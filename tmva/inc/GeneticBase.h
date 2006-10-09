@@ -1,10 +1,11 @@
-// @(#)root/tmva $Id: GeneticBase.h,v 1.3 2006/05/31 14:01:33 rdm Exp $
+// @(#)root/tmva $Id: GeneticBase.h,v 1.11 2006/08/30 22:19:58 andreas.hoecker Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : GeneticBase                                                           *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Base definition for genetic algorithm                                     *
@@ -13,15 +14,14 @@
  *      Peter Speckmayer <speckmay@mail.cern.ch>  - CERN, Switzerland             *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
- *      U. of Victoria, Canada,                                                   *
- *      MPI-KP Heidelberg, Germany                                                *
+ *      CERN, Switzerland,                                                        * 
+ *      U. of Victoria, Canada,                                                   * 
+ *      MPI-KP Heidelberg, Germany                                                * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
- *                                                                                *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_GeneticBase
@@ -41,22 +41,21 @@
 #include <string>
 
 #include <stdio.h>
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
+#include <iostream>
 
 #ifndef ROOT_TMVA_GeneticPopulation
 #include "TMVA/GeneticPopulation.h"
 #endif
+#ifndef ROOT_TMVA_Types
+#include "TMVA/Types.h"
+#endif
 
 namespace TMVA {
-
-   typedef std::pair<Double_t,Double_t>   LowHigh_t;
-
+     
    class GeneticBase {
 
    public:
-
+    
       GeneticBase() {}
       GeneticBase(Int_t populationSize, std::vector < TMVA::LowHigh_t * > ranges);
       virtual ~GeneticBase() {}
@@ -73,14 +72,14 @@ namespace TMVA {
                                     std::vector < Double_t > results);
       virtual void Evolution();
       void Finalize();
-
-      GeneticPopulation& GetGeneticPopulation() { return fPopulation; }
+      
+      GeneticPopulation& GetGeneticPopulation() { return fPopulation; } 
       Double_t GetSpread() const { return fSpread; }
 
       void SetSpread(Double_t s) { fSpread = s; }
 
    protected:
-
+    
       // contains and controls the "individual"
       GeneticPopulation fPopulation;
 
@@ -102,7 +101,7 @@ namespace TMVA {
       Bool_t fFirstTime;        // if true its the first time, so no evolution yet
 
       ClassDef(GeneticBase, 0)  // Base definition for genetic algorithm
-   };
+         };
 
 } // namespace TMVA
 

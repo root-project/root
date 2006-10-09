@@ -1,10 +1,11 @@
-// @(#)root/tmva $Id: CrossEntropy.cxx,v 1.5 2006/05/23 09:53:10 stelzer Exp $       
+// @(#)root/tmva $Id: CrossEntropy.cxx,v 1.9 2006/08/30 22:19:58 andreas.hoecker Exp $       
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TMVA::CrossEntropy                                                    *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description: Implementation of the CrossEntropy as separation criterion        *
  *              -p log (p) - (1-p)log(1-p);     p=purity                          * 
@@ -24,8 +25,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
- *                                                                                *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
 //_______________________________________________________________________

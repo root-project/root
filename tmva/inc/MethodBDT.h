@@ -1,10 +1,11 @@
-// @(#)root/tmva $Id: MethodBDT.h,v 1.11 2006/05/23 09:53:10 stelzer Exp $ 
+// @(#)root/tmva $Id: MethodBDT.h,v 1.27 2006/09/28 10:50:16 helgevoss Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodBDT  (Boosted Decision Trees)                                   *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Analysis of Boosted Decision Trees                                        *
@@ -23,8 +24,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
- *                                                                                *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodBDT
@@ -82,11 +82,14 @@ namespace TMVA {
       // BoostType:       the boosting type for the trees in the forest (AdaBoost e.t.c..)
       // SeparationType   the separation criterion applied in the node splitting
       // nEventsMin:      the minimum number of events in a node (leaf criteria, stop splitting)
-      // dummy:           a dummy variable, just to keep backward compatible
       // nCuts:  the number of steps in the optimisation of the cut for a node
       // SignalFraction:  scale parameter of the number of Bkg events  
       //                  applied to the training sample to simulate different initial purity
       //                  of your data sample. 
+      // UseYesNoLeaf     decide if the classification is done simply by the node type, or the S/B
+      //                  (from the training) in the leaf node
+      // UseWeightedTrees use average classification from the trees, or have the individual trees
+      //                  trees in the forest weighted (e.g. log(boostweight) from AdaBoost
       //
       // known SeparationTypes are:
       //    - MisClassificationError
@@ -98,13 +101,13 @@ namespace TMVA {
 
       // constructor for training and reading
       MethodBDT( TString jobName, 
-                 vector<TString>* theVariables, 
-                 TTree* theTree , 
-                 TString theOption = "100:AdaBoost:GiniIndex:10:0:20:-1",
+                 TString methodTitle, 
+                 DataSet& theData,
+                 TString theOption = "",
                  TDirectory* theTargetDir = 0 );
 
       // constructor for calculating BDT-MVA using previously generatad decision trees
-      MethodBDT( vector<TString> *theVariables, 
+      MethodBDT( DataSet& theData, 
                  TString theWeightFile,  
                  TDirectory* theTargetDir = NULL );
   
@@ -118,34 +121,50 @@ namespace TMVA {
       virtual void Train( void );
 
       // write weights to file
-      virtual void WriteWeightsToFile( void );
-  
+      virtual void WriteWeightsToStream( ostream& o ) const;
+
       // read weights from file
-      virtual void ReadWeightsFromFile( void );
+      virtual void ReadWeightsFromStream( istream& istr );
 
       // write method specific histos to target file
-      virtual void WriteHistosToFile( void ) ;
+      virtual void WriteHistosToFile( void ) const;
 
       // calculate the MVA value
-      virtual Double_t GetMvaValue( Event *e );
+      virtual Double_t GetMvaValue();
 
       // apply the boost algorithm to a tree in the collection 
       virtual Double_t Boost( std::vector<Event*>, DecisionTree *dt, Int_t iTree );
 
-   protected:
+      // ranking of input variables
+      const Ranking* CreateRanking();
+
+      // the option handling methods
+      virtual void DeclareOptions();
+      virtual void ProcessOptions();
+
+      // get the forest
+     inline const std::vector<DecisionTree*> & GetForest() const;
+
+      // get the forest
+     inline const std::vector<Event*> & GetTrainingEvents() const;
+
+     inline const std::vector<double> & GetBoostWeights() const;
+
+     //return the individual relative variable importance 
+     vector< Double_t > GetVariableImportance();
+     Double_t GetVariableImportance(UInt_t ivar);
 
    private:
 
       // boosting algorithm (adaptive boosting)
       Double_t AdaBoost(std::vector<Event*>, DecisionTree *dt );
-      Double_t                        fAdaBoostBeta; // parameter in AdaBoost
  
       //--> not used: Double_t EpsilonBoost(std::vector<Event*>, DecisionTree *dt );
 
       // boosting as a random re-weighting
       Double_t Bagging(std::vector<Event*>, Int_t iTree);
   
-      std::vector<Event*>             fEventSample; // the training events
+      std::vector<Event*>          fEventSample; // the training events
  
       Int_t                           fNTrees;      // number of decision trees requested
       std::vector<DecisionTree*>      fForest;      // the collection of decision trees
@@ -154,11 +173,14 @@ namespace TMVA {
 
       //options for the decision Tree
       SeparationBase                 *fSepType;       // the separation used in node splitting
+      TString                         fSepTypeS;      // the separation (option string) used in node splitting
       Int_t                           fNodeMinEvents; // min number of events in node 
-      Double_t                        fDummyOpt;      // dummy option (for backward compatibility)
   
       Int_t                           fNCuts;          // grid used in cut applied in node splitting
       Double_t                        fSignalFraction; // scalefactor for bkg events to modify initial s/b fraction in training data
+      Bool_t                          fUseYesNoLeaf; // use simple sig or bkg classification in leave nodes or sig/bkg
+      Bool_t                          fUseWeightedTrees; //use average classification from the trees, or have the individual trees trees in the forest weighted (e.g. log(boostweight) from AdaBoost
+    
 
       // Init used in the various constructors
       void InitBDT( void );
@@ -171,10 +193,16 @@ namespace TMVA {
       Double_t                        fBoostWeight;    //ntuple var: boost weight
       Double_t                        fErrorFraction;  //ntuple var: misclassification error fraction 
       Int_t                           fNnodes;         //ntuple var: nNodes
+      Double_t                        fPruneStrength; //a parameter to set the "amount" of pruning..needs to be adjusted 
+
+      vector< Double_t > fVariableImportance; // the relative importance of the different variables 
 
       ClassDef(MethodBDT,0)  // Analysis of Boosted Decision Trees 
          };
 
 } // namespace TMVA
 
+const std::vector<TMVA::DecisionTree*>& TMVA::MethodBDT::GetForest()         const { return fForest; }
+const std::vector<TMVA::Event*>    & TMVA::MethodBDT::GetTrainingEvents() const { return fEventSample; }
+const std::vector<double>             & TMVA::MethodBDT::GetBoostWeights()   const { return fBoostWeights; }
 #endif

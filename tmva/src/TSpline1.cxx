@@ -1,7 +1,11 @@
+// @(#)root/tmva $Id: TSpline1.cxx,v 1.9 2006/08/30 22:20:00 andreas.hoecker Exp $   
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
+
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : TMVA::TSpline1                                                        *
+ * Class  : TSpline1                                                              *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -20,8 +24,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
- *                                                                                *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
 //_______________________________________________________________________
@@ -69,6 +72,7 @@ Double_t TMVA::TSpline1::Eval( Double_t x ) const
    else
       nextbin--;  
 
+   // linear interpolation
    Double_t dx = fGraph->GetX()[ibin] - fGraph->GetX()[nextbin];
    Double_t dy = fGraph->GetY()[ibin] - fGraph->GetY()[nextbin];
    return fGraph->GetY()[ibin] + (x - fGraph->GetX()[ibin]) * dy/dx;

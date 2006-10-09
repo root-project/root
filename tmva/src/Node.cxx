@@ -1,10 +1,11 @@
-// @(#)root/tmva $Id: Node.cxx,v 1.4 2006/05/23 09:53:10 stelzer Exp $    
+// @(#)root/tmva $Id: Node.cxx,v 1.13 2006/10/04 22:29:27 andreas.hoecker Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate Data analysis       *
  * Package: TMVA                                                                  *
- * Classes: TMVA::Node, TMVA::NodeID                                              *
+ * Classes: Node, NodeID                                                          *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header file for description)                          *
@@ -23,8 +24,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
- *                                                                                *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
 //_______________________________________________________________________
@@ -55,28 +55,28 @@ TMVA::Node::~Node( void )
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::Node::GoesRight(const TMVA::Event * e) const {
+Bool_t TMVA::Node::GoesRight(const TMVA::Event& e) const {
    // check if the event fed into the node goes/decends to the right daughter
-   if (e->GetData(fSelector) > fEvent->GetData(fSelector)) return true;
+   if (e.GetVal(fSelector) > fEvent->GetVal(fSelector)) return true;
    else return false;
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::Node::GoesLeft(const TMVA::Event * e) const
+Bool_t TMVA::Node::GoesLeft(const TMVA::Event& e) const
 {
    // check if the event fed into the node goes/decends to the left daughter
-   if (e->GetData(fSelector) <= fEvent->GetData(fSelector)) return true;
+   if (e.GetVal(fSelector) <= fEvent->GetVal(fSelector)) return true;
    else return false;
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::Node::EqualsMe(const TMVA::Event * e) const
+Bool_t TMVA::Node::EqualsMe(const TMVA::Event& e) const
 {
    // check if the event fed into the node actually equals the event
    // that forms the node (in case of a search tree)
    Bool_t result = true;
-   for (Int_t i=0; i<fEvent->GetEventSize(); i++) {
-      result &= (e->GetData(i) == fEvent->GetData(i));
+   for (UInt_t i=0; i<fEvent->GetNVars(); i++) {
+      result&= (e.GetVal(i) == fEvent->GetVal(i));
    }
    return result;
 }
@@ -99,28 +99,28 @@ Int_t TMVA::Node::CountMeAndAllDaughters( void ) const
 void TMVA::Node::Print(ostream& os) const
 {
    //print the node
-   os << "node.Data: " <<  endl << this->GetData() <<endl;
+   os << "< ***  " <<endl << " node.Data: " << this->GetData() << "at address " <<int(this->GetData()) <<endl;
    os << "Selector: " <<  this->GetSelector() <<endl;
-   os << "  address: "<< this 
-      << "  Parent: " << this->GetParent() 
-      << "  Left: " <<  this->GetLeft() 
-      << "  Right: " << this->GetRight()
-      << endl;
+   os << "My address is " << int(this) << ", ";
+   if (this->GetParent() != NULL) os << " parent at addr: " << int(this->GetParent()) ;
+   if (this->GetLeft() != NULL) os << " left daughter at addr: " << int(this->GetLeft());
+   if (this->GetRight() != NULL) os << " right daughter at addr: " << int(this->GetRight()) ;
+   
+   os << " **** > "<< endl;
 }
 
 //_______________________________________________________________________
 void TMVA::Node::PrintRec(ostream& os, const Int_t Depth, const std::string pos ) const
 {
    //recursively print the node and its daughters (--> print the 'tree')
-   os << Depth << " " << pos << " node.Data: " <<  endl << this->GetData() 
-      << endl;
+   os << Depth << " " << pos << " node.Data: " <<  endl << this->GetData() ;
    os << Depth << " " << pos << " Selector: " <<  this->GetSelector() <<endl;
    if(this->GetLeft() != NULL)this->GetLeft()->PrintRec(os,Depth+1,"Left") ;
    if(this->GetRight() != NULL)this->GetRight()->PrintRec(os,Depth+1,"Right");
 }
 
 //_______________________________________________________________________
-TMVA::NodeID TMVA::Node::ReadRec(ifstream& is, TMVA::NodeID nodeID, TMVA::Node* Parent )
+TMVA::NodeID TMVA::Node::ReadRec(istream& is, TMVA::NodeID nodeID, const Event& ev, TMVA::Node* Parent )
 {
    //recursively read the node and its daughters (--> print the 'tree')
    std::string tmp;
@@ -134,12 +134,20 @@ TMVA::NodeID TMVA::Node::ReadRec(ifstream& is, TMVA::NodeID nodeID, TMVA::Node* 
    }
    else is >> tmp;
 
-   TMVA::Event* e=new TMVA::Event();
+   TMVA::Event* e = new TMVA::Event(ev);
    this->SetEventOwnership(kTRUE);
-   e->Read(is);
+   // read the event
+   Double_t dtmp;
+   Int_t nvar;
+   is >> tmp >> tmp >> nvar >> tmp >> tmp >> tmp >> dtmp;
+   e->SetWeight(dtmp);
+   for (int i=0; i<nvar; i++){
+      is >> dtmp; e->SetVal(i,dtmp);
+   }
+
    this->SetData(e);
    is >> itmp >> pos >> tmp >> tmp;
-   this->SetSelector(atoi(tmp.c_str()));
+   this->SetSelector((UInt_t)atoi(tmp.c_str()));
    is >> itmp >> pos;
    nextNodeID.SetDepth(itmp);
    nextNodeID.SetPos(pos);
@@ -148,14 +156,14 @@ TMVA::NodeID TMVA::Node::ReadRec(ifstream& is, TMVA::NodeID nodeID, TMVA::Node* 
       if (nextNodeID.GetPos()=="Left") {
          this->SetLeft(new TMVA::Node());
          this->GetLeft()->SetParent(this);
-         nextNodeID = this->GetLeft()->ReadRec(is,nextNodeID,this);
+         nextNodeID = this->GetLeft()->ReadRec(is,nextNodeID,ev,this);
       }
    }
    if (nextNodeID.GetDepth() == nodeID.GetDepth()+1){
       if (nextNodeID.GetPos()=="Right") {
          this->SetRight(new TMVA::Node());
          this->GetRight()->SetParent(this);
-         nextNodeID = this->GetRight()->ReadRec(is,nextNodeID,this);
+         nextNodeID = this->GetRight()->ReadRec(is,nextNodeID,ev,this);
       }
    }
    return nextNodeID;

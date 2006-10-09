@@ -1,10 +1,11 @@
-// @(#)root/tmva $Id: TSpline1.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $
+// @(#)root/tmva $Id: TSpline1.h,v 1.8 2006/08/30 22:20:00 andreas.hoecker Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TSpline1                                                              *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Linear interpolation class; derivative of TSpline                         *
@@ -23,10 +24,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
- *                                                                                *
- * File and Version Information:                                                  *
- * $Id: TSpline1.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $        
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_TSpline1
@@ -62,7 +60,7 @@ namespace TMVA {
       TGraph *fGraph;  // graph that is splined
 
       ClassDef(TSpline1,0) //Linear interpolation class
-         };
+   };
 
 } // namespace TMVA
 

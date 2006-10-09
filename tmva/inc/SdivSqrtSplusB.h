@@ -1,10 +1,11 @@
-// @(#)root/tmva $Id: SdivSqrtSplusB.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $ 
+// @(#)root/tmva $Id: SdivSqrtSplusB.h,v 1.7 2006/08/30 22:19:59 andreas.hoecker Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : SdivSqrtSplusB                                                        *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description: Implementation of the SdivSqrtSplusB as separation criterion      *
  *              S/sqrt(S + B)                                                     *
@@ -23,11 +24,9 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
- *                                                                                *
- * File and Version Information:                                                  *
- * $Id: SdivSqrtSplusB.h,v 1.5 2006/05/23 09:53:10 stelzer Exp $       
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
+
 #ifndef ROOT_TMVA_SdivSqrtSplusB
 #define ROOT_TMVA_SdivSqrtSplusB
 

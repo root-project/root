@@ -1,10 +1,11 @@
-// @(#)root/tmva $Id: SeparationBase.h,v 1.6 2006/05/23 09:53:10 stelzer Exp $
+// @(#)root/tmva $Id: SeparationBase.h,v 1.9 2006/08/30 22:19:59 andreas.hoecker Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : SeparationBase                                                        *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description: An interface to different separation critiera useded in various   *
  *              training algorithms, as there are:                                *
@@ -40,10 +41,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
- *                                                                                *
- * File and Version Information:                                                  *
- * $Id: SeparationBase.h,v 1.6 2006/05/23 09:53:10 stelzer Exp $   
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_SeparationBase
@@ -103,7 +101,7 @@ namespace TMVA {
       TString fName;  // name of the concrete Separation Index impementation
  
       ClassDef(SeparationBase,0) // Interface to different separation critiera used in training algorithms
-         };
+   };
 
 
 } // namespace TMVA

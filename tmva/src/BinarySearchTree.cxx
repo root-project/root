@@ -1,10 +1,11 @@
-// @(#)root/tmva $Id: BinarySearchTree.cxx,v 1.7 2006/05/23 09:53:10 stelzer Exp $    
+// @(#)root/tmva $Id: BinarySearchTree.cxx,v 1.16 2006/09/29 23:27:15 andreas.hoecker Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * class  : TMVA::BinarySearchTree                                                *
+ * Class  : TMVA::BinarySearchTree                                                *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header file for description)                          *
@@ -23,10 +24,10 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: BinarySearchTree.cxx,v 1.7 2006/05/23 09:53:10 stelzer Exp $        
+ * $Id: BinarySearchTree.cxx,v 1.16 2006/09/29 23:27:15 andreas.hoecker Exp $        
  **********************************************************************************/
       
 //_______________________________________________________________________
@@ -43,6 +44,12 @@
 
 #ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
+#endif
+#ifndef ROOT_TMVA_DataSet
+#include "TMVA/DataSet.h"
+#endif
+#ifndef ROOT_TMVA_Event
+#include "TMVA/Event.h"
 #endif
 #ifndef ROOT_TMVA_BinarySearchTree
 #include "TMVA/BinarySearchTree.h"
@@ -65,22 +72,20 @@ TMVA::BinarySearchTree::~BinarySearchTree( void )
 }
 
 //_______________________________________________________________________
-Int_t TMVA::BinarySearchTree::Fill( TTree* theTree, vector<TString>* theVars, 
-                                    Int_t theType )
+Int_t TMVA::BinarySearchTree::Fill( const DataSet& ds, TTree* theTree, Int_t theType, 
+                                    Types::PreprocessingMethod corr, Types::SBType type  )
 {
-   // create the search tree from the events in a TTree 
-   // using the variables specified in "theVars"
+   // create the search tree from the events in the DataSet
    Int_t nevents=0;
-   fPeriode = (*theVars).size();
+   fPeriode = ds.GetNVariables();
    // the event loop
    Int_t n=theTree->GetEntries();
    for (Int_t ievt=0; ievt<n; ievt++) {
+      ds.ReadEvent(theTree,ievt,corr,type);
       // insert event into binary tree
-      if (theType == -1 || (int)TMVA::Tools::GetValue( theTree, ievt, "type" ) == theType) {
-
+      if (theType==-1 || ds.Event().Type()==theType) {
          // create new event with pointer to event vector, and with a weight
-         TMVA::Event *e=new TMVA::Event(theTree, ievt, theVars);
-         this->Insert( e , kTRUE);
+         this->Insert( new TMVA::Event(ds.Event()), kTRUE );
          nevents++;
       }
    } // end of event loop
@@ -107,13 +112,9 @@ Int_t TMVA::BinarySearchTree::Fill( vector<TMVA::Event*> theTree, vector<Int_t> 
 
    for (Int_t ievt=0; ievt<n; ievt++) {
       // insert event into binary tree
-      if (theType == -1 || theTree[ievt]->GetType() == theType) {
+      if (theType == -1 || theTree[ievt]->Type() == theType) {
          // create new event with pointer to event vector, and with a weight
-         TMVA::Event *e=new TMVA::Event();
-         for (Int_t j=0; j<fPeriode; j++){
-            e->Insert(theTree[ievt]->GetData(theVars[j]) );
-         }
-         e->SetWeight(theTree[ievt]->GetWeight() );
+         TMVA::Event *e = new TMVA::Event(*theTree[ievt]);
          this->Insert( e , kTRUE);
          nevents++;
       }
@@ -139,7 +140,7 @@ Int_t TMVA::BinarySearchTree::Fill( vector<TMVA::Event*> theTree, Int_t theType 
    Int_t nevents = 0;
    for (Int_t ievt=0; ievt<n; ievt++) {
       // insert event into binary tree
-      if (theType == -1 || theTree[ievt]->GetType() == theType) {
+      if (theType == -1 || theTree[ievt]->Type() == theType) {
          this->Insert( theTree[ievt] , kFALSE);
          nevents++;
       }
@@ -161,7 +162,7 @@ Double_t TMVA::BinarySearchTree::SearchVolume( TMVA::Node* t, TMVA::Volume* volu
                                                std::vector<TMVA::Event*>* events )
 {
    // recursively walk through the daughter nodes and add up all weigths of events that 
-   // lie within the given voluem
+   // lie within the given volume
    if (t==NULL) return 0;  // Are we at an outer leave?
 
    Double_t count = 0.0;
@@ -178,8 +179,8 @@ Double_t TMVA::BinarySearchTree::SearchVolume( TMVA::Node* t, TMVA::Volume* volu
            << d << " != " << "node "<< t->GetSelector() << " ==> abort" << endl;
       exit(1);
    }
-   tl = (*(volume->fLower))[d] <  (t->GetData()->GetData(d));  // Should we descend left?
-   tr = (*(volume->fUpper))[d] >= (t->GetData()->GetData(d));  // Should we descend right?
+   tl = (*(volume->fLower))[d] <  (t->GetData()->GetVal(d));  // Should we descend left?
+   tr = (*(volume->fUpper))[d] >= (t->GetData()->GetVal(d));  // Should we descend right?
 
    if (tl) count += SearchVolume( t->GetLeft(),  volume, (depth+1), events );
    if (tr) count += SearchVolume( t->GetRight(), volume, (depth+1), events );
@@ -193,8 +194,8 @@ Bool_t TMVA::BinarySearchTree::InVolume( TMVA::Event* event, TMVA::Volume* volum
 
    Bool_t result = false;
    for (Int_t ivar=0; ivar< fPeriode; ivar++) {
-      result = ( (*(volume->fLower))[ivar] <  ((event->GetData(ivar))) &&
-                 (*(volume->fUpper))[ivar] >= ((event->GetData(ivar))) );
+      result = ( (*(volume->fLower))[ivar] <  ((event->GetVal(ivar))) &&
+                 (*(volume->fUpper))[ivar] >= ((event->GetVal(ivar))) );
       if (!result) break;
    }
    return result;

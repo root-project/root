@@ -1,17 +1,19 @@
-// @(#)root/tmva $Id: GeneticCuts.cxx,v 1.6 2006/05/23 09:53:10 stelzer Exp $ 
-// Author: Andreas Hoecker, Peter Speckmayer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: GeneticCuts.cxx,v 1.14 2006/08/30 22:19:58 andreas.hoecker Exp $ 
+// Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TMVA::GeneticCuts                                                     *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation                                                            *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
+ *      Matt Jachowski  <jachowski@stanford.edu> - Stanford University, USA       *
+ *      Peter Speckmayer <speckmay@mail.cern.ch> - CERN, Switzerland              *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -23,9 +25,9 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
- *                                                                                *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
+
 //_______________________________________________________________________
 //                                                                      
 // User-defined class for genetics algorithm;
@@ -38,16 +40,21 @@
 ClassImp(TMVA::GeneticCuts)
 
 //_______________________________________________________________________
-TMVA::GeneticCuts::GeneticCuts( Int_t size, std::vector<LowHigh_t*> ranges ) 
+TMVA::GeneticCuts::GeneticCuts( Int_t size, std::vector<LowHigh_t*> ranges, 
+				TMVA::MethodCuts* methodCuts ) 
    : TMVA::GeneticBase( size, ranges ) 
 {
    // constructor
-}
+  fMethodCuts = methodCuts;
+}				
 
 //_______________________________________________________________________
-Double_t TMVA::GeneticCuts::FitnessFunction( const std::vector<Double_t> & parameters )
+Double_t TMVA::GeneticCuts::FitnessFunction( const std::vector<Double_t>& parameters )
 {
    // fitness function interface for Genetics Algorithm application of cut 
    // optimisation method
-   return TMVA::MethodCuts::ThisCuts()->ComputeEstimator( parameters ); 
+  if (fMethodCuts == NULL) 
+    return TMVA::MethodCuts::ThisCuts()->ComputeEstimator( parameters );
+  else
+    return fMethodCuts->ComputeEstimator( parameters );
 }

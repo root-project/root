@@ -1,10 +1,11 @@
-// @(#)root/tmva $Id: DecisionTree.h,v 1.9 2006/05/23 09:53:10 stelzer Exp $
+// @(#)root/tmva $Id: DecisionTree.h,v 1.20 2006/09/28 10:50:16 helgevoss Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : DecisionTree                                                          *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation of a Decision Tree                                         *
@@ -42,6 +43,9 @@
 #include "TMVA/DecisionTreeNode.h"
 #endif
 #ifndef ROOT_TMVA_BinarySearchTree
+#include "TMVA/BinaryTree.h"
+#endif
+#ifndef ROOT_TMVA_BinarySearchTree
 #include "TMVA/BinarySearchTree.h"
 #endif
 #ifndef ROOT_TMVA_SeparationBase
@@ -51,11 +55,13 @@
 using std::vector;
 
 namespace TMVA {
-
+   
+   class Event;
+   
    class DecisionTree : public BinaryTree {
-  
+      
    public:
-
+      
       // the constructur needed for the "reading" of the decision tree from weight files
       DecisionTree( void );
 
@@ -71,15 +77,49 @@ namespace TMVA {
       Double_t TrainNode( vector<TMVA::Event*> & eventSample,  DecisionTreeNode *node );
 
       // returns: 1 = Signal (right),  -1 = Bkg (left)
-      Double_t CheckEvent( Event* ); 
+      Double_t CheckEvent( const TMVA::Event & , Bool_t UseYesNoLeaf = kFALSE ); 
+
+      //return the individual relative variable importance 
+      vector< Double_t > GetVariableImportance();
+      Double_t GetVariableImportance(Int_t ivar);
+
+      // recursive pruning of the tree
+      void TMVA::DecisionTree::PruneTree(){
+	this->PruneTree((DecisionTreeNode *)this->GetRoot());
+      };
+      
+      void TMVA::DecisionTree::SetPruneStrength(Double_t p){fPruneStrength = p;};
 
    private:
+      void TMVA::DecisionTree::PruneTree(DecisionTreeNode *node);
 
+      void TMVA::DecisionTree::PruneNode(DecisionTreeNode *node);
+
+      Double_t TMVA::DecisionTree::GetNodeError(DecisionTreeNode *node);
+
+      Double_t TMVA::DecisionTree::GetSubTreeError(DecisionTreeNode *node);
+
+      // utility functions
+
+      //calculates the min and max values for each variable in event sample
+      //helper for TrainNode
+      //find min and max of the variable distrubution
+       void FindMinAndMax(vector<TMVA::Event*> & eventSample,
+				  vector<Double_t> & min,
+				  vector<Double_t> & max);
+
+       //set up the grid for the cut scan
+       void SetCutPoints(vector<Double_t> & cut_points,
+			 Double_t xmin,
+			 Double_t xmax,
+			 Int_t num_gridpoints);
+
+    
       // calculate the Purity out of the number of sig and bkg events collected
       // from individual samples.
 
       //calculates the purity S/(S+B) of a given event sample
-      Double_t SamplePurity(vector<Event*> eventSample);
+       Double_t SamplePurity(vector<Event*> eventSample);
   
       Int_t     fNvars; // number of variables used to separate S and B
       Int_t     fNCuts; // number of grid point in variable cut scans
@@ -89,7 +129,10 @@ namespace TMVA {
       Double_t  fMinSepGain;// min number of separation gain to perform node splitting
 
       Bool_t    fUseSearchTree; //cut scan done with binary trees or simple event loop.
-  
+      Double_t  fPruneStrength; //a parameter to set the "amount" of pruning..needs to be adjusted 
+      
+      vector< Double_t > fVariableImportance; // the relative importance of the different variables 
+
       ClassDef(DecisionTree,0) //Implementation of a Decision Tree
          };
 

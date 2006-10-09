@@ -1,14 +1,14 @@
-// @(#)root/tmva $Id: MisClassificationError.cxx,v 1.5 2006/05/23 09:53:10 stelzer Exp $
+// @(#)root/tmva $Id: MisClassificationError.cxx,v 1.8 2006/08/30 22:19:59 andreas.hoecker Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : TMVA::MisClassificationError                                          *
+ * Class  : MisClassificationError                                                *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description: Implementation of the MisClassificationError as separation        *
  *              criterion:   1-max(p, 1-p) as 
- *                                                                                *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
@@ -24,8 +24,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
- *                                                                                *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
 //_______________________________________________________________________
@@ -40,7 +39,7 @@
 ClassImp(TMVA::MisClassificationError)
 
 //_______________________________________________________________________
-   Double_t  TMVA::MisClassificationError::GetSeparationIndex( const Double_t &s, const Double_t &b )
+Double_t  TMVA::MisClassificationError::GetSeparationIndex( const Double_t &s, const Double_t &b )
 {
    // Misclassifiacton error   criterion: 1-max(p, 1-p)  (p: purity= s/(s+b))
    if ( s+b <= 0) return 0;

@@ -1,21 +1,32 @@
 #include "tmvaglob.C"
 
-void variables( TString fin = "TMVA.root" )
+void variables( TString fin = "TMVA.root", bool useTMVAStyle=kTRUE )
 {
-  gROOT->Reset();
-  gROOT->SetStyle("Plain");
-  gStyle->SetOptStat(0);
-  TList * loc = gROOT->GetListOfCanvases();
+  if(!useTMVAStyle) {
+    gROOT->Reset();
+    gROOT->SetStyle("Plain");
+    gStyle->SetOptStat(0);
+  }
+  TList* loc = gROOT->GetListOfCanvases();
   TListIter itc(loc);
   TObject *o(0);
   while( (o = itc()) ) delete o;
 
   TFile *file = new TFile( fin );
 
-  input_variables->cd();
+  TDirectory * dir = (TDirectory*)gDirectory->Get("input_variables");
+  if(dir==0) {
+    cout << "Could not locate directory input_variables in file " << fin << endl;
+    exit(1);
+  }
+  dir->cd();
 
+  TListIter keyIt(gDirectory->GetListOfKeys());
+  Int_t noPlots = 0;
+  TKey * key = 0;
+  while(key = (TKey*)keyIt()) if(key->GetCycle()==1) noPlots++;
+  noPlots/=2;
   // how many plots are in the "input_variables" directory?
-  Int_t noPlots = ((gDirectory->GetListOfKeys())->GetEntries()) / 2;
 
   // define Canvas layout here!
   // default setting
@@ -55,6 +66,8 @@ void variables( TString fin = "TMVA.root" )
   char fname[200];
   while ((key = (TKey*)next())) {
 
+     //    if(key->GetCycle() != 1) continue;
+
     // make sure, that we only look at histograms
     TClass *cl = gROOT->GetClass(key->GetClassName());
     if (!cl->InheritsFrom("TH1")) continue;
@@ -70,10 +83,10 @@ void variables( TString fin = "TMVA.root" )
         char cn[20];
         sprintf( cn, "canvas%d", countCanvas+1 );
         c[countCanvas] = new TCanvas( cn, "MVA Input Variables", 
-                                      countCanvas*50+300, countCanvas*20, width, height ); 
+                                      countCanvas*50+200, countCanvas*20, width, height ); 
         // style
         c[countCanvas]->SetBorderMode(0);
-        c[countCanvas]->SetFillColor(10);
+        c[countCanvas]->SetFillColor(0);
 
         c[countCanvas]->Divide(xPad,yPad);
         countPad = 1;
@@ -82,12 +95,6 @@ void variables( TString fin = "TMVA.root" )
       // save canvas to file
       c[countCanvas]->cd(countPad);
       countPad++;
-      if (countPad > noPad) {
-        c[countCanvas]->Update();
-        sprintf( fname, "plots/variables_c%i", countCanvas+1 );
-        TMVAGlob::imgconv( c[countCanvas], &fname[0] );
-        countCanvas++;
-      }
 
       // find the corredponding backgrouns histo
       TString bgname = hname;
@@ -112,11 +119,8 @@ void variables( TString fin = "TMVA.root" )
       if (countPad==2) sc = 1.3;
       sig->SetMaximum( TMath::Max( sig->GetMaximum(), bgd->GetMaximum() )*sc );
       sig->Draw();
-      bgd->SetLineColor( 2 );
-      bgd->SetLineWidth( 1 );
-      bgd->SetFillStyle( 3002 );
-      bgd->SetFillColor( 46 );
       bgd->Draw("same");
+      sig->GetXaxis()->SetTitle( title );
       sig->GetYaxis()->SetTitleOffset( 1.35 );
       sig->GetYaxis()->SetTitle("Normalized");
 
@@ -125,20 +129,31 @@ void variables( TString fin = "TMVA.root" )
 
       // Draw legend
       if (countPad==2){
-        TLegend *legend= new TLegend( 0.131, 0.762, 0.531, 0.901 );
+        TLegend *legend= new TLegend( gPad->GetLeftMargin(), 
+                                      1-gPad->GetTopMargin()-.18, 
+                                      gPad->GetLeftMargin()+.4, 
+                                      1-gPad->GetTopMargin() );
         legend->AddEntry(sig,"Signal","F");
         legend->AddEntry(bgd,"Background","F");
         legend->Draw("same");
         legend->SetBorderSize(1);
         legend->SetMargin( 0.3 );
       } 
-     
+
+      // save canvas to file
+      if (countPad > noPad) {
+        c[countCanvas]->Update();
+        sprintf( fname, "plots/variables_c%i", countCanvas+1 );
+        TMVAGlob::imgconv( c[countCanvas], &fname[0] );
+        //        TMVAGlob::plot_logo(); // don't understand why this doesn't work ... :-(
+        countCanvas++;
+      }
     }
   }
-  if (countPad <= noPad) {
 
-    c[countCanvas]->Update();
-    sprintf( fname, "plots/variables_c%i", countCanvas+1 );
-    TMVAGlob::imgconv( c[countCanvas], &fname[0] );
+  if (countPad <= noPad) {
+     c[countCanvas]->Update();
+     sprintf( fname, "plots/variables_c%i", countCanvas+1 );
+     TMVAGlob::imgconv( c[countCanvas], &fname[0] );
   }
 }

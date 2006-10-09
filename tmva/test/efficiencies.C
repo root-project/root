@@ -1,12 +1,17 @@
 #include "tmvaglob.C"
+#include <map>
 
-void efficiencies( TString fin = "TMVA.root", Int_t type = 2 )
+void efficiencies( TString fin = "TMVA.root", Int_t type = 2, Bool_t useTMVAStyle = kTRUE )
 {
    // argument: type = 1 --> plot efficiency(B) versus eff(S)
    //           type = 2 --> plot rejection (B) versus efficiency (S)
   
-   gROOT->SetStyle("Plain");
-   gStyle->SetOptStat(0);
+   if(!useTMVAStyle) {
+      gROOT->Reset();
+      gROOT->SetStyle("Plain");
+      gStyle->SetOptStat(0);
+   }
+
    TList * loc = gROOT->GetListOfCanvases();
    TListIter itc(loc);
    TObject *o(0);
@@ -67,7 +72,7 @@ void plot_efficiencies( TString fin = "TMVA.root", Int_t type = 2 , TDirectory* 
       cout << "--- type==1: plot background efficiency versus signal efficiency" << endl;
 
    // create canvas
-   TCanvas* c = new TCanvas( "c", "the canvas", 300, 0, 650, 500 );
+   TCanvas* c = new TCanvas( "c", "the canvas", 200, 0, 650, 500 );
    c->SetBorderMode(0);
    c->SetFillColor(10);
 
@@ -88,6 +93,7 @@ void plot_efficiencies( TString fin = "TMVA.root", Int_t type = 2 , TDirectory* 
    legend->SetTextSize( 0.05 );
    legend->SetHeader( "MVA Method:" );
    legend->SetMargin( 0.4 );
+   legend->SetFillColor(0);
 
    TString xtit = "Signal efficiency";
    TString ytit = "Background efficiency";  
@@ -114,6 +120,8 @@ void plot_efficiencies( TString fin = "TMVA.root", Int_t type = 2 , TDirectory* 
    TString hName = "effBvsS";
    if (type == 2) hName = "rejBvsS";
 
+   TList hists;
+
    // loop over all histograms with that name
    while (key = (TKey*)next()) {
       TClass *cl = gROOT->GetClass(key->GetClassName());
@@ -124,12 +132,30 @@ void plot_efficiencies( TString fin = "TMVA.root", Int_t type = 2 , TDirectory* 
          h->SetLineWidth(3);
          h->SetLineColor(color);
          color++; if (color == 5 || color == 10 || color == 11) color++; 
-         legend->AddEntry(h,TString(h->GetTitle()).ReplaceAll("MVA_",""),"l");
          h->Draw("csame");
+         hists.Add(h);
          nmva++;
       }
    }
-        
+
+   while(hists.GetSize()) {
+      TListIter hIt(&hists);
+      TH1 * hist(0);
+      double largestInt=0;
+      TH1 * histWithLargestInt(0);
+      while( (hist = (TH1*)hIt())!=0 ) {
+         double integral = hist->Integral(1,hist->FindBin(0.9999));
+         if(integral>largestInt) {
+            largestInt = integral;
+            histWithLargestInt = hist;
+         }
+      }
+      legend->AddEntry(histWithLargestInt,TString(histWithLargestInt->GetTitle()).ReplaceAll("MVA_",""),"l");
+      hists.Remove(histWithLargestInt);
+   }   
+
+
+   
    // rescale legend box size
    // current box size has been tuned for 3 MVAs + 1 title
    if (type == 1) {

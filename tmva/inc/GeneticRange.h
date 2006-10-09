@@ -1,10 +1,11 @@
-// @(#)root/tmva $Id: GeneticRange.h,v 1.4 2006/05/23 09:53:10 stelzer Exp $    
+// @(#)root/tmva $Id: GeneticRange.h,v 1.6 2006/08/30 22:19:58 andreas.hoecker Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : GeneticRange                                                          *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *    Range definition for genetic algorithm                                      *
@@ -20,8 +21,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
- *                                                                                *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_GeneticRange

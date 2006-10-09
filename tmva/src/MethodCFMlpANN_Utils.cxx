@@ -1,10 +1,11 @@
-// @(#)root/tmva $Id: MethodCFMlpANN_Utils.cxx,v 1.8 2006/05/23 09:53:10 stelzer Exp $ 
+// @(#)root/tmva $Id: MethodCFMlpANN_Utils.cxx,v 1.12 2006/08/30 22:19:58 andreas.hoecker Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TMVA::MethodCFMlpANN_utils                                            *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Reference for the original FORTRAN version "mlpl3.F":                          *
  *      Authors  : J. Proriol and contributions from ALEPH-Clermont-Fd            *
@@ -41,10 +42,10 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: MethodCFMlpANN_Utils.cxx,v 1.8 2006/05/23 09:53:10 stelzer Exp $ 
+ * $Id: MethodCFMlpANN_Utils.cxx,v 1.12 2006/08/30 22:19:58 andreas.hoecker Exp $ 
  **********************************************************************************/
 
 //_______________________________________________________________________
@@ -65,8 +66,8 @@
 #include <stdlib.h>
 
 ClassImp(TMVA::MethodCFMlpANN_Utils)
-  
-   Int_t TMVA::MethodCFMlpANN_Utils::fg_100         = 100;
+   
+Int_t TMVA::MethodCFMlpANN_Utils::fg_100         = 100;
 Int_t TMVA::MethodCFMlpANN_Utils::fg_0           = 0;
 Int_t TMVA::MethodCFMlpANN_Utils::fg_max_nVar_   = max_nVar_;
 Int_t TMVA::MethodCFMlpANN_Utils::fg_max_nNodes_ = max_nNodes_;
@@ -505,10 +506,10 @@ void TMVA::MethodCFMlpANN_Utils::Out(Int_t *iii, Int_t *maxcycle)
    // write weights to file
 
    if (*iii == *maxcycle) {
-      WriteNNWeightsToFile( fParam_1.nvar, fParam_1.lclass, 
-                            fVarn_1.xmax, fVarn_1.xmin,
-                            fParam_1.layerm, neur_1.neuron, 
-                            neur_1.w, neur_1.ww, fDel_1.temp );                        
+//       WriteNNWeightsToFile( std::cout, fParam_1.nvar, fParam_1.lclass, 
+//                             fVarn_1.xmax, fVarn_1.xmin,
+//                             fParam_1.layerm, neur_1.neuron, 
+//                             neur_1.w, neur_1.ww, fDel_1.temp );                        
    }
 }
 

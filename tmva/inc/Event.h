@@ -1,115 +1,105 @@
-// @(#)root/tmva $Id: Event.h,v 1.3 2006/05/31 14:01:33 rdm Exp $
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
+// @(#)root/tmva $Id: Event.h,v 1.16 2006/09/29 23:27:15 andreas.hoecker Exp $   
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : Event                                                                 *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *       Event: variables of an event as used for the Binary Tree                 *
+ *      Event container                                                           *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
+ *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
- *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
- *      U. of Victoria, Canada,                                                   *
- *      MPI-KP Heidelberg, Germany                                                *
+ *      CERN, Switzerland,                                                        * 
+ *      U. of Victoria, Canada,                                                   * 
+ *      MPI-KP Heidelberg, Germany,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://mva.sourceforge.net/license.txt)                                       *
- *                                                                                *
  **********************************************************************************/
 
-#ifndef ROOT_TMVA_Event
-#define ROOT_TMVA_Event
+#ifndef TMVA_ROOT_Event
+#define TMVA_ROOT_Event
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Event                                                                //
-//                                                                      //
-// Variables of an event as used for the Binary Tree                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+
+#include "TMVA/VariableInfo.h"
 
 #include <vector>
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
-#ifndef ROOT_TVector
-#include "TVector.h"
-#endif
-#ifndef ROOT_TTree
-#include "TTree.h"
-#endif
 
-// an Event coordinate
-// simple enough for any event with one weight and 1 to n characterising variables,
-// categorised as signal or background
-// but could also be inherited from and extened if needed
+class TTree;
+class TBranch;
 
 namespace TMVA {
 
    class Event;
-   ostream& operator << (ostream& os, const Event& event);
-   ostream& operator << (ostream& os, const Event* event);
+
+   ostream& operator<< (ostream& os, const Event& event);
+   ostream& operator<< (ostream& os, const Event* event);
 
    class Event {
 
-      friend ostream& operator << (ostream& os, const Event& event);
-      friend ostream& operator << (ostream& os, const Event* event);
+      friend ostream& operator<< (ostream& os, const Event& event);
+      friend ostream& operator<< (ostream& os, const Event* event);
 
    public:
 
-      // default constructor
-      Event() : fWeight( 1 ), fType( -1 ) {};
-      // constructor specifying the event variables
-      Event( std::vector<Double_t> &v, Double_t w = 1 , Int_t t=-1)
-         : fVar( v ), fWeight( w ), fType( t ) {}
-      // constructor reading the Event from the ROOT tree
-      Event( TTree* tree, Int_t ievt, std::vector<TString>* fInputVars );
+      Event(const std::vector<TMVA::VariableInfo>&);
+      Event(const Event& );
+      ~Event(){};
+      
+      void SetBranchAddresses(TTree* tr);
+      std::vector<TBranch*>& Branches() { return fBranches; }
 
-      // destructor
-      virtual ~Event() {}
-      // return reference to the event variables as a STL vector
-      inline const std::vector<Double_t> &GetData() const  { return fVar; }
-      // return reference to "i-th" event variable
-      const Double_t                     &GetData( Int_t i ) const;
-      // return the number of the event variabels
-      inline Int_t    GetEventSize() const         { return fVar.size(); }
-      // add an event variable
-      inline void     Insert( Double_t v ) { fVar.push_back(v); }
-      // set an event weight
-      inline void     SetWeight( Double_t w ) { fWeight = w; }
-      //return the event weight
-      inline Double_t GetWeight() const  { return fWeight; }
-      // return the event type (signal = 1, bkg = 0);
-      inline Int_t    GetType() const    { return fType;   }
-      // return alternative type variables (signal = 1, bkg = -1)
-      inline Int_t    GetType2() const   { return fType ? fType : -1 ; }
-      // set the event type (signal = 1, bkg = 0);
-      inline void     SetType( Int_t t ) { fType = t; }
+      Bool_t  IsSignal()  const { return (fType==1); }
+      Float_t GetWeight() const { return fWeight*fBoostWeight; }
+      Float_t GetBoostWeight() const { return fBoostWeight; }
+      Int_t   Type()      const { return fType; }
+      void    SetWeight(Float_t w) { fWeight=w; }
+      void    SetBoostWeight(Float_t w) { fBoostWeight=w; }
+      void    SetType(Int_t t) { fType=t; }
+      void    SetVal(UInt_t ivar, Float_t val);
+      void    CopyVarValues( const Event& other );
 
-      void Print(ostream& os) const;
+      Char_t  VarType(Int_t ivar)     const { return fVariables[ivar].VarType(); }
+      Bool_t  IsInt(Int_t ivar)       const { return (fVariables[ivar].VarType()=='I'); }
+      Bool_t  IsFloat(Int_t ivar)     const { return (fVariables[ivar].VarType()=='F'); }
+      Float_t GetVal(Int_t ivar)      const { return *((Float_t*)fVarPtr[ivar]); }
+      Float_t GetValFloat(Int_t ivar) const { return *((Float_t*)fVarPtr[ivar]); }
+      Int_t   GetValInt(Int_t ivar)   const { return *((Int_t*)fVarPtr[ivar]); }
+      Float_t GetValueNormalized(Int_t ivar) const;
+      UInt_t  GetNVars()              const { return fVariables.size(); }
 
-      Event* Read(std::ifstream& is);
+      void Print(std::ostream & o) const;
 
    private:
 
-      std::vector<Double_t>  fVar;     // the vector of event variables
-      Double_t               fWeight;  // event weight
-      Int_t                  fType;    // event type (sigal=1 bkg = 0)
+      void InitPointers(bool AllowExternalLink = kTRUE);
+   
+      const std::vector<TMVA::VariableInfo>& fVariables;
+      void **   fVarPtr;
+      Int_t *   fVarPtrI;
+      Float_t*  fVarPtrF;
+      Int_t     fType;
+      Float_t   fWeight;
+      Float_t   fBoostWeight;
+      UInt_t    fCountI;  //the number of Integer variables
+      UInt_t    fCountF;  //the number of Float variables
 
-      ClassDef(Event,0); //Variables of an event as used for the Binary Tree
+      std::vector<TBranch*>  fBranches;
+
    };
 
-} // namespace TMVA
+}
 
 #endif
-

@@ -1,10 +1,11 @@
-// @(#)root/tmva $Id: MethodVariable.h,v 1.2 2006/05/23 13:03:15 brun Exp $
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
+// @(#)root/tmva $Id: MethodVariable.h,v 1.13 2006/08/30 22:19:59 andreas.hoecker Exp $
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodVariable                                                        *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Wrapper class for a single variable "MVA"; this is required for           *
@@ -17,17 +18,14 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
- *      U. of Victoria, Canada,                                                   *
- *      MPI-KP Heidelberg, Germany,                                               *
+ *      CERN, Switzerland,                                                        * 
+ *      U. of Victoria, Canada,                                                   * 
+ *      MPI-KP Heidelberg, Germany,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
- *                                                                                *
- * File and Version Information:                                                  *
- * $Id: MethodVariable.h,v 1.2 2006/05/23 13:03:15 brun Exp $
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodVariable
@@ -52,35 +50,38 @@ namespace TMVA {
 
    public:
 
-      MethodVariable( TString jobName,
-                      std::vector<TString>* theVariables,
-                      TTree* theTree = 0,
+      MethodVariable( TString jobName, 
+                      TString methodTitle, 
+                      DataSet& theData,
                       TString theOption = "Variable",
                       TDirectory* theTargetDir = 0 );
-
+  
       virtual ~MethodVariable( void );
-
+    
       // training method
       virtual void Train( void );
 
       // write weights to file
-      virtual void WriteWeightsToFile( void );
+      virtual void WriteWeightsToStream( ostream& o ) const;
 
       // read weights from file
-      virtual void ReadWeightsFromFile( void );
+      virtual void ReadWeightsFromStream( istream& istr );
 
       // calculate the MVA value
-      virtual Double_t GetMvaValue(Event *e);
+      virtual Double_t GetMvaValue();
 
       // write method specific histos to target file
-      virtual void WriteHistosToFile( void ) ;
+      virtual void WriteHistosToFile( void ) const;
+
+      // ranking of input variables
+      const Ranking* CreateRanking() { return 0; }
 
    protected:
 
    private:
 
-      ClassDef(MethodVariable,0) // Wrapper class for a single variable "MVA"
-   };
+      ClassDef(MethodVariable,0) // Wrapper class for a single variable "MVA" 
+         };
 
 } // namespace TMVA
 

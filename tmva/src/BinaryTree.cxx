@@ -1,10 +1,11 @@
-// @(#)root/tmva $Id: BinaryTree.cxx,v 1.6 2006/05/23 09:53:10 stelzer Exp $    
+// @(#)root/tmva $Id: BinaryTree.cxx,v 1.16 2006/09/24 11:33:46 tegen Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * class  : TMVA::BinaryTree                                                      *
+ * Class  : TMVA::BinaryTree                                                      *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header file for description)                          *
@@ -23,8 +24,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
- *                                                                                *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
 //_______________________________________________________________________
@@ -42,10 +42,10 @@ ClassImp(TMVA::BinaryTree)
 
 //_______________________________________________________________________
 TMVA::BinaryTree::BinaryTree( void )
-      :     fNNodes  ( 0 ), 
-            fSumOfWeights( 0 ),
-            fRoot ( NULL ), 
-            fPeriode ( 1 ) 
+   : fNNodes  ( 0 ), 
+     fSumOfWeights( 0 ),
+     fRoot ( NULL ), 
+     fPeriode ( 1 ) 
 {
    //constructor for a yet "empty" tree. Needs to be filled afterwards
 }
@@ -75,18 +75,19 @@ void TMVA::BinaryTree::Insert( TMVA::Event* event, Bool_t eventOwnership )
    //   set "eventOwnershipt" to kTRUE if the event should be owned (deleted) by
    //   the tree
    fCurrentDepth=0;
+
    if (fRoot == NULL) {           //If the list is empty...
       fRoot = new TMVA::Node(event, eventOwnership);        //Make the new node the root.
       fNNodes++;
       fSumOfWeights+=event->GetWeight();
-      fRoot->SetSelector(0);
-      this->SetPeriode(event->GetEventSize());
+      fRoot->SetSelector((UInt_t)0);
+      this->SetPeriode(event->GetNVars());
    }
    else {
       //sanity check:
-      if (event->GetEventSize() != this->GetPeriode()) {
+      if (event->GetNVars() != (UInt_t)this->GetPeriode()) {
          cout << "--- TMVA::BinaryTree: ERROR!!!  Event vector length != Periode specified in Binary Tree\n";
-         cout << "---   event size: " << event->GetEventSize() << " Periode: " << this->GetPeriode() <<endl;
+         cout << "---   event size: " << event->GetNVars() << " Periode: " << this->GetPeriode() <<endl;
          cout << "---   and all this when trying filling the "<<fNNodes+1<<"th Node"<<endl;
          exit(1);
       }
@@ -99,7 +100,7 @@ void TMVA::BinaryTree::Insert( TMVA::Event *event, TMVA::Node *node, Bool_t even
 {
    //private internal fuction to insert a event (node) at the proper position
    fCurrentDepth++;
-   if (node->GoesLeft(event)){    // If the adding item is less than the current node's data...
+   if (node->GoesLeft(*event)){    // If the adding item is less than the current node's data...
       if (node->GetLeft() != NULL){            // If there is a left node...
          this->Insert(event, node->GetLeft(), eventOwnership); // Add the new node to it.
       } 
@@ -107,12 +108,12 @@ void TMVA::BinaryTree::Insert( TMVA::Event *event, TMVA::Node *node, Bool_t even
          TMVA::Node* current = new TMVA::Node(event, eventOwnership);        // Make the new node.
          fNNodes++;
          fSumOfWeights+=event->GetWeight();
-         current->SetSelector(fCurrentDepth%event->GetEventSize());
+         current->SetSelector(fCurrentDepth%((Int_t)event->GetNVars()));
          current->SetParent(node);          // Set the new node's previous node.
          node->SetLeft(current);            // Make it the left node of the current one.
       }  
    } 
-   else if (node->GoesRight(event)) { // If the adding item is less than or equal to the current node's data...
+   else if (node->GoesRight(*event)) { // If the adding item is less than or equal to the current node's data...
       if (node->GetRight() != NULL) {              // If there is a right node...
          this->Insert(event, node->GetRight(), eventOwnership);    // Add the new node to it.
       } 
@@ -120,7 +121,7 @@ void TMVA::BinaryTree::Insert( TMVA::Event *event, TMVA::Node *node, Bool_t even
          TMVA::Node* current = new TMVA::Node(event, eventOwnership);            // Make the new node.
          fNNodes++;
          fSumOfWeights+=event->GetWeight();
-         current->SetSelector(fCurrentDepth%event->GetEventSize());
+         current->SetSelector(fCurrentDepth%((Int_t)event->GetNVars()));
          current->SetParent(node);              // Set the new node's previous node.
          node->SetRight(current);               // Make it the left node of the current one.
       }
@@ -143,9 +144,9 @@ TMVA::Node* TMVA::BinaryTree::Search(TMVA::Event* event, TMVA::Node* node) const
 { 
    // Private, recursive, function for searching.
    if (node != NULL) {               // If the node is not NULL...
-      if (node->EqualsMe(event))      // If we have found the node...
+      if (node->EqualsMe(*event))      // If we have found the node...
          return node;                  // Return it
-      if (node->GoesLeft(event))      // If the node's data is greater than the search item...
+      if (node->GoesLeft(*event))      // If the node's data is greater than the search item...
          return this->Search(event, node->GetLeft());  //Search the left node.
       else                          //If the node's data is less than the search item...
          return this->Search(event, node->GetRight()); //Search the right node.
@@ -154,36 +155,25 @@ TMVA::Node* TMVA::BinaryTree::Search(TMVA::Event* event, TMVA::Node* node) const
 }
 
 //_______________________________________________________________________
-Double_t TMVA::BinaryTree::GetSumOfWeights( void )
+Double_t TMVA::BinaryTree::GetSumOfWeights( void ) const
 {
    //return the sum of event (node) weights
    return fSumOfWeights;
 }
 
-Int_t TMVA::BinaryTree::GetNNodes( void )
+UInt_t TMVA::BinaryTree::GetNNodes( void ) const
 {
    // return the number of nodes in the tree (as counted during tree construction)
    return fNNodes;
 }
 
-Int_t TMVA::BinaryTree::CountNodes()
+UInt_t TMVA::BinaryTree::CountNodes()
 {
    // return the number of nodes in the tree. (make a new count --> takes time)
    if (this->GetRoot()!=NULL) return this->GetRoot()->CountMeAndAllDaughters();
    else return 0;
 }
 
-//_______________________________________________________________________
-ostream &TMVA::BinaryTree::PrintOrdered( ostream & os, TMVA::Node* n ) const
-{
-   //print all events in binary tree (gives ordered output)
-   if (n!=NULL){
-      PrintOrdered(os,n->GetLeft());
-      os << *n;
-      PrintOrdered(os,n->GetRight());
-   }    
-   return os;
-}
 
 //_______________________________________________________________________
 void TMVA::BinaryTree::Print(ostream & os) const
@@ -195,20 +185,7 @@ void TMVA::BinaryTree::Print(ostream & os) const
 //_______________________________________________________________________
 ostream& TMVA::operator<< (ostream& os, const TMVA::BinaryTree& tree)
 { 
-   // print the whole tree recursively in such a way that it starts with bottom/left most entry
-   // and then it moves up the tree always printing the left most part. Like this, 
-   // in a binary search tree, the output is ordered with the first number beeing the smallest.
-   
-   TMVA::Node* current = tree.GetRoot(); // Start with the parent node.
-   if (current != NULL){             // If there are any nodes in the list...
-      while (current->GetLeft() != NULL) // Move to the left-most node,
-         current = current->GetLeft();    // so output will be ordered.
-      while (current != NULL){        // While there are still more nodes in the list...
-         os << *current;               // Output the current node.
-         if (current->GetRight() != NULL) // If there is a right node...
-            tree.PrintOrdered(os, current->GetRight()); // Print it out.
-         current = current->GetParent();               // Move up one node.
-      }
-   }
+   //print the tree recursinvely using the << operator
+   tree.Print(os);
    return os; // Return the output stream.
 }

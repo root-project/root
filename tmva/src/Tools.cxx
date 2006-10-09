@@ -1,7 +1,11 @@
+// @(#)root/tmva $Id: Tools.cxx,v 1.42 2006/10/04 22:29:27 andreas.hoecker Exp $   
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
+
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : TMVA::Tools                                                           *
+ * Class  : Tools                                                                 *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -20,14 +24,10 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/license.txt)                                      *
- *                                                                                *
- * File and Version Information:                                                  *
- * $Id: Tools.cxx,v 1.5 2006/05/23 09:53:11 stelzer Exp $
+ * (http://ttmva.sourceforge.net/LICENSE)                                         *
  **********************************************************************************/
-#include <algorithm>
 
-#include "TMVA/Tools.h"
+#include <algorithm>
 #include "Riostream.h"
 #include "TObjString.h"
 #include "TTree.h"
@@ -37,6 +37,16 @@
 #include "TVector.h"
 #include "TMatrixD.h"
 #include "TVectorD.h"
+#include "TTreeFormula.h"
+
+#ifndef TMVA_Tools
+#include "TMVA/Tools.h"
+#endif
+
+#ifndef TMVA_Event
+#include "TMVA/Event.h"
+#endif
+
 
 namespace TMVA {
    const char* Tools_NAME_ = "TMVA_Tools"; // name to locate output
@@ -48,14 +58,12 @@ Double_t TMVA::Tools::NormVariable( Double_t x, Double_t xmin, Double_t xmax )
    return 2*(x - xmin)/(xmax - xmin) - 1.0;
 }
 
-void TMVA::Tools::ComputeStat( TTree* theTree, TString theVarName,
+void TMVA::Tools::ComputeStat( TTree* theTree, const TString& theVarName,
                                Double_t& meanS, Double_t& meanB,
                                Double_t& rmsS,  Double_t& rmsB,
                                Double_t& xmin,  Double_t& xmax,
                                Bool_t    norm )
 {
-   // compute basic statistics quantities for variable in input tree
-
    // sanity check
    if (0 == theTree) {
       cout << "---" << TMVA::Tools_NAME_ << ": Error in TMVA::Tools::ComputeStat:"
@@ -86,12 +94,46 @@ void TMVA::Tools::ComputeStat( TTree* theTree, TString theVarName,
       xmax_ = theTree->GetMaximum( theVarName );
    }
 
-   for (Int_t ievt=0; ievt<entries; ievt++) {
+   static Int_t    theType;
+   TBranch * br1 = theTree->GetBranch("type" );
+   br1->SetAddress( & theType );
 
-      Double_t theVar = TMVA::Tools::GetValue( theTree, ievt, theVarName );
+   static Double_t theVarD = 0;
+   static Float_t  theVarF = 0;
+   static Int_t    theVarI = 0;
+
+   TBranch * br2 = theTree->GetBranch( theVarName );
+   TString leafType = ((TLeaf*)br2->GetListOfLeaves()->At(0))->GetTypeName();
+   Int_t tIdx = -1;
+   if (leafType=="Double_t") {
+      tIdx=0;
+      br2->SetAddress( & theVarD );
+   } 
+   else if(leafType=="Float_t") {
+      tIdx=1;
+      br2->SetAddress( & theVarF );
+   } 
+   else if(leafType=="Int_t") {
+      tIdx=2;
+      br2->SetAddress( & theVarI );
+   } 
+   else {
+      cout << "Tools::ComputeStat(): Unknown Variable Type " << leafType << endl;
+      exit(1);
+   }
+
+   for (Int_t ievt=0; ievt<entries; ievt++) {
+      br1->GetEntry(ievt);
+      br2->GetEntry(ievt);
+      Double_t theVar = 0;
+      switch(tIdx) {
+      case 0: theVar = theVarD; break;
+      case 1: theVar = theVarF; break;
+      case 2: theVar = theVarI; break;
+      }
       if (norm) theVar = __N__( theVar, xmin_, xmax_ );
 
-      if ((Int_t)TMVA::Tools::GetValue( theTree, ievt, "type" ) == 1) // this is signal
+      if(theType == 1) // this is signal
          varVecS[++nEventsS] = theVar;
       else  // this is background
          varVecB[++nEventsB] = theVar;
@@ -112,149 +154,7 @@ void TMVA::Tools::ComputeStat( TTree* theTree, TString theVarName,
    delete [] varVecB;
 }
 
-void TMVA::Tools::ComputeStat( const std::vector<TMVA::Event*> eventCollection, Int_t ivar,
-                               Double_t& meanS, Double_t& meanB,
-                               Double_t& rmsS,  Double_t& rmsB,
-                               Double_t& xmin,  Double_t& xmax,
-                               Bool_t    norm )
-{
-   // compute basic statistics quantities for variable (ivar) in event vector
-
-   // does variable exist?
-   if (ivar > eventCollection[0]->GetEventSize()){
-      cout << "---" << TMVA::Tools_NAME_ << ": Error in TMVA::Tools::ComputeStat: variable: "
-           << ivar << " is too big ==> exit(1)" << endl;
-      exit(1);
-   }
-
-   Int_t entries = eventCollection.size();
-   // first fill signal and background in arrays before analysis
-   Double_t* varVecS  = new Double_t[entries];
-   Double_t* varVecB  = new Double_t[entries];
-   xmin               = +1e20;
-   xmax               = -1e20;
-   Long64_t nEventsS  = -1;
-   Long64_t nEventsB  = -1;
-   Double_t xmin_ = 0, xmax_ = 0;
-
-   std::vector<Double_t> content;
-   if (norm) {
-      for (int ie=0; ie<entries; ie++)content.push_back(eventCollection[ie]->GetData(ivar));
-      xmax_ = *(std::max_element(content.begin(), content.end()));
-      xmin_ = *(std::min_element(content.begin(), content.end()));
-   }
-
-   for (Int_t ievt=0; ievt<entries; ievt++) {
-      if (norm) content[ievt] = __N__( content[ievt], xmin_, xmax_ );
-
-      if (eventCollection[ievt]->GetType() == 1) // this is signal
-         varVecS[++nEventsS] = eventCollection[ievt]->GetData(ivar);
-      else  // this is background
-         varVecB[++nEventsB] = eventCollection[ievt]->GetData(ivar);
-
-      if (eventCollection[ievt]->GetData(ivar) > xmax) xmax = eventCollection[ievt]->GetData(ivar);
-      if (eventCollection[ievt]->GetData(ivar) < xmin) xmin = eventCollection[ievt]->GetData(ivar);
-   }
-   ++nEventsS;
-   ++nEventsB;
-
-   // basic statistics
-   meanS = TMath::Mean( nEventsS, varVecS );
-   meanB = TMath::Mean( nEventsB, varVecB );
-   rmsS  = TMath::RMS ( nEventsS, varVecS );
-   rmsB  = TMath::RMS ( nEventsB, varVecB );
-
-   delete [] varVecS;
-   delete [] varVecB;
-}
-
-void TMVA::Tools::GetCovarianceMatrix( TTree* theTree, TMatrixDBase *theMatrix,
-                                       vector<TString>* theVars, Int_t theType, Bool_t norm )
-{
-   // computes variance-covariance matrix for variables "theVars" in tree;
-   // "theType" defines the required event "type" 
-   // ("type" variable must be present in tree)
-
-   Long64_t      entries = theTree->GetEntries();
-   const Int_t   nvar    = theVars->size();
-   Int_t         ievt, ivar, jvar;
-   TVectorD      vec(nvar);
-   TMatrixD      mat2(nvar, nvar);
-   TVectorD      xmin(nvar), xmax(nvar);
-
-   // init matrices
-   for (ivar=0; ivar<nvar; ivar++) {
-      vec(ivar) = 0;
-      if (norm) {
-         xmin(ivar) = theTree->GetMinimum( (*theVars)[ivar] );
-         xmax(ivar) = theTree->GetMaximum( (*theVars)[ivar] );
-      }
-      for (jvar=0; jvar<nvar; jvar++) {
-         mat2(ivar, jvar) = 0;
-      }
-   }
-
-   // event loop
-   Int_t ic = 0;
-   for (ievt=0; ievt<entries; ievt++) {
-
-      if (Int_t(TMVA::Tools::GetValue( theTree, ievt, "type" )) == theType) {
-
-         ic++; // count used events
-         for (ivar=0; ivar<nvar; ivar++) {
-            Double_t xi = TMVA::Tools::GetValue( theTree, ievt, (*theVars)[ivar] );
-            if (norm) xi = __N__( xi, xmin(ivar), xmax(ivar) );
-            vec(ivar) += xi;
-            mat2(ivar, ivar) += (xi*xi);
-
-            for (jvar=ivar+1; jvar<nvar; jvar++) {
-               Double_t xj = TMVA::Tools::GetValue( theTree, ievt, (*theVars)[jvar] );
-               if (norm) xj = __N__( xj, xmin(jvar), xmax(jvar) );
-               mat2(ivar, jvar) += (xi*xj);
-               mat2(jvar, ivar) = mat2(ivar, jvar); // symmetric matrix
-            }
-         }
-      }
-   }
-
-   // variance-covariance
-   Double_t n = (Double_t)ic;
-   for (ivar=0; ivar<nvar; ivar++)
-      for (jvar=0; jvar<nvar; jvar++)
-         (*theMatrix)(ivar, jvar) = mat2(ivar, jvar)/n - vec(ivar)*vec(jvar)/pow(n,2);
-}
-
-void TMVA::Tools::GetCorrelationMatrix( TTree* theTree, TMatrixDBase *theMatrix,
-                                        vector<TString>* theVars, Int_t theType )
-{
-   // computes correlation matrix for variables "theVars" in tree;
-   // "theType" defines the required event "type" 
-   // ("type" variable must be present in tree)
-
-   // first compute variance-covariance
-   TMVA::Tools::GetCovarianceMatrix( theTree, theMatrix, theVars, theType, kTRUE );
-
-   // now the correlation
-   const Int_t nvar = theVars->size();
-
-   for (Int_t ivar=0; ivar<nvar; ivar++) {
-      for (Int_t jvar=0; jvar<nvar; jvar++) {
-         if (ivar != jvar) {
-            Double_t d = (*theMatrix)(ivar, ivar)*(*theMatrix)(jvar, jvar);
-            if (d > 0) (*theMatrix)(ivar, jvar) /= sqrt(d);
-            else {
-               cout << "---" << TMVA::Tools_NAME_ << ": Warning: zero variances for variables "
-                    << "(" << (*theVars)[ivar] << ", " << (*theVars)[jvar] << endl;
-               (*theMatrix)(ivar, jvar) = 0;
-            }
-         }
-      }
-   }
-
-   for (Int_t ivar=0; ivar<nvar; ivar++) (*theMatrix)(ivar, ivar) = 1.0;
-}
-
-void TMVA::Tools::GetSQRootMatrix( TMatrixDSym* symMat, TMatrixD* sqrtMat )
+void TMVA::Tools::GetSQRootMatrix( TMatrixDSym* symMat, TMatrixD*& sqrtMat )
 {
    // square-root of symmetric matrix
    // of course the resulting sqrtMat is also symmetric, but it's easier to
@@ -262,11 +162,12 @@ void TMVA::Tools::GetSQRootMatrix( TMatrixDSym* symMat, TMatrixD* sqrtMat )
    Int_t n = symMat->GetNrows();
 
    // sanity check
-   if (NULL != sqrtMat)
+   if (NULL != sqrtMat) {
       if (sqrtMat->GetNrows() != n || sqrtMat->GetNcols() != n) {
          cout << "--- " << TMVA::Tools_NAME_ << ": mismatch in matrices ==> abort: "
               << n << " " << sqrtMat->GetNrows() << " " << sqrtMat->GetNcols() << endl;
       }
+   }
 
    // compute eigenvectors
    TMatrixDSymEigen* eigen = new TMatrixDSymEigen( *symMat );
@@ -282,7 +183,7 @@ void TMVA::Tools::GetSQRootMatrix( TMatrixDSym* symMat, TMatrixD* sqrtMat )
 
    // sanity check: matrix must be diagonal and positive definit
    Int_t i, j;
-   Double_t epsilon = 1.0e-13;
+   Double_t epsilon = 1.0e-8;
    for (i=0; i<n; i++) {
       for (j=0; j<n; j++) {
          if ((i != j && TMath::Abs((*d)(i,j)) > epsilon) ||
@@ -318,6 +219,10 @@ TH1* TMVA::Tools::projNormTH1F( TTree* theTree, TString theVarName,
                                 Double_t xmin, Double_t xmax, TString cut )
 {
    // projects variable from tree into normalised histogram
+ 
+   // needed because of ROOT bug (feature) that excludes events that have value == xmax
+   xmax += 0.00001; 
+   
    TH1* hist = new TH1F( name, name, nbins, xmin, xmax );
    hist->Sumw2(); // enable quadratic errors
    theTree->Project( name, theVarName, cut );
@@ -343,84 +248,77 @@ TList* TMVA::Tools::ParseFormatLine( TString formatString )
 {
    // Parse the string and cut into labels separated by ":"
    TList*   labelList = new TList();
-   TString* label     = new TString();
-   Int_t    nLabels   = 0;
+   TString  label;
 
    const Int_t n = (Int_t)formatString.Length();
-   TObjString** label_obj = new TObjString*[n];  // array of labels
 
    for (Int_t i=0; i<n; i++) {
-      label->Append(formatString(i));
+      label.Append(formatString(i));
       if (formatString(i)==':') {
-         label->Chop();
-         label_obj[nLabels] = new TObjString(label->Data());
-         labelList->Add(label_obj[nLabels]);
-         label->Resize(0);
-         nLabels++;
+         label.Chop();
+         labelList->Add(new TObjString(label.Data()));
+         label.Resize(0);
       }
       if (i == n-1) {
-         label_obj[nLabels] = new TObjString(label->Data());
-         labelList->Add(label_obj[nLabels]);
-         label->Resize(0);
-         nLabels++;
+         labelList->Add(new TObjString(label.Data()));
+         label.Resize(0);
       }
    }
-   delete label;
-   delete [] label_obj;
-   return labelList;
+   return labelList;                                                 
 }
 
-Double_t TMVA::Tools::GetValue( TTree *theTree, Int_t entry, TString varname )
+
+vector<Int_t>* TMVA::Tools::ParseANNOptionString( TString theOptions, Int_t nvar,
+					   vector<Int_t>* nodes )
 {
-   // returns tree value for variable "varname" and event "entry" 
-   // branches are safely set to static variables
- 
-   // branch addresses
-   static Float_t  f = 0;
-   static Double_t d = 0;
-   static Int_t    i = 0;
+   // parse option string for ANN methods
+   // default settings (should be defined in theOption string)
+   TList*  list  = TMVA::Tools::ParseFormatLine( theOptions );
+
+   // format and syntax of option string: "3000:N:N+2:N-3:6"
+   //
+   // where:
+   //        3000 - number of training cycles (epochs)
+   //        N    - number of nodes in first hidden layer, where N is the number
+   //               of discriminating variables used (note that the first ANN
+   //               layer necessarily has N nodes, and hence is not given).
+   //        N+2  - number of nodes in 2nd hidden layer (2 nodes more than
+   //               number of variables)
+   //        N-3  - number of nodes in 3rd hidden layer (3 nodes less than
+   //               number of variables)
+   //        6    - 6 nodes in last (4th) hidden layer (note that the last ANN
+   //               layer in MVA has 2 nodes, each one for signal and background
+   //               classes)
 
    // sanity check
-   if (0 == theTree) {
-      cout << "---" << TMVA::Tools_NAME_ << ": fatal error: zero tree pointer ==> exit(1) " << endl;
+   if (list->GetSize() < 1) {
+      cout << "--- Fatal error in NN parser (1): unrecognized option string: " << theOptions
+           << " ==> exit(1)" << endl;
       exit(1);
    }
 
-   // return value
-   Double_t retval = -1;
+   // add number of cycles
+   nodes->push_back( atoi( ((TObjString*)list->At(0))->GetString() ) );
 
-   TBranch* branch = theTree->GetBranch( varname );
-   if (0 != branch) {
-
-      TLeaf *leaf = branch->GetLeaf(branch->GetName());
-
-      if (((TString)leaf->GetTypeName()).Contains("Int_t")) {     
-         branch->SetAddress(&i);
-         branch->GetEntry(entry);
-         retval = (Double_t)i;
+   Int_t a;
+   if (list->GetSize() > 1) {
+      for (Int_t i=1; i<list->GetSize(); i++) {
+         TString s = ((TObjString*)list->At(i))->GetString();
+         s.ToUpper();
+         if (s(0) == 'N')  {
+            if (s.Length() > 1) nodes->push_back( nvar + atoi(&s[1]) );
+            else                nodes->push_back( nvar );
+         }
+         else if ((a = atoi( s )) > 0) nodes->push_back( atoi(s ) );
+         else {
+            cout << "--- Fatal error in NN parser (1): unrecognized option string: " << theOptions
+                 << " ==> exit(1)" << endl;
+            exit(1);
+         }
       }
-      else if (((TString)leaf->GetTypeName()).Contains("Float_t")) {
-         branch->SetAddress(&f);
-         branch->GetEntry(entry);
-         retval = (Double_t)f;
-      }
-      else if (((TString)leaf->GetTypeName()).Contains("Double_t")) {
-         branch->SetAddress(&d);
-         branch->GetEntry(entry);
-         retval = (Double_t)d;
-      }
-
-   } // end of found right branch
-   else {
-      cout << "---" << TMVA::Tools_NAME_ << ": branch " << varname
-           << " does not exist in tree" << endl;
-      cout << "---" << TMVA::Tools_NAME_ << ": candidates are:" << endl;
-      TIter next_branch1( theTree->GetListOfBranches() );
-      while (TBranch *branch = (TBranch*)next_branch1())
-         cout << "---\t" << branch->GetName() << endl;
    }
 
-   return retval;
+   return nodes;
 }
 
 Bool_t TMVA::Tools::CheckSplines( TH1* theHist, TSpline* theSpline )
@@ -558,5 +456,88 @@ int TMVA::Tools::GetIndexMinElement(vector<Double_t>  &v)
       }
    }
    return pos;
+}
+
+// check if regular expression
+Bool_t TMVA::Tools::ContainsRegularExpression( const TString& s )  
+{
+   Bool_t  regular = kFALSE;
+   for (Int_t i = 0; i < TMVA::Tools::__regexp__.Length(); i++) 
+      if (s.Contains( TMVA::Tools::__regexp__[i] )) { regular = kTRUE; break; }
+
+   return regular;
+}
+
+// replace regular expressions
+TString TMVA::Tools::ReplaceRegularExpressions( const TString& s, TString r )  
+{
+   TString snew = s;
+   for (Int_t i = 0; i < TMVA::Tools::__regexp__.Length(); i++) 
+      snew.ReplaceAll( TMVA::Tools::__regexp__[i], r );
+
+   snew.ReplaceAll( "*", "_T_" );
+   snew.ReplaceAll( "/", "_D_" );
+   snew.ReplaceAll( "+", "_P_" );
+   snew.ReplaceAll( "-", "_M_" );
+
+   return snew;
+}
+
+void TMVA::Tools::FormattedOutput( const TMatrixD& M, const std::vector<TString>& V, TString prefix )
+{
+   // sanity check: matrix must be quadratic
+   UInt_t nvar = V.size();
+   if ((UInt_t)M.GetNcols() != nvar || (UInt_t)M.GetNrows() != nvar) {
+      cout << "--- Tools::FormattedOutput: fatal error with dimensions: " 
+           << M.GetNcols() << " OR " << M.GetNrows() << " != " << nvar << " ==> abort" << endl;
+      exit(1);
+   }
+
+   // get length of each variable, and maximum length  
+   UInt_t minL = 7;
+   UInt_t maxL = minL;
+   std::vector<UInt_t> L;
+   for (UInt_t ivar=0; ivar<nvar; ivar++) {
+      L.push_back(TMath::Max( (UInt_t)V[ivar].Length(), minL ));
+      maxL = TMath::Max( L.back(), maxL );
+   }
+   
+   // count column length
+   UInt_t clen = prefix.Length() + maxL+1;
+   for (UInt_t icol=0; icol<nvar; icol++) clen += L[icol]+1;
+
+   // bar line
+   for (UInt_t i=0; i<clen; i++) cout << "-";
+   cout << endl;
+
+   // title bar   
+   cout << prefix << setw(maxL+1) << " ";
+   for (UInt_t icol=0; icol<nvar; icol++) cout << setw(L[icol]+1) << V[icol];
+   cout << endl;
+
+   // the numbers
+   for (UInt_t irow=0; irow<nvar; irow++) {
+      cout << prefix << setw(maxL) << V[irow] << ":";
+      for (UInt_t icol=0; icol<nvar; icol++) {
+         cout << setw(L[icol]+1) << Form( "%+1.3f", M(irow,icol) );
+      }      
+      cout << endl;
+   }
+
+   // bar line
+   for (UInt_t i=0; i<clen; i++) cout << "-";
+   cout << endl;
+}
+
+const TString BC_blue   = "\033[1;34m" ;
+const TString BC_red    = "\033[1;31m" ;
+const TString EC__      = "\033[0m"    ;
+
+void TMVA::Tools::TMVAWelcomeMessage()
+{
+   cout << BC_blue <<"--- " << BC_red << "T" << BC_blue 
+        << "MVA - " << BC_red << "Toolkit" 
+        << BC_blue << " for Multivariate Analysis --- "
+        << EC__ << endl;
 }
 

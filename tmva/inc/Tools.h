@@ -1,10 +1,11 @@
-// @(#)root/tmva $Id: Tools.h,v 1.7 2006/05/23 09:53:11 stelzer Exp $   
+// @(#)root/tmva $Id: Tools.h,v 1.24 2006/09/29 23:27:15 andreas.hoecker Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : Tools                                                                 *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Global auxiliary applications and data treatment routines                 *
@@ -23,10 +24,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
- *                                                                                *
- * File and Version Information:                                                  *
- * $Id: Tools.h,v 1.7 2006/05/23 09:53:11 stelzer Exp $        
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Tools
@@ -43,42 +41,31 @@
 #include <vector>
 #include <string>
 
+#include "TROOT.h"
 #include "TList.h"
-
-#ifndef ROOT_TMVA_Event
-#include "TMVA/Event.h"
-#endif
 
 #ifndef ROOT_TMVA_TMatrixDSymEigen
 #include "TMatrixDSymEigen.h"
 #endif
 
 class TTree;
+class TString;
 class TH1;
 class TSpline;
 
 #define __N__(a1,a2,a3) Tools::NormVariable(a1,a2,a3)
 
-using std::vector;
-
 namespace TMVA {
 
+   class Event;
+   
    namespace Tools {
 
-      //  TString GetName( void ) { return "Tools"; }
-
       // simple statistics operations on tree entries
-      void  ComputeStat( TTree* theTree, TString theVarName,
+      void  ComputeStat( TTree* theTree, const TString& theVarName,
                          Double_t&, Double_t&, Double_t&, 
                          Double_t&, Double_t&, Double_t&, Bool_t norm = kFALSE );
   
-      // simple statistics operations on Events in a Vector collection class 
-      void  ComputeStat( std::vector<Event*>, Int_t ivar,
-                         Double_t&, Double_t&, Double_t&, 
-                         Double_t&, Double_t&, Double_t&, Bool_t norm = kFALSE );
-  
-
-
       // creates histograms normalized to one
       TH1* projNormTH1F( TTree* theTree, TString theVarName,
                          TString name, Int_t nbins, 
@@ -90,19 +77,15 @@ namespace TMVA {
       // parser for TString phrase with items separated by ':'
       TList* ParseFormatLine( TString theString );
 
-      // returns covariance matrix for all variables in tree
-      void GetCovarianceMatrix( TTree* theTree, TMatrixDBase *theMatrix, 
-                                vector<TString>* theVars, Int_t theType, Bool_t norm = kFALSE );
-
-      // returns correlation matrix for all variables in tree
-      void GetCorrelationMatrix( TTree* theTree, TMatrixDBase *theMatrix, 
-                                 vector<TString>* theVars, Int_t theType );
+      // parse option string for ANN methods
+      std::vector<Int_t>* ParseANNOptionString( TString theOptions, Int_t nvar,
+						std::vector<Int_t>* nodes );
 
       // returns the square-root of a symmetric matrix: symMat = sqrtMat*sqrtMat
-      void GetSQRootMatrix( TMatrixDSym* symMat, TMatrixD* sqrtMat );
+      void GetSQRootMatrix( TMatrixDSym* symMat, TMatrixD*& sqrtMat );
 
       // type-safe accessor to TTree elements
-      Double_t GetValue( TTree *theTree, Int_t entry, TString varname );
+      //      Double_t GetValue( TTree *theTree, Int_t entry, TString varname );
 
       // check spline quality by comparison with initial histogram
       Bool_t CheckSplines( TH1*, TSpline* );
@@ -111,21 +94,32 @@ namespace TMVA {
       Double_t NormVariable( Double_t x, Double_t xmin, Double_t xmax );
 
       // vector rescaling
-      vector<Double_t> MVADiff( vector<Double_t>&, vector<Double_t>& );
-      void Scale     ( vector<Double_t>&, Double_t );
-      void Scale     ( vector<Float_t> &, Float_t  );
+      std::vector<Double_t> MVADiff( std::vector<Double_t>&, std::vector<Double_t>& );
+      void Scale     ( std::vector<Double_t>&, Double_t );
+      void Scale     ( std::vector<Float_t> &, Float_t  );
   
       // re-arrange a vector of arrays (vectors) in a way such that the first array
       // is ordered, and the other arrays reshuffeld accordingly
-      void UsefulSortDescending( vector< vector<Double_t> >&, vector<TString>* vs = 0 );
-      void UsefulSortAscending ( vector< vector<Double_t> >& );
+      void UsefulSortDescending( std::vector< std::vector<Double_t> >&, std::vector<TString>* vs = 0 );
+      void UsefulSortAscending ( std::vector< std::vector<Double_t> >& );
     
-      void UsefulSortDescending( vector<Double_t>& );
-      void UsefulSortAscending ( vector<Double_t>& );
+      void UsefulSortDescending( std::vector<Double_t>& );
+      void UsefulSortAscending ( std::vector<Double_t>& );
 
-      Int_t GetIndexMaxElement ( vector<Double_t>& );
-      Int_t GetIndexMinElement ( vector<Double_t>& );
+      Int_t GetIndexMaxElement ( std::vector<Double_t>& );
+      Int_t GetIndexMinElement ( std::vector<Double_t>& );
 
+      // check if input string contains regular expression
+      Bool_t  ContainsRegularExpression( const TString& s );
+      TString ReplaceRegularExpressions( const TString& s, TString replace = "+" );
+
+      // routines for formatted output -----------------
+      void FormattedOutput( const TMatrixD&, const std::vector<TString>&, TString prefix = "--- " );
+
+      const TString __regexp__ = "!%^&()'<>?= ";
+
+      // print welcome message (to be called from, eg, .TMVAlogon)
+      void TMVAWelcomeMessage();
    }
 
 } // namespace TMVA

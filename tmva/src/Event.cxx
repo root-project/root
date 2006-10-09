@@ -1,19 +1,19 @@
-// @(#)root/tmva $Id: Event.cxx,v 1.6 2006/05/23 09:53:10 stelzer Exp $     
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: Event.cxx,v 1.19 2006/09/29 23:27:15 andreas.hoecker Exp $   
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : TMVA::Event                                                           *
+ * Class  : Event                                                                 *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Implementation (see header file for description)                          *
+ *      Implementation (see header for description)                               *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
+ *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
- *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
@@ -24,91 +24,162 @@
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://mva.sourceforge.net/license.txt)                                       *
- *                                                                                *
  **********************************************************************************/
 
-//_______________________________________________________________________
-//                                                                      //
-// Variables of an event as used for the Binary Tree                    //
-//                                                                      //
-//______________________________________________________________________//
-
-#include <string>
 #include "TMVA/Event.h"
 #include "TMVA/Tools.h"
-#include "TObjString.h"
-#include "Riostream.h"
 #include "TTree.h"
-#include "TString.h"
-#include <stdexcept>
+#include "TBranch.h"
+#include <iostream>
+#include <iomanip>
 
-ClassImp(TMVA::Event)
-
-//_______________________________________________________________________
-TMVA::Event::Event(TTree* tree, Int_t ievt, std::vector<TString>* fInputVars)
+using std::cout;
+using std::endl;
+using std::setw;
+ 
+//____________________________________________________________
+TMVA::Event::Event(const std::vector<VariableInfo> & varinfo) 
+   : fVariables(varinfo),
+     fVarPtr(new void*[varinfo.size()]), // array to hold pointers to the integer or float array
+     fVarPtrI(0),                        // array to hold all float variables 
+     fVarPtrF(0),                        // array to hold all integer variables
+     fType(0),
+     fWeight(0),
+     fBoostWeight(1.0),
+     fCountI(0),
+     fCountF(0)
 {
-   //event constructor reading variables from a ROOT tree
-   for (UInt_t ivar=0; ivar<fInputVars->size(); ivar++) 
-      fVar.push_back(TMVA::Tools::GetValue( tree, ievt, (*fInputVars)[ivar] ));
-
-   if (tree->GetBranchStatus("weight"))
-      fWeight = Double_t(TMVA::Tools::GetValue( tree, ievt, "weight"));
-   else
-      fWeight = 1.;
-
-   if (fWeight > 10) cout << "Weight in TMVA::Event " << fWeight <<endl;
-   fType = Int_t(TMVA::Tools::GetValue( tree, ievt, "type" ));
+   for (UInt_t ivar=0; ivar<fVariables.size(); ivar++) {
+      if      (fVariables[ivar].VarType()=='I') fCountI++;
+      else if (fVariables[ivar].VarType()=='F') fCountF++;
+      else {
+         std::cout << "ERROR: Unknown variable type encountered in constructor of Event" << std::endl;
+         exit(1);
+      }
+   }
+   InitPointers();
 }
 
-//_______________________________________________________________________
-const Double_t&  TMVA::Event::GetData(Int_t i) const 
+TMVA::Event::Event(const Event & event) 
+   : fVariables(event.fVariables),
+     fVarPtr(new void*[event.fVariables.size()]), // array to hold pointers to the integer or float array
+     fVarPtrI(0),                                 // array to hold all float variables 
+     fVarPtrF(0),                                 // array to hold all integer variables
+     fType(event.fType),
+     fWeight(event.fWeight),
+     fBoostWeight(event.fBoostWeight),
+     fCountI(event.fCountI),
+     fCountF(event.fCountF)
 {
-   // return reference to "i-th" event variable
-   if (i<0 || i>(Int_t)fVar.size()) {
-      cout<<"--- TMVA::Event::Data(Int i ... ERROR! i="<<i<<" out of range \n";
+   InitPointers(kFALSE); // this constructor is (miss)used in the BinarySearchTree
+   // where we don't want to have externaly linked variables
+   for (UInt_t ivar = 0; ivar< fCountI; ivar++){
+      fVarPtrI[ivar] = *((Int_t*)event.fVarPtr[ivar]);
+   }
+   for (UInt_t ivar = 0; ivar< fCountF; ivar++){
+      fVarPtrF[ivar] = *((Float_t*)event.fVarPtr[ivar]);
+   }
+}
+ 
+void TMVA::Event::InitPointers(bool AllowExternalLink)
+{
+   fVarPtrI = new Int_t[fCountI];
+   fVarPtrF = new Float_t[fCountF];
+   
+   UInt_t ivar(0), ivarI(0), ivarF(0);
+   std::vector<VariableInfo>::const_iterator varIt = fVariables.begin();
+   // for each variable,
+   for (; varIt != fVariables.end(); varIt++, ivar++) {
+      const VariableInfo & var = *varIt;
+      // set the void pointer (which are used to access the data) to the proper field
+      // if external field is given
+      if (AllowExternalLink && var.GetExternalLink()!=0) {
+		   fVarPtr[ivar] = var.GetExternalLink();
+			// or if its type is I(int) or F(float)
+		} 
+		else if (var.VarType()=='F') {
+         // set the void pointer to the float field
+         fVarPtr[ivar] = fVarPtrF+ivarF++;
+      } 
+		else if (var.VarType()=='I') {
+         // set the void pointer to the int field
+         fVarPtr[ivar] = fVarPtrI+ivarI++;
+      } 
+		else {
+         std::cout << "ERROR: Unknown variable type encountered in constructor of Event" << std::endl;
+         exit(1);
+      }
+   }
+}
+
+//____________________________________________________________
+void TMVA::Event::SetBranchAddresses(TTree *tr) 
+{
+   fBranches.clear();
+   Int_t ivar(0);
+   TBranch * br(0);
+   std::vector<VariableInfo>::const_iterator varIt;
+   for (varIt = fVariables.begin(); varIt != fVariables.end(); varIt++) {
+      const VariableInfo & var = *varIt;
+      br = tr->GetBranch(var.GetInternalVarName());
+      br->SetAddress(fVarPtr[ivar++]);
+      fBranches.push_back(br);
+   }
+   br = tr->GetBranch("type");        br->SetAddress(&fType);        fBranches.push_back(br);
+   br = tr->GetBranch("weight");      br->SetAddress(&fWeight);      fBranches.push_back(br);
+   br = tr->GetBranch("boostweight"); br->SetAddress(&fBoostWeight); fBranches.push_back(br);
+}
+
+//____________________________________________________________
+void TMVA::Event::CopyVarValues( const Event& other )
+{
+   // copies only the variable values
+
+   // sanity check
+   if (GetNVars() != other.GetNVars()) {
+      cout << "--- Event::CopyVarValues: Error: mismatch in events ==> abort" << endl;
       exit(1);
    }
-   else return fVar[i];
+
+   for (UInt_t ivar=0; ivar<GetNVars(); ivar++) SetVal( ivar, other.GetVal( ivar ) );    
 }
 
-//_______________________________________________________________________
-void TMVA::Event::Print(ostream& os) const 
+//____________________________________________________________
+void TMVA::Event::SetVal(UInt_t ivar, Float_t val) 
 {
-   //print event variables and event weight
-   os << "Event with " << this->GetEventSize() << " variables and  weight " << this->GetWeight()<<endl;
-   for (int i=0; i<this->GetEventSize(); i++){
-      os << this->GetData(i) << "  "; 
+   if (ivar>=GetNVars()) {
+      cout << "ERROR: Cannot set value for variable index " << ivar << ", exceeds max index " << GetNVars()-1 << endl;
    }
+   *((Float_t*)fVarPtr[ivar]) = val;
 }
 
-//_______________________________________________________________________
-TMVA::Event* TMVA::Event::Read(ifstream& is)
+//____________________________________________________________
+Float_t TMVA::Event::GetValueNormalized(Int_t ivar) const 
 {
-   //read event e.g. from a text file
-   std::string tmp;
-   Double_t dtmp;
-   Int_t nvar;
-   is >> tmp >> tmp >> nvar >> tmp >> tmp >> tmp >> dtmp;
-   this->SetWeight(dtmp);
-   for (int i=0; i<nvar; i++){
-      is >> dtmp; this->Insert(dtmp);
-   }
-   return this;
+   return Tools::NormVariable(GetVal(ivar),fVariables[ivar].GetMin(),fVariables[ivar].GetMax());
+}
+
+//____________________________________________________________
+void TMVA::Event::Print(std::ostream & o) const
+{
+   o << fVariables.size() << " vars: ";
+   for(UInt_t ivar=0; ivar<fVariables.size(); ivar++)
+      o << setw(10) << GetVal(ivar);
+   o << endl;
 }
 
 //_______________________________________________________________________
-ostream& TMVA::operator<<(ostream& os, const TMVA::Event& event){ 
-   //Outputs the data of an event
+ostream& TMVA::operator<<(ostream& os, const TMVA::Event& event)
+{ 
+   // Outputs the data of an event
    
    event.Print(os);
    return os;
 }
 
 //_______________________________________________________________________
-ostream& TMVA::operator<<(ostream& os, const TMVA::Event* event){
-   //Outputs the data of an event
-   
-   if (event!=NULL)event->Print(os);
-   else os << "There is no TMVA::Event to print. Pointer == NULL";
-   return os;
+ostream& TMVA::operator<<(ostream& os, const TMVA::Event* event)
+{
+   // Outputs the data of an event
+   return os << *event;
 }

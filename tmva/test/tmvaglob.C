@@ -2,21 +2,21 @@
 
 namespace TMVAGlob {
 
-  //signal
-  const Int_t FillColor__S = 38;
-  const Int_t FillStyle__S = 1001;
-  const Int_t LineColor__S = 1;
-  const Int_t LineWidth__S = 1;
-
-  // background
-  const Int_t FillColor__B = 2;
-  const Int_t FillStyle__B = 3002;
-  const Int_t LineColor__B = 2;
-  const Int_t LineWidth__B = 1;
-
   // set the style
   void SetSignalAndBackgroundStyle( TH1* sig, TH1* bgd, TH1* all = 0 ) 
   {
+     //signal
+     const Int_t FillColor__S = 38;
+     const Int_t FillStyle__S = 1001;
+     const Int_t LineColor__S = 1;
+     const Int_t LineWidth__S = 2;
+
+     // background
+     const Int_t FillColor__B = 46;
+     const Int_t FillStyle__B = 3354;
+     const Int_t LineColor__B = 2;
+     const Int_t LineWidth__B = 2;
+
     if (sig != NULL) {
       sig->SetLineColor( LineColor__S );
       sig->SetLineWidth( LineWidth__S );
@@ -62,6 +62,7 @@ namespace TMVAGlob {
   // used to create output file for canvas
   void imgconv( TCanvas* c, TString fname )
   {
+     //      return;
     if (NULL == c) {
       cout << "--- Error in TMVAGlob::imgconv: canvas is NULL" << endl;
     }
@@ -74,17 +75,13 @@ namespace TMVAGlob {
       TString pngName = fname + ".png";
       TString gifName = fname + ".gif";
       TString epsName = fname + ".eps";
-      
-      // create png
-      TImage *img = TImage::Create();      
-      img->FromPad( c );
-      img->WriteImage( gifName );
-      img->WriteImage( pngName );
-      
+            
       // create eps (other option: c->Print( epsName ))
-      c->SaveAs(epsName);
-      
-      cout << "--- Create output files: " << pngName << " (+ .gif and .eps)" << endl;
+      c->SaveAs(epsName);      
+      cout << "If you want to save the image as gif or png, please comment out "
+           << "the corresponding lines (line no. 83+84) in tmvaglob.C" << endl;
+       c->SaveAs(gifName);
+       c->SaveAs(pngName);
     }
   }
 
@@ -98,12 +95,25 @@ namespace TMVAGlob {
     img->SetConstRatio(kFALSE);
     UInt_t h_ = img->GetHeight();
     UInt_t w_ = img->GetWidth();
+    cout << w_/h_ << endl;
+
+    Float_t rgif = 405/108.;
+    Float_t rpad = gPad->GetWw()/gPad->GetWh();
+    Float_t xperc = 0.3;
+    Float_t yperc = xperc * rpad / rgif;
+
+    Float_t r = w_/h_;
 
     Float_t d = 0.045;
     // absolute coordinates
-    Float_t x1L = 0.7803;
+    Float_t x1L = 1 - gStyle->GetPadRightMargin();
     Float_t y1L = 0.91;
-    TPad *p1 = new TPad("img", "img", x1L, y1L, x1L + d*w_/h_, y1L + d*1.5*v_scale );
+    TPad *p1 = new TPad("img", "img", x1L - d*r, y1L, x1L, y1L + d*1.5*v_scale );
+    //    TPad *p1 = new TPad("img", "img", x1L - xperc, y1L, x1L, y1L + yperc );
+    p1->SetRightMargin(0);
+    p1->SetBottomMargin(0);
+    p1->SetLeftMargin(0);
+    p1->SetTopMargin(0);
 
     p1->Draw();
     p1->cd();

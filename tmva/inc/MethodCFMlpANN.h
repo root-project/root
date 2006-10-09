@@ -1,10 +1,11 @@
-// @(#)root/tmva $Id: MethodCFMlpANN.h,v 1.8 2006/05/23 09:53:10 stelzer Exp $    
+// @(#)root/tmva $Id: MethodCFMlpANN.h,v 1.17 2006/08/30 22:19:58 andreas.hoecker Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodCFMlpANN                                                        *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Interface for Clermond-Ferrand artificial neural network.                 *
@@ -67,10 +68,10 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: MethodCFMlpANN.h,v 1.8 2006/05/23 09:53:10 stelzer Exp $    
+ * $Id: MethodCFMlpANN.h,v 1.17 2006/08/30 22:19:58 andreas.hoecker Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodCFMlpANN
@@ -84,11 +85,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <iostream>
+
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
-#ifndef ROOT_TMVA_MethodANNBase
-#include "TMVA/MethodANNBase.h"
 #endif
 #ifndef ROOT_TMVA_MethodCFMlpANN_Utils
 #include "TMVA/MethodCFMlpANN_Utils.h"
@@ -99,17 +99,17 @@
 
 namespace TMVA {
 
-   class MethodCFMlpANN : public MethodBase, MethodANNBase, MethodCFMlpANN_Utils {
+   class MethodCFMlpANN : public MethodBase, MethodCFMlpANN_Utils {
 
    public:
 
       MethodCFMlpANN( TString jobName,
-                      vector<TString>* theVariables, 
-                      TTree* theTree = 0, 
+                      TString methodTitle, 
+                      DataSet& theData,
                       TString theOption = "3000:N-1:N-2",
                       TDirectory* theTargetDir = 0 );
 
-      MethodCFMlpANN( vector<TString> *theVariables, 
+      MethodCFMlpANN( DataSet& theData, 
                       TString theWeightFile,  
                       TDirectory* theTargetDir = NULL );
 
@@ -119,16 +119,16 @@ namespace TMVA {
       virtual void Train( void );
 
       // write weights to file
-      virtual void WriteWeightsToFile( void );
-  
+      virtual void WriteWeightsToStream( ostream& o ) const;
+
       // read weights from file
-      virtual void ReadWeightsFromFile( void );
+      virtual void ReadWeightsFromStream( istream& istr );
 
       // calculate the MVA value
-      virtual Double_t GetMvaValue( Event *e );
+      virtual Double_t GetMvaValue();
 
       // write method specific histos to target file
-      virtual void WriteHistosToFile( void ) ;
+      virtual void WriteHistosToFile( void ) const;
 
       // data accessors for external functions
       Double_t GetData ( Int_t isel, Int_t ivar ) const { return (*fData)(isel, ivar); }
@@ -137,15 +137,22 @@ namespace TMVA {
       // static pointer to this object (required for external functions
       static MethodCFMlpANN* This( void ) { return fgThis; }  
 
+      // ranking of input variables
+      const Ranking* CreateRanking() { return 0; }
+
    protected:
 
       Int_t DataInterface( Double_t*, Double_t*, Int_t*, Int_t*, Int_t*, Int_t*,
                            Double_t*, Int_t*, Int_t* );
   
-      void WriteNNWeightsToFile( Int_t, Int_t, Double_t*, Double_t*, 
-                                 Int_t, Int_t*, Double_t*, Double_t*, Double_t* );
+      virtual void WriteNNWeightsToStream( std::ostream &, Int_t, Int_t, const Double_t*, const Double_t*, 
+                                           Int_t, const Int_t*, const Double_t*, const Double_t*, const Double_t* ) const;
 
    private:
+
+      // the option handling methods
+      virtual void DeclareOptions();
+      virtual void ProcessOptions();
 
       // this carrier
       static MethodCFMlpANN* fgThis;
@@ -153,10 +160,6 @@ namespace TMVA {
       // LUTs
       TMatrix       *fData ;   // the (data,var) string
       vector<Int_t> *fClass;   // the event class (1=signal, 2=background)
-
-      Int_t         fNevt;     // number of training events
-      Int_t         fNsig;     // number of signal events
-      Int_t         fNbgd;     // number of background
 
       Int_t         fNlayers;  // number of layers (including input and output layers)
       Int_t         fNcycles;  // number of training cycles
@@ -171,6 +174,7 @@ namespace TMVA {
       Double_t**    fWwNN;     // weights
       Double_t**    fYNN;      // weights
       Double_t*     fTempNN;   // temperature (used in activation function)
+      TString       fLayerSpec;// the hidden layer specification string
 
       // auxiliary member functions
       Double_t EvalANN( vector<Double_t>*, Bool_t& isOK );

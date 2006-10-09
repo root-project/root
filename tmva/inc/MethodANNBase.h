@@ -1,31 +1,27 @@
-// @(#)root/tmva $Id: MethodANNBase.h,v 1.4 2006/05/23 09:53:10 stelzer Exp $
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: MethodANNBase.h,v 1.29 2006/10/04 22:29:27 andreas.hoecker Exp $
+// Author: Andreas Hoecker, Matt Jachowski
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodANNBase                                                         *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Base class for all MVA methods based on artificial neural networks (ANN)  *
- *      contains common functionality                                             *
+ *      Artificial neural network base class for the discrimination of signal     *
+ *      from background.                                                          *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
- *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
+ *      Andreas Hoecker  <Andreas.Hocker@cern.ch> - CERN, Switzerland             *
+ *      Matt Jachowski   <jachowski@stanford.edu> - Stanford University, USA      *
+ *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>   - CERN, Switzerland             *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
- *      U. of Victoria, Canada,                                                   *
- *      MPI-KP Heidelberg, Germany,                                               *
- *      LAPP, Annecy, France                                                      *
+ *      CERN, Switzerland                                                         *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
- *                                                                                *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodANNBase
@@ -35,32 +31,150 @@
 //                                                                      //
 // MethodANNBase                                                        //
 //                                                                      //
-// Base class for all MVA methods using artificial neural networks      //
+// Base class for all TMVA methods using artificial neural networks     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TString.h"
 #include <vector>
+#include "TTree.h"
+#include "TObjArray.h"
+#include "TRandom3.h"
+
+#ifndef ROOT_TMVA_MethodBase
+#include "TMVA/MethodBase.h"
+#endif
+#ifndef ROOT_TMVA_TNeuron
+#include "TMVA/TNeuron.h"
+#endif
+#ifndef ROOT_TMVA_TActivation
+#include "TMVA/TActivation.h"
+#endif
+#ifndef ROOT_TMVA_TNeuronInput
+#include "TMVA/TNeuronInput.h"
+#endif
 
 namespace TMVA {
 
-   class MethodANNBase {
-
+   class MethodANNBase : public MethodBase {
+      
    public:
+      
+      // constructors dictated by subclassing off of MethodBase
+      MethodANNBase( TString jobName, TString methodTitle, DataSet& theData, 
+                     TString theOption, TDirectory* theTargetDir );
+      
+      MethodANNBase( DataSet& theData, TString theWeightFile, 
+                     TDirectory* theTargetDir );
+      
+      virtual ~MethodANNBase();
+      
+      // this does the real initialization work
+      void InitANNBase();
+      
+      // setters for subclasses
+      void SetActivation(TActivation* activation) { 
+         if (fActivation != NULL) delete fActivation; fActivation = activation; 
+      }
+      void SetNeuronInputCalculator(TNeuronInput* inputCalculator) { 
+         if (fInputCalculator != NULL) delete fInputCalculator; 
+         fInputCalculator = inputCalculator; 
+      }
+      
+      // this will have to be overridden by every subclass
+      virtual void Train() = 0;
+      
+      // print network, for debugging
+      virtual void PrintNetwork();
+      
+      // write weights to file
+      virtual void WriteWeightsToStream( ostream& o ) const;
 
-      MethodANNBase( void );
-      virtual ~MethodANNBase() {}
+      // read weights from file
+      virtual void ReadWeightsFromStream( istream& istr );
+      
+      // calculate the MVA value
+      virtual Double_t GetMvaValue();
+      
+      // write method specific histos to target file
+      virtual void WriteHistosToFile() const;
+     
+      // ranking of input variables
+      const Ranking* CreateRanking();
 
+      // the option handling methods
+      virtual void DeclareOptions();
+      virtual void ProcessOptions();
+      
+      Bool_t Debug() const { return DEBUG; }
+      
    protected:
+      
+      vector<Int_t>* ParseLayoutString(TString layerSpec);
+      virtual void BuildNetwork(vector<Int_t>* layout, vector<Double_t>* weights=NULL);
+      void     ForceNetworkInputs(Int_t ignoreIndex=-1);
+      Double_t GetNetworkOutput() { return GetOutputNeuron()->GetActivationValue(); }
+      
+      // debugging utilities
+      void PrintMessage(TString message, Bool_t force=kFALSE) const;
+      void ForceNetworkCalculations();
+      void WaitForKeyboard();
+      
+      // accessors
+      Int_t    NumCycles()  { return fNcycles;   }
+      Bool_t   Normalize()  { return fNormalize; }
+      TNeuron* GetInputNeuron(Int_t index) { return (TNeuron*)fInputLayer->At(index); }
+      TNeuron* GetOutputNeuron()           { return fOutputNeuron; }
+      
+      // protected variables
+      TObjArray*    fNetwork;     // TObjArray of TObjArrays representing network
+      TObjArray*    fSynapses;    // array of pointers to synapses, no structural data
+      TActivation*  fActivation;  // activation function to be used for hidden layers
+      TActivation*  fIdentity;    // activation for input and output layers
+      TRandom3*     frgen;        // random number generator for various uses
+      TNeuronInput* fInputCalculator; // input calculator for all neurons
 
-      // option string parser
-      // first input in vector is number of cycles; additional inputs give
-      // number of nodes for each layer (as many layers as inputs in vector)
-      std::vector<Int_t>* ParseOptionString( TString, Int_t, std::vector<Int_t>* );
- 
-      ClassDef(MethodANNBase,0) //Base class for all MVA methods using artificial neural networks
+      // monitoring histograms
+      TH1F* fEstimatorHistTrain; // monitors convergence of training sample
+      TH1F* fEstimatorHistTest;  // monitors convergence of independent test sample
+      
+   private:
+      
+      // helper functions for building network
+      void BuildLayers(std::vector<Int_t>* layout);
+      void BuildLayer(Int_t numNeurons, TObjArray* curLayer, TObjArray* prevLayer, 
+                      Int_t layerIndex, Int_t numLayers);
+      void AddPreLinks(TNeuron* neuron, TObjArray* prevLayer);
+     
+      // helper functions for weight initialization
+      void InitWeights();
+      void ForceWeights(std::vector<Double_t>* weights);
+      
+      // helper functions for deleting network
+      void DeleteNetwork();
+      void DeleteNetworkLayer(TObjArray*& layer);
+      
+      // debugging utilities
+      void PrintLayer(TObjArray* layer);
+      void PrintNeuron(TNeuron* neuron);
+      
+      // private variables
+      Int_t      fNcycles;         // number of epochs to train
+      Bool_t     fNormalize;       // flag for input data normalization
+      TString    fNeuronType;      // name of neuron activation function class
+      TString    fNeuronInputType; // name of neuron input calculator class
+      TObjArray* fInputLayer;      // cache this for fast access
+      TNeuron*   fOutputNeuron;    // cache this for fast access
+      TString    fLayerSpec;       // layout specification option
+      
+      // debugging flags
+      static const Bool_t DEBUG      = kTRUE;   // debug flag
+      static const Bool_t FIXED_SEED = kFALSE;  // fix rand generator seed
+     
+     
+      ClassDef(MethodANNBase,0) // Base class for TMVA ANNs
          };
-
+   
 } // namespace TMVA
 
 #endif

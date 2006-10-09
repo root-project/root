@@ -1,10 +1,11 @@
-// @(#)root/tmva $Id: NodeID.h,v 1.3 2006/05/31 14:01:33 rdm Exp $
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
+// @(#)root/tmva $Id: NodeID.h,v 1.6 2006/08/30 22:19:59 andreas.hoecker Exp $    
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class:   NodeID                                                                *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Node identification (NodeID) for the BinarySearch or Decision Trees nodes *
@@ -16,14 +17,14 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        *
- *      U. of Victoria, Canada,                                                   *
- *      MPI-KP Heidelberg, Germany                                                *
+ *      CERN, Switzerland,                                                        * 
+ *      U. of Victoria, Canada,                                                   * 
+ *      MPI-KP Heidelberg, Germany                                                * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_NodeID
@@ -39,13 +40,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <iostream>
+#include <fstream>
 #include <vector>
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
+#include "Riostream.h"
 
 namespace TMVA {
 
@@ -53,14 +52,14 @@ namespace TMVA {
    // (currently it is NOT UNIQUE... but could eventually made it
 
    class NodeID {
-
+    
    public:
-
+    
       // Node constructor
       NodeID( Int_t d=0, std::string p="Root" ) : fDepth( d ), fPos( p ) {}
       // Node destructor
       ~NodeID() {}
-
+      
       // Set depth, layer of the where the node is within the tree, seen from the top (root)
       void SetDepth(const Int_t d){fDepth=d;}
 
@@ -76,7 +75,7 @@ namespace TMVA {
    private:
 
       Int_t        fDepth; // depth of the node within the tree (seen from root node)
-      std::string  fPos;   // position, i.e. it is a left (l) or right (r) daughter
+      std::string  fPos;   // position, i.e. it is a left (l) or right (r) daughter 
 
    };
 

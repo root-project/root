@@ -1,10 +1,11 @@
-// @(#)root/tmva $Id: MethodCFMlpANN_Utils.h,v 1.8 2006/05/23 09:53:10 stelzer Exp $ 
+// @(#)root/tmva $Id: MethodCFMlpANN_Utils.h,v 1.12 2006/08/30 22:19:58 andreas.hoecker Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodCFMlpANN_utils                                                  *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Reference for the original FORTRAN version "mlpl3.F":                          *
  *      Authors  : J. Proriol and contributions from ALEPH-Clermont-Fd            *
@@ -28,8 +29,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
- *                                                                                *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodCFMlpANN_Utils
@@ -71,9 +71,9 @@ namespace TMVA {
       virtual Int_t DataInterface( Double_t*, Double_t*, Int_t*, Int_t*, Int_t*, Int_t*,
                                    Double_t*, Int_t*, Int_t* ) = 0;
   
-      virtual void WriteNNWeightsToFile( Int_t, Int_t, Double_t*, Double_t*, 
-                                         Int_t, Int_t*, 
-                                         Double_t*, Double_t*, Double_t* ) = 0;
+      virtual void WriteNNWeightsToStream( ostream &, Int_t, Int_t, const Double_t*, const Double_t*, 
+                                           Int_t, const Int_t*, 
+                                           const Double_t*, const Double_t*, const Double_t* ) const = 0;
 
       Double_t Fdecroi(Int_t *i__);
       Double_t Sen3a(void);
@@ -95,7 +95,7 @@ namespace TMVA {
       void  Arret(const char* mot );
       void  CollectVar(Int_t *nvar, Int_t *class__, Double_t *xpg);
 
-   private:
+   protected:
 
       static Int_t fg_100;          // constant
       static Int_t fg_0;            // constant

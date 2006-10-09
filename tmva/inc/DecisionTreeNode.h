@@ -1,10 +1,11 @@
-// @(#)root/tmva $Id: DecisionTreeNode.h,v 1.2 2006/05/23 13:03:15 brun Exp $    
+// @(#)root/tmva $Id: DecisionTreeNode.h,v 1.11 2006/08/30 22:19:58 andreas.hoecker Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : DecisionTreeNode                                                      *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Node for the Decision Tree                                                *
@@ -23,8 +24,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
- *                                                                                *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_DecisionTreeNode
@@ -50,6 +50,8 @@
 using std::string;
 
 namespace TMVA {
+   class Event;
+
 
    class DecisionTreeNode: public Node {
 
@@ -62,9 +64,10 @@ namespace TMVA {
       virtual ~DecisionTreeNode(){}
 
       // test event if it decends the tree at this node to the right  
-      virtual Bool_t GoesRight( const Event* ) const;
+      virtual Bool_t GoesRight( const Event & ) const;
+
       // test event if it decends the tree at this node to the left 
-      virtual Bool_t GoesLeft ( const Event* ) const;
+      virtual Bool_t GoesLeft ( const Event & ) const;
 
       // set the cut value applied at this node 
       void  SetCutValue ( Double_t c ) { fCutValue  = c; }
@@ -102,10 +105,10 @@ namespace TMVA {
       Double_t GetNEvents( void ) const  { return fNEvents; }
 
       //recursively print the node and its daughters (--> print the 'tree')
-      virtual void        PrintRec( ostream&  os, Int_t depth=0, const string pos="root" ) const;
+      virtual void        PrintRec( ostream&  os, const Int_t depth=0, const string pos="root" ) const;
 
       //recursively read the node and its daughters (--> read the 'tree')
-      virtual NodeID ReadRec ( ifstream& is, NodeID nodeID, Node* parent=NULL );
+      virtual NodeID ReadRec ( istream& is, NodeID nodeID, const Event&, Node* parent=NULL );
   
    private:
   
@@ -119,7 +122,7 @@ namespace TMVA {
       Int_t    fNodeType;  // Type of node: -1 == Bkg-leaf, 1 == Signal-leaf, 0 = internal 
   
       ClassDef(DecisionTreeNode,0) //Node for the Decision Tree 
-         };  
+   };
 
 } // namespace TMVA
 
