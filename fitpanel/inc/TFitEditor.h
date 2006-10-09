@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.1 2006/10/05 15:06:48 brun Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.2 2006/10/05 21:33:21 rdm Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
