@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.14 2006/09/14 12:57:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple1.cxx,v 1.15 2006/09/14 13:35:58 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -127,14 +127,14 @@ void ReflexSimple1Test::testMembers() {
   CPPUNIT_ASSERT(o.Address());
 
   CPPUNIT_ASSERT_EQUAL(1, int(t.DataMemberSize()));
-  CPPUNIT_ASSERT_EQUAL(30, int(t.FunctionMemberSize()));
-  CPPUNIT_ASSERT_EQUAL(31, int(t.MemberSize()));
+  CPPUNIT_ASSERT_EQUAL(31, int(t.FunctionMemberSize()));
+  CPPUNIT_ASSERT_EQUAL(32, int(t.MemberSize()));
 
   t.UpdateMembers();
 
   CPPUNIT_ASSERT_EQUAL(1, int(t.DataMemberSize()));
-  CPPUNIT_ASSERT_EQUAL(30, int(t.FunctionMemberSize()));
-  CPPUNIT_ASSERT_EQUAL(31, int(t.MemberSize()));
+  CPPUNIT_ASSERT_EQUAL(31, int(t.FunctionMemberSize()));
+  CPPUNIT_ASSERT_EQUAL(32, int(t.MemberSize()));
 
   m = t.DataMemberAt(0);
   CPPUNIT_ASSERT(m);
@@ -221,22 +221,22 @@ void ReflexSimple1Test::testMembers() {
 
   m = t.FunctionMemberAt(11);
   CPPUNIT_ASSERT(m);
-  CPPUNIT_ASSERT_EQUAL(std::string("Key_Begin"), m.Name());
-  CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::Key_Begin"), m.Name(SCOPED));
+  CPPUNIT_ASSERT_EQUAL(std::string("HasProperty"), m.Name());
+  CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::HasProperty"), m.Name(SCOPED));
   CPPUNIT_ASSERT(!m.IsConstructor());
   CPPUNIT_ASSERT(!m.IsDestructor());
 
   m = t.FunctionMemberAt(12);
   CPPUNIT_ASSERT(m);
-  CPPUNIT_ASSERT_EQUAL(std::string("Key_End"), m.Name());
-  CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::Key_End"), m.Name(SCOPED));
+  CPPUNIT_ASSERT_EQUAL(std::string("Key_Begin"), m.Name());
+  CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::Key_Begin"), m.Name(SCOPED));
   CPPUNIT_ASSERT(!m.IsConstructor());
   CPPUNIT_ASSERT(!m.IsDestructor());
 
   m = t.FunctionMemberAt(13);
   CPPUNIT_ASSERT(m);
-  CPPUNIT_ASSERT_EQUAL(std::string("Key_RBegin"), m.Name());
-  CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::Key_RBegin"), m.Name(SCOPED));
+  CPPUNIT_ASSERT_EQUAL(std::string("Key_End"), m.Name());
+  CPPUNIT_ASSERT_EQUAL(std::string("ROOT::Reflex::PropertyList::Key_End"), m.Name(SCOPED));
   CPPUNIT_ASSERT(!m.IsConstructor());
   CPPUNIT_ASSERT(!m.IsDestructor());
 

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PropertyList.h,v 1.12 2006/09/05 17:13:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: PropertyList.h,v 1.13 2006/09/14 13:38:25 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -119,6 +119,14 @@ namespace ROOT {
           * @return true if key exists and property for key is valid
           */
          bool HasProperty( const std::string & key ) const;
+
+
+         /**
+          * HasProperty will return true if the property list contains a valid property with key
+          * @param  key the property key
+          * @return true if key exists and property for key is valid
+          */
+         bool HasProperty( size_t key ) const;
 
 
          /**
@@ -365,6 +373,14 @@ inline void ROOT::Reflex::PropertyList::ClearProperties() const {
 
 //-------------------------------------------------------------------------------
 inline bool ROOT::Reflex::PropertyList::HasProperty(const std::string & key) const {
+//-------------------------------------------------------------------------------
+   if ( fPropertyListImpl ) return fPropertyListImpl->HasProperty( key );
+   return false;
+}
+
+
+//-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::PropertyList::HasProperty( size_t key) const {
 //-------------------------------------------------------------------------------
    if ( fPropertyListImpl ) return fPropertyListImpl->HasProperty( key );
    return false;

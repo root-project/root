@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PropertyListImpl.cxx,v 1.12 2006/09/08 20:54:05 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: PropertyListImpl.cxx,v 1.13 2006/09/14 13:38:25 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -65,6 +65,14 @@ bool ROOT::Reflex::PropertyListImpl::HasProperty( const std::string & key ) cons
    size_t i = KeyByName(key);
    if ( i == NPos() ) return false;
    else               return PropertyValue( i );
+}
+
+
+//-------------------------------------------------------------------------------
+bool ROOT::Reflex::PropertyListImpl::HasProperty( size_t key ) const {
+//-------------------------------------------------------------------------------
+   // Return true if property has key.
+   return PropertyValue( key );
 }
 
 
@@ -217,7 +225,7 @@ ROOT::Reflex::Any &
 ROOT::Reflex::PropertyListImpl::PropertyValue( size_t key ) const {
 //-------------------------------------------------------------------------------
    // Return property as Any object
-   if ( fProperties ) return fProperties->at( key );
+   if ( fProperties && key < fProperties->size()) return (*fProperties)[ key ];
    return Dummy::Any();
 }
 

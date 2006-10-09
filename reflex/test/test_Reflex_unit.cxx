@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.19 2006/09/14 12:57:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.20 2006/09/14 13:35:58 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -282,14 +282,9 @@ void ReflexUnitTest::property_list()
   CPPUNIT_ASSERT(pl.HasProperty("string"));
   CPPUNIT_ASSERT_EQUAL(s, any_cast<string>(pl.PropertyValue("string")));
   CPPUNIT_ASSERT_EQUAL(s, pl.PropertyAsString("string"));
-  std::string s2 = "no return value";
-  try {
-     s2 = pl.PropertyAsString("none");
-  }
-  catch ( std::exception e ) {
-     CPPUNIT_ASSERT_EQUAL(std::string("std::exception"), Tools::Demangle(typeid(e)));
-  }
-  CPPUNIT_ASSERT_EQUAL(string("no return value"), s2);
+  CPPUNIT_ASSERT( Dummy::Any() == pl.PropertyValue("none"));
+  CPPUNIT_ASSERT( Dummy::Any() == pl.PropertyValue(NPos()));
+  CPPUNIT_ASSERT_EQUAL(string(""), pl.PropertyAsString("none"));
   CPPUNIT_ASSERT_EQUAL(std::string("string"), *PropertyList::Key_RBegin());
   CPPUNIT_ASSERT_EQUAL((size_t)5, pl.PropertyCount());
   CPPUNIT_ASSERT_EQUAL(string("Description, int, double, char*, string"), pl.PropertyKeys());
