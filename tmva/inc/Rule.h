@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Rule.h,v 1.14 2006/10/03 17:49:10 tegen Exp $    
+// @(#)root/tmva $Id: Rule.h,v 1.1 2006/10/09 15:55:02 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -78,7 +78,7 @@ namespace TMVA {
       void SetImportanceRef(Double_t v)       { fImportanceRef=(v>0 ? v:1.0); }
 
       // calculate importance
-      void CalcImportance() { fImportance = fabs(fCoefficient)*fSigma; }
+      void CalcImportance() { fImportance = TMath::Abs(fCoefficient)*fSigma; }
 
       // get the relative importance
       const Double_t GetRelImportance()  const { return fImportance/fImportanceRef; }

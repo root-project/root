@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleFitParams.h,v 1.11 2006/10/03 17:49:10 tegen Exp $
+// @(#)root/tmva $Id: RuleFitParams.h,v 1.1 2006/10/09 15:55:02 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -147,7 +147,7 @@ namespace TMVA {
    public:
       bool operator()(Double_t first, Double_t second) const
       {
-         return fabs(first) < fabs(second);
+         return TMath::Abs(first) < TMath::Abs(second);
       }
    };
 };
