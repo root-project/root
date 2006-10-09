@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2Fit.cxx,v 1.2 2006/09/29 15:51:52 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2Fit.cxx,v 1.3 2006/10/02 10:58:42 brun Exp $
 // Author: Miroslav Morhac   25/09/2006
 
 /////////////////////////////////////////////////////////////////////////////
@@ -78,53 +78,14 @@ TSpectrum2Fit::TSpectrum2Fit(Int_t numberPeaks) :TNamed("Spectrum2Fit", "Mirosla
    //variables to their default values. One can change these variables by member functions (setters) of TSpectrumFit class.    
 //Begin_Html <!--
 /* -->
-<div class=3DSection1>
+<div class=Section1>
 
-<p class=3DMsoNormal style=3D'text-align:justify;tab-stops:.75in'><span lan=
-g=3DEN-US>Shape
-function of the fitted peaks contains the two-dimensional symmetrical Gauss=
-ian
-two one-dimensional symmetrical Gaussian ridges as well as nonsymmetrical t=
-erms
-and background.</span></p>
+<p class=MsoNormal style='text-align:justify'>Shape function of the fitted
+peaks contains the two-dimensional symmetrical Gaussian two one-dimensional
+symmetrical Gaussian ridges as well as nonsymmetrical terms and background.</p>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><sub><span lang=3DEN-US
-style=3D'font-size:10.0pt;mso-bidi-font-size:12.0pt'><!--[if gte vml 1]><v:=
-shapetype
- id=3D"_x0000_t75" coordsize=3D"21600,21600" o:spt=3D"75" o:preferrelative=
-=3D"t"
- path=3D"m@4@5l@4@11@9@11@9@5xe" filled=3D"f" stroked=3D"f">
- <v:stroke joinstyle=3D"miter"/>
- <v:formulas>
-  <v:f eqn=3D"if lineDrawn pixelLineWidth 0"/>
-  <v:f eqn=3D"sum @0 1 0"/>
-  <v:f eqn=3D"sum 0 0 @1"/>
-  <v:f eqn=3D"prod @2 1 2"/>
-  <v:f eqn=3D"prod @3 21600 pixelWidth"/>
-  <v:f eqn=3D"prod @3 21600 pixelHeight"/>
-  <v:f eqn=3D"sum @0 0 1"/>
-  <v:f eqn=3D"prod @6 1 2"/>
-  <v:f eqn=3D"prod @7 21600 pixelWidth"/>
-  <v:f eqn=3D"sum @8 21600 0"/>
-  <v:f eqn=3D"prod @7 21600 pixelHeight"/>
-  <v:f eqn=3D"sum @10 21600 0"/>
- </v:formulas>
- <v:path o:extrusionok=3D"f" gradientshapeok=3D"t" o:connecttype=3D"rect"/>
- <o:lock v:ext=3D"edit" aspectratio=3D"t"/>
-</v:shapetype><v:shape id=3D"_x0000_i1025" type=3D"#_x0000_t75" style=3D'wi=
-dth:450pt;
- height:300.75pt' o:ole=3D"" fillcolor=3D"window">
- <v:imagedata src=3D"FitConstructor_files/image001.wmz" o:title=3D""/>
-</v:shape><![endif]--><![if !vml]><img width=3D600 height=3D401
-src=3D"FitConstructor_files/image002.gif" v:shapes=3D"_x0000_i1025"><![endi=
-f]></span></sub><span
-lang=3DEN-US><!--[if gte mso 9]><xml>
- <o:OLEObject Type=3D"Embed" ProgID=3D"Unknown" ShapeID=3D"_x0000_i1025"
-  DrawAspect=3D"Content" ObjectID=3D"_1220798488">
- </o:OLEObject>
-</xml><![endif]--></span><span lang=3DEN-US style=3D'font-size:16.0pt;font-=
-family:
-Arial'><o:p></o:p></span></p>
+<p class=MsoNormal style='text-align:justify'><sub><span style='font-size:10.0pt'><img
+width=600 height=401 src="gif/spectrum2fit_constructor_image001.gif"></span></sub></p>
 
 </div>
 
@@ -1692,2358 +1653,891 @@ void TSpectrum2Fit::FitAwmi(Float_t **source)
 
 //Begin_Html <!--
 /* -->
-<div class=3DSection2>
-
-<p class=3DMsoNormal><b><span lang=3DEN-US style=3D'font-size:14.0pt'>Fitti=
-ng</span></b><span
-lang=3DEN-US style=3D'font-size:14.0pt'><o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><i><span lang=3DEN-US><o:=
-p>&nbsp;</o:p></span></i></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><i><span lang=3DEN-US>Goa=
-l: to
-estimate simultaneously peak shape parameters in spectra with large number =
-of
-peaks</span></i></p>
-
-<p class=3DMsoNormal style=3D'tab-stops:.75in'><span lang=3DEN-US><o:p>&nbs=
-p;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'margin-left:.5in;text-align:justify;text-inde=
-nt:-.25in;
-mso-list:l5 level1 lfo7;tab-stops:list .5in'><![if !supportLists]><span
-lang=3DEN-US><span style=3D'mso-list:Ignore'>&#8226;<span style=3D'font:7.0=
-pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></span><![endif]><span class=3DGramE><span lang=3DEN-US>peaks=
-</span></span><span
-lang=3DEN-US> can be fitted separately, each peak (or <span class=3DSpellE>=
-multiplets</span>)
-in a region or together all peaks in a spectrum. To fit separately each peak
-one needs to determine the fitted region. However it can happen that the
-regions of neighboring peaks are overlapping. Then the results of fitting a=
-re
-very poor. On the other hand, when fitting together all peaks found in a<sp=
-an
-style=3D'mso-spacerun:yes'>&nbsp; </span>spectrum, one needs to have a meth=
-od
-that is<span style=3D'mso-spacerun:yes'>&nbsp; </span>stable (converges) an=
-d fast
-enough to carry out fitting in reasonable time </span></p>
-
-<p class=3DMsoNormal style=3D'margin-left:.5in;text-align:justify;text-inde=
-nt:-.25in;
-mso-list:l5 level1 lfo7;tab-stops:list .5in'><![if !supportLists]><span
-lang=3DEN-US><span style=3D'mso-list:Ignore'>&#8226;<span style=3D'font:7.0=
-pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></span><![endif]><span lang=3DEN-US>we have implemented the
-nonsymmetrical <span class=3DSpellE>semiempirical</span> peak shape functio=
-n</span></p>
-
-<p class=3DMsoNormal style=3D'margin-left:.5in;text-align:justify;text-inde=
-nt:-.25in;
-mso-list:l5 level1 lfo7;tab-stops:list .5in'><![if !supportLists]><span
-lang=3DEN-US><span style=3D'mso-list:Ignore'>&#8226;<span style=3D'font:7.0=
-pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></span><![endif]><span class=3DGramE><span lang=3DEN-US>it</s=
-pan></span><span
-lang=3DEN-US> contains the two-dimensional symmetrical Gaussian two
-one-dimensional symmetrical Gaussian ridges as well as nonsymmetrical terms=
- and
-background.</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><sub><=
-!--[if gte vml 1]><v:shapetype
- id=3D"_x0000_t75" coordsize=3D"21600,21600" o:spt=3D"75" o:preferrelative=
-=3D"t"
- path=3D"m@4@5l@4@11@9@11@9@5xe" filled=3D"f" stroked=3D"f">
- <v:stroke joinstyle=3D"miter"/>
- <v:formulas>
-  <v:f eqn=3D"if lineDrawn pixelLineWidth 0"/>
-  <v:f eqn=3D"sum @0 1 0"/>
-  <v:f eqn=3D"sum 0 0 @1"/>
-  <v:f eqn=3D"prod @2 1 2"/>
-  <v:f eqn=3D"prod @3 21600 pixelWidth"/>
-  <v:f eqn=3D"prod @3 21600 pixelHeight"/>
-  <v:f eqn=3D"sum @0 0 1"/>
-  <v:f eqn=3D"prod @6 1 2"/>
-  <v:f eqn=3D"prod @7 21600 pixelWidth"/>
-  <v:f eqn=3D"sum @8 21600 0"/>
-  <v:f eqn=3D"prod @7 21600 pixelHeight"/>
-  <v:f eqn=3D"sum @10 21600 0"/>
- </v:formulas>
- <v:path o:extrusionok=3D"f" gradientshapeok=3D"t" o:connecttype=3D"rect"/>
- <o:lock v:ext=3D"edit" aspectratio=3D"t"/>
-</v:shapetype><v:shape id=3D"_x0000_i1027" type=3D"#_x0000_t75" style=3D'wi=
-dth:450pt;
- height:236.25pt' o:ole=3D"" fillcolor=3D"window">
- <v:imagedata src=3D"FitAwmi_files/image001.wmz" o:title=3D""/>
-</v:shape><![endif]--><![if !vml]><img width=3D600 height=3D315
-src=3D"FitAwmi_files/image002.gif" v:shapes=3D"_x0000_i1027"><![endif]></su=
-b><!--[if gte mso 9]><xml>
- <o:OLEObject Type=3D"Embed" ProgID=3D"Unknown" ShapeID=3D"_x0000_i1027"
-  DrawAspect=3D"Content" ObjectID=3D"_1220799545">
- </o:OLEObject>
-</xml><![endif]--></span></p>
-
-<p class=3DMsoNormal style=3D'margin-left:37.05pt'><span class=3DGramE><span
-lang=3DEN-US>where</span></span><span lang=3DEN-US> <st1:place w:st=3D"on">=
-<st1:City
- w:st=3D"on"><span class=3DSpellE>Txy</span></st1:City>, <st1:State w:st=3D=
-"on"><span
-  class=3DSpellE>Tx</span></st1:State></st1:place>, <span class=3DSpellE>Ty=
-</span>,
-<span class=3DSpellE>Sxy</span>, <span class=3DSpellE>Sx</span>, <span
-class=3DSpellE>Sy</span> are relative amplitudes and <span class=3DSpellE>B=
-x</span>,
-By are slopes.</span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'margin-left:.5in;text-indent:-.25in;mso-list:=
-l6 level1 lfo8;
-tab-stops:list .5in'><![if !supportLists]><span lang=3DEN-US><span
-style=3D'mso-list:Ignore'>&#8226;<span style=3D'font:7.0pt "Times New Roman=
-"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></span><![endif]><span class=3DGramE><span lang=3DEN-US>algor=
-ithm</span></span><span
-lang=3DEN-US> without matrix inversion (AWMI) allows fitting tens, hundreds=
- of
-peaks simultaneously that represent sometimes thousands of parameters [2], =
-[5].
-</span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'mso-bidi-font-style:italic=
-'><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'mso-bidi-font-style:italic=
-'><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><i><span lang=3DEN-US>Function:</span></i></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span class=3DGramE><span
-lang=3DEN-US>void</span></span><span lang=3DEN-US> <a
-href=3D"http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b
-style=3D'mso-bidi-font-weight:normal'>TSpectrum2Fit::FitAwmi</b></a>(<a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#float"><b
-style=3D'mso-bidi-font-weight:normal'>float</b></a> **<span class=3DSpellE>=
-fSource</span>)</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'mso-bidi-font-weight:bold'><span style=3D'mso-spacerun:yes'>&nbsp;=
-</span></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>This f=
-unction
-fits the source spectrum using AWMI algorithm. The calling program should f=
-ill
-in input parameters of the TSpectrum2Fit class using a set of TSpectrum2Fit
-setters. The fitted parameters are written into the class and fitted data a=
-re
-written into source spectrum. </span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><i style=3D'mso-bidi-font-style:normal'><span lang=3DE=
-N-US
-style=3D'color:red'>Parameter:<o:p></o:p></span></i></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fSource</b></span></span><span
-class=3DGramE>-pointer</span> to the matrix of source spectrum<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><i style=3D'mso-bidi-font-style:normal'><span lang=3DE=
-N-US
-style=3D'font-size:10.0pt;color:red'>Member variables <span class=3DGramE>o=
-f <span
-style=3D'mso-spacerun:yes'>&nbsp;</span>TSpectrum2Fit</span> class:<o:p></o=
-:p></span></i></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DSp=
-ellE>fNPeaks</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//number of peaks present in fit, input parameter, it should be &gt;=
- 0<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DSp=
-ellE>fNumberIterations</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//number of iterations in fitting procedure, input parameter, it sho=
-uld
-be &gt; 0<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DSp=
-ellE>fXmin</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//first fitted channel in x direction<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DSp=
-ellE>fXmax</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//last fitted channel in x direction<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DSp=
-ellE>fYmin</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//first fitted channel in y direction<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DSp=
-ellE>fYmax</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>//last
-fitted channel in y direction<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DSp=
-ellE>fStatisticType</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//type of statistics, possible values <span class=3DSpellE>kFitOptim=
-ChiCounts</span>
-(chi square statistics with counts as weighting coefficients), <span
-class=3DSpellE>kFitOptimChiFuncValues</span> (chi square statistics with fu=
-nction
-values as weighting coefficients)<span class=3DGramE>,<span class=3DSpellE>=
-kFitOptimMaxLikelihood</span></span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DSp=
-ellE>fAlphaOptim</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//optimization of convergence algorithm, possible values <span
-class=3DSpellE>kFitAlphaHalving</span>, <span class=3DSpellE>kFitAlphaOptim=
-al</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DSp=
-ellE>fPower</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span=
->//possible
-values kFitPower2<span class=3DGramE>,4,6,8,10,12</span>, for details see
-references. It applies only for <span class=3DSpellE>Awmi</span> fitting
-function.<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>Int_t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DSp=
-ellE>fFitTaylor</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//order of <st1:City w:st=3D"on"><st1:place w:st=3D"on">Taylor</st1:=
-place></st1:City>
-expansion, possible values <span class=3DSpellE>kFitTaylorOrderFirst</span>=
-, <span
-class=3DSpellE>kFitTaylorOrderSecond</span>.</span> It applies only for <sp=
-an
-class=3DSpellE>Awmi</span> fitting function.<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fAlpha</span>=
-</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;
-</span>//convergence coefficient, input parameter, it should be positive nu=
-mber
-and &lt;=3D1, for details see references<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fChi</span></=
-span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//here the fitting functions return resulting chi square<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*<span class=3DSpellE>fPositionInitX</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of initial values of x
-positions of 2D peaks, input parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*<span class=3DSpellE>fPositionCalcX</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of calculated values o=
-f x
-positions of 2D peaks, output parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*<span class=3DSpellE>fPositionErrX</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of error values of x
-positions of 2D peaks, output parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*<span class=3DSpellE>fPositionInitY</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of initial values of y=
- positions
-of 2D peaks, input parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*<span class=3DSpellE>fPositionCalcY</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of calculated values o=
-f y
-positions of 2D peaks, output parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*<span class=3DSpellE>fPositionErrY</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of error values of y p=
-ositions
-of 2D peaks, output parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*fPositionInitX1;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of initial x positions=
- of 1D
-ridges, input parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*fPositionCalcX1;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of calculated x positi=
-ons of
-1D ridges, output parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*fPositionErrX1;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of x positions errors =
-of 1D
-ridges, output parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*fPositionInitY1;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of initial y positions=
- of 1D
-ridges, input parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;</span><span style=3D'mso-spacerun:yes'>&n=
-bsp;
-</span><span class=3DSpellE>Double_t</span> *fPositionCalcY1;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of calculated y positi=
-ons of
-1D ridges, output parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*fPositionErrY1;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of y positions errors =
-of 1D
-ridges, output parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*<span class=3DSpellE>fAmpInit</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of initial values of
-amplitudes of 2D peaks, input parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*<span class=3DSpellE>fAmpCalc</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of calculated values of
-amplitudes of 2D peaks, output parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*<span class=3DSpellE>fAmpErr</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of amplitudes errors o=
-f 2D
-peaks, output parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*fAmpInitX1;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of initial values of
-amplitudes of 1D ridges in x direction, input parameters<o:p></o:p></span><=
-/p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*fAmpCalcX1;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of calculated values of
-amplitudes of 1D ridges in x direction, output parameters<o:p></o:p></span>=
-</p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*fAmpErrX1;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of amplitudes errors o=
-f 1D
-ridges in x direction, output parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*fAmpInitY1;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of initial values of
-amplitudes of 1D ridges in y direction, input parameters<o:p></o:p></span><=
-/p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*fAmpCalcY1;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of calculated values of
-amplitudes of 1D ridges in y direction, output parameters<o:p></o:p></span>=
-</p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*fAmpErrY1;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of amplitudes errors o=
-f 1D
-ridges in y direction, output parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*<span class=3DSpellE>fVolume</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of calculated volumes =
-of 2D
-peaks, output parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span>
-*<span class=3DSpellE>fVolumeErr</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of volumes errors of 2D
-peaks, output parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fSigmaInitX</=
-span></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//initial value of sigma x parameter<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fSigmaCalcX</=
-span></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//calculated value of sigma x parameter<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fSigmaErrX</s=
-pan></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//error value of sigma x parameter<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fSigmaInitY</=
-span></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//initial value of sigma y parameter<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fSigmaCalcY</=
-span></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>//calculated
-value of sigma y parameter<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fSigmaErrY</s=
-pan></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//error value of sigma y parameter<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fRoInit</span=
-></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//initial value of correlation coefficient<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fRoCalc</span=
-></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;
-</span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;</span>//calculated
-value of correlation coefficient<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fRoErr</span>=
-</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;
-</span>//error value of correlation coefficient<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fTxyInit</spa=
-n></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;
-</span>//initial value of t parameter for 2D peaks (relative amplitude of t=
-ail),
-for details see html manual and references<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fTxyCalc</spa=
-n></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;
-</span>//calculated value of t parameter for 2D peaks<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fTxyErr</span=
-></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//error value of t parameter for 2D peaks<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fSxyInit</spa=
-n></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>//initial
-value of s parameter for 2D peaks (relative amplitude of step), for details=
- see
-html manual and references<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fSxyCalc</spa=
-n></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;
-</span>//calculated value of s parameter for 2D peaks<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fSxyErr</span=
-></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>//error
-value of s parameter for 2D peaks<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fTxInit</span=
-></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//initial value of t parameter for 1D ridges in x direction (relative
-amplitude of tail), for details see html manual and references<o:p></o:p></=
-span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fTxCalc</span=
-></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//calculated value of t parameter for 1D ridges in x direction<o:p><=
-/o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fTxErr</span>=
-</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;
-</span>//error value of t parameter for 1D ridges in x direction<o:p></o:p>=
-</span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fTyInit</span=
-></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//initial value of t parameter for 1D ridges in y direction (relative
-amplitude of tail), for details see html manual and references<o:p></o:p></=
-span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fTyCalc</span=
-></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//calculated value of t parameter for 1D ridges in y direction<o:p><=
-/o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fTyErr</span>=
-</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;</span>//error
-value of t parameter for 1D ridges in y direction<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fSxInit</span=
-></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//initial value of s parameter for 1D ridges in x direction (relative
-amplitude of step), for details see html manual and references<o:p></o:p></=
-span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fSxCalc</span=
-></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//calculated value of s parameter for 1D ridges in x direction<o:p><=
-/o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fSxErr</span>=
-</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;
-</span>//error value of s parameter for 1D ridges in x direction<o:p></o:p>=
-</span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fSyInit</span=
-></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//initial value of s parameter for 1D ridges in y direction (relative
-amplitude of step), for details see html manual and references<o:p></o:p></=
-span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fSyCalc</span=
-></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//calculated value of s parameter for 1D ridges in y direction<o:p><=
-/o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fSyErr</span>=
-</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;
-</span>//error value of s parameter for 1D ridges in y direction<o:p></o:p>=
-</span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fBxInit</span=
-></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//initial value of b parameter for 1D ridges in x direction (slope),=
- for
-details see html manual and references<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fBxCalc</span=
-></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//calculated value of b parameter for 1D ridges in x direction<o:p><=
-/o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fBxErr</span>=
-</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;
-</span>//error value of b parameter for 1D ridges in x direction<o:p></o:p>=
-</span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-t</span><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fByInit</span=
->;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//initial value of b parameter for 1D ridges in y direction (slope),=
- for
-details see html manual and references<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fByCalc</span=
-></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//calculated value of b parameter for 1D ridges in y direction<o:p><=
-/o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fByErr</span>=
-</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;
-</span>//error value of b parameter for 1D ridges in y direction<o:p></o:p>=
-</span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span>fA0Init</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//initial value of background a0 parameter(<span class=3DSpellE>back=
-groud</span>
-is estimated as a0+ax*<span class=3DSpellE>x+ay</span>*y)<o:p></o:p></span>=
-</p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span>fA0Calc</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//calculated value of background a0 parameter<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span>fA0Err</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;
-</span>//error value of background a0 parameter<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fAxInit</span=
-></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//initial value of background ax parameter(<span class=3DSpellE>back=
-groud</span>
-is estimated as a0+ax*<span class=3DSpellE>x+ay</span>*y)<o:p></o:p></span>=
-</p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fAxCalc</span=
-></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;</span>//calculated
-value of background ax parameter<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fAxErr</span>=
-</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;
-</span>//error value of background ax parameter<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fAyInit</span=
-></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//initial value of background ay parameter(<span class=3DSpellE>back=
-groud</span>
-is estimated as a0+ax*<span class=3DSpellE>x+ay</span>*y)<o:p></o:p></span>=
-</p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fAyCalc</span=
-></span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//calculated value of background ay parameter<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Double_=
-<span
-class=3DGramE>t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span class=3DSpellE>fAyErr</span>=
-</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;
-</span>//error value of background ay parameter<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>Bool_t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>*<span class=3DSpellE>fFixPo=
-sitionX</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of logical values which
-allow to fix appropriate x positions of 2D peaks (not fit).</span> However =
-they
-are present in the estimated functional<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>Bool_t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>*<span class=3DSpellE>fFixPo=
-sitionY</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of logical values which
-allow to fix appropriate y positions of 2D peaks (not fit).</span> However =
-they
-are present in the estimated functional<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>Bool_t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>*fFixPositionX1;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of logical values which
-allow to fix appropriate x positions of 1D ridges (not fit).</span> However
-they are present in the estimated functional<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>Bool_t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>*fFixPositionY1;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of logical values which
-allow to fix appropriate y positions of 1D ridges (not fit).</span> However
-they are present in the estimated functional<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Bool_t<=
-/span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>*<span class=3DSpellE>fFixAm=
-p</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of logical values which
+<div class=Section2>
+
+<p class=MsoNormal><b><span style='font-size:14.0pt'>Fitting</span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><i>&nbsp;</i></p>
+
+<p class=MsoNormal style='text-align:justify'><i>Goal: to estimate
+simultaneously peak shape parameters in spectra with large number of peaks</i></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>peaks can be fitted separately, each peak (or multiplets) in a region or
+together all peaks in a spectrum. To fit separately each peak one needs to
+determine the fitted region. However it can happen that the regions of
+neighboring peaks are overlapping. Then the results of fitting are very poor.
+On the other hand, when fitting together all peaks found in a  spectrum, one
+needs to have a method that is  stable (converges) and fast enough to carry out
+fitting in reasonable time </p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>we have implemented the nonsymmetrical semiempirical peak shape function</p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>it contains the two-dimensional symmetrical Gaussian two one-dimensional
+symmetrical Gaussian ridges as well as nonsymmetrical terms and background.</p>
+
+<p class=MsoNormal style='text-align:justify'><sub><img width=600 height=315
+src="gif/spectrum2fit_awmi_image001.gif"></sub></p>
+
+<p class=MsoNormal style='margin-left:37.05pt'>where Txy, Tx, Ty, Sxy, Sx, Sy
+are relative amplitudes and Bx, By are slopes.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-indent:-18.0pt'>•<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>algorithm without matrix inversion (AWMI) allows fitting tens, hundreds
+of peaks simultaneously that represent sometimes thousands of parameters [2],
+[5]. </p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><i>Function:</i></p>
+
+<p class=MsoNormal style='text-align:justify'>void <a
+href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrumFit2::FitAwmi</b></a>(<a
+href="http://root.cern.ch/root/html/ListOfTypes.html#float"><b>float</b></a> **fSource)</p>
+
+<p class=MsoNormal style='text-align:justify'> </p>
+
+<p class=MsoNormal style='text-align:justify'>This function fits the source
+spectrum using AWMI algorithm. The calling program should fill in input
+parameters of the TSpectrumFit2 class using a set of TSpectrumFit2 setters. The
+fitted parameters are written into the class and fitted data are written into
+source spectrum. </p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><i><span style='color:red'>Parameter:</span></i></p>
+
+<p class=MsoNormal style='text-align:justify'>        <b>fSource</b>-pointer to
+the matrix of source spectrum                  </p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><i><span style='font-size:10.0pt;color:red'>Member variables
+of  TSpectrumFit2 class:</span></i></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t    
+fNPeaks;                        //number of peaks present in fit, input
+parameter, it should be &gt; 0</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t    
+fNumberIterations;              //number of iterations in fitting procedure,
+input parameter, it should be &gt; 0</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t    
+fXmin;                          //first fitted channel in x direction</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t    
+fXmax;                          //last fitted channel in x direction</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t    
+fYmin;                          //first fitted channel in y direction</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t    
+fYmax;                          //last fitted channel in y direction</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t    
+fStatisticType;                 //type of statistics, possible values
+kFitOptimChiCounts (chi square statistics with counts as weighting
+coefficients), kFitOptimChiFuncValues (chi square statistics with function
+values as weighting coefficients),kFitOptimMaxLikelihood</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t     fAlphaOptim;                   
+//optimization of convergence algorithm, possible values kFitAlphaHalving,
+kFitAlphaOptimal</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t    
+fPower;                         //possible values kFitPower2,4,6,8,10,12, for
+details see references. It applies only for Awmi fitting function.</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t    
+fFitTaylor;                     //order of Taylor expansion, possible values
+kFitTaylorOrderFirst, kFitTaylorOrderSecond. It applies only for Awmi fitting
+function.</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fAlpha;                         //convergence coefficient, input parameter, it
+should be positive number and &lt;=1, for details see references</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fChi;                           //here the fitting functions return resulting
+chi square   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fPositionInitX;                 //[fNPeaks] array of initial values of x
+positions of 2D peaks, input parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fPositionCalcX;                 //[fNPeaks] array of calculated values of x
+positions of 2D peaks, output parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fPositionErrX;                  //[fNPeaks] array of error values of x
+positions of 2D peaks, output parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fPositionInitY;                 //[fNPeaks] array of initial values of y
+positions of 2D peaks, input parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fPositionCalcY;                 //[fNPeaks] array of calculated values of y
+positions of 2D peaks, output parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fPositionErrY;                  //[fNPeaks] array of error values of y
+positions of 2D peaks, output parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fPositionInitX1;                //[fNPeaks] array of initial x positions of 1D
+ridges, input parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fPositionCalcX1;                //[fNPeaks] array of calculated x positions of
+1D ridges, output parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fPositionErrX1;                 //[fNPeaks] array of x positions errors of 1D
+ridges, output parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fPositionInitY1;                //[fNPeaks] array of initial y positions of 1D
+ridges, input parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fPositionCalcY1;                //[fNPeaks] array of calculated y positions of
+1D ridges, output parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fPositionErrY1;                 //[fNPeaks] array of y positions errors of 1D
+ridges, output parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fAmpInit;                       //[fNPeaks] array of initial values of
+amplitudes of 2D peaks, input parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fAmpCalc;                       //[fNPeaks] array of calculated values of
+amplitudes of 2D peaks, output parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fAmpErr;                        //[fNPeaks] array of amplitudes errors of 2D
+peaks, output parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fAmpInitX1;                     //[fNPeaks] array of initial values of
+amplitudes of 1D ridges in x direction, input parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fAmpCalcX1;                     //[fNPeaks] array of calculated values of
+amplitudes of 1D ridges in x direction, output parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fAmpErrX1;                      //[fNPeaks] array of amplitudes errors of 1D
+ridges in x direction, output parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fAmpInitY1;                     //[fNPeaks] array of initial values of
+amplitudes of 1D ridges in y direction, input parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fAmpCalcY1;                     //[fNPeaks] array of calculated values of
+amplitudes of 1D ridges in y direction, output parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fAmpErrY1;                      //[fNPeaks] array of amplitudes errors of 1D
+ridges in y direction, output parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fVolume;                        //[fNPeaks] array of calculated volumes of 2D
+peaks, output parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t
+*fVolumeErr;                     //[fNPeaks] array of volumes errors of 2D
+peaks, output parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fSigmaInitX;                    //initial value of sigma x parameter</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fSigmaCalcX;                    //calculated value of sigma x parameter</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fSigmaErrX;                     //error value of sigma x parameter</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fSigmaInitY;                    //initial value of sigma y parameter</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fSigmaCalcY;                    //calculated value of sigma y parameter</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fSigmaErrY;                     //error value of sigma y parameter</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fRoInit;                        //initial value of correlation coefficient</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fRoCalc;                        //calculated value of correlation coefficient</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fRoErr;                         //error value of correlation coefficient</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fTxyInit;                       //initial value of t parameter for 2D peaks
+(relative amplitude of tail), for details see html manual and references</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fTxyCalc;                       //calculated value of t parameter for 2D peaks</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fTxyErr;                        //error value of t parameter for 2D peaks</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fSxyInit;                       //initial value of s parameter for 2D peaks
+(relative amplitude of step), for details see html manual and references</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fSxyCalc;                       //calculated value of s parameter for 2D peaks</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fSxyErr;                        //error value of s parameter for 2D peaks</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fTxInit;                        //initial value of t parameter for 1D ridges in
+x direction (relative amplitude of tail), for details see html manual and
+references</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fTxCalc;                        //calculated value of t parameter for 1D ridges
+in x direction</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fTxErr;                         //error value of t parameter for 1D ridges in x
+direction</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fTyInit;                        //initial value of t parameter for 1D ridges in
+y direction (relative amplitude of tail), for details see html manual and
+references</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t  fTyCalc;                       
+//calculated value of t parameter for 1D ridges in y direction</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fTyErr;                         //error value of t parameter for 1D ridges in y
+direction</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fSxInit;                        //initial value of s parameter for 1D ridges in
+x direction (relative amplitude of step), for details see html manual and
+references</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fSxCalc;                        //calculated value of s parameter for 1D ridges
+in x direction</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t  fSxErr;                         //error
+value of s parameter for 1D ridges in x direction</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fSyInit;                        //initial value of s parameter for 1D ridges in
+y direction (relative amplitude of step), for details see html manual and
+references</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fSyCalc;                        //calculated value of s parameter for 1D ridges
+in y direction</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fSyErr;                         //error value of s parameter for 1D ridges in y
+direction</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fBxInit;                        //initial value of b parameter for 1D ridges in
+x direction (slope), for details see html manual and references</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fBxCalc;                        //calculated value of b parameter for 1D ridges
+in x direction</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fBxErr;                         //error value of b parameter for 1D ridges in x
+direction</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fByInit;                        //initial value of b parameter for 1D ridges in
+y direction (slope), for details see html manual and references</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fByCalc;                        //calculated value of b parameter for 1D ridges
+in y direction</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fByErr;                         //error value of b parameter for 1D ridges in y
+direction</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fA0Init;                        //initial value of background a0 parameter(backgroud
+is estimated as a0+ax*x+ay*y)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fA0Calc;                        //calculated value of background a0 parameter</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fA0Err;                         //error value of background a0 parameter</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t  fAxInit;        
+               //initial value of background ax parameter(backgroud is
+estimated as a0+ax*x+ay*y)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fAxCalc;                        //calculated value of background ax parameter</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fAxErr;                         //error value of background ax parameter</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fAyInit;                        //initial value of background ay
+parameter(backgroud is estimated as a0+ax*x+ay*y)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t 
+fAyCalc;                        //calculated value of background ay parameter</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t  fAyErr;                        
+//error value of background ay parameter   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t  
+*fFixPositionX;                  //[fNPeaks] array of logical values which
+allow to fix appropriate x positions of 2D peaks (not fit). However they are
+present in the estimated functional</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t  
+*fFixPositionY;                  //[fNPeaks] array of logical values which
+allow to fix appropriate y positions of 2D peaks (not fit). However they are
+present in the estimated functional</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t  
+*fFixPositionX1;                 //[fNPeaks] array of logical values which
+allow to fix appropriate x positions of 1D ridges (not fit). However they are
+present in the estimated functional</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t  
+*fFixPositionY1;                 //[fNPeaks] array of logical values which
+allow to fix appropriate y positions of 1D ridges (not fit). However they are
+present in the estimated functional</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t  
+*fFixAmp;                        //[fNPeaks] array of logical values which
 allow to fix appropriate amplitudes of 2D peaks (not fit). However they are
-present in the estimated functional<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>Bool_t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>*fFixAmpX1;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of logical values which
-allow to fix appropriate amplitudes of 1D ridges in x direction (not fit).<=
-/span>
-However they are present in the estimated functional<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>Bool_t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>*fFixAmpY1;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;
-</span>//[<span class=3DSpellE>fNPeaks</span>] array of logical values which
-allow to fix appropriate amplitudes of 1D ridges in y direction (not fit).<=
-/span>
-However they are present in the estimated functional<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>Bool_t</span></span><span class=3DGramE><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><span class=3DSpellE>f=
-FixSigmaX</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//logical value of sigma x parameter, which allows to fix the parame=
-ter
-(not to fit).</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Bool_t<=
-/span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><span class=3DSpellE>f=
-FixSigmaY</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>//logical value of sigma y parameter, which allows <span class=3DGra=
-mE>to
-fix</span> the parameter (not to fit).<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Bool_t<=
-/span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><span class=3DSpellE>f=
-FixRo</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;
-</span>//logical value of correlation coefficient, which allows <span
-class=3DGramE>to fix</span> the parameter (not to fit).<o:p></o:p></span></=
-p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Bool_t<=
-/span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><span class=3DSpellE>f=
-FixTxy</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//logical value of t parameter for 2D peaks, which allows <span
-class=3DGramE>to fix</span> the parameter (not to fit).<o:p></o:p></span></=
-p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Bool_t<=
-/span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><span class=3DSpellE>f=
-FixSxy</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;
-</span>//logical value of s parameter for 2D peaks, which allows <span
-class=3DGramE>to fix</span> the parameter (not to fit).<o:p></o:p></span></=
-p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Bool_t<=
-/span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><span class=3DSpellE>f=
-FixTx</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;
-</span>//logical value of t parameter for 1D <span class=3DGramE>ridges</sp=
-an> in
-x direction, which allows to fix the parameter (not to fit).<o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Bool_t<=
-/span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><span class=3DSpellE>f=
-FixTy</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;
-</span>//logical value of t parameter for 1D <span class=3DGramE>ridges</sp=
-an> in
-y direction, which allows to fix the parameter (not to fit).<o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Bool_t<=
-/span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><span class=3DSpellE>f=
-FixSx</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;
-</span>//logical value of s parameter for 1D <span class=3DGramE>ridges</sp=
-an> in
-x direction, which allows to fix the parameter (not to fit).<o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Bool_t<=
-/span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><span class=3DSpellE>f=
-FixSy</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;
-</span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>//logical
-value of s parameter for 1D <span class=3DGramE>ridges</span> in y directio=
-n,
-which allows to fix the parameter (not to fit).<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Bool_t<=
-/span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><span class=3DSpellE>f=
-FixBx</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;
-</span>//logical value of b parameter for 1D <span class=3DGramE>ridges</sp=
-an> in
-x direction, which allows to fix the parameter (not to fit).<o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Bool_t<=
-/span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><span class=3DSpellE>f=
-FixBy</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;
-</span>//logical value of b parameter for 1D <span class=3DGramE>ridges</sp=
-an> in
-y direction, which allows to fix the parameter (not to fit).<o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Bool_t<=
-/span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span>fFixA0;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;
-</span>//logical value of a0 parameter, which allows <span class=3DGramE>to=
- fix</span>
-the parameter (not to fit).<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Bool_t<=
-/span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><span class=3DSpellE>f=
-FixAx</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;
-</span>//logical value of ax parameter, which allows <span class=3DGramE>to=
- fix</span>
-the parameter (not to fit).<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Bool_t<=
-/span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><span class=3DSpellE>f=
-FixAy</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;
-</span>//logical value of ay parameter, which allows <span class=3DGramE>to=
- fix</span>
-the parameter (not to fit).<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;</span></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><i><span lang=3DEN-US>=
-References:<o:p></o:p></span></i></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>[1] <s=
-pan
-class=3DSpellE>Phillps</span> G.W., Marlow K.W., NIM 137 (1976) 525.</span>=
-</p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>[2] I.=
- A.
-Slavic: Nonlinear least-squares fitting without matrix inversion applied to=
- complex
-Gaussian spectra analysis. NIM 134 (1976) 285-289.</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>[3] T.=
- <span
-class=3DSpellE>Awaya</span>: A new method for curve fitting to the data wit=
-h low
-statistics not using chi-square method. NIM 165 (1979) 317-323.</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>[4] T.=
- <span
-class=3DSpellE>Hauschild</span>, M. <span class=3DSpellE>Jentschel</span>:
-Comparison of maximum likelihood estimation and chi-square statistics appli=
-ed
-to counting experiments. NIM A 457 (2001) 384-401.</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;</span>[5<span class=3DGramE>]<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>M</span>. <span class=3DSpellE>Mor=
-h&aacute;&#269;</span>,<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>J. <span class=3DSpellE>Kliman</sp=
-an>,<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>M. <span class=3DSpellE>Jandel</sp=
-an>,<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>&#317;. <span class=3DSpellE>Krupa=
-</span>,
-V. <span class=3DSpellE>Matou&#353;ek</span>: Study of fitting algorithms a=
-pplied
-to simultaneous analysis of large number of peaks in -ray spectra. </span><=
-span
-lang=3DEN-GB style=3D'mso-ansi-language:EN-GB'>Applied Spectroscopy, Vol. 5=
-7, No.
-7, pp. 753-760, 2003</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;</span></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span class=3DGramE><i><s=
-pan
-lang=3DEN-US>Example <span style=3D'mso-spacerun:yes'>&nbsp;</span>&#8211;<=
-/span></i></span><i><span
-lang=3DEN-US> script FitAwmi2.c:<o:p></o:p></span></i></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:18.0pt'><!--[if gte vml 1]><v:shape id=3D"_x0000_i1026" =
-type=3D"#_x0000_t75"
- style=3D'width:451.5pt;height:341.25pt'>
- <v:imagedata src=3D"FitAwmi_files/image003.jpg" o:title=3D"Src_orig"/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D602 height=3D455
-src=3D"FitAwmi_files/image004.jpg" v:shapes=3D"_x0000_i1026"><![endif]><o:p=
-></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span class=3DGramE><b><s=
-pan
-lang=3DEN-US>Fig. 1 Original two-dimensional spectrum with found peaks (usi=
-ng
-TSpectrum2 peak searching function).</span></b></span><b><span lang=3DEN-US=
-> The
-positions of peaks were used as initial estimates in fitting procedure.<o:p=
-></o:p></span></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US
-style=3D'font-size:16.0pt'><!--[if gte vml 1]><v:shape id=3D"_x0000_i1025" =
-type=3D"#_x0000_t75"
- style=3D'width:451.5pt;height:341.25pt'>
- <v:imagedata src=3D"FitAwmi_files/image005.jpg" o:title=3D"FitA"/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D602 height=3D455
-src=3D"FitAwmi_files/image006.jpg" v:shapes=3D"_x0000_i1025"><![endif]><o:p=
-></o:p></span></b></p>
-
-<p class=3DMsoBodyText2 style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'mso-bidi-font-size:12.0pt;mso-bidi-font-weight:bold'>Fig. 2 Fitted=
- (generated
-from fitted parameters) spectrum of the data from Fig. 1 using Algorithm <s=
-pan
-class=3DGramE>Without</span> Matrix Inversion. </span><span lang=3DEN-US
-style=3D'mso-bidi-font-size:12.0pt'>Each peak was represented by 7 paramete=
-rs,
-which together with <span class=3DSpellE>Sigmax</span>, <span class=3DSpell=
-E>Sigmay</span>
-and a0 resulted in 38 fitted parameters. The chi-square after 1000 iteratio=
-ns
-was 0.642342.<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'color:#339966'><o:p>&nbsp;</o:p></span></b></p>
-
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'color:#339966'>Script:<o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// Examp=
-le to
-illustrate fitting function, algorithm without matrix inversion (AWMI) (cla=
-ss
-TSpectrum2Fit).<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// <span
-class=3DGramE>To</span> execute this example, do<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// root =
-&gt; .x
-FitAwmi2.C<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><o:p>&nb=
-sp;</o:p></span></p>
-
-<p class=3DMsoNormal><span class=3DGramE><span lang=3DEN-US style=3D'font-s=
-ize:10.0pt'>void</span></span><span
-lang=3DEN-US style=3D'font-size:10.0pt'> FitAwmi2() {<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span> <span
-class=3DSpellE>i</span>, j, <span class=3DSpellE>nfound</span>;<o:p></o:p><=
-/span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span> <span
-class=3DSpellE>nbinsx</span> =3D 64;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span> <span
-class=3DSpellE>nbinsy</span> =3D 64;<span style=3D'mso-spacerun:yes'>&nbsp;=
-&nbsp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span> <span
-class=3DSpellE><span class=3DGramE>xmin</span></span><span class=3DGramE><s=
-pan
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D</span> 0;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span> <span
-class=3DSpellE><span class=3DGramE>xmax</span></span><span class=3DGramE><s=
-pan
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D</span> <span class=3DSpellE>nb=
-insx</span>;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span> <span
-class=3DSpellE><span class=3DGramE>ymin</span></span><span class=3DGramE><s=
-pan
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D</span> 0;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span> <span
-class=3DSpellE><span class=3DGramE>ymax</span></span><span class=3DGramE><s=
-pan
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D</span> <span class=3DSpellE>nb=
-insy</span>;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Float_t=
-</span>
-** source =3D new float *[<span class=3DSpellE>nbinsx</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Float_t=
-</span>
-** <span class=3DSpellE>dest</span> =3D new float *[<span class=3DSpellE>nb=
-insx</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span>=3D0;i&lt;<span class=3DSpellE>nbinsx;i</span>++)<o:=
-p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-tab-count:3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp; </span><span
-class=3DGramE>source[</span><span class=3DSpellE>i</span>]=3Dnew float[<span
-class=3DSpellE>nbinsy</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span>=3D0;i&lt;<span class=3DSpellE>nbinsx;i</span>++)<o:=
-p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-tab-count:3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>dest</span></span><span class=3DGramE>[<=
-/span><span
-class=3DSpellE>i</span>]=3Dnew float[<span class=3DSpellE>nbinsy</span>];<o=
-:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TH2F *search =3D new <span
-class=3DGramE>TH2F(</span>&quot;<span class=3DSpellE>search&quot;,&quot;Hig=
-h</span>
-resolution peak <span class=3DSpellE>searching&quot;,nbinsx,xmin,xmax,nbins=
-y,ymin,ymax</span>);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TFile</=
-span> *f
-=3D new <span class=3DSpellE><span class=3DGramE>TFile</span></span><span
-class=3DGramE>(</span>&quot;TSpectrum2.root&quot;);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>search</=
-span>=3D(TH2F*)
-f-&gt;Get(&quot;search4;1&quot;);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TCanvas=
-</span>
-*Searching =3D new <span class=3DSpellE><span class=3DGramE>TCanvas</span><=
-/span><span
-class=3DGramE>(</span>&quot;<span class=3DSpellE>Searching&quot;,&quot;Two<=
-/span>-dimensional
-fitting using Algorithm Without Matrix Inversion&quot;,10,10,1000,700);<o:p=
-></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TSpectrum2 *s =3D new <span
-class=3DGramE>TSpectrum2(</span>);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span> &lt; <span cla=
-ss=3DSpellE>nbinsx</span>;
-<span class=3DSpellE>i</span>++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DGr=
-amE>for</span>
-(j =3D 0; j &lt; <span class=3DSpellE>nbinsy</span>; j++){<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;</span><span class=3DGra=
-mE>source[</span><span
-class=3DSpellE>i</span>][j] =3D search-&gt;<span class=3DSpellE>GetBinConte=
-nt</span>(<span
-class=3DSpellE>i</span> + 1,j + 1); <o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;</span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>} <o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>//searching for candidate pe=
-aks
-positions<span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><=
-o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>nfound</span></span> =3D s-&gt;<span class=3DSpellE>SearchHig=
-hRes</span>(source,
-<span class=3DSpellE>dest</span>, <span class=3DSpellE>nbinsx</span>, <span
-class=3DSpellE>nbinsy</span>, 2, 5, <span class=3DSpellE>kTRUE</span>, 3, <=
-span
-class=3DSpellE>kFALSE</span>, 3);<span style=3D'mso-spacerun:yes'>&nbsp;&nb=
-sp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Bool_t<=
-/span> *<span
-class=3DSpellE>FixPosX</span> =3D new <span class=3DSpellE>Bool_<span class=
-=3DGramE>t</span></span><span
-class=3DGramE>[</span><span class=3DSpellE>nfound</span>];<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Bool_t<=
-/span> *<span
-class=3DSpellE>FixPosY</span> =3D new <span class=3DSpellE>Bool_<span class=
-=3DGramE>t</span></span><span
-class=3DGramE>[</span><span class=3DSpellE>nfound</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Bool_t<=
-/span> *<span
-class=3DSpellE>FixAmp</span> =3D new <span class=3DSpellE>Bool_<span class=
-=3DGramE>t</span></span><span
-class=3DGramE>[</span><span class=3DSpellE>nfound</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Float_t=
-</span>
-*<span class=3DSpellE>PosX</span> =3D new <span class=3DSpellE>Float_<span
-class=3DGramE>t</span></span><span class=3DGramE>[</span><span class=3DSpel=
-lE>nfound</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Float_t=
-</span>
-*<span class=3DSpellE>PosY</span> =3D new <span class=3DSpellE>Float_<span
-class=3DGramE>t</span></span><span class=3DGramE>[</span><span class=3DSpel=
-lE>nfound</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Float_t=
-</span>
-*Amp =3D new <span class=3DSpellE>Float_<span class=3DGramE>t</span></span>=
-<span
-class=3DGramE>[</span><span class=3DSpellE>nfound</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Float_t=
-</span>
-*<span class=3DSpellE>AmpXY</span> =3D new <span class=3DSpellE>Float_<span
-class=3DGramE>t</span></span><span class=3DGramE>[</span><span class=3DSpel=
-lE>nfound</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>PosX</s=
-pan> =3D
-s-&gt;<span class=3DSpellE><span class=3DGramE>GetPositionX</span></span><s=
-pan
-class=3DGramE>(</span>);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>PosY</s=
-pan> =3D
-s-&gt;<span class=3DSpellE><span class=3DGramE>GetPositionY</span></span><s=
-pan
-class=3DGramE>(</span>);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>printf</span></span><span class=3DGramE>(</span>&quot;Found %d
-candidate peaks\<span class=3DSpellE>n&quot;,nfound</span>);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for(</sp=
-an><span
-class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span>&lt; <span clas=
-s=3DSpellE>nfound</span>
-; <span class=3DSpellE>i</span>++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DSpellE>FixPosX</span>[<span class=3DSpellE>i</span>] =3D <span clas=
-s=3DSpellE>kFALSE</span>;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DSpellE>FixPosY</span>[<span class=3DSpellE>i</span>] =3D <span clas=
-s=3DSpellE>kFALSE</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DSpellE>FixAmp</span>[<span class=3DSpellE>i</span>] =3D <span class=
-=3DSpellE>kFALSE</span>;<span
-style=3D'mso-tab-count:1'>&nbsp;&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Amp[<span
-class=3DSpellE>i</span>] =3D <span class=3DGramE>source[</span>(<span class=
-=3DSpellE>int</span>)(<span
-class=3DSpellE>PosX</span>[<span class=3DSpellE>i</span>]+0.5)][(<span
-class=3DSpellE>int</span>)(<span class=3DSpellE>PosY</span>[<span class=3DS=
-pellE>i</span>]+0.5)];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>//initial =
-values
-of peaks amplitudes, input parameters<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DSpellE>AmpXY</span>[<span class=3DSpellE>i</span>] =3D 0;<o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>//filling in the initial est=
-imates
-of the input parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TSpectrum2Fit *<span class=
-=3DSpellE>pfit</span>=3Dnew
-<span class=3DGramE>TSpectrum2Fit(</span><span class=3DSpellE>nfound</span>=
-);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>pfit</span></span>-&gt;<span class=3DSpellE>SetFitParameters<=
-/span>(<span
-class=3DSpellE>xmin</span>, xmax-1, <span class=3DSpellE>ymin</span>, ymax-=
-1, 1000,
-0.1, <span class=3DSpellE>pfit</span>-&gt;<span class=3DSpellE>kFitOptimChi=
-Counts</span>,
-<span class=3DSpellE>pfit</span>-&gt;<span class=3DSpellE>kFitAlphaHalving<=
-/span>, <span
-class=3DSpellE>pfit</span>-&gt;kFitPower2, <span class=3DSpellE>pfit</span>=
--&gt;<span
-class=3DSpellE>kFitTaylorOrderFirst</span>);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>pfit</span></span>-&gt;<span class=3DSpellE>SetPeakParameters=
-</span>(2,
-<span class=3DSpellE>kFALSE</span>, 2, <span class=3DSpellE>kFALSE</span>, =
-0, <span
-class=3DSpellE>kTRUE</span>, <span class=3DSpellE>PosX</span>, (<span class=
-=3DSpellE>Bool_t</span>
-*) <span class=3DSpellE>FixPosX</span>, <span class=3DSpellE>PosY</span>, (=
-<span
-class=3DSpellE>Bool_t</span> *) <span class=3DSpellE>FixPosY</span>, <span
-class=3DSpellE>PosX</span>, (<span class=3DSpellE>Bool_t</span> *) <span
-class=3DSpellE>FixPosX</span>, <span class=3DSpellE>PosY</span>, (<span
-class=3DSpellE>Bool_t</span> *) <span class=3DSpellE>FixPosY</span>, Amp, (=
-<span
-class=3DSpellE>Bool_t</span> *) <span class=3DSpellE>FixAmp</span>, <span
-class=3DSpellE>AmpXY</span>, (<span class=3DSpellE>Bool_t</span> *) <span
-class=3DSpellE>FixAmp</span>, <span class=3DSpellE>AmpXY</span>, (<span
-class=3DSpellE>Bool_t</span> *) <span class=3DSpellE>FixAmp</span>);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>pfit</span></span>-&gt;<span class=3DSpellE>SetBackgroundPara=
-meters</span>(0,
-<span class=3DSpellE>kFALSE</span>, 0, <span class=3DSpellE>kTRUE</span>, 0=
-, <span
-class=3DSpellE>kTRUE</span>);<span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; =
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>pfit</span></span>-&gt;<span class=3DSpellE>FitAwmi</span>(so=
-urce);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><span class=3DGramE>fo=
-r</span>
-(<span class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span> &lt; <s=
-pan
-class=3DSpellE>nbinsx</span>; <span class=3DSpellE>i</span>++){<o:p></o:p><=
-/span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DGr=
-amE>for</span>
-(j =3D 0; j &lt; <span class=3DSpellE>nbinsy</span>; j++){<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-style=3D'mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;</span><span class=3DGramE>search</s=
-pan>-&gt;<span
-class=3DSpellE>SetBinContent</span>(<span class=3DSpellE>i</span> + 1, j +
-1,source[<span class=3DSpellE>i</span>][j]);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;</span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>search</=
-span>-&gt;Draw(&quot;SURF&quot;);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>}<o:p></=
-o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><i><span lang=3DEN-US
-style=3D'font-size:16.0pt'><o:p>&nbsp;</o:p></span></i></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><i><span lang=3DEN-US>Exa=
-mple 2
-&#8211; script FitA2.c:<o:p></o:p></span></i></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><!--[if gte vml 1]><v:shape id=3D"_=
-x0000_i1028"
- type=3D"#_x0000_t75" style=3D'width:451.5pt;height:341.25pt'>
- <v:imagedata src=3D"FitAwmi_files/image007.jpg" o:title=3D"FitA2_orig"/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D602 height=3D455
-src=3D"FitAwmi_files/image008.jpg" v:shapes=3D"_x0000_i1028"><![endif]></sp=
-an></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span class=3DGramE><b><s=
-pan
-lang=3DEN-US>Fig. 3 Original two-dimensional gamma-gamma-ray spectrum with =
-found
-peaks (using TSpectrum2 peak searching function).</span></b></span><b><span
-lang=3DEN-US> <o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><!--[i=
-f gte vml 1]><v:shape
- id=3D"_x0000_i1029" type=3D"#_x0000_t75" style=3D'width:451.5pt;height:341=
-.25pt'>
- <v:imagedata src=3D"FitAwmi_files/image009.jpg" o:title=3D"FitA2_decon"/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D602 height=3D455
-src=3D"FitAwmi_files/image010.jpg" v:shapes=3D"_x0000_i1029"><![endif]></sp=
-an></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US>Fig=
-. 4 Fitted
-(generated from fitted parameters) spectrum of the data from Fig. 3 using
-Algorithm <span class=3DGramE>Without</span> Matrix Inversion. 152 peaks we=
-re
-identified. </span></b><b style=3D'mso-bidi-font-weight:normal'><span lang=
-=3DEN-US>Each
-peak was represented by 7 parameters, which together with <span class=3DSpe=
-llE>Sigmax</span>,
-<span class=3DSpellE>Sigmay</span> and a0 resulted in 1067 fitted parameter=
-s. The
-chi-square after 1000 iterations was 0.728675. One can observe good
-correspondence with the original data.<o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b style=3D'mso-bidi-font=
--weight:
-normal'><span lang=3DEN-US style=3D'font-size:16.0pt'><o:p>&nbsp;</o:p></sp=
-an></b></p>
-
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'color:#339966'>Script:<o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'>// Example to illustrate fitting function, algor=
-ithm
-without matrix inversion (AWMI) (class TSpectrum2Fit).<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'>// <span class=3DGramE>To</span> execute this ex=
-ample,
-do<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'>// root &gt; .x FitA2.C<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span class=3DGramE><span
-lang=3DEN-US style=3D'font-size:10.0pt'>void</span></span><span lang=3DEN-US
-style=3D'font-size:10.0pt'> FitA2() {<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE>Int_t</span> <span class=3DSpellE>i</span>, j, <span class=
-=3DSpellE>nfound</span>;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE>Int_t</span> <span class=3DSpellE>nbinsx</span> =3D 256;<o:p=
-></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE>Int_t</span> <span class=3DSpellE>nbinsy</span> =3D 256;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE>Int_t</span> <span class=3DSpellE><span class=3DGramE>xmin</=
-span></span><span
-class=3DGramE><span style=3D'mso-spacerun:yes'>&nbsp; </span>=3D</span> 0;<=
-o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE>Int_t</span> <span class=3DSpellE><span class=3DGramE>xmax</=
-span></span><span
-class=3DGramE><span style=3D'mso-spacerun:yes'>&nbsp; </span>=3D</span> <sp=
-an
-class=3DSpellE>nbinsx</span>;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE>Int_t</span> <span class=3DSpellE><span class=3DGramE>ymin</=
-span></span><span
-class=3DGramE><span style=3D'mso-spacerun:yes'>&nbsp; </span>=3D</span> 0;<=
-o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE>Int_t</span> <span class=3DSpellE><span class=3DGramE>ymax</=
-span></span><span
-class=3DGramE><span style=3D'mso-spacerun:yes'>&nbsp; </span>=3D</span> <sp=
-an
-class=3DSpellE>nbinsy</span>;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE>Float_t</span> ** source =3D new float *[<span class=3DSpell=
-E>nbinsx</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE>Float_t</span> ** <span class=3DSpellE>dest</span> =3D new f=
-loat *[<span
-class=3DSpellE>nbinsx</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DGramE>for</span> (<span class=3DSpellE>i</span>=3D0;i&lt;<span clas=
-s=3DSpellE>nbinsx;i</span>++)<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-tab-count:3'>&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DGramE>source[</span><span class=3DSpellE>i</span>]=3Dnew float[<span
-class=3DSpellE>nbinsy</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DGramE>for</span> (<span class=3DSpellE>i</span>=3D0;i&lt;<span clas=
-s=3DSpellE>nbinsx;i</span>++)<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-tab-count:3'>&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>dest</span></span><span class=3DGramE>[<=
-/span><span
-class=3DSpellE>i</span>]=3Dnew float[<span class=3DSpellE>nbinsy</span>];<s=
-pan
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;
-</span>TH2F *search =3D new <span class=3DGramE>TH2F(</span>&quot;<span
-class=3DSpellE>search&quot;,&quot;High</span> resolution peak <span class=
-=3DSpellE>searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax</span>);<o:p></=
-o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE>TFile</span> *f =3D new <span class=3DSpellE><span class=3DG=
-ramE>TFile</span></span><span
-class=3DGramE>(</span>&quot;TSpectrum2.root&quot;);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DGramE>search</span>=3D(TH2F*) f-&gt;Get(&quot;fit1;1&quot;);<o:p></=
-o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE>TCanvas</span> *Searching =3D new <span class=3DSpellE><span
-class=3DGramE>TCanvas</span></span><span class=3DGramE>(</span>&quot;<span
-class=3DSpellE>Searching&quot;,&quot;Two</span>-dimensional fitting using
-Algorithm Without Matrix Inversion&quot;,10,10,1000,700);<o:p></o:p></span>=
-</p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;
-</span>TSpectrum2 *s =3D new <span class=3DGramE>TSpectrum2(</span>1000,1);=
-<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DGramE>for</span> (<span class=3DSpellE>i</span> =3D 0; <span class=
-=3DSpellE>i</span>
-&lt; <span class=3DSpellE>nbinsx</span>; <span class=3DSpellE>i</span>++){<=
-o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DGr=
-amE>for</span>
-(j =3D 0; j &lt; <span class=3DSpellE>nbinsy</span>; j++){<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-style=3D'mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;</span><span class=3DGra=
-mE>source[</span><span
-class=3DSpellE>i</span>][j] =3D search-&gt;<span class=3DSpellE>GetBinConte=
-nt</span>(<span
-class=3DSpellE>i</span> + 1,j + 1); <o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-style=3D'mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;</span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;
-</span>}<span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></s=
-pan></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE><span class=3DGramE>nfound</span></span> =3D s-&gt;<span cla=
-ss=3DSpellE>SearchHighRes</span>(source,
-<span class=3DSpellE>dest</span>, <span class=3DSpellE>nbinsx</span>, <span
-class=3DSpellE>nbinsy</span>, 2, 2, <span class=3DSpellE>kTRUE</span>, 100,=
- <span
-class=3DSpellE>kFALSE</span>, 3);<span style=3D'mso-spacerun:yes'>&nbsp;&nb=
-sp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE><span class=3DGramE>printf</span></span><span class=3DGramE>=
-(</span>&quot;Found
-%d candidate peaks\<span class=3DSpellE>n&quot;,nfound</span>);<o:p></o:p><=
-/span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE>Bool_t</span> *<span class=3DSpellE>FixPosX</span> =3D new <=
-span
-class=3DSpellE>Bool_<span class=3DGramE>t</span></span><span class=3DGramE>=
-[</span><span
-class=3DSpellE>nfound</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE>Bool_t</span> *<span class=3DSpellE>FixPosY</span> =3D new <=
-span
-class=3DSpellE>Bool_<span class=3DGramE>t</span></span><span class=3DGramE>=
-[</span><span
-class=3DSpellE>nfound</span>];<span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;=
- </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE>Bool_t</span> *<span class=3DSpellE>FixAmp</span> =3D new <s=
-pan
-class=3DSpellE>Bool_<span class=3DGramE>t</span></span><span class=3DGramE>=
-[</span><span
-class=3DSpellE>nfound</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE>Float_t</span> *<span class=3DSpellE>PosX</span> =3D new <sp=
-an
-class=3DSpellE>Float_<span class=3DGramE>t</span></span><span class=3DGramE=
->[</span><span
-class=3DSpellE>nfound</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE>Float_t</span> *<span class=3DSpellE>PosY</span> =3D new <sp=
-an
-class=3DSpellE>Float_<span class=3DGramE>t</span></span><span class=3DGramE=
->[</span><span
-class=3DSpellE>nfound</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE>Float_t</span> *Amp =3D new <span class=3DSpellE>Float_<span
-class=3DGramE>t</span></span><span class=3DGramE>[</span><span class=3DSpel=
-lE>nfound</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE>Float_t</span> *<span class=3DSpellE>AmpXY</span> =3D new <s=
-pan
-class=3DSpellE>Float_<span class=3DGramE>t</span></span><span class=3DGramE=
->[</span><span
-class=3DSpellE>nfound</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE>PosX</span> =3D s-&gt;<span class=3DSpellE><span class=3DGra=
-mE>GetPositionX</span></span><span
-class=3DGramE>(</span>);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE>PosY</span> =3D s-&gt;<span class=3DSpellE><span class=3DGra=
-mE>GetPositionY</span></span><span
-class=3DGramE>(</span>);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DGramE>for(</span><span class=3DSpellE>i</span> =3D 0; <span class=
-=3DSpellE>i</span>&lt;
-<span class=3DSpellE>nfound</span> ; <span class=3DSpellE>i</span>++){<o:p>=
-</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DSpellE>FixPosX</span>[<span class=3DSpellE>i</span>] =3D <span clas=
-s=3DSpellE>kFALSE</span>;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DSpellE>FixPosY</span>[<span class=3DSpellE>i</span>] =3D <span clas=
-s=3DSpellE>kFALSE</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DSpellE>FixAmp</span>[<span class=3DSpellE>i</span>] =3D <span class=
-=3DSpellE>kFALSE</span>;<span
-style=3D'mso-tab-count:1'>&nbsp;&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Amp[<span
-class=3DSpellE>i</span>] =3D <span class=3DGramE>source[</span>(<span class=
-=3DSpellE>int</span>)(<span
-class=3DSpellE>PosX</span>[<span class=3DSpellE>i</span>]+0.5)][(<span
-class=3DSpellE>int</span>)(<span class=3DSpellE>PosY</span>[<span class=3DS=
-pellE>i</span>]+0.5)];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>//initial =
-values
-of peaks amplitudes, input parameters<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DSpellE>AmpXY</span>[<span class=3DSpellE>i</span>] =3D 0;<o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;
-</span>//filling in the initial estimates of the input parameters<o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;
-</span>TSpectrum2Fit *<span class=3DSpellE>pfit</span>=3Dnew <span class=3D=
-GramE>TSpectrum2Fit(</span><span
-class=3DSpellE>nfound</span>);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE><span class=3DGramE>pfit</span></span>-&gt;<span class=3DSpe=
-llE>SetFitParameters</span>(<span
-class=3DSpellE>xmin</span>, xmax-1, <span class=3DSpellE>ymin</span>, ymax-=
-1, 1000,
-0.1, <span class=3DSpellE>pfit</span>-&gt;<span class=3DSpellE>kFitOptimChi=
-Counts</span>,
-<span class=3DSpellE>pfit</span>-&gt;<span class=3DSpellE>kFitAlphaHalving<=
-/span>, <span
-class=3DSpellE>pfit</span>-&gt;kFitPower2, <span class=3DSpellE>pfit</span>=
--&gt;<span
-class=3DSpellE>kFitTaylorOrderFirst</span>);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE><span class=3DGramE>pfit</span></span>-&gt;<span class=3DSpe=
-llE>SetPeakParameters</span>(2,
-<span class=3DSpellE>kFALSE</span>, 2, <span class=3DSpellE>kFALSE</span>, =
-0, <span
-class=3DSpellE>kTRUE</span>, <span class=3DSpellE>PosX</span>, (<span class=
-=3DSpellE>Bool_t</span>
-*) <span class=3DSpellE>FixPosX</span>, <span class=3DSpellE>PosY</span>, (=
-<span
-class=3DSpellE>Bool_t</span> *) <span class=3DSpellE>FixPosY</span>, <span
-class=3DSpellE>PosX</span>, (<span class=3DSpellE>Bool_t</span> *) <span
-class=3DSpellE>FixPosX</span>, <span class=3DSpellE>PosY</span>, (<span
-class=3DSpellE>Bool_t</span> *) <span class=3DSpellE>FixPosY</span>, Amp, (=
-<span
-class=3DSpellE>Bool_t</span> *) <span class=3DSpellE>FixAmp</span>, <span
-class=3DSpellE>AmpXY</span>, (<span class=3DSpellE>Bool_t</span> *) <span
-class=3DSpellE>FixAmp</span>, <span class=3DSpellE>AmpXY</span>, (<span
-class=3DSpellE>Bool_t</span> *) <span class=3DSpellE>FixAmp</span>);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE><span class=3DGramE>pfit</span></span>-&gt;<span class=3DSpe=
-llE>SetBackgroundParameters</span>(0,
-<span class=3DSpellE>kFALSE</span>, 0, <span class=3DSpellE>kTRUE</span>, 0=
-, <span
-class=3DSpellE>kTRUE</span>);<span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; =
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DSpellE><span class=3DGramE>pfit</span></span>-&gt;<span class=3DSpe=
-llE>FitAwmi</span>(source);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DGramE>for</span> (<span class=3DSpellE>i</span> =3D 0; <span class=
-=3DSpellE>i</span>
-&lt; <span class=3DSpellE>nbinsx</span>; <span class=3DSpellE>i</span>++){<=
-o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DGr=
-amE>for</span>
-(j =3D 0; j &lt; <span class=3DSpellE>nbinsy</span>; j++){<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-style=3D'mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;</span><span class=3DGramE>search</s=
-pan>-&gt;<span
-class=3DSpellE>SetBinContent</span>(<span class=3DSpellE>i</span> + 1, j +
-1,source[<span class=3DSpellE>i</span>][j]);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-style=3D'mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;</span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;
-</span>}<span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></s=
-pan></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </=
-span><span
-class=3DGramE>search</span>-&gt;Draw(&quot;SURF&quot;);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:10.0pt'><o:p>&nbsp;</o:p></span></p>
+present in the estimated functional</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t  
+*fFixAmpX1;                      //[fNPeaks] array of logical values which
+allow to fix appropriate amplitudes of 1D ridges in x direction (not fit).
+However they are present in the estimated functional</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t  
+*fFixAmpY1;                      //[fNPeaks] array of logical values which
+allow to fix appropriate amplitudes of 1D ridges in y direction (not fit).
+However they are present in the estimated functional</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t   
+fFixSigmaX;                     //logical value of sigma x parameter, which
+allows to fix the parameter (not to fit).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t   
+fFixSigmaY;                     //logical value of sigma y parameter, which
+allows to fix the parameter (not to fit).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t    fFixRo;                         //logical
+value of correlation coefficient, which allows to fix the parameter (not to
+fit).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t   
+fFixTxy;                        //logical value of t parameter for 2D peaks,
+which allows to fix the parameter (not to fit).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t   
+fFixSxy;                        //logical value of s parameter for 2D peaks,
+which allows to fix the parameter (not to fit).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t   
+fFixTx;                         //logical value of t parameter for 1D ridges in
+x direction, which allows to fix the parameter (not to fit).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t   
+fFixTy;                         //logical value of t parameter for 1D ridges in
+y direction, which allows to fix the parameter (not to fit).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t   
+fFixSx;                         //logical value of s parameter for 1D ridges in
+x direction, which allows to fix the parameter (not to fit).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t   
+fFixSy;                         //logical value of s parameter for 1D ridges in
+y direction, which allows to fix the parameter (not to fit).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t    fFixBx;                         //logical
+value of b parameter for 1D ridges in x direction, which allows to fix the
+parameter (not to fit).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t   
+fFixBy;                         //logical value of b parameter for 1D ridges in
+y direction, which allows to fix the parameter (not to fit).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t   
+fFixA0;                         //logical value of a0 parameter, which allows
+to fix the parameter (not to fit).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t   
+fFixAx;                         //logical value of ax parameter, which allows
+to fix the parameter (not to fit).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t   
+fFixAy;                         //logical value of ay parameter, which allows
+to fix the parameter (not to fit).</span></p>
+
+<p class=MsoNormal> </p>
+
+<p class=MsoNormal style='text-align:justify'><b><i>References:</i></b></p>
+
+<p class=MsoNormal style='text-align:justify'>[1] Phillps G.W., Marlow K.W.,
+NIM 137 (1976) 525.</p>
+
+<p class=MsoNormal style='text-align:justify'>[2] I. A. Slavic: Nonlinear
+least-squares fitting without matrix inversion applied to complex Gaussian
+spectra analysis. NIM 134 (1976) 285-289.</p>
+
+<p class=MsoNormal style='text-align:justify'>[3] T. Awaya: A new method for
+curve fitting to the data with low statistics not using chi-square method. NIM
+165 (1979) 317-323.</p>
+
+<p class=MsoNormal style='text-align:justify'>[4] T. Hauschild, M. Jentschel:
+Comparison of maximum likelihood estimation and chi-square statistics applied
+to counting experiments. NIM A 457 (2001) 384-401.</p>
+
+<p class=MsoNormal style='text-align:justify'> [5]  M. Morhá&#269;,  J.
+Kliman,  M. Jandel,  &#317;. Krupa, V. Matoušek: Study of fitting algorithms
+applied to simultaneous analysis of large number of peaks in -ray spectra. <span
+lang=EN-GB>Applied Spectroscopy, Vol. 57, No. 7, pp. 753-760, 2003</span></p>
+
+<p class=MsoNormal style='text-align:justify'> </p>
+
+<p class=MsoNormal style='text-align:justify'><i>Example  – script FitAwmi2.c:</i></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:18.0pt'><img
+border=0 width=602 height=455 src="gif/spectrum2fit_awmi_image002.jpg"></span></p>
+
+<p class=MsoNormal style='text-align:justify'><b>Fig. 1 Original two-dimensional
+spectrum with found peaks (using TSpectrum2 peak searching function). The
+positions of peaks were used as initial estimates in fitting procedure.</b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
+border=0 width=602 height=455 src="gif/spectrum2fit_awmi_image003.jpg"></span></b></p>
+
+<p class=MsoBodyText2 style='text-align:justify'>Fig. 2 Fitted (generated from
+fitted parameters) spectrum of the data from Fig. 1 using Algorithm Without
+Matrix Inversion. Each peak was represented by 7 parameters, which together
+with Sigmax, Sigmay and a0 resulted in 38 fitted parameters. The chi-square
+after 1000 iterations was 0.642342.</p>
+
+<p class=MsoNormal><b><span style='color:#339966'>&nbsp;</span></b></p>
+
+<p class=MsoNormal><b><span style='color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// Example to illustrate fitting
+function, algorithm without matrix inversion (AWMI) (class TSpectrumFit2).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// To execute this example,
+do</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// root &gt; .x FitAwmi2.C</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>void FitAwmi2() {</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t i, j, nfound;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t nbinsx = 64;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t nbinsy = 64;   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t xmin  = 0;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t xmax  = nbinsx;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t ymin  = 0;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t ymax  = nbinsy;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t ** source = new
+float *[nbinsx];   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t ** dest = new
+float *[nbinsx];      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i=0;i&lt;nbinsx;i++)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                                                source[i]=new
+float[nbinsy];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i=0;i&lt;nbinsx;i++)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                                                dest[i]=new
+float[nbinsy];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TH2F *search = new
+TH2F(&quot;search&quot;,&quot;High resolution peak
+searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TFile *f = new
+TFile(&quot;TSpectrum2.root&quot;);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   search=(TH2F*)
+f-&gt;Get(&quot;search4;1&quot;);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TCanvas *Searching = new
+TCanvas(&quot;Searching&quot;,&quot;Two-dimensional fitting using Algorithm
+Without Matrix Inversion&quot;,10,10,1000,700);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrum2 *s = new
+TSpectrum2();</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbinsx;
+i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
+nbinsy; j++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                    source[i][j]
+= search-&gt;GetBinContent(i + 1,j + 1); </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                 }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   } </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   //searching for candidate
+peaks positions     </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   nfound =
+s-&gt;SearchHighRes(source, dest, nbinsx, nbinsy, 2, 5, kTRUE, 3, kFALSE, 3);  
+</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t *FixPosX = new
+Bool_t[nfound];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t *FixPosY = new
+Bool_t[nfound];   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t *FixAmp = new
+Bool_t[nfound];      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *PosX = new
+Float_t[nfound];         </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *PosY = new
+Float_t[nfound];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *Amp = new
+Float_t[nfound];      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *AmpXY = new
+Float_t[nfound];         </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   PosX =
+s-&gt;GetPositionX();</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   PosY =
+s-&gt;GetPositionY();      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   printf(&quot;Found %d
+candidate peaks\n&quot;,nfound);   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for(i = 0; i&lt; nfound ;
+i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      FixPosX[i] = kFALSE;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      FixPosY[i] =
+kFALSE;      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      FixAmp[i] = kFALSE;    </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      Amp[i] =
+source[(int)(PosX[i]+0.5)][(int)(PosY[i]+0.5)];      //initial values of peaks
+amplitudes, input parameters          </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      AmpXY[i] = 0;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   //filling in the initial
+estimates of the input parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrumFit2 *pfit=new
+TSpectrumFit2(nfound);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+pfit-&gt;SetFitParameters(xmin, xmax-1, ymin, ymax-1, 1000, 0.1, pfit-&gt;kFitOptimChiCounts,
+pfit-&gt;kFitAlphaHalving, pfit-&gt;kFitPower2,
+pfit-&gt;kFitTaylorOrderFirst);   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+pfit-&gt;SetPeakParameters(2, kFALSE, 2, kFALSE, 0, kTRUE, PosX, (Bool_t *)
+FixPosX, PosY, (Bool_t *) FixPosY, PosX, (Bool_t *) FixPosX, PosY, (Bool_t *)
+FixPosY, Amp, (Bool_t *) FixAmp, AmpXY, (Bool_t *) FixAmp, AmpXY, (Bool_t *)
+FixAmp);      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+pfit-&gt;SetBackgroundParameters(0, kFALSE, 0, kTRUE, 0, kTRUE);   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   pfit-&gt;FitAwmi(source);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>    for (i = 0; i &lt;
+nbinsx; i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
+nbinsy; j++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                  search-&gt;SetBinContent(i
++ 1, j + 1,source[i][j]);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                 }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+search-&gt;Draw(&quot;SURF&quot;);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>}</span></p>
+
+<p class=MsoNormal style='text-align:justify'><i><span style='font-size:16.0pt'>&nbsp;</span></i></p>
+
+<p class=MsoNormal style='text-align:justify'><i>Example 2 – script FitA2.c:</i></p>
+
+<p class=MsoNormal><img border=0 width=602 height=455
+src="gif/spectrum2fit_awmi_image004.jpg"></p>
+
+<p class=MsoNormal style='text-align:justify'><b>Fig. 3 Original
+two-dimensional gamma-gamma-ray spectrum with found peaks (using TSpectrum2
+peak searching function). </b></p>
+
+<p class=MsoNormal style='text-align:justify'><img border=0 width=602
+height=455 src="gif/spectrum2fit_awmi_image005.jpg"></p>
+
+<p class=MsoNormal style='text-align:justify'><b>Fig. 4 Fitted (generated from
+fitted parameters) spectrum of the data from Fig. 3 using Algorithm Without
+Matrix Inversion. 152 peaks were identified. </b><b>Each peak was represented
+by 7 parameters, which together with Sigmax, Sigmay and a0 resulted in 1067
+fitted parameters. The chi-square after 1000 iterations was 0.728675. One can
+observe good correspondence with the original data.</b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>&nbsp;</span></b></p>
+
+<p class=MsoNormal><b><span style='color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>//
+Example to illustrate fitting function, algorithm without matrix inversion
+(AWMI) (class TSpectrumFit2).</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>//
+To execute this example, do</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>//
+root &gt; .x FitA2.C</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>void
+FitA2() {</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+Int_t i, j, nfound;</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+Int_t nbinsx = 256;</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+Int_t nbinsy = 256;   </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+Int_t xmin  = 0;</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+Int_t xmax  = nbinsx;</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+Int_t ymin  = 0;</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+Int_t ymax  = nbinsy;</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+Float_t ** source = new float *[nbinsx];   </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+Float_t ** dest = new float *[nbinsx];      </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+for (i=0;i&lt;nbinsx;i++)</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>                                                source[i]=new
+float[nbinsy];</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+for (i=0;i&lt;nbinsx;i++)</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>                                                dest[i]=new
+float[nbinsy];   </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+TH2F *search = new TH2F(&quot;search&quot;,&quot;High resolution peak
+searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+TFile *f = new TFile(&quot;TSpectrum2.root&quot;);</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+search=(TH2F*) f-&gt;Get(&quot;fit1;1&quot;);</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+TCanvas *Searching = new TCanvas(&quot;Searching&quot;,&quot;Two-dimensional
+fitting using Algorithm Without Matrix Inversion&quot;,10,10,1000,700);</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+TSpectrum2 *s = new TSpectrum2(1000,1);</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+for (i = 0; i &lt; nbinsx; i++){</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>    
+for (j = 0; j &lt; nbinsy; j++){</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+                 source[i][j] = search-&gt;GetBinContent(i + 1,j + 1); </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+              }</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+}   </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+nfound = s-&gt;SearchHighRes(source, dest, nbinsx, nbinsy, 2, 2, kTRUE, 100,
+kFALSE, 3);   </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+printf(&quot;Found %d candidate peaks\n&quot;,nfound);</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+Bool_t *FixPosX = new Bool_t[nfound];</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+Bool_t *FixPosY = new Bool_t[nfound];   </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+Bool_t *FixAmp = new Bool_t[nfound];      </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+Float_t *PosX = new Float_t[nfound];         </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+Float_t *PosY = new Float_t[nfound];</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+Float_t *Amp = new Float_t[nfound];      </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+Float_t *AmpXY = new Float_t[nfound];         </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+PosX = s-&gt;GetPositionX();</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+PosY = s-&gt;GetPositionY();      </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+for(i = 0; i&lt; nfound ; i++){</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>     
+FixPosX[i] = kFALSE;</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>     
+FixPosY[i] = kFALSE;      </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>     
+FixAmp[i] = kFALSE;    </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>     
+Amp[i] = source[(int)(PosX[i]+0.5)][(int)(PosY[i]+0.5)];      //initial values
+of peaks amplitudes, input parameters          </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>     
+AmpXY[i] = 0;</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+}</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+//filling in the initial estimates of the input parameters</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+TSpectrumFit2 *pfit=new TSpectrumFit2(nfound);</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+pfit-&gt;SetFitParameters(xmin, xmax-1, ymin, ymax-1, 1000, 0.1,
+pfit-&gt;kFitOptimChiCounts, pfit-&gt;kFitAlphaHalving, pfit-&gt;kFitPower2,
+pfit-&gt;kFitTaylorOrderFirst);   </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+pfit-&gt;SetPeakParameters(2, kFALSE, 2, kFALSE, 0, kTRUE, PosX, (Bool_t *)
+FixPosX, PosY, (Bool_t *) FixPosY, PosX, (Bool_t *) FixPosX, PosY, (Bool_t *)
+FixPosY, Amp, (Bool_t *) FixAmp, AmpXY, (Bool_t *) FixAmp, AmpXY, (Bool_t *)
+FixAmp);      </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+pfit-&gt;SetBackgroundParameters(0, kFALSE, 0, kTRUE, 0, kTRUE);   </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+pfit-&gt;FitAwmi(source);</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+for (i = 0; i &lt; nbinsx; i++){</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>    
+for (j = 0; j &lt; nbinsy; j++){</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>    
+             search-&gt;SetBinContent(i + 1, j + 1,source[i][j]);</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+              }</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+}   </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
+search-&gt;Draw(&quot;SURF&quot;);   </span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>}</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>&nbsp;</span></p>
 
 </div>
 
@@ -6060,566 +4554,232 @@ void TSpectrum2Fit::FitStiefel(Float_t **source)
    
 //Begin_Html <!--
 /* -->
-<div class=3DSection3>
-
-<p class=3DMsoNormal><span class=3DSpellE><b><span lang=3DEN-US style=3D'fo=
-nt-size:
-14.0pt'>Stiefel</span></b></span><b><span lang=3DEN-US style=3D'font-size:1=
-4.0pt'>
-fitting algorithm</span></b><span lang=3DEN-US style=3D'font-size:14.0pt'><=
-o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><i><span lang=3DEN-US
-style=3D'font-size:18.0pt'><o:p>&nbsp;</o:p></span></i></p>
-
-<p class=3DMsoNormal><i><span lang=3DEN-US>Function:</span></i></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span class=3DGramE><span
-lang=3DEN-US>void</span></span><span lang=3DEN-US> <a
-href=3D"http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b
-style=3D'mso-bidi-font-weight:normal'>TSpectrum2Fit::FitStiefel</b></a>(<a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#float"><b
-style=3D'mso-bidi-font-weight:normal'>float</b></a> **<span class=3DSpellE>=
-fSource</span>)<span
-style=3D'mso-bidi-font-weight:bold'> </span></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>This f=
-unction
-fits the source spectrum using <span class=3DSpellE>Stiefel-Hestens</span> =
-method
-[1]. <span style=3D'mso-spacerun:yes'>&nbsp;</span>The calling program shou=
-ld
-fill in input fitting parameters of the TSpectrum2Fit class using a set of
-TSpectrum2Fit setters. The fitted parameters are written into the class and=
- the
-fitted data are written into source spectrum. It converges faster than <span
-class=3DSpellE>Awmi</span> method.</span></p>
-
-<p class=3DMsoNormal><i style=3D'mso-bidi-font-style:normal'><span lang=3DE=
-N-US
-style=3D'color:red'><o:p>&nbsp;</o:p></span></i></p>
-
-<p class=3DMsoNormal><i style=3D'mso-bidi-font-style:normal'><span lang=3DE=
-N-US
-style=3D'color:red'>Parameter:<o:p></o:p></span></i></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fSource</b></span></span><span
-class=3DGramE>-pointer</span> to the matrix of source spectrum<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><i><span lang=3DEN-US>=
-Reference:<o:p></o:p></span></i></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>[1] B.=
- <span
-class=3DSpellE>Mihaila</span>: Analysis of complex gamma spectra, Rom. <span
-class=3DSpellE>Jorn</span>. Phys., Vol. 39, No. 2, (1994), 139-148.</span><=
-/p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><o:p>&=
-nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><i><span lang=3DEN-US>Exa=
-mple 1
-&#8211; script <span class=3DSpellE>FitS.c</span>:<o:p></o:p></span></i></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:18.0pt'><!--[if gte vml 1]><v:shapetype id=3D"_x0000_t75"
- coordsize=3D"21600,21600" o:spt=3D"75" o:preferrelative=3D"t" path=3D"m@4@=
-5l@4@11@9@11@9@5xe"
- filled=3D"f" stroked=3D"f">
- <v:stroke joinstyle=3D"miter"/>
- <v:formulas>
-  <v:f eqn=3D"if lineDrawn pixelLineWidth 0"/>
-  <v:f eqn=3D"sum @0 1 0"/>
-  <v:f eqn=3D"sum 0 0 @1"/>
-  <v:f eqn=3D"prod @2 1 2"/>
-  <v:f eqn=3D"prod @3 21600 pixelWidth"/>
-  <v:f eqn=3D"prod @3 21600 pixelHeight"/>
-  <v:f eqn=3D"sum @0 0 1"/>
-  <v:f eqn=3D"prod @6 1 2"/>
-  <v:f eqn=3D"prod @7 21600 pixelWidth"/>
-  <v:f eqn=3D"sum @8 21600 0"/>
-  <v:f eqn=3D"prod @7 21600 pixelHeight"/>
-  <v:f eqn=3D"sum @10 21600 0"/>
- </v:formulas>
- <v:path o:extrusionok=3D"f" gradientshapeok=3D"t" o:connecttype=3D"rect"/>
- <o:lock v:ext=3D"edit" aspectratio=3D"t"/>
-</v:shapetype><v:shape id=3D"_x0000_i1025" type=3D"#_x0000_t75" style=3D'wi=
-dth:451.5pt;
- height:341.25pt'>
- <v:imagedata src=3D"FitStiefel_files/image001.jpg" o:title=3D"Src_orig"/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D602 height=3D455
-src=3D"FitStiefel_files/image002.jpg" v:shapes=3D"_x0000_i1025"><![endif]><=
-o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span class=3DGramE><b><s=
-pan
-lang=3DEN-US>Fig. 1 Original two-dimensional spectrum with found peaks (usi=
-ng
-TSpectrum2 peak searching function).</span></b></span><b><span lang=3DEN-US=
-> The
-positions of peaks were used as initial estimates in fitting procedure.<o:p=
-></o:p></span></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US
-style=3D'font-size:16.0pt'><!--[if gte vml 1]><v:shape id=3D"_x0000_i1026" =
-type=3D"#_x0000_t75"
- style=3D'width:451.5pt;height:341.25pt'>
- <v:imagedata src=3D"FitStiefel_files/image003.jpg" o:title=3D"FitS_decon"/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D602 height=3D455
-src=3D"FitStiefel_files/image004.jpg" v:shapes=3D"_x0000_i1026"><![endif]><=
-o:p></o:p></span></b></p>
-
-<p class=3DMsoBodyText2 style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'mso-bidi-font-size:12.0pt;mso-bidi-font-weight:bold'>Fig. 2 Fitted=
- (generated
-from fitted parameters) spectrum of the data from Fig. 1 using <span
-class=3DSpellE>Stiefel-Hestens</span> method. </span><span lang=3DEN-US
-style=3D'mso-bidi-font-size:12.0pt'>Each peak was represented by 7 paramete=
-rs,
-which together with <span class=3DSpellE>Sigmax</span>, <span class=3DSpell=
-E>Sigmay</span>
-and a0 resulted in 38 fitted parameters. The chi-square after 1000 iteratio=
-ns
-was 0.642157.<o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:18.0pt'><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'color:#339966'>Script:<o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// Examp=
-le to
-illustrate fitting function, algorithm without matrix inversion (AWMI) (cla=
-ss
-TSpectrum2Fit).<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// <span
-class=3DGramE>To</span> execute this example, do<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// root =
-&gt; .x
-FitStiefel2.C<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><o:p>&nb=
-sp;</o:p></span></p>
-
-<p class=3DMsoNormal><span class=3DGramE><span lang=3DEN-US style=3D'font-s=
-ize:10.0pt'>void</span></span><span
-lang=3DEN-US style=3D'font-size:10.0pt'> FitStiefel2() {<o:p></o:p></span><=
-/p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span> <span
-class=3DSpellE>i</span>, j, <span class=3DSpellE>nfound</span>;<o:p></o:p><=
-/span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span> <span
-class=3DSpellE>nbinsx</span> =3D 64;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span> <span
-class=3DSpellE>nbinsy</span> =3D 64; <span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span> <span
-class=3DSpellE><span class=3DGramE>xmin</span></span><span class=3DGramE><s=
-pan
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D</span> 0;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span> <span
-class=3DSpellE><span class=3DGramE>xmax</span></span><span class=3DGramE><s=
-pan
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D</span> <span class=3DSpellE>nb=
-insx</span>;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span> <span
-class=3DSpellE><span class=3DGramE>ymin</span></span><span class=3DGramE><s=
-pan
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D</span> 0;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span> <span
-class=3DSpellE><span class=3DGramE>ymax</span></span><span class=3DGramE><s=
-pan
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D</span> <span class=3DSpellE>nb=
-insy</span>;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Float_t=
-</span>
-** source =3D new float *[<span class=3DSpellE>nbinsx</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Float_t=
-</span>
-** <span class=3DSpellE>dest</span> =3D new float *[<span class=3DSpellE>nb=
-insx</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span>=3D0;i&lt;<span class=3DSpellE>nbinsx;i</span>++)<o:=
-p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-tab-count:3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp; </span><span
-class=3DGramE>source[</span><span class=3DSpellE>i</span>]=3Dnew float[<span
-class=3DSpellE>nbinsy</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span>=3D0;i&lt;<span class=3DSpellE>nbinsx;i</span>++)<o:=
-p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-tab-count:3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>dest</span></span><span class=3DGramE>[<=
-/span><span
-class=3DSpellE>i</span>]=3Dnew float[<span class=3DSpellE>nbinsy</span>];<o=
-:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TH2F *search =3D new <span
-class=3DGramE>TH2F(</span>&quot;<span class=3DSpellE>search&quot;,&quot;Hig=
-h</span>
-resolution peak <span class=3DSpellE>searching&quot;,nbinsx,xmin,xmax,nbins=
-y,ymin,ymax</span>);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TFile</=
-span> *f
-=3D new <span class=3DSpellE><span class=3DGramE>TFile</span></span><span
-class=3DGramE>(</span>&quot;TSpectrum2.root&quot;);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>search</=
-span>=3D(TH2F*)
-f-&gt;Get(&quot;search4;1&quot;);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TCanvas=
-</span>
-*Searching =3D new <span class=3DSpellE><span class=3DGramE>TCanvas</span><=
-/span><span
-class=3DGramE>(</span>&quot;<span class=3DSpellE>Searching&quot;,&quot;Two<=
-/span>-dimensional
-fitting using <span class=3DSpellE>Stiefel-Hestens</span>
-method&quot;,10,10,1000,700);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TSpectrum2 *s =3D new <span
-class=3DGramE>TSpectrum2(</span>);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span> &lt; <span cla=
-ss=3DSpellE>nbinsx</span>;
-<span class=3DSpellE>i</span>++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DGr=
-amE>for</span>
-(j =3D 0; j &lt; <span class=3DSpellE>nbinsy</span>; j++){<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;</span><span class=3DGra=
-mE>source[</span><span
-class=3DSpellE>i</span>][j] =3D search-&gt;<span class=3DSpellE>GetBinConte=
-nt</span>(<span
-class=3DSpellE>i</span> + 1,j + 1); <o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;</span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>nfound</span></span> =3D s-&gt;<span class=3DSpellE>SearchHig=
-hRes</span>(source,
-<span class=3DSpellE>dest</span>, <span class=3DSpellE>nbinsx</span>, <span
-class=3DSpellE>nbinsy</span>, 2, 5, <span class=3DSpellE>kTRUE</span>, 3, <=
-span
-class=3DSpellE>kFALSE</span>, 3);<span style=3D'mso-spacerun:yes'>&nbsp;&nb=
-sp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>printf</span></span><span class=3DGramE>(</span>&quot;Found %d
-candidate peaks\<span class=3DSpellE>n&quot;,nfound</span>);<o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Bool_t<=
-/span> *<span
-class=3DSpellE>FixPosX</span> =3D new <span class=3DSpellE>Bool_<span class=
-=3DGramE>t</span></span><span
-class=3DGramE>[</span><span class=3DSpellE>nfound</span>];<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Bool_t<=
-/span> *<span
-class=3DSpellE>FixPosY</span> =3D new <span class=3DSpellE>Bool_<span class=
-=3DGramE>t</span></span><span
-class=3DGramE>[</span><span class=3DSpellE>nfound</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Bool_t<=
-/span> *<span
-class=3DSpellE>FixAmp</span> =3D new <span class=3DSpellE>Bool_<span class=
-=3DGramE>t</span></span><span
-class=3DGramE>[</span><span class=3DSpellE>nfound</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Float_t=
-</span>
-*<span class=3DSpellE>PosX</span> =3D new <span class=3DSpellE>Float_<span
-class=3DGramE>t</span></span><span class=3DGramE>[</span><span class=3DSpel=
-lE>nfound</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Float_t=
-</span>
-*<span class=3DSpellE>PosY</span> =3D new <span class=3DSpellE>Float_<span
-class=3DGramE>t</span></span><span class=3DGramE>[</span><span class=3DSpel=
-lE>nfound</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Float_t=
-</span>
-*Amp =3D new <span class=3DSpellE>Float_<span class=3DGramE>t</span></span>=
-<span
-class=3DGramE>[</span><span class=3DSpellE>nfound</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Float_t=
-</span>
-*<span class=3DSpellE>AmpXY</span> =3D new <span class=3DSpellE>Float_<span
-class=3DGramE>t</span></span><span class=3DGramE>[</span><span class=3DSpel=
-lE>nfound</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>PosX</s=
-pan> =3D
-s-&gt;<span class=3DSpellE><span class=3DGramE>GetPositionX</span></span><s=
-pan
-class=3DGramE>(</span>);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>PosY</s=
-pan> =3D
-s-&gt;<span class=3DSpellE><span class=3DGramE>GetPositionY</span></span><s=
-pan
-class=3DGramE>(</span>);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for(</sp=
-an><span
-class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span>&lt; <span clas=
-s=3DSpellE>nfound</span>
-; <span class=3DSpellE>i</span>++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DSpellE>FixPosX</span>[<span class=3DSpellE>i</span>] =3D <span clas=
-s=3DSpellE>kFALSE</span>;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DSpellE>FixPosY</span>[<span class=3DSpellE>i</span>] =3D <span clas=
-s=3DSpellE>kFALSE</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DSpellE>FixAmp</span>[<span class=3DSpellE>i</span>] =3D <span class=
-=3DSpellE>kFALSE</span>;<span
-style=3D'mso-tab-count:1'>&nbsp;&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Amp[<span
-class=3DSpellE>i</span>] =3D <span class=3DGramE>source[</span>(<span class=
-=3DSpellE>int</span>)(<span
-class=3DSpellE>PosX</span>[<span class=3DSpellE>i</span>]+0.5)][(<span
-class=3DSpellE>int</span>)(<span class=3DSpellE>PosY</span>[<span class=3DS=
-pellE>i</span>]+0.5)];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>//initial =
-values
-of peaks amplitudes, input parameters<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DSpellE>AmpXY</span>[<span class=3DSpellE>i</span>] =3D 0;<o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>//filling in the initial est=
-imates
-of the input parameters<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TSpectrum2Fit *<span class=
-=3DSpellE>pfit</span>=3Dnew
-<span class=3DGramE>TSpectrum2Fit(</span><span class=3DSpellE>nfound</span>=
-);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>pfit</span></span>-&gt;<span class=3DSpellE>SetFitParameters<=
-/span>(<span
-class=3DSpellE>xmin</span>, xmax-1, <span class=3DSpellE>ymin</span>, ymax-=
-1, 1000,
-0.1, <span class=3DSpellE>pfit</span>-&gt;<span class=3DSpellE>kFitOptimChi=
-Counts</span>,
-<span class=3DSpellE>pfit</span>-&gt;<span class=3DSpellE>kFitAlphaHalving<=
-/span>, <span
-class=3DSpellE>pfit</span>-&gt;kFitPower2, <span class=3DSpellE>pfit</span>=
--&gt;<span
-class=3DSpellE>kFitTaylorOrderFirst</span>);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>pfit</span></span>-&gt;<span class=3DSpellE>SetPeakParameters=
-</span>(2,
-<span class=3DSpellE>kFALSE</span>, 2, <span class=3DSpellE>kFALSE</span>, =
-0, <span
-class=3DSpellE>kTRUE</span>, <span class=3DSpellE>PosX</span>, (<span class=
-=3DSpellE>Bool_t</span>
-*) <span class=3DSpellE>FixPosX</span>, <span class=3DSpellE>PosY</span>, (=
-<span
-class=3DSpellE>Bool_t</span> *) <span class=3DSpellE>FixPosY</span>, <span
-class=3DSpellE>PosX</span>, (<span class=3DSpellE>Bool_t</span> *) <span
-class=3DSpellE>FixPosX</span>, <span class=3DSpellE>PosY</span>, (<span
-class=3DSpellE>Bool_t</span> *) <span class=3DSpellE>FixPosY</span>, Amp, (=
-<span
-class=3DSpellE>Bool_t</span> *) <span class=3DSpellE>FixAmp</span>, <span
-class=3DSpellE>AmpXY</span>, (<span class=3DSpellE>Bool_t</span> *) <span
-class=3DSpellE>FixAmp</span>, <span class=3DSpellE>AmpXY</span>, (<span
-class=3DSpellE>Bool_t</span> *) <span class=3DSpellE>FixAmp</span>);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>pfit</span></span>-&gt;<span class=3DSpellE>SetBackgroundPara=
-meters</span>(0,
-<span class=3DSpellE>kFALSE</span>, 0, <span class=3DSpellE>kTRUE</span>, 0=
-, <span
-class=3DSpellE>kTRUE</span>);<span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; =
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>pfit</span></span>-&gt;<span class=3DSpellE>FitStiefel</span>=
-(source);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><span class=3DGramE>fo=
-r</span>
-(<span class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span> &lt; <s=
-pan
-class=3DSpellE>nbinsx</span>; <span class=3DSpellE>i</span>++){<o:p></o:p><=
-/span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DGr=
-amE>for</span>
-(j =3D 0; j &lt; <span class=3DSpellE>nbinsy</span>; j++){<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-style=3D'mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;</span><span class=3DGramE>search</s=
-pan>-&gt;<span
-class=3DSpellE>SetBinContent</span>(<span class=3DSpellE>i</span> + 1, j +
-1,source[<span class=3DSpellE>i</span>][j]);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;</span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>search</=
-span>-&gt;Draw(&quot;SURF&quot;);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>}<o:p></=
-o:p></span></p>
+<div class=Section1>
+
+<p class=MsoNormal><b><span style='font-size:14.0pt'>Stiefel fitting algorithm</span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><i><span style='font-size:18.0pt'>&nbsp;</span></i></p>
+
+<p class=MsoNormal><i>Function:</i></p>
+
+<p class=MsoNormal style='text-align:justify'>void <a
+href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrumFit2::FitStiefel</b></a>(<a
+href="http://root.cern.ch/root/html/ListOfTypes.html#float"><b>float</b></a>
+**fSource) </p>
+
+<p class=MsoNormal style='text-align:justify'>This function fits the source
+spectrum using Stiefel-Hestens method [1].  The calling program should fill in
+input fitting parameters of the TSpectrumFit2 class using a set of
+TSpectrumFit2 setters. The fitted parameters are written into the class and the
+fitted data are written into source spectrum. It converges faster than Awmi
+method.</p>
+
+<p class=MsoNormal><i><span style='color:red'>&nbsp;</span></i></p>
+
+<p class=MsoNormal><i><span style='color:red'>Parameter:</span></i></p>
+
+<p class=MsoNormal style='text-align:justify'>        <b>fSource</b>-pointer to
+the matrix of source spectrum                  </p>
+
+<p class=MsoNormal style='text-align:justify'>        </p>
+
+<p class=MsoNormal style='text-align:justify'><b><i>Reference:</i></b></p>
+
+<p class=MsoNormal style='text-align:justify'>[1] B. Mihaila: Analysis of
+complex gamma spectra, Rom. Jorn. Phys., Vol. 39, No. 2, (1994), 139-148.</p>
+
+<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
+
+<p class=MsoNormal style='text-align:justify'><i>Example 1 – script FitS.c:</i></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:18.0pt'><img
+border=0 width=602 height=455 src="gif/spectrum2fit_stiefel_image001.jpg"></span></p>
+
+<p class=MsoNormal style='text-align:justify'><b>Fig. 1 Original
+two-dimensional spectrum with found peaks (using TSpectrum2 peak searching
+function). The positions of peaks were used as initial estimates in fitting
+procedure.</b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
+border=0 width=602 height=455 src="gif/spectrum2fit_stiefel_image002.jpg"></span></b></p>
+
+<p class=MsoBodyText2 style='text-align:justify'>Fig. 2 Fitted (generated from
+fitted parameters) spectrum of the data from Fig. 1 using Stiefel-Hestens
+method. Each peak was represented by 7 parameters, which together with Sigmax,
+Sigmay and a0 resulted in 38 fitted parameters. The chi-square after 1000
+iterations was 0.642157.</p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:18.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal><b><span style='color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// Example to illustrate
+fitting function, algorithm without matrix inversion (AWMI) (class
+TSpectrumFit2).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// To execute this example,
+do</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// root &gt; .x FitStiefel2.C</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>void FitStiefel2() {</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t i, j, nfound;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t nbinsx = 64;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t nbinsy = 64;   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   </span><span lang=FR
+style='font-size:10.0pt'>Int_t xmin  = 0;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmax  =
+nbinsx;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t ymin  = 0;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t ymax  =
+nbinsy;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
+style='font-size:10.0pt'>Float_t ** source = new float *[nbinsx];   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t ** dest = new
+float *[nbinsx];      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i=0;i&lt;nbinsx;i++)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                                                source[i]=new
+float[nbinsy];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i=0;i&lt;nbinsx;i++)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                                                dest[i]=new
+float[nbinsy];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TH2F *search = new
+TH2F(&quot;search&quot;,&quot;High resolution peak
+searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TFile *f = new
+TFile(&quot;TSpectrum2.root&quot;);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   search=(TH2F*)
+f-&gt;Get(&quot;search4;1&quot;);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TCanvas *Searching = new
+TCanvas(&quot;Searching&quot;,&quot;Two-dimensional fitting using
+Stiefel-Hestens method&quot;,10,10,1000,700);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrum2 *s = new
+TSpectrum2();</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbinsx;
+i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
+nbinsy; j++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                    source[i][j]
+= search-&gt;GetBinContent(i + 1,j + 1); </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                 }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   nfound =
+s-&gt;SearchHighRes(source, dest, nbinsx, nbinsy, 2, 5, kTRUE, 3, kFALSE, 3);  
+</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   printf(&quot;Found %d
+candidate peaks\n&quot;,nfound);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t *FixPosX = new
+Bool_t[nfound];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t *FixPosY = new
+Bool_t[nfound];   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t *FixAmp = new
+Bool_t[nfound];      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *PosX = new
+Float_t[nfound];         </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *PosY = new
+Float_t[nfound];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *Amp = new
+Float_t[nfound];      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *AmpXY = new
+Float_t[nfound];         </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   PosX = s-&gt;GetPositionX();</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   PosY =
+s-&gt;GetPositionY();      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for(i = 0; i&lt; nfound ;
+i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      FixPosX[i] = kFALSE;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      FixPosY[i] =
+kFALSE;      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      FixAmp[i] = kFALSE;    </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      Amp[i] =
+source[(int)(PosX[i]+0.5)][(int)(PosY[i]+0.5)];      //initial values of peaks
+amplitudes, input parameters          </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      AmpXY[i] = 0;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   //filling in the initial
+estimates of the input parameters</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrumFit2 *pfit=new
+TSpectrumFit2(nfound);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+pfit-&gt;SetFitParameters(xmin, xmax-1, ymin, ymax-1, 1000, 0.1,
+pfit-&gt;kFitOptimChiCounts, pfit-&gt;kFitAlphaHalving, pfit-&gt;kFitPower2,
+pfit-&gt;kFitTaylorOrderFirst);   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+pfit-&gt;SetPeakParameters(2, kFALSE, 2, kFALSE, 0, kTRUE, PosX, (Bool_t *)
+FixPosX, PosY, (Bool_t *) FixPosY, PosX, (Bool_t *) FixPosX, PosY, (Bool_t *)
+FixPosY, Amp, (Bool_t *) FixAmp, AmpXY, (Bool_t *) FixAmp, AmpXY, (Bool_t *)
+FixAmp);      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+pfit-&gt;SetBackgroundParameters(0, kFALSE, 0, kTRUE, 0, kTRUE);   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+pfit-&gt;FitStiefel(source);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>    for (i = 0; i &lt;
+nbinsx; i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
+nbinsy; j++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                  search-&gt;SetBinContent(i
++ 1, j + 1,source[i][j]);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                 }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+search-&gt;Draw(&quot;SURF&quot;);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>}</span></p>
 
 </div>
 

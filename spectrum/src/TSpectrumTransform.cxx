@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrumTransform.cxx,v 1.2 2006/09/29 15:51:52 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrumTransform.cxx,v 1.3 2006/10/02 10:58:42 brun Exp $
 // Author: Miroslav Morhac   25/09/06
 
 //__________________________________________________________________________
@@ -699,574 +699,248 @@ void TSpectrumTransform::Transform(const float *source, float *destVector)
 ///////////////////////////////////////////////////////////////////////////////
 //Begin_Html <!--
 /* -->
-<div class=3DSection1>
+<div class=Section1>
 
-<p class=3DMsoNormal><b><span lang=3DEN-US style=3D'font-size:14.0pt'>Trans=
-form
-methods</span></b><span lang=3DEN-US style=3D'font-size:14.0pt'><o:p></o:p>=
-</span></p>
+<p class=MsoNormal><b><span style='font-size:14.0pt'>Transform methods</span></b></p>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><i><span lang=3DEN-US><o:=
-p>&nbsp;</o:p></span></i></p>
+<p class=MsoNormal style='text-align:justify'><i>&nbsp;</i></p>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><i><span lang=3DEN-US>Goa=
-l: to
-analyze experimental data using orthogonal transforms<o:p></o:p></span></i>=
+<p class=MsoNormal style='text-align:justify'><i>Goal: to analyze experimental
+data using orthogonal transforms</i></p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>orthogonal transforms can be successfully used for the processing of
+nuclear spectra (not only) </p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>they can be used to remove high frequency noise, to increase
+signal-to-background ratio as well as to enhance low intensity components [1],
+to carry out e.g. Fourier analysis etc. </p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>we have implemented the function for the calculation of the commonly
+used orthogonal transforms as well as functions for the filtration and
+enhancement of experimental data</p>
+
+<p class=MsoNormal><i>&nbsp;</i></p>
+
+<p class=MsoNormal><i>Function:</i></p>
+
+<p class=MsoNormal><b>void TSpectrumTransform::Transform(const <a
+href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> *fSource,
+<a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a>
+*fDest)</b></p>
+
+<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
+
+<p class=MsoNormal style='text-align:justify'>This function transforms the
+source spectrum according to the given input parameters. Transformed data are
+written into dest spectrum. Before the Transform function is called the class
+must be created by constructor and the type of the transform as well as some
+other parameters must be set using a set of setter functions.</p>
+
+<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
+
+<p class=MsoNormal><i><span style='color:red'>Member variables of
+TSpectrumTransform class:</span></i></p>
+
+<p class=MsoNormal style='margin-left:25.65pt;text-align:justify'> <b>fSource</b>-pointer
+to the vector of source spectrum. Its length should be equal to the “fSize”
+parameter except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR transforms. These
+need “2*fSize” length to supply real and imaginary coefficients.                   </p>
+
+<p class=MsoNormal style='margin-left:25.65pt;text-align:justify'><b>fDest</b>-pointer
+to the vector of destination spectrum. Its length should be equal to the
+“fSize” parameter except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR transforms.
+These need “2*fSize” length to store real and imaginary coefficients. </p>
+
+<p class=MsoNormal style='text-align:justify'>        <b>fSize</b>-basic length
+of the source and dest spectrum. <span style='color:fuchsia'>It should be power
+of 2.</span></p>
+
+<p class=MsoNormal style='margin-left:25.65pt;text-align:justify;text-indent:
+-2.85pt'><b>fType</b>-type of transform</p>
+
+<p class=MsoNormal style='text-align:justify'>            Classic transforms:</p>
+
+<p class=MsoNormal style='text-align:justify'>                        kTransformHaar
 </p>
 
-<p class=3DMsoNormal style=3D'margin-left:.5in;text-align:justify;text-inde=
-nt:-.25in;
-mso-list:l10 level1 lfo10;tab-stops:list .5in'><![if !supportLists]><span
-lang=3DEN-US><span style=3D'mso-list:Ignore'>&#8226;<span style=3D'font:7.0=
-pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></span><![endif]><span lang=3DEN-US>orthogonal transforms can=
- be
-successfully used for the processing of nuclear spectra (not only) </span><=
-/p>
-
-<p class=3DMsoNormal style=3D'margin-left:.5in;text-align:justify;text-inde=
-nt:-.25in;
-mso-list:l10 level1 lfo10;tab-stops:list .5in'><![if !supportLists]><span
-lang=3DEN-US><span style=3D'mso-list:Ignore'>&#8226;<span style=3D'font:7.0=
-pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></span><![endif]><span class=3DGramE><span lang=3DEN-US>they<=
-/span></span><span
-lang=3DEN-US> can be used to remove high frequency noise, to increase
-signal-to-background ratio as well as to enhance low intensity components [=
-1],
-to carry out e.g. Fourier analysis etc. </span></p>
-
-<p class=3DMsoNormal style=3D'margin-left:.5in;text-align:justify;text-inde=
-nt:-.25in;
-mso-list:l10 level1 lfo10;tab-stops:list .5in'><![if !supportLists]><span
-lang=3DEN-US><span style=3D'mso-list:Ignore'>&#8226;<span style=3D'font:7.0=
-pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></span><![endif]><span lang=3DEN-US>we have implemented the
-function for the calculation of the commonly used orthogonal transforms as =
-well
-as functions for the filtration and enhancement of experimental data</span>=
+<p class=MsoNormal style='text-align:justify'>                        kTransformWalsh
 </p>
 
-<p class=3DMsoNormal><i><span lang=3DEN-US><o:p>&nbsp;</o:p></span></i></p>
-
-<p class=3DMsoNormal><i><span lang=3DEN-US>Function:</span></i></p>
-
-<p class=3DMsoNormal><span class=3DGramE><b style=3D'mso-bidi-font-weight:n=
-ormal'><span
-lang=3DEN-US>void</span></b></span><b style=3D'mso-bidi-font-weight:normal'=
-><span
-lang=3DEN-US> <span class=3DSpellE>TSpectrumTransform::Transform</span>(con=
-st <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> *<s=
-pan
-class=3DSpellE>fSource</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> *<s=
-pan
-class=3DSpellE>fDest</span>)<o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><o:p>&=
-nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>This f=
-unction
-transforms the source spectrum according to the given input parameters.
-Transformed data are written into <span class=3DSpellE>dest</span> spectrum=
-. Before
-the Transform function is called the class must be created by constructor a=
-nd
-the type of the transform as well as some other parameters must be set usin=
-g a
-set of setter functions.</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><o:p>&=
-nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><i style=3D'mso-bidi-font-style:normal'><span lang=3DE=
-N-US
-style=3D'color:red'>Member variables of <span class=3DSpellE>TSpectrumTrans=
-form</span>
-class:<o:p></o:p></span></i></p>
-
-<p class=3DMsoNormal style=3D'margin-left:25.65pt;text-align:justify;tab-st=
-ops:
-14.2pt'><span lang=3DEN-US><span style=3D'mso-spacerun:yes'>&nbsp;</span><s=
-pan
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fSource</b></span></span><span
-class=3DGramE>-pointer</span> to the vector of source spectrum. Its length =
-should
-be equal to the &#8220;<span class=3DSpellE>fSize</span>&#8221; parameter e=
-xcept
-for inverse FOURIER, FOUR-WALSH, FOUR-HAAR transforms. These need &#8220;2*=
-<span
-class=3DSpellE>fSize</span>&#8221; length to supply real and imaginary
-coefficients. <span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><=
-/p>
-
-<p class=3DMsoNormal style=3D'margin-left:25.65pt;text-align:justify;tab-st=
-ops:
-14.2pt'><span class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-=
-weight:
-normal'><span lang=3DEN-US>fDest</span></b></span></span><span class=3DGram=
-E><span
-lang=3DEN-US>-pointer</span></span><span lang=3DEN-US> to the vector of des=
-tination
-spectrum. Its length should be equal to the &#8220;<span class=3DSpellE>fSi=
-ze</span>&#8221;
-parameter except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR transforms. The=
-se
-need &#8220;2*<span class=3DSpellE>fSize</span>&#8221; length to store real=
- and
-imaginary coefficients. </span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fSize</b></span></span><span
-class=3DGramE>-basic</span> length of the source and <span class=3DSpellE>d=
-est</span>
-spectrum. <span style=3D'color:fuchsia'>It should be power of 2.<o:p></o:p>=
-</span></span></p>
-
-<p class=3DMsoNormal style=3D'margin-left:25.65pt;text-align:justify;text-i=
-ndent:
--2.85pt'><span class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font=
--weight:
-normal'><span lang=3DEN-US>fType</span></b></span></span><span class=3DGram=
-E><span
-lang=3DEN-US>-type</span></span><span lang=3DEN-US> of transform</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp; </span>Classic
-transforms:</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-tab-count:2'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>kTransformHaar</span></span> </span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-tab-count:2'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>kTransformWalsh</span></span> </span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-tab-count:2'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>kTransformCos</span></span> </span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-tab-count:2'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>kTransformSin</span></span> </span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-tab-count:2'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>kTransformFourier</span></span> </span><=
-/p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-tab-count:2'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>kTransformHartey</span></span> </span></=
-p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp; </span>Mixed
-transforms:</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-tab-count:2'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>kTransformFourierWalsh</span></span> </s=
-pan></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-tab-count:2'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>kTransformFourierHaar</span></span> </sp=
-an></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-tab-count:2'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>kTransformWalshHaar</span></span> </span=
-></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-tab-count:2'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>kTransformCosWalsh</span></span> </span>=
+<p class=MsoNormal style='text-align:justify'>                        kTransformCos
 </p>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-tab-count:2'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>kTransformCosHaar</span></span> </span><=
-/p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-tab-count:2'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>kTransformSinWalsh</span></span> <b><o:p=
-></o:p></b></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-tab-count:2'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>kTransformSinHaar</span></span> </span><=
-/p>
-
-<p class=3DMsoNormal style=3D'text-align:justify;text-indent:22.8pt'><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
-><span
-lang=3DEN-US>fDirection</span></b></span></span><span class=3DGramE><span
-lang=3DEN-US>-direction-transform</span></span><span lang=3DEN-US> direction
-(forward, inverse)</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-tab-count:2'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>kTransformForward</span></span> </span><=
-/p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-tab-count:2'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
-p;&nbsp;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>kTransformInverse</span></span> </span><=
-/p>
-
-<p class=3DMsoNormal style=3D'text-align:justify;text-indent:22.8pt'><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
-><span
-lang=3DEN-US>fDegree</span></b></span></span><span class=3DGramE><span lang=
-=3DEN-US>-</span></span><span
-lang=3DEN-US>applies only for mixed transforms [2], [3], [4]. </span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify;text-indent:22.8pt'><span
-lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span style=3D'color:fuchsia'><span
-style=3D'mso-spacerun:yes'>&nbsp;</span>Allowed <span class=3DGramE>range<s=
-pan
-style=3D'mso-spacerun:yes'>&nbsp; </span></span><sub><!--[if gte vml 1]><v:=
-shapetype
- id=3D"_x0000_t75" coordsize=3D"21600,21600" o:spt=3D"75" o:preferrelative=
-=3D"t"
- path=3D"m@4@5l@4@11@9@11@9@5xe" filled=3D"f" stroked=3D"f">
- <v:stroke joinstyle=3D"miter"/>
- <v:formulas>
-  <v:f eqn=3D"if lineDrawn pixelLineWidth 0"/>
-  <v:f eqn=3D"sum @0 1 0"/>
-  <v:f eqn=3D"sum 0 0 @1"/>
-  <v:f eqn=3D"prod @2 1 2"/>
-  <v:f eqn=3D"prod @3 21600 pixelWidth"/>
-  <v:f eqn=3D"prod @3 21600 pixelHeight"/>
-  <v:f eqn=3D"sum @0 0 1"/>
-  <v:f eqn=3D"prod @6 1 2"/>
-  <v:f eqn=3D"prod @7 21600 pixelWidth"/>
-  <v:f eqn=3D"sum @8 21600 0"/>
-  <v:f eqn=3D"prod @7 21600 pixelHeight"/>
-  <v:f eqn=3D"sum @10 21600 0"/>
- </v:formulas>
- <v:path o:extrusionok=3D"f" gradientshapeok=3D"t" o:connecttype=3D"rect"/>
- <o:lock v:ext=3D"edit" aspectratio=3D"t"/>
-</v:shapetype><v:shape id=3D"_x0000_i1026" type=3D"#_x0000_t75" style=3D'wi=
-dth:75pt;
- height:20.25pt' o:ole=3D"">
- <v:imagedata src=3D"Transform_files/image001.wmz" o:title=3D""/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D100 height=3D27
-src=3D"Transform_files/image002.gif" v:shapes=3D"_x0000_i1026"><![endif]></=
-sub><!--[if gte mso 9]><xml>
- <o:OLEObject Type=3D"Embed" ProgID=3D"Equation.DSMT4" ShapeID=3D"_x0000_i1=
-026"
-  DrawAspect=3D"Content" ObjectID=3D"_1220804604">
- </o:OLEObject>
-</xml><![endif]-->. <o:p></o:p></span></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><i><span lang=3DEN-US>=
-References:<o:p></o:p></span></i></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>[1] C.=
-V.
-Hampton, B. <span class=3DSpellE>Lian</span>, Wm. C. <span class=3DSpellE>M=
-cHarris</span>:
-Fast-Fourier-transform spectral enhancement techniques for gamma-ray
-spectroscopy. NIM A353 (1994) 280-284. </span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>[2] <s=
-pan
-class=3DSpellE>Morh&aacute;&#269;</span> M., <span class=3DSpellE>Matou&#35=
-3;ek</span>
-V., New adaptive Cosine-<span class=3DGramE>Walsh<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>transform</span> and its applicati=
-on to
-nuclear data compression, IEEE Transactions on Signal Processing 48 (2000)
-2693.<span style=3D'mso-spacerun:yes'>&nbsp; </span></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>[3] <s=
-pan
-class=3DSpellE>Morh&aacute;&#269;</span> M., <span class=3DSpellE>Matou&#35=
-3;ek</span>
-V., Data compression using new fast adaptive Cosine-<span class=3DSpellE>Ha=
-ar</span>
-transforms, Digital Signal Processing 8 (1998) 63. </span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>[4] <s=
-pan
-class=3DSpellE>Morh&aacute;&#269;</span> M., <span class=3DSpellE>Matou&#35=
-3;ek</span>
-V.: Multidimensional nuclear data <span class=3DGramE>compression using fast
-adaptive Walsh-<span class=3DSpellE>Haar</span> transform</span>. <span
-class=3DSpellE><span class=3DGramE>Acta</span></span><span class=3DGramE> <=
-span
-class=3DSpellE>Physica</span> <span class=3DSpellE>Slovaca</span> 51 (2001)=
- 307.</span>
-</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><o:p>&=
-nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span class=3DGramE><i><s=
-pan
-lang=3DEN-US>Example <span style=3D'mso-spacerun:yes'>&nbsp;</span>&#8211;<=
-/span></i></span><i><span
-lang=3DEN-US> script <span class=3DSpellE>Transform.c</span>:<o:p></o:p></s=
-pan></i></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:18.0pt'><!--[if gte vml 1]><v:shape id=3D"_x0000_s1040" =
-type=3D"#_x0000_t75"
- style=3D'width:450.3pt;height:242.75pt;mso-position-horizontal-relative:ch=
-ar;
- mso-position-vertical-relative:line'>
- <v:imagedata src=3D"Transform_files/image003.png" o:title=3D"Transform1"/>
- <w:wrap type=3D"none"/>
- <w:anchorlock/>
-</v:shape><![endif]--><![if !vml]><img width=3D600 height=3D324
-src=3D"Transform_files/image004.jpg" v:shapes=3D"_x0000_s1040"><![endif]><o=
-:p></o:p></span></p>
-
-<p class=3DMsoNormal><b><span lang=3DEN-US>Fig. 1 Original gamma-ray spectr=
-um<o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal><b><span lang=3DEN-US style=3D'font-size:14.0pt'><!--[=
-if gte vml 1]><v:shape
- id=3D"_x0000_i1027" type=3D"#_x0000_t75" style=3D'width:450.75pt;height:30=
-1.5pt'>
- <v:imagedata src=3D"Transform_files/image005.jpg" o:title=3D"Transform"/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D601 height=3D402
-src=3D"Transform_files/image006.jpg" v:shapes=3D"_x0000_i1027"><![endif]><o=
-:p></o:p></span></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:18.0pt'><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><b><span lang=3DEN-US>Fig. 2 Transformed <span class=
-=3DGramE>spectrum
-from Fig. 1 using Cosine transform</span></span></b></p>
-
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'font-size:16.0pt;color:#339966'><o:p>&nbsp;</o:p></span></b></p>
-
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'color:#339966'>Script:<o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// Examp=
-le to
-illustrate Transform function (class <span class=3DSpellE>TSpectrumTransfor=
-m</span>).<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// <span
-class=3DGramE>To</span> execute this example, do<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// root =
-&gt; .x <span
-class=3DSpellE>Transform.C</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>#include=
- &lt;<span
-class=3DSpellE>TSpectrum</span>&gt;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>#include=
- &lt;<span
-class=3DSpellE>TSpectrumTransform</span>&gt;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><o:p>&nb=
-sp;</o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'>void Transform() {<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;</span>Int_t i;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Double_t nbins =3D=
- 4096;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Double_t xmin<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D 0;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Double_t xmax<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D (Double_t)nbins;<o:p></o:p></s=
-pan></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span></span><span
-class=3DSpellE><span lang=3DEN-US style=3D'font-size:10.0pt'>Float_t</span>=
-</span><span
-lang=3DEN-US style=3D'font-size:10.0pt'> * source =3D new <span class=3DGra=
-mE>float[</span><span
-class=3DSpellE>nbins</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Float_t=
-</span>
-* <span class=3DSpellE>dest</span> =3D new <span class=3DGramE>float[</span=
-><span
-class=3DSpellE>nbins</span>];<span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; =
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TH1F *h =3D new <span class=
-=3DGramE>TH1F(</span>&quot;<span
-class=3DSpellE>h&quot;,&quot;Transformed</span> spectrum using Cosine <span
-class=3DSpellE>transform&quot;,nbins,xmin,xmax</span>);<o:p></o:p></span></=
-p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TFile</=
-span> *f
-=3D new <span class=3DSpellE><span class=3DGramE>TFile</span></span><span
-class=3DGramE>(</span>&quot;spectra\\<span class=3DSpellE>TSpectrum.root</s=
-pan>&quot;);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>h<span class=3DGramE>=3D(</s=
-pan>TH1F*)
-f-&gt;Get(&quot;transform1;1&quot;);<span style=3D'mso-spacerun:yes'>&nbsp;=
-&nbsp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span> &lt; <span cla=
-ss=3DSpellE>nbins</span>;
-<span class=3DSpellE>i</span>++) source[<span class=3DSpellE>i</span>]=3Dh-=
-&gt;<span
-class=3DSpellE>GetBinContent</span>(<span class=3DSpellE>i</span> + 1);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TCanvas=
-</span>
-*Transform1 =3D <span class=3DSpellE>gROOT</span>-&gt;<span class=3DSpellE>=
-<span
-class=3DGramE>GetListOfCanvases</span></span><span class=3DGramE>(</span>)-=
-&gt;<span
-class=3DSpellE>FindObject</span>(&quot;Transform1&quot;);<o:p></o:p></span>=
+<p class=MsoNormal style='text-align:justify'>                        kTransformSin
 </p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>if</span>
-(!Transform1) Transform1 =3D new <span class=3DSpellE>TCanvas</span>(&quot;=
-Transform&quot;,&quot;Transform1&quot;,10,10,1000,700);<o:p></o:p></span></=
-p>
+<p class=MsoNormal style='text-align:justify'>                        kTransformFourier
+</p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TSpectr=
-um</span>
-*s =3D new <span class=3DSpellE><span class=3DGramE>TSpectrum</span></span>=
-<span
-class=3DGramE>(</span>);<o:p></o:p></span></p>
+<p class=MsoNormal style='text-align:justify'>                        kTransformHartey
+</p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TSpectr=
-umTransform</span>
-*t =3D new <span class=3DSpellE><span class=3DGramE>TSpectrumTransform</spa=
-n></span><span
-class=3DGramE>(</span>4096);<o:p></o:p></span></p>
+<p class=MsoNormal style='text-align:justify'>            Mixed transforms:</p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span></span><span lang=3DFR
-style=3D'font-size:10.0pt;mso-ansi-language:FR'>t-&gt;SetTransformType(t-&g=
-t;kTransformCos,0);<o:p></o:p></span></p>
+<p class=MsoNormal style='text-align:justify'>                        kTransformFourierWalsh
+</p>
 
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;
-</span>t-&gt;SetDirection(t-&gt;kTransformForward);<o:p></o:p></span></p>
+<p class=MsoNormal style='text-align:justify'>                        kTransformFourierHaar
+</p>
 
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span></span><span
-class=3DGramE><span lang=3DEN-US style=3D'font-size:10.0pt'>t</span></span>=
-<span
-lang=3DEN-US style=3D'font-size:10.0pt'>-&gt;Transform(<span class=3DSpellE=
->source,dest</span>);<o:p></o:p></span></p>
+<p class=MsoNormal style='text-align:justify'>                        kTransformWalshHaar
+</p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span> &lt; <span cla=
-ss=3DSpellE>nbins</span>;
-<span class=3DSpellE>i</span>++) h-&gt;<span class=3DSpellE>SetBinContent</=
-span>(<span
-class=3DSpellE>i</span> + 1,dest[<span class=3DSpellE>i</span>]);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
+<p class=MsoNormal style='text-align:justify'>                        kTransformCosWalsh
+</p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>h</span>=
--&gt;<span
-class=3DSpellE>SetLineColor</span>(<span class=3DSpellE>kRed</span>);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
+<p class=MsoNormal style='text-align:justify'>                        kTransformCosHaar
+</p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>h</span>=
--&gt;Draw(&quot;L&quot;);<o:p></o:p></span></p>
+<p class=MsoNormal style='text-align:justify'>                        kTransformSinWalsh
+</p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>}<o:p></=
-o:p></span></p>
+<p class=MsoNormal style='text-align:justify'>                        kTransformSinHaar
+</p>
+
+<p class=MsoNormal style='text-align:justify;text-indent:22.8pt'><b>fDirection</b>-direction-transform
+direction (forward, inverse)</p>
+
+<p class=MsoNormal style='text-align:justify'>                        kTransformForward
+</p>
+
+<p class=MsoNormal style='text-align:justify'>                        kTransformInverse
+</p>
+
+<p class=MsoNormal style='text-align:justify;text-indent:22.8pt'><b>fDegree</b>-applies
+only for mixed transforms [2], [3], [4]. </p>
+
+<p class=MsoNormal style='text-align:justify;text-indent:22.8pt'>                
+<span style='color:fuchsia'> Allowed range  <sub><img border=0 width=100
+height=27 src="gif/spectrumtransform_transform_image001.gif"></sub>. </span></p>
+
+<p class=MsoNormal style='text-align:justify'><b><i>References:</i></b></p>
+
+<p class=MsoNormal style='text-align:justify'>[1] C.V. Hampton, B. Lian, Wm. C.
+McHarris: Fast-Fourier-transform spectral enhancement techniques for gamma-ray
+spectroscopy. NIM A353 (1994) 280-284. </p>
+
+<p class=MsoNormal style='text-align:justify'>[2] Morhá&#269; M., Matoušek V.,
+New adaptive Cosine-Walsh  transform and its application to nuclear data
+compression, IEEE Transactions on Signal Processing 48 (2000) 2693.  </p>
+
+<p class=MsoNormal style='text-align:justify'>[3] Morhá&#269; M., Matoušek V.,
+Data compression using new fast adaptive Cosine-Haar transforms, Digital Signal
+Processing 8 (1998) 63. </p>
+
+<p class=MsoNormal style='text-align:justify'>[4] Morhá&#269; M., Matoušek V.:
+Multidimensional nuclear data compression using fast adaptive Walsh-Haar
+transform. Acta Physica Slovaca 51 (2001) 307. </p>
+
+<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
+
+<p class=MsoNormal style='text-align:justify'><i>Example  – script Transform.c:</i></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:18.0pt'><img
+width=600 height=324 src="gif/spectrumtransform_transform_image002.jpg"></span></p>
+
+<p class=MsoNormal><b>Fig. 1 Original gamma-ray spectrum</b></p>
+
+<p class=MsoNormal><b><span style='font-size:14.0pt'><img border=0 width=601
+height=402 src="gif/spectrumtransform_transform_image003.jpg"></span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:18.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal><b>Fig. 2 Transformed spectrum from Fig. 1 using Cosine
+transform</b></p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>&nbsp;</span></b></p>
+
+<p class=MsoNormal><b><span style='color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// Example to illustrate
+Transform function (class TSpectrumTransform).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// To execute this example,
+do</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// root &gt; .x Transform.C</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>#include &lt;TSpectrum&gt;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>#include
+&lt;TSpectrumTransform&gt;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>void Transform() {</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t i;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t nbins =
+4096;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t xmin  =
+0;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t xmax  =
+(Double_t)nbins;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
+style='font-size:10.0pt'>Float_t * source = new float[nbins];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t * dest = new
+float[nbins];   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TH1F *h = new TH1F(&quot;h&quot;,&quot;Transformed
+spectrum using Cosine transform&quot;,nbins,xmin,xmax);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TFile *f = new
+TFile(&quot;spectra\\TSpectrum.root&quot;);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   h=(TH1F*)
+f-&gt;Get(&quot;transform1;1&quot;);   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbins;
+i++) source[i]=h-&gt;GetBinContent(i + 1);         </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TCanvas *Transform1 =
+gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;Transform1&quot;);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   if (!Transform1)
+Transform1 = new
+TCanvas(&quot;Transform&quot;,&quot;Transform1&quot;,10,10,1000,700);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrum *s = new
+TSpectrum();</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrumTransform *t =
+new TSpectrumTransform(4096);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   </span><span lang=FR
+style='font-size:10.0pt'>t-&gt;SetTransformType(t-&gt;kTransformCos,0);</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
+t-&gt;SetDirection(t-&gt;kTransformForward);</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
+style='font-size:10.0pt'>t-&gt;Transform(source,dest);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbins;
+i++) h-&gt;SetBinContent(i + 1,dest[i]);   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+h-&gt;SetLineColor(kRed);      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   h-&gt;Draw(&quot;L&quot;);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>}</span></p>
 
 </div>
 
@@ -1767,292 +1441,134 @@ void TSpectrumTransform::FilterZonal(const float *source, float *destVector)
 //       
 //Begin_Html <!--
 /* -->
-<div class=3DSection2>
+<div class=Section2>
 
-<p class=3DMsoNormal><b><span lang=3DEN-US style=3D'font-size:14.0pt'>Examp=
-le of
-zonal filtering</span></b><span lang=3DEN-US style=3D'font-size:14.0pt'><o:=
-p></o:p></span></p>
+<p class=MsoNormal><b><span style='font-size:14.0pt'>Example of zonal filtering</span></b></p>
 
-<p class=3DMsoNormal><i><span lang=3DEN-US><o:p>&nbsp;</o:p></span></i></p>
+<p class=MsoNormal><i>&nbsp;</i></p>
 
-<p class=3DMsoNormal><i><span lang=3DEN-US>Function:</span></i></p>
+<p class=MsoNormal><i>Function:</i></p>
 
-<p class=3DMsoNormal><span class=3DGramE><b style=3D'mso-bidi-font-weight:n=
-ormal'><span
-lang=3DEN-US>void</span></b></span><b style=3D'mso-bidi-font-weight:normal'=
-><span
-lang=3DEN-US> <span class=3DSpellE>TSpectrumTransform::FilterZonal</span>(c=
-onst <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> *<s=
-pan
-class=3DSpellE>fSource</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> *<s=
-pan
-class=3DSpellE>fDest</span>)<o:p></o:p></span></b></p>
+<p class=MsoNormal><b>void TSpectrumTransform::FilterZonal(const <a
+href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> *fSource,
+<a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> *fDest)</b></p>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><o:p>&=
-nbsp;</o:p></span></p>
+<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>This f=
-unction
-transforms the source spectrum (for details see Transform function). Before=
- the
-<span class=3DSpellE>FilterZonal</span> function is called the class must be
-created by constructor and the type of the transform as well as some other
-parameters must be set using a set of setter <span class=3DSpellE>funcions<=
-/span>.
-The <span class=3DSpellE>FilterZonal</span> function sets transformed
-coefficients in the given region (<span class=3DSpellE>fXmin</span>, <span
-class=3DSpellE>fXmax</span>) to the given <span class=3DSpellE>fFilterCoeff=
-</span>
-and transforms it back. Filtered data are written into <span class=3DSpellE=
->dest</span>
-spectrum. </span></p>
+<p class=MsoNormal style='text-align:justify'>This function transforms the
+source spectrum (for details see Transform function). Before the FilterZonal
+function is called the class must be created by constructor and the type of the
+transform as well as some other parameters must be set using a set of setter
+funcions. The FilterZonal function sets transformed coefficients in the given
+region (fXmin, fXmax) to the given fFilterCoeff and transforms it back.
+Filtered data are written into dest spectrum. </p>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><i><span lang=3DEN-US
-style=3D'font-size:16.0pt'><o:p>&nbsp;</o:p></span></i></p>
+<p class=MsoNormal style='text-align:justify'><i><span style='font-size:16.0pt'>&nbsp;</span></i></p>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><i><span lang=3DEN-US>Exa=
-mple
-&#8211; script <span class=3DSpellE>Filter.c</span>:<o:p></o:p></span></i><=
-/p>
+<p class=MsoNormal style='text-align:justify'><i>Example – script Filter.c:</i></p>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><i><span lang=3DEN-US
-style=3D'font-size:16.0pt'><!--[if gte vml 1]><v:shapetype id=3D"_x0000_t75"
- coordsize=3D"21600,21600" o:spt=3D"75" o:preferrelative=3D"t" path=3D"m@4@=
-5l@4@11@9@11@9@5xe"
- filled=3D"f" stroked=3D"f">
- <v:stroke joinstyle=3D"miter"/>
- <v:formulas>
-  <v:f eqn=3D"if lineDrawn pixelLineWidth 0"/>
-  <v:f eqn=3D"sum @0 1 0"/>
-  <v:f eqn=3D"sum 0 0 @1"/>
-  <v:f eqn=3D"prod @2 1 2"/>
-  <v:f eqn=3D"prod @3 21600 pixelWidth"/>
-  <v:f eqn=3D"prod @3 21600 pixelHeight"/>
-  <v:f eqn=3D"sum @0 0 1"/>
-  <v:f eqn=3D"prod @6 1 2"/>
-  <v:f eqn=3D"prod @7 21600 pixelWidth"/>
-  <v:f eqn=3D"sum @8 21600 0"/>
-  <v:f eqn=3D"prod @7 21600 pixelHeight"/>
-  <v:f eqn=3D"sum @10 21600 0"/>
- </v:formulas>
- <v:path o:extrusionok=3D"f" gradientshapeok=3D"t" o:connecttype=3D"rect"/>
- <o:lock v:ext=3D"edit" aspectratio=3D"t"/>
-</v:shapetype><v:shape id=3D"_x0000_i1025" type=3D"#_x0000_t75" style=3D'wi=
-dth:450.75pt;
- height:301.5pt'>
- <v:imagedata src=3D"Filter_files/image001.jpg" o:title=3D"Filter"/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D601 height=3D402
-src=3D"Filter_files/image002.jpg" v:shapes=3D"_x0000_i1025"><![endif]><o:p>=
-</o:p></span></i></p>
+<p class=MsoNormal style='text-align:justify'><i><span style='font-size:16.0pt'><img
+border=0 width=601 height=402 src="gif/spectrumtransform_filter_image001.jpg"></span></i></p>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US>Fig=
-. 1
-Original spectrum (black line) and filtered spectrum (red line) using Cosine
-transform and zonal filtration (channels 2048-4095 were set to 0) <o:p></o:=
-p></span></b></p>
+<p class=MsoNormal style='text-align:justify'><b>Fig. 1 Original spectrum
+(black line) and filtered spectrum (red line) using Cosine transform and zonal
+filtration (channels 2048-4095 were set to 0) </b></p>
 
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'color:#339966'><o:p>&nbsp;</o:p></span></b></p>
+<p class=MsoNormal><b><span style='color:#339966'>&nbsp;</span></b></p>
 
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'color:#339966'>Script:<o:p></o:p></span></b></p>
+<p class=MsoNormal><b><span style='color:#339966'>Script:</span></b></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// Examp=
-le to
-illustrate <span class=3DSpellE>FilterZonal</span> function (class <span
-class=3DSpellE>TSpectrumTransform</span>).<o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>// Example to illustrate
+FilterZonal function (class TSpectrumTransform).</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// <span
-class=3DGramE>To</span> execute this example, do<o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>// To execute this example,
+do</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// root =
-&gt; .x <span
-class=3DSpellE>Filter.C</span><o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>// root &gt; .x Filter.C</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   </span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>#include=
- &lt;<span
-class=3DSpellE>TSpectrum</span>&gt;<o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>#include &lt;TSpectrum&gt;</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>#include=
- &lt;<span
-class=3DSpellE>TSpectrumTransform</span>&gt;<o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>#include
+&lt;TSpectrumTransform&gt;</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><o:p>&nb=
-sp;</o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>&nbsp;</span></p>
 
-<p class=3DMsoNormal><span class=3DGramE><span lang=3DEN-US style=3D'font-s=
-ize:10.0pt'>void</span></span><span
-lang=3DEN-US style=3D'font-size:10.0pt'> Filter() {<o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>void Filter() {</span></p>
 
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t i;<o:p></o:p=
-></span></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t i;</span></p>
 
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Double_t nbins =3D=
- 4096;<o:p></o:p></span></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t nbins =
+4096;</span></p>
 
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Double_t xmin<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D 0;<o:p></o:p></span></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t xmin  =
+0;</span></p>
 
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Double_t xmax<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D (Double_t)nbins;<o:p></o:p></s=
-pan></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t xmax  =
+(Double_t)nbins;</span></p>
 
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span></span><span
-class=3DSpellE><span lang=3DEN-US style=3D'font-size:10.0pt'>Float_t</span>=
-</span><span
-lang=3DEN-US style=3D'font-size:10.0pt'> * source =3D new <span class=3DGra=
-mE>float[</span><span
-class=3DSpellE>nbins</span>];<o:p></o:p></span></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
+style='font-size:10.0pt'>Float_t * source = new float[nbins];</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Float_t=
-</span>
-* <span class=3DSpellE>dest</span> =3D new <span class=3DGramE>float[</span=
-><span
-class=3DSpellE>nbins</span>];<span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; =
-</span><o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t * dest = new
+float[nbins];   </span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TH1F *h =3D new <span class=
-=3DGramE>TH1F(</span>&quot;<span
-class=3DSpellE>h&quot;,&quot;Zonal</span> filtering using Cosine <span
-class=3DSpellE>transform&quot;,nbins,xmin,xmax</span>);<o:p></o:p></span></=
-p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   TH1F *h = new
+TH1F(&quot;h&quot;,&quot;Zonal filtering using Cosine
+transform&quot;,nbins,xmin,xmax);</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TH1F *d =3D new <span class=
-=3DGramE>TH1F(</span>&quot;<span
-class=3DSpellE>d&quot;,&quot;&quot;,nbins,xmin,xmax</span>);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   TH1F *d = new
+TH1F(&quot;d&quot;,&quot;&quot;,nbins,xmin,xmax);         </span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TFile</=
-span> *f
-=3D new <span class=3DSpellE><span class=3DGramE>TFile</span></span><span
-class=3DGramE>(</span>&quot;spectra\\<span class=3DSpellE>TSpectrum.root</s=
-pan>&quot;);<o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   TFile *f = new
+TFile(&quot;spectra\\TSpectrum.root&quot;);</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>h<span class=3DGramE>=3D(</s=
-pan>TH1F*)
-f-&gt;Get(&quot;transform1;1&quot;);<span style=3D'mso-spacerun:yes'>&nbsp;=
-&nbsp;
-</span><o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   h=(TH1F*)
+f-&gt;Get(&quot;transform1;1&quot;);   </span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span> &lt; <span cla=
-ss=3DSpellE>nbins</span>;
-<span class=3DSpellE>i</span>++) source[<span class=3DSpellE>i</span>]=3Dh-=
-&gt;<span
-class=3DSpellE>GetBinContent</span>(<span class=3DSpellE>i</span> + 1);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p></spa=
-n></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbins;
+i++) source[i]=h-&gt;GetBinContent(i + 1);     </span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;</span><span style=3D'mso-spacerun:yes'>&n=
-bsp;
-</span><span class=3DSpellE>TCanvas</span> *Transform1 =3D <span class=3DSp=
-ellE>gROOT</span>-&gt;<span
-class=3DSpellE><span class=3DGramE>GetListOfCanvases</span></span><span
-class=3DGramE>(</span>)-&gt;<span class=3DSpellE>FindObject</span>(&quot;Tr=
-ansform1&quot;);<o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   TCanvas *Transform1 =
+gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;Transform1&quot;);</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>if</span>
-(!Transform1) Transform1 =3D new <span class=3DSpellE>TCanvas</span>(&quot;=
-Transform&quot;,&quot;Transform1&quot;,10,10,1000,700);<o:p></o:p></span></=
-p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   if (!Transform1)
+Transform1 = new
+TCanvas(&quot;Transform&quot;,&quot;Transform1&quot;,10,10,1000,700);</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>h</span>=
--&gt;<span
-class=3DSpellE>SetAxisRange</span>(700,1024);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+h-&gt;SetAxisRange(700,1024);   </span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>h</span>=
--&gt;Draw(&quot;L&quot;);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+h-&gt;Draw(&quot;L&quot;);   </span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TSpectr=
-um</span>
-*s =3D new <span class=3DSpellE><span class=3DGramE>TSpectrum</span></span>=
-<span
-class=3DGramE>(</span>);<o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrum *s = new
+TSpectrum();</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TSpectr=
-umTransform</span>
-*t =3D new <span class=3DSpellE><span class=3DGramE>TSpectrumTransform</spa=
-n></span><span
-class=3DGramE>(</span>4096);<o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrumTransform *t =
+new TSpectrumTransform(4096);</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span></span><span lang=3DFR
-style=3D'font-size:10.0pt;mso-ansi-language:FR'>t-&gt;SetTransformType(t-&g=
-t;kTransformCos,0);<o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   </span><span lang=FR
+style='font-size:10.0pt'>t-&gt;SetTransformType(t-&gt;kTransformCos,0);</span></p>
 
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>t-&gt;SetRegion(20=
-48,
-4095);<o:p></o:p></span></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
+t-&gt;SetRegion(2048, 4095);</span></p>
 
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;
-</span>t-&gt;FilterZonal(source,dest);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p></spa=
-n></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
+t-&gt;FilterZonal(source,dest);     </span></p>
 
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span></span><span
-class=3DGramE><span lang=3DEN-US style=3D'font-size:10.0pt'>for</span></spa=
-n><span
-lang=3DEN-US style=3D'font-size:10.0pt'> (<span class=3DSpellE>i</span> =3D=
- 0; <span
-class=3DSpellE>i</span> &lt; <span class=3DSpellE>nbins</span>; <span class=
-=3DSpellE>i</span>++)
-d-&gt;<span class=3DSpellE>SetBinContent</span>(<span class=3DSpellE>i</spa=
-n> +
-1,dest[<span class=3DSpellE>i</span>]);<o:p></o:p></span></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
+style='font-size:10.0pt'>for (i = 0; i &lt; nbins; i++) d-&gt;SetBinContent(i +
+1,dest[i]);</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>d</span>=
--&gt;<span
-class=3DSpellE>SetLineColor</span>(<span class=3DSpellE>kRed</span>);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+d-&gt;SetLineColor(kRed);   </span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>d</span>=
--&gt;Draw(&quot;SAME
-L&quot;);<o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   d-&gt;Draw(&quot;SAME
+L&quot;);</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>}<o:p></=
-o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>}</span></p>
 
 </div>
 
@@ -2532,290 +2048,133 @@ void TSpectrumTransform::Enhance(const float *source, float *destVector)
 ////////////////////////////////////////////////////////////////////////////////
 //Begin_Html <!--
 /* -->
-<div class=3DSection3>
+<div class=Section3>
 
-<p class=3DMsoNormal><b><span lang=3DEN-US style=3D'font-size:14.0pt'>Examp=
-le of enhancement</span></b><span
-lang=3DEN-US style=3D'font-size:14.0pt'><o:p></o:p></span></p>
+<p class=MsoNormal><b><span style='font-size:14.0pt'>Example of enhancement</span></b></p>
 
-<p class=3DMsoNormal><i><span lang=3DEN-US><o:p>&nbsp;</o:p></span></i></p>
+<p class=MsoNormal><i>&nbsp;</i></p>
 
-<p class=3DMsoNormal><i><span lang=3DEN-US>Function:</span></i></p>
+<p class=MsoNormal><i>Function:</i></p>
 
-<p class=3DMsoNormal><span class=3DGramE><b style=3D'mso-bidi-font-weight:n=
-ormal'><span
-lang=3DEN-US>void</span></b></span><b style=3D'mso-bidi-font-weight:normal'=
-><span
-lang=3DEN-US> <span class=3DSpellE>TSpectrumTransform::Enhance</span>(const=
- <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> *<s=
-pan
-class=3DSpellE>fSource</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> *<s=
-pan
-class=3DSpellE>fDest</span>)<o:p></o:p></span></b></p>
+<p class=MsoNormal><b>void TSpectrumTransform::Enhance(const <a
+href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> *fSource,
+<a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a>
+*fDest)</b></p>
 
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US><o:p>&nbsp;</o:p></span></b></p>
+<p class=MsoNormal><b>&nbsp;</b></p>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>This f=
-unction
-transforms the source spectrum (for details see Transform function). Before=
- the
-Enhance function is called the class must be created by constructor and the
-type of the transform as well as some other parameters must be set using a =
-set
-of setter <span class=3DSpellE>funcions</span>. The Enhance function multip=
-lies
-transformed coefficients in the given region (<span class=3DSpellE>fXmin</s=
-pan>, <span
-class=3DSpellE>fXmax</span>) by the given <span class=3DSpellE>fEnhancCoeff=
-</span>
-and transforms it back. Enhanced data are written into <span class=3DSpellE=
->dest</span>
-spectrum.<b style=3D'mso-bidi-font-weight:normal'><o:p></o:p></b></span></p>
+<p class=MsoNormal style='text-align:justify'>This function transforms the
+source spectrum (for details see Transform function). Before the Enhance
+function is called the class must be created by constructor and the type of the
+transform as well as some other parameters must be set using a set of setter funcions.
+The Enhance function multiplies transformed coefficients in the given region
+(fXmin, fXmax) by the given fEnhancCoeff and transforms it back. Enhanced data
+are written into dest spectrum.</p>
 
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
+<p class=MsoNormal>&nbsp;</p>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><span class=3DGramE><i><s=
-pan
-lang=3DEN-US>Example <span style=3D'mso-spacerun:yes'>&nbsp;</span>&#8211;<=
-/span></i></span><i><span
-lang=3DEN-US> script <span class=3DSpellE>Enhance.c</span>:<o:p></o:p></spa=
-n></i></p>
+<p class=MsoNormal style='text-align:justify'><i>Example  – script Enhance.c:</i></p>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><i><span lang=3DEN-US
-style=3D'font-size:16.0pt'><!--[if gte vml 1]><v:shapetype id=3D"_x0000_t75"
- coordsize=3D"21600,21600" o:spt=3D"75" o:preferrelative=3D"t" path=3D"m@4@=
-5l@4@11@9@11@9@5xe"
- filled=3D"f" stroked=3D"f">
- <v:stroke joinstyle=3D"miter"/>
- <v:formulas>
-  <v:f eqn=3D"if lineDrawn pixelLineWidth 0"/>
-  <v:f eqn=3D"sum @0 1 0"/>
-  <v:f eqn=3D"sum 0 0 @1"/>
-  <v:f eqn=3D"prod @2 1 2"/>
-  <v:f eqn=3D"prod @3 21600 pixelWidth"/>
-  <v:f eqn=3D"prod @3 21600 pixelHeight"/>
-  <v:f eqn=3D"sum @0 0 1"/>
-  <v:f eqn=3D"prod @6 1 2"/>
-  <v:f eqn=3D"prod @7 21600 pixelWidth"/>
-  <v:f eqn=3D"sum @8 21600 0"/>
-  <v:f eqn=3D"prod @7 21600 pixelHeight"/>
-  <v:f eqn=3D"sum @10 21600 0"/>
- </v:formulas>
- <v:path o:extrusionok=3D"f" gradientshapeok=3D"t" o:connecttype=3D"rect"/>
- <o:lock v:ext=3D"edit" aspectratio=3D"t"/>
-</v:shapetype><v:shape id=3D"_x0000_i1025" type=3D"#_x0000_t75" style=3D'wi=
-dth:450.75pt;
- height:301.5pt'>
- <v:imagedata src=3D"Enhance_files/image001.jpg" o:title=3D"Enhance"/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D601 height=3D402
-src=3D"Enhance_files/image002.jpg" v:shapes=3D"_x0000_i1025"><![endif]><o:p=
-></o:p></span></i></p>
+<p class=MsoNormal style='text-align:justify'><i><span style='font-size:16.0pt'><img
+border=0 width=601 height=402 src="gif/spectrumtransform_enhance_image001.jpg"></span></i></p>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:18.0pt'><o:p>&nbsp;</o:p></span></p>
+<p class=MsoNormal style='text-align:justify'><span style='font-size:18.0pt'>&nbsp;</span></p>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US>Fig=
-. 1
-Original spectrum (black line) and enhanced spectrum (red line) using Cosine
-transform (channels 0-1024 were multiplied by 2) </span></b></p>
+<p class=MsoNormal style='text-align:justify'><b>Fig. 1 Original spectrum (black
+line) and enhanced spectrum (red line) using Cosine transform (channels 0-1024
+were multiplied by 2) </b></p>
 
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'color:#339966'><o:p>&nbsp;</o:p></span></b></p>
+<p class=MsoNormal><b><span style='color:#339966'>&nbsp;</span></b></p>
 
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'color:#339966'>Script:<o:p></o:p></span></b></p>
+<p class=MsoNormal><b><span style='color:#339966'>Script:</span></b></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
+<p class=MsoNormal>&nbsp;</p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// Examp=
-le to
-illustrate Enhance function (class <span class=3DSpellE>TSpectrumTransform<=
-/span>).<o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>// Example to illustrate
+Enhance function (class TSpectrumTransform).</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// <span
-class=3DGramE>To</span> execute this example, do<o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>// To execute this example,
+do</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// root =
-&gt; .x <span
-class=3DSpellE>Enhance.C</span><o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>// root &gt; .x Enhance.C</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><o:p>&nb=
-sp;</o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>&nbsp;</span></p>
 
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'>void Enhance() {<o:p></o:p></span></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>void Enhance() {</span></p>
 
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t i;<o:p></o:p=
-></span></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t i;</span></p>
 
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Double_t nbins =3D=
- 4096;<o:p></o:p></span></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t nbins =
+4096;</span></p>
 
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Double_t xmin<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D 0;<o:p></o:p></span></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t xmin  =
+0;</span></p>
 
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Double_t xmax<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D (Double_t)nbins;<o:p></o:p></s=
-pan></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t xmax  =
+(Double_t)nbins;</span></p>
 
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span></span><span
-class=3DSpellE><span lang=3DEN-US style=3D'font-size:10.0pt'>Float_t</span>=
-</span><span
-lang=3DEN-US style=3D'font-size:10.0pt'> * source =3D new <span class=3DGra=
-mE>float[</span><span
-class=3DSpellE>nbins</span>];<o:p></o:p></span></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
+style='font-size:10.0pt'>Float_t * source = new float[nbins];</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Float_t=
-</span>
-* <span class=3DSpellE>dest</span> =3D new <span class=3DGramE>float[</span=
-><span
-class=3DSpellE>nbins</span>];<span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; =
-</span><o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t * dest = new
+float[nbins];   </span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TH1F *h =3D new <span class=
-=3DGramE>TH1F(</span>&quot;<span
-class=3DSpellE>h&quot;,&quot;Enhancement</span> using Cosine <span class=3D=
-SpellE>transform&quot;,nbins,xmin,xmax</span>);<o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   TH1F *h = new
+TH1F(&quot;h&quot;,&quot;Enhancement using Cosine transform&quot;,nbins,xmin,xmax);</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TH1F *d =3D new <span class=
-=3DGramE>TH1F(</span>&quot;<span
-class=3DSpellE>d&quot;,&quot;&quot;,nbins,xmin,xmax</span>);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   TH1F *d = new
+TH1F(&quot;d&quot;,&quot;&quot;,nbins,xmin,xmax);         </span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TFile</=
-span> *f
-=3D new <span class=3DSpellE><span class=3DGramE>TFile</span></span><span
-class=3DGramE>(</span>&quot;spectra\\<span class=3DSpellE>TSpectrum.root</s=
-pan>&quot;);<o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   TFile *f = new
+TFile(&quot;spectra\\TSpectrum.root&quot;);</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>h<span class=3DGramE>=3D(</s=
-pan>TH1F*)
-f-&gt;Get(&quot;transform1;1&quot;);<span style=3D'mso-spacerun:yes'>&nbsp;=
-&nbsp;
-</span><o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   h=(TH1F*)
+f-&gt;Get(&quot;transform1;1&quot;);   </span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span> &lt; <span cla=
-ss=3DSpellE>nbins</span>;
-<span class=3DSpellE>i</span>++) source[<span class=3DSpellE>i</span>]=3Dh-=
-&gt;<span
-class=3DSpellE>GetBinContent</span>(<span class=3DSpellE>i</span> + 1);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p></spa=
-n></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbins;
+i++) source[i]=h-&gt;GetBinContent(i + 1);     </span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TCanvas=
-</span>
-*Transform1 =3D <span class=3DSpellE>gROOT</span>-&gt;<span class=3DSpellE>=
-<span
-class=3DGramE>GetListOfCanvases</span></span><span class=3DGramE>(</span>)-=
-&gt;<span
-class=3DSpellE>FindObject</span>(&quot;Transform1&quot;);<o:p></o:p></span>=
-</p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   TCanvas *Transform1 = gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;Transform1&quot;);</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>if</span>
-(!Transform1) Transform1 =3D new <span class=3DSpellE>TCanvas</span>(&quot;=
-Transform&quot;,&quot;Transform1&quot;,10,10,1000,700);<o:p></o:p></span></=
-p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   if (!Transform1)
+Transform1 = new
+TCanvas(&quot;Transform&quot;,&quot;Transform1&quot;,10,10,1000,700);</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>h</span>=
--&gt;<span
-class=3DSpellE>SetAxisRange</span>(700,1024);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+h-&gt;SetAxisRange(700,1024);   </span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>h</span>=
--&gt;Draw(&quot;L&quot;);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+h-&gt;Draw(&quot;L&quot;);   </span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TSpectr=
-um</span>
-*s =3D new <span class=3DSpellE><span class=3DGramE>TSpectrum</span></span>=
-<span
-class=3DGramE>(</span>);<o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrum *s = new
+TSpectrum();</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TSpectr=
-umTransform</span>
-*t =3D new <span class=3DSpellE><span class=3DGramE>TSpectrumTransform</spa=
-n></span><span
-class=3DGramE>(</span>4096);<o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrumTransform *t =
+new TSpectrumTransform(4096);</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span></span><span lang=3DFR
-style=3D'font-size:10.0pt;mso-ansi-language:FR'>t-&gt;SetTransformType(t-&g=
-t;kTransformCos,0);<o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   </span><span lang=FR
+style='font-size:10.0pt'>t-&gt;SetTransformType(t-&gt;kTransformCos,0);</span></p>
 
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>t-&gt;SetRegion(0,
-1024);<o:p></o:p></span></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   t-&gt;SetRegion(0,
+1024);</span></p>
 
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;
-</span>t-&gt;SetEnhanceCoeff(2);<o:p></o:p></span></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
+t-&gt;SetEnhanceCoeff(2);</span></p>
 
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;
-</span>t-&gt;Enhance(source,dest);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><o:p></o:p></span></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
+t-&gt;Enhance(source,dest);        </span></p>
 
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span></span><span
-class=3DGramE><span lang=3DEN-US style=3D'font-size:10.0pt'>for</span></spa=
-n><span
-lang=3DEN-US style=3D'font-size:10.0pt'> (<span class=3DSpellE>i</span> =3D=
- 0; <span
-class=3DSpellE>i</span> &lt; <span class=3DSpellE>nbins</span>; <span class=
-=3DSpellE>i</span>++)
-d-&gt;<span class=3DSpellE>SetBinContent</span>(<span class=3DSpellE>i</spa=
-n> +
-1,dest[<span class=3DSpellE>i</span>]);<o:p></o:p></span></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
+style='font-size:10.0pt'>for (i = 0; i &lt; nbins; i++) d-&gt;SetBinContent(i +
+1,dest[i]);</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>d</span>=
--&gt;<span
-class=3DSpellE>SetLineColor</span>(<span class=3DSpellE>kRed</span>);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+d-&gt;SetLineColor(kRed);   </span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>d</span>=
--&gt;Draw(&quot;SAME
-L&quot;);<o:p></o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   d-&gt;Draw(&quot;SAME
+L&quot;);</span></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>}<o:p></=
-o:p></span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>}</span></p>
 
 </div>
 

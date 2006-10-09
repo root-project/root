@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum3.cxx,v 1.1 2006/09/28 19:19:52 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum3.cxx,v 1.2 2006/10/02 10:58:42 brun Exp $
 // Author: Miroslav Morhac   25/09/2006
 
 /////////////////////////////////////////////////////////////////////////////
@@ -272,919 +272,393 @@ const char *TSpectrum3::Background(float ***spectrum,
 ///////////////////////////////////////////////////////////////////////////////
 //Begin_Html <!--
 /* -->
-<div class=3DSection1>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US
-style=3D'font-size:14.0pt'>Background estimation<o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><i><span lang=3DEN-US><o:=
-p>&nbsp;</o:p></span></i></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><i><span lang=3DEN-US>Goa=
-l:
-Separation of useful information (peaks) from useless information (backgrou=
-nd)</span></i><span
-lang=3DEN-US> </span></p>
-
-<p class=3DMsoNormal style=3D'margin-left:.5in;text-align:justify;text-inde=
-nt:-.25in;
-mso-list:l0 level1 lfo1;tab-stops:list .5in'><![if !supportLists]><span
-lang=3DEN-US><span style=3D'mso-list:Ignore'>&#8226;<span style=3D'font:7.0=
-pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></span><![endif]><span lang=3DEN-US>method is based on Sensit=
-ive
-Nonlinear Iterative Peak (SNIP) clipping algorithm [1]</span></p>
-
-<p class=3DMsoNormal style=3D'margin-left:.5in;text-align:justify;text-inde=
-nt:-.25in;
-mso-list:l0 level1 lfo1;tab-stops:list .5in'><![if !supportLists]><span
-lang=3DEN-US><span style=3D'mso-list:Ignore'>&#8226;<span style=3D'font:7.0=
-pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></span><![endif]><span lang=3DEN-US>there exist two algorithm=
-s for
-the estimation of new value in the channel &#8220;<sub><!--[if gte vml 1]><=
-v:shapetype
- id=3D"_x0000_t75" coordsize=3D"21600,21600" o:spt=3D"75" o:preferrelative=
-=3D"t"
- path=3D"m@4@5l@4@11@9@11@9@5xe" filled=3D"f" stroked=3D"f">
- <v:stroke joinstyle=3D"miter"/>
- <v:formulas>
-  <v:f eqn=3D"if lineDrawn pixelLineWidth 0"/>
-  <v:f eqn=3D"sum @0 1 0"/>
-  <v:f eqn=3D"sum 0 0 @1"/>
-  <v:f eqn=3D"prod @2 1 2"/>
-  <v:f eqn=3D"prod @3 21600 pixelWidth"/>
-  <v:f eqn=3D"prod @3 21600 pixelHeight"/>
-  <v:f eqn=3D"sum @0 0 1"/>
-  <v:f eqn=3D"prod @6 1 2"/>
-  <v:f eqn=3D"prod @7 21600 pixelWidth"/>
-  <v:f eqn=3D"sum @8 21600 0"/>
-  <v:f eqn=3D"prod @7 21600 pixelHeight"/>
-  <v:f eqn=3D"sum @10 21600 0"/>
- </v:formulas>
- <v:path o:extrusionok=3D"f" gradientshapeok=3D"t" o:connecttype=3D"rect"/>
- <o:lock v:ext=3D"edit" aspectratio=3D"t"/>
-</v:shapetype><v:shape id=3D"_x0000_i1025" type=3D"#_x0000_t75" style=3D'wi=
-dth:32.25pt;
- height:18pt' o:ole=3D"">
- <v:imagedata src=3D"Background_files/image001.wmz" o:title=3D""/>
-</v:shape><![endif]--><![if !vml]><img width=3D43 height=3D24
-src=3D"Background_files/image002.gif" v:shapes=3D"_x0000_i1025"><![endif]><=
-/sub><!--[if gte mso 9]><xml>
- <o:OLEObject Type=3D"Embed" ProgID=3D"Equation.DSMT4" ShapeID=3D"_x0000_i1=
-025"
-  DrawAspect=3D"Content" ObjectID=3D"_1220806806">
- </o:OLEObject>
-</xml><![endif]-->&#8221;</span></p>
-
-<p class=3DMsoNormal style=3D'margin-left:.25in;text-align:justify'><span
-lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><i style=3D'mso-bidi-font=
--style:
-normal'><span lang=3DEN-US>Algorithm based on Successive Comparisons<o:p></=
-o:p></span></i></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>It is =
-an
-extension of one-dimensional SNIP algorithm to another dimension. For detai=
-ls
-we refer to [2].</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><o:p>&=
-nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><i style=3D'mso-bidi-font=
--style:
-normal'><span lang=3DEN-US>Algorithm based on One Step Filtering<o:p></o:p>=
-</span></i></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>The al=
-gorithm is
-analogous to that for 2-dimensional data. For details we refer to TSpectrum2=
-.
-New value in the estimated channel is calculated as</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><o:p>&=
-nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><sub><=
-!--[if gte vml 1]><v:shape
- id=3D"_x0000_i1026" type=3D"#_x0000_t75" style=3D'width:77.25pt;height:19.=
-5pt'
- o:ole=3D"">
- <v:imagedata src=3D"Background_files/image003.wmz" o:title=3D""/>
-</v:shape><![endif]--><![if !vml]><img width=3D103 height=3D26
-src=3D"Background_files/image004.gif" v:shapes=3D"_x0000_i1026"><![endif]><=
-/sub><!--[if gte mso 9]><xml>
- <o:OLEObject Type=3D"Embed" ProgID=3D"Equation.DSMT4" ShapeID=3D"_x0000_i1=
-026"
-  DrawAspect=3D"Content" ObjectID=3D"_1220806807">
- </o:OLEObject>
-</xml><![endif]--></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><sub><=
-!--[if gte vml 1]><v:shape
- id=3D"_x0000_i1027" type=3D"#_x0000_t75" style=3D'width:465.75pt;height:30=
-6pt'
- o:ole=3D"">
- <v:imagedata src=3D"Background_files/image005.wmz" o:title=3D""/>
-</v:shape><![endif]--><![if !vml]><img width=3D621 height=3D408
-src=3D"Background_files/image006.gif" v:shapes=3D"_x0000_i1027"><![endif]><=
-/sub><!--[if gte mso 9]><xml>
- <o:OLEObject Type=3D"Embed" ProgID=3D"Equation.DSMT4" ShapeID=3D"_x0000_i1=
-027"
-  DrawAspect=3D"Content" ObjectID=3D"_1220806808">
- </o:OLEObject>
-</xml><![endif]--><sub><!--[if gte vml 1]><v:shape id=3D"_x0000_i1029" type=
-=3D"#_x0000_t75"
- style=3D'width:111pt;height:20.25pt' o:ole=3D"">
- <v:imagedata src=3D"Background_files/image007.wmz" o:title=3D""/>
-</v:shape><![endif]--><![if !vml]><img width=3D148 height=3D27
-src=3D"Background_files/image008.gif" v:shapes=3D"_x0000_i1029"><![endif]><=
-/sub><!--[if gte mso 9]><xml>
- <o:OLEObject Type=3D"Embed" ProgID=3D"Equation.DSMT4" ShapeID=3D"_x0000_i1=
-029"
-  DrawAspect=3D"Content" ObjectID=3D"_1220806809">
- </o:OLEObject>
-</xml><![endif]--></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span class=3DGramE><span
-lang=3DEN-US>where</span></span><span lang=3DEN-US> p =3D 1, 2, &#8230;, <s=
-pan
-class=3DSpellE>number_of_iterations</span>. </span></p>
-
-<p class=3DMsoNormal><i><span lang=3DEN-US><o:p>&nbsp;</o:p></span></i></p>
-
-<p class=3DMsoNormal><i><span lang=3DEN-US>Function:</span></i></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US>con=
-st <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#char" target=3D"_par=
-ent">char</a>*
-</span></b><span lang=3DEN-US><a
-href=3D"http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b
-style=3D'mso-bidi-font-weight:normal'>TSpectrum3::Background</b></a><b> (<a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#float" target=3D"_pa=
-rent">float</a>
-***<span class=3DSpellE>fSpectrum</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int" target=3D"_pare=
-nt"><span
-class=3DSpellE>int</span></a> <span class=3DSpellE>fSizex</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int" target=3D"_pare=
-nt"><span
-class=3DSpellE>int</span></a> <span class=3DSpellE>fSizey</span>, <span
-class=3DSpellE>int</span> <span class=3DSpellE>fSizez</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int" target=3D"_pare=
-nt"><span
-class=3DSpellE>int</span></a> <span class=3DSpellE>fNumberIterationsX</span=
->, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int" target=3D"_pare=
-nt"><span
-class=3DSpellE>int</span></a> <span class=3DSpellE>fNumberIterationsY</span=
->, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int" target=3D"_pare=
-nt"><span
-class=3DSpellE>int</span></a> <span class=3DSpellE>fNumberIterationsZ</span=
->, <span
-style=3D'mso-spacerun:yes'>&nbsp;</span><a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int" target=3D"_pare=
-nt"><span
-class=3DSpellE>int</span></a> <span class=3DSpellE>fDirection</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int" target=3D"_pare=
-nt"><span
-class=3DSpellE>int</span></a> <span class=3DSpellE>fFilterType</span>)<span
-style=3D'mso-spacerun:yes'>&nbsp; </span><o:p></o:p></b></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>This f=
-unction
-calculates background spectrum from the source spectrum.<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>The result is placed in the matrix
-pointed by <span class=3DSpellE>fSpectrum</span> pointer.<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>One can also switch the direction =
-of the
-change of the clipping window and to select one of the two above given algo=
-rithms.
-On successful completion it returns 0. On error it returns pointer to the
-string describing error.</span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><i style=3D'mso-bidi-font-style:normal'><span lang=3DE=
-N-US
-style=3D'color:red'>Parameters:<o:p></o:p></span></i></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fSpectrum</b></span></span><span
-class=3DGramE>-pointer</span> to the matrix of source spectrum<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fSizex</b></span></span><b
-style=3D'mso-bidi-font-weight:normal'>, <span class=3DSpellE>fSizey</span>,=
- <span
-class=3DSpellE>fSizez</span> </b>-lengths of the spectrum matrix<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fNumberIterationsX</b></span></span><b
-style=3D'mso-bidi-font-weight:normal'>, <span class=3DSpellE>fNumberIterati=
-onsY</span>,
-<span class=3DSpellE>fNumberIterationsZ</span> </b>maximal</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DGramE>widths</span> of clipping window,<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fDirection</b></span></span><span
-class=3DGramE>-</span> direction of change of clipping window<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>- <span class=3DGramE>possible</span> values=3D<span class=3DSpellE>=
-kBackIncreasingWindow</span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;
-</span></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span class=3DSpellE><span class=3DGramE>kBackDecreasingWindow</span=
-></span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;
-</span></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fFilterType</b></span></span><span
-class=3DGramE>-type</span> of the clipping algorithm,<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>-possible values=3D<span class=3DSpellE>kBack</span> <span class=3DS=
-pellE>SuccessiveFiltering</span></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span class=3DSpellE><span class=3DGramE>kBackOneStepFiltering</span=
-></span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><b><i><span lang=3DEN-US>References:<o:p></o:p></span>=
-</i></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>[1<span
-class=3DGramE>]<span style=3D'mso-spacerun:yes'>&nbsp; </span>C</span>. G R=
-yan et
-al.: SNIP, a statistics-sensitive background treatment for the quantitative
-analysis of PIXE spectra in <span class=3DSpellE>geoscience</span> applicat=
-ions.
-NIM, B34 (1988), 396-402.</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>[2<span
-class=3DGramE>] <span lang=3DSK style=3D'mso-ansi-language:SK'><span
-style=3D'mso-spacerun:yes'>&nbsp;</span>M</span></span></span><span
-style=3D'mso-ansi-language:SK'>. Morh&aacute;&#269;, J. Kliman, V. Matou&#3=
-53;ek,
-M. Veselsk&yacute;, I. Turzo</span><span lang=3DEN-US>.: Background elimina=
-tion
-methods for multidimensional gamma-ray spectra. NIM, A401 (1997) 113-132.</=
-span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:16.0pt'><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><i><span lang=3DEN-US>Example 1&#8211; script <span
-class=3DGramE>Back3.c :</span><o:p></o:p></span></i></p>
-
-<p class=3DMsoNormal><i><span lang=3DEN-US style=3D'font-size:18.0pt'><!--[=
-if gte vml 1]><v:shape
- id=3D"_x0000_i1028" type=3D"#_x0000_t75" style=3D'width:450.75pt;height:27=
-6pt'>
- <v:imagedata src=3D"Background_files/image009.jpg" o:title=3D"back3_origin=
-al_daqprovis"/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D601 height=3D368
-src=3D"Background_files/image010.jpg" v:shapes=3D"_x0000_i1028"><![endif]><=
-o:p></o:p></span></i></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US>Fig=
-. 1
-Original three-dimensional gamma-gamma-gamma-ray spectrum<o:p></o:p></span>=
-</b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US
-style=3D'font-size:16.0pt'><!--[if gte vml 1]><v:shape id=3D"_x0000_i1030" =
-type=3D"#_x0000_t75"
- style=3D'width:450.75pt;height:276pt'>
- <v:imagedata src=3D"Background_files/image011.jpg" o:title=3D"back3_estima=
-ted_background_daqprovis"/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D601 height=3D368
-src=3D"Background_files/image012.jpg" v:shapes=3D"_x0000_i1030"><![endif]><=
-o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US>Fig=
-. 2
-Background estimated from data from Fig. 1 using decreasing clipping window
-with widths 5, 5, 5 and algorithm based on successive comparisons. The esti=
-mate
-includes not only continuously changing background but also one- and two-di=
-mensional
-ridges.<o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'font-size:14.0pt;color:green'><o:p>&nbsp;</o:p></span></b></p>
-
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'font-size:14.0pt;color:green'><!--[if gte vml 1]><v:shape id=3D"_x=
-0000_i1031"
- type=3D"#_x0000_t75" style=3D'width:450.75pt;height:276pt'>
- <v:imagedata src=3D"Background_files/image013.jpg" o:title=3D"back3_peaks_=
-daqprovis"/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D601 height=3D368
-src=3D"Background_files/image014.jpg" v:shapes=3D"_x0000_i1031"><![endif]><=
-o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US>Fig=
-. 3
-Resulting peaks after subtraction of the estimated background (Fig. 2) from
-original three-dimensional gamma-gamma-gamma-ray spectrum (Fig. 1).<o:p></o=
-:p></span></b></p>
-
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'color:green'><o:p>&nbsp;</o:p></span></b></p>
-
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'color:green'><o:p>&nbsp;</o:p></span></b></p>
-
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'color:green'>Script:<o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// Examp=
-le to
-illustrate the background estimator (class TSpectrum3).<o:p></o:p></span></=
-p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// <span
-class=3DGramE>To</span> execute this example, do<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// root =
-&gt; .x
-Back3.C<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><o:p>&nb=
-sp;</o:p></span></p>
-
-<p class=3DMsoNormal><span class=3DGramE><span lang=3DEN-US style=3D'font-s=
-ize:10.0pt'>void</span></span><span
-lang=3DEN-US style=3D'font-size:10.0pt'> Back3() {<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;</span><span style=3D'mso-spacerun:yes'>&n=
-bsp;
-</span><span class=3DSpellE>Int_t</span> <span class=3DSpellE>i</span>, j, =
-k;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span></span><span lang=3DFR
-style=3D'font-size:10.0pt;mso-ansi-language:FR'>Int_t nbinsx =3D 64;<o:p></=
-o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t nbinsy =3D 6=
-4;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t nbinsz =3D 6=
-4;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t xmin<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D 0;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t xmax<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D nbinsx;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t ymin<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D 0;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t ymax<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D nbinsy;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t zmin<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D 0;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span></span><span
-class=3DSpellE><span lang=3DEN-US style=3D'font-size:10.0pt'>Int_t</span></=
-span><span
-lang=3DEN-US style=3D'font-size:10.0pt'> <span class=3DSpellE><span class=
-=3DGramE>zmax</span></span><span
-class=3DGramE><span style=3D'mso-spacerun:yes'>&nbsp; </span>=3D</span> <sp=
-an
-class=3DSpellE>nbinsz</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>float</s=
-pan> ***
-source =3D new float **[<span class=3DSpellE>nbinsx</span>];<o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>float</s=
-pan> ***
-<span class=3DSpellE>dest</span> =3D new float **[<span class=3DSpellE>nbin=
-sx</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for(</sp=
-an><span
-class=3DSpellE>i</span>=3D0;i&lt;<span class=3DSpellE>nbinsx;i</span>++){<o=
-:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DGramE>source[</span><span class=3DSpellE>i</span>]=3Dnew float* [<s=
-pan
-class=3DSpellE>nbinsy</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DGramE>for(</span>j=3D0;j&lt;<span class=3DSpellE>nbinsy;j</span>++)=
-<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span class=3DGramE>source[</span><span class=3DSpellE>i</span>][j]=
-=3Dnew
-float [<span class=3DSpellE>nbinsz</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for(</sp=
-an><span
-class=3DSpellE>i</span>=3D0;i&lt;<span class=3DSpellE>nbinsx;i</span>++){<o=
-:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>dest</span></span><span class=3DGramE>[<=
-/span><span
-class=3DSpellE>i</span>]=3Dnew float* [<span class=3DSpellE>nbinsy</span>];=
-<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DGramE>for(</span>j=3D0;j&lt;<span class=3DSpellE>nbinsy;j</span>++)=
-<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span class=3DSpellE><span class=3DGramE>dest</span></span><span
-class=3DGramE>[</span><span class=3DSpellE>i</span>][j]=3Dnew float [<span
-class=3DSpellE>nbinsz</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TH3F *back =3D new TH3F(&quo=
-t;<span
-class=3DSpellE>back&quot;,&quot;Background</span> <span class=3DSpellE>esti=
-mation&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax,nbinsz,zmin,zmax</span>);<o:=
-p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TFile</=
-span> *f
-=3D new <span class=3DSpellE><span class=3DGramE>TFile</span></span><span
-class=3DGramE>(</span>&quot;TSpectrum3.root&quot;);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>back</sp=
-an>=3D(TH3F*)
-f-&gt;Get(&quot;back;1&quot;);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TCanvas=
-</span>
-*Background =3D new <span class=3DSpellE><span class=3DGramE>TCanvas</span>=
-</span><span
-class=3DGramE>(</span>&quot;<span class=3DSpellE>Background&quot;,&quot;Est=
-imation</span>
-of background with decreasing window&quot;,10,10,1000,700);<o:p></o:p></spa=
-n></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TSpectrum3 *s =3D new <span
-class=3DGramE>TSpectrum3(</span>);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span> &lt; <span cla=
-ss=3DSpellE>nbinsx</span>;
-<span class=3DSpellE>i</span>++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DGr=
-amE>for</span>
-(j =3D 0; j &lt; <span class=3DSpellE>nbinsy</span>; j++){<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-style=3D'mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;</span><span class=3DGramE>for</span=
-> (k =3D
-0; k &lt; <span class=3DSpellE>nbinsz</span>; k++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span=
-><span
-class=3DGramE>source[</span><span class=3DSpellE>i</span>][j][k] =3D back-&=
-gt;<span
-class=3DSpellE>GetBinContent</span>(<span class=3DSpellE>i</span> + 1,j + 1=
-,k + 1);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span=
-><span
-class=3DSpellE><span class=3DGramE>dest</span></span><span class=3DGramE>[<=
-/span><span
-class=3DSpellE>i</span>][j][k] =3D back-&gt;<span class=3DSpellE>GetBinCont=
-ent</span>(<span
-class=3DSpellE>i</span> + 1,j + 1,k + 1);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><sp=
-an
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span=
-><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;</span>} <o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;</span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;
-</span>s-&gt;Background(dest,nbinsx,nbinsy,nbinsz,5,5,5,s-&gt;kBackDecreasi=
-ngWindow,s-&gt;kBackSuccessiveFiltering);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span> &lt; <span cla=
-ss=3DSpellE>nbinsx</span>;
-<span class=3DSpellE>i</span>++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DGr=
-amE>for</span>
-(j =3D 0; j &lt; <span class=3DSpellE>nbinsy</span>; j++){<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DGramE>for</span> (k =3D 0; k &lt; <span class=3DSpellE>nbinsz</span=
->; k++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;
-</span><span class=3DGramE>back</span>-&gt;<span class=3DSpellE>SetBinConte=
-nt</span>(<span
-class=3DSpellE>i</span> + 1,j + 1,k + 1, <span class=3DSpellE>dest</span>[<=
-span
-class=3DSpellE>i</span>][j][k]);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>}<span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><o:p></o=
-:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span>}<o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><o:p>&nb=
-sp;</o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;</span><span style=3D'mso-spacerun:yes'>&n=
-bsp;
-</span>FILE *out;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>char</sp=
-an>
-PATH[80];<span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></=
-span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>strcpy</span></span><span class=3DGramE>(</span>PATH,&quot;sp=
-ectra3\\back_output_5ds.spe&quot;);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>out=3D</=
-span><span
-class=3DSpellE>fopen</span>(<span class=3DSpellE>PATH,&quot;wb</span>&quot;=
-);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for(</sp=
-an><span
-class=3DSpellE>i</span>=3D0;i&lt;<span class=3DSpellE>nbinsx;i</span>++){<o=
-:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DGramE>for(</span>j=3D0;j&lt;<span class=3DSpellE>nbinsy;j</span>++)=
-{<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-;&nbsp;&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span class=3DSpellE><span class=3DGramE>fwrite</span></span><span
-class=3DGramE>(</span><span class=3DSpellE>dest</span>[<span class=3DSpellE=
->i</span>][j],
-<span class=3DSpellE>sizeof</span>(<span class=3DSpellE>dest</span>[0][0][0=
-]),<span
-class=3DSpellE>nbinsz,out</span>);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>}<o:p></o:=
-p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>fclose</span></span><span class=3DGramE>(</span>out);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span> &lt; <span cla=
-ss=3DSpellE>nbinsx</span>;
-<span class=3DSpellE>i</span>++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DGr=
-amE>for</span>
-(j =3D 0; j &lt; <span class=3DSpellE>nbinsy</span>; j++){<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DGramE>for</span> (k =3D 0; k &lt; <span class=3DSpellE>nbinsz</span=
->; k++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;
-</span><span class=3DGramE>source[</span><span class=3DSpellE>i</span>][j][=
-k] =3D
-source[<span class=3DSpellE>i</span>][j][k] - <span class=3DSpellE>dest</sp=
-an>[<span
-class=3DSpellE>i</span>][j][k];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>}<span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><o:p></o=
-:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span>}<o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span> &lt; <span cla=
-ss=3DSpellE>nbinsx</span>;
-<span class=3DSpellE>i</span>++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DGr=
-amE>for</span>
-(j =3D 0; j &lt; <span class=3DSpellE>nbinsy</span>; j++){<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DGramE>for</span> (k =3D 0; k &lt; <span class=3DSpellE>nbinsz</span=
->; k++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;
-</span><span class=3DGramE>back</span>-&gt;<span class=3DSpellE>SetBinConte=
-nt</span>(<span
-class=3DSpellE>i</span> + 1,j + 1,k + 1, source[<span class=3DSpellE>i</spa=
-n>][j][k]);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>}<span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><o:p></o=
-:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span>}<o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>strcpy</span></span><span class=3DGramE>(</span>PATH,&quot;sp=
-ectra3\\back_peaks_5ds.spe&quot;);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>out=3D</=
-span><span
-class=3DSpellE>fopen</span>(<span class=3DSpellE>PATH,&quot;wb</span>&quot;=
-);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for(</sp=
-an><span
-class=3DSpellE>i</span>=3D0;i&lt;<span class=3DSpellE>nbinsx;i</span>++){<o=
-:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DGramE>for(</span>j=3D0;j&lt;<span class=3DSpellE>nbinsy;j</span>++)=
-{<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-;&nbsp;&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span class=3DSpellE><span class=3DGramE>fwrite</span></span><span
-class=3DGramE>(</span>source[<span class=3DSpellE>i</span>][j], <span class=
-=3DSpellE>sizeof</span>(source[0][0][0]),<span
-class=3DSpellE>nbinsz,out</span>);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>}<o:p></o:=
-p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>fclose</span></span><span class=3DGramE>(</span>out);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>back</sp=
-an>-&gt;Draw(&quot;&quot;);<span
-style=3D'mso-spacerun:yes'>&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>}<o:p></=
-o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:16.0pt'><o:p>&nbsp;</o:p></span></p>
+<div class=Section1>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:14.0pt'>Background
+estimation</span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><i>&nbsp;</i></p>
+
+<p class=MsoNormal style='text-align:justify'><i>Goal: Separation of useful
+information (peaks) from useless information (background)</i> </p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>method is based on Sensitive Nonlinear Iterative Peak (SNIP) clipping
+algorithm [1]</p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>there exist two algorithms for the estimation of new value in the
+channel “<sub><img width=43 height=24 src="gif/gif/spectrum3_background_image001.gif"></sub>”</p>
+
+<p class=MsoNormal style='margin-left:18.0pt;text-align:justify'>&nbsp;</p>
+
+<p class=MsoNormal style='text-align:justify'><i>Algorithm based on Successive
+Comparisons</i></p>
+
+<p class=MsoNormal style='text-align:justify'>It is an extension of
+one-dimensional SNIP algorithm to another dimension. For details we refer to
+[2].</p>
+
+<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
+
+<p class=MsoNormal style='text-align:justify'><i>Algorithm based on One Step
+Filtering</i></p>
+
+<p class=MsoNormal style='text-align:justify'>The algorithm is analogous to
+that for 2-dimensional data. For details we refer to TSpectrum2. New value in
+the estimated channel is calculated as</p>
+
+<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
+
+<p class=MsoNormal style='text-align:justify'><sub><img width=103 height=26
+src="gif/gif/spectrum3_background_image002.gif"></sub></p>
+
+<p class=MsoNormal style='text-align:justify'><sub><img width=621 height=408
+src="gif/gif/spectrum3_background_image003.gif"></sub><sub><img width=148 height=27
+src="gif/gif/spectrum3_background_image004.gif"></sub></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal style='text-align:justify'>where p = 1, 2, …,
+number_of_iterations. </p>
+
+<p class=MsoNormal><i>&nbsp;</i></p>
+
+<p class=MsoNormal><i>Function:</i></p>
+
+<p class=MsoNormal style='text-align:justify'><b>const <a
+href="http://root.cern.ch/root/html/ListOfTypes.html#char" target="_parent">char</a>*
+</b><a href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrum3::Background</b></a><b>
+(<a href="http://root.cern.ch/root/html/ListOfTypes.html#float" target="_parent">float</a>
+***fSpectrum, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int"
+target="_parent">int</a> fSizex, <a
+href="http://root.cern.ch/root/html/ListOfTypes.html#int" target="_parent">int</a>
+fSizey, int fSizez, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int"
+target="_parent">int</a> fNumberIterationsX, <a
+href="http://root.cern.ch/root/html/ListOfTypes.html#int" target="_parent">int</a>
+fNumberIterationsY, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int"
+target="_parent">int</a> fNumberIterationsZ,  <a
+href="http://root.cern.ch/root/html/ListOfTypes.html#int" target="_parent">int</a>
+fDirection, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int"
+target="_parent">int</a> fFilterType)  </b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal style='text-align:justify'>This function calculates
+background spectrum from the source spectrum.  The result is placed in the matrix
+pointed by fSpectrum pointer.  One can also switch the direction of the change
+of the clipping window and to select one of the two above given algorithms. On
+successful completion it returns 0. On error it returns pointer to the string
+describing error.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><i><span style='color:red'>Parameters:</span></i></p>
+
+<p class=MsoNormal>        <b>fSpectrum</b>-pointer to the matrix of source
+spectrum                  </p>
+
+<p class=MsoNormal>        <b>fSizex, fSizey, fSizez </b>-lengths of the
+spectrum matrix                                 </p>
+
+<p class=MsoNormal style='text-align:justify'>        <b>fNumberIterationsX,
+fNumberIterationsY, fNumberIterationsZ </b>maximal</p>
+
+<p class=MsoNormal style='text-align:justify'>        widths of clipping window,                                
+</p>
+
+<p class=MsoNormal>        <b>fDirection</b>- direction of change of clipping
+window                  </p>
+
+<p class=MsoNormal>               - possible
+values=kBackIncreasingWindow                      </p>
+
+<p class=MsoNormal>                                           
+kBackDecreasingWindow                      </p>
+
+<p class=MsoNormal>        <b>fFilterType</b>-type of the clipping algorithm,          
+                   </p>
+
+<p class=MsoNormal>                  -possible values=kBack SuccessiveFiltering</p>
+
+<p class=MsoNormal>                                             
+kBackOneStepFiltering                              </p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><b><i>References:</i></b></p>
+
+<p class=MsoNormal style='text-align:justify'>[1]  C. G Ryan et al.: SNIP, a
+statistics-sensitive background treatment for the quantitative analysis of PIXE
+spectra in geoscience applications. NIM, B34 (1988), 396-402.</p>
+
+<p class=MsoNormal style='text-align:justify'>[2] <span lang=SK> M.
+Morhá&#269;, J. Kliman, V. Matoušek, M. Veselský, I. Turzo</span>.: Background
+elimination methods for multidimensional gamma-ray spectra. NIM, A401 (1997)
+113-132.</p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal><i>Example 1– script Back3.c :</i></p>
+
+<p class=MsoNormal><i><span style='font-size:18.0pt'><img border=0 width=601
+height=368 src="gif/gif/spectrum3_background_image005.jpg"></span></i></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal style='text-align:justify'><b>Fig. 1 Original three-dimensional
+gamma-gamma-gamma-ray spectrum</b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
+border=0 width=601 height=368 src="gif/gif/spectrum3_background_image006.jpg"></span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><b>Fig. 2 Background estimated
+from data from Fig. 1 using decreasing clipping window with widths 5, 5, 5 and
+algorithm based on successive comparisons. The estimate includes not only
+continuously changing background but also one- and two-dimensional ridges.</b></p>
+
+<p class=MsoNormal><b><span style='font-size:14.0pt;color:green'>&nbsp;</span></b></p>
+
+<p class=MsoNormal><b><span style='font-size:14.0pt;color:green'><img border=0
+width=601 height=368 src="gif/spectrum3_background_image007.jpg"></span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><b>Fig. 3 Resulting peaks after
+subtraction of the estimated background (Fig. 2) from original three-dimensional
+gamma-gamma-gamma-ray spectrum (Fig. 1).</b></p>
+
+<p class=MsoNormal><b><span style='color:green'>&nbsp;</span></b></p>
+
+<p class=MsoNormal><b><span style='color:green'>&nbsp;</span></b></p>
+
+<p class=MsoNormal><b><span style='color:green'>Script:</span></b></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// Example to illustrate the
+background estimator (class TSpectrum3).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// To execute this example,
+do</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// root &gt; .x Back3.C</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>void Back3() {</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t i, j, k;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   </span><span lang=FR
+style='font-size:10.0pt'>Int_t nbinsx = 64;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t nbinsy = 64;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t nbinsz =
+64;   </span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmin  = 0;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmax  =
+nbinsx;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t ymin  = 0;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t ymax  =
+nbinsy;   </span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t zmin  = 0;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
+style='font-size:10.0pt'>Int_t zmax  = nbinsz;      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   float *** source = new
+float **[nbinsx];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   float *** dest = new float
+**[nbinsx];      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nbinsx;i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      source[i]=new float*
+[nbinsy];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     
+for(j=0;j&lt;nbinsy;j++)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>         source[i][j]=new
+float [nbinsz];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }           </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nbinsx;i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      dest[i]=new float*
+[nbinsy];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     
+for(j=0;j&lt;nbinsy;j++)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>         dest[i][j]=new float
+[nbinsz];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }              </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TH3F *back = new
+TH3F(&quot;back&quot;,&quot;Background
+estimation&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax,nbinsz,zmin,zmax);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TFile *f = new
+TFile(&quot;TSpectrum3.root&quot;);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   back=(TH3F*)
+f-&gt;Get(&quot;back;1&quot;);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TCanvas *Background = new
+TCanvas(&quot;Background&quot;,&quot;Estimation of background with decreasing
+window&quot;,10,10,1000,700);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrum3 *s = new
+TSpectrum3();</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbinsx;
+i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
+nbinsy; j++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                  for (k = 0;
+k &lt; nbinsz; k++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                       source[i][j][k]
+= back-&gt;GetBinContent(i + 1,j + 1,k + 1);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                       dest[i][j][k]
+= back-&gt;GetBinContent(i + 1,j + 1,k + 1);                     </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                    } </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                 }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+s-&gt;Background(dest,nbinsx,nbinsy,nbinsz,5,5,5,s-&gt;kBackDecreasingWindow,s-&gt;kBackSuccessiveFiltering);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbinsx;
+i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
+nbinsy; j++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>        for (k = 0; k &lt;
+nbinsz; k++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>          
+back-&gt;SetBinContent(i + 1,j + 1,k + 1, dest[i][j][k]);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>        }    </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   FILE *out;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   char PATH[80];   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+strcpy(PATH,&quot;spectra3\\back_output_5ds.spe&quot;);   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   out=fopen(PATH,&quot;wb&quot;);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nbinsx;i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     
+for(j=0;j&lt;nbinsy;j++){                   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>         fwrite(dest[i][j],
+sizeof(dest[0][0][0]),nbinsz,out);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   fclose(out);   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbinsx;
+i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
+nbinsy; j++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>        for (k = 0; k &lt;
+nbinsz; k++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>           source[i][j][k] =
+source[i][j][k] - dest[i][j][k];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>        }    </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbinsx;
+i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
+nbinsy; j++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>        for (k = 0; k &lt;
+nbinsz; k++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>          
+back-&gt;SetBinContent(i + 1,j + 1,k + 1, source[i][j][k]);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>        }    </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+strcpy(PATH,&quot;spectra3\\back_peaks_5ds.spe&quot;);   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+out=fopen(PATH,&quot;wb&quot;);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nbinsx;i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     
+for(j=0;j&lt;nbinsy;j++){                   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>         fwrite(source[i][j],
+sizeof(source[0][0][0]),nbinsz,out);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   fclose(out);      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+back-&gt;Draw(&quot;&quot;);  </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>}</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>&nbsp;</span></p>
 
 </div>
 
@@ -1587,551 +1061,231 @@ const char* TSpectrum3::SmoothMarkov(float ***source, Int_t ssizex, Int_t ssizey
 /////////////////////////////////////////////////////////////////////////////
 //Begin_Html <!--
 /* -->
-<div class=3DSection2>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US
-style=3D'font-size:14.0pt'>Smoothing<o:p></o:p></span></b></p>
+<div class=Section2>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><i><span lang=3DEN-US><o:=
-p>&nbsp;</o:p></span></i></p>
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:14.0pt'>Smoothing</span></b></p>
 
-<p class=3DMsoNormal><i><span lang=3DEN-US>Goal: Suppression of statistical
-fluctuations</span></i></p>
+<p class=MsoNormal style='text-align:justify'><i>&nbsp;</i></p>
 
-<p class=3DMsoNormal style=3D'margin-left:.5in;text-align:justify;text-inde=
-nt:-.25in;
-mso-list:l1 level1 lfo2;tab-stops:list .5in'><![if !supportLists]><span
-lang=3DEN-US><span style=3D'mso-list:Ignore'>&#8226;<span style=3D'font:7.0=
-pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></span><![endif]><span lang=3DEN-US>the algorithm is based on
-discrete Markov chain, which has very simple invariant distribution</span><=
-/p>
+<p class=MsoNormal><i>Goal: Suppression of statistical fluctuations</i></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>the algorithm is based on discrete Markov chain, which has very simple
+invariant distribution</p>
 
-<p class=3DMsoNormal><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;
-</span><sub><!--[if gte vml 1]><v:shapetype id=3D"_x0000_t75" coordsize=3D"=
-21600,21600"
- o:spt=3D"75" o:preferrelative=3D"t" path=3D"m@4@5l@4@11@9@11@9@5xe" filled=
-=3D"f"
- stroked=3D"f">
- <v:stroke joinstyle=3D"miter"/>
- <v:formulas>
-  <v:f eqn=3D"if lineDrawn pixelLineWidth 0"/>
-  <v:f eqn=3D"sum @0 1 0"/>
-  <v:f eqn=3D"sum 0 0 @1"/>
-  <v:f eqn=3D"prod @2 1 2"/>
-  <v:f eqn=3D"prod @3 21600 pixelWidth"/>
-  <v:f eqn=3D"prod @3 21600 pixelHeight"/>
-  <v:f eqn=3D"sum @0 0 1"/>
-  <v:f eqn=3D"prod @6 1 2"/>
-  <v:f eqn=3D"prod @7 21600 pixelWidth"/>
-  <v:f eqn=3D"sum @8 21600 0"/>
-  <v:f eqn=3D"prod @7 21600 pixelHeight"/>
-  <v:f eqn=3D"sum @10 21600 0"/>
- </v:formulas>
- <v:path o:extrusionok=3D"f" gradientshapeok=3D"t" o:connecttype=3D"rect"/>
- <o:lock v:ext=3D"edit" aspectratio=3D"t"/>
-</v:shapetype><v:shape id=3D"_x0000_i1025" type=3D"#_x0000_t75" style=3D'wi=
-dth:303pt;
- height:31.5pt' o:ole=3D"" o:allowoverlap=3D"f">
- <v:imagedata src=3D"Smoothing_files/image001.wmz" o:title=3D""/>
-</v:shape><![endif]--><![if !vml]><img width=3D404 height=3D42
-src=3D"Smoothing_files/image002.gif" v:shapes=3D"_x0000_i1025"><![endif]></=
-sub><!--[if gte mso 9]><xml>
- <o:OLEObject Type=3D"Embed" ProgID=3D"Equation.DSMT4" ShapeID=3D"_x0000_i1=
-025"
-  DrawAspect=3D"Content" ObjectID=3D"_1220807480">
- </o:OLEObject>
-</xml><![endif]--></span><span lang=3DEN-US style=3D'font-family:Arial;mso-=
-bidi-font-family:
-"Times New Roman"'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></p>
+<p class=MsoNormal>&nbsp;</p>
 
-<p class=3DMsoNormal style=3D'text-align:justify;tab-stops:.5in'><span lang=
-=3DEN-US
-style=3D'font-family:Arial;mso-bidi-font-family:"Times New Roman"'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n></span><span
-lang=3DEN-US><sub><!--[if gte vml 1]><v:shape id=3D"_x0000_i1026" type=3D"#=
-_x0000_t75"
- style=3D'width:16.5pt;height:21pt' o:ole=3D"" o:allowoverlap=3D"f">
- <v:imagedata src=3D"Smoothing_files/image003.wmz" o:title=3D""/>
-</v:shape><![endif]--><![if !vml]><img width=3D22 height=3D28
-src=3D"Smoothing_files/image004.gif" v:shapes=3D"_x0000_i1026"><![endif]></=
-sub><!--[if gte mso 9]><xml>
- <o:OLEObject Type=3D"Embed" ProgID=3D"Equation.DSMT4" ShapeID=3D"_x0000_i1=
-026"
-  DrawAspect=3D"Content" ObjectID=3D"_1220807481">
- </o:OLEObject>
-</xml><![endif]--></span><span lang=3DEN-US style=3D'font-family:Arial;mso-=
-bidi-font-family:
-"Times New Roman"'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;</span></sp=
-an><span
-class=3DGramE><span lang=3DEN-US>being</span></span><span lang=3DEN-US> def=
-ined from
-the normalization condition <sub><!--[if gte vml 1]><v:shape id=3D"_x0000_i=
-1027"
- type=3D"#_x0000_t75" style=3D'width:37.5pt;height:27.75pt' o:ole=3D""
- o:allowoverlap=3D"f">
- <v:imagedata src=3D"Smoothing_files/image005.wmz" o:title=3D""/>
-</v:shape><![endif]--><![if !vml]><img width=3D50 height=3D37
-src=3D"Smoothing_files/image006.gif" v:shapes=3D"_x0000_i1027"><![endif]></=
-sub><!--[if gte mso 9]><xml>
- <o:OLEObject Type=3D"Embed" ProgID=3D"Equation.DSMT4" ShapeID=3D"_x0000_i1=
-027"
-  DrawAspect=3D"Content" ObjectID=3D"_1220807482">
- </o:OLEObject>
-</xml><![endif]--></span></p>
+<p class=MsoNormal>            <sub><img width=404 height=42
+src="Smoothing_files/image001.gif"></sub><span style='font-family:Arial'>     </span></p>
 
-<p class=3DMsoNormal style=3D'tab-stops:.5in'><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span class=3DGramE>n</span> is the length of the smoothed spectrum =
-and </span></p>
+<p class=MsoNormal style='text-align:justify'><span style='font-family:Arial'>       
+</span><sub><img width=22 height=28 src="Smoothing_files/image002.gif"></sub><span
+style='font-family:Arial'>  </span>being defined from the normalization
+condition <sub><img width=50 height=37 src="Smoothing_files/image003.gif"></sub></p>
 
-<p class=3DMsoNormal style=3D'tab-stops:.5in'><!--[if gte vml 1]><v:shape i=
-d=3D"_x0000_s1033"
- type=3D"#_x0000_t75" style=3D'position:absolute;margin-left:48.45pt;margin=
--top:6.8pt;
- width:153.9pt;height:36pt;z-index:1'>
- <v:imagedata src=3D"Smoothing_files/image007.wmz" o:title=3D""/>
-</v:shape><![if gte mso 9]><o:OLEObject Type=3D"Embed" ProgID=3D"Equation.D=
-SMT4"
- ShapeID=3D"_x0000_s1033" DrawAspect=3D"Content" ObjectID=3D"_1220807483">
-</o:OLEObject>
-<![endif]><![endif]--><![if !vml]><span style=3D'mso-ignore:vglayout'>
+<p class=MsoNormal>         n is the length of the smoothed spectrum and </p>
 
-<table cellpadding=3D0 cellspacing=3D0 align=3Dleft>
+<p class=MsoNormal>
+
+<table cellpadding=0 cellspacing=0 align=left>
  <tr>
-  <td width=3D65 height=3D9></td>
+  <td width=65 height=9></td>
  </tr>
  <tr>
   <td></td>
-  <td><img width=3D205 height=3D48 src=3D"Smoothing_files/image008.gif" v:s=
-hapes=3D"_x0000_s1033"></td>
+  <td><img width=205 height=48 src="Smoothing_files/image004.gif"></td>
  </tr>
 </table>
 
-</span><![endif]><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'tab-stops:.5in'><span lang=3DEN-US><o:p>&nbsp=
-;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><o:p>&=
-nbsp;</o:p></span></p>
-
-<br style=3D'mso-ignore:vglayout' clear=3DALL>
-
-<p class=3DMsoNormal style=3D'margin-left:34.2pt;text-align:justify'><span
-class=3DGramE><span lang=3DEN-US>is</span></span><span lang=3DEN-US> the pr=
-obability
-of the change of the peak position from channel <span class=3DSpellE>i</spa=
-n> to
-the channel i+1. <span style=3D'mso-spacerun:yes'>&nbsp;</span><sub><!--[if=
- gte vml 1]><v:shape
- id=3D"_x0000_i1028" type=3D"#_x0000_t75" style=3D'width:18pt;height:23.25p=
-t' o:ole=3D""
- o:allowoverlap=3D"f">
- <v:imagedata src=3D"Smoothing_files/image009.wmz" o:title=3D""/>
-</v:shape><![endif]--><![if !vml]><img width=3D24 height=3D31
-src=3D"Smoothing_files/image010.gif" v:shapes=3D"_x0000_i1028"><![endif]></=
-sub><!--[if gte mso 9]><xml>
- <o:OLEObject Type=3D"Embed" ProgID=3D"Equation.DSMT4" ShapeID=3D"_x0000_i1=
-028"
-  DrawAspect=3D"Content" ObjectID=3D"_1220807484">
- </o:OLEObject>
-</xml><![endif]--><span class=3DGramE>is</span> the normalization constant =
-so
-that <sub><!--[if gte vml 1]><v:shape id=3D"_x0000_i1029" type=3D"#_x0000_t=
-75"
- style=3D'width:74.25pt;height:18.75pt' o:ole=3D"" o:allowoverlap=3D"f">
- <v:imagedata src=3D"Smoothing_files/image011.wmz" o:title=3D""/>
-</v:shape><![endif]--><![if !vml]><img width=3D99 height=3D25
-src=3D"Smoothing_files/image012.gif" v:shapes=3D"_x0000_i1029"><![endif]></=
-sub><!--[if gte mso 9]><xml>
- <o:OLEObject Type=3D"Embed" ProgID=3D"Equation.DSMT4" ShapeID=3D"_x0000_i1=
-029"
-  DrawAspect=3D"Content" ObjectID=3D"_1220807485">
- </o:OLEObject>
-</xml><![endif]--><span style=3D'mso-spacerun:yes'>&nbsp;</span>and m is a =
-width
-of smoothing window. We have extended this algorithm to three dimensions. <=
-/span></p>
-
-<p class=3DMsoNormal><i><span lang=3DEN-US><o:p>&nbsp;</o:p></span></i></p>
-
-<p class=3DMsoNormal><i><span lang=3DEN-US>Function:</span></i></p>
-
-<p class=3DMsoNormal><b><span lang=3DEN-US>const <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#char" target=3D"_par=
-ent">char</a>*
-</span></b><span lang=3DEN-US><a
-href=3D"http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b
-style=3D'mso-bidi-font-weight:normal'>TSpectrum3::SmoothMarkov</b></a><b>(<a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#float" target=3D"_pa=
-rent">float</a>
-***<span class=3DSpellE>fSpectrum</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int" target=3D"_pare=
-nt"><span
-class=3DSpellE>int</span></a> <span class=3DSpellE>fSizex</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int" target=3D"_pare=
-nt"><span
-class=3DSpellE>int</span></a> <span class=3DSpellE>fSizey</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int" target=3D"_pare=
-nt"><span
-class=3DSpellE>int</span></a> <span class=3DSpellE>fSizey</span>, <span
-style=3D'mso-spacerun:yes'>&nbsp;</span><a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int" target=3D"_pare=
-nt"><span
-class=3DSpellE>int</span></a> <span class=3DSpellE>fAverWindow</span>)<span
-style=3D'mso-spacerun:yes'>&nbsp; </span><o:p></o:p></b></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>This f=
-unction
-calculates smoothed spectrum from the source spectrum based on Markov chain
-method. The result is placed in the field pointed by source pointer. On suc=
-cessful
-completion it returns 0. On error it returns pointer to the string describi=
-ng
-error.</span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><i style=3D'mso-bidi-font-style:normal'><span lang=3DE=
-N-US
-style=3D'color:red'>Parameters:<o:p></o:p></span></i></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fSpectrum</b></span></span><span
-class=3DGramE>-pointer</span> to the matrix of source spectrum<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fSizex</b></span></span><b
-style=3D'mso-bidi-font-weight:normal'>, <span class=3DSpellE>fSizey</span>,=
- <span
-class=3DSpellE>fSizez</span></b> -lengths of the spectrum matrix<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><=
-/p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fAverWindow</b></span></span><span
-class=3DGramE>-width</span> of averaging smoothing window </span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><b><i><span lang=3DEN-US>Reference:<o:p></o:p></span><=
-/i></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>[1] Z.=
-K. <span
-class=3DSpellE>Silagadze</span>, A new algorithm for automatic <span
-class=3DSpellE>photopeak</span> searches. NIM A 376 (1996), 451<b>.</b><span
-style=3D'mso-spacerun:yes'>&nbsp; </span></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><o:p>&=
-nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><i><span lang=3DEN-US>Example 1 &#8211; script <span
-class=3DGramE>SmootMarkov3.c :</span><o:p></o:p></span></i></p>
-
-<p class=3DMsoNormal><i><span lang=3DEN-US><!--[if gte vml 1]><v:shape id=
-=3D"_x0000_i1030"
- type=3D"#_x0000_t75" style=3D'width:450.75pt;height:276pt'>
- <v:imagedata src=3D"Smoothing_files/image013.jpg" o:title=3D"smooth_origin=
-al_daqprovis"/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D601 height=3D368
-src=3D"Smoothing_files/image014.jpg" v:shapes=3D"_x0000_i1030"><![endif]></=
-span></i><span
-class=3DGramE><b><span lang=3DEN-US>Fig. 1 Original noisy spectrum.</span><=
-/b></span><b><span
-lang=3DEN-US><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span></s=
-pan></b><i><span
-lang=3DEN-US><o:p></o:p></span></i></p>
-
-<p class=3DMsoNormal><b><span lang=3DEN-US><!--[if gte vml 1]><v:shape id=
-=3D"_x0000_i1031"
- type=3D"#_x0000_t75" style=3D'width:450.75pt;height:276pt'>
- <v:imagedata src=3D"Smoothing_files/image015.jpg" o:title=3D"smooth_daqpro=
-vis"/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D601 height=3D368
-src=3D"Smoothing_files/image016.jpg" v:shapes=3D"_x0000_i1031"><![endif]><o=
-:p></o:p></span></b></p>
-
-<p class=3DMsoNormal><b><span lang=3DEN-US>Fig. 2 Smoothed spectrum with av=
-eraging
-window m=3D3.</span></b></p>
-
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'color:#339966'><o:p>&nbsp;</o:p></span></b></p>
-
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'color:#339966'>Script:<o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// Examp=
-le to
-illustrate the Markov smoothing (class TSpectrum3).<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// <span
-class=3DGramE>To</span> execute this example, do<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// root =
-&gt; .x
-SmoothMarkov3.C<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><o:p>&nb=
-sp;</o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'>void SmoothMarkov3() {<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t i, j, k;<o:p=
-></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t nbinsx =3D 6=
-4;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t nbinsy =3D 6=
-4;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t nbinsz =3D 6=
-4;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t xmin<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D 0;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t xmax<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D nbinsx;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t ymin<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D 0;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t ymax<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D nbinsy;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t zmin<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D 0;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span></span><span
-class=3DSpellE><span lang=3DEN-US style=3D'font-size:10.0pt'>Int_t</span></=
-span><span
-lang=3DEN-US style=3D'font-size:10.0pt'> <span class=3DSpellE><span class=
-=3DGramE>zmax</span></span><span
-class=3DGramE><span style=3D'mso-spacerun:yes'>&nbsp; </span>=3D</span> <sp=
-an
-class=3DSpellE>nbinsz</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>float</s=
-pan> ***
-source =3D new float **[<span class=3DSpellE>nbinsx</span>];<o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;</span><span class=3DGramE>for(</span><span
-class=3DSpellE>i</span>=3D0;i&lt;<span class=3DSpellE>nbinsx;i</span>++){<o=
-:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DGramE>source[</span><span class=3DSpellE>i</span>]=3Dnew float* [<s=
-pan
-class=3DSpellE>nbinsy</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DGramE>for(</span>j=3D0;j&lt;<span class=3DSpellE>nbinsy;j</span>++)=
-<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span class=3DGramE>source[</span><span class=3DSpellE>i</span>][j]=
-=3Dnew
-float [<span class=3DSpellE>nbinsz</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TH3F *<span class=3DSpellE>s=
-m</span>
-=3D new TH3F(&quot;<span class=3DSpellE>Smoothing&quot;,&quot;Markov</span>=
- <span
-class=3DSpellE>smoothing&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax,nbinsz,zmi=
-n,zmax</span>);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TFile</=
-span> *f
-=3D new <span class=3DSpellE><span class=3DGramE>TFile</span></span><span
-class=3DGramE>(</span>&quot;TSpectrum3.root&quot;);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>sm</span></span>=3D(TH3F*) f-&gt;Get(&quot;back;1&quot;);<o:p=
-></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TCanvas=
-</span>
-*Background =3D new <span class=3DSpellE><span class=3DGramE>TCanvas</span>=
-</span><span
-class=3DGramE>(</span>&quot;<span class=3DSpellE>Smoothing&quot;,&quot;Mark=
-ov</span>
-smoothing&quot;,10,10,1000,700);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TSpectrum3 *s =3D new <span
-class=3DGramE>TSpectrum3(</span>);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span> &lt; <span cla=
-ss=3DSpellE>nbinsx</span>;
-<span class=3DSpellE>i</span>++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DGr=
-amE>for</span>
-(j =3D 0; j &lt; <span class=3DSpellE>nbinsy</span>; j++){<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-style=3D'mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;</span><span class=3DGramE>for</span=
-> (k =3D
-0; k &lt; <span class=3DSpellE>nbinsz</span>; k++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span=
-><span
-class=3DGramE>source[</span><span class=3DSpellE>i</span>][j][k] =3D <span
-class=3DSpellE>sm</span>-&gt;<span class=3DSpellE>GetBinContent</span>(<span
-class=3DSpellE>i</span> + 1,j + 1,k + 1);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;</span>} <o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;</span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>s</span>=
--&gt;<span
-class=3DSpellE>SmoothMarkov</span>(source,nbinsx,nbinsy,nbinsz,3);<o:p></o:=
-p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span> &lt; <span cla=
-ss=3DSpellE>nbinsx</span>;
-<span class=3DSpellE>i</span>++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DGr=
-amE>for</span>
-(j =3D 0; j &lt; <span class=3DSpellE>nbinsy</span>; j++){<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DGramE>for</span> (k =3D 0; k &lt; <span class=3DSpellE>nbinsz</span=
->; k++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;
-</span><span class=3DSpellE><span class=3DGramE>sm</span></span>-&gt;<span
-class=3DSpellE>SetBinContent</span>(<span class=3DSpellE>i</span> + 1,j + 1=
-,k + 1,
-source[<span class=3DSpellE>i</span>][j][k]);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>}<span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><o:p></o=
-:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span>}<o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>sm</span></span>-&gt;Draw(&quot;&quot;);<span
-style=3D'mso-spacerun:yes'>&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>}<o:p></=
-o:p></span></p>
+ &nbsp;</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
+
+<br clear=ALL>
+
+<p class=MsoNormal style='margin-left:34.2pt;text-align:justify'>is the
+probability of the change of the peak position from channel i to the channel
+i+1.  <sub><img width=24 height=31 src="Smoothing_files/image005.gif"></sub>is
+the normalization constant so that <sub><img width=99 height=25
+src="Smoothing_files/image006.gif"></sub> and m is a width of smoothing window.
+We have extended this algorithm to three dimensions. </p>
+
+<p class=MsoNormal><i>&nbsp;</i></p>
+
+<p class=MsoNormal><i>Function:</i></p>
+
+<p class=MsoNormal><b>const <a
+href="http://root.cern.ch/root/html/ListOfTypes.html#char" target="_parent">char</a>*
+</b><a href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrum3::SmoothMarkov</b></a><b>(<a
+href="http://root.cern.ch/root/html/ListOfTypes.html#float" target="_parent">float</a>
+***fSpectrum, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int"
+target="_parent">int</a> fSizex, <a
+href="http://root.cern.ch/root/html/ListOfTypes.html#int" target="_parent">int</a>
+fSizey, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int"
+target="_parent">int</a> fSizey,  <a
+href="http://root.cern.ch/root/html/ListOfTypes.html#int" target="_parent">int</a>
+fAverWindow)  </b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal style='text-align:justify'>This function calculates smoothed
+spectrum from the source spectrum based on Markov chain method. The result is
+placed in the field pointed by source pointer. On successful completion it
+returns 0. On error it returns pointer to the string describing error.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><i><span style='color:red'>Parameters:</span></i></p>
+
+<p class=MsoNormal>        <b>fSpectrum</b>-pointer to the matrix of source
+spectrum                  </p>
+
+<p class=MsoNormal>        <b>fSizex, fSizey, fSizez</b> -lengths of the
+spectrum matrix                                 </p>
+
+<p class=MsoNormal>        <b>fAverWindow</b>-width of averaging smoothing
+window </p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><b><i>Reference:</i></b></p>
+
+<p class=MsoNormal style='text-align:justify'>[1] Z.K. Silagadze, A new
+algorithm for automatic photopeak searches. NIM A 376 (1996), 451<b>.</b>  </p>
+
+<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
+
+<p class=MsoNormal><i>Example 1 – script SmootMarkov3.c :</i></p>
+
+<p class=MsoNormal><i><img border=0 width=601 height=368
+src="Smoothing_files/image007.jpg"></i><b>Fig. 1 Original noisy spectrum.    </b></p>
+
+<p class=MsoNormal><b><img border=0 width=601 height=368
+src="Smoothing_files/image008.jpg"></b></p>
+
+<p class=MsoNormal><b>Fig. 2 Smoothed spectrum with averaging window m=3.</b></p>
+
+<p class=MsoNormal><b><span style='color:#339966'>&nbsp;</span></b></p>
+
+<p class=MsoNormal><b><span style='color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// Example to illustrate the
+Markov smoothing (class TSpectrum3).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// To execute this example,
+do</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// root &gt; .x
+SmoothMarkov3.C</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>void SmoothMarkov3()
+{</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t i, j, k;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t nbinsx = 64;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t nbinsy = 64;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t nbinsz =
+64;   </span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmin  = 0;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmax  =
+nbinsx;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t ymin  = 0;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t ymax  =
+nbinsy;   </span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t zmin  = 0;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
+style='font-size:10.0pt'>Int_t zmax  = nbinsz;      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   float *** source = new
+float **[nbinsx];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nbinsx;i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      source[i]=new float*
+[nbinsy];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     
+for(j=0;j&lt;nbinsy;j++)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>         source[i][j]=new
+float [nbinsz];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }           </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TH3F *sm = new
+TH3F(&quot;Smoothing&quot;,&quot;Markov
+smoothing&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax,nbinsz,zmin,zmax);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TFile *f = new
+TFile(&quot;TSpectrum3.root&quot;);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   sm=(TH3F*)
+f-&gt;Get(&quot;back;1&quot;);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TCanvas *Background = new
+TCanvas(&quot;Smoothing&quot;,&quot;Markov smoothing&quot;,10,10,1000,700);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrum3 *s = new
+TSpectrum3();</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbinsx;
+i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
+nbinsy; j++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                  for (k = 0;
+k &lt; nbinsz; k++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                       source[i][j][k]
+= sm-&gt;GetBinContent(i + 1,j + 1,k + 1);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                    } </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                 }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+s-&gt;SmoothMarkov(source,nbinsx,nbinsy,nbinsz,3);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbinsx;
+i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
+nbinsy; j++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>        for (k = 0; k &lt;
+nbinsz; k++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>          
+sm-&gt;SetBinContent(i + 1,j + 1,k + 1, source[i][j][k]);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>        }    </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+sm-&gt;Draw(&quot;&quot;);  </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>}</span></p>
 
 </div>
 
@@ -2707,1086 +1861,483 @@ const char *TSpectrum3::Deconvolution(float ***source, const float ***resp,
 /////////////////////////////////////////////////////////////////////////////
 //Begin_Html <!--
 /* -->
-<div class=3DSection3>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><span class=3DSpellE><b><=
-span
-lang=3DEN-US style=3D'font-size:14.0pt'>Deconvolution</span></b></span><b><=
-span
-lang=3DEN-US style=3D'font-size:14.0pt'><o:p></o:p></span></b></p>
+<div class=Section3>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><i><span lang=3DEN-US><o:=
-p>&nbsp;</o:p></span></i></p>
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:14.0pt'>Deconvolution</span></b></p>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><i><span lang=3DEN-US>Goa=
-l: Improvement
-of the resolution in spectra, decomposition of <span class=3DSpellE>multipl=
-ets</span></span></i></p>
+<p class=MsoNormal style='text-align:justify'><i>&nbsp;</i></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
+<p class=MsoNormal style='text-align:justify'><i>Goal: Improvement of the
+resolution in spectra, decomposition of multiplets</i></p>
 
-<p class=3DMsoNormal><span lang=3DEN-US>Mathematical formulation of the 3-d=
-imensional
-convolution system is</span></p>
+<p class=MsoNormal>&nbsp;</p>
 
-<p class=3DMsoNormal style=3D'margin-left:.25in'><!--[if gte vml 1]><v:shap=
-etype
- id=3D"_x0000_t75" coordsize=3D"21600,21600" o:spt=3D"75" o:preferrelative=
-=3D"t"
- path=3D"m@4@5l@4@11@9@11@9@5xe" filled=3D"f" stroked=3D"f">
- <v:stroke joinstyle=3D"miter"/>
- <v:formulas>
-  <v:f eqn=3D"if lineDrawn pixelLineWidth 0"/>
-  <v:f eqn=3D"sum @0 1 0"/>
-  <v:f eqn=3D"sum 0 0 @1"/>
-  <v:f eqn=3D"prod @2 1 2"/>
-  <v:f eqn=3D"prod @3 21600 pixelWidth"/>
-  <v:f eqn=3D"prod @3 21600 pixelHeight"/>
-  <v:f eqn=3D"sum @0 0 1"/>
-  <v:f eqn=3D"prod @6 1 2"/>
-  <v:f eqn=3D"prod @7 21600 pixelWidth"/>
-  <v:f eqn=3D"sum @8 21600 0"/>
-  <v:f eqn=3D"prod @7 21600 pixelHeight"/>
-  <v:f eqn=3D"sum @10 21600 0"/>
- </v:formulas>
- <v:path o:extrusionok=3D"f" gradientshapeok=3D"t" o:connecttype=3D"rect"/>
- <o:lock v:ext=3D"edit" aspectratio=3D"t"/>
-</v:shapetype><v:shape id=3D"_x0000_s1027" type=3D"#_x0000_t75" style=3D'po=
-sition:absolute;
- left:0;text-align:left;margin-left:51.3pt;margin-top:.7pt;width:250.8pt;
- height:50pt;z-index:1' fillcolor=3D"window">
- <v:imagedata src=3D"Deconvolution_files/image001.wmz" o:title=3D""/>
-</v:shape><![if gte mso 9]><o:OLEObject Type=3D"Embed" ProgID=3D"Equation.D=
-SMT4"
- ShapeID=3D"_x0000_s1027" DrawAspect=3D"Content" ObjectID=3D"_1220807132">
-</o:OLEObject>
-<![endif]><![endif]--><![if !vml]><span style=3D'mso-ignore:vglayout'>
+<p class=MsoNormal>Mathematical formulation of the 3-dimensional convolution
+system is</p>
 
-<table cellpadding=3D0 cellspacing=3D0 align=3Dleft>
+<p class=MsoNormal style='margin-left:18.0pt'>
+
+<table cellpadding=0 cellspacing=0 align=left>
  <tr>
-  <td width=3D69 height=3D1></td>
+  <td width=69 height=1></td>
  </tr>
  <tr>
   <td></td>
-  <td><img width=3D334 height=3D67 src=3D"Deconvolution_files/image002.gif"=
- v:shapes=3D"_x0000_s1027"></td>
+  <td><img width=334 height=67 src="gif/spectrum3_deconvolution_image001.gif"></td>
  </tr>
 </table>
 
-</span><![endif]><span lang=3DEN-US style=3D'font-size:16.0pt'><o:p>&nbsp;<=
-/o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:16.0pt'><o:p>&nb=
-sp;</o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<br style=3D'mso-ignore:vglayout' clear=3DALL>
-
-<p class=3DMsoNormal><span class=3DGramE><span lang=3DEN-US>where</span></s=
-pan><span
-lang=3DEN-US> h(<span class=3DSpellE>i,j,k</span>) is the impulse response
-function, x, y are input and output fields, respectively, <sub><!--[if gte =
-vml 1]><v:shape
- id=3D"_x0000_i1025" type=3D"#_x0000_t75" style=3D'width:51.75pt;height:18p=
-t' o:ole=3D"">
- <v:imagedata src=3D"Deconvolution_files/image003.wmz" o:title=3D""/>
-</v:shape><![endif]--><![if !vml]><img width=3D69 height=3D24
-src=3D"Deconvolution_files/image004.gif" v:shapes=3D"_x0000_i1025"><![endif=
-]></sub><!--[if gte mso 9]><xml>
- <o:OLEObject Type=3D"Embed" ProgID=3D"Equation.DSMT4" ShapeID=3D"_x0000_i1=
-025"
-  DrawAspect=3D"Content" ObjectID=3D"_1220807133">
- </o:OLEObject>
-</xml><![endif]-->, are the lengths of x and h fields<i> <o:p></o:p></i></s=
-pan></p>
-
-<p class=3DMsoNormal style=3D'margin-left:.5in;text-align:justify;text-inde=
-nt:-.25in;
-mso-list:l6 level1 lfo6;tab-stops:list .5in'><![if !supportLists]><span
-lang=3DEN-US><span style=3D'mso-list:Ignore'>&#8226;<span style=3D'font:7.0=
-pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></span><![endif]><span class=3DGramE><span lang=3DEN-US>let</=
-span></span><span
-lang=3DEN-US> us assume that we know the response and the output fields (sp=
-ectra)
-of the above given system. </span></p>
-
-<p class=3DMsoNormal style=3D'margin-left:.5in;text-align:justify;text-inde=
-nt:-.25in;
-mso-list:l11 level1 lfo7;tab-stops:list .5in'><![if !supportLists]><span
-lang=3DEN-US><span style=3D'mso-list:Ignore'>&#8226;<span style=3D'font:7.0=
-pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></span><![endif]><span class=3DGramE><span lang=3DEN-US>the</=
-span></span><span
-lang=3DEN-US> <span class=3DSpellE>deconvolution</span> represents solution=
- of the <span
-class=3DSpellE>overdetermined</span> system of linear equations, i.e.,<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>the calculation of the field <b>x.=
-</b></span></p>
-
-<p class=3DMsoNormal style=3D'margin-left:.5in;text-align:justify;text-inde=
-nt:-.25in;
-mso-list:l13 level1 lfo8;tab-stops:list .5in'><![if !supportLists]><span
-lang=3DEN-US><span style=3D'mso-list:Ignore'>&#8226;<span style=3D'font:7.0=
-pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></span><![endif]><span class=3DGramE><span lang=3DEN-US>from<=
-/span></span><span
-lang=3DEN-US> numerical stability point of view the operation of <span
-class=3DSpellE>deconvolution</span> is extremely critical (ill-posed<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>problem) as well as time consuming
-operation. </span></p>
-
-<p class=3DMsoNormal style=3D'margin-left:.5in;text-align:justify;text-inde=
-nt:-.25in;
-mso-list:l9 level1 lfo9;tab-stops:list .5in'><![if !supportLists]><span
-lang=3DEN-US><span style=3D'mso-list:Ignore'>&#8226;<span style=3D'font:7.0=
-pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></span><![endif]><span class=3DGramE><span lang=3DEN-US>the</=
-span></span><span
-lang=3DEN-US> Gold <span class=3DSpellE>deconvolution</span> algorithm prov=
-es to
-work very well even for 2-dimensional systems. Generalization of the algori=
-thm
-for 2-dimensional systems was presented <span class=3DGramE>in [1], and for
-multidimensional systems</span> in [2].</span></p>
-
-<p class=3DMsoNormal style=3D'margin-left:.5in;text-align:justify;text-inde=
-nt:-.25in;
-mso-list:l9 level1 lfo9;tab-stops:list .5in'><![if !supportLists]><span
-lang=3DEN-US><span style=3D'mso-list:Ignore'>&#8226;<span style=3D'font:7.0=
-pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></span><![endif]><span lang=3DEN-US>for Gold <span class=3DSp=
-ellE>deconvolution</span>
-algorithm as well as for boosted <span class=3DSpellE>deconvolution</span>
-algorithm we refer also to <span class=3DSpellE>TSpectrum</span> and TSpect=
-rum2 </span></p>
-
-<p class=3DMsoNormal><i><span lang=3DEN-US><o:p>&nbsp;</o:p></span></i></p>
-
-<p class=3DMsoNormal><i><span lang=3DEN-US>Function:</span></i></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b style=3D'mso-bidi-font=
--weight:
-normal'><span lang=3DEN-US>const <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#char">char</a>* </sp=
-an></b><a
-name=3D"TSpectrum:Deconvolution1"></a><a
-href=3D"http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><s=
-pan
-style=3D'mso-bookmark:"TSpectrum\:Deconvolution1"'><b style=3D'mso-bidi-fon=
-t-weight:
-normal'><span lang=3DEN-US>TSpectrum3::Deconvolution</span></b></span><span
-style=3D'mso-bookmark:"TSpectrum\:Deconvolution1"'></span></a><span
-style=3D'mso-bookmark:"TSpectrum\:Deconvolution1"'></span><b style=3D'mso-b=
-idi-font-weight:
-normal'><span lang=3DEN-US>(<a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> ***=
-<span
-class=3DSpellE>fSource</span>, const <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> ***=
-<span
-class=3DSpellE>fResp</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int"><span class=3DS=
-pellE>int</span></a>
-<span class=3DSpellE>fSizex</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int"><span class=3DS=
-pellE>int</span></a>
-<span class=3DSpellE>fSizey</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int"><span class=3DS=
-pellE>int</span></a>
-<span class=3DSpellE>fSizez</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int"><span class=3DS=
-pellE>int</span></a>
-<span class=3DSpellE>fNumberIterations</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int"><span class=3DS=
-pellE>int</span></a>
-<span class=3DSpellE>fNumberRepetitions</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> <=
-span
-class=3DSpellE>fBoost</span>)<span style=3D'mso-bidi-font-weight:bold'><o:p=
-></o:p></span></span></b></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>This f=
-unction
-calculates <span class=3DSpellE>deconvolution</span> from source spectrum
-according to response spectrum using Gold <span class=3DSpellE>deconvolutio=
-n</span>
-algorithm. The result is placed in the field pointed by source pointer. On
-successful completion it returns 0. On error it returns pointer to the stri=
-ng
-describing error. <span class=3DGramE>If desired after every <span class=3D=
-SpellE>fNumberIterations</span>
-one can apply boosting operation (exponential function with exponent given =
-by <span
-class=3DSpellE>fBoost</span> coefficient) and repeat it <span class=3DSpell=
-E>fNumberRepetitions</span>
-times.</span></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><i style=3D'mso-bidi-font-style:normal'><span lang=3DE=
-N-US
-style=3D'color:red'>Parameters:<o:p></o:p></span></i></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fSource</b></span></span><span
-class=3DGramE>-pointer</span> to the matrix of source spectrum<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fResp</b></span></span><span
-class=3DGramE>-pointer</span> to the matrix of response spectrum<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fSizex</b></span></span><b
-style=3D'mso-bidi-font-weight:normal'>, <span class=3DSpellE>fSizey</span>,=
- <span
-class=3DSpellE>fSizez</span></b> -lengths of the spectrum matrix<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
-sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fNumberIterations</b></span></span><span
-class=3DGramE>-number</span> of iterations </span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fNumberRepetitions</b></span></span><span
-class=3DGramE>-number</span> of repetitions for boosted <span class=3DSpell=
-E>deconvolution</span>.
-It must be </span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DGramE>greater</span> or equal to one.</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fBoost</b></span></span><span
-class=3DGramE>-boosting</span> coefficient, applies only if <span class=3DS=
-pellE>fNumberRepetitions</span>
-is greater than one.<span style=3D'mso-spacerun:yes'>&nbsp; </span></span><=
-/p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-style=3D'color:fuchsia'>Recommended range &lt;1<span class=3DGramE>,2</span=
->&gt;.<o:p></o:p></span></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><b><i><span lang=3DEN-US>References:<o:p></o:p></span>=
-</i></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;</span>[1] </span><span style=3D'mso-ansi-=
-language:
-SK'>M. Morh&aacute;&#269;, J. Kliman, V. Matou&#353;ek, M. Veselsk&yacute;,=
- I.
-Turzo</span><span lang=3DEN-US>.: Efficient one- and two-dimensional Gold <=
-span
-class=3DSpellE>deconvolution</span> and its application to gamma-ray spectra
-decomposition. NIM, A401 (1997) 385-408.</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>[2] <s=
-pan
-class=3DSpellE>Morh&aacute;&#269;</span> M., <span class=3DSpellE>Matou&#35=
-3;ek</span>
-V., <span class=3DSpellE>Kliman</span> J., Efficient algorithm of
-multidimensional <span class=3DSpellE>deconvolution</span> and its applicat=
-ion to
-nuclear data processing, Digital Signal Processing 13 (2003) 144. </span></=
-p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><o:p>&=
-nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><i><span lang=3DEN-US>Example 1 &#8211; script <span
-class=3DSpellE><span class=3DGramE>Decon.c</span></span><span class=3DGramE=
-> :</span><o:p></o:p></span></i></p>
-
-<p class=3DMsoNormal style=3D'margin-left:.5in;text-align:justify;text-inde=
-nt:-.25in;
-mso-list:l2 level1 lfo15;tab-stops:list .5in'><![if !supportLists]><span
-lang=3DEN-US><span style=3D'mso-list:Ignore'>&#8226;<span style=3D'font:7.0=
-pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></span><![endif]><span lang=3DEN-US>response function (usually
-peak) should be shifted to the beginning of the coordinate system (see Fig.=
- 1)</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US
-style=3D'font-size:16.0pt'><!--[if gte vml 1]><v:shape id=3D"_x0000_i1026" =
-type=3D"#_x0000_t75"
- style=3D'width:450.75pt;height:276pt'>
- <v:imagedata src=3D"Deconvolution_files/image005.jpg" o:title=3D"decon_res=
-p"/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D601 height=3D368
-src=3D"Deconvolution_files/image006.jpg" v:shapes=3D"_x0000_i1026"><![endif=
-]></span></b><span
-lang=3DEN-US style=3D'font-size:18.0pt'><o:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US>Fig=
-. 1
-Three-dimensional response spectrum<o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><!--[if gte vml 1]><v:shape id=3D"_=
-x0000_i1027"
- type=3D"#_x0000_t75" style=3D'width:450.75pt;height:276pt'>
- <v:imagedata src=3D"Deconvolution_files/image007.jpg" o:title=3D"decon_ori=
-ginal_daqprovis"/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D601 height=3D368
-src=3D"Deconvolution_files/image008.jpg" v:shapes=3D"_x0000_i1027"><![endif=
-]></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US>Fig=
-. 2
-Three-dimensional input spectrum (before <span class=3DSpellE>deconvolution=
-</span>)<o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><!--[if gte vml 1]><v:shape id=3D"_=
-x0000_i1028"
- type=3D"#_x0000_t75" style=3D'width:450.75pt;height:276pt'>
- <v:imagedata src=3D"Deconvolution_files/image009.jpg" o:title=3D"decon_100=
-_1_1_daqprovis"/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D601 height=3D368
-src=3D"Deconvolution_files/image010.jpg" v:shapes=3D"_x0000_i1028"><![endif=
-]></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US>Fig=
-. 3
-Spectrum from Fig. 2 after <span class=3DSpellE>deconvolution</span> (100
-iterations)</span></b></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'color:#339966'>Script:<o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// Examp=
-le to
-illustrate the Gold <span class=3DSpellE>deconvolution</span> (class TSpect=
-rum3).<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// <span
-class=3DGramE>To</span> execute this example, do<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// root =
-&gt; .x
-Decon3.C<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><o:p>&nb=
-sp;</o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>#include
-&lt;TSpectrum3&gt;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><o:p>&nb=
-sp;</o:p></span></p>
-
-<p class=3DMsoNormal><span class=3DGramE><span lang=3DEN-US style=3D'font-s=
-ize:10.0pt'>void</span></span><span
-lang=3DEN-US style=3D'font-size:10.0pt'> Decon3() {<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span> <span
-class=3DSpellE>i</span>, j, k;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span></span><span lang=3DFR
-style=3D'font-size:10.0pt;mso-ansi-language:FR'>Int_t nbinsx =3D 32;<o:p></=
-o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t nbinsy =3D 3=
-2;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t nbinsz =3D 3=
-2;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t xmin<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D 0;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t xmax<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D nbinsx;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t ymin<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D 0;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;</span><span
-style=3D'mso-spacerun:yes'>&nbsp; </span>Int_t ymax<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D nbinsy;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t zmin<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D 0;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span></span><span
-class=3DSpellE><span lang=3DEN-US style=3D'font-size:10.0pt'>Int_t</span></=
-span><span
-lang=3DEN-US style=3D'font-size:10.0pt'> <span class=3DSpellE><span class=
-=3DGramE>zmax</span></span><span
-class=3DGramE><span style=3D'mso-spacerun:yes'>&nbsp; </span>=3D</span> <sp=
-an
-class=3DSpellE>nbinsz</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>float</s=
-pan> ***
-source =3D new float **[<span class=3DSpellE>nbinsx</span>];<o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>float</s=
-pan> ***
-<span class=3DSpellE>resp</span> =3D new float **[<span class=3DSpellE>nbin=
-sx</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for(</sp=
-an><span
-class=3DSpellE>i</span>=3D0;i&lt;<span class=3DSpellE>nbinsx;i</span>++){<o=
-:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DGramE>source[</span><span class=3DSpellE>i</span>]=3Dnew float* [<s=
-pan
-class=3DSpellE>nbinsy</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DGramE>for(</span>j=3D0;j&lt;<span class=3DSpellE>nbinsy;j</span>++)=
-<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span class=3DGramE>source[</span><span class=3DSpellE>i</span>][j]=
-=3Dnew
-float [<span class=3DSpellE>nbinsz</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for(</sp=
-an><span
-class=3DSpellE>i</span>=3D0;i&lt;<span class=3DSpellE>nbinsx;i</span>++){<o=
-:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>resp</span></span><span class=3DGramE>[<=
-/span><span
-class=3DSpellE>i</span>]=3Dnew float* [<span class=3DSpellE>nbinsy</span>];=
-<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DGramE>for(</span>j=3D0;j&lt;<span class=3DSpellE>nbinsy;j</span>++)=
-<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span class=3DSpellE><span class=3DGramE>resp</span></span><span
-class=3DGramE>[</span><span class=3DSpellE>i</span>][j]=3Dnew float [<span
-class=3DSpellE>nbinsz</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TH3F *<span class=3DSpellE>d=
-econ_in</span>
-=3D new TH3F(&quot;decon_in&quot;,&quot;Deconvolution&quot;,nbinsx,xmin,xma=
-x,nbinsy,ymin,ymax,nbinsz,zmin,zmax);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TH3F *<span class=3DSpellE>d=
-econ_resp</span>
-=3D new
-TH3F(&quot;decon_resp&quot;,&quot;Deconvolution&quot;,nbinsx,xmin,xmax,nbin=
-sy,ymin,ymax,nbinsz,zmin,zmax);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TFile</=
-span> *f
-=3D new <span class=3DSpellE><span class=3DGramE>TFile</span></span><span
-class=3DGramE>(</span>&quot;TSpectrum3.root&quot;);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>decon_i=
-n</span><span
-class=3DGramE>=3D(</span>TH3F*) f-&gt;Get(&quot;decon_in;1&quot;);<o:p></o:=
-p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>decon_r=
-esp</span><span
-class=3DGramE>=3D(</span>TH3F*) f-&gt;Get(&quot;decon_resp;1&quot;);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TCanvas=
-</span>
-*<span class=3DSpellE>Deconvolution</span> =3D new <span class=3DSpellE><sp=
-an
-class=3DGramE>TCanvas</span></span><span class=3DGramE>(</span>&quot;<span
-class=3DSpellE>Deconvolution&quot;,&quot;Deconvolution</span> of 3-dimensio=
-nal
-spectra&quot;,10,10,1000,700);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TSpectrum3 *s =3D new <span
-class=3DGramE>TSpectrum3(</span>);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span> &lt; <span cla=
-ss=3DSpellE>nbinsx</span>;
-<span class=3DSpellE>i</span>++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DGr=
-amE>for</span>
-(j =3D 0; j &lt; <span class=3DSpellE>nbinsy</span>; j++){<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-style=3D'mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;</span><span class=3DGramE>for</span=
-> (k =3D
-0; k &lt; <span class=3DSpellE>nbinsz</span>; k++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span=
-><span
-class=3DGramE>source[</span><span class=3DSpellE>i</span>][j][k] =3D <span
-class=3DSpellE>decon_in</span>-&gt;<span class=3DSpellE>GetBinContent</span=
->(<span
-class=3DSpellE>i</span> + 1,j + 1,k + 1);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span=
-><span
-class=3DSpellE><span class=3DGramE>resp</span></span><span class=3DGramE>[<=
-/span><span
-class=3DSpellE>i</span>][j][k] =3D <span class=3DSpellE>decon_resp</span>-&=
-gt;<span
-class=3DSpellE>GetBinContent</span>(<span class=3DSpellE>i</span> + 1,j + 1=
-,k +
-1);<span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-=
-tab-count:
-1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span=
-><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;</span>} <o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;</span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>s</span>=
--&gt;<span
-class=3DSpellE>Deconvolution</span>(source,resp,nbinsx,nbinsy,nbinsz,100,1,=
-1);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span> &lt; <span cla=
-ss=3DSpellE>nbinsx</span>;
-<span class=3DSpellE>i</span>++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DGr=
-amE>for</span>
-(j =3D 0; j &lt; <span class=3DSpellE>nbinsy</span>; j++){<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DGramE>for</span> (k =3D 0; k &lt; <span class=3DSpellE>nbinsz</span=
->; k++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;
-</span><span class=3DSpellE>decon_in</span>-&gt;<span class=3DSpellE><span
-class=3DGramE>SetBinContent</span></span><span class=3DGramE>(</span><span
-class=3DSpellE>i</span> + 1,j + 1,k + 1, source[<span class=3DSpellE>i</spa=
-n>][j][k]);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>}<span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><o:p></o=
-:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span>}<o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><span style=3D'mso-spacerun:yes'>&n=
-bsp;&nbsp;
-</span><span class=3DSpellE>decon_in</span>-&gt;<span class=3DGramE>Draw(</=
-span>&quot;&quot;);<span
-style=3D'mso-spacerun:yes'>&nbsp; </span></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US>}</span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><i><span lang=3DEN-US>Example 2 &#8211; script <span
-class=3DSpellE>Decon_<span class=3DGramE>hr.c</span></span><span class=3DGr=
-amE> :</span><o:p></o:p></span></i></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>This e=
-xample
-illustrates repeated Gold <span class=3DSpellE>deconvolution</span> with
-boosting. After every 10 iterations we apply power function with exponent =
-=3D 2
-to the spectrum given in Fig. 2.</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><o:p>&=
-nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><!--[i=
-f gte vml 1]><v:shape
- id=3D"_x0000_i1029" type=3D"#_x0000_t75" style=3D'width:450.75pt;height:27=
-6pt'>
- <v:imagedata src=3D"Deconvolution_files/image011.jpg" o:title=3D"decon_10_=
-10_2_daqprovis"/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D601 height=3D368
-src=3D"Deconvolution_files/image012.jpg" v:shapes=3D"_x0000_i1029"><![endif=
-]></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US>Fig=
-. 4
-Spectrum from Fig. 2 after boosted <span class=3DSpellE>deconvolution</span=
-> (10
-iterations repeated 10 times). It decomposes completely cluster of peaks fr=
-om
-Fig 2.</span></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><o:p>&=
-nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'color:#339966'>Script:<o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// Examp=
-le to
-illustrate the Gold <span class=3DSpellE>deconvolution</span> (class TSpect=
-rum3).<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// <span
-class=3DGramE>To</span> execute this example, do<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// root =
-&gt; .x
-Decon3_hr.C<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span class=3DGramE><span lang=3DEN-US style=3D'font-s=
-ize:10.0pt'>void</span></span><span
-lang=3DEN-US style=3D'font-size:10.0pt'> Decon3_hr() {<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span> <span
-class=3DSpellE>i</span>, j, k;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span></span><span lang=3DFR
-style=3D'font-size:10.0pt;mso-ansi-language:FR'>Int_t nbinsx =3D 32;<o:p></=
-o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t nbinsy =3D 3=
-2;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t nbinsz =3D 3=
-2;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t xmin<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D 0;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t xmax<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D nbinsx;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t ymin<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D 0;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t ymax<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D nbinsy;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t zmin <span
-style=3D'mso-spacerun:yes'>&nbsp;</span>=3D 0;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span></span><span
-class=3DSpellE><span lang=3DEN-US style=3D'font-size:10.0pt'>Int_t</span></=
-span><span
-lang=3DEN-US style=3D'font-size:10.0pt'> <span class=3DSpellE><span class=
-=3DGramE>zmax</span></span><span
-class=3DGramE><span style=3D'mso-spacerun:yes'>&nbsp; </span>=3D</span> <sp=
-an
-class=3DSpellE>nbinsz</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>float</s=
-pan> ***
-source =3D new float **[<span class=3DSpellE>nbinsx</span>];<o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>float</s=
-pan> ***
-<span class=3DSpellE>resp</span> =3D new float **[<span class=3DSpellE>nbin=
-sx</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for(</sp=
-an><span
-class=3DSpellE>i</span>=3D0;i&lt;<span class=3DSpellE>nbinsx;i</span>++){<o=
-:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DGramE>source[</span><span class=3DSpellE>i</span>]=3Dnew float* [<s=
-pan
-class=3DSpellE>nbinsy</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DGramE>for(</span>j=3D0;j&lt;<span class=3DSpellE>nbinsy;j</span>++)=
-<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span class=3DGramE>source[</span><span class=3DSpellE>i</span>][j]=
-=3Dnew
-float [<span class=3DSpellE>nbinsz</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for(</sp=
-an><span
-class=3DSpellE>i</span>=3D0;i&lt;<span class=3DSpellE>nbinsx;i</span>++){<o=
-:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DSpellE><span class=3DGramE>resp</span></span><span class=3DGramE>[<=
-/span><span
-class=3DSpellE>i</span>]=3Dnew float* [<span class=3DSpellE>nbinsy</span>];=
-<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DGramE>for(</span>j=3D0;j&lt;<span class=3DSpellE>nbinsy;j</span>++)=
-<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span class=3DSpellE><span class=3DGramE>resp</span></span><span
-class=3DGramE>[</span><span class=3DSpellE>i</span>][j]=3Dnew float [<span
-class=3DSpellE>nbinsz</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TH3F *<span class=3DSpellE>d=
-econ_in</span>
-=3D new
-TH3F(&quot;decon_in&quot;,&quot;Deconvolution&quot;,nbinsx,xmin,xmax,nbinsy=
-,ymin,ymax,nbinsz,zmin,zmax);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TH3F *<span class=3DSpellE>d=
-econ_resp</span>
-=3D new
-TH3F(&quot;decon_resp&quot;,&quot;Deconvolution&quot;,nbinsx,xmin,xmax,nbin=
-sy,ymin,ymax,nbinsz,zmin,zmax);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TFile</=
-span> *f
-=3D new <span class=3DSpellE><span class=3DGramE>TFile</span></span><span
-class=3DGramE>(</span>&quot;TSpectrum3.root&quot;);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>decon_i=
-n</span><span
-class=3DGramE>=3D(</span>TH3F*) f-&gt;Get(&quot;decon_in;1&quot;);<o:p></o:=
-p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>decon_r=
-esp</span><span
-class=3DGramE>=3D(</span>TH3F*) f-&gt;Get(&quot;decon_resp;1&quot;);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TCanvas=
-</span>
-*<span class=3DSpellE>Deconvolution</span> =3D new <span class=3DSpellE><sp=
-an
-class=3DGramE>TCanvas</span></span><span class=3DGramE>(</span>&quot;<span
-class=3DSpellE>Deconvolution&quot;,&quot;High</span> resolution <span
-class=3DSpellE>deconvolution</span> of 3-dimensional
-spectra&quot;,10,10,1000,700);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TSpectrum3 *s =3D new <span
-class=3DGramE>TSpectrum3(</span>);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span> &lt; <span cla=
-ss=3DSpellE>nbinsx</span>;
-<span class=3DSpellE>i</span>++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DGr=
-amE>for</span>
-(j =3D 0; j &lt; <span class=3DSpellE>nbinsy</span>; j++){<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-style=3D'mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;</span><span
-style=3D'mso-spacerun:yes'>&nbsp;</span><span class=3DGramE>for</span> (k =
-=3D 0; k
-&lt; <span class=3DSpellE>nbinsz</span>; k++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span=
-><span
-class=3DGramE>source[</span><span class=3DSpellE>i</span>][j][k] =3D <span
-class=3DSpellE>decon_in</span>-&gt;<span class=3DSpellE>GetBinContent</span=
->(<span
-class=3DSpellE>i</span> + 1,j + 1,k + 1);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span=
-><span
-class=3DSpellE><span class=3DGramE>resp</span></span><span class=3DGramE>[<=
-/span><span
-class=3DSpellE>i</span>][j][k] =3D <span class=3DSpellE>decon_resp</span>-&=
-gt;<span
-class=3DSpellE>GetBinContent</span>(<span class=3DSpellE>i</span> + 1,j + 1=
-,k +
-1);<span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-=
-tab-count:
-1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span=
-><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;</span>} <o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;</span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>s</span>=
--&gt;<span
-class=3DSpellE>Deconvolution</span>(source,resp,nbinsx,nbinsy,nbinsz,10,10,=
-2);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span> &lt; <span cla=
-ss=3DSpellE>nbinsx</span>;
-<span class=3DSpellE>i</span>++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DGr=
-amE>for</span>
-(j =3D 0; j &lt; <span class=3DSpellE>nbinsy</span>; j++){<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DGramE>for</span> (k =3D 0; k &lt; <span class=3DSpellE>nbinsz</span=
->; k++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;
-</span><span class=3DSpellE>decon_in</span>-&gt;<span class=3DSpellE><span
-class=3DGramE>SetBinContent</span></span><span class=3DGramE>(</span><span
-class=3DSpellE>i</span> + 1,j + 1,k + 1, source[<span class=3DSpellE>i</spa=
-n>][j][k]);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>}<span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><o:p></o=
-:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span>}<o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>decon_i=
-n</span>-&gt;<span
-class=3DGramE>Draw(</span>&quot;&quot;);<span style=3D'mso-spacerun:yes'>&n=
-bsp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>}<o:p></=
-o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:16.0pt'><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US
-style=3D'font-size:16.0pt'><o:p>&nbsp;</o:p></span></p>
+<span style='font-size:16.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal><span style='font-size:16.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<br clear=ALL>
+
+<p class=MsoNormal>where h(i,j,k) is the impulse response function, x, y are
+input and output fields, respectively, <sub><img width=69 height=24
+src="gif/spectrum3_deconvolution_image002.gif"></sub>, are the lengths of x and h fields<i>
+</i></p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>let us assume that we know the response and the output fields (spectra)
+of the above given system. </p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>the deconvolution represents solution of the overdetermined system of
+linear equations, i.e.,  the calculation of the field <b>x.</b></p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>from numerical stability point of view the operation of deconvolution is
+extremely critical (ill-posed  problem) as well as time consuming operation. </p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>the Gold deconvolution algorithm proves to work very well even for
+2-dimensional systems. Generalization of the algorithm for 2-dimensional
+systems was presented in [1], and for multidimensional systems in [2].</p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>for Gold deconvolution algorithm as well as for boosted deconvolution
+algorithm we refer also to TSpectrum and TSpectrum2 </p>
+
+<p class=MsoNormal><i>&nbsp;</i></p>
+
+<p class=MsoNormal><i>Function:</i></p>
+
+<p class=MsoNormal style='text-align:justify'><b>const <a
+href="http://root.cern.ch/root/html/ListOfTypes.html#char">char</a>* </b><a
+name="TSpectrum:Deconvolution1"></a><a
+href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrum3::Deconvolution</b></a><b>(<a
+href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> ***fSource,
+const <a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a>
+***fResp, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a>
+fSizex, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a>
+fSizey, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a>
+fSizez, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a>
+fNumberIterations, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a>
+fNumberRepetitions, <a
+href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> fBoost)</b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal style='text-align:justify'>This function calculates
+deconvolution from source spectrum according to response spectrum using Gold
+deconvolution algorithm. The result is placed in the field pointed by source
+pointer. On successful completion it returns 0. On error it returns pointer to
+the string describing error. If desired after every fNumberIterations one can apply
+boosting operation (exponential function with exponent given by fBoost
+coefficient) and repeat it fNumberRepetitions times.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><i><span style='color:red'>Parameters:</span></i></p>
+
+<p class=MsoNormal>        <b>fSource</b>-pointer to the matrix of source
+spectrum                  </p>
+
+<p class=MsoNormal>        <b>fResp</b>-pointer to the matrix of response
+spectrum                  </p>
+
+<p class=MsoNormal>        <b>fSizex, fSizey, fSizez</b> -lengths of the
+spectrum matrix                                 </p>
+
+<p class=MsoNormal style='text-align:justify'>        <b>fNumberIterations</b>-number
+of iterations </p>
+
+<p class=MsoNormal style='text-align:justify'>        <b>fNumberRepetitions</b>-number
+of repetitions for boosted deconvolution. It must be </p>
+
+<p class=MsoNormal style='text-align:justify'>        greater or equal to one.</p>
+
+<p class=MsoNormal style='text-align:justify'>        <b>fBoost</b>-boosting
+coefficient, applies only if fNumberRepetitions is greater than one.  </p>
+
+<p class=MsoNormal style='text-align:justify'>        <span style='color:fuchsia'>Recommended
+range &lt;1,2&gt;.</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><b><i>References:</i></b></p>
+
+<p class=MsoNormal style='text-align:justify'> [1] <span lang=SK>M.
+Morhá&#269;, J. Kliman, V. Matoušek, M. Veselský, I. Turzo</span>.: Efficient
+one- and two-dimensional Gold deconvolution and its application to gamma-ray
+spectra decomposition. NIM, A401 (1997) 385-408.</p>
+
+<p class=MsoNormal style='text-align:justify'>[2] Morhá&#269; M., Matoušek V.,
+Kliman J., Efficient algorithm of multidimensional deconvolution and its
+application to nuclear data processing, Digital Signal Processing 13 (2003)
+144. </p>
+
+<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
+
+<p class=MsoNormal><i>Example 1 – script Decon.c :</i></p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>response function (usually peak) should be shifted to the beginning of
+the coordinate system (see Fig. 1)</p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
+border=0 width=601 height=368 src="gif/spectrum3_deconvolution_image003.jpg"></span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><b>Fig. 1 Three-dimensional
+response spectrum</b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><img border=0 width=601 height=368
+src="gif/spectrum3_deconvolution_image004.jpg"></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal style='text-align:justify'><b>Fig. 2 Three-dimensional input
+spectrum (before deconvolution)</b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><img border=0 width=601 height=368
+src="gif/spectrum3_deconvolution_image005.jpg"></p>
+
+<p class=MsoNormal style='text-align:justify'><b>Fig. 3 Spectrum from Fig. 2
+after deconvolution (100 iterations)</b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><b><span style='color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// Example to illustrate the
+Gold deconvolution (class TSpectrum3).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// To execute this example,
+do</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// root &gt; .x Decon3.C</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>#include &lt;TSpectrum3&gt;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>void Decon3() {</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t i, j, k;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   </span><span lang=FR
+style='font-size:10.0pt'>Int_t nbinsx = 32;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t nbinsy = 32;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t nbinsz =
+32;   </span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmin  = 0;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmax  =
+nbinsx;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t ymin  = 0;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t ymax  =
+nbinsy;   </span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t zmin  = 0;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
+style='font-size:10.0pt'>Int_t zmax  = nbinsz;      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   float *** source = new
+float **[nbinsx];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   float *** resp = new float
+**[nbinsx];      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nbinsx;i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      source[i]=new float*
+[nbinsy];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     
+for(j=0;j&lt;nbinsy;j++)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>         source[i][j]=new
+float [nbinsz];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }           </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nbinsx;i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      resp[i]=new float*
+[nbinsy];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     
+for(j=0;j&lt;nbinsy;j++)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>         resp[i][j]=new float
+[nbinsz];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }              </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TH3F *decon_in = new
+TH3F(&quot;decon_in&quot;,&quot;Deconvolution&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax,nbinsz,zmin,zmax);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TH3F *decon_resp = new
+TH3F(&quot;decon_resp&quot;,&quot;Deconvolution&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax,nbinsz,zmin,zmax);  
+</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TFile *f = new
+TFile(&quot;TSpectrum3.root&quot;);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   decon_in=(TH3F*)
+f-&gt;Get(&quot;decon_in;1&quot;);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   decon_resp=(TH3F*)
+f-&gt;Get(&quot;decon_resp;1&quot;);   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TCanvas *Deconvolution =
+new TCanvas(&quot;Deconvolution&quot;,&quot;Deconvolution of 3-dimensional
+spectra&quot;,10,10,1000,700);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrum3 *s = new
+TSpectrum3();</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbinsx;
+i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
+nbinsy; j++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                  for (k = 0;
+k &lt; nbinsz; k++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                       source[i][j][k]
+= decon_in-&gt;GetBinContent(i + 1,j + 1,k + 1);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                       resp[i][j][k]
+= decon_resp-&gt;GetBinContent(i + 1,j + 1,k + 1);                        </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                    } </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                 }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+s-&gt;Deconvolution(source,resp,nbinsx,nbinsy,nbinsz,100,1,1);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbinsx;
+i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
+nbinsy; j++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>        for (k = 0; k &lt;
+nbinsz; k++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>          
+decon_in-&gt;SetBinContent(i + 1,j + 1,k + 1, source[i][j][k]);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>        }    </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }</span></p>
+
+<p class=MsoNormal>   decon_in-&gt;Draw(&quot;&quot;);  </p>
+
+<p class=MsoNormal>}</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><i>Example 2 – script Decon_hr.c :</i></p>
+
+<p class=MsoNormal style='text-align:justify'>This example illustrates repeated
+Gold deconvolution with boosting. After every 10 iterations we apply power
+function with exponent = 2 to the spectrum given in Fig. 2.</p>
+
+<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
+
+<p class=MsoNormal style='text-align:justify'><img border=0 width=601
+height=368 src="gif/spectrum3_deconvolution_image006.jpg"></p>
+
+<p class=MsoNormal style='text-align:justify'><b>Fig. 4 Spectrum from Fig. 2
+after boosted deconvolution (10 iterations repeated 10 times). It decomposes
+completely cluster of peaks from Fig 2.</b></p>
+
+<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
+
+<p class=MsoNormal><b><span style='color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// Example to illustrate the
+Gold deconvolution (class TSpectrum3).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// To execute this example,
+do</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// root &gt; .x Decon3_hr.C</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>void Decon3_hr() {</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t i, j, k;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   </span><span lang=FR
+style='font-size:10.0pt'>Int_t nbinsx = 32;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t nbinsy = 32;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t nbinsz =
+32;   </span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmin  = 0;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmax  =
+nbinsx;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t ymin  = 0;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t ymax  =
+nbinsy;   </span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t zmin  = 0;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
+style='font-size:10.0pt'>Int_t zmax  = nbinsz;      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   float *** source = new
+float **[nbinsx];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   float *** resp = new float
+**[nbinsx];      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nbinsx;i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      source[i]=new float*
+[nbinsy];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     
+for(j=0;j&lt;nbinsy;j++)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>         source[i][j]=new
+float [nbinsz];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }           </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nbinsx;i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      resp[i]=new float*
+[nbinsy];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     
+for(j=0;j&lt;nbinsy;j++)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>         resp[i][j]=new float
+[nbinsz];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }              </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TH3F *decon_in = new
+TH3F(&quot;decon_in&quot;,&quot;Deconvolution&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax,nbinsz,zmin,zmax);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TH3F *decon_resp = new
+TH3F(&quot;decon_resp&quot;,&quot;Deconvolution&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax,nbinsz,zmin,zmax);  
+</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TFile *f = new
+TFile(&quot;TSpectrum3.root&quot;);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   decon_in=(TH3F*)
+f-&gt;Get(&quot;decon_in;1&quot;);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   decon_resp=(TH3F*)
+f-&gt;Get(&quot;decon_resp;1&quot;);   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TCanvas *Deconvolution =
+new TCanvas(&quot;Deconvolution&quot;,&quot;High resolution deconvolution of
+3-dimensional spectra&quot;,10,10,1000,700);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrum3 *s = new
+TSpectrum3();</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbinsx;
+i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
+nbinsy; j++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                  for (k = 0;
+k &lt; nbinsz; k++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                       source[i][j][k]
+= decon_in-&gt;GetBinContent(i + 1,j + 1,k + 1);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                       resp[i][j][k]
+= decon_resp-&gt;GetBinContent(i + 1,j + 1,k + 1);                        </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                    } </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                 }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+s-&gt;Deconvolution(source,resp,nbinsx,nbinsy,nbinsz,10,10,2);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbinsx;
+i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
+nbinsy; j++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>        for (k = 0; k &lt;
+nbinsz; k++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>          
+decon_in-&gt;SetBinContent(i + 1,j + 1,k + 1, source[i][j][k]);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>        }    </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>  
+decon_in-&gt;Draw(&quot;&quot;);  </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>}</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>&nbsp;</span></p>
 
 </div>
 
@@ -4021,733 +2572,312 @@ Int_t TSpectrum3::SearchHighRes(const float ***source,float ***dest, Int_t ssize
 /////////////////////////////////////////////////////////////////////////////
 //Begin_Html <!--
 /* -->
-<div class=3DSection4>
 
-<p class=3DMsoNormal><b><span lang=3DEN-US style=3D'font-size:14.0pt'>Peaks=
- searching</span></b><span
-lang=3DEN-US style=3D'font-size:14.0pt'><o:p></o:p></span></p>
+<div class=Section4>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><i><span lang=3DEN-US><o:=
-p>&nbsp;</o:p></span></i></p>
+<p class=MsoNormal><b><span style='font-size:14.0pt'>Peaks searching</span></b></p>
 
-<p class=3DMsoNormal style=3D'text-align:justify'><i><span lang=3DEN-US>Goa=
-l: to
-identify automatically the peaks in spectrum with the presence of the
-continuous background, one- and two-fold coincidences (ridges) and statisti=
-cal
-fluctuations - noise.</span></i><span lang=3DEN-US> </span></p>
+<p class=MsoNormal style='text-align:justify'><i>&nbsp;</i></p>
 
-<p class=3DMsoNormal style=3D'tab-stops:.75in'><span lang=3DEN-US style=3D'=
-font-family:
-Arial;mso-bidi-font-family:"Times New Roman"'><o:p>&nbsp;</o:p></span></p>
+<p class=MsoNormal style='text-align:justify'><i>Goal: to identify
+automatically the peaks in spectrum with the presence of the continuous
+background, one- and two-fold coincidences (ridges) and statistical
+fluctuations - noise.</i> </p>
 
-<p class=3DMsoNormal style=3D'text-align:justify;tab-stops:.75in'><span lan=
-g=3DEN-US>The
-common problems connected with correct peak identification in three-dimensi=
-onal
-coincidence spectra are</span></p>
+<p class=MsoNormal><span style='font-family:Arial'>&nbsp;</span></p>
 
-<ul style=3D'margin-top:0in' type=3Ddisc>
- <li class=3DMsoNormal style=3D'text-align:justify;mso-list:l5 level1 lfo4;
-     tab-stops:list .5in left .75in'><span lang=3DEN-US>non-sensitivity to =
-noise,
-     i.e., only statistically relevant peaks should be identified</span></l=
-i>
- <li class=3DMsoNormal style=3D'text-align:justify;mso-list:l5 level1 lfo4;
-     tab-stops:list .5in left .75in'><span lang=3DEN-US>non-sensitivity of =
-the
-     algorithm to continuous background</span></li>
- <li class=3DMsoNormal style=3D'text-align:justify;mso-list:l5 level1 lfo4;
-     tab-stops:list .5in left .75in'><span lang=3DEN-US>non-sensitivity to
-     one-fold coincidences (coincidences peak &#8211; peak &#8211; backgrou=
-nd
-     in all dimensions) and their crossings</span></li>
- <li class=3DMsoNormal style=3D'text-align:justify;mso-list:l5 level1 lfo4;
-     tab-stops:list .5in left .75in'><span lang=3DEN-US>non-sensitivity to
-     two-fold coincidences (coincidences peak &#8211; background &#8211;
-     background in all dimensions) and their crossings</span></li>
- <li class=3DMsoNormal style=3D'text-align:justify;mso-list:l5 level1 lfo4;
-     tab-stops:list .5in left .75in'><span lang=3DEN-US>ability to identify=
- peaks
-     close to the edges of the spectrum region</span></li>
- <li class=3DMsoNormal style=3D'text-align:justify;mso-list:l5 level1 lfo4;
-     tab-stops:list .5in left .75in'><span class=3DGramE><span lang=3DEN-US=
->resolution</span></span><span
-     lang=3DEN-US>, decomposition of doublets and <span class=3DSpellE>mult=
-iplets</span>.
-     The algorithm should be able to recognize close positioned peaks. </sp=
-an></li>
+<p class=MsoNormal style='text-align:justify'>The common problems connected
+with correct peak identification in three-dimensional coincidence spectra are</p>
+
+<ul style='margin-top:0mm' type=disc>
+ <li class=MsoNormal style='text-align:justify'>non-sensitivity to noise, i.e.,
+     only statistically relevant peaks should be identified</li>
+ <li class=MsoNormal style='text-align:justify'>non-sensitivity of the
+     algorithm to continuous background</li>
+ <li class=MsoNormal style='text-align:justify'>non-sensitivity to one-fold coincidences
+     (coincidences peak – peak – background in all dimensions) and their
+     crossings</li>
+ <li class=MsoNormal style='text-align:justify'>non-sensitivity to two-fold
+     coincidences (coincidences peak – background – background in all
+     dimensions) and their crossings</li>
+ <li class=MsoNormal style='text-align:justify'>ability to identify peaks close
+     to the edges of the spectrum region</li>
+ <li class=MsoNormal style='text-align:justify'>resolution, decomposition of
+     doublets and multiplets. The algorithm should be able to recognize close
+     positioned peaks. </li>
 </ul>
 
-<p class=3DMsoNormal><i><span lang=3DEN-US><o:p>&nbsp;</o:p></span></i></p>
-
-<p class=3DMsoNormal><i><span lang=3DEN-US>Function:</span></i></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b style=3D'mso-bidi-font=
--weight:
-normal'><span lang=3DEN-US><a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#Int_t"><span class=
-=3DSpellE>Int_t</span></a>
-</span></b><a name=3D"TSpectrum:Search1HighRes"></a><a
-href=3D"http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><s=
-pan
-style=3D'mso-bookmark:"TSpectrum\:Search1HighRes"'><b style=3D'mso-bidi-fon=
-t-weight:
-normal'><span lang=3DEN-US>TSpectrum3::SearchHighRes</span></b></span><span
-style=3D'mso-bookmark:"TSpectrum\:Search1HighRes"'></span></a><span
-style=3D'mso-bookmark:"TSpectrum\:Search1HighRes"'></span><b style=3D'mso-b=
-idi-font-weight:
-normal'><span lang=3DEN-US> (const <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> ***=
-<span
-class=3DSpellE>fSource,<a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#float">float</a></sp=
-an></span></b></p>
-
-<b style=3D'mso-bidi-font-weight:normal'><span lang=3DEN-US style=3D'font-s=
-ize:12.0pt;
-font-family:"Times New Roman";mso-fareast-font-family:"Times New Roman";
-mso-ansi-language:EN-US;mso-fareast-language:EN-US;mso-bidi-language:AR-SA'=
-><span
-style=3D'mso-spacerun:yes'>&nbsp;</span>***<span class=3DSpellE>fDest</span=
->, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int"><span class=3DS=
-pellE>int</span></a>
-<span class=3DSpellE>fSizex</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int"><span class=3DS=
-pellE>int</span></a>
-<span class=3DSpellE>fSizey</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int"><span class=3DS=
-pellE>int</span></a>
-<span class=3DSpellE>fSizez</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> <sp=
-an
-class=3DSpellE>fSigma</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> <=
-span
-class=3DSpellE>fThreshold</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#bool"><span class=3D=
-SpellE>bool</span></a>
-<span class=3DSpellE>fBackgroundRemove,<a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int">int</a></span><=
-/span></b></div>
-
-<b style=3D'mso-bidi-font-weight:normal'><span lang=3DEN-US style=3D'font-s=
-ize:12.0pt;
-font-family:"Times New Roman";mso-fareast-font-family:"Times New Roman";
-mso-ansi-language:EN-US;mso-fareast-language:EN-US;mso-bidi-language:AR-SA'=
-><span
-style=3D'mso-spacerun:yes'>&nbsp;</span><span class=3DSpellE>fDeconIteratio=
-ns</span>,
-<a href=3D"http://root.cern.ch/root/html/ListOfTypes.html#bool"><span
-class=3DSpellE>bool</span></a> <span class=3DSpellE>fMarkov</span>, <a
-href=3D"http://root.cern.ch/root/html/ListOfTypes.html#int"><span class=3DS=
-pellE>int</span></a>
-<span class=3DSpellE>fAverWindow</span>) <span style=3D'mso-bidi-font-weigh=
-t:bold'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;</span><o:p></o:p></span></span></b>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>This f=
-unction
-searches for peaks in source spectrum. It is based on <span class=3DSpellE>=
-deconvolution</span>
-method. First the background is removed (if desired), then Markov smoothed
-spectrum is calculated (if desired), then the response function is generated
-according to given sigma and <span class=3DSpellE>deconvolution</span> is c=
-arried
-out. On success it returns number of found peaks.</span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><i style=3D'mso-bidi-font-style:normal'><span lang=3DE=
-N-US
-style=3D'color:red'>Parameters:<o:p></o:p></span></i></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fSource</b></span></span><span
-class=3DGramE>-pointer</span> to the matrix of source spectrum<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify;tab-stops:14.2pt'><span
-lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fDest</b></span></span><span
-class=3DGramE>-resulting</span> spectrum after <span class=3DSpellE>deconvo=
-lution</span></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fSizex</b></span></span><b
-style=3D'mso-bidi-font-weight:normal'>, <span class=3DSpellE>fSizey</span>,=
- <span
-class=3DSpellE>fSizez</span></b> -lengths of the source and destination spe=
-ctra<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
->fSigma</b></span></span><span
-class=3DGramE>-sigma</span> of searched peaks</span></p>
-
-<p class=3DMsoNormal style=3D'margin-left:22.8pt;text-align:justify;tab-sto=
-ps:31.35pt'><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
-><span
-lang=3DEN-US>fThreshold</span></b></span></span><span class=3DGramE><span
-lang=3DEN-US>-</span></span><span lang=3DEN-US> threshold value in % for se=
-lected
-peaks, peaks with amplitude less than threshold*highest_peak/100 are ignore=
-d</span></p>
-
-<p class=3DMsoNormal style=3D'margin-left:22.8pt;text-align:justify;tab-sto=
-ps:28.5pt'><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
-><span
-lang=3DEN-US>fBackgroundRemove</span></b></span></span><span class=3DGramE>=
-<span
-lang=3DEN-US>-</span></span><span lang=3DEN-US> <span class=3DSpellE>backgr=
-ound_remove</span>-logical
-variable, true if the removal of background before <span class=3DSpellE>dec=
-onvolution</span>
-is desired<span style=3D'mso-spacerun:yes'>&nbsp; </span></span></p>
-
-<p class=3DMsoNormal style=3D'margin-left:22.8pt;text-align:justify'><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
-><span
-lang=3DEN-US>fDeconIterations</span></b></span></span><span class=3DGramE><=
-span
-lang=3DEN-US>-number</span></span><span lang=3DEN-US> of iterations in <span
-class=3DSpellE>deconvolution</span> operation</span></p>
-
-<p class=3DMsoNormal style=3D'margin-left:22.8pt;text-align:justify;tab-sto=
-ps:19.95pt'><span
-class=3DSpellE><span class=3DGramE><b style=3D'mso-bidi-font-weight:normal'=
-><span
-lang=3DEN-US>fMarkov</span></b></span></span><span class=3DGramE><span lang=
-=3DEN-US>-logical</span></span><span
-lang=3DEN-US> variable, if it is true, first the source spectrum is replace=
-d by
-new spectrum calculated using Markov chains method </span></p>
-
-<p class=3DMsoNormal style=3D'margin-left:19.95pt;text-align:justify;text-i=
-ndent:
-2.85pt;tab-stops:14.2pt'><span class=3DSpellE><span class=3DGramE><b
-style=3D'mso-bidi-font-weight:normal'><span lang=3DEN-US>fAverWindow</span>=
-</b></span></span><span
-class=3DGramE><span lang=3DEN-US>-width</span></span><span lang=3DEN-US> of=
- averaging
-smoothing window </span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><b><i><span lang=3DEN-US>References:<o:p></o:p></span>=
-</i></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>[1] M.=
-A. <span
-class=3DSpellE>Mariscotti</span>: A method for identification of peaks in t=
-he
-presence of background and its application to spectrum analysis. NIM 50 (19=
-67),
-309-320.</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>[2<span
-class=3DGramE>] <span lang=3DSK style=3D'mso-ansi-language:SK'><span
-style=3D'mso-spacerun:yes'>&nbsp;</span>M</span></span></span><span
-style=3D'mso-ansi-language:SK'>. Morh&aacute;&#269;, J. Kliman, V. Matou&#3=
-53;ek,
-M. Veselsk&yacute;, <st1:place w:st=3D"on">I.</st1:place> Turzo</span><span
-lang=3DEN-US>.:I<span class=3DGramE>dentification</span> of peaks in
-multidimensional coincidence gamma-ray spectra. NIM, A443 (2000) 108-125.</=
-span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US>[3] Z.=
-K. <span
-class=3DSpellE>Silagadze</span>, A new algorithm for automatic <span
-class=3DSpellE>photopeak</span> searches. NIM A 376 (1996), 451.</span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><span lang=3DEN-US><o:p>&=
-nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US>Example
-of peak searching method<o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal style=3D'tab-stops:14.2pt'><span lang=3DEN-US><o:p>&nb=
-sp;</o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify;tab-stops:14.2pt'><span
-lang=3DEN-US><a
-href=3D"http://root.cern.ch/root/html/src/TSpectrum.cxx.html#TSpectrum:Sear=
-ch1HighRes"
-target=3D"_parent"><span class=3DSpellE>SearchHighRes</span></a> function p=
-rovides
-users with the possibility to vary the input parameters and with the access=
- to the
-output <span class=3DSpellE>deconvolved</span> data in the destination spec=
-trum.
-Based on the output data one can tune the parameters. </span></p>
-
-<p class=3DMsoNormal><i><span lang=3DEN-US>Example 1 &#8211; script Search3=
-.c:<o:p></o:p></span></i></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'mso-bidi-font-style:italic=
-'><o:p>&nbsp;</o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'mso-bidi-font-style:italic=
-'><!--[if gte vml 1]><v:shapetype
- id=3D"_x0000_t75" coordsize=3D"21600,21600" o:spt=3D"75" o:preferrelative=
-=3D"t"
- path=3D"m@4@5l@4@11@9@11@9@5xe" filled=3D"f" stroked=3D"f">
- <v:stroke joinstyle=3D"miter"/>
- <v:formulas>
-  <v:f eqn=3D"if lineDrawn pixelLineWidth 0"/>
-  <v:f eqn=3D"sum @0 1 0"/>
-  <v:f eqn=3D"sum 0 0 @1"/>
-  <v:f eqn=3D"prod @2 1 2"/>
-  <v:f eqn=3D"prod @3 21600 pixelWidth"/>
-  <v:f eqn=3D"prod @3 21600 pixelHeight"/>
-  <v:f eqn=3D"sum @0 0 1"/>
-  <v:f eqn=3D"prod @6 1 2"/>
-  <v:f eqn=3D"prod @7 21600 pixelWidth"/>
-  <v:f eqn=3D"sum @8 21600 0"/>
-  <v:f eqn=3D"prod @7 21600 pixelHeight"/>
-  <v:f eqn=3D"sum @10 21600 0"/>
- </v:formulas>
- <v:path o:extrusionok=3D"f" gradientshapeok=3D"t" o:connecttype=3D"rect"/>
- <o:lock v:ext=3D"edit" aspectratio=3D"t"/>
-</v:shapetype><v:shape id=3D"_x0000_i1025" type=3D"#_x0000_t75" style=3D'wi=
-dth:450.75pt;
- height:276pt'>
- <v:imagedata src=3D"Searching_files/image001.jpg" o:title=3D"search_5gauss=
-_original_daqprovis"/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D601 height=3D368
-src=3D"Searching_files/image002.jpg" v:shapes=3D"_x0000_i1025"><![endif]><o=
-:p></o:p></span></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US>Fig=
-. 1
-Three-dimensional spectrum with 5 peaks (<sub><!--[if gte vml 1]><v:shape i=
-d=3D"_x0000_i1026"
- type=3D"#_x0000_t75" style=3D'width:30pt;height:14.25pt' o:ole=3D"">
- <v:imagedata src=3D"Searching_files/image003.wmz" o:title=3D""/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D40 height=3D19
-src=3D"Searching_files/image004.gif" v:shapes=3D"_x0000_i1026"><![endif]></=
-sub><!--[if gte mso 9]><xml>
- <o:OLEObject Type=3D"Embed" ProgID=3D"Equation.DSMT4" ShapeID=3D"_x0000_i1=
-026"
-  DrawAspect=3D"Content" ObjectID=3D"_1220808414">
- </o:OLEObject>
-</xml><![endif]-->, threshold=3D5%, 3 iterations steps in the <span class=
-=3DSpellE>deconvolution</span>)<o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US><o:=
-p>&nbsp;</o:p></span></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US><!-=
--[if gte vml 1]><v:shape
- id=3D"_x0000_i1027" type=3D"#_x0000_t75" style=3D'width:450.75pt;height:27=
-6pt'>
- <v:imagedata src=3D"Searching_files/image005.jpg" o:title=3D"search_5gauss=
-_hr_daqprovis"/>
-</v:shape><![endif]--><![if !vml]><img border=3D0 width=3D601 height=3D368
-src=3D"Searching_files/image006.jpg" v:shapes=3D"_x0000_i1027"><![endif]><o=
-:p></o:p></span></b></p>
-
-<p class=3DMsoNormal style=3D'text-align:justify'><b><span lang=3DEN-US>Fig=
-. 2
-Spectrum from Fig. 1 after background elimination and <span class=3DSpellE>=
-deconvolution</span><o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'color:#339966'><o:p>&nbsp;</o:p></span></b></p>
-
-<p class=3DMsoNormal><b style=3D'mso-bidi-font-weight:normal'><span lang=3D=
-EN-US
-style=3D'color:#339966'>Script:<o:p></o:p></span></b></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// Examp=
-le to
-illustrate high resolution peak searching function (class TSpectrum3).<o:p>=
-</o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// <span
-class=3DGramE>To</span> execute this example, do<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>// root =
-&gt; .x
-Search3.C<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span class=3DGramE><span lang=3DEN-US style=3D'font-s=
-ize:10.0pt'>void</span></span><span
-lang=3DEN-US style=3D'font-size:10.0pt'> Search3() {<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Int_t</=
-span> <span
-class=3DSpellE>i</span>, j, k, <span class=3DSpellE>nfound</span>;<o:p></o:=
-p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span></span><span lang=3DFR
-style=3D'font-size:10.0pt;mso-ansi-language:FR'>Int_t nbinsx =3D 32;<o:p></=
-o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t nbinsy =3D 3=
-2;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t nbinsz =3D 3=
-2;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t xmin<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D 0;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t xmax<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D nbinsx;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t ymin<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D 0;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t ymax<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D nbinsy;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>Int_t zmin<span
-style=3D'mso-spacerun:yes'>&nbsp; </span>=3D 0;<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DFR style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-FR'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span></span><span
-class=3DSpellE><span lang=3DEN-US style=3D'font-size:10.0pt'>Int_t</span></=
-span><span
-lang=3DEN-US style=3D'font-size:10.0pt'> <span class=3DSpellE><span class=
-=3DGramE>zmax</span></span><span
-class=3DGramE><span style=3D'mso-spacerun:yes'>&nbsp; </span>=3D</span> <sp=
-an
-class=3DSpellE>nbinsz</span>;<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>float</s=
-pan> ***
-source =3D new float **[<span class=3DSpellE>nbinsx</span>];<o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>float</s=
-pan> ***
-<span class=3DSpellE>dest</span> =3D new float **[<span class=3DSpellE>nbin=
-sx</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for(</sp=
-an><span
-class=3DSpellE>i</span>=3D0;i&lt;<span class=3DSpellE>nbinsx;i</span>++){<o=
-:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DGramE>source[</span><span class=3DSpellE>i</span>]=3Dnew float* [<s=
-pan
-class=3DSpellE>nbinsy</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DGramE>for(</span>j=3D0;j&lt;<span class=3DSpellE>nbinsy;j</span>++)=
-<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span class=3DGramE>source[</span><span class=3DSpellE>i</span>][j]=
-=3Dnew
-float [<span class=3DSpellE>nbinsz</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for(</sp=
-an><span
-class=3DSpellE>i</span>=3D0;i&lt;<span class=3DSpellE>nbinsx;i</span>++){<o=
-:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;</span><span class=3DSpellE><span class=3D=
-GramE>dest</span></span><span
-class=3DGramE>[</span><span class=3DSpellE>i</span>]=3Dnew float* [<span
-class=3DSpellE>nbinsy</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-class=3DGramE>for(</span>j=3D0;j&lt;<span class=3DSpellE>nbinsy;j</span>++)=
-<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span class=3DSpellE><span class=3DGramE>dest</span></span><span
-class=3DGramE>[</span><span class=3DSpellE>i</span>][j]=3Dnew float [<span
-class=3DSpellE>nbinsz</span>];<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TH3F *search =3D new TH3F(&q=
-uot;<span
-class=3DSpellE>Search&quot;,&quot;Peak</span> <span class=3DSpellE>searchin=
-g&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax,nbinsz,zmin,zmax</span>);<o:p></o=
-:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TFile</=
-span> *f
-=3D new <span class=3DSpellE><span class=3DGramE>TFile</span></span><span
-class=3DGramE>(</span>&quot;TSpectrum3.root&quot;);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>search</=
-span>=3D(TH3F*)
-f-&gt;Get(&quot;search2;1&quot;);<span style=3D'mso-spacerun:yes'>&nbsp;&nb=
-sp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>TCanvas=
-</span>
-*Search =3D new <span class=3DSpellE><span class=3DGramE>TCanvas</span></sp=
-an><span
-class=3DGramE>(</span>&quot;<span class=3DSpellE>Search&quot;,&quot;Peak</s=
-pan>
-searching&quot;,10,10,1000,700);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>TSpectrum3 *s =3D new <span
-class=3DGramE>TSpectrum3(</span>);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span> &lt; <span cla=
-ss=3DSpellE>nbinsx</span>;
-<span class=3DSpellE>i</span>++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DGr=
-amE>for</span>
-(j =3D 0; j &lt; <span class=3DSpellE>nbinsy</span>; j++){<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-style=3D'mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;</span><span class=3DGramE>for</span=
-> (k =3D
-0; k &lt; <span class=3DSpellE>nbinsz</span>; k++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span=
-><span
-class=3DGramE>source[</span><span class=3DSpellE>i</span>][j][k] =3D search=
--&gt;<span
-class=3DSpellE>GetBinContent</span>(<span class=3DSpellE>i</span> + 1,j + 1=
-,k + 1);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;</span>} <o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span style=3D'mso-tab-count=
-:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
-; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;</span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>nfound</span></span> =3D s-&gt;<span class=3DSpellE>SearchHig=
-hRes</span>(source,
-<span class=3DSpellE>dest</span>, <span class=3DSpellE>nbinsx</span>, <span
-class=3DSpellE>nbinsy</span>, <span class=3DSpellE>nbinsz</span>, 2, 5, <sp=
-an
-class=3DSpellE>kTRUE</span>, 3, <span class=3DSpellE>kFALSE</span>, 3);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE><span
-class=3DGramE>printf</span></span><span class=3DGramE>(</span>&quot;Found %d
-candidate peaks\<span class=3DSpellE>n&quot;,nfound</span>);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for</spa=
-n> (<span
-class=3DSpellE>i</span> =3D 0; <span class=3DSpellE>i</span> &lt; <span cla=
-ss=3DSpellE>nbinsx</span>;
-<span class=3DSpellE>i</span>++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=3DGr=
-amE>for</span>
-(j =3D 0; j &lt; <span class=3DSpellE>nbinsy</span>; j++){<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </spa=
-n><span
-class=3DGramE>for</span> (k =3D 0; k &lt; <span class=3DSpellE>nbinsz</span=
->; k++){<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;
-</span><span class=3DGramE>search</span>-&gt;<span class=3DSpellE>SetBinCon=
-tent</span>(<span
-class=3DSpellE>i</span> + 1,j + 1,k + 1, <span class=3DSpellE>dest</span>[<=
-span
-class=3DSpellE>i</span>][j][k]);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>}<span style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span><o:p></o=
-:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp; </span>}<o:p></o:p></sp=
-an></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span>}<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Float_t=
-</span>
-*<span class=3DSpellE>PosX</span> =3D new <span class=3DSpellE>Float_<span
-class=3DGramE>t</span></span><span class=3DGramE>[</span><span class=3DSpel=
-lE>nfound</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Float_t=
-</span> *<span
-class=3DSpellE>PosY</span> =3D new <span class=3DSpellE>Float_<span class=
-=3DGramE>t</span></span><span
-class=3DGramE>[</span><span class=3DSpellE>nfound</span>];<o:p></o:p></span=
-></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>Float_t=
-</span>
-*<span class=3DSpellE>PosZ</span> =3D new <span class=3DSpellE>Float_<span
-class=3DGramE>t</span></span><span class=3DGramE>[</span><span class=3DSpel=
-lE>nfound</span>];<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p=
-></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>PosX</s=
-pan> =3D
-s-&gt;<span class=3DSpellE><span class=3DGramE>GetPositionX</span></span><s=
-pan
-class=3DGramE>(</span>);<o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>PosY</s=
-pan> =3D
-s-&gt;<span class=3DSpellE><span class=3DGramE>GetPositionY</span></span><s=
-pan
-class=3DGramE>(</span>);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DSpellE>PosZ</s=
-pan> =3D
-s-&gt;<span class=3DSpellE><span class=3DGramE>GetPositionZ</span></span><s=
-pan
-class=3DGramE>(</span>);<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;&nbsp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span><span class=3DGramE>for(</sp=
-an><span
-class=3DSpellE>i</span>=3D0;i&lt;<span class=3DSpellE>nfound;i</span>++)<o:=
-p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'><span
-style=3D'mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
-nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp; </span></span><span lang=3DPL
-style=3D'font-size:10.0pt;mso-ansi-language:PL'>printf(&quot;posx=3D %d, po=
-sy=3D %d,
-posz=3D %d\n&quot;,(int)(PosX[i]+0.5), (int)(PosY[i]+0.5),
-(int)(PosZ[i]+0.5));<span
-style=3D'mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
-&nbsp;&nbsp;
-</span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DPL style=3D'font-size:10.0pt;mso-ansi-lan=
-guage:
-PL'><span style=3D'mso-spacerun:yes'>&nbsp;&nbsp; </span></span><span
-class=3DGramE><span lang=3DEN-US style=3D'font-size:10.0pt'>search</span></=
-span><span
-lang=3DEN-US style=3D'font-size:10.0pt'>-&gt;Draw(&quot;&quot;);<span
-style=3D'mso-spacerun:yes'>&nbsp; </span><o:p></o:p></span></p>
-
-<p class=3DMsoNormal><span lang=3DEN-US style=3D'font-size:10.0pt'>}<o:p></=
-o:p></span></p>
+<p class=MsoNormal><i>&nbsp;</i></p>
+
+<p class=MsoNormal><i>Function:</i></p>
+
+<p class=MsoNormal style='text-align:justify'><b><a
+href="http://root.cern.ch/root/html/ListOfTypes.html#Int_t">Int_t</a> </b><a
+name="TSpectrum:Search1HighRes"></a><a
+href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrum3::SearchHighRes</b></a><b>
+(const <a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a>
+***fSource,<a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a>
+***fDest, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a>
+fSizex, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a>
+fSizey, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a>
+fSizez, <a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a>
+fSigma, <a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a>
+fThreshold, <a href="http://root.cern.ch/root/html/ListOfTypes.html#bool">bool</a>
+fBackgroundRemove,<a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a>
+fDeconIterations, <a href="http://root.cern.ch/root/html/ListOfTypes.html#bool">bool</a>
+fMarkov, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a>
+fAverWindow)   </b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal style='text-align:justify'>This function searches for peaks
+in source spectrum. It is based on deconvolution method. First the background
+is removed (if desired), then Markov smoothed spectrum is calculated (if
+desired), then the response function is generated according to given sigma and
+deconvolution is carried out. On success it returns number of found peaks.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><i><span style='color:red'>Parameters:</span></i></p>
+
+<p class=MsoNormal style='text-align:justify'>        <b>fSource</b>-pointer to
+the matrix of source spectrum                  </p>
+
+<p class=MsoNormal style='text-align:justify'>        <b>fDest</b>-resulting
+spectrum after deconvolution</p>
+
+<p class=MsoNormal style='text-align:justify'>        <b>fSizex, fSizey, fSizez</b>
+-lengths of the source and destination spectra                </p>
+
+<p class=MsoNormal style='text-align:justify'>        <b>fSigma</b>-sigma of
+searched peaks</p>
+
+<p class=MsoNormal style='margin-left:22.8pt;text-align:justify'><b>fThreshold</b>-
+threshold value in % for selected peaks, peaks with amplitude less than
+threshold*highest_peak/100 are ignored</p>
+
+<p class=MsoNormal style='margin-left:22.8pt;text-align:justify'><b>fBackgroundRemove</b>-
+background_remove-logical variable, true if the removal of background before
+deconvolution is desired  </p>
+
+<p class=MsoNormal style='margin-left:22.8pt;text-align:justify'><b>fDeconIterations</b>-number
+of iterations in deconvolution operation</p>
+
+<p class=MsoNormal style='margin-left:22.8pt;text-align:justify'><b>fMarkov</b>-logical
+variable, if it is true, first the source spectrum is replaced by new spectrum
+calculated using Markov chains method </p>
+
+<p class=MsoNormal style='margin-left:19.95pt;text-align:justify;text-indent:
+2.85pt'><b>fAverWindow</b>-width of averaging smoothing window </p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><b><i>References:</i></b></p>
+
+<p class=MsoNormal style='text-align:justify'>[1] M.A. Mariscotti: A method for
+identification of peaks in the presence of background and its application to
+spectrum analysis. NIM 50 (1967), 309-320.</p>
+
+<p class=MsoNormal style='text-align:justify'>[2] <span lang=SK> M.
+Morhá&#269;, J. Kliman, V. Matoušek, M. Veselský, I. Turzo</span>.:Identification
+of peaks in multidimensional coincidence gamma-ray spectra. NIM, A443 (2000)
+108-125.</p>
+
+<p class=MsoNormal style='text-align:justify'>[3] Z.K. Silagadze, A new
+algorithm for automatic photopeak searches. NIM A 376 (1996), 451.</p>
+
+<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
+
+<p class=MsoNormal><b>Example of peak searching method</b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal style='text-align:justify'><a
+href="http://root.cern.ch/root/html/src/TSpectrum.cxx.html#TSpectrum:Search1HighRes"
+target="_parent">SearchHighRes</a> function provides users with the possibility
+to vary the input parameters and with the access to the output deconvolved data
+in the destination spectrum. Based on the output data one can tune the
+parameters. </p>
+
+<p class=MsoNormal><i>Example 1 – script Search3.c:</i></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><img border=0 width=601 height=368
+src="gif/spectrum3_searching_image001.jpg"></p>
+
+<p class=MsoNormal style='text-align:justify'><b>Fig. 1 Three-dimensional
+spectrum with 5 peaks (<sub><img border=0 width=40 height=19
+src="gif/spectrum3_searching_image002.gif"></sub>, threshold=5%, 3 iterations steps in
+the deconvolution)</b></p>
+
+<p class=MsoNormal style='text-align:justify'><b>&nbsp;</b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><img border=0 width=601
+height=368 src="gif/spectrum3_searching_image003.jpg"></b></p>
+
+<p class=MsoNormal style='text-align:justify'><b>Fig. 2 Spectrum from Fig. 1
+after background elimination and deconvolution</b></p>
+
+<p class=MsoNormal><b><span style='color:#339966'>&nbsp;</span></b></p>
+
+<p class=MsoNormal><b><span style='color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// Example to illustrate high
+resolution peak searching function (class TSpectrum3).</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// To execute this example,
+do</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>// root &gt; .x Search3.C</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>void Search3() {</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t i, j, k, nfound;</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   </span><span lang=FR
+style='font-size:10.0pt'>Int_t nbinsx = 32;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t nbinsy = 32;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t nbinsz =
+32;   </span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmin  = 0;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmax  =
+nbinsx;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t ymin  = 0;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t ymax  =
+nbinsy;   </span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t zmin  = 0;</span></p>
+
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
+style='font-size:10.0pt'>Int_t zmax  = nbinsz;      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   float *** source = new
+float **[nbinsx];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   float *** dest = new float
+**[nbinsx];      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nbinsx;i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      source[i]=new float*
+[nbinsy];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     
+for(j=0;j&lt;nbinsy;j++)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>         source[i][j]=new
+float [nbinsz];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }           </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nbinsx;i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>      dest[i]=new float*
+[nbinsy];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     
+for(j=0;j&lt;nbinsy;j++)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>         dest[i][j]=new float
+[nbinsz];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }              </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TH3F *search = new
+TH3F(&quot;Search&quot;,&quot;Peak
+searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax,nbinsz,zmin,zmax);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TFile *f = new
+TFile(&quot;TSpectrum3.root&quot;);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   search=(TH3F*)
+f-&gt;Get(&quot;search2;1&quot;);   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TCanvas *Search = new
+TCanvas(&quot;Search&quot;,&quot;Peak searching&quot;,10,10,1000,700);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrum3 *s = new
+TSpectrum3();</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbinsx;
+i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
+nbinsy; j++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                  for (k = 0;
+k &lt; nbinsz; k++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                       source[i][j][k]
+= search-&gt;GetBinContent(i + 1,j + 1,k + 1);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                    } </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                 }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   nfound =
+s-&gt;SearchHighRes(source, dest, nbinsx, nbinsy, nbinsz, 2, 5, kTRUE, 3,
+kFALSE, 3);   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   printf(&quot;Found %d
+candidate peaks\n&quot;,nfound);   </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbinsx;
+i++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     for (j = 0; j &lt;
+nbinsy; j++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>        for (k = 0; k &lt;
+nbinsz; k++){</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>          
+search-&gt;SetBinContent(i + 1,j + 1,k + 1, dest[i][j][k]);</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>        }    </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>     }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   }</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *PosX = new
+Float_t[nfound];         </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *PosY = new
+Float_t[nfound];</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *PosZ = new
+Float_t[nfound];      </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   PosX =
+s-&gt;GetPositionX();</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   PosY =
+s-&gt;GetPositionY();         </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   PosZ =
+s-&gt;GetPositionZ();            </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nfound;i++)</span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>                    </span><span
+lang=PL style='font-size:10.0pt'>printf(&quot;posx= %d, posy= %d, posz=
+%d\n&quot;,(int)(PosX[i]+0.5), (int)(PosY[i]+0.5),
+(int)(PosZ[i]+0.5));           </span></p>
+
+<p class=MsoNormal><span lang=PL style='font-size:10.0pt'>   </span><span
+style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'>}</span></p>
 
 </div>
 
