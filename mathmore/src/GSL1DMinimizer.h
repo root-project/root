@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Integrator.h,v 1.2 2006/06/16 10:34:08 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSL1DMinimizer.h,v 1.1 2006/10/05 15:23:42 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
  /**********************************************************************
   *                                                                    *
@@ -32,15 +32,15 @@
 
 #include "gsl/gsl_min.h"
 
-/**
-   wrapper class for gsl_min_fminimizer structure
-   @ingroup Min1D
-*/
 
 namespace ROOT { 
 
 namespace Math { 
 
+/**
+   wrapper class for gsl_min_fminimizer structure
+   @ingroup Min1D
+*/
 class GSL1DMinimizer {
 
 public: 
