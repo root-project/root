@@ -6,7 +6,7 @@ dnl
 AC_INIT(src/SpecFuncMathMore.cxx)
 AM_CONFIG_HEADER(config.h)
 AC_CONFIG_AUX_DIR(config)
-AM_INIT_AUTOMAKE(MathMore, 5.13.03)
+AM_INIT_AUTOMAKE(MathMore, 5.13.04)
 
 dnl Checks for programs.
 AC_PROG_CXX
