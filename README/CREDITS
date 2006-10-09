@@ -205,6 +205,10 @@ N: Fabrizio Furano
 E: furano@pd.infn.it
 D: libNetx, the xrootd client code
 
+N: Nikolai Gagunashvili
+E: nikolai@unak.is
+D: Reimplementation of TH1::Chi2Test
+
 N: Gerardo Ganis
 E: Gerardo.Ganis@cern.ch
 D: all matters related to client/server authentication
@@ -251,6 +255,10 @@ N: Andrew Haas
 E: haas@yahoo.com
 D: add support for asymmetric errors in the GraphFitChisquare functions
 D: implement TGraphAsymmErrors::BayesDivide and corresponding functions
+
+N: Daniel Haertl
+E: Daniel.Haertl@cern.ch
+D: Reimplemnt in C++ the original chi2test of Nikolai Gagunashvili
 
 N: Andy Hanushevsky
 E: abh@slac.stanford.edu
