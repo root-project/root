@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2Fit.cxx,v 1.3 2006/10/02 10:58:42 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2Fit.cxx,v 1.4 2006/10/09 09:29:59 brun Exp $
 // Author: Miroslav Morhac   25/09/2006
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1650,7 +1650,7 @@ void TSpectrum2Fit::FitAwmi(Float_t **source)
 //        source-pointer to the matrix of source spectrum                  
 //                                                                         
 /////////////////////////////////////////////////////////////////////////////
-
+//
 //Begin_Html <!--
 /* -->
 <div class=Section2>
@@ -4551,7 +4551,7 @@ void TSpectrum2Fit::FitStiefel(Float_t **source)
 //        source-pointer to the matrix of source spectrum                  
 //                                                                         
 /////////////////////////////////////////////////////////////////////////////
-   
+//   
 //Begin_Html <!--
 /* -->
 <div class=Section1>
