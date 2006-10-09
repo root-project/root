@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.45 2006/06/14 14:21:56 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.46 2006/07/03 16:10:44 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -85,8 +85,8 @@ protected:
 
    Int_t         fPixmapID;        //! Off-screen pixmap identifier
    Int_t         fGLDevice;        //! OpenGL off-screen pixmap identifier
-   Bool_t        fCopyGLDevice;
-   Bool_t        fEmbeddedGL;
+   Bool_t        fCopyGLDevice;    //!
+   Bool_t        fEmbeddedGL;      //!
    Int_t         fNumber;          //  pad number identifier
    Int_t         fTickx;           //  Set to 1 if tick marks along X
    Int_t         fTicky;           //  Set to 1 if tick marks along Y
@@ -368,7 +368,7 @@ public:
    virtual TVirtualViewer3D *GetViewer3D(Option_t * type = "");
    virtual void              ReleaseViewer3D(Option_t * type = "");
 
-   ClassDef(TPad,9)  //A Graphics pad
+   ClassDef(TPad,10)  //A Graphics pad
 };
 
 
