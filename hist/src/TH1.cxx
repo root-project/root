@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.315 2006/10/04 16:32:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.316 2006/10/06 09:26:53 couet Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -6213,7 +6213,15 @@ void TH1::GetStats(Double_t *stats) const
    Double_t x;
    if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange)) {
       for (bin=0;bin<4;bin++) stats[bin] = 0;
-      for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
+
+      Int_t firstBinX = fXaxis.GetFirst(); 
+      Int_t lastBinX  = fXaxis.GetLast();
+      // include underflow/overflow if TH1::StatOverflows(kTRUE) in case no range is set on the axis
+      if (fgStatOverflows && !fXaxis.TestBit(TAxis::kAxisRange)) { 
+         if (firstBinX == 1) firstBinX = 0; 
+         if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1; 
+      }
+      for (binx = firstBinX; binx <= lastBinX; binx++) {
          x   = fXaxis.GetBinCenter(binx);
          w   = TMath::Abs(GetBinContent(binx));
          err = TMath::Abs(GetBinError(binx));

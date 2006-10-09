@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.83 2006/08/25 10:49:11 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.84 2006/08/28 13:34:52 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -964,11 +964,33 @@ void TH3::GetStats(Double_t *stats) const
    Double_t x,y,z;
    if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange) || fZaxis.TestBit(TAxis::kAxisRange)) {
       for (bin=0;bin<9;bin++) stats[bin] = 0;
-      for (binz=fZaxis.GetFirst();binz<=fZaxis.GetLast();binz++) {
+
+      Int_t firstBinX = fXaxis.GetFirst(); 
+      Int_t lastBinX  = fXaxis.GetLast();
+      Int_t firstBinY = fYaxis.GetFirst(); 
+      Int_t lastBinY  = fYaxis.GetLast();
+      Int_t firstBinZ = fZaxis.GetFirst(); 
+      Int_t lastBinZ  = fZaxis.GetLast();
+      // include underflow/overflow if TH1::StatOverflows(kTRUE) in case no range is set on the axis
+      if (fgStatOverflows) { 
+         if ( !fXaxis.TestBit(TAxis::kAxisRange) ) { 
+            if (firstBinX == 1) firstBinX = 0; 
+            if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1; 
+         }
+         if ( !fYaxis.TestBit(TAxis::kAxisRange) ) { 
+            if (firstBinY == 1) firstBinY = 0; 
+            if (lastBinY ==  fYaxis.GetNbins() ) lastBinY += 1; 
+         }
+         if ( !fZaxis.TestBit(TAxis::kAxisRange) ) { 
+            if (firstBinZ == 1) firstBinZ = 0; 
+            if (lastBinZ ==  fZaxis.GetNbins() ) lastBinZ += 1; 
+         }
+      }
+      for (binz = firstBinZ; binz <= lastBinZ; binz++) {
          z = fZaxis.GetBinCenter(binz);
-         for (biny=fYaxis.GetFirst();biny<=fYaxis.GetLast();biny++) {
+         for (biny = firstBinY; biny <= lastBinY; biny++) {
             y = fYaxis.GetBinCenter(biny);
-            for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
+            for (binx = firstBinX; binx <= lastBinX; binx++) {
                bin = GetBin(binx,biny,binz);
                x   = fXaxis.GetBinCenter(binx);
                w   = TMath::Abs(GetBinContent(bin));

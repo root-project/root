@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.100 2006/10/03 10:05:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.101 2006/10/04 09:23:02 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -953,9 +953,25 @@ void TH2::GetStats(Double_t *stats) const
    Double_t x,y;
    if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange)) {
       for (bin=0;bin<7;bin++) stats[bin] = 0;
-      for (biny=fYaxis.GetFirst();biny<=fYaxis.GetLast();biny++) {
+      
+      Int_t firstBinX = fXaxis.GetFirst(); 
+      Int_t lastBinX  = fXaxis.GetLast();
+      Int_t firstBinY = fYaxis.GetFirst(); 
+      Int_t lastBinY  = fYaxis.GetLast();
+      // include underflow/overflow if TH1::StatOverflows(kTRUE) in case no range is set on the axis
+      if (fgStatOverflows) { 
+        if ( !fXaxis.TestBit(TAxis::kAxisRange) ) { 
+            if (firstBinX == 1) firstBinX = 0; 
+            if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1; 
+         }
+         if ( !fYaxis.TestBit(TAxis::kAxisRange) ) { 
+            if (firstBinY == 1) firstBinY = 0; 
+            if (lastBinY ==  fYaxis.GetNbins() ) lastBinY += 1; 
+         }
+      }
+      for (biny = firstBinY; biny <= lastBinY; biny++) {
          y = fYaxis.GetBinCenter(biny);
-         for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
+         for (binx = firstBinX; binx <= lastBinX; binx++) {
             bin = GetBin(binx,biny);
             x   = fXaxis.GetBinCenter(binx);
             w   = TMath::Abs(GetBinContent(bin));
@@ -1818,9 +1834,8 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
    //   The projection is made from the channels along the Y axis
    //   ranging from firstybin to lastybin included.
    //   By default, bins 1 to ny are included
-   //   When all bins are included, the number of entries in the projection
-   //   is set to the number of entries of the 2-D histogram, otherwise
-   //   the number of entries is incremented by 1 for all non empty cells.
+   //   The number of entries in the projection is estimated from the 
+   //   number of effective entries for all the cells included in the projection
    //
    //   To make the projection in X of the underflow bin in Y, use firstybin=lastybin=0;
    //   To make the projection in X of the overflow bin in Y, use firstybin=lastybin=ny+1;
@@ -1904,20 +1919,20 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
    Double_t cont,err,err2;
    for (Int_t binx =0;binx<=nx+1;binx++) {
       err2 = 0;
+      cont = 0; 
       for (Int_t biny=firstybin;biny<=lastybin;biny++) {
          if (ncuts) {
             if (!fPainter->IsInside(binx,biny)) continue;
          }
-         cont  = GetCellContent(binx,biny);
+         cont  += GetCellContent(binx,biny);
          err   = GetCellError(binx,biny);
          err2 += err*err;
-         if (cont) {
-            h1->Fill(fXaxis.GetBinCenter(binx), cont);
-         }
       }
+      h1->SetBinContent(binx,cont);
       if (h1->GetSumw2N()) h1->SetBinError(binx,TMath::Sqrt(err2));
    }
-   if ((firstybin <=1 && lastybin >= ny) && !ncuts) h1->SetEntries(fEntries);
+   // use effective entries as set entries 
+   h1->SetEntries( Int_t( h1->GetEffectiveEntries() ) + 0.5);
 
    if (opt.Contains("d")) {
       TVirtualPad *padsav = gPad;
@@ -1948,9 +1963,8 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
    //   The projection is made from the channels along the X axis
    //   ranging from firstxbin to lastxbin included.
    //   By default, bins 1 to nx are included
-   //   When all bins are included, the number of entries in the projection
-   //   is set to the number of entries of the 2-D histogram, otherwise
-   //   the number of entries is incremented by 1 for all non empty cells.
+   //   The number of entries in the projection is estimated from the 
+   //   number of effective entries for all the cells included in the projection
    //
    //   To make the projection in Y of the underflow bin in X, use firstxbin=lastxbin=0;
    //   To make the projection in Y of the overflow bin in X, use firstxbin=lastxbin=nx+1;
@@ -2034,20 +2048,20 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
    Double_t cont,err,err2;
    for (Int_t biny =0;biny<=ny+1;biny++) {
       err2 = 0;
+      cont = 0; 
       for (Int_t binx=firstxbin;binx<=lastxbin;binx++) {
          if (ncuts) {
             if (!fPainter->IsInside(binx,biny)) continue;
          }
-         cont  = GetCellContent(binx,biny);
+         cont  += GetCellContent(binx,biny);
          err   = GetCellError(binx,biny);
          err2 += err*err;
-         if (cont) {
-            h1->Fill(fYaxis.GetBinCenter(biny), cont);
-         }
       }
+      h1->SetBinContent(biny,cont);
       if (h1->GetSumw2N()) h1->SetBinError(biny,TMath::Sqrt(err2));
    }
-   if ((firstxbin <=1 && lastxbin >= nx) && !ncuts) h1->SetEntries(fEntries);
+   // use effective entries as set entries 
+   h1->SetEntries( Int_t( h1->GetEffectiveEntries() ) + 0.5);
 
    if (opt.Contains("d")) {
       TVirtualPad *padsav = gPad;
