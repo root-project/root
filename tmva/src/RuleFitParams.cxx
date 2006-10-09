@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleFitParams.cxx,v 1.18 2006/10/03 17:49:10 tegen Exp $
+// @(#)root/tmva $Id: RuleFitParams.cxx,v 1.1 2006/10/09 15:55:02 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -199,12 +199,12 @@ Double_t TMVA::RuleFitParams::Penalty() const
    const std::vector<Double_t> *lincoeff = & (fRuleEnsemble->GetLinCoefficients());
    if (fRuleEnsemble->DoRules()) {
       for (UInt_t i=0; i<nrules; i++) {
-         rval += fabs(fRuleEnsemble->GetRules(i)->GetCoefficient());
+         rval += TMath::Abs(fRuleEnsemble->GetRules(i)->GetCoefficient());
       }
    }
    if (fRuleEnsemble->DoLinear()) {
       for (UInt_t i=0; i<lincoeff->size(); i++) {
-         rval += fabs((*lincoeff)[i]);
+         rval += TMath::Abs((*lincoeff)[i]);
       }
    }
    return rval;
@@ -535,8 +535,8 @@ Double_t TMVA::RuleFitParams::ErrorRateReg(Int_t set)
       const TMVA::Event& e = *(*events)[i];
       F = LinearModel( e );
       // scaled abs error, eq 20 in RuleFit paper
-      sumdf += fabs(fFstar[i-ibeg] - F);
-      sumdfmed += fabs(fFstar[i-ibeg] - fFstarMedian);
+      sumdf += TMath::Abs(fFstar[i-ibeg] - F);
+      sumdfmed += TMath::Abs(fFstar[i-ibeg] - fFstarMedian);
    }
    //   std::cout << "median F* = " << fFstarMedian << " ; sumdfmed = " << sumdfmed << " ; sumdf = " << sumdf << std::endl;
    // scaled abs error, eq 20
@@ -580,7 +580,7 @@ Double_t TMVA::RuleFitParams::ErrorRateBin(Int_t set, Double_t & df)
       signF = (F>0 ? +1:-1);
       //      signy = (FStar>0 ? +1:-1);
       signy = (e.IsSignal() ? +1:-1);
-      sumdfbin += fabs(Double_t(signF-signy))*0.5;
+      sumdfbin += TMath::Abs(Double_t(signF-signy))*0.5;
    }
    Double_t f = sumdfbin/dneve;
    df = f*sqrt((1.0/sumdfbin) + (1.0/dneve));
@@ -622,10 +622,10 @@ void TMVA::RuleFitParams::MakeGradientVector()
    for (UInt_t i=ibeg; i<iend; i++) {
       const TMVA::Event& e = *(*events)[i];
       F = LinearModel( e );
-      //      iF = ((fabs(F)<1) ? 1.0:0.0);
-      //      if ((i==ibeg) || (fabs(F)<100000.0)) {
+      //      iF = ((TMath::Abs(F)<1) ? 1.0:0.0);
+      //      if ((i==ibeg) || (TMath::Abs(F)<100000.0)) {
       r=0;
-      if (fabs(F)<1.0) {
+      if (TMath::Abs(F)<1.0) {
          r = (e.IsSignal()?1.:-1.) - F;
          fGradOfs = norm*r;
          // Loop over all rules and calculate grad vector
@@ -638,7 +638,7 @@ void TMVA::RuleFitParams::MakeGradientVector()
          for (UInt_t il=0; il<nlin; il++) {
             fGradVecLin[il] += norm*r*fRuleEnsemble->EvalLinEvent( il, e, kTRUE );
          }
-      } // if (fabs(F)<xxx)
+      } // if (TMath::Abs(F)<xxx)
    }
 //    Double_t sum2=0;
 //    for (UInt_t r=0; r<nrules; r++) {
@@ -653,10 +653,10 @@ void TMVA::RuleFitParams::UpdateCoefficients()
    // Establish maximum gradient for rules, linear terms and the offset
    std::vector<Double_t> maxgrads;
    maxgrads.push_back( (fRuleEnsemble->DoRules() ? 
-                        fabs(*(std::max_element( fGradVec.begin(), fGradVec.end(), TMVA::AbsValue()))):0) );
+                        TMath::Abs(*(std::max_element( fGradVec.begin(), fGradVec.end(), TMVA::AbsValue()))):0) );
    maxgrads.push_back( (fRuleEnsemble->DoLinear() ? 
-                        fabs(*(std::max_element( fGradVecLin.begin(), fGradVecLin.end(), TMVA::AbsValue()))):0) );
-   //   maxgrads.push_back(  fabs(fGradOfs) );
+                        TMath::Abs(*(std::max_element( fGradVecLin.begin(), fGradVecLin.end(), TMVA::AbsValue()))):0) );
+   //   maxgrads.push_back(  TMath::Abs(fGradOfs) );
    // Use the maximum as a threshold
    Double_t cthresh = (*std::max_element( maxgrads.begin(),maxgrads.end() )) * fGDTau;
    //   if (maxl>maxr) std::cout << "Lincoeff is max: " << cthresh << std::endl;
@@ -673,14 +673,14 @@ void TMVA::RuleFitParams::UpdateCoefficients()
    Double_t gval, lval, coef, lcoef;
 
    // Add to offset, if gradient is large enough:
-   //   if (fabs(fGradOfs)>useOThresh) fRuleEnsemble->AddOffset(fGradOfs*fGDPathStep); REMOVE PERHAPS!
+   //   if (TMath::Abs(fGradOfs)>useOThresh) fRuleEnsemble->AddOffset(fGradOfs*fGDPathStep); REMOVE PERHAPS!
    // Loop over the gradient vector and move to next set of coefficients
    // size of GradVec (and GradVecLin) should be 0 if learner is disabled
    for (UInt_t i=0; i<fGradVec.size(); i++) {
       gval = fGradVec[i];
       //      std::cout << "RC = " << gval << " ; thresh = " << useThresh << std::endl;
-      if (fabs(gval)>=useRThresh) {
-         //      if (fabs(gval)>=gthresh) {
+      if (TMath::Abs(gval)>=useRThresh) {
+         //      if (TMath::Abs(gval)>=gthresh) {
          coef = fRuleEnsemble->GetRulesConst(i)->GetCoefficient() + fGDPathStep*gval;
          fRuleEnsemble->GetRules(i)->SetCoefficient(coef);
       }
@@ -690,8 +690,8 @@ void TMVA::RuleFitParams::UpdateCoefficients()
    for (UInt_t i=0; i<fGradVecLin.size(); i++) {
       lval = fGradVecLin[i];
       //      std::cout << "LC = " << lval << " ; thresh = " << useThresh << std::endl;
-      if (fabs(lval)>=useLThresh) {
-         //         if (fabs(lval)>=lthresh) {
+      if (TMath::Abs(lval)>=useLThresh) {
+         //         if (TMath::Abs(lval)>=lthresh) {
          lcoef = fRuleEnsemble->GetLinCoefficients(i) + fGDPathStep*lval;
          fRuleEnsemble->SetLinCoefficient(i,lcoef);
       }

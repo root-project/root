@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Rule.cxx,v 1.19 2006/10/04 22:29:27 andreas.hoecker Exp $
+// @(#)root/tmva $Id: Rule.cxx,v 1.1 2006/10/09 15:55:02 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss 
 
 /**********************************************************************************
@@ -624,8 +624,8 @@ bool TMVA::RuleCmp::operator()( const Rule * first, const Rule * second ) const
             a = node->GetCutValue();
             b = secondNode->GetCutValue();
             s = a+b;
-            if (fabs(s)>0) {
-               p = fabs((a-b)/s);
+            if (TMath::Abs(s)>0) {
+               p = TMath::Abs((a-b)/s);
                if (p>0.001) equal=false; // check cut values
             }
          }

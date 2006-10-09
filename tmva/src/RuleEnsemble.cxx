@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleEnsemble.cxx,v 1.20 2006/10/03 17:49:10 tegen Exp $
+// @(#)root/tmva $Id: RuleEnsemble.cxx,v 1.1 2006/10/09 15:55:02 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -387,7 +387,7 @@ Double_t TMVA::RuleEnsemble::CalcLinImportance()
    //
    Double_t imp;
    for ( UInt_t i=0; i<nvars; i++ ) {
-      imp = fabs(fLinCoefficients[i]);//*fLinNorm[i]/fAverageRuleSigma;
+      imp = TMath::Abs(fLinCoefficients[i]);//*fLinNorm[i]/fAverageRuleSigma;
       fLinImportance[i] = imp;
       if (imp>maxImp) maxImp = imp;
    }
