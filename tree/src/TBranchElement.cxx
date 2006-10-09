@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.208 2006/08/17 22:46:41 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.209 2006/09/13 07:14:20 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -1794,13 +1794,14 @@ void TBranchElement::InitializeOffsets()
          }
 
          Bool_t isBaseSubBranch = kFALSE;
-         if ((subBranch->fType == 1) || (subBranchElement->IsA() == TStreamerBase::Class()) || ((subBranch->fType == 4) && subBranchElement->IsBase())) {
+         if ((subBranch->fType == 1) || (subBranchElement->IsBase())) {
             // -- Base class sub-branch (1).
             //
             // Note: Our type will not be 1, even though we are
             // a base class branch, if we are not split (see the
             // constructor), or if we are an STL container master
-            // branch and a base class branch at the same time.
+            // branch and a base class branch at the same time
+            // or an std::string.
             isBaseSubBranch = kTRUE;
          }
 
