@@ -8,7 +8,7 @@ CLEAN_TARGETS += data.root dummy*.root problem.root tree.root
 #Set the list of target to make while testing
 TEST_TARGETS += ursula inheritAndOwn BadBaseAddresses treeBranch iobug \
 	merging headerTest clonesATest EmbeddedTest inheritTest \
-	relationsTest suetest Jantest deepnesT
+	relationsTest suetest Jantest deepnesT baseString
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -125,4 +125,7 @@ Jantest: Jantest.log
 	$(TestDiff)
 
 deepnest: deepnest.clog
+	$(TestDiff)
+
+baseString: baseString.clog
 	$(TestDiff)
