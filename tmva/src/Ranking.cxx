@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Ranking.cxx,v 1.5 2006/08/30 22:19:59 andreas.hoecker Exp $
+// @(#)root/tmva $Id: Ranking.cxx,v 1.1 2006/10/09 15:55:02 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -59,8 +59,8 @@ namespace TMVA {
       fRanking.push_back( rank );
 
       // sort according to rank value (descending)
-      std::sort   ( fRanking.begin(), fRanking.end() );
-      std::reverse( fRanking.begin(), fRanking.end() );
+      //std::sort   ( fRanking.begin(), fRanking.end() ); //PLEASE FIX ME
+      //std::reverse( fRanking.begin(), fRanking.end() );
       for (UInt_t i=0; i<fRanking.size(); i++) fRanking[i].SetRank( i+1 );
    }
     

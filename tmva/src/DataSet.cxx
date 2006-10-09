@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DataSet.cxx,v 1.56 2006/10/04 22:29:27 andreas.hoecker Exp $
+// @(#)root/tmva $Id: DataSet.cxx,v 1.1 2006/10/09 15:55:02 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -110,8 +110,10 @@ Bool_t TMVA::DataSet::ApplyTransformation( Types::PreprocessingMethod corr, Bool
    case Types::kPCA: {
       const Int_t nvar = GetNVariables();
 
-      Double_t dv[nvar];
-      Double_t rv[nvar];
+      //Double_t dv[nvar];
+      //Double_t rv[nvar];
+      Double_t dv[100]; //PLEASE FIX ME
+      Double_t rv[100];
       for (Int_t ivar=0; ivar<nvar; ivar++) dv[ivar] = Event().GetVal(ivar);
       
       // Perform PCA and put it into PCAed events tree
@@ -603,12 +605,18 @@ void TMVA::DataSet::PlotVariables( TTree* theTree, TString folderName, Types::Pr
 
    // Create all histograms
    // do both, scatter and profile plots
-   TH1F*     vS[nvar];
-   TH1F*     vB[nvar];
-   TH2F*     mycorrS[nvar][nvar];
-   TH2F*     mycorrB[nvar][nvar];
-   TProfile* myprofS[nvar][nvar];
-   TProfile* myprofB[nvar][nvar];
+   //TH1F*     vS[nvar];
+   //TH1F*     vB[nvar];
+   //TH2F*     mycorrS[nvar][nvar];
+   //TH2F*     mycorrB[nvar][nvar];
+   //TProfile* myprofS[nvar][nvar];
+   //TProfile* myprofB[nvar][nvar];
+   TH1F*     vS[20]; //PLEASE FIX ME
+   TH1F*     vB[20];
+   TH2F*     mycorrS[20][20];
+   TH2F*     mycorrB[20][20];
+   TProfile* myprofS[20][20];
+   TProfile* myprofB[20][20];
 
    Float_t timesRMS  = 4.0;
    UInt_t  nbins1D   = 70;
