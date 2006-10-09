@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Node.cxx,v 1.13 2006/10/04 22:29:27 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: Node.cxx,v 1.4 2006/10/09 15:55:02 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -99,12 +99,12 @@ Int_t TMVA::Node::CountMeAndAllDaughters( void ) const
 void TMVA::Node::Print(ostream& os) const
 {
    //print the node
-   os << "< ***  " <<endl << " node.Data: " << this->GetData() << "at address " <<int(this->GetData()) <<endl;
+   os << "< ***  " <<endl << " node.Data: " << this->GetData() << "at address " <<long(this->GetData()) <<endl;
    os << "Selector: " <<  this->GetSelector() <<endl;
-   os << "My address is " << int(this) << ", ";
-   if (this->GetParent() != NULL) os << " parent at addr: " << int(this->GetParent()) ;
-   if (this->GetLeft() != NULL) os << " left daughter at addr: " << int(this->GetLeft());
-   if (this->GetRight() != NULL) os << " right daughter at addr: " << int(this->GetRight()) ;
+   os << "My address is " << long(this) << ", ";
+   if (this->GetParent() != NULL) os << " parent at addr: " << long(this->GetParent()) ;
+   if (this->GetLeft() != NULL) os << " left daughter at addr: " << long(this->GetLeft());
+   if (this->GetRight() != NULL) os << " right daughter at addr: " << long(this->GetRight()) ;
    
    os << " **** > "<< endl;
 }
