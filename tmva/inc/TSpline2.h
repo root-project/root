@@ -1,11 +1,10 @@
-// @(#)root/tmva $Id: TSpline2.h,v 1.9 2006/08/30 22:20:00 andreas.hoecker Exp $
+// @(#)root/tmva $Id: TSpline2.h,v 1.2 2006/05/23 13:03:15 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TSpline2                                                              *
- * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Quadratic spline class; uses quadrax function for interpolation           *
@@ -24,7 +23,10 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (http://mva.sourceforge.net/license.txt)                                       *
+ *                                                                                *
+ * File and Version Information:                                                  *
+ * $Id: TSpline2.h,v 1.2 2006/05/23 13:03:15 brun Exp $        
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_TSpline2
@@ -64,7 +66,8 @@ namespace TMVA {
                        const Float_t cos3 ) const;
   
       ClassDef(TSpline2,0) //Quadratic interpolation class (using quadrax)
-   };
+         };
+
 
 } // namespace TMVA
 

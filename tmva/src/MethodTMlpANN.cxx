@@ -1,10 +1,13 @@
-// @(#)root/tmva $Id: MethodTMlpANN.cxx,v 1.28 2006/10/01 16:13:55 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: MethodTMlpANN.cxx,v 1.3 2006/05/23 19:35:06 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+
+// @(#)root/tmva $Id: MethodTMlpANN.cxx,v 1.3 2006/05/23 19:35:06 brun Exp $ 
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : MethodTMlpANN                                                         *
- * Web    : http://tmva.sourceforge.net                                           *
+ * Class  : TMVA::MethodTMlpANN                                                   *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -23,7 +26,8 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (http://mva.sourceforge.net/license.txt)                                       *
+ *                                                                                *
  **********************************************************************************/
 
 //_______________________________________________________________________
@@ -59,145 +63,94 @@
 
 // some additional TMlpANN options
 const Bool_t EnforceNormalization__=kTRUE;
-const TMultiLayerPerceptron::LearningMethod LearningMethod__= TMultiLayerPerceptron::kStochastic;
-// const TMultiLayerPerceptron::LearningMethod LearningMethod__= TMultiLayerPerceptron::kBatch;
+const TMultiLayerPerceptron::LearningMethod LearningMethod__=TMultiLayerPerceptron::kStochastic;
 
 ClassImp(TMVA::MethodTMlpANN)
 
+
 //_______________________________________________________________________
-TMVA::MethodTMlpANN::MethodTMlpANN( TString jobName, TString methodTitle, DataSet& theData, 
-                                    TString theOption, TDirectory* theTargetDir)
-   : TMVA::MethodBase(jobName, methodTitle, theData, theOption, theTargetDir  )
-   , fMLP(0)
+TMVA::MethodTMlpANN::MethodTMlpANN( TString jobName, std::vector<TString>* theVariables,  
+                                    TTree* theTree, TString theOption, TDirectory* theTargetDir)
+   : TMVA::MethodBase(jobName, theVariables, theTree, theOption, theTargetDir  )
 {
    // standard constructor 
-   InitTMlpANN();
-   
-   DeclareOptions();
+   // option string is interpreted in base class: MethodANNBase
 
-   ParseOptions();
-
-   ProcessOptions();  
-}
-
-//_______________________________________________________________________
-TMVA::MethodTMlpANN::MethodTMlpANN( DataSet& theData, 
-                                    TString theWeightFile,  
-                                    TDirectory* theTargetDir )
-   : TMVA::MethodBase( theData, theWeightFile, theTargetDir ) 
-   , fMLP(0)
-{
-   // constructor to calculate the TMlpANN-MVA from previously generatad 
-   // weigths (weight file)
    InitTMlpANN();
 
-   DeclareOptions();
-}
-
-//_______________________________________________________________________
-void TMVA::MethodTMlpANN::InitTMlpANN( void )
-{
-   // default initialisations
-   SetMethodName( "TMlpANN" );
-   SetMethodType( TMVA::Types::TMlpANN );
-   SetTestvarName();
-}
-
-//_______________________________________________________________________
-TMVA::MethodTMlpANN::~MethodTMlpANN( void )
-{
-   // destructor
-   if(fMLP!=0) delete fMLP;
-}
-
-//_______________________________________________________________________
-void TMVA::MethodTMlpANN::CreateMLPOptions( TString layerSpec )
-{
-   // translates options from option string into TMlpANN language
-
-   fHiddenLayer = ":";
-
-   while(layerSpec.Length()>0) {
-      TString sToAdd="";
-      if(layerSpec.First(',')<0) {
-         sToAdd = layerSpec;
-         layerSpec = "";
-      } else {
-         sToAdd = layerSpec(0,layerSpec.First(','));
-         layerSpec = layerSpec(layerSpec.First(',')+1,layerSpec.Length());
-      }
-      int nNodes = 0;
-      if(sToAdd.BeginsWith("N")) { sToAdd.Remove(0,1); nNodes = GetNvar(); }
-      nNodes += atoi(sToAdd);
-      fHiddenLayer = Form( "%s%i:", (const char*)fHiddenLayer, nNodes );
+   if (fOptions.Sizeof()<2){
+      fOptions = "3000:N-1:N-2";
+      cout << "--- " << GetName() << ": using default options= "<< fOptions << endl;
    }
 
-
-   // set input vars
-   vector<TString>::iterator itrVar    = (*fInputVars).begin();
-   vector<TString>::iterator itrVarEnd = (*fInputVars).end();
-   fMLPBuildOptions="";
-   for (; itrVar != itrVarEnd; itrVar++) {
-      if (EnforceNormalization__) fMLPBuildOptions += "@";
-      TString myVar = *itrVar; ;
-      fMLPBuildOptions += myVar;
-      fMLPBuildOptions += ",";
-   }
-   fMLPBuildOptions.Chop(); // remove last ","
-
-   // prepare final options for MLP kernel
-   fMLPBuildOptions += fHiddenLayer;
-   fMLPBuildOptions += "type";
-
+   // create full configuration string
+   CreateMLPOptions();
+  
    cout << "--- " << GetName() << ": use " << fNcycles << " training cycles" << endl;
    cout << "--- " << GetName() << ": use configuration (nodes per hidden layer): " 
         << fHiddenLayer << endl;  
 }
 
 //_______________________________________________________________________
-void TMVA::MethodTMlpANN::DeclareOptions() 
+TMVA::MethodTMlpANN::MethodTMlpANN( vector<TString> *theVariables, 
+                                    TString theWeightFile,  
+                                    TDirectory* theTargetDir )
+   : TMVA::MethodBase( theVariables, theWeightFile, theTargetDir ) 
 {
-   DeclareOptionRef(fNcycles=3000,"NCycles","Number of training cycles");
-   DeclareOptionRef(fLayerSpec="N-1,N-2","HiddenLayers","Specification of the hidden layers");
+   // constructor to calculate the TMlpANN-MVA from previously generatad 
+   // weigths (weight file)
+   InitTMlpANN();
 }
 
 //_______________________________________________________________________
-void TMVA::MethodTMlpANN::ProcessOptions() 
+void TMVA::MethodTMlpANN::InitTMlpANN( void )
 {
-   CreateMLPOptions(fLayerSpec);
+   // default initialisations
+   fMethodName = "TMlpANN";
+   fMethod     = TMVA::Types::TMlpANN;
+   fTestvar    = fTestvarPrefix+GetMethodName();
+}
 
-   // Here we create a dummy tree necessary to create 
-   // a minimal NN
-   // this NN gets recreated before training
-   // but can be used for testing (see method GetMvaVal() )
-   static Double_t* d = new Double_t[Data().GetNVariables()] ;
-   static Int_t   type;
+//_______________________________________________________________________
+TMVA::MethodTMlpANN::~MethodTMlpANN( void )
+{
+   // destructor
+}
 
-   gROOT->cd();
-   TTree * dummyTree = new TTree("dummy","Empty dummy tree", 1);
-   for(UInt_t ivar = 0; ivar<Data().GetNVariables(); ivar++) {
-      TString vn = Data().GetInternalVarName(ivar);
-      dummyTree->Branch(Form("%s",vn.Data()), d+ivar, Form("%s/D",vn.Data()));
+//_______________________________________________________________________
+void TMVA::MethodTMlpANN::CreateMLPOptions( void )
+{
+   // translates options from option string into TMlpANN language
+
+   // parse the option string
+   vector<Int_t>* nodes = ParseOptionString( fOptions, fNvar, new vector<Int_t>() );
+   fNcycles = (*nodes)[0];
+   fHiddenLayer = ":";
+   for (UInt_t i=1; i<nodes->size(); i++) 
+      fHiddenLayer = Form( "%s%i:", (const char*)fHiddenLayer, (*nodes)[i] );
+
+   // set input vars
+   vector<TString>::iterator itrVar    = (*fInputVars).begin();
+   vector<TString>::iterator itrVarEnd = (*fInputVars).end();
+   fOptions="";
+   for (; itrVar != itrVarEnd; itrVar++) {
+      if (EnforceNormalization__) fOptions += "@";
+      TString myVar = *itrVar; ;
+      fOptions += myVar;
+      fOptions += ",";
    }
-   dummyTree->Branch("type", &type, "type/I");
+   fOptions.Chop(); // remove last ","
 
-   if(fMLP!=0) delete fMLP;
-   fMLP = new TMultiLayerPerceptron( fMLPBuildOptions.Data(), dummyTree );
+   // prepare final options for MLP kernel
+   fOptions += fHiddenLayer;
+   fOptions += "type";
+
+   delete nodes;
 }
 
-//_______________________________________________________________________
-Double_t TMVA::MethodTMlpANN::GetMvaValue()
-{
-   static Double_t* d = new Double_t[Data().GetNVariables()];
-   for(UInt_t ivar = 0; ivar<Data().GetNVariables(); ivar++) {
-      d[ivar] = (Double_t)Data().Event().GetVal(ivar);
-   }
-   Double_t mvaVal = fMLP->Evaluate(0,d);
-   return mvaVal;
-}
 
 //_______________________________________________________________________
-void TMVA::MethodTMlpANN::Train( void )
+void  TMVA::MethodTMlpANN::Train( void )
 {
    // performs TMlpANN training
    // available learning methods:
@@ -215,79 +168,172 @@ void TMVA::MethodTMlpANN::Train( void )
    }
   
    if (Verbose()) 
-      cout << "--- " << GetName() << " <verbose>: option string: " << GetOptions() << endl;
+      cout << "--- " << GetName() << " <verbose>: option string: " << fOptions << endl;
 
    // TMultiLayerPerceptron wants test and training tree at once
    // so merge the training and testing trees from the MVA factory first:
 
-   TTree *localTrainingTree  = Data().GetTrainingTree()->CloneTree();
-   localTrainingTree->CopyEntries(GetTestTree());
+   Double_t v[100];
+   Int_t type;  
+   TTree *localTrainingTree  = new TTree("localTrainingTree","Merged fTraining + fTestTree");
+   localTrainingTree->Branch("type",&type,"type/I");
+   for(Int_t ivar=0; ivar<fNvar; ivar++) {
+      if (!(*fInputVars)[ivar].Contains("type")) {
+         localTrainingTree->Branch( (*fInputVars)[ivar], &v[ivar], (*fInputVars)[ivar] + "/D" );
+      }
+   }
+
+   // loop over training tree and fill local training tree
+   for (Int_t ievt=0;ievt<fTrainingTree->GetEntries(); ievt++) {
+      type = (Int_t)TMVA::Tools::GetValue( fTrainingTree, ievt, "type" );
+      for (Int_t ivar=0; ivar<fNvar; ivar++) {
+         if (!(*fInputVars)[ivar].Contains("type")) {
+            v[ivar] =  TMVA::Tools::GetValue( fTrainingTree, ievt, (*fInputVars)[ivar] );
+         }
+      }
+      localTrainingTree->Fill();        
+   }
+
+   // loop over test tree and fill local training tree
+   for (Int_t ievt=0;ievt<fTestTree->GetEntries(); ievt++) {
+      type = (Int_t)TMVA::Tools::GetValue( fTestTree, ievt, "type" );
+      for(Int_t ivar=0; ivar<fNvar; ivar++) {
+         if (!(*fInputVars)[ivar].Contains("type")) {
+            v[ivar]= TMVA::Tools::GetValue( fTestTree, ievt, (*fInputVars)[ivar] );
+         }
+      }
+      localTrainingTree->Fill();        
+   }
   
    // These are the event lists for the mlp train method
    // first events in the tree are for training
    // the rest for internal testing...
    TString trainList = "Entry$<";
-   trainList += (Int_t)Data().GetNEvtTrain();
+   trainList += (Int_t)fTrainingTree->GetEntries();
    TString testList  = "Entry$>=";
-   testList  += (Int_t)Data().GetNEvtTrain();
+   testList  += (Int_t)fTrainingTree->GetEntries();
 
    // create NN 
-   if(fMLP!=0) delete fMLP;
-   fMLP = new TMultiLayerPerceptron( fMLPBuildOptions.Data(), 
-                                     localTrainingTree,
-                                     trainList,
-                                     testList );
+   TMultiLayerPerceptron *mlp = new TMultiLayerPerceptron( fOptions, 
+                                                           localTrainingTree,
+                                                           trainList,
+                                                           testList );
   
    // set learning method
-   fMLP->SetLearningMethod( LearningMethod__ );
+   mlp->SetLearningMethod( LearningMethod__ );
 
    // train NN
-   fMLP->Train(fNcycles, "text,update=200");
+   mlp->Train(fNcycles, "text,update=200");
 
    // write weights to File;
-   // this is not nice, but fMLP gets deleted at the end of Train()
+   // this is not nice, but mlp gets deleted at the end of Train()
+   mlp->DumpWeights(GetWeightFileName());
+   WriteWeightsToFile();
+
    localTrainingTree->Delete();
+   delete mlp;
 }
 
 //_______________________________________________________________________
-void  TMVA::MethodTMlpANN::WriteWeightsToStream( ostream & o ) const
+void  TMVA::MethodTMlpANN::WriteWeightsToFile( void )
 {
-   // write weights to stream
+   // write weights to file
+   TString fname = GetWeightFileName();
+   cout << "--- " << GetName() << ": creating weight file: " << fname << endl;
 
-   // since the MLP can not write to stream and provides no access to its content
-   // except through DumpWeights(filename), we 
-   // 1st: dump the weights
-   fMLP->DumpWeights("weights/TMlp.nn.weights.temp");
-   // 2nd: read them back
-   ifstream inf("weights/TMlp.nn.weights.temp");
-   // 3rd: write them to the stream
-   o << inf.rdbuf();
-   inf.close();
-   // here we can delete the temporary file
-   // how?
+   //assume that the weights are already written
+   // this method just adds the net structure to the weights file
+   ofstream fout( fname , ios::out | ios::app);
+   if (!fout.good( )) { // file not found --> Error
+      cout << "--- " << GetName() << ": Error in ::WriteWeightsToFile: "
+           << "unable to open output  weight file: " << fname << endl;
+      exit(1);
+   }
+   fout << fOptions;
+   fout.close();  
 }
   
 //_______________________________________________________________________
-void  TMVA::MethodTMlpANN::ReadWeightsFromStream( istream & istr )
+void  TMVA::MethodTMlpANN::ReadWeightsFromFile( void )
 {
-   // read weights from stream
-   // since the MLP can not read from the stream, we
-   // 1st: write the weights to temporary file
-   ofstream fout("weights/TMlp.nn.weights.temp");
-   fout << istr.rdbuf();
-   fout.close();
-   // 2nd: load the weights from the temporary file into the MLP
-   // the MLP is already build
-   cout << "Load TMLP weights" << endl;
-   fMLP->LoadWeights("weights/TMlp.nn.weights.temp");
-   // here we can delete the temporary file
-   // how?
+   // read weights from file
+   TString fname = GetWeightFileName();
+   cout << "--- " << GetName() << ": reading weight file: " << fname << endl;
+   ifstream fin( fname );
+
+   if (!fin.good( )) { // file not found --> Error
+      cout << "--- " << GetName() << ": Error in ::ReadWeightsFromFile: "
+           << "unable to open input file: " << fname << endl;
+      exit(1);
+   }
+
+   while (!fin.eof()) fin >> fOptions;
+
+   fin.close();  
 }
 
 //_______________________________________________________________________
-void  TMVA::MethodTMlpANN::WriteHistosToFile( void ) const
+void TMVA::MethodTMlpANN::PrepareEvaluationTree( TTree* testTree )
+{
+   // evaluate method
+   
+   // A new branch is added to the TestTree which contains the outout of the neural network
+   if (Verbose()) cout << "--- " << GetName() << " <verbose>: begin testing" << endl;
+    
+   Double_t v[100];
+   Int_t type;  
+
+   TTree *localTestTree  = new TTree("localTestTree","copy of testTree");
+   localTestTree->Branch("type",&type,"type/I",128000);
+   for (Int_t ivar=0; ivar<fNvar; ivar++) {
+      if (!(*fInputVars)[ivar].Contains("type")) {
+         localTestTree->Branch( (*fInputVars)[ivar], &v[ivar], (*fInputVars)[ivar] + "/D",128000 );
+      }
+   }
+  
+   // loop over training tree and fill local training tree
+   for (Int_t ievt=0;ievt<testTree->GetEntries(); ievt++) {
+      type = (Int_t)TMVA::Tools::GetValue( testTree, ievt, "type" );
+      for (Int_t ivar=0; ivar<fNvar; ivar++) {
+         if (!(*fInputVars)[ivar].Contains("type")) {
+            v[ivar] =  TMVA::Tools::GetValue( testTree, ievt, (*fInputVars)[ivar] );
+         }
+      }
+      localTestTree->Fill();        
+   }
+  
+   // get net structure from weights file
+   ReadWeightsFromFile();
+
+   // create Net
+   TMultiLayerPerceptron *mlp = new TMultiLayerPerceptron( fOptions, localTestTree );
+   mlp->LoadWeights(GetWeightFileName());
+  
+   // add new branch to testTree
+   Double_t myMVA;
+   TBranch *newBranch = testTree->Branch( fTestvar, &myMVA, fTestvar + "/D" );
+   
+   // loop over testTree
+   for (Int_t i=0; i< (testTree->GetEntries()) ; i++) {
+      myMVA=mlp->Result(i);
+      newBranch->Fill();
+   }
+   
+   localTestTree->Delete();
+   delete mlp;
+}
+
+//_______________________________________________________________________
+void TMVA::MethodTMlpANN::SetTestTree( TTree* testTree )
+{
+   // set the test tree
+   fTestTree = testTree;
+}
+
+//_______________________________________________________________________
+void  TMVA::MethodTMlpANN::WriteHistosToFile( void )
 {
    // write special monitoring histograms to file - not implemented for TMlpANN
    cout << "--- " << GetName() << ": write " << GetName() 
-        << " special histos to file: " << BaseDir()->GetPath() << endl;
+        << " special histos to file: " << fBaseDir->GetPath() << endl;
 }

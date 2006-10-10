@@ -1,11 +1,7 @@
-// @(#)root/tmva $Id: SeparationBase.cxx,v 1.9 2006/08/30 22:19:59 andreas.hoecker Exp $   
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
-
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : SeparationBase                                                        *
- * Web    : http://tmva.sourceforge.net                                           *
+ * Class  : TMVA::SeparationBase                                                  *
  *                                                                                *
  * Description: An interface to different separation critiera useded in various   *
  *              training algorithms, as there are:                                *
@@ -39,7 +35,8 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://ttmva.sourceforge.net/LICENSE)                                         *
+ * (http://tmva.sourceforge.net/license.txt)                                      *
+ *                                                                                *
  **********************************************************************************/
 
 #include "TMVA/SeparationBase.h"
@@ -47,8 +44,8 @@
 ClassImp(TMVA::SeparationBase)
 
 //_______________________________________________________________________
-Double_t TMVA::SeparationBase::GetSeparationGain(const Double_t &nSelS, const Double_t& nSelB, 
-                                                 const Double_t& nTotS, const Double_t& nTotB)
+   Double_t TMVA::SeparationBase::GetSeparationGain(const Double_t &nSelS, const Double_t& nSelB, 
+                                                    const Double_t& nTotS, const Double_t& nTotB)
 {
    // Separation Gain:                                                     
    // the measure of how the quality of separation of the sample increases 

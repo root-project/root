@@ -1,11 +1,7 @@
-// @(#)root/tmva $Id: Reader.cxx,v 1.26 2006/10/02 09:10:39 andreas.hoecker Exp $   
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
-
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : Reader                                                                *
- * Web    : http://tmva.sourceforge.net                                           *
+ * Class  : TMVA::Reader                                                          *
  *                                                                                *
  * Description:                                                                   *
  *      Reader class to be used in the user application to interpret the trained  *
@@ -18,14 +14,15 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://ttmva.sourceforge.net/LICENSE)                                         *
+ * (http://tmva.sourceforge.net/license.txt)                                      *
+ *                                                                                *
  **********************************************************************************/
 
 //_______________________________________________________________________
@@ -33,48 +30,46 @@
 //  The Reader class serves to use the MVAs in a specific analysis context.
 //  Within an event loop, a vector is filled that corresponds to the variables
 //  that were used to train the MVA(s) during the training stage. This vector
-//  is transfered to the Reader, who takes care of interpreting the weight 
-//  file of the MVA of choice, and to return the MVA's output. This is then 
+//  is transfered to the Reader, who takes care of interpreting the weight
+//  file of the MVA of choice, and to return the MVA's output. This is then
 //  used by the user for further analysis.
 //
 //  ---------------------------------------------------------------------
 //  Usage:
-//           
-//    // ------ before starting the event loop (eg, in the initialisation step)
 //
-//    //
-//    // create TMVA::Reader object
-//    //
-//    TMVA::Reader *reader = new TMVA::Reader();    
+//    // ------ before starting the event loop
 //
-//    // create a set of variables and declare them to the reader
-//    // - the variable names must corresponds in name and type to 
-//    // those given in the weight file(s) that you use
-//    Float_t var1, var2, var3, var4;
-//    reader->AddVariable( "var1", &var1 );
-//    reader->AddVariable( "var2", &var2 );
-//    reader->AddVariable( "var3", &var3 );
-//    reader->AddVariable( "var4", &var4 );
-//      
-//    // book the MVA of your choice (prior training of these methods, ie, 
-//    // existence of the weight files is required)
-//    reader->BookMVA( "Fisher method",  "weights/Fisher.weights.txt"   );
-//    reader->BookMVA( "MLP method",     "weights/MLP.weights.txt" );
+//    // fill vector with variable names according to the definition and order
+//    // used in the training stage
+//    vector<string> inputVars;
+//    inputVars.push_back( "var1" );
+//    inputVars.push_back( "var2" );
+//    inputVars.push_back( "var3" );
+//    inputVars.push_back( "var4" );
+//
+//    // create the Reader object
+//    Reader *reader = new TMVA_Reader( inputVars );
+//
+//    // book the MVA of your choice (prior training of these methods, ie,
+//    // existence of weight files is required)
+//    reader->BookMVA( TMVA_Types::Fisher,   "weights/Fisher.weights" );
+//    reader->BookMVA( TMVA_Types::CFMlpANN, "weights/CFMlpANN.weights" );
 //    // ... etc
-//    
-//    // ------- start your event loop
+//
+//    // ------- start the event loop
 //
 //    for (Long64_t ievt=0; ievt<myTree->GetEntries();ievt++) {
 //
-//      // fill vector with values of variables computed from those in the tree
-//      var1 = myvar1;
-//      var2 = myvar2;
-//      var3 = myvar3;
-//      var4 = myvar4;
-//            
+//      // fill vector with values of variables
+//      vector<double> varValues;
+//      varValues.push_back( var1 );
+//      varValues.push_back( var2 );
+//      varValues.push_back( var3 );
+//      varValues.push_back( var4 );
+//
 //      // retrieve the corresponding MVA output
-//      double mvaFi = reader->EvaluateMVA( "Fisher method" );
-//      double mvaNN = reader->EvaluateMVA( "MLP method"    );
+//      double mvaFi  = reader->EvaluateMVA( varValues, TMVA_Types::Fisher );
+//      double mvaNN  = reader->EvaluateMVA( varValues, TMVA_Types::CFMlpANN );
 //
 //      // do something with these ...., e.g., fill them into your ntuple
 //
@@ -83,7 +78,8 @@
 //    delete reader;
 //  ---------------------------------------------------------------------
 //
-//  An example application of the Reader can be found in TMVA/macros/TMVApplication.C.
+//  The example application of the Reader: "TMVApplication.cxx" can be found
+//  in the ROOT tutorial directory.
 //_______________________________________________________________________
 
 #include "TTree.h"
@@ -93,6 +89,7 @@
 #include "TH1D.h"
 #include "TKey.h"
 #include "TVector.h"
+#include "Riostream.h"
 #include <stdlib.h>
 
 #include "TMVA/Reader.h"
@@ -104,52 +101,38 @@
 #include "TMVA/MethodCFMlpANN.h"
 #include "TMVA/MethodTMlpANN.h"
 #include "TMVA/MethodBDT.h"
-#include "TMVA/MethodMLP.h"
-#include "TMVA/MethodRuleFit.h"
 
 ClassImp(TMVA::Reader)
 
 //_______________________________________________________________________
-TMVA::Reader::Reader( Bool_t verbose )
-   : fDataSet  ( new DataSet ),
-     fVerbose  ( verbose )
-{
-   // constructor
-   Init();
-}
-
-//_______________________________________________________________________
 TMVA::Reader::Reader( vector<TString>& inputVars, Bool_t verbose )
-   : fDataSet  ( new DataSet ),
+   : fInputVars( &inputVars ),
      fVerbose  ( verbose )
 {
    // constructor
    // arguments: names of input variables (vector)
    //            verbose flag
-   for (vector<TString>::iterator ivar = inputVars.begin(); ivar != inputVars.end(); ivar++) 
-      Data().AddVariable( *ivar );
-      
    Init();
 }
 
 //_______________________________________________________________________
 TMVA::Reader::Reader( vector<string>& inputVars, Bool_t verbose )
-   : fDataSet( new DataSet ),
-     fVerbose( verbose )
+   : fVerbose  ( verbose )
 {
    // constructor
    // arguments: names of input variables (vector)
    //            verbose flag
-   for (vector<string>::iterator ivar = inputVars.begin(); ivar != inputVars.end(); ivar++) 
-      Data().AddVariable( ivar->c_str() );
+   fInputVars = new vector<TString>;
+   for (vector<string>::iterator ivar = inputVars.begin(); ivar != inputVars.end(); ivar++)
+      fInputVars->push_back( ivar->c_str() );
 
    Init();
 }
 
 //_______________________________________________________________________
 TMVA::Reader::Reader( const string varNames, Bool_t verbose )
-   : fDataSet( new DataSet ),
-     fVerbose( verbose )
+   : fInputVars( 0 ),
+     fVerbose  ( verbose )
 {
    // constructor
    // arguments: names of input variables given in form: "name1:name2:name3"
@@ -160,8 +143,8 @@ TMVA::Reader::Reader( const string varNames, Bool_t verbose )
 
 //_______________________________________________________________________
 TMVA::Reader::Reader( const TString varNames, Bool_t verbose )
-   : fDataSet( new DataSet ),
-     fVerbose( verbose )
+   : fInputVars( 0 ),
+     fVerbose  ( verbose )
 {
    // constructor
    // arguments: names of input variables given in form: "name1:name2:name3"
@@ -174,7 +157,7 @@ TMVA::Reader::Reader( const TString varNames, Bool_t verbose )
 TMVA::Reader::~Reader( void )
 {
    // destructor
-}  
+}
 
 //_______________________________________________________________________
 void TMVA::Reader::Init( void )
@@ -183,166 +166,84 @@ void TMVA::Reader::Init( void )
 }
 
 //_______________________________________________________________________
-void TMVA::Reader::AddVariable( const TString& expression, float* datalink) 
+Bool_t TMVA::Reader::BookMVA( TMVA::Types::MVA mva, TString weightfile )
 {
-   Data().AddVariable(expression, 'F', (void*)datalink);
-}
-
-//_______________________________________________________________________
-void TMVA::Reader::AddVariable( const TString& expression, int* datalink) 
-{
-   Data().AddVariable(expression, 'I', (void*)datalink);
-}
-
-//_______________________________________________________________________
-TMVA::IMethod* TMVA::Reader::BookMVA( TString methodName, TString weightfile )
-{
-   // read method name from weight file
-   ifstream fin( weightfile );
-   if(!fin.good()) { // file not found --> Error
-      cout << "--- " << GetName() << "::BookMVA: fatal error: "
-           << "unable to open input weight file: " << weightfile << endl;
-      exit(1);
-   }
-
-   char buf[512];
-
-   // read the method name
-   fin.getline(buf,512);
-   while (!TString(buf).BeginsWith("Method")) fin.getline(buf,512);
-   TString ls(buf);
-   Int_t idx1 = ls.First(':')+2; Int_t idx2 = ls.Index(' ',idx1)-idx1; if (idx2<0) idx2=ls.Length();
-   fin.close();  
-
-   TString MethodTypeFromFile = ls(idx1,idx2);
-
-   MethodBase* method = (MethodBase*)this->BookMVA( TMVA::gTypes.GetMethodType(MethodTypeFromFile), 
-                                                    weightfile );
-   method->SetMethodTitle(methodName);
-
-   return fMethodMap[methodName] = method;
-}
-
-
-//_______________________________________________________________________
-TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::MVA methodType, TString weightfile )
-{
-   IMethod* method = 0;
    // books MVA method from weightfile
-   switch (methodType) {
+   switch (mva) {
 
    case (TMVA::Types::Cuts):
-      method = new TMVA::MethodCuts( Data(), weightfile );    
+      fMethods.push_back( new TMVA::MethodCuts( fInputVars, weightfile ) );
       break;
 
    case (TMVA::Types::Likelihood):
-      method = new TMVA::MethodLikelihood( Data(), weightfile );
-      break; 
+      fMethods.push_back( new TMVA::MethodLikelihood( fInputVars, weightfile ) );
+      break;
 
    case (TMVA::Types::PDERS):
-      method = new TMVA::MethodPDERS( Data(), weightfile );
-      break; 
+      fMethods.push_back( new TMVA::MethodPDERS( fInputVars, weightfile ) );
+      break;
 
    case (TMVA::Types::HMatrix):
-      method = new TMVA::MethodHMatrix( Data(), weightfile );
-      break; 
+      fMethods.push_back( new TMVA::MethodHMatrix( fInputVars, weightfile ) );
+      break;
 
    case (TMVA::Types::Fisher):
-      method = new TMVA::MethodFisher( Data(), weightfile );
-      break; 
+      fMethods.push_back( new TMVA::MethodFisher( fInputVars, weightfile ) );
+      break;
 
    case (TMVA::Types::CFMlpANN):
-      method = new TMVA::MethodCFMlpANN( Data(), weightfile );
-      break; 
+      fMethods.push_back( new TMVA::MethodCFMlpANN( fInputVars, weightfile ) );
+      break;
 
    case (TMVA::Types::TMlpANN):
-      method = new TMVA::MethodTMlpANN( Data(), weightfile );
-      break; 
+      fMethods.push_back( new TMVA::MethodTMlpANN( fInputVars, weightfile ) );
+      break;
 
    case (TMVA::Types::BDT):
-      method = new TMVA::MethodBDT( Data(), weightfile );
-      break; 
+      fMethods.push_back( new TMVA::MethodBDT( fInputVars, weightfile ) );
+      break;
 
-   case (TMVA::Types::MLP):
-      method = new TMVA::MethodMLP( Data(), weightfile );
-     break;
-
-   case (TMVA::Types::RuleFit):
-      method = new TMVA::MethodRuleFit( Data(), weightfile );
-      break; 
-
-   default: 
-      cerr << "--- " << GetName() << ": MVA method: " << methodType << " not yet implemented ==> abort"
+   default:
+      cerr << "--- " << GetName() << ": MVA: " << mva << " not yet implemented ==> abort"
            << endl;
-      return 0;
-   }  
-
-   cout << "--- " << GetName() << ": booked MVA method: " << method->GetMethodName() << endl;
-
-   // read weight file
-   method->ReadStateFromFile();
-
-   return method;
-}
-
-//_______________________________________________________________________
-Double_t TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& inputVec, TString methodName, Double_t aux )
-{
-   for (UInt_t ivar=0; ivar<inputVec.size(); ivar++) Data().Event().SetVal( ivar, inputVec[ivar] );
-   
-   return EvaluateMVA( methodName, aux );
-}
-
-//_______________________________________________________________________
-Double_t TMVA::Reader::EvaluateMVA( const std::vector<Double_t>& inputVec, TString methodName, Double_t aux )
-{
-   for (UInt_t ivar=0; ivar<inputVec.size(); ivar++) Data().Event().SetVal( ivar, (Float_t)inputVec[ivar] );
-   
-   return EvaluateMVA( methodName, aux );
-}
-
-//_______________________________________________________________________
-Double_t TMVA::Reader::EvaluateMVA( TString methodName, Double_t aux )
-{
-   IMethod* method = 0;
-
-   // evaluates MVA for given set of input variables
-   std::map<const TString, IMethod*>::iterator it = fMethodMap.find( methodName );
-   if (it == fMethodMap.end()) {
-      cout << "--- " << GetName() << "EvaluateMVA(TString: fatal error: unknown method in map: " << method
-           << " ==> abort" << endl;
-      cout << " you looked for " << methodName<< " while the available methods are : " <<endl;
-      for ( it = fMethodMap.begin(); it!=fMethodMap.end(); it++) cout << "M" << it->first << endl;
-
-      exit(1);
+      return kFALSE;
    }
 
-   else method = it->second;
+   cout << "--- " << GetName() << ": booked method: " << fMethods.back()->GetMethodName()
+        << endl;
 
-   return this->EvaluateMVA( method, aux );
-}  
+   // read weight file
+   fMethods.back()->ReadWeightsFromFile();
+
+   return kTRUE;
+}
 
 //_______________________________________________________________________
-Double_t TMVA::Reader::EvaluateMVA( IMethod* method, Double_t aux )
+Double_t TMVA::Reader::EvaluateMVA( vector<Double_t>& inVar, TMVA::Types::MVA mva, Double_t aux )
 {
-   // evaluates the MVA
-  
-   if (method->GetPreprocessingMethod() != Types::kNone) Data().BackupEvent();
+   // evaluates MVA for given set of input variables
+   // the aux value is only needed for MethodCuts: it sets the required signal efficiency
 
-   // NOTE: in likelihood the preprocessing transformations are inserted by hand in GetMvaValue()
-   // (to distinguish signal and background transformations), and hence should not be applied here
-   if (method->GetMethodType() != Types::Likelihood) 
-      Data().ApplyTransformation( method->GetPreprocessingMethod(), kTRUE );
+   // need event
+   TMVA::Event e( inVar );
 
-   // the aux value is only needed for MethodCuts: it sets the required signal efficiency 
-   if (method->GetMethodType() == TMVA::Types::Cuts) 
-      ((TMVA::MethodCuts*)method)->SetTestSignalEfficiency( aux );
+   // iterate over methods and call evaluator
+   vector<TMVA::MethodBase*>::iterator itrMethod    = fMethods.begin();
+   vector<TMVA::MethodBase*>::iterator itrMethodEnd = fMethods.end();
+   for(; itrMethod != itrMethodEnd; itrMethod++) {
+      if ((*itrMethod)->GetMethod() == mva) {
+         if (mva == TMVA::Types::Cuts)
+            ((TMVA::MethodCuts*)(*itrMethod))->SetTestSignalEfficiency( aux );
+         return (*itrMethod)->GetMvaValue( &e );
+      }
+   }
 
-   Double_t mvaVal = method->GetMvaValue();
+   // method not found !
+   cerr << "--- Fatal error in " << GetName() << ": method: " << mva << " not found"
+        << " ==> abort" << endl;
+   exit(1);
 
-   if (method->GetPreprocessingMethod() != Types::kNone) Data().RestoreEvent();   
-
-   return mvaVal;
+   return -1.0;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -350,24 +251,27 @@ Double_t TMVA::Reader::EvaluateMVA( IMethod* method, Double_t aux )
 // ---------------------------------------------------------------------------------------
 
 //_______________________________________________________________________
-void TMVA::Reader::DecodeVarNames( const string varNames ) 
+void TMVA::Reader::DecodeVarNames( const string varNames )
 {
    // decodes "name1:name2:..." form
+   fInputVars = new vector<TString>;
+
    size_t ipos = 0, f = 0;
    while (f != varNames.length()) {
       f = varNames.find( ':', ipos );
       if (f > varNames.length()) f = varNames.length();
-      string subs = varNames.substr( ipos, f-ipos ); ipos = f+1;    
-      Data().AddVariable( subs.c_str() );
-   }  
+      string subs = varNames.substr( ipos, f-ipos ); ipos = f+1;
+      fInputVars->push_back( subs.c_str() );
+   }
 }
 
 //_______________________________________________________________________
 void TMVA::Reader::DecodeVarNames( const TString varNames )
 {
    // decodes "name1:name2:..." form
+   fInputVars = new vector<TString>;
 
-   TString format;  
+   TString format;
    Int_t   n = varNames.Length();
    TString format_obj;
 
@@ -376,8 +280,8 @@ void TMVA::Reader::DecodeVarNames( const TString varNames )
       if ( (varNames(i)==':') || (i==n)) {
          format.Chop();
          format_obj = TString(format.Data()).ReplaceAll("@","");
-         Data().AddVariable( format_obj );
-         format.Resize(0); 
+         fInputVars->push_back( format_obj );
+         format.Resize(0);
       }
    }
-} 
+}

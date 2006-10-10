@@ -1,11 +1,10 @@
-// @(#)root/tmva $Id: Volume.cxx,v 1.8 2006/08/30 22:20:00 andreas.hoecker Exp $
+// @(#)root/tmva $Id: Volume.cxx,v 1.3 2006/05/23 19:35:06 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TMVA::Volume                                                          *
- * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header file for description)                          *
@@ -24,10 +23,10 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: Volume.cxx,v 1.8 2006/08/30 22:20:00 andreas.hoecker Exp $        
+ * $Id: Volume.cxx,v 1.3 2006/05/23 19:35:06 brun Exp $        
  **********************************************************************************/
 
 #include "TMVA/Volume.h"

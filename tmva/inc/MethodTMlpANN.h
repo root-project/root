@@ -1,11 +1,10 @@
-// @(#)root/tmva $Id: MethodTMlpANN.h,v 1.17 2006/08/30 22:19:59 andreas.hoecker Exp $ 
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: MethodTMlpANN.h,v 1.3 2006/08/31 11:03:37 rdm Exp $
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodTMlpANN                                                         *
- * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation of interface for Root-integrated artificial neural         *
@@ -20,14 +19,17 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (http://mva.sourceforge.net/license.txt)                                       *
+ *                                                                                *
+ * File and Version Information:                                                  *
+ * $Id: MethodTMlpANN.h,v 1.3 2006/08/31 11:03:37 rdm Exp $
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodTMlpANN
@@ -38,81 +40,74 @@
 // MethodTMlpANN                                                        //
 //                                                                      //
 // Implementation of interface for Root-integrated artificial neural    //
-// network: TMultiLayerPerceptron                                       //  
+// network: TMultiLayerPerceptron                                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-
+#ifndef ROOT_TMVA_MethodANNBase
+#include "TMVA/MethodANNBase.h"
+#endif
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
 #endif
 
-class TMultiLayerPerceptron;
-
 namespace TMVA {
 
-  class MethodTMlpANN : public MethodBase {
-  
+   class MethodTMlpANN : public MethodBase, MethodANNBase {
+
    public:
 
-      MethodTMlpANN( TString jobName, 
-                     TString methodTitle, 
-                     DataSet& theData,
-                     TString theOption = "3000:N-1:N-2", 
+      MethodTMlpANN( TString jobName,
+                     std::vector<TString>* theVariables,
+                     TTree* theTree = 0,
+                     TString theOption = "3000:N-1:N-2",
                      TDirectory* theTargetDir = 0 );
 
-      MethodTMlpANN( DataSet& theData, 
-                     TString theWeightFile,  
+      MethodTMlpANN( std::vector<TString> *theVariables,
+                     TString theWeightFile,
                      TDirectory* theTargetDir = NULL );
 
       virtual ~MethodTMlpANN( void );
-    
+
       // training method
       virtual void Train( void );
 
       // write weights to file
-      virtual void WriteWeightsToStream( ostream& o ) const;
+      virtual void WriteWeightsToFile( void );
 
       // read weights from file
-      virtual void ReadWeightsFromStream( istream& istr );
+      virtual void ReadWeightsFromFile( void );
+
+      // evaluate method
+      virtual void PrepareEvaluationTree( TTree* testTree );
 
       // calculate the MVA value ...
       // - here it is just a dummy, as it is done in the overwritten
-      // - PrepareEvaluationtree... ugly but necessary due to the strucure 
+      // - PrepareEvaluationtree... ugly but necessary due to the strucure
       //   of TMultiLayerPercepton in ROOT grr... :-(
-     virtual Double_t GetMvaValue();
+      virtual Double_t GetMvaValue( Event * /*e*/ ) { return 0; }
 
       // write method specific histos to target file
-      virtual void WriteHistosToFile( void ) const;
+      virtual void WriteHistosToFile( void );
+
+      void SetTestTree( TTree* testTree );
 
       void SetHiddenLayer(TString hiddenlayer = "" ) { fHiddenLayer=hiddenlayer; }
-
-      // ranking of input variables
-      const Ranking* CreateRanking() { return 0; }
 
    protected:
 
    private:
 
-      // the option handling methods
-      virtual void DeclareOptions();
-      virtual void ProcessOptions();
+      void CreateMLPOptions( void );
 
-      void CreateMLPOptions( TString );
-
-      // option string
-      TString fLayerSpec; // Layer specification option
-
-      TMultiLayerPerceptron * fMLP;
-     
       TString fHiddenLayer; // string containig the hidden layer structure
       Int_t   fNcycles;     // number of training cylcles
-      TString fMLPBuildOptions;  // option string to build the mlp
+      TTree*  fTestTree;    // TestTree
 
       void InitTMlpANN( void );
 
       ClassDef(MethodTMlpANN,0) // Implementation of interface for TMultiLayerPerceptron
-         };
+   };
 
 } // namespace TMVA
 

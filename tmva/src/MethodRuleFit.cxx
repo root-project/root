@@ -1,36 +1,39 @@
-// @(#)root/tmva $Id: MethodRuleFit.cxx,v 1.32 2006/10/03 17:49:10 tegen Exp $
-// Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss 
+// @(#)root/tmva $Id: MethodRuleFit.cxx,v 1.3 2006/05/23 19:35:06 brun Exp $    
+// Author: Andreas Hoecker, Fredrik Tegenfeldt, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TMVA::MethodRuleFit                                                   *
- * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header file for description)                          *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Fredrik Tegenfeldt <Fredrik.Tegenfeldt@cern.ch>  - Iowa State U., USA     *
+ *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
+ *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
- *      Iowa State U.                                                             *
+ *      U. of Victoria, Canada,                                                   * 
  *      MPI-KP Heidelberg, Germany,                                               * 
+ *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (http://mva.sourceforge.net/license.txt)                                       *
+ *                                                                                *
  **********************************************************************************/
 
 //_______________________________________________________________________
-//
-// J Friedman's RuleFit method
+//                                                                      
+// Friedman's RuleFit method -- not yet implemented -- dummy class --   
 //_______________________________________________________________________
 
 #include "TMVA/MethodRuleFit.h"
 #include "TMVA/Tools.h"
-#include "TMVA/Timer.h"
 #include "TMatrix.h"
 #include "Riostream.h"
 #include <algorithm>
@@ -38,208 +41,37 @@
 ClassImp(TMVA::MethodRuleFit)
  
 //_______________________________________________________________________
-TMVA::MethodRuleFit::MethodRuleFit( TString jobName, TString methodTitle, DataSet& theData, 
-                                    TString theOption, TDirectory* theTargetDir )
-   : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
+TMVA::MethodRuleFit::MethodRuleFit( TString jobName, vector<TString>* theVariables,  
+                                    TTree* theTree, TString theOption, TDirectory* theTargetDir )
+   : TMVA::MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
 {
    // standard constructor
-   //
    InitRuleFit();
-
-   DeclareOptions();
-
-   ParseOptions();
-
-   ProcessOptions();
-
-   if (HasTrainingTree()) {
-      if (Verbose())
-         cout << "--- " << GetName() << " called " << endl;
-      // fill the STL Vector with the event sample
-      this->InitEventSample();
-   }
-   else{
-      cout << "--- " << GetName() << ": Warning: no training Tree given " <<endl;
-      cout << "--- " << GetName() << "  you'll not allowed to cal Train e.t.c..."<<endl;
-      exit(1);
-   }
-
-   InitMonitorNtuple();
-   //
-
 }
 
 //_______________________________________________________________________
-TMVA::MethodRuleFit::MethodRuleFit( DataSet& theData,
-                                    TString theWeightFile,
+TMVA::MethodRuleFit::MethodRuleFit( vector<TString> *theVariables, 
+                                    TString theWeightFile,  
                                     TDirectory* theTargetDir )
-   : TMVA::MethodBase( theData, theWeightFile, theTargetDir )
+   : TMVA::MethodBase( theVariables, theWeightFile, theTargetDir ) 
 {
    // constructor from weight file
    InitRuleFit();
-
-   DeclareOptions();
-}
-
-//_______________________________________________________________________
-TMVA::MethodRuleFit::~MethodRuleFit( void )
-{
-   // destructor
-   for (UInt_t i=0; i<fEventSample.size(); i++) delete fEventSample[i];
-   for (UInt_t i=0; i<fForest.size(); i++)      delete fForest[i];
-}
-
-//_______________________________________________________________________
-void TMVA::MethodRuleFit::DeclareOptions() 
-{
-   DeclareOptionRef(fGDTau=0.0,            "GDTau",          "gradient-directed path: fit threshhold");
-   DeclareOptionRef(fGDPathStep=0.01,      "GDStep",         "gradient-directed path: step size");
-   DeclareOptionRef(fGDNPathSteps=100,     "GDNSteps",       "gradient-directed path: number of steps");
-   DeclareOptionRef(fGDErrNsigma=1.0,      "GDErrNsigma",    "threshold for error-rate");
-   DeclareOptionRef(fMinimp=0.01,          "MinImp",         "minimum rule importance accepted");
-   DeclareOptionRef(fNodeMinEvents=10,     "nEventsMin",     "minimum number of events in a leaf node");
-   DeclareOptionRef(fNTrees=50,            "nTrees",         "number of trees in forest.");
-   DeclareOptionRef(fSampleFraction=-1,    "SampleFraction", "fraction of events used to train each tree");
-   DeclareOptionRef(fNCuts=20,             "nCuts",          "number of steps during node cut optimisation");
-   DeclareOptionRef(fRuleMaxDist=0.001,    "RuleMaxDist",    "max distance allowed between equal rules");
-   //
-   DeclareOptionRef(fSepTypeS="GiniIndex", "SeparationType", "separation criterion for node splitting");
-   AddPreDefVal(TString("MisClassificationError"));
-   AddPreDefVal(TString("GiniIndex"));
-   AddPreDefVal(TString("CrossEntropy"));
-   AddPreDefVal(TString("SDivSqrtSPlusB"));
-   //
-   DeclareOptionRef(fModelTypeS="ModRuleLinear", "Model", "model to be used");
-   AddPreDefVal(TString("ModRule"));
-   AddPreDefVal(TString("ModRuleLinear"));
-   AddPreDefVal(TString("ModLinear"));
-}
-
-//_______________________________________________________________________
-void TMVA::MethodRuleFit::ProcessOptions() 
-{
-   MethodBase::ProcessOptions();
-
-   if     (fSepTypeS == "misclassificationerror") fSepType = new TMVA::MisClassificationError();
-   else if(fSepTypeS == "giniindex")              fSepType = new TMVA::GiniIndex();
-   else if(fSepTypeS == "crossentropy")           fSepType = new TMVA::CrossEntropy();
-   else                                           fSepType = new TMVA::SdivSqrtSplusB();
-
-   if      (fModelTypeS == "ModLinear" ) fRuleFit.SetModelLinear();
-   else if (fModelTypeS == "ModRule" )   fRuleFit.SetModelRules();
-   else                                  fRuleFit.SetModelFull();
-
-   fRuleFit.GetRuleFitParamsPtr()->SetGDTau(fGDTau);
-   fRuleFit.GetRuleFitParamsPtr()->SetGDPathStep(fGDPathStep);
-   fRuleFit.GetRuleFitParamsPtr()->SetGDNPathSteps(fGDNPathSteps);
-   fRuleFit.SetImportanceCut(fMinimp);
-   fRuleFit.SetMaxRuleDist(fRuleMaxDist);
-   fRuleFit.GetRuleFitParamsPtr()->SetGDErrNsigma(fGDErrNsigma);
-}
-
-//_______________________________________________________________________
-void TMVA::MethodRuleFit::InitMonitorNtuple()
-{
-   fMonitorNtuple= new TTree("MonitorNtuple_RuleFit","RuleFit variables");
-   fMonitorNtuple->Branch("importance",&fNTImportance,"importance/D");
-   fMonitorNtuple->Branch("support",&fNTSupport,"support/D");
-   fMonitorNtuple->Branch("coefficient",&fNTCoefficient,"coefficient/D");
-   fMonitorNtuple->Branch("ncuts",&fNTNcuts,"ncuts/I");
-   fMonitorNtuple->Branch("type",&fNTType,"type/I");
-   fMonitorNtuple->Branch("ptag",&fNTPtag,"ptag/D");
-   fMonitorNtuple->Branch("pss",&fNTPss,"pss/D");
-   fMonitorNtuple->Branch("psb",&fNTPsb,"psb/D");
-   fMonitorNtuple->Branch("pbs",&fNTPbs,"pbs/D");
-   fMonitorNtuple->Branch("pbb",&fNTPbb,"pbb/D");
-   fMonitorNtuple->Branch("soversb",&fNTSSB,"soversb/D");
 }
 
 //_______________________________________________________________________
 void TMVA::MethodRuleFit::InitRuleFit( void )
 {
    // default initialisation
-   SetMethodName( "RuleFit" );
-   SetMethodType( TMVA::Types::RuleFit );
-   SetTestvarName();
+   fMethodName         = "RuleFit";
+   fMethod             = TMVA::Types::RuleFit;
+   fTestvar            = fTestvarPrefix+GetMethodName();
 }
 
 //_______________________________________________________________________
-void TMVA::MethodRuleFit::InitEventSample( void )
+TMVA::MethodRuleFit::~MethodRuleFit( void )
 {
-   // write all Events from the Tree into a vector of TMVA::Events, that are
-   // more easily manipulated.
-   // This method should never be called without existing trainingTree, as it
-   // the vector of events from the ROOT training tree
-   if (!HasTrainingTree()) {
-      cout << "--- " << GetName() << ": Error in ::Init(): Data().TrainingTree() is zero pointer"
-           << " --> exit(1)" << endl;
-      exit(1);
-   }
-   Int_t nevents = Data().GetNEvtTrain();
-   for (Int_t ievt=0; ievt<nevents; ievt++){
-      ReadTrainingEvent(ievt);
-      //      Float_t weight = GetEventWeight();
-      fEventSample.push_back(new TMVA::Event(Data().Event()));
-//       if (fSignalFraction > 0){
-//          if (!(fEventSample.back()->IsSignal())) {
-//             fEventSample.back()->SetWeight(fSignalFraction*fEventSample.back()->GetWeight());
-//          }
-//       }
-   }
-   if (fSampleFraction<=0) {
-      Double_t N = static_cast<Double_t>(nevents);
-      fSampleFraction = min( 0.5, (100.0 +6.0*sqrt(N))/N);
-   }
-   //
-   //   std::random_shuffle(fEventSample.begin(), fEventSample.end());
-   //
-   std::cout << "--- " << GetName() << " : set sample fraction to " << fSampleFraction << std::endl;
-}
-
-//_______________________________________________________________________
-void TMVA::MethodRuleFit::BuildTree( TMVA::DecisionTree *dt, std::vector< TMVA::Event *> & el )
-{
-   if (dt==0) return;
-   dt->BuildTree(el);
-}
-
-//_______________________________________________________________________
-void TMVA::MethodRuleFit::MakeForest()
-{
-   // make a forest of decisiontrees
-   const Int_t nevents = static_cast<Int_t>(fEventSample.size());
-   const Int_t nsubeve = static_cast<Int_t>(nevents*fSampleFraction);
-
-   std::cout << "--- " << GetName() << ": Creating a forest of " << fNTrees << " decision trees" << std::endl;
-   std::cout << "--- " << GetName() << ": Each tree is built using subsamples of " << nsubeve << " events" << std::endl;
-   TMVA::Timer timer( fNTrees, GetName() );
-
-   std::vector<TMVA::Event*> eventSubSample;
-   std::vector<TMVA::Event*> eventSampleCopy;
-   eventSubSample.resize(nsubeve);
-   eventSampleCopy.resize(nevents);
-   //
-   for (Int_t ie=0; ie<nevents; ie++) {
-      eventSampleCopy[ie] = fEventSample[ie];
-   }
-   Double_t fsig;
-   Int_t nsig,nbkg;
-   for (Int_t i=0; i<fNTrees; i++) {
-      //      timer.DrawProgressBar(i);
-      std::random_shuffle(eventSampleCopy.begin(), eventSampleCopy.end());
-      nsig=0;
-      nbkg=0;
-      for (Int_t ie = 0; ie<nsubeve; ie++) {
-         eventSubSample[ie] = eventSampleCopy[ie];
-         if (eventSubSample[ie]->IsSignal()) nsig++;
-         else nbkg++;
-      }
-      fsig = Double_t(nsig)/Double_t(nsig+nbkg);
-      //
-      //      std::cout << "--- " << GetName() << " : Building tree " << i << " with size = " << eventSubSample.size() << " and f(sig) = " << fsig << ", Nmin = " << fNodeMinEvents << ", ncuts = " << fNCuts << std::endl;
-      fForest.push_back( new DecisionTree( fSepType, fNodeMinEvents, fNCuts ) );
-      BuildTree(fForest.back(),eventSubSample);
-   }
+   // destructor
 }
 
 //_______________________________________________________________________
@@ -248,95 +80,61 @@ void TMVA::MethodRuleFit::Train( void )
    // training of rules
 
    // default sanity checks
-   if (!CheckSanity()) {
+   if (!CheckSanity()) { 
       cout << "--- " << GetName() << ": Error: sanity check failed" << endl;
       exit(1);
    }
 
-   // Make forest of decision trees
-   if (fRuleFit.GetRuleEnsemble().DoRules()) MakeForest();
-
-   // Init RuleFit object and create rule ensemble
-   fRuleFit.Initialise( this, fForest, fInputVars, GetTrainingEvents(), fSampleFraction );
-
-   // Fit the rules
-   std::cout << "--- " << GetName() << ": Fitting rule coefficients" << std::endl;
-   fRuleFit.FitCoefficients();
-
-   // Calculate importance
-   std::cout << "--- " << GetName() << ": Calculating rule and variable importance" << std::endl;
-   fRuleFit.CalcImportance();
-
-   // Output results and fill monitor ntuple
-   std::cout << fRuleFit.GetRuleEnsemble();
-
-   UInt_t nrules = fRuleFit.GetRuleEnsemble().GetRulesConst().size();
-   const Rule *rule;
-   for (UInt_t i=0; i<nrules; i++ ) {
-      rule           = fRuleFit.GetRuleEnsemble().GetRulesConst(i);
-     fNTImportance   = rule->GetRelImportance();
-     fNTSupport      = rule->GetSupport();
-     fNTCoefficient  = rule->GetCoefficient();
-     fNTType         = (rule->IsSignalRule() ? 1:-1 );
-     fNTNcuts        = fRuleFit.GetRuleEnsemble().GetRulesNCuts(i);
-     fNTPtag         = fRuleFit.GetRuleEnsemble().GetRulePTag(i); // should be identical with support
-     fNTPss          = fRuleFit.GetRuleEnsemble().GetRulePSS(i);
-     fNTPsb          = fRuleFit.GetRuleEnsemble().GetRulePSB(i);
-     fNTPbs          = fRuleFit.GetRuleEnsemble().GetRulePBS(i);
-     fNTPbb          = fRuleFit.GetRuleEnsemble().GetRulePBB(i);
-     fNTSSB          = rule->GetRuleSSB();
-     fMonitorNtuple->Fill();
-   }
-
-   // write histos to file
-   WriteHistosToFile();
+   // write weights to file
+   WriteWeightsToFile();
 }
 
 //_______________________________________________________________________
-const TMVA::Ranking* TMVA::MethodRuleFit::CreateRanking() 
-{
-   // computes ranking of input variables
-
-   // create the ranking object
-   fRanking = new TMVA::Ranking( GetName(), "Discr. power" );
-
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-      fRanking->AddRank( *new TMVA::Rank( GetInputExp(ivar), fRuleFit.GetRuleEnsemble().GetVarImportance(ivar) ) );
-   }
-
-   return fRanking;
-}
-
-
-//_______________________________________________________________________
-void  TMVA::MethodRuleFit::WriteWeightsToStream( ostream & o ) const
+void  TMVA::MethodRuleFit::WriteWeightsToFile( void )
 {  
-   fRuleFit.GetRuleEnsemble().PrintRaw(o);
+   // write rules to file
+   TString fname = GetWeightFileName();
+   cout << "--- " << GetName() << ": creating weight file: " << fname << endl;
+   ofstream fout( fname );
+   if (!fout.good( )) { // file not found --> Error
+      cout << "--- " << GetName() << ": Error in ::WriteWeightsToFile: "
+           << "unable to open output  weight file: " << fname << endl;
+      exit(1);
+   }
+   fout.close();    
 }
-
+  
 //_______________________________________________________________________
-void  TMVA::MethodRuleFit::ReadWeightsFromStream( istream & istr )
+void  TMVA::MethodRuleFit::ReadWeightsFromFile( void )
 {
-   // read rules from stream
-   fRuleFit.GetRuleEnsemblePtr()->ReadRaw(istr);
+   // read rules from file
+   TString fname = GetWeightFileName();
+   cout << "--- " << GetName() << ": reading weight file: " << fname << endl;
+   ifstream fin( fname );
+
+   if (!fin.good( )) { // file not found --> Error
+      cout << "--- " << GetName() << ": Error in ::ReadWeightsFromFile: "
+           << "unable to open input file: " << fname << endl;
+      exit(1);
+   }
+
+
+   fin.close();    
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodRuleFit::GetMvaValue()
+Double_t TMVA::MethodRuleFit::GetMvaValue( TMVA::Event * /*e*/ )
 {
    // returns MVA value for given event
-   //   fRuleFit.GetRuleEnsemblePtr()->SetDoLinearTerms(kFALSE);
-   return fRuleFit.EvalEvent( Data().Event() );
-   //   return fRuleFit.GetRuleEnsemble().EvalLinEvent( Data().Event() );
+   Double_t myMVA = 0;
+
+   return myMVA;
 }
 
 //_______________________________________________________________________
-void  TMVA::MethodRuleFit::WriteHistosToFile( void ) const
+void  TMVA::MethodRuleFit::WriteHistosToFile( void )
 {
    // write special monitoring histograms to file - not implemented for RuleFit
    cout << "--- " << GetName() << ": write " << GetName() 
-        <<" special histos to file: " << BaseDir()->GetPath() << endl;
-   //   BaseDir()->mkdir(GetMethodName())->cd();
-
-   fMonitorNtuple->Write();
+        <<" special histos to file: " << fBaseDir->GetPath() << endl;
 }

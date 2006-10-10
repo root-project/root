@@ -1,11 +1,10 @@
-// @(#)root/tmva $Id: GeneticRange.cxx,v 1.10 2006/08/30 22:19:58 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: GeneticRange.cxx,v 1.4 2006/05/31 14:01:33 rdm Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TMVA::GeneticRange                                                    *
- * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -21,10 +20,10 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: GeneticRange.cxx,v 1.10 2006/08/30 22:19:58 andreas.hoecker Exp $
+ * $Id: GeneticRange.cxx,v 1.4 2006/05/31 14:01:33 rdm Exp $
  **********************************************************************************/
 
 //_______________________________________________________________________

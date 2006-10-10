@@ -1,11 +1,10 @@
-// @(#)root/tmva $Id: MethodPDERS.h,v 1.19 2006/09/26 22:57:00 andreas.hoecker Exp $
-// Author: Andreas Hoecker, Yair Mahalalel, Joerg Stelzer, Helge Voss, Kai Voss
+// @(#)root/tmva $Id: MethodPDERS.h,v 1.2 2006/05/23 13:03:15 brun Exp $
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodPDERS                                                           *
- * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Multidimensional Likelihood using the "Probability density estimator      *
@@ -20,7 +19,7 @@
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Yair Mahalalel  <Yair.Mahalalel@cern.ch> - CERN, Switzerland              *
+ *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
@@ -28,10 +27,14 @@
  *      CERN, Switzerland,                                                        *
  *      U. of Victoria, Canada,                                                   *
  *      MPI-KP Heidelberg, Germany                                                *
+ *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (http://mva.sourceforge.net/license.txt)                                       *
+ *                                                                                *
+ * File and Version Information:                                                  *
+ * $Id: MethodPDERS.h,v 1.2 2006/05/23 13:03:15 brun Exp $
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodPDERS
@@ -66,12 +69,12 @@ namespace TMVA {
    public:
 
       MethodPDERS( TString jobName,
-                   TString methodTitle, 
-                   DataSet& theData,
-                   TString theOption,
+                   vector<TString>* theVariables,
+                   TTree* theTree = 0,
+                   TString theOption = "Adaptive:100:200:50:0.99",
                    TDirectory* theTargetDir = 0 );
 
-      MethodPDERS( DataSet& theData,
+      MethodPDERS( vector<TString> *theVariables,
                    TString theWeightFile,
                    TDirectory* theTargetDir = NULL );
 
@@ -81,16 +84,16 @@ namespace TMVA {
       virtual void Train( void );
 
       // write weights to file
-      virtual void WriteWeightsToStream( ostream & o ) const;
+      virtual void WriteWeightsToFile( void );
 
       // read weights from file
-      virtual void ReadWeightsFromStream( istream & istr );
+      virtual void ReadWeightsFromFile( void  );
 
       // calculate the MVA value
-      virtual Double_t GetMvaValue();
+      virtual Double_t GetMvaValue( Event *e );
 
       // write method specific histos to target file
-      virtual void WriteHistosToFile( void ) const;
+      virtual void WriteHistosToFile( void );
 
    public:
 
@@ -110,57 +113,14 @@ namespace TMVA {
       BinarySearchTree* GetBinaryTreeSig( void ) const { return fBinaryTreeS; }
       BinarySearchTree* GetBinaryTreeBkg( void ) const { return fBinaryTreeB; }
 
-      Double_t KernelEstimate( const Event&, std::vector<Event*>&, Volume& );
-      Double_t ApplyKernelFunction (Double_t normalized_distance);
-      Double_t KernelNormalization (Double_t pdf);
-      Double_t GetNormalizedDistance ( const TMVA::Event &base_event, const TMVA::Event &sample_event, Double_t *dim_normalization);
-      Double_t NormSinc (Double_t x);
-      Double_t LanczosFilter (Int_t level, Double_t x);
-
-      // ranking of input variables
-      const Ranking* CreateRanking() { return 0; }
+      Double_t KernelEstimate( Event&, std::vector<Event*>&, Volume& );
 
    private:
 
-      // the option handling methods
-      virtual void DeclareOptions();
-      virtual void ProcessOptions();
+      enum VolumeRangeMode { kMinMax = 0, kRMS, kAdaptive } fVRangeMode;
 
-      TTree* GetReferenceTree() const { return fReferenceTree; }
-      void   SetReferenceTree( TTree* t ) { fReferenceTree = t; }
-
-      // option
-      TString fVolumeRange;   // option volume range
-      TString fKernelString; // option kernel estimator
-
-      enum VolumeRangeMode {
-         kUnsupported = 0,
-         kMinMax,
-         kRMS,
-         kAdaptive,
-         kUnscaled
-      } fVRangeMode;
-
-      enum KernelEstimator {
-         kBox = 0,
-         kSphere,
-         kTeepee,
-         kGauss,
-         kSinc3,     // the sinc enumerators must be consecutive and in order!
-         kSinc5,
-         kSinc7,
-         kSinc9,
-         kSinc11,
-         kLanczos2,
-         kLanczos3,
-         kLanczos5,
-         kLanczos8
-      } fKernelEstimator;
-
-      TTree*             fReferenceTree; // tree used to create binary search trees
-
-      BinarySearchTree*  fBinaryTreeS;
-      BinarySearchTree*  fBinaryTreeB; 
+      BinarySearchTree*       fBinaryTreeS;
+      BinarySearchTree*       fBinaryTreeB;
 
       vector<Float_t>*   fDelta;
       vector<Float_t>*   fShift;
@@ -168,10 +128,6 @@ namespace TMVA {
       Float_t            fScaleS;
       Float_t            fScaleB;
       Float_t            fDeltaFrac;
-      Double_t           fGaussSigma;
-
-      // global weight file -- (needed !)
-      TFile*             fFin;
 
       // input for adaptive volume adjustment
       Float_t            fNEventsMin;
@@ -179,21 +135,22 @@ namespace TMVA {
       Float_t            fMaxVIterations;
       Float_t            fInitialScale;
 
+      TFile*             fFin;
+
       Bool_t             fInitializedVolumeEle;
 
       void    SetVolumeElement ( void );
-      Float_t RScalc           ( const Event& );
+      Float_t RScalc           ( Event *e );
       Float_t GetError         ( Float_t countS, Float_t countB,
                                  Float_t sumW2S, Float_t sumW2B ) const;
 
       // this carrier
       static MethodPDERS* fgThisPDERS;
-      void UpdateThis() { fgThisPDERS = this; }
 
       void InitPDERS( void );
 
-      ClassDef(MethodPDERS,0) // Multi-dimensional probability density estimator range search (PDERS) method
-   };
+      ClassDef(MethodPDERS,0) //Multidimensional Likelihood using the "Probability density estimator range search" (PDERS) method
+         };
 
 } // namespace TMVA
 

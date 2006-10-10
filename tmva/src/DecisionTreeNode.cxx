@@ -1,11 +1,10 @@
-// @(#)root/tmva $Id: DecisionTreeNode.cxx,v 1.13 2006/08/30 22:19:58 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: DecisionTreeNode.cxx,v 1.4 2006/05/31 14:01:33 rdm Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TMVA::DecisionTreeNode                                                *
- * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation of a Decision Tree Node                                    *
@@ -24,7 +23,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (http://mva.sourceforge.net/license.txt)                                       *
  **********************************************************************************/
    
 //_______________________________________________________________________
@@ -37,8 +36,8 @@
 //_______________________________________________________________________
 
 #include <algorithm>
-#include "Riostream.h"
 
+#include "Riostream.h"
 #include "TMVA/DecisionTreeNode.h"
 #include "TMVA/BinarySearchTree.h"
 #include "TMVA/Tools.h"
@@ -78,12 +77,12 @@ TMVA::DecisionTreeNode::DecisionTreeNode(TMVA::Node* p)
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::DecisionTreeNode::GoesRight(const TMVA::Event & e) const
+Bool_t TMVA::DecisionTreeNode::GoesRight(const TMVA::Event * e) const
 {
    // test event if it decends the tree at this node to the right  
    Bool_t result;
   
-   result =  (e.GetVal(this->GetSelector()) > this->GetCutValue() );
+   result =  (e->GetData(this->GetSelector()) > this->GetCutValue() );
   
    if (fCutType == kTRUE) return result; //the cuts are selecting Signal ;
    else return !result;
@@ -91,7 +90,7 @@ Bool_t TMVA::DecisionTreeNode::GoesRight(const TMVA::Event & e) const
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::DecisionTreeNode::GoesLeft(const TMVA::Event & e) const
+Bool_t TMVA::DecisionTreeNode::GoesLeft(const TMVA::Event * e) const
 {
    // test event if it decends the tree at this node to the left 
    if (!this->GoesRight(e)) return kTRUE;
@@ -117,7 +116,7 @@ void TMVA::DecisionTreeNode::PrintRec(ostream& os, const Int_t Depth, const stri
 }
 
 //_______________________________________________________________________
-TMVA::NodeID TMVA::DecisionTreeNode::ReadRec(istream& is, TMVA::NodeID nodeID, const Event& ev, TMVA::Node* Parent )
+TMVA::NodeID TMVA::DecisionTreeNode::ReadRec(ifstream& is, TMVA::NodeID nodeID, TMVA::Node* Parent )
 {
    //recursively read the node and its daughters (--> read the 'tree')
    string tmp;
@@ -134,7 +133,7 @@ TMVA::NodeID TMVA::DecisionTreeNode::ReadRec(istream& is, TMVA::NodeID nodeID, c
    is >> tmp >> itmp1 >> tmp >> dtmp1 >> tmp >> dtmp2 >> tmp >> dtmp3
       >> tmp >> dtmp4 >> tmp >> dtmp5 >> tmp >> dtmp6 
       >> tmp >> itmp2;
-   this->SetSelector((UInt_t)itmp1);
+   this->SetSelector(itmp1);
    this->SetCutValue(dtmp1);
    this->SetCutType(dtmp2);
    this->SetSoverSB(dtmp3);
@@ -151,14 +150,14 @@ TMVA::NodeID TMVA::DecisionTreeNode::ReadRec(istream& is, TMVA::NodeID nodeID, c
       if (nextNodeID.GetPos()=="l") {
          this->SetLeft(new TMVA::DecisionTreeNode());
          this->GetLeft()->SetParent(this);
-         nextNodeID = this->GetLeft()->ReadRec(is,nextNodeID,ev,this);
+         nextNodeID = this->GetLeft()->ReadRec(is,nextNodeID,this);
       }
    }
    if (nextNodeID.GetDepth() == nodeID.GetDepth()+1){
       if (nextNodeID.GetPos()=="r") {
          this->SetRight(new TMVA::DecisionTreeNode());
          this->GetRight()->SetParent(this);
-         nextNodeID = this->GetRight()->ReadRec(is,nextNodeID,ev,this);
+         nextNodeID = this->GetRight()->ReadRec(is,nextNodeID,this);
       }
    }
    return nextNodeID;

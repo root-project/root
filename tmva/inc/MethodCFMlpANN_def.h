@@ -1,11 +1,7 @@
-// @(#)root/tmva $Id: MethodCFMlpANN_def.h,v 1.5 2006/08/30 22:19:58 andreas.hoecker Exp $ 
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
-
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Header : MethodCFMlpANN_def                                                    *
- * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Common definition for CFMlpANN method                                     *
@@ -24,7 +20,10 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (http://mva.sourceforge.net/license.txt)                                       *
+ *                                                                                *
+ * File and Version Information:                                                  *
+ * $Id: MethodCFMlpANN_def.h,v 1.2 2006/05/23 13:03:15 brun Exp $     
  **********************************************************************************/
 
 // ------------- common definitions used in several modules --------------

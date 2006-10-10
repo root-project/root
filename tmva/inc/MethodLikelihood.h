@@ -1,11 +1,10 @@
-// @(#)root/tmva $Id: MethodLikelihood.h,v 1.19 2006/10/04 22:29:27 andreas.hoecker Exp $ 
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: MethodLikelihood.h,v 1.3 2006/08/31 11:03:37 rdm Exp $
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodLikelihood                                                      *
- * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Likelihood analysis ("non-parametric approach")                           *
@@ -22,14 +21,15 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (http://mva.sourceforge.net/license.txt)                                       *
+ *                                                                                *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodLikelihood
@@ -65,82 +65,79 @@ namespace TMVA {
 
    public:
 
-      MethodLikelihood( TString jobName, 
-                        TString methodTitle, 
-                        DataSet& theData,
+      MethodLikelihood( TString jobName,
+                        std::vector<TString>* theVariables,
+                        TTree* theTree = 0,
                         TString theOption = "",
                         TDirectory* theTargetDir = 0 );
-  
-      MethodLikelihood( DataSet& theData, 
-                        TString theWeightFile,  
+
+      MethodLikelihood( std::vector<TString> *theVariables,
+                        TString theWeightFile,
                         TDirectory* theTargetDir = NULL );
 
       virtual ~MethodLikelihood( void );
-    
+
       // training method
       virtual void Train( void );
 
       // write weights to file
-      virtual void WriteWeightsToStream( ostream& o ) const;
+      virtual void WriteWeightsToFile( void );
 
       // read weights from file
-      virtual void ReadWeightsFromStream( istream& istr );
+      virtual void ReadWeightsFromFile( void );
 
       // calculate the MVA value
-      virtual Double_t GetMvaValue();
+      virtual Double_t GetMvaValue( Event *e );
 
       // write method specific histos to target file
-      virtual void WriteHistosToFile( void ) const;
+      virtual void WriteHistosToFile( void ) ;
 
-      // ranking of input variables
-      const Ranking* CreateRanking() { return 0; }
-
-      // overload test event reading
-      virtual Bool_t ReadTestEvent(UInt_t ievt, Types::SBType type = Types::kSignal) { 
-         return Data().ReadTestEvent( ievt, Types::kNone, type ); 
-      }
+      // additional accessor
+      Bool_t DecorrVarSpace( void ) { return fDecorrVarSpace; }
 
    protected:
 
    private:
 
-      // the option handling methods
-      virtual void DeclareOptions();
-      virtual void ProcessOptions();
-      
-      // options
-      Int_t     fSpline;           // Spline order to smooth histograms
-      Int_t     fAverageEvtPerBin; // average events per bin; used to calculate fNbins
+      // weight file
+      TFile* fFin;
 
       // type of Splines used to smooth PDFs
       PDF::SmoothMethod fSmoothMethod;
 
-      // global weight file -- (needed !)
-      TFile*             fFin;
+      Int_t                fNevt;    // total number of events in sample
+      Int_t                fNsig;    // number of signal events in sample
+      Int_t                fNbgd;    // number of background events in sample
 
-      Int_t            fNsmooth; // naumber of smooth passes
-      Double_t         fEpsilon; // minimum number of likelihood (to avoid zero)
-      Bool_t           fTransformLikelihoodOutput; // likelihood output is sigmoid-transformed
+      Int_t                fNsmooth; // naumber of smooth passes
+      Double_t             fEpsilon; // minimum number of likelihood (to avoid zero)
+      TMatrixD*            fSqS;     // square-root matrix for signal
+      TMatrixD*            fSqB;     // square-root matrix for background
 
-      std::vector<TH1*>* fHistSig; // signal PDFs (histograms)
-      std::vector<TH1*>* fHistBgd; // background PDFs (histograms)
-      std::vector<TH1*>* fHistSig_smooth; // signal PDFs (smoothed histograms)
-      std::vector<TH1*>* fHistBgd_smooth; // background PDFs (smoothed histograms)
-  
-      TList* fSigPDFHist;        // list of PDF histograms (signal)
-      TList* fBgdPDFHist;        // list of PDF histograms (background)
+      std::vector<TH1*>*   fHistSig; // signal PDFs (histograms)
+      std::vector<TH1*>*   fHistBgd; // background PDFs (histograms)
+      std::vector<TH1*>*   fHistSig_smooth; // signal PDFs (smoothed histograms)
+      std::vector<TH1*>*   fHistBgd_smooth; // background PDFs (smoothed histograms)
 
-      std::vector<UInt_t>* fIndexSig; // used for caching in GetMvaValue
-      std::vector<UInt_t>* fIndexBgd; // used for caching in GetMvaValue
+      TList* fSigPDFHist;          // list of PDF histograms (signal)
+      TList* fBgdPDFHist;          // list of PDF histograms (background)
 
-      std::vector<PDF*>* fPDFSig; // list of PDFs (signal)    
-      std::vector<PDF*>* fPDFBgd; // list of PDFs (background)
+      std::vector<PDF*>*  fPDFSig; // list of PDFs (signal)
+      std::vector<PDF*>*  fPDFBgd; // list of PDFs (background)
+
+      Int_t     fNbins;            // number of bins in reference histograms
+      Int_t     fAverageEvtPerBin; // average events per bin; used to calculate fNbins
+
+      Bool_t    fDecorrVarSpace;   // flag for decorrelation method
+
+      // computes square-root-matrices
+      void GetSQRMats( void );
 
       // default initialisation called by all constructors
       void InitLik( void );
-   
-      ClassDef(MethodLikelihood,0) //Likelihood analysis ("non-parametric approach") 
-         };
+
+      ClassDef(MethodLikelihood,0) //Likelihood analysis ("non-parametric approach")
+   };
 
 } // namespace TMVA
 

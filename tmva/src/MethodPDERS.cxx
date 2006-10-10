@@ -1,29 +1,34 @@
-// @(#)root/tmva $Id: MethodPDERS.cxx,v 1.36 2006/10/04 22:29:27 andreas.hoecker Exp $
-// Author: Andreas Hoecker, Yair Mahalalel, Joerg Stelzer, Helge Voss, Kai Voss
+// @(#)root/tmva $Id: MethodPDERS.cxx,v 1.4 2006/08/31 11:03:37 rdm Exp $
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
- * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
+ * Project: TMVA - a Root-integrated toolkit for multivariate Data analysis       *
  * Package: TMVA                                                                  *
- * Class  : MethodPDERS                                                           *
- * Web    : http://tmva.sourceforge.net                                           *
+ * Class  : TMVA::MethodPDERS                                                     *
  *                                                                                *
  * Description:                                                                   *
- *      Implementation                                                            *
+ *      Multidimensional Likelihood using the "Probability density estimator      *
+ *      range search" (PDERS) method suggested in                                 *
+ *      T. Carli and B. Koblitz, NIM A 501, 576 (2003)                            *
+ *                                                                                *
+ *      Implementation (see header file for description)                          *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Yair Mahalalel  <Yair.Mahalalel@cern.ch> - CERN, Switzerland              *
+ *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        *
  *      U. of Victoria, Canada,                                                   *
- *      MPI-KP Heidelberg, Germany                                                *
+ *      MPI-KP Heidelberg, Germany,                                               *
+ *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (http://mva.sourceforge.net/license.txt)                                       *
+ *                                                                                *
  **********************************************************************************/
 
 //_______________________________________________________________________
@@ -31,33 +36,33 @@
 /*
   This is a generalization of the above Likelihood methods to <i>N</i><sub>var</sub>
   dimensions, where <i>N</i><sub>var</sub> is the number of input variables
-  used in the MVA. If the multi-dimensional probability density functions 
-  (PDFs) for signal and background were known, this method contains the entire 
-  physical information, and is therefore optimal. Usually, kernel estimation 
-  methods are used to approximate the PDFs using the events from the 
+  used in the MVA. If the multi-dimensional probability density functions
+  (PDFs) for signal and background were known, this method contains the entire
+  physical information, and is therefore optimal. Usually, kernel estimation
+  methods are used to approximate the PDFs using the events from the
   training sample. <br><p></p>
-   
+
   A very simple probability density estimator (PDE) has been suggested
   in <a href="http://arxiv.org/abs/hep-ex/0211019">hep-ex/0211019</a>. The
-  PDE for a given test event is obtained from counting the (normalized) 
-  number of signal and background (training) events that occur in the 
-  "vicinity" of the test event. The volume that describes "vicinity" is 
-  user-defined. A <a href="http://arxiv.org/abs/hep-ex/0211019">search 
-  method based on binary-trees</a> is used to effectively reduce the 
+  PDE for a given test event is obtained from counting the (normalized)
+  number of signal and background (training) events that occur in the
+  "vicinity" of the test event. The volume that describes "vicinity" is
+  user-defined. A <a href="http://arxiv.org/abs/hep-ex/0211019">search
+  method based on binary-trees</a> is used to effectively reduce the
   selection time for the range search. Three different volume definitions
   are optional: <br><p></p>
   <ul>
   <li><u>MinMax:</u>
-  the volume is defined in each dimension with respect 
+  the volume is defined in each dimension with respect
   to the full variable range found in the training sample. </li>
   <li><u>RMS:</u>
-  the volume is defined in each dimensions with respect 
+  the volume is defined in each dimensions with respect
   to the RMS estimated from the training sample. </li>
   <li><u>Adaptive:</u>
-  a volume element is defined in each dimensions with 
-  respect to the RMS estimated from the training sample. The overall 
-  scale of the volume element is then determined for each event so 
-  that the total number of events confined in the volume be within 
+  a volume element is defined in each dimensions with
+  respect to the RMS estimated from the training sample. The overall
+  scale of the volume element is then determined for each event so
+  that the total number of events confined in the volume be within
   a user-defined range.</li>
   </ul><p></p>
   The adaptive range search is used by default.
@@ -71,13 +76,12 @@
 #include "TFile.h"
 #include "TObjString.h"
 #include "TMath.h"
+#include "Riostream.h"
 #include <stdexcept>
 
-#define TMVA_MethodPDERS__countByHand__Debug__
-#undef  TMVA_MethodPDERS__countByHand__Debug__
-
 namespace TMVA {
-   const Bool_t MethodPDERS_UseFindRoot = kTRUE;
+   const Bool_t MethodPDERS_UseFindRoot      =kTRUE;
+   const Bool_t MethodPDERS_UseKernelEstimate=kFALSE;
 }
 
 using std::vector;
@@ -85,62 +89,104 @@ using std::vector;
 ClassImp(TMVA::MethodPDERS)
 
 //_______________________________________________________________________
-TMVA::MethodPDERS::MethodPDERS( TString jobName, TString methodTitle, DataSet& theData, 
-                                TString theOption, TDirectory* theTargetDir )
-   : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
+TMVA::MethodPDERS::MethodPDERS( TString jobName, vector<TString>* theVariables,
+                                TTree* theTree, TString theOption, TDirectory* theTargetDir )
+   : TMVA::MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
 {
    // standard constructor for the PDERS method
    // format and syntax of option string: "VolumeRangeMode:options"
    // where:
-   //    VolumeRangeMode - all methods defined in private enum "VolumeRangeMode" 
+   //    VolumeRangeMode - all methods defined in private enum "VolumeRangeMode"
    //    options         - deltaFrac in case of VolumeRangeMode=MinMax/RMS
    //                    - nEventsMin/Max, maxVIterations, scale for VolumeRangeMode=Adaptive
    //
+   // MethodPDERS also has an implementation of a simple kernel estimater
+   // (adaptive Gaussian); at present this cannot yet be switched on via options;
+   // you must change it in the source file via the flag:
+   // TMVA_MethodPDERS_UseKernelEstimate
 
    InitPDERS();
 
-   DeclareOptions();
+   // interpret options string
+   // default settings (should be defined in fOptions string)
+   TList*  list  = TMVA::Tools::ParseFormatLine( fOptions );
 
-   ParseOptions();
+   // format and syntax of option string: "VolumeRangeMode:options"
+   //
+   // where:
+   //  VolumeRangeMode - all methods defined in private enum "VolumeRangeMode"
+   //  options         - deltaFrac in case of VolumeRangeMode=MinMax/RMS
+   //                  - nEventsMin/Max, maxVIterations, scale for VolumeRangeMode=Adaptive
 
-   ProcessOptions();
+   if (list->GetSize() > 0) {
+      TString s = ((TObjString*)list->At(0))->GetString();
+      s.ToLower();
+      if       (s.Contains("minmax")  ) fVRangeMode = TMVA::MethodPDERS::kMinMax;
+      else  if (s.Contains("rms")     ) fVRangeMode = TMVA::MethodPDERS::kRMS;
+      else  if (s.Contains("adaptive")) fVRangeMode = TMVA::MethodPDERS::kAdaptive;
+      else {
+         cout  << "--- " << GetName() << ": Fatal error unknown vRangeType type: "
+               << s << " in first option" << endl;
+         throw std::invalid_argument( "Abort" );
+      }
+   }
+   if (list->GetSize() > 1 && (fVRangeMode == kMinMax || fVRangeMode == kRMS)) {
+      TString s = ((TObjString*)list->At(0))->GetString();
+      fDeltaFrac = atof( ((TObjString*)list->At(1))->GetString() );
+   }
+   else if (fVRangeMode == kAdaptive) {
+      if (list->GetSize() > 1) fNEventsMin     = atoi( ((TObjString*)list->At(1))->GetString() );
+      if (list->GetSize() > 2) fNEventsMax     = atoi( ((TObjString*)list->At(2))->GetString() );
+      if (list->GetSize() > 3) fMaxVIterations = atoi( ((TObjString*)list->At(3))->GetString() );
+      if (list->GetSize() > 4) fInitialScale   = atof( ((TObjString*)list->At(4))->GetString() );
+   }
+
+   if (Verbose()) {
+      cout << "--- " << GetName()
+           << " <verbose>: interpreted option string: vRangeMethod: '"
+           << (const char*)((fVRangeMode == kMinMax) ? "MinMax" :
+                            (fVRangeMode == kRMS   ) ? "RMS" : "Adaptive")
+           << "'" << endl;
+      if (fVRangeMode == kMinMax || fVRangeMode == kRMS)
+         cout << "--- " << GetName() << ": deltaFrac: " << fDeltaFrac << endl;
+      else
+         cout << "--- " << GetName()
+              << " <verbose>: nEventsMin/Max, maxVIterations, initialScale: "
+              << fNEventsMin << "  " << fNEventsMax
+              << "  " << fMaxVIterations << "  " << fInitialScale << endl;
+   }
 }
 
 //_______________________________________________________________________
-TMVA::MethodPDERS::MethodPDERS( DataSet& theData,
+TMVA::MethodPDERS::MethodPDERS( vector<TString> *theVariables,
                                 TString theWeightFile,
                                 TDirectory* theTargetDir )
-   : TMVA::MethodBase( theData, theWeightFile, theTargetDir )
+   : TMVA::MethodBase( theVariables, theWeightFile, theTargetDir )
 {
    // construct MethodPDERS through from file
    InitPDERS();
-
-   DeclareOptions();
 }
 
 void TMVA::MethodPDERS::InitPDERS( void )
 {
    // default initialisation routine called by all constructors
-   SetMethodName( "PDERS" );
-   SetMethodType( TMVA::Types::PDERS );
-   SetTestvarName();
+   fMethodName  = "PDERS";
+   fMethod      = TMVA::Types::PDERS;
+   fTestvar     = fTestvarPrefix+GetMethodName();
+   fFin         = NULL;
+   fBinaryTreeS = fBinaryTreeB = NULL;
 
-   fBinaryTreeS   = fBinaryTreeB = NULL;
-   fReferenceTree = NULL;
-
-   UpdateThis();
+   fgThisPDERS  = this;
 
    // default options
-   fDeltaFrac       = 3.0;
-   fVRangeMode      = kAdaptive;
-   fKernelEstimator = kBox;
+   fDeltaFrac      = 3.0;
+   fVRangeMode     = kAdaptive;
 
    // special options for Adaptive mode
-   fNEventsMin      = 100;
-   fNEventsMax      = 200;
-   fMaxVIterations  = 50;
-   fInitialScale    = 0.99;
-   fGaussSigma      = 0.2;
+   fNEventsMin     = 100;
+   fNEventsMax     = 200;
+   fMaxVIterations = 50;
+   fInitialScale   = 0.99;
 
    fInitializedVolumeEle = kFALSE;
 }
@@ -151,112 +197,7 @@ TMVA::MethodPDERS::~MethodPDERS( void )
    // destructor
    if (NULL != fBinaryTreeS) delete fBinaryTreeS;
    if (NULL != fBinaryTreeB) delete fBinaryTreeB;
-
-   if (NULL != fFin) { fFin->Close(); delete fFin; }
-}
-
-
-//_______________________________________________________________________
-void TMVA::MethodPDERS::DeclareOptions() 
-{
-   DeclareOptionRef(fVolumeRange="MinMax", "VolumeRangeMode", "Method to determine volume range");
-   AddPreDefVal(TString("Unscaled"));
-   AddPreDefVal(TString("MinMax"));
-   AddPreDefVal(TString("RMS"));
-   AddPreDefVal(TString("Adaptive"));
-
-   DeclareOptionRef(fKernelString="Box", "KernelEstimator", "Kernel estimation function");
-   AddPreDefVal(TString("Box"));
-   AddPreDefVal(TString("Sphere"));
-   AddPreDefVal(TString("Teepee"));
-   AddPreDefVal(TString("Gauss"));
-   AddPreDefVal(TString("Sinc3"));
-   AddPreDefVal(TString("Sinc5"));
-   AddPreDefVal(TString("Sinc7"));
-   AddPreDefVal(TString("Sinc9"));
-   AddPreDefVal(TString("Sinc11"));
-   AddPreDefVal(TString("Lanczos2"));
-   AddPreDefVal(TString("Lanczos3"));
-   AddPreDefVal(TString("Lanczos5"));
-   AddPreDefVal(TString("Lanczos8"));
-
-   DeclareOptionRef(fDeltaFrac     , "DeltaFrac",      "nEventsMin/Max for minmax and rms vaolume range");
-   DeclareOptionRef(fNEventsMin    , "NEventsMin",     "nEventsMin for adaptive volume range");
-   DeclareOptionRef(fNEventsMax    , "NEventsMax",     "nEventsMax for adaptive volume range");
-   DeclareOptionRef(fMaxVIterations, "MaxVIterations", "MaxVIterations for adaptive volume range");
-   DeclareOptionRef(fInitialScale  , "InitialScale",   "InitialScale for adaptive volume range");
-   DeclareOptionRef(fGaussSigma    , "GaussSigma",     "Width (wrt volume size) of Gaussian kernel estimator");
-}
-
-//_______________________________________________________________________
-void TMVA::MethodPDERS::ProcessOptions() 
-{
-   MethodBase::ProcessOptions();
-
-   fVRangeMode = TMVA::MethodPDERS::kUnsupported;
-
-   if     		(fVolumeRange == "MinMax"  ) {
-		fVRangeMode = TMVA::MethodPDERS::kMinMax;
-   } else if 	(fVolumeRange == "RMS"     ) {
-		fVRangeMode = TMVA::MethodPDERS::kRMS;
-   } else if 	(fVolumeRange == "Adaptive") {
-		fVRangeMode = TMVA::MethodPDERS::kAdaptive;
-   } else if 	(fVolumeRange == "Unscaled") {
-		fVRangeMode = TMVA::MethodPDERS::kUnscaled;
-   } else {
-		cout << "VolumeRangeMode parameter '" << fVolumeRange << "' unknown." << endl;
-		throw std::invalid_argument( "Abort" );
-   }
-
-   if		  	   (fKernelString == "Box"		) {
-		fKernelEstimator = TMVA::MethodPDERS::kBox;
-   } else if	(fKernelString == "Sphere"	) {
-		fKernelEstimator = TMVA::MethodPDERS::kSphere;
-   } else if	(fKernelString == "Teepee") {
-		fKernelEstimator = TMVA::MethodPDERS::kTeepee;
-   } else if	(fKernelString == "Gauss") {
-		fKernelEstimator = TMVA::MethodPDERS::kGauss;
-   } else if	(fKernelString == "Sinc3"	) {
-		fKernelEstimator = TMVA::MethodPDERS::kSinc3;
-   } else if	(fKernelString == "Sinc5"	) {
-		fKernelEstimator = TMVA::MethodPDERS::kSinc5;
-   } else if	(fKernelString == "Sinc7"	) {
-		fKernelEstimator = TMVA::MethodPDERS::kSinc7;
-   } else if	(fKernelString == "Sinc9"	) {
-		fKernelEstimator = TMVA::MethodPDERS::kSinc9;
-   } else if	(fKernelString == "Sinc11"	) {
-		fKernelEstimator = TMVA::MethodPDERS::kSinc11;
-   } else if	(fKernelString == "Lanczos2"	) {
-		fKernelEstimator = TMVA::MethodPDERS::kLanczos2;
-   } else if	(fKernelString == "Lanczos3"	) {
-		fKernelEstimator = TMVA::MethodPDERS::kLanczos3;
-   } else if	(fKernelString == "Lanczos5"	) {
-		fKernelEstimator = TMVA::MethodPDERS::kLanczos5;
-   } else if	(fKernelString == "Lanczos8"	) {
-		fKernelEstimator = TMVA::MethodPDERS::kLanczos8;
-   } else {
-		cout << "KernelEstimator parameter '" << fKernelString << "' unknown." << endl;
-		throw std::invalid_argument( "Abort" );
-   }
-
-	// TODO: Add parameter validation
-
-   if (Verbose()) {
-      cout << "--- " << GetName()
-           << " <verbose>: interpreted option string: vRangeMethod: '"
-           << (const char*)((fVRangeMode == kMinMax) ? "MinMax" :
-                            (fVRangeMode == kUnscaled) ? "Unscaled" :
-                            (fVRangeMode == kRMS   ) ? "RMS" : "Adaptive")
-           << "'" << endl;
-      if (fVRangeMode == kMinMax || fVRangeMode == kRMS)
-         cout << "--- " << GetName() << ": deltaFrac: " << fDeltaFrac << endl;
-      else
-         cout << "--- " << GetName()
-              << " <verbose>: nEventsMin/Max, maxVIterations, initialScale: "
-              << fNEventsMin << "  " << fNEventsMax
-              << "  " << fMaxVIterations << "  " << fInitialScale << endl;
-		cout << "KernelEstimator = " << fKernelString << endl;
-   }
+   if (NULL != fFin) { fFin->Close(); fFin->Delete(); }
 }
 
 //_______________________________________________________________________
@@ -273,37 +214,26 @@ void TMVA::MethodPDERS::Train( void )
       throw std::invalid_argument( "Abort" );
    }
 
-   Data().GetTrainingTree()->ResetBranchAddresses(); 
-   Data().ResetCurrentTree();
-   TTree* refTree = (TTree*)Data().GetTrainingTree()->CloneTree(0);
-   refTree->SetName("referenceTree");
-   Data().Event().SetBranchAddresses( refTree );
-
-   // fill the new ntuple (this is needed, since we may be in decorrelation or 
-   // similar preprocessing mode)
-   for (Int_t i=0; i<Data().GetNEvtTrain(); i++) {
-      ReadTrainingEvent(i);      
-      refTree->Fill();
-   }   
-
-   SetReferenceTree( refTree );
+   // write weights to file
+   WriteWeightsToFile();
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodPDERS::GetMvaValue()
+Double_t TMVA::MethodPDERS::GetMvaValue( TMVA::Event *e )
 {
    // init the size of a volume element using a defined fraction of the
    // volume containing the entire events
    if (fInitializedVolumeEle == kFALSE) {
+
       fInitializedVolumeEle = kTRUE;
       SetVolumeElement();
 
       // create binary trees (global member variables) for signal and background
-      Int_t nS = 0, nB = 0;      
+      Int_t nS = 0, nB = 0;
       fBinaryTreeS = new TMVA::BinarySearchTree();
-      nS = fBinaryTreeS->Fill( Data(), GetReferenceTree(), 1, Types::kNone );
+      nS = fBinaryTreeS->Fill( fTrainingTree, fInputVars, 1 );
       fBinaryTreeB = new TMVA::BinarySearchTree();
-      nB = fBinaryTreeB->Fill( Data(), GetReferenceTree(), 0, Types::kNone );
+      nB = fBinaryTreeB->Fill( fTrainingTree, fInputVars, 0 );
 
       // sanity check
       if (NULL == fBinaryTreeS || NULL == fBinaryTreeB) {
@@ -319,7 +249,7 @@ Double_t TMVA::MethodPDERS::GetMvaValue()
                           << fScaleS << " " << fScaleB << endl;
    }
 
-   return this->RScalc( Data().Event() );
+   return this->RScalc( e );
 }
 
 //_______________________________________________________________________
@@ -328,32 +258,27 @@ void TMVA::MethodPDERS::SetVolumeElement( void )
    // defines volume dimensions
 
    // init relative scales
-   fDelta = (GetNvar() > 0) ? new vector<Float_t>( GetNvar() ) : 0;
-   fShift = (GetNvar() > 0) ? new vector<Float_t>( GetNvar() ) : 0;
+   fDelta = (fNvar > 0) ? new vector<Float_t>( fNvar ) : 0;
+   fShift = (fNvar > 0) ? new vector<Float_t>( fNvar ) : 0;
    if (fDelta != 0) {
-      for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
+      for (Int_t ivar=0; ivar<fNvar; ivar++) {
          switch (fVRangeMode) {
 
          case kRMS:
          case kAdaptive:
             Double_t meanS, meanB, rmsS, rmsB, xmin, xmax;
-            TMVA::Tools::ComputeStat( GetReferenceTree(), (*fInputVars)[ivar],
+            TMVA::Tools::ComputeStat( fTrainingTree, (*fInputVars)[ivar],
                                       meanS, meanB, rmsS, rmsB, xmin, xmax );
-
             (*fDelta)[ivar] = (rmsS + rmsB)*0.5*fDeltaFrac;
             if (Verbose())
                cout << "--- " << GetName() << " <verbose>: delta of var[" << (*fInputVars)[ivar]
                     << "\t]: " << (rmsS + rmsB)*0.5
-                    << "\t  |  comp with d|norm|: " << (GetXmax( ivar ) - GetXmin( ivar ))
+                    << "\t  |  comp with d|norm|: " << (GetXmaxNorm( ivar ) - GetXminNorm( ivar ))
                     << endl;
             break;
 
          case kMinMax:
-            (*fDelta)[ivar] = (GetXmax( ivar ) - GetXmin( ivar ))*fDeltaFrac;
-            break;
-
-         case kUnscaled:
-            (*fDelta)[ivar] = fDeltaFrac;
+            (*fDelta)[ivar] = (GetXmaxNorm( ivar ) - GetXminNorm( ivar ))*fDeltaFrac;
             break;
 
          default:
@@ -367,7 +292,7 @@ void TMVA::MethodPDERS::SetVolumeElement( void )
       }
    }
    else {
-      cout << "--- " << GetName() << ": Error: GetNvar() <= 0: " << GetNvar() << endl;
+      cout << "--- " << GetName() << ": Error: fNvar <= 0: " << fNvar << endl;
       throw std::invalid_argument("");
    }
 }
@@ -388,24 +313,26 @@ Double_t TMVA::MethodPDERS::GetVolumeContentForRoot( Double_t scale )
 
    Volume v( *fHelpVolume );
    v.ScaleInterval( scale );
-
    Double_t cS = GetBinaryTreeSig()->SearchVolume( &v );
    Double_t cB = GetBinaryTreeBkg()->SearchVolume( &v );
    v.Delete();
+
    return cS + cB;
 }
 
 //_______________________________________________________________________
-Float_t TMVA::MethodPDERS::RScalc( const TMVA::Event& e )
+Float_t TMVA::MethodPDERS::RScalc( TMVA::Event *e )
 {
-   // computes event weight by counting number of signal and background 
+   // computes event weight by counting number of signal and background
    // events (of reference sample) that are found within given volume
    // defined by the event
-   vector<Double_t> *lb = new vector<Double_t>( GetNvar() );
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) (*lb)[ivar] = e.GetVal(ivar);
+
+   vector<Double_t> *lb = new vector<Double_t>( fNvar );
+   for (Int_t ivar=0; ivar<fNvar; ivar++)
+      (*lb)[ivar] = e->GetData(ivar);
 
    vector<Double_t> *ub = new vector<Double_t>( *lb );
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
+   for (Int_t ivar=0; ivar<fNvar; ivar++) {
       (*lb)[ivar] -= (*fDelta)[ivar]*(1.0 - (*fShift)[ivar]);
       (*ub)[ivar] += (*fDelta)[ivar]*(*fShift)[ivar];
    }
@@ -428,16 +355,16 @@ Float_t TMVA::MethodPDERS::RScalc( const TMVA::Event& e )
    countB = fBinaryTreeB->SearchVolume( volume );
 
    Int_t iS = 0, iB = 0;
-   for (Int_t ievt_=0; ievt_<Data().GetNEvtTrain(); ievt_++) {
-      Data().ReadTrainEvent(ievt_);
+   for (Int_t ievt_=0; ievt_<fTrainingTree->GetEntries(); ievt_++) {
+
       Bool_t inV;
-      for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-         Float_t x = Data().Event().GetVal(ivar);
+      for (Int_t ivar=0; ivar<fNvar; ivar++) {
+         Float_t x = TMVA::Tools::GetValue( fTrainingTree, ievt_, (*fInputVars)[ivar] );
          inV = (x > (*volume->Lower)[ivar] && x <= (*volume->Upper)[ivar]);
          if (!inV) break;
       }
       if (inV) {
-         if (Data().Event().IsSignal())
+         if ((Int_t)TMVA::Tools::GetValue( fTrainingTree, ievt_, "type" ) == 1)
             iS++;
          else
             iB++;
@@ -450,52 +377,35 @@ Float_t TMVA::MethodPDERS::RScalc( const TMVA::Event& e )
 #endif
    // -------------------------------------------------------------------------
 
-   if (fVRangeMode == kRMS || fVRangeMode == kUnscaled) { // Constant volume
-      vector<Double_t> *lb = new vector<Double_t>( GetNvar() );
-      for (Int_t ivar=0; ivar<GetNvar(); ivar++) (*lb)[ivar] = e.GetVal(ivar);
-      vector<Double_t> *ub = new vector<Double_t>( *lb );
-      for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-         (*lb)[ivar] -= (*fDelta)[ivar]*(1.0 - (*fShift)[ivar]);
-         (*ub)[ivar] += (*fDelta)[ivar]*(*fShift)[ivar];
-      }
-      TMVA::Volume* volume = new TMVA::Volume( lb, ub );
-      // starting values
-      TMVA::Volume v( *volume );
-      
-      std::vector<TMVA::Event*> eventsS;
-      std::vector<TMVA::Event*> eventsB;
-      fBinaryTreeS->SearchVolume( &v, &eventsS );
-      fBinaryTreeB->SearchVolume( &v, &eventsB );
-      countS = KernelEstimate( e, eventsS, v );
-      countB = KernelEstimate( e, eventsB, v );
-      
-      delete lb;
-      delete ub;
-   } 
-   else if (fVRangeMode == kAdaptive) {		// adaptive volume
+   // adaptive volume
+
+   if (fVRangeMode == kAdaptive) {
 
       // -----------------------------------------------------------------------
 
-      // TODO: optimize, perhaps multi stage with broadening limits, 
-      // or a different root finding method entirely,
-      if (TMVA::MethodPDERS_UseFindRoot) { 
-         // that won't need to search through large volume, where the bottle neck probably is
+      if (TMVA::MethodPDERS_UseFindRoot) {
 
          fHelpVolume = new TMVA::Volume( *volume );
 
-         UpdateThis(); // necessary update of static pointer
          TMVA::RootFinder rootFinder( &IGetVolumeContentForRoot, 0.01, 50, 50, 10 );
          Double_t scale = rootFinder.Root( (fNEventsMin + fNEventsMax)/2.0 );
 
          TMVA::Volume v( *volume );
          v.ScaleInterval( scale );
 
-         std::vector<TMVA::Event*> eventsS;
-         std::vector<TMVA::Event*> eventsB;
-         fBinaryTreeS->SearchVolume( &v, &eventsS );
-         fBinaryTreeB->SearchVolume( &v, &eventsB );
-         countS = KernelEstimate( e, eventsS, v );
-         countB = KernelEstimate( e, eventsB, v );
+         // improve PDE by estimate of the kernel within volume
+         if (TMVA::MethodPDERS_UseKernelEstimate) {
+            std::vector<TMVA::Event*> eventsS;
+            std::vector<TMVA::Event*> eventsB;
+            fBinaryTreeS->SearchVolume( &v, &eventsS );
+            fBinaryTreeB->SearchVolume( &v, &eventsB );
+            countS = KernelEstimate( *e, eventsS, v );
+            countB = KernelEstimate( *e, eventsB, v );
+         }
+         else {
+            countS = fBinaryTreeS->SearchVolume( &v );
+            countB = fBinaryTreeB->SearchVolume( &v );
+         }
 
          v.Delete();
 
@@ -588,175 +498,33 @@ Float_t TMVA::MethodPDERS::RScalc( const TMVA::Event& e )
    if (countS < 1e-20) return 0.0;
 
    Float_t r = countB*fScaleB/(countS*fScaleS);
-   return 1.0/(r + 1.0);	// TODO: propagate errors from here
+   return 1.0/(r + 1.0);
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodPDERS::KernelEstimate( const TMVA::Event & event,
+Double_t TMVA::MethodPDERS::KernelEstimate( TMVA::Event& event,
                                             vector<TMVA::Event*>& events, TMVA::Volume& v )
 {
-   // Final estimate
+   // returns Gaussian kernel estimate for event in given volume
+
+   // define gaussian sigmas
+   Double_t fac = 0.2;
+   Double_t *sigma = new Double_t[fNvar];
+   for (Int_t ivar=0; ivar<fNvar; ivar++)
+      sigma[ivar] = ((*v.fUpper)[ivar] - (*v.fLower)[ivar])*fac;
+
    Double_t pdfSum = 0;
-  
-   // normalization factors so we can work with radius 1 hyperspheres
-   Double_t *dim_normalization = new Double_t[GetNvar()];
-   for (Int_t ivar=0; ivar<GetNvar(); ivar++)
-      dim_normalization [ivar] = 2 / ((*v.fUpper)[ivar] - (*v.fLower)[ivar]);
-   
-   // Iteration over sample points
    for (vector<TMVA::Event*>::iterator iev = events.begin(); iev != events.end(); iev++) {
-     
-      // First switch to the one dimensional distance
-      Double_t normalized_distance = GetNormalizedDistance (event, *(*iev), dim_normalization);
-      
-      // always working within the hyperelipsoid, except for when we don't
-      // note that rejection ratio goes to 1 as nvar goes to infinity
-      if (normalized_distance > 1 && fKernelEstimator != kBox) continue;		
-      
-      pdfSum += ApplyKernelFunction (normalized_distance) * (*iev)->GetWeight();
+
+      Double_t pdf = 1;
+      for (Int_t ivar=0; ivar<fNvar; ivar++)
+         pdf *= TMath::Gaus( event.GetData(ivar), (*iev)->GetData(ivar), sigma[ivar], kTRUE );
+
+      pdfSum += pdf;
    }
-   return KernelNormalization( pdfSum < 0. ? 0. : pdfSum );
-}
+   delete [] sigma;
 
-//_______________________________________________________________________
-Double_t TMVA::MethodPDERS::ApplyKernelFunction (Double_t normalized_distance) 
-{
-   switch (fKernelEstimator) {
-   case kBox:
-   case kSphere:
-      return 1;
-      break;
-   case kTeepee:
-      return (1 - normalized_distance);
-      break;
-   case kGauss:
-      return TMath::Gaus( normalized_distance, 0, fGaussSigma, kFALSE);
-      break;
-   case kSinc3:
-   case kSinc5:
-   case kSinc7:
-   case kSinc9:
-   case kSinc11: {
-      Double_t side_crossings = 2 + ((int) fKernelEstimator) - ((int) kSinc3);
-      return NormSinc (side_crossings * normalized_distance);
-	}
- 	   break;
-   case kLanczos2:
-      return LanczosFilter (2, normalized_distance);
-      break;
-   case kLanczos3:
-      return LanczosFilter (3, normalized_distance);
-      break;
-   case kLanczos5:
-      return LanczosFilter (5, normalized_distance);
-      break;
-   case kLanczos8:
-      return LanczosFilter (8, normalized_distance);
-      break;
-   default:
-      cout << "Kernel estimation function unsupported. Enumerator is " << fKernelEstimator << endl;
-      throw std::invalid_argument( "Abort" );
-      break;
-   }
-   return 0.;
-}
-		
-//_______________________________________________________________________
-Double_t TMVA::MethodPDERS::KernelNormalization (Double_t pdf) 
-{
-	// Calculating the normalization factor only once (might need a reset at some point. Can the method be restarted with different params?)
-
-	static Double_t ret = 1.; // Caching jammed to disable function. It's not really useful afterall, badly implemented and untested :-)
-
-	if (ret != 0.)
-		return ret*pdf; 
-
-	// We first normalize by the volume of the hypersphere.
-	switch (fKernelEstimator) {
-   case kBox:
-   case kSphere:
-      ret = 1.;
-      break;
-   case kTeepee:
-      ret =	(GetNvar() * (GetNvar() + 1) * TMath::Gamma (((Double_t) GetNvar()) / 2.)) /
-         ( TMath::Power (2., (Double_t) GetNvar() + 1) * TMath::Power (TMath::Pi(), ((Double_t) GetNvar()) / 2.));
-      break;
-   case kGauss:
-      // We use full range integral here. Reasonable because of the fast function decay.
-      ret = 1. / TMath::Power ( 2 * TMath::Pi() * fGaussSigma * fGaussSigma, ((Double_t) GetNvar()) / 2.);
-      break;
-   case kSinc3:
-   case kSinc5:
-   case kSinc7:
-   case kSinc9:
-   case kSinc11:
-   case kLanczos2:
-   case kLanczos3:
-   case kLanczos5:
-   case kLanczos8:
-      // We use the full range integral here. Reasonable because the central lobe domintes it.
-      ret = 1 / TMath::Power ( 2., (Double_t) GetNvar() );
-      break;
-   default:
-      cout << "Kernel estimation function unsupported. Enumerator is " << fKernelEstimator << endl;
-      throw std::invalid_argument( "Abort" );
-	}
-	// Normalizing by the full volume
-	ret *= ( TMath::Power (2., GetNvar()) * TMath::Gamma (1 + (((Double_t) GetNvar()) / 2.)) ) /
-      TMath::Power (TMath::Pi(), ((Double_t) GetNvar()) / 2.);
-	return ret*pdf;
-}
-
-//_______________________________________________________________________
-Double_t TMVA::MethodPDERS::GetNormalizedDistance (	const TMVA::Event &base_event,
-                                                      const TMVA::Event &sample_event,
-                                                      Double_t *dim_normalization) {
-	// We use Euclidian metric here. Might not be best or most efficient.
-	Double_t ret=0;
-	for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-		Double_t dist = dim_normalization[ivar] * (sample_event.GetVal(ivar) - base_event.GetVal(ivar));
-		ret += dist*dist;
-	}
-	return TMath::Sqrt (ret);
-}
-
-//_______________________________________________________________________
-Double_t TMVA::MethodPDERS::NormSinc (Double_t x) {
-	
-	if (x < 10e-10 && x > -10e-10) {
-		return 1; // Poor man's l'Hopital
-	}
-
-	Double_t pix = TMath::Pi() * x;
-	Double_t sinc = TMath::Sin(pix) / pix;
-	Double_t ret;
-
-	if (GetNvar() % 2)
-		ret = TMath::Power (sinc, GetNvar());
-	else
-		ret = TMath::Abs (sinc) * TMath::Power (sinc, GetNvar() - 1);
-
-	return ret;
-}
-
-//_______________________________________________________________________
-Double_t TMVA::MethodPDERS::LanczosFilter (Int_t level, Double_t x) {
-	
-	if (x < 10e-10 && x > -10e-10) {
-		return 1; // Poor man's l'Hopital
-	}
-
-	Double_t pix = TMath::Pi() * x;
-	Double_t pixtimesn = pix * ((Double_t) level);
-	Double_t lanczos = (TMath::Sin(pix) / pix) * (TMath::Sin(pixtimesn) / pixtimesn);
-	Double_t ret;
-
-	if (GetNvar() % 2)
-		ret = TMath::Power (lanczos, GetNvar());
-	else
-		ret = TMath::Abs (lanczos) * TMath::Power (lanczos, GetNvar() - 1);
-
-	return ret;
+   return pdfSum;
 }
 
 //_______________________________________________________________________
@@ -779,29 +547,71 @@ Float_t TMVA::MethodPDERS::GetError( Float_t countS, Float_t countB,
 }
 
 //_______________________________________________________________________
-void TMVA::MethodPDERS::WriteWeightsToStream( ostream& o ) const
+void TMVA::MethodPDERS::WriteWeightsToFile( void )
 {
    // write training sample (TTree) to file
+
    TString fname = GetWeightFileName() + ".root";
    cout << "--- " << GetName() << ": creating weight file: " << fname << endl;
    TFile *fout = new TFile( fname, "RECREATE" );
 
-   // info in txt stream
-   o << "# weights stored in root i/o file: " << fname << endl;
+   // build TList of input variables, and TVectors for min/max
+   // NOTE: the latter values are mandatory for the normalisation
+   // in the reader application !!!
+   TList    lvar;
+   TVectorD vmin( fNvar ), vmax( fNvar );
+   for (Int_t ivar=0; ivar<fNvar; ivar++) {
+      lvar.Add( new TNamed( (*fInputVars)[ivar], TString() ) );
+      vmin[ivar] = this->GetXminNorm( ivar );
+      vmax[ivar] = this->GetXmaxNorm( ivar );
+   }
+   // write to file
+   lvar.Write();
+   vmin.Write( "vmin" );
+   vmax.Write( "vmax" );
+   lvar.Delete();
+
+   // save other configuration options
+   // (best would be to use a TMap here, but found implementation really complicated)
+   TVectorD pdersOptions( 6 );
+   pdersOptions(0) = (Double_t)fVRangeMode;
+   pdersOptions(1) = (Double_t)fDeltaFrac;
+   pdersOptions(2) = (Double_t)fNEventsMin;
+   pdersOptions(3) = (Double_t)fNEventsMax;
+   pdersOptions(4) = (Double_t)fMaxVIterations;
+   pdersOptions(5) = (Double_t)fInitialScale;
+   pdersOptions.Write( "PdersOptions" );
 
    // write trainingTree
-   GetReferenceTree()->Write();
+   // create clone of fTrainingTree in new file
+   TObjArrayIter branchIter( fTrainingTree->GetListOfBranches(), kIterForward );
+   TBranch*      branch = NULL;
+   const int nBranches = fTrainingTree->GetListOfBranches()->GetSize();
+   Float_t    ** branchVar = new Float_t*[nBranches];
+   Int_t         theType, jvar = -1;
+   while ((branch = (TBranch*)branchIter.Next()) != 0) {
+
+      // note: allowed are only variables with minimum and maximum cut
+      //       i.e., no distinct cut regions are supported
+      if ((TString)branch->GetName() == "type")
+         fTrainingTree->SetBranchAddress( branch->GetName(), &theType );
+      else
+         fTrainingTree->SetBranchAddress( branch->GetName(), &branchVar[++jvar] );
+   }
+
+   fTrainingTree->SetBranchStatus( "*", 1 );
+   TTree *trainingTreeClone = fTrainingTree->CloneTree();
+   trainingTreeClone->Write( "trainingTree" );
 
    fout->Close();
-
+   delete[] branchVar;
    delete fout;
 }
 
 //_______________________________________________________________________
-void TMVA::MethodPDERS::ReadWeightsFromStream( istream& istr )
+void TMVA::MethodPDERS::ReadWeightsFromFile( void )
 {
    // read training sample from file
-   if (istr.eof()); // dummy
 
    TString fname = GetWeightFileName();
    if (!fname.EndsWith( ".root" )) fname += ".root";
@@ -809,21 +619,61 @@ void TMVA::MethodPDERS::ReadWeightsFromStream( istream& istr )
    cout << "--- " << GetName() << ": reading weight file: " << fname << endl;
    fFin = new TFile( fname );
 
-   // read the trainingTree
-   TTree* tree = (TTree*)fFin->Get( "referenceTree" );
-   SetReferenceTree( tree );
+   // build TList of input variables, and TVectors for min/max
+   // NOTE: the latter values are mandatory for the normalisation
+   // in the reader application !!!
+   TList lvar;
+   for (Int_t ivar=0; ivar<fNvar; ivar++) {
+      // read variable names
+      TNamed t;
+      t.Read( (*fInputVars)[ivar] );
+      // sanity check
+      if (t.GetName() != (*fInputVars)[ivar]) {
+         cout << "--- " << GetName() << ": Error while reading weight file; "
+              << "unknown variable: " << t.GetName() << " at position: " << ivar << ". "
+              << "Expected variable: " << (*fInputVars)[ivar] << endl;
+         throw std::invalid_argument( "Abort" );
+      }
+   }
 
-   if (NULL == GetReferenceTree()) {
-      cout << "--- " << GetName() << ": Error while reading 'referenceTree': zero pointer "
+   // read vectors
+   TVectorD vmin( fNvar ), vmax( fNvar );
+   // unfortunatly the more elegant vmin/max.Read( "vmin/max" ) crash in ROOT V4.04.02g
+   TVectorD *tmp = (TVectorD*)fFin->Get( "vmin" );
+   vmin = *tmp;
+   tmp  = (TVectorD*)fFin->Get( "vmax" );
+   vmax = *tmp;
+
+   // initialize min/max
+   for (Int_t ivar=0; ivar<fNvar; ivar++) {
+      this->SetXminNorm( ivar, vmin[ivar] );
+      this->SetXmaxNorm( ivar, vmax[ivar] );
+   }
+
+   // read other configuration options
+   TVectorD* pdersOptions = (TVectorD*)fFin->Get( "PdersOptions" );
+   fVRangeMode     = (VolumeRangeMode)(Int_t)(*pdersOptions)(0);
+   fDeltaFrac      = (*pdersOptions)(1);
+   fNEventsMin     = (Int_t)(*pdersOptions)(2);
+   fNEventsMax     = (Int_t)(*pdersOptions)(3);
+   fMaxVIterations = (Int_t)(*pdersOptions)(4);
+   fInitialScale   = (*pdersOptions)(5);
+
+   // read the trainingTree
+   fTrainingTree = (TTree*)fFin->Get( "trainingTree" );
+
+   if (NULL == fTrainingTree) {
+      cout << "--- " << GetName() << ": Error while reading 'trainingTree': zero pointer "
            << endl;
       throw std::invalid_argument( "Abort" );
-   }   
+   }
 }
 
 //_______________________________________________________________________
-void  TMVA::MethodPDERS::WriteHistosToFile( void ) const
+void  TMVA::MethodPDERS::WriteHistosToFile( void )
 {
    // write special monitoring histograms to file - not implemented for PDERS
-   cout << "--- " << GetName() << ": no monitoring histograms written" << endl;
+   cout << "--- " << GetName() << ": write " << GetName()
+        <<" special histos to file: " << fBaseDir->GetPath() << endl;
 }
 

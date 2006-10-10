@@ -1,11 +1,7 @@
-// @(#)root/tmva $Id: TSpline2.cxx,v 1.9 2006/08/30 22:20:00 andreas.hoecker Exp $   
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
-
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : TSpline2                                                              *
- * Web    : http://tmva.sourceforge.net                                           *
+ * Class  : TMVA::TSpline2                                                        *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -24,7 +20,8 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (http://mva.sourceforge.net/license.txt)                                       *
+ *                                                                                *
  **********************************************************************************/
 
 //_______________________________________________________________________

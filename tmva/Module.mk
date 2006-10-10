@@ -3,7 +3,6 @@
 #
 # Author: Fons Rademakers, 20/6/2005
 
-
 MODDIR       := tmva
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc

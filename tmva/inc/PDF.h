@@ -1,11 +1,10 @@
-// @(#)root/tmva $Id: PDF.h,v 1.14 2006/08/30 22:19:59 andreas.hoecker Exp $
+// @(#)root/tmva $Id: PDF.h,v 1.3 2006/06/06 08:35:08 rdm Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : PDF                                                                   *
- * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      PDF wrapper for histograms; uses user-defined spline interpolation        *
@@ -24,7 +23,10 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (http://mva.sourceforge.net/license.txt)                                       *
+ *                                                                                *
+ * File and Version Information:                                                  *
+ * $Id: PDF.h,v 1.3 2006/06/06 08:35:08 rdm Exp $
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_PDF
@@ -42,19 +44,13 @@
 #include "TH1.h"
 #include "TGraph.h"
 
-#include "MStream.h"
-
 namespace TMVA {
 
    class PDF : public TObject {
-      
-   public:
-         
-      static void call_fun();
-
+  
    public:
 
-      enum SmoothMethod { kSpline0, kSpline1, kSpline2, kSpline3, kSpline5 };
+      enum SmoothMethod { kSpline1, kSpline2, kSpline3, kSpline5 };
   
       PDF( const TH1* theHist, 
            PDF::SmoothMethod method = kSpline2,
@@ -63,7 +59,7 @@ namespace TMVA {
       virtual ~PDF( void );
   
       // returns probability density at given abscissa
-      Double_t GetVal( const Double_t x );
+      Double_t GetVal( Double_t x );
 
       // histogram underlying the PDF
       TH1*     GetPDFHist ( void ) { return fPDFHist; }
@@ -76,21 +72,13 @@ namespace TMVA {
       Double_t GetXmin  ( void ) const { return fXmin;   }
       Double_t GetXmax  ( void ) const { return fXmax;   }
 
-      // do we use the original histogram as reference ?
-      Bool_t   UseHistogram() { return fUseHistogram; }
-
    private:
 
       // sanity check of PDF quality (after smoothing): comparison with 
       // original histogram
       void     CheckHist(void);
       void     FillSplineToHist( void );
-      Double_t GetIntegral( void );
-
-      // flag that indicates that no splines are produced, and the original 
-      // histogram is used as reference instead; this is useful for discrete
-      // variables
-      Bool_t   fUseHistogram;
+      Double_t Integral  ( void );
   
       // to increase computation speed, the final PDF is filled in 
       // a high-binned histogram; "GetValue" then returns the histogram
@@ -104,9 +92,10 @@ namespace TMVA {
       TH1*     fPDFHist;       // the high-binned histogram corresponding to the PDF
       TH1*     fHist;          // copy of input histogram
       TGraph*  fGraph;         // needed to create PDF from histogram
+      Double_t fIntegral;      // normalisation
 
-      ClassDef(PDF,0)  // PDF wrapper for histograms
-   };
+      ClassDef(PDF,0)  //PDF wrapper for histograms
+         };
 
 } // namespace TMVA
 

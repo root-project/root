@@ -1,11 +1,10 @@
-// @(#)root/tmva $Id: MethodHMatrix.h,v 1.16 2006/09/29 23:27:15 andreas.hoecker Exp $    
-// Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: MethodHMatrix.h,v 1.3 2006/08/31 11:03:37 rdm Exp $
+// Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodHMatrix                                                         *
- * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      H-Matrix method, which is implemented as a simple comparison of           *
@@ -22,14 +21,15 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany                                                * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany                                                *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (http://mva.sourceforge.net/license.txt)                                       *
+ *                                                                                *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodHMatrix
@@ -39,7 +39,7 @@
 //                                                                      //
 // MethodHMatrix                                                        //
 //                                                                      //
-// H-Matrix method, which is implemented as a simple comparison of      // 
+// H-Matrix method, which is implemented as a simple comparison of      //
 // chi-squared estimators for signal and background, taking into        //
 // account the linear correlations between the input variables          //
 //                                                                      //
@@ -61,50 +61,41 @@ namespace TMVA {
 
    public:
 
-      MethodHMatrix( TString jobName, 
-                     TString methodTitle, 
-                     DataSet& theData,
+      MethodHMatrix( TString jobName,
+                     std::vector<TString>* theVariables,
+                     TTree* theTree = 0,
                      TString theOption = "",
                      TDirectory* theTargetDir = 0 );
 
-      MethodHMatrix( DataSet& theData, 
-                     TString theWeightFile,  
+      MethodHMatrix( std::vector<TString> *theVariables,
+                     TString theWeightFile,
                      TDirectory* theTargetDir = NULL );
 
       virtual ~MethodHMatrix( void );
-    
+
       // training method
       virtual void Train( void );
 
       // write weights to file
-      virtual void WriteWeightsToStream( ostream& o ) const;
+      virtual void WriteWeightsToFile( void );
 
       // read weights from file
-      virtual void ReadWeightsFromStream( istream& istr );
+      virtual void ReadWeightsFromFile( void );
 
       // calculate the MVA value
-      virtual Double_t GetMvaValue();
+      virtual Double_t GetMvaValue( Event *e );
 
       // write method specific histos to target file
-      virtual void WriteHistosToFile( void ) const;
+      virtual void WriteHistosToFile( void );
 
-      // ranking of input variables
-      const Ranking* CreateRanking() { return 0; }
+   protected:
 
    private:
 
-      // the option handling methods
-      virtual void DeclareOptions();
-      virtual void ProcessOptions();
-
       // returns chi2 estimator for given type (signal or background)
-      Double_t GetChi2( Event *e, Types::SBType ) const;
-      Double_t GetChi2( Types::SBType ) const;
+      Double_t GetChi2( Event *e, Type ) const;
 
-      // compute correlation matrices
-      void     ComputeCovariance( Bool_t, TMatrixD* );
-
-      // arrays of input evt vs. variable 
+      // arrays of input evt vs. variable
       TMatrixD* fInvHMatrixS; // inverse H-matrix (signal)
       TMatrixD* fInvHMatrixB; // inverse H-matrix (background)
       TVectorD* fVecMeanS;    // vector of mean values (signal)
@@ -113,10 +104,10 @@ namespace TMVA {
       Bool_t    fNormaliseInputVars; // normalise input variables
 
       // default initialisation method called by all constructors
-      void InitHMatrix( void ); 
+      void InitHMatrix( void );
 
       ClassDef(MethodHMatrix,0) // H-Matrix method, a simple comparison of chi-squared estimators for signal and background
-         }; 
+   };
 
 } // namespace TMVA
 

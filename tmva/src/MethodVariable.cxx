@@ -1,11 +1,10 @@
-// @(#)root/tmva $Id: MethodVariable.cxx,v 1.18 2006/10/04 22:29:27 andreas.hoecker Exp $
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// @(#)root/tmva $Id: MethodVariable.cxx,v 1.4 2006/08/31 11:03:37 rdm Exp $
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate Data analysis       *
  * Package: TMVA                                                                  *
- * Class  : MethodVariable                                                        *
- * Web    : http://tmva.sourceforge.net                                           *
+ * Class  : TMVA::MethodVariable                                                  *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -17,57 +16,58 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland,                                                        * 
- *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      CERN, Switzerland,                                                        *
+ *      U. of Victoria, Canada,                                                   *
+ *      MPI-KP Heidelberg, Germany,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (http://mva.sourceforge.net/license.txt)                                       *
+ *                                                                                *
  **********************************************************************************/
 
 //_______________________________________________________________________
-//                                                                      
-// Wrapper class for a single variable "MVA"; this is required for      
-// the evaluation of the single variable discrimination performance     
+//
+// Wrapper class for a single variable "MVA"; this is required for
+// the evaluation of the single variable discrimination performance
 //_______________________________________________________________________
 
+#include "Riostream.h"
 #include "TMVA/MethodVariable.h"
 #include <algorithm>
 
 ClassImp(TMVA::MethodVariable)
- 
+
 //_______________________________________________________________________
-TMVA::MethodVariable::MethodVariable( TString jobName, TString methodTitle, DataSet& theData, 
-                                      TString theOption, TDirectory* theTargetDir )
-   : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
+TMVA::MethodVariable::MethodVariable( TString jobName, vector<TString>* theVariables,
+                                      TTree* theTree, TString theOption,
+                                      TDirectory* theTargetDir )
+   : TMVA::MethodBase( jobName, theVariables, theTree, theOption, theTargetDir )
 {
    // standard constructor
-   // option string contains variable name - but not only ! 
+   // option string contains variable name - but not only !
    // there is a "Var_" prefix, which is useful in the context of later root plotting
    // so, remove this part
 
-   SetMethodName( "Variable" );
-   SetMethodType( TMVA::Types::Variable );
-   SetTestvarPrefix( "" );
-   SetTestvarName();
-
+   fMethodName    = "Variable";
+   fTestvarPrefix ="";
+   fTestvar       = fTestvarPrefix+GetMethodName();
    if (Verbose())
       cout << "--- " << GetName() << " <verbose>: uses as discriminating variable just "
-           << GetOptions() << " as specified in the option" << endl;
-  
-   if (0 == Data().GetTrainingTree()->FindBranch(GetOptions())) {
-      cout << "--- " << GetName() << ": variable " << GetOptions() 
-           << " not found in tree ==> abort " << endl;
-      Data().GetTrainingTree()->Print();
+           << fOptions << " as specified in the option" << endl;
+
+   if (0 == theTree->FindBranch(fOptions)) {
+      cout << "--- " << GetName() << ": variable " << fOptions <<" not found "<<endl;
+      theTree->Print();
       exit(1);
    }
-   else {
-      SetMethodName ( GetMethodName() + (TString)"_" + GetOptions() );
-      SetTestvarName( GetOptions() );
+   else{
+      fMethodName += "_";
+      fMethodName += fOptions;
+      fTestvar    =  fOptions;
       if (Verbose())
-         cout << "--- " << GetName() << " <verbose>: sucessfully initialized variable as " 
+         cout << "--- " << GetName() << " <verbose>: sucessfully initialized as "
               << GetMethodName() <<endl;
    }
 }
@@ -84,33 +84,37 @@ void TMVA::MethodVariable::Train( void )
    // no training required
 
    // default sanity checks
-   if (!CheckSanity()) { 
+   if (!CheckSanity()) {
       cout << "--- " << GetName() << ": Error: sanity check failed" << endl;
       exit(1);
    }
 }
 
+
 //_______________________________________________________________________
-Double_t TMVA::MethodVariable::GetMvaValue()
+Double_t TMVA::MethodVariable::GetMvaValue( TMVA::Event *e )
 {
    // "MVA" value is variable value
-   return Data().Event().GetVal(0);
+   return e->GetData(0);
 }
 
 //_______________________________________________________________________
-void  TMVA::MethodVariable::WriteWeightsToStream( ostream & o ) const
-{  
-   o << "";
-}
-  
-//_______________________________________________________________________
-void  TMVA::MethodVariable::ReadWeightsFromStream( istream & istr )
+void  TMVA::MethodVariable::WriteWeightsToFile( void )
 {
-   if (istr.eof());
+   // nothing to write
+   cout << "--- " << GetName() << ": no weights to write " << endl;
 }
 
 //_______________________________________________________________________
-void  TMVA::MethodVariable::WriteHistosToFile( void ) const
+void  TMVA::MethodVariable::ReadWeightsFromFile( void )
+{
+   // nothing to read
+   cout << "--- " << GetName() << ": no weights to read "  <<  endl;
+}
+
+//_______________________________________________________________________
+void  TMVA::MethodVariable::WriteHistosToFile( void )
 {
    // write special monitoring histograms to file - not implemented for Variable
+   cout << "--- " << GetName() << ": no histograms to write " << endl;
 }

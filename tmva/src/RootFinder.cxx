@@ -1,11 +1,7 @@
-// @(#)root/tmva $Id: RootFinder.cxx,v 1.9 2006/09/10 15:03:43 stelzer Exp $   
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
-
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : RootFinder                                                            *
- * Web    : http://tmva.sourceforge.net                                           *
+ * Class  : TMVA::RootFinder                                                      *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header file for description)                          *
@@ -24,7 +20,8 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (http://mva.sourceforge.net/license.txt)                                       *
+ *                                                                                *
  **********************************************************************************/
 
 #include "TMVA/RootFinder.h"
@@ -58,6 +55,7 @@ TMVA::RootFinder::~RootFinder( void )
 Double_t TMVA::RootFinder::Root( Double_t refValue  )
 {
    // Root finding using Brents algorithm; taken from CERNLIB function RZERO
+
    Double_t a  = fRootMin, b = fRootMax;
    Double_t fa = (*fGetRootVal)( a ) - refValue;
    Double_t fb = (*fGetRootVal)( b ) - refValue;
@@ -75,6 +73,7 @@ Double_t TMVA::RootFinder::Root( Double_t refValue  )
    Double_t fc = fb;
    Double_t c  = 0, d = 0, e = 0;
    for (Int_t iter= 0; iter <= fMaxIter; iter++) {
+
       if ((fb < 0 && fc < 0) || (fb > 0 && fc > 0)) {
 
          // Rename a,b,c and adjust bounding interval d
@@ -91,6 +90,7 @@ Double_t TMVA::RootFinder::Root( Double_t refValue  )
 
       Double_t tol = 0.5 * 2.2204460492503131e-16 * TMath::Abs(b);
       Double_t m   = 0.5 * (c - b);
+
       if (fb == 0 || TMath::Abs(m) <= tol || TMath::Abs(fb) < fAbsTol) return b;
   
       // Bounds decreasing too slowly: use bisection
@@ -125,7 +125,6 @@ Double_t TMVA::RootFinder::Root( Double_t refValue  )
       else                     b += (m > 0 ? +tol : -tol);
 
       fb = (*fGetRootVal)( b ) - refValue;
-
    }
 
    // Return our best guess if we run out of iterations

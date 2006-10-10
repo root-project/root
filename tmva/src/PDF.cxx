@@ -1,11 +1,7 @@
-// @(#)root/tmva $Id: PDF.cxx,v 1.18 2006/09/14 22:28:18 andreas.hoecker Exp $
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
-
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : PDF                                                                   *
- * Web    : http://tmva.sourceforge.net                                           *
+ * Class  : TMVA::PDF                                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -24,7 +20,8 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (http://mva.sourceforge.net/license.txt)                                       *
+ *                                                                                *
  **********************************************************************************/
 
 #include "Riostream.h"
@@ -33,6 +30,7 @@
 #include "TMVA/TSpline1.h"
 #include "TMVA/TSpline2.h"
 #include "TH1F.h"
+#include "TH1D.h"
 
 namespace TMVA {
    const Bool_t   DEBUG_PDF=kFALSE;
@@ -42,24 +40,16 @@ namespace TMVA {
 
 using namespace std;
 
-void TMVA::PDF::call_fun() 
-{
-   MStream msg( MStream::INFO );
-   msg << "********* hello (THIS 1)" << std::endl;
-   msg << MStream::DEBUG << "blabla" << std::endl;
-   msg << "********* hello (THIS 2)" << std::endl;
-}
-
 ClassImp(TMVA::PDF)
 
 //_______________________________________________________________________
 TMVA::PDF::PDF( const TH1 *hist, TMVA::PDF::SmoothMethod method, Int_t nsmooth )
-   : fUseHistogram( kFALSE ),
-     fNsmooth ( nsmooth ),
+   : fNsmooth ( nsmooth ),
      fSpline  ( 0 ),
      fPDFHist ( 0 ),
      fHist    ( 0 ),
-     fGraph   ( 0 )
+     fGraph   ( 0 ),
+     fIntegral( 1.0)
 {  
    // constructor: 
    // - default Spline method is: Spline2 (quadratic)
@@ -67,29 +57,22 @@ TMVA::PDF::PDF( const TH1 *hist, TMVA::PDF::SmoothMethod method, Int_t nsmooth )
 
    // sanity check
    if (hist == NULL) {
-      cout << "--- " << GetName() << ": ERROR!!! Called without valid histogram pointer!" << endl;
+      cout << "--- TMVA::PDF: ERROR!!! Called without valid histogram pointer!" << endl;
       exit(1);
    }
    fNbinsPDFHist = NBIN_PdfHist_;
    fHist = (TH1*)hist->Clone();
   
-   // check sanity of reference histogram
-   // (not useful for discrete distributions, or if no splines are requested)
-   if (method != TMVA::PDF::kSpline0) CheckHist();
+   // check histogram!
+   CheckHist();
     
    // use ROOT TH1 smooth methos
-   if (fNsmooth > 0) fHist->Smooth( fNsmooth );
+   if (fNsmooth >0) fHist->Smooth( fNsmooth );
   
    // fill histogramm to graph
    fGraph = new TGraph( hist );
     
    switch (method) {
-
-   case TMVA::PDF::kSpline0:
-      // use original histogram as reference
-      // this is useful, eg, for discrete variables
-      fUseHistogram = kTRUE;
-      break;
 
    case TMVA::PDF::kSpline1:
       fSpline = new TMVA::TSpline1( "spline1", fGraph );
@@ -100,37 +83,28 @@ TMVA::PDF::PDF( const TH1 *hist, TMVA::PDF::SmoothMethod method, Int_t nsmooth )
       break;
 
    case TMVA::PDF::kSpline3:
-      fSpline = new TSpline3( "spline3", fGraph );
+      fSpline = new TSpline3    ( "spline3", fGraph );
       break;
     
    case TMVA::PDF::kSpline5:
-      fSpline = new TSpline5( "spline5", fGraph );
+      fSpline = new TSpline5    ( "spline5", fGraph );
       break;
 
    default:
       cout << "--- " << GetName() 
            << ": Warning no valid interpolation method given! Use Spline3" << endl;
-      fSpline = new TMVA::TSpline2( "spline2", fGraph );
+      fSpline = new TSpline3    ( "spline3", fGraph );
    }
 
    // fill into histogram 
    FillSplineToHist();
 
-   if (!UseHistogram()) {
-      fSpline->SetTitle( (TString)fHist->GetTitle() + fSpline->GetTitle() );
-      fSpline->SetName ( (TString)fHist->GetName()  + fSpline->GetName()  );
-   }
-
-   // sanity check
-   Double_t integral = GetIntegral();
-   if (integral < 0) {
-      cout << "--- " << GetName() 
-           << ": fatal error: integral: " << integral << " <= 0 ==> abort" << endl;
-      exit(1);
-   }
+   fSpline->SetTitle( (TString)hist->GetTitle() + fSpline->GetTitle() );
+   fSpline->SetName ( (TString)hist->GetName()  + fSpline->GetName()  );
 
    // normalize
-   if(integral>0)  fPDFHist->Scale( 1.0/integral );
+   Integral();
+   fPDFHist->Scale( 1.0/fIntegral );
 }
 
 //_______________________________________________________________________
@@ -146,30 +120,21 @@ TMVA::PDF::~PDF( void )
 //_______________________________________________________________________
 void TMVA::PDF::FillSplineToHist( void )
 {
-   // creates high-binned reference histogram to be used instead of the 
+   // creates high-binned reference histogram to be used in stead of the 
    // PDF for speed reasons 
 
-   if (UseHistogram()) {
-      // no spline given, use the original histogram
-      fPDFHist = (TH1*)fHist->Clone();
-      fPDFHist->SetTitle( (TString)fHist->GetTitle() + "_hist from_spline0" );
-      fPDFHist->SetName ( (TString)fHist->GetName()  + "_hist_from_spline0" );      
-   }
-   else {
-      // create new reference histogram
-      fPDFHist = new TH1F( "", "", fNbinsPDFHist, fXmin, fXmax );
-      fPDFHist->SetTitle( (TString)fHist->GetTitle() + "_hist from_" + fSpline->GetTitle() );
-      fPDFHist->SetName ( (TString)fHist->GetName()  + "_hist_from_" + fSpline->GetTitle() );
-      
-      for (Int_t bin=1; bin <= fNbinsPDFHist; bin++) {
-         Double_t x = fPDFHist->GetBinCenter( bin );
-         Double_t y = fSpline->Eval( x );
-         // sanity correction: in cases where strong slopes exist, accidentally, the 
-         // splines can go to zero; in this case we set the corresponding bin content
-         // equal to the bin content of the original histogram
-         if (y <= TMVA::PDF_epsilon_) y = fHist->GetBinContent( fHist->FindBin( x ) );
-         fPDFHist->SetBinContent( bin, TMath::Max(y, TMVA::PDF_epsilon_) );
-      }
+   fPDFHist = new TH1D( "", "", fNbinsPDFHist, fXmin, fXmax );
+   fPDFHist->SetTitle( (TString)fHist->GetTitle() + "_hist from_" + fSpline->GetTitle() );
+   fPDFHist->SetName ( (TString)fHist->GetName()  + "_hist_from_" + fSpline->GetTitle() );
+
+   for (Int_t bin=1; bin <= fNbinsPDFHist; bin++) {
+      Double_t x = fPDFHist->GetBinCenter( bin );
+      Double_t y = fSpline->Eval( x );
+      // sanity correction: in cases where strong slopes exist, accidentally, the 
+      // splines can go to zero; in this case we set the corresponding bin content
+      // equal to the bin content of the original histogram
+      if (y <= TMVA::PDF_epsilon_) y = fHist->GetBinContent( fHist->FindBin( x ) );
+      fPDFHist->SetBinContent( bin, TMath::Max(y, TMVA::PDF_epsilon_) );
    }
 }
 
@@ -209,7 +174,7 @@ void TMVA::PDF::CheckHist(void)
 }
 
 //_______________________________________________________________________
-Double_t  TMVA::PDF::GetIntegral( void )
+Double_t  TMVA::PDF::Integral( void )
 {
    // computes normalisation
    return GetIntegral( fXmin, fXmax );
@@ -220,19 +185,13 @@ Double_t TMVA::PDF::GetIntegral( Double_t xmin, Double_t xmax )
 {  
    // computes PDF integral within given ranges
    Double_t  integral = 0;
-
-   if (UseHistogram()) {
-      integral = fPDFHist->GetEntries();
+   Int_t     nsteps   = 10000;
+   Double_t  intBin   = (xmax - xmin)/nsteps; // bin width for integration
+   for (Int_t bini=0; bini < nsteps; bini++) {
+      Double_t x = (bini + 0.5)*intBin + xmin;
+      integral += GetVal( x );
    }
-   else {
-      Int_t     nsteps   = 10000;
-      Double_t  intBin   = (xmax - xmin)/nsteps; // bin width for integration
-      for (Int_t bini=0; bini < nsteps; bini++) {
-         Double_t x = (bini + 0.5)*intBin + xmin;
-         integral += GetVal( x );
-      }
-      integral *= intBin;
-   }
+   integral *= intBin;
   
    return integral;
 }
@@ -243,29 +202,25 @@ Double_t TMVA::PDF::GetVal( const Double_t x )
    // returns value PDF(x)
 
    // check which is filled
-   Int_t bin = fPDFHist->FindBin(x);
-   if      (bin < 1            ) bin = 1;
+   Int_t bin       = fPDFHist->FindBin(x);
+   if      (bin < 1             ) bin = 1;
    else if (bin > fNbinsPDFHist) bin = fNbinsPDFHist;
 
-   Double_t retval = 0;
+   Int_t nextbin   = bin;
+   if ((x > fPDFHist->GetBinCenter(bin) && bin != fNbinsPDFHist) || bin == 1) 
+      nextbin++;
+   else
+      nextbin--;  
 
-   if (UseHistogram()) {
-      retval = fPDFHist->GetBinContent( bin );
-   }
-   else {
-      Int_t nextbin = bin;
-      if ((x > fPDFHist->GetBinCenter(bin) && bin != fNbinsPDFHist) || bin == 1) 
-         nextbin++;
-      else
-         nextbin--;  
-      
-      // linear interpolation between adjacent bins
-      Double_t dx     = fPDFHist->GetBinCenter( bin )  - fPDFHist->GetBinCenter( nextbin );
-      Double_t dy     = fPDFHist->GetBinContent( bin ) - fPDFHist->GetBinContent( nextbin );
-      retval = fPDFHist->GetBinContent( bin ) + (x - fPDFHist->GetBinCenter( bin ))*dy/dx;
-   }
+   //sanity check
+   if (fIntegral <= 0.0) fIntegral = 1.0;
 
-   return TMath::Max( retval, TMVA::PDF_epsilon_ );
+   // linear interpolation between adjacent bins
+   Double_t dx     = fPDFHist->GetBinCenter(bin)  - fPDFHist->GetBinCenter(nextbin);
+   Double_t dy     = fPDFHist->GetBinContent(bin) - fPDFHist->GetBinContent(nextbin);
+   Double_t retval = fPDFHist->GetBinContent(bin) + (x - fPDFHist->GetBinCenter(bin))*dy/dx;
+
+   return max(retval, TMVA::PDF_epsilon_);
 }
 
 

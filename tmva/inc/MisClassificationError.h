@@ -1,11 +1,10 @@
-// @(#)root/tmva $Id: MisClassificationError.h,v 1.7 2006/08/30 22:19:59 andreas.hoecker Exp $
+// @(#)root/tmva $Id: MisClassificationError.h,v 1.2 2006/05/23 13:03:15 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MisClassificationError                                                *
- * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation of the MisClassificationError as separation                *
@@ -26,7 +25,10 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (http://mva.sourceforge.net/license.txt)                                       *
+ *                                                                                *
+ * File and Version Information:                                                  *
+ * $Id: MisClassificationError.h,v 1.2 2006/05/23 13:03:15 brun Exp $  
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MisClassificationError
