@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2.cxx,v 1.3 2006/10/04 10:46:49 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2.cxx,v 1.4 2006/10/09 14:25:48 brun Exp $
 // Author: Miroslav Morhac   17/01/2006
 
 /////////////////////////////////////////////////////////////////////////////
@@ -394,7 +394,7 @@ Nonlinear Iterative Peak (SNIP) clipping algorithm [1]</span></p>
 -18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </span></span><span style='font-size:16.0pt'>there exist two algorithms for the
 estimation of new value in the channel “<sub><img width=28 height=24
-src="TSpectrum2_Background1.gif"></sub>”</span></p>
+src="gif/TSpectrum2_Background1.gif"></sub>”</span></p>
 
 <p class=MsoNormal style='margin-left:18.0pt;text-align:justify'><span
 style='font-size:16.0pt'>&nbsp;</span></p>
@@ -415,19 +415,19 @@ based on One Step Filtering</span></i></p>
 value in the estimated channel is calculated as</span></p>
 
 <p class=MsoNormal style='text-align:justify'><sub><img width=133 height=39
-src="TSpectrum2_Background2.gif"></sub></p>
+src="gif/TSpectrum2_Background2.gif"></sub></p>
 
 <p class=MsoNormal style='text-align:justify'>&nbsp;</p>
 
 <p class=MsoNormal style='text-align:justify'>&nbsp;</p>
 
 <p class=MsoNormal style='text-align:justify'><sub><img width=600 height=128
-src="TSpectrum2_Background3.gif"></sub></p>
+src="gif/TSpectrum2_Background3.gif"></sub></p>
 
 <p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>&nbsp;</span></p>
 
 <p class=MsoNormal><sub><img width=190 height=38
-src="TSpectrum2_Background4.gif"></sub>.</p>
+src="gif/TSpectrum2_Background4.gif"></sub>.</p>
 
 <p class=MsoNormal>&nbsp;</p>
 
@@ -694,13 +694,13 @@ A401 (1997) 113-132.</span></p>
 :</span></i></p>
 
 <p class=MsoNormal><img width=602 height=418
-src="TSpectrum2_Background1.jpg"></p>
+src="gif/TSpectrum2_Background1.jpg"></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 1 Original two-dimensional gamma-gamma-ray spectrum</span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-width=602 height=418 src="TSpectrum2_Background2.jpg"></span></b></p>
+width=602 height=418 src="gif/TSpectrum2_Background2.jpg"></span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 2 Background estimated from data from Fig. 1 using decreasing clipping window with
@@ -709,7 +709,7 @@ includes not only continuously changing background but also one-dimensional
 ridges.</span></b></p>
 
 <p class=MsoNormal><b><span style='font-size:14.0pt;color:green'><img
-width=602 height=418 src="TSpectrum2_Background3.jpg"></span></b></p>
+width=602 height=418 src="gif/TSpectrum2_Background3.jpg"></span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 3 Resulting peaks after subtraction of the estimated background (Fig. 2) from original
@@ -800,13 +800,13 @@ window&quot;,10,10,1000,700);</p>
 :</span></i></p>
 
 <p class=MsoNormal><img width=602 height=418
-src="TSpectrum2_Background4.jpg"></p>
+src="gif/TSpectrum2_Background4.jpg"></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 4 Original two-dimensional gamma-gamma-ray spectrum 256x256 channels</span></b></p>
 
 <p class=MsoNormal><img width=602 height=418
-src="TSpectrum2_Background5.jpg"></p>
+src="gif/TSpectrum2_Background5.jpg"></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 5 Peaks after subtraction of the estimated background (increasing clipping
@@ -894,13 +894,13 @@ window&quot;,10,10,1000,700);</p>
 :</span></i></p>
 
 <p class=MsoNormal><img width=602 height=418
-src="TSpectrum2_Background6.jpg"></p>
+src="gif/TSpectrum2_Background6.jpg"></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 6 Original two-dimensional synthetic spectrum 256x256 channels</span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-width=602 height=418 src="TSpectrum2_Background7.jpg"></span></b></p>
+width=602 height=418 src="gif/TSpectrum2_Background7.jpg"></span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 7 Peaks after subtraction of the estimated background (increasing clipping
@@ -909,7 +909,7 @@ two-dimensional gamma-gamma-ray spectrum (Fig. 6). One can observe artifacts
 (ridges) around the peaks due to the employed algorithm.</span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-width=602 height=418 src="TSpectrum2_Background8.jpg"></span></b></p>
+width=602 height=418 src="gif/TSpectrum2_Background8.jpg"></span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 8 Peaks after subtraction of the estimated background (increasing clipping
@@ -1035,14 +1035,14 @@ Markov chain, which has very simple invariant distribution</span></p>
 <p class=MsoNormal>&nbsp;</p>
 
 <p class=MsoNormal>            <sub><img width=551 height=63
-src="TSpectrum2_Smoothing1.gif"></sub><span style='font-size:16.0pt;
+src="gif/TSpectrum2_Smoothing1.gif"></sub><span style='font-size:16.0pt;
 font-family:Arial'>     </span></p>
 
 <p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt;
 font-family:Arial'>        </span><sub><img width=28 height=36
-src="TSpectrum2_Smoothing2.gif"></sub><span style='font-size:16.0pt;
+src="gif/TSpectrum2_Smoothing2.gif"></sub><span style='font-size:16.0pt;
 font-family:Arial'>  being defined from the normalization condition </span><sub><img
-width=70 height=52 src="TSpectrum2_Smoothing3.gif"></sub></p>
+width=70 height=52 src="gif/TSpectrum2_Smoothing3.gif"></sub></p>
 
 <p class=MsoNormal>&nbsp;</p>
 
@@ -1057,7 +1057,7 @@ is the length of the smoothed spectrum and </span></p>
  </tr>
  <tr>
   <td></td>
-  <td><img width=258 height=60 src="TSpectrum2_Smoothing4.gif"></td>
+  <td><img width=258 height=60 src="gif/TSpectrum2_Smoothing4.gif"></td>
  </tr>
 </table>
 
@@ -1072,10 +1072,10 @@ is the length of the smoothed spectrum and </span></p>
 <p class=MsoNormal style='margin-left:34.2pt;text-align:justify'><span
 style='font-size:16.0pt;font-family:Arial'>is the probability of the change of
 the peak position from channel i to the channel i+1. </span> <sub><img
-width=28 height=36 src="TSpectrum2_Smoothing5.gif"></sub><span
+width=28 height=36 src="gif/TSpectrum2_Smoothing5.gif"></sub><span
 style='font-size:16.0pt;font-family:Arial'>is the normalization constant so
 that </span><span style='font-family:Arial'><sub><img width=133 height=34
-src="TSpectrum2_Smoothing6.gif"></sub> </span><span style='font-size:16.0pt;
+src="gif/TSpectrum2_Smoothing6.gif"></sub> </span><span style='font-size:16.0pt;
 font-family:Arial'>and m is a width of smoothing window. We have extended this
 algortihm to two dimensions. </span></p>
 
@@ -1313,8 +1313,8 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
 :</span></i></p>
 
 <p class=MsoNormal><span style='font-size:16.0pt'><img width=300 height=209
-src="TSpectrum2_Smoothing1.jpg"><img width=297 height=207
-src="TSpectrum2_Smoothing2.jpg"></span></p>
+src="gif/TSpectrum2_Smoothing1.jpg"><img width=297 height=207
+src="gif/TSpectrum2_Smoothing2.jpg"></span></p>
 
 <p class=MsoNormal><b><span style='font-size:16.0pt'>Fig. 9 Original noisy
 spectrum.</span></b><b><span style='font-size:14.0pt'>    </span></b><b><span
@@ -1324,8 +1324,8 @@ style='font-size:16.0pt'>Fig. 10 Smoothed spectrum m=3</span></b></p>
 observed.     Peaks become apparent.</span></b></p>
 
 <p class=MsoNormal><b><span style='font-size:14.0pt'><img width=293 height=203
-src="TSpectrum2_Smoothing3.jpg"><img width=297 height=205
-src="TSpectrum2_Smoothing4.jpg"></span></b></p>
+src="gif/TSpectrum2_Smoothing3.jpg"><img width=297 height=205
+src="gif/TSpectrum2_Smoothing4.jpg"></span></b></p>
 
 <p class=MsoNormal><b><span style='font-size:16.0pt'>Fig. 11 Smoothed spectrum
 m=5 Fig.12 Smoothed spectrum m=7</span></b></p>
@@ -1457,7 +1457,7 @@ the 2-dimensional convolution system is</span></p>
  </tr>
  <tr>
   <td></td>
-  <td><img width=577 height=138 src="TSpectrum2_Deconvolution1.gif"></td>
+  <td><img width=577 height=138 src="gif/TSpectrum2_Deconvolution1.gif"></td>
  </tr>
 </table>
 
@@ -1481,7 +1481,7 @@ the 2-dimensional convolution system is</span></p>
 
 <p class=MsoNormal><span style='font-size:16.0pt'>where h(i,j) is the impulse
 response function, x, y are input and output matrices, respectively, <sub><img
-width=45 height=24 src="TSpectrum2_Deconvolution2.gif"></sub> are the lengths
+width=45 height=24 src="gif/TSpectrum2_Deconvolution2.gif"></sub> are the lengths
 of x and h matrices</span><i><span style='font-size:18.0pt'> </span></i></p>
 
 <p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
@@ -1761,19 +1761,19 @@ should be shifted to the beginning of the coordinate system (see Fig. 13)</span>
 <p class=MsoNormal>&nbsp;</p>
 
 <p class=MsoNormal><img width=602 height=418
-src="TSpectrum2_Deconvolution1.jpg"></p>
+src="gif/TSpectrum2_Deconvolution1.jpg"></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 13 2-dimensional response spectrum</span></b></p>
 
 <p class=MsoNormal><img width=602 height=418
-src="TSpectrum2_Deconvolution2.jpg"></p>
+src="gif/TSpectrum2_Deconvolution2.jpg"></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 14 2-dimensional gamma-gamma-ray input spectrum (before deconvolution)</span></b></p>
 
 <p class=MsoNormal><img width=602 height=418
-src="TSpectrum2_Deconvolution3.jpg"></p>
+src="gif/TSpectrum2_Deconvolution3.jpg"></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 15 Spectrum from Fig. 14 after deconvolution (1000 iterations)</span></b></p>
@@ -1887,13 +1887,13 @@ TCanvas(&quot;Deconvolution&quot;,&quot;Gold deconvolution&quot;,10,10,1000,700)
 Decon2.c :</span></i></p>
 
 <p class=MsoNormal><img width=602 height=418
-src="TSpectrum2_Deconvolution4.jpg"></p>
+src="gif/TSpectrum2_Deconvolution4.jpg"></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 16 Response spectrum</span></b></p>
 
 <p class=MsoNormal><img width=602 height=418
-src="TSpectrum2_Deconvolution5.jpg"></p>
+src="gif/TSpectrum2_Deconvolution5.jpg"></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 17 Original synthetic input spectrum (before deconvolution). It is composed of
@@ -1901,7 +1901,7 @@ src="TSpectrum2_Deconvolution5.jpg"></p>
 doublet.</span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-width=602 height=418 src="TSpectrum2_Deconvolution6.jpg"></span></b></p>
+width=602 height=418 src="gif/TSpectrum2_Deconvolution6.jpg"></span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 18 Spectrum from Fig. 17 after deconvolution (1000 iterations). Resolution is
@@ -2012,7 +2012,7 @@ deconvolution&quot;,10,10,1000,700);</p>
 Decon2HR.c :</span></i></p>
 
 <p class=MsoNormal><img width=602 height=418
-src="TSpectrum2_Deconvolution7.jpg"></p>
+src="gif/TSpectrum2_Deconvolution7.jpg"></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 19 Spectrum from Fig. 17 after boosted deconvolution (50 iterations repeated 20
@@ -2921,15 +2921,15 @@ parameters. </span></p>
 <p class=MsoNormal><i><span style='font-size:16.0pt'>Example 8 – script Src.c:</span></i></p>
 
 <p class=MsoNormal><span style='font-size:16.0pt'><img border=0 width=602
-height=455 src="TSpectrum2_Searching1.jpg"></span></p>
+height=455 src="gif/TSpectrum2_Searching1.jpg"></span></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 20 Two-dimensional spectrum with found peaks denoted by markers (<sub><img
-border=0 width=40 height=19 src="TSpectrum2_Searching2.gif"></sub>,
+border=0 width=40 height=19 src="gif/TSpectrum2_Searching2.gif"></sub>,
 threshold=5%, 3 iterations steps in the deconvolution)</span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="TSpectrum2_Searching3.jpg"></span></b></p>
+border=0 width=602 height=455 src="gif/TSpectrum2_Searching3.jpg"></span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 21 Spectrum from Fig. 20 after background elimination and deconvolution</span></b></p>
@@ -3019,17 +3019,17 @@ nbinsy, 2, 5, kTRUE, 3, kFALSE, 3);   </p>
 <p class=MsoNormal><i><span style='font-size:16.0pt'>Example 9 – script Src2.c:</span></i></p>
 
 <p class=MsoNormal><img border=0 width=602 height=455
-src="TSpectrum2_Searching4.jpg"></p>
+src="gif/TSpectrum2_Searching4.jpg"></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 22 Two-dimensional noisy spectrum with found peaks denoted by markers (<sub><img
-border=0 width=40 height=19 src="TSpectrum2_Searching2.gif"></sub>,
+border=0 width=40 height=19 src="gif/TSpectrum2_Searching2.gif"></sub>,
 threshold=10%, 10 iterations steps in the deconvolution). One can observe that
 the algorithm is insensitive to the crossings of one-dimensional ridges. It
 identifies only two-cooincidence peaks.</span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="TSpectrum2_Searching5.jpg"></span></b></p>
+border=0 width=602 height=455 src="gif/TSpectrum2_Searching5.jpg"></span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 23 Spectrum from Fig. 22 after background elimination and deconvolution</span></b></p>
@@ -3122,7 +3122,7 @@ nbinsy, 2, 10, kTRUE, 10, kFALSE, 3);   </p>
 <p class=MsoNormal><i><span style='font-size:16.0pt'>Example 10 – script Src3.c:</span></i></p>
 
 <p class=MsoNormal><img border=0 width=602 height=455
-src="TSpectrum2_Searching6.jpg"></p>
+src="gif/TSpectrum2_Searching6.jpg"></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 24 Two-dimensional spectrum with 15 found peaks denoted by markers. Some peaks
@@ -3131,21 +3131,21 @@ iterations in the deconvolution. In next 3 Figs. we shall study the influence
 of this parameter.</span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="TSpectrum2_Searching7.jpg"></span></b></p>
+border=0 width=602 height=455 src="gif/TSpectrum2_Searching7.jpg"></span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 25 Spectrum from Fig. 24 after deconvolution (# of iterations = 3). Number of
 identified peaks = 13.</span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="TSpectrum2_Searching8.jpg"></span></b></p>
+border=0 width=602 height=455 src="gif/TSpectrum2_Searching8.jpg"></span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 26 Spectrum from Fig. 24 after deconvolution (# of iterations = 10). Number of
 identified peaks = 13.</span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="TSpectrum2_Searching9.jpg"></span></b></p>
+border=0 width=602 height=455 src="gif/TSpectrum2_Searching9.jpg"></span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 27 Spectrum from Fig. 24 after deconvolution (# of iterations = 100). Number of
@@ -3242,16 +3242,16 @@ nbinsy, 2, 2, kFALSE, 3, kFALSE, 1);//3, 10, 100   </p>
 <p class=MsoNormal><i><span style='font-size:16.0pt'>Example 11 – script Src4.c:</span></i></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="TSpectrum2_Searching10.jpg"></span></b></p>
+border=0 width=602 height=455 src="gif/TSpectrum2_Searching10.jpg"></span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 28 Two-dimensional spectrum with peaks with different sigma denoted by markers (<sub><img
-border=0 width=39 height=19 src="TSpectrum2_Searching11.gif"></sub>,
+border=0 width=39 height=19 src="gif/TSpectrum2_Searching11.gif"></sub>,
 threshold=5%, 10 iterations steps in the deconvolution, Markov smoothing with
 window=3)</span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="TSpectrum2_Searching12.jpg"></span></b></p>
+border=0 width=602 height=455 src="gif/TSpectrum2_Searching12.jpg"></span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 29 Spectrum from Fig. 28 after smoothing and deconvolution.</span></b></p>
@@ -3344,16 +3344,16 @@ nbinsy, 3, 5, kFALSE, 10, kTRUE, 3);   </p>
 <p class=MsoNormal><i><span style='font-size:16.0pt'>Example 12 – script Src5.c:</span></i></p>
 
 <p class=MsoNormal><img border=0 width=602 height=455
-src="TSpectrum2_Searching13.jpg"></p>
+src="gif/TSpectrum2_Searching13.jpg"></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 30 Two-dimensional spectrum with peaks positioned close to the edges denoted by
 markers (<sub><img border=0 width=40 height=19
-src="TSpectrum2_Searching2.gif"></sub>, threshold=5%, 10 iterations
+src="gif/TSpectrum2_Searching2.gif"></sub>, threshold=5%, 10 iterations
 steps in the deconvolution)</span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="TSpectrum2_Searching14.jpg"></span></b></p>
+border=0 width=602 height=455 src="gif/TSpectrum2_Searching14.jpg"></span></b></p>
 
 <p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
 31 Spectrum from Fig. 30 after deconvolution.</span></b></p>
