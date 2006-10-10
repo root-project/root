@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.21 2006/09/05 17:13:15 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.22 2006/09/08 20:41:30 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -259,7 +259,7 @@ const ROOT::Reflex::Base & ROOT::Reflex::Class::HasBase( const Type & cl,
          return lb; 
       }
       // if searched BaseAt class is not direct BaseAt look in the bases of this one
-      else {
+      else if ( lb.BaseClass() ) {
          const Base & b = lb.BaseClass()->HasBase( cl, path );
          if ( b ) {                                              
             // if successfull remember path

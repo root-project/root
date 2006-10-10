@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.15 2006/09/14 12:57:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.16 2006/09/14 13:35:58 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -52,6 +52,7 @@ class ReflexBuilderUnitTest : public CppUnit::TestFixture {
   CPPUNIT_TEST( type_template );
   CPPUNIT_TEST( member_template );
   CPPUNIT_TEST( typebuilder );
+  CPPUNIT_TEST( bases );
   CPPUNIT_TEST( hiddentypes );
   CPPUNIT_TEST( shutdown );
   CPPUNIT_TEST_SUITE_END();
@@ -78,6 +79,7 @@ public:
   void type_template();
   void member_template();
   void typebuilder();
+  void bases();
   void hiddentypes();
 
   void shutdown();
@@ -978,6 +980,20 @@ void ReflexBuilderUnitTest::member_template() {
 
 void ReflexBuilderUnitTest::typebuilder() {
   CPPUNIT_ASSERT_EQUAL(7, int(Tools::MakeVector(1,2,3,4,5,6,7).size()));
+}
+
+
+struct base {};
+struct dev : public base {};
+
+void ReflexBuilderUnitTest::bases() {
+
+   ClassBuilder("dev", typeid(dev), sizeof(dev), PUBLIC | CLASS)
+      .AddBase(TypeBuilder("base"), BaseOffset<dev,base >::Get(), PUBLIC);
+
+   bool b = Type::ByName("dev").HasBase(Type::ByName("base"));
+
+   CPPUNIT_ASSERT_EQUAL(false, b);
 }
 
 
