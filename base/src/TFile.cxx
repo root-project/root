@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.188 2006/09/11 08:11:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.189 2006/10/05 14:53:48 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -237,7 +237,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    if (sfname1.Index("?") != kNPOS) {
       TString s = sfname1(0, sfname1.Index("?"));
       SetName(s);
-	   fNoAnchorInName = kTRUE;
+      fNoAnchorInName = kTRUE;
    } else
       SetName(fname1);
 
@@ -473,8 +473,8 @@ void TFile::Init(Bool_t create)
 
       // Make sure the anchor is in the name
       if (!fNoAnchorInName)
-	      if (!strchr(GetName(),'#'))
-	         SetName(Form("%s#%s", GetName(), fArchive->GetMemberName()));
+         if (!strchr(GetName(),'#'))
+            SetName(Form("%s#%s", GetName(), fArchive->GetMemberName()));
 
       if (fArchive->SetCurrentMember() != -1)
          fArchiveOffset = fArchive->GetMemberFilePosition();

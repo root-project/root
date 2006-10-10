@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.25 2006/09/26 08:07:18 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.26 2006/10/05 18:19:09 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -268,6 +268,8 @@ TGLSAViewer::~TGLSAViewer()
 //______________________________________________________________________________
 void TGLSAViewer::RefreshPadEditor(TObject* changed)
 {
+   // Refresh pad editor.
+   
    if (changed == 0 || fGedEditor->GetModel() == changed) {
       fGedEditor->SetModel(fPad, fGedEditor->GetModel(), kButton1Down);
    }

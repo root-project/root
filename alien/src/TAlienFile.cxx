@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.21 2006/05/31 09:58:31 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.22 2006/10/05 14:56:24 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -92,7 +92,7 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t * option,
                              const char *ftitle, Int_t compress,
                              Bool_t parallelopen)
 {
-
+   // main constructor
    if (!gGrid) {
       ::Error("TAlienFileAccess", "No GRID connection available!");
       return 0;

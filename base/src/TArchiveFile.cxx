@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TArchiveFile.cxx,v 1.4 2006/06/09 01:21:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TArchiveFile.cxx,v 1.5 2006/10/05 14:53:48 rdm Exp $
 // Author: Fons Rademakers   30/6/04
 
 /*************************************************************************
@@ -158,9 +158,9 @@ Bool_t TArchiveFile::ParseUrl(const char *url, TString &archive, TString &member
          TString value = ((TObjString*)objTags->At(1))->GetName();
 
          if (!key.CompareTo("zip", TString::kIgnoreCase)) {
-	         archive = u.GetFile();
+            archive = u.GetFile();
             archive += ".zip";
-	         member = value;
+            member = value;
          }
       }
       delete objTags;

@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.8 2006/05/19 07:30:04 brun Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.9 2006/10/05 14:56:24 rdm Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -308,11 +308,12 @@ TGridResult *TAlienCollection::GetGridResult(const char *filename,
 //______________________________________________________________________________
 Bool_t TAlienCollection::OverlapCollection(TAlienCollection * comparator)
 {
+   // return kTRUE if comparator overlaps with this
    if ((!comparator)) {
       return kFALSE;
    }
 
- loopagain:
+   loopagain:
    // loop over col1 and try to find it in col2
    this->Reset();
    // loop over all elements in reference (=this)

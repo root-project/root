@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.20 2006/06/22 08:21:22 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.21 2006/10/05 10:28:49 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -32,20 +32,20 @@ struct SXmlAttr_t {
 };
 
 enum EXmlNodeType {
-  XML_NODE = 1,       // normal node with childs
-  XML_COMMENT = 2,    // comment (stored as value of node fName)
-  XML_PI_NODE = 3,    // processing instructions node (like <?name  attr="" ?>
-  XML_RAWLINE = 4     // just one line of xml code
+  kXML_NODE = 1,       // normal node with childs
+  kXML_COMMENT = 2,    // comment (stored as value of node fName)
+  kXML_PI_NODE = 3,    // processing instructions node (like <?name  attr="" ?>
+  kXML_RAWLINE = 4     // just one line of xml code
 };
 
 struct SXmlNode_t {
-   EXmlNodeType type;    //  this is node type - node, comment, processing instruction and so on
-   SXmlAttr_t  *fAttr;
-   SXmlAttr_t  *fNs;
-   SXmlNode_t  *fNext;
-   SXmlNode_t  *fChild;
-   SXmlNode_t  *fLastChild;
-   SXmlNode_t  *fParent;
+   EXmlNodeType fType;    //  this is node type - node, comment, processing instruction and so on
+   SXmlAttr_t  *fAttr;    // first attribute 
+   SXmlAttr_t  *fNs;      // name space definition (if any)
+   SXmlNode_t  *fNext;    // next node on the same level of hierarchy 
+   SXmlNode_t  *fChild;   // first child node
+   SXmlNode_t  *fLastChild; // last child node
+   SXmlNode_t  *fParent;   // parent node
    char         fName;    // this is start of node name, if 0 next byte is start of content
 };
 
@@ -680,7 +680,7 @@ Bool_t TXMLEngine::AddComment(XMLNodePointer_t xmlnode, const char* comment)
    if ((xmlnode==0) || (comment==0)) return kFALSE;
    
    SXmlNode_t* node = (SXmlNode_t*) AllocateNode(strlen(comment), xmlnode);
-   node->type = XML_COMMENT;
+   node->fType = kXML_COMMENT;
    strcpy(&(node->fName), comment);
    
    return kTRUE;
@@ -713,7 +713,7 @@ Bool_t TXMLEngine::AddRawLine(XMLNodePointer_t xmlnode, const char* line)
    if ((xmlnode==0) || (line==0)) return kFALSE;
    
    SXmlNode_t* node = (SXmlNode_t*) AllocateNode(strlen(line), xmlnode);
-   node->type = XML_RAWLINE;
+   node->fType = kXML_RAWLINE;
    strcpy(&(node->fName), line);
    
    return kTRUE;
@@ -759,7 +759,7 @@ Bool_t TXMLEngine::AddStyleSheet(XMLNodePointer_t xmlnode,
    const char* nodename = "xml-stylesheet";
    
    SXmlNode_t* node = (SXmlNode_t*) AllocateNode(strlen(nodename), xmlnode);
-   node->type = XML_PI_NODE;
+   node->fType = kXML_PI_NODE;
    strcpy(&(node->fName), nodename);
    
    if (alternate>=0)
@@ -921,7 +921,7 @@ void TXMLEngine::ShiftToNext(XMLNodePointer_t &xmlnode, bool tonode)
       xmlnode = xmlnode==0 ? 0 : (XMLNodePointer_t) ((SXmlNode_t*) xmlnode)->fNext;
       if ((xmlnode==0) || !tonode) return;
       
-   } while (((SXmlNode_t*) xmlnode)->type != XML_NODE);
+   } while (((SXmlNode_t*) xmlnode)->fType != kXML_NODE);
 }
 
 //______________________________________________________________________________
@@ -929,7 +929,7 @@ Bool_t TXMLEngine::IsEmptyNode(XMLNodePointer_t xmlnode)
 {
    // return kTRUE is this is node with special data like comments to data processing instructions 
    
-   return xmlnode==0 ? kTRUE : (((SXmlNode_t*) xmlnode)->type != XML_NODE);
+   return xmlnode==0 ? kTRUE : (((SXmlNode_t*) xmlnode)->fType != kXML_NODE);
 }
 
 //______________________________________________________________________________
@@ -970,7 +970,7 @@ XMLDocPointer_t TXMLEngine::NewDoc(const char* version)
    
    if (version!=0) {
       XMLNodePointer_t vernode = NewChild( (XMLNodePointer_t) doc->fRootNode, 0, "xml");
-      ((SXmlNode_t*) vernode)->type = XML_PI_NODE;
+      ((SXmlNode_t*) vernode)->fType = kXML_PI_NODE;
       NewAttr(vernode, 0, "version", version);
    }
    
@@ -1103,7 +1103,7 @@ Bool_t TXMLEngine::ValidateVersion(XMLDocPointer_t xmldoc, const char* version)
    XMLNodePointer_t vernode = GetChild((XMLNodePointer_t) ((SXmlDoc_t*) xmldoc)->fRootNode);
    if (vernode==0) return kFALSE;
    
-   if (((SXmlNode_t*) vernode)->type!=XML_PI_NODE) return kFALSE;
+   if (((SXmlNode_t*) vernode)->fType!=kXML_PI_NODE) return kFALSE;
    if (strcmp(GetNodeName(vernode), "xml")!=0) return kFALSE;
    
    const char* value = GetAttr(vernode,"version");
@@ -1185,7 +1185,7 @@ XMLNodePointer_t TXMLEngine::AllocateNode(int namelen, XMLNodePointer_t parent)
 
    SXmlNode_t* node = (SXmlNode_t*) malloc(sizeof(SXmlNode_t) + namelen);
 
-   node->type = XML_NODE;
+   node->fType = kXML_NODE;
    node->fParent = 0;
    node->fNs = 0;
    node->fAttr = 0;
@@ -1329,21 +1329,21 @@ void TXMLEngine::SaveNode(XMLNodePointer_t xmlnode, TXMLOutputStream* out, Int_t
 
    if (layout>0) out->Put(' ', level);
 
-   if (node->type==XML_COMMENT) {
+   if (node->fType==kXML_COMMENT) {
       out->Write("<!--");
       out->Write(&(node->fName));
       out->Write("-->");
       if (layout>0) out->Put('\n');
       return;
    } else
-   if (node->type==XML_RAWLINE) {
+   if (node->fType==kXML_RAWLINE) {
       out->Write(&(node->fName));
       if (layout>0) out->Put('\n');
       return; 
    }
 
    out->Put('<');
-   if (node->type==XML_PI_NODE) out->Put('?');
+   if (node->fType==kXML_PI_NODE) out->Put('?');
    
    // we suppose that ns is always first attribute
    if ((node->fNs!=0) && (node->fNs!=node->fAttr)) {
@@ -1366,7 +1366,7 @@ void TXMLEngine::SaveNode(XMLNodePointer_t xmlnode, TXMLOutputStream* out, Int_t
 
    // if single line, close node with "/>" and return
    if (issingleline) {
-      if (node->type==XML_PI_NODE) out->Write("?>");
+      if (node->fType==kXML_PI_NODE) out->Write("?>");
                               else out->Write("/>");
       if (layout>0) out->Put('\n');
       return;
@@ -1429,7 +1429,7 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
 
       node = (SXmlNode_t*) AllocateNode(commentlen, xmlparent);
       char* nameptr = &(node->fName);
-      node->type = XML_COMMENT;
+      node->fType = kXML_COMMENT;
       strncpy(nameptr, inp->fCurrent, commentlen);
       nameptr+=commentlen;
       *nameptr = 0;
@@ -1488,14 +1488,14 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
       return 0;
    }
    
-   EXmlNodeType nodetype = XML_NODE;
+   EXmlNodeType nodetype = kXML_NODE;
    bool canhaschilds = true;
    char endsymbol = '/';
    
    // this is case of processing instructions node
    if (*inp->fCurrent=='?') {
       if (!inp->ShiftCurrent()) return 0;
-      nodetype = XML_PI_NODE;
+      nodetype = kXML_PI_NODE;
       canhaschilds = false;
       endsymbol = '?';
    }
@@ -1505,7 +1505,7 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
    if (len<=0) return 0;
    node = (SXmlNode_t*) AllocateNode(len, xmlparent);
    char* nameptr = &(node->fName);
-   node->type = nodetype;
+   node->fType = nodetype;
 
    strncpy(nameptr, inp->fCurrent, len);
    nameptr+=len;
