@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.306 2006/10/05 17:04:30 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.307 2006/10/06 16:45:41 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -5324,6 +5324,7 @@ void TTree::SetCacheSize(Long64_t cacheSize)
       pf = 0;
       if (cacheSize <= 0) {
          file->SetCacheRead(0);
+         fCacheSize=0;
          return;
       }
    }
