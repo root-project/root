@@ -1,12 +1,9 @@
 #include "tmvaglob.C"
 
-void correlations( TString fin = "TMVA.root", Bool_t greyScale = kFALSE, Bool_t useTMVAStyle = kTRUE )
+void correlations( TString fin = "TMVA.root", Bool_t greyScale = kFALSE )
 {
-   if (!useTMVAStyle) {
-      gROOT->Reset();
-      gROOT->SetStyle("Plain");
-      gStyle->SetOptStat(0);
-   }
+   gROOT->SetStyle("Plain");
+   gStyle->SetOptStat(0);
    TList * loc = gROOT->GetListOfCanvases();
    TListIter itc(loc);
    TObject *o(0);
@@ -18,11 +15,10 @@ void correlations( TString fin = "TMVA.root", Bool_t greyScale = kFALSE, Bool_t 
    for (Int_t ic=0; ic<2; ic++) {
 
       TFile *file = new TFile( fin );
-      TCanvas* c = new TCanvas( hName[ic], 
-				Form("Correlations between MVA input variables (%s)", (ic==0?"signal":"background")), 
-                                ic*(width+5)+200, 0, width, width ); 
+      TCanvas* c = new TCanvas( hName[ic], Form("Correlations between MVA input variables (%s)", (ic==0?"signal":"background")), 
+                                ic*(width+5)+300, 0, width, width ); 
       Float_t newMargin1 = 0.13;
-      Float_t newMargin2 = 0.25;
+      Float_t newMargin2 = 0.18;
 
       gPad->SetGrid();
       gPad->SetTicks();
@@ -36,7 +32,7 @@ void correlations( TString fin = "TMVA.root", Bool_t greyScale = kFALSE, Bool_t 
 
       h2->SetMarkerSize( 1.5 );
       h2->SetMarkerColor( 0 );
-      Float_t labelSize = 0.040;
+      Float_t labelSize = 0.050;
       h2->GetXaxis()->SetLabelSize( labelSize );
       h2->GetYaxis()->SetLabelSize( labelSize );
       h2->LabelsOption( "d" );
@@ -53,13 +49,14 @@ void correlations( TString fin = "TMVA.root", Bool_t greyScale = kFALSE, Bool_t 
       h2->Draw("textsame");  // add text
 
       // add comment    
-      TText* t = new TText( 0.53, 0.88, "linear correlation coefficients in %" );
+      TText* t = new TText( 0.31, 0.88, "absolute values for correlation coefficients given in %" );
       t->SetNDC();
       t->SetTextSize( 0.026 );
       t->AppendPad();    
 
-      TMVAGlob::plot_logo( );
-      c->Update();
+      c->Modified();
+
+      TMVAGlob::plot_logo( 0.85 );
 
       TString fname = "plots/";
       fname += hName[ic];

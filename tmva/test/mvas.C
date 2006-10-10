@@ -1,17 +1,13 @@
 #include "tmvaglob.C"
 
-void mvas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
+void mvas( TString fin = "TMVA.root" )
 {
-   if(!useTMVAStyle) {
-      gROOT->Reset();
-      gROOT->SetStyle("Plain");
-      gStyle->SetOptStat(0);
-   }
-
    // switches
    const Bool_t Draw_CFANN_Logy = kFALSE;
    const Bool_t Save_Images     = kTRUE;
 
+   gROOT->SetStyle("Plain");
+   gStyle->SetOptStat(0);
    TList * loc = gROOT->GetListOfCanvases();
    TListIter itc(loc);
    TObject *o(0);
@@ -24,7 +20,7 @@ void mvas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
    Int_t xPad = 1; // no of plots in x
    Int_t yPad = 1; // no of plots in y
    Int_t noPad = xPad * yPad ; 
-   const Int_t width = 600;   // size of canvas
+   const Int_t width = 650;   // size of canvas
 
    // this defines how many canvases we need
    const Int_t noCanvas = 10;
@@ -36,7 +32,7 @@ void mvas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
    Int_t countPad    = 1;
 
    // list of existing MVAs
-   const Int_t nmva = 16;
+   const Int_t nmva = 14;
    TString prefix = "";
    TString mvaName[nmva] = { "MVA_Likelihood", 
                              "MVA_LikelihoodD", 
@@ -51,9 +47,7 @@ void mvas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
                              "MVA_BDTGini",
                              "MVA_BDTMisCl",
                              "MVA_BDTStatSig",
-                             "MVA_BDTCE",
-                             "MVA_MLP",
-                             "MVA_RuleFit" };
+                             "MVA_BDTCE" };
    char    fname[200];
 
    // loop over MVAs
@@ -82,7 +76,7 @@ void mvas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
             char cn[20];
             sprintf( cn, "canvas%d", countCanvas+1 );
             c[countCanvas] = new TCanvas( cn, Form("MVA Output Variables %s",title.Data()), 
-                                          countCanvas*50+200, countCanvas*20, width, width*0.78 ); 
+                                          countCanvas*50+300, countCanvas*20, width, width*0.8 ); 
             // style
             c[countCanvas]->SetBorderMode(0);
             c[countCanvas]->SetFillColor(10);
@@ -140,12 +134,13 @@ void mvas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
             legend->SetMargin( 0.3 );
          } 
       
+         TMVAGlob::plot_logo();
+
          // save canvas to file
          c[countCanvas]->cd(countPad);
          countPad++;
          if (countPad > noPad) {
             c[countCanvas]->Update();
-            TMVAGlob::plot_logo();
             sprintf( fname, "plots/mva_c%i", countCanvas+1 );
             if (Save_Images) TMVAGlob::imgconv( c[countCanvas], &fname[0] );
             countCanvas++;
@@ -212,11 +207,12 @@ void mvas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
          // redraw axes
          frame->Draw("sameaxis");
       
+         TMVAGlob::plot_logo();
+
          // save canvas to file
          c[countCanvas]->cd(countPad);
          countPad++;
          if (countPad > noPad) {
-            TMVAGlob::plot_logo();
             c[countCanvas]->Update();
             sprintf( fname, "plots/mva_all_c%i", countCanvas+1 );
             if (Save_Images) TMVAGlob::imgconv( c[countCanvas], &fname[0] );
