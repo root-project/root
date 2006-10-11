@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.31 2006/09/14 14:36:30 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.32 2006/09/19 10:09:06 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -182,7 +182,8 @@ class ReflexSimple2Test : public CppUnit::TestFixture {
   CPPUNIT_TEST( unloadType );
   CPPUNIT_TEST( iterateVector );
   CPPUNIT_TEST( testClasses );
- CPPUNIT_TEST( testTemplateTypedefs );
+  CPPUNIT_TEST( testTemplateTypedefs );
+  CPPUNIT_TEST( testArray );
 
   CPPUNIT_TEST( unloadLibrary );
   CPPUNIT_TEST( shutdown );
@@ -218,6 +219,7 @@ public:
   void iterateVector();
   void testClasses();
   void testTemplateTypedefs();
+  void testArray();
 
   void unloadLibrary();
   void shutdown() { Reflex::Shutdown(); }
@@ -1296,6 +1298,35 @@ void ReflexSimple2Test::fundamentalType() {
    Type t6 = Type::ByName("Bla::Base");
    CPPUNIT_ASSERT(t6);
    CPPUNIT_ASSERT_EQUAL(kNOTFUNDAMENTAL, Tools::FundamentalType(t6));
+
+}
+
+
+void ReflexSimple2Test::testArray() {
+
+   const Type & t = Type::ByName("testclasses::WithArray");
+   CPPUNIT_ASSERT(t);
+
+   Object o = t.Construct();
+   CPPUNIT_ASSERT(o);
+
+   const Member & m = t.DataMemberByName("m_a");
+   CPPUNIT_ASSERT(m);
+
+   const Type & memType = m.TypeOf();
+   CPPUNIT_ASSERT(memType);
+
+   const Type & arrType = memType.ToType();
+   CPPUNIT_ASSERT(arrType);
+
+   void * mem = (char*)o.Address() + m.Offset();
+
+   for (size_t i = 0; i < m.TypeOf().ArrayLength(); ++i ) {
+
+      CPPUNIT_ASSERT_EQUAL((int)i+1, Object_Cast<int>(Object(arrType, mem)));
+      mem = (char*)mem + arrType.SizeOf();
+
+   }
 
 }
 

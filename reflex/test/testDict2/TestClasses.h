@@ -16,6 +16,19 @@ namespace xmlTypedefSelection {
 
 namespace testclasses {
 
+   class WithArray {
+   public:
+      WithArray() { 
+         m_a[0] = 1; 
+         m_a[1] = 2; 
+         m_a[2] = 3; 
+         m_a[3] = 4; 
+         m_a[4] = 5; 
+      }
+   private:
+      int m_a[5];
+   };
+
 
    template < int i > class testTemplInt {
       int foo() { return i; }
