@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.9 2006/08/10 14:31:58 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.10 2006/08/25 10:16:03 axel Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -130,7 +130,8 @@ ROOT::Reflex::NameLookup::LookupInScope() {
          fPartialSuccess = true;
          fLookedAtUsingDir.clear();
          FindNextScopePos();
-         if (fPosNamePart == std::string::npos) return Dummy::Type(); // namespace is no a type
+         if (fPosNamePart == std::string::npos) return (const T&) (*in);
+         fCurrentScope = (const Scope&) (*in);
          return LookupInScope< T >();
       }
    }
@@ -163,7 +164,7 @@ ROOT::Reflex::NameLookup::LookupInScope() {
       for ( Base_Iterator bi = storeCurrentScope.Base_Begin(); bi != storeCurrentScope.Base_End(); ++bi ) {
          fCurrentScope = bi->ToScope();
          const T & t = LookupInScope< T >();
-         if ( fPartialSuccess) return t;
+         if (fPartialSuccess) return t;
       }
       fCurrentScope = storeCurrentScope;
    }
