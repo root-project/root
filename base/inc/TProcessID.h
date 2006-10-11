@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.11 2005/11/16 20:02:34 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.12 2006/02/17 05:16:38 pcanal Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -46,6 +46,7 @@ protected:
 public:
    TProcessID();
    TProcessID(const TProcessID &ref);
+   TProcessID& operator=(const TProcessID &ref);
    virtual ~TProcessID();
    virtual void     Clear(Option_t *option="");
    Int_t            DecrementCount();

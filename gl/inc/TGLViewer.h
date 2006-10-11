@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.31 2006/09/25 13:40:46 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.32 2006/10/05 18:19:09 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -234,7 +234,7 @@ public:
    virtual void   ResetCameras()                { SetupCameras(kTRUE); }
    virtual void   ResetCamerasAfterNextUpdate() { fResetCamerasOnNextUpdate = kTRUE; }
 
-   virtual void   RefreshPadEditor(TObject* changed=0) {}
+   virtual void   RefreshPadEditor(TObject* =0) {}
 
    Int_t   GetDev()const{return fGLDevice;}
    Color_t GetClearColor() const             { return fClearColor; }
@@ -352,10 +352,14 @@ public:
 
    TGLPShapeObj() : TObject(), fPShape(0), fViewer(0) {}
    TGLPShapeObj(TGLPhysicalShape* sh,TGLViewer* v) :
-      TObject() {fPShape = sh; fViewer = v; }
+      TObject(), fPShape(sh), fViewer(v) { }
    virtual ~TGLPShapeObj() {}
 
    virtual const char* GetName() const { return "Selected"; }
+
+private:
+   TGLPShapeObj(const TGLPShapeObj &); // Not implemented
+   TGLPShapeObj& operator=(const TGLPShapeObj &); // Not implemented
 
    ClassDef(TGLPShapeObj, 0); // This object wraps TGLPhysicalShape (not a TObject) so 
 };

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.19 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.20 2006/07/24 16:11:45 rdm Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -79,11 +79,11 @@ Bool_t TSBRepeatTimer::Notify()
 }
 
 //______________________________________________________________________________
-TGScrollBarElement::TGScrollBarElement(const TGWindow *p, const TGPicture *pic, 
-                                       UInt_t w, UInt_t h, UInt_t options, Pixel_t back) :  
+TGScrollBarElement::TGScrollBarElement(const TGWindow *p, const TGPicture *pic,
+                                       UInt_t w, UInt_t h, UInt_t options, Pixel_t back) :
                                        TGFrame(p, w, h, options | kOwnBackground, back)
 {
-   // constructor
+   // Constructor.
 
    fPic = fPicN = pic;
    fState = kButtonUp;
@@ -125,7 +125,7 @@ void TGScrollBarElement::SetState(Int_t state)
 //______________________________________________________________________________
 void TGScrollBarElement::SetEnabled(Bool_t on)
 {
-   // Enable/Disable scroll bar button chaging the state
+   // Enable/Disable scroll bar button chaging the state.
 
    if (on) {
       if (fState == kButtonUp) {
@@ -209,6 +209,21 @@ void TGScrollBarElement::DrawBorder()
    }
 }
 
+//______________________________________________________________________________
+TGScrollBar::TGScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
+			 UInt_t options, Pixel_t back) :
+   TGFrame(p, w, h, options | kOwnBackground, back),
+   fX0(0), fY0(0), fXp(0), fYp(0), fDragging(kFALSE), fGrabPointer(kTRUE),
+   fRange(0), fPsize(0), fPos(0), fSliderSize(0), fSliderRange(0),
+   fSmallInc(1), fHead(0), fTail(0), fSlider(0), fHeadPic(0),
+   fTailPic(0), fRepeat(0), fSubw()
+{
+   // Constructor.
+
+   fMsgWindow = p;
+   SetBackgroundPixmap(GetBckgndPixmap());
+   SetWindowName();
+}
 
 //______________________________________________________________________________
 TGScrollBar::~TGScrollBar()
@@ -422,9 +437,9 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
       // last argument kFALSE forces all specified events to this window
       if (fGrabPointer && !fClient->IsEditable())
          gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                                kPointerMotionMask, kNone, kNone, 
+                                kPointerMotionMask, kNone, kNone,
                                 kTRUE, kFALSE);
-   } else { 
+   } else {
       fHead->SetState(kButtonUp);
       fTail->SetState(kButtonUp);
 
@@ -550,7 +565,7 @@ TGVScrollBar::TGVScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
 
    fRange = TMath::Max((Int_t) h - (fgScrollBarWidth << 1), 1);
    fPsize = fRange >> 1;
-    
+
    fSliderSize  = 50;
    fSliderRange = 1;
 
@@ -740,7 +755,7 @@ void TGVScrollBar::SetRange(Int_t range, Int_t page_size)
 
    fPos = TMath::Max(fPos, 0);
    fPos = TMath::Min(fPos, fRange-fPsize);
-   
+
    SendMessage(fMsgWindow, MK_MSG(kC_VSCROLL, kSB_SLIDERPOS), fPos, 0);
    PositionChanged(fPos);
    RangeChanged(fRange);
@@ -775,7 +790,7 @@ void TGHScrollBar::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out <<"   TGHScrollBar *";
    out << GetName() << " = new TGHScrollBar(" << fParent->GetName()
        << "," << GetWidth() << "," << GetHeight();
- 
+
    if (fBackground == GetDefaultFrameBackground()) {
       if (!GetOptions()) {
          out <<");" << endl;

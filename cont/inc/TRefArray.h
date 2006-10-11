@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.11 2004/11/12 21:51:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.12 2005/03/26 07:02:14 brun Exp $
 // Author: Rene Brun    02/10/2001
 
 /*************************************************************************
@@ -56,6 +56,7 @@ public:
    TRefArray();
    TRefArray(Int_t s, Int_t lowerBound = 0);
    TRefArray(const TRefArray &a);
+   TRefArray& operator=(const TRefArray &a);
    virtual          ~TRefArray();
    virtual void     Clear(Option_t *option="");
    virtual void     Compress();
@@ -113,7 +114,7 @@ private:
    Int_t             fCursor;     //current position in array
    Bool_t            fDirection;  //iteration direction
 
-   TRefArrayIter() : fArray(0) { }
+   TRefArrayIter() : fArray(0), fCursor(0), fDirection(kIterForward) { }
 
 public:
    TRefArrayIter(const TRefArray *arr, Bool_t dir = kIterForward);

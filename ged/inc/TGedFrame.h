@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.10 2006/09/25 13:32:57 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.11 2006/09/27 08:45:42 rdm Exp $
 // Author: Ilka  Antcheva 10/05/04
 
 /*************************************************************************
@@ -31,11 +31,14 @@ class TList;
 class TGTab;
 class TGedEditor;
 
-class TGedFrame : public TGCompositeFrame
-{
+class TGedFrame : public TGCompositeFrame {
+
 public:
    // Inner class to store information for each extra tab.
    class TGedSubFrame : public TObject {
+   private:
+      TGedSubFrame(const TGedSubFrame&);            // Not implemented
+      TGedSubFrame& operator=(const TGedSubFrame&); // Not implemented
    public:
       TString            fName;
       TGCompositeFrame  *fFrame;
@@ -46,10 +49,10 @@ public:
 private:
    TGedFrame(const TGedFrame&);            // Not implemented
    TGedFrame& operator=(const TGedFrame&); // Not implemented
-   
+
 protected:
    Bool_t          fInit;        // init flag for setting signals/slots
-   TGedEditor     *fGedEditor;   // manager of this frame 
+   TGedEditor     *fGedEditor;   // manager of this frame
    TClass         *fModelClass;  // class corresponding to instantiated GedFrame
    TGLayoutHints  *fLayoutHints; // defines how this frame is added to fGedEditor
    Bool_t          fAvoidSignal; // flag for executing slots
@@ -84,7 +87,7 @@ public:
    virtual Bool_t    AcceptModel(TObject*) { return kTRUE; }
    void              SetModelClass(TClass* mcl)   { fModelClass = mcl; }
    virtual void      SetModel(TObject* obj) = 0;
-   virtual void      SetGedEditor(TGedEditor* ed) { fGedEditor = ed; } 
+   virtual void      SetGedEditor(TGedEditor* ed) { fGedEditor = ed; }
    virtual void      ActivateBaseClassEditors(TClass* cl);
 
    ClassDef(TGedFrame, 0); //base editor's frame
@@ -109,7 +112,7 @@ public:
 
    virtual Bool_t   HandleButton(Event_t *event);
    virtual Bool_t   HandleCrossing(Event_t *event);
-   
+
    virtual void     SetModel(TObject* obj);
 
    ClassDef(TGedNameFrame,0)      //frame showing the selected object name

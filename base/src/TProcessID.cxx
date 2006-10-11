@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.28 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.29 2006/04/20 18:49:43 pcanal Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -71,6 +71,7 @@ static inline ULong_t Void_Hash(const void *ptr)
 TProcessID::TProcessID()
 {
    // Default constructor.
+
    fCount = 0;
    fObjects = 0;
 }
@@ -79,6 +80,7 @@ TProcessID::TProcessID()
 TProcessID::~TProcessID()
 {
    // Destructor.
+
    delete fObjects;
    fObjects = 0;
    R__LOCKGUARD2(gROOTMutex);
@@ -92,9 +94,20 @@ TProcessID::TProcessID(const TProcessID &ref) : TNamed(ref)
 }
 
 //______________________________________________________________________________
+TProcessID& TProcessID::operator=(const TProcessID &ref)
+{
+   // TProcessID assigment operator.
+
+   if (this!=&ref) {
+      TNamed::operator=(ref);
+   }
+   return *this;
+}
+
+//______________________________________________________________________________
 TProcessID *TProcessID::AddProcessID()
 {
-   // static function to add a new TProcessID to the list of PIDs
+   // Static function to add a new TProcessID to the list of PIDs.
 
    R__LOCKGUARD2(gROOTMutex);
 
@@ -158,7 +171,7 @@ void TProcessID::Clear(Option_t *)
 {
    // delete the TObjArray pointing to referenced objects
    // this function is called by TFile::Close("R")
-   
+
    delete fObjects; fObjects = 0;
 }
 
@@ -231,9 +244,9 @@ UInt_t TProcessID::GetObjectCount()
 TObject *TProcessID::GetObjectWithID(UInt_t uidd)
 {
    //returns the TObject with unique identifier uid in the table of objects
-   
+
    Int_t uid = uidd & 0xffffff;  //take only the 24 lower bits
-   
+
    if (fObjects==0 || uid >= fObjects->GetSize()) return 0;
    return fObjects->UncheckedAt(uid);
 }
@@ -242,14 +255,14 @@ TObject *TProcessID::GetObjectWithID(UInt_t uidd)
 Bool_t TProcessID::IsValid(TProcessID *pid)
 {
    // static function. return kTRUE if pid is a valid TProcessID
-   
+
    R__LOCKGUARD2(gROOTMutex);
 
    if (fgPIDs->IndexOf(pid) >= 0) return kTRUE;
    if (pid == (TProcessID*)gROOT->GetUUIDs())  return kTRUE;
    return kFALSE;
 }
-   
+
 //______________________________________________________________________________
 void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid)
 {
@@ -263,14 +276,14 @@ void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid)
 
    obj->SetBit(kMustCleanup);
    if ( (obj->GetUniqueID()&0xff000000)==0xff000000 ) {
-      // We have more than 255 pids we need to store this 
+      // We have more than 255 pids we need to store this
       // pointer in the table(pointer,pid) since there is no
       // more space in fUniqueID
       if (fgObjPIDs==0) fgObjPIDs = new TExMap;
       ULong_t hash = Void_Hash(obj);
 
       // We use operator() rather than Add() because
-      // if the address has already been registered, we want to 
+      // if the address has already been registered, we want to
       // update it's uniqueID (this can easily happen when the
       // referenced obejct have been stored in a TClonesArray.
       (*fgObjPIDs)(hash, (Long_t)obj) = GetUniqueID();
@@ -366,7 +379,7 @@ UShort_t TProcessID::WriteProcessID(TProcessID *pidd, TFile *file)
    for (Int_t i=0;i<npids;i++) {
       if (pids->At(i) == pid) return (UShort_t)i;
    }
-    
+
    TDirectory *dirsav = gDirectory;
    file->cd();
    file->SetBit(TFile::kHasReferences);
@@ -377,7 +390,7 @@ UShort_t TProcessID::WriteProcessID(TProcessID *pidd, TFile *file)
    pid->Write(name);
    file->IncrementProcessIDs();
    if (gDebug > 0) {
-      printf("WriteProcessID, name=%s, file=%s\n",name,file->GetName());   
+      printf("WriteProcessID, name=%s, file=%s\n",name,file->GetName());
    }
    if (dirsav) dirsav->cd();
    return (UShort_t)npids;

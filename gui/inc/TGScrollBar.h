@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.15 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.16 2006/07/24 16:11:45 rdm Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -49,6 +49,10 @@ class TTimer;
 
 class TGScrollBarElement : public TGFrame {
 
+private:
+   TGScrollBarElement(const TGScrollBarElement&); // Not implemented
+   TGScrollBarElement& operator=(const TGScrollBarElement&); // Not implemented
+
 protected:
    Int_t            fState;  // state of scrollbar element (button up or down)
    const TGPicture *fPic;    // picture in scrollbar element
@@ -56,10 +60,10 @@ protected:
    const TGPicture *fPicD;   // picture for disabled state of scrollbar element
 
 public:
-   TGScrollBarElement(const TGWindow *p = 0, const TGPicture *pic = 0, 
+   TGScrollBarElement(const TGWindow *p = 0, const TGPicture *pic = 0,
                       UInt_t w = 1, UInt_t h = 1,
                       UInt_t options = kRaisedFrame | kDoubleBorder,
-                      Pixel_t back = GetDefaultFrameBackground()); 
+                      Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGScrollBarElement();
 
    virtual void SetState(Int_t state);
@@ -72,6 +76,10 @@ public:
 
 
 class TGScrollBar : public TGFrame, public TGWidget {
+
+private:
+   TGScrollBar(const TGScrollBar&); // Not implemented
+   TGScrollBar& operator=(const TGScrollBar&); // Not implemented
 
 protected:
    Int_t                fX0, fY0;      // current slider position in pixels
@@ -101,11 +109,7 @@ public:
 
    TGScrollBar(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
                UInt_t options = kChildFrame,
-               Pixel_t back = GetDefaultFrameBackground()) :
-      TGFrame(p, w, h, options | kOwnBackground, back)
-            { fMsgWindow = p; fRepeat = 0; fGrabPointer = kTRUE;
-              SetBackgroundPixmap(GetBckgndPixmap()); SetWindowName();
-              fSmallInc = 1; }
+               Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGScrollBar();
 
    void           GrabPointer(Bool_t grab) { fGrabPointer = grab; }
@@ -122,7 +126,7 @@ public:
    virtual Int_t GetPageSize() const { return fPsize; }
    virtual Int_t GetRange() const { return fRange; }
    virtual void  Resize(UInt_t w = 0, UInt_t h = 0) { TGFrame::Resize(w, h); SetRange(fRange, fPsize); }
-   virtual void  MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0) 
+   virtual void  MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0)
                   { TGFrame::MoveResize(x, y, w, h); SetRange(fRange, fPsize); }
    virtual void  Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }
    virtual void  ChangeBackground(Pixel_t back);

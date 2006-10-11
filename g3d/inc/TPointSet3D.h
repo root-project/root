@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPointSet3D.h,v 1.3 2006/08/23 14:39:40 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPointSet3D.h,v 1.4 2006/09/27 08:49:14 rdm Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -32,15 +32,15 @@ protected:
 
 public:
    TPointSet3D() :
-      TPolyMarker3D(), fOwnIds(kFALSE) { fName = "TPointSet3D"; }
+      TPolyMarker3D(), fOwnIds(kFALSE), fIds() { fName="TPointSet3D"; }
    TPointSet3D(Int_t n, Marker_t m=1, Option_t *opt="") :
-      TPolyMarker3D(n, m, opt), fOwnIds(kFALSE) { fName = "TPointSet3D"; }
+      TPolyMarker3D(n, m, opt), fOwnIds(kFALSE), fIds() { fName="TPointSet3D"; }
    TPointSet3D(Int_t n, Float_t *p, Marker_t m=1, Option_t *opt="") :
-      TPolyMarker3D(n, p, m, opt), fOwnIds(kFALSE) { fName = "TPointSet3D"; }
+      TPolyMarker3D(n, p, m, opt), fOwnIds(kFALSE), fIds() { fName="TPointSet3D"; }
    TPointSet3D(Int_t n, Double_t *p, Marker_t m=1, Option_t *opt="") :
-      TPolyMarker3D(n, p, m, opt), fOwnIds(kFALSE) { fName = "TPointSet3D"; }
+      TPolyMarker3D(n, p, m, opt), fOwnIds(kFALSE), fIds() { fName="TPointSet3D"; }
    TPointSet3D(const TPointSet3D &ps) :
-      TPolyMarker3D(ps), TAttBBox(ps), fOwnIds(kFALSE), fIds(ps.fIds) {}
+      TPolyMarker3D(ps), TAttBBox(ps), fOwnIds(kFALSE), fIds(ps.fIds) { }
 
    virtual ~TPointSet3D();
 

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.23 2006/02/03 21:55:38 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.24 2006/02/17 05:16:38 pcanal Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -83,7 +83,7 @@ TRefArray::TRefArray(Int_t s, Int_t lowerBound)
 //______________________________________________________________________________
 TRefArray::TRefArray(const TRefArray &a) : TSeqCollection()
 {
-   // Create a copy of TRefArray a. 
+   // Create a copy of TRefArray a.
 
    fPID  = a.fPID;
    fUIDs = 0;
@@ -94,6 +94,31 @@ TRefArray::TRefArray(const TRefArray &a) : TSeqCollection()
 
    fLast = a.fLast;
    fName = a.fName;
+}
+
+//______________________________________________________________________________
+TRefArray& TRefArray::operator=(const TRefArray &a)
+{
+   // Assignment operator.
+
+   if (this != &a) {
+      // Copy this by hand because the assigment operator
+      // of TCollection is private
+      fName   = a.fName;
+      fSize   = a.fSize;
+      fSorted = a.fSorted;
+
+      fPID  = a.fPID;
+      fUIDs = 0;
+      Init(a.fSize, a.fLowerBound);
+
+      for (Int_t i = 0; i < fSize; i++)
+        fUIDs[i] = a.fUIDs[i];
+
+      fLast = a.fLast;
+      fName = a.fName;
+   }
+   return *this;
 }
 
 //______________________________________________________________________________
@@ -324,7 +349,7 @@ void TRefArray::Expand(Int_t newSize)
 }
 
 //______________________________________________________________________________
-TObject *TRefArray::GetFromTable(Int_t idx) const 
+TObject *TRefArray::GetFromTable(Int_t idx) const
 {
    //the reference may be in the TRefTable
    TRefTable *table = TRefTable::GetRefTable();

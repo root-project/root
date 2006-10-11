@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.32 2006/06/01 09:12:48 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.33 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -145,6 +145,10 @@ public:
 
 class TGLineLBEntry : public TGTextLBEntry {
 
+private:
+   TGLineLBEntry(const TGLineLBEntry&);  // Not implemented
+   TGLineLBEntry operator=(const TGLineLBEntry&);  // Not implemented
+
 protected:
    UInt_t      fLineWidth;       // line width
    Style_t     fLineStyle;       // line style
@@ -183,6 +187,10 @@ public:
 
 class TGIconLBEntry : public TGTextLBEntry {
 
+private:
+   TGIconLBEntry(const TGIconLBEntry&);  // Not implemented
+   TGIconLBEntry operator=(const TGIconLBEntry&);  // Not implemented
+
 protected:
    const TGPicture *fPicture;    // icon
 
@@ -219,6 +227,10 @@ public:
 class TGLBContainer : public TGContainer {
 
 friend class TGListBox;
+
+private:
+   TGLBContainer(const TGLBContainer&);  // Not implemented
+   TGLBContainer operator=(const TGLBContainer&);  // Not implemented
 
 protected:
    TGLBEntry      *fLastActive;    // last active listbox entry in single selection listbox
@@ -276,6 +288,10 @@ public:
 //////////////////////////////////////////////////////////////////////////
 
 class TGListBox : public TGCompositeFrame, public TGWidget {
+
+private:
+   TGListBox(const TGListBox&);  // Not implemented
+   TGListBox operator=(const TGListBox&);  // Not implemented
 
 protected:
    UInt_t           fItemVsize;       // maximum height of single entry

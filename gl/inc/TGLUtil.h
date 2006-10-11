@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.31 2006/09/18 11:44:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.32 2006/10/02 12:55:47 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -995,6 +995,9 @@ private:
    mutable UInt_t               fTexture;
    Int_t                        fMaxPaletteSize;
    Rgl::Range_t                 fZRange;
+
+   TGLLevelPalette(const TGLLevelPalette&);    // Not implemented
+   TGLLevelPalette& operator=(const TGLLevelPalette&);  // Not implemented
 
 public:
    TGLLevelPalette();

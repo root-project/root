@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.25 2006/06/01 09:13:17 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.26 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -57,6 +57,10 @@ public:
 
 
 class TGComboBox : public TGCompositeFrame, public TGWidget {
+
+private:
+   TGComboBox(const TGComboBox&);       // Not implemented
+   TGComboBox& operator=(const TGComboBox&); // Not implemented
 
 protected:
    TGLBEntry           *fSelEntry;      // selected item frame
