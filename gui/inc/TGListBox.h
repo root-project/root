@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.33 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.34 2006/10/11 10:26:23 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -103,6 +103,10 @@ protected:
 
    static const TGFont *fgDefaultFont;
    static TGGC         *fgDefaultGC;
+
+private:
+   TGTextLBEntry(const TGTextLBEntry &);            // not implemented
+   TGTextLBEntry &operator=(const TGTextLBEntry &); // not implemented
 
 public:
    static FontStruct_t  GetDefaultFontStruct();
@@ -322,7 +326,7 @@ public:
    virtual void NewEntry(const char *s = "Entry");             //*MENU*
    virtual void RemoveEntry(Int_t id = -1);                    //*MENU*
    virtual void RemoveAll();                                   //*MENU*
-   virtual void RemoveEntries(Int_t from_ID, Int_t to_ID); 
+   virtual void RemoveEntries(Int_t from_ID, Int_t to_ID);
    virtual void ChangeBackground(Pixel_t back);
    virtual void SetTopEntry(Int_t id = -1);
    virtual void SetMultipleSelections(Bool_t multi = kTRUE)
