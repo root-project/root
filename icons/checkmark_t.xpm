@@ -5,7 +5,6 @@ static char * checkmark_t_xpm[] = {
 ".	c #808080",
 "+ c #ffffff",
 "X	c Black",
-"o	c #c0c0c0",
 "                ",
 "                ",
 "                ",
