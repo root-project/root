@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.118 2006/09/25 13:28:22 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.119 2006/10/06 12:12:34 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -116,6 +116,7 @@ TCanvas::TCanvas(Bool_t build) : TPad()
 {
    // Canvas default constructor.
 
+   fUseGL = kFALSE;
    if (!build || TClass::IsCallingNew()) {
       Constructor();
    } else {
@@ -149,7 +150,6 @@ void TCanvas::Constructor()
    fCanvasImp = 0;
    fBatch     = kTRUE;
    fUpdating  = kFALSE;
-   fUseGL     = kFALSE;
 
    fContextMenu   = 0;
    fSelected      = 0;
@@ -183,7 +183,6 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    fCh           = wh +28;
    fBatch        = kFALSE;
    fUpdating     = kFALSE;
-   fUseGL        = kFALSE;
 
    fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
    SetName(name);

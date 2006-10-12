@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.40 2006/08/24 18:51:57 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.41 2006/09/25 13:28:21 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -84,7 +84,7 @@ protected:
    Bool_t        fUpdating;        //!True when Updating the canvas
    Bool_t        fRetained;        //Retain structure flag
    Bool_t        fUseGL;           //!True when rendering is with GL
-   
+
    static Bool_t fgIsFolder;       //Indicates if canvas can be browsed as a folder
 
 private:
@@ -119,7 +119,7 @@ public:
       kResizeOpaque     = BIT(21),
       kIsGrayscale      = BIT(22)
    };
-      
+
    TCanvas(Bool_t build=kTRUE);
    TCanvas(const char *name, const char *title="", Int_t form=1);
    TCanvas(const char *name, const char *title, Int_t ww, Int_t wh);
@@ -225,9 +225,9 @@ public:
    virtual void      ToggleToolBar();
    virtual void      ToggleEditor();
    virtual void      Update();
-   virtual Bool_t    UseGL() const {return fUseGL;}
-   virtual void      SetSupportGL(Bool_t support) {fUseGL = support;}
-   
+   Bool_t            UseGL() const { return fUseGL; }
+   void              SetSupportGL(Bool_t support) {fUseGL = support;}
+
    static void       MakeDefCanvas();
 
    ClassDef(TCanvas,6)  //Graphics canvas
