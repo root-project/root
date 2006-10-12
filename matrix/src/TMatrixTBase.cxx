@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.9 2006/06/06 05:16:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.10 2006/10/06 06:52:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -1241,8 +1241,10 @@ template Bool_t   AreCompatible<Float_t,Double_t>
                                                (const TMatrixFBase &m1,const TMatrixDBase &m2,Int_t verbose);
 template void     Compare             <Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
 template Bool_t   VerifyMatrixValue   <Float_t>(const TMatrixFBase &m,Float_t val,Int_t verbose,Float_t maxDevAllow);
+template Bool_t   VerifyMatrixValue   <Float_t>(const TMatrixFBase &m,Float_t val);
 template Bool_t   VerifyMatrixIdentity<Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2,
                                                 Int_t verbose,Float_t maxDevAllowN);
+template Bool_t   VerifyMatrixIdentity<Float_t>(const TMatrixFBase &m1,const TMatrixFBase &m2);
 
 template class TMatrixTBase<Double_t>;
 
@@ -1254,5 +1256,7 @@ template Bool_t   AreCompatible<Double_t,Float_t>
                                                (const TMatrixDBase &m1,const TMatrixFBase &m2,Int_t verbose);
 template void     Compare             <Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
 template Bool_t   VerifyMatrixValue   <Double_t>(const TMatrixDBase &m,Double_t val,Int_t verbose,Double_t maxDevAllow);
+template Bool_t   VerifyMatrixValue   <Double_t>(const TMatrixDBase &m,Double_t val);
 template Bool_t   VerifyMatrixIdentity<Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2,
                                                  Int_t verbose,Double_t maxDevAllow);
+template Bool_t   VerifyMatrixIdentity<Double_t>(const TMatrixDBase &m1,const TMatrixDBase &m2);
