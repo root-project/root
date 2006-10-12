@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.20 2005/06/23 06:24:27 brun Exp $
+// @(#)root/base:$Name: v5-12-00 $:$Id: TTimeStamp.cxx,v 1.21 2005/09/02 07:51:51 brun Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -413,9 +413,9 @@ Int_t TTimeStamp::GetZoneOffset()
 #if !defined(R__MACOSX) && !defined(R__FBSD) && !defined(R__OBSD)
    return  timezone;   // unix has extern long int
 #else
-   time_t *tp = 0;
-   time(tp);
-   return localtime(tp)->tm_gmtoff;
+   time_t tp = 0;
+   time(&tp);
+   return localtime(&tp)->tm_gmtoff;
 #endif
 #endif
 #else
