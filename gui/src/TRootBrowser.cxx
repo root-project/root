@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.100 2006/08/01 10:54:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.101 2006/09/04 13:52:53 antcheva Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -251,7 +251,7 @@ class TRootObjItem : public TGFileItem {
 public:
    TRootObjItem(const TGWindow *p, const TGPicture *bpic,
                 const TGPicture *spic, TGString *name,
-                TObject *obj, TClass *cl, EListViewMode viewMode);
+                TObject *obj, TClass *cl, EListViewMode viewMode = kLVSmallIcons);
 };
 
 //______________________________________________________________________________
@@ -565,7 +565,9 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
    if (fGrouped && fCurrentItem && (fCurrentList->GetSize()>1)) {
       fCurrentName->SetString(fCurrentList->GetName());
    }
-
+   
+   EListViewMode view = fListView->GetViewMode();
+   
    if ((fCurrentList->GetSize() < fGroupSize) && !fGrouped) {
       GetObjPictures(&pic, &spic, obj, obj->GetIconName() ?
                      obj->GetIconName() : cl->GetName());
@@ -577,7 +579,7 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
          fCheckHeaders = kFALSE;
       }
 
-      fi = new TRootObjItem(this, pic, spic, new TGString(name), obj, cl, fViewMode);
+      fi = new TRootObjItem(this, pic, spic, new TGString(name), obj, cl, view);
 
       fi->SetUserData(obj);
       AddItem(fi);
@@ -588,7 +590,7 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
    if (fGrouped && (fCurrentList->GetSize()==1)) {
       fCurrentName = new TGString(fCurrentList->GetName());
       fCurrentItem = new TRootObjItem(this, fCurrentList->GetPicture(), fCurrentList->GetPicture(),
-                                      fCurrentName,fCurrentList, TList::Class(), fViewMode);
+                                      fCurrentName,fCurrentList, TList::Class(), view);
       fCurrentItem->SetUserData(fCurrentList);
       AddItem(fCurrentItem);
       fTotal = fList->GetSize();
@@ -611,7 +613,7 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
 
       fCurrentName = new TGString(fCurrentList->GetName());
       fi = new TRootObjItem(this, fCurrentList->GetPicture(), fCurrentList->GetPicture(),
-                            fCurrentName, fCurrentList, TList::Class(), fViewMode);
+                            fCurrentName, fCurrentList, TList::Class(), view);
       fi->SetUserData(fCurrentList);
       AddItem(fi);
 
@@ -1087,7 +1089,8 @@ void TRootBrowser::CreateBrowser(const char *name)
    fIconBox = new TRootIconBox(this, fListView, kHorizontalFrame, fgWhitePixel);
    fIconBox->Associate(this);
    fListView->SetIncrements(1, 19); // set vertical scroll one line height at a time
-
+   fViewMode = fListView->GetViewMode();
+   
    TString str = gEnv->GetValue("Browser.AutoThumbnail", "yes");
    str.ToLower();
    fIconBox->fAutoThumbnail = (str == "yes") || atoi(str.Data());
