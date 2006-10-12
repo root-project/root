@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.20 2005/08/25 16:38:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.21 2005/11/01 18:36:01 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -80,6 +80,7 @@ private:
    TGLayoutHints       *fVertical2Layout;    // layout hints for separator
    TGLayoutHints       *fHorizontal1Layout;  // layout hints for separator
    TGDockableFrame     *fToolDock;           // dockable frame holding the toolbar
+   TGLayoutHints       *fDockLayout;         // layout hints for dockable frame widget
    const TGPicture     *fIconPic;            // icon picture
    
    TVirtualPadEditor   *fEditor;     // pointer to currently loaded pad editor

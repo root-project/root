@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.105 2006/07/04 09:24:43 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.106 2006/09/25 13:30:22 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -483,7 +483,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    // Create toolbar dock
    fToolDock = new TGDockableFrame(this);
    fToolDock->EnableHide(kFALSE);
-   AddFrame(fToolDock, new TGLayoutHints(kLHintsExpandX));
+   AddFrame(fToolDock, fDockLayout = new TGLayoutHints(kLHintsExpandX));
 
    // will alocate it later
    fToolBar = 0;
@@ -614,6 +614,7 @@ TRootCanvas::~TRootCanvas()
       delete fMenuBarItemLayout;
       delete fMenuBarHelpLayout;
       delete fCanvasLayout;
+      delete fDockLayout;
    }
 
    delete fFileMenu;
