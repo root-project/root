@@ -1,4 +1,4 @@
-// @(#)root/base:$Name: v5-10-00-patches $:$Id: TBuffer.cxx,v 1.91 2006/02/17 05:20:13 pcanal Exp $
+// @(#)root/base:$Name: v5-10-00-patches $:$Id: TBuffer.cxx,v 1.91.2.1 2006/04/21 11:50:52 pcanal Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -765,7 +765,7 @@ void TBuffer::ReadDouble32 (Double_t *d, TStreamerElement *ele)
 {
    // read a Double32_t from the buffer
    // see comments about Double32_t encoding at TBuffer::WriteDouble32
-   
+
    if (ele && ele->GetFactor() != 0) {
       UInt_t aint; *this >> aint; d[0] = (Double_t)(aint/ele->GetFactor() + ele->GetXmin());
    } else {
@@ -809,7 +809,7 @@ void TBuffer::WriteDouble32 (Double_t *d, TStreamerElement *ele)
      <img src="gif/double32.gif">
    */
    //End_Html
-         
+
       if (ele && ele->GetFactor() != 0) {
       Double_t x = d[0];
       Double_t xmin = ele->GetXmin();
@@ -1563,15 +1563,15 @@ void TBuffer::ReadFastArray(void **start, const TClass *cl, Int_t n,
 
       for (Int_t j=0; j<n; j++){
          //delete the object or collection
-         if (start[j] && TStreamerInfo::CanDelete() 
+         if (start[j] && TStreamerInfo::CanDelete()
              // There are some cases where the user may set up a pointer in the (default)
-             // constructor but not mark this pointer as transient.  Sometime the value 
+             // constructor but not mark this pointer as transient.  Sometime the value
              // of this pointer is the address of one of the object with just created
-             // and the following delete would result in the deletion (possibly of the 
+             // and the following delete would result in the deletion (possibly of the
              // top level object we are goint to return!).
              // Eventhough this is a user error, we could prevent the crash by simply
              // adding:
-             // && !CheckObject(start[j],cl) 
+             // && !CheckObject(start[j],cl)
              // However this can increase the read time significantly (10% in the case
              // of one TLine pointer in the test/Track and run ./Event 200 0 0 20 30000
              ) ((TClass*)cl)->Destructor(start[j],kFALSE); // call delete and desctructor
@@ -2570,9 +2570,17 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass *cl)
          if (vinfo) {
             version = vinfo->GetClassVersion();
          } else {
-            Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\" in %s.", 
-                   checksum, cl->GetName(), ((TFile*)fParent)->GetName());
-            return 0;
+            // There are some cases (for example when the buffer was stored outside of
+            // a ROOT file) where we do not have a TStreamerInfo.  If the checksum is
+            // the one from the current class, we can still assume that we can read
+            // the data so let use it.
+            if (checksum==cl->GetCheckSum() || checksum==cl->GetCheckSum(1)) {
+               version = cl->GetClassVersion();
+            } else {
+               Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\" in %s.",
+                  checksum, cl->GetName(), ((TFile*)fParent)->GetName());
+               return 0;
+            }
          }
       }  else if (version == 1 && fParent && ((TFile*)fParent)->GetVersion()<40000 ) {
          // We could have a file created using a Foreign class before
@@ -2588,13 +2596,13 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass *cl)
                if (vinfo) {
                   version = vinfo->GetClassVersion();
                } else {
-                  Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\" in %s.", 
+                  Error("ReadVersion", "Could not find the StreamerInfo with a checksum of %d for the class \"%s\" in %s.",
                         checksum, cl->GetName(), ((TFile*)fParent)->GetName());
                   return 0;
                }
             }
             else  {
-               Error("ReadVersion", "Class %s not known to file %s.", 
+               Error("ReadVersion", "Class %s not known to file %s.",
                  cl->GetName(), ((TFile*)fParent)->GetName());
                version = 0;
             }
