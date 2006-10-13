@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.22 2006/07/21 09:15:46 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.23 2006/07/27 12:18:17 rdm Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -175,10 +175,10 @@ public:
    void  DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2, Int_t nx, Int_t ny, UInt_t *ic);
    void  FloodFill(Int_t x, Int_t y, const char *col, const char *min_col, const char *max_col = 0);
    void  DrawCubeBezier(Int_t x1, Int_t y1, Int_t x2, Int_t y2, Int_t x3, Int_t y3, const char *col = "#000000", UInt_t thick = 1);
-   void  DrawStraightEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, const char *col = "#000000", UInt_t thick = 1);
-   void  DrawCircle(Int_t x, Int_t y, Int_t r, const char *col = "#000000", UInt_t thick = 1);
-   void  DrawEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle, const char *col = "#000000", UInt_t thick = 1);
-   void  DrawEllips2(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle, const char *col = "#000000", UInt_t thick = 1);
+   void  DrawStraightEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, const char *col = "#000000", Int_t thick = 1);
+   void  DrawCircle(Int_t x, Int_t y, Int_t r, const char *col = "#000000", Int_t thick = 1);
+   void  DrawEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle, const char *col = "#000000", Int_t thick = 1);
+   void  DrawEllips2(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle, const char *col = "#000000", Int_t thick = 1);
 
    // Input / output
    void  ReadImage(const char *file, EImageFileTypes type = TImage::kUnknown);

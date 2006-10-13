@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.20 2006/09/15 15:12:48 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.21 2006/10/02 16:12:39 brun Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -300,7 +300,10 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          fImage->DrawCircle(ix, iy, Int_t(msize/2), col->AsHexString(), 1);
          break;
       // Circle
+      case 8:
       case 20:
+         if (m < 4) fImage->FillRectangle(col->AsHexString(), UInt_t(ix-m2), UInt_t(iy-m2), UInt_t(m), UInt_t(m));
+         else fImage->DrawCircle(ix, iy, Int_t(msize/4), col->AsHexString(), Int_t(msize/8));
          break;
       // Square
       case 21:

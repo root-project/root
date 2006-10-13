@@ -3670,6 +3670,7 @@ void TASImage::DrawDashHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t nDash,
          thick += (y - half);
       }
    }
+   thick = thick <= 0 ? 1 : thick;
 
    y = y + thick >= fImage->height ? fImage->height - thick - 1 : y;
    x2 = x2 >= fImage->width ? fImage->width - 1 : x2;
@@ -3725,6 +3726,7 @@ void TASImage::DrawDashVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t nDash,
          thick += (x - half);
       }
    }
+   thick = thick <= 0 ? 1 : thick;
 
    y2 = y2 >= fImage->height ? fImage->height - 1 : y2;
    y1 = y1 >= fImage->height ? fImage->height - 1 : y1;
@@ -4951,11 +4953,11 @@ void TASImage::DrawFillArea(UInt_t count, TPoint *ptsIn, TImage *tile)
 static void fill_hline_notile_argb32(ASDrawContext *ctx, int x_from, int y,
                                      int x_to, CARD32)
 {
-   //
+   // Fill horizontal line
 
    int cw = ctx->canvas_width;
 
-   if (x_to >= 0 && x_from < cw && y >= 0 && y < ctx->canvas_height) {
+   if ((x_to >= 0) && (x_from < cw) && (y >= 0) && (y < ctx->canvas_height)) {
       CARD32 value = ctx->tool->matrix[0]; //color
       CARD32 *dst = (CARD32 *)(ctx->canvas + y*cw);
       int x1 = x_from;
@@ -4967,6 +4969,7 @@ static void fill_hline_notile_argb32(ASDrawContext *ctx, int x_from, int y,
       if (x2 >= cw) {
          x2 = cw - 1;
       }
+
       while (x1 <= x2) {
          _alphaBlend(&dst[x1], &value);
          ++x1;
@@ -4991,7 +4994,7 @@ static void apply_tool_2D_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CAR
    CARD32 *dst = (CARD32 *)ctx->canvas;
    int x, y;
 
-   if (corner_x+tw <= 0 || corner_x >= cw || corner_y+th <= 0 || corner_y >= ch) {
+   if ((corner_x+tw <= 0) || (corner_x >= cw) || (corner_y+th <= 0) || (corner_y >= ch)) {
       return;
    }
 
@@ -5029,7 +5032,7 @@ static void apply_tool_2D_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CAR
 //_____________________________________________________________________________
 static ASDrawContext *create_draw_context_argb32(ASImage *im, ASDrawTool *brush)
 {
-   //
+   // Create draw context
 
    static ASDrawContext *ctx = new ASDrawContext;
 
@@ -5052,7 +5055,7 @@ static CARD32 gBrushCache[kBrushCacheSize*kBrushCacheSize];
 void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
                             UInt_t color, UInt_t thick)
 {
-   // draw wide line
+   // Draw wide line
 
    Int_t sz = thick*thick;
    CARD32 *matrix;
@@ -5086,7 +5089,7 @@ void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
 //______________________________________________________________________________
 void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
 {
-   // Draw FT_Bitmap bitmap
+   // Draw glyph bitmap
 
    static UInt_t col[5];
    Int_t x, y, yy, y0, xx;
@@ -5550,13 +5553,14 @@ void TASImage::DrawCubeBezier(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
 
 //_______________________________________________________________________
 void TASImage::DrawStraightEllips(Int_t x, Int_t y, Int_t rx, Int_t ry,
-                                  const char *col, UInt_t thick)
+                                  const char *col, Int_t thick)
 {
-   // draws straight ellips
+   // draws straight ellips. If thick < 0 - draw filled ellips
 
+   thick = !thick ? 1 : thick;
    Int_t sz = thick*thick;
    CARD32 *matrix;
-   Bool_t use_cache = thick < kBrushCacheSize;
+   Bool_t use_cache = (thick > 0) && ((UInt_t)thick < kBrushCacheSize);
 
    ARGB32 color;
    parse_argb_color(col, &color);
@@ -5573,12 +5577,12 @@ void TASImage::DrawStraightEllips(Int_t x, Int_t y, Int_t rx, Int_t ry,
 
    static ASDrawTool *brush = new ASDrawTool;
    brush->matrix = matrix;
-   brush->width = thick;
-   brush->height = thick;
-   brush->center_y = brush->center_x = thick/2;
+   brush->width = thick > 0 ? thick : 1;
+   brush->height = thick > 0 ? thick : 1;
+   brush->center_y = brush->center_x = thick > 0 ? thick/2 : 0;
 
    ASDrawContext *ctx = create_draw_context_argb32(fImage, brush);
-   asim_straight_ellips(ctx, x, y, rx, ry, 0);
+   asim_straight_ellips(ctx, x, y, rx, ry, thick < 0);
 
    if (!use_cache) {
       delete [] matrix;
@@ -5586,14 +5590,14 @@ void TASImage::DrawStraightEllips(Int_t x, Int_t y, Int_t rx, Int_t ry,
 }
 
 //_______________________________________________________________________
-void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, UInt_t thick)
+void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, Int_t thick)
 {
-   // draws circle
+   // Draw circle. If thick < 0 - draw filled circle
 
    thick = !thick ? 1 : thick;
    Int_t sz = thick*thick;
    CARD32 *matrix;
-   Bool_t use_cache = thick < kBrushCacheSize;
+   Bool_t use_cache = (thick > 0) && ((UInt_t)thick < kBrushCacheSize);
 
    ARGB32 color;
    parse_argb_color(col, &color);
@@ -5610,12 +5614,12 @@ void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, UInt_t thi
 
    static ASDrawTool *brush = new ASDrawTool;
    brush->matrix = matrix;
-   brush->width = thick;
-   brush->height = thick;
-   brush->center_y = brush->center_x = thick/2;
+   brush->width = thick > 0 ? thick : 1;
+   brush->height = thick > 0 ? thick : 1;
+   brush->center_y = brush->center_x = thick > 0 ? thick/2 : 0;
 
    ASDrawContext *ctx = create_draw_context_argb32(fImage, brush);
-   asim_circle(ctx, x,  y, r, 0);
+   asim_circle(ctx, x,  y, r, thick < 0);
 
    if (!use_cache) {
       delete [] matrix;
@@ -5624,14 +5628,14 @@ void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, UInt_t thi
 
 //_______________________________________________________________________
 void TASImage::DrawEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
-                           const char *col, UInt_t thick)
+                           const char *col, Int_t thick)
 {
-   // draws ellips
+   // Draw ellips. If thick < 0 - draw filled ellips
 
    thick = !thick ? 1 : thick;
    Int_t sz = thick*thick;
    CARD32 *matrix;
-   Bool_t use_cache = thick < kBrushCacheSize;
+   Bool_t use_cache = (thick > 0) && ((UInt_t)thick < kBrushCacheSize);
 
    ARGB32 color;
    parse_argb_color(col, &color);
@@ -5648,12 +5652,12 @@ void TASImage::DrawEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
 
    static ASDrawTool *brush = new ASDrawTool;
    brush->matrix = matrix;
-   brush->width = thick;
-   brush->height = thick;
-   brush->center_y = brush->center_x = thick/2;
+   brush->width = thick > 0 ? thick : 1;
+   brush->height = thick > 0 ? thick : 1;
+   brush->center_y = brush->center_x = thick > 0 ? thick/2 : 0;
 
    ASDrawContext *ctx = create_draw_context_argb32(fImage, brush);
-   asim_ellips(ctx, x, y, rx, ry, angle, 0);
+   asim_ellips(ctx, x, y, rx, ry, angle, thick < 0);
 
    if (!use_cache) {
       delete [] matrix;
@@ -5662,14 +5666,14 @@ void TASImage::DrawEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
 
 //_______________________________________________________________________
 void TASImage::DrawEllips2(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
-                           const char *col, UInt_t thick)
+                           const char *col, Int_t thick)
 {
-   // draws allips
+   // Draw ellips. If thick < 0 - draw filled ellips
 
    thick = !thick ? 1 : thick;
    Int_t sz = thick*thick;
    CARD32 *matrix;
-   Bool_t use_cache = thick < kBrushCacheSize;
+   Bool_t use_cache = (thick > 0) && ((UInt_t)thick < kBrushCacheSize);
 
    ARGB32 color;
    parse_argb_color(col, &color);
@@ -5686,12 +5690,12 @@ void TASImage::DrawEllips2(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
 
    static ASDrawTool *brush = new ASDrawTool;
    brush->matrix = matrix;
-   brush->width = thick;
-   brush->height = thick;
-   brush->center_y = brush->center_x = thick/2;
+   brush->width = thick > 0 ? thick : 1;
+   brush->height = thick > 0 ? thick : 1;
+   brush->center_y = brush->center_x = thick > 0 ? thick/2 : 0;
 
    ASDrawContext *ctx = create_draw_context_argb32(fImage, brush);
-   asim_ellips2(ctx, x, y, rx, ry, angle, 0);
+   asim_ellips2(ctx, x, y, rx, ry, angle, thick < 0);
 
    if (!use_cache) {
       delete [] matrix;
