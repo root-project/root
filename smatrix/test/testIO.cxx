@@ -33,11 +33,15 @@ TStopwatch timer;
 #ifdef USE_DOUBLE32
 typedef ROOT::Math::SMatrix<Double32_t,5,5,ROOT::Math::MatRepSym<Double32_t,5> >  SMatrixSym5;
 typedef ROOT::Math::SMatrix<Double32_t,5,5 >  SMatrix5;
+const std::string sname = "ROOT::Math::SMatrix<Double32_t,5,5>";
+const std::string sname_sym = "ROOT::Math::SMatrix<Double32_t,5,5,ROOT::Math::MatRepSym<Double32_t,5> >";
 double tol = 1.E-6; 
 #else
 typedef ROOT::Math::SMatrix<double,5,5,ROOT::Math::MatRepSym<double,5> >  SMatrixSym5;
 typedef ROOT::Math::SMatrix<double,5,5 >  SMatrix5;
 double tol = 1.E-16;
+const std::string sname = "ROOT::Math::SMatrix<double,5,5>";
+const std::string sname_sym = "ROOT::Math::SMatrix<double,5,5,ROOT::Math::MatRepSym<double,5> >";
 #endif
 
 
@@ -192,8 +196,8 @@ double writeSMatrix(int n) {
 
   SMatrix5 * m1 = new  SMatrix5;
   //ROOT::Math::SMatrix<Double32_t,5,5> * m1 = new ROOT::Math::SMatrix<Double32_t,5,5>; 
-  //t1.Branch("SMatrix branch","ROOT::Math::SMatrix<Double32_t,5,5>",&m1);
-  t1.Branch("SMatrix branch",&m1,16000,0);
+  t1.Branch("SMatrix branch",sname.c_str(),&m1);
+  //t1.Branch("SMatrix branch",&m1,16000,0);
 
   timer.Start();
   double etot = 0;
@@ -229,8 +233,8 @@ double writeSMatrixSym(int n) {
   TTree t1("t1","Tree with SMatrix");
 
   SMatrixSym5 * m1 = new  SMatrixSym5;
-  // t1.Branch("SMatrixSym branch","ROOT::Math::SMatrix<Double32_t,5,5,ROOT::Math::MatRepSym<Double32_t,5> >",&m1);
-  t1.Branch("SMatrixSym branch",&m1,16000,0);
+  t1.Branch("SMatrixSym branch",sname_sym.c_str(),&m1);
+//  t1.Branch("SMatrixSym branch",&m1,16000,0);
 
   timer.Start();
   double etot = 0;
