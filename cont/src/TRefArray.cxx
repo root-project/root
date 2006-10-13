@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.24 2006/02/17 05:16:38 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.25 2006/10/11 10:26:23 rdm Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -113,7 +113,7 @@ TRefArray& TRefArray::operator=(const TRefArray &a)
       Init(a.fSize, a.fLowerBound);
 
       for (Int_t i = 0; i < fSize; i++)
-        fUIDs[i] = a.fUIDs[i];
+         fUIDs[i] = a.fUIDs[i];
 
       fLast = a.fLast;
       fName = a.fName;
