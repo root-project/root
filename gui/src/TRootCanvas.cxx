@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.107 2006/10/12 07:57:23 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.108 2006/10/12 13:52:23 antcheva Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -1610,10 +1610,10 @@ Bool_t TRootCanvas::HandleContainerMotion(Event_t *event)
    if (fButton == 0)
       fCanvas->HandleInput(kMouseMotion, x, y);
    if (fButton == kButton1) {
-       if (event->fState & kKeyShiftMask)
-          fCanvas->HandleInput(EEventType(8), x, y);
-       else
-          fCanvas->HandleInput(kButton1Motion, x, y);
+      if (event->fState & kKeyShiftMask)
+         fCanvas->HandleInput(EEventType(8), x, y);
+      else
+         fCanvas->HandleInput(kButton1Motion, x, y);
    }
    if (fButton == kButton2)
       fCanvas->HandleInput(kButton2Motion, x, y);

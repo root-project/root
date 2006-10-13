@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.20 2006/07/24 16:11:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.21 2006/10/11 10:26:23 rdm Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -211,7 +211,7 @@ void TGScrollBarElement::DrawBorder()
 
 //______________________________________________________________________________
 TGScrollBar::TGScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
-			 UInt_t options, Pixel_t back) :
+                         UInt_t options, Pixel_t back) :
    TGFrame(p, w, h, options | kOwnBackground, back),
    fX0(0), fY0(0), fXp(0), fYp(0), fDragging(kFALSE), fGrabPointer(kTRUE),
    fRange(0), fPsize(0), fPos(0), fSliderSize(0), fSliderRange(0),
