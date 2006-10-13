@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.18 2006/08/30 12:55:09 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.19 2006/09/29 13:58:34 brun Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -40,6 +40,7 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
    //    TSQLServer::Connect("mysql://host.domain/test?timeout=10&multi_statements");
 
    fMySQL = 0;
+   fInfo = "MySQL";
 
    TUrl url(db);
 
@@ -619,7 +620,7 @@ Int_t TMySQLServer::Shutdown()
 //______________________________________________________________________________
 const char *TMySQLServer::ServerInfo()
 {
-   // Return server info.
+   // Return server info in form "MySQL <vesrion>"
 
    CheckConnect("ServerInfo", 0);
    
@@ -627,7 +628,10 @@ const char *TMySQLServer::ServerInfo()
 
    CheckErrNo("ServerInfo", kFALSE, res);
    
-   return res;
+   fInfo = "MySQL ";
+   fInfo += res;
+   
+   return fInfo.Data();
 }
 
 //______________________________________________________________________________

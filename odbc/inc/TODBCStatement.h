@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.h,v 1.7 2006/06/25 18:43:24 brun Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.h,v 1.8 2006/09/05 13:37:08 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -59,6 +59,7 @@ protected:
    Int_t            fWorkingMode;      // 1 - setting parameters, 2 - reading results, 0 - unknown
    SQLUINTEGER      fNumParsProcessed; // contains number of parameters, affected by last operation
    SQLUINTEGER      fNumRowsFetched;   // indicates number of fetched rows
+   ULong64_t        fLastResultRow;    // stores values of row number after last fetch operation
 
    void       *GetParAddr(Int_t npar, Int_t roottype = 0, Int_t length = 0);
    long double ConvertToNumeric(Int_t npar);

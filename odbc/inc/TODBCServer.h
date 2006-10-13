@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCServer.h,v 1.2 2006/05/22 08:55:30 brun Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCServer.h,v 1.3 2006/06/02 14:02:03 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -27,21 +27,30 @@ typedef short  SQLRETURN;
 #include <sql.h>
 #endif
 
+class TList;
 
 class TODBCServer : public TSQLServer {
 
 private:
    SQLHENV   fHenv;
    SQLHDBC   fHdbc;
-   TString   fInfo;
+   TString   fServerInfo;        // string with DBMS name and version like MySQL 4.1.11 or Oracle 10.01.0030
+   TString   fUserId;
 
    Bool_t ExtractErrors(SQLRETURN retcode, const char* method);
 
    Bool_t EndTransaction(Bool_t commit);
+   
+   static TList* ListData(Bool_t isdrivers);
 
 public:
    TODBCServer(const char* db, const char *uid, const char *pw);
    virtual ~TODBCServer();
+   
+   static TList* GetDrivers();
+   static void PrintDrivers();
+   static TList* GetDataSources();
+   static void PrintDataSources();
 
    void        Close(Option_t *opt="");
    TSQLResult *Query(const char *sql);

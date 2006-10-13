@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.cxx,v 1.9 2006/06/25 18:43:24 brun Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCStatement.cxx,v 1.10 2006/09/05 14:08:48 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -94,6 +94,7 @@ TODBCStatement::TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize, Bool_t errout) :
    }
 
    fNumRowsFetched = 0;
+   fLastResultRow = 0;
 }
 
 //______________________________________________________________________________
@@ -190,8 +191,6 @@ Bool_t TODBCStatement::StoreResult()
    SQLRETURN retcode = SQLNumResultCols(fHstmt, &columnCount);
    if (ExtractErrors(retcode, "StoreResult")) return kFALSE;
 
-//   cout << "Num results columns = " << columnCount << endl;
-
    if (columnCount==0) return kFALSE;
 
    SetNumBuffers(columnCount, fBufferPreferredSize);
@@ -224,6 +223,7 @@ Bool_t TODBCStatement::StoreResult()
    }
 
    fNumRowsFetched = 0;
+   fLastResultRow = 0;
 
    fWorkingMode = 2;
 
@@ -266,11 +266,28 @@ Bool_t TODBCStatement::NextResultRow()
       fBufferCounter = 0;
       fNumRowsFetched = 0;
 
-      SQLRETURN retcode = SQLFetchScroll(fHstmt,SQL_FETCH_NEXT,0);
-
-      if (ExtractErrors(retcode,"NextResultRow")) fNumRowsFetched=0;
-
-      if (fNumRowsFetched==0) {
+      SQLRETURN retcode = SQLFetchScroll(fHstmt, SQL_FETCH_NEXT, 0);
+      if (retcode==SQL_NO_DATA) fNumRowsFetched=0; else
+         ExtractErrors(retcode,"NextResultRow");
+         
+      // this is workaround of Oracle Linux ODBC driver
+      // it does not returns number of fetched lines, therefore one should 
+      // calculate it from current row number
+      if (!IsError() && (retcode!=SQL_NO_DATA) && (fNumRowsFetched==0)) {
+         SQLULEN rownumber = 0;
+         SQLRETURN retcode2 = SQLGetStmtAttr(fHstmt, SQL_ATTR_ROW_NUMBER, &rownumber, 0, 0);
+         ExtractErrors(retcode2, "NextResultRow");
+      
+         if (!IsError()) {
+            fNumRowsFetched = rownumber - fLastResultRow;
+            fLastResultRow = rownumber;
+         }
+      }
+        
+      if (1.*fNumRowsFetched>fBufferLength) 
+         SetError(-1, "Missmatch between buffer length and fetched rows number", "NextResultRow");
+      
+      if (IsError() || (fNumRowsFetched==0)) {
          fWorkingMode = 0;
          FreeBuffers();
       }

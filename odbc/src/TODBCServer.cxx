@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.11 2006/06/06 09:14:54 rdm Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.12 2006/06/25 18:43:24 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -20,6 +20,8 @@
 #include "TString.h"
 #include "TObjString.h"
 #include "TList.h"
+#include "Riostream.h"
+
 
 #include <sqlext.h>
 
@@ -170,8 +172,37 @@ TODBCServer::TODBCServer(const char *db, const char *uid, const char *pw) :
 
    fType = "ODBC";
    fDB = db;
-   if (!simpleconnect) fInfo = sbuf;
-                  else fInfo = connstr;
+                  
+   retcode = SQLGetInfo(fHdbc, SQL_USER_NAME, sbuf, 2048, &reslen);
+   if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
+   fUserId = sbuf;
+
+   retcode = SQLGetInfo(fHdbc, SQL_DBMS_NAME, sbuf, 2048, &reslen);
+   if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
+   fServerInfo = sbuf;
+   
+   retcode = SQLGetInfo(fHdbc, SQL_DBMS_VER, sbuf, 2048, &reslen);
+   if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
+   fServerInfo += " ";
+   fServerInfo += sbuf;
+
+/*   
+   retcode = SQLGetInfo(fHdbc, SQL_SCHEMA_TERM, sbuf, 2048, &reslen);
+   if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
+   
+   SQLUINTEGER iinfo;
+   retcode = SQLGetInfo(fHdbc, SQL_PARAM_ARRAY_ROW_COUNTS, &iinfo, sizeof(iinfo), 0);  
+   if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
+   Info("Constr", "SQL_PARAM_ARRAY_ROW_COUNTS = %u", iinfo);
+   
+   retcode = SQLGetInfo(fHdbc, SQL_PARAM_ARRAY_SELECTS, &iinfo, sizeof(iinfo), 0);  
+   if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
+   Info("Constr", "SQL_PARAM_ARRAY_SELECTS = %u", iinfo);
+
+   retcode = SQLGetInfo(fHdbc, SQL_BATCH_ROW_COUNT, &iinfo, sizeof(iinfo), 0);  
+   if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
+   Info("Constr", "SQL_BATCH_ROW_COUNT = %u", iinfo);
+*/
 
    return;
 
@@ -188,6 +219,110 @@ TODBCServer::~TODBCServer()
 
    if (IsConnected())
       Close();
+}
+
+//______________________________________________________________________________
+TList* TODBCServer::ListData(Bool_t isdrivers)
+{
+   // Produce TList object with list of available 
+   // ODBC drivers (isdrivers = kTRUE) or data sources (isdrivers = kFALSE)
+
+   SQLHENV   henv;
+   SQLRETURN retcode;
+
+   retcode = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &henv);
+   if ((retcode!=SQL_SUCCESS) && (retcode!=SQL_SUCCESS_WITH_INFO)) return 0;
+
+   retcode = SQLSetEnvAttr(henv, SQL_ATTR_ODBC_VERSION, (void*)SQL_OV_ODBC3, 0);
+   if ((retcode!=SQL_SUCCESS) && (retcode!=SQL_SUCCESS_WITH_INFO)) return 0;
+   
+   TList* lst = 0;
+   
+   char namebuf[2048], optbuf[2048];
+   SQLSMALLINT reslen1, reslen2;
+   
+   do {
+      strcpy(namebuf, ""); 
+      strcpy(optbuf, "");
+      if (isdrivers)
+         retcode = SQLDrivers(henv, (lst==0 ? SQL_FETCH_FIRST : SQL_FETCH_NEXT), 
+                     (SQLCHAR*) namebuf, sizeof(namebuf), &reslen1,
+                     (SQLCHAR*) optbuf, sizeof(optbuf), &reslen2);
+      else
+         retcode = SQLDataSources(henv, (lst==0 ? SQL_FETCH_FIRST : SQL_FETCH_NEXT), 
+                     (SQLCHAR*) namebuf, sizeof(namebuf), &reslen1,
+                     (SQLCHAR*) optbuf, sizeof(optbuf), &reslen2);
+                     
+      if (retcode==SQL_NO_DATA) break;
+      if ((retcode==SQL_SUCCESS) || (retcode==SQL_SUCCESS_WITH_INFO)) {
+         if (lst==0) { 
+            lst = new TList; 
+            lst->SetOwner(kTRUE);
+         } 
+         for (int n=0;n<reslen2-1;n++)
+            if (optbuf[n]=='\0') optbuf[n] = ';';
+         
+         lst->Add(new TNamed(namebuf, optbuf));
+      } 
+   } while ((retcode==SQL_SUCCESS) || (retcode==SQL_SUCCESS_WITH_INFO));
+
+   SQLFreeHandle(SQL_HANDLE_ENV, henv);
+   
+   return lst;
+   
+}
+
+
+//______________________________________________________________________________
+TList* TODBCServer::GetDrivers()
+{
+   // Produce TList object with list of available ODBC drivers
+   // User must delete TList object aftewards
+   // Name of driver can be used in connecting to data base in form
+   // TSQLServer::Connect("odbcd://DRIVER={<drivername>};DBQ=<dbname>;UID=user;PWD=pass;", 0, 0);
+
+   return ListData(kTRUE);
+}
+
+//______________________________________________________________________________
+void TODBCServer::PrintDrivers()
+{
+   // Print list of ODBC drivers in form:
+   //   <name> : <options list>
+    
+   TList* lst = GetDrivers();
+   cout << "List of ODBC drivers:" << endl;
+   TIter iter(lst);
+   TNamed* n = 0;
+   while ((n = (TNamed*) iter()) != 0) 
+      cout << "  " << n->GetName() << " : " << n->GetTitle() << endl; 
+   delete lst;
+}
+
+//______________________________________________________________________________
+TList* TODBCServer::GetDataSources()
+{
+   // Produce TList object with list of available ODBC data sources
+   // User must delete TList object aftewards
+   // Name of data source can be used later for connection:
+   // TSQLServer::Connect("odbcn://<data_source_name>", "user", "pass");
+
+   return ListData(kFALSE);
+}
+
+//______________________________________________________________________________
+void TODBCServer::PrintDataSources()
+{
+   // Print list of ODBC data sources in form:
+   //   <name> : <options list>
+    
+   TList* lst = GetDataSources();
+   cout << "List of ODBC data sources:" << endl;
+   TIter iter(lst);
+   TNamed* n = 0;
+   while ((n = (TNamed*) iter()) != 0) 
+      cout << "  " << n->GetName() << " : " << n->GetTitle() << endl; 
+   delete lst;
 }
 
 //______________________________________________________________________________
@@ -312,7 +447,7 @@ TSQLResult *TODBCServer::GetDataBases(const char *)
 }
 
 //______________________________________________________________________________
-TSQLResult *TODBCServer::GetTables(const char *, const char* wild)
+TSQLResult *TODBCServer::GetTables(const char*, const char* wild)
 {
    // List all tables in the specified database. Wild is for wildcarding
    // "t%" list all tables starting with "t".
@@ -326,16 +461,31 @@ TSQLResult *TODBCServer::GetTables(const char *, const char* wild)
 
    SQLAllocHandle(SQL_HANDLE_STMT, fHdbc, &hstmt);
 
+   SQLCHAR* schemaName = 0;
+   SQLSMALLINT schemaNameLength = 0;
+
+/*
+   TString schemabuf;
+   // schema is used by Oracle to specify to which user belong table
+   // therefore, to see correct tables, schema name is set to user name
+   if ((fUserId.Length()>0) && (fServerInfo.Contains("Oracle"))) {
+      schemabuf = fUserId;
+      schemabuf.ToUpper();
+      schemaName = (SQLCHAR*) schemabuf.Data();
+      schemaNameLength = schemabuf.Length();
+   }
+*/
+   
    SQLCHAR* tableName = 0;
    SQLSMALLINT tableNameLength = 0;
 
    if ((wild!=0) && (strlen(wild)!=0)) {
       tableName = (SQLCHAR*) wild;
       tableNameLength = strlen(wild);
-      SQLSetStmtAttr(hstmt, SQL_ATTR_METADATA_ID, (SQLPOINTER) SQL_TRUE, 0);
+      SQLSetStmtAttr(hstmt, SQL_ATTR_METADATA_ID, (SQLPOINTER) SQL_FALSE, 0);
    }
 
-   retcode = SQLTables(hstmt, NULL, 0, NULL, 0, tableName, tableNameLength, NULL, 0);
+   retcode = SQLTables(hstmt, NULL, 0, schemaName, schemaNameLength, tableName, tableNameLength, (SQLCHAR*) "TABLE", 5);
    if (ExtractErrors(retcode, "GetTables")) {
       SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
       return 0;
@@ -352,7 +502,7 @@ TList* TODBCServer::GetTablesList(const char* wild)
 
    CheckConnect("GetTablesList", 0);
 
-   TSQLResult* res = GetTables("", wild);
+   TSQLResult* res = GetTables(0, wild);
    if (res==0) return 0;
 
    TList* lst = 0;
@@ -362,6 +512,7 @@ TList* TODBCServer::GetTablesList(const char* wild)
    while ((row = res->Next())!=0) {
       const char* tablename = row->GetField(2);
       if (tablename!=0) {
+//         Info("List","%s %s %s %s %s", tablename, row->GetField(0), row->GetField(1), row->GetField(3), row->GetField(4));
          if (lst==0) {
             lst = new TList;
             lst->SetOwner(kTRUE);
@@ -554,12 +705,10 @@ Int_t TODBCServer::GetMaxIdentifierLength()
 
    retcode = SQLGetInfo(fHdbc, SQL_MAX_IDENTIFIER_LEN, (SQLPOINTER)&info, sizeof(info), NULL);
 
-   if (ExtractErrors(retcode, "GetMaxIdentifierLength"))
-      return 20;
+   if (ExtractErrors(retcode, "GetMaxIdentifierLength")) return 20;
 
    return info;
 }
-
 
 //______________________________________________________________________________
 Int_t TODBCServer::CreateDataBase(const char*)
@@ -611,7 +760,7 @@ const char *TODBCServer::ServerInfo()
 
    CheckConnect("ServerInfo", 0);
 
-   return fInfo;
+   return fServerInfo;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.h,v 1.6 2006/06/02 14:02:03 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.h,v 1.7 2006/06/25 18:43:24 brun Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -30,7 +30,8 @@ struct MYSQL;
 class TMySQLServer : public TSQLServer {
 
 private:
-   MYSQL  *fMySQL;    // connection to MySQL server
+   MYSQL     *fMySQL;    // connection to MySQL server
+   TString    fInfo;     // server info string
 
 public:
    TMySQLServer(const char *db, const char *uid, const char *pw);
