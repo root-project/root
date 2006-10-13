@@ -12,9 +12,11 @@ ASIMAGEDIRS  := $(ASIMAGEDIR)/src
 ASIMAGEDIRI  := $(ASIMAGEDIR)/inc
 
 ASTEPVERS    := libAfterImage
+ASTEPSRCS    := $(MODDIRS)/$(ASTEPVERS).tar.gz
 ifeq ($(BUILTINASIMAGE),yes)
 ASTEPDIRS    := $(MODDIRS)/$(ASTEPVERS)
 ASTEPDIRI    := -I$(MODDIRS)/$(ASTEPVERS)
+ASTEPETAG    := $(MODDIRS)/headers.d
 else
 ASTEPDIRS    :=
 ASTEPDIRI    := $(ASINCDIR:%=-I%)
@@ -98,7 +100,7 @@ ALLLIBS     += $(ASIMAGELIB) $(ASIMAGEGUILIB) $(ASIMAGEGSLIB)
 INCLUDEFILES += $(ASIMAGEDEP) $(ASIMAGEGUIDEP) $(ASIMAGEGSDEP)
 
 ##### local rules #####
-include/%.h:    $(ASIMAGEDIRI)/%.h
+include/%.h:    $(ASIMAGEDIRI)/%.h $(ASTEPETAG)
 		cp $< $@
 
 ifeq ($(BUILTINASIMAGE),yes)
@@ -108,31 +110,27 @@ $(ASTEPLIB):    $(ASTEPLIBA)
 			ranlib $@; \
 		fi)
 
-$(ASTEPLIBA):   $(ASTEPDIRS).tar.gz
-ifeq ($(PLATFORM),win32)
+$(ASTEPETAG):   $(ASTEPSRCS)
 		@(if [ -d $(ASTEPDIRS) ]; then \
-			rm -rf $(ASTEPDIRS); \
+		   rm -rf $(ASTEPDIRS); \
 		fi; \
-		echo "*** Building $@..."; \
+		echo "*** Extracting libAfterimage source ..."; \
 		cd $(ASIMAGEDIRS); \
 		if [ ! -d $(ASTEPVERS) ]; then \
-			gunzip -c $(ASTEPVERS).tar.gz | tar xf -; \
-		fi; \
-		cd $(ASTEPVERS); \
+		   gunzip -c $(ASTEPVERS).tar.gz | tar xf -; \
+		   etag=`basename $(ASTEPETAG)` ; \
+		   touch $$etag ; \
+		fi)
+
+$(ASTEPLIBA):   $(ASTEPETAG)
+ifeq ($(PLATFORM),win32)
+		@(cd $(ASTEPDIRS); \
 		unset MAKEFLAGS; \
 		nmake FREETYPEDIRI=-I../../../$(FREETYPEDIRI) \
                 -nologo -f libAfterImage.mak \
 		CFG=$(ASTEPBLD) NMAKECXXFLAGS="$(BLDCXXFLAGS) -I../../../build/win -FIw32pragma.h")
 else
-		@(if [ -d $(ASTEPDIRS) ]; then \
-			rm -rf $(ASTEPDIRS); \
-		fi; \
-		echo "*** Building $@..."; \
-		cd $(ASIMAGEDIRS); \
-		if [ ! -d $(ASTEPVERS) ]; then \
-			gunzip -c $(ASTEPVERS).tar.gz | tar xf -; \
-		fi; \
-		cd $(ASTEPVERS); \
+		@(cd $(ASTEPDIRS); \
 		ACC=$(CC); \
 		ACFLAGS="-O"; \
 		if [ "$(CC)" = "icc" ]; then \
@@ -280,8 +278,11 @@ distclean-asimage: clean-asimage
 		   $(ASIMAGEGUIDEP) $(ASIMAGEGUIDS) $(ASIMAGEGUIDH) \
 		   $(ASIMAGEGUILIB) \
 		   $(ASIMAGEGSDEP) $(ASIMAGEGSDS) $(ASIMAGEGSDH) \
-		   $(ASIMAGEGSLIB) $(ASTEPLIB)
+		   $(ASIMAGEGSLIB)
+ifeq ($(BUILTINASIMAGE),yes)
+		@rm -f $(ASTEPLIB) $(ASTEPETAG)
 		@rm -rf $(ASIMAGEDIRS)/$(ASTEPVERS)
+endif
 
 distclean::     distclean-asimage
 

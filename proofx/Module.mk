@@ -68,7 +68,7 @@ PROOFXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
 endif
 
 ##### local rules #####
-include/%.h:    $(PROOFXDIRI)/%.h
+include/%.h:    $(PROOFXDIRI)/%.h $(XROOTDETAG)
 		cp $< $@
 
 $(PROOFXLIB):   $(PROOFXO) $(XPCONNO) $(PROOFXDO) $(ORDER_) $(MAINLIBS) \

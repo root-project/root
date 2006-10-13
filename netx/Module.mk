@@ -57,7 +57,7 @@ NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
 endif
 
 ##### local rules #####
-include/%.h:    $(NETXDIRI)/%.h
+include/%.h:    $(NETXDIRI)/%.h $(XROOTDETAG)
 		cp $< $@
 
 $(NETXLIB):     $(NETXO) $(NETXDO) $(XRDPLUGINS) $(ORDER_) $(MAINLIBS) $(NETXLIBDEP)
