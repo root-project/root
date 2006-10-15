@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.201 2006/09/07 07:31:35 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.202 2006/09/13 05:08:35 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -3357,8 +3357,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->SetBranch(leaf->GetBranch());
             return ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->GetValue(leaf,real_instance);
          }
-         case kIndexOfEntry: return fTree->GetReadEntry();
-         case kEntries:      return fTree->GetEntries();
+         case kIndexOfEntry: return (Double_t)fTree->GetReadEntry();
+         case kEntries:      return (Double_t)fTree->GetEntries();
          case kLength:       return fManager->fNdata;
          case kLengthFunc:   return ((TTreeFormula*)fAliases.UncheckedAt(0))->GetNdata();
          case kIteration:    return instance;
@@ -3584,8 +3584,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             const Int_t code = (oper & kTFOperMask);
             const Int_t lookupType = fLookupType[code];
             switch (lookupType) {
-               case kIndexOfEntry: tab[pos++] = fTree->GetReadEntry(); continue;
-               case kEntries:      tab[pos++] = fTree->GetEntries(); continue;
+               case kIndexOfEntry: tab[pos++] = (Double_t)fTree->GetReadEntry(); continue;
+               case kEntries:      tab[pos++] = (Double_t)fTree->GetEntries(); continue;
                case kLength:       tab[pos++] = fManager->fNdata; continue;
                case kLengthFunc:   tab[pos++] = ((TTreeFormula*)fAliases.UncheckedAt(i))->GetNdata(); continue;
                case kIteration:    tab[pos++] = instance; continue;
@@ -4077,8 +4077,7 @@ Bool_t  TTreeFormula::IsLeafString(Int_t code) const
 //______________________________________________________________________________
 char *TTreeFormula::PrintValue(Int_t mode) const
 {
-//*-*-*-*-*-*-*-*Return value of variable as a string*-*-*-*-*-*-*-*
-//*-*            ====================================
+// Return value of variable as a string
 //
 //      mode = -2 : Print line with ***
 //      mode = -1 : Print column names
@@ -4090,12 +4089,13 @@ char *TTreeFormula::PrintValue(Int_t mode) const
 //______________________________________________________________________________
 char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) const
 {
-//*-*-*-*-*-*-*-*Return value of variable as a string*-*-*-*-*-*-*-*
-//*-*            ====================================
+// Return value of variable as a string
 //
 //      mode = -2 : Print line with ***
 //      mode = -1 : Print column names
 //      mode = 0  : Print column values
+//  decform contains the requested format (with the same convention as printf).
+//  
 
    const int kMAXLENGTH = 1024;
    static char value[kMAXLENGTH];
@@ -4124,7 +4124,6 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
          } else {
             //strncpy(value, " ", kMAXLENGTH-1);
          }
-
          value[kMAXLENGTH-1] = 0;
       }
    } else {
@@ -4133,8 +4132,47 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
          //use the mutable keyword AND we should keep PrintValue const.
          Int_t real_instance = ((TTreeFormula*)this)->GetRealInstance(instance,-1);
          if (real_instance<fNdata[0]) {
-            sprintf(value,Form("%%%sg",decform),((TTreeFormula*)this)->EvalInstance(instance));
-            char *expo = strchr(value,'e');
+            Ssiz_t len = strlen(decform);
+            Char_t dfLast = decform[len-1];
+            Bool_t longer  = kFALSE;
+            Bool_t shorter = kFALSE;
+            char *expo = 0;
+            if (len>2) {
+               switch (decform[len-2]) {
+                  case 'l': 
+                  case 'L': longer = kTRUE; break;
+                  case 'h': shorter = kTRUE; break;
+               }
+            }
+            switch(decform[len-1]) {
+               case 'c':
+               case 'd':
+               case 'i':
+               case 'o':
+               case 'x':
+               case 'X':
+               case 'u':
+                  {
+                     if (shorter) sprintf(value,Form("%%%s",decform),(short)((TTreeFormula*)this)->EvalInstance(instance));
+                     else if (longer) sprintf(value,Form("%%%s",decform),(int)((TTreeFormula*)this)->EvalInstance(instance));
+                     else sprintf(value,Form("%%%s",decform),(long)((TTreeFormula*)this)->EvalInstance(instance));
+                     break;
+                  }
+               case 'f':
+               case 'e':
+               case 'E':
+               case 'g':
+               case 'G':
+                  {
+                     if (longer) sprintf(value,Form("%%%s",decform),(long double)((TTreeFormula*)this)->EvalInstance(instance));
+                     else sprintf(value,Form("%%%s",decform),((TTreeFormula*)this)->EvalInstance(instance));
+                     expo = strchr(value,'e');
+                     break;
+                  }
+               default:
+                  sprintf(value,Form("%%%sg",decform),((TTreeFormula*)this)->EvalInstance(instance));
+                  expo = strchr(value,'e');
+            }
             if (expo) {
                // If there is an exponent we may be longer than planned.
                // so let's trim off the excess precission!

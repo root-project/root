@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.228 2006/09/14 05:27:45 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.229 2006/09/17 19:08:13 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2733,14 +2733,17 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    //       printing format.
    //    col=xxx
    //       Where 'xxx' is colon (:) delimited list of printing format for
-   //       each column if no format is specified for a column, the default is
-   //       used.
+   //       each column. The format string should follow the printf format 
+   //       specification.  The value given will be prefixed by % and, if no 
+   //       conversion specifier is given, will be suffixed by the letter g.  
+   //       before being passed to fprintf.  If no format is specified for a 
+   //       column, the default is used  (aka ${colsize}.${precision}g )
    // For example:
-   //   tree->Scan("a:b:c","","colsize=30 precision=3 col=::20.10");
+   //   tree->Scan("a:b:c","","colsize=30 precision=3 col=::20.10:#x:5ld");
    // Will print 3 columns, the first 2 columns will be 30 characters long,
    // the third columns will be 20 characters long.  The printing format used
    // for the columns (assuming they are numbers) will be respectively:
-   //   %30.3g %30.3g %20.10g
+   //   %30.3g %30.3g %20.10g %#x %5ld
 
 
    TString opt = option;
@@ -2795,6 +2798,22 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       int len = opt.Length();
       while( (numpos+numlen<len) &&
              (isdigit(opt[numpos+numlen])
+              || opt[numpos+numlen] == 'c'
+              || opt[numpos+numlen] == 'd'
+              || opt[numpos+numlen] == 'i'
+              || opt[numpos+numlen] == 'o'
+              || opt[numpos+numlen] == 'x'
+              || opt[numpos+numlen] == 'X'
+              || opt[numpos+numlen] == 'u'
+              || opt[numpos+numlen] == 'f'
+              || opt[numpos+numlen] == 'e'
+              || opt[numpos+numlen] == 'E'
+              || opt[numpos+numlen] == 'g'
+              || opt[numpos+numlen] == 'G'
+              || opt[numpos+numlen] == 'l'
+              || opt[numpos+numlen] == 'L'
+              || opt[numpos+numlen] == 'h'
+              || opt[numpos+numlen] == '#'
               || opt[numpos+numlen]=='.'
               || opt[numpos+numlen]==':')) numlen++;
       TString flist = opt(numpos,numlen);
