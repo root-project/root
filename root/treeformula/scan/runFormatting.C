@@ -1,3 +1,8 @@
+#include "TFile.h"
+#include "TTree.h"
+#include "TError.h"
+TTree* makeTree();
+
 void runFormatting(int mode = 0)
 {
    if (mode==1 || mode ==2) {
@@ -11,7 +16,7 @@ void runFormatting(int mode = 0)
    }
 
    TTree* tree = (TTree*) file->Get("tree");
-   tree->Scan("val:flag:flag:c:cstr", "", "col=::#x:c:");
+   tree->Scan("val:flag:flag:c:c:cstr", "", "col=::#x::c:");
 }
 
 TTree* makeTree()
@@ -30,8 +35,8 @@ TTree* makeTree()
   c2[3] = 0;
   tree->Branch("val", &val, "val/D");
   tree->Branch("flag", &flag, "flag/I");
-  tree->Branch("c", &c, "c/b");
-  tree->Branch("cstr", c2, "cstr/C");
+  tree->Branch("c", (void*)&c, "c/b");
+  tree->Branch("cstr", (void*)c2, "cstr/C");
 
   for(int i=0; i<10; i++) {
     tree->Fill();
@@ -39,9 +44,11 @@ TTree* makeTree()
     flag <<= 1;
     c++;
     (c2[2])++;
+    printf("%f:%d:%#x:%c\n",val,flag,flag,c,c2);
   }
 
   tree->Fill();
   tree->Write();
   file->Close();
+  return 0;
 }
