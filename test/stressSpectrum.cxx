@@ -202,7 +202,7 @@ void stress2(Int_t np2) {
    h2->FillRandom("f2",500000);
    //now the real stuff
    TSpectrum2 *s = new TSpectrum2(2*npeaks);
-   Int_t nfound = s->Search(h2,2,"goff");
+   Int_t nfound = s->Search(h2,2,"goff noMarkov");
    
    //searching good and ghost peaks (approximation)
    Int_t pf,ngood = 0;
