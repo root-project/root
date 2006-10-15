@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.19 2006/05/17 16:37:26 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.20 2006/05/26 15:13:02 rdm Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -50,10 +50,7 @@ TOrdCollection *TLimit::fgSystNames = new TOrdCollection();
 
 TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
                                        Int_t nmc, bool stat,
-                                       TRandom * generator,
-                                       Double_t(*statistic) (Double_t,
-                                                             Double_t,
-                                                             Double_t))
+                                       TRandom * generator)
 {
    // class TLimit
    // ------------
@@ -150,12 +147,12 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
             cout << "         Maybe the MC statistic has to be improved..." << endl;
          }
          if ((s > 0) && (b > 0))
-            buffer += statistic(s, b, d);
+            buffer += LogLikelihood(s, b, b, d);
          // precompute the log(1+s/b)'s in an array to speed up computation
          // background-free bins are set to have a maximum t.s. value
          // for protection (corresponding to s/b of about 5E8)
          if ((s > 0) && (b > 0))
-            fgTable->AddAt(statistic(s, b, 1), (channel * maxbins) + bin);
+            fgTable->AddAt(LogLikelihood(s, b, b, 1), (channel * maxbins) + bin);
          else if ((s > 0) && (b == 0))
             fgTable->AddAt(20, (channel * maxbins) + bin);
       }
@@ -171,6 +168,7 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
    Double_t *lrs = new Double_t[nmc];
    Double_t *lrb = new Double_t[nmc];
    TLimitDataSource* tmp_src = (TLimitDataSource*)(data->Clone());
+   TLimitDataSource* tmp_src2 = (TLimitDataSource*)(data->Clone());
    for (i = 0; i < nmc; i++) {
       tss[i] = 0;
       tsb[i] = 0;
@@ -178,6 +176,11 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
       lrb[i] = 0;
       // fluctuate signal and background
       TLimitDataSource*  fluctuated = Fluctuate(data, tmp_src, !i, myrandom, stat) ? tmp_src : data;
+      // make an independent set of fluctuations for reweighting pseudoexperiments
+      // it turns out using the same fluctuated ones for numerator and denominator
+      // is biased.
+      TLimitDataSource*  fluctuated2 = Fluctuate(data, tmp_src2, false, myrandom, stat) ? tmp_src2 : data;
+
       for (Int_t channel = 0;
            channel <= fluctuated->GetSignal()->GetLast(); channel++) {
          for (Int_t bin = 0;
@@ -190,24 +193,26 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
                Double_t rand = myrandom->Poisson(rate);
                tss[i] += rand * fgTable->At((channel * maxbins) + bin);
                Double_t s = (Double_t) ((TH1 *) (fluctuated->GetSignal()->At(channel)))->GetBinContent(bin);
+               Double_t s2= (Double_t) ((TH1 *) (fluctuated2->GetSignal()->At(channel)))->GetBinContent(bin);
                Double_t b = (Double_t) ((TH1 *) (fluctuated->GetBackground()->At(channel)))->GetBinContent(bin);
-               if ((s > 0) && (b > 0))
-                  lrs[i] += statistic(s, b, rand) - s;
-               else if ((s > 0) && (b == 0))
+               Double_t b2= (Double_t) ((TH1 *) (fluctuated2->GetBackground()->At(channel)))->GetBinContent(bin);
+               if ((s > 0) && (b2 > 0))
+                  lrs[i] += LogLikelihood(s, b, b2, rand) - s - b + b2;
+               else if ((s > 0) && (b2 == 0))
                   lrs[i] += 20 * rand - s;
                // b hypothesis
                rate = (Double_t) ((TH1 *) (fluctuated->GetBackground()->At(channel)))->GetBinContent(bin);
                rand = myrandom->Poisson(rate);
                tsb[i] += rand * fgTable->At((channel * maxbins) + bin);
-               if ((s > 0) && (b > 0))
-                  lrb[i] += statistic(s, b, rand) - s;
+               if ((s2 > 0) && (b > 0))
+                  lrb[i] += LogLikelihood(s2, b2, b, rand) - s2 - b2 + b;
                else if ((s > 0) && (b == 0))
                   lrb[i] += 20 * rand - s;
             }
          }
       }
-      lrs[i] = TMath::Exp(lrs[i]);
-      lrb[i] = TMath::Exp(lrb[i]);
+      lrs[i] = TMath::Exp(lrs[i] < 710 ? lrs[i] : 710);
+      lrb[i] = TMath::Exp(lrb[i] < 710 ? lrb[i] : 710);
    }
    delete tmp_src;
    // lrs and lrb are the LR's (no logs) = prob(s+b)/prob(b) for
@@ -339,15 +344,12 @@ bool TLimit::Fluctuate(TLimitDataSource * input, TLimitDataSource * output,
 
 TConfidenceLevel *TLimit::ComputeLimit(TH1* s, TH1* b, TH1* d,
                                        Int_t nmc, bool stat,
-                                       TRandom * generator,
-                                       Double_t(*statistic) (Double_t,
-                                                             Double_t,
-                                                             Double_t))
+                                       TRandom * generator)
 {
    // Compute limit.
 
    TLimitDataSource* lds = new TLimitDataSource(s,b,d);
-   TConfidenceLevel* out = ComputeLimit(lds,nmc,stat,generator,statistic);
+   TConfidenceLevel* out = ComputeLimit(lds,nmc,stat,generator);
    delete lds;
    return out;
 }
@@ -355,15 +357,12 @@ TConfidenceLevel *TLimit::ComputeLimit(TH1* s, TH1* b, TH1* d,
 TConfidenceLevel *TLimit::ComputeLimit(TH1* s, TH1* b, TH1* d,
                                        TVectorD* se, TVectorD* be, TObjArray* l,
                                        Int_t nmc, bool stat,
-                                       TRandom * generator,
-                                       Double_t(*statistic) (Double_t,
-                                                             Double_t,
-                                                             Double_t))
+                                       TRandom * generator)
 {
    // Compute limit.
 
    TLimitDataSource* lds = new TLimitDataSource(s,b,d,se,be,l);
-   TConfidenceLevel* out = ComputeLimit(lds,nmc,stat,generator,statistic);
+   TConfidenceLevel* out = ComputeLimit(lds,nmc,stat,generator);
    delete lds;
    return out;
 }
@@ -371,10 +370,7 @@ TConfidenceLevel *TLimit::ComputeLimit(TH1* s, TH1* b, TH1* d,
 TConfidenceLevel *TLimit::ComputeLimit(Double_t s, Double_t b, Int_t d,
                                        Int_t nmc,
                                        bool stat,
-                                       TRandom * generator,
-                                       Double_t(*statistic) (Double_t,
-                                                             Double_t,
-                                                             Double_t))
+                                       TRandom * generator)
 {
    // Compute limit.
 
@@ -385,7 +381,7 @@ TConfidenceLevel *TLimit::ComputeLimit(Double_t s, Double_t b, Int_t d,
    TH1D* dh = new TH1D("__dh","__dh",1,0,2);
    dh->Fill(1,d);
    TLimitDataSource* lds = new TLimitDataSource(sh,bh,dh);
-   TConfidenceLevel* out = ComputeLimit(lds,nmc,stat,generator,statistic);
+   TConfidenceLevel* out = ComputeLimit(lds,nmc,stat,generator);
    delete lds;
    delete sh;
    delete bh;
@@ -397,10 +393,7 @@ TConfidenceLevel *TLimit::ComputeLimit(Double_t s, Double_t b, Int_t d,
                                        TVectorD* se, TVectorD* be, TObjArray* l,
                                        Int_t nmc,
                                        bool stat,
-                                       TRandom * generator,
-                                       Double_t(*statistic) (Double_t,
-                                                             Double_t,
-                                                             Double_t))
+                                       TRandom * generator)
 {
    // Compute limit.
 
@@ -411,7 +404,7 @@ TConfidenceLevel *TLimit::ComputeLimit(Double_t s, Double_t b, Int_t d,
    TH1D* dh = new TH1D("__dh","__dh",1,0,2);
    dh->Fill(1,d);
    TLimitDataSource* lds = new TLimitDataSource(sh,bh,dh,se,be,l);
-   TConfidenceLevel* out = ComputeLimit(lds,nmc,stat,generator,statistic);
+   TConfidenceLevel* out = ComputeLimit(lds,nmc,stat,generator);
    delete lds;
    delete sh;
    delete bh;

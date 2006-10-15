@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.h,v 1.8 2006/01/15 22:03:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.h,v 1.9 2006/05/26 15:13:01 rdm Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 #ifndef ROOT_TLimit
@@ -24,8 +24,7 @@ class TH1;
 //
 // TLimit
 //
-// This class computes 95% Confidence Levels using a given statistic.
-// By default, the build-in LogLikelihood is used.
+// This class computes 95% Confidence Levels.
 //
 // Implemented by C. Delaere from the mclimit code written by Tom Junk.
 // reference: HEP-EX/9902006
@@ -35,7 +34,7 @@ class TH1;
 class TLimit {
  protected:
    static bool Fluctuate(TLimitDataSource * input, TLimitDataSource * output, bool init,TRandom *, bool stat=false);
-   inline static Double_t LogLikelihood(Double_t s, Double_t b, Double_t d) { return d * TMath::Log(1 + (s / b)); }
+   inline static Double_t LogLikelihood(Double_t s, Double_t b, Double_t b2, Double_t d) { return d*TMath::Log((s+b)/b2); }
 
 public:
    TLimit() {}
@@ -43,30 +42,25 @@ public:
    static TConfidenceLevel *ComputeLimit(TLimitDataSource * data,
                                          Int_t nmc =50000,
                                          bool stat = false,
-                                         TRandom * generator = 0,
-                                         Double_t(*statistic) (Double_t, Double_t,Double_t) = &(TLimit::LogLikelihood));
+                                         TRandom * generator = 0);
    static TConfidenceLevel *ComputeLimit(Double_t s, Double_t b, Int_t d,
                                          Int_t nmc =50000,
                                          bool stat = false,
-                                         TRandom * generator = 0,
-                                         Double_t(*statistic) (Double_t, Double_t,Double_t) = &(TLimit::LogLikelihood));
-   static TConfidenceLevel *ComputeLimit(Double_t s, Double_t b, Int_t d,
+                                         TRandom * generator = 0);
+   static TConfidenceLevel *ComputeLimit(Double_t s, Double_t b, Int_t d, 
                                          TVectorD* se, TVectorD* be, TObjArray*,
                                          Int_t nmc =50000,
                                          bool stat = false,
-                                         TRandom * generator = 0,
-                                         Double_t(*statistic) (Double_t, Double_t,Double_t) = &(TLimit::LogLikelihood));
+                                         TRandom * generator = 0);
    static TConfidenceLevel *ComputeLimit(TH1* s, TH1* b, TH1* d,
                                          Int_t nmc =50000,
                                          bool stat = false,
-                                         TRandom * generator = 0,
-                                         Double_t(*statistic) (Double_t, Double_t,Double_t) = &(TLimit::LogLikelihood));
-   static TConfidenceLevel *ComputeLimit(TH1* s, TH1* b, TH1* d,
+                                         TRandom * generator = 0);
+   static TConfidenceLevel *ComputeLimit(TH1* s, TH1* b, TH1* d, 
                                          TVectorD* se, TVectorD* be, TObjArray*,
                                          Int_t nmc =50000,
                                          bool stat = false,
-                                         TRandom * generator = 0,
-                                         Double_t(*statistic) (Double_t, Double_t,Double_t) = &(TLimit::LogLikelihood));
+                                         TRandom * generator = 0);
  private:
    static TArrayD *fgTable;              // a log table... just to speed up calculation
    static TOrdCollection *fgSystNames;   // Collection of systematics names
