@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.193 2006/09/14 12:46:32 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.194 2006/09/15 15:16:57 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -208,8 +208,10 @@ TGraph& TGraph::operator=(const TGraph &gr)
       }
     
       Int_t n = gr.GetN()*sizeof(Double_t);
-      memcpy(fX, gr.fX, n);
-      memcpy(fY, gr.fY, n);
+      if (n>0) {
+         memcpy(fX, gr.fX, n);
+         memcpy(fY, gr.fY, n);
+      }
    }
    return *this;
 }
