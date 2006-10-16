@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.237 2006/10/01 16:51:14 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.238 2006/10/02 16:12:38 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -840,7 +840,8 @@ void TPad::Close(Option_t *)
    }
 
    // emit signal
-   Closed();
+   if (IsA() != TCanvas::Class())
+      Closed();
 
    if (fPixmapID != -1) {
       if (gPad) {
