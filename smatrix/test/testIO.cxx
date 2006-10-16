@@ -18,31 +18,50 @@
 
 #include <iostream>
 
-#ifdef USE_REFLEX
+//#ifdef USE_REFLEX
 #include "Cintex/Cintex.h"
 #include "Reflex/Reflex.h"
-#endif
+//#endif
 
 #include "Track.h"
 
 TRandom3 R; 
 TStopwatch timer;
 
+
+//#define DEBUG
+
 // if I use double32 or not depends on the dictionary
-//#define USE_DOUBLE32
+////#define USE_DOUBLE32
 #ifdef USE_DOUBLE32
 typedef ROOT::Math::SMatrix<Double32_t,5,5,ROOT::Math::MatRepSym<Double32_t,5> >  SMatrixSym5;
 typedef ROOT::Math::SMatrix<Double32_t,5,5 >  SMatrix5;
-const std::string sname = "ROOT::Math::SMatrix<Double32_t,5,5>";
+const std::string sname = "ROOT::Math::SMatrix<Double32_t,5,5,ROOT::Math::MatRepStd<Double32_t,5,5> >";
 const std::string sname_sym = "ROOT::Math::SMatrix<Double32_t,5,5,ROOT::Math::MatRepSym<Double32_t,5> >";
 double tol = 1.E-6; 
 #else
 typedef ROOT::Math::SMatrix<double,5,5,ROOT::Math::MatRepSym<double,5> >  SMatrixSym5;
 typedef ROOT::Math::SMatrix<double,5,5 >  SMatrix5;
-double tol = 1.E-16;
-const std::string sname = "ROOT::Math::SMatrix<double,5,5>";
+const std::string sname = "ROOT::Math::SMatrix<double,5,5,ROOT::Math::MatRepStd<double,5,5> >";
 const std::string sname_sym = "ROOT::Math::SMatrix<double,5,5,ROOT::Math::MatRepSym<double,5> >";
+double tol = 1.E-16;
 #endif
+double tol32 = 1.E-6; 
+
+#ifdef USE_REFLEX
+  std::string sfile1   = "smatrix_rflx.root";
+  std::string sfile2   = "smatrix.root";
+
+  std::string symfile1 = "smatrixsym_rflx.root";
+  std::string symfile2 = "smatrixsym.root";
+#else
+  std::string sfile1   = "smatrix.root";
+  std::string sfile2   = "smatrix_rflx.root";
+
+  std::string symfile1 = "smatrixsym.root";
+  std::string symfile2 = "smatrixsym_rflx.root";
+#endif
+
 
 
 //using namespace ROOT::Math;
@@ -155,7 +174,8 @@ double writeCArray(int n) {
   std::cout << "  Test writing a C Array ........\n";
   std::cout << "**************************************************\n";
 
-  TFile f1("smatrix.root","RECREATE");
+  TFile f1("cmatrix.root","RECREATE");
+
 
   // create tree
   TTree t1("t1","Tree with C Array");
@@ -175,29 +195,34 @@ double writeCArray(int n) {
   f1.Write();
   timer.Stop();
 
-  t1.Print();
   std::cout << " Time to Write CArray " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
+
+#ifdef DEBUG
+  t1.Print();
+  int pr = std::cout.precision(18);
   std::cout << " sum " << n<< "  " << etot << "  " << etot/double(n) << std::endl; 
+  std::cout.precision(pr);
+#endif
 
   return etot/double(n);
 }
 
-double writeSMatrix(int n) { 
+double writeSMatrix(int n, const std::string & file) { 
 
   std::cout << "\n";
   std::cout << "**************************************************\n";
   std::cout << "  Test writing SMatrix ........\n";
   std::cout << "**************************************************\n";
 
-  TFile f1("smatrix.root","RECREATE");
+  TFile f1(file.c_str(),"RECREATE");
 
   // create tree
   TTree t1("t1","Tree with SMatrix");
 
   SMatrix5 * m1 = new  SMatrix5;
-  //ROOT::Math::SMatrix<Double32_t,5,5> * m1 = new ROOT::Math::SMatrix<Double32_t,5,5>; 
-  t1.Branch("SMatrix branch",sname.c_str(),&m1);
   //t1.Branch("SMatrix branch",&m1,16000,0);
+  // need to pass type name explicitly to distinguish double/double32
+  t1.Branch("SMatrix branch",sname.c_str(),&m1,16000,0);
 
   timer.Start();
   double etot = 0;
@@ -211,30 +236,34 @@ double writeSMatrix(int n) {
   f1.Write();
   timer.Stop();
 
-  t1.Print();
   std::cout << " Time to Write SMatrix " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
+#ifdef DEBUG
+  t1.Print();
+  int pr = std::cout.precision(18);
   std::cout << " sum " << n<< "  " << etot << "  " << etot/double(n) << std::endl; 
+  std::cout.precision(pr);
+#endif
 
   return etot/double(n);
 }
 
 
 
-double writeSMatrixSym(int n) { 
+double writeSMatrixSym(int n, const std::string & file) { 
 
   std::cout << "\n";
   std::cout << "**************************************************\n";
   std::cout << "  Test writing SMatrix Sym.....\n";
   std::cout << "**************************************************\n";
 
-  TFile f1("smatrixsym.root","RECREATE");
+  TFile f1(file.c_str(),"RECREATE");
 
   // create tree
   TTree t1("t1","Tree with SMatrix");
 
   SMatrixSym5 * m1 = new  SMatrixSym5;
-  t1.Branch("SMatrixSym branch",sname_sym.c_str(),&m1);
-//  t1.Branch("SMatrixSym branch",&m1,16000,0);
+  //t1.Branch("SMatrixSym branch",&m1,16000,0);
+  t1.Branch("SMatrixSym branch",sname_sym.c_str(),&m1,16000,0);
 
   timer.Start();
   double etot = 0;
@@ -248,9 +277,14 @@ double writeSMatrixSym(int n) {
   f1.Write();
   timer.Stop();
 
+
+  std::cout << " Time to Write SMatrix Sym " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
+#ifdef DEBUG
   t1.Print();
-  std::cout << " Time to Write SMatrix " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
+  int pr = std::cout.precision(18);
   std::cout << " sum " << n<< "  " << etot << "  " << etot/double(n) << std::endl; 
+  std::cout.precision(pr);
+#endif
 
   return etot/double(n);
 }
@@ -289,10 +323,14 @@ double writeTMatrix(int n) {
   f2.Write();
   timer.Stop();
 
-  t2.Print();
   std::cout << " Time to Write TMatrix " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
+#ifdef DEBUG
+  t2.Print();
+  int pr = std::cout.precision(18);
   std::cout << " sum " << n<< "  " << etot << "  " << etot/double(n) << std::endl; 
+  std::cout.precision(pr);
   std::cout << "\n\n\n";
+#endif
 
   return etot/double(n);
 
@@ -328,10 +366,14 @@ double writeTMatrixSym(int n) {
   f2.Write();
   timer.Stop();
 
-  t2.Print();
   std::cout << " Time to Write TMatrix Sym " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
+#ifdef DEBUG
+  t2.Print();
+  int pr = std::cout.precision(18);
   std::cout << " sum " << n<< "  " << etot << "  " << etot/double(n) << std::endl; 
+  std::cout.precision(pr);
   std::cout << "\n\n\n";
+#endif
 
   return etot/double(n);
 
@@ -352,6 +394,10 @@ double readTMatrix() {
 
 
   TFile f2("tmatrix.root");
+  if (f2.IsZombie() ) { 
+    std::cerr << "Error opening the ROOT file" << std::endl; 
+    return -1; 
+  }
   TTree *t2 = (TTree*)f2.Get("t2");
 
 
@@ -360,7 +406,6 @@ double readTMatrix() {
 
   timer.Start();
   int n = (int) t2->GetEntries();
-  std::cout << " Tree Entries " << n << std::endl; 
   double etot = 0;
   for (int i = 0; i < n; ++i) { 
     t2->GetEntry(i);
@@ -370,7 +415,12 @@ double readTMatrix() {
   timer.Stop();
   std::cout << " Time for TMatrix " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
   double val = etot/double(n);
-  std::cout << " sum " << n<< "  " << etot << "  " << val << std::endl; 
+#ifdef DEBUG
+  std::cout << " Tree Entries " << n << std::endl; 
+  int pr = std::cout.precision(18);
+  std::cout << " sum " << n<< "  " << etot << "  " << etot/double(n) << std::endl; 
+  std::cout.precision(pr);
+#endif
   return val;
 }
 
@@ -387,6 +437,12 @@ double readTMatrixSym() {
 
 
   TFile f2("tmatrixsym.root");
+  if (f2.IsZombie() ) { 
+    std::cerr << "Error opening the ROOT file" << std::endl; 
+    return -1; 
+  }
+
+
   TTree *t2 = (TTree*)f2.Get("t2");
 
 
@@ -395,7 +451,6 @@ double readTMatrixSym() {
 
   timer.Start();
   int n = (int) t2->GetEntries();
-  std::cout << " Tree Entries " << n << std::endl; 
   double etot = 0;
   for (int i = 0; i < n; ++i) { 
     t2->GetEntry(i);
@@ -405,20 +460,31 @@ double readTMatrixSym() {
   timer.Stop();
   std::cout << " Time for TMatrix Sym" << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
   double val = etot/double(n);
-  std::cout << " sum " << n<< "  " << etot << "  " << val << std::endl; 
+#ifdef DEBUG
+  std::cout << " Tree Entries " << n << std::endl; 
+  int pr = std::cout.precision(18);
+  std::cout << " sum " << n<< "  " << etot << "  " << etot/double(n) << std::endl; 
+  std::cout.precision(pr);
+#endif
+
   return val;
 }
 
 
-double readSMatrix() { 
+double readSMatrix(const std::string & file) { 
 
 
+  std::cout << "\n";
   std::cout << "**************************************************\n";
   std::cout << "  Test reading SMatrix........\n";
   std::cout << "**************************************************\n";
 
 
-  TFile f1("smatrix.root");
+  TFile f1(file.c_str());
+  if (f1.IsZombie() ) { 
+    std::cerr << "Error opening the ROOT file" << file << std::endl; 
+    return -1; 
+  }
 
   // create tree
   TTree *t1 = (TTree*)f1.Get("t1");
@@ -428,7 +494,6 @@ double readSMatrix() {
 
   timer.Start();
   int n = (int) t1->GetEntries();
-  std::cout << " Tree Entries " << n << std::endl; 
   double etot=0;
   for (int i = 0; i < n; ++i) { 
     t1->GetEntry(i);
@@ -439,21 +504,34 @@ double readSMatrix() {
   timer.Stop();
   std::cout << " Time for SMatrix :    " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
 
+#ifdef DEBUG
+  std::cout << " Tree Entries " << n << std::endl; 
+  int pr = std::cout.precision(18);
   std::cout << " sum " << n<< "  " << etot << "  " << etot/double(n) << std::endl; 
+  std::cout.precision(pr);
+#endif
+  std::cout << "\n";
+
 
   return etot/double(n);
 }
 
 
-double readSMatrixSym() { 
+double readSMatrixSym(const std::string & file) { 
 
 
+  std::cout << "\n";
   std::cout << "**************************************************\n";
   std::cout << "  Test reading SMatrix.Sym....\n";
   std::cout << "**************************************************\n";
 
 
-  TFile f1("smatrixsym.root");
+  TFile f1(file.c_str());
+  if (f1.IsZombie() ) { 
+    std::cerr << "Error opening the ROOT file" << file << std::endl; 
+    return -1; 
+  }
+  
 
   // create tree
   TTree *t1 = (TTree*)f1.Get("t1");
@@ -463,7 +541,6 @@ double readSMatrixSym() {
 
   timer.Start();
   int n = (int) t1->GetEntries();
-  std::cout << " Tree Entries " << n << std::endl; 
   double etot=0;
   for (int i = 0; i < n; ++i) { 
     t1->GetEntry(i);
@@ -474,7 +551,13 @@ double readSMatrixSym() {
   timer.Stop();
   std::cout << " Time for SMatrix Sym : " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
 
+#ifdef DEBUG
+  std::cout << " Tree Entries " << n << std::endl; 
+  int pr = std::cout.precision(18);
   std::cout << " sum " << n<< "  " << etot << "  " << etot/double(n) << std::endl; 
+  std::cout.precision(pr);
+#endif
+  std::cout << "\n";
 
   return etot/double(n);
 }
@@ -508,9 +591,14 @@ double writeTrackD(int n) {
   f1.Write();
   timer.Stop();
 
-  t1.Print();
   std::cout << " Time to Write TrackD of SMatrix " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
+
+#ifdef DEBUG
+  t1.Print();
+  int pr = std::cout.precision(18);
   std::cout << " sum " << n<< "  " << etot << "  " << etot/double(n) << std::endl; 
+  std::cout.precision(pr);
+#endif
 
   return etot/double(n);
 }
@@ -520,16 +608,16 @@ double writeTrackD32(int n) {
 
   std::cout << "\n";
   std::cout << "**************************************************\n";
-  std::cout << "  Test writing Track class........\n";
+  std::cout << "  Test writing TrackD32 class........\n";
   std::cout << "**************************************************\n";
 
-  TFile f1("track.root","RECREATE");
+  TFile f1("track32.root","RECREATE");
 
   // create tree
   TTree t1("t1","Tree with Track based on SMatrix");
 
   TrackD32 * m1 = new TrackD32();
-  t1.Branch("Track branch",&m1,16000,0);
+  t1.Branch("Track32 branch",&m1,16000,0);
 
   timer.Start();
   double etot = 0;
@@ -543,113 +631,384 @@ double writeTrackD32(int n) {
   f1.Write();
   timer.Stop();
 
+  std::cout << " Time to Write TrackD32 of SMatrix " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
+
+#ifdef DEBUG
   t1.Print();
-  std::cout << " Time to Write TrackD of SMatrix " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
+  int pr = std::cout.precision(18);
   std::cout << " sum " << n<< "  " << etot << "  " << etot/double(n) << std::endl; 
+  std::cout.precision(pr);
+#endif
 
   return etot/double(n);
 }
 
 
-int testIO() { 
+double readTrackD() { 
 
-#ifdef USE_REFLEX
+  std::cout << "\n";
+  std::cout << "**************************************************\n";
+  std::cout << "  Test reading Track class........\n";
+  std::cout << "**************************************************\n";
 
-   gSystem->Load("libReflex");  
-   gSystem->Load("libCintex");  
-   ROOT::Cintex::Cintex::SetDebug(1);
-   ROOT::Cintex::Cintex::Enable();
+  TFile f1("track.root");
+  if (f1.IsZombie() ) { 
+    std::cerr << "Error opening the ROOT file" << std::endl; 
+    return -1; 
+  }
+
+  // create tree
+  TTree *t1 = (TTree*)f1.Get("t1");
+
+  TrackD *trk = 0;
+  t1->SetBranchAddress("Track branch",&trk);
+
+  timer.Start();
+  int n = (int) t1->GetEntries();
+  double etot=0;
+  for (int i = 0; i < n; ++i) { 
+    t1->GetEntry(i);
+    etot += SumSMatrix(trk->CovMatrix());
+  }
+
+  timer.Stop();
+
+  std::cout << " Time to Read TrackD of SMatrix " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
+
+#ifdef DEBUG
+  std::cout << " Tree Entries " << n << std::endl; 
+  int pr = std::cout.precision(18);
+  std::cout << " sum " << n<< "  " << etot << "  " << etot/double(n) << std::endl; 
+  std::cout.precision(pr);
 #endif
 
+  return etot/double(n);
+}
+
+double readTrackD32() { 
+
+  std::cout << "\n";
+  std::cout << "**************************************************\n";
+  std::cout << "  Test reading Track32 class........\n";
+  std::cout << "**************************************************\n";
+
+  TFile f1("track32.root");
+  if (f1.IsZombie() ) { 
+    std::cerr << "Error opening the ROOT file" << std::endl; 
+    return -1; 
+  }
+
+  // create tree
+  TTree *t1 = (TTree*)f1.Get("t1");
+
+  TrackD32 *trk = 0;
+  t1->SetBranchAddress("Track32 branch",&trk);
+
+  timer.Start();
+  int n = (int) t1->GetEntries();
+  double etot=0;
+  for (int i = 0; i < n; ++i) { 
+    t1->GetEntry(i);
+    etot += SumSMatrix(trk->CovMatrix());
+  }
+
+  timer.Stop();
+
+  std::cout << " Time to Read TrackD32 of SMatrix " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
+
+#ifdef DEBUG
+  std::cout << " Tree Entries " << n << std::endl; 
+  int pr = std::cout.precision(18);
+  std::cout << " sum " << n<< "  " << etot << "  " << etot/double(n) << std::endl; 
+  std::cout.precision(pr);
+#endif
+
+  return etot/double(n);
+}
+
+
+//-----------------------------------------------------------------
+
+
+int testWrite(int nEvents, double & w1, double & w2) { 
+
+  int iret = 0; 
+  double w0 = writeCArray(nEvents);
+
+  w1 = writeTMatrix(nEvents);
+  w2 = writeSMatrix(nEvents,sfile1);
+  if ( fabs(w1-w2) > tol) { 
+    std::cout << "\nERROR: Differeces SMatrix-TMatrix found  when writing" << std::endl;
+    int pr = std::cout.precision(18);  std::cout << w1 << "   !=    " << w2 << std::endl; std::cout.precision(pr);
+    iret = 1;
+  }
+  if ( fabs(w1-w0) > tol) { 
+    std::cout << "\nERROR: Differeces TMatrix-C Array found  when writing" << std::endl;
+    int pr = std::cout.precision(18);  std::cout << w1 << "   !=    " << w0 << std::endl; std::cout.precision(pr);
+    iret = 1;
+  }
+
+  std::cout << "\n\n*************************************************************\n";
+   if (iret == 0 )  
+     std::cout << "  Writing Test:\t" << "OK";
+   else {
+     std::cout << "  Writing Test:\t" << "FAILED";
+   }
+   std::cout << "\n*************************************************************\n\n";
+
+
+  return iret; 
+}
+
+int testRead(double & r1, double & r2, double & r3) { 
+
+  int iret = 0; 
+
+
+
+  r1 = readTMatrix();
+  r2 = readSMatrix(sfile1);
+  if ( fabs(r1-r2) > tol) { 
+    std::cout << "\nERROR: Differeces SMatrix-TMatrix found  when reading " << std::endl;
+    int pr = std::cout.precision(18);  std::cout << r1 << "   !=    " << r2 << std::endl; std::cout.precision(pr);
+    iret = 2;
+  }
+
+#ifdef USE_REFLEX
+  std::cout << "try to read file written with CINT using Reflex Dictionaries " << std::endl;
+#else
+  std::cout << "try to read file written with Reflex using CINT Dictionaries " << std::endl;
+#endif
+  r3 = readSMatrix(sfile2);
+  if ( r3 != -1. && fabs(r2-r3) > tol) { 
+    std::cout << "\nERROR: Differeces Reflex-CINT found  when reading SMatrices" << std::endl;
+    int pr = std::cout.precision(18);  std::cout << r2 << "   !=    " << r3 << std::endl; std::cout.precision(pr);
+    iret = 3;
+  }
+    
+
+  return iret; 
+}
+
+
+int testWriteSym(int nEvents, double & w1, double & w2) { 
+
+  int iret = 0; 
+
+
+
+  w1 = writeTMatrixSym(nEvents);
+  w2 = writeSMatrixSym(nEvents,symfile1);
+  if ( fabs(w1-w2) > tol) { 
+    std::cout << "\nERROR: Differeces found  when writing" << std::endl;
+    int pr = std::cout.precision(18);  std::cout << w1 << "   !=    " << w2 << std::endl; std::cout.precision(pr);
+    iret = 11;
+  }
+
+  std::cout << "\n\n*************************************************************\n";
+  if (iret == 0 )  
+    std::cout << "  Writing Test:\t" << "OK";
+  else {
+    std::cout << "  Writing Test:\t" << "FAILED";
+  }
+  std::cout << "\n*************************************************************\n\n";
+  
+  return iret; 
+}
+
+int testReadSym(double & r1, double & r2, double & r3) { 
+
+  int iret = 0; 
+
+
+  r1 = readTMatrixSym();
+  r2 = readSMatrixSym(symfile1);
+  if ( fabs(r1-r2) > tol) { 
+    std::cout << "\nERROR: Differeces SMatrixSym-TMAtrixSym found  when reading " << std::endl;
+    int pr = std::cout.precision(18);  std::cout << r1 << "   !=    " << r2 << std::endl; std::cout.precision(pr);
+    iret = 12;
+  }
+
+#ifdef USE_REFLEX
+  std::cout << "try to read file written with CINT using Reflex Dictionaries " << std::endl;
+#else
+  std::cout << "try to read file written with Reflex using CINT Dictionaries " << std::endl;
+#endif
+
+  r3 = readSMatrixSym(symfile2);
+  if ( r3 != -1. && fabs(r2-r3) > tol) { 
+    std::cout << "\nERROR: Differeces Reflex-CINT found  when reading SMatricesSym" << std::endl;
+    int pr = std::cout.precision(18);  std::cout << r2 << "   !=    " << r3 << std::endl; std::cout.precision(pr);
+    iret = 13;
+  }
+
+
+  return iret; 
+}
+int testResult(double w1, double r1, double w2, double r2, double r3) { 
+
+  int iret = 0; 
+
+  if ( fabs(w1-r1)  > tol) { 
+    std::cout << "\nERROR: Differeces found  when reading TMatrices" << std::endl;
+    int pr = std::cout.precision(18);  std::cout << w1 << "   !=    " << r1 << std::endl; std::cout.precision(pr);
+    iret = -1;
+  }
+  if ( fabs(w2-r2)  > tol) { 
+    std::cout << "\nERROR: Differeces found  when reading SMatrices" << std::endl;
+    int pr = std::cout.precision(18);  std::cout << w2 << "   !=    " << r2 << std::endl; std::cout.precision(pr);
+    iret = -2;
+  }
+  if ( r3 != -1. && fabs(w2-r3)  > tol) { 
+    std::cout << "\nERROR: Differeces found  when reading SMatrices with different Dictionary" << std::endl;
+    int pr = std::cout.precision(18);  std::cout << w2 << "   !=    " << r2 << std::endl; std::cout.precision(pr);
+    iret = -3;
+  }
+  return iret; 
+}
+
+int testTrack(int nEvents) { 
+
+  int iret = 0; 
+
+  double wt1 = writeTrackD(nEvents);
+
+#ifdef  USE_REFLEX
+  // for the double32 need ROOT Cint
   gSystem->Load("libSmatrix");  
-  gSystem->Load("libMatrix");  
+#endif
+
+  double wt2 = writeTrackD32(nEvents);
+
+  if ( fabs(wt2-wt1)  > tol) { 
+    std::cout << "\nERROR: Differeces found  when writing Track" << std::endl;
+    int pr = std::cout.precision(18);  std::cout << wt2 << "   !=    " << wt1 << std::endl; std::cout.precision(pr);
+    iret = 13;
+  }
+
+  double rt1 = readTrackD(); 
+  if ( fabs(rt1-wt1)  > tol) { 
+    std::cout << "\nERROR: Differeces found  when reading Track" << std::endl;
+    int pr = std::cout.precision(18);  std::cout << rt1 << "   !=    " << wt1 << std::endl; std::cout.precision(pr);
+    iret = 13;
+  }
+
+  double rt2 = readTrackD32(); 
+  if ( fabs(rt2-wt2)  > tol32) { 
+    std::cout << "\nERROR: Differeces found  when reading Track 32" << std::endl;
+    int pr = std::cout.precision(18);  std::cout << rt2 << "   !=    " << wt2 << std::endl; std::cout.precision(pr);
+    iret = 13;
+  }
+
+  return iret; 
+}
+
+
+int testIO() { 
 
 
   int iret = 0;
+
+
+#ifdef USE_REFLEX
+
+
+  gSystem->Load("libReflex");  
+  gSystem->Load("libCintex");  
+  ROOT::Cintex::Cintex::SetDebug(1);
+  ROOT::Cintex::Cintex::Enable();
+
+  std::cout << "Use Reflex dictionary " << std::endl; 
+
+  iret |= gSystem->Load("libSmatrixRflx");  
+  iret |= gSystem->Load("libSmatrix");  
+
+
+#else
+
+  iret |= gSystem->Load("libSmatrix");  
+
+#endif
+
+  iret |= gSystem->Load("libMatrix");  
+
+
   int nEvents = 10000;
 
   initMatrix(nEvents);
 
-  double w0 = writeCArray(nEvents);
+  double w1, w2 = 0; 
+  iret |= testWrite(nEvents,w1,w2); 
 
-  double w1 = writeTMatrix(nEvents);
-  double w2 = writeSMatrix(nEvents);
-  if ( fabs(w1-w2) > tol) { 
-    std::cout << "ERROR: Differeces found  when writing \n" << std::endl;
-    iret = 1;
-  }
-  if ( fabs(w1-w0) > tol) { 
-    std::cout << "ERROR: Differeces found  when writing \n" << std::endl;
-    iret = 1;
-  }
+  
 
+  double r1, r2, r3  = 0; 
+  int iret2 = 0;
+  iret2 |= testRead(r1,r2,r3);
+  iret2 |= testResult(w1,r1,w2,r2,r3);
+  std::cout << "\n\n*************************************************************\n";
+  if (iret2 == 0 )  
+    std::cout << "  Reading Test:\t" << "OK";
+  else {
+    std::cout << "  Reading Test:\t" << "FAILED";
+  }
+  std::cout << "\n*************************************************************\n\n";
 
-  double r1 = readTMatrix();
-  double r2 = readSMatrix();
-  if ( fabs(r1-r2) > tol) { 
-    std::cout << "ERROR: Differeces found  when reading \n" << std::endl;
-    iret = 2;
-  }
+  iret |= iret2; 
 
-  if ( fabs(w1-r1)  > tol) { 
-    std::cout << "ERROR: Differeces found  when reading TMatrices\n" << std::endl;
-    iret = 3;
-  }
-  if ( fabs(w2-r2)  > tol) { 
-    std::cout << "ERROR: Differeces found  when reading SMatrices\n" << std::endl;
-    iret = 4;
-  }
 
   std::cout << "\n*****************************************************\n";
   std::cout << "    Test Symmetric matrices"; 
   std::cout << "\n*****************************************************\n\n";
 
+  iret = testWriteSym(nEvents,w1,w2); 
+  iret2 = testReadSym(r1,r2,r3);
+  iret2 = testResult(w1,r1,w2,r2,r3);
 
-  w1 = writeTMatrixSym(nEvents);
-  w2 = writeSMatrixSym(nEvents);
-  if ( fabs(w1-w2) > tol) { 
-    std::cout << "ERROR: Differeces found  when writing \n" << std::endl;
-    iret = 11;
+  std::cout << "\n\n*************************************************************\n";
+  if (iret2 == 0 )  
+    std::cout << "  Reading Test:\t" << "OK";
+  else {
+    std::cout << "  Reading Test:\t" << "FAILED";
   }
+  std::cout << "\n*************************************************************\n\n";
 
+  iret |= iret2; 
 
-  r1 = readTMatrixSym();
-  r2 = readSMatrixSym();
-  if ( fabs(r1-r2) > tol) { 
-    std::cout << "ERROR: Differeces found  when reading \n" << std::endl;
-    iret = 12;
-  }
-
-  if ( fabs(w1-r1)  > tol) { 
-    std::cout << "ERROR: Differeces found  when reading TMatrices\n" << std::endl;
-    iret = 13;
-  }
-  if ( fabs(w2-r2)  > tol) { 
-    std::cout << "ERROR: Differeces found  when reading SMatrices\n" << std::endl;
-    iret = 14;
-  }
 
   std::cout << "\n*****************************************************\n";
   std::cout << "    Test Track class"; 
   std::cout << "\n*****************************************************\n\n";
+
   // load track dictionary 
-  gSystem->Load("libTrackDict");  
+  iret |= gSystem->Load("libTrackDict"); 
+  if (iret != 0 ) return iret;
+
+  iret |= testTrack(nEvents); 
+  std::cout << "\n\n*************************************************************\n";
+  if (iret2 == 0 )  
+    std::cout << "  Track  Test:\t" << "OK";
+  else {
+    std::cout << "  Track  Test:\t" << "FAILED";
+  }
+  std::cout << "\n*************************************************************\n\n"; 
  
 
-  double wt1 = writeTrackD(nEvents);
-
-  double wt2 = writeTrackD32(nEvents);
-
-  if ( fabs(wt2-wt1)  > tol) { 
-    std::cout << "ERROR: Differeces found  when writing Track\n" << std::endl;
-    iret = 13;
-  }
-
   return iret;
-  
 
 }
+    
+
 
 int main() { 
-  testIO();
+  int iret = testIO();
+  std::cout << "\n\n*************************************************************\n";
+  if (iret != 0) { 
+    std::cerr << "\nERROR !!!!! " << iret << std::endl;
+    std::cerr << "TESTIO \t FAILED " << std::endl;
+  } 
+  else 
+    std::cerr << "TESTIO \t OK " << std::endl;
+  return iret; 
+  std::cout << "*************************************************************\n\n"; 
 }
