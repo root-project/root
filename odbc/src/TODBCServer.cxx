@@ -1,4 +1,4 @@
-// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.12 2006/06/25 18:43:24 brun Exp $
+// @(#)root/odbc:$Name:  $:$Id: TODBCServer.cxx,v 1.13 2006/10/13 07:33:16 brun Exp $
 // Author: Sergey Linev   6/02/2006
 
 /*************************************************************************
@@ -124,6 +124,7 @@ TODBCServer::TODBCServer(const char *db, const char *uid, const char *pw) :
 
       fHost = url.GetHost();
       fPort = url.GetPort()>0 ? url.GetPort() : 1;
+      fDB = dbase;
       simpleconnect = kFALSE;
    } else
    if (strncmp(db, "odbcd://", 8)==0) {
@@ -156,6 +157,7 @@ TODBCServer::TODBCServer(const char *db, const char *uid, const char *pw) :
    char sbuf[2048];
 
    SQLSMALLINT reslen;
+   SQLINTEGER reslen1;
 
    hwnd = 0;
 
@@ -166,29 +168,36 @@ TODBCServer::TODBCServer(const char *db, const char *uid, const char *pw) :
    else
       retcode = SQLDriverConnect(fHdbc, hwnd,
                                  (SQLCHAR*) connstr.Data(), SQL_NTS,
-                                 (SQLCHAR*) sbuf, 2048, &reslen, SQL_DRIVER_NOPROMPT);
+                                 (SQLCHAR*) sbuf, sizeof(sbuf), &reslen, SQL_DRIVER_NOPROMPT);
 
    if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
 
    fType = "ODBC";
-   fDB = db;
                   
-   retcode = SQLGetInfo(fHdbc, SQL_USER_NAME, sbuf, 2048, &reslen);
+   retcode = SQLGetInfo(fHdbc, SQL_USER_NAME, sbuf, sizeof(sbuf), &reslen);
    if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
    fUserId = sbuf;
 
-   retcode = SQLGetInfo(fHdbc, SQL_DBMS_NAME, sbuf, 2048, &reslen);
+   retcode = SQLGetInfo(fHdbc, SQL_DBMS_NAME, sbuf, sizeof(sbuf), &reslen);
    if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
    fServerInfo = sbuf;
+   fType = sbuf;
    
-   retcode = SQLGetInfo(fHdbc, SQL_DBMS_VER, sbuf, 2048, &reslen);
+   retcode = SQLGetInfo(fHdbc, SQL_DBMS_VER, sbuf, sizeof(sbuf), &reslen);
    if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
    fServerInfo += " ";
    fServerInfo += sbuf;
 
-/*   
-   retcode = SQLGetInfo(fHdbc, SQL_SCHEMA_TERM, sbuf, 2048, &reslen);
+   // take current catalog - database name
+   retcode = SQLGetConnectAttr(fHdbc, SQL_ATTR_CURRENT_CATALOG, sbuf, sizeof(sbuf), &reslen1);
    if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
+   if (fDB.Length()==0) fDB = sbuf;
+
+   retcode = SQLGetInfo(fHdbc, SQL_SERVER_NAME, sbuf, sizeof(sbuf), &reslen);
+   if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
+   if (fHost.Length()==0) fHost = sbuf;
+
+/*   
    
    SQLUINTEGER iinfo;
    retcode = SQLGetInfo(fHdbc, SQL_PARAM_ARRAY_ROW_COUNTS, &iinfo, sizeof(iinfo), 0);  
@@ -420,15 +429,18 @@ Bool_t TODBCServer::Exec(const char* sql)
 }
 
 //______________________________________________________________________________
-Int_t TODBCServer::SelectDataBase(const char *)
+Int_t TODBCServer::SelectDataBase(const char *db)
 {
    // Select a database. Returns 0 if successful, non-zero otherwise.
-   // Does not implemented for ODBC driver. User should specify database
-   // name at time of connection
+   // Not all RDBMS support selecting of database (catalog) after connecting
+   // Normally user should specify database name at time of connection
 
    CheckConnect("SelectDataBase", -1);
-
-   Info("SelectDataBase","Does not implemented for ODBC");
+   
+   SQLRETURN retcode = SQLSetConnectAttr(fHdbc, SQL_ATTR_CURRENT_CATALOG, (SQLCHAR*) db, SQL_NTS);
+   if (ExtractErrors(retcode, "SelectDataBase")) return -1;
+   
+   fDB = db;
 
    return 0;
 }

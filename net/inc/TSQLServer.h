@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSQLServer.h,v 1.5 2006/06/02 14:02:03 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSQLServer.h,v 1.6 2006/06/02 15:00:18 rdm Exp $
 // Author: Fons Rademakers   25/11/99
 
 /*************************************************************************
@@ -96,6 +96,7 @@ public:
    virtual const char *ServerInfo() = 0;
    virtual Bool_t      IsConnected() const { return fPort == -1 ? kFALSE : kTRUE; }
    const char         *GetDBMS() const { return fType.Data(); }
+   const char         *GetDB() const { return fDB.Data(); }
    const char         *GetHost() const { return fHost.Data(); }
    Int_t               GetPort() const { return fPort; }
    
