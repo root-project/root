@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.29 2005/12/22 09:54:37 brun Exp $
+// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.30 2006/04/19 08:22:25 rdm Exp $
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -194,7 +194,7 @@ void stress_allocation()
   if (gVerbose)
     cout << "m1 has to be equal to m4 after stretching and shrinking" << endl;
   m1.ResizeTo(m4.GetNrows(),m4.GetNcols());
-  ok &= VerifyMatrixIdentity(m1,m4,gVerbose);
+  ok &= VerifyMatrixIdentity(m1,m4,gVerbose,EPSILON);
   if (gVerbose)
     cout << "m5 has to be equal to m1 after shrinking" << endl;
   m5.ResizeTo(m1.GetNrows(),m1.GetNcols());
@@ -398,7 +398,7 @@ void stress_element_op(Int_t rsize,Int_t csize)
     for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++)
       for(Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++)
         m(i,j) = 0;
-    ok &= VerifyMatrixValue(m,0.,gVerbose);
+    ok &= VerifyMatrixValue(m,0.,gVerbose,EPSILON);
   }
 
   if (gVerbose)
@@ -476,7 +476,7 @@ void stress_element_op(Int_t rsize,Int_t csize)
   if (gVerbose)
     cout << "Assign 2*pattern to m1 by multiplying by two " << endl;
   m1 = pattern; m1 *= 2;
-  ok &= VerifyMatrixValue(m1,2*pattern,gVerbose);
+  ok &= VerifyMatrixValue(m1,2*pattern,gVerbose,EPSILON);
   R__ASSERT( m == m1 );
   if (gVerbose)
     cout << "Multiply m1 by one half returning it to the 1*pattern" << endl;
