@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.22 2006/09/08 20:54:05 roiser Exp $
+// @(#)root/reflex:$Name: v5-13-04 $:$Id: ScopeName.cxx,v 1.23 2006/10/03 09:45:37 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -44,6 +44,7 @@ static ScopeVec_t & sScopeVec() {
 //-------------------------------------------------------------------------------
 // Static wrapper around scope vector.
    static ScopeVec_t m;
+   m.reserve(20000);
    return m;
 }
 
