@@ -72,6 +72,11 @@ void gdk_visual_init(void)
    system_visual->xvisual->visualid = 0;
    system_visual->xvisual->bitspixel = bitspixel;
 
+   // temporary solves a strange bug in root in 16 bit mode:
+   // axis labels background is not the same color than the 
+   // pad background...
+   if (bitspixel == 16) bitspixel = 24; 
+
    if (rastercaps & RC_PALETTE) {
       g_error
           ("Palettized display (%d-colour) mode not supported on Windows.",
