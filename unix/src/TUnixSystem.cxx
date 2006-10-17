@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.158 2006/10/03 13:29:25 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.159 2006/10/07 18:06:11 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1545,10 +1545,11 @@ const char *TUnixSystem::FindFile(const char *search, TString& wfil, EAccessMode
    // Find location of file "wfil" in a search path.
    // The search path is specified as a : separated list of directories.
    // Return value is pointing to wfile for compatibility with
-   // Which(const char*,const char*,EAccessMode) version
+   // Which(const char*,const char*,EAccessMode) version.
 
+   TString show;
    if (gEnv->GetValue("Root.ShowPath", 0))
-      printf("Which: %s = ", wfil.Data());
+      show.Form("Which: %s =", wfil.Data());
 
    gSystem->ExpandPathName(wfil);
 
@@ -1556,12 +1557,12 @@ const char *TUnixSystem::FindFile(const char *search, TString& wfil, EAccessMode
       struct stat finfo;
       if (access(wfil.Data(), mode) == 0 &&
           stat(wfil.Data(), &finfo) == 0 && S_ISREG(finfo.st_mode)) {
-         if (gEnv->GetValue("Root.ShowPath", 0))
-            printf("%s", wfil.Data());
+         if (show != "")
+            Printf("%s %s", show.Data(), wfil.Data());
          return wfil.Data();
       }
-      if (gEnv->GetValue("Root.ShowPath", 0))
-         printf("<not found>");
+      if (show != "")
+         Printf("%s <not found>", show.Data());
       wfil = "";
       return 0;
    }
@@ -1592,15 +1593,15 @@ const char *TUnixSystem::FindFile(const char *search, TString& wfil, EAccessMode
       struct stat finfo;
       if (access(name.Data(), mode) == 0 &&
           stat(name.Data(), &finfo) == 0 && S_ISREG(finfo.st_mode)) {
-         if (gEnv->GetValue("Root.ShowPath", 0))
-            printf("%s", name.Data());
+         if (show != "")
+            Printf("%s %s", show.Data(), name.Data());
          wfil = name;
          return wfil.Data();
       }
    }
 
-   if (gEnv->GetValue("Root.ShowPath", 0))
-      printf("<not found>");
+   if (show != "")
+      Printf("%s <not found>", show.Data());
    wfil = "";
    return 0;
 }

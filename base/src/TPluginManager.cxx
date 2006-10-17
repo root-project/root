@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.29 2006/05/26 09:01:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.30 2006/07/09 05:27:53 brun Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -114,7 +114,7 @@ TPluginHandler::TPluginHandler(const TPluginHandler& ph) :
   fCanCall(ph.fCanCall),
   fIsMacro(ph.fIsMacro),
   fIsGlobal(ph.fIsGlobal)
-{ 
+{
    //copy constructor
 }
 
@@ -134,7 +134,7 @@ TPluginHandler& TPluginHandler::operator=(const TPluginHandler& ph)
       fCanCall=ph.fCanCall;
       fIsMacro=ph.fIsMacro;
       fIsGlobal=ph.fIsGlobal;
-   } 
+   }
    return *this;
 }
 
@@ -463,20 +463,20 @@ void TPluginManager::Print(Option_t *opt) const
    TIter next(fHandlers);
    TPluginHandler *h;
 
-   printf("=====================================================================\n");
-   printf("Base                 Regexp        Class              Plugin\n");
-   printf("=====================================================================\n");
+   Printf("=====================================================================");
+   Printf("Base                 Regexp        Class              Plugin");
+   Printf("=====================================================================");
 
    while ((h = (TPluginHandler*) next())) {
       const char *exist = "";
       if (h->CheckPlugin() == -1)
          exist = " [*]";
-      printf("%-20s %-13s %-18s %s%s\n", h->fBase.Data(), h->fRegexp.Data(),
+      Printf("%-20s %-13s %-18s %s%s", h->fBase.Data(), h->fRegexp.Data(),
              h->fClass.Data(), h->fPlugin.Data(), exist);
       if (strchr(opt, 'a'))
-         printf("  [Ctor: %s]\n", h->fCtor.Data());
+         Printf("  [Ctor: %s]", h->fCtor.Data());
    }
-   printf("=====================================================================\n");
-   printf("[*] plugin not available\n");
-   printf("=====================================================================\n\n");
+   Printf("=====================================================================");
+   Printf("[*] plugin not available");
+   Printf("=====================================================================\n");
 }
