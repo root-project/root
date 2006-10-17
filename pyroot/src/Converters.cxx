@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.30 2006/07/01 21:19:55 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.31 2006/08/14 00:21:56 rdm Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -626,14 +626,18 @@ Bool_t PyROOT::TLongLongArrayConverter::SetArg( PyObject* pyobject, G__CallFunc*
 
 //- converters for special cases ----------------------------------------------
 #define PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( name, strtype, DF1 )  \
+PyROOT::T##name##Converter::T##name##Converter() :                            \
+      TRootObjectConverter( gROOT->GetClass( #strtype ) ) {}                  \
+                                                                              \
 Bool_t PyROOT::T##name##Converter::SetArg( PyObject* pyobject, G__CallFunc* func )\
 {                                                                             \
-   const char* s = PyString_AsString( pyobject );                             \
-   if ( PyErr_Occurred() )                                                    \
-      return kFALSE;                                                          \
-   fBuffer = s;                                                               \
-   func->SetArg( reinterpret_cast< Long_t >( &fBuffer ) );                    \
-   return kTRUE;                                                              \
+   if ( PyString_Check( pyobject ) ) {                                        \
+      fBuffer = PyString_AS_STRING( pyobject );                               \
+      func->SetArg( reinterpret_cast< Long_t >( &fBuffer ) );                 \
+      return kTRUE;                                                           \
+   }                                                                          \
+                                                                              \
+   return TRootObjectConverter::SetArg( pyobject, func );                     \
 }                                                                             \
                                                                               \
 PyObject* PyROOT::T##name##Converter::FromMemory( void* address )             \
@@ -645,12 +649,12 @@ PyObject* PyROOT::T##name##Converter::FromMemory( void* address )             \
                                                                               \
 Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
 {                                                                             \
-   const char* buf = PyString_AsString( value );                              \
-   if ( PyErr_Occurred() )                                                    \
-      return kFALSE;                                                          \
+   if ( PyString_Check( value ) ) {                                           \
+      *((strtype*)address) = PyString_AS_STRING( value );                     \
+      return kTRUE;                                                           \
+   }                                                                          \
                                                                               \
-   *((strtype*)address) = buf;                                                \
-   return kTRUE;                                                              \
+   return TRootObjectConverter::ToMemory( value, address );                   \
 }
 
 PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( TString,   TString,     Data )
@@ -1030,8 +1034,8 @@ namespace {
       NFp_t( "TString&",           &CreateTStringConverter            ),
       NFp_t( "std::string",        &CreateSTLStringConverter          ),
       NFp_t( "string",             &CreateSTLStringConverter          ),
-      NFp_t( "std::string&",       &CreateSTLStringConverter          ),
-      NFp_t( "string&",            &CreateSTLStringConverter          ),
+      NFp_t( "const std::string&", &CreateSTLStringConverter          ),
+      NFp_t( "const string&",      &CreateSTLStringConverter          ),
       NFp_t( "void*&",             &CreateVoidPtrRefConverter         ),
       NFp_t( "void**",             &CreateVoidPtrPtrConverter         ),
       NFp_t( "PyObject*",          &CreatePyObjectConverter           ),

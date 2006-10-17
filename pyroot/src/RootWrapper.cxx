@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.46 2006/07/07 12:23:21 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.47 2006/09/28 19:59:12 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -508,7 +508,13 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
 
 // use actual class name for binding
    G__ClassInfo* clInfo = klass->GetClassInfo();
-   const std::string actual = clInfo ? clInfo->Name() : klass->GetName();
+   std::string actual = clInfo ? clInfo->Name() : klass->GetName();
+
+// in case of missing dictionaries, the scope won't have been stripped
+   if ( actual.rfind( "::" ) != std::string::npos ) {
+   // this is somewhat of a gamble, but the alternative is a guaranteed crash
+      actual = actual.substr( actual.rfind( "::" )+2, std::string::npos );
+   }
 
 // first try to retrieve an existing class representation
    PyObject* pyactual = PyString_FromString( actual.c_str() );

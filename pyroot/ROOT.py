@@ -1,5 +1,5 @@
 from __future__ import generators
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.42 2006/08/14 00:23:27 rdm Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.43 2006/09/28 19:59:12 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
 # Last: 09/22/06
@@ -230,10 +230,6 @@ please use operator[] instead, as in e.g. "mymatrix[i,j] = somevalue".
 if not __builtins__.has_key( '__IPYTHON__' ):
  # IPython has its own ways of executing shell commands etc.
    sys.excepthook = _excepthook
-else:
- # IPython's FakeModule hack otherwise prevents usage of python from CINT
-   _root.gROOT.ProcessLine( 'TPython::Exec( "" )' )
-   sys.modules[ '__main__' ].__builtins__ = __builtins__
 
 
 ### call EndOfLineAction after each interactive command (to update display etc.)
@@ -261,13 +257,6 @@ def _processRootEvents( controller ):
 class ModuleFacade( object ):
    def __init__( self, module ):
       self.__dict__[ 'module' ]    = module
-
-    # store already available ROOT objects to prevent spurious lookups
-      for name in self.module.__pseudo__all__ + _memPolicyAPI + _sigPolicyAPI:
-         self.__dict__[ name ] = getattr( _root, name )
-
-      for name in std.stlclasses:
-         setattr( _root, name, getattr( std, name ) )
 
       self.__dict__[ '__doc__'  ] = self.module.__doc__
       self.__dict__[ '__name__' ] = self.module.__name__
@@ -365,6 +354,12 @@ class ModuleFacade( object ):
          c.InitROOTGlobals()
          c.InitCINTMessageCallback();
 
+    # must be called after gApplication creation:
+      if __builtins__.has_key( '__IPYTHON__' ):
+       # IPython's FakeModule hack otherwise prevents usage of python from CINT
+         _root.gROOT.ProcessLine( 'TPython::Exec( "" )' )
+         sys.modules[ '__main__' ].__builtins__ = __builtins__
+
     # root thread, if needed, to prevent GUIs from starving, as needed
       if not self.keeppolling and not _root.gROOT.IsBatch():
          import threading
@@ -373,6 +368,14 @@ class ModuleFacade( object ):
             threading.Thread( None, _processRootEvents, None, ( self, ) )
          self.thread.setDaemon( 1 )
          self.thread.start()
+
+    # store already available ROOT objects to prevent spurious lookups
+      for name in self.module.__pseudo__all__ + _memPolicyAPI + _sigPolicyAPI:
+         self.__dict__[ name ] = getattr( _root, name )
+
+      for name in std.stlclasses:
+         setattr( _root, name, getattr( std, name ) )
+
 
 sys.modules[ __name__ ] = ModuleFacade( sys.modules[ __name__ ] )
 del ModuleFacade

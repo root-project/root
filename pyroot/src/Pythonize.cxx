@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.42 2006/08/14 00:21:56 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.43 2006/08/21 22:42:24 pcanal Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -41,6 +41,26 @@ namespace {
 
 // for convenience
    using namespace PyROOT;
+
+//____________________________________________________________________________
+   Bool_t HasAttrDirect( PyObject* pyclass, const char* name ) {
+   // prevents calls to pyclass->ob_type->tp_getattr, which is unnecessary for our
+   // purposes here and could tickle problems w/ spurious lookups into ROOT meta
+      PyObject* pyname = PyString_FromString( name );
+      if ( ! pyname )
+         return kFALSE;
+
+      PyObject* attr = PyType_Type.tp_getattro( pyclass, pyname );
+      Py_DECREF( pyname );
+
+      if ( attr != 0 ) {
+         Py_DECREF( attr );
+         return kTRUE;
+      }
+
+      PyErr_Clear();
+      return kFALSE;
+   }
 
 //____________________________________________________________________________
    inline Bool_t IsTemplatedSTLClass( const std::string& name, const std::string& klass ) {
@@ -746,17 +766,45 @@ namespace {
       return callSelfIndex( args, "_vector__at" );
    }
 
-//- STL container iterator supprt ---------------------------------------------
+//- STL container iterator support --------------------------------------------
    PyObject* StlSequenceIter( PyObject*, PyObject* args )
    {
       PyObject* iter = CallPySelfMethod( args, "begin", "O" );
       if ( iter ) {
          PyObject* end = CallPySelfMethod( args, "end", "O" );
-         if ( end )
-            PyObject_SetAttrString( iter, const_cast< char* >( "end" ), end );
+      //         if ( end )
+      //            PyObject_SetAttrString( iter, const_cast< char* >( "end" ), end );
+         if ( end ) {
+            if ( *(void**)((ObjectProxy*)end)->fObject == *(void**)((ObjectProxy*)iter)->fObject ) {
+            // no iter if there are no entries
+               Py_DECREF( iter );
+               iter = 0;
+               PyErr_SetString( PyExc_StopIteration, "" );
+            } else {
+               PyObject_SetAttrString( iter, const_cast< char* >( "end" ), end );
+            }
+         }
          Py_XDECREF( end );
       }
       return iter;
+   }
+
+//- safe indexing for STL-like vector w/o iterator dictionaries ---------------
+   PyObject* CheckedGetItem( PyObject*, PyObject* args )
+   {
+      PyObject* pyindex = 0;
+      if ( PyTuple_GET_SIZE( args ) == 2 )
+         pyindex = PyStyleIndex( PyTuple_GET_ITEM( args, 0 ), PyTuple_GET_ITEM( args, 1 ) );
+
+      if ( pyindex != 0 ) {
+         return CallPySelfObjMethod( args, "_getitem__unchecked", "OO:__getitem__" );
+      } else if ( ! PyErr_ExceptionMatches( PyExc_IndexError ) ) {
+         if ( PyErr_Occurred() )
+            PyErr_Clear();
+         return CallPySelfMethod( args, "_getitem__unchecked", "OO:__getitem__" );
+      }
+
+      return 0;   // to make compiler happy; never get here
    }
 
 //- pair as sequence to allow tuple unpacking ---------------------------------
@@ -882,8 +930,12 @@ namespace {
                PyErr_SetString( PyExc_StopIteration, "" );
             else
                next = CallPyObjMethod( iter, "__deref__" );
+         } else {
+            PyErr_SetString( PyExc_StopIteration, "" );
          }
          Py_XDECREF( iter );
+      } else {
+         PyErr_SetString( PyExc_StopIteration, "" );
       }
       Py_XDECREF( last );
 
@@ -1595,12 +1647,34 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    if ( pyclass == 0 )
       return kFALSE;
 
+
+//- method name based pythonization --------------------------------------------
+
 // for smart pointer style classes (note fall-through)
-   if ( PyObject_HasAttrString( pyclass, (char*)"__deref__" ) ) {
+   if ( HasAttrDirect( pyclass, "__deref__" ) ) {
       Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) DeRefGetAttr );
-   } else if ( PyObject_HasAttrString( pyclass, (char*)"__follow__" ) ) {
+   } else if ( HasAttrDirect( pyclass, "__follow__" ) ) {
       Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) FollowGetAttr );
    }
+
+// for STL containers, and user classes modeled after them
+   if ( HasAttrDirect( pyclass, "size" ) )
+      Utility::AddToClass( pyclass, "__len__", "size" );
+
+   if ( HasAttrDirect( pyclass, "begin" ) && HasAttrDirect( pyclass, "end" ) ) {
+   // some classes may not have dicts for their iterators, making begin/end useless
+      std::string itername = name + "::iterator";
+      TClass* klass = gROOT->GetClass( itername.c_str() );
+      if ( klass && klass->GetClassInfo() ) {
+         Utility::AddToClass( pyclass, "__iter__", (PyCFunction) StlSequenceIter );
+      } else if ( HasAttrDirect( pyclass, "__getitem__" ) && HasAttrDirect( pyclass, "__len__" ) ) {
+         Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
+         Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) CheckedGetItem );
+      }
+   }
+
+
+//- class name based pythonization ---------------------------------------------
 
    if ( name == "TObject" ) {
    // support for the 'in' operator
@@ -1669,26 +1743,20 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    }
 
    if ( IsTemplatedSTLClass( name, "vector" ) ) {
-      Utility::AddToClass( pyclass, "__len__",     "size" );
 
-      if ( PyObject_HasAttrString( pyclass, const_cast< char* >( "at" ) ) )
+      if ( HasAttrDirect( pyclass, "at" ) ) {
          Utility::AddToClass( pyclass, "_vector__at", "at" );
-      else if ( PyObject_HasAttrString( pyclass, const_cast< char* >( "__getitem__" ) ) ) {
+      // remove iterator that was set earlier (checked __getitem__ will do the trick)
+         if ( HasAttrDirect( pyclass, "__iter__" ) )
+            PyObject_DelAttrString(  pyclass, const_cast< char* >( "__iter__" ) );
+      } else if ( HasAttrDirect( pyclass, "__getitem__" ) ) {
          Utility::AddToClass( pyclass, "_vector__at", "__getitem__" );   // unchecked!
-      // for unchecked getitem, it is necessary to have a checked iterator protocol
-         Utility::AddToClass( pyclass, "__iter__",    (PyCFunction) StlSequenceIter );
+      // if unchecked getitem, use checked iterator protocol (was set above if begin/end)
       }
 
    // provide a slice-able __getitem__, if possible
-      if ( PyObject_HasAttrString( pyclass, const_cast< char* >( "_vector__at" ) ) )
+      if ( HasAttrDirect( pyclass, "_vector__at" ) )
          Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) VectorGetItem );
-
-      return kTRUE;
-   }
-
-   if ( IsTemplatedSTLClass( name, "list" ) ) {
-      Utility::AddToClass( pyclass, "__len__",  "size" );
-      Utility::AddToClass( pyclass, "__iter__", (PyCFunction) StlSequenceIter );
 
       return kTRUE;
    }
@@ -1710,7 +1778,6 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    if ( name == "string" || name == "std::string" ) {
       Utility::AddToClass( pyclass, "__repr__", (PyCFunction) StlStringRepr );
       Utility::AddToClass( pyclass, "__str__", "c_str" );
-      Utility::AddToClass( pyclass, "__len__", "length" );
       Utility::AddToClass( pyclass, "__cmp__", (PyCFunction) StlStringCompare );
       Utility::AddToClass( pyclass, "__eq__",  (PyCFunction) StlStringIsequal );
 
@@ -1745,9 +1812,6 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
       return kTRUE;
    }
-
-   if ( IsTemplatedSTLClass( name, "map" ) )
-      return Utility::AddToClass( pyclass, "__len__", "size" );
 
    if ( name == "TDirectory" ) {
    // note: this replaces the already existing TDirectory::GetObject()

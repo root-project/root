@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.49 2006/07/01 21:19:55 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.50 2006/09/28 19:59:12 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -393,11 +393,6 @@ PyObject* PyROOT::TMethodHolder::Execute( void* self )
 
    PyObject* result = 0;
 
-#ifndef R__WIN32              // G__return isn't for API use on Windows
-// TODO: get this into an API to cleanup/init on fresh call
-   G__return = G__RETURN_NON;
-#endif
-
    if ( Utility::gSignalPolicy == Utility::kFast ) {
    // bypasses ROOT try block (i.e. segfaults will abort)
       result = CallFast( self );
@@ -411,6 +406,10 @@ PyObject* PyROOT::TMethodHolder::Execute( void* self )
       Py_DECREF( result );
       result = 0;
    }
+
+// recover from error, if not cleared (needed as we're returning to prompt)
+   if ( G__get_return( 0 ) > G__RETURN_NORMAL )
+      G__security_recover( 0 );    // 0 ensures silence
 
    return result;
 }

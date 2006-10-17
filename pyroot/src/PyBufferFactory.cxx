@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.11 2006/07/01 21:19:55 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.12 2006/08/14 00:21:56 rdm Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -68,7 +68,7 @@ namespace {
    }
 
 //____________________________________________________________________________
-#define PYROOT_IMPLEMENT_PYBUFFER_METHODS( name, type, stype, F1 )           \
+#define PYROOT_IMPLEMENT_PYBUFFER_METHODS( name, type, stype, F1, F2 )       \
    PyObject* name##_buffer_str( PyObject* self )                             \
    {                                                                         \
       Py_ssize_t l = buffer_length( self, sizeof( type ) );                  \
@@ -88,16 +88,32 @@ namespace {
       }                                                                      \
                                                                              \
       return F1( (stype)*((type*)buf + idx) );                               \
+   }                                                                         \
+                                                                             \
+   int name##_buffer_ass_item( PyObject* self, Py_ssize_t idx, PyObject* val ) {\
+      const char* buf = buffer_get( self, idx, sizeof( type ) );             \
+      if ( ! buf ) {                                                         \
+         PyErr_SetString( PyExc_IndexError, "attempt to index a null-buffer" );\
+         return -1;                                                          \
+      }                                                                      \
+                                                                             \
+      type value = F2( val );                                                \
+      if ( PyErr_Occurred() )                                                \
+         return -1;                                                          \
+                                                                             \
+      *((type*)buf+idx) = (type)value;                                       \
+       return 0;                                                             \
    }
+      
 
-   PYROOT_IMPLEMENT_PYBUFFER_METHODS( Short,  Short_t,  Long_t,   PyInt_FromLong )
-   PYROOT_IMPLEMENT_PYBUFFER_METHODS( UShort, UShort_t, Long_t,   PyInt_FromLong )
-   PYROOT_IMPLEMENT_PYBUFFER_METHODS( Int,    Int_t,    Long_t,   PyInt_FromLong )
-   PYROOT_IMPLEMENT_PYBUFFER_METHODS( UInt,   UInt_t,   Long_t,   PyInt_FromLong )
-   PYROOT_IMPLEMENT_PYBUFFER_METHODS( Long,   Long_t,   Long_t,   PyLong_FromLong )
-   PYROOT_IMPLEMENT_PYBUFFER_METHODS( ULong,  ULong_t,  ULong_t,  PyLong_FromUnsignedLong )
-   PYROOT_IMPLEMENT_PYBUFFER_METHODS( Float,  Float_t,  Double_t, PyFloat_FromDouble )
-   PYROOT_IMPLEMENT_PYBUFFER_METHODS( Double, Double_t, Double_t, PyFloat_FromDouble )
+   PYROOT_IMPLEMENT_PYBUFFER_METHODS( Short,  Short_t,  Long_t,   PyInt_FromLong, PyInt_AsLong )
+   PYROOT_IMPLEMENT_PYBUFFER_METHODS( UShort, UShort_t, Long_t,   PyInt_FromLong, PyInt_AsLong )
+   PYROOT_IMPLEMENT_PYBUFFER_METHODS( Int,    Int_t,    Long_t,   PyInt_FromLong, PyInt_AsLong )
+   PYROOT_IMPLEMENT_PYBUFFER_METHODS( UInt,   UInt_t,   Long_t,   PyInt_FromLong, PyInt_AsLong )
+   PYROOT_IMPLEMENT_PYBUFFER_METHODS( Long,   Long_t,   Long_t,   PyLong_FromLong, PyLong_AsLong )
+   PYROOT_IMPLEMENT_PYBUFFER_METHODS( ULong,  ULong_t,  ULong_t,  PyLong_FromUnsignedLong, PyLong_AsUnsignedLong )
+   PYROOT_IMPLEMENT_PYBUFFER_METHODS( Float,  Float_t,  Double_t, PyFloat_FromDouble, PyFloat_AsDouble )
+   PYROOT_IMPLEMENT_PYBUFFER_METHODS( Double, Double_t, Double_t, PyFloat_FromDouble, PyFloat_AsDouble )
 
 } // unnamed namespace
 
@@ -114,6 +130,7 @@ PyROOT::TPyBufferFactory* PyROOT::TPyBufferFactory::Instance()
 //- constructor/destructor ------------------------------------------------------
 #define PYROOT_INSTALL_PYBUFFER_METHODS( name, type )                           \
    Py##name##Buffer_SeqMethods.sq_item      = name##_buffer_item;               \
+   Py##name##Buffer_SeqMethods.sq_ass_item  = name##_buffer_ass_item;           \
    Py##name##Buffer_SeqMethods.sq_length    = &name##_buffer_length;            \
    Py##name##Buffer_Type.tp_as_sequence     = &Py##name##Buffer_SeqMethods;     \
    Py##name##Buffer_Type.tp_str             = name##_buffer_str;

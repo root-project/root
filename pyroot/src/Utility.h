@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.20 2005/09/14 08:07:16 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.21 2005/10/25 05:13:15 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H
@@ -26,7 +26,7 @@ namespace PyROOT {
       Bool_t AddToClass( PyObject* pyclass, const char* label, PyCFunction cfunc,
                        int flags = METH_VARARGS );
       Bool_t AddToClass( PyObject* pyclass, const char* label, const char* func );
-      Bool_t AddToClass( PyObject* pyclass, const char* label, PyCallable* pfunc );
+      Bool_t AddToClass( PyObject* pyclass, const char* label, PyCallable* pyfunc );
 
    // initialize proxy type objects
       Bool_t InitProxy( PyObject* module, PyTypeObject* pytype, const char* name );

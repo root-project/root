@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.18 2005/12/07 06:16:16 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.19 2006/08/14 00:21:56 rdm Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_CONVERTERS_H
 #define PYROOT_CONVERTERS_H
@@ -137,19 +137,6 @@ namespace PyROOT {
    };
 
 // converters for special cases
-#define PYROOT_DECLARE_STRING_CONVERTER( name, strtype )                      \
-   class T##name##Converter : public TConverter {                             \
-   public:                                                                    \
-      virtual Bool_t SetArg( PyObject*, G__CallFunc* );                       \
-      virtual PyObject* FromMemory( void* address );                          \
-      virtual Bool_t ToMemory( PyObject* value, void* address );              \
-   private:                                                                   \
-      strtype fBuffer;                                                        \
-   }
-
-   PYROOT_DECLARE_STRING_CONVERTER( TString,   TString );
-   PYROOT_DECLARE_STRING_CONVERTER( STLString, std::string );
-
    class TRootObjectConverter : public TVoidArrayConverter {
    public:
       TRootObjectConverter( const TClassRef& klass, Bool_t keepControl = kFALSE ) :
@@ -195,6 +182,21 @@ namespace PyROOT {
    };
 
    PYROOT_DECLARE_BASIC_CONVERTER( PyObject );
+
+#define PYROOT_DECLARE_STRING_CONVERTER( name, strtype )                      \
+   class T##name##Converter : public TRootObjectConverter {                   \
+   public:                                                                    \
+      T##name##Converter();                                                   \
+   public:                                                                    \
+      virtual Bool_t SetArg( PyObject*, G__CallFunc* );                       \
+      virtual PyObject* FromMemory( void* address );                          \
+      virtual Bool_t ToMemory( PyObject* value, void* address );              \
+   private:                                                                   \
+      strtype fBuffer;                                                        \
+   }
+
+   PYROOT_DECLARE_STRING_CONVERTER( TString,   TString );
+   PYROOT_DECLARE_STRING_CONVERTER( STLString, std::string );
 
 // factories
    typedef TConverter* (*ConverterFactory_t) ( Long_t user );

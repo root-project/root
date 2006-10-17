@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.29 2006/05/28 19:05:24 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.30 2006/08/14 00:21:56 rdm Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -114,12 +114,17 @@ Bool_t PyROOT::Utility::AddToClass(
 
    PyObject* func = PyCFunction_New( pdef, NULL );
    PyObject* method = PyMethod_New( func, NULL, pyclass );
-   PyObject_SetAttrString( pyclass, pdef->ml_name, method );
+   Bool_t isOk = PyObject_SetAttrString( pyclass, pdef->ml_name, method ) == 0;
    Py_DECREF( method );
    Py_DECREF( func );
 
    if ( PyErr_Occurred() )
       return kFALSE;
+
+   if ( ! isOk ) {
+      PyErr_Format( PyExc_TypeError, "could not add method %s", label );
+      return kFALSE;
+   }
 
    return kTRUE;
 }
@@ -131,19 +136,26 @@ Bool_t PyROOT::Utility::AddToClass( PyObject* pyclass, const char* label, const 
    if ( ! pyfunc )
       return kFALSE;
 
-   return PyObject_SetAttrString( pyclass, const_cast< char* >( label ), pyfunc ) == 0;
+   Bool_t isOk = PyObject_SetAttrString( pyclass, const_cast< char* >( label ), pyfunc ) == 0;
+
+   Py_DECREF( pyfunc );
+   return isOk;
 }
 
 //____________________________________________________________________________
-Bool_t PyROOT::Utility::AddToClass( PyObject* pyclass, const char* label, PyCallable* pfunc )
+Bool_t PyROOT::Utility::AddToClass( PyObject* pyclass, const char* label, PyCallable* pyfunc )
 {
    MethodProxy* method =
       (MethodProxy*)PyObject_GetAttrString( pyclass, const_cast< char* >( label ) );
 
-   if ( ! method )
-      return kFALSE;
+   if ( ! method || ! MethodProxy_Check( method ) ) {
+   // not adding to existing MethodProxy; add callable directly to the class
+      if ( PyErr_Occurred() )
+         PyErr_Clear();
+      return PyObject_SetAttrString( pyclass, const_cast< char* >( label ), (PyObject*)pyfunc ) == 0;
+   }
 
-   method->AddMethod( pfunc );
+   method->AddMethod( pyfunc );
 
    Py_DECREF( method );
    return kTRUE;

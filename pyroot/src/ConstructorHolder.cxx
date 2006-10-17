@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.10 2006/09/28 19:59:12 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.11 2006/09/28 23:16:16 rdm Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -65,15 +65,15 @@ PyObject* PyROOT::TConstructorHolder::operator()( ObjectProxy* self, PyObject* a
 
 // perform the call (fails for loaded macro's)
    Long_t address = (Long_t)Execute( klass );
-   if ( ! address ) {
+   if ( ! address && ( ! PyErr_Occurred() /* exception thrown */ ) ) {
    // the ctor call fails for interpreted classes, can deal with limited info, or
    // otherwise only deal with default ctor
 
       if ( klass->GetClassInfo() != 0 ) {
          long tagnum = klass->GetClassInfo()->Tagnum();
 
-      // data storage for an object of this class (malloc is wrong, but new[] is worse)
-         address = (Long_t)malloc( klass->Size() );
+      // data storage for an object of this class
+         address = (Long_t)new char[ klass->Size() ];
 
       // set new globals, while saving current globals
          G__StoreEnv env;
