@@ -44,8 +44,13 @@ class DD;
 
 class MyOverloads {
 public:
-   std::string call( const AA& ){ return "AA"; }
-   std::string call( const BB&, void* n = 0 ){ return "BB"; }
-   std::string call( const CC& ){ return "CC"; }
-   std::string call( const DD& ){ return "DD"; }
+   std::string call( const AA& ) { return "AA"; }
+   std::string call( const BB&, void* n = 0 ) { n = 0; return "BB"; }
+   std::string call( const CC& ) { return "CC"; }
+   std::string call( const DD& ) { return "DD"; }
+
+   std::string call( double ) { return "double"; }
+   std::string call( int ) { return "int"; }
+   std::string call1( int ) { return "int"; }
+   std::string call1( double ) { return "double"; }
 };

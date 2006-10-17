@@ -79,6 +79,14 @@ class Overloads2TMathTestCase( unittest.TestCase ):
       aL = array( 'L', numbers )
       self.assertRaises( TypeError, TMath.Mean, len(aL), aL )
 
+   def test2DoubleIntOverloads( self ):
+      """Test overloads on int/doubles."""
+
+      self.assertEqual( MyOverloads().call( 1 ), "int" )
+      self.assertEqual( MyOverloads().call( 1. ), "double" )
+      self.assertEqual( MyOverloads().call1( 1 ), "int" )
+      self.assertEqual( MyOverloads().call1( 1. ), "double" )
+
 
 ## actual test run
 if __name__ == '__main__':

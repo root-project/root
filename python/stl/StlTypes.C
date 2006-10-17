@@ -6,6 +6,7 @@
 */
 
 #include <list>
+#include <string>
 #include <vector>
 
 
@@ -14,12 +15,40 @@ public:
    int m_i;
 };
 
+class NoDictAvailable;
+
+template< class T >
+class STLLikeClass {
+public:
+   NoDictAvailable* begin() { return 0; }
+   NoDictAvailable* end() { return 0; }
+   int size() { return 4; }
+   int operator[]( int i ) { return i;}
+};
+
+class StringyClass {
+public:
+   std::string GetString1() { return m_string; }
+   void GetString2( std::string& s ) { s = m_string; }
+
+   void SetString1( const std::string& s ) { m_string = s; }
+   void SetString2( std::string s ) { m_string = s; }
+
+   std::string m_string;
+};
+
 namespace {
-   std::vector< JustAClass > jv1;
-   std::list< JustAClass >   jl1;
+   std::vector< std::string > jv1;
+   std::vector< JustAClass >  jv2;
+   std::list< JustAClass >    jl1;
+
+   STLLikeClass< int >       js1;
+   STLLikeClass< double>     js2;
 }
 
 #ifdef __MAKECINT__
+#pragma link C++ class std::vector< std::string >-;
+#pragma link C++ class std::vector< std::string >::iterator-;
 #pragma link C++ class std::vector< JustAClass >-;
 #pragma link C++ class std::vector< JustAClass >::iterator-;
 #pragma link C++ class std::list< JustAClass* >-;
