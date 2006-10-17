@@ -1,5 +1,5 @@
-CLEAN_TARGETS += *.so Class*.root typedef*.root $(ALL_LIBRARIES) *.log *.xml arr.root
-TEST_TARGETS += foreign310 boolUpdate skip ClassConv ConvArray typedef Missing
+CLEAN_TARGETS += *.so Class*.root typedef*.root $(ALL_LIBRARIES) *.clog *.log *.tmp *.xml arr.root FixedArray*.root
+TEST_TARGETS += foreign310 boolUpdate skip ClassConv ConvArray typedef Missing FixedArrayLengthChange
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -85,3 +85,31 @@ fixarr.log: fixarr1_C.$(DllSuf) fixarr2_C.$(DllSuf) fixarr3_C.$(DllSuf)
 
 fixarr: fixarr.log
 	$(TestDiff)
+
+.PHONY: WriteFixedArrayOld WriteFixedArrayNew
+.PHONY: ReadFixedArrayOldWithNew ReadFixedArrayNewWithOld
+
+FixedArrayLengthChange: WriteFixedArrayOld WriteFixedArrayNew
+	$(CMDECHO) $(MAKE) ReadFixedArrayOldWithNew
+	$(CMDECHO) $(MAKE) ReadFixedArrayNewWithOld
+
+WriteFixedArrayOld : WriteFixedArrayOld.clog
+	#egrep -v '^Info in .*: creating shared library' $< > $<.tmp
+	#mv $<.tmp $<
+	$(TestDiff)
+
+WriteFixedArrayNew : WriteFixedArrayNew.clog
+	#egrep -v '^Info in .*: creating shared library' $< > $<.tmp
+	#mv $<.tmp $<
+	$(TestDiff)
+
+ReadFixedArrayOldWithNew : ReadFixedArrayOldWithNew.clog
+	#egrep -v '^Info in .*: creating shared library' $< > $<.tmp
+	#mv $<.tmp $<
+	$(TestDiff)
+
+ReadFixedArrayNewWithOld : ReadFixedArrayNewWithOld.clog
+	#egrep -v '^Info in .*: creating shared library' $< > $<.tmp
+	#mv $<.tmp $<
+	$(TestDiff)
+
