@@ -126,7 +126,7 @@ GdkWindow *gdk_selection_owner_get(GdkAtom selection)
    GdkWindow *window;
    gchar *sel_name;
 
-#if 1
+#if 0
    /* XXX Hmm, gtk selections seem to work best with this. This causes
     * gtk to always get the clipboard contents from Windows, and not
     * from the editable's own stashed-away copy.
@@ -135,8 +135,11 @@ GdkWindow *gdk_selection_owner_get(GdkAtom selection)
 #else
    if (selection != gdk_clipboard_atom)
       window = NULL;
-   else
+   else {
       window = gdk_window_lookup(GetClipboardOwner());
+      if (window == NULL)
+         window = (GdkWindow *)GetClipboardOwner();
+   }
 
 #endif
 
