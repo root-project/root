@@ -22,7 +22,7 @@ Start root
 
 Start PROOF
 
-root[] gROOT->Proof()
+root[] TProof::Open("")
 
 Create the files on the nodes in the cluster, the first
 argument is the directory the files will reside in. The
