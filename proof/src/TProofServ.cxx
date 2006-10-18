@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.141 2006/10/03 14:03:11 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.142 2006/10/06 09:12:23 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -236,25 +236,6 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fShutdownWhenIdle = kTRUE;
    fShutdownTimer   = 0;
    fShutdownTimerMtx = 0;
-
-   if (gErrorIgnoreLevel == kUnset) {
-      gErrorIgnoreLevel = 0;
-      if (gEnv) {
-         TString level = gEnv->GetValue("Root.ErrorIgnoreLevel", "Info");
-         if (!level.CompareTo("Info",TString::kIgnoreCase))
-            gErrorIgnoreLevel = kInfo;
-         else if (!level.CompareTo("Warning",TString::kIgnoreCase))
-            gErrorIgnoreLevel = kWarning;
-         else if (!level.CompareTo("Error",TString::kIgnoreCase))
-            gErrorIgnoreLevel = kError;
-         else if (!level.CompareTo("Break",TString::kIgnoreCase))
-            gErrorIgnoreLevel = kBreak;
-         else if (!level.CompareTo("SysError",TString::kIgnoreCase))
-            gErrorIgnoreLevel = kSysError;
-         else if (!level.CompareTo("Fatal",TString::kIgnoreCase))
-            gErrorIgnoreLevel = kFatal;
-      }
-   }
 
    if (gSystem->Getenv("ROOTPROOFLOGLEVEL"))
       gProofDebugLevel = atoi(gSystem->Getenv("ROOTPROOFLOGLEVEL"));
@@ -4220,6 +4201,27 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
    // The PROOF error handler function. It prints the message on stderr and
    // if abort is set it aborts the application.
 
+   if (gErrorIgnoreLevel == kUnset) {
+      gErrorIgnoreLevel = 0;
+      if (gEnv) {
+         TString level = gEnv->GetValue("Root.ErrorIgnoreLevel", "Print");
+         if (!level.CompareTo("Print", TString::kIgnoreCase))
+            gErrorIgnoreLevel = kPrint;
+         else if (!level.CompareTo("Info", TString::kIgnoreCase))
+            gErrorIgnoreLevel = kInfo;
+         else if (!level.CompareTo("Warning", TString::kIgnoreCase))
+            gErrorIgnoreLevel = kWarning;
+         else if (!level.CompareTo("Error", TString::kIgnoreCase))
+            gErrorIgnoreLevel = kError;
+         else if (!level.CompareTo("Break", TString::kIgnoreCase))
+            gErrorIgnoreLevel = kBreak;
+         else if (!level.CompareTo("SysError", TString::kIgnoreCase))
+            gErrorIgnoreLevel = kSysError;
+         else if (!level.CompareTo("Fatal", TString::kIgnoreCase))
+            gErrorIgnoreLevel = kFatal;
+      }
+   }
+
    if (level < gErrorIgnoreLevel)
       return;
 
@@ -4238,6 +4240,10 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
    const char *type   = 0;
    ELogLevel loglevel = kLogInfo;
 
+   if (level >= kPrint) {
+      loglevel = kLogInfo;
+      type = "Print";
+   }
    if (level >= kInfo) {
       loglevel = kLogInfo;
       type = "Info";
@@ -4275,6 +4281,7 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
    TString buf;
 
    if (!location || strlen(location) == 0 ||
+       (level >= kPrint && level < kInfo) ||
        (level >= kBreak && level < kSysError)) {
       fprintf(stderr, "%s on %s: %s\n", type, node.Data(), msg);
       buf.Form("%s:%s:%s:%s", user.Data(), node.Data(), type, msg);
