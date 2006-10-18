@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolumePosition.cxx,v 1.8 2006/07/03 16:10:46 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TVolumePosition.cxx,v 1.9 2006/07/11 09:05:02 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -12,7 +12,7 @@
 
 #include "Riostream.h"
 
-#include "TCL.h"
+#include "TCernLib.h"
 #include "TVolumePosition.h"
 #include "TVolume.h"
 

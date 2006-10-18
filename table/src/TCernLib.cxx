@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TCL.cxx,v 1.7 2006/05/21 18:05:26 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TCL.cxx,v 1.8 2006/07/11 09:05:02 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/09/99
 
 /*************************************************************************
@@ -55,10 +55,10 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <assert.h>
-#include "TCL.h"
+#include "TCernLib.h"
 #include "TMath.h"
-#include <TArrayD.h>
-#include <TError.h>
+#include "TArrayD.h"
+#include "TError.h"
 
 ClassImp(TCL)
 

@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TCL.h,v 1.6 2006/05/20 14:06:09 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TCL.h,v 1.7 2006/07/11 09:05:02 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/09/99
 
 /*************************************************************************
@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TCL
-#define ROOT_TCL
+#ifndef ROOT_TCernLib
+#define ROOT_TCernLib
 
 #include "Rtypes.h"
 #include <string.h>
@@ -350,14 +350,14 @@ inline double *TCL::mxmltr(const double *a, const double *b, double *c, int ni, 
 
 //________________________________________________________
 inline int  *TCL::ucopy(const int  *b, int  *a, int n)
-{ 
+{
    //to be documented
    if (n <= 0) return 0; memcpy(a,b,n*sizeof(int)); return a;
 }
 
 //________________________________________________________
 inline float *TCL::ucopy(const float *b, float *a, int n)
-{ 
+{
    //to be documented
    if (n <= 0) return 0; memcpy(a,b,n*sizeof(float)); return a;
 }
@@ -382,14 +382,14 @@ inline double *TCL::ucopy(const float *b, double *a, int n)
 
 //________________________________________________________
 inline double *TCL::ucopy(const double *b, double *a, int n)
-{ 
+{
    //to be documented
    if (n <= 0) return 0; memcpy(a,b,n*sizeof(double)); return a;
 }
 
 //________________________________________________________
 inline void **TCL::ucopy(const void **b, void  **a, int n)
-{ 
+{
    //to be documented
    if (n <= 0) return 0; memcpy(a,b,n*sizeof(void *)); return a;
 }
@@ -563,7 +563,7 @@ inline float *TCL::vmatl(const float *G, const float *c, float *x, int n,int m)
    for (int i=0; i<n; i++) {
       double sum = 0;
       for (int j=0; j<m; j++) sum += G[j + m*i]*c[j];
-      x[i] = sum; 
+      x[i] = sum;
    }
    return x;
 }
@@ -587,7 +587,7 @@ inline float *TCL::vmatr(const float *c, const float *G, float *x, int n,int m)
    for (int j=0; j<m; j++) {
       double sum = 0;
       for (int i=0; i<n; i++) sum += G[j + n*i]*c[i];
-      x[j] = sum; 
+      x[j] = sum;
    }
    return x;
 }
@@ -599,7 +599,7 @@ inline double *TCL::vmatr(const double *c, const double *G, double *x, int n,int
    for (int j=0; j<m; j++) {
       double sum = 0;
       for (int i=0; i<n; i++) sum += G[j + n*i]*c[i];
-      x[j] = sum; 
+      x[j] = sum;
    }
    return x;
 }
