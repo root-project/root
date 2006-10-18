@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.55 2006/10/03 21:51:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.56 2006/10/05 21:04:38 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -876,7 +876,7 @@ void TString::ReadBuffer(char *&buffer)
       nchars = nwh;
 
    if (nchars < 0) {
-      printf("Error in TString::ReadBuffer, found case with nwh=%d and nchars=%d\n",nwh,nchars);
+      Printf("Error in TString::ReadBuffer, found case with nwh=%d and nchars=%d", nwh, nchars);
       return;
    }
    fData = TStringRef::GetRep(nchars, nchars)->Data();
@@ -1836,14 +1836,19 @@ char *Form(const char *va_(fmt), ...)
 void Printf(const char *va_(fmt), ...)
 {
    // Formats a string in a circular formatting buffer and prints the string.
-   // Appends a newline.
+   // Appends a newline. If gPrintViaErrorHandler is true it will print via the
+   // currently active ROOT error handler.
 
    va_list ap;
    va_start(ap,va_(fmt));
-   char *b = Format(va_(fmt), ap);
+   if (gPrintViaErrorHandler)
+      ErrorHandler(kPrint, 0, va_(fmt), ap);
+   else {
+      char *b = Format(va_(fmt), ap);
+      printf("%s\n", b);
+      fflush(stdout);
+   }
    va_end(ap);
-   printf("%s\n", b);
-   fflush(stdout);
 }
 
 //______________________________________________________________________________

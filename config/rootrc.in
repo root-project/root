@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.148 2006/10/05 14:56:24 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.149 2006/10/05 15:06:48 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -44,6 +44,10 @@ Root.MemCheckFile:       memcheck.out
 # Global debug mode. When >0 turns on progressively more details debugging.
 Root.Debug:              0
 Root.Stacktrace:         yes
+
+# Ignore errors lower than the ignore level. Possible values:
+# Print, Info, Warning, Error, Break, SysError and Fatal.
+Root.ErrorIgnoreLevel:   Print
 
 # Settings for X11 behaviour.
 X11.Sync:                no

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.12 2005/06/23 00:29:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.13 2005/12/08 17:37:48 pcanal Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -39,8 +39,9 @@
 
 TVirtualMutex *gErrorMutex = 0;
 
-Int_t gErrorIgnoreLevel = kUnset;
-Int_t gErrorAbortLevel  = kSysError+1;
+Int_t  gErrorIgnoreLevel     = kUnset;
+Int_t  gErrorAbortLevel      = kSysError+1;
+Bool_t gPrintViaErrorHandler = kFALSE;
 
 const char *kAssertMsg = "%s violated at line %d of `%s'";
 const char *kCheckMsg  = "%s not true at line %d of `%s'";
@@ -56,24 +57,30 @@ static void DebugPrint(const char *fmt, ...)
    static Int_t buf_size = 2048;
    static char *buf = 0;
 
-   va_list arg_ptr;
-   va_start(arg_ptr, fmt);
-
    R__LOCKGUARD2(gErrorMutex);
+
+   va_list ap;
+   va_start(ap, fmt);
 
 again:
    if (!buf)
       buf = new char[buf_size];
 
-   Int_t n = vsnprintf(buf, buf_size, fmt, arg_ptr);
-
+   Int_t n = vsnprintf(buf, buf_size, fmt, ap);
+   // old vsnprintf's return -1 if string is truncated new ones return
+   // total number of characters that would have been written
    if (n == -1 || n >= buf_size) {
-      buf_size *= 2;
+      if (n == -1)
+         buf_size *= 2;
+      else
+         buf_size = n+1;
       delete [] buf;
       buf = 0;
+      va_end(ap);
+      va_start(ap, fmt);
       goto again;
    }
-   va_end(arg_ptr);
+   va_end(ap);
 
    fprintf(stderr, "%s", buf);
 
@@ -81,7 +88,6 @@ again:
    ::OutputDebugString(buf);
 #endif
 }
-
 
 //______________________________________________________________________________
 ErrorHandlerFunc_t SetErrorHandler(ErrorHandlerFunc_t newhandler)
@@ -112,18 +118,20 @@ void DefaultErrorHandler(Int_t level, Bool_t abort, const char *location, const 
 
       gErrorIgnoreLevel = 0;
       if (gEnv) {
-         TString level = gEnv->GetValue("Root.ErrorIgnoreLevel", "Info");
-         if (!level.CompareTo("Info",TString::kIgnoreCase))
+         TString level = gEnv->GetValue("Root.ErrorIgnoreLevel", "Print");
+         if (!level.CompareTo("Print", TString::kIgnoreCase))
+            gErrorIgnoreLevel = kPrint;
+         else if (!level.CompareTo("Info", TString::kIgnoreCase))
             gErrorIgnoreLevel = kInfo;
-         else if (!level.CompareTo("Warning",TString::kIgnoreCase))
+         else if (!level.CompareTo("Warning", TString::kIgnoreCase))
             gErrorIgnoreLevel = kWarning;
-         else if (!level.CompareTo("Error",TString::kIgnoreCase))
+         else if (!level.CompareTo("Error", TString::kIgnoreCase))
             gErrorIgnoreLevel = kError;
-         else if (!level.CompareTo("Break",TString::kIgnoreCase))
+         else if (!level.CompareTo("Break", TString::kIgnoreCase))
             gErrorIgnoreLevel = kBreak;
-         else if (!level.CompareTo("SysError",TString::kIgnoreCase))
+         else if (!level.CompareTo("SysError", TString::kIgnoreCase))
             gErrorIgnoreLevel = kSysError;
-         else if (!level.CompareTo("Fatal",TString::kIgnoreCase))
+         else if (!level.CompareTo("Fatal", TString::kIgnoreCase))
             gErrorIgnoreLevel = kFatal;
       }
    }
@@ -146,7 +154,9 @@ void DefaultErrorHandler(Int_t level, Bool_t abort, const char *location, const 
    if (level >= kFatal)
       type = "Fatal";
 
-   if (level >= kBreak && level < kSysError)
+   if (level >= kPrint && level < kInfo)
+      DebugPrint("%s\n", msg);
+   else if (level >= kBreak && level < kSysError)
       DebugPrint("%s %s\n", type, msg);
    else if (!location || strlen(location) == 0)
       DebugPrint("%s: %s\n", type, msg);
@@ -175,29 +185,33 @@ void ErrorHandler(Int_t level, const char *location, const char *fmt, va_list ap
    static Int_t buf_size = 2048;
    static char *buf = 0;
 
-   char *bp;
+   va_list sap;
+   R__VA_COPY(sap, ap);
 
 again:
    if (!buf)
       buf = new char[buf_size];
 
-   if (fmt==0) {
+   if (!fmt)
       fmt = "no error message provided";
-   }
+
    Int_t n = vsnprintf(buf, buf_size, fmt, ap);
    // old vsnprintf's return -1 if string is truncated new ones return
    // total number of characters that would have been written
    if (n == -1 || n >= buf_size) {
-      buf_size *= 2;
+      if (n == -1)
+         buf_size *= 2;
+      else
+         buf_size = n+1;
       delete [] buf;
       buf = 0;
-      if (buf_size < 0) {
-         buf_size = 2048;
-         fmt = Form("ErrorHandler format error with %s\n",fmt);
-      } else {
-         goto again;
-      }
+      va_end(ap);
+      R__VA_COPY(ap, sap);
+      goto again;
    }
+   va_end(sap);
+
+   char *bp;
    if (level >= kSysError && level < kFatal)
       bp = Form("%s (%s)", buf, gSystem->GetError());
    else

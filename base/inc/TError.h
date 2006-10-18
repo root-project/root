@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TError.h,v 1.6 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TError.h,v 1.7 2006/06/09 01:16:56 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -36,12 +36,13 @@
 class TVirtualMutex;
 
 const Int_t kUnset    =  -1;
-const Int_t kInfo     =   0;
-const Int_t kWarning  =   1000;
-const Int_t kError    =   2000;
-const Int_t kBreak    =   3000;
-const Int_t kSysError =   4000;
-const Int_t kFatal    =   5000;
+const Int_t kPrint    =   0;
+const Int_t kInfo     =   1000;
+const Int_t kWarning  =   2000;
+const Int_t kError    =   3000;
+const Int_t kBreak    =   4000;
+const Int_t kSysError =   5000;
+const Int_t kFatal    =   6000;
 
 R__EXTERN TVirtualMutex *gErrorMutex;
 
@@ -91,7 +92,8 @@ R__EXTERN const char *kCheckMsg;
       Warning("", "please change Check to R__CHECK in %s at line %d", __FILE__, __LINE__); \
    } while (0)
 
-R__EXTERN Int_t gErrorIgnoreLevel;
-R__EXTERN Int_t gErrorAbortLevel;
+R__EXTERN Int_t  gErrorIgnoreLevel;
+R__EXTERN Int_t  gErrorAbortLevel;
+R__EXTERN Bool_t gPrintViaErrorHandler;
 
 #endif
