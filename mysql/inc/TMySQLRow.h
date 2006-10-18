@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLRow.h,v 1.1.1.1 2000/05/16 17:00:58 rdm Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLRow.h,v 1.2 2001/12/11 14:19:51 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -17,7 +17,9 @@
 #endif
 
 #if !defined(__CINT__)
-#ifndef R__WIN32
+#ifdef R__WIN32
+#include <winsock.h>
+#else
 #include <sys/time.h>
 #endif
 #include <mysql.h>
