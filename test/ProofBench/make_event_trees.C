@@ -1,4 +1,4 @@
-// $Id: make_event_trees.C,v 1.7 2005/09/22 09:57:25 rdm Exp $
+// $Id: make_event_trees.C,v 1.8 2006/06/21 16:20:37 rdm Exp $
 //
 //
 
@@ -50,7 +50,10 @@ Bool_t make_event_trees(const char *basedir, Int_t events_per_file,
    slavemacro << "void build_trees(const char *basedir, Int_t nevents, Int_t nfiles) {" << endl;
    slavemacro << "   Int_t slave_number = -1;"                                            << endl;
    slavemacro << "   Int_t nslaves = 0;"                                                  << endl;
-   slavemacro << "   TString hn = gSystem->HostName();"                                   << endl;
+   if (!strcmp(gProof->GetMaster(), "localhost"))
+      slavemacro << "   TString hn = \"localhost\";"                                      << endl;
+   else
+      slavemacro << "   TString hn = gSystem->HostName();"                                << endl;
    slavemacro << "   TString ord = gProofServ->GetOrdinal();"                             << endl;
    slavemacro <<                                                                             endl;
    TList* l = gProof->GetSlaveInfo();
@@ -61,7 +64,7 @@ Bool_t make_event_trees(const char *basedir, Int_t events_per_file,
       slavemacro << si->fHostName;
       slavemacro << "\") { nslaves++; if (ord == \"";
       slavemacro << si->fOrdinal;
-      slavemacro << "\") slave_number=nslaves; }" << endl;
+      slavemacro << "\") slave_number = nslaves; }" << endl;
    }
    slavemacro <<                                                                             endl;
    slavemacro << "   if (slave_number >= 0) {"                                            << endl;
@@ -124,7 +127,7 @@ Bool_t make_event_trees(const char *basedir, Int_t events_per_file,
 
    cout << "Running: '" << cmd << "' (please be patient!)" << endl;
 
-   if(gProof->Exec(cmd)<0) return kFALSE;
+   if (gProof->Exec(cmd)<0) return kFALSE;
 
    return kTRUE;
 }
