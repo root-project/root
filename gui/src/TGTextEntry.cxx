@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.46 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.47 2006/08/31 14:59:11 antcheva Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -1295,6 +1295,10 @@ Bool_t TGTextEntry::HandleButton(Event_t *event)
          }
       }
    }
+   if (event->fType == kButtonRelease)
+      if (event->fCode == kButton1)
+         CopyText();
+
    return kTRUE;
 }
 
