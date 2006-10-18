@@ -555,7 +555,7 @@ dist:
 distsrc:
 	@$(MAKEDISTSRC)
 
-distmsi: build/package/msi/makemsi$(EXEEXT) 
+distmsi: build/package/msi/makemsi$(EXEEXT)
 	@rm -f $(ROOTMAP)
 	@$(MAKE) map
 	$(MAKEDIST) -msi
@@ -803,7 +803,7 @@ install: all
 	   $(INSTALLDIR)                        $(DESTDIR)$(TTFFONTDIR); \
 	   $(INSTALLDATA) fonts/*               $(DESTDIR)$(TTFFONTDIR); \
 	   rm -rf $(DESTDIR)$(TTFFONTDIR)/CVS; \
-	   echo "Installing misc docs in  $(DESTDIR)$(DOCDIR)" ; \
+	   echo "Installing misc docs in $(DESTDIR)$(DOCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(DOCDIR); \
 	   $(INSTALLDATA) LICENSE               $(DESTDIR)$(DOCDIR); \
 	   $(INSTALLDATA) README/*              $(DESTDIR)$(DOCDIR); \
