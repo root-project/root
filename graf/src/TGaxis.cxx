@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.92 2006/07/03 16:10:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.93 2006/09/28 09:35:12 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1080,6 +1080,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    charheight = GetLabelSize();
    if (optionText) charheight *= 0.66666;
    textaxis->SetTextFont(GetLabelFont());
+   if ((GetLabelFont()%10 < 2) && optionLog) // force TLatex mode in PaintLatex
+      textaxis->SetTextFont((Int_t)(GetLabelFont()/10)*10+2);
    textaxis->SetTextColor(GetLabelColor());
    textaxis->SetTextSize (charheight);
    textaxis->SetTextAngle(GetTextAngle());
@@ -1608,6 +1610,8 @@ L110:
                else          { xfactor = y1-y0+0.1*charheight; yfactor = 0; }
                Rotate (xfactor,yfactor,cosphi,sinphi,x0,y0,xx,yy);
                textaxis->SetTextAlign(11);
+               if (GetLabelFont()%10 < 2) // force TLatex mode in PaintLatex
+                  textaxis->SetTextFont((Int_t)(GetLabelFont()/10)*10+2);
                textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                            gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
                            0,
