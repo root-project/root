@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheRead.cxx,v 1.3 2006/07/04 12:58:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheRead.cxx,v 1.4 2006/08/26 16:28:32 rdm Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************
@@ -187,8 +187,9 @@ Int_t TFileCacheRead::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 
    if (fNseek > 0 && !fIsSorted) {
       Sort();
-      if (fFile->ReadBuffers(fBuffer,fPos,fLen,fNb))
+      if (fFile->ReadBuffers(fBuffer,fPos,fLen,fNb)) {
          return -1;
+      }
    }
 
    // in case we are writing and reading to/from this file, we much check
@@ -214,9 +215,11 @@ Int_t TFileCacheRead::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 //_____________________________________________________________________________
 void TFileCacheRead::SetFile(TFile *file)
 {
-   //set the file using this cache
+   // Set the file using this cache and reset the current blocks (if any).
+
 
    fFile = file;
+   Prefetch(0,0);
 }
 
 //_____________________________________________________________________________
