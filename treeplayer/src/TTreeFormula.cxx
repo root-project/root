@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.202 2006/09/13 05:08:35 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.203 2006/10/15 20:08:33 pcanal Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1834,7 +1834,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
       }
       delete method;
       method = new TMethodCall(objClass, "AsString", "");
-      if (method->IsValid() 
+      if (method->IsValid()
           && method->ReturnType() == TMethodCall::kString
           && SwitchToFormLeafInfo(code) ) {
 
@@ -1847,7 +1847,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
 
          return kDefinedString;
       }
-      if (method->IsValid() 
+      if (method->IsValid()
           && method->ReturnType() == TMethodCall::kOther) {
 
          TClass *rcl = 0;
@@ -1880,7 +1880,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
       }
       delete method;
    }
-   
+
    return action;
 }
 //______________________________________________________________________________
@@ -4095,7 +4095,7 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
 //      mode = -1 : Print column names
 //      mode = 0  : Print column values
 //  decform contains the requested format (with the same convention as printf).
-//  
+//
 
    const int kMAXLENGTH = 1024;
    static char value[kMAXLENGTH];
@@ -4133,13 +4133,12 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
          Int_t real_instance = ((TTreeFormula*)this)->GetRealInstance(instance,-1);
          if (real_instance<fNdata[0]) {
             Ssiz_t len = strlen(decform);
-            Char_t dfLast = decform[len-1];
             Bool_t longer  = kFALSE;
             Bool_t shorter = kFALSE;
             char *expo = 0;
             if (len>2) {
                switch (decform[len-2]) {
-                  case 'l': 
+                  case 'l':
                   case 'L': longer = kTRUE; break;
                   case 'h': shorter = kTRUE; break;
                }
@@ -4826,12 +4825,12 @@ void TTreeFormula::Convert(UInt_t oldversion)
 }
 
 //______________________________________________________________________________
-Bool_t TTreeFormula::SwitchToFormLeafInfo(Int_t code) 
+Bool_t TTreeFormula::SwitchToFormLeafInfo(Int_t code)
 {
-   // Convert the underlying lookup method from the direct technique 
-   // (dereferencing the address held by the branch) to the method using 
-   // TFormLeafInfo.  This is in particular usefull in the case where we 
-   // need to append an additional TFormLeafInfo (for example to call a 
+   // Convert the underlying lookup method from the direct technique
+   // (dereferencing the address held by the branch) to the method using
+   // TFormLeafInfo.  This is in particular usefull in the case where we
+   // need to append an additional TFormLeafInfo (for example to call a
    // method).
    // Return false if the switch was unsuccessfull (basically in the
    // case of an old style split tree).
