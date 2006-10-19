@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.9 2006/08/26 16:28:32 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.10 2006/08/31 11:09:10 brun Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -305,7 +305,6 @@ void TTreeCache::UpdateBranches(TTree *tree)
    //update pointer to current Tree and recompute pointers to the branches in the cache
 
    fTree = tree;
-   Prefetch(0,0);
 
    fEntryMin  = 0;
    fEntryMax  = fTree->GetEntries();
