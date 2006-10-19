@@ -58,6 +58,8 @@ xrootd.export /pool/data
 xrd.protocol xproofd:1093 libXrdProofd.so
 ### b) using absolute paths (<ROOT_sys> with the path to the ROOT distribution)
 # xrd.protocol xproofd:1093 <ROOT_sys>/lib/libXrdProofd.so rootsys:<ROOT_sys>
+### NB: envs vars are not expanded here, i.e. $ROOTSYS/lib/libXrdProofd.so will
+###     not work; they are supported for the remaining "xpd." directives
 
 ###
 ### Directives governing the behaviour of the XrdProofd plug-in.
@@ -117,6 +119,8 @@ xrd.protocol xproofd:1093 libXrdProofd.so
 #                                     assigned twice)
 # xpd.resource static [<cfg_file>] [ucfg:<user_cfg_opt>]  [wmx:<max_workers>] [selopt:<selection_mode>]
 # xpd.resource static ~/.proof.test.conf wmx:2 selopt:random
+# xpd.resource static $ROOTSYS/etc/proof.conf
+
 ###
 ### Master(s) allowed to connect. Directive active only for Worker or
 ### Submaster session requests. Multiple 'allow' directives can
@@ -136,6 +140,26 @@ xrd.protocol xproofd:1093 libXrdProofd.so
 ### namespace /proofpool.
 # xpd.poolurl lxb0105.cern.ch
 # xpd.namespace /store
+
+###
+### Specifies tracing options. Valid keywords are:
+###   req            trace protocol requests             [on]*
+###   login          trace details about login requests  [on]*
+###   act            trace internal actions              [off]
+###   rsp            trace server replies                [off]
+###   fork           trace proofserv forks               [on]*
+###   dbg            trace details about actions         [off]
+###   err            trace errors                        [on]
+###   all            trace everything
+###
+### Defaults are shown in brackets; '*' shows the default when the '-d'
+### option is passed on the command line. Each option may be
+### optionally prefixed by a minus sign to turn off the setting.
+### Order matters: 'all' in last position enables everything; in first
+### position is corrected by subsequent settings
+###
+# xpd.trace fork -err rsp
+
 
 ### xproofd specific security directives, allowing for independent
 ### rules from the ones applying to data serving.
