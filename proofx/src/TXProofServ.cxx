@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.14 2006/10/03 14:04:57 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.15 2006/10/19 12:38:07 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -554,7 +554,8 @@ void TXProofServ::HandleTermination()
             Warning("HandleTermination","processing could not be stopped");
       }
       // Close the session
-      fProof->Close("S");
+      if (fProof)
+         fProof->Close("S");
    }
 
    // Avoid communicating back anything to the coordinator (it is gone)
