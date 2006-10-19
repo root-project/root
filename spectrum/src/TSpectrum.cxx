@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum.cxx,v 1.2 2006/10/02 10:58:42 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum.cxx,v 1.3 2006/10/04 10:46:48 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -2225,6 +2225,34 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
    return 0;      
 }
 
+
+
+//_______________________________________________________________________________
+const char *TSpectrum::Deconvolution(float *source, const float *response,
+                                      int ssize, int numberIterations,
+                                      int numberRepetitions, double boost ) 
+{   
+/////////////////////////////////////////////////////////////////////////////
+//   ONE-DIMENSIONAL DECONVOLUTION FUNCTION                                //
+//   This function calculates deconvolution from source spectrum           //
+//   according to response spectrum using Gold algorithm                   //
+//   The result is placed in the vector pointed by source pointer.         //
+//                                                                         //
+//   Function parameters:                                                  //
+//   source:  pointer to the vector of source spectrum                     //
+//   response:     pointer to the vector of response spectrum              //
+//   ssize:    length of source and response spectra                       //
+//   numberIterations, for details we refer to the reference given below   //
+//   numberRepetitions, for repeated boosted deconvolution                 //
+//   boost, boosting coefficient                                           //
+//                                                                         //
+//    M. Morhac, J. Kliman, V. Matousek, M. Veselský, I. Turzo.:           //
+//    Efficient one- and two-dimensional Gold deconvolution and its        //
+//    application to gamma-ray spectra decomposition.                      //
+//    NIM, A401 (1997) 385-408.                                            //
+//                                                                         //
+/////////////////////////////////////////////////////////////////////////////
+//
 //Begin_Html <!--
 /* -->
 <div class=Section17>
@@ -2310,34 +2338,6 @@ TCanvas(&quot;Smooth1&quot;,&quot;Smooth1&quot;,10,10,1000,700);</p>
 
 <!-- */
 // --> End_Html
-
-
-//_______________________________________________________________________________
-const char *TSpectrum::Deconvolution(float *source, const float *response,
-                                      int ssize, int numberIterations,
-                                      int numberRepetitions, double boost ) 
-{   
-/////////////////////////////////////////////////////////////////////////////
-//   ONE-DIMENSIONAL DECONVOLUTION FUNCTION                                //
-//   This function calculates deconvolution from source spectrum           //
-//   according to response spectrum using Gold algorithm                   //
-//   The result is placed in the vector pointed by source pointer.         //
-//                                                                         //
-//   Function parameters:                                                  //
-//   source:  pointer to the vector of source spectrum                     //
-//   response:     pointer to the vector of response spectrum              //
-//   ssize:    length of source and response spectra                       //
-//   numberIterations, for details we refer to the reference given below   //
-//   numberRepetitions, for repeated boosted deconvolution                 //
-//   boost, boosting coefficient                                           //
-//                                                                         //
-//    M. Morhac, J. Kliman, V. Matousek, M. Veselský, I. Turzo.:           //
-//    Efficient one- and two-dimensional Gold deconvolution and its        //
-//    application to gamma-ray spectra decomposition.                      //
-//    NIM, A401 (1997) 385-408.                                            //
-//                                                                         //
-/////////////////////////////////////////////////////////////////////////////
-//
 //Begin_Html <!--
 /* -->
 <div class=Section9>
@@ -2750,6 +2750,28 @@ Processing 13 (2003) 144. </span></p>
    delete[]working_space;
    return 0;
 }
+
+//_______________________________________________________________________________
+const char *TSpectrum::DeconvolutionRL(float *source, const float *response,
+                                      int ssize, int numberIterations,
+                                      int numberRepetitions, double boost ) 
+{   
+/////////////////////////////////////////////////////////////////////////////
+//   ONE-DIMENSIONAL DECONVOLUTION FUNCTION                                //
+//   This function calculates deconvolution from source spectrum           //
+//   according to response spectrum using Richardson-Lucy algorithm        //
+//   The result is placed in the vector pointed by source pointer.         //
+//                                                                         //
+//   Function parameters:                                                  //
+//   source:  pointer to the vector of source spectrum                     //
+//   response:     pointer to the vector of response spectrum              //
+//   ssize:    length of source and response spectra                       //
+//   numberIterations, for details we refer to the reference given above   //
+//   numberRepetitions, for repeated boosted deconvolution                 //
+//   boost, boosting coefficient                                           //
+//                                                                         //
+/////////////////////////////////////////////////////////////////////////////
+//
 //Begin_Html <!--
 /* -->
 <div class=Section10>
@@ -3400,28 +3422,6 @@ L&quot;);   </p>
 
 <!-- */
 // --> End_Html
-
-//_______________________________________________________________________________
-const char *TSpectrum::DeconvolutionRL(float *source, const float *response,
-                                      int ssize, int numberIterations,
-                                      int numberRepetitions, double boost ) 
-{   
-/////////////////////////////////////////////////////////////////////////////
-//   ONE-DIMENSIONAL DECONVOLUTION FUNCTION                                //
-//   This function calculates deconvolution from source spectrum           //
-//   according to response spectrum using Richardson-Lucy algorithm        //
-//   The result is placed in the vector pointed by source pointer.         //
-//                                                                         //
-//   Function parameters:                                                  //
-//   source:  pointer to the vector of source spectrum                     //
-//   response:     pointer to the vector of response spectrum              //
-//   ssize:    length of source and response spectra                       //
-//   numberIterations, for details we refer to the reference given above   //
-//   numberRepetitions, for repeated boosted deconvolution                 //
-//   boost, boosting coefficient                                           //
-//                                                                         //
-/////////////////////////////////////////////////////////////////////////////
-//
 //Begin_Html <!--
 /* -->
 <div class=Section12>
@@ -3531,106 +3531,6 @@ experimental data, NIM A 405 (1998) 139.</span></p>
 
 <!-- */
 // --> End_Html
-
-   if (ssize <= 0)
-      return "Wrong Parameters";
-   
-   if (numberRepetitions <= 0)
-      return "Wrong Parameters";
-   
-       //   working_space-pointer to the working vector
-       //   (its size must be 4*ssize of source spectrum)
-   double *working_space = new double[4 * ssize];
-   int i, j, k, lindex, posit, lh_gold, repet, kmin, kmax;
-   double lda, ldb, ldc, maximum;
-   lh_gold = -1;
-   posit = 0;
-   maximum = 0;
-   
-//read response vector
-   for (i = 0; i < ssize; i++) {
-      lda = response[i];
-      if (lda != 0)
-         lh_gold = i + 1;
-      working_space[ssize + i] = lda;
-      if (lda > maximum) {
-         maximum = lda;
-         posit = i;
-      }
-   }
-   if (lh_gold == -1)
-      return "ZERO RESPONSE VECTOR";
-   
-//read source vector
-   for (i = 0; i < ssize; i++)
-      working_space[2 * ssize + i] = source[i];
-     
-//initialization of resulting vector
-   for (i = 0; i < ssize; i++){
-      if (i <= ssize - lh_gold)      
-         working_space[i] = 1;
-         
-      else
-         working_space[i] = 0;   
-         
-   }
-       //**START OF ITERATIONS**
-   for (repet = 0; repet < numberRepetitions; repet++) {
-      if (repet != 0) {
-         for (i = 0; i < ssize; i++)
-            working_space[i] = TMath::Power(working_space[i], boost);
-      }       
-      for (lindex = 0; lindex < numberIterations; lindex++) {
-         for (i = 0; i <= ssize - lh_gold; i++){
-            lda = 0;
-            if (working_space[i] > 0){//x[i]
-               for (j = i; j < i + lh_gold; j++){
-                  ldb = working_space[2 * ssize + j];//y[j]
-                  if (j < ssize){
-                     if (ldb > 0){//y[j]
-                        kmax = j;
-                        if (kmax > lh_gold - 1)
-                           kmax = lh_gold - 1;
-                        kmin = j + lh_gold - ssize;
-                        if (kmin < 0)
-                           kmin = 0;
-                        ldc = 0;
-                        for (k = kmax; k >= kmin; k--){
-                           ldc += working_space[ssize + k] * working_space[j - k];//h[k]*x[j-k]
-                        }
-                        if (ldc > 0)
-                           ldb = ldb / ldc;
-
-                        else
-                           ldb = 0;
-                     }
-                     ldb = ldb * working_space[ssize + j - i];//y[j]*h[j-i]/suma(h[j][k]x[k])
-                  }
-                  lda += ldb;
-               }
-               lda = lda * working_space[i];
-            }
-            working_space[3 * ssize + i] = lda;
-         }
-         for (i = 0; i < ssize; i++)
-            working_space[i] = working_space[3 * ssize + i];
-      }
-   }
-
-//shift resulting spectrum
-   for (i = 0; i < ssize; i++) {
-      lda = working_space[i];
-      j = i + posit;
-      j = j % ssize;
-      working_space[ssize + j] = lda;
-   }
-   
-//write back resulting spectrum
-   for (i = 0; i < ssize; i++)
-      source[i] = working_space[ssize + i];
-   delete[]working_space;
-   return 0;
-}
 //Begin_Html <!--
 /* -->
 <div class=Section13>
@@ -3959,8 +3859,107 @@ L&quot;);   </p>
 <!-- */
 // --> End_Html
 
-//_______________________________________________________________________________
+   if (ssize <= 0)
+      return "Wrong Parameters";
+   
+   if (numberRepetitions <= 0)
+      return "Wrong Parameters";
+   
+       //   working_space-pointer to the working vector
+       //   (its size must be 4*ssize of source spectrum)
+   double *working_space = new double[4 * ssize];
+   int i, j, k, lindex, posit, lh_gold, repet, kmin, kmax;
+   double lda, ldb, ldc, maximum;
+   lh_gold = -1;
+   posit = 0;
+   maximum = 0;
+   
+//read response vector
+   for (i = 0; i < ssize; i++) {
+      lda = response[i];
+      if (lda != 0)
+         lh_gold = i + 1;
+      working_space[ssize + i] = lda;
+      if (lda > maximum) {
+         maximum = lda;
+         posit = i;
+      }
+   }
+   if (lh_gold == -1)
+      return "ZERO RESPONSE VECTOR";
+   
+//read source vector
+   for (i = 0; i < ssize; i++)
+      working_space[2 * ssize + i] = source[i];
+     
+//initialization of resulting vector
+   for (i = 0; i < ssize; i++){
+      if (i <= ssize - lh_gold)      
+         working_space[i] = 1;
+         
+      else
+         working_space[i] = 0;   
+         
+   }
+       //**START OF ITERATIONS**
+   for (repet = 0; repet < numberRepetitions; repet++) {
+      if (repet != 0) {
+         for (i = 0; i < ssize; i++)
+            working_space[i] = TMath::Power(working_space[i], boost);
+      }       
+      for (lindex = 0; lindex < numberIterations; lindex++) {
+         for (i = 0; i <= ssize - lh_gold; i++){
+            lda = 0;
+            if (working_space[i] > 0){//x[i]
+               for (j = i; j < i + lh_gold; j++){
+                  ldb = working_space[2 * ssize + j];//y[j]
+                  if (j < ssize){
+                     if (ldb > 0){//y[j]
+                        kmax = j;
+                        if (kmax > lh_gold - 1)
+                           kmax = lh_gold - 1;
+                        kmin = j + lh_gold - ssize;
+                        if (kmin < 0)
+                           kmin = 0;
+                        ldc = 0;
+                        for (k = kmax; k >= kmin; k--){
+                           ldc += working_space[ssize + k] * working_space[j - k];//h[k]*x[j-k]
+                        }
+                        if (ldc > 0)
+                           ldb = ldb / ldc;
 
+                        else
+                           ldb = 0;
+                     }
+                     ldb = ldb * working_space[ssize + j - i];//y[j]*h[j-i]/suma(h[j][k]x[k])
+                  }
+                  lda += ldb;
+               }
+               lda = lda * working_space[i];
+            }
+            working_space[3 * ssize + i] = lda;
+         }
+         for (i = 0; i < ssize; i++)
+            working_space[i] = working_space[3 * ssize + i];
+      }
+   }
+
+//shift resulting spectrum
+   for (i = 0; i < ssize; i++) {
+      lda = working_space[i];
+      j = i + posit;
+      j = j % ssize;
+      working_space[ssize + j] = lda;
+   }
+   
+//write back resulting spectrum
+   for (i = 0; i < ssize; i++)
+      source[i] = working_space[ssize + i];
+   delete[]working_space;
+   return 0;
+}
+
+//_______________________________________________________________________________
 const char *TSpectrum::Unfolding(float *source,
                                                const float **respMatrix,
                                                int ssizex, int ssizey,
