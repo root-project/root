@@ -1569,6 +1569,7 @@ if test ! "x$enable_mysql" = "xno"; then
        if test ! "x$mysqllib" = "x" ; then
 	   case $platform in
 	       linux) mysqllib="$mysqllib -lz" ;;
+	       win32) mysqllib="`echo $mysqllib | sed 's/mysqlclient/libmysql/'` $mysqllib" ;;
 	   esac
        fi
 
