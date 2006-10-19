@@ -94,22 +94,14 @@ FixedArrayLengthChange: WriteFixedArrayOld WriteFixedArrayNew
 	$(CMDECHO) $(MAKE) ReadFixedArrayNewWithOld
 
 WriteFixedArrayOld : WriteFixedArrayOld.clog
-	#egrep -v '^Info in .*: creating shared library' $< > $<.tmp
-	#mv $<.tmp $<
 	$(TestDiff)
 
 WriteFixedArrayNew : WriteFixedArrayNew.clog
-	#egrep -v '^Info in .*: creating shared library' $< > $<.tmp
-	#mv $<.tmp $<
 	$(TestDiff)
 
 ReadFixedArrayOldWithNew : ReadFixedArrayOldWithNew.clog
-	#egrep -v '^Info in .*: creating shared library' $< > $<.tmp
-	#mv $<.tmp $<
 	$(TestDiff)
 
 ReadFixedArrayNewWithOld : ReadFixedArrayNewWithOld.clog
-	#egrep -v '^Info in .*: creating shared library' $< > $<.tmp
-	#mv $<.tmp $<
 	$(TestDiff)
 
