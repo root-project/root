@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.89 2006/09/01 15:56:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.90 2006/10/19 10:58:25 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -1072,7 +1072,7 @@ void TGeoVolume::SaveAs(const char *filename) const
       Error("SavePrimitive", "Bad file name: %s", filename);
       return;
    }
-   if (fGeoManager->GetTopVolume() != this) fGeoManager->SetTopVolume(this);
+   if (fGeoManager->GetTopVolume() != this) fGeoManager->SetTopVolume((TGeoVolume*)this);
    
    char fname[1000];
    strcpy(fname,filename);
