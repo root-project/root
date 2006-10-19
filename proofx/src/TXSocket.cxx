@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.19 2006/09/29 08:17:21 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.20 2006/10/06 09:14:58 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -309,12 +309,13 @@ void TXSocket::Close(Option_t *opt)
       }
    }
 
-   // Warn the remote session, if any (after destroy the session is gone)
-   if (sessID > -1)
+   if (sessID > -1) {
+      // Warn the remote session, if any (after destroy the session is gone)
       DisconnectSession(sessID, opt);
-
-   // Close underlying connection
-   fConn->Close(opt);
+   } else {
+      // We are the manager: close underlying connection
+      fConn->Close(opt);
+   }
 
    // Delete the connection module
    SafeDelete(fConn);
@@ -1492,8 +1493,7 @@ void TXSocket::InitEnvs()
    EnvPutInt(NAME_RECONNECTTIMEOUT, recoTO);
 
    // Request Timeout
-   Int_t requTO = gEnv->GetValue("XProof.RequestTimeout",
-                                  DFLT_REQUESTTIMEOUT);
+   Int_t requTO = gEnv->GetValue("XProof.RequestTimeout", DFLT_REQUESTTIMEOUT);
    EnvPutInt(NAME_REQUESTTIMEOUT, requTO);
 
    // Whether to use a separate thread for garbage collection

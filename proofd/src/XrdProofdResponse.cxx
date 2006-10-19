@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.cxx,v 1.4 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.cxx,v 1.5 2006/09/07 09:32:16 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -30,8 +30,8 @@
 // Tracing utils
 #include "XrdProofdTrace.h"
 extern XrdOucTrace *XrdProofdTrace;
-const char *XrdProofdResponse::fgTraceID = "Response";
-#define TRACEID fgTraceID
+const char *XrdProofdResponse::fgTraceID = " : Response";
+#define TRACEID fTraceID.c_str()
 #define TRSID ((const char *)fTrsid)
 
 // Local define
@@ -387,7 +387,7 @@ int XrdProofdResponse::Send(XErrorCode ecode, const char *msg)
    fRespIO[2].iov_len  = strlen(msg)+1;
    dlen   = sizeof(erc) + fRespIO[2].iov_len;
    fResp.dlen          = static_cast<kXR_int32>(htonl(dlen));
-   TRACES(EMSG,(int *)fLink<< ": sending err " <<ecode <<": " <<msg);
+   TRACES(RSP,(int *)fLink<< ": sending err " <<ecode <<": " <<msg);
 
    if (fLink->Send(fRespIO, 3, sizeof(fResp) + dlen) < 0)
       return fLink->setEtext("send failure");
@@ -414,7 +414,7 @@ int XrdProofdResponse::Send(XPErrorCode ecode, const char *msg)
    fRespIO[2].iov_len  = strlen(msg)+1;
    dlen   = sizeof(erc) + fRespIO[2].iov_len;
    fResp.dlen          = static_cast<kXR_int32>(htonl(dlen));
-   TRACES(EMSG,(int *)fLink<< ": sending err " <<ecode <<": " <<msg);
+   TRACES(RSP,(int *)fLink<< ": sending err " <<ecode <<": " <<msg);
 
    if (fLink->Send(fRespIO, 3, sizeof(fResp) + dlen) < 0)
       return fLink->setEtext("send failure");
@@ -433,13 +433,14 @@ void XrdProofdResponse::Set(unsigned char *stream)
    fResp.streamid[0] = stream[0];
    fResp.streamid[1] = stream[1];
 
-   if (TRACING(TRACE_REQ|TRACE_RSP))
-   {outbuff = fTrsid;
-   for (i = 0; i < (int)sizeof(fResp.streamid); i++)
-   {*outbuff++ = hv[(stream[i] >> 4) & 0x0f];
-   *outbuff++ = hv[ stream[i]       & 0x0f];
-   }
-   *outbuff++ = ' '; *outbuff = '\0';
+   if (TRACING(REQ) || TRACING(RSP)) {
+      outbuff = fTrsid;
+      for (i = 0; i < (int)sizeof(fResp.streamid); i++) {
+         *outbuff++ = hv[(stream[i] >> 4) & 0x0f];
+         *outbuff++ = hv[ stream[i]       & 0x0f];
+      }
+      *outbuff++ = ' ';
+      *outbuff = '\0';
    }
 }
 
@@ -457,13 +458,14 @@ void XrdProofdResponse::Set(unsigned short sid)
    fResp.streamid[0] = stream[0];
    fResp.streamid[1] = stream[1];
 
-   if (TRACING(TRACE_REQ|TRACE_RSP))
-   {outbuff = fTrsid;
-   for (i = 0; i < (int)sizeof(fResp.streamid); i++)
-   {*outbuff++ = hv[(stream[i] >> 4) & 0x0f];
-   *outbuff++ = hv[ stream[i]       & 0x0f];
-   }
-   *outbuff++ = ' '; *outbuff = '\0';
+   if (TRACING(REQ) || TRACING(RSP)) {
+      outbuff = fTrsid;
+      for (i = 0; i < (int)sizeof(fResp.streamid); i++) {
+         *outbuff++ = hv[(stream[i] >> 4) & 0x0f];
+         *outbuff++ = hv[ stream[i]       & 0x0f];
+      }
+      *outbuff++ = ' ';
+      *outbuff = '\0';
    }
 }
 

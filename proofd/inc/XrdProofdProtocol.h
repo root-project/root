@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.12 2006/08/05 20:04:47 brun Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.13 2006/09/28 23:23:45 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -116,7 +116,7 @@ public:
    int           SendData(XrdProofdResponse *resp, kXR_int32 sid = -1, XrdSrvBuffer **buf = 0);
    int           SendDataN(XrdProofServProxy *xps, XrdSrvBuffer **buf = 0);
    int           SendMsg();
-   int           SetUserEnvironment(XrdProofServProxy *xps, const char *usr, const char *dir = 0);
+   int           SetUserEnvironment(const char *usr, const char *dir = 0);
    int           Urgent();
 
    int           Broadcast(int type, const char *msg);
@@ -128,7 +128,6 @@ public:
    int           SetShutdownTimer(XrdProofServProxy *xps, bool on = 1);
    int           TerminateProofServ(XrdProofServProxy *xps, bool add = 1);
    int           VerifyProofServ(XrdProofServProxy *xps);
-   int           VerifyProcessByID(int pid, const char *pname = 0);
 
    //
    // Local area
@@ -162,7 +161,7 @@ public:
    int                           fhalfBSize;
    //
    XPClientRequest               fRequest; // handle client requests
-   XrdProofdResponse             fResponse; // Response to incomign request
+   XrdProofdResponse             fResponse; // Response to incoming request
    XrdOucRecMutex                fMutex; // Local mutex
 
    //
@@ -238,7 +237,7 @@ public:
    static int    SetProofServEnv(XrdProofdProtocol *p = 0, int psid = -1,
                                  int loglevel = -1, const char *cfg = 0);
    static int    SetSrvProtVers();
-   static int    VerifyPID(int pid);
+   static int    VerifyProcessByID(int pid, const char *pname = 0);
 };
 
 
@@ -258,8 +257,8 @@ public:
 class XrdProofClient {
 
  public:
-   XrdProofClient(XrdProofdProtocol *p, short int clientvers = -1,
-                  const char *tag = 0, const char *ord = 0);
+   XrdProofClient(XrdProofdProtocol *p,
+                  short int clientvers = -1, const char *wrk = 0);
 
    virtual ~XrdProofClient();
 
@@ -268,21 +267,20 @@ class XrdProofClient {
    bool                    Match(const char *id)
                               { return (id ? !strcmp(id, fClientID) : 0); }
    inline unsigned short   RefSid() const { return fRefSid; }
-   inline const char      *SessionTag() const
-                              { return (const char *)fSessionTag; }
-   inline const char      *Ordinal() const
-                              { return (const char *)fOrdinal; }
    inline short            Version() const { return fClientVers; }
+   inline const char      *Workdir() const
+                              { return (const char *)fWorkdir; }
 
    int                     GetClientID(XrdProofdProtocol *p);
 
    void                    SetRefSid(unsigned short sid) { fRefSid = sid; }
-   void                    SetSessionTag(const char *tag)
-                              { if (fSessionTag) free(fSessionTag);
-                                fSessionTag = (tag) ? strdup(tag) : 0; }
-   void                    SetOrdinal(const char *ord)
-                              { if (fOrdinal) free(fOrdinal);
-                                fOrdinal = (ord) ? strdup(ord) : 0; }
+   void                    SetWorkdir(const char *wrk)
+                              { if (fWorkdir) free(fWorkdir);
+                                fWorkdir = (wrk) ? strdup(wrk) : 0; }
+
+   int                     CreateUNIXSock(XrdOucError *edest, char *tmpdir);
+   XrdNet                 *UNIXSock() const { return fUNIXSock; }
+   char                   *UNIXSockPath() const { return fUNIXSockPath; }
 
    std::vector<XrdProofServProxy *> fProofServs; // Allocated ProofServ sessions
    std::vector<XrdProofdProtocol *> fClients;    // Attached Client sessions
@@ -290,11 +288,15 @@ class XrdProofClient {
    XrdOucMutex                      fMutex; // Local mutex
 
  private:
-   char                            *fClientID;   // String identifying this client
-   char                            *fSessionTag; // [workers, submasters] session tag of the master
-   char                            *fOrdinal;    // [workers, submasters] ordinal number 
-   short int                        fClientVers; // PROOF version run by client
-   unsigned short                   fRefSid;     // Reference stream ID for this client
+   char                   *fClientID;   // String identifying this client
+   short int               fClientVers; // PROOF version run by client
+   unsigned short          fRefSid;     // Reference stream ID for this client
+   char                   *fWorkdir;    // Client working area (sandbox) 
+
+   XrdNet                 *fUNIXSock;     // UNIX server socket for internal connections
+   char                   *fUNIXSockPath; // UNIX server socket path
+
+   void                    SaveUNIXPath(); // Save path in the sandbox
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -319,6 +321,8 @@ class XrdProofWorker {
 
    const char             *Export();
 
+   bool                    Matches(const char *host);
+
    // Counters
    int                     fActive;      // number of active sessions
    int                     fSuspended;   // number of suspended sessions 
@@ -327,9 +331,9 @@ class XrdProofWorker {
                                                // this worker
 
    // Worker definitions
-   XrdOucString            fExport;    // export string
+   XrdOucString            fExport;      // export string
    char                    fType;        // type: worker ('W') or submaster ('S')
-   XrdOucString            fHost;    // user@host
+   XrdOucString            fHost;        // user@host
    int                     fPort;        // port
    int                     fPerfIdx;     // performance index
    XrdOucString            fImage;       // image name

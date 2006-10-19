@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.43 2006/07/26 14:28:58 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.44 2006/10/03 13:31:07 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -154,7 +154,7 @@ protected:
    virtual void  HandleWorkerLists(TMessage *mess);
 
    virtual void  HandleSocketInputDuringProcess();
-   virtual void  Setup();
+   virtual Int_t Setup();
 
    virtual void  SetShutdownTimer(Bool_t, Int_t) { }
 
@@ -165,7 +165,7 @@ public:
    TProofServ(Int_t *argc, char **argv, FILE *flog = 0);
    virtual ~TProofServ();
 
-   virtual void   CreateServer();
+   virtual Int_t  CreateServer();
 
    TProof        *GetProof()      const { return fProof; }
    const char    *GetService()    const { return fService; }

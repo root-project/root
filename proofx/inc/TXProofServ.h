@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.h,v 1.7 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.h,v 1.8 2006/08/05 20:04:47 brun Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -46,14 +46,14 @@ private:
    Int_t         ReadEnvFile(Int_t dbglevel = 0);
    void          SendLogFile(Int_t status = 0, Int_t start = -1, Int_t end = -1);
    void          SetShutdownTimer(Bool_t on = kTRUE, Int_t delay = 0);
-   void          Setup();
+   Int_t         Setup();
 
 public:
    TXProofServ(Int_t *argc, char **argv,  FILE *flog = 0) : TProofServ(argc, argv, flog)
                  { fInterruptHandler = 0; fInputHandler = 0; fTerminated = kFALSE; fEnvList = 0;}
    virtual ~TXProofServ();
 
-   void          CreateServer();
+   Int_t         CreateServer();
 
    // Disable / Enable read timeout
    void          DisableTimeout();

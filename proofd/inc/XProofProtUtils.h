@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofdp.h,v 1.4 2003/08/29 10:41:28 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XProofProtUtils.h,v 1.2 2006/03/01 15:46:33 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -24,7 +24,7 @@
 
 namespace XPD {
 
-   void clientMarshall(XPClientRequest* str);
+   int clientMarshall(XPClientRequest* str);
    void clientUnmarshall(struct ServerResponseHeader* str);
    void ServerResponseHeader2NetFmt(struct ServerResponseHeader *srh);
    void ServerInitHandShake2HostFmt(struct ServerInitHandShake *srh);

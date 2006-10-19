@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XProofProtUtils.cxx,v 1.4 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XProofProtUtils.cxx,v 1.5 2006/06/21 16:18:26 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -27,11 +27,12 @@
 namespace XPD {
 
 //___________________________________________________________________________
-void clientMarshall(XPClientRequest* str)
+int clientMarshall(XPClientRequest* str)
 {
    // This function applies the network byte order on those
    // parts of the 16-bytes buffer, only if it is composed
    // by some binary part
+   // Return 0 if OK, -1 in case the ID is unknown
 
    switch(str->header.requestid) {
 
@@ -84,10 +85,17 @@ void clientMarshall(XPClientRequest* str)
       str->proof.int2 = host2net(str->proof.int2);
       str->proof.int3 = host2net(str->proof.int3);
       break;
+   default:
+      fprintf(stderr,"clientMarshall: unknown req ID: %d (0x%x)\n",
+                      str->header.requestid, str->header.requestid);
+      return -1;
+      break;
    }
 
    str->header.requestid = host2net(str->header.requestid);
    str->header.dlen      = host2net(str->header.dlen);
+
+   return 0;
 }
 
 //_________________________________________________________________________
@@ -145,6 +153,11 @@ char *convertRequestIdToChar(kXR_int16 requestid)
    case kXP_urgent:
       return (char *)"kXP_urgent";
    default:
+#if 0
+      int dbg = 1;
+      while (dbg)
+         ;
+#endif
       return (char *)"kXP_UNKNOWN";
    }
 }

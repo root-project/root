@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.h,v 1.4 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.h,v 1.5 2006/08/05 20:04:47 brun Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -37,7 +37,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 class XrdSrvBuffer {
- public:
+public:
    int   fSize;
    char *fBuff;
 
@@ -55,7 +55,7 @@ class XrdSrvBuffer {
       }}
    ~XrdSrvBuffer() {if (fMembuf) free(fMembuf);}
 
- private:
+private:
    char *fMembuf;
 };
 
@@ -72,7 +72,7 @@ class XrdProofdProtocol;
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 class XrdClientID {
- public:
+public:
    XrdProofdProtocol *fP;
    unsigned short     fSid;
 
@@ -108,21 +108,23 @@ public:
    XrdProofServProxy();
    ~XrdProofServProxy();
 
-   inline const char  *Alias() const { return (const char *)fAlias; }
-   inline const char  *Client() const { return (const char *)fClient; }
+   inline const char  *Alias() const { return fAlias; }
+   inline const char  *Client() const { return fClient; }
+   inline const char  *Fileout() const { return fFileout; }
+   inline bool         IsParent(XrdProofdProtocol *p) const
+                                 { return (fParent && fParent->fP == p); }
    inline bool         Match(short int id) const { return (id == fID); }
    inline XrdOucMutex *Mutex() { return &fMutex; }
+   inline const char  *Ordinal() const { return (const char *)fOrdinal; }
    inline int          SrvID() const { return fSrvID; }
    inline int          SrvType() const { return fSrvType; }
-   inline void         SetClient(const char *c) { if (c) memcpy(fClient, c, 8); }
-   inline void         SetFileout(const char *f) { if (f) strcpy(fFileout, f); }
    inline void         SetID(short int id) { fID = id;}
    inline void         SetSrv(int id) { fSrvID = id; }
    inline void         SetSrvType(int id) { fSrvType = id; }
    inline void         SetStatus(int st) { fStatus = st; }
    inline void         SetValid(bool valid = 1) { fIsValid = valid; }
    inline int          Status() const { return fStatus;}
-   inline const char  *Tag() const { return (const char *)fTag; }
+   inline const char  *Tag() const { return fTag; }
 
    XrdClientID        *GetClientID(int cid);
    int                 GetFreeID();
@@ -132,9 +134,16 @@ public:
    void                AddWorker(XrdProofWorker *w) { fWorkers.push_back(w); }
    void                RemoveWorker(XrdProofWorker *w) { fWorkers.remove(w); }
 
-   int                 CreateUNIXSock(XrdOucError *edest, char *tmpdir);
-   XrdNet             *UNIXSock() const { return fUNIXSock; }
-   char               *UNIXSockPath() const { return fUNIXSockPath; }
+   void                SetAlias(const char *a, int l = 0)
+                          { XrdProofServProxy::SetCharValue(&fAlias, a, l); }
+   void                SetClient(const char *c, int l = 0)
+                          { XrdProofServProxy::SetCharValue(&fClient, c, l); }
+   void                SetFileout(const char *f, int l = 0)
+                          { XrdProofServProxy::SetCharValue(&fFileout, f, l); }
+   void                SetOrdinal(const char *o, int l = 0)
+                          { XrdProofServProxy::SetCharValue(&fOrdinal, o, l); }
+   void                SetTag(const char *t, int l = 0)
+                          { XrdProofServProxy::SetCharValue(&fTag, t, l); }
 
    bool                IsValid() const { return fIsValid; }
    const char         *StatusAsString() const;
@@ -148,7 +157,7 @@ public:
    XrdProofdResponse         fProofSrv;  // Utility to talk to proofsrv
 
    XrdClientID              *fParent;    // Parent creating this session
-   std::vector<XrdClientID *> fClients;   // Attached clients stream ids
+   std::vector<XrdClientID *> fClients;  // Attached clients stream ids
    std::list<XrdProofWorker *> fWorkers; // Workers assigned to the session
 
    XrdOucSemWait            *fPingSem;   // To sychronize ping requests
@@ -156,22 +165,22 @@ public:
    XrdSrvBuffer             *fQueryNum;  // Msg with sequential number of currebt query
    XrdSrvBuffer             *fStartMsg;  // Msg with start processing info
 
-   XrdNet                   *fUNIXSock;     // UNIX server socket for internal connections
-   char                     *fUNIXSockPath; // UNIX server socket path
-
    int                       fStatus;
-   int                       fSrvID;  // Srv process ID
+   int                       fSrvID;     // Srv process ID
    int                       fSrvType;
    short int                 fID;
    char                      fProtVer;
-   char                      fFileout[1024];
+   char                     *fFileout;
 
-   bool                      fIsValid; // Validity flag
+   bool                      fIsValid;   // Validity flag
 
-   char                      fClient[9]; // Client name
-   char                      fTag[kXPROOFSRVTAGMAX];
-   char                      fAlias[kXPROOFSRVALIASMAX];
+   char                     *fAlias;     // Session alias
+   char                     *fClient;    // Client name
+   char                     *fTag;       // Session unique tag
+   char                     *fOrdinal;   // Session ordinal number
 
    void                      ClearWorkers();
+
+   static void               SetCharValue(char **carr, const char *v, int len = 0);
 };
 #endif

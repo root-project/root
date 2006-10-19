@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.13 2006/07/26 14:28:58 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.14 2006/09/29 08:17:21 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -384,14 +384,17 @@ XrdClientMessage *XrdProofConn::SendRecv(XPClientRequest *req, const void *reqDa
    SetSID(req->header.streamid);
 
    // Notify what we are going to send
-   if (TRACING(TRACE_ALL))
+   if (TRACING(ALL))
       XPD::smartPrintClientHeader(req);
 
    // We need the right order
    int reqDataLen = req->header.dlen;
-   XPD::clientMarshall(req);
+   if (XPD::clientMarshall(req) != 0) {
+      TRACE(REQ, "XrdProofConn::SendRecv: problems marshalling "<<URLTAG);
+      return xmsg;
+   }
    if (LowWrite(req, reqData, reqDataLen) != kOK) {
-      TRACE(REQ, "XrdProofConn::SendRecv: sending request to server "<<URLTAG);
+      TRACE(REQ, "XrdProofConn::SendRecv: problems sending request to server "<<URLTAG);
       return xmsg;
    }
 
@@ -412,7 +415,7 @@ XrdClientMessage *XrdProofConn::SendRecv(XPClientRequest *req, const void *reqDa
          TRACE(REQ, "XrdProofConn::SendRecv: reading msg from connmgr (server "<<URLTAG<<")");
       } else {
          // Dump header, if required
-         if (TRACING(TRACE_ALL))
+         if (TRACING(ALL))
             XPD::smartPrintServerHeader(&(xmsg->fHdr));
          // Get the status
          xst = xmsg->HeaderStatus();
@@ -439,7 +442,7 @@ XrdClientMessage *XrdProofConn::SendRecv(XPClientRequest *req, const void *reqDa
                    xmsg->GetData(), xmsg->DataLen());
             //
             // Dump the buffer *answData, if requested
-            if (TRACING(TRACE_ALL)) {
+            if (TRACING(ALL)) {
                TRACE(REQ, "XrdProofConn::SendRecv: dumping read data ...");
                for (int jj = 0; jj < xmsg->DataLen(); jj++) {
                   printf("0x%.2x ", *(((kXR_char *)xmsg->GetData())+jj));
@@ -483,6 +486,10 @@ XrdClientMessage *XrdProofConn::SendReq(XPClientRequest *req, const void *reqDat
    int retry = 0;
    bool resp = 0, abortcmd = 0;
 
+   // We need the unmarshalled request for retries
+   XPClientRequest reqsave;
+   memcpy(&reqsave, req, sizeof(XPClientRequest));
+
    while (!abortcmd && !resp) {
 
       abortcmd = 0;
@@ -500,8 +507,11 @@ XrdClientMessage *XrdProofConn::SendReq(XPClientRequest *req, const void *reqDat
          if (retry > kXR_maxReqRetry) {
             TRACE(REQ,"XrdProofConn::SendReq: max number of retries reached - Abort");
             abortcmd = 1;
-         } else
+         } else {
             abortcmd = 0;
+            // Restore the unmarshalled request
+            memcpy(req, &reqsave, sizeof(XPClientRequest));
+         }
       } else {
 
          // We are here if we got an answer for the command, so

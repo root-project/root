@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.11 2006/06/05 22:51:14 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.12 2006/06/21 16:18:26 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -117,7 +117,7 @@ Int_t TXProofMgr::Init(Int_t)
    // Set this has handler
    ((TXSocket *)fSocket)->fHandler = this;
 
-   // We add the manager itself fro correct destruction
+   // We add the manager itself for correct destruction
    {  R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(fSocket);
    }

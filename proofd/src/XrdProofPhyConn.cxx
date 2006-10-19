@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.9 2006/07/31 10:27:48 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.10 2006/09/29 08:17:21 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -26,6 +26,7 @@
 #include "XrdClient/XrdClientConst.hh"
 #include "XrdClient/XrdClientLogConnection.hh"
 #include "XrdClient/XrdClientMessage.hh"
+#include "XrdNet/XrdNetDNS.hh"
 #include "XrdSec/XrdSecInterface.hh"
 
 #ifndef WIN32
@@ -81,7 +82,7 @@ bool XrdProofPhyConn::Init(const char *url)
       ::GetUserName(name, &length);
       fUser = name;
 #endif
-      fHost = "localhost";
+      fHost = XrdNetDNS::getHostName("localhost");
       fPort = -1;
 
    } else {

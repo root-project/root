@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.13 2006/10/03 13:28:29 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.14 2006/10/03 14:04:57 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -168,10 +168,11 @@ extern "C" {
 }
 
 //______________________________________________________________________________
-void TXProofServ::CreateServer()
+Int_t TXProofServ::CreateServer()
 {
    // Finalize the server setup. If master, create the TProof instance to talk
    // the worker or submaster nodes.
+   // Return 0 on success, -1 on error
 
    TNamed *env = 0;
    Bool_t xtest = (Argc() > 3 && !strcmp(Argv(3), "test")) ? kTRUE : kFALSE;
@@ -182,7 +183,7 @@ void TXProofServ::CreateServer()
    // Read environment
    if (!xtest && ReadEnvFile(gProofDebugLevel) != 0) {
       Error("CreateServer", "reading environment file");
-      exit(1);
+      return -1;
    }
 
 
@@ -191,7 +192,7 @@ void TXProofServ::CreateServer()
       // Use the file already open by pmain
       if ((fLogFileDes = fileno(fLogFile)) < 0) {
          Error("CreateServer", "resolving the log file description number");
-         exit(1);
+         return -1;
       }
    }
 
@@ -207,21 +208,21 @@ void TXProofServ::CreateServer()
       // and exit
       if (!(fSockPath = gSystem->Getenv("ROOTOPENSOCK"))) {
          Error("CreateServer", "Socket setup by xpd undefined");
-         exit(1);
+         return -1;
       }
       Int_t fpw = (Int_t) strtol(fSockPath.Data(), 0, 10);
       int proto = htonl(kPROOF_Protocol);
       fSockPath = "";
       if (write(fpw, &proto, sizeof(proto)) != sizeof(proto)) {
          Error("CreateServer", "test: sending protocol number");
-         exit(1);
+         return -1;
       }
       exit(0);
    } else {
       env = (TNamed *) fEnvList->FindObject("ROOTOPENSOCK");
       if (!env) {
          Error("CreateServer", "Socket setup by xpd undefined");
-         exit(1);
+         return -1;
       }
       fSockPath = env->GetTitle();
    }
@@ -230,7 +231,7 @@ void TXProofServ::CreateServer()
    env = (TNamed *) fEnvList->FindObject("ROOTSESSIONID");
    if (!env) {
      Error("CreateServer", "Session ID undefined");
-     exit(1);
+     return -1;
    }
    Int_t psid = (Int_t) strtol(env->GetTitle(), 0, 10);
 
@@ -238,7 +239,7 @@ void TXProofServ::CreateServer()
    fSocket = new TXUnixSocket(fSockPath, psid);
    if (!fSocket || !(fSocket->IsValid())) {
       Error("CreateServer", "Failed to open connection to XrdProofd coordinator");
-      exit(1);
+      return -1;
    }
 
    // Get socket descriptor
@@ -249,7 +250,7 @@ void TXProofServ::CreateServer()
    if (!env) {
      Error("CreateServer", "Client ID undefined");
      SendLogFile();
-     exit(1);
+     return -1;
    }
    Int_t cid = (Int_t) strtol(env->GetTitle(), 0, 10);
    ((TXSocket *)fSocket)->SetClientID(cid);
@@ -273,23 +274,30 @@ void TXProofServ::CreateServer()
       Info("CreateServer", "Service: %s, ConfDir: %s, IsMaster: %d",
            fService.Data(), fConfDir.Data(), (Int_t)fMasterServ);
 
-   Setup();
+   if (Setup() == -1) {
+      // Setup failure
+      Terminate(0);
+      SendLogFile();
+      return -1;
+   }
 
    if (!fLogFile) {
       RedirectOutput();
       // If for some reason we failed setting a redirection fole for the logs
       // we cannot continue
       if (!fLogFile || (fLogFileDes = fileno(fLogFile)) < 0) {
-         SendLogFile(-98);
          Terminate(0);
+         SendLogFile(-98);
+         return -1;
       }
    }
 
    // Send message of the day to the client
    if (IsMaster()) {
       if (CatMotd() == -1) {
-         SendLogFile(-99);
          Terminate(0);
+         SendLogFile(-99);
+         return -1;
       }
    } else {
       THLimitsFinder::SetLimitsFinder(new TProofLimitsFinder);
@@ -363,6 +371,7 @@ void TXProofServ::CreateServer()
          Error("CreateServer", "no plugin manager found");
          SendLogFile(-99);
          Terminate(0);
+         return -1;
       }
 
       // Find the appropriate handler
@@ -372,6 +381,7 @@ void TXProofServ::CreateServer()
                              " config file of '%s'", fConfFile.Data());
          SendLogFile(-99);
          Terminate(0);
+         return -1;
       }
 
       // load the plugin
@@ -379,6 +389,7 @@ void TXProofServ::CreateServer()
          Error("CreateServer", "plugin for TVirtualProof could not be loaded");
          SendLogFile(-99);
          Terminate(0);
+         return -1;
       }
 
       // make instance of TProof
@@ -393,12 +404,16 @@ void TXProofServ::CreateServer()
          fProof = 0;
          SendLogFile(-99);
          Terminate(0);
+         return -1;
       }
       // Find out if we are a master in direct contact only with workers
       fEndMaster = fProof->IsEndMaster();
 
    }
    SendLogFile();
+
+   // Done
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -549,9 +564,10 @@ void TXProofServ::HandleTermination()
 }
 
 //______________________________________________________________________________
-void TXProofServ::Setup()
+Int_t TXProofServ::Setup()
 {
    // Print the ProofServ logo on standard output.
+   // Return 0 on success, -1 on error
 
    char str[512];
 
@@ -563,16 +579,14 @@ void TXProofServ::Setup()
 
    if (fSocket->Send(str) != 1+static_cast<Int_t>(strlen(str))) {
       Error("Setup", "failed to send proof server startup message");
-      SendLogFile();
-      gSystem->Exit(1);
+      return -1;
    }
 
    // Get client protocol
    TNamed *env = (TNamed *) fEnvList->FindObject("ROOTPROOFCLNTVERS");
    if (!env) {
       Error("Setup", "remote proof protocol missing");
-      SendLogFile();
-      gSystem->Exit(1);
+      return -1;
    }
    fProtocol = atoi(env->GetTitle());
 
@@ -633,8 +647,7 @@ void TXProofServ::Setup()
       if (!gSystem->ChangeDirectory(fWorkDir)) {
          Error("Setup", "can not change to PROOF directory %s",
                fWorkDir.Data());
-         SendLogFile();
-         gSystem->Exit(1);
+         return -1;
       }
    } else {
       if (!gSystem->ChangeDirectory(fWorkDir)) {
@@ -643,8 +656,7 @@ void TXProofServ::Setup()
          if (!gSystem->ChangeDirectory(fWorkDir)) {
             Error("Setup", "can not change to PROOF directory %s",
                      fWorkDir.Data());
-            SendLogFile();
-            gSystem->Exit(1);
+            return -1;
          }
       }
    }
@@ -672,9 +684,8 @@ void TXProofServ::Setup()
    // Get Session tag
    env = (TNamed *) fEnvList->FindObject("ROOTPROOFSESSIONTAG");
    if (!env) {
-     Error("Setup", "Session tag missing");
-     SendLogFile();
-     gSystem->Exit(1);
+      Error("Setup", "Session tag missing");
+      return -1;
    }
    fSessionTag = env->GetTitle();
    if (gProofDebugLevel > 0)
@@ -682,9 +693,8 @@ void TXProofServ::Setup()
 
    // Get Session dir (sandbox)
    if (!gSystem->Getenv("ROOTPROOFSESSDIR")) {
-     Error("Setup", "Session dir missing");
-     SendLogFile();
-     gSystem->Exit(1);
+      Error("Setup", "Session dir missing");
+      return -1;
    }
    fSessionDir = gSystem->Getenv("ROOTPROOFSESSDIR");
 
@@ -693,8 +703,7 @@ void TXProofServ::Setup()
       if (!gSystem->ChangeDirectory(fSessionDir)) {
          Error("Setup", "can not change to working directory %s",
                fSessionDir.Data());
-         SendLogFile();
-         gSystem->Exit(1);
+         return -1;
       } else {
          gSystem->Setenv("PROOF_SANDBOX", fSessionDir);
       }
@@ -759,6 +768,9 @@ void TXProofServ::Setup()
 
    if (gProofDebugLevel > 0)
       Info("Setup", "successfully completed");
+
+   // Done
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -1034,10 +1046,6 @@ void TXProofServ::Terminate(Int_t status)
          fQueryLock->Unlock();
    }
 
-   // Cleanup UNIX socket
-   if (fSockPath.Length() > 0 && !gSystem->AccessPathName(fSockPath))
-      gSystem->Unlink(fSockPath);
-
    // Remove input handler to avoid spurious signals in socket
    // selection for closing activities executed upon exit()
    gSystem->RemoveFileHandler(fInputHandler);
@@ -1045,13 +1053,9 @@ void TXProofServ::Terminate(Int_t status)
 
    // Stop processing events
    gSystem->ExitLoop();
-//   SafeDelete(fSocket);
 
    // Notify
    Info("Terminate", "termination operations ended: quitting!");
-
-   // Exit
-//   gSystem->Exit(status);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.89 2006/10/03 13:26:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.90 2006/10/03 15:28:25 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -214,7 +214,6 @@ public:
 
    ClassDef(TSlaveInfo,2) //basic info on slave
 };
-
 
 class TProof : public TVirtualProof {
 
@@ -628,6 +627,8 @@ public:
    void        Detach(Option_t *opt = "");
 
    void        SetAlias(const char *alias="");
+
+   void        SetManager(TVirtualProofMgr *mgr);
 
    void        ActivateWorker(const char *ord);
    void        DeactivateWorker(const char *ord);

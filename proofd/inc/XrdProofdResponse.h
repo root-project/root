@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.h,v 1.2 2006/03/01 15:46:33 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.h,v 1.3 2006/06/02 15:14:35 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #include <sys/uio.h>
 
 #include "XrdOuc/XrdOucPthread.hh"
+#include "XrdOuc/XrdOucString.hh"
 #include "XProofProtocol.h"
 
 class XrdLink;
@@ -36,7 +37,8 @@ class XrdProofdResponse
  public:
    XrdProofdResponse() { fLink = 0; *fTrsid = '\0';
                          fRespIO[0].iov_base = (caddr_t)&fResp;
-                         fRespIO[0].iov_len  = sizeof(fResp); }
+                         fRespIO[0].iov_len  = sizeof(fResp);
+                         fTraceID = fgTraceID; }
    XrdProofdResponse(XrdProofdResponse &rhs) { Set(rhs.fLink);
                                                Set(rhs.fResp.streamid); }
    virtual ~XrdProofdResponse() {}
@@ -66,6 +68,7 @@ class XrdProofdResponse
    int                   Send(kXR_int32 int1, void *data = 0, int dlen = 0);
 
    inline void           Set(XrdLink *lp) { fLink = lp;}
+   inline void           Set(const char *tid) { fTraceID = tid;}
    void                  Set(unsigned char *stream);
    void                  Set(unsigned short streamid);
 
@@ -82,6 +85,8 @@ class XrdProofdResponse
    struct iovec         fRespIO[4];
 
    char                 fTrsid[8];  // sizeof() does not work here
+
+   XrdOucString         fTraceID;
 
    static const char   *fgTraceID;
 };

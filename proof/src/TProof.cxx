@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.158 2006/08/10 14:14:47 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.159 2006/10/03 13:26:20 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -75,7 +75,6 @@
 #include "TRegexp.h"
 #include "TFileInfo.h"
 #include "TFileMerger.h"
-
 
 TVirtualMutex *gProofMutex = 0;
 
@@ -593,6 +592,19 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 }
 
 //______________________________________________________________________________
+void TProof::SetManager(TVirtualProofMgr *mgr)
+{
+   // Set manager and schedule its destruction after this for clean
+   // operations.
+
+   fManager = mgr;
+
+   R__LOCKGUARD2(gROOTMutex);
+   gROOT->GetListOfSockets()->Remove(mgr);
+   gROOT->GetListOfSockets()->Add(mgr);
+}
+
+//______________________________________________________________________________
 Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
 {
    // Start up PROOF slaves.
@@ -691,6 +703,7 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
                slaveOk = kFALSE;
                fBadSlaves->Add(slave);
             }
+
             PDB(kGlobal,3)
                Info("StartSlaves", "worker on host %s created"
                     " and added to list", worker->GetNodeName().Data());
@@ -760,7 +773,9 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
          TSlave *sl = 0;
          while ((sl = (TSlave *) nxsl())) {
 
-            // Finalize setup of the server
+
+         // Finalize setup of the server
+         if (sl->IsValid())
             sl->SetupServ(TSlave::kSlave, 0);
 
             // Monitor good slaves
@@ -4148,7 +4163,7 @@ Int_t TProof::UploadPackageOnClient(const TString &par, EUploadPackageOpt opt, T
 {
    // Upload a package on the client in ~/proof/packages.
    // The 'opt' allows to specify whether the .PAR should be just unpacked
-   // in the exiting dir (opt = kUntar, default) or a remove of the existing
+   // in the existing dir (opt = kUntar, default) or a remove of the existing
    // directory should be executed (opt = kRemoveOld), thereby triggering a full
    // re-build. The option if effective only for PROOF protocol > 8 .
    // Returns 0 in case of success and -1 in case of error.
@@ -4227,7 +4242,6 @@ Int_t TProof::UploadPackageOnClient(const TString &par, EUploadPackageOpt opt, T
             status = -1;
          } else {
             // store md5 in package/PROOF-INF/md5.txt
-            TString md5f = fPackageDir + "/" + packnam + "/PROOF-INF/md5.txt";
             TMD5::WriteChecksum(md5f, md5);
          }
       }

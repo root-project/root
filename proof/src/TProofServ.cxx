@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.142 2006/10/06 09:12:23 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.143 2006/10/18 09:27:32 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -255,20 +255,21 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
 }
 
 //______________________________________________________________________________
-void TProofServ::CreateServer()
+Int_t TProofServ::CreateServer()
 {
    // Finalize the server setup. If master, create the TProof instance to talk
    // the worker or submaster nodes.
+   // Return 0 on success, -1 on error
 
    // get socket to be used (setup in proofd)
    if (!(gSystem->Getenv("ROOTOPENSOCK"))) {
       Fatal("CreateServer", "Socket setup by proofd undefined");
-      exit(1);
+      return -1;
    }
    Int_t sock = strtol(gSystem->Getenv("ROOTOPENSOCK"), (char **)0, 10);
    if (sock <= 0) {
       Fatal("CreateServer", "Invalid socket descriptor number (%d)", sock);
-      exit(1);
+      return -1;
    }
    fSocket = new TSocket(sock);
 
@@ -291,7 +292,12 @@ void TProofServ::CreateServer()
       Info("CreateServer", "Service %s ConfDir %s IsMaster %d\n",
            GetService(), GetConfDir(), (Int_t)fMasterServ);
 
-   Setup();
+   if (Setup() != 0) {
+      // Setup failure
+      SendLogFile();
+      Terminate(0);
+      return -1;
+   }
    if (!fLogFile) {
       RedirectOutput();
       // If for some reason we failed setting a redirection fole for the logs
@@ -299,12 +305,14 @@ void TProofServ::CreateServer()
       if (!fLogFile || (fLogFileDes = fileno(fLogFile)) < 0) {
          SendLogFile(-98);
          Terminate(0);
+         return -1;
       }
    } else {
       // Use the file already open by pmain
       if ((fLogFileDes = fileno(fLogFile)) < 0) {
          SendLogFile(-98);
          Terminate(0);
+         return -1;
       }
    }
 
@@ -313,6 +321,7 @@ void TProofServ::CreateServer()
       if (CatMotd() == -1) {
          SendLogFile(-99);
          Terminate(0);
+         return -1;
       }
    } else {
       THLimitsFinder::SetLimitsFinder(new TProofLimitsFinder);
@@ -376,6 +385,7 @@ void TProofServ::CreateServer()
          Error("CreateServer", "no plugin manager found");
          SendLogFile(-99);
          Terminate(0);
+         return -1;
       }
 
       // Find the appropriate handler
@@ -385,6 +395,7 @@ void TProofServ::CreateServer()
                              " config file of '%s'", fConfFile.Data());
          SendLogFile(-99);
          Terminate(0);
+         return -1;
       }
 
       // load the plugin
@@ -392,6 +403,7 @@ void TProofServ::CreateServer()
          Error("CreateServer", "plugin for TVirtualProof could not be loaded");
          SendLogFile(-99);
          Terminate(0);
+         return -1;
       }
 
       // make instance of TProof
@@ -405,12 +417,16 @@ void TProofServ::CreateServer()
          fProof = 0;
          SendLogFile(-99);
          Terminate(0);
+         return -1;
       }
       // Find out if we are a master in direct contact only with workers
       fEndMaster = fProof->IsEndMaster();
 
       SendLogFile();
    }
+
+   // Done
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -1531,10 +1547,11 @@ void TProofServ::Run(Bool_t retrn)
    // Main server eventloop.
 
    // Setup the server
-   CreateServer();
+   if (CreateServer() == 0) {
 
-   // Run the main event loop
-   TApplication::Run(retrn);
+      // Run the main event loop
+      TApplication::Run(retrn);
+   }
 }
 
 //______________________________________________________________________________
@@ -1703,9 +1720,10 @@ Int_t TProofServ::UnloadPackages()
 }
 
 //______________________________________________________________________________
-void TProofServ::Setup()
+Int_t TProofServ::Setup()
 {
    // Print the ProofServ logo on standard output.
+   // Return 0 on success, -1 on failure
 
    char str[512];
 
@@ -1717,7 +1735,7 @@ void TProofServ::Setup()
 
    if (fSocket->Send(str) != 1+static_cast<Int_t>(strlen(str))) {
       Error("Setup", "failed to send proof server startup message");
-      gSystem->Exit(1);
+      return -1;
    }
 
    // exchange protocol level between client and master and between
@@ -1725,11 +1743,11 @@ void TProofServ::Setup()
    Int_t what;
    if (fSocket->Recv(fProtocol, what) != 2*sizeof(Int_t)) {
       Error("Setup", "failed to receive remote proof protocol");
-      gSystem->Exit(1);
+      return -1;
    }
    if (fSocket->Send(kPROOF_Protocol, kROOTD_PROTOCOL) != 2*sizeof(Int_t)) {
       Error("Setup", "failed to send local proof protocol");
-      gSystem->Exit(1);
+      return -1;
    }
 
    // If old version, setup authentication related stuff
@@ -1737,7 +1755,7 @@ void TProofServ::Setup()
       TString wconf;
       if (OldAuthSetup(wconf) != 0) {
          Error("Setup", "OldAuthSetup: failed to setup authentication");
-         gSystem->Exit(1);
+         return -1;
       }
       if (IsMaster()) {
          fConfFile = wconf;
@@ -1756,7 +1774,7 @@ void TProofServ::Setup()
       TMessage *mess;
       if ((fSocket->Recv(mess) <= 0) || !mess) {
          Error("Setup", "failed to receive ordinal and config info");
-         gSystem->Exit(1);
+         return -1;
       }
       if (IsMaster()) {
          (*mess) >> fUser >> fOrdinal >> fConfFile;
@@ -1792,7 +1810,7 @@ void TProofServ::Setup()
       } else {
          Error("Setup", "reading config file %s",
                         resources.GetFileName().Data());
-         gSystem->Exit(1);
+         return -1;
       }
    }
 
@@ -1946,6 +1964,9 @@ void TProofServ::Setup()
 
    // Install SigPipe handler to handle kKeepAlive failure
    gSystem->AddSignalHandler(new TProofServSigPipeHandler(this));
+
+   // Done
+   return 0;
 }
 
 //______________________________________________________________________________
