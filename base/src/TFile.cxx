@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.189 2006/10/05 14:53:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.190 2006/10/10 06:43:22 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1302,8 +1302,9 @@ Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
 //______________________________________________________________________________
 Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)
 {
-   // Read buffer via cache. Returns 0 if cache is not active, 1 in case
-   // read via cache was successful, 2 in case read via cache failed.
+   // Read buffer via cache. Returns 0 if cache is the resquest block in
+   // not in the cache, 1 in case read via cache was successful, 
+   // 2 in case read via cache failed.
 
    Long64_t off = GetRelOffset();
    if (fCacheRead) {
@@ -1315,6 +1316,8 @@ Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)
          Seek(off + len);
          return 1;
       }
+      // fOffset might have been changed via TFileCacheRead::ReadBuffer(), reset it
+      Seek(off);
    } else {
       // if write cache is active check if data still in write cache
       if (fWritable && fCacheWrite) {
@@ -1322,6 +1325,8 @@ Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)
             Seek(off + len);
             return 1;
          }
+         // fOffset might have been changed via TFileCacheWrite::ReadBuffer(), reset it
+         Seek(off);
       }
    }
 
