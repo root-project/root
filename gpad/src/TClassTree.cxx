@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.9 2006/04/27 15:07:57 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.10 2006/08/11 10:57:09 brun Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -692,7 +692,7 @@ void TClassTree::PaintClass(Int_t iclass, Float_t xleft, Float_t y)
 
 
 //______________________________________________________________________________
-void TClassTree::SaveAs(const char *filename)
+void TClassTree::SaveAs(const char *filename) const
 {
    // save current configuration in a Root file
    // if filename is blank, the name of the file will be the current objectname.root
@@ -705,12 +705,12 @@ void TClassTree::SaveAs(const char *filename)
       sprintf(fname,"%s.root",GetName());
       TFile local(fname,"recreate");
       if (local.IsZombie()) return;
-      Write();
+      ((TClassTree*)this)->Write();
       printf("TClassTree::SaveAs, file: %s has been written\n",fname);
    } else {
       TFile local(filename,"recreate");
       if (local.IsZombie()) return;
-      Write();
+      ((TClassTree*)this)->Write();
       printf("TClassTree::SaveAs, file: %s has been written\n",filename);
    }
 }

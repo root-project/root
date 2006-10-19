@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.238 2006/10/02 16:12:38 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.239 2006/10/16 17:53:03 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4544,7 +4544,7 @@ void TPad::ResizePad(Option_t *option)
 
 
 //______________________________________________________________________________
-void TPad::SaveAs(const char *filename)
+void TPad::SaveAs(const char *filename) const
 {
    // Save Pad contents on a  file in various formats
    //
@@ -4580,35 +4580,35 @@ void TPad::SaveAs(const char *filename)
    }
 
    if (psname.EndsWith(".gif"))
-      Print(psname,"gif");
+      ((TPad*)this)->Print(psname,"gif");
    else if (psname.Contains(".gif+"))
-      Print(psname,"gif+");
+      ((TPad*)this)->Print(psname,"gif+");
    else if (psname.EndsWith(".C") || psname.EndsWith(".cxx") || psname.EndsWith(".cpp"))
-      Print(psname,"cxx");
+      ((TPad*)this)->Print(psname,"cxx");
    else if (psname.EndsWith(".root"))
-      Print(psname,"root");
+      ((TPad*)this)->Print(psname,"root");
    else if (psname.EndsWith(".xml"))
-      Print(psname,"xml");
+      ((TPad*)this)->Print(psname,"xml");
    else if (psname.EndsWith(".eps"))
-      Print(psname,"eps");
+      ((TPad*)this)->Print(psname,"eps");
    else if (psname.EndsWith(".pdf"))
-      Print(psname,"pdf");
+      ((TPad*)this)->Print(psname,"pdf");
    else if (psname.EndsWith(".svg"))
-      Print(psname,"svg");
+      ((TPad*)this)->Print(psname,"svg");
    else if (psname.EndsWith(".xpm"))
-      Print(psname,"xpm");
+      ((TPad*)this)->Print(psname,"xpm");
    else if (psname.EndsWith(".png"))
-      Print(psname,"png");
+      ((TPad*)this)->Print(psname,"png");
    else if (psname.EndsWith(".jpg"))
-      Print(psname,"jpg");
+      ((TPad*)this)->Print(psname,"jpg");
    else if (psname.EndsWith(".jpeg"))
-      Print(psname,"jpg");
+      ((TPad*)this)->Print(psname,"jpg");
    else if (psname.EndsWith(".bmp"))
-      Print(psname,"bmp");
+      ((TPad*)this)->Print(psname,"bmp");
    else if (psname.EndsWith(".tiff"))
-      Print(psname,"tiff");
+      ((TPad*)this)->Print(psname,"tiff");
    else
-      Print(psname,"ps");
+      ((TPad*)this)->Print(psname,"ps");
 }
 
 

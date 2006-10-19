@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.46 2006/07/03 16:10:44 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.47 2006/10/09 07:21:28 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -294,7 +294,7 @@ public:
    virtual void      RedrawAxis(Option_t *option="");
    virtual void      ResetView3D(TPadView3D *view=0){fPadView3D=view;}
    virtual void      ResizePad(Option_t *option="");
-   virtual void      SaveAs(const char *filename=""); // *MENU*
+   virtual void      SaveAs(const char *filename="") const; // *MENU*
    virtual void      SetBorderMode(Short_t bordermode) {fBorderMode = bordermode; Modified();} // *MENU*
    virtual void      SetBorderSize(Short_t bordersize) {fBorderSize = bordersize; Modified();} // *MENU*
    void              SetCanvas(TCanvas *c) { fCanvas = c; }

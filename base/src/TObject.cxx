@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.77 2006/07/03 16:10:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.78 2006/10/19 09:23:15 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -643,7 +643,7 @@ void TObject::RecursiveRemove(TObject *)
 
 
 //______________________________________________________________________________
-void TObject::SaveAs(const char *filename)
+void TObject::SaveAs(const char *filename) const
 {
    // Save this object in filename
    // The C++ code to revbuild this object is generated via SavePrimitive.
@@ -665,7 +665,7 @@ void TObject::SaveAs(const char *filename)
    out <<"{"<<endl;
    out <<"//=========Macro generated from object: "<<GetName()<<"/"<<GetTitle()<<endl;
    out <<"//=========  by ROOT version"<<gROOT->GetVersion()<<endl;
-   SavePrimitive(out);
+   ((TObject*)this)->SavePrimitive(out);
    out <<"}"<<endl;
    out.close();
    Printf("C++ Macro file: %s has been generated", fname);
