@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.8 2006/09/29 08:17:21 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.9 2006/10/19 12:38:07 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -148,13 +148,13 @@ XrdClientID *XrdProofServProxy::GetClientID(int cid)
    //
 
    XrdClientID *csid = 0;
+   TRACE(ACT,"XrdProofServProxy::GetClientID: cid: "<<cid<<
+             ", size: "<<fClients.size());
 
    if (cid < 0) {
-      TRACE(ALL,"XrdProofServProxy::GetClientID: negative ID: protocol error!");
+      TRACE(ERR,"XrdProofServProxy::GetClientID: negative ID: protocol error!");
       return csid;
    }
-   TRACE(ALL,"XrdProofServProxy::GetClientID: cid = "<<cid<<
-             "; size = "<<fClients.size());
 
    // If in the allocate range reset the corresponding instance and
    // return it
@@ -173,8 +173,8 @@ XrdClientID *XrdProofServProxy::GetClientID(int cid)
    for (; ic <= cid; ic++)
       fClients.push_back((csid = new XrdClientID()));
 
-   TRACE(ALL,"XrdProofServProxy::GetClientID: cid = "<<cid<<
-             "; new size = "<<fClients.size());
+   TRACE(DBG,"XrdProofServProxy::GetClientID: cid: "<<cid<<
+             ", new size: "<<fClients.size());
 
    // We are done
    return csid;

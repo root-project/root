@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XProofProtUtils.cxx,v 1.5 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XProofProtUtils.cxx,v 1.6 2006/10/19 12:38:07 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -153,11 +153,6 @@ char *convertRequestIdToChar(kXR_int16 requestid)
    case kXP_urgent:
       return (char *)"kXP_urgent";
    default:
-#if 0
-      int dbg = 1;
-      while (dbg)
-         ;
-#endif
       return (char *)"kXP_UNKNOWN";
    }
 }

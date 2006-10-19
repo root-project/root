@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.25 2006/10/07 18:03:30 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.26 2006/10/19 12:38:07 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -2659,7 +2659,7 @@ int XrdProofdProtocol::GetData(const char *dtype, char *buff, int blen)
          TRACEP(ERR, "GetData: link read error");
          return fLink->setEtext("link read error");
       } else {
-         TRACEP(ERR, "GetData: connection closed by peer");
+         TRACEP(DBG, "GetData: connection closed by peer");
          return -1;
       }
    if (rlen < blen) {
