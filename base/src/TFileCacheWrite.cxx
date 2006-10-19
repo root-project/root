@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.cxx,v 1.6 2006/06/30 14:24:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.cxx,v 1.7 2006/08/26 16:28:32 rdm Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************
@@ -103,8 +103,9 @@ void TFileCacheWrite::Print(Option_t *option) const
 Int_t TFileCacheWrite::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
    // Called by the read cache to check if the requested data is not
-   // in the write cache buffer. Returns -1 if data not in write cache,
-   // 0 otherwise.
+   // in the write cache buffer. 
+   //        Returns -1 if data not in write cache,
+   //        0 otherwise.
 
    if (pos < fSeekStart || pos+len > fSeekStart+fNtot) return -1;
    memcpy(buf,fBuffer+pos-fSeekStart,len);
@@ -147,7 +148,8 @@ Int_t TFileCacheWrite::WriteBuffer(const char *buf, Long64_t pos, Int_t len)
 //_____________________________________________________________________________
 void TFileCacheWrite::SetFile(TFile *file)
 {
-   // Set the file using this cache.
+   // Set the file using this cache. 
+   // Any write not yet flushed will be lost.
 
    fFile = file;
 }
