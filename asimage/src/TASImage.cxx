@@ -1015,6 +1015,7 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y)
       Pixmap_t pic = gVirtualX->CreatePixmapFromData(bits, im->width, im->height);
       if (pic) {
          gVirtualX->CopyArea(pic, wid, gc, 0, 0, im->width, im->height, x, y);
+         gVirtualX->DeletePixmap(pic);
       } else {
          return;
       }
