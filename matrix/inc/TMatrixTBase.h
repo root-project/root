@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.11 2006/05/23 04:47:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.12 2006/10/12 21:30:58 pcanal Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -231,10 +231,14 @@ template<class Element> void    Compare      (const TMatrixTBase<Element>  &m1,c
 
 template<class Element> Bool_t VerifyMatrixValue   (const TMatrixTBase<Element> &m,Element val,
                                                     Int_t verbose,Element maxDevAllow);
+template<class Element> Bool_t VerifyMatrixValue   (const TMatrixTBase<Element> &m,Element val,Int_t verbose) 
+                                                                           { return VerifyMatrixValue(m,val,verbose,Element(0.)); }
 template<class Element> Bool_t VerifyMatrixValue   (const TMatrixTBase<Element> &m,Element val)
                                                                            { return VerifyMatrixValue(m,val,1,Element(0.)); }
 template<class Element> Bool_t VerifyMatrixIdentity(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2,
                                                     Int_t verbose,Element maxDevAllow);
+template<class Element> Bool_t VerifyMatrixIdentity(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2,Int_t verbose)
+                                                                           { return VerifyMatrixIdentity(m1,m2,verbose,Element(0.)); }
 template<class Element> Bool_t VerifyMatrixIdentity(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
                                                                            { return VerifyMatrixIdentity(m1,m2,1,Element(0.)); }
 

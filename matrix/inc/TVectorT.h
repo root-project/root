@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.h,v 1.10 2006/05/26 15:13:02 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.h,v 1.11 2006/10/06 06:52:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -238,9 +238,21 @@ template<class Element> TVectorT<Element> &ElementDiv   (      TVectorT      <El
 template<class Element> TVectorT<Element> &ElementDiv   (      TVectorT      <Element>  &target, const TVectorT      <Element>  &source, const TVectorT<Element> &select);
 template<class Element> void               Compare      (const TVectorT      <Element>  &source1,const TVectorT      <Element>  &source2);
 template<class Element> Bool_t             VerifyVectorValue
-                                                        (const TVectorT      <Element>  &m,            Element                  val,           Int_t              verbose=1,
-                                                         Element maxDevAllow=0.0);
+                                                        (const TVectorT      <Element>  &m,            Element                  val,           Int_t              verbose,
+                                                         Element maxDevAllow);
+template<class Element> Bool_t             VerifyVectorValue
+                                                        (const TVectorT      <Element>  &m,            Element                  val,           Int_t              verbose)
+                                                        { return VerifyVectorValue(m,val,verbose,Element(0.0)); }
+template<class Element> Bool_t             VerifyVectorValue
+                                                        (const TVectorT      <Element>  &m,            Element                  val)
+                                                        { return VerifyVectorValue(m,val,1,Element(0.0)); }
 template<class Element> Bool_t             VerifyVectorIdentity
-                                                        (const TVectorT      <Element>  &m1,     const TVectorT      <Element> &m2,            Int_t              verbose=1,
-                                                         Element maxDevAllow=0.0);
+                                                        (const TVectorT      <Element>  &m1,     const TVectorT      <Element> &m2,            Int_t              verbose,
+                                                         Element maxDevAllow);
+template<class Element> Bool_t             VerifyVectorIdentity
+                                                        (const TVectorT      <Element>  &m1,     const TVectorT      <Element> &m2,            Int_t              verbose)
+                                                        { return VerifyVectorIdentity(m1,m2,verbose,Element(0.0)); }
+template<class Element> Bool_t             VerifyVectorIdentity
+                                                        (const TVectorT      <Element>  &m1,     const TVectorT      <Element> &m2)
+                                                        { return VerifyVectorIdentity(m1,m2,1,Element(0.0)); }
 #endif
