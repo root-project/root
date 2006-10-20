@@ -14,7 +14,7 @@ int main() {
   XYZTVector v(1.,2.,3.,4.);
 
   XYZTVector vb1 = bx(v); 
-  XYZTVector vb2 = VectorUtil::BoostX(v,0.8); 
+  XYZTVector vb2 = VectorUtil::boostX(v,0.8); 
 
   if (vb1 != vb2) { 
     std::cout << "BoostX test failed" << std::endl;
@@ -34,7 +34,7 @@ int main() {
 
 
   vb1 = b(v);
-  vb2 = VectorUtil::Boost(v,bv);
+  vb2 = VectorUtil::boost(v,bv);
   if (vb1 != vb2) { 
     std::cout << "Boost test failed" << std::endl;
     int pr = std::cout.precision(18);

@@ -16,6 +16,14 @@ else
 EXTRALIBS        = -lMathCore
 endif
 
+# use reflex
+#useReflex=yes
+ifneq ($(useReflex),)
+CXXFLAGS += -DUSE_REFLEX
+EXTRAIOLIBS = -lReflex -lCintex
+endif
+
+
 COORDINATES3DOBJ     = coordinates3D.$(ObjSuf)
 COORDINATES3DSRC     = coordinates3D.$(SrcSuf)
 COORDINATES3D        = coordinates3D$(ExeSuf)
@@ -36,11 +44,16 @@ GENVECTOROBJ     = testGenVector.$(ObjSuf)
 GENVECTORSRC     = testGenVector.$(SrcSuf)
 GENVECTOR        = testGenVector$(ExeSuf)
 
+VECTORIOOBJ     = testVectorIO.$(ObjSuf)
+VECTORIOSRC     = testVectorIO.$(SrcSuf)
+VECTORIO        = testVectorIO$(ExeSuf)
 
-OBJS          = $(COORDINATES3DOBJ) $(COORDINATES4DOBJ) $(ROTATIONOBJ) $(BOOSTOBJ) $(GENVECTOROBJ)
 
 
-PROGRAMS      = $(COORDINATES3D)  $(COORDINATES4D) $(ROTATION) $(BOOST) $(GENVECTOR)
+OBJS          = $(COORDINATES3DOBJ) $(COORDINATES4DOBJ) $(ROTATIONOBJ) $(BOOSTOBJ) $(GENVECTOROBJ) $(VECTORIOOBJ)
+
+
+PROGRAMS      = $(COORDINATES3D)  $(COORDINATES4D) $(ROTATION) $(BOOST) $(GENVECTOR) $(VECTORIO)
 
 		  
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
@@ -67,6 +80,10 @@ $(BOOST):           $(BOOSTOBJ)
 
 $(GENVECTOR):     $(GENVECTOROBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		    @echo "$@ done"
+
+$(VECTORIO):   	  $(VECTORIOOBJ)
+		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(EXTRAIOLIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
 
