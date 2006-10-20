@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRolke.h,v 1.6 2005/06/17 14:56:08 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRolke.h,v 1.7 2006/05/16 08:13:31 brun Exp $
 // Author: Jan Conrad    9/2/2004
 
 /*************************************************************************
@@ -67,7 +67,8 @@ protected:
    //MISC
    static Double_t EvalPolynomial(Double_t x, const Int_t coef[], Int_t N);
    static Double_t EvalMonomial  (Double_t x, const Int_t coef[], Int_t N);
-
+   Double_t LogFactorial(Int_t n);
+   
 public:
 
    TRolke(Double_t CL=0.9, Option_t *option = "");
