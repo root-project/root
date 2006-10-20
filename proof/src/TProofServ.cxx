@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.143 2006/10/18 09:27:32 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.144 2006/10/19 12:38:07 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -3668,6 +3668,12 @@ Int_t TProofServ::HandleCache(TMessage *mess)
                notm.Reset();
                notm << TString(Form("%s: building %s ...", noth.Data(), package.Data())) << notln;
                fSocket->Send(notm);
+
+               // forward build command to slaves, but don't wait for results
+               if (IsMaster())
+                  fProof->BuildPackage(package, -1);
+
+               // build the package
                if (gSystem->Exec("PROOF-INF/BUILD.sh"))
                   status = -1;
             }
@@ -3678,16 +3684,16 @@ Int_t TProofServ::HandleCache(TMessage *mess)
 
          fPackageLock->Unlock();
 
+         // collect built results from slaves
+         if (IsMaster())
+            fProof->BuildPackage(package, 1);
+
          if (status) {
             // Notify the upper level
             notm.Reset();
             notm << TString(Form("%s: failure building %s ...", noth.Data(), package.Data())) << notln;
             fSocket->Send(notm);
          } else {
-            // if built successful propagate to slaves
-            if (IsMaster())
-               fProof->BuildPackage(package);
-
             PDB(kPackage, 1)
                Info("HandleCache", "package %s successfully built", package.Data());
          }

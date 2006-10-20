@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.159 2006/10/03 13:26:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.160 2006/10/19 12:38:07 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -3756,10 +3756,15 @@ Int_t TProof::DisablePackages()
 }
 
 //______________________________________________________________________________
-Int_t TProof::BuildPackage(const char *package)
+Int_t TProof::BuildPackage(const char *package, Int_t opt)
 {
    // Build specified package. Executes the PROOF-INF/BUILD.sh
-   // script if it exists on all unique nodes.
+   // script if it exists on all unique nodes. If opt is -1
+   // then submit build command to slaves, but don't wait
+   // for results. If opt is 1 then collect result from slaves.
+   // To be used on the master.
+   // If opt = 0 (default) then submit and wait for results
+   // (to be used on the client).
    // Returns 0 in case of success and -1 in case of error.
 
    if (!IsValid()) return -1;
@@ -3775,20 +3780,27 @@ Int_t TProof::BuildPackage(const char *package)
       pac.Remove(pac.Length()-4);
    pac = gSystem->BaseName(pac);
 
-   if (BuildPackageOnClient(pac) == -1)
-      return -1;
+   if (opt <= 0) {
+      TMessage mess(kPROOF_CACHE);
+      mess << Int_t(kBuildPackage) << pac;
+      Broadcast(mess, kUnique);
 
-   TMessage mess(kPROOF_CACHE);
-   mess << Int_t(kBuildPackage) << pac;
-   Broadcast(mess, kUnique);
+      TMessage mess2(kPROOF_CACHE);
+      mess2 << Int_t(kBuildSubPackage) << pac;
+      Broadcast(mess2, fNonUniqueMasters);
+   }
 
-   TMessage mess2(kPROOF_CACHE);
-   mess2 << Int_t(kBuildSubPackage) << pac;
-   Broadcast(mess2, fNonUniqueMasters);
+   if (opt >= 0) {
+      // by first forwarding the build commands to the master and slaves
+      // and only then building locally we build in parallel
+      Int_t st = BuildPackageOnClient(pac);
 
-   Collect(kAllUnique);
+      Collect(kAllUnique);
 
-   return fStatus;
+      if (fStatus < 0 || st < 0)
+         return -1;
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -4110,8 +4122,11 @@ Int_t TProof::UploadPackage(const char *tpar, EUploadPackageOpt opt)
             // remote directory is locked, upload file over the open channel
             if (SendFile(par, (kBinary | kForce), Form("%s/%s/%s",
                          sl->GetProofWorkDir(), kPROOF_PackDir,
-                         gSystem->BaseName(par)), sl) < 0)
-               Warning("UploadPackage", "problems uploading file %s", par.Data());
+                         gSystem->BaseName(par)), sl) < 0) {
+               Error("UploadPackage", "problems uploading file %s", par.Data());
+               SafeDelete(reply);
+               return -1;
+            }
          } else {
             // old servers receive it via TFTP
             TFTP ftp(TString("root://")+sl->GetName(), 1);

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.90 2006/10/03 15:28:25 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.91 2006/10/19 12:38:07 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -383,7 +383,7 @@ private:
    Int_t    GoParallel(Int_t nodes, Bool_t accept = kFALSE);
    Int_t    SetParallelSilent(Int_t nodes);
    void     RecvLogFile(TSocket *s, Int_t size);
-   Int_t    BuildPackage(const char *package);
+   Int_t    BuildPackage(const char *package, Int_t opt = 0);
    Int_t    BuildPackageOnClient(const TString &package);
    Int_t    LoadPackage(const char *package);
    Int_t    LoadPackageOnClient(const TString &package);
