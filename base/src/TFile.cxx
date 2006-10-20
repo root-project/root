@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.190 2006/10/10 06:43:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.191 2006/10/19 19:42:31 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1302,8 +1302,8 @@ Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
 //______________________________________________________________________________
 Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)
 {
-   // Read buffer via cache. Returns 0 if cache is the resquest block in
-   // not in the cache, 1 in case read via cache was successful, 
+   // Read buffer via cache. Returns 0 if the requested block is
+   // not in the cache, 1 in case read via cache was successful,
    // 2 in case read via cache failed.
 
    Long64_t off = GetRelOffset();
