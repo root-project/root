@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.307 2006/10/06 16:45:41 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.308 2006/10/10 12:24:24 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -898,10 +898,22 @@ TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass*
    }
    if (ptrClass && claim) {
       if (!(claim->InheritsFrom(ptrClass) || ptrClass->InheritsFrom(claim))) {
-         // Note we currently do not warning in case of splicing or over-expectation).
-         Error("Branch", "The class requested (%s) for \"%s\" is different from the type of the pointer passed (%s)", claim->GetName(), branchname, ptrClass->GetName());
+         // Note we currently do not warn in case of splicing or over-expectation).
+         if (claim->IsLoaded() && ptrClass->IsLoaded() && strcmp( claim->GetTypeInfo()->name(), ptrClass->GetTypeInfo()->name() ) == 0) {
+            // The type is the same according to the C++ type_info, we must be in the case of 
+            // a template of Double32_t.  This is actually a correct case.
+         } else {
+            Error("Branch", "The class requested (%s) for \"%s\" is different from the type of the pointer passed (%s)", 
+                  claim->GetName(), branchname, ptrClass->GetName());
+         }
       } else if (actualClass && (claim != actualClass) && !actualClass->InheritsFrom(claim)) {
-         Error("Branch", "The actual class (%s) of the object provided for the definition of the branch \"%s\" does not inherit from %s", actualClass->GetName(), branchname, claim->GetName());
+         if (claim->IsLoaded() && actualClass->IsLoaded() && strcmp( claim->GetTypeInfo()->name(), actualClass->GetTypeInfo()->name() ) == 0) {
+            // The type is the same according to the C++ type_info, we must be in the case of 
+            // a template of Double32_t.  This is actually a correct case.
+         } else {
+            Error("Branch", "The actual class (%s) of the object provided for the definition of the branch \"%s\" does not inherit from %s", 
+                  actualClass->GetName(), branchname, claim->GetName());
+         }
       }
    }
    return Branch(branchname, classname, (void*) addobj, bufsize, splitlevel);
