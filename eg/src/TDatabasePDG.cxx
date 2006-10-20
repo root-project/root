@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.24 2006/05/16 06:18:27 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.25 2006/08/24 16:31:21 rdm Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -521,16 +521,16 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
       fListOfClasses = new TObjArray;
    }
 
-   char         default_name[1024];
-   const char*  fn;
+   TString default_name;
+   const char *fn;
 
    if (strlen(FileName) == 0) {
 #ifdef ROOTETCDIR
-      sprintf(default_name,"%s/pdg_table.txt",ROOTETCDIR);
+      default_name.Form("%s/pdg_table.txt", ROOTETCDIR);
 #else
-      sprintf(default_name,"%s/etc/pdg_table.txt",gSystem->Getenv("ROOTSYS"));
+      default_name.Form("%s/etc/pdg_table.txt", gSystem->Getenv("ROOTSYS"));
 #endif
-      fn = gEnv->GetValue("Root.DatabasePDG",default_name);
+      fn = gEnv->GetValue("Root.DatabasePDG", default_name.Data());
    } else {
       fn = FileName;
    }
