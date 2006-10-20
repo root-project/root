@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.160 2006/09/26 13:44:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.161 2006/10/06 19:15:05 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1047,9 +1047,16 @@ void TGeoManager::Edit(Option_t *option) {
 void TGeoManager::SetVisibility(TObject *obj, Bool_t vis)
 {
 // Set visibility for a volume.
-   if(obj->IsA() != TGeoVolume::Class()) return;
-   TGeoVolume *vol = (TGeoVolume *) obj;
-   vol->SetVisibility(vis);
+   if(obj->IsA() == TGeoVolume::Class()) {
+      TGeoVolume *vol = (TGeoVolume *) obj;
+      vol->SetVisibility(vis);
+   } else {
+      if (obj->InheritsFrom(TGeoNode::Class())) {
+         TGeoNode *node = (TGeoNode *) obj;
+         node->SetVisibility(vis);
+      } else return;
+   }   
+   GetGeomPainter()->ModifiedPad(kTRUE);
 }  
 
 //_____________________________________________________________________________
@@ -1828,10 +1835,6 @@ void TGeoManager::ClearAttributes()
    TGeoVolume *vol = 0;
    while ((vol=(TGeoVolume*)next())) {
       if (!vol->IsVisTouched()) continue;
-//      vol->SetVisibility(kTRUE);
-//      vol->SetVisDaughters(kTRUE);
-//      vol->SetLineStyle(gStyle->GetLineStyle());
-//      vol->SetLineWidth(gStyle->GetLineWidth());
       vol->SetVisTouched(kFALSE);
    }
 }
@@ -2095,6 +2098,37 @@ Bool_t TGeoManager::CheckPath(const char *path) const
    }
    return kTRUE;
 }
+
+//_____________________________________________________________________________
+void TGeoManager::ConvertReflections()
+{
+// Convert all reflections in geometry to normal rotations + reflected shapes.
+   if (!fTopNode) return;
+   Info("ConvertReflections", "Converting reflections in: %s - %s ...", GetName(), GetTitle());
+   TGeoIterator next(fTopVolume);
+   TGeoNode *node;
+   TGeoNodeMatrix *nodematrix;
+   TGeoMatrix *matrix, *mclone;
+   TGeoVolume *reflected;
+   while ((node=next())) {
+      matrix = node->GetMatrix();
+      if (matrix->IsReflection()) {
+//         printf("%s before\n", node->GetName());
+//         matrix->Print();
+         mclone = new TGeoCombiTrans(*matrix);
+         mclone->RegisterYourself();
+         // Reflect just the rotation component
+         mclone->ReflectZ(kFALSE, kTRUE);
+         nodematrix = (TGeoNodeMatrix*)node;
+         nodematrix->SetMatrix(mclone);
+//         printf("%s after\n", node->GetName());
+//         node->GetMatrix()->Print();
+         reflected = node->GetVolume()->MakeReflectedVolume();
+         node->SetVolume(reflected);
+      }
+   }
+   Info("ConvertReflections", "Done");
+}   
 
 //_____________________________________________________________________________
 Int_t TGeoManager::CountNodes(const TGeoVolume *vol, Int_t nlevels, Int_t option)

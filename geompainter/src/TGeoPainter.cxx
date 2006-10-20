@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.92 2006/09/15 10:23:07 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.93 2006/09/17 14:16:37 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -250,14 +250,7 @@ TGeoVolume *TGeoPainter::GetDrawnVolume() const
 {
 // Get currently drawn volume.
    if (!gPad) return 0;
-   TList *list = gPad->GetListOfPrimitives();
-   Int_t size = list->GetSize();
-   TObject *obj;
-   for (Int_t i=0; i<size; i++) {
-      obj = list->At(i);
-      if (obj->InheritsFrom("TGeoVolume")) return ((TGeoVolume*)obj);
-   }
-   return 0;
+   return fTopVolume;
 }         
  
 //______________________________________________________________________________
@@ -1035,10 +1028,14 @@ void TGeoPainter::LocalToMasterVect(const Double_t *local, Double_t *master) con
 }
 
 //______________________________________________________________________________
-void TGeoPainter::ModifiedPad() const
+void TGeoPainter::ModifiedPad(Bool_t update) const
 {
 // Check if a pad and view are present and send signal "Modified" to pad.
    if (!gPad) return;
+   if (update) {
+      gPad->Update();
+      return;
+   }   
    TView *view = gPad->GetView();
    if (!view) return;
    view->SetViewChanged();
@@ -1125,6 +1122,7 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
    PaintShape(*(vol->GetShape()),option);
    vol->SetLineColor(color);
    vol->SetTransparency(transparency);
+   fGeoManager->SetMatrixReflection(kFALSE);
    fVisLock = kTRUE;
 }
 
@@ -1380,7 +1378,8 @@ void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)
             PaintShape(*shape,option);
          }   
       }
-   }      
+   }
+   fGeoManager->SetMatrixReflection(kFALSE);      
 }   
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoScaledShape.cxx,v 1.3 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoScaledShape.cxx,v 1.4 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   26/09/05
 
 /*************************************************************************
@@ -49,6 +49,7 @@ TGeoScaledShape::TGeoScaledShape(const char *name, TGeoShape *shape, TGeoScale *
 // Constructor
    fShape = shape;
    fScale = scale;
+   if (!fScale->IsRegistered()) fScale->RegisterYourself();
    ComputeBBox();
 }
 
@@ -58,6 +59,7 @@ TGeoScaledShape::TGeoScaledShape(TGeoShape *shape, TGeoScale *scale)
 // Constructor
    fShape = shape;
    fScale = scale;
+   if (!fScale->IsRegistered()) fScale->RegisterYourself();
    ComputeBBox();
 }
 
@@ -94,9 +96,9 @@ void TGeoScaledShape::ComputeBBox()
    
    fScale->LocalToMaster(orig, fOrigin);
    fScale->LocalToMaster(point, master);
-   fDX = master[0];
-   fDY = master[1];
-   fDZ = master[2];
+   fDX = TMath::Abs(master[0]);
+   fDY = TMath::Abs(master[1]);
+   fDZ = TMath::Abs(master[2]);
 }   
 
 //_____________________________________________________________________________   
@@ -218,6 +220,13 @@ void TGeoScaledShape::InspectShape() const
 }
 
 //_____________________________________________________________________________
+Bool_t TGeoScaledShape::IsReflected() const
+{
+// Check if the scale transformation is a reflection.
+   return fScale->IsReflection();
+}
+
+//_____________________________________________________________________________
 TBuffer3D *TGeoScaledShape::MakeBuffer3D() const
 { 
    // Creates a TBuffer3D describing *this* shape.
@@ -227,6 +236,25 @@ TBuffer3D *TGeoScaledShape::MakeBuffer3D() const
    if (buff) SetPoints(buff->fPnts);   
    return buff; 
 }
+
+//_____________________________________________________________________________
+TGeoShape *TGeoScaledShape::MakeScaledShape(const char *name, TGeoShape *shape, TGeoScale *scale)
+{
+// Create a scaled shape starting from a non-scaled one.
+   TGeoShape *new_shape;
+   if (shape->IsA() == TGeoScaledShape::Class()) {
+      TGeoScaledShape *sshape = (TGeoScaledShape*)shape;
+      TGeoScale *old_scale = sshape->GetScale();
+      TGeoShape *old_shape = sshape->GetShape();
+      scale->SetScale(scale->GetScale()[0]*old_scale->GetScale()[0],
+                      scale->GetScale()[1]*old_scale->GetScale()[1],
+                      scale->GetScale()[2]*old_scale->GetScale()[2]);
+      new_shape = new TGeoScaledShape(name, old_shape, scale);
+      return new_shape;
+   }   
+   new_shape = new TGeoScaledShape(name, shape, scale);
+   return new_shape;
+}   
 
 //_____________________________________________________________________________
 void TGeoScaledShape::SetSegsAndPols(TBuffer3D &buff) const

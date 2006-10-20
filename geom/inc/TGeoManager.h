@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.81 2006/09/26 13:44:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.82 2006/10/06 19:15:05 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -235,6 +235,7 @@ public:
    void                   CheckGeometry(Option_t *option="");
    void                   CheckOverlaps(Double_t ovlp=0.1, Option_t *option=""); // *MENU*
    void                   CheckPoint(Double_t x=0,Double_t y=0, Double_t z=0, Option_t *option=""); // *MENU*
+   void                   ConvertReflections();
    void                   DrawCurrentPoint(Int_t color=2); // *MENU*
    void                   DrawTracks(Option_t *option=""); // *MENU*
    void                   SetParticleName(const char *pname) {fParticleName=pname;}

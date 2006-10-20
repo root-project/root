@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.36 2006/06/23 11:55:15 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.37 2006/09/15 10:23:07 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -108,7 +108,7 @@ public:
    virtual TH2F      *LegoPlot(Int_t ntheta=60, Double_t themin=0., Double_t themax=180.,
                             Int_t nphi=90, Double_t phimin=0., Double_t phimax=360.,
                             Double_t rmin=0., Double_t rmax=9999999, Option_t *option="") = 0;
-   virtual void       ModifiedPad() const = 0;
+   virtual void       ModifiedPad(Bool_t update=kFALSE) const = 0;
    virtual void       Paint(Option_t *option="") = 0;
    virtual void       PaintNode(TGeoNode *node, Option_t *option="", TGeoMatrix* global=0) = 0;
    virtual void       PaintShape(TGeoShape *shape, Option_t *option="") = 0;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.90 2006/10/19 10:58:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.89 2006/09/01 15:56:39 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -339,14 +339,16 @@
 #include "TH2F.h"
 #include "TPad.h"
 #include "TClass.h"
+#include "TEnv.h"
+#include "TMap.h"
 
 #include "TGeoManager.h"
 #include "TGeoNode.h"
 #include "TGeoMatrix.h"
 #include "TVirtualGeoPainter.h"
 #include "TGeoVolume.h"
-#include "TEnv.h"
 #include "TGeoShapeAssembly.h"
+#include "TGeoScaledShape.h"
 
 ClassImp(TGeoVolume)
 
@@ -461,7 +463,7 @@ void TGeoVolume::Browse(TBrowser *b)
 // How to browse a volume
    if (!b) return;
 
-   if (!GetNdaughters()) b->Add(this, 0, IsVisible());
+//   if (!GetNdaughters()) b->Add(this, GetName(), IsVisible());
    TGeoVolume *daughter;
    TString title;
    for (Int_t i=0; i<GetNdaughters(); i++) { 
@@ -479,11 +481,11 @@ void TGeoVolume::Browse(TBrowser *b)
                          daughter->GetShape()->ClassName(),daughter->GetNdaughters());
          daughter->SetTitle(title.Data());
       }   
-      b->Add(daughter);
-      if (IsVisDaughters())
-         b->AddCheckBox(daughter, daughter->IsVisible());
-      else
-         b->AddCheckBox(daughter, kFALSE);
+      b->Add(daughter, daughter->GetName(), daughter->IsVisible());
+//      if (IsVisDaughters())
+//      b->AddCheckBox(daughter, daughter->IsVisible());
+//      else
+//         b->AddCheckBox(daughter, kFALSE);
    }
 }
 
@@ -669,11 +671,48 @@ Int_t TGeoVolume::CountNodes(Int_t nlevels, Int_t option)
 }
 
 //_____________________________________________________________________________
+Bool_t TGeoVolume::IsAllInvisible() const
+{
+// Return TRUE if volume and all daughters are invisible.
+   if (IsVisible()) return kFALSE;
+   Int_t nd = GetNdaughters();
+   for (Int_t i=0; i<nd; i++) if (GetNode(i)->GetVolume()->IsVisible()) return kFALSE;
+   return kTRUE;
+}   
+
+//_____________________________________________________________________________
+void TGeoVolume::InvisibleAll(Bool_t flag)
+{
+// Make volume and each of it daughters (in)visible.
+   SetAttVisibility(!flag);
+   Int_t nd = GetNdaughters();
+   TObjArray *list = new TObjArray(nd+1);
+   list->Add(this);
+   TGeoVolume *vol;
+   for (Int_t i=0; i<nd; i++) {
+      vol = GetNode(i)->GetVolume();
+      vol->SetAttVisibility(!flag);
+      list->Add(vol);
+   }
+   TIter next(gROOT->GetListOfBrowsers());
+   TBrowser *browser = 0;
+   while ((browser=(TBrowser*)next())) {
+      for (Int_t i=0; i<nd+1; i++) {
+         vol = (TGeoVolume*)list->At(i);
+         browser->CheckObjectItem(vol, !flag);
+      }   
+      browser->Refresh();
+   }
+   delete list;
+   fGeoManager->SetVisOption(4);
+}   
+
+//_____________________________________________________________________________
 Bool_t TGeoVolume::IsFolder() const
 {
 // Return TRUE if volume contains nodes
-   if (fNodes && fNodes->GetEntries()) return kTRUE;
-   else return kFALSE;
+//   return (GetNdaughters()?kTRUE:kFALSE);
+   return kTRUE;
 }
 
 //_____________________________________________________________________________
@@ -1437,6 +1476,86 @@ TGeoVolume *TGeoVolume::MakeCopyVolume(TGeoShape *newshape)
    return vol;       
 }    
 
+//_____________________________________________________________________________
+TGeoVolume *TGeoVolume::MakeReflectedVolume(const char *newname) const
+{
+// Make a copy of this volume which is reflected with respect to XY plane.
+   static TMap map(100);
+   if (!fGeoManager->IsClosed()) {
+      Error("MakeReflectedVolume", "Geometry must be closed.");
+      return NULL;
+   }   
+   TGeoVolume *vol = (TGeoVolume*)map.GetValue(this);
+   if (vol) {
+      if (strlen(newname)) vol->SetName(newname);
+      return vol;
+   }
+//   printf("Making reflection for volume: %s\n", GetName());   
+   vol = CloneVolume();
+   map.Add((TObject*)this, vol);
+   if (strlen(newname)) vol->SetName(newname);
+   delete vol->GetNodes();
+   vol->SetNodes(NULL);
+   vol->SetBit(kVolumeImportNodes, kFALSE);
+   CloneNodesAndConnect(vol);
+   // The volume is now properly cloned, but with the same shape.
+   // Reflect the shape (if any) and connect it.
+   if (fShape) {
+      TGeoShape *reflected_shape = 
+         TGeoScaledShape::MakeScaledShape("", fShape, new TGeoScale(1.,1.,-1.));
+      vol->SetShape(reflected_shape);
+   }   
+   // Reflect the daughters.
+   Int_t nd = vol->GetNdaughters();
+   if (!nd) return vol;
+   TGeoNodeMatrix *node;
+   TGeoMatrix *local, *local_cloned;
+   TGeoVolume *new_vol;
+   if (!vol->GetFinder()) {
+      for (Int_t i=0; i<nd; i++) {
+         node = (TGeoNodeMatrix*)vol->GetNode(i);
+         local = node->GetMatrix();
+//         printf("%s before\n", node->GetName());
+//         local->Print();
+         Bool_t reflected = local->IsReflection();
+         local_cloned = new TGeoCombiTrans(*local);
+         local_cloned->RegisterYourself();
+         node->SetMatrix(local_cloned);
+         if (!reflected) {
+         // We need to reflect only the translation and propagate to daughters.
+            // H' = Sz * H * Sz
+            local_cloned->ReflectZ(kTRUE);
+            local_cloned->ReflectZ(kFALSE);
+//            printf("%s after\n", node->GetName());
+//            node->GetMatrix()->Print();
+            new_vol = node->GetVolume()->MakeReflectedVolume();
+            node->SetVolume(new_vol);
+            continue;
+         }
+         // The next daughter is already reflected, so reflect on Z everything and stop
+         local_cloned->ReflectZ(kTRUE); // rot + tr
+//         printf("%s already reflected... After:\n", node->GetName());
+//         node->GetMatrix()->Print();
+      }
+      if (vol->GetVoxels()) vol->GetVoxels()->Voxelize();
+      return vol;
+   }
+   // Volume is divided, so we have to reflect the division.
+//   printf("   ... divided %s\n", fFinder->ClassName());
+   TGeoPatternFinder *new_finder = fFinder->MakeCopy(kTRUE);
+   new_finder->SetVolume(vol);
+   vol->SetFinder(new_finder);
+   TGeoNodeOffset *nodeoff;
+   new_vol = 0;
+   for (Int_t i=0; i<nd; i++) {
+      nodeoff = (TGeoNodeOffset*)vol->GetNode(i);
+      nodeoff->SetFinder(new_finder);
+      new_vol = nodeoff->GetVolume()->MakeReflectedVolume();
+      nodeoff->SetVolume(new_vol); 
+   }   
+   return vol;
+}
+   
 //_____________________________________________________________________________
 void TGeoVolume::SetAsTopVolume()
 {

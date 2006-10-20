@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.38 2006/03/20 10:09:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.39 2006/04/11 11:21:44 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -127,6 +127,7 @@ public:
    static  Bool_t        IsCloseToPhi(Double_t epsil, Double_t *point, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
    static  Bool_t        IsCrossingSemiplane(Double_t *point, Double_t *dir, Double_t cphi, Double_t sphi, Double_t &snext, Double_t &rxy);
    static  Bool_t        IsInPhiRange(Double_t *point, Double_t phi1, Double_t phi2);
+   virtual Bool_t        IsReflected() const {return kFALSE;}
    Bool_t                IsRunTimeShape() const {return TestShapeBit(kGeoRunTimeShape);}
    Bool_t                IsValid() const {return !TestShapeBit(kGeoInvalidShape);}
    virtual Bool_t        IsValidBox() const                      = 0; 

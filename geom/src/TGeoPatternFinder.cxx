@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.18 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.19 2006/07/09 05:27:53 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -32,7 +32,7 @@ ClassImp(TGeoPatternSphPhi)
 ClassImp(TGeoPatternHoneycomb)
    
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternFinder::TGeoPatternFinder()
 {
 // Default constructor
@@ -45,7 +45,8 @@ TGeoPatternFinder::TGeoPatternFinder()
    fEnd        = 0;
    fVolume     = 0;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPatternFinder::TGeoPatternFinder(TGeoVolume *vol, Int_t ndiv)
 {
 // Default constructor
@@ -58,7 +59,8 @@ TGeoPatternFinder::TGeoPatternFinder(TGeoVolume *vol, Int_t ndiv)
    fStart      = 0;
    fEnd        = 0;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPatternFinder::TGeoPatternFinder(const TGeoPatternFinder& pf) :
   TObject(pf),
   fStep(pf.fStep),
@@ -72,7 +74,8 @@ TGeoPatternFinder::TGeoPatternFinder(const TGeoPatternFinder& pf) :
 { 
    //copy constructor
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPatternFinder& TGeoPatternFinder::operator=(const TGeoPatternFinder& pf)
 {
    //assignment operator
@@ -89,10 +92,18 @@ TGeoPatternFinder& TGeoPatternFinder::operator=(const TGeoPatternFinder& pf)
    } 
    return *this;
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPatternFinder::~TGeoPatternFinder()
 {
 // Destructor
+}
+
+//______________________________________________________________________________
+TGeoPatternFinder *TGeoPatternFinder::MakeCopy(Bool_t)
+{
+// Make a copy of this finder. Has to be overwritten by derived classes.
+   return NULL;
 }
 
 /*************************************************************************
@@ -100,13 +111,13 @@ TGeoPatternFinder::~TGeoPatternFinder()
  *   
  *************************************************************************/
 
-
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternX::TGeoPatternX()
 {
 // Default constructor
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -118,7 +129,8 @@ TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions)
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions, Double_t step)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -130,7 +142,8 @@ TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions, Double_t step)
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -141,12 +154,14 @@ TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions, Double_t start, Do
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPatternX::~TGeoPatternX()
 {
 // Destructor
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNode *TGeoPatternX::FindNode(Double_t *point)
 {
 // get the node division containing the query point
@@ -179,6 +194,21 @@ Double_t TGeoPatternX::FindNextBoundary(Double_t *point, Double_t *dir, Int_t &i
 }   
 
 //______________________________________________________________________________
+TGeoPatternFinder *TGeoPatternX::MakeCopy(Bool_t reflect)
+{
+// Make a copy of this finder. Reflect by Z if required.
+   TGeoPatternX *finder = new TGeoPatternX(*this);
+   if (!reflect) return finder;
+   Reflect();
+   TGeoCombiTrans *combi = new TGeoCombiTrans(*fMatrix);
+   combi->ReflectZ(kTRUE);
+   combi->ReflectZ(kFALSE);
+   combi->RegisterYourself();
+   fMatrix = combi;
+   return finder;
+}
+   
+//______________________________________________________________________________
 void TGeoPatternX::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
@@ -192,12 +222,13 @@ void TGeoPatternX::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
  *************************************************************************/
 
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternY::TGeoPatternY()
 {
 // Default constructor
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -209,7 +240,8 @@ TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions)
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions, Double_t step)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -221,7 +253,8 @@ TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions, Double_t step)
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -232,12 +265,14 @@ TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions, Double_t start, Do
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoPatternY::~TGeoPatternY()
 {
 // Destructor
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNode *TGeoPatternY::FindNode(Double_t *point)
 {
 // find the node containing the query point
@@ -268,7 +303,22 @@ Double_t TGeoPatternY::FindNextBoundary(Double_t *point, Double_t *dir, Int_t &i
    indnext = fCurrent+inc;
    return dist;   
 }   
-
+   
+//______________________________________________________________________________
+TGeoPatternFinder *TGeoPatternY::MakeCopy(Bool_t reflect)
+{
+// Make a copy of this finder. Reflect by Z if required.
+   TGeoPatternY *finder = new TGeoPatternY(*this);
+   if (!reflect) return finder;
+   Reflect();
+   TGeoCombiTrans *combi = new TGeoCombiTrans(*fMatrix);
+   combi->ReflectZ(kTRUE);
+   combi->ReflectZ(kFALSE);
+   combi->RegisterYourself();
+   fMatrix = combi;
+   return finder;
+}
+   
 //______________________________________________________________________________
 void TGeoPatternY::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
@@ -283,12 +333,12 @@ void TGeoPatternY::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
  *************************************************************************/
 
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternZ::TGeoPatternZ()
 {
 // Default constructor
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -300,7 +350,7 @@ TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions)
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions, Double_t step)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -312,7 +362,7 @@ TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions, Double_t step)
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -323,12 +373,12 @@ TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions, Double_t start, Do
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternZ::~TGeoPatternZ()
 {
 // Destructor
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoNode *TGeoPatternZ::FindNode(Double_t *point)
 {
 // find the node containing the query point
@@ -362,6 +412,21 @@ Double_t TGeoPatternZ::FindNextBoundary(Double_t *point, Double_t *dir, Int_t &i
 }   
 
 //______________________________________________________________________________
+TGeoPatternFinder *TGeoPatternZ::MakeCopy(Bool_t reflect)
+{
+// Make a copy of this finder. Reflect by Z if required.
+   TGeoPatternZ *finder = new TGeoPatternZ(*this);
+   if (!reflect) return finder;
+   Reflect();
+   TGeoCombiTrans *combi = new TGeoCombiTrans(*fMatrix);
+   combi->ReflectZ(kTRUE);
+   combi->ReflectZ(kFALSE);
+   combi->RegisterYourself();
+   fMatrix = combi;
+   return finder;
+}
+   
+//______________________________________________________________________________
 void TGeoPatternZ::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
@@ -375,12 +440,12 @@ void TGeoPatternZ::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
  *************************************************************************/
 
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternParaX::TGeoPatternParaX()
 {
 // Default constructor
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -392,7 +457,7 @@ TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions)
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions, Double_t step)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -404,7 +469,7 @@ TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -415,12 +480,12 @@ TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternParaX::~TGeoPatternParaX()
 {
 // Destructor
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoNode *TGeoPatternParaX::FindNode(Double_t *point)
 {
 // get the node division containing the query point
@@ -437,6 +502,21 @@ TGeoNode *TGeoPatternParaX::FindNode(Double_t *point)
 }
 
 //______________________________________________________________________________
+TGeoPatternFinder *TGeoPatternParaX::MakeCopy(Bool_t reflect)
+{
+// Make a copy of this finder. Reflect by Z if required.
+   TGeoPatternParaX *finder = new TGeoPatternParaX(*this);
+   if (!reflect) return finder;
+   Reflect();
+   TGeoCombiTrans *combi = new TGeoCombiTrans(*fMatrix);
+   combi->ReflectZ(kTRUE);
+   combi->ReflectZ(kFALSE);
+   combi->RegisterYourself();
+   fMatrix = combi;
+   return finder;
+}
+   
+//______________________________________________________________________________
 void TGeoPatternParaX::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
@@ -450,13 +530,13 @@ void TGeoPatternParaX::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*
  *************************************************************************/
 
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternParaY::TGeoPatternParaY()
 {
 // Default constructor
    fTxy = 0;
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -469,7 +549,7 @@ TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions)
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions, Double_t step)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -482,7 +562,7 @@ TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -494,20 +574,20 @@ TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternParaY::~TGeoPatternParaY()
 {
 // Destructor
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoPatternParaY::cd(Int_t idiv)
 {
    fCurrent = idiv;
    Double_t dy = fStart+idiv*fStep+0.5*fStep;
-   ((TGeoTranslation*)fMatrix)->SetDx(fTxy*dy);
-   ((TGeoTranslation*)fMatrix)->SetDy(dy);
+   fMatrix->SetDx(fTxy*dy);
+   fMatrix->SetDy(dy);
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoNode *TGeoPatternParaY::FindNode(Double_t *point)
 {
 // get the node division containing the query point
@@ -522,6 +602,21 @@ TGeoNode *TGeoPatternParaY::FindNode(Double_t *point)
 }
 
 //______________________________________________________________________________
+TGeoPatternFinder *TGeoPatternParaY::MakeCopy(Bool_t reflect)
+{
+// Make a copy of this finder. Reflect by Z if required.
+   TGeoPatternParaY *finder = new TGeoPatternParaY(*this);
+   if (!reflect) return finder;
+   Reflect();
+   TGeoCombiTrans *combi = new TGeoCombiTrans(*fMatrix);
+   combi->ReflectZ(kTRUE);
+   combi->ReflectZ(kFALSE);
+   combi->RegisterYourself();
+   fMatrix = combi;
+   return finder;
+}
+   
+//______________________________________________________________________________
 void TGeoPatternParaY::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
@@ -535,14 +630,14 @@ void TGeoPatternParaY::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*
  *************************************************************************/
 
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternParaZ::TGeoPatternParaZ()
 {
 // Default constructor
    fTxz = 0;
    fTyz = 0;
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -556,7 +651,7 @@ TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions)
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions, Double_t step)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -570,7 +665,7 @@ TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -583,21 +678,22 @@ TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternParaZ::~TGeoPatternParaZ()
 {
 // Destructor
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoPatternParaZ::cd(Int_t idiv)
 {
    fCurrent = idiv;
    Double_t dz = fStart+idiv*fStep+0.5*fStep;
-   ((TGeoTranslation*)fMatrix)->SetDx(fTxz*dz);
-   ((TGeoTranslation*)fMatrix)->SetDy(fTyz*dz);
-   ((TGeoTranslation*)fMatrix)->SetDz(dz);
+   fMatrix->SetDx(fTxz*dz);
+   fMatrix->SetDy(fTyz*dz);
+   fMatrix->SetDz((IsReflected())?-dz:dz);
 }
-//-----------------------------------------------------------------------------
+
+//_____________________________________________________________________________
 TGeoNode *TGeoPatternParaZ::FindNode(Double_t *point)
 {
 // get the node division containing the query point
@@ -610,6 +706,21 @@ TGeoNode *TGeoPatternParaZ::FindNode(Double_t *point)
    return node;
 }
 
+//______________________________________________________________________________
+TGeoPatternFinder *TGeoPatternParaZ::MakeCopy(Bool_t reflect)
+{
+// Make a copy of this finder. Reflect by Z if required.
+   TGeoPatternParaZ *finder = new TGeoPatternParaZ(*this);
+   if (!reflect) return finder;
+   Reflect();
+   TGeoCombiTrans *combi = new TGeoCombiTrans(*fMatrix);
+   combi->ReflectZ(kTRUE);
+   combi->ReflectZ(kFALSE);
+   combi->RegisterYourself();
+   fMatrix = combi;
+   return finder;
+}
+   
 //______________________________________________________________________________
 void TGeoPatternParaZ::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
@@ -624,14 +735,14 @@ void TGeoPatternParaZ::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*
  *************************************************************************/
 
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternTrapZ::TGeoPatternTrapZ()
 {
 // Default constructor
    fTxz = 0;
    fTyz = 0;
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -647,7 +758,7 @@ TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions)
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions, Double_t step)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -663,7 +774,7 @@ TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
              :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -678,21 +789,21 @@ TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions, Double_t s
    fMatrix     = new TGeoTranslation(0,0,0);
    fMatrix->RegisterYourself();
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternTrapZ::~TGeoPatternTrapZ()
 {
 // Destructor
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoPatternTrapZ::cd(Int_t idiv)
 {
    fCurrent = idiv;
    Double_t dz = fStart+idiv*fStep+0.5*fStep;
-   ((TGeoTranslation*)fMatrix)->SetDx(fTxz*dz);
-   ((TGeoTranslation*)fMatrix)->SetDy(fTyz*dz);
-   ((TGeoTranslation*)fMatrix)->SetDz(dz);
+   fMatrix->SetDx(fTxz*dz);
+   fMatrix->SetDy(fTyz*dz);
+   fMatrix->SetDz((IsReflected())?-dz:dz);
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoNode *TGeoPatternTrapZ::FindNode(Double_t *point)
 {
 // get the node division containing the query point
@@ -705,6 +816,21 @@ TGeoNode *TGeoPatternTrapZ::FindNode(Double_t *point)
    return node;
 }
 
+//______________________________________________________________________________
+TGeoPatternFinder *TGeoPatternTrapZ::MakeCopy(Bool_t reflect)
+{
+// Make a copy of this finder. Reflect by Z if required.
+   TGeoPatternTrapZ *finder = new TGeoPatternTrapZ(*this);
+   if (!reflect) return finder;
+   Reflect();
+   TGeoCombiTrans *combi = new TGeoCombiTrans(*fMatrix);
+   combi->ReflectZ(kTRUE);
+   combi->ReflectZ(kFALSE);
+   combi->RegisterYourself();
+   fMatrix = combi;
+   return finder;
+}
+   
 //______________________________________________________________________________
 void TGeoPatternTrapZ::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
@@ -721,13 +847,13 @@ void TGeoPatternTrapZ::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*
  
 
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternCylR::TGeoPatternCylR()
 {
 // Default constructor
    fMatrix = 0;
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternCylR::TGeoPatternCylR(TGeoVolume *vol, Int_t ndivisions)
                 :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -735,7 +861,7 @@ TGeoPatternCylR::TGeoPatternCylR(TGeoVolume *vol, Int_t ndivisions)
    fMatrix     = gGeoIdentity;
 // compute step, start, end
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternCylR::TGeoPatternCylR(TGeoVolume *vol, Int_t ndivisions, Double_t step)
                 :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -744,7 +870,7 @@ TGeoPatternCylR::TGeoPatternCylR(TGeoVolume *vol, Int_t ndivisions, Double_t ste
    fMatrix     = gGeoIdentity;
 // compute start, end
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternCylR::TGeoPatternCylR(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
                 :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -754,12 +880,12 @@ TGeoPatternCylR::TGeoPatternCylR(TGeoVolume *vol, Int_t ndivisions, Double_t sta
    fStep       = (end - start)/ndivisions;
    fMatrix     = gGeoIdentity;
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternCylR::~TGeoPatternCylR()
 {
 // Destructor
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoNode *TGeoPatternCylR::FindNode(Double_t *point)
 {
 // find the node containing the query point
@@ -773,6 +899,21 @@ TGeoNode *TGeoPatternCylR::FindNode(Double_t *point)
    return node;
 }
 
+//______________________________________________________________________________
+TGeoPatternFinder *TGeoPatternCylR::MakeCopy(Bool_t reflect)
+{
+// Make a copy of this finder. Reflect by Z if required.
+   TGeoPatternCylR *finder = new TGeoPatternCylR(*this);
+   if (!reflect) return finder;
+   Reflect();
+   TGeoCombiTrans *combi = new TGeoCombiTrans(*fMatrix);
+   combi->ReflectZ(kTRUE);
+   combi->ReflectZ(kFALSE);
+   combi->RegisterYourself();
+   fMatrix = combi;
+   return finder;
+}
+   
 //______________________________________________________________________________
 void TGeoPatternCylR::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
@@ -788,13 +929,13 @@ void TGeoPatternCylR::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/
  
 
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternCylPhi::TGeoPatternCylPhi()
 {
 // Default constructor
    fSinCos = 0;
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions)
                   :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -806,7 +947,7 @@ TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions)
    fMatrix = 0;
    fSinCos = 0;
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions, Double_t step)
                   :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -815,7 +956,7 @@ TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions, Double_t
    fSinCos = 0;
 // compute start, end
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
                   :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -836,13 +977,13 @@ TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions, Double_t
       fSinCos[2*idiv+1] = TMath::Cos(TMath::DegToRad()*(start+0.5*fStep+idiv*fStep));
    }
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternCylPhi::~TGeoPatternCylPhi()
 {
 // Destructor
    if (fSinCos) delete [] fSinCos;
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 void TGeoPatternCylPhi::cd(Int_t idiv)
 {
    fCurrent = idiv;
@@ -852,11 +993,10 @@ void TGeoPatternCylPhi::cd(Int_t idiv)
          fSinCos[2*i] = TMath::Sin(TMath::DegToRad()*(fStart+0.5*fStep+i*fStep));
          fSinCos[2*i+1] = TMath::Cos(TMath::DegToRad()*(fStart+0.5*fStep+i*fStep));
       }
-   }   
-   
+   }      
    ((TGeoRotation*)fMatrix)->FastRotZ(&fSinCos[2*idiv]);
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoNode *TGeoPatternCylPhi::FindNode(Double_t *point)
 {
 // find the node containing the query point
@@ -875,6 +1015,21 @@ TGeoNode *TGeoPatternCylPhi::FindNode(Double_t *point)
 }
 
 //______________________________________________________________________________
+TGeoPatternFinder *TGeoPatternCylPhi::MakeCopy(Bool_t reflect)
+{
+// Make a copy of this finder. Reflect by Z if required.
+   TGeoPatternCylPhi *finder = new TGeoPatternCylPhi(*this);
+   if (!reflect) return finder;
+   Reflect();
+   TGeoRotation *rot = new TGeoRotation(*fMatrix);
+   rot->ReflectZ(kTRUE);
+   rot->ReflectZ(kFALSE);
+   rot->RegisterYourself();
+   fMatrix = rot;
+   return finder;
+}
+   
+//______________________________________________________________________________
 void TGeoPatternCylPhi::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
@@ -890,19 +1045,19 @@ void TGeoPatternCylPhi::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""
 
 
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternSphR::TGeoPatternSphR()
 {
 // Default constructor
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternSphR::TGeoPatternSphR(TGeoVolume *vol, Int_t ndivisions)
                 :TGeoPatternFinder(vol, ndivisions)
 {   
 // constructor
 // compute step, start, end
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternSphR::TGeoPatternSphR(TGeoVolume *vol, Int_t ndivisions, Double_t step)
                 :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -910,7 +1065,7 @@ TGeoPatternSphR::TGeoPatternSphR(TGeoVolume *vol, Int_t ndivisions, Double_t ste
    fStep       = step;
 // compute start, end
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternSphR::TGeoPatternSphR(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
                 :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -919,18 +1074,33 @@ TGeoPatternSphR::TGeoPatternSphR(TGeoVolume *vol, Int_t ndivisions, Double_t sta
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternSphR::~TGeoPatternSphR()
 {
 // Destructor
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoNode *TGeoPatternSphR::FindNode(Double_t * /*point*/)
 {
 // find the node containing the query point
    return 0;
 }
 
+//______________________________________________________________________________
+TGeoPatternFinder *TGeoPatternSphR::MakeCopy(Bool_t reflect)
+{
+// Make a copy of this finder. Reflect by Z if required.
+   TGeoPatternSphR *finder = new TGeoPatternSphR(*this);
+   if (!reflect) return finder;
+   Reflect();
+   TGeoCombiTrans *combi = new TGeoCombiTrans(*fMatrix);
+   combi->ReflectZ(kTRUE);
+   combi->ReflectZ(kFALSE);
+   combi->RegisterYourself();
+   fMatrix = combi;
+   return finder;
+}
+   
 //______________________________________________________________________________
 void TGeoPatternSphR::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
@@ -944,22 +1114,19 @@ void TGeoPatternSphR::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/
  *   
  *************************************************************************/
 
-
-
-
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternSphTheta::TGeoPatternSphTheta()
 {
 // Default constructor
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternSphTheta::TGeoPatternSphTheta(TGeoVolume *vol, Int_t ndivisions)
                     :TGeoPatternFinder(vol, ndivisions)
 {   
 // constructor
 // compute step, start, end
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternSphTheta::TGeoPatternSphTheta(TGeoVolume *vol, Int_t ndivisions, Double_t step)
                     :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -967,7 +1134,7 @@ TGeoPatternSphTheta::TGeoPatternSphTheta(TGeoVolume *vol, Int_t ndivisions, Doub
    fStep       = step;
 // compute start, end
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternSphTheta::TGeoPatternSphTheta(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
                     :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -976,18 +1143,33 @@ TGeoPatternSphTheta::TGeoPatternSphTheta(TGeoVolume *vol, Int_t ndivisions, Doub
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternSphTheta::~TGeoPatternSphTheta()
 {
 // Destructor
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoNode *TGeoPatternSphTheta::FindNode(Double_t * /*point*/)
 {
 // find the node containing the query point
    return 0;
 }
 
+//______________________________________________________________________________
+TGeoPatternFinder *TGeoPatternSphTheta::MakeCopy(Bool_t reflect)
+{
+// Make a copy of this finder. Reflect by Z if required.
+   TGeoPatternSphTheta *finder = new TGeoPatternSphTheta(*this);
+   if (!reflect) return finder;
+   Reflect();
+   TGeoCombiTrans *combi = new TGeoCombiTrans(*fMatrix);
+   combi->ReflectZ(kTRUE);
+   combi->ReflectZ(kFALSE);
+   combi->RegisterYourself();
+   fMatrix = combi;
+   return finder;
+}
+   
 //______________________________________________________________________________
 void TGeoPatternSphTheta::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
@@ -1001,19 +1183,19 @@ void TGeoPatternSphTheta::SavePrimitive(ostream &out, Option_t * /*option*/ /*= 
  *   
  *************************************************************************/
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternSphPhi::TGeoPatternSphPhi()
 {
 // Default constructor
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternSphPhi::TGeoPatternSphPhi(TGeoVolume *vol, Int_t ndivisions)
                   :TGeoPatternFinder(vol, ndivisions)
 {   
 // constructor
 // compute step, start, end
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternSphPhi::TGeoPatternSphPhi(TGeoVolume *vol, Int_t ndivisions, Double_t step)
                   :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -1021,7 +1203,7 @@ TGeoPatternSphPhi::TGeoPatternSphPhi(TGeoVolume *vol, Int_t ndivisions, Double_t
    fStep       = step;
 // compute start, end
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternSphPhi::TGeoPatternSphPhi(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
                   :TGeoPatternFinder(vol, ndivisions)
 {   
@@ -1030,18 +1212,33 @@ TGeoPatternSphPhi::TGeoPatternSphPhi(TGeoVolume *vol, Int_t ndivisions, Double_t
    fEnd        = end;
    fStep       = (end - start)/ndivisions;
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternSphPhi::~TGeoPatternSphPhi()
 {
 // Destructor
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoNode *TGeoPatternSphPhi::FindNode(Double_t * /*point*/)
 {
 // find the node containing the query point
    return 0;
 }
 
+//______________________________________________________________________________
+TGeoPatternFinder *TGeoPatternSphPhi::MakeCopy(Bool_t reflect)
+{
+// Make a copy of this finder. Reflect by Z if required.
+   TGeoPatternSphPhi *finder = new TGeoPatternSphPhi(*this);
+   if (!reflect) return finder;
+   Reflect();
+   TGeoCombiTrans *combi = new TGeoCombiTrans(*fMatrix);
+   combi->ReflectZ(kTRUE);
+   combi->ReflectZ(kFALSE);
+   combi->RegisterYourself();
+   fMatrix = combi;
+   return finder;
+}
+   
 //______________________________________________________________________________
 void TGeoPatternSphPhi::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 {
@@ -1057,7 +1254,7 @@ void TGeoPatternSphPhi::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""
 
    
 
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternHoneycomb::TGeoPatternHoneycomb()
 {
 // Default constructor
@@ -1066,7 +1263,7 @@ TGeoPatternHoneycomb::TGeoPatternHoneycomb()
    fNdivisions  = 0;             
    fStart       = 0;                 
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternHoneycomb::TGeoPatternHoneycomb(TGeoVolume *vol, Int_t nrows)
                      :TGeoPatternFinder(vol, nrows)
 {
@@ -1074,7 +1271,7 @@ TGeoPatternHoneycomb::TGeoPatternHoneycomb(TGeoVolume *vol, Int_t nrows)
    fNrows = nrows;
 // compute everything else
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternHoneycomb::TGeoPatternHoneycomb(const TGeoPatternHoneycomb& pfh) :
   TGeoPatternFinder(pfh),
   fNrows(pfh.fNrows),
@@ -1084,7 +1281,7 @@ TGeoPatternHoneycomb::TGeoPatternHoneycomb(const TGeoPatternHoneycomb& pfh) :
 { 
    //copy constructor
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternHoneycomb& TGeoPatternHoneycomb::operator=(const TGeoPatternHoneycomb& pfh) 
 {
    //assignment operator
@@ -1097,12 +1294,12 @@ TGeoPatternHoneycomb& TGeoPatternHoneycomb::operator=(const TGeoPatternHoneycomb
    } 
    return *this;
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoPatternHoneycomb::~TGeoPatternHoneycomb()
 {
 // destructor
 }
-//-----------------------------------------------------------------------------
+//_____________________________________________________________________________
 TGeoNode *TGeoPatternHoneycomb::FindNode(Double_t * /*point*/)
 {
 // find the node containing the query point

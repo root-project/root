@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.38 2006/04/11 11:21:45 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.39 2006/04/19 09:11:57 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -461,7 +461,16 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
       }
 
       buffer.fLocalFrame = localFrame;
-      buffer.fReflection = gGeoManager->IsMatrixReflection();
+      Bool_t r1,r2=kFALSE;
+      r1 = gGeoManager->IsMatrixReflection();
+      if (paintVolume && paintVolume->GetShape()) {
+         if (paintVolume->GetShape()->IsReflected()) {
+         // Temporary trick to deal with reflected shapes.
+         // Still lighting gets wrong...
+            if (buffer.Type() < TBuffer3DTypes::kTube) r2 = kTRUE;
+         }
+      }      
+      buffer.fReflection = ((r1&(!r2))|(r2&!(r1)));
       
       // Set up local -> master translation matrix
       if (localFrame) {

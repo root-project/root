@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoScaledShape.h,v 1.2 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoScaledShape.h,v 1.3 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   26/09/05
    
 /*************************************************************************
@@ -50,11 +50,16 @@ public:
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual Int_t         GetNmeshVertices() const {return fShape->GetNmeshVertices();}
+   TGeoShape            *GetShape() const {return fShape;}
+   TGeoScale            *GetScale() const {return fScale;}
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return fShape->IsCylType();}
+   virtual Bool_t        IsReflected() const;
    virtual TBuffer3D    *MakeBuffer3D() const;
+   static  TGeoShape    *MakeScaledShape(const char *name, TGeoShape *shape, TGeoScale *scale);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SavePrimitive(ostream &out, Option_t *option = "");
+   void                  SetScale(TGeoScale *scale) {fScale = scale;}
    virtual void          SetPoints(Double_t *points) const;
    virtual void          SetPoints(Float_t *points) const;
    virtual void          SetSegsAndPols(TBuffer3D &buffer) const;

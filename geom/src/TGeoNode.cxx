@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.37 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.38 2006/07/09 05:27:53 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -156,11 +156,7 @@ void TGeoNode::Browse(TBrowser *b)
    TString title;
    for (Int_t i=0; i<GetNdaughters(); i++) {
       daughter = GetDaughter(i);
-      b->Add(daughter);
-      if (fVolume->IsVisDaughters())
-         b->AddCheckBox(daughter, daughter->IsVisible());
-      else
-         b->AddCheckBox(daughter, kFALSE);
+      b->Add(daughter, daughter->GetName(), daughter->IsVisible());
    }      
 }
 
@@ -563,6 +559,7 @@ void TGeoNode::SetVisibility(Bool_t vis)
 // Set visibility of the node (obsolete).
    if (gGeoManager->IsClosed()) SetVisTouched(kTRUE);
    TGeoAtt::SetVisibility(vis);
+   if (vis && !fVolume->IsVisible()) fVolume->SetVisibility(vis);
    gGeoManager->ModifiedPad();
 }
 
@@ -730,9 +727,7 @@ TGeoNode *TGeoNodeOffset::MakeCopyNode() const
 {
 // make a copy of this node
    TGeoNodeOffset *node = new TGeoNodeOffset(fVolume, GetIndex(), fOffset);
-   char *name = new char[strlen(GetName())+1];
-   sprintf(name, "%s", GetName());
-   node->SetName(name);
+   node->SetName(GetName());
    // set the mother
    node->SetMotherVolume(fMother);
    if (IsVirtual()) node->SetVirtual();

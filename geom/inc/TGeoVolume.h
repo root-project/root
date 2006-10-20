@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.50 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.51 2006/10/19 10:58:24 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -114,7 +114,7 @@ public:
    Int_t           CountNodes(Int_t nlevels=1000, Int_t option=0);
    Bool_t          Contains(Double_t *point) const {return fShape->Contains(point);}
    virtual Bool_t  IsAssembly() const {return kFALSE;}
-   Bool_t          IsFolder() const;
+   virtual Bool_t  IsFolder() const;
    Bool_t          IsRunTime() const {return fShape->IsRunTimeShape();}
    virtual Bool_t  IsVolumeMulti() const {return kFALSE;}
    virtual void    AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat=0, Option_t *option="");       // most general case
@@ -147,7 +147,7 @@ public:
    Bool_t          IsVisContainers() const {return TGeoAtt::IsVisContainers();}
    Bool_t          IsVisLeaves() const {return TGeoAtt::IsVisLeaves();}
    Bool_t          IsVisOnly() const {return TGeoAtt::IsVisOnly();}
-   Bool_t          IsAllInvisible() const {return ((!IsVisible()) & (!IsVisibleDaughters()));}
+   Bool_t          IsAllInvisible() const;
    Bool_t          IsRaytracing() const;
    TGeoNode       *FindNode(const char *name) const;
    void            FindOverlaps() const;
@@ -183,6 +183,7 @@ public:
    void            InspectShape() const {fShape->InspectShape();} // *MENU*
    virtual TGeoVolume *MakeCopyVolume(TGeoShape *newshape);
    void            MakeCopyNodes(const TGeoVolume *other);
+   TGeoVolume     *MakeReflectedVolume(const char *newname="") const;
    Bool_t          OptimizeVoxels(); // *MENU*
    void            RandomPoints(Int_t npoints=1000000, Option_t *option=""); // *MENU*
    void            RandomRays(Int_t nrays=10000, Double_t startx=0, Double_t starty=0, Double_t startz=0); // *MENU*
@@ -203,6 +204,7 @@ public:
    void            SetTransparency(Char_t transparency=0) {if (fMedium) fMedium->GetMaterial()->SetTransparency(transparency);} // *MENU*
    void            SetField(const TObject *field)          {fField = (TObject*)field;}
    void            SetOption(const char *option);
+   void            SetAttVisibility(Bool_t vis) {TGeoAtt::SetVisibility(vis);}
    virtual void    SetVisibility(Bool_t vis=kTRUE); // *TOGGLE* *GETTER=IsVisible
    virtual void    SetVisContainers(Bool_t flag=kTRUE); // *TOGGLE* *GETTER=IsVisContainers
    virtual void    SetVisLeaves(Bool_t flag=kTRUE); // *TOGGLE* *GETTER=IsVisLeaves
@@ -220,7 +222,7 @@ public:
    void            UnmarkSaved();
    Bool_t          Valid() const;
    void            VisibleDaughters(Bool_t vis=kTRUE); // *TOGGLE* *GETTER=IsVisibleDaughters
-   void            InvisibleAll(Bool_t flag=kTRUE) {SetVisibility(!flag); VisibleDaughters(!flag);} // *TOGGLE* *GETTER=IsAllInvisible
+   void            InvisibleAll(Bool_t flag=kTRUE); // *TOGGLE* *GETTER=IsAllInvisible
    void            Voxelize(Option_t *option);
    Double_t        Weight(Double_t precision=0.01, Option_t *option="va"); // *MENU*
    Double_t        WeightA() const;
