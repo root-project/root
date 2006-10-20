@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.89 2006/09/01 15:56:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.92 2006/10/20 08:38:43 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -1101,7 +1101,7 @@ void TGeoVolume::Raytrace(Bool_t flag)
 }   
 
 //______________________________________________________________________________
-void TGeoVolume::SaveAs(const char *filename) const
+void TGeoVolume::SaveAs(const char *filename, Option_t *option) const
 {
 //  Save geometry having this as top volume as a C++ macro.
    if (!filename) return;
@@ -1119,7 +1119,7 @@ void TGeoVolume::SaveAs(const char *filename) const
    if (dot) *dot = 0;  
    out << "void "<<fname<<"() {" << endl;
    out << "   gSystem->Load(\"libGeom\");" << endl;
-   ((TGeoVolume*)this)->SavePrimitive(out,"");
+   ((TGeoVolume*)this)->SavePrimitive(out,option);
    out << "}" << endl;
 }   
 

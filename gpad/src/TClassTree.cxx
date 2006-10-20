@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.10 2006/08/11 10:57:09 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.11 2006/10/19 10:58:25 brun Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -692,7 +692,7 @@ void TClassTree::PaintClass(Int_t iclass, Float_t xleft, Float_t y)
 
 
 //______________________________________________________________________________
-void TClassTree::SaveAs(const char *filename) const
+void TClassTree::SaveAs(const char *filename, Option_t *) const
 {
    // save current configuration in a Root file
    // if filename is blank, the name of the file will be the current objectname.root

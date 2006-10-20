@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.19 2006/04/07 08:43:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.20 2006/10/19 10:58:24 brun Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -183,7 +183,7 @@ public:
    virtual void     RedrawAxis(Option_t *option="") = 0;
    virtual void     ResetView3D(TPadView3D *view=0) = 0;
    virtual void     ResizePad(Option_t *option="") = 0;
-   virtual void     SaveAs(const char *filename="") const = 0;
+   virtual void     SaveAs(const char *filename="",Option_t *option="") const = 0;
    virtual void     SetBatch(Bool_t batch=kTRUE) = 0;
    virtual void     SetBorderMode(Short_t bordermode) = 0;
    virtual void     SetBorderSize(Short_t bordersize) = 0;

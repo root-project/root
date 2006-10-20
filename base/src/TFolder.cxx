@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.24 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.25 2006/10/19 10:58:24 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -411,7 +411,7 @@ void TFolder::Remove(TObject *obj)
 }
 
 //______________________________________________________________________________
-void TFolder::SaveAs(const char *filename) const
+void TFolder::SaveAs(const char *filename, Option_t *) const
 {
 // Save all objects in this folder in filename
 // Each object in this folder will have a key in the file where the name of

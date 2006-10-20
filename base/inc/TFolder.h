@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.h,v 1.14 2003/02/09 18:35:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.h,v 1.15 2006/10/19 10:58:24 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -61,7 +61,7 @@ public:
    virtual Int_t       Occurence(const TObject *obj) const;
    virtual void        RecursiveRemove(TObject *obj);
    virtual void        Remove(TObject *obj);
-   virtual void        SaveAs(const char *filename="") const; // *MENU*
+   virtual void        SaveAs(const char *filename="",Option_t *option="") const; // *MENU*
    virtual void        SetOwner(Bool_t owner=kTRUE);
 
    ClassDef(TFolder,1)  //Describe a folder: a list of objects and folders

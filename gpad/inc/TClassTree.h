@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.h,v 1.3 2000/12/13 15:13:49 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.h,v 1.4 2006/10/19 10:58:25 brun Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -72,7 +72,7 @@ public:
    virtual const char  *GetSourceDir() const {return fSourceDir.Data();}
    virtual  void ls(Option_t *option="") const;
    virtual  void Paint(Option_t *option="");
-   virtual  void SaveAs(const char *filename="") const;
+   virtual  void SaveAs(const char *filename="",Option_t *option="") const;
    virtual  void SetClasses(const char *classes, Option_t *option="ID");
    virtual  void SetSourceDir(const char *dir="src") {fSourceDir = dir;}
    virtual  void SetYoffset(Float_t offset=0);

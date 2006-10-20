@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.239 2006/10/16 17:53:03 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.240 2006/10/19 10:58:25 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4544,7 +4544,7 @@ void TPad::ResizePad(Option_t *option)
 
 
 //______________________________________________________________________________
-void TPad::SaveAs(const char *filename) const
+void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
 {
    // Save Pad contents on a  file in various formats
    //

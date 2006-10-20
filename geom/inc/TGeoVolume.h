@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.51 2006/10/19 10:58:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.52 2006/10/20 08:38:43 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -189,7 +189,7 @@ public:
    void            RandomRays(Int_t nrays=10000, Double_t startx=0, Double_t starty=0, Double_t startz=0); // *MENU*
    void            Raytrace(Bool_t flag=kTRUE); // *TOGGLE* *GETTER=IsRaytracing
    void            RemoveNode(TGeoNode *node);
-   void            SaveAs(const char *filename) const; // *MENU*
+   void            SaveAs(const char *filename,Option_t *option="") const; // *MENU*
    virtual void    SavePrimitive(ostream &out, Option_t *option = "");
    void            SelectVolume(Bool_t clear = kFALSE);
    void            SetActivity(Bool_t flag=kTRUE) {TGeoAtt::SetActivity(flag);}

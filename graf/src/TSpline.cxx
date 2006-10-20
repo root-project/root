@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.16 2006/05/26 09:14:51 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.17 2006/07/09 05:27:54 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -655,7 +655,7 @@ Double_t TSpline3::Derivative(Double_t x) const
 
 
 //____________________________________________________________________________
-void TSpline3::SaveAs(const char *filename) const
+void TSpline3::SaveAs(const char *filename, Option_t * /*option*/) const
 {
    // write this spline as a C++ function that can be executed without ROOT
    // the name of the function is the name of the file up to the "." if any
@@ -1348,7 +1348,7 @@ Double_t TSpline5::Derivative(Double_t x) const
 
 
 //____________________________________________________________________________
-void TSpline5::SaveAs(const char *filename) const
+void TSpline5::SaveAs(const char *filename, Option_t * /*option*/) const
 {
   // write this spline as a C++ function that can be executed without ROOT
   // the name of the function is the name of the file up to the "." if any

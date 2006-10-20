@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPaveClass.h,v 1.6 2006/07/03 16:10:44 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPaveClass.h,v 1.7 2006/10/19 10:58:25 brun Exp $
 // Author: Rene Brun   06/08/99
 
 /*************************************************************************
@@ -42,7 +42,7 @@ public:
    void          Copy(TObject &PaveVar) const;
    virtual void  DrawClasses(const char *classes="this");   // *MENU*
    TClassTree   *GetClassTree() const {return fClassTree;}
-   virtual void  SaveAs(const char *filename="") const; // *MENU*
+   virtual void  SaveAs(const char *filename="",Option_t *option="") const; // *MENU*
    virtual void  SavePrimitive(ostream &out, Option_t *option = "");
    virtual void  SetClasses(const char *classes="this", Option_t *option="ID");   // *MENU*
    virtual void  ShowClassesUsedBy(const char *classes="this");  // *MENU*

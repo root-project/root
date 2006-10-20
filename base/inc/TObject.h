@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.29 2006/10/19 09:23:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.30 2006/10/19 10:58:24 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -143,7 +143,7 @@ public:
    virtual void        Print(Option_t *option="") const;
    virtual Int_t       Read(const char *name);
    virtual void        RecursiveRemove(TObject *obj);
-   virtual void        SaveAs(const char *filename="") const; // *MENU*
+   virtual void        SaveAs(const char *filename="",Option_t *option="") const; // *MENU*
    virtual void        SavePrimitive(ostream &out, Option_t *option = "");
    virtual void        SetDrawOption(Option_t *option="");  // *MENU*
    virtual void        SetUniqueID(UInt_t uid);
