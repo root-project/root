@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.193 2006/06/28 10:03:13 pcanal Exp $
+// @(#)root/meta:$Name: v5-12-00-patches $:$Id: TClass.cxx,v 1.194 2006/07/07 14:59:30 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -62,6 +62,10 @@
 #include "TVirtualRefProxy.h"
 #include "TVirtualMutex.h"
 #include "Riostream.h"
+
+#include <cstdio>
+#include <string>
+#include <sstream>
 
 using namespace std;
 
@@ -1659,52 +1663,155 @@ Int_t TClass::GetDataMemberOffset(const char *name) const
 }
 
 //______________________________________________________________________________
-TRealData *TClass::GetRealData(const char *name) const
+TRealData* TClass::GetRealData(const char* name) const
 {
-   // return pointer to TRealData element with name.
-   // name can be a data member in the class itself,
-   // one of its base classes, or one member in
+   // -- Return pointer to TRealData element with name "name".
+   //
+   // Name can be a data member in the class itself,
+   // one of its base classes, or a member in
    // one of the aggregated classes.
    //
-   // In case of an emulated class, the list of emulated TRealData is built
+   // In case of an emulated class, the list of emulated TRealData is built.
+   //
 
-   if (!fRealData) ((TClass*)this)->BuildRealData();
+   if (!fRealData) {
+      const_cast<TClass*>(this)->BuildRealData();
+   }
 
-   TRealData *rd = (TRealData*)fRealData->FindObject(name);
-   if (rd) return rd;
+   if (!fRealData) {
+      return 0;
+   }
 
-   //may be member is a pointer
-   rd = (TRealData*)fRealData->FindObject(Form("*%s",name));
-   if (rd) return rd;
+   if (!name) {
+      return 0;
+   }
 
-   const char *dot = strchr(name,'.');
-   const char *ldot = strrchr(name,'.');
-   if (!dot) return 0;
+   // First try just the whole name.
+   TRealData* rd = (TRealData*) fRealData->FindObject(name);
+   if (rd) {
+      return rd;
+   }
+   
+   std::string givenName(name);
 
-   //may be a pointer like in TH1 fXaxis.fLabels (in TRealdata is fXaxis.*fLabels)
-   char starname[1024];
-   Int_t nch = ldot-name;
-   strncpy(starname,name,nch);
-   sprintf(starname+nch,".*%s",ldot+1);
-   rd = (TRealData*)fRealData->FindObject(starname);
-   if (rd) return rd;
+   // Try ignoring the array dimensions.
+   std::string::size_type firstBracket = givenName.find_first_of("[");
+   if (firstBracket != std::string::npos) {
+      // -- We are looking for an array data member.
+      std::string nameNoDim(givenName.substr(0, firstBracket));
+      TObjLink* lnk = fRealData->FirstLink();
+      while (lnk) {
+         TObject* obj = lnk->GetObject();
+         std::string objName(obj->GetName());
+         std::string::size_type pos = objName.find_first_of("[");
+         // Only match arrays to arrays for now.
+         if (pos != std::string::npos) {
+            objName.erase(pos);
+            if (objName == nameNoDim) {
+               return static_cast<TRealData*>(obj);
+            }
+         }
+         lnk = lnk->Next();
+      }
+   }
 
-   //new attempt starting after the first "." if any
-   rd = (TRealData*)fRealData->FindObject(dot+1);
-   if (rd) return rd;
-   rd = (TRealData*)fRealData->FindObject(Form("*%s",dot+1));
-   if (rd) return rd;
+   // Now try it as a pointer.
+   std::ostringstream ptrname;
+   ptrname << "*" << givenName;
+   rd = (TRealData*) fRealData->FindObject(ptrname.str().c_str());
+   if (rd) {
+      return rd;
+   }
 
-   //last attempt in case a member has been changed from a static array to a pointer
-   //for example the member was arr[20] and is now *arr
-   char *bracket = strchr(starname,'[');
-   if (!bracket) return 0;
+   // Check for a dot in the name.
+   std::string::size_type firstDot = givenName.find_first_of(".");
+   if (firstDot == std::string::npos) {
+      // -- Not found, a simple name, all done.
+      return 0;
+   }
 
-   *bracket = 0;
-   rd = (TRealData*)fRealData->FindObject(starname);
-   return rd;
-   //in principle, one could also take into account the opposite situation
-   //where a member like *arr has been converted to arr[20]
+   //
+   //  At this point the name has a dot in it, so it is the name
+   //  of some contained sub-object.
+   //
+
+   // May be a pointer like in TH1: fXaxis.fLabels (in TRealdata is named fXaxis.*fLabels)
+   std::string::size_type lastDot = givenName.find_last_of(".");
+   std::ostringstream starname;
+   starname << givenName.substr(0, lastDot) << ".*" << givenName.substr(lastDot + 1);
+   rd = (TRealData*) fRealData->FindObject(starname.str().c_str());
+   if (rd) {
+      return rd;
+   }
+
+   // Strip the first component, it may be the name of
+   // the branch (old TBranchElement code), and try again.
+   std::string firstDotName(givenName.substr(firstDot + 1));
+
+   // New attempt starting after the first "." if any,
+   // this allows for the case that the first component
+   // may have been a branch name (for TBranchElement).
+   rd = (TRealData*) fRealData->FindObject(firstDotName.c_str());
+   if (rd) {
+      return rd;
+   }
+
+   // New attempt starting after the first "." if any,
+   // but this time try ignoring the array dimensions.
+   // Again, we are allowing for the case that the first
+   // component may have been a branch name (for TBranchElement).
+   std::string::size_type firstDotBracket = firstDotName.find_first_of("[");
+   if (firstDotBracket != std::string::npos) {
+      // -- We are looking for an array data member.
+      std::string nameNoDim(firstDotName.substr(0, firstDotBracket));
+      TObjLink* lnk = fRealData->FirstLink();
+      while (lnk) {
+         TObject* obj = lnk->GetObject();
+         std::string objName(obj->GetName());
+         std::string::size_type pos = objName.find_first_of("[");
+         // Only match arrays to arrays for now.
+         if (pos != std::string::npos) {
+            objName.erase(pos);
+            if (objName == nameNoDim) {
+               return static_cast<TRealData*>(obj);
+            }
+         }
+         lnk = lnk->Next();
+      }
+   }
+
+   // New attempt starting after the first "." if any,
+   // but this time check for a pointer type.  Again, we
+   // are allowing for the case that the first component
+   // may have been a branch name (for TBranchElement).
+   ptrname.str("");
+   ptrname << "*" << firstDotName;
+   rd = (TRealData*) fRealData->FindObject(ptrname.str().c_str());
+   if (rd) {
+      return rd;
+   }
+
+   // Last attempt in case a member has been changed from
+   // a static array to a pointer, for example the member
+   // was arr[20] and is now *arr.
+   //
+   // Note: In principle, one could also take into account
+   // the opposite situation where a member like *arr has
+   // been converted to arr[20].
+   //
+   // FIXME: What about checking after the first dot as well?
+   //
+   std::string::size_type bracket = starname.str().find_first_of("[");
+   if (bracket == std::string::npos) {
+      return 0;
+   }
+   rd = (TRealData*) fRealData->FindObject(starname.str().substr(0, bracket).c_str());
+   if (rd) {
+      return rd;
+   }
+
+   // Not found;
+   return 0;
 }
 
 //______________________________________________________________________________
