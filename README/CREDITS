@@ -80,6 +80,7 @@ D: class THtml, generation of the clickable class hierarchy
 N: Thomas Bretz
 E: tbretz@astro.uni-wuerzburg.de
 D: Additions to TF1: functions IntegralFast and CalcGaussLegendreSamplingPoints
+D: Improvements in TRolke
 
 N: Nicolas Brun
 E: nicolas@pcbrun.cern.ch
