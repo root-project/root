@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.194 2006/09/15 15:16:57 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.195 2006/10/16 12:08:55 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -608,6 +608,12 @@ Int_t TGraph::DistancetoPrimitive(Int_t px, Int_t py)
    Int_t puxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
    Int_t puymax = gPad->YtoAbsPixel(gPad->GetUymax());
 
+   // return if point is not in the graph area
+   if (px <= puxmin) return big;
+   if (py >= puymin) return big;
+   if (px >= puxmax) return big;
+   if (py <= puymax) return big;
+
    // check if point is near one of the graph points
    Int_t i, pxp, pyp, d;
    distance = big;
@@ -637,11 +643,6 @@ Int_t TGraph::DistancetoPrimitive(Int_t px, Int_t py)
          return 0; //must be o and not dist in case of TMultiGraph
       }
    }
-   // return if point is not in the histogram area
-   if (px <= puxmin) return big;
-   if (py >= puymin) return big;
-   if (px >= puxmax) return big;
-   if (py <= puymax) return big;
 
    return distance;
 }
