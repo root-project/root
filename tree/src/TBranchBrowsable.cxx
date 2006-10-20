@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.8 2006/03/20 21:43:44 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.9 2006/10/20 16:16:08 pcanal Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************
@@ -74,7 +74,8 @@ Bool_t TVirtualBranchBrowsable::fgGeneratorsSet=kFALSE;
 TVirtualBranchBrowsable::TVirtualBranchBrowsable(const TBranch* branch, TClass* type, 
                                                  Bool_t typeIsPointer, 
                                                  const TVirtualBranchBrowsable* parent /*=0*/):
-fBranch(branch), fParent(parent), fLeaves(0), fClass(type), fTypeIsPointer(typeIsPointer) {
+fBranch(branch), fParent(parent), fLeaves(0), fClass(type), fTypeIsPointer(typeIsPointer) 
+{
    // constructor setting all members according to parameters.
    if (!fgGeneratorsSet) RegisterDefaultGenerators();
    if (!branch) 
@@ -82,13 +83,15 @@ fBranch(branch), fParent(parent), fLeaves(0), fClass(type), fTypeIsPointer(typeI
 }
 
 //______________________________________________________________________________
-TVirtualBranchBrowsable::~TVirtualBranchBrowsable() {
+TVirtualBranchBrowsable::~TVirtualBranchBrowsable() 
+{
    // Destructor. Delete our leaves.
    delete fLeaves;
 }
 
 //______________________________________________________________________________
-void TVirtualBranchBrowsable::Browse(TBrowser *b) {
+void TVirtualBranchBrowsable::Browse(TBrowser *b) 
+{
 // Calls TTree::Draw on the method if return type is not a class;
 // otherwise expands returned object's "folder"
 
@@ -115,7 +118,8 @@ void TVirtualBranchBrowsable::Browse(TBrowser *b) {
 
 //______________________________________________________________________________
 Int_t TVirtualBranchBrowsable::FillListOfBrowsables(TList& li, const TBranch* branch, 
-   const TVirtualBranchBrowsable* parent /* =0 */) {
+   const TVirtualBranchBrowsable* parent /* =0 */) 
+{
 // Askes all registered generators to fill their browsables into
 // the list. The browsables are generated for a given parent,
 // or (if 0), for a given branch. The branch is passed down to
@@ -132,7 +136,8 @@ Int_t TVirtualBranchBrowsable::FillListOfBrowsables(TList& li, const TBranch* br
 //______________________________________________________________________________
 TClass* TVirtualBranchBrowsable::GetCollectionContainedType(const TBranch* branch, 
                                                             const TVirtualBranchBrowsable* parent,
-                                                            TClass* &contained) {
+                                                            TClass* &contained) 
+{
 // Check whether the branch (or the parent) contains a collection. 
 // If it does, set "contained" to the contained type (if we can 
 // retrieve it) and return the TClass for the collection. Set 
@@ -244,7 +249,8 @@ TClass* TVirtualBranchBrowsable::GetCollectionContainedType(const TBranch* branc
 }
 
 //______________________________________________________________________________
-TList* TVirtualBranchBrowsable::GetLeaves() const {
+TList* TVirtualBranchBrowsable::GetLeaves() const 
+{
 // Return list of leaves. If not set up yet we'll create them.
    if (!fLeaves) {
       TList* leaves=new TList();
@@ -256,13 +262,15 @@ TList* TVirtualBranchBrowsable::GetLeaves() const {
 }
 
 //______________________________________________________________________________
-std::list<TVirtualBranchBrowsable::MethodCreateListOfBrowsables_t>& TVirtualBranchBrowsable::GetRegisteredGenerators() {
+std::list<TVirtualBranchBrowsable::MethodCreateListOfBrowsables_t>& TVirtualBranchBrowsable::GetRegisteredGenerators() 
+{
    // returns the list of registered generator methods
    return fgGenerators;
 }
 
 //______________________________________________________________________________
-void TVirtualBranchBrowsable::GetScope(TString & scope) const {
+void TVirtualBranchBrowsable::GetScope(TString & scope) const 
+{
 // Returns the full name for TTree::Draw to draw *this.
 // Recursively appends, starting at the top TBranch,
 // all method / object names with proper reference operators (->, .)
@@ -301,7 +309,8 @@ void TVirtualBranchBrowsable::GetScope(TString & scope) const {
 
 
 //______________________________________________________________________________
-void TVirtualBranchBrowsable::RegisterDefaultGenerators() {
+void TVirtualBranchBrowsable::RegisterDefaultGenerators() 
+{
 // Adds the default generators. The user can remove any of them as follows:
 //   TMethodBrowsable::Unregister();
 // which will cause the browser not to show any methods.
@@ -313,7 +322,8 @@ void TVirtualBranchBrowsable::RegisterDefaultGenerators() {
    fgGeneratorsSet=kTRUE;
 }
 
-void TVirtualBranchBrowsable::RegisterGenerator(MethodCreateListOfBrowsables_t generator) {
+void TVirtualBranchBrowsable::RegisterGenerator(MethodCreateListOfBrowsables_t generator) 
+{
    // Adds a generator to be called when browsing branches.
    // Called by the Register method, which should be implemented 
    // for all derived classes (see e.g. TMethodBrowsable::Register())
@@ -323,7 +333,8 @@ void TVirtualBranchBrowsable::RegisterGenerator(MethodCreateListOfBrowsables_t g
    fgGenerators.push_back(generator);
 }
 
-void TVirtualBranchBrowsable::UnregisterGenerator(MethodCreateListOfBrowsables_t generator) {
+void TVirtualBranchBrowsable::UnregisterGenerator(MethodCreateListOfBrowsables_t generator) 
+{
    // Removes a generator from the list of generators to be called when 
    // browsing branches. The user can remove any of the generators as follows:
    //   TMethodBrowsable::Unregister();
@@ -359,7 +370,8 @@ ClassImp(TMethodBrowsable);
 //______________________________________________________________________________
 TMethodBrowsable::TMethodBrowsable(const TBranch* branch, TMethod* m,
                                    const TVirtualBranchBrowsable* parent /* =0 */):
-   TVirtualBranchBrowsable(branch, 0, kFALSE, parent), fMethod(m) {
+   TVirtualBranchBrowsable(branch, 0, kFALSE, parent), fMethod(m) 
+{
 // Constructor.
 // Links a TBranchElement to a TMethod, allowing the TBrowser to
 // browse simple methods.
@@ -390,7 +402,8 @@ TMethodBrowsable::TMethodBrowsable(const TBranch* branch, TMethod* m,
 }
 
 //______________________________________________________________________________
-void TMethodBrowsable::GetBrowsableMethodsForClass(TClass* cl, TList& li) {
+void TMethodBrowsable::GetBrowsableMethodsForClass(TClass* cl, TList& li) 
+{
 // Given a class, this methods fills list with TMethodBrowsables
 // for the class and its base classes, and returns the number of 
 // added elements. If called from a TBranch::Browse overload, "branch" 
@@ -436,7 +449,8 @@ void TMethodBrowsable::GetBrowsableMethodsForClass(TClass* cl, TList& li) {
 
 //______________________________________________________________________________
 Int_t TMethodBrowsable::GetBrowsables(TList& li, const TBranch* branch, 
-                                      const TVirtualBranchBrowsable* parent /*=0*/) {
+                                      const TVirtualBranchBrowsable* parent /*=0*/) 
+{
 // This methods fills list with TMethodBrowsables
 // for the branch's or parent's class and its base classes, and returns 
 // the number of added elements. If called from a TBranch::Browse 
@@ -458,7 +472,8 @@ Int_t TMethodBrowsable::GetBrowsables(TList& li, const TBranch* branch,
 }
 
 //______________________________________________________________________________
-Bool_t TMethodBrowsable::IsMethodBrowsable(const TMethod* m) {
+Bool_t TMethodBrowsable::IsMethodBrowsable(const TMethod* m) 
+{
 // A TMethod is browsable if it is const, public and not pure virtual,
 // if does not have any parameter without default value, and if it has 
 // a (non-void) return value.
@@ -515,7 +530,8 @@ Bool_t TMethodBrowsable::IsMethodBrowsable(const TMethod* m) {
 }
 
 //______________________________________________________________________________
-void TMethodBrowsable::Register() {
+void TMethodBrowsable::Register() 
+{
    // Wrapper for the registration method. Needed against MSVC, which 
    // assigned different addr to the same method, depending on what
    // translation unit you're in...
@@ -523,7 +539,8 @@ void TMethodBrowsable::Register() {
 }
 
 //______________________________________________________________________________
-void TMethodBrowsable::Unregister() {
+void TMethodBrowsable::Unregister() 
+{
    // Wrapper for the registration method. Needed against MSVC, which 
    // assigned different addr to the same method, depending on what
    // translation unit you're in...
@@ -552,7 +569,8 @@ ClassImp(TNonSplitBrowsable);
 TNonSplitBrowsable::TNonSplitBrowsable(const TStreamerElement* element, const TBranch* branch, 
                                        const TVirtualBranchBrowsable* parent /* =0 */):
    TVirtualBranchBrowsable(branch, element->GetClassPointer(), 
-   element->IsaPointer(), parent) {
+   element->IsaPointer(), parent) 
+{
 // Constructor. Creates a TNonSplitBrowsable from a TStreamerElement, containing branch 
 // and (if applicable) parent TVirtualBranchBrowsable.
    SetNameTitle(element->GetName(), element->GetTitle());
@@ -638,7 +656,8 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& li, const TBranch* branch,
 }
 
 //______________________________________________________________________________
-void TNonSplitBrowsable::Register() {
+void TNonSplitBrowsable::Register() 
+{
    // Wrapper for the registration method. Needed against MSVC, which 
    // assigned different addr to the same method, depending on what
    // translation unit you're in...
@@ -646,7 +665,8 @@ void TNonSplitBrowsable::Register() {
 }
 
 //______________________________________________________________________________
-void TNonSplitBrowsable::Unregister() {
+void TNonSplitBrowsable::Unregister() 
+{
    // Wrapper for the registration method. Needed against MSVC, which 
    // assigned different addr to the same method, depending on what
    // translation unit you're in...
@@ -674,7 +694,8 @@ ClassImp(TCollectionPropertyBrowsable);
 
 
 //______________________________________________________________________________
-void TCollectionPropertyBrowsable::Browse(TBrowser *b) {
+void TCollectionPropertyBrowsable::Browse(TBrowser *b) 
+{
    // Browses a TCollectionPropertyBrowsable. The only difference to
    // the generic TVirtualBranchBrowsable::Browse is our fDraw
    GetBranch()->GetTree()->Draw(GetDraw(), "", b ? b->GetDrawOption() : "");
@@ -683,7 +704,8 @@ void TCollectionPropertyBrowsable::Browse(TBrowser *b) {
 
 //______________________________________________________________________________
 Int_t TCollectionPropertyBrowsable::GetBrowsables(TList& li, const TBranch* branch, 
-                                                  const TVirtualBranchBrowsable* parent /* =0 */) {
+                                                  const TVirtualBranchBrowsable* parent /* =0 */) 
+{
 // If the element to browse (given by either parent of branch) contains
 // a collection (TClonesArray or something for which a TVirtualCollectionProxy
 // exists), we will add some special objects to the browser. For now there is
@@ -763,7 +785,8 @@ Int_t TCollectionPropertyBrowsable::GetBrowsables(TList& li, const TBranch* bran
 }
 
 //______________________________________________________________________________
-void TCollectionPropertyBrowsable::Register() {
+void TCollectionPropertyBrowsable::Register() 
+{
    // Wrapper for the registration method. Needed against MSVC, which 
    // assigned different addr to the same method, depending on what
    // translation unit you're in...
@@ -771,7 +794,8 @@ void TCollectionPropertyBrowsable::Register() {
 }
 
 //______________________________________________________________________________
-void TCollectionPropertyBrowsable::Unregister() {
+void TCollectionPropertyBrowsable::Unregister() 
+{
    // Wrapper for the registration method. Needed against MSVC, which 
    // assigned different addr to the same method, depending on what
    // translation unit you're in...
@@ -802,7 +826,8 @@ ClassImp(TCollectionMethodBrowsable);
 //______________________________________________________________________________
 TCollectionMethodBrowsable::TCollectionMethodBrowsable(const TBranch* branch, TMethod* m, 
                                                        const TVirtualBranchBrowsable* parent /*=0*/):
-TMethodBrowsable(branch, m, parent) {
+TMethodBrowsable(branch, m, parent) 
+{
    // Contructor, see TMethodBrowsable's constructor.
    // Prepends "@" to the name to make this method work on the container.
    SetName(TString("@")+GetName());
@@ -810,7 +835,8 @@ TMethodBrowsable(branch, m, parent) {
 
 //______________________________________________________________________________
 Int_t TCollectionMethodBrowsable::GetBrowsables(TList& li, const TBranch* branch, 
-                                                const TVirtualBranchBrowsable* parent /*=0*/) {
+                                                const TVirtualBranchBrowsable* parent /*=0*/) 
+{
 // This methods fills list with TMethodBrowsables
 // for the branch's or parent's collection class and its base classes, 
 // and returns the number of added elements. If called from a TBranch::Browse 
@@ -845,7 +871,8 @@ Int_t TCollectionMethodBrowsable::GetBrowsables(TList& li, const TBranch* branch
 }
 
 //______________________________________________________________________________
-void TCollectionMethodBrowsable::Register() {
+void TCollectionMethodBrowsable::Register() 
+{
    // Wrapper for the registration method. Needed against MSVC, which 
    // assigned different addr to the same method, depending on what
    // translation unit you're in...
@@ -853,7 +880,8 @@ void TCollectionMethodBrowsable::Register() {
 }
 
 //______________________________________________________________________________
-void TCollectionMethodBrowsable::Unregister() {
+void TCollectionMethodBrowsable::Unregister() 
+{
    // Wrapper for the registration method. Needed against MSVC, which 
    // assigned different addr to the same method, depending on what
    // translation unit you're in...
