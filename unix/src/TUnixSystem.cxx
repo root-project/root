@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.159 2006/10/07 18:06:11 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.160 2006/10/17 12:28:38 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -215,6 +215,9 @@ extern "C" {
 #      define HAVE_BACKTRACE_SYMBOLS_FD
 #   endif
 #   define HAVE_DLADDR
+#endif
+#if defined(R__MACOSX)
+#   define USE_GDB_STACK_TRACE
 #endif
 
 #ifdef HAVE_U_STACK_TRACE
@@ -1815,7 +1818,7 @@ void TUnixSystem::StackTrace()
       return;
 
    cerr.flush ();
-   fflush (stderr);
+   fflush(stderr);
 
    int fd = STDERR_FILENO;
 
@@ -1823,7 +1826,41 @@ void TUnixSystem::StackTrace()
 
    if (fd && message) { }  // remove unused warning (remove later)
 
-#if defined(HAVE_U_STACK_TRACE) || defined(HAVE_XL_TRBK)   // hp-ux, aix
+#if defined(USE_GDB_STACK_TRACE)
+   char *gdb = Which(Getenv("PATH"), "gdb", kExecutePermission);
+   if (!gdb) {
+      fprintf(stderr, "gdb not found, need it for stack trace\n");
+      return;
+   }
+
+   char *exe = Which(Getenv("PATH"), gProgName, kExecutePermission);
+   if (!exe) {
+      fprintf(stderr, "cannot find ourself\n");
+      return;
+   }
+
+   // use gdb to get stack trace
+   TString gdbscript;
+# ifdef ROOTETCDIR
+   gdbscript.Form("%s/gdb-backtrace-script", ROOTETCDIR);
+# else
+   gdbscript.Form("%s/etc/gdb-backtrace-script", gSystem->Getenv("ROOTSYS"));
+# endif
+   TString tracefile, tracecmd;
+   tracefile.Form("/tmp/rootstack.%d", GetPid());
+   tracecmd.Form("%s -batch -n -x %s %s %d > %s 2>&1",
+                 gdb, gdbscript.Data(), exe, GetPid(), tracefile.Data());
+   Exec(tracecmd);
+   FILE *p = fopen(tracefile, "r");
+   TString gdbout;
+   while (gdbout.Gets(p)) {
+      fprintf(stderr, "%s\n", gdbout.Data());
+   }
+   fclose(p);
+   Unlink(tracefile);
+   return;
+
+#elif defined(HAVE_U_STACK_TRACE) || defined(HAVE_XL_TRBK)   // hp-ux, aix
 /*
    // FIXME: deal with inability to duplicate the file handle
    int stderrfd = dup(STDERR_FILENO);
