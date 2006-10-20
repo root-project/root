@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.78 2006/10/19 09:23:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.79 2006/10/19 10:58:24 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -645,32 +645,31 @@ void TObject::RecursiveRemove(TObject *)
 //______________________________________________________________________________
 void TObject::SaveAs(const char *filename) const
 {
-   // Save this object in filename
-   // The C++ code to revbuild this object is generated via SavePrimitive.
+   // Save this object in the file specified by filename.
+   // The C++ code to rebuild this object is generated via SavePrimitive().
    // The function is available via the object context menu.
-   
+
    char *fname = 0;
    if (filename && strlen(filename) > 0) {
       fname = (char*)filename;
    } else {
-      fname = Form("%s.C",GetName());
+      fname = Form("%s.C", GetName());
    }
    ofstream out;
    out.open(fname, ios::out);
    if (!out.good ()) {
-      Printf("SaveAs cannot open file: %s",fname);
-      if (fname != filename) delete [] fname;
+      Error("SaveAs", "cannot open file: %s", fname);
       return;
    }
    out <<"{"<<endl;
-   out <<"//=========Macro generated from object: "<<GetName()<<"/"<<GetTitle()<<endl;
-   out <<"//=========  by ROOT version"<<gROOT->GetVersion()<<endl;
+   out <<"//========= Macro generated from object: "<<GetName()<<"/"<<GetTitle()<<endl;
+   out <<"//========= by ROOT version"<<gROOT->GetVersion()<<endl;
    ((TObject*)this)->SavePrimitive(out);
    out <<"}"<<endl;
    out.close();
-   Printf("C++ Macro file: %s has been generated", fname);
-}   
-   
+   Info("SaveAs", "C++ Macro file: %s has been generated", fname);
+}
+
 //______________________________________________________________________________
 void TObject::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 {
