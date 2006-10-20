@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.160 2006/10/17 12:28:38 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.161 2006/10/20 09:36:11 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1833,12 +1833,6 @@ void TUnixSystem::StackTrace()
       return;
    }
 
-   char *exe = Which(Getenv("PATH"), gProgName, kExecutePermission);
-   if (!exe) {
-      fprintf(stderr, "cannot find ourself\n");
-      return;
-   }
-
    // use gdb to get stack trace
    TString gdbscript;
 # ifdef ROOTETCDIR
@@ -1848,8 +1842,8 @@ void TUnixSystem::StackTrace()
 # endif
    TString tracefile, tracecmd;
    tracefile.Form("/tmp/rootstack.%d", GetPid());
-   tracecmd.Form("%s -batch -n -x %s %s %d > %s 2>&1",
-                 gdb, gdbscript.Data(), exe, GetPid(), tracefile.Data());
+   tracecmd.Form("%s -batch -n -x %s -p %d > %s 2>&1",
+                 gdb, gdbscript.Data(), GetPid(), tracefile.Data());
    Exec(tracecmd);
    FILE *p = fopen(tracefile, "r");
    TString gdbout;
@@ -1858,6 +1852,7 @@ void TUnixSystem::StackTrace()
    }
    fclose(p);
    Unlink(tracefile);
+   delete [] gdb;
    return;
 
 #elif defined(HAVE_U_STACK_TRACE) || defined(HAVE_XL_TRBK)   // hp-ux, aix
