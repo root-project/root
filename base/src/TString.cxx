@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.56 2006/10/05 21:04:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.57 2006/10/18 09:26:58 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1492,14 +1492,19 @@ Bool_t TString::IsDigit() const
    // Returns true if all characters in string are digits (0-9) or whitespaces,
    // i.e. "123456" and "123 456" are both valid integer strings.
    // Returns false in case string length is 0 or string contains other
-   // characters.
+   // characters or only whitespace.
 
    const char *cp = Data();
    Ssiz_t len = Length();
    if (len == 0) return kFALSE;
-   for (Ssiz_t i = 0; i < len; ++i){
-      if (cp[i]!=' ' && !isdigit(cp[i])) return kFALSE;
+   Int_t b = 0, d = 0;
+   for (Ssiz_t i = 0; i < len; ++i) {
+      if (cp[i] != ' ' && !isdigit(cp[i])) return kFALSE;
+      if (cp[i] == ' ') b++;
+      if (isdigit(cp[i])) d++;
    }
+   if (b && !d)
+      return kFALSE;
    return kTRUE;
 }
 
@@ -1520,26 +1525,26 @@ Bool_t TString::IsFloat() const
 
    TString tmp = *this;
    //now we look for occurrences of '.', ',', e', 'E', '+', '-' and replace each
-   //with '0'. if it is a floating point, IsDigit() will then return kTRUE
+   //with ' '. if it is a floating point, IsDigit() will then return kTRUE
    Int_t i_dot, i_e, i_plus, i_minus, i_comma;
    i_dot = i_e = i_plus = i_minus = i_comma = -1;
 
    i_dot = tmp.First('.');
-   if (i_dot > -1) tmp.Replace(i_dot, 1, "0", 1);
+   if (i_dot > -1) tmp.Replace(i_dot, 1, " ", 1);
    i_comma = tmp.First(',');
-   if (i_comma > -1) tmp.Replace(i_comma, 1, "0", 1);
+   if (i_comma > -1) tmp.Replace(i_comma, 1, " ", 1);
    i_e = tmp.First('e');
    if (i_e > -1)
-      tmp.Replace(i_e, 1, "0", 1);
+      tmp.Replace(i_e, 1, " ", 1);
    else {
       //try for a capital "E"
       i_e = tmp.First('E');
-      if (i_e > -1) tmp.Replace(i_e, 1, "0", 1);
+      if (i_e > -1) tmp.Replace(i_e, 1, " ", 1);
    }
    i_plus = tmp.First('+');
-   if (i_plus > -1) tmp.Replace(i_plus, 1, "0", 1);
+   if (i_plus > -1) tmp.Replace(i_plus, 1, " ", 1);
    i_minus = tmp.First('-');
-   if (i_minus > -1) tmp.Replace(i_minus, 1, "0", 1);
+   if (i_minus > -1) tmp.Replace(i_minus, 1, " ", 1);
 
    //test if it is now uniquely composed of numbers
    return tmp.IsDigit();
@@ -1585,6 +1590,40 @@ Int_t TString::Atoi() const
    end = Length();
    tmp += (*this)(start, end-start);
    return atoi(tmp.Data());
+}
+
+//______________________________________________________________________________
+Long64_t TString::Atoll() const
+{
+   // Return long long value of string.
+   // Valid strings include only digits and whitespace (see IsDigit()),
+   // i.e. "123456", "123 456" and "1 2 3 4        56" are all valid
+   // integer strings whose Atoll() value is 123456.
+
+   //any whitespace ?
+   Int_t end = Index(" ");
+   //if no whitespaces in string, just use atoi()
+#ifndef R__WIN32
+   if (end == -1) return atoll(Data());
+#else
+   if (end == -1) return _atoi64(Data());
+#endif
+   //make temporary string, removing whitespace
+   Int_t start = 0;
+   TString tmp;
+   //loop over all whitespace
+   while (end > -1) {
+      tmp += (*this)(start, end-start);
+      start = end+1; end = Index(" ", start);
+   }
+   //finally add part from last whitespace to end of string
+   end = Length();
+   tmp += (*this)(start, end-start);
+#ifndef R__WIN32
+   return atoll(tmp.Data());
+#else
+   return _atoi64(tmp.Data());
+#endif
 }
 
 //______________________________________________________________________________

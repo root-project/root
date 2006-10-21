@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.51 2006/10/05 21:04:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.52 2006/10/07 18:01:59 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -299,6 +299,7 @@ public:
    TString     &Append(const TString &s, Ssiz_t n);
    TString     &Append(char c, Ssiz_t rep = 1);   // Append c rep times
    Int_t        Atoi() const;
+   Long64_t     Atoll() const;
    Double_t     Atof() const;
    Bool_t       BeginsWith(const char *s,      ECaseCompare cmp = kExact) const;
    Bool_t       BeginsWith(const TString &pat, ECaseCompare cmp = kExact) const;
