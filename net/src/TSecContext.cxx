@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.12 2006/05/23 04:47:40 brun Exp $
+// @(#)root/net:$Name: v5-12-00-patches $:$Id: TSecContext.cxx,v 1.13 2006/05/24 15:10:46 brun Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -331,4 +331,12 @@ Bool_t TSecContext::CleanupSecContext(Bool_t)
 
    AbstractMethod("CleanupSecContext");
    return kFALSE;
+}
+
+//______________________________________________________________________________
+const char *TSecContext::GetName()
+{
+   // Return hash of fUser@fHost for fast search.
+
+   return Form("%s@%s", fUser.Data(), fHost.Data());
 }

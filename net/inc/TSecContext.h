@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSecContext.h,v 1.6 2006/05/16 06:28:23 brun Exp $
+// @(#)root/net:$Name: v5-12-00-patches $:$Id: TSecContext.h,v 1.7 2006/05/23 04:47:40 brun Exp $
 // Author: G. Ganis   31/03/2003
 
 /*************************************************************************
@@ -86,6 +86,8 @@ public:
    TList      *GetSecContextCleanup() const { return fCleanup; }
    const char *GetToken()   const { return fToken; }
    const char *GetUser()    const { return fUser; }
+
+   const char *GetName();  // fUser@fHost, for searching purposes
 
    Bool_t      IsA(const char *methodname);
    Bool_t      IsActive()   const;

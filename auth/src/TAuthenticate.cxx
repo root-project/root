@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.13 2006/05/10 07:40:12 brun Exp $
+// @(#)root/auth:$Name: v5-12-00-patches $:$Id: TAuthenticate.cxx,v 1.14 2006/05/10 14:06:06 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -323,6 +323,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
       fHostAuth->SetHost(fqdn);
       fHostAuth->SetUser(checkUser);
       fHostAuth->SetServer(servtype);
+      GetAuthInfo()->Add(fHostAuth);
    }
 
    // If a specific method has been requested via the protocol

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.38 2006/05/04 17:05:29 rdm Exp $
+// @(#)root/net:$Name: v5-12-00-patches $:$Id: TSocket.cxx,v 1.39 2006/05/16 06:28:23 brun Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -859,9 +859,13 @@ Bool_t TSocket::Authenticate(const char *user)
                TSocket::NetError("TSocket::Authenticate", stat);
          } else if (kind == kROOTD_AUTH) {
 
-            // Authentication was not required: create inactive
+            // Authentication was not required: attach or create inactive
             // security context for consistency
-            fSecContext = new TSecContext(user, host, 0, -4, 0, 0);
+            if (!(fSecContext = (TSecContext *) gROOT->GetListOfSecContexts()
+                  ->FindObject(Form("%s@%s", user, host.Data())))) {
+               fSecContext = new TSecContext(user, host, 0, -4, 0, 0);
+               gROOT->GetListOfSecContexts()->Add(fSecContext);
+            }
             if (gDebug > 3)
                Info("Authenticate", "no authentication required remotely");
 
