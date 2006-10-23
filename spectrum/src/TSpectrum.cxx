@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum.cxx,v 1.3 2006/10/04 10:46:48 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum.cxx,v 1.4 2006/10/19 10:54:29 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -588,6 +588,801 @@ A401 (1997) 113-132.</span></p>
 <p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>[3]
 D. D. Burgess, R. J. Tervo: Background estimation for gamma-ray spectroscopy.
 NIM 214 (1983), 431-434. </span></p>
+
+</div>
+
+<!-- */
+// --> End_Html
+//Begin_Html <!--
+/* -->
+<div class=Section2>
+
+<p class=MsoNormal><i><span style='font-size:18.0pt'>Example 1– script
+Background_incr.c :</span></i></p>
+
+<p class=MsoNormal><img width=601 height=407
+src="gif/TSpectrum_Background_incr.jpg"></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
+1 Example of the estimation of background for number of iterations=6. Original
+spectrum is shown in black color, estimated background in red color.</span></b></p>
+
+<p class=MsoNormal><b><span style='font-size:14.0pt;color:green'>&nbsp;</span></b></p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt;color:green'>Script:</span></b></p>
+
+<p class=MsoNormal>// Example to illustrate the background estimator (class
+TSpectrum).</p>
+
+<p class=MsoNormal>// To execute this example, do</p>
+
+<p class=MsoNormal>// root &gt; .x Background_incr.C</p>
+
+<p class=MsoNormal>#include &lt;TSpectrum&gt; </p>
+
+<p class=MsoNormal>void Background_incr() {</p>
+
+<p class=MsoNormal>   Int_t i;</p>
+
+<p class=MsoNormal>   Double_t nbins = 256;</p>
+
+<p class=MsoNormal>   Double_t xmin  = 0;</p>
+
+<p class=MsoNormal>   Double_t xmax  = (Double_t)nbins;</p>
+
+<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
+
+<p class=MsoNormal>   TH1F *back = new
+TH1F(&quot;back&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
+
+<p class=MsoNormal>   TH1F *d = new
+TH1F(&quot;d&quot;,&quot;&quot;,nbins,xmin,xmax);      </p>
+
+<p class=MsoNormal>   TFile *f = new
+TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
+
+<p class=MsoNormal>   back=(TH1F*) f-&gt;Get(&quot;back1;1&quot;);</p>
+
+<p class=MsoNormal>   TCanvas *Background = gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;Background&quot;);</p>
+
+<p class=MsoNormal>   if (!Background) Background = new
+TCanvas(&quot;Background&quot;,&quot;Estimation of background with increasing
+window&quot;,10,10,1000,700);</p>
+
+<p class=MsoNormal>   back-&gt;Draw(&quot;L&quot;);</p>
+
+<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) source[i]=back-&gt;GetBinContent(i
++ 1); </p>
+
+<p class=MsoNormal>   s-&gt;Background(source,nbins,6,kBackIncreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d-&gt;SetBinContent(i +
+1,source[i]);   </p>
+
+<p class=MsoNormal>   d-&gt;SetLineColor(kRed);</p>
+
+<p class=MsoNormal>   d-&gt;Draw(&quot;SAME L&quot;);   </p>
+
+<p class=MsoNormal>   }</p>
+
+</div>
+
+<!-- */
+// --> End_Html
+//Begin_Html <!--
+/* -->
+<div class=Section3>
+
+<p class=MsoNormal><i><span style='font-size:18.0pt'>Example 2 – script
+Background_decr.c :</span></i></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>In
+Figure 1. one can notice that at the edges of the peaks the estimated
+background goes under the peaks. An alternative approach is to decrease the
+clipping window from a given value numberIterations to the value of one, which
+is presented in this example. </span></p>
+
+<p class=MsoNormal><img width=601 height=407
+src="gif/TSpectrum_Background_decr.jpg"></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
+2 Example of the estimation of background for numberIterations=6 using
+decreasing clipping window algorithm. Original spectrum is shown in black
+color, estimated background in red color.</span></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal>// Example to illustrate the background estimator (class
+TSpectrum).</p>
+
+<p class=MsoNormal>// To execute this example, do</p>
+
+<p class=MsoNormal>// root &gt; .x Background_decr.C</p>
+
+<p class=MsoNormal>#include &lt;TSpectrum&gt;   </p>
+
+<p class=MsoNormal>void Background_decr() {</p>
+
+<p class=MsoNormal>   Int_t i;</p>
+
+<p class=MsoNormal>   Double_t nbins = 256;</p>
+
+<p class=MsoNormal>   Double_t xmin  = 0;</p>
+
+<p class=MsoNormal>   Double_t xmax  = (Double_t)nbins;</p>
+
+<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
+
+<p class=MsoNormal>   TH1F *back = new
+TH1F(&quot;back&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
+
+<p class=MsoNormal>   TH1F *d = new
+TH1F(&quot;d&quot;,&quot;&quot;,nbins,xmin,xmax);      </p>
+
+<p class=MsoNormal>   TFile *f = new TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
+
+<p class=MsoNormal>   back=(TH1F*) f-&gt;Get(&quot;back1;1&quot;);</p>
+
+<p class=MsoNormal>   TCanvas *Background =
+gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;Background&quot;);</p>
+
+<p class=MsoNormal>   if (!Background) Background = new
+TCanvas(&quot;Background&quot;,&quot;Estimation of background with decreasing
+window&quot;,10,10,1000,700);</p>
+
+<p class=MsoNormal>   back-&gt;Draw(&quot;L&quot;);</p>
+
+<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
+source[i]=back-&gt;GetBinContent(i + 1); </p>
+
+<p class=MsoNormal>   s-&gt;Background(source,nbins,6,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d-&gt;SetBinContent(i +
+1,source[i]);   </p>
+
+<p class=MsoNormal>   d-&gt;SetLineColor(kRed);</p>
+
+<p class=MsoNormal>   d-&gt;Draw(&quot;SAME L&quot;);   </p>
+
+<p class=MsoNormal>   }</p>
+
+</div>
+
+<!-- */
+// --> End_Html
+//Begin_Html <!--
+/* -->
+<div class=Section4>
+
+<p class=MsoNormal><i><span style='font-size:18.0pt'>Example 3 – script
+Background_width.c :</span></i></p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:16.0pt'>the question is how to choose the
+width of the clipping window, i.e.,  numberIterations   parameter. The
+influence of this parameter on the estimated background is illustrated in
+Figure 3.</span></p>
+
+<p class=MsoNormal><img width=601 height=407
+src="gif/TSpectrum_Background_width.jpg"></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
+3 Example of the influence of clipping window width on the estimated background
+for numberIterations=4 (red line), 6 (blue line) 8 (green line) using
+decreasing clipping window algorithm.</span></b></p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'><span style='font-size:18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><i><span style='font-size:18.0pt'>in general one should set this
+parameter so that the value 2*numberIterations+1 was greater than the widths
+of preserved objects (peaks).</span></i></p>
+
+<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt;
+color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal>// Example to illustrate the influence of the clipping
+window width on the estimated background</p>
+
+<p class=MsoNormal>// To execute this example, do</p>
+
+<p class=MsoNormal>// root &gt; .x Background_width.C</p>
+
+<p class=MsoNormal>#include &lt;TSpectrum&gt;</p>
+
+<p class=MsoNormal>void Background_width() {</p>
+
+<p class=MsoNormal>   Int_t i;</p>
+
+<p class=MsoNormal>   Double_t nbins = 256;</p>
+
+<p class=MsoNormal>   Double_t xmin  = 0;</p>
+
+<p class=MsoNormal>   Double_t xmax  = (Double_t)nbins;</p>
+
+<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
+
+<p class=MsoNormal>   TH1F *h = new
+TH1F(&quot;h&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
+
+<p class=MsoNormal>   TH1F *d1 = new
+TH1F(&quot;d1&quot;,&quot;&quot;,nbins,xmin,xmax);      </p>
+
+<p class=MsoNormal>   TH1F *d2 = new
+TH1F(&quot;d2&quot;,&quot;&quot;,nbins,xmin,xmax);         </p>
+
+<p class=MsoNormal>   TH1F *d3 = new
+TH1F(&quot;d3&quot;,&quot;&quot;,nbins,xmin,xmax);         </p>
+
+<p class=MsoNormal>   TFile *f = new
+TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
+
+<p class=MsoNormal>   h=(TH1F*) f-&gt;Get(&quot;back1;1&quot;);      </p>
+
+<p class=MsoNormal>   TCanvas *background = gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;background&quot;);</p>
+
+<p class=MsoNormal>   if (!background) background = new
+TCanvas(&quot;background&quot;,&quot;Influence of clipping window width on the
+estimated background&quot;,10,10,1000,700);</p>
+
+<p class=MsoNormal>   h-&gt;Draw(&quot;L&quot;);</p>
+
+<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) source[i]=h-&gt;GetBinContent(i
++ 1);   </p>
+
+<p class=MsoNormal>  
+s-&gt;Background(source,nbins,4,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d1-&gt;SetBinContent(i +
+1,source[i]);   </p>
+
+<p class=MsoNormal>   d1-&gt;SetLineColor(kRed);</p>
+
+<p class=MsoNormal>   d1-&gt;Draw(&quot;SAME L&quot;);   </p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
+source[i]=h-&gt;GetBinContent(i + 1);</p>
+
+<p class=MsoNormal>  
+s-&gt;Background(source,nbins,6,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
+</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d2-&gt;SetBinContent(i +
+1,source[i]);   </p>
+
+<p class=MsoNormal>   d2-&gt;SetLineColor(kBlue);</p>
+
+<p class=MsoNormal>   d2-&gt;Draw(&quot;SAME L&quot;);   </p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
+source[i]=h-&gt;GetBinContent(i + 1);</p>
+
+<p class=MsoNormal>  
+s-&gt;Background(source,nbins,8,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
+</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d3-&gt;SetBinContent(i +
+1,source[i]);   </p>
+
+<p class=MsoNormal>   d3-&gt;SetLineColor(kGreen);</p>
+
+<p class=MsoNormal>   d3-&gt;Draw(&quot;SAME L&quot;);         </p>
+
+<p class=MsoNormal>}</p>
+
+</div>
+
+<!-- */
+// --> End_Html
+//Begin_Html <!--
+/* -->
+<div class=Section5>
+
+<p class=MsoNormal><i><span style='font-size:18.0pt'>Example 4 – script
+Background_width2.c :</span></i></p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-indent:-18.0pt'><span
+style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:16.0pt'>another example for very complex
+spectrum is given in Figure 4.</span></p>
+
+<p class=MsoNormal><img width=601 height=407
+src="gif/TSpectrum_Background_width2.jpg"></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
+4 Example of the influence of clipping window width on the estimated background
+for numberIterations=10 (red line), 20 (blue line), 30 (green line) and 40
+(magenta line) using decreasing clipping window algorithm.</span></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal>// Example to illustrate the influence of the clipping
+window width on the estimated background</p>
+
+<p class=MsoNormal>// To execute this example, do</p>
+
+<p class=MsoNormal>// root &gt; .x Background_width2.C</p>
+
+<p class=MsoNormal>#include &lt;TSpectrum&gt;  </p>
+
+<p class=MsoNormal>void Background_width2() {</p>
+
+<p class=MsoNormal>   Int_t i;</p>
+
+<p class=MsoNormal>   Double_t nbins = 4096;</p>
+
+<p class=MsoNormal>   Double_t xmin  = 0;</p>
+
+<p class=MsoNormal>   Double_t xmax  = (Double_t)4096;</p>
+
+<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
+
+<p class=MsoNormal>   TH1F *h = new
+TH1F(&quot;h&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
+
+<p class=MsoNormal>   TH1F *d1 = new TH1F(&quot;d1&quot;,&quot;&quot;,nbins,xmin,xmax);     
+</p>
+
+<p class=MsoNormal>   TH1F *d2 = new
+TH1F(&quot;d2&quot;,&quot;&quot;,nbins,xmin,xmax);         </p>
+
+<p class=MsoNormal>   TH1F *d3 = new
+TH1F(&quot;d3&quot;,&quot;&quot;,nbins,xmin,xmax);         </p>
+
+<p class=MsoNormal>   TH1F *d4 = new
+TH1F(&quot;d4&quot;,&quot;&quot;,nbins,xmin,xmax);            </p>
+
+<p class=MsoNormal>   TFile *f = new
+TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
+
+<p class=MsoNormal>   h=(TH1F*) f-&gt;Get(&quot;back2;1&quot;);   </p>
+
+<p class=MsoNormal>   TCanvas *background =
+gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;background&quot;);</p>
+
+<p class=MsoNormal>   if (!background) background = new
+TCanvas(&quot;background&quot;,&quot;Influence of clipping window width on the
+estimated background&quot;,10,10,1000,700);</p>
+
+<p class=MsoNormal>   h-&gt;SetAxisRange(0,1000);</p>
+
+<p class=MsoNormal>   h-&gt;SetMaximum(20000);</p>
+
+<p class=MsoNormal>   h-&gt;Draw(&quot;L&quot;);</p>
+
+<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
+source[i]=h-&gt;GetBinContent(i + 1);   </p>
+
+<p class=MsoNormal>  
+s-&gt;Background(source,nbins,10,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
+    </p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d1-&gt;SetBinContent(i +
+1,source[i]);   </p>
+
+<p class=MsoNormal>   d1-&gt;SetLineColor(kRed);</p>
+
+<p class=MsoNormal>   d1-&gt;Draw(&quot;SAME L&quot;);   </p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
+source[i]=h-&gt;GetBinContent(i + 1);</p>
+
+<p class=MsoNormal>   s-&gt;Background(source,nbins,20,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
+</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d2-&gt;SetBinContent(i +
+1,source[i]);   </p>
+
+<p class=MsoNormal>   d2-&gt;SetLineColor(kBlue);</p>
+
+<p class=MsoNormal>   d2-&gt;Draw(&quot;SAME L&quot;);   </p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
+source[i]=h-&gt;GetBinContent(i + 1);</p>
+
+<p class=MsoNormal>  
+s-&gt;Background(source,nbins,30,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
+</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d3-&gt;SetBinContent(i +
+1,source[i]);   </p>
+
+<p class=MsoNormal>   d3-&gt;SetLineColor(kGreen);</p>
+
+<p class=MsoNormal>   d3-&gt;Draw(&quot;SAME L&quot;);         </p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
+source[i]=h-&gt;GetBinContent(i + 1);</p>
+
+<p class=MsoNormal>  
+s-&gt;Background(source,nbins,10,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
+</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d4-&gt;SetBinContent(i +
+1,source[i]);   </p>
+
+<p class=MsoNormal>   d4-&gt;SetLineColor(kMagenta);</p>
+
+<p class=MsoNormal>   d4-&gt;Draw(&quot;SAME L&quot;);            </p>
+
+<p class=MsoNormal>}</p>
+
+</div>
+
+<!-- */
+// --> End_Html
+//Begin_Html <!--
+/* -->
+<div class=Section6>
+
+<p class=MsoNormal><i><span style='font-size:18.0pt'>Example 5 – script
+Background_order.c :</span></i></p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:16.0pt'>second order difference filter
+removes linear (quasi-linear) background and preserves symmetrical peaks.</span></p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:16.0pt'>however if the shape of the
+background is more complex one can employ higher-order clipping filters (see
+example in Figure 5)</span></p>
+
+<p class=MsoNormal><img width=601 height=407
+src="gif/TSpectrum_Background_order.jpg"></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
+5 Example of the influence of clipping filter difference order on the estimated
+background for fNnumberIterations=40, 2-nd order red line, 4-th order blue
+line, 6-th order green line and 8-th order magenta line, and using decreasing
+clipping window algorithm.</span></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal>// Example to illustrate the influence of the clipping
+filter difference order on the estimated background</p>
+
+<p class=MsoNormal>// To execute this example, do</p>
+
+<p class=MsoNormal>// root &gt; .x Background_order.C</p>
+
+<p class=MsoNormal>#include &lt;TSpectrum&gt;</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>void Background_order() {</p>
+
+<p class=MsoNormal>   Int_t i;</p>
+
+<p class=MsoNormal>   Double_t nbins = 4096;</p>
+
+<p class=MsoNormal>   Double_t xmin  = 0;</p>
+
+<p class=MsoNormal>   Double_t xmax  = (Double_t)4096;</p>
+
+<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
+
+<p class=MsoNormal>   TH1F *h = new
+TH1F(&quot;h&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
+
+<p class=MsoNormal>   TH1F *d1 = new
+TH1F(&quot;d1&quot;,&quot;&quot;,nbins,xmin,xmax);      </p>
+
+<p class=MsoNormal>   TH1F *d2 = new
+TH1F(&quot;d2&quot;,&quot;&quot;,nbins,xmin,xmax);         </p>
+
+<p class=MsoNormal>   TH1F *d3 = new
+TH1F(&quot;d3&quot;,&quot;&quot;,nbins,xmin,xmax);         </p>
+
+<p class=MsoNormal>   TH1F *d4 = new
+TH1F(&quot;d4&quot;,&quot;&quot;,nbins,xmin,xmax);            </p>
+
+<p class=MsoNormal>   TFile *f = new
+TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
+
+<p class=MsoNormal>   h=(TH1F*) f-&gt;Get(&quot;back2;1&quot;);</p>
+
+<p class=MsoNormal>   TCanvas *background =
+gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;background&quot;);</p>
+
+<p class=MsoNormal>   if (!background) background = new
+TCanvas(&quot;background&quot;,&quot;Influence of clipping filter difference
+order on the estimated background&quot;,10,10,1000,700);</p>
+
+<p class=MsoNormal>   h-&gt;SetAxisRange(1220,1460);</p>
+
+<p class=MsoNormal>   h-&gt;SetMaximum(11000);</p>
+
+<p class=MsoNormal>   h-&gt;Draw(&quot;L&quot;);</p>
+
+<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
+source[i]=h-&gt;GetBinContent(i + 1);   </p>
+
+<p class=MsoNormal>   s-&gt;Background(source,nbins,40,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
+    </p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d1-&gt;SetBinContent(i +
+1,source[i]);   </p>
+
+<p class=MsoNormal>   d1-&gt;SetLineColor(kRed);</p>
+
+<p class=MsoNormal>   d1-&gt;Draw(&quot;SAME L&quot;);   </p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
+source[i]=h-&gt;GetBinContent(i + 1);</p>
+
+<p class=MsoNormal>   s-&gt;Background(source,nbins,40,kBackDecreasingWindow,kBackOrder4,kFALSE,kBackSmoothing3,kFALSE);  
+</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d2-&gt;SetBinContent(i +
+1,source[i]);   </p>
+
+<p class=MsoNormal>   d2-&gt;SetLineColor(kBlue);</p>
+
+<p class=MsoNormal>   d2-&gt;Draw(&quot;SAME L&quot;);   </p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
+source[i]=h-&gt;GetBinContent(i + 1);</p>
+
+<p class=MsoNormal>  
+s-&gt;Background(source,nbins,40,kBackDecreasingWindow,kBackOrder6,kFALSE,kBackSmoothing3,kFALSE);     
+</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d3-&gt;SetBinContent(i +
+1,source[i]);   </p>
+
+<p class=MsoNormal>   d3-&gt;SetLineColor(kGreen);</p>
+
+<p class=MsoNormal>   d3-&gt;Draw(&quot;SAME L&quot;);         </p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
+source[i]=h-&gt;GetBinContent(i + 1);</p>
+
+<p class=MsoNormal>   s-&gt;Background(source,nbins,40,kBackDecreasingWindow,kBackOrder8,kFALSE,kBackSmoothing3,kFALSE);     
+</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d4-&gt;SetBinContent(i +
+1,source[i]);   </p>
+
+<p class=MsoNormal>   d4-&gt;SetLineColor(kMagenta);</p>
+
+<p class=MsoNormal>   d4-&gt;Draw(&quot;SAME L&quot;);            </p>
+
+<p class=MsoNormal>}</p>
+
+</div>
+
+</div>
+<!-- */
+// --> End_Html
+//Begin_Html <!--
+/* -->
+<div class=Section7>
+
+<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 6 – script
+Background_smooth.c :</span></i></p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:16.0pt'>the estimate of the background can
+be influenced by noise present in the spectrum. We proposed  the algorithm of
+the background estimate with simultaneous smoothing</span></p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:16.0pt'>in the original algorithm without
+smoothing, the estimated background snatches the lower spikes in the noise.
+Consequently, the areas of peaks are biased by this error. </span></p>
+
+<p class=MsoNormal style='text-indent:5.7pt'><img width=554 height=104
+src="gif/TSpectrum_Background_smooth1.jpg"></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
+7 Principle of background estimation algorithm with  simultaneous smoothing</span></b></p>
+
+<p class=MsoNormal><img width=601 height=407
+src="gif/TSpectrum_Background_smooth2.jpg"></p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt'>Figure 8 Illustration of
+non-smoothing (red line) and smoothing algorithm of background estimation (blue
+line).</span></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal>// Example to illustrate the background estimator (class
+TSpectrum) including Compton edges.</p>
+
+<p class=MsoNormal>// To execute this example, do</p>
+
+<p class=MsoNormal>// root &gt; .x Background_smooth.C</p>
+
+<p class=MsoNormal>#include &lt;TSpectrum&gt;</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>void Background_smooth() {</p>
+
+<p class=MsoNormal>   Int_t i;</p>
+
+<p class=MsoNormal>   Double_t nbins = 4096;</p>
+
+<p class=MsoNormal>   Double_t xmin  = 0;</p>
+
+<p class=MsoNormal>   Double_t xmax  = (Double_t)nbins;</p>
+
+<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
+
+<p class=MsoNormal>   TH1F *h = new
+TH1F(&quot;h&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
+
+<p class=MsoNormal>   TH1F *d1 = new TH1F(&quot;d1&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
+
+<p class=MsoNormal>   TH1F *d2 = new
+TH1F(&quot;d2&quot;,&quot;&quot;,nbins,xmin,xmax);                  </p>
+
+<p class=MsoNormal>   TFile *f = new
+TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
+
+<p class=MsoNormal>   h=(TH1F*) f-&gt;Get(&quot;back4;1&quot;);</p>
+
+<p class=MsoNormal>   TCanvas *background =
+gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;background&quot;);</p>
+
+<p class=MsoNormal>   if (!background) background = new
+TCanvas(&quot;background&quot;,&quot;Estimation of background with
+noise&quot;,10,10,1000,700);</p>
+
+<p class=MsoNormal>   h-&gt;SetAxisRange(3460,3830);   </p>
+
+<p class=MsoNormal>   h-&gt;Draw(&quot;L&quot;);</p>
+
+<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
+source[i]=h-&gt;GetBinContent(i + 1);   </p>
+
+<p class=MsoNormal>  
+s-&gt;Background(source,nbins,6,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);     
+</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d1-&gt;SetBinContent(i +
+1,source[i]);   </p>
+
+<p class=MsoNormal>   d1-&gt;SetLineColor(kRed);</p>
+
+<p class=MsoNormal>   d1-&gt;Draw(&quot;SAME L&quot;);</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
+source[i]=h-&gt;GetBinContent(i + 1);   </p>
+
+<p class=MsoNormal>  
+s-&gt;Background(source,nbins,6,kBackDecreasingWindow,kBackOrder2,kTRUE,kBackSmoothing3,kFALSE);     
+</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d2-&gt;SetBinContent(i +
+1,source[i]);   </p>
+
+<p class=MsoNormal>   d2-&gt;SetLineColor(kBlue);</p>
+
+<p class=MsoNormal>   d2-&gt;Draw(&quot;SAME L&quot;);      </p>
+
+<p class=MsoNormal>}</p>
+
+</div>
+
+<!-- */
+// --> End_Html
+//Begin_Html <!--
+/* -->
+<div class=Section8>
+
+<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 8 – script
+Background_compton.c :</span></i></p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:16.0pt'>sometimes it is necessary to
+include also the Compton edges into the estimate of the background. In Figure 8
+we present the example of the synthetic spectrum with Compton edges. </span></p>
+
+<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
+-18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:16.0pt'>the background was estimated using
+the 8-th order filter with the estimation of the Compton edges using decreasing
+clipping window algorithm (numberIterations=10) with smoothing (
+smoothingWindow=5).</span></p>
+
+<p class=MsoNormal><img width=601 height=407
+src="gif/TSpectrum_Background_compton.jpg"></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
+8 Example of the estimate of the background with Compton edges (red line) for
+numberIterations=10, 8-th order difference filter, using decreasing clipping
+window algorithm and smoothing (smoothingWindow=5).</span></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal>// Example to illustrate the background estimator (class
+TSpectrum) including Compton edges.</p>
+
+<p class=MsoNormal>// To execute this example, do</p>
+
+<p class=MsoNormal>// root &gt; .x Background_compton.C</p>
+
+<p class=MsoNormal>#include &lt;TSpectrum&gt;</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>void Background_compton() {</p>
+
+<p class=MsoNormal>   Int_t i;</p>
+
+<p class=MsoNormal>   Double_t nbins = 512;</p>
+
+<p class=MsoNormal>   Double_t xmin  = 0;</p>
+
+<p class=MsoNormal>   Double_t xmax  = (Double_t)nbins;</p>
+
+<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
+
+<p class=MsoNormal>   TH1F *h = new
+TH1F(&quot;h&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
+
+<p class=MsoNormal>   TH1F *d1 = new
+TH1F(&quot;d1&quot;,&quot;&quot;,nbins,xmin,xmax);      </p>
+
+<p class=MsoNormal>   TFile *f = new
+TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
+
+<p class=MsoNormal>   h=(TH1F*) f-&gt;Get(&quot;back3;1&quot;);</p>
+
+<p class=MsoNormal>   TCanvas *background =
+gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;background&quot;);</p>
+
+<p class=MsoNormal>   if (!background) background = new
+TCanvas(&quot;background&quot;,&quot;Estimation of background with Compton edges under peaks&quot;,10,10,1000,700);</p>
+
+<p class=MsoNormal>   h-&gt;Draw(&quot;L&quot;);</p>
+
+<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
+source[i]=h-&gt;GetBinContent(i + 1);   </p>
+
+<p class=MsoNormal>   s-&gt;Background(source,nbins,10,kBackDecreasingWindow,kBackOrder8,kTRUE,kBackSmoothing5,,kTRUE);     
+</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d1-&gt;SetBinContent(i +
+1,source[i]);   </p>
+
+<p class=MsoNormal>   d1-&gt;SetLineColor(kRed);</p>
+
+<p class=MsoNormal>   d1-&gt;Draw(&quot;SAME L&quot;);   </p>
+
+<p class=MsoNormal>}</p>
 
 </div>
 
@@ -1233,810 +2028,6 @@ NIM 214 (1983), 431-434. </span></p>
    return 0;
 }
 
-//Begin_Html <!--
-/* -->
-<div class=Section2>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>Example 1– script
-Background_incr.c :</span></i></p>
-
-<p class=MsoNormal><img width=601 height=407
-src="gif/TSpectrum_Background_incr.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
-1 Example of the estimation of background for number of iterations=6. Original
-spectrum is shown in black color, estimated background in red color.</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:14.0pt;color:green'>&nbsp;</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:green'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate the background estimator (class
-TSpectrum).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Background_incr.C</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum&gt; </p>
-
-<p class=MsoNormal>void Background_incr() {</p>
-
-<p class=MsoNormal>   Int_t i;</p>
-
-<p class=MsoNormal>   Double_t nbins = 256;</p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbins;</p>
-
-<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
-
-<p class=MsoNormal>   TH1F *back = new
-TH1F(&quot;back&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
-
-<p class=MsoNormal>   TH1F *d = new
-TH1F(&quot;d&quot;,&quot;&quot;,nbins,xmin,xmax);      </p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
-
-<p class=MsoNormal>   back=(TH1F*) f-&gt;Get(&quot;back1;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *Background = gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;Background&quot;);</p>
-
-<p class=MsoNormal>   if (!Background) Background = new
-TCanvas(&quot;Background&quot;,&quot;Estimation of background with increasing
-window&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   back-&gt;Draw(&quot;L&quot;);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) source[i]=back-&gt;GetBinContent(i
-+ 1); </p>
-
-<p class=MsoNormal>   s-&gt;Background(source,nbins,6,kBackIncreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d-&gt;SetLineColor(kRed);</p>
-
-<p class=MsoNormal>   d-&gt;Draw(&quot;SAME L&quot;);   </p>
-
-<p class=MsoNormal>   }</p>
-
-</div>
-
-<!-- */
-// --> End_Html
-
-
-
-//Begin_Html <!--
-/* -->
-<div class=Section3>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>Example 2 – script
-Background_decr.c :</span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>In
-Figure 1. one can notice that at the edges of the peaks the estimated
-background goes under the peaks. An alternative approach is to decrease the
-clipping window from a given value numberIterations to the value of one, which
-is presented in this example. </span></p>
-
-<p class=MsoNormal><img width=601 height=407
-src="gif/TSpectrum_Background_decr.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
-2 Example of the estimation of background for numberIterations=6 using
-decreasing clipping window algorithm. Original spectrum is shown in black
-color, estimated background in red color.</span></b></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate the background estimator (class
-TSpectrum).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Background_decr.C</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum&gt;   </p>
-
-<p class=MsoNormal>void Background_decr() {</p>
-
-<p class=MsoNormal>   Int_t i;</p>
-
-<p class=MsoNormal>   Double_t nbins = 256;</p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbins;</p>
-
-<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
-
-<p class=MsoNormal>   TH1F *back = new
-TH1F(&quot;back&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
-
-<p class=MsoNormal>   TH1F *d = new
-TH1F(&quot;d&quot;,&quot;&quot;,nbins,xmin,xmax);      </p>
-
-<p class=MsoNormal>   TFile *f = new TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
-
-<p class=MsoNormal>   back=(TH1F*) f-&gt;Get(&quot;back1;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *Background =
-gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;Background&quot;);</p>
-
-<p class=MsoNormal>   if (!Background) Background = new
-TCanvas(&quot;Background&quot;,&quot;Estimation of background with decreasing
-window&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   back-&gt;Draw(&quot;L&quot;);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=back-&gt;GetBinContent(i + 1); </p>
-
-<p class=MsoNormal>   s-&gt;Background(source,nbins,6,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d-&gt;SetLineColor(kRed);</p>
-
-<p class=MsoNormal>   d-&gt;Draw(&quot;SAME L&quot;);   </p>
-
-<p class=MsoNormal>   }</p>
-
-</div>
-
-<!-- */
-// --> End_Html
-
-//Begin_Html <!--
-/* -->
-<div class=Section4>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>Example 3 – script
-Background_width.c :</span></i></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>the question is how to choose the
-width of the clipping window, i.e.,  numberIterations   parameter. The
-influence of this parameter on the estimated background is illustrated in
-Figure 3.</span></p>
-
-<p class=MsoNormal><img width=601 height=407
-src="gif/TSpectrum_Background_width.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
-3 Example of the influence of clipping window width on the estimated background
-for numberIterations=4 (red line), 6 (blue line) 8 (green line) using
-decreasing clipping window algorithm.</span></b></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><i><span style='font-size:18.0pt'>in general one should set this
-parameter so that the value 2*numberIterations+1 was greater than the widths
-of preserved objects (peaks).</span></i></p>
-
-<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt;
-color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate the influence of the clipping
-window width on the estimated background</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Background_width.C</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum&gt;</p>
-
-<p class=MsoNormal>void Background_width() {</p>
-
-<p class=MsoNormal>   Int_t i;</p>
-
-<p class=MsoNormal>   Double_t nbins = 256;</p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbins;</p>
-
-<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
-
-<p class=MsoNormal>   TH1F *h = new
-TH1F(&quot;h&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
-
-<p class=MsoNormal>   TH1F *d1 = new
-TH1F(&quot;d1&quot;,&quot;&quot;,nbins,xmin,xmax);      </p>
-
-<p class=MsoNormal>   TH1F *d2 = new
-TH1F(&quot;d2&quot;,&quot;&quot;,nbins,xmin,xmax);         </p>
-
-<p class=MsoNormal>   TH1F *d3 = new
-TH1F(&quot;d3&quot;,&quot;&quot;,nbins,xmin,xmax);         </p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
-
-<p class=MsoNormal>   h=(TH1F*) f-&gt;Get(&quot;back1;1&quot;);      </p>
-
-<p class=MsoNormal>   TCanvas *background = gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;background&quot;);</p>
-
-<p class=MsoNormal>   if (!background) background = new
-TCanvas(&quot;background&quot;,&quot;Influence of clipping window width on the
-estimated background&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   h-&gt;Draw(&quot;L&quot;);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) source[i]=h-&gt;GetBinContent(i
-+ 1);   </p>
-
-<p class=MsoNormal>  
-s-&gt;Background(source,nbins,4,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d1-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d1-&gt;SetLineColor(kRed);</p>
-
-<p class=MsoNormal>   d1-&gt;Draw(&quot;SAME L&quot;);   </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);</p>
-
-<p class=MsoNormal>  
-s-&gt;Background(source,nbins,6,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d2-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d2-&gt;SetLineColor(kBlue);</p>
-
-<p class=MsoNormal>   d2-&gt;Draw(&quot;SAME L&quot;);   </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);</p>
-
-<p class=MsoNormal>  
-s-&gt;Background(source,nbins,8,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d3-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d3-&gt;SetLineColor(kGreen);</p>
-
-<p class=MsoNormal>   d3-&gt;Draw(&quot;SAME L&quot;);         </p>
-
-<p class=MsoNormal>}</p>
-
-</div>
-
-<!-- */
-// --> End_Html
-
-
-//Begin_Html <!--
-/* -->
-<div class=Section5>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>Example 4 – script
-Background_width2.c :</span></i></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-indent:-18.0pt'><span
-style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>another example for very complex
-spectrum is given in Figure 4.</span></p>
-
-<p class=MsoNormal><img width=601 height=407
-src="gif/TSpectrum_Background_width2.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
-4 Example of the influence of clipping window width on the estimated background
-for numberIterations=10 (red line), 20 (blue line), 30 (green line) and 40
-(magenta line) using decreasing clipping window algorithm.</span></b></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate the influence of the clipping
-window width on the estimated background</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Background_width2.C</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum&gt;  </p>
-
-<p class=MsoNormal>void Background_width2() {</p>
-
-<p class=MsoNormal>   Int_t i;</p>
-
-<p class=MsoNormal>   Double_t nbins = 4096;</p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)4096;</p>
-
-<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
-
-<p class=MsoNormal>   TH1F *h = new
-TH1F(&quot;h&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
-
-<p class=MsoNormal>   TH1F *d1 = new TH1F(&quot;d1&quot;,&quot;&quot;,nbins,xmin,xmax);     
-</p>
-
-<p class=MsoNormal>   TH1F *d2 = new
-TH1F(&quot;d2&quot;,&quot;&quot;,nbins,xmin,xmax);         </p>
-
-<p class=MsoNormal>   TH1F *d3 = new
-TH1F(&quot;d3&quot;,&quot;&quot;,nbins,xmin,xmax);         </p>
-
-<p class=MsoNormal>   TH1F *d4 = new
-TH1F(&quot;d4&quot;,&quot;&quot;,nbins,xmin,xmax);            </p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
-
-<p class=MsoNormal>   h=(TH1F*) f-&gt;Get(&quot;back2;1&quot;);   </p>
-
-<p class=MsoNormal>   TCanvas *background =
-gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;background&quot;);</p>
-
-<p class=MsoNormal>   if (!background) background = new
-TCanvas(&quot;background&quot;,&quot;Influence of clipping window width on the
-estimated background&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   h-&gt;SetAxisRange(0,1000);</p>
-
-<p class=MsoNormal>   h-&gt;SetMaximum(20000);</p>
-
-<p class=MsoNormal>   h-&gt;Draw(&quot;L&quot;);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);   </p>
-
-<p class=MsoNormal>  
-s-&gt;Background(source,nbins,10,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
-    </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d1-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d1-&gt;SetLineColor(kRed);</p>
-
-<p class=MsoNormal>   d1-&gt;Draw(&quot;SAME L&quot;);   </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);</p>
-
-<p class=MsoNormal>   s-&gt;Background(source,nbins,20,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d2-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d2-&gt;SetLineColor(kBlue);</p>
-
-<p class=MsoNormal>   d2-&gt;Draw(&quot;SAME L&quot;);   </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);</p>
-
-<p class=MsoNormal>  
-s-&gt;Background(source,nbins,30,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d3-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d3-&gt;SetLineColor(kGreen);</p>
-
-<p class=MsoNormal>   d3-&gt;Draw(&quot;SAME L&quot;);         </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);</p>
-
-<p class=MsoNormal>  
-s-&gt;Background(source,nbins,10,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d4-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d4-&gt;SetLineColor(kMagenta);</p>
-
-<p class=MsoNormal>   d4-&gt;Draw(&quot;SAME L&quot;);            </p>
-
-<p class=MsoNormal>}</p>
-
-</div>
-
-<!-- */
-// --> End_Html
-
-//Begin_Html <!--
-/* -->
-<div class=Section6>
-
-<p class=MsoNormal><i><span style='font-size:18.0pt'>Example 5 – script
-Background_order.c :</span></i></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>second order difference filter
-removes linear (quasi-linear) background and preserves symmetrical peaks.</span></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>however if the shape of the
-background is more complex one can employ higher-order clipping filters (see
-example in Figure 5)</span></p>
-
-<p class=MsoNormal><img width=601 height=407
-src="gif/TSpectrum_Background_order.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
-5 Example of the influence of clipping filter difference order on the estimated
-background for fNnumberIterations=40, 2-nd order red line, 4-th order blue
-line, 6-th order green line and 8-th order magenta line, and using decreasing
-clipping window algorithm.</span></b></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate the influence of the clipping
-filter difference order on the estimated background</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Background_order.C</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum&gt;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Background_order() {</p>
-
-<p class=MsoNormal>   Int_t i;</p>
-
-<p class=MsoNormal>   Double_t nbins = 4096;</p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)4096;</p>
-
-<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
-
-<p class=MsoNormal>   TH1F *h = new
-TH1F(&quot;h&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
-
-<p class=MsoNormal>   TH1F *d1 = new
-TH1F(&quot;d1&quot;,&quot;&quot;,nbins,xmin,xmax);      </p>
-
-<p class=MsoNormal>   TH1F *d2 = new
-TH1F(&quot;d2&quot;,&quot;&quot;,nbins,xmin,xmax);         </p>
-
-<p class=MsoNormal>   TH1F *d3 = new
-TH1F(&quot;d3&quot;,&quot;&quot;,nbins,xmin,xmax);         </p>
-
-<p class=MsoNormal>   TH1F *d4 = new
-TH1F(&quot;d4&quot;,&quot;&quot;,nbins,xmin,xmax);            </p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
-
-<p class=MsoNormal>   h=(TH1F*) f-&gt;Get(&quot;back2;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *background =
-gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;background&quot;);</p>
-
-<p class=MsoNormal>   if (!background) background = new
-TCanvas(&quot;background&quot;,&quot;Influence of clipping filter difference
-order on the estimated background&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   h-&gt;SetAxisRange(1220,1460);</p>
-
-<p class=MsoNormal>   h-&gt;SetMaximum(11000);</p>
-
-<p class=MsoNormal>   h-&gt;Draw(&quot;L&quot;);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);   </p>
-
-<p class=MsoNormal>   s-&gt;Background(source,nbins,40,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);  
-    </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d1-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d1-&gt;SetLineColor(kRed);</p>
-
-<p class=MsoNormal>   d1-&gt;Draw(&quot;SAME L&quot;);   </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);</p>
-
-<p class=MsoNormal>   s-&gt;Background(source,nbins,40,kBackDecreasingWindow,kBackOrder4,kFALSE,kBackSmoothing3,kFALSE);  
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d2-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d2-&gt;SetLineColor(kBlue);</p>
-
-<p class=MsoNormal>   d2-&gt;Draw(&quot;SAME L&quot;);   </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);</p>
-
-<p class=MsoNormal>  
-s-&gt;Background(source,nbins,40,kBackDecreasingWindow,kBackOrder6,kFALSE,kBackSmoothing3,kFALSE);     
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d3-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d3-&gt;SetLineColor(kGreen);</p>
-
-<p class=MsoNormal>   d3-&gt;Draw(&quot;SAME L&quot;);         </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);</p>
-
-<p class=MsoNormal>   s-&gt;Background(source,nbins,40,kBackDecreasingWindow,kBackOrder8,kFALSE,kBackSmoothing3,kFALSE);     
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d4-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d4-&gt;SetLineColor(kMagenta);</p>
-
-<p class=MsoNormal>   d4-&gt;Draw(&quot;SAME L&quot;);            </p>
-
-<p class=MsoNormal>}</p>
-
-</div>
-
-</div>
-<!-- */
-// --> End_Html
-
-//Begin_Html <!--
-/* -->
-<div class=Section7>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 6 – script
-Background_smooth.c :</span></i></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>the estimate of the background can
-be influenced by noise present in the spectrum. We proposed  the algorithm of
-the background estimate with simultaneous smoothing</span></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>in the original algorithm without
-smoothing, the estimated background snatches the lower spikes in the noise.
-Consequently, the areas of peaks are biased by this error. </span></p>
-
-<p class=MsoNormal style='text-indent:5.7pt'><img width=554 height=104
-src="gif/TSpectrum_Background_smooth1.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
-7 Principle of background estimation algorithm with  simultaneous smoothing</span></b></p>
-
-<p class=MsoNormal><img width=601 height=407
-src="gif/TSpectrum_Background_smooth2.jpg"></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt'>Figure 8 Illustration of
-non-smoothing (red line) and smoothing algorithm of background estimation (blue
-line).</span></b></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate the background estimator (class
-TSpectrum) including Compton edges.</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Background_smooth.C</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum&gt;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Background_smooth() {</p>
-
-<p class=MsoNormal>   Int_t i;</p>
-
-<p class=MsoNormal>   Double_t nbins = 4096;</p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbins;</p>
-
-<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
-
-<p class=MsoNormal>   TH1F *h = new
-TH1F(&quot;h&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
-
-<p class=MsoNormal>   TH1F *d1 = new TH1F(&quot;d1&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
-
-<p class=MsoNormal>   TH1F *d2 = new
-TH1F(&quot;d2&quot;,&quot;&quot;,nbins,xmin,xmax);                  </p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
-
-<p class=MsoNormal>   h=(TH1F*) f-&gt;Get(&quot;back4;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *background =
-gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;background&quot;);</p>
-
-<p class=MsoNormal>   if (!background) background = new
-TCanvas(&quot;background&quot;,&quot;Estimation of background with
-noise&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   h-&gt;SetAxisRange(3460,3830);   </p>
-
-<p class=MsoNormal>   h-&gt;Draw(&quot;L&quot;);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);   </p>
-
-<p class=MsoNormal>  
-s-&gt;Background(source,nbins,6,kBackDecreasingWindow,kBackOrder2,kFALSE,kBackSmoothing3,kFALSE);     
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d1-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d1-&gt;SetLineColor(kRed);</p>
-
-<p class=MsoNormal>   d1-&gt;Draw(&quot;SAME L&quot;);</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);   </p>
-
-<p class=MsoNormal>  
-s-&gt;Background(source,nbins,6,kBackDecreasingWindow,kBackOrder2,kTRUE,kBackSmoothing3,kFALSE);     
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d2-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d2-&gt;SetLineColor(kBlue);</p>
-
-<p class=MsoNormal>   d2-&gt;Draw(&quot;SAME L&quot;);      </p>
-
-<p class=MsoNormal>}</p>
-
-</div>
-
-<!-- */
-// --> End_Html
-
-//Begin_Html <!--
-/* -->
-<div class=Section8>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 8 – script
-Background_compton.c :</span></i></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>sometimes it is necessary to
-include also the Compton edges into the estimate of the background. In Figure 8
-we present the example of the synthetic spectrum with Compton edges. </span></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'><span style='font-size:16.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span></span><span style='font-size:16.0pt'>the background was estimated using
-the 8-th order filter with the estimation of the Compton edges using decreasing
-clipping window algorithm (numberIterations=10) with smoothing (
-smoothingWindow=5).</span></p>
-
-<p class=MsoNormal><img width=601 height=407
-src="gif/TSpectrum_Background_compton.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Figure
-8 Example of the estimate of the background with Compton edges (red line) for
-numberIterations=10, 8-th order difference filter, using decreasing clipping
-window algorithm and smoothing (smoothingWindow=5).</span></b></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate the background estimator (class
-TSpectrum) including Compton edges.</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Background_compton.C</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum&gt;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Background_compton() {</p>
-
-<p class=MsoNormal>   Int_t i;</p>
-
-<p class=MsoNormal>   Double_t nbins = 512;</p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbins;</p>
-
-<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
-
-<p class=MsoNormal>   TH1F *h = new
-TH1F(&quot;h&quot;,&quot;&quot;,nbins,xmin,xmax);</p>
-
-<p class=MsoNormal>   TH1F *d1 = new
-TH1F(&quot;d1&quot;,&quot;&quot;,nbins,xmin,xmax);      </p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
-
-<p class=MsoNormal>   h=(TH1F*) f-&gt;Get(&quot;back3;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *background =
-gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;background&quot;);</p>
-
-<p class=MsoNormal>   if (!background) background = new
-TCanvas(&quot;background&quot;,&quot;Estimation of background with Compton edges under peaks&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   h-&gt;Draw(&quot;L&quot;);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);   </p>
-
-<p class=MsoNormal>   s-&gt;Background(source,nbins,10,kBackDecreasingWindow,kBackOrder8,kTRUE,kBackSmoothing5,,kTRUE);     
-</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) d1-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   d1-&gt;SetLineColor(kRed);</p>
-
-<p class=MsoNormal>   d1-&gt;Draw(&quot;SAME L&quot;);   </p>
-
-<p class=MsoNormal>}</p>
-
-</div>
-
-<!-- */
-// --> End_Html
 
 //_______________________________________________________________________________
 const char* TSpectrum::SmoothMarkov(float *source, int ssize, int averWindow)
@@ -2160,6 +2151,91 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
 
 <!-- */
 // --> End_Html
+//Begin_Html <!--
+/* -->
+<div class=Section17>
+
+<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 14 – script Smoothing.c
+:</span></i></p>
+
+<p class=MsoNormal><span style='font-size:16.0pt'> <img width=296 height=182
+src="gif/TSpectrum_Smoothing1.jpg"><img width=296 height=182
+src="gif/TSpectrum_Smoothing2.jpg"></span></p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt'>Fig. 23 Original noisy spectrum</span></b><b><span
+style='font-size:14.0pt'>    </span></b><b><span style='font-size:16.0pt'>Fig.
+24 Smoothed spectrum m=3</span></b></p>
+
+<p class=MsoNormal><b><span style='font-size:14.0pt'><img width=299 height=184
+src="gif/TSpectrum_Smoothing3.jpg"><img width=299 height=184
+src="gif/TSpectrum_Smoothing4.jpg"></span></b></p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt'>Fig. 25 Smoothed spectrum
+m=7 Fig.26 Smoothed spectrum m=10</span></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal>// Example to illustrate smoothing using Markov algorithm
+(class TSpectrum).</p>
+
+<p class=MsoNormal>// To execute this example, do</p>
+
+<p class=MsoNormal>// root &gt; .x Smoothing.C</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>//#include &lt;TSpectrum&gt;</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>void Smoothing() {</p>
+
+<p class=MsoNormal>   Int_t i;</p>
+
+<p class=MsoNormal>   Double_t nbins = 1024;</p>
+
+<p class=MsoNormal>   Double_t xmin  = 0;</p>
+
+<p class=MsoNormal>   Double_t xmax  = (Double_t)nbins;</p>
+
+<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
+
+<p class=MsoNormal>   TH1F *h = new TH1F(&quot;h&quot;,&quot;Smoothed spectrum
+for m=3&quot;,nbins,xmin,xmax);</p>
+
+<p class=MsoNormal>   TFile *f = new
+TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
+
+<p class=MsoNormal>   h=(TH1F*) f-&gt;Get(&quot;smooth1;1&quot;);   </p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
+source[i]=h-&gt;GetBinContent(i + 1);   </p>
+
+<p class=MsoNormal>   TCanvas *Smooth1 =
+gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;Smooth1&quot;);</p>
+
+<p class=MsoNormal>   if (!Smooth1) Smooth1 = new
+TCanvas(&quot;Smooth1&quot;,&quot;Smooth1&quot;,10,10,1000,700);</p>
+
+<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
+
+<p class=MsoNormal>   s-&gt;SmoothMarkov(source,1024,3);  //3, 7, 10</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) h-&gt;SetBinContent(i +
+1,source[i]);   </p>
+
+<p class=MsoNormal>   h-&gt;SetAxisRange(330,880);</p>
+
+<p class=MsoNormal>   h-&gt;Draw(&quot;L&quot;);</p>
+
+<p class=MsoNormal>}</p>
+
+</div>
+
+<!-- */
+// --> End_Html
    int xmin, xmax, i, l;
    float a, b, maxch;
    float nom, nip, nim, sp, sm, area = 0;
@@ -2253,91 +2329,6 @@ const char *TSpectrum::Deconvolution(float *source, const float *response,
 //                                                                         //
 /////////////////////////////////////////////////////////////////////////////
 //
-//Begin_Html <!--
-/* -->
-<div class=Section17>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 14 – script Smoothing.c
-:</span></i></p>
-
-<p class=MsoNormal><span style='font-size:16.0pt'> <img width=296 height=182
-src="gif/TSpectrum_Smoothing1.jpg"><img width=296 height=182
-src="gif/TSpectrum_Smoothing2.jpg"></span></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt'>Fig. 23 Original noisy spectrum</span></b><b><span
-style='font-size:14.0pt'>    </span></b><b><span style='font-size:16.0pt'>Fig.
-24 Smoothed spectrum m=3</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:14.0pt'><img width=299 height=184
-src="gif/TSpectrum_Smoothing3.jpg"><img width=299 height=184
-src="gif/TSpectrum_Smoothing4.jpg"></span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt'>Fig. 25 Smoothed spectrum
-m=7 Fig.26 Smoothed spectrum m=10</span></b></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate smoothing using Markov algorithm
-(class TSpectrum).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Smoothing.C</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>//#include &lt;TSpectrum&gt;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Smoothing() {</p>
-
-<p class=MsoNormal>   Int_t i;</p>
-
-<p class=MsoNormal>   Double_t nbins = 1024;</p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbins;</p>
-
-<p class=MsoNormal>   Float_t * source = new float[nbins];</p>
-
-<p class=MsoNormal>   TH1F *h = new TH1F(&quot;h&quot;,&quot;Smoothed spectrum
-for m=3&quot;,nbins,xmin,xmax);</p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra\\TSpectrum.root&quot;);</p>
-
-<p class=MsoNormal>   h=(TH1F*) f-&gt;Get(&quot;smooth1;1&quot;);   </p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++)
-source[i]=h-&gt;GetBinContent(i + 1);   </p>
-
-<p class=MsoNormal>   TCanvas *Smooth1 =
-gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;Smooth1&quot;);</p>
-
-<p class=MsoNormal>   if (!Smooth1) Smooth1 = new
-TCanvas(&quot;Smooth1&quot;,&quot;Smooth1&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   s-&gt;SmoothMarkov(source,1024,3);  //3, 7, 10</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbins; i++) h-&gt;SetBinContent(i +
-1,source[i]);   </p>
-
-<p class=MsoNormal>   h-&gt;SetAxisRange(330,880);</p>
-
-<p class=MsoNormal>   h-&gt;Draw(&quot;L&quot;);</p>
-
-<p class=MsoNormal>}</p>
-
-</div>
-
-<!-- */
-// --> End_Html
 //Begin_Html <!--
 /* -->
 <div class=Section9>
@@ -2624,154 +2615,6 @@ Processing 13 (2003) 144. </span></p>
 
 <!-- */
 // --> End_Html
-
-   if (ssize <= 0)
-      return "Wrong Parameters";
-   
-   if (numberRepetitions <= 0)
-      return "Wrong Parameters";
-   
-       //   working_space-pointer to the working vector
-       //   (its size must be 4*ssize of source spectrum)
-   double *working_space = new double[4 * ssize];
-   int i, j, k, lindex, posit, lh_gold, l, repet;
-   double lda, ldb, ldc, area, maximum;
-   area = 0;
-   lh_gold = -1;
-   posit = 0;
-   maximum = 0;
-   
-//read response vector
-   for (i = 0; i < ssize; i++) {
-      lda = response[i];
-      if (lda != 0)
-         lh_gold = i + 1;
-      working_space[i] = lda;
-      area += lda;
-      if (lda > maximum) {
-         maximum = lda;
-         posit = i;
-      }
-   }
-   if (lh_gold == -1)
-      return "ZERO RESPONSE VECTOR";
-   
-//read source vector
-   for (i = 0; i < ssize; i++)
-      working_space[2 * ssize + i] = source[i];
-   
-// create matrix at*a and vector at*y
-   for (i = 0; i < ssize; i++){
-      lda = 0;
-      for (j = 0; j < ssize; j++){
-         ldb = working_space[j];
-         k = i + j;
-         if (k < ssize){
-            ldc = working_space[k];
-            lda = lda + ldb * ldc;
-         }
-      }
-      working_space[ssize + i] = lda;
-      lda = 0;
-      for (k = 0; k < ssize; k++){
-         l = k - i;
-         if (l >= 0){
-            ldb = working_space[l];
-            ldc = working_space[2 * ssize + k];
-            lda = lda + ldb * ldc;
-         }
-      }
-      working_space[3 * ssize + i]=lda;
-   }
-
-// move vector at*y
-   for (i = 0; i < ssize; i++){
-      working_space[2 * ssize + i] = working_space[3 * ssize + i];
-   }
-   
-//initialization of resulting vector
-   for (i = 0; i < ssize; i++)
-      working_space[i] = 1;
-   
-       //**START OF ITERATIONS**
-   for (repet = 0; repet < numberRepetitions; repet++) {
-      if (repet != 0) {
-         for (i = 0; i < ssize; i++)
-            working_space[i] = TMath::Power(working_space[i], boost);
-      }       
-      for (lindex = 0; lindex < numberIterations; lindex++) {
-         for (i = 0; i < ssize; i++) {
-            if (working_space[2 * ssize + i] > 0.000001
-                 && working_space[i] > 0.000001) {
-               lda = 0;
-               for (j = 0; j < lh_gold; j++) {
-                  ldb = working_space[j + ssize];
-                  if (j != 0){
-                     k = i + j;
-                     ldc = 0;
-                     if (k < ssize)
-                        ldc = working_space[k];                  
-                     k = i - j;                  
-                     if (k >= 0)
-                        ldc += working_space[k];                  
-                  }
-               
-                  else
-                     ldc = working_space[i];               
-                  lda = lda + ldb * ldc;
-               }              
-               ldb = working_space[2 * ssize + i];
-               if (lda != 0)
-                  lda = ldb / lda;
-
-               else
-                  lda = 0;
-               ldb = working_space[i];
-               lda = lda * ldb;
-               working_space[3 * ssize + i] = lda;
-            }
-         }
-         for (i = 0; i < ssize; i++)
-            working_space[i] = working_space[3 * ssize + i];
-      }
-   }
-   
-//shift resulting spectrum
-   for (i = 0; i < ssize; i++) {
-      lda = working_space[i];
-      j = i + posit;
-      j = j % ssize;
-      working_space[ssize + j] = lda;
-   }
-   
-//write back resulting spectrum
-   for (i = 0; i < ssize; i++)
-      source[i] = area * working_space[ssize + i];
-   delete[]working_space;
-   return 0;
-}
-
-//_______________________________________________________________________________
-const char *TSpectrum::DeconvolutionRL(float *source, const float *response,
-                                      int ssize, int numberIterations,
-                                      int numberRepetitions, double boost ) 
-{   
-/////////////////////////////////////////////////////////////////////////////
-//   ONE-DIMENSIONAL DECONVOLUTION FUNCTION                                //
-//   This function calculates deconvolution from source spectrum           //
-//   according to response spectrum using Richardson-Lucy algorithm        //
-//   The result is placed in the vector pointed by source pointer.         //
-//                                                                         //
-//   Function parameters:                                                  //
-//   source:  pointer to the vector of source spectrum                     //
-//   response:     pointer to the vector of response spectrum              //
-//   ssize:    length of source and response spectra                       //
-//   numberIterations, for details we refer to the reference given above   //
-//   numberRepetitions, for repeated boosted deconvolution                 //
-//   boost, boosting coefficient                                           //
-//                                                                         //
-/////////////////////////////////////////////////////////////////////////////
-//
 //Begin_Html <!--
 /* -->
 <div class=Section10>
@@ -2884,7 +2727,6 @@ TCanvas(&quot;Decon1&quot;,&quot;Decon1&quot;,10,10,1000,700);</p>
 
 <!-- */
 // --> End_Html
-
 //Begin_Html <!--
 /* -->
 <div class=Section11>
@@ -3422,6 +3264,154 @@ L&quot;);   </p>
 
 <!-- */
 // --> End_Html
+
+   if (ssize <= 0)
+      return "Wrong Parameters";
+   
+   if (numberRepetitions <= 0)
+      return "Wrong Parameters";
+   
+       //   working_space-pointer to the working vector
+       //   (its size must be 4*ssize of source spectrum)
+   double *working_space = new double[4 * ssize];
+   int i, j, k, lindex, posit, lh_gold, l, repet;
+   double lda, ldb, ldc, area, maximum;
+   area = 0;
+   lh_gold = -1;
+   posit = 0;
+   maximum = 0;
+   
+//read response vector
+   for (i = 0; i < ssize; i++) {
+      lda = response[i];
+      if (lda != 0)
+         lh_gold = i + 1;
+      working_space[i] = lda;
+      area += lda;
+      if (lda > maximum) {
+         maximum = lda;
+         posit = i;
+      }
+   }
+   if (lh_gold == -1)
+      return "ZERO RESPONSE VECTOR";
+   
+//read source vector
+   for (i = 0; i < ssize; i++)
+      working_space[2 * ssize + i] = source[i];
+   
+// create matrix at*a and vector at*y
+   for (i = 0; i < ssize; i++){
+      lda = 0;
+      for (j = 0; j < ssize; j++){
+         ldb = working_space[j];
+         k = i + j;
+         if (k < ssize){
+            ldc = working_space[k];
+            lda = lda + ldb * ldc;
+         }
+      }
+      working_space[ssize + i] = lda;
+      lda = 0;
+      for (k = 0; k < ssize; k++){
+         l = k - i;
+         if (l >= 0){
+            ldb = working_space[l];
+            ldc = working_space[2 * ssize + k];
+            lda = lda + ldb * ldc;
+         }
+      }
+      working_space[3 * ssize + i]=lda;
+   }
+
+// move vector at*y
+   for (i = 0; i < ssize; i++){
+      working_space[2 * ssize + i] = working_space[3 * ssize + i];
+   }
+   
+//initialization of resulting vector
+   for (i = 0; i < ssize; i++)
+      working_space[i] = 1;
+   
+       //**START OF ITERATIONS**
+   for (repet = 0; repet < numberRepetitions; repet++) {
+      if (repet != 0) {
+         for (i = 0; i < ssize; i++)
+            working_space[i] = TMath::Power(working_space[i], boost);
+      }       
+      for (lindex = 0; lindex < numberIterations; lindex++) {
+         for (i = 0; i < ssize; i++) {
+            if (working_space[2 * ssize + i] > 0.000001
+                 && working_space[i] > 0.000001) {
+               lda = 0;
+               for (j = 0; j < lh_gold; j++) {
+                  ldb = working_space[j + ssize];
+                  if (j != 0){
+                     k = i + j;
+                     ldc = 0;
+                     if (k < ssize)
+                        ldc = working_space[k];                  
+                     k = i - j;                  
+                     if (k >= 0)
+                        ldc += working_space[k];                  
+                  }
+               
+                  else
+                     ldc = working_space[i];               
+                  lda = lda + ldb * ldc;
+               }              
+               ldb = working_space[2 * ssize + i];
+               if (lda != 0)
+                  lda = ldb / lda;
+
+               else
+                  lda = 0;
+               ldb = working_space[i];
+               lda = lda * ldb;
+               working_space[3 * ssize + i] = lda;
+            }
+         }
+         for (i = 0; i < ssize; i++)
+            working_space[i] = working_space[3 * ssize + i];
+      }
+   }
+   
+//shift resulting spectrum
+   for (i = 0; i < ssize; i++) {
+      lda = working_space[i];
+      j = i + posit;
+      j = j % ssize;
+      working_space[ssize + j] = lda;
+   }
+   
+//write back resulting spectrum
+   for (i = 0; i < ssize; i++)
+      source[i] = area * working_space[ssize + i];
+   delete[]working_space;
+   return 0;
+}
+
+//_______________________________________________________________________________
+const char *TSpectrum::DeconvolutionRL(float *source, const float *response,
+                                      int ssize, int numberIterations,
+                                      int numberRepetitions, double boost ) 
+{   
+/////////////////////////////////////////////////////////////////////////////
+//   ONE-DIMENSIONAL DECONVOLUTION FUNCTION                                //
+//   This function calculates deconvolution from source spectrum           //
+//   according to response spectrum using Richardson-Lucy algorithm        //
+//   The result is placed in the vector pointed by source pointer.         //
+//                                                                         //
+//   Function parameters:                                                  //
+//   source:  pointer to the vector of source spectrum                     //
+//   response:     pointer to the vector of response spectrum              //
+//   ssize:    length of source and response spectra                       //
+//   numberIterations, for details we refer to the reference given above   //
+//   numberRepetitions, for repeated boosted deconvolution                 //
+//   boost, boosting coefficient                                           //
+//                                                                         //
+/////////////////////////////////////////////////////////////////////////////
+//
 //Begin_Html <!--
 /* -->
 <div class=Section12>
@@ -4139,147 +4129,6 @@ NIM A 516 (2004), 172-183.</span></p>
 
 <!-- */
 // --> End_Html
-   int i, j, k, lindex, lhx = 0, repet;
-   double lda, ldb, ldc, area;
-   if (ssizex <= 0 || ssizey <= 0)
-      return "Wrong Parameters";
-   if (ssizex < ssizey)
-      return "Sizex must be greater than sizey)";
-   if (numberIterations <= 0)
-      return "Number of iterations must be positive";
-   double *working_space =
-       new double[ssizex * ssizey + 2 * ssizey * ssizey + 4 * ssizex];
-   
-/*read response matrix*/ 
-   for (j = 0; j < ssizey && lhx != -1; j++) {
-      area = 0;
-      lhx = -1;
-      for (i = 0; i < ssizex; i++) {
-         lda = respMatrix[j][i];
-         if (lda != 0) {
-            lhx = i + 1;
-         }
-         working_space[j * ssizex + i] = lda;
-         area = area + lda;
-      }
-      if (lhx != -1) {
-         for (i = 0; i < ssizex; i++)
-            working_space[j * ssizex + i] /= area;
-      }
-   }
-   if (lhx == -1)
-      return ("ZERO COLUMN IN RESPONSE MATRIX");
-   
-/*read source vector*/ 
-   for (i = 0; i < ssizex; i++)
-      working_space[ssizex * ssizey + 2 * ssizey * ssizey + 2 * ssizex + i] =
-          source[i];
-   
-/*create matrix at*a + at*y */ 
-   for (i = 0; i < ssizey; i++) {
-      for (j = 0; j < ssizey; j++) {
-         lda = 0;
-         for (k = 0; k < ssizex; k++) {
-            ldb = working_space[ssizex * i + k];
-            ldc = working_space[ssizex * j + k];
-            lda = lda + ldb * ldc;
-         }
-         working_space[ssizex * ssizey + ssizey * i + j] = lda;
-      }
-      lda = 0;
-      for (k = 0; k < ssizex; k++) {
-         ldb = working_space[ssizex * i + k];
-         ldc =
-             working_space[ssizex * ssizey + 2 * ssizey * ssizey + 2 * ssizex +
-                           k];
-         lda = lda + ldb * ldc;
-      }
-      working_space[ssizex * ssizey + 2 * ssizey * ssizey + 3 * ssizex + i] =
-          lda;
-   }
-   
-/*move vector at*y*/ 
-   for (i = 0; i < ssizey; i++)
-      working_space[ssizex * ssizey + 2 * ssizey * ssizey + 2 * ssizex + i] =
-          working_space[ssizex * ssizey + 2 * ssizey * ssizey + 3 * ssizex + i];
-   
-/*create matrix at*a*at*a + vector at*a*at*y */ 
-   for (i = 0; i < ssizey; i++) {
-      for (j = 0; j < ssizey; j++) {
-         lda = 0;
-         for (k = 0; k < ssizey; k++) {
-            ldb = working_space[ssizex * ssizey + ssizey * i + k];
-            ldc = working_space[ssizex * ssizey + ssizey * j + k];
-            lda = lda + ldb * ldc;
-         }
-         working_space[ssizex * ssizey + ssizey * ssizey + ssizey * i + j] =
-             lda;
-      }
-      lda = 0;
-      for (k = 0; k < ssizey; k++) {
-         ldb = working_space[ssizex * ssizey + ssizey * i + k];
-         ldc =
-             working_space[ssizex * ssizey + 2 * ssizey * ssizey + 2 * ssizex +
-                           k];
-         lda = lda + ldb * ldc;
-      }
-      working_space[ssizex * ssizey + 2 * ssizey * ssizey + 3 * ssizex + i] =
-          lda;
-   }
-   
-/*move at*a*at*y*/ 
-   for (i = 0; i < ssizey; i++)
-      working_space[ssizex * ssizey + 2 * ssizey * ssizey + 2 * ssizex + i] =
-          working_space[ssizex * ssizey + 2 * ssizey * ssizey + 3 * ssizex + i];
-   
-/*initialization in resulting vector */ 
-   for (i = 0; i < ssizey; i++)
-      working_space[ssizex * ssizey + 2 * ssizey * ssizey + i] = 1;
-   
-        /***START OF ITERATIONS***/
-   for (repet = 0; repet < numberRepetitions; repet++) {
-      if (repet != 0) {
-         for (i = 0; i < ssizey; i++)
-            working_space[ssizex * ssizey + 2 * ssizey * ssizey + i] = TMath::Power(working_space[ssizex * ssizey + 2 * ssizey * ssizey + i], boost);
-      }                
-      for (lindex = 0; lindex < numberIterations; lindex++) {
-         for (i = 0; i < ssizey; i++) {
-            lda = 0;
-            for (j = 0; j < ssizey; j++) {
-               ldb =
-                   working_space[ssizex * ssizey + ssizey * ssizey + ssizey * i + j];
-               ldc = working_space[ssizex * ssizey + 2 * ssizey * ssizey + j];
-               lda = lda + ldb * ldc;
-            }
-            ldb =
-                working_space[ssizex * ssizey + 2 * ssizey * ssizey + 2 * ssizex + i];
-            if (lda != 0) {
-               lda = ldb / lda;
-            }
-         
-            else
-               lda = 0;
-            ldb = working_space[ssizex * ssizey + 2 * ssizey * ssizey + i];
-            lda = lda * ldb;
-            working_space[ssizex * ssizey + 2 * ssizey * ssizey + 3 * ssizex + i] = lda;
-         }
-         for (i = 0; i < ssizey; i++)
-            working_space[ssizex * ssizey + 2 * ssizey * ssizey + i] =
-                working_space[ssizex * ssizey + 2 * ssizey * ssizey + 3 * ssizex + i];
-      }
-   }
-   
-/*write back resulting spectrum*/ 
-   for (i = 0; i < ssizex; i++) {
-      if (i < ssizey)
-         source[i] = working_space[ssizex * ssizey + 2 * ssizey * ssizey + i];
-      
-      else
-         source[i] = 0;
-   }
-   delete[]working_space;
-   return 0;
-}
 //Begin_Html <!--
 /* -->
 <div class=Section15>
@@ -4424,6 +4273,147 @@ d-&gt;SetAxisRange(0,nbinsy);     </p>
 
 <!-- */
 // --> End_Html
+   int i, j, k, lindex, lhx = 0, repet;
+   double lda, ldb, ldc, area;
+   if (ssizex <= 0 || ssizey <= 0)
+      return "Wrong Parameters";
+   if (ssizex < ssizey)
+      return "Sizex must be greater than sizey)";
+   if (numberIterations <= 0)
+      return "Number of iterations must be positive";
+   double *working_space =
+       new double[ssizex * ssizey + 2 * ssizey * ssizey + 4 * ssizex];
+   
+/*read response matrix*/ 
+   for (j = 0; j < ssizey && lhx != -1; j++) {
+      area = 0;
+      lhx = -1;
+      for (i = 0; i < ssizex; i++) {
+         lda = respMatrix[j][i];
+         if (lda != 0) {
+            lhx = i + 1;
+         }
+         working_space[j * ssizex + i] = lda;
+         area = area + lda;
+      }
+      if (lhx != -1) {
+         for (i = 0; i < ssizex; i++)
+            working_space[j * ssizex + i] /= area;
+      }
+   }
+   if (lhx == -1)
+      return ("ZERO COLUMN IN RESPONSE MATRIX");
+   
+/*read source vector*/ 
+   for (i = 0; i < ssizex; i++)
+      working_space[ssizex * ssizey + 2 * ssizey * ssizey + 2 * ssizex + i] =
+          source[i];
+   
+/*create matrix at*a + at*y */ 
+   for (i = 0; i < ssizey; i++) {
+      for (j = 0; j < ssizey; j++) {
+         lda = 0;
+         for (k = 0; k < ssizex; k++) {
+            ldb = working_space[ssizex * i + k];
+            ldc = working_space[ssizex * j + k];
+            lda = lda + ldb * ldc;
+         }
+         working_space[ssizex * ssizey + ssizey * i + j] = lda;
+      }
+      lda = 0;
+      for (k = 0; k < ssizex; k++) {
+         ldb = working_space[ssizex * i + k];
+         ldc =
+             working_space[ssizex * ssizey + 2 * ssizey * ssizey + 2 * ssizex +
+                           k];
+         lda = lda + ldb * ldc;
+      }
+      working_space[ssizex * ssizey + 2 * ssizey * ssizey + 3 * ssizex + i] =
+          lda;
+   }
+   
+/*move vector at*y*/ 
+   for (i = 0; i < ssizey; i++)
+      working_space[ssizex * ssizey + 2 * ssizey * ssizey + 2 * ssizex + i] =
+          working_space[ssizex * ssizey + 2 * ssizey * ssizey + 3 * ssizex + i];
+   
+/*create matrix at*a*at*a + vector at*a*at*y */ 
+   for (i = 0; i < ssizey; i++) {
+      for (j = 0; j < ssizey; j++) {
+         lda = 0;
+         for (k = 0; k < ssizey; k++) {
+            ldb = working_space[ssizex * ssizey + ssizey * i + k];
+            ldc = working_space[ssizex * ssizey + ssizey * j + k];
+            lda = lda + ldb * ldc;
+         }
+         working_space[ssizex * ssizey + ssizey * ssizey + ssizey * i + j] =
+             lda;
+      }
+      lda = 0;
+      for (k = 0; k < ssizey; k++) {
+         ldb = working_space[ssizex * ssizey + ssizey * i + k];
+         ldc =
+             working_space[ssizex * ssizey + 2 * ssizey * ssizey + 2 * ssizex +
+                           k];
+         lda = lda + ldb * ldc;
+      }
+      working_space[ssizex * ssizey + 2 * ssizey * ssizey + 3 * ssizex + i] =
+          lda;
+   }
+   
+/*move at*a*at*y*/ 
+   for (i = 0; i < ssizey; i++)
+      working_space[ssizex * ssizey + 2 * ssizey * ssizey + 2 * ssizex + i] =
+          working_space[ssizex * ssizey + 2 * ssizey * ssizey + 3 * ssizex + i];
+   
+/*initialization in resulting vector */ 
+   for (i = 0; i < ssizey; i++)
+      working_space[ssizex * ssizey + 2 * ssizey * ssizey + i] = 1;
+   
+        /***START OF ITERATIONS***/
+   for (repet = 0; repet < numberRepetitions; repet++) {
+      if (repet != 0) {
+         for (i = 0; i < ssizey; i++)
+            working_space[ssizex * ssizey + 2 * ssizey * ssizey + i] = TMath::Power(working_space[ssizex * ssizey + 2 * ssizey * ssizey + i], boost);
+      }                
+      for (lindex = 0; lindex < numberIterations; lindex++) {
+         for (i = 0; i < ssizey; i++) {
+            lda = 0;
+            for (j = 0; j < ssizey; j++) {
+               ldb =
+                   working_space[ssizex * ssizey + ssizey * ssizey + ssizey * i + j];
+               ldc = working_space[ssizex * ssizey + 2 * ssizey * ssizey + j];
+               lda = lda + ldb * ldc;
+            }
+            ldb =
+                working_space[ssizex * ssizey + 2 * ssizey * ssizey + 2 * ssizex + i];
+            if (lda != 0) {
+               lda = ldb / lda;
+            }
+         
+            else
+               lda = 0;
+            ldb = working_space[ssizex * ssizey + 2 * ssizey * ssizey + i];
+            lda = lda * ldb;
+            working_space[ssizex * ssizey + 2 * ssizey * ssizey + 3 * ssizex + i] = lda;
+         }
+         for (i = 0; i < ssizey; i++)
+            working_space[ssizex * ssizey + 2 * ssizey * ssizey + i] =
+                working_space[ssizex * ssizey + 2 * ssizey * ssizey + 3 * ssizex + i];
+      }
+   }
+   
+/*write back resulting spectrum*/ 
+   for (i = 0; i < ssizex; i++) {
+      if (i < ssizey)
+         source[i] = working_space[ssizex * ssizey + 2 * ssizey * ssizey + i];
+      
+      else
+         source[i] = 0;
+   }
+   delete[]working_space;
+   return 0;
+}
 
 //_____________________________________________________________________________
 
@@ -4598,452 +4588,6 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
 
 <!-- */
 // --> End_Html
-   int i, j, numberIterations = (int)(7 * sigma + 0.5);
-   double a, b, c;
-   int k, lindex, posit, imin, imax, jmin, jmax, lh_gold, priz;
-   double lda, ldb, ldc, area, maximum, maximum_decon;
-   int xmin, xmax, l, peak_index = 0, size_ext = ssize + 2 * numberIterations, shift = numberIterations, bw = 2, w;
-   double maxch;
-   double nom, nip, nim, sp, sm, plocha = 0;
-   double m0low=0,m1low=0,m2low=0,l0low=0,l1low=0,detlow,av,men;   
-   if (sigma < 1) {
-      Error("SearchHighRes", "Invalid sigma, must be greater than or equal to 1");
-      return 0;
-   }
-
-   if(threshold<=0 || threshold>=100){
-      Error("SearchHighRes", "Invalid threshold, must be positive and less than 100");
-      return 0;
-   }
-
-   j = (int) (5.0 * sigma + 0.5);
-   if (j >= PEAK_WINDOW / 2) {
-      Error("SearchHighRes", "Too large sigma");
-      return 0;
-   }
-
-   if (markov == true) {
-      if (averWindow <= 0) {
-         Error("SearchHighRes", "Averanging window must be positive");
-         return 0;
-      }
-   }
-
-   if(backgroundRemove == true){
-      if(ssize < 2 * numberIterations + 1){   
-         Error("SearchHighRes", "Too large clipping window");
-         return 0;
-      }
-   }
-
-   k = int(2 * sigma+0.5);
-   if(k >= 2){
-      for(i = 0;i < k;i++){
-         a = i,b = source[i];
-         m0low += 1,m1low += a,m2low += a * a,l0low += b,l1low += a * b;
-      }
-      detlow = m0low * m2low - m1low * m1low;
-      if(detlow != 0)
-         l1low = (-l0low * m1low + l1low * m0low) / detlow;
-         
-      else
-         l1low = 0;
-      if(l1low > 0)
-         l1low=0;
-   }
-   
-   else{
-      l1low = 0;
-   }
-		
-   i = (int)(7 * sigma + 0.5);
-   i = 2 * i;
-   double *working_space = new double [7 * (ssize + i)];    
-   for (j=0;j<7 * (ssize + i);j++) working_space[j] = 0;
-   for(i = 0; i < size_ext; i++){
-      if(i < shift){
-         a = i - shift;      	
-         working_space[i + size_ext] = source[0] + l1low * a;         
-         if(working_space[i + size_ext] < 0)
-            working_space[i + size_ext]=0;         
-      }
-
-      else if(i >= ssize + shift){
-      	 a = i - (ssize - 1 + shift);
-         working_space[i + size_ext] = source[ssize - 1];
-         if(working_space[i + size_ext] < 0)
-            working_space[i + size_ext]=0;
-      }
-
-      else
-         working_space[i + size_ext] = source[i - shift];
-   }
-   
-   if(backgroundRemove == true){
-      for(i = 1; i <= numberIterations; i++){
-         for(j = i; j < size_ext - i; j++){
-            if(markov == false){         	
-               a = working_space[size_ext + j];
-               b = (working_space[size_ext + j - i] + working_space[size_ext + j + i]) / 2.0;
-               if(b < a)
-                  a = b;
-
-               working_space[j]=a;
-            }
-            
-            else{
-               a = working_space[size_ext + j];                                   
-               av = 0;
-               men = 0;
-               for (w = j - bw; w <= j + bw; w++){
-                  if ( w >= 0 && w < size_ext){
-                     av += working_space[size_ext + w];
-                     men +=1;
-                  }
-               }
-               av = av / men;
-               b = 0;
-               men = 0;
-               for (w = j - i - bw; w <= j - i + bw; w++){
-                  if ( w >= 0 && w < size_ext){
-                     b += working_space[size_ext + w];
-                     men +=1;
-                  }
-               }           
-               b = b / men;
-               c = 0;
-               men = 0;
-               for (w = j + i - bw; w <= j + i + bw; w++){
-                  if ( w >= 0 && w < size_ext){
-                     c += working_space[size_ext + w];
-                     men +=1;
-                  }
-               }           
-               c = c / men;                   
-               b = (b + c) / 2;
-               if (b < a)
-                  av = b;
-               working_space[j]=av;                              
-            }
-         }
-         for(j = i; j < size_ext - i; j++)
-            working_space[size_ext + j] = working_space[j];
-      }
-      for(j = 0;j < size_ext; j++){
-         if(j < shift){
-         	  a = j - shift;
-         	  b = source[0] + l1low * a;
-         	  if(b < 0)
-         	     b = 0;
-            working_space[size_ext + j] = b - working_space[size_ext + j];
-         }
-
-         else if(j >= ssize + shift){
-         	  a = j - (ssize - 1 + shift);
-         	  b = source[ssize - 1];
-         	  if(b < 0)
-         	     b = 0;         	  
-            working_space[size_ext + j] = b - working_space[size_ext + j];
-         }
-
-         else{
-            working_space[size_ext + j] = source[j - shift] - working_space[size_ext + j];
-         }
-      }      
-      for(j = 0;j < size_ext; j++){
-      	if(working_space[size_ext + j] < 0)
-      	   working_space[size_ext + j] = 0;
-      }
-   }
-
-   for(i = 0; i < size_ext; i++){
-      working_space[i + 6*size_ext] = working_space[i + size_ext];
-   }
-
-   if(markov == true){
-      for(j = 0; j < size_ext; j++)
-         working_space[2 * size_ext + j] = working_space[size_ext + j];
-      xmin = 0,xmax = size_ext - 1;
-      for(i = 0, maxch = 0; i < size_ext; i++){
-         working_space[i] = 0;
-         if(maxch < working_space[2 * size_ext + i])
-            maxch = working_space[2 * size_ext + i];
-         plocha += working_space[2 * size_ext + i];
-      }
-      if(maxch == 0) {
-         delete [] working_space;
-         return 0;
-      }
-
-      nom = 1;
-      working_space[xmin] = 1;
-      for(i = xmin; i < xmax; i++){
-         nip = working_space[2 * size_ext + i] / maxch;
-         nim = working_space[2 * size_ext + i + 1] / maxch;
-         sp = 0,sm = 0;
-         for(l = 1; l <= averWindow; l++){
-            if((i + l) > xmax)
-               a = working_space[2 * size_ext + xmax] / maxch;
-
-            else
-               a = working_space[2 * size_ext + i + l] / maxch;
-
-            b = a - nip;
-            if(a + nip <= 0)
-               a=1;
-
-            else
-               a = TMath::Sqrt(a + nip);            
-
-            b = b / a;
-            b = TMath::Exp(b);            
-            sp = sp + b;
-            if((i - l + 1) < xmin)
-               a = working_space[2 * size_ext + xmin] / maxch;
-
-            else
-               a = working_space[2 * size_ext + i - l + 1] / maxch;
-
-            b = a - nim;
-            if(a + nim <= 0)
-               a = 1;
-
-            else
-               a = TMath::Sqrt(a + nim);
-
-            b = b / a;
-            b = TMath::Exp(b);                        
-            sm = sm + b;
-         }
-         a = sp / sm;
-         a = working_space[i + 1] = working_space[i] * a;
-         nom = nom + a;
-      }
-      for(i = xmin; i <= xmax; i++){
-         working_space[i] = working_space[i] / nom;
-      }
-      for(j = 0; j < size_ext; j++)
-         working_space[size_ext + j] = working_space[j] * plocha;
-      for(j = 0; j < size_ext; j++){
-         working_space[2 * size_ext + j] = working_space[size_ext + j];
-      }
-      if(backgroundRemove == true){
-         for(i = 1; i <= numberIterations; i++){
-            for(j = i; j < size_ext - i; j++){
-               a = working_space[size_ext + j];
-               b = (working_space[size_ext + j - i] + working_space[size_ext + j + i]) / 2.0;
-               if(b < a)
-                  a = b;
-               working_space[j] = a;
-            }
-            for(j = i; j < size_ext - i; j++)
-               working_space[size_ext + j] = working_space[j];
-         }
-         for(j = 0; j < size_ext; j++){
-            working_space[size_ext + j] = working_space[2 * size_ext + j] - working_space[size_ext + j];
-         }
-      }
-   }
-//deconvolution starts
-   area = 0;
-   lh_gold = -1;
-   posit = 0;
-   maximum = 0;
-//generate response vector
-   for(i = 0; i < size_ext; i++){
-      lda = (double)i - 3 * sigma;
-      lda = lda * lda / (2 * sigma * sigma);    
-      j = (int)(1000 * TMath::Exp(-lda));
-      lda = j;
-      if(lda != 0)
-         lh_gold = i + 1;
-
-      working_space[i] = lda;
-      area = area + lda;
-      if(lda > maximum){
-         maximum = lda;
-         posit = i;
-      }
-   }
-//read source vector
-   for(i = 0; i < size_ext; i++)          
-      working_space[2 * size_ext + i] = TMath::Abs(working_space[size_ext + i]);
-//create matrix at*a(vector b)
-   i = lh_gold - 1;
-   if(i > size_ext)
-      i = size_ext;
-
-   imin = -i,imax = i;
-   for(i = imin; i <= imax; i++){
-      lda = 0;
-      jmin = 0;
-      if(i < 0)
-         jmin = -i;
-      jmax = lh_gold - 1 - i;
-      if(jmax > (lh_gold - 1))
-         jmax = lh_gold - 1;
-
-      for(j = jmin;j <= jmax; j++){
-         ldb = working_space[j];
-         ldc = working_space[i + j];
-         lda = lda + ldb * ldc;
-      }
-      working_space[size_ext + i - imin] = lda;
-   }
-//create vector p
-   i = lh_gold - 1;
-   imin = -i,imax = size_ext + i - 1;
-   for(i = imin; i <= imax; i++){
-      lda = 0;
-      for(j = 0; j <= (lh_gold - 1); j++){
-         ldb = working_space[j];
-         k = i + j;
-         if(k >= 0 && k < size_ext){
-            ldc = working_space[2 * size_ext + k];
-            lda = lda + ldb * ldc;
-         }
-
-      }
-      working_space[4 * size_ext + i - imin] = lda;
-   }
-//move vector p
-   for(i = imin; i <= imax; i++)
-      working_space[2 * size_ext + i - imin] = working_space[4 * size_ext + i - imin];
-//initialization of resulting vector
-   for(i = 0; i < size_ext; i++)
-      working_space[i] = 1;
-//START OF ITERATIONS
-   for(lindex = 0; lindex < deconIterations; lindex++){
-      for(i = 0; i < size_ext; i++){
-         if(TMath::Abs(working_space[2 * size_ext + i]) > 0.00001 && TMath::Abs(working_space[i]) > 0.00001){
-            lda=0;
-            jmin = lh_gold - 1;
-            if(jmin > i)
-               jmin = i;
-
-            jmin = -jmin;
-            jmax = lh_gold - 1;
-            if(jmax > (size_ext - 1 - i))
-               jmax=size_ext-1-i;
-
-            for(j = jmin; j <= jmax; j++){
-               ldb = working_space[j + lh_gold - 1 + size_ext];
-               ldc = working_space[i + j];
-               lda = lda + ldb * ldc;
-            }
-            ldb = working_space[2 * size_ext + i];
-            if(lda != 0)
-               lda = ldb / lda;
-
-            else
-               lda = 0;
-
-            ldb = working_space[i];
-            lda = lda * ldb;
-            working_space[3 * size_ext + i] = lda;
-         }
-      }
-      for(i = 0; i < size_ext; i++){
-         working_space[i] = working_space[3 * size_ext + i];
-      }
-   }
-//shift resulting spectrum
-   for(i=0;i<size_ext;i++){
-      lda = working_space[i];
-      j = i + posit;
-      j = j % size_ext;
-      working_space[size_ext + j] = lda;
-   }
-//write back resulting spectrum
-   maximum = 0, maximum_decon = 0;
-   j = lh_gold - 1;
-   for(i = 0; i < size_ext - j; i++){
-      if(i >= shift && i < ssize + shift){   	
-         working_space[i] = area * working_space[size_ext + i + j];
-         if(maximum_decon < working_space[i])
-            maximum_decon = working_space[i];      
-         if(maximum < working_space[6 * size_ext + i])
-            maximum = working_space[6 * size_ext + i];
-      }
-      
-      else
-         working_space[i] = 0;
-   }
-   lda=1;
-   if(lda>threshold)
-      lda=threshold;
-   lda=lda/100;
-
-//searching for peaks in deconvolved spectrum
-   for(i = 1; i < size_ext - 1; i++){
-      if(working_space[i] > working_space[i - 1] && working_space[i] > working_space[i + 1]){
-         if(i >= shift && i < ssize + shift){
-            if(working_space[i] > lda*maximum_decon && working_space[6 * size_ext + i] > threshold * maximum / 100.0){        
-               for(j = i - 1, a = 0, b = 0; j <= i + 1; j++){
-                  a += (double)(j - shift) * working_space[j];
-                  b += working_space[j];
-               }
-               a = a / b;
-               if(a < 0)
-                  a = 0;
-
-               if(a >= ssize)
-                  a = ssize - 1;
-               if(peak_index == 0){
-                  fPositionX[0] = a;
-                  peak_index = 1; 
-               }
-
-               else{
-                  for(j = 0, priz = 0; j < peak_index && priz == 0; j++){
-                     if(working_space[6 * size_ext + shift + (int)a] > working_space[6 * size_ext + shift + (int)fPositionX[j]])   
-                        priz = 1;
-                  }
-                  if(priz == 0){
-                     if(j < fMaxPeaks){
-                        fPositionX[j] = a;   
-                     }
-                  }
-
-                  else{
-                     for(k = peak_index; k >= j; k--){
-                        if(k < fMaxPeaks){                        
-                           fPositionX[k] = fPositionX[k - 1];
-                        }
-                     }      
-                     fPositionX[j - 1] = a;                        
-                  }
-                  if(peak_index < fMaxPeaks)
-                     peak_index += 1;
-               }
-            }
-         }
-      }
-   }
-
-   for(i = 0; i < ssize; i++) destVector[i] = working_space[i + shift];      
-   delete [] working_space;
-   fNPeaks = peak_index;
-   if(peak_index == fMaxPeaks)
-      Warning("SearchHighRes", "Peak buffer full");   
-   return fNPeaks;
-}
-
-//_____________________________________________________________________________
-
-Int_t TSpectrum::Search1HighRes(float *source,float *destVector, int ssize,
-                                     float sigma, double threshold,
-                                     bool backgroundRemove,int deconIterations,
-                                     bool markov, int averWindow)
-{
-//  Old name of SearcHighRes introduced for back compatibility
-// This function will be removed after the June 2006 release
-   
-   return SearchHighRes(source,destVector,ssize,sigma,threshold,backgroundRemove,
-                        deconIterations,markov,averWindow);
-}
-
-
 //Begin_Html <!--
 /* -->
 <div class=Section19>
@@ -5560,6 +5104,452 @@ source[i]=h-&gt;GetBinContent(i + 1);</p>
 
 <!-- */
 // --> End_Html
+   int i, j, numberIterations = (int)(7 * sigma + 0.5);
+   double a, b, c;
+   int k, lindex, posit, imin, imax, jmin, jmax, lh_gold, priz;
+   double lda, ldb, ldc, area, maximum, maximum_decon;
+   int xmin, xmax, l, peak_index = 0, size_ext = ssize + 2 * numberIterations, shift = numberIterations, bw = 2, w;
+   double maxch;
+   double nom, nip, nim, sp, sm, plocha = 0;
+   double m0low=0,m1low=0,m2low=0,l0low=0,l1low=0,detlow,av,men;   
+   if (sigma < 1) {
+      Error("SearchHighRes", "Invalid sigma, must be greater than or equal to 1");
+      return 0;
+   }
+
+   if(threshold<=0 || threshold>=100){
+      Error("SearchHighRes", "Invalid threshold, must be positive and less than 100");
+      return 0;
+   }
+
+   j = (int) (5.0 * sigma + 0.5);
+   if (j >= PEAK_WINDOW / 2) {
+      Error("SearchHighRes", "Too large sigma");
+      return 0;
+   }
+
+   if (markov == true) {
+      if (averWindow <= 0) {
+         Error("SearchHighRes", "Averanging window must be positive");
+         return 0;
+      }
+   }
+
+   if(backgroundRemove == true){
+      if(ssize < 2 * numberIterations + 1){   
+         Error("SearchHighRes", "Too large clipping window");
+         return 0;
+      }
+   }
+
+   k = int(2 * sigma+0.5);
+   if(k >= 2){
+      for(i = 0;i < k;i++){
+         a = i,b = source[i];
+         m0low += 1,m1low += a,m2low += a * a,l0low += b,l1low += a * b;
+      }
+      detlow = m0low * m2low - m1low * m1low;
+      if(detlow != 0)
+         l1low = (-l0low * m1low + l1low * m0low) / detlow;
+         
+      else
+         l1low = 0;
+      if(l1low > 0)
+         l1low=0;
+   }
+   
+   else{
+      l1low = 0;
+   }
+		
+   i = (int)(7 * sigma + 0.5);
+   i = 2 * i;
+   double *working_space = new double [7 * (ssize + i)];    
+   for (j=0;j<7 * (ssize + i);j++) working_space[j] = 0;
+   for(i = 0; i < size_ext; i++){
+      if(i < shift){
+         a = i - shift;      	
+         working_space[i + size_ext] = source[0] + l1low * a;         
+         if(working_space[i + size_ext] < 0)
+            working_space[i + size_ext]=0;         
+      }
+
+      else if(i >= ssize + shift){
+      	 a = i - (ssize - 1 + shift);
+         working_space[i + size_ext] = source[ssize - 1];
+         if(working_space[i + size_ext] < 0)
+            working_space[i + size_ext]=0;
+      }
+
+      else
+         working_space[i + size_ext] = source[i - shift];
+   }
+   
+   if(backgroundRemove == true){
+      for(i = 1; i <= numberIterations; i++){
+         for(j = i; j < size_ext - i; j++){
+            if(markov == false){         	
+               a = working_space[size_ext + j];
+               b = (working_space[size_ext + j - i] + working_space[size_ext + j + i]) / 2.0;
+               if(b < a)
+                  a = b;
+
+               working_space[j]=a;
+            }
+            
+            else{
+               a = working_space[size_ext + j];                                   
+               av = 0;
+               men = 0;
+               for (w = j - bw; w <= j + bw; w++){
+                  if ( w >= 0 && w < size_ext){
+                     av += working_space[size_ext + w];
+                     men +=1;
+                  }
+               }
+               av = av / men;
+               b = 0;
+               men = 0;
+               for (w = j - i - bw; w <= j - i + bw; w++){
+                  if ( w >= 0 && w < size_ext){
+                     b += working_space[size_ext + w];
+                     men +=1;
+                  }
+               }           
+               b = b / men;
+               c = 0;
+               men = 0;
+               for (w = j + i - bw; w <= j + i + bw; w++){
+                  if ( w >= 0 && w < size_ext){
+                     c += working_space[size_ext + w];
+                     men +=1;
+                  }
+               }           
+               c = c / men;                   
+               b = (b + c) / 2;
+               if (b < a)
+                  av = b;
+               working_space[j]=av;                              
+            }
+         }
+         for(j = i; j < size_ext - i; j++)
+            working_space[size_ext + j] = working_space[j];
+      }
+      for(j = 0;j < size_ext; j++){
+         if(j < shift){
+         	  a = j - shift;
+         	  b = source[0] + l1low * a;
+         	  if(b < 0)
+         	     b = 0;
+            working_space[size_ext + j] = b - working_space[size_ext + j];
+         }
+
+         else if(j >= ssize + shift){
+         	  a = j - (ssize - 1 + shift);
+         	  b = source[ssize - 1];
+         	  if(b < 0)
+         	     b = 0;         	  
+            working_space[size_ext + j] = b - working_space[size_ext + j];
+         }
+
+         else{
+            working_space[size_ext + j] = source[j - shift] - working_space[size_ext + j];
+         }
+      }      
+      for(j = 0;j < size_ext; j++){
+      	if(working_space[size_ext + j] < 0)
+      	   working_space[size_ext + j] = 0;
+      }
+   }
+
+   for(i = 0; i < size_ext; i++){
+      working_space[i + 6*size_ext] = working_space[i + size_ext];
+   }
+
+   if(markov == true){
+      for(j = 0; j < size_ext; j++)
+         working_space[2 * size_ext + j] = working_space[size_ext + j];
+      xmin = 0,xmax = size_ext - 1;
+      for(i = 0, maxch = 0; i < size_ext; i++){
+         working_space[i] = 0;
+         if(maxch < working_space[2 * size_ext + i])
+            maxch = working_space[2 * size_ext + i];
+         plocha += working_space[2 * size_ext + i];
+      }
+      if(maxch == 0) {
+         delete [] working_space;
+         return 0;
+      }
+
+      nom = 1;
+      working_space[xmin] = 1;
+      for(i = xmin; i < xmax; i++){
+         nip = working_space[2 * size_ext + i] / maxch;
+         nim = working_space[2 * size_ext + i + 1] / maxch;
+         sp = 0,sm = 0;
+         for(l = 1; l <= averWindow; l++){
+            if((i + l) > xmax)
+               a = working_space[2 * size_ext + xmax] / maxch;
+
+            else
+               a = working_space[2 * size_ext + i + l] / maxch;
+
+            b = a - nip;
+            if(a + nip <= 0)
+               a=1;
+
+            else
+               a = TMath::Sqrt(a + nip);            
+
+            b = b / a;
+            b = TMath::Exp(b);            
+            sp = sp + b;
+            if((i - l + 1) < xmin)
+               a = working_space[2 * size_ext + xmin] / maxch;
+
+            else
+               a = working_space[2 * size_ext + i - l + 1] / maxch;
+
+            b = a - nim;
+            if(a + nim <= 0)
+               a = 1;
+
+            else
+               a = TMath::Sqrt(a + nim);
+
+            b = b / a;
+            b = TMath::Exp(b);                        
+            sm = sm + b;
+         }
+         a = sp / sm;
+         a = working_space[i + 1] = working_space[i] * a;
+         nom = nom + a;
+      }
+      for(i = xmin; i <= xmax; i++){
+         working_space[i] = working_space[i] / nom;
+      }
+      for(j = 0; j < size_ext; j++)
+         working_space[size_ext + j] = working_space[j] * plocha;
+      for(j = 0; j < size_ext; j++){
+         working_space[2 * size_ext + j] = working_space[size_ext + j];
+      }
+      if(backgroundRemove == true){
+         for(i = 1; i <= numberIterations; i++){
+            for(j = i; j < size_ext - i; j++){
+               a = working_space[size_ext + j];
+               b = (working_space[size_ext + j - i] + working_space[size_ext + j + i]) / 2.0;
+               if(b < a)
+                  a = b;
+               working_space[j] = a;
+            }
+            for(j = i; j < size_ext - i; j++)
+               working_space[size_ext + j] = working_space[j];
+         }
+         for(j = 0; j < size_ext; j++){
+            working_space[size_ext + j] = working_space[2 * size_ext + j] - working_space[size_ext + j];
+         }
+      }
+   }
+//deconvolution starts
+   area = 0;
+   lh_gold = -1;
+   posit = 0;
+   maximum = 0;
+//generate response vector
+   for(i = 0; i < size_ext; i++){
+      lda = (double)i - 3 * sigma;
+      lda = lda * lda / (2 * sigma * sigma);    
+      j = (int)(1000 * TMath::Exp(-lda));
+      lda = j;
+      if(lda != 0)
+         lh_gold = i + 1;
+
+      working_space[i] = lda;
+      area = area + lda;
+      if(lda > maximum){
+         maximum = lda;
+         posit = i;
+      }
+   }
+//read source vector
+   for(i = 0; i < size_ext; i++)          
+      working_space[2 * size_ext + i] = TMath::Abs(working_space[size_ext + i]);
+//create matrix at*a(vector b)
+   i = lh_gold - 1;
+   if(i > size_ext)
+      i = size_ext;
+
+   imin = -i,imax = i;
+   for(i = imin; i <= imax; i++){
+      lda = 0;
+      jmin = 0;
+      if(i < 0)
+         jmin = -i;
+      jmax = lh_gold - 1 - i;
+      if(jmax > (lh_gold - 1))
+         jmax = lh_gold - 1;
+
+      for(j = jmin;j <= jmax; j++){
+         ldb = working_space[j];
+         ldc = working_space[i + j];
+         lda = lda + ldb * ldc;
+      }
+      working_space[size_ext + i - imin] = lda;
+   }
+//create vector p
+   i = lh_gold - 1;
+   imin = -i,imax = size_ext + i - 1;
+   for(i = imin; i <= imax; i++){
+      lda = 0;
+      for(j = 0; j <= (lh_gold - 1); j++){
+         ldb = working_space[j];
+         k = i + j;
+         if(k >= 0 && k < size_ext){
+            ldc = working_space[2 * size_ext + k];
+            lda = lda + ldb * ldc;
+         }
+
+      }
+      working_space[4 * size_ext + i - imin] = lda;
+   }
+//move vector p
+   for(i = imin; i <= imax; i++)
+      working_space[2 * size_ext + i - imin] = working_space[4 * size_ext + i - imin];
+//initialization of resulting vector
+   for(i = 0; i < size_ext; i++)
+      working_space[i] = 1;
+//START OF ITERATIONS
+   for(lindex = 0; lindex < deconIterations; lindex++){
+      for(i = 0; i < size_ext; i++){
+         if(TMath::Abs(working_space[2 * size_ext + i]) > 0.00001 && TMath::Abs(working_space[i]) > 0.00001){
+            lda=0;
+            jmin = lh_gold - 1;
+            if(jmin > i)
+               jmin = i;
+
+            jmin = -jmin;
+            jmax = lh_gold - 1;
+            if(jmax > (size_ext - 1 - i))
+               jmax=size_ext-1-i;
+
+            for(j = jmin; j <= jmax; j++){
+               ldb = working_space[j + lh_gold - 1 + size_ext];
+               ldc = working_space[i + j];
+               lda = lda + ldb * ldc;
+            }
+            ldb = working_space[2 * size_ext + i];
+            if(lda != 0)
+               lda = ldb / lda;
+
+            else
+               lda = 0;
+
+            ldb = working_space[i];
+            lda = lda * ldb;
+            working_space[3 * size_ext + i] = lda;
+         }
+      }
+      for(i = 0; i < size_ext; i++){
+         working_space[i] = working_space[3 * size_ext + i];
+      }
+   }
+//shift resulting spectrum
+   for(i=0;i<size_ext;i++){
+      lda = working_space[i];
+      j = i + posit;
+      j = j % size_ext;
+      working_space[size_ext + j] = lda;
+   }
+//write back resulting spectrum
+   maximum = 0, maximum_decon = 0;
+   j = lh_gold - 1;
+   for(i = 0; i < size_ext - j; i++){
+      if(i >= shift && i < ssize + shift){   	
+         working_space[i] = area * working_space[size_ext + i + j];
+         if(maximum_decon < working_space[i])
+            maximum_decon = working_space[i];      
+         if(maximum < working_space[6 * size_ext + i])
+            maximum = working_space[6 * size_ext + i];
+      }
+      
+      else
+         working_space[i] = 0;
+   }
+   lda=1;
+   if(lda>threshold)
+      lda=threshold;
+   lda=lda/100;
+
+//searching for peaks in deconvolved spectrum
+   for(i = 1; i < size_ext - 1; i++){
+      if(working_space[i] > working_space[i - 1] && working_space[i] > working_space[i + 1]){
+         if(i >= shift && i < ssize + shift){
+            if(working_space[i] > lda*maximum_decon && working_space[6 * size_ext + i] > threshold * maximum / 100.0){        
+               for(j = i - 1, a = 0, b = 0; j <= i + 1; j++){
+                  a += (double)(j - shift) * working_space[j];
+                  b += working_space[j];
+               }
+               a = a / b;
+               if(a < 0)
+                  a = 0;
+
+               if(a >= ssize)
+                  a = ssize - 1;
+               if(peak_index == 0){
+                  fPositionX[0] = a;
+                  peak_index = 1; 
+               }
+
+               else{
+                  for(j = 0, priz = 0; j < peak_index && priz == 0; j++){
+                     if(working_space[6 * size_ext + shift + (int)a] > working_space[6 * size_ext + shift + (int)fPositionX[j]])   
+                        priz = 1;
+                  }
+                  if(priz == 0){
+                     if(j < fMaxPeaks){
+                        fPositionX[j] = a;   
+                     }
+                  }
+
+                  else{
+                     for(k = peak_index; k >= j; k--){
+                        if(k < fMaxPeaks){                        
+                           fPositionX[k] = fPositionX[k - 1];
+                        }
+                     }      
+                     fPositionX[j - 1] = a;                        
+                  }
+                  if(peak_index < fMaxPeaks)
+                     peak_index += 1;
+               }
+            }
+         }
+      }
+   }
+
+   for(i = 0; i < ssize; i++) destVector[i] = working_space[i + shift];      
+   delete [] working_space;
+   fNPeaks = peak_index;
+   if(peak_index == fMaxPeaks)
+      Warning("SearchHighRes", "Peak buffer full");   
+   return fNPeaks;
+}
+
+//_____________________________________________________________________________
+
+Int_t TSpectrum::Search1HighRes(float *source,float *destVector, int ssize,
+                                     float sigma, double threshold,
+                                     bool backgroundRemove,int deconIterations,
+                                     bool markov, int averWindow)
+{
+//  Old name of SearcHighRes introduced for back compatibility
+// This function will be removed after the June 2006 release
+   
+   return SearchHighRes(source,destVector,ssize,sigma,threshold,backgroundRemove,
+                        deconIterations,markov,averWindow);
+}
+
+
 
 
 // STATIC functions (called by TH1)
