@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.162 2006/10/20 16:20:15 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.163 2006/10/23 13:58:44 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -4374,11 +4374,11 @@ static void GetDarwinMemInfo(MemInfo_t *meminfo)
 //______________________________________________________________________________
 static void GetDarwinProcInfo(ProcInfo_t *procinfo)
 {
-   // Get processing for process on Mac OS X.
+   // Get process info for this process on Mac OS X.
 
    struct rusage ru;
    if (getrusage(RUSAGE_SELF, &ru) < 0) {
-      SysError("GetDarwinProcInfo", "getrusage failed");
+      ::SysError("TUnixSystem::GetDarwinProcInfo", "getrusage failed");
    } else {
       procinfo->fCpuUser     = (Float_t)(ru.ru_utime.tv_sec) +
                                ((Float_t)(ru.ru_utime.tv_usec) / 1000000.);
@@ -4405,6 +4405,160 @@ static void GetDarwinProcInfo(ProcInfo_t *procinfo)
 }
 #endif
 
+#if defined(R__LINUX)
+//______________________________________________________________________________
+static void ReadLinuxCpu(long *ticks)
+{
+   // Get CPU load on Linux.
+
+   ticks[0] = ticks[1] = ticks[2] = ticks[3] = 0;
+
+   TString s;
+   FILE *f = fopen("/proc/stat", "r");
+   s.Gets(f);
+   // user, user nice, sys, idle
+   sscanf(s.Data(), "%*s %ld %ld %ld %ld", &ticks[0], &ticks[3], &ticks[1], &ticks[2]);
+   fclose(f);
+}
+
+//______________________________________________________________________________
+static void GetLinuxSysInfo(SysInfo_t *sysinfo)
+{
+   // Get system info for Linux. Only fBusSpeed is not set.
+
+   TString s;
+   FILE *f = fopen("/proc/cpuinfo", "r");
+   while (s.Gets(f)) {
+      if (s.BeginsWith("model name")) {
+         TPRegexp("^.+: *(.*$)").Substitute(s, "$1");
+         sysinfo->fModel = s;
+      }
+      if (s.BeginsWith("cpu MHz")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         sysinfo->fCpuSpeed = s.Atoi();
+      }
+      if (s.BeginsWith("cache size")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         sysinfo->fL2Cache = s.Atoi();
+      }
+      if (s.BeginsWith("processor")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         sysinfo->fCpus = s.Atoi();
+         sysinfo->fCpus++;
+      }
+   }
+   fclose(f);
+
+   f = fopen("/proc/meminfo", "r");
+   while (s.Gets(f)) {
+      if (s.BeginsWith("MemTotal")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         sysinfo->fPhysRam = (s.Atoi() / 1024);
+         break;
+      }
+   }
+   fclose(f);
+
+   f = gSystem->OpenPipe("uname -s -p", "r");
+   s.Gets(f);
+   Ssiz_t from = 0;
+   s.Tokenize(sysinfo->fOS, from);
+   s.Tokenize(sysinfo->fCpuType, from);
+   gSystem->ClosePipe(f);
+}
+
+//______________________________________________________________________________
+static void GetLinuxCpuInfo(CpuInfo_t *cpuinfo)
+{
+   // Get CPU stat for Linux.
+
+   Double_t avg[3];
+   if (getloadavg(avg, sizeof(avg)) < 0) {
+      ::Error("TUnixSystem::GetLinuxCpuInfo", "getloadavg failed");
+   } else {
+      cpuinfo->fLoad1m  = (Float_t)avg[0];
+      cpuinfo->fLoad5m  = (Float_t)avg[1];
+      cpuinfo->fLoad15m = (Float_t)avg[2];
+   }
+
+   Long_t cpu_ticks1[4], cpu_ticks2[4];
+   ReadLinuxCpu(cpu_ticks1);
+   gSystem->Sleep(1000);
+   ReadLinuxCpu(cpu_ticks2);
+
+   Long_t userticks = (cpu_ticks2[0] + cpu_ticks2[3]) -
+                      (cpu_ticks1[0] + cpu_ticks1[3]);
+   Long_t systicks  = cpu_ticks2[1] - cpu_ticks1[1];
+   Long_t idleticks = cpu_ticks2[2] - cpu_ticks1[2];
+   if (userticks < 0) userticks = 0;
+   if (systicks < 0)  systicks = 0;
+   if (idleticks < 0) idleticks = 0;
+   Long_t totalticks = userticks + systicks + idleticks;
+   if (totalticks) {
+      cpuinfo->fUser  = ((Float_t)(100 * userticks)) / ((Float_t)totalticks);
+      cpuinfo->fSys   = ((Float_t)(100 * systicks))  / ((Float_t)totalticks);
+      cpuinfo->fTotal = cpuinfo->fUser + cpuinfo->fSys;
+      cpuinfo->fIdle  = ((Float_t)(100 * idleticks)) / ((Float_t)totalticks);
+   }
+}
+
+//______________________________________________________________________________
+static void GetLinuxMemInfo(MemInfo_t *meminfo)
+{
+   // Get VM stat for Linux.
+
+   TString s;
+   FILE *f = fopen("/proc/meminfo", "r");
+   while (s.Gets(f)) {
+      if (s.BeginsWith("MemTotal")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         meminfo->fMemTotal = (s.Atoi() / 1024);
+      }
+      if (s.BeginsWith("MemFree")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         meminfo->fMemFree = (s.Atoi() / 1024);
+      }
+      if (s.BeginsWith("SwapTotal")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         meminfo->fSwapTotal = (s.Atoi() / 1024);
+      }
+      if (s.BeginsWith("SwapFree")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         meminfo->fSwapFree = (s.Atoi() / 1024);
+      }
+   }
+   fclose(f);
+
+   meminfo->fMemUsed  = meminfo->fMemTotal - meminfo->fMemFree;
+   meminfo->fSwapUsed = meminfo->fSwapTotal - meminfo->fSwapFree;
+}
+
+//______________________________________________________________________________
+static void GetLinuxProcInfo(ProcInfo_t *procinfo)
+{
+   // Get process info for this process on Linux.
+
+   struct rusage ru;
+   if (getrusage(RUSAGE_SELF, &ru) < 0) {
+      ::SysError("TUnixSystem::GetLinuxProcInfo", "getrusage failed");
+   } else {
+      procinfo->fCpuUser     = (Float_t)(ru.ru_utime.tv_sec) +
+                               ((Float_t)(ru.ru_utime.tv_usec) / 1000000.);
+      procinfo->fCpuSys      = (Float_t)(ru.ru_stime.tv_sec) +
+                               ((Float_t)(ru.ru_stime.tv_usec) / 1000000.);
+   }
+
+   TString s;
+   FILE *f = fopen(Form("/proc/%d/statm", gSystem->GetPid()), "r");
+   s.Gets(f);
+   Long_t total, rss;
+   sscanf(s.Data(), "%ld %ld", &total, &rss);
+   procinfo->fMemVirtual  = total * getpagesize() / 1024;
+   procinfo->fMemResident = rss * getpagesize() / 1024;
+   fclose(f);
+}
+#endif
+
 //______________________________________________________________________________
 SysInfo_t *TUnixSystem::GetSysInfo() const
 {
@@ -4417,6 +4571,10 @@ SysInfo_t *TUnixSystem::GetSysInfo() const
 #if defined(R__MACOSX)
       sysinfo = new SysInfo_t;
       GetDarwinSysInfo(sysinfo);
+#endif
+#if defined(R__LINUX)
+      sysinfo = new SysInfo_t;
+      GetLinuxSysInfo(sysinfo);
 #endif
    }
    return sysinfo;
@@ -4434,6 +4592,10 @@ CpuInfo_t *TUnixSystem::GetCpuInfo() const
    cpuinfo = new CpuInfo_t;
    GetDarwinCpuInfo(cpuinfo);
 #endif
+#if defined(R__LINUX)
+   cpuinfo = new CpuInfo_t;
+   GetLinuxCpuInfo(cpuinfo);
+#endif
    return cpuinfo;
 }
 
@@ -4448,6 +4610,10 @@ MemInfo_t *TUnixSystem::GetMemInfo() const
    meminfo = new MemInfo_t;
    GetDarwinMemInfo(meminfo);
 #endif
+#if defined(R__LINUX)
+   meminfo = new MemInfo_t;
+   GetLinuxMemInfo(meminfo);
+#endif
    return meminfo;
 }
 
@@ -4461,6 +4627,10 @@ ProcInfo_t *TUnixSystem::GetProcInfo() const
 #if defined(R__MACOSX)
    procinfo = new ProcInfo_t;
    GetDarwinProcInfo(procinfo);
+#endif
+#if defined(R__LINUX)
+   procinfo = new ProcInfo_t;
+   GetLinuxProcInfo(procinfo);
 #endif
    return procinfo;
 }
