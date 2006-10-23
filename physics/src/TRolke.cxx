@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRolke.cxx,v 1.12 2006/05/16 08:13:31 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRolke.cxx,v 1.14 2006/10/20 16:01:21 brun Exp $
 // Author: Jan Conrad    9/2/2004
 
 /*************************************************************************
@@ -412,7 +412,7 @@ Double_t TRolke::LikeMod1(Double_t mu,Double_t b, Double_t e, Int_t x, Int_t y, 
    // Profile Likelihood function for MODEL 1:
    // Poisson background/ Binomial Efficiency
 
-   return 2*(x*TMath::Log(e*mu+b)-(e*mu +b)-TMath::Log(TMath::Factorial(x))+y*TMath::Log(tau*b)-tau*b-TMath::Log(TMath::Factorial(y)) + TMath::Log(TMath::Factorial(m)) - TMath::Log(TMath::Factorial(m-z)) - TMath::Log(TMath::Factorial(z))+ z * TMath::Log(e) + (m-z)*TMath::Log(1-e));
+   return 2*(x*TMath::Log(e*mu+b)-(e*mu +b)-LogFactorial(x)+y*TMath::Log(tau*b)-tau*b-LogFactorial(y) + TMath::Log(TMath::Factorial(m)) - TMath::Log(TMath::Factorial(m-z)) - TMath::Log(TMath::Factorial(z))+ z * TMath::Log(e) + (m-z)*TMath::Log(1-e));
 }
 
 //________________________________________________________________________
@@ -513,7 +513,7 @@ Double_t TRolke::LikeMod2(Double_t mu, Double_t b, Double_t e,Int_t x,Int_t y,Do
    // Profile Likelihood function for MODEL 2:
    // Poisson background/Gauss Efficiency
 
-   return 2*(x*TMath::Log(e*mu+b)-(e*mu+b)-TMath::Log(TMath::Factorial(x))+y*TMath::Log(tau*b)-tau*b-TMath::Log(TMath::Factorial(y))-0.9189385-TMath::Log(v)/2-(em-e)*(em-e)/v/2);
+   return 2*(x*TMath::Log(e*mu+b)-(e*mu+b)-LogFactorial(x)+y*TMath::Log(tau*b)-tau*b-LogFactorial(y)-0.9189385-TMath::Log(v)/2-(em-e)*(em-e)/v/2);
 }
 
 //_____________________________________________________________________
@@ -569,7 +569,7 @@ Double_t TRolke::LikeMod3(Double_t mu,Double_t b,Double_t e,Int_t x,Double_t bm,
    // Profile Likelihood function for MODEL 3:
    // Gauss background/Gauss Efficiency
 
-   return 2*(x * TMath::Log(e*mu+b)-(e*mu+b)-TMath::Log(TMath::Factorial(x))-1.837877-TMath::Log(u)/2-(bm-b)*(bm-b)/u/2-TMath::Log(v)/2-(em-e)*(em-e)/v/2);
+   return 2*(x * TMath::Log(e*mu+b)-(e*mu+b)-LogFactorial(x)-1.837877-TMath::Log(u)/2-(bm-b)*(bm-b)/u/2-TMath::Log(v)/2-(em-e)*(em-e)/v/2);
 }
 
 //____________________________________________________________________
@@ -608,7 +608,7 @@ Double_t TRolke::LikeMod4(Double_t mu,Double_t b,Int_t x,Int_t y,Double_t tau)
    // Profile Likelihood function for MODEL 4:
    // Poiss background/Efficiency known
 
-   return 2*(x*TMath::Log(mu+b)-(mu+b)-TMath::Log(TMath::Factorial(x))+y*TMath::Log(tau*b)-tau*b-TMath::Log(TMath::Factorial(y)) );
+   return 2*(x*TMath::Log(mu+b)-(mu+b)-LogFactorial(x)+y*TMath::Log(tau*b)-tau*b-LogFactorial(y) );
 }
 
 //___________________________________________________________________
@@ -646,7 +646,7 @@ Double_t TRolke::LikeMod5(Double_t mu,Double_t b,Int_t x,Double_t bm,Double_t u)
    // Profile Likelihood function for MODEL 5:
    // Gauss background/Efficiency known
 
-   return 2*(x*TMath::Log(mu+b)-(mu + b)-TMath::Log(TMath::Factorial(x))-0.9189385-TMath::Log(u)/2-((bm-b)*(bm-b))/u/2);
+   return 2*(x*TMath::Log(mu+b)-(mu + b)-LogFactorial(x)-0.9189385-TMath::Log(u)/2-((bm-b)*(bm-b))/u/2);
 }
 
 //_______________________________________________________________________
@@ -697,9 +697,9 @@ Double_t TRolke::LikeMod6(Double_t mu,Double_t b,Double_t e,Int_t x,Int_t z,Int_
    Double_t f = 0.0;
 
    if (z > 100 || m > 100) {
-      f = 2*(x*TMath::Log(e*mu+b)-(e*mu+b)-TMath::Log(TMath::Factorial(x))+(m*TMath::Log(m)  - m)-(z*TMath::Log(z) - z)  - ((m-z)*TMath::Log(m-z) - m + z)+z*TMath::Log(e)+(m-z)*TMath::Log(1-e));
+      f = 2*(x*TMath::Log(e*mu+b)-(e*mu+b)-LogFactorial(x)+(m*TMath::Log(m)  - m)-(z*TMath::Log(z) - z)  - ((m-z)*TMath::Log(m-z) - m + z)+z*TMath::Log(e)+(m-z)*TMath::Log(1-e));
    } else {
-      f = 2*(x*TMath::Log(e*mu+b)-(e*mu+b)-TMath::Log(TMath::Factorial(x))+TMath::Log(TMath::Factorial(m))-TMath::Log(TMath::Factorial(z))-TMath::Log(TMath::Factorial(m-z))+z*TMath::Log(e)+(m-z)*TMath::Log(1-e));
+      f = 2*(x*TMath::Log(e*mu+b)-(e*mu+b)-LogFactorial(x)+TMath::Log(TMath::Factorial(m))-TMath::Log(TMath::Factorial(z))-TMath::Log(TMath::Factorial(m-z))+z*TMath::Log(e)+(m-z)*TMath::Log(1-e));
    }
    return f;
 }
@@ -746,7 +746,7 @@ Double_t TRolke::LikeMod7(Double_t mu,Double_t b,Double_t e,Int_t x,Double_t em,
    // Profile Likelihood function for MODEL 6:
    // background known/ Efficiency binomial
 
-   return 2*(x*TMath::Log(e*mu+b)-(e*mu + b)-TMath::Log(TMath::Factorial(x))-0.9189385-TMath::Log(v)/2-(em-e)*(em-e)/v/2);
+   return 2*(x*TMath::Log(e*mu+b)-(e*mu + b)-LogFactorial(x)-0.9189385-TMath::Log(v)/2-(em-e)*(em-e)/v/2);
 }
 
 //______________________________________________________________________
@@ -783,4 +783,15 @@ Double_t TRolke::EvalMonomial(Double_t x, const Int_t coef[], Int_t N)
    while( --i );
 
    return ans;
+}
+
+//______________________________________________________________________
+Double_t TRolke::LogFactorial(Int_t n)
+{
+   // Uses Stirling-Wells formula: ln(N!) ~ N*ln(N) - N + 0.5*ln(2piN)
+   // if N exceeds 70, otherwise use the TMath functions
+   if (n>69)
+      return n*TMath::Log(n)-n + 0.5*TMath::Log(TMath::TwoPi()*n);
+   else
+      return TMath::Log(TMath::Factorial(n));
 }
