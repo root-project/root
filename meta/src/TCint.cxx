@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.122 2006/05/24 15:09:21 brun Exp $
+// @(#)root/meta:$Name: v5-12-00-patches $:$Id: TCint.cxx,v 1.123 2006/06/14 18:15:30 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1031,6 +1031,7 @@ Int_t TCint::LoadLibraryMap()
          }
          gSystem->FreeDirectory(dirp);
       }
+      delete a;
 
       if (!fMapfile->GetTable()->GetEntries())
          return -1;
