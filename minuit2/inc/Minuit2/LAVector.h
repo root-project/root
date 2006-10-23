@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: LAVector.h,v 1.10.2.3 2005/11/29 11:08:34 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: LAVector.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -177,7 +177,16 @@ public:
   }
 
   double& operator()(unsigned int i) {
-//     std::cout<<"double& operator()(unsigned int i), i= "<<i<<std::endl;
+    assert(i<fSize);
+    return fData[i];
+  }
+
+  double operator[](unsigned int i) const {
+    assert(i<fSize);
+    return fData[i];
+  }
+
+  double& operator[](unsigned int i) {
     assert(i<fSize);
     return fData[i];
   }

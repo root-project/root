@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnFcn.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnFcn.h,v 1.2 2006/07/03 15:48:06 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -23,7 +23,8 @@ namespace ROOT {
 class FCNBase;
 /**
    Wrapper class to FCNBase interface used internally by Minuit.
-   Apply conversion from internal to external parameter values
+   Apply conversion from calling the function from a Minuit Vector (MnAlgebraicVector) to a std::vector  for 
+   the function coordinates
  */
 class MnFcn {
 

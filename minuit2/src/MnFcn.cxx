@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnFcn.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnFcn.cxx,v 1.2 2006/07/03 15:48:06 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -21,8 +21,7 @@ MnFcn::~MnFcn() {
 }
 
 double MnFcn::operator()(const MnAlgebraicVector& v) const {
-   // evaluate FCN converting from internal to external values (and from 
-   // an MnAlgebraicVector to a std::vector
+   // evaluate FCN converting from from MnAlgebraicVector to std::vector
    fNumCall++;
    return fFCN(MnVectorTransform()(v));
 }
