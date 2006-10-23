@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.48 2006/10/19 10:58:25 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.49 2006/10/20 21:07:40 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -141,9 +141,10 @@ public:
    enum {
       kFraming      = BIT(6),
       kHori         = BIT(9),
-      kClearAfterCR = BIT(10),
+      kClipFrame    = BIT(10),
       kPrintingPS   = BIT(11),
-      kCannotMove   = BIT(12)
+      kCannotMove   = BIT(12),
+      kClearAfterCR = BIT(14)
    };
 
    TPad();
