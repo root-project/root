@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2.cxx,v 1.4 2006/10/09 14:25:48 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2.cxx,v 1.5 2006/10/10 09:38:13 brun Exp $
 // Author: Miroslav Morhac   17/01/2006
 
 /////////////////////////////////////////////////////////////////////////////
@@ -517,175 +517,6 @@ A401 (1997) 113-132.</span></p>
 
 <!-- */
 // --> End_Html
-
-   int i, x, y, sampling, r1, r2;
-   float a, b, p1, p2, p3, p4, s1, s2, s3, s4;
-   if (ssizex <= 0 || ssizey <= 0)
-      return "Wrong parameters";
-   if (numberIterationsX < 1 || numberIterationsY < 1)
-      return "Width of Clipping Window Must Be Positive";
-   if (ssizex < 2 * numberIterationsX + 1
-        || ssizey < 2 * numberIterationsY + 1)
-      return ("Too Large Clipping Window");
-   float **working_space = new float *[ssizex];
-   for (i = 0; i < ssizex; i++)
-      working_space[i] = new float[ssizey];
-   sampling =
-       (int) TMath::Max(numberIterationsX, numberIterationsY);
-   if (direction == kBackIncreasingWindow) {
-      if (filterType == kBackSuccessiveFiltering) {
-         for (i = 1; i <= sampling; i++) {
-            r1 = (int) TMath::Min(i, numberIterationsX), r2 =
-                (int) TMath::Min(i, numberIterationsY);
-            for (y = r2; y < ssizey - r2; y++) {
-               for (x = r1; x < ssizex - r1; x++) {
-                  a = spectrum[x][y];
-                  p1 = spectrum[x - r1][y - r2];
-                  p2 = spectrum[x - r1][y + r2];
-                  p3 = spectrum[x + r1][y - r2];
-                  p4 = spectrum[x + r1][y + r2];
-                  s1 = spectrum[x][y - r2];
-                  s2 = spectrum[x - r1][y];
-                  s3 = spectrum[x + r1][y];
-                  s4 = spectrum[x][y + r2];
-                  b = (p1 + p2) / 2.0;
-                  if (b > s2)
-                     s2 = b;
-                  b = (p1 + p3) / 2.0;
-                  if (b > s1)
-                     s1 = b;
-                  b = (p2 + p4) / 2.0;
-                  if (b > s4)
-                     s4 = b;
-                  b = (p3 + p4) / 2.0;
-                  if (b > s3)
-                     s3 = b;
-                  s1 = s1 - (p1 + p3) / 2.0;
-                  s2 = s2 - (p1 + p2) / 2.0;
-                  s3 = s3 - (p3 + p4) / 2.0;
-                  s4 = s4 - (p2 + p4) / 2.0;
-                  b = (s1 + s4) / 2.0 + (s2 + s3) / 2.0 + (p1 + p2 +
-                                                            p3 +
-                                                            p4) / 4.0;
-                  if (b < a && b > 0)
-                     a = b;
-                  working_space[x][y] = a;
-               }
-            }
-            for (y = r2; y < ssizey - r2; y++) {
-               for (x = r1; x < ssizex - r1; x++) {
-                  spectrum[x][y] = working_space[x][y];
-               }
-            }
-         }                 
-      }
-      
-      else if (filterType == kBackOneStepFiltering) {
-         for (i = 1; i <= sampling; i++) {
-            r1 = (int) TMath::Min(i, numberIterationsX), r2 =
-                (int) TMath::Min(i, numberIterationsY);
-            for (y = r2; y < ssizey - r2; y++) {
-               for (x = r1; x < ssizex - r1; x++) {
-                  a = spectrum[x][y];
-                  b = -(spectrum[x - r1][y - r2] +
-                         spectrum[x - r1][y + r2] + spectrum[x + r1][y -
-                                                                     r2]
-                         + spectrum[x + r1][y + r2]) / 4 +
-                      (spectrum[x][y - r2] + spectrum[x - r1][y] +
-                       spectrum[x + r1][y] + spectrum[x][y + r2]) / 2;
-                  if (b < a && b > 0)
-                     a = b;
-                  working_space[x][y] = a;
-               }
-            }
-            for (y = i; y < ssizey - i; y++) {
-               for (x = i; x < ssizex - i; x++) {
-                  spectrum[x][y] = working_space[x][y];
-               }
-            }
-         }
-      }
-   }
-   
-   else if (direction == kBackDecreasingWindow) {
-      if (filterType == kBackSuccessiveFiltering) {
-         for (i = sampling; i >= 1; i--) {
-            r1 = (int) TMath::Min(i, numberIterationsX), r2 =
-                (int) TMath::Min(i, numberIterationsY);
-            for (y = r2; y < ssizey - r2; y++) {
-               for (x = r1; x < ssizex - r1; x++) {
-                  a = spectrum[x][y];
-                  p1 = spectrum[x - r1][y - r2];
-                  p2 = spectrum[x - r1][y + r2];
-                  p3 = spectrum[x + r1][y - r2];
-                  p4 = spectrum[x + r1][y + r2];
-                  s1 = spectrum[x][y - r2];
-                  s2 = spectrum[x - r1][y];
-                  s3 = spectrum[x + r1][y];
-                  s4 = spectrum[x][y + r2];
-                  b = (p1 + p2) / 2.0;
-                  if (b > s2)
-                     s2 = b;
-                  b = (p1 + p3) / 2.0;
-                  if (b > s1)
-                     s1 = b;
-                  b = (p2 + p4) / 2.0;
-                  if (b > s4)
-                     s4 = b;
-                  b = (p3 + p4) / 2.0;
-                  if (b > s3)
-                     s3 = b;
-                  s1 = s1 - (p1 + p3) / 2.0;
-                  s2 = s2 - (p1 + p2) / 2.0;
-                  s3 = s3 - (p3 + p4) / 2.0;
-                  s4 = s4 - (p2 + p4) / 2.0;
-                  b = (s1 + s4) / 2.0 + (s2 + s3) / 2.0 + (p1 + p2 +
-                                                            p3 +
-                                                            p4) / 4.0;
-                  if (b < a && b > 0)
-                     a = b;
-                  working_space[x][y] = a;
-               }
-            }
-            for (y = r2; y < ssizey - r2; y++) {
-               for (x = r1; x < ssizex - r1; x++) {
-                  spectrum[x][y] = working_space[x][y];
-               }
-            }
-         }
-      }        
-      
-      else if (filterType == kBackOneStepFiltering) {
-         for (i = sampling; i >= 1; i--) {
-            r1 = (int) TMath::Min(i, numberIterationsX), r2 =
-                (int) TMath::Min(i, numberIterationsY);
-            for (y = r2; y < ssizey - r2; y++) {
-               for (x = r1; x < ssizex - r1; x++) {
-                  a = spectrum[x][y];
-                  b = -(spectrum[x - r1][y - r2] +
-                         spectrum[x - r1][y + r2] + spectrum[x + r1][y -
-                                                                     r2]
-                         + spectrum[x + r1][y + r2]) / 4 +
-                      (spectrum[x][y - r2] + spectrum[x - r1][y] +
-                       spectrum[x + r1][y] + spectrum[x][y + r2]) / 2;
-                  if (b < a && b > 0)
-                     a = b;
-                  working_space[x][y] = a;
-               }
-            }
-            for (y = i; y < ssizey - i; y++) {
-               for (x = i; x < ssizex - i; x++) {
-                  spectrum[x][y] = working_space[x][y];
-               }
-            }
-         }
-      }
-   }
-   for (i = 0; i < ssizex; i++)
-      delete[]working_space[i];
-   delete[]working_space;
-   return 0;
-}
 //Begin_Html <!--
 /* -->
 <div class=Section1>
@@ -999,6 +830,175 @@ window&quot;,10,10,1000,700);</p>
 <!-- */
 // --> End_Html
 
+   int i, x, y, sampling, r1, r2;
+   float a, b, p1, p2, p3, p4, s1, s2, s3, s4;
+   if (ssizex <= 0 || ssizey <= 0)
+      return "Wrong parameters";
+   if (numberIterationsX < 1 || numberIterationsY < 1)
+      return "Width of Clipping Window Must Be Positive";
+   if (ssizex < 2 * numberIterationsX + 1
+        || ssizey < 2 * numberIterationsY + 1)
+      return ("Too Large Clipping Window");
+   float **working_space = new float *[ssizex];
+   for (i = 0; i < ssizex; i++)
+      working_space[i] = new float[ssizey];
+   sampling =
+       (int) TMath::Max(numberIterationsX, numberIterationsY);
+   if (direction == kBackIncreasingWindow) {
+      if (filterType == kBackSuccessiveFiltering) {
+         for (i = 1; i <= sampling; i++) {
+            r1 = (int) TMath::Min(i, numberIterationsX), r2 =
+                (int) TMath::Min(i, numberIterationsY);
+            for (y = r2; y < ssizey - r2; y++) {
+               for (x = r1; x < ssizex - r1; x++) {
+                  a = spectrum[x][y];
+                  p1 = spectrum[x - r1][y - r2];
+                  p2 = spectrum[x - r1][y + r2];
+                  p3 = spectrum[x + r1][y - r2];
+                  p4 = spectrum[x + r1][y + r2];
+                  s1 = spectrum[x][y - r2];
+                  s2 = spectrum[x - r1][y];
+                  s3 = spectrum[x + r1][y];
+                  s4 = spectrum[x][y + r2];
+                  b = (p1 + p2) / 2.0;
+                  if (b > s2)
+                     s2 = b;
+                  b = (p1 + p3) / 2.0;
+                  if (b > s1)
+                     s1 = b;
+                  b = (p2 + p4) / 2.0;
+                  if (b > s4)
+                     s4 = b;
+                  b = (p3 + p4) / 2.0;
+                  if (b > s3)
+                     s3 = b;
+                  s1 = s1 - (p1 + p3) / 2.0;
+                  s2 = s2 - (p1 + p2) / 2.0;
+                  s3 = s3 - (p3 + p4) / 2.0;
+                  s4 = s4 - (p2 + p4) / 2.0;
+                  b = (s1 + s4) / 2.0 + (s2 + s3) / 2.0 + (p1 + p2 +
+                                                            p3 +
+                                                            p4) / 4.0;
+                  if (b < a && b > 0)
+                     a = b;
+                  working_space[x][y] = a;
+               }
+            }
+            for (y = r2; y < ssizey - r2; y++) {
+               for (x = r1; x < ssizex - r1; x++) {
+                  spectrum[x][y] = working_space[x][y];
+               }
+            }
+         }                 
+      }
+      
+      else if (filterType == kBackOneStepFiltering) {
+         for (i = 1; i <= sampling; i++) {
+            r1 = (int) TMath::Min(i, numberIterationsX), r2 =
+                (int) TMath::Min(i, numberIterationsY);
+            for (y = r2; y < ssizey - r2; y++) {
+               for (x = r1; x < ssizex - r1; x++) {
+                  a = spectrum[x][y];
+                  b = -(spectrum[x - r1][y - r2] +
+                         spectrum[x - r1][y + r2] + spectrum[x + r1][y -
+                                                                     r2]
+                         + spectrum[x + r1][y + r2]) / 4 +
+                      (spectrum[x][y - r2] + spectrum[x - r1][y] +
+                       spectrum[x + r1][y] + spectrum[x][y + r2]) / 2;
+                  if (b < a && b > 0)
+                     a = b;
+                  working_space[x][y] = a;
+               }
+            }
+            for (y = i; y < ssizey - i; y++) {
+               for (x = i; x < ssizex - i; x++) {
+                  spectrum[x][y] = working_space[x][y];
+               }
+            }
+         }
+      }
+   }
+   
+   else if (direction == kBackDecreasingWindow) {
+      if (filterType == kBackSuccessiveFiltering) {
+         for (i = sampling; i >= 1; i--) {
+            r1 = (int) TMath::Min(i, numberIterationsX), r2 =
+                (int) TMath::Min(i, numberIterationsY);
+            for (y = r2; y < ssizey - r2; y++) {
+               for (x = r1; x < ssizex - r1; x++) {
+                  a = spectrum[x][y];
+                  p1 = spectrum[x - r1][y - r2];
+                  p2 = spectrum[x - r1][y + r2];
+                  p3 = spectrum[x + r1][y - r2];
+                  p4 = spectrum[x + r1][y + r2];
+                  s1 = spectrum[x][y - r2];
+                  s2 = spectrum[x - r1][y];
+                  s3 = spectrum[x + r1][y];
+                  s4 = spectrum[x][y + r2];
+                  b = (p1 + p2) / 2.0;
+                  if (b > s2)
+                     s2 = b;
+                  b = (p1 + p3) / 2.0;
+                  if (b > s1)
+                     s1 = b;
+                  b = (p2 + p4) / 2.0;
+                  if (b > s4)
+                     s4 = b;
+                  b = (p3 + p4) / 2.0;
+                  if (b > s3)
+                     s3 = b;
+                  s1 = s1 - (p1 + p3) / 2.0;
+                  s2 = s2 - (p1 + p2) / 2.0;
+                  s3 = s3 - (p3 + p4) / 2.0;
+                  s4 = s4 - (p2 + p4) / 2.0;
+                  b = (s1 + s4) / 2.0 + (s2 + s3) / 2.0 + (p1 + p2 +
+                                                            p3 +
+                                                            p4) / 4.0;
+                  if (b < a && b > 0)
+                     a = b;
+                  working_space[x][y] = a;
+               }
+            }
+            for (y = r2; y < ssizey - r2; y++) {
+               for (x = r1; x < ssizex - r1; x++) {
+                  spectrum[x][y] = working_space[x][y];
+               }
+            }
+         }
+      }        
+      
+      else if (filterType == kBackOneStepFiltering) {
+         for (i = sampling; i >= 1; i--) {
+            r1 = (int) TMath::Min(i, numberIterationsX), r2 =
+                (int) TMath::Min(i, numberIterationsY);
+            for (y = r2; y < ssizey - r2; y++) {
+               for (x = r1; x < ssizex - r1; x++) {
+                  a = spectrum[x][y];
+                  b = -(spectrum[x - r1][y - r2] +
+                         spectrum[x - r1][y + r2] + spectrum[x + r1][y -
+                                                                     r2]
+                         + spectrum[x + r1][y + r2]) / 4 +
+                      (spectrum[x][y - r2] + spectrum[x - r1][y] +
+                       spectrum[x + r1][y] + spectrum[x][y + r2]) / 2;
+                  if (b < a && b > 0)
+                     a = b;
+                  working_space[x][y] = a;
+               }
+            }
+            for (y = i; y < ssizey - i; y++) {
+               for (x = i; x < ssizex - i; x++) {
+                  spectrum[x][y] = working_space[x][y];
+               }
+            }
+         }
+      }
+   }
+   for (i = 0; i < ssizex; i++)
+      delete[]working_space[i];
+   delete[]working_space;
+   return 0;
+}
+
 //_____________________________________________________________________________
 const char* TSpectrum2::SmoothMarkov(float **source, Int_t ssizex, Int_t ssizey, Int_t averWindow)
 {
@@ -1122,6 +1122,111 @@ of averaging smoothing window </p>
 <p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>[1]
 Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
 (1996), 451<b>.</b>  </span></p>
+
+</div>
+
+<!-- */
+// --> End_Html
+//Begin_Html <!--
+/* -->
+<div class=Section1>
+
+<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 4 – script Smooth.c
+:</span></i></p>
+
+<p class=MsoNormal><span style='font-size:16.0pt'><img width=300 height=209
+src="gif/TSpectrum2_Smoothing1.jpg"><img width=297 height=207
+src="gif/TSpectrum2_Smoothing2.jpg"></span></p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt'>Fig. 9 Original noisy
+spectrum.</span></b><b><span style='font-size:14.0pt'>    </span></b><b><span
+style='font-size:16.0pt'>Fig. 10 Smoothed spectrum m=3</span></b></p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt'>Peaks can hardly be
+observed.     Peaks become apparent.</span></b></p>
+
+<p class=MsoNormal><b><span style='font-size:14.0pt'><img width=293 height=203
+src="gif/TSpectrum2_Smoothing3.jpg"><img width=297 height=205
+src="gif/TSpectrum2_Smoothing4.jpg"></span></b></p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt'>Fig. 11 Smoothed spectrum
+m=5 Fig.12 Smoothed spectrum m=7</span></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal>// Example to illustrate the Markov smoothing (class
+TSpectrum).</p>
+
+<p class=MsoNormal>// To execute this example, do</p>
+
+<p class=MsoNormal>// root &gt; .x Smooth.C</p>
+
+<p class=MsoNormal>#include &lt;TSpectrum&gt; </p>
+
+<p class=MsoNormal>void Smooth() {</p>
+
+<p class=MsoNormal>   Int_t i, j;</p>
+
+<p class=MsoNormal>   Double_t nbinsx = 256;</p>
+
+<p class=MsoNormal>   Double_t nbinsy = 256;   </p>
+
+<p class=MsoNormal>   Double_t xmin  = 0;</p>
+
+<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
+
+<p class=MsoNormal>   Double_t ymin  = 0;</p>
+
+<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
+
+<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
+
+<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
+
+<p class=MsoNormal>                                    source[i]=new
+float[nbinsy];     </p>
+
+<p class=MsoNormal>   TH2F *smooth = new
+TH2F(&quot;smooth&quot;,&quot;Background
+estimation&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
+
+<p class=MsoNormal>   TFile *f = new
+TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
+
+<p class=MsoNormal>   smooth=(TH2F*) f-&gt;Get(&quot;smooth1;1&quot;);</p>
+
+<p class=MsoNormal>   TCanvas *Smoothing = new
+TCanvas(&quot;Smoothing&quot;,&quot;Markov smoothing&quot;,10,10,1000,700);</p>
+
+<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
+
+<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
+
+<p class=MsoNormal>                source[i][j] = smooth-&gt;GetBinContent(i +
+1,j + 1); </p>
+
+<p class=MsoNormal>             }</p>
+
+<p class=MsoNormal>   }</p>
+
+<p class=MsoNormal>   s-&gt;SmoothMarkov(source,nbinsx,nbinsx,3);//5,7</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
+
+<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++)</p>
+
+<p class=MsoNormal>       smooth-&gt;SetBinContent(i + 1,j + 1,
+source[i][j]);   </p>
+
+<p class=MsoNormal>   }</p>
+
+<p class=MsoNormal>   smooth-&gt;Draw(&quot;SURF&quot;);  </p>
+
+<p class=MsoNormal>   }</p>
 
 </div>
 
@@ -1305,111 +1410,7 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
    delete[]working_space;   
    return 0;
 }
-//Begin_Html <!--
-/* -->
-<div class=Section1>
 
-<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 4 – script Smooth.c
-:</span></i></p>
-
-<p class=MsoNormal><span style='font-size:16.0pt'><img width=300 height=209
-src="gif/TSpectrum2_Smoothing1.jpg"><img width=297 height=207
-src="gif/TSpectrum2_Smoothing2.jpg"></span></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt'>Fig. 9 Original noisy
-spectrum.</span></b><b><span style='font-size:14.0pt'>    </span></b><b><span
-style='font-size:16.0pt'>Fig. 10 Smoothed spectrum m=3</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt'>Peaks can hardly be
-observed.     Peaks become apparent.</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:14.0pt'><img width=293 height=203
-src="gif/TSpectrum2_Smoothing3.jpg"><img width=297 height=205
-src="gif/TSpectrum2_Smoothing4.jpg"></span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt'>Fig. 11 Smoothed spectrum
-m=5 Fig.12 Smoothed spectrum m=7</span></b></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate the Markov smoothing (class
-TSpectrum).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Smooth.C</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum&gt; </p>
-
-<p class=MsoNormal>void Smooth() {</p>
-
-<p class=MsoNormal>   Int_t i, j;</p>
-
-<p class=MsoNormal>   Double_t nbinsx = 256;</p>
-
-<p class=MsoNormal>   Double_t nbinsy = 256;   </p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
-
-<p class=MsoNormal>   Double_t ymin  = 0;</p>
-
-<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
-
-<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    source[i]=new
-float[nbinsy];     </p>
-
-<p class=MsoNormal>   TH2F *smooth = new
-TH2F(&quot;smooth&quot;,&quot;Background
-estimation&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
-
-<p class=MsoNormal>   smooth=(TH2F*) f-&gt;Get(&quot;smooth1;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *Smoothing = new
-TCanvas(&quot;Smoothing&quot;,&quot;Markov smoothing&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   TSpectrum *s = new TSpectrum();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                source[i][j] = smooth-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }</p>
-
-<p class=MsoNormal>   s-&gt;SmoothMarkov(source,nbinsx,nbinsx,3);//5,7</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++)</p>
-
-<p class=MsoNormal>       smooth-&gt;SetBinContent(i + 1,j + 1,
-source[i][j]);   </p>
-
-<p class=MsoNormal>   }</p>
-
-<p class=MsoNormal>   smooth-&gt;Draw(&quot;SURF&quot;);  </p>
-
-<p class=MsoNormal>   }</p>
-
-</div>
-
-<!-- */
-// --> End_Html
 //______________________________________________________________________________________________________________________________
 const char *TSpectrum2::Deconvolution(float **source, float **resp,
                                        Int_t ssizex, Int_t ssizey,
@@ -1591,161 +1592,6 @@ Processing 13 (2003) 144. </span></p>
 
 <!-- */
 // --> End_Html
-   int i, j, lhx, lhy, i1, i2, j1, j2, k1, k2, lindex, i1min, i1max,
-       i2min, i2max, j1min, j1max, j2min, j2max, positx = 0, posity = 0, repet;
-   double lda, ldb, ldc, area, maximum = 0;
-   if (ssizex <= 0 || ssizey <= 0)
-      return "Wrong parameters";
-   if (numberIterations <= 0)
-      return "Number of iterations must be positive";
-   if (numberRepetitions <= 0)
-      return "Number of repetitions must be positive";   
-   double **working_space = new double *[ssizex];
-   for (i = 0; i < ssizex; i++)
-      working_space[i] = new double[5 * ssizey];
-   area = 0;
-   lhx = -1, lhy = -1;
-   for (i = 0; i < ssizex; i++) {
-      for (j = 0; j < ssizey; j++) {
-         lda = resp[i][j];
-         if (lda != 0) {
-            if ((i + 1) > lhx)
-               lhx = i + 1;
-            if ((j + 1) > lhy)
-               lhy = j + 1;
-         }
-         working_space[i][j] = lda;
-         area = area + lda;
-         if (lda > maximum) {
-            maximum = lda;
-            positx = i, posity = j;
-         }
-      }
-   }
-   if (lhx == -1 || lhy == -1)
-      return ("Zero response data");
-   
-//calculate ht*y and write into p 
-   for (i2 = 0; i2 < ssizey; i2++) {
-      for (i1 = 0; i1 < ssizex; i1++) {
-         ldc = 0;
-         for (j2 = 0; j2 <= (lhy - 1); j2++) {
-            for (j1 = 0; j1 <= (lhx - 1); j1++) {
-               k2 = i2 + j2, k1 = i1 + j1;
-               if (k2 >= 0 && k2 < ssizey && k1 >= 0 && k1 < ssizex) {
-                  lda = working_space[j1][j2];
-                  ldb = source[k1][k2];
-                  ldc = ldc + lda * ldb;
-               }
-            }
-         }
-         working_space[i1][i2 + ssizey] = ldc;
-      }
-   }
-   
-//calculate matrix b=ht*h 
-   i1min = -(lhx - 1), i1max = lhx - 1;
-   i2min = -(lhy - 1), i2max = lhy - 1;
-   for (i2 = i2min; i2 <= i2max; i2++) {
-      for (i1 = i1min; i1 <= i1max; i1++) {
-         ldc = 0;
-         j2min = -i2;
-         if (j2min < 0)
-            j2min = 0;
-         j2max = lhy - 1 - i2;
-         if (j2max > lhy - 1)
-            j2max = lhy - 1;
-         for (j2 = j2min; j2 <= j2max; j2++) {
-            j1min = -i1;
-            if (j1min < 0)
-               j1min = 0;
-            j1max = lhx - 1 - i1;
-            if (j1max > lhx - 1)
-               j1max = lhx - 1;
-            for (j1 = j1min; j1 <= j1max; j1++) {
-               lda = working_space[j1][j2];
-               if (i1 + j1 < ssizex && i2 + j2 < ssizey)
-                  ldb = working_space[i1 + j1][i2 + j2];
-               else
-                  ldb = 0;
-               ldc = ldc + lda * ldb;
-            }
-         }
-         working_space[i1 - i1min][i2 - i2min + 2 * ssizey ] = ldc;
-      }
-   }
-   
-//initialization in x1 matrix 
-   for (i2 = 0; i2 < ssizey; i2++) {
-      for (i1 = 0; i1 < ssizex; i1++) {
-         working_space[i1][i2 + 3 * ssizey] = 1;
-         working_space[i1][i2 + 4 * ssizey] = 0;
-      }
-   }
-   
-   //START OF ITERATIONS 
-   for (repet = 0; repet < numberRepetitions; repet++) {
-      if (repet != 0) {
-         for (i = 0; i < ssizex; i++) {
-            for (j = 0; j < ssizey; j++) {
-               working_space[i][j + 3 * ssizey] =
-                   TMath::Power(working_space[i][j + 3 * ssizey], boost);
-            }
-         }
-      }
-      for (lindex = 0; lindex < numberIterations; lindex++) {
-         for (i2 = 0; i2 < ssizey; i2++) {
-            for (i1 = 0; i1 < ssizex; i1++) {
-               ldb = 0;                 
-               j2min = i2;
-               if (j2min > lhy - 1)
-                  j2min = lhy - 1;
-               j2min = -j2min;
-               j2max = ssizey - i2 - 1;
-               if (j2max > lhy - 1)
-                  j2max = lhy - 1;
-               j1min = i1;
-               if (j1min > lhx - 1)
-                  j1min = lhx - 1;
-               j1min = -j1min;
-               j1max = ssizex - i1 - 1;
-               if (j1max > lhx - 1)
-                  j1max = lhx - 1;
-               for (j2 = j2min; j2 <= j2max; j2++) {
-                  for (j1 = j1min; j1 <= j1max; j1++) {
-                     ldc =  working_space[j1 - i1min][j2 - i2min + 2 * ssizey];
-                     lda = working_space[i1 + j1][i2 + j2 + 3 * ssizey];
-                     ldb = ldb + lda * ldc;
-                  }
-               }
-               lda = working_space[i1][i2 + 3 * ssizey];
-               ldc = working_space[i1][i2 + 1 * ssizey];
-               if (ldc * lda != 0 && ldb != 0) {
-                  lda = lda * ldc / ldb;
-               }
-
-               else
-                  lda = 0;
-               working_space[i1][i2 + 4 * ssizey] = lda;
-            }
-         }
-         for (i2 = 0; i2 < ssizey; i2++) {
-            for (i1 = 0; i1 < ssizex; i1++)
-               working_space[i1][i2 + 3 * ssizey] =
-                   working_space[i1][i2 + 4 * ssizey];
-         }
-      }
-   }
-   for (i = 0; i < ssizex; i++) {
-      for (j = 0; j < ssizey; j++)
-         source[(i + positx) % ssizex][(j + posity) % ssizey] =
-             area * working_space[i][j + 3 * ssizey];
-   }
-   for (i = 0; i < ssizex; i++)
-      delete[]working_space[i];
-   delete[]working_space;
-   return 0;
-}
 //Begin_Html <!--
 /* -->
 <div class=Section1>
@@ -2126,6 +1972,162 @@ deconvolution&quot;,10,10,1000,700);</p>
 
 <!-- */
 // --> End_Html
+   int i, j, lhx, lhy, i1, i2, j1, j2, k1, k2, lindex, i1min, i1max,
+       i2min, i2max, j1min, j1max, j2min, j2max, positx = 0, posity = 0, repet;
+   double lda, ldb, ldc, area, maximum = 0;
+   if (ssizex <= 0 || ssizey <= 0)
+      return "Wrong parameters";
+   if (numberIterations <= 0)
+      return "Number of iterations must be positive";
+   if (numberRepetitions <= 0)
+      return "Number of repetitions must be positive";   
+   double **working_space = new double *[ssizex];
+   for (i = 0; i < ssizex; i++)
+      working_space[i] = new double[5 * ssizey];
+   area = 0;
+   lhx = -1, lhy = -1;
+   for (i = 0; i < ssizex; i++) {
+      for (j = 0; j < ssizey; j++) {
+         lda = resp[i][j];
+         if (lda != 0) {
+            if ((i + 1) > lhx)
+               lhx = i + 1;
+            if ((j + 1) > lhy)
+               lhy = j + 1;
+         }
+         working_space[i][j] = lda;
+         area = area + lda;
+         if (lda > maximum) {
+            maximum = lda;
+            positx = i, posity = j;
+         }
+      }
+   }
+   if (lhx == -1 || lhy == -1)
+      return ("Zero response data");
+   
+//calculate ht*y and write into p 
+   for (i2 = 0; i2 < ssizey; i2++) {
+      for (i1 = 0; i1 < ssizex; i1++) {
+         ldc = 0;
+         for (j2 = 0; j2 <= (lhy - 1); j2++) {
+            for (j1 = 0; j1 <= (lhx - 1); j1++) {
+               k2 = i2 + j2, k1 = i1 + j1;
+               if (k2 >= 0 && k2 < ssizey && k1 >= 0 && k1 < ssizex) {
+                  lda = working_space[j1][j2];
+                  ldb = source[k1][k2];
+                  ldc = ldc + lda * ldb;
+               }
+            }
+         }
+         working_space[i1][i2 + ssizey] = ldc;
+      }
+   }
+   
+//calculate matrix b=ht*h 
+   i1min = -(lhx - 1), i1max = lhx - 1;
+   i2min = -(lhy - 1), i2max = lhy - 1;
+   for (i2 = i2min; i2 <= i2max; i2++) {
+      for (i1 = i1min; i1 <= i1max; i1++) {
+         ldc = 0;
+         j2min = -i2;
+         if (j2min < 0)
+            j2min = 0;
+         j2max = lhy - 1 - i2;
+         if (j2max > lhy - 1)
+            j2max = lhy - 1;
+         for (j2 = j2min; j2 <= j2max; j2++) {
+            j1min = -i1;
+            if (j1min < 0)
+               j1min = 0;
+            j1max = lhx - 1 - i1;
+            if (j1max > lhx - 1)
+               j1max = lhx - 1;
+            for (j1 = j1min; j1 <= j1max; j1++) {
+               lda = working_space[j1][j2];
+               if (i1 + j1 < ssizex && i2 + j2 < ssizey)
+                  ldb = working_space[i1 + j1][i2 + j2];
+               else
+                  ldb = 0;
+               ldc = ldc + lda * ldb;
+            }
+         }
+         working_space[i1 - i1min][i2 - i2min + 2 * ssizey ] = ldc;
+      }
+   }
+   
+//initialization in x1 matrix 
+   for (i2 = 0; i2 < ssizey; i2++) {
+      for (i1 = 0; i1 < ssizex; i1++) {
+         working_space[i1][i2 + 3 * ssizey] = 1;
+         working_space[i1][i2 + 4 * ssizey] = 0;
+      }
+   }
+   
+   //START OF ITERATIONS 
+   for (repet = 0; repet < numberRepetitions; repet++) {
+      if (repet != 0) {
+         for (i = 0; i < ssizex; i++) {
+            for (j = 0; j < ssizey; j++) {
+               working_space[i][j + 3 * ssizey] =
+                   TMath::Power(working_space[i][j + 3 * ssizey], boost);
+            }
+         }
+      }
+      for (lindex = 0; lindex < numberIterations; lindex++) {
+         for (i2 = 0; i2 < ssizey; i2++) {
+            for (i1 = 0; i1 < ssizex; i1++) {
+               ldb = 0;                 
+               j2min = i2;
+               if (j2min > lhy - 1)
+                  j2min = lhy - 1;
+               j2min = -j2min;
+               j2max = ssizey - i2 - 1;
+               if (j2max > lhy - 1)
+                  j2max = lhy - 1;
+               j1min = i1;
+               if (j1min > lhx - 1)
+                  j1min = lhx - 1;
+               j1min = -j1min;
+               j1max = ssizex - i1 - 1;
+               if (j1max > lhx - 1)
+                  j1max = lhx - 1;
+               for (j2 = j2min; j2 <= j2max; j2++) {
+                  for (j1 = j1min; j1 <= j1max; j1++) {
+                     ldc =  working_space[j1 - i1min][j2 - i2min + 2 * ssizey];
+                     lda = working_space[i1 + j1][i2 + j2 + 3 * ssizey];
+                     ldb = ldb + lda * ldc;
+                  }
+               }
+               lda = working_space[i1][i2 + 3 * ssizey];
+               ldc = working_space[i1][i2 + 1 * ssizey];
+               if (ldc * lda != 0 && ldb != 0) {
+                  lda = lda * ldc / ldb;
+               }
+
+               else
+                  lda = 0;
+               working_space[i1][i2 + 4 * ssizey] = lda;
+            }
+         }
+         for (i2 = 0; i2 < ssizey; i2++) {
+            for (i1 = 0; i1 < ssizex; i1++)
+               working_space[i1][i2 + 3 * ssizey] =
+                   working_space[i1][i2 + 4 * ssizey];
+         }
+      }
+   }
+   for (i = 0; i < ssizex; i++) {
+      for (j = 0; j < ssizey; j++)
+         source[(i + positx) % ssizex][(j + posity) % ssizey] =
+             area * working_space[i][j + 3 * ssizey];
+   }
+   for (i = 0; i < ssizex; i++)
+      delete[]working_space[i];
+   delete[]working_space;
+   return 0;
+}
+
 //____________________________________________________________________________
 Int_t TSpectrum2::SearchHighRes(float **source,float **dest, Int_t ssizex, Int_t ssizey,
                                  Double_t sigma, Double_t threshold,
@@ -2291,6 +2293,551 @@ of peaks in multidimensional coincidence gamma-ray spectra. NIM, A443 (2000)
 <p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>[3]
 Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
 (1996), 451.</span></p>
+
+</div>
+
+<!-- */
+// --> End_Html
+//Begin_Html <!--
+/* -->
+<div class=Section1>
+
+<p class=MsoNormal><b><span style='font-size:18.0pt'>Examples of peak searching
+method</span></b></p>
+
+<p class=MsoNormal><span style='font-size:16.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'><a
+href="http://root.cern.ch/root/html/src/TSpectrum.cxx.html#TSpectrum:Search1HighRes"
+target="_parent">SearchHighRes</a> function provides users with the possibility
+to vary the input parameters and with the access to the output deconvolved data
+in the destination spectrum. Based on the output data one can tune the
+parameters. </span></p>
+
+<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 8 – script Src.c:</span></i></p>
+
+<p class=MsoNormal><span style='font-size:16.0pt'><img border=0 width=602
+height=455 src="gif/TSpectrum2_Searching1.jpg"></span></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
+20 Two-dimensional spectrum with found peaks denoted by markers (<sub><img
+border=0 width=40 height=19 src="gif/TSpectrum2_Searching2.gif"></sub>,
+threshold=5%, 3 iterations steps in the deconvolution)</span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
+border=0 width=602 height=455 src="gif/TSpectrum2_Searching3.jpg"></span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
+21 Spectrum from Fig. 20 after background elimination and deconvolution</span></b></p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal>// Example to illustrate high resolution peak searching
+function (class TSpectrum).</p>
+
+<p class=MsoNormal>// To execute this example, do</p>
+
+<p class=MsoNormal>// root &gt; .x Src.C</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>#include &lt;TSpectrum2&gt;</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>void Src() {</p>
+
+<p class=MsoNormal>   Int_t i, j, nfound;</p>
+
+<p class=MsoNormal>   Double_t nbinsx = 64;</p>
+
+<p class=MsoNormal>   Double_t nbinsy = 64;   </p>
+
+<p class=MsoNormal>   Double_t xmin  = 0;</p>
+
+<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
+
+<p class=MsoNormal>   Double_t ymin  = 0;</p>
+
+<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
+
+<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
+
+<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
+
+<p class=MsoNormal>                                    source[i]=new
+float[nbinsy];</p>
+
+<p class=MsoNormal>   Float_t ** dest = new float *[nbinsx];   </p>
+
+<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
+
+<p class=MsoNormal>                                    dest[i]=new
+float[nbinsy];</p>
+
+<p class=MsoNormal>   TH2F *search = new TH2F(&quot;search&quot;,&quot;High
+resolution peak searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
+
+<p class=MsoNormal>   TFile *f = new TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
+
+<p class=MsoNormal>   search=(TH2F*) f-&gt;Get(&quot;search4;1&quot;);</p>
+
+<p class=MsoNormal>   TCanvas *Searching = new
+TCanvas(&quot;Searching&quot;,&quot;High resolution peak
+searching&quot;,10,10,1000,700);</p>
+
+<p class=MsoNormal>   TSpectrum2 *s = new TSpectrum2();</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
+
+<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
+
+<p class=MsoNormal>                source[i][j] = search-&gt;GetBinContent(i +
+1,j + 1); </p>
+
+<p class=MsoNormal>             }</p>
+
+<p class=MsoNormal>   }   </p>
+
+<p class=MsoNormal>   nfound = s-&gt;SearchHighRes(source, dest, nbinsx,
+nbinsy, 2, 5, kTRUE, 3, kFALSE, 3);   </p>
+
+<p class=MsoNormal>   printf(&quot;Found %d candidate peaks\n&quot;,nfound);</p>
+
+<p class=MsoNormal>   for(i=0;i&lt;nfound;i++)</p>
+
+<p class=MsoNormal>             printf(&quot;posx= %d, posy= %d, value=
+%d\n&quot;,(int)(fPositionX[i]+0.5), (int)(fPositionY[i]+0.5),
+(int)source[(int)(fPositionX[i]+0.5)][(int)(fPositionY[i]+0.5)]);        </p>
+
+<p class=MsoNormal>}</p>
+
+<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 9 – script Src2.c:</span></i></p>
+
+<p class=MsoNormal><img border=0 width=602 height=455
+src="gif/TSpectrum2_Searching4.jpg"></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
+22 Two-dimensional noisy spectrum with found peaks denoted by markers (<sub><img
+border=0 width=40 height=19 src="gif/TSpectrum2_Searching2.gif"></sub>,
+threshold=10%, 10 iterations steps in the deconvolution). One can observe that
+the algorithm is insensitive to the crossings of one-dimensional ridges. It
+identifies only two-cooincidence peaks.</span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
+border=0 width=602 height=455 src="gif/TSpectrum2_Searching5.jpg"></span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
+23 Spectrum from Fig. 22 after background elimination and deconvolution</span></b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal>// Example to illustrate high resolution peak searching
+function (class TSpectrum).</p>
+
+<p class=MsoNormal>// To execute this example, do</p>
+
+<p class=MsoNormal>// root &gt; .x Src2.C</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>#include &lt;TSpectrum2&gt;</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>void Src2() {</p>
+
+<p class=MsoNormal>   Int_t i, j, nfound;</p>
+
+<p class=MsoNormal>   Double_t nbinsx = 256;</p>
+
+<p class=MsoNormal>   Double_t nbinsy = 256;   </p>
+
+<p class=MsoNormal>   Double_t xmin  = 0;</p>
+
+<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
+
+<p class=MsoNormal>   Double_t ymin  = 0;</p>
+
+<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
+
+<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
+
+<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
+
+<p class=MsoNormal>                                    source[i]=new
+float[nbinsy];</p>
+
+<p class=MsoNormal>   Float_t ** dest = new float *[nbinsx];   </p>
+
+<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
+
+<p class=MsoNormal>                                    dest[i]=new
+float[nbinsy];</p>
+
+<p class=MsoNormal>   TH2F *search = new TH2F(&quot;search&quot;,&quot;High
+resolution peak searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
+
+<p class=MsoNormal>   TFile *f = new
+TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
+
+<p class=MsoNormal>   search=(TH2F*) f-&gt;Get(&quot;back3;1&quot;);</p>
+
+<p class=MsoNormal>   TCanvas *Searching = new
+TCanvas(&quot;Searching&quot;,&quot;High resolution peak
+searching&quot;,10,10,1000,700);</p>
+
+<p class=MsoNormal>   TSpectrum2 *s = new TSpectrum2();</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
+
+<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
+
+<p class=MsoNormal>                source[i][j] = search-&gt;GetBinContent(i +
+1,j + 1); </p>
+
+<p class=MsoNormal>             }</p>
+
+<p class=MsoNormal>   }   </p>
+
+<p class=MsoNormal>   nfound = s-&gt;SearchHighRes(source, dest, nbinsx,
+nbinsy, 2, 10, kTRUE, 10, kFALSE, 3);   </p>
+
+<p class=MsoNormal>   printf(&quot;Found %d candidate peaks\n&quot;,nfound);</p>
+
+<p class=MsoNormal>   for(i=0;i&lt;nfound;i++)</p>
+
+<p class=MsoNormal>             printf(&quot;posx= %d, posy= %d, value=
+%d\n&quot;,(int)(fPositionX[i]+0.5), (int)(fPositionY[i]+0.5),
+(int)source[(int)(fPositionX[i]+0.5)][(int)(fPositionY[i]+0.5)]);        </p>
+
+<p class=MsoNormal>}</p>
+
+<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 10 – script Src3.c:</span></i></p>
+
+<p class=MsoNormal><img border=0 width=602 height=455
+src="gif/TSpectrum2_Searching6.jpg"></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
+24 Two-dimensional spectrum with 15 found peaks denoted by markers. Some peaks
+are positioned close to each other. It is necessary to increase number of
+iterations in the deconvolution. In next 3 Figs. we shall study the influence
+of this parameter.</span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
+border=0 width=602 height=455 src="gif/TSpectrum2_Searching7.jpg"></span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
+25 Spectrum from Fig. 24 after deconvolution (# of iterations = 3). Number of
+identified peaks = 13.</span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
+border=0 width=602 height=455 src="gif/TSpectrum2_Searching8.jpg"></span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
+26 Spectrum from Fig. 24 after deconvolution (# of iterations = 10). Number of
+identified peaks = 13.</span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
+border=0 width=602 height=455 src="gif/TSpectrum2_Searching9.jpg"></span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
+27 Spectrum from Fig. 24 after deconvolution (# of iterations = 100). Number of
+identified peaks = 15. Now the algorithm is able to decompose two doublets in
+the spectrum.</span></b></p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>&nbsp;</span></b></p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal>// Example to illustrate high resolution peak searching
+function (class TSpectrum).</p>
+
+<p class=MsoNormal>// To execute this example, do</p>
+
+<p class=MsoNormal>// root &gt; .x Src3.C</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>#include &lt;TSpectrum2&gt;</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>void Src3() {</p>
+
+<p class=MsoNormal>   Int_t i, j, nfound;</p>
+
+<p class=MsoNormal>   Double_t nbinsx = 64;</p>
+
+<p class=MsoNormal>   Double_t nbinsy = 64;   </p>
+
+<p class=MsoNormal>   Double_t xmin  = 0;</p>
+
+<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
+
+<p class=MsoNormal>   Double_t ymin  = 0;</p>
+
+<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
+
+<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
+
+<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
+
+<p class=MsoNormal>                                    source[i]=new
+float[nbinsy];</p>
+
+<p class=MsoNormal>   Float_t ** dest = new float *[nbinsx];   </p>
+
+<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
+
+<p class=MsoNormal>                                    dest[i]=new
+float[nbinsy];</p>
+
+<p class=MsoNormal>   TH2F *search = new TH2F(&quot;search&quot;,&quot;High
+resolution peak searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
+
+<p class=MsoNormal>   TFile *f = new
+TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
+
+<p class=MsoNormal>   search=(TH2F*) f-&gt;Get(&quot;search1;1&quot;);</p>
+
+<p class=MsoNormal>   TCanvas *Searching = new
+TCanvas(&quot;Searching&quot;,&quot;High resolution peak
+searching&quot;,10,10,1000,700);</p>
+
+<p class=MsoNormal>   TSpectrum2 *s = new TSpectrum2();</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
+
+<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
+
+<p class=MsoNormal>                source[i][j] = search-&gt;GetBinContent(i +
+1,j + 1); </p>
+
+<p class=MsoNormal>             }</p>
+
+<p class=MsoNormal>   }   </p>
+
+<p class=MsoNormal>   nfound = s-&gt;SearchHighRes(source, dest, nbinsx,
+nbinsy, 2, 2, kFALSE, 3, kFALSE, 1);//3, 10, 100   </p>
+
+<p class=MsoNormal>   printf(&quot;Found %d candidate peaks\n&quot;,nfound);</p>
+
+<p class=MsoNormal> </p>
+
+<p class=MsoNormal>   for(i=0;i&lt;nfound;i++)</p>
+
+<p class=MsoNormal>             printf(&quot;posx= %d, posy= %d, value=
+%d\n&quot;,(int)(fPositionX[i]+0.5), (int)(fPositionY[i]+0.5),
+(int)source[(int)(fPositionX[i]+0.5)][(int)(fPositionY[i]+0.5)]);        </p>
+
+<p class=MsoNormal>}</p>
+
+<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 11 – script Src4.c:</span></i></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
+border=0 width=602 height=455 src="gif/TSpectrum2_Searching10.jpg"></span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
+28 Two-dimensional spectrum with peaks with different sigma denoted by markers (<sub><img
+border=0 width=39 height=19 src="gif/TSpectrum2_Searching11.gif"></sub>,
+threshold=5%, 10 iterations steps in the deconvolution, Markov smoothing with
+window=3)</span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
+border=0 width=602 height=455 src="gif/TSpectrum2_Searching12.jpg"></span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
+29 Spectrum from Fig. 28 after smoothing and deconvolution.</span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>&nbsp;</span></b></p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal>// Example to illustrate high resolution peak searching
+function (class TSpectrum).</p>
+
+<p class=MsoNormal>// To execute this example, do</p>
+
+<p class=MsoNormal>// root &gt; .x Src4.C</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>#include &lt;TSpectrum2&gt;</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>void Src4() {</p>
+
+<p class=MsoNormal>   Int_t i, j, nfound;</p>
+
+<p class=MsoNormal>   Double_t nbinsx = 64;</p>
+
+<p class=MsoNormal>   Double_t nbinsy = 64;   </p>
+
+<p class=MsoNormal>   Double_t xmin  = 0;</p>
+
+<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
+
+<p class=MsoNormal>   Double_t ymin  = 0;</p>
+
+<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
+
+<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
+
+<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
+
+<p class=MsoNormal>                                    source[i]=new
+float[nbinsy];</p>
+
+<p class=MsoNormal>   Float_t ** dest = new float *[nbinsx];   </p>
+
+<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
+
+<p class=MsoNormal>                                    dest[i]=new
+float[nbinsy];</p>
+
+<p class=MsoNormal>   TH2F *search = new TH2F(&quot;search&quot;,&quot;High
+resolution peak searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
+
+<p class=MsoNormal>   TFile *f = new
+TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
+
+<p class=MsoNormal>   search=(TH2F*) f-&gt;Get(&quot;search2;1&quot;);</p>
+
+<p class=MsoNormal>   TCanvas *Searching = new
+TCanvas(&quot;Searching&quot;,&quot;High resolution peak
+searching&quot;,10,10,1000,700);</p>
+
+<p class=MsoNormal>   TSpectrum2 *s = new TSpectrum2();</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
+
+<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
+
+<p class=MsoNormal>                source[i][j] = search-&gt;GetBinContent(i +
+1,j + 1); </p>
+
+<p class=MsoNormal>             }</p>
+
+<p class=MsoNormal>   }   </p>
+
+<p class=MsoNormal>   nfound = s-&gt;SearchHighRes(source, dest, nbinsx,
+nbinsy, 3, 5, kFALSE, 10, kTRUE, 3);   </p>
+
+<p class=MsoNormal>   printf(&quot;Found %d candidate peaks\n&quot;,nfound);</p>
+
+<p class=MsoNormal>   for(i=0;i&lt;nfound;i++)</p>
+
+<p class=MsoNormal>             printf(&quot;posx= %d, posy= %d, value=
+%d\n&quot;,(int)(fPositionX[i]+0.5), (int)(fPositionY[i]+0.5),
+(int)source[(int)(fPositionX[i]+0.5)][(int)(fPositionY[i]+0.5)]);        </p>
+
+<p class=MsoNormal>}</p>
+
+<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 12 – script Src5.c:</span></i></p>
+
+<p class=MsoNormal><img border=0 width=602 height=455
+src="gif/TSpectrum2_Searching13.jpg"></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
+30 Two-dimensional spectrum with peaks positioned close to the edges denoted by
+markers (<sub><img border=0 width=40 height=19
+src="gif/TSpectrum2_Searching2.gif"></sub>, threshold=5%, 10 iterations
+steps in the deconvolution)</span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
+border=0 width=602 height=455 src="gif/TSpectrum2_Searching14.jpg"></span></b></p>
+
+<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
+31 Spectrum from Fig. 30 after deconvolution.</span></b></p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>&nbsp;</span></b></p>
+
+<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
+
+<p class=MsoNormal>// Example to illustrate high resolution peak searching
+function (class TSpectrum).</p>
+
+<p class=MsoNormal>// To execute this example, do</p>
+
+<p class=MsoNormal>// root &gt; .x Src5.C</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>#include &lt;TSpectrum2&gt;</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>void Src5() {</p>
+
+<p class=MsoNormal>   Int_t i, j, nfound;</p>
+
+<p class=MsoNormal>   Double_t nbinsx = 64;</p>
+
+<p class=MsoNormal>   Double_t nbinsy = 64;   </p>
+
+<p class=MsoNormal>   Double_t xmin  = 0;</p>
+
+<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
+
+<p class=MsoNormal>   Double_t ymin  = 0;</p>
+
+<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
+
+<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
+
+<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
+
+<p class=MsoNormal>                                    source[i]=new
+float[nbinsy];</p>
+
+<p class=MsoNormal>   Float_t ** dest = new float *[nbinsx];   </p>
+
+<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
+
+<p class=MsoNormal>                                    dest[i]=new
+float[nbinsy];</p>
+
+<p class=MsoNormal>   TH2F *search = new TH2F(&quot;search&quot;,&quot;High
+resolution peak searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
+
+<p class=MsoNormal>   TFile *f = new
+TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
+
+<p class=MsoNormal>   search=(TH2F*) f-&gt;Get(&quot;search3;1&quot;);</p>
+
+<p class=MsoNormal>   TCanvas *Searching = new
+TCanvas(&quot;Searching&quot;,&quot;High resolution peak
+searching&quot;,10,10,1000,700);</p>
+
+<p class=MsoNormal>   TSpectrum2 *s = new TSpectrum2();</p>
+
+<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
+
+<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
+
+<p class=MsoNormal>                source[i][j] = search-&gt;GetBinContent(i +
+1,j + 1); </p>
+
+<p class=MsoNormal>             }</p>
+
+<p class=MsoNormal>   }   </p>
+
+<p class=MsoNormal>   nfound = s-&gt;SearchHighRes(source, dest, nbinsx,
+nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
+
+<p class=MsoNormal>   printf(&quot;Found %d candidate peaks\n&quot;,nfound);</p>
+
+<p class=MsoNormal>   for(i=0;i&lt;nfound;i++)</p>
+
+<p class=MsoNormal>             printf(&quot;posx= %d, posy= %d, value=
+%d\n&quot;,(int)(fPositionX[i]+0.5), (int)(fPositionY[i]+0.5),
+(int)source[(int)(fPositionX[i]+0.5)][(int)(fPositionY[i]+0.5)]);        </p>
+
+<p class=MsoNormal>}</p>
 
 </div>
 
@@ -2902,551 +3449,6 @@ Z.K. Silagadze, A new algorithm for automatic photopeak searches. NIM A 376
    fNPeaks = peak_index;
    return fNPeaks;
 }
-//Begin_Html <!--
-/* -->
-<div class=Section1>
-
-<p class=MsoNormal><b><span style='font-size:18.0pt'>Examples of peak searching
-method</span></b></p>
-
-<p class=MsoNormal><span style='font-size:16.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'><a
-href="http://root.cern.ch/root/html/src/TSpectrum.cxx.html#TSpectrum:Search1HighRes"
-target="_parent">SearchHighRes</a> function provides users with the possibility
-to vary the input parameters and with the access to the output deconvolved data
-in the destination spectrum. Based on the output data one can tune the
-parameters. </span></p>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 8 – script Src.c:</span></i></p>
-
-<p class=MsoNormal><span style='font-size:16.0pt'><img border=0 width=602
-height=455 src="gif/TSpectrum2_Searching1.jpg"></span></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-20 Two-dimensional spectrum with found peaks denoted by markers (<sub><img
-border=0 width=40 height=19 src="gif/TSpectrum2_Searching2.gif"></sub>,
-threshold=5%, 3 iterations steps in the deconvolution)</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/TSpectrum2_Searching3.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-21 Spectrum from Fig. 20 after background elimination and deconvolution</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate high resolution peak searching
-function (class TSpectrum).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Src.C</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum2&gt;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Src() {</p>
-
-<p class=MsoNormal>   Int_t i, j, nfound;</p>
-
-<p class=MsoNormal>   Double_t nbinsx = 64;</p>
-
-<p class=MsoNormal>   Double_t nbinsy = 64;   </p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
-
-<p class=MsoNormal>   Double_t ymin  = 0;</p>
-
-<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
-
-<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    source[i]=new
-float[nbinsy];</p>
-
-<p class=MsoNormal>   Float_t ** dest = new float *[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    dest[i]=new
-float[nbinsy];</p>
-
-<p class=MsoNormal>   TH2F *search = new TH2F(&quot;search&quot;,&quot;High
-resolution peak searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   TFile *f = new TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
-
-<p class=MsoNormal>   search=(TH2F*) f-&gt;Get(&quot;search4;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *Searching = new
-TCanvas(&quot;Searching&quot;,&quot;High resolution peak
-searching&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   TSpectrum2 *s = new TSpectrum2();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                source[i][j] = search-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }   </p>
-
-<p class=MsoNormal>   nfound = s-&gt;SearchHighRes(source, dest, nbinsx,
-nbinsy, 2, 5, kTRUE, 3, kFALSE, 3);   </p>
-
-<p class=MsoNormal>   printf(&quot;Found %d candidate peaks\n&quot;,nfound);</p>
-
-<p class=MsoNormal>   for(i=0;i&lt;nfound;i++)</p>
-
-<p class=MsoNormal>             printf(&quot;posx= %d, posy= %d, value=
-%d\n&quot;,(int)(fPositionX[i]+0.5), (int)(fPositionY[i]+0.5),
-(int)source[(int)(fPositionX[i]+0.5)][(int)(fPositionY[i]+0.5)]);        </p>
-
-<p class=MsoNormal>}</p>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 9 – script Src2.c:</span></i></p>
-
-<p class=MsoNormal><img border=0 width=602 height=455
-src="gif/TSpectrum2_Searching4.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-22 Two-dimensional noisy spectrum with found peaks denoted by markers (<sub><img
-border=0 width=40 height=19 src="gif/TSpectrum2_Searching2.gif"></sub>,
-threshold=10%, 10 iterations steps in the deconvolution). One can observe that
-the algorithm is insensitive to the crossings of one-dimensional ridges. It
-identifies only two-cooincidence peaks.</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/TSpectrum2_Searching5.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-23 Spectrum from Fig. 22 after background elimination and deconvolution</span></b></p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate high resolution peak searching
-function (class TSpectrum).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Src2.C</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum2&gt;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Src2() {</p>
-
-<p class=MsoNormal>   Int_t i, j, nfound;</p>
-
-<p class=MsoNormal>   Double_t nbinsx = 256;</p>
-
-<p class=MsoNormal>   Double_t nbinsy = 256;   </p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
-
-<p class=MsoNormal>   Double_t ymin  = 0;</p>
-
-<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
-
-<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    source[i]=new
-float[nbinsy];</p>
-
-<p class=MsoNormal>   Float_t ** dest = new float *[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    dest[i]=new
-float[nbinsy];</p>
-
-<p class=MsoNormal>   TH2F *search = new TH2F(&quot;search&quot;,&quot;High
-resolution peak searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
-
-<p class=MsoNormal>   search=(TH2F*) f-&gt;Get(&quot;back3;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *Searching = new
-TCanvas(&quot;Searching&quot;,&quot;High resolution peak
-searching&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   TSpectrum2 *s = new TSpectrum2();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                source[i][j] = search-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }   </p>
-
-<p class=MsoNormal>   nfound = s-&gt;SearchHighRes(source, dest, nbinsx,
-nbinsy, 2, 10, kTRUE, 10, kFALSE, 3);   </p>
-
-<p class=MsoNormal>   printf(&quot;Found %d candidate peaks\n&quot;,nfound);</p>
-
-<p class=MsoNormal>   for(i=0;i&lt;nfound;i++)</p>
-
-<p class=MsoNormal>             printf(&quot;posx= %d, posy= %d, value=
-%d\n&quot;,(int)(fPositionX[i]+0.5), (int)(fPositionY[i]+0.5),
-(int)source[(int)(fPositionX[i]+0.5)][(int)(fPositionY[i]+0.5)]);        </p>
-
-<p class=MsoNormal>}</p>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 10 – script Src3.c:</span></i></p>
-
-<p class=MsoNormal><img border=0 width=602 height=455
-src="gif/TSpectrum2_Searching6.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-24 Two-dimensional spectrum with 15 found peaks denoted by markers. Some peaks
-are positioned close to each other. It is necessary to increase number of
-iterations in the deconvolution. In next 3 Figs. we shall study the influence
-of this parameter.</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/TSpectrum2_Searching7.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-25 Spectrum from Fig. 24 after deconvolution (# of iterations = 3). Number of
-identified peaks = 13.</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/TSpectrum2_Searching8.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-26 Spectrum from Fig. 24 after deconvolution (# of iterations = 10). Number of
-identified peaks = 13.</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/TSpectrum2_Searching9.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-27 Spectrum from Fig. 24 after deconvolution (# of iterations = 100). Number of
-identified peaks = 15. Now the algorithm is able to decompose two doublets in
-the spectrum.</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>&nbsp;</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate high resolution peak searching
-function (class TSpectrum).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Src3.C</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum2&gt;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Src3() {</p>
-
-<p class=MsoNormal>   Int_t i, j, nfound;</p>
-
-<p class=MsoNormal>   Double_t nbinsx = 64;</p>
-
-<p class=MsoNormal>   Double_t nbinsy = 64;   </p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
-
-<p class=MsoNormal>   Double_t ymin  = 0;</p>
-
-<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
-
-<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    source[i]=new
-float[nbinsy];</p>
-
-<p class=MsoNormal>   Float_t ** dest = new float *[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    dest[i]=new
-float[nbinsy];</p>
-
-<p class=MsoNormal>   TH2F *search = new TH2F(&quot;search&quot;,&quot;High
-resolution peak searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
-
-<p class=MsoNormal>   search=(TH2F*) f-&gt;Get(&quot;search1;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *Searching = new
-TCanvas(&quot;Searching&quot;,&quot;High resolution peak
-searching&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   TSpectrum2 *s = new TSpectrum2();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                source[i][j] = search-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }   </p>
-
-<p class=MsoNormal>   nfound = s-&gt;SearchHighRes(source, dest, nbinsx,
-nbinsy, 2, 2, kFALSE, 3, kFALSE, 1);//3, 10, 100   </p>
-
-<p class=MsoNormal>   printf(&quot;Found %d candidate peaks\n&quot;,nfound);</p>
-
-<p class=MsoNormal> </p>
-
-<p class=MsoNormal>   for(i=0;i&lt;nfound;i++)</p>
-
-<p class=MsoNormal>             printf(&quot;posx= %d, posy= %d, value=
-%d\n&quot;,(int)(fPositionX[i]+0.5), (int)(fPositionY[i]+0.5),
-(int)source[(int)(fPositionX[i]+0.5)][(int)(fPositionY[i]+0.5)]);        </p>
-
-<p class=MsoNormal>}</p>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 11 – script Src4.c:</span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/TSpectrum2_Searching10.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-28 Two-dimensional spectrum with peaks with different sigma denoted by markers (<sub><img
-border=0 width=39 height=19 src="gif/TSpectrum2_Searching11.gif"></sub>,
-threshold=5%, 10 iterations steps in the deconvolution, Markov smoothing with
-window=3)</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/TSpectrum2_Searching12.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-29 Spectrum from Fig. 28 after smoothing and deconvolution.</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>&nbsp;</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate high resolution peak searching
-function (class TSpectrum).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Src4.C</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum2&gt;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Src4() {</p>
-
-<p class=MsoNormal>   Int_t i, j, nfound;</p>
-
-<p class=MsoNormal>   Double_t nbinsx = 64;</p>
-
-<p class=MsoNormal>   Double_t nbinsy = 64;   </p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
-
-<p class=MsoNormal>   Double_t ymin  = 0;</p>
-
-<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
-
-<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    source[i]=new
-float[nbinsy];</p>
-
-<p class=MsoNormal>   Float_t ** dest = new float *[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    dest[i]=new
-float[nbinsy];</p>
-
-<p class=MsoNormal>   TH2F *search = new TH2F(&quot;search&quot;,&quot;High
-resolution peak searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
-
-<p class=MsoNormal>   search=(TH2F*) f-&gt;Get(&quot;search2;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *Searching = new
-TCanvas(&quot;Searching&quot;,&quot;High resolution peak
-searching&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   TSpectrum2 *s = new TSpectrum2();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                source[i][j] = search-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }   </p>
-
-<p class=MsoNormal>   nfound = s-&gt;SearchHighRes(source, dest, nbinsx,
-nbinsy, 3, 5, kFALSE, 10, kTRUE, 3);   </p>
-
-<p class=MsoNormal>   printf(&quot;Found %d candidate peaks\n&quot;,nfound);</p>
-
-<p class=MsoNormal>   for(i=0;i&lt;nfound;i++)</p>
-
-<p class=MsoNormal>             printf(&quot;posx= %d, posy= %d, value=
-%d\n&quot;,(int)(fPositionX[i]+0.5), (int)(fPositionY[i]+0.5),
-(int)source[(int)(fPositionX[i]+0.5)][(int)(fPositionY[i]+0.5)]);        </p>
-
-<p class=MsoNormal>}</p>
-
-<p class=MsoNormal><i><span style='font-size:16.0pt'>Example 12 – script Src5.c:</span></i></p>
-
-<p class=MsoNormal><img border=0 width=602 height=455
-src="gif/TSpectrum2_Searching13.jpg"></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-30 Two-dimensional spectrum with peaks positioned close to the edges denoted by
-markers (<sub><img border=0 width=40 height=19
-src="gif/TSpectrum2_Searching2.gif"></sub>, threshold=5%, 10 iterations
-steps in the deconvolution)</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'><img
-border=0 width=602 height=455 src="gif/TSpectrum2_Searching14.jpg"></span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><span style='font-size:16.0pt'>Fig.
-31 Spectrum from Fig. 30 after deconvolution.</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>&nbsp;</span></b></p>
-
-<p class=MsoNormal><b><span style='font-size:16.0pt;color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal>// Example to illustrate high resolution peak searching
-function (class TSpectrum).</p>
-
-<p class=MsoNormal>// To execute this example, do</p>
-
-<p class=MsoNormal>// root &gt; .x Src5.C</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>#include &lt;TSpectrum2&gt;</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal>void Src5() {</p>
-
-<p class=MsoNormal>   Int_t i, j, nfound;</p>
-
-<p class=MsoNormal>   Double_t nbinsx = 64;</p>
-
-<p class=MsoNormal>   Double_t nbinsy = 64;   </p>
-
-<p class=MsoNormal>   Double_t xmin  = 0;</p>
-
-<p class=MsoNormal>   Double_t xmax  = (Double_t)nbinsx;</p>
-
-<p class=MsoNormal>   Double_t ymin  = 0;</p>
-
-<p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
-
-<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    source[i]=new
-float[nbinsy];</p>
-
-<p class=MsoNormal>   Float_t ** dest = new float *[nbinsx];   </p>
-
-<p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
-
-<p class=MsoNormal>                                    dest[i]=new
-float[nbinsy];</p>
-
-<p class=MsoNormal>   TH2F *search = new TH2F(&quot;search&quot;,&quot;High
-resolution peak searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
-
-<p class=MsoNormal>   TFile *f = new
-TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
-
-<p class=MsoNormal>   search=(TH2F*) f-&gt;Get(&quot;search3;1&quot;);</p>
-
-<p class=MsoNormal>   TCanvas *Searching = new
-TCanvas(&quot;Searching&quot;,&quot;High resolution peak
-searching&quot;,10,10,1000,700);</p>
-
-<p class=MsoNormal>   TSpectrum2 *s = new TSpectrum2();</p>
-
-<p class=MsoNormal>   for (i = 0; i &lt; nbinsx; i++){</p>
-
-<p class=MsoNormal>     for (j = 0; j &lt; nbinsy; j++){</p>
-
-<p class=MsoNormal>                source[i][j] = search-&gt;GetBinContent(i +
-1,j + 1); </p>
-
-<p class=MsoNormal>             }</p>
-
-<p class=MsoNormal>   }   </p>
-
-<p class=MsoNormal>   nfound = s-&gt;SearchHighRes(source, dest, nbinsx,
-nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
-
-<p class=MsoNormal>   printf(&quot;Found %d candidate peaks\n&quot;,nfound);</p>
-
-<p class=MsoNormal>   for(i=0;i&lt;nfound;i++)</p>
-
-<p class=MsoNormal>             printf(&quot;posx= %d, posy= %d, value=
-%d\n&quot;,(int)(fPositionX[i]+0.5), (int)(fPositionY[i]+0.5),
-(int)source[(int)(fPositionX[i]+0.5)][(int)(fPositionY[i]+0.5)]);        </p>
-
-<p class=MsoNormal>}</p>
-
-</div>
-
-<!-- */
-// --> End_Html
 
 
 // STATIC functions (called by TH1)
