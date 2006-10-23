@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum3.cxx,v 1.3 2006/10/09 09:29:59 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum3.cxx,v 1.4 2006/10/23 10:06:50 couet Exp $
 // Author: Miroslav Morhac   25/09/2006
 
 /////////////////////////////////////////////////////////////////////////////
@@ -5240,10 +5240,10 @@ Int_t TSpectrum3::SearchFast(const float ***source, float ***dest, Int_t ssizex,
    for(i = 0;i < ssizex; i++){
       for(j = 0;j < ssizey; j++){
          for(k = 0;k < ssizez; k++){
-             val = -working_space[i + shift][j + shift][k + shift];
-             if( val < 0)
-                val = 0;
-             dest[i][j][k] = val;
+            val = -working_space[i + shift][j + shift][k + shift];
+            if( val < 0)
+               val = 0;
+            dest[i][j][k] = val;
          }
       }
    }   
