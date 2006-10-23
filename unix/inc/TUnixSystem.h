@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.25 2005/09/24 11:57:36 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.26 2006/07/04 17:36:37 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -205,6 +205,12 @@ public:
    int               SendBuf(int sock, const void *buffer, int length);
    int               SetSockOpt(int sock, int option, int val);
    int               GetSockOpt(int sock, int option, int *val);
+
+   //---- System, CPU and Memory info
+   SysInfo_t        *GetSysInfo() const;
+   CpuInfo_t        *GetCpuInfo() const;
+   MemInfo_t        *GetMemInfo() const;
+   ProcInfo_t       *GetProcInfo() const;
 
    ClassDef(TUnixSystem,0)  //Interface to Unix OS services
 };

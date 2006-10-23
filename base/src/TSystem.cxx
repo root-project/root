@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.146 2006/09/04 06:38:57 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.147 2006/10/11 10:26:23 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1869,6 +1869,47 @@ int TSystem::GetSockOpt(int, int, int*)
    return -1;
 }
 
+//---- System, CPU and Memory info ---------------------------------------------
+
+//______________________________________________________________________________
+SysInfo_t *TSystem::GetSysInfo() const
+{
+   // Returns static system info, like OS type, CPU type, number of CPUs
+   // RAM size, etc. Returns 0 in case of error.
+
+   AbstractMethod("GetSysInfo");
+   return 0;
+}
+
+//______________________________________________________________________________
+CpuInfo_t *TSystem::GetCpuInfo() const
+{
+   // Returns cpu load average and load info. Returned structure must be deleted
+   // by the user. Returns 0 in case of error.
+
+   AbstractMethod("GetCpuInfo");
+   return 0;
+}
+
+//______________________________________________________________________________
+MemInfo_t *TSystem::GetMemInfo() const
+{
+   // Returns ram and swap memory usage info. Returned structure must be deleted
+   // by the user. Returns 0 in case of error.
+
+   AbstractMethod("GetMemInfo");
+   return 0;
+}
+
+//______________________________________________________________________________
+ProcInfo_t *TSystem::GetProcInfo() const
+{
+   // Returns cpu and memory used by this process. Returned structure must be
+   // deleted by the user. Returns 0 in case of error.
+
+   AbstractMethod("GetProcInfo");
+   return 0;
+}
 
 //---- Script Compiler ---------------------------------------------------------
 

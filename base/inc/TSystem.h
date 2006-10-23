@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.58 2006/09/04 00:45:02 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.59 2006/10/07 18:06:11 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -157,7 +157,52 @@ struct UserGroup_t {
    TString  fRealName;     // user full name
    TString  fShell;        // user preferred shell
    UserGroup_t() : fUid(0), fGid(0), fUser(), fGroup(), fPasswd(),
-       fRealName (), fShell() { }
+                   fRealName (), fShell() { }
+};
+
+struct SysInfo_t {
+   TString   fOS;          // OS
+   TString   fModel;       // computer model
+   TString   fCpuType;     // type of cpu
+   Int_t     fCpus;        // number of cpus
+   Int_t     fCpuSpeed;    // cpu speed in MHz
+   Int_t     fBusSpeed;    // bus speed in MHz
+   Int_t     fL2Cache;     // level 2 cache size in KB
+   Int_t     fPhysRam;     // physical RAM in MB
+   SysInfo_t() : fOS(), fModel(), fCpuType(), fCpus(0), fCpuSpeed(0),
+                 fBusSpeed(0), fL2Cache(0), fPhysRam(0) { }
+};
+
+struct CpuInfo_t {
+   Float_t   fLoad1m;      // cpu load average over 1 m
+   Float_t   fLoad5m;      // cpu load average over 5 m
+   Float_t   fLoad15m;     // cpu load average over 15 m
+   Float_t   fUser;        // cpu user load in percentage
+   Float_t   fSys;         // cpu sys load in percentage
+   Float_t   fTotal;       // cpu user+sys load in percentage
+   Float_t   fIdle;        // cpu idle percentage
+   CpuInfo_t() : fLoad1m(0), fLoad5m(0), fLoad15m(0),
+                 fUser(0), fSys(0), fTotal(0), fIdle(0) { }
+};
+
+struct MemInfo_t {
+   Int_t     fMemTotal;    // total RAM in MB
+   Int_t     fMemUsed;     // used RAM in MB
+   Int_t     fMemFree;     // free RAM in MB
+   Int_t     fSwapTotal;   // total swap in MB
+   Int_t     fSwapUsed;    // used swap in MB
+   Int_t     fSwapFree;    // free swap in MB
+   MemInfo_t() : fMemTotal(0), fMemUsed(0), fMemFree(0),
+                 fSwapTotal(0), fSwapUsed(0), fSwapFree(0) { }
+};
+
+struct ProcInfo_t {
+   Float_t   fCpuUser;     // user time used by this process in seconds
+   Float_t   fCpuSys;      // system time used by this process in seconds
+   Long_t    fMemResident; // resident memory used by this process in KB
+   Long_t    fMemVirtual;  // virtual memory used by this process in KB
+   ProcInfo_t() : fCpuUser(0), fCpuSys(0), fMemResident(0),
+                  fMemVirtual(0) { }
 };
 
 typedef void* Func_t;
@@ -406,6 +451,12 @@ public:
    virtual int             SendBuf(int sock, const void *buffer, int length);
    virtual int             SetSockOpt(int sock, int kind, int val);
    virtual int             GetSockOpt(int sock, int kind, int *val);
+
+   //---- System, CPU and Memory info
+   virtual SysInfo_t      *GetSysInfo() const;
+   virtual CpuInfo_t      *GetCpuInfo() const;
+   virtual MemInfo_t      *GetMemInfo() const;
+   virtual ProcInfo_t     *GetProcInfo() const;
 
    //---- ACLiC (Automatic Compiler of Shared Library for CINT)
    virtual void            AddIncludePath(const char *includePath);

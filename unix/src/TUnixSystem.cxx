@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.161 2006/10/20 09:36:11 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.162 2006/10/20 16:20:15 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #include "TMath.h"
 #include "TOrdCollection.h"
 #include "TRegexp.h"
+#include "TPRegexp.h"
 #include "TException.h"
 #include "Demangle.h"
 #include "TEnv.h"
@@ -4209,4 +4210,257 @@ void *TUnixSystem::SearchUtmpEntry(int n, const char *tty)
       ue++;
    }
    return 0;
+}
+
+//---- System, CPU and Memory info ---------------------------------------------
+
+#if defined(R__MACOSX)
+#include <mach/mach.h>
+#include <mach/mach_error.h>
+#include <mach/shared_memory_server.h>
+
+//______________________________________________________________________________
+static void ReadDarwinCpu(long *ticks)
+{
+   // Get CPU load on Mac OS X.
+
+   mach_msg_type_number_t count;
+   kern_return_t kr;
+   host_cpu_load_info_data_t cpu;
+
+   ticks[0] = ticks[1] = ticks[2] = ticks[3] = 0;
+
+   count = HOST_CPU_LOAD_INFO_COUNT;
+   kr = host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, (host_info_t)&cpu, &count);
+   if (kr != KERN_SUCCESS) {
+      ::Error("TUnixSystem::ReadDarwinCpu", "host_statistics: %s", mach_error_string(kr));
+   } else {
+      ticks[0] = cpu.cpu_ticks[CPU_STATE_USER];
+      ticks[1] = cpu.cpu_ticks[CPU_STATE_SYSTEM];
+      ticks[2] = cpu.cpu_ticks[CPU_STATE_IDLE];
+      ticks[3] = cpu.cpu_ticks[CPU_STATE_NICE];
+   }
+}
+
+//______________________________________________________________________________
+static void GetDarwinSysInfo(SysInfo_t *sysinfo)
+{
+   // Get system info for Mac OS X.
+
+   FILE *p = gSystem->OpenPipe("sysctl -n kern.ostype hw.model hw.ncpu hw.cpufrequency "
+                               "hw.busfrequency hw.l2cachesize hw.physmem", "r");
+   TString s;
+   s.Gets(p);
+   sysinfo->fOS = s;
+   s.Gets(p);
+   sysinfo->fModel = s;
+   s.Gets(p);
+   sysinfo->fCpus = s.Atoi();
+   s.Gets(p);
+   Long64_t t = s.Atoll();
+   sysinfo->fCpuSpeed = Int_t(t / 1000000);
+   s.Gets(p);
+   t = s.Atoll();
+   sysinfo->fBusSpeed = Int_t(t / 1000000);
+   s.Gets(p);
+   sysinfo->fL2Cache = s.Atoi() / 1024;
+   s.Gets(p);
+   t = s.Atoll();
+   sysinfo->fPhysRam = Int_t(t / 1024 / 1024);
+   gSystem->ClosePipe(p);
+   p = gSystem->OpenPipe("hostinfo", "r");
+   while (s.Gets(p)) {
+      if (s.BeginsWith("Processor type: ")) {
+         TPRegexp("Processor type: ([^ ]+).*").Substitute(s, "$1");
+         sysinfo->fCpuType = s;
+      }
+   }
+   gSystem->ClosePipe(p);
+}
+
+//______________________________________________________________________________
+static void GetDarwinCpuInfo(CpuInfo_t *cpuinfo)
+{
+   // Get CPU stat for Mac OS X.
+
+   Double_t avg[3];
+   if (getloadavg(avg, sizeof(avg)) < 0) {
+      ::Error("TUnixSystem::GetDarwinCpuInfo", "getloadavg failed");
+   } else {
+      cpuinfo->fLoad1m  = (Float_t)avg[0];
+      cpuinfo->fLoad5m  = (Float_t)avg[1];
+      cpuinfo->fLoad15m = (Float_t)avg[2];
+   }
+
+   Long_t cpu_ticks1[4], cpu_ticks2[4];
+   ReadDarwinCpu(cpu_ticks1);
+   gSystem->Sleep(1000);
+   ReadDarwinCpu(cpu_ticks2);
+
+   Long_t userticks = (cpu_ticks2[0] + cpu_ticks2[3]) -
+                      (cpu_ticks1[0] + cpu_ticks1[3]);
+   Long_t systicks  = cpu_ticks2[1] - cpu_ticks1[1];
+   Long_t idleticks = cpu_ticks2[2] - cpu_ticks1[2];
+   if (userticks < 0) userticks = 0;
+   if (systicks < 0)  systicks = 0;
+   if (idleticks < 0) idleticks = 0;
+   Long_t totalticks = userticks + systicks + idleticks;
+   if (totalticks) {
+      cpuinfo->fUser  = ((Float_t)(100 * userticks)) / ((Float_t)totalticks);
+      cpuinfo->fSys   = ((Float_t)(100 * systicks))  / ((Float_t)totalticks);
+      cpuinfo->fTotal = cpuinfo->fUser + cpuinfo->fSys;
+      cpuinfo->fIdle  = ((Float_t)(100 * idleticks)) / ((Float_t)totalticks);
+   }
+}
+
+//______________________________________________________________________________
+static void GetDarwinMemInfo(MemInfo_t *meminfo)
+{
+   // Get VM stat for Mac OS X.
+
+   static Int_t pshift = 0;
+   static DIR *dirp;
+   vm_statistics_data_t vm_info;
+   mach_msg_type_number_t count;
+   kern_return_t kr;
+   struct dirent *dp;
+   Long64_t total, used, free, swap_total, swap_used;
+
+   count = HOST_VM_INFO_COUNT;
+   kr = host_statistics(mach_host_self(), HOST_VM_INFO, (host_info_t)&vm_info, &count);
+   if (kr != KERN_SUCCESS) {
+      ::Error("TUnixSystem::GetDarwinMemInfo", "host_statistics: %s", mach_error_string(kr));
+      return;
+   }
+   if (pshift == 0) {
+      for (int psize = getpagesize(); psize > 1; psize >>= 1)
+         pshift++;
+   }
+
+   used = (natural_t)(vm_info.active_count + vm_info.inactive_count + vm_info.wire_count) << pshift;
+   free = (natural_t)vm_info.free_count << pshift;
+   total = (natural_t)(vm_info.active_count + vm_info.inactive_count + vm_info.free_count + vm_info.wire_count) << pshift;
+
+   // Swap is available at same time as mem, so grab values here.
+   swap_used = vm_info.pageouts << pshift;
+
+   // Figure out total swap. This adds up the size of the swapfiles */
+   dirp = opendir("/private/var/vm");
+   if (!dirp)
+       return;
+
+   swap_total = 0;
+   while ((dp = readdir(dirp)) != 0) {
+      struct stat sb;
+      char fname [MAXNAMLEN];
+      if (strncmp(dp->d_name, "swapfile", 8))
+         continue;
+      strcpy(fname, "/private/var/vm/");
+      strcat (fname, dp->d_name);
+      if (stat(fname, &sb) < 0)
+         continue;
+      swap_total += sb.st_size;
+   }
+   closedir(dirp);
+
+   meminfo->fMemTotal  = (Int_t) (total >> 20);       // divide by 1024 * 1024
+   meminfo->fMemUsed   = (Int_t) (used >> 20);
+   meminfo->fMemFree   = (Int_t) (free >> 20);
+   meminfo->fSwapTotal = (Int_t) (swap_total >> 20);
+   meminfo->fSwapUsed  = (Int_t) (swap_used >> 20);
+   meminfo->fSwapFree  = meminfo->fSwapTotal - meminfo->fSwapUsed;
+}
+
+//______________________________________________________________________________
+static void GetDarwinProcInfo(ProcInfo_t *procinfo)
+{
+   // Get processing for process on Mac OS X.
+
+   struct rusage ru;
+   if (getrusage(RUSAGE_SELF, &ru) < 0) {
+      SysError("GetDarwinProcInfo", "getrusage failed");
+   } else {
+      procinfo->fCpuUser     = (Float_t)(ru.ru_utime.tv_sec) +
+                               ((Float_t)(ru.ru_utime.tv_usec) / 1000000.);
+      procinfo->fCpuSys      = (Float_t)(ru.ru_stime.tv_sec) +
+                               ((Float_t)(ru.ru_stime.tv_usec) / 1000000.);
+   }
+
+   task_basic_info_data_t ti;
+   mach_msg_type_number_t count;
+   kern_return_t kr;
+
+   count = TASK_BASIC_INFO_COUNT;
+   kr = task_info(mach_task_self(), TASK_BASIC_INFO, (task_info_t)&ti, &count);
+   if (kr != KERN_SUCCESS) {
+      ::Error("TUnixSystem::GetDarwinProcInfo", "task_info: %s", mach_error_string(kr));
+   } else {
+      if (ti.virtual_size < SHARED_TEXT_REGION_SIZE + SHARED_DATA_REGION_SIZE)
+         procinfo->fMemVirtual  = (Long_t)(ti.virtual_size / 1024);
+      else
+         procinfo->fMemVirtual  = (Long_t)((ti.virtual_size -
+                                  SHARED_TEXT_REGION_SIZE - SHARED_DATA_REGION_SIZE) / 1024);
+      procinfo->fMemResident = (Long_t)(ti.resident_size / 1024);
+   }
+}
+#endif
+
+//______________________________________________________________________________
+SysInfo_t *TUnixSystem::GetSysInfo() const
+{
+   // Returns static system info, like OS type, CPU type, number of CPUs
+   // RAM size, etc. Returns 0 in case of error.
+
+   static SysInfo_t *sysinfo = 0;
+
+   if (!sysinfo) {
+#if defined(R__MACOSX)
+      sysinfo = new SysInfo_t;
+      GetDarwinSysInfo(sysinfo);
+#endif
+   }
+   return sysinfo;
+}
+
+//______________________________________________________________________________
+CpuInfo_t *TUnixSystem::GetCpuInfo() const
+{
+   // Returns cpu load average and cpu load. To get an estimate of the load
+   // the load is measured over one second (so this method takes one second).
+   // Returned structure must be deleted by the user. Returns 0 in case of error.
+
+   CpuInfo_t *cpuinfo = 0;
+#if defined(R__MACOSX)
+   cpuinfo = new CpuInfo_t;
+   GetDarwinCpuInfo(cpuinfo);
+#endif
+   return cpuinfo;
+}
+
+//______________________________________________________________________________
+MemInfo_t *TUnixSystem::GetMemInfo() const
+{
+   // Returns ram and swap memory usage info. Returned structure must be deleted
+   // by the user. Returns 0 in case of error.
+
+   MemInfo_t *meminfo = 0;
+#if defined(R__MACOSX)
+   meminfo = new MemInfo_t;
+   GetDarwinMemInfo(meminfo);
+#endif
+   return meminfo;
+}
+
+//______________________________________________________________________________
+ProcInfo_t *TUnixSystem::GetProcInfo() const
+{
+   // Returns cpu and memory used by this process. Returned structure must be
+   // deleted by the user. Returns 0 in case of error.
+
+   ProcInfo_t *procinfo = 0;
+#if defined(R__MACOSX)
+   procinfo = new ProcInfo_t;
+   GetDarwinProcInfo(procinfo);
+#endif
+   return procinfo;
 }
