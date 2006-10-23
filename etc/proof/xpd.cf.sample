@@ -82,6 +82,24 @@ xrd.protocol xproofd:1093 libXrdProofd.so
 ### Max number of PROOF sessions [-1, i.e. no limit]
 # xpd.maxsessions 10
 ###
+### Defines what to do when no client sessions are attached to a client area.
+# Format:
+#          xpd.shutdown <opt> <delay>
+# where:
+#          <opt> is the type of action to be taken when a client completly
+#                disconnets; the options are:
+#                0  remain connected
+#                1  terminate when idle
+#                2  terminate no matter the processing state
+#
+#          <delay> is the delay after which the action for option 1 or 2
+#                  is performed; in seconds; to indicate minutes or hours use
+#                  the suffix 'm' or 'h', respectively; e.g. 5m for 5 minutes.
+# default:
+#          xpd.shutdown 1 0
+# xpd.shutdown 1 1m
+# xpd.shutdown 1 1s
+###
 ### Image name of this server [node name]
 # xpd.image <image>
 ###
@@ -149,6 +167,7 @@ xrd.protocol xproofd:1093 libXrdProofd.so
 ###   rsp            trace server replies                [off]
 ###   fork           trace proofserv forks               [on]*
 ###   dbg            trace details about actions         [off]
+###   hdbg           trace more details about actions    [off]
 ###   err            trace errors                        [on]
 ###   all            trace everything
 ###

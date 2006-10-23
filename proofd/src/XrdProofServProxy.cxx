@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.9 2006/10/19 12:38:07 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.10 2006/10/19 14:53:24 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -80,25 +80,6 @@ XrdProofServProxy::~XrdProofServProxy()
    SafeDelArray(fTag);
    SafeDelArray(fAlias);
    SafeDelArray(fOrdinal);
-}
-
-//_______________________________________________________________________________
-XrdProofServProxy *XrdProofdProtocol::GetServer(int psid)
-{
-   // Search the vector for a matching server
-
-   XrdOucMutexHelper mh(fMutex);
-
-   XrdProofServProxy *xps = 0;
-   std::vector<XrdProofServProxy *>::iterator ip;
-   for (ip = fPClient->fProofServs.begin(); ip != fPClient->fProofServs.end(); ++ip) {
-      xps = *ip;
-      if (xps && xps->Match(psid))
-         break;
-      xps = 0;
-   }
-
-   return xps;
 }
 
 //__________________________________________________________________________

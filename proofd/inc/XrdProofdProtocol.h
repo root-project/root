@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.13 2006/09/28 23:23:45 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.14 2006/10/19 12:38:07 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -116,7 +116,7 @@ public:
    int           SendData(XrdProofdResponse *resp, kXR_int32 sid = -1, XrdSrvBuffer **buf = 0);
    int           SendDataN(XrdProofServProxy *xps, XrdSrvBuffer **buf = 0);
    int           SendMsg();
-   int           SetUserEnvironment(const char *usr, const char *dir = 0);
+   int           SetUserEnvironment();
    int           Urgent();
 
    int           Broadcast(int type, const char *msg);
@@ -233,7 +233,6 @@ public:
    static int    GetWorkers(XrdOucString &workers, XrdProofServProxy *);
    static XrdSecService *LoadSecurity(char *seclib, char *cfn);
    static int    ReadPROOFcfg();
-   static void   SetIgnoreZombieChild();
    static int    SetProofServEnv(XrdProofdProtocol *p = 0, int psid = -1,
                                  int loglevel = -1, const char *cfg = 0);
    static int    SetSrvProtVers();

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdTrace.h,v 1.4 2006/08/31 11:05:20 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdTrace.h,v 1.5 2006/10/19 12:38:07 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 #define TRACE_DBG       0x0020
 #define TRACE_ERR       0x0040
 #define TRACE_FORK      0x0080
+#define TRACE_HDBG      0x0100
 
 #ifndef NODEBUG
 

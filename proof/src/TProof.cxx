@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.160 2006/10/19 12:38:07 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.161 2006/10/20 15:22:41 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -773,10 +773,9 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
          TSlave *sl = 0;
          while ((sl = (TSlave *) nxsl())) {
 
-
-         // Finalize setup of the server
-         if (sl->IsValid())
-            sl->SetupServ(TSlave::kSlave, 0);
+            // Finalize setup of the server
+            if (sl->IsValid())
+               sl->SetupServ(TSlave::kSlave, 0);
 
             // Monitor good slaves
             Bool_t slaveOk = kTRUE;
