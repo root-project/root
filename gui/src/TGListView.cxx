@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.37 2006/06/09 15:01:10 antcheva Exp $
+// @(#)root/gui:$Name: v5-12-00-patches $:$Id: TGListView.cxx,v 1.38 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -772,6 +772,7 @@ void TGListView::SetHeaders(Int_t ncolumns)
    // create blank filler header
    fColHeader[fNColumns-1] = new TGTextButton(fHeader, new TGHotString(""), -1,
                                               fNormGC, fFontStruct);
+   fColHeader[fNColumns-1]->Associate(this);
    fColHeader[fNColumns-1]->SetTextJustify(kTextCenterX | kTextCenterY);
    fColHeader[fNColumns-1]->SetState(kButtonDisabled);
    fColHeader[fNColumns-1]->SetState(kButtonDisabled);
@@ -793,6 +794,7 @@ void TGListView::SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx)
    delete fColHeader[idx];
    fColHeader[idx] = new TGTextButton(fHeader, new TGHotString(s),
                                       idx, fNormGC, fFontStruct);
+   fColHeader[idx]->Associate(this);
    fColHeader[idx]->SetTextJustify(hmode | kTextCenterY);
 
    // fJmode and fColumns contain values for columns idx > 0. idx==0 is
