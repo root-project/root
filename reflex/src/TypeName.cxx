@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeName.cxx,v 1.18 2006/09/08 20:54:05 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeName.cxx,v 1.19 2006/10/03 09:45:37 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -51,6 +51,7 @@ static TypeVec_t & sTypeVec() {
 //-------------------------------------------------------------------------------
 // Static wrapper for type vector.
    static TypeVec_t m;
+   m.reserve(20000);
    return m;
 }
 
