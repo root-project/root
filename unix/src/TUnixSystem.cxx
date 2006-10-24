@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.163 2006/10/23 13:58:44 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.164 2006/10/23 16:39:32 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -4215,32 +4215,10 @@ void *TUnixSystem::SearchUtmpEntry(int n, const char *tty)
 //---- System, CPU and Memory info ---------------------------------------------
 
 #if defined(R__MACOSX)
+#include <sys/resource.h>
 #include <mach/mach.h>
 #include <mach/mach_error.h>
 #include <mach/shared_memory_server.h>
-
-//______________________________________________________________________________
-static void ReadDarwinCpu(long *ticks)
-{
-   // Get CPU load on Mac OS X.
-
-   mach_msg_type_number_t count;
-   kern_return_t kr;
-   host_cpu_load_info_data_t cpu;
-
-   ticks[0] = ticks[1] = ticks[2] = ticks[3] = 0;
-
-   count = HOST_CPU_LOAD_INFO_COUNT;
-   kr = host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, (host_info_t)&cpu, &count);
-   if (kr != KERN_SUCCESS) {
-      ::Error("TUnixSystem::ReadDarwinCpu", "host_statistics: %s", mach_error_string(kr));
-   } else {
-      ticks[0] = cpu.cpu_ticks[CPU_STATE_USER];
-      ticks[1] = cpu.cpu_ticks[CPU_STATE_SYSTEM];
-      ticks[2] = cpu.cpu_ticks[CPU_STATE_IDLE];
-      ticks[3] = cpu.cpu_ticks[CPU_STATE_NICE];
-   }
-}
 
 //______________________________________________________________________________
 static void GetDarwinSysInfo(SysInfo_t *sysinfo)
@@ -4276,6 +4254,29 @@ static void GetDarwinSysInfo(SysInfo_t *sysinfo)
       }
    }
    gSystem->ClosePipe(p);
+}
+
+//______________________________________________________________________________
+static void ReadDarwinCpu(long *ticks)
+{
+   // Get CPU load on Mac OS X.
+
+   mach_msg_type_number_t count;
+   kern_return_t kr;
+   host_cpu_load_info_data_t cpu;
+
+   ticks[0] = ticks[1] = ticks[2] = ticks[3] = 0;
+
+   count = HOST_CPU_LOAD_INFO_COUNT;
+   kr = host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, (host_info_t)&cpu, &count);
+   if (kr != KERN_SUCCESS) {
+      ::Error("TUnixSystem::ReadDarwinCpu", "host_statistics: %s", mach_error_string(kr));
+   } else {
+      ticks[0] = cpu.cpu_ticks[CPU_STATE_USER];
+      ticks[1] = cpu.cpu_ticks[CPU_STATE_SYSTEM];
+      ticks[2] = cpu.cpu_ticks[CPU_STATE_IDLE];
+      ticks[3] = cpu.cpu_ticks[CPU_STATE_NICE];
+   }
 }
 
 //______________________________________________________________________________
@@ -4390,37 +4391,63 @@ static void GetDarwinProcInfo(ProcInfo_t *procinfo)
    mach_msg_type_number_t count;
    kern_return_t kr;
 
+   task_t a_task = mach_task_self();
+
    count = TASK_BASIC_INFO_COUNT;
-   kr = task_info(mach_task_self(), TASK_BASIC_INFO, (task_info_t)&ti, &count);
+   kr = task_info(a_task, TASK_BASIC_INFO, (task_info_t)&ti, &count);
    if (kr != KERN_SUCCESS) {
       ::Error("TUnixSystem::GetDarwinProcInfo", "task_info: %s", mach_error_string(kr));
    } else {
-      if (ti.virtual_size < SHARED_TEXT_REGION_SIZE + SHARED_DATA_REGION_SIZE)
-         procinfo->fMemVirtual  = (Long_t)(ti.virtual_size / 1024);
-      else
-         procinfo->fMemVirtual  = (Long_t)((ti.virtual_size -
-                                  SHARED_TEXT_REGION_SIZE - SHARED_DATA_REGION_SIZE) / 1024);
-      procinfo->fMemResident = (Long_t)(ti.resident_size / 1024);
+      // resident size does not require any calculation. Virtual size
+      // needs to be adjusted if traversing memory objects do not include the
+   	// globally shared text and data regions
+   	mach_port_t object_name;
+   	vm_address_t address;
+   	vm_region_top_info_data_t info;
+   	vm_size_t vsize, rsize, size;
+   	rsize = ti.resident_size;
+   	vsize = ti.virtual_size;
+      for (address = 0; ; address += size) {
+         // get memory region
+         count = VM_REGION_TOP_INFO_COUNT;
+         if (vm_region(a_task, &address, &size,
+                       VM_REGION_TOP_INFO, (vm_region_info_t)&info, &count,
+                       &object_name) != KERN_SUCCESS) {
+            // no more memory regions.
+            break;
+         }
+
+         if (address >= GLOBAL_SHARED_TEXT_SEGMENT &&
+             address < (GLOBAL_SHARED_DATA_SEGMENT + SHARED_DATA_REGION_SIZE)) {
+            // This region is private shared.
+            // Check if this process has the globally shared
+            // text and data regions mapped in. If so, adjust
+            // virtual memory size and exit loop.
+            if (info.share_mode == SM_EMPTY) {
+               vm_region_basic_info_data_64_t b_info;
+               count = VM_REGION_BASIC_INFO_COUNT_64;
+               if (vm_region_64(a_task, &address,
+                                &size, VM_REGION_BASIC_INFO,
+                                (vm_region_info_t)&b_info, &count,
+                                &object_name) != KERN_SUCCESS) {
+                  break;
+               }
+
+               if (b_info.reserved) {
+                  vsize -= (SHARED_TEXT_REGION_SIZE + SHARED_DATA_REGION_SIZE);
+                  break;
+               }
+            }
+         }
+      }
+
+      procinfo->fMemResident = (Long_t)(rsize / 1024);
+      procinfo->fMemVirtual  = (Long_t)(vsize / 1024);
    }
 }
 #endif
 
 #if defined(R__LINUX)
-//______________________________________________________________________________
-static void ReadLinuxCpu(long *ticks)
-{
-   // Get CPU load on Linux.
-
-   ticks[0] = ticks[1] = ticks[2] = ticks[3] = 0;
-
-   TString s;
-   FILE *f = fopen("/proc/stat", "r");
-   s.Gets(f);
-   // user, user nice, sys, idle
-   sscanf(s.Data(), "%*s %ld %ld %ld %ld", &ticks[0], &ticks[3], &ticks[1], &ticks[2]);
-   fclose(f);
-}
-
 //______________________________________________________________________________
 static void GetLinuxSysInfo(SysInfo_t *sysinfo)
 {
@@ -4465,6 +4492,21 @@ static void GetLinuxSysInfo(SysInfo_t *sysinfo)
    s.Tokenize(sysinfo->fOS, from);
    s.Tokenize(sysinfo->fCpuType, from);
    gSystem->ClosePipe(f);
+}
+
+//______________________________________________________________________________
+static void ReadLinuxCpu(long *ticks)
+{
+   // Get CPU load on Linux.
+
+   ticks[0] = ticks[1] = ticks[2] = ticks[3] = 0;
+
+   TString s;
+   FILE *f = fopen("/proc/stat", "r");
+   s.Gets(f);
+   // user, user nice, sys, idle
+   sscanf(s.Data(), "%*s %ld %ld %ld %ld", &ticks[0], &ticks[3], &ticks[1], &ticks[2]);
+   fclose(f);
 }
 
 //______________________________________________________________________________
@@ -4560,77 +4602,76 @@ static void GetLinuxProcInfo(ProcInfo_t *procinfo)
 #endif
 
 //______________________________________________________________________________
-SysInfo_t *TUnixSystem::GetSysInfo() const
+int TUnixSystem::GetSysInfo(SysInfo_t *info) const
 {
    // Returns static system info, like OS type, CPU type, number of CPUs
-   // RAM size, etc. Returns 0 in case of error.
+   // RAM size, etc into the SysInfo_t structure. Returns -1 in case of error,
+   // 0 otherwise.
 
-   static SysInfo_t *sysinfo = 0;
+   if (!info) return -1;
 
-   if (!sysinfo) {
+   static SysInfo_t sysinfo;
+
+   if (!sysinfo.fCpus) {
 #if defined(R__MACOSX)
-      sysinfo = new SysInfo_t;
-      GetDarwinSysInfo(sysinfo);
-#endif
-#if defined(R__LINUX)
-      sysinfo = new SysInfo_t;
-      GetLinuxSysInfo(sysinfo);
+      GetDarwinSysInfo(&sysinfo);
+#elif defined(R__LINUX)
+      GetLinuxSysInfo(&sysinfo);
 #endif
    }
-   return sysinfo;
+
+   *info = sysinfo;
+
+   return 0;
 }
 
 //______________________________________________________________________________
-CpuInfo_t *TUnixSystem::GetCpuInfo() const
+int TUnixSystem::GetCpuInfo(CpuInfo_t *info) const
 {
-   // Returns cpu load average and cpu load. To get an estimate of the load
-   // the load is measured over one second (so this method takes one second).
-   // Returned structure must be deleted by the user. Returns 0 in case of error.
+   // Returns cpu load average and load info into the CpuInfo_t structure.
+   // Returns -1 in case of error, 0 otherwise.
 
-   CpuInfo_t *cpuinfo = 0;
+   if (!info) return -1;
+
 #if defined(R__MACOSX)
-   cpuinfo = new CpuInfo_t;
-   GetDarwinCpuInfo(cpuinfo);
+   GetDarwinCpuInfo(info);
+#elif defined(R__LINUX)
+   GetLinuxCpuInfo(info);
 #endif
-#if defined(R__LINUX)
-   cpuinfo = new CpuInfo_t;
-   GetLinuxCpuInfo(cpuinfo);
-#endif
-   return cpuinfo;
+
+   return 0;
 }
 
 //______________________________________________________________________________
-MemInfo_t *TUnixSystem::GetMemInfo() const
+int TUnixSystem::GetMemInfo(MemInfo_t *info) const
 {
-   // Returns ram and swap memory usage info. Returned structure must be deleted
-   // by the user. Returns 0 in case of error.
+   // Returns ram and swap memory usage info into the MemInfo_t structure.
+   // Returns -1 in case of error, 0 otherwise.
 
-   MemInfo_t *meminfo = 0;
+   if (!info) return -1;
+
 #if defined(R__MACOSX)
-   meminfo = new MemInfo_t;
-   GetDarwinMemInfo(meminfo);
+   GetDarwinMemInfo(info);
+#elif defined(R__LINUX)
+   GetLinuxMemInfo(info);
 #endif
-#if defined(R__LINUX)
-   meminfo = new MemInfo_t;
-   GetLinuxMemInfo(meminfo);
-#endif
-   return meminfo;
+
+   return 0;
 }
 
 //______________________________________________________________________________
-ProcInfo_t *TUnixSystem::GetProcInfo() const
+int TUnixSystem::GetProcInfo(ProcInfo_t *info) const
 {
-   // Returns cpu and memory used by this process. Returned structure must be
-   // deleted by the user. Returns 0 in case of error.
+   // Returns cpu and memory used by this process into the ProcInfo_t structure.
+   // Returns -1 in case of error, 0 otherwise.
 
-   ProcInfo_t *procinfo = 0;
+   if (!info) return -1;
+
 #if defined(R__MACOSX)
-   procinfo = new ProcInfo_t;
-   GetDarwinProcInfo(procinfo);
+   GetDarwinProcInfo(info);
+#elif defined(R__LINUX)
+   GetLinuxProcInfo(info);
 #endif
-#if defined(R__LINUX)
-   procinfo = new ProcInfo_t;
-   GetLinuxProcInfo(procinfo);
-#endif
-   return procinfo;
+
+   return 0;
 }

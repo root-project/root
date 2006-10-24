@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.147 2006/10/11 10:26:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.148 2006/10/23 13:58:44 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1872,43 +1872,44 @@ int TSystem::GetSockOpt(int, int, int*)
 //---- System, CPU and Memory info ---------------------------------------------
 
 //______________________________________________________________________________
-SysInfo_t *TSystem::GetSysInfo() const
+int TSystem::GetSysInfo(SysInfo_t *) const
 {
    // Returns static system info, like OS type, CPU type, number of CPUs
-   // RAM size, etc. Returns 0 in case of error.
+   // RAM size, etc into the SysInfo_t structure. Returns -1 in case of error,
+   // 0 otherwise.
 
    AbstractMethod("GetSysInfo");
-   return 0;
+   return -1;
 }
 
 //______________________________________________________________________________
-CpuInfo_t *TSystem::GetCpuInfo() const
+int TSystem::GetCpuInfo(CpuInfo_t *) const
 {
-   // Returns cpu load average and load info. Returned structure must be deleted
-   // by the user. Returns 0 in case of error.
+   // Returns cpu load average and load info into the CpuInfo_t structure.
+   // Returns -1 in case of error, 0 otherwise.
 
    AbstractMethod("GetCpuInfo");
-   return 0;
+   return -1;
 }
 
 //______________________________________________________________________________
-MemInfo_t *TSystem::GetMemInfo() const
+int TSystem::GetMemInfo(MemInfo_t *) const
 {
-   // Returns ram and swap memory usage info. Returned structure must be deleted
-   // by the user. Returns 0 in case of error.
+   // Returns ram and swap memory usage info into the MemInfo_t structure.
+   // Returns -1 in case of error, 0 otherwise.
 
    AbstractMethod("GetMemInfo");
-   return 0;
+   return -1;
 }
 
 //______________________________________________________________________________
-ProcInfo_t *TSystem::GetProcInfo() const
+int TSystem::GetProcInfo(ProcInfo_t *) const
 {
-   // Returns cpu and memory used by this process. Returned structure must be
-   // deleted by the user. Returns 0 in case of error.
+   // Returns cpu and memory used by this process into the ProcInfo_t structure.
+   // Returns -1 in case of error, 0 otherwise.
 
    AbstractMethod("GetProcInfo");
-   return 0;
+   return -1;
 }
 
 //---- Script Compiler ---------------------------------------------------------

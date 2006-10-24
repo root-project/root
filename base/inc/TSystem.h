@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.59 2006/10/07 18:06:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.60 2006/10/23 13:58:44 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -453,10 +453,10 @@ public:
    virtual int             GetSockOpt(int sock, int kind, int *val);
 
    //---- System, CPU and Memory info
-   virtual SysInfo_t      *GetSysInfo() const;
-   virtual CpuInfo_t      *GetCpuInfo() const;
-   virtual MemInfo_t      *GetMemInfo() const;
-   virtual ProcInfo_t     *GetProcInfo() const;
+   virtual int             GetSysInfo(SysInfo_t *info) const;
+   virtual int             GetCpuInfo(CpuInfo_t *info) const;
+   virtual int             GetMemInfo(MemInfo_t *info) const;
+   virtual int             GetProcInfo(ProcInfo_t *info) const;
 
    //---- ACLiC (Automatic Compiler of Shared Library for CINT)
    virtual void            AddIncludePath(const char *includePath);
