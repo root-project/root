@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: VariableMetricBuilder.cxx,v 1.4 2006/07/05 08:32:39 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: VariableMetricBuilder.cxx,v 1.5 2006/10/24 14:07:22 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -24,9 +24,6 @@
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnHesse.h"
 #include "Minuit2/MnPrint.h"
-
-#include "MnGradFcn.h"
-#include "LineSearch.h"
 
 //#define DEBUG 
 
