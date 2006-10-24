@@ -1,4 +1,4 @@
-// @(#)root/monalisa:$Name:  $:$Id: TMonaLisaWriter.cxx,v 1.3 2006/10/05 16:15:21 rdm Exp $
+// @(#)root/monalisa:$Name:  $:$Id: TMonaLisaWriter.cxx,v 1.4 2006/10/24 15:29:58 rdm Exp $
 // Author: Andreas Peters   5/10/2005
 
 /*************************************************************************
@@ -455,8 +455,8 @@ Bool_t TMonaLisaWriter::SendProcessingProgress(Double_t nevent, Double_t nbytes,
 
    ProcInfo_t pinfo;
    gSystem->GetProcInfo(&pinfo);
-   Double_t totmem = (Double_t)(pinfo->fMemVirtual) * 1024.;
-   Double_t rssmem = (Double_t)(pinfo->fMemResident) * 1024.;
+   Double_t totmem = (Double_t)(pinfo.fMemVirtual) * 1024.;
+   Double_t rssmem = (Double_t)(pinfo.fMemResident) * 1024.;
    Double_t shdmem = 0.;
 
    TMonaLisaValue *valtotmem = new TMonaLisaValue("totmem",totmem);
