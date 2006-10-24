@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.27 2006/10/19 14:53:24 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.28 2006/10/23 14:44:40 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -640,24 +640,36 @@ static int AssertDir(const char *path, XrdProofUI ui)
    if (stat(path,&st) != 0) {
       if (errno == ENOENT) {
          if (mkdir(path, 0755) != 0) {
-            MERROR(MHEAD,
-                   "AssertDir: unable to create dir: "<<path<<" (errno: "<<errno<<")");
+            MERROR(MHEAD, "AssertDir: unable to create dir: "<<path<<
+                          " (errno: "<<errno<<")");
+            return -1;
+         }
+         if (stat(path,&st) != 0) {
+            MERROR(MHEAD, "AssertDir: unable to stat dir: "<<path<<
+                          " (errno: "<<errno<<")");
             return -1;
          }
       } else {
          // Failure: stop
-         MERROR(MHEAD,
-                "AssertDir: unable to stat dir: "<<path<<" (errno: "<<errno<<")");
+         MERROR(MHEAD, "AssertDir: unable to stat dir: "<<path<<
+                       " (errno: "<<errno<<")");
          return -1;
       }
-   } else {
-      // Check ownership
-      if ((int) st.st_uid != ui.fUid || (int) st.st_gid != ui.fGid) {
-         MERROR(MHEAD,
-                "MkDir: dir "<<path<<
-                " exists but is owned by another entity: "<<
-                "target uid: "<<ui.fUid<<", gid: "<<ui.fGid<<
-                ": dir uid: "<<st.st_uid<<", gid: "<<st.st_gid<<")");
+   }
+
+   // Make sure the ownership is right
+   if ((int) st.st_uid != ui.fUid || (int) st.st_gid != ui.fGid) {
+
+      XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
+      if (!pGuard.Valid()) {
+         MERROR(MHEAD, "AsserDir: could not get privileges");
+         return -1;
+      }
+
+      // Set ownership of the socket file to the client
+      if (chown(path, ui.fUid, ui.fGid) == -1) {
+         MERROR(MHEAD, "AssertDir: cannot set user ownership"
+                       " on path (errno: "<<errno<<")");
          return -1;
       }
    }
@@ -2496,9 +2508,10 @@ int XrdProofdProtocol::MapClient(bool all)
       }
       // Make sure the directory exists
       if (AssertDir(udir.c_str(), fUI) == -1) {
-         udir.insert("MapClient: unable to create work dir: ");
-         TRACEP(ERR, udir);
-         fResponse.Send(kXP_ServerError, udir.c_str());
+         XrdOucString emsg("MapClient: unable to create work dir: ");
+         emsg += udir;
+         TRACEP(ERR, emsg);
+         fResponse.Send(kXP_ServerError, emsg.c_str());
          return rc;
       }
 
@@ -3298,6 +3311,8 @@ int XrdProofdProtocol::Create()
       fResponse.Send(kXR_ServerError, emsg.c_str());
       return rc;
    }
+   // UNIX Socket is saved now
+   fPClient->SetUNIXSockSaved();
 
    // now we wait for the callback to be (successfully) established
    TRACEP(FORK, "Create: server launched: wait for callback ");
@@ -4262,6 +4277,10 @@ int XrdProofdProtocol::SetUserEnvironment()
       return -1;
    }
 
+   // Save UNIX path in the sandbox for later cleaning
+   // (it must be done after sandbox login)
+   fPClient->SaveUNIXPath();
+
    // We are done
    MTRACE(DBG, MHEAD, "SetUserEnvironment: done");
    return 0;
@@ -4690,6 +4709,7 @@ XrdProofClient::XrdProofClient(XrdProofdProtocol *p,
    fWorkdir = (wrkdir) ? strdup(wrkdir) : 0;
    fUNIXSock = 0;
    fUNIXSockPath = 0;
+   fUNIXSockSaved = 0;
 }
 
 //__________________________________________________________________________
@@ -4784,9 +4804,6 @@ int XrdProofClient::CreateUNIXSock(XrdOucError *edest, char *tmpdir)
       return -1;
    }
 
-   // Save UNIX path in the sandbox for later cleaning
-   SaveUNIXPath();
-
    // We are done
    return 0;
 }
@@ -4796,7 +4813,13 @@ void XrdProofClient::SaveUNIXPath()
 {
    // Save UNIX path in <SandBox>/.unixpath
 
-   TRACE(ACT,"SaveUNIXPath: enter");
+   TRACE(ACT,"SaveUNIXPath: enter: saved? "<<fUNIXSockSaved);
+
+   // Make sure we do not have already a socket
+   if (fUNIXSockSaved) {
+      TRACE(DBG,"SaveUNIXPath: UNIX path daved already");
+      return;
+   }
 
    // Make sure we do not have already a socket
    if (!fUNIXSockPath) {
@@ -4845,6 +4868,7 @@ void XrdProofClient::SaveUNIXPath()
          actln.push_back(new XrdOucString(ln));
       } else if (vrc == 0) {
          // Not running: remove the socket path
+         TRACE(DBG, "SaveUNIXPath: unlinking socket path "<< path);
          if (unlink(path) != 0 && errno != ENOENT) { 
             TRACE(ERR, "SaveUNIXPath: problems unlinking socket path "<< path<<
                     " (errno: "<<errno<<")");
@@ -4873,7 +4897,7 @@ void XrdProofClient::SaveUNIXPath()
 
    // Append the path and our process ID
    lseek(fileno(fup), 0, SEEK_END);
-   fprintf(fup, "%d %s\n", getpid(), fUNIXSockPath);
+   fprintf(fup, "%d %s\n", getppid(), fUNIXSockPath);
 
    // Unlock the file
    lseek(fileno(fup), 0, SEEK_SET);
@@ -4883,6 +4907,9 @@ void XrdProofClient::SaveUNIXPath()
 
    // Close the file
    fclose(fup);
+
+   // Path saved
+   fUNIXSockSaved = 1;
 }
 
 //--------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.14 2006/10/19 12:38:07 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.15 2006/10/23 14:44:40 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -280,6 +280,8 @@ class XrdProofClient {
    int                     CreateUNIXSock(XrdOucError *edest, char *tmpdir);
    XrdNet                 *UNIXSock() const { return fUNIXSock; }
    char                   *UNIXSockPath() const { return fUNIXSockPath; }
+   void                    SaveUNIXPath(); // Save path in the sandbox
+   void                    SetUNIXSockSaved() { fUNIXSockSaved = 1;}
 
    std::vector<XrdProofServProxy *> fProofServs; // Allocated ProofServ sessions
    std::vector<XrdProofdProtocol *> fClients;    // Attached Client sessions
@@ -294,8 +296,7 @@ class XrdProofClient {
 
    XrdNet                 *fUNIXSock;     // UNIX server socket for internal connections
    char                   *fUNIXSockPath; // UNIX server socket path
-
-   void                    SaveUNIXPath(); // Save path in the sandbox
+   bool                    fUNIXSockSaved; // TRUE if the socket path has been saved
 };
 
 //////////////////////////////////////////////////////////////////////////

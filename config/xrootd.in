@@ -45,7 +45,7 @@ start() {
 }
 
 stop() {
-    	test ! -f /var/lock/subsys/xrootd && return 0 || true
+	[ ! -f /var/lock/subsys/xrootd ] && return 0 || true 
         echo -n $"Stopping $prog: "
         killproc xrootd
         RETVAL=$?
@@ -64,6 +64,7 @@ case "$1" in
 	;;
   status)
 	status xrootd
+	RETVAL=$?
 	;;
   restart|reload)
 	stop
