@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.24 2006/08/25 10:16:02 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.h,v 1.25 2006/09/08 20:41:29 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -2135,10 +2135,10 @@ inline bool operator&&(int i, const ROOT::Reflex::Type & rh) {
    return i && rh.operator bool();
 }
 inline bool operator||(bool b, const ROOT::Reflex::Type & rh) {
-   return b && rh.operator bool();
+   return b || rh.operator bool();
 }
 inline bool operator||(int i, const ROOT::Reflex::Type & rh) {
-   return i && rh.operator bool();
+   return i || rh.operator bool();
 }
 #endif
 #endif // ROOT_Reflex_Type

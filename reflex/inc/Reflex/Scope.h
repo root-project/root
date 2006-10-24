@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.h,v 1.19 2006/08/25 10:16:02 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.h,v 1.20 2006/09/05 17:13:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -1623,10 +1623,10 @@ inline bool operator&&(int i, const ROOT::Reflex::Scope & rh) {
    return i && rh.operator bool();
 }
 inline bool operator||(bool b, const ROOT::Reflex::Scope & rh) {
-   return b && rh.operator bool();
+   return b || rh.operator bool();
 }
 inline bool operator||(int i, const ROOT::Reflex::Scope & rh) {
-   return i && rh.operator bool();
+   return i || rh.operator bool();
 }
 #endif
 
