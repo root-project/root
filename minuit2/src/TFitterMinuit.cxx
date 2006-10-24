@@ -303,7 +303,7 @@ Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t n
    // FIX 
    else if (strncmp(command,"FIX",3) == 0 || strncmp(command,"fix",3)  == 0) {
       for(int i = 0; i < nargs; i++) {
-         FixParameter(int(args[i]));
+         FixParameter(int(args[i])-1);
       }
       return 0;
    } 

@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: VariableMetricBuilder.cxx,v 1.3 2006/06/26 11:03:55 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: VariableMetricBuilder.cxx,v 1.4 2006/07/05 08:32:39 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -25,7 +25,12 @@
 #include "Minuit2/MnHesse.h"
 #include "Minuit2/MnPrint.h"
 
-//#define DEBUG 0
+#include "MnGradFcn.h"
+#include "LineSearch.h"
+
+//#define DEBUG 
+
+//#define NEW_LINESEARCH  // dor new line search from Powell book
 
 
 #ifdef DEBUG
@@ -214,6 +219,9 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
             return FunctionMinimum(seed, result, fcn.Up());
          }
       }
+
+      // line search
+
       MnParabolaPoint pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
       if(fabs(pp.y() - s0.Fval()) < fabs(s0.Fval())*prec.Eps() ) {
 #ifdef WARNINGMSG
@@ -231,13 +239,55 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
                 << "\nNew Fval = " << pp.y() 
                 << "\nNFcalls = " << fcn.NumOfCalls() << std::endl; 
 #endif
-      
+
+#ifndef NEW_LINESEARCH
+      // case of doing new Line search from Powell book
+
       MinimumParameters p(s0.Vec() + pp.x()*step, pp.y());
       
       
       FunctionGradient g = gc(p, s0.Gradient());
-      
-      
+#else 
+
+
+      MnAlgebraicVector x = s0.Vec();
+      double  y = s0.Fval();
+      MnAlgebraicVector grad = s0.Gradient().Grad();
+      MnGradFcn func(fcn,gc,s0.Gradient() );
+      MnAlgebraicVector dx(x.size() );
+      double fbar = -100; 
+      //double fbar = -1.0E300; 
+      double epsilon = 1.0E-8;
+      double alpha_ratio; 
+      const MnAlgebraicVector & dirin  = step;
+
+#ifdef DEBUG
+      std::cout << "calling new LineSearch x: " << x << " f(x)  " << y << " direction " << dirin << std::endl; 
+#endif      
+      LineSearch( func, fbar, epsilon, s0.size(), dirin, x, y, grad, alpha_ratio, dx);
+
+#ifdef DEBUG
+      std::cout << "Result after line search : \nx = " << x 
+                << "\nOld Fval = " << s0.Fval() 
+                << "\nNew Fval = " << y 
+                << "\nalpha ratio " << alpha_ratio 
+                << "\nNFcalls = " << fcn.NumOfCalls() << std::endl; 
+#endif
+
+      if(fabs(y - s0.Fval()) < fabs(s0.Fval())*prec.Eps() ) {
+#ifdef WARNINGMSG
+         std::cout<<"VariableMetricBuilder: warning: no improvement in line search  " << std::endl;
+#endif
+         // no improvement exit   (is it really needed LM ? in vers. 1.22 tried alternative )
+         break;                   
+      }
+
+      MinimumParameters p(x,y);
+      FunctionGradient g = func.FGradient(x); 
+
+#endif      
+
+
       edm = Estimator().Estimate(g, s0.Error());
       
       
