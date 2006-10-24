@@ -41,8 +41,11 @@ TGLSurfacePainter::TGLSurfacePainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotC
 char *TGLSurfacePainter::GetPlotInfo(Int_t px, Int_t py)
 {
    //Coords for point on surface under cursor.
-   if (fSelectedPart)
+   if (fSelectedPart) {
+      if (fHighColor)
+         return fSelectedPart < 7 ? (char *)"TF2" : (char *)"Switch to true-color mode to obtain correct info";
       return fSelectedPart < 7 ? (char *)"TF2" : WindowPointTo3DPoint(px, py);
+   }
    return "";
 }
 
@@ -248,7 +251,7 @@ void TGLSurfacePainter::DrawPlot()const
 {
    //Draw surf/surf1/surf2/surf4
    if (fCoord->GetCoordType() == kGLCartesian) {
-      fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels);
+      fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
       DrawSections();
       DrawProjections();
    }
@@ -280,11 +283,14 @@ void TGLSurfacePainter::DrawPlot()const
    const Int_t addI = frontPoint == 2 || frontPoint == 1 ? i = 0, 1 : (i = nX - 2, -1);
    const Int_t addJ = frontPoint == 2 || frontPoint == 3 ? firstJ = 0, 1 : (firstJ = nY - 2, -1);
 
+   if (fHighColor && fSelectionPass)
+      Rgl::ObjectIDToColor(7, kTRUE);
+
    for (; addI > 0 ? i < nX - 1 : i >= 0; i += addI) {
       for (Int_t j = firstJ; addJ > 0 ? j < nY - 1 : j >= 0; j += addJ) {
          Int_t triNumber = 2 * i * (nY - 1) + j * 2 + 7;
-         if (fSelectionPass)
-            Rgl::ObjectIDToColor(triNumber);
+         if (fSelectionPass && !fHighColor)
+            Rgl::ObjectIDToColor(triNumber, kFALSE);
 
          if ((fType == kSurf1 || fType == kSurf2 || fType == kSurf5) && !fSelectionPass)
              Rgl::DrawFaceTextured(fMesh[i][j + 1], fMesh[i][j], fMesh[i + 1][j],
@@ -298,8 +304,8 @@ void TGLSurfacePainter::DrawPlot()const
 
          ++triNumber;
 
-         if (fSelectionPass)
-            Rgl::ObjectIDToColor(triNumber);
+         if (fSelectionPass && !fHighColor)
+            Rgl::ObjectIDToColor(triNumber, kFALSE);
 
          if ((fType == kSurf1 || fType == kSurf2 || fType == kSurf5) && !fSelectionPass)
              Rgl::DrawFaceTextured(fMesh[i + 1][j], fMesh[i + 1][j + 1], fMesh[i][j + 1],

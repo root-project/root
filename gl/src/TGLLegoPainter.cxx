@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.cxx,v 1.4 2006/08/31 13:42:14 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.cxx,v 1.5 2006/10/02 12:55:47 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -47,12 +47,13 @@ char *TGLLegoPainter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
             fBinInfo += fHist->Class()->GetName();
          fBinInfo += "::";
          fBinInfo += fHist->GetName();
-      } else {
+      } else if (!fHighColor) {
          const Int_t binI = (fSelectedPart - 6) / fCoord->GetNYBins() + fCoord->GetFirstXBin();
          const Int_t binJ = (fSelectedPart - 6) % fCoord->GetNYBins() + fCoord->GetFirstYBin();
          fBinInfo.Form("(binx = %d; biny = %d; binc = %f)", binI, binJ, 
                        fHist->GetBinContent(binI, binJ));
-      }
+      } else
+         fBinInfo = "Switch to true-color mode to obtain correct info";
    }
 
    return (Char_t *)fBinInfo.Data();
@@ -454,7 +455,7 @@ void TGLLegoPainter::DrawLegoCartesian()const
 {
    //Lego in cartesian system.
    if (fCoord->GetCoordType() == kGLCartesian) {
-      fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels);
+      fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
       const TGLDisableGuard cullGuard(GL_CULL_FACE);
       DrawSections();
    }
@@ -484,6 +485,9 @@ void TGLLegoPainter::DrawLegoCartesian()const
       if (!PreparePalette() || !fPalette.EnableTexture(GL_MODULATE))
          fLegoType = kColorSimple;         
 
+   if (fSelectionPass && fHighColor)
+      Rgl::ObjectIDToColor(6, kTRUE);
+
    for(Int_t i = iInit, ir = irInit; addI > 0 ? i < nX : i >= 0; i += addI, ir += addI) {
       for(Int_t j = jInit, jr = jrInit; addJ > 0 ? j < nY : j >= 0; j += addJ, jr += addJ) {
          Double_t zMax = fHist->GetCellContent(ir, jr) * fCoord->GetFactor();
@@ -492,9 +496,9 @@ void TGLLegoPainter::DrawLegoCartesian()const
 
          const Int_t binID = 6 + i * fCoord->GetNYBins() + j;
 
-         if (fSelectionPass)
-            Rgl::ObjectIDToColor(binID);
-         else if(fSelectedPart == binID)
+         if (fSelectionPass && !fHighColor)
+            Rgl::ObjectIDToColor(binID, kFALSE);
+         else if(!fHighColor && fSelectedPart == binID)
             glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gOrangeEmission);
          
          if (fLegoType == kCylindricBars) {
@@ -509,7 +513,7 @@ void TGLLegoPainter::DrawLegoCartesian()const
                               fYEdges[j].second, fMinZ, zMax, frontPoint);
          } 
 
-         if (!fSelectionPass && fSelectedPart == binID)
+         if (!fHighColor && !fSelectionPass && fSelectedPart == binID)
             glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gNullEmission);
       }
    }
@@ -573,6 +577,9 @@ void TGLLegoPainter::DrawLegoPolar()const
       if (!PreparePalette() || !fPalette.EnableTexture(GL_MODULATE))
          fLegoType = kColorSimple;         
 
+   if (fHighColor && fSelectionPass)
+      Rgl::ObjectIDToColor(6, kTRUE);
+
    for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
       for(Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
          Double_t zMax = fHist->GetCellContent(ir, jr);
@@ -589,9 +596,9 @@ void TGLLegoPainter::DrawLegoPolar()const
 
          const Int_t binID = 6 + i * fCoord->GetNYBins() + j;
 
-         if (fSelectionPass)
-            Rgl::ObjectIDToColor(binID);
-         else if(fSelectedPart == binID)
+         if (!fHighColor && fSelectionPass)
+            Rgl::ObjectIDToColor(binID, kFALSE);
+         else if(!fHighColor && fSelectedPart == binID)
             glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gOrangeEmission);
 
          if (fLegoType == kColorLevel && !fSelectionPass)
@@ -600,7 +607,7 @@ void TGLLegoPainter::DrawLegoPolar()const
          else
             Rgl::DrawTrapezoid(points, fMinZ, zMax);
 
-         if (!fSelectionPass && fSelectedPart == binID)
+         if (!fHighColor && !fSelectionPass && fSelectedPart == binID)
             glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gNullEmission);
       }
    }
@@ -663,7 +670,10 @@ void TGLLegoPainter::DrawLegoCylindrical()const
 
    if (fLegoType == kColorLevel && !fSelectionPass)
       if (!PreparePalette() || !fPalette.EnableTexture(GL_MODULATE))
-         fLegoType = kColorSimple;         
+         fLegoType = kColorSimple;      
+
+   if (fHighColor && fSelectionPass) 
+      Rgl::ObjectIDToColor(6, kTRUE); 
 
    for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
       for(Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
@@ -683,9 +693,9 @@ void TGLLegoPainter::DrawLegoCylindrical()const
 
          const Int_t binID = 6 + i * fCoord->GetNYBins() + j;
 
-         if (fSelectionPass)
-            Rgl::ObjectIDToColor(binID);
-         else if(fSelectedPart == binID)
+         if (fSelectionPass && !fHighColor)
+            Rgl::ObjectIDToColor(binID, kFALSE);
+         else if(!fHighColor && fSelectedPart == binID)
             glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gOrangeEmission);
 
          if (fLegoType == kColorLevel && !fSelectionPass){
@@ -694,7 +704,7 @@ void TGLLegoPainter::DrawLegoCylindrical()const
          }else
             Rgl::DrawTrapezoid(points, fYEdges[j].first, fYEdges[j].second);
 
-         if (!fSelectionPass && fSelectedPart == binID)
+         if(!fSelectionPass && !fHighColor && fSelectedPart == binID)
             glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gNullEmission);
       }
    }
@@ -759,7 +769,10 @@ void TGLLegoPainter::DrawLegoSpherical()const
 
    if (fLegoType == kColorLevel && !fSelectionPass)
       if (!PreparePalette() || !fPalette.EnableTexture(GL_MODULATE))
-         fLegoType = kColorSimple;         
+         fLegoType = kColorSimple;     
+
+   if (fSelectionPass && fHighColor)    
+      Rgl::ObjectIDToColor(6, kTRUE);
 
    for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
       for(Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
@@ -795,9 +808,9 @@ void TGLLegoPainter::DrawLegoSpherical()const
 
          const Int_t binID = 6 + i * fCoord->GetNYBins() + j;
          
-         if (fSelectionPass)
-            Rgl::ObjectIDToColor(binID);
-         else if(fSelectedPart == binID)
+         if (fSelectionPass && !fHighColor)
+            Rgl::ObjectIDToColor(binID, kFALSE);
+         else if(!fHighColor && fSelectedPart == binID)
             glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gOrangeEmission);
          if (fLegoType == kColorLevel && !fSelectionPass)
             Rgl::DrawTrapezoidTextured(points, fPalette.GetTexCoord(fMinZ), 
@@ -805,7 +818,7 @@ void TGLLegoPainter::DrawLegoSpherical()const
          else
             Rgl::DrawTrapezoid(points);
 
-         if(fSelectedPart == binID)
+         if(!fHighColor && fSelectedPart == binID)
             glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gNullEmission);
       }
    }

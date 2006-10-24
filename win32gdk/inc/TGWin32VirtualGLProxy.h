@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.19 2006/06/06 11:49:01 couet Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.20 2006/08/31 13:42:14 couet Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -154,6 +154,7 @@ public:
    void     PrintViewer(TVirtualViewer3D *vv);
    Bool_t   PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t py);
    char    *GetPlotInfo(TVirtualGLPainter *plot, Int_t px, Int_t py);
+   Bool_t   HighColorFormat(Int_t ctx);
 
    static TGLManager *ProxyObject();
    static TGLManager *RealObject();

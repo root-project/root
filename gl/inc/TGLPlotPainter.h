@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.5 2006/08/31 16:03:10 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.6 2006/10/02 12:55:47 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -65,6 +65,7 @@ protected:
    TGLPlotBox            fBackBox;
 
    std::vector<Double_t> fZLevels;
+   Bool_t                fHighColor;
 
 public:
    TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, Int_t context = -1,

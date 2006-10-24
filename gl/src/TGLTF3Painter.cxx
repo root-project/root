@@ -147,7 +147,7 @@ namespace {
 void TGLTF3Painter::DrawPlot()const
 {
    //Draw mesh.
-   fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels);
+   fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
 
    //Draw TF3 surface
    if (!fSelectionPass)
@@ -179,7 +179,7 @@ void TGLTF3Painter::DrawPlot()const
          glVertex3dv(fMesh[i].fXYZ[2].CArr());
       }
    } else {
-      Rgl::ObjectIDToColor(7);
+      Rgl::ObjectIDToColor(7, fHighColor);
       for (UInt_t i = 0, e = fMesh.size(); i < e; ++i) {
          glVertex3dv(fMesh[i].fXYZ[0].CArr());
          glVertex3dv(fMesh[i].fXYZ[1].CArr());

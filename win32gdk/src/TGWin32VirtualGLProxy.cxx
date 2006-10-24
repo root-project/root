@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.21 2006/06/06 11:49:01 couet Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.22 2006/08/31 13:42:14 couet Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -157,3 +157,4 @@ RETURN_METHOD_ARG2(GLManager, Bool_t, SelectViewer, TVirtualViewer3D *, viewer, 
 RETURN_METHOD_ARG3(GLManager, Bool_t, PlotSelected, TVirtualGLPainter *, plot, Int_t, x, Int_t, y)
 RETURN_METHOD_ARG3(GLManager, char *, GetPlotInfo, TVirtualGLPainter *, plot, Int_t, x, Int_t, y)
 RETURN_METHOD_ARG4(GLManager, Bool_t, SelectManip, TVirtualGLManip *, manip, const TGLCamera *, camera, const TGLRect *, rect, const TGLBoundingBox *, box)
+RETURN_METHOD_ARG1(GLManager, Bool_t, HighColorFormat, Int_t, ctx)

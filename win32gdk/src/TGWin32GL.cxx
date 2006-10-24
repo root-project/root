@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.14 2006/06/13 15:43:39 couet Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.15 2006/08/31 13:42:14 couet Exp $
 // Author: Valeriy Onuchin(TGWin32GL)/ Timur Pocheptsov (TGWin32GLManager)
 
 /*************************************************************************
@@ -172,6 +172,8 @@ struct TGWin32GLManager::TGLContext {
    //
    Int_t        fX;
    Int_t        fY;
+   //
+   Bool_t       fHighColor;
    //
    Bool_t       fDirect;
    //
@@ -391,6 +393,9 @@ Int_t TGWin32GLManager::CreateGLContext(Int_t winInd)
          }
 
          TGLContext newDevice = {winInd, -1, hDC, 0, glCtx};
+         PIXELFORMATDESCRIPTOR testFormat = {};
+         DescribePixelFormat(hDC, pixFormat, sizeof testFormat, &testFormat);
+         newDevice.fHighColor = testFormat.cColorBits < 24 ? kTRUE : kFALSE;
 
          if (TGLContext *ctx = fPimpl->fNextFreeContext) {
             Int_t ind = ctx->fWindowIndex;
@@ -450,7 +455,7 @@ Bool_t TGWin32GLManager::CreateDIB(TGLContext &ctx)const
 Bool_t TGWin32GLManager::AttachOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    TGLContext &ctx = fPimpl->fGLContexts[ctxInd];
-   TGLContext newCtx = {ctx.fWindowIndex, -1, ctx.fDC, 0, ctx.fGLContext, w, h, x, y};
+   TGLContext newCtx = {ctx.fWindowIndex, -1, ctx.fDC, 0, ctx.fGLContext, w, h, x, y, ctx.fHighColor};
 
    if (CreateDIB(newCtx)) {
       ctx = newCtx;
@@ -468,7 +473,7 @@ Bool_t TGWin32GLManager::ResizeOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, U
 
    if (ctx.fPixmapIndex != -1)
       if (TMath::Abs(Int_t(w) - Int_t(ctx.fW)) > 1 || TMath::Abs(Int_t(h) - Int_t(ctx.fH)) > 1) {
-         TGLContext newCtx = {ctx.fWindowIndex, -1, ctx.fDC, 0, ctx.fGLContext, w, h, x, y};
+         TGLContext newCtx = {ctx.fWindowIndex, -1, ctx.fDC, 0, ctx.fGLContext, w, h, x, y, ctx.fHighColor};
          if (CreateDIB(newCtx)) {
             //new DIB created
             gVirtualX->SelectWindow(ctx.fPixmapIndex);
@@ -632,4 +637,13 @@ Bool_t TGWin32GLManager::PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t p
 char *TGWin32GLManager::GetPlotInfo(TVirtualGLPainter *plot, Int_t px, Int_t py)
 {
     return plot->GetPlotInfo(px, py);
+}
+
+//______________________________________________________________________________
+Bool_t TGWin32GLManager::HighColorFormat(Int_t ctxInd)
+{
+   if (ctxInd == -1)
+      return kFALSE;
+
+   return fPimpl->fGLContexts[ctxInd].fHighColor;
 }

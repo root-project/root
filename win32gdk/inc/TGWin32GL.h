@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.h,v 1.11 2006/06/06 11:49:01 couet Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.h,v 1.12 2006/08/31 13:42:14 couet Exp $
 // Author: Valeriy Onuchin  05/08/04
 
 /*************************************************************************
@@ -96,6 +96,8 @@ public:
    void     PaintSingleObject(TVirtualGLPainter *);
    void     PanObject(TVirtualGLPainter *o, Int_t x, Int_t y);
    void     PrintViewer(TVirtualViewer3D *vv);
+
+   Bool_t   HighColorFormat(Int_t ctx);
 
 private:
    struct TGLContext;

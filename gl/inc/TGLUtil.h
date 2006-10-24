@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.32 2006/10/02 12:55:47 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.33 2006/10/11 10:26:23 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -943,8 +943,8 @@ namespace Rgl {
    typedef std::pair<Int_t, Int_t> BinRange_t;
    typedef std::pair<Double_t, Double_t> Range_t;
 
-   void ObjectIDToColor(Int_t objectID);
-   Int_t ColorToObjectID(const UChar_t *color);
+   void ObjectIDToColor(Int_t objectID, Bool_t highColor);
+   Int_t ColorToObjectID(const UChar_t *color, Bool_t highColor);
    void DrawQuadOutline(const TGLVertex3 &v1, const TGLVertex3 &v2, 
                         const TGLVertex3 &v3, const TGLVertex3 &v4);
    void DrawQuadFilled(const TGLVertex3 &v0, const TGLVertex3 &v1, 

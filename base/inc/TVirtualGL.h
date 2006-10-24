@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.32 2006/06/06 11:49:01 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.33 2006/08/31 13:42:14 couet Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -253,6 +253,8 @@ public:
 
    virtual Bool_t   PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t py) = 0;
    virtual char    *GetPlotInfo(TVirtualGLPainter *plot, Int_t px, Int_t py) = 0;
+
+   virtual Bool_t   HighColorFormat(Int_t ctxInd) = 0;
 
    static TGLManager *&Instance();
 

@@ -50,7 +50,8 @@ TGLPlotBox::~TGLPlotBox()
 
 
 //______________________________________________________________________________
-void TGLPlotBox::DrawBox(Int_t selected, Bool_t selectionPass, const std::vector<Double_t> &zLevels)const
+void TGLPlotBox::DrawBox(Int_t selected, Bool_t selectionPass, const std::vector<Double_t> &zLevels,
+                         Bool_t highColor)const
 {
    // Draw back box for a plot.
 
@@ -79,7 +80,7 @@ void TGLPlotBox::DrawBox(Int_t selected, Bool_t selectionPass, const std::vector
                          glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gRedEmission);
       }
    } else
-      ObjectIDToColor(1);//Bottom plane, encoded as 1 in a selection buffer.
+      ObjectIDToColor(1, highColor);//Bottom plane, encoded as 1 in a selection buffer.
 
    DrawQuadFilled(f3DBox[0], f3DBox[1], f3DBox[2], f3DBox[3], TGLVector3(0., 0., 1.));
 
@@ -89,7 +90,7 @@ void TGLPlotBox::DrawBox(Int_t selected, Bool_t selectionPass, const std::vector
       else if (selected == 2)
          glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gGreenEmission);
    } else
-      ObjectIDToColor(2);//Left plane, encoded as 2 in a selection buffer.
+      ObjectIDToColor(2, highColor);//Left plane, encoded as 2 in a selection buffer.
 
    DrawBackPlane(fgBackPairs[fFrontPoint][0], selectionPass, zLevels);
 
@@ -99,7 +100,7 @@ void TGLPlotBox::DrawBox(Int_t selected, Bool_t selectionPass, const std::vector
       else if (selected == 3)
          glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gGreenEmission);
    } else
-      ObjectIDToColor(3); //Right plane, encoded as 3 in a selection buffer.
+      ObjectIDToColor(3, highColor); //Right plane, encoded as 3 in a selection buffer.
    
    DrawBackPlane(fgBackPairs[fFrontPoint][1], selectionPass, zLevels);
 

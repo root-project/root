@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.5 2006/08/31 16:03:10 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.6 2006/10/02 12:55:47 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -43,7 +43,8 @@ TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordin
                     fXOZSectionPos(0.),
                     fYOZSectionPos(0.),
                     fXOYSectionPos(0.),
-                    fBackBox(xoy)
+                    fBackBox(xoy),
+                    fHighColor(kFALSE)
 {
    //TGLPlotPainter's ctor.
    if (MakeGLContextCurrent())
@@ -56,6 +57,8 @@ void TGLPlotPainter::Paint()
    //Draw lego.
    if (!MakeGLContextCurrent())
       return;
+
+   fHighColor = gGLManager->HighColorFormat(GetGLContext())? kTRUE : kFALSE;
 
    InitGL();
    //Save material/light properties in a stack.
@@ -149,7 +152,7 @@ Bool_t TGLPlotPainter::PlotSelected(Int_t px, Int_t py)
    py = fCamera->GetHeight() - py;
    //Y is a number of a row, x - column.
    std::swap(px, py);
-   Int_t newSelected(Rgl::ColorToObjectID(fSelection.GetPixelColor(px, py)));
+   Int_t newSelected(Rgl::ColorToObjectID(fSelection.GetPixelColor(px, py), fHighColor));
 
    if (newSelected != fSelectedPart) {
       //New object was selected (or surface deselected) - re-paint.
@@ -295,7 +298,7 @@ void TGLPlotPainter::DrawSections()const
       const TGLVertex3 v4(frame[1].X(), fXOZSectionPos, frame[1].Z());
 
       if (fSelectionPass)
-         Rgl::ObjectIDToColor(4);
+         Rgl::ObjectIDToColor(4, fHighColor);
       else if (fSelectedPart == 4)
          glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gBlueEmission);
   
@@ -338,7 +341,7 @@ void TGLPlotPainter::DrawSections()const
       TGLVertex3 v4(fYOZSectionPos, frame[4].Y(), frame[4].Z());
       
       if (fSelectionPass) {
-         Rgl::ObjectIDToColor(5);
+         Rgl::ObjectIDToColor(5, fHighColor);
       } else if (fSelectedPart == 5)
          glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gBlueEmission);
       
@@ -380,7 +383,7 @@ void TGLPlotPainter::DrawSections()const
       TGLVertex3 v4(frame[3].X(), frame[3].Y(), fXOYSectionPos);
       
       if (fSelectionPass) {
-         Rgl::ObjectIDToColor(6);
+         Rgl::ObjectIDToColor(6, fHighColor);
       } else if (fSelectedPart == 6)
          glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gBlueEmission);
       

@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.13 2006/06/06 11:49:01 couet Exp $
+// @(#)root/x11:$Name:  $:$Id: TX11GL.h,v 1.14 2006/08/31 13:42:14 couet Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -103,6 +103,8 @@ public:
    void     PaintSingleObject(TVirtualGLPainter *);
    void     PanObject(TVirtualGLPainter *o, Int_t x, Int_t y);
    void     PrintViewer(TVirtualViewer3D *vv);
+
+   Bool_t   HighColorFormat(Int_t /*ctxInd*/){return kFALSE;}
 
    struct TGLContext_t;
    

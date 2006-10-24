@@ -39,7 +39,7 @@ char *TGLBoxPainter::GetPlotInfo(Int_t, Int_t)
             fPlotInfo += fHist->Class()->GetName();
          fPlotInfo += "::";
          fPlotInfo += fHist->GetName();
-      } else {
+      } else if (!fHighColor){
          const Int_t arr2Dsize = fCoord->GetNYBins() * fCoord->GetNZBins();
          const Int_t binI = (fSelectedPart - 6) / arr2Dsize + fCoord->GetFirstXBin();
          const Int_t binJ = (fSelectedPart - 6) % arr2Dsize / fCoord->GetNZBins() + fCoord->GetFirstYBin();
@@ -47,7 +47,8 @@ char *TGLBoxPainter::GetPlotInfo(Int_t, Int_t)
 
          fPlotInfo.Form("(binx = %d; biny = %d; binz = %d; binc = %f)", binI, binJ, binK,
                         fHist->GetBinContent(binI, binJ, binK));
-      }
+      } else
+         fPlotInfo = "Switch to true color mode to get correct info";
    }
 
    return (Char_t *)fPlotInfo.Data();
@@ -173,7 +174,7 @@ void TGLBoxPainter::DrawPlot()const
 {
    // Draw set of boxes (spheres)
 
-   fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels);
+   fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
    glDisable(GL_CULL_FACE);
    DrawSections();
    glEnable(GL_CULL_FACE);
@@ -210,6 +211,9 @@ void TGLBoxPainter::DrawPlot()const
    const TAxis   *yA = fYAxis;
    const TAxis   *zA = fZAxis;
 
+   if (fSelectionPass && fHighColor)
+      Rgl::ObjectIDToColor(7, fHighColor);
+
    for(Int_t ir = irInit, i = iInit; addI > 0 ? i < nX : i >= 0; ir += addI, i += addI) {
       for(Int_t jr = jrInit, j = jInit; addJ > 0 ? j < nY : j >= 0; jr += addJ, j += addJ) {
          for(Int_t kr = krInit, k = kInit; addK > 0 ? k < nZ : k >= 0; kr += addK, k += addK) {
@@ -219,9 +223,9 @@ void TGLBoxPainter::DrawPlot()const
 
             const Int_t binID = 6 + i * fCoord->GetNZBins() * fCoord->GetNYBins() + j * fCoord->GetNZBins() + k;
 
-            if (fSelectionPass)
-               Rgl::ObjectIDToColor(binID);
-            else if(fSelectedPart == binID)
+            if (fSelectionPass && !fHighColor)
+               Rgl::ObjectIDToColor(binID, fHighColor);
+            else if(!fHighColor && fSelectedPart == binID)
                glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gOrangeEmission);
 
                if (fType == kBox)
@@ -242,7 +246,7 @@ void TGLBoxPainter::DrawPlot()const
                                   zScale * (zA->GetBinLowEdge(kr) / 2 + zA->GetBinUpEdge(kr) / 2 + w * zA->GetBinWidth(kr) / 2)
                                  );
 
-            if (!fSelectionPass && fSelectedPart == binID)
+            if (!fSelectionPass && !fHighColor && fSelectedPart == binID)
                glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gNullEmission);
          }
       }

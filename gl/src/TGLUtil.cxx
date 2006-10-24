@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.29 2006/08/31 13:42:14 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.30 2006/10/02 12:55:47 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <string>
+#include <map>
 
 #include "THLimitsFinder.h"
 #include "TVirtualPad.h"
@@ -997,17 +998,91 @@ namespace Rgl {
    const Float_t gGrayEmission[]   = {0.3f,0.3f, 0.3f,1.f};
    const Float_t gNullEmission[]   = {0.f, 0.f,  0.f, 1.f};
 
+   namespace {
+      struct RGB_t {
+         Int_t fRGB[3];
+      };
+
+      RGB_t gColorTriplets[] = {{{255, 0, 0}}, 
+                                {{0, 255, 0}}, 
+                                {{0, 0, 255}}, 
+                                {{255, 255, 0}}, 
+                                {{255, 0, 255}}, 
+                                {{0, 255, 255}}, 
+                                {{128, 128, 128}}};
+
+      Bool_t operator < (const RGB_t &lhs, const RGB_t &rhs)
+      {
+         if (lhs.fRGB[0] < rhs.fRGB[0])
+            return kTRUE;
+         else if (lhs.fRGB[0] > rhs.fRGB[0])
+            return kFALSE;
+         else if (lhs.fRGB[1] < rhs.fRGB[1])
+            return kTRUE;
+         else if (lhs.fRGB[1] > rhs.fRGB[1])
+            return kFALSE;
+         else if (lhs.fRGB[2] < rhs.fRGB[2])
+            return kTRUE;
+
+         return kFALSE;
+      }
+
+      typedef std::map<Int_t, RGB_t> ColorLookupTable_t;
+      typedef ColorLookupTable_t::const_iterator CLTCI_t;
+
+      ColorLookupTable_t gObjectIDToColor;
+
+      typedef std::map<RGB_t, Int_t> ObjectLookupTable_t;
+      typedef ObjectLookupTable_t::const_iterator OLTCI_t;
+
+      ObjectLookupTable_t gColorToObjectID;
+   }
    //______________________________________________________________________________
-   void ObjectIDToColor(Int_t objectID)
+   void ObjectIDToColor(Int_t objectID, Bool_t highColor)
    {
       //Object id encoded as rgb triplet.
-      glColor3ub(objectID & 0xff, (objectID & 0xff00) >> 8, (objectID & 0xff0000) >> 16);
+      if (!highColor)
+         glColor3ub(objectID & 0xff, (objectID & 0xff00) >> 8, (objectID & 0xff0000) >> 16);
+      else {
+         if (!gObjectIDToColor.size()) {
+         //Initialize lookup tables.
+            for (Int_t i = 0, id = 1; i < Int_t(sizeof gColorTriplets / sizeof(RGB_t)); ++i, ++id)
+               gObjectIDToColor[id] = gColorTriplets[i];
+            //6 is a number of "clean" colors, which cannot be distorted in high-color.
+            for (Int_t i = 0, id = 1; i < 6; ++i, ++id)
+               gColorToObjectID[gColorTriplets[i]] = id;
+         }
+
+         CLTCI_t it = gObjectIDToColor.find(objectID);
+
+         if (it != gObjectIDToColor.end())
+            glColor3ub(it->second.fRGB[0], it->second.fRGB[1], it->second.fRGB[2]);
+         else {
+            Error("ObjectIDToColor", "No color for such object ID: %d", objectID);
+            glColor3ub(0, 0, 0);
+         }
+      }
    }
 
    //______________________________________________________________________________
-   Int_t ColorToObjectID(const UChar_t *color)
+   Int_t ColorToObjectID(const UChar_t *pixel, Bool_t highColor)
    {
-      return color[0] | (color[1] << 8) | (color[2] << 16);
+      if (!highColor)
+         return pixel[0] | (pixel[1] << 8) | (pixel[2] << 16);
+      else {
+         if (!gObjectIDToColor.size())
+            return 0;
+
+         RGB_t triplet = {{pixel[0], pixel[1], pixel[2]}};
+         OLTCI_t it = gColorToObjectID.find(triplet);
+
+         if (it != gColorToObjectID.end())
+            return it->second;
+         else if(pixel[0] && pixel[1] && pixel[2])
+            return 7;
+         else
+            return 0;
+      }
    }
 
 

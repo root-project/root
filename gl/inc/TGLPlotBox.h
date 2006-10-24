@@ -28,7 +28,8 @@ public:
    virtual ~TGLPlotBox();
 
    void DrawBox(Int_t selectedPart, Bool_t selectionPass, 
-                const std::vector<Double_t> &zLevels)const;
+                const std::vector<Double_t> &zLevels, 
+                Bool_t highColor)const;
 
    void SetPlotBox(const Rgl::Range_t &xRange, 
                    const Rgl::Range_t &yRange, 
