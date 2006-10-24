@@ -1,4 +1,4 @@
-// @(#)root/monalisa:$Name:  $:$Id: TMonaLisaWriter.cxx,v 1.2 2006/10/05 16:10:22 rdm Exp $
+// @(#)root/monalisa:$Name:  $:$Id: TMonaLisaWriter.cxx,v 1.3 2006/10/05 16:15:21 rdm Exp $
 // Author: Andreas Peters   5/10/2005
 
 /*************************************************************************
@@ -453,12 +453,10 @@ Bool_t TMonaLisaWriter::SendProcessingProgress(Double_t nevent, Double_t nbytes,
    TMonaLisaValue *valrealtime = new TMonaLisaValue("realtime",fStopwatch.RealTime());
    TMonaLisaValue *valcputime =  new TMonaLisaValue("cputime",fStopwatch.CpuTime());
 
-   // This info should come from TSystem (to be fixed) -- rdm
-   //Double_t totmem = (Double_t)TStopwatch::GetTotalMemory();
-   //Double_t rssmem = (Double_t)TStopwatch::GetResidentMemory();
-   //Double_t shdmem = (Double_t)TStopwatch::GetSharedMemory();
-   Double_t totmem = 0.;
-   Double_t rssmem = 0.;
+   ProcInfo_t pinfo;
+   gSystem->GetProcInfo(&pinfo);
+   Double_t totmem = (Double_t)(pinfo->fMemVirtual) * 1024.;
+   Double_t rssmem = (Double_t)(pinfo->fMemResident) * 1024.;
    Double_t shdmem = 0.;
 
    TMonaLisaValue *valtotmem = new TMonaLisaValue("totmem",totmem);
