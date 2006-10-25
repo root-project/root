@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.17 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.18 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -97,6 +97,7 @@ public:
    virtual Long_t ReturnLongestLine() { return fText->GetLongestLine(); }
    virtual Long_t ReturnLineCount() { return fText->RowCount(); }
    virtual Bool_t HandleButton(Event_t *event);
+   virtual Bool_t HandleSelectionClear(Event_t *event);
    virtual Bool_t HandleSelectionRequest(Event_t *event);
 
    virtual void SavePrimitive(ostream &out, Option_t * = "");

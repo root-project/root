@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.31 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.32 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -182,6 +182,7 @@ public:
    virtual  Bool_t      HandleKey(Event_t *event);
    virtual  Bool_t      HandleFocusChange(Event_t *event);
    virtual  Bool_t      HandleSelection(Event_t *event);
+   virtual  Bool_t      HandleSelectionClear(Event_t *event);
    virtual  Bool_t      HandleSelectionRequest(Event_t *event);
    virtual  Bool_t      HandleTimer(TTimer *t);
    virtual  Bool_t      HandleConfigureNotify(Event_t *event);

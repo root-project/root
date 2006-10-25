@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.47 2006/08/31 14:59:11 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.48 2006/10/18 15:20:56 antcheva Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -1396,6 +1396,17 @@ Bool_t TGTextEntry::HandleSelection(Event_t *event)
 }
 
 //______________________________________________________________________________
+Bool_t TGTextEntry::HandleSelectionClear(Event_t * /*event*/)
+{
+   // Handle selection clear event.
+
+   fSelectionOn = kFALSE;
+   fEndIX = fStartIX = fCursorIX;
+   fClient->NeedRedraw(this);
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 Bool_t TGTextEntry::HandleSelectionRequest(Event_t *event)
 {
    // Handle request to send current clipboard contents to requestor window.
@@ -1403,6 +1414,8 @@ Bool_t TGTextEntry::HandleSelectionRequest(Event_t *event)
    Event_t reply;
    char   *buffer;
    Long_t  len;
+   Atom_t targets[2];
+   Atom_t type;
 
    reply.fType    = kSelectionNotify;
    reply.fTime    = event->fTime;
@@ -1410,6 +1423,18 @@ Bool_t TGTextEntry::HandleSelectionRequest(Event_t *event)
    reply.fUser[1] = event->fUser[1];     // selection
    reply.fUser[2] = event->fUser[2];     // target
    reply.fUser[3] = event->fUser[3];     // property
+
+   targets[0] = gVirtualX->InternAtom("TARGETS", kFALSE);
+   targets[1] = gVirtualX->InternAtom("XA_STRING", kFALSE);
+
+   if ((Atom_t)event->fUser[2] == targets[0]) {
+      type = gVirtualX->InternAtom("XA_ATOM", kFALSE);
+      gVirtualX->ChangeProperty((Window_t) event->fUser[0], (Atom_t) event->fUser[3],
+                                type, (UChar_t*) targets, (Int_t) 2);
+
+      gVirtualX->SendEvent((Window_t)event->fUser[0], &reply);
+      return kTRUE;
+   }
 
    len = 0;
    if (fgClipboardText) len = fgClipboardText->Length();

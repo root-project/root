@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.27 2006/07/09 05:27:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.28 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -559,6 +559,16 @@ Bool_t TGTextView::HandleButton(Event_t *event)
 }
 
 //______________________________________________________________________________
+Bool_t TGTextView::HandleSelectionClear(Event_t * /*event*/)
+{
+   // Handle selection clear event.
+
+   if (fIsMarked)
+      UnMark();
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 Bool_t TGTextView::HandleSelectionRequest(Event_t *event)
 {
    // Handle request to send current clipboard contents to requestor window.
@@ -567,6 +577,8 @@ Bool_t TGTextView::HandleSelectionRequest(Event_t *event)
    char *buffer, *temp_buffer;
    Long_t len, prev_len, temp_len, count;
    TGLongPosition pos;
+   Atom_t targets[2];
+   Atom_t type;
 
    reply.fType    = kSelectionNotify;
    reply.fTime    = event->fTime;
@@ -574,6 +586,18 @@ Bool_t TGTextView::HandleSelectionRequest(Event_t *event)
    reply.fUser[1] = event->fUser[1];     // selection
    reply.fUser[2] = event->fUser[2];     // target
    reply.fUser[3] = event->fUser[3];     // property
+
+   targets[0] = gVirtualX->InternAtom("TARGETS", kFALSE);
+   targets[1] = gVirtualX->InternAtom("XA_STRING", kFALSE);
+
+   if ((Atom_t)event->fUser[2] == targets[0]) {
+      type = gVirtualX->InternAtom("XA_ATOM", kFALSE);
+      gVirtualX->ChangeProperty((Window_t) event->fUser[0], (Atom_t) event->fUser[3],
+                                type, (UChar_t*) targets, (Int_t) 2);
+
+      gVirtualX->SendEvent((Window_t)event->fUser[0], &reply);
+      return kTRUE;
+   }
 
    len = 0;
    for (count = 0; count < fClipText->RowCount(); count++)
