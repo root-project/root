@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheRead.cxx,v 1.4 2006/08/26 16:28:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheRead.cxx,v 1.5 2006/10/19 19:36:54 pcanal Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************
@@ -92,9 +92,11 @@ TFileCacheRead::~TFileCacheRead()
    delete [] fSeek;
    delete [] fSeekIndex;
    delete [] fSeekSort;
+   delete [] fPos;
    delete [] fSeekLen;
    delete [] fSeekSortLen;
    delete [] fSeekPos;
+   delete [] fLen;
    delete [] fBuffer;
 }
 
