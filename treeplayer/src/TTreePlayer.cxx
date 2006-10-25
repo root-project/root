@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.229 2006/09/17 19:08:13 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.230 2006/10/15 20:08:33 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1680,7 +1680,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"   if (!fChain) return -5;\n");
       fprintf(fp,"   Long64_t centry = fChain->LoadTree(entry);\n");
       fprintf(fp,"   if (centry < 0) return centry;\n");
-      fprintf(fp,"   if (fChain->IsA() != TChain::Class()) return centry;\n");
+      fprintf(fp,"   if (!fChain->InheritsFrom(TChain::Class()))  return centry;\n");
       fprintf(fp,"   TChain *chain = (TChain*)fChain;\n");
       fprintf(fp,"   if (chain->GetTreeNumber() != fCurrent) {\n");
       fprintf(fp,"      fCurrent = chain->GetTreeNumber();\n");
