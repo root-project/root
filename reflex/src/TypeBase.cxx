@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.24 2006/09/08 20:54:05 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.25 2006/09/14 14:39:12 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -102,6 +102,8 @@ ROOT::Reflex::TypeBase::operator const ROOT::Reflex::Scope & () const {
    case UNION:
    case ENUM:
       return (dynamic_cast<const ScopeBase*>(this))->ThisScope();
+   case TYPEDEF:
+	   return FinalType();
    default:
       return Dummy::Scope();
    }
