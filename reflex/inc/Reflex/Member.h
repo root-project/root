@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Member.h,v 1.12 2006/08/15 15:22:51 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Member.h,v 1.13 2006/09/05 17:13:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -117,6 +117,13 @@ namespace ROOT {
           * @return member value as object
           */
          Object Get( const Object & obj) const;
+
+
+         /**
+          * Id returns a unique identifier of the member in the system
+          * @return unique identifier
+          */
+         void * Id() const;
 
 
          /*Object Invoke( const Object & obj, 
@@ -523,6 +530,13 @@ inline const ROOT::Reflex::Type & ROOT::Reflex::Member::DeclaringType() const {
 //-------------------------------------------------------------------------------
    if ( *this ) return fMemberBase->DeclaringScope();
    return Dummy::Type();
+}
+
+
+//-------------------------------------------------------------------------------
+inline void * ROOT::Reflex::Member::Id() const {
+//-------------------------------------------------------------------------------
+   return (void*)fMemberBase;
 }
 
 
