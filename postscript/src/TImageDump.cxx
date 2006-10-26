@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.21 2006/10/02 16:12:39 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.22 2006/10/13 08:18:39 rdm Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -131,7 +131,16 @@ void TImageDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    Int_t fillsi = fFillStyle%1000;
 
    TColor *col = gROOT->GetColor(fFillColor);
+   if (!col) { // no color, set it a la hsimple
+      fFillColor = 48;
+      col = gROOT->GetColor(48);
+   }
+
    TColor *linecol = gROOT->GetColor(fLineColor);
+   if (!linecol) { // no color, set it to black
+      fLineColor = 1;
+      linecol = gROOT->GetColor(1);
+   }
 
    if (fillis == 3 || fillis == 2) {
       if (fillsi > 99) {
@@ -180,7 +189,13 @@ void TImageDump::DrawFrame(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
 
    TColor *col;
    TColor *lo = gROOT->GetColor(dark);
+   if (!lo) {
+      lo = gROOT->GetColor(121);
+   }
    TColor *hi = gROOT->GetColor(light);
+   if (!hi) {
+      hi = gROOT->GetColor(171);
+   }
 
    Short_t pxl,pyl,pxt,pyt,px1,py1,px2,py2;
    Double_t xl, xt, yl, yt;
@@ -193,14 +208,22 @@ void TImageDump::DrawFrame(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
    else           {pyl = py2; pyt = py1; yl = y2; yt = y1;}
 
    if (bordersize == 1) {
-      fImage->DrawBox(pxl, pyl, pxt, pyt-1,
-                      gROOT->GetColor(fLineColor)->AsHexString());
+      col = gROOT->GetColor(fLineColor);
+      if (!col) {
+         fLineColor = 1;
+         col = gROOT->GetColor(fLineColor);
+      }
+      fImage->DrawBox(pxl, pyl, pxt, pyt-1, col->AsHexString());
       return;
    }
 
    if (!fImage->IsValid()) {
+      col = gROOT->GetColor(light);
+      if (!col) {
+         col = gROOT->GetColor(10);
+      }
       fImage->DrawBox(pxl, pyl, pxt, pyt,    // force image creation and resizing
-                      gROOT->GetColor(light)->AsHexString(), 1, TVirtualX::kFilled);
+                      col->AsHexString(), 1, TVirtualX::kFilled);
    }
 
    TPoint frame[6];
@@ -400,6 +423,10 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
    switch (n) {
       case 1:
          col = gROOT->GetColor(fFillColor);
+         if (!col) { // no color, make it black 
+            fFillColor = 1;
+            col = gROOT->GetColor(1);
+         }
          px1 = gPad->XtoAbsPixel(x[0]);   py1 = gPad->YtoAbsPixel(y[0]);
          fImage->PutPixel(px1, py1, col->AsHexString());
          break;
@@ -407,6 +434,10 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
       case 2:
       {
          col = gROOT->GetColor(fLineColor);
+         if (!col) { // no color, make it black
+            fLineColor = 1;
+            col = gROOT->GetColor(1);
+         }
          px1 = gPad->XtoAbsPixel(x[0]);   py1 = gPad->YtoAbsPixel(y[0]);
          px2 = gPad->XtoAbsPixel(x[1]);   py2 = gPad->YtoAbsPixel(y[1]);
 
@@ -447,7 +478,15 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
          }
 
          TColor *fcol = gROOT->GetColor(fFillColor);
+         if (!fcol) { // no color, set it a la hsimple
+            fFillColor = 48;
+            fcol = gROOT->GetColor(48);
+         }
          TColor *lcol = gROOT->GetColor(fLineColor);
+         if (!lcol) { // no color, make it black
+            fLineColor = 1;
+            lcol = gROOT->GetColor(1);
+         }
 
          for (UInt_t i = 0; i < n; i++) {
             pt[i].fX = gPad->XtoAbsPixel(x[i]);
