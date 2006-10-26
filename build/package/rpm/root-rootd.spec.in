@@ -124,8 +124,12 @@ chmod 0755 /etc/rc.d/init.d/rootd
 #
 # end of script
 #---------------------------------------------------------------------
-# Pre removal - only body
+# Pre removal 
 %preun
+#
+# Stop the service
+#
+/etc/rc.d/init.d/rootd stop
 #
 # Remove entries from /etc/inetd.conf
 if [ -f /etc/inetd.conf ] ; then 
