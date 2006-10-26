@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.22 2006/10/13 08:18:39 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.23 2006/10/26 11:06:38 couet Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -131,9 +131,9 @@ void TImageDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    Int_t fillsi = fFillStyle%1000;
 
    TColor *col = gROOT->GetColor(fFillColor);
-   if (!col) { // no color, set it a la hsimple
-      fFillColor = 48;
-      col = gROOT->GetColor(48);
+   if (!col) { // no color, set it white
+      fFillColor = 10;
+      col = gROOT->GetColor(10);
    }
 
    TColor *linecol = gROOT->GetColor(fLineColor);
@@ -179,13 +179,14 @@ void TImageDump::DrawFrame(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
    //
    // mode = -1  the box looks as it is behind the screen
    // mode =  1  the box looks as it is in front of the screen
-   // border is the border size in already pre-computed SVG units dark is the
+   // border is the border size in already pre-computed dark is the
    // color for the dark part of the frame light is the color for the light
    // part of the frame
 
-   if (!gPad || !fImage || (bordersize < 1)) {
+   if (!gPad || !fImage) {
       return;
    }
+   bordersize = bordersize < 1 ? 1 : bordersize;
 
    TColor *col;
    TColor *lo = gROOT->GetColor(dark);
@@ -478,10 +479,11 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
          }
 
          TColor *fcol = gROOT->GetColor(fFillColor);
-         if (!fcol) { // no color, set it a la hsimple
-            fFillColor = 48;
-            fcol = gROOT->GetColor(48);
+         if (!fcol) { // no color, set it white
+            fFillColor = 10;
+            fcol = gROOT->GetColor(10);
          }
+
          TColor *lcol = gROOT->GetColor(fLineColor);
          if (!lcol) { // no color, make it black
             fLineColor = 1;
@@ -528,8 +530,9 @@ void TImageDump::DrawPS(Int_t, Float_t *, Float_t *)
 //______________________________________________________________________________
 void TImageDump::NewPage()
 {
-   // nothing 
+   // new page
 
+   if (gPad) fImage->DrawBox(0, 0, gPad->GetWw(), gPad->GetWh());
    return;
 }
 

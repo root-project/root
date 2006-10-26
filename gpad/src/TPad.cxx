@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.240 2006/10/19 10:58:25 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.241 2006/10/20 21:07:40 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4176,7 +4176,7 @@ void TPad::Print(const char *filenam, Option_t *option)
       gVirtualPS->Open(psname,pstype);
       gVirtualPS->SetBit(kPrintingPS);
       if (!copenb) {
-         if (!strstr(opt,"pdf")) gVirtualPS->NewPage();
+         if (!strstr(opt,"pdf") || image) gVirtualPS->NewPage();
          Paint();
       }
       if (noScreen) GetCanvas()->SetBatch(kFALSE);
