@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.14 2005/09/22 23:29:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.15 2006/05/15 09:45:03 brun Exp $
 // Author: Maarten Ballintijn   24/09/2003
 
 #ifndef ROOT_TProofDraw
@@ -221,9 +221,9 @@ protected:
    std::vector<T> *fVector;   // vector
 
 public:
-   TProofVectorContainer<T>(std::vector<T>* anVector) : fVector(anVector) { };
-   TProofVectorContainer<T>() : fVector(0) { };
-   ~TProofVectorContainer<T>() { delete fVector; }
+   TProofVectorContainer(std::vector<T>* anVector) : fVector(anVector) { }
+   TProofVectorContainer() : fVector(0) { }
+   ~TProofVectorContainer() { delete fVector; }
 
    std::vector<T> *GetVector() const { return fVector; }
    Long64_t        Merge(TCollection* list);
