@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.19 2006/08/21 15:25:35 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.20 2006/08/25 10:16:03 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -500,8 +500,12 @@ bool ROOT::Reflex::Scope::operator&&(const Scope &right) const
 { return operator bool() && (bool)right; }
 bool ROOT::Reflex::Scope::operator&&(const Type &right) const 
 { return operator bool() && (bool)right; }
+bool ROOT::Reflex::Scope::operator&&(const Member &right) const 
+{ return operator bool() && (bool)right; }
 bool ROOT::Reflex::Scope::operator||(const Scope &right) const 
 { return operator bool() && (bool)right; }
 bool ROOT::Reflex::Scope::operator||(const Type &right) const 
 { return operator bool() && (bool)right; }
+bool ROOT::Reflex::Scope::operator&||(const Member &right) const 
+{ return operator bool() || (bool)right; }
 #endif

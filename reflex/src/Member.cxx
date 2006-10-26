@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Member.cxx,v 1.9 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Member.cxx,v 1.10 2006/08/15 15:22:52 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -135,3 +135,17 @@ void ROOT::Reflex::Member::GenerateDict( DictionaryGenerator & generator) const 
    if ( * this ) fMemberBase->GenerateDict( generator );
 }
                            
+#ifdef REFLEX_CINT_MERGE
+bool ROOT::Reflex::Member::operator&&(const Scope &right) const
+{ return operator bool() && (bool)right; }
+bool ROOT::Reflex::Member::operator&&(const Type &right) const 
+{ return operator bool() && (bool)right; }
+bool ROOT::Reflex::Member::operator&&(const Member &right) const 
+{ return operator bool() && (bool)right; }
+bool ROOT::Reflex::Member::operator||(const Scope &right) const 
+{ return operator bool() && (bool)right; }
+bool ROOT::Reflex::Member::operator||(const Type &right) const 
+{ return operator bool() && (bool)right; }
+bool ROOT::Reflex::Member::operator||(const Member &right) const 
+{ return operator bool() && (bool)right; }
+#endif

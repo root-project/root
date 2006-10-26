@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Member.h,v 1.13 2006/09/05 17:13:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Member.h,v 1.14 2006/10/26 17:25:37 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -82,6 +82,25 @@ namespace ROOT {
           */
          operator bool () const;
 
+#ifdef REFLEX_CINT_MERGE
+      // To prevent any un-authorized use as the old type
+         bool operator!() const { return !operator bool(); }
+         bool operator&&(bool right) const { return operator bool() && right; }
+         bool operator&&(int right) const { return operator bool() && right; }
+         bool operator&&(long right) const { return operator bool() && right; }
+         bool operator&&(const Scope &right) const;
+         bool operator&&(const Type &right) const;
+         bool operator&&(const Member &right) const;
+         bool operator||(bool right) const { return operator bool() || right; }
+         bool operator||(int right) const { return operator bool() || right; }
+         bool operator||(long right) const { return operator bool() || right; }
+         bool operator||(const Scope &right) const;
+         bool operator||(const Type &right) const;
+         bool operator||(const Member &right) const;
+      private:
+         operator int () const;
+      public:
+#endif
 
          /** 
           * DeclaringScope will return the scope which the member lives in
@@ -937,6 +956,20 @@ inline const ROOT::Reflex::Type & ROOT::Reflex::Member::TypeOf() const {
    return Dummy::Type();
 }
 
+#ifdef REFLEX_CINT_MERGE
+inline bool operator&&(bool b, const ROOT::Reflex::Member & rh) {
+   return b && rh.operator bool();
+}
+inline bool operator&&(int i, const ROOT::Reflex::Member & rh) {
+   return i && rh.operator bool();
+}
+inline bool operator||(bool b, const ROOT::Reflex::Member & rh) {
+   return b || rh.operator bool();
+}
+inline bool operator||(int i, const ROOT::Reflex::Member & rh) {
+   return i || rh.operator bool();
+}
+#endif
 
 
 #endif // ROOT_Reflex_Member
