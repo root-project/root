@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.23 2006/10/26 11:06:38 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.24 2006/10/26 14:18:54 couet Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -133,13 +133,13 @@ void TImageDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    TColor *col = gROOT->GetColor(fFillColor);
    if (!col) { // no color, set it white
       fFillColor = 10;
-      col = gROOT->GetColor(10);
+      col = gROOT->GetColor(fFillColor);
    }
 
    TColor *linecol = gROOT->GetColor(fLineColor);
    if (!linecol) { // no color, set it to black
       fLineColor = 1;
-      linecol = gROOT->GetColor(1);
+      linecol = gROOT->GetColor(fLineColor);
    }
 
    if (fillis == 3 || fillis == 2) {
@@ -191,11 +191,11 @@ void TImageDump::DrawFrame(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
    TColor *col;
    TColor *lo = gROOT->GetColor(dark);
    if (!lo) {
-      lo = gROOT->GetColor(121);
+      lo = gROOT->GetColor(10);
    }
    TColor *hi = gROOT->GetColor(light);
    if (!hi) {
-      hi = gROOT->GetColor(171);
+      hi = gROOT->GetColor(10);
    }
 
    Short_t pxl,pyl,pxt,pyt,px1,py1,px2,py2;
@@ -288,6 +288,10 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    Double_t m6 = m/6;
 
    TColor *col = gROOT->GetColor(fMarkerColor);
+   if (!col) { // no color
+      fMarkerColor = 1;
+      col = gROOT->GetColor(fMarkerColor);
+   }
 
    // Draw the marker according to the type
    Short_t ix,iy;
@@ -426,7 +430,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
          col = gROOT->GetColor(fFillColor);
          if (!col) { // no color, make it black 
             fFillColor = 1;
-            col = gROOT->GetColor(1);
+            col = gROOT->GetColor(fFillColor);
          }
          px1 = gPad->XtoAbsPixel(x[0]);   py1 = gPad->YtoAbsPixel(y[0]);
          fImage->PutPixel(px1, py1, col->AsHexString());
@@ -437,7 +441,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
          col = gROOT->GetColor(fLineColor);
          if (!col) { // no color, make it black
             fLineColor = 1;
-            col = gROOT->GetColor(1);
+            col = gROOT->GetColor(fLineColor);
          }
          px1 = gPad->XtoAbsPixel(x[0]);   py1 = gPad->YtoAbsPixel(y[0]);
          px2 = gPad->XtoAbsPixel(x[1]);   py2 = gPad->YtoAbsPixel(y[1]);
@@ -481,13 +485,13 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
          TColor *fcol = gROOT->GetColor(fFillColor);
          if (!fcol) { // no color, set it white
             fFillColor = 10;
-            fcol = gROOT->GetColor(10);
+            fcol = gROOT->GetColor(fFillColor);
          }
 
          TColor *lcol = gROOT->GetColor(fLineColor);
          if (!lcol) { // no color, make it black
             fLineColor = 1;
-            lcol = gROOT->GetColor(1);
+            lcol = gROOT->GetColor(fLineColor);
          }
 
          for (UInt_t i = 0; i < n; i++) {
@@ -641,6 +645,10 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
    }
 
    TColor *col = gROOT->GetColor(fTextColor);
+   if (!col) {
+      fTextColor = 1;   //black
+      col = gROOT->GetColor(fTextColor);
+   }
    fImage->DrawText((int)x, angle ? (int)y - w: (int)y - h, chars, ttfsize, col->AsHexString(),
                      ttfont, TImage::kPlain, 0, fTextAngle);
 
