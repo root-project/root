@@ -1,4 +1,4 @@
-// @(#)root/fft:$Name:  $:$Id: TFFTRealComplex.cxx,v 1.2 2006/04/10 16:03:19 brun Exp $
+// @(#)root/fft:$Name:  $:$Id: TFFTRealComplex.cxx,v 1.3 2006/04/11 12:50:04 rdm Exp $
 // Author: Anna Kreshuk   07/4/2006
 
 /*************************************************************************
@@ -8,6 +8,38 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      
+// TFFTRealComplex                                                       
+//                                                                      
+// One of the interface classes to the FFTW package, can be used directly
+// or via the TVirtualFFT class. Only the basic interface of FFTW is implemented.
+//
+// Computes a real input/complex output discrete Fourier transform in 1 or more
+// dimensions. However, only out-of-place transforms are now supported for transforms
+// in more than 1 dimension. For detailed information about the computed transforms,
+// please refer to the FFTW manual
+//
+// How to use it:
+// 1) Create an instance of TFFTRealComplex - this will allocate input and output
+//    arrays (unless an in-place transform is specified)
+// 2) Run the Init() function with the desired flags and settings (see function
+//    comments for possible kind parameters)
+// 3) Set the data (via SetPoints()or SetPoint() functions)
+// 4) Run the Transform() function
+// 5) Get the output (via GetPoints() or GetPoint() functions)
+// 6) Repeat steps 3)-5) as needed
+// For a transform of the same size, but with different flags, 
+// rerun the Init() function and continue with steps 3)-5)
+//
+// NOTE: 1) running Init() function will overwrite the input array! Don't set any data
+//          before running the Init() function
+//       2) FFTW computes unnormalized transform, so doing a transform followed by 
+//          its inverse will lead to the original array scaled by the transform size
+// 
+//
+//////////////////////////////////////////////////////////////////////////
 
 #include "TFFTRealComplex.h"
 #include "fftw3.h"
@@ -64,7 +96,7 @@ TFFTRealComplex::TFFTRealComplex(Int_t ndim, Int_t *n, Bool_t inPlace)
       fN[i] = n[i];
       fTotalSize*=n[i];
    }
-   Int_t sizeout = fTotalSize*(n[ndim-1]/2+1)/n[ndim-1];
+   Int_t sizeout = Int_t(Double_t(fTotalSize)*(n[ndim-1]/2+1)/n[ndim-1]);
    if (!inPlace){
       fIn = fftw_malloc(sizeof(Double_t)*fTotalSize);
       fOut = fftw_malloc(sizeof(fftw_complex)*sizeout);
@@ -125,8 +157,10 @@ void TFFTRealComplex::Transform()
 {
 //Computes the transform, specified in Init() function
 
-   if (fPlan)
+
+   if (fPlan){
       fftw_execute((fftw_plan)fPlan);
+   }
    else {
       Error("Transform", "transform hasn't been initialised");
       return;
@@ -144,7 +178,7 @@ void TFFTRealComplex::GetPoints(Double_t *data, Bool_t fromInput) const
       for (Int_t i=0; i<fTotalSize; i++)
          data[i] = ((Double_t*)fIn)[i];
    } else {
-      Int_t realN = 2*fTotalSize*(fN[fNdim-1]/2+1)/fN[fNdim-1];
+      Int_t realN = 2*Int_t(Double_t(fTotalSize)*(fN[fNdim-1]/2+1)/fN[fNdim-1]);
       if (fOut){
          for (Int_t i=0; i<realN; i+=2){
             data[i] = ((fftw_complex*)fOut)[i/2][0];
@@ -222,7 +256,7 @@ void TFFTRealComplex::GetPointComplex(Int_t ipoint, Double_t &re, Double_t &im, 
          }
       }
       else {
-         Int_t realN = 2*fTotalSize*(fN[fNdim-1]/2+1)/fN[fNdim-1];
+         Int_t realN = 2*Int_t(Double_t(fTotalSize)*(fN[fNdim-1]/2+1)/fN[fNdim-1]);
          if (ipoint>realN/2){
             Error("GetPointComplex", "Illegal index value");
             return;
@@ -334,7 +368,7 @@ void TFFTRealComplex::GetPointsComplex(Double_t *re, Double_t *im, Bool_t fromIn
 
    Int_t nreal;
    if (fOut && !fromInput){
-      nreal = fTotalSize*(fN[fNdim-1]/2+1)/fN[fNdim-1];
+      nreal = Int_t(Double_t(fTotalSize)*(fN[fNdim-1]/2+1)/fN[fNdim-1]);
       for (Int_t i=0; i<nreal; i++){
          re[i] = ((fftw_complex*)fOut)[i][0];
          im[i] = ((fftw_complex*)fOut)[i][1];
@@ -346,7 +380,7 @@ void TFFTRealComplex::GetPointsComplex(Double_t *re, Double_t *im, Bool_t fromIn
       }
    }
    else {
-      nreal = 2*fTotalSize*(fN[fNdim-1]/2+1)/fN[fNdim-1];
+      nreal = 2*Int_t(Double_t(fTotalSize)*(fN[fNdim-1]/2+1)/fN[fNdim-1]);
       for (Int_t i=0; i<nreal; i+=2){
          re[i/2] = ((Double_t*)fIn)[i];
          im[i/2] = ((Double_t*)fIn)[i+1];
@@ -364,7 +398,7 @@ void TFFTRealComplex::GetPointsComplex(Double_t *data, Bool_t fromInput) const
    Int_t nreal;
 
    if (fOut && !fromInput){
-      nreal = fTotalSize*(fN[fNdim-1]/2+1)/fN[fNdim-1];
+      nreal = Int_t(Double_t(fTotalSize)*(fN[fNdim-1]/2+1)/fN[fNdim-1]);
 
       for (Int_t i=0; i<nreal; i+=2){
          data[i] = ((fftw_complex*)fOut)[i/2][0];
@@ -378,7 +412,7 @@ void TFFTRealComplex::GetPointsComplex(Double_t *data, Bool_t fromInput) const
    }
    else {
 
-      nreal = 2*fTotalSize*(fN[fNdim-1]/2+1)/fN[fNdim-1];
+      nreal = 2*Int_t(Double_t(fTotalSize)*(fN[fNdim-1]/2+1)/fN[fNdim-1]);
       for (Int_t i=0; i<nreal; i++)
          data[i] = ((Double_t*)fIn)[i];
    }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFFT.h,v 1.1 2006/04/10 15:40:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFFT.h,v 1.2 2006/04/11 16:17:37 brun Exp $
 // Author: Anna Kreshuk  10/04/2006
 
 #ifndef ROOT_TVirtualFFT
@@ -10,7 +10,7 @@
 //                                                                     
 // TVirtualFFT is an interface class for Fast Fourier Transforms.
 //
-
+//
 //
 // The default FFT library is FFTW. To use it, FFTW3 library should already
 // be installed, and ROOT should be have fftw3 module enabled, with the directories

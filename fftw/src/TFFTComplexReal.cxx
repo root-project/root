@@ -1,4 +1,4 @@
-// @(#)root/fft:$Name:  $:$Id: TFFTComplexReal.cxx,v 1.2 2006/04/10 16:03:19 brun Exp $
+// @(#)root/fft:$Name:  $:$Id: TFFTComplexReal.cxx,v 1.3 2006/04/11 12:50:04 rdm Exp $
 // Author: Anna Kreshuk   07/4/2006
 
 /*************************************************************************
@@ -8,6 +8,35 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      
+// TFFTComplexReal                                                          
+//                                                                      
+// One of the interface classes to the FFTW package, can be used directly
+// or via the TVirtualFFT class. Only the basic interface of FFTW is implemented.
+//
+// Computes the inverse of the real-to-complex transforms (class TFFTRealComplex)
+// taking complex input (storing the non-redundant half of a logically Hermitian array)
+// to real output (see FFTW manual for more details)
+// 
+// How to use it:
+// 1) Create an instance of TFFTComplexReal - this will allocate input and output
+//    arrays (unless an in-place transform is specified)
+// 2) Run the Init() function with the desired flags and settings
+// 3) Set the data (via SetPoints(), SetPoint() or SetPointComplex() functions)
+// 4) Run the Transform() function
+// 5) Get the output (via GetPoints(), GetPoint() or GetPointReal() functions)
+// 6) Repeat steps 3)-5) as needed
+//
+// For a transform of the same size, but with different flags, rerun the Init()
+// function and continue with steps 3)-5)
+// NOTE: 1) running Init() function will overwrite the input array! Don't set any data
+//          before running the Init() function
+//       2) FFTW computes unnormalized transform, so doing a transform followed by 
+//          its inverse will lead to the original array scaled by the transform size
+//                                                                      
+//////////////////////////////////////////////////////////////////////////
 
 #include "TFFTComplexReal.h"
 #include "fftw3.h"
@@ -61,7 +90,7 @@ TFFTComplexReal::TFFTComplexReal(Int_t ndim, Int_t *n, Bool_t inPlace)
       fN[i] = n[i];
       fTotalSize*=n[i];
    }
-   Int_t sizein = fTotalSize*(n[ndim-1]/2+1)/n[ndim-1];
+   Int_t sizein = Int_t(Double_t(fTotalSize)*(n[ndim-1]/2+1)/n[ndim-1]);
    if (!inPlace){
       fIn = fftw_malloc(sizeof(fftw_complex)*sizein);
       fOut = fftw_malloc(sizeof(Double_t)*fTotalSize);
@@ -194,7 +223,7 @@ void TFFTComplexReal::GetPointComplex(Int_t ipoint, Double_t &re, Double_t &im, 
       Error("GetPointReal", "Input array was destroyed");
       return;
    } else {
-      if (fOut){   printf("in destructor\n");
+      if (fOut){
          re = ((Double_t*)fOut)[ipoint];
          im = 0;
       } else {
@@ -310,7 +339,7 @@ void TFFTComplexReal::SetPoint(const Int_t *ipoint, Double_t re, Double_t im)
    for (Int_t i=0; i<fNdim-1; i++)
       ireal=fN[i+1]*ireal + ipoint[i+1];
 
-   Int_t realN = fTotalSize*(fN[fNdim-1]/2+1)/fN[fNdim-1];
+   Int_t realN = Int_t(Double_t(fTotalSize)*(fN[fNdim-1]/2+1)/fN[fNdim-1]);
    if (ireal > realN){
       Error("SetPoint", "Illegal index value");
       return;
@@ -340,7 +369,7 @@ void TFFTComplexReal::SetPoints(const Double_t *data)
 //set all points. the values are copied. points should be ordered as follows:
 //[re_0, im_0, re_1, im_1, ..., re_n, im_n)
 
-   Int_t sizein = fTotalSize*(fN[fNdim-1]/2+1)/fN[fNdim-1];
+   Int_t sizein = Int_t(Double_t(fTotalSize)*(fN[fNdim-1]/2+1)/fN[fNdim-1]);
 
    for (Int_t i=0; i<2*(sizein); i+=2){
       ((fftw_complex*)fIn)[i/2][0]=data[i];
@@ -353,7 +382,7 @@ void TFFTComplexReal::SetPointsComplex(const Double_t *re, const Double_t *im)
 {
 //Set all points. The values are copied.
 
-   Int_t sizein = fTotalSize*(fN[fNdim-1]/2+1)/fN[fNdim-1];
+   Int_t sizein = Int_t(Double_t(fTotalSize)*(fN[fNdim-1]/2+1)/fN[fNdim-1]);
    for (Int_t i=0; i<sizein; i++){
       ((fftw_complex*)fIn)[i][0]=re[i];
       ((fftw_complex*)fIn)[i][1]=im[i];
