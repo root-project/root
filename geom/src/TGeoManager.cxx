@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.161 2006/10/06 19:15:05 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.162 2006/10/20 08:38:43 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -500,6 +500,7 @@ TGeoManager::TGeoManager()
       fNtracks = 0;
       fNpdg = 0;
       fPdgNames = 0;
+      memset(fPdgId, 0, 256*sizeof(Int_t)); 
       fCurrentTrack = 0;
       fTopVolume = 0;
       fTopNode = 0;
@@ -618,6 +619,7 @@ void TGeoManager::Init()
    fNtracks = 0;
    fNpdg = 0;
    fPdgNames = 0;
+   memset(fPdgId, 0, 256*sizeof(Int_t)); 
    fCurrentTrack = 0;
    fTopVolume = 0;
    fTopNode = 0;
@@ -2277,7 +2279,7 @@ const char *TGeoManager::GetPdgName(Int_t pdg) const
 {
 // Get name for given pdg code;
    static char *defaultname = "XXX";
-   if (!fPdgNames) return defaultname;
+   if (!fPdgNames || !pdg) return defaultname;
    for (Int_t i=0; i<fNpdg; i++) {
       if (fPdgId[i]==pdg) return fPdgNames->At(i)->GetName();
    }
@@ -2288,11 +2290,16 @@ const char *TGeoManager::GetPdgName(Int_t pdg) const
 void TGeoManager::SetPdgName(Int_t pdg, const char *name)
 {
 // Set a name for a particle having a given pdg.
+   if (!pdg) return;
    if (!fPdgNames) {
       fPdgNames = new TObjArray(256);
    }
    if (!strcmp(name, GetPdgName(pdg))) return;
    // store pdg name
+   if (fNpdg>255) {
+      Warning("SetPdgName", "No more than 256 different pdg codes allowed");
+      return;
+   }   
    fPdgId[fNpdg] = pdg;
    TNamed *pdgname = new TNamed(name, "");
    fPdgNames->AddAt(pdgname, fNpdg++);
