@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: VariableMetricBuilder.cxx,v 1.4 2006/07/05 08:32:39 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: VariableMetricBuilder.cxx,v 1.7 2006/10/24 15:45:42 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -29,6 +29,7 @@
 
 
 #ifdef DEBUG
+#define WARNINGMSG
 #include "Minuit2/MnPrint.h"
 #endif
 
@@ -83,6 +84,10 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    
    do { 
       
+#ifdef DEBUG
+      std::cout << "start iterating... " << std::endl; 
+      if (ipass > 0)  std::cout << "continue iterating... " << std::endl; 
+#endif
       
       min = Minimum(fcn, gc, seed, result, maxfcn_eff, edmval);
       // second time check for validity of function Minimum 
@@ -112,7 +117,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
          // check edm 
          edm = st.Edm();
 #ifdef DEBUG
-         std::cout << "edm after Hesse calculation " << edm << std::endl;
+         std::cout << "edm after Hesse calculation " << edm << " requested " << edmval << std::endl;
 #endif
          if (edm > edmval) { 
 #ifdef WARNINGMSG
@@ -220,6 +225,8 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
          std::cout<<"VariableMetricBuilder: warning: no improvement in line search  " << std::endl;
 #endif
          // no improvement exit   (is it really needed LM ? in vers. 1.22 tried alternative )
+         // add new state where only fcn changes
+         result.push_back(MinimumState(s0.Parameters(), s0.Error(), s0.Gradient(), s0.Edm(), fcn.NumOfCalls()) );
          break; 
          
          
@@ -294,7 +301,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
          return FunctionMinimum(seed, result, fcn.Up());
       } else {
 #ifdef WARNINGMSG
-         std::cout<<"VariableMetricBuilder: finishes without convergence."<<std::endl;
+         std::cout<<"VariableMetricBuilder: iterations finish without convergence."<<std::endl;
          std::cout<<"VariableMetricBuilder: edm= "<<edm<<" requested: "<<edmval<<std::endl;
 #endif
          return FunctionMinimum(seed, result, fcn.Up(), FunctionMinimum::MnAboveMaxEdm());

@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: ModularFunctionMinimizer.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: ModularFunctionMinimizer.cxx,v 1.2 2006/07/04 10:36:52 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -143,7 +143,11 @@ FunctionMinimum ModularFunctionMinimizer::Minimize(const MnFcn& mfcn, const Grad
    
    const MinimumBuilder & mb = Builder();
    //std::cout << typeid(&mb).Name() << std::endl;
-   return mb.Minimum(mfcn, gc, seed, strategy, maxfcn, toler*mfcn.Up());
+   double effective_toler = toler * mfcn.Up(); 
+   // avoid tolerance too smalls (than limits)
+   double eps = MnMachinePrecision().Eps2(); 
+   if (effective_toler < eps) effective_toler = eps; 
+   return mb.Minimum(mfcn, gc, seed, strategy, maxfcn, effective_toler);
 }
 
 
