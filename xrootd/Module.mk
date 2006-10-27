@@ -40,7 +40,7 @@ endif
 
 ##### Xrootd executables #####
 ifneq ($(PLATFORM),win32)
-XRDEXEC     = xrootd olbd xrdcp xrdpwdadmin xrdgsiproxy
+XRDEXEC     = xrootd olbd xrdcp xrd xrdpwdadmin xrdgsiproxy
 else
 XRDEXEC     = xrdcp.exe
 endif
