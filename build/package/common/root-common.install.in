@@ -4,6 +4,7 @@
 @sysconfdir@/root/system.rootauthrc
 @sysconfdir@/root/system.rootrc
 @sysconfdir@/root/system.rootdaemonrc
+@sysconfdir@/root/RadioNuclides.txt
 @prefix@/share/man/man1/system.rootdaemonrc.1*
 @prefix@/share/root/icons/
 @prefix@/share/root/fonts/symbol.ttf

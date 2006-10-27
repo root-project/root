@@ -6,6 +6,19 @@
 #
 # Version:	@(#)skeleton  1.9  26-Feb-2001  miquels@cistron.nl
 #
+### BEGIN INIT INFO
+# Provides:          root-proofd
+# Required-Start:    $local_fs
+# Required-Stop:     $local_fs 
+# Should-Start:	     $network, $remote_fs, root-file-server
+# Should-Stop:	     $network, $remote_fs, root-file-server
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Parallel ROOt Facility Server
+# Description:       Parallel ROOt Facility Server to let the node
+#		     participate in a PROOF cluster, either as slave or
+#		     master. 
+### END INIT INFO
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=@prefix@/bin/proofd
@@ -19,6 +32,13 @@ if [ -f @sysconfdir@/default/root-proofd ] ; then
 	. @sysconfdir@/default/root-proofd
 fi
 
+# Load the VERBOSE setting and other rcS variables
+[ -f /etc/default/rcS ] && . /etc/default/rcS
+
+# Define LSB log_* functions.
+. /lib/lsb/init-functions
+
+# Check if inetd is controlling proofd
 if test -f /var/run/inetd.pid ; then 
     # Inetd is running
     if grep -q ^$NAME /etc/inetd.conf > /dev/null 2>&1 ; then 
@@ -26,6 +46,7 @@ if test -f /var/run/inetd.pid ; then
 	ENABLE_PROOFD=no
     fi
 fi
+# Check if xinetd is controlling proofd
 if test -f /var/run/xinetd.pid ; then 
     # Inetd is running
     if grep -q ^$NAME /etc/inetd.conf > /dev/null 2>&1 ; then 
@@ -48,41 +69,52 @@ if test -f /var/run/xinetd.pid ; then
     fi
 fi
 
+# Check if we're enabled
 case `echo $ENABLE_PROOFD | tr '[:upper:]' '[:lower:]'` in 
     yes) ;;
     *) exit 0;;
 esac
 
+# function to start daemon
 startit ()
 {
     start-stop-daemon --make-pidfile --start --quiet --pidfile \
 	/var/run/$NAME.pid --exec $DAEMON -- $DAEMON_OPTS $PROOF_DIR
-    if test $? -ne 0 ; then 
+    ret=$?
+    if test $ret -ne 0 ; then 
 	echo "Failed" 
 	exit 1
     fi
     pidof $DAEMON > /var/run/$NAME.pid 2> /dev/null
+    return $ret
 }
+
+# function to stop daemon
 stopit ()
 {
     start-stop-daemon --stop --oknodo --quiet --pidfile /var/run/$NAME.pid \
 	--exec $DAEMON
-    if test $? -ne 0 ; then 
+    ret=$?
+    if test $ret -ne 0 ; then 
 	echo "Failed" 
 	exit 1
     fi
+    return $ret
 }
 
+# Executable code
 case "$1" in
   start)
-	echo -n "Starting $DESC: "
+	[ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
 	startit 
-	echo "$NAME."
+	ret=$?
+	[ "$VERBOSE" != no ] && log_end_msg $ret
 	;;
   stop)
-	echo -n "Stopping $DESC: "
+	[ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
 	stopit
-	echo "$NAME."
+	ret=$?
+	[ "$VERBOSE" != no ] && log_end_msg $ret
 	;;
   restart|force-reload)
 	#
@@ -90,11 +122,12 @@ case "$1" in
 	#	option to the "reload" entry above. If not, "force-reload" is
 	#	just the same as "restart".
 	#
-	echo -n "Restarting $DESC: "
+	log_daemon_msg "Restarting $DESC" "$NAME"
 	stopit
 	sleep 1
 	startit
-	echo "$NAME."
+	ret=$?
+	log_end_msg $ret
 	;;
   *)
 	N=@sysconfdir@/init.d/root-$NAME

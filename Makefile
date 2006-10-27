@@ -1008,3 +1008,4 @@ showbuild:
 	@echo "The list of modules to be built:"
 	@echo "--------------------------------"
 	@echo "$(MODULES)"
+	@$(foreach i, $(ALLHDRS), echo -e "\t$(i)"; )

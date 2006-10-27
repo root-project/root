@@ -52,34 +52,36 @@ A few `extension' packages
 Further more, there's a number of plugin packages.  Which exactly are
 built depends on your system. 
 
-* root-plugin-alien     AliEN interface (*)
+* root-plugin-alien     AliEN interface (*,***)
 * root-plugin-asimage   AfterStep image manipulation plugin
-* root-plugin-castor    Interface to CASTOR managed tape robots
-* root-plugin-chirp     Access files via the Chirp protocol
-* root-plugin-dcache    Access to files data via a dCache server
+* root-plugin-castor    Interface to CASTOR managed tape robots (***)
+* root-plugin-chirp     Access files via the Chirp protocol (***)
+* root-plugin-dcache    Access to files data via a dCache server (***)
 * root-plugin-fumuli    Alternative fitting algorithm for ROOT (**)
-* root-plugin-globus    Authentication and authorisation against Globus(*)
+* root-plugin-globus    Authentication and authorisation against Globus(*,***)
 * root-plugin-gl        OpenGL support using Mesa (or XFree)
 * root-plugin-hbook     Conversion tools from HBOOK to ROOT files
 * root-plugin-ldap      Interface to LDAP 
 * root-plugin-mysql     MySQL client for ROOT
 * root-plugin-netx      Client for XRootd server (**)
-* root-plugin-oracle    Oracle client for ROOT
+* root-plugin-oracle    Oracle client for ROOT (***)
 * root-plugin-peac      Proof Enabled Analysis Center plugin
 * root-plugin-pqsql     PostGreSQL client for ROOT
 * root-plugin-proof     PROOF Client (**)
-* root-plugin-pythia5   Wrapper for Pythia event generator (version 5)
-* root-plugin-pythia6   Wrapper for Pythia event generator (version 6)
+* root-plugin-pythia5   Wrapper for Pythia event generator (version 5) (***)
+* root-plugin-pythia6   Wrapper for Pythia event generator (version 6) (***)
 * root-plugin-qt        ROOT GUIs using QT
 * root-plugin-qaudp     Quadratic Programming plugin 
 * root-plugin-maxdb     MaxDB/SapDB client for ROOT
-* root-plugin-venus     Wrapper for Venus event generator
+* root-plugin-venus     Wrapper for Venus event generator  (***)
 * root-plugin-xml       XML plugin for ROOT
 
-(*)  Note that these packages have not been tested. 
-(**) These packages can always be build, as they do not depend on
-     external packages.   As such, they can be considered part of an 
-     extended `base' system. 
+(*)   Note that these packages have not been tested. 
+(**)  These packages can always be build, as they do not depend on
+      external packages.   As such, they can be considered part of an 
+      extended `base' system. 
+(***) These packages are not distributed by Debian for license, and 
+      availability reasons. 
 
 The packages are structured like this, to allow maximum modularity and
 flexibility for the user.
@@ -162,7 +164,7 @@ Pure CINT and ROOT's CINT:
 ==========================
 To facilitate a parallel installation of a Pure CINT on a Debian
 GNU/Linux system, the `root-bin' package exploits the "alternatives"
-feature of dpkg.  Since most ROOT users never use then Pure CINT
+feature of dpkg.  Since most ROOT users never use the Pure CINT
 programs "cint" and "makecint" is is reasonably safe to have a Pure
 CINT installation next to ROOT.  A Debian GNU/Linux package of CINT is
 being maintained by Richard B. Kreckel.
@@ -237,12 +239,9 @@ The source tree is configured with
   OpenSource.  
 
   The ROOT sources has been patched to allow using FreeFont files
-  instead of the MS Core fonts.  However, there's no DSFG free
-  alternative to `symbol.ttf', so either a user should get and install
-  that file herself, or make do with out.  The package
-  `ttf-root-installer' (in contrib) uses the MS Core fonts from the
-  package `msttcorefonts' and downloads the remaining fonts from the
-  ROOT web-site. 
+  instead of the MS Core fonts.  The package `ttf-root-installer' (in
+  contrib) downloads the MS Core fonts from the ROOT web-site in case
+  these are wanted.
 
 * Version number in soname:
   Debian GNU/Linux (indirectly) mandates that any shared library shall

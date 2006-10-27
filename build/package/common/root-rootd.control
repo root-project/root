@@ -1,6 +1,6 @@
 Package: root-rootd
 Architecture: any
-Depends: root-common, ${shlibs:Depends}
+Depends: root-common, lsb-base (>= 3.0-6), ${shlibs:Depends}
 Pre-Depends: adduser, netbase
 Recommends: root-bin, libroot-dev
 Provides: root-file-server

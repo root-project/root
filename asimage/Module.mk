@@ -183,7 +183,7 @@ else
 		--disable-glx \
 		$$MMX \
 		$(ASTEPDBG) \
-		--with-builtin-ungif \
+		$(NOUNGIF) \
 		--with-jpeg \
 		$$JPEGINCDIR \
 		--with-png \

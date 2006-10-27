@@ -1,3 +1,47 @@
+root (5.13.05-3) experimental; urgency=low
+
+  * [Kevin] Use system libungif if possible. 
+  * [Kevin] Removed some files left after clean in libAfterImage. 
+  * [Kevin] Fixed up the initd scripts with Required-{start,stop}
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 26 Oct 2006 11:17:44 +0200
+
+root (5.13.05-2) experimental; urgency=low
+
+  * [Kevin] Fix missing install of libSpectrum and libFitPanel. 
+  * [Kevin] Fix duplicate build-depends
+  * [Kevin] Fix missing install of PyCintex.py
+  * [Kevin] Fix unpacking of tar-balls for asimage and xrootd.
+  * [Kevin] Fix init missing info. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Tue, 24 Oct 2006 12:43:14 +0200
+
+root (5.13.05-1) experimental; urgency=low
+
+  * New upstream development version.
+  * [Kevin] Remove cruft left behind after removing ttf-root-installer
+  * [Kevin] Install RadioNuclides.txt
+  * [Kevin] Fix build dependency on python-support.
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Mon, 23 Oct 2006 12:13:11 +0200
+
+root (5.13.03-1) experimental; urgency=low
+
+  * New upstream version
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 31 Aug 2006 00:45:21 +0200
+
+root (5.13.02-1) experimental; urgency=low
+
+  * New upstream version
+  * [Kevin] First attempt at complying with the Python policy.
+  * Python seems ok.  We install for one  version only - the one we were
+    compiled against. 
+  * Made init.d scripts use LSB functions (except start-stop-daemon is still
+    used, since the normal one isn't OK).  daemons depend on lsb-base. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu, 31 Aug 2006 00:33:04 +0200
+
 root (5.13.01-4) experimental; urgency=low
 
   * copyrights fixed by Fons.

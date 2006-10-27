@@ -38,7 +38,8 @@ non-free MS TTF Core fonts.
 The above license applies also to the following files and directories,
 but they have different copyright holders, as listed below: 
 
-  asimage/src/libAfterImage.tar.gz
+  asimage/src/libAfterImage.tar.gz 
+  (and unpacked sources in asimage/src/libAfterImage/)
     libAfterBase
       Copyright (C) 1999-2004 Sasha Vasko     <sasha at aftercode.net>
       Copyright (c) 2000,2001 Andrew Ferguson <andrew@owsla.cjb.net>
@@ -148,7 +149,6 @@ but they have different copyright holders, as listed below:
 
   eg/inc/TVirtualMCDecayer.h
   eg/inc/TVirtualMCDecayer.cxx
-
   vmc/
     Copyright (C) 2006, Rene Brun and Fons Rademakers.
     Copyright(c) 1998-1999, 2002, 2003, ALICE Experiment at CERN, All
@@ -258,35 +258,11 @@ copyright statements.  These are reproduced below.
 
     except where otherwise noted in this file.
 
-  cint/inc/aixdlfcn.h:
-  cint/src/aixdlfcn.c:
-    Copyright (c) 1992,1993,1995,1996, Jens-Uwe Mager, Helios Software
-    GmbH
-    Not derived from licensed software.
-
-    Permission is granted to freely use, copy, modify, and
-    redistribute this software, provided that the author is not
-    construed to be liable for any results of using the software,
-    alterations are clearly marked as such, and this notice is not
-    modified.
-
-
-  cint/stl/*.h	
-    Copyright (c) 1994
-    Hewlett-Packard Company
-  
-    Permission to use, copy, modify, distribute and sell this software
-    and its documentation for any purpose is hereby granted without
-    fee, provided that the above copyright notice appear in all copies
-    and that both that copyright notice and this permission notice
-    appear in supporting documentation.  Hewlett-Packard Company makes
-    no representations about the suitability of this software for any
-    purpose.  It is provided "as is" without express or implied
-    warranty.
-
-    except:
-
   cint/stl/bstring.h
+    Copyright(c) 1995~2006  Masaharu Goto (cint@pcroot.cern.ch)
+
+    Same license as the rest of the cint directory. 
+
     Copyright (c) 1994-1995 Modena Software Inc.,
   
     Permission to use, copy, modify, distribute and sell this software

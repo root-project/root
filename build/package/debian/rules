@@ -16,9 +16,15 @@
 # These are used for cross-compiling and for saving the configure script
 # from having to guess our platform (since we know it already)
 DEB_HOST_GNU_TYPE    ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_HOST_ARCH_CPU    ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU)
 DEB_BUILD_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 DEB_BUILD_GNU_SYSTEM ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_SYSTEM)
 DEB_BUILD_ARCH       ?= $(shell dpkg-architecture -qDEB_BUILD_ARCH)
+ifeq ($(DEB_HOST_ARCH_CPU),powerpc)
+PLATFORM	= linuxppcgcc
+else
+PLATFORM	=
+endif
 ifneq (,$(findstring debug,$(DEB_BUILD_OPTIONS)))
 BUILDOPT	= --build=debug
 endif
@@ -102,7 +108,7 @@ VERSION		:= $(shell cat build/version_number | tr '/' '.')
 MAJOR   	:= $(shell echo $(VERSION) | tr '.' ' ' | cut -f1 -d' ')
 MINOR   	:= $(shell echo $(VERSION) | tr '.' ' ' | cut -f2 -d' ')
 SOVERS		:= $(MAJOR).$(MINOR)
-PKGLIST		:= $(shell ./configure --pkglist $(CONFOPTIONS) | sed -n -e 's/packages: //p')
+PKGLIST		:= $(shell ./configure $(PLATFORM) --pkglist $(CONFOPTIONS) | sed -n -e 's/packages: //p')
 ESSENTIALS	:= libroot-dev 			\
 		   libroot 			\
 		   root-bin 			\
@@ -174,7 +180,9 @@ RUBYARCHDIR	:=
 endif
 HAVEPYTHON	:= $(filter libroot-python, $(PKGLIST))
 ifeq ($(HAVEPYTHON), libroot-python)
-PYTHONDIR	:= usr/lib/python$(shell python -c 'import sys; print "%d.%d" % (sys.version_info[0], sys.version_info[1])')/site-packages
+PYVERS		:= $(shell pyversions -vs)
+PYVER		:= $(shell python -c 'import sys; print "%d.%d" % (sys.version_info[0], sys.version_info[1])')
+PYTHONDIR	:= /usr/lib/python-support/root/python$(PYVER)
 else
 PYTHONDIR	:= 
 endif
@@ -216,16 +224,21 @@ debian/control:debian/control.in
 		-e 's,@sysconfdir@,$(SYSCONFDIR),g' \
 		-e 's,@pkgdocdir@,$(PKGDOCDIR),g' \
 		-e "s/@builddepends@/$${builddep}/" \
+		-e 's/@pyvers@/$(PYVER)/g' \
 		-e 's/@pkglist@/$(DPKGLIST)/' 	\
 		-e 's/@plugins@/$(PLUGINLIST)/'	\
 		-e 's/@extras@/$(EXTRALIST)/' < $@.tmp > $@
 	rm -rf $@.tmp 
+ifeq ($(HAVEPYTHON), libroot-python)
+	echo "$(PYVER)-" > debian/pyversions
+endif
 
 configure-stamp:$(TEMPLATES:%.in=%) config.status
 config.status: configure 
 	dh_testdir
 	# Add here commands to configure the package.
-	./configure --prefix=$(PREFIX) 					\
+	./configure $(PLATFORM)						\
+		    --prefix=$(PREFIX) 					\
 		    --mandir=$(PREFIX)/share/man/man1			\
 		    --docdir=$(PKGDOCDIR)				\
 		    --cintincdir=$(CINTDIR)				\
@@ -234,6 +247,8 @@ config.status: configure
 		    --libdir=$(PREFIX)/lib/root/$(SOVERS)		\
 		    $(CONFOPTIONS)
 	touch configure-stamp
+	echo "Contents of roofit"
+	ls roofit/
 
 #         --fontdir=%_datadir/root/fonts/truetype
 #Architecture 
@@ -243,7 +258,7 @@ build-arch: build-arch-cint-stamp
 build-arch-stamp:  configure-stamp
 
 	# Add here commands to compile the arch part of the package.
-	$(MAKE) 
+	$(MAKE) ASTEPETAG= XROOTDETAG= ROOFITETAG=
 	touch build-arch-stamp
 
 build-arch-cint-stamp:build-arch-stamp
@@ -261,13 +276,15 @@ clean:  $(TEMPLATES:%.in=%)
 	dh_testdir
 	dh_testroot
 	debconf-updatepo --podir=build/package/debian/po
+	-rm -f debian/pyversions debian/pycombat
 	-rm -f build-arch-stamp build-indep-stamp build-arch-cint-stamp \
 		config.status configure-stamp config.log
 	-rm -rf minuit2/src/Minuit-1_7_6
 	-rm -rf freetype/src/freetype-2.1.9
-	-rm -rf asimage/src/libAfterImage 
+	#-rm -rf asimage/src/libAfterImage 
 	-rm -rf debian/*.files 	debian/*.install	
 	-rm -f  macros/html.C 
+	-rm -f  cint/MAKEINFO
 	-rm -f  etc/daemons/proofd.rc.d
 	-rm -f  etc/daemons/proofd.xinetd
 	-rm -f  etc/daemons/rootd.rc.d
@@ -277,13 +294,30 @@ clean:  $(TEMPLATES:%.in=%)
 	-rm -f  qtgsi/src/G__QtGSI.cxx qtgsi/src/G__QtGSI.h
 	-rm -f  qt/src/moc_*.cxx
 	-rm -f  G__genreflex_rootcint.h
+	-rm -f  asimage/src/libAfterImage/Makefile
+	-rm -f  asimage/src/libAfterImage/afterbase.h
+	-rm -f  asimage/src/libAfterImage/afterimage-config
+	-rm -f  asimage/src/libAfterImage/afterimage-libs
+	-rm -f  asimage/src/libAfterImage/config.h
+	-rm -f  asimage/src/libAfterImage/config.log
+	-rm -f  asimage/src/libAfterImage/config.status
+	-rm -f  asimage/src/libAfterImage/libAfterImage.a
+	-rm -f  xrootd/src/xrootd/GNUmakefile
+	-rm -f  xrootd/src/xrootd/src/GNUmake.env
+	-rm -f  xrootd/src/xrootd/src/GNUmake.options
 	-find . -name ".#*" | xargs rm -rf
-	-find . \( -name "G__*.cxx" -or -name "G__*.h" \) \
+	-find . \( -name "G__*.cxx" -or -name "G__*.h" -or -name "G__*.c" \) \
 		-and -not -name "G__ci.h" -and -not -name G__postprocess.h \
+		-and -not -name "G__main.c" -and -not -name "G__setup.c" \
 		| xargs rm -rf
-
+	echo "Contents of roofit"
+	ls roofit/
 	# Add here commands to clean up after the build process.
-	-$(MAKE) distclean 
+	-$(MAKE) distclean ASTEPVERS=.bogus ASTEPETAG=	\
+			   XROOTDDIRD= 	    XROOTDETAG= \
+			   ROOFITDIRS=      ROOFITDIRI=    ROOFITETAG=
+	echo "Contents of roofit"
+	ls roofit/
 	build/unix/makecintdll.sh clean
 	rm -rf bin lib include 			\
 		system.rootrc 			\
@@ -305,8 +339,17 @@ clean:  $(TEMPLATES:%.in=%)
 		cint/include/sys/*.dll		\
 		cint/stl/*.so*			\
 		cint/stl/*.dll			\
-		pcre/src/pcre-6.4		
+		pcre/src/pcre-6.4		\
+		xrootd/src/xrootd/lib		\
+		xrootd/src/xrootd/obj		\
+		xrootd/src/xrootd/bin
+	# touch the headers for xrootd and asimage 
+	touch xrootd/src/headers.d 
+	touch asimage/src/headers.d 
+	touch roofit/headers.d 
 	dh_clean 
+	echo "Contents of roofit"
+	ls roofit/
 
 pkglists:
 	-rm -rf debian/*.files 	debian/*.install	
@@ -347,7 +390,8 @@ install-arch:
 
 	# Add here commands to install the arch part of the package into 
 	# $(DTMP).
-	$(MAKE) install DESTDIR=$(CURDIR)/$(DTMP)
+	$(MAKE) install DESTDIR=$(CURDIR)/$(DTMP) \
+		ASTEPETAG= XROOTDETAG= ROOFITETAG=
 
 	# Install desktop entry and icon 
 	mkdir -p $(DTMP)/$(PREFIX)/share/applications
@@ -397,11 +441,16 @@ install-arch:
 	# Remove some unwanted files 
 	rm -rf $(DTMP)$(PREFIX)/share/doc/root/INSTALL 
 	rm -rf $(DTMP)$(PREFIX)/share/doc/root/LICENSE
+	rm -rf $(DTMP)$(PREFIX)/share/doc/root/COPYING.CINT
 	rm -rf $(DTMP)$(PREFIX)/share/doc/root/cfortran.doc
 	rm -rf $(DTMP)$(PREFIX)/share/root/fonts/LICENSE
-	rm -rf $(DTMP)$(PREFIX)/lib/root/$(SOVERS)/cint/lib/posix/a.out
-	rm -rf $(DTMP)$(PREFIX)/lib/root/$(SOVERS)/cint/lib/posix/mktypes
-	rm -rf $(DTMP)$(PREFIX)/lib/root/$(SOVERS)/cint/lib/dll_stl/setup
+	rm -rf $(DTMP)$(CINTDIR)/lib/posix/a.out
+	rm -rf $(DTMP)$(CINTDIR)/lib/posix/mktypes
+	rm -rf $(DTMP)$(CINTDIR)/lib/dll_stl/setup
+	rm -rf $(DTMP)$(CINTDIR)/lib/G__*
+	rm -rf $(DTMP)$(CINTDIR)/lib/dll_stl/G__*
+	rm -rf $(DTMP)$(CINTDIR)/lib/dll_stl/rootcint_*
+	rm -rf $(DTMP)$(CINTDIR)/lib/posix/extend.o
 	rm -rf $(DTMP)$(CINTDIR)/include/makehpib
 
 	# Remove MacOSX service descriptions 
@@ -440,23 +489,47 @@ install-arch:
 	./debian/rules pkglists
 
 	#	--sourcedir=$(DTMP) $(SPKGOPTS) 		
-	dh_install -s						\
-		--list-missing 					\
-		--sourcedir=$(DTMP)	 			\
-		-Xetc/root/rootd 				\
-		-Xusr/include/root/config.h 			\
-		-Xusr/share/man/man1/rlibmap.1 			\
-		-Xusr/include/root/rootcint.pri 		\
-		-Xusr/include/root/rootcintrule.pri 		\
-		-Xusr/include/root/rootlibs.pri 		\
-		-Xusr/include/root/TQtWidget.cw 		\
-		-Xusr/share/root/fonts 				\
-		-Xusr/share/doc/root				\
-		-Xusr/lib/root/lib\*.so.$(SOVERS)		\
-		-Xusr/share/root/icons/  			\
-		-Xetc/root/daemon/				\
-		-Xetc/root/proof/				\
-		-Xusr/lib/root/$(SOVERS)/libAfterImage.a	
+	dh_install -s							\
+		--list-missing 						\
+		--sourcedir=$(DTMP)	 				\
+		-X$(PREFIX)/include/root/config.h 			\
+		-X$(PREFIX)/share/man/man1/rlibmap.1 			\
+		-X$(PREFIX)/include/root/rootcint.pri 			\
+		-X$(PREFIX)/include/root/rootcintrule.pri 		\
+		-X$(PREFIX)/include/root/rootlibs.pri 			\
+		-X$(PREFIX)/include/root/precompile.h 			\
+		-X$(PREFIX)/include/root/precompile.h.gch 		\
+		-X$(PREFIX)/include/root/TQtWidget.cw 			\
+		-X$(PREFIX)/share/root/fonts 				\
+		-X$(PREFIX)/share/doc/root				\
+		-X$(PREFIX)/share/man/man1/system.rootdaemonrc.1	\
+		-X$(PREFIX)/share/man/man1/xproofd.1			\
+		-X$(PREFIX)/bin/thisroot.sh				\
+		-X$(PREFIX)/bin/thisroot.csh				\
+		-X$(PREFIX)/share/root/icons/  				\
+		-X$(SYSCONFDIR)/root/rootd 				\
+		-X$(SYSCONFDIR)/root/daemons/				\
+		-X$(SYSCONFDIR)/root/proof/				\
+		-X$(SYSCONFDIR)/root/RadioNuclides.txt 			\
+		-X$(SYSCONFDIR)/root/gdb-backtrace-script		\
+		-X$(SYSCONFDIR)/root/hostcert.conf 			\
+		-X$(SYSCONFDIR)/root/pdg_table.txt 			\
+		-X$(SYSCONFDIR)/root/root.mimes 			\
+		-X$(SYSCONFDIR)/root/system.rootrc 			\
+		-X$(SYSCONFDIR)/root/system.rootauthrc 			\
+		-X$(SYSCONFDIR)/root/system.rootdaemonrc 		\
+		-X$(SYSCONFDIR)/root/pdg_table.txt 			\
+		-X$(SYSCONFDIR)/root/pdg_table.txt 			\
+		-X$(SYSCONFDIR)/root/pdg_table.txt 			\
+		-X$(PREFIX)/lib/root/$(SOVERS)/libAfterImage.a		\
+		-X$(PREFIX)/lib/root/$(SOVERS)/PyCintex.pyc		\
+		-X$(PREFIX)/lib/root/$(SOVERS)/PyCintex.pyo		\
+		-X$(PREFIX)/lib/root/$(SOVERS)/ROOT.pyc			\
+		-X$(PREFIX)/lib/root/$(SOVERS)/ROOT.pyo			\
+		$(foreach i, \
+		   $(wildcard $(DTMP)/$(PREFIX)/lib/root/lib*.so.$(SOVERS)), \
+		    -X$(i:$(DTMP)/%=%) )
+
 
 	# Install Lintian overrides files 
 	for i in debian/*.overrides ; do 	\
@@ -515,9 +588,9 @@ binary-indep: build-indep install-indep
 # Build architecture dependent packages using the common target.
 binary-arch: build-arch install-arch
 	$(MAKE) -f debian/rules DH_OPTIONS=-s binary-common
-	dh_python -plibroot-python-dev \
-		$(PREFIX)/lib/root/$(SOVERS) $(PREFIX)/lib/root
-	dh_python -plibroot-dev \
+	dh_pysupport -plibroot-python-dev 
+	# 	$(PREFIX)/lib/root/$(SOVERS) $(PREFIX)/lib/root
+	dh_pysupport -plibroot-dev \
 		$(PREFIX)/lib/root/$(SOVERS)/python/genreflex
 	dh_makeshlibs -V $(patsubst %, -p%, $(filter libroot%$(SOVERS),$(SPKGLIST)))
 	dh_installdeb -s

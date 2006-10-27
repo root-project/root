@@ -2363,12 +2363,12 @@ if test ! "x$enable_asimage" = "xno" ; then
        found_dirz=""
        # libz must be before libpng, if libz is not found don't
        # add libpng which needs libz
-       # don't look for libungif since we use the one built-in in libAfterImage
-       #for k in libjpeg libtiff libungif libz libpng ; do
+       # note that failure to find system libungif is not fatal since
+       # libAfterImage contains embedded libungif source if needed
        if test ! "x$enable_astiff" = "xno" ; then
-           aslibs="libjpeg libtiff libz libpng"
+           aslibs="libjpeg libtiff libungif libz libpng"
        else
-           aslibs="libjpeg libz libpng"
+           aslibs="libjpeg libungif libz libpng"
        fi
        for k in $aslibs ; do
            check_library $k "$enable_shared" "" \
@@ -2380,6 +2380,9 @@ if test ! "x$enable_asimage" = "xno" ; then
            fi
            if test "x$k" = "xlibpng" && test "x$found_libz" = "x" ; then
                break;
+           fi
+           if test "x$k" = "xlibungif" && test "x$found_lib" = "x" ; then
+               asgifincdir=""
            fi
            if test ! "x$found_lib" = "x" ; then
                asextralib="$asextralib $found_lib"
@@ -3511,7 +3514,7 @@ if test ! "x$enable_mathmore" = "xno"; then
     if test ! "x$gslflags" = "x"; then
 	#check for the library now
 	gsllibdir0=$gsllibdir
-	check_library "libgsl gslML gsl" "no" "$gsllibdir" \
+	check_library "libgsl gslML gsl" "$enable_shared" "$gsllibdir" \
 	    $GSL $GSL/lib $GSL/.libs /usr/local/lib /usr/lib /opt/gsl/lib \
 	    $finkdir/lib
 

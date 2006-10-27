@@ -1,7 +1,7 @@
 Package: root-proofd
 Architecture: any
 Pre-Depends: netbase
-Depends: root-common, root-plugin-proof, ${shlibs:Depends}
+Depends: root-common, root-plugin-proof, lsb-base (>= 3.0-6), ${shlibs:Depends}
 Recommends: root-bin, libroot-dev, root-file-server | root-rootd
 Description: Parallel ROOt Facility - distributed, parallel computing
  This package contains the PROOF server.  prootd is the core daemon of

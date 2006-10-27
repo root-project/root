@@ -38,9 +38,9 @@ for d in * ; do
 	            extra="ALLLIBS=${prefix}/lib/root/libCore.so" ;;  	
 	cint)	    lib=libroot             ; dev=libroot-dev; bin=root-bin
 	    	    extra="ALLLIBS=${prefix}/lib/root/libCint.so" ;;  	
-	clib|cont|eg|foam|g3d|ged*|geom*|gpad|graf|gui*|hist*|html)
+	clib|cont|eg|foam|fitpanel|g3d|ged*|geom*|gpad|graf|gui*|hist*|html)
 	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
-	mathcore|matrix|meta*|net|newdelete|physics|postscript|rint)
+	mathcore|matrix|meta*|net|newdelete|physics|postscript|rint|spectrum)
 	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
 	table|thread|tree*|unix|utils|vmc|x11*|x3d|zip|rpdutils|rootx)
 	            lib=libroot             ; dev=libroot-dev; bin=root-bin ;;
