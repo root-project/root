@@ -3582,8 +3582,9 @@ void TASImage::DrawRectangle(UInt_t x, UInt_t y, UInt_t w, UInt_t h,
    }
 
    if (!fImage) {
-      Warning("DrawRectangle", "no image");
-      return;
+      fImage = create_asimage(w ? w : 20, h ? h : 20, 0);
+      x = 0;
+      y = 0;
    }
 
    if (!fImage->alt.argb32) {

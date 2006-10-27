@@ -536,7 +536,7 @@ void TImageDump::NewPage()
 {
    // new page
 
-   if (gPad) fImage->DrawBox(0, 0, gPad->GetWw(), gPad->GetWh());
+   if (gPad) fImage->DrawRectangle(0, 0, gPad->GetWw(), gPad->GetWh(), "#00ffffff");
    return;
 }
 
