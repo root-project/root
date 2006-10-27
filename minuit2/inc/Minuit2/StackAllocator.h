@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: StackAllocator.h,v 1.15.2.4 2005/11/29 11:08:34 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: StackAllocator.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -17,7 +17,9 @@
 // to calculate and vanishes quickly if going to cost-intensive functions)
 // the library is no longer thread save however 
 
-// #define _MN_NO_THREAD_SAVE_
+#ifdef MN_USE_STACK_ALLOC
+#define _MN_NO_THREAD_SAVE_
+#endif
 
 //#include <iostream>
 

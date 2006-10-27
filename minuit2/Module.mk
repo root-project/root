@@ -48,6 +48,11 @@ MINUIT2DEP   := $(MINUIT2O:.o=.d) $(MINUIT2DO:.o=.d)
 
 MINUIT2LIB   := $(LPATH)/libMinuit2.$(SOEXT)
 
+# use this compiler option if want to optimize object allocation in Minuit2
+# NOTE: using this option one loses the thread safety. 
+# It is worth to use only for minimization of cheap (non CPU intensive) functions
+#CXXFLAGS += -DMN_USE_STACK_ALLOC
+
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MINUIT2H))
 ALLLIBS      += $(MINUIT2LIB)

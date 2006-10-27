@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: testUserFunc.cxx,v 1.1 2005/10/27 14:11:07 brun Exp $
+// @(#)root/minuit2:$Name:  $:$Id: testUserFunc.cxx,v 1.2 2005/10/27 17:22:16 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -14,7 +14,7 @@
 #include "TRandom3.h"
 #include "TVirtualFitter.h"
 
-
+#include <iostream>
 
 double myfunc( double * x, double * p) { 
 
@@ -49,7 +49,13 @@ void testUserFunc(std::string type="Minuit2", int n = 1000) {
   f->SetParameters(p);
   
   h1->Fit(f); 
+  // try fix a parameter 
+  //TVirtualFitter * fitter = TVirtualFitter::GetFitter(); 
+  //std::cout << typeid(*fitter).name() << std::endl; 
+  //fitter->FixParameter(2); 
+  f->FixParameter(2,1.0); 
 
+  h1->Fit(f,"V");
 
   h1->Draw();
  
