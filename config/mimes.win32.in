@@ -386,3 +386,7 @@ pattern = TMacro
 icon = tmacro_s.xpm tmacro_t.xpm
 action =
 
+[root/lnkfile]
+pattern = *.root.lnk
+icon = rootdblnk_s.xpm rootdblnk_t.xpm
+action = TFile *ftmp = new TFile("%s")
