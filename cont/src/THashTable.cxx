@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.12 2006/05/24 14:34:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.13 2006/07/26 13:36:42 rdm Exp $
 // Author: Fons Rademakers   27/09/95
 
 /*************************************************************************
@@ -418,19 +418,18 @@ TObject *THashTableIter::Next()
 {
    // Return next object in hashtable. Returns 0 when no more objects in table.
 
-   if (!fListCursor) {
-      int slot = NextSlot();
-      if (slot == -1) return 0;
-      fListCursor = new TListIter(fTable->fCont[slot], fDirection);
-   }
+   while (kTRUE) {
+      if (!fListCursor) {
+         int slot = NextSlot();
+         if (slot == -1) return 0;
+         fListCursor = new TListIter(fTable->fCont[slot], fDirection);
+      }
 
-   TObject *obj = fListCursor->Next();
+      TObject *obj = fListCursor->Next();
+      if (obj) return obj;
 
-   if (!obj) {
       SafeDelete(fListCursor);
-      return Next();
    }
-   return obj;
 }
 
 //______________________________________________________________________________
