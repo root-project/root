@@ -2603,6 +2603,7 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table *ifunc,
    fprintf(fp, "      case 'f': objsize = sizeof(double); break;\n");
    fprintf(fp, "    }\n");
 
+   fprintf(fp, "#ifdef G__VAARG_PASS_BY_REFERENCE\n");
    fprintf(fp, "    if (objsize > G__VAARG_PASS_BY_REFERENCE) {\n");
    fprintf(fp, "      if (pval->ref > 0x1000) {\n");
    fprintf(fp, "        if (icnt < imax) {\n");
@@ -2619,6 +2620,7 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table *ifunc,
    fprintf(fp, "      }\n");
    fprintf(fp, "      type = 'z';\n");
    fprintf(fp, "    }\n");
+   fprintf(fp, "#endif\n");
 
    fprintf(fp, "    switch (type) {\n");
    fprintf(fp, "      case 'n': case 'm':\n");
@@ -2634,8 +2636,15 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table *ifunc,
    fprintf(fp, "          u[ucnt].dval = G__double(*pval); ucnt++;\n");
    fprintf(fp, "        } break;\n");
    fprintf(fp, "      case 'z': break;\n");
+   fprintf(fp, "      case 'u':\n");
+   fprintf(fp, "        if (objsize >= 16) {\n");
+   fprintf(fp, "          memcpy(&u[ucnt].lval, (void*)pval->obj.i, objsize);\n");
+   fprintf(fp, "          ucnt += objsize/8;\n");
+   fprintf(fp, "          break;\n");
+   fprintf(fp, "        }\n");
+   fprintf(fp, "        // objsize < 16 -> fall through\n");
    fprintf(fp, "      case 'g': case 'c': case 'b': case 'r': case 's': case 'h': case 'i':\n");
-   fprintf(fp, "      case 'k': case 'l': case 'u':\n");
+   fprintf(fp, "      case 'k': case 'l':\n");
    fprintf(fp, "      default:\n");
    fprintf(fp, "        if (icnt < imax) {\n");
    fprintf(fp, "          lval[icnt] = G__int(*pval); icnt++;\n");
