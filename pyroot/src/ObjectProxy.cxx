@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.11 2006/04/19 06:20:22 brun Exp $
+// @(#)root/pyroot:$Name: v5-13-04-patches $:$Id: ObjectProxy.cxx,v 1.12 2006/09/28 19:59:12 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -69,7 +69,7 @@ namespace {
          Py_INCREF( Py_True );
          return Py_True;
       }
-
+      Py_INCREF( Py_False );
       return Py_False;
    }
 
