@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.147 2006/09/28 11:37:26 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.148 2006/10/07 18:06:11 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -55,13 +55,13 @@
 #include <Tlhelp32.h>
 #include <sstream>
 #include <iostream>
+#include <shlobj.h>
 
 extern "C" {
    extern int G__get_security_error();
    extern int G__genericerror(const char* msg);
    void *_ReturnAddress(void);
 }
-
 
 //////////////////// Windows TFdSet ////////////////////////////////////////////////
 class TFdSet {
@@ -696,6 +696,94 @@ namespace {
             return "??";
       }
    }
+
+   ////// Shortcuts helper functions IsShortcut and ResolveShortCut ///////////
+
+   //__________________________________________________________________________
+   static BOOL IsShortcut(const char *filename)
+   {
+      // Validates if a file name has extension '.lnk'. Returns true if file
+      // name have extension same as Window's shortcut file (.lnk).
+
+      //File extension for the Window's shortcuts (.lnk)
+      const char *extLnk = ".lnk";
+      if (filename != NULL) {
+         //Validate extension
+         TString strfilename(filename);
+         if (strfilename.EndsWith(extLnk))
+            return TRUE;
+      }
+      return FALSE;
+   }
+
+   //__________________________________________________________________________
+   static BOOL ResolveShortCut(LPCSTR pszShortcutFile, char *pszPath, int maxbuf)
+   {
+      // Resolve a ShellLink (i.e. c:\path\shortcut.lnk) to a real path.
+
+      HRESULT hres;
+      IShellLink* psl;
+      char szGotPath[MAX_PATH];
+      WIN32_FIND_DATA wfd;
+
+      *pszPath = 0;   // assume failure
+
+      // Make typedefs for some ole32.dll functions so that we can use them
+      // with GetProcAddress
+      typedef HRESULT (__stdcall *COINITIALIZEPROC)( LPVOID );
+      static COINITIALIZEPROC _CoInitialize = 0;
+      typedef void (__stdcall *COUNINITIALIZEPROC)( void );
+      static COUNINITIALIZEPROC _CoUninitialize = 0;
+      typedef HRESULT (__stdcall *COCREATEINSTANCEPROC)( REFCLSID, LPUNKNOWN,
+                       DWORD, REFIID, LPVOID );
+      static COCREATEINSTANCEPROC _CoCreateInstance = 0;
+
+      HMODULE hModImagehlp = LoadLibrary( "ole32.dll" );
+      if (!hModImagehlp)
+         return FALSE;
+
+      _CoInitialize = (COINITIALIZEPROC) GetProcAddress( hModImagehlp, "CoInitialize" );
+      if (!_CoInitialize)
+         return FALSE;
+      _CoUninitialize = (COUNINITIALIZEPROC) GetProcAddress( hModImagehlp, "CoUninitialize");
+      if (!_CoUninitialize)
+         return FALSE;
+      _CoCreateInstance = (COCREATEINSTANCEPROC) GetProcAddress( hModImagehlp, "CoCreateInstance" );
+      if (!_CoCreateInstance)
+         return FALSE;
+
+      _CoInitialize(NULL);
+
+      hres = _CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+                               IID_IShellLink, (void **) &psl);
+      if (SUCCEEDED(hres)) {
+         IPersistFile* ppf;
+
+         hres = psl->QueryInterface(IID_IPersistFile, (void **) &ppf);
+         if (SUCCEEDED(hres)) {
+            WCHAR wsz[MAX_PATH];
+            MultiByteToWideChar(CP_ACP, 0, pszShortcutFile, -1, wsz, MAX_PATH);
+
+            hres = ppf->Load(wsz, STGM_READ);
+            if (SUCCEEDED(hres)) {
+               hres = psl->Resolve(HWND_DESKTOP, SLR_ANY_MATCH);
+               if (SUCCEEDED(hres)) {
+                  strcpy(szGotPath, pszShortcutFile);
+                  hres = psl->GetPath(szGotPath, MAX_PATH, (WIN32_FIND_DATA *)&wfd,
+                                      SLGP_UNCPRIORITY | SLGP_RAWPATH);
+                  strncpy(pszPath,szGotPath, maxbuf);
+                  if (maxbuf) pszPath[maxbuf-1] = 0;
+               }
+            }
+            ppf->Release();
+         }
+         psl->Release();
+      }
+      _CoUninitialize();
+
+      return SUCCEEDED(hres);
+   }
+
 } // end unnamed namespace
 
 
@@ -1780,7 +1868,15 @@ void *TWinNTSystem::OpenDirectory(const char *fdir)
    }
 
    const char *proto = (strstr(fdir, "file:///")) ? "file://" : "file:";
-   const char *dir = StripOffProto(fdir, proto);
+   const char *sdir = StripOffProto(fdir, proto);
+
+   char *dir = new char[MAX_PATH];
+   if (IsShortcut(sdir)) {
+      if (!ResolveShortCut(sdir, dir, MAX_PATH))
+         strcpy(dir, sdir);
+   }
+   else
+      strcpy(dir, sdir);
 
    char *entry = new char[strlen(dir)+3];
    struct _stati64 finfo;
@@ -2149,6 +2245,7 @@ int TWinNTSystem::GetPathInfo(const char *path, FileStat_t &buf)
       }
       newpath[l] = '\0';
    }
+
    if (newpath && ::_stati64(newpath, &sbuf) >= 0) {
 
       buf.fDev    = sbuf.st_dev;
@@ -2158,8 +2255,18 @@ int TWinNTSystem::GetPathInfo(const char *path, FileStat_t &buf)
       buf.fGid    = sbuf.st_gid;
       buf.fSize   = sbuf.st_size;
       buf.fMtime  = sbuf.st_mtime;
-      buf.fIsLink = kFALSE;
-
+      buf.fIsLink = IsShortcut(newpath); // kFALSE;
+/*
+      char *lpath = new char[MAX_PATH];
+      if (IsShortcut(newpath)) {
+         struct _stati64 sbuf2;
+         if (ResolveShortCut(newpath, lpath, MAX_PATH)) {
+            if (::_stati64(lpath, &sbuf2) >= 0) {
+               buf.fMode   = sbuf2.st_mode;
+            }
+         }
+      }
+*/
       delete [] newpath;
       return 0;
    }
@@ -2237,6 +2344,127 @@ int TWinNTSystem::Link(const char *from, const char *to)
 {
    // Create a link from file1 to file2.
 
+   struct   _stati64 finfo;
+   char     winPath[256];
+   char     winDrive[256];
+   char     winDir[256];
+   char     winName[256];
+   char     winExt[256];
+   char     linkname[1024];
+   LPTSTR   lpszFilePart;
+   TCHAR    szPath[MAX_PATH];
+   DWORD    dwRet = 0;
+
+   typedef BOOL (__stdcall *CREATEHARDLINKPROC)( LPCTSTR, LPCTSTR, LPSECURITY_ATTRIBUTES );
+   static CREATEHARDLINKPROC _CreateHardLink = 0;
+
+   HMODULE hModImagehlp = LoadLibrary( "Kernel32.dll" );
+   if (!hModImagehlp)
+      return -1;
+
+#ifdef _UNICODE
+   _CreateHardLink = (CREATEHARDLINKPROC) GetProcAddress( hModImagehlp, "CreateHardLinkW" );
+#else
+   _CreateHardLink = (CREATEHARDLINKPROC) GetProcAddress( hModImagehlp, "CreateHardLinkA" );
+#endif
+   if (!_CreateHardLink)
+      return -1;
+
+   dwRet = GetFullPathName(from, sizeof(szPath) / sizeof(TCHAR),
+                           szPath, &lpszFilePart);
+
+   if (_stati64(szPath, &finfo) < 0)
+      return -1;
+
+   if (finfo.st_mode & S_IFDIR)
+      return -1;
+
+   sprintf(linkname,"%s",to);
+   _splitpath(linkname,winDrive,winDir,winName,winExt);
+   if ((strlen(winDrive) == 0 ) &&
+       (strlen(winDir) == 0 ))  {
+      _splitpath(szPath,winDrive,winDir,winName,winExt);
+      sprintf(linkname,"%s\\%s\\%s", winDrive, winDir, to);
+   }
+   else if (strlen(winDrive) == 0)  {
+      _splitpath(szPath,winDrive,winDir,winName,winExt);
+      sprintf(linkname,"%s\\%s", winDrive, to);
+   }
+
+   if (!_CreateHardLink(linkname, szPath, NULL))
+      return -1;
+
+   return 0;
+}
+
+//______________________________________________________________________________
+int TWinNTSystem::Symlink(const char *from, const char *to)
+{
+   // Create a symlink from file1 to file2. Returns 0 when succesfull,
+   // -1 in case of failure.
+
+   HRESULT        hRes;                  /* Returned COM result code */
+   IShellLink*    pShellLink;            /* IShellLink object pointer */
+   IPersistFile*  pPersistFile;          /* IPersistFile object pointer */
+   WCHAR          wszLinkfile[MAX_PATH]; /* pszLinkfile as Unicode string */
+   int            iWideCharsWritten;     /* Number of wide characters written */
+   DWORD          dwRet = 0;
+   LPTSTR         lpszFilePart;
+   TCHAR          szPath[MAX_PATH];
+
+   hRes = E_INVALIDARG;
+   if ((from == NULL) || (strlen(from) == 0) || (to == NULL) ||
+       (strlen(to) == 0))
+      return -1;
+
+   // Make typedefs for some ole32.dll functions so that we can use them
+   // with GetProcAddress
+   typedef HRESULT (__stdcall *COINITIALIZEPROC)( LPVOID );
+   static COINITIALIZEPROC _CoInitialize = 0;
+   typedef void (__stdcall *COUNINITIALIZEPROC)( void );
+   static COUNINITIALIZEPROC _CoUninitialize = 0;
+   typedef HRESULT (__stdcall *COCREATEINSTANCEPROC)( REFCLSID, LPUNKNOWN, DWORD, REFIID, LPVOID );
+   static COCREATEINSTANCEPROC _CoCreateInstance = 0;
+
+   HMODULE hModImagehlp = LoadLibrary( "ole32.dll" );
+   if (!hModImagehlp)
+      return -1;
+
+   _CoInitialize = (COINITIALIZEPROC) GetProcAddress( hModImagehlp, "CoInitialize" );
+   if (!_CoInitialize)
+      return -1;
+   _CoUninitialize = (COUNINITIALIZEPROC) GetProcAddress( hModImagehlp, "CoUninitialize" );
+   if (!_CoUninitialize)
+      return -1;
+   _CoCreateInstance = (COCREATEINSTANCEPROC) GetProcAddress( hModImagehlp, "CoCreateInstance" );
+   if (!_CoCreateInstance)
+      return -1;
+
+   TString linkname(to);
+   if (!linkname.EndsWith(".lnk"))
+      linkname.Append(".lnk");
+
+   _CoInitialize(NULL);
+
+   // Retrieve the full path and file name of a specified file
+   dwRet = GetFullPathName(from, sizeof(szPath) / sizeof(TCHAR),
+                           szPath, &lpszFilePart);
+   hRes = _CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+                           IID_IShellLink, (LPVOID *)&pShellLink);
+   if (SUCCEEDED(hRes)) {
+      // Set the fields in the IShellLink object
+      hRes = pShellLink->SetPath(szPath);
+      // Use the IPersistFile object to save the shell link
+      hRes = pShellLink->QueryInterface(IID_IPersistFile, (void **)&pPersistFile);
+      if (SUCCEEDED(hRes)){
+         iWideCharsWritten = MultiByteToWideChar(CP_ACP, 0, linkname.Data(), -1,
+                                                 wszLinkfile, MAX_PATH);
+         hRes = pPersistFile->Save(wszLinkfile, TRUE);
+         pPersistFile->Release();
+      }
+      pShellLink->Release();
+   }
+   _CoUninitialize();
    return 0;
 }
 
@@ -2378,7 +2606,14 @@ char *TWinNTSystem::ExpandPathName(const char *path)
    // Expand a pathname getting rid of special shell characaters like ~.$, etc.
    // User must delete returned string.
 
-   TString patbuf = path;
+   char newpath[MAX_PATH];
+   if (IsShortcut(path)) {
+      if (!ResolveShortCut(path, newpath, MAX_PATH))
+         strcpy(newpath, path);
+   }
+   else
+      strcpy(newpath, path);
+   TString patbuf = newpath;
    if (ExpandPathName(patbuf)) return 0;
 
    return StrDup(patbuf.Data());
@@ -4421,4 +4656,635 @@ int TWinNTSystem::AcceptConnection(int socket)
       }
    }
    return soc;
+}
+
+//---- System, CPU and Memory info ---------------------------------------------
+
+// !!! using undocumented functions and structures !!!
+
+#define SystemBasicInformation         0
+#define SystemPerformanceInformation   2
+
+typedef struct
+{
+   DWORD dwUnknown1;
+   ULONG uKeMaximumIncrement;
+   ULONG uPageSize;
+   ULONG uMmNumberOfPhysicalPages;
+   ULONG uMmLowestPhysicalPage;
+   ULONG UMmHighestPhysicalPage;
+   ULONG uAllocationGranularity;
+   PVOID pLowestUserAddress;
+   PVOID pMmHighestUserAddress;
+   ULONG uKeActiveProcessors;
+   BYTE  bKeNumberProcessors;
+   BYTE  bUnknown2;
+   WORD  bUnknown3;
+} SYSTEM_BASIC_INFORMATION;
+
+typedef struct
+{
+   LARGE_INTEGER  liIdleTime;
+   DWORD    dwSpare[76];
+} SYSTEM_PERFORMANCE_INFORMATION;
+
+typedef struct _PROCESS_MEMORY_COUNTERS {
+   DWORD cb;
+   DWORD PageFaultCount;
+   SIZE_T PeakWorkingSetSize;
+   SIZE_T WorkingSetSize;
+   SIZE_T QuotaPeakPagedPoolUsage;
+   SIZE_T QuotaPagedPoolUsage;
+   SIZE_T QuotaPeakNonPagedPoolUsage;
+   SIZE_T QuotaNonPagedPoolUsage;
+   SIZE_T PagefileUsage;
+   SIZE_T PeakPagefileUsage;
+} PROCESS_MEMORY_COUNTERS, *PPROCESS_MEMORY_COUNTERS;
+
+typedef LONG (WINAPI *PROCNTQSI) (UINT, PVOID, ULONG, PULONG);
+
+#define Li2Double(x) ((double)((x).HighPart) * 4.294967296E9 + (double)((x).LowPart))
+
+//_____________________________________________________________________________
+static DWORD GetCPUSpeed()
+{
+   // Calculate the CPU clock speed using the 'rdtsc' instruction.
+   // RDTSC: Read Time Stamp Counter.
+
+   LARGE_INTEGER ulFreq, ulTicks, ulValue, ulStartCounter, ulEAX_EDX;
+
+   // Query for high-resolution counter frequency 
+   // (this is not the CPU frequency):
+   if (QueryPerformanceFrequency(&ulFreq)) {
+      // Query current value:
+      QueryPerformanceCounter(&ulTicks);
+      // Calculate end value (one second interval); 
+      // this is (current + frequency)
+      ulValue.QuadPart = ulTicks.QuadPart + ulFreq.QuadPart/10;
+      // Read CPU time-stamp counter:
+      __asm RDTSC
+      // And save in ulEAX_EDX:
+      __asm mov ulEAX_EDX.LowPart, EAX
+      __asm mov ulEAX_EDX.HighPart, EDX
+      // Store starting counter value:
+      ulStartCounter.QuadPart = ulEAX_EDX.QuadPart;
+      // Loop for one second (measured with the high-resolution counter):
+      do {
+ 	      QueryPerformanceCounter(&ulTicks);
+      } while (ulTicks.QuadPart <= ulValue.QuadPart);
+      // Now again read CPU time-stamp counter:
+      __asm RDTSC
+      // And save:
+      __asm mov ulEAX_EDX.LowPart, EAX
+      __asm mov ulEAX_EDX.HighPart, EDX
+      // Calculate number of cycles done in interval; 1000000 Hz = 1 MHz
+      return (DWORD)((ulEAX_EDX.QuadPart - ulStartCounter.QuadPart)/100000);
+	} else {
+      // No high-resolution counter present:
+      return 0;
+	}
+}
+
+#define BUFSIZE 80
+#define SM_SERVERR2 89 
+typedef void (WINAPI *PGNSI)(LPSYSTEM_INFO);
+
+char *GetWindowsVersion()
+{
+   OSVERSIONINFOEX osvi;
+   SYSTEM_INFO si;
+   PGNSI pGNSI;
+   BOOL bOsVersionInfoEx;
+   char strReturn[2048];
+   char temp[512];
+
+   ZeroMemory(&si, sizeof(SYSTEM_INFO));
+   ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
+
+   // Try calling GetVersionEx using the OSVERSIONINFOEX structure.
+   // If that fails, try using the OSVERSIONINFO structure.
+
+   osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+
+   if( !(bOsVersionInfoEx = GetVersionEx ((OSVERSIONINFO *) &osvi)) )
+   {
+      osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
+      if (! GetVersionEx ( (OSVERSIONINFO *) &osvi) )
+         return "";
+   }
+
+   // Call GetNativeSystemInfo if supported or GetSystemInfo otherwise.
+   pGNSI = (PGNSI) GetProcAddress( GetModuleHandle("kernel32.dll"),
+                                   "GetNativeSystemInfo");
+   if(NULL != pGNSI)
+      pGNSI(&si);
+   else GetSystemInfo(&si);
+
+   switch (osvi.dwPlatformId)
+   {
+      // Test for the Windows NT product family.
+      case VER_PLATFORM_WIN32_NT:
+
+         // Test for the specific product.
+         if ( osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 0 )
+         {
+            if( osvi.wProductType == VER_NT_WORKSTATION )
+                strcpy(strReturn, "Microsoft Windows Vista ");
+            else strcpy(strReturn, "Windows Server \"Longhorn\" " );
+         }
+         if ( osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 2 )
+         {
+            if( GetSystemMetrics(SM_SERVERR2) )
+               strcpy(strReturn, "Microsoft Windows Server 2003 \"R2\" ");
+            else if( osvi.wProductType == VER_NT_WORKSTATION &&
+                      si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_AMD64)
+            {
+               strcpy(strReturn, "Microsoft Windows XP Professional x64 Edition ");
+            }
+            else strcpy(strReturn, "Microsoft Windows Server 2003, ");
+         }
+         if ( osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 1 )
+            strcpy(strReturn, "Microsoft Windows XP ");
+
+         if ( osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 0 )
+            strcpy(strReturn, "Microsoft Windows 2000 ");
+
+         if ( osvi.dwMajorVersion <= 4 )
+            strcpy(strReturn, "Microsoft Windows NT ");
+
+         // Test for specific product on Windows NT 4.0 SP6 and later.
+         if( bOsVersionInfoEx )
+         {
+            // Test for the workstation type.
+            if ( osvi.wProductType == VER_NT_WORKSTATION &&
+                 si.wProcessorArchitecture!=PROCESSOR_ARCHITECTURE_AMD64)
+            {
+               if( osvi.dwMajorVersion == 4 )
+                  strcat(strReturn, "Workstation 4.0 " );
+               else if( osvi.wSuiteMask & VER_SUITE_PERSONAL )
+                  strcat(strReturn, "Home Edition " );
+               else strcat(strReturn, "Professional " );
+            }
+            // Test for the server type.
+            else if ( osvi.wProductType == VER_NT_SERVER ||
+                      osvi.wProductType == VER_NT_DOMAIN_CONTROLLER )
+            {
+               if(osvi.dwMajorVersion==5 && osvi.dwMinorVersion==2)
+               {
+                  if ( si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_IA64 )
+                  {
+                      if( osvi.wSuiteMask & VER_SUITE_DATACENTER )
+                         strcat(strReturn, "Datacenter Edition for Itanium-based Systems" );
+                      else if( osvi.wSuiteMask & VER_SUITE_ENTERPRISE )
+                         strcat(strReturn, "Enterprise Edition for Itanium-based Systems" );
+                  }
+                  else if ( si.wProcessorArchitecture==PROCESSOR_ARCHITECTURE_AMD64 )
+                  {
+                      if( osvi.wSuiteMask & VER_SUITE_DATACENTER )
+                         strcat(strReturn, "Datacenter x64 Edition " );
+                      else if( osvi.wSuiteMask & VER_SUITE_ENTERPRISE )
+                         strcat(strReturn, "Enterprise x64 Edition " );
+                      else strcat(strReturn, "Standard x64 Edition " );
+                  }
+                  else
+                  {
+                      if( osvi.wSuiteMask & VER_SUITE_DATACENTER )
+                         strcat(strReturn, "Datacenter Edition " );
+                      else if( osvi.wSuiteMask & VER_SUITE_ENTERPRISE )
+                         strcat(strReturn, "Enterprise Edition " );
+                      else if ( osvi.wSuiteMask == VER_SUITE_BLADE )
+                         strcat(strReturn, "Web Edition " );
+                      else strcat(strReturn, "Standard Edition " );
+                  }
+               }
+               else if(osvi.dwMajorVersion==5 && osvi.dwMinorVersion==0)
+               {
+                  if( osvi.wSuiteMask & VER_SUITE_DATACENTER )
+                     strcat(strReturn, "Datacenter Server " );
+                  else if( osvi.wSuiteMask & VER_SUITE_ENTERPRISE )
+                     strcat(strReturn, "Advanced Server " );
+                  else strcat(strReturn, "Server " );
+               }
+               else  // Windows NT 4.0
+               {
+                  if( osvi.wSuiteMask & VER_SUITE_ENTERPRISE )
+                     strcat(strReturn, "Server 4.0, Enterprise Edition " );
+                  else strcat(strReturn, "Server 4.0 " );
+               }
+            }
+         }
+         // Test for specific product on Windows NT 4.0 SP5 and earlier
+         else
+         {
+            HKEY hKey;
+            TCHAR szProductType[BUFSIZE];
+            DWORD dwBufLen=BUFSIZE*sizeof(TCHAR);
+            LONG lRet;
+
+            lRet = RegOpenKeyEx( HKEY_LOCAL_MACHINE,
+                                 "SYSTEM\\CurrentControlSet\\Control\\ProductOptions",
+                                 0, KEY_QUERY_VALUE, &hKey );
+            if( lRet != ERROR_SUCCESS )
+               return "";
+
+            lRet = RegQueryValueEx( hKey, "ProductType", NULL, NULL,
+                                   (LPBYTE) szProductType, &dwBufLen);
+            RegCloseKey( hKey );
+
+            if( (lRet != ERROR_SUCCESS) || (dwBufLen > BUFSIZE*sizeof(TCHAR)) )
+               return "";
+
+            if ( lstrcmpi( "WINNT", szProductType) == 0 )
+               strcat(strReturn, "Workstation " );
+            if ( lstrcmpi( "LANMANNT", szProductType) == 0 )
+               strcat(strReturn, "Server " );
+            if ( lstrcmpi( "SERVERNT", szProductType) == 0 )
+               strcat(strReturn, "Advanced Server " );
+            sprintf(temp, "%d.%d ", osvi.dwMajorVersion, osvi.dwMinorVersion);
+            strcat(strReturn, temp);
+         }
+
+         // Display service pack (if any) and build number.
+
+         if( osvi.dwMajorVersion == 4 &&
+             lstrcmpi( osvi.szCSDVersion, "Service Pack 6" ) == 0 )
+         {
+            HKEY hKey;
+            LONG lRet;
+
+            // Test for SP6 versus SP6a.
+            lRet = RegOpenKeyEx( HKEY_LOCAL_MACHINE,
+                                 "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Hotfix\\Q246009",
+                                 0, KEY_QUERY_VALUE, &hKey );
+            if( lRet == ERROR_SUCCESS ) {
+               sprintf(temp,  "Service Pack 6a (Build %d)", osvi.dwBuildNumber & 0xFFFF );
+               strcat(strReturn, temp );
+            }
+            else // Windows NT 4.0 prior to SP6a
+            {
+               sprintf(temp, "%s (Build %d)", osvi.szCSDVersion, osvi.dwBuildNumber & 0xFFFF);
+               strcat(strReturn, temp );
+            }
+
+            RegCloseKey( hKey );
+         }
+         else // not Windows NT 4.0
+         {
+            sprintf(temp, "%s (Build %d)", osvi.szCSDVersion, osvi.dwBuildNumber & 0xFFFF);
+            strcat(strReturn, temp );
+         }
+
+         break;
+
+      // Test for the Windows Me/98/95.
+      case VER_PLATFORM_WIN32_WINDOWS:
+
+         if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 0)
+         {
+             strcpy(strReturn, "Microsoft Windows 95 ");
+             if (osvi.szCSDVersion[1]=='C' || osvi.szCSDVersion[1]=='B')
+                strcat(strReturn, "OSR2 " );
+         }
+
+         if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 10)
+         {
+             strcpy(strReturn, "Microsoft Windows 98 ");
+             if ( osvi.szCSDVersion[1]=='A' || osvi.szCSDVersion[1]=='B')
+                strcat(strReturn, "SE " );
+         }
+
+         if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 90)
+         {
+             strcpy(strReturn, "Microsoft Windows Millennium Edition");
+         }
+         break;
+
+      case VER_PLATFORM_WIN32s:
+         strcpy(strReturn, "Microsoft Win32s");
+         break;
+   }
+   return strReturn;
+}
+
+//______________________________________________________________________________
+static int GetL2CacheSize()
+{
+   // Use assembly to retrieve the L2 cache information ...
+
+   unsigned long eaxreg, ebxreg, ecxreg, edxreg;;
+
+   __try {
+      _asm {
+         push eax
+         push ebx
+         push ecx
+         push edx
+         ; eax = 0x80000006 --> eax: L2 cache information.
+         mov eax, 0x80000006
+         cpuid
+         mov eaxreg, eax
+         mov ebxreg, ebx
+         mov ecxreg, ecx
+         mov edxreg, edx
+         pop edx
+         pop ecx
+         pop ebx
+         pop eax
+      }
+   }
+   __except (1) {
+      return 0;
+   }
+   // Return the L2 cache size (in KB) from ecxreg
+   return ((ecxreg & 0xFFFF0000) >> 16);
+}
+
+//______________________________________________________________________________
+static void GetWinNTSysInfo(SysInfo_t *sysinfo)
+{
+   // Get system info for Windows NT.
+
+   SYSTEM_PERFORMANCE_INFORMATION   SysPerfInfo;
+   SYSTEM_INFO sysInfo;
+   MEMORYSTATUSEX statex;
+   OSVERSIONINFO OsVersionInfo;
+   HKEY hKey;
+   char  szKeyValueString[80];
+   DWORD szKeyValueDword;
+   DWORD dwBufLen;
+   LONG  status;
+   PROCNTQSI  NtQuerySystemInformation;
+   int i;
+
+   NtQuerySystemInformation = (PROCNTQSI)GetProcAddress(
+         GetModuleHandle("ntdll"), "NtQuerySystemInformation");
+
+   if (!NtQuerySystemInformation) {
+      ::Error("GetWinNTSysInfo",
+              "Error on GetProcAddress(NtQuerySystemInformation)");
+      return;
+   }
+
+   status = NtQuerySystemInformation(SystemPerformanceInformation,
+                                     &SysPerfInfo, sizeof(SysPerfInfo),
+                                     NULL);
+   OsVersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+   GetVersionEx(&OsVersionInfo);
+   GetSystemInfo(&sysInfo);
+   statex.dwLength = sizeof(statex);
+   if (!GlobalMemoryStatusEx(&statex)) {
+      ::Error("GetWinNTSysInfo", "Error on GlobalMemoryStatusEx()");
+      return;
+   }
+   sysinfo->fCpus     = sysInfo.dwNumberOfProcessors;
+   sysinfo->fPhysRam  = (Int_t)(statex.ullTotalPhys  >> 20);
+   sysinfo->fOS       = GetWindowsVersion();
+   sysinfo->fModel    = "";
+   sysinfo->fCpuType  = "";
+   sysinfo->fCpuSpeed = GetCPUSpeed();
+   sysinfo->fBusSpeed = 0;  // bus speed in MHz
+   sysinfo->fL2Cache  = GetL2CacheSize();
+
+   status = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System",
+                         0, KEY_QUERY_VALUE, &hKey);
+   if (status == ERROR_SUCCESS) {
+      dwBufLen = sizeof(szKeyValueString);
+      RegQueryValueEx(hKey, "Identifier", NULL, NULL,(LPBYTE)szKeyValueString,
+                      &dwBufLen);
+      sysinfo->fModel = szKeyValueString;
+      RegCloseKey (hKey);
+   }
+   status = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                         "Hardware\\Description\\System\\CentralProcessor\\0",
+                         0, KEY_QUERY_VALUE, &hKey);
+   if (status == ERROR_SUCCESS) {
+      dwBufLen = sizeof(szKeyValueString);
+      status = RegQueryValueEx(hKey, "ProcessorNameString", NULL, NULL,
+                               (LPBYTE)szKeyValueString, &dwBufLen);
+      if (status == ERROR_SUCCESS)
+         sysinfo->fCpuType = szKeyValueString;
+      dwBufLen = sizeof(DWORD);
+      status = RegQueryValueEx(hKey,"~MHz",NULL,NULL,(LPBYTE)&szKeyValueDword,
+                               &dwBufLen);
+      if ((status == ERROR_SUCCESS) && ((sysinfo->fCpuSpeed <= 0) ||
+         (sysinfo->fCpuSpeed < (szKeyValueDword >> 1))))
+         sysinfo->fCpuSpeed = (Int_t)szKeyValueDword;
+      RegCloseKey (hKey);
+   }
+   sysinfo->fCpuType.Remove(TString::kBoth, ' ');
+   sysinfo->fModel.Remove(TString::kBoth, ' ');
+}
+
+//______________________________________________________________________________
+static void GetWinNTCpuInfo(CpuInfo_t *cpuinfo)
+{
+
+   SYSTEM_INFO sysInfo;
+   Float_t  idle_ratio, kernel_ratio, user_ratio, total_ratio;
+   FILETIME ft_sys_idle, ft_sys_kernel, ft_sys_user, ft_fun_time;
+   SYSTEMTIME st_fun_time;
+
+   ULARGE_INTEGER ul_sys_idle, ul_sys_kernel, ul_sys_user;
+   static ULARGE_INTEGER ul_sys_idleold = {0, 0};
+   static ULARGE_INTEGER ul_sys_kernelold = {0, 0};
+   static ULARGE_INTEGER ul_sys_userold = {0, 0};
+   ULARGE_INTEGER ul_sys_idle_diff, ul_sys_kernel_diff, ul_sys_user_diff;
+
+   ULARGE_INTEGER ul_fun_time;
+   static ULARGE_INTEGER ul_fun_timeold = {0, 0};
+   ULARGE_INTEGER ul_fun_time_diff;
+
+   typedef BOOL (__stdcall *GetSystemTimesProc)( LPFILETIME lpIdleTime,
+                 LPFILETIME lpKernelTime, LPFILETIME lpUserTime );
+   static GetSystemTimesProc pGetSystemTimes = 0;
+
+   HMODULE hModImagehlp = LoadLibrary( "Kernel32.dll" );
+   if (!hModImagehlp) {
+      ::Error("GetWinNTCpuInfo", "Error on LoadLibrary(Kernel32.dll)");
+      return;
+   }
+
+   pGetSystemTimes = (GetSystemTimesProc) GetProcAddress( hModImagehlp,
+                      "GetSystemTimes" );
+   if (!pGetSystemTimes) {
+      ::Error("GetWinNTCpuInfo", "Error on GetProcAddress(GetSystemTimes)");
+      return;
+   }
+   GetSystemInfo(&sysInfo);
+
+again:
+   pGetSystemTimes(&ft_sys_idle,&ft_sys_kernel,&ft_sys_user);
+   GetSystemTime(&st_fun_time);
+   SystemTimeToFileTime(&st_fun_time,&ft_fun_time);
+
+   memcpy(&ul_sys_idle, &ft_sys_idle, sizeof(FILETIME));
+   memcpy(&ul_sys_kernel, &ft_sys_kernel, sizeof(FILETIME));
+   memcpy(&ul_sys_user, &ft_sys_user, sizeof(FILETIME));
+   memcpy(&ul_fun_time, &ft_fun_time, sizeof(FILETIME));
+
+   ul_sys_idle_diff.QuadPart   = ul_sys_idle.QuadPart -
+                                 ul_sys_idleold.QuadPart;
+   ul_sys_kernel_diff.QuadPart = ul_sys_kernel.QuadPart -
+                                 ul_sys_kernelold.QuadPart;
+   ul_sys_user_diff.QuadPart   = ul_sys_user.QuadPart -
+                                 ul_sys_userold.QuadPart;
+
+   ul_fun_time_diff.QuadPart = ul_fun_time.QuadPart -
+                               ul_fun_timeold.QuadPart;
+
+   ul_sys_idleold.QuadPart   = ul_sys_idle.QuadPart;
+   ul_sys_kernelold.QuadPart = ul_sys_kernel.QuadPart;
+   ul_sys_userold.QuadPart   = ul_sys_user.QuadPart;
+
+   if(ul_fun_timeold.QuadPart == 0) {
+      Sleep(100);
+      ul_fun_timeold.QuadPart = ul_fun_time.QuadPart;
+      goto again;
+   }
+   ul_fun_timeold.QuadPart = ul_fun_time.QuadPart;
+
+   idle_ratio = (Float_t)(Li2Double(ul_sys_idle_diff)/
+                          Li2Double(ul_fun_time_diff))*100.0;
+   user_ratio = (Float_t)(Li2Double(ul_sys_user_diff)/
+                          Li2Double(ul_fun_time_diff))*100.0;
+   kernel_ratio = (Float_t)(Li2Double(ul_sys_kernel_diff)/
+                            Li2Double(ul_fun_time_diff))*100.0;
+   idle_ratio /= (Float_t)sysInfo.dwNumberOfProcessors;
+   user_ratio /= (Float_t)sysInfo.dwNumberOfProcessors;
+   kernel_ratio /= (Float_t)sysInfo.dwNumberOfProcessors;
+   total_ratio = 100.0 - idle_ratio;
+
+   cpuinfo->fLoad1m  = 0; // cpu load average over 1 m
+   cpuinfo->fLoad5m  = 0; // cpu load average over 5 m
+   cpuinfo->fLoad15m = 0; // cpu load average over 15 m
+   cpuinfo->fUser    = user_ratio; // cpu user load in percentage
+   cpuinfo->fSys     = kernel_ratio; // cpu sys load in percentage
+   cpuinfo->fTotal   = total_ratio; // cpu user+sys load in percentage
+   cpuinfo->fIdle    = idle_ratio; // cpu idle percentage
+}
+//______________________________________________________________________________
+static void GetWinNTMemInfo(MemInfo_t *meminfo)
+{
+   // Get VM stat for Windows NT.
+
+   Long64_t total, used, free, swap_total, swap_used, swap_avail;
+   MEMORYSTATUSEX statex;
+   statex.dwLength = sizeof(statex);
+   if (!GlobalMemoryStatusEx(&statex)) {
+      ::Error("GetWinNTMemInfo", "Error on GlobalMemoryStatusEx()");
+      return;
+   }
+   used  = (Long64_t)(statex.ullTotalPhys - statex.ullAvailPhys);
+   free  = (Long64_t) statex.ullAvailPhys;
+   total = (Long64_t) statex.ullTotalPhys;
+
+   meminfo->fMemTotal  = (Int_t) (total >> 20); // divide by 1024 * 1024
+   meminfo->fMemUsed   = (Int_t) (used >> 20);
+   meminfo->fMemFree   = (Int_t) (free >> 20);
+
+   swap_total = (Long64_t)(statex.ullTotalPageFile - statex.ullTotalPhys);
+   swap_avail = (Long64_t)(statex.ullAvailPageFile - statex.ullAvailPhys);
+   swap_used  = swap_total - swap_avail;
+
+   meminfo->fSwapTotal = (Int_t) (swap_total >> 20);
+   meminfo->fSwapUsed  = (Int_t) (swap_used >> 20);
+   meminfo->fSwapFree  = (Int_t) (swap_avail >> 20);
+}
+
+//______________________________________________________________________________
+static void GetWinNTProcInfo(ProcInfo_t *procinfo)
+{
+   // Get processing for process on Windows NT.
+
+   PROCESS_MEMORY_COUNTERS pmc;
+   FILETIME    starttime, exittime, kerneltime, usertime;
+   timeval     ru_stime, ru_utime;
+   ULARGE_INTEGER li;
+
+   typedef BOOL (__stdcall *GetProcessMemoryInfoProc)( HANDLE Process,
+                 PPROCESS_MEMORY_COUNTERS ppsmemCounters, DWORD cb );
+   static GetProcessMemoryInfoProc pGetProcessMemoryInfo = 0;
+
+   HMODULE hModImagehlp = LoadLibrary( "Psapi.dll" );
+   if (!hModImagehlp) {
+      ::Error("GetWinNTProcInfo", "Error on LoadLibrary(Psapi.dll)");
+      return;
+   }
+
+   pGetProcessMemoryInfo = (GetProcessMemoryInfoProc) GetProcAddress(
+                            hModImagehlp, "GetProcessMemoryInfo" );
+   if (!pGetProcessMemoryInfo) {
+      ::Error("GetWinNTProcInfo",
+              "Error on GetProcAddress(GetProcessMemoryInfo)");
+      return;
+   }
+
+   if ( pGetProcessMemoryInfo( GetCurrentProcess(), &pmc, sizeof(pmc)) ) {
+      procinfo->fMemResident = pmc.WorkingSetSize;
+      procinfo->fMemVirtual  = pmc.PagefileUsage;
+   }
+   if ( GetProcessTimes(GetCurrentProcess(), &starttime, &exittime,
+      &kerneltime, &usertime)) {
+
+      /* Convert FILETIMEs (0.1 us) to struct timeval */
+      memcpy(&li, &kerneltime, sizeof(FILETIME));
+      li.QuadPart /= 10L;         /* Convert to microseconds */
+      ru_stime.tv_sec = li.QuadPart / 1000000L;
+      ru_stime.tv_usec = li.QuadPart % 1000000L;
+
+      memcpy(&li, &usertime, sizeof(FILETIME));
+      li.QuadPart /= 10L;         /* Convert to microseconds */
+      ru_utime.tv_sec = li.QuadPart / 1000000L;
+      ru_utime.tv_usec = li.QuadPart % 1000000L;
+
+      procinfo->fCpuUser = (Float_t)(ru_utime.tv_sec) +
+                           ((Float_t)(ru_utime.tv_usec) / 1000000.);
+      procinfo->fCpuSys  = (Float_t)(ru_stime.tv_sec) +
+                           ((Float_t)(ru_stime.tv_usec) / 1000000.);
+   }
+}
+
+//______________________________________________________________________________
+Int_t TWinNTSystem::GetSysInfo(SysInfo_t *info) const
+{
+   // Returns static system info, like OS type, CPU type, number of CPUs
+   // RAM size, etc into the SysInfo_t structure. Returns -1 in case of error,
+   // 0 otherwise.
+
+   if (!info) return -1;
+   GetWinNTSysInfo(info);
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TWinNTSystem::GetCpuInfo(CpuInfo_t *info) const
+{
+   // Returns cpu load average and load info into the CpuInfo_t structure.
+   // Returns -1 in case of error, 0 otherwise.
+
+   if (!info) return -1;
+   GetWinNTCpuInfo(info);
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TWinNTSystem::GetMemInfo(MemInfo_t *info) const
+{
+   // Returns ram and swap memory usage info into the MemInfo_t structure.
+   // Returns -1 in case of error, 0 otherwise.
+
+   if (!info) return -1;
+   GetWinNTMemInfo(info);
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TWinNTSystem::GetProcInfo(ProcInfo_t *info) const
+{
+   // Returns cpu and memory used by this process into the ProcInfo_t structure.
+   // Returns -1 in case of error, 0 otherwise.
+
+   if (!info) return -1;
+   GetWinNTProcInfo(info);
+   return 0;
 }

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.40 2006/05/15 16:30:10 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.41 2006/07/04 17:36:38 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -188,6 +188,7 @@ public:
    int               CopyFile(const char *from, const char *to, Bool_t overwrite = kFALSE);
    int               Rename(const char *from, const char *to);
    int               Link(const char *from, const char *to);
+   int               Symlink(const char *from, const char *to);
    int               Unlink(const char *name);
    int               SetNonBlock(int fd);
    int               GetPathInfo(const char *path, FileStat_t &buf);
@@ -236,6 +237,12 @@ public:
    int               SendBuf(int sock, const void *buffer, int length);
    int               SetSockOpt(int sock, int opt, int val);
    int               GetSockOpt(int sock, int opt, int *val);
+
+   //---- System, CPU and Memory info
+   Int_t             GetSysInfo(SysInfo_t *info) const;
+   Int_t             GetCpuInfo(CpuInfo_t *info) const;
+   Int_t             GetMemInfo(MemInfo_t *info) const;
+   Int_t             GetProcInfo(ProcInfo_t *info) const;
 
    ClassDef(TWinNTSystem, 0)
 };
