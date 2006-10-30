@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.21 2006/10/11 10:26:23 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.22 2006/10/13 07:52:00 antcheva Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -303,9 +303,10 @@ TGHScrollBar::TGHScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
    fHeadPic = fClient->GetPicture("arrow_left.xpm");
    fTailPic = fClient->GetPicture("arrow_right.xpm");
 
-   if (!fHeadPic || !fTailPic)
+   if (!fHeadPic || !fTailPic) {
       Error("TGHScrollBar", "arrow_*.xpm not found");
-
+      return;
+   }
    fHead   = new TGScrollBarElement(this, fHeadPic, fgScrollBarWidth, fgScrollBarWidth,
                                     kRaisedFrame);
    fTail   = new TGScrollBarElement(this, fTailPic, fgScrollBarWidth, fgScrollBarWidth,
@@ -546,9 +547,10 @@ TGVScrollBar::TGVScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
    fHeadPic = fClient->GetPicture("arrow_up.xpm");
    fTailPic = fClient->GetPicture("arrow_down.xpm");
 
-   if (!fHeadPic || !fTailPic)
+   if (!fHeadPic || !fTailPic) {
       Error("TGVScrollBar", "arrow_*.xpm not found");
-
+      return;
+   }
    fHead   = new TGScrollBarElement(this, fHeadPic, fgScrollBarWidth, fgScrollBarWidth,
                                     kRaisedFrame);
    fTail   = new TGScrollBarElement(this, fTailPic, fgScrollBarWidth, fgScrollBarWidth,
