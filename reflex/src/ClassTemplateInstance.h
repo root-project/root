@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassTemplateInstance.h,v 1.8 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassTemplateInstance.h,v 1.9 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -57,7 +57,7 @@ namespace ROOT {
           * @param  nth nth template argument
           * @return pointer to nth template argument
           */
-         const Type & TemplateArgumentAt( size_t nth ) const;
+         Type TemplateArgumentAt( size_t nth ) const;
 
 
          /**
@@ -77,7 +77,7 @@ namespace ROOT {
           * TemplateFamily returns the corresponding TypeTemplate if any
           * @return corresponding TypeTemplate
           */
-         const TypeTemplate & TemplateFamily() const;
+         TypeTemplate TemplateFamily() const;
 
       private:
 
@@ -136,7 +136,7 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ClassTemplateInstance::
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::TypeTemplate & ROOT::Reflex::ClassTemplateInstance::TemplateFamily() const {
+inline ROOT::Reflex::TypeTemplate ROOT::Reflex::ClassTemplateInstance::TemplateFamily() const {
 //-------------------------------------------------------------------------------
    return fTemplateFamily;
 }

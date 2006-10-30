@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.9 2006/09/05 17:13:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.h,v 1.10 2006/09/14 14:39:12 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -59,14 +59,14 @@ namespace ROOT {
           * operator Scope will return the corresponding Scope object
           * @return Scope corresponding to this ScopeBase
           */
-         operator const Scope & () const;
+         operator Scope () const;
 
 
          /** 
           * the operator Type will return a corresponding Type object to the At if
           * applicable (i.e. if the Scope is also a Type e.g. Class, Union, Enum)
           */
-         operator const Type & () const;
+         operator Type () const;
 
 
          /**
@@ -74,7 +74,7 @@ namespace ROOT {
           * @param  nth nth BaseAt class
           * @return pointer to BaseAt class information
           */
-         virtual const Base & BaseAt( size_t nth ) const;
+         virtual Base BaseAt( size_t nth ) const;
 
 
          /**
@@ -95,7 +95,7 @@ namespace ROOT {
           * @param  nth data MemberAt
           * @return pointer to data MemberAt
           */
-         const Member & DataMemberAt( size_t nth ) const;
+         Member DataMemberAt( size_t nth ) const;
 
 
          /**
@@ -103,7 +103,7 @@ namespace ROOT {
           * @param  Name of data MemberAt
           * @return data MemberAt
           */
-         const Member & DataMemberByName( const std::string & nam ) const;
+         Member DataMemberByName( const std::string & nam ) const;
 
 
          /**
@@ -123,7 +123,7 @@ namespace ROOT {
           * DeclaringScope will return a pointer to the At of this one
           * @return pointer to declaring At
           */
-         const Scope & DeclaringScope() const;
+         Scope DeclaringScope() const;
 
 
          /**
@@ -131,7 +131,7 @@ namespace ROOT {
           * @param  nth function MemberAt
           * @return pointer to function MemberAt
           */
-         const Member & FunctionMemberAt( size_t nth ) const;
+         Member FunctionMemberAt( size_t nth ) const;
 
  
          /**
@@ -141,8 +141,8 @@ namespace ROOT {
           * @param  signature of the MemberAt function 
           * @return function MemberAt
           */
-         const Member & FunctionMemberByName( const std::string & name,
-                                              const Type & signature ) const;
+         Member FunctionMemberByName( const std::string & name,
+                                      const Type & signature ) const;
 
 
          /**
@@ -170,7 +170,7 @@ namespace ROOT {
           * GlobalScope will return the global scope representation\
           * @return global scope
           */
-         static const Scope & GlobalScope();
+         static Scope GlobalScope();
 
 
          /** 
@@ -244,8 +244,8 @@ namespace ROOT {
           * @param current the current scope
           * @return if a matching member is found return it, otherwise return empty member
           */
-         const Member & LookupMember( const std::string & nam,
-                                      const Scope & current ) const;
+         Member LookupMember( const std::string & nam,
+                              const Scope & current ) const;
 
 
          /**
@@ -254,8 +254,8 @@ namespace ROOT {
           * @param current the current scope
           * @return if a matching type is found return it, otherwise return empty type
           */
-         const Type & LookupType( const std::string & nam,
-                                  const Scope & current ) const;
+         Type LookupType( const std::string & nam,
+                          const Scope & current ) const;
 
 
          /**
@@ -264,8 +264,8 @@ namespace ROOT {
           * @param current the current scope
           * @return if a matching scope is found return it, otherwise return empty scope
           */
-         const Scope & LookupScope( const std::string & nam,
-                                    const Scope & current ) const;
+         Scope LookupScope( const std::string & nam,
+                            const Scope & current ) const;
 
 
          /**
@@ -273,8 +273,8 @@ namespace ROOT {
           * @param Name  MemberAt Name
           * @return pointer to MemberAt
           */
-         const Member & MemberByName( const std::string & name,
-                                      const Type & signature ) const;
+         Member MemberByName( const std::string & name,
+                              const Type & signature ) const;
 
 
          /**
@@ -282,7 +282,7 @@ namespace ROOT {
           * @param  nth MemberAt
           * @return pointer to nth MemberAt
           */
-         const Member & MemberAt( size_t nth ) const;
+         Member MemberAt( size_t nth ) const;
 
 
          Member_Iterator Member_Begin() const;
@@ -303,7 +303,7 @@ namespace ROOT {
           * @param nth MemberAt template
           * @return nth MemberAt template
           */
-         const MemberTemplate & MemberTemplateAt( size_t nth ) const;
+         MemberTemplate MemberTemplateAt( size_t nth ) const;
 
 
          /** 
@@ -319,7 +319,7 @@ namespace ROOT {
           * @param string representing the member template to look for
           * @return member template representation of the looked up member
           */
-         const MemberTemplate & MemberTemplateByName( const std::string & nam ) const;
+         MemberTemplate MemberTemplateByName( const std::string & nam ) const;
 
 
          MemberTemplate_Iterator MemberTemplate_Begin() const;
@@ -340,14 +340,14 @@ namespace ROOT {
           * to this item
           * @return pointer to PropertyNth list
           */
-         virtual const  PropertyList & Properties() const;
+         virtual PropertyList Properties() const;
 
       
          /** 
           * At will return the At Object of this ScopeBase
           * @return corresponding Scope
           */
-         const Scope & ThisScope() const;
+         Scope ThisScope() const;
 
       
          /**
@@ -370,7 +370,7 @@ namespace ROOT {
           * @param  nth sub-At
           * @return pointer to nth sub-At
           */
-         const Scope & SubScopeAt( size_t nth ) const;
+         Scope SubScopeAt( size_t nth ) const;
 
 
          /**
@@ -394,7 +394,7 @@ namespace ROOT {
           * @param unscoped name of the sub scope to look for
           * @return Scope representation of the sub scope
           */
-         const Scope & SubScopeByName( const std::string & nam ) const;
+         Scope SubScopeByName( const std::string & nam ) const;
 
 
          Scope_Iterator SubScope_Begin() const;
@@ -408,7 +408,7 @@ namespace ROOT {
           * @param  nth sub-At
           * @return pointer to nth sub-At
           */
-         const Type & SubTypeAt( size_t nth ) const;
+         Type SubTypeAt( size_t nth ) const;
 
 
          /**
@@ -423,7 +423,7 @@ namespace ROOT {
           * @param string of the unscoped sub type to look for
           * @return Type representation of the sub type
           */
-         const Type & SubTypeByName( const std::string & nam ) const;
+         Type SubTypeByName( const std::string & nam ) const;
 
 
          Type_Iterator SubType_Begin() const;
@@ -437,7 +437,7 @@ namespace ROOT {
           * @param  nth nth template argument
           * @return pointer to nth template argument
           */
-         virtual const Type & TemplateArgumentAt( size_t nth ) const;
+         virtual Type TemplateArgumentAt( size_t nth ) const;
 
 
          /**
@@ -457,7 +457,7 @@ namespace ROOT {
           * SubTypeTemplateAt returns the corresponding TypeTemplate if any
           * @return corresponding TypeTemplate
           */
-         virtual const TypeTemplate & TemplateFamily() const;
+         virtual TypeTemplate TemplateFamily() const;
 
 
          /** 
@@ -465,7 +465,7 @@ namespace ROOT {
           * @param  nth sub type template
           * @return nth sub type template
           */
-         const TypeTemplate & SubTypeTemplateAt( size_t nth ) const;
+         TypeTemplate SubTypeTemplateAt( size_t nth ) const;
 
 
          /** 
@@ -481,7 +481,7 @@ namespace ROOT {
           * @param unscoped name of the type template to look for
           * @return TypeTemplate representation of the sub type template
           */
-         const TypeTemplate & SubTypeTemplateByName( const std::string & nam ) const;
+         TypeTemplate SubTypeTemplateByName( const std::string & nam ) const;
 
 
          TypeTemplate_Iterator SubTypeTemplate_Begin() const;
@@ -495,7 +495,7 @@ namespace ROOT {
           * @param  nth using directive
           * @return nth using directive
           */
-         const Scope & UsingDirectiveAt( size_t nth ) const;
+         Scope UsingDirectiveAt( size_t nth ) const;
 
 
          /**
@@ -798,7 +798,7 @@ inline ROOT::Reflex::Reverse_Base_Iterator ROOT::Reflex::ScopeBase::Base_REnd() 
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Scope & ROOT::Reflex::ScopeBase::DeclaringScope() const {
+inline ROOT::Reflex::Scope ROOT::Reflex::ScopeBase::DeclaringScope() const {
 //-------------------------------------------------------------------------------
    return fDeclaringScope;
 }
@@ -1011,7 +1011,7 @@ inline ROOT::Reflex::TYPE ROOT::Reflex::ScopeBase::ScopeType() const {
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Scope & ROOT::Reflex::ScopeBase::SubScopeAt( size_t nth ) const {
+inline ROOT::Reflex::Scope ROOT::Reflex::ScopeBase::SubScopeAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( nth < fSubScopes.size() ) { return fSubScopes[ nth ]; }
    return Dummy::Scope();
@@ -1061,7 +1061,7 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::ScopeBase::TemplateArgu
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Scope & ROOT::Reflex::ScopeBase::UsingDirectiveAt( size_t nth ) const {
+inline ROOT::Reflex::Scope ROOT::Reflex::ScopeBase::UsingDirectiveAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( nth < fUsingDirectives.size() ) { return fUsingDirectives[ nth ]; }
    return Dummy::Scope();

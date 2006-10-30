@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplate.cxx,v 1.11 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplate.cxx,v 1.12 2006/08/16 06:42:35 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -19,8 +19,8 @@
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::MemberTemplate & ROOT::Reflex::MemberTemplate::ByName( const std::string & name,
-                                                                           size_t nTemplateParams ) {
+ROOT::Reflex::MemberTemplate ROOT::Reflex::MemberTemplate::ByName( const std::string & name,
+                                                                   size_t nTemplateParams ) {
 //-------------------------------------------------------------------------------
    // Return a member template by name.
    return MemberTemplateName::ByName( name, nTemplateParams );
@@ -28,7 +28,7 @@ const ROOT::Reflex::MemberTemplate & ROOT::Reflex::MemberTemplate::ByName( const
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::MemberTemplate & ROOT::Reflex::MemberTemplate::MemberTemplateAt( size_t nth ) {
+ROOT::Reflex::MemberTemplate ROOT::Reflex::MemberTemplate::MemberTemplateAt( size_t nth ) {
 //-------------------------------------------------------------------------------
    // Return the nth member template defined.
    return MemberTemplateName::MemberTemplateAt( nth );
@@ -113,7 +113,7 @@ ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::MemberTemplate::TemplateInst
 
                                              
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Member & ROOT::Reflex::MemberTemplate::TemplateInstanceAt( size_t nth ) const {
+ROOT::Reflex::Member ROOT::Reflex::MemberTemplate::TemplateInstanceAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth template instance of this family.
    if ( * this ) return fMemberTemplateName->fMemberTemplateImpl->TemplateInstanceAt( nth );

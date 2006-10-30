@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeName.h,v 1.2 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeName.h,v 1.3 2006/09/05 17:13:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -47,7 +47,7 @@ namespace ROOT {
           * @param  Name fully qualified Name of At
           * @return pointer to At or 0 if none is found
           */
-         static const Scope & ByName( const std::string & name );
+         static Scope ByName( const std::string & name );
 
 
          static void CleanUp();
@@ -82,7 +82,7 @@ namespace ROOT {
           * ThisScope will return the unqualified Scope object of this ScopeName
           * @return corresponding Scope
           */
-         const Scope & ThisScope() const;
+         Scope ThisScope() const;
 
 
          /**
@@ -90,7 +90,7 @@ namespace ROOT {
           * @param  nth scope defined in the system
           * @return nth scope defined in the system
           */
-         static const Scope & ScopeAt( size_t nth );
+         static Scope ScopeAt( size_t nth );
 
 
          /**

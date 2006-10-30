@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: v5-13-04a $:$Id: Class.cxx,v 1.23 2006/10/10 09:51:31 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Class.cxx,v 1.24 2006/10/27 08:56:43 rdm Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -69,7 +69,7 @@ void ROOT::Reflex::Class::AddBase( const Type &   bas,
    fBases.push_back( b );
 }
 
-    
+
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Object ROOT::Reflex::Class::CastObject( const Type & to, 
                                                       const Object & obj ) const {
@@ -214,7 +214,7 @@ struct DynType_t {
 
     
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Type & ROOT::Reflex::Class::DynamicType( const Object & obj ) const {
+ROOT::Reflex::Type ROOT::Reflex::Class::DynamicType( const Object & obj ) const {
 //-------------------------------------------------------------------------------
 // Discover the dynamic type of a class object and return it.
    // If no virtual_function_table return itself
@@ -236,7 +236,7 @@ const ROOT::Reflex::Type & ROOT::Reflex::Class::DynamicType( const Object & obj 
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Base & ROOT::Reflex::Class::HasBase( const Type & cl ) const {
+bool ROOT::Reflex::Class::HasBase( const Type & cl ) const {
 //-------------------------------------------------------------------------------
 // Return true if this class has a base class of type cl.
    std::vector<Base> v = std::vector<Base>();
@@ -245,30 +245,31 @@ const ROOT::Reflex::Base & ROOT::Reflex::Class::HasBase( const Type & cl ) const
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Base & ROOT::Reflex::Class::HasBase( const Type & cl,  
-                                                         std::vector< Base > & path ) const {
+bool ROOT::Reflex::Class::HasBase( const Type & cl,  
+                                   std::vector< Base > & path ) const {
 //-------------------------------------------------------------------------------
 // Return true if this class has a base class of type cl. Return also the path
 // to this type.
+   if ( ! cl.Id() ) return false;
    for ( size_t i = 0; i < BaseSize(); ++i ) {
-      const Base & lb = BaseAt( i );
-      // is the final BaseAt class one of the current class ?
-      if ( lb.ToType().FinalType().Id() == cl.Id() ) { 
+      Base b = BaseAt( i );
+      Type basetype = b.ToType();
+      if ( basetype.Id() == cl.Id() || basetype.FinalType().Id() == cl.Id()) { 
          // remember the path to this class
-         path.push_back( lb ); 
-         return lb; 
+         path.push_back( b ); 
+         return true; 
       }
-      // if searched BaseAt class is not direct BaseAt look in the bases of this one
-      else if ( lb.ToType() ) {
-         const Base & b = lb.ToType().HasBase( cl );
-         if ( b ) {                                              
+      else if ( basetype && basetype.HasBase(cl) ) {
+         // is the final base class one of the current class ?
+         // if searched base class is not direct base look in the bases of this one
+         //       if ( basetype.HasBase( cl ) ) {                                              
             // if successfull remember path
-            path.push_back( lb ); 
-            return b; 
-         }
+            path.push_back( b ); 
+            return true; 
+            //}
       }
    }
-   return Dummy::Base();
+   return false;
 }
 
 
@@ -339,7 +340,7 @@ void ROOT::Reflex::Class::UpdateMembers() const {
                    basePath );
 }
 
-    
+
 //-------------------------------------------------------------------------------
 const std::vector < ROOT::Reflex::OffsetFunction > & 
 ROOT::Reflex::Class::PathToBase( const Scope & bas ) const {

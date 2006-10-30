@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassTemplateInstance.cxx,v 1.9 2006/08/01 09:14:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassTemplateInstance.cxx,v 1.10 2006/08/11 06:31:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -80,7 +80,7 @@ std::string ROOT::Reflex::ClassTemplateInstance::Name( unsigned int mod ) const 
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Type & ROOT::Reflex::ClassTemplateInstance::TemplateArgumentAt( size_t nth ) const {
+ROOT::Reflex::Type ROOT::Reflex::ClassTemplateInstance::TemplateArgumentAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth template argument type.
    return TemplateInstance::TemplateArgumentAt( nth );

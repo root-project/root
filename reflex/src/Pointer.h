@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Pointer.h,v 1.14 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Pointer.h,v 1.15 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -47,10 +47,10 @@ namespace ROOT {
 
 
          /**
-          * At will return a pointer to the At the pointer points to.
+          * ToType will return a pointer to the type the pointer points to.
           * @return pointer to Type of MemberAt et. al.
           */
-         const Type & ToType() const;
+         Type ToType() const;
 
 
          /** static funtion that composes the typename */
@@ -74,7 +74,7 @@ namespace ROOT {
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Type & ROOT::Reflex::Pointer::ToType() const {
+inline ROOT::Reflex::Type ROOT::Reflex::Pointer::ToType() const {
 //-------------------------------------------------------------------------------
    return fPointerType;
 }

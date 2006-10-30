@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Base.h,v 1.12 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Base.h,v 1.13 2006/09/05 17:13:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -110,14 +110,14 @@ namespace ROOT {
           * @param mod accepts FINAL to go to the final type for a typedef
           * @return type of base class
           */
-         const Type & ToType() const;
+         Type ToType() const;
 
       
          /** 
           * ToScope will return this base classes scope
           * @return this base class as scope
           */
-         const Scope & ToScope() const;
+         Scope ToScope() const;
 
       private:
 
@@ -219,14 +219,14 @@ inline ROOT::Reflex::OffsetFunction ROOT::Reflex::Base::OffsetFP() const {
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Type & ROOT::Reflex::Base::ToType() const {
+inline ROOT::Reflex::Type ROOT::Reflex::Base::ToType() const {
 //-------------------------------------------------------------------------------
    return fBaseType;
 }
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Scope & ROOT::Reflex::Base::ToScope() const {
+inline ROOT::Reflex::Scope ROOT::Reflex::Base::ToScope() const {
 //-------------------------------------------------------------------------------
    return (const Scope &)fBaseType;
 }

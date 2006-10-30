@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: NameLookup.h,v 1.12 2006/08/07 15:02:09 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: NameLookup.h,v 1.13 2006/08/25 10:16:03 axel Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -33,38 +33,35 @@ namespace ROOT {
       public:
 
          // 1. Lookup
-         static const Type & LookupType( const std::string & nam,
-                                         const Scope & current );
+         static Type LookupType( const std::string & nam,
+                                 const Scope & current );
 
-         static const Scope & LookupScope( const std::string & nam,
-                                           const Scope & current );
+         static Scope LookupScope( const std::string & nam,
+                                   const Scope & current );
 
-         static const Member & LookupMember( const std::string & nam,
-                                             const Scope & current );
+         static Member LookupMember( const std::string & nam,
+                                     const Scope & current );
 
-         static const Member & LookupMemberUnqualified( const std::string & nam,
-                                                        const Scope & current );
+         static Member LookupMemberUnqualified( const std::string & nam,
+                                                const Scope & current );
 
-         static const Member & LookupMemberQualified( const std::string & nam );
+         static Member LookupMemberQualified( const std::string & nam );
 
          // 2. OverloadResolution
-         static const Member & OverloadResultion( const std::string & nam,
-                                                  const std::vector< Member > & funcs );
+         static Member OverloadResultion( const std::string & nam,
+                                          const std::vector< Member > & funcs );
          
 
          // 3. AccessControl
-         static const Type & AccessControl( const Type & typ,
-                                            const Scope & current );
+         static Type AccessControl( const Type & typ,
+                                    const Scope & current );
 
       private:
          NameLookup(const std::string& name, const Scope& current);
 
-         template <class T>
-         const T & Lookup();
-         template <class T>
-         const T & LookupInScope();
-         template <class T>
-         const T & LookupInUnknownScope();
+         template <class T> T Lookup();
+         template <class T> T LookupInScope();
+         template <class T> T LookupInUnknownScope();
 
          void FindNextScopePos();
 

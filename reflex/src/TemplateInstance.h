@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TemplateInstance.h,v 1.8 2006/08/28 16:03:54 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TemplateInstance.h,v 1.9 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -56,7 +56,7 @@ namespace ROOT {
           * @param  nth nth template argument
           * @return pointer to nth template argument
           */
-         const Type & TemplateArgumentAt( size_t nth ) const;
+         Type TemplateArgumentAt( size_t nth ) const;
 
 
          /**
@@ -96,7 +96,7 @@ inline ROOT::Reflex::TemplateInstance::TemplateInstance()
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Type &
+inline ROOT::Reflex::Type
 ROOT::Reflex::TemplateInstance::TemplateArgumentAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( nth < fTemplateArguments.size() ) { return fTemplateArguments[ nth ]; }

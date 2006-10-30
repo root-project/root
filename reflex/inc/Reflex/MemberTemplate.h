@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplate.h,v 1.13 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplate.h,v 1.14 2006/09/05 17:13:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -67,8 +67,8 @@ namespace ROOT {
           *        if it is set to 0, the first occurence of the template family name will be returned
           * @return corresponding member template to name
           */
-         static const MemberTemplate & ByName( const std::string & name,
-                                               size_t nTemplateParams = 0 );
+         static MemberTemplate ByName( const std::string & name,
+                                       size_t nTemplateParams = 0 );
 
 
          /**
@@ -83,7 +83,7 @@ namespace ROOT {
           * @param nth member template
           * @return nth member template
           */
-         static const MemberTemplate & MemberTemplateAt( size_t nth );
+         static MemberTemplate MemberTemplateAt( size_t nth );
 
       
          /**
@@ -162,7 +162,7 @@ namespace ROOT {
           * @param  nth template instantion
           * @return pointer to nth template instantion
           */
-         const Member & TemplateInstanceAt( size_t nth ) const;
+         Member TemplateInstanceAt( size_t nth ) const;
 
 
          /**

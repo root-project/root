@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.32 2006/09/19 10:09:06 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.33 2006/10/11 15:10:44 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -499,9 +499,7 @@ void ReflexSimple2Test::testBaseClasses() {
   CPPUNIT_ASSERT(t1);
   CPPUNIT_ASSERT_EQUAL(size_t(1), ((Scope)t1).SubScopeLevel());
   CPPUNIT_ASSERT(t2);
-  const Base & b = t1.HasBase(t2);
-  CPPUNIT_ASSERT(b);
-  CPPUNIT_ASSERT_EQUAL(std::string("ClassB"), b.ToType().Name());
+  CPPUNIT_ASSERT(t1.HasBase(t2));
 }
 
 // testing data members

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.23 2006/10/03 09:45:37 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeName.cxx,v 1.24 2006/10/24 19:34:07 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -44,7 +44,6 @@ static ScopeVec_t & sScopeVec() {
 //-------------------------------------------------------------------------------
 // Static wrapper around scope vector.
    static ScopeVec_t m;
-   m.reserve(20000);
    return m;
 }
 
@@ -75,7 +74,7 @@ ROOT::Reflex::ScopeName::~ScopeName() {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Scope & ROOT::Reflex::ScopeName::ByName( const std::string & name ) {
+ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ByName( const std::string & name ) {
 //-------------------------------------------------------------------------------
 // Lookup a scope by fully qualified name.
    size_t pos =  name.substr(0,2) == "::" ?  2 : 0;
@@ -88,7 +87,7 @@ const ROOT::Reflex::Scope & ROOT::Reflex::ScopeName::ByName( const std::string &
    Type t = Type::ByName(name);
    if ( t && t.IsTypedef()) {
       while ( t.IsTypedef()) t = t.ToType();
-      if ( t.IsClass() || t.IsEnum() || t.IsUnion() ) return t.operator const Scope &();
+      if ( t.IsClass() || t.IsEnum() || t.IsUnion() ) return t.operator Scope ();
    }
    return Dummy::Scope();
    // END OF UGLY HACK
@@ -133,7 +132,7 @@ void ROOT::Reflex::ScopeName::HideName() {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Scope & ROOT::Reflex::ScopeName::ThisScope() const {
+ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ThisScope() const {
 //-------------------------------------------------------------------------------
 // Return the scope corresponding to this scope.
    return *fThisScope;
@@ -141,7 +140,7 @@ const ROOT::Reflex::Scope & ROOT::Reflex::ScopeName::ThisScope() const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Scope & ROOT::Reflex::ScopeName::ScopeAt( size_t nth ) {
+ROOT::Reflex::Scope ROOT::Reflex::ScopeName::ScopeAt( size_t nth ) {
 //-------------------------------------------------------------------------------
 // Return the nth scope defined in Reflex.
    if ( nth < sScopeVec().size()) return sScopeVec()[nth];

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Enum.h,v 1.9 2006/08/15 15:22:52 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Enum.h,v 1.10 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -47,14 +47,14 @@ namespace ROOT {
           * operator Scope will return the corresponding scope of this type if
           * applicable (i.e. if the Type is also a Scope e.g. Class, Union, Enum)
           */                                       
-         operator const Scope & () const;
+         operator Scope () const;
 
 
          /**
           * operator Type will return the corresponding Type object
           * @return Type corresponding to this TypeBase
           */
-         operator const Type & () const;
+         operator Type () const;
 
 
          /**
@@ -73,7 +73,7 @@ namespace ROOT {
           * @param  nth data MemberAt
           * @return pointer to data MemberAt
           */
-         virtual const Member & DataMemberAt( size_t nth ) const;
+         virtual Member DataMemberAt( size_t nth ) const;
 
 
          /**
@@ -81,7 +81,7 @@ namespace ROOT {
           * @param  Name of data MemberAt
           * @return data MemberAt
           */
-         virtual const Member & DataMemberByName( const std::string & nam ) const;
+         virtual Member DataMemberByName( const std::string & nam ) const;
 
 
          /**
@@ -101,7 +101,7 @@ namespace ROOT {
           * DeclaringScope will return a pointer to the At of this one
           * @return pointer to declaring At
           */
-         virtual const Scope & DeclaringScope() const;
+         virtual Scope DeclaringScope() const;
 
 
          /**
@@ -140,8 +140,8 @@ namespace ROOT {
           * @param  MemberAt Name
           * @return pointer to MemberAt
           */
-         virtual const Member & MemberByName( const std::string & nam,
-                                              const Type & signature ) const;
+         virtual Member MemberByName( const std::string & nam,
+                                      const Type & signature ) const;
 
 
          /**
@@ -149,7 +149,7 @@ namespace ROOT {
           * @param  nth MemberAt
           * @return pointer to nth MemberAt
           */
-         virtual const Member & MemberAt( size_t nth ) const;
+         virtual Member MemberAt( size_t nth ) const;
 
 
          /**
@@ -173,7 +173,7 @@ namespace ROOT {
           * to this item
           * @return pointer to PropertyNth list
           */
-         virtual const PropertyList & Properties() const;
+         virtual PropertyList Properties() const;
 
       private:
 
@@ -189,16 +189,16 @@ namespace ROOT {
 #include "Reflex/internal/OwnedMember.h"
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Enum::operator const ROOT::Reflex::Scope & () const {
+inline ROOT::Reflex::Enum::operator ROOT::Reflex::Scope () const {
 //-------------------------------------------------------------------------------
-   return ScopeBase::operator const Scope & ();
+   return ScopeBase::operator Scope ();
 }
 
 
 //-------------------------------------------------------------------------------
-inline ROOT::Reflex::Enum::operator const ROOT::Reflex::Type & () const {
+inline ROOT::Reflex::Enum::operator ROOT::Reflex::Type () const {
 //-------------------------------------------------------------------------------
-   return TypeBase::operator const Type & ();
+   return TypeBase::operator Type ();
 }
 
 
@@ -283,14 +283,14 @@ inline void ROOT::Reflex::Enum::AddDataMember( const char * nam,
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Member & ROOT::Reflex::Enum::DataMemberAt( size_t nth ) const {
+inline ROOT::Reflex::Member ROOT::Reflex::Enum::DataMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    return ScopeBase::DataMemberAt( nth );
 }
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Member & ROOT::Reflex::Enum::DataMemberByName( const std::string & nam ) const {
+inline ROOT::Reflex::Member ROOT::Reflex::Enum::DataMemberByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
    return ScopeBase::DataMemberByName( nam );
 }
@@ -304,7 +304,7 @@ inline size_t ROOT::Reflex::Enum::DataMemberSize() const {
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Scope & ROOT::Reflex::Enum::DeclaringScope() const {
+inline ROOT::Reflex::Scope ROOT::Reflex::Enum::DeclaringScope() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::DeclaringScope();
 }
@@ -340,7 +340,7 @@ inline bool ROOT::Reflex::Enum::IsPublic() const {
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Member & ROOT::Reflex::Enum::MemberByName( const std::string & nam,
+inline ROOT::Reflex::Member ROOT::Reflex::Enum::MemberByName( const std::string & nam,
                                                               const Type & signature ) const {
 //-------------------------------------------------------------------------------
    return ScopeBase::MemberByName( nam, signature );
@@ -348,7 +348,7 @@ inline const ROOT::Reflex::Member & ROOT::Reflex::Enum::MemberByName( const std:
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Member & ROOT::Reflex::Enum::MemberAt( size_t nth ) const {
+inline ROOT::Reflex::Member ROOT::Reflex::Enum::MemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    return ScopeBase::MemberAt( nth );
 }
@@ -362,7 +362,7 @@ inline size_t ROOT::Reflex::Enum::MemberSize() const {
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::PropertyList & ROOT::Reflex::Enum::Properties() const {
+inline ROOT::Reflex::PropertyList ROOT::Reflex::Enum::Properties() const {
 //-------------------------------------------------------------------------------
    return ScopeBase::Properties();
 }

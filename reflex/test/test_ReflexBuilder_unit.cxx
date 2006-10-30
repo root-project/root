@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.16 2006/09/14 13:35:58 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.17 2006/10/10 09:51:31 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -982,18 +982,40 @@ void ReflexBuilderUnitTest::typebuilder() {
   CPPUNIT_ASSERT_EQUAL(7, int(Tools::MakeVector(1,2,3,4,5,6,7).size()));
 }
 
-
-struct base {};
-struct dev : public base {};
+namespace cc {
+   struct base {};
+   struct dev : public base {};
+}
 
 void ReflexBuilderUnitTest::bases() {
 
-   ClassBuilder("dev", typeid(dev), sizeof(dev), PUBLIC | CLASS)
-      .AddBase(TypeBuilder("base"), BaseOffset<dev,base >::Get(), PUBLIC);
+   ClassBuilder("cc::dev", typeid(cc::dev), sizeof(cc::dev), PUBLIC | CLASS | ABSTRACT | VIRTUAL)
+      .AddBase(TypeBuilder("cc::base"), BaseOffset<cc::dev, cc::base >::Get(), VIRTUAL | PUBLIC);
+   
+   Type base = Type::ByName("cc::base");
+   Type dev  = Type::ByName("cc::dev");
+   Type foo  = Type::ByName("foo");
 
-   bool b = Type::ByName("dev").HasBase(Type::ByName("base"));
+   CPPUNIT_ASSERT(base.Id());
+   CPPUNIT_ASSERT(!base);
+   CPPUNIT_ASSERT(dev);
+   CPPUNIT_ASSERT(!foo);
 
-   CPPUNIT_ASSERT_EQUAL(false, b);
+   CPPUNIT_ASSERT(!dev.HasBase(Type::ByName("foo")));
+   CPPUNIT_ASSERT_EQUAL(false, dev.HasBase(foo));
+   CPPUNIT_ASSERT(dev.HasBase(base));
+   CPPUNIT_ASSERT_EQUAL(true, dev.HasBase(base));
+
+   ClassBuilder("cc::base", typeid(cc::base), sizeof(cc::base), PUBLIC | CLASS);
+
+   CPPUNIT_ASSERT(base);
+   CPPUNIT_ASSERT(dev);
+   CPPUNIT_ASSERT(!foo);
+
+   CPPUNIT_ASSERT(!dev.HasBase(foo));
+   CPPUNIT_ASSERT_EQUAL(false, dev.HasBase(foo));
+   CPPUNIT_ASSERT(dev.HasBase(base));
+   CPPUNIT_ASSERT_EQUAL(true, dev.HasBase(base));
 }
 
 

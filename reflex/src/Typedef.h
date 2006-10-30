@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.14 2006/08/17 13:50:30 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.15 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -52,7 +52,7 @@ namespace ROOT {
           * @param  nth nth BaseAt class
           * @return pointer to BaseAt class information
           */
-         virtual const Base & BaseAt( size_t nth ) const;
+         virtual Base BaseAt( size_t nth ) const;
 
 
          /**
@@ -82,7 +82,7 @@ namespace ROOT {
           * @param  nth data MemberAt
           * @return pointer to data MemberAt
           */
-         virtual const Member & DataMemberAt( size_t nth ) const;
+         virtual Member DataMemberAt( size_t nth ) const;
 
 
          /**
@@ -90,7 +90,7 @@ namespace ROOT {
           * @param  Name of data MemberAt
           * @return data MemberAt
           */
-         virtual const Member & DataMemberByName( const std::string & Name ) const;
+         virtual Member DataMemberByName( const std::string & Name ) const;
 
 
          /**
@@ -122,7 +122,7 @@ namespace ROOT {
           * @param  mem is the memory AddressGet of the object to checked
           * @return the actual class of the object
           */
-         virtual const Type & DynamicType( const Object & obj ) const;
+         virtual Type DynamicType( const Object & obj ) const;
 
 
          /**
@@ -130,7 +130,7 @@ namespace ROOT {
           * @param  nth function MemberAt
           * @return pointer to function MemberAt
           */
-         virtual const Member & FunctionMemberAt( size_t nth ) const;
+         virtual Member FunctionMemberAt( size_t nth ) const;
 
 
          /**
@@ -140,8 +140,8 @@ namespace ROOT {
           * @param  signature of the MemberAt function 
           * @return function MemberAt
           */
-         virtual const Member & FunctionMemberByName( const std::string & Name,
-                                                      const Type & signature = Type() ) const;
+         virtual Member FunctionMemberByName( const std::string & Name,
+                                              const Type & signature = Type() ) const;
 
 
          /**
@@ -164,7 +164,7 @@ namespace ROOT {
           * @param  cl the BaseAt-class to check for
           * @return true if this class has a BaseAt-class cl, false otherwise
           */
-         virtual const Base & HasBase( const Type & cl ) const;
+         virtual bool HasBase( const Type & cl ) const;
 
 
          /**
@@ -193,7 +193,7 @@ namespace ROOT {
           * @param  MemberAt Name
           * @return pointer to MemberAt
           */
-         virtual const Member & MemberByName( const std::string & Name,
+         virtual Member MemberByName( const std::string & Name,
                                               const Type & signature ) const;
 
 
@@ -202,7 +202,7 @@ namespace ROOT {
           * @param  nth MemberAt
           * @return pointer to nth MemberAt
           */
-         virtual const Member & MemberAt( size_t nth ) const;
+         virtual Member MemberAt( size_t nth ) const;
 
 
          /**
@@ -223,7 +223,7 @@ namespace ROOT {
           * @param nth MemberAt template
           * @return nth MemberAt template
           */
-         virtual const MemberTemplate & MemberTemplateAt( size_t nth ) const;
+         virtual MemberTemplate MemberTemplateAt( size_t nth ) const;
 
 
          /** 
@@ -258,7 +258,7 @@ namespace ROOT {
           * @param  nth sub-At
           * @return pointer to nth sub-At
           */
-         virtual const Scope & SubScopeAt( size_t nth ) const;
+         virtual Scope SubScopeAt( size_t nth ) const;
 
 
          /**
@@ -279,7 +279,7 @@ namespace ROOT {
           * @param  nth sub-At
           * @return pointer to nth sub-At
           */
-         virtual const Type & SubTypeAt( size_t nth ) const;
+         virtual Type SubTypeAt( size_t nth ) const;
 
 
          /**
@@ -300,7 +300,7 @@ namespace ROOT {
           * @param  nth nth template argument
           * @return pointer to nth template argument
           */
-         virtual const Type & TemplateArgumentAt( size_t nth ) const;
+         virtual Type TemplateArgumentAt( size_t nth ) const;
 
 
          /**
@@ -320,7 +320,7 @@ namespace ROOT {
           * TemplateFamily returns the corresponding TypeTemplate if any
           * @return corresponding TypeTemplate
           */
-         virtual const TypeTemplate & TemplateFamily() const;
+         virtual TypeTemplate TemplateFamily() const;
 
 
          /** 
@@ -328,7 +328,7 @@ namespace ROOT {
           * @param nth At template
           * @return nth At template
           */
-         virtual const TypeTemplate & SubTypeTemplateAt( size_t nth ) const;
+         virtual TypeTemplate SubTypeTemplateAt( size_t nth ) const;
 
 
          /** 
@@ -355,7 +355,7 @@ namespace ROOT {
           * typedefType will return a pointer to the At of the typedef.
           * @return pointer to Type of MemberAt et. al.
           */
-         virtual const Type & ToType() const;
+         virtual Type ToType() const;
 
       private:  
 
@@ -386,7 +386,7 @@ namespace ROOT {
 #include "Reflex/TypeTemplate.h"
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Base & ROOT::Reflex::Typedef::BaseAt( size_t nth ) const {
+inline ROOT::Reflex::Base ROOT::Reflex::Typedef::BaseAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.BaseAt( nth );
    return Dummy::Base();  
@@ -443,7 +443,7 @@ inline ROOT::Reflex::Object ROOT::Reflex::Typedef::CastObject( const Type & to,
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Member & ROOT::Reflex::Typedef::DataMemberAt( size_t nth ) const {
+inline ROOT::Reflex::Member ROOT::Reflex::Typedef::DataMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.DataMemberAt( nth );
    return Dummy::Member();
@@ -451,7 +451,7 @@ inline const ROOT::Reflex::Member & ROOT::Reflex::Typedef::DataMemberAt( size_t 
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Member & ROOT::Reflex::Typedef::DataMemberByName( const std::string & name ) const {
+inline ROOT::Reflex::Member ROOT::Reflex::Typedef::DataMemberByName( const std::string & name ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.DataMemberByName( name );
    return Dummy::Member();
@@ -507,7 +507,7 @@ inline void ROOT::Reflex::Typedef::Destruct( void * instance,
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Type & ROOT::Reflex::Typedef::DynamicType( const Object & obj ) const {
+inline ROOT::Reflex::Type ROOT::Reflex::Typedef::DynamicType( const Object & obj ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.DynamicType( obj );
    return Dummy::Type();
@@ -515,7 +515,7 @@ inline const ROOT::Reflex::Type & ROOT::Reflex::Typedef::DynamicType( const Obje
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Member & ROOT::Reflex::Typedef::FunctionMemberAt( size_t nth ) const {
+inline ROOT::Reflex::Member ROOT::Reflex::Typedef::FunctionMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.FunctionMemberAt( nth );
    return Dummy::Member();
@@ -523,7 +523,7 @@ inline const ROOT::Reflex::Member & ROOT::Reflex::Typedef::FunctionMemberAt( siz
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Member & ROOT::Reflex::Typedef::FunctionMemberByName( const std::string & name,
+inline ROOT::Reflex::Member ROOT::Reflex::Typedef::FunctionMemberByName( const std::string & name,
                                                                                  const Type & signature ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.FunctionMemberByName( name, signature );
@@ -572,10 +572,10 @@ inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Typedef::FunctionMemb
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Base & ROOT::Reflex::Typedef::HasBase( const Type & cl ) const {
+inline bool ROOT::Reflex::Typedef::HasBase( const Type & cl ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.HasBase( cl );
-   return Dummy::Base();
+   return false;
 }
 
 
@@ -604,7 +604,7 @@ inline bool ROOT::Reflex::Typedef::IsVirtual() const {
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Member & ROOT::Reflex::Typedef::MemberByName( const std::string & name,
+inline ROOT::Reflex::Member ROOT::Reflex::Typedef::MemberByName( const std::string & name,
                                                                          const Type & signature ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.MemberByName( name, signature );
@@ -613,7 +613,7 @@ inline const ROOT::Reflex::Member & ROOT::Reflex::Typedef::MemberByName( const s
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Member & ROOT::Reflex::Typedef::MemberAt( size_t nth ) const {
+inline ROOT::Reflex::Member ROOT::Reflex::Typedef::MemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.MemberAt( nth );
    return Dummy::Member();
@@ -661,7 +661,7 @@ inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Typedef::Member_REnd(
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::MemberTemplate & ROOT::Reflex::Typedef::MemberTemplateAt( size_t nth ) const {
+inline ROOT::Reflex::MemberTemplate ROOT::Reflex::Typedef::MemberTemplateAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.MemberTemplateAt( nth );
    return Dummy::MemberTemplate();
@@ -749,7 +749,7 @@ inline std::string ROOT::Reflex::Typedef::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Scope & ROOT::Reflex::Typedef::SubScopeAt( size_t nth ) const {
+inline ROOT::Reflex::Scope ROOT::Reflex::Typedef::SubScopeAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.SubScopeAt( nth );
    return Dummy::Scope();
@@ -797,7 +797,7 @@ inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::Typedef::SubScope_REnd
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Type & ROOT::Reflex::Typedef::SubTypeAt( size_t nth ) const {
+inline ROOT::Reflex::Type ROOT::Reflex::Typedef::SubTypeAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.SubTypeAt( nth );
    return Dummy::Type();
@@ -845,7 +845,7 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Typedef::SubType_REnd()
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Type & ROOT::Reflex::Typedef::TemplateArgumentAt( size_t nth ) const {
+inline ROOT::Reflex::Type ROOT::Reflex::Typedef::TemplateArgumentAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardTemplate()) return fTypedefType.TemplateArgumentAt( nth );
    return Dummy::Type();
@@ -893,7 +893,7 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Typedef::TemplateArgume
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::TypeTemplate & ROOT::Reflex::Typedef::TemplateFamily() const {
+inline ROOT::Reflex::TypeTemplate ROOT::Reflex::Typedef::TemplateFamily() const {
 //-------------------------------------------------------------------------------
    if ( ForwardTemplate()) return fTypedefType.TemplateFamily();
    return Dummy::TypeTemplate();
@@ -901,7 +901,7 @@ inline const ROOT::Reflex::TypeTemplate & ROOT::Reflex::Typedef::TemplateFamily(
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::TypeTemplate & ROOT::Reflex::Typedef::SubTypeTemplateAt( size_t nth ) const {
+inline ROOT::Reflex::TypeTemplate ROOT::Reflex::Typedef::SubTypeTemplateAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( ForwardStruct()) return fTypedefType.SubTypeTemplateAt( nth );
    return Dummy::TypeTemplate();
@@ -960,7 +960,7 @@ inline const std::type_info & ROOT::Reflex::Typedef::TypeInfo() const {
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Type & ROOT::Reflex::Typedef::ToType() const {
+inline ROOT::Reflex::Type ROOT::Reflex::Typedef::ToType() const {
 //-------------------------------------------------------------------------------
    return fTypedefType;
 }

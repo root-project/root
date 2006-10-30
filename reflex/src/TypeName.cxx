@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeName.cxx,v 1.19 2006/10/03 09:45:37 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeName.cxx,v 1.20 2006/10/24 19:34:07 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -51,7 +51,6 @@ static TypeVec_t & sTypeVec() {
 //-------------------------------------------------------------------------------
 // Static wrapper for type vector.
    static TypeVec_t m;
-   m.reserve(20000);
    return m;
 }
 
@@ -110,7 +109,7 @@ void ROOT::Reflex::TypeName::SetTypeId( const std::type_info & ti ) const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Type &
+ROOT::Reflex::Type
 ROOT::Reflex::TypeName::ByName( const std::string & key ) {
 //-------------------------------------------------------------------------------
 // Lookup a type by name.
@@ -123,7 +122,7 @@ ROOT::Reflex::TypeName::ByName( const std::string & key ) {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Type &
+ROOT::Reflex::Type
 ROOT::Reflex::TypeName::ByTypeInfo( const std::type_info & ti ) {
 //-------------------------------------------------------------------------------
 // Lookup a type by type_info.
@@ -146,7 +145,7 @@ void ROOT::Reflex::TypeName::HideName() {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Type & ROOT::Reflex::TypeName::ThisType() const {
+ROOT::Reflex::Type ROOT::Reflex::TypeName::ThisType() const {
 //-------------------------------------------------------------------------------
 // Return Type of this TypeName.
    return *fThisType;
@@ -154,7 +153,7 @@ const ROOT::Reflex::Type & ROOT::Reflex::TypeName::ThisType() const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Type & ROOT::Reflex::TypeName::TypeAt( size_t nth ) {
+ROOT::Reflex::Type ROOT::Reflex::TypeName::TypeAt( size_t nth ) {
 //-------------------------------------------------------------------------------
 // Return nth type in Reflex.
    if ( nth < sTypeVec().size()) return sTypeVec()[nth];

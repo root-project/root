@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.20 2006/08/25 10:16:03 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.cxx,v 1.21 2006/10/26 17:49:22 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -35,7 +35,7 @@ ROOT::Reflex::Scope & ROOT::Reflex::Scope::__NIRVANA__() {
 
 
 //-------------------------------------------------------------------------------
-ROOT::Reflex::Scope::operator const ROOT::Reflex::Type & () const {
+ROOT::Reflex::Scope::operator ROOT::Reflex::Type () const {
 //-------------------------------------------------------------------------------
 // Conversion operator to Type. If this scope is not a Type, returns the empty type.
    if ( * this ) return *(fScopeName->fScopeBase);
@@ -45,7 +45,7 @@ ROOT::Reflex::Scope::operator const ROOT::Reflex::Type & () const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Base & ROOT::Reflex::Scope::BaseAt( size_t nth ) const {
+ROOT::Reflex::Base ROOT::Reflex::Scope::BaseAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return nth base class info.
    if ( * this ) return fScopeName->fScopeBase->BaseAt( nth );
@@ -63,7 +63,7 @@ size_t ROOT::Reflex::Scope::BaseSize() const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Scope & ROOT::Reflex::Scope::ByName( const std::string & name ) {
+ROOT::Reflex::Scope ROOT::Reflex::Scope::ByName( const std::string & name ) {
 //-------------------------------------------------------------------------------
 // Lookup a Scope by it's fully qualified name.
    return ScopeName::ByName( name );
@@ -71,7 +71,7 @@ const ROOT::Reflex::Scope & ROOT::Reflex::Scope::ByName( const std::string & nam
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Member & ROOT::Reflex::Scope::DataMemberAt( size_t nth ) const {
+ROOT::Reflex::Member ROOT::Reflex::Scope::DataMemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth data member of this scope.
    if ( * this ) return fScopeName->fScopeBase->DataMemberAt( nth ); 
@@ -80,7 +80,7 @@ const ROOT::Reflex::Member & ROOT::Reflex::Scope::DataMemberAt( size_t nth ) con
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Member & ROOT::Reflex::Scope::DataMemberByName( const std::string & name ) const {
+ROOT::Reflex::Member ROOT::Reflex::Scope::DataMemberByName( const std::string & name ) const {
 //-------------------------------------------------------------------------------
 // Return a data member by it's name.
    if ( * this ) return fScopeName->fScopeBase->DataMemberByName( name ); 
@@ -98,7 +98,7 @@ size_t ROOT::Reflex::Scope::DataMemberSize() const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Member & ROOT::Reflex::Scope::FunctionMemberAt( size_t nth ) const {
+ROOT::Reflex::Member ROOT::Reflex::Scope::FunctionMemberAt( size_t nth ) const {
 //------------------------------------------------------------------------------- 
 // Return nth function member of this socpe.
    if ( * this ) return fScopeName->fScopeBase->FunctionMemberAt(nth); 
@@ -107,7 +107,7 @@ const ROOT::Reflex::Member & ROOT::Reflex::Scope::FunctionMemberAt( size_t nth )
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Member & ROOT::Reflex::Scope::FunctionMemberByName( const std::string & name ) const {
+ROOT::Reflex::Member ROOT::Reflex::Scope::FunctionMemberByName( const std::string & name ) const {
 //------------------------------------------------------------------------------- 
 // Return a function member by it's name.
    if ( * this ) return fScopeName->fScopeBase->FunctionMemberByName( name, Type() ); 
@@ -116,7 +116,7 @@ const ROOT::Reflex::Member & ROOT::Reflex::Scope::FunctionMemberByName( const st
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Member & ROOT::Reflex::Scope::FunctionMemberByName( const std::string & name,
+ROOT::Reflex::Member ROOT::Reflex::Scope::FunctionMemberByName( const std::string & name,
                                                                 const Type & signature ) const {
 //------------------------------------------------------------------------------- 
 // Return a function member by it's name, qualified by it's signature type.
@@ -135,7 +135,7 @@ size_t ROOT::Reflex::Scope::FunctionMemberSize() const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Member & 
+ROOT::Reflex::Member 
 ROOT::Reflex::Scope::LookupMember( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
 // Lookup a member from this scope.
@@ -145,7 +145,7 @@ ROOT::Reflex::Scope::LookupMember( const std::string & nam ) const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Type &
+ROOT::Reflex::Type
 ROOT::Reflex::Scope::LookupType( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
 // Lookup a type from this scope.
@@ -155,7 +155,7 @@ ROOT::Reflex::Scope::LookupType( const std::string & nam ) const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Scope &
+ROOT::Reflex::Scope
 ROOT::Reflex::Scope::LookupScope( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
 // Lookup a scope from this scope.
@@ -165,7 +165,7 @@ ROOT::Reflex::Scope::LookupScope( const std::string & nam ) const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Member & 
+ROOT::Reflex::Member 
 ROOT::Reflex::Scope::MemberByName( const std::string & name ) const {
 //-------------------------------------------------------------------------------
 // Return a member from this scope, by name.
@@ -175,7 +175,7 @@ ROOT::Reflex::Scope::MemberByName( const std::string & name ) const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Member & 
+ROOT::Reflex::Member 
 ROOT::Reflex::Scope::MemberByName( const std::string & name,
                                    const Type & signature ) const {
 //-------------------------------------------------------------------------------
@@ -222,7 +222,7 @@ ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Scope::Member_REnd() const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Member & ROOT::Reflex::Scope::MemberAt( size_t nth ) const {
+ROOT::Reflex::Member ROOT::Reflex::Scope::MemberAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth member of this scope.
    if ( * this ) return fScopeName->fScopeBase->MemberAt(nth); 
@@ -231,7 +231,7 @@ const ROOT::Reflex::Member & ROOT::Reflex::Scope::MemberAt( size_t nth ) const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::MemberTemplate & ROOT::Reflex::Scope::MemberTemplateAt( size_t nth ) const {
+ROOT::Reflex::MemberTemplate ROOT::Reflex::Scope::MemberTemplateAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth memer template in this scope.
    if ( * this ) return fScopeName->fScopeBase->MemberTemplateAt( nth );
@@ -249,7 +249,7 @@ size_t ROOT::Reflex::Scope::MemberTemplateSize() const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::MemberTemplate & ROOT::Reflex::Scope::MemberTemplateByName( const std::string & nam ) const {
+ROOT::Reflex::MemberTemplate ROOT::Reflex::Scope::MemberTemplateByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
 // Look up a member template in this scope by name and return it.
    if ( * this ) return fScopeName->fScopeBase->MemberTemplateByName( nam );
@@ -273,7 +273,7 @@ std::string ROOT::Reflex::Scope::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Scope & ROOT::Reflex::Scope::ScopeAt( size_t nth ) {
+ROOT::Reflex::Scope ROOT::Reflex::Scope::ScopeAt( size_t nth ) {
 //-------------------------------------------------------------------------------
 // Return the nth scope in the Reflex database.
    return ScopeName::ScopeAt( nth );
@@ -289,7 +289,7 @@ size_t ROOT::Reflex::Scope::ScopeSize() {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Type & ROOT::Reflex::Scope::SubTypeAt( size_t nth ) const {
+ROOT::Reflex::Type ROOT::Reflex::Scope::SubTypeAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth sub type of this scope.
    if ( * this ) return fScopeName->fScopeBase->SubTypeAt( nth ); 
@@ -307,7 +307,7 @@ size_t ROOT::Reflex::Scope::SubTypeSize() const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Type & ROOT::Reflex::Scope::SubTypeByName( const std::string & nam ) const {
+ROOT::Reflex::Type ROOT::Reflex::Scope::SubTypeByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
 // Look up a sub type by name and return it.
    if ( * this ) return fScopeName->fScopeBase->SubTypeByName( nam );
@@ -316,7 +316,7 @@ const ROOT::Reflex::Type & ROOT::Reflex::Scope::SubTypeByName( const std::string
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Type & ROOT::Reflex::Scope::TemplateArgumentAt( size_t nth ) const {
+ROOT::Reflex::Type ROOT::Reflex::Scope::TemplateArgumentAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth template argument of this scope (ie. class).
    if ( * this ) return fScopeName->fScopeBase->TemplateArgumentAt( nth );
@@ -325,7 +325,7 @@ const ROOT::Reflex::Type & ROOT::Reflex::Scope::TemplateArgumentAt( size_t nth )
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::TypeTemplate & ROOT::Reflex::Scope::TemplateFamily() const {
+ROOT::Reflex::TypeTemplate ROOT::Reflex::Scope::TemplateFamily() const {
 //-------------------------------------------------------------------------------
 // Return the template family related to this scope.
    if ( * this ) return fScopeName->fScopeBase->TemplateFamily();
@@ -334,7 +334,7 @@ const ROOT::Reflex::TypeTemplate & ROOT::Reflex::Scope::TemplateFamily() const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::TypeTemplate & ROOT::Reflex::Scope::SubTypeTemplateAt( size_t nth ) const {
+ROOT::Reflex::TypeTemplate ROOT::Reflex::Scope::SubTypeTemplateAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth sub type template.
    if ( * this ) return fScopeName->fScopeBase->SubTypeTemplateAt( nth ); 
@@ -352,7 +352,7 @@ size_t ROOT::Reflex::Scope::SubTypeTemplateSize() const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::TypeTemplate & ROOT::Reflex::Scope::SubTypeTemplateByName( const std::string & nam ) const {
+ROOT::Reflex::TypeTemplate ROOT::Reflex::Scope::SubTypeTemplateByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
 // Lookup a sub type template by string and return it.
    if ( * this ) return fScopeName->fScopeBase->SubTypeTemplateByName( nam );

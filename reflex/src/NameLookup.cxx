@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.10 2006/08/25 10:16:03 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.11 2006/10/11 08:04:30 axel Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -30,7 +30,7 @@ ROOT::Reflex::NameLookup::NameLookup(const std::string& name, const Scope& curre
 //-------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Type &
+ROOT::Reflex::Type
 ROOT::Reflex::NameLookup::LookupType( const std::string & nam, 
                                       const Scope & current ) {
 //-------------------------------------------------------------------------------
@@ -40,7 +40,9 @@ ROOT::Reflex::NameLookup::LookupType( const std::string & nam,
    return lookup.Lookup< Type >();
 }
 
-const ROOT::Reflex::Scope & 
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Scope 
 ROOT::Reflex::NameLookup::LookupScope( const std::string & nam,
                                          const Scope & current ) {
 //-------------------------------------------------------------------------------
@@ -51,6 +53,7 @@ ROOT::Reflex::NameLookup::LookupScope( const std::string & nam,
 }
 
 /*
+//-------------------------------------------------------------------------------
 const ROOT::Reflex::Member & LookupMember( const std::string & nam,
                                            const Scope & current ) {
 //-------------------------------------------------------------------------------
@@ -63,9 +66,9 @@ const ROOT::Reflex::Member & LookupMember( const std::string & nam,
 }
 */
 
+
 //-------------------------------------------------------------------------------
-template< class T >
-const T &
+template< class T > T
 ROOT::Reflex::NameLookup::Lookup() {
 //-------------------------------------------------------------------------------
 // Lookup a type using fLookupName, fCurrentScope.
@@ -86,8 +89,7 @@ ROOT::Reflex::NameLookup::Lookup() {
 
 
 //-------------------------------------------------------------------------------
-template< class T >
-const T &
+template< class T > T
 ROOT::Reflex::NameLookup::LookupInScope() {
 //-------------------------------------------------------------------------------
 // Lookup a type in fCurrentScope.
@@ -174,8 +176,7 @@ ROOT::Reflex::NameLookup::LookupInScope() {
 
 
 //-------------------------------------------------------------------------------
-template< class T >
-const T &
+template< class T > T
 ROOT::Reflex::NameLookup::LookupInUnknownScope() {
 //-------------------------------------------------------------------------------
 // Lookup a type in fCurrentScope and its declaring scopes.
@@ -190,7 +191,7 @@ ROOT::Reflex::NameLookup::LookupInUnknownScope() {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Member &
+ROOT::Reflex::Member
 ROOT::Reflex::NameLookup::LookupMember( const std::string & nam, 
                                         const Scope & current ) {
 //-------------------------------------------------------------------------------
@@ -202,7 +203,7 @@ ROOT::Reflex::NameLookup::LookupMember( const std::string & nam,
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Member &
+ROOT::Reflex::Member
 ROOT::Reflex::NameLookup::LookupMemberQualified( const std::string & nam ) {
 //-------------------------------------------------------------------------------
 // Lookup of a qualified member.
@@ -219,7 +220,7 @@ ROOT::Reflex::NameLookup::LookupMemberQualified( const std::string & nam ) {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Member &
+ROOT::Reflex::Member
 ROOT::Reflex::NameLookup::LookupMemberUnqualified( const std::string & nam,
                                                    const Scope & current ) {
 //-------------------------------------------------------------------------------
@@ -246,8 +247,8 @@ ROOT::Reflex::NameLookup::LookupMemberUnqualified( const std::string & nam,
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Type & ROOT::Reflex::NameLookup::AccessControl( const Type & typ,
-                                                                    const Scope & /* current */ ) {
+ROOT::Reflex::Type ROOT::Reflex::NameLookup::AccessControl( const Type & typ,
+                                                            const Scope & /* current */ ) {
 //-------------------------------------------------------------------------------
 // Check access .
    
@@ -260,8 +261,7 @@ const ROOT::Reflex::Type & ROOT::Reflex::NameLookup::AccessControl( const Type &
 }
 
 //-------------------------------------------------------------------------------
-void 
-ROOT::Reflex::NameLookup::FindNextScopePos() {
+void ROOT::Reflex::NameLookup::FindNextScopePos() {
 //-------------------------------------------------------------------------------
 // Move fPosNamePart to point to the next scope in fLookupName, updating 
 // fPosNamePartLen. If fPosNamePartLen == std::string::npos, initialize

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeName.h,v 1.2 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeName.h,v 1.3 2006/09/05 17:13:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -49,7 +49,7 @@ namespace ROOT {
           * @param  key fully qualified Name of the At as string
           * @return pointer to At or 0 if none is found
           */
-         static const Type & ByName( const std::string & key );
+         static Type ByName( const std::string & key );
       
       
          /**
@@ -58,7 +58,7 @@ namespace ROOT {
           * @param  tid string representation of the type_info At
           * @return pointer to At or 0 if none is found
           */
-         static const Type & ByTypeInfo( const std::type_info & ti );
+         static Type ByTypeInfo( const std::type_info & ti );
 
 
          static void CleanUp();
@@ -94,7 +94,7 @@ namespace ROOT {
           * At returns the At object of this TypeName
           * @return corresponding Type to this TypeName
           */
-         const Type & ThisType() const;
+         Type ThisType() const;
 
 
          /**
@@ -102,7 +102,7 @@ namespace ROOT {
           * @param  nth number of At to return
           * @return pointer to nth Type in the system
           */
-         static const Type & TypeAt( size_t nth );
+         static Type TypeAt( size_t nth );
 
 
          /**

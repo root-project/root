@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.5 2006/08/18 12:18:49 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.6 2006/09/05 17:13:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -66,14 +66,14 @@ namespace ROOT {
           * operator Scope will return the corresponding scope of this type if
           * applicable (i.e. if the Type is also a Scope e.g. Class, Union, Enum)
           */                                       
-         operator const Scope & () const;
+         operator Scope () const;
 
 
          /**
           * operator Type will return the corresponding Type object
           * @return Type corresponding to this TypeBase
           */
-         operator const Type & () const;
+         operator Type () const;
 
 
          /**
@@ -88,12 +88,12 @@ namespace ROOT {
           * @param  nth nth BaseAt class
           * @return pointer to BaseAt class information
           */
-         virtual const Base & BaseAt( size_t nth ) const;
+         virtual Base BaseAt( size_t nth ) const;
 
 
          /**
-          * BaseSize will return the number of BaseAt classes
-          * @return number of BaseAt classes
+          * BaseSize will return the number of base classes
+          * @return number of base classes
           */
          virtual size_t BaseSize() const;
 
@@ -135,7 +135,7 @@ namespace ROOT {
           * @param  nth data MemberAt
           * @return pointer to data MemberAt
           */
-         virtual const Member & DataMemberAt( size_t nth ) const;
+         virtual Member DataMemberAt( size_t nth ) const;
 
 
          /**
@@ -143,7 +143,7 @@ namespace ROOT {
           * @param  Name of data MemberAt
           * @return data MemberAt
           */
-         virtual const Member & DataMemberByName( const std::string & nam ) const;
+         virtual Member DataMemberByName( const std::string & nam ) const;
 
 
          /**
@@ -180,7 +180,7 @@ namespace ROOT {
           * DeclaringScope will return a pointer to the At of this one
           * @return pointer to declaring At
           */
-         virtual const Scope & DeclaringScope() const;
+         virtual Scope DeclaringScope() const;
 
 
          /**
@@ -189,7 +189,7 @@ namespace ROOT {
           * @param  mem is the memory AddressGet of the object to checked
           * @return the actual class of the object
           */
-         virtual const Type & DynamicType( const Object & obj ) const;
+         virtual Type DynamicType( const Object & obj ) const;
 
 
 
@@ -197,7 +197,7 @@ namespace ROOT {
           * FinalType will return the type without typedefs 
           * @return type with all typedef info removed
           */
-         const Type & FinalType() const;
+         Type FinalType() const;
 
 
          /**
@@ -205,7 +205,7 @@ namespace ROOT {
           * @param  nth function MemberAt
           * @return pointer to function MemberAt
           */
-         virtual const Member & FunctionMemberAt( size_t nth ) const;
+         virtual Member FunctionMemberAt( size_t nth ) const;
 
 
          /**
@@ -215,8 +215,8 @@ namespace ROOT {
           * @param  signature of the MemberAt function 
           * @return function MemberAt
           */
-         virtual const Member & FunctionMemberByName( const std::string & nam,
-                                                           const Type & signature ) const;
+         virtual Member FunctionMemberByName( const std::string & nam,
+                                              const Type & signature ) const;
 
 
          /**
@@ -246,7 +246,7 @@ namespace ROOT {
           * @param  cl the BaseAt-class to check for
           * @return the Base info if it is found, an empty base otherwise (can be tested for bool)
           */
-         virtual const Base & HasBase( const Type & cl ) const;
+         virtual bool HasBase( const Type & cl ) const;
 
 
          /**
@@ -380,8 +380,8 @@ namespace ROOT {
           * @param  MemberAt Name
           * @return pointer to MemberAt
           */
-         virtual const Member & MemberByName( const std::string & nam,
-                                                   const Type & signature ) const;
+         virtual Member MemberByName( const std::string & nam,
+                                      const Type & signature ) const;
 
 
          /**
@@ -389,7 +389,7 @@ namespace ROOT {
           * @param  nth MemberAt
           * @return pointer to nth MemberAt
           */
-         virtual const Member & MemberAt( size_t nth ) const;
+         virtual Member MemberAt( size_t nth ) const;
 
 
          /**
@@ -410,7 +410,7 @@ namespace ROOT {
           * @param nth MemberAt template
           * @return nth MemberAt template
           */
-         virtual const MemberTemplate & MemberTemplateAt( size_t nth ) const;
+         virtual MemberTemplate MemberTemplateAt( size_t nth ) const;
 
 
          /** 
@@ -438,7 +438,7 @@ namespace ROOT {
           * @param  nth nth FunctionParameterAt
           * @return pointer to nth FunctionParameterAt At
           */
-         virtual const Type & FunctionParameterAt( size_t nth ) const;
+         virtual Type FunctionParameterAt( size_t nth ) const;
 
 
          /**
@@ -458,7 +458,7 @@ namespace ROOT {
           * PointerToMemberScope will return the scope of the pointer to member type
           * @return scope of the pointer to member type
           */
-         virtual const Scope & PointerToMemberScope() const;
+         virtual Scope PointerToMemberScope() const;
 
 
          /**
@@ -466,7 +466,7 @@ namespace ROOT {
           * to this item
           * @return pointer to PropertyNth list
           */
-         virtual const PropertyList & Properties() const;
+         virtual PropertyList Properties() const;
 
 
          /**
@@ -474,14 +474,14 @@ namespace ROOT {
           * of pointers, arrays, typedefs
           * @return the raw type representation
           */
-         const Type & RawType() const;
+         Type RawType() const;
 
 
          /**
           * ReturnType will return a pointer to the At of the return At.
           * @return pointer to Type of return At
           */
-         virtual const Type & ReturnType() const;
+         virtual Type ReturnType() const;
       
 
          /**
@@ -496,7 +496,7 @@ namespace ROOT {
           * @param  nth sub-At
           * @return pointer to nth sub-At
           */
-         virtual const Scope & SubScopeAt( size_t nth ) const;
+         virtual Scope SubScopeAt( size_t nth ) const;
 
 
          /**
@@ -517,7 +517,7 @@ namespace ROOT {
           * @param  nth sub-At
           * @return pointer to nth sub-At
           */
-         virtual const Type & SubTypeAt( size_t nth ) const;
+         virtual Type SubTypeAt( size_t nth ) const;
 
 
          /**
@@ -538,7 +538,7 @@ namespace ROOT {
           * @param  nth nth template argument
           * @return pointer to nth template argument
           */
-         virtual const Type & TemplateArgumentAt( size_t nth ) const;
+         virtual Type TemplateArgumentAt( size_t nth ) const;
 
 
          /**
@@ -558,21 +558,21 @@ namespace ROOT {
           * TemplateFamily returns the corresponding TypeTemplate if any
           * @return corresponding TypeTemplate
           */
-         virtual const TypeTemplate & TemplateFamily() const;
+         virtual TypeTemplate TemplateFamily() const;
 
 
          /**
           * arrayType will return a pointer to the At of the array.
           * @return pointer to Type of MemberAt et. al.
           */
-         virtual const Type & ToType() const;
+         virtual Type ToType() const;
 
 
          /** 
           * At returns the corresponding unqualified Type object
           * @return corresponding At object
           */
-         const Type & ThisType() const;
+         Type ThisType() const;
 
 
          /** 
@@ -580,7 +580,7 @@ namespace ROOT {
           * @param nth At template
           * @return nth At template
           */
-         virtual const TypeTemplate & SubTypeTemplateAt( size_t nth ) const;
+         virtual TypeTemplate SubTypeTemplateAt( size_t nth ) const;
 
 
          /** 
@@ -1235,7 +1235,7 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeBase::TemplateArgum
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::TypeTemplate & ROOT::Reflex::TypeBase::TemplateFamily() const {
+inline ROOT::Reflex::TypeTemplate ROOT::Reflex::TypeBase::TemplateFamily() const {
 //-------------------------------------------------------------------------------
    return Dummy::TypeTemplate();
 }

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Scope.h,v 1.21 2006/10/24 18:02:41 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: Scope.h,v 1.22 2006/10/26 17:49:22 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -11,7 +11,6 @@
 
 #ifndef ROOT_Reflex_Scope
 #define ROOT_Reflex_Scope
-
 
 // Include files
 #include "Reflex/Kernel.h"
@@ -95,7 +94,7 @@ namespace ROOT {
           * the operator Type will return a corresponding type object to the scope if
           * applicable (i.e. if the Scope is also a Type e.g. Class, Union, Enum)
           */
-         operator const Type & () const;
+         operator Type () const;
 
 
          /**
@@ -103,7 +102,7 @@ namespace ROOT {
           * @param  nth base class
           * @return pointer to base class information
           */
-         const Base & BaseAt( size_t nth ) const;
+         Base BaseAt( size_t nth ) const;
 
 
          /**
@@ -146,7 +145,7 @@ namespace ROOT {
           * @param  name fully qualified name of the scope
           * @return reflection information of the scope
           */
-         static const Scope & ByName( const std::string & name );
+         static Scope ByName( const std::string & name );
 
 
          /**
@@ -154,7 +153,7 @@ namespace ROOT {
           * @param  nth the nth data member
           * @return nth data member 
           */
-         const Member & DataMemberAt( size_t nth ) const;
+         Member DataMemberAt( size_t nth ) const;
 
 
          /**
@@ -162,7 +161,7 @@ namespace ROOT {
           * @param  name of data member
           * @return data member
           */
-         const Member & DataMemberByName( const std::string & name ) const;
+         Member DataMemberByName( const std::string & name ) const;
 
 
          /**
@@ -204,7 +203,7 @@ namespace ROOT {
           * DeclaringScope will return the declaring socpe of this type
           * @return declaring scope of this type
           */
-         const Scope & DeclaringScope() const;
+         Scope DeclaringScope() const;
 
 
          /**
@@ -212,7 +211,7 @@ namespace ROOT {
           * @param  nth function member
           * @return reflection information of nth function member
           */
-         const Member & FunctionMemberAt( size_t nth ) const;
+         Member FunctionMemberAt( size_t nth ) const;
 
 
          /**
@@ -221,7 +220,7 @@ namespace ROOT {
           * @param  name of function member
           * @return reflection information of the function member
           */
-         const Member & FunctionMemberByName( const std::string & name ) const;
+         Member FunctionMemberByName( const std::string & name ) const;
 
 
          /**
@@ -232,8 +231,8 @@ namespace ROOT {
           * @return reflection information of the function member
           */
          // this overloading is unfortunate but I can't include Type.h here
-         const Member & FunctionMemberByName( const std::string & name,
-                                              const Type & signature ) const;
+         Member FunctionMemberByName( const std::string & name,
+                                      const Type & signature ) const;
 
 
          /**
@@ -284,7 +283,7 @@ namespace ROOT {
           * GlobalScope will return the global scope representation\
           * @return global scope
           */
-         static const Scope & GlobalScope();
+         static Scope GlobalScope();
 
 
          /**
@@ -362,7 +361,7 @@ namespace ROOT {
           * @param nam the string representation of the member to lookup
           * @return if a matching member is found return it, otherwise return empty member
           */
-         const Member & LookupMember( const std::string & nam ) const;
+         Member LookupMember( const std::string & nam ) const;
 
 
          /**
@@ -370,7 +369,7 @@ namespace ROOT {
           * @param nam the string representation of the type to lookup
           * @return if a matching type is found return it, otherwise return empty type
           */
-         const Type & LookupType( const std::string & nam ) const;
+         Type LookupType( const std::string & nam ) const;
 
 
          /**
@@ -378,7 +377,7 @@ namespace ROOT {
           * @param nam the string representation of the scope to lookup
           * @return if a matching scope is found return it, otherwise return empty scope
           */
-         const Scope & LookupScope( const std::string & nam ) const;
+         Scope LookupScope( const std::string & nam ) const;
 
 
          /**
@@ -386,7 +385,7 @@ namespace ROOT {
           * @param  nth member
           * @return reflection information nth member
           */
-         const Member & MemberAt( size_t nth ) const;
+         Member MemberAt( size_t nth ) const;
 
 
          /**
@@ -394,7 +393,7 @@ namespace ROOT {
           * @param  member name
           * @return reflection information of the member
           */
-         const Member & MemberByName( const std::string & name ) const;
+         Member MemberByName( const std::string & name ) const;
 
 
          /**
@@ -404,7 +403,7 @@ namespace ROOT {
           * @return reflection information of the member
           */
          // this overloading is unfortunate but I can't include Type.h here
-         const Member & MemberByName( const std::string & name,
+         Member MemberByName( const std::string & name,
                                       const Type & signature ) const;
 
 
@@ -448,7 +447,7 @@ namespace ROOT {
           * @param nth member template
           * @return nth member template
           */
-         const MemberTemplate & MemberTemplateAt( size_t nth ) const;
+         MemberTemplate MemberTemplateAt( size_t nth ) const;
 
 
          /** 
@@ -464,7 +463,7 @@ namespace ROOT {
           * @param string representing the member template to look for
           * @return member template representation of the looked up member
           */
-         const MemberTemplate & MemberTemplateByName( const std::string & nam ) const;
+         MemberTemplate MemberTemplateByName( const std::string & nam ) const;
 
 
          /**
@@ -517,7 +516,7 @@ namespace ROOT {
           * Properties will return a PropertyList attached to this item
           * @return PropertyList of this type
           */
-         const PropertyList & Properties() const;
+         PropertyList Properties() const;
 
       
          /**
@@ -525,7 +524,7 @@ namespace ROOT {
           * @param  nth scope defined in the system
           * @return nth scope defined in the system
           */
-         static const Scope & ScopeAt( size_t nth );
+         static Scope ScopeAt( size_t nth );
 
 
          /**
@@ -583,7 +582,7 @@ namespace ROOT {
           * @param  nth sub scope
           * @return reflection information of nth sub scope
           */
-         const Scope & SubScopeAt( size_t nth ) const;
+         Scope SubScopeAt( size_t nth ) const;
 
 
          /**
@@ -607,7 +606,7 @@ namespace ROOT {
           * @param unscoped name of the sub scope to look for
           * @return Scope representation of the sub scope
           */
-         const Scope & SubScopeByName( const std::string & nam ) const;
+         Scope SubScopeByName( const std::string & nam ) const;
 
 
          /**
@@ -643,7 +642,7 @@ namespace ROOT {
           * @param  nth sub type
           * @return reflection information of nth sub type
           */
-         const Type & SubTypeAt( size_t nth ) const;
+         Type SubTypeAt( size_t nth ) const;
 
 
          /**
@@ -658,7 +657,7 @@ namespace ROOT {
           * @param string of the unscoped sub type to look for
           * @return Type representation of the sub type
           */
-         const Type & SubTypeByName( const std::string & nam ) const;
+         Type SubTypeByName( const std::string & nam ) const;
 
 
          /**
@@ -694,7 +693,7 @@ namespace ROOT {
           * @param nth type template
           * @return nth type template
           */
-         const TypeTemplate & SubTypeTemplateAt( size_t nth ) const;
+         TypeTemplate SubTypeTemplateAt( size_t nth ) const;
 
 
          /** 
@@ -710,7 +709,7 @@ namespace ROOT {
           * @param unscoped name of the type template to look for
           * @return TypeTemplate representation of the sub type template
           */
-         const TypeTemplate & SubTypeTemplateByName( const std::string & nam ) const;
+         TypeTemplate SubTypeTemplateByName( const std::string & nam ) const;
 
 
          /**
@@ -746,7 +745,7 @@ namespace ROOT {
           * @param  nth nth template argument
           * @return reflection information of nth template argument
           */
-         const Type & TemplateArgumentAt( size_t nth ) const;
+         Type TemplateArgumentAt( size_t nth ) const;
 
 
          /**
@@ -788,7 +787,7 @@ namespace ROOT {
           * TemplateFamily returns the corresponding TypeTemplate if any
           * @return corresponding TypeTemplate
           */
-         const TypeTemplate & TemplateFamily() const;
+         TypeTemplate TemplateFamily() const;
 
          
          /**
@@ -802,7 +801,7 @@ namespace ROOT {
           * @param  nth using directive
           * @return nth using directive
           */
-         const Scope & UsingDirectiveAt( size_t nth ) const;
+         Scope UsingDirectiveAt( size_t nth ) const;
          
          
          /**
@@ -1124,7 +1123,7 @@ inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Scope::DataMember_REn
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Scope & ROOT::Reflex::Scope::DeclaringScope() const {
+inline ROOT::Reflex::Scope ROOT::Reflex::Scope::DeclaringScope() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->DeclaringScope(); 
    return Dummy::Scope();
@@ -1164,7 +1163,7 @@ inline ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::Scope::FunctionMember
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Scope & ROOT::Reflex::Scope::GlobalScope() {
+inline ROOT::Reflex::Scope ROOT::Reflex::Scope::GlobalScope() {
 //-------------------------------------------------------------------------------
   return ScopeBase::GlobalScope();
 }
@@ -1298,7 +1297,7 @@ inline const char * ROOT::Reflex::Scope::Name_c_str() const {
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::PropertyList & ROOT::Reflex::Scope::Properties() const {
+inline ROOT::Reflex::PropertyList ROOT::Reflex::Scope::Properties() const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->Properties();
    return Dummy::PropertyList();
@@ -1350,7 +1349,7 @@ inline ROOT::Reflex::Reverse_Scope_Iterator ROOT::Reflex::Scope::Scope_REnd() {
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Scope & ROOT::Reflex::Scope::SubScopeAt( size_t nth ) const {
+inline ROOT::Reflex::Scope ROOT::Reflex::Scope::SubScopeAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->SubScopeAt( nth ); 
    return Dummy::Scope();
@@ -1375,7 +1374,7 @@ inline size_t ROOT::Reflex::Scope::SubScopeSize() const {
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Scope & ROOT::Reflex::Scope::SubScopeByName( const std::string & nam ) const {
+inline ROOT::Reflex::Scope ROOT::Reflex::Scope::SubScopeByName( const std::string & nam ) const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->SubScopeByName( nam );
    return Dummy::Scope();
@@ -1535,7 +1534,7 @@ inline void ROOT::Reflex::Scope::Unload() const {
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Scope & ROOT::Reflex::Scope::UsingDirectiveAt( size_t nth ) const {
+inline ROOT::Reflex::Scope ROOT::Reflex::Scope::UsingDirectiveAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    if ( * this ) return fScopeName->fScopeBase->UsingDirectiveAt( nth );
    return Dummy::Scope();

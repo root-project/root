@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Function.h,v 1.11 2006/08/28 16:03:54 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Function.h,v 1.12 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -64,7 +64,7 @@ namespace ROOT {
           * @param  nth nth FunctionParameterAt
           * @return pointer to nth FunctionParameterAt At
           */
-         virtual const Type & FunctionParameterAt( size_t nth ) const;
+         virtual Type FunctionParameterAt( size_t nth ) const;
 
 
          /**
@@ -84,7 +84,7 @@ namespace ROOT {
           * ReturnType will return a pointer to the At of the return At.
           * @return pointer to Type of return At
           */
-         virtual const Type & ReturnType() const;
+         virtual Type ReturnType() const;
 
 
          /** static funtion that composes the At Name */
@@ -166,7 +166,7 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Function::FunctionParam
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Type & 
+inline ROOT::Reflex::Type 
 ROOT::Reflex::Function::FunctionParameterAt( size_t nth ) const {
 //------------------------------------------------------------------------------- 
    if (nth < fParameters.size()) { return fParameters[nth]; }
@@ -175,7 +175,7 @@ ROOT::Reflex::Function::FunctionParameterAt( size_t nth ) const {
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Type & ROOT::Reflex::Function::ReturnType() const {
+inline ROOT::Reflex::Type ROOT::Reflex::Function::ReturnType() const {
 //-------------------------------------------------------------------------------
    return fReturnType;
 }

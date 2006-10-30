@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeTemplate.cxx,v 1.13 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplate.cxx,v 1.14 2006/08/16 06:42:36 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -28,8 +28,8 @@ std::string ROOT::Reflex::TypeTemplate::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::TypeTemplate & ROOT::Reflex::TypeTemplate::ByName( const std::string & name,
-                                                                       size_t nTemplateParams ) {
+ROOT::Reflex::TypeTemplate ROOT::Reflex::TypeTemplate::ByName( const std::string & name,
+                                                               size_t nTemplateParams ) {
 //-------------------------------------------------------------------------------
    // Lookup a type template by name.
    return TypeTemplateName::ByName( name, nTemplateParams );
@@ -37,7 +37,7 @@ const ROOT::Reflex::TypeTemplate & ROOT::Reflex::TypeTemplate::ByName( const std
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::TypeTemplate & ROOT::Reflex::TypeTemplate::TypeTemplateAt( size_t nth ) {
+ROOT::Reflex::TypeTemplate ROOT::Reflex::TypeTemplate::TypeTemplateAt( size_t nth ) {
 //-------------------------------------------------------------------------------
    // Return the nth type template defined.
    return TypeTemplateName::TypeTemplateAt( nth );
@@ -113,7 +113,7 @@ ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeTemplate::TemplateInstance
 
                                              
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Type & ROOT::Reflex::TypeTemplate::TemplateInstanceAt( size_t nth ) const {
+ROOT::Reflex::Type ROOT::Reflex::TypeTemplate::TemplateInstanceAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
    // Return the nth template instance of this family.
    if ( * this ) return fTypeTemplateName->fTypeTemplateImpl->TemplateInstanceAt( nth );

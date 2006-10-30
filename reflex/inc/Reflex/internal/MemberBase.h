@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberBase.h,v 1.2 2006/08/15 15:22:52 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberBase.h,v 1.3 2006/09/05 17:13:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -49,7 +49,7 @@ namespace ROOT {
          /**
           * operator Member will return the MemberAt object of this MemberAt BaseAt
           */
-         operator const Member & () const;
+         operator Member () const;
 
 
          /** 
@@ -57,7 +57,7 @@ namespace ROOT {
           * (i.e. the same as the Type)
           * @return the declaring Scope of the MemberAt
           */
-         const Scope & DeclaringScope() const;
+         Scope DeclaringScope() const;
 
 
          /** 
@@ -65,14 +65,14 @@ namespace ROOT {
           * (i.e. the same as the Scope)
           * @return the declaring Type of the MemberAt
           */
-         const Type & DeclaringType() const;
+         Type DeclaringType() const;
 
 
          /**
           * GenerateDict will produce the dictionary information of this type
           * @param generator a reference to the dictionary generator instance
           */
-         virtual void GenerateDict(DictionaryGenerator &generator) const;
+         virtual void GenerateDict(DictionaryGenerator & generator) const;
 	  
       
          /** Get the MemberAt value (as void*) */
@@ -233,7 +233,7 @@ namespace ROOT {
           * to this item
           * @return pointer to PropertyNth list
           */
-         const PropertyList & Properties() const;
+         PropertyList Properties() const;
 
 
          /** Set the MemberAt value */
@@ -260,7 +260,7 @@ namespace ROOT {
           * @param  nth nth template argument
           * @return pointer to nth template argument
           */
-         virtual const Type & TemplateArgumentAt( size_t nth ) const;
+         virtual Type TemplateArgumentAt( size_t nth ) const;
 
 
          /**
@@ -280,11 +280,11 @@ namespace ROOT {
           * TemplateFamily returns the corresponding MemberTemplate if any
           * @return corresponding MemberTemplate
           */
-         virtual const MemberTemplate & TemplateFamily() const;
+         virtual MemberTemplate TemplateFamily() const;
 
 
          /** return pointer to MemberAt At */
-         const Type & TypeOf() const;
+         Type TypeOf() const;
 
       protected:
 
@@ -741,14 +741,14 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::MemberBase::TemplateArg
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::MemberTemplate & ROOT::Reflex::MemberBase::TemplateFamily() const {
+inline ROOT::Reflex::MemberTemplate ROOT::Reflex::MemberBase::TemplateFamily() const {
 //-------------------------------------------------------------------------------
    return Dummy::MemberTemplate();
 }
 
 
 //-------------------------------------------------------------------------------
-inline const ROOT::Reflex::Type & ROOT::Reflex::MemberBase::TypeOf() const {
+inline ROOT::Reflex::Type ROOT::Reflex::MemberBase::TypeOf() const {
 //-------------------------------------------------------------------------------
    return fType;
 }
