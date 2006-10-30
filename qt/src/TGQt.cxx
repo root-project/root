@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.32 2006/05/30 07:06:50 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.33 2006/10/04 16:08:48 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -19,6 +19,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifdef HAVE_CONFIG
+# include "config.h"
+#endif
 #ifdef R__QTWIN32
 #include <process.h>
 #endif
@@ -491,8 +494,12 @@ QPixmap *TGQt::MakeIcon(Int_t i)
    HDC dc = tempIcon->handle();
    DrawIcon (dc, 0, 0, icon);
 #else
+# ifdef ROOTICONPATH
+   gSystem->ExpandPathName(ROOTICONPATH);
+# else
    gSystem->ExpandPathName("$ROOTSYS/icons/");
 //   tempIcon =new QPixmap (16,16),
+# endif
 #endif
    return tempIcon;
 }
@@ -584,7 +591,13 @@ TQtApplication *TGQt::CreateQtApplicationImp()
    static TQtApplication *app = 0;
    if (!app) {
       //    app = new TQtApplication(gApplication->ApplicationName(),gApplication->Argc(),gApplication->Argv());
-      static TString argvString ("$ROOTSYS/bin/root.exe");
+      static TString argvString (
+#ifdef ROOTBINDIR
+				 ROOTBINDIR "/root.exe" 
+#else
+				 "$ROOTSYS/bin/root.exe"
+#endif
+				 );
       gSystem->ExpandPathName(argvString);
       static char *argv[] = {(char *)argvString.Data()};
       static int nArg = 1;
@@ -655,7 +668,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.137 2006/09/07 00:23:30 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.33 2006/10/04 16:08:48 antcheva Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -756,7 +769,13 @@ Bool_t TGQt::Init(void* /*display*/)
          //  provide the replacement and the codec
         fSymbolFontFamily = "Arial";
         fprintf(stderr, " Substitute it with \"%s\"\n",fSymbolFontFamily);
-        fprintf(stderr, " Make sure your local \"~/.fonts.conf\" or \"/etc/fonts/fonts.conf\" file points to \"$ROOOTSYS/fonts\" directory to get the proper support for ROOT TLatex class\n");
+        fprintf(stderr, " Make sure your local \"~/.fonts.conf\" or \"/etc/fonts/fonts.conf\" file points to \""
+#ifdef TTFFONTDIR
+		TTFFONTDIR
+#else
+		"$ROOOTSYS/fonts"
+#endif
+		"\" directory to get the proper support for ROOT TLatex class\n");
         // create a custom codec
         new QSymbolCodec();
     }
@@ -769,7 +788,13 @@ Bool_t TGQt::Init(void* /*display*/)
    // Add $QTDIR include  path to the  the list of includes for ACliC
    gSystem->AddIncludePath("-I$QTDIR/include");
 #ifndef R__WIN32
-   TString newPath = "$(ROOTSYS)/cint/include";
+   TString newPath = 
+# ifdef ROOTLIBDIR
+      ROOTLIBDIR
+# else 
+   "$(ROOTSYS)/cint/include"
+# endif
+     ;
    newPath += ":";
    newPath += gSystem->GetDynamicPath();
    // SetDynamicPath causes the SegFault on Win32 platform
