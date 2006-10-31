@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.26 2006/10/25 20:29:31 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.27 2006/10/30 12:51:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -103,7 +103,7 @@ ROOT::Reflex::TypeBase::operator ROOT::Reflex::Scope () const {
    case ENUM:
       return (dynamic_cast<const ScopeBase*>(this))->ThisScope();
    case TYPEDEF:
-	   return FinalType();
+      return FinalType();
    default:
       return Dummy::Scope();
    }
@@ -290,7 +290,7 @@ ROOT::Reflex::Member ROOT::Reflex::TypeBase::FunctionMemberByName( const std::st
 bool ROOT::Reflex::TypeBase::HasBase( const Type & /* cl */ ) const {
 //-------------------------------------------------------------------------------
    // Return base info if type has base cl.
-  return false;
+   return false;
 }
 
 
