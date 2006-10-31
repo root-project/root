@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.cxx,v 1.15 2006/06/16 11:01:16 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.cxx,v 1.1 2006/10/27 09:58:02 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -120,10 +120,10 @@ Bool_t TEntryListBlock::Remove(Int_t entry)
          fIndices[i] &= (0xFFFF^(1<<j));
          fNPassed--;
          return 1;
-       } else { 
-          printf("not entered\n");
-          return 0;
-       }
+      } else { 
+         printf("not entered\n");
+         return 0;
+      }
    }
    //list
    //change to bits

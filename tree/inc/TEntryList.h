@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.h,v 1.15 2006/06/16 11:01:16 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.h,v 1.1 2006/10/27 09:58:02 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -83,6 +83,6 @@ class TEntryList: public TNamed
 
    friend TEntryList operator||(TEntryList& elist1, TEntryList& elist2);
 
-   ClassDef(TEntryList, 1);
+   ClassDef(TEntryList, 1);  //A list of entries in a TTree
 };
 #endif

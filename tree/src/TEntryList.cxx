@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.15 2006/06/16 11:01:16 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.1 2006/10/27 09:58:02 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -463,9 +463,9 @@ Long64_t TEntryList::GetEntry(Int_t index)
          i--;
          total_passed-=block->GetNPassed();
          if (i!=fLastIndexReturned/kBlockSize){
-             block = (TEntryListBlock*)fBlocks->UncheckedAt(fLastIndexReturned/kBlockSize);
-             block->ResetIndices();
-             block = (TEntryListBlock*)fBlocks->UncheckedAt(i);
+            block = (TEntryListBlock*)fBlocks->UncheckedAt(fLastIndexReturned/kBlockSize);
+            block->ResetIndices();
+            block = (TEntryListBlock*)fBlocks->UncheckedAt(i);
          }
 
          Long64_t localindex = index - total_passed;

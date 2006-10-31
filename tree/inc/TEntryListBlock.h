@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.h,v 1.15 2006/06/16 11:01:16 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.h,v 1.1 2006/10/27 09:58:02 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 // TEntryListBlock
 //
 // Used internally in TEntryList to store the entry numbers. TEntryListBlock
-// can have to representations - stored as bits and stored as a list.
+// can have two representations - stored as bits and stored as a list.
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TEntryListBlock
@@ -58,7 +58,7 @@ class TEntryListBlock:public TObject
    virtual void Print(const Option_t *option = "") const;
    void    PrintWithShift(Int_t shift) const;
 
-   ClassDef(TEntryListBlock, 1);
+   ClassDef(TEntryListBlock, 1) //Used internally in TEntryList to store the entry numbers
 
 };
 
