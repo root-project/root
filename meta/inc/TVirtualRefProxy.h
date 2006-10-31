@@ -1,8 +1,8 @@
-// @(#)root/meta:$Name:  $: $Id: TVirtualRefProxy.h,v 1.2 2006/06/28 10:39:46 pcanal Exp $
+// @(#)root/meta:$Name:  $: $Id: TVirtualRefProxy.h,v 1.3 2006/06/29 06:50:42 brun Exp $
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -30,21 +30,21 @@ class TFormLeafInfoReference;
 //   
 //   References are a well known mechanism to support persistency
 //   of entities, which in C++ typically are represented as 
-//   pointers. The generic mechansim allows clients to supply 
+//   pointers. The generic mechanism allows clients to supply 
 //   hooks to the ROOT framework in interactive mode in order to 
 //   dereference these objects and access the objects pointed to by 
 //   the reference objects.
 //   
-//   Implementations are supplied for ROOT owns reference mechanism
-//   based on instances of the TRef and the TRefArray class.
+//   Implementations are supplied for ROOT own reference mechanism
+//   based on instances of the TRef and the TRefArray classes.
 //   
 //   To support generality this mechanism was implemented using a
 //   proxy mechanism, which shields the concrete implementation of the
 //   reference classes from ROOT. Hence, this mechanism also works for
-//   references as they are suppotred by the POOL persistent framework
+//   references as they are supported by the POOL persistency framework
 //   and by frameworks like Gaudi.
 //   
-//   To enable reference support a concrete sub-classed instance of 
+//   To enable reference support a concrete sub-class instance of 
 //   the TVirtualRefProxy base class must be attached to the TClass
 //   instance representing the reference itself. Please see the 
 //   header- and implementation file TRefProxy.h/cxx for details.
@@ -75,7 +75,7 @@ class TFormLeafInfoReference;
 //
 //   The type of the referenced object must either be known at compilation
 //      time or it must be possible to guess it reading the first TTree entry.
-//      In this case the following condiitons must be met:
+//      In this case the following conditions must be met:
 //      - GetValueClass() must return the TClass to the referenced
 //        objects (or a base class)
 // 
@@ -105,7 +105,7 @@ public:
    // Access to the target class.
    // In the event the value class cannot be specified from the reference
    // itself, because the object behind the reference requires a cast,
-   // the return value maust be NULL.
+   // the return value must be NULL.
    //
    // data   [IN]   Resolved pointer to the referenced object
    virtual TClass* GetValueClass(void* data) const = 0;
@@ -139,7 +139,7 @@ public:
    //
    // info     [IN]   Pointer to the structure called by TTree::Draw
    //                 to extract the required object information.
-   // data     [IN]   Pointer to the reference object
+   // data     [IN]   Pointer to the referenced object
    // instance [IN]   Item number if ref collection  
    //
    // return value: Pointer to the requested information
