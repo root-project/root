@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.11 2006/10/11 08:04:30 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.12 2006/10/30 12:51:33 roiser Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -132,8 +132,8 @@ ROOT::Reflex::NameLookup::LookupInScope() {
          fPartialSuccess = true;
          fLookedAtUsingDir.clear();
          FindNextScopePos();
-         if (fPosNamePart == std::string::npos) return (const T&) (*in);
-         fCurrentScope = (const Scope&) (*in);
+         if (fPosNamePart == std::string::npos) return (T) (*in);
+         fCurrentScope = (Scope) (*in);
          return LookupInScope< T >();
       }
    }
@@ -143,7 +143,7 @@ ROOT::Reflex::NameLookup::LookupInScope() {
       Scope storeCurrentScope = fCurrentScope;
       for ( Scope_Iterator si = storeCurrentScope.UsingDirective_Begin(); si != storeCurrentScope.UsingDirective_End(); ++si ) {
          fCurrentScope = *si;
-         const T & t = LookupInScope< T >();
+         T t = LookupInScope< T >();
          if (fPartialSuccess) return t;
       }
       fCurrentScope = storeCurrentScope;
@@ -165,7 +165,7 @@ ROOT::Reflex::NameLookup::LookupInScope() {
       Scope storeCurrentScope = fCurrentScope;
       for ( Base_Iterator bi = storeCurrentScope.Base_Begin(); bi != storeCurrentScope.Base_End(); ++bi ) {
          fCurrentScope = bi->ToScope();
-         const T & t = LookupInScope< T >();
+         T t = LookupInScope< T >();
          if (fPartialSuccess) return t;
       }
       fCurrentScope = storeCurrentScope;
@@ -182,7 +182,7 @@ ROOT::Reflex::NameLookup::LookupInUnknownScope() {
 // Lookup a type in fCurrentScope and its declaring scopes.
    for (fPartialSuccess = false; !fPartialSuccess && fCurrentScope; fCurrentScope = fCurrentScope.DeclaringScope()) {
       fLookedAtUsingDir.clear();
-      const T & t = LookupInScope< T >();
+      T t = LookupInScope< T >();
       if (fPartialSuccess) return t;
       if (fCurrentScope.IsTopScope()) break;
    }
@@ -207,7 +207,7 @@ ROOT::Reflex::Member
 ROOT::Reflex::NameLookup::LookupMemberQualified( const std::string & nam ) {
 //-------------------------------------------------------------------------------
 // Lookup of a qualified member.
-   const Scope & bscope = Scope::ByName(Tools::GetScopeName(nam));
+   Scope bscope = Scope::ByName(Tools::GetScopeName(nam));
    if ( bscope ) {
       return LookupMemberUnqualified( Tools::GetBaseName(nam), bscope);
    }
@@ -225,16 +225,16 @@ ROOT::Reflex::NameLookup::LookupMemberUnqualified( const std::string & nam,
                                                    const Scope & current ) {
 //-------------------------------------------------------------------------------
 // Lookup of an unqualified member.
-   const Member & m0 = current.MemberByName(nam);
+   Member m0 = current.MemberByName(nam);
    if ( m0 ) return m0;
       
    for ( Scope_Iterator si = current.UsingDirective_Begin(); si != current.UsingDirective_End(); ++si ) {
-      const Member & m1 = LookupMember( nam, *si );
+      Member m1 = LookupMember( nam, *si );
       if ( m1 ) return m1;
    }
 
    for ( Base_Iterator bi = current.Base_Begin(); bi != current.Base_End(); ++ bi ) {
-      const Member & m2 = LookupMember( nam, bi->ToScope() );
+      Member m2 = LookupMember( nam, bi->ToScope() );
       if ( m2 ) return m2;
    }
          
