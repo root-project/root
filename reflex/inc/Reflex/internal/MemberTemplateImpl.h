@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.h,v 1.4 2006/08/28 16:03:54 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.h,v 1.5 2006/09/05 17:13:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -87,7 +87,7 @@ namespace ROOT {
           * @param  nth template instantion
           * @return pointer to nth template instantion
           */
-         const Member & TemplateInstanceAt( size_t nth ) const;
+         Member TemplateInstanceAt( size_t nth ) const;
 
 
          /**
@@ -137,7 +137,7 @@ namespace ROOT {
           * Return the member template API class corresponding to this member template impl
           * @return corresponding member template
           */
-         const MemberTemplate & ThisMemberTemplate() const;
+         MemberTemplate ThisMemberTemplate() const;
 
       public:
 

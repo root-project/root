@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeTemplateName.cxx,v 1.3 2006/08/28 16:03:54 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplateName.cxx,v 1.4 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -67,8 +67,8 @@ ROOT::Reflex::TypeTemplateName::~TypeTemplateName() {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::TypeTemplate & ROOT::Reflex::TypeTemplateName::ByName( const std::string & name,
-                                                                               size_t nTemplateParams ) {
+ROOT::Reflex::TypeTemplate ROOT::Reflex::TypeTemplateName::ByName( const std::string & name,
+                                                                   size_t nTemplateParams ) {
 //-------------------------------------------------------------------------------
    // Lookup a type template by its name.
    typedef Name2TypeTemplate_t::iterator IT;
@@ -121,7 +121,7 @@ std::string ROOT::Reflex::TypeTemplateName::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::TypeTemplate & ROOT::Reflex::TypeTemplateName::ThisTypeTemplate() const {
+ROOT::Reflex::TypeTemplate ROOT::Reflex::TypeTemplateName::ThisTypeTemplate() const {
 //-------------------------------------------------------------------------------
    // Return the type template corresponding to this type template name.
    return * fThisTypeTemplate;
@@ -129,7 +129,7 @@ const ROOT::Reflex::TypeTemplate & ROOT::Reflex::TypeTemplateName::ThisTypeTempl
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::TypeTemplate & ROOT::Reflex::TypeTemplateName::TypeTemplateAt( size_t nth ) {
+ROOT::Reflex::TypeTemplate ROOT::Reflex::TypeTemplateName::TypeTemplateAt( size_t nth ) {
 //-------------------------------------------------------------------------------
    // Return teh nth type template.
    if ( nth < sTypeTemplateVec().size()) return sTypeTemplateVec()[nth];

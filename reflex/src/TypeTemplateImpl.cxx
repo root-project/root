@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeTemplateImpl.cxx,v 1.13 2006/08/16 06:42:36 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplateImpl.cxx,v 1.14 2006/08/28 16:03:54 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -98,7 +98,7 @@ ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::TypeTemplateImpl::TemplateInst
 
                                              
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Type & ROOT::Reflex::TypeTemplateImpl::TemplateInstanceAt( size_t nth ) const {
+ROOT::Reflex::Type ROOT::Reflex::TypeTemplateImpl::TemplateInstanceAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth template instance of this family.
    if ( nth < fTemplateInstances.size() ) return fTemplateInstances[ nth ];
@@ -115,7 +115,7 @@ size_t ROOT::Reflex::TypeTemplateImpl::TemplateInstanceSize() const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::TypeTemplate & ROOT::Reflex::TypeTemplateImpl::ThisTypeTemplate() const {
+ROOT::Reflex::TypeTemplate ROOT::Reflex::TypeTemplateImpl::ThisTypeTemplate() const {
 //-------------------------------------------------------------------------------
    // Return a ref to this type template.
    return fTypeTemplateName->ThisTypeTemplate();

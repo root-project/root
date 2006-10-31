@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.cxx,v 1.16 2006/08/17 11:49:49 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateImpl.cxx,v 1.17 2006/08/28 16:03:54 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -93,7 +93,7 @@ ROOT::Reflex::Reverse_Member_Iterator ROOT::Reflex::MemberTemplateImpl::Template
 
                                              
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Member & ROOT::Reflex::MemberTemplateImpl::TemplateInstanceAt( size_t nth ) const {
+ROOT::Reflex::Member ROOT::Reflex::MemberTemplateImpl::TemplateInstanceAt( size_t nth ) const {
 //-------------------------------------------------------------------------------
 // Return the nth template instance of this template family.
    if ( nth < fTemplateInstances.size() ) return fTemplateInstances[ nth ];
@@ -110,7 +110,7 @@ size_t ROOT::Reflex::MemberTemplateImpl::TemplateInstanceSize() const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::MemberTemplate & ROOT::Reflex::MemberTemplateImpl::ThisMemberTemplate() const {
+ROOT::Reflex::MemberTemplate ROOT::Reflex::MemberTemplateImpl::ThisMemberTemplate() const {
 //-------------------------------------------------------------------------------
    // Return a ref to this member template.
    return fMemberTemplateName->ThisMemberTemplate();

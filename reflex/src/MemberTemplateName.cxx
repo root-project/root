@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberTemplateName.cxx,v 1.3 2006/08/28 16:03:54 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberTemplateName.cxx,v 1.4 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -67,8 +67,8 @@ ROOT::Reflex::MemberTemplateName::~MemberTemplateName() {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::MemberTemplate & ROOT::Reflex::MemberTemplateName::ByName( const std::string & name,
-                                                                               size_t nTemplateParams ) {
+ROOT::Reflex::MemberTemplate ROOT::Reflex::MemberTemplateName::ByName( const std::string & name,
+                                                                       size_t nTemplateParams ) {
 //-------------------------------------------------------------------------------
    // Lookup a member template by its name.
    typedef Name2MemberTemplate_t::iterator IT;
@@ -121,7 +121,7 @@ std::string ROOT::Reflex::MemberTemplateName::Name( unsigned int mod ) const {
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::MemberTemplate & ROOT::Reflex::MemberTemplateName::ThisMemberTemplate() const {
+ROOT::Reflex::MemberTemplate ROOT::Reflex::MemberTemplateName::ThisMemberTemplate() const {
 //-------------------------------------------------------------------------------
    // Return the member template corresponding to this member template name.
    return * fThisMemberTemplate;
@@ -129,7 +129,7 @@ const ROOT::Reflex::MemberTemplate & ROOT::Reflex::MemberTemplateName::ThisMembe
 
 
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::MemberTemplate & ROOT::Reflex::MemberTemplateName::MemberTemplateAt( size_t nth ) {
+ROOT::Reflex::MemberTemplate ROOT::Reflex::MemberTemplateName::MemberTemplateAt( size_t nth ) {
 //-------------------------------------------------------------------------------
    // Return teh nth member template.
    if ( nth < sMemberTemplateVec().size()) return sMemberTemplateVec()[nth];

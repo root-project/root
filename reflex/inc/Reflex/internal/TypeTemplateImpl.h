@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeTemplateImpl.h,v 1.3 2006/08/28 16:03:54 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeTemplateImpl.h,v 1.4 2006/09/05 17:13:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -86,7 +86,7 @@ namespace ROOT {
           * @param  nth template instantion
           * @return pointer to nth template instantion
           */
-         const Type & TemplateInstanceAt( size_t nth ) const;
+         Type TemplateInstanceAt( size_t nth ) const;
 
 
          /**
@@ -136,7 +136,7 @@ namespace ROOT {
           * Return the member template API class corresponding to this member template impl
           * @return corresponding member template
           */
-         const TypeTemplate & ThisTypeTemplate() const;
+         TypeTemplate ThisTypeTemplate() const;
 
       public:
 
