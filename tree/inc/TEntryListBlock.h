@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.h,v 1.1 2006/10/27 09:58:02 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.h,v 1.2 2006/10/31 08:51:07 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -12,8 +12,27 @@
 //////////////////////////////////////////////////////////////////////////
 // TEntryListBlock
 //
-// Used internally in TEntryList to store the entry numbers. TEntryListBlock
-// can have two representations - stored as bits and stored as a list.
+// Used internally in TEntryList to store the entry numbers. 
+//
+// There are 2 ways to represent entry numbers in a TEntryListBlock:
+// 1) as bits, where passing entry numbers are assigned 1, not passing - 0
+// 2) as a simple array of entry numbers
+// In both cases, a UShort_t* is used. The second option is better in case
+// less than 1/16 of entries passes the selection, and the representation can be
+// changed by calling OptimizeStorage() function. 
+// When the block is being filled, it's always stored as bits, and the OptimizeStorage()
+// function is called by TEntryList when it starts filling the next block. If
+// Enter() or Remove() is called after OptimizeStorage(), representation is 
+// again changed to 1).
+//
+// Operations on blocks (see also function comments):
+// - Merge() - adds all entries from one block to the other. If the first block 
+//             uses array representation, it's changed to bits representation only
+//             if the total number of passing entries is still less than kBlockSize
+// - GetEntry(n) - returns n-th non-zero entry.
+// - Next()      - return next non-zero entry. In case of representation 1), Next()
+//                 is faster than GetEntry()
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TEntryListBlock
@@ -33,8 +52,8 @@ class TEntryListBlock:public TObject
    Bool_t   fPassing;    //1 - stores entries that belong to the list
                          //0 - stores entries that don't belong to the list (not there yet)
    UShort_t fCurrent;    //! to fasten Enter() and Contains() in list mode
-   Int_t  fLastIndexQueried; //! to optimize GetEntry() in a loop
-   Int_t  fLastIndexReturned; //! to optimize GetEntry() in a loop
+   Int_t    fLastIndexQueried; //! to optimize GetEntry() in a loop
+   Int_t    fLastIndexReturned; //! to optimize GetEntry() in a loop
 
    void Transform(Bool_t dir, UShort_t *indexnew);
 
