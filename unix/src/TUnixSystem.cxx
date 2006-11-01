@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.164 2006/10/23 16:39:32 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.165 2006/10/24 14:42:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -4295,7 +4295,7 @@ static void GetDarwinCpuInfo(CpuInfo_t *cpuinfo)
 
    Long_t cpu_ticks1[4], cpu_ticks2[4];
    ReadDarwinCpu(cpu_ticks1);
-   gSystem->Sleep(1000);
+   gSystem->Sleep(100);
    ReadDarwinCpu(cpu_ticks2);
 
    Long_t userticks = (cpu_ticks2[0] + cpu_ticks2[3]) -
@@ -4525,7 +4525,7 @@ static void GetLinuxCpuInfo(CpuInfo_t *cpuinfo)
 
    Long_t cpu_ticks1[4], cpu_ticks2[4];
    ReadLinuxCpu(cpu_ticks1);
-   gSystem->Sleep(1000);
+   gSystem->Sleep(100);
    ReadLinuxCpu(cpu_ticks2);
 
    Long_t userticks = (cpu_ticks2[0] + cpu_ticks2[3]) -
