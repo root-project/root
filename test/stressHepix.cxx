@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stressHepix.cxx,v 1.6 2006/09/15 10:05:30 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stressHepix.cxx,v 1.7 2006/11/01 14:03:49 rdm Exp $
 // Author: Rene Brun   12/09/2006
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -69,17 +69,27 @@
 #include <TSystem.h>
 #include <TStopwatch.h>
 
+
 void runTest(const char *atest, int estimate)
 {
-   printf("Running : %s, (takes %d RT seconds on the ref machine)\n",atest,estimate);
+   if (estimate > 0)
+      printf("Running : %s, (takes %d RT seconds on the ref machine)\n",atest,estimate);
    TString cmdname(gROOT->GetApplication()->Argv(0));
    TString prefix(".");
    Ssiz_t offset;
+#ifdef WIN32
+   if ((offset = cmdname.Last('\\')) != kNPOS) {
+      cmdname.Resize(offset);
+      prefix = cmdname;
+   }
+   gSystem->Exec(Form("%s\\%s >>stressHepix.log",prefix.Data(),atest));
+#else
    if ((offset = cmdname.Last('/')) != kNPOS) {
       cmdname.Resize(offset);
       prefix = cmdname;
    }
    gSystem->Exec(Form("%s/%s >>stressHepix.log",prefix.Data(),atest));
+#endif
 }
 
 int main(int argc, char **argv)
@@ -95,7 +105,7 @@ int main(int argc, char **argv)
    printf("Takes 121 CP seconds on a 1828 rootmarks machine (MacPro 3.0GHz icc9.1)\n\n");
    if (gSystem->AccessPathName("atlas.root")) {
       printf("\nPreparing geometry files from http://root.cern.ch\n\n");
-      gSystem->Exec("stressGeometry >stressHepix.log");
+      runTest("stressGeometry", 0);
    }
    TStopwatch timer;
    timer.Start();
