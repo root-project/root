@@ -1,13 +1,13 @@
-// @(#)root/test:$Name:  $:$Id: stressHepix.cxx,v 1.5 2006/09/14 07:21:37 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stressHepix.cxx,v 1.6 2006/09/15 10:05:30 brun Exp $
 // Author: Rene Brun   12/09/2006
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//    R O O T   S T R E S S H E P I X  G L O B A L  B E N C H M A R K 
+//    R O O T   S T R E S S H E P I X  G L O B A L  B E N C H M A R K
 //    ===============================================================
 //
-// HEPiX-HEPNT is an organization comprised of UNIX and Windows support staff 
-// in the High Energy Physics community. 
+// HEPiX-HEPNT is an organization comprised of UNIX and Windows support staff
+// in the High Energy Physics community.
 // One of the HEPIX activities is to gather knowledge about new hardware
 // and software and to recommend common solutions (eg Scientific Linux)
 //   see: http://wwwhepix.web.cern.ch/wwwhepix/
@@ -63,15 +63,23 @@
 // tests. Your results will be shown at http://root.cern.ch/root/Benchmark.html
 //
 ///////////////////////////////////////////////////////////////////////////////
-    
+
 #include <TROOT.h>
 #include "TApplication.h"
 #include <TSystem.h>
 #include <TStopwatch.h>
 
-void runTest(const char *atest, int estimate) {
+void runTest(const char *atest, int estimate)
+{
    printf("Running : %s, (takes %d RT seconds on the ref machine)\n",atest,estimate);
-   gSystem->Exec(Form("%s >>stressHepix.log",atest));
+   TString cmdname(gROOT->GetApplication()->Argv(0));
+   TString prefix(".");
+   Ssiz_t offset;
+   if ((offset = cmdname.Last('/')) != kNPOS) {
+      cmdname.Resize(offset);
+      prefix = cmdname;
+   }
+   gSystem->Exec(Form("%s/%s >>stressHepix.log",prefix.Data(),atest));
 }
 
 int main(int argc, char **argv)
@@ -106,14 +114,14 @@ int main(int argc, char **argv)
    Double_t ct = 0;
    {
       while (fgets(line,180,fp)) {
-      char *cpu = strstr(line,"Cpu Time =");
-      if (cpu) {sscanf(cpu+10,"%g",&cput); ct += cput;}
-   }
+         char *cpu = strstr(line,"Cpu Time =");
+         if (cpu) {sscanf(cpu+10,"%g",&cput); ct += cput;}
+      }
    }
    fclose(fp);
    Double_t reftime = 278.04; //pcbrun compiled and 368 seconds real time
    const Double_t rootmarks = 800*reftime/ct;
-   
+
    //Print table with results
    Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
    printf("\n\n");
@@ -137,5 +145,5 @@ int main(int argc, char **argv)
       else     printf("*  %s %s \n",os,gSystem->Getenv("PROCESSOR_IDENTIFIER"));
    }
    printf("****************************************************************************\n");
-}    
-   
+}
+
