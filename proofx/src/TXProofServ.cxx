@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.15 2006/10/19 12:38:07 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.16 2006/10/19 13:02:38 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -242,8 +242,20 @@ Int_t TXProofServ::CreateServer()
       return -1;
    }
 
+   // Set the this as reference of this socket
+   ((TXSocket *)fSocket)->fReference = this;
+   // Set this has handler
+   ((TXSocket *)fSocket)->fHandler = this;
+
    // Get socket descriptor
    Int_t sock = fSocket->GetDescriptor();
+
+   // Install interrupt and message input handlers
+   fInterruptHandler = new TXProofServInterruptHandler(this);
+   gSystem->AddSignalHandler(fInterruptHandler);
+   fInputHandler =
+      TXSocketHandler::GetSocketHandler(new TXProofServInputHandler(this, sock), fSocket);
+   gSystem->AddFileHandler(fInputHandler);
 
    // Get the client ID
    env = (TNamed *) fEnvList->FindObject("ROOTCLIENTID");
@@ -337,18 +349,6 @@ Int_t TXProofServ::CreateServer()
    // Save current interpreter context
    gInterpreter->SaveContext();
    gInterpreter->SaveGlobalsContext();
-
-   // Install interrupt and message input handlers
-   fInterruptHandler = new TXProofServInterruptHandler(this);
-   gSystem->AddSignalHandler(fInterruptHandler);
-   fInputHandler =
-      TXSocketHandler::GetSocketHandler(new TXProofServInputHandler(this, sock), fSocket);
-   gSystem->AddFileHandler(fInputHandler);
-
-   // Set the this as reference of this socket
-   ((TXSocket *)fSocket)->fReference = this;
-   // Set this has handler
-   ((TXSocket *)fSocket)->fHandler = this;
 
    // if master, start slave servers
    if (IsMaster()) {
