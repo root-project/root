@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: FunctionMemberTemplateInstance.cxx,v 1.12 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: FunctionMemberTemplateInstance.cxx,v 1.13 2006/10/30 12:51:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -63,7 +63,7 @@ FunctionMemberTemplateInstance( const char * nam,
    if ( ! fTemplateFamily ) {
       std::vector < std::string > parameterNames = std::vector < std::string > ();
       for ( size_t i = 65; i < 65 + TemplateArgumentSize(); ++i ) 
-         parameterNames.push_back("typename " + char(i));
+         parameterNames.push_back("typename " + std::string(1,char(i)));
       MemberTemplateImpl * mti = new MemberTemplateImpl( scopedTemplateName.c_str(),
                                                          scop,
                                                          parameterNames );
