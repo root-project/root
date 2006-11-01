@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.53 2006/05/15 06:31:19 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.54 2006/08/04 19:43:13 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -5804,6 +5804,8 @@ L200:
          fDirin[in]    = fDirin[in-1];
          fG2[in]       = fG2[in-1];
          fGstep[in]    = fGstep[in-1];
+         fWerr[in]     = fWerr[in-1];
+         fGrd[in]      = fGrd[in-1];
       }
    } else {
 //*-*-                         remove variable parameter from list
@@ -5816,6 +5818,8 @@ L200:
          fDirin[in-1]  = fDirin[in];
          fG2[in-1]     = fG2[in];
          fGstep[in-1]  = fGstep[in];
+         fWerr[in-1]   = fWerr[in];
+         fGrd[in-1]    = fGrd[in];
       }
    }
 L280:
