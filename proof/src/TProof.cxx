@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.161 2006/10/20 15:22:41 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.162 2006/10/23 14:44:39 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1213,7 +1213,7 @@ TList *TProof::GetQueryResults()
 TQueryResult *TProof::GetQueryResult(const char *ref)
 {
    // Return pointer to the full TQueryResult instance owned by the player
-   // and referenced by 'ref'
+   // and referenced by 'ref'. If ref = 0 or "", return the last query result.
 
    return fPlayer->GetQueryResult(ref);
 }

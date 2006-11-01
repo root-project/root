@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.91 2006/10/19 12:38:07 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.92 2006/10/20 15:22:41 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -582,7 +582,7 @@ public:
    Int_t       GetNumberOfQueries();
    Int_t       GetNumberOfDrawQueries() { return fDrawQueries; }
    TList      *GetQueryResults();
-   TQueryResult *GetQueryResult(const char *ref);
+   TQueryResult *GetQueryResult(const char *ref = 0);
    void        GetMaxQueries();
    void        SetMaxDrawQueries(Int_t max);
    void        ShowQueries(Option_t *opt = "");

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.38 2006/08/06 07:15:00 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.39 2006/10/03 13:31:07 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -219,7 +219,7 @@ public:
    virtual Int_t       GetNumberOfQueries() = 0;
    virtual Int_t       GetNumberOfDrawQueries() = 0;
    virtual TList      *GetQueryResults() = 0;
-   virtual TQueryResult *GetQueryResult(const char *ref) = 0;
+   virtual TQueryResult *GetQueryResult(const char *ref = 0) = 0;
    virtual void        GetMaxQueries() = 0;
    virtual void        SetMaxDrawQueries(Int_t max) = 0;
    virtual void        ShowQueries(Option_t *opt = "") = 0;
