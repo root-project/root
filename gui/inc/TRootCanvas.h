@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.21 2005/11/01 18:36:01 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.22 2006/10/12 07:57:23 antcheva Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -88,6 +88,8 @@ private:
    Bool_t               fAutoFit;    // when true canvas container keeps same size as canvas
    Int_t                fButton;     // currently pressed button
 
+   TRootCanvas(const TRootCanvas&); // Not implemented
+   TRootCanvas& operator=(const TRootCanvas&); // Not implemented
    void     CreateCanvas(const char *name);
    void     CreateEditor();
 
