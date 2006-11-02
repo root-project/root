@@ -138,14 +138,21 @@ void TGSpeedo::Build()
       for (i=1; i<4; i++) {
          mark[i] = mark[i-1] + step;
       }
-      if (!((Int_t)(fScaleMax) % 1000)) {
-         for (i=0; i<5; i++) {
-            mark[i] /= 1000.0;
+      // format tick labels
+      Int_t nexe = 0;
+      if (fScaleMax >= 1000) {
+         while (1) {
+            nexe++;
+            for (i=0; i<5; i++) {
+               mark[i] /= 10.0;
+            }
+            if (nexe%3 == 0 && mark[4] < 1000) break;
          }
          // draw multiplier
-         fImage->DrawText((Int_t)xc - 15, (Int_t)yc + 13, "x1000", 12, "#ffffff", ar);
+         fImage->DrawText((Int_t)xc - 10, (Int_t)yc + 15, "x10", 12, "#ffffff", ar);
+         sc.Form("%d", nexe);
+         fImage->DrawText((Int_t)xc + 9, (Int_t)yc + 13, sc.Data(), 10, "#ffffff", ar);
       }
-
       // Format and draw scale tickmarks
       sc.Form("%d",(Int_t)mark[0]);
       fImage->DrawText((Int_t)xc - 51, (Int_t)yc + 30, sc.Data(), 14, "#ffffff", ar);
@@ -162,9 +169,10 @@ void TGSpeedo::Build()
       fImage->DrawText((Int_t)xc + offset, (Int_t)yc + 30, sc.Data(), 14, "#ffffff", ar);
       // draw main label (two lines)
       fImage->DrawText((Int_t)xc + 13, (Int_t)yc - 17, fLabel1.Data(), 14, "#ffffff", ar);
-      fImage->DrawText((Int_t)xc + 13, (Int_t)yc -  2, fLabel2.Data(), 12, "#ffffff", ar);
+      fImage->DrawText((Int_t)xc + 13, (Int_t)yc -  4, fLabel2.Data(), 12, "#ffffff", ar);
+      if (fBase)
+         gVirtualX->ShapeCombineMask(fId, 0, 0, fBase->GetMask());
    }
-   gVirtualX->ShapeCombineMask(fId, 0, 0, fBase->GetMask());
 }
 
 //______________________________________________________________________________
@@ -464,7 +472,19 @@ void TGSpeedo::DoRedraw()
       TString fp = gEnv->GetValue("Root.TTFontPath", "");
       TString ar = fp + "/arialbd.ttf";
       // format counter value
-      sprintf(sval, "%04d", (int)fCounter);
+      Int_t nexe = 0;
+      Int_t ww = fCounter;
+      if (fCounter >= 10000) {
+         while (1) {
+            nexe++;
+            ww /= 10;
+            if (nexe%3 == 0 && ww < 10000) break;
+         }
+         img->DrawText((Int_t)xc - 8, (Int_t)yc + 72, "x10", 10, "#ffffff", ar);
+         sprintf(sval,"%d", nexe);
+         img->DrawText((Int_t)xc + 8, (Int_t)yc + 69, sval, 8, "#ffffff", ar);
+      }
+      sprintf(sval, "%04d", (int)ww);
       sprintf(dsval, "%c %c %c %c", sval[0], sval[1], sval[2], sval[3]);
       // draw text in the counter
       if (gVirtualX->InheritsFrom("TGX11")) {
