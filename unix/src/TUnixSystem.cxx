@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.165 2006/10/24 14:42:04 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.166 2006/11/01 14:09:08 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -4295,7 +4295,7 @@ static void GetDarwinCpuInfo(CpuInfo_t *cpuinfo)
 
    Long_t cpu_ticks1[4], cpu_ticks2[4];
    ReadDarwinCpu(cpu_ticks1);
-   gSystem->Sleep(100);
+   gSystem->Sleep(1000);
    ReadDarwinCpu(cpu_ticks2);
 
    Long_t userticks = (cpu_ticks2[0] + cpu_ticks2[3]) -
@@ -4338,9 +4338,9 @@ static void GetDarwinMemInfo(MemInfo_t *meminfo)
          pshift++;
    }
 
-   used = (natural_t)(vm_info.active_count + vm_info.inactive_count + vm_info.wire_count) << pshift;
-   free = (natural_t)vm_info.free_count << pshift;
-   total = (natural_t)(vm_info.active_count + vm_info.inactive_count + vm_info.free_count + vm_info.wire_count) << pshift;
+   used =  (Long64_t)(vm_info.active_count + vm_info.inactive_count + vm_info.wire_count) << pshift;
+   free =  (Long64_t)(vm_info.free_count) << pshift;
+   total = (Long64_t)(vm_info.active_count + vm_info.inactive_count + vm_info.free_count + vm_info.wire_count) << pshift;
 
    // Swap is available at same time as mem, so grab values here.
    swap_used = vm_info.pageouts << pshift;
