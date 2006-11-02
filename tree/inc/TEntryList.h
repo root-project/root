@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.h,v 1.1 2006/10/27 09:58:02 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.h,v 1.2 2006/10/31 08:51:07 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -37,6 +37,8 @@ class TEntryList: public TNamed
 
    Long64_t         fLastIndexQueried; //! used to optimize GetEntry() function from a loop 
    Long64_t         fLastIndexReturned; //! used to optimize GetEntry() function from a loop
+   Bool_t           fShift;            //! true when some sub-lists don't correspond to trees
+                                       //(when the entry list is used as input in TChain)
    TDirectory      *fDirectory;   //! Pointer to directory holding this tree
 
  public:
@@ -72,7 +74,7 @@ class TEntryList: public TNamed
 
    virtual void        Print(const Option_t* option = "") const;
 
-
+   virtual void        SetShift(Bool_t shift) { fShift = shift; };
    virtual void        SetTree(const TTree *tree);
    virtual void        SetTree(const char *treename, const char *filename);
    virtual void        SetTreeName(const char *treename){ fTreeName = treename; };

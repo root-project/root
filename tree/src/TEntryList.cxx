@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.2 2006/10/31 08:51:07 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.3 2006/10/31 15:18:34 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -82,7 +82,7 @@ TEntryList::TEntryList()
    //default c-tor
 
    fLists = 0;
-   fCurrent = this;
+   fCurrent = 0;
    fBlocks = 0;
    fN = 0;
    fNBlocks = 0;
@@ -93,6 +93,7 @@ TEntryList::TEntryList()
 
    fLastIndexQueried = -1;
    fLastIndexReturned = 0;
+   fShift = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -101,7 +102,7 @@ TEntryList::TEntryList(const char *name, const char *title):TNamed(name, title)
    //c-tor with name and title
 
    fLists = 0;
-   fCurrent = this;
+   fCurrent = 0;
    fBlocks = 0;
    fN = 0;
    fNBlocks = 0;
@@ -113,7 +114,7 @@ TEntryList::TEntryList(const char *name, const char *title):TNamed(name, title)
 
    fLastIndexQueried = -1;
    fLastIndexReturned = 0;
-
+   fShift = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -122,7 +123,7 @@ TEntryList::TEntryList(const char *name, const char *title, const TTree *tree):T
    //constructor with name and title, which also sets the tree
 
    fLists = 0;
-   fCurrent = this;
+   fCurrent = 0;
    fBlocks = 0;
    fN = 0;
    fNBlocks = 0;
@@ -136,7 +137,7 @@ TEntryList::TEntryList(const char *name, const char *title, const TTree *tree):T
 
    fLastIndexQueried = -1;
    fLastIndexReturned = 0;
-
+   fShift = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -145,7 +146,7 @@ TEntryList::TEntryList(const char *name, const char *title, const char *treename
    //c-tor with name and title, which also sets the treename and the filename
 
    fLists = 0;
-   fCurrent = this;
+   fCurrent = 0;
    fBlocks = 0;
    fNBlocks = 0;
    fN = 0;
@@ -156,6 +157,7 @@ TEntryList::TEntryList(const char *name, const char *title, const char *treename
 
    fLastIndexQueried = -1;
    fLastIndexReturned = 0;
+   fShift = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -164,7 +166,7 @@ TEntryList::TEntryList(const TTree *tree)
    //c-tor, which sets the tree
 
    fLists = 0;
-   fCurrent = this;
+   fCurrent = 0;
    fBlocks = 0;
    fNBlocks = 0;
    fN = 0;
@@ -176,6 +178,7 @@ TEntryList::TEntryList(const TTree *tree)
 
    fLastIndexQueried = -1;
    fLastIndexReturned = 0;
+   fShift = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -188,6 +191,7 @@ TEntryList::TEntryList(const TEntryList &elist) : TNamed(elist)
    fFileName = elist.fFileName;
    fTreeNumber = elist.fTreeNumber;
    fN = elist.fN;
+   fShift = elist.fShift;
    fLists = 0;
    fBlocks = 0;
    if (elist.fLists){
@@ -386,6 +390,7 @@ Int_t TEntryList::Contains(Long64_t entry, TTree *tree)
          return block->Contains(entry-nblock*kBlockSize);
       }
       if (fLists) {
+         if (!fCurrent) fCurrent = (TEntryList*)fLists->First();
          return fCurrent->Contains(entry);
       }
    } else {
@@ -431,6 +436,7 @@ Bool_t TEntryList::Enter(Long64_t entry, TTree *tree)
          }
       } else {
          //the entry in the current entry list
+         if (!fCurrent) fCurrent = (TEntryList*)fLists->First();
          if (fCurrent->Enter(entry)) {
             fN++;
             return 1;
@@ -473,6 +479,7 @@ Bool_t TEntryList::Remove(Long64_t entry, TTree *tree)
             return 1;
          }
       } else {
+         if (!fCurrent) fCurrent = (TEntryList*)fLists->First();
          if (fCurrent->Remove(entry)){
             fN--;
             return 1;
@@ -496,6 +503,7 @@ Long64_t TEntryList::GetEntry(Int_t index)
 {
    //return the number of the entry #index of this TEntryList in the TTree or TChain
    //See also Next().
+
 
    if (index>=fN){
       return -1;
@@ -530,6 +538,7 @@ Long64_t TEntryList::GetEntry(Int_t index)
          return res;
       } else {
          //find the corresponding list
+         if (!fCurrent) fCurrent = (TEntryList*)fLists->First();
          TIter next(fLists);
          TEntryList *templist;
          Long64_t ntotal = 0;
@@ -543,7 +552,12 @@ Long64_t TEntryList::GetEntry(Int_t index)
 
          }
          while ((templist = (TEntryList*)next())){
-            ntotal += templist->GetN();
+            if (!fShift){
+               ntotal += templist->GetN();
+            } else {
+               if (templist->GetTreeNumber() >= 0)
+                  ntotal += templist->GetN();
+            }
             if (ntotal > index)
               break;
          }
@@ -564,8 +578,18 @@ Long64_t TEntryList::GetEntryAndTree(Int_t index, Int_t &treenum)
 //return the index of "index"-th non-zero entry in the TTree or TChain
 //and the # of the corresponding tree in the chain
 
+//If shift is true, then when the requested entry is found in an entry list,
+//for which there is no corresponding tree in the chain, this list is not
+//taken into account, and entry from the next list with a tree is returned.
+//Example:
+//First sublist - 20 entries, second sublist - 5 entries, third sublist - 10 entries
+//Second sublist doesn't correspond to any trees of the chain
+//Then, when GetEntryAndTree(21, treenum, kTRUE) is called, first entry of the
+//third sublist will be returned
+
    Long64_t result = GetEntry(index);
    treenum = fCurrent->fTreeNumber;
+   if (treenum<0) return -1;
    return result;
 }
 
@@ -647,6 +671,7 @@ Long64_t TEntryList::Next()
          return fLastIndexReturned;
       }
    } else {
+      if (!fCurrent) fCurrent = (TEntryList*)fLists->First();
       result = fCurrent->Next();
       if (result>=0) {
          fLastIndexQueried++;
@@ -668,7 +693,12 @@ Long64_t TEntryList::Next()
             fCurrent->fLastIndexQueried = -1;
             fCurrent->fLastIndexReturned = 0;
             fCurrent = (TEntryList*)fLists->After(fCurrent);
-            result = fCurrent->Next();
+            if (!fShift)
+               result = fCurrent->Next();
+            else {
+               if (fCurrent->GetTreeNumber() >= 0)
+                  result = fCurrent->Next();
+            }
          }
          fLastIndexQueried++;
          fLastIndexReturned = result;
@@ -742,7 +772,7 @@ void TEntryList::Reset()
       delete fLists;
       fLists = 0;
    }
-   fCurrent = this;
+   fCurrent = 0;
    fBlocks = 0;
    fNBlocks = 0;
    fN = 0;
@@ -760,13 +790,17 @@ void TEntryList::SetTree(const char *treename, const char *filename)
    //If not, creates this list and sets it as the current sublist
 
    TEntryList *elist = 0;
-   if (fCurrent->fTreeName==treename && fCurrent->fFileName==filename){
+   //if (fCurrent->fTreeName==treename && fCurrent->fFileName==filename){
       //this tree's entry list is current, do nothing
-      return;
-   }
+   // return;
+   //}
    if (fLists) {
       //find the corresponding entry list and make it current
-
+      if (!fCurrent) fCurrent = (TEntryList*)fLists->First();
+      if (fCurrent->fTreeName==treename && fCurrent->fFileName==filename){
+         //this tree's entry list is current, do nothing
+         return;
+      }
       TIter next(fLists);
       while ((elist = (TEntryList*)next())){
          if (elist->fTreeName==treename && elist->fFileName== filename){
