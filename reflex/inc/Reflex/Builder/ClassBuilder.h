@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.h,v 1.10 2006/08/11 06:31:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.h,v 1.11 2006/09/14 14:39:12 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -117,6 +117,13 @@ namespace ROOT {
                             Any value );
          void  AddProperty( const char * key, 
                             const char * value );
+
+
+         /*
+          * ToType will return the currently produced Type (class)
+          * @return the type currently being built
+          */
+         Type ToType();
       
       private:
 
@@ -235,6 +242,13 @@ namespace ROOT {
             ClassBuilder & AddProperty( const char * key, 
                                         P value );
 
+
+         /*
+          * ToType will return the currently produced Type (class)
+          * @return the type currently being built
+          */
+         Type ToType();
+      
       private:
       
          ClassBuilderImpl fClassBuilderImpl;
@@ -349,6 +363,13 @@ namespace ROOT {
             ClassBuilderT & AddProperty( const char * key, 
                                          P value );
 
+
+         /*
+          * ToType will return the currently produced Type (class)
+          * @return the type currently being built
+          */
+         Type ToType();
+      
          private:
       
          ClassBuilderImpl fClassBuilderImpl;
@@ -649,6 +670,14 @@ ROOT::Reflex::ClassBuilderT<C>::AddProperty( const char * key,
 {
    fClassBuilderImpl.AddProperty(key , value);
    return * this;
+}
+
+
+//-------------------------------------------------------------------------------
+template < class C > inline ROOT::Reflex::Type 
+ROOT::Reflex::ClassBuilderT<C>::ToType() {
+//-------------------------------------------------------------------------------
+   return fClassBuilderImpl.ToType();
 }
 
 #endif // ROOT_Reflex_ClassBuilder

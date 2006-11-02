@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: v5-13-04 $:$Id: ClassBuilder.cxx,v 1.15 2006/09/14 14:39:12 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.cxx,v 1.16 2006/11/01 11:10:59 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -138,6 +138,14 @@ ROOT::Reflex::ClassBuilder::AddEnum( const char * nam,
   return * this;
   }
 */
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Type ROOT::Reflex::ClassBuilder::ToType() {
+//-------------------------------------------------------------------------------
+// Return the type currently being built.
+   return fClassBuilderImpl.ToType();
+}
 
 
 //-------------------------------------------------------------------------------
@@ -287,6 +295,13 @@ void ROOT::Reflex::ClassBuilderImpl::AddProperty( const char * key,
 //-------------------------------------------------------------------------------
 // Add property info (internal).
    if ( fLastMember ) fLastMember.Properties().AddProperty( key, value );
-   else                fClass->Properties().AddProperty(key, value); 
+   else               fClass->Properties().AddProperty(key, value); 
 }
 
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Type ROOT::Reflex::ClassBuilderImpl::ToType() {
+//-------------------------------------------------------------------------------
+// Return the type currently being built.
+   return fClass->ThisType();
+}

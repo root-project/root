@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: NamespaceBuilder.cxx,v 1.9 2006/07/04 15:02:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: NamespaceBuilder.cxx,v 1.10 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -57,3 +57,10 @@ ROOT::Reflex::NamespaceBuilder::AddProperty( const char * key,
    return * this;
 }
     
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Scope ROOT::Reflex::NamespaceBuilder::ToScope() {
+//-------------------------------------------------------------------------------
+// Return the scope currently being built.
+   return fNamespace;
+}

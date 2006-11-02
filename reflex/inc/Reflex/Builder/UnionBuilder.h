@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: UnionBuilder.h,v 1.7 2006/06/30 19:17:46 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: UnionBuilder.h,v 1.8 2006/08/01 09:14:32 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -75,6 +75,13 @@ namespace ROOT{
          void AddProperty( const char * key,
                            const char * value );
 
+
+         /*
+          * ToType will return the currently produced Type (class)
+          * @return the type currently being built
+          */
+         Type ToType();
+      
       private:
 
          /** the union currently being built */
@@ -142,6 +149,13 @@ namespace ROOT{
             UnionBuilder & AddProperty( const char * key, 
                                         P value );
 
+
+         /*
+          * ToType will return the currently produced Type (class)
+          * @return the type currently being built
+          */
+         Type ToType();
+      
          private:
 
          /** the union information */
@@ -202,6 +216,14 @@ ROOT::Reflex::UnionBuilder<T>::AddProperty( const char * key,
 //-------------------------------------------------------------------------------
    fUnionBuilderImpl.AddProperty( key, value );
    return * this;
+}
+
+
+//-------------------------------------------------------------------------------
+template < typename T > inline ROOT::Reflex::Type
+ROOT::Reflex::UnionBuilder<T>::ToType() {
+//-------------------------------------------------------------------------------
+   return fUnionBuilderImpl.ToType();
 }
 
 

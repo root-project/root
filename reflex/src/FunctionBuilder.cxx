@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: FunctionBuilder.cxx,v 1.11 2006/08/03 16:49:21 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: FunctionBuilder.cxx,v 1.12 2006/09/12 13:06:46 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -54,6 +54,14 @@ ROOT::Reflex::FunctionBuilder::AddProperty( const char * key,
 // Add property info to this function as Any object.
    fFunction.Properties().AddProperty( key , value );
    return * this;
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Member ROOT::Reflex::FunctionBuilder::ToMember() {
+//-------------------------------------------------------------------------------
+   // Return the function currently being built.
+   return fFunction;
 }
 
 
@@ -128,6 +136,14 @@ void ROOT::Reflex::FunctionBuilderImpl::AddProperty( const char * key,
 //-------------------------------------------------------------------------------
 // Add property info to this function type.
    fFunction.Properties().AddProperty( key , value );
+}
+
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Member ROOT::Reflex::FunctionBuilderImpl::ToMember() {
+//-------------------------------------------------------------------------------
+   // Return the function member currently being built.
+   return fFunction;
 }
 
 

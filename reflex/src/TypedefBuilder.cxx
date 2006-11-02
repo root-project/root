@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypedefBuilder.cxx,v 1.9 2006/08/03 16:49:21 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypedefBuilder.cxx,v 1.10 2006/08/16 14:04:10 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -47,3 +47,10 @@ void ROOT::Reflex::TypedefBuilderImpl::AddProperty( const char * key,
    AddProperty( key, Any(value));
 }
 
+
+//-------------------------------------------------------------------------------
+ROOT::Reflex::Type ROOT::Reflex::TypedefBuilderImpl::ToType() {
+//-------------------------------------------------------------------------------
+// Return the type currently being built.
+   return fTypedef;
+}

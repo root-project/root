@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: VariableBuilder.h,v 1.7 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: VariableBuilder.h,v 1.8 2006/07/05 07:09:09 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -42,9 +42,9 @@ namespace ROOT {
 
 
          /** 
-          * AddProperty will add a PropertyNth 
-          * @param  key the PropertyNth key
-          * @param  value the value of the PropertyNth
+          * AddProperty will add a property
+          * @param  key the property key
+          * @param  value the value of the property
           * @return a reference to the building class
           */
          VariableBuilder & AddProperty( const char * key, 
@@ -52,9 +52,16 @@ namespace ROOT {
          VariableBuilder & AddProperty( const char * key,
                                         const char * value );
 
+
+         /**
+          * ToMember will return the member currently being built
+          * @return member currently being built
+          */
+         Member ToMember();
+
       private:
 
-         /** function MemberAt */
+         /** function member */
          Member fDataMember;
 
       }; // class VariableBuilder
@@ -81,9 +88,9 @@ namespace ROOT {
          ~VariableBuilderImpl();
 
 
-         /** AddProperty will add a PropertyNth 
-          * @param  key the PropertyNth key
-          * @param  value the value of the PropertyNth
+         /** AddProperty will add a property 
+          * @param  key the property key
+          * @param  value the value of the property
           * @return a reference to the building class
           */
          void AddProperty( const char * key, 
@@ -92,10 +99,18 @@ namespace ROOT {
                            const char * value );
 
 
-         /** string containing the union information */
+         /**
+          * ToMember will return the member currently being built
+          * @return member currently being built
+          */
+         Member ToMember();
+
+      private:
+
+         /** member being built */
          Member fDataMember;
 
-      }; // class VariableBuilder
+      }; // class VariableBuilderImpl
 
 
       /** 
@@ -119,17 +134,24 @@ namespace ROOT {
       
 
          /** 
-          * AddProperty will add a PropertyNth 
-          * @param  key the PropertyNth key
-          * @param  value the value of the PropertyNth
+          * AddProperty will add a property 
+          * @param  key the property key
+          * @param  value the value of the property
           * @return a reference to the building class
           */
          template < typename P >
             VariableBuilderT & AddProperty( const char * key, P value );
 
+
+         /**
+          * ToMember will return the member currently being built
+          * @return member currently being built
+          */
+         Member ToMember();
+
       private:
 
-         /** data MemberAt builder implementation */
+         /** data member builder implementation */
          VariableBuilderImpl fDataMemberBuilderImpl;
     
       }; // class VariableBuilderT
@@ -159,6 +181,14 @@ ROOT::Reflex::VariableBuilderT<D>::AddProperty( const char * key,
 //-------------------------------------------------------------------------------
    fDataMemberBuilderImpl.AddProperty(key, value);
    return * this;
+}
+
+
+//-------------------------------------------------------------------------------
+template < typename D > inline ROOT::Reflex::Member
+ROOT::Reflex::VariableBuilderT<D>::ToMember() {
+//-------------------------------------------------------------------------------
+   return fDataMemberBuilderImpl.ToMember();
 }
 
 #endif // ROOT_Reflex_VariableBuilder

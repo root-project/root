@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: NamespaceBuilder.h,v 1.5 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: NamespaceBuilder.h,v 1.6 2006/07/05 07:09:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -42,6 +42,12 @@ namespace ROOT{
           */
          NamespaceBuilder & AddProperty( const char * key, Any value );
          NamespaceBuilder & AddProperty( const char * key, const char * value );
+
+         /**
+          * ToScope will return the currently being built namespace
+          * @return namespace currently being built
+          */
+         Scope ToScope();
 
       private:
 

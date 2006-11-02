@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: HEAD $:$Id: FunctionBuilder.h,v 1.7 2006/03/13 15:49:50 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: FunctionBuilder.h,v 1.8 2006/07/05 07:09:08 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -45,9 +45,9 @@ namespace ROOT {
          virtual ~FunctionBuilder();
 
 
-         /** AddProperty will add a PropertyNth 
-          * @param  key the PropertyNth key
-          * @param  value the value of the PropertyNth
+         /** AddProperty will add a property
+          * @param  key the property key
+          * @param  value the value of the property
           * @return a reference to the building class
           */
          FunctionBuilder & AddProperty( const char * key, 
@@ -55,9 +55,16 @@ namespace ROOT {
          FunctionBuilder & AddProperty( const char * key,
                                         const char * value );
 
+
+         /**
+          * ToMember will return the member currently being built
+          * @return member currently being built
+          */
+         Member ToMember();
+
       private:
 
-         /** function MemberAt */
+         /** function member */
          Member fFunction;
 
       }; // class FunctionBuilder
@@ -86,9 +93,9 @@ namespace ROOT {
          ~FunctionBuilderImpl();
 
 
-         /** AddProperty will add a PropertyNth 
-          * @param  key the PropertyNth key
-          * @param  value the value of the PropertyNth
+         /** AddProperty will add a property 
+          * @param  key the property key
+          * @param  value the value of the property
           * @return a reference to the building class
           */
          void AddProperty( const char * key, 
@@ -96,7 +103,16 @@ namespace ROOT {
          void AddProperty( const char * key, 
                            const char * value );
 
-         /** string containing the union information */
+
+         /**
+          * ToMember will return the member currently being built
+          * @return member currently being built
+          */
+         Member ToMember();
+
+      private:
+
+         /** function member being built */
          Member fFunction;
 
       }; // class FunctionBuilderImpl
@@ -123,14 +139,20 @@ namespace ROOT {
          virtual ~FunctionBuilderT() {}
 
       
-         /** AddProperty will add a PropertyNth 
-          * @param  key the PropertyNth key
-          * @param  value the value of the PropertyNth
+         /** AddProperty will add a property
+          * @param  key the property key
+          * @param  value the value of the property
           * @return a reference to the building class
           */
          template < typename P >
             FunctionBuilderT & AddProperty( const char * key, P value );
 
+
+         /**
+          * ToMember will return the member currently being built
+          * @return member currently being built
+          */
+         Member ToMember();
 
       private:
 
@@ -169,6 +191,14 @@ ROOT::Reflex::FunctionBuilderT<F>::AddProperty( const char * key,
 { 
    fFunctionBuilderImpl.AddProperty(key , value);
    return * this;
+}
+
+
+//-------------------------------------------------------------------------------
+template < typename F > inline ROOT::Reflex::Member
+ROOT::Reflex::FunctionBuilderT<F>::ToMember() {
+//-------------------------------------------------------------------------------
+   return fFunctionBuilderImpl.ToMember();
 }
 
 #endif // ROOT_Reflex_FunctionBuilder

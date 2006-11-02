@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: EnumBuilder.h,v 1.7 2006/07/05 07:09:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: EnumBuilder.h,v 1.8 2006/08/01 09:14:32 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -70,6 +70,13 @@ namespace ROOT{
          EnumBuilder &  AddProperty( const char * key,
                                      const char * value );
 
+
+         /*
+          * ToType will return the currently produced Type (class)
+          * @return the type currently being built
+          */
+         Type ToType();
+      
       private:
 
          /** current enum being built */
@@ -126,6 +133,13 @@ namespace ROOT{
             EnumBuilderT & AddProperty( const char * key, 
                                         P value );
 
+
+         /*
+          * ToType will return the currently produced Type (class)
+          * @return the type currently being built
+          */
+         Type ToType();
+      
          private:
 
          /** the enums and values */
@@ -176,6 +190,15 @@ ROOT::Reflex::EnumBuilderT<T>::AddProperty( const char * key,
    fEnumBuilderImpl.AddProperty( key, value );
    return * this;
 }
+
+
+//-------------------------------------------------------------------------------
+template < typename T > inline ROOT::Reflex::Type
+ROOT::Reflex::EnumBuilderT<T>::ToType() {
+//-------------------------------------------------------------------------------
+   return fEnumBuilderImpl.ToType();
+}
+   
 
 
 #endif // ROOT_Reflex_EnumBuilder

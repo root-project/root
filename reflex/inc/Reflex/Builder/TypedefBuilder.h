@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypedefBuilder.h,v 1.7 2006/07/05 07:09:09 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypedefBuilder.h,v 1.8 2006/08/16 14:04:10 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -41,7 +41,7 @@ namespace ROOT{
 
       
          /** 
-          * AddProperty will add a PropertyNth to the typedef currently being built
+          * AddProperty will add a property to the typedef currently being built
           * @param  key the PropertyNth key
           * @param  value the value of the PropertyNth
           */
@@ -50,12 +50,19 @@ namespace ROOT{
 
 
          /** 
-          * AddProperty will add a PropertyNth to the typedef currently being built
+          * AddProperty will add a property to the typedef currently being built
           * @param  key the PropertyNth key
           * @param  value the value of the PropertyNth
           */
          void AddProperty( const char * key,
                            const char * value );
+
+
+         /*
+          * ToType will return the currently produced Type (class)
+          * @return the type currently being built
+          */
+         Type ToType();
 
       private:
 
@@ -85,18 +92,25 @@ namespace ROOT{
 
 
          /** 
-          * AddProperty will add a PropertyNth to the typedef currently being built
-          * @param  key the PropertyNth key
-          * @param  value the value of the PropertyNth
+          * AddProperty will add a property to the typedef currently being built
+          * @param  key the property key
+          * @param  value the value of the property
           * @return a reference to the building class
           */
          template < typename P >
             TypedefBuilder & AddProperty( const char * key, 
                                           P value );
 
+
+         /*
+          * ToType will return the currently produced Type (class)
+          * @return the type currently being built
+          */
+         Type ToType();
+         
          private:
 
-         /** the At of the typedef */
+         /** the type of the typedef */
          TypedefBuilderImpl fTypedefBuilderImpl;
 
       }; // class TypedefBuilder
@@ -119,6 +133,14 @@ ROOT::Reflex::TypedefBuilder<T>::AddProperty( const char * key,
 //-------------------------------------------------------------------------------
    fTypedefBuilderImpl.AddProperty( key, value );
    return * this;
+}
+
+
+//-------------------------------------------------------------------------------
+template < typename T > inline ROOT::Reflex::Type 
+ROOT::Reflex::TypedefBuilder<T>::ToType() {
+//-------------------------------------------------------------------------------
+   return fTypedefBuilderImpl.ToType();
 }
 
 #endif // ROOT_Reflex_TypedefBuilder
