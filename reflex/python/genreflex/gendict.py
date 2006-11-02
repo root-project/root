@@ -308,7 +308,9 @@ class genDictionary(object) :
             self.genTypeID(t['id'])
             catt = c['attrs']
             catt['extra'] = match[0]
-            if catt not in selec : selec.append(catt)
+            if catt not in selec :
+              print '--->> genreflex: INFO: Using typedef %s to select class %s' % (self.genTypeName(t['id']), self.genTypeName(catt['id']))
+              selec.append(catt)
       if self.resolvettd :
         newselector = self.resolveSelectorTypedefs( self.selector.sel_classes )
         if newselector:
