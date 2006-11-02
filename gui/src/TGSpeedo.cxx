@@ -437,10 +437,10 @@ void TGSpeedo::Translate(Float_t val, Float_t angle, Int_t *x, Int_t *y)
 //______________________________________________________________________________
 void TGSpeedo::DoRedraw()
 {
-   // Redraw Analog Meterer widget.
+   // Redraw speedo widget.
 
-   char sval[8];
-   char dsval[8];
+   char sval[80];
+   char dsval[80];
    Int_t strSize;
    Int_t xch0, xch1, ych0, ych1;
    Int_t xpk0, ypk0, xpk1, ypk1;
