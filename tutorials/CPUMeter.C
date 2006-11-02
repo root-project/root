@@ -109,6 +109,8 @@ void CPUMeter()
    // enable peak marker
    speedo->EnablePeakMark();
    // update the TGSpeedo widget
+   gSystem->GetCpuInfo(&cpuInfo);
+   gSystem->GetMemInfo(&memInfo);
    gSystem->ProcessEvents();
    while (mainWindow->IsRunning() && mainWindow->IsMapped()) {
       // Get CPU informations
@@ -135,8 +137,8 @@ void CPUMeter()
          old_memUsage = memUsage;
       }
       // sleep a bit
-      gSystem->Sleep(250);
       gSystem->ProcessEvents();
+      gSystem->Sleep(250);
    }
    mainWindow->CloseWindow();
 }
