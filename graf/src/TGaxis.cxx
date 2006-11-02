@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.93 2006/09/28 09:35:12 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.94 2006/10/19 13:35:52 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -711,7 +711,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             struct tm* tptest;
             time_t timeoffsettest;
             // get timezone offset for the current location
-            Int_t  zoneoffset = TTimeStamp::GetZoneOffset();
+            Int_t zoneoffset = TTimeStamp::GetZoneOffset();
             // convert offset in hours
             zoneoffset /= 3600;
             tp.tm_year  = yy-1900;
@@ -720,25 +720,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             tp.tm_hour  = hh - zoneoffset;
             tp.tm_min   = mi;
             tp.tm_sec   = ss;
-            tp.tm_isdst = -1; //daylight saving time is only used on Windows(see mktime man pages)
-                              //If successful, *mktime* sets the values of *tm_wday* and *tm_yday* as
-                              //appropriate and sets the other components to represent the specified
-                              //calendar time, but with their values forced to the normal ranges. The final
-                              //value of *tm_mday* is not set until *tm_mon* and *tm_year* are determined.
-                              //When specifying a *tm* structure time, set the *tm_isdst* field to:
-                              //  * Zero (0) to indicate that standard time is in effect.
-                              //   * A value greater than 0 to indicate that daylight savings time is
-                              //     in effect.
-                              //   * A value less than zero to have the C run-time library code compute
-                              //     whether standard time or daylight savings time is in effect.
-                              //                   
-                              //(The C run-time library assumes the United States' rules for implementing
-                              //the calculation of Daylight Saving Time.) *tm_isdst* is a required field. If
-                              //not set, its value is undefined and the return value from *mktime* is
-                              //unpredictable. If /timeptr/ points to a *tm* structure returned by a
-                              //previous call to *asctime*, *gmtime*, or *localtime*, the *tm_isdst* field
-                              //contains the correct value.            timeoffset  = mktime(&tp);
+            tp.tm_isdst =  1; //daylight saving time is on.
             timeoffset  = mktime(&tp);
+            if (timeoffset<0.) timeoffset=0.;
             // have to correct this time to go back to UTC
             timeoffsettest = (time_t)((Long_t)timeoffset);
             tptest = gmtime(&timeoffsettest);
