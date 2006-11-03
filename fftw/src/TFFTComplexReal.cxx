@@ -1,4 +1,4 @@
-// @(#)root/fft:$Name:  $:$Id: TFFTComplexReal.cxx,v 1.3 2006/04/11 12:50:04 rdm Exp $
+// @(#)root/fft:$Name:  $:$Id: TFFTComplexReal.cxx,v 1.4 2006/10/27 16:21:11 brun Exp $
 // Author: Anna Kreshuk   07/4/2006
 
 /*************************************************************************
@@ -336,10 +336,12 @@ void TFFTComplexReal::SetPoint(const Int_t *ipoint, Double_t re, Double_t im)
 //the points have to be set.
 
    Int_t ireal = ipoint[0];
-   for (Int_t i=0; i<fNdim-1; i++)
+   for (Int_t i=0; i<fNdim-2; i++){
       ireal=fN[i+1]*ireal + ipoint[i+1];
-
+   } 
+   ireal = (fN[fNdim-1]/2+1)*ireal+ipoint[fNdim-1];
    Int_t realN = Int_t(Double_t(fTotalSize)*(fN[fNdim-1]/2+1)/fN[fNdim-1]);
+
    if (ireal > realN){
       Error("SetPoint", "Illegal index value");
       return;
