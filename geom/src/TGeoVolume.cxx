@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.92 2006/10/20 08:38:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.93 2006/10/20 21:07:40 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -341,6 +341,8 @@
 #include "TClass.h"
 #include "TEnv.h"
 #include "TMap.h"
+#include "TFile.h"
+#include "TKey.h"
 
 #include "TGeoManager.h"
 #include "TGeoNode.h"
@@ -349,6 +351,7 @@
 #include "TGeoVolume.h"
 #include "TGeoShapeAssembly.h"
 #include "TGeoScaledShape.h"
+#include "TGeoCompositeShape.h"
 
 ClassImp(TGeoVolume)
 
@@ -520,15 +523,24 @@ void TGeoVolume::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Do
 void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option) const
 {
 // Overlap checking tool. Check for illegal overlaps within a limit OVLP.
+// Use option="s[number]" to force overlap checking by sampling volume with
+// [number] points.
+// Ex: myVol->CheckOverlaps(0.01, "s10000000"); // shoot 10000000 points
+//     myVol->CheckOverlaps(0.01, "s"); // shoot the default value of 1e6 points
+
    if (!GetNdaughters() || fFinder) return;
+   Bool_t sampling = kFALSE;
+   TString opt(option);
+   opt.ToLower();
+   if (opt.Contains("s")) sampling = kTRUE;
    TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
-   fGeoManager->SetNsegments(80);
+   if (!sampling) fGeoManager->SetNsegments(80);
    if (!fGeoManager->IsCheckingOverlaps()) {
       fGeoManager->ClearOverlaps();
       Info("CheckOverlaps", "=== Checking overlaps vor volume %s ===\n", GetName());
    }   
    painter->CheckOverlaps(this, ovlp, option);
-   
+   if (sampling) return;
    if (!fGeoManager->IsCheckingOverlaps()) {
       fGeoManager->SortOverlaps();
       TObjArray *overlaps = fGeoManager->GetListOfOverlaps();
@@ -746,6 +758,92 @@ void TGeoVolume::InspectMaterial() const
 {
 // Inspect the material for this volume.
    fMedium->GetMaterial()->Print();
+}
+
+//_____________________________________________________________________________
+TGeoVolume *TGeoVolume::Import(const char *filename, const char *name, Option_t * /*option*/)
+{
+// Import a volume from a file.
+   if (!gGeoManager) gGeoManager = new TGeoManager("geometry","");
+   if (!filename) return 0;
+   TGeoVolume *volume = 0;
+   if (strstr(filename,".gdml")) {
+   // import from a gdml file
+   } else {
+   // import from a root file
+      TFile *old = gFile;
+      TFile *f = TFile::Open(filename);
+      if (!f || f->IsZombie()) {
+         if (old) old->cd();
+         printf("Error: TGeoVolume::Import : Cannot open file %s\n", filename);
+         return 0;
+      }
+      if (name && strlen(name) > 0) {
+         volume = (TGeoVolume*)f->Get(name);
+      } else {
+         TIter next(f->GetListOfKeys());
+         TKey *key;
+         while ((key = (TKey*)next())) {
+            if (strcmp(key->GetClassName(),"TGeoVolume") != 0) continue;
+            volume = (TGeoVolume*)key->ReadObj();
+            break;
+         }
+      }
+      if (old) old->cd();
+      delete f;         
+   }
+   if (!volume) return NULL;
+   volume->RegisterYourself();
+   return volume;
+}
+   
+//_____________________________________________________________________________
+Int_t TGeoVolume::Export(const char *filename, const char *name, Option_t *option)
+{
+// Export this volume to a file.
+   //
+   // -Case 1: root file or root/xml file
+   //  if filename end with ".root". The key will be named name
+   //  if filename end with ".xml" a root/xml file is produced.
+   //
+   // -Case 2: C++ script
+   //  if filename end with ".C"
+   //
+   // -Case 3: gdml file
+   //  if filename end with ".gdml"
+   //  NOTE that to use this option, the PYTHONPATH must be defined like
+   //      export PYTHONPATH=$ROOTSYS/lib:$ROOTSYS/gdml
+   //
+   TString sfile(filename);
+   if (sfile.Contains(".C")) {
+      //Save volume as a C++ script
+      Info("Export","Exporting volume %s as C++ code", GetName());
+      SaveAs(filename, "");
+      return 1;
+   }
+   if (sfile.Contains(".gdml")) {
+     //Save geometry as a gdml file
+      Info("Export","Exporting %s as gdml code - not implemented yet", GetName());
+      return 0;
+   }   
+   if (sfile.Contains(".root") || sfile.Contains(".xml")) {  
+      //Save volume in a root file
+      Info("Export","Exporting %s as root file.", GetName());
+      TString opt(option);
+      if (!opt.Length()) opt = "recreate";
+      TFile *f = TFile::Open(filename,opt.Data());
+      if (!f || f->IsZombie()) {
+         Error("Export","Cannot open file");
+         return 0;
+      }   
+      char keyname[256];
+      if (name) strcpy(keyname,name);
+      if (strlen(keyname) == 0) strcpy(keyname,GetName());
+      Int_t nbytes = Write(keyname);
+      delete f;
+      return nbytes;
+   }
+   return 0;
 }
 
 //_____________________________________________________________________________
@@ -1063,6 +1161,45 @@ TH2F *TGeoVolume::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
    return hist;
 }
 
+//_____________________________________________________________________________
+void TGeoVolume::RegisterYourself(Option_t *option)
+{
+// Register the volume and all materials/media/matrices/shapes to the manager.
+   if (fGeoManager->GetListOfVolumes()->FindObject(this)) return;
+   // Register volume
+   fGeoManager->AddVolume(this);
+   // Register shape
+   if (!fGeoManager->GetListOfShapes()->FindObject(fShape)) {
+      if (fShape->IsComposite()) {
+         TGeoCompositeShape *comp = (TGeoCompositeShape*)fShape;
+         comp->RegisterYourself();
+      } else {
+         fGeoManager->AddShape(fShape);   
+      }
+   }   
+   // Register medium/material
+   if (fMedium && !fGeoManager->GetListOfMedia()->FindObject(fMedium)) {
+      fGeoManager->GetListOfMedia()->Add(this);
+      if (!fGeoManager->GetListOfMaterials()->FindObject(fMedium->GetMaterial()))
+         fGeoManager->AddMaterial(fMedium->GetMaterial());
+   }
+   // Register matrices for nodes.
+   TGeoMatrix *matrix;
+   TGeoNode *node;
+   Int_t nd = GetNdaughters();
+   Int_t i;
+   for (i=0; i<nd; i++) {
+      node = GetNode(i);
+      matrix = node->GetMatrix();
+      if (!matrix->IsRegistered()) matrix->RegisterYourself();
+      else if (!fGeoManager->GetListOfMatrices()->FindObject(matrix)) {
+         fGeoManager->GetListOfMatrices()->Add(matrix);
+      }
+   }
+   // Call RegisterYourself recursively
+   for (i=0; i<nd; i++) GetNode(i)->GetVolume()->RegisterYourself(option);
+}      
+      
 //_____________________________________________________________________________
 void TGeoVolume::RandomPoints(Int_t npoints, Option_t *option)
 {

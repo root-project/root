@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.35 2006/06/04 09:35:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.36 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -374,6 +374,47 @@ Bool_t TGeoCompositeShape::PaintComposite(Option_t *option) const
    }
 
    return addChildren;
+}
+
+//_____________________________________________________________________________
+void TGeoCompositeShape::RegisterYourself()
+{
+// Register the shape and all components to TGeoManager class.
+   if (gGeoManager->GetListOfShapes()->FindObject(this)) return;
+   gGeoManager->AddShape(this);
+   TGeoMatrix *matrix;
+   TGeoShape  *shape;
+   TGeoCompositeShape *comp;
+   if (fNode) {
+      matrix = fNode->GetLeftMatrix();
+      if (!matrix->IsRegistered()) matrix->RegisterYourself();
+      else if (!gGeoManager->GetListOfMatrices()->FindObject(matrix)) {
+         gGeoManager->GetListOfMatrices()->Add(matrix);
+      }
+      matrix = fNode->GetRightMatrix();
+      if (!matrix->IsRegistered()) matrix->RegisterYourself();
+      else if (!gGeoManager->GetListOfMatrices()->FindObject(matrix)) {
+         gGeoManager->GetListOfMatrices()->Add(matrix);
+      }
+      shape = fNode->GetLeftShape();
+      if (!gGeoManager->GetListOfShapes()->FindObject(shape)) {
+         if (shape->IsComposite()) {
+            comp = (TGeoCompositeShape*)shape;
+            comp->RegisterYourself();
+         } else {
+            gGeoManager->AddShape(shape);
+         }
+      }   
+      shape = fNode->GetRightShape();
+      if (!gGeoManager->GetListOfShapes()->FindObject(shape)) {
+         if (shape->IsComposite()) {
+            comp = (TGeoCompositeShape*)shape;
+            comp->RegisterYourself();
+         } else {
+            gGeoManager->AddShape(shape);
+         }
+      }   
+   }
 }
 
 //_____________________________________________________________________________

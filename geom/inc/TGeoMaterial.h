@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.22 2006/07/03 16:10:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.23 2006/09/14 17:22:12 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -40,6 +40,10 @@
  *
  *************************************************************************/
 
+// Some units used in G4
+static const Double_t STP_temperature = 273.15;     // [K]
+static const Double_t STP_pressure    = 6.32420e+8; // [MeV/mm3]
+
 class TGeoMaterial : public TNamed,
                      public TAttFill
 {
@@ -47,6 +51,12 @@ public:
    enum EGeoMaterial {
       kMatUsed   =   BIT(17),
       kMatSavePrimitive = BIT(18)
+   };
+   enum EGeoMaterialState {   
+      kMatStateUndefined,
+      kMatStateSolid,
+      kMatStateLiquid,
+      kMatStateGas
    };
 
 protected:
@@ -56,6 +66,9 @@ protected:
    Double_t                 fDensity;    // density of material
    Double_t                 fRadLen;     // radiation length
    Double_t                 fIntLen;     // interaction length
+   Double_t                 fTemperature; // temperature
+   Double_t                 fPressure;   // pressure
+   EGeoMaterialState        fState;      // material state
    TObject                 *fShader;     // shader with optical properties
    TObject                 *fCerenkov;   // pointer to class with Cerenkov properties
    TGeoElement             *fElement;    // pointer to element composing the material
@@ -71,8 +84,11 @@ public:
    TGeoMaterial(const char *name);
    TGeoMaterial(const char *name, Double_t a, Double_t z, 
                 Double_t rho, Double_t radlen=0, Double_t intlen=0);
-   TGeoMaterial(const char *name, TGeoElement *elem, 
-                Double_t rho);
+   TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rho,
+                EGeoMaterialState state, Double_t temperature=STP_temperature, Double_t pressure=STP_pressure);
+   TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho,
+                EGeoMaterialState state=kMatStateUndefined, 
+                Double_t temperature=STP_temperature, Double_t pressure=STP_pressure);
    // destructor
    virtual ~TGeoMaterial();
    // methods
@@ -94,6 +110,9 @@ public:
    Int_t                    GetIndex();
    virtual TObject         *GetCerenkovProperties() const {return fCerenkov;}
    Char_t                   GetTransparency() const {return (fFillStyle<3000 || fFillStyle>3100)?0:Char_t(fFillStyle-3000);}
+   Double_t                 GetTemperature() const {return fTemperature;}
+   Double_t                 GetPressure() const {return fPressure;}
+   EGeoMaterialState        GetState() const {return fState;}
    virtual Bool_t           IsEq(const TGeoMaterial *other) const;
    Bool_t                   IsUsed() const {return TObject::TestBit(kMatUsed);}
    virtual Bool_t           IsMixture() const {return kFALSE;}
@@ -104,11 +123,14 @@ public:
    void                     SetRadLen(Double_t radlen, Double_t intlen=0.);
    void                     SetUsed(Bool_t flag=kTRUE) {TObject::SetBit(kMatUsed, flag);}
    void                     SetTransparency(Char_t transparency=0) {fFillStyle = 3000+transparency;}
+   void                     SetTemperature(Double_t temperature) {fTemperature = temperature;}
+   void                     SetPressure(Double_t pressure) {fPressure = pressure;}
+   void                     SetState(EGeoMaterialState state) {fState = state;}
    static  Double_t         ScreenFactor(Double_t z);
 
    
 
-   ClassDef(TGeoMaterial, 4)              // base material class
+   ClassDef(TGeoMaterial, 5)              // base material class
 
 //***** Need to add classes and globals to LinkDef.h *****
 };

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.15 2006/02/23 13:23:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.16 2006/02/28 10:57:12 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -54,6 +54,7 @@ public:
    // methods
    void             CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const;
    void             CheckOverlaps(const TGeoVolume *vol, Double_t ovlp=0.1, Option_t *option="") const;
+   void             CheckOverlapsBySampling(TGeoVolume *vol, Double_t ovlp=0.1, Int_t npoints=1000000) const;
    void             CheckPoint(Double_t x=0, Double_t y=0, Double_t z=0, Option_t *option="");
    Double_t         CheckVoxels(TGeoVolume *vol, TGeoVoxelFinder *voxels, Double_t *xyz, Int_t npoints);
    TH2F            *LegoPlot(Int_t ntheta=60, Double_t themin=0., Double_t themax=180.,

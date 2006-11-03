@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.52 2006/10/20 08:38:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.53 2006/10/20 21:07:40 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -149,6 +149,8 @@ public:
    Bool_t          IsVisOnly() const {return TGeoAtt::IsVisOnly();}
    Bool_t          IsAllInvisible() const;
    Bool_t          IsRaytracing() const;
+   static TGeoVolume *Import(const char *filename, const char *name="", Option_t *option="");
+   Int_t           Export(const char *filename, const char *name="", Option_t *option="");
    TGeoNode       *FindNode(const char *name) const;
    void            FindOverlaps() const;
    Bool_t          FindMatrixOfDaughterVolume(TGeoVolume *vol) const;
@@ -188,6 +190,7 @@ public:
    void            RandomPoints(Int_t npoints=1000000, Option_t *option=""); // *MENU*
    void            RandomRays(Int_t nrays=10000, Double_t startx=0, Double_t starty=0, Double_t startz=0); // *MENU*
    void            Raytrace(Bool_t flag=kTRUE); // *TOGGLE* *GETTER=IsRaytracing
+   void            RegisterYourself(Option_t *option="");
    void            RemoveNode(TGeoNode *node);
    void            SaveAs(const char *filename,Option_t *option="") const; // *MENU*
    virtual void    SavePrimitive(ostream &out, Option_t *option = "");

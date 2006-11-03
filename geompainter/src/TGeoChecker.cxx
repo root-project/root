@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.44 2006/03/22 11:18:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.45 2006/04/06 09:37:14 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -478,12 +478,107 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
 }
 
 //-----------------------------------------------------------------------------
-void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t * /*option*/) const
+void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t ovlp, Int_t npoints) const
+{
+// Check illegal overlaps for volume VOL within a limit OVLP by sampling npoints
+// inside the volume shape.
+   if (vol->GetFinder()) return;
+   Int_t nd = vol->GetNdaughters();
+   if (!nd) return;
+   TGeoBBox *box = (TGeoBBox*)vol->GetShape();
+   TGeoShape *shape;
+   TGeoNode *node;
+   Double_t dx = box->GetDX();
+   Double_t dy = box->GetDY();
+   Double_t dz = box->GetDZ();
+   Double_t pt[3];
+   Double_t local[3];
+   const Double_t *orig = box->GetOrigin();
+   Int_t ipoint = 0;
+   Int_t itry = 0;
+   Int_t iovlp = 0;
+   Int_t id;
+   Bool_t in, incrt;
+   Double_t safe;
+   TPolyMarker3D *marker = 0;
+   gRandom = new TRandom3();
+   while (ipoint < npoints) {
+   // Shoot randomly in the bounding box.
+      pt[0] = orig[0] - dx + 2.*dx*gRandom->Rndm();
+      pt[1] = orig[1] - dy + 2.*dy*gRandom->Rndm();
+      pt[2] = orig[2] - dz + 2.*dz*gRandom->Rndm();
+      if (!vol->Contains(pt)) {
+         itry++;
+         if (itry>10000 && !ipoint) {
+            Error("CheckOverlapsBySampling", "No point inside volume!!! - aborting");
+            break;
+         }   
+         continue;
+      }   
+      // Check if the point is inside one or more daughters
+      in = kFALSE;
+      ipoint++;
+      for (id=0; id<nd; id++) {
+         node  = vol->GetNode(id);
+         node->GetMatrix()->MasterToLocal(pt,local);
+         shape = node->GetVolume()->GetShape();
+         incrt = shape->Contains(local);
+         if (!incrt) continue;
+         if (!in) {
+            in = kTRUE;
+            continue;
+         }
+         // The point is inside 2 or more daughters, check safety
+         safe = shape->Safety(local, kTRUE);
+         if (safe < ovlp) continue;
+         // We really have found an overlap -> store the point in a container
+         iovlp++;
+         if (!marker) {
+            marker = new TPolyMarker3D();
+            marker->SetMarkerColor(kRed);
+         }   
+         marker->SetNextPoint(pt[0], pt[1], pt[2]);
+      }
+   }
+
+   if (!marker) {
+      Info("CheckOverlapsBySampling", "No overlaps found within %g cm for daughters of %s",
+           ovlp, vol->GetName());
+      return;
+   }   
+   // Draw the volume.
+   vol->SetVisContainers();
+//   fGeoManager->SetVisLevel(1);
+//   fGeoManager->SetTopVisible();
+   vol->Draw();
+   marker->Draw("SAME");
+   gPad->Modified();
+   gPad->Update();
+   Double_t capacity = vol->GetShape()->Capacity();
+   capacity *= Double_t(iovlp)/Double_t(npoints);
+   Double_t err = 1./TMath::Sqrt(Double_t(iovlp));
+   Info("CheckOverlapsBySampling", "Overlap region(s) adding-up to %g +/- %g [cm3] for daughters of %s",
+         capacity, err*capacity, vol->GetName());
+}   
+
+//-----------------------------------------------------------------------------
+void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *option) const
 {
 // Check illegal overlaps for volume VOL within a limit OVLP.
    if (vol->GetFinder()) return;
    UInt_t nd = vol->GetNdaughters();
    if (!nd) return;
+   Bool_t sampling = kFALSE;
+   TString opt(option);
+   opt.ToLower();
+   if (opt.Contains("s")) sampling = kTRUE;
+   if (sampling) {
+      opt = opt.Strip(TString::kLeading, 's');
+      Int_t npoints = atoi(opt.Data());
+      if (!npoints) npoints = 1000000;
+      CheckOverlapsBySampling((TGeoVolume*)vol, ovlp, npoints);
+      return;
+   }   
    Bool_t is_assembly = vol->IsAssembly();
    TGeoIterator next1((TGeoVolume*)vol);
    TGeoIterator next2((TGeoVolume*)vol);

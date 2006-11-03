@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.34 2006/07/10 19:38:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.35 2006/09/14 17:22:12 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -39,6 +39,8 @@ TGeoMaterial::TGeoMaterial()
    fDensity  = 0;
    fRadLen   = 0;
    fIntLen   = 0;       
+   fTemperature = STP_temperature;
+   fPressure = STP_pressure;
    fCerenkov = 0;
    fElement  = 0;
 }
@@ -57,6 +59,8 @@ TGeoMaterial::TGeoMaterial(const char *name)
    fDensity  = 0;
    fRadLen   = 0;
    fIntLen   = 0;
+   fTemperature = STP_temperature;
+   fPressure = STP_pressure;
    fCerenkov = 0;
    fElement  = 0;
    
@@ -78,6 +82,8 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
    fIndex    = -1;
    fA        = a;
    fZ        = z;
+   fTemperature = STP_temperature;
+   fPressure = STP_pressure;
    fDensity  = rho;
    fCerenkov = 0;
    fElement  = 0;
@@ -92,22 +98,52 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
 }
 
 //_____________________________________________________________________________
-TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem,
-                Double_t rho)
+TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rho,
+                EGeoMaterialState state, Double_t temperature, Double_t pressure)
+             :TNamed(name, "")
+{
+// Constructor with state, temperature and pressure.
+   fName = fName.Strip();
+   SetUsed(kFALSE);
+   fIndex    = -1;
+   fA        = a;
+   fZ        = z;
+   fDensity  = rho;
+   SetRadLen(0,0);
+   fTemperature = temperature;
+   fPressure = pressure;
+   fState = state;
+   fShader   = 0;
+   fCerenkov = 0;
+   fElement  = 0;
+   if (!gGeoManager) {
+      gGeoManager = new TGeoManager("Geometry", "default geometry");
+   }
+   if (fZ - Int_t(fZ) > 1E-3)
+      Warning("ctor", "Material %s defined with fractional Z=%f", GetName(), fZ);
+   GetElement()->SetUsed();
+   gGeoManager->AddMaterial(this);
+}
+
+//_____________________________________________________________________________
+TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho,
+                EGeoMaterialState state, Double_t temperature, Double_t pressure)
              :TNamed(name, "")
 {
 // constructor
    fName = fName.Strip();
    SetUsed(kFALSE);
-   fShader   = 0;
    fIndex    = -1;
    fA        = elem->A();
    fZ        = elem->Z();
    fDensity  = rho;
-   fCerenkov = 0;
-   fElement  = elem;
-   
    SetRadLen(0,0);
+   fTemperature = temperature;
+   fPressure = pressure;
+   fState = state;
+   fShader   = 0;
+   fCerenkov = 0;
+   fElement  = elem;   
    if (!gGeoManager) {
       gGeoManager = new TGeoManager("Geometry", "default geometry");
    }
@@ -127,6 +163,9 @@ TGeoMaterial::TGeoMaterial(const TGeoMaterial& gm) :
   fDensity(gm.fDensity),
   fRadLen(gm.fRadLen),
   fIntLen(gm.fIntLen),
+  fTemperature(gm.fTemperature),
+  fPressure(gm.fPressure),
+  fState(gm.fState),
   fShader(gm.fShader),
   fCerenkov(gm.fCerenkov),
   fElement(gm.fElement)
@@ -147,6 +186,9 @@ TGeoMaterial& TGeoMaterial::operator=(const TGeoMaterial& gm)
       fDensity=gm.fDensity;
       fRadLen=gm.fRadLen;
       fIntLen=gm.fIntLen;
+      fTemperature=gm.fTemperature;
+      fPressure=gm.fPressure;
+      fState=gm.fState;
       fShader=gm.fShader;
       fCerenkov=gm.fCerenkov;
       fElement=gm.fElement;

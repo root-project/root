@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.21 2006/04/06 09:37:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.22 2006/07/03 16:10:43 brun Exp $
 // Author: Andrei Gheata   24/10/01
    
 /*************************************************************************
@@ -49,12 +49,17 @@ public:
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t        Contains(Double_t *point) const;
+   static  Bool_t        Contains(const Double_t *point, Double_t dx, Double_t dy, Double_t dz, const Double_t *origin);
    virtual Bool_t        CouldBeCrossed(Double_t *point, Double_t *dir) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+   static  Double_t      DistFromInside(const Double_t *point,const Double_t *dir, 
+                                   Double_t dx, Double_t dy, Double_t dz, const Double_t *origin);
    virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+   static  Double_t      DistFromOutside(const Double_t *point,const Double_t *dir, 
+                                   Double_t dx, Double_t dy, Double_t dz, const Double_t *origin);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
    virtual const char   *GetAxisName(Int_t iaxis) const;
