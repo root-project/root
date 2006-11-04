@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.20 2006/03/29 22:18:49 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.21 2006/04/21 12:16:10 pcanal Exp $
 // Author: Victor Perev   04/10/2003
 //         Philippe Canal 05/2004
 
@@ -273,6 +273,7 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
 
 
    string result;
+   result.reserve(strlen(typeDesc)*2);
    int lev=0,kbl=1;
    const char* c;
 
