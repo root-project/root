@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.36 2006/07/20 21:54:08 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.37 2006/09/17 19:08:13 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -87,6 +87,7 @@ public:
    TTreeFormula     *GetSelect() const    {return fSelector->GetSelect();}
    virtual Long64_t  GetSelectedRows() const {return fSelectedRows;}
    TSelector        *GetSelector() const {return fSelector;}
+   TSelector        *GetSelectorFromFile() const {return fSelectorFromFile;}
    TTreeFormula     *GetVar1() const {return fSelector->GetVar1();}
    TTreeFormula     *GetVar2() const {return fSelector->GetVar2();}
    TTreeFormula     *GetVar3() const {return fSelector->GetVar3();}
