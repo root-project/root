@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.41 2006/07/04 17:36:38 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.42 2006/10/27 01:18:07 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -89,7 +89,6 @@ private:
 
    void              CreateIcons();     // Create a list of the icons for ROOT appl
    Bool_t            DispatchTimers(Bool_t mode);
-   Bool_t            DispatchSynchTimers();
    Bool_t            CheckDescriptors();
    Bool_t            CheckSignals(Bool_t sync);
    Bool_t            CountMembers(const char *lpszGroupName);
@@ -101,6 +100,9 @@ private:
    Bool_t            InitUsersGroups();
    void              DoBeep(Int_t freq=-1, Int_t duration=-1) const;
 
+   static void       ThreadStub(void *Parameter) {((TWinNTSystem *)Parameter)->TimerThread();}
+   void              TimerThread();
+   
 public:
    TWinNTSystem();
    virtual ~TWinNTSystem();

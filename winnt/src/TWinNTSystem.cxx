@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.148 2006/10/07 18:06:11 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.149 2006/10/27 01:18:07 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -101,6 +101,7 @@ namespace {
 
    static HANDLE gConsoleEvent;
    static HANDLE gConsoleThreadHandle;
+   static HANDLE gTimerThreadHandle;
    typedef NET_API_STATUS (WINAPI *pfn1)(LPVOID);
    typedef NET_API_STATUS (WINAPI *pfn2)(LPCWSTR, LPCWSTR, DWORD, LPBYTE*);
    typedef NET_API_STATUS (WINAPI *pfn3)(LPCWSTR, LPCWSTR, DWORD, LPBYTE*,
@@ -135,73 +136,6 @@ namespace {
    };
 
    ////// static functions providing interface to raw WinNT ////////////////////
-   struct  itimerval {
-      struct  timeval it_interval;
-      struct  timeval it_value;
-   };
-
-   static UINT   timer_active = 0;
-   static struct itimerval itv;
-   static DWORD  start_time;
-
-#define ITIMER_REAL     0
-#define ITIMER_VIRTUAL  1
-#define ITIMER_PROF     2
-
-   //______________________________________________________________________________
-   static int setitimer(int which, const struct itimerval *value, struct itimerval *oldvalue)
-   {
-      //
-
-      UINT elapse;
-
-      if (which != ITIMER_REAL) {
-         return -1;
-      }
-      // Check if we will wrap
-      if (itv.it_value.tv_sec >= (long) (UINT_MAX/1000)) {
-         return -1;
-      }
-      if (timer_active) {
-         ::KillTimer(NULL, timer_active);
-         timer_active = 0;
-      }
-      if (oldvalue) {
-         *oldvalue = itv;
-      }
-      if (value == NULL) {
-         return -1;
-      }
-      itv = *value;
-      elapse = itv.it_value.tv_sec * 1000 + itv.it_value.tv_usec / 1000;
-      if (elapse == 0) {
-         if (itv.it_value.tv_usec) {
-            elapse = 1;
-         } else {
-            return 0;
-         }
-      }
-      if (!(timer_active = ::SetTimer(NULL, 1, elapse, NULL))) {
-         return -1;
-      }
-      start_time = ::GetTickCount();
-      return 0;
-   }
-
-   //______________________________________________________________________________
-   static int WinNTSetitimer(Long_t ms)
-   {
-      // Set interval timer to time-out in ms milliseconds.
-
-      struct itimerval itval;
-      itval.it_interval.tv_sec = itval.it_interval.tv_usec = 0;
-      itval.it_value.tv_sec = itval.it_value.tv_usec = 0;
-      if (ms >= 0) {
-         itval.it_value.tv_sec  = ms / 1000;
-         itval.it_value.tv_usec = (ms % 1000) * 1000;
-      }
-      return setitimer(ITIMER_REAL, &itval, 0);
-   }
 
    //---- RPC -------------------------------------------------------------------
    //*-* Error codes set by the Windows Sockets implementation are not made available
@@ -869,6 +803,7 @@ TWinNTSystem::~TWinNTSystem()
       gConsoleEvent = 0;
    }
    if (gConsoleThreadHandle) ::CloseHandle(gConsoleThreadHandle);
+   if (gTimerThreadHandle) ::CloseHandle(gTimerThreadHandle);
 }
 
 //______________________________________________________________________________
@@ -934,6 +869,9 @@ Bool_t TWinNTSystem::Init()
                                                     0, 0, 0);
    }
 
+   gTimerThreadHandle = ::CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)ThreadStub,
+                        this, NULL, NULL);
+   
    fGroupsInitDone = kFALSE;
 
    return kFALSE;
@@ -3783,9 +3721,6 @@ void TWinNTSystem::AddTimer(TTimer *ti)
    // Add timer to list of system timers.
 
    TSystem::AddTimer(ti);
-   if (!fInsideNotify && ti->IsAsync()) {
-      WinNTSetitimer(NextTimeOut(kFALSE));
-   }
 }
 
 //______________________________________________________________________________
@@ -3796,10 +3731,19 @@ TTimer *TWinNTSystem::RemoveTimer(TTimer *ti)
    if (!ti) return 0;
 
    TTimer *t = TSystem::RemoveTimer(ti);
-   if (ti->IsAsync()) {
-      WinNTSetitimer(NextTimeOut(kFALSE));
-   }
    return t;
+}
+
+//______________________________________________________________________________
+void TWinNTSystem::TimerThread()
+{
+   // Special Thread to check asynchronous timers.
+
+   while (1) {
+      if (!fInsideNotify)
+         DispatchTimers(kFALSE);
+      ::Sleep(kItimerResolution/2);
+   }
 }
 
 //______________________________________________________________________________
@@ -3825,38 +3769,12 @@ Bool_t TWinNTSystem::DispatchTimers(Bool_t mode)
          }
       } else if (!mode && t->IsAsync()) {
          if (t->CheckTimer(now)) {
-            WinNTSetitimer(NextTimeOut(kFALSE));
             timedout = kTRUE;
          }
       }
    }
    fInsideNotify = kFALSE;
 
-   return timedout;
-}
-
-//______________________________________________________________________________
-Bool_t TWinNTSystem::DispatchSynchTimers()
-{
-   // Handle and dispatch timers. If mode = kTRUE dispatch synchronous
-   // timers else a-synchronous timers.
-
-   if (!fTimers) return kFALSE;
-
-   fInsideNotify = kTRUE;
-
-   TOrdCollectionIter it((TOrdCollection*)fTimers);
-   TTimer *t;
-   Bool_t  timedout = kFALSE;
-
-   while ((t = (TTimer *) it.Next())) {
-      if (t->IsSync()) {
-         TTime now = Now();
-         now += TTime(kItimerResolution);
-         if (t->CheckTimer(now)) timedout = kTRUE;
-      }
-   }
-   fInsideNotify = kFALSE;
    return timedout;
 }
 
