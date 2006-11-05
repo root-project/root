@@ -1776,16 +1776,39 @@ if test ! "x$enable_qt" = "xno" || \
         enable_qt="no"
         enable_qtgsi="no"
     else
-        message "Checking whether Qt version = 3.xx"
-	logmsg "grep 'QT_VERSION 0x03' $qtincdir/qglobal.h"
-        grep "QT_VERSION 0x03" $qtincdir/qglobal.h >> $logfile 2>&1
-        if test $? -ne 0 ; then
-            result "no"
-            enable_qt="no"
-            enable_qtgsi="no"
-        else
-            result "yes"
-        fi
+	qtverneed="3.3.0"
+	qttoonew="4.0.0"
+        message "Checking whether $qtverneed <= Qt version < $qttoonew"
+	logmsg "grep '# *define *QT_VERSION_STR *' $qtincdir/qglobal.h"
+	qtverstr=`grep "# *define *QT_VERSION_STR *" $qtincdir/qglobal.h | \
+          sed '-e s/[^"]*"//' -e 's/".*$//' 2>> $logfile`
+	if test $? -eq 0 ; then
+	    logmsg "Got Qt version $qtverstr"
+	    qtgot=`echo $qtverstr | \
+	      awk 'BEGIN {FS="."} {printf "%d", ((($1*2^8)+$2)*2^8)+$3; }'`; 
+	    qtneed=`echo $qtverneed | \
+	      awk 'BEGIN {FS="."}{ printf "%d", (($1*2^8)+$2)*2^8+$1; }'`
+	    qtnew=`echo $qttoonew | \
+	      awk 'BEGIN {FS="."}{ printf "%d", (($1*2^8)+$2)*2^8+$1; }'`
+	    logmsg "Got $qtgot, min $qtneed, max $qtnew"
+	    if test $qtgot -lt $qtneed ; then 
+		logmsg "Please update to Qt $qtverneed" 
+		enable_qt="no"
+		enable_qtgsi="no"
+		result "no"
+	    elif test $qtgot -ge $qtnew; then 
+		logmsg "Qt $qtverstr too new (>= $qttoonew)"
+		enable_qt="no"
+		enable_qtgsi="no"
+		result "no"
+	    else 
+		result "$qtverstr"
+	    fi
+	else
+	    result "no"
+	    enable_qt="no"
+	    enable_qtgsi="no"
+	fi
     fi
 fi
 check_explicit "$enable_qt" "$enable_qt_explicit" \

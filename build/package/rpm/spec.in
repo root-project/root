@@ -116,7 +116,7 @@ sovers=`echo %ver | sed 's/\([[:digit:]]*\.[[:digit:]]*\)\.[[:digit:]]*/\1/'`
 
 # Rename proofserv, xrdgsiproxy, and xrdpwdadmin in /usr/bin 
 # to end in `.bin' and make wrapper script in /usr/bin 
-for i in proofserv xrdgsiproxy xrdpwdadmin ; do 		
+for i in proofserv xrdgsiproxy xrdpwdadmin xrd xrdcp ; do 		
   if test -f ${RPM_BUILD_ROOT}%{_prefix}/bin/$i && 	\
      test -f build/package/common/$i.in ; then 		
     mv ${RPM_BUILD_ROOT}%{_prefix}/bin/$i 		\

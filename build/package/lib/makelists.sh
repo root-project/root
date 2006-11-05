@@ -57,8 +57,8 @@ for d in * ; do
 	srputils)   lib=root-plugin-srp     ; dev=$lib       ; bin=$lib ;;  
 	xmlparser)  lib=root-plugin-xml     ; dev=$lib       ; bin=$lib ;;
 	krb5auth)   lib=root-plugin-krb5    ; dev=$lib       ; bin=$lib ;;
-	rootd|proofd) 
-	    	    lib=root-$d             ; dev=$lib       ; bin=$lib ;;
+	proofd)	    lib=root-plugin-xproof  ; dev=$lib       ; bin=root-$d ;;
+	rootd)      lib=root-$d             ; dev=$lib       ; bin=$lib ;;
 	xrootd)     lib=root-$d             ; dev=$lib       ; bin=$lib ;
 	            xrdlibs=
 	    	    extra="ALLLIBS= NOVERS=1" ;;     

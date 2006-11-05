@@ -106,9 +106,6 @@ The latest Debian GNU/Linux packages should be available from [1], and
 a back catalogue as well as latest build should be available from the
 ROOT web-site [2].
 
-It is hoped that these packages will eventually be part of some Debian
-GNU/Linux and Redhat distributions.  
-
 [1] deb http://mirror.phy.bnl.gov/debian-root root main
 [2] http://root.cern.ch
 
@@ -168,6 +165,10 @@ feature of dpkg.  Since most ROOT users never use the Pure CINT
 programs "cint" and "makecint" is is reasonably safe to have a Pure
 CINT installation next to ROOT.  A Debian GNU/Linux package of CINT is
 being maintained by Richard B. Kreckel.
+
+The pure CINT packages have not been in Debian for some time now.
+However, the alternatives are still used, as the pure CINT packages
+might get resurrected at some point in the future. 
 
 I (Christian Holm) know of no such system on Redhat so no attempt to
 provide a similar mechanism has been tried.  If anyone should know
@@ -461,10 +462,25 @@ contains that new module.   Let's assume that the new plugin is called
 
 Package Bugs, etc.:
 ===================
-Since this package is not in any Debian GNU/Linux distribution, the
-regular Debian GNU/Linux bug tracking system cannot be used.
-Therefore, please send bug reports to the Debian GNU/Linux package
-maintainer <cholm@nbi.dk>.
+If you didn't get the packages from the official repositories, please
+do not use the regular Debian bug tracking system.  Instead, please
+send bug reports to the Debian GNU/Linux package maintainer
+<cholm@nbi.dk> and possibly also the ROOT mailing list
+<roottalk@root.cern.ch>. 
+
+Experimental Packages:
+======================
+Packages downloaded from the 'experimental' distribution are snapshots
+of the development versions of ROOT.  As such, there's no guaranty
+that the Application Binary Interface (ABI) or Application Programming
+Interface (API) is stable or backward compatible.   Therefor, use
+these packages at your own risk.  You may have to recompile code that
+uses ROOT even if the major and minor version numbers have not
+changed.  
+
+Development snapshots are numbered like <N>.<2 * M + 1>.<PP> (that is,
+have odd minor version) while production releases are numbered like
+<N>.<2 * M>.00. 
 
 Thanks:
 =======
@@ -513,3 +529,7 @@ Thanks:
   stable i386 builds. 
 
  -- Christian Holm Christensen <cholm@nbi.dk>, Mon, 21 Feb 2005 16:28:37 +0100
+
+Local Variables:
+  mode: text
+End: 

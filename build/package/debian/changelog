@@ -1,3 +1,38 @@
+root (5.13.05-7) experimental; urgency=low
+
+  * New release.  take out /usr/lib/root/<version> from
+    /etc/root/system.rootrc as it may cause problems.  Should have no
+    consequence to the users. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Thu,  2 Nov 2006 10:19:18 +0100
+
+root (5.13.05-6) experimental; urgency=low
+
+  * Fix to Qt plug-in to allow fixed directory builds.  
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Mon, 30 Oct 2006 12:19:24 +0100
+
+root (5.13.05-5) experimental; urgency=low
+
+  * Added man page for xrd. 
+  * [Kevin] Fixed some broken dependencies in the [X]Proofd packages. I moved
+    the libXrdProofd library into the root-plugin-xproof package as it seems
+    to be used by the client only. 
+  * [Kevin] Fixed up some man pages. 
+  * [Kevin] Fixed some spelling errors in descriptions. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Sat, 28 Oct 2006 12:16:50 +0200
+
+root (5.13.05-4) experimental; urgency=low
+
+  * [Kevin] Fixed up the README.Debian file for an imminent upload to
+    experimental. 
+  * [Kevin] Removed some autotools generated files from the libAfterImage
+    directory in the source package. 
+  * [Kevin] Corrected a typo in the debian/rules clean target. 
+
+ -- Christian Holm Christensen <cholm@nbi.dk>  Fri, 27 Oct 2006 10:15:25 +0200
+
 root (5.13.05-3) experimental; urgency=low
 
   * [Kevin] Use system libungif if possible. 
