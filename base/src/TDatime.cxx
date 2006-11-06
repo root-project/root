@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.10 2005/06/23 10:49:19 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.11 2005/06/23 13:33:47 rdm Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -251,13 +251,14 @@ void TDatime::Set()
 
 #ifndef WIN32
    time_t tloc   = time(0);
-   struct tm *tp = localtime(&tloc);
-   UInt_t year   = tp->tm_year;
-   UInt_t month  = tp->tm_mon + 1;
-   UInt_t day    = tp->tm_mday;
-   UInt_t hour   = tp->tm_hour;
-   UInt_t min    = tp->tm_min;
-   UInt_t sec    = tp->tm_sec;
+   struct tm tp;
+   localtime_r(&tloc, &tp);
+   UInt_t year   = tp.tm_year;
+   UInt_t month  = tp.tm_mon + 1;
+   UInt_t day    = tp.tm_mday;
+   UInt_t hour   = tp.tm_hour;
+   UInt_t min    = tp.tm_min;
+   UInt_t sec    = tp.tm_sec;
 #else
    SYSTEMTIME tp;
    GetLocalTime(&tp);
