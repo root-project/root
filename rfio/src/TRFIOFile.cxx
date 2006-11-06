@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.37 2006/08/26 16:37:44 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.38 2006/08/28 08:04:24 rdm Exp $
 // Author: Fons Rademakers   20/01/99 + Giulia Taurelli 29/06/2006
 
 /*************************************************************************
@@ -535,12 +535,14 @@ Int_t TRFIOSystem::Unlink(const char *path)
    // Unlink, i.e. remove, a file or directory. Returns 0 when succesfull,
    // -1 in case of failure.
 
+   TUrl url(path);
+
    struct stat finfo;
-   if (rfio_stat(path, &finfo) < 0)
+   if (rfio_stat(url.GetFile(), &finfo) < 0)
       return -1;
 
    if (R_ISDIR(finfo.st_mode))
-      return rfio_rmdir(path);
+      return rfio_rmdir(url.GetFile());
    else
-      return rfio_unlink(path);
+      return rfio_unlink(url.GetFile());
 }
