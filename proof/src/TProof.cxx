@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.162 2006/10/23 14:44:39 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.163 2006/11/01 16:02:25 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -4436,7 +4436,7 @@ void TProof::Feedback(TList *objs)
    // to monitor the feedback object.
 
    PDB(kGlobal,1)
-      Info("Feedback","%d Objects", objs->GetSize());
+      Info("Feedback","%d objects", objs->GetSize());
    PDB(kFeedback,1) {
       Info("Feedback","%d objects", objs->GetSize());
       objs->ls();

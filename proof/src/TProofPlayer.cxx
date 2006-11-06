@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.91 2006/08/10 10:33:04 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.92 2006/10/05 16:10:22 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -1351,11 +1351,6 @@ void TProofPlayerRemote::Progress(Long64_t total, Long64_t processed)
 {
    // Progress signal.
 
-   PDB(kGlobal,1)
-      Info("Progress","%2f (%lld/%lld)", 100.*processed/total, processed, total);
-
-   EmitVA("Progress(Long64_t,Long64_t)", 2, total, processed);
-
    fProof->Progress(total, processed);
 }
 
@@ -1363,14 +1358,6 @@ void TProofPlayerRemote::Progress(Long64_t total, Long64_t processed)
 void TProofPlayerRemote::Feedback(TList *objs)
 {
    // Feedback signal.
-
-   PDB(kGlobal,1) Info("Feedback","%d Objects", objs->GetSize());
-   PDB(kFeedback,1) {
-      Info("Feedback","%d Objects", objs->GetSize());
-      objs->ls();
-   }
-
-   Emit("Feedback(TList *objs)", (Long_t) objs);
 
    fProof->Feedback(objs);
 }
