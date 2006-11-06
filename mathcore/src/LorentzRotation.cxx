@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.cxx,v 1.6 2006/06/19 09:02:24 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.cxx,v 1.7 2006/06/22 08:36:27 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -190,8 +190,8 @@ LorentzRotation::operator() (const LorentzVector< PxPyPzE4D<double> > & v) const
         , fM[kTX]*x + fM[kTY]*y + fM[kTZ]*z + fM[kTT]*t );
 }
 
-void LorentzRotation::Invert() {
-   // invert modifying current content
+LorentzRotation &  LorentzRotation::Invert() {
+   // invert modifying current content 
    Scalar temp;
    temp = fM[kXY]; fM[kXY] =  fM[kYX]; fM[kYX] =  temp;  
    temp = fM[kXZ]; fM[kXZ] =  fM[kZX]; fM[kZX] =  temp;  
@@ -199,6 +199,7 @@ void LorentzRotation::Invert() {
    temp = fM[kXT]; fM[kXT] = -fM[kTX]; fM[kTX] = -temp;  
    temp = fM[kYT]; fM[kYT] = -fM[kTY]; fM[kTY] = -temp;  
    temp = fM[kZT]; fM[kZT] = -fM[kTZ]; fM[kTZ] = -temp;  
+   return *this; 
 }
 
 LorentzRotation LorentzRotation::Inverse() const {

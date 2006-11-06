@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: BoostY.cxx,v 1.5 2006/06/19 09:02:24 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: BoostY.cxx,v 1.6 2006/06/22 08:36:27 moneta Exp $
 // Authors:  M. Fischler  2005  
 
  /**********************************************************************
@@ -92,9 +92,10 @@ BoostY::operator() (const LorentzVector< PxPyPzE4D<double> > & v) const {
          , fGamma*fBeta*y + fGamma*t );
 }
 
-void BoostY::Invert() {
+BoostY & BoostY::Invert() {
    // invert Boost
    fBeta = -fBeta;
+   return *this;
 }
 
 BoostY BoostY::Inverse() const {

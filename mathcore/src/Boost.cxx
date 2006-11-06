@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Boost.cxx,v 1.6 2006/06/19 09:02:24 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Boost.cxx,v 1.7 2006/06/22 08:36:27 moneta Exp $
 // Authors:  M. Fischler  2005  
 
  /**********************************************************************
@@ -155,11 +155,12 @@ Boost::operator() (const LorentzVector< PxPyPzE4D<double> > & v) const {
         , fM[kXT]*x + fM[kYT]*y + fM[kZT]*z + fM[kTT]*t );
 }
 
-void Boost::Invert() {
+Boost & Boost::Invert() {
    // invert in place boost (modifying the object)
    fM[kXT] = -fM[kXT];
    fM[kYT] = -fM[kYT];
    fM[kZT] = -fM[kZT];
+   return *this;
 }
 
 Boost Boost::Inverse() const {

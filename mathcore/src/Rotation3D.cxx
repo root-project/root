@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.cxx,v 1.8 2006/06/15 16:23:44 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.cxx,v 1.9 2006/06/19 09:02:24 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -118,11 +118,12 @@ static inline void swap(double & a, double & b) {
    double t=b; b=a; a=t; 
 }
 
-void Rotation3D::Invert() {
+Rotation3D & Rotation3D::Invert() {
    // invert a rotation
    swap (fM[kXY], fM[kYX]);
    swap (fM[kXZ], fM[kZX]);
    swap (fM[kYZ], fM[kZY]);
+   return *this;
 }
 
 Rotation3D Rotation3D::operator * (const Rotation3D  & r) const {
