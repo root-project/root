@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.78 2006/11/06 00:00:26 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.79 2006/11/06 10:54:08 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -2521,7 +2521,7 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
    }
 
    // compute progress bar position and update
-   Float_t pos = Float_t(Double_t(processed * 100)/Double_t(total));
+   Float_t pos = (Float_t)((Double_t)(processed * 100)/(Double_t)total);
    frmProg->SetPosition(pos);
    // if 100%, stop animation and set icon to "connected"
    if (pos >= 100.0) {
@@ -2594,7 +2594,7 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
          break;
    }
    if (processed < 0) processed = 0;
-   
+
    frmProg->SetBarColor("green");
    if (status == kAborted)
       frmProg->SetBarColor("red");
@@ -2627,7 +2627,9 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
    }
 
    // compute progress bar position and update
-   Float_t pos = Float_t(Double_t(processed * 100)/Double_t(total));
+   Float_t pos = 0.0;
+   if (processed > 0 && total > 0)
+      pos = (Float_t)((Double_t)(processed * 100)/(Double_t)total);
    frmProg->SetPosition(pos);
    // if 100%, stop animation and set icon to "connected"
    if (pos >= 100.0) {
@@ -2638,7 +2640,7 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
    // get current time
    if (status == kRunning)
       fViewer->GetActDesc()->fActQuery->fEndTime = gSystem->Now();
-   TTime tdiff = fViewer->GetActDesc()->fActQuery->fEndTime - 
+   TTime tdiff = fViewer->GetActDesc()->fActQuery->fEndTime -
                  fViewer->GetActDesc()->fActQuery->fStartTime;
    Float_t eta = 0;
    if (processed)
