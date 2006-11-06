@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.79 2006/11/06 10:54:08 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.80 2006/11/06 11:40:30 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -2530,7 +2530,7 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
    }
 
    // get current time
-   if ((fViewer->GetActDesc()->fActQuery->fStatus == 
+   if ((fViewer->GetActDesc()->fActQuery->fStatus ==
         TQueryDescription::kSessionQueryRunning) ||
        (fViewer->GetActDesc()->fActQuery->fStatus == 
         TQueryDescription::kSessionQuerySubmitted))
@@ -2762,7 +2762,8 @@ void TSessionQueryFrame::OnBtnFinalize()
    if (fViewer->GetActDesc()->fLocal) {
       gPad->SetEditable(kFALSE);
       TChain *chain = (TChain *)fViewer->GetActDesc()->fActQuery->fChain;
-      ((TTreePlayer *)(chain->GetPlayer()))->GetSelectorFromFile()->Terminate();
+      if (chain)
+         ((TTreePlayer *)(chain->GetPlayer()))->GetSelectorFromFile()->Terminate();
    }
 }
 
@@ -2825,21 +2826,23 @@ void TSessionQueryFrame::OnBtnRetrieve()
    }
    if (fViewer->GetActDesc()->fLocal) {
       TGListTreeItem *item=0, *item2=0;
-      TChain *chain = (TChain *)fViewer->GetActDesc()->fActQuery->fChain;
-      item = fViewer->GetSessionHierarchy()->FindItemByObj(fViewer->GetSessionItem(), 
+      item = fViewer->GetSessionHierarchy()->FindItemByObj(fViewer->GetSessionItem(),
                                                            fViewer->GetActDesc());
       if (item) {
-         item2 = fViewer->GetSessionHierarchy()->FindItemByObj(item, 
+         item2 = fViewer->GetSessionHierarchy()->FindItemByObj(item,
                                     fViewer->GetActDesc()->fActQuery);
       }
       if (item2) {
          // add input and output list entries
-         TSelector *selector = ((TTreePlayer *)(chain->GetPlayer()))->GetSelectorFromFile();
-         if (selector) {
-            TList *objlist = selector->GetOutputList();
-            if (objlist)
-               if (!fViewer->GetSessionHierarchy()->FindChildByName(item2, "OutputList"))
-                  fViewer->GetSessionHierarchy()->AddItem(item2, "OutputList");
+         TChain *chain = (TChain *)fViewer->GetActDesc()->fActQuery->fChain;
+         if (chain) {
+            TSelector *selector = ((TTreePlayer *)(chain->GetPlayer()))->GetSelectorFromFile();
+            if (selector) {
+               TList *objlist = selector->GetOutputList();
+               if (objlist)
+                  if (!fViewer->GetSessionHierarchy()->FindChildByName(item2, "OutputList"))
+                     fViewer->GetSessionHierarchy()->AddItem(item2, "OutputList");
+            }
          }
       }
       // update list tree, query frame informations, and buttons state
@@ -3033,9 +3036,10 @@ void TSessionQueryFrame::UpdateButtons(TQueryDescription *desc)
       case TQueryDescription::kSessionQueryCompleted:
          fBtnSubmit->SetEnabled(submit_en);
          fBtnFinalize->SetEnabled(kTRUE);
-         if ((desc->fResult == 0) || (desc->fResult &&
-             (desc->fResult->IsFinalized() ||
-             (desc->fResult->GetDSet() == 0))))
+         if (((desc->fResult == 0) || (desc->fResult &&
+              (desc->fResult->IsFinalized() ||
+              (desc->fResult->GetDSet() == 0)))) &&
+              !(fViewer->GetActDesc()->fLocal))
             fBtnFinalize->SetEnabled(kFALSE);
          fBtnStop->SetEnabled(kFALSE);
          fBtnAbort->SetEnabled(kFALSE);
@@ -3099,6 +3103,11 @@ void TSessionQueryFrame::UpdateButtons(TQueryDescription *desc)
 
       default:
          break;
+   }
+   if (fViewer->GetActDesc()->fLocal &&
+       !(fViewer->GetActDesc()->fActQuery->fChain)) {
+      fBtnFinalize->SetEnabled(kFALSE);
+      fBtnRetrieve->SetEnabled(kFALSE);
    }
 }
 
