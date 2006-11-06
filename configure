@@ -3783,7 +3783,7 @@ case "$dicttype" in
     cint);;
     reflex | gccxml)
         # check that cintex is enabled for reflex/gccxml
-        if ! test "x$enable_cintex" = "xyes"; then
+        if test ! "x$enable_cintex" = "xyes"; then
             result "Cannot generate $dicttype dictionaries with cintex disabled."
             dicttype=cint
         fi ;;
@@ -4294,7 +4294,7 @@ sed \
     < config.tmp > $CONFOUT
 rm -f config.tmp
 
-if ! test "x$enable_ruby" = "xno"; then
+if test ! "x$enable_ruby" = "xno"; then
    echo "" >> $CONFOUT
    ruby -rrbconfig -e 'puts Config::CONFIG["ruby_version"]' | \
    sed 's/^\([0-9]\)\.\([0-9]\)/#define R__RUBY_MAJOR \1@#define R__RUBY_MINOR \2/' | \
