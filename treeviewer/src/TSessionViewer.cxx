@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.77 2006/10/04 14:49:23 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.78 2006/11/06 00:00:26 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -2284,7 +2284,6 @@ void TSessionQueryFrame::Build(TSessionViewer *gui)
    SetCleanup(kDeepCleanup);
    fFirst = fEntries = fPrevTotal = 0;
    fPrevProcessed = 0;
-   fStatus = kRunning;
    fViewer = gui;
 
    // main query tab
@@ -2485,14 +2484,16 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
    TVirtualProof *sender = dynamic_cast<TVirtualProof*>((TQObject*)gTQSender);
    if (!sender || (sender != fViewer->GetActDesc()->fProof))
       return;
-   static const char *cproc[] = { "running", "done", "STOPPED", "ABORTED" };
 
    if ((fViewer->GetActDesc()->fActQuery) &&
        (fViewer->GetActDesc()->fActQuery->fStatus !=
         TQueryDescription::kSessionQuerySubmitted) &&
        (fViewer->GetActDesc()->fActQuery->fStatus !=
         TQueryDescription::kSessionQueryRunning) ) {
+      fTotal->SetText(" Estimated time left : 0.0 sec (0 events of 0 processed)        ");
+      fRate->SetText(" Processing Rate : 0.0f events/sec   ");
       frmProg->Reset();
+      fFB->Layout();
       return;
    }
 
@@ -2529,8 +2530,10 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
    }
 
    // get current time
-   if (fViewer->GetActDesc()->fActQuery->fStatus == 
-       TQueryDescription::kSessionQueryRunning)
+   if ((fViewer->GetActDesc()->fActQuery->fStatus == 
+        TQueryDescription::kSessionQueryRunning) ||
+       (fViewer->GetActDesc()->fActQuery->fStatus == 
+        TQueryDescription::kSessionQuerySubmitted))
       fViewer->GetActDesc()->fActQuery->fEndTime = gSystem->Now();
    TTime tdiff = fViewer->GetActDesc()->fActQuery->fEndTime - 
                  fViewer->GetActDesc()->fActQuery->fStartTime;
@@ -2545,16 +2548,13 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
       fTotal->SetText(buf);
    } else {
       // update status infos
-      if (fStatus > kDone) {
-         buf = Form(" Estimated time left : %.1f sec (%lld events of %lld processed) - %s  ",
-                     eta, processed, total, cproc[fStatus]);
-      } else {
-         buf = Form(" Estimated time left : %.1f sec (%lld events of %lld processed)        ",
-                    eta, processed, total);
-      }
+      buf = Form(" Estimated time left : %.1f sec (%lld events of %lld processed)        ",
+                 eta, processed, total);
       fTotal->SetText(buf);
+   }
+   if (processed > 0 && (Long_t)tdiff > 0) {
       buf = Form(" Processing Rate : %.1f events/sec   ",
-                 Float_t(processed)/Long_t(tdiff)*1000.);
+                 (Float_t)processed/(Long_t)tdiff*1000.);
       fRate->SetText(buf);
    }
    fPrevProcessed = processed;
@@ -2567,22 +2567,41 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
 {
    // Update progress bar and status labels.
 
-   static const char *cproc[] = { "running", "done", "STOPPED", "ABORTED" };
+   char cproc[80];
+   Int_t status;
 
+   switch (fViewer->GetActDesc()->fActQuery->fStatus) {
+
+      case TQueryDescription::kSessionQueryAborted:
+         strcpy(cproc, " - ABORTED");
+         status = kAborted;
+         break;
+      case TQueryDescription::kSessionQueryStopped:
+         strcpy(cproc, " - STOPPED");
+         status = kStopped;
+         break;
+      case TQueryDescription::kSessionQueryRunning:
+         strcpy(cproc, " ");
+         status = kRunning;
+         break;
+      case TQueryDescription::kSessionQueryCompleted:
+      case TQueryDescription::kSessionQueryFinalized:
+         strcpy(cproc, " ");
+         status = kDone;
+         break;
+      default:
+         status = -1;
+         break;
+   }
+   if (processed < 0) processed = 0;
+   
    frmProg->SetBarColor("green");
-   if (fViewer->GetActDesc()->fActQuery->fStatus ==
-       TQueryDescription::kSessionQueryAborted) {
+   if (status == kAborted)
       frmProg->SetBarColor("red");
-   }
-   else if (fViewer->GetActDesc()->fActQuery->fStatus ==
-            TQueryDescription::kSessionQueryStopped) {
+   else if (status == kStopped)
       frmProg->SetBarColor("yellow");
-   }
-   else if ((fViewer->GetActDesc()->fActQuery->fStatus !=
-        TQueryDescription::kSessionQueryRunning) &&
-       (fViewer->GetActDesc()->fActQuery->fStatus !=
-        TQueryDescription::kSessionQueryCompleted) ) {
-         fTotal->SetText(" Estimated time left : 0.0 sec (0 events of 0 processed)        ");
+   else if (status == -1 ) {
+      fTotal->SetText(" Estimated time left : 0.0 sec (0 events of 0 processed)        ");
       fRate->SetText(" Processing Rate : 0.0f events/sec   ");
       frmProg->Reset();
       fFB->Layout();
@@ -2617,8 +2636,7 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
    }
 
    // get current time
-   if (fViewer->GetActDesc()->fActQuery->fStatus == 
-       TQueryDescription::kSessionQueryRunning)
+   if (status == kRunning)
       fViewer->GetActDesc()->fActQuery->fEndTime = gSystem->Now();
    TTime tdiff = fViewer->GetActDesc()->fActQuery->fEndTime - 
                  fViewer->GetActDesc()->fActQuery->fStartTime;
@@ -2627,22 +2645,20 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
       eta = ((Float_t)((Long_t)tdiff)*total/(Float_t)(processed) -
             (Long_t)(tdiff))/1000.;
 
-   if (processed == total) {
-      // finished
-      buf = Form(" Processed : %lld events in %.1f sec", total, Long_t(tdiff)/1000.);
+   if ((processed != total) && (status == kRunning)) {
+      // update status infos
+      buf = Form(" Estimated time left : %.1f sec (%lld events of %lld processed)        ",
+                 eta, processed, total);
       fTotal->SetText(buf);
    } else {
-      // update status infos
-      if (fStatus > kDone) {
-         buf = Form(" Estimated time left : %.1f sec (%lld events of %lld processed) - %s  ",
-                     eta, processed, total, cproc[fStatus]);
-      } else {
-         buf = Form(" Estimated time left : %.1f sec (%lld events of %lld processed)        ",
-                    eta, processed, total);
-      }
+      buf = Form(" Processed : %ld events in %.1f sec", (Long_t)processed,
+                 (Long_t)tdiff/1000.0);
+      strcat(buf, cproc);
       fTotal->SetText(buf);
+   }
+   if (processed > 0 && (Long_t)tdiff > 0) {
       buf = Form(" Processing Rate : %.1f events/sec   ",
-                 Float_t(processed)/Long_t(tdiff)*1000.);
+                 (Float_t)processed/(Long_t)tdiff*1000.);
       fRate->SetText(buf);
    }
    fPrevProcessed = processed;
@@ -2658,12 +2674,10 @@ void TSessionQueryFrame::IndicateStop(Bool_t aborted)
    if (aborted == kTRUE) {
       // Aborted
       frmProg->SetBarColor("red");
-      fStatus = kAborted;
    }
    else {
       // Stopped
       frmProg->SetBarColor("yellow");
-      fStatus = kStopped;
    }
    // disconnect progress related signals
    if (fViewer->GetActDesc()->fProof &&
@@ -2687,10 +2701,11 @@ void TSessionQueryFrame::ResetProgressDialog(const char * /*selector*/, Int_t fi
    fEntries       = entries;
    fPrevProcessed = 0;
    fPrevTotal     = 0;
-   fStatus        = kRunning;
 
-   frmProg->SetBarColor("green");
-   frmProg->Reset();
+   if (!fViewer->GetActDesc()->fLocal) {
+      frmProg->SetBarColor("green");
+      frmProg->Reset();
+   }
 
    buf = Form("%0d files, %0lld events, starting event %0lld",
            fFiles > 0 ? fFiles : 0, fEntries > 0 ? fEntries : 0,
@@ -2708,8 +2723,14 @@ void TSessionQueryFrame::ResetProgressDialog(const char * /*selector*/, Int_t fi
                fViewer->GetActDesc()->fProof->GetParallel());
       fLabInfos->SetText(buf);
    }
+   else if (fViewer->GetActDesc()->fLocal) {
+      fStatsCanvas->Clear();
+      fLabInfos->SetText("Local Session");
+      fLabStatus->SetText(" ");
+   }
    else {
-      fLabInfos->SetText("");
+      fLabInfos->SetText(" ");
+      fLabStatus->SetText(" ");
    }
    fFB->Layout();
 }
@@ -2812,10 +2833,12 @@ void TSessionQueryFrame::OnBtnRetrieve()
       if (item2) {
          // add input and output list entries
          TSelector *selector = ((TTreePlayer *)(chain->GetPlayer()))->GetSelectorFromFile();
-         TList *objlist = selector->GetOutputList();
-         if (objlist)
-            if (!fViewer->GetSessionHierarchy()->FindChildByName(item2, "OutputList"))
-               fViewer->GetSessionHierarchy()->AddItem(item2, "OutputList");
+         if (selector) {
+            TList *objlist = selector->GetOutputList();
+            if (objlist)
+               if (!fViewer->GetSessionHierarchy()->FindChildByName(item2, "OutputList"))
+                  fViewer->GetSessionHierarchy()->AddItem(item2, "OutputList");
+         }
       }
       // update list tree, query frame informations, and buttons state
       fClient->NeedRedraw(fViewer->GetSessionHierarchy());
@@ -3102,6 +3125,7 @@ void TSessionQueryFrame::UpdateInfos()
    fInfoTextView->Clear();
    if (!fViewer->GetActDesc()->fActQuery ||
        !fViewer->GetActDesc()->fActQuery->fResult) {
+      ResetProgressDialog("", 0, 0, 0);
       if (fViewer->GetActDesc()->fLocal) {
          if (fViewer->GetActDesc()->fActQuery) {
             TChain *chain = (TChain *)fViewer->GetActDesc()->fActQuery->fChain;
@@ -3109,8 +3133,17 @@ void TSessionQueryFrame::UpdateInfos()
                ProgressLocal(chain->GetEntries(),
                      chain->GetChainEntryNumber(chain->GetReadEntry())+1);
             }
+            else {
+               ProgressLocal(0, 0);
+            }
             UpdateButtons(fViewer->GetActDesc()->fActQuery);
          }
+      }
+      else {
+         fTotal->SetText(" Estimated time left : 0.0 sec (0 events of 0 processed)        ");
+         fRate->SetText(" Processing Rate : 0.0f events/sec   ");
+         frmProg->Reset();
+         fFB->Layout();
       }
       return;
    }
@@ -3193,6 +3226,23 @@ void TSessionQueryFrame::UpdateInfos()
                  buffer);
    }
    fInfoTextView->LoadBuffer(buffer);
+
+   //Float_t pos = Float_t((Double_t)(result->GetEntries() * 100)/(Double_t)total);
+   if (result->GetStatus() == TQueryResult::kAborted)
+      frmProg->SetBarColor("red");
+   else if (result->GetStatus() == TQueryResult::kStopped)
+      frmProg->SetBarColor("yellow");
+   else
+      frmProg->SetBarColor("green");
+
+   frmProg->SetPosition(100.0);
+
+   buffer = Form(" Processed : %lld events in %.1f sec", result->GetEntries(), 
+              (Float_t)elapsed);
+   fTotal->SetText(buffer);
+   buffer = Form(" Processing Rate : %.1f events/sec   ", rate);
+   fRate->SetText(buffer);
+   fFB->Layout();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -3541,7 +3591,7 @@ void TSessionViewer::ReadConfiguration(const char *filename)
                TString firstentry = strtok(0, ";");
 
                TQueryDescription *newquery = new TQueryDescription();
-               newquery->fStatus =
+               newquery->fStatus = 
                   (TQueryDescription::ESessionQueryStatus)(atoi(status));
                newquery->fSelectorString  = selector.Length() > 2 ? selector.Data() : "";
                newquery->fReference       = reference.Length() > 2 ? reference.Data() : "";
@@ -5246,12 +5296,12 @@ void TSessionViewer::OnCascadeMenu()
       fQueryFrame->ResetProgressDialog("", 0, 0, 0);
    }
    else if (fActDesc->fActQuery) {
-      if (!fActDesc->fLocal)
-         fQueryFrame->ResetProgressDialog(fActDesc->fActQuery->fSelectorString,
-                                          fActDesc->fActQuery->fNbFiles,
-                                          fActDesc->fActQuery->fFirstEntry,
-                                          fActDesc->fActQuery->fNoEntries);
+      fQueryFrame->ResetProgressDialog(fActDesc->fActQuery->fSelectorString,
+                                       fActDesc->fActQuery->fNbFiles,
+                                       fActDesc->fActQuery->fFirstEntry,
+                                       fActDesc->fActQuery->fNoEntries);
    }
+   fQueryFrame->UpdateInfos();
 }
 //______________________________________________________________________________
 Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
