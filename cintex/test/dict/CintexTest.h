@@ -165,6 +165,11 @@ public:
   long setByUnknownTypeReference(UnknownType& t) { return (long)&t; }
   long setByUnknownConstTypePointer(const UnknownType* t) { return (long)t; }
   long setByUnknownConstTypeReference(const UnknownType& t) { return (long)&t; }
+
+  bool   GetByPrimitiveReference(bool& d) { bool e = d; d = true; return e;}
+  int    GetByPrimitiveReference(int& d) {  int e = d; d = 999; return e;}
+  double GetByPrimitiveReference(double& d) { double e = d; d = 999.99; return e;}
+
   int overloaded( int ) { return 1; }
   int overloaded( float ) { return 2; }
   int overloaded( int, float ) { return 3; }

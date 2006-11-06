@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.16 2006/07/03 09:22:46 roiser Exp $
+// @(#)root/cintex:$Name: v5-12-00e $:$Id: CINTClassBuilder.cxx,v 1.17 2006/07/03 10:22:13 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -122,7 +122,7 @@ namespace ROOT { namespace Cintex {
 
       // Setup tag number
       fTaginfo->tagnum = G__get_linked_tagnum(fTaginfo);
-      std::string comment = fClass.Properties().HasKey("comment") ? 
+      std::string comment = fClass.Properties().HasProperty("comment") ? 
          fClass.Properties().PropertyAsString("comment").c_str() :
          "";
       // Assume some minimal class functionality; see below for explanation

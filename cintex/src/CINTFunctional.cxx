@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.16 2006/07/03 09:22:46 roiser Exp $
+// @(#)root/cintex:$Name: v5-12-00e $:$Id: CINTFunctional.cxx,v 1.17 2006/07/03 10:22:13 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -64,17 +64,16 @@ namespace ROOT { namespace Cintex {
       for (int i = 0; i < fNpar; i++ ) {
          Type pt = fFunction.FunctionParameterAt(i);
          while ( pt.IsTypedef() ) pt = pt.ToType();
-         if ( pt.IsFundamental() || pt.IsEnum() )
+         if ( pt.IsReference() )
+            if( pt.IsPointer() ) fTreat[i] = '*';
+            else                 fTreat[i] = '&';
+         else if ( pt.IsFundamental() || pt.IsEnum() )
             if      ( pt.TypeInfo() == typeid(float) )       fTreat[i] = 'f';
             else if ( pt.TypeInfo() == typeid(double) )      fTreat[i] = 'd';
             else if ( pt.TypeInfo() == typeid(long double) ) fTreat[i] = 'q';
             else if ( pt.TypeInfo() == typeid(long long) )   fTreat[i] = 'n';
             else if ( pt.TypeInfo() == typeid(unsigned long long) ) fTreat[i] = 'm';
             else                                             fTreat[i] = 'i';
-         else if ( pt.IsReference() )
-            if( pt.IsPointer() ) fTreat[i] = '*';
-            else                 fTreat[i] = '&';
-         //fTreat[i] = '&';
          else fTreat[i] = 'u';
       }
 

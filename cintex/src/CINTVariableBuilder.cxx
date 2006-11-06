@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTVariableBuilder.cxx,v 1.4 2006/07/03 10:22:13 roiser Exp $
+// @(#)root/cintex:$Name: v5-12-00e $:$Id: CINTVariableBuilder.cxx,v 1.5 2006/07/03 10:27:23 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -95,7 +95,7 @@ namespace ROOT { namespace Cintex {
       Type fClass = Type::ByName(dm.DeclaringScope().Name(SCOPED));
       string fName(CintName(fClass));
 
-      std::string cm = dm.Properties().HasKey("comment") ? 
+      std::string cm = dm.Properties().HasProperty("comment") ? 
          dm.Properties().PropertyAsString("comment") : std::string("");
 
       Type t = dm.TypeOf();
@@ -137,7 +137,7 @@ namespace ROOT { namespace Cintex {
       }
       Indirection  indir = IndirectionGet(dm.TypeOf());
       CintTypeDesc type = CintType(indir.second);
-      string dname = dm.Properties().HasKey("ioname") ? dm.Properties().PropertyAsString("ioname") : dm.Name();
+      string dname = dm.Properties().HasProperty("ioname") ? dm.Properties().PropertyAsString("ioname") : dm.Name();
       ostringstream ost;
       if ( t.IsArray() ) ost << dname << "[" << t.ArrayLength() << "]=";
       else               ost << dname << "=";
@@ -161,7 +161,7 @@ namespace ROOT { namespace Cintex {
 
       if ( type.first == 'u' )  {
          //dependencies.push_back(indir.second);
-         member_tagnum = dm.Properties().HasKey("iotype") ? CintTag(dm.Properties().PropertyAsString("iotype")) : CintTag(type.second);
+         member_tagnum = dm.Properties().HasProperty("iotype") ? CintTag(dm.Properties().PropertyAsString("iotype")) : CintTag(type.second);
          if ( typeid(longlong) == indir.second.TypeInfo() )
             ::G__loadlonglong(&member_tagnum, &member_typnum, G__LONGLONG);
          else if ( typeid(ulonglong) == indir.second.TypeInfo() )
@@ -191,7 +191,7 @@ namespace ROOT { namespace Cintex {
             << std::endl
             << std::setw(16) << std::left << "declareField>"
             << "  Type:" 
-            << std::left << std::setw(24) << ("[" + dm.Properties().HasKey("iotype") ? dm.Properties().PropertyAsString("iotype") : t.Name(SCOPED) + "]")
+            << std::left << std::setw(24) << ("[" + dm.Properties().HasProperty("iotype") ? dm.Properties().PropertyAsString("iotype") : t.Name(SCOPED) + "]")
             << " DeclBy:" << fClass.Name(SCOPED)
             << std::endl;
       }
