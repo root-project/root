@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.7 2005/12/08 15:52:41 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.8 2006/06/15 16:23:44 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Aug 8  2005
 // 
-// Last update: $Id: LorentzRotation.h,v 1.7 2005/12/08 15:52:41 moneta Exp $
+// Last update: $Id: LorentzRotation.h,v 1.8 2006/06/15 16:23:44 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_LorentzRotation 
 #define ROOT_Math_GenVector_LorentzRotation  1
@@ -347,9 +347,9 @@ public:
   }
 
   /**
-      Invert a Lorentz rotation in place
+      Invert a Lorentz rotation in place and return a reference to the inverted rotation class
    */
-  void Invert();
+  LorentzRotation & Invert();
 
   /**
       Return inverse of  a rotation
@@ -396,13 +396,13 @@ public:
   /**
      Equality/inequality operators
    */
-  bool operator == (const LorentzRotation & rhs) {
+  bool operator == (const LorentzRotation & rhs) const {
     for (unsigned int i=0; i < 16; ++i) {
       if( fM[i] != rhs.fM[i] )  return false;
     }
     return true;
   }
-  bool operator != (const LorentzRotation & rhs) {
+  bool operator != (const LorentzRotation & rhs) const {
     return ! operator==(rhs);
   }
 

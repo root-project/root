@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.8 2006/06/15 16:23:44 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.9 2006/07/01 16:01:08 rdm Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -256,15 +256,16 @@ public:
   }
 
   /**
-      Invert a rotation in place
+      Invert a rotation in place and return a reference to the inverted rotation class
    */
   // theta stays the same and negative rotation in Theta is done via a rotation 
   // of + PI in pohi and Psi 
-  void Invert() {
+  EulerAngles & Invert() {
     Scalar tmp = -fPhi; 
     fPhi = -fPsi + Pi(); 
     fTheta = fTheta; 
     fPsi=tmp + Pi();
+    return *this;
   }
 
   /**
@@ -300,13 +301,13 @@ public:
   /**
      Equality/inequality operators
    */
-  bool operator == (const EulerAngles & rhs) {
+  bool operator == (const EulerAngles & rhs) const {
     if( fPhi   != rhs.fPhi   ) return false;
     if( fTheta != rhs.fTheta ) return false;
     if( fPsi   != rhs.fPsi   ) return false;
     return true;
   }
-  bool operator != (const EulerAngles & rhs) {
+  bool operator != (const EulerAngles & rhs) const {
     return ! operator==(rhs);
   }
 

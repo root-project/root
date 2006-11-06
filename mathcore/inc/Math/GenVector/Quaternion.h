@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Quaternion.h,v 1.5 2006/05/26 15:10:39 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Quaternion.h,v 1.6 2006/06/15 16:23:44 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -11,7 +11,7 @@
 // Header file for rotation in 3 dimensions, represented by a quaternion
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Quaternion.h,v 1.5 2006/05/26 15:10:39 moneta Exp $
+// Last update: $Id: Quaternion.h,v 1.6 2006/06/15 16:23:44 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Quaternion 
 #define ROOT_Math_GenVector_Quaternion  1
@@ -254,9 +254,9 @@ public:
   }
 
   /**
-      Invert a rotation in place
+      Invert a rotation in place and return a reference to the inverted rotation class
    */
-  void Invert() { fI = -fI; fJ = -fJ; fK = -fK; }
+  Quaternion & Invert() { fI = -fI; fJ = -fJ; fK = -fK; return *this;}
 
   /**
       Return inverse of a rotation
@@ -301,14 +301,14 @@ public:
   /**
      Equality/inequality operators
    */
-  bool operator == (const Quaternion & rhs) {
+  bool operator == (const Quaternion & rhs) const {
     if( fU != rhs.fU )  return false;
     if( fI != rhs.fI )  return false;
     if( fJ != rhs.fJ )  return false;
     if( fK != rhs.fK )  return false;
     return true;
   }
-  bool operator != (const Quaternion & rhs) {
+  bool operator != (const Quaternion & rhs) const {
     return ! operator==(rhs);
   }
 

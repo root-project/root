@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.12 2006/04/13 10:38:30 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.13 2006/05/26 15:10:39 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -417,9 +417,10 @@ namespace ROOT {
     }
 
     /** 
-	Invert the transformation in place
+	Invert the transformation in place and return a reference to the inverted transformation class. 
+        In case of error (singular case) the original object is returned
     */
-    void Invert();
+    Transform3D & Invert();
 
     /**
        Return the inverse of the transformation.
@@ -434,7 +435,7 @@ namespace ROOT {
     /**
        Equality/inequality operators
     */
-    bool operator == (const Transform3D & rhs) {
+    bool operator == (const Transform3D & rhs) const {
       if( fM[0] != rhs.fM[0] )  return false;
       if( fM[1] != rhs.fM[1] )  return false;
       if( fM[2] != rhs.fM[2] )  return false;
@@ -450,7 +451,7 @@ namespace ROOT {
       return true;
     }
 
-    bool operator != (const Transform3D & rhs) {
+    bool operator != (const Transform3D & rhs) const {
       return ! operator==(rhs);
     }
 

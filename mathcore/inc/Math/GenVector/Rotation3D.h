@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.6 2006/04/11 13:06:15 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.7 2006/06/15 16:23:44 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Rotation3D.h,v 1.6 2006/04/11 13:06:15 moneta Exp $
+// Last update: $Id: Rotation3D.h,v 1.7 2006/06/15 16:23:44 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Rotation3D 
 #define ROOT_Math_GenVector_Rotation3D  1
@@ -344,9 +344,9 @@ public:
   }
 
   /**
-      Invert a rotation in place
+      Invert a rotation in place and return a reference to the inverted rotation class
    */
-  void Invert();
+  Rotation3D & Invert();
 
   /**
       Return inverse of  a rotation
@@ -375,7 +375,7 @@ public:
   /**
      Equality/inequality operators
    */
-  bool operator == (const Rotation3D & rhs) {
+  bool operator == (const Rotation3D & rhs) const {
     if( fM[0] != rhs.fM[0] )  return false;
     if( fM[1] != rhs.fM[1] )  return false;
     if( fM[2] != rhs.fM[2] )  return false;
@@ -387,7 +387,7 @@ public:
     if( fM[8] != rhs.fM[8] )  return false;
     return true;
   }
-  bool operator != (const Rotation3D & rhs) {
+  bool operator != (const Rotation3D & rhs) const {
     return ! operator==(rhs);
   }
 

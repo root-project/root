@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Boost.h,v 1.4 2006/05/26 15:10:39 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Boost.h,v 1.5 2006/06/15 16:23:44 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Nov 1  2005
 // 
-// Last update: $Id: Boost.h,v 1.4 2006/05/26 15:10:39 moneta Exp $
+// Last update: $Id: Boost.h,v 1.5 2006/06/15 16:23:44 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_Boost
 #define ROOT_Math_GenVector_Boost 1
@@ -207,7 +207,7 @@ public:
   }
 
   /**
-     Overload operator * for rotation on a vector
+     Overload operator * for boost on a vector
    */
   template <class A4Vector>
   inline
@@ -217,25 +217,25 @@ public:
   }
 
   /**
-      Invert a Boost in place
+      Invert a Boost in place and return a reference to the inverted boost class 
    */
-  void Invert();
+  Boost & Invert();
 
   /**
-      Return inverse of  a rotation
+      Return inverse of  a boost
    */
   Boost Inverse() const;
 
   /**
      Equality/inequality operators
    */
-  bool operator == (const Boost & rhs) {
+  bool operator == (const Boost & rhs) const {
     for (unsigned int i=0; i < 10; ++i) {
       if( fM[i] != rhs.fM[i] )  return false;
     }
     return true;
   }
-  bool operator != (const Boost & rhs) {
+  bool operator != (const Boost & rhs) const {
     return ! operator==(rhs);
   }
 

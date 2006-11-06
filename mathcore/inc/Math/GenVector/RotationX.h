@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: RotationX.h,v 1.4 2006/04/11 13:06:15 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: RotationX.h,v 1.5 2006/06/15 16:23:44 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Mon July 18  2005
 //
-// Last update: $Id: RotationX.h,v 1.4 2006/04/11 13:06:15 moneta Exp $
+// Last update: $Id: RotationX.h,v 1.5 2006/06/15 16:23:44 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_RotationX 
 #define ROOT_Math_GenVector_RotationX  1
@@ -171,9 +171,9 @@ public:
   }
 
   /**
-      Invert a rotation in place
+      Invert a rotation in place and return a reference to the inverted rotation class
    */
-  void Invert() { fAngle = -fAngle; fSin = -fSin; }
+  RotationX & Invert() { fAngle = -fAngle; fSin = -fSin; return *this;}
 
   /**
       Return inverse of  a rotation
@@ -202,11 +202,11 @@ public:
   /**
      Equality/inequality operators
    */
-  bool operator == (const RotationX & rhs) {
+  bool operator == (const RotationX & rhs) const {
     if( fAngle != rhs.fAngle )  return false;
     return true;
   }
-  bool operator != (const RotationX & rhs) {
+  bool operator != (const RotationX & rhs) const {
     return ! operator==(rhs);
   }
 

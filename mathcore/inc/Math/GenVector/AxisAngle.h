@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.h,v 1.7 2006/06/15 16:23:44 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.h,v 1.8 2006/08/16 10:29:59 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -266,9 +266,9 @@ public:
   }
 
   /**
-      Invert an AxisAngle rotation in place
+      Invert an AxisAngle rotation in place and return a reference to the inverted rotation class
    */
-  void Invert() { fAngle = -fAngle; }
+  AxisAngle & Invert() { fAngle = -fAngle; return *this; }
 
   /**
       Return inverse of an AxisAngle rotation
@@ -304,12 +304,12 @@ public:
   /**
      Equality/inequality operators
    */
-  bool operator == (const AxisAngle & rhs) {
+  bool operator == (const AxisAngle & rhs) const {
     if( fAxis  != rhs.fAxis  )  return false;
     if( fAngle != rhs.fAngle )  return false;
     return true;
   }
-  bool operator != (const AxisAngle & rhs) {
+  bool operator != (const AxisAngle & rhs) const {
     return ! operator==(rhs);
   }
 
