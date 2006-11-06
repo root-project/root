@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.7 2006/06/15 16:23:44 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.8 2006/11/06 09:51:42 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Rotation3D.h,v 1.7 2006/06/15 16:23:44 moneta Exp $
+// Last update: $Id: Rotation3D.h,v 1.8 2006/11/06 09:51:42 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Rotation3D 
 #define ROOT_Math_GenVector_Rotation3D  1
@@ -205,9 +205,9 @@ public:
   GetComponents ( ForeignVector& v1,
                   ForeignVector& v2,
                   ForeignVector& v3 ) {
-    v1 = ForeignVector ( fM[kXX], fM[kXY], fM[kXZ] );
-    v2 = ForeignVector ( fM[kYX], fM[kYY], fM[kYZ] );
-    v3 = ForeignVector ( fM[kZX], fM[kZY], fM[kZZ] );
+    v1 = ForeignVector ( fM[kXX], fM[kYX], fM[kZX] );
+    v2 = ForeignVector ( fM[kXY], fM[kYY], fM[kZY] );
+    v3 = ForeignVector ( fM[kXZ], fM[kYZ], fM[kZZ] );
   }
 
   /**

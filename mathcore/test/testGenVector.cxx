@@ -121,8 +121,8 @@ int testVector3D() {
 #endif
 
 
-  if (iret == 0) std::cout << "\t\t\tOK\n"; 
-  else std::cout << "\t\tFAILED\n";
+  if (iret == 0) std::cout << "\t\t\t\t\tOK\n"; 
+  else std::cout << "\t\t\t\tFAILED\n";
 
 
   return iret;
@@ -176,8 +176,8 @@ int testPoint3D() {
   vg4 = pg - pl;
 #endif
 
-  if (iret == 0) std::cout << "\t\t\tOK\n"; 
-  else std::cout << "\t\tFAILED\n"; 
+  if (iret == 0) std::cout << "\t\t\t\t\tOK\n"; 
+  else std::cout << "\t\t\t\tFAILED\n"; 
 
   return iret;
 }
@@ -244,7 +244,26 @@ int testRotations3D() {
   iret |= compare(vpg2.Y(), vg2.Y(),"y diff",10 );
   iret |= compare(vpg2.Z(), vg2.Z(),"z diff",10 );
 
+  // test Get/SetComponents
+  XYZVector v1,v2,v3; 
+  rot.GetComponents(v1,v2,v3);
+  Rotation3D rot2; 
+  rot2.SetComponents(v1,v2,v3);
+  double r1[9],r2[9]; 
+  rot.GetComponents(r1,r1+9);
+  rot2.GetComponents(r2,r2+9);
+  for (int i = 0; i < 9; ++i) {
+     iret |= compare(r1[i],r2[i],"Get/SetComponents"); 
+  }
+  // operator == fails for numerical precision
+  //iret |= compare( (rot2==rot),true,"Get/SetComponens");
 
+  //test inversion
+  Rotation3D rotInv = rot.Inverse();
+  bool comp = (rotInv == rot.Invert()); 
+  iret |= compare(comp,true,"inversion");
+
+    
 
   if (iret == 0) std::cout << "\tOK\n"; 
   else std::cout << "\t FAILED\n";
@@ -319,8 +338,8 @@ int testTransform3D() {
 
 
 
-  if (iret == 0) std::cout << "\t\tOK\n"; 
-  else std::cout << "\t\tFAILED\n"; 
+  if (iret == 0) std::cout << "\t\t\t\tOK\n"; 
+  else std::cout << "\t\t\t\tFAILED\n"; 
 
   return iret; 
 }
@@ -369,8 +388,8 @@ int testVectorUtil() {
    double perp2 = Perp2(v,u);
    iret |= compare(perp2, vp.Mag2(),"perp2",1 );
 
-  if (iret == 0) std::cout << "\t\tOK\n"; 
-  else std::cout << "\t\tFAILED\n"; 
+  if (iret == 0) std::cout << "\t\t\t\tOK\n"; 
+  else std::cout << "\t\t\t\t\t\tFAILED\n"; 
   return iret; 
 
 }

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Rotation.h,v 1.4 2006/02/26 17:20:11 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Rotation.h,v 1.5 2006/04/11 13:06:15 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 // rotation functions
@@ -16,6 +16,7 @@
 #pragma link C++ function  ROOT::Math::Rotation3D::operator* (const ROOT::Math::XYZVector &);
 #pragma link C++ function  ROOT::Math::Rotation3D::operator* (const ROOT::Math::XYZTVector &);
 // axis angle
+#pragma link C++ function  ROOT::Math::AxisAngle::AxisAngle (ROOT::Math::XYZVector &, double);
 #pragma link C++ function  ROOT::Math::AxisAngle::AxisAngle (double *, double*);
 #pragma link C++ function  ROOT::Math::AxisAngle::SetComponents (double *, double *);
 #pragma link C++ function  ROOT::Math::AxisAngle::GetComponents (double *, double *);
