@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Member.h,v 1.15 2006/10/26 17:49:22 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: Member.h,v 1.16 2006/10/30 12:51:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -44,7 +44,7 @@ namespace ROOT {
          Member( const MemberBase * memberBase = 0 );
 
 
-         /** Copy Constructor */
+         /** copy constructor */
          Member( const Member & rh );
 
 
@@ -166,6 +166,13 @@ namespace ROOT {
           */
          Object Invoke( const std::vector < void * > & paramList = 
                         std::vector<void*>()) const;
+
+
+         /** 
+          * IsAbstract checks whether abstract is set for the data member 
+          * @return true if abstract modifier is set for this member
+          */
+         bool IsAbstract() const;
 
 
          /** 
@@ -560,11 +567,20 @@ inline void * ROOT::Reflex::Member::Id() const {
 
 
 //-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::Member::IsAbstract() const {
+//-------------------------------------------------------------------------------
+   if ( *this ) return fMemberBase->IsAbstract();
+   return false;
+}
+
+
+//-------------------------------------------------------------------------------
 inline bool ROOT::Reflex::Member::IsArtificial() const {
 //-------------------------------------------------------------------------------
    if ( *this ) return fMemberBase->IsArtificial();
    return false;
 }
+
 
 //-------------------------------------------------------------------------------
 inline bool ROOT::Reflex::Member::IsAuto() const {

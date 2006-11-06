@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: MemberBase.h,v 1.3 2006/09/05 17:13:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: MemberBase.h,v 1.4 2006/10/30 12:51:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -26,7 +26,7 @@ namespace ROOT {
       class DictionaryGenerator;
 
       /**
-       * @class MemberBase MemberBase.h Reflex/MemberBase.h
+       * @class MemberBase MemberBase.h Reflex/internal/MemberBase.h
        * @author Stefan Roiser
        * @date 24/11/2003
        * @ingroup Ref
@@ -47,23 +47,21 @@ namespace ROOT {
 
 
          /**
-          * operator Member will return the MemberAt object of this MemberAt BaseAt
+          * operator member will return the member object of this MemberBase
           */
          operator Member () const;
 
 
          /** 
-          * DeclaringScope will return the Scope which the MemberAt lives in
-          * (i.e. the same as the Type)
-          * @return the declaring Scope of the MemberAt
+          * DeclaringScope will return the scope which the member lives in
+          * @return the declaring scope of the member
           */
          Scope DeclaringScope() const;
 
 
          /** 
-          * DeclaringType will return the Type which the MemberAt lives in
-          * (i.e. the same as the Scope)
-          * @return the declaring Type of the MemberAt
+          * DeclaringType will return the type which the member lives in
+          * @return the declaring type of the member
           */
          Type DeclaringType() const;
 
@@ -75,11 +73,11 @@ namespace ROOT {
          virtual void GenerateDict(DictionaryGenerator & generator) const;
 	  
       
-         /** Get the MemberAt value (as void*) */
+         /** Get the member value */
          virtual Object Get( const Object & obj ) const;
 
 
-         /** Invoke the function (if return At as void*) */
+         /** Invoke the member function */
          /*virtual Object Invoke( const Object & obj, 
            const std::vector < Object > & paramList ) const;*/
          virtual Object Invoke( const Object & obj, 
@@ -93,14 +91,18 @@ namespace ROOT {
                                 std::vector<void*>()) const;
 
 
-         /** check whether artificial is Set for the data MemberAt */
+         /** check whether abstract is set for the data member */
+         bool IsAbstract() const;
+         
+
+         /** check whether artificial is set for the data member */
          bool IsArtificial() const;
 
-         /** check whether auto is Set for the data MemberAt */
+         /** check whether auto is set for the data member */
          bool IsAuto() const;
 
 
-         /** check whether the function MemberAt is a constructor */
+         /** check whether the function member is a constructor */
          bool IsConstructor() const;
 
 
@@ -108,79 +110,79 @@ namespace ROOT {
          bool IsConst() const;
 
 
-         /** check whether the function MemberAt is a user defined conversion function */
+         /** check whether the function member is a user defined conversion function */
          bool IsConverter() const;
 
 
-         /** check whether the function MemberAt is a copy constructor */
+         /** check whether the function member is a copy constructor */
          bool IsCopyConstructor() const;
 
 
-         /** return true if this is a data MemberAt */
+         /** return true if this is a data member */
          bool IsDataMember() const;
 
 
-         /** check whether the function MemberAt is a destructor */
+         /** check whether the function member is a destructor */
          bool IsDestructor() const;
 
 
-         /** check whether explicit is Set for the function MemberAt */
+         /** check whether explicit is set for the function member */
          bool IsExplicit() const;
 
 
-         /** check whether extern is Set for the data MemberAt */
+         /** check whether extern is set for the data member */
          bool IsExtern() const;
 
 
-         /** return true if this is a function MemberAt */
+         /** return true if this is a function member */
          bool IsFunctionMember() const;
 
 
-         /** check whether inline is Set for the function MemberAt */
+         /** check whether inline is set for the function member */
          bool IsInline() const;
 
       
-         /** check whether Mutable is Set for the data MemberAt */
+         /** check whether mutable is set for the data member */
          bool IsMutable() const;
 
 
-         /** check whether the function MemberAt is an operator */
+         /** check whether the function member is an operator */
          bool IsOperator() const;
 
 
-         /** check whether the function MemberAt is private */
+         /** check whether the function member is private */
          bool IsPrivate() const;
 
 
-         /** check whether the function MemberAt is protected */
+         /** check whether the function member is protected */
          bool IsProtected() const;
 
 
-         /** check whether the function MemberAt is public */
+         /** check whether the function member is public */
          bool IsPublic() const;
 
 
-         /** check whether register is Set for the data MemberAt */
+         /** check whether register is set for the data member */
          bool IsRegister() const;
 
 
-         /** check whether static is Set for the data MemberAt */
+         /** check whether static is set for the data member */
          bool IsStatic() const;
 
 
          /** 
-          * IsTemplateInstance returns true if the At represents a 
+          * IsTemplateInstance returns true if the type represents a 
           * ClassTemplateInstance
-          * @return true if At represents a InstantiatedTemplateClass
+          * @return true if type represents a InstantiatedTemplateClass
           */
          bool IsTemplateInstance() const;
 
 
-         /** check whether transient is Set for the data MemberAt */
+         /** check whether transient is set for the data member */
          bool IsTransient() const;
 
 
-         /** check whether virtual is Set for the function MemberAt */
+         /** check whether virtual is set for the function member */
          bool IsVirtual() const;
 
 
@@ -188,19 +190,19 @@ namespace ROOT {
          bool IsVolatile() const;
 
 
-         /** return the At of the MemberAt (function or data MemberAt) */
+         /** return the type of the member (function or data member) */
          TYPE MemberType() const;
 
 
-         /** returns the string representation of the MemberAt species */
+         /** returns the string representation of the member species */
          std::string MemberTypeAsString() const;
 
 
-         /** return the Name of the MemberAt */
+         /** return the name of the member */
          virtual std::string Name( unsigned int mod = 0 ) const;
 
 
-         /** return the Offset of the MemberAt */
+         /** return the offset of the member */
          virtual size_t Offset() const;
 
 
@@ -208,7 +210,7 @@ namespace ROOT {
          virtual size_t FunctionParameterSize( bool required = false ) const;
 
 
-         /** FunctionParameterAt nth default value if declared*/
+         /** FunctionParameterDefaultAt returns the nth default value if declared*/
          virtual std::string FunctionParameterDefaultAt( size_t nth ) const;
 
 
@@ -218,7 +220,7 @@ namespace ROOT {
          virtual Reverse_StdString_Iterator FunctionParameterDefault_REnd() const;
 
 
-         /** FunctionParameterAt nth Name if declared*/
+         /** FunctionParameterNameAt returns the nth name if declared*/
          virtual std::string FunctionParameterNameAt( size_t nth ) const;
 
 
@@ -229,25 +231,25 @@ namespace ROOT {
 
 
          /**
-          * Properties will return a pointer to the PropertyNth list attached
+          * Properties will return a pointer to the property list attached
           * to this item
-          * @return pointer to PropertyNth list
+          * @return pointer to property list
           */
          PropertyList Properties() const;
 
 
-         /** Set the MemberAt value */
+         /** Set the member value */
          /*virtual void Set( const Object & instance,
            const Object & value ) const;*/
          virtual void Set( const Object & instance,
                            const void * value ) const;
 
 
-         /** Set the At of the MemberAt */
+         /** Set the type of the member */
          void SetScope( const Scope & scope ) const;
 
 
-         /** return the context of the MemberAt */
+         /** return the context of the member */
          virtual void * Stubcontext() const;
 
 
@@ -264,7 +266,7 @@ namespace ROOT {
 
 
          /**
-          * templateArgSize will return the number of template arguments
+          * TemplateArgumentSize will return the number of template arguments
           * @return number of template arguments
           */
          virtual size_t TemplateArgumentSize() const;
@@ -283,16 +285,16 @@ namespace ROOT {
          virtual MemberTemplate TemplateFamily() const;
 
 
-         /** return pointer to MemberAt At */
+         /** return pointer to member type */
          Type TypeOf() const;
 
       protected:
 
          /** 
           * CalculateBaseObject will calculate the inheritance between an object
-          * and the local At if necessary
+          * and the local type if necessary
           * @param obj the object from which the calculation should start
-          * @return memory AddressGet of new local object relative to obj
+          * @return memory address of new local object relative to obj
           */
          void * CalculateBaseObject( const Object & obj ) const;
 
@@ -308,12 +310,12 @@ namespace ROOT {
          Type fType;
 
       
-         /** all modifiers of the MemberAt */
+         /** all modifiers of the member */
          unsigned int fModifiers;
 
       private:
 
-         /** Name of MemberAt */
+         /** name of member */
          std::string fName;
 
 
@@ -404,6 +406,13 @@ inline ROOT::Reflex::Object
 ROOT::Reflex::MemberBase::Invoke( const std::vector < void * > & /* paramList */ ) const {
 //-------------------------------------------------------------------------------
    return Object();
+}
+
+
+//-------------------------------------------------------------------------------
+inline bool ROOT::Reflex::MemberBase::IsAbstract() const {
+//-------------------------------------------------------------------------------
+   return 0 != (fModifiers & ABSTRACT);
 }
 
 
