@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.h,v 1.35 2006/09/15 08:55:48 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.h,v 1.36 2006/10/02 14:27:25 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -125,6 +125,8 @@ public:
    Int_t          fNbFiles;         // number of files to process
    Int_t          fNoEntries;       // number of events/entries to process
    Int_t          fFirstEntry;      // first event/entry to process
+   TTime          fStartTime;       // start time of the query
+   TTime          fEndTime;         // end time of the query
    TObject       *fChain;           // dataset on which to process selector
    TQueryResult  *fResult;          // query result received back
 
@@ -409,8 +411,6 @@ private:
    TGTextView           *fInfoTextView;      // summary on current query
 
    Int_t                 fFiles;             // number of files processed
-   TTime                 fStartTime;         // start time of the process
-   TTime                 fEndTime;           // end time of the process
    Long64_t              fFirst;             // first event/entry to process
    Long64_t              fEntries;           // number of events/entries to process
    Long64_t              fPrevTotal;         // used for progress bar
@@ -436,16 +436,12 @@ public:
    void     Build(TSessionViewer *gui);
 
    TCanvas *GetStatsCanvas() const { return fStatsCanvas; }
-   TTime    GetStartTime() const { return fStartTime; }
-   TTime    GetEndTime() const   { return fEndTime; }
    TEditQueryFrame *GetQueryEditFrame() const { return fFD; }
    TGTab   *GetTab() const { return fTab; }
 
-   void     SetStartTime(TTime time) { fStartTime = time; }
-   void     SetEndTime(TTime time) { fEndTime = time; }
-
    void     Feedback(TList *objs);
    void     Progress(Long64_t total, Long64_t processed);
+   void     ProgressLocal(Long64_t total, Long64_t processed);
    void     IndicateStop(Bool_t aborted);
    void     ResetProgressDialog(const char *selec, Int_t files, Long64_t first, Long64_t entries);
 

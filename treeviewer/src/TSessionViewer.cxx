@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.76 2006/10/02 14:27:25 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.77 2006/10/04 14:49:23 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -60,6 +60,7 @@
 #include "TSessionDialogs.h"
 #include "TEnv.h"
 #include "TH2.h"
+#include "TTreePlayer.h"
 #ifdef WIN32
 #include "TWin32SplashThread.h"
 #endif
@@ -2051,6 +2052,7 @@ void TEditQueryFrame::Build(TSessionViewer *gui)
          (const char *)0, 2), new TGTableLayoutHints(1, 2, 1, 2,
          kLHintsCenterY, 5, 5, 4, 0));
    fTxtChain->SetToolTipText("Specify TChain or TDSet from memory or file");
+   fTxtChain->SetEnabled(kFALSE);
    // add "Browse" button
    AddFrame(btnTmp = new TGTextButton(this, "Browse..."),
          new TGTableLayoutHints(2, 3, 1, 2, kLHintsCenterY, 5, 0, 4, 8));
@@ -2527,12 +2529,103 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
    }
 
    // get current time
-   fEndTime = gSystem->Now();
-   TTime tdiff = fEndTime - fStartTime;
+   if (fViewer->GetActDesc()->fActQuery->fStatus == 
+       TQueryDescription::kSessionQueryRunning)
+      fViewer->GetActDesc()->fActQuery->fEndTime = gSystem->Now();
+   TTime tdiff = fViewer->GetActDesc()->fActQuery->fEndTime - 
+                 fViewer->GetActDesc()->fActQuery->fStartTime;
    Float_t eta = 0;
    if (processed)
       eta = ((Float_t)((Long_t)tdiff)*total/Float_t(processed) -
             Long_t(tdiff))/1000.;
+
+   if (processed == total) {
+      // finished
+      buf = Form(" Processed : %lld events in %.1f sec", total, Long_t(tdiff)/1000.);
+      fTotal->SetText(buf);
+   } else {
+      // update status infos
+      if (fStatus > kDone) {
+         buf = Form(" Estimated time left : %.1f sec (%lld events of %lld processed) - %s  ",
+                     eta, processed, total, cproc[fStatus]);
+      } else {
+         buf = Form(" Estimated time left : %.1f sec (%lld events of %lld processed)        ",
+                    eta, processed, total);
+      }
+      fTotal->SetText(buf);
+      buf = Form(" Processing Rate : %.1f events/sec   ",
+                 Float_t(processed)/Long_t(tdiff)*1000.);
+      fRate->SetText(buf);
+   }
+   fPrevProcessed = processed;
+
+   fFB->Layout();
+}
+
+//______________________________________________________________________________
+void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
+{
+   // Update progress bar and status labels.
+
+   static const char *cproc[] = { "running", "done", "STOPPED", "ABORTED" };
+
+   frmProg->SetBarColor("green");
+   if (fViewer->GetActDesc()->fActQuery->fStatus ==
+       TQueryDescription::kSessionQueryAborted) {
+      frmProg->SetBarColor("red");
+   }
+   else if (fViewer->GetActDesc()->fActQuery->fStatus ==
+            TQueryDescription::kSessionQueryStopped) {
+      frmProg->SetBarColor("yellow");
+   }
+   else if ((fViewer->GetActDesc()->fActQuery->fStatus !=
+        TQueryDescription::kSessionQueryRunning) &&
+       (fViewer->GetActDesc()->fActQuery->fStatus !=
+        TQueryDescription::kSessionQueryCompleted) ) {
+         fTotal->SetText(" Estimated time left : 0.0 sec (0 events of 0 processed)        ");
+      fRate->SetText(" Processing Rate : 0.0f events/sec   ");
+      frmProg->Reset();
+      fFB->Layout();
+      return;
+   }
+
+   if (total < 0)
+      total = fPrevTotal;
+   else
+      fPrevTotal = total;
+
+   // if no change since last call, just return
+   char *buf;
+
+   // Update informations at first call
+   if (fEntries != total) {
+      fLabInfos->SetText("Local Session");
+
+      fEntries = total;
+      buf = Form(" %d files, %lld events, starting event %lld",
+              fFiles, fEntries, fFirst);
+      fLabStatus->SetText(buf);
+   }
+
+   // compute progress bar position and update
+   Float_t pos = Float_t(Double_t(processed * 100)/Double_t(total));
+   frmProg->SetPosition(pos);
+   // if 100%, stop animation and set icon to "connected"
+   if (pos >= 100.0) {
+      fViewer->SetChangePic(kFALSE);
+      fViewer->ChangeRightLogo("monitor01.xpm");
+   }
+
+   // get current time
+   if (fViewer->GetActDesc()->fActQuery->fStatus == 
+       TQueryDescription::kSessionQueryRunning)
+      fViewer->GetActDesc()->fActQuery->fEndTime = gSystem->Now();
+   TTime tdiff = fViewer->GetActDesc()->fActQuery->fEndTime - 
+                 fViewer->GetActDesc()->fActQuery->fStartTime;
+   Float_t eta = 0;
+   if (processed)
+      eta = ((Float_t)((Long_t)tdiff)*total/(Float_t)(processed) -
+            (Long_t)(tdiff))/1000.;
 
    if (processed == total) {
       // finished
@@ -2643,6 +2736,11 @@ void TSessionQueryFrame::OnBtnFinalize()
          gVirtualX->SetCursor(GetId(), 0);
       }
    }
+   if (fViewer->GetActDesc()->fLocal) {
+      gPad->SetEditable(kFALSE);
+      TChain *chain = (TChain *)fViewer->GetActDesc()->fActQuery->fChain;
+      ((TTreePlayer *)(chain->GetPlayer()))->GetSelectorFromFile()->Terminate();
+   }
 }
 
 //______________________________________________________________________________
@@ -2654,6 +2752,11 @@ void TSessionQueryFrame::OnBtnStop()
    if (fViewer->GetActDesc()->fProof &&
        fViewer->GetActDesc()->fProof->IsValid()) {
       fViewer->GetActDesc()->fProof->StopProcess(kFALSE);
+   }
+   if (fViewer->GetActDesc()->fLocal) {
+      gROOT->SetInterrupt();
+      fViewer->GetActDesc()->fActQuery->fStatus =
+         TQueryDescription::kSessionQueryStopped;
    }
    // stop icon animation and set connected icon
    fViewer->ChangeRightLogo("monitor01.xpm");
@@ -2697,6 +2800,28 @@ void TSessionQueryFrame::OnBtnRetrieve()
          gVirtualX->SetCursor(GetId(), 0);
       }
    }
+   if (fViewer->GetActDesc()->fLocal) {
+      TGListTreeItem *item=0, *item2=0;
+      TChain *chain = (TChain *)fViewer->GetActDesc()->fActQuery->fChain;
+      item = fViewer->GetSessionHierarchy()->FindItemByObj(fViewer->GetSessionItem(), 
+                                                           fViewer->GetActDesc());
+      if (item) {
+         item2 = fViewer->GetSessionHierarchy()->FindItemByObj(item, 
+                                    fViewer->GetActDesc()->fActQuery);
+      }
+      if (item2) {
+         // add input and output list entries
+         TSelector *selector = ((TTreePlayer *)(chain->GetPlayer()))->GetSelectorFromFile();
+         TList *objlist = selector->GetOutputList();
+         if (objlist)
+            if (!fViewer->GetSessionHierarchy()->FindChildByName(item2, "OutputList"))
+               fViewer->GetSessionHierarchy()->AddItem(item2, "OutputList");
+      }
+      // update list tree, query frame informations, and buttons state
+      fClient->NeedRedraw(fViewer->GetSessionHierarchy());
+      UpdateInfos();
+      UpdateButtons(fViewer->GetActDesc()->fActQuery);
+   }
 }
 
 //______________________________________________________________________________
@@ -2709,6 +2834,11 @@ void TSessionQueryFrame::OnBtnAbort()
        fViewer->GetActDesc()->fProof->IsValid()) {
       fViewer->GetActDesc()->fProof->StopProcess(kTRUE);
    }
+   if (fViewer->GetActDesc()->fLocal) {
+      gROOT->SetInterrupt();
+      fViewer->GetActDesc()->fActQuery->fStatus =
+         TQueryDescription::kSessionQueryAborted;
+   }
    // stop icon animation and set connected icon
    fViewer->ChangeRightLogo("monitor01.xpm");
    fViewer->SetChangePic(kFALSE);
@@ -2719,6 +2849,7 @@ void TSessionQueryFrame::OnBtnSubmit()
 {
    // Submit query.
 
+   Int_t retval;
    Long64_t id = 0;
    TGListTreeItem *item = fViewer->GetSessionHierarchy()->GetSelected();
    if (!item) return;
@@ -2730,8 +2861,8 @@ void TSessionQueryFrame::OnBtnSubmit()
    // reset progress informations
    ResetProgressDialog(newquery->fSelectorString,
          newquery->fNbFiles, newquery->fFirstEntry, newquery->fNoEntries);
-   // set start time
-   SetStartTime(gSystem->Now());
+   // set query start time
+   newquery->fStartTime = gSystem->Now();
    fViewer->GetActDesc()->fNbHistos = 0;
    // check for proof validity
    if (fViewer->GetActDesc()->fProof &&
@@ -2808,16 +2939,34 @@ void TSessionQueryFrame::OnBtnSubmit()
       if (newquery->fChain) {
          if (newquery->fChain->IsA() == TChain::Class()) {
             // TChain case
+            newquery->fStatus = TQueryDescription::kSessionQueryRunning;
+            fViewer->EnableTimer();
+            UpdateButtons(newquery);
+            gPad->SetEditable(kFALSE);
+            ((TChain *)newquery->fChain)->SetTimerInterval(100);
             id = ((TChain *)newquery->fChain)->Process(newquery->fSelectorString,
                   newquery->fOptions,
                   newquery->fNoEntries > 0 ? newquery->fNoEntries : 1234567890,
                   newquery->fFirstEntry);
+            OnBtnRetrieve();
+            TChain *chain = (TChain *)newquery->fChain;
+            ProgressLocal(chain->GetEntries(),
+                          chain->GetChainEntryNumber(chain->GetReadEntry())+1);
+            if ((newquery->fStatus != TQueryDescription::kSessionQueryAborted) &&
+                (newquery->fStatus != TQueryDescription::kSessionQueryStopped))
+               newquery->fStatus = TQueryDescription::kSessionQueryCompleted;
+            UpdateButtons(newquery);
          }
-         else if (newquery->fChain->IsA() == TDSet::Class()) {
-            // TDSet case
-            id = ((TDSet *)newquery->fChain)->Process(newquery->fSelectorString,
-               newquery->fOptions, newquery->fNoEntries, newquery->fFirstEntry);
+         else {
+            new TGMsgBox(fClient->GetRoot(), this, "Error Submitting Query",
+                         "Only TChains are allowed in Local Session (no TDSet) !",
+                          kMBIconExclamation,kMBOk,&retval);
          }
+      }
+      else {
+         Error("Submit", "No TChain defined; skipping");
+         newquery->fStatus = TQueryDescription::kSessionQueryCreated;
+         return;
       }
       // set query reference id to unique identifier
       newquery->fReference = Form("local-session-%s:q%lld", newquery->fQueryName.Data(), id);
@@ -2953,6 +3102,16 @@ void TSessionQueryFrame::UpdateInfos()
    fInfoTextView->Clear();
    if (!fViewer->GetActDesc()->fActQuery ||
        !fViewer->GetActDesc()->fActQuery->fResult) {
+      if (fViewer->GetActDesc()->fLocal) {
+         if (fViewer->GetActDesc()->fActQuery) {
+            TChain *chain = (TChain *)fViewer->GetActDesc()->fActQuery->fChain;
+            if (chain) {
+               ProgressLocal(chain->GetEntries(),
+                     chain->GetChainEntryNumber(chain->GetReadEntry())+1);
+            }
+            UpdateButtons(fViewer->GetActDesc()->fActQuery);
+         }
+      }
       return;
    }
    TQueryResult *result = fViewer->GetActDesc()->fActQuery->fResult;
@@ -4284,6 +4443,18 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
                }
             }
          }
+         else {
+            TChain *chain = (TChain *)fActDesc->fActQuery->fChain;
+            if (chain) {
+               objlist = ((TTreePlayer *)(chain->GetPlayer()))->GetSelectorFromFile()->GetOutputList();
+               if (objlist) {
+                  TIter nexto(objlist);
+                  while ((obj = (TObject *) nexto())) {
+                     fOutputFrame->AddObject(obj);
+                  }
+               }
+            }
+         }
          fInputFrame->Resize();
          fOutputFrame->Resize();
          fClient->NeedRedraw(fOutputFrame->GetLVContainer());
@@ -4504,6 +4675,17 @@ Bool_t TSessionViewer::HandleTimer(TTimer *)
    sprintf(line,"      %02d:%02d:%02d", connected->tm_hour,
            connected->tm_min, connected->tm_sec);
    fStatusBar->SetText(line, 2);
+
+   if (fActDesc->fLocal) {
+      if ((fActDesc->fActQuery) &&
+         (fActDesc->fActQuery->fStatus ==
+         TQueryDescription::kSessionQueryRunning)) {
+         TChain *chain = (TChain *)fActDesc->fActQuery->fChain;
+         fQueryFrame->ProgressLocal(chain->GetEntries(),
+                        chain->GetChainEntryNumber(chain->GetReadEntry())+1);
+      }
+   }
+
    fTimer->Reset();
    return kTRUE;
 }
@@ -5064,10 +5246,11 @@ void TSessionViewer::OnCascadeMenu()
       fQueryFrame->ResetProgressDialog("", 0, 0, 0);
    }
    else if (fActDesc->fActQuery) {
-      fQueryFrame->ResetProgressDialog(fActDesc->fActQuery->fSelectorString,
-                                       fActDesc->fActQuery->fNbFiles,
-                                       fActDesc->fActQuery->fFirstEntry,
-                                       fActDesc->fActQuery->fNoEntries);
+      if (!fActDesc->fLocal)
+         fQueryFrame->ResetProgressDialog(fActDesc->fActQuery->fSelectorString,
+                                          fActDesc->fActQuery->fNbFiles,
+                                          fActDesc->fActQuery->fFirstEntry,
+                                          fActDesc->fActQuery->fNoEntries);
    }
 }
 //______________________________________________________________________________

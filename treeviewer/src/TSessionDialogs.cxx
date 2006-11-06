@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.cxx,v 1.29 2006/08/03 12:42:26 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.cxx,v 1.30 2006/10/02 14:27:25 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -413,6 +413,7 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
          (const char *)0, 2), new TGTableLayoutHints(1, 2, 1, 2,
          kLHintsCenterY, 5, 5, 4, 0));
    fTxtChain->SetToolTipText("Specify TChain or TDSet from memory or file");
+   fTxtChain->SetEnabled(kFALSE);
    // add "Browse" button
    fFrmNewQuery->AddFrame(btnTmp = new TGTextButton(fFrmNewQuery, "Browse..."),
          new TGTableLayoutHints(2, 3, 1, 2, kLHintsCenterY, 5, 0, 4, 8));
