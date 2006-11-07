@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.h,v 1.7 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.h,v 1.8 2006/07/03 16:10:45 brun Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -112,6 +112,7 @@ protected:
    TGDockHideButton *fHideButton;    // hide button
    TGUndockedFrame  *fFrame;         // undocked frame
    TGLayoutHints    *fCl, *fHints;   // layout hints
+   TGLayoutHints    *fLb, *fLc;      // layout hints
 
 public:
    TGDockableFrame(const TGWindow *p = 0, Int_t id = -1,

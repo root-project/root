@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.13 2006/05/18 16:32:01 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.14 2006/07/03 16:10:45 brun Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -222,8 +222,8 @@ TGDockableFrame::TGDockableFrame(const TGWindow *p, int id, UInt_t /*options*/)
 
    TGLayoutHints *l1 = new TGLayoutHints(kLHintsTop | kLHintsLeft);
    TGLayoutHints *l2 = new TGLayoutHints(kLHintsExpandY | kLHintsLeft);
-   TGLayoutHints *lb = new TGLayoutHints(kLHintsExpandY | kLHintsLeft, 0, 2, 0, 0);
-   TGLayoutHints *lc = new TGLayoutHints(kLHintsExpandY | kLHintsExpandX);
+   fLb = new TGLayoutHints(kLHintsExpandY | kLHintsLeft, 0, 2, 0, 0);
+   fLc = new TGLayoutHints(kLHintsExpandY | kLHintsExpandX);
 
    fButtons = new TGCompositeFrame(this, 10, 10, kVerticalFrame);
    fButtons->SetCleanup();
@@ -232,11 +232,11 @@ TGDockableFrame::TGDockableFrame(const TGWindow *p, int id, UInt_t /*options*/)
    fDockButton = new TGDockButton(fButtons);
    fButtons->AddFrame(fDockButton, l2);
 
-   TGCompositeFrame::AddFrame(fButtons, lb);
+   TGCompositeFrame::AddFrame(fButtons, fLb);
 
    fContainer = new TGCompositeFrame(this, 10, 10);
-
-   TGCompositeFrame::AddFrame(fContainer, lc);
+   
+   TGCompositeFrame::AddFrame(fContainer, fLc);
 
    fEnableHide   = kTRUE;
    fEnableUndock = kTRUE;
@@ -264,6 +264,8 @@ TGDockableFrame::~TGDockableFrame()
       delete fContainer;
    }
    delete fCl;
+   delete fLb;
+   delete fLc;
    delete fButtons;
 }
 
