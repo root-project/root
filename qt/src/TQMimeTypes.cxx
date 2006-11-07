@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQMimeTypes.cxx,v 1.4 2006/03/24 15:31:10 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TQMimeTypes.cxx,v 1.5 2006/05/10 14:06:06 rdm Exp $
 // Author: Valeri Fine   21/01/2003
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -334,7 +334,7 @@ void TQMimeTypes::AddType(const char *type, const char *pattern, const char *ico
       mime->fIcon  = new QIcon( QPixmap(picnam) ) ;
 #endif /* QT_VERSION */
    }
-   delete picnam;
+   delete [] picnam;
    mime->fAction  = action;
 
    mime->fReg = new TRegexp(pattern, kTRUE);
