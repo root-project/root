@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: RotationY.h,v 1.5 2006/06/15 16:23:44 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: RotationY.h,v 1.6 2006/11/06 09:51:42 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Mon July 18  2005
 //
-// Last update: $Id: RotationY.h,v 1.5 2006/06/15 16:23:44 moneta Exp $
+// Last update: $Id: RotationY.h,v 1.6 2006/11/06 09:51:42 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_RotationY 
 #define ROOT_Math_GenVector_RotationY  1
@@ -171,9 +171,9 @@ public:
   }
 
   /**
-      Invert a rotation in place and return a reference to the inverted rotation class
+      Invert a rotation in place
    */
-  RotationY & Invert() { fAngle = -fAngle; fSin = -fSin; return *this; }
+  void Invert() { fAngle = -fAngle; fSin = -fSin; }
 
   /**
       Return inverse of  a rotation

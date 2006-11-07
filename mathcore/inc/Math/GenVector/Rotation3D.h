@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.8 2006/11/06 09:51:42 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.9 2006/11/06 14:45:39 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Rotation3D.h,v 1.8 2006/11/06 09:51:42 moneta Exp $
+// Last update: $Id: Rotation3D.h,v 1.9 2006/11/06 14:45:39 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Rotation3D 
 #define ROOT_Math_GenVector_Rotation3D  1
@@ -344,9 +344,9 @@ public:
   }
 
   /**
-      Invert a rotation in place and return a reference to the inverted rotation class
+      Invert a rotation in place
    */
-  Rotation3D & Invert();
+  void Invert();
 
   /**
       Return inverse of  a rotation

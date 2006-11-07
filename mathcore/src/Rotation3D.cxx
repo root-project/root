@@ -118,12 +118,11 @@ static inline void swap(double & a, double & b) {
    double t=b; b=a; a=t; 
 }
 
-Rotation3D & Rotation3D::Invert() {
+void Rotation3D::Invert() {
    // invert a rotation
    swap (fM[kXY], fM[kYX]);
    swap (fM[kXZ], fM[kZX]);
    swap (fM[kYZ], fM[kZY]);
-   return *this;
 }
 
 Rotation3D Rotation3D::operator * (const Rotation3D  & r) const {

@@ -93,10 +93,9 @@ BoostZ::operator() (const LorentzVector< PxPyPzE4D<double> > & v) const {
          , fGamma*fBeta*z  + fGamma*t );
 }
 
-BoostZ & BoostZ::Invert() {
+void BoostZ::Invert() {
    // invert
    fBeta = -fBeta;
-   return *this;
 }
 
 BoostZ BoostZ::Inverse() const {

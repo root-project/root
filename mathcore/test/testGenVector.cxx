@@ -260,7 +260,8 @@ int testRotations3D() {
 
   //test inversion
   Rotation3D rotInv = rot.Inverse();
-  bool comp = (rotInv == rot.Invert()); 
+  rot.Invert(); // invert in place
+  bool comp = (rotInv == rot ); 
   iret |= compare(comp,true,"inversion");
 
     

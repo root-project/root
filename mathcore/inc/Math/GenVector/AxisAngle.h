@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.h,v 1.8 2006/08/16 10:29:59 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.h,v 1.9 2006/11/06 09:51:42 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -266,9 +266,9 @@ public:
   }
 
   /**
-      Invert an AxisAngle rotation in place and return a reference to the inverted rotation class
+      Invert an AxisAngle rotation in place
    */
-  AxisAngle & Invert() { fAngle = -fAngle; return *this; }
+  void Invert() { fAngle = -fAngle; }
 
   /**
       Return inverse of an AxisAngle rotation

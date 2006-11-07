@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Boost.h,v 1.5 2006/06/15 16:23:44 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Boost.h,v 1.6 2006/11/06 09:51:42 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Nov 1  2005
 // 
-// Last update: $Id: Boost.h,v 1.5 2006/06/15 16:23:44 moneta Exp $
+// Last update: $Id: Boost.h,v 1.6 2006/11/06 09:51:42 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_Boost
 #define ROOT_Math_GenVector_Boost 1
@@ -217,9 +217,9 @@ public:
   }
 
   /**
-      Invert a Boost in place and return a reference to the inverted boost class 
+      Invert a Boost in place
    */
-  Boost & Invert();
+  void Invert();
 
   /**
       Return inverse of  a boost

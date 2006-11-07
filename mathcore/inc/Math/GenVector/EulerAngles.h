@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.9 2006/07/01 16:01:08 rdm Exp $
+// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.10 2006/11/06 09:51:42 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -256,16 +256,15 @@ public:
   }
 
   /**
-      Invert a rotation in place and return a reference to the inverted rotation class
+      Invert a rotation in place
    */
   // theta stays the same and negative rotation in Theta is done via a rotation 
   // of + PI in pohi and Psi 
-  EulerAngles & Invert() {
+  void Invert() {
     Scalar tmp = -fPhi; 
     fPhi = -fPsi + Pi(); 
     fTheta = fTheta; 
     fPsi=tmp + Pi();
-    return *this;
   }
 
   /**

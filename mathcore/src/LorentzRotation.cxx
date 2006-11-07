@@ -190,8 +190,8 @@ LorentzRotation::operator() (const LorentzVector< PxPyPzE4D<double> > & v) const
         , fM[kTX]*x + fM[kTY]*y + fM[kTZ]*z + fM[kTT]*t );
 }
 
-LorentzRotation &  LorentzRotation::Invert() {
-   // invert modifying current content 
+void LorentzRotation::Invert() {
+   // invert modifying current content
    Scalar temp;
    temp = fM[kXY]; fM[kXY] =  fM[kYX]; fM[kYX] =  temp;  
    temp = fM[kXZ]; fM[kXZ] =  fM[kZX]; fM[kZX] =  temp;  
@@ -199,7 +199,6 @@ LorentzRotation &  LorentzRotation::Invert() {
    temp = fM[kXT]; fM[kXT] = -fM[kTX]; fM[kTX] = -temp;  
    temp = fM[kYT]; fM[kYT] = -fM[kTY]; fM[kTY] = -temp;  
    temp = fM[kZT]; fM[kZT] = -fM[kTZ]; fM[kTZ] = -temp;  
-   return *this; 
 }
 
 LorentzRotation LorentzRotation::Inverse() const {

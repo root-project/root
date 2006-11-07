@@ -155,12 +155,11 @@ Boost::operator() (const LorentzVector< PxPyPzE4D<double> > & v) const {
         , fM[kXT]*x + fM[kYT]*y + fM[kZT]*z + fM[kTT]*t );
 }
 
-Boost & Boost::Invert() {
+void Boost::Invert() {
    // invert in place boost (modifying the object)
    fM[kXT] = -fM[kXT];
    fM[kYT] = -fM[kYT];
    fM[kZT] = -fM[kZT];
-   return *this;
 }
 
 Boost Boost::Inverse() const {

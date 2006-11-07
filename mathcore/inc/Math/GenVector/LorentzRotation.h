@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.8 2006/06/15 16:23:44 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.9 2006/11/06 09:51:42 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Aug 8  2005
 // 
-// Last update: $Id: LorentzRotation.h,v 1.8 2006/06/15 16:23:44 moneta Exp $
+// Last update: $Id: LorentzRotation.h,v 1.9 2006/11/06 09:51:42 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_LorentzRotation 
 #define ROOT_Math_GenVector_LorentzRotation  1
@@ -347,9 +347,9 @@ public:
   }
 
   /**
-      Invert a Lorentz rotation in place and return a reference to the inverted rotation class
+      Invert a Lorentz rotation in place
    */
-  LorentzRotation & Invert();
+  void Invert();
 
   /**
       Return inverse of  a rotation

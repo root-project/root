@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.13 2006/05/26 15:10:39 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.14 2006/11/06 09:51:42 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -417,10 +417,9 @@ namespace ROOT {
     }
 
     /** 
-	Invert the transformation in place and return a reference to the inverted transformation class. 
-        In case of error (singular case) the original object is returned
+	Invert the transformation in place
     */
-    Transform3D & Invert();
+    void Invert();
 
     /**
        Return the inverse of the transformation.

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Quaternion.h,v 1.6 2006/06/15 16:23:44 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Quaternion.h,v 1.7 2006/11/06 09:51:42 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -11,7 +11,7 @@
 // Header file for rotation in 3 dimensions, represented by a quaternion
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Quaternion.h,v 1.6 2006/06/15 16:23:44 moneta Exp $
+// Last update: $Id: Quaternion.h,v 1.7 2006/11/06 09:51:42 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Quaternion 
 #define ROOT_Math_GenVector_Quaternion  1
@@ -254,9 +254,9 @@ public:
   }
 
   /**
-      Invert a rotation in place and return a reference to the inverted rotation class
+      Invert a rotation in place
    */
-  Quaternion & Invert() { fI = -fI; fJ = -fJ; fK = -fK; return *this;}
+  void Invert() { fI = -fI; fJ = -fJ; fK = -fK; }
 
   /**
       Return inverse of a rotation

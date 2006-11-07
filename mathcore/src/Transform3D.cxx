@@ -105,15 +105,13 @@ Transform3D::Transform3D(const XYZPoint & fr0, const XYZPoint & fr1, const XYZPo
 
 
 // inversion (from CLHEP)
-Transform3D & Transform3D::Invert()
+void Transform3D::Invert()
 {
    //
    // Name: Transform3D::inverse                     Date:    24.09.96
    // Author: E.Chernyaev (IHEP/Protvino)            Revised:
    //
    // Function: Find inverse affine transformation.
-   // return a reference to the transformed class. 
-   // In case of error (singular class) the original class will be returned
    
    double detxx = fM[kYY]*fM[kZZ] - fM[kYZ]*fM[kZY];
    double detxy = fM[kYX]*fM[kZZ] - fM[kYZ]*fM[kZX];
@@ -121,7 +119,7 @@ Transform3D & Transform3D::Invert()
    double det   = fM[kXX]*detxx - fM[kXY]*detxy + fM[kXZ]*detxz;
    if (det == 0) {
       std::cerr << "Transform3D::inverse error: zero determinant" << std::endl;
-      return *this;
+      return;
    }
    det = 1./det; detxx *= det; detxy *= det; detxz *= det;
    double detyx = (fM[kXY]*fM[kZZ] - fM[kXZ]*fM[kZY] )*det;
@@ -134,7 +132,6 @@ Transform3D & Transform3D::Invert()
       (detxx, -detyx,  detzx, -detxx*fM[kDX]+detyx*fM[kDY]-detzx*fM[kDZ],
        -detxy,  detyy, -detzy,  detxy*fM[kDX]-detyy*fM[kDY]+detzy*fM[kDZ],
        detxz, -detyz,  detzz, -detxz*fM[kDX]+detyz*fM[kDY]-detzz*fM[kDZ]);
-   return *this;
 }
 
 
