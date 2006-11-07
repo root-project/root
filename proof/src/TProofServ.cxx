@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.144 2006/10/19 12:38:07 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.145 2006/10/20 15:22:41 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -3640,6 +3640,10 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          break;
       case TProof::kBuildPackage:
          (*mess) >> package;
+         if (IsMaster()) {
+            // make sure package is available on all slaves, even new ones
+            fProof->UploadPackage(fPackageDir + "/" + package + ".par");
+         }
          fPackageLock->Lock();
          // check that package and PROOF-INF directory exists
          pdir = fPackageDir + "/" + package;
@@ -3684,16 +3688,15 @@ Int_t TProofServ::HandleCache(TMessage *mess)
 
          fPackageLock->Unlock();
 
-         // collect built results from slaves
-         if (IsMaster())
-            fProof->BuildPackage(package, 1);
-
          if (status) {
             // Notify the upper level
             notm.Reset();
             notm << TString(Form("%s: failure building %s ...", noth.Data(), package.Data())) << notln;
             fSocket->Send(notm);
          } else {
+            // collect built results from slaves
+            if (IsMaster())
+               fProof->BuildPackage(package, 1);
             PDB(kPackage, 1)
                Info("HandleCache", "package %s successfully built", package.Data());
          }
