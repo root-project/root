@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.23 2006/09/14 17:22:12 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.24 2006/11/03 21:22:31 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -86,9 +86,8 @@ public:
                 Double_t rho, Double_t radlen=0, Double_t intlen=0);
    TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rho,
                 EGeoMaterialState state, Double_t temperature=STP_temperature, Double_t pressure=STP_pressure);
-   TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho,
-                EGeoMaterialState state=kMatStateUndefined, 
-                Double_t temperature=STP_temperature, Double_t pressure=STP_pressure);
+   TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho);
+
    // destructor
    virtual ~TGeoMaterial();
    // methods

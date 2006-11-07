@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.35 2006/09/14 17:22:12 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.36 2006/11/03 21:22:32 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -41,6 +41,7 @@ TGeoMaterial::TGeoMaterial()
    fIntLen   = 0;       
    fTemperature = STP_temperature;
    fPressure = STP_pressure;
+   fState = kMatStateUndefined;
    fCerenkov = 0;
    fElement  = 0;
 }
@@ -61,6 +62,7 @@ TGeoMaterial::TGeoMaterial(const char *name)
    fIntLen   = 0;
    fTemperature = STP_temperature;
    fPressure = STP_pressure;
+   fState = kMatStateUndefined;
    fCerenkov = 0;
    fElement  = 0;
    
@@ -84,6 +86,7 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
    fZ        = z;
    fTemperature = STP_temperature;
    fPressure = STP_pressure;
+   fState = kMatStateUndefined;
    fDensity  = rho;
    fCerenkov = 0;
    fElement  = 0;
@@ -126,8 +129,7 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rh
 }
 
 //_____________________________________________________________________________
-TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho,
-                EGeoMaterialState state, Double_t temperature, Double_t pressure)
+TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho)
              :TNamed(name, "")
 {
 // constructor
@@ -138,9 +140,9 @@ TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho,
    fZ        = elem->Z();
    fDensity  = rho;
    SetRadLen(0,0);
-   fTemperature = temperature;
-   fPressure = pressure;
-   fState = state;
+   fTemperature = STP_temperature;
+   fPressure = STP_pressure;
+   fState = kMatStateUndefined;
    fShader   = 0;
    fCerenkov = 0;
    fElement  = elem;   
