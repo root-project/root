@@ -368,47 +368,40 @@ void TGSpeedo::SetScaleValue(Float_t val, Int_t damping)
 {
    // Set actual scale (needle position) value.
 
-   Int_t i;
+   Float_t i;
    Float_t old_val = fValue;
+   Float_t new_val = val;
    // avoid useless redraw
    if (val == fValue)
       return;
-   if (val > old_val) {
-      for (i=(int)old_val; i<(int)val; i++) {
-         SetScaleValue((Float_t)i);
-         if (gVirtualX->InheritsFrom("TGX11")) {
-            // This is a workaround the fact that on Linux,
-            // gSystem->ProcessEvents() takes ages...
-            if (damping > 5)
-               gSystem->Sleep(damping);
-            if ((damping > 5) || (i % (1 + (5 - damping)) == 0))
-               gSystem->ProcessEvents();
-         }
-         else {
-            // As it is much faster on Windows...
-            if (damping > 0)
-               gSystem->Sleep(damping);
+
+   Float_t old_angle = fAngleMin + (old_val / ((fScaleMax - fScaleMin) /
+                      (fAngleMax - fAngleMin)));
+   Float_t new_angle = fAngleMin + (new_val / ((fScaleMax - fScaleMin) /
+                      (fAngleMax - fAngleMin)));
+
+   if (new_angle > old_angle) {
+      for (i=old_angle; i<new_angle; i+=3.0) {
+         new_val = (i - fAngleMin) * ((fScaleMax - fScaleMin) /
+                   (fAngleMax - fAngleMin));
+         SetScaleValue(new_val);
+         // gSystem->ProcessEvents() takes ages...
+         if (damping > 5)
+            gSystem->Sleep(damping);
+         if ((damping > 5) || (((int)i) % (1 + (5 - damping)) == 0))
             gSystem->ProcessEvents();
-         }
       }
    }
-   if (val < old_val) {
-      for (i=(int)old_val; i>(int)val; i--) {
-         SetScaleValue((Float_t)i);
-         if (gVirtualX->InheritsFrom("TGX11")) {
-            // This is a workaround the fact that on Linux,
-            // gSystem->ProcessEvents() takes ages...
-            if (damping > 5)
-               gSystem->Sleep(damping);
-            if ((damping > 5) || (i % (1 + (5 - damping)) == 0))
-               gSystem->ProcessEvents();
-         }
-         else {
-            // As it is much faster on Windows...
-            if (damping > 0)
-               gSystem->Sleep(damping);
+   if (new_angle < old_angle) {
+      for (i=old_angle; i>new_angle; i-=3.0) {
+         new_val = (i - fAngleMin) * ((fScaleMax - fScaleMin) /
+                   (fAngleMax - fAngleMin));
+         SetScaleValue(new_val);
+         // gSystem->ProcessEvents() takes ages...
+         if (damping > 5)
+            gSystem->Sleep(damping);
+         if ((damping > 5) || (((int)i) % (1 + (5 - damping)) == 0))
             gSystem->ProcessEvents();
-         }
       }
    }
    // Last step
