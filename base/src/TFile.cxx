@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.191 2006/10/19 19:42:31 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.192 2006/10/20 07:30:57 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -604,7 +604,7 @@ void TFile::Init(Bool_t create)
       cname.ReadBuffer(buffer); // fName.ReadBuffer(buffer); file may have been renamed
       fTitle.ReadBuffer(buffer);
       delete [] header;
-      if (fNbytesName < 10 || fNbytesName > 2000) {
+      if (fNbytesName < 10 || fNbytesName > 10000) {
          Error("Init","cannot read directory info of file %s", GetName());
          goto zombie;
       }
@@ -2047,6 +2047,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       if (!h) continue;
       *h = 0;
       fprintf(fp,"#pragma link C++ class %s+;\n",path);
+      if (strstr(afile,"<")) continue; //do not write the vector<T>, pair<T>, etc
       fprintf(fpMAKE,"%s ",afile);
    }
    fprintf(fp,"#endif\n");
