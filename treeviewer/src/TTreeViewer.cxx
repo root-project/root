@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.51 2005/11/11 16:10:02 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.52 2006/05/26 09:23:47 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -2617,23 +2617,24 @@ Bool_t TTreeViewer::SwitchTree(Int_t index)
       return kFALSE;
    }
    if ((tree == fTree) && (tree == fMappedTree)) return kFALSE;     // nothing to switch
-   char *command = new char[50];
+   std::string command;
    if (tree != fTree) {
-      sprintf(command, "tv__tree = (TTree *) tv__tree_list->At(%i);", index);
-      ExecuteCommand(command);
+      command = "tv__tree = (TTree *) tv__tree_list->At";
+      command += Form("(%i)",index);
+      ExecuteCommand(command.c_str());
    }
 
    fTree = tree;
    fSlider->SetRange(0,fTree->GetEntries()-1);
    fSlider->SetPosition(0,fTree->GetEntries()-1);
-   sprintf(command, "Current Tree : %s", fTree->GetName());
-   fLbl2->SetText(new TGString(command));
+   command = "Current Tree : ";
+   command += fTree->GetName();
+   fLbl2->SetText(new TGString(command.c_str()));
    fTreeHdr->Layout();
    MapSubwindows();
    Resize(GetDefaultSize());
    MapWindow();
    ///Resize();  //ia
-   delete[] command;
    PrintEntries();
    return kTRUE;
 }
