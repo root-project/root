@@ -1017,7 +1017,15 @@ macosx) cwhich="type -path" ;;
 *)      cwhich="which"      ;;
 esac
 
+# check for Fink on MacOS X
+# and for sanity of source e.g. pcre-*.tar.gz must exist
+# which might not be the case if source was unpacked with StuffIt
 if test "x$platform" = "xmacosx" ; then
+   if test ! -f pcre/src/pcre-*.tar.gz ; then
+      echo "Source tree does not contain expected files, please unpack"
+      echo "using tar and not StuffIt"
+      exit 1
+   fi
    logmsg "Checking Fink directory"
    finkdir=`$cwhich fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    logmsg "$finkdir"
@@ -1785,23 +1793,23 @@ if test ! "x$enable_qt" = "xno" || \
 	if test $? -eq 0 ; then
 	    logmsg "Got Qt version $qtverstr"
 	    qtgot=`echo $qtverstr | \
-	      awk 'BEGIN {FS="."} {printf "%d", ((($1*2^8)+$2)*2^8)+$3; }'`; 
+	      awk 'BEGIN {FS="."} {printf "%d", ((($1*2^8)+$2)*2^8)+$3; }'`;
 	    qtneed=`echo $qtverneed | \
 	      awk 'BEGIN {FS="."}{ printf "%d", (($1*2^8)+$2)*2^8+$1; }'`
 	    qtnew=`echo $qttoonew | \
 	      awk 'BEGIN {FS="."}{ printf "%d", (($1*2^8)+$2)*2^8+$1; }'`
 	    logmsg "Got $qtgot, min $qtneed, max $qtnew"
-	    if test $qtgot -lt $qtneed ; then 
-		logmsg "Please update to Qt $qtverneed" 
+	    if test $qtgot -lt $qtneed ; then
+		logmsg "Please update to Qt $qtverneed"
 		enable_qt="no"
 		enable_qtgsi="no"
 		result "no"
-	    elif test $qtgot -ge $qtnew; then 
+	    elif test $qtgot -ge $qtnew; then
 		logmsg "Qt $qtverstr too new (>= $qttoonew)"
 		enable_qt="no"
 		enable_qtgsi="no"
 		result "no"
-	    else 
+	    else
 		result "$qtverstr"
 	    fi
 	else
