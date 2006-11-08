@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.269 2006/09/20 11:46:13 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.270 2006/09/20 14:23:36 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TSystem.h"
 #include "THistPainter.h"
 #include "TH3.h"
 #include "TH2.h"
@@ -614,6 +615,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    Hoption.Char = Hoption.Color  = Hoption.Contour = Hoption.Logx  = 0;
    Hoption.Logy = Hoption.Logz   = Hoption.Lego    = Hoption.Surf  = 0;
    Hoption.Off  = Hoption.Tri    = Hoption.Proj    = Hoption.AxisPos = 0;
+   Hoption.Spec = 0;
 
    //    special 2-D options
    Hoption.List     = 0;
@@ -632,6 +634,13 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (!nch) Hoption.Hist = 1;
    if (fFunctions->First()) Hoption.Func = 2;
    if (fH->GetSumw2N() && fH->GetDimension() == 1) Hoption.Error = 2;
+
+   l = strstr(chopt,"SPEC");
+   if (l) {
+      Hoption.Scat = 0;
+      Hoption.Spec = 1; strncpy(l,"    ",4);
+      return 1;
+   }
 
    l = strstr(chopt,"GL");
    if (l) {
@@ -1052,7 +1061,7 @@ void THistPainter::Paint(Option_t *option)
    // option use TH1::GetOption.
    //
    // Setting line, fill, marker, and text attributes
-   // =====================================
+   // ===============================================
    // The histogram classes inherit from the attribute classes:
    //    TAttLine, TAttFill, TAttMarker and TAttText.
    // See the description of these classes for the list of options.
@@ -1080,7 +1089,7 @@ void THistPainter::Paint(Option_t *option)
    //
    //
    //  Giving titles to the X, Y and Z axis
-   //  =================================
+   //  ====================================
    //    h->GetXaxis()->SetTitle("X axis title");
    //    h->GetYaxis()->SetTitle("Y axis title");
    //  The histogram title and the axis titles can be any TLatex string.
@@ -1136,7 +1145,7 @@ void THistPainter::Paint(Option_t *option)
    //
    //
    // Statistics Display
-   // ======================================
+   // ==================
    // The type of information shown in the histogram statistics box
    //  can be selected with gStyle->SetOptStat(mode).
    //
@@ -1255,26 +1264,26 @@ void THistPainter::Paint(Option_t *option)
    //End_Html
    //
    //  The SCATter plot option (default for 2-D histograms)
-   // =======================
+   //  =======================
    //  For each cell (i,j) a number of points proportional to the cell content is drawn.
    //  A maximum of 500 points per cell are drawn. If the maximum is above 500
    //  contents are normalized to 500.
    //
    //
-   //  The ARRow option.  Shows gradient between adjacent cells
+   //  The ARRow option.
    //  ================
+   //  Shows gradient between adjacent cells.
    //    For each cell (i,j) an arrow is drawn
    //    The orientation of the arrow follows the cell gradient
    //
    //
-   //
    //  The BOX option
    //  ==============
-   //    For each cell (i,j) a box is drawn with surface proportional to contents
+   //  For each cell (i,j) a box is drawn with surface proportional to contents
    //
    //
    //  The COLor option
-   //  ==============
+   //  ================
    //  For each cell (i,j) a box is drawn with a color proportional
    //    to the cell content.
    //    The color table used is defined in the current style (gStyle).
@@ -1368,8 +1377,8 @@ void THistPainter::Paint(Option_t *option)
    //End_Html
    //
    //
-   //   The "SURFace" options
-   //   =====================
+   //  The "SURFace" options
+   //  =====================
    //  In a surface plot, cell contents are represented as a mesh.
    //     The height of the mesh is proportional to the cell content.
    //
@@ -1395,6 +1404,10 @@ void THistPainter::Paint(Option_t *option)
    */
    //End_Html
    //
+   //  The SPEC option
+   //  ===============
+   //  This option allows to use the TSpectrum2Painter tools. See full
+   //  documentation in TSpectrum2Painter::PaintSpectrum.
    //
    //  Option "Z" : Adding the color palette on the right side of the pad
    //  ==================================================================
@@ -1476,6 +1489,14 @@ void THistPainter::Paint(Option_t *option)
    Double_t minsav = fH->GetMinimumStored();
 
    if (!MakeChopt(option)) return; //check options and fill Hoption structure
+
+   // Paint using TSpectrum2Painter
+   if (Hoption.Spec) {
+      if (!TableInit()) return;
+      if (!gROOT->GetClass("TSpectrum2Painter")) gSystem->Load("libSpectrumPainter");
+      gROOT->ProcessLineFast(Form("TSpectrum2Painter::PaintSpectrum((TH2F*)0x%x,\"%s\")",fH,option));
+      return;
+   }
 
    fXbuf  = new Double_t[kNMAX];
    fYbuf  = new Double_t[kNMAX];

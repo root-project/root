@@ -1,4 +1,4 @@
-/* @(#)root/histpainter:$Name:  $:$Id: Hoption.h,v 1.6 2004/10/05 10:28:24 brun Exp $ */
+/* @(#)root/histpainter:$Name:  $:$Id: Hoption.h,v 1.7 2006/02/13 09:52:33 couet Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -60,6 +60,7 @@ typedef struct Hoption_t {
                     //  = 3 to get a Sinusoidal ptojection
                     //  = 4 to get a Parabolic ptojection
    int AxisPos;     //  Axis position
+   int Spec;        // TSpectrum graphics
 
    // the following structure members are set to 1 if the corresponding option
    // in the current style is selected.
