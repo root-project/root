@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.15 2006/05/13 15:40:17 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.16 2006/05/14 07:18:41 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //______________________________________________________________________________
@@ -314,6 +314,8 @@ void TFoam::Initialize()
 // IMPORTANT: Random number generator and the distribution object has to be
 // provided using SetPseRan and SetRho prior to invoking this initializator!
 
+   Bool_t addStatus = TH1::AddDirectoryStatus();
+   TH1::AddDirectory(kFALSE);
    Int_t i;
 
    if(fChat>0){
@@ -427,6 +429,7 @@ void TFoam::Initialize()
       BXCLO;
    }
    if(fChat==2) PrintCells();
+   TH1::AddDirectory(addStatus);
 } // Initialize
 
 //_______________________________________________________________________________________
