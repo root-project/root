@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.242 2006/08/22 22:06:34 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.243 2006/09/08 06:56:24 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1429,6 +1429,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
    // Generate header file for the class described by this TStreamerInfo
    // the function is called by TFile::MakeProject for each class in the file
 
+   if (strstr(GetName(),"<")) return 0;
    TClass *cl = gROOT->GetClass(GetName());
    if (cl) {
       if (cl->GetClassInfo()) return 0; // skip known classes
@@ -1436,6 +1437,13 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
    if (gDebug) printf("generating code for class %s\n",GetName());
 
    //open the file
+   TString goodName = GetName();
+   const char *aname = goodName.Data();
+   const char *colon2 = strstr(aname,"::");
+   if (colon2) {
+      fName = colon2+2;
+   }
+   
    Int_t nch = strlen(dirname) + strlen(GetName()) + 4;
    char *filename = new char[nch];
    sprintf(filename,"%s/%s.h",dirname,GetName());
@@ -1477,7 +1485,10 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
    Bool_t incRiostream = kFALSE;
    while ((element = (TStreamerElement*)next())) {
       //if (element->IsA() == TStreamerBase::Class()) continue;
-      sprintf(name,element->GetName());
+      const char *ename = element->GetName();
+      colon2 = strstr(ename,"::");
+      if (colon2) ename = colon2+2;
+      sprintf(name,ename);
       for (i=0;i < element->GetArrayDim();i++) {
          sprintf(cdim,"[%d]",element->GetMaxIndex(i));
          strcat(name,cdim);
@@ -1494,8 +1505,12 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
       //get include file name if any
       const char *include = element->GetInclude();
       if (strlen(include) == 0) continue;
+      colon2 = strstr(include,"::");
+      if (colon2) include = colon2+2;
+      else        include++;
       const char *slash = strrchr(include,'/');
       if (slash) include = slash+1;
+      const char *greater = strstr(include,">");
       // do not generate the include if already done
       if (strstr(inclist,include)) continue;
       ninc++;
@@ -1503,8 +1518,8 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
       if (strstr(include,"include/") || strstr(include,"include\\"))
          fprintf(fp,"#include \"%s\n",include+9);
       else {
-         if (slash) fprintf(fp,"#include \"%s\n",include);
-         else       fprintf(fp,"#include %s\n",include);
+         if (greater) fprintf(fp,"#include <%s\n",include);
+         else         fprintf(fp,"#include \"%s\n",include);
       }
    }
    ltype += 2;
@@ -1518,8 +1533,11 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
    while ((element = (TStreamerElement*)next())) {
       if (element->IsA() != TStreamerBase::Class()) continue;
       nbase++;
-      if (nbase == 1) fprintf(fp," : public %s",element->GetName());
-      else            fprintf(fp," , public %s",element->GetName());
+      const char *ename = element->GetName();
+      colon2 = strstr(ename,"::");
+      if (colon2) ename = colon2+2;
+      if (nbase == 1) fprintf(fp," : public %s",ename);
+      else            fprintf(fp," , public %s",ename);
    }
    fprintf(fp," {\n");
 
@@ -1529,15 +1547,22 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
    while ((element = (TStreamerElement*)next())) {
       for (i=0;i < kMaxLen;i++) line[i] = ' ';
       if (element->IsA() == TStreamerBase::Class()) continue;
-      sprintf(name,element->GetName());
+      const char *ename = element->GetName();
+      colon2 = strstr(ename,"::");
+      if (colon2) ename = colon2+2;
+      sprintf(name,ename);
       for (Int_t i=0;i < element->GetArrayDim();i++) {
          sprintf(cdim,"[%d]",element->GetMaxIndex(i));
          strcat(name,cdim);
       }
       strcat(name,";");
       ld = strlen(name);
-      lt = strlen(element->GetTypeNameBasic());
-      strncpy(line+3,element->GetTypeNameBasic(),lt);
+      const char *enamebasic = element->GetTypeNameBasic();
+      colon2 = strstr(enamebasic,"::");
+      if (strstr(enamebasic,"<")) colon2 = 0;
+      if (colon2) enamebasic = colon2+2;
+      lt = strlen(enamebasic);
+      strncpy(line+3,enamebasic,lt);
       strncpy(line+3+ltype,name,ld);
       if (element->IsaPointer() && !strchr(line,'*')) line[2+ltype] = '*';
       sprintf(line+3+ltype+ldata,"   //%s",element->GetTitle());
@@ -1567,7 +1592,10 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
       if (element->GetType() == kObjectp || element->GetType() == kObjectP||
           element->GetType() == kAnyp || element->GetType() == kAnyP
           || element->GetType() == kAnyPnoVT) {
-         fprintf(fp,"   delete %s;   %s = 0;\n",element->GetName(),element->GetName());
+         const char *ename = element->GetName();
+         colon2 = strstr(ename,"::");
+         if (colon2) ename = colon2+2;
+         fprintf(fp,"   delete %s;   %s = 0;\n",ename,ename);
       }
    }
    fprintf(fp,"}\n\n");
@@ -1577,6 +1605,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
    delete [] filename;
    delete [] inclist;
    delete [] line;
+   fName = goodName;
    return 1;
 }
 
