@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.203 2006/10/15 20:08:33 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.204 2006/10/19 13:19:43 rdm Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1523,6 +1523,8 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                      }
                      if (element) {
                         if (numberOfVarDim>1) {
+                           Warning("DefinedVariable","TTreeFormula support only 2 level of variables size collections.  Assuming '@' notation for the collection %s.",
+                                   curelem->GetName());
                            leafinfo = new TFormLeafInfo(cl,coll_offset,curelem);
                            useCollectionObject = kTRUE;
                         } else if (numberOfVarDim==1) {
@@ -1640,6 +1642,8 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
 
                         mustderef = kTRUE;
                         if (numberOfVarDim>1) {
+                           Warning("DefinedVariable","TTreeFormula support only 2 level of variables size collections.  Assuming '@' notation for the collection %s.",
+                                   element->GetName());
                            leafinfo = new TFormLeafInfo(cl,offset,element);
                            useCollectionObject = kTRUE;
                         } else if (numberOfVarDim==1) {
@@ -4178,7 +4182,12 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
                UInt_t len = atoi(decform);
                if (strlen(value)>len) {
                   UInt_t off = strlen(value)-len;
-                  strcpy(expo-off,expo);
+                  char *start = expo - off;
+                  UInt_t vlen = strlen(expo);
+                  for(UInt_t z=0;z<=vlen;++z) {
+                     start[z] = expo[z];
+                  }
+                  //strcpy(expo-off,expo);
                }
             }
          } else {
