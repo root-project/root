@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.28 2006/07/09 05:27:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.29 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -277,7 +277,7 @@ void TGLabel::SetTextColor(TColor *color, Bool_t global)
 void TGLabel::SetTextJustify(Int_t mode)
 {
    // Set text justification. Mode is an OR of the bits:
-   // kTextTop, kTextLeft, kTextLeft, kTextRight, kTextCenterX and
+   // kTextTop, kTextBottom, kTextLeft, kTextRight, kTextCenterX and
    // kTextCenterY.
 
    fTextChanged = kTRUE;
