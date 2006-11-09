@@ -65,6 +65,9 @@ ALLCINTDLLS = $(CINTDLLS) $(CINTDICTDLLS)
 # used in the main Makefile
 ALLLIBS    += $(ALLCINTDLLS)
 
+INCLUDEFILES += $(addsuffix .d,$(addprefix metautils/src/stlLoader_,$(CINTSTLDLLNAMES)))\
+   $(CINTDIRL)/posix/mktypes.d $(CINTDIRL)/posix/exten.d
+
 cintdlls: $(ALLCINTDLLS)
 
 $(CINTDIRDLLSTL)/G__cpp_vector.cxx:	$(CINTDIRL)/dll_stl/vec.h
@@ -127,7 +130,11 @@ $(CINTDIRDLLS)/%.dll: $(CINTDIRL)/G__c_%.o
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $^
 	$(CINTDLLSOEXTCMD)
 
-metautils/src/stlLoader_%.o: metautils/src/stlLoader.cc
+metautils/src/stlLoader_%.cc: metautils/src/stlLoader.cc
+	cp -f $< $@
+
+metautils/src/stlLoader_%.o: metautils/src/stlLoader_%.cc
+	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- $(CINTCXXFLAGS) -D__cplusplus -- $<
 	$(CXX) $(OPT) $(CINTCXXFLAGS) $(INCDIRS) -DWHAT=\"$*\" $(CXXOUT)$@ -c $<
 
 $(CINTDIRDLLSTL)/G__cpp_%.cxx: $(CINTTMP) $(IOSENUM)
@@ -152,6 +159,7 @@ $(CINTDIRL)/G__c_%.o: CINTCFLAGS += -I. -DG__SYSTYPES_H
 
 ##### posix special treatment
 $(CINTDIRL)/posix/exten.o: $(CINTDIRL)/posix/exten.c
+	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- $(CINTCFLAGS) -- $<
 	$(CC) $(OPT) $(CINTCFLAGS) -I. $(CXXOUT)$@ -c $<
 
 $(CINTDIRL)/G__c_posix.c: $(CINTDIRDLLS)/sys/types.h cint/lib/posix/exten.h cint/lib/posix/posix.h
@@ -166,6 +174,7 @@ $(CINTDIRDLLS)/sys/types.h: $(CINTDIRL)/posix/mktypes$(EXEEXT)
 	cp -f $(CINTDIRDLLS)/systypes.h $@
 
 $(CINTDIRL)/posix/mktypes$(EXEEXT): $(CINTDIRL)/posix/mktypes.c
+	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- $(CINTCFLAGS) -- $<
 	$(CC) $(OPT) $(CXXOUT)$@ $<
 ##### posix special treatment - END
 

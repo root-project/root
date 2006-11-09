@@ -5,7 +5,8 @@
 static const char *what = WHAT;
 #endif
 
-static int stlLoader() {
+static int stlLoader()
+{
    G__ClassInfo cl("TSystem");
    if (cl.IsValid()&strlen(WHAT)<1000) {
       char buf[1024];
