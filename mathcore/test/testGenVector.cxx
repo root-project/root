@@ -1,3 +1,4 @@
+
 #include "Math/Vector3D.h"
 #include "Math/Point3D.h"
 #include "Math/EulerAngles.h"
@@ -13,8 +14,6 @@
 #include "Math/EulerAngles.h"
 
 #include "Math/VectorUtil.h"
-
-#include <iostream>
 
 using namespace ROOT::Math;
 using namespace ROOT::Math::VectorUtil;
@@ -176,6 +175,13 @@ int testPoint3D() {
   vg4 = pg - pl;
 #endif
 
+  // operator - 
+  XYZPoint q1(1.,2.,3.);
+  XYZPoint q2 = -1.* q1; 
+  XYZVector v2 = -XYZVector(q1);
+  iret |= compare(XYZVector(q2) == v2,true,"reflection");
+
+
   if (iret == 0) std::cout << "\t\t\t\t\tOK\n"; 
   else std::cout << "\t\t\t\tFAILED\n"; 
 
@@ -264,7 +270,14 @@ int testRotations3D() {
   bool comp = (rotInv == rot ); 
   iret |= compare(comp,true,"inversion");
 
-    
+  // rotation and scaling of points
+  XYZPoint q1(1.,2,3); double a = 3;
+  XYZPoint qr1 =  rot( a * q1);
+  XYZPoint qr2 =  a * rot( q1);
+  iret |= compare(qr1.X(), qr2.X(),"x diff",10 );
+  iret |= compare(qr1.Y(), qr2.Y(),"y diff",10 );
+  iret |= compare(qr1.Z(), qr2.Z(),"z diff",10 );
+
 
   if (iret == 0) std::cout << "\tOK\n"; 
   else std::cout << "\t FAILED\n";
@@ -337,6 +350,25 @@ int testTransform3D() {
   iret |= compare(v3.Y(), v2.Y(),"y diff",10 );
   iret |= compare(v3.Z(), v2.Z(),"z diff",10 );
 
+  XYZPoint q1(1,2,3);
+  XYZPoint q2(-1,-2,-3);
+  XYZPoint q3 = q1 +  XYZVector(q2);
+  //std::cout << q3 << std::endl; 
+  XYZPoint qt3 = t3(q3); 
+  //std::cout << qt3 << std::endl; 
+  XYZPoint qt1 = t3(q1);
+  XYZVector vt2 = t3( XYZVector(q2) );
+  XYZPoint qt4 = qt1 + vt2; 
+  iret |= compare(qt3.X(), qt4.X(),"x diff",10 );
+  iret |= compare(qt3.Y(), qt4.Y(),"y diff",10 );
+  iret |= compare(qt3.Z(),  qt4.Z(),"z diff",10 );
+     //std::cout << qt4 << std::endl; 
+
+  // this fails
+//  double a = 3;
+  //XYZPoint q4 = a*q1;
+//   std::cout << t3( a * q1) << std::endl;
+//   std::cout << a * t3(q1) << std::endl;
 
 
   if (iret == 0) std::cout << "\t\t\t\tOK\n"; 

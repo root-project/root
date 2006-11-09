@@ -40,6 +40,10 @@ BOOSTOBJ     = testBoost.$(ObjSuf)
 BOOSTSRC     = testBoost.$(SrcSuf)
 BOOST        = testBoost$(ExeSuf)
 
+ITERATOROBJ     = testIterator.$(ObjSuf)
+ITERATORSRC     = testIterator.$(SrcSuf)
+ITERATOR        = testIterator$(ExeSuf)
+
 GENVECTOROBJ     = testGenVector.$(ObjSuf)
 GENVECTORSRC     = testGenVector.$(SrcSuf)
 GENVECTOR        = testGenVector$(ExeSuf)
@@ -48,12 +52,17 @@ VECTORIOOBJ     = testVectorIO.$(ObjSuf)
 VECTORIOSRC     = testVectorIO.$(SrcSuf)
 VECTORIO        = testVectorIO$(ExeSuf)
 
+STRESS3DOBJ     = stress3D.$(ObjSuf)
+STRESS3DSRC     = stress3D.$(SrcSuf)
+STRESS3D        = stress3D$(ExeSuf)
 
 
-OBJS          = $(COORDINATES3DOBJ) $(COORDINATES4DOBJ) $(ROTATIONOBJ) $(BOOSTOBJ) $(GENVECTOROBJ) $(VECTORIOOBJ)
+
+OBJS          = $(COORDINATES3DOBJ) $(COORDINATES4DOBJ) $(ROTATIONOBJ) $(BOOSTOBJ) $(GENVECTOROBJ) $(VECTORIOOBJ) $(STRESS3DOBJ) $(ITERATOROBJ)
 
 
-PROGRAMS      = $(COORDINATES3D)  $(COORDINATES4D) $(ROTATION) $(BOOST) $(GENVECTOR) $(VECTORIO)
+PROGRAMS      = $(COORDINATES3D)  $(COORDINATES4D) $(ROTATION) $(BOOST) $(GENVECTOR) $(VECTORIO) $(STRESS3D) $(ITERATOR)
+
 
 		  
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
@@ -86,6 +95,13 @@ $(VECTORIO):   	  $(VECTORIOOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(EXTRAIOLIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
+$(STRESS3D):      $(STRESS3DOBJ)
+		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		    @echo "$@ done"
+
+$(ITERATOR):           $(ITERATOROBJ)
+		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		    @echo "$@ done"
 
 
 clean:

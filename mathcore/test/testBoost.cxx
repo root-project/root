@@ -4,6 +4,8 @@
 #include "Math/Vector3D.h"
 #include "Math/Vector4D.h"
 
+#include <iterator> 
+
 using namespace ROOT::Math;
 
 int main() { 
@@ -28,9 +30,12 @@ int main() {
   Polar3DVector bv(0.99999,1.,2);
   std::cout << "BoostVector " << XYZVector(bv) << " beta boost = " << XYZVector(bv).R() << std::endl; 
   Boost b(bv);
-  double d[3];
-  b.GetComponents(d,d+3);
-  std::cout << "Boost Components" << d[0] << " " << d[1] << "  " << d[2] << std::endl;
+  std::cout << "Boost Components : "; 
+  std::ostream_iterator<double> oi(std::cout,"\t");
+  b.GetComponents(oi);
+  std::cout << std::endl;
+  
+
 
 
   vb1 = b(v);
