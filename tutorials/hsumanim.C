@@ -61,7 +61,8 @@
   slider->SetRange(0,1);
   total->Draw("sameaxis"); // to redraw axis hidden by the fill area
   c1->Modified();
-  if (gROOT->IsBatch()) c1->Print("hsumanim.gif+");
+  // make infinite animation by adding "++" to the file name
+  if (gROOT->IsBatch()) c1->Print("hsumanim.gif++");
   
   //You can view the animated file hsumanim.gif with Netscape/IE or mozilla
   

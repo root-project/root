@@ -491,6 +491,8 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
    // "myfile.gif+" of "myfile.gif+NN", where NN is delay of displaying 
    // subimages during animation in 10ms seconds units.
    // If NN is ommitted the delay between subimages is zero.
+   // For repeated animation the last subimage must be specified as "myfile.gif++NN",
+   // where NN is number of cycles. If NN is ommitted the animation will be infinite.
 
    if (!IsValid()) {
       Error("WriteImage", "no image loaded");
@@ -564,13 +566,21 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
       parms.gif.flags = EXPORT_ALPHA | EXPORT_APPEND;
       parms.gif.dither = 0;
       parms.gif.opaque_threshold = 0;
+      parms.gif.animate_repeats = 0;
 
-      s += 4; // skip "gif+" 
+      s += 4; // skip "gif+"
       int delay = atoi(s);
 
+      
       if (delay < 0) {
          delay = 0;
       }
+      if (s[0] == '+') { // repeat count
+         parms.gif.flags |= EXPORT_ANIMATION_REPEATS;
+         s++;
+         parms.gif.animate_repeats = atoi(s);
+      }
+
       parms.gif.animate_delay = delay;
 
       int i1 = fname.Index("gif+");
