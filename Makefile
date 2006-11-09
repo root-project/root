@@ -802,16 +802,16 @@ install: all
 	   echo "Installing fonts in $(DESTDIR)$(TTFFONTDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(TTFFONTDIR); \
 	   $(INSTALLDATA) fonts/*               $(DESTDIR)$(TTFFONTDIR); \
-	   rm -rf $(DESTDIR)$(TTFFONTDIR)/CVS; \
+	   (cd $(DESTDIR)$(TTFFONTDIR); rm -rf CVS); \
 	   echo "Installing misc docs in $(DESTDIR)$(DOCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(DOCDIR); \
 	   $(INSTALLDATA) LICENSE               $(DESTDIR)$(DOCDIR); \
 	   $(INSTALLDATA) README/*              $(DESTDIR)$(DOCDIR); \
-	   rm -rf $(DESTDIR)$(DOCDIR)/CVS; \
+	   (cd $(DESTDIR)$(DOCDIR); rm -rf CVS); \
 	   echo "Installing tutorials in $(DESTDIR)$(TUTDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(TUTDIR); \
 	   $(INSTALLDATA) tutorials/*           $(DESTDIR)$(TUTDIR); \
-	   rm -rf $(DESTDIR)$(TUTDIR)/CVS; \
+	   (cd $(DESTDIR)$(TUTDIR); rm -rf CVS); \
 	   echo "Installing tests in $(DESTDIR)$(TESTDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(TESTDIR); \
 	   $(INSTALLDATA) test/*                $(DESTDIR)$(TESTDIR); \
@@ -819,11 +819,11 @@ install: all
 	   echo "Installing macros in $(DESTDIR)$(MACRODIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(MACRODIR); \
 	   $(INSTALLDATA) macros/*              $(DESTDIR)$(MACRODIR); \
-	   rm -rf $(DESTDIR)$(MACRODIR)/CVS; \
+	   (cd $(DESTDIR)$(MACRODIR); rm -rf CVS); \
 	   echo "Installing man(1) pages in $(DESTDIR)$(MANDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(MANDIR); \
 	   $(INSTALLDATA) man/man1/*            $(DESTDIR)$(MANDIR); \
-	   rm -rf $(DESTDIR)$(MANDIR)/CVS; \
+	   (cd $(DESTDIR)$(MANDIR); rm -rf CVS); \
 	   echo "Installing config files in $(DESTDIR)$(ETCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ETCDIR); \
 	   $(INSTALLDATA) etc/*                 $(DESTDIR)$(ETCDIR); \
@@ -836,7 +836,7 @@ install: all
 	   $(INSTALLDATA) build/misc/root-help.el $(DESTDIR)$(ELISPDIR); \
 	   echo "Installing GDML conversion scripts in $(DESTDIR)$(LIBDIR)"; \
 	   $(INSTALLDATA) gdml/*.py               $(DESTDIR)$(LIBDIR); \
-	   rm -rf $(DESTDIR)$(DATADIR)/CVS; \
+	   (cd $(DESTDIR)$(DATADIR); rm -rf CVS); \
 	fi
 
 uninstall:
