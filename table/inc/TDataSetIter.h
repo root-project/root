@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TDataSetIter.h,v 1.5 2006/07/11 09:05:02 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TDataSetIter.h,v 1.6 2006/08/24 16:37:12 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -88,8 +88,8 @@ public:
   virtual TDataSet    *ls(const Char_t *dirname,Int_t depth) const {return Ls(dirname,depth);}
   virtual TDataSet    *Mkdir(const Char_t *dirname);
   virtual TDataSet    *Md(const Char_t *dirname)                       {return Mkdir(dirname);}
-  virtual TString      Path(const Char_t *path)                        {TDataSet *set = Find(path); return set ? TString (""):set->Path();}
-  virtual TString      Path() {return fWorkingDataSet ? TString ("") : fWorkingDataSet->Path();}
+  virtual TString      Path(const Char_t *path)                        {TDataSet *set = Find(path); return set ? set->Path():TString ("");}
+  virtual TString      Path() {return fWorkingDataSet ?  fWorkingDataSet->Path() : TString ("");}
   virtual TDataSet    *Pwd(Option_t *opt="") const                     {if (Cwd()) Cwd()->ls(opt); return Cwd();}
   virtual TDataSet    *Rmdir(TDataSet *dataset,Option_t *option="");
   virtual TDataSet    *Rmdir(const Char_t *dirname,Option_t *option=""){return Rmdir(Find(dirname),option);}
