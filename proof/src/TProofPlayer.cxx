@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.92 2006/10/05 16:10:22 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.93 2006/11/06 09:52:50 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -312,11 +312,16 @@ TQueryResult *TProofPlayer::GetQueryResult(const char *ref)
    // the list of results.
 
    if (fQueryResults) {
-      TIter nxq(fQueryResults);
-      TQueryResult *qr = 0;
-      while ((qr = (TQueryResult *) nxq())) {
-         if (qr->Matches(ref))
-            return qr;
+      if (ref && strlen(ref) > 0) {
+         TIter nxq(fQueryResults);
+         TQueryResult *qr = 0;
+         while ((qr = (TQueryResult *) nxq())) {
+            if (qr->Matches(ref))
+               return qr;
+         }
+      } else {
+         // Get last
+         return (TQueryResult *) fQueryResults->Last();
       }
    }
 
