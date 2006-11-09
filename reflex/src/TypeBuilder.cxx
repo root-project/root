@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.cxx,v 1.16 2006/08/24 09:34:55 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.cxx,v 1.17 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -144,7 +144,7 @@ ROOT::Reflex::Type ROOT::Reflex::TypedefTypeBuilder(const char * nam,
                                                     const Type & t) {
 //-------------------------------------------------------------------------------
 // Construct a typedef type.
-   const Type & ret = Type::ByName(nam);
+   Type ret = Type::ByName(nam);
    // Check for typedef AA AA;
    if ( ret == t && ! t.IsTypedef() ) 
       if ( t ) t.ToTypeBase()->HideName();

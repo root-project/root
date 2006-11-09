@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.cxx,v 1.16 2006/11/01 11:10:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.cxx,v 1.17 2006/11/02 09:01:19 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -245,7 +245,15 @@ void ROOT::Reflex::ClassBuilderImpl::AddTypedef( const Type & typ,
                                                  const char * def ) {
 //-------------------------------------------------------------------------------
 // Add typedef info (internal).
-   TypedefTypeBuilder( def, typ );
+   Type ret = Type::ByName( def );
+   // Check for typedef AA AA;
+   if ( ret == typ && ! typ.IsTypedef() ) 
+      if ( typ ) typ.ToTypeBase()->HideName();
+      else ((TypeName*)typ.Id())->HideName();
+   // We found the typedef type
+   else if ( ret ) fClass->AddSubType( ret );
+   // Create a new typedef
+   else new Typedef( def , typ );        
 }
 
 
