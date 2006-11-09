@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.h,v 1.9 2006/11/06 09:51:42 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.h,v 1.10 2006/11/07 16:24:10 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -164,6 +164,19 @@ public:
     assert (end==begin+4);
     fAxis.GetCoordinates(begin, begin+3);
     *(begin+3) = fAngle;
+  }
+
+  /**
+     Get the axis and then the angle into data specified by an iterator begin
+   */
+  template<class IT>
+  void GetComponents(IT begin) const {
+     double ax,ay,az = 0;
+     fAxis.GetCoordinates(ax,ay,az);
+     *begin++ = ax; 
+     *begin++ = ay; 
+     *begin++ = az; 
+     *begin = fAngle;
   }
 
   /**

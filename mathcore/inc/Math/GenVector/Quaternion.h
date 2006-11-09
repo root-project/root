@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Quaternion.h,v 1.7 2006/11/06 09:51:42 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Quaternion.h,v 1.8 2006/11/07 16:24:10 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -11,7 +11,7 @@
 // Header file for rotation in 3 dimensions, represented by a quaternion
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Quaternion.h,v 1.7 2006/11/06 09:51:42 moneta Exp $
+// Last update: $Id: Quaternion.h,v 1.8 2006/11/07 16:24:10 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Quaternion 
 #define ROOT_Math_GenVector_Quaternion  1
@@ -155,6 +155,17 @@ public:
   template<class IT>
   void GetComponents(IT begin, IT end) const {
     assert (end==begin+4);
+    *begin++ = fU;
+    *begin++ = fI;
+    *begin++ = fJ;
+    *begin   = fK;
+  }
+
+  /**
+     Get the components into data specified by an iterator begin
+   */
+  template<class IT>
+  void GetComponents(IT begin ) const {
     *begin++ = fU;
     *begin++ = fI;
     *begin++ = fJ;

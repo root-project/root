@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.10 2006/11/06 09:51:42 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.11 2006/11/07 16:24:10 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -146,7 +146,17 @@ public:
    */
   template<class IT>
   void GetComponents(IT begin, IT end) const {
-    assert (end==begin+4);
+    assert (end==begin+3);
+    *begin++ = fPhi;
+    *begin++ = fTheta;
+    *begin   = fPsi;
+   }
+
+  /**
+     Get the axis and then the angle into data specified by an iterator begin
+   */
+  template<class IT>
+  void GetComponents(IT begin) const {
     *begin++ = fPhi;
     *begin++ = fTheta;
     *begin   = fPsi;

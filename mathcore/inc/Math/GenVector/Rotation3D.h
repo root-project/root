@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.9 2006/11/06 14:45:39 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.10 2006/11/07 16:24:10 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Rotation3D.h,v 1.9 2006/11/06 14:45:39 moneta Exp $
+// Last update: $Id: Rotation3D.h,v 1.10 2006/11/07 16:24:10 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Rotation3D 
 #define ROOT_Math_GenVector_Rotation3D  1
@@ -226,7 +226,15 @@ public:
    */
   template<class IT>
   void GetComponents(IT begin, IT end) const {
-    assert (end==begin+9);
+     assert (end==begin+9);
+     std::copy ( fM, fM+9, begin );
+  }
+
+  /**
+     Get the 9 matrix components into data specified by an iterator begin
+   */
+  template<class IT>
+  void GetComponents(IT begin) const {
     std::copy ( fM, fM+9, begin );
   }
 
@@ -238,7 +246,7 @@ public:
   */
   template<class ForeignMatrix>
   void
-  SetComponents (const ForeignMatrix & m) {
+  SetRotationMatrix (const ForeignMatrix & m) {
     fM[kXX]=m(0,0);  fM[kXY]=m(0,1);  fM[kXZ]=m(0,2);
     fM[kYX]=m(1,0);  fM[kYY]=m(1,1);  fM[kYZ]=m(1,2);
     fM[kZX]=m(2,0);  fM[kZY]=m(2,1);  fM[kZZ]=m(2,2);
@@ -251,7 +259,7 @@ public:
   */
   template<class ForeignMatrix>
   void
-  GetComponents (ForeignMatrix & m) const {
+  GetRotationMatrix (ForeignMatrix & m) const {
     m(0,0)=fM[kXX];  m(0,1)=fM[kXY];  m(0,2)=fM[kXZ];
     m(1,0)=fM[kYX];  m(1,1)=fM[kYY];  m(1,2)=fM[kYZ];
     m(2,0)=fM[kZX];  m(2,1)=fM[kZY];  m(2,2)=fM[kZZ];

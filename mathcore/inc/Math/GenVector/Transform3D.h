@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.14 2006/11/06 09:51:42 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.15 2006/11/07 16:24:10 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -251,6 +251,13 @@ namespace ROOT {
 
     /**
        Get the 12 matrix components into data specified by an iterator begin
+    */
+    template<class IT>
+    void GetComponents(IT begin) const {
+      std::copy ( fM, fM+12, begin );
+    }
+    /**
+       Get the 12 matrix components into data specified by an iterator begin
        and another to the end of the desired data (12 past start).
     */
     template<class IT>
@@ -267,7 +274,7 @@ namespace ROOT {
     */
     template<class ForeignMatrix>
     void
-    SetComponents (const ForeignMatrix & m) {
+    SetTransformMatrix (const ForeignMatrix & m) {
       fM[kXX]=m(0,0);  fM[kXY]=m(0,1);  fM[kXZ]=m(0,2); fM[kDX]=m(0,3);
       fM[kYX]=m(1,0);  fM[kYY]=m(1,1);  fM[kYZ]=m(1,2); fM[kDY]=m(1,3);
       fM[kZX]=m(2,0);  fM[kZY]=m(2,1);  fM[kZZ]=m(2,2); fM[kDZ]=m(2,3);
@@ -280,10 +287,10 @@ namespace ROOT {
     */
     template<class ForeignMatrix>
     void
-    GetComponents (ForeignMatrix & m) const {
+    GetTransformMatrix (ForeignMatrix & m) const {
       m(0,0)=fM[kXX];  m(0,1)=fM[kXY];  m(0,2)=fM[kXZ];  m(0,3)=fM[kDX];
-      m(1,0)=fM[kYX];  m(1,1)=fM[kYY];  m(1,2)=fM[kYZ];  m(0,3)=fM[kDY];
-      m(2,0)=fM[kZX];  m(2,1)=fM[kZY];  m(2,2)=fM[kZZ];  m(0,3)=fM[kDZ];
+      m(1,0)=fM[kYX];  m(1,1)=fM[kYY];  m(1,2)=fM[kYZ];  m(1,3)=fM[kDY];
+      m(2,0)=fM[kZX];  m(2,1)=fM[kZY];  m(2,2)=fM[kZZ];  m(2,3)=fM[kDZ];
     }
 
 

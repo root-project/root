@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Boost.h,v 1.6 2006/11/06 09:51:42 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Boost.h,v 1.7 2006/11/07 16:24:10 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Nov 1  2005
 // 
-// Last update: $Id: Boost.h,v 1.6 2006/11/06 09:51:42 moneta Exp $
+// Last update: $Id: Boost.h,v 1.7 2006/11/07 16:24:10 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_Boost
 #define ROOT_Math_GenVector_Boost 1
@@ -155,6 +155,19 @@ public:
   void GetComponents(IT begin, IT end) const {
     assert (end==begin+3);
     GetComponents (*begin, *(begin+1), *(begin+2));
+  }
+
+  /**
+     Get given a pointer or an iterator defining the beginning of 
+     an array into which to place beta_x, beta_y, and beta_z
+   */
+  template<class IT>
+  void GetComponents(IT begin ) const {
+     double bx,by,bz = 0;      
+     GetComponents (bx,by,bz);
+     *begin++ = bx; 
+     *begin++ = by; 
+     *begin = bz; 
   }
    
   /**

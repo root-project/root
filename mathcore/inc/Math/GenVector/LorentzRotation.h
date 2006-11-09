@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.9 2006/11/06 09:51:42 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.10 2006/11/07 16:24:10 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Aug 8  2005
 // 
-// Last update: $Id: LorentzRotation.h,v 1.9 2006/11/06 09:51:42 moneta Exp $
+// Last update: $Id: LorentzRotation.h,v 1.10 2006/11/07 16:24:10 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_LorentzRotation 
 #define ROOT_Math_GenVector_LorentzRotation  1
@@ -246,6 +246,14 @@ public:
   }
 
   /**
+     Get the 16 matrix components into data specified by an iterator begin
+   */
+  template<class IT>
+  void GetComponents(IT begin) const {
+    std::copy ( fM+0, fM+16, begin );
+  }
+
+  /**
      Set components from a linear algebra matrix of size at least 4x4,
      which must support operator()(i,j) to obtain elements (0,0) thru (3,3).
      Precondition:  The matrix is assumed to be orthosymplectic.  NO checking
@@ -253,7 +261,7 @@ public:
   */
   template<class ForeignMatrix>
   void
-  SetComponents (const ForeignMatrix & m) {
+  SetRotationMatrix (const ForeignMatrix & m) {
     fM[kXX]=m(0,0);  fM[kXY]=m(0,1);  fM[kXZ]=m(0,2);  fM[kXT]=m(0,3);
     fM[kYX]=m(1,0);  fM[kYY]=m(1,1);  fM[kYZ]=m(1,2);  fM[kYT]=m(1,3);
     fM[kZX]=m(2,0);  fM[kZY]=m(2,1);  fM[kZZ]=m(2,2);  fM[kZT]=m(2,3);
@@ -267,7 +275,7 @@ public:
   */
   template<class ForeignMatrix>
   void
-  GetComponents (ForeignMatrix & m) const {
+  GetRotationMatrix (ForeignMatrix & m) const {
     m(0,0)=fM[kXX];  m(0,1)=fM[kXY];  m(0,2)=fM[kXZ]; m(0,3)=fM[kXT];
     m(1,0)=fM[kYX];  m(1,1)=fM[kYY];  m(1,2)=fM[kYZ]; m(1,3)=fM[kYT];
     m(2,0)=fM[kZX];  m(2,1)=fM[kZY];  m(2,2)=fM[kZZ]; m(2,3)=fM[kZT];

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.h,v 1.7 2006/04/11 13:06:15 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: DisplacementVector3D.h,v 1.8 2006/04/13 10:38:30 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -14,7 +14,7 @@
 // Created by: Lorenzo Moneta  at Mon May 30 12:21:43 2005
 // Major rewrite: M. FIschler  at Wed Jun  8  2005
 //
-// Last update: $Id: DisplacementVector3D.h,v 1.7 2006/04/11 13:06:15 moneta Exp $
+// Last update: $Id: DisplacementVector3D.h,v 1.8 2006/04/13 10:38:30 moneta Exp $
 //
 
 #ifndef ROOT_Math_GenVector_DisplacementVector3D 
@@ -220,13 +220,24 @@ namespace ROOT {
                             { fCoordinates.GetCoordinates(dest);  }
 
       /**
-         get internal data into 3 Scalars at *begin to *end
+         get internal data into 3 Scalars at *begin to *end (3 past begin)
        */
       template <class IT>
       void GetCoordinates( IT begin, IT end ) const
       { IT a = begin; IT b = ++begin; IT c = ++begin;
         assert (++begin==end);
         GetCoordinates (*a,*b,*c);
+      }
+      /**
+         get internal data into 3 Scalars starting at *begin 
+       */
+      template <class IT>
+      void GetCoordinates( IT begin) const {
+         Scalar a,b,c = 0; 
+         GetCoordinates (a,b,c);
+         *begin++ = a; 
+         *begin++ = b; 
+         *begin = c; 
       }
 
       /**
