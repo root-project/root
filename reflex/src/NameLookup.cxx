@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.12 2006/10/30 12:51:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.13 2006/10/31 15:23:14 roiser Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -54,8 +54,8 @@ ROOT::Reflex::NameLookup::LookupScope( const std::string & nam,
 
 /*
 //-------------------------------------------------------------------------------
-const ROOT::Reflex::Member & LookupMember( const std::string & nam,
-                                           const Scope & current ) {
+ROOT::Reflex::Member LookupMember( const std::string & nam,
+                                   const Scope & current ) {
 //-------------------------------------------------------------------------------
 // Lookup up a (possibly scoped) member name appearing in the scope context 
 // current. This is the public interface for member lookup.
