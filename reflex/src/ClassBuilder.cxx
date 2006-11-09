@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassBuilder.cxx,v 1.14 2006/09/05 17:13:15 roiser Exp $
+// @(#)root/reflex:$Name: v5-13-04-patches $:$Id: ClassBuilder.cxx,v 1.15 2006/09/14 14:39:12 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -237,7 +237,15 @@ void ROOT::Reflex::ClassBuilderImpl::AddTypedef( const Type & typ,
                                                  const char * def ) {
 //-------------------------------------------------------------------------------
 // Add typedef info (internal).
-   TypedefTypeBuilder( def, typ );
+   Type ret = Type::ByName( def );
+   // Check for typedef AA AA;
+   if ( ret == typ && ! typ.IsTypedef() ) 
+      if ( typ ) typ.ToTypeBase()->HideName();
+      else ((TypeName*)typ.Id())->HideName();
+   // We found the typedef type
+   else if ( ret ) fClass->AddSubType( ret );
+   // Create a new typedef
+   else new Typedef( def , typ );        
 }
 
 
@@ -249,23 +257,26 @@ void ROOT::Reflex::ClassBuilderImpl::AddEnum( const char * nam,
 //-------------------------------------------------------------------------------
 // Add enum info (internal).  
 
-   EnumTypeBuilder(nam, values, *ti, modifiers);
-//    Enum * e = new Enum(nam, *ti, modifiers);
+// This does not work because the EnumTypeBuilder does a definition of the enum
+// not only a declaration. (It is called in the dictionary header already)
+//   EnumTypeBuilder(nam, values, *ti, modifiers);
 
-//    std::vector<std::string> valVec = std::vector<std::string>();
-//    Tools::StringSplit(valVec, values, ";");
+   Enum * e = new Enum(nam, *ti, modifiers);
 
-//    for (std::vector<std::string>::const_iterator it = valVec.begin(); 
-//         it != valVec.end(); ++it ) {
-//       std::string name = "";
-//       std::string value = "";
-//       Tools::StringSplitPair(name, value, *it, "=");
-//       unsigned long int valInt = atol(value.c_str());
-//       e->AddDataMember( Member( new DataMember( name.c_str(),
-//                                                 Type::ByName("int"),
-//                                                 valInt,
-//                                                 0 )));
-//    }
+   std::vector<std::string> valVec = std::vector<std::string>();
+   Tools::StringSplit(valVec, values, ";");
+
+   for (std::vector<std::string>::const_iterator it = valVec.begin(); 
+        it != valVec.end(); ++it ) {
+      std::string name = "";
+      std::string value = "";
+      Tools::StringSplitPair(name, value, *it, "=");
+      unsigned long int valInt = atol(value.c_str());
+      e->AddDataMember( Member( new DataMember( name.c_str(),
+                                                Type::ByName("int"),
+                                                valInt,
+                                                0 )));
+   }
 }
 
 
