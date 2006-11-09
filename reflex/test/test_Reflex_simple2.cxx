@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.33 2006/10/11 15:10:44 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.34 2006/10/30 12:51:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -1148,6 +1148,17 @@ void ReflexSimple2Test::testSubTypes() {
   }
 
   CPPUNIT_ASSERT( 5 < tdefs  && tdefs < 20 );
+
+  Scope s0 = Scope::ByName("std::vector<int>");
+  CPPUNIT_ASSERT(s0);
+  CPPUNIT_ASSERT(s0.SubTypeByName("iterator"));
+  CPPUNIT_ASSERT(s0.SubTypeByName("value_type"));
+
+  Scope s1 = Scope::ByName("std::vector<MyClass>");
+  CPPUNIT_ASSERT(s1);
+  CPPUNIT_ASSERT(s1.SubTypeByName("iterator"));
+  CPPUNIT_ASSERT(Type::ByName(s0.Name(SCOPED)+"::value_type"));
+  CPPUNIT_ASSERT(s1.SubTypeByName("value_type"));
 
 }
 

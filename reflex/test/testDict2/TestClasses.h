@@ -288,6 +288,8 @@ typedef float MYFLOAT;
 // template instances
 namespace {
    struct _testclasses_instances {
+
+      std::vector<MyClass> m_v2;
       
       std::vector<MYINT> m_v0;
       std::vector<MYFLOAT> m_v1;

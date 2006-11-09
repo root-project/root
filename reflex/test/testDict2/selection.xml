@@ -39,6 +39,10 @@
   <class name="std::map<std::string,double>"/>
 
   <class name="std::vector<int>"/>
+  <class name="std::vector<int>::value_type"/>
+
+  <class name="std::vector<MyClass>"/>
+  <class name="std::vector<MyClass>::value_type"/>
 
   <class name="std::vector<MYINT>"/>
   <class name="std::vector<MYFLOAT>"/>

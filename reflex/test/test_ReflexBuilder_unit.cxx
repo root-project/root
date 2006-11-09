@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.17 2006/10/10 09:51:31 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_ReflexBuilder_unit.cxx,v 1.18 2006/10/30 12:51:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -995,7 +995,6 @@ void ReflexBuilderUnitTest::bases() {
    Type base = Type::ByName("cc::base");
    Type dev  = Type::ByName("cc::dev");
    Type foo  = Type::ByName("foo");
-
    CPPUNIT_ASSERT(base.Id());
    CPPUNIT_ASSERT(!base);
    CPPUNIT_ASSERT(dev);
