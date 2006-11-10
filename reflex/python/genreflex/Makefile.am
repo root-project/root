@@ -7,6 +7,8 @@ EXTRA_DIST =       \
   gendict.py       \
   genheader.py     \
   genreflex.py     \
+  genreflex-rootcint.py     \
+  genrootmap.py             \
   selclass.py
 
 pkgpython_PYTHON = \
@@ -15,6 +17,8 @@ pkgpython_PYTHON = \
   gendict.py       \
   genheader.py     \
   genreflex.py     \
+  genreflex-rootcint.py     \
+  genrootmap.py             \
   selclass.py
 
 if PLATFORM_IS_WINDOWS 

@@ -16,6 +16,7 @@ libReflex_la_SOURCES =               \
   ClassBuilder.cxx                   \
   ClassTemplateInstance.cxx          \
   DataMember.cxx                     \
+  DictionaryGenerator.cxx            \
   Enum.cxx                           \
   EnumBuilder.cxx                    \
   FuncHandler.cxx                    \
@@ -29,6 +30,8 @@ libReflex_la_SOURCES =               \
   MemberBase.cxx                     \
   MemberTemplate.cxx                 \
   MemberTemplateImpl.cxx             \
+  MemberTemplateName.cxx             \
+  NameLookup.cxx                      \
   Namespace.cxx                      \
   NamespaceBuilder.cxx               \
   Object.cxx                         \
@@ -47,6 +50,7 @@ libReflex_la_SOURCES =               \
   TypeName.cxx                       \
   TypeTemplate.cxx                   \
   TypeTemplateImpl.cxx               \
+  TypeTemplateName.cxx               \
   Typedef.cxx                        \
   TypedefBuilder.cxx                 \
   Union.cxx                          \
@@ -62,6 +66,7 @@ libReflex_la_SOURCES =               \
   FunctionMember.h                   \
   FunctionMemberTemplateInstance.h   \
   Fundamental.h                      \
+  NameLookup.h                       \
   Namespace.h                        \
   Pointer.h                          \
   PointerToMember.h                  \

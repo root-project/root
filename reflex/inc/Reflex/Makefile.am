@@ -9,21 +9,29 @@ Reflex_HEADERS =                   \
   Any.h                            \
   Base.h                           \
   Callback.h                       \
+  DictionaryGenerator.h            \
+  internal/InternalTools.h         \
+  internal/MemberBase.h            \
+  internal/MemberTemplateImpl.h    \
+  internal/MemberTemplateName.h    \
+  internal/OwnedMember.h           \
+  internal/OwnedMemberTemplate.h   \
+  internal/OwnedPropertyList.h     \
+  internal/PropertyListImpl.h      \
+  internal/ScopeBase.h             \
+  internal/ScopeName.h             \
+  internal/TypeBase.h              \
+  internal/TypeName.h              \
+  internal/TypeTemplateImpl.h      \
+  internal/TypeTemplateName.h      \
   Kernel.h                         \
   Member.h                         \
-  MemberBase.h                     \
   MemberTemplate.h                 \
-  MemberTemplateImpl.h             \
   Object.h                         \
   PropertyList.h                   \
-  PropertyListImpl.h               \
   Reflex.h                         \
   Scope.h                          \
-  ScopeBase.h                      \
-  ScopeName.h                      \
   Tools.h                          \
   Type.h                           \
-  TypeBase.h                       \
-  TypeName.h                       \
   TypeTemplate.h                   \
-  TypeTemplateImpl.h 
+  ValueObject.h
