@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.10 2006/11/07 16:24:10 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.11 2006/11/09 21:22:53 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Rotation3D.h,v 1.10 2006/11/07 16:24:10 moneta Exp $
+// Last update: $Id: Rotation3D.h,v 1.11 2006/11/09 21:22:53 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Rotation3D 
 #define ROOT_Math_GenVector_Rotation3D  1
@@ -204,7 +204,7 @@ public:
   void
   GetComponents ( ForeignVector& v1,
                   ForeignVector& v2,
-                  ForeignVector& v3 ) {
+                  ForeignVector& v3 ) const {
     v1 = ForeignVector ( fM[kXX], fM[kYX], fM[kZX] );
     v2 = ForeignVector ( fM[kXY], fM[kYY], fM[kZY] );
     v3 = ForeignVector ( fM[kXZ], fM[kYZ], fM[kZZ] );
@@ -216,8 +216,11 @@ public:
    */
   template<class IT>
   void SetComponents(IT begin, IT end) {
-    assert (end==begin+9);
-    std::copy ( begin, end, fM );
+     for (int i = 0; i <9; ++i) { 
+        fM[i] = *begin;
+        ++begin;  
+     }
+     assert (end==begin);
   }
 
   /**
@@ -226,8 +229,11 @@ public:
    */
   template<class IT>
   void GetComponents(IT begin, IT end) const {
-     assert (end==begin+9);
-     std::copy ( fM, fM+9, begin );
+     for (int i = 0; i <9; ++i) { 
+        *begin = fM[i];
+        ++begin; 
+     }
+     assert (end==begin);
   }
 
   /**

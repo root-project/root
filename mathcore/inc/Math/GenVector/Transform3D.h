@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.15 2006/11/07 16:24:10 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.16 2006/11/09 21:22:53 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -245,8 +245,24 @@ namespace ROOT {
     */
     template<class IT>
     void SetComponents(IT begin, IT end) {
-      assert (end==begin+12);
-      std::copy ( begin, end, fM );
+     for (int i = 0; i <12; ++i) { 
+        fM[i] = *begin;
+        ++begin; 
+     }
+     assert (end==begin);
+    }
+
+    /**
+       Get the 12 matrix components into data specified by an iterator begin
+       and another to the end of the desired data (12 past start).
+    */
+    template<class IT>
+    void GetComponents(IT begin, IT end) const {
+       for (int i = 0; i <12; ++i) { 
+          *begin = fM[i];
+          ++begin;  
+       }
+       assert (end==begin);
     }
 
     /**
@@ -254,15 +270,6 @@ namespace ROOT {
     */
     template<class IT>
     void GetComponents(IT begin) const {
-      std::copy ( fM, fM+12, begin );
-    }
-    /**
-       Get the 12 matrix components into data specified by an iterator begin
-       and another to the end of the desired data (12 past start).
-    */
-    template<class IT>
-    void GetComponents(IT begin, IT end) const {
-      assert (end==begin+12);
       std::copy ( fM, fM+12, begin );
     }
 

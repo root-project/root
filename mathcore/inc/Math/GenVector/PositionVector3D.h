@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: PositionVector3D.h,v 1.6 2006/04/13 10:38:30 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PositionVector3D.h,v 1.7 2006/11/09 21:22:53 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Lorenzo Moneta  at Mon May 30 15:25:04 2005
 //
-// Last update: $Id: PositionVector3D.h,v 1.6 2006/04/13 10:38:30 moneta Exp $
+// Last update: $Id: PositionVector3D.h,v 1.7 2006/11/09 21:22:53 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_PositionVector3D 
 #define ROOT_Math_GenVector_PositionVector3D  1
@@ -177,9 +177,10 @@ namespace ROOT {
          Set internal data based on 3 Scalars at *begin to *end
        */
       template <class IT>
-      void SetCoordinates( IT begin, IT end ) {
-        assert( begin != end && begin+1 != end && begin+2 != end);
-        fCoordinates.SetCoordinates(*begin, *(begin+1), *(begin+2));
+      void SetCoordinates( IT begin, IT end ) 
+      { IT a = begin; IT b = ++begin; IT c = ++begin;
+        assert (++begin==end);
+        SetCoordinates (*a,*b,*c);
       }
 
       /**

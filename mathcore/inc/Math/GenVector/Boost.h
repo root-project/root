@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Boost.h,v 1.7 2006/11/07 16:24:10 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Boost.h,v 1.8 2006/11/09 21:22:53 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Nov 1  2005
 // 
-// Last update: $Id: Boost.h,v 1.7 2006/11/07 16:24:10 moneta Exp $
+// Last update: $Id: Boost.h,v 1.8 2006/11/09 21:22:53 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_Boost
 #define ROOT_Math_GenVector_Boost 1
@@ -143,8 +143,9 @@ public:
    */
   template<class IT>
   void SetComponents(IT begin, IT end) {
-    assert (end==begin+3);
-    SetComponents (*begin, *(begin+1), *(begin+2));
+    IT a = begin; IT b = ++begin; IT c = ++begin;
+    assert (++begin==end);
+    SetComponents (*a, *b, *c);
   }
 
   /**
@@ -153,8 +154,9 @@ public:
    */
   template<class IT>
   void GetComponents(IT begin, IT end) const {
-    assert (end==begin+3);
-    GetComponents (*begin, *(begin+1), *(begin+2));
+    IT a = begin; IT b = ++begin; IT c = ++begin;
+    assert (++begin==end);
+    GetComponents (*a, *b, *c);
   }
 
   /**

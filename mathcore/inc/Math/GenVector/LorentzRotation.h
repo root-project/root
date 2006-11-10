@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.10 2006/11/07 16:24:10 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.11 2006/11/09 21:22:53 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Aug 8  2005
 // 
-// Last update: $Id: LorentzRotation.h,v 1.10 2006/11/07 16:24:10 moneta Exp $
+// Last update: $Id: LorentzRotation.h,v 1.11 2006/11/09 21:22:53 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_LorentzRotation 
 #define ROOT_Math_GenVector_LorentzRotation  1
@@ -231,8 +231,11 @@ public:
    */
   template<class IT>
   void SetComponents(IT begin, IT end) {
-    assert (end==begin+16);
-    std::copy ( begin, end, fM+0 );
+     for (int i = 0; i <16; ++i) { 
+        fM[i] = *begin;
+        ++begin; 
+     }
+     assert (end==begin);
   }
 
   /**
@@ -241,8 +244,11 @@ public:
    */
   template<class IT>
   void GetComponents(IT begin, IT end) const {
-    assert (end==begin+16);
-    std::copy ( fM+0, fM+16, begin );
+     for (int i = 0; i <16; ++i) { 
+        *begin = fM[i];
+        ++begin;  
+     }
+     assert (end==begin);
   }
 
   /**

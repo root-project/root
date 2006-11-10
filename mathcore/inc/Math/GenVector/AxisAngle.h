@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.h,v 1.10 2006/11/07 16:24:10 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.h,v 1.11 2006/11/09 21:22:53 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -147,12 +147,13 @@ public:
    */
   template<class IT>
   void SetComponents(IT begin, IT end) {
-    assert (end==begin+4);
-    fAxis.SetCoordinates(begin, begin+3);
+    IT a = begin; IT b = ++begin; IT c = ++begin;
+    fAxis.SetCoordinates(*a,*b,*c);
+    fAngle = *(++begin); 
+    assert (++begin==end);
     // re-normalize the vector
     double tot = fAxis.R();
     if (tot >  0) fAxis /= tot;
-    fAngle = *(begin+3);
   }
 
   /**
@@ -161,9 +162,10 @@ public:
    */
   template<class IT>
   void GetComponents(IT begin, IT end) const {
-    assert (end==begin+4);
-    fAxis.GetCoordinates(begin, begin+3);
-    *(begin+3) = fAngle;
+    IT a = begin; IT b = ++begin; IT c = ++begin;
+    fAxis.GetCoordinates(*a,*b,*c);
+    *(++begin) = fAngle;  
+    assert (++begin==end);
   }
 
   /**
@@ -312,7 +314,7 @@ public:
      Distance between two rotations
    */
   template <class R>
-  Scalar Distance ( const R & r ) {return gv_detail::dist(*this,r);}
+  Scalar Distance ( const R & r ) const {return gv_detail::dist(*this,r);}
 
   /**
      Equality/inequality operators

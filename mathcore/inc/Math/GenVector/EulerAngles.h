@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.11 2006/11/07 16:24:10 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.12 2006/11/09 21:22:53 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -133,10 +133,10 @@ public:
    */
   template<class IT>
   void SetComponents(IT begin, IT end) {
-    assert (end==begin+3);
     fPhi   = *begin++;
     fTheta = *begin++;
-    fPsi   = *begin;
+    fPsi   = *begin++;
+    assert(begin == end); 
     Rectify();			// Added 27 Jan. 06   JMM
   }
 
@@ -146,10 +146,10 @@ public:
    */
   template<class IT>
   void GetComponents(IT begin, IT end) const {
-    assert (end==begin+3);
     *begin++ = fPhi;
     *begin++ = fTheta;
-    *begin   = fPsi;
+    *begin++ = fPsi;
+    assert(begin == end); 
    }
 
   /**
@@ -305,7 +305,7 @@ public:
      Distance between two rotations
    */
   template <class R>
-  Scalar Distance ( const R & r ) {return gv_detail::dist(*this,r);}
+  Scalar Distance ( const R & r ) const {return gv_detail::dist(*this,r);}
 
   /**
      Equality/inequality operators
