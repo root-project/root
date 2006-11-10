@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Boost.h,v 1.4 2006/05/26 15:10:39 moneta Exp $
+// @(#)root/mathcore:$Name: v5-13-04-patches $:$Id: Boost.h,v 1.5 2006/06/15 16:23:44 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Nov 1  2005
 // 
-// Last update: $Id: Boost.h,v 1.4 2006/05/26 15:10:39 moneta Exp $
+// Last update: $Id: Boost.h,v 1.9 2006/11/10 11:04:41 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_Boost
 #define ROOT_Math_GenVector_Boost 1
@@ -143,8 +143,9 @@ public:
    */
   template<class IT>
   void SetComponents(IT begin, IT end) {
-    assert (end==begin+3);
-    SetComponents (*begin, *(begin+1), *(begin+2));
+    IT a = begin; IT b = ++begin; IT c = ++begin;
+    assert (++begin==end);
+    SetComponents (*a, *b, *c);
   }
 
   /**
@@ -153,8 +154,22 @@ public:
    */
   template<class IT>
   void GetComponents(IT begin, IT end) const {
-    assert (end==begin+3);
-    GetComponents (*begin, *(begin+1), *(begin+2));
+    IT a = begin; IT b = ++begin; IT c = ++begin;
+    assert (++begin==end);
+    GetComponents (*a, *b, *c);
+  }
+
+  /**
+     Get given a pointer or an iterator defining the beginning of 
+     an array into which to place beta_x, beta_y, and beta_z
+   */
+  template<class IT>
+  void GetComponents(IT begin ) const {
+     double bx,by,bz = 0;      
+     GetComponents (bx,by,bz);
+     *begin++ = bx; 
+     *begin++ = by; 
+     *begin = bz; 
   }
    
   /**
@@ -207,7 +222,7 @@ public:
   }
 
   /**
-     Overload operator * for rotation on a vector
+     Overload operator * for boost on a vector
    */
   template <class A4Vector>
   inline
@@ -222,20 +237,20 @@ public:
   void Invert();
 
   /**
-      Return inverse of  a rotation
+      Return inverse of  a boost
    */
   Boost Inverse() const;
 
   /**
      Equality/inequality operators
    */
-  bool operator == (const Boost & rhs) {
+  bool operator == (const Boost & rhs) const {
     for (unsigned int i=0; i < 10; ++i) {
       if( fM[i] != rhs.fM[i] )  return false;
     }
     return true;
   }
-  bool operator != (const Boost & rhs) {
+  bool operator != (const Boost & rhs) const {
     return ! operator==(rhs);
   }
 

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzVector.h,v 1.10 2006/05/03 13:10:22 moneta Exp $
+// @(#)root/mathcore:$Name: v5-13-04-patches $:$Id: LorentzVector.h,v 1.11 2006/08/11 15:34:38 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by:    moneta   at Tue May 31 17:06:09 2005
 // Major mods by: fischler at Wed Jul 20   2005
 //
-// Last update: $Id: LorentzVector.h,v 1.10 2006/05/03 13:10:22 moneta Exp $
+// Last update: $Id: LorentzVector.h,v 1.12 2006/11/09 21:22:53 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_LorentzVector 
 #define ROOT_Math_GenVector_LorentzVector  1
@@ -193,6 +193,19 @@ namespace ROOT {
       { IT a = begin; IT b = ++begin; IT c = ++begin; IT d = ++begin;
         assert (++begin==end);
         GetCoordinates (*a,*b,*c,*d);
+      }
+
+      /**
+         get internal data into 4 Scalars at *begin 
+       */
+      template <class IT>
+      void GetCoordinates( IT begin ) const { 
+         Scalar a,b,c,d = 0; 
+         GetCoordinates (a,b,c,d);
+         *begin++ = a; 
+         *begin++ = b; 
+         *begin++ = c; 
+         *begin   = d; 
       }
 
       /**

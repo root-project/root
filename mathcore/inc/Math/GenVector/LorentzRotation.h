@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.7 2005/12/08 15:52:41 moneta Exp $
+// @(#)root/mathcore:$Name: v5-13-04-patches $:$Id: LorentzRotation.h,v 1.8 2006/06/15 16:23:44 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Aug 8  2005
 // 
-// Last update: $Id: LorentzRotation.h,v 1.7 2005/12/08 15:52:41 moneta Exp $
+// Last update: $Id: LorentzRotation.h,v 1.12 2006/11/10 11:04:42 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_LorentzRotation 
 #define ROOT_Math_GenVector_LorentzRotation  1
@@ -231,8 +231,11 @@ public:
    */
   template<class IT>
   void SetComponents(IT begin, IT end) {
-    assert (end==begin+16);
-    std::copy ( begin, end, fM+0 );
+     for (int i = 0; i <16; ++i) { 
+        fM[i] = *begin;
+        ++begin; 
+     }
+     assert (end==begin);
   }
 
   /**
@@ -241,7 +244,18 @@ public:
    */
   template<class IT>
   void GetComponents(IT begin, IT end) const {
-    assert (end==begin+16);
+     for (int i = 0; i <16; ++i) { 
+        *begin = fM[i];
+        ++begin;  
+     }
+     assert (end==begin);
+  }
+
+  /**
+     Get the 16 matrix components into data specified by an iterator begin
+   */
+  template<class IT>
+  void GetComponents(IT begin) const {
     std::copy ( fM+0, fM+16, begin );
   }
 
@@ -253,7 +267,7 @@ public:
   */
   template<class ForeignMatrix>
   void
-  SetComponents (const ForeignMatrix & m) {
+  SetRotationMatrix (const ForeignMatrix & m) {
     fM[kXX]=m(0,0);  fM[kXY]=m(0,1);  fM[kXZ]=m(0,2);  fM[kXT]=m(0,3);
     fM[kYX]=m(1,0);  fM[kYY]=m(1,1);  fM[kYZ]=m(1,2);  fM[kYT]=m(1,3);
     fM[kZX]=m(2,0);  fM[kZY]=m(2,1);  fM[kZZ]=m(2,2);  fM[kZT]=m(2,3);
@@ -267,7 +281,7 @@ public:
   */
   template<class ForeignMatrix>
   void
-  GetComponents (ForeignMatrix & m) const {
+  GetRotationMatrix (ForeignMatrix & m) const {
     m(0,0)=fM[kXX];  m(0,1)=fM[kXY];  m(0,2)=fM[kXZ]; m(0,3)=fM[kXT];
     m(1,0)=fM[kYX];  m(1,1)=fM[kYY];  m(1,2)=fM[kYZ]; m(1,3)=fM[kYT];
     m(2,0)=fM[kZX];  m(2,1)=fM[kZY];  m(2,2)=fM[kZZ]; m(2,3)=fM[kZT];
@@ -396,13 +410,13 @@ public:
   /**
      Equality/inequality operators
    */
-  bool operator == (const LorentzRotation & rhs) {
+  bool operator == (const LorentzRotation & rhs) const {
     for (unsigned int i=0; i < 16; ++i) {
       if( fM[i] != rhs.fM[i] )  return false;
     }
     return true;
   }
-  bool operator != (const LorentzRotation & rhs) {
+  bool operator != (const LorentzRotation & rhs) const {
     return ! operator==(rhs);
   }
 

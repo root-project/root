@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: BoostY.h,v 1.4 2006/05/26 15:10:39 moneta Exp $
+// @(#)root/mathcore:$Name: v5-13-04-patches $:$Id: BoostY.h,v 1.5 2006/06/15 16:23:44 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Nov 1  2005
 // 
-// Last update: $Id: BoostY.h,v 1.4 2006/05/26 15:10:39 moneta Exp $
+// Last update: $Id: BoostY.h,v 1.7 2006/11/07 16:24:10 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_BoostY
 #define ROOT_Math_GenVector_BoostY 1
@@ -179,12 +179,12 @@ public:
   /**
      Equality/inequality operators
    */
-  bool operator == (const BoostY & rhs) {
+  bool operator == (const BoostY & rhs) const {
     if( fBeta  != rhs.fBeta  ) return false;
     if( fGamma != rhs.fGamma ) return false;
     return true;
   }
-  bool operator != (const BoostY & rhs) {
+  bool operator != (const BoostY & rhs) const {
     return ! operator==(rhs);
   }
 

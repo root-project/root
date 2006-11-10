@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Transform3D.h,v 1.12 2006/04/13 10:38:30 moneta Exp $
+// @(#)root/mathcore:$Name: v5-13-04-patches $:$Id: Transform3D.h,v 1.13 2006/05/26 15:10:39 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -245,8 +245,11 @@ namespace ROOT {
     */
     template<class IT>
     void SetComponents(IT begin, IT end) {
-      assert (end==begin+12);
-      std::copy ( begin, end, fM );
+     for (int i = 0; i <12; ++i) { 
+        fM[i] = *begin;
+        ++begin; 
+     }
+     assert (end==begin);
     }
 
     /**
@@ -255,7 +258,18 @@ namespace ROOT {
     */
     template<class IT>
     void GetComponents(IT begin, IT end) const {
-      assert (end==begin+12);
+       for (int i = 0; i <12; ++i) { 
+          *begin = fM[i];
+          ++begin;  
+       }
+       assert (end==begin);
+    }
+
+    /**
+       Get the 12 matrix components into data specified by an iterator begin
+    */
+    template<class IT>
+    void GetComponents(IT begin) const {
       std::copy ( fM, fM+12, begin );
     }
 
@@ -267,7 +281,7 @@ namespace ROOT {
     */
     template<class ForeignMatrix>
     void
-    SetComponents (const ForeignMatrix & m) {
+    SetTransformMatrix (const ForeignMatrix & m) {
       fM[kXX]=m(0,0);  fM[kXY]=m(0,1);  fM[kXZ]=m(0,2); fM[kDX]=m(0,3);
       fM[kYX]=m(1,0);  fM[kYY]=m(1,1);  fM[kYZ]=m(1,2); fM[kDY]=m(1,3);
       fM[kZX]=m(2,0);  fM[kZY]=m(2,1);  fM[kZZ]=m(2,2); fM[kDZ]=m(2,3);
@@ -280,10 +294,10 @@ namespace ROOT {
     */
     template<class ForeignMatrix>
     void
-    GetComponents (ForeignMatrix & m) const {
+    GetTransformMatrix (ForeignMatrix & m) const {
       m(0,0)=fM[kXX];  m(0,1)=fM[kXY];  m(0,2)=fM[kXZ];  m(0,3)=fM[kDX];
-      m(1,0)=fM[kYX];  m(1,1)=fM[kYY];  m(1,2)=fM[kYZ];  m(0,3)=fM[kDY];
-      m(2,0)=fM[kZX];  m(2,1)=fM[kZY];  m(2,2)=fM[kZZ];  m(0,3)=fM[kDZ];
+      m(1,0)=fM[kYX];  m(1,1)=fM[kYY];  m(1,2)=fM[kYZ];  m(1,3)=fM[kDY];
+      m(2,0)=fM[kZX];  m(2,1)=fM[kZY];  m(2,2)=fM[kZZ];  m(2,3)=fM[kDZ];
     }
 
 
@@ -434,7 +448,7 @@ namespace ROOT {
     /**
        Equality/inequality operators
     */
-    bool operator == (const Transform3D & rhs) {
+    bool operator == (const Transform3D & rhs) const {
       if( fM[0] != rhs.fM[0] )  return false;
       if( fM[1] != rhs.fM[1] )  return false;
       if( fM[2] != rhs.fM[2] )  return false;
@@ -450,7 +464,7 @@ namespace ROOT {
       return true;
     }
 
-    bool operator != (const Transform3D & rhs) {
+    bool operator != (const Transform3D & rhs) const {
       return ! operator==(rhs);
     }
 

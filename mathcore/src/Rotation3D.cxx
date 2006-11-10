@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.cxx,v 1.8 2006/06/15 16:23:44 moneta Exp $
+// @(#)root/mathcore:$Name: v5-13-04-patches $:$Id: Rotation3D.cxx,v 1.9 2006/06/19 09:02:24 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************

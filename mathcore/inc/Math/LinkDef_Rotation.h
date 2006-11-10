@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Rotation.h,v 1.4 2006/02/26 17:20:11 moneta Exp $
+// @(#)root/mathcore:$Name: v5-13-04-patches $:$Id: LinkDef_Rotation.h,v 1.5 2006/04/11 13:06:15 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 // rotation functions
@@ -8,7 +8,7 @@
 #pragma link C++ function  ROOT::Math::Rotation3D::Rotation3D (ROOT::Math::XYZVector &, ROOT::Math::XYZVector &,ROOT::Math::XYZVector &);
 #pragma link C++ function  ROOT::Math::Rotation3D::SetComponents (ROOT::Math::XYZVector &, ROOT::Math::XYZVector &,ROOT::Math::XYZVector &);
 #pragma link C++ function  ROOT::Math::Rotation3D::SetComponents (double *, double *);
-#pragma link C++ function  ROOT::Math::Rotation3D::GetComponents (double *, double *);
+#pragma link C++ function  ROOT::Math::Rotation3D::GetComponents (double *);
 #pragma link C++ function  ROOT::Math::Rotation3D::operator() (const ROOT::Math::XYZTVector &);
 #pragma link C++ function  ROOT::Math::Rotation3D::operator() (const ROOT::Math::XYZVector &);
 #pragma link C++ function  ROOT::Math::Rotation3D::operator() (const ROOT::Math::XYZPoint &);
@@ -16,9 +16,10 @@
 #pragma link C++ function  ROOT::Math::Rotation3D::operator* (const ROOT::Math::XYZVector &);
 #pragma link C++ function  ROOT::Math::Rotation3D::operator* (const ROOT::Math::XYZTVector &);
 // axis angle
+#pragma link C++ function  ROOT::Math::AxisAngle::AxisAngle (ROOT::Math::XYZVector &, double);
 #pragma link C++ function  ROOT::Math::AxisAngle::AxisAngle (double *, double*);
 #pragma link C++ function  ROOT::Math::AxisAngle::SetComponents (double *, double *);
-#pragma link C++ function  ROOT::Math::AxisAngle::GetComponents (double *, double *);
+#pragma link C++ function  ROOT::Math::AxisAngle::GetComponents (double *);
 #pragma link C++ function  ROOT::Math::AxisAngle::operator() (const ROOT::Math::XYZTVector &);
 #pragma link C++ function  ROOT::Math::AxisAngle::operator() (const ROOT::Math::XYZVector &);
 #pragma link C++ function  ROOT::Math::AxisAngle::operator() (const ROOT::Math::XYZPoint &);
@@ -28,7 +29,7 @@
 // Euler angles 
 #pragma link C++ function  ROOT::Math::EulerAngles::EulerAngles (double *, double*);
 #pragma link C++ function  ROOT::Math::EulerAngles::SetComponents (double *, double *);
-#pragma link C++ function  ROOT::Math::EulerAngles::GetComponents (double *, double *);
+#pragma link C++ function  ROOT::Math::EulerAngles::GetComponents (double *);
 #pragma link C++ function  ROOT::Math::EulerAngles::operator() (const ROOT::Math::XYZTVector &);
 #pragma link C++ function  ROOT::Math::EulerAngles::operator() (const ROOT::Math::XYZVector &);
 #pragma link C++ function  ROOT::Math::EulerAngles::operator() (const ROOT::Math::XYZPoint &);
@@ -38,7 +39,7 @@
 // quaternion 
 #pragma link C++ function  ROOT::Math::Quaternion::Quaternion (double *, double*);
 #pragma link C++ function  ROOT::Math::Quaternion::SetComponents (double *, double *);
-#pragma link C++ function  ROOT::Math::Quaternion::GetComponents (double *, double *);
+#pragma link C++ function  ROOT::Math::Quaternion::GetComponents (double *);
 #pragma link C++ function  ROOT::Math::Quaternion::operator() (const ROOT::Math::XYZTVector &);
 #pragma link C++ function  ROOT::Math::Quaternion::operator() (const ROOT::Math::XYZVector &);
 #pragma link C++ function  ROOT::Math::Quaternion::operator() (const ROOT::Math::XYZPoint &);
@@ -69,7 +70,7 @@
 // transform3D
 #pragma link C++ function  ROOT::Math::Transform3D::Transform3D (double *, double*);
 #pragma link C++ function  ROOT::Math::Transform3D::SetComponents (double *, double *);
-#pragma link C++ function  ROOT::Math::Transform3D::GetComponents (double *, double *);
+#pragma link C++ function  ROOT::Math::Transform3D::GetComponents (double *);
 #pragma link C++ function  ROOT::Math::Transform3D::operator() (const ROOT::Math::XYZTVector &);
 #pragma link C++ function  ROOT::Math::Transform3D::operator() (const ROOT::Math::XYZVector &);
 #pragma link C++ function  ROOT::Math::Transform3D::operator() (const ROOT::Math::XYZPoint &);
@@ -80,7 +81,7 @@
 // LorentzRotation
 #pragma link C++ function  ROOT::Math::LorentzRotation::LorentzRotation (double *, double*);
 #pragma link C++ function  ROOT::Math::LorentzRotation::SetComponents (double *, double *);
-#pragma link C++ function  ROOT::Math::LorentzRotation::GetComponents (double *, double *);
+#pragma link C++ function  ROOT::Math::LorentzRotation::GetComponents (double *);
 #pragma link C++ function  ROOT::Math::LorentzRotation::operator* (const ROOT::Math::XYZTVector &);
 
 // Boost
@@ -88,7 +89,7 @@
 #pragma link C++ function  ROOT::Math::Boost::Boost (double *, double*);
 #pragma link C++ function  ROOT::Math::Boost::SetComponents (const ROOT::Math::XYZVector &);
 #pragma link C++ function  ROOT::Math::Boost::SetComponents (double *, double *);
-#pragma link C++ function  ROOT::Math::Boost::GetComponents (double *, double *);
+#pragma link C++ function  ROOT::Math::Boost::GetComponents (double *);
 #pragma link C++ function  ROOT::Math::Boost::operator* (const ROOT::Math::XYZTVector &);
 
 // Boost X

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Quaternion.h,v 1.5 2006/05/26 15:10:39 moneta Exp $
+// @(#)root/mathcore:$Name: v5-13-04-patches $:$Id: Quaternion.h,v 1.6 2006/06/15 16:23:44 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -11,7 +11,7 @@
 // Header file for rotation in 3 dimensions, represented by a quaternion
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Quaternion.h,v 1.5 2006/05/26 15:10:39 moneta Exp $
+// Last update: $Id: Quaternion.h,v 1.10 2006/11/10 11:04:42 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Quaternion 
 #define ROOT_Math_GenVector_Quaternion  1
@@ -141,11 +141,11 @@ public:
    */
   template<class IT>
   void SetComponents(IT begin, IT end) {
-    assert (end==begin+4);
     fU = *begin++;
     fI = *begin++;
     fJ = *begin++;
-    fK = *begin;
+    fK = *begin++;
+    assert (end==begin);
   }
 
   /**
@@ -154,7 +154,18 @@ public:
    */
   template<class IT>
   void GetComponents(IT begin, IT end) const {
-    assert (end==begin+4);
+    *begin++ = fU;
+    *begin++ = fI;
+    *begin++ = fJ;
+    *begin++ = fK;
+    assert (end==begin);
+  }
+
+  /**
+     Get the components into data specified by an iterator begin
+   */
+  template<class IT>
+  void GetComponents(IT begin ) const {
     *begin++ = fU;
     *begin++ = fI;
     *begin++ = fJ;
@@ -301,14 +312,14 @@ public:
   /**
      Equality/inequality operators
    */
-  bool operator == (const Quaternion & rhs) {
+  bool operator == (const Quaternion & rhs) const {
     if( fU != rhs.fU )  return false;
     if( fI != rhs.fI )  return false;
     if( fJ != rhs.fJ )  return false;
     if( fK != rhs.fK )  return false;
     return true;
   }
-  bool operator != (const Quaternion & rhs) {
+  bool operator != (const Quaternion & rhs) const {
     return ! operator==(rhs);
   }
 

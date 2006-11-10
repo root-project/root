@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.6 2006/04/11 13:06:15 moneta Exp $
+// @(#)root/mathcore:$Name: v5-13-04-patches $:$Id: Rotation3D.h,v 1.7 2006/06/15 16:23:44 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Rotation3D.h,v 1.6 2006/04/11 13:06:15 moneta Exp $
+// Last update: $Id: Rotation3D.h,v 1.12 2006/11/10 11:04:42 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Rotation3D 
 #define ROOT_Math_GenVector_Rotation3D  1
@@ -204,10 +204,10 @@ public:
   void
   GetComponents ( ForeignVector& v1,
                   ForeignVector& v2,
-                  ForeignVector& v3 ) {
-    v1 = ForeignVector ( fM[kXX], fM[kXY], fM[kXZ] );
-    v2 = ForeignVector ( fM[kYX], fM[kYY], fM[kYZ] );
-    v3 = ForeignVector ( fM[kZX], fM[kZY], fM[kZZ] );
+                  ForeignVector& v3 ) const {
+    v1 = ForeignVector ( fM[kXX], fM[kYX], fM[kZX] );
+    v2 = ForeignVector ( fM[kXY], fM[kYY], fM[kZY] );
+    v3 = ForeignVector ( fM[kXZ], fM[kYZ], fM[kZZ] );
   }
 
   /**
@@ -216,8 +216,11 @@ public:
    */
   template<class IT>
   void SetComponents(IT begin, IT end) {
-    assert (end==begin+9);
-    std::copy ( begin, end, fM );
+     for (int i = 0; i <9; ++i) { 
+        fM[i] = *begin;
+        ++begin;  
+     }
+     assert (end==begin);
   }
 
   /**
@@ -226,7 +229,18 @@ public:
    */
   template<class IT>
   void GetComponents(IT begin, IT end) const {
-    assert (end==begin+9);
+     for (int i = 0; i <9; ++i) { 
+        *begin = fM[i];
+        ++begin; 
+     }
+     assert (end==begin);
+  }
+
+  /**
+     Get the 9 matrix components into data specified by an iterator begin
+   */
+  template<class IT>
+  void GetComponents(IT begin) const {
     std::copy ( fM, fM+9, begin );
   }
 
@@ -238,7 +252,7 @@ public:
   */
   template<class ForeignMatrix>
   void
-  SetComponents (const ForeignMatrix & m) {
+  SetRotationMatrix (const ForeignMatrix & m) {
     fM[kXX]=m(0,0);  fM[kXY]=m(0,1);  fM[kXZ]=m(0,2);
     fM[kYX]=m(1,0);  fM[kYY]=m(1,1);  fM[kYZ]=m(1,2);
     fM[kZX]=m(2,0);  fM[kZY]=m(2,1);  fM[kZZ]=m(2,2);
@@ -251,7 +265,7 @@ public:
   */
   template<class ForeignMatrix>
   void
-  GetComponents (ForeignMatrix & m) const {
+  GetRotationMatrix (ForeignMatrix & m) const {
     m(0,0)=fM[kXX];  m(0,1)=fM[kXY];  m(0,2)=fM[kXZ];
     m(1,0)=fM[kYX];  m(1,1)=fM[kYY];  m(1,2)=fM[kYZ];
     m(2,0)=fM[kZX];  m(2,1)=fM[kZY];  m(2,2)=fM[kZZ];
@@ -375,7 +389,7 @@ public:
   /**
      Equality/inequality operators
    */
-  bool operator == (const Rotation3D & rhs) {
+  bool operator == (const Rotation3D & rhs) const {
     if( fM[0] != rhs.fM[0] )  return false;
     if( fM[1] != rhs.fM[1] )  return false;
     if( fM[2] != rhs.fM[2] )  return false;
@@ -387,7 +401,7 @@ public:
     if( fM[8] != rhs.fM[8] )  return false;
     return true;
   }
-  bool operator != (const Rotation3D & rhs) {
+  bool operator != (const Rotation3D & rhs) const {
     return ! operator==(rhs);
   }
 

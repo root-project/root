@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: EulerAngles.h,v 1.8 2006/06/15 16:23:44 moneta Exp $
+// @(#)root/mathcore:$Name: v5-13-04-patches $:$Id: EulerAngles.h,v 1.9 2006/07/01 16:01:08 rdm Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -133,10 +133,10 @@ public:
    */
   template<class IT>
   void SetComponents(IT begin, IT end) {
-    assert (end==begin+3);
     fPhi   = *begin++;
     fTheta = *begin++;
-    fPsi   = *begin;
+    fPsi   = *begin++;
+    assert(begin == end); 
     Rectify();			// Added 27 Jan. 06   JMM
   }
 
@@ -146,7 +146,17 @@ public:
    */
   template<class IT>
   void GetComponents(IT begin, IT end) const {
-    assert (end==begin+4);
+    *begin++ = fPhi;
+    *begin++ = fTheta;
+    *begin++ = fPsi;
+    assert(begin == end); 
+   }
+
+  /**
+     Get the axis and then the angle into data specified by an iterator begin
+   */
+  template<class IT>
+  void GetComponents(IT begin) const {
     *begin++ = fPhi;
     *begin++ = fTheta;
     *begin   = fPsi;
@@ -295,18 +305,18 @@ public:
      Distance between two rotations
    */
   template <class R>
-  Scalar Distance ( const R & r ) {return gv_detail::dist(*this,r);}
+  Scalar Distance ( const R & r ) const {return gv_detail::dist(*this,r);}
 
   /**
      Equality/inequality operators
    */
-  bool operator == (const EulerAngles & rhs) {
+  bool operator == (const EulerAngles & rhs) const {
     if( fPhi   != rhs.fPhi   ) return false;
     if( fTheta != rhs.fTheta ) return false;
     if( fPsi   != rhs.fPsi   ) return false;
     return true;
   }
-  bool operator != (const EulerAngles & rhs) {
+  bool operator != (const EulerAngles & rhs) const {
     return ! operator==(rhs);
   }
 

@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: AxisAngle.h,v 1.7 2006/06/15 16:23:44 moneta Exp $
+// @(#)root/mathcore:$Name: v5-13-04-patches $:$Id: AxisAngle.h,v 1.8 2006/08/16 10:29:59 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -147,12 +147,13 @@ public:
    */
   template<class IT>
   void SetComponents(IT begin, IT end) {
-    assert (end==begin+4);
-    fAxis.SetCoordinates(begin, begin+3);
+    IT a = begin; IT b = ++begin; IT c = ++begin;
+    fAxis.SetCoordinates(*a,*b,*c);
+    fAngle = *(++begin); 
+    assert (++begin==end);
     // re-normalize the vector
     double tot = fAxis.R();
     if (tot >  0) fAxis /= tot;
-    fAngle = *(begin+3);
   }
 
   /**
@@ -161,9 +162,23 @@ public:
    */
   template<class IT>
   void GetComponents(IT begin, IT end) const {
-    assert (end==begin+4);
-    fAxis.GetCoordinates(begin, begin+3);
-    *(begin+3) = fAngle;
+    IT a = begin; IT b = ++begin; IT c = ++begin;
+    fAxis.GetCoordinates(*a,*b,*c);
+    *(++begin) = fAngle;  
+    assert (++begin==end);
+  }
+
+  /**
+     Get the axis and then the angle into data specified by an iterator begin
+   */
+  template<class IT>
+  void GetComponents(IT begin) const {
+     double ax,ay,az = 0;
+     fAxis.GetCoordinates(ax,ay,az);
+     *begin++ = ax; 
+     *begin++ = ay; 
+     *begin++ = az; 
+     *begin = fAngle;
   }
 
   /**
@@ -299,17 +314,17 @@ public:
      Distance between two rotations
    */
   template <class R>
-  Scalar Distance ( const R & r ) {return gv_detail::dist(*this,r);}
+  Scalar Distance ( const R & r ) const {return gv_detail::dist(*this,r);}
 
   /**
      Equality/inequality operators
    */
-  bool operator == (const AxisAngle & rhs) {
+  bool operator == (const AxisAngle & rhs) const {
     if( fAxis  != rhs.fAxis  )  return false;
     if( fAngle != rhs.fAngle )  return false;
     return true;
   }
-  bool operator != (const AxisAngle & rhs) {
+  bool operator != (const AxisAngle & rhs) const {
     return ! operator==(rhs);
   }
 
