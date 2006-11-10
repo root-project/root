@@ -3,12 +3,12 @@
 #Set the list of files to be delete by clean:
 CLEAN_TARGETS +=  *.log $(ALL_LIBRARIES) *.d 
 CLEAN_TARGETS += Embedded.root RootRelations.root clonesA_Event.root 
-CLEAN_TARGETS += data.root dummy*.root problem.root tree.root
+CLEAN_TARGETS += data.root dummy*.root problem.root tree.root merge.root
 
 #Set the list of target to make while testing
 TEST_TARGETS += ursula inheritAndOwn BadBaseAddresses treeBranch iobug \
 	merging headerTest clonesATest EmbeddedTest inheritTest \
-	relationsTest suetest Jantest deepnesT baseString
+	relationsTest suetest Jantest deepnesT baseString prova
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -128,4 +128,7 @@ deepnest: deepnest.clog
 	$(TestDiff)
 
 baseString: baseString.clog
+	$(TestDiff)
+
+prova: prova.log
 	$(TestDiff)
