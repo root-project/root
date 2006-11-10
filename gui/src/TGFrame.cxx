@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.140 2006/09/25 08:18:39 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.141 2006/09/29 08:42:18 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -2213,7 +2213,7 @@ Bool_t TGHeaderFrame::HandleMotion(Event_t* event)
 }
 
 //______________________________________________________________________________
-void TGFrame::SaveUserColor(ostream &out, Option_t *)
+void TGFrame::SaveUserColor(ostream &out, Option_t *option)
 {
    // Save a user color in a C++ macro file - used in SavePrimitive().
 
@@ -2226,7 +2226,11 @@ void TGFrame::SaveUserColor(ostream &out, Option_t *)
       out << endl;
       out << "   ULong_t ucolor;        // will reflect user color changes" << endl;
    }
-   ULong_t ucolor = GetBackground();
+   ULong_t ucolor;
+   if (!strcmp(option, "slider"))
+      ucolor = GetDefaultFrameBackground();
+   else
+      ucolor = GetBackground();
    if ((ucolor != fgUserColor) || (ucolor == GetWhitePixel())) {
       const char *ucolorname = TColor::PixelAsHexString(ucolor);
       out << "   gClient->GetColorByName(" << quote << ucolorname << quote
@@ -2464,6 +2468,11 @@ void TGCompositeFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    // Save a composite frame widget as a C++ statement(s) on output stream out.
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
+
+   if (!strcmp(GetName(),"")) {
+      SetName(Form("fCompositeframe%d",fgCounter));
+      fgCounter++;
+   }
 
    out << endl << "   // composite frame" << endl;
    out << "   TGCompositeFrame *";
