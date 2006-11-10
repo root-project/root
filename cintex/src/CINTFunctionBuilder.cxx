@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctionBuilder.cxx,v 1.11 2006/07/03 10:22:13 roiser Exp $
+// @(#)root/cintex:$Name: v5-13-04-patches $:$Id: CINTFunctionBuilder.cxx,v 1.12 2006/07/14 06:58:00 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -36,7 +36,9 @@ namespace ROOT { namespace Cintex {
       // Setup a CINT function.
       Scope scope = fFunction.DeclaringScope();
       bool global = scope.IsTopScope();
-
+      
+      CINTScopeBuilder::Setup(fFunction.TypeOf());
+      
       if ( global ) {
          G__lastifuncposition();
       }
@@ -82,7 +84,7 @@ namespace ROOT { namespace Cintex {
       int ret_typedeft = -1;
       if ( rt.IsTypedef()) {
          ret_typedeft = CINTTypedefBuilder::Setup(rt);
-         rt = rt.FinalType();
+         while ( rt.IsTypedef()) rt = rt.ToType();
       }
       //CINTScopeBuilder::Setup( rt );
       CintTypeDesc ret_desc = CintType( rt );
