@@ -20,7 +20,7 @@ FILEDIR := $(VERSION)
 #debug := $(shell echo $(LIBDIR) 1>&2 )
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += -r $(ALL_LIBRARIES) *.d *.log *.clog $(LIBDIRTOP) result.root
+CLEAN_TARGETS += -r $(ALL_LIBRARIES) *.d *.log *.clog  result.root $(LIBDIRTOP)
 # We intentionally do not delete the output file in $(FILEDIR) so that 
 # we can keep the historic versions.
 
@@ -33,7 +33,6 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
-
 
 $(FILEDIR):
 	$(CMDECHO)mkdir -p $(FILEDIR)
@@ -116,8 +115,10 @@ LIBDIR_SED=$(subst /,\\/,$(LIBDIR))
 LIBDIR_SED2=$(subst /,\\/,$(LPWD)/./)
 #debug := $(shell echo $(LIBDIR) 1>&2 )
 
+ifneq ($(MAKECMDGOALS),clean)
 $(LIBDIR)%_C.df: $(LIBDIR)%_C.d
 	@cat $< | sed -e s/$(LIBDIR_SED2)// | sed -e s/$*.o/$(LIBDIR_SED)$*_C.$(DllSuf)/ > $@
+endif
 
 $(HELPER_DLL) : TestHelpers.C 
 	$(CMDECHO) root.exe -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"\",\"\")" > $(*F).build.log 2>&1
