@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.39 2006/08/15 10:06:51 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.40 2006/08/21 13:25:32 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -712,6 +712,9 @@ void TGTab::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
             out << "   " << cf->GetName() <<"->SetLayoutManager(";
             lm->SavePrimitive(out, option);
             out << ");" << endl;
+         }
+         if (!IsEnabled(i)) {
+            out << "   " << GetName() << "->SetEnabled(" << i << ", kFALSE);" << endl;
          }
       }
       cf->SavePrimitiveSubframes(out, option);
