@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.14 2006/03/24 15:31:10 antcheva Exp $
+// @(#)root/qt:$Name: v5-13-04-patches $:$Id: TQtWidget.h,v 1.15 2006/08/30 14:45:44 antcheva Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -268,6 +268,6 @@ inline void   TQtWidget::InvertBit(UInt_t f)      { fBits ^= f & kBitMask;      
 inline void   TQtWidget::EnableSignalEvents  (UInt_t f){ SetBit  (f); }
 inline void   TQtWidget::DisableSignalEvents (UInt_t f){ ResetBit(f); }
 inline Bool_t TQtWidget::IsSignalEventEnabled(UInt_t f) const { return TestBit (f); }
-inline void   TQtWidget::EmitSignal(UInt_t f)  {if (IsSignalEventEnabled(f)) EmitTestedSignal();};
+inline void   TQtWidget::EmitSignal(UInt_t f)  {if (IsSignalEventEnabled(f)) EmitTestedSignal();}
 
 #endif
