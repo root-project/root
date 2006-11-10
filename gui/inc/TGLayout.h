@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.14 2006/05/26 15:13:01 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.15 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -107,7 +107,7 @@ public:
    void Print(Option_t* option = "") const;
    void ls(Option_t* option = "") const { Print(option); }
 
-   virtual void SavePrimitive(ostream &out, Option_t * = "");
+   virtual void SavePrimitive(ostream &out, Option_t *option = "");
 
    ClassDef(TGLayoutHints,0)  // Class describing GUI layout hints
 };

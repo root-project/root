@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.22 2006/05/31 09:02:00 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.23 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -950,7 +950,7 @@ TGDimension TGListDetailsLayout::GetDefaultSize() const
 }
 
 // ________________________________________________________________________
-void TGLayoutHints::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGLayoutHints::SavePrimitive(ostream &out, Option_t * option/*= ""*/)
 {
 
    // Save layout hints as a C++ statement(s) on output stream out
@@ -959,9 +959,12 @@ void TGLayoutHints::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    UInt_t pad = GetPadLeft()+GetPadRight()+GetPadTop()+GetPadBottom();
 
    if (!GetLayoutHints()) return;
+   
+   if (strcmp(option, "nocoma"))
+      out << ", ";
 
    if ((fLayoutHints == kLHintsNormal) && (pad == 0)) {
-      out << ", new TGLayoutHints(kLHintsNormal)";
+      out << "new TGLayoutHints(kLHintsNormal)";
       return;
    }
    if (fLayoutHints & kLHintsLeft) {
@@ -997,7 +1000,7 @@ void TGLayoutHints::SavePrimitive(ostream &out, Option_t * /*= ""*/)
       else                     hints += " | kLHintsExpandY";
    }
 
-   out << ", new TGLayoutHints(" << hints;
+   out << "new TGLayoutHints(" << hints;
 
    if (pad) {
       out << "," << GetPadLeft() << "," << GetPadRight()
