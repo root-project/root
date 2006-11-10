@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.25 2005/11/17 19:09:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.26 2006/07/03 16:10:45 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -603,7 +603,12 @@ void TGHButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    TIter next(GetList());
    while ((f = (TGFrameElement *)next())) {
       f->fFrame->SavePrimitive(out,option);
-      if (f->fFrame->InheritsFrom("TGButton")) continue;
+      if (f->fFrame->InheritsFrom("TGButton")){
+         out << "   " << GetName() << "->SetLayoutHints(";
+         f->fLayout->SavePrimitive(out, "nocoma");
+         out << "," << f->fFrame->GetName();
+         out << ");"<< endl;
+      }
       else {
          out << "   " << GetName() << "->AddFrame(" << f->fFrame->GetName();
          f->fLayout->SavePrimitive(out, option);
