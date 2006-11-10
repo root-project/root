@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.114 2006/08/17 22:46:41 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.115 2006/08/31 11:05:20 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1469,7 +1469,8 @@ void TBranch::SetAddress(void* addr)
       if (TestBit(kIsClone)) {
          offset = 0;
       }
-      leaf->SetAddress(fAddress + offset);
+      if (fAddress) leaf->SetAddress(fAddress + offset);
+      else leaf->SetAddress(0);
    }
 }
 
