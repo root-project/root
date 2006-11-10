@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.195 2006/10/16 12:08:55 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.196 2006/10/20 16:00:40 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -448,6 +448,60 @@ void TGraph::Browse(TBrowser *b)
    gPad->Update();
 }
 
+
+//______________________________________________________________________________
+Double_t TGraph::Chisquare(const TF1 *f1) const
+{
+   // Return the chisquare of this graph with respect to f1.
+   // The chisquare is computed as the sum of the quantity below at each point:
+   //
+   //                     (y - f1(x))**2
+   //         -----------------------------------
+   //         ey**2 + (0.5*(exl + exh)*f1'(x))**2
+   //
+   // where x and y are the graph point coordinates and f1'(x) is the derivative of function f1(x).
+   // This method to approximate the uncertainty in y because of the errors in x, is called
+   // "effective variance" method.
+   // In case of a pure TGraph, the denominator is 1.
+   // In case of a TGraphErrors or TGraphAsymmErrors the errors are taken
+   // into account.
+   
+   if (!f1) return 0;
+   Double_t cu,eu,exh,exl,ey,eux,fu,fsum;
+   Double_t x[1];
+   Double_t chi2 = 0;
+   TF1 *func = (TF1*)f1; //EvalPar is not const !
+   for (Int_t i=0;i<fNpoints;i++) {
+      func->InitArgs(x,0); //must be inside the loop because of TF1::Derivative calling InitArgs
+      x[0] = fX[i];
+      if (!func->IsInside(x)) continue;
+      cu   = fY[i];
+      TF1::RejectPoint(kFALSE);
+      fu   = func->EvalPar(x);
+      if (TF1::RejectedPoint()) continue;
+      fsum = (cu-fu);
+      //npfits++;
+      exh = GetErrorXhigh(i);
+      exl = GetErrorXlow(i);
+      if (fsum < 0)
+         ey = GetErrorYhigh(i);
+      else
+         ey = GetErrorYlow(i);
+      if (exl < 0) exl = 0;
+      if (exh < 0) exh = 0;
+      if (ey < 0)  ey  = 0;
+      if (exh > 0 || exl > 0) {
+         //"Effective Variance" method introduced by Anna Kreshuk 
+         //a copy of the algorithm in GraphFitChisquare from TFitter
+         eux = 0.5*(exl + exh)*func->Derivative(x[0]);
+      } else
+         eux = 0.;
+      eu = ey*ey+eux*eux;
+      if (eu <= 0) eu = 1;
+      chi2 += fsum*fsum/eu;
+   }
+   return chi2;
+}
 
 //______________________________________________________________________________
 Bool_t TGraph::CompareX(const TGraph* gr, Int_t left, Int_t right)
