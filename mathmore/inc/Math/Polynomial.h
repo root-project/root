@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Polynomial.h,v 1.2 2005/09/19 13:06:53 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Polynomial.h,v 1.3 2006/05/26 14:26:08 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -51,7 +51,7 @@ namespace Math {
      @ingroup CppFunctions
   */
 
-  class Polynomial : virtual public ParamFunction {
+  class Polynomial : public ParamFunction {
 
   public: 
   
@@ -83,7 +83,7 @@ namespace Math {
     Polynomial(double a, double b, double c, double d, double e);
 
 
-    ~Polynomial(); 
+    virtual ~Polynomial(); 
 
     /**
        Copy constructor 

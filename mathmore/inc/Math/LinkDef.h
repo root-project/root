@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: LinkDef.h,v 1.4 2006/05/26 14:26:08 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: LinkDef.h,v 1.5 2006/10/05 15:23:42 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -18,11 +18,9 @@
 #pragma link C++ namespace ROOT;
 #pragma link C++ namespace ROOT::Math;
 
-#ifndef _WIN32
 #pragma link C++ class ROOT::Math::ParamFunction+;
 #pragma link C++ class ROOT::Math::Polynomial+;
 #pragma link C++ class ROOT::Math::WrappedFunction<ROOT::Math::Polynomial>+;
-#endif
 
 #pragma link C++ class ROOT::Math::Chebyshev+;
 
