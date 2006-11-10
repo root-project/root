@@ -260,7 +260,7 @@ int testResult(double w1, double r1, const std::string & type) {
 
 
 
-int testVectorIO() { 
+int testVectorIO(bool readOnly = false) { 
 
   int iret = 0; 
 
@@ -291,36 +291,45 @@ int testVectorIO() {
     return iret; 
   }
 
-
-#endif
+#endif   // endif on using reflex
 
   
   int nEvents = 100000;
 
   double w1, r1 = 0;
+  std::string fname; 
   
   testDummy<Vector4D>(nEvents);
  
-#ifdef READONLY
-  w1 = 98.995527276968474; 
-#else
-  w1 = write<Vector4D>(nEvents,"lorentzvector",vector4d_type);
-#endif
-  r1 = read<Vector4D>("lorentzvector");
+  fname = "lorentzvector";
+  if (readOnly) {
+     w1 = 98.995527276968474;
+     fname += "_prev";
+  }
+  else
+     w1 = write<Vector4D>(nEvents,fname,vector4d_type);
+
+  r1 = read<Vector4D>(fname);
   iret |= testResult(w1,r1,vector4d_type); 
 
-#ifdef READONLY
-  w1 = 17.3281570633214095; 
-#else
-  w1 = write<Vector3D>(nEvents,"displacementvector",vector3d_type);
-#endif
-  r1 = read<Vector3D>("displacementvector");
+  fname = "displacementvector";
+  if (readOnly) {
+     w1 = 17.3281570633214095; 
+     fname += "_prev";
+  }
+  else 
+     w1 = write<Vector3D>(nEvents,fname,vector3d_type);
+
+  r1 = read<Vector3D>(fname);
   iret |= testResult(w1,r1,vector3d_type); 
 
-#ifndef READONLY
-  w1 = write<Point3D>(nEvents,"positionvector",point3d_type);
-#endif
-  r1 = read<Point3D>("positionvector");
+  fname = "positionvector";
+  if (readOnly)
+     fname += "_prev";
+  else 
+     w1 = write<Point3D>(nEvents,fname,point3d_type);
+  
+  r1 = read<Point3D>(fname);
   iret |= testResult(w1,r1,point3d_type); 
 
 
@@ -328,15 +337,18 @@ int testVectorIO() {
   return iret; 
 }
 
-int main() { 
+int main(int argc, const char * ) { 
 
-  int iret =  testVectorIO();
-  if (iret != 0) 
-    std::cerr << "testVectorIO:\t FAILED ! " << std::endl;
-  else 
-    std::cerr << "testVectorIO:\t OK ! " << std::endl;
+   bool readOnly = false;
+   if (argc > 1) readOnly = true; 
 
-  return iret; 
+   int iret =  testVectorIO(readOnly);
+   if (iret != 0) 
+      std::cerr << "testVectorIO:\t FAILED ! " << std::endl;
+   else 
+      std::cerr << "testVectorIO:\t OK ! " << std::endl;
+   
+   return iret; 
 
 }
   
