@@ -13,7 +13,11 @@
 #include "Math/AxisAngle.h"
 #include "Math/EulerAngles.h"
 
+#include "Math/LorentzRotation.h"
+
 #include "Math/VectorUtil.h"
+#include "Math/SMatrix.h"
+
 
 using namespace ROOT::Math;
 using namespace ROOT::Math::VectorUtil;
@@ -106,6 +110,7 @@ int testVector3D() {
 
   GlobalXYZVector vg4 = vg - vpg;  
   iret |= compare(vg4.R(), 0.0,"diff",10 );
+
 
 
 
@@ -253,8 +258,8 @@ int testRotations3D() {
   // test Get/SetComponents
   XYZVector v1,v2,v3; 
   rot.GetComponents(v1,v2,v3);
-  Rotation3D rot2; 
-  rot2.SetComponents(v1,v2,v3);
+  const Rotation3D rot2(v1,v2,v3); 
+  //rot2.SetComponents(v1,v2,v3);
   double r1[9],r2[9]; 
   rot.GetComponents(r1,r1+9);
   rot2.GetComponents(r2,r2+9);
@@ -263,6 +268,13 @@ int testRotations3D() {
   }
   // operator == fails for numerical precision
   //iret |= compare( (rot2==rot),true,"Get/SetComponens");
+
+  // test get/set with a matrix
+  SMatrix<double,3> mat; 
+  rot2.GetRotationMatrix(mat);
+  rot.SetRotationMatrix(mat); 
+  iret |= compare( (rot2==rot),true,"Get/SetRotMatrix");
+
 
   //test inversion
   Rotation3D rotInv = rot.Inverse();
@@ -370,6 +382,19 @@ int testTransform3D() {
 //   std::cout << t3( a * q1) << std::endl;
 //   std::cout << a * t3(q1) << std::endl;
 
+  // test get/set with a matrix
+  SMatrix<double,3,4> mat; 
+  t3.GetTransformMatrix(mat);
+  Transform3D t3b;  t3b.SetTransformMatrix(mat); 
+  iret |= compare( (t3==t3b),true,"Get/SetTransformMatrix");
+
+  // test LR 
+  Boost b(0.2,0.4,0.8); 
+  LorentzRotation lr(b); 
+  SMatrix<double,4> mat4; 
+  lr.GetRotationMatrix(mat4);
+  LorentzRotation lr2;  lr2.SetRotationMatrix(mat4); 
+  iret |= compare( (lr==lr2),true,"Get/SetLRotMatrix");
 
   if (iret == 0) std::cout << "\t\t\t\tOK\n"; 
   else std::cout << "\t\t\t\tFAILED\n"; 

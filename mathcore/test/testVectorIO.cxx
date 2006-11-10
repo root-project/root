@@ -27,6 +27,8 @@
 
 #define DEBUG
 
+//#define READONLY
+
 //#define USE_REFLEX
 #ifdef USE_REFLEX
 #include "Cintex/Cintex.h"
@@ -44,6 +46,7 @@ const std::string vector3d_type = #TYPE ;
 #define DEFPOINT3D(TYPE) \
 typedef TYPE Point3D; \
 const std::string point3d_type = #TYPE ;
+
 
 
 //const double tol = 1.0E-16;
@@ -298,15 +301,25 @@ int testVectorIO() {
   
   testDummy<Vector4D>(nEvents);
  
+#ifdef READONLY
+  w1 = 98.995527276968474; 
+#else
   w1 = write<Vector4D>(nEvents,"lorentzvector",vector4d_type);
+#endif
   r1 = read<Vector4D>("lorentzvector");
   iret |= testResult(w1,r1,vector4d_type); 
 
+#ifdef READONLY
+  w1 = 17.3281570633214095; 
+#else
   w1 = write<Vector3D>(nEvents,"displacementvector",vector3d_type);
+#endif
   r1 = read<Vector3D>("displacementvector");
   iret |= testResult(w1,r1,vector3d_type); 
 
+#ifndef READONLY
   w1 = write<Point3D>(nEvents,"positionvector",point3d_type);
+#endif
   r1 = read<Point3D>("positionvector");
   iret |= testResult(w1,r1,point3d_type); 
 
