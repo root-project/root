@@ -736,7 +736,7 @@ int testRotation() {
 
   // test with matrix 
   double tdata[12]; 
-  t.GetComponents(tdata, tdata+12);
+  t.GetComponents(tdata);
   TMatrixD mt(3,4,tdata);
   double vData[4]; // needs a vector of dim 4 
   v.GetCoordinates(vData);
@@ -865,7 +865,7 @@ int testRotation() {
   ok+= compare(lv1== lv2,true,"V1==V2"); 
 
   double rlData[16];
-  rl0.GetComponents(rlData, rlData+16);
+  rl0.GetComponents(rlData);
   TMatrixD ml(4,4,rlData); 
   //  ml.Print();
   double lvData[4];
