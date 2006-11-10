@@ -54,7 +54,7 @@ class MyPairTemplate<int, double> : public TObject {
   MyPairTemplate<int,double>(int a, double b) : var1(a), var2(b) {};
   MyPairTemplate<int,double>() {};
 #if (__GNUC__>=3 || __GNUC_MINOR__>=95)
-  ~MyPairTemplate<int,double>() {};
+  ~MyPairTemplate() {};
 #endif
 
   typedef MyPairTemplate<int, double> type;
