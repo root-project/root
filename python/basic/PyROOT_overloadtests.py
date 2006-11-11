@@ -30,10 +30,13 @@ class Overloads1ClassArrayTestCase( unittest.TestCase ):
    def test2ClassOverloads( self ):
       """Test functions overloaded on void* and non-existing classes."""
 
+      oldval = ROOT.gErrorIgnoreLevel
+      ROOT.SgErrorIgnoreLevel = 3000
       self.assertEqual( MyOverloads().call( AA() ), "AA" )
       self.assertEqual( MyOverloads().call( BB() ), "DD" ) # <- BB has an unknown + void*
       self.assertEqual( MyOverloads().call( CC() ), "CC" )
       self.assertEqual( MyOverloads().call( DD() ), "DD" ) # <- DD has an unknown
+      ROOT.gErrorIgnoreLevel = oldval
 
    def test3ArrayOverloads( self ):
       """Test functions overloaded on different arrays"""

@@ -5,6 +5,8 @@
   Last: 03/08/06
 */
 
+#include "TError.h"
+
 class MyA {
 public:
    MyA() { i1 = 42; i2 = -1; }
@@ -44,6 +46,7 @@ class DD;
 
 class MyOverloads {
 public:
+   MyOverloads() { gErrorIgnoreLevel  = kError; }
    std::string call( const AA& ) { return "AA"; }
    std::string call( const BB&, void* n = 0 ) { n = 0; return "BB"; }
    std::string call( const CC& ) { return "CC"; }
