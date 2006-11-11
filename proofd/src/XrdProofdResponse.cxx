@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.cxx,v 1.6 2006/10/19 12:38:07 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.cxx,v 1.7 2006/11/09 23:23:32 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -443,6 +443,7 @@ void XrdProofdResponse::Set(unsigned char *stream)
    static char hv[] = "0123456789abcdef";
    char *outbuff;
    int i;
+   XrdOucMutexHelper mh(fMutex);
 
    fResp.streamid[0] = stream[0];
    fResp.streamid[1] = stream[1];
@@ -467,6 +468,8 @@ void XrdProofdResponse::Set(unsigned short sid)
    char *outbuff;
    int i;
    unsigned char stream[2];
+   XrdOucMutexHelper mh(fMutex);
+
    memcpy((void *)&stream[0], (const void *)&sid, sizeof(sid));
 
    fResp.streamid[0] = stream[0];
@@ -487,6 +490,7 @@ void XrdProofdResponse::Set(unsigned short sid)
 void XrdProofdResponse::GetSID(unsigned short &sid)
 {
    // Get stream ID (to be able to restore it later
+   XrdOucMutexHelper mh(fMutex);
 
    memcpy((void *)&sid, (void *)&fResp.streamid[0], sizeof(sid));
 }
