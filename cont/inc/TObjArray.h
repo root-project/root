@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.17 2006/08/08 16:02:44 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.18 2006/08/22 18:03:03 rdm Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -83,6 +83,7 @@ public:
    Int_t            IndexOf(const TObject *obj) const;
    void             SetLast(Int_t last);
 
+   virtual void     Randomize(Int_t ntimes=1);
    virtual void     Sort(Int_t upto = kMaxInt);
    virtual Int_t    BinarySearch(TObject *obj, Int_t upto = kMaxInt); // the TObjArray has to be sorted, -1 == not found !!
 

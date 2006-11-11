@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.27 2006/08/08 16:02:44 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.28 2006/08/08 17:02:26 rdm Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TMath.h"
 #include "TError.h"
 #include "TROOT.h"
+#include "TRandom.h"
 
 ClassImp(TObjArray)
 
@@ -576,6 +577,28 @@ void TObjArray::SetLast(Int_t last)
       fLast = -2;
    else if (BoundsOk("SetLast", last))
       fLast = last - fLowerBound;
+}
+
+//______________________________________________________________________________
+void TObjArray::Randomize(Int_t ntimes)
+{
+   //Randomize objects inside the array, ie permute randomly objects.
+   //fLast being the index of the last entry in the array, the following
+   //algorithm is applied to the array.
+   // -for each entry j between 0 and fLast, another entry k is chosen randomly
+   //  between 0 and fLast.
+   // -the objects at j and k are swapped.
+   // -this process is repeated ntimes (ntimes=1 by default)
+   
+   for (Int_t i=0;i<ntimes;i++) {
+      for (Int_t j=0;j<fLast;j++) {
+         Int_t k = (Int_t)gRandom->Uniform(0,fLast);
+         if (k == j) continue;
+         TObject *obj = fCont[j];
+         fCont[j] = fCont[k];
+         fCont[k] = obj;
+      }
+   }
 }
 
 //______________________________________________________________________________
