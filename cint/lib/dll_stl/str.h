@@ -41,6 +41,8 @@ using namespace std;
 #pragma if  (defined (G__VISUAL) && (G__MSC_VER>=1310))
 #pragma link C++ class string::iterator;
 #pragma link C++ class string::const_iterator;
+#pragma link C++ class _Ranit<char,long,char*,char&>;
+#pragma link C++ class iterator<random_access_iterator_tag,char,long,char*,char&>;
 #pragma else
 //#pragma if ((G__GNUC>=3 && G__GNUC_MINOR>=1) && !defined(G__INTEL_COMPILER)) 
 #pragma if (G__GNUC_VER>=3001) && !defined(G__INTEL_COMPILER)) 
