@@ -22,7 +22,8 @@ PyROOT_basictests: PyROOT_basictests.log
 	$(TestDiff)
 
 PyROOT_overloadtests.log: Overloads_C.$(DllSuf)
-
+	$(CMDECHO) python PyROOT_overloadtests.py -b 2>&1 | grep -v 'Warning in <TClass::TClass>: no dictionary for class [BD]* is available' > PyROOT_overloadtests.log
+	
 PyROOT_overloadtests: PyROOT_overloadtests.log
 	$(TestDiff)
 
