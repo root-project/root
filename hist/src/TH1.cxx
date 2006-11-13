@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.316 2006/10/06 09:26:53 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.317 2006/10/09 06:31:09 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2778,26 +2778,27 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
 //      Fit this histogram with function f1.
 //
 //      The list of fit options is given in parameter option.
-//         option = "W" Set all weights to 1; ignore error bars
-//                = "I" Use integral of function in bin instead of value at bin center
-//                = "L" Use Loglikelihood method (default is chisquare method)
+//         option = "W"  Set all weights to 1 for non empty bins; ignore error bars
+//                = "WW" Set all weights to 1 including empty bins; ignore error bars
+//                = "I"  Use integral of function in bin instead of value at bin center
+//                = "L"  Use Loglikelihood method (default is chisquare method)
 //                = "LL" Use Loglikelihood method and bin contents are not integers)
-//                = "U" Use a User specified fitting algorithm (via SetFCN)
-//                = "Q" Quiet mode (minimum printing)
-//                = "V" Verbose mode (default is between Q and V)
-//                = "E" Perform better Errors estimation using Minos technique
-//                = "B" Use this option when you want to fix one or more parameters
-//                      and the fitting function is like "gaus","expo","poln","landau".
-//                = "M" More. Improve fit results
-//                = "R" Use the Range specified in the function range
-//                = "N" Do not store the graphics function, do not draw
-//                = "0" Do not plot the result of the fit. By default the fitted function
-//                      is drawn unless the option"N" above is specified.
-//                = "+" Add this new fitted function to the list of fitted functions
-//                      (by default, any previous function is deleted)
-//                = "C" In case of linear fitting, don't calculate the chisquare
-//                      (saves time)
-//                = "F" If fitting a polN, switch to minuit fitter
+//                = "U"  Use a User specified fitting algorithm (via SetFCN)
+//                = "Q"  Quiet mode (minimum printing)
+//                = "V"  Verbose mode (default is between Q and V)
+//                = "E"  Perform better Errors estimation using Minos technique
+//                = "B"  Use this option when you want to fix one or more parameters
+//                       and the fitting function is like "gaus","expo","poln","landau".
+//                = "M"  More. Improve fit results
+//                = "R"  Use the Range specified in the function range
+//                = "N"  Do not store the graphics function, do not draw
+//                = "0"  Do not plot the result of the fit. By default the fitted function
+//                       is drawn unless the option"N" above is specified.
+//                = "+"  Add this new fitted function to the list of fitted functions
+//                       (by default, any previous function is deleted)
+//                = "C"  In case of linear fitting, don't calculate the chisquare
+//                       (saves time)
+//                = "F"  If fitting a polN, switch to minuit fitter
 //
 //      When the fit is drawn (by default), the parameter goption may be used
 //      to specify a list of graphics options. See TH1::Draw for a complete
@@ -3125,7 +3126,10 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
             Int_t bin = GetBin(binx,biny,binz);
             cache[0] = GetBinContent(bin);
             cache[1] = GetBinError(bin);
-            if (fitOption.W1) cache[1] = 1;
+            if (fitOption.W1) {
+               if (fitOption.W1 == 1 && cache[0] == 0) continue;
+               cache[1] = 1;
+            }
             if (cache[1] == 0) {
                if (fitOption.Like) cache[1] = 1;
                else   continue;
@@ -3592,6 +3596,7 @@ Int_t TH1::FitOptionsMake(Option_t *choptin, Foption_t &fitOption)
    if (strstr(chopt,"L"))  fitOption.Like    = 1;
    if (strstr(chopt,"LL")) fitOption.Like    = 2;
    if (strstr(chopt,"W"))  fitOption.W1      = 1;
+   if (strstr(chopt,"WW")) fitOption.W1      = 2; //all bins have weight=1, even empty bins
    if (strstr(chopt,"E"))  fitOption.Errors  = 1;
    if (strstr(chopt,"M"))  fitOption.More    = 1;
    if (strstr(chopt,"R"))  fitOption.Range   = 1;

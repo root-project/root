@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.32 2006/09/15 15:16:57 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.33 2006/10/07 05:38:16 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -1727,6 +1727,7 @@ Int_t TLinearFitter::HistLinearFitter()
             bin = hfit->GetBin(binx,biny,binz);
             cu  = hfit->GetBinContent(bin);
             if (fitOption.W1) {
+               if (fitOption.W1==1 && cu == 0) continue;
                eu = 1;
             } else {
                eu  = hfit->GetBinError(bin);
@@ -1753,7 +1754,8 @@ Int_t TLinearFitter::HistLinearFitter()
                cu  = hfit->GetBinContent(bin);
 
                if (fitOption.W1) {
-               eu = 1;
+                  if (fitOption.W1==1 && cu == 0) continue;
+                  eu = 1;
                } else {
                   eu  = hfit->GetBinError(bin);
                   if (eu <= 0) continue;
