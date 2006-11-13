@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.163 2006/11/01 16:02:25 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.164 2006/11/06 09:52:50 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2306,7 +2306,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
          break;
 
       default:
-         Error("Collect", "unknown command received from slave (%d)", what);
+         Error("Collect", "unknown command received from slave (what = %d)", what);
          break;
    }
 
@@ -2367,7 +2367,7 @@ void TProof::HandleAsyncInput(TSocket *sl)
          break;
 
       default:
-         Error("HandleAsyncInput", "unknown command %d", what);
+         Error("HandleAsyncInput", "unknown command (what = %d)", what);
          break;
    }
 
