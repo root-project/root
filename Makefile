@@ -802,16 +802,16 @@ install: all
 	   echo "Installing fonts in $(DESTDIR)$(TTFFONTDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(TTFFONTDIR); \
 	   $(INSTALLDATA) fonts/*               $(DESTDIR)$(TTFFONTDIR); \
-	   (cd $(DESTDIR)$(TTFFONTDIR); rm -rf CVS); \
+	   find $(DESTDIR)$(TTFFONTDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing misc docs in $(DESTDIR)$(DOCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(DOCDIR); \
 	   $(INSTALLDATA) LICENSE               $(DESTDIR)$(DOCDIR); \
 	   $(INSTALLDATA) README/*              $(DESTDIR)$(DOCDIR); \
-	   (cd $(DESTDIR)$(DOCDIR); rm -rf CVS); \
+	   find $(DESTDIR)$(DOCDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing tutorials in $(DESTDIR)$(TUTDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(TUTDIR); \
 	   $(INSTALLDATA) tutorials/*           $(DESTDIR)$(TUTDIR); \
-	   (cd $(DESTDIR)$(TUTDIR); rm -rf CVS); \
+	   find $(DESTDIR)$(TUTDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing tests in $(DESTDIR)$(TESTDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(TESTDIR); \
 	   $(INSTALLDATA) test/*                $(DESTDIR)$(TESTDIR); \
@@ -819,11 +819,11 @@ install: all
 	   echo "Installing macros in $(DESTDIR)$(MACRODIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(MACRODIR); \
 	   $(INSTALLDATA) macros/*              $(DESTDIR)$(MACRODIR); \
-	   (cd $(DESTDIR)$(MACRODIR); rm -rf CVS); \
+	   find $(DESTDIR)$(MACRODIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing man(1) pages in $(DESTDIR)$(MANDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(MANDIR); \
 	   $(INSTALLDATA) man/man1/*            $(DESTDIR)$(MANDIR); \
-	   (cd $(DESTDIR)$(MANDIR); rm -rf CVS); \
+	   find $(DESTDIR)$(MANDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing config files in $(DESTDIR)$(ETCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ETCDIR); \
 	   $(INSTALLDATA) etc/*                 $(DESTDIR)$(ETCDIR); \
@@ -836,7 +836,7 @@ install: all
 	   $(INSTALLDATA) build/misc/root-help.el $(DESTDIR)$(ELISPDIR); \
 	   echo "Installing GDML conversion scripts in $(DESTDIR)$(LIBDIR)"; \
 	   $(INSTALLDATA) gdml/*.py               $(DESTDIR)$(LIBDIR); \
-	   (cd $(DESTDIR)$(DATADIR); rm -rf CVS); \
+	   find $(DESTDIR)$(DATADIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
 	fi
 
 uninstall:
