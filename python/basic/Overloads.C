@@ -46,7 +46,7 @@ class DD;
 
 class MyOverloads {
 public:
-   MyOverloads() { gErrorIgnoreLevel  = kError; }
+   MyOverloads() {}
    std::string call( const AA& ) { return "AA"; }
    std::string call( const BB&, void* n = 0 ) { n = 0; return "BB"; }
    std::string call( const CC& ) { return "CC"; }
