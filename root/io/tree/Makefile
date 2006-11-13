@@ -2,7 +2,7 @@
 
 #Set the list of files to be delete by clean:
 CLEAN_TARGETS += test.root copy.root *.so *.out *.d test2.root \
-		 *.root.log tref_test_pid*.root *.log
+		 *.root.log tref_test_pid*.root *.log $(ALL_LIBRARIES)
 
 #Set the list of target to make while testing
 TEST_TARGETS += missingClass reftest tref_pid_test
