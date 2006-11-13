@@ -595,6 +595,10 @@ void G__gen_clink()
 **************************************************************************/
 void G__cpp_initialize(FILE *fp)
 {
+  // Do not do this for cint/src/Apiif.cxx and cint/src/Apiifold.cxx.
+  if (!strcmp(G__DLLID, "G__API")) {
+     return;
+  }
   fprintf(fp,"class G__cpp_setup_init%s {\n",G__DLLID);
   fprintf(fp,"  public:\n");
   if (G__DLLID && G__DLLID[0]) {
@@ -5273,7 +5277,7 @@ void G__cpplink_memvar(FILE *fp)
   int store_var_type;
   fpos_t pos;
   int count;
-  char commentbuf[G__ONELINE];
+  char commentbuf[G__LONGLINE];
   /* int alltag=0; */
 
   fprintf(fp,"\n/*********************************************************\n");
@@ -7143,7 +7147,7 @@ int G__set_sizep2memfunc(FILE *fp)
 **************************************************************************/
 int G__getcommentstring(char *buf,int tagnum,G__comment_info *pcomment)
 {
-  char temp[G__ONELINE];
+  char temp[G__LONGLINE];
   G__getcomment(temp,pcomment,tagnum);
   if('\0'==temp[0]) {
     sprintf(buf,"(char*)NULL");
