@@ -16,8 +16,6 @@ endif
 # ".dll", not ".$(SOEXT)"!
 CINTDLLS = $(addsuffix .dll,$(addprefix $(CINTDIRSTL)/,$(CINTSTLDLLNAMES)) \
                             $(addprefix $(CINTDIRDLLS)/,$(CINTINCDLLNAMES)))
-CINTDLLS := $(subst /ipc.dll,/sys/ipc.$(SOEXT), \
-            $(subst /posix.dll,/posix.$(SOEXT),$(CINTDLLS)))
 
 CINTDLLNAMES = $(CINTSTLDLLNAMES) $(CINTINCDLLNAMES)
 
@@ -164,9 +162,7 @@ $(CINTDIRL)/posix/exten.o: $(CINTDIRL)/posix/exten.c
 
 $(CINTDIRL)/G__c_posix.c: $(CINTDIRDLLS)/sys/types.h cint/lib/posix/exten.h cint/lib/posix/posix.h
 
-$(CINTDIRDLLS)/posix.$(SOEXT): $(CINTDIRL)/G__c_posix.o \
-   metautils/src/stlLoader_posix.o $(CINTDIRL)/posix/exten.o
-	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ "$^"
+$(CINTDIRDLLS)/posix.dll: $(CINTDIRL)/G__c_posix.o $(CINTDIRL)/posix/exten.o
 
 $(CINTDIRDLLS)/sys/types.h: $(CINTDIRL)/posix/mktypes$(EXEEXT)
 	(cd $(dir $<) && \
@@ -179,9 +175,8 @@ $(CINTDIRL)/posix/mktypes$(EXEEXT): $(CINTDIRL)/posix/mktypes.c
 ##### posix special treatment - END
 
 ##### ipc special treatment
-$(CINTDIRDLLS)/sys/ipc.$(SOEXT): $(CINTDIRL)/G__c_ipc.o \
-   metautils/src/stlLoader_ipc.o
-	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ "$^"
+$(CINTDIRDLLS)/sys/ipc.dll: $(CINTDIRL)/G__c_ipc.o
+
 ##### ipc special treatment - END
 
 ##### dictionaries
@@ -213,7 +208,8 @@ clean-cintdlls:
 	  metautils/src/stlLoader_$${cintdll}.o; done)
 	@rm -f $(ALLCINTDLLS) \
 	  $(CINTDIRL)/posix/exten.o $(CINTDIRSTL)/posix.dll \
-	  $(CINTDIRL)/posix/G__c_posix.o
+	  $(CINTDIRL)/posix/G__c_posix.o \
+	  $(CINTDIRDLLS)/posix.so $(CINTDIRDLLS)/sys/ipc.so $(CINTDIRDLLS)/ipc.*
 
 clean:: clean-cintdlls
 
