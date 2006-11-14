@@ -1,3 +1,5 @@
+#include "TEmulatedCollectionProxy.h"
+
 static int G__ManualTree2_169_2_18(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
 {
   // We need to emulate
@@ -28,6 +30,12 @@ static int G__ManualTree2_169_2_18(G__value *result7,G__CONST char *funcname,str
          } else if (claim!=actualClass && !actualClass->InheritsFrom(claim)) {
             Error("TTree::Branch", "The actual class (%s) of the object provided for the definition of the branch \"%s\" does not inherit from %s",
                   actualClass->GetName(),branchname,claim->GetName());
+            error = kTRUE;
+         } else if (claim->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(claim->GetCollectionProxy())) {
+            Error("TTree::Branch", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
+                  "Please generate the dictionary for this class (%s)", 
+                  claim->GetName(), branchname, claim->GetName());
+
             error = kTRUE;
          }
       }
@@ -74,6 +82,20 @@ static int G__ManualTree2_169_3_18(G__value *result7,G__CONST char *funcname,str
    if (ptrClass && addr) actualClass = ptrClass->GetActualClass(*addr);
 
    const char *branchname = (const char*)G__int(libp->para[0]);
+
+
+   if (ptrClass && ptrClass->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(ptrClass->GetCollectionProxy())) {
+      Error("TTree::Branch", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
+            "Please generate the dictionary for this class (%s)",
+            ptrClass->GetName(), branchname, ptrClass->GetName());   
+      G__letint(result7,85,0);
+   } else if (actualClass && actualClass->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(actualClass->GetCollectionProxy())) {
+      Error("TTree::Branch", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
+            "Please generate the dictionary for this class (%s)",
+            actualClass->GetName(), branchname, actualClass->GetName());   
+      G__letint(result7,85,0);
+   }
+
    if (ptrClass == 0) {
       Error("TTree::Branch","The pointer specified for %s not of a class known to ROOT",
             branchname);

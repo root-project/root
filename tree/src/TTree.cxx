@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.308 2006/10/10 12:24:24 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.309 2006/10/20 20:13:11 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -298,6 +298,7 @@
 #include "TTreeCloner.h"
 #include "TTreeCache.h"
 #include "TVirtualCollectionProxy.h"
+#include "TEmulatedCollectionProxy.h"
 #include "TVirtualFitter.h"
 #include "TVirtualIndex.h"
 #include "TVirtualPad.h"
@@ -888,6 +889,13 @@ TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass*
    //
 
    if (!ptrClass) {
+      TClass* claim = gROOT->GetClass(classname);
+      if (claim->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(claim->GetCollectionProxy())) {
+         Error("Branch", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
+               "Please generate the dictionary for this class (%s)", 
+               claim->GetName(), branchname, claim->GetName());
+         return 0;
+      }
       return Branch(branchname, classname, (void*) addobj, bufsize, splitlevel);
    }
    TClass* claim = gROOT->GetClass(classname);
@@ -916,6 +924,12 @@ TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass*
          }
       }
    }
+   if (claim->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(claim->GetCollectionProxy())) {
+      Error("Branch", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
+            "Please generate the dictionary for this class (%s)", 
+            claim->GetName(), branchname, claim->GetName());
+      return 0;
+   }
    return Branch(branchname, classname, (void*) addobj, bufsize, splitlevel);
 }
 
@@ -942,6 +956,12 @@ TBranch* TTree::BranchImp(const char* branchname, TClass* ptrClass, void* addobj
       }
    } else {
       actualClass = ptrClass;
+   }
+   if (actualClass && actualClass->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(actualClass->GetCollectionProxy())) {
+      Error("Branch", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
+            "Please generate the dictionary for this class (%s)",
+            actualClass->GetName(), branchname, actualClass->GetName());   
+      return 0;
    }
    return Branch(branchname, actualClass->GetName(), (void*) addobj, bufsize, splitlevel);
 }
@@ -2065,6 +2085,11 @@ Bool_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataTyp
          return kFALSE;
       }
    }
+   if (expectedClass && expectedClass->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(expectedClass->GetCollectionProxy())) {
+      Error("SetBranchAddress", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
+            "Please generate the dictionary for this class (%s)",
+            expectedClass->GetName(), branch->GetName(), expectedClass->GetName());   
+   } 
    return kTRUE;
 }
 
