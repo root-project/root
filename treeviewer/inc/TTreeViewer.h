@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.15 2003/11/25 13:17:33 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.16 2004/07/29 10:54:55 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -168,7 +168,7 @@ private:
    const char   *Ex();
    const char   *Ey();
    const char   *Ez();
-   void          MapBranch(TBranch *branch, TGListTreeItem *parent = 0, Bool_t listIt = kTRUE);
+   void          MapBranch(TBranch *branch, const char *prefix="", TGListTreeItem *parent = 0, Bool_t listIt = kTRUE);
    void          MapOptions(Long_t parm1);
    void          MapTree(TTree *tree, TGListTreeItem *parent = 0, Bool_t listIt = kTRUE);
    void          SetFile();

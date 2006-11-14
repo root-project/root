@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.52 2006/05/26 09:23:47 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.53 2006/11/08 19:21:36 pcanal Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -192,6 +192,7 @@
 #include "TCanvas.h"
 #include "TH1.h"
 #include "TTree.h"
+#include "TFriendElement.h"
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TGButton.h"
@@ -2230,21 +2231,39 @@ void TTreeViewer::MapOptions(Long_t parm1)
 //______________________________________________________________________________
 void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
 {
-   // Map current tree and expand its content in the lists.
+   // Map current tree and expand its content (including friends) in the lists.
 
    if (!tree) return;
    TObjArray *branches = tree->GetListOfBranches();
    TBranch   *branch;
    // loop on branches
-   for (Int_t id=0; id<branches->GetEntries(); id++) {
+   Int_t id;
+   for (id=0; id<branches->GetEntries(); id++) {
       branch = (TBranch *)branches->At(id);
       if (branch->TestBit(kDoNotProcess))  continue;
       TString name = branch->GetName();
       if (name.Contains("fBits") || name.Contains("fUniqueID")) continue;
       // now map sub-branches
-      MapBranch(branch, parent, listIt);
+      MapBranch(branch, "", parent, listIt);
       fStopMapping = kFALSE;
    }
+   //Map branches of friend Trees (if any)
+   TIter nextf(tree->GetListOfFriends());
+   TFriendElement *fr;
+   while ((fr = (TFriendElement*)nextf())) {
+      TTree * t = fr->GetTree();
+      branches = t->GetListOfBranches();
+      for (id=0; id<branches->GetEntries(); id++) {
+         branch = (TBranch *)branches->At(id);
+         if (branch->TestBit(kDoNotProcess))  continue;
+         TString name = branch->GetName();
+         if (name.Contains("fBits") || name.Contains("fUniqueID")) continue;
+         // now map sub-branches
+         MapBranch(branch, fr->GetName(), parent, listIt);
+         fStopMapping = kFALSE;
+      }
+   }
+   
    // tell who was last mapped
    if (listIt) {
       fMappedTree    = tree;
@@ -2253,12 +2272,14 @@ void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
 }
 
 //______________________________________________________________________________
-void TTreeViewer::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t listIt)
+void TTreeViewer::MapBranch(TBranch *branch, const char *prefix, TGListTreeItem *parent, Bool_t listIt)
 {
    // Map current branch and expand its content in the list view.
 
    if (!branch) return;
-   TString   name = branch->GetName();
+   TString   name;
+   if (prefix && strlen(prefix) >0) name = Form("%s.%s",prefix,branch->GetName());
+   else                             name = branch->GetName();
    Int_t     ind;
    TGListTreeItem *branchItem = 0;
    ULong_t *itemType;
@@ -2283,13 +2304,13 @@ void TTreeViewer::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t list
                   spic = gClient->GetPicture("branch_t.xpm");
                }
             }
-            branchItem = fLt->AddItem(parent, EmptyBrackets(branch->GetName()), itemType, pic, spic);
+            branchItem = fLt->AddItem(parent, EmptyBrackets(name), itemType, pic, spic);
          } else {
             if (branch->GetNleaves() > 1) {
                itemType = new ULong_t(kLTBranchType);
                pic = gClient->GetPicture("branch_t.xpm");
                spic = gClient->GetPicture("branch_t.xpm");
-               branchItem = fLt->AddItem(parent, EmptyBrackets(branch->GetName()), itemType,pic, spic);
+               branchItem = fLt->AddItem(parent, EmptyBrackets(name), itemType,pic, spic);
                TObjArray *leaves = branch->GetListOfLeaves();
                TLeaf *leaf = 0;
                TString leafName;
@@ -2306,7 +2327,7 @@ void TTreeViewer::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t list
                itemType = new ULong_t(kLTLeafType);
                pic = gClient->GetPicture("leaf_t.xpm");
                spic = gClient->GetPicture("leaf_t.xpm");
-               branchItem = fLt->AddItem(parent, EmptyBrackets(branch->GetName()), itemType, pic, spic);
+               branchItem = fLt->AddItem(parent, EmptyBrackets(name), itemType, pic, spic);
             }
          }
       }
@@ -2397,7 +2418,7 @@ void TTreeViewer::MapBranch(TBranch *branch, TGListTreeItem *parent, Bool_t list
    for (ind=0; ind<branches->GetEntries(); ind++) {
       branchDaughter = (TBranch *)branches->UncheckedAt(ind);
       // map also all sub-branches
-      MapBranch(branchDaughter, branchItem, listIt);
+      MapBranch(branchDaughter, "", branchItem, listIt);
    }
 }
 
