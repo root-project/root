@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.93 2006/10/20 21:07:40 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.94 2006/11/03 21:22:32 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -1179,7 +1179,7 @@ void TGeoVolume::RegisterYourself(Option_t *option)
    }   
    // Register medium/material
    if (fMedium && !fGeoManager->GetListOfMedia()->FindObject(fMedium)) {
-      fGeoManager->GetListOfMedia()->Add(this);
+      fGeoManager->GetListOfMedia()->Add(fMedium);
       if (!fGeoManager->GetListOfMaterials()->FindObject(fMedium->GetMaterial()))
          fGeoManager->AddMaterial(fMedium->GetMaterial());
    }

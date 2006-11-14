@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.36 2006/11/03 21:22:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.37 2006/11/07 08:50:54 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -29,42 +29,51 @@ ClassImp(TGeoMaterial)
 
 //_____________________________________________________________________________
 TGeoMaterial::TGeoMaterial()
+             :TNamed(), TAttFill(),
+              fIndex(0),
+              fA(0.),
+              fZ(0.),
+              fDensity(0.),
+              fRadLen(0.),
+              fIntLen(0.),
+              fTemperature(0.),
+              fPressure(0.),
+              fState(kMatStateUndefined),
+              fShader(NULL),
+              fCerenkov(NULL),
+              fElement(NULL)
 {
 // Default constructor
    SetUsed(kFALSE);
    fIndex    = -1;
-   fShader   = 0;
-   fA        = 0;
-   fZ        = 0;
-   fDensity  = 0;
-   fRadLen   = 0;
-   fIntLen   = 0;       
    fTemperature = STP_temperature;
    fPressure = STP_pressure;
    fState = kMatStateUndefined;
-   fCerenkov = 0;
-   fElement  = 0;
 }
 
 //_____________________________________________________________________________
 TGeoMaterial::TGeoMaterial(const char *name)
-             :TNamed(name, "")
+             :TNamed(name, ""), TAttFill(),
+              fIndex(0),
+              fA(0.),
+              fZ(0.),
+              fDensity(0.),
+              fRadLen(0.),
+              fIntLen(0.),
+              fTemperature(0.),
+              fPressure(0.),
+              fState(kMatStateUndefined),
+              fShader(NULL),
+              fCerenkov(NULL),
+              fElement(NULL)
 {
 // constructor
    fName = fName.Strip();
    SetUsed(kFALSE);
    fIndex    = -1;
-   fShader   = 0;
-   fA        = 0;
-   fZ        = 0;
-   fDensity  = 0;
-   fRadLen   = 0;
-   fIntLen   = 0;
    fTemperature = STP_temperature;
    fPressure = STP_pressure;
    fState = kMatStateUndefined;
-   fCerenkov = 0;
-   fElement  = 0;
    
    if (!gGeoManager) {
       gGeoManager = new TGeoManager("Geometry", "default geometry");
@@ -75,21 +84,30 @@ TGeoMaterial::TGeoMaterial(const char *name)
 //_____________________________________________________________________________
 TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, 
                 Double_t rho, Double_t radlen, Double_t intlen)
-             :TNamed(name, "")
+             :TNamed(name, ""), TAttFill(),
+              fIndex(0),
+              fA(a),
+              fZ(z),
+              fDensity(rho),
+              fRadLen(0.),
+              fIntLen(0.),
+              fTemperature(0.),
+              fPressure(0.),
+              fState(kMatStateUndefined),
+              fShader(NULL),
+              fCerenkov(NULL),
+              fElement(NULL)
 {
 // constructor
    fName = fName.Strip();
    SetUsed(kFALSE);
-   fShader   = 0;
    fIndex    = -1;
    fA        = a;
    fZ        = z;
+   fDensity  = rho;
    fTemperature = STP_temperature;
    fPressure = STP_pressure;
    fState = kMatStateUndefined;
-   fDensity  = rho;
-   fCerenkov = 0;
-   fElement  = 0;
    SetRadLen(radlen, intlen);
    if (!gGeoManager) {
       gGeoManager = new TGeoManager("Geometry", "default geometry");
@@ -103,22 +121,25 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
 //_____________________________________________________________________________
 TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rho,
                 EGeoMaterialState state, Double_t temperature, Double_t pressure)
-             :TNamed(name, "")
+             :TNamed(name, ""), TAttFill(),
+              fIndex(0),
+              fA(a),
+              fZ(z),
+              fDensity(rho),
+              fRadLen(0.),
+              fIntLen(0.),
+              fTemperature(temperature),
+              fPressure(pressure),
+              fState(state),
+              fShader(NULL),
+              fCerenkov(NULL),
+              fElement(NULL)
 {
 // Constructor with state, temperature and pressure.
    fName = fName.Strip();
    SetUsed(kFALSE);
    fIndex    = -1;
-   fA        = a;
-   fZ        = z;
-   fDensity  = rho;
    SetRadLen(0,0);
-   fTemperature = temperature;
-   fPressure = pressure;
-   fState = state;
-   fShader   = 0;
-   fCerenkov = 0;
-   fElement  = 0;
    if (!gGeoManager) {
       gGeoManager = new TGeoManager("Geometry", "default geometry");
    }
@@ -130,7 +151,19 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rh
 
 //_____________________________________________________________________________
 TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho)
-             :TNamed(name, "")
+             :TNamed(name, ""), TAttFill(),
+              fIndex(0),
+              fA(0.),
+              fZ(0.),
+              fDensity(rho),
+              fRadLen(0.),
+              fIntLen(0.),
+              fTemperature(0.),
+              fPressure(0.),
+              fState(kMatStateUndefined),
+              fShader(NULL),
+              fCerenkov(NULL),
+              fElement(elem)
 {
 // constructor
    fName = fName.Strip();
@@ -138,14 +171,10 @@ TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho)
    fIndex    = -1;
    fA        = elem->A();
    fZ        = elem->Z();
-   fDensity  = rho;
    SetRadLen(0,0);
    fTemperature = STP_temperature;
    fPressure = STP_pressure;
    fState = kMatStateUndefined;
-   fShader   = 0;
-   fCerenkov = 0;
-   fElement  = elem;   
    if (!gGeoManager) {
       gGeoManager = new TGeoManager("Geometry", "default geometry");
    }
@@ -157,20 +186,20 @@ TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho)
 
 //_____________________________________________________________________________
 TGeoMaterial::TGeoMaterial(const TGeoMaterial& gm) :
-  TNamed(gm),
-  TAttFill(gm),
-  fIndex(gm.fIndex),
-  fA(gm.fA),
-  fZ(gm.fZ),
-  fDensity(gm.fDensity),
-  fRadLen(gm.fRadLen),
-  fIntLen(gm.fIntLen),
-  fTemperature(gm.fTemperature),
-  fPressure(gm.fPressure),
-  fState(gm.fState),
-  fShader(gm.fShader),
-  fCerenkov(gm.fCerenkov),
-  fElement(gm.fElement)
+              TNamed(gm),
+              TAttFill(gm),
+              fIndex(gm.fIndex),
+              fA(gm.fA),
+              fZ(gm.fZ),
+              fDensity(gm.fDensity),
+              fRadLen(gm.fRadLen),
+              fIntLen(gm.fIntLen),
+              fTemperature(gm.fTemperature),
+              fPressure(gm.fPressure),
+              fState(gm.fState),
+              fShader(gm.fShader),
+              fCerenkov(gm.fCerenkov),
+              fElement(gm.fElement)
 { 
    //copy constructor
 }
