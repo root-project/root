@@ -1,0 +1,4 @@
+
+Processing runmixing.C+...
+Error in <TTree::Branch>: The class requested (vector<MyClass>) for the branch "checked_value" refer to an stl collection and do not have a compiled CollectionProxy.  Please generate the dictionary for this class (vector<MyClass>)
+Error in <TTree::SetBranchAddress>: The class requested (vector<MyClass>) for the branch "value" refer to an stl collection and do not have a compiled CollectionProxy.  Please generate the dictionary for this class (vector<MyClass>)
