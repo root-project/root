@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.6 2006/10/06 14:34:21 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.7 2006/11/14 15:08:33 brun Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -135,7 +135,7 @@ void TFitEditor::Open(TVirtualPad* pad, TObject *obj)
    if (!fgFitDialog) {
       TFitEditor::GetFP() = new TFitEditor(pad, obj);
    } else {
-      fgFitDialog->Show();
+      fgFitDialog->Show(pad, obj);
    }
 }
 
@@ -754,7 +754,7 @@ void TFitEditor::Hide()
 }
 
 //______________________________________________________________________________
-void TFitEditor::Show()
+void TFitEditor::Show(TVirtualPad* pad, TObject *obj)
 {
    // Show the fit panel (possible only via context menu).
 
@@ -765,8 +765,8 @@ void TFitEditor::Show()
       fgFitDialog->MapWindow();
       gVirtualX->RaiseWindow(GetId());
    }
-   SetCanvas(gPad->GetCanvas());
-   fCanvas->Selected(fParentPad, fFitObject, kButton1Down);
+   SetCanvas(pad->GetCanvas());
+   fCanvas->Selected(pad, obj, kButton1Down);
 }
 //______________________________________________________________________________
 void TFitEditor::CloseWindow()

@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.3 2006/10/09 08:07:08 brun Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.4 2006/11/14 15:08:33 brun Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -138,7 +138,7 @@ public:
    static TFitEditor *&GetFP() { return fgFitDialog; }
    static  void       Open(TVirtualPad* pad, TObject *obj);
    virtual void       Hide();
-   virtual void       Show();
+   virtual void       Show(TVirtualPad* pad, TObject *obj);
            void       ShowObjectName(TObject* obj);
            Bool_t     SetObjectType(TObject* obj);
    virtual void       Terminate();
