@@ -1795,9 +1795,9 @@ if test ! "x$enable_qt" = "xno" || \
 	    qtgot=`echo $qtverstr | \
 	      awk 'BEGIN {FS="."} {printf "%d", ((($1*2^8)+$2)*2^8)+$3; }'`;
 	    qtneed=`echo $qtverneed | \
-	      awk 'BEGIN {FS="."}{ printf "%d", (($1*2^8)+$2)*2^8+$1; }'`
+	      awk 'BEGIN {FS="."}{ printf "%d", (($1*2^8)+$2)*2^8+$3; }'`
 	    qtnew=`echo $qttoonew | \
-	      awk 'BEGIN {FS="."}{ printf "%d", (($1*2^8)+$2)*2^8+$1; }'`
+	      awk 'BEGIN {FS="."}{ printf "%d", (($1*2^8)+$2)*2^8+$3; }'`
 	    logmsg "Got $qtgot, min $qtneed, max $qtnew"
 	    if test $qtgot -lt $qtneed ; then
 		logmsg "Please update to Qt $qtverneed"
