@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.2 2006/10/05 21:33:21 rdm Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.3 2006/10/09 08:07:08 brun Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -29,7 +29,6 @@
 
 
 //--- Object types
-
 enum EObjectType {
    kObjectHisto,
    kObjectGraph,
@@ -40,7 +39,7 @@ enum EObjectType {
 
 
 class TGTab;
-class TPad;
+class TCanvas;
 class TGLabel;
 class TGComboBox;
 class TGTextEntry;
@@ -61,6 +60,7 @@ protected:
    TGTextButton        *fFitButton;        // performs fitting
    TGTextButton        *fResetButton;      // resets fit parameters
    TGTextButton        *fCloseButton;      // close the fit panel
+   TGHorizontalFrame   *fObjLabelParent;   // parent of fObjLabel
    TGLabel             *fObjLabel;         // contains fitted object name
    TGLabel             *fSelLabel;         // contains selected fit function
    TGComboBox          *fFuncList;         // contains function list
@@ -69,6 +69,9 @@ protected:
    TGRadioButton       *fNone;             // set no operation mode
    TGRadioButton       *fAdd;              // set addition mode
    TGRadioButton       *fConv;             // set convolution mode
+   TGLayoutHints       *fLayoutNone;       // layout hints of fNone radio button
+   TGLayoutHints       *fLayoutAdd;        // layout hints of fAdd radio button
+   TGLayoutHints       *fLayoutConv;       // layout hints of fConv radio button
    TGTextButton        *fSetParam;         // open set parameters dialog
    TGCheckButton       *fIntegral;         // switch on/off option 'integral'
    TGCheckButton       *fBestErrors;       // switch on/off option 'improve errors'
@@ -86,10 +89,14 @@ protected:
    TGDoubleHSlider     *fSliderX;          // slider to set fit range along x-axis
    TGDoubleHSlider     *fSliderY;          // slider to set fit range along y-axis
    TGDoubleHSlider     *fSliderZ;          // slider to set fit range along z-axis
+   TGHorizontalFrame   *fSliderXParent;    // parent of fSliderX
+   TGHorizontalFrame   *fSliderYParent;    // parent of fSliderY
+   TGHorizontalFrame   *fSliderZParent;    // parent of fSliderZ
    TGNumberEntry       *fRobustValue;      // contains robust value for linear fit
    TGRadioButton       *fOptDefault;       // set default printing mode
    TGRadioButton       *fOptVerbose;       // set printing mode to 'Verbose'
    TGRadioButton       *fOptQuiet;         // set printing mode to 'Quiet'
+   TCanvas             *fCanvas;           // canvas containing the object
    TVirtualPad         *fParentPad;        // pad containing the object
    TObject             *fFitObject;        // selected object to fit
    EObjectType          fType;             // object type info
@@ -99,50 +106,74 @@ protected:
    TAxis               *fZaxis;            // z-axis
    Double_t             fXmin;             // x-min
    Double_t             fXmax;             // x-max
+   Double_t             fYmin;             // y-min
+   Double_t             fYmax;             // y-max
+   Double_t             fZmin;             // z-min
+   Double_t             fZmax;             // z-max
+
    TString              fPlus;             // string for addition ('+' or "++")
    TString              fFunction;         // selected function to fit
    TString              fFitOption;        // fitting options
    TString              fDrawOption;       // graphics option for drawing
    TF1                 *fFitFunc;          // function used for fitting
+   Int_t                fPx1old,
+                        fPy1old,
+                        fPx2old,
+                        fPy2old;
 
-   Int_t     fPx1old,
-             fPy1old,
-             fPx2old,
-             fPy2old;
+   static TFitEditor *fgFitDialog;         // singleton fit panel
 
-   static  TGComboBox *BuildFunctionList(TGFrame *parent, Int_t id);
-   static  TGComboBox *BuildMethodList(TGFrame *parent, Int_t id);
-   void    Init();
-   Int_t    CheckFunctionString(const char* str);
+   TGComboBox *BuildFunctionList(TGFrame *parent, Int_t id);
+   TGComboBox *BuildMethodList(TGFrame *parent, Int_t id);
+   Int_t       CheckFunctionString(const char* str);
 
 private:
    TFitEditor(const TFitEditor&);              // not implemented
    TFitEditor& operator=(const TFitEditor&);   // not implemented
 
 public:
-   TFitEditor(const TVirtualPad* pad, const TObject *obj);
+   TFitEditor(TVirtualPad* pad, TObject *obj);
    virtual ~TFitEditor();
 
+   static TFitEditor *&GetFP() { return fgFitDialog; }
+   static  void       Open(TVirtualPad* pad, TObject *obj);
+   virtual void       Hide();
+   virtual void       Show();
+           void       ShowObjectName(TObject* obj);
+           Bool_t     SetObjectType(TObject* obj);
+   virtual void       Terminate();
+           void       UpdateGUI();
+
    virtual void   CloseWindow();
+   virtual void   ConnectSlots();
+   virtual void   ConnectToCanvas();
+   virtual void   DisconnectSlots();
+   virtual void   RecursiveRemove(TObject* obj);
+   virtual void   SetCanvas(TCanvas *c);
+   virtual void   SetFitObject(TVirtualPad *pad, TObject *obj, Int_t event);
+   virtual void   SetFunction(const char *function);
+
+   // slot methods
+   virtual void   DoAddition(Bool_t on);
    virtual void   DoAddtoList();
    virtual void   DoAdvancedOptions();
    virtual void   DoAllWeights1();
+   virtual void   DoBestErrors();
    virtual void   DoClose();
    virtual void   DoDrawSame();
-   virtual void   DoFit();
    virtual void   DoEnteredFunction();
+   virtual void   DoFit();
    virtual void   DoFunction(Int_t sel);
    virtual void   DoImproveResults();
-   virtual void   DoBestErrors();
    virtual void   DoIntegral();
-   virtual void   DoAddition(Bool_t on);
-   virtual void   DoNoOperation(Bool_t);
    virtual void   DoLinearFit();
-   virtual void   DoMethod(Int_t);
+   virtual void   DoMethod(Int_t id);
    virtual void   DoNoChi2();
    virtual void   DoNoDrawing();
+   virtual void   DoNoOperation(Bool_t on);
+   virtual void   DoNoSelection();
    virtual void   DoNoStoreDrawing();
-   virtual void   DoPrintOpt(Bool_t);
+   virtual void   DoPrintOpt(Bool_t on);
    virtual void   DoReset();
    virtual void   DoRobust();
    virtual void   DoSetParameters();
@@ -157,9 +188,6 @@ public:
    virtual void   DoSliderZReleased();
    virtual void   DoUserDialog();
    virtual void   DoUseRange();
-
-   virtual void   SetFunction(const char *function);
-   virtual void   RecursiveRemove(TObject* obj);
 
    ClassDef(TFitEditor,0)  //new fit panel interface
 };

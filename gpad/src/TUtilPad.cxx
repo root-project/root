@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TUtilPad.cxx,v 1.6 2006/10/05 15:06:48 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TUtilPad.cxx,v 1.7 2006/10/06 12:00:21 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 #include "TDrawPanelHist.h"
 #include "TInspectCanvas.h"
 #include "TVirtualPadEditor.h"
-#include "TPluginManager.h"
+#include "TSystem.h"
 
 Int_t TUtilPad::fgPanelVersion = 0;
 
@@ -80,12 +80,9 @@ void TUtilPad::FitPanel(const TVirtualPad *pad, const TObject *obj)
    if (fgPanelVersion == 0) {
 
       // new interface (default)
-      TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("TFitEditor"))) {
-         if (h->LoadPlugin() == -1)
-            return;
-         h->ExecPlugin(2, pad, obj);
-      }
+      if (!gROOT->GetClass("TFitEditor"))
+         gSystem->Load("libFitPanel");
+      gROOT->ProcessLine(Form("TFitEditor::Open((TVirtualPad*)0x%x,(TObject*)0x%x)",pad,obj));
    } else {
    
       // old FitPanel - use TUtilPad::SetPanelVersion(1)
@@ -108,12 +105,9 @@ void TUtilPad::FitPanelGraph(const TVirtualPad *pad, const TObject *obj)
    if (fgPanelVersion == 0) {
 
       // new interface (default)
-      TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("TFitEditor"))) {
-         if (h->LoadPlugin() == -1)
-            return;
-         h->ExecPlugin(2, pad, obj);
-      }
+      if (!gROOT->GetClass("TFitEditor"))
+         gSystem->Load("libFitPanel");
+      gROOT->ProcessLine(Form("TFitEditor::Open((TVirtualPad*)0x%x,(TObject*)0x%x)",pad,obj));
    } else {
 
    // old FitPanel - use TUtilPad::SetPanelVersion(1)
