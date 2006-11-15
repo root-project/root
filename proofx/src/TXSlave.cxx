@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.10 2006/08/05 20:04:47 brun Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.11 2006/10/06 09:14:58 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -194,8 +194,8 @@ void TXSlave::Init(const char *host, Int_t stype)
 
    // Open connection to a remote XrdPROOF slave server.
    // Login and authentication are dealt with at this level, if required.
-   if (!(fSocket = new TXSocket(url.GetUrl(kTRUE),
-                                mode, psid, -1, alias, fProof->GetLogLevel()))) {
+   if (!(fSocket = new TXSocket(url.GetUrl(kTRUE), mode, psid,
+                                -1, alias, fProof->GetLogLevel(), this))) {
       Error("Init", "while opening the connection to %s - exit", url.GetUrl(kTRUE));
       return;
    }
@@ -210,8 +210,6 @@ void TXSlave::Init(const char *host, Int_t stype)
 
    // Set the reference to TProof
    ((TXSocket *)fSocket)->fReference = fProof;
-   // Set this has handler
-   ((TXSocket *)fSocket)->fHandler = this;
 
    // Protocol run by remote PROOF server
    fProtocol = fSocket->GetRemoteProtocol();
@@ -518,11 +516,18 @@ Bool_t TXSlave::HandleInput(const void *)
       if (gDebug > 2)
          Info("HandleInput","%p: proof: %p, mon: %p", this, fProof, mon);
 
-      if (mon && mon->GetListOfActives()->FindObject(fSocket)) {
-         // Synchronous collection in TProof
-         if (gDebug > 2)
-            Info("HandleInput","%p: posting monitor %p", this, mon);
-         mon->SetReady(fSocket);
+      if (mon) {
+         TList *la = mon->GetListOfActives();
+         if (la) {
+            if (la->FindObject(fSocket)) {
+               // Synchronous collection in TProof
+               if (gDebug > 2)
+                  Info("HandleInput","%p: posting monitor %p", this, mon);
+               mon->SetReady(fSocket);
+            }
+            la->SetOwner(kFALSE);
+            delete la;
+         }
       } else {
          // Asynchronous collection in TProof
          if (gDebug > 2)

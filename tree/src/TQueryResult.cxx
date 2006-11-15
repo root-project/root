@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.7 2006/08/05 11:14:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.8 2006/08/10 14:14:47 brun Exp $
 // Author: G Ganis Sep 2005
 
 /*************************************************************************
@@ -39,7 +39,8 @@ TQueryResult::TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
              : fSeqNum(seqnum), fStatus(kSubmitted), fOptions(opt),
                fEntries(entries), fFirst(first),
                fBytes(0), fParList("-"), fOutputList(0),
-               fFinalized(kFALSE), fArchived(kFALSE), fResultFile("-")
+               fFinalized(kFALSE), fArchived(kFALSE), fResultFile("-"),
+               fInitTime(0.), fProcTime(0.)
 {
    // Main constructor.
 
@@ -149,6 +150,8 @@ TQueryResult *TQueryResult::CloneInfo()
    qr->fParList = fParList;
    qr->fResultFile = fResultFile;
    qr->fArchived = fArchived;
+   qr->fInitTime = fInitTime;
+   qr->fProcTime = fProcTime;
 
    qr->fSelecHdr = 0;
    if (GetSelecHdr()) {
@@ -265,13 +268,16 @@ void TQueryResult::RecordEnd(EQueryStatus status, TList *outlist)
 }
 
 //______________________________________________________________________________
-void TQueryResult::SetProcessInfo(Long64_t ent, Float_t cpu, Long64_t bytes)
+void TQueryResult::SetProcessInfo(Long64_t ent, Float_t cpu, Long64_t bytes,
+                                  Float_t init, Float_t proc)
 {
    // Set processing info.
 
-   fEntries = ent;
-   fUsedCPU = cpu;
-   fBytes = bytes;
+   fEntries = (ent > 0) ? ent : fEntries;
+   fUsedCPU = (cpu > 0.) ? cpu : fUsedCPU;
+   fBytes = (bytes > 0.) ? bytes : fBytes;
+   fInitTime = (init > 0.) ? init : fInitTime;
+   fProcTime = (proc > 0.) ? proc : fProcTime;
 }
 
 //______________________________________________________________________________
@@ -349,15 +355,17 @@ void TQueryResult::Print(Option_t *opt) const
    if (!full) return;
 
    // Time information
-   Int_t elapsed = (Int_t)(fEnd.Convert() - fStart.Convert());
+   Float_t elapsed = (fProcTime > 0.) ? fProcTime
+                                      : (Float_t)(fEnd.Convert() - fStart.Convert());
    Printf("+++        started:   %s", fStart.AsString());
-   Printf("+++        real time: %d sec (CPU time: %.1f sec)", elapsed, fUsedCPU);
+   Printf("+++        init time: %.3f sec", fInitTime);
+   Printf("+++        proc time: %.3f sec (CPU time: %.1f sec)", elapsed, fUsedCPU);
 
    // Number of events processed, rate, size
    Double_t rate = 0.0;
    if (fEntries > -1 && elapsed > 0)
       rate = fEntries / (Double_t)elapsed ;
-   Float_t size = ((Float_t)fBytes)/(1024*1024);
+   Float_t size = ((Float_t)fBytes) / TMath::Power(2.,20.);
    Printf("+++        processed: %lld events (size: %.3f MBs)", fEntries, size);
    Printf("+++        rate:      %.1f evts/sec", rate);
 
@@ -409,14 +417,15 @@ void TQueryResult::SetInputList(TList *in, Bool_t adopt)
    if (in) {
       if (!adopt) {
          fInputList = (TList *) (in->Clone());
+         fInputList->SetOwner();
       } else {
          fInputList = new TList;
          TIter nxi(in);
          TObject *o = 0;
          while ((o = nxi()))
             fInputList->Add(o);
+         fInputList->SetOwner(kFALSE);
       }
-      fInputList->SetOwner(kFALSE);
    }
 }
 
@@ -433,14 +442,15 @@ void TQueryResult::SetOutputList(TList *out, Bool_t adopt)
    if (out) {
       if (!adopt) {
          fOutputList = (TList *) (out->Clone());
+         fOutputList->SetOwner();
       } else {
          fOutputList = new TList;
          TIter nxo(out);
          TObject *o = 0;
          while ((o = nxo()))
             fOutputList->Add(o);
+         fOutputList->SetOwner(kFALSE);
       }
-      fOutputList->SetOwner();
    }
 }
 

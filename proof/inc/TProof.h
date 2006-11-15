@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.92 2006/10/20 15:22:41 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.93 2006/11/01 16:02:25 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -93,9 +93,10 @@ class TVirtualMutex;
 // 8 -> 9: support for stateless connection via xproofd
 // 9 -> 10: new features requested, tested at CAF
 // 10 -> 11: new merging strategy
+// 11 -> 12: new progress message
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 11;            // protocol version number
+const Int_t       kPROOF_Protocol        = 12;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir
@@ -481,7 +482,7 @@ public:
    Int_t       CleanupSession(const char *sessiontag);
    Int_t       Finalize(Int_t query = -1, Bool_t force = kFALSE);
    Int_t       Finalize(const char *queryref, Bool_t force = kFALSE);
-   Int_t       Remove(Int_t query);
+   Int_t       Remove(Int_t query, Bool_t all = kFALSE);
    Int_t       Remove(const char *queryref, Bool_t all = kFALSE);
    Int_t       Retrieve(Int_t query, const char *path = 0);
    Int_t       Retrieve(const char *queryref, const char *path = 0);
@@ -593,6 +594,9 @@ public:
 
    void        LogMessage(const char *msg, Bool_t all); //*SIGNAL*
    void        Progress(Long64_t total, Long64_t processed); //*SIGNAL*
+   void        Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
+                        Float_t initTime, Float_t procTime,
+                        Float_t evtrti, Float_t mbrti); // *SIGNAL*
    void        Feedback(TList *objs); //*SIGNAL*
    void        QueryResultReady(const char *ref); //*SIGNAL*
    void        CloseProgressDialog(); //*SIGNAL*

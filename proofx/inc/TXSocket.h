@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.8 2006/07/20 01:24:48 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.9 2006/07/26 14:48:02 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -141,8 +141,8 @@ public:
    // Should be the same as in proofd/src/XrdProofdProtocol::Urgent
    enum EUrgentMsgType { kStopProcess = 2000 };
 
-   TXSocket(const char *url, Char_t mode = 'M',
-            Int_t psid = -1, Char_t ver = -1, const char *logbuf = 0, Int_t loglevel = -1);
+   TXSocket(const char *url, Char_t mode = 'M', Int_t psid = -1, Char_t ver = -1,
+            const char *logbuf = 0, Int_t loglevel = -1, TXHandler *handler = 0);
    TXSocket(const TXSocket &xs);
    TXSocket& operator=(const TXSocket& xs);
    virtual ~TXSocket();

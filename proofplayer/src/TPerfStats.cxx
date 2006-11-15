@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPerfStats.cxx,v 1.7 2006/05/15 09:45:03 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TPerfStats.cxx,v 1.8 2006/06/01 16:26:57 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -107,7 +107,8 @@ void TPerfEvent::Print(Option_t *) const
 //______________________________________________________________________________
 TPerfStats::TPerfStats(TList *input, TList *output)
    : fTrace(0), fPerfEvent(0), fPacketsHist(0), fEventsHist(0), fLatencyHist(0),
-      fProcTimeHist(0), fCpuTimeHist(0)
+      fProcTimeHist(0), fCpuTimeHist(0), fDoHist(0),
+      fDoTrace(0), fDoTraceRate(0), fDoSlaveTrace(0)
 {
    // Normal Constructor.
 
@@ -120,12 +121,13 @@ TPerfStats::TPerfStats(TList *input, TList *output)
 
    PDB(kGlobal,1) Info("TPerfStats", "Statistics for %d slave(s)", nslaves);
 
-   Bool_t doHist = (input->FindObject("PROOF_StatsHist") != 0);
-   Bool_t doTrace = (input->FindObject("PROOF_StatsTrace") != 0);
-   Bool_t doSlaveTrace = (input->FindObject("PROOF_SlaveStatsTrace") != 0);
+   fDoHist = (input->FindObject("PROOF_StatsHist") != 0);
+   fDoTrace = (input->FindObject("PROOF_StatsTrace") != 0);
+   fDoTraceRate = (input->FindObject("PROOF_RateTrace") != 0);
+   fDoSlaveTrace = (input->FindObject("PROOF_SlaveStatsTrace") != 0);
 
-   if ((gProofServ->IsMaster() && doTrace) ||
-       (!gProofServ->IsMaster() && doSlaveTrace)) {
+   if ((gProofServ->IsMaster() && (fDoTrace || fDoTraceRate)) ||
+       (!gProofServ->IsMaster() && fDoSlaveTrace)) {
       // Construct tree
       fTrace = new TTree("PROOF_PerfStats", "PROOF Statistics");
       fTrace->SetDirectory(0);
@@ -133,7 +135,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       output->Add(fTrace);
    }
 
-   if (gProofServ->IsMaster() && doHist) {
+   if (fDoHist && gProofServ->IsMaster()) {
       // Make Histograms
       Double_t time_per_bin = 1e-3; // 10ms
       Double_t min_time = 0;
@@ -227,7 +229,7 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
 {
    // Packet event
 
-   if (fTrace != 0) {
+   if (fDoTrace && fTrace != 0) {
       TPerfEvent pe(&fTzero);
 
       pe.fType = kPacket;
@@ -246,7 +248,7 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
       fPerfEvent = 0;
    }
 
-   if (fPacketsHist != 0) {
+   if (fDoHist && fPacketsHist != 0) {
       fPacketsHist->Fill(slave, 1);
       fEventsHist->Fill(slave, eventsprocessed);
       fLatencyHist->Fill(slave, latency, 1);
@@ -262,7 +264,7 @@ void TPerfStats::FileEvent(const char *slave, const char *slavename, const char 
 {
    // File event
 
-   if (fTrace != 0) {
+   if (fDoTrace && fTrace != 0) {
       TPerfEvent pe(&fTzero);
 
       pe.fType = kFile;
@@ -278,7 +280,7 @@ void TPerfStats::FileEvent(const char *slave, const char *slavename, const char 
       fPerfEvent = 0;
    }
 
-   if (fPacketsHist != 0) {
+   if (fDoHist && fPacketsHist != 0) {
       fNodeHist->Fill(nodename, isStart ? 1 : -1);
    }
 }
@@ -289,7 +291,7 @@ void TPerfStats::FileOpenEvent(TFile *file, const char *filename, Double_t proct
 {
    // Open file event
 
-   if (fTrace != 0) {
+   if (fDoTrace && fTrace != 0) {
       TPerfEvent pe(&fTzero);
 
       pe.fType = kFileOpen;
@@ -311,7 +313,7 @@ void TPerfStats::FileReadEvent(TFile *file, Int_t len, Double_t proctime)
 {
    // Read file event
 
-   if (fTrace != 0) {
+   if (fDoTrace && fTrace != 0) {
       TPerfEvent pe(&fTzero);
 
       pe.fType = kFileRead;
@@ -327,6 +329,27 @@ void TPerfStats::FileReadEvent(TFile *file, Int_t len, Double_t proctime)
    }
 }
 
+//______________________________________________________________________________
+void TPerfStats::RateEvent(Double_t proctime, Double_t deltatime,
+                           Long64_t eventsprocessed, Long64_t bytesRead)
+{
+   // Rate event
+
+   if ((fDoTrace || fDoTraceRate) && fTrace != 0) {
+      TPerfEvent pe(&fTzero);
+
+      pe.fType = kRate;
+      pe.fEventsProcessed = eventsprocessed;
+      pe.fBytesRead = bytesRead;
+      pe.fProcTime = proctime;
+      pe.fLatency = deltatime;
+
+      fPerfEvent = &pe;
+      fTrace->SetBranchAddress("PerfEvents",&fPerfEvent);
+      fTrace->Fill();
+      fPerfEvent = 0;
+   }
+}
 
 //______________________________________________________________________________
 void TPerfStats::SetBytesRead(Long64_t num)

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.93 2006/11/06 09:52:50 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.94 2006/11/09 22:15:41 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -58,6 +58,7 @@
 #include "TH1.h"
 #endif
 #include "TVirtualMonitoring.h"
+#include "TParameter.h"
 
 // Timeout exception
 #define kPEX_STOPPED  1001
@@ -586,6 +587,17 @@ void TProofPlayer::Progress(Long64_t /*total*/, Long64_t /*processed*/)
 }
 
 //______________________________________________________________________________
+void TProofPlayer::Progress(Long64_t /*total*/, Long64_t /*processed*/,
+                            Long64_t /*bytesread*/,
+                            Float_t /*evtRate*/, Float_t /*mbRate*/,
+                            Float_t /*evtrti*/, Float_t /*mbrti*/)
+{
+   // Report progress (may not be used in this class).
+
+   MayNotUse("Progress");
+}
+
+//______________________________________________________________________________
 void TProofPlayer::Feedback(TList *)
 {
    // Set feedback list (may not be used in this class).
@@ -1067,8 +1079,14 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       if (IsClient())
          fProof->fRedirLog = kFALSE;
 
-      if (!IsClient())
+      if (!IsClient()) {
          HandleTimer(0); // force an update of final result
+         // Store process info
+         if (fPacketizer && fQuery)
+            fQuery->SetProcessInfo(0, 0., fPacketizer->GetBytesRead(),
+                                          fPacketizer->GetInitTime(),
+                                          fPacketizer->GetProcTime());
+      }
       StopFeedback();
 
       if (IsClient() && GetExitStatus() == TProofPlayer::kStopped)
@@ -1149,11 +1167,15 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
          while(TObject* o = it()) {
             fOutput->Add(o);
          }
-         // Save the output list in the current query
-         fQuery->SetOutputList(fOutput);
 
-         // Set in finalized state (cannot be done twice)
-         fQuery->SetFinalized();
+         // Save the output list in the current query, if any
+         if (fQuery) {
+            fQuery->SetOutputList(fOutput);
+            // Set in finalized state (cannot be done twice)
+            fQuery->SetFinalized();
+         } else {
+            Warning("Finalize","current TQueryResult object is undefined!");
+         }
 
          // We have transferred copy of the output objects in TQueryResult,
          // so now we can cleanup the selector, making sure that we do not
@@ -1292,11 +1314,11 @@ Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
    }
 
    // Send files now
-   if ( fProof->SendFile(selec) == -1 ) {
+   if (fProof->SendFile(selec) == -1) {
       Info("SendSelector", "problems sending implementation file %s", selec.Data());
       return kFALSE;
    }
-   if ( fProof->SendFile(header) == -1 ) {
+   if (fProof->SendFile(header) == -1) {
       Info("SendSelector", "problems sending header file %s", header.Data());
       return kFALSE;
    }
@@ -1357,6 +1379,20 @@ void TProofPlayerRemote::Progress(Long64_t total, Long64_t processed)
    // Progress signal.
 
    fProof->Progress(total, processed);
+}
+
+//______________________________________________________________________________
+void TProofPlayerRemote::Progress(Long64_t total, Long64_t processed,
+                                  Long64_t bytesread,
+                                  Float_t initTime, Float_t procTime,
+                                  Float_t evtrti, Float_t mbrti)
+{
+   // Progress signal.
+
+   PDB(kGlobal,1)
+      Info("Progress","%lld %lld %lld %f %f %f %f", total, processed, bytesread,
+                                             initTime, procTime, evtrti, mbrti);
+   fProof->Progress(total, processed, bytesread, initTime, procTime, evtrti, mbrti);
 }
 
 //______________________________________________________________________________
@@ -1836,10 +1872,14 @@ void TProofPlayerRemote::SetupFeedback()
    if (fFeedback == 0) return;
 
    // OK, feedback was requested, setup the timer
-
+   TParameter<Int_t> *par = 0;
+   TObject *obj = fInput->FindObject("PROOF_FeedbackPeriod");
+   Int_t period = 2000;
+   if (obj && (par = dynamic_cast<TParameter<Int_t>*>(obj)))
+      period = par->GetVal();
    fFeedbackTimer = new TTimer;
    fFeedbackTimer->SetObject(this);
-   fFeedbackTimer->Start(500,kTRUE);
+   fFeedbackTimer->Start(period, kTRUE);
 }
 
 //______________________________________________________________________________

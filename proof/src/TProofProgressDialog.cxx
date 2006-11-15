@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.22 2006/06/05 22:51:13 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.23 2006/06/21 16:18:26 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -29,7 +29,17 @@
 #include "TProof.h"
 #include "TSystem.h"
 #include "TTimer.h"
+#include "TGraph.h"
+#include "TNtuple.h"
+#include "TCanvas.h"
+#include "TColor.h"
+#include "TLine.h"
+#include "TPaveText.h"
 
+#ifdef PPD_SRV_NEWER
+#undef PPD_SRV_NEWER
+#endif
+#define PPD_SRV_NEWER(v) (fProof->GetRemoteProtocol() > v)
 
 Bool_t TProofProgressDialog::fgKeepDefault = kTRUE;
 Bool_t TProofProgressDialog::fgLogQueryDefault = kFALSE;
@@ -57,6 +67,12 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
    fStatus        = kRunning;
    fKeep          = fgKeepDefault;
    fLogQuery      = fgLogQueryDefault;
+   fRatePoints    = 0;
+   fRateGraph     = 0;
+   fAvgRate       = 0.;
+   fAvgMBRate     = 0.;
+   if (PPD_SRV_NEWER(11))
+      fRatePoints = new TNtuple("RateNtuple","Rate progress info","tm:evr:mbr");
 
    const TGWindow *main = gClient->GetRoot();
    fDialog = new TGTransientFrame(main, main, 10, 10);
@@ -87,6 +103,16 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
                      kLHintsExpandX, 10, 10, 20, 20));
 
    // status labels
+   if (PPD_SRV_NEWER(11)) {
+      TGHorizontalFrame *hf0 = new TGHorizontalFrame(fDialog, 0, 0);
+      TGCompositeFrame *cf0 = new TGCompositeFrame(hf0, 110, 0, kFixedWidth);
+      cf0->AddFrame(new TGLabel(cf0, "Initialization time:"));
+      hf0->AddFrame(cf0);
+      fInit = new TGLabel(hf0, "- secs");
+      hf0->AddFrame(fInit, new TGLayoutHints(kLHintsNormal, 10, 10, 0, 0));
+      fDialog->AddFrame(hf0, new TGLayoutHints(kLHintsNormal, 10, 10, 5, 0));
+   }
+
    TGHorizontalFrame *hf1 = new TGHorizontalFrame(fDialog, 0, 0);
    TGCompositeFrame *cf1 = new TGCompositeFrame(hf1, 110, 0, kFixedWidth);
    fProcessed = new TGLabel(cf1, "Estimated time left:");
@@ -167,6 +193,16 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
    height = TMath::Max(height, fLog->GetDefaultHeight());
    width  = TMath::Max(width, fLog->GetDefaultWidth()); ++nb;
 
+   if (PPD_SRV_NEWER(11)) {
+      fRatePlot = new TGTextButton(hf3, "&Rate plot");
+      fRatePlot->SetToolTipText("Show processing rate vs time");
+      fRatePlot->SetState(kButtonDisabled);
+      fRatePlot->Connect("Clicked()", "TProofProgressDialog", this, "DoPlotRateGraph()");
+      hf3->AddFrame(fRatePlot, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 7, 7, 0, 0));
+      height = TMath::Max(height, fRatePlot->GetDefaultHeight());
+      width  = TMath::Max(width, fRatePlot->GetDefaultWidth()); ++nb;
+   }
+
    // place button frame (hf3) at the bottom
    fDialog->AddFrame(hf3, new TGLayoutHints(kLHintsBottom | kLHintsCenterX, 10, 10, 20, 10));
 
@@ -177,6 +213,9 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
    if (fProof) {
       fProof->Connect("Progress(Long64_t,Long64_t)", "TProofProgressDialog",
                       this, "Progress(Long64_t,Long64_t)");
+      fProof->Connect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
+                      "TProofProgressDialog", this,
+                      "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
       fProof->Connect("StopProcess(Bool_t)", "TProofProgressDialog", this,
                       "IndicateStop(Bool_t)");
       fProof->Connect("ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)",
@@ -276,6 +315,13 @@ void TProofProgressDialog::ResetProgressDialog(const char *selec,
 
    // Reset start time
    fStartTime = gSystem->Now();
+
+   // Clear the list of performances points
+   if (PPD_SRV_NEWER(11))
+      fRatePoints->Reset();
+   SafeDelete(fRateGraph);
+   fAvgRate = 0.;
+   fAvgMBRate = 0.;
 }
 
 //______________________________________________________________________________
@@ -363,6 +409,142 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
       }
       fTotal->SetText(buf);
       sprintf(buf, "%.1f events/sec", Float_t(evproc)/Long_t(tdiff)*1000.);
+      fRate->SetText(buf);
+
+      if (processed < 0) {
+         // And we disable the buttons
+         fStop->SetState(kButtonDisabled);
+         fAbort->SetState(kButtonDisabled);
+         fClose->SetState(kButtonUp);
+      }
+   }
+   fPrevProcessed = evproc;
+
+   fDialog->Layout();
+}
+
+//______________________________________________________________________________
+void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
+                                    Long64_t bytesread,
+                                    Float_t initTime, Float_t procTime,
+                                    Float_t evtrti, Float_t mbrti)
+{
+   // Update progress bar and status labels.
+   // Use "processed == total" or "processed < 0" to indicate end of processing.
+
+//   Info("Progress","processed: %lld, read: %lld", processed, bytesread);
+
+   char buf[256];
+   static const char *cproc[] = { "running", "done",
+                                  "STOPPED", "ABORTED", "***EVENTS SKIPPED***"};
+
+   // Update title
+   sprintf(buf, "Executing on PROOF cluster \"%s\" with %d parallel workers:",
+           fProof ? fProof->GetMaster() : "<dummy>",
+           fProof ? fProof->GetParallel() : 0);
+   fTitleLab->SetText(buf);
+
+   Info("Progress","total: %lld, processed: %lld", total, processed);
+
+   if (initTime >= 0.) {
+      // Set init time
+      sprintf(buf, "%.1f secs", initTime);
+      fInit->SetText(buf);
+      fDialog->Layout();
+   }
+
+   Bool_t over = kFALSE;
+   if (total < 0) {
+      total = fPrevTotal;
+      over = kTRUE;
+   } else {
+      fPrevTotal = total;
+   }
+
+   // Nothing to update
+   if (fPrevProcessed == processed)
+      return;
+
+   // Number of processed events
+   Long64_t evproc = (processed >= 0) ? processed : fPrevProcessed;
+   Float_t mbsproc = bytesread / TMath::Power(2.,20.);
+
+   if (fEntries != total) {
+      fEntries = total;
+      sprintf(buf, "%d files, number of events %lld, starting event %lld",
+              fFiles, fEntries, fFirst);
+      fFilesEvents->SetText(buf);
+   }
+
+   // Update position
+   Float_t pos = Float_t(Double_t(evproc * 100)/Double_t(total));
+   fBar->SetPosition(pos);
+
+   Float_t eta = 0;
+   if (evproc > 0 && procTime > 0.)
+      eta = (Float_t) (total - evproc) / (Double_t)evproc * procTime;
+
+   // Update average rates
+   if (procTime > 0.) {
+      fAvgRate = Float_t(evproc) / procTime;
+      fAvgMBRate = mbsproc / procTime;
+   }
+
+   if (over || (processed >= 0 && processed >= total)) {
+      fProcessed->SetText("Processed:");
+      sprintf(buf, "%lld events (%.2f MBs) in %.1f sec", total, mbsproc, procTime);
+      fTotal->SetText(buf);
+      sprintf(buf, "%.1f evts/sec (%.1f MBs/sec)", fAvgRate, fAvgMBRate);
+      fRate->SetText(buf);
+      // Fill rate graph
+      if (evtrti > 0.) {
+         fRatePoints->Fill(procTime, evtrti, mbrti);
+         fRatePlot->SetState(kButtonUp);
+      }
+
+      if (fProof) {
+         fProof->Disconnect("Progress(Long64_t,Long64_t)", this,
+                            "Progress(Long64_t,Long64_t)");
+         fProof->Disconnect("StopProcess(Bool_t)", this,
+                            "IndicateStop(Bool_t)");
+      }
+
+      // Set button state
+      fStop->SetState(kButtonDisabled);
+      fAbort->SetState(kButtonDisabled);
+      fClose->SetState(kButtonUp);
+      if (!fKeep)
+         DoClose();
+   } else {
+      // A negative value for process indicates that we are finished,
+      // no matter whether the processing was complete
+      Bool_t incomplete = (processed < 0 &&
+                          (fPrevProcessed < total || fPrevProcessed == 0))
+                        ? kTRUE : kFALSE;
+      if (incomplete) {
+         fStatus = kIncomplete;
+         // We use a different color to highlight incompletion
+         fBar->SetBarColor("magenta");
+      }
+
+      if (fStatus > kDone) {
+         sprintf(buf, "%.1f sec (processed %lld events out of %lld - %.2f MBs of data) - %s",
+                      eta, evproc, total, mbsproc, cproc[fStatus]);
+      } else {
+         sprintf(buf, "%.1f sec (processed %lld events out of %lld - %.2f MBs of data)",
+                      eta, evproc, total, mbsproc);
+      }
+      fTotal->SetText(buf);
+
+      // Post
+      if (evtrti > 0.) {
+         sprintf(buf, "%.1f evts/sec (%.1f MBs/sec) - avg: %.1f evts/sec (%.1f MBs/sec)",
+                      evtrti, mbrti, fAvgRate, fAvgMBRate);
+         fRatePoints->Fill(procTime, evtrti, mbrti);
+         fRatePlot->SetState(kButtonUp);
+      } else {
+         sprintf(buf, "avg: %.1f evts/sec (%.1f MBs/sec)", fAvgRate, fAvgMBRate);
+      }
       fRate->SetText(buf);
 
       if (processed < 0) {
@@ -547,4 +729,69 @@ void TProofProgressDialog::DoAbort()
    fStop->SetState(kButtonDisabled);
    fAbort->SetState(kButtonDisabled);
    fClose->SetState(kButtonUp);
+}
+
+//______________________________________________________________________________
+void TProofProgressDialog::DoPlotRateGraph()
+{
+   // Handle Plot Rate Graph.
+
+   // We must have some point to plot
+   if (!fRatePoints || fRatePoints->GetEntries() <= 0) {
+      Info("DoPlotRateGraph","list is empty!");
+      return;
+   }
+
+   // Create a canvas
+   TCanvas *c1 = new TCanvas("c1","Rate vs Time",200,10,700,500);
+   c1->SetFillColor(42);
+   c1->SetGrid();
+
+   // Fill TGraph
+   Int_t np = fRatePoints->GetEntries();
+   Double_t ymx = -1.;
+   SafeDelete(fRateGraph);
+   fRateGraph = new TGraph(np);
+   Float_t *nar = fRatePoints->GetArgs();
+   Int_t ii = 0;
+   for ( ; ii < np; ++ii) {
+      fRatePoints->GetEntry(ii);
+      fRateGraph->SetPoint(ii, (Double_t) nar[0], (Double_t) nar[1]);
+      ymx = (nar[1] > ymx) ? nar[1] : ymx; 
+   }
+
+   fRateGraph->SetMinimum(0.);
+   fRateGraph->SetMaximum(ymx*1.1);
+   fRateGraph->SetLineColor(2);
+   fRateGraph->SetLineWidth(4);
+   fRateGraph->SetMarkerColor(4);
+   fRateGraph->SetMarkerStyle(21);
+   fRateGraph->SetTitle("Processing rate (evts/sec)");
+   fRateGraph->GetXaxis()->SetTitle("elapsed time (sec)");
+   fRateGraph->Draw("ALP");
+
+   // Line with average
+   TLine *line = new TLine(fRateGraph->GetXaxis()->GetXmin(),fAvgRate,
+                           fRateGraph->GetXaxis()->GetXmax(),fAvgRate);
+   Int_t ci;   // for color index setting
+   ci = TColor::GetColor("#008200");
+   line->SetLineColor(ci);
+   line->SetLineWidth(2);
+   line->Draw("P");
+
+   // Label
+   Double_t xax0 = fRateGraph->GetXaxis()->GetXmin();
+   Double_t xax1 = fRateGraph->GetXaxis()->GetXmax();
+   Double_t yax0 = 0.;
+   Double_t yax1 = ymx*1.1;
+   Double_t x0 = xax0 + 0.05 * (xax1 - xax0);
+   Double_t x1 = xax0 + 0.40 * (xax1 - xax0);
+   Double_t y0 = yax0 + 0.08 * (yax1 - yax0);
+   Double_t y1 = yax0 + 0.16 * (yax1 - yax0);
+   TPaveText *pt = new TPaveText(x0, y0, x1, y1, "br");
+   pt->SetFillColor(19);
+   pt->AddText(Form("Global average: %.2f evts/sec", fAvgRate));
+   pt->Draw();
+
+   c1->Modified();
 }

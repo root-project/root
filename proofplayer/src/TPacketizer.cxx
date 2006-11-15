@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.37 2006/09/07 09:27:25 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.38 2006/10/08 11:37:16 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 #include "TMap.h"
 #include "TMessage.h"
 #include "TMonitor.h"
+#include "TNtupleD.h"
 #include "TObject.h"
 #include "TParameter.h"
 #include "TPerfStats.h"
@@ -252,10 +253,23 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    fProgress = 0;
 
    fProcessed = 0;
+   fBytesRead = 0;
    fMaxPerfIdx = 1;
 
-   TObject *obj = input->FindObject("PROOF_MaxSlavesPerNode");
+   TTime tnow = gSystem->Now();
+   fStartTime = Long_t(tnow);
+   fInitTime = 0;
+   fProcTime = 0;
+   fTimeUpdt = -1.;
+
+   fCircProg = new TNtupleD("CircNtuple","Circular progress info","tm:ev:mb");
+   TObject *obj = input->FindObject("PROOF_ProgressCircularity");
    TParameter<Long_t> *par = (obj == 0) ? 0 : dynamic_cast<TParameter<Long_t>*>(obj);
+   fCircN = (par == 0) ? 10 : par->GetVal();
+   fCircProg->SetCircular(fCircN);
+
+   obj = input->FindObject("PROOF_MaxSlavesPerNode");
+   par = (obj == 0) ? 0 : dynamic_cast<TParameter<Long_t>*>(obj);
    fMaxSlaveCnt = (par == 0) ? 4 : par->GetVal();
 
    fPackets = new TList;
@@ -440,10 +454,15 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
 
    PDB(kPacketizer,1) Info("TPacketizer", "Base Packetsize = %lld", fPacketSize);
 
-   if ( fValid ) {
+   if (fValid) {
+      TParameter<Int_t> *par = 0;
+      TObject *obj = input->FindObject("PROOF_ProgressPeriod");
+      Int_t period = 500;
+      if (obj && (par = dynamic_cast<TParameter<Int_t>*>(obj)))
+         period = par->GetVal();
       fProgress = new TTimer;
       fProgress->SetObject(this);
-      fProgress->Start(500,kFALSE);
+      fProgress->Start(period, kFALSE);
    }
 
    PDB(kPacketizer,1) Info("TPacketizer", "Return");
@@ -926,17 +945,27 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
    if ( slstat->fCurElem != 0 ) {
       Double_t latency, proctime, proccpu;
       Long64_t bytesRead = -1;
+      Long64_t totalEntries = -1;
 
       Long64_t numev = slstat->fCurElem->GetNum();
-      slstat->fProcessed += numev;
-      fProcessed += numev;
 
       fPackets->Add(slstat->fCurElem);
       (*r) >> latency >> proctime >> proccpu;
       // only read new info if available
       if (r->BufferSize() > r->Length()) (*r) >> bytesRead;
+      if (r->BufferSize() > r->Length()) (*r) >> totalEntries;
+      Long64_t totev = 0;
+      if (r->BufferSize() > r->Length()) (*r) >> totev;
 
-      PDB(kPacketizer,2) Info("GetNextPacket","slave-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
+      // Record
+      if (totev > 0)
+         numev = totev - slstat->fProcessed;
+      slstat->fProcessed += ((numev > 0) ? numev : 0);
+      fProcessed += ((numev > 0) ? numev : 0);
+      fBytesRead += ((bytesRead > 0) ? bytesRead : 0);
+
+      PDB(kPacketizer,2)
+         Info("GetNextPacket","slave-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
                               sl->GetOrdinal(), sl->GetName(),
                               numev, latency, proctime, proccpu, bytesRead);
 
@@ -1042,9 +1071,58 @@ Bool_t TPacketizer::HandleTimer(TTimer *)
 
    if (fProgress == 0) return kFALSE; // timer stopped already
 
+   // Message to be sent over
    TMessage m(kPROOF_PROGRESS);
 
-   m << fTotalEntries << fProcessed;
+   if (gProofServ->GetProtocol() > 11) {
+
+      // Prepare progress info
+      TTime tnow = gSystem->Now();
+      Float_t now = (Float_t) (Long_t(tnow) - fStartTime) / (Double_t)1000.;
+      Double_t evts = (Double_t) fProcessed;
+      Double_t mbs = (fBytesRead > 0) ? fBytesRead / TMath::Power(2.,20.) : 0.; // --> MB
+
+      // Times and counters
+      Float_t evtrti = -1., mbrti = -1.;
+      if (evts <= 0) {
+         // Initialization
+         fInitTime = now;
+      } else {
+         // Fill the reference as first
+         if (fCircProg->GetEntries() <= 0) {
+            fCircProg->Fill((Double_t)0., 0., 0.);
+            // Best estimation of the init time
+            fInitTime = (now + fInitTime) / 2.;
+         }
+         // Time between updates
+         fTimeUpdt = now - fProcTime;
+         // Update proc time
+         fProcTime = now - fInitTime;
+         // Good entry
+         fCircProg->Fill((Double_t)fProcTime, evts, mbs);
+         // Instantaneous rates (at least 5 reports)
+         if (fCircProg->GetEntries() > 4) {
+            Double_t *ar = fCircProg->GetArgs();
+            fCircProg->GetEntry(0);
+            Double_t dt = (Double_t)fProcTime - ar[0];
+            evtrti = (dt > 0) ? (Float_t) (evts - ar[1]) / dt : -1. ;
+            mbrti = (dt > 0) ? (Float_t) (mbs - ar[2]) / dt : -1. ;
+            if (gPerfStats != 0)
+               gPerfStats->RateEvent((Double_t)fProcTime, dt,
+                                     (Long64_t) (evts - ar[1]),
+                                     (Long64_t) ((mbs - ar[2])*TMath::Power(2.,20.)));
+         }
+      }
+
+      // Fill the message now
+      m << fTotalEntries << fProcessed << fBytesRead << fInitTime << fProcTime
+        << evtrti << mbrti;
+
+
+   } else {
+      // Old format
+      m << fTotalEntries << fProcessed;
+   }
 
    // send message to client;
    gProofServ->GetSocket()->Send(m);

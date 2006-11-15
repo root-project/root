@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.20 2006/10/06 09:14:58 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.21 2006/10/19 12:38:07 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -107,8 +107,8 @@ Long64_t     TXSockBuf::fgBuffMem = 0;       // Total allocated memory
 Long64_t     TXSockBuf::fgMemMax = 10485760; // Max allowed allocated memory [10 MB]
 
 //_____________________________________________________________________________
-TXSocket::TXSocket(const char *url, Char_t m, Int_t psid,
-                   Char_t capver, const char *logbuf, Int_t loglevel)
+TXSocket::TXSocket(const char *url, Char_t m, Int_t psid, Char_t capver,
+                   const char *logbuf, Int_t loglevel, TXHandler *handler)
          : TSocket(), fMode(m), fLogLevel(loglevel),
            fBuffer(logbuf), fASem(0), fDontTimeout(kFALSE)
 {
@@ -165,7 +165,7 @@ TXSocket::TXSocket(const char *url, Char_t m, Int_t psid,
    // This is used by external code to create a link between this object
    // and another one
    fReference = 0;
-   fHandler = 0;
+   fHandler = handler;
 
    // The global pipe
    if (fgPipe[0] == -1) {

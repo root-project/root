@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TQueryResult.h,v 1.4 2006/08/05 11:14:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TQueryResult.h,v 1.5 2006/08/10 14:14:47 brun Exp $
 // Author: G Ganis Sep 2005
 
 /*************************************************************************
@@ -82,6 +82,8 @@ protected:
    Bool_t          fFinalized;    //whether Terminate has been run
    Bool_t          fArchived;     //whether the query has been archived
    TString         fResultFile;   //URL of the file where results have been archived
+   Float_t         fInitTime;     //Initialization time (seconds) (millisec precision)
+   Float_t         fProcTime;     //Processing time (seconds) (millisec precision)
 
    TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
                 Long64_t entries, Long64_t first, TDSet *dset,
@@ -95,14 +97,17 @@ protected:
    virtual void    SetFinalized() { fFinalized = kTRUE; }
    virtual void    SetInputList(TList *in, Bool_t adopt = kTRUE);
    virtual void    SetOutputList(TList *out, Bool_t adopt = kTRUE);
-   virtual void    SetProcessInfo(Long64_t ent, Float_t cpu = 0., Long64_t siz = -1);
+   virtual void    SetProcessInfo(Long64_t ent, Float_t cpu = 0.,
+                                  Long64_t siz = -1,
+                                  Float_t inittime = 0., Float_t proctime = 0.);
 
 public:
    TQueryResult() : fSeqNum(-1), fDraw(0), fStatus(kSubmitted), fUsedCPU(0.),
                     fInputList(0), fDSet(0),
                     fEventList(0), fEntries(-1), fFirst(-1), fBytes(0),
                     fLogFile(0), fSelecHdr(0), fSelecImp(0),
-                    fLibList("-"), fOutputList(0) { }
+                    fLibList("-"), fOutputList(0),
+                    fInitTime(0.), fProcTime(0.) { }
    virtual ~TQueryResult();
 
    void           Browse(TBrowser *b = 0);
@@ -126,6 +131,8 @@ public:
    const char    *GetParList() const { return fParList; }
    TList         *GetOutputList() { return fOutputList; }
    const char    *GetResultFile() const { return fResultFile; }
+   Float_t        GetInitTime() const { return fInitTime; }
+   Float_t        GetProcTime() const { return fProcTime; }
 
    Bool_t         IsArchived() const { return fArchived; }
    virtual Bool_t IsDone() const { return (fStatus > kRunning); }
@@ -136,7 +143,7 @@ public:
 
    void Print(Option_t *opt = "") const;
 
-   ClassDef(TQueryResult,1)  //Class describing a query
+   ClassDef(TQueryResult,2)  //Class describing a query
 };
 
 inline Bool_t operator!=(const TQueryResult &qr1,  const TQueryResult &qr2)

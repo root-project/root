@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.16 2006/10/19 13:02:38 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.17 2006/11/01 16:01:58 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -236,7 +236,7 @@ Int_t TXProofServ::CreateServer()
    Int_t psid = (Int_t) strtol(env->GetTitle(), 0, 10);
 
    // Call back the server
-   fSocket = new TXUnixSocket(fSockPath, psid);
+   fSocket = new TXUnixSocket(fSockPath, psid, -1, this);
    if (!fSocket || !(fSocket->IsValid())) {
       Error("CreateServer", "Failed to open connection to XrdProofd coordinator");
       return -1;
@@ -244,8 +244,6 @@ Int_t TXProofServ::CreateServer()
 
    // Set the this as reference of this socket
    ((TXSocket *)fSocket)->fReference = this;
-   // Set this has handler
-   ((TXSocket *)fSocket)->fHandler = this;
 
    // Get socket descriptor
    Int_t sock = fSocket->GetDescriptor();

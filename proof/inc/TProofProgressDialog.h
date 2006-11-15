@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.h,v 1.9 2005/12/12 12:54:27 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.h,v 1.10 2006/06/02 15:14:35 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -37,6 +37,8 @@ class TGTextBuffer;
 class TGTextEntry;
 class TVirtualProof;
 class TProofProgressLog;
+class TNtuple;
+class TGraph;
 
 
 class TProofProgressDialog {
@@ -52,6 +54,7 @@ private:
    TGTextButton       *fStop;
    TGTextButton       *fAbort;
    TGTextButton       *fLog;
+   TGTextButton       *fRatePlot;
    TGCheckButton      *fKeepToggle;
    TGCheckButton      *fLogQueryToggle;
    TGTextBuffer       *fTextQuery;
@@ -61,6 +64,7 @@ private:
    TGLabel            *fProcessed;
    TGLabel            *fTotal;
    TGLabel            *fRate;
+   TGLabel            *fInit;
    TGLabel            *fSelector;
    TProofProgressLog  *fLogWindow;       // transient frame for logs
    TVirtualProof      *fProof;
@@ -74,6 +78,10 @@ private:
    EQueryStatus        fStatus;
    Bool_t              fKeep;
    Bool_t              fLogQuery;
+   TNtuple            *fRatePoints;
+   TGraph             *fRateGraph;
+   Double_t            fAvgRate;
+   Double_t            fAvgMBRate;
 
    static Bool_t       fgKeepDefault;
    static Bool_t       fgLogQueryDefault;
@@ -86,6 +94,9 @@ public:
 
    void ResetProgressDialog(const char *sel, Int_t sz, Long64_t fst, Long64_t ent);
    void Progress(Long64_t total, Long64_t processed);
+   void Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
+                 Float_t initTime, Float_t procTime,
+                 Float_t evtrti, Float_t mbrti);
    void IndicateStop(Bool_t aborted);
    void LogMessage(const char *msg, Bool_t all);
 
@@ -96,6 +107,7 @@ public:
    void DoSetLogQuery(Bool_t on);
    void DoStop();
    void DoAbort();
+   void DoPlotRateGraph();
 
    ClassDef(TProofProgressDialog,0)  //PROOF progress dialog
 };

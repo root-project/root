@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPerfStats.h,v 1.1 2004/06/13 16:26:36 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPerfStats.h,v 1.2 2005/02/07 18:02:36 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -43,6 +43,7 @@ public:
       kFile,         //file started/finished in packetizer
       kFileOpen,     //opening data file statistics
       kFileRead,     //reading data file event
+      kRate,         //processing {evt, MB} rates
       kNumEventType  //number of entries, must be last
    };
 
@@ -59,6 +60,9 @@ public:
    virtual void FileOpenEvent(TFile *file, const char *filename, Double_t proctime) = 0;
 
    virtual void FileReadEvent(TFile *file, Int_t len, Double_t proctime) = 0;
+
+   virtual void RateEvent(Double_t proctime, Double_t deltatime,
+                          Long64_t eventsprocessed, Long64_t bytesRead) = 0;
 
    virtual void SetBytesRead(Long64_t num) = 0;
    virtual Long64_t GetBytesRead() const = 0;

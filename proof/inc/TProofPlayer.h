@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.37 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.38 2006/07/26 14:28:58 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -137,6 +137,9 @@ public:
    virtual void      Progress(Long64_t total, Long64_t processed); // *SIGNAL*
    virtual void      Progress(TSlave *, Long64_t total, Long64_t processed)
                         { Progress(total, processed); }
+   virtual void      Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
+                              Float_t initTime, Float_t procTime,
+                              Float_t evtrti, Float_t mbrti); // *SIGNAL*
    virtual void      Feedback(TList *objs); // *SIGNAL*
 
    virtual TDSetElement *GetNextPacket(TSlave *slave, TMessage *r);
@@ -218,6 +221,9 @@ public:
    void           Progress(Long64_t total, Long64_t processed); // *SIGNAL*
    void           Progress(TSlave*, Long64_t total, Long64_t processed)
                      { Progress(total, processed); }
+   void           Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
+                           Float_t initTime, Float_t procTime,
+                           Float_t evtrti, Float_t mbrti); // *SIGNAL*
    void           Feedback(TList *objs); // *SIGNAL*
    TDSetElement  *GetNextPacket(TSlave *slave, TMessage *r);
 
@@ -276,6 +282,11 @@ public:
                             Long64_t firstentry = 0, TEventList *evl = 0);
    virtual void  Progress(Long64_t total, Long64_t processed)
                     { TProofPlayerRemote::Progress(total, processed); }
+   virtual void  Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
+                          Float_t initTime, Float_t procTime,
+                          Float_t evtrti, Float_t mbrti)
+                    { TProofPlayerRemote::Progress(total, processed, bytesread,
+                                                   initTime, procTime, evtrti, mbrti); }
    virtual void  Progress(TSlave *sl, Long64_t total, Long64_t processed);
 
    ClassDef(TProofPlayerSuperMaster,0)  // PROOF player running on super master

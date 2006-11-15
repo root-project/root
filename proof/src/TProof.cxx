@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.164 2006/11/06 09:52:50 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.165 2006/11/13 10:49:13 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1683,25 +1683,32 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout)
    fRealTime  = 0.0;
    fCpuTime   = 0.0;
 
-   while (mon->GetActive()) {
+   // Timeout counter
+   Long_t nto = timeout;
+   while (mon->GetActive() && (nto < 0 || nto > 0)) {
 
       // Wait for a ready socket
-      TSocket *s = mon->Select(timeout*1000);
+      TSocket *s = mon->Select(1000);
 
-      // Treat interrupt condition
-      if (!s || s == (TSocket *)(-1)) {
-         mon->DeActivateAll();
-         break;
+      if (s && s != (TSocket *)(-1)) {
+         // Get and analyse the info it did receive
+         if ((rc = CollectInputFrom(s)) == 1)
+            // Deactivate it if we are done with it
+            mon->DeActivate(s);
+
+         // Update counter (if no error occured)
+         if (rc >= 0)
+            cnt++;
+      } else {
+         // Decrease the timeout counter if requested
+         if (s == (TSocket *)(-1) && nto > 0)
+            nto--;
       }
-
-      // Get and analyse the info it did receive
-      if ((rc = CollectInputFrom(s)) == 1)
-         // Deactivate it if we are done with it
-         mon->DeActivate(s);
-
-      // Update counter (if no error occured)
-      if (rc >= 0) cnt++;
    }
+
+   // If timed-out, decativate the remaining sockets
+   if (nto == 0)
+      mon->DeActivateAll();
 
    // make sure group view is up to date
    SendGroupView();
@@ -1906,8 +1913,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                                     Form("%s:%s",pq->GetTitle(),pq->GetName())));
 
                } else {
-                  PDB(kGlobal,2)
-                     Info("Collect:kPROOF_OUTPUTOBJECT","query result missing");
+                  Warning("Collect:kPROOF_OUTPUTOBJECT","query result missing");
                }
             } else if (type > 0) {
                // Read object
@@ -1972,7 +1978,12 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                           "the processing was aborted - %lld events processed",
                           fPlayer->GetEventsProcessed());
 
-                  Progress(-1, fPlayer->GetEventsProcessed());
+                  if (GetRemoteProtocol() > 11) {
+                     // New format
+                     Progress(-1, fPlayer->GetEventsProcessed(), -1, -1., -1., -1., -1.);
+                  } else {
+                     Progress(-1, fPlayer->GetEventsProcessed());
+                  }
                   Emit("StopProcess(Bool_t)", kTRUE);
                }
 
@@ -1983,12 +1994,24 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                           "the processing was stopped - %lld events processed",
                           fPlayer->GetEventsProcessed());
 
-                  Progress(-1, fPlayer->GetEventsProcessed());
+                  if (GetRemoteProtocol() > 11) {
+                     // New format
+                     Progress(-1, fPlayer->GetEventsProcessed(), -1, -1., -1., -1., -1.);
+                  } else {
+                     Progress(-1, fPlayer->GetEventsProcessed());
+                  }
                   Emit("StopProcess(Bool_t)", kFALSE);
                }
 
                // Final update of the dialog box
-               EmitVA("Progress(Long64_t,Long64_t)", 2, (Long64_t)(-1), (Long64_t)(-1));
+               if (GetRemoteProtocol() > 11) {
+                  // New format
+                  EmitVA("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t,)",
+                          7, (Long64_t)(-1), (Long64_t)(-1), (Long64_t)(-1),
+                             (Float_t)(-1.),(Float_t)(-1.),(Float_t)(-1.),(Float_t)(-1.));
+               } else {
+                  EmitVA("Progress(Long64_t,Long64_t)", 2, (Long64_t)(-1), (Long64_t)(-1));
+               }
             }
          }
          break;
@@ -2194,11 +2217,22 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
             sl = FindSlave(s);
 
-            Long64_t total, processed;
+            if (GetRemoteProtocol() > 11) {
+               // New format
+               Long64_t total, processed, bytesread;
+               Float_t initTime, procTime, evtrti, mbrti;
+               (*mess) >> total >> processed >> bytesread
+                       >> initTime >> procTime
+                       >> evtrti >> mbrti;
+               fPlayer->Progress(total, processed, bytesread,
+                                 initTime, procTime, evtrti, mbrti);
 
-            (*mess) >> total >> processed;
-
-            fPlayer->Progress(sl, total, processed);
+            } else {
+               // Old format
+               Long64_t total, processed;
+               (*mess) >> total >> processed;
+               fPlayer->Progress(sl, total, processed);
+            }
          }
          break;
 
@@ -2716,14 +2750,14 @@ Int_t TProof::Retrieve(const char *ref, const char *path)
 }
 
 //______________________________________________________________________________
-Int_t TProof::Remove(Int_t qry)
+Int_t TProof::Remove(Int_t qry, Bool_t all)
 {
    // Send remove request for the qry-th query in fQueries.
 
    if (qry > 0) {
       TString ref;
       if (GetQueryReference(qry, ref) == 0)
-         return Remove(ref);
+         return Remove(ref, all);
       else
          Info("Remove", "query #%d not found", qry);
    } else {
@@ -3799,6 +3833,7 @@ Int_t TProof::BuildPackage(const char *package, Int_t opt)
       if (fStatus < 0 || st < 0)
          return -1;
    }
+
    return 0;
 }
 
@@ -4427,6 +4462,22 @@ void TProof::Progress(Long64_t total, Long64_t processed)
       Info("Progress","%2f (%lld/%lld)", 100.*processed/total, processed, total);
 
    EmitVA("Progress(Long64_t,Long64_t)", 2, total, processed);
+}
+
+//______________________________________________________________________________
+void TProof::Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
+                      Float_t initTime, Float_t procTime,
+                      Float_t evtrti, Float_t mbrti)
+{
+   // Get query progress information. Connect a slot to this signal
+   // to track progress.
+
+   PDB(kGlobal,1)
+      Info("Progress","%lld %lld %lld %f %f %f %f", total, processed, bytesread,
+                                initTime, procTime, evtrti, mbrti);
+
+   EmitVA("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
+          7, total, processed, bytesread, initTime, procTime, evtrti, mbrti);
 }
 
 //______________________________________________________________________________

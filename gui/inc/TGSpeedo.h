@@ -60,12 +60,14 @@ protected:
    TString          fDisplay2;            // second line in the small display
    Float_t          fAngle, fValue;       // needle angle and corresponding value
    Float_t          fPeakVal;             // maximum peak mark
+   Float_t          fMeanVal;             // mean value mark
    Float_t          fAngleMin, fAngleMax; // needle min and max angle
    Float_t          fScaleMin, fScaleMax; // needle min and max scale
    Float_t          fThreshold[3];        // glowing thresholds
    EGlowColor       fThresholdColor[3];   // glowing threshold colors
    Bool_t           fThresholdActive;     // kTRUE if glowing threhsholds are active
    Bool_t           fPeakMark;            // kTRUE if peak mark is active
+   Bool_t           fMeanMark;            // kTRUE if mean mark is active
 
    virtual void     DoRedraw();
    void             Translate(Float_t val, Float_t angle, Int_t *x, Int_t *y);
@@ -99,10 +101,13 @@ public:
    void SetThresholdColors(EGlowColor col1, EGlowColor col2, EGlowColor col3)
              { fThresholdColor[0] = col1; fThresholdColor[1] = col2; fThresholdColor[2] = col3; }
    void EnableThreshold() { fThresholdActive = kTRUE; }
-   void DisableThreshold() { fThresholdActive = kFALSE; }
+   void DisableThreshold() { fThresholdActive = kFALSE; Glow(kNoglow); fClient->NeedRedraw(this);}
    void EnablePeakMark() { fPeakMark = kTRUE; }
    void DisablePeakMark() { fPeakMark = kFALSE; }
+   void EnableMeanMark() { fMeanMark = kTRUE; }
+   void DisableMeanMark() { fMeanMark = kFALSE; }
    void ResetPeakVal() { fPeakVal = fValue; fClient->NeedRedraw(this); }
+   void SetMeanValue(Float_t mean) { fMeanVal = mean; fClient->NeedRedraw(this); }
 
    void OdoClicked() { Emit("OdoClicked()"); }   // *SIGNAL*
    void LedClicked() { Emit("LedClicked()"); }   // *SIGNAL*

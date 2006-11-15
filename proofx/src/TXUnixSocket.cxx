@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXUnixSocket.cxx,v 1.4 2006/06/05 22:51:14 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXUnixSocket.cxx,v 1.5 2006/07/31 10:27:48 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -24,8 +24,9 @@
 ClassImp(TXUnixSocket)
 
 //_____________________________________________________________________________
-TXUnixSocket::TXUnixSocket(const char *url, Int_t psid, Char_t capver)
-             : TXSocket(0,'i',psid,capver)
+TXUnixSocket::TXUnixSocket(const char *url,
+                           Int_t psid, Char_t capver, TXHandler *handler)
+             : TXSocket(0,'i',psid,capver,0,-1,handler)
 {
    // Constructor
 

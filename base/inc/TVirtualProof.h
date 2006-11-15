@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.39 2006/10/03 13:31:07 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.40 2006/11/01 16:02:25 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -113,7 +113,7 @@ public:
    virtual Int_t       CleanupSession(const char *sessiontag) = 0;
    virtual Int_t       Finalize(Int_t qry = -1, Bool_t force = kFALSE) = 0;
    virtual Int_t       Finalize(const char *queryref, Bool_t force = kFALSE) = 0;
-   virtual Int_t       Remove(Int_t query) = 0;
+   virtual Int_t       Remove(Int_t query, Bool_t all = kFALSE) = 0;
    virtual Int_t       Remove(const char *queryref, Bool_t all = kFALSE) = 0;
    virtual Int_t       Retrieve(Int_t query, const char *path = 0) = 0;
    virtual Int_t       Retrieve(const char *queryref, const char *path = 0) = 0;
@@ -228,6 +228,9 @@ public:
 
    virtual void        LogMessage(const char *msg, Bool_t all) = 0; //*SIGNAL*
    virtual void        Progress(Long64_t total, Long64_t processed) = 0; //*SIGNAL*
+   virtual void        Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
+                                Float_t initTime, Float_t procTime,
+                                Float_t evtrti, Float_t mbrti) = 0; // *SIGNAL*
    virtual void        Feedback(TList *objs) = 0; //*SIGNAL*
    virtual void        QueryResultReady(const char *ref) = 0; //*SIGNAL*
    virtual void        CloseProgressDialog() = 0; //*SIGNAL*

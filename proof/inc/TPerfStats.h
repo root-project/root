@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPerfStats.h,v 1.2 2005/02/07 18:02:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPerfStats.h,v 1.3 2006/08/28 13:35:32 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -87,6 +87,11 @@ private:
    TH2D          *fCpuTimeHist;  //!histogram of cpu time spent processing packets
    Long64_t       fBytesRead;    //!track bytes read of main file
 
+   Bool_t         fDoHist;       //!Fill histos
+   Bool_t         fDoTrace;      //!Trace details in master
+   Bool_t         fDoTraceRate;  //!Trace processing rate in master
+   Bool_t         fDoSlaveTrace; //!Full tracing in workers
+
    TPerfStats(TList *input, TList *output);
 
 public:
@@ -101,6 +106,8 @@ public:
 
    void FileOpenEvent(TFile *file, const char *filename, Double_t proctime);
    void FileReadEvent(TFile *file, Int_t len, Double_t proctime);
+   void RateEvent(Double_t proctime, Double_t deltatime,
+                  Long64_t eventsprocessed, Long64_t bytesRead);
    void SetBytesRead(Long64_t num);
    Long64_t GetBytesRead() const;
 

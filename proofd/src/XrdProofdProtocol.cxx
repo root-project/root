@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.28 2006/10/23 14:44:40 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.29 2006/10/24 14:59:07 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -2395,6 +2395,7 @@ int XrdProofdProtocol::MapClient(bool all)
    if (proofsrv) {
       memcpy(&psid, (const void *)&(fRequest.login.reserved[0]), 2);
       if (psid < 0) {
+         TRACEP(ERR,"MapClient: proofsrv callback: sent invalid session id");
          fResponse.Send(kXR_InvalidRequest,
                         "MapClient: proofsrv callback: sent invalid session id");
          return rc;
@@ -2438,6 +2439,8 @@ int XrdProofdProtocol::MapClient(bool all)
             psrv = 0;
          }
          if (!psrv) {
+            TRACEP(ERR, "MapClient: proofsrv callback:"
+                        " wrong target session: protocol error");
             fResponse.Send(kXP_nosession, "MapClient: proofsrv callback:"
                            " wrong target session: protocol error");
             return rc;
@@ -2486,10 +2489,9 @@ int XrdProofdProtocol::MapClient(bool all)
 
       // Proofsrv callbacks need something to attach to
       if (proofsrv) {
-         fResponse.Send(kXP_nomanager,
-                        "MapClient: proofsrv callback:"
-                        " no manager to attach to: protocol error");
-         return rc;
+         TRACEP(ERR, "MapClient: proofsrv callback:"
+                     " no manager to attach to: protocol error");
+         return -1;
       }
 
       // No existing instance: create the workdir directory ...
@@ -2511,8 +2513,7 @@ int XrdProofdProtocol::MapClient(bool all)
          XrdOucString emsg("MapClient: unable to create work dir: ");
          emsg += udir;
          TRACEP(ERR, emsg);
-         fResponse.Send(kXP_ServerError, emsg.c_str());
-         return rc;
+         return -1;
       }
 
       // Make sure that no zombie proofserv is around

@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TProofServ.h,v 1.34 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXUnixSocket.h,v 1.2 2006/02/26 16:09:57 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -26,6 +26,8 @@
 #endif
 #include <list>
 
+class TXHandler;
+
 class TXUnixSocket  : public TXSocket {
 
 friend class TXProofServ;
@@ -34,7 +36,8 @@ private:
    std::list<Int_t>  fClientIDs;
 
 public:
-   TXUnixSocket(const char *u, Int_t psid = -1, Char_t ver = -1);
+   TXUnixSocket(const char *u,
+                Int_t psid = -1, Char_t ver = -1, TXHandler *handler = 0);
    virtual ~TXUnixSocket() { fSessionID = -1; }
 
    Int_t GetClientID() const { return (fClientIDs.size() > 0) ? fClientIDs.front() : -1; }

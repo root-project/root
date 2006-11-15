@@ -57,7 +57,9 @@ TGSpeedo::TGSpeedo(const TGWindow *p, int id)
    fValue    = 0.0;
    fCounter  = 0;
    fPeakMark = kFALSE;
+   fMeanMark = kFALSE;
    fPeakVal  = 0.0;
+   fMeanVal  = 0.0;
    fThreshold[0] = fThreshold[1] = fThreshold[2] = 0.0;
    fThresholdColor[0] = kGreen;
    fThresholdColor[1] = kOrange;
@@ -85,12 +87,15 @@ TGSpeedo::TGSpeedo(const TGWindow *p, Float_t smin, Float_t smax,
    fScaleMin = smin;
    fScaleMax = smax;
    fValue    = smin;
+   fCounter  = 0;
    fLabel1   = lbl1;
    fLabel2   = lbl2;
    fDisplay1 = dsp1;
    fDisplay2 = dsp2;
    fPeakMark = kFALSE;
+   fMeanMark = kFALSE;
    fPeakVal  = 0.0;
+   fMeanVal  = 0.0;
    fThreshold[0] = fThreshold[1] = fThreshold[2] = 0.0;
    fThresholdColor[0] = kGreen;
    fThresholdColor[1] = kOrange;
@@ -140,13 +145,16 @@ void TGSpeedo::Build()
       }
       // format tick labels
       Int_t nexe = 0;
+      Int_t nx = 3;
       if (fScaleMax >= 1000) {
+         while ((Int_t)(fScaleMax) % (Int_t)(TMath::Power(10,nx)))
+            nx--;
          while (1) {
             nexe++;
             for (i=0; i<5; i++) {
                mark[i] /= 10.0;
             }
-            if (nexe%3 == 0 && mark[4] < 1000) break;
+            if (nexe%nx == 0 && mark[4] < 1000) break;
          }
          // draw multiplier
          fImage->DrawText((Int_t)xc - 10, (Int_t)yc + 15, "x10", 12, "#ffffff", ar);
@@ -437,6 +445,7 @@ void TGSpeedo::DoRedraw()
    Int_t strSize;
    Int_t xch0, xch1, ych0, ych1;
    Int_t xpk0, ypk0, xpk1, ypk1;
+   Int_t xmn0, ymn0, xmn1, ymn1;
    static Bool_t first = kTRUE;
    if (first) {
       TGFrame::DoRedraw();
@@ -457,8 +466,14 @@ void TGSpeedo::DoRedraw()
    Float_t angle = fAngleMin + (fPeakVal / ((fScaleMax - fScaleMin) /
                   (fAngleMax - fAngleMin)));
    Translate(80.0, angle, &xpk0, &ypk0);
-   Translate(70.0, angle, &xpk1, &ypk1);
+   Translate(67.0, angle, &xpk1, &ypk1);
 
+   // compute x/y position of the peak mark
+   angle = fAngleMin + (fMeanVal / ((fScaleMax - fScaleMin) /
+          (fAngleMax - fAngleMin)));
+   Translate(80.0, angle, &xmn0, &ymn0);
+   Translate(70.0, angle, &xmn1, &ymn1);
+   
    if (fImage && fImage->IsValid()) {
       // First clone original image.
       TImage *img = (TImage*)fImage->Clone("img");
@@ -496,8 +511,12 @@ void TGSpeedo::DoRedraw()
       strSize = gVirtualX->TextWidth(fTextFS, fDisplay2.Data(), fDisplay2.Length()) - 6;
       img->DrawText((Int_t)xc - (strSize / 2), (Int_t)yc + 38, fDisplay2.Data(), 8, "#ffffff", ar);
       if (fPeakMark) {
-         img->DrawLine(xpk0, ypk0, xpk1, ypk1, "#ffff00", 3);
-         img->DrawLine(xpk0, ypk0, xpk1, ypk1, "#ff0000", 1);
+         img->DrawLine(xpk0, ypk0, xpk1, ypk1, "#00ff00", 3);
+         img->DrawLine(xpk0, ypk0, xpk1, ypk1, "#ffffff", 1);
+      }
+      if (fMeanMark) {
+         img->DrawLine(xmn0, ymn0, xmn1, ymn1, "#ffff00", 3);
+         img->DrawLine(xmn0, ymn0, xmn1, ymn1, "#ff0000", 1);
       }
       // draw line (used to render the needle) directly on the image
       img->DrawLine(xch0, ych0, xch1, ych1, "#ff0000", 2);

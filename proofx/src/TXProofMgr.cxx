@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.12 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.13 2006/10/19 12:38:07 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -102,7 +102,8 @@ Int_t TXProofMgr::Init(Int_t)
    // even when it matches the default value
    TString u = fUrl.GetUrl(kTRUE);
 
-   if (!(fSocket = new TXSocket(u,'C',kPROOF_Protocol,kXPROOF_Protocol)) ||
+   if (!(fSocket = new TXSocket(u, 'C', kPROOF_Protocol,
+                                kXPROOF_Protocol, 0, -1, this)) ||
        !(fSocket->IsValid())) {
       if (!fSocket || !(fSocket->IsServProofd()))
          Error("Init", "while opening the connection to %s - exit", u.Data());
@@ -113,9 +114,6 @@ Int_t TXProofMgr::Init(Int_t)
 
    // Protocol run by remote PROOF server
    fRemoteProtocol = fSocket->GetRemoteProtocol();
-
-   // Set this has handler
-   ((TXSocket *)fSocket)->fHandler = this;
 
    // We add the manager itself for correct destruction
    {  R__LOCKGUARD2(gROOTMutex);

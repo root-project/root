@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.145 2006/10/20 15:22:41 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.146 2006/11/07 16:46:37 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -2225,7 +2225,7 @@ void TProofServ::FinalizeQuery(TProofPlayer *p, TProofQueryResult *pq)
    }
 
    // Fill some variables
-   pq->SetProcessInfo(np, cpu - pq->GetUsedCPU(), bytes - pq->GetBytes());
+   pq->SetProcessInfo(np, cpu - pq->GetUsedCPU());
    pq->RecordEnd(st, out);
 
    // Save the logs into the query result instance
@@ -2885,6 +2885,9 @@ void TProofServ::HandleProcess(TMessage *mess)
          // Add query results to the player lists
          p->AddQueryResult(pq);
 
+         // Set query currently processed
+         p->SetCurrentQuery(pq);
+
          // Set player
          fPlayer = p;
 
@@ -2989,6 +2992,7 @@ void TProofServ::HandleProcess(TMessage *mess)
                fSocket->SendObject(p->GetOutputList(), kPROOF_OUTPUTLIST);
             }
          } else {
+            Warning("HandleProcess","The output list is empty!");
             fSocket->SendObject(0,kPROOF_OUTPUTLIST);
          }
 

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.26 2006/07/01 11:39:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.27 2006/07/04 23:35:36 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -47,6 +47,7 @@ TEventIter::TEventIter()
    fCur   = -1;
    fNum   = 0;
    fStop  = kFALSE;
+   fOldBytesRead = 0;
 }
 
 //______________________________________________________________________________
@@ -64,6 +65,7 @@ TEventIter::TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num
    fStop  = kFALSE;
    fEventList = 0;
    fEventListPos = 0;
+   fOldBytesRead = 0;
 }
 
 //______________________________________________________________________________
@@ -371,10 +373,11 @@ Long64_t TEventIterTree::GetNextEvent()
 
    while ( fElem == 0 || fElemNum == 0 || fCur < fFirst-1 ) {
 
-      if (gPerfStats != 0 && fFile != 0) {
-         Long64_t bytesRead = fFile->GetBytesRead();
-         gPerfStats->SetBytesRead(bytesRead - fOldBytesRead);
-         fOldBytesRead = bytesRead;
+      if (gPerfStats != 0 && fTree != 0) {
+         Long64_t totBytesRead = fTree->GetCurrentFile()->GetBytesRead();
+         Long64_t bytesRead = totBytesRead - fOldBytesRead;
+         gPerfStats->SetBytesRead(bytesRead);
+         fOldBytesRead = totBytesRead;
       }
 
       if (fTree) {
@@ -398,6 +401,7 @@ Long64_t TEventIterTree::GetNextEvent()
       if (newTree != fTree) {
          fTree = newTree;
          attach = kTRUE;
+         fOldBytesRead = fTree->GetCurrentFile()->GetBytesRead();
       }
 
       // Validate values for this element

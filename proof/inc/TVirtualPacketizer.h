@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.h,v 1.4 2003/05/01 17:51:42 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.h,v 1.5 2006/05/15 09:45:03 brun Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
@@ -60,6 +60,10 @@ public:
    virtual Long64_t        GetEntriesProcessed(TSlave *sl) const;
    virtual TDSetElement   *GetNextPacket(TSlave *sl, TMessage *r);
    virtual void            StopProcess(Bool_t abort);
+
+   virtual Long64_t        GetBytesRead() const = 0;
+   virtual Float_t         GetInitTime() const = 0;
+   virtual Float_t         GetProcTime() const = 0;
 
    ClassDef(TVirtualPacketizer,0)  //Generate work packets for parallel processing
 };

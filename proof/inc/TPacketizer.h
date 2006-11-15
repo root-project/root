@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.17 2006/07/01 12:05:49 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.18 2006/10/08 11:37:16 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -35,6 +35,7 @@ class TMessage;
 class TTimer;
 class TTree;
 class TMap;
+class TNtupleD;
 class TProofStats;
 
 
@@ -47,9 +48,19 @@ public:              // public because of Sun CC bug
 
 private:
    Long64_t  fProcessed;    // number of entries processed
+   Long64_t  fBytesRead;    // number of bytes processed
    TList    *fPackets;      // all processed packets
 
    Long64_t  fTotalEntries; // total number of entries to be distributed
+
+   // Members for progress info
+   Long_t    fStartTime;    // time offset
+   Float_t   fInitTime;     // time before processing
+   Float_t   fProcTime;     // time since start of processing
+   Float_t   fTimeUpdt;     // time between updates
+   TNtupleD *fCircProg;     // Keeps circular info for "instantenous"
+                            // rate calculations
+   Int_t     fCircN;        // Circularity
 
    TList    *fFileNodes;    // nodes with files
    TList    *fUnAllocated;  // nodes with unallocated files
@@ -100,6 +111,9 @@ public:
    Long64_t      GetEntriesProcessed(TSlave *sl) const;
    TDSetElement *GetNextPacket(TSlave *sl, TMessage *r);
 
+   Long64_t      GetBytesRead() const { return fBytesRead; }
+   Float_t       GetInitTime() const { return fInitTime; }
+   Float_t       GetProcTime() const { return fProcTime; }
 
    ClassDef(TPacketizer,0)  //Generate work packets for parallel processing
 };
