@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.60 2006/07/03 16:10:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.61 2006/07/09 05:27:54 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1552,7 +1552,7 @@ void TLatex::DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
 //______________________________________________________________________________
 void TLatex::Paint(Option_t *)
 {
-   // Paint
+   // Paint.
 
    Double_t xsave = fX;
    Double_t ysave = fY;
