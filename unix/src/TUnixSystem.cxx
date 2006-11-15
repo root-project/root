@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.167 2006/11/02 10:52:10 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.168 2006/11/15 18:27:17 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -4642,7 +4642,7 @@ int TUnixSystem::GetCpuInfo(CpuInfo_t *info, Int_t sampleTime) const
 #if defined(R__MACOSX)
    GetDarwinCpuInfo(info, sampleTime);
 #elif defined(R__LINUX)
-   GetLinuxCpuInfo(info. sampleTime);
+   GetLinuxCpuInfo(info, sampleTime);
 #endif
 
    return 0;
