@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.150 2006/11/05 23:58:46 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.151 2006/11/15 18:27:17 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -5012,7 +5012,7 @@ static void GetWinNTCpuInfo(CpuInfo_t *cpuinfo, Int_t sampleTime)
    ULARGE_INTEGER ul_sys_idle_diff, ul_sys_kernel_diff, ul_sys_user_diff;
 
    ULARGE_INTEGER ul_fun_time;
-   static ULARGE_INTEGER ul_fun_timeold = {0, 0};
+   ULARGE_INTEGER ul_fun_timeold = {0, 0};
    ULARGE_INTEGER ul_fun_time_diff;
 
    typedef BOOL (__stdcall *GetSystemTimesProc)( LPFILETIME lpIdleTime,
