@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.3 2006/05/18 19:15:36 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.4 2006/11/15 17:44:57 couet Exp $
 // Author: Sebastian Boser, Mathieu Demaret 02/02/06
 
 /*************************************************************************
@@ -353,8 +353,8 @@ void TGraphPolar::Paint(Option_t* options)
       }
    } else {
       for (i=0; i<fNpoints; i++) {
-         fXpol[i] = abs((fY[i]-rwrmin)/radiusNDC*TMath::Cos((fX[i]-rwtmin)/thetaNDC)+1);
-         fYpol[i] = abs((fY[i]-rwrmin)/radiusNDC*TMath::Sin((fX[i]-rwtmin)/thetaNDC)+1);
+         fXpol[i] = TMath::Abs((fY[i]-rwrmin)/radiusNDC*TMath::Cos((fX[i]-rwtmin)/thetaNDC)+1);
+         fYpol[i] = TMath::Abs((fY[i]-rwrmin)/radiusNDC*TMath::Sin((fX[i]-rwtmin)/thetaNDC)+1);
       }
       TGraph::PaintGraph(fNpoints, fXpol, fYpol,opt);
    }
@@ -574,7 +574,7 @@ Int_t TGraphPolargram::DistancetoPrimitive(Int_t px, Int_t py)
                 ((px-gPad->XtoPixel(0))<0))          ||
                 ((TMath::Abs(theta)<0.1)             &&
                 ((px-gPad->XtoPixel(0))>0))) {
-               dthis = abs(py-gPad->YtoPixel(0.));
+               dthis = TMath::Abs(py-gPad->YtoPixel(0.));
             }
 
             //Check for vertical line.
@@ -582,7 +582,7 @@ Int_t TGraphPolargram::DistancetoPrimitive(Int_t px, Int_t py)
                ((py-gPad->YtoPixel(0))>0))                 ||
                 ((TMath::Abs(theta-3*TMath::PiOver2())<0.1) &&
                                   (py-gPad->YtoPixel(0))<0)) {
-               dthis = abs(px-gPad->XtoPixel(0.));
+               dthis = TMath::Abs(px-gPad->XtoPixel(0.));
             }
             if (dthis==9999) {
 
@@ -627,14 +627,14 @@ void TGraphPolargram::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       case kMouseMotion:
          px1 = gPad->XtoAbsPixel(TMath::Cos(GetAngle()));
          py1 = gPad->YtoAbsPixel(TMath::Sin(GetAngle()));
-         d1  = abs(px1 - px) + abs(py1-py); //simply take sum of pixels differences
+         d1  = TMath::Abs(px1 - px) + TMath::Abs(py1-py); //simply take sum of pixels differences
          p1  = kFALSE;
          px2 = gPad->XtoAbsPixel(-1);
          py2 = gPad->YtoAbsPixel(1);
          d2  = (Int_t)(TMath::Abs(px2 - px) + TMath::Abs(py2 - py)) ;
          px3 = gPad->XtoAbsPixel(-1);
          py3 = gPad->YtoAbsPixel(-1);
-         d3  = abs(px3 - px) + abs(py3 - py) ; //simply take sum of pixels differences
+         d3  = TMath::Abs(px3 - px) + TMath::Abs(py3 - py) ; //simply take sum of pixels differences
          // check if point is close to the radial axis
          if (d1 < kMaxDiff) {
             gPad->SetCursor(kMove);
