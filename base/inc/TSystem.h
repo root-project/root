@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.60 2006/10/23 13:58:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.61 2006/10/24 14:42:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -454,7 +454,7 @@ public:
 
    //---- System, CPU and Memory info
    virtual int             GetSysInfo(SysInfo_t *info) const;
-   virtual int             GetCpuInfo(CpuInfo_t *info) const;
+   virtual int             GetCpuInfo(CpuInfo_t *info, Int_t sampleTime = 1000) const;
    virtual int             GetMemInfo(MemInfo_t *info) const;
    virtual int             GetProcInfo(ProcInfo_t *info) const;
 

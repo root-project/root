@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.27 2006/10/23 13:58:44 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.28 2006/10/24 14:42:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -208,7 +208,7 @@ public:
 
    //---- System, CPU and Memory info
    int               GetSysInfo(SysInfo_t *info) const;
-   int               GetCpuInfo(CpuInfo_t *info) const;
+   int               GetCpuInfo(CpuInfo_t *info, Int_t sampleTime = 1000) const;
    int               GetMemInfo(MemInfo_t *info) const;
    int               GetProcInfo(ProcInfo_t *info) const;
 

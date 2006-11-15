@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.42 2006/10/27 01:18:07 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.43 2006/11/05 23:58:46 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -102,7 +102,7 @@ private:
 
    static void       ThreadStub(void *Parameter) {((TWinNTSystem *)Parameter)->TimerThread();}
    void              TimerThread();
-   
+
 public:
    TWinNTSystem();
    virtual ~TWinNTSystem();
@@ -242,7 +242,7 @@ public:
 
    //---- System, CPU and Memory info
    Int_t             GetSysInfo(SysInfo_t *info) const;
-   Int_t             GetCpuInfo(CpuInfo_t *info) const;
+   Int_t             GetCpuInfo(CpuInfo_t *info, Int_t sampleTime = 1000) const;
    Int_t             GetMemInfo(MemInfo_t *info) const;
    Int_t             GetProcInfo(ProcInfo_t *info) const;
 

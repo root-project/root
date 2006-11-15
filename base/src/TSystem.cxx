@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.148 2006/10/23 13:58:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.149 2006/10/24 14:42:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1883,10 +1883,11 @@ int TSystem::GetSysInfo(SysInfo_t *) const
 }
 
 //______________________________________________________________________________
-int TSystem::GetCpuInfo(CpuInfo_t *) const
+int TSystem::GetCpuInfo(CpuInfo_t *, Int_t) const
 {
    // Returns cpu load average and load info into the CpuInfo_t structure.
-   // Returns -1 in case of error, 0 otherwise.
+   // Returns -1 in case of error, 0 otherwise. Use sampleTime to set the
+   // interval over which the CPU load will be measured, in ms (default 1000).
 
    AbstractMethod("GetCpuInfo");
    return -1;

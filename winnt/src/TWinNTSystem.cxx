@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.149 2006/10/27 01:18:07 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.150 2006/11/05 23:58:46 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -871,7 +871,7 @@ Bool_t TWinNTSystem::Init()
 
    gTimerThreadHandle = ::CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)ThreadStub,
                         this, NULL, NULL);
-   
+
    fGroupsInitDone = kFALSE;
 
    return kFALSE;
@@ -4631,12 +4631,12 @@ static DWORD GetCPUSpeed()
 
    LARGE_INTEGER ulFreq, ulTicks, ulValue, ulStartCounter, ulEAX_EDX;
 
-   // Query for high-resolution counter frequency 
+   // Query for high-resolution counter frequency
    // (this is not the CPU frequency):
    if (QueryPerformanceFrequency(&ulFreq)) {
       // Query current value:
       QueryPerformanceCounter(&ulTicks);
-      // Calculate end value (one second interval); 
+      // Calculate end value (one second interval);
       // this is (current + frequency)
       ulValue.QuadPart = ulTicks.QuadPart + ulFreq.QuadPart/10;
       // Read CPU time-stamp counter:
@@ -4664,10 +4664,11 @@ static DWORD GetCPUSpeed()
 }
 
 #define BUFSIZE 80
-#define SM_SERVERR2 89 
+#define SM_SERVERR2 89
 typedef void (WINAPI *PGNSI)(LPSYSTEM_INFO);
 
-char *GetWindowsVersion()
+//_____________________________________________________________________________
+static char *GetWindowsVersion()
 {
    OSVERSIONINFOEX osvi;
    SYSTEM_INFO si;
@@ -4994,8 +4995,10 @@ static void GetWinNTSysInfo(SysInfo_t *sysinfo)
 }
 
 //______________________________________________________________________________
-static void GetWinNTCpuInfo(CpuInfo_t *cpuinfo)
+static void GetWinNTCpuInfo(CpuInfo_t *cpuinfo, Int_t sampleTime)
 {
+   // Get CPU stat for Window. Use sampleTime to set the interval over which
+   // the CPU load will be measured, in ms (default 1000).
 
    SYSTEM_INFO sysInfo;
    Float_t  idle_ratio, kernel_ratio, user_ratio, total_ratio;
@@ -5054,8 +5057,8 @@ again:
    ul_sys_kernelold.QuadPart = ul_sys_kernel.QuadPart;
    ul_sys_userold.QuadPart   = ul_sys_user.QuadPart;
 
-   if(ul_fun_timeold.QuadPart == 0) {
-      Sleep(100);
+   if (ul_fun_timeold.QuadPart == 0) {
+      Sleep(sampleTime);
       ul_fun_timeold.QuadPart = ul_fun_time.QuadPart;
       goto again;
    }
@@ -5080,6 +5083,7 @@ again:
    cpuinfo->fTotal   = total_ratio; // cpu user+sys load in percentage
    cpuinfo->fIdle    = idle_ratio; // cpu idle percentage
 }
+
 //______________________________________________________________________________
 static void GetWinNTMemInfo(MemInfo_t *meminfo)
 {
@@ -5112,7 +5116,7 @@ static void GetWinNTMemInfo(MemInfo_t *meminfo)
 //______________________________________________________________________________
 static void GetWinNTProcInfo(ProcInfo_t *procinfo)
 {
-   // Get processing for process on Windows NT.
+   // Get process info for this process on Windows NT.
 
    PROCESS_MEMORY_COUNTERS pmc;
    FILETIME    starttime, exittime, kerneltime, usertime;
@@ -5175,13 +5179,14 @@ Int_t TWinNTSystem::GetSysInfo(SysInfo_t *info) const
 }
 
 //______________________________________________________________________________
-Int_t TWinNTSystem::GetCpuInfo(CpuInfo_t *info) const
+Int_t TWinNTSystem::GetCpuInfo(CpuInfo_t *info, Int_t sampleTime) const
 {
    // Returns cpu load average and load info into the CpuInfo_t structure.
-   // Returns -1 in case of error, 0 otherwise.
+   // Returns -1 in case of error, 0 otherwise. Use sampleTime to set the
+   // interval over which the CPU load will be measured, in ms (default 1000).
 
    if (!info) return -1;
-   GetWinNTCpuInfo(info);
+   GetWinNTCpuInfo(info, sampleTime);
    return 0;
 }
 

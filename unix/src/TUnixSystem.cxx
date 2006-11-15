@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.166 2006/11/01 14:09:08 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.167 2006/11/02 10:52:10 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -4280,9 +4280,10 @@ static void ReadDarwinCpu(long *ticks)
 }
 
 //______________________________________________________________________________
-static void GetDarwinCpuInfo(CpuInfo_t *cpuinfo)
+static void GetDarwinCpuInfo(CpuInfo_t *cpuinfo, Int_t sampleTime)
 {
-   // Get CPU stat for Mac OS X.
+   // Get CPU stat for Mac OS X. Use sampleTime to set the interval over which
+   // the CPU load will be measured, in ms (default 1000).
 
    Double_t avg[3];
    if (getloadavg(avg, sizeof(avg)) < 0) {
@@ -4295,7 +4296,7 @@ static void GetDarwinCpuInfo(CpuInfo_t *cpuinfo)
 
    Long_t cpu_ticks1[4], cpu_ticks2[4];
    ReadDarwinCpu(cpu_ticks1);
-   gSystem->Sleep(1000);
+   gSystem->Sleep(sampleTime);
    ReadDarwinCpu(cpu_ticks2);
 
    Long_t userticks = (cpu_ticks2[0] + cpu_ticks2[3]) -
@@ -4510,14 +4511,18 @@ static void ReadLinuxCpu(long *ticks)
 }
 
 //______________________________________________________________________________
-static void GetLinuxCpuInfo(CpuInfo_t *cpuinfo)
+static void GetLinuxCpuInfo(CpuInfo_t *cpuinfo, Int_t sampleTime)
 {
-   // Get CPU stat for Linux.
+   // Get CPU stat for Linux. Use sampleTime to set the interval over which
+   // the CPU load will be measured, in ms (default 1000).
 
-   Double_t avg[3];
+   Double_t avg[3] = { -1., -1., -1. };
+#ifndef R__WINGCC
    if (getloadavg(avg, sizeof(avg)) < 0) {
       ::Error("TUnixSystem::GetLinuxCpuInfo", "getloadavg failed");
-   } else {
+   } else
+#endif
+   {
       cpuinfo->fLoad1m  = (Float_t)avg[0];
       cpuinfo->fLoad5m  = (Float_t)avg[1];
       cpuinfo->fLoad15m = (Float_t)avg[2];
@@ -4525,7 +4530,7 @@ static void GetLinuxCpuInfo(CpuInfo_t *cpuinfo)
 
    Long_t cpu_ticks1[4], cpu_ticks2[4];
    ReadLinuxCpu(cpu_ticks1);
-   gSystem->Sleep(100);
+   gSystem->Sleep(sampleTime);
    ReadLinuxCpu(cpu_ticks2);
 
    Long_t userticks = (cpu_ticks2[0] + cpu_ticks2[3]) -
@@ -4626,17 +4631,18 @@ int TUnixSystem::GetSysInfo(SysInfo_t *info) const
 }
 
 //______________________________________________________________________________
-int TUnixSystem::GetCpuInfo(CpuInfo_t *info) const
+int TUnixSystem::GetCpuInfo(CpuInfo_t *info, Int_t sampleTime) const
 {
    // Returns cpu load average and load info into the CpuInfo_t structure.
-   // Returns -1 in case of error, 0 otherwise.
+   // Returns -1 in case of error, 0 otherwise. Use sampleTime to set the
+   // interval over which the CPU load will be measured, in ms (default 1000).
 
    if (!info) return -1;
 
 #if defined(R__MACOSX)
-   GetDarwinCpuInfo(info);
+   GetDarwinCpuInfo(info, sampleTime);
 #elif defined(R__LINUX)
-   GetLinuxCpuInfo(info);
+   GetLinuxCpuInfo(info. sampleTime);
 #endif
 
    return 0;
