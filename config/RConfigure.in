@@ -1,3 +1,6 @@
+#ifndef ROOT_RConfigure
+#define ROOT_RConfigure
+
 /* Configurations file for @architecture@ */
 #ifdef HAVE_CONFIG
 #define ROOTPREFIX    "@prefix@"
@@ -17,5 +20,8 @@
 
 #@setresuid@ R__HAS_SETRESUID   /**/
 #@hasmathmore@ R__HAS_MATHMORE   /**/
+#@haspthread@ R__HAS_PTHREAD    /**/
 
 #define R__CONFIGUREOPTIONS   "@configoptions@"
+
+#endif

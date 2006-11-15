@@ -508,12 +508,12 @@ endif
 
 # Target Makefile is synonym for "run (re-)configure"
 # Makefile is target as we need to re-parse dependencies after
-# configure is run (as config.h changed etc)
-config/Makefile.config include/config.h etc/system.rootauthrc \
+# configure is run (as RConfigure.h changed etc)
+config/Makefile.config include/RConfigure.h etc/system.rootauthrc \
   etc/system.rootdaemonrc etc/root.mimes $(ROOTRC) bin/root-config: Makefile
 
 ifeq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean debian redhat),)
-Makefile: configure config/rootrc.in config/config.in config/Makefile.in \
+Makefile: configure config/rootrc.in config/RConfigure.in config/Makefile.in \
   config/root-config.in config/rootauthrc.in config/rootdaemonrc.in \
   config/mimes.unix.in config/mimes.win32.in config.status
 	@(if [ ! -x $(RECONFIGURE) ] || ! $(RECONFIGURE) "$?"; then \
@@ -685,9 +685,9 @@ clean::
 endif
 
 distclean:: clean
-	-@mv -f include/config.h include/config.h1
+	-@mv -f include/RConfigure.h include/RConfigure.h-
 	@rm -f include/*.h $(ROOTMAP) $(CORELIB)
-	-@mv -f include/config.h1 include/config.h
+	-@mv -f include/RConfigure.h- include/RConfigure.h
 	@rm -f bin/*.dll bin/*.exp bin/*.lib bin/*.pdb \
                lib/*.def lib/*.exp lib/*.lib lib/*.dll.a \
                *.def .def

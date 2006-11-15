@@ -722,8 +722,8 @@ guess_architecture () {
 ARCHS=config/ARCHS
 MAKEIN=config/Makefile.in
 MAKEOUT=config/Makefile.config
-CONFIN=config/config.in
-CONFOUT=include/config.h
+CONFIGUREIN=config/RConfigure.in
+CONFIGUREOUT=include/RConfigure.h
 RCONFIN=config/root-config.in
 RCONFOUT=bin/root-config
 ROOTRCIN=config/rootrc.in
@@ -1035,7 +1035,7 @@ fi
 #
 ### echo %%% Some clean up
 #
-trapcmd="rm -f Makefile.tmp config.tmp root-config.tmp rootrc.tmp \
+trapcmd="rm -f Makefile.tmp RConfigure.tmp root-config.tmp rootrc.tmp \
          rootauthrc.tmp rootdaemonrc.tmp memprobe.tmp rootd.tmp \
          proofd.tmp rootd.xinetd.tmp proofd.xinetd.tmp conftest.mk \
          conftest.c conftest xrootd.tmp olbd.tmp"
@@ -1200,7 +1200,7 @@ fi
 #
 if test "x$noact" = "xno"; then
     cp -f $MAKEIN Makefile.tmp
-    cp -f $CONFIN config.tmp
+    cp -f $CONFIGUREIN RConfigure.tmp
     cp -f $RCONFIN root-config.tmp
     cp -f $ROOTRCIN rootrc.tmp
     cp -f $ROOTAUTHRCIN rootauthrc.tmp
@@ -1356,6 +1356,12 @@ if test "x$enable_thread" = "xyes" && \
     if test "x$threadlib" = "x" ; then
         enable_thread="no"
     fi
+fi
+
+haspthread="undef"
+if test "x$enable_thread" = "xyes" && \
+   test ! "$platform" = "win32"; then
+   haspthread="define"
 fi
 
 ######################################################################
@@ -4278,9 +4284,9 @@ fi
 result "done"
 
 #---------------------------------------------------------------------
-# include/config.h
+# include/RConfigure.h
 #
-message "Writing $CONFOUT"
+message "Writing $CONFIGUREOUT"
 sed \
     -e "s|@architecture@|$arch|"           \
     -e "s|@bindir@|$bindir|"               \
@@ -4299,15 +4305,17 @@ sed \
     -e "s|@setresuid@|$setresuid|"         \
     -e "s|@configoptions@|$configoptions|" \
     -e "s|@hasmathmore@|$hasmathmore|"     \
-    < config.tmp > $CONFOUT
-rm -f config.tmp
+    -e "s|@haspthread@|$haspthread|"       \
+    < RConfigure.tmp > $CONFIGUREOUT
+rm -f RConfigure.tmp
 
 if test ! "x$enable_ruby" = "xno"; then
-   echo "" >> $CONFOUT
+   echo "" >> $CONFIGUREOUT
    ruby -rrbconfig -e 'puts Config::CONFIG["ruby_version"]' | \
    sed 's/^\([0-9]\)\.\([0-9]\)/#define R__RUBY_MAJOR \1@#define R__RUBY_MINOR \2/' | \
-   tr '@' '\n' >> $CONFOUT
+   tr '@' '\n' >> $CONFIGUREOUT
 fi
+
 result "done"
 
 #---------------------------------------------------------------------
