@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.270 2006/09/20 14:23:36 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.271 2006/11/08 13:12:36 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -830,6 +830,10 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
          if (Hoption.Error == 0) {
             Hoption.Error = 100;
             Hoption.Scat  = 0;
+         }
+         if (Hoption.Text) {
+            Hoption.Text += 2000;
+            Hoption.Error = 0;
          }
       }
       if (strstr(chopt,"X0"))  Hoption.Error += 10; 
@@ -5823,27 +5827,29 @@ void THistPainter::PaintText(Option_t *)
    //   By default the format "g" is used. This format can be redefined
    //   by calling gStyle->SetPaintTextFormat
    //
+   //   This method is called when Paint() is invoked with the option "TEXT".
+   //   It is also possible to use "TEXTnn" in order to draw the text with the
+   //   angle nn (0 < nn < 90).
    //Begin_Html
    /*
    <img src="gif/PaintText.gif">
    */
    //End_Html
 
-   TText text;
+   TLatex text;
    text.SetTextFont(gStyle->GetTextFont());
    text.SetTextColor(fH->GetMarkerColor());
    text.SetTextSize(0.02*fH->GetMarkerSize());
 
-   Double_t x, y, z, angle = 0;
+   Double_t x, y, z, e, angle = 0;
    char value[50];
    char format[32];
    sprintf(format,"%s%s","%",gStyle->GetPaintTextFormat());
-   if (Hoption.Text >= 1000) angle = Hoption.Text-1000;
+   if (Hoption.Text >= 1000) angle = Hoption.Text%1000;
 
    // 1D histograms
    if (fH->GetDimension() == 1) {
       if (Hoption.Text ==  1) angle = 90;
-      text.SetTextAngle(angle);
       text.SetTextAlign(11);
       if (angle == 90) text.SetTextAlign(12);
       if (angle ==  0) text.SetTextAlign(21);
@@ -5863,7 +5869,7 @@ void THistPainter::PaintText(Option_t *)
          }
          if (y >= gPad->GetY2()) continue;
          if (y <= gPad->GetY1()) continue;
-         gPad->PaintText(x,y+0.2*dt,value);
+         text.PaintLatex(x,y+0.2*dt,angle,0.02*fH->GetMarkerSize(),value);
       }
 
    // 2D histograms
@@ -5886,10 +5892,18 @@ void THistPainter::PaintText(Option_t *)
                else continue;
             }
             if (!IsInside(x,y)) continue;
-            z     = fH->GetBinContent(bin);
+            z = fH->GetBinContent(bin);
             if (z < Hparam.zmin) continue;
-            sprintf(value,format,z);
-            gPad->PaintText(x,y,value);
+            if (Hoption.Text>2000) {
+               e = fH->GetBinError(bin);
+               sprintf(format,"#splitline{%s%s}{#pm %s%s}",
+                                          "%",gStyle->GetPaintTextFormat(),
+                                          "%",gStyle->GetPaintTextFormat());
+               sprintf(value,format,z,e);
+            } else {
+               sprintf(value,format,z);
+            }
+            text.PaintLatex(x,y,angle,0.02*fH->GetMarkerSize(),value);
          }
       }
    }
