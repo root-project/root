@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TControlBar.cxx,v 1.7 2005/08/02 16:43:21 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TControlBar.cxx,v 1.8 2005/11/23 11:03:12 couet Exp $
 // Author: Nenad Buncic   20/02/96
 
 /*************************************************************************
@@ -255,6 +255,26 @@ void TControlBar::SetTextColor(const char *colorName)
    // root > bar->SetTextColor("red")
 
    fControlBarImp->SetTextColor(colorName);
+}
+
+
+//_______________________________________________________________________
+void TControlBar::SetButtonState(const char *label, Int_t state)
+{
+   // Sets a state for control bar button 'label'; possible states are
+   // 0-kButtonUp, 1-kButtonDown, 2-kButtonEngaged, 3-kButtonDisabled,
+   // e.g.:
+   // root > .x tutorials/demos.C
+   // to disable the button 'first' do:
+   // root > bar->SetButtonState("first", 3)
+   // to enable the button 'first' do:
+   // root > bar->SetButtonState("first", 0)
+
+   if (state > 3) {
+      Error("SetButtonState", "not valid button state (expecting 0, 1, 2 or 3)");
+      return;
+   }
+   fControlBarImp->SetButtonState(label, state);
 }
 
 

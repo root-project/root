@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TControlBar.h,v 1.6 2003/07/21 12:42:36 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TControlBar.h,v 1.7 2003/10/07 13:41:33 brun Exp $
 // Author: Nenad Buncic   20/02/96
 
 /*************************************************************************
@@ -70,6 +70,7 @@ public:
    Int_t           GetNumberOfRows() const    { return fNoroc; }
    Int_t           GetOrientation() const     { return fOrientation; }
    void            Hide();
+   void            SetButtonState(const char *label, Int_t state = 0);
    void            SetFont(const char *fontName);
    void            SetTextColor(const char *colorName);
    void            SetNumberOfColumns(Int_t n) { fNoroc = n; }

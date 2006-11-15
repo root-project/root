@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootControlBar.h,v 1.5 2003/07/21 12:42:36 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootControlBar.h,v 1.6 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -55,6 +55,7 @@ public:
    void   CloseWindow();
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    void   ReallyDelete();
+   void   SetButtonState(const char *label, Int_t state = 0);
    void   SetFont(const char *fontName);
    void   SetTextColor(const char *colorName);
 

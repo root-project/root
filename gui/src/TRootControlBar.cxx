@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootControlBar.cxx,v 1.9 2005/08/23 17:00:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootControlBar.cxx,v 1.10 2006/03/28 16:23:08 antcheva Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -168,6 +168,46 @@ void TRootControlBar::SetFont(const char *fontName)
       if (!obj->InheritsFrom(TGTextButton::Class())) continue;
 
       ((TGTextButton *)obj)->SetFont(fontName);
+   }
+   Resize();
+}
+
+//______________________________________________________________________________
+void TRootControlBar::SetButtonState(const char *label, Int_t state)
+{
+   // sets new font for control bar buttons
+
+   TIter next(fWidgets);
+
+   TObject *obj;
+   
+   while ((obj=next())) {
+      if (!obj->InheritsFrom(TGTextButton::Class())) continue;
+
+      if (!strcmp(((TGTextButton *)obj)->GetTitle(), label)) {
+         switch (state) {
+            case 0: {
+               ((TGTextButton *)obj)->SetState(kButtonUp);
+               break;
+            }
+            case 1: {
+               ((TGTextButton *)obj)->SetState(kButtonDown);
+               break;
+            }
+            case 2: {
+               ((TGTextButton *)obj)->SetState(kButtonEngaged);
+               break;
+            }
+            case 3: {
+               ((TGTextButton *)obj)->SetState(kButtonDisabled);
+               break;
+            }
+            default: {
+               Error("SetButtonState", "not valid button state (expecting 0, 1, 2 or 3)");
+               break;
+            }
+         }
+      }
    }
    Resize();
 }
