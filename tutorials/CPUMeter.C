@@ -114,7 +114,7 @@ void CPUMeter()
    gSystem->ProcessEvents();
    while (mainWindow->IsRunning() && mainWindow->IsMapped()) {
       // Get CPU informations
-      gSystem->GetCpuInfo(&cpuInfo);
+      gSystem->GetCpuInfo(&cpuInfo, 100);
       // actual CPU load
       act_load = cpuInfo.fTotal;
       // Get Memory informations
@@ -128,7 +128,7 @@ void CPUMeter()
          memUsage = memInfo.fMemFree;
       // small threshold to avoid "trembling" needle
       if (fabs(act_load-prev_load) > 0.9) {
-         speedo->SetScaleValue(act_load, 5);
+         speedo->SetScaleValue(act_load, 10);
          prev_load = act_load;
       }
       // update only if value has changed
