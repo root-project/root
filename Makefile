@@ -155,6 +155,9 @@ endif
 ifeq ($(BUILDMINUIT2),yes)
 MODULES      += minuit2
 endif
+ifeq ($(BUILDUNURAN),yes)
+MODULES      += unuran
+endif
 ifeq ($(BUILDCINTEX),yes)
 MODULES      += cintex
 endif

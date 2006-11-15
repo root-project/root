@@ -74,6 +74,7 @@ options="                    \
    enable_ssl                \
    enable_table              \
    enable_thread             \
+   enable_unuran             \
    enable_venus              \
    enable_winrtdebug         \
    enable_xml                \
@@ -100,6 +101,7 @@ enable_shadowpw=
 enable_soversion=no
 enable_table=no
 enable_thread=           # must be set explicitely via --enable-thread
+enable_unuran=no
 enable_winrtdebug=
 enable_xrootd=           # must be set explicitely via --enable-xrootd
 
@@ -867,6 +869,7 @@ enable/disable options, prefix with either --enable- or --disable-
   ssl                SSL encryption support, requires openssl
   table              Build libTable contrib library
   thread             Thread support
+  unuran             UNURAN - package for generating non-uniform random numbers
   venus              Venus EG support, requires libVenus
   winrtdebug         Link against the Windows debug runtime library
   xml                XML parser interface
@@ -3701,6 +3704,19 @@ fi
 
 ######################################################################
 #
+### echo %%% Unuran Library - Contributed library
+#
+message "Checking whether to build libUnuran"
+if test "x$enable_unuran" = "xyes" || test ! "x$UNURAN" = "x"; then
+    enable_unuran="yes"
+    result "yes"
+else
+    enable_unuran=""
+    result "no"
+fi
+
+######################################################################
+#
 ### echo %%% Table Library - Contributed library
 #
 message "Checking whether to build libTable"
@@ -4123,6 +4139,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@buildreflex@|$enable_reflex|"        \
     -e "s|@buildroofit@|$enable_roofit|"        \
     -e "s|@buildminuit2@|$enable_minuit2|"      \
+    -e "s|@buildunuran@|$enable_unuran|"        \
     -e "s|@buildmonalisa@|$enable_monalisa|"    \
     -e "s|@enable_pch@|$enable_pch|"            \
     -e "s|@buildtable@|$enable_table|"          \

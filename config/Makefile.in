@@ -244,6 +244,8 @@ BUILDROOFIT    := @buildroofit@
 
 BUILDMINUIT2   := @buildminuit2@
 
+BUILDUNURAN    := @buildunuran@
+
 BUILDTABLE     := @buildtable@
 
 BUILDCLARENS   := @buildclarens@
