@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.44 2006/09/15 15:16:57 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.45 2006/09/26 13:33:04 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -512,9 +512,7 @@ Bool_t TFitter::IsFixed(Int_t ipar) const
 {
    //return kTRUE if parameter ipar is fixed, kFALSE othersise)
    
-   for (Int_t i=0;i<fMinuit->fNpfix;i++) {
-      if (fMinuit->fNexofi[i] == ipar) return kTRUE;
-   }
+   if (fMinuit->fNiofex[ipar] == 0 ) return kTRUE; 
    return kFALSE;
 }
 
