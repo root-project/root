@@ -23,6 +23,7 @@ class genreflex:
     self.deep            = False
     self.opts            = {}
     self.gccxmlpath      = None
+    self.gccxmlopt       = ''
     self.selector        = None
     self.gccxml          = ''
     self.quiet           = False
@@ -85,6 +86,8 @@ class genreflex:
       --gccxmlpath=<path>
          Path path where the gccxml tool is installed.
          If not defined the standard PATH environ variable is used\n
+      --gccxmlopt=<gccxmlopt>
+         Options to be passed directly to gccxml\n
       -c <file>, --capabilities=<file>
          Generate the capabilities file to be used by the SEAL Plugin Manager. This file
          lists the names of all classes for which the reflection is formation is provided.\n
@@ -116,7 +119,7 @@ class genreflex:
       opts, args = getopt.getopt(options, 'ho:s:c:I:U:D:PC', \
       ['help','debug=', 'output=','selection_file=','pool','deep','gccxmlpath=',
        'capabilities=','rootmap=','rootmap-lib=','comments','no_membertypedefs',
-       'fail_on_warnings', 'quiet', 'reflex', 'split','no_templatetypedefs'])
+       'fail_on_warnings', 'quiet', 'gccxmlopt=', 'reflex', 'split','no_templatetypedefs'])
     except getopt.GetoptError, e:
       print "--->> genreflex: ERROR:",e
       self.usage(2)
@@ -155,6 +158,8 @@ class genreflex:
         self.quiet = True
       if o in ('--gccxmlpath',):
         self.gccxmlpath = a
+      if o in ('--gccxmlopt',):
+        self.gccxmlopt += a +' '
       if o in ('-c', '--capabilities'):
         self.capabilities = a
       if o in ('--rootmap',):
@@ -260,7 +265,7 @@ class genreflex:
       else :
         dicfile = os.path.join(self.outputDir,name+file_extension)
       #---------------Parse the header file with GCC_XML
-      cmd  = '%s %s -fxml=%s %s -D__REFLEX__' %(self.gccxml, source, xmlfile, self.cppopt)
+      cmd  = '%s %s %s -fxml=%s %s -D__REFLEX__' %(self.gccxml, self.gccxmlopt, source, xmlfile, self.cppopt)
       if not self.quiet : print '--->> genreflex: INFO: Parsing file %s with GCC_XML' % source,
       status = os.system(cmd)
       if status :
