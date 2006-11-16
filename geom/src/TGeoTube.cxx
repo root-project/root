@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.67 2006/05/26 09:09:59 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.68 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -1189,7 +1189,7 @@ void TGeoTubeSeg::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    saf[1] = (fRmin>1E-10)?TMath::Abs(r-fRmin):TGeoShape::Big();
    saf[2] = TMath::Abs(fRmax-r);
    Int_t i = TMath::LocMin(3,saf);
-   if (TGeoShape::IsCloseToPhi(saf[i], point,c1,s1,c2,s2)) {
+   if (((fPhi2-fPhi1)<360.) && TGeoShape::IsCloseToPhi(saf[i], point,c1,s1,c2,s2)) {
       TGeoShape::NormalPhi(point,dir,norm,c1,s1,c2,s2);
       return;
    }
@@ -1310,6 +1310,7 @@ Double_t TGeoTubeSeg::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (*safe>step)) return TGeoShape::Big();
    }
+   if ((fPhi2-fPhi1)>=360.) return TGeoTube::DistFromInsideS(point,dir,fRmin,fRmax,fDz);
    Double_t phi1 = fPhi1*TMath::DegToRad();
    Double_t phi2 = fPhi2*TMath::DegToRad();
    Double_t c1 = TMath::Cos(phi1);
@@ -1592,6 +1593,7 @@ Double_t TGeoTubeSeg::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (step<=*safe)) return TGeoShape::Big();
    }
+   if ((fPhi2-fPhi1)>=360.) return TGeoTube::DistFromOutsideS(point,dir,fRmin,fRmax,fDz);
    Double_t phi1 = fPhi1*TMath::DegToRad();
    Double_t phi2 = fPhi2*TMath::DegToRad();
    Double_t c1 = TMath::Cos(phi1);
@@ -1882,6 +1884,7 @@ Double_t TGeoTubeSeg::Safety(Double_t *point, Bool_t in) const
       saf[2] = r-fRmax;
       safe   = saf[TMath::LocMax(3,saf)];
    }
+   if ((fPhi2-fPhi1)>=360.) return safe;
    Double_t safphi = TGeoShape::SafetyPhi(point,in,fPhi1,fPhi2);
 
    if (in) return TMath::Min(safe, safphi);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.163 2006/10/27 06:43:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.164 2006/11/03 21:22:32 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1691,7 +1691,10 @@ TGeoVolume *TGeoManager::Volume(const char *name, const char *shape, Int_t nmed,
       volume = MakeCtub(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10]);
    } else if (sh.Contains("para")) {
       volume = MakePara(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5]);
+   } else if (sh.Contains("tor")) {
+      volume = MakeTorus(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
    }
+
    if (!volume) {
       Error("Volume","volume: %s not created",vname);
       return 0;
@@ -1771,7 +1774,10 @@ TGeoVolume *TGeoManager::Volume(const char *name, const char *shape, Int_t nmed,
       volume = MakeCtub(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10]);
    } else if (sh.Contains("para")) {
       volume = MakePara(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5]);
+   } else if (sh.Contains("tor")) {
+      volume = MakeTorus(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
    }
+
    if (!volume) {
       Error("Volume","volume: %s not created",vname);
       return 0;

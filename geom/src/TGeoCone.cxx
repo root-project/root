@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.55 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.56 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -1199,7 +1199,7 @@ void TGeoConeSeg::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    saf[1] = (ro1>0)?(TMath::Abs((r-rin)*cr1)):TGeoShape::Big();
    saf[2] = TMath::Abs((rout-r)*cr2);
    Int_t i = TMath::LocMin(3,saf);
-   if (TGeoShape::IsCloseToPhi(saf[i], point,c1,s1,c2,s2)) {
+   if (((fPhi2-fPhi1)<360.) && TGeoShape::IsCloseToPhi(saf[i], point,c1,s1,c2,s2)) {
       TGeoShape::NormalPhi(point,dir,norm,c1,s1,c2,s2);
       return;
    }
@@ -1281,9 +1281,10 @@ Bool_t TGeoConeSeg::Contains(Double_t *point) const
 {
 // test if point is inside this sphere
    if (!TGeoCone::Contains(point)) return kFALSE;
+   Double_t dphi = fPhi2 - fPhi1;
+   if (dphi >= 360.) return kTRUE;
    Double_t phi = TMath::ATan2(point[1], point[0]) * TMath::RadToDeg();
    if (phi < 0 ) phi+=360.;
-   Double_t dphi = fPhi2 - fPhi1;
    Double_t ddp = phi-fPhi1;
    if (ddp < 0) ddp+=360.;
 //   if (ddp > 360) ddp-=360;
@@ -1304,6 +1305,8 @@ Double_t TGeoConeSeg::DistToCons(Double_t *point, Double_t *dir, Double_t r1, Do
    }
 
    Double_t dphi = phi2 - phi1;
+   Bool_t hasphi = kTRUE;
+   if (dphi >= 360.) hasphi=kFALSE;
    if (dphi < 0) dphi+=360.;
 //   printf("phi1=%f phi2=%f dphi=%f\n", phi1, phi2, dphi);
 
@@ -1332,6 +1335,7 @@ Double_t TGeoConeSeg::DistToCons(Double_t *point, Double_t *dir, Double_t r1, Do
       ptnew[2] = point[2] + snxt*dir[2];
       if (((ptnew[2]-z1)*(ptnew[2]-z2)) < 0) {
       // check phi range
+         if (!hasphi) return snxt;
          ptnew[0] = point[0] + snxt*dir[0];
          ptnew[1] = point[1] + snxt*dir[1];
          phi = TMath::ATan2(ptnew[1], ptnew[0]) * TMath::RadToDeg();
@@ -1348,6 +1352,7 @@ Double_t TGeoConeSeg::DistToCons(Double_t *point, Double_t *dir, Double_t r1, Do
       ptnew[2] = point[2] + snxt*dir[2];
       if (((ptnew[2]-z1)*(ptnew[2]-z2)) < 0) {
       // check phi range
+         if (!hasphi) return snxt;
          ptnew[0] = point[0] + snxt*dir[0];
          ptnew[1] = point[1] + snxt*dir[1];
          phi = TMath::ATan2(ptnew[1], ptnew[0]) * TMath::RadToDeg();
@@ -1419,6 +1424,7 @@ Double_t TGeoConeSeg::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (*safe>step)) return TGeoShape::Big();
    }
+   if ((fPhi2-fPhi1)>=360.) return TGeoCone::DistFromInsideS(point,dir,fDz,fRmin1,fRmax1,fRmin2,fRmax2);
    Double_t phi1 = fPhi1*TMath::DegToRad();
    Double_t phi2 = fPhi2*TMath::DegToRad();
    Double_t c1 = TMath::Cos(phi1);
@@ -1719,6 +1725,7 @@ Double_t TGeoConeSeg::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (*safe>step)) return TGeoShape::Big();
    }
+   if ((fPhi2-fPhi1)>=360.) return TGeoCone::DistFromOutsideS(point,dir,fDz,fRmin1,fRmax1,fRmin2,fRmax2);
    Double_t phi1 = fPhi1*TMath::DegToRad();
    Double_t phi2 = fPhi2*TMath::DegToRad();
    Double_t c1 = TMath::Cos(phi1);
@@ -2023,6 +2030,7 @@ Double_t TGeoConeSeg::Safety(Double_t *point, Bool_t in) const
       saf[2] = (r-rout)*cr2;
       safe = saf[TMath::LocMax(3,saf)];
    }
+   if ((fPhi2-fPhi1)>=360.) return safe;
    Double_t safphi = TGeoShape::SafetyPhi(point, in, fPhi1, fPhi2);
 
    if (in) return TMath::Min(safe, safphi);
