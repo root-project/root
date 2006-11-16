@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.189 2006/09/27 17:36:14 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.190 2006/10/03 13:31:07 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -61,7 +61,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "RConfig.h"
-#include "config.h"
+#include "RConfigure.h"
 
 #include <string>
 #include <map>

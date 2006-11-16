@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: THostAuth.cxx,v 1.1 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: THostAuth.cxx,v 1.2 2005/09/06 09:34:34 brun Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -19,8 +19,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
 
 #include "TSystem.h"

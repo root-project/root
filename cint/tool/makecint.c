@@ -10,7 +10,7 @@
  ************************************************************************
  * Copyright(c) 1995~2004  Masaharu Goto (cint@pcroot.cern.ch)
  *
- * Permission to use, copy, modify and distribute this software and its 
+ * Permission to use, copy, modify and distribute this software and its
  * documentation for any purpose is hereby granted without fee,
  * provided that the above copyright notice appear in all copies and
  * that both that copyright notice and this permission notice appear
@@ -25,8 +25,8 @@
 #include <ctype.h>
 
 #ifdef G__ROOT
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
 #endif
 
@@ -44,7 +44,7 @@
 #define G__MAXARG       100
 #define G__MAXNAME      100
 
-char G__cintsysdir[G__MAXFILENAME] ; 
+char G__cintsysdir[G__MAXFILENAME] ;
 
 char G__CSRCPOST[20];
 char G__CHDRPOST[20];
@@ -196,7 +196,7 @@ int *argc;
   int flag=0;
   int n_eof=1;
   int single_quote=0,double_quote=0,back_slash=0;
-  
+
   while((string[i]!='\n')&&
 	(string[i]!='\0')
 #ifdef G__OLDIMPLEMENTATION1616
@@ -303,7 +303,7 @@ FILE *to,*from;
   int c=0;
   while(EOF != (c=fgetc(from))) {
     fputc(c,to);
-  } 
+  }
   return(0);
 }
 
@@ -351,7 +351,7 @@ int G__getcintsysdir()
     }
     else {
 #ifdef G__ROOT
-      fprintf(stderr,"Error: environment variable ROOTSYS is not set. makecint aborted.\n");   
+      fprintf(stderr,"Error: environment variable ROOTSYS is not set. makecint aborted.\n");
 #else
       fprintf(stderr,"Error: environment variable CINTSYSDIR is not set. makecint aborted.\n");
 #endif
@@ -402,9 +402,9 @@ void G__readMAKEINFO()
   while(G__readline(fp,line,argbuf,&argn,arg)) {
     if(argn>2 && strcmp(arg[1],"CSRCPOST")==0) strcpy(G__CSRCPOST,arg[3]);
     else if(argn>2 && strcmp(arg[1],"CHDRPOST")==0) strcpy(G__CHDRPOST,arg[3]);
-    else if(argn>2 && strcmp(arg[1],"CPPHDRPOST")==0) 
+    else if(argn>2 && strcmp(arg[1],"CPPHDRPOST")==0)
       strcpy(G__CPPHDRPOST,arg[3]);
-    else if(argn>2 && strcmp(arg[1],"CPPSRCPOST")==0) 
+    else if(argn>2 && strcmp(arg[1],"CPPSRCPOST")==0)
       strcpy(G__CPPSRCPOST,arg[3]);
     else if(argn>2 && strcmp(arg[1],"OBJPOST")==0) strcpy(G__OBJPOST,arg[3]);
     else if(argn>2 && strcmp(arg[1],"DLLPOST")==0) {
@@ -420,7 +420,7 @@ void G__readMAKEINFO()
 #endif
     }
 #ifdef G__DJGPP
-    else if(argn>2 && strcmp(arg[1],"DJGPPDIR")==0 && 0==G__DJGPPDIR[0]) 
+    else if(argn>2 && strcmp(arg[1],"DJGPPDIR")==0 && 0==G__DJGPPDIR[0])
       strcpy(G__DJGPPDIR,arg[3]);
 #endif
   }
@@ -547,7 +547,7 @@ char *buf;
 /******************************************************************
 * G__checksourcefiles()
 *
-* check string list and identify it the item is 
+* check string list and identify it the item is
 *   1) source file      string="xxx.C" object="xxx.o"  misc=NULL
 *   2) object file      string=NULL    object="xxx.o"  misc=NULL
 *   3) others(misc)     string=NULL    object=NULL     misc="xxx"
@@ -692,7 +692,7 @@ char *compiler;
 }
 
 
-  
+
 /******************************************************************
 * G__readargument
 ******************************************************************/
@@ -792,7 +792,7 @@ char **argv;
       i++;
       mode = G__IDLE;
     }
-    else if(strncmp(argv[i],"-I",2)==0 
+    else if(strncmp(argv[i],"-I",2)==0
 	    && G__COMPILEROPT!=mode && G__CINTOPT!=mode
 	    ) {
       G__IPATH = G__storestringlist(G__IPATH,argv[i]);
@@ -995,7 +995,7 @@ char **argv;
   fprintf(fp,"\n");
 
   /***************************************************************************
-   * Copy platform dependent information fro $CINTSYSDIR/MAKEINFO 
+   * Copy platform dependent information fro $CINTSYSDIR/MAKEINFO
    ***************************************************************************/
   G__copyfile(fp,makeinfofp);
   fclose(makeinfofp);
@@ -1247,7 +1247,7 @@ char **argv;
 #endif
   }
   fprintf(fp,"\n");
-    
+
   /***************************************************************************
    * Interface routine
    ***************************************************************************/
@@ -1264,16 +1264,16 @@ char **argv;
 #else
     fprintf(fp,"$(CIFC) : $(CHEADER) $(CSTUB) $(CINTSYSDIR)/cint\n");
 #endif
-    /* Following line needs explanation. -K is used at the beginning and 
+    /* Following line needs explanation. -K is used at the beginning and
      * later again $(KRMODE) may be set to -K. When -K is given after -c-2
-     * it will set G__clock flags so that it will create K&R compatible 
+     * it will set G__clock flags so that it will create K&R compatible
      * function headers. This is not a good manner but -K -c-2 and -c-2 -K
      * has different meaning. */
 #ifdef CINTSYSDIR
-    fprintf(fp,"\tcint %s -K -w%d -z%s -n$(CIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-2 $(KRMODE) $(IPATH) $(MACRO) $(CINTOPT) $(CHEADERCINT)" 
+    fprintf(fp,"\tcint %s -K -w%d -z%s -n$(CIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-2 $(KRMODE) $(IPATH) $(MACRO) $(CINTOPT) $(CHEADERCINT)"
 	    ,G__INITFUNC,G__isDLL,G__DLLID,G__preprocess);
 #else
-    fprintf(fp,"\t$(CINTSYSDIR)/cint %s -K -w%d -z%s -n$(CIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-2 $(KRMODE) $(IPATH) $(MACRO) $(CINTOPT) $(CHEADERCINT)" 
+    fprintf(fp,"\t$(CINTSYSDIR)/cint %s -K -w%d -z%s -n$(CIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-2 $(KRMODE) $(IPATH) $(MACRO) $(CINTOPT) $(CHEADERCINT)"
 	    ,G__INITFUNC,G__isDLL,G__DLLID,G__preprocess);
 #endif
     if(G__CSTUB) fprintf(fp," +STUB $(CSTUBCINT) -STUB\n");

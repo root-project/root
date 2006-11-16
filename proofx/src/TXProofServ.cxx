@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.17 2006/11/01 16:01:58 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.18 2006/11/15 17:45:55 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -18,8 +18,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
 
 #include "RConfig.h"

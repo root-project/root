@@ -1173,24 +1173,24 @@ if test $# -gt 0 ; then
       #
       # Install path options
       #
-      --aclocaldir=*) haveconfig=-DHAVE_CONFIG ; aclocaldir=$optarg  ;;
-      --bindir=*)     haveconfig=-DHAVE_CONFIG ; bindir=$optarg      ;;
-      --cintincdir=*) haveconfig=-DHAVE_CONFIG ; cintincdir=$optarg  ;;
-      --datadir=*)    haveconfig=-DHAVE_CONFIG ; datadir=$optarg     ;;
-      --docdir=*)     haveconfig=-DHAVE_CONFIG ; docdir=$optarg      ;;
-      --elispdir=*)   haveconfig=-DHAVE_CONFIG ; elispdir=$optarg    ;;
-      --etcdir=*)     haveconfig=-DHAVE_CONFIG ; etcdir=$optarg      ;;
-      --fontdir=*)    haveconfig=-DHAVE_CONFIG ; fontdir=$optarg     ;;
-      --iconpath=*)   haveconfig=-DHAVE_CONFIG ; iconpath=$optarg    ;;
-      --incdir=*)     haveconfig=-DHAVE_CONFIG ; incdir=$optarg      ;;
-      --libdir=*)     haveconfig=-DHAVE_CONFIG ; libdir=$optarg      ;;
-      --macrodir=*)   haveconfig=-DHAVE_CONFIG ; macrodir=$optarg    ;;
-      --mandir=*)     haveconfig=-DHAVE_CONFIG ; mandir=$optarg      ;;
-      --pkglist*)     show_pkglist="yes"       ; noact="yes"         ;;
-      --prefix*)      haveconfig=-DHAVE_CONFIG ; prefix=$optarg      ;;
-      --srcdir=*)     haveconfig=-DHAVE_CONFIG ; srcdir=$optarg      ;;
-      --testdir=*)    haveconfig=-DHAVE_CONFIG ; testdir=$optarg     ;;
-      --tutdir=*)     haveconfig=-DHAVE_CONFIG ; tutdir=$optarg      ;;
+      --aclocaldir=*) haveconfig=-DR__HAVE_CONFIG ; aclocaldir=$optarg  ;;
+      --bindir=*)     haveconfig=-DR__HAVE_CONFIG ; bindir=$optarg      ;;
+      --cintincdir=*) haveconfig=-DR__HAVE_CONFIG ; cintincdir=$optarg  ;;
+      --datadir=*)    haveconfig=-DR__HAVE_CONFIG ; datadir=$optarg     ;;
+      --docdir=*)     haveconfig=-DR__HAVE_CONFIG ; docdir=$optarg      ;;
+      --elispdir=*)   haveconfig=-DR__HAVE_CONFIG ; elispdir=$optarg    ;;
+      --etcdir=*)     haveconfig=-DR__HAVE_CONFIG ; etcdir=$optarg      ;;
+      --fontdir=*)    haveconfig=-DR__HAVE_CONFIG ; fontdir=$optarg     ;;
+      --iconpath=*)   haveconfig=-DR__HAVE_CONFIG ; iconpath=$optarg    ;;
+      --incdir=*)     haveconfig=-DR__HAVE_CONFIG ; incdir=$optarg      ;;
+      --libdir=*)     haveconfig=-DR__HAVE_CONFIG ; libdir=$optarg      ;;
+      --macrodir=*)   haveconfig=-DR__HAVE_CONFIG ; macrodir=$optarg    ;;
+      --mandir=*)     haveconfig=-DR__HAVE_CONFIG ; mandir=$optarg      ;;
+      --pkglist*)     show_pkglist="yes"          ; noact="yes"         ;;
+      --prefix*)      haveconfig=-DR__HAVE_CONFIG ; prefix=$optarg      ;;
+      --srcdir=*)     haveconfig=-DR__HAVE_CONFIG ; srcdir=$optarg      ;;
+      --testdir=*)    haveconfig=-DR__HAVE_CONFIG ; testdir=$optarg     ;;
+      --tutdir=*)     haveconfig=-DR__HAVE_CONFIG ; tutdir=$optarg      ;;
       *)  echo "Invalid option '$1'. Try $0 --help" ; exit 1 ;;
       esac
       shift
@@ -4027,7 +4027,7 @@ if test ! "x$haveconfig" = "x" ; then
     fi
 
     sed -e "s|@useconfig@|TRUE|"                       \
-        -e "s|@cflags@|-DHAVE_CONFIG|"                 \
+        -e "s|@cflags@|$haveconfig|"                   \
             < Makefile.tmp > Makefile.tmpp
     mv Makefile.tmpp Makefile.tmp
 else
@@ -4609,9 +4609,7 @@ fi
 result "To build ROOT type:"
 result ""
 result "   $gnumake"
-if test ! "x$haveconfig" = "x" ; then
-    result "   $gnumake install"
-fi
+result "   $gnumake install"
 result ""
 
 exit 0

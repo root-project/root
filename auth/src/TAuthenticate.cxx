@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.13 2006/05/10 07:40:12 brun Exp $
+// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.14 2006/05/10 14:06:06 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -18,7 +18,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
+#endif
 
 #include "TAuthenticate.h"
 #include "TApplication.h"

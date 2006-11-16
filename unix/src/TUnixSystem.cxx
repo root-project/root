@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.168 2006/11/15 18:27:17 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.169 2006/11/15 21:05:38 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -17,10 +17,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
-
 #include "RConfig.h"
 #include "TUnixSystem.h"
 #include "TROOT.h"

@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.25 2006/08/24 16:31:21 rdm Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.26 2006/10/20 09:36:47 rdm Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
 
 #include "TROOT.h"

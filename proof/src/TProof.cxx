@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.165 2006/11/13 10:49:13 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.166 2006/11/15 17:45:55 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -33,7 +33,9 @@
 #endif
 #include <vector>
 
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
+#endif
 #include "TProof.h"
 #include "TSortedList.h"
 #include "TSlave.h"

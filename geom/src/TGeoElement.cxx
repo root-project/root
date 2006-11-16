@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.17 2006/09/17 11:03:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.18 2006/10/20 09:38:11 rdm Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -19,8 +19,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
 
 #include "Riostream.h"

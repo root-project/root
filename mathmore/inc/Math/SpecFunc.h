@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: SpecFunc.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: SpecFunc.h,v 1.2 2005/09/30 09:47:00 rdm Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -23,18 +23,13 @@
   **********************************************************************/
 
 
-//#ifndef STANDALONEMATH
-#include "config.h"
-//#endif
+#include "RConfigure.h"
 
-
-//#if defined(HASMATHMORE)
 
 #ifdef R__HAS_MATHMORE
 
 #include "Math/SpecFuncMathCore.h"
 #include "Math/SpecFuncMathMore.h"
-
 
 #else
 

@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.41 2006/05/19 07:40:18 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.42 2006/09/27 13:11:27 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -123,8 +123,8 @@
 
 #include <stdio.h>
 
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
 
 #include "TTabCom.h"

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.13 2006/04/21 16:29:33 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.14 2006/04/24 14:24:43 rdm Exp $
 // Author: Olivier Couet     01/10/02
 
 /*************************************************************************
@@ -18,8 +18,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 // config.h is needed for TTFFONTDIR
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
 
 #include "TTF.h"

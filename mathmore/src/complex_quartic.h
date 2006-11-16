@@ -1,33 +1,32 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinderDeriv.h,v 1.1 2005/09/18 17:33:47 brun Exp $
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// @(#)root/mathmore:$Name:  $:$Id: complex_quartic.h,v 1.1 2006/05/26 14:26:08 moneta Exp $
+// Authors: L. Moneta, A. Zsenei   08/2005
 
 /* poly/zsolve_quartic.c
- * 
+ *
  * Copyright (C) 2003 CERN and K.S. K\"{o}lbig
  *
  * Converted to C and implemented into the GSL Library - Sept. 2003
  * by Andrew W. Steiner and Andy Buckley
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or (at
  * your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/* zsolve_quartic.c - finds the complex roots of 
+/* zsolve_quartic.c - finds the complex roots of
  *  x^4 + a x^3 + b x^2 + c x + d = 0
  */
 
-#include <config.h>
 #include <math.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_complex.h>
@@ -205,12 +204,12 @@ gsl_poly_complex_solve_quartic (double a, double b, double c, double d,
       }
       /* End of solution to resolvent cubic */
 
-      /* Combine the square roots of the roots of the cubic 
-       * resolvent appropriately. Also, calculate 'mt' which 
+      /* Combine the square roots of the roots of the cubic
+       * resolvent appropriately. Also, calculate 'mt' which
        * designates the nature of the roots:
-       * mt=1 : 4 real roots 
-       * mt=2 : 0 real roots 
-       * mt=3 : 2 real roots 
+       * mt=1 : 4 real roots
+       * mt=2 : 0 real roots
+       * mt=3 : 2 real roots
        */
       if (0 == disc)
         {
@@ -263,7 +262,7 @@ gsl_poly_complex_solve_quartic (double a, double b, double c, double d,
           w1 = gsl_complex_sqrt (w1);
           w2 = gsl_complex_sqrt (w2);
         }
-      /* Solve the quadratic in order to obtain the roots 
+      /* Solve the quadratic in order to obtain the roots
        * to the quartic */
       q = qq;
       gsl_complex prod_w = gsl_complex_mul (w1, w2);
@@ -336,8 +335,8 @@ gsl_poly_complex_solve_quartic (double a, double b, double c, double d,
         }
     }
 
-  /* 
-   * Sort the roots as usual: main sorting by ascending real part, secondary 
+  /*
+   * Sort the roots as usual: main sorting by ascending real part, secondary
    * sorting by ascending imaginary part
    */
 

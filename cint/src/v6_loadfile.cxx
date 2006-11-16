@@ -7,7 +7,7 @@
  * Description:
  *  Loading source file
  ************************************************************************
- * Copyright(c) 1995~2005  Masaharu Goto 
+ * Copyright(c) 1995~2005  Masaharu Goto
  *
  * For the licensing terms see the file COPYING
  *
@@ -23,8 +23,8 @@
 #include "process.h"
 #endif
 
-#if defined(HAVE_CONFIG)
-#include "config.h"
+#if defined(R__HAVE_CONFIG)
+#include "RConfigure.h"
 #endif
 
 #if defined(G__HAVE_CONFIG)
@@ -42,7 +42,7 @@
 #endif
 
 #define G__OLDIMPLEMENTATION1849
-  
+
 extern "C" {
 
 /******************************************************************
@@ -554,20 +554,20 @@ int G__matchfilename(int i1,char *filename)
 
 #ifdef G__WIN32
   char i1name[_MAX_PATH],fullfile[_MAX_PATH];
-#else 
-  struct stat statBufItem;  
-  struct stat statBuf;  
+#else
+  struct stat statBufItem;
+  struct stat statBuf;
 #endif
 
   if((strcmp(G__srcfile[i1].filename,filename)==0)) return(1);
 
 #ifdef G__WIN32
-  _fullpath( i1name, G__srcfile[i1].filename, _MAX_PATH ); 
+  _fullpath( i1name, G__srcfile[i1].filename, _MAX_PATH );
   _fullpath( fullfile, filename, _MAX_PATH );
   if((stricmp(i1name, fullfile)==0)) return 1;
 #else
   if (   ( 0 == stat( filename, & statBufItem ) )
-      && ( 0 == stat( G__srcfile[i1].filename, & statBuf ) ) 
+      && ( 0 == stat( G__srcfile[i1].filename, & statBuf ) )
       && ( statBufItem.st_ino == statBuf.st_ino ) ) {
      return 1;
   }
@@ -639,9 +639,9 @@ char* G__stripfilename(char *filename)
 #else
     buf[0] = 0;
 #endif
-    if(strncmp(buf,filename,filenamebase-filename-1)==0) 
+    if(strncmp(buf,filename,filenamebase-filename-1)==0)
       return(filenamebase+2);
-    else 
+    else
       return(filename);
   }
   else return(filename);
@@ -806,7 +806,7 @@ static int G__isbinaryfile(char *filename)
   int badflag=0;
   int comflag=0;
 #ifdef G__VISUAL /* ON959 */
-  char buf[11];  
+  char buf[11];
 #endif
   int unnamedmacro = 0;
   int alphaflag=0;
@@ -891,7 +891,7 @@ static void G__checkIfOnlyFunction(int fentry)
   struct G__var_array *var;
   struct G__Deffuncmacro *deffuncmacro;
   struct G__Definedtemplateclass *definedtemplateclass;
-  struct G__Definetemplatefunc *definedtemplatefunc;   
+  struct G__Definetemplatefunc *definedtemplatefunc;
   struct G__dictposition* dictpos = G__srcfile[fentry].dictpos;
   int varflag = 1;
   int tagflag ;
@@ -922,7 +922,7 @@ static void G__checkIfOnlyFunction(int fentry)
     struct G__var_array *var2 = dictpos->var;
     int ig152 = dictpos->ig15;
     while(var2 && (var2 != var || ig152 != var->allvar)) {
-      if('p'!=var2->type[ig152]) { 
+      if('p'!=var2->type[ig152]) {
         varflag = 0;
         break;
       }
@@ -951,7 +951,7 @@ static void G__checkIfOnlyFunction(int fentry)
      dictpos->deffuncmacro == deffuncmacro &&
      dictpos->definedtemplateclass == definedtemplateclass &&
      dictpos->definedtemplatefunc == definedtemplatefunc) {
-    G__srcfile[fentry].hasonlyfunc = 
+    G__srcfile[fentry].hasonlyfunc =
       (struct G__dictposition*)malloc(sizeof(struct G__dictposition));
     G__srcfile[fentry].hasonlyfunc->ptype = (char*)G__PVOID;
     G__store_dictposition(G__srcfile[fentry].hasonlyfunc);
@@ -1239,7 +1239,7 @@ int G__loadfile(const char *filenamein)
   * The + or ++ can also be followed by either a 'g'
   * or an 'O' which means respectively to compile
   * in debug or optimized mode.
-  *************************************************/  
+  *************************************************/
   compiler_option = 0;
   if ( len>2 && (strncmp(filename+len-2,"+",1)==0 )
        && (strcmp(filename+len-1,"O")==0
@@ -1271,8 +1271,8 @@ int G__loadfile(const char *filenamein)
          compiler_option = "k";
       }
       len -= 1;
-    } 
-    
+    }
+
     filename[len]='\0';
     external_compiler = 1; /* Request external compilation
                             * if available (in ROOT) */
@@ -1668,12 +1668,12 @@ int G__loadfile(const char *filenamein)
         /*  sprintf(G__ifile.name,getenv("ROOTSYS"));
             sprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
         sprintf(G__ifile.name,"%s[include]%s",getenv("ROOTSYS"),filename);
-        
+
         G__ifile.fp = fopen(G__ifile.name,"r");
         /*G__globalcomp=G__store_globalcomp;*/
       }
       if(G__ifile.fp) break;
-      
+
        /**********************************************
        * try $ROOTSYS[cint.include]
        **********************************************/
@@ -1681,25 +1681,25 @@ int G__loadfile(const char *filenamein)
         /*   sprintf(G__ifile.name,"%s",G__cintsysdir);
              sprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
         sprintf(G__ifile.name,"%s[include]%s",G__cintsysdir,filename);
-        
+
         G__ifile.fp = fopen(G__ifile.name,"r");
         hdrprop = G__CINTHDR;
         G__globalcomp=G__NOLINK;
       }
       if(G__ifile.fp) break;
-      
+
        /**********************************************
        * try sys$common:[decc$lib.reference.decc$rtldef..]
        **********************************************/
 
       sprintf(G__ifile.name,"sys$common:decc$lib.reference.decc$rtdef]%s",filename);
       printf("Trying to open %s\n",G__ifile.name,"r");
-      
+
       G__ifile.fp = fopen(G__ifile.name,"r");
       G__globalcomp=G__store_globalcomp;
-      
+
       if(G__ifile.fp) break;
-      
+
 #endif  /*G__VMS*/
 
       /**********************************************
@@ -1766,7 +1766,7 @@ int G__loadfile(const char *filenamein)
 /* #endif __hpux */
     }
   }
-    
+
 
   /**********************************************
   * filenum and line_number.
@@ -1808,7 +1808,7 @@ int G__loadfile(const char *filenamein)
       fclose(G__ifile.fp);
       /* since we ignore the file, we can assume that it has no template
          nor any references... */
-      
+
       /******************************************************
        * restore input file information to G__ifile
        * and reset G__eof to 0.
@@ -1926,7 +1926,7 @@ int G__loadfile(const char *filenamein)
      (len>strlen(soext) && strcmp(filename+len-strlen(soext), soext)==0) ||
 #endif
      (
-      dllpost[0] && 
+      dllpost[0] &&
       len>(len1=strlen(dllpost)) && strcmp(filename+len-len1,dllpost)==0) ||
      (len>2&& (strcmp(filename+len-2,".a")==0 ||
                strcmp(filename+len-2,".A")==0))
@@ -2208,7 +2208,7 @@ int G__preprocessor(char *outname,char *inname,int cppflag
                              0==strcmp(inname+strlen(inname)-4,".hxx")||
                              0==strcmp(inname+strlen(inname)-4,".HXX"))) ||
        (!strchr(inname,'.'))
-       ) 
+       )
     {
       /* if header file, create tmpfile name as xxx.C */
       do {
@@ -2398,7 +2398,7 @@ class G__Tmpnam_Files {
 public:
   G__Tmpnam_Files() {}
   ~G__Tmpnam_Files() {
-    for (std::list<std::string>::iterator iFile=fFiles.begin(); 
+    for (std::list<std::string>::iterator iFile=fFiles.begin();
         iFile!=fFiles.end(); ++iFile)
       unlink(iFile->c_str());
   }
@@ -2412,7 +2412,7 @@ public:
 char* G__tmpnam(char *name)
 {
   static G__Tmpnam_Files G__tmpfiles;
-#if defined(G__TMPFILE) 
+#if defined(G__TMPFILE)
   const char *appendix="_cint";
   static char tempname[G__MAXFILENAME];
   int pid = getpid();
@@ -2427,7 +2427,7 @@ char* G__tmpnam(char *name)
   if(name) {
     strcpy(name,(tmp=tempnam(G__tmpdir,"")));
     free((void*)tmp);
-    if(strlen(name)<G__MAXFILENAME-10) 
+    if(strlen(name)<G__MAXFILENAME-10)
       sprintf(name+strlen(name),"%d%d",pid%10000,now%10000);
     if(strlen(name)<G__MAXFILENAME-6) strcat(name,appendix);
     G__tmpfiles.Add(name);
@@ -2437,9 +2437,9 @@ char* G__tmpnam(char *name)
     strcpy(tempname,(tmp=tempnam(G__tmpdir,"")));
     free((void*)tmp);
     size_t lentemp=strlen(tempname);
-    if(lentemp<G__MAXFILENAME-10) 
+    if(lentemp<G__MAXFILENAME-10)
       sprintf(tempname+lentemp,"%d%d",pid%10000,now%10000);
-    if(strlen(tempname)<G__MAXFILENAME-strlen(appendix)-1) 
+    if(strlen(tempname)<G__MAXFILENAME-strlen(appendix)-1)
       strcat(tempname,appendix);
     G__tmpfiles.Add(tempname);
     return(tempname);

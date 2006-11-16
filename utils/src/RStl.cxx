@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.9 2004/10/29 18:03:11 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.10 2005/11/11 23:58:34 pcanal Exp $
 // Author: Philippe Canal 27/08/2003
 
 /*************************************************************************
@@ -9,10 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS              *
  *************************************************************************/
 
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
-
 #include "RConfig.h"
 #include "Api.h"
 
@@ -128,7 +127,7 @@ void ROOT::RStl::WriteClassInit(FILE* /*file*/)
    }
 }
 
-void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl) 
+void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl)
 {
    // Write the free standing streamer function for the given
    // STL container class.

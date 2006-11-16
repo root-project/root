@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.84 2006/03/22 21:57:17 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.85 2006/05/10 07:42:10 brun Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -153,7 +153,9 @@
 // 12: major authentication re-organization
 // 13: support for SSH authentication via SSH tunnel
 
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
+#endif
 #include "RConfig.h"
 
 #include <ctype.h>

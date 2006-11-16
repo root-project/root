@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.29 2006/10/24 14:59:07 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.30 2006/11/15 17:45:55 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -86,7 +86,9 @@
 #include "XrdProofConn.h"
 #include "XrdProofdProtocol.h"
 
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
+#endif
 
 // Tracing utils
 #include "XrdProofdTrace.h"
@@ -627,7 +629,7 @@ int XrdProofdProtocol::SetSrvProtVers()
 //_____________________________________________________________________________
 static int AssertDir(const char *path, XrdProofUI ui)
 {
-   // Make sure that 'path' exists and is owned by the entity 
+   // Make sure that 'path' exists and is owned by the entity
    // described by 'ui'
    // Return 0 in case of success, -1 in case of error
 
@@ -690,13 +692,13 @@ static int SymLink(const char *path, const char *link)
       return -1;
 
    // Remove existing link, if any
-   if (unlink(link) != 0 && errno != ENOENT) { 
+   if (unlink(link) != 0 && errno != ENOENT) {
       MERROR(MHEAD, "SymLink: problems unlinking existing symlink "<< link<<
                     " (errno: "<<errno<<")");
       return -1;
    }
    if (symlink(path, link) != 0) {
-      MERROR(MHEAD, "SymLink: problems creating symlink " << link<< 
+      MERROR(MHEAD, "SymLink: problems creating symlink " << link<<
                     " (errno: "<<errno<<")");
       return -1;
    }
@@ -1797,7 +1799,7 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
       } else {
 
          // Internal connection: we need to remove this instance from the list
-         // of proxy servers and to notify the attached clients. 
+         // of proxy servers and to notify the attached clients.
          // Loop over servers sessions associated to this client and locate
          // the one corresponding to this proofserv instance
          if (pmgr->fProofServs.size() > 0) {
@@ -1992,7 +1994,7 @@ int XrdProofdProtocol::ReadPROOFcfg()
             if (fgWorkers[0]->fImage == "")
                fgWorkers[0]->fImage = fgImage;
          }
-         SafeDelete(pw); 
+         SafeDelete(pw);
      } else {
          // If not, allocate a new one; we need to resize (double it)
          if (nw >= (int)fgWorkers.capacity())
@@ -3482,7 +3484,7 @@ int XrdProofdProtocol::SendData(XrdProofdResponse *resp,
          return rc;
       if (buf && !(*buf))
          *buf = new XrdSrvBuffer(fArgp->buff, quantum, 1);
-      // Send 
+      // Send
       if (sid > -1) {
          if (resp->Send(kXR_attn, kXPD_msgsid, sid, fArgp->buff, quantum))
             return 1;
@@ -3836,7 +3838,7 @@ int XrdProofdProtocol::Admin()
             // Get a user name, if any.
             // A super user can ask cleaning for clients different from itself
             char *buf = 0;
-            int len = fRequest.header.dlen; 
+            int len = fRequest.header.dlen;
             if (len > 0) {
                clntfound = 0;
                buf = fArgp->buff;
@@ -3913,7 +3915,7 @@ int XrdProofdProtocol::Admin()
                      p->fResponse.Set(sid);
                      // Close the link, so that the associated protocol instance
                      // can be recycled
-                     p->fLink->Close(); 
+                     p->fLink->Close();
                   }
                }
 
@@ -4565,7 +4567,7 @@ int XrdProofdProtocol::KillProofServ(int pid, bool forcekill, bool add)
       if (pGuard.Valid()) {
          bool signalled = 1;
          if (forcekill)
-            // Hard shutdown via SIGKILL 
+            // Hard shutdown via SIGKILL
             if (kill(pid, SIGKILL) != 0) {
                if (errno != ESRCH) {
                   XrdOucString msg = "KillProofServ: could not send SIGKILL to process: ";
@@ -4870,7 +4872,7 @@ void XrdProofClient::SaveUNIXPath()
       } else if (vrc == 0) {
          // Not running: remove the socket path
          TRACE(DBG, "SaveUNIXPath: unlinking socket path "<< path);
-         if (unlink(path) != 0 && errno != ENOENT) { 
+         if (unlink(path) != 0 && errno != ENOENT) {
             TRACE(ERR, "SaveUNIXPath: problems unlinking socket path "<< path<<
                     " (errno: "<<errno<<")");
          }
@@ -4924,7 +4926,7 @@ XrdProofWorker::XrdProofWorker(const char *str)
                : fActive (0), fSuspended(0),
                  fExport(256), fType('W'), fPort(-1), fPerfIdx(100)
 {
-   // Constructor from a config file-like string 
+   // Constructor from a config file-like string
 
    // Make sure we got something to parse
    if (!str || strlen(str) <= 0)
@@ -4937,7 +4939,7 @@ XrdProofWorker::XrdProofWorker(const char *str)
 //__________________________________________________________________________
 void XrdProofWorker::Reset(const char *str)
 {
-   // Set content from a config file-like string 
+   // Set content from a config file-like string
 
    // Reinit vars
    fActive = 0;

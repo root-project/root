@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.12 2006/05/23 04:47:40 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.13 2006/05/24 15:10:46 brun Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -18,8 +18,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
 
 #include <stdlib.h>
@@ -116,12 +116,12 @@ TSecContext::TSecContext(const TSecContext& sc) :
   fOffSet(sc.fOffSet),
   fToken(sc.fToken),
   fUser(sc.fUser)
-{ 
+{
    //copy constructor
 }
 
 //______________________________________________________________________________
-TSecContext& TSecContext::operator=(const TSecContext& sc) 
+TSecContext& TSecContext::operator=(const TSecContext& sc)
 {
    //assignement operator
    if(this!=&sc) {
@@ -136,7 +136,7 @@ TSecContext& TSecContext::operator=(const TSecContext& sc)
       fOffSet=sc.fOffSet;
       fToken=sc.fToken;
       fUser=sc.fUser;
-   } 
+   }
    return *this;
 }
 

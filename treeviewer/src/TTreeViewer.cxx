@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.53 2006/11/08 19:21:36 pcanal Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.54 2006/11/14 14:19:15 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -160,8 +160,8 @@
 //End_Html
 //
 
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
 
 #include "snprintf.h"
@@ -1812,7 +1812,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         dir = info.fIniDir;
                         char command[1024];
                         command[0] = 0;
-                        sprintf(command, "tv__tree_file = new TFile(\"%s\");", 
+                        sprintf(command, "tv__tree_file = new TFile(\"%s\");",
                            gSystem->UnixPathName(info.fFilename));
                         ExecuteCommand(command);
                         ExecuteCommand("tv__tree_file->ls();");
@@ -2263,7 +2263,7 @@ void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
          fStopMapping = kFALSE;
       }
    }
-   
+
    // tell who was last mapped
    if (listIt) {
       fMappedTree    = tree;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.cxx,v 1.8 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.cxx,v 1.9 2006/06/22 06:14:42 brun Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -21,9 +21,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
+
 #include "TError.h"
 #include "TInetAddress.h"
 #include "TList.h"

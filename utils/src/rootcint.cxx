@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.248 2006/06/25 15:29:34 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.249 2006/08/28 14:17:52 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -159,10 +159,9 @@
 
 #ifndef __CINT__
 
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
-
 #include "RConfig.h"
 #include "Api.h"
 #include <iostream>
@@ -1926,11 +1925,11 @@ int STLStringStreamer(G__DataMemberInfo &m, int rwmode)
          } else if (m.Property() & G__BIT_ISARRAY) {
             std::stringstream fullIdx;
             for (int dim = 0; dim < m.ArrayDim(); ++dim) {
-               (*dictSrcOut) << "      for (int R__i" << dim << "=0; R__i" << dim << "<" 
+               (*dictSrcOut) << "      for (int R__i" << dim << "=0; R__i" << dim << "<"
                   << m.MaxIndex(dim) << "; ++R__i" << dim << " )" << std::endl;
                fullIdx << "[R__i" << dim << "]";
             }
-            (*dictSrcOut) << "         { TString R__str; R__str.Streamer(R__b); " 
+            (*dictSrcOut) << "         { TString R__str; R__str.Streamer(R__b); "
                << m.Name() << fullIdx.str() << " = R__str.Data();}" << std::endl;
          } else {
             (*dictSrcOut) << "      { TString R__str; R__str.Streamer(R__b); ";
@@ -1948,7 +1947,7 @@ int STLStringStreamer(G__DataMemberInfo &m, int rwmode)
          else if (m.Property() & G__BIT_ISARRAY) {
             std::stringstream fullIdx;
             for (int dim = 0; dim < m.ArrayDim(); ++dim) {
-               (*dictSrcOut) << "      for (int R__i" << dim << "=0; R__i" << dim << "<" 
+               (*dictSrcOut) << "      for (int R__i" << dim << "=0; R__i" << dim << "<"
                   << m.MaxIndex(dim) << "; ++R__i" << dim << " )" << std::endl;
                fullIdx << "[R__i" << dim << "]";
             }

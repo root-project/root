@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.91 2006/03/22 21:57:17 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.92 2006/05/15 09:45:03 brun Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -17,7 +17,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "config.h"
+#include "RConfigure.h"
 #include "RConfig.h"
 
 #include <ctype.h>

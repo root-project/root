@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.11 2006/10/19 10:58:25 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.12 2006/10/20 21:07:40 brun Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
 
 #include "TROOT.h"
@@ -817,7 +817,7 @@ void TClassTree::ScanClasses(Int_t iclass)
    // we stop reading the code when
    //   - a class member function is found
    //   - any class constructor is found
-   if (!cl->GetImplFileName() || !cl->GetImplFileName()[0]) 
+   if (!cl->GetImplFileName() || !cl->GetImplFileName()[0])
       return;
 
    const char *source = gSystem->BaseName( gSystem->UnixPathName(cl->GetImplFileName()));

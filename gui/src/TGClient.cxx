@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.51 2006/05/24 18:20:12 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.52 2006/07/09 05:27:54 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -29,8 +29,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
 
 #include "TGClient.h"
@@ -75,7 +75,7 @@ public:
 Bool_t TGInputHandler::Notify()
 {
    // Notify input from the display server.
-   
+
    return fClient->HandleInput();
 }
 
@@ -200,12 +200,12 @@ TGClient::TGClient(const TGClient& gc) :
   fIdleHandlers(gc.fIdleHandlers),
   fWaitForEvent(gc.fWaitForEvent),
   fWaitForWindow(gc.fWaitForWindow)
-{ 
+{
    //copy constructor
 }
 
 //______________________________________________________________________________
-TGClient& TGClient::operator=(const TGClient& gc) 
+TGClient& TGClient::operator=(const TGClient& gc)
 {
    //assignment operator
    if(this!=&gc) {
@@ -235,7 +235,7 @@ TGClient& TGClient::operator=(const TGClient& gc)
       fIdleHandlers=gc.fIdleHandlers;
       fWaitForEvent=gc.fWaitForEvent;
       fWaitForWindow=gc.fWaitForWindow;
-   } 
+   }
    return *this;
 }
 

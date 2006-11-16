@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TRootSecContext.cxx,v 1.2 2005/09/06 09:34:34 brun Exp $
+// @(#)root/auth:$Name:  $:$Id: TRootSecContext.cxx,v 1.3 2006/04/19 08:22:22 rdm Exp $
 // Author: G. Ganis   08/07/2005
 
 /*************************************************************************
@@ -17,8 +17,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
 
 #include <stdlib.h>

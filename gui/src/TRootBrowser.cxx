@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.101 2006/09/04 13:52:53 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.102 2006/10/12 16:08:37 antcheva Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -18,8 +18,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
 
 #include "TRootBrowser.h"
@@ -565,9 +565,9 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
    if (fGrouped && fCurrentItem && (fCurrentList->GetSize()>1)) {
       fCurrentName->SetString(fCurrentList->GetName());
    }
-   
+
    EListViewMode view = fListView->GetViewMode();
-   
+
    if ((fCurrentList->GetSize() < fGroupSize) && !fGrouped) {
       GetObjPictures(&pic, &spic, obj, obj->GetIconName() ?
                      obj->GetIconName() : cl->GetName());
@@ -1090,7 +1090,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fIconBox->Associate(this);
    fListView->SetIncrements(1, 19); // set vertical scroll one line height at a time
    fViewMode = fListView->GetViewMode();
-   
+
    TString str = gEnv->GetValue("Browser.AutoThumbnail", "yes");
    str.ToLower();
    fIconBox->fAutoThumbnail = (str == "yes") || atoi(str.Data());
@@ -1548,7 +1548,7 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
 
             if (img->GetWidth() > img->GetHeight()) {
                h = (img->GetHeight()*sz)/img->GetWidth();
-            } else { 
+            } else {
                w = (img->GetWidth()*sz)/img->GetHeight();
             }
 
@@ -2709,7 +2709,7 @@ void TRootBrowser::ExecMacro()
 {
    // executed browsed text macro
 
-   char *tmpfile = gSystem->ConcatFileName(gSystem->TempDirectory(), 
+   char *tmpfile = gSystem->ConcatFileName(gSystem->TempDirectory(),
                                            fTextFileName.Data());
 
    gROOT->SetExecutingMacro(kTRUE);

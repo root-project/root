@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGResourcePool.cxx,v 1.7 2005/11/24 23:30:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGResourcePool.cxx,v 1.8 2006/05/10 14:06:06 rdm Exp $
 // Author: Fons Rademakers   19/5/2003
 
 /*************************************************************************
@@ -30,8 +30,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
 
 #include "TGResourcePool.h"

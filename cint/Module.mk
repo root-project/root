@@ -288,7 +288,7 @@ $(CINTDIRS)/%strm.o:    CINTCXXFLAGS += -I$(CINTDIRL)/$(notdir $(basename $@))
 $(MAKECINTO) $(CINTALLO): $(CINTCONF)
 
 $(CINTDIRS)/v6_stdstrct.o:     CINTCXXFLAGS += -I$(CINTDIRL)/stdstrct
-$(CINTDIRS)/v6_loadfile_tmp.o: CINTCXXFLAGS += -UHAVE_CONFIG -DROOTBUILD
+$(CINTDIRS)/v6_loadfile_tmp.o: CINTCXXFLAGS += -UR__HAVE_CONFIG -DROOTBUILD
 
 $(CINTDIRS)/v6_loadfile_tmp.cxx: $(CINTDIRS)/v6_loadfile.cxx
 	cp -f $< $@

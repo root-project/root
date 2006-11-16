@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.10 2006/07/26 14:28:58 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: pmain.cxx,v 1.11 2006/08/05 20:04:47 brun Exp $
 // Author: Fons Rademakers   15/02/97
 
 /*************************************************************************
@@ -25,8 +25,8 @@
 #include <stdio.h>
 #include <errno.h>
 
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
 #include "TApplication.h"
 #include "TInterpreter.h"

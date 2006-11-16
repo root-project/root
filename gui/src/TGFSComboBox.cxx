@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.20 2006/08/28 15:10:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.21 2006/08/29 15:55:01 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -29,8 +29,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
 
 #include "TGFSComboBox.h"
@@ -262,7 +262,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
       // the table above.  However, in the case of prefix being set at
       // build time, we do not need to expand the prefix, as it is
       // already known, so the entries in the table above are actually
-      // fully expanded. 
+      // fully expanded.
       if (strstr(gLbc[i].fPath, "$ROOTSYS") != 0) {
 	  // Get the size of the prefix template
          const int plen = 8;
@@ -271,12 +271,12 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
 	    // Allocate enough memory to hold prefix (hlen), and
 	    // what's in the path (strlen(gLbc[i].fPath)) minus the
 	    // prefix template size, and one character for terminating
-	    // null. 
+	    // null.
             int blen = hlen + strlen(gLbc[i].fPath) - plen + 1;
             p = new char[blen];
             strcpy(p, rootSys);
             strcat(p, &(gLbc[i].fPath[plen]));
-	    // Figure out where to put the terminating NULL 
+	    // Figure out where to put the terminating NULL
             int npos = hlen + strlen(&(gLbc[i].fPath[plen]));
             p[npos] = '\0';
             gLbc[i].fPath = p;

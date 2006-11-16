@@ -2,7 +2,7 @@
 #define ROOT_RConfigure
 
 /* Configurations file for @architecture@ */
-#ifdef HAVE_CONFIG
+#ifdef R__HAVE_CONFIG
 #define ROOTPREFIX    "@prefix@"
 #define ROOTBINDIR    "@bindir@"
 #define ROOTLIBDIR    "@libdir@"
@@ -22,6 +22,8 @@
 #@hasmathmore@ R__HAS_MATHMORE   /**/
 #@haspthread@ R__HAS_PTHREAD    /**/
 
+#ifndef __CINT__
 #define R__CONFIGUREOPTIONS   "@configoptions@"
+#endif
 
 #endif

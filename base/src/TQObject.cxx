@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.47 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.48 2006/05/14 08:19:30 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -76,10 +76,9 @@
 #include "Varargs.h"
 #include "TCint.h"
 
-#ifdef HAVE_CONFIG
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
 #endif
-
 
 void *gTQSender; // A pointer to the object that sent the last signal.
                  // Getting access to the sender might be practical

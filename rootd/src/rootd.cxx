@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.123 2006/08/14 10:51:34 brun Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.124 2006/08/15 10:48:17 brun Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -205,7 +205,9 @@
 // 15 -> 16: cope with the bug fix in TUrl::GetFile
 // 16 -> 17: Addition of "Gets" (multiple buffers in a single request)
 
-#include "config.h"
+#ifdef R__HAVE_CONFIG
+#include "RConfigure.h"
+#endif
 #include "RConfig.h"
 
 #include <ctype.h>
@@ -1287,7 +1289,7 @@ void RootdGet(const char *msg)
       ErrorInfo("RootdGet: read %d bytes starting at %lld from file %s",
                 len, offset, gFile);
 }
-  
+
 //______________________________________________________________________________
 void RootdGets(const char *msg)
 {
@@ -1298,22 +1300,22 @@ void RootdGets(const char *msg)
 
    if (!RootdIsOpen())
       Error(ErrFatal, kErrNoAccess, "RootdGets: file %s not open", gFile);
-   
+
    Int_t nbuf;      // Number of buffers
    Int_t len;       // len of the data buffer with the list of buffers
    Int_t npar;      // compatibility issues
-   Int_t size;      // size of the readv block (all the small reads) 
+   Int_t size;      // size of the readv block (all the small reads)
    Int_t maxTransz; // blocksize for the transfer
 
    npar = sscanf(msg, "%d %d %d", &nbuf, &len, &maxTransz);
 
    Long64_t *offsets = new Long64_t[nbuf];  // list to be filled
-   Int_t    *lens    = new Int_t[nbuf];     // list to be filled 
-   char     *buf_in  = new char[len+1];     // buff coming from the server 
-   
+   Int_t    *lens    = new Int_t[nbuf];     // list to be filled
+   char     *buf_in  = new char[len+1];     // buff coming from the server
+
    NetRecvRaw(buf_in, len);
    buf_in[len] = '\0';
-   
+
    char *ptr = buf_in;
    size = 0;
    for(Int_t i = 0 ; i < nbuf ; i++) {
@@ -1321,11 +1323,11 @@ void RootdGets(const char *msg)
       ptr = strchr(ptr, '/') + 1;
       size += lens[i];
    }
-   
+
    // If the blocksize is not specified the try to send
    // just a big block
    if( npar == 2  )
-      maxTransz = size; 
+      maxTransz = size;
 
    // We are Ready to begin the transference
    NetSend(0, kROOTD_GETS);
@@ -1340,7 +1342,7 @@ void RootdGets(const char *msg)
       Long64_t left = size - actual_pos;
       if (left > maxTransz)
          left = maxTransz;
-      
+
       Int_t pos = 0; // Position for the disk read
       while ( pos < lens[i] ) {
 #if defined (R__SEEK64)
@@ -1378,7 +1380,7 @@ void RootdGets(const char *msg)
             actual_pos += left;
             buf_pos = 0;
 
-            if ( left > (size - actual_pos) ) 
+            if ( left > (size - actual_pos) )
                left = size - actual_pos;
          }
       }
