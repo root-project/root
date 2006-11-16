@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TError.h,v 1.7 2006/06/09 01:16:56 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TError.h,v 1.8 2006/10/18 09:26:58 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -78,18 +78,6 @@ R__EXTERN const char *kCheckMsg;
 #define R__CHECK(e) \
    do { \
       if (!(e)) Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__); \
-   } while (0)
-
-// deprecated macros (will be removed in next release)
-#define Assert(e) \
-   do { \
-      if (!(e)) Fatal("", kAssertMsg, _QUOTE_(e), __LINE__, __FILE__); \
-      Warning("", "please change Assert to R__ASSERT in %s at line %d", __FILE__, __LINE__); \
-   } while (0)
-#define Check(e) \
-   do { \
-      if (!(e)) Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__); \
-      Warning("", "please change Check to R__CHECK in %s at line %d", __FILE__, __LINE__); \
    } while (0)
 
 R__EXTERN Int_t  gErrorIgnoreLevel;
