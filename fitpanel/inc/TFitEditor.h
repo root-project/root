@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.4 2006/11/14 15:08:33 brun Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.5 2006/11/14 16:42:33 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -104,12 +104,15 @@ protected:
    TAxis               *fXaxis;            // x-axis
    TAxis               *fYaxis;            // y-axis
    TAxis               *fZaxis;            // z-axis
-   Double_t             fXmin;             // x-min
-   Double_t             fXmax;             // x-max
-   Double_t             fYmin;             // y-min
-   Double_t             fYmax;             // y-max
-   Double_t             fZmin;             // z-min
-   Double_t             fZmax;             // z-max
+   Float_t              fXrange;           // x-range
+   Float_t              fXmin;             // x-min
+   Float_t              fXmax;             // x-max
+   Float_t              fYrange;           // y-range
+   Float_t              fYmin;             // y-min
+   Float_t              fYmax;             // y-max
+   Float_t              fZrange;           // z-range
+   Float_t              fZmin;             // z-min
+   Float_t              fZmax;             // z-max
 
    TString              fPlus;             // string for addition ('+' or "++")
    TString              fFunction;         // selected function to fit

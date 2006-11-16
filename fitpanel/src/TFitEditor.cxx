@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.7 2006/11/14 15:08:33 brun Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.8 2006/11/14 16:42:33 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -630,10 +630,6 @@ void TFitEditor::ConnectSlots()
    // advanced draw options
    fDrawAdvanced->Connect("Clicked()", "TFitEditor", this, "DoAdvancedOptions()");
 
-   // x-slider range
-//   fXmin = fXaxis->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
-//   fXmax = fXaxis->GetBinUpEdge((Int_t)((fSliderX->GetMaxPosition())+0.5));
-
    if (fDim > 0) {
       fSliderX->Connect("PositionChanged()","TFitEditor",this, "DoSliderXMoved()");
       fSliderX->Connect("Pressed()","TFitEditor",this, "DoSliderXPressed()");
@@ -799,12 +795,9 @@ void TFitEditor::UpdateGUI()
             fXaxis = ((TH1*)fFitObject)->GetXaxis();
             fYaxis = ((TH1*)fFitObject)->GetYaxis();
             fZaxis = ((TH1*)fFitObject)->GetZaxis();
-            Int_t nx = fXaxis->GetNbins();
-            Int_t nxbinmin = fXaxis->GetFirst();
-            Int_t nxbinmax = fXaxis->GetLast();
-            fSliderX->SetRange(1,nx);
-            fSliderX->SetScale(5);
-            fSliderX->SetPosition((Double_t)nxbinmin,(Double_t)nxbinmax);
+            fXrange = fXaxis->GetNbins();
+            fXmin = fXaxis->GetFirst();
+            fXmax = fXaxis->GetLast();
             break;
          }
          case kObjectGraph: {
@@ -814,12 +807,9 @@ void TFitEditor::UpdateGUI()
                fXaxis = hist->GetXaxis();
                fYaxis = hist->GetYaxis();
                fZaxis = hist->GetZaxis();
-               Int_t nx = fXaxis->GetNbins();
-               Int_t xgrmin = fXaxis->GetFirst();
-               Int_t xgrmax = fXaxis->GetLast();
-               fSliderX->SetRange(1,nx);
-               fSliderX->SetScale(5);
-               fSliderX->SetPosition((Double_t)xgrmin,(Double_t)xgrmax);
+               fXrange = fXaxis->GetNbins();
+               fXmin = fXaxis->GetFirst();
+               fXmax = fXaxis->GetLast();
             }
             break;
          }
@@ -832,19 +822,19 @@ void TFitEditor::UpdateGUI()
             fXaxis = hist->GetXaxis();
             fYaxis = hist->GetYaxis();
             fZaxis = hist->GetZaxis();
-            Int_t nx = fXaxis->GetNbins();
-            Int_t nxbinmin = fXaxis->GetFirst();
-            Int_t nxbinmax = fXaxis->GetLast();
-            fSliderX->SetRange(1,nx);
-            fSliderX->SetScale(5);
-            fSliderX->SetPosition((Double_t)nxbinmin,(Double_t)nxbinmax);
-            break;
+            fXrange = fXaxis->GetNbins();
+            fXmin = fXaxis->GetFirst();
+            fXmax = fXaxis->GetLast();
+           break;
          }
          case kObjectTree:  {
             //not implemented
             break;
          }
       }
+      fSliderX->SetRange(1,fXrange);
+      fSliderX->SetPosition(fXmin,fXmax);
+      fSliderX->SetScale(5);
    }
 
 /*  no implemented functionality for y & z sliders yet 
@@ -857,11 +847,9 @@ void TFitEditor::UpdateGUI()
 
       switch (fType) {
          case kObjectHisto: {
-            Int_t ny = fYaxis->GetNbins();
-            Int_t nybinmin = fYaxis->GetFirst();
-            Int_t nybinmax = fYaxis->GetLast();
-            fSliderY->SetRange(1,ny);
-            fSliderY->SetPosition((Double_t)nybinmin,(Double_t)nybinmax);
+            fYrange = fYaxis->GetNbins();
+            fYmin = fYaxis->GetFirst();
+            fYmax = fYaxis->GetLast();
             break;
          }
          case kObjectGraph: {
@@ -873,11 +861,9 @@ void TFitEditor::UpdateGUI()
             break;
          }
          case kObjectHStack: {
-            Int_t ny = fYaxis->GetNbins();
-            Int_t nybinmin = fYaxis->GetFirst();
-            Int_t nybinmax = fYaxis->GetLast();
-            fSliderY->SetRange(1,ny);
-            fSliderY->SetPosition((Double_t)nybinmin,(Double_t)nybinmax);
+            fYrange = fYaxis->GetNbins();
+            fYmin = fYaxis->GetFirst();
+            fYmax = fYaxis->GetLast();
             break;
          }
          case kObjectTree:  {
@@ -885,6 +871,9 @@ void TFitEditor::UpdateGUI()
             break;
          }
       }
+      fSliderY->SetRange(1,fYrange);
+      fSliderY->SetPosition(fYmin,fYmax);
+      fSliderY->SetScale(5);
    }
 
    if (fDim > 2) {
@@ -893,11 +882,9 @@ void TFitEditor::UpdateGUI()
 
       switch (fType) {
          case kObjectHisto: {
-            Int_t nz = fZaxis->GetNbins();
-            Int_t nzbinmin = fZaxis->GetFirst();
-            Int_t nzbinmax = fZaxis->GetLast();
-            fSliderZ->SetRange(1,nz);
-            fSliderZ->SetPosition((Double_t)nzbinmin,(Double_t)nzbinmax);
+            fZrange = fZaxis->GetNbins();
+            fZmin = fZaxis->GetFirst();
+            fZmax = fZaxis->GetLast();
             break;
          }
          case kObjectGraph: {
@@ -910,11 +897,9 @@ void TFitEditor::UpdateGUI()
          }
          case kObjectHStack: {
             //TH1 *hist = (TH1 *)((THStack *)fFitObject)->GetHists()->First();
-            Int_t nz = fZaxis->GetNbins();
-            Int_t nzbinmin = fZaxis->GetFirst();
-            Int_t nzbinmax = fZaxis->GetLast();
-            fSliderZ->SetRange(1,nz);
-            fSliderZ->SetPosition((Double_t)nzbinmin,(Double_t)nzbinmax);
+            fZrange = fZaxis->GetNbins();
+            fZmin = fZaxis->GetFirst();
+            fZmax = fZaxis->GetLast();
             break;
          }
          case kObjectTree:  {
@@ -922,6 +907,9 @@ void TFitEditor::UpdateGUI()
             break;
          }
       }
+      fSliderZ->SetRange(1,fZrange);
+      fSliderZ->SetPosition(fZmin,fZmax);
+      fSliderZ->SetScale(5);
    }
 
    switch (fDim) {
@@ -1499,12 +1487,17 @@ void TFitEditor::DoReset()
 {
    // Reset all fit parameters.
 
+   fParentPad->Modified();
+   fParentPad->Update();
    fFitOption = 'R';
    fDrawOption = "";
    fFunction = "gaus";
    fFuncList->Select(1);
-   if (fFitFunc) delete fFitFunc;
+   if (fFitFunc) 
+      delete fFitFunc;
    fFitFunc = new TF1("fitFunc",fFunction.Data(),fXmin,fXmax);
+   fSliderX->SetRange(1, fXrange);
+   fSliderX->SetPosition(fXmin, fXmax);
    fPlus = '+';
    if (fLinearFit->GetState() == kButtonDown)
       fLinearFit->SetState(kButtonUp, kFALSE);
@@ -1569,7 +1562,12 @@ void TFitEditor::DoSliderXPressed()
    // Slot connected to range settings on x-axis.
 
    if (!fParentPad) return;
+
+   TVirtualPad *save = 0;
+   save = gPad;
+   gPad = fParentPad;
    fParentPad->cd();
+
    fParentPad->GetCanvas()->FeedbackMode(kFALSE);
    fParentPad->SetLineWidth(1);
    fParentPad->SetLineColor(2);
@@ -1608,6 +1606,8 @@ void TFitEditor::DoSliderXPressed()
    fPx2old = fParentPad->XtoAbsPixel(xright);
    fPy2old = fParentPad->YtoAbsPixel(ymax);
    gVirtualX->DrawBox(fPx1old, fPy1old, fPx2old, fPy2old, TVirtualX::kHollow);
+
+   if(save) gPad = save;
 }
 
 //______________________________________________________________________________
@@ -1618,7 +1618,12 @@ void TFitEditor::DoSliderXMoved()
    Int_t px1,py1,px2,py2;
    Float_t xleft = 0;
    Double_t xright = 0;
-   fParentPad->cd();
+
+   TVirtualPad *save = 0;
+   save = gPad;
+   gPad = fParentPad;
+   gPad->cd();
+
    switch (fType) {
       case kObjectHisto: {
          xleft  = fXaxis->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
@@ -1655,23 +1660,23 @@ void TFitEditor::DoSliderXMoved()
          break;
       }
    }
-   Float_t ymin = fParentPad->GetUymin();
-   Float_t ymax = fParentPad->GetUymax();
-   px1 = fParentPad->XtoAbsPixel(xleft);
-   py1 = fParentPad->YtoAbsPixel(ymin);
-   px2 = fParentPad->XtoAbsPixel(xright);
-   py2 = fParentPad->YtoAbsPixel(ymax);
-   fParentPad->GetCanvas()->FeedbackMode(kTRUE);
-   fParentPad->cd();
-   fParentPad->SetLineWidth(1);
-   fParentPad->SetLineColor(2);
+   Float_t ymin = gPad->GetUymin();
+   Float_t ymax = gPad->GetUymax();
+   px1 = gPad->XtoAbsPixel(xleft);
+   py1 = gPad->YtoAbsPixel(ymin);
+   px2 = gPad->XtoAbsPixel(xright);
+   py2 = gPad->YtoAbsPixel(ymax);
+   gPad->GetCanvas()->FeedbackMode(kTRUE);
+   gPad->SetLineWidth(1);
+   gPad->SetLineColor(2);
    gVirtualX->DrawBox(fPx1old, fPy1old, fPx2old, fPy2old, TVirtualX::kHollow);
    gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
    fPx1old = px1;
    fPy1old = py1;
    fPx2old = px2 ;
    fPy2old = py2;
-   gVirtualX->Update(0);
+
+   if(save) gPad = save;
 }
 
 //______________________________________________________________________________
@@ -1679,8 +1684,7 @@ void TFitEditor::DoSliderXReleased()
 {
    // Slot connected to range settings on x-axis.
 
-   fParentPad->Modified();
-   fParentPad->Update();
+   gVirtualX->Update(0);
 }
 
 //______________________________________________________________________________
