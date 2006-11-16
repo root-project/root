@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.8 2006/11/14 16:42:33 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.9 2006/11/16 12:30:32 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -115,8 +115,8 @@ enum EFitPanel {
    kFP_FLIST, kFP_GAUS,  kFP_GAUSN, kFP_EXPO,  kFP_LAND,  kFP_LANDN,
    kFP_POL0,  kFP_POL1,  kFP_POL2,  kFP_POL3,  kFP_POL4,  kFP_POL5,
    kFP_POL6,  kFP_POL7,  kFP_POL8,  kFP_POL9,  kFP_USER,
-   kFP_NONE,  kFP_ADD,   kFP_CONV,  kFP_FILE,  kFP_PARS,  kFP_RBUST,
-   kFP_INTEG, kFP_IMERR, kFP_USERG, kFP_ADDLS, kFP_ALLE1, kFP_IFITR, kFP_NOCHI,
+   kFP_NONE,  kFP_ADD,   kFP_CONV,  kFP_FILE,  kFP_PARS,  kFP_RBUST, kFP_EMPW1,
+   kFP_INTEG, kFP_IMERR, kFP_USERG, kFP_ADDLS, kFP_ALLW1, kFP_IFITR, kFP_NOCHI,
    kFP_MLIST, kFP_MCHIS, kFP_MBINL, kFP_MUBIN, kFP_MUSER, kFP_MLINF, kFP_MUSR,
    kFP_DSAME, kFP_DNONE, kFP_DADVB, kFP_DNOST, kFP_PDEF,  kFP_PVER,  kFP_PQET,
    kFP_XMIN,  kFP_XMAX,  kFP_YMIN,  kFP_YMAX,  kFP_ZMIN,  kFP_ZMAX,
@@ -360,20 +360,25 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    fBestErrors->SetToolTipText("'E'- better errors estimation using Minos technique");
    v3->AddFrame(fBestErrors, new TGLayoutHints(kLHintsNormal, 0, 0, 2, 2));
 
-   fUseRange = new TGCheckButton(v3, "Use range", kFP_USERG);
-   fUseRange->Associate(this);
-   fUseRange->SetToolTipText("'R'- fit only data within the specified function range");
-   v3->AddFrame(fUseRange, new TGLayoutHints(kLHintsNormal, 0, 0, 2, 2));
-   if (fFitOption.Contains('R'))
-      fUseRange->SetState(kButtonDown);
+   fAllWeights1 = new TGCheckButton(v3, "All weights = 1", kFP_ALLW1);
+   fAllWeights1->Associate(this);
+   fAllWeights1->SetToolTipText("'W'- all weights=1 for non empty bins; error bars ignored");
+   v3->AddFrame(fAllWeights1, new TGLayoutHints(kLHintsNormal, 0, 0, 2, 2));
+
+   fEmptyBinsWghts1 = new TGCheckButton(v3, "Empty bins, weights=1", kFP_EMPW1);
+   fEmptyBinsWghts1->Associate(this);
+   fEmptyBinsWghts1->SetToolTipText("'WW'- all weights=1 including empty bins; error bars ignored");
+   v3->AddFrame(fEmptyBinsWghts1, new TGLayoutHints(kLHintsNormal, 0, 0, 2, 2));
 
    h->AddFrame(v3, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    TGVerticalFrame *v4 = new TGVerticalFrame(h);
-   fAllWeights1 = new TGCheckButton(v4, "All weights = 1", kFP_ALLE1);
-   fAllWeights1->Associate(this);
-   fAllWeights1->SetToolTipText("'W'- all weights set to 1, error bars are ignored");
-   v4->AddFrame(fAllWeights1, new TGLayoutHints(kLHintsNormal, 0, 0, 2, 2));
+   fUseRange = new TGCheckButton(v4, "Use range", kFP_USERG);
+   fUseRange->Associate(this);
+   fUseRange->SetToolTipText("'R'- fit only data within the specified function range");
+   v4->AddFrame(fUseRange, new TGLayoutHints(kLHintsNormal, 0, 0, 2, 2));
+   if (fFitOption.Contains('R'))
+      fUseRange->SetState(kButtonDown);
 
    fImproveResults = new TGCheckButton(v4, "Improve fit results", kFP_IFITR);
    fImproveResults->Associate(this);
@@ -451,12 +456,12 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
 
    fOptVerbose = new TGRadioButton(h8, "Verbose", kFP_PVER);
    fOptVerbose->Associate(this);
-   fOptVerbose->SetToolTipText("Print results after each iteration");
+   fOptVerbose->SetToolTipText("'V'- print results after each iteration");
    h8->AddFrame(fOptVerbose, new TGLayoutHints(kLHintsNormal, 30, 0, 0, 1));
 
    fOptQuiet = new TGRadioButton(h8, "Quiet", kFP_PQET);
    fOptQuiet->Associate(this);
-   fOptQuiet->SetToolTipText("No print");
+   fOptQuiet->SetToolTipText("'Q'- no print");
    h8->AddFrame(fOptQuiet, new TGLayoutHints(kLHintsNormal, 30, 0, 0, 1));
 
    gf->AddFrame(h8, new TGLayoutHints(kLHintsExpandX, 20, 0, 1, 1));
@@ -598,6 +603,7 @@ void TFitEditor::ConnectSlots()
    fUseRange->Connect("Toggled(Bool_t)","TFitEditor",this,"DoUseRange()");
    fAdd2FuncList->Connect("Toggled(Bool_t)","TFitEditor",this,"DoAddtoList()");
    fAllWeights1->Connect("Toggled(Bool_t)","TFitEditor",this,"DoAllWeights1()");
+   fEmptyBinsWghts1->Connect("Toggled(Bool_t)","TFitEditor",this,"DoEmptyBinsAllWeights1()");
    fImproveResults->Connect("Toggled(Bool_t)","TFitEditor",this,"DoImproveResults()");
 
    // linear fit
@@ -666,6 +672,7 @@ void TFitEditor::DisconnectSlots()
    fUseRange->Disconnect("Toggled(Bool_t)");
    fAdd2FuncList->Disconnect("Toggled(Bool_t)");
    fAllWeights1->Disconnect("Toggled(Bool_t)");
+   fEmptyBinsWghts1->Disconnect("Toggled(Bool_t)");
    fImproveResults->Disconnect("Toggled(Bool_t)");
 
    // linear fit
@@ -1106,13 +1113,32 @@ void TFitEditor::DoAdvancedOptions()
 }
 
 //______________________________________________________________________________
+void TFitEditor::DoEmptyBinsAllWeights1()
+{
+   // Slot connected to 'include emtry bins and forse all weights to 1' setting.
+
+   if (fEmptyBinsWghts1->GetState() == kButtonDown) {
+      if (fAllWeights1->GetState() == kButtonDown) {
+         fAllWeights1->SetState(kButtonUp, kTRUE);
+      }
+      fFitOption += "WW";
+   } else {
+      Int_t eq = fFitOption.First("WW");
+      fFitOption.Remove(eq, 2);
+   }
+}
+
+//______________________________________________________________________________
 void TFitEditor::DoAllWeights1()
 {
    // Slot connected to 'set all weights to 1' setting.
 
-   if (fAllWeights1->GetState() == kButtonDown)
+   if (fAllWeights1->GetState() == kButtonDown) {
+      if (fEmptyBinsWghts1->GetState() == kButtonDown) {
+         fEmptyBinsWghts1->SetState(kButtonUp, kTRUE);
+      }
       fFitOption += 'W';
-   else {
+   } else {
       Int_t eq = fFitOption.First('W');
       fFitOption.Remove(eq, 1);
    }
@@ -1268,7 +1294,7 @@ void TFitEditor::DoNoOperation(Bool_t on)
 }
 
 //______________________________________________________________________________
-void TFitEditor::DoFunction(Int_t)
+void TFitEditor::DoFunction(Int_t /*sel*/)
 {
    // Slot connected to predefined fit function settings.
 
@@ -1492,10 +1518,11 @@ void TFitEditor::DoReset()
    fFitOption = 'R';
    fDrawOption = "";
    fFunction = "gaus";
-   fFuncList->Select(1);
-   if (fFitFunc) 
+   fFuncList->Select(1, kTRUE);
+   if (fFitFunc) {
       delete fFitFunc;
-   fFitFunc = new TF1("fitFunc",fFunction.Data(),fXmin,fXmax);
+      fFitFunc = new TF1("fitFunc","gaus",fXmin,fXmax);
+   }
    fSliderX->SetRange(1, fXrange);
    fSliderX->SetPosition(fXmin, fXmax);
    fPlus = '+';
@@ -1507,6 +1534,8 @@ void TFitEditor::DoReset()
       fUseRange->SetState(kButtonDown, kFALSE);
    if (fAllWeights1->GetState() == kButtonDown)
       fAllWeights1->SetState(kButtonUp, kFALSE);
+   if (fEmptyBinsWghts1->GetState() == kButtonDown)
+      fEmptyBinsWghts1->SetState(kButtonUp, kFALSE);
    if (fImproveResults->GetState() == kButtonDown)
       fImproveResults->SetState(kButtonUp, kFALSE);
    if (fAdd2FuncList->GetState() == kButtonDown)
@@ -1519,10 +1548,6 @@ void TFitEditor::DoReset()
       fNoDrawing->SetState(kButtonUp, kFALSE);
    if (fNoStoreDrawing->GetState() == kButtonDown)
       fNoStoreDrawing->SetState(kButtonUp, kFALSE);
-   if (fLinearFit->GetState() == kButtonUp)
-      fRobustValue->SetState(kFALSE);
-   else
-      fRobustValue->SetState(kTRUE);
    fOptDefault->SetState(kButtonDown);
    fNone->SetState(kButtonDown);
 }

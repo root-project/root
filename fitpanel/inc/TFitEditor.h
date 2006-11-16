@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.5 2006/11/14 16:42:33 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.6 2006/11/16 12:30:31 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -79,6 +79,7 @@ protected:
    TGCheckButton       *fAdd2FuncList;     // switch on/off option 'add to list'
    TGCheckButton       *fAllWeights1;      // switch on/off option 'all weights=1'
    TGCheckButton       *fImproveResults;   // switch on/off option 'improve fit results'
+   TGCheckButton       *fEmptyBinsWghts1;  // switch on/off option 'include empry bins'
    TGComboBox          *fMethodList;       // contains method list
    TGCheckButton       *fLinearFit;        // switch on/off linear fit option
    TGCheckButton       *fNoChi2;           // switch on/off option 'No Chi-square'
@@ -164,6 +165,7 @@ public:
    virtual void   DoBestErrors();
    virtual void   DoClose();
    virtual void   DoDrawSame();
+   virtual void   DoEmptyBinsAllWeights1();
    virtual void   DoEnteredFunction();
    virtual void   DoFit();
    virtual void   DoFunction(Int_t sel);
