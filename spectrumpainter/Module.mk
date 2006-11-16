@@ -36,7 +36,8 @@ INCLUDEFILES += $(SPECTRUMPAINTERDEP)
 include/%.h:    $(SPECTRUMPAINTERDIRI)/%.h
 		cp $< $@
 
-$(SPECTRUMPAINTERLIB): $(SPECTRUMPAINTERO) $(SPECTRUMPAINTERDO) $(ORDER_) $(MAINLIBS) $(SPECTRUMPAINTERLIBDEP)
+$(SPECTRUMPAINTERLIB): $(SPECTRUMPAINTERO) $(SPECTRUMPAINTERDO) $(ORDER_) \
+                       $(MAINLIBS) $(SPECTRUMPAINTERLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libSpectrumPainter.$(SOEXT) $@ \
 		   "$(SPECTRUMPAINTERO) $(SPECTRUMPAINTERDO)" \
@@ -60,7 +61,7 @@ clean-spectrumpainter:
 clean::         clean-spectrumpainter
 
 distclean-spectrumpainter: clean-spectrumpainter
-		@rm -f $(SPECTRUMPAINTERDEP) $(SPECTRUMPAINTERDS) $(SPECTRUMPAINTERDH) \
-		   $(SPECTRUMPAINTERLIB)
+		@rm -f $(SPECTRUMPAINTERDEP) $(SPECTRUMPAINTERDS) \
+		   $(SPECTRUMPAINTERDH) $(SPECTRUMPAINTERLIB)
 
 distclean::     distclean-spectrumpainter
