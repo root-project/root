@@ -46,7 +46,9 @@ MATHCOREDH1  :=  $(MODDIRI)/Math/Vector3D.h \
                  $(MODDIRI)/Math/SpecFuncMathCore.h \
                  $(MODDIRI)/Math/ProbFuncMathCore.h \
                  $(MODDIRI)/Math/DistFunc.h \
-                 $(MODDIRI)/Math/VectorUtil_Cint.h
+                 $(MODDIRI)/Math/VectorUtil_Cint.h \
+                 $(MODDIRI)/Math/IParamFunction.h \
+                 $(MODDIRI)/Math/IFunction.h 
 
 MATHCOREDH132:=  $(MODDIRI)/Math/Vector3D.h \
                  $(MODDIRI)/Math/Point3D.h \

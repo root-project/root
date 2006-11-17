@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Func.h,v 1.2 2005/06/28 09:55:13 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Func.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
 
 /**********************************************************************
@@ -14,6 +14,31 @@
 
 #pragma link C++ namespace ROOT;
 #pragma link C++ namespace ROOT::Math;
+
+#ifdef OLD
+#pragma link C++ class ROOT::Math::IFunction<ROOT::Math::OneDim,ROOT::Math::Base>+;
+#pragma link C++ class ROOT::Math::IFunction<ROOT::Math::OneDim,ROOT::Math::Gradient>+;
+#pragma link C++ class ROOT::Math::IFunction<ROOT::Math::MultiDim,ROOT::Math::Base>+;
+#pragma link C++ class ROOT::Math::IFunction<ROOT::Math::MultiDim,ROOT::Math::Gradient>+;
+
+#pragma link C++ class ROOT::Math::IParamFunction<ROOT::Math::OneDim,ROOT::Math::Base>+;
+#pragma link C++ class ROOT::Math::IParamFunction<ROOT::Math::OneDim,ROOT::Math::Gradient>+;
+#pragma link C++ class ROOT::Math::IParamFunction<ROOT::Math::MultiDim,ROOT::Math::Base>+;
+#pragma link C++ class ROOT::Math::IParamFunction<ROOT::Math::MultiDim,ROOT::Math::Gradient>+;
+
+#endif
+
+#pragma link C++ class ROOT::Math::IBaseFunction<ROOT::Math::OneDim>+;
+#pragma link C++ class ROOT::Math::IGradientFunction<ROOT::Math::OneDimt>+;
+#pragma link C++ class ROOT::Math::IBaseFunction<ROOT::Math::MultiDim>+;
+#pragma link C++ class ROOT::Math::IGradientFunction<ROOT::Math::MultiDim>+;
+
+#pragma link C++ class ROOT::Math::IParamFunction<ROOT::Math::OneDim>+;
+#pragma link C++ class ROOT::Math::IParamGradFunction<ROOT::Math::OneDim>+;
+#pragma link C++ class ROOT::Math::IParamFunction<ROOT::Math::MultiDim>+;
+#pragma link C++ class ROOT::Math::IParamGradFunction<ROOT::Math::MultiDim>+;
+
+
 
 #pragma link C++ function ROOT::Math::erf( double );
 #pragma link C++ function ROOT::Math::erfc( double );
