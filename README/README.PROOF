@@ -95,7 +95,7 @@ To install and use PROOF on a cluster do the following:
 5) This is all. To test PROOF try the following:
 
    % root
-   root [1] gROOT->Proof("<master.node.ch>")
+   root [1] TProof::Open("<master.node.ch>")
    root [2] gProof->Print()
    <shows information on the master and all active slave servers>
    root [3] .q
