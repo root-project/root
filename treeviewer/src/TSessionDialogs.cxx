@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.cxx,v 1.30 2006/10/02 14:27:25 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.cxx,v 1.31 2006/11/06 00:00:26 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -81,7 +81,7 @@ TNewChainDlg::TNewChainDlg(const TGWindow *p, const TGWindow *main) :
    Pixel_t backgnd;
    if (!p || !main) return;
    SetCleanup(kDeepCleanup);
-   fClient->GetColorByName("#D0EED0", backgnd);
+   fClient->GetColorByName("#F0FFF0", backgnd);
    AddFrame(new TGLabel(this, new TGHotString("List of Chains in Memory :")),
             new TGLayoutHints(kLHintsLeft, 5, 5, 7, 2) );
 
@@ -702,7 +702,9 @@ void TNewQueryDlg::UpdateFields(TQueryDescription *desc)
 
    fQuery = desc;
    fTxtQueryName->SetText(desc->fQueryName);
-   fTxtChain->SetText(desc->fTDSetString);
+   fTxtChain->SetText("");
+   if (desc->fChain)
+      fTxtChain->SetText(desc->fTDSetString);
    fTxtSelector->SetText(desc->fSelectorString);
    fTxtOptions->SetText(desc->fOptions);
    fNumEntries->SetIntNumber(desc->fNoEntries);

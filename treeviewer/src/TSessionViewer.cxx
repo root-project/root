@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.80 2006/11/06 11:40:30 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.81 2006/11/06 13:15:55 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -565,11 +565,14 @@ void TSessionServerFrame::OnBtnConnectClicked()
       fClient->NeedRedraw(fViewer->GetSessionHierarchy());
       // connect to progress related signals
       fViewer->GetActDesc()->fProof->Connect("Progress(Long64_t,Long64_t)",
-                                 "TSessionQueryFrame", fViewer->GetQueryFrame(),
-                                 "Progress(Long64_t,Long64_t)");
+                 "TSessionQueryFrame", fViewer->GetQueryFrame(),
+                 "Progress(Long64_t,Long64_t)");
+      fViewer->GetActDesc()->fProof->Connect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
+                 "TSessionQueryFrame", fViewer->GetQueryFrame(),
+                 "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
       fViewer->GetActDesc()->fProof->Connect("StopProcess(Bool_t)",
-                                 "TSessionQueryFrame", fViewer->GetQueryFrame(),
-                                 "IndicateStop(Bool_t)");
+                 "TSessionQueryFrame", fViewer->GetQueryFrame(),
+                 "IndicateStop(Bool_t)");
       fViewer->GetActDesc()->fProof->Connect(
                   "ResetProgressDialog(const char*,Int_t,Long64_t,Long64_t)",
                   "TSessionQueryFrame", fViewer->GetQueryFrame(),
@@ -2246,10 +2249,12 @@ void TEditQueryFrame::UpdateFields(TQueryDescription *desc)
 
    fChain = 0;
    fQuery = desc;
-   if (desc->fChain)
+   fTxtChain->SetText("");
+   if (desc->fChain) {
       fChain = desc->fChain;
+      fTxtChain->SetText(desc->fTDSetString);
+   }
    fTxtQueryName->SetText(desc->fQueryName);
-   fTxtChain->SetText(desc->fTDSetString);
    fTxtSelector->SetText(desc->fSelectorString);
    fTxtOptions->SetText(desc->fOptions);
    fNumEntries->SetIntNumber(desc->fNoEntries);
@@ -2563,6 +2568,18 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
 }
 
 //______________________________________________________________________________
+void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed,
+                                  Long64_t /*bytesread*/ , Float_t /*initTime*/, 
+                                  Float_t /*procTime*/, Float_t /*evtrti*/, 
+                                  Float_t /*mbrti*/)
+{
+   // New version of Progress (just forward to the old version
+   // for the time being).
+
+   Progress(total, processed);
+}
+
+//______________________________________________________________________________
 void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
 {
    // Update progress bar and status labels.
@@ -2686,6 +2703,8 @@ void TSessionQueryFrame::IndicateStop(Bool_t aborted)
        fViewer->GetActDesc()->fProof->IsValid()) {
       fViewer->GetActDesc()->fProof->Disconnect("Progress(Long64_t,Long64_t)",
                this, "Progress(Long64_t,Long64_t)");
+      fViewer->GetActDesc()->fProof->Disconnect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
+               this, "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
       fViewer->GetActDesc()->fProof->Disconnect("StopProcess(Bool_t)", this,
                "IndicateStop(Bool_t)");
    }
@@ -2718,6 +2737,9 @@ void TSessionQueryFrame::ResetProgressDialog(const char * /*selector*/, Int_t fi
        fViewer->GetActDesc()->fProof->IsValid()) {
       fViewer->GetActDesc()->fProof->Connect("Progress(Long64_t,Long64_t)",
                "TSessionQueryFrame", this, "Progress(Long64_t,Long64_t)");
+      fViewer->GetActDesc()->fProof->Connect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
+               "TSessionQueryFrame", this,
+               "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
       fViewer->GetActDesc()->fProof->Connect("StopProcess(Bool_t)",
                "TSessionQueryFrame", this, "IndicateStop(Bool_t)");
       sprintf(buf, "PROOF cluster : \"%s\" - %d worker nodes",
@@ -2976,6 +2998,7 @@ void TSessionQueryFrame::OnBtnSubmit()
                   newquery->fOptions,
                   newquery->fNoEntries > 0 ? newquery->fNoEntries : 1234567890,
                   newquery->fFirstEntry);
+            ((TChain *)newquery->fChain)->SetTimerInterval(0);
             OnBtnRetrieve();
             TChain *chain = (TChain *)newquery->fChain;
             ProgressLocal(chain->GetEntries(),
@@ -3693,6 +3716,9 @@ void TSessionViewer::UpdateListOfProofs()
                            fActDesc->fProof->Connect("Progress(Long64_t,Long64_t)",
                                     "TSessionQueryFrame", fQueryFrame,
                                     "Progress(Long64_t,Long64_t)");
+                           fActDesc->fProof->Connect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
+                                    "TSessionQueryFrame", fQueryFrame,
+                                    "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
                            fActDesc->fProof->Connect("StopProcess(Bool_t)",
                                     "TSessionQueryFrame", fQueryFrame,
                                     "IndicateStop(Bool_t)");
@@ -3762,6 +3788,9 @@ void TSessionViewer::UpdateListOfProofs()
                   newdesc->fProof->Connect("Progress(Long64_t,Long64_t)",
                            "TSessionQueryFrame", fQueryFrame,
                            "Progress(Long64_t,Long64_t)");
+                  newdesc->fProof->Connect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
+                           "TSessionQueryFrame", fQueryFrame,
+                           "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
                   newdesc->fProof->Connect("StopProcess(Bool_t)",
                            "TSessionQueryFrame", fQueryFrame,
                            "IndicateStop(Bool_t)");
@@ -4742,7 +4771,8 @@ Bool_t TSessionViewer::HandleTimer(TTimer *)
          (fActDesc->fActQuery->fStatus ==
          TQueryDescription::kSessionQueryRunning)) {
          TChain *chain = (TChain *)fActDesc->fActQuery->fChain;
-         fQueryFrame->ProgressLocal(chain->GetEntries(),
+         if (chain)
+            fQueryFrame->ProgressLocal(chain->GetEntries(),
                         chain->GetChainEntryNumber(chain->GetReadEntry())+1);
       }
    }
@@ -5293,6 +5323,8 @@ void TSessionViewer::OnCascadeMenu()
          fActDesc->fNbHistos++;
       i++;
    }
+   fQueryFrame->GetStatsCanvas()->SetEditable(kTRUE);
+   fQueryFrame->GetStatsCanvas()->Clear();
    if (fActDesc->fNbHistos == 4)
       fQueryFrame->GetStatsCanvas()->Divide(2, 2);
    else if (fActDesc->fNbHistos > 4)

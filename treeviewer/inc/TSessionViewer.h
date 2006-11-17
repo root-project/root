@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.h,v 1.36 2006/10/02 14:27:25 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.h,v 1.37 2006/11/06 00:00:26 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -441,6 +441,10 @@ public:
 
    void     Feedback(TList *objs);
    void     Progress(Long64_t total, Long64_t processed);
+   void     Progress(Long64_t total, Long64_t processed,
+                     Long64_t bytesread, Float_t initTime, 
+                     Float_t procTime, Float_t evtrti, 
+                     Float_t mbrti);
    void     ProgressLocal(Long64_t total, Long64_t processed);
    void     IndicateStop(Bool_t aborted);
    void     ResetProgressDialog(const char *selec, Int_t files, Long64_t first, Long64_t entries);
