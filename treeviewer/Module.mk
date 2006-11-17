@@ -25,9 +25,7 @@ TREEVIEWERH  := TTreeViewerOld.h TPaveVar.h
 TREEVIEWERS  := TTreeViewerOld.cxx TPaveVar.cxx
 else
 TREEVIEWERH  := TTreeViewer.h TTVSession.h TTVLVContainer.h HelpTextTV.h
-TREEVIEWERH  += TSessionViewer.h TSessionLogView.h TSessionDialogs.h
 TREEVIEWERS  := TTreeViewer.cxx TTVSession.cxx TTVLVContainer.cxx HelpTextTV.cxx
-TREEVIEWERS  += TSessionViewer.cxx TSessionLogView.cxx TSessionDialogs.cxx
 endif
 TREEVIEWERH  := $(patsubst %,$(MODDIRI)/%,$(TREEVIEWERH))
 TREEVIEWERS  := $(patsubst %,$(MODDIRS)/%,$(TREEVIEWERS))

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionDialogs.cxx,v 1.31 2006/11/06 00:00:26 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSessionDialogs.cxx,v 1.32 2006/11/17 15:42:13 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -774,15 +774,15 @@ TUploadDataSetDlg::TUploadDataSetDlg(TSessionViewer *gui, Int_t w, Int_t h) :
    SetCleanup(kDeepCleanup);
    TGHorizontalFrame *hFrame1 = new TGHorizontalFrame(this);
    hFrame1->SetCleanup(kDeepCleanup);
-   hFrame1->AddFrame(new TGLabel(hFrame1,"Name of DataSet :"), 
-                     new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 
+   hFrame1->AddFrame(new TGLabel(hFrame1,"Name of DataSet :"),
+                     new TGLayoutHints(kLHintsLeft | kLHintsCenterY,
                      10, 10, 5, 5));
    fDSetName = new TGTextEntry(hFrame1, new TGTextBuffer(50));
    fDSetName->SetText("DataSet1");
    fDSetName->Resize(150, fDSetName->GetDefaultHeight());
-   hFrame1->AddFrame(fDSetName, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 
+   hFrame1->AddFrame(fDSetName, new TGLayoutHints(kLHintsLeft | kLHintsCenterY,
                      10, 10, 5, 5));
-   AddFrame(hFrame1, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX, 
+   AddFrame(hFrame1, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX,
             2, 2, 2, 2));
 
    // "DataSet Files" group frame
@@ -792,20 +792,20 @@ TUploadDataSetDlg::TUploadDataSetDlg(TSessionViewer *gui, Int_t w, Int_t h) :
    // horizontal frame for files location URL
    TGHorizontalFrame *hFrame11 = new TGHorizontalFrame(groupFrame1);
    hFrame11->SetCleanup(kDeepCleanup);
-   hFrame11->AddFrame(new TGLabel(hFrame11,"Location URL :"), 
-                     new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 
+   hFrame11->AddFrame(new TGLabel(hFrame11,"Location URL :"),
+                     new TGLayoutHints(kLHintsLeft | kLHintsCenterY,
                      10, 10, 5, 5));
    fLocationURL = new TGTextEntry(hFrame11, new TGTextBuffer(150));
    fLocationURL->SetToolTipText("Enter location URL ( i.e \" root://lxplus//castor/cern.ch/user/n/name/*.root \" )");
    fLocationURL->Resize(210, fLocationURL->GetDefaultHeight());
-   hFrame11->AddFrame(fLocationURL, new TGLayoutHints(kLHintsLeft | 
+   hFrame11->AddFrame(fLocationURL, new TGLayoutHints(kLHintsLeft |
                       kLHintsCenterY, 10, 10, 5, 5));
    fAddButton = new TGTextButton(hFrame11, " Add >> ", 0);
    fAddButton->SetToolTipText("Add file(s) to the list");
    fAddButton->Associate(this);
-   hFrame11->AddFrame(fAddButton, new TGLayoutHints(kLHintsLeft | kLHintsCenterY | 
+   hFrame11->AddFrame(fAddButton, new TGLayoutHints(kLHintsLeft | kLHintsCenterY |
                       kLHintsExpandX, 5, 10, 5, 5));
-   groupFrame1->AddFrame(hFrame11, new TGLayoutHints(kLHintsLeft | kLHintsTop | 
+   groupFrame1->AddFrame(hFrame11, new TGLayoutHints(kLHintsLeft | kLHintsTop |
                          kLHintsExpandX, 2, 2, 2, 2));
    // horizontal frame for the list view displaying list of files
    // and for a vertical frame with control buttons
@@ -821,7 +821,7 @@ TUploadDataSetDlg::TUploadDataSetDlg(TSessionViewer *gui, Int_t w, Int_t h) :
    fLVContainer->SetCleanup(kDeepCleanup);
    fLVContainer->SetHeaders(1);
    fLVContainer->SetHeader("File Name", kTextLeft, kTextLeft , 0);
-   hFrame2->AddFrame(fListView, new TGLayoutHints(kLHintsLeft | kLHintsTop | 
+   hFrame2->AddFrame(fListView, new TGLayoutHints(kLHintsLeft | kLHintsTop |
                      kLHintsExpandX | kLHintsExpandY, 2, 2, 10, 10));
 
    // vertical frame for control buttons
@@ -831,30 +831,30 @@ TUploadDataSetDlg::TUploadDataSetDlg(TSessionViewer *gui, Int_t w, Int_t h) :
    fBrowseButton = new TGTextButton(vFrame1, " Browse... ", 1);
    fBrowseButton->SetToolTipText("Add file(s) to the list");
    fBrowseButton->Associate(this);
-   vFrame1->AddFrame(fBrowseButton, new TGLayoutHints(kLHintsLeft | kLHintsTop | 
+   vFrame1->AddFrame(fBrowseButton, new TGLayoutHints(kLHintsLeft | kLHintsTop |
                      kLHintsExpandX, 15, 5, 5, 5));
    fRemoveButton = new TGTextButton(vFrame1, " Remove ", 2);
    fRemoveButton->SetToolTipText("Remove selected file from the list");
    fRemoveButton->Associate(this);
-   vFrame1->AddFrame(fRemoveButton, new TGLayoutHints(kLHintsLeft | kLHintsTop | 
+   vFrame1->AddFrame(fRemoveButton, new TGLayoutHints(kLHintsLeft | kLHintsTop |
                      kLHintsExpandX, 15, 5, 5, 5));
    fClearButton = new TGTextButton(vFrame1, " Clear ", 3);
    fClearButton->SetToolTipText("Clear list of files");
    fClearButton->Associate(this);
-   vFrame1->AddFrame(fClearButton, new TGLayoutHints(kLHintsLeft | kLHintsTop | 
+   vFrame1->AddFrame(fClearButton, new TGLayoutHints(kLHintsLeft | kLHintsTop |
                      kLHintsExpandX, 15, 5, 5, 5));
 
    fOverwriteDSet = new TGCheckButton(vFrame1, "Overwrite DataSet");
    fOverwriteDSet->SetToolTipText("Overwrite DataSet");
-   vFrame1->AddFrame(fOverwriteDSet, new TGLayoutHints(kLHintsLeft | kLHintsTop | 
+   vFrame1->AddFrame(fOverwriteDSet, new TGLayoutHints(kLHintsLeft | kLHintsTop |
                      kLHintsExpandX, 15, 5, 5, 5));
    fOverwriteFiles = new TGCheckButton(vFrame1, "Overwrite Files");
    fOverwriteFiles->SetToolTipText("Overwrite files in DataSet");
-   vFrame1->AddFrame(fOverwriteFiles, new TGLayoutHints(kLHintsLeft | kLHintsTop | 
+   vFrame1->AddFrame(fOverwriteFiles, new TGLayoutHints(kLHintsLeft | kLHintsTop |
                      kLHintsExpandX, 15, 5, 5, 5));
    fAppendFiles = new TGCheckButton(vFrame1, "Append Files");
    fAppendFiles->SetToolTipText("Append files in DataSet");
-   vFrame1->AddFrame(fAppendFiles, new TGLayoutHints(kLHintsLeft | kLHintsTop | 
+   vFrame1->AddFrame(fAppendFiles, new TGLayoutHints(kLHintsLeft | kLHintsTop |
                      kLHintsExpandX, 15, 5, 5, 5));
 
    fOverwriteDSet->Connect("Toggled(Bool_t)", "TUploadDataSetDlg", this,
@@ -864,33 +864,33 @@ TUploadDataSetDlg::TUploadDataSetDlg(TSessionViewer *gui, Int_t w, Int_t h) :
    fAppendFiles->Connect("Toggled(Bool_t)", "TUploadDataSetDlg", this,
          "OnAppendFiles(Bool_t)");
 
-   hFrame2->AddFrame(vFrame1, new TGLayoutHints(kLHintsRight | kLHintsTop | 
+   hFrame2->AddFrame(vFrame1, new TGLayoutHints(kLHintsRight | kLHintsTop |
                      kLHintsExpandY, 2, 2, 2, 2));
-   groupFrame1->AddFrame(hFrame2, new TGLayoutHints(kLHintsLeft | kLHintsTop | 
+   groupFrame1->AddFrame(hFrame2, new TGLayoutHints(kLHintsLeft | kLHintsTop |
                          kLHintsExpandX | kLHintsExpandY, 2, 2, 2, 2));
 
-   AddFrame(groupFrame1, new TGLayoutHints(kLHintsLeft | kLHintsTop | 
+   AddFrame(groupFrame1, new TGLayoutHints(kLHintsLeft | kLHintsTop |
             kLHintsExpandX, 5, 5, 2, 2));
 
    // horizontal frame for destination URL
    TGHorizontalFrame *hFrame3 = new TGHorizontalFrame(this);
    hFrame3->SetCleanup(kDeepCleanup);
-   hFrame3->AddFrame(new TGLabel(hFrame3,"Destination URL :"), 
+   hFrame3->AddFrame(new TGLabel(hFrame3,"Destination URL :"),
                      new TGLayoutHints(kLHintsLeft | kLHintsCenterY,
                      15, 10, 5, 5));
    fDestinationURL = new TGTextEntry(hFrame3, new TGTextBuffer(150));
-   if (fViewer->GetActDesc()->fConnected && 
+   if (fViewer->GetActDesc()->fConnected &&
       fViewer->GetActDesc()->fAttached &&
-      fViewer->GetActDesc()->fProof && 
+      fViewer->GetActDesc()->fProof &&
       fViewer->GetActDesc()->fProof->IsValid()) {
       // const char *dest = fViewer->GetActDesc()->fProof->GetDataPoolUrl();
       // fDestinationURL->SetText(dest);
    }
    fDestinationURL->SetToolTipText("Enter destination URL ( relative to \" root://host//proofpool/user/ \" )");
    fDestinationURL->Resize(305, fDestinationURL->GetDefaultHeight());
-   hFrame3->AddFrame(fDestinationURL, new TGLayoutHints(kLHintsLeft | 
+   hFrame3->AddFrame(fDestinationURL, new TGLayoutHints(kLHintsLeft |
                      kLHintsCenterY, 10, 15, 5, 5));
-   AddFrame(hFrame3, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX, 
+   AddFrame(hFrame3, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX,
             2, 2, 2, 2));
 
    // horizontal frame for upload and close buttons
@@ -899,14 +899,14 @@ TUploadDataSetDlg::TUploadDataSetDlg(TSessionViewer *gui, Int_t w, Int_t h) :
    fUploadButton = new TGTextButton(hFrame4, "Upload DataSet", 10);
    fUploadButton->SetToolTipText("Upload the dataset to the cluster");
    fUploadButton->Associate(this);
-   hFrame4->AddFrame(fUploadButton, new TGLayoutHints(kLHintsLeft | kLHintsCenterY | 
+   hFrame4->AddFrame(fUploadButton, new TGLayoutHints(kLHintsLeft | kLHintsCenterY |
                      kLHintsExpandX, 15, 15, 2, 2));
    fCloseDlgButton = new TGTextButton(hFrame4, "Close Dialog", 11);
    fCloseDlgButton->SetToolTipText("Close the dialog");
    fCloseDlgButton->Associate(this);
-   hFrame4->AddFrame(fCloseDlgButton, new TGLayoutHints(kLHintsLeft | kLHintsCenterY | 
+   hFrame4->AddFrame(fCloseDlgButton, new TGLayoutHints(kLHintsLeft | kLHintsCenterY |
                      kLHintsExpandX, 15, 15, 2, 2));
-   AddFrame(hFrame4, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX, 
+   AddFrame(hFrame4, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX,
             2, 2, 2, 2));
 
    // position relative to the parent's window
@@ -1011,7 +1011,7 @@ void TUploadDataSetDlg::AddFiles(const char *fileName)
          if (entryString.Index(rg) != kNPOS &&
              gSystem->AccessPathName(Form("%s/%s", gSystem->DirName(fileName),
                 ent), kReadPermission) == kFALSE) {
-            const char *text = Form("%s/%s", 
+            const char *text = Form("%s/%s",
                gSystem->UnixPathName(gSystem->DirName(fileName)), ent);
             if (!fLVContainer->FindItem(text)) {
                TGLVEntry *entry = new TGLVEntry(fLVContainer, text, text);
@@ -1183,7 +1183,7 @@ void TUploadDataSetDlg::UploadDataSet()
    ret = fViewer->GetActDesc()->fProof->UploadDataSet(dsetName,
                   datasetFiles, destination, flags, skippedFiles);
    if (ret == TVirtualProof::kDataSetExists) {
-      // ask user what to do : 
+      // ask user what to do :
       // cancel/overwrite and change option
       new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
                    Form("The dataset \"%s\" already exists on the cluster ! Overwrite ?",
@@ -1191,15 +1191,15 @@ void TUploadDataSetDlg::UploadDataSet()
                    &retval);
       if (retval == kMBYes) {
          ret = fViewer->GetActDesc()->fProof->UploadDataSet(dsetName,
-                          datasetFiles, destination, 
-                          TVirtualProof::kOverwriteDataSet | 
+                          datasetFiles, destination,
+                          TVirtualProof::kOverwriteDataSet |
                           TVirtualProof::kOverwriteNoFiles,
                           skippedFiles);
       }
       if (retval == kMBAppend) {
          ret = fViewer->GetActDesc()->fProof->UploadDataSet(dsetName,
-                          datasetFiles, destination, 
-                          TVirtualProof::kAppend | 
+                          datasetFiles, destination,
+                          TVirtualProof::kAppend |
                           TVirtualProof::kOverwriteNoFiles,
                           skippedFiles);
       }
@@ -1218,16 +1218,16 @@ void TUploadDataSetDlg::UploadDataSet()
    if (skippedFiles->GetSize()) {
       TIter nexts(skippedFiles);
       while (TFileInfo *obj = (TFileInfo*)nexts()) {
-         // Notify user that file: obj->GetFirstUrl()->GetUrl() exists on 
+         // Notify user that file: obj->GetFirstUrl()->GetUrl() exists on
          // the cluster and ask user what to do
          new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
                    Form("The file \"%s\" already exists on the cluster ! Overwrite ?",
-                   obj->GetFirstUrl()->GetUrl()), kMBIconQuestion, 
+                   obj->GetFirstUrl()->GetUrl()), kMBIconQuestion,
                    kMBYes | kMBNo | kMBYesAll | kMBNoAll | kMBDismiss, &retval);
          if (retval == kMBYesAll) {
             ret = fViewer->GetActDesc()->fProof->UploadDataSet(dsetName,
-                           skippedFiles, destination, 
-                           TVirtualProof::kAppend | 
+                           skippedFiles, destination,
+                           TVirtualProof::kAppend |
                            TVirtualProof::kOverwriteAllFiles);
             if (ret == TVirtualProof::kError) {
                // Inform user
@@ -1251,8 +1251,8 @@ void TUploadDataSetDlg::UploadDataSet()
          }
          if (retval == kMBYes) {
             // Append one file to the dataSet
-            ret = fViewer->GetActDesc()->fProof->UploadDataSet(dsetName, 
-                  obj->GetFirstUrl()->GetUrl(), destination, 
+            ret = fViewer->GetActDesc()->fProof->UploadDataSet(dsetName,
+                  obj->GetFirstUrl()->GetUrl(), destination,
                   TVirtualProof::kAppend | TVirtualProof::kOverwriteAllFiles);
             if (ret == TVirtualProof::kError) {
                // Inform user

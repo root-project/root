@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionLogView.cxx $
+// @(#)root/proof:$Name:  $:$Id: TSessionLogView.cxx,v 1.4 2006/01/30 17:42:06 rdm Exp $
 // Author: Bertrand Bellenot, Gerri Ganis 15/09/2005
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TSessionViewer.cxx,v 1.81 2006/11/06 13:15:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSessionViewer.cxx,v 1.82 2006/11/17 15:42:13 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -2537,10 +2537,10 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
    // get current time
    if ((fViewer->GetActDesc()->fActQuery->fStatus ==
         TQueryDescription::kSessionQueryRunning) ||
-       (fViewer->GetActDesc()->fActQuery->fStatus == 
+       (fViewer->GetActDesc()->fActQuery->fStatus ==
         TQueryDescription::kSessionQuerySubmitted))
       fViewer->GetActDesc()->fActQuery->fEndTime = gSystem->Now();
-   TTime tdiff = fViewer->GetActDesc()->fActQuery->fEndTime - 
+   TTime tdiff = fViewer->GetActDesc()->fActQuery->fEndTime -
                  fViewer->GetActDesc()->fActQuery->fStartTime;
    Float_t eta = 0;
    if (processed)
@@ -2569,8 +2569,8 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
 
 //______________________________________________________________________________
 void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed,
-                                  Long64_t /*bytesread*/ , Float_t /*initTime*/, 
-                                  Float_t /*procTime*/, Float_t /*evtrti*/, 
+                                  Long64_t /*bytesread*/ , Float_t /*initTime*/,
+                                  Float_t /*procTime*/, Float_t /*evtrti*/,
                                   Float_t /*mbrti*/)
 {
    // New version of Progress (just forward to the old version
@@ -3271,7 +3271,7 @@ void TSessionQueryFrame::UpdateInfos()
 
    frmProg->SetPosition(100.0);
 
-   buffer = Form(" Processed : %lld events in %.1f sec", result->GetEntries(), 
+   buffer = Form(" Processed : %lld events in %.1f sec", result->GetEntries(),
               (Float_t)elapsed);
    fTotal->SetText(buffer);
    buffer = Form(" Processing Rate : %.1f events/sec   ", rate);
@@ -3625,7 +3625,7 @@ void TSessionViewer::ReadConfiguration(const char *filename)
                TString firstentry = strtok(0, ";");
 
                TQueryDescription *newquery = new TQueryDescription();
-               newquery->fStatus = 
+               newquery->fStatus =
                   (TQueryDescription::ESessionQueryStatus)(atoi(status));
                newquery->fSelectorString  = selector.Length() > 2 ? selector.Data() : "";
                newquery->fReference       = reference.Length() > 2 ? reference.Data() : "";

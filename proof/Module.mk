@@ -32,7 +32,11 @@ PROOFGUIDO   := $(PROOFGUIDS:.cxx=.o)
 PROOFGUIDH   := $(PROOFGUIDS:.cxx=.h)
 
 PROOFGUIH    := $(wildcard $(MODDIRI)/TProofProgress*.h)
+PROOFGUIH    += $(MODDIRI)/TSessionViewer.h $(MODDIRI)/TSessionLogView.h
+PROOFGUIH    += $(MODDIRI)/TSessionDialogs.h
 PROOFGUIS    := $(wildcard $(MODDIRS)/TProofProgress*.cxx)
+PROOFGUIS    += $(MODDIRS)/TSessionViewer.cxx $(MODDIRS)/TSessionLogView.cxx 
+PROOFGUIS    += $(MODDIRS)/TSessionDialogs.cxx
 PROOFGUIO    := $(PROOFGUIS:.cxx=.o)
 
 PROOFGUIDEP  := $(PROOFGUIO:.o=.d) $(PROOFGUIDO:.o=.d)
