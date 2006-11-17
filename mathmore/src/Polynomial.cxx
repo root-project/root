@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Polynomial.cxx,v 1.3 2005/09/19 13:06:53 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Polynomial.cxx,v 1.4 2006/05/26 14:26:08 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -121,7 +121,7 @@ Polynomial::~Polynomial()
 // }
 
 
-double  Polynomial::operator() (double x) { 
+double  Polynomial::DoEval (double x) const { 
   
     return gsl_poly_eval( &fParams.front(), fOrder + 1, x); 
 
@@ -135,7 +135,7 @@ double  Polynomial::operator() (double x, const std::vector<double> & p) {
 }
 
 
-double  Polynomial::Gradient(double x) { 
+double  Polynomial::DoDerivative(double x) const{ 
 
    for ( unsigned int i = 0; i < fOrder; ++i ) 
     fDerived_params[i] =  (i + 1) * Parameters()[i+1]; 
@@ -144,12 +144,12 @@ double  Polynomial::Gradient(double x) {
 
 }
 
-const std::vector<double> &  Polynomial::ParameterGradient (double x) { 
+void Polynomial::DoParameterGradient (double x, double * grad) const { 
 
-    for (unsigned int i = 0; i < fParGradient.size(); ++i) 
-      fParGradient[i] = gsl_pow_int(x, i); 
-  
-    return fParGradient; 
+   unsigned int npar = NPar(); 
+   for (unsigned int i = 0; i < npar; ++i) 
+      grad[i] = gsl_pow_int(x, i); 
+      // return fParGradient; 
 
 }
 
@@ -277,7 +277,7 @@ const std::vector< std::complex <double> > &  Polynomial::FindNumRoots(){
 
     gsl_poly_complex_workspace * w = gsl_poly_complex_workspace_alloc( n + 1); 
     std::vector<double> z(2*n);
-    int status = gsl_poly_complex_solve (&Parameters().front(), n+1, w, &z.front() );  
+    int status = gsl_poly_complex_solve ( Parameters(), n+1, w, &z.front() );  
     gsl_poly_complex_workspace_free(w);
     if (status != GSL_SUCCESS) return fRoots; 
     for (unsigned int i = 0; i < n; ++i) 

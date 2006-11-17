@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: RootFinder.h,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: RootFinder.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -31,8 +31,14 @@
 #ifndef ROOT_Math_RootFinder
 #define ROOT_Math_RootFinder
 
+#ifndef ROOT_Math_GSLRootHelper
 #include "Math/GSLRootHelper.h"
-#include "Math/IGenFunction.h"
+#endif
+
+#ifndef ROOT_Math_IFunctionfwd
+#include "Math/IFunctionfwd.h"
+#endif
+
 
 /**
    @defgroup RootFinders Root-Finding algorithms
@@ -109,7 +115,7 @@ public:
        <em>  double  operator() (  double  x ) </em>
     */
 
-    void SetFunction( const IGenFunction & f, double Root) { 
+    void SetFunction( const IGradFunction & f, double Root) { 
     fSolver.SetFunction( f, Root); 
   }   
 

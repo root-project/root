@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLFunctionWrapper.h,v 1.3 2005/09/19 13:06:53 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLFunctionWrapper.h,v 1.4 2006/06/08 16:36:17 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -33,7 +33,8 @@
 
 #include "gsl/gsl_math.h"
 
-#include "Math/IGenFunction.h"
+#include "Math/IFunctionfwd.h"
+#include "Math/IFunction.h"
 
 
 namespace ROOT {
@@ -100,7 +101,7 @@ namespace Math {
     // evaluate the function and derivatives
     double operator() (double x) {  return GSL_FN_FDF_EVAL_F(&fFunc, x); }
 
-    double Gradient (double x) { return GSL_FN_FDF_EVAL_DF(&fFunc, x); } 
+    double Derivative (double x) { return GSL_FN_FDF_EVAL_DF(&fFunc, x); } 
 
     void Fdf(double x, double & f, double & df) { 
       return GSL_FN_FDF_EVAL_F_DF(&fFunc, x, &f, &df);

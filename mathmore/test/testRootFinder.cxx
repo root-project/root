@@ -1,4 +1,5 @@
 #include "Math/Polynomial.h"
+#include "Math/Functor.h"
 #include "Math/RootFinder.h"
 #include "Math/RootFinderAlgorithms.h"
 
@@ -49,15 +50,15 @@ int findRoot( RF * r ) {
 void testRootFinder() {
 
 
-  ROOT::Math::Polynomial func(2);
+  ROOT::Math::Polynomial polyf(2);
   std::vector<double> p(3);
   p[0] = -5; 
   p[1] = 0; 
   p[2] = 1; 
 
-  func.SetParameters(p); 
+  polyf.SetParameters(&p[0]); 
 
-
+  ROOT::Math::IGenFunction &  func = polyf;
 
   ROOT::Math::RootFinder<ROOT::Math::Roots::Bisection> *rf1 = new ROOT::Math::RootFinder<ROOT::Math::Roots::Bisection>;
   rf1->SetFunction( func, 0, 5); 
@@ -68,15 +69,15 @@ void testRootFinder() {
   rf2->SetFunction( func, 0, 5); 
   findRoot(rf2); 
 
-
+  // methods using derivatives 
 
   ROOT::Math::RootFinder<ROOT::Math::Roots::Secant> *rf3 = new ROOT::Math::RootFinder<ROOT::Math::Roots::Secant>;
-  rf3->SetFunction( func, 0, 5); 
+  rf3->SetFunction( polyf, 1); 
   findRoot(rf3); 
 
   
   ROOT::Math::RootFinder<ROOT::Math::Roots::Steffenson> *rf4 = new ROOT::Math::RootFinder<ROOT::Math::Roots::Steffenson>;
-  rf4->SetFunction( func, 0, 5); 
+  rf4->SetFunction( polyf, 1); 
   findRoot(rf4); 
   
 

@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Derivator.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Derivator.h,v 1.2 2006/06/08 16:36:17 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -37,8 +37,10 @@
 @defgroup Deriv Numerical Differentiation
 */
  
+#ifndef ROOT_Math_IFunctionfwd
+#include "Math/IFunctionfwd.h"
+#endif
 
-#include "Math/IGenFunction.h"
 
 namespace ROOT {
 namespace Math {
@@ -106,7 +108,7 @@ namespace Math {
 	 adaptive central difference algorithm with a step size h
      */
 
-     double Eval(const IGenFunction & f, double x, double h = 1E-8);
+     double Eval(const IGenFunction & f, double x, double h = 1E-8) const;
     
  
    
@@ -116,7 +118,7 @@ namespace Math {
 	 adaptive central difference algorithm with a step size h
      */
 
-     double Eval(double x, double h = 1E-8);
+     double Eval(double x, double h = 1E-8) const;
 
 
 
@@ -125,7 +127,7 @@ namespace Math {
 	 difference algorithm with a step size h
      */
      
-    double EvalCentral(const IGenFunction & f, double x, double h = 1E-8);
+    double EvalCentral(const IGenFunction & f, double x, double h = 1E-8) const;
 
 //     template <class UserFunc>
 //     inline double EvalCentral(const UserFunc & f, double x, double h) { 
@@ -140,7 +142,7 @@ namespace Math {
 	 The function is evaluated only at points greater than x and at x itself
      */
     
-    double EvalForward(const IGenFunction & f, double x, double h = 1E-8);
+    double EvalForward(const IGenFunction & f, double x, double h = 1E-8) const;
 
      /** 
 	 Computes the numerical derivative of a function f at a point x using an adaptive backward 
@@ -148,28 +150,28 @@ namespace Math {
 	 The function is evaluated only at points less than x and at x itself
      */
     
-    double EvalBackward(const IGenFunction & f, double x, double h = 1E-8);
+    double EvalBackward(const IGenFunction & f, double x, double h = 1E-8) const;
 
     
      /** 
 	 Computes the numerical derivative at a point x using an adaptive central 
 	 difference algorithm with a step size h. 
      */
-    double EvalCentral( double x, double h = 1E-8); 
+    double EvalCentral( double x, double h = 1E-8) const; 
 
      /** 
 	 Computes the numerical derivative at a point x using an adaptive forward 
 	 difference algorithm with a step size h.
 	 The function is evaluated only at points greater than x and at x itself.
      */
-    double EvalForward( double x, double h = 1E-8); 
+    double EvalForward( double x, double h = 1E-8) const; 
 
      /** 
 	 Computes the numerical derivative at a point x using an adaptive backward 
 	 difference algorithm with a step size h.
 	 The function is evaluated only at points less than x and at x itself.
      */
-    double EvalBackward( double x, double h = 1E-8); 
+    double EvalBackward( double x, double h = 1E-8) const; 
 
      /**
 	return the error status of the last integral calculation
@@ -193,7 +195,7 @@ protected:
 private: 
 
 
-    GSLDerivator * fDerivator;  
+    mutable GSLDerivator * fDerivator;  
 
 }; 
 

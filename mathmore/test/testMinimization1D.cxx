@@ -1,6 +1,6 @@
 #include "Math/Polynomial.h"
 #include "Math/Minimizer1D.h"
-#include "Math/WrappedFunction.h"
+#include "Math/Functor.h"
 //#include "TF1.h"
 #include <iostream>
 
@@ -10,19 +10,21 @@
 void testMinimization1D() {
 
 
-  ROOT::Math::Polynomial *f = new ROOT::Math::Polynomial(2);
+  ROOT::Math::Polynomial *polyf = new ROOT::Math::Polynomial(2);
 
   std::vector<double> p(3);
   p[0] = 1;
   p[1] = -4;
   p[2] = 1;
-  f->SetParameters(p);
+  polyf->SetParameters(&p[0]);
+  //ROOT::Math::Functor1D<ROOT::Math::Base> func(*polyf);
+  ROOT::Math::IGenFunction & func = *polyf;
 
 
   { 
      // default (Brent) 
      ROOT::Math::Minimizer1D min;
-     min.SetFunction(*f,1,-10,10); 
+     min.SetFunction(func,1,-10,10); 
      int status = min.Minimize(100,0.01,0.01); 
      std::cout << "test Min1D " << min.Name() << "  Return code " << status << std::endl; 
      
@@ -34,7 +36,7 @@ void testMinimization1D() {
   {
      // Golden Section
      ROOT::Math::Minimizer1D min(ROOT::Math::Minim1D::GOLDENSECTION);
-     min.SetFunction(*f,1,-10,10); 
+     min.SetFunction(func,1,-10,10); 
      int status = min.Minimize(100,0.01,0.01); 
      std::cout << "test Min1D " << min.Name() << "  Return code " << status << std::endl; 
      

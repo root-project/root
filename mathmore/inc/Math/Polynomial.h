@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Polynomial.h,v 1.3 2006/05/26 14:26:08 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Polynomial.h,v 1.4 2006/11/10 16:28:42 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -51,106 +51,108 @@ namespace Math {
      @ingroup CppFunctions
   */
 
-  class Polynomial : public ParamFunction {
+class Polynomial : public ParamFunction {
 
-  public: 
+public: 
   
-    /**
-       Construct a Polynomial function of order n. 
-       The number of Parameters is n+1. 
-    */
+   /**
+      Construct a Polynomial function of order n. 
+      The number of Parameters is n+1. 
+   */
 
-    Polynomial(unsigned int n); 
+   Polynomial(unsigned int n); 
 
-    /**
-       Construct a Polynomial of degree  1 : a*x + b
-     */ 
-    Polynomial(double a, double b);
+   /**
+      Construct a Polynomial of degree  1 : a*x + b
+   */ 
+   Polynomial(double a, double b);
 
-    /**
-       Construct a Polynomial of degree  2 : a*x**2 + b*x + c
-     */ 
-    Polynomial(double a, double b, double c);
+   /**
+      Construct a Polynomial of degree  2 : a*x**2 + b*x + c
+   */ 
+   Polynomial(double a, double b, double c);
 
-    /**
-       Construct a Polynomial of degree  3 : a*x**3 + b*x**2 + c*x + d
-     */ 
-    Polynomial(double a, double b, double c, double d);
+   /**
+      Construct a Polynomial of degree  3 : a*x**3 + b*x**2 + c*x + d
+   */ 
+   Polynomial(double a, double b, double c, double d);
 
-    /**
-       Construct a Polynomial of degree  4 : a*x**4 + b*x**3 + c*x**2 + dx  + e
-     */ 
-    Polynomial(double a, double b, double c, double d, double e);
+   /**
+      Construct a Polynomial of degree  4 : a*x**4 + b*x**3 + c*x**2 + dx  + e
+   */ 
+   Polynomial(double a, double b, double c, double d, double e);
 
 
-    virtual ~Polynomial(); 
+   virtual ~Polynomial(); 
 
-    /**
-       Copy constructor 
-    */
-    //Polynomial(const Polynomial &); 
+   /**
+      Copy constructor 
+   */
+   //Polynomial(const Polynomial &); 
 
     
-    /**
-       Copy operator 
-    */
-    //Polynomial & operator = (const Polynomial &);
+   /**
+      Copy operator 
+   */
+   //Polynomial & operator = (const Polynomial &);
 
-    double operator() ( double x ); 
     
-    double operator() ( double x, const std::vector<double> & p ); 
+   double operator() ( double x, const std::vector<double> & p ); 
 
-    double Gradient (double x); 
-
-    const std::vector<double> & ParameterGradient( double x); 
+   using ParamFunction::operator();
 
 
-    /**
-       Find the polynomial roots. 
-       For n <= 4, the roots are found analytically while for larger order an iterative numerical method is used
-       The numerical method used is from GSL (see <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_6.html#SEC53" )
-    */
-    const std::vector<std::complex <double> > & FindRoots(); 
 
 
-    /**
-       Find the only the real polynomial roots. 
-       For n <= 4, the roots are found analytically while for larger order an iterative numerical method is used
-       The numerical method used is from GSL (see <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_6.html#SEC53" )
-    */
-    std::vector<double > FindRealRoots(); 
+   /**
+      Find the polynomial roots. 
+      For n <= 4, the roots are found analytically while for larger order an iterative numerical method is used
+      The numerical method used is from GSL (see <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_6.html#SEC53" )
+   */
+   const std::vector<std::complex <double> > & FindRoots(); 
 
 
-    /**
-       Find the polynomial roots using always an iterative numerical methods 
-       The numerical method used is from GSL (see <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_6.html#SEC53" )
-    */
-    const std::vector<std::complex <double> > & FindNumRoots(); 
-
-    /**
-       Order of Polynomial
-     */
-    unsigned int Order() const { return fOrder; } 
+   /**
+      Find the only the real polynomial roots. 
+      For n <= 4, the roots are found analytically while for larger order an iterative numerical method is used
+      The numerical method used is from GSL (see <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_6.html#SEC53" )
+   */
+   std::vector<double > FindRealRoots(); 
 
 
-    IGenFunction * Clone() const; 
+   /**
+      Find the polynomial roots using always an iterative numerical methods 
+      The numerical method used is from GSL (see <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_6.html#SEC53" )
+   */
+   const std::vector<std::complex <double> > & FindNumRoots(); 
 
+   /**
+      Order of Polynomial
+   */
+   unsigned int Order() const { return fOrder; } 
+
+
+   IGenFunction * Clone() const; 
+
+
+private: 
+
+   double DoEval ( double x ) const ; 
+
+   double DoDerivative (double x) const ; 
+
+   void DoParameterGradient(double x, double * g) const; 
+   
+
+   // cache order = number of params - 1)
+   unsigned int fOrder;
+
+   // cache Parameters for Gradient
+   mutable std::vector<double> fDerived_params;
  
+   // roots
 
-  protected: 
-
-
-  private: 
-
-    // cache order = number of params - 1)
-    unsigned int fOrder;
-
-    // cache Parameters for Gradient
-    std::vector<double> fDerived_params;
- 
-    // roots
-
-    std::vector< std::complex < double > > fRoots; 
+   std::vector< std::complex < double > > fRoots; 
 
 }; 
 

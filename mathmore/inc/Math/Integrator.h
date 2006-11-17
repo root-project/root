@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Integrator.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Integrator.h,v 1.2 2006/06/16 10:34:08 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -31,8 +31,15 @@
 #ifndef ROOT_Math_Integrator
 #define ROOT_Math_Integrator
 
-#include "Math/IGenFunction.h"
+#ifndef ROOT_Math_IntegrationTypes
 #include "Math/IntegrationTypes.h"
+#endif
+
+#ifndef ROOT_Math_IFunctionfwd
+#include "Math/IFunctionfwd.h"
+#endif
+
+
 
 #include <vector>
 

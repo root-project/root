@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinder.h,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinder.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -31,8 +31,16 @@
 #ifndef ROOT_Math_GSLRootFinder
 #define ROOT_Math_GSLRootFinder
 
-#include "Math/IGenFunction.h"
+
+#ifndef ROOT_Math_GSLFunctionAdapter
 #include "Math/GSLFunctionAdapter.h"
+#endif
+
+#ifndef ROOT_Math_IFunctionfwd
+#include "Math/IFunctionfwd.h"
+#endif
+
+#include <iostream>
 
 namespace ROOT {
 namespace Math {
@@ -67,8 +75,9 @@ namespace Math {
    public: 
      
 
-     void SetFunction( const IGenFunction & f, double Root) { 
-       SetFunction( f, Root -1, Root + 1); // temporary 
+     void SetFunction( const IGradFunction & , double ) { 
+        std::cerr <<"GSLRootFinder - Error : use other Setfunction" << std::endl;  
+      //SetFunction( f, Root -1, Root + 1); // temporary 
      }
    
      /**  

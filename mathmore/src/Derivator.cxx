@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Derivator.cxx,v 1.2 2005/09/18 20:41:25 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Derivator.cxx,v 1.3 2006/06/16 10:34:08 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -29,6 +29,7 @@
 // Last update: Sat Nov 13 14:46:00 2004
 // 
 
+#include "Math/IFunction.h"
 #include "Math/Derivator.h"
 #include "GSLDerivator.h"
 
@@ -82,36 +83,36 @@ void Derivator::SetFunction( const GSLFuncPointer &f) {
 }
 
 
-double Derivator::Eval(const IGenFunction & f, double x, double h ) {
+double Derivator::Eval(const IGenFunction & f, double x, double h ) const {
    return fDerivator->Eval(f, x, h);
 }
 
-double Derivator::EvalCentral(const IGenFunction & f, double x, double h) {
+double Derivator::EvalCentral(const IGenFunction & f, double x, double h) const {
    return fDerivator->EvalCentral(f, x, h);
 }
 
-double Derivator::EvalForward(const IGenFunction & f, double x, double h) {
+double Derivator::EvalForward(const IGenFunction & f, double x, double h) const {
    return fDerivator->EvalForward(f, x, h);
 } 
 
-double Derivator::EvalBackward(const IGenFunction & f, double x, double h) {
+double Derivator::EvalBackward(const IGenFunction & f, double x, double h) const {
    return fDerivator->EvalBackward(f, x, h);
 }
 
 
-double Derivator::Eval( double x, double h) { 
+double Derivator::Eval( double x, double h) const { 
    return fDerivator->EvalCentral(x, h);
 }
 
-double Derivator::EvalCentral( double x, double h) { 
+double Derivator::EvalCentral( double x, double h) const { 
    return fDerivator->EvalCentral(x, h);
 }
 
-double Derivator::EvalForward( double x, double h) { 
+double Derivator::EvalForward( double x, double h) const { 
    return fDerivator->EvalForward(x, h);
 }
 
-double Derivator::EvalBackward( double x, double h) { 
+double Derivator::EvalBackward( double x, double h) const { 
    return fDerivator->EvalBackward(x, h);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: LinkDef.h,v 1.5 2006/10/05 15:23:42 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: LinkDef.h,v 1.6 2006/11/10 16:28:42 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -6,11 +6,15 @@
 #include "LinkDef_SpecFunc.h" 
 #include "LinkDef_StatFunc.h" 
 #include "LinkDef_Func.h" 
-#include "TF1.h"
+
 
 #include "LinkDef_RootFinding.h"
 
 #ifdef __CINT__
+
+#pragma extra_include "Math/IFunctionfwd.h";
+#pragma extra_include "Math/IFunction.h";
+
 
 #pragma link C++ nestedclasses;
 #pragma link C++ nestedtypedef;
@@ -20,7 +24,7 @@
 
 #pragma link C++ class ROOT::Math::ParamFunction+;
 #pragma link C++ class ROOT::Math::Polynomial+;
-#pragma link C++ class ROOT::Math::WrappedFunction<ROOT::Math::Polynomial>+;
+//#pragma link C++ class ROOT::Math::WrappedFunction<ROOT::Math::Polynomial>+;
 
 #pragma link C++ class ROOT::Math::Chebyshev+;
 

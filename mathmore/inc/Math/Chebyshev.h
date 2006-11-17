@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Chebyshev.h,v 1.2 2005/09/19 15:17:08 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Chebyshev.h,v 1.3 2005/09/19 15:50:04 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -35,15 +35,22 @@
    @defgroup FuncApprox Function Approximation (Chebyshev)
  */
 
+
+#ifndef ROOT_Math_IFunctionfwd
+#include "Math/IFunctionfwd.h"
+#endif
+
+#ifndef ROOT_Math_GSLFunctionAdapter
+#include "Math/GSLFunctionAdapter.h"
+#endif
+
 #include <memory>
 
-#include "Math/GSLFunctionAdapter.h"
 
 
 namespace ROOT {
 namespace Math {
 
-class IGenFunction; 
 class GSLChebSeries; 
 class GSLFunctionWrapper; 
 

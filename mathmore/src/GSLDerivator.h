@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLDerivator.h,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLDerivator.h,v 1.2 2005/09/18 20:41:25 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -39,7 +39,8 @@
  
 #include "Math/GSLFunctionAdapter.h"
 
-#include "Math/IGenFunction.h"
+#include "Math/IFunctionfwd.h"
+#include "Math/IFunction.h"
 
 namespace ROOT {
 namespace Math {

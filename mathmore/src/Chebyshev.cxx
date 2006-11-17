@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Chebyshev.cxx,v 1.4 2005/10/18 10:11:51 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Chebyshev.cxx,v 1.5 2006/06/16 10:34:08 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -30,14 +30,16 @@
 // Last update: Thu Dec  2 14:51:15 2004
 // 
 
-#include <cassert>
+
+#include "Math/IFunction.h"
 
 #include "Math/Chebyshev.h"
-#include "Math/IGenFunction.h"
 #include "GSLFunctionWrapper.h"
 #include "GSLChebSeries.h"
 
 #include "gsl/gsl_chebyshev.h"
+
+#include <cassert>
 
 
 namespace ROOT {

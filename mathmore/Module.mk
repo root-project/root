@@ -29,10 +29,6 @@ MATHMOREDH   := $(MATHMOREDS:.cxx=.h)
 MATHMOREDH1  := $(MODDIRI)/Math/ProbFuncMathMore.h \
 		$(MODDIRI)/Math/ProbFuncInv.h \
 		$(MODDIRI)/Math/SpecFuncMathMore.h \
-		$(MODDIRI)/Math/IGenFunction.h \
-		$(MODDIRI)/Math/IParamFunction.h \
-		$(MODDIRI)/Math/ParamFunction.h \
-		$(MODDIRI)/Math/WrappedFunction.h \
 		$(MODDIRI)/Math/Polynomial.h \
 		$(MODDIRI)/Math/Derivator.h \
 		$(MODDIRI)/Math/Interpolator.h \

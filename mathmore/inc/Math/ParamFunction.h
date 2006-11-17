@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ParamFunction.h,v 1.2 2005/09/19 13:06:53 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: ParamFunction.h,v 1.3 2006/11/10 16:28:42 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -34,7 +34,9 @@
 #define ROOT_Math_ParamFunction
 
 
+#ifndef ROOT_Math_IParamFunction
 #include "Math/IParamFunction.h"
+#endif
 
 namespace ROOT {
 namespace Math {
@@ -55,86 +57,76 @@ namespace Math {
   */
 
 
+   
+class ParamFunction : virtual public IParamGradFunction<ROOT::Math::OneDim> {
 
-  class ParamFunction : public IParamFunction {
+public: 
 
-  public: 
+   typedef IParamGradFunction<ROOT::Math::OneDim> BaseFunc; 
 
-    /**
-       Construct a parameteric function with npar parameters
-       @param npar number of parameters (default is zero)
-       @param providesGrad flag to specify if function implements the calculation of the derivative
-       @param providesParamGrad flag to specify if function implements the calculation of the derivatives with respect to the Parameters 
-     */
-    ParamFunction(unsigned int npar = 0, bool providesGrad = false, bool providesParamGrad = false);  
+   /**
+      Construct a parameteric function with npar parameters
+      @param npar number of parameters (default is zero)
+      @param providesGrad flag to specify if function implements the calculation of the derivative
+      @param providesParamGrad flag to specify if function implements the calculation of the derivatives with respect to the Parameters 
+   */
+   ParamFunction(unsigned int npar = 0, bool providesGrad = false, bool providesParamGrad = false);  
     
-    // destructor
-    virtual ~ParamFunction() {}
+   // destructor
+   virtual ~ParamFunction() {}
 
 
-    // copying constructors
+   // copying constructors
 
-    // use defaults one ??
-    //ParamFunction(const ParamFunction & pf);  
-    //ParamFunction & operator = (const ParamFunction &); 
+   // use defaults one ??
+   //ParamFunction(const ParamFunction & pf);  
+   //ParamFunction & operator = (const ParamFunction &); 
 
 
-    // cloning
-    /**
-       Deep copy of function (to be implemented by the derived classes)
-     */
-    virtual IGenFunction *  Clone() const = 0; 
+   // cloning
+   /**
+      Deep copy of function (to be implemented by the derived classes)
+   */
+   //virtual ParamFunction *  Clone() const = 0; 
 
 
     
-    /**
-       Access the parameter values
-    */
-    const std::vector<double> & Parameters() const { return fParams; } 
+   /**
+      Access the parameter values
+   */
+   virtual const double * Parameters() const { return &fParams.front(); } 
 
-    /**
-       Set the parameter values
-       @param p vector of doubles containing the parameter values. 
-     */
-    void SetParameters(const std::vector<double> & p)
-      // pending : can user change number of Parameters ? 
-      { 
-	fParams = p;
-	fNpar = fParams.size(); 
-      } 
+   /**
+      Set the parameter values
+      @param p vector of doubles containing the parameter values. 
+   */
+   virtual void SetParameters(const double * p)
+   { 
+      fParams = std::vector<double>(p,p+fNpar);
+   } 
 
-    /**
-       Return the number of parameters
-     */
-    unsigned int NumberOfParameters() const { return fNpar; } 
+   /**
+      Return the number of parameters
+   */
+   unsigned int NPar() const { return fNpar; } 
 
-    // this needs to be implemented in derived classes 
-    /**
-       Evaluate function at a point x  (to be implemented by the derived classes)
-     */
-    virtual double operator() (double x ) = 0; 
 
-    // user may re-implement this for better efficiency
-    // this method is NOT required to  change internal values of parameters. confusing ?? 
-    /**
-       Evaluate function at a point x and for parameters p.
-       This method mey be needed for better efficiencies when for each function evaluation the parameters are changed.
-     */
-    virtual double operator() (double x, const std::vector<double> & p ) 
-      { 
-	SetParameters(p); 
-	return operator() (x); 
-      }
+   //using BaseFunc::operator();
 
-    /**
-       Return \a true if the calculation of derivatives is implemented
-     */
-    bool ProvidesGradient() const {  return fProvGrad; } 
+   /**
+      Return \a true if the calculation of derivatives is implemented
+   */
+//   bool ProvidesGradient() const {  return fProvGrad; } 
 
-    /**
-       Return \a true if the calculation of derivatives with respect to the Parameters is implemented
-     */
-    bool ProvidesParameterGradient() const {  return fProvParGrad; } 
+   /**
+      Return \a true if the calculation of derivatives with respect to the Parameters is implemented
+   */
+   bool ProvidesParameterGradient() const {  return fProvParGrad; } 
+
+   const std::vector<double> & GetParGradient( double x) { 
+      BaseFunc::ParameterGradient(x,&fParGradient[0]);
+      return fParGradient; 
+   } 
 
 
 public: 
@@ -142,20 +134,20 @@ public:
 
 protected: 
   
-  // Parameters (make protected to be accessible directly by derived classes) 
-  std::vector<double> fParams;
+   // Parameters (make protected to be accessible directly by derived classes) 
+   std::vector<double> fParams;
 
-  // cache paramGradient for better efficiency (to be used by derived classes) 
-  mutable std::vector<double> fParGradient; 
+   // cache paramGradient for better efficiency (to be used by derived classes) 
+   mutable std::vector<double> fParGradient; 
 
 
 private: 
 
-  // cache number of Parameters for speed efficiency
-  unsigned int fNpar; 
+   // cache number of Parameters for speed efficiency
+   unsigned int fNpar; 
 
-  bool fProvGrad; 
-  bool fProvParGrad;
+   bool fProvGrad; 
+   bool fProvParGrad;
 
 }; 
 

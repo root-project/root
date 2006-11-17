@@ -1,6 +1,7 @@
 
 #include "Math/Chebyshev.h"
-#include "Math/IGenFunction.h"
+#include "Math/IFunction.h"
+#include "Math/Functor.h"
 #include "Math/SpecFunc.h"
 
 //#include "MathCore/GSLIntegrator.h"
@@ -13,7 +14,7 @@ typedef double ( * FP ) ( double, void * );
 
 // function is a step function
 
-double myfunc ( double x, void * params) {
+double myfunc ( double x, void * /* params */) {
   //double * p = reinterpret_cast<double *>( params); 
   if (x < 0.5) 
     return 0.25; 
@@ -31,12 +32,15 @@ class GammaFunction : public ROOT::Math::IGenFunction {
   
 public: 
 
-  double operator() ( double x) { 
-    return ROOT::Math::tgamma(x);
-  }
 
   ROOT::Math::IGenFunction * Clone() const { 
     return new GammaFunction();
+  }
+
+private: 
+
+  double DoEval ( double x) const { 
+    return ROOT::Math::tgamma(x);
   }
 
 };

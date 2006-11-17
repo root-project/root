@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: RootFinderAlgorithms.h,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: RootFinderAlgorithms.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -32,10 +32,13 @@
 #define ROOT_Math_GSLRootFinderAlgorithms
 
 
+#ifndef ROOT_Math_GSLRootFinder
 #include "Math/GSLRootFinder.h"
+#endif
 
+#ifndef ROOT_Math_GSLRootFinderDeriv
 #include "Math/GSLRootFinderDeriv.h"
-
+#endif
 
 namespace ROOT {
 namespace Math {

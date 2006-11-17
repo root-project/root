@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinderDeriv.h,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinderDeriv.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -31,8 +31,19 @@
 #ifndef ROOT_Math_GSL_RootFinderDeriv
 #define ROOT_Math_GSL_RootFinderDeriv
 
-#include "Math/IGenFunction.h"
+
+#ifndef ROOT_Math_GSLFunctionAdapter
 #include "Math/GSLFunctionAdapter.h"
+#endif
+
+#ifndef ROOT_Math_IFunctionfwd
+#include "Math/IFunctionfwd.h"
+#endif
+#ifndef ROOT_Math_IFunction
+#include "Math/IFunction.h"
+#endif
+
+#include <iostream>
 
 namespace ROOT {
 namespace Math {
@@ -67,14 +78,14 @@ namespace Math {
    public: 
 
 
-     void SetFunction( const IGenFunction & f, double xlow, double xup) { 
-       SetFunction( f, (xlow + xup)/2. ); 
+     void SetFunction( const IGenFunction & , double , double ) { 
+        std::cerr <<"GSLRootFinderDeriv - Error : Algorithm requirs derivatives" << std::endl;  
      }
     
      
-     void SetFunction( const IGenFunction & f, double Root) { 
+     void SetFunction( const IGradFunction & f, double Root) { 
        const void * p = &f; 
-       SetFunction(  &GSLFunctionAdapter<IGenFunction>::F, &GSLFunctionAdapter<IGenFunction>::Df, &GSLFunctionAdapter<IGenFunction>::Fdf, const_cast<void *>(p), Root ); 
+       SetFunction(  &GSLFunctionAdapter<IGradFunction>::F, &GSLFunctionAdapter<IGradFunction>::Df, &GSLFunctionAdapter<IGradFunction>::Fdf, const_cast<void *>(p), Root ); 
        }
 
      

@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Integrator.cxx,v 1.3 2005/09/18 20:41:25 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Integrator.cxx,v 1.4 2006/06/16 10:34:08 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -29,6 +29,7 @@
 // Last update: Thu Nov 11 14:22:32 2004
 //
 
+#include "Math/IFunction.h"
 #include "Math/Integrator.h"
 #include "GSLIntegrator.h"
 
