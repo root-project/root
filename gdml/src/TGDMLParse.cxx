@@ -1,4 +1,4 @@
-/* @(#)root/netx:$Name: $:$Id: TGDMLParse.cxx,v 1.5 2006/11/09 16:36:38 rdm Exp $ */
+/* @(#)root/netx:$Name:  $:$Id: TGDMLParse.cxx,v 1.1 2006/11/17 17:40:02 brun Exp $ */
 // Author: Ben Lloyd 09/11/06
 
 /*************************************************************************
@@ -117,8 +117,6 @@ When most solids or volumes are added to the geometry they
 #include "TGDMLParse.h"
 
 ClassImp(TGDMLParse)
-
-time_t time1, time2, result;
 
 //_________________________________________________________________
 TGeoVolume* TGDMLParse::GDMLReadFile(const char* filename){
