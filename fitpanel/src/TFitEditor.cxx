@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.9 2006/11/16 12:30:32 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.10 2006/11/16 15:39:52 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -1577,8 +1577,10 @@ void TFitEditor::DoSetParameters()
       printf("SetParamters - create fit function %s\n",fFunction.Data());
       fFitFunc = new TF1("fitFunc",Form("%s",fFunction.Data()), fXmin, fXmax);
    }
+   Double_t xmin, xmax;
+   fFitFunc->GetRange(xmin, xmax);
    new TFitParametersDialog(gClient->GetDefaultRoot(), GetMainFrame(),
-                            fFitFunc, fParentPad, fXmin, fXmax);
+                            fFitFunc, fParentPad, xmin, xmax);
 }
 
 //______________________________________________________________________________
