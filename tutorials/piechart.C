@@ -15,12 +15,12 @@ void piechart()
    TPie *pie4 = new TPie("pie4","Pie with verbose labels",nvals,vals,colors);
 
    cpie->cd(1);
-   pie1->SetOffset(30.);
+   pie1->SetAngularOffset(30.);
    pie1->SetRadius(.35);
    pie1->Draw();
 
    cpie->cd(2);
-   pie2->SetEntryRadOffset(2,.05);
+   pie2->SetEntryRadiusOffset(2,.05);
    pie2->SetEntryLineColor(2,2);
    pie2->SetEntryLineWidth(2,5);
    pie2->SetEntryLineStyle(2,2);
