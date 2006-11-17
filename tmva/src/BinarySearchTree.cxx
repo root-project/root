@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: BinarySearchTree.cxx,v 1.22 2006/11/06 00:10:12 helgevoss Exp $    
+// @(#)root/tmva $Id: BinarySearchTree.cxx,v 1.24 2006/11/17 14:59:23 stelzer Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -13,13 +13,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -27,7 +27,7 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: BinarySearchTree.cxx,v 1.22 2006/11/06 00:10:12 helgevoss Exp $        
+ * $Id: BinarySearchTree.cxx,v 1.24 2006/11/17 14:59:23 stelzer Exp $        
  **********************************************************************************/
       
 //_______________________________________________________________________
@@ -198,7 +198,7 @@ Double_t TMVA::BinarySearchTree::GetSumOfWeights( void ) const
 
 //_______________________________________________________________________
 Int_t TMVA::BinarySearchTree::Fill( const DataSet& ds, TTree* theTree, Int_t theType, 
-                                    Types::PreprocessingMethod corr, Types::SBType type  )
+                                    Types::EPreprocessingMethod corr, Types::ESBType type  )
 {
    // create the search tree from the events in the DataSet
    Int_t nevents=0;

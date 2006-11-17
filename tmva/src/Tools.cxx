@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Tools.cxx,v 1.52 2006/11/12 15:45:42 stelzer Exp $   
+// @(#)root/tmva $Id: Tools.cxx,v 1.55 2006/11/16 22:51:59 helgevoss Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -13,13 +13,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        *
  *      U. of Victoria, Canada,                                                   *
- *      MPI-KP Heidelberg, Germany,                                               *
+ *      MPI-K Heidelberg, Germany ,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -56,6 +56,8 @@ namespace TMVA {
 
 TMVA::MsgLogger& TMVA::Tools::Logger()
 {
+   // static access to a common MsgLogger
+
    return Tools_Logger ? *Tools_Logger : *(Tools_Logger = new MsgLogger( Tools_NAME_ ));
 }
 
@@ -452,6 +454,8 @@ int TMVA::Tools::GetIndexMinElement(vector<Double_t>  &v)
 // check if regular expression
 Bool_t TMVA::Tools::ContainsRegularExpression( const TString& s )  
 {
+   // helper function to search for "!%^&()'<>?= " in a string
+
    Bool_t  regular = kFALSE;
    for (Int_t i = 0; i < TMVA::Tools::__regexp__.Length(); i++) 
       if (s.Contains( TMVA::Tools::__regexp__[i] )) { regular = kTRUE; break; }
@@ -462,6 +466,9 @@ Bool_t TMVA::Tools::ContainsRegularExpression( const TString& s )
 // replace regular expressions
 TString TMVA::Tools::ReplaceRegularExpressions( const TString& s, TString r )  
 {
+   // helper function to remove all occurences "!%^&()'<>?= " from a string
+   // and replace all ::,*,/,+,- with _M_,_T_,_D_,_P_,_M_ respectively
+
    TString snew = s;
    for (Int_t i = 0; i < TMVA::Tools::__regexp__.Length(); i++) 
       snew.ReplaceAll( TMVA::Tools::__regexp__[i], r );
@@ -487,15 +494,15 @@ void TMVA::Tools::FormattedOutput( const TMatrixD& M, const std::vector<TString>
    // get length of each variable, and maximum length  
    UInt_t minL = 7;
    UInt_t maxL = minL;
-   std::vector<UInt_t> L;
+   std::vector<UInt_t> vLengths;
    for (UInt_t ivar=0; ivar<nvar; ivar++) {
-      L.push_back(TMath::Max( (UInt_t)V[ivar].Length(), minL ));
-      maxL = TMath::Max( L.back(), maxL );
+      vLengths.push_back(TMath::Max( (UInt_t)V[ivar].Length(), minL ));
+      maxL = TMath::Max( vLengths.back(), maxL );
    }
    
    // count column length
    UInt_t clen = maxL+1;
-   for (UInt_t icol=0; icol<nvar; icol++) clen += L[icol]+1;
+   for (UInt_t icol=0; icol<nvar; icol++) clen += vLengths[icol]+1;
 
    // bar line
    for (UInt_t i=0; i<clen; i++) logger << "-";
@@ -503,14 +510,14 @@ void TMVA::Tools::FormattedOutput( const TMatrixD& M, const std::vector<TString>
 
    // title bar   
    logger << setw(maxL+1) << " ";
-   for (UInt_t icol=0; icol<nvar; icol++) logger << setw(L[icol]+1) << V[icol];
+   for (UInt_t icol=0; icol<nvar; icol++) logger << setw(vLengths[icol]+1) << V[icol];
    logger << Endl;
 
    // the numbers
    for (UInt_t irow=0; irow<nvar; irow++) {
       logger << setw(maxL) << V[irow] << ":";
       for (UInt_t icol=0; icol<nvar; icol++) {
-         logger << setw(L[icol]+1) << Form( "%+1.3f", M(irow,icol) );
+         logger << setw(vLengths[icol]+1) << Form( "%+1.3f", M(irow,icol) );
       }      
       logger << Endl;
    }

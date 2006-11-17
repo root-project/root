@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TNeuron.h,v 1.16 2006/10/15 12:06:33 andreas.hoecker Exp $
+// @(#)root/tmva $Id: TNeuron.h,v 1.17 2006/11/16 19:42:44 stelzer Exp $
 // Author: Matt Jachowski
 
 /**********************************************************************************
@@ -126,7 +126,7 @@ namespace TMVA {
       void InitNeuron();
       void DeleteLinksArray( TObjArray*& links );
       void PrintLinks      ( TObjArray* links );
-      void PrintMessage    ( MsgType, TString message );
+      void PrintMessage    ( EMsgType, TString message );
 
       // inlined helper functions
       Int_t NumLinks(TObjArray* links) { 

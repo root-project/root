@@ -1,26 +1,29 @@
 #include "tmvaglob.C"
 
-void mvas( TString fin = "TMVA.root" )
+// this macro plots the resulting MVA distribution (Signal and
+// Background overlayed) of different MVA methods run in TMVA
+// (e.g. running TMVAnalysis.C).
+
+
+// input: - Input file (result from TMVA)
+//        - use of TMVA plotting TStyle
+void mvas( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
 {
+   // set style and remove existing canvas'
+   TMVAGlob::Initialize( useTMVAStyle );
+
    // switches
    const Bool_t Draw_CFANN_Logy = kFALSE;
    const Bool_t Save_Images     = kTRUE;
 
-   gROOT->SetStyle("Plain");
-   gStyle->SetOptStat(0);
-   TList * loc = gROOT->GetListOfCanvases();
-   TListIter itc(loc);
-   TObject *o(0);
-   while( (o = itc()) ) delete o;
-
-   cout << "Reading file: " << fin << endl;
-   TFile *file = new TFile( fin );
+   // checks if file with name "fin" is already open, and if not opens one
+   TFile* file = TMVAGlob::OpenFile( fin );  
 
    // define Canvas layout here!
    Int_t xPad = 1; // no of plots in x
    Int_t yPad = 1; // no of plots in y
    Int_t noPad = xPad * yPad ; 
-   const Int_t width = 650;   // size of canvas
+   const Int_t width = 600;   // size of canvas
 
    // this defines how many canvases we need
    const Int_t noCanvas = 10;
@@ -32,31 +35,38 @@ void mvas( TString fin = "TMVA.root" )
    Int_t countPad    = 1;
 
    // list of existing MVAs
-   const Int_t nmva = 14;
-   TString prefix = "";
-   TString mvaName[nmva] = { "MVA_Likelihood", 
-                             "MVA_LikelihoodD", 
-                             "MVA_Fisher", 
-                             "MVA_Fisher_Fi", 
-                             "MVA_Fisher_Ma", 
-                             "MVA_CFMlpANN", 
-                             "MVA_TMlpANN", 
-                             "MVA_HMatrix", 
-                             "MVA_PDERS" , 
-                             "MVA_BDT",
-                             "MVA_BDTGini",
-                             "MVA_BDTMisCl",
-                             "MVA_BDTStatSig",
-                             "MVA_BDTCE" };
-   char    fname[200];
+   const Int_t nveto = 1;
+   TString prefix = "MVA_";
+   TString suffixSig = "_S";
+   TString suffixBgd = "_B";
+   TString vetoNames[nveto] = { "muTransform" };
 
-   // loop over MVAs
-   for (Int_t imva=0; imva<nmva; imva++) {
+   // search for the right histograms in full list of keys
+   TIter next(file->GetListOfKeys());
+   TKey *key;
+   char fname[200];
+   while ((key = (TKey*)next())) {
+
+      // make sure, that we only look at histograms
+      TClass *cl = gROOT->GetClass(key->GetClassName());
+      if (!cl->InheritsFrom("TH1")) continue;
+      TH1 *th1 = (TH1*)key->ReadObj();
+      TString hname= th1->GetName();
+
+      if (!hname.BeginsWith( prefix ) || !hname.EndsWith( suffixSig )) continue;
+
+      // check if histogram is vetoed
+      Bool_t found = kFALSE;
+      for (UInt_t iv=0; iv<nveto; iv++) if (hname.Contains( vetoNames[iv] )) found = kTRUE;
+      if (found) continue;
+
+      // remove the signal suffix
+      hname.ReplaceAll( suffixSig, "" );
 
       // retrieve corresponding signal and background histograms   
-      TH1* sig = (TH1*)gDirectory->Get( prefix + mvaName[imva] + "_S" );
-      TH1* bgd = (TH1*)gDirectory->Get( prefix + mvaName[imva] + "_B" );
-      TH1* all = (TH1*)gDirectory->Get( prefix + mvaName[imva] );
+      TH1* sig = (TH1*)gDirectory->Get( hname + "_S" );
+      TH1* bgd = (TH1*)gDirectory->Get( hname + "_B" );
+      TH1* all = (TH1*)gDirectory->Get( hname );
 
       // check that exist
       if (NULL != sig && NULL != bgd) {
@@ -76,7 +86,7 @@ void mvas( TString fin = "TMVA.root" )
             char cn[20];
             sprintf( cn, "canvas%d", countCanvas+1 );
             c[countCanvas] = new TCanvas( cn, Form("MVA Output Variables %s",title.Data()), 
-                                          countCanvas*50+300, countCanvas*20, width, width*0.8 ); 
+                                          countCanvas*50+200, countCanvas*20, width, width*0.78 ); 
             // style
             c[countCanvas]->SetBorderMode(0);
             c[countCanvas]->SetFillColor(10);
@@ -85,7 +95,6 @@ void mvas( TString fin = "TMVA.root" )
             countPad = 1;
          }       
             
-
          // set the histogram style
          TMVAGlob::SetSignalAndBackgroundStyle( sig, bgd );
 
@@ -134,13 +143,12 @@ void mvas( TString fin = "TMVA.root" )
             legend->SetMargin( 0.3 );
          } 
       
-         TMVAGlob::plot_logo();
-
          // save canvas to file
          c[countCanvas]->cd(countPad);
          countPad++;
          if (countPad > noPad) {
             c[countCanvas]->Update();
+            TMVAGlob::plot_logo();
             sprintf( fname, "plots/mva_c%i", countCanvas+1 );
             if (Save_Images) TMVAGlob::imgconv( c[countCanvas], &fname[0] );
             countCanvas++;
@@ -207,12 +215,11 @@ void mvas( TString fin = "TMVA.root" )
          // redraw axes
          frame->Draw("sameaxis");
       
-         TMVAGlob::plot_logo();
-
          // save canvas to file
          c[countCanvas]->cd(countPad);
          countPad++;
          if (countPad > noPad) {
+            TMVAGlob::plot_logo();
             c[countCanvas]->Update();
             sprintf( fname, "plots/mva_all_c%i", countCanvas+1 );
             if (Save_Images) TMVAGlob::imgconv( c[countCanvas], &fname[0] );

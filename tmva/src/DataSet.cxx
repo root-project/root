@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DataSet.cxx,v 1.78 2006/11/14 23:02:57 stelzer Exp $
+// @(#)root/tmva $Id: DataSet.cxx,v 1.82 2006/11/17 14:59:23 stelzer Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -13,11 +13,11 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        *
- *      MPI-KP Heidelberg, Germany,                                               *
+ *      MPI-K Heidelberg, Germany ,                                               *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -56,14 +56,16 @@ TMVA::DataSet::DataSet()
      fWeightFormula( 0 ),
      fLogger( GetName(), kINFO )
 {
-   fDecorrMatrix[0]	= fDecorrMatrix[1] = 0;
-   fPrincipal[0]		= fPrincipal[1]    = 0;
+   // constructor
+
+   fDecorrMatrix[0]   = fDecorrMatrix[1] = 0;
+   fPrincipal[0]      = fPrincipal[1]    = 0;
    fPreprocessingEnabled[Types::kNone] = kTRUE;
    fPreprocessingEnabled[Types::kDecorrelated] = fPreprocessingEnabled[Types::kPCA] = kFALSE;
 
    for (Int_t corr=0; corr!=Types::kMaxPreprocessingMethod; corr++) fFlagPreprocessed[corr] = kFALSE;
 
-   for (Int_t dim1=0; dim1!=kMaxTreeType; dim1++) {
+   for (Int_t dim1=0; dim1!=Types::kMaxTreeType; dim1++) {
       for (Int_t dim2=0; dim2!=Types::kMaxSBType; dim2++) {
          fDataStats[dim1][dim2]=0;
       }
@@ -76,8 +78,11 @@ TMVA::DataSet::~DataSet()
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::DataSet::ReadEvent(TTree* tr, UInt_t evidx, Types::PreprocessingMethod corr, Types::SBType type) const 
+Bool_t TMVA::DataSet::ReadEvent(TTree* tr, UInt_t evidx, Types::EPreprocessingMethod corr, Types::ESBType type) const 
 {
+   // read event from a tree into memory
+   // after the reading the event transformation is called
+
    if (tr == 0) fLogger << kFATAL << "<ReadEvent> zero Tree Pointer encountered" << Endl;
 
    Bool_t needRead = kFALSE;
@@ -105,8 +110,9 @@ Bool_t TMVA::DataSet::ReadEvent(TTree* tr, UInt_t evidx, Types::PreprocessingMet
    return ApplyTransformation( corr, (type == Types::kTrueType) ? Event().IsSignal() : (type == Types::kSignal) );
 }
 
-Bool_t TMVA::DataSet::ApplyTransformation( Types::PreprocessingMethod corr, Bool_t useSignal ) const 
+Bool_t TMVA::DataSet::ApplyTransformation( Types::EPreprocessingMethod corr, Bool_t useSignal ) const 
 { 
+   // applies the transformation (none, decorellation, PCA) to the event data
 
    switch (corr) {
 
@@ -148,6 +154,9 @@ Bool_t TMVA::DataSet::ApplyTransformation( Types::PreprocessingMethod corr, Bool
 
 void TMVA::DataSet::ResetBranchAndEventAddresses( TTree* tree )
 {
+   // resets all branch adresses of the tree given as parameter 
+   // to the event memory
+
    if (tree != 0) {
       tree->ResetBranchAddresses();
       if (fEvent != 0) fEvent->SetBranchAddresses( tree );
@@ -158,26 +167,37 @@ void TMVA::DataSet::ResetBranchAndEventAddresses( TTree* tree )
 //_______________________________________________________________________
 void TMVA::DataSet::AddSignalTree(TTree* tr, double weight) 
 {
+   // add a signal tree to the dataset to be used as input
+   // multiple trees is not used at the moment, use chains instead
    fSignalTrees.push_back(TreeInfo(tr,weight));
 }
 
 //_______________________________________________________________________
 void TMVA::DataSet::AddBackgroundTree(TTree* tr, double weight) 
 {
+   // add a background tree to the dataset to be used as input
+   // multiple trees is not used at the moment, use chains instead
    fBackgroundTrees.push_back(TreeInfo(tr,weight));
 }
 
 //_______________________________________________________________________
 void TMVA::DataSet::AddVariable(const TString& expression, char varType, void* external) 
 {
+   // add a variable (can be a complex expression) to the set of variables used in
+   // the MV analysis
    fVariables.push_back(VariableInfo(expression, fVariables.size()+1, varType, external));
    fVariableStrings.push_back(expression);
 }
 
 //_______________________________________________________________________
 // corr==0 - correlated, corr==1 - decorrelated, corr==2 - PCAed
-void TMVA::DataSet::CalcNorm(Types::PreprocessingMethod corr)
+void TMVA::DataSet::CalcNorm(Types::EPreprocessingMethod corr)
 {
+   // method to calculate minimum, maximum, mean, and RMS for all
+   // variables used in the MVA for the given data preprocessing
+   // method (none, decorrelate, PCA)
+
+   // preprocessing method has to be enabled 
    if(!PreprocessingEnabled(corr)) return;
 
    if (GetTrainingTree()==0) return;
@@ -193,11 +213,11 @@ void TMVA::DataSet::CalcNorm(Types::PreprocessingMethod corr)
    TVectorD x0( nvar ); x0 *= 0;   
    
    for (UInt_t ievt=0; ievt<nevts; ievt++) {
-      ReadTrainingEvent(ievt,(Types::PreprocessingMethod)corr);
+      ReadTrainingEvent(ievt,(Types::EPreprocessingMethod)corr);
       
       for (UInt_t ivar=0; ivar<nvar; ivar++) {
          Double_t x = Event().GetVal(ivar);
-         UpdateNorm( ivar,  x, (Types::PreprocessingMethod)corr);
+         UpdateNorm( ivar,  x, (Types::EPreprocessingMethod)corr);
          x2(ivar) += x*x;
          x0(ivar) += x;
       }
@@ -221,6 +241,7 @@ void TMVA::DataSet::CalcNorm(Types::PreprocessingMethod corr)
 //_______________________________________________________________________
 Int_t TMVA::DataSet::FindVar(const TString& var) const
 {
+   // find variable by name
    for (UInt_t ivar=0; ivar<GetNVariables(); ivar++) 
       if (var == GetInternalVarName(ivar)) return ivar;
    fLogger << kFATAL << "<FindVar> variable \'" << var << "\' not found" << Endl;
@@ -228,8 +249,9 @@ Int_t TMVA::DataSet::FindVar(const TString& var) const
 }
 
 //_______________________________________________________________________
-void TMVA::DataSet::UpdateNorm ( Int_t ivar,  Double_t x, Types::PreprocessingMethod corr) 
+void TMVA::DataSet::UpdateNorm ( Int_t ivar,  Double_t x, Types::EPreprocessingMethod corr) 
 {
+   // update min and max of a given variable and a given preprocessing method
    if (x < GetXmin( ivar, corr )) SetXmin( ivar, x, corr );
    if (x > GetXmax( ivar, corr )) SetXmax( ivar, x, corr );
 }
@@ -237,6 +259,17 @@ void TMVA::DataSet::UpdateNorm ( Int_t ivar,  Double_t x, Types::PreprocessingMe
 //_______________________________________________________________________
 void TMVA::DataSet::PrepareForTrainingAndTesting( Int_t Ntrain, Int_t Ntest, TString TreeName )
 { 
+   // The internally used training and testing trees are prepaired in
+   // this method 
+   // First the variables (expressions) of interest are copied from
+   // the given signal and background trees/chains into the local
+   // trees (training and testing), according to the specified numbers
+   // of training and testing events
+   // Second DataSet::CalcNorm is called to determine min, max, mean,
+   // and rms for all variables
+   // Optionally (if specified as option) the decorrelation and PCA
+   // preparation is executed
+
    fLogger << kINFO << "prepare training and Test samples" << Endl;
    fLogger << kINFO << "" << NSignalTrees()     
            << " signal trees with total number of events     : " << flush;
@@ -275,7 +308,9 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( Int_t Ntrain, Int_t Ntest, TSt
 
    if (Ntrain > 0 && Ntest == 0) {
       array[0]      = Ntrain;
-      nsig_train    = TMath::MinElement(3,array);
+      //      nsig_train    = TMath::MinElement(3,array);
+      // to be backward compatible with ROOT 4.02
+      nsig_train    = TMath::Min(array[0],TMath::Min(array[1],array[2]));
       nbkg_train    = nsig_train;
       nsig_test_min = nsig_train;
       nbkg_test_min = nsig_train;
@@ -291,7 +326,9 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( Int_t Ntrain, Int_t Ntest, TSt
    } 
    else if (Ntrain > 0 && Ntest > 0) {
       array[0]      = Ntrain;
-      nsig_train    = TMath::MinElement(3,array);
+      //      nsig_train    = TMath::MinElement(3,array);
+      // to be backward compatible with ROOT 4.02
+      nsig_train    = TMath::Min(array[0],TMath::Min(array[1],array[2]));
       nbkg_train    = nsig_train;
       nsig_test_min = nsig_train;
       nbkg_test_min = nsig_train;
@@ -492,22 +529,22 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( Int_t Ntrain, Int_t Ntest, TSt
             ac++;
             if ( ac <= n_train[sb]) {
                trainingTree->Fill();
-               fDataStats[kTraining][Types::kSBBoth]++;
-               fDataStats[kTraining][sb]++;
+               fDataStats[Types::kTraining][Types::kSBBoth]++;
+               fDataStats[Types::kTraining][sb]++;
             }
             if ((ac > n_test_min[sb])&& (ac <= n_test[sb])) {
                testTree->Fill();
-               fDataStats[kTesting][Types::kSBBoth]++;
-               fDataStats[kTesting][sb]++;
+               fDataStats[Types::kTesting][Types::kSBBoth]++;
+               fDataStats[Types::kTesting][sb]++;
             }
          }
       }
       tr[sb]->ResetBranchAddresses();
 
       // some output
-      fLogger << kINFO << "collected " << fDataStats[kTraining][sb] << " " << kindS[sb] 
+      fLogger << kINFO << "collected " << fDataStats[Types::kTraining][sb] << " " << kindS[sb] 
               << " events for the training sample" << Endl;
-      fLogger << kINFO << "collected " << fDataStats[kTesting][sb] << " " << kindS[sb] 
+      fLogger << kINFO << "collected " << fDataStats[Types::kTesting][sb] << " " << kindS[sb] 
               << " events for the test sample" << Endl;
    }
 
@@ -560,8 +597,16 @@ void TMVA::DataSet::PrepareForTrainingAndTesting( Int_t Ntrain, Int_t Ntest, TSt
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::DataSet::Preprocess( Types::PreprocessingMethod corr ) 
+Bool_t TMVA::DataSet::Preprocess( Types::EPreprocessingMethod corr ) 
 {
+   // the dataset can be preprocessed with one of three methods 
+   // - None: trivial identity
+   // - Decorellation: transformation that decorellates the input variables
+   // - PCA: Principal component analysis
+   // first the transformations are calculated, then the minimum,
+   // maximum, mean, and rms for the transformed set of variables are
+   // calculated (in DataSet::CalcNorm)
+
    if( corr == Types::kNone ) return kTRUE;
 
    if( ! PreprocessingEnabled(corr) ) return kFALSE;
@@ -608,6 +653,12 @@ Bool_t TMVA::DataSet::Preprocess( Types::PreprocessingMethod corr )
 //_______________________________________________________________________
 void TMVA::DataSet::ChangeToNewTree( TTree* tr )
 { 
+   // While the data gets copied into the local training and testing
+   // trees, the input tree can change (for intance when changing from
+   // signal to background tree, or using TChains as input) The
+   // TTreeFormulas, that hold the input expressions need to be
+   // reassociated with the new tree, which is done here
+
    vector<TTreeFormula*>::const_iterator varFIt = fInputVarFormulas.begin();
    for (;varFIt!=fInputVarFormulas.end();varFIt++) delete *varFIt;
    fInputVarFormulas.clear();
@@ -637,8 +688,11 @@ void TMVA::DataSet::ChangeToNewTree( TTree* tr )
 }
 
 //_______________________________________________________________________
-void TMVA::DataSet::PlotVariables( TString tree, TString folderName, Types::PreprocessingMethod corr )
+void TMVA::DataSet::PlotVariables( TString tree, TString folderName, Types::EPreprocessingMethod corr )
 {
+   // wrapper around PlotVariable(TTree*) that allows to call
+   // PlotVariables with a name
+
    if(!PreprocessingEnabled(corr)) return;
    tree.ToLower();
    if (tree.BeginsWith("train")) {
@@ -650,8 +704,12 @@ void TMVA::DataSet::PlotVariables( TString tree, TString folderName, Types::Prep
 }
 
 //_______________________________________________________________________
-void TMVA::DataSet::PlotVariables( TTree* theTree, TString folderName, Types::PreprocessingMethod corr )
+void TMVA::DataSet::PlotVariables( TTree* theTree, TString folderName, Types::EPreprocessingMethod corr )
 {
+   // create histograms from the input variables
+   // - histograms for all input variables
+   // - scatter plots for all pairs of input variables
+
    if(!PreprocessingEnabled(corr)) return;
 
    // if decorrelation has not been achieved, the decorrelation tree may be empty
@@ -682,7 +740,7 @@ void TMVA::DataSet::PlotVariables( TTree* theTree, TString folderName, Types::Pr
    TVectorD rmsS( nvar ), meanS( nvar ); 
    TVectorD rmsB( nvar ), meanB( nvar ); 
    
-   UInt_t nevts = theTree->GetEntries();
+   UInt_t nevts = (UInt_t)theTree->GetEntries();
    UInt_t nS = 0, nB = 0;
    for (UInt_t ievt=0; ievt<nevts; ievt++) {
       ReadTrainingEvent( ievt, corr, Types::kTrueType );
@@ -996,8 +1054,12 @@ Double_t TMVA::DataSet::GetSeparation( TH1* S, TH1* B ) const
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::DataSet::PreparePreprocessing( Types::PreprocessingMethod corr, TTree* originalTree )
+Bool_t TMVA::DataSet::PreparePreprocessing( Types::EPreprocessingMethod corr, TTree* originalTree )
 {
+   // For the preprocessing methods kDecorrelate and kPCA the
+   // transformation matrices are calculated.  For the PCA the class
+   // TPrincipal is used.
+
    if( originalTree == 0 ) return kFALSE;
 
    // creates a deep copy of a tree with all of the values decorrelated
@@ -1179,51 +1241,57 @@ void TMVA::DataSet::GetSQRMats( TMatrixD*& sqS, TMatrixD*& sqB, vector<TString>*
 //_______________________________________________________________________
 void TMVA::DataSet::CalculatePrincipalComponents (TTree* originalTree, TPrincipal *&sigPrincipal, TPrincipal *&bgdPrincipal, vector<TString>* theVars )
 {
-	if (sigPrincipal != NULL) { delete sigPrincipal; sigPrincipal = 0; }
-	if (bgdPrincipal != NULL) { delete bgdPrincipal; sigPrincipal = 0; }
+   // calculate the principal components for the signal and the background data
+   // it uses the MakePrincipal method of ROOT's TPrincipal class
 
-	Int_t nvar = (int)theVars->size();
-	sigPrincipal = new TPrincipal (nvar, ""); // Not normalizing and not storing input data, for performance reasons. Should perhaps restore normalization.
-	bgdPrincipal = new TPrincipal (nvar, "");
+   if (sigPrincipal != NULL) { delete sigPrincipal; sigPrincipal = 0; }
+   if (bgdPrincipal != NULL) { delete bgdPrincipal; sigPrincipal = 0; }
 
-	// Should we shove this into TMVA::Tools?
+   Int_t nvar = (int)theVars->size();
+   sigPrincipal = new TPrincipal (nvar, ""); // Not normalizing and not storing input data, for performance reasons. Should perhaps restore normalization.
+   bgdPrincipal = new TPrincipal (nvar, "");
 
-	TObjArrayIter	branchIter( originalTree->GetListOfBranches(), kIterForward );
-	TBranch*		branch = NULL;
-	Long64_t		ievt, entries = originalTree->GetEntries();
-	Float_t  *		fvec = new Float_t [nvar];
-	Double_t *		dvec = new Double_t [nvar];
-	Int_t			type, jvar=-1;
-	Float_t			weight, boostweight;
-	
-	while ((branch = (TBranch*)branchIter.Next()) != 0) { 
-		if ((TString)branch->GetName() == "type") 
-			originalTree->SetBranchAddress( branch->GetName(), &type );
-		else if ((TString)branch->GetName() == "weight")
-			originalTree->SetBranchAddress( branch->GetName(), &weight );
-		else if ((TString)branch->GetName() == "boostweight")
-			originalTree->SetBranchAddress( branch->GetName(), &boostweight );
-		else
-			originalTree->SetBranchAddress( branch->GetName(), &fvec[++jvar] );
-	}
+   // Should we shove this into TMVA::Tools?
 
-	for (ievt=0; ievt<entries; ievt++) {
-		originalTree->GetEntry( ievt );
-		TPrincipal *princ = type == Types::kSignal ? sigPrincipal : bgdPrincipal;
-		for (Int_t i = 0; i < nvar; i++)
-			dvec [i] = (Double_t) fvec [i];
-		princ->AddRow (dvec);
-	}
+   TObjArrayIter   branchIter( originalTree->GetListOfBranches(), kIterForward );
+   TBranch*      branch = NULL;
+   Long64_t      ievt, entries = originalTree->GetEntries();
+   Float_t  *      fvec = new Float_t [nvar];
+   Double_t *      dvec = new Double_t [nvar];
+   Int_t         type, jvar=-1;
+   Float_t         weight, boostweight;
+   
+   while ((branch = (TBranch*)branchIter.Next()) != 0) { 
+      if ((TString)branch->GetName() == "type") 
+         originalTree->SetBranchAddress( branch->GetName(), &type );
+      else if ((TString)branch->GetName() == "weight")
+         originalTree->SetBranchAddress( branch->GetName(), &weight );
+      else if ((TString)branch->GetName() == "boostweight")
+         originalTree->SetBranchAddress( branch->GetName(), &boostweight );
+      else
+         originalTree->SetBranchAddress( branch->GetName(), &fvec[++jvar] );
+   }
 
-	sigPrincipal->MakePrincipals();
-	bgdPrincipal->MakePrincipals();
+   for (ievt=0; ievt<entries; ievt++) {
+      originalTree->GetEntry( ievt );
+      TPrincipal *princ = type == Types::kSignal ? sigPrincipal : bgdPrincipal;
+      for (Int_t i = 0; i < nvar; i++)
+         dvec [i] = (Double_t) fvec [i];
+      princ->AddRow (dvec);
+   }
 
-	delete fvec; delete dvec;
+   sigPrincipal->MakePrincipals();
+   bgdPrincipal->MakePrincipals();
+
+   delete fvec; delete dvec;
 }
 
 //_______________________________________________________________________
-void TMVA::DataSet::WriteVarsToStream(std::ostream& o, Types::PreprocessingMethod corr) const 
+void TMVA::DataSet::WriteVarsToStream(std::ostream& o, Types::EPreprocessingMethod corr) const 
 {
+   // write the list of variables (name, min, max) for a given data
+   // transformation method to the stream
+
    o << "NVar " << GetNVariables() << endl;
    std::vector<VariableInfo>::const_iterator varIt = fVariables.begin();
    for (;varIt!=fVariables.end(); varIt++) varIt->WriteToStream(o,corr);
@@ -1232,6 +1300,7 @@ void TMVA::DataSet::WriteVarsToStream(std::ostream& o, Types::PreprocessingMetho
 //_______________________________________________________________________
 void TMVA::DataSet::WriteCorrMatToStream(std::ostream& o) const
 {
+   // write the decorrelation matrix to the stream
    for (Int_t matType=0; matType<2; matType++) {
       o << "# correlation matrix " << endl;
       TMatrixD* mat = fDecorrMatrix[matType];
@@ -1247,8 +1316,11 @@ void TMVA::DataSet::WriteCorrMatToStream(std::ostream& o) const
 }
 
 //_______________________________________________________________________
-void TMVA::DataSet::ReadVarsFromStream(std::istream& istr, Types::PreprocessingMethod corr) 
+void TMVA::DataSet::ReadVarsFromStream(std::istream& istr, Types::EPreprocessingMethod corr) 
 {
+   // Read the variables (name, min, max) for a given data
+   // transformation method from the stream.
+
    TString dummy;
    Int_t readNVar;
    istr >> dummy >> readNVar;
@@ -1293,6 +1365,8 @@ void TMVA::DataSet::ReadVarsFromStream(std::istream& istr, Types::PreprocessingM
 //_______________________________________________________________________
 void TMVA::DataSet::ReadCorrMatFromStream(std::istream& istr )
 {
+   // Read the decorellation matrix from an input stream
+
    char buf[512];
    istr.getline(buf,512);
    TString strvar, dummy;

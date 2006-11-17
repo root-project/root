@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodLikelihood.cxx,v 1.51 2006/11/02 15:44:50 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: MethodLikelihood.cxx,v 1.55 2006/11/17 00:21:35 stelzer Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -13,13 +13,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -186,7 +186,7 @@ void TMVA::MethodLikelihood::InitLik( void )
    fPDFBgd         = NULL;
   
    SetMethodName( "Likelihood" );
-   SetMethodType( TMVA::Types::Likelihood );
+   SetMethodType( TMVA::Types::kLikelihood );
    SetTestvarName();
 
    fEpsilon        = 1e-5;
@@ -207,6 +207,17 @@ void TMVA::MethodLikelihood::InitLik( void )
 //_______________________________________________________________________
 void TMVA::MethodLikelihood::DeclareOptions() 
 {
+   // define the options (their key words) that can be set in the option string 
+   // know options:
+   // Spline            <int>    spline used to interpolate reference histograms
+   //    available values are:        0, 1, 2 <default>, 3, 5
+   //
+   // NSmooth           <int>    how often the input histos are smoothed
+   // NAvEvtPerBin      <int>    minimum average number of events per PDF bin (less trigger warning)
+   // TransformOutput   <bool>   transform (often strongly peaked) likelihood output through sigmoid inversion
+
+   
+
    DeclareOptionRef(fSpline=2,"Spline","spline used to interpolate reference histograms");
    AddPreDefVal(0); // take histogram
    AddPreDefVal(1); // linear interpolation between bins
@@ -226,6 +237,7 @@ void TMVA::MethodLikelihood::DeclareOptions()
 //_______________________________________________________________________
 void TMVA::MethodLikelihood::ProcessOptions() 
 {
+   // process user options
    MethodBase::ProcessOptions();
 
    if      (fSpline == 0) fSmoothMethod = TMVA::PDF::kSpline0;
@@ -239,9 +251,9 @@ void TMVA::MethodLikelihood::ProcessOptions()
    }
    
    // decorrelate option will be last option, if it is specified
-	if      (GetPreprocessingMethod() == Types::kDecorrelated)
+   if      (GetPreprocessingMethod() == Types::kDecorrelated)
       fLogger << kINFO << "use decorrelated variable set" << Endl;
-	else if (GetPreprocessingMethod() == Types::kPCA)
+   else if (GetPreprocessingMethod() == Types::kPCA)
       fLogger << kINFO << "use principal component preprocessing" << Endl;
 }
 
@@ -563,8 +575,11 @@ void  TMVA::MethodLikelihood::ReadWeightsFromStream( istream& istr )
       // find corresponding variable index and cache it (to spead up likelihood evaluation)
       for (Int_t ivar=0; ivar<GetNvar(); ivar++) {    
          if (hname.Contains( (*fInputVars)[ivar] )) {
-            if      (hname.Contains("_sig_")) (*fIndexSig)[ivar] = fSigPDFHist->GetEntries()-1;
-            else if (hname.Contains("_bgd_")) (*fIndexBgd)[ivar] = fBgdPDFHist->GetEntries()-1;
+//             if      (hname.Contains("_sig_")) (*fIndexSig)[ivar] = fSigPDFHist->GetEntries()-1;
+//             else if (hname.Contains("_bgd_")) (*fIndexBgd)[ivar] = fBgdPDFHist->GetEntries()-1;
+// to be backward compatible to ROOT 4.02
+            if      (hname.Contains("_sig_")) (*fIndexSig)[ivar] = fSigPDFHist->GetSize()-1;
+            else if (hname.Contains("_bgd_")) (*fIndexBgd)[ivar] = fBgdPDFHist->GetSize()-1;
          }
       }
    }  

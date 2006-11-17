@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticRange.cxx,v 1.11 2006/10/10 17:43:51 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: GeneticRange.cxx,v 1.12 2006/11/16 22:51:58 helgevoss Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -16,7 +16,7 @@
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        *
  *      U. of Victoria, Canada,                                                   *
- *      MPI-KP Heidelberg, Germany,                                               *
+ *      MPI-K Heidelberg, Germany ,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -24,7 +24,7 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: GeneticRange.cxx,v 1.11 2006/10/10 17:43:51 andreas.hoecker Exp $
+ * $Id: GeneticRange.cxx,v 1.12 2006/11/16 22:51:58 helgevoss Exp $
  **********************************************************************************/
 
 //_______________________________________________________________________

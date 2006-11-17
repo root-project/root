@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticANN.cxx,v 1.3 2006/10/10 17:43:51 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: GeneticANN.cxx,v 1.5 2006/11/16 22:51:58 helgevoss Exp $ 
 // Author: Andreas Hoecker, Matt Jachowski, Helge Voss
 
 /**********************************************************************************
@@ -13,12 +13,12 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Matt Jachowski  <jachowski@stanford.edu> - Stanford University, USA       *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -44,7 +44,7 @@ TMVA::GeneticANN::GeneticANN( Int_t size, std::vector<LowHigh_t*> ranges, TMVA::
 {
    // constructor
    fMethodMLP = methodMLP;
-}				
+}
 
 //_______________________________________________________________________
 Double_t TMVA::GeneticANN::FitnessFunction( const std::vector<Double_t>& parameters )

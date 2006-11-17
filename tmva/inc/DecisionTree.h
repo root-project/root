@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTree.h,v 1.33 2006/11/14 14:19:17 andreas.hoecker Exp $
+// @(#)root/tmva $Id: DecisionTree.h,v 1.35 2006/11/17 14:59:23 stelzer Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -13,13 +13,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -107,8 +107,8 @@ namespace TMVA {
       void ClearTree();
 
       // set pruning method
-      enum PruneMethod { kExpectedErrorPruning=0, kCostComplexityPruning, kMCC };
-      void SetPruneMethod( PruneMethod m = kExpectedErrorPruning ) { fPruneMethod = m; }
+      enum EPruneMethod { kExpectedErrorPruning=0, kCostComplexityPruning, kMCC };
+      void SetPruneMethod( EPruneMethod m = kExpectedErrorPruning ) { fPruneMethod = m; }
 
       // recursive pruning of the tree
       void PruneTree();
@@ -196,7 +196,7 @@ namespace TMVA {
       Bool_t    fUseSearchTree; //cut scan done with binary trees or simple event loop.
       Double_t  fPruneStrength; //a parameter to set the "amount" of pruning..needs to be adjusted 
       
-      PruneMethod fPruneMethod; // method used for prunig 
+      EPruneMethod fPruneMethod; // method used for prunig 
 
       vector< Double_t > fVariableImportance; // the relative importance of the different variables 
       

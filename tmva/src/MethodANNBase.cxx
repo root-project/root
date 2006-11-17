@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodANNBase.cxx,v 1.47 2006/11/14 23:02:57 stelzer Exp $
+// @(#)root/tmva $Id: MethodANNBase.cxx,v 1.49 2006/11/17 14:59:23 stelzer Exp $
 // Author: Andreas Hoecker, Matt Jachowski
 
 /**********************************************************************************
@@ -74,12 +74,12 @@ TMVA::MethodANNBase::MethodANNBase( TString jobName, TString methodTitle, DataSe
                                     TString theOption, TDirectory* theTargetDir )
    : TMVA::MethodBase( jobName, methodTitle, theData, theOption, theTargetDir )
 {
-   /* Note: Right now it is an option to choose the neuron input function,
-      but only the input function "sum" leads to weight convergence --
-      otherwise the weights go to nan and lead to an ABORT.
-   */
-
    // standard constructor
+   // Note: Right now it is an option to choose the neuron input function,
+   // but only the input function "sum" leads to weight convergence --
+   // otherwise the weights go to nan and lead to an ABORT.
+   
+
    InitANNBase();
 
    DeclareOptions();
@@ -90,15 +90,26 @@ TMVA::MethodANNBase::MethodANNBase( DataSet & theData,
                                     TString theWeightFile, TDirectory* theTargetDir )
    : TMVA::MethodBase( theData, theWeightFile, theTargetDir ) 
 {
-   // weight file constructor
+   // construct the Method from the weight file 
    InitANNBase();
 
    DeclareOptions();
 }
 
 
+//______________________________________________________________________________
 void TMVA::MethodANNBase::DeclareOptions()
 {
+   // define the options (their key words) that can be set in the option string 
+   // here the options valid for ALL MVA methods are declared.
+   // know options: NCycles=xx              :the number of training cycles
+   //               Normalize=kTRUE,kFALSe  :if normalised in put variables should be used
+   //               HiddenLayser="N-1,N-2"  :the specification of the hidden layers
+   //               NeuronType=sigmoid,tanh,radial,linar  : the type of activation function
+   //                                                       used at the neuronn
+   //                
+
+
    DeclareOptionRef(fNcycles=3000,"NCycles","Number of training cycles");
    DeclareOptionRef(fNormalize=kTRUE, "Normalize", "Normalize input variables");
    DeclareOptionRef(fLayerSpec="N-1,N-2","HiddenLayers","Specification of the hidden layers");
@@ -121,8 +132,11 @@ void TMVA::MethodANNBase::DeclareOptions()
    delete names;
 }
 
+//______________________________________________________________________________
 void TMVA::MethodANNBase::ProcessOptions()
 {
+   // decode the options in the option string
+
    MethodBase::ProcessOptions();
 
    vector<Int_t>* layout = ParseLayoutString(fLayerSpec);
@@ -585,7 +599,7 @@ const TMVA::Ranking* TMVA::MethodANNBase::CreateRanking()
 
       // figure out average value of variable i
       Double_t meanS, meanB, rmsS, rmsB, xmin, xmax;
-      Statistics( TMVA::Types::kTrain, varName, 
+      Statistics( TMVA::Types::kTraining, varName, 
                   meanS, meanB, rmsS, rmsB, xmin, xmax );
 
       avgVal = (meanS + meanB) / 2.0; // change this into a real weighted average

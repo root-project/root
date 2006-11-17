@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodRuleFit.h,v 1.24 2006/11/02 15:44:50 andreas.hoecker Exp $
+// @(#)root/tmva $Id: MethodRuleFit.h,v 1.25 2006/11/16 22:51:58 helgevoss Exp $
 // Author: Andreas Hoecker, Fredrik Tegenfeldt, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -19,13 +19,13 @@
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany                                                * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
- * $Id: MethodRuleFit.h,v 1.24 2006/11/02 15:44:50 andreas.hoecker Exp $    
+ * $Id: MethodRuleFit.h,v 1.25 2006/11/16 22:51:58 helgevoss Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodRuleFit

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCommittee.cxx,v 1.10 2006/11/02 15:44:50 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: MethodCommittee.cxx,v 1.14 2006/11/17 14:59:23 stelzer Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -13,12 +13,12 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -63,12 +63,13 @@ ClassImp(TMVA::MethodCommittee)
 //_______________________________________________________________________
 TMVA::MethodCommittee::MethodCommittee( TString jobName, TString committeeTitle, DataSet& theData, 
                                         TString committeeOptions,
-                                        Types::MVA method, TString methodOptions,
+                                        Types::EMVA method, TString methodOptions,
                                         TDirectory* theTargetDir )
    : TMVA::MethodBase( jobName, committeeTitle, theData, committeeOptions, theTargetDir ),
      fMemberType( method ),
      fMemberOption( methodOptions )
 {
+   // constructor
    InitCommittee(); // sets default values
 
    DeclareOptions();
@@ -105,6 +106,16 @@ TMVA::MethodCommittee::MethodCommittee( DataSet& theData,
 //_______________________________________________________________________
 void TMVA::MethodCommittee::DeclareOptions() 
 {
+   // define the options (their key words) that can be set in the option string 
+   // know options:
+   // NMembers           <string>     number of members in the committee
+   // UseMemberDecision  <bool>       use signal information from event (otherwise assume signal)
+   // UseWeightedMembers <bool>       use weighted trees or simple average in classification from the forest
+   //
+   // BoostType          <string>     boosting type
+   //    available values are:        AdaBoost  <default>
+   //                                 Bagging
+
    DeclareOptionRef(fNMembers, "NMembers", "number of members in the committee");
    DeclareOptionRef(fUseMemberDecision=kFALSE, "UseMemberDecision", "use binary information from IsSignal");
    DeclareOptionRef(fUseWeightedMembers=kTRUE, "UseWeightedMembers", "use weighted trees or simple average in classification from the forest");
@@ -117,6 +128,7 @@ void TMVA::MethodCommittee::DeclareOptions()
 //_______________________________________________________________________
 void TMVA::MethodCommittee::ProcessOptions() 
 {
+   // process user options
    MethodBase::ProcessOptions();
 }
 
@@ -125,7 +137,7 @@ void TMVA::MethodCommittee::InitCommittee( void )
 {
    // common initialisation with defaults for the Committee-Method
    SetMethodName( "Committee" );
-   SetMethodType( TMVA::Types::Committee );
+   SetMethodType( TMVA::Types::kCommittee );
    SetTestvarName();
 
    fNMembers  = 100;
@@ -179,29 +191,29 @@ void TMVA::MethodCommittee::Train( void )
       
       // initialize methods
       switch(fMemberType) {
-      case TMVA::Types::Cuts:       
+      case TMVA::Types::kCuts:       
          method = new TMVA::MethodCuts           ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::Fisher:     
+      case TMVA::Types::kFisher:     
          method = new TMVA::MethodFisher         ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::MLP:        
+      case TMVA::Types::kMLP:        
          method = new TMVA::MethodMLP            ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::TMlpANN:    
+      case TMVA::Types::kTMlpANN:    
          method = new TMVA::MethodTMlpANN        ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::CFMlpANN:   
+      case TMVA::Types::kCFMlpANN:   
          method = new TMVA::MethodCFMlpANN       ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::Likelihood: 
+      case TMVA::Types::kLikelihood: 
          method = new TMVA::MethodLikelihood     ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::HMatrix:    
+      case TMVA::Types::kHMatrix:    
          method = new TMVA::MethodHMatrix        ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::PDERS:      
+      case TMVA::Types::kPDERS:      
          method = new TMVA::MethodPDERS          ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::BDT:        
+      case TMVA::Types::kBDT:        
          method = new TMVA::MethodBDT            ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::SVM:        
+      case TMVA::Types::kSVM:        
          method = new TMVA::MethodSVM            ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::RuleFit:    
+      case TMVA::Types::kRuleFit:    
          method = new TMVA::MethodRuleFit        ( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
-      case TMVA::Types::BayesClassifier:    
+      case TMVA::Types::kBayesClassifier:    
          method = new TMVA::MethodBayesClassifier( GetJobName(), GetMethodTitle(), Data(), fMemberOption ); break;
       default:
          fLogger << kFATAL << "method: " << fMemberType << " does not exist" << Endl;
@@ -366,6 +378,7 @@ Double_t TMVA::MethodCommittee::Bagging( UInt_t imember )
 //_______________________________________________________________________
 void TMVA::MethodCommittee::WriteWeightsToStream( ostream& o ) const
 {
+   // write the state of the method to an output stream
    for (UInt_t imember=0; imember<GetCommittee().size(); imember++) {
       o << endl;
       o << "------------------------------ new member: " << imember << " ---------------" << endl;
@@ -377,6 +390,8 @@ void TMVA::MethodCommittee::WriteWeightsToStream( ostream& o ) const
 //_______________________________________________________________________
 void  TMVA::MethodCommittee::ReadWeightsFromStream( istream& istr )
 {
+   // read the state of the method from an input stream
+
    // explicitly destroy objects in vector
    std::vector<IMethod*>::iterator member = GetCommittee().begin();
    for (; member != GetCommittee().end(); member++) delete *member;
@@ -403,29 +418,29 @@ void  TMVA::MethodCommittee::ReadWeightsFromStream( istream& istr )
       
       // initialize methods
       switch(fMemberType) {
-      case TMVA::Types::Cuts:       
+      case TMVA::Types::kCuts:       
          method = new TMVA::MethodCuts           ( Data(), "" ); break;
-      case TMVA::Types::Fisher:     
+      case TMVA::Types::kFisher:     
          method = new TMVA::MethodFisher         ( Data(), "" ); break;
-      case TMVA::Types::MLP:        
+      case TMVA::Types::kMLP:        
          method = new TMVA::MethodMLP            ( Data(), "" ); break;
-      case TMVA::Types::TMlpANN:    
+      case TMVA::Types::kTMlpANN:    
          method = new TMVA::MethodTMlpANN        ( Data(), "" ); break;
-      case TMVA::Types::CFMlpANN:   
+      case TMVA::Types::kCFMlpANN:   
          method = new TMVA::MethodCFMlpANN       ( Data(), "" ); break;
-      case TMVA::Types::Likelihood: 
+      case TMVA::Types::kLikelihood: 
          method = new TMVA::MethodLikelihood     ( Data(), "" ); break;
-      case TMVA::Types::HMatrix:    
+      case TMVA::Types::kHMatrix:    
          method = new TMVA::MethodHMatrix        ( Data(), "" ); break;
-      case TMVA::Types::PDERS:      
+      case TMVA::Types::kPDERS:      
          method = new TMVA::MethodPDERS          ( Data(), "" ); break;
-      case TMVA::Types::BDT:        
+      case TMVA::Types::kBDT:        
          method = new TMVA::MethodBDT            ( Data(), "" ); break;
-      case TMVA::Types::SVM:        
+      case TMVA::Types::kSVM:        
          method = new TMVA::MethodSVM            ( Data(), "" ); break;
-      case TMVA::Types::RuleFit:    
+      case TMVA::Types::kRuleFit:    
          method = new TMVA::MethodRuleFit        ( Data(), "" ); break;
-      case TMVA::Types::BayesClassifier:    
+      case TMVA::Types::kBayesClassifier:    
          method = new TMVA::MethodBayesClassifier( Data(), "" ); break;
       default:
          fLogger << kFATAL << "<ReadWeightsFromStream> fatal error: method: " 
@@ -510,6 +525,7 @@ vector< Double_t > TMVA::MethodCommittee::GetVariableImportance()
 //_______________________________________________________________________
 Double_t TMVA::MethodCommittee::GetVariableImportance(UInt_t ivar)
 {
+   // return the variable importance
    vector<Double_t> relativeImportance = this->GetVariableImportance();
    if (ivar < (UInt_t)relativeImportance.size()) return relativeImportance[ivar];
    else  fLogger << kFATAL << "<GetVariableImportance> ivar = " << ivar << " is out of range " << Endl;

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodVariable.cxx,v 1.21 2006/11/02 15:44:50 andreas.hoecker Exp $
+// @(#)root/tmva $Id: MethodVariable.cxx,v 1.24 2006/11/17 00:21:35 stelzer Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -13,13 +13,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -50,7 +50,7 @@ TMVA::MethodVariable::MethodVariable( TString jobName, TString methodTitle, Data
    // so, remove this part
 
    SetMethodName( "Variable" );
-   SetMethodType( TMVA::Types::Variable );
+   SetMethodType( TMVA::Types::kVariable );
    SetTestvarPrefix( "" );
    SetTestvarName();
 
@@ -93,11 +93,13 @@ Double_t TMVA::MethodVariable::GetMvaValue()
 //_______________________________________________________________________
 void  TMVA::MethodVariable::WriteWeightsToStream( ostream & o ) const
 {  
+   // Write configuration to output stream
    o << "";
 }
   
 //_______________________________________________________________________
 void  TMVA::MethodVariable::ReadWeightsFromStream( istream & istr )
 {
+   // Read configuration from input stream
    if (istr.eof());
 }

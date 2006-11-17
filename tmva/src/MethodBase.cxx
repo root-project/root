@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBase.cxx,v 1.86 2006/11/15 00:20:32 stelzer Exp $
+// @(#)root/tmva $Id: MethodBase.cxx,v 1.92 2006/11/17 14:59:23 stelzer Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -13,13 +13,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        *
  *      U. of Victoria, Canada,                                                   *
- *      MPI-KP Heidelberg, Germany,                                               *
+ *      MPI-K Heidelberg, Germany ,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -27,7 +27,7 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: MethodBase.cxx,v 1.86 2006/11/15 00:20:32 stelzer Exp $
+ * $Id: MethodBase.cxx,v 1.92 2006/11/17 14:59:23 stelzer Exp $
  **********************************************************************************/
 
 //_______________________________________________________________________
@@ -385,6 +385,17 @@ void TMVA::MethodBase::Init()
 //_______________________________________________________________________
 void TMVA::MethodBase::DeclareOptions() 
 {
+   // define the options (their key words) that can be set in the option string 
+   // here the options valid for ALL MVA methods are declared.
+   // know options: Preprocess=None,Decorrelated,PCA  to use decorrelated variables 
+   //                                                 instead of the original ones
+   //               PreprocessType=Signal,Background  which decorrelation matrix to use
+   //                                                 in the method. Only the Likelihood
+   //                                                 Method can make proper use of independent
+   //                                                 transformations of signal and background
+   //               V  for Verbose output (!V) for non verbos
+   //               H  for Help 
+
    DeclareOptionRef(fUseDecorr, "D", "use-decorrelated-variables flag (for backward compatibility)");
 
    DeclareOptionRef(fPreprocessingString="None", "Preprocess", "Variable Decorrelation Method");
@@ -403,6 +414,8 @@ void TMVA::MethodBase::DeclareOptions()
 //_______________________________________________________________________
 void TMVA::MethodBase::ProcessOptions() 
 {
+   // the option string is decoded, for availabel options see "DeclareOptions"
+
    if      (fPreprocessingString == "None")         fPreprocessingMethod = Types::kNone;
    else if (fPreprocessingString == "Decorrelate" ) fPreprocessingMethod = Types::kDecorrelated;
    else if (fPreprocessingString == "PCA" )         fPreprocessingMethod = Types::kPCA;
@@ -425,7 +438,7 @@ void TMVA::MethodBase::ProcessOptions()
 
 
    if( GetPreprocessingMethod() == Types::kDecorrelated ) {
-      Types::PreprocessingMethod c = Types::kDecorrelated;
+      Types::EPreprocessingMethod c = Types::kDecorrelated;
       Data().EnablePreprocess(Types::kDecorrelated);
       if( Data().Preprocess(Types::kDecorrelated) ) {
          // local copy of the variable ranges 
@@ -438,7 +451,7 @@ void TMVA::MethodBase::ProcessOptions()
    }
 
    if( GetPreprocessingMethod() == Types::kPCA ) {
-      Types::PreprocessingMethod c = Types::kPCA;
+      Types::EPreprocessingMethod c = Types::kPCA;
       Data().EnablePreprocess(Types::kPCA);
       if( Data().Preprocess(Types::kPCA) ) {
          // local copy of the variable ranges 
@@ -467,6 +480,9 @@ void TMVA::MethodBase::TrainMethod()
 //_______________________________________________________________________
 void TMVA::MethodBase::WriteStateToStream(std::ostream& o) const 
 {
+   // general method used in writing the header of the weight files where
+   // the used variables, preprocessing type etc. is specified
+
    o << "#GEN -*-*-*-*-*-*-*-*-*-*-*- general info -*-*-*-*-*-*-*-*-*-*-*-" << endl << endl;
    o << "Method : " << GetMethodName() << endl;
    o << "Creator: " << gSystem->GetUserInfo()->fUser << endl;
@@ -547,8 +563,11 @@ void TMVA::MethodBase::ReadStateFromFile()
    }
 }
 
+//_______________________________________________________________________
 void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
 {     
+   // read the header from the weight files of the different MVA methods
+
    char buf[512];
    
    // first read the method name
@@ -595,7 +614,7 @@ void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
       if (0 != fXmaxNorm[corr]) delete fXmaxNorm[corr]; 
       fXminNorm[corr] = new Double_t[Data().GetNVariables()];
       fXmaxNorm[corr] = new Double_t[Data().GetNVariables()];
-      Types::PreprocessingMethod c = (Types::PreprocessingMethod) corr;
+      Types::EPreprocessingMethod c = (Types::EPreprocessingMethod) corr;
       for(UInt_t ivar=0; ivar<Data().GetNVariables(); ivar++) {
          SetXmin(ivar, Data().GetXmin(ivar, c), c);
          SetXmax(ivar, Data().GetXmax(ivar, c), c);
@@ -614,6 +633,7 @@ void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
 //_______________________________________________________________________
 Double_t TMVA::MethodBase::GetEventValNormalized(Int_t ivar) const 
 { 
+   // return the normalized event variable (normalized to interval [0,1]
    return Tools::NormVariable( Data().Event().GetVal(ivar), 
                                GetXmin(ivar, GetPreprocessingMethod()),
                                GetXmax(ivar, GetPreprocessingMethod()));
@@ -622,6 +642,9 @@ Double_t TMVA::MethodBase::GetEventValNormalized(Int_t ivar) const
 //_______________________________________________________________________
 TDirectory * TMVA::MethodBase::BaseDir( void ) const
 {
+   // returns the ROOT directory where info/histograms etc of the 
+   // corresponding MVA method are stored
+
    if (fBaseDir != 0) return fBaseDir;
 
    TDirectory* dir = 0;
@@ -961,6 +984,7 @@ Double_t TMVA::MethodBase::GetEfficiency( TString theString, TTree *theTree )
    return 0.5*(effS + effS_); // the mean between bin above and bin below
 }
 
+//_______________________________________________________________________
 Double_t TMVA::MethodBase::GetTrainingEfficiency( TString theString)
 {
    // fill background efficiency (resp. rejection) versus signal efficiency plots
@@ -1018,7 +1042,7 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency( TString theString)
          ReadTrainingEvent(ievt);
 
          TH1* theHist = (Data().Event().IsSignal() ? fTrainEffS : fTrainEffB);
-	 
+ 
          Double_t theVal = this->GetMvaValue();
 
          for (Int_t bin=1; bin<=fNbinsH; bin++)
@@ -1285,14 +1309,19 @@ Double_t TMVA::MethodBase::GetmuTransform( TTree *theTree )
    return intS; // return average mu-transform for signal
 }
 
-void TMVA::MethodBase::Statistics( TMVA::Types::TreeType treeType, const TString& theVarName,
+//_______________________________________________________________________
+void TMVA::MethodBase::Statistics( TMVA::Types::ETreeType treeType, const TString& theVarName,
                                    Double_t& meanS, Double_t& meanB,
                                    Double_t& rmsS,  Double_t& rmsB,
                                    Double_t& xmin,  Double_t& xmax,
                                    Bool_t    norm )
 {
-   Long64_t entries = ( (treeType == TMVA::Types::kTest ) ? Data().GetNEvtTest() :
-                        (treeType == TMVA::Types::kTrain) ? Data().GetNEvtTrain() : -1 );
+   // calculates rms,mean, xmin, xmax of the event variable
+   // this can be either done for the variables as they are or for
+   // normalised variables (in the range of 0-1) if "norm" is set to kTRUE
+
+   Long64_t entries = ( (treeType == TMVA::Types::kTesting ) ? Data().GetNEvtTest() :
+                        (treeType == TMVA::Types::kTraining) ? Data().GetNEvtTrain() : -1 );
 
    // sanity check
    if (entries <=0) 
@@ -1312,8 +1341,10 @@ void TMVA::MethodBase::Statistics( TMVA::Types::TreeType treeType, const TString
    // loop over all training events 
    for (Int_t i = 0; i < entries; i++) {
 
-      if (treeType == TMVA::Types::kTest ) ReadTestEvent(i);
-      else                                 ReadTrainingEvent(i);
+      if (treeType == TMVA::Types::kTesting )
+         ReadTestEvent(i);
+      else
+         ReadTrainingEvent(i);
       
       Double_t theVar = (norm) ? GetEventValNormalized(varIndex) : GetEventVal(varIndex);
 
@@ -1395,6 +1426,8 @@ Double_t TMVA::MethodBase::GetEffForRoot( Double_t theCut )
 //______________________________________________________________________
 void TMVA::MethodBase::PrintOptions() const 
 {
+   // prints out the options set in the options string and the defaults
+
    fLogger << kINFO << "the following options are set:" << Endl;
    TListIter optIt( & ListOfOptions() );
    fLogger << kINFO << "by User:" << Endl;
@@ -1413,6 +1446,8 @@ void TMVA::MethodBase::PrintOptions() const
 //______________________________________________________________________
 void TMVA::MethodBase::WriteOptionsToStream(ostream& o) const 
 {
+   // write options to output stream (e.g. in writing the MVA weight files
+
    TListIter optIt( & ListOfOptions() );
    o << "# Set by User:" << endl;
    while (OptionBase * opt = (OptionBase *) optIt()) if (opt->IsSet()) { opt->Print(o); o << endl; }
@@ -1425,6 +1460,8 @@ void TMVA::MethodBase::WriteOptionsToStream(ostream& o) const
 //______________________________________________________________________
 void TMVA::MethodBase::ReadOptionsFromStream(istream& istr)
 {
+   // read option back from the weight file
+
    fOptions = "";
    char buf[512];
    istr.getline(buf,512);

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodRuleFit.cxx,v 1.40 2006/11/02 15:44:50 andreas.hoecker Exp $
+// @(#)root/tmva $Id: MethodRuleFit.cxx,v 1.43 2006/11/17 00:21:35 stelzer Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss 
 
 /**********************************************************************************
@@ -16,7 +16,7 @@
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      Iowa State U.                                                             *
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -87,6 +87,30 @@ TMVA::MethodRuleFit::~MethodRuleFit( void )
 //_______________________________________________________________________
 void TMVA::MethodRuleFit::DeclareOptions() 
 {
+   // define the options (their key words) that can be set in the option string 
+   // know options:
+   // GDTau          <float>      gradient-directed path: fit threshhold  
+   // GDStep         <float>      gradient-directed path: step size       
+   // GDNSteps       <float>      gradient-directed path: number of steps 
+   // GDErrNsigma    <float>      threshold for error-rate                
+   // MinImp         <float>      minimum rule importance accepted        
+   // nEventsMin     <float>      minimum number of events in a leaf node 
+   // nTrees         <float>      number of trees in forest.              
+   // SampleFraction <float>      fraction of events used to train each tree
+   // nCuts          <float>      number of steps during node cut optimisation
+   // RuleMaxDist    <float>      max distance allowed between equal rules
+   // 
+   // SeparationType <string>     separation criterion for node splitting
+   //    available values are:    GiniIndex <default>
+   //                             MisClassificationError
+   //                             CrossEntropy
+   //                             SDivSqrtSPlusB
+   // 
+   // Model          <string>     model to be used
+   //    available values are:    ModRuleLinear <default>
+   //                             ModRule
+   //                             ModLinear
+
    DeclareOptionRef(fGDTau=0.0,            "GDTau",          "gradient-directed path: fit threshhold");
    DeclareOptionRef(fGDPathStep=0.01,      "GDStep",         "gradient-directed path: step size");
    DeclareOptionRef(fGDNPathSteps=100,     "GDNSteps",       "gradient-directed path: number of steps");
@@ -113,6 +137,7 @@ void TMVA::MethodRuleFit::DeclareOptions()
 //_______________________________________________________________________
 void TMVA::MethodRuleFit::ProcessOptions() 
 {
+   // process the options specified by the user   
    MethodBase::ProcessOptions();
 
    if     (fSepTypeS == "misclassificationerror") fSepType = new TMVA::MisClassificationError();
@@ -135,6 +160,7 @@ void TMVA::MethodRuleFit::ProcessOptions()
 //_______________________________________________________________________
 void TMVA::MethodRuleFit::InitMonitorNtuple()
 {
+   // initialize the monitoring ntuple
    fMonitorNtuple= new TTree("MonitorNtuple_RuleFit","RuleFit variables");
    fMonitorNtuple->Branch("importance",&fNTImportance,"importance/D");
    fMonitorNtuple->Branch("support",&fNTSupport,"support/D");
@@ -154,7 +180,7 @@ void TMVA::MethodRuleFit::InitRuleFit( void )
 {
    // default initialisation
    SetMethodName( "RuleFit" );
-   SetMethodType( TMVA::Types::RuleFit );
+   SetMethodType( TMVA::Types::kRuleFit );
    SetTestvarName();
 }
 
@@ -191,6 +217,7 @@ void TMVA::MethodRuleFit::InitEventSample( void )
 //_______________________________________________________________________
 void TMVA::MethodRuleFit::BuildTree( TMVA::DecisionTree *dt, std::vector< TMVA::Event *> & el )
 {
+   // build the decision tree
    if (dt==0) return;
    dt->BuildTree(el);
 }
@@ -298,13 +325,14 @@ const TMVA::Ranking* TMVA::MethodRuleFit::CreateRanking()
 //_______________________________________________________________________
 void  TMVA::MethodRuleFit::WriteWeightsToStream( ostream & o ) const
 {  
+   // write the rules to an ostream
    fRuleFit.GetRuleEnsemble().PrintRaw(o);
 }
 
 //_______________________________________________________________________
 void  TMVA::MethodRuleFit::ReadWeightsFromStream( istream & istr )
 {
-   // read rules from stream
+   // read rules from an istream
    fRuleFit.GetRuleEnsemblePtr()->ReadRaw(istr);
 }
 

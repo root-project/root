@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: SimulatedAnnealingCuts.cxx,v 1.5 2006/10/10 17:43:52 andreas.hoecker Exp $   
+// @(#)root/tmva $Id: SimulatedAnnealingCuts.cxx,v 1.7 2006/11/16 22:51:59 helgevoss Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -13,13 +13,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -41,13 +41,18 @@ ClassImp(TMVA::SimulatedAnnealingCuts)
 
 TMVA::SimulatedAnnealingCuts::SimulatedAnnealingCuts( std::vector<LowHigh_t*>& ranges )
    : SimulatedAnnealingBase( ranges )
-{}
+{
+   // constructor
+}
 
 TMVA::SimulatedAnnealingCuts::~SimulatedAnnealingCuts()
-{}
+{
+   // destructor
+}
 
 Double_t TMVA::SimulatedAnnealingCuts::MinimizeFunction( const std::vector<Double_t>& parameters )
 {
    // minimize function interface for Simulated Annealing fitter for cut optimisation
+
    return TMVA::MethodCuts::ThisCuts()->ComputeEstimator( parameters ); 
 }

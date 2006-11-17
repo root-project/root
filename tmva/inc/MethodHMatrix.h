@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodHMatrix.h,v 1.18 2006/11/02 15:44:50 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: MethodHMatrix.h,v 1.20 2006/11/17 14:59:24 stelzer Exp $    
 // Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -18,13 +18,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany                                                * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -95,8 +95,8 @@ namespace TMVA {
       virtual void ProcessOptions();
 
       // returns chi2 estimator for given type (signal or background)
-      Double_t GetChi2( Event *e, Types::SBType ) const;
-      Double_t GetChi2( Types::SBType ) const;
+      Double_t GetChi2( Event *e, Types::ESBType ) const;
+      Double_t GetChi2( Types::ESBType ) const;
 
       // compute correlation matrices
       void     ComputeCovariance( Bool_t, TMatrixD* );

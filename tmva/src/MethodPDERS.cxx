@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodPDERS.cxx,v 1.39 2006/11/02 15:44:50 andreas.hoecker Exp $
+// @(#)root/tmva $Id: MethodPDERS.cxx,v 1.43 2006/11/17 00:21:35 stelzer Exp $
 // Author: Andreas Hoecker, Yair Mahalalel, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -13,13 +13,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Yair Mahalalel  <Yair.Mahalalel@cern.ch> - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        *
  *      U. of Victoria, Canada,                                                   *
- *      MPI-KP Heidelberg, Germany                                                *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -123,7 +123,7 @@ void TMVA::MethodPDERS::InitPDERS( void )
 {
    // default initialisation routine called by all constructors
    SetMethodName( "PDERS" );
-   SetMethodType( TMVA::Types::PDERS );
+   SetMethodType( TMVA::Types::kPDERS );
    SetTestvarName();
 
    fBinaryTreeS   = fBinaryTreeB = NULL;
@@ -160,6 +160,36 @@ TMVA::MethodPDERS::~MethodPDERS( void )
 //_______________________________________________________________________
 void TMVA::MethodPDERS::DeclareOptions() 
 {
+   // define the options (their key words) that can be set in the option string 
+   // know options:
+   // VolumeRangeMode   <string>  Method to determine volume range
+   //    available values are:        MinMax <default>
+   //                                 Unscaled
+   //                                 RMS
+   //                                 Adaptive
+   //
+   // KernelEstimator   <string>  Kernel estimation function
+   //    available values are:        Box <default>
+   //                                 Sphere
+   //                                 Teepee
+   //                                 Gauss
+   //                                 Sinc3
+   //                                 Sinc5
+   //                                 Sinc7
+   //                                 Sinc9
+   //                                 Sinc11
+   //                                 Lanczos2
+   //                                 Lanczos3
+   //                                 Lanczos5
+   //                                 Lanczos8
+   //
+   // DeltaFrac         <float>   Ratio of #EventsMin/#EventsMax for MinMax and RMS volume range
+   // NEventsMin        <int>     Minimum number of events for adaptive volume range             
+   // NEventsMax        <int>     Maximum number of events for adaptive volume range
+   // MaxVIterations    <int>     Maximum number of iterations for adaptive volume range
+   // InitialScale      <float>   Initial scale for adaptive volume range           
+   // GaussSigma        <float>   Width with respect to the volume size of Gaussian kernel estimator
+
    DeclareOptionRef(fVolumeRange="MinMax", "VolumeRangeMode", "Method to determine volume range");
    AddPreDefVal(TString("Unscaled"));
    AddPreDefVal(TString("MinMax"));
@@ -181,7 +211,7 @@ void TMVA::MethodPDERS::DeclareOptions()
    AddPreDefVal(TString("Lanczos5"));
    AddPreDefVal(TString("Lanczos8"));
 
-   DeclareOptionRef(fDeltaFrac     , "DeltaFrac",      "nEventsMin/Max for minmax and rms vaolume range");
+   DeclareOptionRef(fDeltaFrac     , "DeltaFrac",      "nEventsMin/Max for minmax and rms volume range");
    DeclareOptionRef(fNEventsMin    , "NEventsMin",     "nEventsMin for adaptive volume range");
    DeclareOptionRef(fNEventsMax    , "NEventsMax",     "nEventsMax for adaptive volume range");
    DeclareOptionRef(fMaxVIterations, "MaxVIterations", "MaxVIterations for adaptive volume range");
@@ -192,36 +222,38 @@ void TMVA::MethodPDERS::DeclareOptions()
 //_______________________________________________________________________
 void TMVA::MethodPDERS::ProcessOptions() 
 {
+   // process the options specified by the user
+   
    MethodBase::ProcessOptions();
 
    fVRangeMode = TMVA::MethodPDERS::kUnsupported;
 
-   if  		(fVolumeRange == "MinMax"    ) fVRangeMode = TMVA::MethodPDERS::kMinMax;
-   else if 	(fVolumeRange == "RMS"       ) fVRangeMode = TMVA::MethodPDERS::kRMS;
-   else if 	(fVolumeRange == "Adaptive"  ) fVRangeMode = TMVA::MethodPDERS::kAdaptive;
-   else if 	(fVolumeRange == "Unscaled"  ) fVRangeMode = TMVA::MethodPDERS::kUnscaled;
+   if         (fVolumeRange == "MinMax"    ) fVRangeMode = TMVA::MethodPDERS::kMinMax;
+   else if    (fVolumeRange == "RMS"       ) fVRangeMode = TMVA::MethodPDERS::kRMS;
+   else if    (fVolumeRange == "Adaptive"  ) fVRangeMode = TMVA::MethodPDERS::kAdaptive;
+   else if    (fVolumeRange == "Unscaled"  ) fVRangeMode = TMVA::MethodPDERS::kUnscaled;
    else {
       fLogger << kFATAL << "VolumeRangeMode parameter '" << fVolumeRange << "' unknown" << Endl;
    }
 
-   if	  	   (fKernelString == "Box"		  ) fKernelEstimator = TMVA::MethodPDERS::kBox;
-   else if	(fKernelString == "Sphere"	  ) fKernelEstimator = TMVA::MethodPDERS::kSphere;
-   else if	(fKernelString == "Teepee"   ) fKernelEstimator = TMVA::MethodPDERS::kTeepee;
-   else if	(fKernelString == "Gauss"    ) fKernelEstimator = TMVA::MethodPDERS::kGauss;
-   else if	(fKernelString == "Sinc3"	  ) fKernelEstimator = TMVA::MethodPDERS::kSinc3;
-   else if	(fKernelString == "Sinc5"	  ) fKernelEstimator = TMVA::MethodPDERS::kSinc5;
-   else if	(fKernelString == "Sinc7"	  ) fKernelEstimator = TMVA::MethodPDERS::kSinc7;
-   else if	(fKernelString == "Sinc9"	  ) fKernelEstimator = TMVA::MethodPDERS::kSinc9;
-   else if	(fKernelString == "Sinc11"	  ) fKernelEstimator = TMVA::MethodPDERS::kSinc11;
-   else if	(fKernelString == "Lanczos2" ) fKernelEstimator = TMVA::MethodPDERS::kLanczos2;
-   else if	(fKernelString == "Lanczos3" ) fKernelEstimator = TMVA::MethodPDERS::kLanczos3;
-   else if	(fKernelString == "Lanczos5" ) fKernelEstimator = TMVA::MethodPDERS::kLanczos5;
-   else if	(fKernelString == "Lanczos8" ) fKernelEstimator = TMVA::MethodPDERS::kLanczos8;
+   if        (fKernelString == "Box"      ) fKernelEstimator = TMVA::MethodPDERS::kBox;
+   else if   (fKernelString == "Sphere"   ) fKernelEstimator = TMVA::MethodPDERS::kSphere;
+   else if   (fKernelString == "Teepee"   ) fKernelEstimator = TMVA::MethodPDERS::kTeepee;
+   else if   (fKernelString == "Gauss"    ) fKernelEstimator = TMVA::MethodPDERS::kGauss;
+   else if   (fKernelString == "Sinc3"    ) fKernelEstimator = TMVA::MethodPDERS::kSinc3;
+   else if   (fKernelString == "Sinc5"    ) fKernelEstimator = TMVA::MethodPDERS::kSinc5;
+   else if   (fKernelString == "Sinc7"    ) fKernelEstimator = TMVA::MethodPDERS::kSinc7;
+   else if   (fKernelString == "Sinc9"    ) fKernelEstimator = TMVA::MethodPDERS::kSinc9;
+   else if   (fKernelString == "Sinc11"   ) fKernelEstimator = TMVA::MethodPDERS::kSinc11;
+   else if   (fKernelString == "Lanczos2" ) fKernelEstimator = TMVA::MethodPDERS::kLanczos2;
+   else if   (fKernelString == "Lanczos3" ) fKernelEstimator = TMVA::MethodPDERS::kLanczos3;
+   else if   (fKernelString == "Lanczos5" ) fKernelEstimator = TMVA::MethodPDERS::kLanczos5;
+   else if   (fKernelString == "Lanczos8" ) fKernelEstimator = TMVA::MethodPDERS::kLanczos8;
    else {
       fLogger << kFATAL << "KernelEstimator parameter '" << fKernelString << "' unknown" << Endl;
    }
 
-	// TODO: Add parameter validation
+   // TODO: Add parameter validation
 
    fLogger << kVERBOSE << "interpreted option string: vRangeMethod: '"
            << (const char*)((fVRangeMode == kMinMax) ? "MinMax" :
@@ -438,7 +470,7 @@ Float_t TMVA::MethodPDERS::RScalc( const TMVA::Event& e )
       delete lb;
       delete ub;
    } 
-   else if (fVRangeMode == kAdaptive) {		// adaptive volume
+   else if (fVRangeMode == kAdaptive) {      // adaptive volume
 
       // -----------------------------------------------------------------------
 
@@ -554,7 +586,7 @@ Float_t TMVA::MethodPDERS::RScalc( const TMVA::Event& e )
    if (countS < 1e-20) return 0.0;
 
    Float_t r = countB*fScaleB/(countS*fScaleS);
-   return 1.0/(r + 1.0);	// TODO: propagate errors from here
+   return 1.0/(r + 1.0);   // TODO: propagate errors from here
 }
 
 //_______________________________________________________________________
@@ -577,7 +609,7 @@ Double_t TMVA::MethodPDERS::KernelEstimate( const TMVA::Event & event,
       
       // always working within the hyperelipsoid, except for when we don't
       // note that rejection ratio goes to 1 as nvar goes to infinity
-      if (normalized_distance > 1 && fKernelEstimator != kBox) continue;		
+      if (normalized_distance > 1 && fKernelEstimator != kBox) continue;      
       
       pdfSum += ApplyKernelFunction (normalized_distance) * (*iev)->GetWeight();
    }
@@ -587,6 +619,8 @@ Double_t TMVA::MethodPDERS::KernelEstimate( const TMVA::Event & event,
 //_______________________________________________________________________
 Double_t TMVA::MethodPDERS::ApplyKernelFunction (Double_t normalized_distance) 
 {
+   // from the normalized euclidean distance calculate the distance
+   // for a certain kernel
    switch (fKernelEstimator) {
    case kBox:
    case kSphere:
@@ -605,8 +639,8 @@ Double_t TMVA::MethodPDERS::ApplyKernelFunction (Double_t normalized_distance)
    case kSinc11: {
       Double_t side_crossings = 2 + ((int) fKernelEstimator) - ((int) kSinc3);
       return NormSinc (side_crossings * normalized_distance);
-	}
- 	   break;
+   }
+      break;
    case kLanczos2:
       return LanczosFilter (2, normalized_distance);
       break;
@@ -626,25 +660,25 @@ Double_t TMVA::MethodPDERS::ApplyKernelFunction (Double_t normalized_distance)
 
    return 0;
 }
-		
+      
 //_______________________________________________________________________
 Double_t TMVA::MethodPDERS::KernelNormalization (Double_t pdf) 
 {
-	// Calculating the normalization factor only once (might need a reset at some point. Can the method be restarted with different params?)
+   // Calculating the normalization factor only once (might need a reset at some point. Can the method be restarted with different params?)
 
-	static Double_t ret = 1.; // Caching jammed to disable function. It's not really useful afterall, badly implemented and untested :-)
+   static Double_t ret = 1.; // Caching jammed to disable function. It's not really useful afterall, badly implemented and untested :-)
 
-	if (ret != 0.)
-		return ret*pdf; 
+   if (ret != 0.)
+      return ret*pdf; 
 
-	// We first normalize by the volume of the hypersphere.
-	switch (fKernelEstimator) {
+   // We first normalize by the volume of the hypersphere.
+   switch (fKernelEstimator) {
    case kBox:
    case kSphere:
       ret = 1.;
       break;
    case kTeepee:
-      ret =	(GetNvar() * (GetNvar() + 1) * TMath::Gamma (((Double_t) GetNvar()) / 2.)) /
+      ret =   (GetNvar() * (GetNvar() + 1) * TMath::Gamma (((Double_t) GetNvar()) / 2.)) /
          ( TMath::Power (2., (Double_t) GetNvar() + 1) * TMath::Power (TMath::Pi(), ((Double_t) GetNvar()) / 2.));
       break;
    case kGauss:
@@ -665,63 +699,65 @@ Double_t TMVA::MethodPDERS::KernelNormalization (Double_t pdf)
       break;
    default:
       fLogger << kFATAL << "Kernel estimation function unsupported. Enumerator is " << fKernelEstimator << Endl;
-	}
-	// Normalizing by the full volume
-	ret *= ( TMath::Power (2., GetNvar()) * TMath::Gamma (1 + (((Double_t) GetNvar()) / 2.)) ) /
+   }
+   // Normalizing by the full volume
+   ret *= ( TMath::Power (2., GetNvar()) * TMath::Gamma (1 + (((Double_t) GetNvar()) / 2.)) ) /
       TMath::Power (TMath::Pi(), ((Double_t) GetNvar()) / 2.);
-	return ret*pdf;
+   return ret*pdf;
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodPDERS::GetNormalizedDistance (	const TMVA::Event &base_event,
+Double_t TMVA::MethodPDERS::GetNormalizedDistance (   const TMVA::Event &base_event,
                                                       const TMVA::Event &sample_event,
                                                       Double_t *dim_normalization) {
-	// We use Euclidian metric here. Might not be best or most efficient.
-	Double_t ret=0;
-	for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
-		Double_t dist = dim_normalization[ivar] * (sample_event.GetVal(ivar) - base_event.GetVal(ivar));
-		ret += dist*dist;
-	}
-	return TMath::Sqrt (ret);
+   // We use Euclidian metric here. Might not be best or most efficient.
+   Double_t ret=0;
+   for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
+      Double_t dist = dim_normalization[ivar] * (sample_event.GetVal(ivar) - base_event.GetVal(ivar));
+      ret += dist*dist;
+   }
+   return TMath::Sqrt (ret);
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodPDERS::NormSinc (Double_t x) {
-	
-	if (x < 10e-10 && x > -10e-10) {
-		return 1; // Poor man's l'Hopital
-	}
+Double_t TMVA::MethodPDERS::NormSinc (Double_t x)
+{
+   // NormSinc
+   if (x < 10e-10 && x > -10e-10) {
+      return 1; // Poor man's l'Hopital
+   }
 
-	Double_t pix = TMath::Pi() * x;
-	Double_t sinc = TMath::Sin(pix) / pix;
-	Double_t ret;
+   Double_t pix = TMath::Pi() * x;
+   Double_t sinc = TMath::Sin(pix) / pix;
+   Double_t ret;
 
-	if (GetNvar() % 2)
-		ret = TMath::Power (sinc, GetNvar());
-	else
-		ret = TMath::Abs (sinc) * TMath::Power (sinc, GetNvar() - 1);
+   if (GetNvar() % 2)
+      ret = TMath::Power (sinc, GetNvar());
+   else
+      ret = TMath::Abs (sinc) * TMath::Power (sinc, GetNvar() - 1);
 
-	return ret;
+   return ret;
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodPDERS::LanczosFilter (Int_t level, Double_t x) {
-	
-	if (x < 10e-10 && x > -10e-10) {
-		return 1; // Poor man's l'Hopital
-	}
+Double_t TMVA::MethodPDERS::LanczosFilter (Int_t level, Double_t x)
+{
+   // Lanczos Filter
+   if (x < 10e-10 && x > -10e-10) {
+      return 1; // Poor man's l'Hopital
+   }
 
-	Double_t pix = TMath::Pi() * x;
-	Double_t pixtimesn = pix * ((Double_t) level);
-	Double_t lanczos = (TMath::Sin(pix) / pix) * (TMath::Sin(pixtimesn) / pixtimesn);
-	Double_t ret;
+   Double_t pix = TMath::Pi() * x;
+   Double_t pixtimesn = pix * ((Double_t) level);
+   Double_t lanczos = (TMath::Sin(pix) / pix) * (TMath::Sin(pixtimesn) / pixtimesn);
+   Double_t ret;
 
-	if (GetNvar() % 2)
-		ret = TMath::Power (lanczos, GetNvar());
-	else
-		ret = TMath::Abs (lanczos) * TMath::Power (lanczos, GetNvar() - 1);
+   if (GetNvar() % 2)
+      ret = TMath::Power (lanczos, GetNvar());
+   else
+      ret = TMath::Abs (lanczos) * TMath::Power (lanczos, GetNvar() - 1);
 
-	return ret;
+   return ret;
 }
 
 //_______________________________________________________________________

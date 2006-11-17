@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodPDERS.h,v 1.21 2006/11/02 15:44:50 andreas.hoecker Exp $
+// @(#)root/tmva $Id: MethodPDERS.h,v 1.23 2006/11/17 14:59:24 stelzer Exp $
 // Author: Andreas Hoecker, Yair Mahalalel, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -21,13 +21,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Yair Mahalalel  <Yair.Mahalalel@cern.ch> - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        *
  *      U. of Victoria, Canada,                                                   *
- *      MPI-KP Heidelberg, Germany                                                *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -132,7 +132,7 @@ namespace TMVA {
       TString fVolumeRange;   // option volume range
       TString fKernelString; // option kernel estimator
 
-      enum VolumeRangeMode {
+      enum EVolumeRangeMode {
          kUnsupported = 0,
          kMinMax,
          kRMS,
@@ -140,7 +140,7 @@ namespace TMVA {
          kUnscaled
       } fVRangeMode;
 
-      enum KernelEstimator {
+      enum EKernelEstimator {
          kBox = 0,
          kSphere,
          kTeepee,

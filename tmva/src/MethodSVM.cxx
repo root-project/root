@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodSVM.cxx,v 1.16 2006/11/02 15:44:50 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: MethodSVM.cxx,v 1.19 2006/11/17 00:21:35 stelzer Exp $    
 // Author: Marcin .... 
 
 /**********************************************************************************
@@ -17,7 +17,7 @@
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -60,15 +60,18 @@ void TMVA::MethodSVM::InitSVM( void )
 {
    // default initialisation
    SetMethodName( "SVM" );
-   SetMethodType( TMVA::Types::SVM );
+   SetMethodType( TMVA::Types::kSVM );
    SetTestvarName();
 }
 
 void TMVA::MethodSVM::DeclareOptions() 
-{}
+{
+   // declare options available for this method
+}
 
 void TMVA::MethodSVM::ProcessOptions() 
 {
+   // evaluate options 
    MethodBase::ProcessOptions();
 }
 
@@ -90,12 +93,14 @@ void TMVA::MethodSVM::Train( void )
 //_______________________________________________________________________
 void  TMVA::MethodSVM::WriteWeightsToStream( ostream & o ) const
 {  
+   // Write configuration to output stream
    o << "whatever" << endl;
 }
   
 //_______________________________________________________________________
 void  TMVA::MethodSVM::ReadWeightsFromStream( istream & istr )
 {
+   // Read configuration from input stream
    if (istr.eof());
 }
 

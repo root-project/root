@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Rule.cxx,v 1.30 2006/10/29 23:40:57 helgevoss Exp $
+// @(#)root/tmva $Id: Rule.cxx,v 1.32 2006/11/16 22:51:59 helgevoss Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss 
 
 /**********************************************************************************
@@ -20,7 +20,7 @@
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      Iowa State U.                                                             *
- *      MPI-KP Heidelberg, Germany                                                * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -56,7 +56,14 @@
 TMVA::Rule::Rule( RuleEnsemble *re,
                   const std::vector< const Node * >& nodes,
                   const std::vector< Int_t >       & cutdirs )
-   : fLogger( "Rule" )
+   : fNorm          ( 1.0 )
+   , fSupport       ( 0.0 )
+   , fSigma         ( 0.0 )
+   , fCoefficient   ( 0.0 )
+   , fImportance    ( 0.0 )
+   , fImportanceRef ( 1.0 )
+   , fRuleEnsemble  ( re )
+   , fLogger( "Rule" )
 {
    // the main constructor for a Rule
 
@@ -65,15 +72,8 @@ TMVA::Rule::Rule( RuleEnsemble *re,
    //   nodes  - a vector of TMVA::Node; from these all possible rules will be created
    //
    //
-   fRuleEnsemble  = re;
    SetNodes( nodes );
    SetCutDirs( cutdirs );
-   fNorm          = 1.0;
-   fCoefficient   = 0.0;
-   fSupport       = 0.0;
-   fSigma         = 0.0;
-   fImportance    = 0.0;
-   fImportanceRef = 1.0;
 }
 
 //_______________________________________________________________________
@@ -274,18 +274,18 @@ Double_t TMVA::Rule::RuleDist( const Rule& other, Bool_t useCutValue ) const
 
 //_______________________________________________________________________
 void TMVA::Rule::GetEffectiveRule( std::vector<Int_t>& nodeind ) const
-//
-// Returns a vector of node indecis which correspond to the effective rule.
-// E.g, the rule:
-//  v1<0.1
-//  v1<0.05
-//  v4>0.12
-//
-// is effectively the same as:
-//  v1<0.05
-//  v4>0.12
-//
 {
+   //
+   // Returns a vector of node indecis which correspond to the effective rule.
+   // E.g, the rule:
+   //  v1<0.1
+   //  v1<0.05
+   //  v4>0.12
+   //
+   // is effectively the same as:
+   //  v1<0.05
+   //  v4>0.12
+   //
    nodeind.clear();
    UInt_t nnodes = fNodes.size();
    if (nnodes==2) { // just one cut, return all nodes
@@ -370,18 +370,22 @@ Bool_t TMVA::Rule::IsSimpleRule() const
 //_______________________________________________________________________
 Bool_t TMVA::Rule::operator==( const TMVA::Rule& other ) const
 {
+   // comparison operator ==
+
    return this->Equal( other, kTRUE, 1e-3 );
 }
 
 //_______________________________________________________________________
 Bool_t TMVA::Rule::operator<( const TMVA::Rule& other ) const
 {
+   // comparison operator <
    return (fImportance < other.GetImportance());
 }
 
 //_______________________________________________________________________
 ostream& TMVA::operator<< ( ostream& os, const TMVA::Rule& rule )
 {
+   // ostream operator
    rule.Print( os );
    return os;
 }
@@ -389,28 +393,34 @@ ostream& TMVA::operator<< ( ostream& os, const TMVA::Rule& rule )
 //_______________________________________________________________________
 const TString & TMVA::Rule::GetVarName( Int_t i ) const
 {
+   // returns the name of a rule
+
    return fRuleEnsemble->GetMethodRuleFit()->GetInputExp(i);
 }
 
 //_______________________________________________________________________
 void TMVA::Rule::Copy( const Rule& other )
 {
-   SetRuleEnsemble( other.GetRuleEnsemble() );
-   SetNodes( other.GetNodes() );
-   fSSB     = other.GetSSB();
-   fSSBNeve = other.GetSSBNeve();
-   SetCutDirs( other.GetCutDirs() );
-   SetCoefficient(other.GetCoefficient());
-   SetSupport( other.GetSupport() );
-   SetSigma( other.GetSigma() );
-   SetNorm( other.GetNorm() );
-   CalcImportance();
-   SetImportanceRef( other.GetImportanceRef() );
+   // copy function
+   if(this != &other) {
+      SetRuleEnsemble( other.GetRuleEnsemble() );
+      SetNodes( other.GetNodes() );
+      fSSB     = other.GetSSB();
+      fSSBNeve = other.GetSSBNeve();
+      SetCutDirs( other.GetCutDirs() );
+      SetCoefficient(other.GetCoefficient());
+      SetSupport( other.GetSupport() );
+      SetSigma( other.GetSigma() );
+      SetNorm( other.GetNorm() );
+      CalcImportance();
+      SetImportanceRef( other.GetImportanceRef() );
+   }
 }
 
 //_______________________________________________________________________
 void TMVA::Rule::Print( ostream& os ) const
 {
+   // print function
    Int_t ind;
    Int_t sel,ntype,nnodes;
    Double_t data, ssbval;
@@ -449,6 +459,7 @@ void TMVA::Rule::Print( ostream& os ) const
 //_______________________________________________________________________
 void TMVA::Rule::PrintRaw( ostream& os ) const
 {
+   // extensive print function
    const TMVA::DecisionTreeNode *node;
    std::vector<Int_t> nodes;
    GetEffectiveRule( nodes );
@@ -484,6 +495,8 @@ void TMVA::Rule::PrintRaw( ostream& os ) const
 //_______________________________________________________________________
 void TMVA::Rule::ReadRaw( istream& istr )
 {
+   // read function (format is the same as written by PrintRaw)
+
    TString dummy;
    TMVA::DecisionTreeNode *node;
    std::vector<Int_t> nodes;

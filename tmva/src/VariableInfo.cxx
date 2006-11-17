@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: VariableInfo.cxx,v 1.12 2006/10/18 01:24:53 armske Exp $   
+// @(#)root/tmva $Id: VariableInfo.cxx,v 1.14 2006/11/17 14:59:24 stelzer Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -13,12 +13,12 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -79,7 +79,7 @@ TMVA::VariableInfo& TMVA::VariableInfo::operator=(const TMVA::VariableInfo& rhs)
 }
 
 //_______________________________________________________________________
-void TMVA::VariableInfo::WriteToStream(std::ostream& o, Types::PreprocessingMethod corr) const
+void TMVA::VariableInfo::WriteToStream(std::ostream& o, Types::EPreprocessingMethod corr) const
 {
    // write VariableInfo to stream   
    UInt_t nc = TMath::Max( 30, TMath::Max( GetExpression().Length()+1, GetInternalVarName().Length()+1 ) );
@@ -91,7 +91,7 @@ void TMVA::VariableInfo::WriteToStream(std::ostream& o, Types::PreprocessingMeth
 }
 
 //_______________________________________________________________________
-void TMVA::VariableInfo::ReadFromStream(std::istream& istr, Types::PreprocessingMethod corr)
+void TMVA::VariableInfo::ReadFromStream(std::istream& istr, Types::EPreprocessingMethod corr)
 {
    // write VariableInfo to stream
    TString exp, varname, vartype, minmax, minstr, maxstr;

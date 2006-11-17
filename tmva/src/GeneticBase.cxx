@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticBase.cxx,v 1.17 2006/10/17 21:22:29 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: GeneticBase.cxx,v 1.19 2006/11/16 22:51:58 helgevoss Exp $    
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -16,7 +16,7 @@
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        *
  *      U. of Victoria, Canada,                                                   *
- *      MPI-KP Heidelberg, Germany,                                               *
+ *      MPI-K Heidelberg, Germany ,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -278,5 +278,7 @@ Bool_t TMVA::GeneticBase::HasConverged( Int_t steps, Double_t improvement )
 
 //_______________________________________________________________________
 void TMVA::GeneticBase::Finalize()
-{}
+{
+   // nothing so far...
+}
 

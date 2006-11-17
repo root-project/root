@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: SimulatedAnnealingBase.cxx,v 1.8 2006/10/10 17:43:52 andreas.hoecker Exp $   
+// @(#)root/tmva $Id: SimulatedAnnealingBase.cxx,v 1.10 2006/11/16 22:51:59 helgevoss Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -13,13 +13,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -39,23 +39,24 @@ ClassImp(TMVA::SimulatedAnnealingBase)
    ;
 
 TMVA::SimulatedAnnealingBase::SimulatedAnnealingBase( std::vector<LowHigh_t*>& ranges )
-   : fRanges( ranges )
+   : fRandom                ( new TRandom() )
+   , fRanges                ( ranges )
+   , fMaxCalls              ( 500000 )
+   , fTemperatureGradient   ( 0.3 )
+   , fUseAdaptiveTemperature( kFALSE )
+   , fInitialTemperature    ( 1000 )
+   , fMinTemperature        ( 0 )
+   , fEps                   ( 1e-04 )
+   , fNFunLoops             ( 25 )
+   , fNEps                  ( 4 ) // needs to be at leas 2 !
 {   
-   fRandom                 = new TRandom();
-
-   // set default options
-   fMaxCalls               = 500000;
-   fTemperatureGradient    = 0.3;
-   fUseAdaptiveTemperature = kFALSE;
-   fInitialTemperature     = 1000;
-   fMinTemperature         = 0;
-   fEps                    = 1e-04;
-   fNFunLoops              = 25;
-   fNEps                   = 4; // needs to be at leas 2 !
+   // constructor
 }
 
 TMVA::SimulatedAnnealingBase::~SimulatedAnnealingBase()
-{}
+{
+   // destructor
+}
 
 Double_t TMVA::SimulatedAnnealingBase::Minimize( std::vector<Double_t>& parameters )
 {
@@ -242,5 +243,6 @@ Double_t TMVA::SimulatedAnnealingBase::Minimize( std::vector<Double_t>& paramete
 Double_t TMVA::SimulatedAnnealingBase::GetPerturbationProbability( Double_t E, Double_t Eref, 
                                                                    Double_t temperature )
 {
+   // calculates the probability that a perturbation occured
    return (temperature > 0) ? TMath::Exp( (E - Eref)/temperature ) : 0;
 }

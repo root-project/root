@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: VariableInfo.h,v 1.13 2006/10/10 17:43:52 andreas.hoecker Exp $   
+// @(#)root/tmva $Id: VariableInfo.h,v 1.15 2006/11/17 14:59:24 stelzer Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -13,12 +13,12 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2006:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -60,22 +60,22 @@ namespace TMVA {
       const TString& GetInternalVarName()  const { return fInternalVarName; }
       char           VarType()             const { return fVarType; }
       char           VarTypeOriginal()     const { return fVarTypeOriginal; }
-      Double_t       GetMin (Types::PreprocessingMethod corr = Types::kNone) const { return fXminNorm[(Int_t) corr]; }
-      Double_t       GetMax (Types::PreprocessingMethod corr = Types::kNone) const { return fXmaxNorm[(Int_t) corr]; }
-      Double_t       GetMean(Types::PreprocessingMethod corr = Types::kNone) const { return fXmeanNorm[(Int_t) corr]; }
-      Double_t       GetRMS (Types::PreprocessingMethod corr = Types::kNone) const { return fXrmsNorm[(Int_t) corr]; }
+      Double_t       GetMin (Types::EPreprocessingMethod corr = Types::kNone) const { return fXminNorm[(Int_t) corr]; }
+      Double_t       GetMax (Types::EPreprocessingMethod corr = Types::kNone) const { return fXmaxNorm[(Int_t) corr]; }
+      Double_t       GetMean(Types::EPreprocessingMethod corr = Types::kNone) const { return fXmeanNorm[(Int_t) corr]; }
+      Double_t       GetRMS (Types::EPreprocessingMethod corr = Types::kNone) const { return fXrmsNorm[(Int_t) corr]; }
 
       void           SetExpression(const TString& s)      { fExpression = s; }
       void           SetInternalVarName(const TString& s) { fInternalVarName = s; }
       void           SetVarType(char c)                    { fVarType = c; }
-      void           SetMin (Double_t v, Types::PreprocessingMethod corr = Types::kNone) { fXminNorm[(Int_t) corr] = v; }
-      void           SetMax (Double_t v, Types::PreprocessingMethod corr = Types::kNone) { fXmaxNorm[(Int_t) corr] = v; }
-      void           SetMean(Double_t v, Types::PreprocessingMethod corr = Types::kNone) { fXmeanNorm[(Int_t) corr] = v; }
-      void           SetRMS (Double_t v, Types::PreprocessingMethod corr = Types::kNone) { fXrmsNorm[(Int_t) corr] = v; }
+      void           SetMin (Double_t v, Types::EPreprocessingMethod corr = Types::kNone) { fXminNorm[(Int_t) corr] = v; }
+      void           SetMax (Double_t v, Types::EPreprocessingMethod corr = Types::kNone) { fXmaxNorm[(Int_t) corr] = v; }
+      void           SetMean(Double_t v, Types::EPreprocessingMethod corr = Types::kNone) { fXmeanNorm[(Int_t) corr] = v; }
+      void           SetRMS (Double_t v, Types::EPreprocessingMethod corr = Types::kNone) { fXrmsNorm[(Int_t) corr] = v; }
       void           SetExternalLink(void* p) { fExternalData = p; }
 
-      void           WriteToStream(std::ostream& o, Types::PreprocessingMethod corr) const;
-      void           ReadFromStream(std::istream& istr, Types::PreprocessingMethod corr);
+      void           WriteToStream(std::ostream& o, Types::EPreprocessingMethod corr) const;
+      void           ReadFromStream(std::istream& istr, Types::EPreprocessingMethod corr);
       void*          GetExternalLink() const { return fExternalData; }
 
       // assignment operator (does not copy external link)

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleFitParams.h,v 1.19 2006/11/14 14:23:32 andreas.hoecker Exp $
+// @(#)root/tmva $Id: RuleFitParams.h,v 1.20 2006/11/16 22:51:59 helgevoss Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -23,7 +23,7 @@
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      Iowa State U.                                                             *
- *      MPI-KP Heidelberg, Germany                                                * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *

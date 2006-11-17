@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodHMatrix.cxx,v 1.31 2006/11/14 16:00:56 helgevoss Exp $    
+// @(#)root/tmva $Id: MethodHMatrix.cxx,v 1.36 2006/11/17 14:59:24 stelzer Exp $    
 // Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -13,13 +13,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -90,7 +90,7 @@ void TMVA::MethodHMatrix::InitHMatrix( void )
 {
    // default initialisation called by all constructors
    SetMethodName( "HMatrix" );
-   SetMethodType( TMVA::Types::HMatrix );
+   SetMethodType( TMVA::Types::kHMatrix );
    SetTestvarName();
 
    fNormaliseInputVars = kTRUE;
@@ -122,6 +122,7 @@ void TMVA::MethodHMatrix::DeclareOptions()
 
 void TMVA::MethodHMatrix::ProcessOptions() 
 {
+   // process user options
    MethodBase::ProcessOptions();
 }
 
@@ -137,7 +138,7 @@ void TMVA::MethodHMatrix::Train( void )
    Double_t meanS, meanB, rmsS, rmsB, xmin, xmax;
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
 
-      Statistics( TMVA::Types::kTrain, (*fInputVars)[ivar], 
+      Statistics( TMVA::Types::kTraining, (*fInputVars)[ivar], 
                   meanS, meanB, rmsS, rmsB, xmin, xmax, fNormaliseInputVars );
 
       (*fVecMeanS)(ivar) = meanS;
@@ -148,16 +149,32 @@ void TMVA::MethodHMatrix::Train( void )
    this->ComputeCovariance( kTRUE,  fInvHMatrixS );
    this->ComputeCovariance( kFALSE, fInvHMatrixB );
 
-   if ( TMath::Abs(fInvHMatrixS->Determinant()) < 10E-14 ) {
-      fLogger << kFATAL << "<Train> matrix is singular,"
-              << " did you use the variables that are linear combinations ???" 
+   if ( TMath::Abs(fInvHMatrixS->Determinant()) < 10E-24 ) {
+      fLogger << kWARNING << "<Train> H-matrix  S is almost singular with deterinant= "
+              << TMath::Abs(fInvHMatrixS->Determinant())
+              << " did you use the variables that are linear combinations or highly correlated ???" 
               << Endl;
    }
-   if ( TMath::Abs(fInvHMatrixB->Determinant()) < 10E-14 ) {
-      fLogger << kFATAL << "<Train> matrix is singular,"
-              << " did you use the variables that are linear combinations ???" 
+   if ( TMath::Abs(fInvHMatrixB->Determinant()) < 10E-24 ) {
+      fLogger << kWARNING << "<Train> H-matrix  B is almost singular with deterinant= "
+              << TMath::Abs(fInvHMatrixB->Determinant())
+              << " did you use the variables that are linear combinations or highly correlated ???" 
               << Endl;
    }
+
+    if ( TMath::Abs(fInvHMatrixS->Determinant()) < 10E-120 ) {
+       fLogger << kFATAL << "<Train> H-matrix  S is singular with deterinant= "
+               << TMath::Abs(fInvHMatrixS->Determinant())
+               << " did you use the variables that are linear combinations ???" 
+               << Endl;
+    }
+    if ( TMath::Abs(fInvHMatrixB->Determinant()) < 10E-120 ) {
+       fLogger << kFATAL << "<Train> H-matrix  B is singular with deterinant= "
+               << TMath::Abs(fInvHMatrixB->Determinant())
+               << " did you use the variables that are linear combinations ???" 
+               << Endl;
+    }
+
 
 
    // invert matrix
@@ -229,7 +246,7 @@ Double_t TMVA::MethodHMatrix::GetMvaValue()
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodHMatrix::GetChi2( TMVA::Event *e,  Types::SBType type ) const
+Double_t TMVA::MethodHMatrix::GetChi2( TMVA::Event *e,  Types::ESBType type ) const
 {
    // compute chi2-estimator for event according to type (signal/background)
 
@@ -261,7 +278,7 @@ Double_t TMVA::MethodHMatrix::GetChi2( TMVA::Event *e,  Types::SBType type ) con
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodHMatrix::GetChi2( Types::SBType type ) const
+Double_t TMVA::MethodHMatrix::GetChi2( Types::ESBType type ) const
 {
    // compute chi2-estimator for event according to type (signal/background)
 

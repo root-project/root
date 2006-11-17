@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleFit.cxx,v 1.26 2006/10/17 21:22:30 andreas.hoecker Exp $
+// @(#)root/tmva $Id: RuleFit.cxx,v 1.28 2006/11/16 22:51:59 helgevoss Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -21,7 +21,7 @@
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        *
  *      Iowa State U.                                                             *
- *      MPI-KP Heidelberg, Germany                                                *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -44,17 +44,22 @@ TMVA::RuleFit::RuleFit( const TMVA::MethodRuleFit *rfbase,
                         Double_t samplefrac )
    : fLogger( "RuleFit" )
 {
+   // constructor
    Initialise( rfbase, forest, trainingEvents, samplefrac );
 }
 
 //_______________________________________________________________________
 TMVA::RuleFit::RuleFit()
    : fLogger( "RuleFit" )
-{}
+{
+   // default constructor
+}
 
 //_______________________________________________________________________
 TMVA::RuleFit::~RuleFit()
-{}
+{
+   // destructor
+}
 
 //_______________________________________________________________________
 void TMVA::RuleFit::Initialise(  const TMVA::MethodRuleFit *rfbase,
@@ -62,6 +67,7 @@ void TMVA::RuleFit::Initialise(  const TMVA::MethodRuleFit *rfbase,
                                  const std::vector< TMVA::Event *> & events,
                                  Double_t sampfrac )
 {
+   // initialize the parameters of the RuleFit method
    fMethodRuleFit = rfbase;
    std::vector< TMVA::DecisionTree *>::const_iterator itrDtree=forest.begin();
    for (; itrDtree!=forest.end(); ++itrDtree ) fForest.push_back( *itrDtree );
@@ -84,19 +90,23 @@ void TMVA::RuleFit::Initialise(  const TMVA::MethodRuleFit *rfbase,
 //_______________________________________________________________________
 void TMVA::RuleFit::Copy( const TMVA::RuleFit& other )
 {
-   fMethodRuleFit   = other.GetMethodRuleFit();
-   fTrainingEvents  = other.GetTrainingEvents();
-   fSubsampleEvents = other.GetSubsampleEvents();
+   // copy method
+   if(this != &other) {
+      fMethodRuleFit   = other.GetMethodRuleFit();
+      fTrainingEvents  = other.GetTrainingEvents();
+      fSubsampleEvents = other.GetSubsampleEvents();
    
-   fForest       = other.GetForest();
-   fRuleEnsemble = other.GetRuleEnsemble();
+      fForest       = other.GetForest();
+      fRuleEnsemble = other.GetRuleEnsemble();
+   }
 }
 
 //_______________________________________________________________________
 void TMVA::RuleFit::ForestStatistics()
-// summary of statistics of all trees
-// * end-nodes: average and spread
 {
+   // summary of statistics of all trees
+   // * end-nodes: average and spread
+   
    UInt_t ntrees = fForest.size();
    Double_t nt   = Double_t(ntrees);
    const TMVA::DecisionTree *tree;
@@ -128,6 +138,8 @@ void TMVA::RuleFit::FitCoefficients()
 //_______________________________________________________________________
 void TMVA::RuleFit::CalcImportance()
 {
+   // calculates the importance of each rule
+
    fLogger << kINFO << "calculating importance" << Endl;
    fRuleEnsemble.CalcImportance();
    fRuleEnsemble.CleanupRules();
@@ -140,12 +152,16 @@ void TMVA::RuleFit::CalcImportance()
 //_______________________________________________________________________
 Double_t TMVA::RuleFit::EvalEvent( const TMVA::Event& e )
 {
+   // evaluate single event
+
    return fRuleEnsemble.EvalEvent( e );
 }
 
 //_______________________________________________________________________
 void TMVA::RuleFit::SetTrainingEvents( const std::vector<TMVA::Event *>& el, Double_t sampfrac )
 {
+   // set the training events randomly
+
    UInt_t neve = el.size();
    if (neve==0) fLogger << kWARNING << "an empty sample of training events was given" << Endl;
 
@@ -174,6 +190,8 @@ void TMVA::RuleFit::SetTrainingEvents( const std::vector<TMVA::Event *>& el, Dou
 //_______________________________________________________________________
 void TMVA::RuleFit::GetSubsampleEvents(Int_t sub, UInt_t& ibeg, UInt_t& iend) const
 {
+   // get the events for subsample sub
+
    Int_t nsub = GetNSubsamples();
    if (nsub==0) {
       fLogger << kFATAL << "<GetSubsampleEvents> - wrong size, not properly initialised! BUG!!!" << Endl;

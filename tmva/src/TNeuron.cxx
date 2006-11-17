@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TNeuron.cxx,v 1.18 2006/10/15 12:06:33 andreas.hoecker Exp $
+// @(#)root/tmva $Id: TNeuron.cxx,v 1.19 2006/11/16 19:42:44 stelzer Exp $
 // Author: Matt Jachowski
 
 /**********************************************************************************
@@ -326,7 +326,7 @@ void TMVA::TNeuron::PrintActivationEqn()
 }
 
 //______________________________________________________________________________
-void TMVA::TNeuron::PrintMessage( MsgType type, TString message)
+void TMVA::TNeuron::PrintMessage( EMsgType type, TString message)
 {
    // print message, for debugging
    fLogger << type << message << Endl;

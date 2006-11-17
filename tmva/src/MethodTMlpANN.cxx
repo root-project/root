@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodTMlpANN.cxx,v 1.31 2006/11/02 15:44:50 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: MethodTMlpANN.cxx,v 1.34 2006/11/17 00:21:35 stelzer Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -12,13 +12,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -100,7 +100,7 @@ void TMVA::MethodTMlpANN::InitTMlpANN( void )
 {
    // default initialisations
    SetMethodName( "TMlpANN" );
-   SetMethodType( TMVA::Types::TMlpANN );
+   SetMethodType( TMVA::Types::kTMlpANN );
    SetTestvarName();
 }
 
@@ -157,6 +157,16 @@ void TMVA::MethodTMlpANN::CreateMLPOptions( TString layerSpec )
 //_______________________________________________________________________
 void TMVA::MethodTMlpANN::DeclareOptions() 
 {
+   // define the options (their key words) that can be set in the option string 
+   // know options:
+   // NCycles       <integer>    Number of training cycles (too many cycles could overtrain the network) 
+   // HiddenLayers  <string>     Layout of the hidden layers (nodes per layer)
+   //   * specifiactions for each hidden layer are separated by commata
+   //   * for each layer the number of nodes can be either absolut (simply a number)
+   //        or relative to the number of input nodes to the neural net (N)
+   //   * there is always a single node in the output layer 
+   //   example: a net with 6 input nodes and "Hiddenlayers=N-1,N-2" has 6,5,4,1 nodes in the 
+   //   layers 1,2,3,4, repectively 
    DeclareOptionRef(fNcycles=3000,"NCycles","Number of training cycles");
    DeclareOptionRef(fLayerSpec="N-1,N-2","HiddenLayers","Specification of the hidden layers");
 }
@@ -164,6 +174,8 @@ void TMVA::MethodTMlpANN::DeclareOptions()
 //_______________________________________________________________________
 void TMVA::MethodTMlpANN::ProcessOptions() 
 {
+   // builds the neural network as specified by the user
+
    CreateMLPOptions(fLayerSpec);
 
    // Here we create a dummy tree necessary to create 
@@ -188,6 +200,7 @@ void TMVA::MethodTMlpANN::ProcessOptions()
 //_______________________________________________________________________
 Double_t TMVA::MethodTMlpANN::GetMvaValue()
 {
+   // calculate the value of the neural net for the current event 
    static Double_t* d = new Double_t[Data().GetNVariables()];
    for(UInt_t ivar = 0; ivar<Data().GetNVariables(); ivar++) {
       d[ivar] = (Double_t)Data().Event().GetVal(ivar);

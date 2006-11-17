@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Reader.cxx,v 1.31 2006/11/13 23:43:34 stelzer Exp $   
+// @(#)root/tmva $Id: Reader.cxx,v 1.35 2006/11/17 14:59:24 stelzer Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -14,13 +14,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -182,12 +182,14 @@ void TMVA::Reader::Init( void )
 //_______________________________________________________________________
 void TMVA::Reader::AddVariable( const TString& expression, float* datalink) 
 {
+   // Add a float variable or expression to the reader
    Data().AddVariable(expression, 'F', (void*)datalink);
 }
 
 //_______________________________________________________________________
 void TMVA::Reader::AddVariable( const TString& expression, int* datalink) 
 {
+   // Add a integer variable or expression to the reader
    Data().AddVariable(expression, 'I', (void*)datalink);
 }
 
@@ -221,53 +223,53 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TString methodName, TString weightfile )
 
 
 //_______________________________________________________________________
-TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::MVA methodType, TString weightfile )
+TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, TString weightfile )
 {
-   IMethod* method = 0;
    // books MVA method from weightfile
+   IMethod* method = 0;
    switch (methodType) {
 
-   case (TMVA::Types::Cuts):
+   case (TMVA::Types::kCuts):
       method = new TMVA::MethodCuts( Data(), weightfile );    
       break;
 
-   case (TMVA::Types::Likelihood):
+   case (TMVA::Types::kLikelihood):
       method = new TMVA::MethodLikelihood( Data(), weightfile );
       break; 
 
-   case (TMVA::Types::PDERS):
+   case (TMVA::Types::kPDERS):
       method = new TMVA::MethodPDERS( Data(), weightfile );
       break; 
 
-   case (TMVA::Types::HMatrix):
+   case (TMVA::Types::kHMatrix):
       method = new TMVA::MethodHMatrix( Data(), weightfile );
       break; 
 
-   case (TMVA::Types::Fisher):
+   case (TMVA::Types::kFisher):
       method = new TMVA::MethodFisher( Data(), weightfile );
       break; 
 
-   case (TMVA::Types::CFMlpANN):
+   case (TMVA::Types::kCFMlpANN):
       method = new TMVA::MethodCFMlpANN( Data(), weightfile );
       break; 
 
-   case (TMVA::Types::TMlpANN):
+   case (TMVA::Types::kTMlpANN):
       method = new TMVA::MethodTMlpANN( Data(), weightfile );
       break; 
 
-   case (TMVA::Types::BDT):
+   case (TMVA::Types::kBDT):
       method = new TMVA::MethodBDT( Data(), weightfile );
       break; 
 
-   case (TMVA::Types::MLP):
+   case (TMVA::Types::kMLP):
       method = new TMVA::MethodMLP( Data(), weightfile );
       break;
 
-   case (TMVA::Types::RuleFit):
+   case (TMVA::Types::kRuleFit):
       method = new TMVA::MethodRuleFit( Data(), weightfile );
       break; 
 
-   case (TMVA::Types::BayesClassifier):
+   case (TMVA::Types::kBayesClassifier):
       method = new TMVA::MethodBayesClassifier( Data(), weightfile );
       break; 
 
@@ -287,6 +289,9 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::MVA methodType, TString weigh
 //_______________________________________________________________________
 Double_t TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& inputVec, TString methodName, Double_t aux )
 {
+   // Evaluate a vector<float> of input data for a given method
+   // The parameter aux is obligatory for the cuts method where it represents the efficiency cutoff
+
    for (UInt_t ivar=0; ivar<inputVec.size(); ivar++) Data().Event().SetVal( ivar, inputVec[ivar] );
    
    return EvaluateMVA( methodName, aux );
@@ -295,6 +300,9 @@ Double_t TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& inputVec, TStrin
 //_______________________________________________________________________
 Double_t TMVA::Reader::EvaluateMVA( const std::vector<Double_t>& inputVec, TString methodName, Double_t aux )
 {
+   // Evaluate a vector<double> of input data for a given method
+   // The parameter aux is obligatory for the cuts method where it represents the efficiency cutoff
+
    for (UInt_t ivar=0; ivar<inputVec.size(); ivar++) Data().Event().SetVal( ivar, (Float_t)inputVec[ivar] );
    
    return EvaluateMVA( methodName, aux );
@@ -303,9 +311,9 @@ Double_t TMVA::Reader::EvaluateMVA( const std::vector<Double_t>& inputVec, TStri
 //_______________________________________________________________________
 Double_t TMVA::Reader::EvaluateMVA( TString methodName, Double_t aux )
 {
+   // evaluates MVA for given set of input variables
    IMethod* method = 0;
 
-   // evaluates MVA for given set of input variables
    std::map<TString, IMethod*>::iterator it = fMethodMap.find( methodName );
    if (it == fMethodMap.end()) {
       for (it = fMethodMap.begin(); it!=fMethodMap.end(); it++) fLogger << "M" << it->first << Endl;
@@ -327,11 +335,11 @@ Double_t TMVA::Reader::EvaluateMVA( IMethod* method, Double_t aux )
 
    // NOTE: in likelihood the preprocessing transformations are inserted by hand in GetMvaValue()
    // (to distinguish signal and background transformations), and hence should not be applied here
-   if (method->GetMethodType() != Types::Likelihood) 
+   if (method->GetMethodType() != Types::kLikelihood) 
       Data().ApplyTransformation( method->GetPreprocessingMethod(), kTRUE );
 
    // the aux value is only needed for MethodCuts: it sets the required signal efficiency 
-   if (method->GetMethodType() == TMVA::Types::Cuts) 
+   if (method->GetMethodType() == TMVA::Types::kCuts) 
       ((TMVA::MethodCuts*)method)->SetTestSignalEfficiency( aux );
 
    Double_t mvaVal = method->GetMvaValue();

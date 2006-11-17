@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBDT.h,v 1.33 2006/11/14 18:08:25 helgevoss Exp $ 
+// @(#)root/tmva $Id: MethodBDT.h,v 1.36 2006/11/17 14:59:23 stelzer Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -13,13 +13,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -188,17 +188,19 @@ namespace TMVA {
       void InitBDT( void );
 
       //some histograms for monitoring
-      TH1F*                           fBoostWeightHist; // weights applied in boosting
-      TH2F*                           fErrFractHist;    // error fraction vs tree number
-      TTree*                          fMonitorNtuple;   // monitoring ntuple
-      Int_t                           fITree;           // ntuple var: ith tree
-      Double_t                        fBoostWeight;     // ntuple var: boost weight
-      Double_t                        fErrorFraction;   // ntuple var: misclassification error fraction 
-      Int_t                           fNnodes;          // ntuple var: nNodes
-      Double_t                        fPruneStrength;   // a parameter to set the "amount" of pruning..needs to be adjusted 
-      TMVA::DecisionTree::PruneMethod fPruneMethod;     // method used for prunig 
-      TString                         fPruneMethodS;    // prune method option String
-      Bool_t                          fAutomatic;       // use user given prune strength or automatically determined one using a validation sample 
+      TH1F*                            fBoostWeightHist; // weights applied in boosting
+      TH1F*                            fBoostWeightVsTree;// weights applied in boosting vs tree number
+      TH1F*                            fErrFractHist;    // error fraction vs tree number
+      TH1I*                            fNodesBeforePruningVsTree;  // nNodesBeforePruning vs tree number
+      TH1I*                            fNodesAfterPruningVsTree;   // nNodesAfterPruning vs tree number
+      TTree*                           fMonitorNtuple;   // monitoring ntuple
+      Int_t                            fITree;           // ntuple var: ith tree
+      Double_t                         fBoostWeight;     // ntuple var: boost weight
+      Double_t                         fErrorFraction;   // ntuple var: misclassification error fraction 
+      Double_t                         fPruneStrength;   // a parameter to set the "amount" of pruning..needs to be adjusted 
+      TMVA::DecisionTree::EPruneMethod fPruneMethod;     // method used for prunig 
+      TString                          fPruneMethodS;    // prune method option String
+      Bool_t                           fAutomatic;       // use user given prune strength or automatically determined one using a validation sample 
 
 
       std::vector<Double_t>           fVariableImportance; // the relative importance of the different variables 

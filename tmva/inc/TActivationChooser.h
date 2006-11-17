@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TActivationChooser.h,v 1.8 2006/10/17 21:22:30 andreas.hoecker Exp $
+// @(#)root/tmva $Id: TActivationChooser.h,v 1.10 2006/11/17 14:59:24 stelzer Exp $
 // Author: Matt Jachowski 
 
 /**********************************************************************************
@@ -64,6 +64,8 @@ namespace TMVA {
       TActivationChooser()
          : fLogger( "TActivationChooser" )
       {
+        // defaut constructor 
+
          fLINEAR  = "linear";
          fSIGMOID = "sigmoid";
          fTANH    = "tanh";
@@ -71,14 +73,17 @@ namespace TMVA {
       }
       virtual ~TActivationChooser() {}
 
-      enum ActivationType { kLinear = 0,
-                            kSigmoid,
-                            kTanh,
-                            kRadial
+      enum EActivationType { kLinear = 0,
+                             kSigmoid,
+                             kTanh,
+                             kRadial
       };
 
-      TActivation* CreateActivation(const ActivationType type) const
+      TActivation* CreateActivation(const EActivationType type) const
       {
+        // instantiate the correct activation object according to the
+        // type choosen (given as the enumeration type)
+
          switch (type) {
          case kLinear:  return new TActivationIdentity();
          case kSigmoid: return new TActivationSigmoid(); 
@@ -93,6 +98,9 @@ namespace TMVA {
       
       TActivation* CreateActivation(const TString type) const
       {
+        // instantiate the correct activation object according to the
+        // type choosen (given by a TString)
+
          if      (type == fLINEAR)  return CreateActivation(kLinear);
          else if (type == fSIGMOID) return CreateActivation(kSigmoid);
          else if (type == fTANH)    return CreateActivation(kTanh);
@@ -105,6 +113,8 @@ namespace TMVA {
       
       vector<TString>* GetAllActivationNames() const
       {
+        // retuns the names of all know activation functions
+
          vector<TString>* names = new vector<TString>();
          names->push_back(fLINEAR);
          names->push_back(fSIGMOID);

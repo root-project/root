@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Ranking.cxx,v 1.10 2006/10/17 14:02:14 krasznaa Exp $
+// @(#)root/tmva $Id: Ranking.cxx,v 1.12 2006/11/16 22:51:59 helgevoss Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -13,11 +13,11 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -39,6 +39,7 @@ ClassImp(TMVA::Ranking)
 TMVA::Ranking::Ranking()
   : fLogger( "", kINFO )
 {
+   // default constructor
    fRanking.clear();
 }
 
@@ -47,24 +48,26 @@ TMVA::Ranking::Ranking( const TString& context, const TString& rankingDiscrimina
      fRankingDiscriminatorName( rankingDiscriminatorName ),
      fLogger( context.Data(), kINFO )
 {
+   // constructor
    fRanking.clear();
 }
 
 TMVA::Ranking::~Ranking() 
 {
+   // destructor
    fRanking.clear();
 }
 
 void TMVA::Ranking::AddRank( Rank& rank )
 {
-   fRanking.push_back( rank );
-   
+   // Add a new rank
    // sort according to rank value (descending)
    // Who the hell knows why this does not compile on windos.. write the sorting 
    // reversing myself... (means sorting in "descending" order)
    //   --> std::sort   ( fRanking.begin(), fRanking.end() );
    //   --> std::reverse( fRanking.begin(), fRanking.end() );
-   
+   fRanking.push_back( rank );
+      
    UInt_t sizeofarray=fRanking.size();
    Rank  temp(fRanking[0]);
    for (unsigned int i=0; i<sizeofarray; i++) {
@@ -108,18 +111,24 @@ TMVA::Rank::Rank( TString variable, Double_t rankValue )
    : fVariable( variable ),
      fRankValue( rankValue ),
      fRank( -1 ) 
-{}
+{
+   // constructor
+}
 
 TMVA::Rank::~Rank() 
-{}
+{
+   // destructor
+}
 
-Bool_t TMVA::Rank::operator < ( const Rank& other ) const
+Bool_t TMVA::Rank::operator< ( const Rank& other ) const
 { 
+   // comparison operator <
    if (fRankValue < other.fRankValue) return true;
    else                               return false;
 }
-Bool_t TMVA::Rank::operator > ( const Rank& other ) const
+Bool_t TMVA::Rank::operator> ( const Rank& other ) const
 { 
+   // comparison operator >
    if (fRankValue > other.fRankValue) return true;
    else                               return false;
 }

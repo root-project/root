@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Ranking.h,v 1.8 2006/10/15 23:32:38 andreas.hoecker Exp $
+// @(#)root/tmva $Id: Ranking.h,v 1.9 2006/11/16 22:51:59 helgevoss Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -13,18 +13,18 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: Ranking.h,v 1.8 2006/10/15 23:32:38 andreas.hoecker Exp $          
+ * $Id: Ranking.h,v 1.9 2006/11/16 22:51:59 helgevoss Exp $          
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Ranking

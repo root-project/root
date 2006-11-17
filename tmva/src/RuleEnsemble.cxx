@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleEnsemble.cxx,v 1.30 2006/11/14 15:39:36 helgevoss Exp $
+// @(#)root/tmva $Id: RuleEnsemble.cxx,v 1.33 2006/11/16 22:51:59 helgevoss Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -19,7 +19,7 @@
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      Iowa State U.                                                             *
- *      MPI-KP Heidelberg, Germany                                                * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -38,12 +38,12 @@
 
 //_______________________________________________________________________
 TMVA::RuleEnsemble::RuleEnsemble( RuleFit *rf )
-   : fLogger( "RuleEnsemble" )
+   : fLearningModel    ( kFull )
+   , fAverageRuleSigma ( 0.4 ) // default value - used if only linear model is chosen
+   , fMaxRuleDist      ( 1e-3 ) // closest allowed 'distance' between two rules
+   , fLogger( "RuleEnsemble" )
 {
    // constructor
-   fAverageRuleSigma = 0.4; // default value - used if only linear model is chosen
-   fLearningModel = kFull;
-   fMaxRuleDist = 1e-3; // closest allowed 'distance' between two rules
    Initialize( rf );
 }
 
@@ -51,7 +51,7 @@ TMVA::RuleEnsemble::RuleEnsemble( RuleFit *rf )
 TMVA::RuleEnsemble::RuleEnsemble( const RuleEnsemble& other )
    : fLogger( "RuleEnsemble" )
 {
-   // constructor
+   // copy constructor
    Copy( other );
 }
 
@@ -65,6 +65,7 @@ TMVA::RuleEnsemble::RuleEnsemble()
 //_______________________________________________________________________
 TMVA::RuleEnsemble::~RuleEnsemble()
 {
+   // destructor
    for ( std::vector< TMVA::Rule *>::iterator itrRule = fRules.begin(); itrRule != fRules.end(); itrRule++ ) {
       delete *itrRule;
    }
@@ -74,6 +75,8 @@ TMVA::RuleEnsemble::~RuleEnsemble()
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::Initialize( RuleFit *rf )
 {
+   // Initializes all member variables with default values
+
    fAverageRuleSigma = 0.4; // default value - used if only linear model is chosen
    fRuleFit = rf;
    UInt_t nvars =  GetMethodRuleFit()->GetNvar();
@@ -98,6 +101,7 @@ const TMVA::MethodRuleFit*  TMVA::RuleEnsemble::GetMethodRuleFit() const
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::MakeModel()
 {
+   // create model
    if (DoRules())
       MakeRules( fRuleFit->GetForest() );
    if (DoLinear())
@@ -125,6 +129,8 @@ Double_t TMVA::RuleEnsemble::CoefficientRadius()
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::ResetCoefficients()
 {
+   // reset all rule coefficients
+
    fOffset = 0.0;
    UInt_t nrules = fRules.size();
    for (UInt_t i=0; i<nrules; i++) {
@@ -135,6 +141,8 @@ void TMVA::RuleEnsemble::ResetCoefficients()
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::SetCoefficients( const std::vector< Double_t > & v )
 {
+   // set all rule coefficients
+
    UInt_t nrules = fRules.size();
    if (v.size()!=nrules) {
       fLogger << kFATAL << "<SetCoefficients> - BUG TRAP - input vector worng size! It is = " << v.size()
@@ -148,6 +156,8 @@ void TMVA::RuleEnsemble::SetCoefficients( const std::vector< Double_t > & v )
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::GetCoefficients( std::vector< Double_t > & v )
 {
+   // Retrieve all rule coefficients
+
    UInt_t nrules = fRules.size();
    v.resize(nrules);
    if (nrules==0) return;
@@ -160,41 +170,50 @@ void TMVA::RuleEnsemble::GetCoefficients( std::vector< Double_t > & v )
 //_______________________________________________________________________
 const std::vector<const TMVA::Event *> *TMVA::RuleEnsemble::GetTrainingEvents()  const
 { 
+   // get list of training events from the rule fitter
+
    return &(fRuleFit->GetTrainingEvents());
 }
 
 //_______________________________________________________________________
 const std::vector< Int_t > *TMVA::RuleEnsemble::GetSubsampleEvents() const
 {
+   // get list of events for the subsamples from the rule fitter
    return &(fRuleFit->GetSubsampleEvents());
 }
 
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::GetSubsampleEvents(UInt_t sub, UInt_t & ibeg, UInt_t & iend) const
 {
+   // get list of events for the subsample sub from the rule fitter
    fRuleFit->GetSubsampleEvents(sub,ibeg,iend);
 }
 //_______________________________________________________________________
 const UInt_t TMVA::RuleEnsemble::GetNSubsamples() const
 {
+   // get the number of subsamples from the rule fitter
    return fRuleFit->GetNSubsamples();
 }
 
 //_______________________________________________________________________
 const TMVA::Event * TMVA::RuleEnsemble::GetTrainingEvent(UInt_t i) const
 {
+   // get the training event from the rule fitter
    return fRuleFit->GetTrainingEvent(i);
 }
 
 //_______________________________________________________________________
 const TMVA::Event * TMVA::RuleEnsemble::GetTrainingEvent(UInt_t i, UInt_t isub)  const
 {
+   // get one training event for one subsample from the rule fitter
    return fRuleFit->GetTrainingEvent(i,isub);
 }
 
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::SetRulesNCuts()
 {
+   // set the number of nodes to the cut array
+ 
    std::vector<Int_t> nodes;
    fRulesNCuts.clear();
    for (UInt_t i=0; i<fRules.size(); i++) {
@@ -206,6 +225,8 @@ void TMVA::RuleEnsemble::SetRulesNCuts()
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::RemoveSimpleRules()
 {
+   // remove all simple rules
+
    fLogger << kINFO << "removing simple rules" << Endl;
    UInt_t nrulesIn = fRules.size();
    std::vector<bool> removeMe( nrulesIn,false );
@@ -234,6 +255,8 @@ void TMVA::RuleEnsemble::RemoveSimpleRules()
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::RemoveSimilarRules()
 {
+   // remove rules that behave similar 
+   
    fLogger << kINFO << "removing similar rules; distance = " << fMaxRuleDist << Endl;
 
    UInt_t nrulesIn = fRules.size();
@@ -287,6 +310,8 @@ void TMVA::RuleEnsemble::RemoveSimilarRules()
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::CleanupRules()
 {
+   // cleanup rules
+
    UInt_t nrules   = fRules.size();
    if (nrules==0) return;
    fLogger << kINFO << "removing rules with relative importance < " << fImportanceCut << Endl;
@@ -312,6 +337,8 @@ void TMVA::RuleEnsemble::CleanupRules()
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::CleanupLinear()
 {
+   // cleanup linear model
+
    UInt_t nlin = fLinNorm.size();
    if (nlin==0) return;
    fLogger << kINFO << "removing linear terms with relative importance < " << fImportanceCut << Endl;
@@ -326,6 +353,8 @@ void TMVA::RuleEnsemble::CleanupLinear()
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::CalcRuleSupport()
 {
+   // calculate the support for all rules
+
    Double_t seve, s,t,stot,ttot;
    Double_t ssig, sbkg;
    Int_t indrule=0;
@@ -371,6 +400,8 @@ void TMVA::RuleEnsemble::CalcRuleSupport()
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::CalcImportance()
 {
+   // calculate the importance of each rule
+
    Double_t maxRuleImp = CalcRuleImportance();
    Double_t maxLinImp  = CalcLinImportance();
    Double_t maxImp = (maxRuleImp>maxLinImp ? maxRuleImp : maxLinImp);
@@ -384,6 +415,8 @@ void TMVA::RuleEnsemble::CalcImportance()
 //_______________________________________________________________________
 Double_t TMVA::RuleEnsemble::CalcRuleImportance()
 {
+   // calculate importance of each rule
+
    Double_t maxImp=-1.0;
    Double_t imp;
    Int_t nrules = fRules.size();
@@ -402,6 +435,8 @@ Double_t TMVA::RuleEnsemble::CalcRuleImportance()
 //_______________________________________________________________________
 Double_t TMVA::RuleEnsemble::CalcLinImportance()
 {
+   // calculate the linear importance for each rule
+
    Double_t maxImp=-1.0;
    UInt_t nvars = fLinCoefficients.size();
    fLinImportance.resize(nvars,0.0);
@@ -661,7 +696,8 @@ Double_t TMVA::RuleEnsemble::FStar() const
 //_____________________________________________________________________
 Double_t TMVA::RuleEnsemble::EvalEvent() const
 {
-   //
+   // evaluate current event
+
    Int_t nrules = fRules.size();
    Double_t rval=fOffset;
    Double_t linear=0;
@@ -686,6 +722,7 @@ Double_t TMVA::RuleEnsemble::EvalEvent() const
 //_____________________________________________________________________
 Double_t TMVA::RuleEnsemble::EvalEvent(const TMVA::Event & e)
 {
+   // evaluate event e
    SetEvent(e);
    UpdateEventVal();
    return EvalEvent();
@@ -694,6 +731,8 @@ Double_t TMVA::RuleEnsemble::EvalEvent(const TMVA::Event & e)
 //_______________________________________________________________________
 Double_t TMVA::RuleEnsemble::EvalLinEventRaw( UInt_t vind, const TMVA::Event & e)
 {
+   // evaluate the event linearly (not normalized)
+
    Double_t val  = e.GetVal(vind);
    Double_t rval = TMath::Min( fLinDP[vind], TMath::Max( fLinDM[vind], val ) );
    return rval;
@@ -702,6 +741,7 @@ Double_t TMVA::RuleEnsemble::EvalLinEventRaw( UInt_t vind, const TMVA::Event & e
 //_______________________________________________________________________
 Double_t TMVA::RuleEnsemble::EvalLinEvent( UInt_t vind, Bool_t norm ) const
 {
+   // evaluate the event linearly normalized
    Double_t rval=0;
    rval = fEventLinearVal[vind];
    if (norm) rval*=fLinNorm[vind];
@@ -711,6 +751,8 @@ Double_t TMVA::RuleEnsemble::EvalLinEvent( UInt_t vind, Bool_t norm ) const
 //_______________________________________________________________________
 Double_t TMVA::RuleEnsemble::EvalLinEvent() const
 {
+   // evaluate event linearly
+
    Double_t rval=0;
    for (UInt_t v=0; v<fLinTermOK.size(); v++) {
       if (fLinTermOK[v])
@@ -722,6 +764,8 @@ Double_t TMVA::RuleEnsemble::EvalLinEvent() const
 //_______________________________________________________________________
 Double_t TMVA::RuleEnsemble::EvalLinEvent( const TMVA::Event& e )
 {
+   // evaluate event linearly
+
    SetEvent(e);
    UpdateEventVal();
    return EvalLinEvent();
@@ -730,6 +774,8 @@ Double_t TMVA::RuleEnsemble::EvalLinEvent( const TMVA::Event& e )
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::RuleStatistics()
 {
+   // calculate various statistics for this rule
+
    const UInt_t nrules = fRules.size();
    const std::vector<const TMVA::Event *> *events = GetTrainingEvents();
    const TMVA::Event *eveData;
@@ -802,6 +848,8 @@ void TMVA::RuleEnsemble::RuleStatistics()
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::Print( ostream& os ) const
 {
+   // print function
+
    fLogger << kINFO << "===============================" << Endl;
    fLogger << kINFO << "          RuleEnsemble " << Endl;
    fLogger << kINFO << "===============================" << Endl;
@@ -961,18 +1009,22 @@ void TMVA::RuleEnsemble::ReadRaw( istream & istr )
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::Copy( const RuleEnsemble & other )
 {
-   fRuleFit           = other.GetRuleFit();
-   fMaxRuleDist       = other.GetMaxRuleDist();
-   fOffset            = other.GetOffset();
-   fRules             = other.GetRulesConst();
-   fImportanceCut     = other.GetImportanceCut();
-   fVarImportance     = other.GetVarImportance();
-   fLearningModel     = other.GetLearningModel();
+   // copy function
+   if(this != &other) {
+      fRuleFit           = other.GetRuleFit();
+      fMaxRuleDist       = other.GetMaxRuleDist();
+      fOffset            = other.GetOffset();
+      fRules             = other.GetRulesConst();
+      fImportanceCut     = other.GetImportanceCut();
+      fVarImportance     = other.GetVarImportance();
+      fLearningModel     = other.GetLearningModel();
+   }
 }
 
 //_______________________________________________________________________
 Int_t TMVA::RuleEnsemble::CalcNRules( const TMVA::DecisionTree *dtree )
 {
+   // calculate the number of rules
    if (dtree==0) return 0;
    TMVA::Node *node = dtree->GetRoot();
    Int_t nendnodes = 0;
@@ -983,6 +1035,8 @@ Int_t TMVA::RuleEnsemble::CalcNRules( const TMVA::DecisionTree *dtree )
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::FindNEndNodes( const TMVA::Node *node, Int_t & nendnodes )
 {
+   // find the number of leaf nodes
+
    if (node==0) return;
    if (dynamic_cast<const TMVA::DecisionTreeNode*>(node)->GetSelector()<0) {
       ++nendnodes;
@@ -997,6 +1051,7 @@ void TMVA::RuleEnsemble::FindNEndNodes( const TMVA::Node *node, Int_t & nendnode
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::MakeRulesFromTree( const TMVA::DecisionTree *dtree )
 {
+   // create rules from the decsision tree structure 
    TMVA::Node *node = dtree->GetRoot();
    AddRule( node );
 }
@@ -1004,6 +1059,8 @@ void TMVA::RuleEnsemble::MakeRulesFromTree( const TMVA::DecisionTree *dtree )
 //_______________________________________________________________________
 void TMVA::RuleEnsemble::AddRule( const TMVA::Node *node )
 {
+   // add a new rule to the tree
+
    if (node==0) return;
    if (node->GetParent()==0) { // it's a root node, don't make a rule
       AddRule( node->GetRight() );
@@ -1081,6 +1138,7 @@ TMVA::Rule *TMVA::RuleEnsemble::MakeTheRule( const TMVA::Node *node )
 //_______________________________________________________________________
 ostream& TMVA::operator<< ( ostream& os, const TMVA::RuleEnsemble & rules )
 {
+   // ostream operator
    rules.Print( os );
    return os;
 }

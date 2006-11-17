@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodMLP.cxx,v 1.29 2006/11/14 23:02:57 stelzer Exp $
+// @(#)root/tmva $Id: MethodMLP.cxx,v 1.32 2006/11/17 14:59:24 stelzer Exp $
 // Author: Andreas Hoecker, Matt Jachowski
 
 /**********************************************************************************
@@ -113,13 +113,29 @@ void TMVA::MethodMLP::InitMLP()
 {
    // default initializations
    SetMethodName( "MLP" );
-   SetMethodType( TMVA::Types::MLP );
+   SetMethodType( TMVA::Types::kMLP );
    SetTestvarName();
 }
 
 //_______________________________________________________________________
 void TMVA::MethodMLP::DeclareOptions() 
 {
+   // define the options (their key words) that can be set in the option string 
+   // know options:
+   // TrainingMethod  <string>     Training method
+   //    available values are:         BP   Back-Propagation <default>
+   //                                  GA   Genetic Algorithm (takes a LONG time)
+   //
+   // LearningRate    <float>      NN learning rate parameter
+   // DecayRate       <float>      Decay rate for learning parameter
+   // TestRate        <int>        Test for overtraining performed at each #th epochs
+   //
+   // BPMode          <string>     Back-propagation learning mode
+   //    available values are:         sequential <default>
+   //                                  batch
+   //
+   // BatchSize       <int>        Batch size: number of events/batch, only set if in Batch Mode, -1 for BatchSize=number_of_events
+
    DeclareOptionRef(fTrainMethodS="BP", "TrainingMethod", 
                     "Train with Back-Propagation (BP) or Genetic Algorithm (GA) (takes a LONG time)");
    AddPreDefVal(TString("BP"));
@@ -141,6 +157,7 @@ void TMVA::MethodMLP::DeclareOptions()
 //_______________________________________________________________________
 void TMVA::MethodMLP::ProcessOptions() 
 {
+   // process user options
    MethodANNBase::ProcessOptions();
 
    if      (fTrainMethodS == "BP") fTrainingMethod = kBP;
@@ -153,7 +170,6 @@ void TMVA::MethodMLP::ProcessOptions()
 //______________________________________________________________________________
 void TMVA::MethodMLP::InitializeLearningRates()
 {
-
    // initialize learning rates of synapses, used only by backpropagation
    TSynapse *synapse;
    Int_t numSynapses = fSynapses->GetEntriesFast();
@@ -164,12 +180,12 @@ void TMVA::MethodMLP::InitializeLearningRates()
 }
 
 //______________________________________________________________________________ 
-Double_t TMVA::MethodMLP::CalculateEstimator( TMVA::Types::TreeType treeType )
+Double_t TMVA::MethodMLP::CalculateEstimator( TMVA::Types::ETreeType treeType )
 {
    // calculate the estimator that training is attempting to minimize
 
-   Int_t nEvents = ( (treeType == TMVA::Types::kTest ) ? Data().GetNEvtTest() :
-                     (treeType == TMVA::Types::kTrain) ? Data().GetNEvtTrain() : -1 );
+   Int_t nEvents = ( (treeType == TMVA::Types::kTesting ) ? Data().GetNEvtTest() :
+                     (treeType == TMVA::Types::kTraining) ? Data().GetNEvtTrain() : -1 );
 
    // sanity check
    if (nEvents <=0) 
@@ -180,8 +196,10 @@ Double_t TMVA::MethodMLP::CalculateEstimator( TMVA::Types::TreeType treeType )
    // loop over all training events 
    for (Int_t i = 0; i < nEvents; i++) {
 
-      if (treeType == TMVA::Types::kTest ) ReadTestEvent(i);
-      else                                 ReadTrainingEvent(i);
+      if (treeType == TMVA::Types::kTesting )
+         ReadTestEvent(i);
+      else
+         ReadTrainingEvent(i);
       
       Double_t desired = GetDesiredOutput();
       ForceNetworkInputs();
@@ -236,8 +254,8 @@ void TMVA::MethodMLP::BackPropagationMinimize(Int_t nEpochs)
 
       // monitor convergence of training and control sample
       if ((i+1)%fTestRate == 0) {
-         Double_t trainE = CalculateEstimator( TMVA::Types::kTrain ); // estimator for training sample
-         Double_t testE  = CalculateEstimator( TMVA::Types::kTest  );  // estimator for test samplea
+         Double_t trainE = CalculateEstimator( TMVA::Types::kTraining ); // estimator for training sample
+         Double_t testE  = CalculateEstimator( TMVA::Types::kTesting  );  // estimator for test samplea
          fEstimatorHistTrain->Fill( i+1, trainE );
          fEstimatorHistTest ->Fill( i+1, testE );
       }
@@ -579,6 +597,7 @@ void TMVA::MethodMLP::AdjustSynapseWeights()
 //______________________________________________________________________________
 void TMVA::MethodMLP::MinuitMinimize()
 {
+   // minimize using Minuit
    fNumberOfWeights = fSynapses->GetEntriesFast();
 
    TFitter* tfitter = new TFitter( fNumberOfWeights );

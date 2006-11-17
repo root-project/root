@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Types.cxx,v 1.8 2006/10/26 19:55:40 andreas.hoecker Exp $   
+// @(#)root/tmva $Id: Types.cxx,v 1.11 2006/11/17 00:21:35 stelzer Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -13,12 +13,12 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -33,18 +33,21 @@ TMVA::Types* TMVA::Types::fgTypesPtr = 0;
 TMVA::Types::Types()
    : fLogger( "Types" )
 {
-   fStr2type["Variable"]        = Types::Variable;
-   fStr2type["Cuts"]            = Types::Cuts;
-   fStr2type["Likelihood"]      = Types::Likelihood;
-   fStr2type["PDERS"]           = Types::PDERS;
-   fStr2type["HMatrix"]         = Types::HMatrix;
-   fStr2type["Fisher"]          = Types::Fisher;
-   fStr2type["CFMlpANN"]        = Types::CFMlpANN;
-   fStr2type["TMlpANN"]         = Types::TMlpANN;
-   fStr2type["BDT"]             = Types::BDT;
-   fStr2type["RuleFit"]         = Types::RuleFit;
-   fStr2type["SVM"]             = Types::SVM;
-   fStr2type["MLP"]             = Types::MLP;
-   fStr2type["BayesClassifier"] = Types::BayesClassifier;
-   fStr2type["Committee"]       = Types::Committee;
+   // constructor
+   // fill map that links method names and enums
+
+   fStr2type["Variable"]        = Types::kVariable;
+   fStr2type["Cuts"]            = Types::kCuts;
+   fStr2type["Likelihood"]      = Types::kLikelihood;
+   fStr2type["PDERS"]           = Types::kPDERS;
+   fStr2type["HMatrix"]         = Types::kHMatrix;
+   fStr2type["Fisher"]          = Types::kFisher;
+   fStr2type["CFMlpANN"]        = Types::kCFMlpANN;
+   fStr2type["TMlpANN"]         = Types::kTMlpANN;
+   fStr2type["BDT"]             = Types::kBDT;
+   fStr2type["RuleFit"]         = Types::kRuleFit;
+   fStr2type["SVM"]             = Types::kSVM;
+   fStr2type["MLP"]             = Types::kMLP;
+   fStr2type["BayesClassifier"] = Types::kBayesClassifier;
+   fStr2type["Committee"]       = Types::kCommittee;
 }

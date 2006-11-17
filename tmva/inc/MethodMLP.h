@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodMLP.h,v 1.21 2006/10/10 17:43:52 andreas.hoecker Exp $
+// @(#)root/tmva $Id: MethodMLP.h,v 1.22 2006/11/17 14:59:24 stelzer Exp $
 // Author: Andreas Hoecker, Matt Jachowski
 
 /**********************************************************************************
@@ -81,8 +81,8 @@ namespace TMVA {
       // for GA
       Double_t ComputeEstimator(const std::vector<Double_t>& parameters);
 
-      enum TrainingMethod { kBP=0, kGA };
-      enum BPTrainingMode { kSequential=0, kBatch };
+      enum ETrainingMethod { kBP=0, kGA };
+      enum EBPTrainingMode { kSequential=0, kBatch };
 
    private:
 
@@ -96,7 +96,7 @@ namespace TMVA {
       void     InitializeLearningRates(); // although this is only needed by backprop
 
       // used as a measure of success in all minimization techniques
-      Double_t CalculateEstimator( Types::TreeType treeType = Types::kTrain );
+      Double_t CalculateEstimator( Types::ETreeType treeType = Types::kTraining );
 
       // backpropagation functions
       void     BackPropagationMinimize( Int_t nEpochs );
@@ -125,23 +125,23 @@ namespace TMVA {
 #endif
 
       // general
-      TrainingMethod fTrainingMethod; // method of training, BP or GA
-      TString        fTrainMethodS;   // training method option param
+      ETrainingMethod fTrainingMethod; // method of training, BP or GA
+      TString         fTrainMethodS;   // training method option param
 
       // backpropagation variables
-      Double_t       fLearnRate;      // learning rate for synapse weight adjustments
-      Double_t       fDecayRate;      // decay rate for above learning rate
-      BPTrainingMode fBPMode;         // backprop learning mode (sequential or batch)
-      TString        fBpModeS;        // backprop learning mode option string (sequential or batch)
-      Int_t          fBatchSize;      // batch size, only matters if in batch learning mode
-      Int_t          fTestRate;       // test for overtraining performed at each #th epochs
+      Double_t        fLearnRate;      // learning rate for synapse weight adjustments
+      Double_t        fDecayRate;      // decay rate for above learning rate
+      EBPTrainingMode fBPMode;         // backprop learning mode (sequential or batch)
+      TString         fBpModeS;        // backprop learning mode option string (sequential or batch)
+      Int_t           fBatchSize;      // batch size, only matters if in batch learning mode
+      Int_t           fTestRate;       // test for overtraining performed at each #th epochs
       
       // genetic algorithm variables
-      Int_t          fGA_nsteps;      // GA settings: number of steps
-      Int_t          fGA_preCalc;     // GA settings: number of pre-calc steps
-      Int_t          fGA_SC_steps;    // GA settings: SC_steps
-      Int_t          fGA_SC_offsteps; // GA settings: SC_offsteps
-      Double_t       fGA_SC_factor;   // GA settings: SC_factor
+      Int_t           fGA_nsteps;      // GA settings: number of steps
+      Int_t           fGA_preCalc;     // GA settings: number of pre-calc steps
+      Int_t           fGA_SC_steps;    // GA settings: SC_steps
+      Int_t           fGA_SC_offsteps; // GA settings: SC_offsteps
+      Double_t        fGA_SC_factor;   // GA settings: SC_factor
 
 #ifdef MethodMLP_UseMinuit__
       // minuit variables -- commented out because they rely on a static pointer

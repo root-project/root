@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Types.h,v 1.25 2006/11/13 23:43:34 stelzer Exp $   
+// @(#)root/tmva $Id: Types.h,v 1.28 2006/11/17 14:59:24 stelzer Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -13,12 +13,12 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -54,32 +54,32 @@ namespace TMVA {
    public:
          
       // available MVA methods in TMVA
-      enum MVA {
-         Variable    = 0,
-         Cuts           ,     
-         Likelihood     ,
-         PDERS          ,
-         HMatrix        ,
-         Fisher         ,
-         CFMlpANN       ,
-         TMlpANN        , 
-         BDT            ,     
-         RuleFit        ,
-         SVM            ,
-         MLP            ,
-         BayesClassifier,
-         Committee      ,
+      enum EMVA {
+         kVariable    = 0,
+         kCuts           ,     
+         kLikelihood     ,
+         kPDERS          ,
+         kHMatrix        ,
+         kFisher         ,
+         kCFMlpANN       ,
+         kTMlpANN        , 
+         kBDT            ,     
+         kRuleFit        ,
+         kSVM            ,
+         kMLP            ,
+         kBayesClassifier,
+         kCommittee      ,
          kMaxMethod
       };
 
-      enum PreprocessingMethod {
+      enum EPreprocessingMethod {
          kNone = 0,
          kDecorrelated,
          kPCA,
          kMaxPreprocessingMethod
       };
 
-      enum SBType { 
+      enum ESBType { 
          kSignal = 0, 
          kBackground, 
          kSBBoth, 
@@ -87,18 +87,18 @@ namespace TMVA {
          kTrueType
       };
 
-      enum TreeType { kTrain = 1, kTest };
+      enum ETreeType { kTraining = 0, kTesting, kMaxTreeType };
          
    public:
 
       static Types& Instance() { return fgTypesPtr ? *fgTypesPtr : *(fgTypesPtr = new Types()); }
       ~Types() {}
 
-      const MVA GetMethodType( const TString& method ) const { 
-         std::map<TString, MVA>::const_iterator it = fStr2type.find( method );
+      const EMVA GetMethodType( const TString& method ) const { 
+         std::map<TString, EMVA>::const_iterator it = fStr2type.find( method );
          if (it == fStr2type.end()) {
             fLogger << kFATAL << "unknown method in map: " << method << Endl;
-            return Variable; // Inserted to get rid of GCC warning...
+            return kVariable; // Inserted to get rid of GCC warning...
          }
          else return it->second;
       }
@@ -111,7 +111,7 @@ namespace TMVA {
                   
    private:
          
-      std::map<TString, MVA> fStr2type; // types-to-text map
+      std::map<TString, EMVA> fStr2type; // types-to-text map
       mutable MsgLogger            fLogger;   // message logger
          
    };

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodLikelihood.h,v 1.21 2006/11/02 15:44:50 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: MethodLikelihood.h,v 1.23 2006/11/17 14:59:24 stelzer Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -18,13 +18,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -96,7 +96,7 @@ namespace TMVA {
       const Ranking* CreateRanking() { return 0; }
 
       // overload test event reading
-      virtual Bool_t ReadTestEvent(UInt_t ievt, Types::SBType type = Types::kSignal) { 
+      virtual Bool_t ReadTestEvent(UInt_t ievt, Types::ESBType type = Types::kSignal) { 
          return Data().ReadTestEvent( ievt, Types::kNone, type ); 
       }
 
@@ -113,7 +113,7 @@ namespace TMVA {
       Int_t     fAverageEvtPerBin; // average events per bin; used to calculate fNbins
 
       // type of Splines used to smooth PDFs
-      PDF::SmoothMethod fSmoothMethod;
+      PDF::ESmoothMethod fSmoothMethod;
 
       // global weight file -- (needed !)
       TFile*             fFin;

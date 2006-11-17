@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Rule.h,v 1.22 2006/10/23 01:51:39 stelzer Exp $    
+// @(#)root/tmva $Id: Rule.h,v 1.23 2006/11/16 22:51:59 helgevoss Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -21,7 +21,7 @@
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      Iowa State U.                                                             *
- *      MPI-KP Heidelberg, Germany                                                * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *

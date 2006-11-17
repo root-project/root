@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: BinarySearchTree.h,v 1.17 2006/11/02 08:03:18 helgevoss Exp $    
+// @(#)root/tmva $Id: BinarySearchTree.h,v 1.19 2006/11/17 14:59:23 stelzer Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -13,13 +13,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany                                                * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -104,8 +104,8 @@ namespace TMVA {
     // create the search tree from the events in a TTree
     // using the variables specified in "theVars"
     Int_t Fill( const DataSet& ds, TTree* theTree, Int_t theType = -1, 
-                Types::PreprocessingMethod corr = Types::kNone, 
-                Types::SBType type = Types::kSignal );
+                Types::EPreprocessingMethod corr = Types::kNone, 
+                Types::ESBType type = Types::kSignal );
     
     // Create the search tree from the event collection 
     // using ONLY the variables specified in "theVars"

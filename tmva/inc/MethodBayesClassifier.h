@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBayesClassifier.h,v 1.2 2006/11/02 15:44:50 andreas.hoecker Exp $    
+// @(#)root/tmva $Id: MethodBayesClassifier.h,v 1.3 2006/11/16 22:51:58 helgevoss Exp $    
 // Author: Abhishek Narain
 
 /**********************************************************************************
@@ -17,7 +17,7 @@
  *      University of Houston,                                                    *
  *      CERN, Switzerland,                                                        *
  *      U. of Victoria, Canada,                                                   *
- *      MPI-KP Heidelberg, Germany                                                *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *

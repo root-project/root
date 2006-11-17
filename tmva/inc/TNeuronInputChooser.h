@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TNeuronInputChooser.h,v 1.4 2006/10/10 17:43:52 andreas.hoecker Exp $
+// @(#)root/tmva $Id: TNeuronInputChooser.h,v 1.5 2006/11/17 14:59:24 stelzer Exp $
 // Author: Matt Jachowski 
 
 /**********************************************************************************
@@ -65,12 +65,12 @@ namespace TMVA {
       }
       virtual ~TNeuronInputChooser() {}
 
-      enum NeuronInputType { kSum = 0,
-                             kSqSum,
-                             kAbsSum
+      enum ENeuronInputType { kSum = 0,
+                              kSqSum,
+                              kAbsSum
       };
 
-      TNeuronInput* CreateNeuronInput(const NeuronInputType type) const
+      TNeuronInput* CreateNeuronInput(const ENeuronInputType type) const
       {
          switch (type) {
          case kSum:    return new TNeuronInputSum();

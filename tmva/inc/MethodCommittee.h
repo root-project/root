@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCommittee.h,v 1.5 2006/11/02 15:44:50 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: MethodCommittee.h,v 1.7 2006/11/17 14:59:23 stelzer Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -13,12 +13,12 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -57,7 +57,7 @@ namespace TMVA {
                        TString committeeTitle,                        
                        DataSet& theData,
                        TString committeeOptions,
-                       Types::MVA method,
+                       Types::EMVA method,
                        TString methodOptions,
                        TDirectory* theTargetDir = 0 );
 
@@ -122,7 +122,7 @@ namespace TMVA {
       TString                         fBoostType;       // string specifying the boost type
 
       // options for the MVA method
-      Types::MVA                      fMemberType;      // the MVA method to be boosted
+      Types::EMVA                      fMemberType;      // the MVA method to be boosted
       TString                         fMemberOption;    // the options for that method
 
       Bool_t                          fUseMemberDecision;  // use binary information from IsSignal

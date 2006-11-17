@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Factory.h,v 1.25 2006/10/14 23:19:19 andreas.hoecker Exp $   
+// @(#)root/tmva $Id: Factory.h,v 1.27 2006/11/17 14:59:23 stelzer Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -16,13 +16,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -136,9 +136,9 @@ namespace TMVA {
       void ProcessMultipleMVA();
 
       Bool_t BookMethod( TString theMethodName, TString methodTitle, TString theOption = "" );
-      Bool_t BookMethod( Types::MVA theMethod,  TString methodTitle, TString theOption = "" );
-      Bool_t BookMethod( TMVA::Types::MVA theMethod, TString methodTitle, TString methodOption,
-                         TMVA::Types::MVA theCommittee, TString committeeOption = "" ); 
+      Bool_t BookMethod( Types::EMVA theMethod,  TString methodTitle, TString theOption = "" );
+      Bool_t BookMethod( TMVA::Types::EMVA theMethod, TString methodTitle, TString methodOption,
+                         TMVA::Types::EMVA theCommittee, TString committeeOption = "" ); 
 
       // booking the method with a given weight file --> testing or application only
       //      Bool_t BookMethod( IMethod *theMethod );

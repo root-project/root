@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: IMethod.h,v 1.18 2006/11/02 15:44:49 andreas.hoecker Exp $   
+// @(#)root/tmva $Id: IMethod.h,v 1.20 2006/11/17 14:59:23 stelzer Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -13,13 +13,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -133,9 +133,9 @@ namespace TMVA {
       virtual const TString&   GetJobName    ( void ) const = 0;
       virtual const TString&   GetMethodName ( void ) const = 0;
       virtual const TString&   GetMethodTitle( void ) const = 0;
-      virtual const Types::MVA GetMethodType ( void ) const = 0;
+      virtual const Types::EMVA GetMethodType ( void ) const = 0;
 
-      virtual Types::PreprocessingMethod GetPreprocessingMethod() const = 0;
+      virtual Types::EPreprocessingMethod GetPreprocessingMethod() const = 0;
 
       virtual void  SetJobName( TString jobName ) = 0;
 

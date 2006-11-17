@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCuts.h,v 1.34 2006/11/02 15:44:50 andreas.hoecker Exp $
+// @(#)root/tmva $Id: MethodCuts.h,v 1.36 2006/11/17 14:59:24 stelzer Exp $
 // Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -16,13 +16,13 @@
  *      Andreas Hoecker  <Andreas.Hocker@cern.ch> - CERN, Switzerland             *
  *      Matt Jachowski   <jachowski@stanford.edu> - Stanford University, USA      *
  *      Peter Speckmayer <speckmay@mail.cern.ch>  - CERN, Switzerland             *
- *      Helge Voss       <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany    *
+ *      Helge Voss       <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany     *
  *      Kai Voss         <Kai.Voss@cern.ch>       - U. of Victoria, Canada        *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        *
  *      U. of Victoria, Canada,                                                   *
- *      MPI-KP Heidelberg, Germany,                                               *
+ *      MPI-K Heidelberg, Germany ,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -123,34 +123,34 @@ namespace TMVA {
    private:
 
       // determines type of data to be optimised
-      enum ConstrainType { kConstrainEffS = 0,
-                           kConstrainEffB } fConstrainType;
+      enum EConstrainType { kConstrainEffS = 0,
+                            kConstrainEffB } fConstrainType;
 
       // optimisation method
-      enum FitMethodType { kUseMonteCarlo = 0,
-                           kUseGeneticAlgorithm,
-                           kUseSimulatedAnnealing };
+      enum EFitMethodType { kUseMonteCarlo = 0,
+                            kUseGeneticAlgorithm,
+                            kUseSimulatedAnnealing };
 
       // efficiency calculation method
       // - kUseEventSelection: computes efficiencies from given data sample
       // - kUsePDFs          : creates smoothed PDFs from data samples, and 
       //                       uses this to compute efficiencies
-      enum EffMethod     { kUseEventSelection = 0,
-                           kUsePDFs };
+      enum EEffMethod     { kUseEventSelection = 0,
+                            kUsePDFs };
 
       // improve the Monte Carlo by providing some additional information
-      enum FitParameters { kNotEnforced = 0,
-                           kForceMin,
-                           kForceMax,
-                           kForceSmart,
-                           kForceVerySmart };
+      enum EFitParameters { kNotEnforced = 0,
+                            kForceMin,
+                            kForceMax,
+                            kForceSmart,
+                            kForceVerySmart };
 
       // general
       TString                 fFitMethodS;    // chosen fit method (string)
-      FitMethodType           fFitMethod;     // chosen fit method
+      EFitMethodType          fFitMethod;     // chosen fit method
       TString                 fEffMethodS;    // chosen efficiency calculation method (string)
-      EffMethod               fEffMethod;     // chosen efficiency calculation method
-      vector<FitParameters>*  fFitParams;     // vector for series of fit methods
+      EEffMethod              fEffMethod;     // chosen efficiency calculation method
+      vector<EFitParameters>* fFitParams;     // vector for series of fit methods
       Double_t                fTestSignalEff; // used to test optimized signal efficiency
       Double_t                fEffSMin;       // used to test optimized signal efficiency
       Double_t                fEffSMax;       // used to test optimized signal efficiency

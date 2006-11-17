@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleEnsemble.h,v 1.24 2006/10/23 01:51:39 stelzer Exp $
+// @(#)root/tmva $Id: RuleEnsemble.h,v 1.26 2006/11/17 14:59:24 stelzer Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -19,7 +19,7 @@
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      Iowa State U.                                                             *
- *      MPI-KP Heidelberg, Germany                                                * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -60,7 +60,7 @@ namespace TMVA {
       
    public:
 
-      enum LearningModel { kFull, kRules, kLinear };
+      enum ELearningModel { kFull, kRules, kLinear };
 
       // main constructor
       RuleEnsemble( RuleFit* rf );
@@ -196,7 +196,7 @@ namespace TMVA {
       inline const Bool_t             DoLinear()             const { return (fLearningModel==kFull) || (fLearningModel==kLinear); }
       inline const Bool_t             DoRules()              const { return (fLearningModel==kFull) || (fLearningModel==kRules); }
       const Bool_t                    DoFull()               const { return (fLearningModel==kFull); }
-      const LearningModel             GetLearningModel()     const { return fLearningModel; }
+      const ELearningModel            GetLearningModel()     const { return fLearningModel; }
       const Double_t                  GetImportanceCut()     const { return fImportanceCut; }
       const Double_t                  GetOffset()            const { return fOffset; }
       const UInt_t                    GetNRules()            const { return fRules.size(); }
@@ -262,7 +262,7 @@ namespace TMVA {
       // evaluate linear terms used to fill fEventLinearVal
       Double_t EvalLinEventRaw( UInt_t vind, const Event &e );
 
-      LearningModel                 fLearningModel;     // can be full (rules+linear), rules, linear
+      ELearningModel                fLearningModel;     // can be full (rules+linear), rules, linear
       Double_t                      fImportanceCut;     // minimum importance accepted
       Double_t                      fOffset;            // offset in discriminator function
       std::vector< Rule* >          fRules;             // vector of rules

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTree.cxx,v 1.45 2006/11/14 15:21:00 stelzer Exp $
+// @(#)root/tmva $Id: DecisionTree.cxx,v 1.48 2006/11/16 22:51:58 helgevoss Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -13,13 +13,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        *
  *      U. of Victoria, Canada,                                                   *
- *      MPI-KP Heidelberg, Germany,                                               *
+ *      MPI-K Heidelberg, Germany ,                                               *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -27,7 +27,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: DecisionTree.cxx,v 1.45 2006/11/14 15:21:00 stelzer Exp $
+ * $Id: DecisionTree.cxx,v 1.48 2006/11/16 22:51:58 helgevoss Exp $
  **********************************************************************************/
 
 //_______________________________________________________________________
@@ -172,7 +172,8 @@ TMVA::DecisionTree::~DecisionTree( void )
 }
 
 //_______________________________________________________________________
-void TMVA::DecisionTree::SetParentTreeInNodes( DecisionTreeNode *n){
+void TMVA::DecisionTree::SetParentTreeInNodes( DecisionTreeNode *n)
+{
    // descend a tree to find all its leaf nodes, fill max depth reached in the
    // tree at the same time. 
 
@@ -354,7 +355,8 @@ void TMVA::DecisionTree::FillEvent( TMVA::Event & event,
 
 
 //_______________________________________________________________________
-void TMVA::DecisionTree::ClearTree(){
+void TMVA::DecisionTree::ClearTree()
+{
    // clear the tree nodes (their S/N, Nevents etc), just keep the structure of the tree
 
    if (this->GetRoot()!=NULL) 
@@ -364,7 +366,8 @@ void TMVA::DecisionTree::ClearTree(){
 
 
 //_______________________________________________________________________
-void TMVA::DecisionTree::PruneTree(){
+void TMVA::DecisionTree::PruneTree()
+{
    // prune (get rid of internal nodes) the Decision tree to avoid overtraining
    // serveral different pruning methods can be applied as selected by the 
    // variable "fPruneMethod". Currently however only the Expected Error Pruning
@@ -387,7 +390,8 @@ void TMVA::DecisionTree::PruneTree(){
 
 
 //_______________________________________________________________________
-void TMVA::DecisionTree::PruneTreeEEP(DecisionTreeNode *node){
+void TMVA::DecisionTree::PruneTreeEEP(DecisionTreeNode *node)
+{
    // recursive prunig of nodes using the Expected Error Pruning (EEP)
    // if internal node, then prune
    DecisionTreeNode *l = (DecisionTreeNode*)node->GetLeft();
@@ -404,7 +408,8 @@ void TMVA::DecisionTree::PruneTreeEEP(DecisionTreeNode *node){
 }
 
 //_______________________________________________________________________
-void TMVA::DecisionTree::PruneTreeCC(){
+void TMVA::DecisionTree::PruneTreeCC()
+{
    // prunig of nodes using the Cost Complexity criteria. The Pruning is performed
    // until a minimum in the cost complexity CC(alpha) is reached.
    // CC(alpha) = alpha*NLeafs + sum_over_leafs[ N*Quality(leaf) ]
@@ -429,7 +434,8 @@ void TMVA::DecisionTree::PruneTreeCC(){
 
 
 //_______________________________________________________________________
-void TMVA::DecisionTree::PruneTreeMCC(){
+void TMVA::DecisionTree::PruneTreeMCC()
+{
    // Similar to the CostCoplexity pruning, only here I calculate immediately
    // the "prunestrength" (= alpha, the regularisation parameter in the CostComplexity)
    // for which the respective subtree below a node would be pruned. Then I continue
@@ -768,39 +774,39 @@ Double_t TMVA::DecisionTree::GetNodeError(DecisionTreeNode *node)
    // this node) is (1-f)
    // now f has a statistical error according to the binomial distribution
    // hence the error on f can be estimated (same error as the binomial error
-   // for efficency calculations ( sigma = sqrt(eff(1-eff)/N) ) 
+   // for efficency calculations ( sigma = sqrt(eff(1-eff)/nEvts ) ) 
    
    
-   Double_t errorRate=0;
+   Double_t errorRate = 0;
 
-   Double_t N=node->GetNEvents();
+   Double_t nEvts = node->GetNEvents();
    
    //fraction of correctly classified events by this node:
    Double_t f=0;
    if (node->GetSoverSB() > 0.5) f = node->GetSoverSB();
    else  f = (1-node->GetSoverSB());
 
-   Double_t df = sqrt(f*(1-f)/N);
+   Double_t df = sqrt(f*(1-f)/nEvts );
    
    errorRate = std::min(1.,(1 - (f-fPruneStrength*df) ));
    
    // -------------------------------------------------------------------
    // Minimum Error Pruning (MEP) accordig to Niblett/Bratko
    //# of correctly classified events by this node:
-   //Double_t n=f*N;
+   //Double_t n=f*nEvts ;
    //Double_t p_apriori = 0.5, m=100;
-   //errorRate = (N - n + (1-p_apriori) * m ) / (N + m);
+   //errorRate = (nEvts  - n + (1-p_apriori) * m ) / (nEvts  + m);
    
    // Pessimistic error Pruing (proposed by Quinlan (error estimat with continuity approximation)
    //# of correctly classified events by this node:
-   //Double_t n=f*N;
-   //errorRate = (N - n + 0.5) / N;
+   //Double_t n=f*nEvts ;
+   //errorRate = (nEvts  - n + 0.5) / nEvts ;
           
    //const Double Z=.65;
    //# of correctly classified events by this node:
-   //Double_t n=f*N;
-   //errorRate = (f + Z*Z/(2*N) + Z*sqrt(f/N - f*f/N + Z*Z/4/N/N) ) / (1 + Z*Z/N); 
-   //errorRate = (n + Z*Z/2 + Z*sqrt(n - n*n/N + Z*Z/4) )/ (N + Z*Z);
+   //Double_t n=f*nEvts ;
+   //errorRate = (f + Z*Z/(2*nEvts ) + Z*sqrt(f/nEvts  - f*f/nEvts  + Z*Z/4/nEvts /nEvts ) ) / (1 + Z*Z/nEvts ); 
+   //errorRate = (n + Z*Z/2 + Z*sqrt(n - n*n/nEvts  + Z*Z/4) )/ (nEvts  + Z*Z);
    //errorRate = 1 - errorRate;
    // -------------------------------------------------------------------
    

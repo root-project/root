@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleFitParams.cxx,v 1.29 2006/11/14 15:39:36 helgevoss Exp $
+// @(#)root/tmva $Id: RuleFitParams.cxx,v 1.32 2006/11/16 22:51:59 helgevoss Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -17,7 +17,7 @@
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      Iowa State U.                                                             *
- *      MPI-KP Heidelberg, Germany                                                * 
+ *      MPI-K Heidelberg, Germany                                                 * 
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -39,29 +39,29 @@
 
 //_______________________________________________________________________
 TMVA::RuleFitParams::RuleFitParams()
-   : fLogger( "RuleFitParams" )
+   : fRuleFit ( 0 )
+   , fRuleEnsemble ( 0 )
+   , fPathIdx1 ( 0 )
+   , fPathIdx2 ( 0 )
+   , fPerfIdx1 ( 0 )
+   , fPerfIdx2 ( 0 )
+   , fGDTau      ( 0.0 )
+   , fGDPathStep ( 0.01 )
+   , fGDNPathSteps ( 100 )
+   , fGDErrNsigma ( 1.0 )
+   , fGDNtuple ( 0 )
+   , fNTOffset ( 0 )
+   , fNTCoeff ( 0 )
+   , fNTLinCoeff ( 0 )
+   , fLogger( "RuleFitParams" )
 {
-   fRuleFit = 0;
-   fRuleEnsemble = 0;
-   fGDTau      = 0.0;
-   fGDPathStep = 0.01;
-   fGDNPathSteps = 100;
-   fGDNtuple = 0;
-   fGDErrNsigma = 1.0;
-   fNTLinCoeff = 0;
-   fNTCoeff = 0;
-   fNTOffset = 0;
-
-   fPathIdx1 = 0;
-   fPathIdx2 = 0;
-   fPerfIdx1 = 0;
-   fPerfIdx2 = 0;
-
+   // constructor
    Init();
 }
 //_______________________________________________________________________
 TMVA::RuleFitParams::~RuleFitParams()
 {
+   // destructor
    if (fNTCoeff)     { delete fNTCoeff; fNTCoeff = 0; }
    if (fNTLinCoeff)  { delete fNTLinCoeff;fNTLinCoeff = 0; }
 }
@@ -69,7 +69,7 @@ TMVA::RuleFitParams::~RuleFitParams()
 //_______________________________________________________________________
 void TMVA::RuleFitParams::Init()
 {
-   //
+   // Initializes all parameters using the RuleEnsemble and the training tree
    if (fRuleFit==0) return;
    fRuleEnsemble = fRuleFit->GetRuleEnsemblePtr();
    UInt_t nrules = fRuleEnsemble->GetNRules();
@@ -102,6 +102,8 @@ void TMVA::RuleFitParams::Init()
 //_______________________________________________________________________
 void TMVA::RuleFitParams::InitNtuple()
 {
+   // initializes the ntuple
+
    const UInt_t nrules = fRuleEnsemble->GetNRules();
    const UInt_t nlin   = fRuleEnsemble->GetLinNorm().size();
    //
@@ -132,24 +134,28 @@ void TMVA::RuleFitParams::InitNtuple()
 //_______________________________________________________________________
 const std::vector< Int_t >  *TMVA::RuleFitParams::GetSubsampleEvents() const
 {
+   // accessor to the subsamples
    return &(fRuleFit->GetSubsampleEvents());
 }
 
 //_______________________________________________________________________
 void TMVA::RuleFitParams::GetSubsampleEvents(UInt_t sub, UInt_t & ibeg, UInt_t & iend) const
 {
+   // calls the Subsample Events
    fRuleFit->GetSubsampleEvents(sub,ibeg,iend);
 }
 
 //_______________________________________________________________________
 const UInt_t TMVA::RuleFitParams::GetNSubsamples() const
 {
+   // get the number of subsamples
    return fRuleFit->GetNSubsamples();
 }
 
 //_______________________________________________________________________
 const TMVA::Event *TMVA::RuleFitParams::GetTrainingEvent(UInt_t i, UInt_t isub) const
 {
+   // accesses a training event
    return fRuleFit->GetTrainingEvent(i,isub);
 }
 
@@ -158,8 +164,8 @@ Double_t TMVA::RuleFitParams::LossFunction( const TMVA::Event& e ) const
 {
    // Implementation of squared-error ramp loss function (eq 39,40 in ref 1)
    // This is used for binary Classifications where y = {+1,-1} for (sig,bkg)
-   Double_t H = max( -1.0, min(1.0,fRuleEnsemble->EvalEvent( e )) );
-   Double_t diff = (e.IsSignal()?1:-1) - H;
+   Double_t h = max( -1.0, min(1.0,fRuleEnsemble->EvalEvent( e )) );
+   Double_t diff = (e.IsSignal()?1:-1) - h;
    //
    return diff*diff;
 }
@@ -167,6 +173,7 @@ Double_t TMVA::RuleFitParams::LossFunction( const TMVA::Event& e ) const
 //_______________________________________________________________________
 Double_t TMVA::RuleFitParams::Risk(UInt_t ibeg, UInt_t iend) const
 {
+   // risk asessment
    UInt_t neve = iend-ibeg+1;
    if (neve<1) {
       fLogger << kWARNING << "makeGradientVector() - invalid start/end indices!" << Endl;
@@ -452,6 +459,8 @@ void TMVA::RuleFitParams::MakeGDPath()
 //_______________________________________________________________________
 void TMVA::RuleFitParams::FillCoefficients()
 {
+   // helper function to store the rule coefficients in local arrays
+
    const UInt_t nrules = fRuleEnsemble->GetNRules();
    const UInt_t nlin   = fRuleEnsemble->GetLinNorm().size();
    //
@@ -468,7 +477,6 @@ void TMVA::RuleFitParams::FillCoefficients()
 //_______________________________________________________________________
 void TMVA::RuleFitParams::CalcFStar(UInt_t ibeg, UInt_t iend)
 {
-   //
    // Estimates F* (optimum scoring function) for all events for the given sets.
    // The result is used in ErrorRateReg().
    //
@@ -828,6 +836,8 @@ void TMVA::RuleFitParams::UpdateCoefficients()
 //_______________________________________________________________________
 Double_t TMVA::RuleFitParams::CalcAverageResponse(UInt_t ibeg, UInt_t iend)
 {
+   // calulate the average response
+
    UInt_t neve = iend-ibeg+1;
    if (neve<1) {
       fLogger << kFATAL << "<CalcAverageResponse> invalid start/end indices!" << Endl;

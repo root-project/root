@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCuts.cxx,v 1.67 2006/11/02 15:44:50 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: MethodCuts.cxx,v 1.73 2006/11/17 14:59:23 stelzer Exp $ 
 // Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -15,13 +15,13 @@
  *      Matt Jachowski  <jachowski@stanford.edu> - Stanford University, USA       *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
  *      Peter Speckmayer <speckmay@mail.cern.ch> - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -192,7 +192,7 @@ void TMVA::MethodCuts::InitCuts( void )
 {
    // default initialisation called by all constructors
    SetMethodName( "Cuts" );
-   SetMethodType( TMVA::Types::Cuts );  
+   SetMethodType( TMVA::Types::kCuts );  
    SetTestvarName();
 
    fConstrainType     = kConstrainEffS;
@@ -221,7 +221,7 @@ void TMVA::MethodCuts::InitCuts( void )
    fXmax      = new vector<Double_t>( GetNvar() );  
 
    // get the variable specific options, first initialize default
-   fFitParams = new vector<FitParameters>( GetNvar() );
+   fFitParams = new vector<EFitParameters>( GetNvar() );
    for (Int_t ivar=0; ivar<GetNvar(); ivar++) (*fFitParams)[ivar] = kNotEnforced;
 
    fRandom    = new TRandom( 0 ); // set seed
@@ -280,6 +280,47 @@ TMVA::MethodCuts::~MethodCuts( void )
 //_______________________________________________________________________
 void TMVA::MethodCuts::DeclareOptions() 
 {
+   // define the options (their key words) that can be set in the option string 
+   // know options:
+   // Method             <string> Minimization method
+   //    available values are:        MC Monte Carlo <default>
+   //                                 GA Genetic Algorithm
+   //                                 SA Simulated annealing
+   //
+   // EffMethod          <string> Efficiency selection method
+   //    available values are:        EffSel <default>
+   //                                 EffPDF
+   //
+   // MC_NRandCuts       <int>    Number of random cuts to estimate the efficiency for the MC method
+   // MC_AllVarProp      <string> Property of all variables for the MC method
+   //    available values are:        AllNotEnforced <default>
+   //                                 AllFMax
+   //                                 AllFMin
+   //                                 AllFSmart
+   //                                 AllFVerySmart
+   // MC_Var1Prop        <string> Property of variable 1 for the MC method (taking precedence over the
+   //    globale setting. The same values as for the global option are available. Variables 1..10 can be
+   //    set this way
+   //
+   //
+   // GA_nsteps           <int>   Number of steps for the genetic algorithm
+   // GA_cycles           <int>   Number of generations for the genetic algorithm
+   // GA_popSize          <int>   Size of the population for the genetic algorithm
+   // GA_SC_steps         <int>   Number of steps for the genetic algorithm
+   // GA_SC_offsteps      <int>    for the genetic algorithm
+   // GA_SC_factor        <float>  for the genetic algorithm
+   //
+   //
+   // SA_MaxCalls                 <int>      maximum number of calls for simulated annealing
+   // SA_TemperatureGradient      <float>    temperature gradient for simulated annealing
+   // SA_UseAdaptiveTemperature   <bool>     use of adaptive temperature for simulated annealing
+   // SA_InitialTemperature       <float>    initial temperature for simulated annealing
+   // SA_MinTemperature           <float>    minimum temperature for simulated annealing 
+   // SA_Eps                      <int>      number of epochs for simulated annealing
+   // SA_NFunLoops                <int>      number of loops for simulated annealing      
+   // SA_NEps                     <int>      number of epochs for simulated annealing
+
+
    DeclareOptionRef(fFitMethodS="MC", "Method", "Minimization Method");
    AddPreDefVal(TString("GA"));
    AddPreDefVal(TString("SA"));
@@ -339,12 +380,13 @@ void TMVA::MethodCuts::DeclareOptions()
    DeclareOptionRef(fSA_MinTemperature,         "SA_MinTemperature", "");
    DeclareOptionRef(fSA_Eps,                    "SA_Eps", "");  
    DeclareOptionRef(fSA_NFunLoops,              "SA_NFunLoops", "");  
-   DeclareOptionRef(fSA_NEps,                   "SA_NEps", "");  
+   DeclareOptionRef(fSA_NEps,                   "SA_NEps", "");           
 }
 
 //_______________________________________________________________________
 void TMVA::MethodCuts::ProcessOptions() 
 {
+   // process user options
    MethodBase::ProcessOptions();
 
    if      (fFitMethodS == "MC" ) fFitMethod = kUseMonteCarlo;
@@ -377,7 +419,7 @@ void TMVA::MethodCuts::ProcessOptions()
   
       if (fAllVars!="AllNotEnforced") { // options are specified
 
-         FitParameters theFitP = kNotEnforced;
+         EFitParameters theFitP = kNotEnforced;
          if      (fAllVars == "AllNotEnforced") theFitP = kNotEnforced;
          else if (fAllVars == "AllFMax"       ) theFitP = kForceMax;
          else if (fAllVars == "AllFMin"       ) theFitP = kForceMin;
@@ -395,7 +437,7 @@ void TMVA::MethodCuts::ProcessOptions()
 
          int maxVar = GetNvar()<=10?GetNvar():10;
          for (Int_t ivar=0; ivar<maxVar; ivar++) {
-            FitParameters theFitP = kNotEnforced;
+            EFitParameters theFitP = kNotEnforced;
             if (fAllVarsI[ivar] == "" || fAllVarsI[ivar] == "NotEnforced") theFitP = kNotEnforced;
             else if (fAllVarsI[ivar] == "FMax" )                           theFitP = kForceMax;
             else if (fAllVarsI[ivar] == "FMin" )                           theFitP = kForceMin;
@@ -429,9 +471,9 @@ void TMVA::MethodCuts::ProcessOptions()
    }
 
    // decorrelate option will be last option, if it is specified
-	if      (GetPreprocessingMethod() == Types::kDecorrelated)
+   if      (GetPreprocessingMethod() == Types::kDecorrelated)
       fLogger << kINFO << "use decorrelated variable set" << Endl;
-	else if (GetPreprocessingMethod() == Types::kPCA)
+   else if (GetPreprocessingMethod() == Types::kPCA)
       fLogger << kINFO << "use principal component preprocessing" << Endl;
 }
 
@@ -496,7 +538,7 @@ void  TMVA::MethodCuts::Train( void )
 
       const TString& varname = Data().GetInternalVarName(ivar);
 
-      Statistics( TMVA::Types::kTrain, varname,
+      Statistics( TMVA::Types::kTraining, varname,
                   (*fMeanS)[ivar], (*fMeanB)[ivar], 
                   (*fRmsS)[ivar], (*fRmsB)[ivar], 
                   (*fXmin)[ivar], (*fXmax)[ivar] );            
@@ -536,7 +578,7 @@ void  TMVA::MethodCuts::Train( void )
          // generate random cuts
          for (Int_t ivar=0; ivar<GetNvar(); ivar++) {
 
-            FitParameters fitParam = (*fFitParams)[ivar];
+            EFitParameters fitParam = (*fFitParams)[ivar];
 
             if (fitParam == kForceSmart) {
                if ((*fMeanS)[ivar] > (*fMeanB)[ivar]) fitParam = kForceMax;
@@ -643,13 +685,13 @@ void  TMVA::MethodCuts::Train( void )
          timer1.DrawProgressBar( cycle );
 
          // ---- perform series of fits to achieve best convergence
-	 
+         
          // "m_ga_spread" times the number of variables
          TMVA::GeneticCuts ga( fGA_popSize, ranges, this ); 
-	 
+    
          ga.CalculateFitness();
          ga.GetGeneticPopulation().TrimPopulation();
-	 
+    
          do {
             ga.Init();
             ga.CalculateFitness();
@@ -728,9 +770,9 @@ void  TMVA::MethodCuts::Train( void )
    if (fBinaryTreeB != 0) { delete fBinaryTreeB; fBinaryTreeB = 0; }
 }
 
-void TMVA::MethodCuts::Test( TTree* theTestTree )
+void TMVA::MethodCuts::Test( TTree* )
 {
-   if (theTestTree == 0); // dummy call
+   // not used 
 }
 
 //_______________________________________________________________________
@@ -998,6 +1040,7 @@ void  TMVA::MethodCuts::WriteWeightsToStream( ostream & o ) const
 //_______________________________________________________________________
 void  TMVA::MethodCuts::ReadWeightsFromStream( istream& istr )
 {
+   // read the cuts from stream
    TString dummy;
    UInt_t  dummyInt;
 

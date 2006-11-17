@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Factory.cxx,v 1.80 2006/11/15 00:20:32 stelzer Exp $   
+// @(#)root/tmva $Id: Factory.cxx,v 1.85 2006/11/17 14:59:23 stelzer Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -13,13 +13,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -74,15 +74,16 @@ const int MinNoTrainingEvents = 10;
 const int MinNoTestEvents     = 1;
 const long int basketsize     = 1280000;
 
-const TString BCwhite__f  ( "\033[1;37m" );
-const TString BCred__f    ( "\033[31m"   );
-const TString BCblue__f   ( "\033[34m"   );
-const TString BCblue__b   ( "\033[44m"   );
-const TString BCred__b    ( "\033[1;41m" );
-const TString EC__        ( "\033[0m"    );
-const TString BClblue__b  ( "\033[1;44m" );
-const TString BC_yellow = "\033[1;33m";
-const TString BC_lgreen = "\033[1;32m";
+const TString BCwhite__f = "\033[1;37m";
+const TString BCred__f   = "\033[31m";
+const TString BCblue__f  = "\033[34m";
+const TString BCblue__b  = "\033[44m";
+const TString BCred__b   = "\033[1;41m";
+const TString EC__       = "\033[0m";
+const TString BClblue__b = "\033[1;44m";
+const TString BC_yellow  = "\033[1;33m";
+const TString BC_lgreen  = "\033[1;32m";
+const TString BC_green   = "\033[32m";
 
 using namespace std;
 
@@ -517,7 +518,7 @@ void TMVA::Factory::PrepareTrainingAndTestTree( TCut cut, Int_t Ntrain, Int_t Nt
    // the samples.
    // ------------------------------------------------------------------------
    // 
-   fLogger << kINFO << BC_lgreen << "preparing trees for training and testing..." << EC__ << Endl;
+   fLogger << kINFO << "preparing trees for training and testing..." << Endl;
    if(fMultipleMVAs) Data().SetMultiCut(cut);
    else              Data().SetCut(cut);
 
@@ -566,7 +567,7 @@ Bool_t TMVA::Factory::BookMethod( TString theMethodName, TString methodTitle, TS
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::Factory::BookMethod( TMVA::Types::MVA theMethod, TString methodTitle, TString theOption ) 
+Bool_t TMVA::Factory::BookMethod( TMVA::Types::EMVA theMethod, TString methodTitle, TString theOption ) 
 {
    // books MVA method; the option configuration string is custom for each MVA
    // the TString field "theNameAppendix" serves to define (and distringuish) 
@@ -577,31 +578,31 @@ Bool_t TMVA::Factory::BookMethod( TMVA::Types::MVA theMethod, TString methodTitl
 
    // initialize methods
    switch(theMethod) {
-   case TMVA::Types::Cuts:       
+   case TMVA::Types::kCuts:       
       method = new TMVA::MethodCuts           ( fJobName, methodTitle, Data(), theOption ); break;
-   case TMVA::Types::Fisher:     
+   case TMVA::Types::kFisher:     
       method = new TMVA::MethodFisher         ( fJobName, methodTitle, Data(), theOption ); break;
-   case TMVA::Types::MLP:        
+   case TMVA::Types::kMLP:        
       method = new TMVA::MethodMLP            ( fJobName, methodTitle, Data(), theOption ); break;
-   case TMVA::Types::TMlpANN:    
+   case TMVA::Types::kTMlpANN:    
       method = new TMVA::MethodTMlpANN        ( fJobName, methodTitle, Data(), theOption ); break;
-   case TMVA::Types::CFMlpANN:   
+   case TMVA::Types::kCFMlpANN:   
       method = new TMVA::MethodCFMlpANN       ( fJobName, methodTitle, Data(), theOption ); break;
-   case TMVA::Types::Likelihood: 
+   case TMVA::Types::kLikelihood: 
       method = new TMVA::MethodLikelihood     ( fJobName, methodTitle, Data(), theOption ); break;
-   case TMVA::Types::Variable:   
+   case TMVA::Types::kVariable:   
       method = new TMVA::MethodVariable       ( fJobName, methodTitle, Data(), theOption ); break;
-   case TMVA::Types::HMatrix:    
+   case TMVA::Types::kHMatrix:    
       method = new TMVA::MethodHMatrix        ( fJobName, methodTitle, Data(), theOption ); break;
-   case TMVA::Types::PDERS:      
+   case TMVA::Types::kPDERS:      
       method = new TMVA::MethodPDERS          ( fJobName, methodTitle, Data(), theOption ); break;
-   case TMVA::Types::BDT:        
+   case TMVA::Types::kBDT:        
       method = new TMVA::MethodBDT            ( fJobName, methodTitle, Data(), theOption ); break;
-   case TMVA::Types::SVM:        
+   case TMVA::Types::kSVM:        
       method = new TMVA::MethodSVM            ( fJobName, methodTitle, Data(), theOption ); break;
-   case TMVA::Types::RuleFit:    
+   case TMVA::Types::kRuleFit:    
       method = new TMVA::MethodRuleFit        ( fJobName, methodTitle, Data(), theOption ); break;
-   case TMVA::Types::BayesClassifier:    
+   case TMVA::Types::kBayesClassifier:    
       method = new TMVA::MethodBayesClassifier( fJobName, methodTitle, Data(), theOption ); break;
    default:
       fLogger << kFATAL << "method: " << theMethod << " does not exist" << Endl;
@@ -613,8 +614,8 @@ Bool_t TMVA::Factory::BookMethod( TMVA::Types::MVA theMethod, TString methodTitl
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::Factory::BookMethod( TMVA::Types::MVA theMethod, TString methodTitle, TString methodOption,
-                                  TMVA::Types::MVA theCommittee, TString committeeOption ) 
+Bool_t TMVA::Factory::BookMethod( TMVA::Types::EMVA theMethod, TString methodTitle, TString methodOption,
+                                  TMVA::Types::EMVA theCommittee, TString committeeOption ) 
 {
    // books MVA method; the option configuration string is custom for each MVA
    // the TString field "theNameAppendix" serves to define (and distringuish) 
@@ -625,7 +626,7 @@ Bool_t TMVA::Factory::BookMethod( TMVA::Types::MVA theMethod, TString methodTitl
 
    // initialize methods
    switch(theMethod) {
-   case TMVA::Types::Committee:    
+   case TMVA::Types::kCommittee:    
       method = new TMVA::MethodCommittee( fJobName, methodTitle, Data(), methodOption, theCommittee, committeeOption ); break;
    default:
       fLogger << kFATAL << "method: " << theMethod << " does not exist" << Endl;
@@ -653,7 +654,7 @@ TMVA::IMethod* TMVA::Factory::GetMVA( TString method )
 void TMVA::Factory::TrainAllMethods( void ) 
 {  
    // iterates over all MVAs that have been booked, and calls their training methods
-   fLogger << kINFO << BC_lgreen << "training all methods..." << EC__ << Endl;
+   fLogger << kINFO << "training all methods..." << Endl;
 
    // if multiple  MVAs 
    if (fMultipleMVAs && !fMultipleStoredOptions ) {
@@ -699,7 +700,7 @@ void TMVA::Factory::TrainAllMethods( void )
 void TMVA::Factory::TestAllMethods( void )
 {
    // iterates over all MVAs that have been booked, and calls their testing methods
-   fLogger << kINFO << BC_lgreen << "testing all methods..." << EC__ << Endl;
+   fLogger << kINFO << "testing all methods..." << Endl;
 
    // if multiple  MVAs 
    if (fMultipleMVAs && !fMultipleStoredOptions ) {
@@ -730,7 +731,7 @@ void TMVA::Factory::TestAllMethods( void )
 void TMVA::Factory::EvaluateAllVariables( TString options )
 {
    // iterates over all MVA input varables and evaluates them
-   fLogger << kINFO << BC_lgreen << "evaluating all variables..." << EC__ << Endl;
+   fLogger << kINFO << "evaluating all variables..." << Endl;
 
    // if multiple  MVAs 
    if (fMultipleMVAs && !fMultipleStoredOptions ) {
@@ -757,8 +758,9 @@ void TMVA::Factory::EvaluateAllVariables( TString options )
 //_______________________________________________________________________
 void TMVA::Factory::EvaluateAllMethods( void )
 {
-   fLogger << kINFO << BC_lgreen << "evaluating all methods..." << EC__ << Endl;
    // iterates over all MVAs that have been booked, and calls their evaluation methods
+
+   fLogger << kINFO << "evaluating all methods..." << Endl;
 
    // if multiple  MVAs 
    if (fMultipleMVAs && !fMultipleStoredOptions ) {

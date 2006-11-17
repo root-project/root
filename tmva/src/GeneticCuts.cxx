@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: GeneticCuts.cxx,v 1.15 2006/10/10 17:43:51 andreas.hoecker Exp $ 
+// @(#)root/tmva $Id: GeneticCuts.cxx,v 1.17 2006/11/16 22:51:58 helgevoss Exp $ 
 // Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -14,13 +14,13 @@
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Matt Jachowski  <jachowski@stanford.edu> - Stanford University, USA       *
  *      Peter Speckmayer <speckmay@mail.cern.ch> - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -47,7 +47,7 @@ TMVA::GeneticCuts::GeneticCuts( Int_t size, std::vector<LowHigh_t*> ranges,
 {
    // constructor
    fMethodCuts = methodCuts;
-}				
+}            
 
 //_______________________________________________________________________
 Double_t TMVA::GeneticCuts::FitnessFunction( const std::vector<Double_t>& parameters )

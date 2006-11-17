@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBDT.cxx,v 1.58 2006/11/14 23:02:57 stelzer Exp $ 
+// @(#)root/tmva $Id: MethodBDT.cxx,v 1.64 2006/11/17 00:21:35 stelzer Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -13,13 +13,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -113,25 +113,27 @@ TMVA::MethodBDT::MethodBDT( TString jobName, TString methodTitle, DataSet& theDa
    // the standard constructor for the "boosted decision trees" 
    //
    // MethodBDT (Boosted Decision Trees) options:
-   // nTrees:          number of trees in the forest to be created
-   // BoostType:       the boosting type for the trees in the forest (AdaBoost e.t.c..)
+   // know options:
+   // nTrees=Int_t:    number of trees in the forest to be created
+   // BoostType=       the boosting type for the trees in the forest (AdaBoost e.t.c..)
+   //                  known: AdaBoost
+   //                         Bagging
    // SeparationType   the separation criterion applied in the node splitting
+   //                  known: GiniIndex
+   //                         MisClassificationError
+   //                         CrossEntropy
+   //                         SDivSqrtSPlusB
    // nEventsMin:      the minimum number of events in a node (leaf criteria, stop splitting)
-   // nCuts:  the number of steps in the optimisation of the cut for a node
+   // nCuts:           the number of steps in the optimisation of the cut for a node
    // UseYesNoLeaf     decide if the classification is done simply by the node type, or the S/B
    //                  (from the training) in the leaf node
    // UseWeightedTrees use average classification from the trees, or have the individual trees
    //                  trees in the forest weighted (e.g. log(boostweight) from AdaBoost
-   // PruneMethod      The Pruning method: Expected Error or Cost Complexity");
+   // PruneMethod      The Pruning method: 
+   //                  known: ExpectedError
+   //                         CostComplexity 
+   //                         CostComplexity2
    // PruneStrength    a parameter to adjust the amount of pruning. Should be large enouth such that overtraining is avoided");
-   //
-   // known SeparationTypes are:
-   //    - MisClassificationError
-   //    - GiniIndex
-   //    - CrossEntropy
-   // known BoostTypes are:
-   //    - AdaBoost
-   //    - Bagging
    InitBDT(); // sets default values
 
    DeclareOptions();
@@ -153,13 +155,17 @@ TMVA::MethodBDT::MethodBDT( TString jobName, TString methodTitle, DataSet& theDa
 
    //book monitoring histograms (currently for AdaBost, only)
    fBoostWeightHist = new TH1F("fBoostWeight","Ada Boost weights",100,1,100);
-   fErrFractHist = new TH2F("fErrFractHist","error fraction vs tree number",
-                            fNTrees,0,fNTrees,50,0,0.5);
+   fBoostWeightVsTree = new TH1F("fBoostWeightVsTree","Ada Boost weights",fNTrees,0,fNTrees);
+   
+   fErrFractHist = new TH1F("fErrFractHist","error fraction vs tree number",fNTrees,0,fNTrees);
+
+   fNodesBeforePruningVsTree = new TH1I("fNodesBeforePruning","nodes before pruning",fNTrees,0,fNTrees);
+   fNodesAfterPruningVsTree = new TH1I("fNodesAfterPruning","nodes after pruning",fNTrees,0,fNTrees); 
+
    fMonitorNtuple= new TTree("fMonitorNtuple","BDT variables");
    fMonitorNtuple->Branch("iTree",&fITree,"iTree/I");
    fMonitorNtuple->Branch("boostWeight",&fBoostWeight,"boostWeight/D");
    fMonitorNtuple->Branch("errorFraction",&fErrorFraction,"errorFraction/D");
-   fMonitorNtuple->Branch("nNodes",&fNnodes,"nNodes/I");
 }
 
 //_______________________________________________________________________
@@ -180,6 +186,29 @@ TMVA::MethodBDT::MethodBDT( DataSet& theData,
 //_______________________________________________________________________
 void TMVA::MethodBDT::DeclareOptions() 
 {
+   // define the options (their key words) that can be set in the option string 
+   // know options:
+   // nTrees=Int_t:    number of trees in the forest to be created
+   // BoostType=       the boosting type for the trees in the forest (AdaBoost e.t.c..)
+   //                  known: AdaBoost
+   //                         Bagging
+   // SeparationType   the separation criterion applied in the node splitting
+   //                  known: GiniIndex
+   //                         MisClassificationError
+   //                         CrossEntropy
+   //                         SDivSqrtSPlusB
+   // nEventsMin:      the minimum number of events in a node (leaf criteria, stop splitting)
+   // nCuts:           the number of steps in the optimisation of the cut for a node
+   // UseYesNoLeaf     decide if the classification is done simply by the node type, or the S/B
+   //                  (from the training) in the leaf node
+   // UseWeightedTrees use average classification from the trees, or have the individual trees
+   //                  trees in the forest weighted (e.g. log(boostweight) from AdaBoost
+   // PruneMethod      The Pruning method: 
+   //                  known: ExpectedError
+   //                         CostComplexity 
+   //                         CostComplexity2
+   // PruneStrength    a parameter to adjust the amount of pruning. Should be large enouth such that overtraining is avoided");
+
    DeclareOptionRef(fNTrees, "NTrees", "number of trees in the forest");
    DeclareOptionRef(fBoostType, "BoostType", "boosting type for the trees in the forest");
    AddPreDefVal(TString("AdaBoost"));
@@ -203,6 +232,8 @@ void TMVA::MethodBDT::DeclareOptions()
 //_______________________________________________________________________
 void TMVA::MethodBDT::ProcessOptions() 
 {
+   // the option string is decoded, for available options see "DeclareOptions"
+
    MethodBase::ProcessOptions();
 
    fSepTypeS.ToLower();
@@ -234,12 +265,12 @@ void TMVA::MethodBDT::InitBDT( void )
 {
    // common initialisation with defaults for the BDT-Method
    SetMethodName( "BDT" );
-   SetMethodType( TMVA::Types::BDT );
+   SetMethodType( TMVA::Types::kBDT );
    SetTestvarName();
 
    fNTrees         = 200;
    fBoostType      = "AdaBoost";
-   fNodeMinEvents  = 5;
+   fNodeMinEvents  = 10;
    fNCuts          = 20;
    fPruneMethod    = TMVA::DecisionTree::kMCC;
    fPruneStrength  = 5;     // means automatic determination of the prune strength using a validation sample  
@@ -294,6 +325,9 @@ void TMVA::MethodBDT::Train( void )
    fLogger << kINFO << "will train "<< fNTrees << " Decision Trees ... patience please" << Endl;
 
    TMVA::Timer timer( fNTrees, GetName() ); 
+   Int_t nNodesBeforePruningCount = 0;
+   Int_t nNodesAfterPruningCount = 0;
+
    Int_t nNodesBeforePruning = 0;
    Int_t nNodesAfterPruning = 0;
 
@@ -312,12 +346,12 @@ void TMVA::MethodBDT::Train( void )
       //
       //       std::vector<Event*> sample;
       //       for (std::vector<Event*>::iterator iev=fEventSample.begin(); 
-      // 	   iev != fEventSample.end(); iev++){
-      // 	if ((*iev)->GetWeight() > 0.1) sample.push_back(*iev);
+      //       iev != fEventSample.end(); iev++){
+      //    if ((*iev)->GetWeight() > 0.1) sample.push_back(*iev);
       //       }
-      //       fNnodes = fForest.back()->BuildTree(sample);
+      //       nNodesBeforePruning = fForest.back()->BuildTree(sample);
 
-      fNnodes = fForest.back()->BuildTree(fEventSample);
+      nNodesBeforePruning = fForest.back()->BuildTree(fEventSample);
 
       if (itree==1 && fgDebugLevel==1){
          //plot Cost Complexity versus #Nodes for increasing pruning strengths
@@ -377,7 +411,8 @@ void TMVA::MethodBDT::Train( void )
       }
 
 
-      nNodesBeforePruning +=fNnodes;
+      nNodesBeforePruningCount +=nNodesBeforePruning;
+      fNodesBeforePruningVsTree->SetBinContent(itree+1,nNodesBeforePruning);
       fBoostWeights.push_back( this->Boost(fEventSample, fForest.back(), itree) );
       fITree = itree;
 
@@ -403,15 +438,16 @@ void TMVA::MethodBDT::Train( void )
          fForest[itree]->SetPruneStrength(fPruneStrength);
          fForest[itree]->PruneTree();
       }
-      fNnodes = fForest[itree]->GetNNodes();
-      nNodesAfterPruning +=fNnodes;
+      nNodesAfterPruning = fForest[itree]->GetNNodes();
+      nNodesAfterPruningCount += nNodesAfterPruning;
+      fNodesAfterPruningVsTree->SetBinContent(itree+1,nNodesAfterPruning);
       alpha->SetBinContent(itree+1,fPruneStrength);
    }
    alpha->Write();
 
    fLogger << kINFO << "<Train> average number of nodes before/after pruning : " 
-           << nNodesBeforePruning/fNTrees << " / " 
-           << nNodesAfterPruning/fNTrees
+           << nNodesBeforePruningCount/fNTrees << " / " 
+           << nNodesAfterPruningCount/fNTrees
            << Endl;    
    // get elapsed time
 
@@ -474,7 +510,7 @@ Double_t  TMVA::MethodBDT::PruneTree( TMVA::DecisionTree *dt, Int_t itree)
                     << " if that stitill didn't work, TRY IT BY HAND"  
                     << " currently Prunestrenght= " << alpha 
                     << " stepsize " << fDeltaPruneStrength << " " << Endl;
-             troubleCount = 0;   // try again
+            troubleCount = 0;   // try again
             fPruneStrength = 3; // if it was for the first time.. 
          }else{
             forceStop=kTRUE;
@@ -626,7 +662,10 @@ Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, TMVA::Deci
    }
 
    fBoostWeightHist->Fill(boostWeight);
-   fErrFractHist->Fill(fForest.size(),err);
+
+   fBoostWeightVsTree->SetBinContent(fForest.size(),boostWeight);
+   
+   fErrFractHist->SetBinContent(fForest.size(),err);
 
    fBoostWeight = boostWeight;
    fErrorFraction = err;
@@ -738,7 +777,10 @@ void  TMVA::MethodBDT::WriteMonitoringHistosToFile( void ) const
  
    BaseDir()->cd();
    fBoostWeightHist->Write();
+   fBoostWeightVsTree->Write();
    fErrFractHist->Write();
+   fNodesBeforePruningVsTree->Write();
+   fNodesAfterPruningVsTree->Write();
    fMonitorNtuple->Write();
    //   (*fForest.begin())->DrawTree("ExampleTree")->Write();
 

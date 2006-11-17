@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MsgLogger.cxx,v 1.6 2006/11/13 23:43:34 stelzer Exp $
+// @(#)root/tmva $Id: MsgLogger.cxx,v 1.10 2006/11/16 22:51:59 helgevoss Exp $
 // Author: Attila Krasznahorkay
 
 /**********************************************************************************
@@ -15,7 +15,7 @@
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -48,7 +48,7 @@ static const string PREFIX = "--- ";
 // this is the hardcoded suffix
 static const string SUFFIX = ": ";
 
-TMVA::MsgLogger::MsgLogger( const TObject* source, MsgType minType )
+TMVA::MsgLogger::MsgLogger( const TObject* source, EMsgType minType )
    : fObjSource( source ), 
      fStrSource( "" ), 
      fPrefix( PREFIX ), 
@@ -61,7 +61,7 @@ TMVA::MsgLogger::MsgLogger( const TObject* source, MsgType minType )
    InitMaps();
 }
 
-TMVA::MsgLogger::MsgLogger( const string& source, MsgType minType )
+TMVA::MsgLogger::MsgLogger( const string& source, EMsgType minType )
    : fObjSource( 0 ),
      fStrSource( source ), 
      fPrefix( PREFIX ), 
@@ -74,7 +74,7 @@ TMVA::MsgLogger::MsgLogger( const string& source, MsgType minType )
    InitMaps();
 }
 
-TMVA::MsgLogger::MsgLogger( MsgType minType )
+TMVA::MsgLogger::MsgLogger( EMsgType minType )
    : fObjSource( 0 ), 
      fStrSource( "Unknown" ), 
      fPrefix( PREFIX ), 
@@ -96,19 +96,25 @@ TMVA::MsgLogger::MsgLogger( const MsgLogger& parent ) :
    fSuffix( SUFFIX ),
    fMaxSourceSize( MAXIMUM_SOURCE_NAME_LENGTH )
 {
+   // copy constructor
    InitMaps();
    *this = parent;
 }
 
 TMVA::MsgLogger::~MsgLogger() 
-{}
+{
+   // destructor
+}
 
 TMVA::MsgLogger& TMVA::MsgLogger::operator= ( const MsgLogger& parent ) 
 {
-   fObjSource  = parent.fObjSource;
-   fStrSource  = parent.fStrSource;
-   fActiveType = parent.fActiveType;
-   fMinType    = parent.fMinType;
+   // assingment operator
+   if( &parent != this) {
+      fObjSource  = parent.fObjSource;
+      fStrSource  = parent.fStrSource;
+      fActiveType = parent.fActiveType;
+      fMinType    = parent.fMinType;
+   }
 
    return *this;
 }
@@ -169,15 +175,19 @@ void TMVA::MsgLogger::Send()
    return;
 }
 
-void TMVA::MsgLogger::WriteMsg( MsgType type, const std::string& line ) const 
+void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const 
 {
+   // putting the output string, the message type, and the color
+   // switcher together into a single string
+
    if (type < fMinType) return;
-   map<MsgType, std::string>::const_iterator stype;
+   map<EMsgType, std::string>::const_iterator stype;
    if ((stype = fTypeMap.find( type )) == fTypeMap.end()) return;
 #ifdef USE_COLORED_CONSOLE
    // no text for INFO
    if (type == kINFO) 
-      cout << fColorMap.find( type )->second << fPrefix << line << "\033[0m" << endl;
+      // no color for info
+      cout << fPrefix << line << endl;
    else
       cout << fColorMap.find( type )->second << fPrefix << "<" << stype->second << "> " << line  << "\033[0m" << endl;
 #else
@@ -191,7 +201,7 @@ void TMVA::MsgLogger::WriteMsg( MsgType type, const std::string& line ) const
    if (type == kFATAL) { cout << "***> abort program execution" << endl; exit(1); }
 }
 
-TMVA::MsgLogger& TMVA::MsgLogger::endmsg( MsgLogger& logger ) 
+TMVA::MsgLogger& TMVA::MsgLogger::Endmsg( MsgLogger& logger ) 
 {
    // end line
    logger.Send();
@@ -200,6 +210,7 @@ TMVA::MsgLogger& TMVA::MsgLogger::endmsg( MsgLogger& logger )
 
 void TMVA::MsgLogger::InitMaps()
 {
+   // fill maps that assign a string and a color to echo message level
    fTypeMap[kVERBOSE]  = "VERBOSE";
    fTypeMap[kDEBUG]    = "DEBUG";
    fTypeMap[kINFO]     = "INFO";

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTreeNode.cxx,v 1.23 2006/11/14 15:03:46 stelzer Exp $    
+// @(#)root/tmva $Id: DecisionTreeNode.cxx,v 1.25 2006/11/16 22:51:58 helgevoss Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -13,13 +13,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * CopyRight (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -144,7 +144,7 @@ Bool_t TMVA::DecisionTreeNode::GoesLeft(const TMVA::Event & e) const
 Double_t TMVA::DecisionTreeNode::GetSoverSB( void ) const  
 {
    // return the S/(S+B) for the node
- return this->GetNSigEvents() / ( this->GetNSigEvents() + this->GetNBkgEvents()); 
+   return this->GetNSigEvents() / ( this->GetNSigEvents() + this->GetNBkgEvents()); 
 }
 
 //_______________________________________________________________________

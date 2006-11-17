@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodFisher.cxx,v 1.53 2006/11/14 15:22:54 helgevoss Exp $
+// @(#)root/tmva $Id: MethodFisher.cxx,v 1.58 2006/11/17 00:21:35 stelzer Exp $
 // Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -17,13 +17,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -171,7 +171,7 @@ void TMVA::MethodFisher::InitFisher( void )
 {
    // default initialisation called by all constructors
    SetMethodName( "Fisher" );
-   SetMethodType( TMVA::Types::Fisher );  
+   SetMethodType( TMVA::Types::kFisher );  
    SetTestvarName();
 
    fMeanMatx    = 0; 
@@ -201,6 +201,7 @@ void TMVA::MethodFisher::DeclareOptions()
 
 void TMVA::MethodFisher::ProcessOptions() 
 {
+   // process user options
    MethodBase::ProcessOptions();
 
    if (fTheMethod ==  "Fisher" ) fFisherMethod = kFisher;
@@ -410,11 +411,19 @@ void TMVA::MethodFisher::GetFisherCoeff( void )
    }
 
    TMatrixD invCov( *theMat );
-   if ( TMath::Abs(invCov.Determinant()) < 10E-14 ) {
-      fLogger << kFATAL << "<GetFisherCoeff> matrix is singular,"
-              << " did you use the variables that are linear combinations ???" 
-              << GetFisherMethod() << Endl;
-   }
+   if ( TMath::Abs(invCov.Determinant()) < 10E-24 ) {
+      fLogger << kWARNING << "<GetFisherCoeff> matrix is almost singular with deterninant="
+              << TMath::Abs(invCov.Determinant()) 
+              << " did you use the variables that are linear combinations or highly correlated ???" 
+              << Endl;
+       }
+    if ( TMath::Abs(invCov.Determinant()) < 10E-120 ) {
+       fLogger << kFATAL << "<GetFisherCoeff> matrix is singular with determinant="
+               << TMath::Abs(invCov.Determinant())  
+               << " did you use the variables that are linear combinations ???" 
+               << Endl;
+    }
+
    invCov.Invert();
 
    // apply rescaling factor
@@ -440,7 +449,7 @@ void TMVA::MethodFisher::GetFisherCoeff( void )
    fF0 = 0.0;
    for(ivar=0; ivar<GetNvar(); ivar++){ 
       fF0 += (*fFisherCoeff)[ivar]*((*fMeanMatx)(ivar, 0) + (*fMeanMatx)(ivar, 1));
-    }
+   }
    fF0 /= -2.0;  
 }
 

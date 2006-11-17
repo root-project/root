@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBase.h,v 1.55 2006/11/14 23:02:57 stelzer Exp $   
+// @(#)root/tmva $Id: MethodBase.h,v 1.57 2006/11/17 14:59:23 stelzer Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -13,13 +13,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -76,7 +76,7 @@ namespace TMVA {
       
    public:
 
-      enum WeightFileType { kROOT=0, kTEXT };
+      enum EWeightFileType { kROOT=0, kTEXT };
       
       // default constructur
       MethodBase( TString jobName,
@@ -126,19 +126,19 @@ namespace TMVA {
       const TString&   GetMethodName ( void ) const { return fMethodName; }
       const char*      GetName       ( void ) const { return GetMethodName().Data(); }
       const TString&   GetMethodTitle( void ) const { return fMethodTitle; }
-      const Types::MVA GetMethodType ( void ) const { return fMethodType; }
+      const Types::EMVA GetMethodType ( void ) const { return fMethodType; }
 
       void    SetJobName    ( TString jobName )       { fJobName     = jobName; }
       void    SetMethodName ( TString methodName )    { fMethodName  = methodName; }
       void    SetMethodTitle( TString methodTitle )   { fMethodTitle = methodTitle; }
-      void    SetMethodType ( Types::MVA methodType ) { fMethodType  = methodType; }
+      void    SetMethodType ( Types::EMVA methodType ) { fMethodType  = methodType; }
 
       TString GetOptions    ( void ) const { return fOptions; }
       
       TString GetWeightFileExtension( void ) const            { return fFileExtension; }
       void    SetWeightFileExtension( TString fileExtension ) { fFileExtension = fileExtension; } 
-      void    SetWeightFileType( WeightFileType w ) { fWeightFileType = w; }
-      WeightFileType GetWeightFileType() const { return fWeightFileType; }
+      void    SetWeightFileType( EWeightFileType w ) { fWeightFileType = w; }
+      EWeightFileType GetWeightFileType() const { return fWeightFileType; }
 
 
       TString GetWeightFileDir( void ) const { return fFileDir; }
@@ -182,14 +182,14 @@ namespace TMVA {
       virtual Double_t  GetmuTransform  ( TTree* );
 
       // normalisation accessors
-      Double_t GetXmin( Int_t ivar, Types::PreprocessingMethod corr = Types::kNone )         const { return fXminNorm[(Int_t) corr][ivar]; }
-      Double_t GetXmax( Int_t ivar, Types::PreprocessingMethod corr = Types::kNone )         const { return fXmaxNorm[(Int_t) corr][ivar]; }
-      Double_t GetXmin( const TString& var, Types::PreprocessingMethod corr = Types::kNone ) const { return GetXmin(Data().FindVar(var), corr); }
-      Double_t GetXmax( const TString& var, Types::PreprocessingMethod corr = Types::kNone ) const { return GetXmax(Data().FindVar(var), corr); }
-      void     SetXmin( Int_t ivar, Double_t x, Types::PreprocessingMethod corr = Types::kNone )         { fXminNorm[(Int_t) corr][ivar] = x; }
-      void     SetXmax( Int_t ivar, Double_t x, Types::PreprocessingMethod corr = Types::kNone )         { fXmaxNorm[(Int_t) corr][ivar] = x; }
-      void     SetXmin( const TString& var, Double_t x, Types::PreprocessingMethod corr = Types::kNone ) { SetXmin(Data().FindVar(var), x, corr); }
-      void     SetXmax( const TString& var, Double_t x, Types::PreprocessingMethod corr = Types::kNone ) { SetXmax(Data().FindVar(var), x, corr); }
+      Double_t GetXmin( Int_t ivar, Types::EPreprocessingMethod corr = Types::kNone )         const { return fXminNorm[(Int_t) corr][ivar]; }
+      Double_t GetXmax( Int_t ivar, Types::EPreprocessingMethod corr = Types::kNone )         const { return fXmaxNorm[(Int_t) corr][ivar]; }
+      Double_t GetXmin( const TString& var, Types::EPreprocessingMethod corr = Types::kNone ) const { return GetXmin(Data().FindVar(var), corr); }
+      Double_t GetXmax( const TString& var, Types::EPreprocessingMethod corr = Types::kNone ) const { return GetXmax(Data().FindVar(var), corr); }
+      void     SetXmin( Int_t ivar, Double_t x, Types::EPreprocessingMethod corr = Types::kNone )         { fXminNorm[(Int_t) corr][ivar] = x; }
+      void     SetXmax( Int_t ivar, Double_t x, Types::EPreprocessingMethod corr = Types::kNone )         { fXmaxNorm[(Int_t) corr][ivar] = x; }
+      void     SetXmin( const TString& var, Double_t x, Types::EPreprocessingMethod corr = Types::kNone ) { SetXmin(Data().FindVar(var), x, corr); }
+      void     SetXmax( const TString& var, Double_t x, Types::EPreprocessingMethod corr = Types::kNone ) { SetXmax(Data().FindVar(var), x, corr); }
 
       // main normalization method is in Tools
       Double_t Norm       ( Int_t ivar,  Double_t x ) const;
@@ -202,18 +202,18 @@ namespace TMVA {
       // write method-specific histograms to file
       void WriteEvaluationHistosToFile( TDirectory* targetDir );
 
-      Types::PreprocessingMethod GetPreprocessingMethod() const { return fPreprocessingMethod; }
-      void SetPreprocessingMethod ( Types::PreprocessingMethod m ) { fPreprocessingMethod = m; }
+      Types::EPreprocessingMethod GetPreprocessingMethod() const { return fPreprocessingMethod; }
+      void SetPreprocessingMethod ( Types::EPreprocessingMethod m ) { fPreprocessingMethod = m; }
       
       Bool_t Verbose( void ) const { return fVerbose; }
       void   SetVerbose( Bool_t v = kTRUE ) { fVerbose = v; }
 
       DataSet& Data() const { return fData; }
-      Bool_t   ReadTrainingEvent( UInt_t ievt, Types::SBType type = Types::kMaxSBType ) { 
+      Bool_t   ReadTrainingEvent( UInt_t ievt, Types::ESBType type = Types::kMaxSBType ) { 
          return Data().ReadTrainingEvent( ievt, GetPreprocessingMethod(),
                                           (type == Types::kMaxSBType) ? GetPreprocessingType() : type ); 
       }
-      virtual Bool_t   ReadTestEvent( UInt_t ievt, Types::SBType type = Types::kMaxSBType ) { 
+      virtual Bool_t   ReadTestEvent( UInt_t ievt, Types::ESBType type = Types::kMaxSBType ) { 
          return Data().ReadTestEvent( ievt, GetPreprocessingMethod(),
                                       (type == Types::kMaxSBType) ? GetPreprocessingType() : type ); 
       }
@@ -233,8 +233,8 @@ namespace TMVA {
    protected:
 
       // used in efficiency computation
-      enum CutOrientation { kNegative = -1, kPositive = +1 };
-      CutOrientation GetCutOrientation() const { return fCutOrientation; }
+      enum ECutOrientation { kNegative = -1, kPositive = +1 };
+      ECutOrientation GetCutOrientation() const { return fCutOrientation; }
 
       // reset required for RootFinder
       void ResetThisBase( void ) { fgThisBase = this; }
@@ -245,17 +245,17 @@ namespace TMVA {
       void     SetSignalReferenceCut( Double_t cut ) { fSignalReferenceCut = cut; }
 
       // some basic statistical analysis
-      void     Statistics( TMVA::Types::TreeType treeType, const TString& theVarName,
+      void     Statistics( TMVA::Types::ETreeType treeType, const TString& theVarName,
                            Double_t&, Double_t&, Double_t&, 
                            Double_t&, Double_t&, Double_t&, Bool_t norm = kFALSE );
          
-      Types::SBType GetPreprocessingType() const { return fPreprocessingType; }
-      void          SetPreprocessingType( Types::SBType t ) { fPreprocessingType = t; }
+      Types::ESBType GetPreprocessingType() const { return fPreprocessingType; }
+      void           SetPreprocessingType( Types::ESBType t ) { fPreprocessingType = t; }
 
    private:
 
       Double_t      fSignalReferenceCut; // minimum requirement on the MVA output to declare an event signal-like
-      Types::SBType fPreprocessingType;  // this is the event type (sig or bgd) assumed for preprocessing
+      Types::ESBType fPreprocessingType;  // this is the event type (sig or bgd) assumed for preprocessing
 
    private:
 
@@ -291,7 +291,7 @@ namespace TMVA {
 
       TString          fJobName;        // name of job -> user defined, appears in weight files
       TString          fMethodName;     // name of the method (set in derived class)
-      Types::MVA       fMethodType;     // type of method (set in derived class)      
+      Types::EMVA       fMethodType;     // type of method (set in derived class)      
       TString          fMethodTitle;    // user-defined title for method (used for weight-file names)
       TString          fTestvar;        // variable used in evaluation, etc (mostly the MVA)
       TString          fTestvarPrefix;  // 'MVA_' prefix of MVA variable
@@ -309,7 +309,7 @@ namespace TMVA {
       TString     fFileDir;             // unix sub-directory for weight files (default: "weights")
       TString     fWeightFile;          // weight file name
 
-      WeightFileType fWeightFileType;   // The type of weight file  {kROOT,kTEXT}
+      EWeightFileType fWeightFileType;   // The type of weight file  {kROOT,kTEXT}
 
    protected:
 
@@ -362,7 +362,7 @@ namespace TMVA {
       Double_t  fXmax;                  // maximum (signal and background)
 
       Bool_t    fUseDecorr;             // Use decorrelated Variables (kept for backward compatibility)
-      Types::PreprocessingMethod fPreprocessingMethod;  // Decorrelation, PCA, etc.
+      Types::EPreprocessingMethod fPreprocessingMethod;  // Decorrelation, PCA, etc.
       TString fPreprocessingString;     // labels preprocessing method
       TString fPreprocessingTypeString; // labels preprocessing type
 
@@ -378,7 +378,7 @@ namespace TMVA {
       Int_t     fNbinsH;                // number of bins in evaluation histograms
 
       // orientation of cut: depends on signal and background mean values
-      CutOrientation  fCutOrientation;  // +1 if Sig>Bkg, -1 otherwise
+      ECutOrientation  fCutOrientation;  // +1 if Sig>Bkg, -1 otherwise
 
       // for root finder
       TSpline1*  fSplRefS;              // helper splines for RootFinder (signal)

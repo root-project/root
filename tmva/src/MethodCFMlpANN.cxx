@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCFMlpANN.cxx,v 1.32 2006/11/14 23:02:57 stelzer Exp $    
+// @(#)root/tmva $Id: MethodCFMlpANN.cxx,v 1.35 2006/11/17 00:21:35 stelzer Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -13,13 +13,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -168,6 +168,10 @@ TMVA::MethodCFMlpANN::MethodCFMlpANN( DataSet & theData,
 //_______________________________________________________________________
 void TMVA::MethodCFMlpANN::DeclareOptions() 
 {
+   // define the options (their key words) that can be set in the option string 
+   // know options: NCycles=xx              :the number of training cycles
+   //               HiddenLayser="N-1,N-2"  :the specification of the hidden layers
+ 
    DeclareOptionRef(fNcycles=3000,"NCycles","Number of training cycles");
    DeclareOptionRef(fLayerSpec="N-1,N-2","HiddenLayers","Specification of the hidden layers");
 }
@@ -175,6 +179,8 @@ void TMVA::MethodCFMlpANN::DeclareOptions()
 //_______________________________________________________________________
 void TMVA::MethodCFMlpANN::ProcessOptions() 
 {
+   // decode the options in the option string
+
    MethodBase::ProcessOptions();
 
    fNodes = new Int_t[100]; // input layer
@@ -210,7 +216,7 @@ void TMVA::MethodCFMlpANN::InitCFMlpANN( void )
 {
    // default initialisation called by all constructors
    SetMethodName( "CFMlpANN" );
-   SetMethodType( TMVA::Types::CFMlpANN );
+   SetMethodType( TMVA::Types::kCFMlpANN );
    SetTestvarName();
 
    // initialize all pointers
@@ -381,7 +387,7 @@ void TMVA::MethodCFMlpANN::WriteWeightsToStream( std::ostream & o ) const
 //_______________________________________________________________________
 void TMVA::MethodCFMlpANN::ReadWeightsFromStream( istream & istr )
 {
-      
+   // read back the weight from the training from file (stream)
    TString var;
 
    // read number of variables and classes

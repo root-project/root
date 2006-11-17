@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodFisher.h,v 1.19 2006/11/02 15:44:50 andreas.hoecker Exp $
+// @(#)root/tmva $Id: MethodFisher.h,v 1.21 2006/11/17 14:59:24 stelzer Exp $
 // Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -17,13 +17,13 @@
  * Authors (alphabetical):                                                        *
  *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
  *      Xavier Prudent  <prudent@lapp.in2p3.fr>  - LAPP, France                   *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-KP Heidelberg, Germany     *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
  *      CERN, Switzerland,                                                        * 
  *      U. of Victoria, Canada,                                                   * 
- *      MPI-KP Heidelberg, Germany,                                               * 
+ *      MPI-K Heidelberg, Germany ,                                               * 
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -31,7 +31,7 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: MethodFisher.h,v 1.19 2006/11/02 15:44:50 andreas.hoecker Exp $          
+ * $Id: MethodFisher.h,v 1.21 2006/11/17 14:59:24 stelzer Exp $          
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodFisher
@@ -90,8 +90,8 @@ namespace TMVA {
       // calculate the MVA value
       virtual Double_t GetMvaValue();
 
-      enum FisherMethod { kFisher, kMahalanobis };
-      virtual FisherMethod GetFisherMethod( void ) { return fFisherMethod; }
+      enum EFisherMethod { kFisher, kMahalanobis };
+      virtual EFisherMethod GetFisherMethod( void ) { return fFisherMethod; }
 
       // ranking of input variables
       const Ranking* CreateRanking();
@@ -146,7 +146,7 @@ namespace TMVA {
       Double_t fF0;
 
       // method to be used (Fisher or Mahalanobis)
-      FisherMethod fFisherMethod;
+      EFisherMethod fFisherMethod;
 
       // default initialisation called by all constructors
       void InitFisher( void );
