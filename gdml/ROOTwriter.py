@@ -1,4 +1,4 @@
-# @(#)root/gdml:$Name:  $:$Id: ROOTwriter.py,v 1.5 2006/08/07 14:29:01 brun Exp $
+# @(#)root/gdml:$Name:  $:$Id: ROOTwriter.py,v 1.6 2006/08/07 15:31:36 brun Exp $
 # Author: Witold Pokorski   05/06/2006
 
 from math import *
@@ -7,6 +7,7 @@ from units import *
 import libPyROOT
 import ROOT
 import math
+import re
 
 # This class provides ROOT binding for the 'writer' class. It implements specific
 # methods for all the supported TGeo classes which call the appropriate 'add-element'
@@ -74,6 +75,15 @@ class ROOTwriter(object):
         self.geomgr.SetAllIndex()
         pass
 
+
+
+    def genName(self, name):
+
+        re.sub('$', '', name)
+
+        return name
+
+
     def rotXYZ(self, r):            
         cosb = math.sqrt( r[0]*r[0] + r[1]*r[1] )
         if cosb > 0.00001 : #I didn't find a proper constant to use here, so I just put a value that works with all the examples on a linux machine (P4)
@@ -87,18 +97,18 @@ class ROOTwriter(object):
         return (a, b, c)
 
     def TGeoBBox(self, solid):
-        self.writer.addBox(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDX(), 2*solid.GetDY(), 2*solid.GetDZ())
+        self.writer.addBox(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDX(), 2*solid.GetDY(), 2*solid.GetDZ())
 
     def TGeoParaboloid(self, solid):
-        self.writer.addParaboloid(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetRlo(), solid.GetRhi(), solid.GetDz())
+        self.writer.addParaboloid(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetRlo(), solid.GetRhi(), solid.GetDz())
 
     def TGeoSphere(self, solid):
-        self.writer.addSphere(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetRmin(), solid.GetRmax(),
+        self.writer.addSphere(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetRmin(), solid.GetRmax(),
                              solid.GetPhi1(), solid.GetPhi2() - solid.GetPhi1(),
                              solid.GetTheta1(), solid.GetTheta2() - solid.GetTheta1())
 			 
     def TGeoArb8(self, solid):
-        self.writer.addArb8(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]),
+        self.writer.addArb8(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]),
 			    solid.GetVertices()[0],
 			    solid.GetVertices()[1],
 			    solid.GetVertices()[2],
@@ -118,41 +128,41 @@ class ROOTwriter(object):
 			    solid.GetDz())
 
     def TGeoConeSeg(self, solid):
-        self.writer.addCone(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDz(), solid.GetRmin1(), solid.GetRmin2(),
+        self.writer.addCone(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDz(), solid.GetRmin1(), solid.GetRmin2(),
                            solid.GetRmax1(), solid.GetRmax2(), solid.GetPhi1(), solid.GetPhi2() - solid.GetPhi1())
 
     def TGeoCone(self, solid):
-        self.writer.addCone(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDz(), solid.GetRmin1(), solid.GetRmin2(), 
+        self.writer.addCone(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDz(), solid.GetRmin1(), solid.GetRmin2(), 
 	                   solid.GetRmax1(), solid.GetRmax2(), 0, 360)
 
     def TGeoPara(self, solid):
-        self.writer.addPara(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetX(), solid.GetY(), solid.GetZ(),
+        self.writer.addPara(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetX(), solid.GetY(), solid.GetZ(),
                            solid.GetAlpha(), solid.GetTheta(), solid.GetPhi())
 
     def TGeoTrap(self, solid):
-        self.writer.addTrap(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDz(), solid.GetTheta(), solid.GetPhi(),
+        self.writer.addTrap(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDz(), solid.GetTheta(), solid.GetPhi(),
                            2*solid.GetH1(), 2*solid.GetBl1(), 2*solid.GetTl1(), solid.GetAlpha1(),
                            2*solid.GetH2(), 2*solid.GetBl2(), 2*solid.GetTl2(), solid.GetAlpha2())
 			   
     def TGeoGtra(self, solid):
-        self.writer.addTwistedTrap(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDz(), solid.GetTheta(), solid.GetPhi(),
+        self.writer.addTwistedTrap(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDz(), solid.GetTheta(), solid.GetPhi(),
                                    2*solid.GetH1(), 2*solid.GetBl1(), 2*solid.GetTl1(), solid.GetAlpha1(),
                                    2*solid.GetH2(), 2*solid.GetBl2(), 2*solid.GetTl2(), solid.GetAlpha2(), solid.GetTwistAngle())
 
     def TGeoTrd1(self, solid):
-        self.writer.addTrd(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDx1(), 2*solid.GetDx2(), 2*solid.GetDy(),
+        self.writer.addTrd(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDx1(), 2*solid.GetDx2(), 2*solid.GetDy(),
                           2*solid.GetDy(), 2*solid.GetDz())
     
     def TGeoTrd2(self, solid):
-        self.writer.addTrd(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDx1(), 2*solid.GetDx2(), 2*solid.GetDy1(),
+        self.writer.addTrd(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]), 2*solid.GetDx1(), 2*solid.GetDx2(), 2*solid.GetDy1(),
                           2*solid.GetDy2(), 2*solid.GetDz())
 
     def TGeoTubeSeg(self, solid):
-        self.writer.addTube(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetRmin(), solid.GetRmax(),
+        self.writer.addTube(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetRmin(), solid.GetRmax(),
                            2*solid.GetDz(), solid.GetPhi1(), solid.GetPhi2()-solid.GetPhi1())
 			   
     def TGeoCtub(self, solid):
-        self.writer.addCutTube(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetRmin(), solid.GetRmax(),
+        self.writer.addCutTube(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetRmin(), solid.GetRmax(),
                               2*solid.GetDz(), solid.GetPhi1(), solid.GetPhi2()-solid.GetPhi1(),
 			      solid.GetNlow()[0],
 			      solid.GetNlow()[1],
@@ -162,24 +172,24 @@ class ROOTwriter(object):
 			      solid.GetNhigh()[2])
 			   
     def TGeoTube(self, solid):
-        self.writer.addTube(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetRmin(), solid.GetRmax(),
+        self.writer.addTube(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetRmin(), solid.GetRmax(),
                            2*solid.GetDz(), 0, 360)
 
     def TGeoPcon(self, solid):
         zplanes = []
         for i in range(solid.GetNz()):
             zplanes.append( (solid.GetZ(i), solid.GetRmin(i), solid.GetRmax(i)) )
-        self.writer.addPolycone(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetPhi1(), solid.GetDphi(), zplanes)
+        self.writer.addPolycone(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetPhi1(), solid.GetDphi(), zplanes)
 
     def TGeoTorus(self, solid):
-        self.writer.addTorus(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetR(), solid.GetRmin(), solid.GetRmax(),
+        self.writer.addTorus(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetR(), solid.GetRmin(), solid.GetRmax(),
                             solid.GetPhi1(), solid.GetDphi())
 
     def TGeoPgon(self, solid):
         zplanes = []
         for i in range(solid.GetNz()):
             zplanes.append( (solid.GetZ(i), solid.GetRmin(i), solid.GetRmax(i)) )
-        self.writer.addPolyhedra(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetPhi1(), solid.GetDphi(),
+        self.writer.addPolyhedra(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetPhi1(), solid.GetDphi(),
                                 solid.GetNedges(), zplanes)
 				
     def TGeoXtru(self, solid):
@@ -189,13 +199,13 @@ class ROOTwriter(object):
             vertices.append( (solid.GetX(i), solid.GetY(i)) )
 	for i in range(solid.GetNz()):
             sections.append( (i, solid.GetZ(i), solid.GetXOffset(i), solid.GetYOffset(i), solid.GetScale(i)) )    
-        self.writer.addXtrusion(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), vertices, sections)
+        self.writer.addXtrusion(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]), vertices, sections)
 
     def TGeoEltu(self, solid):
-        self.writer.addEltube(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetA(), solid.GetB(), solid.GetDz())
+        self.writer.addEltube(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetA(), solid.GetB(), solid.GetDz())
 
     def TGeoHype(self, solid):
-        self.writer.addHype(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetRmin(), solid.GetRmax(),
+        self.writer.addHype(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]), solid.GetRmin(), solid.GetRmax(),
                            solid.GetStIn(), solid.GetStOut(), 2*solid.GetDz())
 
     def TGeoUnion(self, solid):
@@ -211,7 +221,7 @@ class ROOTwriter(object):
             eval('self.'+solid.GetBoolNode().GetRightShape().__class__.__name__)(solid.GetBoolNode().GetRightShape())
 	    self.shapesCount = self.shapesCount + 1
 
-        self.writer.addUnion(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]),
+        self.writer.addUnion(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]),
                             solid.GetBoolNode().GetLeftShape().GetName()+'_'+str(libPyROOT.AddressOf(solid.GetBoolNode().GetLeftShape())[0]),
                             solid.GetBoolNode().GetLeftMatrix().GetTranslation(),
                             lrot,
@@ -232,7 +242,7 @@ class ROOTwriter(object):
             eval('self.'+solid.GetBoolNode().GetRightShape().__class__.__name__)(solid.GetBoolNode().GetRightShape())
 	    self.shapesCount = self.shapesCount + 1
 
-        self.writer.addIntersection(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]),
+        self.writer.addIntersection(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]),
                                    solid.GetBoolNode().GetLeftShape().GetName()+'_'+str(libPyROOT.AddressOf(solid.GetBoolNode().GetLeftShape())[0]),
                                    solid.GetBoolNode().GetLeftMatrix().GetTranslation(),
                                    lrot,
@@ -253,7 +263,7 @@ class ROOTwriter(object):
             eval('self.'+solid.GetBoolNode().GetRightShape().__class__.__name__)(solid.GetBoolNode().GetRightShape())
 	    self.shapesCount = self.shapesCount + 1
 
-        self.writer.addSubtraction(solid.GetName()+'_'+str(libPyROOT.AddressOf(solid)[0]),
+        self.writer.addSubtraction(self.genName(solid.GetName())+'_'+str(libPyROOT.AddressOf(solid)[0]),
                                   solid.GetBoolNode().GetLeftShape().GetName()+'_'+str(libPyROOT.AddressOf(solid.GetBoolNode().GetLeftShape())[0]),
                                   solid.GetBoolNode().GetLeftMatrix().GetTranslation(),
                                   lrot,
@@ -268,7 +278,7 @@ class ROOTwriter(object):
         print 'Found ', matlist.GetSize(),' materials'
         for mat in matlist:
             if not mat.IsMixture():
-                self.writer.addMaterial(mat.GetName(), mat.GetA(), mat.GetZ(), mat.GetDensity())
+                self.writer.addMaterial(self.genName(mat.GetName()), mat.GetA(), mat.GetZ(), mat.GetDensity())
             else:
                 elems = {}
                 for index in range(mat.GetNelements()):
@@ -278,7 +288,7 @@ class ROOTwriter(object):
                         self.elements.append(el)
                         self.writer.addElement(mat.GetElement(index).GetTitle(), mat.GetElement(index).GetName(), mat.GetZmixt()[index], mat.GetAmixt()[index])
 			
-                self.writer.addMixture(mat.GetName(), mat.GetDensity(), elems)
+                self.writer.addMixture(self.genName(mat.GetName()), mat.GetDensity(), elems)
 
     def dumpSolids(self, shapelist):
         print 'Found ', shapelist.GetEntries(), ' shapes'
@@ -366,7 +376,7 @@ class ROOTwriter(object):
                     subvol.SetAttBit(524288) 
                     self.vols.append(subvol)
                     self.examineVol(subvol)
-                name = node.GetName()+'in'+volume.GetName()
+                name = node.GetName()+str(libPyROOT.AddressOf(subvol)[0])+'in'+volume.GetName()+str(libPyROOT.AddressOf(volume)[0])
                 pos = node.GetMatrix().GetTranslation()
                 self.writer.addPosition(name+'pos', pos[0], pos[1], pos[2])
                 r = self.rotXYZ(node.GetMatrix().GetRotationMatrix())
@@ -378,12 +388,12 @@ class ROOTwriter(object):
 
         if volume.IsTopVolume():
 	   if not volume.IsAssembly():
-	       self.writer.addVolume(volume.GetName(), volume.GetShape().GetName()+'_'+str(libPyROOT.AddressOf(volume.GetShape())[0]), volume.GetMaterial().GetName(), daughters)
+	       self.writer.addVolume(volume.GetName(), volume.GetShape().GetName()+'_'+str(libPyROOT.AddressOf(volume.GetShape())[0]), self.genName(volume.GetMaterial().GetName()), daughters)
 	   else:
 	       self.writer.addAssembly(volume.GetName(), daughters)
 	else: 
 	   if not volume.IsAssembly():
-	       self.writer.addVolume(volume.GetName()+'_'+str(libPyROOT.AddressOf(volume)[0]), volume.GetShape().GetName()+'_'+str(libPyROOT.AddressOf(volume.GetShape())[0]), volume.GetMaterial().GetName(), daughters)
+	       self.writer.addVolume(volume.GetName()+'_'+str(libPyROOT.AddressOf(volume)[0]), volume.GetShape().GetName()+'_'+str(libPyROOT.AddressOf(volume.GetShape())[0]), self.genName(volume.GetMaterial().GetName()), daughters)
            else:
 	       self.writer.addAssembly(volume.GetName()+'_'+str(libPyROOT.AddressOf(volume)[0]), daughters)    
 	    
@@ -409,12 +419,12 @@ class ROOTwriter(object):
 		    	
 	    if volume.IsTopVolume():
 		if not volume.IsAssembly():
-	            self.writer.addVolume(volume.GetName(), volume.GetShape().GetName()+'_'+str(libPyROOT.AddressOf(volume.GetShape())[0]), volume.GetMaterial().GetName(), daughters)
+	            self.writer.addVolume(volume.GetName(), volume.GetShape().GetName()+'_'+str(libPyROOT.AddressOf(volume.GetShape())[0]), self.genName(volume.GetMaterial().GetName()), daughters)
 		else:
 		    self.writer.addAssembly(volume.GetName(), daughters)
 	    else: 
 		if not volume.IsAssembly():
-	            self.writer.addVolume(volume.GetName()+'_'+str(libPyROOT.AddressOf(volume)[0]), volume.GetShape().GetName()+'_'+str(libPyROOT.AddressOf(volume.GetShape())[0]), volume.GetMaterial().GetName(), daughters)
+	            self.writer.addVolume(volume.GetName()+'_'+str(libPyROOT.AddressOf(volume)[0]), volume.GetShape().GetName()+'_'+str(libPyROOT.AddressOf(volume.GetShape())[0]), self.genName(volume.GetMaterial().GetName()), daughters)
                 else:
 		    self.writer.addAssembly(volume.GetName()+'_'+str(libPyROOT.AddressOf(volume)[0]), daughters)
 		
