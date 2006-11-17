@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.23 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.24 2006/11/15 17:45:55 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -432,8 +432,6 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
    // Update progress bar and status labels.
    // Use "processed == total" or "processed < 0" to indicate end of processing.
 
-//   Info("Progress","processed: %lld, read: %lld", processed, bytesread);
-
    char buf[256];
    static const char *cproc[] = { "running", "done",
                                   "STOPPED", "ABORTED", "***EVENTS SKIPPED***"};
@@ -443,8 +441,6 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
            fProof ? fProof->GetMaster() : "<dummy>",
            fProof ? fProof->GetParallel() : 0);
    fTitleLab->SetText(buf);
-
-   Info("Progress","total: %lld, processed: %lld", total, processed);
 
    if (initTime >= 0.) {
       // Set init time
