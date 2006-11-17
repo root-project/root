@@ -41,6 +41,7 @@ options="                    \
    enable_exceptions         \
    enable_explicitlink       \
    enable_fftw3              \
+   enable_gdml               \
    enable_gfal               \
    enable_globus             \
    enable_krb5               \
@@ -89,6 +90,7 @@ for c in $options ; do eval ${c}="yes" ; done
 for c in $options ; do eval ${c}_explicit="no" ; done
 
 enable_afs=no
+enable_gdml=no
 enable_explicitlink=no
 enable_pythia=no
 enable_qt=no
@@ -836,6 +838,7 @@ enable/disable options, prefix with either --enable- or --disable-
   exceptions         Turn on compiler exception handling capability
   explicitlink       Explicitly link with all dependent libraries
   fftw3              Fast Fourier Transform support, requires libfftw3
+  gdml               GDML writer and reader
   gfal               GFAL support, requires libgfal
   globus             Globus authentication support, requires Globus toolkit
   krb5               Kerberos5 support, requires Kerberos libs
@@ -3717,6 +3720,19 @@ fi
 
 ######################################################################
 #
+### echo %%% GDML Library - Contributed library
+#
+message "Checking whether to build libGdml"
+if test "x$enable_gdml" = "xyes" || test ! "x$GDML" = "x"; then
+    enable_gdml="yes"
+    result "yes"
+else
+    enable_gdml=""
+    result "no"
+fi
+
+######################################################################
+#
 ### echo %%% Table Library - Contributed library
 #
 message "Checking whether to build libTable"
@@ -4140,6 +4156,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@buildroofit@|$enable_roofit|"        \
     -e "s|@buildminuit2@|$enable_minuit2|"      \
     -e "s|@buildunuran@|$enable_unuran|"        \
+    -e "s|@buildgdml@|$enable_gdml|"            \
     -e "s|@buildmonalisa@|$enable_monalisa|"    \
     -e "s|@enable_pch@|$enable_pch|"            \
     -e "s|@buildtable@|$enable_table|"          \
