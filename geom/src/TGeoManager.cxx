@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.164 2006/11/03 21:22:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.165 2006/11/16 11:26:23 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -5502,16 +5502,11 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    
    if (strstr(filename,".gdml")) {
       // import from a gdml file
-      gROOT->ProcessLine("TPython::Exec(\"import xml.sax\")");
-      gROOT->ProcessLine("TPython::Exec(\"import ROOTBinding\")");
-      gROOT->ProcessLine("TPython::Exec(\"import GDMLContentHandler\")");
-      gROOT->ProcessLine("TPython::Exec(\"gdmlhandler = GDMLContentHandler.GDMLContentHandler(ROOTBinding.ROOTBinding())\")");
-      const char *cmd = Form("TPython::Exec(\"xml.sax.parse('%s',gdmlhandler)\")",filename);
-      gROOT->ProcessLine(cmd);
-      gROOT->ProcessLine("TPython::Exec(\"geomgr = ROOT.gGeoManager\")");
-      gROOT->ProcessLine("TPython::Exec(\"geomgr.SetTopVolume(gdmlhandler.WorldVolume())\")");
-      gROOT->ProcessLine("TPython::Exec(\"geomgr.CloseGeometry()\")");
-      gROOT->ProcessLine("TPython::Exec(\"geomgr.DefaultColors()\")");
+      const char* cmd = Form("TGDMLParse::StartGDML(\"%s\")", filename);
+      TGeoVolume* world = (TGeoVolume*)gROOT->ProcessLineFast(cmd);
+      gGeoManager->SetTopVolume(world);
+      gGeoManager->CloseGeometry();
+      gGeoManager->DefaultColors();
    } else {   
       // import from a root file
       TFile *old = gFile;

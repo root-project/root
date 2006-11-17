@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.21 2006/10/05 10:28:49 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.22 2006/10/10 06:49:48 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -1576,11 +1576,11 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
          if ((strlen(attrname)>6) && (strstr(attrname,"xmlns:")==attrname)) {
             if (strcmp(&(node->fName), attrname + 6)!=0) {
                resvalue = -8;
-               return 0;
+               //return 0;
             }
             if (node->fNs!=0) {
                resvalue = -9;
-               return 0;
+               //return 0;
             }
             node->fNs = attr;
          }
