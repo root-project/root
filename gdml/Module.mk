@@ -32,42 +32,18 @@ ALLLIBS      += $(GDMLLIB)
 # include all dependency files
 INCLUDEFILES += $(GDMLDEP)
 
-# These are undefined if using an external XROOTD distribution
-# The new XROOTD build system based on autotools installs the headers
-# under <dir>/include/xrootd, while the old system under <dir>/src
-ifneq ($(XROOTDDIR),)
-ifeq ($(XROOTDDIRI),)
-XROOTDDIRI   := $(XROOTDDIR)/include/xrootd
-ifeq ($(wildcard $(XROOTDDIRI)/*.hh),)
-XROOTDDIRI   := $(XROOTDDIR)/src
-endif
-XROOTDDIRL   := $(XROOTDDIR)/lib
-endif
-endif
-
-# Xrootd includes
-GDMLINCEXTRA := $(XROOTDDIRI:%=-I%)
-
-# Xrootd client libs
-ifeq ($(PLATFORM),win32)
-GDMLLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
-else
-GDMLLIBEXTRA += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
-		$(XROOTDDIRL)/libXrdNet.a
-endif
-
 ##### local rules #####
 include/%.h:    $(GDMLDIRI)/%.h
 		cp $< $@
 
-$(GDMLLIB):     $(GDMLO) $(GDMLDO) $(XRDPLUGINS) $(ORDER_) $(MAINLIBS) $(GDMLLIBDEP)
+$(GDMLLIB):     $(GDMLO) $(GDMLDO) $(ORDER_) $(MAINLIBS) $(GDMLLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGdml.$(SOEXT) $@ "$(GDMLO) $(GDMLDO)" \
 		   "$(GDMLLIBEXTRA)"
 
-$(GDMLDS):      $(GDMLH1) $(GDMLL) $(ROOTCINTTMPEXE) $(XROOTDETAG)
+$(GDMLDS):      $(GDMLH) $(GDMLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(GDMLINCEXTRA) $(GDMLH) $(GDMLL)
+		$(ROOTCINTTMP) -f $@ -c $(GDMLH) $(GDMLL)
 
 all-gdml:       $(GDMLLIB)
 
@@ -86,7 +62,3 @@ distclean-gdml: clean-gdml
 		@rm -f $(GDMLDEP) $(GDMLDS) $(GDMLDH) $(GDMLLIB)
 
 distclean::     distclean-gdml
-
-##### extra rules ######
-$(GDMLO) $(GDMLDO): $(XROOTDETAG)
-$(GDMLO) $(GDMLDO): CXXFLAGS += $(GDMLINCEXTRA)
