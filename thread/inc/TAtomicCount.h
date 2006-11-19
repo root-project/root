@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TAtomicCount.h,v 1.1 2006/11/16 18:07:33 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TAtomicCount.h,v 1.2 2006/11/19 10:45:39 brun Exp $
 // Author: Fons Rademakers   14/11/06
 
 /*************************************************************************
@@ -55,6 +55,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_RConfigure
+#include "RConfigure.h"
+#endif
+#ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif
 
