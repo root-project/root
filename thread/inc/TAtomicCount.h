@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:$:$Id:$
+// @(#)root/thread:$Name:  $:$Id: TAtomicCount.h,v 1.1 2006/11/16 18:07:33 rdm Exp $
 // Author: Fons Rademakers   14/11/06
 
 /*************************************************************************
@@ -55,7 +55,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_RConfigure
-#include "RConfigure.h"
+#include "Rtypes.h"
 #endif
 
 #if (defined(__GLIBCPP__) || defined(__GLIBCXX__)) && !defined(__CINT__)
