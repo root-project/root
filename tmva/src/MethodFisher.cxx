@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodFisher.cxx,v 1.58 2006/11/17 00:21:35 stelzer Exp $
+// @(#)root/tmva $Id: MethodFisher.cxx,v 1.59 2006/11/19 00:43:59 stelzer Exp $
 // Author: Andreas Hoecker, Xavier Prudent, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -416,16 +416,16 @@ void TMVA::MethodFisher::GetFisherCoeff( void )
               << TMath::Abs(invCov.Determinant()) 
               << " did you use the variables that are linear combinations or highly correlated ???" 
               << Endl;
-       }
-    if ( TMath::Abs(invCov.Determinant()) < 10E-120 ) {
-       fLogger << kFATAL << "<GetFisherCoeff> matrix is singular with determinant="
-               << TMath::Abs(invCov.Determinant())  
-               << " did you use the variables that are linear combinations ???" 
-               << Endl;
-    }
+   }
+   if ( TMath::Abs(invCov.Determinant()) < 10E-120 ) {
+      fLogger << kFATAL << "<GetFisherCoeff> matrix is singular with determinant="
+	      << TMath::Abs(invCov.Determinant())  
+	      << " did you use the variables that are linear combinations ???" 
+	      << Endl;
+   }
 
    invCov.Invert();
-
+   
    // apply rescaling factor
    Double_t xfact = ( sqrt( Double_t(Data().GetNEvtSigTrain()*Data().GetNEvtBkgdTrain()) )
                       / Double_t(Data().GetNEvtTrain()) );

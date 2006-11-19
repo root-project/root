@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVAnalysis.C,v 1.62 2006/11/17 00:21:35 stelzer Exp $
+// @(#)root/tmva $Id: TMVAnalysis.C,v 1.63 2006/11/19 00:43:59 stelzer Exp $
 /**********************************************************************************
  * Project   : TMVA - a Root-integrated toolkit for multivariate data analysis    *
  * Package   : TMVA                                                               *
@@ -59,9 +59,14 @@ void TMVAnalysis()
    // Create a new root output file.
    TFile* outputFile = TFile::Open( "TMVA.root", "RECREATE" );
 
-   // Create the factory object. Later you can choose the methods whose performance 
-   // you'd like to investigate. The factory will then run the performance analysis
-   // for you.
+   // Create the factory object. Later you can choose the methods
+   // whose performance you'd like to investigate. The factory will
+   // then run the performance analysis for you.
+   //
+   // The first argument is the base of the name of all the
+   // weightfiles in the directory weight/ 
+   //
+   // The second argument is the output file for the training results
    TMVA::Factory *factory = new TMVA::Factory( "MVAnalysis", outputFile, "" );
 
    if (ReadDataFromAsciiIFormat) {
@@ -78,19 +83,13 @@ void TMVAnalysis()
    else {
       // load the signal and background event samples from ROOT trees
       TFile *input(0);
-      if (!gSystem->AccessPathName("../examples/data/toy_sigbkg.root")) { 
-         // ../examples/data/toy_sigbkg.root is
-         // available with the sourceforge installation
-         cout << "--- accessing ../examples/data/toy_sigbkg.root" << endl;
-         input = TFile::Open("../examples/data/toy_sigbkg.root");
-      } else if(!gSystem->AccessPathName("tmva_example.root")) {
-         // if you downloaded the example from the ROOT site
-         // http://root.cern.ch/files/tmva_example.root
-         // into the local directory
+      if(!gSystem->AccessPathName("./tmva_example.root")) {
+         // first we try to find tmva_example.root in the local directory
          cout << "--- accessing ./tmva_example.root" << endl;
          input = TFile::Open("tmva_example.root");
       } else { 
-         // try accessing the file via the web from the ROOT site
+         // second we try accessing the file via the web from
+         // http://root.cern.ch/files/tmva_example.root
          cout << "--- accessing tmva_example.root file from http://root.cern.ch/files" << endl;
          cout << "--- for faster startup you may consider downloading it into you local directory" << endl;
          input = TFile::Open("http://root.cern.ch/files/tmva_example.root");
@@ -108,11 +107,6 @@ void TMVAnalysis()
       Double_t signalWeight     = 1.0;
       Double_t backgroundWeight = 1.0;
 
-      // sanity check
-      if (!signal || !background) {
-         std::cout << "ERROR: unknown tree(s)" << std::endl;
-         exit(1);
-      }
       if (!factory->SetInputTrees( signal, background, signalWeight, backgroundWeight)) exit(1);
    }
    
@@ -206,13 +200,13 @@ void TMVAnalysis()
 
    // ---- Now you can tell the factory to train, test, and evaluate the MVAs. 
 
-   // Train MVAs.
+   // Train MVAs using the set of training events
    factory->TrainAllMethods();
 
-   // Test MVAs.
+   // Evaluate all MVAs using the set of test events
    factory->TestAllMethods();
 
-   // Evaluate MVAs
+   // Evaluate and compare performance of all configured MVAs
    factory->EvaluateAllMethods();    
   
    // Save the output.

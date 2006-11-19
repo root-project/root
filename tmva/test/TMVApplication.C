@@ -70,16 +70,6 @@ void TMVApplication()
    if (Use_BDTD)        reader->BookMVA( "BDTD method",        dir + prefix + "_BDTD.weights.txt"  );
    if (Use_RuleFit)     reader->BookMVA( "RuleFit method",     dir + prefix + "_RuleFit.weights.txt"  );
   
-   //
-   // Prepare input tree (this must be replaced by your data source)
-   // in this example, there is a toy tree with signal and one with background events
-   // we'll later on use only the "signal" events for the test in this example.
-   //   
-   TFile *input      = new TFile("../examples/data/toy_sigbkg.root");
-   TTree *signal     = (TTree*)input->Get("TreeS");
-   TTree *background = (TTree*)input->Get("TreeB");  
-
-   // 
    // book output histograms
    UInt_t nbin = 100;
 	TH1F *histLk, *histLkD, *histPD, *histPDD, *histHm, *histFi, *histNn, *histNnC, *histNnT, *histBdt, *histRf;
@@ -96,13 +86,38 @@ void TMVApplication()
    if (Use_BDTD)        histBdtD= new TH1F( "MVA_BDTD",        "MVA_BDTD",        nbin, -0.4, 0.6 );
    if (Use_RuleFit)     histRf  = new TH1F( "MVA_RuleFit",     "MVA_RuleFit",     nbin, -1.3, 1.3 );
 
+
+   //
+   // Prepare input tree (this must be replaced by your data source)
+   // in this example, there is a toy tree with signal and one with background events
+   // we'll later on use only the "signal" events for the test in this example.
+   //   
+   TFile *input(0);
+   if(!gSystem->AccessPathName("./tmva_example.root")) {
+      // first we try to find tmva_example.root in the local directory
+      cout << "--- accessing ./tmva_example.root" << endl;
+      input = TFile::Open("tmva_example.root");
+   } else { 
+      // second we try accessing the file via the web from
+      // http://root.cern.ch/files/tmva_example.root
+      cout << "--- accessing tmva_example.root file from http://root.cern.ch/files" << endl;
+      cout << "--- for faster startup you may consider downloading it into you local directory" << endl;
+      input = TFile::Open("http://root.cern.ch/files/tmva_example.root");
+   }
+   
+   if (!input) {
+      std::cout << "ERROR: could not open data file" << std::endl;
+      exit(1);
+   }
+
+   // 
    //
    // prepare the tree
    // - here the variable names have to corresponds to your tree
    // - you can use the same variables as above which is slightly faster,
    //   but of course you can use different ones and copy the values inside the event loop
    //
-   TTree* theTree = signal;
+   TTree* theTree = (TTree*)input->Get("TreeS");
    theTree->SetBranchAddress( "var1", &var1 );
    theTree->SetBranchAddress( "var2", &var2 );
    theTree->SetBranchAddress( "var3", &var3 );

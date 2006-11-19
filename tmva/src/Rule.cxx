@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Rule.cxx,v 1.32 2006/11/16 22:51:59 helgevoss Exp $
+// @(#)root/tmva $Id: Rule.cxx,v 1.33 2006/11/19 00:43:59 stelzer Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss 
 
 /**********************************************************************************
@@ -196,15 +196,15 @@ Int_t TMVA::Rule::Equivalent( const Rule& other ) const
 
 //_______________________________________________________________________
 Bool_t TMVA::Rule::Equal( const Rule& other, Bool_t useCutValue, Double_t maxdist ) const
-//
-// Compare two rules.
-// useCutValue: true -> calculate a distance between the two rules based on the cut values
-//                      if the rule cuts are not equal, the distance is < 0 (-1.0)
-//                      return true if d<maxdist
-//              false-> ignore maxdist, return true if rules are equal, ignoring cut values
-// maxdist:     max distance allowed; if < 0 => set useCutValue=false;
-//
 {
+   //
+   // Compare two rules.
+   // useCutValue: true -> calculate a distance between the two rules based on the cut values
+   //                      if the rule cuts are not equal, the distance is < 0 (-1.0)
+   //                      return true if d<maxdist
+   //              false-> ignore maxdist, return true if rules are equal, ignoring cut values
+   // maxdist:     max distance allowed; if < 0 => set useCutValue=false;
+   //
    Bool_t rval=kFALSE;
    if (maxdist<0) useCutValue=kFALSE;
    Double_t d = RuleDist( other, useCutValue );
@@ -217,13 +217,13 @@ Bool_t TMVA::Rule::Equal( const Rule& other, Bool_t useCutValue, Double_t maxdis
 
 //_______________________________________________________________________
 Double_t TMVA::Rule::RuleDist( const Rule& other, Bool_t useCutValue ) const
-//
-// Returns:
-// -1.0 : rules are NOT equal, i.e, variables and/or cut directions are wrong
-//   >=0: rules are equal apart from the cutvalue, returns d = sqrt(sum(c1-c2)^2)
-// If not useCutValue, the distance is exactly zero if they are equal
-//
 {
+   // Returns:
+   // -1.0 : rules are NOT equal, i.e, variables and/or cut directions are wrong
+   //   >=0: rules are equal apart from the cutvalue, returns d = sqrt(sum(c1-c2)^2)
+   // If not useCutValue, the distance is exactly zero if they are equal
+   //
+
    // first get effective rules
    std::vector<Int_t> ruleThis;
    std::vector<Int_t> ruleOther;
