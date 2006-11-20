@@ -42,4 +42,8 @@ void fithist() {
    ftot->SetParLimits(0,.3*norm,norm);
    
    result->Fit("ftot","b");   
+   result->Fit("gaus");
+   TF1 *myfunc = result->GetFunction("gaus");
+   cout << myfunc << endl;
+   cout << myfunc->GetParameter(0) << endl;
 }   

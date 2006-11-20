@@ -75,6 +75,8 @@ void Ifit()
 
    arglist[0] = 1;
    gMinuit->mnexcm("SET ERR", arglist ,1,ierflg);
+   arglist[0] = 3; 
+   gMinuit->mnexcm("SET PRINT", arglist ,1,ierflg);
 
 // Set starting values and step sizes for parameters
    static Double_t vstart[4] = {3, 1 , 0.1 , 0.01};
