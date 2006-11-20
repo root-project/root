@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.18 2006/11/15 17:45:55 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.19 2006/11/16 17:17:38 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -165,6 +165,19 @@ ClassImp(TXProofServ)
 extern "C" {
    TApplication *GetTXProofServ(Int_t *argc, char **argv, FILE *flog)
    { return new TXProofServ(argc, argv, flog); }
+}
+
+//______________________________________________________________________________
+TXProofServ::TXProofServ(Int_t *argc, char **argv, FILE *flog)
+            : TProofServ(argc, argv, flog)
+{
+   // Main constructor
+
+   fInterruptHandler = 0;
+   fInputHandler = 0;
+   fTerminated = kFALSE;
+   fEnvList = 0;
+   fShutdownTimerMtx = new TMutex(kTRUE);
 }
 
 //______________________________________________________________________________
@@ -407,8 +420,9 @@ Int_t TXProofServ::CreateServer()
       // Find out if we are a master in direct contact only with workers
       fEndMaster = fProof->IsEndMaster();
 
+      SendLogFile();
+
    }
-   SendLogFile();
 
    // Done
    return 0;
@@ -1122,7 +1136,6 @@ void TXProofServ::SetShutdownTimer(Bool_t on, Int_t delay)
    // seconds; depending on fShutdownWhenIdle, the countdown will start
    // immediately or when the session is idle.
 
-   fShutdownTimerMtx = (fShutdownTimerMtx) ? fShutdownTimerMtx : new TMutex(kTRUE);
    R__LOCKGUARD(fShutdownTimerMtx);
 
    if (delay < 0 && !fShutdownTimer)

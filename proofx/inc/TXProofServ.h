@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.h,v 1.8 2006/08/05 20:04:47 brun Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.h,v 1.9 2006/10/19 12:38:07 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -49,8 +49,7 @@ private:
    Int_t         Setup();
 
 public:
-   TXProofServ(Int_t *argc, char **argv,  FILE *flog = 0) : TProofServ(argc, argv, flog)
-                 { fInterruptHandler = 0; fInputHandler = 0; fTerminated = kFALSE; fEnvList = 0;}
+   TXProofServ(Int_t *argc, char **argv, FILE *flog = 0);
    virtual ~TXProofServ();
 
    Int_t         CreateServer();
