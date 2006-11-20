@@ -164,6 +164,9 @@ endif
 ifeq ($(BUILDROOFIT),yes)
 MODULES      += roofit
 endif
+ifeq ($(BUILDGDML),yes)
+MODULES      += gdml
+endif
 ifeq ($(BUILDTABLE),yes)
 MODULES      += table
 endif
@@ -220,7 +223,7 @@ MODULES      += unix winnt x11 x11ttf win32gdk gl rfio castor thread \
                 ldap mlp krb5auth rpdutils globusauth pyroot ruby gfal \
                 qt qtroot qtgsi xrootd netx proofx alien clarens peac oracle \
                 xmlparser mathcore mathmore reflex cintex roofit minuit2 \
-                monalisa fftw odbc unuran
+                monalisa fftw odbc unuran gdml
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 

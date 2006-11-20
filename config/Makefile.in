@@ -246,6 +246,8 @@ BUILDMINUIT2   := @buildminuit2@
 
 BUILDUNURAN    := @buildunuran@
 
+BUILDGDML      := @buildgdml@
+
 BUILDTABLE     := @buildtable@
 
 BUILDCLARENS   := @buildclarens@
