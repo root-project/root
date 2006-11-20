@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TAtomicCount.h,v 1.2 2006/11/19 10:45:39 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TAtomicCount.h,v 1.3 2006/11/19 14:40:32 rdm Exp $
 // Author: Fons Rademakers   14/11/06
 
 /*************************************************************************
@@ -54,11 +54,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+#ifndef R__SOLARIS    /* CINT problem, to be fixed asap */
 #ifndef ROOT_RConfigure
 #include "RConfigure.h"
 #endif
-#ifndef ROOT_Rtypes
-#include "Rtypes.h"
 #endif
 
 #if (defined(__GLIBCPP__) || defined(__GLIBCXX__)) && !defined(__CINT__)
