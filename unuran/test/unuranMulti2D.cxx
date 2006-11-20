@@ -1,3 +1,5 @@
+// test using Multi-dim (2D)  Distribution object interface
+// and compare results and CPU performances using TF2::GetRandom
 
 #include "TStopwatch.h"
 #include "TUnuran.h"
@@ -8,7 +10,7 @@
 
 #include "TRandom.h"
 #include "TSystem.h"
-#include "TApplication.h"
+//#include "TApplication.h"
 
 // #include "Math/ProbFunc.h"
 // #include "Math/DistFunc.h"
@@ -88,7 +90,7 @@ void unuranMulti2D() {
    }
 
    w.Stop(); 
-   cout << w.CpuTime() << endl;
+   cout << "Time using Unuran =\t\t " << w.CpuTime() << endl;
    c1->cd(1); 
    h1->Draw("col");
 
@@ -100,24 +102,25 @@ void unuranMulti2D() {
    }
 
    w.Stop(); 
-   cout << w.CpuTime() << endl;
+   cout << "Time using GetRandom()  =\t " << w.CpuTime() << endl;
 
    
    c1->cd(2);
    h2->Draw("col");
    //  h2->Fit("gaus");
 
-   std::cout << " chi2 test h1 vs h2 " << std::endl;
-   h1->Chi2Test(h2,"P");
+   std::cout << " chi2 test of histogram generated with Unuran vs histogram generated with TF1::GetRandom " << std::endl;
+   h1->Chi2Test(h2,"UUP");
 
 }
 
 #ifndef __CINT__
-int main(int argc, char **argv)
+//int main(int argc, char **argv)
+int main( )
 {
-   TApplication theApp("App", &argc, argv);
+//   TApplication theApp("App", &argc, argv);
    unuranMulti2D();
-   theApp.Run();
+//   theApp.Run();
    return 0;
 }
 #endif

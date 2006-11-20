@@ -6,7 +6,9 @@
 
 #include "TRandom.h"
 #include "TSystem.h"
-#include "TApplication.h"
+//#include "TApplication.h"
+#include "TVirtualFitter.h"
+#include "Math/ProbFunc.h"
 
 #include <iostream> 
 
@@ -17,8 +19,6 @@ void unuranSimple() {
 
    // simple test of unuran
 
-   TH1D * h1 = new TH1D("h1","gaussian distribution",100,-10,10);
-   TH1D * h2 = new TH1D("h2","gaussian distribution",100,-10,10);
 
    TUnuran unr; 
    if (! unr.Init( "normal()", "method=arou") ) {
@@ -26,7 +26,7 @@ void unuranSimple() {
       return;
    }
 
-   int n = 10000000;
+   int n = 1000000;
    TStopwatch w; 
    w.Start(); 
 
@@ -43,13 +43,21 @@ void unuranSimple() {
    w.Stop(); 
    cout << "Time using TRandom::Gaus  =\t " << w.CpuTime() << endl;
 
-   // test the quality
+   // test the quality by looking at the cdf
+
+   TH1D * h1 = new TH1D("h1","cdf on the data ",100,0,1);
    for (int i = 0; i < n; ++i) {
       double x = unr.Sample();
-      h1->Fill(  x ); 
-      //h1u->Fill( fc->Eval( x ) ); 
+      // x = gRandom->Gaus(0,1); 
+      h1->Fill( ROOT::Math::normal_quant( x , 1.0) ); 
    }
-
+//    gSystem->Load("libMinuit2");
+//    TVirtualFitter::SetDefaultFitter("Minuit2");
+   std::cout << "Result of fitting a cdf to a constant function : " << std::endl;
+   h1->Fit("pol0","Q");
+   TF1 * f = (TF1*)gROOT->GetFunction("pol0");
+   std::cout << "Fit chi2 = " << f->GetChisquare() << " ndf = " << f->GetNDF() << std::endl;
+   std::cout << "Fit Prob = " << f->GetProb() << std::endl;
 
    h1->Draw();
 
@@ -58,11 +66,11 @@ void unuranSimple() {
 }
 
 #ifndef __CINT__
-int main(int argc, char **argv)
+int main(int /* argc */, char  **  /* argv */)
 {
-   TApplication theApp("App", &argc, argv);
+//   TApplication theApp("App", &argc, argv);
    unuranSimple();
-   theApp.Run();
+//   theApp.Run();
    return 0;
 }
 #endif

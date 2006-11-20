@@ -17,7 +17,7 @@ CXXFLAGS += -g
 ifeq ($(PLATFORM),win32)
 EXTRALIBS        = "$(ROOTSYS)/lib/libMathMore.lib" "$(ROOTSYS)/lib/libMathCore.lib" "$(ROOTSYS)/lib/libUnuran.lib"
 else
-EXTRALIBS        =  -lUnuran -lMathCore
+EXTRALIBS        =  -lUnuran -lMathCore -lMinuit
 endif
 
 #UNURANBASE=/Users/moneta/mathlibs/Unuran

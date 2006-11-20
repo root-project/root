@@ -1,3 +1,6 @@
+// test using Multi-dim (3D)  Distribution object interface
+// and compare results and CPU performances using TF3::GetRandom
+
 
 #include "TStopwatch.h"
 #include "TUnuran.h"
@@ -8,7 +11,7 @@
 
 #include "TRandom.h"
 #include "TSystem.h"
-#include "TApplication.h"
+//#include "TApplication.h"
 
 // #include "Math/ProbFunc.h"
 // #include "Math/DistFunc.h"
@@ -54,13 +57,9 @@ void unuranMulti3D() {
    
 
    TF3 * f = new TF3("g3d",gaus3d,-10,10,-10,10,-10,10,3); 
-   double par[3] = {1,1,0.5}; 
+   double par[3] = {2,2,0.5}; 
    f->SetParameters(par); 
 
-   f->SetNpx(100);
-   f->SetNpy(100);
-   f->SetNpz(100);
-   std::cout << " npoints" << f->GetNpx() << "  "  << f->GetNpy() <<  "  "  << f->GetNpz() << std::endl;
 
    TCanvas * c1 = new TCanvas("c1_unuranMulti","Multidimensional distribution",10,10,500,500); 
    c1->Divide(1,2);
@@ -88,12 +87,19 @@ void unuranMulti3D() {
    }
 
    w.Stop(); 
-   cout << w.CpuTime() << endl;
+   cout << "Time using Unuran =\t\t " << w.CpuTime() << endl;
+
    c1->cd(1); 
    h1->Draw();
 //   h1->Fit("gaus");
 
 
+   // need to have a larger value to get good quality
+   int np = 200;
+   f->SetNpx(np);
+   f->SetNpy(np);
+   f->SetNpz(np);
+   std::cout << "Function npoints used in GetRandom: " << f->GetNpx() << "  "  << f->GetNpy() <<  "  "  << f->GetNpz() << std::endl;
    w.Start();
    for (int i = 0; i < 1000000; ++i) { 
       f->GetRandom3(x[0],x[1],x[2]);
@@ -101,25 +107,26 @@ void unuranMulti3D() {
    }
 
    w.Stop(); 
-   cout << w.CpuTime() << endl;
+   cout << "Time using GetRandom()  =\t " << w.CpuTime() << endl;
+
 
    
    c1->cd(2);
    h2->Draw("same");
    //  h2->Fit("gaus");
 
-   std::cout << " chi2 test h1 vs h2 " << std::endl;
-   h1->Chi2Test(h2,"P");
+   std::cout << " chi2 test of histogram generated with Unuran vs histogram generated with TF1::GetRandom " << std::endl;
+   h1->Chi2Test(h2,"UUP");
    
 
 }
 
 #ifndef __CINT__
-int main(int argc, char **argv)
+int main()
 {
-   TApplication theApp("App", &argc, argv);
+//   TApplication theApp("App", &argc, argv);
    unuranMulti3D();
-   theApp.Run();
+   //  theApp.Run();
    return 0;
 }
 #endif

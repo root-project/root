@@ -1,3 +1,6 @@
+// test using 1D Distribution object interface
+// and compare results and CPU performances using TF1::GetRandom
+
 
 #include "TStopwatch.h"
 #include "TUnuran.h"
@@ -8,7 +11,7 @@
 #include "TSystem.h"
 #include "TStyle.h"
 
-#include "TApplication.h"
+//#include "TApplication.h"
 #include "TCanvas.h"
 
 #include "Math/ProbFunc.h"
@@ -55,6 +58,14 @@ void unuranDistr() {
    cout << fc->Eval(-11) << "  " <<    fc->Eval(1) << endl;
 
    TUnuranDistr dist(f,fc); 
+
+//    double m = dist.Mode();
+//    std::cout << " mode " << dist.Mode() << std::endl; 
+//    std::cout << " f(mode) " << dist(m) << std::endl; 
+//    std::cout << " f(mode) " << dist.Cdf(m) << std::endl; 
+//    std::cout << " f(mode) " << dist.Derivative(m) << std::endl
+
+
    TUnuran unr(gRandom,2); 
 
    std::string method = "method=arou";
@@ -74,7 +85,7 @@ void unuranDistr() {
    TStopwatch w; 
    w.Start(); 
 
-   int n = 10000000;
+   int n = 100000;
    for (int i = 0; i < n; ++i) 
       unr.Sample(); 
 
@@ -103,6 +114,11 @@ void unuranDistr() {
    c1->cd(2);
    h1u->Draw("Error");
    h1u->Fit("pol0");
+   std::cout << "\nFit result on data cdf with unuran: " << std::endl;
+   TF1 * f1 = h1u->GetFunction("pol0");
+   std::cout << "Fit chi2 = " << f1->GetChisquare() << " ndf = " << f1->GetNDF() << std::endl;
+   std::cout << "Fit Prob = " << f1->GetProb() << std::endl;
+   
 
    for (int i = 0; i < n; ++i) {
       double x = f->GetRandom();
@@ -110,8 +126,6 @@ void unuranDistr() {
       h2u->Fill( fc->Eval( x ) ); 
    }
 
-   w.Stop(); 
-   cout << w.CpuTime() << endl;
 
 
    c1->cd(3);
@@ -119,20 +133,25 @@ void unuranDistr() {
    h2->Fit("gaus");
    c1->cd(4);
    h2u->Draw("Error");
+   std::cout << "\nFit result on data cdf with GetRandom: " << std::endl;
    h2u->Fit("pol0");
+   f1 = h2u->GetFunction("pol0");
+   std::cout << "Fit chi2 = " << f1->GetChisquare() << " ndf = " << f1->GetNDF() << std::endl;
+   std::cout << "Fit Prob = " << f1->GetProb() << std::endl;
 
    std::cout << " chi2 test h1 vs h2 " << std::endl;
-   h1->Chi2Test(h2,"P");
+   h1->Chi2Test(h2,"UUP");
    
+//    TApplication theApp("App",0,0);
+//    theApp.Run();
 
 }
 
 #ifndef __CINT__
-int main(int argc, char **argv)
+//int main(int argc, char **argv)
+int main()
 {
-   TApplication theApp("App", &argc, argv);
    unuranDistr();
-   theApp.Run();
    return 0;
 }
 #endif
