@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Rule.cxx,v 1.33 2006/11/19 00:43:59 stelzer Exp $
+// @(#)root/tmva $Id: Rule.cxx,v 1.6 2006/11/19 10:11:42 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss 
 
 /**********************************************************************************
@@ -197,7 +197,6 @@ Int_t TMVA::Rule::Equivalent( const Rule& other ) const
 //_______________________________________________________________________
 Bool_t TMVA::Rule::Equal( const Rule& other, Bool_t useCutValue, Double_t maxdist ) const
 {
-   //
    // Compare two rules.
    // useCutValue: true -> calculate a distance between the two rules based on the cut values
    //                      if the rule cuts are not equal, the distance is < 0 (-1.0)
