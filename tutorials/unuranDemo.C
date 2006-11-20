@@ -157,6 +157,9 @@ void testDistr1D() {
    c1->cd(++izone);
    h2->Draw();
    
+   std::cout << " chi2 test of UNURAN vs GetRandom generated histograms:  " << std::endl;
+   h1->Chi2Test(h2,"UUP");
+
 }
 
 // 3D gaussian distribution
@@ -184,7 +187,7 @@ void testDistrMultiDim() {
 
 
    TF3 * f = new TF3("g3d",gaus3d,-10,10,-10,10,-10,10,3); 
-   double par[3] = {1,1,0.5}; 
+   double par[3] = {2,2,0.5}; 
    f->SetParameters(par); 
 
 
@@ -218,9 +221,10 @@ void testDistrMultiDim() {
 
 
    // need to set a reasanable number of points in TF1 to get accettable quality from GetRandom to 
-   f->SetNpx(100);
-   f->SetNpy(100);
-   f->SetNpz(100);
+   int np = 200;
+   f->SetNpx(200);
+   f->SetNpy(200);
+   f->SetNpz(200);
 
    w.Start();
    for (int i = 0; i < NGEN; ++i) { 
@@ -234,6 +238,9 @@ void testDistrMultiDim() {
    
    c1->cd(++izone);
    h2->Draw();
+
+   std::cout << " chi2 test of UNURAN vs GetRandom generated histograms:  " << std::endl;
+   h1->Chi2Test(h2,"UUP");
 
 }
 void unuranDemo() { 
