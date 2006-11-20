@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: IGenFunction.h,v 1.2 2005/09/19 13:06:53 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: IFunction.h,v 1.1 2006/11/17 18:18:47 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -16,7 +16,7 @@
 @defgroup CppFunctions Function Classes and Interfaces
 */
 
-//typedefs definition
+//typedefs and tags definitions 
 #ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
 #endif
@@ -26,23 +26,9 @@ namespace ROOT {
 namespace Math {
 
 
-   /// tag for multi-dimensional functions
-   struct MultiDim {}; 
-
-   /// tag for one-dimensional functions
-   struct OneDim {}; 
-
-//    /// tag for functions with minimal capabilities
-//    struct Base {}; 
-
-//    /// tag for functions with gradient capabbilities
-//    struct Gradient {}; 
-
-   // struct required for defining BaseFunc
-   struct NullFunc {};
 
    /** 
-       Template Interface for generic functions objects: 
+       Interface for generic functions objects: 
        A template parameter, DimensionType specify the DimensionType  which can be
        single-dimension or multi-dimension onother parameter specify the 
        function capabilities. 
@@ -111,7 +97,8 @@ namespace Math {
 
 
    /** 
-       Interface for single-dimensional functions with minimal capabilities (no gradient) 
+       Specialized Interface for one-dimensional generic functions with 
+       minimal capabilities (no gradient) 
         
        @ingroup  CppFunctions
    */
@@ -165,7 +152,9 @@ namespace Math {
 
 //-------- GRAD  functions---------------------------
    /**
-      Generic Gradient interface
+      Gradient interface defining the signature for the functions to calculate the gradient
+
+      @ingroup  CppFunctions
     */
    template <class DimensionType = MultiDim> 
    class IGradient { 
@@ -210,7 +199,9 @@ namespace Math {
    };
 
    /**
-      One Dimensional  Gradient interface
+      Specialized Gradient interface for one dimensional functions
+
+      @ingroup  CppFunctions
     */
    template <> 
    class IGradient<OneDim> { 
@@ -257,6 +248,7 @@ namespace Math {
    ROOT::Math::IFunction::Derivative provides the partial derivatives. 
    The latter bust be implemented (using ROOT::Math::IFunction::Derivative by the derived classes, 
    while the former can be overloaded if for the particular function can be implemented more efficiently.  
+   @ingroup  CppFunctions
 */ 
    template<class DimensionType = MultiDim> 
    class IGradientFunction : 
@@ -320,11 +312,12 @@ namespace Math {
 
 
 /** 
-   Interface for one-dimensional functions providing a gradient calculation. 
+   Specialized Interface for one-dimensional functions providing a gradient calculation. 
    A method ROOT::Math::IFunction::Gradient provides the full gradient vector while 
    ROOT::Math::IFunction::Derivative provides the partial derivatives. 
    The latter bust be implemented (using ROOT::Math::IFunction::Derivative by the derived classes, 
    while the former can be overloaded if for the particular function can be implemented more efficiently.  
+   @ingroup  CppFunctions
 */ 
    template <>
    class IGradientFunction<OneDim> : 

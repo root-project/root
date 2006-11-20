@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: inc/Math/Functor.h,v 1.0 2006/01/01 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Functor.h,v 1.1 2006/11/17 18:18:47 moneta Exp $
 // Author: L. Moneta Mon Nov 13 15:58:13 2006
 
 /**********************************************************************
@@ -36,11 +36,15 @@ namespace Math {
    free C functions.
    It can be created from any function implementing the correct signature 
    corresponding to the requested type
+
+   @ingroup  CppFunctions
+
 */ 
 template<class ParentFunctor, class Func >
 class FunctorHandler : public ParentFunctor::Impl { 
 
    typedef typename ParentFunctor::Impl Base; 
+   typedef typename ParentFunctor::Dim Dim; 
 
 public: 
 
@@ -54,7 +58,7 @@ public:
    {}
 
    // clone of the function handler (use copy-ctor) 
-   FunctorHandler * Clone() const { return new FunctorHandler(*this); }
+   IBaseFunction<Dim> * Clone() const { return new FunctorHandler(*this); }
 
    // constructor for multi-dimensional functions
    unsigned int NDim() const { 
@@ -88,14 +92,17 @@ private :
 
 /** 
    Functor Handler class for gradient functions where the gradient is provided as 
-   an additional functor.
+   an additional callable function
    It can be created from any function implementing the correct signature 
    corresponding to the requested type
+
+   @ingroup  CppFunctions
 */ 
 template<class ParentFunctor, class Func, class GradFunc = Func >
 class FunctorGradHandler : public ParentFunctor::Impl { 
 
    typedef typename ParentFunctor::Impl Base; 
+   typedef typename ParentFunctor::Dim Dim; 
 
 public: 
 
@@ -118,7 +125,7 @@ public:
    }
 
    // clone of the function handler (use copy-ctor) 
-   FunctorGradHandler * Clone() const { return new FunctorGradHandler(*this); }
+   IBaseFunction<Dim> * Clone() const { return new FunctorGradHandler(*this); }
 
    // constructor for multi-dimensional functions
    unsigned int NDim() const { 
@@ -152,13 +159,16 @@ private :
 
 
 /**
-   Functor Handler to Wrap pointers to member functions of Base type
+   Functor Handler to Wrap pointers to member functions 
+
+   @ingroup  CppFunctions
 */
 template <class ParentFunctor, typename PointerToObj,
           typename PointerToMemFn>
 class MemFunHandler : public ParentFunctor::Impl
 {
    typedef typename ParentFunctor::Impl Base;
+   typedef typename ParentFunctor::Dim Dim; 
    
 public:
    
@@ -174,7 +184,7 @@ public:
         
    
    // clone of the function handler (use copy-ctor) 
-   MemFunHandler * Clone() const { return new MemFunHandler(*this); }
+   IBaseFunction<Dim> * Clone() const { return new MemFunHandler(*this); }
 
    // constructor for multi-dimensional functions
    unsigned int NDim() const { 
@@ -198,14 +208,19 @@ private :
 };
 
 /**
-   Functor Handler to Wrap pointers to member functions of Grad type
+   Functor Handler to Wrap pointers to member functions for the evaluation of the function 
+   and for the gradient evaluation
+
+   @ingroup  CppFunctions
+
 */
 template <class ParentFunctor, typename PointerToObj,
           typename PointerToMemFn, typename PointerToGradMemFn>
 class MemGradFunHandler : public ParentFunctor::Impl
 {
    typedef typename ParentFunctor::Impl Base;
-   
+   typedef typename ParentFunctor::Dim Dim; 
+
 public:
    
    /// constructor from a pointer to the class and a pointer to the function
@@ -229,7 +244,7 @@ public:
         
    
    // clone of the function handler (use copy-ctor) 
-   MemGradFunHandler * Clone() const { return new MemGradFunHandler(*this); }
+     IBaseFunction<Dim> * Clone() const { return new MemGradFunHandler(*this); }
 
    // constructor for multi-dimensional functions
    unsigned int NDim() const { 
@@ -261,40 +276,18 @@ private :
 };
   
 
-#ifdef CHECK
 /**
-   Functor helper class to check on function dimension
- */
-//template<class DimensionType>
-struct FunctorDimHelper {
-   static void CheckDimension(OneDim  ) {}
-};
-// template <>
-// struct FunctorDimHelper<MultiDim> {
-//    static void CheckDimension() {
-//       STATIC_CHECK(0==1, Wrong_method_called_Multidimensional_functions);
-//    }
-// };
-/**
-   Functor helper class to check on function capability type
- */
-//template<class CapabilityType>
-struct FunctorCapHelper {
-   static void CheckType(Gradient ) {}
-};
-// template <>
-// struct FunctorCapHelper<Base> {
-//    static void CheckType() {
-//       STATIC_CHECK(0==1, Wrong_method_called_Base_Type_functions);
-//    }
-// };
+   Functor class for Multidimensional functions. 
+   It is used to wrap in a very simple and convenient way 
+   any other C++ callable object (implemention double operator( const double * ) ) 
+   or a member function with the correct signature, 
+   like Foo::Eval(const double *)
+   The function dimension is required when constructing the functor.  
 
-#endif
+   @ingroup  CppFunctions
 
-/**
-   Functor clas for Multidimensional functions
  */
-template<class IFuncType>
+template<class IFuncType = IBaseFunction<MultiDim> >
 class Functor : public IFuncType  { 
 
 
@@ -302,6 +295,7 @@ public:
 
    typedef IFuncType Impl;   
    typedef typename IFuncType::BaseFunc ImplBase;   
+   typedef MultiDim Dim;  
 //    typedef typename Impl::DimType DimType; 
 //    typedef typename Impl::CapType CapType; 
    
@@ -413,9 +407,17 @@ private :
 
 
 /**
-   Functor clas for Onedimensional functions
+   Functor1D class for One-dimensional functions. 
+   It is used to wrap in a very simple and convenient way 
+   any other C++ callable object (implemention double operator()( double  ) ) 
+   or a member function with the correct signature, 
+   like Foo::Eval(double ). 
+   In this case one pass the object pointer and a pointer to the member function (&Foo::Eval) 
+
+   @ingroup  CppFunctions
+
  */
-template<class IFuncType >
+template<class IFuncType = IBaseFunction<OneDim> >
 class Functor1D : public IFuncType  { 
 
 
@@ -423,6 +425,7 @@ public:
 
    typedef IFuncType           Impl;   
    typedef typename IFuncType::BaseFunc ImplBase; 
+   typedef OneDim Dim;  
 //    typedef typename Impl::DimType DimType; 
 //    typedef typename Impl::CapType CapType; 
    

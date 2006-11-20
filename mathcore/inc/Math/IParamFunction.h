@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: inc/Math/IParamFunction.h,v 1.0 2006/01/01 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: IParamFunction.h,v 1.1 2006/11/17 18:18:47 moneta Exp $
 // Author: L. Moneta Tue Nov 14 14:20:07 2006
 
 /**********************************************************************
@@ -32,28 +32,23 @@ namespace ROOT {
 
 
 /** 
-   IParamFunction interface for generic parameteric function
-   It is a derived class from IFunction
+   IBaseParam interface defining the API for dealing with the function parameters
+   This is used only for internal convinience, to avoid redefining the Parameter API  
+   for the 1D and the multi-dim function. 
+   Concrete class should derive from ROOT::Math::IParamFunction and not from this class.  
+
    @ingroup  CppFunctions
 */ 
 
-template <class DimensionType>
-class IParamFunctionBase : virtual public IBaseFunction<DimensionType> {
+class IBaseParam  {
 
 public: 
-
-   typedef IBaseFunction<DimensionType> BaseFunc; 
-
-//    /// default constructor (needed to initialize parent classes)
-//    IParamFunctionBase() : 
-//       BaseFunc()
-//    {}
 
 
    /** 
       Virtual Destructor (no operations)
    */ 
-   virtual ~IParamFunctionBase ()  {}  
+   virtual ~IBaseParam ()  {}  
 
 
    /**
@@ -92,22 +87,22 @@ public:
       return "Par_" + Util::ToString(i);
    }
 
-   using BaseFunc::operator();
 
 };
 
 /** 
-   IParamFunction interface for generic parameteric function
+   IParamFunction interface describing parameteric function
    It is a derived class from IFunction
    @ingroup  CppFunctions
 */ 
 template<class DimensionType = MultiDim> 
-class IParamFunction : public IParamFunctionBase<DimensionType> {
+class IParamFunction : 
+         virtual public IBaseFunction<DimensionType>, 
+         public IBaseParam {
 
 public: 
 
-   typedef IParamFunctionBase<DimensionType> BaseParamFunc;
-   typedef typename IParamFunctionBase<DimensionType>::BaseFunc BaseFunc; 
+   typedef IBaseFunction<DimensionType>  BaseFunc; 
 
    /// default constructor (needed to initialize parent classes)
 //    IParamFunction() : 
@@ -127,29 +122,31 @@ public:
       return operator() (x); 
    }
 
-   using BaseParamFunc::SetParameters;
 
-   using BaseParamFunc::operator();
+   using BaseFunc::operator();
 
 }; 
 /** 
-   IParamFunction interface for one-dimensional function
+   Specialized IParamFunction interface for one-dimensional function
+
    @ingroup  CppFunctions
 */ 
 template<> 
-class IParamFunction<ROOT::Math::OneDim> : public IParamFunctionBase<ROOT::Math::OneDim> {
+class IParamFunction<ROOT::Math::OneDim> : 
+         virtual public IBaseFunction<ROOT::Math::OneDim>, 
+         public IBaseParam { 
+
 
 public: 
 
-   typedef IParamFunctionBase<ROOT::Math::OneDim>           BaseParamFunc;
-   typedef IParamFunctionBase<ROOT::Math::OneDim>::BaseFunc BaseFunc; 
+   typedef IBaseFunction<ROOT::Math::OneDim>   BaseFunc; 
 
    /// default constructor (needed to initialize parent classes)
 //    IParamFunction() : 
 //       BaseParamFunc() 
 //    {}
 
-   using BaseParamFunc::operator();
+   using BaseFunc::operator();
 
    // user may re-implement this for better efficiency
    // this method is NOT required to  change internal values of parameters. confusing ?? 
