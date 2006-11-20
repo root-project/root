@@ -57,13 +57,16 @@ RANDOMDISTOBJ      = testRandomDist.$(ObjSuf)
 RANDOMDISTSRC      = testRandomDist.$(SrcSuf)
 RANDOMDIST         = testRandomDist$(ExeSuf)
 
+TESTFUNCTOROBJ      = testFunctor.$(ObjSuf)
+TESTFUNCTORSRC      = testFunctor.$(SrcSuf)
+TESTFUNCTOR         = testFunctor$(ExeSuf)
 
 
 OBJS          = $(CHEBYSHEVOBJ) $(DERIVATIONOBJ) $(INTEGRATIONOBJ) $(ROOTFINDEROBJ) \
-                  $(MINIMIZATION1DOBJ) $(INTERPOLATIONOBJ)  $(RANDOMOBJ) $(RANDOMDISTOBJ)
+                  $(MINIMIZATION1DOBJ) $(INTERPOLATIONOBJ)  $(RANDOMOBJ) $(RANDOMDISTOBJ) $(TESTFUNCTOROBJ)
 
 PROGRAMS      = $(CHEBYSHEV)  $(DERIVATION) $(INTEGRATION) $(ROOTFINDER) \
-                  $(MINIMIZATION1D) $(INTERPOLATION) $(RANDOM) $(RANDOMDIST)
+                  $(MINIMIZATION1D) $(INTERPOLATION) $(RANDOM) $(RANDOMDIST) $(TESTFUNCTOR)
 		  
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
 
@@ -102,6 +105,12 @@ $(RANDOM):  	$(RANDOMOBJ)
 $(RANDOMDIST):  $(RANDOMDISTOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
+
+$(TESTFUNCTOR): $(TESTFUNCTOROBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+
 
 
 clean:

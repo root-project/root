@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: LinkDef.h,v 1.6 2006/11/10 16:28:42 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: LinkDef.h,v 1.7 2006/11/17 18:26:50 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -22,18 +22,21 @@
 #pragma link C++ namespace ROOT;
 #pragma link C++ namespace ROOT::Math;
 
+
+#ifndef _WIN32  
+// virtual inheritance gives problem when making dictionary on Windows 
 #pragma link C++ class ROOT::Math::ParamFunction+;
 #pragma link C++ class ROOT::Math::Polynomial+;
-//#pragma link C++ class ROOT::Math::WrappedFunction<ROOT::Math::Polynomial>+;
+#endif
 
 #pragma link C++ class ROOT::Math::Chebyshev+;
 
 
 #pragma link C++ class ROOT::Math::Derivator+;
-//#pragma link C++ class ROOT::Math::WrappedFunction<double (&)(double)>+;
+
 
 #pragma extra_include "TF1.h";
-//#pragma link C++ class ROOT::Math::WrappedFunction< ::TF1 &>+;
+
 // maybe idem with IGenFunction... to be seen after checking with Philippe
 
 
