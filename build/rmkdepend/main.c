@@ -49,6 +49,8 @@ in this Software without prior written authorization from the X Consortium.
 #include <stdarg.h>
 #ifndef WIN32
 #include <unistd.h>
+#else
+#include <io.h>
 #endif
 #if !defined(__hpux)
 #if defined(__APPLE__)

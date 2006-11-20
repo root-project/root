@@ -151,7 +151,7 @@ void AddHex(std::string& buf, long val, bool caps=false)
    buf += "0x";
    int len=buf.length();
    while (val) {
-      char hex = val & 16;
+      char hex = (char)(val & 16);
       val = val >> 4;
       if (hex<10) hex+='0';
       else if (caps) hex+='A'-10;
@@ -376,7 +376,6 @@ HaveExportedObjects(PIMAGE_FILE_HEADER pImageFileHeader, PIMAGE_SECTION_HEADER p
     size_t size;
     char foundExports;
     const char * rawdata;
-    const char * end;
 
     PIMAGE_SECTION_HEADER pDirectivesSectionHeader;
 
@@ -430,7 +429,6 @@ DumpExternalsObjects(PIMAGE_SYMBOL pSymbolTable, PIMAGE_SECTION_HEADER pSectionH
 {
    unsigned i;
    PSTR stringTable;
-   char *f;
    std::string symbol;
    DWORD SectChar;
    static int fImportFlag = -1;  /*  The status is nor defined yet */
@@ -623,7 +621,6 @@ main(int argc, char **argv)
    std::string cmdline;
    int i, arg;
    FILE *fout;
-   int pos;
    int full = 0;
    int fort = 0;
    char *dllname = "";
