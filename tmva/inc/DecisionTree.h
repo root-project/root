@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTree.h,v 1.35 2006/11/17 14:59:23 stelzer Exp $
+// @(#)root/tmva $Id: DecisionTree.h,v 1.36 2006/11/20 13:20:16 stelzer Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -169,30 +169,30 @@ namespace TMVA {
       //calculates the min and max values for each variable in event sample
       //helper for TrainNode
       //find min and max of the variable distrubution
-       void FindMinAndMax(vector<TMVA::Event*> & eventSample,
-				  vector<Double_t> & min,
-				  vector<Double_t> & max);
-
-       //set up the grid for the cut scan
-       void SetCutPoints(vector<Double_t> & cut_points,
-			 Double_t xmin,
-			 Double_t xmax,
-			 Int_t num_gridpoints);
-
-    
+      void FindMinAndMax(vector<TMVA::Event*> & eventSample,
+                         vector<Double_t> & min,
+                         vector<Double_t> & max);
+      
+      //set up the grid for the cut scan
+      void SetCutPoints(vector<Double_t> & cut_points,
+                        Double_t xmin,
+                        Double_t xmax,
+                        Int_t num_gridpoints);
+      
+      
       // calculate the Purity out of the number of sig and bkg events collected
       // from individual samples.
-
+      
       //calculates the purity S/(S+B) of a given event sample
-       Double_t SamplePurity(vector<Event*> eventSample);
-  
+      Double_t SamplePurity(vector<Event*> eventSample);
+      
       Int_t     fNvars; // number of variables used to separate S and B
       Int_t     fNCuts; // number of grid point in variable cut scans
       SeparationBase *fSepType; // the separation crition
-
+      
       Double_t  fMinSize;  // min number of events in node
       Double_t  fMinSepGain;// min number of separation gain to perform node splitting
-
+      
       Bool_t    fUseSearchTree; //cut scan done with binary trees or simple event loop.
       Double_t  fPruneStrength; //a parameter to set the "amount" of pruning..needs to be adjusted 
       

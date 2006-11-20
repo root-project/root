@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCuts.h,v 1.36 2006/11/17 14:59:24 stelzer Exp $
+// @(#)root/tmva $Id: MethodCuts.h,v 1.37 2006/11/20 13:20:16 stelzer Exp $
 // Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -241,7 +241,7 @@ namespace TMVA {
 
       ClassDef(MethodCuts,0)  // Multivariate optimisation of signal efficiency
          ;
-	};
+   };
 
 } // namespace TMVA
 

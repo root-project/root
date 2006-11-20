@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTree.cxx,v 1.48 2006/11/16 22:51:58 helgevoss Exp $
+// @(#)root/tmva $Id: DecisionTree.cxx,v 1.49 2006/11/19 15:35:34 helgevoss Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -27,7 +27,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: DecisionTree.cxx,v 1.48 2006/11/16 22:51:58 helgevoss Exp $
+ * $Id: DecisionTree.cxx,v 1.49 2006/11/19 15:35:34 helgevoss Exp $
  **********************************************************************************/
 
 //_______________________________________________________________________
@@ -218,6 +218,7 @@ Int_t TMVA::DecisionTree::BuildTree( vector<TMVA::Event*> & eventSample,
       // have to use "s" for start as "r" for "root" would be the same as "r" for "right"
       this->GetRoot()->SetPos('s');
       this->GetRoot()->SetDepth(0);
+      this->GetRoot()->SetParentTree(this);
    }
 
    UInt_t nevents = eventSample.size();

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Node.h,v 1.20 2006/11/16 22:51:59 helgevoss Exp $    
+// @(#)root/tmva $Id: Node.h,v 1.21 2006/11/20 13:20:16 stelzer Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -63,12 +63,12 @@ namespace TMVA {
    // (currently it is NOT UNIQUE... but could eventually made it
    // a node in the tree structure
    class Node {
-	    
+
       // output operator for a node
       friend ostream& operator << (ostream& os, const Node& node);
       // output operator with a pointer to the node (which still prints the node itself)
       friend ostream& operator << (ostream& os, const Node* node);
-	    
+    
    public:
 
       // constructor of a node 
@@ -83,7 +83,7 @@ namespace TMVA {
 
       // destructor
       virtual ~Node ();
-	      
+      
       // test event if i{ decends the tree at this node to the right  
       virtual Bool_t GoesRight( const Event& ) const = 0;
       // test event if it decends the tree at this node to the left 
@@ -97,20 +97,20 @@ namespace TMVA {
       inline Node* GetRight () const { return fRight;  }
       // return pointer to the parent node
       inline Node* GetParent() const { return fParent; }
-	    
+    
       // set pointer to the left daughter node
       inline void SetLeft  (Node* l) { fLeft   = l;} 
       // set pointer to the right daughter node
       inline void SetRight (Node* r) { fRight  = r;} 
       // set pointer to the parent node
       inline void SetParent(Node* p) { fParent = p;} 
-	    
+    
       //recursively go through the part of the tree below this node and count all daughters
       Int_t  CountMeAndAllDaughters() const;
-	    
+    
       // printout of the node
       virtual void Print( ostream& os ) const = 0;
-	    
+
       // recursive printout of the node and it daughters 
       virtual void PrintRec ( ostream& os ) const = 0;
       // recursive reading of the node (essectially the whole tree) from a text file 
@@ -152,7 +152,7 @@ namespace TMVA {
       ClassDef(Node,0) // Node for the BinarySearch or Decision Trees
          ;
    };
-	  
+
 } // namespace TMVA
 
 #endif

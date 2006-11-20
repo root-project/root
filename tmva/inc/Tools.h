@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Tools.h,v 1.27 2006/11/16 22:51:59 helgevoss Exp $   
+// @(#)root/tmva $Id: Tools.h,v 1.28 2006/11/20 13:20:17 stelzer Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -82,8 +82,8 @@ namespace TMVA {
 
       // parse option string for ANN methods
       std::vector<Int_t>* ParseANNOptionString( TString theOptions, Int_t nvar,
-						std::vector<Int_t>* nodes );
-
+                                                std::vector<Int_t>* nodes );
+      
       // returns the square-root of a symmetric matrix: symMat = sqrtMat*sqrtMat
       void GetSQRootMatrix( TMatrixDSym* symMat, TMatrixD*& sqrtMat );
 

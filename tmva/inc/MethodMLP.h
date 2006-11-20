@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodMLP.h,v 1.22 2006/11/17 14:59:24 stelzer Exp $
+// @(#)root/tmva $Id: MethodMLP.h,v 1.23 2006/11/20 13:20:16 stelzer Exp $
 // Author: Andreas Hoecker, Matt Jachowski
 
 /**********************************************************************************
@@ -156,7 +156,7 @@ namespace TMVA {
 
       ClassDef(MethodMLP,0) // Multi-layer perceptron implemented specifically for TMVA
          ;
-	};
+   };
 
 } // namespace TMVA
 
