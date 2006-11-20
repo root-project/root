@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.86 2006/11/16 17:17:38 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.87 2006/11/20 15:56:36 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -164,6 +164,7 @@
 #include <pwd.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <string>
 #include <stdlib.h>
 #include <unistd.h>
