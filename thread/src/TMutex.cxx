@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TMutex.cxx,v 1.7 2006/05/23 04:47:41 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TMutex.cxx,v 1.8 2006/05/24 15:10:46 brun Exp $
 // Author: Fons Rademakers   26/06/97
 
 /*************************************************************************
@@ -38,30 +38,6 @@ TMutex::TMutex(Bool_t recursive)
 
    if (!fMutexImp)
       Error("TMutex", "could not create TMutexImp");
-}
-
-//______________________________________________________________________________
-TMutex::TMutex(const TMutex& mu) :
-  TVirtualMutex(mu),
-  fMutexImp(mu.fMutexImp),
-  fId(mu.fId),
-  fRef(mu.fRef)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TMutex& TMutex::operator=(const TMutex& mu)
-{
-   //assignement operator
-   
-   if(this!=&mu) {
-      TVirtualMutex::operator=(mu);
-      fMutexImp=mu.fMutexImp;
-      fId=mu.fId;
-      fRef=mu.fRef;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________
@@ -152,12 +128,12 @@ Int_t TMutex::CleanUp()
 
 //______________________________________________________________________________
 TVirtualMutex *TMutex::Factory(Bool_t recursive)
-{ 
+{
    // Create mutex and return pointer to it. Calling function must care
-   // about proper deletion. The function is intended to be used in connection 
-   // with the R__LOCKGUARD2 macro for local thread protection. Since "new" is 
+   // about proper deletion. The function is intended to be used in connection
+   // with the R__LOCKGUARD2 macro for local thread protection. Since "new" is
    // used the TStorage class has to be protected by gGlobalMutex.
 
-   TVirtualMutex *ret = new TMutex(recursive); 
+   TVirtualMutex *ret = new TMutex(recursive);
    return ret;
 }

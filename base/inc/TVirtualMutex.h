@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualMutex.h,v 1.13 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualMutex.h,v 1.14 2006/06/13 21:12:19 rdm Exp $
 // Author: Fons Rademakers   14/07/2002
 
 /*************************************************************************
@@ -71,11 +71,8 @@ class TLockGuard {
 private:
    TVirtualMutex *fMutex;
 
-protected:
-   TLockGuard(const TLockGuard& vm)
-     : fMutex(vm.fMutex) { }
-   TLockGuard& operator=(const TLockGuard& vm)
-     { if(this!=&vm) fMutex=vm.fMutex; return *this; }
+   TLockGuard(const TLockGuard&);             // not implemented
+   TLockGuard& operator=(const TLockGuard&);  // not implemented
 
 public:
    TLockGuard(TVirtualMutex *mutex)
