@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.93 2006/11/01 16:02:25 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.94 2006/11/15 17:45:54 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -321,10 +321,10 @@ private:
    Bool_t          fIdle;            //on clients, true if no PROOF jobs running
    Bool_t          fSync;            //true if type of currently processed query is sync
 
-   Bool_t          fRedirLog;        //redirect received log info
-   TString         fLogFileName;     //name of the temp file for redirected logs
-   FILE           *fLogFileW;        //temp file to redirect logs
-   FILE           *fLogFileR;        //temp file to read redirected logs
+   Bool_t          fRedirLog;       //redirect received log info
+   TString         fLogFileName;    //name of the temp file for redirected logs
+   FILE           *fLogFileW;       //temp file to redirect logs
+   FILE           *fLogFileR;       //temp file to read redirected logs
    Bool_t          fLogToWindowOnly; //send log to window only
 
    TList          *fWaitingSlaves;   //stores a TPair of the slaves's TSocket and TMessage
@@ -438,7 +438,8 @@ private:
 protected:
    TProof(); // For derived classes to use
    Int_t           Init(const char *masterurl, const char *conffile,
-                        const char *confdir, Int_t loglevel, const char *alias = 0);
+                        const char *confdir, Int_t loglevel,
+                        const char *alias = 0);
    virtual Bool_t  StartSlaves(Bool_t parallel, Bool_t attach = kFALSE);
 
    void                  SetPlayer(TProofPlayer *player) { fPlayer = player; };
@@ -463,7 +464,8 @@ protected:
 
 public:
    TProof(const char *masterurl, const char *conffile = kPROOF_ConfFile,
-          const char *confdir = kPROOF_ConfDir, Int_t loglevel = 0, const char *alias = 0);
+          const char *confdir = kPROOF_ConfDir, Int_t loglevel = 0,
+          const char *alias = 0, TVirtualProofMgr *mgr = 0);
    virtual ~TProof();
 
    void        cd(Int_t id = -1);

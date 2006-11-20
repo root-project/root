@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.38 2006/05/04 17:05:29 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.39 2006/05/16 06:28:23 brun Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -44,17 +44,18 @@ ULong64_t TSocket::fgBytesRecv = 0;
 // of TSocket::CreateAuthSocket the common place for all the clients is TSocket,
 // so this seems to be the right place for a version number
 //
-// 6 -> 7: added support for ReOpen(), kROOTD_BYE and kROOTD_PROTOCOL2
-// 7 -> 8: added support for update being a create (open stat = 2 and not 1)
-// 8 -> 9: added new authentication features (see README.AUTH)
-// 9 -> 10: added support for authenticated socket via TSocket::CreateAuthSocket(...)
-// 10 -> 11: modified SSH protocol + support for server 'no authentication' mode
-// 11 -> 12: add random tags to avoid reply attacks (password+token)
-// 12 -> 13: authentication re-organization; cleanup in PROOF
-// 13 -> 14: support for SSH authentication via SSH tunnel
-// 14 -> 15: cope with fixes in TUrl::GetFile
+// 7: added support for ReOpen(), kROOTD_BYE and kROOTD_PROTOCOL2
+// 8: added support for update being a create (open stat = 2 and not 1)
+// 9: added new authentication features (see README.AUTH)
+// 10: added support for authenticated socket via TSocket::CreateAuthSocket(...)
+// 11: modified SSH protocol + support for server 'no authentication' mode
+// 12: add random tags to avoid reply attacks (password+token)
+// 13: authentication re-organization; cleanup in PROOF
+// 14: support for SSH authentication via SSH tunnel
+// 15: cope with fixes in TUrl::GetFile
+// 16: add env setup message exchange
 //
-Int_t TSocket::fgClientProtocol = 15;  // increase when client protocol changes
+Int_t TSocket::fgClientProtocol = 16;  // increase when client protocol changes
 
 TVirtualMutex *gSocketAuthMutex = 0;
 

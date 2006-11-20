@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.15 2006/10/23 14:44:40 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.16 2006/10/24 14:59:07 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -41,8 +41,9 @@
 
 // Version index: start from 1001 (0x3E9) to distinguish from 'proofd'
 // To be increment when non-backward compatible changes are introduced
-#define XPROOFD_VERSBIN 0x000003E9
-#define XPROOFD_VERSION "0.1"
+//  1001 (0x3E9) -> 1002 (0x3EA) : support for flexible env setting
+#define XPROOFD_VERSBIN 0x000003EA
+#define XPROOFD_VERSION "0.2"
 
 #define XPD_LOGGEDIN       1
 #define XPD_NEED_AUTH      2
@@ -194,7 +195,7 @@ public:
    static char                  *fgNamespace;  // Local pool namespace
    //
    static char                  *fgPrgmSrv;  // PROOF server application
-   static int                    fgSrvProtVers;  // Protocol version run by PROOF server
+   static kXR_int16              fgSrvProtVers;  // Protocol version run by PROOF server
    static XrdOucSemWait          fgForkSem;   // To serialize fork requests
    //
    static EResourceType          fgResourceType; // resource type

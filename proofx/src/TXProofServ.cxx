@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.19 2006/11/16 17:17:38 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.20 2006/11/20 10:31:48 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -652,7 +652,11 @@ Int_t TXProofServ::Setup()
 #endif
    if (!bindir.IsNull()) bindir += ":";
    bindir += "/bin:/usr/bin:/usr/local/bin";
-   gSystem->Setenv("PATH", bindir);
+   // Add bindir to PATH
+   TString path(gSystem->Getenv("PATH"));
+   if (!path.IsNull()) path.Insert(0, ":");
+   path.Insert(0, bindir);
+   gSystem->Setenv("PATH", path);
 #endif
 
    if (gSystem->AccessPathName(fWorkDir)) {
@@ -778,6 +782,17 @@ Int_t TXProofServ::Setup()
 
    // Install seg violation handler
    gSystem->AddSignalHandler(new TXProofServSegViolationHandler(this));
+
+   // Set user vars in TProof
+   TString all_vars(gSystem->Getenv("PROOF_ALLVARS"));
+   TString name;
+   Int_t from = 0;
+   while (all_vars.Tokenize(name, from, ",")) {
+      if (!name.IsNull()) {
+         TString value = gSystem->Getenv(name);
+         TVirtualProof::AddEnvVar(name, value);
+      }
+   }
 
    if (gProofDebugLevel > 0)
       Info("Setup", "successfully completed");

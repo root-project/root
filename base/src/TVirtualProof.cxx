@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.cxx,v 1.9 2006/10/14 11:05:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.cxx,v 1.10 2006/10/19 12:38:07 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -27,7 +27,8 @@
 
 TVirtualProof *gProof = 0;
 
-TProof_t TVirtualProof::fgProofHook = 0; // Hook to the TProof constructor
+TProof_t TVirtualProof::fgProofHook = 0;     // Hook to the TProof constructor
+TList   *TVirtualProof::fgProofEnvList = 0;  // List of env vars for proofserv
 
 ClassImp(TVirtualProof)
 
@@ -208,4 +209,51 @@ TProof_t TVirtualProof::GetTProofHook()
    // Get the TProof hook.
 
    return fgProofHook;
+}
+
+//_____________________________________________________________________________
+void TVirtualProof::AddEnvVar(const char *name, const char *value)
+{
+   // Add an variable to the list of environment variables passed to proofserv
+   // on the master and slaves
+
+   if (gDebug > 0) ::Info("TVirtualProof::AddEnvVar","%s=%s", name, value);
+
+   if (fgProofEnvList == 0) {
+      // initialize the list if needed
+      fgProofEnvList = new TList;
+      fgProofEnvList->SetOwner();
+   } else {
+      // replace old entries with the same name
+      TObject *o = fgProofEnvList->FindObject(name);
+      if (o != 0) {
+         fgProofEnvList->Remove(o);
+      }
+   }
+   fgProofEnvList->Add(new TNamed(name, value));
+}
+
+//_____________________________________________________________________________
+void TVirtualProof::DelEnvVar(const char *name)
+{
+   // Remove an variable from the list of environment variables passed to proofserv
+   // on the master and slaves
+
+   if (fgProofEnvList == 0) return;
+
+   TObject *o = fgProofEnvList->FindObject(name);
+   if (o != 0) {
+      fgProofEnvList->Remove(o);
+   }
+}
+
+//_____________________________________________________________________________
+void TVirtualProof::ResetEnvVars()
+{
+   // Clear the list of environment variables passed to proofserv
+   // on the master and slaves
+
+   if (fgProofEnvList == 0) return;
+
+   SafeDelete(fgProofEnvList);
 }

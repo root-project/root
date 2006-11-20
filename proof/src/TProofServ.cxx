@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.147 2006/11/15 17:45:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.148 2006/11/16 17:17:37 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1855,7 +1855,11 @@ Int_t TProofServ::Setup()
 #endif
    if (!bindir.IsNull()) bindir += ":";
    bindir += "/bin:/usr/bin:/usr/local/bin";
-   gSystem->Setenv("PATH", bindir);
+   // Add bindir to PATH
+   TString path(gSystem->Getenv("PATH"));
+   if (!path.IsNull()) path.Insert(0, ":");
+   path.Insert(0, bindir);
+   gSystem->Setenv("PATH", path);
 #endif
    if (gSystem->AccessPathName(fWorkDir)) {
       gSystem->mkdir(fWorkDir, kTRUE);
@@ -1964,6 +1968,16 @@ Int_t TProofServ::Setup()
 
    // Install SigPipe handler to handle kKeepAlive failure
    gSystem->AddSignalHandler(new TProofServSigPipeHandler(this));
+
+   TString all_vars(gSystem->Getenv("PROOF_ALLVARS"));
+   TString name;
+   Int_t from = 0;
+   while (all_vars.Tokenize(name, from, ",")) {
+      if (!name.IsNull()) {
+         TString value = gSystem->Getenv(name);
+         TVirtualProof::AddEnvVar(name, value);
+      }
+   }
 
    // Done
    return 0;

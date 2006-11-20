@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.9 2006/07/26 14:48:02 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.10 2006/11/15 17:45:55 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -105,6 +105,9 @@ private:
    // Whether to timeout or not
    Bool_t              fDontTimeout;   // If true wait forever for incoming messages
 
+   // Version of the remote XrdProofdProtocol
+   Int_t               fXrdProofdVersion;
+
    // Static area for input handling
    static TList        fgReadySock;    // Static list of sockets ready to be read
    static TMutex       fgReadyMtx;     // Protect access to the sockets-ready list
@@ -163,6 +166,7 @@ public:
    Int_t               GetOpenError() const { return (fConn ? fConn->GetOpenError() : -1); }
    Int_t               GetServType() const { return (fConn ? fConn->GetServType() : -1); }
    Int_t               GetSessionID() const { return (fConn ? fConn->GetSessionID() : -1); }
+   Int_t               GetXrdProofdVersion() const { return fXrdProofdVersion; }
 
    Bool_t              IsValid() const { return (fConn ? (fConn->IsValid()) : kFALSE); }
    Bool_t              IsServProofd();

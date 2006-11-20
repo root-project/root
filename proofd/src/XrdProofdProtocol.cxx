@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.30 2006/11/15 17:45:55 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.31 2006/11/16 17:17:38 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -133,7 +133,7 @@ char                 *XrdProofdProtocol::fgPoolURL = 0;
 char                 *XrdProofdProtocol::fgNamespace = strdup("/proofpool");
 //
 char                 *XrdProofdProtocol::fgPrgmSrv  = 0;
-int                   XrdProofdProtocol::fgSrvProtVers = -1;
+kXR_int16             XrdProofdProtocol::fgSrvProtVers = -1;
 XrdOucSemWait         XrdProofdProtocol::fgForkSem;   // To serialize fork requests
 //
 EResourceType         XrdProofdProtocol::fgResourceType = kRTStatic;
@@ -616,7 +616,7 @@ int XrdProofdProtocol::SetSrvProtVers()
    }
 
    // Record protocol
-   fgSrvProtVers = ntohl(proto);
+   fgSrvProtVers = (kXR_int16) ntohl(proto);
 
    // Cleanup
    close(fp[0]);
@@ -854,6 +854,7 @@ char *XrdProofdProtocol::Expand(char *p)
                memcpy(po+lenv+1, p1, lp1);
                po[lenv] = '/';
             }
+            po[lp1 + lenv + 1] = 0;
             free(p);
          } else
             po = p;
@@ -1273,7 +1274,7 @@ int XrdProofdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
       return 0;
    }
    mp = "Configure: PROOF server protocol number: ";
-   mp += fgSrvProtVers;
+   mp += (int) fgSrvProtVers;
    fgEDest.Say(0, mp.c_str());
 
    // Schedule protocol object cleanup
@@ -2758,9 +2759,10 @@ int XrdProofdProtocol::Attach()
       if (!dpu.endswith('/'))
          dpu += '/';
       dpu += fgNamespace;
-      fResponse.Send(psid, fgSrvProtVers, (void *) dpu.c_str(), dpu.length());
+      fResponse.Send(psid, fgSrvProtVers, (kXR_int16)XPROOFD_VERSBIN,
+                     (void *) dpu.c_str(), dpu.length());
    } else
-      fResponse.Send(psid, fgSrvProtVers);
+      fResponse.Send(psid, fgSrvProtVers, (kXR_int16)XPROOFD_VERSBIN);
 
    // Send saved query num message
    if (xps->fQueryNum) {
@@ -3120,6 +3122,35 @@ int XrdProofdProtocol::SetProofServEnv(XrdProofdProtocol *p,
    fprintf(fenv, "ROOTPROOFLOGFILE=%s\n", logfile.c_str());
    xps->SetFileout(logfile.c_str());
 
+   // Set the user envs
+   if (xps->UserEnvs() &&
+       strlen(xps->UserEnvs()) && strstr(xps->UserEnvs(),"=")) {
+      // The single components
+      XrdOucString ue = xps->UserEnvs();
+      XrdOucString env, namelist;
+      int from = 0, ieq = -1;
+      while ((from = ue.tokenize(env, from, ',')) != -1) {
+         if (env.length() > 0 && (ieq = env.find('=')) != -1) {
+            ev = new char[env.length()+1];
+            strncpy(ev, env.c_str(), env.length());
+            ev[env.length()] = 0;
+            putenv(ev);
+            fprintf(fenv, "%s\n", ev);
+            MTRACE(DBG, MHEAD, "SetProofServEnv: "<<ev);
+            env.erase(ieq);
+            if (namelist.length() > 0)
+               namelist += ',';
+            namelist += env;
+         }
+      }
+      // The list of names, ','-separated
+      ev = new char[strlen("PROOF_ALLVARS=") + namelist.length() + 2];
+      sprintf(ev, "PROOF_ALLVARS=%s", namelist.c_str());
+      putenv(ev);
+      fprintf(fenv, "%s\n", ev);
+      MTRACE(DBG, MHEAD, "SetProofServEnv: "<<ev);
+   }
+
    // Close file
    fclose(fenv);
 
@@ -3179,15 +3210,27 @@ int XrdProofdProtocol::Create()
       ord.erase(ord.find("|cf:"));
    }
    xps->SetOrdinal(ord.c_str());
+
    // Extract config file, if any (for backward compatibility)
    XrdOucString cffile;
    cffile.assign(buf,0,len-1);
    int icf = cffile.find("|cf:");
    cffile.erase(0,icf+4);
+   cffile.erase(cffile.find("|envs:"));
+
+   // Extract user envs, if any
+   XrdOucString uenvs;
+   uenvs.assign(buf,0,len-1);
+   int ienv = uenvs.find("|envs:");
+   uenvs.erase(0,ienv+6);
+   uenvs.erase(uenvs.find("|"));
+   xps->SetUserEnvs(uenvs.c_str());
 
    // Notify
    TRACEP(DBG, "Create: {ord,cfg,psid,cid,log}: {"<<ord<<","<<cffile<<","<<psid
                                                   <<","<<fCID<<","<<loglevel<<"}");
+   if (uenvs.length() > 0)
+      TRACEP(DBG, "Create: user envs: "<<uenvs);
 
    // Here we fork: for some weird problem on SMP machines there is a
    // non-zero probability for a deadlock situation in system mutexes.
@@ -3303,9 +3346,10 @@ int XrdProofdProtocol::Create()
          if (!dpu.endswith('/'))
             dpu += '/';
          dpu += fgNamespace;
-         fResponse.Send(psid, fgSrvProtVers, (void *) dpu.c_str(), dpu.length());
+         fResponse.Send(psid, fgSrvProtVers, (kXR_int16)XPROOFD_VERSBIN,
+                       (void *) dpu.c_str(), dpu.length());
       } else
-         fResponse.Send(psid, fgSrvProtVers);
+         fResponse.Send(psid, fgSrvProtVers, (kXR_int16)XPROOFD_VERSBIN);
    } else {
       // Failure
       emsg += ": failure setting up proofserv" ;

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.85 2006/05/10 07:42:10 brun Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.86 2006/11/16 17:17:38 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -152,6 +152,7 @@
 // 11: added support for openSSL keys for encryption
 // 12: major authentication re-organization
 // 13: support for SSH authentication via SSH tunnel
+// 14: add env setup message
 
 #ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
@@ -242,7 +243,7 @@ static std::string gRpdAuthTab;   // keeps track of authentication info
 static std::string gTmpDir;
 static std::string gUser;
 static EService gService         = kPROOFD;
-static int gProtocol             = 13;       // increase when protocol changes
+static int gProtocol             = 14;       // increase when protocol changes
 static int gRemPid               = -1;      // remote process ID
 static std::string gReadHomeAuthrc = "0";
 static int gInetdFlag            = 0;
@@ -510,6 +511,43 @@ void ProofdExec()
       }
    }
 
+   if(RpdGetClientProtocol() >= 16) {
+      void          *vb = 0;
+      Int_t          len = 0;
+      EMessageTypes  kind = kMESS_ANY;
+
+      int rc = NetRecvAllocate(vb, len, kind);
+
+      if (rc < 0) {
+         ErrorInfo("ProofdExec: error receiving kPROOF_SETENV message");
+         return;
+      }
+
+      if (kind != kPROOF_SETENV) {
+         ErrorInfo("ProofdExec: expecting kPROOF_SETENV, got %d", kind);
+         return;
+
+      }
+
+      char *buf = (char *) vb;
+      char *end = buf + len;
+      const char name[] = "PROOF_ALLVARS=";
+      char *all = new char[strlen(name)+len]; // strlen("PROOF_ALLVARS=") = 14
+      strcpy(all, name);
+      while (buf < end) {
+         if (gDebug > 0) ErrorInfo("ProofdExec: setting: %s", buf);
+         char *p = index(buf, '=');
+         if (p) {
+            if (buf != (char *) vb) strcat(all, ","); // skip the first one
+            strncat(all, buf, p-buf);
+            putenv(buf);
+         }
+         buf += strlen(buf) + 1;
+      }
+      if (gDebug > 0) ErrorInfo("ProofdExec: setting: %s", all);
+      putenv(all);
+   }
+
    if (gDebug > 0)
       ErrorInfo("ProofdExec: send Okay (SockFd: %d)", sockFd);
    NetSend("Okay");
@@ -569,7 +607,7 @@ void ProofdExec()
    char *roothomeauthrc = new char[20];
    sprintf(roothomeauthrc, "ROOTHOMEAUTHRC=%s", gReadHomeAuthrc.c_str());
    putenv(roothomeauthrc);
-   if (gDebug > 2)
+   if (gDebug > 0)
       ErrorInfo("ProofdExec: setting: %s", roothomeauthrc);
 
 #ifdef R__GLBS
@@ -577,7 +615,7 @@ void ProofdExec()
    char *shmidcred = new char[25];
    sprintf(shmidcred, "ROOTSHMIDCRED=%d", RpdGetShmIdCred());
    putenv(shmidcred);
-   if (gDebug > 2)
+   if (gDebug > 0)
       ErrorInfo("ProofdExec: setting: %s", shmidcred);
 #endif
 

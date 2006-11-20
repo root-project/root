@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.32 2006/07/03 09:33:49 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.33 2006/07/26 14:28:58 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -85,6 +85,7 @@ enum EMessageTypes {
    kPROOF_WORKERLISTS,                   //an action on any of the worker list follows
    kPROOF_DATASET_STATUS,                //status of data set preparation before processing
    kPROOF_OUTPUTOBJECT,                  //output object follows
+   kPROOF_SETENV,                        //buffer with env vars to set
 
    //---- ROOTD message opcodes (2000 - 2099)
    kROOTD_USER             = 2000,       //user id follows

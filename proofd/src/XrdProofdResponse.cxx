@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.cxx,v 1.7 2006/11/09 23:23:32 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.cxx,v 1.8 2006/11/11 17:37:40 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -255,6 +255,48 @@ int XrdProofdResponse::Send(XResponseType rcode, XProofActionCode acode,
    fResp.dlen          = static_cast<kXR_int32>(htonl((hlen)));
 
    if (fLink->Send(fRespIO, 3, sizeof(fResp)) < 0)
+      return fLink->setEtext("send failure");
+   return 0;
+}
+
+//______________________________________________________________________________
+int XrdProofdResponse::Send(kXR_int32 int1, kXR_int16 int2, kXR_int16 int3,
+                            void *data, int dlen )
+{
+   // Auxilliary Send method
+
+   if (!fLink) {
+      TRACE(RSP,"XrdProofdResponse:: link is undefined! ");
+      return 0;
+   }
+   XrdOucMutexHelper mh(fMutex);
+
+   kXR_int32 i1 = static_cast<kXR_int32>(htonl(int1));
+   kXR_int16 i2 = static_cast<kXR_int16>(htons(int2));
+   kXR_int16 i3 = static_cast<kXR_int16>(htons(int3));
+   int ilen = sizeof(i1) + sizeof(i2) + sizeof(i3);
+   int nn = 4;
+
+   fResp.status        = static_cast<kXR_unt16>(htons(kXR_ok));
+   fRespIO[1].iov_base = (caddr_t)(&i1);
+   fRespIO[1].iov_len  = sizeof(i1);
+   fRespIO[2].iov_base = (caddr_t)(&i2);
+   fRespIO[2].iov_len  = sizeof(i2);
+   fRespIO[3].iov_base = (caddr_t)(&i3);
+   fRespIO[3].iov_len  = sizeof(i3);
+   if (data) {
+      nn = 5;
+      fRespIO[4].iov_base = (caddr_t)data;
+      fRespIO[4].iov_len  = dlen;
+      TRACES(RSP,(int *)fLink<<": sending " <<dlen << " data bytes;"<<
+             " int1=" <<int1<<"; int2="<<int2<<"; int3="<<int3);
+   } else {
+      TRACES(RSP,(int *)fLink<<": sending int1=" <<int1
+                             <<"; int2=" <<int2 <<"; int3=" <<int3);
+   }
+   fResp.dlen          = static_cast<kXR_int32>(htonl((dlen+ilen)));
+
+   if (fLink->Send(fRespIO, nn, sizeof(fResp) + dlen) < 0)
       return fLink->setEtext("send failure");
    return 0;
 }

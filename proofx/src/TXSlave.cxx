@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.11 2006/10/06 09:14:58 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.12 2006/11/15 17:45:55 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -192,6 +192,32 @@ void TXSlave::Init(const char *host, Int_t stype)
    if (fProof->fConfFile.Length() > 0)
       alias += Form("|cf:%s",fProof->fConfFile.Data());
 
+   // Send over env variables (may not be supported remotely)
+   TString envlist;
+   if (!fProof->GetManager() ||
+        fProof->GetManager()->GetRemoteProtocol() > 1001) {
+         const TList *envs = TVirtualProof::GetEnvVars();
+         if (envs != 0 ) {
+            TIter next(envs);
+            for (TObject *o = next(); o != 0; o = next()) {
+               TNamed *env = dynamic_cast<TNamed*>(o);
+               if (env != 0) {
+                  if (!envlist.IsNull())
+                     envlist += ",";
+                  envlist += Form("%s=%s", env->GetName(), env->GetTitle());
+               }
+            }
+         }
+   } else {
+      if (fProof->GetManager())
+         Info("Init", "** NOT ** sending user envs - RemoteProtocol : %d",
+                      fProof->GetManager()->GetRemoteProtocol());
+   }
+
+   // Add to the buffer
+   if (!envlist.IsNull())
+      alias += Form("|envs:%s", envlist.Data());
+
    // Open connection to a remote XrdPROOF slave server.
    // Login and authentication are dealt with at this level, if required.
    if (!(fSocket = new TXSocket(url.GetUrl(kTRUE), mode, psid,
@@ -206,6 +232,13 @@ void TXSlave::Init(const char *host, Int_t stype)
                     "the connection at %s - exit", url.GetUrl(kTRUE));
       SafeDelete(fSocket);
       return;
+   }
+
+   // Check if the remote server supports user envs setting
+   if (!fProof->GetManager() && !envlist.IsNull() &&
+      ((TXSocket *)fSocket)->GetXrdProofdVersion() <= 1001) {
+      Info("Init","user envs setting sent but unsupported remotely - RemoteProtocol : %d",
+                     ((TXSocket *)fSocket)->GetXrdProofdVersion()); 
    }
 
    // Set the reference to TProof

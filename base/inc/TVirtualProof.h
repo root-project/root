@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.40 2006/11/01 16:02:25 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.41 2006/11/15 17:45:54 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -45,7 +45,7 @@ R__EXTERN TVirtualProof *gProof;
 // Special type for the hook to the TProof constructor, needed to avoid
 // using the plugin manager
 typedef TVirtualProof *(*TProof_t)(const char *, const char *, const char *,
-                                   Int_t, const char *);
+                                   Int_t, const char *, TVirtualProofMgr *);
 
 class TVirtualProof : public TNamed, public TQObject {
 
@@ -76,7 +76,9 @@ public:
    };
 
 private:
-   static TProof_t              fgProofHook;  // Hook to TProof constructor
+   static TProof_t              fgProofHook;     // Hook to TProof constructor             
+   static TList                *fgProofEnvList;  // List of TNameds defining environment   
+                                                 // variables to pass to proofserv         
 
 protected:
    TString                      fDataPoolUrl; // Default data pool entry point URL
@@ -279,6 +281,11 @@ public:
    static TVirtualProof *Open(const char *url = 0, const char *conffile = 0,
                               const char *confdir = 0, Int_t loglevel = 0);
    static Int_t        Reset(const char *url, const char *usr = 0);
+   
+   static void          AddEnvVar(const char *name, const char *value);
+   static void          DelEnvVar(const char *name);
+   static const TList  *GetEnvVars() { return fgProofEnvList; }
+   static void          ResetEnvVars();
 
    ClassDef(TVirtualProof,0)  // Abstract PROOF interface
 };

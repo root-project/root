@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.27 2005/07/21 14:08:06 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.28 2005/08/31 11:11:46 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -79,6 +79,7 @@ int    NetInit(EService service, int port1, int port2, int tcpwindowsize);
 int    NetParOpen(int port, int size);
 int    NetOpen(int inetdflag, EService service);
 int    NetRecv(char *msg, int len, EMessageTypes &kind);
+int    NetRecvAllocate(void *&buf, int &len, EMessageTypes &kind);
 int    NetRecvRaw(void *buf, int len);
 void   NetResetByteCount();
 int    NetSend(int code, EMessageTypes kind);

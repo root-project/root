@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.21 2006/10/19 12:38:07 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.22 2006/11/15 17:45:55 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -110,7 +110,7 @@ Long64_t     TXSockBuf::fgMemMax = 10485760; // Max allowed allocated memory [10
 TXSocket::TXSocket(const char *url, Char_t m, Int_t psid, Char_t capver,
                    const char *logbuf, Int_t loglevel, TXHandler *handler)
          : TSocket(), fMode(m), fLogLevel(loglevel),
-           fBuffer(logbuf), fASem(0), fDontTimeout(kFALSE)
+           fBuffer(logbuf), fASem(0), fDontTimeout(kFALSE), fXrdProofdVersion(-1)
 {
    // Constructor
    // Open the connection to a remote XrdProofd instance and start a PROOF
@@ -204,6 +204,8 @@ TXSocket::TXSocket(const char *url, Char_t m, Int_t psid, Char_t capver,
       fUser = fConn->fUser.c_str();
       fHost = fConn->fHost.c_str();
       fPort = fConn->fPort;
+      if (m == 'C')
+         fRemoteProtocol = fConn->fRemoteProtocol;
 
       // Also in the base class
       fUrl = fConn->fUrl.GetUrl().c_str();
@@ -851,15 +853,26 @@ Bool_t TXSocket::Create()
          Error("Create","session ID is undefined!");
       }
 
-      if (len >= (Int_t)sizeof(kXR_int32)) {
-         // The second 4 bytes contain the remote protocol version
-         kXR_int32 dver = 0;
-         memcpy(&dver, pdata, sizeof(kXR_int32));
+      if (len >= (Int_t)sizeof(kXR_int16)) {
+         // The second 2 bytes contain the remote PROOF protocol version
+         kXR_int16 dver = 0;
+         memcpy(&dver, pdata, sizeof(kXR_int16));
          fRemoteProtocol = net2host(dver);
-         pdata = (void *)((char *)pdata + sizeof(kXR_int32));
-         len -= sizeof(kXR_int32);
+         pdata = (void *)((char *)pdata + sizeof(kXR_int16));
+         len -= sizeof(kXR_int16);
       } else {
-         Warning("Create","protocol version of the remote daemon undefined!");
+         Warning("Create","protocol version of the remote PROOF undefined!");
+      }
+
+      if (len >= (Int_t)sizeof(kXR_int16)) {
+         // The third 2 bytes contain the remote XrdProofdProtocol version
+         kXR_int16 dver = 0;
+         memcpy(&dver, pdata, sizeof(kXR_int16));
+         fXrdProofdVersion = net2host(dver);
+         pdata = (void *)((char *)pdata + sizeof(kXR_int16));
+         len -= sizeof(kXR_int16);
+      } else {
+         Warning("Create","version of the remote XrdProofdProtocol undefined!");
       }
 
       if (len > 0) {

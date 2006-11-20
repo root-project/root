@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.cxx,v 1.9 2006/06/22 06:14:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProofMgr.cxx,v 1.10 2006/11/16 17:17:37 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -150,12 +150,9 @@ TVirtualProof *TVirtualProofMgr::CreateSession(const char *cfg,
    }
    // Create the instance
    TVirtualProof *p =
-     (TVirtualProof*) (*proofhook)(fUrl.GetUrl(), cfg, cfgdir, loglevel, 0);
+     (TVirtualProof*) (*proofhook)(fUrl.GetUrl(), cfg, cfgdir, loglevel, 0, this);
 
    if (p && p->IsValid()) {
-
-      // Set reference manager
-      p->SetManager(this);
 
       // Save record about this session
       Int_t ns = 1;

@@ -30,9 +30,15 @@ endif
 PROOFSERVS   := $(MODDIRS)/pmain.cxx
 PROOFSERVO   := $(PROOFSERVS:.cxx=.o)
 PROOFSERVDEP := $(PROOFSERVO:.o=.d)
-PROOFSERV    := bin/proofserv$(EXEEXT)
+ifeq ($(ARCH),win32gcc)
+PROOFSERVEXE := bin/proofserv_exe.exe
+else
+PROOFSERVEXE := bin/proofserv.exe
+PROOFSERVSH  := bin/proofserv
+endif
 ifeq ($(PROOFLIB),)
-PROOFSERV    :=
+PROOFSERVEXE :=
+PROOFSERVSH  :=
 endif
 
 ##### hadd #####
@@ -87,7 +93,8 @@ SSH2RPD         :=
 endif
 
 # used in the main Makefile
-ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(SSH2RPD)
+ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
+                $(HADD) $(SSH2RPD)
 ifeq ($(BUILDHBOOK),yes)
 ALLEXECS     += $(H2ROOT) $(G2ROOT) $(G2ROOTOLD)
 endif
@@ -105,10 +112,15 @@ $(ROOTNEXE):    $(ROOTEXEO) $(NEWLIB) $(ROOTLIBSDEP) $(RINTLIB)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTEXEO) $(ROOTICON) $(ROOTULIBS) \
 		   $(RPATH) $(NEWLIBS) $(ROOTLIBS) $(RINTLIBS) $(SYSLIBS)
 
-$(PROOFSERV):   $(PROOFSERVO) $(ROOTLIBSDEP) $(PROOFLIB) \
+$(PROOFSERVEXE): $(PROOFSERVO) $(ROOTLIBSDEP) $(PROOFLIB) \
                 $(TREEPLAYERLIB) $(THREADLIB)
 		$(LD) $(LDFLAGS) -o $@ $(PROOFSERVO) $(ROOTULIBS) \
 		   $(RPATH) $(ROOTLIBS) $(SYSLIBS)
+
+$(PROOFSERVSH): main/src/proofserv.sh
+		@echo "Install proofserv wrapper."
+		@cp $< $@
+		@chmod 0755 $@
 
 $(HADD):        $(HADDO) $(ROOTLIBSDEP)
 		$(LD) $(LDFLAGS) -o $@ $(HADDO) $(ROOTULIBS) \
@@ -134,10 +146,11 @@ $(G2ROOTOLD):   $(G2ROOTOLDO)
 		   $(SHIFTLIB) $(F77LIBS) $(SYSLIBS)
 
 ifeq ($(BUILDHBOOK),yes)
-all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(SSH2RPD) \
-               $(H2ROOT) $(G2ROOT) $(G2ROOTOLD)
+all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
+               $(HADD) $(SSH2RPD) $(H2ROOT) $(G2ROOT) $(G2ROOTOLD)
 else
-all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(SSH2RPD)
+all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
+               $(HADD) $(SSH2RPD)
 endif
 
 clean-main:
@@ -148,7 +161,8 @@ clean::         clean-main
 
 distclean-main: clean-main
 		@rm -f $(ROOTEXEDEP) $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVDEP) \
-		   $(PROOFSERV) $(HADDDEP) $(HADD) $(H2ROOTDEP) $(H2ROOT) \
-		   $(G2ROOT) $(G2ROOTOLD) $(SSH2RPDDEP) $(SSH2RPD)
+		   $(PROOFSERVEXE) $(PROOFSERVSH) $(HADDDEP) $(HADD) \
+		   $(H2ROOTDEP) $(H2ROOT) $(G2ROOT) $(G2ROOTOLD) \
+		   $(SSH2RPDDEP) $(SSH2RPD)
 
 distclean::     distclean-main

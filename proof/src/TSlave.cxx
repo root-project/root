@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.53 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.54 2006/11/16 17:17:38 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -141,6 +141,27 @@ void TSlave::Init(const char *host, Int_t port, Int_t stype)
    fUser              = fSocket->GetSecContext()->GetUser();
    PDB(kGlobal,3) {
       Info("Init","%s: fUser is .... %s", iam.Data(), fUser.Data());
+   }
+
+   if (fSocket->GetRemoteProtocol() >= 14 ) {
+      TMessage m(kPROOF_SETENV);
+
+      const TList *envs = TVirtualProof::GetEnvVars();
+      if (envs != 0 ) {
+         TIter next(envs);
+         for (TObject *o = next(); o != 0; o = next()) {
+            TNamed *env = dynamic_cast<TNamed*>(o);
+            if (env != 0) {
+               TString def = Form("%s=%s", env->GetName(), env->GetTitle());
+               const char *p = def.Data();
+               m << p;
+            }
+         }
+      }
+      fSocket->Send(m);
+   } else {
+      Info("Init","** NOT ** Sending kPROOF_SETENV RemoteProtocol : %d",
+         fSocket->GetRemoteProtocol());   
    }
 
    char buf[512];

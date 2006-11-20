@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.166 2006/11/15 17:45:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.167 2006/11/16 17:17:37 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -250,8 +250,9 @@ ClassImp(TProof)
 // in multi-threaded environments.
 extern "C" {
    TVirtualProof *GetTProof(const char *url, const char *file,
-                            const char *dir, Int_t log, const char *al)
-   { return (new TProof(url, file, dir, log, al)); }
+                            const char *dir, Int_t log, const char *al,
+                            TVirtualProofMgr *mgr)
+   { return (new TProof(url, file, dir, log, al, mgr)); }
 }
 class TProofInit {
 public:
@@ -264,7 +265,8 @@ TSemaphore    *TProof::fgSemaphore = 0;
 
 //______________________________________________________________________________
 TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
-               Int_t loglevel, const char *alias) : fUrl(masterurl)
+               Int_t loglevel, const char *alias, TVirtualProofMgr *mgr)
+       : fUrl(masterurl)
 {
    // Create a PROOF environment. Starting PROOF involves either connecting
    // to a master server, which in turn will start a set of slave servers, or
@@ -277,12 +279,23 @@ TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
    // Loglevel is the log level (default = 1). User specified custom config
    // files will be first looked for in $HOME/.conffile.
 
+   // This may be needed during init
+   fManager = mgr;
+
    if (!conffile || strlen(conffile) == 0)
       conffile = kPROOF_ConfFile;
    if (!confdir  || strlen(confdir) == 0)
       confdir = kPROOF_ConfDir;
 
    Init(masterurl, conffile, confdir, loglevel, alias);
+
+   // If called by a manager, make sure it stays in lasto position
+   // for cleaning
+   if (mgr) {
+      R__LOCKGUARD2(gROOTMutex);
+      gROOT->GetListOfSockets()->Remove(mgr);
+      gROOT->GetListOfSockets()->Add(mgr);
+   }
 
    // Old-style server type: we add this to the list and set the global pointer
    if (IsProofd() || IsMaster())
@@ -601,9 +614,11 @@ void TProof::SetManager(TVirtualProofMgr *mgr)
 
    fManager = mgr;
 
-   R__LOCKGUARD2(gROOTMutex);
-   gROOT->GetListOfSockets()->Remove(mgr);
-   gROOT->GetListOfSockets()->Add(mgr);
+   if (mgr) {
+      R__LOCKGUARD2(gROOTMutex);
+      gROOT->GetListOfSockets()->Remove(mgr);
+      gROOT->GetListOfSockets()->Add(mgr);
+   }
 }
 
 //______________________________________________________________________________

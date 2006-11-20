@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.h,v 1.5 2006/08/05 20:04:47 brun Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.h,v 1.6 2006/10/19 12:38:07 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -125,6 +125,7 @@ public:
    inline void         SetValid(bool valid = 1) { fIsValid = valid; }
    inline int          Status() const { return fStatus;}
    inline const char  *Tag() const { return fTag; }
+   inline const char  *UserEnvs() const { return (const char *)fUserEnvs; }
 
    XrdClientID        *GetClientID(int cid);
    int                 GetFreeID();
@@ -144,6 +145,8 @@ public:
                           { XrdProofServProxy::SetCharValue(&fOrdinal, o, l); }
    void                SetTag(const char *t, int l = 0)
                           { XrdProofServProxy::SetCharValue(&fTag, t, l); }
+   void                SetUserEnvs(const char *t, int l = 0)
+                          { XrdProofServProxy::SetCharValue(&fUserEnvs, t, l); }
 
    bool                IsValid() const { return fIsValid; }
    const char         *StatusAsString() const;
@@ -178,6 +181,7 @@ public:
    char                     *fClient;    // Client name
    char                     *fTag;       // Session unique tag
    char                     *fOrdinal;   // Session ordinal number
+   char                     *fUserEnvs;  // List of envs received from the user
 
    void                      ClearWorkers();
 

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.h,v 1.3 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.h,v 1.4 2006/10/19 12:38:07 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -64,6 +64,8 @@ class XrdProofdResponse
                               XProofActionCode acode, void *data, int dlen);
    int                   Send(XResponseType rcode, XProofActionCode acode,
                               kXR_int32 sid, void *data, int dlen);
+   int                   Send(kXR_int32 int1, kXR_int16 int2, kXR_int16 int3,
+                              void *data = 0, int dlen = 0);
    int                   Send(kXR_int32 int1, kXR_int32 int2, void *data = 0, int dlen = 0);
    int                   Send(kXR_int32 int1, void *data = 0, int dlen = 0);
 
