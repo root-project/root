@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.10 2006/11/16 15:39:52 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.11 2006/11/17 18:37:18 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -832,7 +832,7 @@ void TFitEditor::UpdateGUI()
             fXrange = fXaxis->GetNbins();
             fXmin = fXaxis->GetFirst();
             fXmax = fXaxis->GetLast();
-           break;
+            break;
          }
          case kObjectTree:  {
             //not implemented
