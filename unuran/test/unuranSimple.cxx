@@ -7,7 +7,9 @@
 #include "TRandom.h"
 #include "TSystem.h"
 //#include "TApplication.h"
+//#include "TRint.h"
 #include "TVirtualFitter.h"
+#include "TFitter.h"
 #include "Math/ProbFunc.h"
 
 #include <iostream> 
@@ -54,6 +56,9 @@ void unuranSimple() {
 //    gSystem->Load("libMinuit2");
 //    TVirtualFitter::SetDefaultFitter("Minuit2");
    std::cout << "Result of fitting a cdf to a constant function : " << std::endl;
+   // need TRint();
+   TFitter * fitter = new TFitter(); 
+   TVirtualFitter::SetFitter(fitter);
    h1->Fit("pol0","Q");
    TF1 * f = (TF1*)gROOT->GetFunction("pol0");
    std::cout << "Fit chi2 = " << f->GetChisquare() << " ndf = " << f->GetNDF() << std::endl;
@@ -61,16 +66,18 @@ void unuranSimple() {
 
    h1->Draw();
 
+   //delete fitter; 
 
 
 }
 
 #ifndef __CINT__
-int main(int /* argc */, char  **  /* argv */)
+int main()
 {
 //   TApplication theApp("App", &argc, argv);
+  //TRint theApp("TRint",&argc, argv);
+  //theApp.Run();
    unuranSimple();
-//   theApp.Run();
    return 0;
 }
 #endif
