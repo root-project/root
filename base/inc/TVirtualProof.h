@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.41 2006/11/15 17:45:54 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.42 2006/11/20 15:56:35 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -284,7 +284,7 @@ public:
    
    static void          AddEnvVar(const char *name, const char *value);
    static void          DelEnvVar(const char *name);
-   static const TList  *GetEnvVars() { return fgProofEnvList; }
+   static const TList  *GetEnvVars();
    static void          ResetEnvVars();
 
    ClassDef(TVirtualProof,0)  // Abstract PROOF interface

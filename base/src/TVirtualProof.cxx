@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.cxx,v 1.10 2006/10/19 12:38:07 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.cxx,v 1.11 2006/11/20 15:56:35 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -201,6 +201,14 @@ void TVirtualProof::SetTProofHook(TProof_t proofhook)
    // Set hook to TProof ctor.
 
    fgProofHook = proofhook;
+}
+
+//_____________________________________________________________________________
+const TList *TVirtualProof::GetEnvVars()
+{
+   // Get environemnt variables.
+
+   return fgProofEnvList;
 }
 
 //_____________________________________________________________________________
