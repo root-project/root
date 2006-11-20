@@ -19,8 +19,9 @@ The current set includes classes and functions for:
 <li>\ref Random
 <li>\ref CppFunctions : 
 <ul>
-<li>interfaces for generic (ROOT::Math::IGenFunction) and parameteric (ROOT::Math::IParamFunction) one-dimensional functions</li>
+<li>Interface for generic and parameteric functions in one and multi dimensions
 <li>Concrete function classes like ROOT::Math::Polynomial for polynomial evaluation and root solvers 
+<li>Wrapper class inheriting from the ROOT::Math function interfaces for the %ROOT TF1 objects in the case of one (ROOT::Math::WrappedTF1) and multi dimensions (ROOT::Math::WrappedMultiTF1).  
 </ul>
 <p>
 The mathematical functions are implemented as a set of free functions in the namespace \em ROOT::Math. The naming used for the special functions is the same proposed for the C++ standard (see C++ standard extension <A HREF="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2004/n1687.pdf"> proposal document</A>).

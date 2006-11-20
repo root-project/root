@@ -1,4 +1,4 @@
-// @(#)root/fit:$Name:  $:$Id: inc/Fit/WrappedTF1.h,v 1.0 2006/01/01 12:00:00 moneta Exp $
+// @(#)root/fit:$Name:  $:$Id: WrappedMultiTF1.h,v 1.1 2006/11/17 18:26:50 moneta Exp $
 // Author: L. Moneta Wed Sep  6 09:52:26 2006
 
 /**********************************************************************
@@ -28,7 +28,9 @@ namespace ROOT {
 
 /** 
    Class to Wrap a ROOT Function class (like TF1)  in a IParamFunction interface
-   in order to be used in fitting
+   of multi-dimensions to be used in the ROOT::Math numerical algorithm
+
+   @ingroup CppFunctions
 */ 
 class WrappedMultiTF1 : public ROOT::Math::IParamFunction<ROOT::Math::MultiDim> {
 

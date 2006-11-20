@@ -8,4 +8,13 @@ cp -p build/doc_Makefile.am doc/Makefile.am
 cp -p build/autogen . 
 cp -p -r build/config . 
 
+# add files from mahcore
+cp ../mathcore/inc/Math/IFunction.h inc/Math/.
+cp ../mathcore/inc/Math/IFunctionfwd.h inc/Math/.
+cp ../mathcore/inc/Math/IParamFunction.h inc/Math/.
+cp ../mathcore/inc/Math/IParamFunctionfwd.h inc/Math/.
+cp ../mathcore/inc/Math/Functor.h inc/Math/.
+cp ../mathcore/inc/Math/Util.h inc/Math/.
+cp ../mathcore/inc/Math/WrappedFunction.h inc/Math/.
+
 ./autogen
