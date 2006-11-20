@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TCondition.cxx,v 1.9 2006/05/23 04:47:41 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TCondition.cxx,v 1.10 2006/05/24 15:10:46 brun Exp $
 // Author: Fons Rademakers   01/07/97
 
 /*************************************************************************
@@ -45,29 +45,6 @@ TCondition::TCondition(TMutex *m)
 
    if (!fConditionImp)
       Error("TCondition", "could not create TConditionImp");
-}
-
-//______________________________________________________________________________
-TCondition::TCondition(const TCondition& tc) :
-  TObject(tc),
-  fConditionImp(tc.fConditionImp),
-  fMutex(tc.fMutex),
-  fPrivateMutex(tc.fPrivateMutex)
-{ 
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TCondition& TCondition::operator=(const TCondition& tc) 
-{
-   //assignement operator
-   if(this!=&tc) {
-      TObject::operator=(tc);
-      fConditionImp=tc.fConditionImp;
-      fMutex=tc.fMutex;
-      fPrivateMutex=tc.fPrivateMutex;
-   } 
-   return *this;
 }
 
 //______________________________________________________________________________

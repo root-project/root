@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TSemaphore.h,v 1.3 2005/12/09 15:12:19 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TSemaphore.h,v 1.4 2006/05/23 07:43:55 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -40,10 +40,11 @@ private:
    TCondition   fCond;    // semaphore condition variable
    Int_t        fValue;   // counter
 
+   TSemaphore(const TSemaphore &s);             // not implemented
+   TSemaphore& operator=(const TSemaphore &s);  // not implemented
+
 public:
    TSemaphore(UInt_t initial = 1);
-   TSemaphore(const TSemaphore &s);
-   TSemaphore& operator=(const TSemaphore& s);
    virtual ~TSemaphore() { }
 
    Int_t  Wait(Int_t millisec = 0);

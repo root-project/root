@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TSemaphore.cxx,v 1.4 2006/05/23 07:43:55 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TSemaphore.cxx,v 1.5 2006/06/01 16:28:18 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -28,19 +28,6 @@ TSemaphore::TSemaphore(UInt_t initial) : fCond(&fMutex)
    // Create counting semaphore.
 
    fValue = initial;
-}
-
-//______________________________________________________________________________
-TSemaphore::TSemaphore(const TSemaphore &s) : TObject(s)
-{
-   // TSemaphore copy ctor.
-}
-
-//______________________________________________________________________________
-TSemaphore& TSemaphore::operator=(const TSemaphore&)
-{
-   // TSemaphore assignment operator.
-   return *this;
 }
 
 //______________________________________________________________________________

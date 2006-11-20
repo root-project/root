@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TRWLock.h,v 1.2 2004/12/10 12:13:33 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TRWLock.h,v 1.3 2006/05/23 08:41:51 brun Exp $
 // Author: Fons Rademakers   04/01/2000
 
 /*************************************************************************
@@ -42,10 +42,11 @@ private:
    TMutex       fMutex;     // rwlock mutex
    TCondition   fLockFree;  // rwlock condition variable
 
+   TRWLock(const TRWLock &);           // not implemented
+   TRWLock& operator=(const TRWLock&); // not implemented
+
 public:
    TRWLock();
-   TRWLock(const TRWLock &l) : TObject(l) {}
-   TRWLock& operator=(const TRWLock&) {return *this;}
    virtual ~TRWLock() { }
 
    Int_t  ReadLock();

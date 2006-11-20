@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TCondition.h,v 1.6 2006/05/13 11:00:50 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TCondition.h,v 1.7 2006/05/23 04:47:41 brun Exp $
 // Author: Fons Rademakers   01/07/97
 
 /*************************************************************************
@@ -42,9 +42,8 @@ private:
    TMutex         *fMutex;         // mutex used around Wait() and TimedWait()
    Bool_t          fPrivateMutex;  // is fMutex our private mutex
 
-protected:
-   TCondition(const TCondition&); 
-   TCondition& operator=(const TCondition&); 
+   TCondition(const TCondition&);             // not implemented
+   TCondition& operator=(const TCondition&);  // not implemented
 
 public:
    TCondition(TMutex *m = 0);
