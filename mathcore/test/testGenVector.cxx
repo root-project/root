@@ -16,7 +16,9 @@
 #include "Math/LorentzRotation.h"
 
 #include "Math/VectorUtil.h"
+#ifndef NO_SMATRIX
 #include "Math/SMatrix.h"
+#endif
 
 
 using namespace ROOT::Math;
@@ -270,11 +272,12 @@ int testRotations3D() {
   //iret |= compare( (rot2==rot),true,"Get/SetComponens");
 
   // test get/set with a matrix
+#ifndef NO_SMATRIX
   SMatrix<double,3> mat; 
   rot2.GetRotationMatrix(mat);
   rot.SetRotationMatrix(mat); 
   iret |= compare( (rot2==rot),true,"Get/SetRotMatrix");
-
+#endif
 
   //test inversion
   Rotation3D rotInv = rot.Inverse();
@@ -383,6 +386,7 @@ int testTransform3D() {
 //   std::cout << a * t3(q1) << std::endl;
 
   // test get/set with a matrix
+#ifndef NO_SMATRIX
   SMatrix<double,3,4> mat; 
   t3.GetTransformMatrix(mat);
   Transform3D t3b;  t3b.SetTransformMatrix(mat); 
@@ -395,6 +399,7 @@ int testTransform3D() {
   lr.GetRotationMatrix(mat4);
   LorentzRotation lr2;  lr2.SetRotationMatrix(mat4); 
   iret |= compare( (lr==lr2),true,"Get/SetLRotMatrix");
+#endif
 
   if (iret == 0) std::cout << "\t\t\t\tOK\n"; 
   else std::cout << "\t\t\t\tFAILED\n"; 
