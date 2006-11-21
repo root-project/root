@@ -1,5 +1,5 @@
-/* @(#)root/netx:$Name: $:$Id: LinkDef.h,v 1.5 2006/11/09 16:36:38 rdm Exp $ */
-// Authors: Ben Lloyd 09/11/06 ben.lloyd@cern.ch
+/* @(#)root/gdml:$Name:  $:$Id: LinkDef.h,v 1.1 2006/11/17 17:40:02 brun Exp $ */
+/* Authors: Ben Lloyd 09/11/06 ben.lloyd@cern.ch */
 
 /*************************************************************************
  * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *

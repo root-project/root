@@ -1,4 +1,4 @@
-/* @(#)root/netx:$Name:  $:$Id: TGDMLParse.cxx,v 1.3 2006/11/20 13:30:55 brun Exp $ */
+/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.cxx,v 1.4 2006/11/21 10:43:16 brun Exp $ */
 // Author: Ben Lloyd 09/11/06
 
 /*************************************************************************
