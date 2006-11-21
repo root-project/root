@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.3 2006/10/31 15:18:34 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.4 2006/11/02 15:12:33 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -73,6 +73,7 @@
 #include "TEntryListBlock.h"
 #include "TTree.h"
 #include "TFile.h"
+#include "TSystem.h"
 
 ClassImp(TEntryList)
 
@@ -129,8 +130,6 @@ TEntryList::TEntryList(const char *name, const char *title, const TTree *tree):T
    fNBlocks = 0;
    fTreeNumber = -1;
    SetTree(tree);
-   fTreeName = tree->GetName();
-   fFileName = tree->GetCurrentFile()->GetName();
 
    fDirectory  = gDirectory;
    gDirectory->Append(this);
@@ -190,6 +189,8 @@ TEntryList::TEntryList(const TEntryList &elist) : TNamed(elist)
    fTreeName = elist.fTreeName;
    fFileName = elist.fFileName;
    fTreeNumber = elist.fTreeNumber;
+   fLastIndexQueried = -1;
+   fLastIndexReturned = 0;
    fN = elist.fN;
    fShift = elist.fShift;
    fLists = 0;
@@ -252,6 +253,7 @@ TEntryList::~TEntryList()
 void TEntryList::Add(const TEntryList *elist)
 {
    //Add 2 entry lists
+   //If the resulting list has sublists (fLists!=0), its fCurrent member is reset to 0
 
    if (fN==0){
       //this list is empty. copy the other list completely ??
@@ -259,6 +261,8 @@ void TEntryList::Add(const TEntryList *elist)
       fTreeName = elist->fTreeName;
       fFileName = elist->fFileName;
       fTreeNumber = elist->fTreeNumber;
+      fLastIndexQueried = -1;
+      fLastIndexReturned = 0;
       fN = elist->fN;
       if (elist->fLists){
          fLists = new TList();
@@ -332,11 +336,12 @@ void TEntryList::Add(const TEntryList *elist)
             el->fBlocks = fBlocks;
             fBlocks = 0;
             el->fNBlocks = fNBlocks;
+            el->fN = fN;
             fLists->Add(el);
             el = new TEntryList(*elist);
             fLists->Add(el);
-            fCurrent = el;
             fN+=el->GetN();
+            fCurrent = 0;
       }
    } else {
       //there are already some sublists in this list, just add another one
@@ -588,8 +593,12 @@ Long64_t TEntryList::GetEntryAndTree(Int_t index, Int_t &treenum)
 //third sublist will be returned
 
    Long64_t result = GetEntry(index);
-   treenum = fCurrent->fTreeNumber;
+   if (fLists)
+      treenum = fCurrent->fTreeNumber;
+   else
+      treenum = fTreeNumber;
    if (treenum<0) return -1;
+
    return result;
 }
 
@@ -851,6 +860,9 @@ void TEntryList::SetTree(const TTree *tree)
 
    TString treename = tree->GetTree()->GetName();
    TString filename = tree->GetTree()->GetCurrentFile()->GetName();
+   gSystem->ExpandPathName(filename);
+   if (!gSystem->IsAbsoluteFileName(filename))
+      gSystem->PrependPathName(gSystem->pwd(), filename);
    SetTree(treename, filename);
 
 }
