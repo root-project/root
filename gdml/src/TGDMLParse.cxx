@@ -1,4 +1,4 @@
-/* @(#)root/netx:$Name:  $:$Id: TGDMLParse.cxx,v 1.2 2006/11/17 17:49:50 brun Exp $ */
+/* @(#)root/netx:$Name:  $:$Id: TGDMLParse.cxx,v 1.3 2006/11/20 13:30:55 brun Exp $ */
 // Author: Ben Lloyd 09/11/06
 
 /*************************************************************************
@@ -78,18 +78,9 @@ When most solids or volumes are added to the geometry they
 
 ****************************************************************************/
 
-#ifndef ROOT_TGeoMatrix
 #include "TGeoMatrix.h"
-#endif
-
-#ifndef ROOT_TXMLEngine
 #include "TXMLEngine.h"
-#endif
-
-#ifndef ROOT_TGeoVolume
 #include "TGeoVolume.h"
-#endif
-
 #include "TGeoBBox.h"
 #include "TGeoParaboloid.h"
 #include "TGeoArb8.h"
@@ -119,8 +110,8 @@ When most solids or volumes are added to the geometry they
 ClassImp(TGDMLParse)
 
 //_________________________________________________________________
-TGeoVolume* TGDMLParse::GDMLReadFile(const char* filename){
-
+TGeoVolume* TGDMLParse::GDMLReadFile(const char* filename)
+{
   //creates the new instance of the XMLEngine called 'gdml', using the filename 
   //then parses the file and creates the DOM tree. Then passes the DOM to the 
   //next funtion to translate it. 
@@ -139,7 +130,7 @@ TGeoVolume* TGDMLParse::GDMLReadFile(const char* filename){
    XMLNodePointer_t mainnode = gdml->DocGetRootElement(gdmldoc);
    
    // display recursively all nodes and subnodes
-     ParseGDML(gdml, mainnode, 1);
+   ParseGDML(gdml, mainnode, 1);
 
 
    // Release memory before exit
@@ -151,8 +142,8 @@ TGeoVolume* TGDMLParse::GDMLReadFile(const char* filename){
 }
 
 //________________________________________________________________
-void TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node, Int_t level) {
-
+void TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node, Int_t level) 
+{
   //this function recursively moves thru the DOM tree of the GDML file. It checks for
   //key words along the way and if a key word is found it calls the corresponding
   //function to interpret the node.
@@ -195,104 +186,72 @@ void TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node, Int_t level)
    const char* reflstr = "reflectedSolid";
    
    if ((strcmp(name, posistr)) == 0){ 
-     node = PosProcess(gdml, node, attr);
-   }
-   else if ((strcmp(name, rotastr)) == 0){ 
-     node = RotProcess(gdml, node, attr);
-   } 
-   else if ((strcmp(name, setustr)) == 0){ 
-     node = TopProcess(gdml, node);
-   } 
-   else if ((strcmp(name, consstr)) == 0){ 
-     node = ConProcess(gdml, node, attr);
-  }
-   else if (((strcmp(name, "atom")) == 0) && ((strcmp(parent, elemstr)) == 0)){ 
-     node = EleProcess(gdml, node, parentn);
-   }
-   else if ((strcmp(name, isotstr)) == 0){ 
-     std::cout << "Isotope NOT supported by ROOT.." << std::endl;
-   }
-    else if ((strcmp(name, matestr)) == 0){ 
-       if(gdml->HasAttr(node, "Z")){
-          int z = 1;
-          node = MatProcess(gdml, node, attr, z);
+      node = PosProcess(gdml, node, attr);
+   } else if ((strcmp(name, rotastr)) == 0){ 
+      node = RotProcess(gdml, node, attr);
+   } else if ((strcmp(name, setustr)) == 0){ 
+      node = TopProcess(gdml, node);
+   } else if ((strcmp(name, consstr)) == 0){ 
+      node = ConProcess(gdml, node, attr);
+   } else if (((strcmp(name, "atom")) == 0) && ((strcmp(parent, elemstr)) == 0)){ 
+      node = EleProcess(gdml, node, parentn);
+   } else if ((strcmp(name, isotstr)) == 0){ 
+      std::cout << "Isotope NOT supported by ROOT.." << std::endl;
+   } else if ((strcmp(name, matestr)) == 0){ 
+      if(gdml->HasAttr(node, "Z")) {
+         int z = 1;
+         node = MatProcess(gdml, node, attr, z);
+      } else {
+         int z = 0;
+         node = MatProcess(gdml, node, attr, z);
       }
-       else{
-          int z = 0;
-          node = MatProcess(gdml, node, attr, z);
-       }
-    }
-    
-    else if ((strcmp(name, volustr)) == 0){ 
-       node = VolProcess(gdml, node);
-    }
-    else if ((strcmp(name, bboxstr)) == 0){ 
-       node = Box(gdml, node, attr);
-    }
-    else if ((strcmp(name, cutTstr)) == 0){ 
+   } else if ((strcmp(name, volustr)) == 0){ 
+      node = VolProcess(gdml, node);
+   } else if ((strcmp(name, bboxstr)) == 0){ 
+      node = Box(gdml, node, attr);
+   } else if ((strcmp(name, cutTstr)) == 0){ 
       node = CutTube(gdml, node, attr);
-   }
-   else if ((strcmp(name, arb8str)) == 0){ 
+   } else if ((strcmp(name, arb8str)) == 0){ 
       node = Arb8(gdml, node, attr);
-   }
-   else if ((strcmp(name, tubestr)) == 0){ 
+   } else if ((strcmp(name, tubestr)) == 0){ 
       node = Tube(gdml, node, attr);
-   }
-   else if ((strcmp(name, conestr)) == 0){ 
+   } else if ((strcmp(name, conestr)) == 0){ 
       node = Cone(gdml, node, attr);
-   }
-   else if ((strcmp(name, polystr)) == 0){ 
+   } else if ((strcmp(name, polystr)) == 0){ 
       node = Polycone(gdml, node, attr);
-   }
-   else if ((strcmp(name, trapstr)) == 0){ 
+   } else if ((strcmp(name, trapstr)) == 0){ 
       node = Trap(gdml, node, attr);
-   }
-   else if ((strcmp(name, trdstr)) == 0){ 
+   } else if ((strcmp(name, trdstr)) == 0){ 
       node = Trd(gdml, node, attr);
-   }
-   else if ((strcmp(name, sphestr)) == 0){ 
+   } else if ((strcmp(name, sphestr)) == 0){ 
       node = Sphere(gdml, node, attr);
-   } 
-   else if ((strcmp(name, xtrustr)) == 0){ 
+   } else if ((strcmp(name, xtrustr)) == 0){ 
       node = Xtru(gdml, node, attr);
-   }
-   else if ((strcmp(name, twtrstr)) == 0){ 
+   } else if ((strcmp(name, twtrstr)) == 0){ 
       node = TwistTrap(gdml, node, attr);
-   }
-   else if ((strcmp(name, hypestr)) == 0){ 
+   } else if ((strcmp(name, hypestr)) == 0){ 
       node = Hype(gdml, node, attr);
-   }
-   else if ((strcmp(name, orbstr)) == 0){ 
+   } else if ((strcmp(name, orbstr)) == 0){ 
       node = Orb(gdml, node, attr);
-   }
-   else if ((strcmp(name, parastr)) == 0){ 
+   } else if ((strcmp(name, parastr)) == 0){ 
       node = Para(gdml, node, attr);
-   }
-   else if ((strcmp(name, torustr)) == 0){ 
+   } else if ((strcmp(name, torustr)) == 0){ 
       node = Torus(gdml, node, attr);
-   }
-   else if ((strcmp(name, eltustr)) == 0){ 
+   } else if ((strcmp(name, eltustr)) == 0){ 
       node = ElTube(gdml, node, attr);
-   }
-   else if ((strcmp(name, hedrstr)) == 0){ 
+   } else if ((strcmp(name, hedrstr)) == 0){ 
       node = Polyhedra(gdml, node, attr);
-   }
-   else if ((strcmp(name, parbstr)) == 0){ 
+   } else if ((strcmp(name, parbstr)) == 0){ 
       node = Paraboloid(gdml, node, attr); 
-   }
-   else if ((strcmp(name, subtstr)) == 0){ 
+   } else if ((strcmp(name, subtstr)) == 0){ 
       node = BooSolid(gdml, node, attr, 1);
-   }
-   else if ((strcmp(name, intestr)) == 0){ 
+   } else if ((strcmp(name, intestr)) == 0){ 
       node = BooSolid(gdml, node, attr, 2);
-   }
-   else if ((strcmp(name, uniostr)) == 0){ 
+   } else if ((strcmp(name, uniostr)) == 0){ 
       node = BooSolid(gdml, node, attr, 3);
-   }
-   else if ((strcmp(name, reflstr)) == 0){ 
+   } else if ((strcmp(name, reflstr)) == 0){ 
       node = Reflection(gdml, node, attr);
-   }
-   else if ((strcmp(name, assestr)) == 0){ 
+   } else if ((strcmp(name, assestr)) == 0){ 
       node = AssProcess(gdml, node);
    }
    
@@ -306,8 +265,8 @@ void TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node, Int_t level)
 }
 
 //___________________________________________________________
-double TGDMLParse::Evaluate(const char* evalline){
-
+double TGDMLParse::Evaluate(const char* evalline)
+{
    //takes in a string containing a mathematical expression and
    //returns the result of the expression as a double.
 
@@ -320,8 +279,8 @@ double TGDMLParse::Evaluate(const char* evalline){
 }
 
 //____________________________________________________________
-Int_t TGDMLParse::SetAxis(const char* axisString){
-
+Int_t TGDMLParse::SetAxis(const char* axisString)
+{
    //When using the 'divide' process in the geometry this function
    //sets the variable 'axis' depending on what is specified.
 
@@ -329,27 +288,22 @@ Int_t TGDMLParse::SetAxis(const char* axisString){
 
    if((strcmp(axisString, "kXAxis")) == 0){
       axis = 1;
-   }
-   else if((strcmp(axisString, "kYAxis")) == 0){
+   } else if((strcmp(axisString, "kYAxis")) == 0){
       axis = 2;
-   }
-   else if((strcmp(axisString, "kZAxis")) == 0){
+   } else if((strcmp(axisString, "kZAxis")) == 0){
       axis = 3;
-   }
-   else if((strcmp(axisString, "kRho")) == 0){
+   } else if((strcmp(axisString, "kRho")) == 0){
       axis = 1;
-   }
-   else if((strcmp(axisString, "kPhi")) == 0){
+   } else if((strcmp(axisString, "kPhi")) == 0){
       axis = 2;
    }
    
    return axis;
-
 }
 
 //____________________________________________________________
-const char* TGDMLParse::NameShort(const char* name){
-
+const char* TGDMLParse::NameShort(const char* name)
+{
    //this function looks thru a string for the chars '0x' next to
    //each other, when it finds this, it calls another function to strip
    //the hex address.   It does this recursively until the end of the 
@@ -370,8 +324,8 @@ const char* TGDMLParse::NameShort(const char* name){
 }
 
 //_____________________________________________________________
-const char* TGDMLParse::NameShortB(const char* name){ 
-
+const char* TGDMLParse::NameShortB(const char* name)
+{ 
    //this function is passed a string, and removes the first hex address
    //it finds.   This function is called recursively by NameShort to
    //fully strip a string of all hex addresses within it.
@@ -391,8 +345,7 @@ const char* TGDMLParse::NameShortB(const char* name){
          const char *temp = &name[(char_offset + 10)];
          shortname = strcat(shortname, temp);
          retname = shortname;
-      }
-      else{
+      } else {
          retname = name;
       }               
       char_offset = char_offset + 1;
@@ -406,8 +359,8 @@ const char* TGDMLParse::NameShortB(const char* name){
 }
 
 //____________________________________________________________
-const char* TGDMLParse::FindConst(const char* retval){
-
+const char* TGDMLParse::FindConst(const char* retval)
+{
    //If a value is given within the GDML file, this function checks
    //the constant map set up when all constants are declared.   If a matching
    //constant name is found, the corresponding value is returned, if not,
@@ -420,8 +373,8 @@ const char* TGDMLParse::FindConst(const char* retval){
 }
 
 //________________________________________________________
-XMLNodePointer_t TGDMLParse::ConProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-
+XMLNodePointer_t TGDMLParse::ConProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{
    //In the define section of the GDML file, constants can be declared.
    //when the constant keyword is found, this function is called, and the
    //name and value of the constant is stored in fconmap map using the 
@@ -449,8 +402,8 @@ XMLNodePointer_t TGDMLParse::ConProcess(TXMLEngine* gdml, XMLNodePointer_t node,
    
 }
 //__________________________________________________________
-const char* TGDMLParse::GetScale(const char* unit){
-
+const char* TGDMLParse::GetScale(const char* unit)
+{
    //Throughout the GDML file, a unit can de specified.   Whether it be
    //angular or linear, values can be used as well as abbreviations such as
    // 'mm' or 'deg'. This function is passed the specified unit and if it is 
@@ -502,8 +455,8 @@ const char* TGDMLParse::GetScale(const char* unit){
 }
 
 //____________________________________________________________
-XMLNodePointer_t TGDMLParse::PosProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-
+XMLNodePointer_t TGDMLParse::PosProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{
    //In the define section of the GDML file, positions can be declared.
    //when the position keyword is found, this function is called, and the
    //name and values of the position are converted into type TGeoPosition 
@@ -562,8 +515,8 @@ XMLNodePointer_t TGDMLParse::PosProcess(TXMLEngine* gdml, XMLNodePointer_t node,
 }
 
 //___________________________________________________________________
-XMLNodePointer_t TGDMLParse::RotProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-   
+XMLNodePointer_t TGDMLParse::RotProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{
    //In the define section of the GDML file, rotations can be declared.
    //when the rotation keyword is found, this function is called, and the
    //name and values of the rotation are converted into type TGeoRotation 
@@ -624,8 +577,8 @@ XMLNodePointer_t TGDMLParse::RotProcess(TXMLEngine* gdml, XMLNodePointer_t node,
 }
 
 //___________________________________________________________
-XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,   XMLNodePointer_t parentn){
-   
+XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,   XMLNodePointer_t parentn)
+{   
    //In the materials section of the GDML file, elements can be declared.
    //when the element keyword is found, this function is called, and the
    //name and values of the element are converted into type TGeoElement and
@@ -685,8 +638,8 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,
 }
 
 //_________________________________________________________________________
-XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,   XMLAttrPointer_t attr, int z){
-   
+XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,   XMLAttrPointer_t attr, int z)
+{   
    //In the materials section of the GDML file, materials can be declared.
    //when the material keyword is found, this function is called, and the
    //name and values of the material are converted into type TGeoMaterial 
@@ -718,25 +671,25 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
          attr = gdml->GetFirstAttr(child);
          
          if((strcmp(gdml->GetNodeName(child), "atom")) == 0){
-    while (attr!=0){   
-       tempattr = gdml->GetAttrName(attr);
+	    while (attr!=0){   
+	       tempattr = gdml->GetAttrName(attr);
        
-       if((strcmp(tempattr, "value")) == 0) { 
-          a = Evaluate(FindConst(gdml->GetAttrValue(attr)));
-       }       
-       attr = gdml->GetNextAttr(attr);
-    }         
+	       if((strcmp(tempattr, "value")) == 0) { 
+		  a = Evaluate(FindConst(gdml->GetAttrValue(attr)));
+	       }       
+	       attr = gdml->GetNextAttr(attr);
+	    }         
          }
          
          if((strcmp(gdml->GetNodeName(child), "D")) == 0){
-    while (attr!=0){   
-       tempattr = gdml->GetAttrName(attr);
-       
-       if((strcmp(tempattr, "value")) == 0) { 
-          d = Evaluate(FindConst(gdml->GetAttrValue(attr)));   
-       }       
-       attr = gdml->GetNextAttr(attr);
-    } 
+	    while (attr!=0){   
+	       tempattr = gdml->GetAttrName(attr);
+	       
+	       if((strcmp(tempattr, "value")) == 0) { 
+		  d = Evaluate(FindConst(gdml->GetAttrValue(attr)));   
+	       }       
+	       attr = gdml->GetNextAttr(attr);
+	    } 
          }         
          child = gdml->GetNext(child);
       }
@@ -747,7 +700,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
       
       //CHECK FOR CONSTANTS    
       tempconst = FindConst(gdml->GetAttr(node, "Z"));
-    
+      
       mat = new TGeoMaterial(NameShort(name), a, Evaluate(tempconst), d);      
       mixflag = 0;
       TGeoElement* mat_ele = new TGeoElement(NameShort(name), "", atoi(tempconst), a);
@@ -759,64 +712,64 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
          attr = gdml->GetFirstAttr(child);
          
          if((strcmp(gdml->GetNodeName(child), "fraction")) == 0){
-    double n = 0;
-    const char* ref = ""; 
-    ncompo = ncompo + 1;
-    
-    while (attr!=0){   
-       tempattr = gdml->GetAttrName(attr);
-       
-       if((strcmp(tempattr, "n")) == 0) { 
-          n = Evaluate(FindConst(gdml->GetAttrValue(attr)));
-       }
-       else if((strcmp(tempattr, "ref")) == 0) { 
-          ref = FindConst(gdml->GetAttrValue(attr));
-       }
-       
-       attr = gdml->GetNextAttr(attr);
-    }
-    
-    fracmap[ref] = n; 
+	    double n = 0;
+	    const char* ref = ""; 
+	    ncompo = ncompo + 1;
+	    
+	    while (attr!=0){   
+	       tempattr = gdml->GetAttrName(attr);
+	       
+	       if((strcmp(tempattr, "n")) == 0) { 
+		  n = Evaluate(FindConst(gdml->GetAttrValue(attr)));
+	       }
+	       else if((strcmp(tempattr, "ref")) == 0) { 
+		  ref = FindConst(gdml->GetAttrValue(attr));
+	       }
+	       
+	       attr = gdml->GetNextAttr(attr);
+	    }
+	    
+	    fracmap[ref] = n; 
          }
          
          else if((strcmp(gdml->GetNodeName(child), "composite")) == 0){
-    double n = 0;
-    const char* ref = ""; 
-    ncompo = ncompo + 1;
-    
-    while (attr!=0){   
-       tempattr = gdml->GetAttrName(attr);
-       
-       if((strcmp(tempattr, "n")) == 0) { 
-          n = Evaluate(FindConst(gdml->GetAttrValue(attr)));
-       }
-       else if((strcmp(tempattr, "ref")) == 0) { 
-          ref = FindConst(gdml->GetAttrValue(attr));
-       }
-       
-       attr = gdml->GetNextAttr(attr);
-    }
-    
-    fracmap[ref] = n;
+	    double n = 0;
+	    const char* ref = ""; 
+	    ncompo = ncompo + 1;
+	    
+	    while (attr!=0){   
+	       tempattr = gdml->GetAttrName(attr);
+	       
+	       if((strcmp(tempattr, "n")) == 0) { 
+		  n = Evaluate(FindConst(gdml->GetAttrValue(attr)));
+	       }
+	       else if((strcmp(tempattr, "ref")) == 0) { 
+		  ref = FindConst(gdml->GetAttrValue(attr));
+	       }
+	       
+	       attr = gdml->GetNextAttr(attr);
+	    }
+	    
+	    fracmap[ref] = n;
          }
          
          else if((strcmp(gdml->GetNodeName(child), "D")) == 0){
-    while (attr!=0){         
-       tempattr = gdml->GetAttrName(attr);
-       
-       if((strcmp(tempattr, "value")) == 0) { 
-          density = Evaluate(FindConst(gdml->GetAttrValue(attr)));
-       }
-       
-       attr = gdml->GetNextAttr(attr);
-    }
+	    while (attr!=0){         
+	       tempattr = gdml->GetAttrName(attr);
+	       
+	       if((strcmp(tempattr, "value")) == 0) { 
+		  density = Evaluate(FindConst(gdml->GetAttrValue(attr)));
+	       }
+	       
+	       attr = gdml->GetNextAttr(attr);
+	    }
          }
          
          child = gdml->GetNext(child);       
       }
       
       //still in the not Z else...but not in the while..
-          
+      
       name = gdml->GetAttr(node, "name");
       mix = new TGeoMixture(NameShort(name), ncompo, density);
       mixflag = 1;
@@ -824,10 +777,9 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
       
       for(fractions f = fracmap.begin(); f != fracmap.end(); f++){
          if(felemap.find(f->first) != felemap.end()){
-    mix->DefineElement(i, felemap[f->first], f->second);
-         }
-         else{
-    // mix->DefineElement(i, fmixmap[f->first], f->second); BUG IN PYTHON???
+	    mix->DefineElement(i, felemap[f->first], f->second);
+         } else {
+	    // mix->DefineElement(i, fmixmap[f->first], f->second); BUG IN PYTHON???
          }
          
          i = i + 1;
@@ -840,11 +792,10 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
    
    TGeoMedium* med = 0;
    
-   if(mixflag == 1){
+   if(mixflag == 1) {
       fmixmap[name] = mix;
       med = new TGeoMedium(NameShort(name), medid, mix);
-   }
-   else if (mixflag == 0){
+   } else if (mixflag == 0) {
       fmatmap[name] = mat;
       med = new TGeoMedium(NameShort(name), medid, mat);
    }
@@ -855,8 +806,8 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
 }
 
 //____________________________________________________________
-XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node){
-   
+XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
+{   
    //In the structure section of the GDML file, volumes can be declared.
    //when the volume keyword is found, this function is called, and the
    //name and values of the volume are converted into type TGeoVolume and
@@ -893,23 +844,20 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
    while (child!=0) {
       if((strcmp(gdml->GetNodeName(child), "solidref")) == 0){
          if(fsolmap.find(gdml->GetAttr(child, "ref")) != fsolmap.end()){ 
-    solid = fsolmap[gdml->GetAttr(child, "ref")];
-         }
-         else if(freflectmap.find(gdml->GetAttr(child, "ref")) != freflectmap.end()){
-    solidname = gdml->GetAttr(child, "ref");
-    reflex = fsolmap[freflectmap[gdml->GetAttr(child, "ref")]];
-         } 
-         else{
-    printf("Solid: %s, Not Yet Defined!\n", gdml->GetAttr(child, "ref"));
+	    solid = fsolmap[gdml->GetAttr(child, "ref")];
+         } else if(freflectmap.find(gdml->GetAttr(child, "ref")) != freflectmap.end()){
+	    solidname = gdml->GetAttr(child, "ref");
+	    reflex = fsolmap[freflectmap[gdml->GetAttr(child, "ref")]];
+         } else{
+	    printf("Solid: %s, Not Yet Defined!\n", gdml->GetAttr(child, "ref"));
          }
       }
       
       if((strcmp(gdml->GetNodeName(child), "materialref")) == 0){ 
          if(fmedmap.find(gdml->GetAttr(child, "ref")) != fmedmap.end()){ 
-    medium = fmedmap[gdml->GetAttr(child, "ref")];
-         } 
-         else{
-    printf("Medium: %s, Not Yet Defined!\n", gdml->GetAttr(child, "ref"));
+	    medium = fmedmap[gdml->GetAttr(child, "ref")];
+         } else{
+	    printf("Medium: %s, Not Yet Defined!\n", gdml->GetAttr(child, "ref"));
          }
       }
       
@@ -920,8 +868,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
    
    if(reflex == 0){
       vol = new TGeoVolume(NameShort(name), solid, medium);
-   }
-   else{
+   } else{
       vol = new TGeoVolume(NameShort(name), reflex, medium);
       freflvolmap[name] = solidname;
       TGDMLRefl* parentrefl = freflsolidmap[solidname];
@@ -945,35 +892,35 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          rot = new TGeoRotation();
          
          while (subchild!=0){
-    tempattr = gdml->GetNodeName(subchild);
+	    tempattr = gdml->GetNodeName(subchild);
     
-    if((strcmp(tempattr, "volumeref")) == 0){
-       lv = fvolmap[gdml->GetAttr(subchild, "ref")];
-       volref = gdml->GetAttr(subchild, "ref");
-    }
-    
-    else if((strcmp(tempattr, "positionref")) == 0){
-       if(fposmap.find(gdml->GetAttr(subchild, "ref")) != fposmap.end()){ 
-          pos = fposmap[gdml->GetAttr(subchild, "ref")];
-       }
-    }
-    else if((strcmp(tempattr, "position")) == 0){
-       attr = gdml->GetFirstAttr(subchild);
-       PosProcess(gdml, subchild, attr);
-       pos = fposmap[gdml->GetAttr(subchild, "name")];
-    }
-    else if((strcmp(tempattr, "rotationref")) == 0){
-       if(frotmap.find(gdml->GetAttr(subchild, "ref")) != frotmap.end()){ 
-          rot = frotmap[gdml->GetAttr(subchild, "ref")];
-       }
-    }
-    else if((strcmp(tempattr, "rotation")) == 0){
-       attr = gdml->GetFirstAttr(subchild);
-       RotProcess(gdml, subchild, attr);
-       rot = frotmap[gdml->GetAttr(subchild, "name")];
-    }
-    
-    subchild = gdml->GetNext(subchild);
+	    if((strcmp(tempattr, "volumeref")) == 0){
+	       lv = fvolmap[gdml->GetAttr(subchild, "ref")];
+	       volref = gdml->GetAttr(subchild, "ref");
+	    }
+	    
+	    else if((strcmp(tempattr, "positionref")) == 0){
+	       if(fposmap.find(gdml->GetAttr(subchild, "ref")) != fposmap.end()){ 
+		  pos = fposmap[gdml->GetAttr(subchild, "ref")];
+	       }
+	    }
+	    else if((strcmp(tempattr, "position")) == 0){
+	       attr = gdml->GetFirstAttr(subchild);
+	       PosProcess(gdml, subchild, attr);
+	       pos = fposmap[gdml->GetAttr(subchild, "name")];
+	    }
+	    else if((strcmp(tempattr, "rotationref")) == 0){
+	       if(frotmap.find(gdml->GetAttr(subchild, "ref")) != frotmap.end()){ 
+		  rot = frotmap[gdml->GetAttr(subchild, "ref")];
+	       }
+	    }
+	    else if((strcmp(tempattr, "rotation")) == 0){
+	       attr = gdml->GetFirstAttr(subchild);
+	       RotProcess(gdml, subchild, attr);
+	       rot = frotmap[gdml->GetAttr(subchild, "name")];
+	    }
+	    
+	    subchild = gdml->GetNext(subchild);
          }
          
          //ADD PHYSVOL TO GEOMETRY
@@ -981,41 +928,41 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 
          //if the volume is a reflected volume the matrix needs to be CHANGED
          if(freflvolmap.find(volref) != freflvolmap.end()){ 
-    
-    TGDMLRefl* temprefl = freflsolidmap[freflvolmap[volref]];
-    tempmatr = new TGeoCombiTrans(*pos, *rot);
-    
-    const Double_t* a_pos = temprefl->GetMatrix()->GetTranslation();
-    const Double_t* b_pos = tempmatr->GetTranslation();
-    const Double_t* a_rot = temprefl->GetMatrix()->GetRotationMatrix();
-    const Double_t* b_rot = tempmatr->GetRotationMatrix();
-    double c_rot[8]; for (int i = 0; i < 9; i++){c_rot[i] = 0;}
-    int a = 0, c = 0;
-    
-    //matrix multiplication
-    for(a=0; a<9; a+=3){
-       for(c=a; c<(a+3); c++){
-          int b = (c-a);
-          c_rot[c] = (a_rot[a] * b_rot[b]) + (a_rot[(a+1)] * b_rot[(b+3)]) + (a_rot[(a+2)] * b_rot[(b+6)]);
-       } 
-    }
-    
-    //new matrix values being set
-    rot = new TGeoRotation();
-    rot->SetMatrix(c_rot);
-    pos = new TGeoTranslation();
-    pos->SetDx((a_pos[0] + b_pos[0]));
-    pos->SetDy((a_pos[1] + b_pos[1]));
-    pos->SetDz((a_pos[2] + b_pos[2]));
-    
+	   
+	    TGDMLRefl* temprefl = freflsolidmap[freflvolmap[volref]];
+	    tempmatr = new TGeoCombiTrans(*pos, *rot);
+	    
+	    const Double_t* a_pos = temprefl->GetMatrix()->GetTranslation();
+	    const Double_t* b_pos = tempmatr->GetTranslation();
+	    const Double_t* a_rot = temprefl->GetMatrix()->GetRotationMatrix();
+	    const Double_t* b_rot = tempmatr->GetRotationMatrix();
+	    double c_rot[8]; for (int i = 0; i < 9; i++){c_rot[i] = 0;}
+	    int a = 0, c = 0;
+	    
+	    //matrix multiplication
+	    for(a=0; a<9; a+=3){
+	       for(c=a; c<(a+3); c++){
+		  int b = (c-a);
+		  c_rot[c] = (a_rot[a] * b_rot[b]) + (a_rot[(a+1)] * b_rot[(b+3)]) + (a_rot[(a+2)] * b_rot[(b+6)]);
+	       } 
+	    }
+	    
+	    //new matrix values being set
+	    rot = new TGeoRotation();
+	    rot->SetMatrix(c_rot);
+	    pos = new TGeoTranslation();
+	    pos->SetDx((a_pos[0] + b_pos[0]));
+	    pos->SetDy((a_pos[1] + b_pos[1]));
+	    pos->SetDz((a_pos[2] + b_pos[2]));
+	    
          }
          
          //reflection from mother volume being carried forward
          if(yesrefl == 1){
-    const Double_t* tempPos = pos->GetTranslation();      
-    pos->SetDx(tempPos[0]*parentrot[0]);
-    pos->SetDy(tempPos[1]*parentrot[4]);
-    pos->SetDz(tempPos[2]*parentrot[8]);
+	    const Double_t* tempPos = pos->GetTranslation();      
+	    pos->SetDx(tempPos[0]*parentrot[0]);
+	    pos->SetDy(tempPos[1]*parentrot[4]);
+	    pos->SetDz(tempPos[2]*parentrot[8]);
          }
          
          matr = new TGeoCombiTrans(*pos, *rot);
@@ -1025,7 +972,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
       }
       
       else if((strcmp(gdml->GetNodeName(child), "divisionvol")) == 0){
-         
+	
          const char* divVolref = "";
          Int_t axis = 0;
          const char* number = "";
@@ -1037,41 +984,41 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          
          while (attr!=0) {
     
-    tempattr = gdml->GetAttrName(attr);
-    
-    if((strcmp(tempattr, "axis")) == 0) { 
-       axis = SetAxis(gdml->GetAttrValue(attr));
-    }
-    else if((strcmp(tempattr, "number")) == 0) { 
-       number = FindConst(gdml->GetAttrValue(attr));
-    }
-    else if(strcmp(tempattr, "width") == 0){
-       width = FindConst(gdml->GetAttrValue(attr));
-    }
-    else if (strcmp(tempattr, "offset") == 0){
-       offset = FindConst(gdml->GetAttrValue(attr));
-    }
-    else if (strcmp(tempattr, "unit") == 0){
-       lunit = gdml->GetAttrValue(attr);
-    }
-    
-    attr = gdml->GetNextAttr(attr);
-    
+	    tempattr = gdml->GetAttrName(attr);
+	    
+	    if((strcmp(tempattr, "axis")) == 0) { 
+	       axis = SetAxis(gdml->GetAttrValue(attr));
+	    }
+	    else if((strcmp(tempattr, "number")) == 0) { 
+	       number = FindConst(gdml->GetAttrValue(attr));
+	    }
+	    else if(strcmp(tempattr, "width") == 0){
+	       width = FindConst(gdml->GetAttrValue(attr));
+	    }
+	    else if (strcmp(tempattr, "offset") == 0){
+	       offset = FindConst(gdml->GetAttrValue(attr));
+	    }
+	    else if (strcmp(tempattr, "unit") == 0){
+	       lunit = gdml->GetAttrValue(attr);
+	    }
+	    
+	    attr = gdml->GetNextAttr(attr);
+	    
          }
          
          subchild = gdml->GetChild(child);
          
          while (subchild!=0){
-    tempattr = gdml->GetNodeName(subchild);
-    
-    if((strcmp(tempattr, "volumeref")) == 0){ 
-       divVolref = gdml->GetAttr(subchild, "ref");
-    }
-    
-    subchild = gdml->GetNext(subchild);             
+	    tempattr = gdml->GetNodeName(subchild);
+	    
+	    if((strcmp(tempattr, "volumeref")) == 0){ 
+	       divVolref = gdml->GetAttr(subchild, "ref");
+	    }
+	    
+	    subchild = gdml->GetNext(subchild);             
          } 
-
-
+	 
+	 
          const char* numberline = "";
          const char* widthline = "";
          const char* offsetline = "";
@@ -1083,7 +1030,6 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          widthline = Form("%s*%s", width, retunit);
          offsetline = Form("%s*%s", offset, retunit);
  
-         
          fVolID = fVolID + 1;
          
          vol->Divide(NameShort(name), axis, (Int_t)Evaluate(numberline), (Double_t)Evaluate(offsetline), (Double_t)Evaluate(widthline));
@@ -1098,14 +1044,14 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 }
 
 //______________________________________________________
-XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr, int num){
- 
+XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr, int num)
+{ 
    //In the solid section of the GDML file, boolean solids can be 
    //declared. when the subtraction, intersection or union   keyword 
    //is found, this function is called, and the values (rotation and 
    //translation) of the solid are converted into type TGeoCompositeShape
    //and stored in fsolmap map using the name as its key.
-
+   //
    //1 = SUBTRACTION
    //2 = INTERSECTION
    //3 = UNION
@@ -1129,12 +1075,12 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
       
       if((strcmp(tempattr, "first")) == 0){
          if(fsolmap.find(gdml->GetAttr(child, "ref")) != fsolmap.end()){ 
-    first = fsolmap[gdml->GetAttr(child, "ref")];
+	    first = fsolmap[gdml->GetAttr(child, "ref")];
          }
       }
       else if((strcmp(tempattr, "second")) == 0) {
          if(fsolmap.find(gdml->GetAttr(child, "ref")) != fsolmap.end()){   
-    second = fsolmap[gdml->GetAttr(child, "ref")];
+	    second = fsolmap[gdml->GetAttr(child, "ref")];
          }
       }
       else if((strcmp(tempattr, "position")) == 0){
@@ -1144,7 +1090,7 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
       }
       else if((strcmp(tempattr, "positionref")) == 0){
          if(fposmap.find(gdml->GetAttr(child, "ref")) != fposmap.end()){ 
-    pos = fposmap[gdml->GetAttr(child, "ref")];
+	    pos = fposmap[gdml->GetAttr(child, "ref")];
          }
       }
       else if((strcmp(tempattr, "rotation")) == 0){
@@ -1154,7 +1100,7 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
       }
       else if((strcmp(tempattr, "rotationref")) == 0){
          if(frotmap.find(gdml->GetAttr(child, "ref")) != frotmap.end()){ 
-    rot = frotmap[gdml->GetAttr(child, "ref")];
+	    rot = frotmap[gdml->GetAttr(child, "ref")];
          }
       }      
       child = gdml->GetNext(child);
@@ -1189,8 +1135,8 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
 }
 
 //________________________________________________________
-XMLNodePointer_t TGDMLParse::AssProcess(TXMLEngine* gdml, XMLNodePointer_t node){
-   
+XMLNodePointer_t TGDMLParse::AssProcess(TXMLEngine* gdml, XMLNodePointer_t node)
+{   
    //In the structure section of the GDML file, assembly volumes can be 
    //declared. when the assembly keyword is found, this function is called, 
    //and the name is converted into type TGeoVolumeAssembly and
@@ -1224,33 +1170,33 @@ XMLNodePointer_t TGDMLParse::AssProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          rot = new TGeoRotation();
          
          while (subchild!=0){
-    tempattr = gdml->GetNodeName(subchild);
+	    tempattr = gdml->GetNodeName(subchild);
     
-    if((strcmp(tempattr, "volumeref")) == 0){
-       lv = fvolmap[gdml->GetAttr(subchild, "ref")];
-    }       
-    else if((strcmp(tempattr, "positionref")) == 0){
-       if(fposmap.find(gdml->GetAttr(subchild, "ref")) != fposmap.end()){ 
-          pos = fposmap[gdml->GetAttr(subchild, "ref")];
-       }
-    }
-    else if((strcmp(tempattr, "position")) == 0){
-       attr = gdml->GetFirstAttr(subchild);
-       PosProcess(gdml, subchild, attr);
-       pos = fposmap[gdml->GetAttr(subchild, "name")];
-    }
-    else if((strcmp(tempattr, "rotationref")) == 0){
-       if(frotmap.find(gdml->GetAttr(subchild, "ref")) != frotmap.end()){ 
-          rot = frotmap[gdml->GetAttr(subchild, "ref")];
-       }
-    }
-    else if((strcmp(tempattr, "rotation")) == 0){
-       attr = gdml->GetFirstAttr(subchild);
-       RotProcess(gdml, subchild, attr);
-       rot = frotmap[gdml->GetAttr(subchild, "name")];
-    }
-    
-    subchild = gdml->GetNext(subchild);
+	    if((strcmp(tempattr, "volumeref")) == 0){
+	       lv = fvolmap[gdml->GetAttr(subchild, "ref")];
+	    }       
+	    else if((strcmp(tempattr, "positionref")) == 0){
+	       if(fposmap.find(gdml->GetAttr(subchild, "ref")) != fposmap.end()){ 
+		  pos = fposmap[gdml->GetAttr(subchild, "ref")];
+	       }
+	    }
+	    else if((strcmp(tempattr, "position")) == 0){
+	       attr = gdml->GetFirstAttr(subchild);
+	       PosProcess(gdml, subchild, attr);
+	       pos = fposmap[gdml->GetAttr(subchild, "name")];
+	    }
+	    else if((strcmp(tempattr, "rotationref")) == 0){
+	       if(frotmap.find(gdml->GetAttr(subchild, "ref")) != frotmap.end()){ 
+		  rot = frotmap[gdml->GetAttr(subchild, "ref")];
+	       }
+	    }
+	    else if((strcmp(tempattr, "rotation")) == 0){
+	       attr = gdml->GetFirstAttr(subchild);
+	       RotProcess(gdml, subchild, attr);
+	       rot = frotmap[gdml->GetAttr(subchild, "name")];
+	    }
+	    
+	    subchild = gdml->GetNext(subchild);
          }
          
          //ADD PHYSVOL TO GEOMETRY
@@ -1267,8 +1213,8 @@ XMLNodePointer_t TGDMLParse::AssProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 }
 
 //________________________________________________________
-XMLNodePointer_t   TGDMLParse::TopProcess(TXMLEngine* gdml, XMLNodePointer_t node){
-   
+XMLNodePointer_t   TGDMLParse::TopProcess(TXMLEngine* gdml, XMLNodePointer_t node)
+{   
    //In the setup section of the GDML file, the top volume need to be 
    //declared. when the setup keyword is found, this function is called, 
    //and the top volume ref is taken and 'world' is set
@@ -1286,8 +1232,8 @@ XMLNodePointer_t   TGDMLParse::TopProcess(TXMLEngine* gdml, XMLNodePointer_t nod
 }
 
 //___________________________________________________________________
-XMLNodePointer_t TGDMLParse::Box(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-   
+XMLNodePointer_t TGDMLParse::Box(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{   
    //In the solids section of the GDML file, a box may be declared. 
    //when the box keyword is found, this function is called, and the 
    //dimensions required are taken and stored, these are then bound and
@@ -1347,8 +1293,8 @@ XMLNodePointer_t TGDMLParse::Box(TXMLEngine* gdml, XMLNodePointer_t node, XMLAtt
 }
 
 //_______________________________________________________
-XMLNodePointer_t TGDMLParse::Paraboloid(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-   
+XMLNodePointer_t TGDMLParse::Paraboloid(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{   
    //In the solids section of the GDML file, a Paraboloid may be declared. 
    //when the paraboloid keyword is found, this function is called, and the 
    //dimensions required are taken and stored, these are then bound and
@@ -1408,8 +1354,8 @@ XMLNodePointer_t TGDMLParse::Paraboloid(TXMLEngine* gdml, XMLNodePointer_t node,
 }
 
 //_______________________________________________________
-XMLNodePointer_t TGDMLParse::Arb8(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-   
+XMLNodePointer_t TGDMLParse::Arb8(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{   
    //In the solids section of the GDML file, an Arb8 may be declared. 
    //when the arb8 keyword is found, this function is called, and the 
    //dimensions required are taken and stored, these are then bound and
@@ -1561,8 +1507,8 @@ XMLNodePointer_t TGDMLParse::Arb8(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
 }
 
 //_______________________________________________________
-XMLNodePointer_t TGDMLParse::Tube(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-   
+XMLNodePointer_t TGDMLParse::Tube(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{   
    //In the solids section of the GDML file, a Tube may be declared. 
    //when the tube keyword is found, this function is called, and the 
    //dimensions required are taken and stored, these are then bound and
@@ -1643,8 +1589,8 @@ XMLNodePointer_t TGDMLParse::Tube(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
 }
 
 //_______________________________________________________
-XMLNodePointer_t TGDMLParse::CutTube(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-   
+XMLNodePointer_t TGDMLParse::CutTube(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{   
    //In the solids section of the GDML file, a Cut Tube may be declared. 
    //when the cutTube keyword is found, this function is called, and the 
    //dimensions required are taken and stored, these are then bound and
@@ -1672,7 +1618,7 @@ XMLNodePointer_t TGDMLParse::CutTube(TXMLEngine* gdml, XMLNodePointer_t node, XM
       tempattr = gdml->GetAttrName(attr);
       
       if((strcmp(tempattr, "name")) == 0) { 
-	name = gdml->GetAttrValue(attr);
+	 name = gdml->GetAttrValue(attr);
       }
       else if((strcmp(tempattr, "rmin")) == 0) { 
          rmin = FindConst(gdml->GetAttrValue(attr));
@@ -1769,8 +1715,8 @@ XMLNodePointer_t TGDMLParse::CutTube(TXMLEngine* gdml, XMLNodePointer_t node, XM
 }
 
 //_______________________________________________________
-XMLNodePointer_t TGDMLParse::Cone(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-   
+XMLNodePointer_t TGDMLParse::Cone(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{   
    //In the solids section of the GDML file, a cone may be declared. 
    //when the cone keyword is found, this function is called, and the 
    //dimensions required are taken and stored, these are then bound and
@@ -1865,8 +1811,8 @@ XMLNodePointer_t TGDMLParse::Cone(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
 }
 
 //_______________________________________________________
-XMLNodePointer_t TGDMLParse::Trap(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-   
+XMLNodePointer_t TGDMLParse::Trap(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{   
    //In the solids section of the GDML file, a Trap may be declared. 
    //when the trap keyword is found, this function is called, and the 
    //dimensions required are taken and stored, these are then bound and
@@ -1987,8 +1933,8 @@ XMLNodePointer_t TGDMLParse::Trap(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
 }
 
 //_______________________________________________________
-XMLNodePointer_t TGDMLParse::Trd(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-   
+XMLNodePointer_t TGDMLParse::Trd(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{   
    //In the solids section of the GDML file, a Trd may be declared. 
    //when the trd keyword is found, this function is called, and the 
    //dimensions required are taken and stored, these are then bound and
@@ -2062,8 +2008,8 @@ XMLNodePointer_t TGDMLParse::Trd(TXMLEngine* gdml, XMLNodePointer_t node, XMLAtt
 }
 
 //_______________________________________________________
-XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-   
+XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{   
    //In the solids section of the GDML file, a Polycone may be declared. 
    //when the polycone keyword is found, this function is called, and the 
    //dimensions required are taken and stored, these are then bound and
@@ -2134,38 +2080,38 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine* gdml, XMLNodePointer_t node, X
    while (child!=0) {
       if((strcmp(gdml->GetNodeName(child), "zplane")) == 0){
          //removed original dec
-       const char* rminline = "";
-       const char* rmaxline = "";
-       const char* zline = "";
+	 const char* rminline = "";
+	 const char* rmaxline = "";
+	 const char* zline = "";
          
          attr = gdml->GetFirstAttr(child);
          
          while (attr!=0){
-    tempattr = gdml->GetAttrName(attr);
-    
-    if((strcmp(tempattr, "rmin")) == 0) { 
-       rmin = FindConst(gdml->GetAttrValue(attr));
-       rminline = Form("%s*%s", rmin, retlunit);
-       table[planeno][0] = Evaluate(rminline);
-    }
-    else if(strcmp(tempattr, "rmax") == 0){
-       rmax = FindConst(gdml->GetAttrValue(attr));
-       rmaxline = Form("%s*%s", rmax, retlunit);
-       table[planeno][1] = Evaluate(rmaxline);
-    }
-    else if (strcmp(tempattr, "z") == 0){
-       z = FindConst(gdml->GetAttrValue(attr));
-       zline = Form("%s*%s", z, retlunit);
-       table[planeno][2] = Evaluate(zline);
-    }
-    
-    attr = gdml->GetNextAttr(attr);
+	    tempattr = gdml->GetAttrName(attr);
+	    
+	    if((strcmp(tempattr, "rmin")) == 0) { 
+	       rmin = FindConst(gdml->GetAttrValue(attr));
+	       rminline = Form("%s*%s", rmin, retlunit);
+	       table[planeno][0] = Evaluate(rminline);
+	    }
+	    else if(strcmp(tempattr, "rmax") == 0){
+	       rmax = FindConst(gdml->GetAttrValue(attr));
+	       rmaxline = Form("%s*%s", rmax, retlunit);
+	       table[planeno][1] = Evaluate(rmaxline);
+	    }
+	    else if (strcmp(tempattr, "z") == 0){
+	       z = FindConst(gdml->GetAttrValue(attr));
+	       zline = Form("%s*%s", z, retlunit);
+	       table[planeno][2] = Evaluate(zline);
+	    }
+	    
+	    attr = gdml->GetNextAttr(attr);
          }
       }
       planeno = planeno + 1;
       child = gdml->GetNext(child);
    }
-
+   
    const char* startphiline = "";
    const char* deltaphiline = "";
    
@@ -2190,8 +2136,8 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine* gdml, XMLNodePointer_t node, X
 }
 
 //_______________________________________________________
-XMLNodePointer_t TGDMLParse::Polyhedra(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-   
+XMLNodePointer_t TGDMLParse::Polyhedra(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{   
    //In the solids section of the GDML file, a Polyhedra may be declared. 
    //when the polyhedra keyword is found, this function is called, and the 
    //dimensions required are taken and stored, these are then bound and
@@ -2266,38 +2212,38 @@ XMLNodePointer_t TGDMLParse::Polyhedra(TXMLEngine* gdml, XMLNodePointer_t node, 
    while (child!=0) {
       if((strcmp(gdml->GetNodeName(child), "zplane")) == 0){
     
-    const char* rminline = "";
-    const char* rmaxline = "";
-    const char* zline = "";
-
-    attr = gdml->GetFirstAttr(child);
-    
-    while (attr!=0){
-       tempattr = gdml->GetAttrName(attr);
-       
-       if((strcmp(tempattr, "rmin")) == 0) { 
-          rmin = FindConst(gdml->GetAttrValue(attr));
-          rminline = Form("%s*%s", rmin, retlunit);
-          table[planeno][0] = Evaluate(rminline);
-       }
-       else if(strcmp(tempattr, "rmax") == 0){
-          rmax = FindConst(gdml->GetAttrValue(attr));
-          rmaxline = Form("%s*%s", rmax, retlunit);
-          table[planeno][1] = Evaluate(rmaxline);
-       }
-       else if (strcmp(tempattr, "z") == 0){
-          z = FindConst(gdml->GetAttrValue(attr));
-          zline = Form("%s*%s", z, retlunit);
-          table[planeno][2] = Evaluate(zline);
-       }
-       
-       attr = gdml->GetNextAttr(attr);
-    }
-         }
+	 const char* rminline = "";
+	 const char* rmaxline = "";
+	 const char* zline = "";
+	 
+	 attr = gdml->GetFirstAttr(child);
+	 
+	 while (attr!=0){
+	    tempattr = gdml->GetAttrName(attr);
+	    
+	    if((strcmp(tempattr, "rmin")) == 0) { 
+	       rmin = FindConst(gdml->GetAttrValue(attr));
+	       rminline = Form("%s*%s", rmin, retlunit);
+	       table[planeno][0] = Evaluate(rminline);
+	    }
+	    else if(strcmp(tempattr, "rmax") == 0){
+	       rmax = FindConst(gdml->GetAttrValue(attr));
+	       rmaxline = Form("%s*%s", rmax, retlunit);
+	       table[planeno][1] = Evaluate(rmaxline);
+	    }
+	    else if (strcmp(tempattr, "z") == 0){
+	       z = FindConst(gdml->GetAttrValue(attr));
+	       zline = Form("%s*%s", z, retlunit);
+	       table[planeno][2] = Evaluate(zline);
+	    }
+	    
+	    attr = gdml->GetNextAttr(attr);
+	 }
+      }
       planeno = planeno + 1;
       child = gdml->GetNext(child);
    }
-
+   
    
    const char* startphiline = "";
    const char* deltaphiline = "";
@@ -2326,8 +2272,8 @@ XMLNodePointer_t TGDMLParse::Polyhedra(TXMLEngine* gdml, XMLNodePointer_t node, 
 }
 
 //_______________________________________________________
-XMLNodePointer_t TGDMLParse::Sphere(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-   
+XMLNodePointer_t TGDMLParse::Sphere(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{   
    //In the solids section of the GDML file, a Sphere may be declared. 
    //when the sphere keyword is found, this function is called, and the 
    //dimensions required are taken and stored, these are then bound and
@@ -2413,8 +2359,8 @@ XMLNodePointer_t TGDMLParse::Sphere(TXMLEngine* gdml, XMLNodePointer_t node, XML
 }
 
 //_______________________________________________________
-XMLNodePointer_t TGDMLParse::Torus(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-   
+XMLNodePointer_t TGDMLParse::Torus(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{   
    //In the solids section of the GDML file, a Torus may be declared. 
    //when the torus keyword is found, this function is called, and the 
    //dimensions required are taken and stored, these are then bound and
@@ -2495,8 +2441,8 @@ XMLNodePointer_t TGDMLParse::Torus(TXMLEngine* gdml, XMLNodePointer_t node, XMLA
 }
 
 //_______________________________________________________
-XMLNodePointer_t TGDMLParse::Hype(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-
+XMLNodePointer_t TGDMLParse::Hype(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{
    //In the solids section of the GDML file, a Hype may be declared. 
    //when the hype keyword is found, this function is called, and the 
    //dimensions required are taken and stored, these are then bound and
@@ -2576,8 +2522,8 @@ XMLNodePointer_t TGDMLParse::Hype(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
 }
 
 //_______________________________________________________
-XMLNodePointer_t TGDMLParse::Para(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-
+XMLNodePointer_t TGDMLParse::Para(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{
    //In the solids section of the GDML file, a Para may be declared. 
    //when the para keyword is found, this function is called, and the 
    //dimensions required are taken and stored, these are then bound and
@@ -2666,8 +2612,8 @@ XMLNodePointer_t TGDMLParse::Para(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
 }
 
 //_______________________________________________________
-XMLNodePointer_t TGDMLParse::TwistTrap(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-   
+XMLNodePointer_t TGDMLParse::TwistTrap(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{   
    //In the solids section of the GDML file, a TwistTrap may be declared. 
    //when the twistedtrap keyword is found, this function is called, and the 
    //dimensions required are taken and stored, these are then bound and
@@ -2769,7 +2715,7 @@ XMLNodePointer_t TGDMLParse::TwistTrap(TXMLEngine* gdml, XMLNodePointer_t node, 
    x4line = Form("%s*%s", x4, retlunit);
    y1line = Form("%s*%s", y1, retlunit);
    y2line = Form("%s*%s", y2, retlunit);
-   zline = Form("%s*%s", z, retlunit);
+   zline  = Form("%s*%s", z, retlunit);
    philine = Form("%s*%s", phi, retaunit);
    thetaline = Form("%s*%s", theta, retaunit);
    alpha1line = Form("%s*%s", alpha1, retaunit);
@@ -2798,8 +2744,8 @@ XMLNodePointer_t TGDMLParse::TwistTrap(TXMLEngine* gdml, XMLNodePointer_t node, 
 
 
 //___________________________________________________________________
-XMLNodePointer_t TGDMLParse::ElTube(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-   
+XMLNodePointer_t TGDMLParse::ElTube(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{   
    //In the solids section of the GDML file, a ElTube may be declared. 
    //when the eltube keyword is found, this function is called, and the 
    //dimensions required are taken and stored, these are then bound and
@@ -2857,8 +2803,8 @@ XMLNodePointer_t TGDMLParse::ElTube(TXMLEngine* gdml, XMLNodePointer_t node, XML
 
 }
 //___________________________________________________________________
-XMLNodePointer_t TGDMLParse::Orb(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-   
+XMLNodePointer_t TGDMLParse::Orb(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{   
    //In the solids section of the GDML file, an Orb may be declared. 
    //when the orb keyword is found, this function is called, and the 
    //dimensions required are taken and stored, these are then bound and
@@ -2906,8 +2852,8 @@ XMLNodePointer_t TGDMLParse::Orb(TXMLEngine* gdml, XMLNodePointer_t node, XMLAtt
 
 
 //_______________________________________________________
-XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-   
+XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{   
    //In the solids section of the GDML file, an Xtru may be declared. 
    //when the xtru keyword is found, this function is called, and the 
    //dimensions required are taken and stored, these are then bound and
@@ -2994,20 +2940,20 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
          attr = gdml->GetFirstAttr(child);
          
          while (attr!=0){
-    tempattr = gdml->GetAttrName(attr);
+	    tempattr = gdml->GetAttrName(attr);
     
-    if((strcmp(tempattr, "x")) == 0) { 
-       x = FindConst(gdml->GetAttrValue(attr));
-       xline = Form("%s*%s", x, retlunit);
-       vertx[vert] = Evaluate(xline);
-    }
-    else if(strcmp(tempattr, "y") == 0){
-       y = FindConst(gdml->GetAttrValue(attr));
-       yline = Form("%s*%s", y, retlunit);
-       verty[vert] = Evaluate(yline);
-    }
-    
-    attr = gdml->GetNextAttr(attr);
+	    if((strcmp(tempattr, "x")) == 0) { 
+	       x = FindConst(gdml->GetAttrValue(attr));
+	       xline = Form("%s*%s", x, retlunit);
+	       vertx[vert] = Evaluate(xline);
+	    }
+	    else if(strcmp(tempattr, "y") == 0){
+	       y = FindConst(gdml->GetAttrValue(attr));
+	       yline = Form("%s*%s", y, retlunit);
+	       verty[vert] = Evaluate(yline);
+	    }
+	    
+	    attr = gdml->GetNextAttr(attr);
          }
          
          vert = vert + 1;
@@ -3025,35 +2971,35 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
          attr = gdml->GetFirstAttr(child);
          
          while (attr!=0){
-    tempattr = gdml->GetAttrName(attr);
+	    tempattr = gdml->GetAttrName(attr);
     
-    if((strcmp(tempattr, "zOrder")) == 0) { 
-       zorder = FindConst(gdml->GetAttrValue(attr));
-       zorderline = Form("%s*%s", zorder, retlunit);
-       section[sect][0] = Evaluate(zorderline);
-    }
-    else if(strcmp(tempattr, "zPosition") == 0){
-       zpos = FindConst(gdml->GetAttrValue(attr));
-       zposline = Form("%s*%s", zpos, retlunit);
-       section[sect][1] = Evaluate(zposline);
-    }
-    else if (strcmp(tempattr, "xOffset") == 0){
-       xoff = FindConst(gdml->GetAttrValue(attr));
-       xoffline = Form("%s*%s", xoff, retlunit);
-       section[sect][2] = Evaluate(xoffline);
-    }
-    else if (strcmp(tempattr, "yOffset") == 0){
-       yoff = FindConst(gdml->GetAttrValue(attr));
-       yoffline = Form("%s*%s", yoff, retlunit);
-       section[sect][3] = Evaluate(yoffline);
-    }
-    else if (strcmp(tempattr, "scalingFactor") == 0){
-       scale = FindConst(gdml->GetAttrValue(attr));
-       scaleline = Form("%s*%s", scale, retlunit);
-       section[sect][4] = Evaluate(scaleline);
-    }
-    
-    attr = gdml->GetNextAttr(attr);
+	    if((strcmp(tempattr, "zOrder")) == 0) { 
+	       zorder = FindConst(gdml->GetAttrValue(attr));
+	       zorderline = Form("%s*%s", zorder, retlunit);
+	       section[sect][0] = Evaluate(zorderline);
+	    }
+	    else if(strcmp(tempattr, "zPosition") == 0){
+	       zpos = FindConst(gdml->GetAttrValue(attr));
+	       zposline = Form("%s*%s", zpos, retlunit);
+	       section[sect][1] = Evaluate(zposline);
+	    }
+	    else if (strcmp(tempattr, "xOffset") == 0){
+	       xoff = FindConst(gdml->GetAttrValue(attr));
+	       xoffline = Form("%s*%s", xoff, retlunit);
+	       section[sect][2] = Evaluate(xoffline);
+	    }
+	    else if (strcmp(tempattr, "yOffset") == 0){
+	       yoff = FindConst(gdml->GetAttrValue(attr));
+	       yoffline = Form("%s*%s", yoff, retlunit);
+	       section[sect][3] = Evaluate(yoffline);
+	    }
+	    else if (strcmp(tempattr, "scalingFactor") == 0){
+	       scale = FindConst(gdml->GetAttrValue(attr));
+	       scaleline = Form("%s*%s", scale, retlunit);
+	       section[sect][4] = Evaluate(scaleline);
+	    }
+	    
+	    attr = gdml->GetNextAttr(attr);
          }
          sect = sect + 1; 
       }      
@@ -3075,8 +3021,8 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
 }
 
 //____________________________________________________________
-XMLNodePointer_t TGDMLParse::Reflection(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr){
-
+XMLNodePointer_t TGDMLParse::Reflection(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{
    //In the solids section of the GDML file, a Reflected Solid may be 
    //declared when the ReflectedSolid keyword is found, this function 
    //is called. The rotation, position and scale for the reflection are 
@@ -3179,8 +3125,8 @@ file.
 ******************************************************************/
 
 //___________________________________________________________________
-TGDMLRefl::TGDMLRefl(const char* name, const char* solid, TGeoMatrix* matrix){
-   
+TGDMLRefl::TGDMLRefl(const char* name, const char* solid, TGeoMatrix* matrix)
+{   
    //this constructor method stores the values brought in as params.
 
    fNameS = name;
@@ -3189,8 +3135,8 @@ TGDMLRefl::TGDMLRefl(const char* name, const char* solid, TGeoMatrix* matrix){
 }
 
 //_________________________________________________________________
-TGeoMatrix* TGDMLRefl::GetMatrix(){
-
+TGeoMatrix* TGDMLRefl::GetMatrix()
+{
    //this accessor method returns the matrix.
 
    return fMatrix;
