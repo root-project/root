@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TASPluginGS.cxx,v 1.1 2005/07/05 12:36:05 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TASPluginGS.cxx,v 1.2 2005/07/05 18:09:22 brun Exp $
 //  Author: Valeriy Onuchin   23/06/05
 
 /*************************************************************************
@@ -72,8 +72,46 @@ ASImage *TASPluginGS::File2ASImage(const char *filename)
       return 0;
    }
 
+   TString ext = (strrchr(filename, '.') + 1);
+   ext.Strip();
+   ext.ToLower();
+
+   UInt_t width = 0;
+   UInt_t height = 0;
+   Bool_t eps = kFALSE;
+
+   if (ext == "eps") {
+      eps = kTRUE;
+      FILE *fd = fopen(filename, "r");
+      if (!fd) {
+         Warning("File2ASImage", "input file %s is not readable", filename);
+         return 0;
+      }
+
+
+      do {
+         char buf[128];
+         TString line = fgets(buf, 128, fd);
+         if (line.IsNull() || !line.BeginsWith("%")) break;
+
+         if (line.BeginsWith("%%BoundingBox:")) {
+            int lx, ly, ux, uy;
+            line = line(14, line.Length());
+            sscanf(line.Data(), "%d %d %d %d", &lx, &ly, &ux, &uy);
+            width = TMath::Abs(ux - lx);
+            height = TMath::Abs(uy - ly);
+            break;
+         }
+      } while (!feof(fd)); 
+
+      fclose(fd);      
+   }
+
    // command line to execute
    TString cmd = fInterpreter;
+   if (eps) {
+      cmd += Form(" -g%dx%d", width, height); 
+   }
    cmd += " -dSAFER -dBATCH -dNOPAUSE -dQUIET -sDEVICE=png16m -dGraphicsAlphaBits=4 -sOutputFile=- ";
    cmd += filename;
    FILE *in = gSystem->OpenPipe(cmd.Data(), "r");
@@ -85,7 +123,7 @@ ASImage *TASPluginGS::File2ASImage(const char *filename)
    const UInt_t kBuffLength = 32768;
    static char buf[kBuffLength];
    TString raw;
-   
+
    do {
       Long_t r = fread(&buf, 1, kBuffLength, in);
       raw.Append((const char*)&buf, r);
@@ -94,8 +132,8 @@ ASImage *TASPluginGS::File2ASImage(const char *filename)
    gSystem->ClosePipe(in);
 
    ASImageImportParams params; 
-   params.flags = 0;
-   params.width = 0;
+   params.flags = width;
+   params.width = height;
    params.height = 0 ;
    params.filter = SCL_DO_ALL;
    params.gamma = 0;
