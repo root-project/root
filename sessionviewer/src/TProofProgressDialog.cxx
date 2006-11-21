@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.24 2006/11/15 17:45:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.25 2006/11/17 17:22:05 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -309,6 +309,9 @@ void TProofProgressDialog::ResetProgressDialog(const char *selec,
    if (fProof) {
       fProof->Connect("Progress(Long64_t,Long64_t)", "TProofProgressDialog",
                       this, "Progress(Long64_t,Long64_t)");
+      fProof->Connect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
+                      "TProofProgressDialog", this,
+                      "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
       fProof->Connect("StopProcess(Bool_t)", "TProofProgressDialog", this,
                       "IndicateStop(Bool_t)");
    }
@@ -501,6 +504,9 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
       if (fProof) {
          fProof->Disconnect("Progress(Long64_t,Long64_t)", this,
                             "Progress(Long64_t,Long64_t)");
+         fProof->Disconnect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
+                            this,
+                            "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
          fProof->Disconnect("StopProcess(Bool_t)", this,
                             "IndicateStop(Bool_t)");
       }
@@ -563,6 +569,9 @@ TProofProgressDialog::~TProofProgressDialog()
    if (fProof) {
       fProof->Disconnect("Progress(Long64_t,Long64_t)", this,
                          "Progress(Long64_t,Long64_t)");
+      fProof->Disconnect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
+                         this,
+                         "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
       fProof->Disconnect("StopProcess(Bool_t)", this,
                          "IndicateStop(Bool_t)");
       fProof->Disconnect("LogMessage(const char*,Bool_t)", this,
@@ -603,6 +612,9 @@ void TProofProgressDialog::IndicateStop(Bool_t aborted)
    if (fProof) {
       fProof->Disconnect("Progress(Long64_t,Long64_t)", this,
                          "Progress(Long64_t,Long64_t)");
+      fProof->Disconnect("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
+                         this,
+                         "Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)");
       fProof->Disconnect("StopProcess(Bool_t)", this,
                          "IndicateStop(Bool_t)");
       // These buttons are meaningless at this point
