@@ -2057,10 +2057,10 @@ if test ! "x$enable_g4root" = "xno"; then
     g4libdir=$found_dir
 
     # Check for CLHEP include
-    check_header "CLHEP/Vector/Rotation.h" "$clhepincdir" "$clhepincdir" $CLHEP_INCLUDE_DIR
+    check_header "CLHEP/Vector/Rotation.h" "$clhepincdir" "$clhepincdir" \
+        $CLHEP_INCLUDE_DIR
     clhepinc=$found_hdr
     clhepincdir=$found_dir
-
 
     if test "x$g4incdir" = "x" || test "x$g4rootlib" = "x" || test "x$clhepincdir" = "x"; then
         enable_g4root="no"
