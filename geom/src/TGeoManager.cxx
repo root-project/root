@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.165 2006/11/16 11:26:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.166 2006/11/17 17:36:42 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -471,7 +471,7 @@ TGeoManager::TGeoManager()
       fLoopVolumes = kFALSE;
       fStartSafe = kTRUE;
       fSafety = 0;
-      fLastSafety = 0.;
+      fLastSafety = -1.;
       fStep = 0;
       fBits = 0;
       fMaterials = 0;
@@ -590,7 +590,7 @@ void TGeoManager::Init()
    fLoopVolumes = kFALSE;
    fStartSafe = kTRUE;
    fSafety = 0;
-   fLastSafety = 0.;
+   fLastSafety = -1.;
    fStep = 0;
    fBits = new UChar_t[50000]; // max 25000 nodes per volume
    fHashPNE = new THashList(256,3);
@@ -3726,7 +3726,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
          stepmax = - stepmax;
          computeGlobal = kTRUE;
       }
-      if (IsSamePoint(fPoint[0], fPoint[1], fPoint[2])) fSafety = fLastSafety;
+      if (IsSamePoint(fPoint[0], fPoint[1], fPoint[2]) && fLastSafety>=0.) fSafety = fLastSafety;
       else fSafety = Safety();
       fSafety = TMath::Abs(fSafety);
       memcpy(fLastPoint, fPoint, kN3);
