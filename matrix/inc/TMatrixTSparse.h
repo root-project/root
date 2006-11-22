@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.h,v 1.5 2006/05/17 06:22:06 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.h,v 1.6 2006/10/06 06:52:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -233,7 +233,7 @@ inline Element TMatrixTSparse<Element>::operator()(Int_t rown,Int_t coln) const
 
    const Int_t sIndex = fRowIndex[arown];
    const Int_t eIndex = fRowIndex[arown+1];
-   const Int_t index = TMath::BinarySearch(eIndex-sIndex,fColIndex+sIndex,acoln)+sIndex;
+   const Int_t index = (Int_t)TMath::BinarySearch(eIndex-sIndex,fColIndex+sIndex,acoln)+sIndex;
    if (index < sIndex || fColIndex[index] != acoln) return 0.0;
    else                                             return fElements[index];
 }

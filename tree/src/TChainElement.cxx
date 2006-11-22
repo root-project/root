@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainElement.cxx,v 1.5 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainElement.cxx,v 1.6 2006/06/25 14:14:11 pcanal Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -21,8 +21,8 @@
 ClassImp(TChainElement)
 
 //______________________________________________________________________________
-   TChainElement::TChainElement(): TNamed(),fBaddress(0),fBaddressType(0),
-                                   fBaddressIsPtr(kFALSE), fBranchPtr(0)
+TChainElement::TChainElement() : TNamed(),fBaddress(0),fBaddressType(0),
+                                 fBaddressIsPtr(kFALSE), fBranchPtr(0)
 {
    // Default constructor for a chain element.
 
@@ -58,9 +58,9 @@ TChainElement::~TChainElement()
 //_______________________________________________________________________
 void TChainElement::CreatePackets()
 {
-   // Initialize the packet descriptor string. 
+   // Initialize the packet descriptor string.
 
-   fNPackets = 1 + fEntries/fPacketSize;
+   fNPackets = 1 + Int_t(fEntries/fPacketSize);
    delete [] fPackets;
    fPackets = new char[fNPackets+1];
    for (Int_t i=0;i<fNPackets;i++) fPackets[i] = ' ';
@@ -73,7 +73,7 @@ void TChainElement::ls(Option_t *) const
 {
    // List files in the chain.
 
-   printf("%s tree:%s entries=%d\n",GetTitle(),GetName(),fEntries);
+   printf("%s tree:%s entries=%lld\n",GetTitle(),GetName(),fEntries);
 }
 
 //_______________________________________________________________________

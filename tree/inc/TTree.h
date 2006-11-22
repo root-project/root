@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.91 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.92 2006/09/17 19:08:13 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -358,7 +358,7 @@ public:
    virtual void            SetBranchStatus(const char* bname, Bool_t status = 1, UInt_t* found = 0);
    static  void            SetBranchStyle(Int_t style = 1);  //style=0 for old branch, =1 for new branch style
    virtual void            SetCacheSize(Long64_t cachesize = 10000000);
-   virtual void            SetChainOffset(Int_t offset = 0) { fChainOffset=offset; }
+   virtual void            SetChainOffset(Long64_t offset = 0) { fChainOffset=offset; }
    virtual void            SetCircular(Long64_t maxEntries);
    virtual void            SetDebug(Int_t level = 1, Long64_t min = 0, Long64_t max = 9999999); // *MENU*
    virtual void            SetDirectory(TDirectory* dir);

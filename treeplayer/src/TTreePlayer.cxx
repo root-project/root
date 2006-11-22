@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.230 2006/10/15 20:08:33 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.231 2006/10/25 11:59:45 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -722,11 +722,11 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //  AsString can return either a char*, a std::string or a TString.s
 //  For example, the following
 //     tree->Draw("event.myTTimeStamp");
-//  will draw the same histogram as 
+//  will draw the same histogram as
 //     tree->Draw("event.myTTimeStamp.AsDouble()");
 //  In addition, when the object is a type TString or std::string, TTree::Draw
 //  will call respectively TString::Data and std::string::c_str()
-// 
+//
 //  If the object is a TBits, the histogram will contain the index of the bit
 //  that are turned on.
 //
@@ -981,7 +981,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    }
 
    // Draw generated histogram
-   Int_t drawflag = fSelector->GetDrawFlag();
+   Long64_t drawflag = fSelector->GetDrawFlag();
    Int_t action   = fSelector->GetAction();
    TString opt = option;
    opt.ToLower();
@@ -1101,7 +1101,7 @@ Long64_t TTreePlayer::GetEntries(const char *selection)
    // of entries will be considered.
 
    TSelectorEntries s(selection);
-   fTree->Process(&s); 
+   fTree->Process(&s);
    return s.GetSelectedRows();
 }
 
@@ -1362,7 +1362,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    char aprefix[128];
    TObjArray branches(100);
    TObjArray mustInit(100);
-   TObjArray mustInitArr(100); 
+   TObjArray mustInitArr(100);
    mustInitArr.SetOwner(kFALSE);
    Int_t *leafStatus = new Int_t[nleaves];
    for (l=0;l<nleaves;l++) {
@@ -2733,10 +2733,10 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    //       printing format.
    //    col=xxx
    //       Where 'xxx' is colon (:) delimited list of printing format for
-   //       each column. The format string should follow the printf format 
-   //       specification.  The value given will be prefixed by % and, if no 
-   //       conversion specifier is given, will be suffixed by the letter g.  
-   //       before being passed to fprintf.  If no format is specified for a 
+   //       each column. The format string should follow the printf format
+   //       specification.  The value given will be prefixed by % and, if no
+   //       conversion specifier is given, will be suffixed by the letter g.
+   //       before being passed to fprintf.  If no format is specified for a
    //       column, the default is used  (aka ${colsize}.${precision}g )
    // For example:
    //   tree->Scan("a:b:c","","colsize=30 precision=3 col=::20.10:#x:5ld");

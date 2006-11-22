@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.62 2006/05/26 15:13:02 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.63 2006/08/06 07:15:01 rdm Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -759,11 +759,11 @@ void TSelectorDraw::Begin(TTree *tree)
    fForceRead = fTree->TestBit(TTree::kForceRead);
    fWeight  = fTree->GetWeight();
    fNfill   = 0;
-   if (!fV1 && fVar1)   fV1 = new Double_t[fTree->GetEstimate()];
-   if (!fV2 && fVar2)   fV2 = new Double_t[fTree->GetEstimate()];
-   if (!fV3 && fVar3)   fV3 = new Double_t[fTree->GetEstimate()];
-   if (!fV4 && fVar4)   fV4 = new Double_t[fTree->GetEstimate()];
-   if (!fW)             fW  = new Double_t[fTree->GetEstimate()];
+   if (!fV1 && fVar1)   fV1 = new Double_t[(Int_t)fTree->GetEstimate()];
+   if (!fV2 && fVar2)   fV2 = new Double_t[(Int_t)fTree->GetEstimate()];
+   if (!fV3 && fVar3)   fV3 = new Double_t[(Int_t)fTree->GetEstimate()];
+   if (!fV4 && fVar4)   fV4 = new Double_t[(Int_t)fTree->GetEstimate()];
+   if (!fW)             fW  = new Double_t[(Int_t)fTree->GetEstimate()];
 
    fVmin[0] = fVmin[1] = fVmin[2] = fVmin[3] =  FLT_MAX; //in float.h
    fVmax[0] = fVmax[1] = fVmax[2] = fVmax[3] = -fVmin[0];

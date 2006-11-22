@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.25 2006/11/17 17:22:05 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.26 2006/11/21 11:41:46 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -756,7 +756,7 @@ void TProofProgressDialog::DoPlotRateGraph()
    c1->SetGrid();
 
    // Fill TGraph
-   Int_t np = fRatePoints->GetEntries();
+   Int_t np = (Int_t)fRatePoints->GetEntries();
    Double_t ymx = -1.;
    SafeDelete(fRateGraph);
    fRateGraph = new TGraph(np);
@@ -765,7 +765,7 @@ void TProofProgressDialog::DoPlotRateGraph()
    for ( ; ii < np; ++ii) {
       fRatePoints->GetEntry(ii);
       fRateGraph->SetPoint(ii, (Double_t) nar[0], (Double_t) nar[1]);
-      ymx = (nar[1] > ymx) ? nar[1] : ymx; 
+      ymx = (nar[1] > ymx) ? nar[1] : ymx;
    }
 
    fRateGraph->SetMinimum(0.);
