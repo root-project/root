@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.h,v 1.5 2005/02/03 07:29:32 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.h,v 1.6 2006/01/09 15:47:30 brun Exp $
 // Author: Christophe.Delaere@cern.ch   25/04/04
 
 /*************************************************************************
@@ -8,6 +8,10 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
+#ifndef ROOT_TMLPAnalyzer
+#define ROOT_TMLPAnalyzer
+
 
 #ifndef ROOT_TObject
 #include "TObject.h"
@@ -67,3 +71,4 @@ public:
    ClassDef(TMLPAnalyzer, 0) // A simple analysis class for MLP
 };
 
+#endif
