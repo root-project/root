@@ -50,6 +50,7 @@ public:
 
 protected:
    TImage          *fImage;               // image used as background
+   TImage          *fImage2;              // intermediate image used as background
    const TGPicture *fBase;                // picture used as background
    FontStruct_t     fTextFS, fCounterFS;  // font structures for text rendering
    Int_t            fCounter;             // small odo meter (4 digits)
@@ -70,7 +71,9 @@ protected:
    Bool_t           fMeanMark;            // kTRUE if mean mark is active
 
    virtual void     DoRedraw();
-   void             Translate(Float_t val, Float_t angle, Int_t *x, Int_t *y);
+           void     DrawNeedle();
+           void     DrawText();
+           void     Translate(Float_t val, Float_t angle, Int_t *x, Int_t *y);
 
 public:
    TGSpeedo(const TGWindow *p = 0, int id = -1);
