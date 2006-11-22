@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.6 2006/10/02 12:55:47 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.7 2006/10/24 14:20:41 brun Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -8,7 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
+#include <iostream>
 #include <cstdio>
 
 #include "TVirtualPS.h"
@@ -28,7 +28,7 @@ ClassImp(TGLPlotPainter)
 
 //______________________________________________________________________________
 TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, 
-                               Int_t context, Bool_t xoy)
+                               Int_t context, Bool_t xoy, Bool_t xoz, Bool_t yoz)
                   : fGLContext(context),
                     fPadColor(0),
                     fHist(hist),
@@ -43,8 +43,10 @@ TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordin
                     fXOZSectionPos(0.),
                     fYOZSectionPos(0.),
                     fXOYSectionPos(0.),
-                    fBackBox(xoy),
-                    fHighColor(kFALSE)
+                    fBackBox(xoy, xoz, yoz),
+                    fBoxCut(&fBackBox),
+                    fHighColor(kFALSE),
+                    fSelectionBase(kTrueColorSelectionBase)
 {
    //TGLPlotPainter's ctor.
    if (MakeGLContextCurrent())
@@ -59,6 +61,7 @@ void TGLPlotPainter::Paint()
       return;
 
    fHighColor = gGLManager->HighColorFormat(GetGLContext())? kTRUE : kFALSE;
+   fSelectionBase = fHighColor ? kHighColorSelectionBase : kTrueColorSelectionBase;
 
    InitGL();
    //Save material/light properties in a stack.
@@ -1017,4 +1020,238 @@ namespace {
       return kTRUE;
    }
 
+}
+
+ClassImp(TGLBoxCut)
+
+//______________________________________________________________________________
+TGLBoxCut::TGLBoxCut(const TGLPlotBox *box)
+               : fDirection(kAlongX),
+                 fXLength(0.),
+                 fYLength(0.),
+                 fZLength(0.),
+                 fPlotBox(box),
+                 fActive(kFALSE),
+                 fFactor(1.)
+{
+   //Constructor.
+}
+
+//______________________________________________________________________________
+TGLBoxCut::~TGLBoxCut()
+{
+   //Destructor.
+}
+
+//______________________________________________________________________________
+void TGLBoxCut::TurnOnOff()
+{
+   fActive = !fActive;
+
+   if (fActive) {
+      const Int_t frontPoint = fPlotBox->GetFrontPoint();
+      const TGLVertex3 *box = fPlotBox->Get3DBox();
+      const TGLVertex3 center((box[0].X() + box[1].X()) / 2, (box[0].Y() + box[2].Y()) / 2,
+                              (box[0].Z() + box[4].Z()) / 2);
+      fXLength = fFactor * (box[1].X() - box[0].X());
+      fYLength = fFactor * (box[2].Y() - box[0].Y());
+      fZLength = fFactor * (box[4].Z() - box[0].Z());
+
+      switch(frontPoint){
+      case 0:
+         fCenter.X() = box[0].X();
+         fCenter.Y() = box[0].Y();
+         break;
+      case 1:
+         fCenter.X() = box[1].X();
+         fCenter.Y() = box[0].Y();
+         break;
+      case 2:
+         fCenter.X() = box[2].X();
+         fCenter.Y() = box[2].Y();
+         break;
+      case 3:
+         fCenter.X() = box[0].X();
+         fCenter.Y() = box[2].Y();
+         break;
+      }
+
+      fCenter.Z() = box[4].Z();
+      AdjustBox();
+   }
+}
+
+void TGLBoxCut::DrawBox(Bool_t selectionPass, Int_t selected)const
+{
+   if (!selectionPass) {
+      GLboolean oldBlendState = kFALSE;
+      glGetBooleanv(GL_BLEND, &oldBlendState);
+   
+      if (!oldBlendState)
+         glEnable(GL_BLEND);
+      
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+      glDisable(GL_LIGHTING);
+      glLineWidth(3.f);
+      glEnable(GL_LINE_SMOOTH);
+      glColor4d(1., 0.3, 0., 0.8);
+      switch(fDirection){
+      case kAlongX:
+         glBegin(GL_LINES);
+         glVertex3d(fXRange.first, (fYRange.first + fYRange.second) / 2, (fZRange.first + fZRange.second) / 2);
+         glVertex3d(fXRange.second, (fYRange.first + fYRange.second) / 2, (fZRange.first + fZRange.second) / 2);
+         glEnd();
+         break;
+      case kAlongY:
+         glBegin(GL_LINES);
+         glVertex3d((fXRange.first + fXRange.second) / 2, fYRange.first, (fZRange.first + fZRange.second) / 2);
+         glVertex3d((fXRange.first + fXRange.second) / 2, fYRange.second, (fZRange.first + fZRange.second) / 2);
+         glEnd();
+         break;
+      case kAlongZ:
+         glBegin(GL_LINES);
+         glVertex3d((fXRange.first + fXRange.second) / 2, (fYRange.first + fYRange.second) / 2, fZRange.first);
+         glVertex3d((fXRange.first + fXRange.second) / 2, (fYRange.first + fYRange.second) / 2, fZRange.second);
+         glEnd();
+         break;
+      }
+
+      glDisable(GL_LINE_SMOOTH);
+      glLineWidth(1.f);
+      glEnable(GL_LIGHTING);
+
+      const Float_t diffuseColor[] = {0.f, 0.f, 1.f, selected == 7 ? 0.5f : 0.2f};
+      glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuseColor);
+   
+      if (selected == 7) {
+         const Float_t blueEmission[] = {0.5f, 0.f, 1.f, 1.f};
+         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, blueEmission);
+      }
+
+      Rgl::DrawBoxFront(fXRange.first, fXRange.second, fYRange.first, fYRange.second,
+                        fZRange.first, fZRange.second, fPlotBox->GetFrontPoint());
+
+      if (selected == 7);
+         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gNullEmission);
+
+      if (!oldBlendState)
+         glDisable(GL_BLEND);
+   } else {
+      Rgl::ObjectIDToColor(7, kFALSE);//kFALSE == highColor
+      Rgl::DrawBoxFront(fXRange.first, fXRange.second, fYRange.first, fYRange.second,
+                        fZRange.first, fZRange.second, fPlotBox->GetFrontPoint());
+   }
+}
+
+void TGLBoxCut::SetDirectionX()
+{
+   fDirection = kAlongX;
+   //
+}
+
+void TGLBoxCut::SetDirectionY()
+{
+   fDirection = kAlongY;
+   //
+}
+
+void TGLBoxCut::SetDirectionZ()
+{
+   fDirection = kAlongZ;
+}
+
+void TGLBoxCut::StartMovement(Int_t px, Int_t py)
+{
+   fMousePos.fX = px;
+   fMousePos.fY = py;
+}
+
+void TGLBoxCut::MoveBox(Int_t px, Int_t py)
+{
+   Double_t mv[16] = {0.};
+   glGetDoublev(GL_MODELVIEW_MATRIX, mv);
+   Double_t pr[16] = {0.};
+   glGetDoublev(GL_PROJECTION_MATRIX, pr);
+   Int_t vp[4] = {0};
+   glGetIntegerv(GL_VIEWPORT, vp);
+   Double_t winVertex[3] = {0.};
+
+   switch(fDirection){
+   case kAlongX:
+      gluProject(fCenter.X(), 0., 0., mv, pr, vp, &winVertex[0], &winVertex[1], &winVertex[2]);
+      break;
+   case kAlongY:
+      gluProject(0., fCenter.Y(), 0., mv, pr, vp, &winVertex[0], &winVertex[1], &winVertex[2]);
+      break;
+   case kAlongZ:
+      gluProject(0., 0., fCenter.Z(), mv, pr, vp, &winVertex[0], &winVertex[1], &winVertex[2]);
+      break;
+   }
+
+   winVertex[0] += px - fMousePos.fX;
+   winVertex[1] += py - fMousePos.fY;
+   Double_t newPoint[3] = {0.};
+   gluUnProject(winVertex[0], winVertex[1], winVertex[2], mv, pr, vp,
+                newPoint, newPoint + 1, newPoint + 2);
+
+   switch(fDirection){
+   case kAlongX:
+      fCenter.X() = newPoint[0];
+      break;
+   case kAlongY:
+      fCenter.Y() = newPoint[1];
+      break;
+   case kAlongZ:
+      fCenter.Z() = newPoint[2];
+      break;
+   }
+   
+   fMousePos.fX = px;
+   fMousePos.fY = py;
+   
+   AdjustBox();
+}
+
+void TGLBoxCut::AdjustBox()
+{
+   const TGLVertex3 *box = fPlotBox->Get3DBox();
+   
+   fXRange.first  = fCenter.X() - fXLength / 2.;
+   fXRange.second = fCenter.X() + fXLength / 2.;
+   fYRange.first  = fCenter.Y() - fYLength / 2.;
+   fYRange.second = fCenter.Y() + fYLength / 2.;
+   fZRange.first  = fCenter.Z() - fZLength / 2.;
+   fZRange.second = fCenter.Z() + fZLength / 2.;
+
+   fXRange.first  = TMath::Max(fXRange.first, box[0].X());
+   fXRange.first  = TMath::Min(fXRange.first, box[1].X());
+   fXRange.second = TMath::Min(fXRange.second, box[1].X());
+   fXRange.second = TMath::Max(fXRange.second, box[0].X());
+   
+   fYRange.first  = TMath::Max(fYRange.first, box[0].Y());
+   fYRange.first  = TMath::Min(fYRange.first, box[2].Y());
+   fYRange.second = TMath::Min(fYRange.second, box[2].Y());
+   fYRange.second = TMath::Max(fYRange.second, box[0].Y());
+
+   fZRange.first  = TMath::Max(fZRange.first, box[0].Z());
+   fZRange.first  = TMath::Min(fZRange.first, box[4].Z());
+   fZRange.second = TMath::Min(fZRange.second, box[4].Z());
+   fZRange.second = TMath::Max(fZRange.second, box[0].Z());
+   
+   if (fXRange.second - fXRange.first < 0.001 || 
+       fYRange.second - fYRange.first < 0.001 || 
+       fZRange.second - fZRange.first < 0.001) {
+      fActive = kFALSE;
+   }
+}
+
+Bool_t TGLBoxCut::IsInCut(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
+                          Double_t zMin, Double_t zMax)const
+{
+   if (((xMin >= fXRange.first && xMin < fXRange.second) || (xMax > fXRange.first && xMax <= fXRange.second)) &&
+       ((yMin >= fYRange.first && yMin < fYRange.second) || (yMax > fYRange.first && yMax <= fYRange.second)) &&
+       ((zMin >= fZRange.first && zMin < fZRange.second) || (zMax > fZRange.first && zMax <= fZRange.second)))
+       return kTRUE;
+   return kFALSE;
 }

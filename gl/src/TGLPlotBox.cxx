@@ -31,14 +31,32 @@ const Int_t TGLPlotBox::fgBackPairs[][2] =
     {1, 0}
    };
 
+void TGLPlotBox::SomeFun(PF_t)
+{
+}
 
 //______________________________________________________________________________
-TGLPlotBox::TGLPlotBox(Bool_t xoy)
+TGLPlotBox::TGLPlotBox(Bool_t xoy, Bool_t xoz, Bool_t yoz)
                : fFrameColor(0),
                  fXOYSelectable(xoy),
+                 fXOZSelectable(xoz),
+                 fYOZSelectable(yoz),
+                 fSelectablePairs(),
                  fFrontPoint(0)
 {
    // Constructor.
+   //Front point is 0.
+   fSelectablePairs[0][0] = xoz;
+   fSelectablePairs[0][1] = yoz;
+   //Front point is 1.
+   fSelectablePairs[1][0] = yoz;
+   fSelectablePairs[1][1] = xoz;
+   //Front point is 2.
+   fSelectablePairs[2][0] = xoz;
+   fSelectablePairs[2][1] = yoz;
+   //Front point is 3.
+   fSelectablePairs[3][0] = yoz;
+   fSelectablePairs[3][1] = xoz;
 }
 
 
@@ -88,7 +106,9 @@ void TGLPlotBox::DrawBox(Int_t selected, Bool_t selectionPass, const std::vector
       if (selected == 1)
          glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gNullEmission);
       else if (selected == 2)
-         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gGreenEmission);
+         fSelectablePairs[fFrontPoint][0] ?
+            glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gGreenEmission)
+           :glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gRedEmission);
    } else
       ObjectIDToColor(2, highColor);//Left plane, encoded as 2 in a selection buffer.
 
@@ -98,7 +118,9 @@ void TGLPlotBox::DrawBox(Int_t selected, Bool_t selectionPass, const std::vector
       if (selected == 2)
          glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gNullEmission);
       else if (selected == 3)
-         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gGreenEmission);
+         fSelectablePairs[fFrontPoint][1] ?
+            glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gGreenEmission)
+           :glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gRedEmission);
    } else
       ObjectIDToColor(3, highColor); //Right plane, encoded as 3 in a selection buffer.
    

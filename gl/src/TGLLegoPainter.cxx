@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.cxx,v 1.5 2006/10/02 12:55:47 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.cxx,v 1.6 2006/10/24 14:20:41 brun Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cctype>
 
+#include "KeySymbols.h"
 #include "Buttons.h"
 #include "TColor.h"
 #include "TClass.h"
@@ -27,7 +28,7 @@ ClassImp(TGLLegoPainter)
 
 //______________________________________________________________________________
 TGLLegoPainter::TGLLegoPainter(TH1 *hist, TGLOrthoCamera *cam, TGLPlotCoordinates *coord, Int_t ctx)
-                  : TGLPlotPainter(hist, cam, coord, ctx, kFALSE),
+                  : TGLPlotPainter(hist, cam, coord, ctx, kFALSE, kTRUE, kTRUE),
                     fLegoType(kColorSimple),
                     fMinZ(0.),
                     fDrawErrors(kFALSE)
@@ -42,14 +43,14 @@ char *TGLLegoPainter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
    fBinInfo = "";
 
    if (fSelectedPart) {
-      if (fSelectedPart < 6) {
+      if (fSelectedPart < fSelectionBase) {
          if (fHist->Class())
             fBinInfo += fHist->Class()->GetName();
          fBinInfo += "::";
          fBinInfo += fHist->GetName();
       } else if (!fHighColor) {
-         const Int_t binI = (fSelectedPart - 6) / fCoord->GetNYBins() + fCoord->GetFirstXBin();
-         const Int_t binJ = (fSelectedPart - 6) % fCoord->GetNYBins() + fCoord->GetFirstYBin();
+         const Int_t binI = (fSelectedPart - fSelectionBase) / fCoord->GetNYBins() + fCoord->GetFirstXBin();
+         const Int_t binJ = (fSelectedPart - fSelectionBase) % fCoord->GetNYBins() + fCoord->GetFirstYBin();
          fBinInfo.Form("(binx = %d; biny = %d; binc = %f)", binI, binJ, 
                        fHist->GetBinContent(binI, binJ));
       } else
@@ -368,6 +369,7 @@ void TGLLegoPainter::StartPan(Int_t px, Int_t py)
    fMousePosition.fX = px;
    fMousePosition.fY = fCamera->GetHeight() - py;
    fCamera->StartPan(px, py);
+   fBoxCut.StartMovement(px, py);
 }
 
 //______________________________________________________________________________
@@ -377,12 +379,19 @@ void TGLLegoPainter::Pan(Int_t px, Int_t py)
    if (!MakeGLContextCurrent())
       return;
 
-   if (fSelectedPart > 5 || fSelectedPart == 1)
+   if (fSelectedPart >= fSelectionBase || fSelectedPart == 1)
       fCamera->Pan(px, py);
    else if (fSelectedPart > 0) {
       //Convert py into bottom-top orientation.
       py = fCamera->GetHeight() - py;
-      MoveSection(px, py);
+      
+      if (!fHighColor) {
+         if (fBoxCut.IsActive() && fSelectedPart == 7)
+            fBoxCut.MoveBox(px, py);
+         else
+            MoveSection(px, py);
+      } else
+         MoveSection(px, py);
    }
 
    fMousePosition.fX = px, fMousePosition.fY = py;
@@ -486,7 +495,7 @@ void TGLLegoPainter::DrawLegoCartesian()const
          fLegoType = kColorSimple;         
 
    if (fSelectionPass && fHighColor)
-      Rgl::ObjectIDToColor(6, kTRUE);
+      Rgl::ObjectIDToColor(fSelectionBase, kTRUE);
 
    for(Int_t i = iInit, ir = irInit; addI > 0 ? i < nX : i >= 0; i += addI, ir += addI) {
       for(Int_t j = jInit, jr = jrInit; addJ > 0 ? j < nY : j >= 0; j += addJ, jr += addJ) {
@@ -494,7 +503,7 @@ void TGLLegoPainter::DrawLegoCartesian()const
          if (!ClampZ(zMax))
             continue;
 
-         const Int_t binID = 6 + i * fCoord->GetNYBins() + j;
+         const Int_t binID = fSelectionBase + i * fCoord->GetNYBins() + j;
 
          if (fSelectionPass && !fHighColor)
             Rgl::ObjectIDToColor(binID, kFALSE);
@@ -578,7 +587,7 @@ void TGLLegoPainter::DrawLegoPolar()const
          fLegoType = kColorSimple;         
 
    if (fHighColor && fSelectionPass)
-      Rgl::ObjectIDToColor(6, kTRUE);
+      Rgl::ObjectIDToColor(fSelectionBase, kTRUE);
 
    for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
       for(Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
@@ -594,7 +603,7 @@ void TGLLegoPainter::DrawLegoPolar()const
          points[3][0] = fYEdges[j].first  * fCosSinTableX[i + 1].first;
          points[3][1] = fYEdges[j].first  * fCosSinTableX[i + 1].second;
 
-         const Int_t binID = 6 + i * fCoord->GetNYBins() + j;
+         const Int_t binID = fSelectionBase + i * fCoord->GetNYBins() + j;
 
          if (!fHighColor && fSelectionPass)
             Rgl::ObjectIDToColor(binID, kFALSE);
@@ -673,7 +682,7 @@ void TGLLegoPainter::DrawLegoCylindrical()const
          fLegoType = kColorSimple;      
 
    if (fHighColor && fSelectionPass) 
-      Rgl::ObjectIDToColor(6, kTRUE); 
+      Rgl::ObjectIDToColor(fSelectionBase, kTRUE); 
 
    for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
       for(Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
@@ -691,7 +700,7 @@ void TGLLegoPainter::DrawLegoCylindrical()const
          points[3][0] = fCosSinTableX[i + 1].first * zMin;
          points[3][1] = fCosSinTableX[i + 1].second * zMin;
 
-         const Int_t binID = 6 + i * fCoord->GetNYBins() + j;
+         const Int_t binID = fSelectionBase + i * fCoord->GetNYBins() + j;
 
          if (fSelectionPass && !fHighColor)
             Rgl::ObjectIDToColor(binID, kFALSE);
@@ -772,7 +781,7 @@ void TGLLegoPainter::DrawLegoSpherical()const
          fLegoType = kColorSimple;     
 
    if (fSelectionPass && fHighColor)    
-      Rgl::ObjectIDToColor(6, kTRUE);
+      Rgl::ObjectIDToColor(fSelectionBase, kTRUE);
 
    for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
       for(Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
@@ -806,7 +815,7 @@ void TGLLegoPainter::DrawLegoSpherical()const
          points[3][1] = zMax * fCosSinTableY[j + 1].second * fCosSinTableX[i].second;
          points[3][2] = zMax * fCosSinTableY[j + 1].first;
 
-         const Int_t binID = 6 + i * fCoord->GetNYBins() + j;
+         const Int_t binID = fSelectionBase + i * fCoord->GetNYBins() + j;
          
          if (fSelectionPass && !fHighColor)
             Rgl::ObjectIDToColor(binID, kFALSE);
@@ -980,14 +989,18 @@ void TGLLegoPainter::DrawSectionXOY()const
 }
 
 //______________________________________________________________________________
-void TGLLegoPainter::ProcessEvent(Int_t event, Int_t, Int_t)
+void TGLLegoPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
 {
    //Remove all sections and repaint.
    const TGLVertex3 *frame = fBackBox.Get3DBox();
    if (event == kButton1Double && (fXOZSectionPos > frame[0].Y() || fYOZSectionPos > frame[0].X())) {
       fXOZSectionPos = frame[0].Y();
       fYOZSectionPos = frame[0].X();
+      if (fBoxCut.IsActive())
+         fBoxCut.TurnOnOff();
       gGLManager->PaintSingleObject(this);
+   } else if (event == kKeyPress && (py == kKey_c || py == kKey_C)) {
+      Info("ProcessEvent", "Box cut does not exist for lego");
    }
 }
 

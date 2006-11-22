@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <iostream>
 #include <cstdlib>
 #include <cctype>
 
@@ -29,7 +30,7 @@ void TGLSurfacePainter::Projection_t::Swap(Projection_t &rhs)
 
 //______________________________________________________________________________
 TGLSurfacePainter::TGLSurfacePainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, Int_t ctx)
-                                     : TGLPlotPainter(hist, camera, coord, ctx, kTRUE),
+                                     : TGLPlotPainter(hist, camera, coord, ctx, kTRUE, kTRUE, kTRUE),
                                        fType(kSurf),
                                        fSectionPass(kFALSE),
                                        fUpdateTexMap(kTRUE)
@@ -43,8 +44,8 @@ char *TGLSurfacePainter::GetPlotInfo(Int_t px, Int_t py)
    //Coords for point on surface under cursor.
    if (fSelectedPart) {
       if (fHighColor)
-         return fSelectedPart < 7 ? (char *)"TF2" : (char *)"Switch to true-color mode to obtain correct info";
-      return fSelectedPart < 7 ? (char *)"TF2" : WindowPointTo3DPoint(px, py);
+         return fSelectedPart < fSelectionBase ? (char *)"TF2" : (char *)"Switch to true-color mode to obtain correct info";
+      return fSelectedPart < fSelectionBase ? (char *)"TF2" : WindowPointTo3DPoint(px, py);
    }
    return "";
 }
@@ -74,6 +75,7 @@ void TGLSurfacePainter::StartPan(Int_t px, Int_t py)
    fMousePosition.fX = px;
    fMousePosition.fY = fCamera->GetHeight() - py;
    fCamera->StartPan(px, py);
+   fBoxCut.StartMovement(px, fCamera->GetHeight() - py);
 }
 
 //______________________________________________________________________________
@@ -84,12 +86,20 @@ void TGLSurfacePainter::Pan(Int_t px, Int_t py)
    if (!MakeGLContextCurrent())
       return;
 
-   if (fSelectedPart > 6)//Pan camera.
+   if (fSelectedPart >= fSelectionBase)//Pan camera.
       fCamera->Pan(px, py);
    else if (fSelectedPart > 0) {
       //Convert py into bottom-top orientation.
       py = fCamera->GetHeight() - py;
-      MoveSection(px, py);
+
+      if (!fHighColor) {
+         if (fBoxCut.IsActive() && fSelectedPart == 7)
+            fBoxCut.MoveBox(px, py);
+         else
+            MoveSection(px, py);
+      }
+      else
+         MoveSection(px, py);
    }
 
    fMousePosition.fX = px, fMousePosition.fY = py;
@@ -147,14 +157,34 @@ void TGLSurfacePainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
          fXOYSectionPos = frame[0].Z();
          fSectionPass = kFALSE;
       }
-   } else if (event == kButton1Double && (HasSections() || HasProjections())) {
+   } else if (event == kButton1Double && (HasSections() || HasProjections() || fBoxCut.IsActive())) {
       fXOZSectionPos = frame[0].Y();
       fYOZSectionPos = frame[0].X();
       fXOYSectionPos = frame[0].Z();
       fXOZProj.clear();
       fYOZProj.clear();
       fXOYProj.clear();
+      if (fBoxCut.IsActive())
+         fBoxCut.TurnOnOff();
       gGLManager->PaintSingleObject(this);
+   } else if (event == kKeyPress) {
+      if (py == kKey_c || py == kKey_C) {
+         if (fHighColor)
+            Info("ProcessEvent", "Switch to true color to use box cut");
+         else {
+            fBoxCut.TurnOnOff();
+            fUpdateSelection = kTRUE;
+         }
+      } else if (py == kKey_x || py == kKey_X) {
+         if (fBoxCut.IsActive())
+            fBoxCut.SetDirectionX();
+      } else if (py == kKey_y || py == kKey_Y) {
+         if (fBoxCut.IsActive())
+            fBoxCut.SetDirectionY();
+      } else if (py == kKey_z || py == kKey_Z) {
+         if (fBoxCut.IsActive())
+            fBoxCut.SetDirectionZ();
+      }
    }
 }
 
@@ -253,7 +283,8 @@ void TGLSurfacePainter::DrawPlot()const
    if (fCoord->GetCoordType() == kGLCartesian) {
       fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
       DrawSections();
-      DrawProjections();
+      if (!fSelectionPass)
+         DrawProjections();
    }
 
    if (!fSelectionPass) {
@@ -284,23 +315,34 @@ void TGLSurfacePainter::DrawPlot()const
    const Int_t addJ = frontPoint == 2 || frontPoint == 3 ? firstJ = 0, 1 : (firstJ = nY - 2, -1);
 
    if (fHighColor && fSelectionPass)
-      Rgl::ObjectIDToColor(7, kTRUE);
+      Rgl::ObjectIDToColor(fSelectionBase, kTRUE);
 
    for (; addI > 0 ? i < nX - 1 : i >= 0; i += addI) {
       for (Int_t j = firstJ; addJ > 0 ? j < nY - 1 : j >= 0; j += addJ) {
-         Int_t triNumber = 2 * i * (nY - 1) + j * 2 + 7;
+         Int_t triNumber = 2 * i * (nY - 1) + j * 2 + fSelectionBase;
+
+         Double_t xMin = TMath::Min(TMath::Min(fMesh[i][j + 1].X(), fMesh[i][j].X()), fMesh[i + 1][j].X());
+         Double_t xMax = TMath::Max(TMath::Max(fMesh[i][j + 1].X(), fMesh[i][j].X()), fMesh[i + 1][j].X());
+         Double_t yMin = TMath::Min(TMath::Min(fMesh[i][j + 1].Y(), fMesh[i][j].Y()), fMesh[i + 1][j].Y());
+         Double_t yMax = TMath::Max(TMath::Max(fMesh[i][j + 1].Y(), fMesh[i][j].Y()), fMesh[i + 1][j].Y());
+         Double_t zMin = TMath::Min(TMath::Min(fMesh[i][j + 1].Z(), fMesh[i][j].Z()), fMesh[i + 1][j].Z());
+         Double_t zMax = TMath::Max(TMath::Max(fMesh[i][j + 1].Z(), fMesh[i][j].Z()), fMesh[i + 1][j].Z());
+
+         if (fBoxCut.IsActive() && fBoxCut.IsInCut(xMin, xMax, yMin, yMax, zMin, zMax))
+            continue;
+
          if (fSelectionPass && !fHighColor)
             Rgl::ObjectIDToColor(triNumber, kFALSE);
 
          if ((fType == kSurf1 || fType == kSurf2 || fType == kSurf5) && !fSelectionPass)
-             Rgl::DrawFaceTextured(fMesh[i][j + 1], fMesh[i][j], fMesh[i + 1][j],
-                                   fTexMap[i][j + 1], fTexMap[i][j], fTexMap[i + 1][j],
-                                   fAverageNormals[i][j + 1], fAverageNormals[i][j], 
-                                   fAverageNormals[i + 1][j]);
+            Rgl::DrawFaceTextured(fMesh[i][j + 1], fMesh[i][j], fMesh[i + 1][j],
+                                 fTexMap[i][j + 1], fTexMap[i][j], fTexMap[i + 1][j],
+                                 fAverageNormals[i][j + 1], fAverageNormals[i][j], 
+                                 fAverageNormals[i + 1][j]);
          else
             Rgl::DrawSmoothFace(fMesh[i][j + 1], fMesh[i][j], fMesh[i + 1][j],
-                                fAverageNormals[i][j + 1], fAverageNormals[i][j], 
-                                fAverageNormals[i + 1][j]);
+                              fAverageNormals[i][j + 1], fAverageNormals[i][j], 
+                              fAverageNormals[i + 1][j]);
 
          ++triNumber;
 
@@ -308,19 +350,22 @@ void TGLSurfacePainter::DrawPlot()const
             Rgl::ObjectIDToColor(triNumber, kFALSE);
 
          if ((fType == kSurf1 || fType == kSurf2 || fType == kSurf5) && !fSelectionPass)
-             Rgl::DrawFaceTextured(fMesh[i + 1][j], fMesh[i + 1][j + 1], fMesh[i][j + 1],
-                                   fTexMap[i + 1][j], fTexMap[i + 1][j + 1], fTexMap[i][j + 1],
-                                   fAverageNormals[i + 1][j], fAverageNormals[i + 1][j + 1], 
-                                   fAverageNormals[i][j + 1]);
+            Rgl::DrawFaceTextured(fMesh[i + 1][j], fMesh[i + 1][j + 1], fMesh[i][j + 1],
+                                 fTexMap[i + 1][j], fTexMap[i + 1][j + 1], fTexMap[i][j + 1],
+                                 fAverageNormals[i + 1][j], fAverageNormals[i + 1][j + 1], 
+                                 fAverageNormals[i][j + 1]);
          else
             Rgl::DrawSmoothFace(fMesh[i + 1][j], fMesh[i + 1][j + 1], fMesh[i][j + 1], 
-                                fAverageNormals[i + 1][j], fAverageNormals[i + 1][j + 1], 
-                                fAverageNormals[i][j + 1]);
+                              fAverageNormals[i + 1][j], fAverageNormals[i + 1][j + 1], 
+                              fAverageNormals[i][j + 1]);
       }
    }
 
    if (!fSelectionPass)
       glDisable(GL_POLYGON_OFFSET_FILL);
+
+   if (fBoxCut.IsActive())
+      fBoxCut.DrawBox(fSelectionPass, fSelectedPart);
 
    //Draw outlines here
    if (!fSelectionPass && (fType == kSurf || fType == kSurf1 || fType == kSurf3)) {
@@ -375,7 +420,6 @@ void TGLSurfacePainter::DrawPlot()const
       glEnd();
       glLineWidth(1.f);
    }
-
 }
 
 //______________________________________________________________________________
@@ -989,7 +1033,7 @@ char *TGLSurfacePainter::WindowPointTo3DPoint(Int_t px, Int_t py)const
    py = fCamera->GetHeight() - py;
 
    const Int_t nY = fCoord->GetNYBins() - 1;
-   Int_t selected = fSelectedPart - 6;
+   Int_t selected = fSelectedPart - (fSelectionBase - 1);
    Int_t k = selected / 2;
    Int_t i = k / nY;
    Int_t j = k % nY;

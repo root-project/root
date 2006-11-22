@@ -1,5 +1,6 @@
 #include <ctype.h>
 
+#include "KeySymbols.h"
 #include "Buttons.h"
 #include "TColor.h"
 #include "TStyle.h"
@@ -16,7 +17,7 @@ ClassImp(TGLBoxPainter)
 
 //______________________________________________________________________________
 TGLBoxPainter::TGLBoxPainter(TH1 *hist, TGLOrthoCamera *cam, TGLPlotCoordinates *coord, Int_t ctx)
-                  : TGLPlotPainter(hist, cam, coord, ctx, kTRUE),
+                  : TGLPlotPainter(hist, cam, coord, ctx, kTRUE, kTRUE, kTRUE),
                     fXOZSlice("XOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOZ),
                     fYOZSlice("YOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kYOZ),
                     fXOYSlice("XOY", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOY),
@@ -34,16 +35,16 @@ char *TGLBoxPainter::GetPlotInfo(Int_t, Int_t)
    fPlotInfo = "";
 
    if (fSelectedPart) {
-      if (fSelectedPart < 6) {
+      if (fSelectedPart < fSelectionBase) {
          if (fHist->Class())
             fPlotInfo += fHist->Class()->GetName();
          fPlotInfo += "::";
          fPlotInfo += fHist->GetName();
       } else if (!fHighColor){
          const Int_t arr2Dsize = fCoord->GetNYBins() * fCoord->GetNZBins();
-         const Int_t binI = (fSelectedPart - 6) / arr2Dsize + fCoord->GetFirstXBin();
-         const Int_t binJ = (fSelectedPart - 6) % arr2Dsize / fCoord->GetNZBins() + fCoord->GetFirstYBin();
-         const Int_t binK = (fSelectedPart - 6) % arr2Dsize % fCoord->GetNZBins() + fCoord->GetFirstZBin();         
+         const Int_t binI = (fSelectedPart - fSelectionBase) / arr2Dsize + fCoord->GetFirstXBin();
+         const Int_t binJ = (fSelectedPart - fSelectionBase) % arr2Dsize / fCoord->GetNZBins() + fCoord->GetFirstYBin();
+         const Int_t binK = (fSelectedPart - fSelectionBase) % arr2Dsize % fCoord->GetNZBins() + fCoord->GetFirstZBin();
 
          fPlotInfo.Form("(binx = %d; biny = %d; binz = %d; binc = %f)", binI, binJ, binK,
                         fHist->GetBinContent(binI, binJ, binK));
@@ -101,6 +102,7 @@ void TGLBoxPainter::StartPan(Int_t px, Int_t py)
    fMousePosition.fX = px;
    fMousePosition.fY = fCamera->GetHeight() - py;
    fCamera->StartPan(px, py);
+   fBoxCut.StartMovement(px, fCamera->GetHeight() - py);
 }
 
 
@@ -113,12 +115,20 @@ void TGLBoxPainter::Pan(Int_t px, Int_t py)
    if (!MakeGLContextCurrent())
       return;
 
-   if (fSelectedPart > 6)//Pan camera.
+   if (fSelectedPart >= fSelectionBase)//Pan camera.
       fCamera->Pan(px, py);
    else if (fSelectedPart > 0) {
       //Convert py into bottom-top orientation.
+      //Possibly, move box here
       py = fCamera->GetHeight() - py;
-      MoveSection(px, py);
+      if (!fHighColor) {
+         if (fBoxCut.IsActive() && fSelectedPart == 7)
+            fBoxCut.MoveBox(px, py);
+         else
+            MoveSection(px, py);
+      } else {
+         MoveSection(px, py);
+      }
    }
 
    fMousePosition.fX = px, fMousePosition.fY = py;
@@ -140,15 +150,35 @@ void TGLBoxPainter::AddOption(const TString &option)
 
 
 //______________________________________________________________________________
-void TGLBoxPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t /*py*/)
+void TGLBoxPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
 {
    // Remove sections.
 
-   if (event == kButton1Double && HasSections()) {
+   if (event == kButton1Double && (HasSections() || fBoxCut.IsActive())) {
       fXOZSectionPos = fBackBox.Get3DBox()[0].Y();
       fYOZSectionPos = fBackBox.Get3DBox()[0].X();
       fXOYSectionPos = fBackBox.Get3DBox()[0].Z();
+      if (fBoxCut.IsActive())
+         fBoxCut.TurnOnOff();
       gGLManager->PaintSingleObject(this);
+   } else if (event == kKeyPress) {
+      if (py == kKey_c || py == kKey_C) {
+         if (fHighColor)
+            Info("ProcessEvent", "Switch to true color mode to use box cut");
+         else {
+            fBoxCut.TurnOnOff();
+            fUpdateSelection = kTRUE;
+         }
+      } else if (py == kKey_x || py == kKey_X) {
+         if (fBoxCut.IsActive())
+            fBoxCut.SetDirectionX();
+      } else if (py == kKey_y || py == kKey_Y) {
+         if (fBoxCut.IsActive())
+            fBoxCut.SetDirectionY();
+      } else if (py == kKey_z || py == kKey_Z) {
+         if (fBoxCut.IsActive())
+            fBoxCut.SetDirectionZ();
+      }
    }
 }
 
@@ -212,7 +242,7 @@ void TGLBoxPainter::DrawPlot()const
    const TAxis   *zA = fZAxis;
 
    if (fSelectionPass && fHighColor)
-      Rgl::ObjectIDToColor(7, fHighColor);
+      Rgl::ObjectIDToColor(fSelectionBase, fHighColor);//base + 1 == 7
 
    for(Int_t ir = irInit, i = iInit; addI > 0 ? i < nX : i >= 0; ir += addI, i += addI) {
       for(Int_t jr = jrInit, j = jInit; addJ > 0 ? j < nY : j >= 0; jr += addJ, j += addJ) {
@@ -221,30 +251,27 @@ void TGLBoxPainter::DrawPlot()const
             if (!w)
                continue;
 
-            const Int_t binID = 6 + i * fCoord->GetNZBins() * fCoord->GetNYBins() + j * fCoord->GetNZBins() + k;
+            const Double_t xMin = xScale * (xA->GetBinLowEdge(ir) / 2 + xA->GetBinUpEdge(ir) / 2 - w * xA->GetBinWidth(ir) / 2);
+            const Double_t xMax = xScale * (xA->GetBinLowEdge(ir) / 2 + xA->GetBinUpEdge(ir) / 2 + w * xA->GetBinWidth(ir) / 2);
+            const Double_t yMin = yScale * (yA->GetBinLowEdge(jr) / 2 + yA->GetBinUpEdge(jr) / 2 - w * yA->GetBinWidth(jr) / 2);
+            const Double_t yMax = yScale * (yA->GetBinLowEdge(jr) / 2 + yA->GetBinUpEdge(jr) / 2 + w * yA->GetBinWidth(jr) / 2);
+            const Double_t zMin = zScale * (zA->GetBinLowEdge(kr) / 2 + zA->GetBinUpEdge(kr) / 2 - w * zA->GetBinWidth(kr) / 2);
+            const Double_t zMax = zScale * (zA->GetBinLowEdge(kr) / 2 + zA->GetBinUpEdge(kr) / 2 + w * zA->GetBinWidth(kr) / 2);
+
+            if (fBoxCut.IsActive() && fBoxCut.IsInCut(xMin, xMax, yMin, yMax, zMin, zMax))
+               continue;
+
+            const Int_t binID = fSelectionBase + i * fCoord->GetNZBins() * fCoord->GetNYBins() + j * fCoord->GetNZBins() + k;
 
             if (fSelectionPass && !fHighColor)
                Rgl::ObjectIDToColor(binID, fHighColor);
             else if(!fHighColor && fSelectedPart == binID)
                glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gOrangeEmission);
 
-               if (fType == kBox)
-                  Rgl::DrawBoxFront(xScale * (xA->GetBinLowEdge(ir) / 2 + xA->GetBinUpEdge(ir) / 2 - w * xA->GetBinWidth(ir) / 2),
-                                    xScale * (xA->GetBinLowEdge(ir) / 2 + xA->GetBinUpEdge(ir) / 2 + w * xA->GetBinWidth(ir) / 2),
-                                    yScale * (yA->GetBinLowEdge(jr) / 2 + yA->GetBinUpEdge(jr) / 2 - w * yA->GetBinWidth(jr) / 2),
-                                    yScale * (yA->GetBinLowEdge(jr) / 2 + yA->GetBinUpEdge(jr) / 2 + w * yA->GetBinWidth(jr) / 2),
-                                    zScale * (zA->GetBinLowEdge(kr) / 2 + zA->GetBinUpEdge(kr) / 2 - w * zA->GetBinWidth(kr) / 2),
-                                    zScale * (zA->GetBinLowEdge(kr) / 2 + zA->GetBinUpEdge(kr) / 2 + w * zA->GetBinWidth(kr) / 2),
-                                    frontPoint);
-               else
-                  Rgl::DrawSphere(&fQuadric,
-                                  xScale * (xA->GetBinLowEdge(ir) / 2 + xA->GetBinUpEdge(ir) / 2 - w * xA->GetBinWidth(ir) / 2),
-                                  xScale * (xA->GetBinLowEdge(ir) / 2 + xA->GetBinUpEdge(ir) / 2 + w * xA->GetBinWidth(ir) / 2),
-                                  yScale * (yA->GetBinLowEdge(jr) / 2 + yA->GetBinUpEdge(jr) / 2 - w * yA->GetBinWidth(jr) / 2),
-                                  yScale * (yA->GetBinLowEdge(jr) / 2 + yA->GetBinUpEdge(jr) / 2 + w * yA->GetBinWidth(jr) / 2),
-                                  zScale * (zA->GetBinLowEdge(kr) / 2 + zA->GetBinUpEdge(kr) / 2 - w * zA->GetBinWidth(kr) / 2),
-                                  zScale * (zA->GetBinLowEdge(kr) / 2 + zA->GetBinUpEdge(kr) / 2 + w * zA->GetBinWidth(kr) / 2)
-                                 );
+            if (fType == kBox)
+               Rgl::DrawBoxFront(xMin, xMax, yMin, yMax, zMin, zMax, frontPoint);
+            else
+               Rgl::DrawSphere(&fQuadric, xMin, xMax, yMin, yMax, zMin, zMax);
 
             if (!fSelectionPass && !fHighColor && fSelectedPart == binID)
                glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gNullEmission);
@@ -252,6 +279,8 @@ void TGLBoxPainter::DrawPlot()const
       }
    }
 
+   if (fBoxCut.IsActive())
+      fBoxCut.DrawBox(fSelectionPass, fSelectedPart);
 
    if (!fSelectionPass && fType != kBox1) {
       glDisable(GL_POLYGON_OFFSET_FILL);//0]
@@ -271,13 +300,17 @@ void TGLBoxPainter::DrawPlot()const
                if (!w)
                   continue;
 
-               Rgl::DrawBoxFront(xScale * (xA->GetBinLowEdge(ir) / 2 + xA->GetBinUpEdge(ir) / 2 - w * xA->GetBinWidth(ir) / 2),
-                                 xScale * (xA->GetBinLowEdge(ir) / 2 + xA->GetBinUpEdge(ir) / 2 + w * xA->GetBinWidth(ir) / 2),
-                                 yScale * (yA->GetBinLowEdge(jr) / 2 + yA->GetBinUpEdge(jr) / 2 - w * yA->GetBinWidth(jr) / 2),
-                                 yScale * (yA->GetBinLowEdge(jr) / 2 + yA->GetBinUpEdge(jr) / 2 + w * yA->GetBinWidth(jr) / 2),
-                                 zScale * (zA->GetBinLowEdge(kr) / 2 + zA->GetBinUpEdge(kr) / 2 - w * zA->GetBinWidth(kr) / 2),
-                                 zScale * (zA->GetBinLowEdge(kr) / 2 + zA->GetBinUpEdge(kr) / 2 + w * zA->GetBinWidth(kr) / 2),
-                                 frontPoint);
+               const Double_t xMin = xScale * (xA->GetBinLowEdge(ir) / 2 + xA->GetBinUpEdge(ir) / 2 - w * xA->GetBinWidth(ir) / 2);
+               const Double_t xMax = xScale * (xA->GetBinLowEdge(ir) / 2 + xA->GetBinUpEdge(ir) / 2 + w * xA->GetBinWidth(ir) / 2);
+               const Double_t yMin = yScale * (yA->GetBinLowEdge(jr) / 2 + yA->GetBinUpEdge(jr) / 2 - w * yA->GetBinWidth(jr) / 2);
+               const Double_t yMax = yScale * (yA->GetBinLowEdge(jr) / 2 + yA->GetBinUpEdge(jr) / 2 + w * yA->GetBinWidth(jr) / 2);
+               const Double_t zMin = zScale * (zA->GetBinLowEdge(kr) / 2 + zA->GetBinUpEdge(kr) / 2 - w * zA->GetBinWidth(kr) / 2);
+               const Double_t zMax = zScale * (zA->GetBinLowEdge(kr) / 2 + zA->GetBinUpEdge(kr) / 2 + w * zA->GetBinWidth(kr) / 2);
+
+               if (fBoxCut.IsActive() && fBoxCut.IsInCut(xMin, xMax, yMin, yMax, zMin, zMax))
+                  continue;
+
+               Rgl::DrawBoxFront(xMin, xMax, yMin, yMax, zMin, zMax, frontPoint);
             }
          }
       }  

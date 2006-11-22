@@ -17,11 +17,11 @@
    TGLHistPainter is a proxy class. It inherits TVirtualHistPainter and
    overrides its virtual functions, but all actual work is done by :
       THistPainter - I name it "default" painter, it's the member of type
-                     TVirtualHistPainter * and loaded via plugin-manager
-      TGLLegoPainter - it draws different legos (lego/lego1/lego2/lego3)
-      TGLSurfacePainter - supports surfaces (surf/surf1/surf2/surf3/surf4/surf5)
-      TGLBoxPainter - box option for TH3
-      TGLTF3Painter - TF3
+                     TVirtualHistPainter * and loaded via plugin-manager;
+      TGLLegoPainter - it draws different legos (lego/lego1/lego2/lego3);
+      TGLSurfacePainter - supports surfaces (surf/surf1/surf2/surf3/surf4/surf5);
+      TGLBoxPainter - box option for TH3;
+      TGLTF3Painter - TF3.
 */
 
 class TString;

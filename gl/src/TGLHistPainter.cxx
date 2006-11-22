@@ -1,5 +1,4 @@
 #include <cstring>
-#include <cctype>
 
 #include "TVirtualPad.h"
 #include "TVirtualGL.h"
@@ -14,6 +13,15 @@
 
 ClassImp(TGLHistPainter)
 
+/*
+   Some TGLHistPainter's functions are useless - I have to define them
+   to override pure-virtual functions from TVirtualHistPainter:
+      GetContourList
+      IsInside
+      MakeCuts
+      SetShowProjection
+*/
+
 //______________________________________________________________________________
 TGLHistPainter::TGLHistPainter(TH1 *hist)
                    : fDefaultPainter(TVirtualHistPainter::HistPainter(hist)),
@@ -21,10 +29,10 @@ TGLHistPainter::TGLHistPainter(TH1 *hist)
                      fHist(hist),
                      fF3(0),
                      fStack(0),
-                     fPlotType(kGLDefaultPlot)
+                     fPlotType(kGLDefaultPlot)//THistPainter
 {
    //ROOT does not use exceptions, so, if default painter's creation failed,
-   //fDefaultPainter is 0. In each function, which use it, I have to check pointer first.
+   //fDefaultPainter is 0. In each function, which use it, I have to check the pointer first.
 }
 
 //______________________________________________________________________________
@@ -35,9 +43,12 @@ Int_t TGLHistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    if (fPlotType == kGLDefaultPlot)
       return fDefaultPainter.get() ? fDefaultPainter->DistancetoPrimitive(px, py) : 9999;
    else {
-
+      //Adjust px and py - canvas can have several pads inside, so we need to convert
+      //the from canvas' system into pad's.
       py -= Int_t((1 - gPad->GetHNDC() - gPad->GetYlowNDC()) * gPad->GetWh());
       px -= Int_t(gPad->GetXlowNDC() * gPad->GetWw());
+      //One hist can be appended to several pads,
+      //the current pad should have valid OpenGL context.
       const Int_t glContext = gPad->GetGLDevice();
 
       if (glContext != -1) {
@@ -45,7 +56,7 @@ Int_t TGLHistPainter::DistancetoPrimitive(Int_t px, Int_t py)
          if (!gGLManager->PlotSelected(fGLPainter.get(), px, py))
             gPad->SetSelected(gPad);
       } else {
-         Error("DistancetoPrimitive", 
+         Error("DistancetoPrimitive",
                "Attempt to use TGLHistPainter, while the current pad (gPad) does not support gl");
          gPad->SetSelected(gPad);
       }
@@ -57,7 +68,10 @@ Int_t TGLHistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 //______________________________________________________________________________
 void TGLHistPainter::DrawPanel()
 {
-   //Default implementation is OK.
+   //Default implementation is OK 
+   //This function is called from a context menu 
+   //after right click on a plot's area. Opens window
+   //("panel") with several controls.
    if (fDefaultPainter.get())
       fDefaultPainter->DrawPanel();
 }
@@ -65,11 +79,21 @@ void TGLHistPainter::DrawPanel()
 //______________________________________________________________________________
 void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Execute event.
+   //Execute event.
+   //Events are: mouse events in a plot's area, 
+   //key presses (while mouse cursor is in plot's area).
+   //"Event execution" means one of the following actions:
+   //1. Rotation.
+   //2. Panning.
+   //3. Zoom changing.
+   //4. Moving dynamic profile.
+   //5. Plot specific events - for example, 's' or 'S' key press for TF3.
    if (fPlotType == kGLDefaultPlot) {
       if(fDefaultPainter.get())
          fDefaultPainter->ExecuteEvent(event, px, py);
    } else {
+      //One hist can be appended to several pads,
+      //the current pad should have valid OpenGL context.
       const Int_t glContext = gPad->GetGLDevice();
 
       if (glContext == -1) {
@@ -80,43 +104,61 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          fGLPainter->SetGLContext(glContext);
 
       if (event != kKeyPress) {
+         //Adjust px and py - canvas can have several pads inside, so we need to convert
+         //the from canvas' system into pad's. If it was a key press event,
+         //px and py ARE NOT coordinates.
          py -= Int_t((1 - gPad->GetHNDC() - gPad->GetYlowNDC()) * gPad->GetWh());
          px -= Int_t(gPad->GetXlowNDC() * gPad->GetWw());
       }
 
       switch (event) {
       case kButton1Double:
+         //Left double click removes dynamic sections, user created (if plot type supports sections).
          fGLPainter->ProcessEvent(event, px, py);
          break;
-      case kButton1Down :
+      case kButton1Down:
+         //Left mouse down in a plot area starts rotation.
          fCamera.StartRotation(px, py);
+         //During rotation, usual TCanvas/TPad machinery (CopyPixmap/Flush/UpdateWindow/etc.)
+         //is skipped - I use "bit blasting" functions to copy picture directly onto window.
          gGLManager->MarkForDirectCopy(glContext, kTRUE);
          break;
-      case kButton1Motion :
+      case kButton1Motion:
+         //Rotation invalidates "selection buffer" 
+         // - (color-to-object map, previously read from gl-buffer).
          fGLPainter->InvalidateSelection();
          fCamera.RotateCamera(px, py);
+         //Draw modified scene onto canvas' window.
          gGLManager->PaintSingleObject(fGLPainter.get());
          break;
       case kButton1Up:
-         gGLManager->MarkForDirectCopy(glContext, kFALSE);
-         break;
       case kButton2Up:
          gGLManager->MarkForDirectCopy(glContext, kFALSE);
          break;
       case kMouseMotion:
          gPad->SetCursor(kRotate);
          break;
-      case 7://kButton2Down://+ shift modifier
+      case 7://kButton1Down + shift modifier
+         //The current version of ROOT does not
+         //have enumerators for button events + key modifiers,
+         //so I use hardcoded literals. :(
+         //With left mouse button down and shift pressed
+         //we can move plot as the whole or move
+         //plot's parts - dynamic sections.
          fGLPainter->StartPan(px, py);
          gGLManager->MarkForDirectCopy(glContext, kTRUE);
          break;
-      case 8://kButton2Motion://+shift modifier
+      case 8://kButton1Motion + shift modifier
          gGLManager->PanObject(fGLPainter.get(), px, py);
          gGLManager->PaintSingleObject(fGLPainter.get());
          break;
       case kKeyPress:
       case 5:
       case 6:
+         //5, 6 are mouse wheel events (see comment about literals above).
+         //'p'/'P' - specific events processed by TGLSurfacePainter,
+         //'s'/'S' - specific events processed by TGLTF3Painter,
+         //'c'/'C' - turn on/off box cut.
          gGLManager->MarkForDirectCopy(glContext, kTRUE);
          if (event == 5 || py == kKey_J || py == kKey_j) {
             fCamera.ZoomIn();
@@ -126,7 +168,10 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             fCamera.ZoomOut();
             fGLPainter->InvalidateSelection();
             gGLManager->PaintSingleObject(fGLPainter.get());
-         } else if (py == kKey_p || py == kKey_P || py == kKey_S || py == kKey_s) {
+         } else if (py == kKey_p || py == kKey_P || py == kKey_S || py == kKey_s
+                    || py == kKey_c || py == kKey_C || py == kKey_x || py == kKey_X
+                    || py == kKey_y || py == kKey_Y || py == kKey_z || py == kKey_Z) 
+         {
             fGLPainter->ProcessEvent(event, px, py);
             gGLManager->PaintSingleObject(fGLPainter.get());
          }
@@ -140,6 +185,9 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 void TGLHistPainter::FitPanel()
 {
    //Default implementation is OK.
+   //This function is called from a context menu 
+   //after right click on a plot's area. Opens window
+   //("panel") with several controls.
    if (fDefaultPainter.get())
       fDefaultPainter->FitPanel();
 }
@@ -147,7 +195,9 @@ void TGLHistPainter::FitPanel()
 //______________________________________________________________________________
 TList *TGLHistPainter::GetContourList(Double_t contour)const
 {
-   // Get contour list.
+   //Get contour list.
+   //I do not use this function. Contours are implemented in
+   //a completely different way by gl-painters.
    return fDefaultPainter.get() ? fDefaultPainter->GetContourList(contour) : 0;
 }
 
@@ -155,8 +205,11 @@ TList *TGLHistPainter::GetContourList(Double_t contour)const
 char *TGLHistPainter::GetObjectInfo(Int_t px, Int_t py)const
 {
    //Overrides TObject::GetObjectInfo.
-   //Displays the histogram info (bin number, contents, integral up to bin
-   //corresponding to cursor position px,py.
+   //For lego info is: bin numbers (i, j), bin content.
+   //For TF2 info is: x,y,z 3d surface-point for 2d screen-point under cursor
+   //(this can work incorrectly now, because of wrong code in TF2).
+   //For TF3 no info now.
+   //For box info is: bin numbers (i, j, k), bin content.
    static char *errMsg = "TGLHistPainter::GetObjectInfo: Error in a hist painter\n";
    if (fPlotType == kGLDefaultPlot)
       return fDefaultPainter.get() ? fDefaultPainter->GetObjectInfo(px, py) 
@@ -176,6 +229,7 @@ TList *TGLHistPainter::GetStack()const
 Bool_t TGLHistPainter::IsInside(Int_t x, Int_t y)
 {
    //Returns kTRUE if the cell ix, iy is inside one of the graphical cuts.
+   //I do not use this function anywhere, this is a "default implementation".
    if (fPlotType == kGLDefaultPlot)
       return fDefaultPainter.get() ? fDefaultPainter->IsInside(x, y) : kFALSE;
    
@@ -186,6 +240,7 @@ Bool_t TGLHistPainter::IsInside(Int_t x, Int_t y)
 Bool_t TGLHistPainter::IsInside(Double_t x, Double_t y)
 {
    //Returns kTRUE if the cell x, y is inside one of the graphical cuts.
+   //I do not use this function anywhere, this is a "default implementation".
    if (fPlotType == kGLDefaultPlot)
       return fDefaultPainter.get() ? fDefaultPainter->IsInside(x, y) : kFALSE;
    
@@ -195,7 +250,8 @@ Bool_t TGLHistPainter::IsInside(Double_t x, Double_t y)
 //______________________________________________________________________________
 void TGLHistPainter::PaintStat(Int_t dostat, TF1 *fit)
 {
-   // Paint statistics.
+   //Paint statistics.
+   //This does not work on windows.
    if (fDefaultPainter.get()) 
       fDefaultPainter->PaintStat(dostat, fit);
 }
@@ -205,7 +261,7 @@ void TGLHistPainter::ProcessMessage(const char *m, const TObject *o)
 {
    // Process message.
    if (!std::strcmp(m, "SetF3"))
-      fF3 = (TF3 *)o;//static_cast, followed by const_cast
+      fF3 = (TF3 *)o;
    
    if (fDefaultPainter.get())
       fDefaultPainter->ProcessMessage(m, o);
@@ -271,6 +327,8 @@ void TGLHistPainter::Paint(Option_t *o)
    CreatePainter(ParsePaintOption(option), option);
 
    if (fPlotType == kGLDefaultPlot) {
+      //In case of default plot pad 
+      //should not copy gl-buffer (it will be simply black)
       gPad->SetCopyGLDevice(kFALSE);
 
       if (fDefaultPainter.get())
@@ -279,6 +337,8 @@ void TGLHistPainter::Paint(Option_t *o)
       Int_t glContext = gPad->GetGLDevice();
 
       if (glContext != -1) {
+         //With gl-plot, pad should copy
+         //gl-buffer into the final pad/canvas pixmap/DIB.
          gPad->SetCopyGLDevice(kTRUE);
          fGLPainter->SetGLContext(glContext);
          if (fGLPainter->InitGeometry())

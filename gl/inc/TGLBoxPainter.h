@@ -65,6 +65,7 @@ private:
    TGLTH3Slice fXOZSlice;
    TGLTH3Slice fYOZSlice;
    TGLTH3Slice fXOYSlice;
+
    enum EBoxType {
       kBox, //boxes, sizes are proportional to bin content
       kBox1 //spheres, not boxes

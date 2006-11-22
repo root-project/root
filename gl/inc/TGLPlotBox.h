@@ -16,13 +16,21 @@ class TGLPlotBox {
 private:
    const TColor          *fFrameColor;
    const Bool_t           fXOYSelectable;
+   const Bool_t           fXOZSelectable;
+   const Bool_t           fYOZSelectable;
+   
+   Bool_t                 fSelectablePairs[4][2];
 
    TGLVertex3             f3DBox[8];
    mutable TGLVertex3     f2DBox[8];
    mutable Int_t          fFrontPoint;
 
 public:
-   TGLPlotBox(Bool_t xoySelectable);
+
+   typedef void (TGLPlotBox::*PF_t)(int);
+   void SomeFun(PF_t);
+
+   TGLPlotBox(Bool_t xoySelectable, Bool_t xozSelectable, Bool_t yozSelectable);
    //ClassDef macro adds some virtual functions,
    //so, to supress g++ warnings virtual destructor declared.
    virtual ~TGLPlotBox();

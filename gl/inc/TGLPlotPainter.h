@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.6 2006/10/02 12:55:47 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.7 2006/10/24 14:20:41 brun Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -20,9 +20,6 @@
 #ifndef ROOT_TGLPlotBox
 #include "TGLPlotBox.h"
 #endif
-#ifndef ROOT_Rtypes
-#include "Rtypes.h"
-#endif
 #ifndef ROOT_TPoint
 #include "TPoint.h"
 #endif
@@ -41,10 +38,60 @@ class TH1;
    TGLPlotPainter class defines interface to different plot painters.
 */
 
+class TGLBoxCut {
+private:
+   enum EMovementDirection {
+      kAlongX,
+      kAlongY,
+      kAlongZ
+   };
+
+   EMovementDirection         fDirection;
+   Double_t                   fXLength;
+   Double_t                   fYLength;
+   Double_t                   fZLength;
+   TGLVertex3                 fCenter;
+   Rgl::Range_t               fXRange;
+   Rgl::Range_t               fYRange;
+   Rgl::Range_t               fZRange;
+
+   const TGLPlotBox * const   fPlotBox;
+   Bool_t                     fActive;
+   Double_t                   fFactor;
+
+   TPoint                     fMousePos;
+   enum{kSelectionColor = 7};
+
+public:
+   TGLBoxCut(const TGLPlotBox *plotBox);
+   //Class has ClassDef macro == virtual functions, so we need 
+   //explicitly declared/defined dtor to supress warnings from g++
+   virtual ~TGLBoxCut();
+
+   void   TurnOnOff();
+   Bool_t IsActive()const{return fActive;}
+   void   SetFactor(Double_t f){fFactor = f;}
+
+   void   DrawBox(Bool_t selectionPass, Int_t selected)const;
+   void   SetDirectionX();
+   void   SetDirectionY();
+   void   SetDirectionZ();
+   
+   void   StartMovement(Int_t px, Int_t py);
+   void   MoveBox(Int_t px, Int_t py);
+   
+   Bool_t IsInCut(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
+                  Double_t zMin, Double_t zMax)const;
+private:
+   void AdjustBox();
+
+   ClassDef(TGLBoxCut, 0)
+};
+
 class TGLPlotPainter : public TVirtualGLPainter {
 private:
-   Int_t          fGLContext;
-   const TColor  *fPadColor;
+   Int_t                 fGLContext;
+   const TColor         *fPadColor;
 
 protected:
    TH1                  *fHist;
@@ -63,13 +110,21 @@ protected:
    mutable Double_t      fYOZSectionPos;
    mutable Double_t      fXOYSectionPos;
    TGLPlotBox            fBackBox;
+   TGLBoxCut             fBoxCut;
 
    std::vector<Double_t> fZLevels;
    Bool_t                fHighColor;
+   
+   enum ESelectionBase{
+      kHighColorSelectionBase = 7,
+      kTrueColorSelectionBase = 8
+   };
+   
+   ESelectionBase        fSelectionBase;
 
 public:
-   TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, Int_t context = -1,
-                  Bool_t xoySelectable = kFALSE);
+   TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, Int_t context,
+                  Bool_t xoySelectable, Bool_t xozSelectable, Bool_t yozSelectable);
 
    virtual void     Paint();
    //Checks, if mouse cursor is above plot.

@@ -14,7 +14,7 @@ ClassImp(TGLTF3Painter)
 //______________________________________________________________________________
 TGLTF3Painter::TGLTF3Painter(TF3 *fun, TH1 *hist, TGLOrthoCamera *camera, 
                              TGLPlotCoordinates *coord, Int_t ctx)
-                  : TGLPlotPainter(hist, camera, coord, ctx, kTRUE),
+                  : TGLPlotPainter(hist, camera, coord, ctx, kFALSE, kFALSE, kFALSE),
                     fStyle(kDefault),
                     fF3(fun)
 {
@@ -83,9 +83,12 @@ Bool_t TGLTF3Painter::InitGeometry()
 void TGLTF3Painter::StartPan(Int_t px, Int_t py)
 {
    //User clicks right mouse button (in a pad).
-   fMousePosition.fX = px;
-   fMousePosition.fY = fCamera->GetHeight() - py;
-   fCamera->StartPan(px, py);
+   if (fBoxCut.IsActive() && fSelectedPart == 7) {
+      fMousePosition.fX = px;
+      fMousePosition.fY = fCamera->GetHeight() - py;
+      fBoxCut.StartMovement(px, fCamera->GetHeight() - py);
+   } else
+      fCamera->StartPan(px, py);
 }
 
 //______________________________________________________________________________
@@ -96,9 +99,12 @@ void TGLTF3Painter::Pan(Int_t px, Int_t py)
    if (!MakeGLContextCurrent())
       return;
 
-   if (fSelectedPart)//Pan camera.
-      fCamera->Pan(px, py);
-
+   if (fSelectedPart) {
+      if (fBoxCut.IsActive() && fSelectedPart == 7)
+         fBoxCut.MoveBox(px, fCamera->GetHeight() - py);
+      else
+         fCamera->Pan(px, py);
+   }
 }
 
 //______________________________________________________________________________
@@ -111,8 +117,29 @@ void TGLTF3Painter::AddOption(const TString &/*option*/)
 void TGLTF3Painter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
 {
    //Change color sheme.
-   if (event == kKeyPress && (py == kKey_s || py == kKey_S)) {
-      fStyle < kMaple2 ? fStyle = ETF3Style(fStyle + 1) : fStyle = kDefault;
+   if (event == kKeyPress) {
+      if (py == kKey_s || py == kKey_S) {
+         fStyle < kMaple2 ? fStyle = ETF3Style(fStyle + 1) : fStyle = kDefault;
+         //gGLManager->PaintSingleObject(this);
+      } else if (py == kKey_c || py == kKey_C) {
+         if (fHighColor)
+            Info("ProcessEvent", "Cut box does not work in high color, please, switch to true color");
+         else {
+            fBoxCut.TurnOnOff();
+            fUpdateSelection = kTRUE;
+         }
+      } else if (py == kKey_x || py == kKey_X) {
+         if (fBoxCut.IsActive())
+            fBoxCut.SetDirectionX();
+      } else if (py == kKey_y || py == kKey_Y) {
+         if (fBoxCut.IsActive())
+            fBoxCut.SetDirectionY();
+      } else if (py == kKey_z || py == kKey_Z) {
+         if (fBoxCut.IsActive())
+            fBoxCut.SetDirectionZ();
+      }
+   } else if (event == kButton1Double && fBoxCut.IsActive()) {
+      fBoxCut.TurnOnOff();
       gGLManager->PaintSingleObject(this);
    }
 }
@@ -159,58 +186,141 @@ void TGLTF3Painter::DrawPlot()const
    } else if (fStyle == kMaple2)
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);//[2
 
-   glBegin(GL_TRIANGLES);
-
-   TGLVector3 color;
-
-   if (!fSelectionPass) {
-      for (UInt_t i = 0, e = fMesh.size(); i < e; ++i) {
-         glNormal3dv(fMesh[i].fNormals[0].CArr());
-         GetColor(color, fMesh[i].fNormals[0]);
-         glColor3dv(color.CArr());
-         glVertex3dv(fMesh[i].fXYZ[0].CArr());
-         glNormal3dv(fMesh[i].fNormals[1].CArr());
-         GetColor(color, fMesh[i].fNormals[1]);
-         glColor3dv(color.CArr());
-         glVertex3dv(fMesh[i].fXYZ[1].CArr());
-         glNormal3dv(fMesh[i].fNormals[2].CArr());
-         GetColor(color, fMesh[i].fNormals[2]);
-         glColor3dv(color.CArr());
-         glVertex3dv(fMesh[i].fXYZ[2].CArr());
-      }
-   } else {
-      Rgl::ObjectIDToColor(7, fHighColor);
-      for (UInt_t i = 0, e = fMesh.size(); i < e; ++i) {
-         glVertex3dv(fMesh[i].fXYZ[0].CArr());
-         glVertex3dv(fMesh[i].fXYZ[1].CArr());
-         glVertex3dv(fMesh[i].fXYZ[2].CArr());
-      }
-   }
-
-   glEnd();
-
-   if (fStyle == kMaple1 && !fSelectionPass) {
-      glDisable(GL_POLYGON_OFFSET_FILL);//1]
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);//[3
-      glColor3d(0., 0., 0.);
-
+   if (!fBoxCut.IsActive()) {
       glBegin(GL_TRIANGLES);
 
-      for (UInt_t i = 0, e = fMesh.size(); i < e; ++i) {
-         glVertex3dv(fMesh[i].fXYZ[0].CArr());
-         glVertex3dv(fMesh[i].fXYZ[1].CArr());
-         glVertex3dv(fMesh[i].fXYZ[2].CArr());
+      TGLVector3 color;
+
+      if (!fSelectionPass) {
+         for (UInt_t i = 0, e = fMesh.size(); i < e; ++i) {
+            glNormal3dv(fMesh[i].fNormals[0].CArr());
+            GetColor(color, fMesh[i].fNormals[0]);
+            glColor3dv(color.CArr());
+            glVertex3dv(fMesh[i].fXYZ[0].CArr());
+            glNormal3dv(fMesh[i].fNormals[1].CArr());
+            GetColor(color, fMesh[i].fNormals[1]);
+            glColor3dv(color.CArr());
+            glVertex3dv(fMesh[i].fXYZ[1].CArr());
+            glNormal3dv(fMesh[i].fNormals[2].CArr());
+            GetColor(color, fMesh[i].fNormals[2]);
+            glColor3dv(color.CArr());
+            glVertex3dv(fMesh[i].fXYZ[2].CArr());
+         }
+      } else {
+         Rgl::ObjectIDToColor(fSelectionBase, fHighColor);
+         for (UInt_t i = 0, e = fMesh.size(); i < e; ++i) {
+            glVertex3dv(fMesh[i].fXYZ[0].CArr());
+            glVertex3dv(fMesh[i].fXYZ[1].CArr());
+            glVertex3dv(fMesh[i].fXYZ[2].CArr());
+         }
       }
 
       glEnd();
+      
+      if (fStyle == kMaple1 && !fSelectionPass) {
+         glDisable(GL_POLYGON_OFFSET_FILL);//1]
+         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);//[3
+         glColor3d(0., 0., 0.);
 
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);//3]
-   } else if (fStyle == kMaple2)
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);//2]
+         glBegin(GL_TRIANGLES);
 
-   if (fStyle > kDefault && !fSelectionPass) {
-      glEnable(GL_LIGHTING); //0]
+         for (UInt_t i = 0, e = fMesh.size(); i < e; ++i) {
+            glVertex3dv(fMesh[i].fXYZ[0].CArr());
+            glVertex3dv(fMesh[i].fXYZ[1].CArr());
+            glVertex3dv(fMesh[i].fXYZ[2].CArr());
+         }
+
+         glEnd();
+         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);//3]
+      } else if (fStyle == kMaple2)
+         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);//2]
+
+      if (fStyle > kDefault && !fSelectionPass)
+         glEnable(GL_LIGHTING); //0]
+   } else {
+      glBegin(GL_TRIANGLES);
+
+      TGLVector3 color;
+
+      if (!fSelectionPass) {
+         for (UInt_t i = 0, e = fMesh.size(); i < e; ++i) {
+            const TriFace_t &tri = fMesh[i];
+            const Double_t xMin = TMath::Min(TMath::Min(tri.fXYZ[0].X(), tri.fXYZ[1].X()), tri.fXYZ[2].X());
+            const Double_t xMax = TMath::Max(TMath::Max(tri.fXYZ[0].X(), tri.fXYZ[1].X()), tri.fXYZ[2].X());
+            const Double_t yMin = TMath::Min(TMath::Min(tri.fXYZ[0].Y(), tri.fXYZ[1].Y()), tri.fXYZ[2].Y());
+            const Double_t yMax = TMath::Max(TMath::Max(tri.fXYZ[0].Y(), tri.fXYZ[1].Y()), tri.fXYZ[2].Y());
+            const Double_t zMin = TMath::Min(TMath::Min(tri.fXYZ[0].Z(), tri.fXYZ[1].Z()), tri.fXYZ[2].Z());
+            const Double_t zMax = TMath::Max(TMath::Max(tri.fXYZ[0].Z(), tri.fXYZ[1].Z()), tri.fXYZ[2].Z());
+            
+            if (fBoxCut.IsInCut(xMin, xMax, yMin, yMax, zMin, zMax))
+               continue;
+
+            glNormal3dv(tri.fNormals[0].CArr());
+            GetColor(color, tri.fNormals[0]);
+            glColor3dv(color.CArr());
+            glVertex3dv(tri.fXYZ[0].CArr());
+            glNormal3dv(tri.fNormals[1].CArr());
+            GetColor(color, tri.fNormals[1]);
+            glColor3dv(color.CArr());
+            glVertex3dv(tri.fXYZ[1].CArr());
+            glNormal3dv(tri.fNormals[2].CArr());
+            GetColor(color, tri.fNormals[2]);
+            glColor3dv(color.CArr());
+            glVertex3dv(tri.fXYZ[2].CArr());
+         }
+      } else {
+         Rgl::ObjectIDToColor(fSelectionBase, fHighColor);
+         for (UInt_t i = 0, e = fMesh.size(); i < e; ++i) {
+            const TriFace_t &tri = fMesh[i];
+            const Double_t xMin = TMath::Min(TMath::Min(tri.fXYZ[0].X(), tri.fXYZ[1].X()), tri.fXYZ[2].X());
+            const Double_t xMax = TMath::Max(TMath::Max(tri.fXYZ[0].X(), tri.fXYZ[1].X()), tri.fXYZ[2].X());
+            const Double_t yMin = TMath::Min(TMath::Min(tri.fXYZ[0].Y(), tri.fXYZ[1].Y()), tri.fXYZ[2].Y());
+            const Double_t yMax = TMath::Max(TMath::Max(tri.fXYZ[0].Y(), tri.fXYZ[1].Y()), tri.fXYZ[2].Y());
+            const Double_t zMin = TMath::Min(TMath::Min(tri.fXYZ[0].Z(), tri.fXYZ[1].Z()), tri.fXYZ[2].Z());
+            const Double_t zMax = TMath::Max(TMath::Max(tri.fXYZ[0].Z(), tri.fXYZ[1].Z()), tri.fXYZ[2].Z());
+            
+            if (fBoxCut.IsInCut(xMin, xMax, yMin, yMax, zMin, zMax))
+               continue;
+            glVertex3dv(tri.fXYZ[0].CArr());
+            glVertex3dv(tri.fXYZ[1].CArr());
+            glVertex3dv(tri.fXYZ[2].CArr());
+         }
+      }
+
+      glEnd();
+      if (fStyle == kMaple1 && !fSelectionPass) {
+         glDisable(GL_POLYGON_OFFSET_FILL);//1]
+         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);//[3
+         glColor3d(0., 0., 0.);
+
+         glBegin(GL_TRIANGLES);
+
+         for (UInt_t i = 0, e = fMesh.size(); i < e; ++i) {
+            const TriFace_t &tri = fMesh[i];
+            const Double_t xMin = TMath::Min(TMath::Min(tri.fXYZ[0].X(), tri.fXYZ[1].X()), tri.fXYZ[2].X());
+            const Double_t xMax = TMath::Max(TMath::Max(tri.fXYZ[0].X(), tri.fXYZ[1].X()), tri.fXYZ[2].X());
+            const Double_t yMin = TMath::Min(TMath::Min(tri.fXYZ[0].Y(), tri.fXYZ[1].Y()), tri.fXYZ[2].Y());
+            const Double_t yMax = TMath::Max(TMath::Max(tri.fXYZ[0].Y(), tri.fXYZ[1].Y()), tri.fXYZ[2].Y());
+            const Double_t zMin = TMath::Min(TMath::Min(tri.fXYZ[0].Z(), tri.fXYZ[1].Z()), tri.fXYZ[2].Z());
+            const Double_t zMax = TMath::Max(TMath::Max(tri.fXYZ[0].Z(), tri.fXYZ[1].Z()), tri.fXYZ[2].Z());
+            
+            if (fBoxCut.IsInCut(xMin, xMax, yMin, yMax, zMin, zMax))
+               continue;
+            glVertex3dv(tri.fXYZ[0].CArr());
+            glVertex3dv(tri.fXYZ[1].CArr());
+            glVertex3dv(tri.fXYZ[2].CArr());
+         }
+
+         glEnd();
+         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);//3]
+      } else if (fStyle == kMaple2) 
+         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);//2]
+
+      if (fStyle > kDefault && !fSelectionPass)
+         glEnable(GL_LIGHTING); //0]
+      fBoxCut.DrawBox(fSelectionPass, fSelectedPart);
    }
+
 }
 
 //______________________________________________________________________________
@@ -223,7 +333,9 @@ void TGLTF3Painter::SetSurfaceColor()const
       if (const TColor *c = gROOT->GetColor(fF3->GetFillColor()))
          c->GetRGB(diffColor[0], diffColor[1], diffColor[2]);
    
-   glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffColor);
+   glMaterialfv(GL_BACK, GL_DIFFUSE, diffColor);
+   diffColor[0] /= 2, diffColor[1] /= 2, diffColor[2] /= 2;
+   glMaterialfv(GL_FRONT, GL_DIFFUSE, diffColor);
    const Float_t specColor[] = {1.f, 1.f, 1.f, 1.f};
    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specColor);
    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 70.f);
