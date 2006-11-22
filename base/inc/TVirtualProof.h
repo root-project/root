@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.42 2006/11/20 15:56:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.43 2006/11/20 16:55:37 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -76,9 +76,9 @@ public:
    };
 
 private:
-   static TProof_t              fgProofHook;     // Hook to TProof constructor             
-   static TList                *fgProofEnvList;  // List of TNameds defining environment   
-                                                 // variables to pass to proofserv         
+   static TProof_t              fgProofHook;     // Hook to TProof constructor
+   static TList                *fgProofEnvList;  // List of TNameds defining environment
+                                                 // variables to pass to proofserv
 
 protected:
    TString                      fDataPoolUrl; // Default data pool entry point URL
@@ -113,8 +113,8 @@ public:
    virtual Int_t       Archive(Int_t query, const char *url) = 0;
    virtual Int_t       Archive(const char *queryref, const char *url = 0) = 0;
    virtual Int_t       CleanupSession(const char *sessiontag) = 0;
-   virtual Int_t       Finalize(Int_t qry = -1, Bool_t force = kFALSE) = 0;
-   virtual Int_t       Finalize(const char *queryref, Bool_t force = kFALSE) = 0;
+   virtual Long64_t    Finalize(Int_t qry = -1, Bool_t force = kFALSE) = 0;
+   virtual Long64_t    Finalize(const char *queryref, Bool_t force = kFALSE) = 0;
    virtual Int_t       Remove(Int_t query, Bool_t all = kFALSE) = 0;
    virtual Int_t       Remove(const char *queryref, Bool_t all = kFALSE) = 0;
    virtual Int_t       Retrieve(Int_t query, const char *path = 0) = 0;
@@ -281,7 +281,7 @@ public:
    static TVirtualProof *Open(const char *url = 0, const char *conffile = 0,
                               const char *confdir = 0, Int_t loglevel = 0);
    static Int_t        Reset(const char *url, const char *usr = 0);
-   
+
    static void          AddEnvVar(const char *name, const char *value);
    static void          DelEnvVar(const char *name);
    static const TList  *GetEnvVars();

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TFileMerger.cxx,v 1.11 2006/07/26 14:43:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TFileMerger.cxx,v 1.12 2006/09/07 09:27:25 rdm Exp $
 // Author: Andreas Peters + Fons Rademakers   26/5/2005
 
 /*************************************************************************
@@ -182,7 +182,7 @@ Bool_t TFileMerger::Cp(const char *src, const char *dst, Bool_t progressbar,
 
       Long64_t b0 = sfile->GetBytesRead();
       sfile->Seek(totalread,TFile::kBeg);
-      readop = sfile->ReadBuffer(copybuffer, readsize);
+      readop = sfile->ReadBuffer(copybuffer, (Int_t)readsize);
       read   = sfile->GetBytesRead() - b0;
       if (read < 0) {
          Error("Cp", "cannot read from source file %s", src);
@@ -190,7 +190,7 @@ Bool_t TFileMerger::Cp(const char *src, const char *dst, Bool_t progressbar,
       }
 
       Long64_t w0 = dfile->GetBytesWritten();
-      writeop = dfile->WriteBuffer(copybuffer, read);
+      writeop = dfile->WriteBuffer(copybuffer, (Int_t)read);
       written = dfile->GetBytesWritten() - w0;
       if (written != read) {
          Error("Cp", "cannot write %d bytes to destination file %s", read, dst);

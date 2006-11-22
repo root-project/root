@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.27 2006/07/04 23:35:36 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.28 2006/11/15 17:45:55 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -458,7 +458,7 @@ Long64_t TEventIterTree::GetNextEvent()
    }
    else {
       --fElemNum;
-      int rv = fEventList->GetEntry(fEventListPos);
+      Long64_t rv = fEventList->GetEntry(fEventListPos);
       fEventListPos++;
       return rv;
    }

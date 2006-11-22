@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.167 2006/11/16 17:17:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.168 2006/11/20 15:56:35 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2636,10 +2636,10 @@ Int_t TProof::GetQueryReference(Int_t qry, TString &ref)
 }
 
 //______________________________________________________________________________
-Int_t TProof::Finalize(Int_t qry, Bool_t force)
+Long64_t TProof::Finalize(Int_t qry, Bool_t force)
 {
    // Finalize the qry-th query in fQueries.
-   // If force, force new retrieve if the query is found in the local list
+   // If force, force retrieval if the query is found in the local list
    // but has already been finalized (default kFALSE).
    // If query < 0, finalize current query.
    // Return 0 on success, -1 on error
@@ -2661,10 +2661,10 @@ Int_t TProof::Finalize(Int_t qry, Bool_t force)
 }
 
 //______________________________________________________________________________
-Int_t TProof::Finalize(const char *ref, Bool_t force)
+Long64_t TProof::Finalize(const char *ref, Bool_t force)
 {
    // Finalize query with reference ref.
-   // If force, force new retrieve if the query is found in the local list
+   // If force, force retrieval if the query is found in the local list
    // but has already been finalized (default kFALSE).
    // If ref = 0, finalize current query.
    // Return 0 on success, -1 on error
@@ -2683,7 +2683,7 @@ Int_t TProof::Finalize(const char *ref, Bool_t force)
                   retrieve = kTRUE;
                } else {
                   Info("Finalize","query already finalized:"
-                       " use Finalize(<qry>,kTRUE) to force new retrieve");
+                       " use Finalize(<qry>,kTRUE) to force new retrieval");
                   qr = 0;
                }
             }
@@ -2696,7 +2696,6 @@ Int_t TProof::Finalize(const char *ref, Bool_t force)
             return fPlayer->Finalize(qr);
       }
    }
-
    return -1;
 }
 

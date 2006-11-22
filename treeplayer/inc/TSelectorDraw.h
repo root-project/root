@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.12 2006/08/06 07:15:00 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.13 2006/09/17 19:08:13 pcanal Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -85,7 +85,7 @@ public:
    virtual Int_t     GetAction() const {return fAction;}
    virtual Bool_t    GetCleanElist() const {return fCleanElist;}
    virtual Int_t     GetDimension() const {return fDimension;}
-   virtual Int_t     GetDrawFlag() const {return fDraw;}
+   virtual Long64_t  GetDrawFlag() const {return fDraw;}
    TObject          *GetObject() const {return fObject;}
    Int_t             GetMultiplicity() const   {return fMultiplicity;}
    const char       *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex);

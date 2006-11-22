@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.38 2006/10/08 11:37:16 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.39 2006/11/15 17:45:55 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -881,8 +881,8 @@ void TPacketizer::SplitEventList(TDSet *dset)
 #endif
 
       TEventList* newEventList = new TEventList();
-      while (currPos < mainList->GetN() && mainList->GetEntry(currPos) < high) {
-         newEventList->Enter(mainList->GetEntry(currPos) - low);
+      while (currPos < mainList->GetN() && mainList->GetEntry((Int_t)currPos) < high) {
+         newEventList->Enter(mainList->GetEntry((Int_t)currPos) - low);
          currPos++;
       }
       prev->SetEventList(newEventList);
@@ -1057,7 +1057,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
       // take a part of the event list.
       TEventList *evl = new TEventList();
       for (; num > 0; num--, first++)
-         evl->Enter(base->GetEventList()->GetEntry(first));
+         evl->Enter(base->GetEventList()->GetEntry((Int_t)first));
       slstat->fCurElem->SetEventList(evl);
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSessionViewer.h,v 1.38 2006/11/17 15:42:13 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSessionViewer.h,v 1.1 2006/11/17 15:50:17 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -123,8 +123,8 @@ public:
    TString        fOptions;         // query processing options
    TString        fEventList;       // event list
    Int_t          fNbFiles;         // number of files to process
-   Int_t          fNoEntries;       // number of events/entries to process
-   Int_t          fFirstEntry;      // first event/entry to process
+   Long64_t       fNoEntries;       // number of events/entries to process
+   Long64_t       fFirstEntry;      // first event/entry to process
    TTime          fStartTime;       // start time of the query
    TTime          fEndTime;         // end time of the query
    TObject       *fChain;           // dataset on which to process selector

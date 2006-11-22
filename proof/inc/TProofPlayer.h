@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.38 2006/07/26 14:28:58 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.39 2006/11/15 17:45:54 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -19,8 +19,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TArrayL
-#include "TArrayL.h"
+#ifndef ROOT_TArrayL64
+#include "TArrayL64.h"
 #endif
 #ifndef ROOT_TList
 #include "TList.h"
@@ -263,10 +263,10 @@ public:
 class TProofPlayerSuperMaster : public TProofPlayerRemote {
 
 private:
-   TArrayL fSlaveProgress;
-   TArrayL fSlaveTotals;
-   TList   fSlaves;
-   Bool_t  fReturnFeedback;
+   TArrayL64 fSlaveProgress;
+   TArrayL64 fSlaveTotals;
+   TList     fSlaves;
+   Bool_t    fReturnFeedback;
 
 protected:
    virtual Bool_t HandleTimer(TTimer *timer);

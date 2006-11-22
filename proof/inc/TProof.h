@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.94 2006/11/15 17:45:54 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.95 2006/11/20 15:56:35 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -482,8 +482,8 @@ public:
    Int_t       Archive(Int_t query, const char *url);
    Int_t       Archive(const char *queryref, const char *url = 0);
    Int_t       CleanupSession(const char *sessiontag);
-   Int_t       Finalize(Int_t query = -1, Bool_t force = kFALSE);
-   Int_t       Finalize(const char *queryref, Bool_t force = kFALSE);
+   Long64_t    Finalize(Int_t query = -1, Bool_t force = kFALSE);
+   Long64_t    Finalize(const char *queryref, Bool_t force = kFALSE);
    Int_t       Remove(Int_t query, Bool_t all = kFALSE);
    Int_t       Remove(const char *queryref, Bool_t all = kFALSE);
    Int_t       Retrieve(Int_t query, const char *path = 0);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.17 2006/07/27 12:21:56 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.18 2006/08/09 16:11:01 antcheva Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -79,13 +79,13 @@ public:
 
    virtual void SetViewMode(EListViewMode viewMode);
 
-   Bool_t  IsActive() const { return fActive; }
-   Bool_t  IsSymLink() const { return fIsLink; }
-   Int_t   GetType() const { return fType; }
-   ULong_t GetSize() const { return fSize; }
-   Long_t  GetModTime() const { return fModTime; }
-   Int_t   GetUid() const { return fUid; }
-   Int_t   GetGid() const { return fGid; }
+   Bool_t   IsActive() const { return fActive; }
+   Bool_t   IsSymLink() const { return fIsLink; }
+   Int_t    GetType() const { return fType; }
+   Long64_t GetSize() const { return fSize; }
+   Long_t   GetModTime() const { return fModTime; }
+   Int_t    GetUid() const { return fUid; }
+   Int_t    GetGid() const { return fGid; }
 
    ClassDef(TGFileItem,0)   // Class representing file system object
 };
