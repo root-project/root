@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.19 2006/09/29 13:58:34 brun Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.20 2006/10/13 07:33:16 brun Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -20,6 +20,9 @@
 #include "TObjString.h"
 #include "TObjArray.h"
 
+#include <my_global.h>
+
+
 ClassImp(TMySQLServer)
 
 //______________________________________________________________________________
@@ -31,7 +34,7 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
    // the password that should be used for the connection.
    //
    // In addition, several parameters can be specified in url after "?" symbold:
-   //    timeout=N            n is connect timeout is seconds 
+   //    timeout=N            n is connect timeout is seconds
    //    socket=socketname   socketname should be name of Unix socket, used for connection
    //    multi_statements    Tell the server that the client may send multiple statements in a single string (separated by ;);
    //    multi_results       Tell the server that the client can handle multiple result sets from multiple-statement executions or stored procedures.
@@ -61,13 +64,13 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
    const char* dbase = url.GetFile();
    if (dbase!=0)
      if (*dbase=='/') dbase++; //skip leading "/" if appears
-   
+
    fMySQL = new MYSQL;
    mysql_init(fMySQL);
-   
+
    ULong_t client_flag = 0;
    TString socket;
-   
+
    TString optstr = url.GetOptions();
    TObjArray* optarr = optstr.Tokenize("&");
    if (optarr!=0) {
@@ -94,23 +97,23 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
             #if MYSQL_VERSION_ID >= 40100
                client_flag = client_flag | CLIENT_MULTI_STATEMENTS;
                if (gDebug) Info("TMySQLServer","Use CLIENT_MULTI_STATEMENTS");
-            #endif             
-         } else 
+            #endif
+         } else
          if (opt.Contains("multi_results")) {
             #if MYSQL_VERSION_ID >= 40100
                client_flag = client_flag | CLIENT_MULTI_RESULTS;
                if (gDebug) Info("TMySQLServer","Use CLIENT_MULTI_RESULTS");
-            #endif             
+            #endif
          }
       }
       optarr->Delete();
       delete optarr;
    }
-   
+
    Int_t port = 3306;
    if (url.GetPort()>0) port = url.GetPort();
 
-   if (mysql_real_connect(fMySQL, url.GetHost(), uid, pw, dbase, port, 
+   if (mysql_real_connect(fMySQL, url.GetHost(), uid, pw, dbase, port,
                          (socket.Length()>0) ? socket.Data() : 0 , client_flag)) {
       fType = "MySQL";
       fHost = url.GetHost();
@@ -180,12 +183,12 @@ TSQLResult *TMySQLServer::Query(const char *sql)
 
    CheckConnect("Query", 0);
 
-   if (mysql_query(fMySQL, sql)) 
+   if (mysql_query(fMySQL, sql))
       CheckErrNo("Query",kTRUE,0);
 
    MYSQL_RES *res = mysql_store_result(fMySQL);
    CheckErrNo("Query", kFALSE, 0);
-   
+
    return new TMySQLResult(res);
 }
 
@@ -197,7 +200,7 @@ Bool_t TMySQLServer::Exec(const char* sql)
 
    CheckConnect("Exec", kFALSE);
 
-   if (mysql_query(fMySQL, sql)) 
+   if (mysql_query(fMySQL, sql))
       CheckErrNo("Exec",kTRUE,kFALSE);
 
    return !IsError();
@@ -212,8 +215,8 @@ Int_t TMySQLServer::SelectDataBase(const char *dbname)
 
    Int_t res = mysql_select_db(fMySQL, dbname);
    if (res==0) fDB = dbname;
-          else CheckErrNo("SelectDataBase", kTRUE, res);  
-          
+          else CheckErrNo("SelectDataBase", kTRUE, res);
+
    return res;
 }
 
@@ -228,9 +231,9 @@ TSQLResult *TMySQLServer::GetDataBases(const char *wild)
    CheckConnect("GetDataBases", 0);
 
    MYSQL_RES *res = mysql_list_dbs(fMySQL, wild);
-   
-   CheckErrNo("GetDataBases", kFALSE, 0);  
-   
+
+   CheckErrNo("GetDataBases", kFALSE, 0);
+
    return new TMySQLResult(res);
 }
 
@@ -247,9 +250,9 @@ TSQLResult *TMySQLServer::GetTables(const char *dbname, const char *wild)
    if (SelectDataBase(dbname) != 0) return 0;
 
    MYSQL_RES *res = mysql_list_tables(fMySQL, wild);
-   
-   CheckErrNo("GetTables", kFALSE, 0);  
-   
+
+   CheckErrNo("GetTables", kFALSE, 0);
+
    return new TMySQLResult(res);
 }
 
@@ -258,33 +261,33 @@ TSQLResult *TMySQLServer::GetTables(const char *dbname, const char *wild)
 TList* TMySQLServer::GetTablesList(const char* wild)
 {
    // Return list of tables with specified wildcard
-   
+
    CheckConnect("GetTablesList", 0);
-   
+
    MYSQL_RES *res = mysql_list_tables(fMySQL, wild);
-   
+
    CheckErrNo("GetTablesList", kFALSE, 0);
-   
+
    MYSQL_ROW row = mysql_fetch_row(res);
-   
+
    TList* lst = 0;
-   
+
    while (row!=0) {
       CheckErrNo("GetTablesList", kFALSE, lst);
-      
-      const char* tablename = row[0]; 
-      
+
+      const char* tablename = row[0];
+
       if (tablename!=0) {
          if (lst==0) {
             lst = new TList();
-            lst->SetOwner(kTRUE);   
-         } 
-         lst->Add(new TObjString(tablename));   
+            lst->SetOwner(kTRUE);
+         }
+         lst->Add(new TObjString(tablename));
       }
-       
-      row = mysql_fetch_row(res); 
+
+      row = mysql_fetch_row(res);
    }
-   
+
    mysql_free_result(res);
 
    return lst;
@@ -295,15 +298,15 @@ TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
 {
    // Produces SQL table info
    // Object must be deleted by user
-   
+
    CheckConnect("GetTableInfo", 0);
-   
+
    if ((tablename==0) || (*tablename==0)) return 0;
 
    TString sql;
    sql.Form("SELECT * FROM `%s` LIMIT 1", tablename);
 
-   if (mysql_query(fMySQL, sql.Data()) != 0) 
+   if (mysql_query(fMySQL, sql.Data()) != 0)
       CheckErrNo("GetTableInfo", kTRUE, 0);
 
    MYSQL_RES *res = mysql_store_result(fMySQL);
@@ -312,7 +315,7 @@ TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
    unsigned int numfields = mysql_num_fields(res);
 
    MYSQL_FIELD* fields = mysql_fetch_fields(res);
-   
+
    sql.Form("SHOW COLUMNS FROM `%s`", tablename);
    TSQLResult* showres = Query(sql.Data());
 
@@ -320,36 +323,36 @@ TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
       mysql_free_result(res);
       return 0;
    }
-   
+
    TList* lst = 0;
-   
+
    unsigned int nfield = 0;
-   
+
    TSQLRow* row = 0;
 
    while ((row = showres->Next()) != 0) {
       const char* column_name = row->GetField(0);
       const char* type_name = row->GetField(1);
-      
+
       if ((nfield>=numfields) ||
           (strcmp(column_name, fields[nfield].name)!=0))
       {
          SetError(-1,"missmatch in column names","GetTableInfo");
          break;
       }
-      
+
       Int_t sqltype = kSQL_NONE;
-      
+
       Int_t data_size = -1;    // size in bytes
       Int_t data_length = -1;  // declaration like VARCHAR(n) or NUMERIC(n)
       Int_t data_scale = -1;   // second argument in declaration
       Int_t data_sign = -1; // signed type or not
-      
+
       if (IS_NUM(fields[nfield].type))
          if (fields[nfield].flags & UNSIGNED_FLAG)
             data_sign = 0;
          else
-            data_sign = 1;    
+            data_sign = 1;
 
       Bool_t nullable = (fields[nfield].flags & NOT_NULL_FLAG) == 0;
 
@@ -396,7 +399,7 @@ TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
                sqltype = kSQL_BINARY;
             else
                sqltype = kSQL_VARCHAR;
-            data_size = data_length;   
+            data_size = data_length;
             break;
          case MYSQL_TYPE_BLOB:
             if (fields[nfield].charsetnr==63)
@@ -412,25 +415,25 @@ TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
             break;
          default:
             if (IS_NUM(fields[nfield].type))
-               sqltype = kSQL_NUMERIC; 
+               sqltype = kSQL_NUMERIC;
       }
 
 #endif
-      
+
       if (lst==0) lst = new TList;
-      lst->Add(new TSQLColumnInfo(column_name, 
-                                  type_name, 
+      lst->Add(new TSQLColumnInfo(column_name,
+                                  type_name,
                                   nullable,
                                   sqltype,
                                   data_size,
                                   data_length,
                                   data_scale,
                                   data_sign));
-      
+
       nfield++;
       delete row;
    }
-   
+
    mysql_free_result(res);
    delete showres;
 
@@ -439,20 +442,20 @@ TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
    TSQLTableInfo* info = 0;
 
    TSQLResult* stats = Query(sql.Data());
-   
+
    if (stats!=0) {
       TSQLRow* row = 0;
-      
+
       while ((row = stats->Next()) != 0) {
          if (strcmp(row->GetField(0), tablename)!=0) {
             delete row;
-            continue;  
+            continue;
          }
          const char* comments = 0;
          const char* engine = 0;
          const char* create_time = 0;
          const char* update_time = 0;
-         
+
          for (int n=1;n<stats->GetFieldCount();n++) {
             TString fname = stats->GetFieldName(n);
             fname.ToLower();
@@ -461,23 +464,23 @@ TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
             if (fname=="create_time") create_time = row->GetField(n); else
             if (fname=="update_time") update_time = row->GetField(n);
          }
-         
-         info = new TSQLTableInfo(tablename, 
+
+         info = new TSQLTableInfo(tablename,
                                   lst,
                                   comments,
                                   engine,
                                   create_time,
                                   update_time);
-         
+
          delete row;
          break;
       }
-      delete stats;    
+      delete stats;
    }
-   
+
    if (info==0)
       info = new TSQLTableInfo(tablename, lst);
-   
+
    return info;
 }
 
@@ -488,17 +491,17 @@ TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
 {
    // Produces SQL table info
    // Object must be deleted by user
-   
+
    CheckConnect("GetTableInfo", 0);
-   
+
    if ((tablename==0) || (*tablename==0)) return 0;
 
    TString sql;
    sql.Form("SHOW COLUMNS FROM `%s`", tablename);
-   
+
    TSQLStatement* stmt = Statement(sql.Data(), 10);
    if (stmt==0) return 0;
-   
+
    if (!stmt->Process()) {
       delete stmt;
       return 0;
@@ -506,24 +509,24 @@ TSQLTableInfo* TMySQLServer::GetTableInfo(const char* tablename)
 
    TList* lst = 0;
 
-   stmt->StoreResult();  
-   
+   stmt->StoreResult();
+
    while (stmt->NextResultRow()) {
       const char* columnname = stmt->GetString(0);
       const char* sqltype = stmt->GetString(1);
       const char* nstr = stmt->GetString(2);
-      
+
       Bool_t IsNullable = kFALSE;
       if (nstr!=0)
          IsNullable = (strcmp(nstr,"YES")==0) || (strcmp(nstr,"yes")==0);
-      
+
       if (lst==0) lst = new TList;
-      
+
       lst->Add(new TSQLColumnInfo(columnname, sqltype, IsNullable));
    }
-   
+
    delete stmt;
-   
+
    return new TSQLTableInfo(tablename, lst);
 }
 
@@ -557,7 +560,7 @@ Int_t TMySQLServer::CreateDataBase(const char *dbname)
    // Create a database. Returns 0 if successful, non-zero otherwise.
 
    CheckConnect("CreateDataBase", -1);
-   
+
    Int_t res = mysql_query(fMySQL, Form("CREATE DATABASE %s",dbname));
 
    CheckErrNo("CreateDataBase", kFALSE, res);
@@ -602,9 +605,9 @@ Int_t TMySQLServer::Shutdown()
    // otherwise. User must have shutdown permissions.
 
    CheckConnect("Shutdown", -1);
-   
+
    Int_t res;
-   
+
 #if MYSQL_VERSION_ID >= 50001 || \
     (MYSQL_VERSION_ID < 50000 && MYSQL_VERSION_ID >= 40103)
    res = mysql_shutdown(fMySQL, SHUTDOWN_DEFAULT);
@@ -623,14 +626,14 @@ const char *TMySQLServer::ServerInfo()
    // Return server info in form "MySQL <vesrion>"
 
    CheckConnect("ServerInfo", 0);
-   
+
    const char* res = mysql_get_server_info(fMySQL);
 
    CheckErrNo("ServerInfo", kFALSE, res);
-   
+
    fInfo = "MySQL ";
    fInfo += res;
-   
+
    return fInfo.Data();
 }
 
@@ -638,27 +641,27 @@ const char *TMySQLServer::ServerInfo()
 Bool_t TMySQLServer::IsSupportStatement() const
 {
    // return kTRUE if TSQLStatement class is supported.
-   // Starts from MySQL 4.1 
+   // Starts from MySQL 4.1
 
 #if MYSQL_VERSION_ID < 40100
    return kFALSE;
 #else
    return kTRUE;
-#endif   
+#endif
 }
 
 
 //______________________________________________________________________________
 TSQLStatement* TMySQLServer::Statement(const char *sql, Int_t)
 {
-   // Produce TMySQLStatement 
+   // Produce TMySQLStatement
 
 #if MYSQL_VERSION_ID < 40100
    ClearError();
    SetError(-1, "Statement class does not supported by MySQL version < 4.1", "Statement");
    return 0;
 #else
-    
+
    CheckConnect("Statement", 0);
 
    if (!sql || !*sql) {
@@ -667,9 +670,9 @@ TSQLStatement* TMySQLServer::Statement(const char *sql, Int_t)
    }
 
    MYSQL_STMT *stmt = mysql_stmt_init(fMySQL);
-   if (!stmt) 
-      CheckErrNo("Statement", kTRUE, 0); 
-    
+   if (!stmt)
+      CheckErrNo("Statement", kTRUE, 0);
+
    if (mysql_stmt_prepare(stmt, sql, strlen(sql))) {
       SetError(mysql_errno(fMySQL), mysql_error(fMySQL), "Statement");
       mysql_stmt_close(stmt);
@@ -677,17 +680,17 @@ TSQLStatement* TMySQLServer::Statement(const char *sql, Int_t)
    }
 
    return new TMySQLStatement(stmt, fErrorOut);
-   
-#endif   
+
+#endif
 }
 
 //______________________________________________________________________________
 Bool_t TMySQLServer::StartTransaction()
 {
-   // Start transaction 
-    
+   // Start transaction
+
    CheckConnect("StartTransaction", kFALSE);
-   
+
    return TSQLServer::StartTransaction();
 }
 
@@ -699,18 +702,18 @@ Bool_t TMySQLServer::Commit()
    CheckConnect("Commit", kFALSE);
 
 #if MYSQL_VERSION_ID >= 40100
-   
+
    if (mysql_commit(fMySQL))
-      CheckErrNo("Commit", kTRUE, kFALSE); 
-     
+      CheckErrNo("Commit", kTRUE, kFALSE);
+
    return kTRUE;
 
 #else
-   
+
    return TSQLServer::Commit();
-   
-#endif      
-   
+
+#endif
+
 }
 
 //______________________________________________________________________________
@@ -719,16 +722,16 @@ Bool_t TMySQLServer::Rollback()
    // Rollback changes
 
    CheckConnect("Rollback", kFALSE);
-   
+
 #if MYSQL_VERSION_ID >= 40100
 
    if (mysql_rollback(fMySQL))
-      CheckErrNo("Rollback", kTRUE, kFALSE); 
-      
+      CheckErrNo("Rollback", kTRUE, kFALSE);
+
    return kTRUE;
 
 #else
-   
+
    return TSQLServer::Rollback();
 
 #endif
