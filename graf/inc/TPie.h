@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPie.h,v 1.1 2006/11/16 12:19:49 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPie.h,v 1.2 2006/11/17 15:18:56 couet Exp $
 // Author: Guido Volpi, Olivier Couet  03/11/2006
 
 /*************************************************************************
@@ -23,6 +23,8 @@
 #ifndef ROOT_TAttText
 #include <TAttText.h>
 #endif
+
+class TH1;
 
 class TPie : public TNamed , public TAttText {
 private:
@@ -66,6 +68,7 @@ public:
    TPie(const char *,const char *, Int_t);
    TPie(const char *,const char *, Int_t, Double_t *,Int_t *cols=0, const char *lbls[]=0);
    TPie(const char *,const char *, Int_t, Float_t *,Int_t *cols=0, const char *lbls[]=0);
+   TPie(const TH1 *h);
    TPie(const TPie&);
    ~TPie();
 
@@ -89,6 +92,7 @@ public:
    Double_t       GetY() { return fY; }
    virtual void   Paint(Option_t *);
    void           SavePrimitive(ostream &out, Option_t *opts="");
+   void           SetAngularOffset(Double_t);
    void           SetCircle(Double_t x=.5, Double_t y=.5, Double_t rad=.4);
    void           SetEntryLabel(Int_t, const char *text="Slice");
    void           SetEntryLineColor(Int_t, Int_t);
@@ -104,9 +108,8 @@ public:
    void           SetLabelFormat(const char *); // *MENU*
    void           SetLabels(const char *[]);
    void           SetLabelsOffset(Float_t); // *MENU*
-   void           SetAngularOffset(Double_t); // *MENU*
    void           SetPercentFormat(const char *); // *MENU*
-   void           SetRadius(Double_t); // *MENU*
+   void           SetRadius(Double_t);
    void           SetValFormat(const char *); // *MENU*
    void           SetX(Double_t); // *MENU*
    void           SetY(Double_t); // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.1 2006/11/16 12:19:49 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.2 2006/11/17 15:18:56 couet Exp $
 // Author: Guido Volpi, Olivier Couet 03/11/2006
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 #include <TStyle.h>
 #include <TLatex.h>
 #include <TPaveText.h>
+#include <TH1.h>
 
 ClassImp(TPie)
 
@@ -34,11 +35,12 @@ ClassImp(TPie)
 //End_Html
 //
 
-static Double_t gX         = 0; // temporary pie X position
-static Double_t gY         = 0; // temporary pie Y position
-static Double_t gRadius    = 0; // temporary pie Radius of the TPie
-static Double_t gRadiusOffset = 0; // temporary slice's radial offset
-static Bool_t   gIsUpt     = kFALSE; // True is the TPie should be updated
+static Double_t gX             = 0; // temporary pie X position
+static Double_t gY             = 0; // temporary pie Y position
+static Double_t gRadius        = 0; // temporary pie Radius of the TPie
+static Double_t gRadiusOffset  = 0; // temporary slice's radial offset
+static Double_t gAngularOffset = 0; // temporary slice's angular offset
+static Bool_t   gIsUpt         = kFALSE; // True is the TPie should be updated
 
 
 //______________________________________________________________________________
@@ -54,7 +56,7 @@ TPie::TPie() : TNamed()
 TPie::TPie(const char *name, const char *title, Int_t npoints) :
    TNamed(name,title)
 {
-   // This constructor is useful to create a pie chart when only the number of
+   // This constructor creates a pie chart when only the number of
    // the slices is known. The number of slices is fixed.
 
    Init(npoints, 0, 0.5, 0.5, 0.4);
@@ -68,7 +70,7 @@ TPie::TPie(const char *name,
                Int_t *colors, const char *lbls[]) : TNamed(name,title)
 {
    // Normal constructor. The 1st and 2nd parameters are the name of the object
-   // and its title, printed in the pad.
+   // and its title.
    //
    // The number of points passed at this point is used to allocate the memory.
    //
@@ -104,22 +106,29 @@ TPie::TPie(const char *name,
 
 
 //______________________________________________________________________________
+TPie::TPie(const TH1 *h) : TNamed(h->GetName(),h->GetTitle())
+{
+   // Constructor from a TH1
+
+   Init(h->GetNbinsX(), 0, 0.5, 0.5, 0.4);
+   for (Int_t i=0; i<fNvals; ++i) fVals[i] = h->GetBin(i);
+}
+
+
+//______________________________________________________________________________
 TPie::TPie(const TPie &cpy) : TNamed(cpy), TAttText(cpy)
 {
-   // Copy constructor
+   // Copy constructor.
 
    Init(cpy.fNvals, cpy.fAngularOffset, cpy.fX, cpy.fY, cpy.fRadius);
 
    for (Int_t i=0;i<fNvals;++i) {
-      fVals[i] = cpy.fVals[i];
-
-      fLineColors[i] = cpy.fLineColors[i];
-      fLineStyles[i] = cpy.fLineStyles[i];
-      fLineWidths[i] = cpy.fLineWidths[i];
-
-      fFillColors[i] = cpy.fFillColors[i];
-      fFillStyles[i] = cpy.fFillStyles[i];
-
+      fVals[i]          = cpy.fVals[i];
+      fLineColors[i]    = cpy.fLineColors[i];
+      fLineStyles[i]    = cpy.fLineStyles[i];
+      fLineWidths[i]    = cpy.fLineWidths[i];
+      fFillColors[i]    = cpy.fFillColors[i];
+      fFillStyles[i]    = cpy.fFillStyles[i];
       fRadiusOffsets[i] = cpy.fRadiusOffsets[i];
    }
 }
@@ -147,7 +156,7 @@ TPie::~TPie()
 //______________________________________________________________________________
 Int_t TPie::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Evaluate the distance to the chart in a TPad.
+   // Evaluate the distance to the chart in gPad.
 
    if ( (fCurrent_slice = DistancetoSlice(px,py))>=0 ) {
       if (fCurrent_rad<=fRadius) {
@@ -187,12 +196,12 @@ Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
    for (Int_t i=0;i<fNvals;++i) {
       if (gIsUpt && fCurrent_slice!=i) continue;
 
-      // take values of the important angles fot this slice
+      // Angles' values for this slice
       phimin = fSlices[2*i  ]*TMath::Pi()/180.;
       cphi   = fSlices[2*i+1]*TMath::Pi()/180.;
       phimax = fSlices[2*i+2]*TMath::Pi()/180.;
 
-      // recalculate the coordinates about the vertex of the slice
+      // Recalculate slice's vertex' coordinates.
       Double_t x, y, rad, radOffset;
       if (gIsUpt) {
          x         = gX;
@@ -258,14 +267,14 @@ void TPie::Draw(Option_t *option)
 //______________________________________________________________________________
 void TPie::DrawGhost()
 {
-   // This method is intended for internal use. It is used by Execute event
-   // to draw the outline of "this" TPie. Used when the opaque movements are
-   // not permitted.
+   // This method is for internal use. It is used by Execute event to draw the
+   // outline of "this" TPie. Used when the opaque movements are not permitted.
 
    MakeSlices();
 
-   for (Int_t i=0;i<fNvals;++i) { // loop over slices
-      Float_t minphi = (fSlices[i*2  ]+.5)*TMath::Pi()/180.;
+   // Loop over slices
+   for (Int_t i=0;i<fNvals;++i) {
+      Float_t minphi = (fSlices[i*2]+gAngularOffset+.5)*TMath::Pi()/180.;
       Float_t avgphi = fSlices[i*2+1]*TMath::Pi()/180.;
       Float_t maxphi = (fSlices[i*2+2]-.5)*TMath::Pi()/180;
 
@@ -283,19 +292,19 @@ void TPie::DrawGhost()
       if (dphi>.15) ndiv = (Int_t) ((maxphi-minphi)/.15);
       dphi = (maxphi-minphi)/ndiv;
 
-      for (Int_t j=1;j<ndiv;++j) { // loop to draw the arc
+      // Loop to draw the arc
+      for (Int_t j=1;j<ndiv;++j) {
          Double_t phi = minphi+dphi*j;
          gVirtualX->DrawLine( gPad->XtoAbsPixel(x0+gRadius*TMath::Cos(phi)),
                               gPad->YtoAbsPixel(y0+gRadius*TMath::Sin(phi)),
                               gPad->XtoAbsPixel(x0+gRadius*TMath::Cos(phi+dphi)),
                               gPad->YtoAbsPixel(y0+gRadius*TMath::Sin(phi+dphi)));
-      } // end loop to draw the arc
+      }
 
       gVirtualX->DrawLine( gPad->XtoAbsPixel(x0+gRadius*TMath::Cos(maxphi)),
                            gPad->YtoAbsPixel(y0+gRadius*TMath::Sin(maxphi)),
                            gPad->XtoAbsPixel(x0), gPad->YtoAbsPixel(y0) );
-
-   } // end loop over slices
+   }
 }
 
 
@@ -312,16 +321,17 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static bool isMovingPie(kFALSE);
    static bool isMovingSlice(kFALSE);
    static bool isResizing(kFALSE);
+   static bool isRotating(kFALSE);
    static bool onBorder(kFALSE);
    bool isRedrawing(kFALSE);
    static Int_t prev_event(-1);
    static Int_t oldpx, oldpy;
 
-   // portion of pie considered border width
+   // Portion of pie considered as "border"
    static Double_t dr     = gPad->PixeltoX(3);
    static Double_t minRad = gPad->PixeltoX(10);
 
-   // angular divisions in radial direction
+   // Angular divisions in radial direction
    static Double_t angstep1 = 0.5*TMath::PiOver4();
    static Double_t angstep2 = 1.5*TMath::PiOver4();
    static Double_t angstep3 = 2.5*TMath::PiOver4();
@@ -336,16 +346,17 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    switch(event) {
       case kButton1Down:
-         // change curso the show movement of the pie
+         // Change cursor to show pie's movement.
          gVirtualX->SetLineColor(1);
          gVirtualX->SetLineWidth(2);
 
-         // current center and rad for the TPie
-         gX         = fX;
-         gY         = fY;
-         gRadius    = fRadius;
-         gRadiusOffset = fRadiusOffsets[fCurrent_slice];
-         gIsUpt     = kTRUE;
+         // Current center and radius.
+         gX             = fX;
+         gY             = fY;
+         gRadius        = fRadius;
+         gRadiusOffset  = fRadiusOffsets[fCurrent_slice];
+         gAngularOffset = 0;
+         gIsUpt         = kTRUE;
 
          prev_event = kButton1Down;
 
@@ -368,15 +379,16 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                gPad->SetCursor(kBottomSide);
             else if (fCurrent_ang>=angstep7 && fCurrent_ang<angstep8)
                gPad->SetCursor(kBottomRight);
-
             onBorder = kTRUE;
-         }
-         else {
+         } else {
             onBorder = kFALSE;
-            if (fCurrent_rad>fRadius*.5)
+            if (fCurrent_rad>fRadius*.6) {
                gPad->SetCursor(kPointer);
-            else if (fCurrent_rad<=fRadius*.5)
+            } else if (fCurrent_rad<=fRadius*.3) {
                gPad->SetCursor(kHand);
+            } else if (fCurrent_rad<=fRadius*.6 && fCurrent_rad>=fRadius*.3) {
+              gPad->SetCursor(kRotate);
+            }
          }
          oldpx = px;
          oldpy = py;
@@ -386,12 +398,15 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       case kButton1Motion:
          if (!isMovingSlice || !isMovingPie || !isResizing) {
             if (prev_event==kButton1Down) {
-               if (onBorder)
+               if (onBorder) {
                   isResizing = kTRUE;
-               else if(fCurrent_rad>fRadius*.5 && fCurrent_slice>=0)
+               } else if (fCurrent_rad>=fRadius*.6 && fCurrent_slice>=0) {
                   isMovingSlice = kTRUE;
-               else
+               } else if (fCurrent_rad<=fRadius*.3) {
                   isMovingPie = kTRUE;
+               } else if (fCurrent_rad<fRadius*.6 && fCurrent_rad>fRadius*.3) {
+                  isRotating = kTRUE;
+               }
             }
          }
 
@@ -403,59 +418,56 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
          if (isMovingPie || isMovingSlice) {
             gPad->SetCursor(kMove);
-
-            if (isMovingSlice) { // move the slice
+            if (isMovingSlice) {
                Float_t avgphi = fSlices[fCurrent_slice*2+1]*TMath::Pi()/180.;
 
-               if (!gPad->OpaqueMoving()) { // old slice position
-                  DrawGhost();
-               }
+               if (!gPad->OpaqueMoving()) DrawGhost();
 
                gRadiusOffset += TMath::Cos(avgphi)*mdx +TMath::Sin(avgphi)*mdy;
                if (gRadiusOffset<0) gRadiusOffset = .0;
 
-               if (!gPad->OpaqueMoving()) { // new slice position
-                  DrawGhost();
-               }
-
-            }
-            else {
-               if (!gPad->OpaqueMoving()) { // old box around the pie-chart
-                  DrawGhost();
-               }
+               if (!gPad->OpaqueMoving()) DrawGhost();
+            } else {
+               if (!gPad->OpaqueMoving()) DrawGhost();
 
                gX += mdx;
                gY += mdy;
 
-               if (!gPad->OpaqueMoving()) { // new box around the pie-chart
-                  DrawGhost();
-               }
+               if (!gPad->OpaqueMoving()) DrawGhost();
             }
-
          } else if (isResizing) {
-            if (!gPad->OpaqueResizing()) { // old box around the pie-cart
-               DrawGhost();
-            }
+            if (!gPad->OpaqueResizing()) DrawGhost();
 
             Float_t dr = mdx*TMath::Cos(fCurrent_ang)+mdy*TMath::Sin(fCurrent_ang);
-            if (gRadius+dr>=minRad) // minimum radius
+            if (gRadius+dr>=minRad) {
                gRadius += dr;
-            else
+            } else {
                gRadius = minRad;
-
-            if (!gPad->OpaqueResizing()) { // new box around the pie-cart
-               DrawGhost();
             }
+
+            if (!gPad->OpaqueResizing()) DrawGhost();
+         } else if (isRotating) {
+            if (!gPad->OpaqueMoving()) DrawGhost();
+
+            if (py>=gPad->YtoAbsPixel(fY)) {
+               if (px<oldpx) gAngularOffset--;
+               else          gAngularOffset++;
+            } else {
+               if (px<oldpx) gAngularOffset++;
+               else          gAngularOffset--;
+            }
+            if (gAngularOffset>=360) gAngularOffset = 0;
+            if (!gPad->OpaqueMoving()) DrawGhost();
          }
 
          oldpx = px;
          oldpy = py;
          if ( ((isMovingPie || isMovingSlice) && gPad->OpaqueMoving()) ||
-               (isResizing && gPad->OpaqueResizing()) ) isRedrawing = kTRUE;
+               (isResizing && gPad->OpaqueResizing()) ||
+               (isRotating && gPad->OpaqueMoving()) ) isRedrawing = kTRUE;
          else break;
 
       case kButton1Up:
-         // restore the cursor
          if (!isRedrawing) {
             prev_event = kButton1Up;
             gIsUpt = kFALSE;
@@ -471,15 +483,17 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          fY      = gY;
          fRadius = gRadius;
          fRadiusOffsets[fCurrent_slice] = gRadiusOffset;
+         SetAngularOffset(fAngularOffset+gAngularOffset);
 
          gPad->Modified(kTRUE);
 
          gVirtualX->SetLineColor(-1);
          gVirtualX->SetLineWidth(-1);
 
-         if (isMovingPie) isMovingPie = kFALSE;
+         if (isMovingPie)   isMovingPie   = kFALSE;
          if (isMovingSlice) isMovingSlice = kFALSE;
-         if (isResizing) isResizing = kFALSE;
+         if (isResizing)    isResizing    = kFALSE;
+         if (isRotating)    isResizing    = kFALSE;
 
          gIsUpt = kFALSE;
          break;
@@ -500,7 +514,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //______________________________________________________________________________
 const char* TPie::GetEntryLabel(Int_t i)
 {
-   // Returns the label of the entryi number "i".
+   // Returns the label of the entry number "i".
 
    return fLabels[i].Data();
 }
@@ -536,7 +550,7 @@ Double_t TPie::GetEntryRadiusOffset(Int_t i)
 //______________________________________________________________________________
 Double_t TPie::GetEntryVal(Int_t i)
 {
-   // Return the value associated with the slice of index "i".
+   // Return the value associated with the slice number "i".
 
    return fVals[i];
 }
@@ -567,19 +581,19 @@ void TPie::Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r)
    fFillColors = new Int_t[fNvals];
    fFillStyles = new Int_t[fNvals];
 
-   fLabels     = new TString[fNvals];
+   fLabels        = new TString[fNvals];
    fRadiusOffsets = new Double_t[fNvals];
-   fVals       = new Double_t[fNvals];
+   fVals          = new Double_t[fNvals];
 
    for (Int_t i=0;i<fNvals;++i) {
-      fVals[i]       = 0.;
-      fLabels[i]     = "Slice";
-      fLabels[i]    += i;
-      fLineColors[i] = 1;
-      fLineStyles[i] = 1;
-      fLineWidths[i] = 1;
-      fFillColors[i] = gStyle->GetColorPalette(i);
-      fFillStyles[i] = 1001;
+      fVals[i]          = 0.;
+      fLabels[i]        = "Slice";
+      fLabels[i]       += i;
+      fLineColors[i]    = 1;
+      fLineStyles[i]    = 1;
+      fLineWidths[i]    = 1;
+      fFillColors[i]    = gStyle->GetColorPalette(i);
+      fFillStyles[i]    = 1001;
       fRadiusOffsets[i] = 0.;
    }
 
@@ -609,34 +623,33 @@ void TPie::Paint(Option_t *option)
 
    bool optionSame(kFALSE);
 
-   // for the label orientation there are 3 possibilities:
-   // 0: horizontal
-   // 1: radial
-   // 2: tangent
+   // For the label orientation there are 3 possibilities:
+   //   0: horizontal
+   //   1: radial
+   //   2: tangent
    Int_t lblor(0);
 
-   // parse the options
+   // Parse the options
    Int_t idx;
-   // paint the TPie in an existing canvas
+   // Paint the TPie in an existing canvas
    if ( (idx=soption.Index("same"))>=0 ) {
       optionSame = kTRUE;
       soption.Remove(idx,4);
    }
 
-   // seek if have to draw the labels around the pie chart
+   // Seek if have to draw the labels around the pie chart
    if ( (idx=soption.Index("t"))>=0 ) {
       lblor = 2;
       soption.Remove(idx,1);
    }
 
-   // seek if have to paint the labels along the radii
+   // Seek if have to paint the labels along the radii
    if ( (idx=soption.Index("r"))>=0 ) {
       lblor = 1;
       soption.Remove(idx,1);
    }
 
    if (fNvals<=0) {
-      // do nothing, 0 points
       Warning("Paint","No vals");
       return;
    }
@@ -646,14 +659,13 @@ void TPie::Paint(Option_t *option)
       return;
    }
 
-   // objects usefull to draw labels and slices
+   // Objects useful to draw labels and slices
    TLatex *textlabel = new TLatex();
    TArc *arc = new TArc();
 
    // Draw the slices.
    for (Int_t i=0;i<fNvals;++i) {
-      // draw the arc
-      // set the color of the next slice
+      // Set the color of the next slice
       arc->SetFillColor(fFillColors[i]);
       arc->SetFillStyle(fFillStyles[i]);
       arc->SetLineColor(fLineColors[i]);
@@ -666,25 +678,22 @@ void TPie::Paint(Option_t *option)
       Double_t ay = fY+TMath::Sin(aphi)*fRadiusOffsets[i];
       arc->PaintEllipse(ax, ay, fRadius, fRadius, fSlices[2*i],
                                                   fSlices[2*i+2], 0.);
-   } // end loop to place the arcs
+   }
 
 
-   for (Int_t i=0;i<fNvals;++i) { // loop to place the labels
+   // Loop to place the labels.
+   for (Int_t i=0;i<fNvals;++i) {
       Float_t aphi = fSlices[2*i+1]*TMath::Pi()/180.;
-
-      // distance from label to the cicle, like distance
-      // from label to axes
       Float_t label_off = fLabelsOffset;
 
-      // set the font
+      // Set the font
       textlabel->SetTextFont(GetTextFont());
       textlabel->SetTextSize(GetTextSize());
       textlabel->SetTextColor(GetTextColor());
 
-      // eval the dimension of the text
       textlabel->SetTextAngle(GetTextAngle());
 
-      // paint the text in the pad
+      // Paint the text in the pad
       TString tmptxt  = fLabelFormat;
 
       tmptxt.ReplaceAll("%txt",fLabels[i]);
@@ -707,7 +716,7 @@ void TPie::Paint(Option_t *option)
          lx += h/2.*TMath::Sin(lblang);
          ly -= h/2.*TMath::Cos(lblang);
 
-         // this control prevent text up-side
+         // This control prevent text up-side
          if (aphi>TMath::PiOver2() && aphi<=3.*TMath::PiOver2()) {
             lx     += w*TMath::Cos(lblang)-h*TMath::Sin(lblang);
             ly     += w*TMath::Sin(lblang)+h*TMath::Cos(lblang);
@@ -733,7 +742,7 @@ void TPie::Paint(Option_t *option)
       textlabel->PaintLatex(lx,ly,
                             lblang*180/TMath::Pi()+GetTextAngle(),
                             GetTextSize(), tmptxt.Data());
-   } // end loop for the labels
+   }
 
    delete arc;
    delete textlabel;
@@ -747,13 +756,13 @@ void TPie::Paint(Option_t *option)
       title = dynamic_cast<TPaveText*>(obj);
    }
 
-   // check the OptTitle option
+   // Check the OptTitle option
    if (strlen(GetTitle()) == 0 || gStyle->GetOptTitle() <= 0) {
       if (title) delete title;
       return;
    }
 
-   // height and width of the title
+   // Height and width of the title
    Double_t ht = gStyle->GetTitleH();
    Double_t wt = gStyle->GetTitleW();
    if (ht<=0) ht = 1.1*gStyle->GetTitleFontSize();
