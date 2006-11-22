@@ -716,6 +716,13 @@ guess_architecture () {
             exit 1
             ;;
     esac
+    if [ "$arch" = "macosx" ]; then
+       if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` = 5 ]; then
+          if `sysctl machdep.cpu.extfeatures | grep "64" > /dev/null  2>&1` ; then
+             arch=macosx64
+          fi
+       fi
+    fi
     logmsg "$arch"
 }
 
@@ -766,7 +773,7 @@ THISROOTCSHOUT=bin/thisroot.csh
 #
 ### echo %%% Testing the echo features
 #
-if  `(echo "testing\c"; echo 1,2,3) | grep c > /dev/null` ; then
+if `(echo "testing\c"; echo 1,2,3) | grep c > /dev/null` ; then
   if `(echo -n testing; echo 1,2,3) | sed s/-n/xn/ | grep xn > /dev/null`; then
     ac_n= ac_c='
 ' ac_t='	'
