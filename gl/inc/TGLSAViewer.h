@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.16 2006/09/26 08:06:49 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.h,v 1.17 2006/10/05 18:19:09 brun Exp $
 // Author:  Richard Maunder / Timur Pocheptsov
 
 /*************************************************************************
@@ -80,7 +80,6 @@ private:
    TGLSAViewer(const TGLSAViewer &);
    TGLSAViewer & operator = (const TGLSAViewer &);
 
-   void SavePicture(const TString &fileName);
 
 protected:
    // Overloadable 
@@ -98,6 +97,7 @@ public:
 
    void   Show();
    void   Close();
+   void   SavePicture(const TString &fileName);
 
    // GUI events - editors, frame etc
    Bool_t ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t);

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.26 2006/10/05 18:19:09 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSAViewer.cxx,v 1.27 2006/10/10 06:41:06 brun Exp $
 // Author:  Timur Pocheptsov / Richard Maunder
 
 /*************************************************************************
@@ -551,7 +551,8 @@ void TGLSAViewer::SavePicture(const TString &fileName)
       gVirtualGL->CaptureViewer(this, TGLOutput::kEPS_BSP, fileName.Data());
    else if (fileName.EndsWith(".pdf"))
       gVirtualGL->CaptureViewer(this, TGLOutput::kPDF_BSP, fileName.Data());
-   else if (fileName.EndsWith(".gif") || fileName.EndsWith(".jpg") || fileName.EndsWith(".png")) {
+   else if (fileName.EndsWith(".gif") || fileName.Contains("gif+") ||
+            fileName.EndsWith(".jpg") || fileName.EndsWith(".png")) {
       std::auto_ptr<TImage>gif(TImage::Create());
       gif->FromWindow(fGLArea->GetGLWindow()->GetId());
       gif->WriteImage(fileName.Data());
