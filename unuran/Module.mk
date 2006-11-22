@@ -14,13 +14,21 @@ UNURANDIRI := $(UNURANDIR)/inc
 UNRVERS      := unuran-0.8.1-root
 UNRSRCS      := $(MODDIRS)/$(UNRVERS).tar.gz
 UNRDIRS      := $(MODDIRS)/$(UNRVERS)
+UNURANETAG   := $(UNURANDIRS)/headers.d
 
 
-###pre-compiled GSL DLL require Unuran to be compiled with -DGSL_DLL 
-#ifeq ($(PLATFORM),win32)
-#GSLFLAGS += "-DGSL_DLL"
-#endif
 
+UNRS 	   := $(wildcard $(UNRDIRS)/src/utils/*.c)\
+		$(wildcard $(UNRDIRS)/src/methods/*.c) \
+		$(wildcard $(UNRDIRS)/src/specfunct/*.c) \
+		$(wildcard $(UNRDIRS)/src/distr/*.c) \
+		$(wildcard $(UNRDIRS)/src/distributions/*.c) \
+		$(wildcard $(UNRDIRS)/src/parser/*.c) \
+		$(wildcard $(UNRDIRS)/src/tests/*.c) \
+		$(wildcard $(UNRDIRS)/src/uniform/*.c) \
+		$(wildcard $(UNRDIRS)/src/urng/*.c) 
+
+UNRO       := $(UNRS:.c=.o)
 
 #UNRLIBDIR := /Users/moneta/mathlibs/Unuran/lib
 
@@ -29,7 +37,7 @@ UNRLIBS := $(MODDIRS)/$(UNRVERS)/src/.libs/libunuran.lib
 else
 UNRLIBS := $(MODDIRS)/$(UNRVERS)/src/.libs/libunuran.a
 endif
-#UNRFLAGS := -I$(MODDIRS)/$(UNRVERS)/src -I$(MODDIRS)/$(UNRVERS) -I$(MODDIRS)/$(UNRVERS)/src/utils -DHAVE_CONFIG_H
+
 UNRFLAGS :=  -I$(MODDIRS)/$(UNRVERS)/src 
 
 ##### libUnuran #####
@@ -43,7 +51,7 @@ UNURANH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 UNURANS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 
 UNURANO    := $(UNURANS:.cxx=.o)
-#UNURANO    += $(UNURANS:.c=.o)
+
 
 
 UNURANDEP  := $(UNURANO:.o=.d) $(UNURANDO:.o=.d)
@@ -57,25 +65,29 @@ ALLLIBS      += $(UNURANLIB)
 # include all dependency files
 INCLUDEFILES += $(UNURANDEP) 
 
-##### local rules #####
-include/%.h: 	$(UNURANDIRI)/%.h
-		cp $< $@
 
-$(UNRLIBS):	$(UNRSRCS)
-#ifeq ($(PLATFORM),win32)
-#		echo "build unuran"
-#		echo $(ARCH)
-#		echo $(CC)
-#		echo $(CFLAGS)
-#else
-		echo "build unuran"
+##### local rules #####
+
+include/%.h: 	$(UNURANDIRI)/%.h  
+		echo "copy includes"
+		cp $< $@	
+
+
+# force untar in first pass, so that in second pass ROOFITS is correctly set
+ifeq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
+-include $(UNURANETAG)
+endif
+
+$(UNURANETAG):	$(UNRSRCS)
+		echo "** untar and configure unuran"
 		@(if [ -d $(UNRDIRS) ]; then \
 			rm -rf $(UNRDIRS); \
 		fi; \
-		echo "*** Building unuran..."; \
 		cd $(UNURANDIRS); \
 		if [ ! -d $(UNRVERS) ]; then \
 			gunzip -c $(UNRVERS).tar.gz | tar xf -; \
+		   etag=`basename $(UNURANETAG)` ; \
+		   touch $$etag ; \
 		fi; \
 		cd $(UNRVERS); \
 		ACC=$(CC); \
@@ -101,23 +113,23 @@ $(UNRLIBS):	$(UNRSRCS)
 			ACFLAGS="-MD -G5 -GX"; \
 		fi; \
 		GNUMAKE=$(MAKE) ./configure --prefix=`pwd`/$(MODDIRS)/$(UNRVERS) CC="$$ACC"  \
-		CFLAGS="$$ACFLAGS $(GSLOPT)" $(GSLDBG); \
-		$(MAKE))
+		CFLAGS="$$ACFLAGS"; )
+#		$(MAKE))
 
 
 
-$(UNURANLIB): $(UNRLIBS) $(UNURANO) $(UNURANDO) $(ORDER_) $(MAINLIBS)
-		echo $(UNROBJS)
+
+$(UNURANLIB): $(UNRCFG) $(UNRO) $(UNURANO) $(UNURANDO) $(ORDER_) $(MAINLIBS) 
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
 		   "$(SOFLAGS)" libUnuran.$(SOEXT) $@     \
 		   "$(UNURANO) $(UNURANDO)"             \
-		   "$(UNURANLIBEXTRA) $(UNRLIBS)"
+		   "$(UNURANLIBEXTRA) $(UNRO)"
 
-$(UNURANDS):  $(UNURANDH1) $(UNURANL) $(ROOTCINTTMPEXE)
+$(UNURANDS):  $(UNRINIT) $(UNURANDH1) $(UNURANL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(UNRFLAGS) $(UNURANDH1) $(UNURANL)
 
-all-unuran:   $(UNURANLIB)
+all-unuran:   $(UNURANLIB) 
 
 map-unuran:   $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(UNURANLIB) \
@@ -133,10 +145,10 @@ clean-unuran:
 		fi)
 
 
-clean::         clean-unuran
+clean::        clean-unuran
 
 distclean-unuran: clean-unuran
-		@rm -f $(UNURANDEP) $(UNURANDS) $(UNURANDH) $(UNURANLIB)
+		@rm -f $(UNURANETAG) $(UNURANDEP) $(UNURANDS) $(UNURANDH) $(UNURANLIB)
 		@mv $(UNRSRCS) $(UNURANDIRS)/-$(UNRVERS).tar.gz
 		@rm -rf $(UNURANDIRS)/$(UNRVERS)
 		@mv $(UNURANDIRS)/-$(UNRVERS).tar.gz $(UNRSRCS)
@@ -144,5 +156,11 @@ distclean-unuran: clean-unuran
 distclean::     distclean-unuran
 
 ##### extra rules ######
-##$(UNURANO): CFLAGS += $(UNRFLAGS)
+
 $(UNURANO): CXXFLAGS += $(UNRFLAGS) 
+
+ifeq ($(PLATFORM),win32)
+$(UNRO): CFLAGS := $(filter-out -FIsehmap.h,$(filter-out -Iinclude,$(CFLAGS) -I$(UNRDIRS) -I$(UNRDIRS)/src/ -I$(UNRDIRS)/src/utils  -DHAVE_CONFIG_H))
+else
+$(UNRO): CFLAGS := $(filter-out -Iinclude,$(CFLAGS) -I$(UNRDIRS) -I$(UNRDIRS)/src/ -I$(UNRDIRS)/src/utils  -DHAVE_CONFIG_H)
+endif
