@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMonitor.h,v 1.8 2005/12/09 15:12:19 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMonitor.h,v 1.9 2006/04/19 10:50:01 rdm Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -82,6 +82,8 @@ public:
    Int_t  GetDeActive() const;
    TList *GetListOfActives() const;
    TList *GetListOfDeActives() const;
+
+   Bool_t IsActive(TSocket *s) const;
 
    ClassDef(TMonitor,0)  //Monitor activity on a set of TSocket objects
 };

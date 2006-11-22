@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.12 2006/11/15 17:45:55 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.13 2006/11/20 15:56:36 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -209,7 +209,7 @@ void TXSlave::Init(const char *host, Int_t stype)
             }
          }
    } else {
-      if (fProof->GetManager())
+      if (fProof->GetManager() && TVirtualProof::GetEnvVars())
          Info("Init", "** NOT ** sending user envs - RemoteProtocol : %d",
                       fProof->GetManager()->GetRemoteProtocol());
    }
@@ -547,28 +547,24 @@ Bool_t TXSlave::HandleInput(const void *)
       TMonitor *mon = fProof->fCurrentMonitor;
 
       if (gDebug > 2)
-         Info("HandleInput","%p: proof: %p, mon: %p", this, fProof, mon);
+         Info("HandleInput", "%p: %s: proof: %p, mon: %p",
+                             this, GetOrdinal(), fProof, mon);
 
       if (mon) {
-         TList *la = mon->GetListOfActives();
-         if (la) {
-            if (la->FindObject(fSocket)) {
-               // Synchronous collection in TProof
-               if (gDebug > 2)
-                  Info("HandleInput","%p: posting monitor %p", this, mon);
-               mon->SetReady(fSocket);
-            }
-            la->SetOwner(kFALSE);
-            delete la;
+         if (mon->IsActive(fSocket)) {
+            // Synchronous collection in TProof
+            if (gDebug > 2)
+               Info("HandleInput","%p: %s: posting monitor %p", this, GetOrdinal(), mon);
+            mon->SetReady(fSocket);
          }
       } else {
          // Asynchronous collection in TProof
          if (gDebug > 2)
-            Info("HandleInput","%p: calling TProof::CollectInputFrom", this);
+            Info("HandleInput","%p: %s: calling TProof::CollectInputFrom", this, GetOrdinal());
          fProof->CollectInputFrom(fSocket);
       }
    } else {
-      Warning("HandleInput", "%p: reference to PROOF missing", this);
+      Warning("HandleInput", "%p: %s: reference to PROOF missing", this, GetOrdinal());
       return kFALSE;
    }
 

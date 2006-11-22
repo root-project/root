@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.10 2006/05/19 07:40:18 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.11 2006/06/21 16:18:26 rdm Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -400,6 +400,21 @@ Int_t TMonitor::GetDeActive() const
    // Return number of sockets in the de-active list.
 
    return fDeActive->GetSize();
+}
+
+//______________________________________________________________________________
+Bool_t TMonitor::IsActive(TSocket *sock) const
+{
+   // Check if socket 's' is in the active list. Avoids the duplication
+   // of active list via TMonitor::GetListOfActives().
+
+   TIter next(fActive);
+   while (TSocketHandler *h = (TSocketHandler*) next())
+      if (sock == h->GetSocket())
+         return kTRUE;
+
+   // Not found
+   return kFALSE;
 }
 
 //______________________________________________________________________________
