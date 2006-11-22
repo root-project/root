@@ -15,8 +15,13 @@ void gltf3(){
    TPad *tf3Pad  = new TPad("box", "box", 0.04, 0.04, 0.96, 0.8);   
    tf3Pad->Draw();
 
- //  TF3 *tf3 = new TF3("sample", "x*x+y*y-z*z-1", -2., 2., -2., 2., -2., 2.);
-   TF3 *tf3 = new TF3("Klein Bottle","(x*x + y*y + z*z + 2*y -1)*((x*x + y*y + z*z - 2*y -1)*(x*x + y*y + z*z - 2*y -1)-8*z*z)+16*x*z*(x*x + y*y + z*z - 2*y -1)", -3.5, 3.5, -3.5, 3.5, -5.5, 5.5);
+   TFormula f1 = TFormula("f1", "x*x + y*y + z*z + 2*y - 1");
+   TFormula f2 = TFormula("f2", "x*x + y*y + z*z - 2*y - 1");
+
+   // Klein bottle with cutted top&bottom parts
+   // The Klein bottle is a closed nonorientable surface that has no inside or outside.
+   TF3 *tf3 = new TF3("Klein Bottle","f1*(f2*f2-8*z*z) + 16*x*z*f2", -3.5, 3.5, -3.5, 3.5, -2.5, 2.5);
+
    tf3->SetFillColor(kRed);
    tf3Pad->cd();
    tf3->Draw("gl");
