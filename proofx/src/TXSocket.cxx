@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.22 2006/11/15 17:45:55 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.23 2006/11/20 15:56:36 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -657,7 +657,8 @@ Int_t TXSocket::PostPipe(TSocket *s)
    }
 
    if (gDebug > 2)
-      ::Info("TXSocket::PostPipe", "%s: %p: pipe posted", fgLoc.Data(), s);
+      ::Info("TXSocket::PostPipe", "%s: %p: pipe posted (pending %d)",
+                                   fgLoc.Data(), s, TXSocket::fgReadySock.GetSize());
 
    // We are done
    return 0;
@@ -686,7 +687,8 @@ Int_t TXSocket::CleanPipe(TSocket *s)
    TXSocket::fgReadySock.Remove(s);
 
    if (gDebug > 2)
-      ::Info("TXSocket::CleanPipe", "%s: %p: pipe cleaned", fgLoc.Data(), s);
+      ::Info("TXSocket::CleanPipe", "%s: %p: pipe cleaned (pending %d)",
+                                     fgLoc.Data(), s, TXSocket::fgReadySock.GetSize());
 
    // We are done
    return 0;
@@ -864,15 +866,25 @@ Bool_t TXSocket::Create()
          Warning("Create","protocol version of the remote PROOF undefined!");
       }
 
-      if (len >= (Int_t)sizeof(kXR_int16)) {
-         // The third 2 bytes contain the remote XrdProofdProtocol version
-         kXR_int16 dver = 0;
-         memcpy(&dver, pdata, sizeof(kXR_int16));
-         fXrdProofdVersion = net2host(dver);
-         pdata = (void *)((char *)pdata + sizeof(kXR_int16));
-         len -= sizeof(kXR_int16);
+      if (fRemoteProtocol == 0) {
+         // We are dealing with an older server: the PROOF protocol is on 4 bytes
+         len += sizeof(kXR_int16);
+         kXR_int32 dver = 0;
+         memcpy(&dver, pdata, sizeof(kXR_int32));
+         fRemoteProtocol = net2host(dver);
+         pdata = (void *)((char *)pdata + sizeof(kXR_int32));
+         len -= sizeof(kXR_int32);
       } else {
-         Warning("Create","version of the remote XrdProofdProtocol undefined!");
+         if (len >= (Int_t)sizeof(kXR_int16)) {
+            // The third 2 bytes contain the remote XrdProofdProtocol version
+            kXR_int16 dver = 0;
+            memcpy(&dver, pdata, sizeof(kXR_int16));
+            fXrdProofdVersion = net2host(dver);
+            pdata = (void *)((char *)pdata + sizeof(kXR_int16));
+            len -= sizeof(kXR_int16);
+         } else {
+            Warning("Create","version of the remote XrdProofdProtocol undefined!");
+         }
       }
 
       if (len > 0) {
