@@ -106,6 +106,9 @@ endif
 ifeq ($(BUILDGFAL),yes)
 MODULES      += gfal
 endif
+ifeq ($(BUILDG4ROOT),yes)
+MODULES      += g4root
+endif
 ifeq ($(BUILDCHIRP),yes)
 MODULES      += chirp
 endif
@@ -223,7 +226,7 @@ MODULES      += unix winnt x11 x11ttf win32gdk gl rfio castor thread \
                 ldap mlp krb5auth rpdutils globusauth pyroot ruby gfal \
                 qt qtroot qtgsi xrootd netx proofx alien clarens peac oracle \
                 xmlparser mathcore mathmore reflex cintex roofit minuit2 \
-                monalisa fftw odbc unuran gdml
+                monalisa fftw odbc unuran gdml g4root
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
@@ -974,6 +977,8 @@ showbuild:
 	@echo "SHIFTLIB           = $(SHIFTLIB)"
 	@echo "DCAPLIB            = $(DCAPLIB)"
 	@echo "GFALLIB            = $(GFALLIB)"
+	@echo "G4INCDIR           = $(G4INCDIR)"
+	@echo "G4LIBDIR           = $(G4LIBDIR)"
 	@echo "MYSQLINCDIR        = $(MYSQLINCDIR)"
 	@echo "ORACLEINCDIR       = $(ORACLEINCDIR)"
 	@echo "PGSQLINCDIR        = $(PGSQLINCDIR)"

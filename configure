@@ -43,6 +43,7 @@ options="                    \
    enable_fftw3              \
    enable_gdml               \
    enable_gfal               \
+   enable_g4root             \
    enable_globus             \
    enable_krb5               \
    enable_ldap               \
@@ -124,6 +125,7 @@ SAPDB            \
 RFIO             \
 CASTOR           \
 GFAL             \
+G4ROOT           \
 GSL              \
 CERNLIB          \
 PYTHIA           \
@@ -847,6 +849,7 @@ enable/disable options, prefix with either --enable- or --disable-
   fftw3              Fast Fourier Transform support, requires libfftw3
   gdml               GDML writer and reader
   gfal               GFAL support, requires libgfal
+  g4root             GEANT4 navigator based on TGeo, requires GEANT4 installed
   globus             Globus authentication support, requires Globus toolkit
   krb5               Kerberos5 support, requires Kerberos libs
   ldap               LDAP support, requires (Open)LDAP libs
@@ -903,6 +906,9 @@ with options, prefix with --with-, enables corresponding support
   fftw3-libdir       FFTW3 support, location of libfftw3 (libfftw3-3 for windows)
   gfal-incdir        GFAL support, location of gfal_api.h
   gfal-libdir        GFAL support, location of libgfal
+  g4-incdir          GEANT4 support, location of GEANT4 header files
+  g4-libdir          GEANT4 support, location of GEANT4 libraries
+  clhep-incdir       CLHEP support, location of CLHEP header files
   gsl-incdir         GSL support, location of gsl/gsl_version.h
   gsl-libdir         GSL support, location of libgsl
   gccxml             Gccxml support, directory of the gccxml installation
@@ -1093,6 +1099,9 @@ if test $# -gt 0 ; then
       --with-fftw3-libdir=*)   fftw3libdir=$optarg   ; enable_fftw3="yes"   ;;
       --with-gfal-incdir=*)    gfalincdir=$optarg    ; enable_gfal="yes"    ;;
       --with-gfal-libdir=*)    gfallibdir=$optarg    ; enable_gfal="yes"    ;;
+      --with-g4-incdir=*)      g4incdir=$optarg      ; enable_g4root="yes"  ;;
+      --with-g4-libdir=*)      g4libdir=$optarg      ; enable_g4root="yes"  ;;
+      --with-clhep-incdir=*)   clhepincdir=$optarg   ;;
       --with-gsl-incdir=*)     gslincdir=$optarg     ; enable_gsl="yes"     ;;
       --with-gsl-libdir=*)     gsllibdir=$optarg     ; enable_gsl="yes"     ;;
       --with-globus=*)         globusdir=$optarg     ; enable_globus="yes"  ;;
@@ -2026,6 +2035,39 @@ if test ! "x$enable_gfal" = "xno"; then
 fi
 check_explicit "$enable_gfal" "$enable_gfal_explicit" \
      "Explicitly required GFAL dependencies not fulfilled"
+
+######################################################################
+#
+### echo %%% GEANT4 Support - Third party libraries
+#
+# (See http://geant4.web.cern.ch/geant4/)
+#
+# If the user has set the flags "--disable-g4root", we don't check for
+# GEANT4 at all.
+#
+if test ! "x$enable_g4root" = "xno"; then
+    # Check for GEANT4 include and library
+    check_header "G4Navigator.hh" "$g4incdir" "$g4incdir" $G4INCLUDE
+    g4rootinc=$found_hdr
+    g4incdir=$found_dir
+
+    check_library "libG4navigation" "$enable_shared" "$g4libdir" \
+	$G4LIB/$G4SYSTEM    
+    g4rootlib=$found_lib
+    g4libdir=$found_dir
+
+    # Check for CLHEP include
+    check_header "CLHEP/Vector/Rotation.h" "$clhepincdir" "$clhepincdir" $CLHEP_INCLUDE_DIR
+    clhepinc=$found_hdr
+    clhepincdir=$found_dir
+
+
+    if test "x$g4incdir" = "x" || test "x$g4rootlib" = "x" || test "x$clhepincdir" = "x"; then
+        enable_g4root="no"
+    fi
+fi
+check_explicit "$enable_g4root" "$enable_g4root_explicit" \
+     "Explicitly required G4root dependencies not fulfilled"
 
 ######################################################################
 #
@@ -3872,6 +3914,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_dcache"  = "xyes" && pkglist="$pkglist root-plugin-dcache"
     test "x$enable_fftw3"   = "xyes" && pkglist="$pkglist root-plugin-fftw3"
     test "x$enable_gfal"    = "xyes" && pkglist="$pkglist root-plugin-gfal"
+    test "x$enable_g4root"  = "xyes" && pkglist="$pkglist root-plugin-g4root"
     test "x$enable_globus"  = "xyes" && pkglist="$pkglist root-plugin-globus"
     test "x$enable_krb5"    = "xyes" && pkglist="$pkglist root-plugin-krb5"
     test "x$enable_ldap"    = "xyes" && pkglist="$pkglist libroot-ldap"
@@ -4174,6 +4217,9 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@gfalincdir@|$gfalincdir|"            \
     -e "s|@gfallib@|$gfallib|"                  \
     -e "s|@gfallibdir@|$gfallibdir|"            \
+    -e "s|@g4incdir@|$g4incdir|"                \
+    -e "s|@g4libdir@|$g4libdir|"                \
+    -e "s|@clhepincdir@|$clhepincdir|"          \
         < Makefile.tmp > Makefile.tmpp
 mv Makefile.tmpp Makefile.tmp
 
@@ -4295,6 +4341,7 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@builddcap@|$enable_dcache|"          \
     -e "s|@buildfftw3@|$enable_fftw3|"          \
     -e "s|@buildgfal@|$enable_gfal|"            \
+    -e "s|@buildg4root@|$enable_g4root|"        \
     -e "s|@buildchirp@|$enable_chirp|"          \
     -e "s|@buildalien@|$enable_alien|"          \
     -e "s|@buildasimage@|$enable_asimage|"      \
