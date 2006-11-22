@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainProof.h,v 1.7 2006/07/04 23:45:50 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainProof.h,v 1.8 2006/09/18 15:13:51 pcanal Exp $
 // Author: Marek Biskup   10/12/2004
 
 /*************************************************************************
@@ -39,7 +39,7 @@ protected:
    TDSet         *fSet;              // TDSet
    TVirtualProof *fProof;            // PROOF
    TDrawFeedback *fDrawFeedback;     // feedback handler
-   
+
 protected:
    void             AddClone(TTree*);
    const   char    *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex) const;
@@ -50,7 +50,7 @@ protected:
 public:
    TChainProof(TDSet *set, TTree* tree, TVirtualProof* proof);
    virtual ~TChainProof();
-   
+
    virtual TFriendElement *AddFriend(const char *treename, const char *filename="");
    virtual TFriendElement *AddFriend(const char *treename, TFile *file);
    virtual TFriendElement *AddFriend(TTree *tree, const char* alias="", Bool_t warn = kFALSE);
@@ -90,7 +90,7 @@ public:
    virtual TLeaf       *FindLeaf(const char *name);
    virtual Long64_t     Fit(const char *funcname ,const char *varexp, const char *selection="",Option_t *option="" ,Option_t *goption=""
                             ,Long64_t nentries=1000000000, Long64_t firstentry=0); // *MENU*
-   
+
    virtual const char  *GetAlias(const char *aliasName) const;
    virtual TBranch     *GetBranch(const char *name);
    virtual TBranchRef  *GetBranchRef() const {return fBranchRef;};
@@ -207,7 +207,7 @@ public:
    virtual void         SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t ptr);
    virtual void         SetBranchStatus(const char *bname,Bool_t status=1,UInt_t *found=0);
    static  void         SetBranchStyle(Int_t style=1);  //style=0 for old branch, =1 for new branch style
-   virtual void         SetChainOffset(Int_t offset=0) {fChainOffset=offset;}
+   virtual void         SetChainOffset(Long64_t offset=0) {fChainOffset=offset;}
    virtual void         SetCircular(Long64_t maxEntries);
    virtual void         SetDebug(Int_t level=1, Long64_t min=0, Long64_t max=9999999); // *MENU*
    virtual void         SetDirectory(TDirectory *dir);
@@ -234,9 +234,9 @@ public:
    void                 UseCurrentStyle();
    virtual void         ConnectProof(TVirtualProof* proof);
    virtual void         ReleaseProof();
-   
+
    static  TChainProof *MakeChainProof(TDSet *set, TVirtualProof *proof, Bool_t gettreeheader = kFALSE);
-   
+
    ClassDef(TChainProof,0)  //TChain proxy for running chains on PROOF
 };
 
