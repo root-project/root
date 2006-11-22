@@ -1,4 +1,4 @@
-/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.h,v 1.2 2006/11/21 10:43:16 brun Exp $ */
+/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.h,v 1.3 2006/11/21 23:34:39 rdm Exp $ */
 // Authors: Ben Lloyd 09/11/06
 
 /*************************************************************************
@@ -61,6 +61,47 @@ private:
 /*************************************************************************
  * TGDMLParse - base class for the import of GDML to ROOT.               * 
  *************************************************************************/
+
+class BaseMapHelper : public std::map<std::string, const void *>{
+};
+
+//map's [] operator returns reference.
+//to avoid ugly UB casts like static_cast<SomeType * &>(voidPtrLValue)
+//I have this helper class.
+template<typename T>
+class AssignmentHelper{
+private:
+   BaseMapHelper::iterator fPosInMap;
+
+public:
+   AssignmentHelper(BaseMapHelper &baseMap, const std::string &key)
+   {
+      baseMap[key];//if we do not have this key-value pair before, insert it now (with zero for pointer).
+      //find iterator for this key now :)
+      fPosInMap = baseMap.find(key);
+   }
+   
+   operator T * ()const
+   {
+      return (T*)fPosInMap->second;//const_cast<T*>(static_cast<const T *>(fPosInMap->second));   
+   }
+   
+   AssignmentHelper & operator = (const T * ptr)
+   {
+      fPosInMap->second = ptr;
+      return *this;
+   }
+};
+
+template<class T>
+class MapHelper : public BaseMapHelper{
+public:
+   AssignmentHelper<T> operator [] (const std::string &key)
+   {
+      return AssignmentHelper<T>(*this, key);
+   }
+};
+
 
 class TGDMLParse : public TObject {
 
@@ -133,7 +174,20 @@ private:
    XMLNodePointer_t  TopProcess(TXMLEngine* gdml, XMLNodePointer_t node);
     
     
-   typedef std::map<std::string, TGeoTranslation*> PosMap;
+   typedef MapHelper<TGeoTranslation> PosMap;
+   typedef MapHelper<TGeoRotation> RotMap;
+   typedef MapHelper<TGeoElement> EleMap;
+   typedef MapHelper<TGeoMaterial> MatMap;
+   typedef MapHelper<TGeoMedium> MedMap;
+   typedef MapHelper<TGeoMixture> MixMap;
+   typedef MapHelper<const char> ConMap;
+   typedef MapHelper<TGeoShape> SolMap;
+   typedef MapHelper<TGeoVolume> VolMap;
+   typedef MapHelper<TGDMLRefl> ReflSolidMap;
+
+
+
+  /* typedef std::map<std::string, TGeoTranslation*> PosMap;
    typedef std::map<std::string, TGeoRotation*> RotMap;
    typedef std::map<std::string, TGeoElement*> EleMap;
    typedef std::map<std::string, TGeoMaterial*> MatMap;
@@ -142,11 +196,12 @@ private:
    typedef std::map<std::string, const char*> ConMap;
    typedef std::map<std::string, TGeoShape*> SolMap;
    typedef std::map<std::string, TGeoVolume*> VolMap;
+*/
    typedef std::map<std::string, std::string> ReflectionsMap;
-   typedef std::map<std::string, TGDMLRefl*> ReflSolidMap;
+//   typedef std::map<std::string, TGDMLRefl*> ReflSolidMap;
    typedef std::map<std::string, std::string> ReflVolMap; 
    typedef std::map<std::string, double> FracMap;
-    
+
    PosMap fposmap;                //!Map containing position names and the TGeoTranslation for it
    RotMap frotmap;                //!Map containing rotation names and the TGeoRotation for it
    EleMap felemap;                //!Map containing element names and the TGeoElement for it
