@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.72 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.73 2006/08/10 15:38:39 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -1059,7 +1059,19 @@ void TGCheckButton::DoRedraw()
    gVirtualX->DrawLine(fId, GetBckgndGC()(),  2, y0+cw-2, cw-2, y0+cw-2);
    gVirtualX->DrawLine(fId, GetBckgndGC()(),  cw-2, y0+2, cw-2, y0+cw-2);
 
-   gVirtualX->FillRectangle(fId, GetWhiteGC()(), 2, y0+2, cw-4, cw-4);
+   x = 20;
+   y = y0;
+
+   int max_ascent, max_descent;
+   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
+   if (fState == kButtonDisabled) {
+      fLabel->Draw(fId, GetHilightGC()(), x+1, y+1 + max_ascent);
+      fLabel->Draw(fId, GetShadowGC()(), x, y + max_ascent);
+      gVirtualX->FillRectangle(fId, GetBckgndGC()(), 2, y0+2, cw-4, cw-4);
+   } else {
+      fLabel->Draw(fId, fNormGC, x, y + max_ascent);
+      gVirtualX->FillRectangle(fId, GetWhiteGC()(), 2, y0+2, cw-4, cw-4);
+   }
 
    if (fState == kButtonDown) {
       Segment_t seg[6];
@@ -1077,17 +1089,6 @@ void TGCheckButton::DoRedraw()
       gVirtualX->DrawSegments(fId, GetBlackGC()(), seg, 6);
    }
 
-   x = 20;
-   y = y0;
-
-   int max_ascent, max_descent;
-   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-   if (fState == kButtonDisabled) {
-      fLabel->Draw(fId, GetHilightGC()(), x+1, y+1 + max_ascent);
-      fLabel->Draw(fId, GetShadowGC()(), x, y + max_ascent);
-   } else {
-      fLabel->Draw(fId, fNormGC, x, y + max_ascent);
-   }
 }
 
 //______________________________________________________________________________
