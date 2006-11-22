@@ -1,4 +1,4 @@
-/* @(#)root/cont:$Name:  $:$Id: LinkDef.h,v 1.13 2005/03/20 19:35:50 brun Exp $ */
+/* @(#)root/cont:$Name:  $:$Id: LinkDef.h,v 1.14 2005/10/21 22:01:35 pcanal Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -23,6 +23,7 @@
 #pragma link C++ class TArrayF-!;
 #pragma link C++ class TArrayI-!;
 #pragma link C++ class TArrayL-!;
+#pragma link C++ class TArrayL64-!;
 #pragma link C++ class TArrayS-!;
 #pragma link C++ class TBits+;
 #pragma link C++ class TCollection-;
