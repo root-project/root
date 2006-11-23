@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.11 2006/11/17 18:37:18 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.12 2006/11/20 08:10:22 brun Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -1518,10 +1518,9 @@ void TFitEditor::DoReset()
    fFitOption = 'R';
    fDrawOption = "";
    fFunction = "gaus";
-   fFuncList->Select(1, kTRUE);
    if (fFitFunc) {
       delete fFitFunc;
-      fFitFunc = new TF1("fitFunc","gaus",fXmin,fXmax);
+      fFitFunc = new TF1("fitFunc", fFunction.Data(), fXmin, fXmax);
    }
    fSliderX->SetRange(1, fXrange);
    fSliderX->SetPosition(fXmin, fXmax);
@@ -1550,6 +1549,7 @@ void TFitEditor::DoReset()
       fNoStoreDrawing->SetState(kButtonUp, kFALSE);
    fOptDefault->SetState(kButtonDown);
    fNone->SetState(kButtonDown);
+   fFuncList->Select(1, kTRUE);
 }
 
 //______________________________________________________________________________
