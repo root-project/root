@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Polynomial.h,v 1.4 2006/11/10 16:28:42 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Polynomial.h,v 1.5 2006/11/17 18:26:50 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -85,19 +85,19 @@ public:
 
    virtual ~Polynomial(); 
 
-   /**
-      Copy constructor 
-   */
-   //Polynomial(const Polynomial &); 
+//    /**
+//       Copy constructor 
+//    */
+//    Polynomial(const Polynomial &); 
 
     
-   /**
-      Copy operator 
-   */
-   //Polynomial & operator = (const Polynomial &);
+//    /**
+//       Copy operator 
+//    */
+//    Polynomial & operator = (const Polynomial &);
 
     
-   double operator() ( double x, const std::vector<double> & p ); 
+   double operator() ( double x, const double * p ); 
 
    using ParamFunction::operator();
 

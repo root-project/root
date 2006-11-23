@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ParamFunction.cxx,v 1.2 2005/09/18 20:41:25 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: ParamFunction.cxx,v 1.3 2006/05/24 20:10:47 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -47,16 +47,23 @@ ParamFunction::ParamFunction(unsigned int npar, bool providesGrad, bool provides
 }
       
 
-// ParamFunction::ParamFunction(const ParamFunction &) 
-// {
-// }
+ParamFunction::ParamFunction(const ParamFunction & rhs) : 
+   BaseFunc(),
+   BaseParFunc()
+{
+   operator=(rhs);
+}
 
-// ParamFunction & ParamFunction::operator = (const ParamFunction &rhs) 
-// {
-//    if (this == &rhs) return *this;  // time saving self-test
-
-//    return *this;
-// }
+ParamFunction & ParamFunction::operator = (const ParamFunction &rhs) 
+{
+   if (this == &rhs) return *this;  // time saving self-test
+   fNpar = rhs.fNpar; 
+   fProvGrad = rhs.fProvGrad;  
+   fProvParGrad = rhs.fProvParGrad; 
+   fParams = rhs.fParams;
+   fParGradient = rhs.fParGradient;
+   return *this;
+}
 
 } // namespace Math
 } // namespace ROOT

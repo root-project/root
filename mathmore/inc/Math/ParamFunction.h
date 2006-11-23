@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ParamFunction.h,v 1.3 2006/11/10 16:28:42 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: ParamFunction.h,v 1.4 2006/11/17 18:26:50 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -62,7 +62,8 @@ class ParamFunction : virtual public IParamGradFunction<ROOT::Math::OneDim> {
 
 public: 
 
-   typedef IParamGradFunction<ROOT::Math::OneDim> BaseFunc; 
+   typedef IParamGradFunction<ROOT::Math::OneDim> BaseParFunc; 
+   typedef IParamGradFunction<ROOT::Math::OneDim>::BaseFunc BaseFunc; 
 
    /**
       Construct a parameteric function with npar parameters
@@ -78,9 +79,10 @@ public:
 
    // copying constructors
 
-   // use defaults one ??
-   //ParamFunction(const ParamFunction & pf);  
-   //ParamFunction & operator = (const ParamFunction &); 
+   // need to implement it
+   ParamFunction(const ParamFunction & pf);  
+   
+   ParamFunction & operator = (const ParamFunction &); 
 
 
    // cloning
@@ -102,7 +104,9 @@ public:
    */
    virtual void SetParameters(const double * p)
    { 
-      fParams = std::vector<double>(p,p+fNpar);
+      //fParams = std::vector<double>(p,p+fNpar);
+      assert(fParams.size() == fNpar);
+      std::copy(p,p+fNpar,fParams.begin());
    } 
 
    /**
@@ -124,7 +128,7 @@ public:
    bool ProvidesParameterGradient() const {  return fProvParGrad; } 
 
    const std::vector<double> & GetParGradient( double x) { 
-      BaseFunc::ParameterGradient(x,&fParGradient[0]);
+      BaseParFunc::ParameterGradient(x,&fParGradient[0]);
       return fParGradient; 
    } 
 

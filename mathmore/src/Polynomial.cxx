@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Polynomial.cxx,v 1.4 2006/05/26 14:26:08 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Polynomial.cxx,v 1.5 2006/11/17 18:26:50 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -128,9 +128,9 @@ double  Polynomial::DoEval (double x) const {
 }
 
 
-double  Polynomial::operator() (double x, const std::vector<double> & p) { 
+double  Polynomial::operator() (double x, const double *  p) { 
   
-    return gsl_poly_eval( &p.front(), fOrder + 1, x); 
+    return gsl_poly_eval( p, fOrder + 1, x); 
 
 }
 
