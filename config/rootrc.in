@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.150 2006/10/18 09:26:58 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.151 2006/10/18 21:56:59 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -510,8 +510,7 @@ Plugin.TProofProgressDialog: * TProofProgressDialog ProofGui  "TProofProgressDia
 Plugin.TDataProgressDialog:  * TDataProgressDialog  peacGui   "TDataProgressDialog(TVirtualProof*,const char*,Int_t,Long64_t)"
 Plugin.TProofServ:    ^xpd     TXProofServ   Proofx       "TXProofServ(Int_t *,char **)"
 Plugin.TSlave: ^xpd  TXSlave Proofx  "TXSlave(const char *,const char *,Int_t,const char *, TProof *,Int_t,const char *,const char *)"
-Plugin.TVirtualPadEditor:  GedOld TPadEditorOld GedOld    "TPadEditorOld()"
-+Plugin.TVirtualPadEditor: Ged    TGedEditor    Ged       "TGedEditor(TCanvas*)"
+Plugin.TVirtualPadEditor: Ged    TGedEditor    Ged       "TGedEditor(TCanvas*)"
 Plugin.TVirtualProofMgr: ^std  TProofMgr    Proof        "TProofMgr(const char *,Int_t,const char *)"
 @hasxrd@+Plugin.TVirtualProofMgr:  ^xpd  TXProofMgr   Proofx       "TXProofMgr(const char *,Int_t,const char *)"
 Plugin.TVirtualViewer3D:    x3d TViewerX3D    X3d   "TViewerX3D(TVirtualPad*)"
