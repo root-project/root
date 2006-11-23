@@ -1,3 +1,23 @@
+!IF "$(CFG)" == ""
+CFG = Debug
+!MESSAGE No configuration specified. Defaulting to Win32 Debug.
+!ENDIF 
+
+!IF "$(CFG)" != "Release" && "$(CFG)" != "Debug"
+!MESSAGE Invalid configuration "$(CFG)" specified.
+!MESSAGE You can specify a configuration when running NMAKE
+!MESSAGE by defining the macro CFG on the command line. For example:
+!MESSAGE 
+!MESSAGE NMAKE /f "Makefile.win32" CFG="Debug"
+!MESSAGE 
+!MESSAGE Possible choices for configuration are:
+!MESSAGE 
+!MESSAGE "Release" (based on "Win32 (x86) Library")
+!MESSAGE "Debug" (based on "Win32 (x86) Library")
+!MESSAGE 
+!ERROR An invalid configuration is specified.
+!ENDIF 
+
 ObjSuf        = obj
 SrcSuf        = cxx
 ExeSuf        = .exe
@@ -8,14 +28,18 @@ OutPutOpt     = -out:
 !include <win32.mak>
 CC            = $(cc)
 CXX           = $(cc)
-CXXFLAGS      = $(cvarsdll) -EHsc  -nologo -G5 -GR -MD -DWIN32 \
+CXXFLAGS      = $(cvarsdll) -EHsc -nologo -G5 -GR -DWIN32 \
                 -DVISUAL_CPLUSPLUS -D_WINDOWS -I$(ROOTSYS)/include
-CXXOPT        = -O2
-#CXXOPT       = -Z7
-
 LD            = $(link)
+
+!IF  "$(CFG)" == "Release"
+CXXOPT        = -O2 -MD
 LDOPT         = -opt:ref
-#LDOPT         = -debug
+!ELSEIF  "$(CFG)" == "Debug"
+CXXOPT        = -Z7 -MDd
+LDOPT         = -debug
+!ENDIF 
+
 LDFLAGS       = $(LDOPT) $(conlflags) -nologo
 SOFLAGS       = $(dlllflags:-pdb:none=)
 ROOTLIBS      = $(ROOTSYS)/lib/libCore.lib \
@@ -24,29 +48,31 @@ ROOTLIBS      = $(ROOTSYS)/lib/libCore.lib \
                 $(ROOTSYS)/lib/libGpad.lib $(ROOTSYS)/lib/libTree.lib \
                 $(ROOTSYS)/lib/libRint.lib $(ROOTSYS)/lib/libPostscript.lib \
                 $(ROOTSYS)/lib/libMatrix.lib $(ROOTSYS)/lib/libPhysics.lib
-LIBS          = $(ROOTLIBS) $(guilibsdll) MSVCPRT.LIB
+LIBS          = $(ROOTLIBS)
+GLIBS         = $(LIBS) $(ROOTSYS)/lib/libGui.lib $(ROOTSYS)/lib/libGraf.lib \
+                $(ROOTSYS)/lib/libGpad.lib
 LIBSALL       = $(ROOTLIBS)
 EVENTLIB      = libEvent.lib
 
 
 #------------------------------------------------------------------------------
 
-EVENTO        = Event.$(ObjSuf) \
-                EventDict.$(ObjSuf)
-
-EVENTS        = Event.$(SrcSuf) \
-                EventDict.$(SrcSuf)
-
-MAINEVENTS    = MainEvent.$(SrcSuf)
+EVENTO        = Event.$(ObjSuf) EventDict.$(ObjSuf)
+EVENTS        = Event.$(SrcSuf) EventDict.$(SrcSuf)
+EVENTSO       = libEvent.$(DllSuf)
+EVENT         = Event$(ExeSuf)
+EVENTLIB      = libEvent.lib
 
 MAINEVENTO    = MainEvent.$(ObjSuf)
-
-EVENT         = Event$(ExeSuf)
-EVENTSO       = libEvent.$(DllSuf)
+MAINEVENTS    = MainEvent.$(SrcSuf)
 
 HWORLDO       = hworld.$(ObjSuf)
 HWORLDS       = hworld.$(SrcSuf)
 HWORLD        = hworld$(ExeSuf)
+
+CTORTUREO     = ctorture.$(ObjSuf)
+CTORTURES     = ctorture.$(SrcSuf)
+CTORTURE      = ctorture$(ExeSuf)
 
 HSIMPLEO      = hsimple.$(ObjSuf)
 HSIMPLES      = hsimple.$(SrcSuf)
@@ -55,14 +81,6 @@ HSIMPLE       = hsimple$(ExeSuf)
 MINEXAMO      = minexam.$(ObjSuf)
 MINEXAMS      = minexam.$(SrcSuf)
 MINEXAM       = minexam$(ExeSuf)
-
-HELLOO        = Hello.$(ObjSuf) HelloDict.$(ObjSuf)
-HELLOS        = Hello.$(SrcSuf) HelloDict.$(SrcSuf)
-HELLOSO       = Hello.$(DllSuf)
-
-ACLOCKO       = Aclock.$(ObjSuf) AclockDict.$(ObjSuf)
-ACLOCKS       = Aclock.$(SrcSuf) AclockDict.$(SrcSuf)
-ACLOCKSO      = Aclock.$(DllSuf)
 
 TSTRINGO      = tstring.$(ObjSuf)
 TSTRINGS      = tstring.$(SrcSuf)
@@ -84,25 +102,102 @@ VMATRIXO      = vmatrix.$(ObjSuf)
 VMATRIXS      = vmatrix.$(SrcSuf)
 VMATRIX       = vmatrix$(ExeSuf)
 
+STRESSLO      = stressLinear.$(ObjSuf)
+STRESSLS      = stressLinear.$(SrcSuf)
+STRESSL       = stressLinear$(ExeSuf)
+
+STRESSGO      = stressGraphics.$(ObjSuf)
+STRESSGS      = stressGraphics.$(SrcSuf)
+STRESSG       = stressGraphics$(ExeSuf)
+
+STRESSVECO   = stressVector.$(ObjSuf)
+STRESSVECS   = stressVector.$(SrcSuf)
+STRESSVEC    = stressVector$(ExeSuf)
+
 VLAZYO        = vlazy.$(ObjSuf)
 VLAZYS        = vlazy.$(SrcSuf)
 VLAZY         = vlazy$(ExeSuf)
+
+GUITESTO      = guitest.$(ObjSuf)
+GUITESTS      = guitest.$(SrcSuf)
+GUITEST       = guitest$(ExeSuf)
+
+GUIVIEWERO    = guiviewer.$(ObjSuf) guiviewerDict.$(ObjSuf)
+GUIVIEWERS    = guiviewer.$(SrcSuf) guiviewerDict.$(SrcSuf)
+GUIVIEWER     = guiviewer$(ExeSuf)
+
+HELLOO        = Hello.$(ObjSuf) HelloDict.$(ObjSuf)
+HELLOS        = Hello.$(SrcSuf) HelloDict.$(SrcSuf)
+HELLOSO       = Hello.$(DllSuf)
+
+ACLOCKO       = Aclock.$(ObjSuf) AclockDict.$(ObjSuf)
+ACLOCKS       = Aclock.$(SrcSuf) AclockDict.$(SrcSuf)
+ACLOCKSO      = Aclock.$(DllSuf)
+
+TETRISO       = Tetris.$(ObjSuf) TetrisDict.$(ObjSuf)
+TETRISS       = Tetris.$(SrcSuf) TetrisDict.$(SrcSuf)
+TETRISSO      = Tetris.$(DllSuf)
 
 STRESSO       = stress.$(ObjSuf)
 STRESSS       = stress.$(SrcSuf)
 STRESS        = stress$(ExeSuf)
 
-STRESSSPO     = stress.$(ObjSuf)
-STRESSSPS     = stress.$(SrcSuf)
-STRESSSP      = stress$(ExeSuf)
+STRESSGEOMETRYO   = stressGeometry.$(ObjSuf)
+STRESSGEOMETRYS   = stressGeometry.$(SrcSuf)
+STRESSGEOMETRY    = stressGeometry$(ExeSuf)
+
+STRESSSHAPESO   = stressShapes.$(ObjSuf)
+STRESSSHAPESS   = stressShapes.$(SrcSuf)
+STRESSSHAPES    = stressShapes$(ExeSuf)
+
+STRESSFITO    = stressFit.$(ObjSuf)
+STRESSFITS    = stressFit.$(SrcSuf)
+STRESSFIT     = stressFit$(ExeSuf)
+
+STRESSHEPIXO  = stressHepix.$(ObjSuf)
+STRESSHEPIXS  = stressHepix.$(SrcSuf)
+STRESSHEPIX   = stressHepix$(ExeSuf)
+
+STRESSSPO     = stressSpectrum.$(ObjSuf)
+STRESSSPS     = stressSpectrum.$(SrcSuf)
+STRESSSP      = stressSpectrum$(ExeSuf)
+
+TBENCHO       = TBench.$(ObjSuf) TBenchDict.$(ObjSuf)
+TBENCHS       = TBench.$(SrcSuf) TBenchDict.$(SrcSuf)
+TBENCHSO      = TBench.$(DllSuf)
+
+BENCHO        = bench.$(ObjSuf)
+BENCHS        = bench.$(SrcSuf)
+BENCH         = bench$(ExeSuf)
+
+TESTBITSO     = testbits.$(ObjSuf)
+TESTBITSS     = testbits.$(SrcSuf)
+TESTBITS      = testbits$(ExeSuf)
+
+QPRANDOMO     = QpRandomDriver.$(ObjSuf)
+QPRANDOMS     = QpRandomDriver.$(SrcSuf)
+QPRANDOM      = QpRandomDriver$(ExeSuf)
+
+THREADSO      = threads.$(ObjSuf)
+THREADSS      = threads.$(SrcSuf)
+THREADS       = threads$(ExeSuf)
 
 OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
-                $(HELLOO) $(ACLOCKO) $(STRESSO) $(STRESSSPO) $(EVENTSO) $(TCOLLBMO)
+                $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
+                $(STRESSSHAPESO) $(TCOLLBMO) $(STRESSGEOMETRYO) $(STRESSLO) \
+                $(STRESSGO) $(STRESSSPO) $(TESTBITSO) \
+                $(CTORTUREO) $(QPRANDOMO) $(THREADO) $(STRESSVECO) \
+                $(STRESSFITO) $(STRESSHEPIXO) \
+                $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
-                $(HELLOSO) $(ACLOCKSO) $(STRESS) $(STRESSP)
+                $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
+                $(STRESSSHAPES) $(STRESSGEOMETRY) $(STRESSL) $(STRESSG) \
+                $(TESTBITS) $(CTORTURE) $(QPRANDOM) $(THREADS) $(STRESSSP) \
+                $(STRESSVEC) $(STRESSFIT) $(STRESSHEPIX) \
+                $(GUITEST) $(GUIVIEWER) $(TETRISSO)
 
 all:            $(PROGRAMS)
 
@@ -117,74 +212,159 @@ $(EVENT):       $(EVENTSO) $(MAINEVENTO)
                 @echo "$(EVENT) done"
 
 $(HWORLD):      $(HWORLDO)
-                $(LD) $(LDFLAGS) $(HWORLDO) $(LIBS) $(OutPutOpt)$(HWORLD)
-                @echo "$(HWORLD) done"
+                $(LD) $(LDFLAGS) $(HWORLDO) $(GLIBS) $(OutPutOpt)$@
+                @echo "$@ done"
+
+$(CTORTURE):    $(CTORTUREO)
+                $(LD) $(LDFLAGS) $(CTORTUREO) $(LIBS) $(OutPutOpt)$@
+                @echo "$@ done"
 
 $(HSIMPLE):     $(HSIMPLEO)
-                $(LD) $(LDFLAGS) $(HSIMPLEO) $(LIBS) $(OutPutOpt)$(HSIMPLE)
-                @echo "$(HSIMPLE) done"
+                $(LD) $(LDFLAGS) $(HSIMPLEO) $(LIBS) $(OutPutOpt)$@
+                @echo "$@ done"
 
 $(MINEXAM):     $(MINEXAMO)
-                $(LD) $(LDFLAGS) $(MINEXAMO) $(LIBS) $(OutPutOpt)$(MINEXAM)
-                @echo "$(MINEXAM) done"
+                $(LD) $(LDFLAGS) $(MINEXAMO) $(LIBS) $(OutPutOpt)$@
+                @echo "$@ done"
 
 $(TSTRING):     $(TSTRINGO)
-                $(LD) $(LDFLAGS) $(TSTRINGO) $(LIBS) $(OutPutOpt)$(TSTRING)
-                @echo "$(TSTRING) done"
+                $(LD) $(LDFLAGS) $(TSTRINGO) $(LIBS) $(OutPutOpt)$@
+                @echo "$@ done"
 
 $(TCOLLEX):     $(TCOLLEXO)
-                $(LD) $(LDFLAGS) $(TCOLLEXO) $(LIBS) $(OutPutOpt)$(TCOLLEX)
-                @echo "$(TCOLLEX) done"
+                $(LD) $(LDFLAGS) $(TCOLLEXO) $(LIBS) $(OutPutOpt)$@
+                @echo "$@ done"
 
 $(TCOLLBM):     $(TCOLLBMO)
-                $(LD) $(LDFLAGS) $(TCOLLBMO) $(LIBS) $(OutPutOpt)$(TCOLLBM)
-                @echo "$(TCOLLBM) done"
+                $(LD) $(LDFLAGS) $(TCOLLBMO) $(LIBS) $(OutPutOpt)$@
+                @echo "$@ done"
 
 $(VVECTOR):     $(VVECTORO)
-                $(LD) $(LDFLAGS) $(VVECTORO) $(LIBS) $(OutPutOpt)$(VVECTOR)
-                @echo "$(VVECTOR) done"
+                $(LD) $(LDFLAGS) $(VVECTORO) $(LIBS) $(OutPutOpt)$@
+                @echo "$@ done"
 
 $(VMATRIX):     $(VMATRIXO)
-                $(LD) $(LDFLAGS) $(VMATRIXO) $(LIBS) $(OutPutOpt)$(VMATRIX)
-                @echo "$(VMATRIX) done"
+                $(LD) $(LDFLAGS) $(VMATRIXO) $(LIBS) $(OutPutOpt)$@
+                @echo "$@ done"
 
 $(VLAZY):       $(VLAZYO)
-                $(LD) $(LDFLAGS) $(VLAZYO) $(LIBS) $(OutPutOpt)$(VLAZY)
-                @echo "$(VLAZY) done"
-                @echo "$(VMATRIX) done"
+                $(LD) $(LDFLAGS) $(VLAZYO) $(LIBS) $(OutPutOpt)$@
+                @echo "$@ done"
+
+$(STRESSL):     $(STRESSLO)
+                $(LD) $(LDFLAGS) $(STRESSLO) $(LIBS) $(OutPutOpt)$@
+                @echo "$@ done"
+
+$(STRESSG):     $(STRESSGO)
+                $(LD) $(LDFLAGS) $(STRESSGO) $(LIBS) $(OutPutOpt)$@
+                @echo "$@ done"
+
+$(STRESSSP):    $(STRESSSPO)
+                $(LD) $(LDFLAGS) $(STRESSSPO) $(LIBS) ../lib/libSpectrum.lib $(OutPutOpt)$@
+                @echo "$@ done"
+
+$(STRESSVEC):   $(STRESSVECO)
+                $(LD) $(LDFLAGS) $(STRESSVECO) $(LIBS) ../lib/libMathCore.lib $(OutPutOpt)$@
+                @echo "$@ done"
+
+$(TESTBITS):    $(TESTBITSO)
+                $(LD) $(LDFLAGS) $(TESTBITSO) $(LIBS) $(OutPutOpt)$@
+                @echo "$@ done"
+
+$(THREADS):     $(THREADSO)
+                $(LD) $(LDFLAGS) $(THREADSO) $(LIBS) ../lib/libThread.lib $(OutPutOpt)$@
+                @echo "$@ done"
+
+$(QPRANDOM):    $(QPRANDOMO)
+                $(LD) $(LDFLAGS) $(QPRANDOMO) $(LIBS) ../lib/libQuadp.lib $(OutPutOpt)$@
+                @echo "$@ done"
+
+$(GUITEST):     $(GUITESTO)
+                $(LD) $(LDFLAGS) $(GUITESTO) $(GLIBS) $(OutPutOpt)$@
+                @echo "$@ done"
+
+$(GUIVIEWER):   $(GUIVIEWERO)
+                $(LD) $(LDFLAGS) $(GUIVIEWERO) $(GLIBS) $(OutPutOpt)$@
+                @echo "$@ done"
 
 $(STRESS):      $(STRESSO) $(EVENT)
-                $(LD) $(LDFLAGS) $(STRESSO) $(EVENTLIB) $(LIBS) $(OutPutOpt)$(STRESS)
-                @echo "$(STRESS) done"
+                $(LD) $(LDFLAGS) $(STRESSO) $(EVENTLIB) $(LIBS) $(OutPutOpt)$@
+                @echo "$@ done"
 
+$(STRESSGEOMETRY):  $(STRESSGEOMETRYO)
+                $(LD) $(LDFLAGS) $(STRESSGEOMETRYO) $(LIBS) ../lib/libGeom.lib $(OutPutOpt)$@
+                @echo "$@ done"
+
+$(STRESSSHAPES):  $(STRESSSHAPESO)
+                $(LD) $(LDFLAGS)  $(STRESSSHAPESO) $(LIBS) ../lib/libGeom.lib $(OutPutOpt)$@
+                @echo "$@ done"
+
+$(STRESSFIT):   $(STRESSFITO)
+                $(LD) $(LDFLAGS) $(STRESSFITO) $(LIBS) $(OutPutOpt)$@
+                @echo "$@ done"
+
+$(STRESSHEPIX): $(STRESSHEPIXO) $(STRESSGEOMETRY) $(STRESSFIT) $(STRESSL) \
+                $(STRESSSP) $(STRESS)
+                $(LD) $(LDFLAGS) $(STRESSHEPIXO) $(LIBS) $(OutPutOpt)$@
+                @echo "$@ done"
+
+$(BENCH):       $(BENCHO) $(TBENCHSO)
+                $(LD) $(LDFLAGS) $(BENCHO) $(TBENCHO) $(LIBS) $(OutPutOpt)$@
+                @echo "$@ done"
+
+Hello:          $(HELLOSO)
 $(HELLOSO):     $(HELLOO)
-                $(LD) $(SOFLAGS) $(HELLOO) $(LIBS) $(OutPutOpt)$(HELLOSO)
+                $(LD) $(SOFLAGS) $(LDFLAGS) $(HELLOO) $(GLIBS) $(OutPutOpt)$@
 
+Aclock:         $(ACLOCKSO)
 $(ACLOCKSO):    $(ACLOCKO)
-                $(LD) $(SOFLAGS) $(ACLOCKO) $(LIBS) $(OutPutOpt)$(ACLOCKSO)
+                $(LD) $(SOFLAGS) $(LDFLAGS) $(ACLOCKO) $(GLIBS) $(OutPutOpt)$@
+
+Tetris:         $(TETRISSO)
+$(TETRISSO):    $(TETRISO)
+                $(LD) $(SOFLAGS) $(LDFLAGS) $(TETRISO) $(GLIBS) $(OutPutOpt)$@
+
+$(TBENCHSO):    $(TBENCHO)
+                $(LD) $(SOFLAGS) $(LDFLAGS) $(TBENCHO) $(LIBS) $(OutPutOpt)$@
 
 clean:
-                @del /q $(OBJS) $(EVENTLIB)
+                @del *.obj *Dict.* *.def *.exp *.d *.log .def *.pdb *.ilk
 
 distclean:      clean
-		@del /q $(PROGRAMS) *Dict.* *.def *.exp *.root *.ps .def
+       @del *.exe *.root *.ps *.lib *.dll
 
 ###
 Event.$(ObjSuf): Event.h
 MainEvent.$(ObjSuf): Event.h
+
 EventDict.$(SrcSuf): Event.h EventLinkDef.h
-        @echo "Generating dictionary EventDict..."
-        @$(ROOTSYS)\bin\rootcint -f EventDict.$(SrcSuf) -c Event.h EventLinkDef.h
+   @echo "Generating dictionary $@..."
+   @rootcint -f $@ -c Event.h EventLinkDef.h
 
 Hello.$(ObjSuf): Hello.h
 HelloDict.$(SrcSuf): Hello.h
-        @echo "Generating dictionary HelloDict..."
-        @$(ROOTSYS)\bin\rootcint -f HelloDict.$(SrcSuf) -c Hello.h
+   @echo "Generating dictionary $@..."
+   @rootcint -f $@ -c Hello.h
 
 Aclock.$(ObjSuf): Aclock.h
 AclockDict.$(SrcSuf): Aclock.h
-        @echo "Generating dictionary AclockDict..."
-        @$(ROOTSYS)\bin\rootcint -f AclockDict.$(SrcSuf) -c Aclock.h
+   @echo "Generating dictionary $@..."
+   @rootcint -f $@ -c Aclock.h
+
+Tetris.$(ObjSuf): Tetris.h
+TetrisDict.$(SrcSuf): Tetris.h
+   @echo "Generating dictionary $@..."
+   @rootcint -f $@ -c Tetris.h
+
+TBench.$(ObjSuf): TBench.h
+TBenchDict.$(SrcSuf): TBench.h benchLinkDef.h
+   @echo "Generating dictionary $@..."
+   @rootcint -f $@ -c TBench.h benchLinkDef.h
+
+guiviewer.$(ObjSuf): guiviewer.h
+guiviewerDict.$(SrcSuf): guiviewer.h guiviewerLinkDef.h
+   @echo "Generating dictionary $@..."
+   @rootcint -f $@ -c guiviewer.h guiviewerLinkDef.h
 
 .$(SrcSuf).$(ObjSuf):
         $(CXX) $(CXXFLAGS) $(CXXOPT) -c $<
