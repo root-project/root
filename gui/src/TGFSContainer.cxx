@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.32 2006/07/27 12:21:56 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.33 2006/08/09 16:11:01 antcheva Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -128,7 +128,7 @@ Int_t TGFSFrameElement::Compare(const TObject *obj) const
          if (type1 > type2)  return  1;
          return strcmp(f1->GetItemName()->GetString(),
                        f2->GetItemName()->GetString());
-         
+
       case kSortByGroup:
          if ( f1->GetGid() != f2->GetGid() )
             if ( f1->GetGid() < f2->GetGid() )
@@ -186,10 +186,10 @@ Int_t TGFSFrameElement::Compare(const TObject *obj) const
                        f2->GetItemName()->GetString());
 
       case kSortByDate:
-         const time_t loctimeF1 = (const time_t) f1->GetModTime();
+         time_t loctimeF1 = (time_t) f1->GetModTime();
          struct tm tmF1 = *localtime(&loctimeF1);
 
-         const time_t loctimeF2 = (const time_t) f2->GetModTime();
+         time_t loctimeF2 = (time_t) f2->GetModTime();
          struct tm tmF2 = *localtime(&loctimeF2);
 
          if ( tmF1.tm_year != tmF2.tm_year )
@@ -320,7 +320,7 @@ TGFileItem::TGFileItem(const TGWindow *p,
    }
 
    struct tm *newtime;
-   const time_t loctime = (const time_t) fModTime;
+   time_t loctime = (time_t) fModTime;
    newtime = localtime(&loctime);
    sprintf(tmp, "%d-%02d-%02d %02d:%02d", newtime->tm_year + 1900,
            newtime->tm_mon, newtime->tm_mday, newtime->tm_hour,
