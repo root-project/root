@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: IFunctionfwd.h,v 1.1 2006/11/17 18:18:47 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: IFunctionfwd.h,v 1.2 2006/11/20 11:05:56 moneta Exp $
 // Author: L. Moneta Tue Nov 14 14:38:48 2006
 
 /**********************************************************************
@@ -28,14 +28,6 @@ namespace ROOT {
       /// tag for one-dimensional functions
       struct OneDim {}; 
 
-//       class Base; 
-//       class Gradient; 
-
-//       typedef IFunction<OneDim, Base>        IGenFunction;   
-//       typedef IFunction<MultiDim, Base>      IMultiGenFunction; 
-
-//       typedef IFunction<OneDim, Gradient>    IGradFunction; 
-//       typedef IFunction<MultiDim, Gradient>  IMultiGradFunction; 
 
       typedef IBaseFunction<OneDim>        IGenFunction;   
       typedef IBaseFunction<MultiDim>      IMultiGenFunction; 

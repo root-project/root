@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: inc/Math/IParamFunctionfwd.h,v 1.0 2006/01/01 12:00:00 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: IParamFunctionfwd.h,v 1.1 2006/11/17 18:18:47 moneta Exp $
 // Author: L. Moneta Tue Nov 14 14:38:52 2006
 
 /**********************************************************************
@@ -22,13 +22,13 @@ namespace ROOT {
    namespace Math { 
 
 
-      template<class DimensionType, class CapabilityType> class IParamFunction; 
+      template<class DimensionType> class IParamFunction; 
 
-      typedef IParamFunction<OneDim, Base>        IParam1DFunction;   
-      typedef IParamFunction<MultiDim, Base>      IParamMultiFunction; 
+      typedef IParamFunction<OneDim>        IParam1DFunction;   
+      typedef IParamFunction<MultiDim>      IParamMultiFunction; 
 
-      typedef IParamFunction<OneDim, Gradient>    IParam1DGradFunction; 
-      typedef IParamFunction<MultiDim, Gradient>  IParamMultiGradFunction; 
+      typedef IParamFunction<OneDim>        IParam1DGradFunction; 
+      typedef IParamFunction<MultiDim>      IParamMultiGradFunction; 
 
 
 

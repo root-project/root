@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: IParamFunction.h,v 1.1 2006/11/17 18:18:47 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: IParamFunction.h,v 1.2 2006/11/20 11:05:56 moneta Exp $
 // Author: L. Moneta Tue Nov 14 14:20:07 2006
 
 /**********************************************************************
@@ -15,6 +15,10 @@
 
 #ifndef ROOT_Math_IFunction
 #include "Math/IFunction.h"
+#endif
+
+#ifndef ROOT_Math_IParamFunctionfwd
+#include "Math/IParamFunctionfwd.h"
 #endif
 
 #ifndef ROOT_Math_Util
@@ -158,6 +162,12 @@ public:
    { 
       SetParameters(p); 
       return operator() (x); 
+   }
+
+   /// muldim-like interface
+   virtual double operator() (const double * x, const double *  p ) 
+   { 
+      return operator() (*x, p); 
    }
 
 
