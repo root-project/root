@@ -103,7 +103,6 @@ enable_ruby=no
 enable_shadowpw=
 enable_soversion=no
 enable_table=no
-enable_thread=           # must be set explicitely via --enable-thread
 enable_unuran=no
 enable_winrtdebug=
 enable_xrootd=           # must be set explicitely via --enable-xrootd
@@ -2050,7 +2049,7 @@ if test ! "x$enable_g4root" = "xno"; then
     g4incdir=$found_dir
 
     check_library "libG4navigation" "$enable_shared" "$g4libdir" \
-	$G4LIB/$G4SYSTEM    
+	$G4LIB/$G4SYSTEM
     g4rootlib=$found_lib
     g4libdir=$found_dir
 
