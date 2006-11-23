@@ -44,7 +44,7 @@ include/%.h:    $(G4ROOTDIRI)/%.h
 
 $(G4ROOTLIB):   $(G4ROOTO) $(G4ROOTDO) $(ORDER_) $(MAINLIBS) $(G4ROOTLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libG4geom.$(SOEXT) $@ "$(G4ROOTO) $(G4ROOTDO)" \
+		   "$(SOFLAGS)" libG4root.$(SOEXT) $@ "$(G4ROOTO) $(G4ROOTDO)" \
 		   "$(G4ROOTLIBEXTRA)"
 
 $(G4ROOTDS1):   $(G4ROOTH1) $(G4ROOTL1) $(ROOTCINTTMPEXE)
