@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.4 2006/11/23 07:39:15 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.5 2006/11/23 10:06:35 couet Exp $
 // Author: Guido Volpi, Olivier Couet 03/11/2006
 
 /*************************************************************************
@@ -820,7 +820,7 @@ void TPie::Paint(Option_t *option)
 
 
 //______________________________________________________________________________
-void TPie::SavePrimitive(ostream &out, Option_t *)
+void TPie::SavePrimitive(ostream &out, Option_t *option)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
@@ -834,12 +834,26 @@ void TPie::SavePrimitive(ostream &out, Option_t *)
        << "\", " << fNvals << ");" << endl;
    out << "   " << GetName() << "->SetCircle(" << fX << ", " << fY << ", "
        << fRadius << ");" << endl;
+   out << "   " << GetName() << "->SetLabelFormat(\"" << GetLabelFormat() 
+       << "\");" << endl;
+   out << "   " << GetName() << "->SetLabelsOffset(" << GetLabelsOffset() 
+       << ");" << endl;
+   out << "   " << GetName() << "->SetAngularOffset(" << GetAngularOffset() 
+       << ");" << endl;
+   out << "   " << GetName() << "->SetTextAngle(" << GetTextAngle() 
+       << ");" << endl;
+   out << "   " << GetName() << "->SetTextColor(" << GetTextColor() 
+       << ");" << endl;
+   out << "   " << GetName() << "->SetTextFont(" << GetTextFont() 
+       << ");" << endl;
+   out << "   " << GetName() << "->SetTextSize(" << GetTextSize() 
+       << ");" << endl;
 
    SaveTextAttributes(out,GetName(),
                       GetTextAlign(), GetTextAngle(), GetTextColor(),
                       GetTextFont(), GetTextSize());
 
-   // save the values fo the slices
+   // Save the values for the slices
    for (Int_t i=0;i<fNvals;++i) {
       out << "   " << GetName() << "->SetEntryLabel( " << i << ", \""
           << fLabels[i] << "\");" << endl;
@@ -859,7 +873,7 @@ void TPie::SavePrimitive(ostream &out, Option_t *)
           << ");" << endl;
    }
 
-   out << "   " << GetName() << "->Draw();" << endl;
+   out << "   " << GetName() << "->Draw(\"" << option << "\");" << endl;
 }
 
 
@@ -1108,22 +1122,19 @@ void TPie::MakeSlices(Bool_t force)
    for (Int_t i=0;i<fNvals;++i) {
       if (fVals[i]<0) {
          Warning("MakeSlices",
-                 "Negative values in TPie, absolute value iwll be used");
+                 "Negative values in TPie, absolute value will be used");
          fVals[i] *= -1;
       }
       fSum += fVals[i];
    }
 
-   if (fSum<=.0) {
-      Warning("Paint","Sum of values is <= 0");
-      return;
-   }
+   if (fSum<=.0) return;
 
    if (!fSlices) fSlices = new Float_t[2*fNvals+1];
 
+   // Compute the slices size and position (2 angles for each slice)
    fSlices[0] = fAngularOffset;
-   for (Int_t i=0;i<fNvals;++i) { // loop to place the labels
-      // size of this slice
+   for (Int_t i=0;i<fNvals;++i) {
       Float_t dphi   = fVals[i]/fSum*360.;
       fSlices[2*i+1] = fSlices[2*i]+dphi/2.;
       fSlices[2*i+2] = fSlices[2*i]+dphi;
