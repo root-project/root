@@ -1020,8 +1020,6 @@ linuxx8664*)
 hpuxia64acc)
    logmsg "Will check HP/UX 64bit libraries"
    checkhpux64="yes" ;;
-macosxicc)
-   enable_python="no" ;;  # turn off once icc 9.1 is fixed
 esac
 
 # check for (g)make
