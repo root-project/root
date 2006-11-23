@@ -146,7 +146,7 @@ void TGLSurfacePainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
    //Remove all profiles/sections.
    const TGLVertex3 *frame = fBackBox.Get3DBox();
    if (py == kKey_P || py == kKey_p) {
-      
+
       if (HasSections()) {
          fSectionPass = kTRUE;
          DrawSectionXOZ();
@@ -212,7 +212,7 @@ void TGLSurfacePainter::SetNormals()
    fFaceNormals.assign(fFaceNormals.size(), std::pair<TGLVector3, TGLVector3>());
    fFaceNormals.SetRowLen(nY + 1);
 
-   
+
    //first, calculate normal for each triangle face
    for (Int_t i = 0; i < nX - 1; ++i) {
       for (Int_t j = 0; j < nY - 1; ++j) {
@@ -224,7 +224,7 @@ void TGLSurfacePainter::SetNormals()
                              fFaceNormals[i + 1][j + 1].second.Arr());
       }
    }
-      
+
    fAverageNormals.resize(nX * nY);
    fAverageNormals.SetRowLen(nY);
 
@@ -233,7 +233,7 @@ void TGLSurfacePainter::SetNormals()
    for (Int_t i = 0; i < nX; ++i) {
       for (Int_t j = 0; j < nY; ++j) {
          TGLVector3 &norm = fAverageNormals[i][j];
-         
+
          norm += fFaceNormals[i][j].second;
          norm += fFaceNormals[i][j + 1].first;
          norm += fFaceNormals[i][j + 1].second;
@@ -258,7 +258,7 @@ void TGLSurfacePainter::SetSurfaceColor()const
    if (fHist->GetFillColor() != kWhite && fType != kSurf1 && fType != kSurf2 && fType != kSurf5)
       if (const TColor *c = gROOT->GetColor(fHist->GetFillColor()))
          c->GetRGB(diffColor[0], diffColor[1], diffColor[2]);
-   
+
    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffColor);
    const Float_t specColor[] = {1.f, 1.f, 1.f, 1.f};
    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specColor);
@@ -291,8 +291,8 @@ void TGLSurfacePainter::DrawPlot()const
       SetSurfaceColor();
       glEnable(GL_POLYGON_OFFSET_FILL);
       glPolygonOffset(1.f, 1.f);
-      
-      if (HasSections() || HasProjections()) 
+
+      if (HasSections() || HasProjections())
       {
          //Surface is semi-transparent during dynamic profiling
          glEnable(GL_BLEND);
@@ -337,11 +337,11 @@ void TGLSurfacePainter::DrawPlot()const
          if ((fType == kSurf1 || fType == kSurf2 || fType == kSurf5) && !fSelectionPass)
             Rgl::DrawFaceTextured(fMesh[i][j + 1], fMesh[i][j], fMesh[i + 1][j],
                                  fTexMap[i][j + 1], fTexMap[i][j], fTexMap[i + 1][j],
-                                 fAverageNormals[i][j + 1], fAverageNormals[i][j], 
+                                 fAverageNormals[i][j + 1], fAverageNormals[i][j],
                                  fAverageNormals[i + 1][j]);
          else
             Rgl::DrawSmoothFace(fMesh[i][j + 1], fMesh[i][j], fMesh[i + 1][j],
-                              fAverageNormals[i][j + 1], fAverageNormals[i][j], 
+                              fAverageNormals[i][j + 1], fAverageNormals[i][j],
                               fAverageNormals[i + 1][j]);
 
          ++triNumber;
@@ -352,11 +352,11 @@ void TGLSurfacePainter::DrawPlot()const
          if ((fType == kSurf1 || fType == kSurf2 || fType == kSurf5) && !fSelectionPass)
             Rgl::DrawFaceTextured(fMesh[i + 1][j], fMesh[i + 1][j + 1], fMesh[i][j + 1],
                                  fTexMap[i + 1][j], fTexMap[i + 1][j + 1], fTexMap[i][j + 1],
-                                 fAverageNormals[i + 1][j], fAverageNormals[i + 1][j + 1], 
+                                 fAverageNormals[i + 1][j], fAverageNormals[i + 1][j + 1],
                                  fAverageNormals[i][j + 1]);
          else
-            Rgl::DrawSmoothFace(fMesh[i + 1][j], fMesh[i + 1][j + 1], fMesh[i][j + 1], 
-                              fAverageNormals[i + 1][j], fAverageNormals[i + 1][j + 1], 
+            Rgl::DrawSmoothFace(fMesh[i + 1][j], fMesh[i + 1][j + 1], fMesh[i][j + 1],
+                              fAverageNormals[i + 1][j], fAverageNormals[i + 1][j + 1],
                               fAverageNormals[i][j + 1]);
       }
    }
@@ -480,7 +480,7 @@ Bool_t TGLSurfacePainter::InitGeometryCartesian()
 
    if (fCoord->Modified()) {
       fUpdateSelection = kTRUE;
-      const TGLVertex3 &vertex = fBackBox.Get3DBox()[0];      
+      const TGLVertex3 &vertex = fBackBox.Get3DBox()[0];
       fXOZSectionPos = vertex.Y();
       fYOZSectionPos = vertex.X();
       fXOYSectionPos = vertex.Z();
@@ -508,7 +508,7 @@ Bool_t TGLSurfacePainter::InitGeometryPolar()
 
    if (fCoord->Modified()) {
       fUpdateSelection = kTRUE;
-      const TGLVertex3 &vertex = fBackBox.Get3DBox()[0];      
+      const TGLVertex3 &vertex = fBackBox.Get3DBox()[0];
       fXOZSectionPos = vertex.Y();
       fYOZSectionPos = vertex.X();
       fXOYSectionPos = vertex.Z();
@@ -528,7 +528,7 @@ Bool_t TGLSurfacePainter::InitGeometryPolar()
    for (Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
       for (Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
          const Double_t angle  = (fXAxis->GetBinCenter(ir) - phiLow) / fullAngle * TMath::TwoPi();
-         const Double_t radius = ((fYAxis->GetBinCenter(jr)) - fYAxis->GetXmin()) / 
+         const Double_t radius = ((fYAxis->GetBinCenter(jr)) - fYAxis->GetXmin()) /
                                  rRange * fCoord->GetYScale();
          fMesh[i][j].X() = radius * TMath::Cos(angle);
          fMesh[i][j].Y() = radius * TMath::Sin(angle);
@@ -555,7 +555,7 @@ Bool_t TGLSurfacePainter::InitGeometryPolar()
       fUpdateTexMap = kTRUE;
    }
 
-   
+
    return kTRUE;
 }
 
@@ -576,7 +576,7 @@ Bool_t TGLSurfacePainter::InitGeometryCylindrical()
 
    if (fCoord->Modified()) {
       fUpdateSelection = kTRUE;
-      const TGLVertex3 &vertex = fBackBox.Get3DBox()[0];      
+      const TGLVertex3 &vertex = fBackBox.Get3DBox()[0];
       fXOZSectionPos = vertex.Y();
       fYOZSectionPos = vertex.X();
       fXOYSectionPos = vertex.Z();
@@ -594,7 +594,7 @@ Bool_t TGLSurfacePainter::InitGeometryCylindrical()
    const Double_t rRange = fCoord->GetZLength();
    const Double_t sc = (1 - legoR) * fCoord->GetXScale();
    legoR *= fCoord->GetXScale();
-   
+
    const Double_t fullAngle = fXAxis->GetXmax() - fXAxis->GetXmin();
    const Double_t phiLow    = fXAxis->GetXmin();
    Double_t angle = 0.;
@@ -604,12 +604,12 @@ Bool_t TGLSurfacePainter::InitGeometryCylindrical()
          angle = (fXAxis->GetBinLowEdge(ir) - phiLow) / fullAngle * TMath::TwoPi();
          Double_t r = fType != kSurf5 ? legoR + (fHist->GetCellContent(ir, jr) - fCoord->GetZRange().first) / rRange * sc : legoR;
          fMesh[i][j].X() = r * TMath::Cos(angle);
-         fMesh[i][j].Y() = fCoord->GetYLog() ? 
+         fMesh[i][j].Y() = fCoord->GetYLog() ?
                               TMath::Log10(fYAxis->GetBinCenter(jr)) * fCoord->GetYScale()
                                           :
                               fYAxis->GetBinCenter(jr) * fCoord->GetYScale();
          fMesh[i][j].Z() = r * TMath::Sin(angle);
-      }  
+      }
    }
 
    if (Textured()) {
@@ -650,7 +650,7 @@ Bool_t TGLSurfacePainter::InitGeometrySpherical()
 
    if (fCoord->Modified()) {
       fUpdateSelection = kTRUE;
-      const TGLVertex3 &vertex = fBackBox.Get3DBox()[0];      
+      const TGLVertex3 &vertex = fBackBox.Get3DBox()[0];
       fXOZSectionPos = vertex.Y();
       fYOZSectionPos = vertex.X();
       fXOYSectionPos = vertex.Z();
@@ -729,7 +729,7 @@ void TGLSurfacePainter::DrawProjections()const
    for (CLI_t begin = fXOZProj.begin(), end = fXOZProj.end(); begin != end; ++begin) {
       const Projection_t &proj = *begin;
       glColor4ub(proj.fRGBA[0], proj.fRGBA[1], proj.fRGBA[2], proj.fRGBA[3]);
-      
+
       for(UInt_t i = 0, e = proj.fVertices.size() / 3; i < e; ++i) {
          glBegin(GL_LINE_STRIP);
          glVertex3dv(proj.fVertices[i * 3].CArr());
@@ -753,7 +753,7 @@ void TGLSurfacePainter::DrawProjections()const
    for (CLI_t begin = fYOZProj.begin(), end = fYOZProj.end(); begin != end; ++begin) {
       const Projection_t &proj = *begin;
       glColor4ub(proj.fRGBA[0], proj.fRGBA[1], proj.fRGBA[2], proj.fRGBA[3]);
-      
+
       for(UInt_t i = 0, e = proj.fVertices.size() / 3; i < e; ++i) {
          glBegin(GL_LINE_STRIP);
          glVertex3dv(proj.fVertices[i * 3].CArr());
@@ -761,7 +761,7 @@ void TGLSurfacePainter::DrawProjections()const
          glVertex3dv(proj.fVertices[i * 3 + 2].CArr());
          glEnd();
       }
-      
+
       const Double_t x = fBackBox.GetFrontPoint() == 2 || fBackBox.GetFrontPoint() == 1 ? fBackBox.Get3DBox()[0].X() : fBackBox.Get3DBox()[2].X();
       for(UInt_t i = 0, e = proj.fVertices.size() / 3; i < e; ++i) {
          glBegin(GL_LINE_STRIP);
@@ -778,15 +778,15 @@ void TGLSurfacePainter::DrawProjections()const
    for (CLI_t begin = fXOYProj.begin(), end = fXOYProj.end(); begin != end; ++begin) {
       const Projection_t &proj = *begin;
       glColor4ub(proj.fRGBA[0], proj.fRGBA[1], proj.fRGBA[2], proj.fRGBA[3]);
-      
+
       for(UInt_t i = 0, e = proj.fVertices.size() / 2; i < e; ++i) {
          glBegin(GL_LINES);
          glVertex3dv(proj.fVertices[i * 2].CArr());
          glVertex3dv(proj.fVertices[i * 2 + 1].CArr());
          glEnd();
       }
-      
-      
+
+
       for(UInt_t i = 0, e = proj.fVertices.size() / 2; i < e; ++i) {
          glBegin(GL_LINES);
          const TGLVertex3 &v1 = proj.fVertices[i * 2];
@@ -795,12 +795,12 @@ void TGLSurfacePainter::DrawProjections()const
          glVertex3d(v2.X(), v2.Y(), fBackBox.Get3DBox()[0].Z());
          glEnd();
       }
-      
+
    }
 
    glDepthMask(GL_TRUE);
    glLineWidth(1.f);
-}  
+}
 
 //______________________________________________________________________________
 void TGLSurfacePainter::DrawSectionXOZ()const
@@ -844,7 +844,7 @@ void TGLSurfacePainter::DrawSectionXOZ()const
             fProj.fRGBA[1] = rand() % 100;
             fProj.fRGBA[2] = rand() % 100;
             fProj.fRGBA[3] = 150;
-            static const Projection_t dummy;
+            static Projection_t dummy;
             fXOZProj.push_back(dummy);
             fXOZProj.back().Swap(fProj);
          }
@@ -894,13 +894,13 @@ void TGLSurfacePainter::DrawSectionYOZ()const
             fProj.fRGBA[1] = rand() % 100;
             fProj.fRGBA[2] = rand() % 100;
             fProj.fRGBA[3] = 150;
-            static const Projection_t dummy;
+            static Projection_t dummy;
             fYOZProj.push_back(dummy);
             fYOZProj.back().Swap(fProj);
          }
       }
-      
-   } 
+
+   }
 }
 
 //______________________________________________________________________________
@@ -995,7 +995,7 @@ void TGLSurfacePainter::DrawSectionXOY()const
       fProj.fRGBA[1] = rand() % 150;
       fProj.fRGBA[2] = rand() % 206 + 50;
       fProj.fRGBA[3] = 150;
-      static const Projection_t dummy;
+      static Projection_t dummy;
       fXOYProj.push_back(dummy);
       fXOYProj.back().Swap(fProj);
    }
@@ -1012,9 +1012,9 @@ void TGLSurfacePainter::ClampZ(Double_t &zVal)const
    if (fCoord->GetZLog())
       if (zVal <= 0.)
          zVal = frame[0].Z();
-      else 
+      else
          zVal = TMath::Log10(zVal) * fCoord->GetZScale();
-   else 
+   else
       zVal *= fCoord->GetZScale();
 
    if (zVal > frame[4].Z())
@@ -1064,11 +1064,11 @@ char *TGLSurfacePainter::WindowPointTo3DPoint(Int_t px, Int_t py)const
 
    gluUnProject(px, py, pz, mvMatrix, prMatrix, viewport, rez, rez + 1, rez + 2);
 
-   fObjectInfo.Form("(x == %f, y == %f, z == %f)", 
-                    rez[0] / fCoord->GetXScale(), 
-                    rez[1] / fCoord->GetYScale(), 
+   fObjectInfo.Form("(x == %f, y == %f, z == %f)",
+                    rez[0] / fCoord->GetXScale(),
+                    rez[1] / fCoord->GetYScale(),
                     rez[2] / fCoord->GetZScale());
-                    
+
    return (char *)fObjectInfo.Data();
 }
 #include <iostream>
@@ -1138,7 +1138,7 @@ void TGLSurfacePainter::DrawContoursProjection()const
                                fBackBox.Get3DBox()[4].Z(), TGLVector3(0., 0., 1.));
          Rgl::DrawFaceTextured(fMesh[i + 1][j], fMesh[i + 1][j + 1], fMesh[i][j + 1],
                                fTexMap[i + 1][j], fTexMap[i + 1][j + 1], fTexMap[i][j + 1],
-                               fBackBox.Get3DBox()[4].Z(), TGLVector3(0., 0., 1.)); 
+                               fBackBox.Get3DBox()[4].Z(), TGLVector3(0., 0., 1.));
       }
    }
 }
@@ -1163,7 +1163,7 @@ Bool_t TGLSurfacePainter::Textured()const
 Bool_t TGLSurfacePainter::HasSections()const
 {
    //Any section exists.
-   return fXOZSectionPos > fBackBox.Get3DBox()[0].Y() || fYOZSectionPos > fBackBox.Get3DBox()[0].X() || 
+   return fXOZSectionPos > fBackBox.Get3DBox()[0].Y() || fYOZSectionPos > fBackBox.Get3DBox()[0].X() ||
           fXOYSectionPos > fBackBox.Get3DBox()[0].Z();
 }
 
