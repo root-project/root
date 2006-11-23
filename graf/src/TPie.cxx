@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.2 2006/11/17 15:18:56 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.3 2006/11/22 15:42:22 couet Exp $
 // Author: Guido Volpi, Olivier Couet 03/11/2006
 
 /*************************************************************************
@@ -387,7 +387,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             } else if (fCurrent_rad<=fRadius*.3) {
                gPad->SetCursor(kHand);
             } else if (fCurrent_rad<=fRadius*.6 && fCurrent_rad>=fRadius*.3) {
-              gPad->SetCursor(kRotate);
+               gPad->SetCursor(kRotate);
             }
          }
          oldpx = px;

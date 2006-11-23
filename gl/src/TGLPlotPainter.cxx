@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.7 2006/10/24 14:20:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.8 2006/11/22 16:19:55 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -1252,6 +1252,6 @@ Bool_t TGLBoxCut::IsInCut(Double_t xMin, Double_t xMax, Double_t yMin, Double_t 
    if (((xMin >= fXRange.first && xMin < fXRange.second) || (xMax > fXRange.first && xMax <= fXRange.second)) &&
        ((yMin >= fYRange.first && yMin < fYRange.second) || (yMax > fYRange.first && yMax <= fYRange.second)) &&
        ((zMin >= fZRange.first && zMin < fZRange.second) || (zMax > fZRange.first && zMax <= fZRange.second)))
-       return kTRUE;
+      return kTRUE;
    return kFALSE;
 }

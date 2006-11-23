@@ -302,7 +302,7 @@ void TGSpeedo::SetDisplayText(const char *text1, const char *text2)
 
    if (!(fDisplay1.CompareTo(text1)) &&
        !(fDisplay2.CompareTo(text2)))
-       return;
+      return;
    fDisplay1 = text1;
    fDisplay2 = text2;
    DrawText();
