@@ -27,8 +27,6 @@ GEDLIBDEP           = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) $(TREELIB) \
                       $(TREEPLAYERLIB)
 GEDLIBEXTRA         = lib/libHist.lib lib/libGpad.lib lib/libGraf.lib \
                       lib/libTree.lib lib/libTreePlayer.lib lib/libGui.lib
-GEDOLDLIBDEP        = $(GPADLIB) $(GRAFLIB)
-GEDOLDLIBEXTRA      = lib/libGpad.lib lib/libGraf.lib
 POSTSCRIPTLIBDEP    = $(GRAFLIB)
 POSTSCRIPTLIBEXTRA  = lib/libGraf.lib
 GUILIBDEP           = $(GPADLIB) $(GRAFLIB)
@@ -151,8 +149,6 @@ G3DLIBEXTRA         = -Llib -lGraf -lHist
 GEDLIBDEP           = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) $(TREELIB) \
                       $(TREEPLAYERLIB)
 GEDLIBEXTRA         = -Llib -lHist -lGpad -lGraf -lGui -lTree -lTreePlayer
-GEDOLDLIBDEP        = $(GPADLIB) $(GRAFLIB)
-GEDOLDLIBEXTRA      = -Llib -lGpad -lGraf
 POSTSCRIPTLIBDEP    = $(GRAFLIB)
 POSTSCRIPTLIBEXTRA  = -Llib -lGraf
 GUILIBDEP           = $(GPADLIB) $(GRAFLIB)
