@@ -1,4 +1,4 @@
-/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.cxx,v 1.5 2006/11/21 23:34:39 rdm Exp $ */
+/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.cxx,v 1.6 2006/11/22 09:10:58 brun Exp $ */
 // Author: Ben Lloyd 09/11/06
 
 /*************************************************************************
@@ -2032,20 +2032,15 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine* gdml, XMLNodePointer_t node, X
       
       if((strcmp(tempattr, "name")) == 0) { 
          name = gdml->GetAttrValue(attr);
-      }
-      else if (strcmp(tempattr, "lunit") == 0){
+      } else if (strcmp(tempattr, "lunit") == 0) {
          lunit = gdml->GetAttrValue(attr);
-      }
-      else if (strcmp(tempattr, "aunit") == 0){
+      } else if (strcmp(tempattr, "aunit") == 0) {
          aunit = gdml->GetAttrValue(attr);
-      }
-      else if (strcmp(tempattr, "startphi") == 0){
+      } else if (strcmp(tempattr, "startphi") == 0) {
          startphi = FindConst(gdml->GetAttrValue(attr));
-      }
-      else if (strcmp(tempattr, "deltaphi") == 0){
+      } else if (strcmp(tempattr, "deltaphi") == 0) {
          deltaphi = FindConst(gdml->GetAttrValue(attr));
       }
-      
       attr = gdml->GetNextAttr(attr);   
    } 
    
@@ -2069,7 +2064,7 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine* gdml, XMLNodePointer_t node, X
    int i;
    cols = 3;
    double ** table = new double*[numplanes];
-   for(i = 0; i < numplanes; i++){
+   for(i = 0; i < numplanes; i++) {
       table[i] = new double[cols];
    }
    
@@ -2077,34 +2072,31 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine* gdml, XMLNodePointer_t node, X
    int planeno = 0;
    
    while (child!=0) {
-      if((strcmp(gdml->GetNodeName(child), "zplane")) == 0){
+      if((strcmp(gdml->GetNodeName(child), "zplane")) == 0) {
          //removed original dec
-    const char* rminline = "";
-    const char* rmaxline = "";
-    const char* zline = "";
+         const char* rminline = "";
+         const char* rmaxline = "";
+         const char* zline = "";
          
          attr = gdml->GetFirstAttr(child);
          
-         while (attr!=0){
-       tempattr = gdml->GetAttrName(attr);
+         while (attr!=0) {
+            tempattr = gdml->GetAttrName(attr);
        
-       if((strcmp(tempattr, "rmin")) == 0) { 
-          rmin = FindConst(gdml->GetAttrValue(attr));
-          rminline = Form("%s*%s", rmin, retlunit);
-          table[planeno][0] = Evaluate(rminline);
-       }
-       else if(strcmp(tempattr, "rmax") == 0){
-          rmax = FindConst(gdml->GetAttrValue(attr));
-          rmaxline = Form("%s*%s", rmax, retlunit);
-          table[planeno][1] = Evaluate(rmaxline);
-       }
-       else if (strcmp(tempattr, "z") == 0){
-          z = FindConst(gdml->GetAttrValue(attr));
-          zline = Form("%s*%s", z, retlunit);
-          table[planeno][2] = Evaluate(zline);
-       }
-       
-       attr = gdml->GetNextAttr(attr);
+            if((strcmp(tempattr, "rmin")) == 0) { 
+               rmin = FindConst(gdml->GetAttrValue(attr));
+               rminline = Form("%s*%s", rmin, retlunit);
+               table[planeno][0] = Evaluate(rminline);
+            } else if(strcmp(tempattr, "rmax") == 0) {
+               rmax = FindConst(gdml->GetAttrValue(attr));
+               rmaxline = Form("%s*%s", rmax, retlunit);
+               table[planeno][1] = Evaluate(rmaxline);
+            } else if (strcmp(tempattr, "z") == 0) {
+               z = FindConst(gdml->GetAttrValue(attr));
+               zline = Form("%s*%s", z, retlunit);
+               table[planeno][2] = Evaluate(zline);
+            }
+            attr = gdml->GetNextAttr(attr);
          }
       }
       planeno = planeno + 1;
@@ -2123,7 +2115,7 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine* gdml, XMLNodePointer_t node, X
                   numplanes);
    Int_t zno = 0;
    
-   for (int j = 0; j < numplanes; j++){
+   for (int j = 0; j < numplanes; j++) {
       poly->DefineSection(zno, table[j][2], table[j][0], table[j][1]);
       zno = zno + 1;
    }
@@ -2131,7 +2123,6 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine* gdml, XMLNodePointer_t node, X
    fsolmap[name] = poly;
    
    return node;
-   
 }
 
 //_______________________________________________________
