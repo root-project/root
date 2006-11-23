@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleFit.h,v 1.25 2006/11/16 22:51:59 helgevoss Exp $
+// @(#)root/tmva $Id: RuleFit.h,v 1.6 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -96,7 +96,7 @@ namespace TMVA {
       void     SetGDPathStep( Double_t s=0.01 ) { fRuleFitParams.SetGDPathStep(s); }
       void     SetGDNPathSteps( Int_t n=100 )   { fRuleFitParams.SetGDNPathSteps(n); }
       // accessors
-      const UInt_t  GetNSubsamples() const { return (fSubsampleEvents.size()>1 ? fSubsampleEvents.size()-1:0); }
+      UInt_t        GetNSubsamples() const { return (fSubsampleEvents.size()>1 ? fSubsampleEvents.size()-1:0); }
       const Event*  GetTrainingEvent(UInt_t i)  const { return fTrainingEvents[i]; }
       const Event*  GetTrainingEvent(UInt_t i, UInt_t isub)  const { return &(fTrainingEvents[fSubsampleEvents[isub]])[i]; }
 

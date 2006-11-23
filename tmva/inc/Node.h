@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Node.h,v 1.21 2006/11/20 13:20:16 stelzer Exp $    
+// @(#)root/tmva $Id: Node.h,v 1.12 2006/11/20 15:35:28 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -118,13 +118,13 @@ namespace TMVA {
                             UInt_t &depth, Node* parent=NULL ) = 0;
       
       // Set depth, layer of the where the node is within the tree, seen from the top (root)
-      void SetDepth(const UInt_t d){fDepth=d;}
+      void SetDepth(UInt_t d){fDepth=d;}
       
       // Return depth, layer of the where the node is within the tree, seen from the top (root)
       UInt_t GetDepth() const {return fDepth;}
       
       // set node position, i.e, the node is a left (l) or right (r) daugther
-      void SetPos(const char s) {fPos=s;}
+      void SetPos(char s) {fPos=s;}
       
       // Return the node position, i.e, the node is a left (l) or right (r) daugther
       char GetPos() const {return fPos;}

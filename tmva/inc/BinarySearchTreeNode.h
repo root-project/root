@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: BinarySearchTreeNode.h,v 1.6 2006/11/20 13:20:16 stelzer Exp $    
+// @(#)root/tmva $Id: BinarySearchTreeNode.h,v 1.4 2006/11/20 15:35:28 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -84,7 +84,7 @@ namespace TMVA {
       virtual Bool_t EqualsMe ( const Event& ) const;
 
       // set index of variable used for discrimination at this node
-      inline void SetSelector( const Short_t i) { fSelector = i; }
+      inline void SetSelector( Short_t i) { fSelector = i; }
       // return index of variable used for discrimination at this node 
       inline Short_t GetSelector() const { return fSelector; }
       // set the EVENT that forms this node (in search tree)
@@ -106,7 +106,7 @@ namespace TMVA {
       // return true/false if the EVENT* that forms the node is owned by the node or not 
       Bool_t      GetEventOwnership( void           ) { return fEventOwnership; }
       // set if the EVENT* that forms the node is owned by the node or not 
-      void        SetEventOwnership( const Bool_t b ) { fEventOwnership = b; }
+      void        SetEventOwnership( Bool_t b ) { fEventOwnership = b; }
 
    private: 
 

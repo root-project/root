@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleFitParams.h,v 1.20 2006/11/16 22:51:59 helgevoss Exp $
+// @(#)root/tmva $Id: RuleFitParams.h,v 1.7 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -74,7 +74,7 @@ namespace TMVA {
       UInt_t                            GetPerfIdx1() const { return fPerfIdx1; }
       UInt_t                            GetPerfIdx2() const { return fPerfIdx2; }
       //
-      const UInt_t                 GetNSubsamples() const;
+      UInt_t                       GetNSubsamples() const;
       const Event *                GetTrainingEvent(UInt_t i) const { return fTrainingEvents[i]; }
       const Event *                GetTrainingEvent(UInt_t i, UInt_t isub)  const;
 

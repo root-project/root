@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleEnsemble.h,v 1.26 2006/11/17 14:59:24 stelzer Exp $
+// @(#)root/tmva $Id: RuleEnsemble.h,v 1.6 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -188,18 +188,18 @@ namespace TMVA {
       const std::vector< Int_t >*            GetSubsampleEvents() const;
       void                                   GetSubsampleEvents(UInt_t sub, UInt_t& ibeg, UInt_t& iend) const;
       //
-      const UInt_t                    GetNSubsamples() const;
+      UInt_t                          GetNSubsamples() const;
       const Event*                    GetTrainingEvent(UInt_t i) const;
       const Event*                    GetTrainingEvent(UInt_t i, UInt_t isub)  const;
       const Event*                    GetEvent() const { return fEvent; }
       //
-      inline const Bool_t             DoLinear()             const { return (fLearningModel==kFull) || (fLearningModel==kLinear); }
-      inline const Bool_t             DoRules()              const { return (fLearningModel==kFull) || (fLearningModel==kRules); }
-      const Bool_t                    DoFull()               const { return (fLearningModel==kFull); }
-      const ELearningModel            GetLearningModel()     const { return fLearningModel; }
-      const Double_t                  GetImportanceCut()     const { return fImportanceCut; }
-      const Double_t                  GetOffset()            const { return fOffset; }
-      const UInt_t                    GetNRules()            const { return fRules.size(); }
+      Bool_t                          DoLinear()             const { return (fLearningModel==kFull) || (fLearningModel==kLinear); }
+      Bool_t                          DoRules()              const { return (fLearningModel==kFull) || (fLearningModel==kRules); }
+      Bool_t                          DoFull()               const { return (fLearningModel==kFull); }
+      ELearningModel                  GetLearningModel()     const { return fLearningModel; }
+      Double_t                        GetImportanceCut()     const { return fImportanceCut; }
+      Double_t                        GetOffset()            const { return fOffset; }
+      UInt_t                          GetNRules()            const { return fRules.size(); }
       const std::vector< Rule* >&     GetRulesConst()        const { return fRules; }
       std::vector< Rule* >&           GetRules()                   { return fRules; }
       const std::vector< Int_t  >  &  GetRulesNCuts()        const { return fRulesNCuts; }
@@ -210,22 +210,22 @@ namespace TMVA {
 
       const Rule    *GetRulesConst(int i)        const { return fRules[i]; }
       Rule          *GetRules(int i)                   { return fRules[i]; }
-      const Int_t    GetRulesNCuts(int i)        const { return fRulesNCuts[i]; }
-      const Double_t GetMaxRuleDist()            const { return fMaxRuleDist; }
-      const Double_t GetLinCoefficients(int i)   const { return fLinCoefficients[i]; }
-      const Double_t GetLinNorm(int i)           const { return fLinNorm[i]; }
-      const Double_t GetLinImportance(int i)     const { return fLinImportance[i]; }
-      const Double_t GetVarImportance(int i)     const { return fVarImportance[i]; }
-      const Double_t GetRulePTag(int i)          const { return fRulePTag[i]; }
-      const Double_t GetRulePSS(int i)           const { return fRulePSS[i]; }
-      const Double_t GetRulePSB(int i)           const { return fRulePSB[i]; }
-      const Double_t GetRulePBS(int i)           const { return fRulePBS[i]; }
-      const Double_t GetRulePBB(int i)           const { return fRulePBB[i]; }
+      Int_t          GetRulesNCuts(int i)        const { return fRulesNCuts[i]; }
+      Double_t       GetMaxRuleDist()            const { return fMaxRuleDist; }
+      Double_t       GetLinCoefficients(int i)   const { return fLinCoefficients[i]; }
+      Double_t       GetLinNorm(int i)           const { return fLinNorm[i]; }
+      Double_t       GetLinImportance(int i)     const { return fLinImportance[i]; }
+      Double_t       GetVarImportance(int i)     const { return fVarImportance[i]; }
+      Double_t       GetRulePTag(int i)          const { return fRulePTag[i]; }
+      Double_t       GetRulePSS(int i)           const { return fRulePSS[i]; }
+      Double_t       GetRulePSB(int i)           const { return fRulePSB[i]; }
+      Double_t       GetRulePBS(int i)           const { return fRulePBS[i]; }
+      Double_t       GetRulePBB(int i)           const { return fRulePBB[i]; }
       //
-      const Double_t GetAverageSupport()         const { return fAverageSupport; }
-      const Double_t GetAverageRuleSigma()       const { return fAverageRuleSigma; }
-      const Double_t GetEventRuleVal(UInt_t i)   const { return fEventRuleVal[i]; }
-      const Double_t GetEventLinearVal(UInt_t i) const { return fEventLinearVal[i]; }
+      Double_t       GetAverageSupport()         const { return fAverageSupport; }
+      Double_t       GetAverageRuleSigma()       const { return fAverageRuleSigma; }
+      Double_t       GetEventRuleVal(UInt_t i)   const { return fEventRuleVal[i]; }
+      Double_t       GetEventLinearVal(UInt_t i) const { return fEventLinearVal[i]; }
 
       // print the model in a cryptic way
       void  PrintRaw( ostream& os ) const;

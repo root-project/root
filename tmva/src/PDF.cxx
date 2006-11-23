@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: PDF.cxx,v 1.22 2006/11/17 14:59:24 stelzer Exp $
+// @(#)root/tmva $Id: PDF.cxx,v 1.11 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -220,7 +220,7 @@ Double_t TMVA::PDF::GetIntegral( Double_t xmin, Double_t xmax )
 }
 
 //_______________________________________________________________________
-Double_t TMVA::PDF::GetVal( const Double_t x )
+Double_t TMVA::PDF::GetVal( Double_t x )
 {  
    // returns value PDF(x)
 

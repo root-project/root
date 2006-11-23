@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleEnsemble.cxx,v 1.33 2006/11/16 22:51:59 helgevoss Exp $
+// @(#)root/tmva $Id: RuleEnsemble.cxx,v 1.7 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -189,7 +189,7 @@ void TMVA::RuleEnsemble::GetSubsampleEvents(UInt_t sub, UInt_t & ibeg, UInt_t & 
    fRuleFit->GetSubsampleEvents(sub,ibeg,iend);
 }
 //_______________________________________________________________________
-const UInt_t TMVA::RuleEnsemble::GetNSubsamples() const
+UInt_t TMVA::RuleEnsemble::GetNSubsamples() const
 {
    // get the number of subsamples from the rule fitter
    return fRuleFit->GetNSubsamples();

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTreeNode.h,v 1.22 2006/11/16 22:51:58 helgevoss Exp $    
+// @(#)root/tmva $Id: DecisionTreeNode.h,v 1.10 2006/11/20 15:35:28 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -72,7 +72,7 @@ namespace TMVA {
       virtual Bool_t GoesLeft ( const Event & ) const;
 
       // set index of variable used for discrimination at this node
-      inline void SetSelector( const Short_t i) { fSelector = i; }
+      inline void SetSelector( Short_t i) { fSelector = i; }
       // return index of variable used for discrimination at this node 
       inline Short_t GetSelector() const { return fSelector; }
 

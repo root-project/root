@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Types.h,v 1.28 2006/11/17 14:59:24 stelzer Exp $   
+// @(#)root/tmva $Id: Types.h,v 1.9 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -94,7 +94,7 @@ namespace TMVA {
       static Types& Instance() { return fgTypesPtr ? *fgTypesPtr : *(fgTypesPtr = new Types()); }
       ~Types() {}
 
-      const EMVA GetMethodType( const TString& method ) const { 
+      EMVA GetMethodType( const TString& method ) const { 
          std::map<TString, EMVA>::const_iterator it = fStr2type.find( method );
          if (it == fStr2type.end()) {
             fLogger << kFATAL << "unknown method in map: " << method << Endl;

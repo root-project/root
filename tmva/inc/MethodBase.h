@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBase.h,v 1.57 2006/11/17 14:59:23 stelzer Exp $   
+// @(#)root/tmva $Id: MethodBase.h,v 1.10 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -126,7 +126,7 @@ namespace TMVA {
       const TString&   GetMethodName ( void ) const { return fMethodName; }
       const char*      GetName       ( void ) const { return GetMethodName().Data(); }
       const TString&   GetMethodTitle( void ) const { return fMethodTitle; }
-      const Types::EMVA GetMethodType ( void ) const { return fMethodType; }
+      Types::EMVA      GetMethodType ( void ) const { return fMethodType; }
 
       void    SetJobName    ( TString jobName )       { fJobName     = jobName; }
       void    SetMethodName ( TString methodName )    { fMethodName  = methodName; }

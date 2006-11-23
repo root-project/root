@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleFitParams.cxx,v 1.32 2006/11/16 22:51:59 helgevoss Exp $
+// @(#)root/tmva $Id: RuleFitParams.cxx,v 1.7 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -146,7 +146,7 @@ void TMVA::RuleFitParams::GetSubsampleEvents(UInt_t sub, UInt_t & ibeg, UInt_t &
 }
 
 //_______________________________________________________________________
-const UInt_t TMVA::RuleFitParams::GetNSubsamples() const
+UInt_t TMVA::RuleFitParams::GetNSubsamples() const
 {
    // get the number of subsamples
    return fRuleFit->GetNSubsamples();

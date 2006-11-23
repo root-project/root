@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TActivationChooser.h,v 1.10 2006/11/17 14:59:24 stelzer Exp $
+// @(#)root/tmva $Id: TActivationChooser.h,v 1.6 2006/11/20 15:35:28 brun Exp $
 // Author: Matt Jachowski 
 
 /**********************************************************************************
@@ -79,7 +79,7 @@ namespace TMVA {
                              kRadial
       };
 
-      TActivation* CreateActivation(const EActivationType type) const
+      TActivation* CreateActivation(EActivationType type) const
       {
         // instantiate the correct activation object according to the
         // type choosen (given as the enumeration type)

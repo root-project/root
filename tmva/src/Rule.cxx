@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Rule.cxx,v 1.33 2006/11/19 00:43:59 stelzer Exp $
+// @(#)root/tmva $Id: Rule.cxx,v 1.8 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss 
 
 /**********************************************************************************
@@ -110,7 +110,7 @@ void TMVA::Rule::SetNodes( const std::vector< const TMVA::Node * >& nodes )
 }
 
 //_______________________________________________________________________
-const Int_t TMVA::Rule::GetNumVarsUsed() const
+Int_t TMVA::Rule::GetNumVarsUsed() const
 {
    //
    // Get the number of different variables used for this Rule
@@ -147,7 +147,7 @@ const Int_t TMVA::Rule::GetNumVarsUsed() const
 }
 
 //_______________________________________________________________________
-const Bool_t TMVA::Rule::ContainsVariable(Int_t iv) const
+Bool_t TMVA::Rule::ContainsVariable(Int_t iv) const
 {
    // check if variable in node
    Bool_t found    = kFALSE;

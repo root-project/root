@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DataSet.h,v 1.41 2006/11/17 14:59:23 stelzer Exp $
+// @(#)root/tmva $Id: DataSet.h,v 1.6 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -222,7 +222,7 @@ namespace TMVA {
 
       void RestoreEvent() { Event().CopyVarValues( *fEventBackup ); }
 
-      const UInt_t  GetCurrentEvtIdx() const { return fCurrentEvtIdx; } // the current event (to avoid reading of the same event)
+      UInt_t  GetCurrentEvtIdx() const { return fCurrentEvtIdx; } // the current event (to avoid reading of the same event)
 
       const TMVA::Event& Event() const { return *fEvent; } // Warning, this requires an existing event object
 

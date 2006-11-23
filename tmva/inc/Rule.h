@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Rule.h,v 1.23 2006/11/16 22:51:59 helgevoss Exp $    
+// @(#)root/tmva $Id: Rule.h,v 1.7 2006/11/20 15:35:28 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -98,7 +98,7 @@ namespace TMVA {
       void CalcImportance()             { fImportance = fabs(fCoefficient)*fSigma; }
 
       // get the relative importance
-      const Double_t GetRelImportance()  const { return fImportance/fImportanceRef; }
+      Double_t GetRelImportance()  const { return fImportance/fImportanceRef; }
 
       // evaluate the Rule for the given Event using the coefficient
       inline Double_t EvalEvent( const Event& e, Bool_t norm ) const;
@@ -137,22 +137,22 @@ namespace TMVA {
       Bool_t operator<( const Rule & other ) const;
 
       // get number of variables used in Rule
-      const Int_t GetNumVarsUsed() const;
+      Int_t GetNumVarsUsed() const;
 
       // check if variable is used by the rule
-      const Bool_t ContainsVariable(Int_t iv) const;
+      Bool_t ContainsVariable(Int_t iv) const;
 
       // get the effective rule
       void GetEffectiveRule( std::vector<Int_t> & nodeind ) const;
 
       // accessors
       const RuleEnsemble                * GetRuleEnsemble()  const { return fRuleEnsemble; }
-      const Double_t                      GetCoefficient()   const { return fCoefficient; }
-      const Double_t                      GetSupport()       const { return fSupport; }
-      const Double_t                      GetSigma()         const { return fSigma; }
-      const Double_t                      GetNorm()          const { return fNorm; }
-      const Double_t                      GetImportance()    const { return fImportance; }
-      const Double_t                      GetImportanceRef() const { return fImportanceRef; }
+      Double_t                            GetCoefficient()   const { return fCoefficient; }
+      Double_t                            GetSupport()       const { return fSupport; }
+      Double_t                            GetSigma()         const { return fSigma; }
+      Double_t                            GetNorm()          const { return fNorm; }
+      Double_t                            GetImportance()    const { return fImportance; }
+      Double_t                            GetImportanceRef() const { return fImportanceRef; }
       const std::vector< const Node * > & GetNodes()         const { return fNodes; }
       const std::vector< Int_t >        & GetCutDirs()       const { return fCutDirs; }
 

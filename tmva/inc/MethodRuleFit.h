@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodRuleFit.h,v 1.25 2006/11/16 22:51:58 helgevoss Exp $
+// @(#)root/tmva $Id: MethodRuleFit.h,v 1.10 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Fredrik Tegenfeldt, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -25,7 +25,7 @@
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
- * $Id: MethodRuleFit.h,v 1.25 2006/11/16 22:51:58 helgevoss Exp $    
+ * $Id: MethodRuleFit.h,v 1.10 2006/11/20 15:35:28 brun Exp $    
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodRuleFit
@@ -110,10 +110,10 @@ namespace TMVA {
       // get training event in a std::vector
       const std::vector<TMVA::Event*>         &GetTrainingEvents() const   { return fEventSample; }
       const std::vector<TMVA::DecisionTree*>  &GetForest() const           { return fForest; }
-      const Int_t                              GetNTrees() const           { return fNTrees; }
-      const Double_t                           GetSampleFraction() const   { return fSampleFraction; }
+      Int_t                                    GetNTrees() const           { return fNTrees; }
+      Double_t                                 GetSampleFraction() const   { return fSampleFraction; }
       const SeparationBase                    *GetSeparationBase() const   { return fSepType; }
-      const Int_t                              GetNCuts() const            { return fNCuts; }
+      Int_t                                    GetNCuts() const            { return fNCuts; }
 
    protected:
       // initialize rulefit

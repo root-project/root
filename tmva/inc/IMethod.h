@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: IMethod.h,v 1.20 2006/11/17 14:59:23 stelzer Exp $   
+// @(#)root/tmva $Id: IMethod.h,v 1.6 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -133,7 +133,7 @@ namespace TMVA {
       virtual const TString&   GetJobName    ( void ) const = 0;
       virtual const TString&   GetMethodName ( void ) const = 0;
       virtual const TString&   GetMethodTitle( void ) const = 0;
-      virtual const Types::EMVA GetMethodType ( void ) const = 0;
+      virtual Types::EMVA      GetMethodType ( void ) const = 0;
 
       virtual Types::EPreprocessingMethod GetPreprocessingMethod() const = 0;
 

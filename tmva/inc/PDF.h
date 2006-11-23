@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: PDF.h,v 1.20 2006/11/17 14:59:24 stelzer Exp $
+// @(#)root/tmva $Id: PDF.h,v 1.10 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -61,7 +61,7 @@ namespace TMVA {
       virtual ~PDF( void );
   
       // returns probability density at given abscissa
-      Double_t GetVal( const Double_t x );
+      Double_t GetVal( Double_t x );
 
       // histogram underlying the PDF
       TH1*     GetPDFHist ( void ) { return fPDFHist; }

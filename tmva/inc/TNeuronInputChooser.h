@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TNeuronInputChooser.h,v 1.5 2006/11/17 14:59:24 stelzer Exp $
+// @(#)root/tmva $Id: TNeuronInputChooser.h,v 1.6 2006/11/20 15:35:28 brun Exp $
 // Author: Matt Jachowski 
 
 /**********************************************************************************
@@ -70,7 +70,7 @@ namespace TMVA {
                               kAbsSum
       };
 
-      TNeuronInput* CreateNeuronInput(const ENeuronInputType type) const
+      TNeuronInput* CreateNeuronInput(ENeuronInputType type) const
       {
          switch (type) {
          case kSum:    return new TNeuronInputSum();
