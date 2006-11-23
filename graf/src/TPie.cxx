@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.3 2006/11/22 15:42:22 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.4 2006/11/23 07:39:15 brun Exp $
 // Author: Guido Volpi, Olivier Couet 03/11/2006
 
 /*************************************************************************
@@ -110,8 +110,11 @@ TPie::TPie(const TH1 *h) : TNamed(h->GetName(),h->GetTitle())
 {
    // Constructor from a TH1
 
-   Init(h->GetNbinsX(), 0, 0.5, 0.5, 0.4);
-   for (Int_t i=0; i<fNvals; ++i) fVals[i] = h->GetBin(i);
+   Int_t first = h->GetXaxis()->GetFirst();
+   Int_t last  = h->GetXaxis()->GetLast();
+   Int_t np    = last-first+1;
+   Init(np, 0, 0.5, 0.5, 0.4);
+   for (Int_t i=first; i<=last; ++i) fVals[i-first] = h->GetBinContent(i);
 }
 
 
@@ -691,8 +694,6 @@ void TPie::Paint(Option_t *option)
       textlabel->SetTextSize(GetTextSize());
       textlabel->SetTextColor(GetTextColor());
 
-      textlabel->SetTextAngle(GetTextAngle());
-
       // Paint the text in the pad
       TString tmptxt  = fLabelFormat;
 
@@ -708,7 +709,7 @@ void TPie::Paint(Option_t *option)
       Float_t lx = fX+(fRadius+fRadiusOffsets[i]+label_off)*TMath::Cos(aphi);
       Float_t ly = fY+(fRadius+fRadiusOffsets[i]+label_off)*TMath::Sin(aphi);
 
-      Double_t lblang = GetTextAngle();
+      Double_t lblang = 0;
 
       if (lblor==1) {
          lblang += aphi;
