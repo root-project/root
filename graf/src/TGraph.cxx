@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.196 2006/10/20 16:00:40 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.197 2006/11/10 08:32:21 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -27,13 +27,12 @@
 #include "TRandom.h"
 #include "TSpline.h"
 #include "TPaveStats.h"
-#include "TPluginManager.h"
 #include "TVirtualFitter.h"
 #include "TVirtualPad.h"
-#include "TVirtualUtilPad.h"
 #include "TVirtualHistPainter.h"
 #include "TBrowser.h"
 #include "TClass.h"
+#include "TSystem.h"
 
 Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
 
@@ -1556,27 +1555,17 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //______________________________________________________________________________
 void TGraph::FitPanel()
 {
-   // Display a panel with all graph fit options.
+   // Display a GUI panel with all graph fit options.
    //
-   //   See class TFitPanel for example
+   //   See class TFitEditor for example
 
    if (!gPad) {
-      Error("FitPanelGraph", "need to draw graph first");
+      Error("FitPanel", "need to draw graph first");
       return;
    }
 
-   //The pad utility manager is required (a plugin)
-   TVirtualUtilPad *util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
-   if (!util) {
-      TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilPad"))) {
-         if (h->LoadPlugin() == -1)
-            return;
-         h->ExecPlugin(0);
-         util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
-      }
-   }
-   util->FitPanelGraph(gPad,this);
+   if (!gROOT->GetClass("TFitEditor")) gSystem->Load("libFitPanel");
+   gROOT->ProcessLine(Form("TFitEditor::Open((TVirtualPad*)0x%x,(TObject*)0x%x)",gPad,this));
 }
 
 
