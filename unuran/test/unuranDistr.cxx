@@ -85,7 +85,7 @@ void unuranDistr() {
    TStopwatch w; 
    w.Start(); 
 
-   int n = 100000;
+   int n = 1000000;
    for (int i = 0; i < n; ++i) 
       unr.Sample(); 
 

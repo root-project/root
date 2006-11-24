@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: inc/Math/TUnuranDistr.h,v 1.0 2006/01/01 12:00:00 moneta Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuranDistr.h,v 1.1 2006/11/15 17:40:36 brun Exp $
 // Author: L. Moneta Wed Sep 27 11:53:27 2006
 
 /**********************************************************************
@@ -26,12 +26,16 @@ class TUnuranDistr {
 public: 
 
    /** 
-      Default constructor
+      Default constructor.
+      Set by default a value of  min > max for the distribution range, which means 
+      that  is undefined. If the variable fHasDomain is not set the range is used only for 
+      finding the mode of the distribution
    */ 
    TUnuranDistr() : 
       fFunc(0), 
       fCdf(0),
       fDeriv(0), 
+      fXmin(1.), fXmax(-1.), 
       fHasDomain(0)
    {}
 
@@ -42,9 +46,12 @@ public:
       fFunc(func), 
       fCdf(cdf),
       fDeriv(deriv), 
+      fXmin(1.), fXmax(-1.), // if min > max range is undef.
       fHasDomain(0)
    {
       assert(func != 0); 
+      // use by default the range specified in TF1
+      func->GetRange(fXmin, fXmax);
    } 
 
    /** 
