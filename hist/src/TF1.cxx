@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.129 2006/09/15 15:16:57 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.130 2006/11/24 10:19:02 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -19,7 +19,6 @@
 #include "TRandom.h"
 #include "Api.h"
 #include "TPluginManager.h"
-#include "TVirtualUtilPad.h"
 #include "TBrowser.h"
 #include "TColor.h"
 #include "TClass.h"
@@ -1067,28 +1066,6 @@ void TF1::DrawF1(const char *formula, Double_t xmin, Double_t xmax, Option_t *op
    SetRange(xmin, xmax);
 
    Draw(option);
-}
-
-//______________________________________________________________________________
-void TF1::DrawPanel()
-{
-//*-*-*-*-*-*-*Display a panel with all function drawing options*-*-*-*-*-*
-//*-*          =================================================
-//*-*
-//*-*   See class TDrawPanelHist for example
-
-   //The pad utility manager is required (a plugin)
-   TVirtualUtilPad *util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
-   if (!util) {
-      TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilPad"))) {
-         if (h->LoadPlugin() == -1)
-            return;
-         h->ExecPlugin(0);
-         util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
-      }
-   }
-   util->DrawPanel(gPad,this);
 }
 
 //______________________________________________________________________________
