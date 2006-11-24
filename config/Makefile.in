@@ -150,10 +150,6 @@ ASINCDIR       := $(filter-out /usr/include, @asimageincdir@)
 ASLIB          := @asimagelib@
 ASLIBDIR       := @asimagelibdir@
 
-BUILDFPYTHIA   := @buildpythia@
-FPYTHIALIBDIR  := @pythialibdir@
-FPYTHIALIB     := @pythialib@
-
 BUILDFPYTHIA6    := @buildpythia6@
 FPYTHIA6LIBDIR   := @pythia6libdir@
 FPYTHIA6LIB      := @pythia6lib@
@@ -162,11 +158,6 @@ FPYTHIA6CPPFLAGS := @pythia6cppflags@
 BUILDFFTW3     := @buildfftw3@
 FFTW3LIBDIR    := @fftw3libdir@
 FFTW3LIB       := @fftw3lib@
-FFTW3INCDIR    := $(filter-out /usr/include, @fftw3incdir@)
-
-BUILDFVENUS    := @buildvenus@
-FVENUSLIBDIR   := @venuslibdir@
-FVENUSLIB      := @venuslib@
 
 BUILDPYTHON    := @buildpython@
 PYTHONLIBDIR   := @pythonlibdir@

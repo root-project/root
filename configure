@@ -57,7 +57,6 @@ options="                    \
    enable_pch                \
    enable_peac               \
    enable_pgsql              \
-   enable_pythia             \
    enable_pythia6            \
    enable_python             \
    enable_qt                 \
@@ -77,7 +76,6 @@ options="                    \
    enable_table              \
    enable_thread             \
    enable_unuran             \
-   enable_venus              \
    enable_winrtdebug         \
    enable_xml                \
    enable_xrootd             \
@@ -93,7 +91,6 @@ for c in $options ; do eval ${c}_explicit="no" ; done
 enable_afs=no
 enable_gdml=no
 enable_explicitlink=no
-enable_pythia=no
 enable_qt=no
 enable_qtgsi=no
 enable_roofit=no
@@ -127,11 +124,9 @@ GFAL             \
 G4ROOT           \
 GSL              \
 CERNLIB          \
-PYTHIA           \
 PYTHIA6          \
 FFTW3            \
 PYTHONDIR        \
-VENUS            \
 DCACHE           \
 CHIRP            \
 ALIEN            \
@@ -863,7 +858,6 @@ enable/disable options, prefix with either --enable- or --disable-
   pch                Precompiled headers (if supported by the compiler)
   peac               PEAC, PROOF Enabled Analysis Center, requires Clarens
   pgsql              PostgreSQL support, requires libpq
-  pythia             Pythia5 EG support, requires libPythia
   pythia6            Pythia6 EG support, requires libPythia6
   python             Python ROOT bindings, requires python >= 2.2
   qt                 Qt graphics backend, requires libqt >= 3
@@ -882,7 +876,6 @@ enable/disable options, prefix with either --enable- or --disable-
   table              Build libTable contrib library
   thread             Thread support
   unuran             UNURAN - package for generating non-uniform random numbers
-  venus              Venus EG support, requires libVenus
   winrtdebug         Link against the Windows debug runtime library
   xml                XML parser interface
   xrootd             Build xrootd file server and its client (if supported)
@@ -929,7 +922,6 @@ with options, prefix with --with-, enables corresponding support
   oracle-libdir      Oracle support, location of libocci
   pgsql-incdir       PostgreSQL support, location of libpq-fe.h
   pgsql-libdir       PostgreSQL support, location of libpq
-  pythia-libdir      PYHTIA support, location of libPythia
   pythia6-libdir     PYHTIA6 support, location of libPythia6
   python-incdir      Python support, location of Python.h
   python-libdir      Python support, location of libpython
@@ -948,7 +940,6 @@ with options, prefix with --with-, enables corresponding support
   ssl-libdir         OpenSSL support, location of libssl
   sys-iconpath       Extra icon path
   thread-libdir      Thread support, path to libpthread
-  venus-libdir       VENUS support, location of libVenus
   xml-incdir         XML support, location of libxml/tree.h
   xml-libdir         XML support, location of libxml2
   x11-libdir         X11 support, path to libX11
@@ -1120,7 +1111,6 @@ if test $# -gt 0 ; then
       --with-oracle-libdir=*)  oraclelibdir=$optarg  ; enable_oracle="yes"  ;;
       --with-pgsql-incdir=*)   pgsqlincdir=$optarg   ; enable_pgsql="yes"   ;;
       --with-pgsql-libdir=*)   pgsqllibdir=$optarg   ; enable_pgsql="yes"   ;;
-      --with-pythia-libdir=*)  pythialibdir=$optarg  ; enable_pythia="yes"  ;;
       --with-pythia6-libdir=*) pythia6libdir=$optarg ; enable_pythia6="yes" ;;
       --with-pythia6-uscore=*) pythia6uscore=$optarg ; enable_pythia6="yes" ;;
       --with-python-incdir=*)  pythonincdir=$optarg  ; enable_python="yes"  ;;
@@ -1143,7 +1133,6 @@ if test $# -gt 0 ; then
       --with-ssl-libdir=*)     ssllibdir=$optarg     ; enable_ssl="yes"     ;;
       --with-sys-iconpath=*)   extraiconpath=$optarg ;;
       --with-thread-libdir=*)  threadlibdir=$optarg  ; enable_thread="yes"  ;;
-      --with-venus-libdir=*)   venuslibdir=$optarg   ; enable_venus="yes"   ;;
       --with-xml-incdir=*)     xmlincdir=$optarg     ; enable_xml="yes"     ;;
       --with-xml-libdir=*)     xmllibdir=$optarg     ; enable_xml="yes"     ;;
       --with-x11-libdir=*)     x11libdir=$optarg     ;;
@@ -2196,28 +2185,6 @@ fi
 check_explicit "$enable_cern" "$enable_cern_explicit" \
      "Explicitly required CernLib dependencies not fulfilled"
 
-######################################################################
-#
-### echo %%% Pythia5 Usage - Third party libraries
-#
-# (See http://root.cern.ch and Lund)
-#
-# Check for libPythia
-#
-if test ! "x$enable_pythia" = "xno"; then
-    check_library "libPythia" "$enable_shared" "$pythialibdir" \
-	$PYTHIA $PYTHIA/lib /cern/pro/lib /opt/pythia /opt/pythia5 \
-        /usr/lib/pythia /usr/local/lib/pythia /usr/lib/pythia5 \
-	/usr/local/lib/pythia5 /usr/lib /usr/local/lib
-    pythialib=$found_lib
-    pythialibdir=$found_dir
-
-    if test "x$pythialib" = "x"; then
-        enable_pythia=no
-    fi
-fi
-check_explicit "$enable_pythia" "$enable_pythia_explicit" \
-     "Explicitly required Pythia5 dependencies not fulfilled"
 
 ######################################################################
 #
@@ -2279,27 +2246,6 @@ fi
 check_explicit "$enable_pythia6" "$enable_pythia6_explicit" \
      "Explicitly required Pythia6 dependencies not fulfilled"
 
-######################################################################
-#
-### echo %%% Venus  Usage - Third party libraries
-#
-# (See http://root.cern.ch)
-#
-# Check for libVenus
-#
-if test ! "x$enable_venus" = "xno" ; then
-    check_library "libVenus" "$enable_shared" "$venuslibdir" \
-	$VENUS $VENUS/lib /cern/pro/lib /opt/venus /usr/lib/venus \
-	/usr/local/lib/venus /usr/lib /usr/local/lib
-    venuslib=$found_lib
-    venuslibdir=$found_dir
-
-    if test "x$venuslib" = "x" ; then
-        enable_venus=no
-    fi
-fi
-check_explicit "$enable_venus" "$enable_venus_explicit" \
-     "Explicitly required Venus dependencies not fulfilled"
 
 ######################################################################
 #
@@ -3924,7 +3870,6 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_oracle"  = "xyes" && pkglist="$pkglist root-plugin-oracle"
     test "x$enable_peac"    = "xyes" && pkglist="$pkglist root-plugin-peac"
     test "x$enable_pgsql"   = "xyes" && pkglist="$pkglist root-plugin-pgsql"
-    test "x$enable_pythia"  = "xyes" && pkglist="$pkglist root-plugin-pythia5"
     test "x$enable_pythia6" = "xyes" && pkglist="$pkglist root-plugin-pythia6"
     test "x$enable_python"  = "xyes" && pkglist="$pkglist libroot-python"
     test "x$enable_qt"      = "xyes" && pkglist="$pkglist root-plugin-qt"
@@ -3933,7 +3878,6 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_rfio"    = "xyes" && pkglist="$pkglist root-plugin-rfio"
     test "x$enable_sapdb"   = "xyes" && pkglist="$pkglist root-plugin-maxdb"
     test "x$enable_srp"     = "xyes" && pkglist="$pkglist root-plugin-srp"
-    test "x$enable_venus"   = "xyes" && pkglist="$pkglist root-plugin-venus"
     test "x$enable_xml"     = "xyes" && pkglist="$pkglist root-plugin-xml"
     test "x$enable_xrootd"  = "xyes" && pkglist="$pkglist root-xrootd root-plugin-netx"
 
@@ -4269,8 +4213,6 @@ sed -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@pythia6lib@|$pythia6lib|"            \
     -e "s|@pythia6libdir@|$pythia6libdir|"      \
     -e "s|@pythia6cppflags@|$pythia6cppflags|"  \
-    -e "s|@pythialib@|$pythialib|"              \
-    -e "s|@pythialibdir@|$pythialibdir|"        \
     -e "s|@pythonlib@|$pythonlib|"              \
     -e "s|@pythonlibdir@|$pythonlibdir|"        \
     -e "s|@pythonincdir@|$pythonincdir|"        \
@@ -4313,8 +4255,6 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@threadlibdir@|$threadlibdir|"        \
     -e "s|@ttffontdir@|$fontdir|"               \
     -e "s|@tutdir@|$tutdir|"                    \
-    -e "s|@venuslib@|$venuslib|"                \
-    -e "s|@venuslibdir@|$venuslibdir|"          \
     -e "s|@winrtdebug@|$enable_winrtdebug|"     \
     -e "s|@xmlincdir@|$xmlincdir|"              \
     -e "s|@xmllib@|$xmllib|"                    \
@@ -4342,9 +4282,7 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@buildchirp@|$enable_chirp|"          \
     -e "s|@buildalien@|$enable_alien|"          \
     -e "s|@buildasimage@|$enable_asimage|"      \
-    -e "s|@buildpythia@|$enable_pythia|"        \
     -e "s|@buildpythia6@|$enable_pythia6|"      \
-    -e "s|@buildvenus@|$enable_venus|"          \
     -e "s|@buildpython@|$enable_python|"        \
     -e "s|@buildruby@|$enable_ruby|"            \
     -e "s|@buildxml@|$enable_xml|"              \
