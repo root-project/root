@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.151 2006/10/18 21:56:59 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.152 2006/11/23 17:03:14 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -475,7 +475,6 @@ Plugin.TVirtualGeoPainter:  *  TGeoPainter   GeomPainter  "TGeoPainter(TGeoManag
 Plugin.TGeoManagerEditor:   *  TGeoManagerEditor  GeomBuilder  "LoadLib()"
 Plugin.TVirtualUtil3D:      *  TUtil3D       Graf3d       "TUtil3D()"
 Plugin.TVirtualUtilHist:    *  TUtilHist     Hist         "TUtilHist()"
-Plugin.TVirtualUtilPad:     *  TUtilPad      Gpad         "TUtilPad()"
 Plugin.TVirtualFitter:  Minuit  TFitter        Minuit     "TFitter(Int_t)"
 +Plugin.TVirtualFitter: Fumili  TFumili        Fumili     "TFumili(Int_t)"
 +Plugin.TVirtualFitter: Minuit2 TFitterMinuit  Minuit2    "TFitterMinuit(Int_t)"
