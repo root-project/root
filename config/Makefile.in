@@ -158,6 +158,7 @@ FPYTHIA6CPPFLAGS := @pythia6cppflags@
 BUILDFFTW3     := @buildfftw3@
 FFTW3LIBDIR    := @fftw3libdir@
 FFTW3LIB       := @fftw3lib@
+FFTW3INCDIR    := $(filter-out /usr/include, @fftw3incdir@)
 
 BUILDPYTHON    := @buildpython@
 PYTHONLIBDIR   := @pythonlibdir@
