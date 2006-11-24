@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.20 2006/09/14 13:35:58 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.21 2006/10/09 09:27:17 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -394,7 +394,14 @@ void ReflexUnitTest::array_type() {
   CPPUNIT_ASSERT_EQUAL(10*sizeof(float), fat.SizeOf());
 }
 
+
 void ReflexUnitTest::typedef_type() {
+
+  ROOT::Reflex::Type t = ROOT::Reflex::Type::ByName("unsigned long");
+  CPPUNIT_ASSERT(t);
+  CPPUNIT_ASSERT_EQUAL(t.Name(), std::string("unsigned long"));
+  CPPUNIT_ASSERT_EQUAL(t.Name(SCOPED), std::string("unsigned long"));
+  CPPUNIT_ASSERT_EQUAL(t.Name(FINAL), std::string("unsigned long int"));
 
   //Fundamental i("int",sizeof(int),typeid(int));
   Typedef my_i("myInt", Type::ByName("int"));
