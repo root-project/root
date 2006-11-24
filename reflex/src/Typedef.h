@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.14 2006/08/17 13:50:30 roiser Exp $
+// @(#)root/reflex:$Name: v5-13-04-patches $:$Id: Typedef.h,v 1.15 2006/09/05 17:13:15 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -743,7 +743,10 @@ inline ROOT::Reflex::Reverse_Type_Iterator ROOT::Reflex::Typedef::FunctionParame
 //-------------------------------------------------------------------------------
 inline std::string ROOT::Reflex::Typedef::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
-   if ( 0 != ( mod & ( FINAL | F ))) return FinalType().Name( mod );
+   if ( 0 != ( mod & ( FINAL | F ))) {
+      if (IsFundamental()) return fTypedefType.Name( mod );
+      else return FinalType().Name( mod );
+   }
    else                              return TypeBase::Name( mod );
 }
 
