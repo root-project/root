@@ -1,4 +1,0 @@
-#!/bin/sh
-
-tar cvf WildCard.tar wildc test3.c test4.c quest.c README
-gzip WildCard.tar
