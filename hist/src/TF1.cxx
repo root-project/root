@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.128 2006/07/03 16:10:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.129 2006/09/15 15:16:57 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -614,26 +614,7 @@ TF1::~TF1()
    delete fHistogram;
    delete fMethodCall;
 
-   if (fParent) {
-      if (fParent->InheritsFrom(TH1::Class())) {
-         ((TH1*)fParent)->GetListOfFunctions()->Remove(this);
-         return;
-      }
-      //parent may be a graph, or ??
-      //The pad utility manager is required (a plugin)
-      TVirtualUtilPad *util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
-      if (!util) {
-         TPluginHandler *h;
-         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilPad"))) {
-            if (h->LoadPlugin() == -1)
-               return;
-            h->ExecPlugin(0);
-            util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
-         }
-      }
-      util->RemoveObject(fParent,this);
-      fParent = 0;
-   }
+   if (fParent) fParent->RecursiveRemove(this);
 }
 
 //______________________________________________________________________________
