@@ -118,7 +118,10 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          break;
       case kButton1Down:
          //Left mouse down in a plot area starts rotation.
-         fCamera.StartRotation(px, py);
+         if (!fGLPainter->CutAxisSelected())
+            fCamera.StartRotation(px, py);
+         else
+            fGLPainter->StartPan(px, py);
          //During rotation, usual TCanvas/TPad machinery (CopyPixmap/Flush/UpdateWindow/etc.)
          //is skipped - I use "bit blasting" functions to copy picture directly onto window.
          gGLManager->MarkForDirectCopy(glContext, kTRUE);
@@ -127,7 +130,10 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          //Rotation invalidates "selection buffer" 
          // - (color-to-object map, previously read from gl-buffer).
          fGLPainter->InvalidateSelection();
-         fCamera.RotateCamera(px, py);
+         if (fGLPainter->CutAxisSelected())
+            fGLPainter->Pan(px, py);
+         else
+            fCamera.RotateCamera(px, py);
          //Draw modified scene onto canvas' window.
          gGLManager->PaintSingleObject(fGLPainter.get());
          break;

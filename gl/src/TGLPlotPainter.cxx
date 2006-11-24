@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.9 2006/11/23 07:42:06 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.10 2006/11/24 10:45:13 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -1025,8 +1025,7 @@ ClassImp(TGLBoxCut)
 
 //______________________________________________________________________________
 TGLBoxCut::TGLBoxCut(const TGLPlotBox *box)
-               : fDirection(kAlongX),
-                 fXLength(0.),
+               : fXLength(0.),
                  fYLength(0.),
                  fZLength(0.),
                  fPlotBox(box),
@@ -1087,6 +1086,30 @@ void TGLBoxCut::DrawBox(Bool_t selectionPass, Int_t selected)const
 {
    //Draw cut as a semi-transparent box.
    if (!selectionPass) {
+      glDisable(GL_LIGHTING);
+      glLineWidth(3.f);
+
+      selected == TGLPlotPainter::kXAxis ? glColor3d(1., 1., 0.) : glColor3d(1., 0., 0.);
+      glBegin(GL_LINES);
+      glVertex3d(fXRange.first, (fYRange.first + fYRange.second) / 2, (fZRange.first + fZRange.second) / 2);
+      glVertex3d(fXRange.second, (fYRange.first + fYRange.second) / 2, (fZRange.first + fZRange.second) / 2);
+      glEnd();
+
+      selected == TGLPlotPainter::kYAxis ? glColor3d(1., 1., 0.) : glColor3d(0., 1., 0.);
+      glBegin(GL_LINES);
+      glVertex3d((fXRange.first + fXRange.second) / 2, fYRange.first, (fZRange.first + fZRange.second) / 2);
+      glVertex3d((fXRange.first + fXRange.second) / 2, fYRange.second, (fZRange.first + fZRange.second) / 2);
+      glEnd();
+
+      selected == TGLPlotPainter::kZAxis ? glColor3d(1., 1., 0.) : glColor3d(0., 0., 1.);
+      glBegin(GL_LINES);
+      glVertex3d((fXRange.first + fXRange.second) / 2, (fYRange.first + fYRange.second) / 2, fZRange.first);
+      glVertex3d((fXRange.first + fXRange.second) / 2, (fYRange.first + fYRange.second) / 2, fZRange.second);
+      glEnd();
+
+      glLineWidth(1.f);
+      glEnable(GL_LIGHTING);
+      
       GLboolean oldBlendState = kFALSE;
       glGetBooleanv(GL_BLEND, &oldBlendState);
    
@@ -1095,77 +1118,36 @@ void TGLBoxCut::DrawBox(Bool_t selectionPass, Int_t selected)const
       
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-      glDisable(GL_LIGHTING);
-      glLineWidth(3.f);
-      glEnable(GL_LINE_SMOOTH);
-      glColor4d(1., 0.3, 0., 0.8);
-      switch(fDirection){
-      case kAlongX:
-         glBegin(GL_LINES);
-         glVertex3d(fXRange.first, (fYRange.first + fYRange.second) / 2, (fZRange.first + fZRange.second) / 2);
-         glVertex3d(fXRange.second, (fYRange.first + fYRange.second) / 2, (fZRange.first + fZRange.second) / 2);
-         glEnd();
-         break;
-      case kAlongY:
-         glBegin(GL_LINES);
-         glVertex3d((fXRange.first + fXRange.second) / 2, fYRange.first, (fZRange.first + fZRange.second) / 2);
-         glVertex3d((fXRange.first + fXRange.second) / 2, fYRange.second, (fZRange.first + fZRange.second) / 2);
-         glEnd();
-         break;
-      case kAlongZ:
-         glBegin(GL_LINES);
-         glVertex3d((fXRange.first + fXRange.second) / 2, (fYRange.first + fYRange.second) / 2, fZRange.first);
-         glVertex3d((fXRange.first + fXRange.second) / 2, (fYRange.first + fYRange.second) / 2, fZRange.second);
-         glEnd();
-         break;
-      }
 
-      glDisable(GL_LINE_SMOOTH);
-      glLineWidth(1.f);
-      glEnable(GL_LIGHTING);
-
-      const Float_t diffuseColor[] = {0.f, 0.f, 1.f, selected == 7 ? 0.5f : 0.2f};
+      const Float_t diffuseColor[] = {0.f, 0.f, 1.f, 0.2f};
       glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuseColor);
    
-      if (selected == 7) {
-         const Float_t blueEmission[] = {0.5f, 0.f, 1.f, 1.f};
-         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, blueEmission);
-      }
-
       Rgl::DrawBoxFront(fXRange.first, fXRange.second, fYRange.first, fYRange.second,
                         fZRange.first, fZRange.second, fPlotBox->GetFrontPoint());
-
-      if (selected == 7);
-         glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, Rgl::gNullEmission);
 
       if (!oldBlendState)
          glDisable(GL_BLEND);
    } else {
-      Rgl::ObjectIDToColor(7, kFALSE);//kFALSE == highColor
-      Rgl::DrawBoxFront(fXRange.first, fXRange.second, fYRange.first, fYRange.second,
-                        fZRange.first, fZRange.second, fPlotBox->GetFrontPoint());
+      glLineWidth(5.f);
+      Rgl::ObjectIDToColor(TGLPlotPainter::kXAxis, kFALSE);
+      glBegin(GL_LINES);
+      glVertex3d(fXRange.first, (fYRange.first + fYRange.second) / 2, (fZRange.first + fZRange.second) / 2);
+      glVertex3d(fXRange.second, (fYRange.first + fYRange.second) / 2, (fZRange.first + fZRange.second) / 2);
+      glEnd();
+
+      Rgl::ObjectIDToColor(TGLPlotPainter::kYAxis, kFALSE);
+      glBegin(GL_LINES);
+      glVertex3d((fXRange.first + fXRange.second) / 2, fYRange.first, (fZRange.first + fZRange.second) / 2);
+      glVertex3d((fXRange.first + fXRange.second) / 2, fYRange.second, (fZRange.first + fZRange.second) / 2);
+      glEnd();
+
+      Rgl::ObjectIDToColor(TGLPlotPainter::kZAxis, kFALSE);
+      glBegin(GL_LINES);
+      glVertex3d((fXRange.first + fXRange.second) / 2, (fYRange.first + fYRange.second) / 2, fZRange.first);
+      glVertex3d((fXRange.first + fXRange.second) / 2, (fYRange.first + fYRange.second) / 2, fZRange.second);
+      glEnd();
+      glLineWidth(1.f);
    }
-}
-
-//______________________________________________________________________________
-void TGLBoxCut::SetDirectionX()
-{
-   //Set X Axis as a movement direction
-   fDirection = kAlongX;
-}
-
-//______________________________________________________________________________
-void TGLBoxCut::SetDirectionY()
-{
-   //Set Y Axis as a movement direction
-   fDirection = kAlongY;
-}
-
-//______________________________________________________________________________
-void TGLBoxCut::SetDirectionZ()
-{
-   //Set Z Axis as a movement direction
-   fDirection = kAlongZ;
 }
 
 //______________________________________________________________________________
@@ -1177,7 +1159,7 @@ void TGLBoxCut::StartMovement(Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TGLBoxCut::MoveBox(Int_t px, Int_t py)
+void TGLBoxCut::MoveBox(Int_t px, Int_t py, Int_t axisID)
 {
    //Move box cut along selected direction.
    Double_t mv[16] = {0.};
@@ -1188,14 +1170,14 @@ void TGLBoxCut::MoveBox(Int_t px, Int_t py)
    glGetIntegerv(GL_VIEWPORT, vp);
    Double_t winVertex[3] = {0.};
 
-   switch(fDirection){
-   case kAlongX:
+   switch(axisID){
+   case TGLPlotPainter::kXAxis :
       gluProject(fCenter.X(), 0., 0., mv, pr, vp, &winVertex[0], &winVertex[1], &winVertex[2]);
       break;
-   case kAlongY:
+   case TGLPlotPainter::kYAxis :
       gluProject(0., fCenter.Y(), 0., mv, pr, vp, &winVertex[0], &winVertex[1], &winVertex[2]);
       break;
-   case kAlongZ:
+   case TGLPlotPainter::kZAxis :
       gluProject(0., 0., fCenter.Z(), mv, pr, vp, &winVertex[0], &winVertex[1], &winVertex[2]);
       break;
    }
@@ -1208,22 +1190,22 @@ void TGLBoxCut::MoveBox(Int_t px, Int_t py)
 
    const TGLVertex3 *box = fPlotBox->Get3DBox();
 
-   switch(fDirection){
-   case kAlongX:
+   switch(axisID){
+   case TGLPlotPainter::kXAxis :
       if (newPoint[0] >= box[1].X() + 0.4 * fXLength)
          break;
       if (newPoint[0] <= box[0].X() - 0.4 * fXLength)
          break;
       fCenter.X() = newPoint[0];
       break;
-   case kAlongY:
+   case TGLPlotPainter::kYAxis :
       if (newPoint[1] >= box[2].Y() + 0.4 * fYLength)
          break;
       if (newPoint[1] <= box[0].Y() - 0.4 * fYLength)
          break;
       fCenter.Y() = newPoint[1];
       break;
-   case kAlongZ:
+   case TGLPlotPainter::kZAxis :
       if (newPoint[2] >= box[4].Z() + 0.4 * fZLength)
          break;
       if (newPoint[2] <= box[0].Z() - 0.4 * fZLength)

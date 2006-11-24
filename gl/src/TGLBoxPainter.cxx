@@ -122,8 +122,8 @@ void TGLBoxPainter::Pan(Int_t px, Int_t py)
       //Possibly, move box here
       py = fCamera->GetHeight() - py;
       if (!fHighColor) {
-         if (fBoxCut.IsActive() && fSelectedPart == 7)
-            fBoxCut.MoveBox(px, py);
+         if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis))
+            fBoxCut.MoveBox(px, py, fSelectedPart);
          else
             MoveSection(px, py);
       } else {
@@ -148,7 +148,6 @@ void TGLBoxPainter::AddOption(const TString &option)
       fType = kBox;
 }
 
-
 //______________________________________________________________________________
 void TGLBoxPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
 {
@@ -161,27 +160,15 @@ void TGLBoxPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
       if (fBoxCut.IsActive())
          fBoxCut.TurnOnOff();
       gGLManager->PaintSingleObject(this);
-   } else if (event == kKeyPress) {
-      if (py == kKey_c || py == kKey_C) {
-         if (fHighColor)
-            Info("ProcessEvent", "Switch to true color mode to use box cut");
-         else {
-            fBoxCut.TurnOnOff();
-            fUpdateSelection = kTRUE;
-         }
-      } else if (py == kKey_x || py == kKey_X) {
-         if (fBoxCut.IsActive())
-            fBoxCut.SetDirectionX();
-      } else if (py == kKey_y || py == kKey_Y) {
-         if (fBoxCut.IsActive())
-            fBoxCut.SetDirectionY();
-      } else if (py == kKey_z || py == kKey_Z) {
-         if (fBoxCut.IsActive())
-            fBoxCut.SetDirectionZ();
+   } else if (event == kKeyPress && (py == kKey_c || py == kKey_C)) {
+      if (fHighColor)
+         Info("ProcessEvent", "Switch to true color mode to use box cut");
+      else {
+         fBoxCut.TurnOnOff();
+         fUpdateSelection = kTRUE;
       }
    }
 }
-
 
 //______________________________________________________________________________
 void TGLBoxPainter::InitGL()const
@@ -197,7 +184,6 @@ void TGLBoxPainter::InitGL()const
 
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 }
-
 
 //______________________________________________________________________________
 void TGLBoxPainter::DrawPlot()const
@@ -350,7 +336,6 @@ void TGLBoxPainter::SetPlotColor()const
    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 70.f);
 }
 
-
 //______________________________________________________________________________
 void TGLBoxPainter::DrawSectionXOZ()const
 {
@@ -360,7 +345,6 @@ void TGLBoxPainter::DrawSectionXOZ()const
       return;
    fXOZSlice.DrawSlice(fXOZSectionPos / fCoord->GetYScale());
 }
-
 
 //______________________________________________________________________________
 void TGLBoxPainter::DrawSectionYOZ()const

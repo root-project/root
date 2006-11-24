@@ -93,8 +93,8 @@ void TGLSurfacePainter::Pan(Int_t px, Int_t py)
       py = fCamera->GetHeight() - py;
 
       if (!fHighColor) {
-         if (fBoxCut.IsActive() && fSelectedPart == 7)
-            fBoxCut.MoveBox(px, py);
+         if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis))
+            fBoxCut.MoveBox(px, py, fSelectedPart);
          else
             MoveSection(px, py);
       }
@@ -167,23 +167,12 @@ void TGLSurfacePainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
       if (fBoxCut.IsActive())
          fBoxCut.TurnOnOff();
       gGLManager->PaintSingleObject(this);
-   } else if (event == kKeyPress) {
-      if (py == kKey_c || py == kKey_C) {
-         if (fHighColor)
-            Info("ProcessEvent", "Switch to true color to use box cut");
-         else {
-            fBoxCut.TurnOnOff();
-            fUpdateSelection = kTRUE;
-         }
-      } else if (py == kKey_x || py == kKey_X) {
-         if (fBoxCut.IsActive())
-            fBoxCut.SetDirectionX();
-      } else if (py == kKey_y || py == kKey_Y) {
-         if (fBoxCut.IsActive())
-            fBoxCut.SetDirectionY();
-      } else if (py == kKey_z || py == kKey_Z) {
-         if (fBoxCut.IsActive())
-            fBoxCut.SetDirectionZ();
+   } else if (event == kKeyPress && (py == kKey_c || py == kKey_C)) {
+      if (fHighColor)
+         Info("ProcessEvent", "Switch to true color to use box cut");
+      else {
+         fBoxCut.TurnOnOff();
+         fUpdateSelection = kTRUE;
       }
    }
 }

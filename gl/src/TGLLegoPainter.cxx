@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.cxx,v 1.6 2006/10/24 14:20:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.cxx,v 1.7 2006/11/22 16:19:55 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -386,8 +386,8 @@ void TGLLegoPainter::Pan(Int_t px, Int_t py)
       py = fCamera->GetHeight() - py;
       
       if (!fHighColor) {
-         if (fBoxCut.IsActive() && fSelectedPart == 7)
-            fBoxCut.MoveBox(px, py);
+         if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis))
+            fBoxCut.MoveBox(px, py, fSelectedPart);
          else
             MoveSection(px, py);
       } else

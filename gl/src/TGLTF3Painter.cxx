@@ -83,12 +83,10 @@ Bool_t TGLTF3Painter::InitGeometry()
 void TGLTF3Painter::StartPan(Int_t px, Int_t py)
 {
    //User clicks right mouse button (in a pad).
-   if (fBoxCut.IsActive() && fSelectedPart == 7) {
-      fMousePosition.fX = px;
-      fMousePosition.fY = fCamera->GetHeight() - py;
-      fBoxCut.StartMovement(px, fCamera->GetHeight() - py);
-   } else
-      fCamera->StartPan(px, py);
+   fMousePosition.fX = px;
+   fMousePosition.fY = fCamera->GetHeight() - py;
+   fCamera->StartPan(px, py);
+   fBoxCut.StartMovement(px, fCamera->GetHeight() - py);
 }
 
 //______________________________________________________________________________
@@ -100,8 +98,8 @@ void TGLTF3Painter::Pan(Int_t px, Int_t py)
       return;
 
    if (fSelectedPart) {
-      if (fBoxCut.IsActive() && fSelectedPart == 7)
-         fBoxCut.MoveBox(px, fCamera->GetHeight() - py);
+      if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis))
+         fBoxCut.MoveBox(px, fCamera->GetHeight() - py, fSelectedPart);
       else
          fCamera->Pan(px, py);
    }
@@ -130,15 +128,6 @@ void TGLTF3Painter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
             fBoxCut.TurnOnOff();
             fUpdateSelection = kTRUE;
          }
-      } else if (py == kKey_x || py == kKey_X) {
-         if (fBoxCut.IsActive())
-            fBoxCut.SetDirectionX();
-      } else if (py == kKey_y || py == kKey_Y) {
-         if (fBoxCut.IsActive())
-            fBoxCut.SetDirectionY();
-      } else if (py == kKey_z || py == kKey_Z) {
-         if (fBoxCut.IsActive())
-            fBoxCut.SetDirectionZ();
       }
    } else if (event == kButton1Double && fBoxCut.IsActive()) {
       fBoxCut.TurnOnOff();

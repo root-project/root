@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.8 2006/11/22 16:19:55 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.9 2006/11/24 10:45:13 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -41,13 +41,6 @@ class TH1;
 
 class TGLBoxCut {
 private:
-   enum EMovementDirection {
-      kAlongX,
-      kAlongY,
-      kAlongZ
-   };
-
-   EMovementDirection         fDirection;
    Double_t                   fXLength;
    Double_t                   fYLength;
    Double_t                   fZLength;
@@ -61,7 +54,6 @@ private:
    Double_t                   fFactor;
 
    TPoint                     fMousePos;
-   enum{kSelectionColor = 7};
 
 public:
    TGLBoxCut(const TGLPlotBox *plotBox);
@@ -74,12 +66,9 @@ public:
    void   SetFactor(Double_t f){fFactor = f;}
 
    void   DrawBox(Bool_t selectionPass, Int_t selected)const;
-   void   SetDirectionX();
-   void   SetDirectionY();
-   void   SetDirectionZ();
    
    void   StartMovement(Int_t px, Int_t py);
-   void   MoveBox(Int_t px, Int_t py);
+   void   MoveBox(Int_t px, Int_t py, Int_t axisID);
    
    Bool_t IsInCut(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
                   Double_t zMin, Double_t zMax)const;
@@ -122,7 +111,7 @@ protected:
    
    enum ESelectionBase{
       kHighColorSelectionBase = 7,
-      kTrueColorSelectionBase = 8
+      kTrueColorSelectionBase = 10
    };
    
    ESelectionBase        fSelectionBase;
@@ -151,6 +140,14 @@ public:
    //Camera is external to painter, if zoom was changed, or camera
    //was rotated, selection must be invalidated.
    void             InvalidateSelection();
+
+   enum ECutAxisID {
+      kXAxis = 7,
+      kYAxis = 8,
+      kZAxis = 9
+   };
+
+   Bool_t           CutAxisSelected()const{return fSelectedPart <= kZAxis && fSelectedPart >= kXAxis;}
 
 protected:
    Int_t            GetGLContext()const;
