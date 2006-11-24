@@ -1,0 +1,71 @@
+# exportroot
+#
+# Description: 
+#  A script to merge newer Cint source to Root source tree on UNIX.
+#  This script removes all cint related source files from Root directory
+#  and make links to them from the Cint source directory.
+#
+# Usage:
+#   ### CINTSYSDIR and ROOTSYS must be properly set
+#   $ cd $CINTSYSDIR (or most likely, directory where this file exists)
+#   $ sh exportroot
+#
+
+export RM=rm
+export LINK=ln
+
+$RM   $ROOTSYS/cint/inc/G__ci.h
+$LINK G__ci.h $ROOTSYS/cint/inc/G__ci.h
+$RM   $ROOTSYS/include/G__ci.h
+$LINK G__ci.h $ROOTSYS/include/G__ci.h
+
+
+cd src
+for i in *.h
+do
+  $RM $ROOTSYS/cint/inc/$i
+  $LINK $i $ROOTSYS/cint/inc/$i
+  $RM   $ROOTSYS/include/$i
+  $LINK $i $ROOTSYS/include/$i
+done
+for i in *.c *.cxx
+do
+  $RM $ROOTSYS/cint/src/$i
+  $LINK $i $ROOTSYS/cint/src/$i
+done
+rm $ROOTSYS/cint/src/dmystrct.c
+rm $ROOTSYS/cint/src/dmystrm.c
+rm $ROOTSYS/cint/src/dmyinit.c
+#rm $ROOTSYS/cint/src/gcc3strm.cxx
+rm $ROOTSYS/cint/src/libstrm.cxx
+rm $ROOTSYS/cint/src/iccstrm.cxx
+rm $ROOTSYS/cint/src/vc7strm.cxx
+rm $ROOTSYS/cint/src/allstrm.cxx
+rm $ROOTSYS/cint/src/accstrm.cxx
+#rm $ROOTSYS/cint/src/longif3.cxx
+rm $ROOTSYS/cint/src/longif.cxx
+rm $ROOTSYS/cint/src/bc_*
+
+cd ../include
+for i in *
+do
+  $RM $ROOTSYS/cint/include/$i
+  $LINK $i $ROOTSYS/cint/include/$i
+done
+  
+cd ../stl
+for i in *
+do
+  $RM $ROOTSYS/cint/stl/$i
+  $LINK $i $ROOTSYS/cint/stl/$i
+done
+
+$RM $ROOTSYS/cint/src/*old.cxx
+$RM $ROOTSYS/cint/src/*old.h
+
+cd ../lib
+for i in */*.h
+do
+  $RM   $ROOTSYS/cint/lib/$i
+  $LINK $i $ROOTSYS/cint/lib/$i
+done

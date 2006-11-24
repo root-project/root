@@ -1,0 +1,25 @@
+#
+# setup and test
+#
+
+######################################################################
+# Dynamic Link Library test
+######################################################################
+
+# Create Makefile
+makecint -mk Makefile -dl Stub.dl -H Src.h -C++ Src.C -i++ Stub.h
+
+# Compile 
+make clean
+make
+
+# Test
+cint Src.C Stub.C # All interpreted
+cint Stub.dl Stub.C       # class Complex precompiled
+
+
+cint Src.C Stub.C > cint.out
+cint Stub.dl Stub.C       > cc.out
+diff cint.out cc.out
+rm *.out
+

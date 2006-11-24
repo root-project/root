@@ -1,0 +1,11 @@
+
+######################################################################
+cat $CINTSYSDIR/MAKEINFO > Makefile
+echo 'main : main.cxx mt.c' >> Makefile
+echo '	$(CPP) main.cxx mt.c -lpthread -ldl' >> Makefile
+
+make -f Makefile
+a.out
+
+rm a.out Makefile
+

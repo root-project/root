@@ -1,0 +1,18 @@
+# exportcint
+#
+# Description:
+#   The Author's private utility. 
+#   Copy cint source package from Linux to Windows file system.
+#
+# Usage:
+#   $ su
+#   # sh exportcint
+#
+
+cp test.tar.gz /hda1/cinttry/test.tgz
+cp cint.tar.gz /hda1/cinttry/cint5.15.tar.gz
+#cp cinttest.tar.gz /hda1/cinttry/cinttest.tgz
+cp RELNOTE.txt /hda1/cinttry/RELNOTE.txt
+cp CINTPACK.TAR /hda1/cinttry/CINTPACK.TAR
+
+ 

@@ -1,0 +1,13 @@
+
+makecint -mk Makefile -dl errpipe.dll -H errpipe.h
+make -f Makefile
+
+echo '### cint errpipe.cxx'
+cint errpipe.cxx
+echo '### cat dump.out'
+cat dump.out
+
+make -f Makefile clean
+rm dump.out
+rm Makefile
+

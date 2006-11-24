@@ -1,0 +1,23 @@
+###########################################################################
+# src/Makebcdict
+#
+# Makefile to make bc_dict.cxx
+#
+#  1) First, you must install cint correctly.
+#  2) Modify newlink.c eliminating G__N_EXPLICITDESTRUCTOR macro
+#  3) do make in $CINTSYSDIR
+#  4) do make -f Makeapi in src directory
+#  5) Restore G__N_EXPLICITDESTRUCTOR macro in newlink.c
+#  6) do make in $CINTSYSDIR
+#
+###########################################################################
+
+BCHEADER = bc_autoobj.h \
+	   bc_cfunc.h \
+	   bc_inst.h \
+	   bc_parse.h \
+	   bc_reader.h \
+	   bc_type.h 
+
+bc_dict.cxx : $(BCHEADER) ../cint
+	cint -nbc_dict.cxx -NG__bcdict -Z0 -DG__NOALGORITHM -DG__BC_DICT -D__MAKECINT__ -c-1 -I.. $(BCHEADER) bc_linkdef.h

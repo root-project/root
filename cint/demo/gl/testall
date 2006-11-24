@@ -1,0 +1,43 @@
+
+# DEMO0
+INC='-I/usr/X11R6/include'
+#LIB='-L/usr/X11R6/lib -l -lGL -lGLU -lglut -lXmu -lX11 -lXi'
+case `uname -s` in
+CYGWIN*)
+  LIB='-l -L/usr/X11R6/lib -lGL -lGLU -lXmu -lX11 -lXi'
+  ;;
+esac
+
+makecint -mk Makefile $INC $LIB -dl display0.dll -h display0.h
+make clean
+make
+
+cint test0.c
+
+make clean
+rm Makefile
+
+
+# DEMO1
+
+makecint -mk Makefile $INC $LIB -dl display1.dll -h display1.h
+make clean
+make
+
+cint test1.c
+
+make clean
+rm Makefile
+
+
+# DEMO2
+
+makecint -mk Makefile $INC $LIB -I$CINTSYSDIR -dl display2.dll -h display2.h
+make clean
+make
+
+cint test2.c
+
+make clean
+rm Makefile
+

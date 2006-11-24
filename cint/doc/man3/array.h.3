@@ -1,0 +1,148 @@
+.PU
+.TH ARRAY 3 
+.SH NAME
+array.h \- Array and complex calculation library for cint
+
+.SH SYNOPSIS
+.br
+#include <array.h>
+
+array   x=array(double start,double stop,int ndat);
+
+carray  y=carray(double real,double imag,int ndat);
+
+complex c=complex(double real,double imag=0);
+
+arrayostream aos=arrayostream(char *filename);
+
+arrayistream ais=arrayistream(char *filename);
+
+graphbuf buffer;
+
+.SH DESCRIPTION
+ <array.h> is header file for a array, complex and complex array calculation
+library for CINT.  
+
+.B Declaration
+ Array,carray and complex type object declaration can be done using 
+appropriate constructors. 'array' is an array of double, 'carray' is an array
+of complex, and 'complex' is a complex number type.
+
+.nf
+	array   x=array(double start,double stop,int npoint);   
+	carray  y=carray(double real,double, imag,int npoint);
+	complex j=complex(double real, double imag);
+.fi
+
+.B Operation
+ +,-,*,/ operators can be used to above types and combination of above types
+and double.  Types are automatically promoted to appropriate types.
+For example,
+
+.nf
+	y = x*j+1.4142 ;  // carray = array*complex+double;
+.fi
+
+.B Graphical plot
+ Graphical plot can be done by redirecting array or carray object to
+a predefined ostream 'plot'. Title of the data can be optionally given
+by string. '\\n' is needed at the end. For example,
+
+.nf
+        plot << x << y << "\\n";
+
+        plot << "title of graph"
+             << x  << "xunit"           << xmin >> xmax << LOG
+             << y1 << "name of y1 data" << ymin >> ymax << LOG
+             << y2 << "name of y2 data"  // multiple y axis data(optional)
+             << y3 << "name of y3 data"  //
+             << "yunit\\n" ;             // must end with \\n
+.fi
+
+.B Output to CSV (Comma Separated Value)
+ You can also output value of arrays in CVS(Comma Separated Value) and let
+Microsoft Excel read it. 
+
+.nf
+        // output CSV to stdout
+        csv << x << y << "\\n";
+
+        // output CSV to a file
+        arrayostream csvf("outfile.csv",1);
+        csvf << "title of graph"
+             << x  << "xunit"           << xmin >> xmax << LOG
+             << y1 << "name of y1 data" << ymin >> ymax << LOG
+             << y2 << "name of y2 data"  // multiple y axis data(optional)
+             << y3 << "name of y3 data"  //
+             << "yunit\\n" ;             // must end with \\n
+.fi
+
+
+.B graphbuf
+ Graphbuf is a buffer to store graphical plot data.
+
+.nf
+	array x=array(0,10,100),y1,y2;
+	graphbuf buf;
+
+        buf  << "title of graph"
+             << x  << "xunit"           << xmin >> xmax << LOG
+             << y1 << "name of y1 data" << ymin >> ymax << LOG
+             << "yunit\\n" ;  // store data to 'buf'
+
+	plot << buf; // plot same data as above
+
+	buf >> x >> y2 >> '\\n'; // read data back to array
+.fi
+
+
+.B File I/O
+ If you use 'arraycout' instead of 'plot', you can print out the data to 
+standard output.
+If you want to store/load the data to/from a file, store data into graphbuf
+and redirect it/out to arrayostream/arrayistream.
+
+.nf
+        // store x,c,y data to a file "data.d"
+	graphbuf bufout;
+	bufout << "title" << x << c << y << '\\n';
+        arrayostream("data.d") << bufout;
+
+        // load from "data.d"
+	graphbuf bufin;
+        arrayistream("data.d") >> bufin;
+        bufin >> x >> c >> y >> '\\n';
+.fi
+
+.B Subarray
+ Reference to subarray can be done by subarray(array& c,int offset,int ndat)
+function. The subarray() function can only be used as rvalue.
+Assignment to subarray can be done by array::sub(int offset,int ndat)
+member function. array::sub() can only be used as lvalue.
+
+.nf
+        array x(0,1e-6,1024), y;
+        y.sub(50,100) = subarray(x,75,125) + subarray(x,100,150);
+.fi
+
+.B FFT
+ Following FFT library can be used if <fft.h> is also included.
+
+.nf
+  fft << (array)time << (array)in >> (array)freq >> (carray)o1 >> \'\\n\';
+  fft << (array)time << (carray)in >> (array)freq >> (carray)o1 >> \'\\n\';
+  ifft << (array)freq << (carray)in >> (array)time >> (array)o1 >> \'\\n\';
+  ifft << (array)freq << (carray)in >> (array)time >> (carray)o1 >> \'\\n\';
+  spectrum << (array)time << (array)in >> (array)freq >> (array)o1>>\'\\n\';
+  cepstrum << (array)time << (array)in >> (array)freq >> (array)o1>>\'\\n\';
+  array conv(array& a,array& b);  // convolution
+.fi
+
+.SH COMPATIBILITY
+	HP-UX, Linux
+.SH SEE ALSO
+	cint(1),fft.h(3)
+.SH AUTHOR
+Masaharu Goto
+
+Copyright (c) 1995~1999 Hewlett-Packard Japan

@@ -1,0 +1,98 @@
+
+	Operator Summary   C++ 2nd edition  page 89
+-----------------------------------------------------------------
+::		scope resoolution	class_name::member
+::		global			::name
+-----------------------------------------------------------------
+.		member selection	object.member
+->		member selection	pointer->member
+[]		subscripting		pointer[expr]
+()		function call		expr(expr_list)
+()		value construction	type(expr_list)
+sizeof		size of object		sizeof expr
+sizeof		size of type		sizeof (type)
+----------------------------------------------------------------- 
+ up above should be handled in G__getobjectexpr
+
+ down below is handled in G__getexpr, except for type casting
+----------------------------------------------------------------- 
+++		post increment		lvalue++
+++		pre increment		++lvalue
+--		post decrement		lvalue--
+--		pre increment		--lvalue
+~		complement		~expr
+!		not			!expr
+-		unary minus		-exprr
++		unary plus		+expr
+&		address of		&lvalue
+*		dereference		*expr
+new		create(allocate)	new type , new (arena) type
+delete		destroy(de-allocate)	delete pointer
+delete[]	destroy array		delete[] pointer
+()		cast(type conversion)	(type)expr   type(expr)
+-----------------------------------------------------------------
+.*		member selection	object.*pointer-to-member
+->*		member selection	pointer->*pointer-to-member
+-----------------------------------------------------------------
+*		multiply		expr*expr
+/		divide			expr/expr
+%		module(remainder)	expr%expr
+-----------------------------------------------------------------
++		add(plus)		expr+expr
+-		subtract(minus)		expr-expr
+-----------------------------------------------------------------
+<<		shift left		expr<<expr
+>>		shift right		expr>>expr
+-----------------------------------------------------------------
+<		less than		expr<expr
+<=		less than or equal	expr<=expr
+>		greater than		expr>expr
+>=		greater than or equal	expr>=expr
+-----------------------------------------------------------------
+==		equal			expr==expr
+!=		not equal		expr!=expr
+-----------------------------------------------------------------
+&		bitwise AND		expr&expr
+-----------------------------------------------------------------
+^		bitwise exclusive OR	expr^expr
+-----------------------------------------------------------------
+|		bitwise inclusive OR	expr|expr
+-----------------------------------------------------------------
+&&		logical AND		expr&&expr
+-----------------------------------------------------------------
+||		logical OR		expr||expr
+-----------------------------------------------------------------
+? :		conditional expression	expr?expr:expr
+-----------------------------------------------------------------
+=		simple assignment	lvalue=expr
+*=		multiply and assign	lvalue*=expr
+/=		divide and assign	lvalue/=expr
+%=		modulo and assign	lvalue%=expr
++=		add and assign		lvalue+=expr
+-=		subtract and assign	lvalue-=expr
+<<=		shift left and assign	lvalue<<=expr
+>>=		shift right and assign	lvalue>>=expr
+&=		AND and assign		lvalue&=expr
+|=		inclusive OR and assign	lvalue|=expr
+^=		exlusive OR  and assign	lvalue^=expr
+-----------------------------------------------------------------
+,		comman(sequencing)	expr,expr
+-----------------------------------------------------------------
+
+operators that can be overaloded
++	-	*	/	%	^	&	|	~
+!	=	<	>	+=	-=	*=	/=	%=
+^=	&=	|=	<<	>>	>>=	<<=	==	!=
+<=	>=	&&	||	++	--	,	->*	->
+()	[]
+
+both binary and unary form
++	-	*	&
+
+operators that can not be loaded
+.	  .*	::	?:	sizeof
+     
+meaning of overloaded ->
+	ptr->member
+	obj->member     (obj.operator->())->member
+

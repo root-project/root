@@ -1,0 +1,743 @@
+RELNOTE.txt 
+
+cint 5.16.16/6.1.16  release note
+
+ - CINT mailing list 
+    Cint mailing list 'cint@root.cern.ch' is started. Send request to 
+    'Majordomo@pcroot.cern.ch' containing following line for subscription.
+
+       subscribe cint [preferred mail address]
+
+* Notice *******************************************************************
+
+ - From Mar/2004, I start working on re-engineering of bytecode compiler
+   which has been a major source of bugs.  Hence this is a major change
+   of the system, I'll have to slowdown user support and bug fix. I'd 
+   appreciate your understanding. High priority problems will still get 
+   fixed.
+
+
+* New features *************************************************************
+
+ - Major re-engineering on bytecode compiler
+   Cint5.15.x   : legacy Cint, 
+   Cint6.0.x    : preliminarily reengineering version, 
+   
+
+ - Visual C++ .NET support
+   Visual C++ .NET is supported from cint5.15.120. Go to platform/VisualCpp7
+   directory and run setup script. After that, you need to run setup script
+   in lib/longlong, lib/win32api, lib/posix and lib/dll_stl directories.
+   You can use full functionality of Cint.  There is a problem Windows batch
+   command that child processes do not run properly. That is why you need to
+   run setup.bat script in each lib/* directory.
+
+ - Qt library
+   Qt-Cint is experimentally supported from 5.15.108. Refer to 
+   lib/qt/README.txt and demo/qt/README.txt. Currently, Qt-Cint is supported
+   only on Windows with VC++6.0 compiler.  Qt-Cint implementation is quite
+   premature.  Your feedback will be greatly appreciated.
+
+ - DLL loading without makecint/rootcint for Intel CPU
+   From 5.15.102, you can load global functions in DLL without 
+   makecint/rootcint if you use Intel 32bit CPU with gcc3.2, VC++ or BC++. 
+   You need to specify DLL filename and function interface by 
+      extern "[dllname]" { ... }
+   Refer to doc/ref.txt for detail.
+
+ - Cygwin5.1 support
+   From 5.15.101, Cygwin5.1 is supported with full Cint functionality including
+   dynamic loading. Read platform/README.txt and try platform/cygwin51_gcc3_so.
+
+ -  VC++7.1 support
+   Try platform/visualCpp7/setup[XXX].bat for setup. This version uses new
+   templated iostream library.
+
+ -  Command prompt input mode
+   A new command prompt input mode is added from version 5.15.74. The new mode
+   can be activated by setting 'INPUTMODE = C++' in $CINTSYSDIR/MAKEINFO.
+   See doc/ref.txt - INPUTMODE for more detail.
+
+ -  Test suite
+   Cint test suite goes with source code package. The test suite is a 
+   collection of test programs reported with bug reports. Read test/README.txt
+   for more detail.
+
+ -  Borland C++ compiler 5.5 support
+   Free version of Borland BCC32.exe comiler is available from 
+   http://www.borland.com.  BCC32.exe version 5.5 is supported from
+   cint5.15.53.  Refer to c:\cint\platform\borlandcc5\README.txt.
+
+ -  New iostream redirection scheme is implemented in lib/*stream/iostrm.h.
+   The code is implementation dependent which needs to be tested on each
+   compiler and computer platform. If you fail to compile src/*strm.cxx,
+   please look into corresponding lib/*stream/iostrm.h, fix the problem and
+   send me appropriate fix. 
+
+ -  DLL binary compatibility is discountinued between 5.14.X to 5.15.X. Please
+   re-compile all the CINT DLLs. After 5.15.02, DLL binary compatibility became
+   more robust.
+
+ - gcc-3.00 support
+    gcc-3.00 is supported from 5.15.14. Use platform/linux_RH6.2_gcc3 to
+   compile Cint with gcc-3.00 on RedHat6.2 Linux. This configuration has many
+   problems still. The author is working to solve them.
+
+ - Power operator '**' delete option
+    Cint have had power operator '**' as an original extension. However, this
+   causes problem if we look C/C++ syntax strictly. 'a**b' is 'a power b' for
+   Cint and 'a*(*b)' for compiled code. G__NOPOWEROPR compile flag is added
+   to turn off '**' operator. Add -DG__NOPOWEROPR to OTHMACRO in platform
+   dependency file. From 5.15.25, power operator is deleted by default.
+
+ - WildC++ with Tcl/Tk8.3
+    WildC++ interpreter, a mixture of Cint and Tcl/Tk, used to require older
+   Tcl/Tk. Now, it supports newer Tcl/Tk8.3. Please find it in lib/wintcldl83.
+
+ - New API
+   Following API functions are added. Please refer to doc/ref.txt.
+
+   char* G__load_text(char* namedmacro); 
+         loading on memory C++ source code.
+
+   void G__set_emergencycallback(void (*p2f)())
+         set behavior of '.save' command for emergency object save
+
+
+ - Exception handling example
+   Exception handling has been implemented long time ago. However, it has
+  not been informed enough to the users.  A new example is added in 
+  demo/exception directory. Refer to demo/exception/README.txt for the
+  details.
+
+
+ - Experimental multi-threading libcintX.so
+   Multi-threading libcintX.so capability is provided experimentally. This
+  is a very clude implementation and NOT RECOMMENDEDN FOR ORDINARY USERS.
+   For Linux RedHat6.2, platform dependency file platform/linux_RH6.2_mtso 
+  is prepared. Install Cint with 'sh ./setup platform/linux_RH6.2_mtso' and
+  try example in demo/multilibcint directory.
+   For Windows VC++6.0, add G__MULTITHREADLIBCINT macro at the beginning of
+  G__ci.h. This has to be done before Cint compilation. Install Cint and
+  try example in demo/multilibcint directory.
+
+
+ - Xlib and openGL support
+   X11R6 and openGL APIs are supported from 5.14.86. include/X11/xlib.dll and
+  include/GL/gl.dll can be built under lib/xlib and lib/gl directory. Simple
+  example for X11 program can be found in demo/xlib directory. OpenGL example
+  is missing right now. Your contribution to add an openGL programming example
+  will be greatly appreciated.  Those libraries are verified only on Linux
+  RedHat6.2 at this moment.
+
+
+ - Error message callback
+   Error message can be redirected through an user defined callback function.
+  The callback can be set by G__set_errmsgcallback(void (*p2f)(char*)) API.
+  This feature is convenient when a user wants to embed cint into a GUI based
+  host program. See doc/ref.txt for G__set_errmsgcallback.
+   A special care is needed to compile src/disp.c. Some compiler may report
+  an error in variable argument declaration around line 1972-1978. If you 
+  find a compile error, please modify the source appropriately. Your report
+  about such change , regarding specific platform , is highly appreciated.
+   This feature is normally turned off. You need to define 
+  'OTHMACRO = -DG__ERRORCALLBACK' in platform dependency file for activation.
+  An example is added in demo/errpipe directory.
+
+
+ - Variable argument
+   Variable argument is supported from Cint 5.14.69 for Intel architecture. 
+  <stdarg.h> must be included to use variable argument. Cint accepts both 
+  form of declaration.
+       void foo1(char *fmt, ...);
+       void foo2(char *fmt ...);
+   Argument values for Variable arguments are put into function call stack.
+  For each computer platform, specific byte layout must be emulated by Cint.
+  Because byte layout is not publicly informed, this capability may not be 
+  portable to all platforms. At this moment, only Linux and Win32 with Intel
+  architecture are verified. It is known that this scheme can not be extended
+  to HP-PA and Sparc architecture. Need more investigation for other platforms.
+
+
+ - "ifdef" utility is added to the package. Read doc/ifdef.txt for the detail.
+        "ifdef" selectively resolves #ifdef,#ifndef,#if,#elif,
+       #else and #endif in C/C++ source code. Macros that are 
+       explicitly defined/undefined by -D/-U option are resolved
+       and eliminated from the source code. Other #ifdefs remain
+       unchanged. #if statements with multiple conditions and
+       &&,|| operators will be resolved by a symbolic resolver.
+       "ifdef" can be also used as a #ifdef nesting hierarchy
+       analyzer.
+         Although included in CINT package, ifdef is an independent
+        software productivity tool.
+
+
+ - New memory allocation method is fully activated in cint5.14.64. This
+   scheme is tested under most of the platforms. 
+    + If you find compiling src/Apiif.cxx or other dictionary code due to
+      'void operator delete(void*,[DLLID]_tag*)', undefine G__EH_DUMMY_DELETE
+      macro in G__ci.h around line 195.
+    + Uncomment '#define G__OLDIMPLEMENTATION1423' in G__ci.h to disable the 
+      new scheme.
+    + Alternatively, you can give '-cint -M0x0', '-cint -M0x10' or 
+      '-cint -M0x1c' option to makecint in order to use the old memory 
+      allocation scheme.
+    + A version of IBM AIX-xlC compiler has a problem compiling explicit 
+      destructor calls for implicitly created destructor. This is supposed 
+      to be a compiler bug.
+    + MicroSoft Visual C++97 (or VC++5.0) can not compile dictionary with
+      new memory allocation system. With VC++5.0 or older version, cint will
+      use the old method. (Do not include vcstrmold.cxx and Apiifold.cxx to
+      ROOT source tree.)
+
+
+ - -Y[0|1] option, controls if std namespace is ignored or not. -Y1 (ignore
+   std namespace) is a default. If you specify -Y0 option, you must explicitly
+   use std:: namespace. For example,
+
+     $ cint -Y0 string
+     cint> { std::string a="abcdefg"; }
+
+   Note that CINT header file is reorganized for this purpose. In order to
+   use this feature, you must use new header files. (Under $CINTSYSDIR/include
+   and $CINTSYSDIR/stl directories.)
+
+
+ - -Z[0|1] option, loading std header files implicitly with DLL
+   With -Z1, std header files included in making cint dictionary are
+   implicitly loaded with DLL. Consider following example,
+
+      // myapp.h
+      #include <string>
+      void f(const string& x) { ... }
+
+   When you make cint dictionary, std header file <string> is implicitly 
+   loaded with myapp.dll if -Z1 option is given both to makecint and cint.
+
+      $  makecint -mk makefile -dl myapp.dll -H myapp.h -cint -Z1
+      $  make -f makefile
+      $  cint -Z1 myapp.dll
+
+   -Z1 is a default for pure CINT and -Z0 is a default for ROOT.
+
+
+ - True virtual function resolution in mixed interpreted/precompiled-class
+   environment is supported by STUB.  Base class and interface of derived 
+   class have to be precompiled and derived class member function can be 
+   interpreted. Please find example in demo/makecint/Stub2 directory.
+
+
+ - Protected member access for compiled class
+   '#pragma link C++ class+protected [classname];' is added to allow
+   protected member access of compiled base class from interpreted derived
+   class.
+
+
+ - !!! Special notes about past changes !!!
+
+   Following changes were deactivated because of bad side-effects. 
+
+    1289 : Tried to support true pointer to static member function. But
+	   because side effect was found, this feature is turned off.
+
+* Cint installation ********************************************************
+
+ 1) make a new directory for cint
+ 2) Get source code package cint.tar.gz and put it under the new directory
+ 3) Unpack the package
+     $ gunzip -c cint.tar.gz | tar xvf -
+            OR
+     $ gzip -vd cint.tgz
+     $ tar xvf cint.tar
+            OR
+        winzip twice
+ 4) Read README.txt and platform/README.txt for further instruction.
+
+Recent changes ************************************************************
+
+ (See src/HISTORY for older changes)
+
+* 5.15.126, Mar 4 2004
+* 2012, display DLL name for .class, .func
+* 2013, findposition() insure filenum>=0 && linenum>=0 
+* 2014, classname autoloading , t1218.cxx
+*-2015, classname autoloading 2, t1220.cxx
+*
+* 5.15.127, Mar 10 2004
+* 2016, typedef double* X; f(*(X*)a); casting problem, t1221.cxx
+* 2017, (enum xxx)1, ' xxx' => 'xxx', t1222.cxx
+* 2018, operator[](char*) t1223.h/cxx
+* 2019, G__CallFunc::SetFunc(... MatchMode), t1228.cxx
+* 2020, G__CallFunc::SetFunc(), reftype handling bug, t1228.cxx 
+* -   , stl/pair.dll, lib/dll_stl/pr.h experimental version
+*
+* 5.15.128, Mar 16 2004
+* 2021, G__ANSI defined for gcc3.x, Solaris
+* 2022, newlink.c, ptr to static member function, ns::f -> &ns::f 
+* 2023, cintdll for Solaris
+* 2024, 2014 side-effect found with valgrind, 
+* -   , G__MAXBASE -> 50
+* 2025, 2011, more to fix, by Philippe Canal
+* -   , str.h, operator==, != to char* are added
+* 2026, 2014 bug fix,
+*
+* 5.15.129, Mar 21 2004
+* 2027, dtor always registered at the beginning (as part of reeng)
+* 2028, 2024, one more fix
+* 2029, long arguments in CallFunc
+* 2030, G__calldtor() is added in struct.c, not used yet (as part of reeng)
+* 2031, $ command  -> sh -I -c [com]
+* -   , fix to 2030,
+*
+* 5.15.130, Mar 30 2004
+* 2032, lib/prec_stl/memory
+* 2033, typedef list<int**> listintxx;, 1967
+*
+* 5.15.131, Apr 6 2004
+* 2034, #define ZEXTERN extern, t1239.cxx
+*       CAUTION: This implementation has limitation. Using map, macro table can
+*               only be reset in G__scratch_all.
+* 2035, 2012 left-over
+* 2036, operator=() more check
+* 2037, memberfunc initialization in G__define_struct 
+* 2038, add G__var_array::enclosing_scope, inner_scope member
+*       G__free_bytecode() deletes inner_scope
+*       G__searchvariable() searchs enclosing_scope
+* 2039, 2027, dtor location left-over
+* 2040, dictionary for implicit assignment operator turned on for ROOT
+* 2041, G__defined_macro searchs for function macro and symbol macros
+*
+* 5.15.132, Apr 12 2004
+*r2042, ENTERSCOPE, EXITSCOPE instructions, temporary disabled in pcode.c
+* 2043, G__ClassInfo::Delete , Destroy added
+*
+* 5.15.133, Apr 18 2004
+*-2044, detecting private ctor/dtor/opr= in precompiled class, t980.cxx problem
+* 2045, generate dictionary for private ctor/dtor/opr=
+* -   , regeneration of *strm.cxx due to 2045
+* 2046, 1993 side-effect, #pragma link MACRO for static member function
+* -   , IBM xlc,xLC flags are added
+* -   , G__define_var temp1 length of buffer increased
+*-2047, G__MBoolref(), t1250.cxx, not completely done yet.
+*
+* 5.15.134, Apr 27 2004
+* 2048, autoloading patch
+* 2049, G__TypeInfo::Init("int**&");  
+*
+* 5.15.135, May 07 2004
+* 2050, G__struct.memfunc->busy[0] initizlization
+*
+* ---------------------------------------------------------------------
+*
+* 5.15.136, May 09 2004
+* 6.0,0, May 09 2004
+* 2051, activate cint dictionary for new bytecode compiler library
+* 2052, namespace compiled member deallocation problem, t1258.cxx/.h
+* 2053, missing initialization
+*
+* 5.15.137, May 17 2004
+* 6.0,1, May 17 2004
+* 2054, CTOR_SETGVP, store_globalvarpointer 
+* -   , 1073 activated
+* 2055, ifunc.c compile error fixed by Philippe Canal
+*r2056, G__callfunc0(), G__asm_exec restoration
+*r2057, G__calldtor(), free memory for interpreted class 
+*r2058, G__exec_bytecode(), allocate autoobjectstack for return value
+*r2059, G__ClassInfo::GetCtor/Dtor/Assign added
+* 2060, G__ST_LVAR optimization
+* 2061, addtional fix to template, by Philippe Canal
+*
+* 5.15.138, May 23 2004
+* 6.0,2, May 23 2004
+*r2062, CL -> G__autoobjectstack::Autodelete()
+*
+* 5.15.139, June 1 2004
+* 6.0,3, June 1 2004
+*r2066, LD_IFUNC -> always call new bytecode compiler
+*r2067, G__interpret_func -> always call new bytecode compiler
+* 2068, uninitialized G__value::isconst
+*
+* 5.15.140, June 6 2004
+* 6.0,4, June 6 2004
+* 2069, abs -> labs in G__setiparseobject
+*rw2070, operator=, (on going change)
+* 2071, TMath::pow wrong call
+* 2072, f(arg) {const double x=arg;}
+*r2073, G__struct.vtable, G__ifunc_table.vtblindex added
+*r2074, virtual function
+*
+* 5.15.141, June 14 2004
+* 6.0,5, June 14 2004
+*r2075, vtbl and implicit operator= generation in struct.c
+*r2076, G__ClassInfo::AddMethod(name,arg)
+*r2077, BASECONV, ref==0?ref=obj.i;
+*r2078, PUSHCPY, does not clear ref.
+*  One of 2077 or 2078 solves operator=(const A&) problem
+*r2079, GetMethod() + withInheritance parameter
+*r2080, G__MethodInfo::IsVirtual();
+*
+* 5.15.142, June 20 2004
+* 6.0,6, June 20 2004
+*r2081, pBase=pDerived;
+* 2082, G__MethodInfo::GetBytecode() always compile bytecode.
+* 2083, printf("%2$*1$d", width, num); printf("%*d", width, num);
+*r2084, vtbl, add basetagnum for multiple inheritance resolution
+* 2085, operator<< bug fix
+* 2086, FOO::operator> bug fix
+*r2087, new -> new implementation
+*
+* 5.15.143, July 6 2004
+* 6.0,7, July 6 2004
+* 2088, G__exec_asm() presult=NULL;
+*r2089, G__CAST generation in G__asm_gen_stvar()
+* 2090, Philippe's operator>> fix in func.c and ifunc.c cint_35.diffs
+* 2091, tmplt.c fix by Philippe
+* 2092, tmpfile()==NULL -> G__tmpnam()
+*
+* 5.15.144, July 12 2004
+* 6.0,8, July 12 2004
+* 2093, array dimention error detection
+* 2094, fix to 'typedef void ** const * const_iterator;' by Philippe, (919)
+* 2095, MacOS X problem with GNUC macros, by Fons
+* 2096, G__calc("TPara<long long>::f()"), by Philippe
+* 2097, autoloading patch, by Philippe
+* 2098, static private array initialization
+*
+* 5.15.145, July 19 2004
+* 6.0,9, July 19 2004
+*r2099, G__SETGVP <- G__store_struct_offset
+* 2100, typedef.c, patch by Philippe,
+*r2101, new x[n],
+*
+* 5.15.146, July 25 2004
+* 6.0,10, July 25 2004
+*r2102, delete -> new implementation
+* 2103, map forward declaration, by Philippe
+* 2104, namespace fix, by Philippe
+*r2105, G__genericerror() display message if cintv6
+*
+* 5.15.147, Aug 3 2004
+* 6.0,11, Aug 3 2004
+* 2106, friend template, by Philippe
+* 2107, ICC v8.1 fix, by Fons
+* -   , Type.cxx valgrind error fix, by Philippe, 2105 -> 2106
+* 2108, missin protection in G__what_type, by Philippe
+*
+* 5.15.148, Aug 17 2004
+* 6.0,12, Aug 17 2004
+*r2109, exception handling, G__THROW instruction
+*r2110, RTN_FUNC 2, G__exec_asm returns from try { }
+*r2111, explicit conversion for exception, don't put into legacy tempobj buf
+*
+* 5.15.149, Aug 23 2004
+* 6.0,13, Aug 23 2004
+*r2112, G__exec_bytecode -> C++
+* 2113, G__asm_optimize, i<5 optimization potential bug fix
+*
+*-2114, G__asm_optimize3() returns max stack usage
+*-2115, re-sizable stack buffer
+*   2114 and 2115 failed. Those changes are deleted. That state is archived
+*   as backup/cint6.0.13C.tar.gz. 
+*
+*r2116, resizable G__asm_inst buffer
+*r2117, throw G__bc_compile_error + error handling
+* 2118, G__ClassInfo::Funcflag() returns G__struct.funs[]
+* -   , Error handling
+*
+* 5.15.150, Aug 30 2004
+* 6.0,14, Aug 30 2004
+* 2119, G__delete_ipath(char* path);
+* 2120, class A { operator()(int i);} a; a(i)(i) bug fix
+* TODO, class A { operator[](int i);} a; a[i](i) reserved 2121
+*r2122, assignment error check
+*r2123, A<A<int> > x; avoid recursive G__bc_struct call
+*r2124, G__asm_noverflow reset after template instantiation,
+*
+* 5.15.151, Sep 5 2004
+* 6.0,15, Sep 5 2004
+* 2125, initary[]={f(),g()};
+* 2126, intassignbyref, if(!ref) 
+*r2127, local stitic/const handling
+*r2128, G__letvalue, 'c' memcpy
+*r2129, G__OP2 '#', add arbitrary value to pointer
+* 2130, implicit ctor -> allow array initiazliation
+*r2131, incsetup_memvar in G__initmemvar()
+*r2132, G__CL line+filenum
+*
+* 5.15.152, Sep 12 2004
+* 6.0,16, Sep 12 2004
+*r2133, G__CL, 's','S','c', + 2 lines G__pr() call 
+*r2134, G__CL position, end of statement -> beginning of statement
+*r2135, turn off source code trace in step mode
+*r2136, implement new stack trace mechanism 
+*r2137, use new stack trace mechanism for V command
+*r2138, break/continue 
+* 2139, eof check in G__input
+*
+* 5.15.153, Sep 20 2004
+* 6.0,17, Sep 20 2004
+*r2140, MEMCPY instruction 
+*r2141, copy ctor dictionary -> array copying
+*r2142, G__PAUSE() instruction
+*r2143, argument name difference in header and definition,
+* 2144, argument difference in reference,  header vs definition
+* -   , int *a, b , &c=b; bug fix
+* 2145, class A *p=new A[5]; p[i].disp();
+*r2146, virtual base class G__abortbytecode()
+* 2146, array of pointer to function
+*
+* 5.15.154, Sep 29 2004
+* 6.0,18, Sep 29 2004
+*r2147, MEMSETINT instruction
+*r2148, G__BaseClassInfo::Property() G__BIT_ISVIRTUAL -> G__BIT_ISVIRTUALBASE
+* 2149, template specialization bug fix by Philippe Canal
+*r2150, virtual base initialization in bc_*
+*
+* 5.15.155, Oct 11 2004
+* 6.0,19, Oct 11 2004
+*r2151, virtual base class, G__ISINDIRECTVIRTUALBASE flag, may be unnecessary
+*r2152, virtual base function resolution VIRTUALADDSTROS
+*r2153, virtual base function resolution in bytecode, bc_exec_virtualbase_
+*r2154, base class cast to array element, rewind stack before cast
+*r2155, SETMEMFUNCENV, RECMEMFUNCENV for x.y when G__cintv6
+*
+* 5.15.156, Oct 20 2004
+* 6.0,20, Oct 20 2004
+*r2156, G__STATICCONST flag is set for constant literals
+* 2157, bug fix A<T> A<T>::x=0;
+* 2158, timeout at main()
+*
+* 5.15.157, Oct 24 2004
+* 6.0,21, Oct 24 2004
+*-    , r2156 fixed
+*r2159, local variable monitor
+*r2160, G__CAST instruction added
+*r2161, B<int,5*2> bug fix for v6
+*r2162, virtual table debugging, disp()
+*r2163, G__exec_asm moved in bc_exec.cxx
+* 2164, bug fix -> reserved dtor does not trigger template instantiation
+*-    , bit field assignment in bytecode, bug fix
+* 2165, vector::iterator::operator= added for gcc3.x
+* 2166, (*vecvec[0])[0] bug fix
+* 2167, multiple occurannce of using namespace, by Philippe
+* 2168, HP aCC fix by Fons
+*r2169, new int*; bug fix in SET_NEWALLOC
+*
+* 5.15.158, Nov 2 2004
+* 6.0,22, Nov 2 2004
+*r2170, A** p=new A*[3]; p[0]=new A[2]; p[0][0];
+*r2171, G__ExceptionWrapper() returns value from running funciton
+*r2172, virtual dtor free operation offset calculation in G__exec_asm
+* 2173, template function and member name conflict
+* 2174, loadfile.c fix by Philippe
+* 2175, printf fix by Philippe
+   *r2176, improvement on type conversion at assignment
+*r2177, GetMethod() add doconvert flag
+* 2178, Philippe's fix on tmplt.c
+* 2179, Philippe's fix on scope operator '::' at the beginning
+*-2180, Philippe's fix on template bool
+* 2181, Addition to Philippe's fix. No error for G__fgetname_template()
+* -   , std::string getline added
+*
+* 5.15.159, Nov 14 2004
+* 6.0,23, Nov 14 2004
+*r2182, improvement on type conversion at assignment
+* 2183, return (*this)[1]; bug fix
+*r2184, *expr1=expr2; bug fix
+* 2185, this erase isconst flag
+* 2186, Fons' fix on MacOS X bool
+*r2187, delete 0; skip dtor call and deletefree
+* 2188, bool fix,
+*
+* 5.15.160, Nov 24 2004
+* 6.0,24, Nov 24 2004
+* 2189, native long long support with G__NATIVELONGLONG
+*      n, m, q     M:macro, Q:p2f
+* 2190, delete all dictpos->ptype
+* 2191, 'm' macro -> 'j'
+*
+* 5.15.161, Dec 12 2004
+* 6.0,25, Dec 12 2004
+* 2189, + long long(x) and unsigned long long(y) fixed
+* 2192, long long bug fix by Philippe,
+* 2193, 1<<31, bug fix
+*-2194, Philippe's namespace <tab> fix
+*
+* 5.15.162, Jan 4 2005
+* 6.0,26, Jan 4 2005
+* 2195, bug fix, G__convert_param G__BASECONV
+* 2196, bug fix, namespace variable array initialization
+*
+* 5.15.163, Jan 10 2005
+* 6.0,27, Jan 10 2005
+* 2197, newlink.c fix by Philippe
+* 2198, tmplt.c fix by Philippe
+* 2199, VC7 optimizer bug workaround by Philippe,
+* 2200, Philippe's valgrind fix
+*
+* 5.15.164, Jan 23 2005
+* 6.0,28, Jan 23 2005
+* 2201, 0x0E + 12  bug fix
+* 2202, warning for 64bit to 32bit integer conversion in G__int, G__uint
+* 2203, G__DLL_direct_globalfunc supported for bytecode
+* 2204, G__DLL_direct_globalfunc with argument type conversion
+* 2205, G__DLL_direct_globalfunc for G__CallFunc, test2/t1353.cxx/h
+* 2206, unexpectedEOF improvement for error reporting,
+*
+* 5.15.165, Feb 18 2005
+* 6.0,29, Feb 18 2005
+* 2207, bool(0.1) -> 1
+* 2208, assert test G__int() -> G__bool()
+* 2209, template vec2<long double> f(); bug fix
+* 2210, G__fgetname_template, bug fix
+* 2211, template ostream& operator<<(); bug fix in G__keyword_anytime_8
+* 2212, cint_10 Philippe's change on template member
+* 2213, cint_13 Constructor execution bug fix, by Philippe
+* 2214, cint_15 template member function fix by Philippe
+*
+* 5.15.166, Feb 22 2005
+* 6.0,30, Feb 22 2005
+* 2215, long long casting in dictionary
+* 2216, G__fdumpstream(), '<' + G__defined_templateclass() '>' 
+* 2217, char (*fName)[5];
+* 2218, Philippe's fix in vector DLL
+* 2219, abstract class instantiation error for new
+* 2220, stub function flag setting bug fix,
+*
+* 5.15.167, Mar 2 2005
+* 6.0,31, Mar 2 2005
+* 2221, display pure virtual function 
+* 2222, buffer overrun bug fix by Philippe,
+* 2223, avoid segv from typo, TMath::Max)TMath::MaxElement(n,
+* 2224, #pragma link C++ macro fix? by Philippe
+*
+* 5.15.168, Mar 10 2005
+* 6.0,32, Mar 10 2005
+* 2225, template<class T> void f(const T& x);  T=char* fix
+* 2226, G__setmemtestbreak(n,m);
+* 2227, errordictpos memory leak 
+* 2228, VPersonTest.cxx bug fix for VObject** p=a;
+*
+* 5.15.169, Mar 14 2005
+* 6.0,33, Mar 14 2005
+* 2229, comment out 64bit->32bit conversion
+* 2230, operator with invalid argument, Philippe
+* 2231, Philippe's patch
+* 2232, Fons's patch
+*
+* 5.15.170, Mar 23 2005
+* 6.0,34, Mar 23 2005
+* 2233, Axel's patch for windows fclose
+*
+* 5.15.171, Apr 12 2005
+* 6.0,35, Apr 12 2005
+* 2234, return"";
+* 2235, va_arg, float -> passing as double for gcc
+* 2236, var.c G__var_type store/restore, by Philippe,
+* 2237, template<classA,B> MyTmplt<A,B<A> > operator*(..) fix by Philippe
+* 2238, Windows patch by Philippe,
+* 2239, G__SourceFileInfo::Next() fix
+* 2240, G__srcreader<T>::fgetstream_core() bug fix
+*
+* 5.15.172, May 3 2005
+* 6.0.36, May 3 2005
+* -   , Philippe's change on G__ci.h
+*
+* 5.15.173, May 4 2005
+* 6.0.37, May 4 2005
+*
+* 5.15.174, May 5 2005
+* 6.0.38, May 5 2005
+* -   , removed 90% of G__OLDIMPLEMENTATION* from source
+*
+* 5.16.2, July 14 2005
+* 6.1.2, July 14 2005
+* -   , Convert most of the C source file from K&R C to Ansi C++
+* -     The files *.c were renamed v6_*.cxx.  The interfaces are
+* -     kept backward compatible (extern "C")
+* 
+* 5.16.3, November 11, 2005
+* 6.1.3, November 11, 2005
+* -   , Port to windows visual C++ version 8
+* -   , Many bugs fixes (see CVS change log for details)
+* 
+* 5.16.4 November 30, 2005
+* 6.1.4 November 30, 2005
+* - Add support for generating dictionary using the reflex API (makecint -c3)
+* - See CVS Change log for other updates.
+* 
+* 5.16.5 November 30, 2005
+* 6.1.5 November 30, 2005
+* - Improve support for generating dictionary using the reflex API (makecint -c3)
+* - Extend ClassInfo to better support array allocation and deallocation
+* - See CVS Change log for other updates.
+*
+* 5.16.6 January 9, 2006
+* 6.1.6 January 9, 2006
+* - Import and use the shadow class mechanism from ROOT.  This allows the 
+*   calculation of the data member offset even if they are protected/private.
+* - See CVS Change log for other updates (http://root.cern.ch/root/ChangeLog-cint.phtml)
+*
+* 5.16.7 January 19, 2006
+* 6.1.7 January 19, 2006
+* - Many improvement to the shadow class generation.
+* - See CVS Change log for other updates (http://root.cern.ch/root/ChangeLog-cint.phtml)
+*
+* 5.16.8 February 9, 2006
+* 6.1.8 February 9, 2006
+* - Update and streamline the handling operator new and delete
+* - See CVS Change log for other updates (http://root.cern.ch/root/ChangeLog-cint.phtml)
+*
+* 5.16.9 March 3, 2006
+* 6.1.9 March 3, 2006
+* - Upgrade the support for operator new and delete in the dictionaries (improve usage
+    of user provided operator new).
+* - Add a new command line option (-E) to insure exit on error.
+* - Improve error message in case of missing symbols.
+* - See CVS Change log for other updates (http://root.cern.ch/root/ChangeLog-cint.phtml)
+*    
+* 5.16.10 March 30, 2006
+* 6.1.10 March 30, 2006
+* - Refresh of the port to icc and alpha cxx
+* - Fix for comment parsing in the CPP parser.
+* - See CVS Change log for other updates (http://root.cern.ch/root/ChangeLog-cint.phtml)
+*    
+* 5.16.11 April 14, 2006
+* 6.1.10 April 14, 2006
+* - Improve template support
+* - Port to MacOS on Intel
+* - See CVS Change log for other updates (http://root.cern.ch/root/ChangeLog-cint.phtml)
+*    
+* 5.16.12 May 16, 2006
+* 6.1.12 May 16, 2006
+* - Add support for variadic functions on AMD64 and EM64T.
+* - See CVS Change log for other updates (http://root.cern.ch/root/ChangeLog-cint.phtml)
+* 
+* 5.16.13 June 8, 2006
+* 6.1.13 June 8, 2006
+* - New build system based on the configure/make model.  MAKEINFO is not longer used.
+* - A few more function has been officially exported and/or added to the appropriate 
+*   header files
+* - See CVS Change log for other updates (http://root.cern.ch/root/ChangeLog-cint.phtml)
+* 
+* 5.16.14 August 18, 2006
+* 6.1.14 August 18, 2006
+* - Clarification of the license (Now MIT License)
+* - See CVS Change log for other updates (http://root.cern.ch/root/ChangeLog-cint.phtml)
+* 
+* 5.16.15 September 21, 2006
+* 6.1.15 September 21, 2006
+* - Various bug fixes (include a couple of cint dlls cleanups)
+* - See CVS Change log for other updates (http://root.cern.ch/root/ChangeLog-cint.phtml)
+* 
+* 5.16.16 November 24, 2006
+* 6.1.16 November 24, 2006
+* - Some minor bug fixes: remove G__CINTVERSION from strm dict files, AMD64 vararg passing, long comments, extern "C" multiline issue
+* - G__sizeof, G__getfunction now part of the API
+* - respect system macros when generating dictionaries
+* - Move public header files into inc/
+* - Changes to achieve binary compatibility with cint7; some of these are temporary
+* - Move C++ API into namespace Cint
+* - added build support for linux x86_64
+* - See CVS Change log for other updates (http://root.cern.ch/root/ChangeLog-cint.phtml)
+*

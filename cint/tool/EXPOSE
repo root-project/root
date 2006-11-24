@@ -1,0 +1,34 @@
+# EXPOSE
+#
+# Description:
+#   The Author's private utility. 
+#   Cint source code and test suite archiver.
+#
+# Usage:
+#   $ sh EXPOSE
+#
+# Output:
+#   cint.tar.gz
+#   CINTPACK.TAR  (includes cint5.15.tar.gz, RELNOTE.txt)
+#
+
+# making test.tar.gz
+#cd ../test
+#rm *.so *.o *.dll a.out core G__* error error? \#*
+#cd ..
+#tar cvf test.tar test
+#gzip test.tar
+#mv test.tar.gz cint/test.tar.gz
+
+# making CINTPACK.TAR
+cd $CINTSYSDIR
+sh ./ARCHIVE
+cp cint.tar.gz cint5.15.tar.gz
+tar cvf CINTPACK.TAR cint5.15.tar.gz RELNOTE.txt
+rm cint5.15.tar.gz
+
+
+# making cinttest.tar.gz
+#tar cvf cinttest.tar test
+#rm cinttest.tar.gz
+#gzip cinttest.tar

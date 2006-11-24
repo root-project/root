@@ -1,0 +1,29 @@
+t1040.cxx // g++3.2 can not compile this test case
+t1129.cxx // g++3.2 can not compile this test case
+t977.cxx  // DLL recompilation needed
+t1046.cxx // DLL recompilation needed
+
+cint t1027.cxx
+\fclose(0x103d19f4) not opened FILE:t1027.h LINE:14
+0x103f94a8	alive=1	use=0 i=490	ERROR malloc()
+
+cint t1047.cxx, bcc55
+
+cint t1042.cxx : ERTTI calling explicit ctor/dtor, application problem
+0x1044e038	alive=1	use=0 i=977	ERROR malloc()
+0x1044f388	alive=1	use=0 i=980	ERROR malloc()
+0x1044f468	alive=1	use=0 i=1010	ERROR malloc()
+
+
+cint -c-1 -D__MAKECINT__ t1061.h  :  f(vector<A*>) causes memory leak
+Because G__nfile is rewound after reading argument list. This is done in
+ifunc.c line 1424. Maybe possible to change condition of line 1421.
+      if(store_ifunc_tmp!=G__p_ifunc || func_now!=G__p_ifunc->allifunc) 
+         --G__p_ifunc->allifunc;
+Ignore this error:fclose(0x1047274c) not opened FILE: LINE:0
+0x10482a18	alive=1	use=0 i=1475	ERROR malloc()
+0x10482a28	alive=1	use=0 i=1476	ERROR malloc()
+0x10482a38	alive=1	use=0 i=1477	ERROR malloc()
+0x10482a48	alive=1	use=0 i=1478	ERROR malloc()
+
+
