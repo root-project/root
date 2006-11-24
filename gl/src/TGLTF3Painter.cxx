@@ -105,6 +105,8 @@ void TGLTF3Painter::Pan(Int_t px, Int_t py)
       else
          fCamera->Pan(px, py);
    }
+   
+   fUpdateSelection = kTRUE;
 }
 
 //______________________________________________________________________________

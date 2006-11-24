@@ -458,6 +458,7 @@ void TGLTH3Slice::DrawSlice(Double_t pos)const
    }   
 }
 
+//______________________________________________________________________________
 void TGLTH3Slice::FindMinMax(Double_t &min, Double_t &max, Int_t low, Int_t up)const
 {
    // Find minimum and maximum.
@@ -518,6 +519,7 @@ void TGLTH3Slice::FindMinMax(Double_t &min, Double_t &max, Int_t low, Int_t up)c
    }
 }
 
+//______________________________________________________________________________
 Bool_t TGLTH3Slice::PreparePalette(Double_t min, Double_t max)const
 {
    //Initialize color palette.
@@ -528,6 +530,7 @@ Bool_t TGLTH3Slice::PreparePalette(Double_t min, Double_t max)const
    return fPalette.GeneratePalette(paletteSize, Rgl::Range_t(min, max));
 }
 
+//______________________________________________________________________________
 void TGLTH3Slice::PrepareTexCoords()const
 {
    // Prepare TexCoords.
@@ -631,6 +634,7 @@ void TGLTH3Slice::DrawSliceTextured(Double_t pos)const
 
 namespace {
 
+   //______________________________________________________________________________
    void DrawBoxOutline(Double_t xMin, Double_t xMax, Double_t yMin, 
                        Double_t yMax, Double_t zMin, Double_t zMax)
    {
@@ -662,6 +666,7 @@ namespace {
 
 }
 
+//______________________________________________________________________________
 void TGLTH3Slice::DrawSliceFrame(Int_t low, Int_t up)const
 {
    // Draw slice frame.

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.7 2006/10/24 14:20:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.8 2006/11/22 16:19:55 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -35,7 +35,8 @@ class TAxis;
 class TH1;
 
 /*
-   TGLPlotPainter class defines interface to different plot painters.
+   Box cut. When attached to a plot, cuts away a part of it.
+   Can be moved in a plot's own area in X/Y/Z directions.
 */
 
 class TGLBoxCut {
@@ -85,8 +86,12 @@ public:
 private:
    void AdjustBox();
 
-   ClassDef(TGLBoxCut, 0)
+   ClassDef(TGLBoxCut, 0)//Cuts away part of a plot.
 };
+
+/*
+   TGLPlotPainter class defines interface to different plot painters.
+*/
 
 class TGLPlotPainter : public TVirtualGLPainter {
 private:
@@ -167,6 +172,11 @@ protected:
 
    ClassDef(TGLPlotPainter, 0) //Base for gl plots
 };
+
+/*
+   Auxiliary class, which holds different
+   information about plot's current coordinate system
+*/
 
 class TGLPlotCoordinates {
 private:

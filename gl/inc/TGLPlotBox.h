@@ -12,6 +12,10 @@
 
 class TColor;
 
+/*
+   TGLPlotBox draws a box behind a plot.
+*/
+
 class TGLPlotBox {
 private:
    const TColor          *fFrameColor;
@@ -26,9 +30,6 @@ private:
    mutable Int_t          fFrontPoint;
 
 public:
-
-   typedef void (TGLPlotBox::*PF_t)(int);
-   void SomeFun(PF_t);
 
    TGLPlotBox(Bool_t xoySelectable, Bool_t xozSelectable, Bool_t yozSelectable);
    //ClassDef macro adds some virtual functions,

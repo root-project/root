@@ -31,10 +31,6 @@ const Int_t TGLPlotBox::fgBackPairs[][2] =
     {1, 0}
    };
 
-void TGLPlotBox::SomeFun(PF_t)
-{
-}
-
 //______________________________________________________________________________
 TGLPlotBox::TGLPlotBox(Bool_t xoy, Bool_t xoz, Bool_t yoz)
                : fFrameColor(0),

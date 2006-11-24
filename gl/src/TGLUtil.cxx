@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.30 2006/10/02 12:55:47 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.31 2006/10/24 14:20:41 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -1139,15 +1139,8 @@ namespace Rgl {
       //Draws lego's bar as a 3d box
       if (zMax < zMin) 
          std::swap(zMax, zMin);
-      //Top and bottom are always drawn.
-      glBegin(GL_POLYGON);
-      glNormal3d(0., 0., 1.);
-      glVertex3d(xMax, yMin, zMax);
-      glVertex3d(xMax, yMax, zMax);
-      glVertex3d(xMin, yMax, zMax);
-      glVertex3d(xMin, yMin, zMax);
-      glEnd();
 
+      //Bottom is always drawn.
       glBegin(GL_POLYGON);
       glNormal3d(0., 0., -1.);
       glVertex3d(xMax, yMin, zMin);
@@ -1176,6 +1169,15 @@ namespace Rgl {
       glVertex3dv(box[verts[1]]);
       glVertex3dv(box[verts[2]]);
       glVertex3dv(box[verts[3]]);
+      glEnd();
+      
+      //Top is always drawn.
+      glBegin(GL_POLYGON);
+      glNormal3d(0., 0., 1.);
+      glVertex3d(xMax, yMin, zMax);
+      glVertex3d(xMax, yMax, zMax);
+      glVertex3d(xMin, yMax, zMax);
+      glVertex3d(xMin, yMin, zMax);
       glEnd();
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.8 2006/11/22 16:19:55 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.9 2006/11/23 07:42:06 brun Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -8,7 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#include <iostream>
 #include <cstdio>
 
 #include "TVirtualPS.h"
@@ -1046,6 +1045,8 @@ TGLBoxCut::~TGLBoxCut()
 //______________________________________________________________________________
 void TGLBoxCut::TurnOnOff()
 {
+   //Turn the box cut on/off.
+   //If it's on, it will be placed in front point of a plot.
    fActive = !fActive;
 
    if (fActive) {
@@ -1081,8 +1082,10 @@ void TGLBoxCut::TurnOnOff()
    }
 }
 
+//______________________________________________________________________________
 void TGLBoxCut::DrawBox(Bool_t selectionPass, Int_t selected)const
 {
+   //Draw cut as a semi-transparent box.
    if (!selectionPass) {
       GLboolean oldBlendState = kFALSE;
       glGetBooleanv(GL_BLEND, &oldBlendState);
@@ -1144,31 +1147,39 @@ void TGLBoxCut::DrawBox(Bool_t selectionPass, Int_t selected)const
    }
 }
 
+//______________________________________________________________________________
 void TGLBoxCut::SetDirectionX()
 {
+   //Set X Axis as a movement direction
    fDirection = kAlongX;
-   //
 }
 
+//______________________________________________________________________________
 void TGLBoxCut::SetDirectionY()
 {
+   //Set Y Axis as a movement direction
    fDirection = kAlongY;
-   //
 }
 
+//______________________________________________________________________________
 void TGLBoxCut::SetDirectionZ()
 {
+   //Set Z Axis as a movement direction
    fDirection = kAlongZ;
 }
 
+//______________________________________________________________________________
 void TGLBoxCut::StartMovement(Int_t px, Int_t py)
 {
+   //Start cut's movement
    fMousePos.fX = px;
    fMousePos.fY = py;
 }
 
+//______________________________________________________________________________
 void TGLBoxCut::MoveBox(Int_t px, Int_t py)
 {
+   //Move box cut along selected direction.
    Double_t mv[16] = {0.};
    glGetDoublev(GL_MODELVIEW_MATRIX, mv);
    Double_t pr[16] = {0.};
@@ -1195,14 +1206,28 @@ void TGLBoxCut::MoveBox(Int_t px, Int_t py)
    gluUnProject(winVertex[0], winVertex[1], winVertex[2], mv, pr, vp,
                 newPoint, newPoint + 1, newPoint + 2);
 
+   const TGLVertex3 *box = fPlotBox->Get3DBox();
+
    switch(fDirection){
    case kAlongX:
+      if (newPoint[0] >= box[1].X() + 0.4 * fXLength)
+         break;
+      if (newPoint[0] <= box[0].X() - 0.4 * fXLength)
+         break;
       fCenter.X() = newPoint[0];
       break;
    case kAlongY:
+      if (newPoint[1] >= box[2].Y() + 0.4 * fYLength)
+         break;
+      if (newPoint[1] <= box[0].Y() - 0.4 * fYLength)
+         break;
       fCenter.Y() = newPoint[1];
       break;
    case kAlongZ:
+      if (newPoint[2] >= box[4].Z() + 0.4 * fZLength)
+         break;
+      if (newPoint[2] <= box[0].Z() - 0.4 * fZLength)
+         break;
       fCenter.Z() = newPoint[2];
       break;
    }
@@ -1213,8 +1238,10 @@ void TGLBoxCut::MoveBox(Int_t px, Int_t py)
    AdjustBox();
 }
 
+//______________________________________________________________________________
 void TGLBoxCut::AdjustBox()
 {
+   //Box cut is limited by plot's sizes.
    const TGLVertex3 *box = fPlotBox->Get3DBox();
    
    fXRange.first  = fCenter.X() - fXLength / 2.;
@@ -1224,31 +1251,27 @@ void TGLBoxCut::AdjustBox()
    fZRange.first  = fCenter.Z() - fZLength / 2.;
    fZRange.second = fCenter.Z() + fZLength / 2.;
 
-   fXRange.first  = TMath::Max(fXRange.first, box[0].X());
-   fXRange.first  = TMath::Min(fXRange.first, box[1].X());
+   fXRange.first  = TMath::Max(fXRange.first,  box[0].X());
+   fXRange.first  = TMath::Min(fXRange.first,  box[1].X());
    fXRange.second = TMath::Min(fXRange.second, box[1].X());
    fXRange.second = TMath::Max(fXRange.second, box[0].X());
    
-   fYRange.first  = TMath::Max(fYRange.first, box[0].Y());
-   fYRange.first  = TMath::Min(fYRange.first, box[2].Y());
+   fYRange.first  = TMath::Max(fYRange.first,  box[0].Y());
+   fYRange.first  = TMath::Min(fYRange.first,  box[2].Y());
    fYRange.second = TMath::Min(fYRange.second, box[2].Y());
    fYRange.second = TMath::Max(fYRange.second, box[0].Y());
 
-   fZRange.first  = TMath::Max(fZRange.first, box[0].Z());
-   fZRange.first  = TMath::Min(fZRange.first, box[4].Z());
+   fZRange.first  = TMath::Max(fZRange.first,  box[0].Z());
+   fZRange.first  = TMath::Min(fZRange.first,  box[4].Z());
    fZRange.second = TMath::Min(fZRange.second, box[4].Z());
    fZRange.second = TMath::Max(fZRange.second, box[0].Z());
-   
-   if (fXRange.second - fXRange.first < 0.001 || 
-       fYRange.second - fYRange.first < 0.001 || 
-       fZRange.second - fZRange.first < 0.001) {
-      fActive = kFALSE;
-   }
 }
 
+//______________________________________________________________________________
 Bool_t TGLBoxCut::IsInCut(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yMax,
                           Double_t zMin, Double_t zMax)const
 {
+   //Check, if box defined by xmin/xmax etc. is in cut.
    if (((xMin >= fXRange.first && xMin < fXRange.second) || (xMax > fXRange.first && xMax <= fXRange.second)) &&
        ((yMin >= fYRange.first && yMin < fYRange.second) || (yMax > fYRange.first && yMax <= fYRange.second)) &&
        ((zMin >= fZRange.first && zMin < fZRange.second) || (zMax > fZRange.first && zMax <= fZRange.second)))
