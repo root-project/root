@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.27 2006/10/30 12:51:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.28 2006/10/31 16:46:37 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -45,14 +45,15 @@
 ROOT::Reflex::TypeBase::TypeBase( const char * nam, 
                                   size_t size,
                                   TYPE typeTyp, 
-                                  const std::type_info & ti ) 
+                                  const std::type_info & ti,
+                                  const Type & finalType) 
    : fTypeInfo( &ti ), 
      fScope( Scope::__NIRVANA__() ),
      fSize( size ),
      fTypeType( typeTyp ),
      fPropertyList( OwnedPropertyList( new PropertyListImpl())),
      fBasePosition(Tools::GetBasePosition( nam)),
-     fFinalType(0),
+     fFinalType(finalType.Id() ? new Type(finalType) : 0 ),
      fRawType(0) {
 //-------------------------------------------------------------------------------
 // Construct the dictinary info for a type.

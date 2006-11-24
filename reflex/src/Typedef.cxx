@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Typedef.cxx,v 1.9 2006/07/13 14:45:59 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Typedef.cxx,v 1.10 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -21,9 +21,10 @@
 //-------------------------------------------------------------------------------
 ROOT::Reflex::Typedef::Typedef( const char * typ,
                                 const Type & typedefType,
-                                TYPE typeTyp )
+                                TYPE typeTyp,
+                                const Type & finalType )
 //-------------------------------------------------------------------------------
-   : TypeBase(typ, typedefType.SizeOf() , typeTyp, typeid(UnknownType)), //typedefType.TypeInfo()),
+   : TypeBase(typ, typedefType.SizeOf() , typeTyp, typeid(UnknownType), finalType), //typedefType.TypeInfo()),
      fTypedefType(typedefType) { 
    // Construct typedef info.
 

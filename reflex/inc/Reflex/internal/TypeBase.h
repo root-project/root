@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.6 2006/09/05 17:13:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.h,v 1.7 2006/10/30 12:51:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -55,7 +55,8 @@ namespace ROOT {
          TypeBase( const char *           nam, 
                    size_t                 size, 
                    TYPE                   typeTyp,
-                   const std::type_info & ti);
+                   const std::type_info & ti,
+                   const Type &           finalType = Dummy::Type());
 
 
          /** destructor */

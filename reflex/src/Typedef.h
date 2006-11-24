@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.15 2006/09/05 17:13:15 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.16 2006/10/30 12:51:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -40,7 +40,8 @@ namespace ROOT {
          /** constructor */
          Typedef( const char * typ,
                   const Type & typedefType,
-                  TYPE typeTyp = TYPEDEF ) ;
+                  TYPE typeTyp = TYPEDEF,
+                  const Type & finalType = Dummy::Type()) ;
 
 
          /** destructor */
