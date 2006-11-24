@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.6 2006/11/23 13:37:14 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.7 2006/11/24 13:07:55 couet Exp $
 // Author: Guido Volpi, Olivier Couet 03/11/2006
 
 /*************************************************************************
@@ -110,12 +110,19 @@ TPie::TPie(const TH1 *h) : TNamed(h->GetName(),h->GetTitle())
 {
    // Constructor from a TH1
 
+   Int_t i;
+
    TAxis *axis = h->GetXaxis();
    Int_t first = axis->GetFirst();
    Int_t last  = axis->GetLast();
    Int_t np    = last-first+1;
    Init(np, 0, 0.5, 0.5, 0.4);
-   for (Int_t i=first; i<=last; ++i) fVals[i-first] = h->GetBinContent(i);
+   for (i=first; i<=last; ++i) fVals[i-first] = h->GetBinContent(i);
+   if (axis->GetLabels()) {
+      for (i=first; i<=last; ++i) fLabels[i-first] = axis->GetBinLabel(i);
+   } else {
+      SetLabelFormat("%val");
+   }
 }
 
 
