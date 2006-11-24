@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyClassGenerator.cxx,v 1.8 2006/07/01 21:19:55 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyClassGenerator.cxx,v 1.9 2006/08/21 22:42:24 pcanal Exp $
 // Author: Wim Lavrijsen, May 2004
 
 // Bindings
@@ -25,6 +25,9 @@ namespace {
    {
       G__ifunc_table* ifunc = 0;
       long index = 0;
+
+      // from cint/src/common.h
+#define G__RECMEMFUNCENV      (long)0x7fff0036
       G__CurrentCall( G__RECMEMFUNCENV, &ifunc, &index );
 
       PyObject* args = PyTuple_New( 0 );

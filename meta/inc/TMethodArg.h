@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodArg.h,v 1.2 2000/12/13 15:13:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodArg.h,v 1.3 2002/11/26 10:24:09 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -29,7 +29,10 @@
 
 class TFunction;
 class TMethod;
+namespace Cint {
 class G__MethodArgInfo;
+}
+using namespace Cint;
 
 
 class TMethodArg : public TDictionary {

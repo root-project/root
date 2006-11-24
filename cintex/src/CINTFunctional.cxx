@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name: v5-12-00e $:$Id: CINTFunctional.cxx,v 1.17 2006/07/03 10:22:13 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.18 2006/11/06 15:33:14 brun Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -12,7 +12,6 @@
 #include "Reflex/Type.h"
 #include "CINTdefs.h"
 #include "Api.h"
-#include "common.h"
 #include "CINTFunctional.h"
 
 #ifdef __linux

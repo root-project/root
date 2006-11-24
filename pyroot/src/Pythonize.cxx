@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.43 2006/08/21 22:42:24 pcanal Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.44 2006/10/17 06:09:15 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -1282,6 +1282,9 @@ namespace {
    // retrieve function information
       G__ifunc_table* ifunc = 0;
       long index = 0;
+
+      // from cint/src/common.h
+#define G__RECMEMFUNCENV      (long)0x7fff0036
       G__CurrentCall( G__RECMEMFUNCENV, &ifunc, &index );
 
       CallInfo_t* ci = (CallInfo_t*)ifunc->userparam[index];

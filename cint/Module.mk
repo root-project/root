@@ -228,10 +228,10 @@ endif
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(CINTH)) $(CINTCONF)
 
+CINTCXXFLAGS += -DG__HAVE_CONFIG -DG__NOMAKEINFO -DG__CINTBODY -I$(CINTDIRS)
+
 # include all dependency files
 INCLUDEFILES += $(CINTDEP) $(CINTEXEDEP)
-
-CINTCXXFLAGS += -DG__HAVE_CONFIG -DG__NOMAKEINFO -DG__CINTBODY
 
 ##### local rules #####
 include/%.h:    $(CINTDIRI)/%.h

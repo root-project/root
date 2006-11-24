@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.67 2006/09/25 13:27:35 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.68 2006/10/05 17:10:09 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -49,7 +49,10 @@ class TMethod;
 class TRealData;
 class TCint;
 class TBuffer;
+namespace Cint {
 class G__ClassInfo;
+}
+using namespace Cint;
 class TStreamerInfo;
 class TVirtualCollectionProxy;
 class TMethodCall;

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.26 2006/05/12 12:25:45 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.27 2006/05/23 04:47:40 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -28,11 +28,8 @@
 #include "TInterpreter.h"
 #endif
 
-// do not want to load fproto.h since it will cause problems in G__Rint
-// (double declared functions)
-#define G__FPROTO_H
 #ifndef __CINT__
-#include "common.h"
+#include "G__ci.h"
 #else
 struct G__dictposition;
 #endif
@@ -41,7 +38,10 @@ struct G__dictposition;
 # define  TWin32SendClass char
 #endif
 
+namespace Cint {
 class G__ClassInfo;
+}
+using namespace Cint;
 class TMethod;
 class TObjArray;
 class TEnv;

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.19 2006/08/14 00:21:56 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.h,v 1.20 2006/10/17 06:09:15 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_CONVERTERS_H
 #define PYROOT_CONVERTERS_H
@@ -9,8 +9,11 @@
 #include "TClassRef.h"
 
 // CINT
+namespace Cint {
 class G__CallFunc;
 class G__TypeInfo;
+}
+using namespace Cint;
 
 // Standard
 #include <limits.h>

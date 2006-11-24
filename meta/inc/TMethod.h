@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethod.h,v 1.4 2003/06/13 16:21:21 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethod.h,v 1.5 2004/03/12 00:25:59 rdm Exp $
 // Author: Rene Brun   09/02/95
 
 /*************************************************************************
@@ -32,7 +32,10 @@ class TList;
 class TDataMember;
 class TMethodCall;
 class TClass;
+namespace Cint {
 class G__MethodInfo;
+}
+using namespace Cint;
 
 enum EMenuItemKind {
    kMenuNoMenu = 0,

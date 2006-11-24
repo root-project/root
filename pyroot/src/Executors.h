@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name: v5-06-00 $:$Id: Executors.h,v 1.7 2005/10/25 05:13:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.h,v 1.8 2005/12/05 17:40:54 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 #ifndef PYROOT_EXECUTORS_H
 #define PYROOT_EXECUTORS_H
@@ -8,7 +8,10 @@
 #include "TClassRef.h"
 
 // CINT
+namespace Cint {
 class G__CallFunc;
+}
+using namespace Cint;
 
 // Standard
 #include <string>

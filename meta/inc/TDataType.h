@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.h,v 1.13 2006/05/13 11:00:50 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.h,v 1.14 2006/05/23 04:47:40 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -39,7 +39,10 @@ enum EDataType {
    kCounter =  6,  kCharStar = 7,  kBits     = 15 /* for compatibility with TStreamerInfo */
 };
 
+namespace Cint {
 class G__TypedefInfo;
+}
+using namespace Cint;
 
 
 class TDataType : public TDictionary {

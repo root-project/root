@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TFunction.h,v 1.7 2003/06/13 16:21:21 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TFunction.h,v 1.8 2003/08/04 20:07:42 brun Exp $
 // Author: Fons Rademakers   07/02/97
 
 /*************************************************************************
@@ -29,7 +29,10 @@
 #include "TString.h"
 #endif
 
+namespace Cint {
 class G__MethodInfo;
+}
+using namespace Cint;
 
 
 class TFunction : public TDictionary {

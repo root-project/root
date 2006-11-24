@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.13 2006/05/13 11:00:50 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.14 2006/05/23 04:47:40 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -29,7 +29,10 @@
 class TList;
 class TClass;
 class TDataType;
+namespace Cint {
 class G__DataMemberInfo;
+}
+using namespace Cint;
 class TMethodCall;
 
 class TDataMember : public TDictionary {

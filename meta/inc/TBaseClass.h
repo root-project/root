@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TBaseClass.h,v 1.7 2002/11/26 10:24:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TBaseClass.h,v 1.8 2004/01/10 10:52:29 brun Exp $
 // Author: Fons Rademakers   08/02/95
 
 /*************************************************************************
@@ -31,7 +31,10 @@
 
 class TBrowser;
 class TClass;
+namespace Cint {
 class G__BaseClassInfo;
+}
+using namespace Cint;
 
 
 class TBaseClass : public TDictionary {

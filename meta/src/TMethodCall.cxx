@@ -1,4 +1,4 @@
-// @(#)Root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.26 2006/08/15 03:51:27 pcanal Exp $
+// @(#)Root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.27 2006/09/13 05:03:43 pcanal Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TClass.h"
 #include "TROOT.h"
 #include "Strlen.h"
+#include "G__ci.h"
 #include "Api.h"
 #include "TVirtualMutex.h"
 #include "TCint.h"
@@ -327,17 +328,10 @@ void TMethodCall::Execute(void *object)
    if (object) address = (void*)((Long_t)object + fOffset);
    G__settemplevel(1);
    if (fDtorOnly) {
-#ifdef WIN32
       Long_t saveglobalvar = G__getgvp();
       G__setgvp((Long_t)address);
       fFunc->Exec(address);
       G__setgvp(saveglobalvar);
-#else
-      Long_t saveglobalvar = G__globalvarpointer;
-      G__globalvarpointer = (Long_t)address;
-      fFunc->Exec(address);
-      G__globalvarpointer = saveglobalvar;
-#endif
    } else
       fFunc->Exec(address);
    G__settemplevel(-1);

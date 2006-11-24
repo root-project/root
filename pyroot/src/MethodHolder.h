@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.21 2006/03/24 06:04:09 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.22 2006/06/13 06:39:05 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_TMETHODHOLDER_H
@@ -13,8 +13,11 @@
 class TMethod;
 
 // CINT
+namespace Cint {
 class G__CallFunc;
 class G__ClassInfo;
+}
+using namespace Cint;
 
 // Standard
 #include <string>

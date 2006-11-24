@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.17 2004/01/10 10:52:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.18 2004/02/11 17:00:07 brun Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -33,7 +33,7 @@ namespace ROOT {
       // transient and does not have a dictionary we check first.
       if (transientMember) {
          if (!TClassEdit::IsSTLCont(topClassName)) {
-            G__ClassInfo b(topClassName);
+            Cint::G__ClassInfo b(topClassName);
             if (!b.IsLoaded()) return;
          }
       }

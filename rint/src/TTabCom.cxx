@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.42 2006/09/27 13:11:27 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.43 2006/11/16 17:17:38 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -145,7 +145,6 @@
 
 //Direct CINT include
 #include "DataMbr.h"
-#include "common.h"
 
 
 #define BUF_SIZE    1024        // must match value in C_Getline.c (for bounds checking)

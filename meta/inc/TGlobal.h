@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGlobal.h,v 1.2 2000/12/13 15:13:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TGlobal.h,v 1.3 2002/11/26 10:24:09 brun Exp $
 // Author: Rene Brun   13/11/95
 
 /*************************************************************************
@@ -25,7 +25,10 @@
 #include "TDictionary.h"
 #endif
 
+namespace Cint {
 class G__DataMemberInfo;
+}
+using namespace Cint;
 
 
 class TGlobal : public TDictionary {

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.12 2005/03/13 15:05:31 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.13 2006/08/15 03:51:27 pcanal Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -36,8 +36,11 @@
 
 class TClass;
 class TFunction;
+namespace Cint {
 class G__CallFunc;
 class G__ClassInfo;
+}
+using namespace Cint;
 
 class TMethodCall : public TObject {
 

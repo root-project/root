@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TSelectorCint.h,v 1.13 2006/07/04 23:35:37 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelectorCint.h,v 1.14 2006/08/06 07:15:00 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -26,8 +26,10 @@
 #include "TSelector.h"
 #endif
 
-class G__CallFunc;
-class G__ClassInfo;
+namespace Cint {
+   class G__CallFunc;
+   class G__ClassInfo;
+}
 
 class TSelectorCint : public TSelector {
 

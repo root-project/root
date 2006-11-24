@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctionBuilder.cxx,v 1.13 2006/11/08 08:33:57 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctionBuilder.cxx,v 1.14 2006/11/10 15:52:29 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -120,6 +120,8 @@ namespace ROOT { namespace Cintex {
       else if ( function.IsPublic() )
          access = G__PUBLIC;
 
+      // from cint/src/common.h
+#define G__CONSTFUNC      8
       if ( function.TypeOf().IsConst() )  
          const_ness = G__CONSTFUNC;
       if ( function.IsVirtual() )  
