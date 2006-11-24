@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.197 2006/11/10 08:32:21 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.198 2006/11/24 09:20:34 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -3702,6 +3702,16 @@ void TGraph::Print(Option_t *) const
 
    for (Int_t i=0;i<fNpoints;i++) {
       printf("x[%d]=%g, y[%d]=%g\n",i,fX[i],i,fY[i]);
+   }
+}
+
+//______________________________________________________________________________
+void TGraph::RecursiveRemove(TObject *obj)
+{
+   // Recursively remove object from the list of functions
+
+   if (fFunctions) {
+      if (!fFunctions->TestBit(kInvalidObject)) fFunctions->RecursiveRemove(obj);
    }
 }
 
