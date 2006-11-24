@@ -280,8 +280,7 @@ distclean::     distclean-cint
 
 ##### extra rules ######
 $(CINTDIRS)/libstrm.o:  CINTCXXFLAGS += -I$(CINTDIRL)/stream
-$(CINTDIRS)/sunstrm.o:  CINTCXXFLAGS += -I$(CINTDIRL)/snstream
-$(CINTDIRS)/sun5strm.o: CINTCXXFLAGS += -I$(CINTDIRL)/snstream
+$(CINTDIRS)/sun5strm.o: CINTCXXFLAGS += -I$(CINTDIRL)/sunstrm
 $(CINTDIRS)/vcstrm.o:   CINTCXXFLAGS += -I$(CINTDIRL)/vcstream
 $(CINTDIRS)/%strm.o:    CINTCXXFLAGS += -I$(CINTDIRL)/$(notdir $(basename $@))
 
