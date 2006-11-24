@@ -1,4 +1,4 @@
-// @(#)root/fit:$Name:  $:$Id: WrappedMultiTF1.h,v 1.1 2006/11/17 18:26:50 moneta Exp $
+// @(#)root/fit:$Name:  $:$Id: WrappedMultiTF1.h,v 1.2 2006/11/20 14:27:17 moneta Exp $
 // Author: L. Moneta Wed Sep  6 09:52:26 2006
 
 /**********************************************************************
@@ -68,6 +68,7 @@ public:
    WrappedMultiTF1 & operator = (const WrappedMultiTF1 & rhs) { 
       if (this == &rhs) return *this;  // time saving self-test
       fFunc = rhs.fFunc; 
+      return *this;
    } 
 
 

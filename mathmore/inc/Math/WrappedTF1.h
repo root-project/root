@@ -1,4 +1,4 @@
-// @(#)root/fit:$Name:  $:$Id: WrappedTF1.h,v 1.1 2006/11/17 18:26:50 moneta Exp $
+// @(#)root/fit:$Name:  $:$Id: WrappedTF1.h,v 1.2 2006/11/20 14:27:17 moneta Exp $
 // Author: L. Moneta Wed Sep  6 09:52:26 2006
 
 /**********************************************************************
@@ -74,6 +74,7 @@ public:
       if (this == &rhs) return *this;  // time saving self-test
       fFunc = rhs.fFunc; 
       fFunc->InitArgs(fX, 0 );
+      return *this;
    } 
 
 

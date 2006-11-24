@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ParamFunction.cxx,v 1.3 2006/05/24 20:10:47 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: ParamFunction.cxx,v 1.4 2006/11/23 17:28:57 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -51,11 +51,13 @@ ParamFunction::ParamFunction(const ParamFunction & rhs) :
    BaseFunc(),
    BaseParFunc()
 {
+   // copy constructor, need to initialize base classes (they are virtual)
    operator=(rhs);
 }
 
 ParamFunction & ParamFunction::operator = (const ParamFunction &rhs) 
 {
+   // implementation of assignment operator
    if (this == &rhs) return *this;  // time saving self-test
    fNpar = rhs.fNpar; 
    fProvGrad = rhs.fProvGrad;  
