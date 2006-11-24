@@ -141,6 +141,12 @@ namespace testclasses {
       void foo() {}
    };
 
+   class WithTransientMember {
+   private:
+      int m_transient;
+      WithTransientMember * m_nottransient;
+   };
+
 
    struct ConstNonConstMembers {
 

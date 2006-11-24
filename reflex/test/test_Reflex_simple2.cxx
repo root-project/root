@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.34 2006/10/30 12:51:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.35 2006/11/09 13:50:51 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -184,6 +184,7 @@ class ReflexSimple2Test : public CppUnit::TestFixture {
   CPPUNIT_TEST( testClasses );
   CPPUNIT_TEST( testTemplateTypedefs );
   CPPUNIT_TEST( testArray );
+  CPPUNIT_TEST( testCommentsEtc );
 
   CPPUNIT_TEST( unloadLibrary );
   CPPUNIT_TEST( shutdown );
@@ -220,6 +221,7 @@ public:
   void testClasses();
   void testTemplateTypedefs();
   void testArray();
+  void testCommentsEtc();
 
   void unloadLibrary();
   void shutdown() { Reflex::Shutdown(); }
@@ -1313,19 +1315,19 @@ void ReflexSimple2Test::fundamentalType() {
 
 void ReflexSimple2Test::testArray() {
 
-   const Type & t = Type::ByName("testclasses::WithArray");
+   Type t = Type::ByName("testclasses::WithArray");
    CPPUNIT_ASSERT(t);
 
    Object o = t.Construct();
    CPPUNIT_ASSERT(o);
 
-   const Member & m = t.DataMemberByName("m_a");
+   Member  m = t.DataMemberByName("m_a");
    CPPUNIT_ASSERT(m);
 
-   const Type & memType = m.TypeOf();
+   Type memType = m.TypeOf();
    CPPUNIT_ASSERT(memType);
 
-   const Type & arrType = memType.ToType();
+   Type arrType = memType.ToType();
    CPPUNIT_ASSERT(arrType);
 
    void * mem = (char*)o.Address() + m.Offset();
@@ -1337,6 +1339,22 @@ void ReflexSimple2Test::testArray() {
 
    }
 
+}
+
+
+void ReflexSimple2Test::testCommentsEtc() {
+
+   Type t = Type::ByName("testclasses::WithTransientMember");
+   CPPUNIT_ASSERT(t);
+
+   Member m0 = t.MemberByName("m_transient");
+   CPPUNIT_ASSERT(m0);
+   CPPUNIT_ASSERT(m0.IsTransient());
+
+   Member m1 = t.MemberByName("m_nottransient");
+   CPPUNIT_ASSERT(m1);
+   CPPUNIT_ASSERT(! m1.IsTransient());
+   
 }
 
 

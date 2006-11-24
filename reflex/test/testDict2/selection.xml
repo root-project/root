@@ -13,6 +13,10 @@
   <operator name="+"/>
   <operator name="<<"/>
 
+  <class name="testclasses::WithTransientMember">
+    <field name="m_transient" transient="TRUE"/>
+  </class>
+
   <function name="trigger"/>
   
   <class name="MemberPointerTest"/>
