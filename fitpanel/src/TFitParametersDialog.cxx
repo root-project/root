@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.cxx,v 1.4 2006/10/06 15:34:03 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.cxx,v 1.5 2006/11/17 18:43:37 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 03/10/06
 
 /*************************************************************************
@@ -422,7 +422,7 @@ void TFitParametersDialog::DoParFix(Bool_t on)
          if (on) {
             // no bound available
             fParBnd[i]->Disconnect("Toggled(Bool_t)");
-            fParBnd[i]->UnmapWindow();
+            fParBnd[i]->SetEnabled(kFALSE);
             fParBnd[i]->SetToolTipText(Form("DISABLED - %s is fixed", fFunc->GetParName(i)));
             if (fParVal[i]->GetNumber() != 0) {
                fParMin[i]->SetNumber(fParVal[i]->GetNumber());
@@ -472,7 +472,7 @@ void TFitParametersDialog::DoParFix(Bool_t on)
                fParMax[i]->SetNumber(fParMin[i]->GetNumber());
                fParMin[i]->SetNumber(temp);
             }
-            fParBnd[i]->MapWindow();
+            fParBnd[i]->SetEnabled(kTRUE);
             fParBnd[i]->Connect("Toggled(Bool_t)",  "TFitParametersDialog",
                                 this, "DoParBound(Bool_t)");
             fParBnd[i]->SetState(kButtonUp);
@@ -581,7 +581,7 @@ void TFitParametersDialog::DoReset()
          fParSld[i]->Disconnect("PositionChanged()");
          fParSld[i]->UnmapWindow();
          fParBnd[i]->Disconnect("Toggled(Bool_t)");
-         fParBnd[i]->UnmapWindow();
+         fParBnd[i]->SetEnabled(kFALSE);
          fFunc->FixParameter(i, fParVal[i]->GetNumber());
          fParFix[i]->SetState(kButtonDown);
       } else {
@@ -599,9 +599,9 @@ void TFitParametersDialog::DoReset()
                                 this, "DoSlider()");
             fParSld[i]->Connect("PositionChanged()", "TFitParametersDialog",
                                 this, "DoSlider()");
+            fParBnd[i]->SetEnabled(kTRUE);
             fParBnd[i]->Connect("Toggled(Bool_t)", "TFitParametersDialog",
                                 this, "DoParBound()");
-            fParBnd[i]->MapWindow();
          }
       }
       fParVal[i]->SetNumber(fPval[i]);
