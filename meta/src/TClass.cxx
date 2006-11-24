@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.202 2006/09/25 13:27:35 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.203 2006/10/05 17:10:09 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -62,7 +62,6 @@
 #include "TVirtualMutex.h"
 #include "TVirtualMutex.h"
 #include "TVirtualPad.h"
-#include "TVirtualUtilPad.h"
 
 #include <cstdio>
 #include <set>
@@ -1236,18 +1235,7 @@ void TClass::Draw(Option_t *option)
    if (!padsav || !opt.Contains("same")) {
       TVirtualPad *padclass = (TVirtualPad*)(gROOT->GetListOfCanvases())->FindObject("R__class");
       if (!padclass) {
-         //The pad utility manager is required (a plugin)
-         TVirtualUtilPad *util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
-         if (!util) {
-            TPluginHandler *h;
-            if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilPad"))) {
-               if (h->LoadPlugin() == -1)
-                  return;
-               h->ExecPlugin(0);
-               util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
-            }
-         }
-         util->MakeCanvas("R__class","class",20,20,1000,750);
+         gROOT->ProcessLine("new TCanvas(\"R__class\",\"class\",20,20,1000,750);");
       } else {
          padclass->cd();
       }
