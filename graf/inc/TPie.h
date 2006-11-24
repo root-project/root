@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPie.h,v 1.2 2006/11/17 15:18:56 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPie.h,v 1.3 2006/11/22 15:42:22 couet Exp $
 // Author: Guido Volpi, Olivier Couet  03/11/2006
 
 /*************************************************************************
@@ -61,6 +61,7 @@ protected:
    Int_t    *fLineStyles;     //[fNvals] Line style
    Int_t    *fLineWidths;     //[fNvals] Line width
    Double_t *fRadiusOffsets;  //[fNvals] Distance of a slice from the center
+   Bool_t fIs3D;              //! true if the pseudo-3d is enabled
 
 public:
 

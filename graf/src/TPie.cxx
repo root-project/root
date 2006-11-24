@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.5 2006/11/23 10:06:35 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.6 2006/11/23 13:37:14 couet Exp $
 // Author: Guido Volpi, Olivier Couet 03/11/2006
 
 /*************************************************************************
@@ -110,8 +110,9 @@ TPie::TPie(const TH1 *h) : TNamed(h->GetName(),h->GetTitle())
 {
    // Constructor from a TH1
 
-   Int_t first = h->GetXaxis()->GetFirst();
-   Int_t last  = h->GetXaxis()->GetLast();
+   TAxis *axis = h->GetXaxis();
+   Int_t first = axis->GetFirst();
+   Int_t last  = axis->GetLast();
    Int_t np    = last-first+1;
    Init(np, 0, 0.5, 0.5, 0.4);
    for (Int_t i=first; i<=last; ++i) fVals[i-first] = h->GetBinContent(i);
@@ -193,6 +194,15 @@ Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
    Double_t xx = gPad->PadtoX(gPad->AbsPixeltoX(px));
    Double_t yy = gPad->PadtoY(gPad->AbsPixeltoY(py));
 
+   // XY metric
+   Double_t radX  = fRadius;
+   Double_t radY  = fRadius;
+   Double_t radXY = 1.;
+   if (fIs3D) {
+      radY  = .5*radX;
+      radXY = .5;
+   }
+
    Double_t phimin;
    Double_t cphi;
    Double_t phimax;
@@ -219,8 +229,8 @@ Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
          radOffset = fRadiusOffsets[i];
       }
 
-      Double_t dx  = xx-x-radOffset*TMath::Cos(cphi);
-      Double_t dy  = yy-y-radOffset*TMath::Sin(cphi);
+      Double_t dx  = (xx-x-radOffset*TMath::Cos(cphi))/radX;
+      Double_t dy  = (yy-y-radOffset*TMath::Sin(cphi)*radXY)/radY;
       Double_t ang = TMath::ATan2(dy,dx);
       if (ang<0) ang += TMath::TwoPi();
 
@@ -228,13 +238,13 @@ Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
 
       if ( ((ang>=phimin && ang <= phimax) || (phimax>TMath::TwoPi() &&
              ang+TMath::TwoPi()>=phimin && ang+TMath::TwoPi()<phimax)) &&
-             dist<=rad) { // if true the pointer is in the slice region
+             dist<=1.) { // if true the pointer is in the slice region
          fCurrent_x    = dx;
          fCurrent_y    = dy;
          fCurrent_ang  = ang;
          fCurrent_phi1 = phimin;
          fCurrent_phi2 = phimax;
-         fCurrent_rad  = dist;
+         fCurrent_rad  = dist*rad;
          result        = i;
          break;
       }
@@ -257,10 +267,6 @@ void TPie::Draw(Option_t *option)
 
    if (gPad) {
       if (!gPad->IsEditable()) (gROOT->GetMakeDefCanvas())();
-      if (!soption.Contains("same")) {
-         gPad->Clear();
-         gPad->Range(0.,0.,1.,1.);
-      }
    }
 
    AppendPad(option);
@@ -275,19 +281,27 @@ void TPie::DrawGhost()
 
    MakeSlices();
 
-   // Loop over slices
-   for (Int_t i=0;i<fNvals;++i) {
+   // XY metric
+   Double_t radX  = fRadius;
+   Double_t radY  = fRadius;
+   Double_t radXY = 1.;
+   if (fIs3D) {
+      radY  = .5*radX;
+      radXY = .5;
+   }
+
+   for (Int_t i=0;i<fNvals&&fIs3D==kTRUE;++i) {
       Float_t minphi = (fSlices[i*2]+gAngularOffset+.5)*TMath::Pi()/180.;
       Float_t avgphi = fSlices[i*2+1]*TMath::Pi()/180.;
-      Float_t maxphi = (fSlices[i*2+2]-.5)*TMath::Pi()/180;
+      Float_t maxphi = (fSlices[i*2+2]-.5)*TMath::Pi()/180.;
 
       Double_t radOffset = (i == fCurrent_slice ? gRadiusOffset : fRadiusOffsets[i]);
       Double_t x0 = gX+radOffset*TMath::Cos(avgphi);
-      Double_t y0 = gY+radOffset*TMath::Sin(avgphi);
+      Double_t y0 = gY+radOffset*TMath::Sin(avgphi)+gPad->PixeltoY(20);
 
       gVirtualX->DrawLine( gPad->XtoAbsPixel(x0), gPad->YtoAbsPixel(y0),
                            gPad->XtoAbsPixel(x0+gRadius*TMath::Cos(minphi)),
-                           gPad->YtoAbsPixel(y0+gRadius*TMath::Sin(minphi)) );
+                           gPad->YtoAbsPixel(y0+gRadius*TMath::Sin(minphi)*radXY) );
 
       Int_t ndiv = 10;
       Double_t dphi = (maxphi-minphi)/ndiv;
@@ -299,13 +313,48 @@ void TPie::DrawGhost()
       for (Int_t j=1;j<ndiv;++j) {
          Double_t phi = minphi+dphi*j;
          gVirtualX->DrawLine( gPad->XtoAbsPixel(x0+gRadius*TMath::Cos(phi)),
-                              gPad->YtoAbsPixel(y0+gRadius*TMath::Sin(phi)),
+                              gPad->YtoAbsPixel(y0+gRadius*TMath::Sin(phi)*radXY),
                               gPad->XtoAbsPixel(x0+gRadius*TMath::Cos(phi+dphi)),
-                              gPad->YtoAbsPixel(y0+gRadius*TMath::Sin(phi+dphi)));
+                              gPad->YtoAbsPixel(y0+gRadius*TMath::Sin(phi+dphi)*radXY));
       }
 
       gVirtualX->DrawLine( gPad->XtoAbsPixel(x0+gRadius*TMath::Cos(maxphi)),
-                           gPad->YtoAbsPixel(y0+gRadius*TMath::Sin(maxphi)),
+                           gPad->YtoAbsPixel(y0+gRadius*TMath::Sin(maxphi)*radXY),
+                           gPad->XtoAbsPixel(x0), gPad->YtoAbsPixel(y0) );
+   }
+
+
+   // Loop over slices
+   for (Int_t i=0;i<fNvals;++i) {
+      Float_t minphi = (fSlices[i*2]+gAngularOffset+.5)*TMath::Pi()/180.;
+      Float_t avgphi = fSlices[i*2+1]*TMath::Pi()/180.;
+      Float_t maxphi = (fSlices[i*2+2]-.5)*TMath::Pi()/180.;
+
+      Double_t radOffset = (i == fCurrent_slice ? gRadiusOffset : fRadiusOffsets[i]);
+      Double_t x0 = gX+radOffset*TMath::Cos(avgphi);
+      Double_t y0 = gY+radOffset*TMath::Sin(avgphi);
+
+      gVirtualX->DrawLine( gPad->XtoAbsPixel(x0), gPad->YtoAbsPixel(y0),
+                           gPad->XtoAbsPixel(x0+gRadius*TMath::Cos(minphi)),
+                           gPad->YtoAbsPixel(y0+gRadius*TMath::Sin(minphi)*radXY) );
+
+      Int_t ndiv = 10;
+      Double_t dphi = (maxphi-minphi)/ndiv;
+
+      if (dphi>.15) ndiv = (Int_t) ((maxphi-minphi)/.15);
+      dphi = (maxphi-minphi)/ndiv;
+
+      // Loop to draw the arc
+      for (Int_t j=1;j<ndiv;++j) {
+         Double_t phi = minphi+dphi*j;
+         gVirtualX->DrawLine( gPad->XtoAbsPixel(x0+gRadius*TMath::Cos(phi)),
+                              gPad->YtoAbsPixel(y0+gRadius*TMath::Sin(phi)*radXY),
+                              gPad->XtoAbsPixel(x0+gRadius*TMath::Cos(phi+dphi)),
+                              gPad->YtoAbsPixel(y0+gRadius*TMath::Sin(phi+dphi)*radXY));
+      }
+
+      gVirtualX->DrawLine( gPad->XtoAbsPixel(x0+gRadius*TMath::Cos(maxphi)),
+                           gPad->YtoAbsPixel(y0+gRadius*TMath::Sin(maxphi)*radXY),
                            gPad->XtoAbsPixel(x0), gPad->YtoAbsPixel(y0) );
    }
 }
@@ -343,6 +392,15 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Double_t angstep6 = 5.5*TMath::PiOver4();
    static Double_t angstep7 = 6.5*TMath::PiOver4();
    static Double_t angstep8 = 7.5*TMath::PiOver4();
+
+   // XY metric
+   Double_t radX  = fRadius;
+   Double_t radY  = fRadius;
+   Double_t radXY = 1.;
+   if (fIs3D) {
+      radY  = .5*radX;
+      radXY = .5;
+   }
 
    Int_t dx, dy;
    Double_t mdx, mdy;
@@ -399,7 +457,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          break;
 
       case kButton1Motion:
-         if (!isMovingSlice || !isMovingPie || !isResizing) {
+         if (!isMovingSlice || !isMovingPie || !isResizing || !isRotating) {
             if (prev_event==kButton1Down) {
                if (onBorder) {
                   isResizing = kTRUE;
@@ -426,7 +484,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
                if (!gPad->OpaqueMoving()) DrawGhost();
 
-               gRadiusOffset += TMath::Cos(avgphi)*mdx +TMath::Sin(avgphi)*mdy;
+               gRadiusOffset += TMath::Cos(avgphi)*mdx +TMath::Sin(avgphi)*mdy*radXY;
                if (gRadiusOffset<0) gRadiusOffset = .0;
 
                if (!gPad->OpaqueMoving()) DrawGhost();
@@ -460,6 +518,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                else          gAngularOffset--;
             }
             if (gAngularOffset>=360) gAngularOffset = 0;
+
             if (!gPad->OpaqueMoving()) DrawGhost();
          }
 
@@ -616,6 +675,7 @@ void TPie::Paint(Option_t *option)
    // "R"  Print the labels along the central "R"adius of slices.
    // "T"  Print the label in a direction "T"angent to circle that describes
    //      the TPie.
+   // "3D" Draw the pie-chart with a pseudo 3D effect.
    //
    // Other options changing the labels' format are described in
    // TPie::SetLabelFormat().
@@ -640,7 +700,15 @@ void TPie::Paint(Option_t *option)
       soption.Remove(idx,4);
    }
 
-   // Seek if have to draw the labels around the pie chart
+   // check if is active the pseudo-3d
+   if ( (idx=soption.Index("3d"))>=0 ) {
+      fIs3D = kTRUE;
+      soption.Remove(idx,2);
+   } else {
+      fIs3D = kFALSE;
+   }
+
+   // seek if have to draw the labels around the pie chart
    if ( (idx=soption.Index("t"))>=0 ) {
       lblor = 2;
       soption.Remove(idx,1);
@@ -658,15 +726,78 @@ void TPie::Paint(Option_t *option)
    }
 
    if (!fVals) {
-      Warning("TPie","No valid arrays of values");
+      Warning("Paint","No valid arrays of values");
+      return;
+   }
+
+   // Check if gPad exists and define the drawing range.
+   if (gPad) {
+      if (!optionSame) {
+         gPad->Clear();
+         gPad->Range(0.,0.,1.,1.);
+      }
+   } else {
       return;
    }
 
    // Objects useful to draw labels and slices
    TLatex *textlabel = new TLatex();
    TArc *arc = new TArc();
+   TLine *line = new TLine();
+
+   // XY metric
+   Double_t radX  = fRadius;
+   Double_t radY  = fRadius;
+   Double_t radXY = 1.;
+
+   if (fIs3D) {
+      radXY = .5;
+      radY = fRadius*radXY;
+   }
 
    // Draw the slices.
+   if (fIs3D==kTRUE) {
+      for (Int_t pi=0;pi<=20; ++pi) {
+         for (Int_t i=0;i<fNvals;++i) {
+            // draw the arc
+            // set the color of the next slice
+            if (pi>0) {
+               arc->SetFillColor(fFillColors[i]);
+               arc->SetFillStyle(fFillStyles[i]);
+               arc->SetLineColor(fFillColors[i]+100);
+            }
+            else {
+               arc->SetFillColor(fFillColors[i]);
+               arc->SetFillStyle(fFillStyles[i]);
+               arc->SetLineColor(fLineColors[i]);
+               arc->SetLineStyle(fLineStyles[i]);
+               arc->SetLineWidth(fLineWidths[i]);
+            }
+            // Paint the slice
+            Float_t aphi = fSlices[2*i+1]*TMath::Pi()/180.;
+
+            Double_t ax = fX+TMath::Cos(aphi)*fRadiusOffsets[i];
+            Double_t ay = fY+TMath::Sin(aphi)*fRadiusOffsets[i]*radXY+gPad->PixeltoY(20-pi);
+
+            arc->PaintEllipse(ax, ay, radX, radY, fSlices[2*i],
+                                                fSlices[2*i+2], 0.);
+
+            line->SetLineColor(fLineColors[i]);
+            line->SetLineStyle(fLineStyles[i]);
+            line->SetLineWidth(fLineWidths[i]);
+            line->PaintLine(ax,ay,ax,ay);
+
+            Double_t x0, y0;
+            x0 = ax+radX*TMath::Cos(fSlices[2*i]/180.*TMath::Pi());
+            y0 = ay+radY*TMath::Sin(fSlices[2*i]/180.*TMath::Pi());
+            line->PaintLine(x0,y0,x0,y0);
+
+            x0 = ax+radX*TMath::Cos(fSlices[2*i+2]/180.*TMath::Pi());
+            y0 = ay+radY*TMath::Sin(fSlices[2*i+2]/180.*TMath::Pi());
+            line->PaintLine(x0,y0,x0,y0);
+         }
+      }
+   }
    for (Int_t i=0;i<fNvals;++i) {
       // Set the color of the next slice
       arc->SetFillColor(fFillColors[i]);
@@ -677,12 +808,12 @@ void TPie::Paint(Option_t *option)
 
       // Paint the slice
       Float_t aphi = fSlices[2*i+1]*TMath::Pi()/180.;
-      Double_t ax = fX+TMath::Cos(aphi)*fRadiusOffsets[i];
-      Double_t ay = fY+TMath::Sin(aphi)*fRadiusOffsets[i];
-      arc->PaintEllipse(ax, ay, fRadius, fRadius, fSlices[2*i],
-                                                  fSlices[2*i+2], 0.);
-   }
 
+      Double_t ax = fX+TMath::Cos(aphi)*fRadiusOffsets[i];
+      Double_t ay = fY+TMath::Sin(aphi)*fRadiusOffsets[i]*radXY;
+      arc->PaintEllipse(ax, ay, radX, radY, fSlices[2*i],
+                                            fSlices[2*i+2], 0.);
+   }
 
    // Loop to place the labels.
    for (Int_t i=0;i<fNvals;++i) {
@@ -707,7 +838,7 @@ void TPie::Paint(Option_t *option)
       Double_t w = textlabel->GetXsize();
 
       Float_t lx = fX+(fRadius+fRadiusOffsets[i]+label_off)*TMath::Cos(aphi);
-      Float_t ly = fY+(fRadius+fRadiusOffsets[i]+label_off)*TMath::Sin(aphi);
+      Float_t ly = fY+(fRadius+fRadiusOffsets[i]+label_off)*TMath::Sin(aphi)*radXY;
 
       Double_t lblang = 0;
 
@@ -746,6 +877,7 @@ void TPie::Paint(Option_t *option)
    }
 
    delete arc;
+   delete line;
    delete textlabel;
 
    if (optionSame) return;
@@ -834,19 +966,19 @@ void TPie::SavePrimitive(ostream &out, Option_t *option)
        << "\", " << fNvals << ");" << endl;
    out << "   " << GetName() << "->SetCircle(" << fX << ", " << fY << ", "
        << fRadius << ");" << endl;
-   out << "   " << GetName() << "->SetLabelFormat(\"" << GetLabelFormat() 
+   out << "   " << GetName() << "->SetLabelFormat(\"" << GetLabelFormat()
        << "\");" << endl;
-   out << "   " << GetName() << "->SetLabelsOffset(" << GetLabelsOffset() 
+   out << "   " << GetName() << "->SetLabelsOffset(" << GetLabelsOffset()
        << ");" << endl;
-   out << "   " << GetName() << "->SetAngularOffset(" << GetAngularOffset() 
+   out << "   " << GetName() << "->SetAngularOffset(" << GetAngularOffset()
        << ");" << endl;
-   out << "   " << GetName() << "->SetTextAngle(" << GetTextAngle() 
+   out << "   " << GetName() << "->SetTextAngle(" << GetTextAngle()
        << ");" << endl;
-   out << "   " << GetName() << "->SetTextColor(" << GetTextColor() 
+   out << "   " << GetName() << "->SetTextColor(" << GetTextColor()
        << ");" << endl;
-   out << "   " << GetName() << "->SetTextFont(" << GetTextFont() 
+   out << "   " << GetName() << "->SetTextFont(" << GetTextFont()
        << ");" << endl;
-   out << "   " << GetName() << "->SetTextSize(" << GetTextSize() 
+   out << "   " << GetName() << "->SetTextSize(" << GetTextSize()
        << ");" << endl;
 
    SaveTextAttributes(out,GetName(),
