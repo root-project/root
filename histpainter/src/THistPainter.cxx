@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.271 2006/11/08 13:12:36 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.272 2006/11/15 14:12:27 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -46,7 +46,7 @@
 #include "TPluginManager.h"
 #include "TPaletteAxis.h"
 #include "TCrown.h"
-#include "TVirtualUtilPad.h"
+#include "TVirtualPadEditor.h"
 #include "TEnv.h"
 #include "TPoint.h"
 
@@ -320,18 +320,9 @@ void THistPainter::DrawPanel()
       Error("DrawPanel", "need to draw histogram first");
       return;
    }
-
-   //The pad utility manager is required (a plugin)
-   TVirtualUtilPad *util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
-   if (!util) {
-      TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilPad"))) {
-         if (h->LoadPlugin() == -1) return;
-         h->ExecPlugin(0);
-         util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
-      }
-   }
-   util->DrawPanel(gPad,fH);
+   TVirtualPadEditor *editor = TVirtualPadEditor::GetPadEditor();
+   editor->Show();
+   gROOT->ProcessLine(Form("((TCanvas*)0x%x)->Selected((TVirtualPad*)0x%x,(TObject*)0x%x,1)",gPad->GetCanvas(),gPad,fH));
 }
 
 //______________________________________________________________________________
@@ -456,17 +447,8 @@ void THistPainter::FitPanel()
       return;
    }
 
-   //The pad utility manager is required (a plugin)
-   TVirtualUtilPad *util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
-   if (!util) {
-      TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilPad"))) {
-         if (h->LoadPlugin() == -1) return;
-         h->ExecPlugin(0);
-         util = (TVirtualUtilPad*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilPad");
-      }
-   }
-   util->FitPanel(gPad,fH);
+   if (!gROOT->GetClass("TFitEditor")) gSystem->Load("libFitPanel");
+   gROOT->ProcessLine(Form("TFitEditor::Open((TVirtualPad*)0x%x,(TObject*)0x%x)",gPad,fH));
 }
 
 //______________________________________________________________________________
