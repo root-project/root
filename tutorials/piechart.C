@@ -16,8 +16,9 @@ void piechart()
 
    cpie->cd(1);
    pie1->SetAngularOffset(30.);
+   pie1->SetEntryRadiusOffset( 4, 0.1);
    pie1->SetRadius(.35);
-   pie1->Draw();
+   pie1->Draw("3d");
 
    cpie->cd(2);
    pie2->SetEntryRadiusOffset(2,.05);
@@ -26,12 +27,12 @@ void piechart()
    pie2->SetEntryLineStyle(2,2);
    pie2->SetEntryFillStyle(1,3030);
    pie2->SetCircle(.5,.45,.3);
-   pie2->Draw("rad");
+   pie2->Draw("r");
 
    cpie->cd(3);
    pie3->SetEntryVal(0,.8);
    pie3->SetLabelsOffset(-.1);
-   pie3->Draw("tan");
+   pie3->Draw("3d t");
 
    cpie->cd(4);
    pie4->SetRadius(.2);
