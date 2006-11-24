@@ -19,6 +19,8 @@
 
 #include "Api.h"
 
+namespace Cint {
+
 /*********************************************************************
 * class G__MethodArgInfo
 *
@@ -59,4 +61,7 @@ G__MethodArgInfo {
 
 };
 
+} // namespace Cint
+
+using namespace Cint;
 #endif

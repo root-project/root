@@ -1279,7 +1279,9 @@ int G__main(int argc,char **argv)
     int more = 0;
     G__redirect_on();
     G__init_process_cmd();
-    G__process_cmd(icom, "cint>", &more,(int*)NULL,(G__value*)NULL);
+    char prompt[G__ONELINE];
+    strcpy(prompt,"cint>");
+    G__process_cmd(icom, prompt, &more,(int*)NULL,(G__value*)NULL);
     G__scratch_all();
     return(EXIT_SUCCESS);
   }
@@ -1922,6 +1924,65 @@ int G__init_globals()
 void G__initcxx(); 
 
 /******************************************************************
+* G__defineMacro
+* Add a macro called name with its value to the known macros.
+* Also add a CINT version, which transforms
+* [_]*xyz[_]* to G__XYZ
+* If called with cap=false, capitalization does not happen,
+* i.e. [_]*xyz[_]* is transformed to G__xyz.
+* If cintname is given, it will be used instead of the 
+* converted name G__XYZ.
+******************************************************************/
+static void G__defineMacro(const char* name, long value,
+                           const char* cintname = 0,
+                           bool cap = true) {
+  char temp[G__ONELINE];
+  sprintf(temp+2, "!%s=%ld", name, value);
+
+  if (G__globalcomp != G__NOLINK)
+     // add system version, which starts with a '!'
+     G__add_macro(temp+2);
+
+  char* start = temp;
+  if (cintname) {
+     sprintf(temp+3, "%s=%ld", cintname, value);
+  } else {
+     // generate CINT name:
+     // leading '_' are skipped:
+     char* end=start + 3 + strlen(name) - 1;
+     while (start[3] == '_') ++start;
+     // it starts with a "G__":
+     memcpy(start, "G__", 3);
+     // trailing '_' are removed
+     while (*end=='_') --end;
+
+     sprintf(end+1, "=%ld", value);
+     while(cap && end != start) {
+        // capitalize the CINT macro name
+        *end = toupper(*end);
+        --end;
+     }
+  }
+  // add the CINT version of the macro
+  G__add_macro(start);
+}
+
+/* Define macro with value, both system macro and CINT macro
+*/
+#define G__DEFINE_MACRO(macro) \
+    G__defineMacro(#macro, (long)macro)
+/* Define macro with value, both system macro and CINT macro,
+  specifying the CINT macro name
+*/
+#define G__DEFINE_MACRO_N(macro, name) \
+    G__defineMacro(#macro, (long)macro, name)
+/* Define macro with value, both system macro and CINT macro,
+  preventing capitalization of the CINT macro name
+*/
+#define G__DEFINE_MACRO_S(macro) \
+    G__defineMacro(#macro, (long)macro, 0, false)
+
+/******************************************************************
 * G__platformMacro
 ******************************************************************/
 void G__platformMacro() 
@@ -1931,114 +1992,116 @@ void G__platformMacro()
    * operating system
    ***********************************************************************/
 #if defined(__linux__)  /* Linux */
-  sprintf(temp,"G__LINUX=%ld",(long)__linux__); G__add_macro(temp);
+  G__DEFINE_MACRO(__linux__);
 #elif defined(__linux) 
-  sprintf(temp,"G__LINUX=%ld",(long)__linux); G__add_macro(temp);
+  G__DEFINE_MACRO(__linux);
 #elif defined(linux)
-  sprintf(temp,"G__LINUX=%ld",(long)linux); G__add_macro(temp);
+  G__DEFINE_MACRO(linux);
 #endif
 #ifdef __FreeBSD__   /* FreeBSD */
-  sprintf(temp,"G__FBSD=%ld",(long)__FreeBSD__); G__add_macro(temp);
+  G__DEFINE_MACRO_N(__FreeBSD__, "G__FBSD");
 #endif
 #ifdef __OpenBSD__   /* OpenBSD */
-  sprintf(temp,"G__OBSD=%ld",(long)__OpenBSD__); G__add_macro(temp);
+  G__DEFINE_MACRO_N(__OpenBSD__, "G__OBSD");
 #endif
 #ifdef __hpux        /* HP-UX */
-  sprintf(temp,"G__HPUX=%ld",(long)__hpux); G__add_macro(temp);
+  G__DEFINE_MACRO(__hpux__);
 #endif
 #ifdef __sun         /* SunOS and Solaris */
-  sprintf(temp,"G__SUN=%ld",(long)__sun); G__add_macro(temp);
+  G__DEFINE_MACRO(__sun);
 #endif
 #ifdef _WIN32        /* Windows 32bit */
-  sprintf(temp,"G__WIN32=%ld",(long)_WIN32); G__add_macro(temp);
+  G__DEFINE_MACRO(_WIN32);
 #endif
 #ifdef _WINDOWS_     /* Windows */
-  sprintf(temp,"G__WINDOWS=%ld",(long)_WINDOWS_); G__add_macro(temp);
+  G__DEFINE_MACRO(_WINDOWS_);
 #endif
 #ifdef __APPLE__     /* Apple MacOS X */
-  sprintf(temp,"G__APPLE=%ld",(long)__APPLE__); G__add_macro(temp);
+  G__DEFINE_MACRO(__APPLE__);
 #endif
 #ifdef __VMS         /* DEC/Compac VMS */
-  sprintf(temp,"G__VMS=%ld",(long)__VMS); G__add_macro(temp);
+  G__DEFINE_MACRO(__VMS);
 #endif
 #ifdef _AIX          /* IBM AIX */
-  sprintf(temp,"G__AIX=%ld",(long)_AIX); G__add_macro(temp);
+  G__DEFINE_MACRO(_AIX);
 #endif
 #ifdef __sgi         /* SGI IRIX */
-  sprintf(temp,"G__SGI=%ld",(long)__sgi); G__add_macro(temp);
+  G__DEFINE_MACRO(__sgi);
 #endif
 #if defined(__alpha) && !defined(__linux) && !defined(__linux__) && !defined(linux) /* DEC/Compac Alpha-OSF operating system */
-  sprintf(temp,"G__ALPHA=%ld",(long)__alpha); G__add_macro(temp);
+  G__DEFINE_MACRO(__alpha);
 #endif
 #ifdef __QNX__         /* QNX realtime OS */
-  sprintf(temp,"G__QNX=%ld",(long)__QNX__); G__add_macro(temp);
+  G__DEFINE_MACRO(__QNX__);
 #endif
   /***********************************************************************
    * compiler and library
    ***********************************************************************/
 #ifdef G__MINGW /* Mingw */
-  sprintf(temp,"G__MINGW=%ld",(long)G__MINGW); G__add_macro(temp);
+  G__DEFINE_MACRO(G__MINGW);
 #endif
 #ifdef G__CYGWIN /* Cygwin */
-  sprintf(temp,"G__CYGWIN=%ld",(long)G__CYGWIN); G__add_macro(temp);
+  G__DEFINE_MACRO(G__CYGWIN);
 #endif
 #ifdef __GNUC__  /* gcc/g++  GNU C/C++ compiler major version */
-  sprintf(temp,"G__GNUC=%ld",(long)__GNUC__); G__add_macro(temp);
+  G__DEFINE_MACRO(__GNUC__);
 #endif
 #ifdef __GNUC_MINOR__  /* gcc/g++ minor version */
-  sprintf(temp,"G__GNUC_MINOR=%ld",(long)__GNUC_MINOR__); G__add_macro(temp);
+  G__DEFINE_MACRO(__GNUC_MINOR__);
 #endif
 #if defined(__GNUC__) && defined(__GNUC_MINOR__)
   sprintf(temp,"G__GNUC_VER=%ld",(long)__GNUC__*1000+__GNUC_MINOR__); 
   G__add_macro(temp);
 #endif
 #ifdef __GLIBC__   /* GNU C library major version */
-  sprintf(temp,"G__GLIBC=%ld",(long)__GLIBC__); G__add_macro(temp);
+  G__DEFINE_MACRO(__GLIBC__);
 #endif
 #ifdef __GLIBC_MINOR__  /* GNU C library minor version */
-  sprintf(temp,"G__GLIBC_MINOR=%ld",(long)__GLIBC_MINOR__); G__add_macro(temp);
+  G__DEFINE_MACRO(__GLIBC_MINOR__);
 #endif
 #ifdef __HP_aCC     /* HP aCC C++ compiler */
   sprintf(temp,"G__HP_aCC=%ld",(long)__HP_aCC); G__add_macro(temp);
+  G__DEFINE_MACRO_S(__HP_aCC);
 #if __HP_aCC > 15000
   sprintf(temp,"G__ANSIISOLIB=1"); G__add_macro(temp);
 #endif
 #endif
 #ifdef __SUNPRO_CC  /* Sun C++ compiler */
-  sprintf(temp,"G__SUNPRO_CC=%ld",(long)__SUNPRO_CC); G__add_macro(temp);
+  G__DEFINE_MACRO(__SUNPRO_CC);
 #endif
 #ifdef __SUNPRO_C   /* Sun C compiler */
-  sprintf(temp,"G__SUNPRO_C=%ld",(long)__SUNPRO_C); G__add_macro(temp);
+  G__DEFINE_MACRO(__SUNPRO_C);
 #endif
 #ifdef G__VISUAL    /* Microsoft Visual C++ compiler */
   sprintf(temp,"G__VISUAL=%ld",(long)G__VISUAL); G__add_macro(temp);
 #endif
 #ifdef _MSC_VER     /* Microsoft Visual C++ version */
-  sprintf(temp,"G__MSC_VER=%ld",(long)_MSC_VER); G__add_macro(temp);
+  sprintf(temp,"G__VISUAL=%ld",(long)G__VISUAL); G__add_macro(temp);
+  G__DEFINE_MACRO(_MSC_VER);
 #endif
 #ifdef __SC__       /* Symantec C/C++ compiler */
-  sprintf(temp,"G__SYMANTEC=%ld",(long)__SC__); G__add_macro(temp);
+  G__DEFINE_MACRO_N(__SC__, "G__SYMANTEC");
 #endif
 #ifdef __BORLANDC__ /* Borland C/C++ compiler */
-  sprintf(temp,"G__BORLAND=%ld",(long)__BORLANDC__); G__add_macro(temp);
+  G__DEFINE_MACRO(__BORLANDC__);
 #endif
 #ifdef __BCPLUSPLUS__  /* Borland C++ compiler */
-  sprintf(temp,"G__BCPLUSPLUS=%ld",(long)__BCPLUSPLUS__); G__add_macro(temp);
+  G__DEFINE_MACRO(__BCPLUSPLUS__);
 #endif
 #ifdef G__BORLANDCC5 /* Borland C/C++ compiler 5.5 */
-  sprintf(temp,"G__BORLANDCC5=%ld",(long)505); G__add_macro(temp);
+  G__DEFINE_MACRO(__BORLANDCC5__);
 #endif
 #ifdef __KCC        /* KCC  C++ compiler */
-  sprintf(temp,"G__KCC=%ld",(long)__KCC); G__add_macro(temp);
+  G__DEFINE_MACRO(__KCC__);
 #endif
 #if defined(__INTEL_COMPILER) && (__INTEL_COMPILER<810) /* icc and ecc C++ compilers */
-  sprintf(temp,"G__INTEL_COMPILER=%ld",(long)__INTEL_COMPILER); G__add_macro(temp);
+  G__DEFINE_MACRO(__INTEL_COMPILER);
 #endif
 #ifndef _AIX
 #ifdef __xlc__ /* IBM xlc compiler */
-  sprintf(temp,"G__XLC=%ld",(long)__xlc__); G__add_macro(temp);
   sprintf(temp,"G__GNUC=%ld",(long)3 /*__GNUC__*/); G__add_macro(temp);
   sprintf(temp,"G__GNUC_MINOR=%ld",(long)3 /*__GNUC_MINOR__*/); G__add_macro(temp);
+  G__DEFINE_MACRO(__xlc__);
 #endif
 #endif
   G__initcxx(); 
@@ -2046,59 +2109,57 @@ void G__platformMacro()
    * micro processor
    ***********************************************************************/
 #ifdef __hppa__ /* HP-PA , Hewlett Packard Precision Architecture */
-  sprintf(temp,"G__hppa=%ld",(long)__hppa__); G__add_macro(temp);
+  G__DEFINE_MACRO_S(__hppa__);
 #endif
 #ifdef __i386__ /* Intel 386,486,586 */
-  sprintf(temp,"G__i386=%ld",(long)__i386__); G__add_macro(temp);
+  G__DEFINE_MACRO_S(__i386__);
 #endif
 #ifdef __i860__ /* Intel 860 */
-  sprintf(temp,"G__i860=%ld",(long)__i860__); G__add_macro(temp);
+  G__DEFINE_MACRO_S(__i860__);
 #endif
 #ifdef __i960__ /* Intel 960 */
-  sprintf(temp,"G__i860=%ld",(long)__i960__); G__add_macro(temp);
+  G__DEFINE_MACRO_N(__i960__, "G__i860");
 #endif
 #ifdef __ia64__ /* Intel Itanium */
-  sprintf(temp,"G__ia64=%ld",(long)__ia64__); G__add_macro(temp);
+  G__DEFINE_MACRO_S(__ia64__);
 #endif
 #ifdef __m88k__ /* Motorola 88000 */
-  sprintf(temp,"G__m88k=%ld",(long)__m88k__); G__add_macro(temp);
+  G__DEFINE_MACRO_S(__m88k__);
 #endif
 #ifdef __m68k__ /* Motorola 68000 */
-  sprintf(temp,"G__m68k=%ld",(long)__m68k__); G__add_macro(temp);
+  G__DEFINE_MACRO_S(__m68k__);
 #endif
 #ifdef __ppc__  /* Motorola Power-PC */
-  sprintf(temp,"G__ppc=%ld",(long)__ppc__); G__add_macro(temp);
+  G__DEFINE_MACRO_S(__ppc__);
 #endif
 #ifdef __PPC__  /* IBM Power-PC */
-  sprintf(temp,"G__PPC=%ld",(long)__PPC__); G__add_macro(temp);
+  G__DEFINE_MACRO(__PPC__);
 #endif
 #ifdef __mips__ /* MIPS architecture */
-  sprintf(temp,"G__mips=%ld",(long)__mips__); G__add_macro(temp);
+  G__DEFINE_MACRO_S(__mips__);
 #endif
 #ifdef __alpha__ /* DEC/Compac Alpha */
-  sprintf(temp,"G__alpha=%ld",(long)__alpha__); G__add_macro(temp);
+  G__DEFINE_MACRO_S(__alpha__);
 #endif
 #if defined(__sparc) /* Sun Microsystems SPARC architecture */
-  sprintf(temp,"G__SPARC=%ld",(long)__sparc); G__add_macro(temp);
-  sprintf(temp,"G__sparc=%ld",(long)__sparc); G__add_macro(temp);
+  G__DEFINE_MACRO(__sparc);
 #elif  defined(__sparc__)
-  sprintf(temp,"G__SPARC=%ld",(long)__sparc__); G__add_macro(temp);
-  sprintf(temp,"G__sparc=%ld",(long)__sparc__); G__add_macro(temp);
+  G__DEFINE_MACRO(__sparc__);
 #endif
 #ifdef __arc__  /* ARC architecture */
-  sprintf(temp,"G__arc=%ld",(long)__arc__); G__add_macro(temp);
+  G__DEFINE_MACRO_S(__arc__);
 #endif
 #ifdef __M32R__
-  sprintf(temp,"G__m32r=%ld",(long)__M32R__); G__add_macro(temp);
+  G__DEFINE_MACRO_S(__M32R__);
 #endif
 #ifdef __sh__   /* Hitachi SH micro-controller */
-  sprintf(temp,"G__sh=%ld",(long)__SH__); G__add_macro(temp);
+  G__DEFINE_MACRO_S(__sh__);
 #endif
 #ifdef __arm__  /* ARM , Advanced Risk Machines */
-  sprintf(temp,"G__arm=%ld",(long)__arm__); G__add_macro(temp);
+  G__DEFINE_MACRO_S(__arm__);
 #endif
 #ifdef __s390__ /* IBM S390 */
-  sprintf(temp,"G__s390=%ld",(long)__s390__); G__add_macro(temp);
+  G__DEFINE_MACRO_S(__s390__);
 #endif
   /***********************************************************************
    * application environment

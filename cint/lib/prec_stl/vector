@@ -85,8 +85,7 @@ class vector {
    typedef typename std::reverse_iterator<iterator>       reverse_iterator;
    typedef typename std::reverse_iterator<const_iterator> const_reverse_iterator;
 
-#elif defined(G__SUN) 
-
+#elif defined(G__SUN) && !defined(G__GNUC)
   typedef T* iterator;
   typedef const T* const_iterator;
 
@@ -161,7 +160,7 @@ class vector {
 	public:
 		typedef random_access_iterator_tag iterator_category;
 		typedef T value_type;
-		typedef Allocator::diffrence_type difference_type;
+		typedef Allocator::difference_type difference_type;
 #if (G__MSC_VER>=1310)
 		typedef Allocator::pointer pointer;
 #else
@@ -201,6 +200,13 @@ class vector {
 #ifndef G__OLDIMPLEMENTATION1703
   class iterator {
    public:
+     typedef vector::pointer pointer;
+     typedef vector::const_pointer const_pointer;
+     typedef vector::reference reference;
+     typedef vector::const_reference const_reference;
+     typedef vector::size_type size_type;
+     typedef vector::difference_type difference_type;
+
       iterator();
       explicit iterator(const pointer& __i) ;
       // Allow iterator to const_iterator conversion
@@ -252,10 +258,17 @@ class vector {
   //typedef reverse_iterator<iterator>	      reverse_iterator;
   //typedef reverse_iterator<const_iterator>   const_reverse_iterator;
 
-#elif (!defined(G__INTEL_COMPILER) && (G__GNUC_VER>=3001))
+#elif (!defined(G__INTEL_COMPILER) && (G__GNUC_VER==3001))
 
   class iterator {
    public:
+     typedef vector::pointer pointer;
+     typedef vector::const_pointer const_pointer;
+     typedef vector::reference reference;
+     typedef vector::const_reference const_reference;
+     typedef vector::size_type size_type;
+     typedef vector::difference_type difference_type;
+
       iterator();
       explicit iterator(const pointer& __i) ;
       // Allow iterator to const_iterator conversion
@@ -291,7 +304,7 @@ class vector {
 
   typedef const iterator const_iterator;
 
-#elif (!defined(G__INTEL_COMPILER) && (G__GNUC_VER>=3000))
+#elif (!defined(G__INTEL_COMPILER) && (G__GNUC_VER==3000))
   typedef vector<T, Allocator> vector_type;
   typedef std::__normal_iterator<T*, vector_type> iterator;
   typedef std::__normal_iterator<T*, vector_type> const_iterator;

@@ -20,6 +20,8 @@
 
 #include "Api.h"
 
+namespace Cint {
+
 class G__ClassInfo;
 class G__MethodInfo;
 
@@ -84,6 +86,8 @@ G__TokenInfo {
   void GetNextscope(const char* name,G__ClassInfo& tag_scope);
 };
 
+} // namespace Cint
+
 /*********************************************************************
 * memo
 *
@@ -121,4 +125,5 @@ G__TokenInfo {
 * 
 *********************************************************************/
 
+using namespace Cint;
 #endif

@@ -18,6 +18,7 @@
 #include <stdio.h>
 
 #include "common.h"
+#include "Api.h"
 
 extern "C" {
 

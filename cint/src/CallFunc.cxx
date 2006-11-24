@@ -61,14 +61,14 @@
 * 
 *********************************************************************/
 ///////////////////////////////////////////////////////////////////////////
-G__CallFunc::G__CallFunc()
+Cint::G__CallFunc::G__CallFunc()
 {
   G__LockCriticalSection();
   Init();
   G__UnlockCriticalSection();
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::Init()
+void Cint::G__CallFunc::Init()
 {
   pfunc = (G__InterfaceMethod)NULL;
   para.paran = 0;
@@ -80,19 +80,19 @@ void G__CallFunc::Init()
 #endif
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetFunc(G__InterfaceMethod f)
+void Cint::G__CallFunc::SetFunc(G__InterfaceMethod f)
 {
   pfunc = f; // Set pointer to interface method
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetFunc(G__MethodInfo m)
+void Cint::G__CallFunc::SetFunc(G__MethodInfo m)
 {
   method = m;
   pfunc = m.InterfaceMethod(); // Set pointer to interface method
 }
 #ifdef G__ASM_WHOLEFUNC
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetBytecode(struct G__bytecodefunc* bc)
+void Cint::G__CallFunc::SetBytecode(struct G__bytecodefunc* bc)
 {
   bytecode = bc;
   if(bytecode) pfunc = (G__InterfaceMethod)G__exec_bytecode;
@@ -101,7 +101,7 @@ void G__CallFunc::SetBytecode(struct G__bytecodefunc* bc)
 #ifndef G__ROOT
     if(G__asm_dbg) {
       if(G__dispmsg>=G__DISPWARN) {
-	G__fprinterr(G__serr,"Warning: Bytecode compilation of %s failed. G__CallFunc::Exec may be slow\n",method.Name());
+	G__fprinterr(G__serr,"Warning: Bytecode compilation of %s failed. Cint::G__CallFunc::Exec may be slow\n",method.Name());
       }
     }
 #endif
@@ -110,7 +110,7 @@ void G__CallFunc::SetBytecode(struct G__bytecodefunc* bc)
 }
 #endif
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetArgArray(long *p,int narg)
+void Cint::G__CallFunc::SetArgArray(long *p,int narg)
 {
   int i,n;
   if(method.IsValid()) {
@@ -118,13 +118,13 @@ void G__CallFunc::SetArgArray(long *p,int narg)
     else {
       n = narg;
       if (narg > method.NArg()) {
-	G__fprinterr(G__serr,"Warning: G__CallFunc::SetArgArray() too many arguments specified (%d expected %d)\n",narg,method.NArg());
+	G__fprinterr(G__serr,"Warning: Cint::G__CallFunc::SetArgArray() too many arguments specified (%d expected %d)\n",narg,method.NArg());
 	G__printlinenum();
 	/* G__genericerror((char*)NULL); */
         n = method.NArg();
       }
       else if(n<method.NArg()-method.NDefaultArg()) {
-	G__fprinterr(G__serr,"Error: G__CallFunc::SetArgArray() too few arguments");
+	G__fprinterr(G__serr,"Error: Cint::G__CallFunc::SetArgArray() too few arguments");
 	G__printlinenum();
 	/* G__genericerror((char*)NULL); */
         n = method.NArg();
@@ -172,11 +172,11 @@ void G__CallFunc::SetArgArray(long *p,int narg)
 #endif
   }
   else {
-    G__fprinterr(G__serr,"Error: G__CallFunc::SetArgArray() must be initialized with 'G__CallFunc::SetFunc(G__ClassInfo* cls,char* fname,char* args,long* poffset)' first\n");
+    G__fprinterr(G__serr,"Error: Cint::G__CallFunc::SetArgArray() must be initialized with 'Cint::G__CallFunc::SetFunc(G__ClassInfo* cls,char* fname,char* args,long* poffset)' first\n");
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetArg(long l)
+void Cint::G__CallFunc::SetArg(long l)
 {
   para.para[para.paran].obj.i = l;  
   para.para[para.paran].ref = l;
@@ -187,7 +187,7 @@ void G__CallFunc::SetArg(long l)
   ++para.paran; // Increment number of argument
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetArg(unsigned long ul)
+void Cint::G__CallFunc::SetArg(unsigned long ul)
 {
   para.para[para.paran].obj.ulo = ul;
   para.para[para.paran].ref = (long)ul;
@@ -198,7 +198,7 @@ void G__CallFunc::SetArg(unsigned long ul)
   ++para.paran; // Increment number of argument
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetArg(double d)
+void Cint::G__CallFunc::SetArg(double d)
 {
   para.para[para.paran].obj.d = d;
   // Following data shouldn't matter, but set just in case
@@ -209,7 +209,7 @@ void G__CallFunc::SetArg(double d)
   ++para.paran; // Increment number of argument
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetArgRef(long& l)
+void Cint::G__CallFunc::SetArgRef(long& l)
 {
   para.para[para.paran].ref = (long)&l;
   para.para[para.paran].type = 'l';
@@ -220,7 +220,7 @@ void G__CallFunc::SetArgRef(long& l)
   ++para.paran; // Increment number of argument
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetArgRef(double& d)
+void Cint::G__CallFunc::SetArgRef(double& d)
 {
   para.para[para.paran].ref = (long)&d ;
   para.para[para.paran].type = 'd';
@@ -231,14 +231,14 @@ void G__CallFunc::SetArgRef(double& d)
   ++para.paran; // Increment number of argument
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetArg( G__value v )
+void Cint::G__CallFunc::SetArg( G__value v )
 {
    para.para[para.paran] = v;
    ++para.paran;
 }
 #ifdef G__NATIVELONGLONG
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetArg(G__int64 ll)
+void Cint::G__CallFunc::SetArg(G__int64 ll)
 {
   para.para[para.paran].obj.ll = ll;  
   para.para[para.paran].ref = 0;
@@ -249,7 +249,7 @@ void G__CallFunc::SetArg(G__int64 ll)
   ++para.paran; // Increment number of argument
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetArg(G__uint64 ull)
+void Cint::G__CallFunc::SetArg(G__uint64 ull)
 {
   para.para[para.paran].obj.ull = ull;  
   para.para[para.paran].ref = 0;
@@ -260,7 +260,7 @@ void G__CallFunc::SetArg(G__uint64 ull)
   ++para.paran; // Increment number of argument
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetArg(long double ld)
+void Cint::G__CallFunc::SetArg(long double ld)
 {
   para.para[para.paran].obj.ld = ld;
   // Following data shouldn't matter, but set just in case
@@ -271,7 +271,7 @@ void G__CallFunc::SetArg(long double ld)
   ++para.paran; // Increment number of argument
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetArgRef(G__int64& ll)
+void Cint::G__CallFunc::SetArgRef(G__int64& ll)
 {
   para.para[para.paran].ref = (long)&ll;
   para.para[para.paran].type = 'n';
@@ -282,7 +282,7 @@ void G__CallFunc::SetArgRef(G__int64& ll)
   ++para.paran; // Increment number of argument
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetArgRef(G__uint64& ull)
+void Cint::G__CallFunc::SetArgRef(G__uint64& ull)
 {
   para.para[para.paran].ref = (long)&ull;
   para.para[para.paran].type = 'm';
@@ -293,7 +293,7 @@ void G__CallFunc::SetArgRef(G__uint64& ull)
   ++para.paran; // Increment number of argument
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetArgRef(long double& ld)
+void Cint::G__CallFunc::SetArgRef(long double& ld)
 {
   para.para[para.paran].ref = (long)&ld ;
   para.para[para.paran].type = 'q';
@@ -305,7 +305,7 @@ void G__CallFunc::SetArgRef(long double& ld)
 }
 #endif
 //////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetArgs(const char* args)
+void Cint::G__CallFunc::SetArgs(const char* args)
 {
   int isrc=0;
   char *endmark=(char*)",";
@@ -329,7 +329,7 @@ void G__CallFunc::SetArgs(const char* args)
   delete [] tmp;
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetFuncProto(G__ClassInfo* cls
+void Cint::G__CallFunc::SetFuncProto(G__ClassInfo* cls
 			       ,const char* fname  ,const char* argtype
 			       ,long* poffset)
 {
@@ -342,7 +342,7 @@ void G__CallFunc::SetFuncProto(G__ClassInfo* cls
   G__UnlockCriticalSection();
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetFunc(G__ClassInfo* cls
+void Cint::G__CallFunc::SetFunc(G__ClassInfo* cls
 			  ,const char* fname  ,const char* args
 			  ,long* poffset
 			  ,MatchMode mode
@@ -389,7 +389,7 @@ void G__CallFunc::SetFunc(G__ClassInfo* cls
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-G__value G__CallFunc::Execute(void *pobject)
+G__value Cint::G__CallFunc::Execute(void *pobject)
 {
   int ret;
   long store_struct_offset;
@@ -422,7 +422,7 @@ G__value G__CallFunc::Execute(void *pobject)
   return result;
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__CallFunc::ExecInterpretedFunc(G__value* presult)
+int Cint::G__CallFunc::ExecInterpretedFunc(G__value* presult)
 {
   int ret=0;
   if(method.IsValid()) {
@@ -447,7 +447,7 @@ int G__CallFunc::ExecInterpretedFunc(G__value* presult)
   return(ret);
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetFuncType() {
+void Cint::G__CallFunc::SetFuncType() {
   if(method.IsValid()) {
     struct G__ifunc_table *ifunc = method.ifunc();
     int ifn = method.Index();

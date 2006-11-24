@@ -24,6 +24,8 @@
 #pragma setertti
 #endif
 
+using namespace Cint;
+
 /************************************************************************
 * translation between ANSI/ISO RTTI type_info and ERTTI G__ClassInfo
 ************************************************************************/

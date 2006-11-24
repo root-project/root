@@ -1323,9 +1323,11 @@ int G__pp_ifdefextern(char* temp)
       cin = G__fgetstream(fname,"\"");
 
       temp[0] = 0;
-      cin = G__fgetstream(temp,"{\r\n");
-
+      do {
+         cin = G__fgetstream(temp,"{\r\n");
+      } while (0==temp[0] && (cin == '\r' || cin == '\n'));
       if(0!=temp[0] || '{'!=cin)  goto goback;
+
       cin = G__fgetstream(temp,"\n\r");
       if (cin=='}' && 0==strcmp(fname,"C")) {
         goto goback;

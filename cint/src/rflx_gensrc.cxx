@@ -5,12 +5,13 @@
  * For the licensing terms see the file COPYING
  *
  ************************************************************************/
-//$Id: rflx_gensrc.cxx,v 1.20 2006/07/26 13:00:35 axel Exp $
+//$Id: rflx_gensrc.cxx,v 1.1.1.1 2006/11/24 10:57:06 rdm Exp $
 
 #include "rflx_gensrc.h"
 #include "rflx_tools.h"
 
 #include "G__ci.h"
+#include "common.h"
 #include "global.h"
 #include "Api.h"
 

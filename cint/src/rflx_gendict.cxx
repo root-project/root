@@ -5,7 +5,7 @@
  * For the licensing terms see the file COPYING
  *
  ************************************************************************/
-//$Id: rflx_gendict.cxx,v 1.5 2006/07/26 13:00:35 axel Exp $
+//$Id: rflx_gendict.cxx,v 1.1.1.1 2006/11/24 10:57:06 rdm Exp $
 
 #include "rflx_gendict.h"
 #include "rflx_gensrc.h"

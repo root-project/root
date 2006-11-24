@@ -1,3 +1,11 @@
-iosenum.h
-systypes.h
-*.so.*
+ errno.h
+ float.h
+ limits.h
+ locale.h
+ math.h
+ mkincld
+ signal.h
+ stddef.h
+ stdio.h
+ stdlib.h
+ time.h

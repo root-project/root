@@ -17,13 +17,15 @@
 #include "Api.h"
 #include "common.h"
 
+extern "C" int G__xrefflag;
+
 /*********************************************************************
 * class G__MethodInfo
 *
 * 
 *********************************************************************/
 ///////////////////////////////////////////////////////////////////////////
-void G__MethodInfo::Init()
+void Cint::G__MethodInfo::Init()
 {
   handle = (long)(&G__ifunc);
   index = -1;
@@ -33,7 +35,7 @@ void G__MethodInfo::Init()
   belongingclass=(G__ClassInfo*)NULL;
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__MethodInfo::Init(G__ClassInfo &a)
+void Cint::G__MethodInfo::Init(G__ClassInfo &a)
 {
   if(a.IsValid()) {
     handle=(long)G__struct.memfunc[a.Tagnum()];
@@ -54,7 +56,7 @@ void G__MethodInfo::Init(G__ClassInfo &a)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__MethodInfo::Init(long handlein,long indexin
+void Cint::G__MethodInfo::Init(long handlein,long indexin
 	,G__ClassInfo *belongingclassin)
 {
 #ifndef G__OLDIMPLEMENTATION2194
@@ -86,7 +88,7 @@ void G__MethodInfo::Init(long handlein,long indexin
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__MethodInfo::Init(G__ClassInfo *belongingclassin
+void Cint::G__MethodInfo::Init(G__ClassInfo *belongingclassin
 	,long funcpage,long indexin)
 {
   struct G__ifunc_table *ifunc;
@@ -125,7 +127,7 @@ void G__MethodInfo::Init(G__ClassInfo *belongingclassin
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* G__MethodInfo::Name()
+const char* Cint::G__MethodInfo::Name()
 {
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
@@ -137,7 +139,7 @@ const char* G__MethodInfo::Name()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__MethodInfo::Hash()
+int Cint::G__MethodInfo::Hash()
 {
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
@@ -149,7 +151,7 @@ int G__MethodInfo::Hash()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-struct G__ifunc_table* G__MethodInfo::ifunc()
+struct G__ifunc_table* Cint::G__MethodInfo::ifunc()
 {
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
@@ -161,7 +163,7 @@ struct G__ifunc_table* G__MethodInfo::ifunc()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* G__MethodInfo::Title() 
+const char* Cint::G__MethodInfo::Title() 
 {
   static char buf[G__INFO_TITLELEN];
   buf[0]='\0';
@@ -176,7 +178,7 @@ const char* G__MethodInfo::Title()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-long G__MethodInfo::Property()
+long Cint::G__MethodInfo::Property()
 {
   if(IsValid()) {
     long property=0;
@@ -207,7 +209,7 @@ long G__MethodInfo::Property()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__MethodInfo::NArg()
+int Cint::G__MethodInfo::NArg()
 {
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
@@ -219,7 +221,7 @@ int G__MethodInfo::NArg()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__MethodInfo::NDefaultArg()
+int Cint::G__MethodInfo::NDefaultArg()
 {
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
@@ -239,7 +241,7 @@ int G__MethodInfo::NDefaultArg()
   return(-1);
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__MethodInfo::HasVarArgs()
+int Cint::G__MethodInfo::HasVarArgs()
 {
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
@@ -251,7 +253,7 @@ int G__MethodInfo::HasVarArgs()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-G__InterfaceMethod G__MethodInfo::InterfaceMethod()
+G__InterfaceMethod Cint::G__MethodInfo::InterfaceMethod()
 {
   G__LockCriticalSection();
   if(IsValid()) {
@@ -275,7 +277,7 @@ G__InterfaceMethod G__MethodInfo::InterfaceMethod()
 }
 #ifdef G__ASM_WHOLEFUNC
 ///////////////////////////////////////////////////////////////////////////
-struct G__bytecodefunc *G__MethodInfo::GetBytecode()
+struct G__bytecodefunc *Cint::G__MethodInfo::GetBytecode()
 {
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
@@ -299,13 +301,12 @@ struct G__bytecodefunc *G__MethodInfo::GetBytecode()
 #endif
 /* #ifndef G__OLDIMPLEMENTATION1163 */
 ///////////////////////////////////////////////////////////////////////////
-G__DataMemberInfo G__MethodInfo::GetLocalVariable()
+G__DataMemberInfo Cint::G__MethodInfo::GetLocalVariable()
 {
   G__DataMemberInfo localvar;
   localvar.Init((long)0,(long)(-1),(G__ClassInfo*)NULL);
   if(IsValid()) {
     int store_fixedscope=G__fixedscope;
-    extern int G__xrefflag;
     G__xrefflag=1;
     G__fixedscope=1;
     struct G__bytecodefunc* pbc = GetBytecode();
@@ -330,7 +331,7 @@ G__DataMemberInfo G__MethodInfo::GetLocalVariable()
 /* #endif */
 ///////////////////////////////////////////////////////////////////////////
 #ifdef G__TRUEP2F
-void* G__MethodInfo::PointerToFunc()
+void* Cint::G__MethodInfo::PointerToFunc()
 {
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
@@ -353,7 +354,7 @@ void* G__MethodInfo::PointerToFunc()
 }
 #endif
 ///////////////////////////////////////////////////////////////////////////
-void G__MethodInfo::SetGlobalcomp(int globalcomp)
+void Cint::G__MethodInfo::SetGlobalcomp(int globalcomp)
 {
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
@@ -364,7 +365,7 @@ void G__MethodInfo::SetGlobalcomp(int globalcomp)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__MethodInfo::IsValid()
+int Cint::G__MethodInfo::IsValid()
 {
   if(handle) {
     struct G__ifunc_table *ifunc;
@@ -381,7 +382,7 @@ int G__MethodInfo::IsValid()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__MethodInfo::SetFilePos(const char* fname)
+int Cint::G__MethodInfo::SetFilePos(const char* fname)
 {
   struct G__dictposition* dict=G__get_dictpos((char*)fname);
   if(!dict) return(0);
@@ -391,7 +392,7 @@ int G__MethodInfo::SetFilePos(const char* fname)
   return(1);
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__MethodInfo::Next()
+int Cint::G__MethodInfo::Next()
 {
   if(handle) {
     struct G__ifunc_table *ifunc;
@@ -438,7 +439,7 @@ int G__MethodInfo::Next()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* G__MethodInfo::FileName()
+const char* Cint::G__MethodInfo::FileName()
 {
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
@@ -455,7 +456,7 @@ const char* G__MethodInfo::FileName()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-FILE* G__MethodInfo::FilePointer()
+FILE* Cint::G__MethodInfo::FilePointer()
 {
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
@@ -474,7 +475,7 @@ FILE* G__MethodInfo::FilePointer()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__MethodInfo::LineNumber()
+int Cint::G__MethodInfo::LineNumber()
 {
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
@@ -493,7 +494,7 @@ int G__MethodInfo::LineNumber()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-long G__MethodInfo::FilePosition()
+long Cint::G__MethodInfo::FilePosition()
 { 
   // returns  'type fname(type p1,type p2)'
   //                      ^
@@ -527,7 +528,7 @@ long G__MethodInfo::FilePosition()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__MethodInfo::Size()
+int Cint::G__MethodInfo::Size()
 {
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
@@ -546,7 +547,7 @@ int G__MethodInfo::Size()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__MethodInfo::IsBusy()
+int Cint::G__MethodInfo::IsBusy()
 {
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
@@ -559,7 +560,7 @@ int G__MethodInfo::IsBusy()
 }
 ///////////////////////////////////////////////////////////////////////////
 static char G__buf[G__LONGLINE];
-char* G__MethodInfo::GetPrototype()
+char* Cint::G__MethodInfo::GetPrototype()
 {
   strcpy(G__buf,Type()->Name());
   strcat(G__buf," ");
@@ -586,7 +587,7 @@ char* G__MethodInfo::GetPrototype()
   return(G__buf);
 }
 ///////////////////////////////////////////////////////////////////////////
-char* G__MethodInfo::GetMangledName()
+char* Cint::G__MethodInfo::GetMangledName()
 {
   return(G__map_cpp_name(GetPrototype()));
 }
@@ -595,7 +596,7 @@ extern "C" int G__DLL_direct_globalfunc(G__value *result7
 					,G__CONST char *funcname
 					,struct G__param *libp,int hash) ;
 extern "C" void* G__FindSym(const char* filename,const char* funcname);
-int G__MethodInfo::LoadDLLDirect(const char* filename,const char* funcname) 
+int Cint::G__MethodInfo::LoadDLLDirect(const char* filename,const char* funcname) 
 {
   void* p2f;
   struct G__ifunc_table *ifunc;
@@ -616,7 +617,7 @@ int G__MethodInfo::LoadDLLDirect(const char* filename,const char* funcname)
 ///////////////////////////////////////////////////////////////////////////
 // Global function to set precompiled library linkage
 ///////////////////////////////////////////////////////////////////////////
-extern "C" int G__SetGlobalcomp(char *funcname,char *param,int globalcomp)
+int Cint::G__SetGlobalcomp(char *funcname,char *param,int globalcomp)
 {
   G__ClassInfo globalscope;
   G__MethodInfo method;
@@ -666,7 +667,7 @@ extern "C" int G__SetGlobalcomp(char *funcname,char *param,int globalcomp)
 ///////////////////////////////////////////////////////////////////////////
 // Global function to set precompiled library linkage
 ///////////////////////////////////////////////////////////////////////////
-extern "C" int G__ForceBytecodecompilation(char *funcname,char *param)
+int Cint::G__ForceBytecodecompilation(char *funcname,char *param)
 {
   G__ClassInfo globalscope;
   G__MethodInfo method;
@@ -717,7 +718,7 @@ extern "C" int G__ForceBytecodecompilation(char *funcname,char *param)
 ///////////////////////////////////////////////////////////////////////////
 // SetVtblIndex
 ///////////////////////////////////////////////////////////////////////////
-void G__MethodInfo::SetVtblIndex(int vtblindex) {
+void Cint::G__MethodInfo::SetVtblIndex(int vtblindex) {
   if(!IsValid()) return;
   struct G__ifunc_table* ifunc = (struct G__ifunc_table*)handle;
   ifunc->vtblindex[index] = (short)vtblindex;
@@ -726,7 +727,7 @@ void G__MethodInfo::SetVtblIndex(int vtblindex) {
 ///////////////////////////////////////////////////////////////////////////
 // SetIsVirtual
 ///////////////////////////////////////////////////////////////////////////
-void G__MethodInfo::SetIsVirtual(int isvirtual) {
+void Cint::G__MethodInfo::SetIsVirtual(int isvirtual) {
   if(!IsValid()) return;
   struct G__ifunc_table* ifunc = (struct G__ifunc_table*)handle;
   ifunc->isvirtual[index] = isvirtual;
@@ -735,7 +736,7 @@ void G__MethodInfo::SetIsVirtual(int isvirtual) {
 ///////////////////////////////////////////////////////////////////////////
 // SetVtblBasetagnum
 ///////////////////////////////////////////////////////////////////////////
-void G__MethodInfo::SetVtblBasetagnum(int basetagnum) {
+void Cint::G__MethodInfo::SetVtblBasetagnum(int basetagnum) {
   if(!IsValid()) return;
   struct G__ifunc_table* ifunc = (struct G__ifunc_table*)handle;
   ifunc->vtblbasetagnum[index] = (short)basetagnum;

@@ -19,6 +19,8 @@
 
 #include "Api.h"
 
+namespace Cint {
+
 /*********************************************************************
 * class G__DataMemberInfo
 *
@@ -77,4 +79,7 @@ G__DataMemberInfo {
   G__TypeInfo type;
 };
 
+}
+
+using namespace Cint;
 #endif

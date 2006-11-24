@@ -5,7 +5,7 @@
  * For the licensing terms see the file COPYING
  *
  ************************************************************************/
-//$Id: Shadow.cxx,v 1.12 2006/07/26 13:00:35 axel Exp $
+//$Id: Shadow.cxx,v 1.1.1.1 2006/11/24 10:57:06 rdm Exp $
 
 #include "Api.h"
 #include <ostream>
@@ -13,10 +13,10 @@
 #include <list>
 
 const int kMaxLen   =   1024;
-bool G__ShadowMaker::fgVetoShadow = false;
+bool Cint::G__ShadowMaker::fgVetoShadow = false;
 
-G__ShadowMaker::G__ShadowMaker(std::ostream& out, const char* nsprefix, 
-   bool(*needShadowClass)(G__ClassInfo &cl) /*=G__ShadowMaker::NeedShadowClass*/,
+Cint::G__ShadowMaker::G__ShadowMaker(std::ostream& out, const char* nsprefix, 
+   bool(*needShadowClass)(G__ClassInfo &cl) /*=Cint::G__ShadowMaker::NeedShadowClass*/,
    bool(*needTypedefShadow)(G__ClassInfo &cl) /*=0*/):
    fOut(out), fNSPrefix(nsprefix), fNeedTypedefShadow(needTypedefShadow) {
 
@@ -55,12 +55,12 @@ G__ShadowMaker::G__ShadowMaker(std::ostream& out, const char* nsprefix,
 }
 
 //______________________________________________________________________________
-void G__ShadowMaker::VetoShadow(bool veto /*=true*/) { 
+void Cint::G__ShadowMaker::VetoShadow(bool veto /*=true*/) { 
    fgVetoShadow = veto; 
 }
 
 //______________________________________________________________________________
-bool G__ShadowMaker::NeedShadowClass(G__ClassInfo& cl)
+bool Cint::G__ShadowMaker::NeedShadowClass(G__ClassInfo& cl)
 {
    // Return whether cl needs a shadow class.
 
@@ -74,7 +74,7 @@ bool G__ShadowMaker::NeedShadowClass(G__ClassInfo& cl)
 }
 
 //______________________________________________________________________________
-int G__ShadowMaker::WriteNamespaceHeader(G__ClassInfo &cl)
+int Cint::G__ShadowMaker::WriteNamespaceHeader(G__ClassInfo &cl)
 {
   // Write all the necessary opening part of the namespace and
   // return the number of closing brackets needed
@@ -98,7 +98,7 @@ int G__ShadowMaker::WriteNamespaceHeader(G__ClassInfo &cl)
 }
 
 //______________________________________________________________________________
-void G__ShadowMaker::GetFullyQualifiedName(G__ClassInfo &cl, std::string &fullyQualifiedName)
+void Cint::G__ShadowMaker::GetFullyQualifiedName(G__ClassInfo &cl, std::string &fullyQualifiedName)
 {
    GetFullyQualifiedName(cl.Fullname(),fullyQualifiedName);
    const char *qual = fullyQualifiedName.c_str();
@@ -119,7 +119,7 @@ void G__ShadowMaker::GetFullyQualifiedName(G__ClassInfo &cl, std::string &fullyQ
 }
 
 //______________________________________________________________________________
-void G__ShadowMaker::GetFullyQualifiedName(G__TypeInfo &type, std::string &fullyQualifiedName)
+void Cint::G__ShadowMaker::GetFullyQualifiedName(G__TypeInfo &type, std::string &fullyQualifiedName)
 {
 
    const char *s = type.TmpltName();
@@ -173,7 +173,7 @@ void G__ShadowMaker::GetFullyQualifiedName(G__TypeInfo &type, std::string &fully
 }
 
 //______________________________________________________________________________
-void G__ShadowMaker::GetFullyQualifiedName(const char *originalName, std::string &fullyQualifiedName)
+void Cint::G__ShadowMaker::GetFullyQualifiedName(const char *originalName, std::string &fullyQualifiedName)
 {
    //fprintf(stderr,"qualifying %s\n",originalName);
    std::string subQualifiedName = "";
@@ -279,7 +279,7 @@ void G__ShadowMaker::GetFullyQualifiedName(const char *originalName, std::string
 }
 
 //______________________________________________________________________________
-bool G__ShadowMaker::IsSTLCont(const char *type)
+bool Cint::G__ShadowMaker::IsSTLCont(const char *type)
 {
    // Just checking whether it contains one of
    // "any","vector","list","deque","map","multimap","set","multiset"
@@ -304,7 +304,7 @@ bool G__ShadowMaker::IsSTLCont(const char *type)
 }
 
 //______________________________________________________________________________
-bool G__ShadowMaker::IsStdPair(G__ClassInfo &cl)
+bool Cint::G__ShadowMaker::IsStdPair(G__ClassInfo &cl)
 {
    // Is this an std pair
 
@@ -313,7 +313,7 @@ bool G__ShadowMaker::IsStdPair(G__ClassInfo &cl)
 }
 
 //______________________________________________________________________________
-void G__ShadowMaker::GetFullShadowNameRecurse(G__ClassInfo &cl, std::string &fullname)
+void Cint::G__ShadowMaker::GetFullShadowNameRecurse(G__ClassInfo &cl, std::string &fullname)
 {
 
    if (fullname.empty()) {
@@ -343,7 +343,7 @@ void G__ShadowMaker::GetFullShadowNameRecurse(G__ClassInfo &cl, std::string &ful
 }
 
 //______________________________________________________________________________
-void G__ShadowMaker::GetFullShadowName(G__ClassInfo &cl, std::string &fullname)
+void Cint::G__ShadowMaker::GetFullShadowName(G__ClassInfo &cl, std::string &fullname)
 {
    GetFullShadowNameRecurse(cl, fullname);
    size_t len=fullname.length();
@@ -352,7 +352,7 @@ void G__ShadowMaker::GetFullShadowName(G__ClassInfo &cl, std::string &fullname)
 }
 
 //______________________________________________________________________________
-std::string G__ShadowMaker::GetNonConstTypeName(G__DataMemberInfo &m, bool fullyQualified /*= false*/)
+std::string Cint::G__ShadowMaker::GetNonConstTypeName(G__DataMemberInfo &m, bool fullyQualified /*= false*/)
 {
    // Return the type of the data member, without ANY const keyword
 
@@ -394,7 +394,7 @@ std::string G__ShadowMaker::GetNonConstTypeName(G__DataMemberInfo &m, bool fully
 }
 
 //______________________________________________________________________________
-void G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
+void Cint::G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
 {
    // This function writes or make available a class named fNSPrefix::Shadow::ClassName
    // for which all data member are the same as the one in the class but are
@@ -664,7 +664,7 @@ void G__ShadowMaker::WriteShadowClass(G__ClassInfo &cl, int level /*=0*/)
 }
 
 
-void G__ShadowMaker::WriteAllShadowClasses() {
+void Cint::G__ShadowMaker::WriteAllShadowClasses() {
    if (fgVetoShadow) return;
 
    fOut << "// START OF SHADOWS" << std::endl << std::endl;

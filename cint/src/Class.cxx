@@ -25,39 +25,39 @@ static char G__buf[G__ONELINE];
 #endif
 
 /*********************************************************************
-* class G__ClassInfo
+* class Cint::G__ClassInfo
 *********************************************************************/
 
 ///////////////////////////////////////////////////////////////////////////
-void G__ClassInfo::Init()
+void Cint::G__ClassInfo::Init()
 {
   tagnum = -1;
   class_property = 0;
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__ClassInfo::Init(const char *classname)
+void Cint::G__ClassInfo::Init(const char *classname)
 {
   tagnum = G__defined_tagname(classname,1);
   class_property = 0;
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__ClassInfo::Init(int tagnumin)
+void Cint::G__ClassInfo::Init(int tagnumin)
 {
   tagnum = tagnumin;
   class_property = 0;
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::operator==(const G__ClassInfo& a)
+int Cint::G__ClassInfo::operator==(const Cint::G__ClassInfo& a)
 {
   return(tagnum == a.tagnum);
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::operator!=(const G__ClassInfo& a)
+int Cint::G__ClassInfo::operator!=(const Cint::G__ClassInfo& a)
 {
   return(tagnum != a.tagnum);
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* G__ClassInfo::Name()
+const char* Cint::G__ClassInfo::Name()
 {
   if(IsValid()) {
     return(G__struct.name[tagnum]);
@@ -67,7 +67,7 @@ const char* G__ClassInfo::Name()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* G__ClassInfo::Fullname()
+const char* Cint::G__ClassInfo::Fullname()
 {
   if(IsValid()) {
 #ifndef G__OLDIMPLEMENTATION1586
@@ -88,7 +88,7 @@ const char* G__ClassInfo::Fullname()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* G__ClassInfo::Title() 
+const char* Cint::G__ClassInfo::Title() 
 {
   static char buf[G__INFO_TITLELEN];
   buf[0]='\0';
@@ -101,7 +101,7 @@ const char* G__ClassInfo::Title()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::Size() 
+int Cint::G__ClassInfo::Size() 
 {
   if(IsValid()) {
     return(G__struct.size[tagnum]);
@@ -111,7 +111,7 @@ int G__ClassInfo::Size()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-long G__ClassInfo::Property()
+long Cint::G__ClassInfo::Property()
 {
   if (class_property) return class_property;
   if(IsValid()) {
@@ -139,7 +139,7 @@ long G__ClassInfo::Property()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::NDataMembers()
+int Cint::G__ClassInfo::NDataMembers()
 {
   struct G__var_array *var;
   int ndatamembers=0;
@@ -157,7 +157,7 @@ int G__ClassInfo::NDataMembers()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::NMethods()
+int Cint::G__ClassInfo::NMethods()
 {
   struct G__ifunc_table *ifunc;
   int nmethod=0;
@@ -175,13 +175,13 @@ int G__ClassInfo::NMethods()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-long G__ClassInfo::IsBase(const char *classname)
+long Cint::G__ClassInfo::IsBase(const char *classname)
 {
-  G__ClassInfo base(classname);
+  Cint::G__ClassInfo base(classname);
   return(IsBase(base));
 }
 ///////////////////////////////////////////////////////////////////////////
-long G__ClassInfo::IsBase(G__ClassInfo& a)
+long Cint::G__ClassInfo::IsBase(G__ClassInfo& a)
 {
   G__inheritance *baseclass;
   int i;
@@ -210,42 +210,42 @@ long G__ClassInfo::IsBase(G__ClassInfo& a)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-G__ClassInfo G__ClassInfo::EnclosingClass()
+G__ClassInfo Cint::G__ClassInfo::EnclosingClass()
 {
   if(IsValid()) {
-    G__ClassInfo enclosingclass(G__struct.parent_tagnum[tagnum]);
+    Cint::G__ClassInfo enclosingclass(G__struct.parent_tagnum[tagnum]);
     return(enclosingclass);
   }
   else {
-    G__ClassInfo enclosingclass;
+    Cint::G__ClassInfo enclosingclass;
     return(enclosingclass);
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-G__ClassInfo G__ClassInfo::EnclosingSpace()
+G__ClassInfo Cint::G__ClassInfo::EnclosingSpace()
 {
   if(IsValid()) {
     int enclosed_tag = G__struct.parent_tagnum[tagnum];
     while (enclosed_tag>=0 && (G__struct.type[enclosed_tag]!='n')) {
        enclosed_tag = G__struct.parent_tagnum[enclosed_tag];
     }
-    G__ClassInfo enclosingclass(enclosed_tag);
+    Cint::G__ClassInfo enclosingclass(enclosed_tag);
     return(enclosingclass);
   }
   else {
-    G__ClassInfo enclosingclass;
+    Cint::G__ClassInfo enclosingclass;
     return(enclosingclass);
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__ClassInfo::SetGlobalcomp(int globalcomp)
+void Cint::G__ClassInfo::SetGlobalcomp(int globalcomp)
 {
   if(IsValid()) {
     G__struct.globalcomp[tagnum] = globalcomp;
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__ClassInfo::SetProtectedAccess(int protectedaccess)
+void Cint::G__ClassInfo::SetProtectedAccess(int protectedaccess)
 {
   if(IsValid()) {
     G__struct.protectedaccess[tagnum] = protectedaccess;
@@ -253,7 +253,7 @@ void G__ClassInfo::SetProtectedAccess(int protectedaccess)
 }
 ///////////////////////////////////////////////////////////////////////////
 #ifndef G__OLDIMPLEMENTATION1218_YET
-int G__ClassInfo::IsValid()
+int Cint::G__ClassInfo::IsValid()
 {
   if(0<=tagnum && tagnum<G__struct.alltag) {
     return(1);
@@ -264,11 +264,11 @@ int G__ClassInfo::IsValid()
 }
 #endif
 ///////////////////////////////////////////////////////////////////////////
-unsigned char G__ClassInfo::FuncFlag() { 
+unsigned char Cint::G__ClassInfo::FuncFlag() { 
   return(IsValid()?G__struct.funcs[tagnum]:0); 
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::IsLoaded()
+int Cint::G__ClassInfo::IsLoaded()
 {
   if(IsValid() && 
      (G__NOLINK!=G__struct.iscpplink[tagnum]||-1!=G__struct.filenum[tagnum])) {
@@ -279,7 +279,7 @@ int G__ClassInfo::IsLoaded()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::SetFilePos(const char *fname)
+int Cint::G__ClassInfo::SetFilePos(const char *fname)
 {
   struct G__dictposition* dict=G__get_dictpos((char*)fname);
   if(!dict) return(0);
@@ -288,19 +288,19 @@ int G__ClassInfo::SetFilePos(const char *fname)
   return(1);
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::Next()
+int Cint::G__ClassInfo::Next()
 {
   ++tagnum;
   class_property = 0;
   return(IsValid());
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::Linkage()
+int Cint::G__ClassInfo::Linkage()
 {
   return G__struct.globalcomp[tagnum];
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* G__ClassInfo::FileName()
+const char* Cint::G__ClassInfo::FileName()
 {
   if(IsValid()) {
 #ifndef G__OLDIMPLEMENtATION2012
@@ -338,7 +338,7 @@ const char* G__ClassInfo::FileName()
   return((char*)NULL);
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::LineNumber()
+int Cint::G__ClassInfo::LineNumber()
 {
   if(IsValid()) {
     switch(G__struct.iscpplink[tagnum]) {
@@ -362,7 +362,7 @@ int G__ClassInfo::LineNumber()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::IsTmplt()
+int Cint::G__ClassInfo::IsTmplt()
 {
   if(IsValid()) {
     char *p = strchr((char*)Name(),'<');
@@ -374,7 +374,7 @@ int G__ClassInfo::IsTmplt()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* G__ClassInfo::TmpltName()
+const char* Cint::G__ClassInfo::TmpltName()
 {
   static char buf[G__ONELINE];
   if(IsValid()) {
@@ -389,7 +389,7 @@ const char* G__ClassInfo::TmpltName()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* G__ClassInfo::TmpltArg()
+const char* Cint::G__ClassInfo::TmpltArg()
 {
   static char buf[G__ONELINE];
   if(IsValid()) {
@@ -417,7 +417,7 @@ const char* G__ClassInfo::TmpltArg()
 * ROOT project special requirements
 *********************************************************************/
 ///////////////////////////////////////////////////////////////////////////
-void G__ClassInfo::SetDefFile(char *deffilein)
+void Cint::G__ClassInfo::SetDefFile(char *deffilein)
 {
   if(IsValid()) {
     CheckValidRootInfo();
@@ -425,7 +425,7 @@ void G__ClassInfo::SetDefFile(char *deffilein)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__ClassInfo::SetDefLine(int deflinein)
+void Cint::G__ClassInfo::SetDefLine(int deflinein)
 {
   if(IsValid()) {
     CheckValidRootInfo();
@@ -433,7 +433,7 @@ void G__ClassInfo::SetDefLine(int deflinein)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__ClassInfo::SetImpFile(char *impfilein)
+void Cint::G__ClassInfo::SetImpFile(char *impfilein)
 {
   if(IsValid()) {
     CheckValidRootInfo();
@@ -441,7 +441,7 @@ void G__ClassInfo::SetImpFile(char *impfilein)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__ClassInfo::SetImpLine(int implinein)
+void Cint::G__ClassInfo::SetImpLine(int implinein)
 {
   if(IsValid()) {
     CheckValidRootInfo();
@@ -449,7 +449,7 @@ void G__ClassInfo::SetImpLine(int implinein)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__ClassInfo::SetVersion(int versionin)
+void Cint::G__ClassInfo::SetVersion(int versionin)
 {
   if(IsValid()) {
     CheckValidRootInfo();
@@ -457,7 +457,7 @@ void G__ClassInfo::SetVersion(int versionin)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* G__ClassInfo::DefFile()
+const char* Cint::G__ClassInfo::DefFile()
 {
   if(IsValid()) {
     CheckValidRootInfo();
@@ -468,7 +468,7 @@ const char* G__ClassInfo::DefFile()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::DefLine()
+int Cint::G__ClassInfo::DefLine()
 {
   if(IsValid()) {
     CheckValidRootInfo();
@@ -479,7 +479,7 @@ int G__ClassInfo::DefLine()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* G__ClassInfo::ImpFile()
+const char* Cint::G__ClassInfo::ImpFile()
 {
   if(IsValid()) {
     CheckValidRootInfo();
@@ -490,7 +490,7 @@ const char* G__ClassInfo::ImpFile()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::ImpLine()
+int Cint::G__ClassInfo::ImpLine()
 {
   if(IsValid()) {
     CheckValidRootInfo();
@@ -501,7 +501,7 @@ int G__ClassInfo::ImpLine()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::Version()
+int Cint::G__ClassInfo::Version()
 {
   if(IsValid()) {
     CheckValidRootInfo();
@@ -512,7 +512,7 @@ int G__ClassInfo::Version()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::InstanceCount() 
+int Cint::G__ClassInfo::InstanceCount() 
 {
   if(IsValid()) {
     CheckValidRootInfo();
@@ -523,7 +523,7 @@ int G__ClassInfo::InstanceCount()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__ClassInfo::ResetInstanceCount()
+void Cint::G__ClassInfo::ResetInstanceCount()
 {
   if(IsValid()) {
     CheckValidRootInfo();
@@ -531,7 +531,7 @@ void G__ClassInfo::ResetInstanceCount()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__ClassInfo::IncInstanceCount()
+void Cint::G__ClassInfo::IncInstanceCount()
 {
   if(IsValid()) {
     CheckValidRootInfo();
@@ -539,7 +539,7 @@ void G__ClassInfo::IncInstanceCount()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::HeapInstanceCount() 
+int Cint::G__ClassInfo::HeapInstanceCount() 
 {
   if(IsValid()) {
     CheckValidRootInfo();
@@ -550,7 +550,7 @@ int G__ClassInfo::HeapInstanceCount()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__ClassInfo::ResetHeapInstanceCount()
+void Cint::G__ClassInfo::ResetHeapInstanceCount()
 {
   if(IsValid()) {
     CheckValidRootInfo();
@@ -558,7 +558,7 @@ void G__ClassInfo::ResetHeapInstanceCount()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__ClassInfo::IncHeapInstanceCount()
+void Cint::G__ClassInfo::IncHeapInstanceCount()
 {
   if(IsValid()) {
     CheckValidRootInfo();
@@ -566,12 +566,12 @@ void G__ClassInfo::IncHeapInstanceCount()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::RootFlag()
+int Cint::G__ClassInfo::RootFlag()
 {
   return G__struct.rootflag[tagnum];
 }
 ///////////////////////////////////////////////////////////////////////////
-G__InterfaceMethod G__ClassInfo::GetInterfaceMethod(const char* fname
+G__InterfaceMethod Cint::G__ClassInfo::GetInterfaceMethod(const char* fname
 						    ,const char* arg
 						    ,long* poffset
 						    ,MatchMode mode
@@ -603,7 +603,7 @@ G__InterfaceMethod G__ClassInfo::GetInterfaceMethod(const char* fname
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-G__MethodInfo G__ClassInfo::GetMethod(const char* fname,const char* arg
+G__MethodInfo Cint::G__ClassInfo::GetMethod(const char* fname,const char* arg
 				      ,long* poffset
 				      ,MatchMode mode
 				      ,InheritanceMode imode
@@ -637,7 +637,7 @@ G__MethodInfo G__ClassInfo::GetMethod(const char* fname,const char* arg
   return(method);
 }
 ///////////////////////////////////////////////////////////////////////////
-G__MethodInfo G__ClassInfo::GetMethod(const char* fname,struct G__param* libp
+G__MethodInfo Cint::G__ClassInfo::GetMethod(const char* fname,struct G__param* libp
 				      ,long* poffset
 				      ,MatchMode mode
 				      ,InheritanceMode imode
@@ -662,7 +662,7 @@ G__MethodInfo G__ClassInfo::GetMethod(const char* fname,struct G__param* libp
   return(method);
 }
 ///////////////////////////////////////////////////////////////////////////
-G__MethodInfo G__ClassInfo::GetDefaultConstructor() {
+G__MethodInfo Cint::G__ClassInfo::GetDefaultConstructor() {
   // TODO, reserve location for default ctor for tune up
   long dmy;
   G__MethodInfo method;
@@ -673,7 +673,7 @@ G__MethodInfo G__ClassInfo::GetDefaultConstructor() {
   return(method);
 }
 ///////////////////////////////////////////////////////////////////////////
-G__MethodInfo G__ClassInfo::GetCopyConstructor() {
+G__MethodInfo Cint::G__ClassInfo::GetCopyConstructor() {
   // TODO, reserve location for copy ctor for tune up
   long dmy;
   G__MethodInfo method;
@@ -687,7 +687,7 @@ G__MethodInfo G__ClassInfo::GetCopyConstructor() {
   return(method);
 }
 ///////////////////////////////////////////////////////////////////////////
-G__MethodInfo G__ClassInfo::GetDestructor() {
+G__MethodInfo Cint::G__ClassInfo::GetDestructor() {
   // TODO, dtor location is already reserved, ready for tune up
   long dmy;
   G__MethodInfo method;
@@ -698,7 +698,7 @@ G__MethodInfo G__ClassInfo::GetDestructor() {
   return(method);
 }
 ///////////////////////////////////////////////////////////////////////////
-G__MethodInfo G__ClassInfo::GetAssignOperator() {
+G__MethodInfo Cint::G__ClassInfo::GetAssignOperator() {
   // TODO, reserve operator= location for tune up
   long dmy;
   G__MethodInfo method;
@@ -709,7 +709,7 @@ G__MethodInfo G__ClassInfo::GetAssignOperator() {
   return(method);
 }
 ///////////////////////////////////////////////////////////////////////////
-G__DataMemberInfo G__ClassInfo::GetDataMember(const char* name,long* poffset)
+G__DataMemberInfo Cint::G__ClassInfo::GetDataMember(const char* name,long* poffset)
 {
   char *varname;
   int hash;
@@ -736,7 +736,7 @@ G__DataMemberInfo G__ClassInfo::GetDataMember(const char* name,long* poffset)
   return(datamember);
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::HasDefaultConstructor()
+int Cint::G__ClassInfo::HasDefaultConstructor()
 {
   if(IsValid()) {
      CheckValidRootInfo();
@@ -746,7 +746,7 @@ int G__ClassInfo::HasDefaultConstructor()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::HasMethod(const char *fname)
+int Cint::G__ClassInfo::HasMethod(const char *fname)
 {
   struct G__ifunc_table *ifunc;
   int ifn;
@@ -768,7 +768,7 @@ int G__ClassInfo::HasMethod(const char *fname)
   return(0);
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::HasDataMember(const char *name)
+int Cint::G__ClassInfo::HasDataMember(const char *name)
 {
   struct G__var_array *var;
   int ig15;
@@ -790,7 +790,7 @@ int G__ClassInfo::HasDataMember(const char *name)
   return(0);
 }
 ///////////////////////////////////////////////////////////////////////////
-void* G__ClassInfo::New()
+void* Cint::G__ClassInfo::New()
 {
   if(IsValid()) {
     void *p;
@@ -841,7 +841,7 @@ void* G__ClassInfo::New()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void* G__ClassInfo::New(int n)
+void* Cint::G__ClassInfo::New(int n)
 {
   if(IsValid() && n>0 ) {
     void *p;
@@ -913,7 +913,7 @@ void* G__ClassInfo::New(int n)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void* G__ClassInfo::New(void *arena)
+void* Cint::G__ClassInfo::New(void *arena)
 {
   if(IsValid()) {
     void *p;
@@ -972,7 +972,7 @@ void* G__ClassInfo::New(void *arena)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void* G__ClassInfo::New(int n, void *arena)
+void* Cint::G__ClassInfo::New(int n, void *arena)
 {
   if(IsValid() && (n > 0)) {
     void *p;
@@ -1045,11 +1045,11 @@ void* G__ClassInfo::New(int n, void *arena)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__ClassInfo::Delete(void* p) const { G__calldtor(p,tagnum,1); }
+void Cint::G__ClassInfo::Delete(void* p) const { G__calldtor(p,tagnum,1); }
 ///////////////////////////////////////////////////////////////////////////
-void G__ClassInfo::Destruct(void* p) const { G__calldtor(p,tagnum,0); }
+void Cint::G__ClassInfo::Destruct(void* p) const { G__calldtor(p,tagnum,0); }
 ///////////////////////////////////////////////////////////////////////////
-void G__ClassInfo::DeleteArray(void* ary, int dtorOnly)
+void Cint::G__ClassInfo::DeleteArray(void* ary, int dtorOnly)
 {
   // Array Destruction, with optional deletion.
   if (!IsValid()) return;
@@ -1099,7 +1099,7 @@ void G__ClassInfo::DeleteArray(void* ary, int dtorOnly)
   return;
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__ClassInfo::CheckValidRootInfo()
+void Cint::G__ClassInfo::CheckValidRootInfo()
 {
   long offset;
   if(G__struct.rootspecial[tagnum]) return;
@@ -1190,7 +1190,7 @@ static long G__ClassInfo_DataMemberProperty(long& property,int tagnum)
   return property;
 }
 ///////////////////////////////////////////////////////////////////////////
-long G__ClassInfo::ClassProperty()
+long Cint::G__ClassInfo::ClassProperty()
 {
   long property=0;
   if(IsValid()) {
@@ -1213,14 +1213,14 @@ long G__ClassInfo::ClassProperty()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-struct G__friendtag* G__ClassInfo::GetFriendInfo() { 
+struct G__friendtag* Cint::G__ClassInfo::GetFriendInfo() { 
   if(IsValid()) return(G__struct.friendtag[tagnum]);
   else return 0;
 }
 ///////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////
-G__MethodInfo G__ClassInfo::AddMethod(const char* typenam,const char* fname
+G__MethodInfo Cint::G__ClassInfo::AddMethod(const char* typenam,const char* fname
 				     ,const char *arg
                          	     ,int isstatic,int isvirtual) {
   struct G__ifunc_table *ifunc;

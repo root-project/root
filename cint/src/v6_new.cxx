@@ -14,24 +14,20 @@
  ************************************************************************/
 
 #include "common.h"
+#include "Api.h"
 
 extern "C" {
-
-#ifdef G__ROOT
-extern void* G__new_interpreted_object G__P((int size));
-extern void G__delete_interpreted_object G__P((void* p));
-#endif
 
 static void G__lock_noop() {}
 void(*G__AllocMutexLock)()   = G__lock_noop;
 void(*G__AllocMutexUnLock)() = G__lock_noop;
 
-G__EXPORT void G__exec_alloc_lock()   { G__AllocMutexLock(); }
-G__EXPORT void G__exec_alloc_unlock() { G__AllocMutexUnLock(); }
+void G__exec_alloc_lock()   { G__AllocMutexLock(); }
+void G__exec_alloc_unlock() { G__AllocMutexUnLock(); }
 
-G__EXPORT void G__set_alloclockfunc(void(*foo)())
+void G__set_alloclockfunc(void(*foo)())
 { G__AllocMutexLock = foo; }
-G__EXPORT void G__set_allocunlockfunc(void(*foo)())
+void G__set_allocunlockfunc(void(*foo)())
 { G__AllocMutexUnLock = foo; }
 
 /****************************************************************

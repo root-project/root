@@ -6854,7 +6854,13 @@ void G__argtype2param(char *argtype,G__param *libp)
   do {
     c=G__getstream_template(argtype,&p,typenam,endmark);
     if(typenam[0]) {
-      libp->para[libp->paran] = G__string2type(typenam);
+      char* start=typenam;
+      while (isspace(*start)) ++start;
+      if (*start) {
+        char* end=start + strlen(start) - 1;
+        while (isspace(*end) && end!=start) --end;
+      }
+      libp->para[libp->paran] = G__string2type(start);
       ++libp->paran;
     }
   } while(','==c);

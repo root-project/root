@@ -25,21 +25,21 @@
 *********************************************************************/
 
 ///////////////////////////////////////////////////////////////////////////
-G__BaseClassInfo::G__BaseClassInfo(G__ClassInfo& a)
+Cint::G__BaseClassInfo::G__BaseClassInfo(G__ClassInfo& a)
 : G__ClassInfo()
 {
   Init(a);
 }
 
 ///////////////////////////////////////////////////////////////////////////
-void G__BaseClassInfo::Init(G__ClassInfo& a)
+void Cint::G__BaseClassInfo::Init(G__ClassInfo& a)
 {
   derivedtagnum = a.Tagnum();
   basep = -1;
 }
 
 ///////////////////////////////////////////////////////////////////////////
-long G__BaseClassInfo::Offset()
+long Cint::G__BaseClassInfo::Offset()
 {
   if (IsValid()) {
     return (long) G__struct.baseclass[derivedtagnum]->baseoffset[basep];
@@ -50,7 +50,7 @@ long G__BaseClassInfo::Offset()
 }
 
 ///////////////////////////////////////////////////////////////////////////
-long G__BaseClassInfo::Property()
+long Cint::G__BaseClassInfo::Property()
 {
   if (IsValid()) {
     long property = G__ClassInfo::Property();
@@ -81,7 +81,7 @@ long G__BaseClassInfo::Property()
 }
 
 ///////////////////////////////////////////////////////////////////////////
-int G__BaseClassInfo::IsValid()
+int Cint::G__BaseClassInfo::IsValid()
 {
   if (
       (0 <= derivedtagnum) &&
@@ -97,13 +97,13 @@ int G__BaseClassInfo::IsValid()
 }
 
 ///////////////////////////////////////////////////////////////////////////
-int G__BaseClassInfo::Next()
+int Cint::G__BaseClassInfo::Next()
 {
   return Next(1); 
 }
 
 ///////////////////////////////////////////////////////////////////////////
-int G__BaseClassInfo::Next(int onlydirect)
+int Cint::G__BaseClassInfo::Next(int onlydirect)
 {
   ++basep;
   if (onlydirect) {
@@ -120,13 +120,13 @@ int G__BaseClassInfo::Next(int onlydirect)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-int G__BaseClassInfo::Prev()
+int Cint::G__BaseClassInfo::Prev()
 {
   return Prev(1); 
 }
 
 ///////////////////////////////////////////////////////////////////////////
-int G__BaseClassInfo::Prev(int onlydirect)
+int Cint::G__BaseClassInfo::Prev(int onlydirect)
 {
   if (basep == -1) {
     basep = G__struct.baseclass[derivedtagnum]->basen - 1;

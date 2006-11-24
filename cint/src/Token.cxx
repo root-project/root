@@ -27,7 +27,7 @@
 *********************************************************************/
 
 ///////////////////////////////////////////////////////////////////////////
-void G__TokenInfo::Init() 
+void Cint::G__TokenInfo::Init() 
 {
   // reset status of the object 
   tokentype= t_invalid;
@@ -41,7 +41,7 @@ void G__TokenInfo::Init()
 }
 
 ///////////////////////////////////////////////////////////////////////////
-G__TokenInfo::G__TokenInfo(const G__TokenInfo& tki) :
+Cint::G__TokenInfo::G__TokenInfo(const G__TokenInfo& tki) :
   tokentype(tki.tokentype), 
   tokenproperty(tki.tokenproperty), 
   methodscope(tki.methodscope),
@@ -55,7 +55,7 @@ G__TokenInfo::G__TokenInfo(const G__TokenInfo& tki) :
 }
 
 ///////////////////////////////////////////////////////////////////////////
-G__TokenInfo& G__TokenInfo::operator=(const G__TokenInfo& tki)
+G__TokenInfo& Cint::G__TokenInfo::operator=(const G__TokenInfo& tki)
 {
 
   // Assignment operator
@@ -75,7 +75,7 @@ G__TokenInfo& G__TokenInfo::operator=(const G__TokenInfo& tki)
 
 ///////////////////////////////////////////////////////////////////////////
 // MakeLocalTable has to be used when entering to a new function
-G__MethodInfo G__TokenInfo::MakeLocalTable(G__ClassInfo& tag_scope
+G__MethodInfo Cint::G__TokenInfo::MakeLocalTable(G__ClassInfo& tag_scope
                                            ,const char* fname
 					   ,const char* paramtype) 
 {
@@ -108,7 +108,7 @@ G__MethodInfo G__TokenInfo::MakeLocalTable(G__ClassInfo& tag_scope
 }
 ///////////////////////////////////////////////////////////////////////////
 // Query has to be used to get information for each token
-int G__TokenInfo::Query(G__ClassInfo& tag_scope
+int Cint::G__TokenInfo::Query(G__ClassInfo& tag_scope
 			,G__MethodInfo& func_scope
 			,const char* /* preopr */ ,const char* name
 			,const char* postopr)
@@ -132,7 +132,7 @@ int G__TokenInfo::Query(G__ClassInfo& tag_scope
 ///////////////////////////////////////////////////////////////////////////
 // Private member functions
 ///////////////////////////////////////////////////////////////////////////
-int G__TokenInfo::SearchTypeName(const char* name,const char* postopr)
+int Cint::G__TokenInfo::SearchTypeName(const char* name,const char* postopr)
 {
   tinfo.Init(name);
   if(tinfo.IsValid()) {
@@ -152,12 +152,12 @@ int G__TokenInfo::SearchTypeName(const char* name,const char* postopr)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__TokenInfo::SearchLocalVariable(const char* name,G__MethodInfo& func_scope
+int Cint::G__TokenInfo::SearchLocalVariable(const char* name,G__MethodInfo& func_scope
 				     ,const char* postopr)
 {
   if(localvar && func_scope.IsValid()) {
     if(&func_scope != &methodscope) {
-      G__fprinterr(G__serr,"Warning: G__TokenInfo::SearchLocalVariable() func scope changed without G__TokenInfo::MakeLocalTable()\n");
+      G__fprinterr(G__serr,"Warning: Cint::G__TokenInfo::SearchLocalVariable() func scope changed without Cint::G__TokenInfo::MakeLocalTable()\n");
       return(0);
     }
     struct G__var_array *var;
@@ -183,7 +183,7 @@ int G__TokenInfo::SearchLocalVariable(const char* name,G__MethodInfo& func_scope
   return(0);
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__TokenInfo::SearchDataMember(const char* name,G__ClassInfo& tag_scope
+int Cint::G__TokenInfo::SearchDataMember(const char* name,G__ClassInfo& tag_scope
 				  ,const char* postopr)
 {
   if(tag_scope.IsValid() && tag_scope.HasDataMember(name)) {
@@ -201,7 +201,7 @@ int G__TokenInfo::SearchDataMember(const char* name,G__ClassInfo& tag_scope
 }
 
 ///////////////////////////////////////////////////////////////////////////
-int G__TokenInfo::SearchGlobalVariable(const char* name,const char* postopr)
+int Cint::G__TokenInfo::SearchGlobalVariable(const char* name,const char* postopr)
 {
   if(glob.HasDataMember(name)) {
     tokenproperty = p_data;
@@ -217,7 +217,7 @@ int G__TokenInfo::SearchGlobalVariable(const char* name,const char* postopr)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__TokenInfo::SearchMemberFunction(const char* name,G__ClassInfo& tag_scope)
+int Cint::G__TokenInfo::SearchMemberFunction(const char* name,G__ClassInfo& tag_scope)
 {
   if(tag_scope.IsValid() && tag_scope.HasMethod(name)) {
     tokenproperty = p_func;
@@ -229,7 +229,7 @@ int G__TokenInfo::SearchMemberFunction(const char* name,G__ClassInfo& tag_scope)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__TokenInfo::SearchGlobalFunction(const char* name)
+int Cint::G__TokenInfo::SearchGlobalFunction(const char* name)
 {
   if(glob.HasMethod(name)) {
     tokenproperty = p_func;
@@ -242,7 +242,7 @@ int G__TokenInfo::SearchGlobalFunction(const char* name)
 }
 ///////////////////////////////////////////////////////////////////////////
 // set nextscope for scope stacking
-void G__TokenInfo::GetNextscope(const char* name,G__ClassInfo& tag_scope)
+void Cint::G__TokenInfo::GetNextscope(const char* name,G__ClassInfo& tag_scope)
 {
   G__DataMemberInfo dt(tag_scope);
   // iterate on variable table

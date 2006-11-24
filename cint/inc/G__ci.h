@@ -20,10 +20,10 @@
 #define G__CINT_VER6  1
 #endif
 
-#define G__CINTVERSION_V6      60010015
-#define G__CINTVERSIONSTR_V6  "6.1.15, September 21, 2006"
-#define G__CINTVERSION_V5      50160015
-#define G__CINTVERSIONSTR_V5  "5.16.15, September 21, 2006"
+#define G__CINTVERSION_V6      60010016
+#define G__CINTVERSIONSTR_V6  "6.1.16, November 24, 2006"
+#define G__CINTVERSION_V5      50160016
+#define G__CINTVERSIONSTR_V5  "5.16.16, November 24, 2006"
 
 #define G__ALWAYS
 /* #define G__NEVER */
@@ -295,7 +295,17 @@
 #endif
 #endif
 
+/**************************************************************************
+* G__reftype, var->reftype[], ifunc->reftype[] flag
+**************************************************************************/
+#define G__PARANORMAL       0
+#define G__PARAREFERENCE    1
+#define G__PARAP2P          2
+#define G__PARAP2P2P        3
 
+#define G__PARAREF         100
+#define G__PARAREFP2P      102
+#define G__PARAREFP2P2P    103
 
 /**************************************************************************
 * if __MAKECINT__ is defined, do not include this file
@@ -839,6 +849,37 @@ typedef int (*G__IgnoreInclude)();
 #endif
 
 /**************************************************************************
+* flag argument to G__getfunction()
+**************************************************************************/
+#define G__TRYNORMAL         0
+#define G__CALLMEMFUNC       1
+#define G__TRYMEMFUNC        2
+#define G__CALLCONSTRUCTOR   3  
+#define G__TRYCONSTRUCTOR    4  
+#define G__TRYDESTRUCTOR     5  
+#define G__CALLSTATICMEMFUNC 6
+#define G__TRYUNARYOPR       7
+#define G__TRYBINARYOPR      8
+
+#ifndef G__OLDIMPLEMENTATINO1250
+#define G__TRYIMPLICITCONSTRUCTOR 7
+#endif
+
+/**************************************************************************
+* Scope operator category
+**************************************************************************/
+#define G__NOSCOPEOPR    0
+#define G__GLOBALSCOPE   1
+#define G__CLASSSCOPE    2
+
+/*********************************************************************
+* variable length string buffer
+*********************************************************************/
+#define G__LONGLONG    1
+#define G__ULONGLONG   2
+#define G__LONGDOUBLE  3
+
+/**************************************************************************
 * store environment for stub function casll
 *
 **************************************************************************/
@@ -870,6 +911,10 @@ struct G__p2p {
 * struct of internal data
 *
 **************************************************************************/
+struct G__DUMMY_FOR_CINT7 {
+   void* fTypeName;
+   unsigned int fModifiers;
+};
 typedef struct {
   union {
     double d;
@@ -890,6 +935,7 @@ typedef struct {
   int type;
   int tagnum;
   int typenum;
+  char dummyForCint7[sizeof(struct G__DUMMY_FOR_CINT7) - sizeof(int)];
 #ifdef G__REFERENCETYPE2
   long ref;
 #endif
@@ -1016,12 +1062,56 @@ extern G__value G__null;
 #define G__MAINEXIST               1
 #define G__TCLMAIN                 2
 
+/*********************************************************************
+* return status flag
+*********************************************************************/
+#define G__RETURN_NON       0
+#define G__RETURN_NORMAL    1 
+#define G__RETURN_IMMEDIATE 2
+#define G__RETURN_TRY      -1 
+#define G__RETURN_EXIT1     4
+#define G__RETURN_EXIT2     5
+
 /**************************************************************************
 * struct declaration to avoid error (compiler dependent)
 **************************************************************************/
 struct G__ifunc_table;
 struct G__var_array;
-struct G__dictposition;
+
+/*********************************************************************
+* scratch upto dictionary position
+*********************************************************************/
+struct G__dictposition {
+  /* global variable table position */
+  struct G__var_array *var;
+  int ig15;
+  /* struct tagnum */
+  int tagnum;
+  /* const string table */
+  struct G__ConstStringList *conststringpos;
+  /* typedef table */
+  int typenum;
+  /* global function table position */
+  struct G__ifunc_table *ifunc;
+  int ifn;
+  /* include path */
+  struct G__includepath *ipath;
+  /* shared library file */
+  int allsl;
+  /* preprocessfilekey */
+  struct G__Preprocessfilekey *preprocessfilekey;
+  /* input file */
+  int nfile;
+  /* macro table */
+  struct G__Deffuncmacro *deffuncmacro;
+  /* template class */
+  struct G__Definedtemplateclass *definedtemplateclass;
+  /* function template */
+  struct G__Definetemplatefunc *definedtemplatefunc;   
+
+  char* ptype; /* struct,union,enum,class */
+};
+
 
 /**************************************************************************
 * comment information
@@ -1563,6 +1653,60 @@ typedef struct {
   void (*pfunc)();
 } G__COMPLETIONLIST;
 
+#define G__TEMPLATEMEMFUNC
+#ifdef G__TEMPLATEMEMFUNC
+/* Doubly linked list of long int, methods are described in tmplt.c */
+struct G__IntList {
+  long i;
+  struct G__IntList *prev;
+  struct G__IntList *next;
+};
+
+struct G__Definedtemplatememfunc {
+  int line;
+  int filenum;
+  FILE *def_fp;
+  fpos_t def_pos;
+  struct G__Definedtemplatememfunc *next;
+};
+#endif
+
+struct G__Templatearg {
+  int type;
+  char *string;
+  char *default_parameter;
+  struct G__Templatearg *next;
+};
+
+struct G__Definedtemplateclass {
+  char *name;
+  int hash;
+  int line;
+  int filenum;
+  FILE *def_fp;
+  fpos_t def_pos;
+  struct G__Templatearg *def_para;
+#ifdef G__TEMPLATEMEMFUNC
+  struct G__Definedtemplatememfunc memfunctmplt;
+#endif
+  struct G__Definedtemplateclass *next;
+  int parent_tagnum;
+  struct G__IntList *instantiatedtagnum;
+  int isforwarddecl;
+  int friendtagnum;
+  struct G__Definedtemplateclass *specialization;
+  struct G__Templatearg *spec_arg;
+};
+
+/********************************************************************
+* include path by -I option
+* Used in G__main() and G__loadfile()
+********************************************************************/
+struct G__includepath {
+  char *pathname;
+  struct G__includepath *next;
+};
+
 
 /**************************************************************************
 * pointer to function which is evaluated at pause
@@ -2059,6 +2203,8 @@ extern G__EXPORT long double G__Longdouble G__P((G__value buf));
 extern G__EXPORT G__int64* G__Longlongref G__P((G__value *buf));
 extern G__EXPORT G__uint64* G__ULonglongref G__P((G__value *buf));
 extern G__EXPORT long double* G__Longdoubleref G__P((G__value *buf));
+extern G__EXPORT void G__exec_alloc_lock();
+extern G__EXPORT void G__exec_alloc_unlock();
 
 /* Missing interfaces */
 
@@ -2101,6 +2247,11 @@ extern G__EXPORT void G__loadlonglong(int* ptag,int* ptype,int which);
 extern G__EXPORT int G__isanybase(int basetagnum,int derivedtagnum,long pobject);
 extern G__EXPORT int G__pop_tempobject(void);
 extern G__EXPORT char* G__stripfilename(char* filename);
+
+extern G__EXPORT int G__sizeof (G__value *object);
+#ifdef _WIN32
+extern G__EXPORT FILE *FOpenAndSleep(const char *filename, const char *mode);
+#endif
 
 #else /* G__MULTITHREADLIBCINT */
 

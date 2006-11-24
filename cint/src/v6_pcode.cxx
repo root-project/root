@@ -17,11 +17,6 @@
 
 extern "C" {
 
-#ifdef G__ROOT
-extern void* G__new_interpreted_object G__P((int size));
-extern void G__delete_interpreted_object G__P((void* p));
-#endif
-
 #ifdef G__BORLANDCC5
 double G__doubleM(G__value *buf);
 static void G__asm_toXvalue(G__value* result);

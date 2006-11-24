@@ -1707,6 +1707,7 @@ int G__fgetstream(char *string,char *endmark)
         if(c==prev) {
           flag=1;
           ignoreflag=1;
+          break;
         }
       }
     }

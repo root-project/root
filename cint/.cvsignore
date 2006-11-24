@@ -1,1 +1,2 @@
-MAKEINFO
+MAKEINFO cint cint.exe
+update.bat updatedb.bat

@@ -24,14 +24,14 @@
 *
 *********************************************************************/
 ///////////////////////////////////////////////////////////////////////////
-void G__DataMemberInfo::Init()
+void Cint::G__DataMemberInfo::Init()
 {
   belongingclass = (G__ClassInfo*)NULL;
   handle = (long)(&G__global);
   index = -1;
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__DataMemberInfo::Init(class G__ClassInfo &a)
+void Cint::G__DataMemberInfo::Init(class G__ClassInfo &a)
 {
   if(a.IsValid()) {
     belongingclass = &a;
@@ -46,7 +46,7 @@ void G__DataMemberInfo::Init(class G__ClassInfo &a)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__DataMemberInfo::Init(long handlein,long indexin
+void Cint::G__DataMemberInfo::Init(long handlein,long indexin
 	,G__ClassInfo *belongingclassin)
 {
   if(handlein) {
@@ -77,7 +77,7 @@ void G__DataMemberInfo::Init(long handlein,long indexin
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* G__DataMemberInfo::Name()
+const char* Cint::G__DataMemberInfo::Name()
 {
   if(IsValid()) {
     struct G__var_array *var;
@@ -89,7 +89,7 @@ const char* G__DataMemberInfo::Name()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* G__DataMemberInfo::Title()
+const char* Cint::G__DataMemberInfo::Title()
 {
   static char buf[G__INFO_TITLELEN];
   buf[0]='\0';
@@ -104,7 +104,7 @@ const char* G__DataMemberInfo::Title()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-long G__DataMemberInfo::Property()
+long Cint::G__DataMemberInfo::Property()
 {
   if(IsValid()) {
     long property=0;
@@ -155,7 +155,7 @@ long G__DataMemberInfo::Property()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-long G__DataMemberInfo::Offset()
+long Cint::G__DataMemberInfo::Offset()
 {
   if(IsValid()) {
     struct G__var_array *var;
@@ -167,7 +167,7 @@ long G__DataMemberInfo::Offset()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__DataMemberInfo::Bitfield() 
+int Cint::G__DataMemberInfo::Bitfield() 
 {
   if(IsValid()) {
     struct G__var_array *var;
@@ -179,7 +179,7 @@ int G__DataMemberInfo::Bitfield()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__DataMemberInfo::ArrayDim()
+int Cint::G__DataMemberInfo::ArrayDim()
 {
   if(IsValid()) {
     struct G__var_array *var;
@@ -191,7 +191,7 @@ int G__DataMemberInfo::ArrayDim()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__DataMemberInfo::MaxIndex(int dim)
+int Cint::G__DataMemberInfo::MaxIndex(int dim)
 {
   if(IsValid()) {
     struct G__var_array *var;
@@ -213,7 +213,7 @@ int G__DataMemberInfo::MaxIndex(int dim)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-void G__DataMemberInfo::SetGlobalcomp(int globalcomp)
+void Cint::G__DataMemberInfo::SetGlobalcomp(int globalcomp)
 {
   if(IsValid()) {
     struct G__var_array *var;
@@ -224,7 +224,7 @@ void G__DataMemberInfo::SetGlobalcomp(int globalcomp)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__DataMemberInfo::IsValid()
+int Cint::G__DataMemberInfo::IsValid()
 {
   if(handle) {
     struct G__var_array *var;
@@ -234,7 +234,7 @@ int G__DataMemberInfo::IsValid()
   return(0);
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__DataMemberInfo::SetFilePos(const char* fname)
+int Cint::G__DataMemberInfo::SetFilePos(const char* fname)
 {
   struct G__dictposition* dict=G__get_dictpos((char*)fname);
   if(!dict) return(0);
@@ -244,7 +244,7 @@ int G__DataMemberInfo::SetFilePos(const char* fname)
   return(1);
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__DataMemberInfo::Next()
+int Cint::G__DataMemberInfo::Next()
 {
   if(handle) {
     struct G__var_array *var;
@@ -284,7 +284,7 @@ int G__DataMemberInfo::Next()
 #include <vector>
 namespace std { }
 using namespace std;
-int G__DataMemberInfo::Prev()
+int Cint::G__DataMemberInfo::Prev()
 {
   struct G__var_array *var;
   static vector<void*> prevbuf;
@@ -337,7 +337,7 @@ int G__DataMemberInfo::Prev()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* G__DataMemberInfo::FileName() {
+const char* Cint::G__DataMemberInfo::FileName() {
 #ifdef G__VARIABLEFPOS
   if(IsValid()) {
     struct G__var_array *var;
@@ -353,13 +353,13 @@ const char* G__DataMemberInfo::FileName() {
     return((char*)NULL);
   }
 #else
-  G__fprinterr("Warning: G__DataMemberInfo::Filename() not supported in this configuration. define G__VARIABLEFPOS macro in platform dependency file and recompile cint");
+  G__fprinterr("Warning: Cint::G__DataMemberInfo::Filename() not supported in this configuration. define G__VARIABLEFPOS macro in platform dependency file and recompile cint");
   G__printlinenum();
   return((char*)NULL);
 #endif
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__DataMemberInfo::LineNumber() {
+int Cint::G__DataMemberInfo::LineNumber() {
 #ifdef G__VARIABLEFPOS
   if(IsValid()) {
     struct G__var_array *var;
@@ -375,7 +375,7 @@ int G__DataMemberInfo::LineNumber() {
     return(-1);
   }
 #else
-  G__fprinterr("Warning: G__DataMemberInfo::LineNumber() not supported in this configuration. define G__VARIABLEFPOS macro in platform dependency file and recompile cint");
+  G__fprinterr("Warning: Cint::G__DataMemberInfo::LineNumber() not supported in this configuration. define G__VARIABLEFPOS macro in platform dependency file and recompile cint");
   G__printlinenum();
   return(-1);
 #endif
@@ -446,15 +446,15 @@ static G__DataMemberInfo GetDataMemberFromAllParents(G__ClassInfo & cl, const ch
 // array data member.
 // In case of error, or if the size is not specified, GrabIndex returns 0.
 // If errnum is not null, *errnum updated with the error number:
-//   G__DataMemberInfo::G__VALID     : valid array index
-//   G__DataMemberInfo::G__NOT_INT   : array index is not an int
-//   G__DataMemberInfo::G__NOT_DEF   : index not defined before array 
+//   Cint::G__DataMemberInfo::G__VALID     : valid array index
+//   Cint::G__DataMemberInfo::G__NOT_INT   : array index is not an int
+//   Cint::G__DataMemberInfo::G__NOT_DEF   : index not defined before array 
 //                                          (this IS an error for streaming to disk)
-//   G__DataMemberInfo::G__IS_PRIVATE: index exist in a parent class but is private
-//   G__DataMemberInfo::G__UNKNOWN   : index is not known
+//   Cint::G__DataMemberInfo::G__IS_PRIVATE: index exist in a parent class but is private
+//   Cint::G__DataMemberInfo::G__UNKNOWN   : index is not known
 // If errstr is not null, *errstr is updated with the address of a static
 //   string containing the part of the index with is invalid.
-const char* G__DataMemberInfo::ValidArrayIndex(int *errnum, char **errstr) {
+const char* Cint::G__DataMemberInfo::ValidArrayIndex(int *errnum, char **errstr) {
   const char* title;
   //long dummy;
 

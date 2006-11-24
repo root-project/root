@@ -20,6 +20,8 @@
 
 #include "Api.h"
 
+namespace Cint {
+
 /*********************************************************************
 * class G__TypedefInfo
 *
@@ -51,4 +53,7 @@ G__TypedefInfo : public G__TypeInfo {
   int LineNumber();
 };
 
+} // namespace Cint
+
+using namespace Cint;
 #endif

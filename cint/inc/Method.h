@@ -19,6 +19,7 @@
 
 #include "Api.h"
 
+namespace Cint {
 
 /*********************************************************************
 * class G__MethodInfo
@@ -110,9 +111,8 @@ G__MethodInfo {
   G__TypeInfo type;
 };
 
-extern "C" int G__SetGlobalcomp(char *funcname,char *param,int globalcomp);
+} // namespace Cint
 
-extern "C" int G__ForceBytecodecompilation(char *funcname,char *param);
-
+using namespace Cint;
 #endif
 

@@ -20,6 +20,8 @@
 
 #include "Api.h"
 
+namespace Cint {
+
 /*********************************************************************
 * class G__CallFunc
 *
@@ -115,5 +117,7 @@ G__CallFunc {
 #endif /* __MAKECINT__ */
 };
 
+} // namespace Cint
 
+using namespace Cint;
 #endif

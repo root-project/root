@@ -20,6 +20,8 @@
 
 #include "Api.h"
 
+namespace Cint {
+
 /*********************************************************************
 * class G__TypeInfo
 * 
@@ -33,28 +35,16 @@ G__TypeInfo : public G__ClassInfo  {
   friend class G__MethodInfo;
   friend class G__MethodArgInfo;
  public:
-  ~G__TypeInfo() {}
-  G__TypeInfo(const char *typenamein) : G__ClassInfo(),
-    type(0), typenum(-1), reftype(0), isconst(0) { Init(typenamein); }
-  G__TypeInfo() : G__ClassInfo(), type(0), typenum(-1), reftype(0), isconst(0) {}
+  ~G__TypeInfo();
+  G__TypeInfo(const char *typenamein);
+  G__TypeInfo();
   void Init(const char *typenamein);
 #ifndef __MAKECINT__
-  G__TypeInfo(G__value buf) : G__ClassInfo(), type(0), typenum(-1), reftype(0), isconst(0) { Init(buf); }
-  void Init(G__value& buf) { 
-    type    = buf.type; 
-    typenum = buf.typenum; 
-    tagnum  = buf.tagnum;
-    if(type!='d' && type!='f') reftype=buf.obj.reftype.reftype;
-    else              reftype=0;
-    isconst = buf.isconst;
-  }
-  void Init(struct G__var_array *var,int ig15) {
-    type    = var->type[ig15]; 
-    typenum = var->p_typetable[ig15]; 
-    tagnum  = var->p_tagtable[ig15];
-    reftype = var->reftype[ig15];
-    isconst = var->constvar[ig15];
-  }
+  G__TypeInfo(G__value buf);
+  void Init(G__value& buf);
+  void Init(struct G__var_array *var,int ig15);
+  G__TypeInfo(const G__TypeInfo&);
+  G__TypeInfo& operator=(const G__TypeInfo&);
 #endif
   int operator==(const G__TypeInfo& a);
   int operator!=(const G__TypeInfo& a);
@@ -65,22 +55,12 @@ G__TypeInfo : public G__ClassInfo  {
   int IsValid();
   void *New();
 
-  int Typenum() const { return(typenum); }
-  int Type() const { return(type); }
-  int Reftype() const { return(reftype); }
-  int Isconst() const { return(isconst); }
+  int Typenum() const;
+  int Type() const;
+  int Reftype() const;
+  int Isconst() const;
 
-  G__value Value() const {
-    G__value buf;
-    buf.type=type;
-    buf.tagnum=tagnum;
-    buf.typenum=typenum;
-    buf.isconst=(G__SIGNEDCHAR_T)isconst;
-    buf.obj.reftype.reftype = reftype;
-    buf.obj.i = 1;
-    buf.ref = 0;
-    return(buf);
-  }
+  G__value Value() const;
  protected:
   long type;
   long typenum;
@@ -91,5 +71,7 @@ G__TypeInfo : public G__ClassInfo  {
   int Next() { return(0); } // prohibit use of next
 };
 
+} // namespace Cint
 
+using namespace Cint;
 #endif

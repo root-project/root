@@ -23,7 +23,7 @@
 * 
 *********************************************************************/
 ///////////////////////////////////////////////////////////////////////////
-void G__MethodArgInfo::Init(class G__MethodInfo &a)
+void Cint::G__MethodArgInfo::Init(class G__MethodInfo &a)
 {
   if(a.IsValid()) {
     belongingmethod = &a;
@@ -34,7 +34,7 @@ void G__MethodArgInfo::Init(class G__MethodInfo &a)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* G__MethodArgInfo::Name()
+const char* Cint::G__MethodArgInfo::Name()
 {
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
@@ -47,7 +47,7 @@ const char* G__MethodArgInfo::Name()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-long G__MethodArgInfo::Property()
+long Cint::G__MethodArgInfo::Property()
 {
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
@@ -70,7 +70,7 @@ long G__MethodArgInfo::Property()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-char* G__MethodArgInfo::DefaultValue()
+char* Cint::G__MethodArgInfo::DefaultValue()
 {
   if(IsValid()) {
     struct G__ifunc_table *ifunc;
@@ -83,7 +83,7 @@ char* G__MethodArgInfo::DefaultValue()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__MethodArgInfo::IsValid()
+int Cint::G__MethodArgInfo::IsValid()
 {
   if(belongingmethod && belongingmethod->IsValid()) {
     if(0<=argn&&argn<belongingmethod->NArg()) {
@@ -98,7 +98,7 @@ int G__MethodArgInfo::IsValid()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__MethodArgInfo::Next()
+int Cint::G__MethodArgInfo::Next()
 {
   ++argn;
   if(IsValid()) {

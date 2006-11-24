@@ -3308,7 +3308,6 @@ static void G__cpp_setup_global0() {
    /* Setting up global variables */
    G__resetplocal();
 
-   G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__CINTVERSION=50160007",1,(char*)NULL);
    G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__IOSTREAM_H=0",1,(char*)NULL);
    G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__MANIP_SUPPORT=0",1,(char*)NULL);
    G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__OLDIMPLEMENTATION762=0",1,(char*)NULL);

@@ -17,8 +17,10 @@
 #ifndef G__CLASSINFO_H
 #define G__CLASSINFO_H 
 
-
 #include "Api.h"
+
+namespace Cint {
+
 class G__MethodInfo;
 class G__DataMemberInfo;
 class G__FriendInfo;
@@ -187,5 +189,7 @@ G__FriendInfo {
   G__ClassInfo cls;
 };
 
+} // namespace Cint
 
+using namespace Cint;
 #endif

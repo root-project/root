@@ -8,7 +8,7 @@
  *  Extended Run Time Type Identification API
  *   -I$(CINTSYSDIR) -I$(CINTSYSDIR)/src must be given at compile time
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto 
+ * Copyright(c) 1995~1999  Masaharu Goto
  *
  * For the licensing terms see the file COPYING
  *
@@ -20,21 +20,15 @@
 #include <string>
 #include <ostream>
 
+using std::string;
+using std::ostream;
+
 /*********************************************************************
 * include header files
 *********************************************************************/
 
 #define G__API
-#ifndef G__DICTIONARY
-#define G__DICTIONARY
-#endif
 #include "G__ci.h"
-#ifndef __MAKECINT__
-#include "common.h"
-#else
-struct G__friendtag ;
-typedef int (*G__InterfaceMethod)();
-#endif
 #ifdef __MAKECINT__
 #pragma link off all classes;
 #pragma link off all functions;
@@ -61,12 +55,14 @@ typedef int (*G__InterfaceMethod)();
 struct G__includepath;
 #endif
 
+namespace Cint {
+
 /*********************************************************************
 * $xxx object resolution function, pointer to a class object
 *
 * Usage:
 *
-*  extern "C" void YourGetObject(char *name,G__ClassInfo *type) {
+*  void YourGetObject(char *name,G__ClassInfo *type) {
 *     void *p;
 *     // Whatever you want to fill type and pointetr to the object info
 *     return(p);
@@ -77,48 +73,61 @@ struct G__includepath;
 *     G__InitGetSpecialObject(YourGetObject);
 *  }
 *********************************************************************/
-extern "C" {
 typedef void *(*G__pMethodSpecialObject)(char *item,G__ClassInfo *typeinfo
-					 ,void** pptr,void** ppdict);
-G__EXPORT void G__InitGetSpecialObject(G__pMethodSpecialObject pmethod);
-}
+                                         ,void** pptr,void** ppdict);
+#ifndef __CINT__
+G__EXPORT
+#endif
+void G__InitGetSpecialObject(G__pMethodSpecialObject pmethod);
 
 /*********************************************************************
 * $xxx object resolution function, Generic
 *********************************************************************/
-extern "C" {
 typedef void (*G__pMethodSpecialValue)(char *item,G__TypeInfo *typeinfo
-				       ,long *pl,double *pd,void** pptr
-				       ,void** ppdict);
-G__EXPORT void G__InitGetSpecialValue(G__pMethodSpecialValue pmethod);
-}
+                                       ,long *pl,double *pd,void** pptr
+                                       ,void** ppdict);
+#ifndef __CINT__
+G__EXPORT
+#endif
+void G__InitGetSpecialValue(G__pMethodSpecialValue pmethod);
 
+
+#ifndef __CINT__
+G__EXPORT
+#endif
+int G__SetGlobalcomp(char *funcname,char *param,int globalcomp); // Method.cxx
+
+#ifndef __CINT__
+G__EXPORT
+#endif
+int G__ForceBytecodecompilation(char *funcname,char *param); // Method.cxx
 
 /*********************************************************************
 * Feedback routine in case tagnum for a class changes (in case the
 * dictionary of a shared lib is being re-initialized).
 *********************************************************************/
-extern "C" {
 typedef void (*G__pMethodUpdateClassInfo)(char *item,long tagnum);
-G__EXPORT void G__InitUpdateClassInfo(G__pMethodUpdateClassInfo pmethod);
-}
 
-#ifdef G__EXCEPTIONWRAPPER
-/*********************************************************************
-* G__ExceptionWrapper
-*********************************************************************/
-extern "C" int G__ExceptionWrapper(G__InterfaceMethod funcp
-				   ,G__value* result7
-				   ,char* funcname
-				   ,struct G__param *libp
-				   ,int hash);
+#ifndef __CINT__
+G__EXPORT
 #endif
+void G__InitUpdateClassInfo(G__pMethodUpdateClassInfo pmethod);
 
-namespace Cint {
+#ifndef __CINT__
+G__EXPORT
+#endif
+void* G__new_interpreted_object(int size);
+
+#ifndef __CINT__
+G__EXPORT
+#endif
+void G__delete_interpreted_object(void* p);
+
+
 /*********************************************************************
 * G__SourceFileInfo
 *********************************************************************/
-class 
+class
 #ifndef __CINT__
 G__EXPORT
 #endif
@@ -128,12 +137,12 @@ G__SourceFileInfo {
   G__SourceFileInfo(int filenin): filen(filenin) { }
   G__SourceFileInfo(const char* fname): filen(0) { Init(fname); }
   ~G__SourceFileInfo() { }
-  void Init() { 
-    filen = -1; 
+  void Init() {
+    filen = -1;
   }
   void Init(const char* fname);
-  const char *Name(); 
-  const char *Prepname(); 
+  const char *Name();
+  const char *Prepname();
   FILE* fp();
   int MaxLine();
   G__SourceFileInfo& IncludedFrom();
@@ -147,7 +156,7 @@ G__SourceFileInfo {
 /*********************************************************************
 * G__IncludePathInfo
 *********************************************************************/
-class 
+class
 #ifndef __CINT__
 G__EXPORT
 #endif
@@ -159,7 +168,7 @@ G__IncludePathInfo {
 #endif
   ~G__IncludePathInfo() { }
   void Init() { p=(struct G__includepath*)NULL; }
-  const char *Name(); 
+  const char *Name();
   long Property();
   int IsValid();
   int Next();
@@ -170,15 +179,28 @@ G__IncludePathInfo {
 #endif
 };
 
+#ifdef G__EXCEPTIONWRAPPER
+/*********************************************************************
+* G__ExceptionWrapper
+*********************************************************************/
+int G__ExceptionWrapper(G__InterfaceMethod funcp
+                        ,G__value* result7
+                        ,char* funcname
+                        ,struct G__param *libp
+                        ,int hash);
+#endif
 
 /*********************************************************************
 * Shadow class functions
 *********************************************************************/
+class
 #ifndef __CINT__
-class G__EXPORT G__ShadowMaker {
+G__EXPORT
+#endif
+G__ShadowMaker {
 public:
    static bool NeedShadowClass(G__ClassInfo& cl);
-   G__ShadowMaker(std::ostream& out, const char* nsprefix, 
+   G__ShadowMaker(std::ostream& out, const char* nsprefix,
       bool(*needShadowClass)(G__ClassInfo &cl)=G__ShadowMaker::NeedShadowClass,
       bool(*needTypedefShadow)(G__ClassInfo &cl)=0);
 
@@ -210,8 +232,7 @@ private:
    static bool fgVetoShadow; // whether WritaAllShadowClasses should write the shadow
    bool (*fNeedTypedefShadow)(G__ClassInfo &cl); // func deciding whether the shadow is a tyepdef
 };
-#endif
- 
+
 } // namespace Cint
 
 using namespace Cint;

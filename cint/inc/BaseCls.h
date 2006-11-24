@@ -21,6 +21,8 @@
 
 #include "Api.h"
 
+namespace Cint {
+
 /*********************************************************************
 * class G__BaseClassInfo
 *
@@ -49,6 +51,7 @@ G__BaseClassInfo : public G__ClassInfo {
   long basep;
   long derivedtagnum;
 };
+} // namespace Cint
 
-
+using namespace Cint;
 #endif

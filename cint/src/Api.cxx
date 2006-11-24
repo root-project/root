@@ -69,7 +69,7 @@ extern "C" G__value G__APIGetSpecialValue_layer1(char *item,void **pptr
 //
 // Initialization routine
 //
-extern "C" void G__InitGetSpecialValue(G__pMethodSpecialValue pmethod) 
+void Cint::G__InitGetSpecialValue(G__pMethodSpecialValue pmethod) 
 {
   G__GetSpecialObject
 	=(G__value (*)(char*,void**,void**))G__APIGetSpecialValue_layer1;
@@ -120,7 +120,7 @@ extern "C" G__value G__APIGetSpecialObject_layer1(char *item,void** pptr
 //
 // Initialization routine
 //
-extern "C" void G__InitGetSpecialObject(G__pMethodSpecialObject pmethod) 
+void Cint::G__InitGetSpecialObject(G__pMethodSpecialObject pmethod) 
 {
   G__LockCriticalSection();
   G__GetSpecialObject
@@ -138,20 +138,19 @@ extern "C" void G__InitGetSpecialObject(G__pMethodSpecialObject pmethod)
 //
 extern "C" G__pMethodUpdateClassInfo G__UserSpecificUpdateClassInfo;
 
-extern "C" void G__InitUpdateClassInfo(G__pMethodUpdateClassInfo pmethod)
+void Cint::G__InitUpdateClassInfo(G__pMethodUpdateClassInfo pmethod)
 {
    G__UserSpecificUpdateClassInfo = pmethod;
 }
 
-#ifdef G__ROOT
-extern "C" void* G__new_interpreted_object(int size) {
+void* Cint::G__new_interpreted_object(int size) {
   char *p = new char[size];
   return((void*)p);
 }
-extern "C" void G__delete_interpreted_object(void* p) {
+
+void Cint::G__delete_interpreted_object(void* p) {
   delete [] (char*)p;
 }
-#endif
 
 
 /*********************************************************************
@@ -343,7 +342,7 @@ static int G__DemangleClassname(char *buf,const char *orig)
 /*********************************************************************
 * G__ExceptionWrapper
 *********************************************************************/
-extern "C" int G__ExceptionWrapper(G__InterfaceMethod funcp
+int Cint::G__ExceptionWrapper(G__InterfaceMethod funcp
 				   ,G__value* result7
 				   ,char* funcname
 				   ,struct G__param *libp

@@ -27,7 +27,8 @@
 #ifdef _WIN32
 #include "windows.h"
 #include <errno.h>
-extern "C" G__EXPORT FILE *FOpenAndSleep(const char *filename, const char *mode) {
+extern "C"
+FILE *FOpenAndSleep(const char *filename, const char *mode) {
    int tries=0;
    FILE *ret=0;
    while (!ret && ++tries<51)
@@ -1956,6 +1957,8 @@ void G__add_compiledheader(const char *headerfile)
 /**************************************************************************
 * G__add_macro()
 *
+* Macros starting with '!' are assumed to be system level macros
+* that will not be passed to an external preprocessor.
 **************************************************************************/
 void G__add_macro(const char *macroin)
 {
@@ -1976,7 +1979,10 @@ void G__add_macro(const char *macroin)
   G__var_type = 'p';
   G__p_local = (struct G__var_array*)0;
 
-  strcpy(macro,macroin);
+  const char* macroname = macroin;
+  if (macroname[0] == '!')
+     ++macroname;
+  strcpy(macro,macroname);
   G__definemacro=1;
   if((p=strchr(macro,'='))) {
     if(G__cpp && '"'==*(p+1)) {
@@ -1993,6 +1999,9 @@ void G__add_macro(const char *macroin)
   }
   G__getexpr(temp);
   G__definemacro=0;
+
+  if (macroin[0] == '!')
+     goto end_add_macro;
 
   sprintf(temp,"-D%s ",macro);
   p = strstr(G__macros,temp);

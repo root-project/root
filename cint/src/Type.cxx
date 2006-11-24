@@ -27,7 +27,65 @@ static char G__buf[G__LONGLINE];
 * 
 *********************************************************************/
 ///////////////////////////////////////////////////////////////////////////
-void G__TypeInfo::Init(const char *typenamein)
+Cint::G__TypeInfo::G__TypeInfo(const char *typenamein):
+   G__ClassInfo(), type(0), typenum(-1), reftype(0), isconst(0)
+{
+   Init(typenamein);
+}
+///////////////////////////////////////////////////////////////////////////
+Cint::G__TypeInfo::G__TypeInfo():
+   G__ClassInfo(), type(0), typenum(-1), reftype(0), isconst(0)
+{}
+///////////////////////////////////////////////////////////////////////////
+Cint::G__TypeInfo::G__TypeInfo(G__value buf):
+   G__ClassInfo(), type(0), typenum(-1), reftype(0), isconst(0)
+{
+   Init(buf);
+}
+///////////////////////////////////////////////////////////////////////////
+Cint::G__TypeInfo::~G__TypeInfo() {}
+#ifndef __MAKECINT__
+///////////////////////////////////////////////////////////////////////////
+Cint::G__TypeInfo::G__TypeInfo(const Cint::G__TypeInfo& rhs)
+: G__ClassInfo(rhs)
+{
+   type = rhs.type;
+   typenum = rhs.typenum;
+   reftype = rhs.reftype;
+   isconst = rhs.isconst;
+}
+
+///////////////////////////////////////////////////////////////////////////
+Cint::G__TypeInfo& Cint::G__TypeInfo::operator=(const Cint::G__TypeInfo& rhs)
+{
+   if (this != &rhs) {
+      type = rhs.type;
+      typenum = rhs.typenum;
+      reftype = rhs.reftype;
+      isconst = rhs.isconst;
+   }
+   return *this;
+}
+#endif // __MAKECINT__
+///////////////////////////////////////////////////////////////////////////
+void Cint::G__TypeInfo::Init(G__value& buf) { 
+   type    = buf.type; 
+   typenum = buf.typenum; 
+   tagnum  = buf.tagnum;
+   if(type!='d' && type!='f') reftype=buf.obj.reftype.reftype;
+   else              reftype=0;
+   isconst = buf.isconst;
+}
+///////////////////////////////////////////////////////////////////////////
+void Cint::G__TypeInfo::Init(struct G__var_array *var,int ig15) {
+   type    = var->type[ig15]; 
+   typenum = var->p_typetable[ig15]; 
+   tagnum  = var->p_tagtable[ig15];
+   reftype = var->reftype[ig15];
+   isconst = var->constvar[ig15];
+}
+///////////////////////////////////////////////////////////////////////////
+void Cint::G__TypeInfo::Init(const char *typenamein)
 {
   G__value buf;
   buf = G__string2type_body(typenamein,2);
@@ -39,7 +97,7 @@ void G__TypeInfo::Init(const char *typenamein)
   class_property = 0;
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__TypeInfo::operator==(const G__TypeInfo& a)
+int Cint::G__TypeInfo::operator==(const G__TypeInfo& a)
 {
   if(type==a.type && tagnum==a.tagnum && typenum==a.typenum &&
      reftype==a.reftype) {
@@ -50,7 +108,7 @@ int G__TypeInfo::operator==(const G__TypeInfo& a)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__TypeInfo::operator!=(const G__TypeInfo& a)
+int Cint::G__TypeInfo::operator!=(const G__TypeInfo& a)
 {
   if(type==a.type && tagnum==a.tagnum && typenum==a.typenum &&
      reftype==a.reftype) {
@@ -61,7 +119,7 @@ int G__TypeInfo::operator!=(const G__TypeInfo& a)
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* G__TypeInfo::TrueName() 
+const char* Cint::G__TypeInfo::TrueName() 
 {
 #if !defined(G__OLDIMPLEMENTATION1586)
   strcpy(G__buf,
@@ -74,7 +132,7 @@ const char* G__TypeInfo::TrueName()
 #endif
 }
 ///////////////////////////////////////////////////////////////////////////
-const char* G__TypeInfo::Name() 
+const char* Cint::G__TypeInfo::Name() 
 {
 #if !defined(G__OLDIMPLEMENTATION1586)
   strcpy(G__buf,G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype
@@ -88,7 +146,7 @@ const char* G__TypeInfo::Name()
 #endif
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__TypeInfo::Size() const
+int Cint::G__TypeInfo::Size() const
 {
   G__value buf;
   buf.type=(int)type;
@@ -102,7 +160,7 @@ int G__TypeInfo::Size() const
   return(G__sizeof(&buf));
 }
 ///////////////////////////////////////////////////////////////////////////
-long G__TypeInfo::Property()
+long Cint::G__TypeInfo::Property()
 {
   long property = 0;
   if(-1!=typenum) property|=G__BIT_ISTYPEDEF;
@@ -131,7 +189,7 @@ long G__TypeInfo::Property()
   return(property);
 }
 ///////////////////////////////////////////////////////////////////////////
-void* G__TypeInfo::New() {
+void* Cint::G__TypeInfo::New() {
   if(G__ClassInfo::IsValid()) {
     return(G__ClassInfo::New());
   }
@@ -144,7 +202,7 @@ void* G__TypeInfo::New() {
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-int G__TypeInfo::IsValid() {
+int Cint::G__TypeInfo::IsValid() {
   if(G__ClassInfo::IsValid()) {
     return(1);
   }
@@ -154,5 +212,25 @@ int G__TypeInfo::IsValid() {
   else {
     return(0);
   }
+}
+///////////////////////////////////////////////////////////////////////////
+int Cint::G__TypeInfo::Typenum() const { return(typenum); }
+///////////////////////////////////////////////////////////////////////////
+int Cint::G__TypeInfo::Type() const { return(type); }
+///////////////////////////////////////////////////////////////////////////
+int Cint::G__TypeInfo::Reftype() const { return(reftype); }
+///////////////////////////////////////////////////////////////////////////
+int Cint::G__TypeInfo::Isconst() const { return(isconst); }
+///////////////////////////////////////////////////////////////////////////
+G__value Cint::G__TypeInfo::Value() const {
+   G__value buf;
+   buf.type=type;
+   buf.tagnum=tagnum;
+   buf.typenum=typenum;
+   buf.isconst=(G__SIGNEDCHAR_T)isconst;
+   buf.obj.reftype.reftype = reftype;
+   buf.obj.i = 1;
+   buf.ref = 0;
+   return(buf);
 }
 ///////////////////////////////////////////////////////////////////////////
