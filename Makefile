@@ -119,17 +119,11 @@ ifeq ($(ENABLETHREAD),yes)
 MODULES      += thread
 MODULES      += proof
 endif
-ifeq ($(BUILDFPYTHIA),yes)
-MODULES      += pythia
-endif
 ifeq ($(BUILDFPYTHIA6),yes)
 MODULES      += pythia6
 endif
 ifeq ($(BUILDFFTW3),yes)
 MODULES      += fftw
-endif
-ifeq ($(BUILDFVENUS),yes)
-MODULES      += venus
 endif
 ifeq ($(BUILDPYTHON),yes)
 MODULES      += pyroot
@@ -221,7 +215,7 @@ endif
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32gdk gl rfio castor thread \
-                pythia pythia6 venus table mysql pgsql sapdb srputils x3d \
+                pythia6 table mysql pgsql sapdb srputils x3d \
                 rootx rootd proofd proof dcache chirp hbook asimage \
                 ldap mlp krb5auth rpdutils globusauth pyroot ruby gfal \
                 qt qtroot qtgsi xrootd netx proofx alien clarens peac oracle \
@@ -960,9 +954,7 @@ showbuild:
 	@echo "CILIBS             = $(CILIBS)"
 	@echo "F77LIBS            = $(F77LIBS)"
 	@echo ""
-	@echo "FPYTHIALIBDIR      = $(FPYTHIALIBDIR)"
 	@echo "FPYTHIA6LIBDIR     = $(FPYTHIA6LIBDIR)"
-	@echo "FVENUSLIBDIR       = $(FVENUSLIBDIR)"
 	@echo "TABLE              = $(TABLE)"
 	@echo "XPMLIBDIR          = $(XPMLIBDIR)"
 	@echo "XPMLIB             = $(XPMLIB)"

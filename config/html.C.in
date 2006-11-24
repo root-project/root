@@ -14,7 +14,6 @@ Bool_t enable_opengl            = @enable_opengl@;
 Bool_t enable_oracle            = @enable_oracle@;
 Bool_t enable_peac              = @enable_peac@;
 Bool_t enable_pgsql             = @enable_pgsql@;
-Bool_t enable_pythia            = @enable_pythia@;
 Bool_t enable_pythia6           = @enable_pythia6@;
 Bool_t enable_python            = @enable_python@;
 Bool_t enable_qt                = @enable_qt@;
@@ -25,7 +24,6 @@ Bool_t enable_srp               = @enable_srp@;
 Bool_t enable_ssl               = @enable_ssl@;
 Bool_t enable_table             = @enable_table@;
 Bool_t enable_thread            = @enable_thread@;
-Bool_t enable_venus             = @enable_venus@;
 Bool_t enable_xml               = @enable_xml@;
 Bool_t enable_xrootd            = @enable_xrootd@;
 
@@ -36,7 +34,6 @@ void html()
    gSystem->Load("libGX11.so");
    gSystem->Load("libGX11TTF.so");
    gSystem->Load("libGed.so");
-   gSystem->Load("libGedOld.so");
    gSystem->Load("libGeom.so");
    gSystem->Load("libGeomPainter.so");
    gSystem->Load("libGpad.so");
@@ -88,7 +85,6 @@ void html()
    if (enable_opengl)            gSystem->Load("libRGL");
    if (enable_oracle)            gSystem->Load("libOracle");
    if (enable_pgsql)             gSystem->Load("libPgSQL");
-   if (enable_pythia)            gSystem->Load("libEGPythia");
    if (enable_pythia6)           gSystem->Load("libEGPythia6");
    if (enable_python)            gSystem->Load("libPyROOT");
    if (enable_qt) {
@@ -101,7 +97,6 @@ void html()
    if (enable_srp)               gSystem->Load("libSRPAuth");
    if (enable_table)             gSystem->Load("libTable");
    if (enable_thread)            gSystem->Load("libThread");
-   if (enable_venus)             gSystem->Load("libEGVenus");
    if (enable_xml)               gSystem->Load("libXMLParser");
    if (enable_xrootd) {
       gSystem->Load("libNetx.so");
