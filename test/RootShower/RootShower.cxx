@@ -7,7 +7,7 @@
  * For the licensing terms see the LICENSE file.                         *
  *************************************************************************/
 
-
+#include <time.h>
 #include <Riostream.h>
 
 #include <TROOT.h>
@@ -981,6 +981,7 @@ void RootShower::OnShowerProduce()
     if (!fTimer) fTimer = new TTimer(this, fPicDelay);
     fTimer->Reset();
     fTimer->TurnOn();
+    fEventTime.Set();
 
     fIsRunning = kTRUE;
     fHisto_dEdX->Reset();
@@ -1022,9 +1023,7 @@ void RootShower::OnShowerProduce()
                 // create one gif image by step if "Animated GIF"
                 // has been choosen into the menu
                 if (fCreateGIFs) {
-                    sprintf(gifname,"event_%04d.gif",gifindex);
-                    fCA->SaveAs(gifname);
-                    gifindex++;
+                    fCA->SaveAs("RSEvent.gif+");
                 }
             }
         }
