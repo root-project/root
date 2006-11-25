@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: PtEtaPhiE4D.h,v 1.3 2006/02/06 16:47:45 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PtEtaPhiE4D.h,v 1.4 2006/02/06 17:22:03 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by: fischler at Wed Jul 20 2005
 //   based on CylindricalEta4D by moneta
 // 
-// Last update: $Id: PtEtaPhiE4D.h,v 1.3 2006/02/06 16:47:45 moneta Exp $
+// Last update: $Id: PtEtaPhiE4D.h,v 1.4 2006/02/06 17:22:03 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_PtEtaPhiE4D 
 #define ROOT_Math_GenVector_PtEtaPhiE4D  1
@@ -313,10 +313,10 @@ public:
 
 private:
 
-  Scalar fPt;
-  Scalar fEta;
-  Scalar fPhi;
-  Scalar fE; 
+  ScalarType fPt;
+  ScalarType fEta;
+  ScalarType fPhi;
+  ScalarType fE; 
 
 };    
     

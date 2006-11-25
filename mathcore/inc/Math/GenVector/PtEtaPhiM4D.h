@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: PtEtaPhiM4D.h,v 1.3 2006/02/06 16:47:45 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PtEtaPhiM4D.h,v 1.5 2006/02/06 17:22:03 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by: fischler at Wed Jul 21 2005
 //   Similar to PtEtaPhiMSystem by moneta
 // 
-// Last update: $Id: PtEtaPhiM4D.h,v 1.3 2006/02/06 16:47:45 moneta Exp $
+// Last update: $Id: PtEtaPhiM4D.h,v 1.5 2006/02/06 17:22:03 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_PtEtaPhiM4D 
 #define ROOT_Math_GenVector_PtEtaPhiM4D  1
@@ -303,10 +303,10 @@ public:
 
 private:
 
-  Scalar fPt;
-  Scalar fEta;
-  Scalar fPhi;
-  Scalar fM; 
+  ScalarType fPt;
+  ScalarType fEta;
+  ScalarType fPhi;
+  ScalarType fM; 
 
 };    
     

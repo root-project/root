@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: PxPyPzE4D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PxPyPzE4D.h,v 1.3 2005/12/09 17:53:39 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by: fischler at Wed Jul 20   2005
 //   (starting from PxPyPzE4D by moneta)
 // 
-// Last update: $Id: PxPyPzE4D.h,v 1.2 2005/09/19 16:43:07 brun Exp $
+// Last update: $Id: PxPyPzE4D.h,v 1.3 2005/12/09 17:53:39 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_PxPyPzE4D 
 #define ROOT_Math_GenVector_PxPyPzE4D  1
@@ -319,10 +319,10 @@ private:
     (contigous) data containing the coordinate values x,y,z,t
   */
 
-  Scalar fX;
-  Scalar fY;
-  Scalar fZ;
-  Scalar fT;
+  ScalarType fX;
+  ScalarType fY;
+  ScalarType fZ;
+  ScalarType fT;
 
 }; 
     
