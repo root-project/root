@@ -56,7 +56,7 @@ all-g4root:     $(G4ROOTLIB)
 
 map-g4root:     $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(G4ROOTLIB) \
-		   -d $(G4ROOTLIBDEP) -c $(G4ROOTLIB)
+		   -d $(G4ROOTLIBDEP) -c $(G4ROOTL)
 
 map::           map-g4root
 
