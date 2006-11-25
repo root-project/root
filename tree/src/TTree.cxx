@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.309 2006/10/20 20:13:11 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.310 2006/11/14 20:06:51 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -890,7 +890,7 @@ TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass*
 
    if (!ptrClass) {
       TClass* claim = gROOT->GetClass(classname);
-      if (claim->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(claim->GetCollectionProxy())) {
+      if (claim && claim->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(claim->GetCollectionProxy())) {
          Error("Branch", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
                "Please generate the dictionary for this class (%s)", 
                claim->GetName(), branchname, claim->GetName());
