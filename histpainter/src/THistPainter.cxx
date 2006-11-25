@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.272 2006/11/15 14:12:27 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.273 2006/11/24 14:05:44 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -22,6 +22,10 @@
 #include "TH2.h"
 #include "TF2.h"
 #include "TF3.h"
+#include "TMatrixDBase.h"
+#include "TMatrixFBase.h"
+#include "TVectorD.h"
+#include "TVectorF.h"
 #include "TPad.h"
 #include "TPaveStats.h"
 #include "TFrame.h"
@@ -4648,6 +4652,44 @@ void THistPainter::PaintScatterPlot(Option_t *option)
    if (Hoption.Zscale) PaintPalette();
 }
 
+//______________________________________________________________________________
+void THistPainter::PaintSpecialObjects(const TObject *obj, Option_t *option)
+{
+   // Static function to paint special objects like vectors and matrices
+   // This function is called via gROOT->ProcessLine to paint these objects
+   // without having a direct dependency of the graphics or histogramming system
+   
+   if (!obj) return;
+   Bool_t status = TH1::AddDirectoryStatus();
+   TH1::AddDirectory(kFALSE);
+   
+   if (obj->InheritsFrom(TMatrixFBase::Class())) {
+      // case TMatrixF
+      TH2F *R__TMatrixFBase = new TH2F((TMatrixFBase &)*obj);
+      R__TMatrixFBase->SetBit(kCanDelete);
+      R__TMatrixFBase->Draw(option);
+      
+   } else if (obj->InheritsFrom(TMatrixDBase::Class())) {
+      // case TMatrixD
+      TH2D *R__TMatrixDBase = new TH2D((TMatrixDBase &)*obj);
+      R__TMatrixDBase->SetBit(kCanDelete);
+      R__TMatrixDBase->Draw(option);
+      
+   } else if (obj->InheritsFrom(TVectorF::Class())) {  
+      //case TVectorF
+      TH1F *R__TVectorF = new TH1F((TVectorF &)*obj);
+      R__TVectorF->SetBit(kCanDelete);
+      R__TVectorF->Draw(option);
+      
+    } else if (obj->InheritsFrom(TVectorD::Class())) {  
+      //case TVectorD
+      TH1D *R__TVectorD = new TH1D((TVectorD &)*obj);
+      R__TVectorD->SetBit(kCanDelete);
+      R__TVectorD->Draw(option);
+   }
+   
+  TH1::AddDirectory(status);   
+}
 
 //______________________________________________________________________________
 void THistPainter::PaintStat(Int_t dostat, TF1 *fit)

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.27 2006/04/18 06:58:59 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.28 2006/05/14 09:53:04 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -120,6 +120,7 @@ public:
    virtual Int_t      TableInit();
 
    static const char * GetBestFormat(Double_t v, Double_t e, const char *f);
+   static void       PaintSpecialObjects(const TObject *obj, Option_t *option);
 
    ClassDef(THistPainter,0)  //Helper class to draw histograms
 };
