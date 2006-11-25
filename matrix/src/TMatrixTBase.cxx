@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.10 2006/10/06 06:52:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.11 2006/10/12 21:30:58 pcanal Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -795,21 +795,10 @@ Element TMatrixTBase<Element>::Max() const
 template<class Element>
 void TMatrixTBase<Element>::Draw(Option_t *option)
 {
-// Draw this matrix using an intermediate histogram
+// Draw this matrix 
 // The histogram is named "TMatrixT" by default and no title
 
-   //create the hist utility manager (a plugin)
-   TVirtualUtilHist *util = (TVirtualUtilHist*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
-   if (!util) {
-      TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilHist"))) {
-         if (h->LoadPlugin() == -1)
-            return;
-         h->ExecPlugin(0);
-         util = (TVirtualUtilHist*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
-      }
-   }
-  util->PaintMatrix(*this,option);
+   gROOT->ProcessLine(Form("THistPainter::PaintSpecialObjects((TObject*)0x%x,\"%s\");",this,option));
 }
 
 //______________________________________________________________________________

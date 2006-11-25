@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.18 2006/08/30 12:54:13 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.19 2006/10/06 06:52:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1344,21 +1344,10 @@ TVectorT<Element> &TVectorT<Element>::Apply(const TElementPosActionT<Element> &a
 template<class Element>
 void TVectorT<Element>::Draw(Option_t *option)
 {
-// Draw this vector using an intermediate histogram
+// Draw this vector 
 // The histogram is named "TVectorT" by default and no title
 
-   //create the hist utility manager (a plugin)
-   TVirtualUtilHist *util = (TVirtualUtilHist*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
-   if (!util) {
-      TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilHist"))) {
-         if (h->LoadPlugin() == -1)
-            return;
-         h->ExecPlugin(0);
-         util = (TVirtualUtilHist*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
-      }
-   }
-   util->PaintVector(*this,option);
+   gROOT->ProcessLine(Form("THistPainter::PaintSpecialObjects((TObject*)0x%x,\"%s\");",this,option));
 }
 
 //______________________________________________________________________________

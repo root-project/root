@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.12 2006/10/12 21:30:58 pcanal Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.13 2006/10/19 20:45:44 pcanal Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -73,11 +73,17 @@
 #ifndef ROOT_TClass
 #include "TClass.h"
 #endif
-#ifndef ROOT_TPluginManager
-#include "TPluginManager.h"
+#ifndef ROOT_TMatrixFBasefwd
+#include "TMatrixFBasefwd.h"
 #endif
-#ifndef ROOT_TVirtualUtilHist
-#include "TVirtualUtilHist.h"
+#ifndef ROOT_TMatrixDBasefwd
+#include "TMatrixDBasefwd.h"
+#endif
+#ifndef ROOT_TVectorFfwd
+#include "TVectorFfwd.h"
+#endif
+#ifndef ROOT_TVectorDfwd
+#include "TVectorDfwd.h"
 #endif
 #ifndef ROOT_TError
 #include "TError.h"
