@@ -32,10 +32,15 @@ typedef struct __dirstream DIR;
 
 #define NAME_MAX 128
 struct dirent {
+#if !defined(__CYGWIN__) && !defined(G__CYGWIN)
   long d_ino;                /* inode number */
   /* off_t d_off; */         /* offset to this dirent */
-#if !defined(__CYGWIN__) && !defined(G__CYGWIN)
   unsigned short d_reclen;   /* length of record */
+#else
+   long d_version;
+   int  __invalid_d_ino;
+   long d_fd;
+   unsigned long __invalid_ino32;
 #endif
   /* char d_namelen; */      /* length of d_name */
   char d_name[NAME_MAX+1];   /* file name */

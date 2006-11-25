@@ -2040,8 +2040,8 @@ void G__platformMacro()
 #ifdef G__MINGW /* Mingw */
   G__DEFINE_MACRO(G__MINGW);
 #endif
-#ifdef G__CYGWIN /* Cygwin */
-  G__DEFINE_MACRO(G__CYGWIN);
+#ifdef __CYGWIN__ /* Cygwin */
+  G__DEFINE_MACRO(__CYGWIN__);
 #endif
 #ifdef __GNUC__  /* gcc/g++  GNU C/C++ compiler major version */
   G__DEFINE_MACRO(__GNUC__);

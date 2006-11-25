@@ -737,32 +737,31 @@ TODO!
 
 }
 
-/*
-#if (G__CYGWIN)
-/ ******************************************************************
+#if (G__CYGWIN) && 0
+/******************************************************************
 * G__outputmain()
-****************************************************************** /
+******************************************************************/
 void G__outputmain()
 {
   FILE *mainfp;
   char G__DLLID[10] = "";
-  / *****************************************************************
+  /*****************************************************************
   * creating G__main.cxx
-  ***************************************************************** /
+  *****************************************************************/
   mainfp = fopen("G__main.cxx","w");
-  fprintf(mainfp,"/ ******************************************************\n");
+  fprintf(mainfp,"/******************************************************\n");
   fprintf(mainfp,"* G__main.cxx\n");
   fprintf(mainfp,"*  automatically generated main() function for cint\n");
   fprintf(mainfp,"*  Cygwin environment\n");
-  fprintf(mainfp,"****************************************************** /\n");
+  fprintf(mainfp,"******************************************************/\n");
   fprintf(mainfp,"#include <stdio.h>\n");
   fprintf(mainfp,"extern \"C\" {\n");
   fprintf(mainfp,"extern void G__setothermain(int othermain);\n");
   fprintf(mainfp,"extern int G__main(int argc,char **argv);\n");
   fprintf(mainfp,"extern void G__set_p2fsetup(void (*p2f)());\n");
   fprintf(mainfp,"extern void G__free_p2fsetup();\n");
-  if(G__CHDR) fprintf(mainfp,"extern void G__c_setup%s();\n",G__DLLID);
-  if(G__CXXHDR) fprintf(mainfp,"extern void G__cpp_setup%s();\n",G__DLLID);
+  if(!G__CHDR.empty()) fprintf(mainfp,"extern void G__c_setup%s();\n",G__DLLID);
+  if(!G__CXXHDR.empty()) fprintf(mainfp,"extern void G__cpp_setup%s();\n",G__DLLID);
   fprintf(mainfp,"}\n");
   fprintf(mainfp,"\n");
 #ifndef G__OLDIMPLEMENTATION874
@@ -770,8 +769,8 @@ void G__outputmain()
     fprintf(mainfp,"class G__DMYp2fsetup {\n");
     fprintf(mainfp," public:\n");
     fprintf(mainfp,"  G__DMYp2fsetup() { \n");
-    if(G__CHDR) fprintf(mainfp,"    G__set_p2fsetup(G__c_setup%s);\n",G__DLLID);
-    if(G__CXXHDR) fprintf(mainfp,"    G__set_p2fsetup(G__cpp_setup%s);\n",G__DLLID);
+    if(!G__CHDR.empty()) fprintf(mainfp,"    G__set_p2fsetup(G__c_setup%s);\n",G__DLLID);
+    if(!G__CXXHDR.empty()) fprintf(mainfp,"    G__set_p2fsetup(G__cpp_setup%s);\n",G__DLLID);
     fprintf(mainfp,"  }\n");
     fprintf(mainfp,"} G__DMY;\n");
   }
@@ -780,8 +779,8 @@ void G__outputmain()
     fprintf(mainfp,"int main(int argc,char **argv)\n");
     fprintf(mainfp,"{\n");
     fprintf(mainfp,"  int result;\n");
-    if(G__CHDR) fprintf(mainfp,"  G__set_p2fsetup(G__c_setup%s);\n",G__DLLID);
-    if(G__CXXHDR) fprintf(mainfp,"  G__set_p2fsetup(G__cpp_setup%s);\n",G__DLLID);
+    if(G__CHDR.empty()) fprintf(mainfp,"  G__set_p2fsetup(G__c_setup%s);\n",G__DLLID);
+    if(G__CXXHDR.empty()) fprintf(mainfp,"  G__set_p2fsetup(G__cpp_setup%s);\n",G__DLLID);
     fprintf(mainfp,"  G__setothermain(0);\n");
     fprintf(mainfp,"  result=G__main(argc,argv);\n");
     fprintf(mainfp,"  G__free_p2fsetup();\n");
@@ -792,12 +791,11 @@ void G__outputmain()
 #endif
 
   fclose(mainfp);
-  / *****************************************************************
+  /*****************************************************************
   * end of creating G__main.cxx
-  ***************************************************************** /
+  *****************************************************************/
 }
 #endif
-*/
 
 /******************************************************************
 * G__makecint
@@ -810,7 +808,7 @@ int G__makecint(int argc, char **argv)
     std::cerr << "!!!makecint aborted!!!  makecint -? for help\n" << std::endl;
     exit(EXIT_FAILURE);
   }
-#if (G__CYGWIN)
+#if (G__CYGWIN) && 0
   if(!(G__flags & G__isDLL)) G__outputmain();
 #endif
   G__outputmakefile(argc,argv);
