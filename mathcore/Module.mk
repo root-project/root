@@ -62,7 +62,7 @@ MATHCOREH    := $(MATHCOREAH) $(MATHCOREGVH)
 MATHCORES    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 MATHCOREO    := $(MATHCORES:.cxx=.o)
 
-MATHCOREDEP  := $(MATHCOREO:.o=.d)  $(MATHCOREDO:.o=.d)
+MATHCOREDEP  := $(MATHCOREO:.o=.d)  $(MATHCOREDO:.o=.d) $(MATHCOREDO32:.o=.d)
 
 MATHCORELIB  := $(LPATH)/libMathCore.$(SOEXT)
 
@@ -100,7 +100,7 @@ all-mathcore:   $(MATHCORELIB)
 
 map-mathcore:   $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(MATHCORELIB) \
-		   -d $(MATHCORELIBDEP) -c $(MATHCOREL) $(MATHCORELINC)
+		   -d $(MATHCORELIBDEP) -c $(MATHCOREL) $(MATHCORELINC) $(MATHCOREL32)
 
 map::           map-mathcore
 
