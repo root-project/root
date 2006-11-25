@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.317 2006/10/09 06:31:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.318 2006/11/13 11:24:15 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 #include "TH2.h"
 #include "TF2.h"
 #include "TF3.h"
+#include "TPluginManager.h"
 #include "TVirtualPad.h"
 #include "TRandom.h"
 #include "TVirtualFitter.h"
