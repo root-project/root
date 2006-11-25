@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.190 2006/10/03 13:31:07 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.191 2006/11/16 17:17:37 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -105,7 +105,6 @@
 #include "TPluginManager.h"
 #include "TMap.h"
 #include "TObjString.h"
-#include "TVirtualUtilHist.h"
 #include "TAuthenticate.h"
 #include "TVirtualMutex.h"
 
@@ -1260,18 +1259,7 @@ TObject *TROOT::GetFunction(const char *name) const
    TObject *f1 = fFunctions->FindObject(name);
    if (f1) return f1;
 
-   //The hist utility manager is required (a plugin)
-   TVirtualUtilHist *util = (TVirtualUtilHist*)GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
-   if (!util) {
-      TPluginHandler *h;
-      if ((h = GetPluginManager()->FindHandler("TVirtualUtilHist"))) {
-         if (h->LoadPlugin() == -1)
-            return 0;
-         h->ExecPlugin(0);
-         util = (TVirtualUtilHist*)GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
-      }
-   }
-   if (util) util->InitStandardFunctions();
+   gROOT->ProcessLine("TF1::InitStandardFunctions()");
 
    return fFunctions->FindObject(name);
 }
