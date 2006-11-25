@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.125 2006/09/04 15:33:35 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.126 2006/10/05 17:02:48 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1359,6 +1359,9 @@ const char *TCint::GetClassSharedLibs(const char *cls)
       // convert "::" to "@@", we used "@@" because TEnv
       // considers "::" a terminator
       c.ReplaceAll("::", "@@");
+      // convert "-" to " ", since class names may have
+      // blanks and TEnv considers a blank a terminator
+      c.ReplaceAll(" ", "-");
       const char *libs = fMapfile->GetValue(c, "");
       return (*libs) ? libs : 0;
    }
