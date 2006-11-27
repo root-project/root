@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.126 2006/10/05 17:02:48 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.127 2006/11/25 00:16:34 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -99,6 +99,7 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
    fMore      = 0;
    fPrompt[0] = 0;
    fMapfile   = 0;
+   fLockProcessLine = kTRUE;
 
    G__RegisterScriptCompiler(&ScriptCompiler);
    G__set_ignoreinclude(&IgnoreInclude);
@@ -127,28 +128,30 @@ TCint::TCint(const TCint& ci) :
   fDictPosGlobals(ci.fDictPosGlobals),
   fSharedLibs(ci.fSharedLibs),
   fIncludePath(ci.fIncludePath),
-  fMapfile(ci.fMapfile)
-{ 
+  fMapfile(ci.fMapfile),
+  fLockProcessLine(ci.fLockProcessLine)
+{
    //copy constructor
-   strncpy(fPrompt,ci.fPrompt,64); 
+   strncpy(fPrompt,ci.fPrompt,64);
 }
 
 
 //______________________________________________________________________________
-TCint& TCint::operator=(const TCint& ci) 
+TCint& TCint::operator=(const TCint& ci)
 {
    //assignement operator
    if(this!=&ci) {
       TInterpreter::operator=(ci);
       fMore=ci.fMore;
       fExitCode=ci.fExitCode;
-      strncpy(fPrompt,ci.fPrompt,64); 
+      strncpy(fPrompt,ci.fPrompt,64);
       fDictPos=ci.fDictPos;
       fDictPosGlobals=ci.fDictPosGlobals;
       fSharedLibs=ci.fSharedLibs;
       fIncludePath=ci.fIncludePath;
       fMapfile=ci.fMapfile;
-   } 
+      fLockProcessLine=ci.fLockProcessLine;
+   }
    return *this;
 }
 
@@ -306,7 +309,13 @@ Long_t TCint::ProcessLine(const char *line, EErrorCode *error)
    Int_t ret = 0;
    if (gApplication) {
       if (gApplication->IsCmdThread()) {
-         R__LOCKGUARD2(gCINTMutex);
+         if (gGlobalMutex && !gCINTMutex && fLockProcessLine) {
+            gGlobalMutex->Lock();
+            if (!gCINTMutex)
+               gCINTMutex = gGlobalMutex->Factory(kTRUE);
+            gGlobalMutex->UnLock();
+         }
+         R__LOCKGUARD(fLockProcessLine ? gCINTMutex : 0);
          gROOT->SetLineIsProcessing();
 
          G__value local_res;
@@ -504,7 +513,7 @@ void TCint::UpdateListOfGlobalFunctions()
    R__LOCKGUARD2(gCINTMutex);
    G__MethodInfo t, *a;
    void* vt =0;
-   
+
    while (t.Next()) {
       // if name cannot be obtained no use to put in list
       if (t.IsValid() && t.Name()) {
@@ -523,14 +532,14 @@ void TCint::UpdateListOfGlobalFunctions()
                }
                foundStart = kTRUE;
                if (vt == f->InterfaceMethod()) {
-                  if (prop == -1) 
+                  if (prop == -1)
                      prop = t.Property();
                   needToAdd = !((prop & G__BIT_ISCOMPILED)
                                 || t.GetMangledName() == f->GetMangledName());
                }
             }
          }
-         
+
          if (needToAdd) {
             a = new G__MethodInfo(t);
             gROOT->fGlobalFunctions->Add(new TFunction(a));
@@ -1393,7 +1402,7 @@ const char *TCint::GetSharedLibDeps(const char *lib)
 }
 
 //______________________________________________________________________________
-Bool_t TCint::IsErrorMessagesEnabled()
+Bool_t TCint::IsErrorMessagesEnabled() const
 {
    // If error messages are disabled, the interpreter should suppress its
    // failures and warning messages from stdout.
@@ -1404,8 +1413,8 @@ Bool_t TCint::IsErrorMessagesEnabled()
 //______________________________________________________________________________
 Bool_t TCint::SetErrorMessages(Bool_t enable)
 {
-   // If error messages are disabled, the interpreter should  suppress its
-   // failures and warning messages from stdout.
+   // If error messages are disabled, the interpreter should suppress its
+   // failures and warning messages from stdout. Return the previous state.
 
    if (enable)
       G__const_resetnoerror();

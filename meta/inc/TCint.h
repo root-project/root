@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.27 2006/05/23 04:47:40 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.28 2006/11/24 14:24:54 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -47,7 +47,7 @@ class TObjArray;
 class TEnv;
 class TVirtualMutex;
 
-R__EXTERN TVirtualMutex *gCINTMutex; 
+R__EXTERN TVirtualMutex *gCINTMutex;
 
 class TCint : public TInterpreter {
 
@@ -60,8 +60,9 @@ private:
    TString         fSharedLibs;     //hold a list of lib loaded by G__loadfile
    TString         fIncludePath;    //hold a list of lib include path
    TEnv           *fMapfile;        //map of classes and libraries
+   Bool_t          fLockProcessLine;//true if ProcessLine should lock gCINTMutex
 
-   TCint() : fMore(-1), fExitCode(0), fDictPos(), fDictPosGlobals(), 
+   TCint() : fMore(-1), fExitCode(0), fDictPos(), fDictPosGlobals(),
      fSharedLibs(), fIncludePath(), fMapfile(0) { }  //for Dictionary() only
    virtual void Execute(TMethod *, TObjArray *, int * /*error*/ = 0) { }
 
@@ -124,8 +125,10 @@ public:
    void    Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error = 0);
    Long_t  ExecuteMacro(const char *filename, EErrorCode *error = 0);
    void    RecursiveRemove(TObject *obj);
-   Bool_t  IsErrorMessagesEnabled();
+   Bool_t  IsErrorMessagesEnabled() const;
    Bool_t  SetErrorMessages(Bool_t enable = kTRUE);
+   Bool_t  IsProcessLineLocked() const { return fLockProcessLine; }
+   void    SetProcessLineLock(Bool_t lock = kTRUE) { fLockProcessLine = lock; }
    const char *TypeName(const char *typeDesc);
 
    static void *FindSpecialObject(const char *name, G__ClassInfo *type, void **prevObj, void **assocPtr);

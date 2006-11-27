@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.23 2005/11/16 20:09:16 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.24 2005/11/24 23:30:05 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -102,8 +102,10 @@ public:
    virtual void     Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error = 0) = 0;
    virtual void     Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error = 0) = 0;
    virtual Long_t   ExecuteMacro(const char *filename, EErrorCode *error = 0) = 0;
-   virtual Bool_t   IsErrorMessagesEnabled() = 0;
+   virtual Bool_t   IsErrorMessagesEnabled() const = 0;
    virtual Bool_t   SetErrorMessages(Bool_t enable = kTRUE) = 0;
+   virtual Bool_t   IsProcessLineLocked() const = 0;
+   virtual void     SetProcessLineLock(Bool_t lock = kTRUE) = 0;
    virtual const char *TypeName(const char *s) = 0;
 
    static TInterpreter  *&Instance();
