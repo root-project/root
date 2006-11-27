@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.169 2006/11/15 21:05:38 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.170 2006/11/16 17:17:38 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -830,7 +830,12 @@ void TUnixSystem::Sleep(UInt_t milliSec)
 //______________________________________________________________________________
 Int_t TUnixSystem::Select(TList *act, Long_t to)
 {
-   // Select on file descriptors. The timeout to is in millisec.
+   // Select on file descriptors. The timeout to is in millisec. Returns
+   // the number of ready descriptors, or 0 in case of timeout, or < 0 in
+   // case of an error, with -2 being EINTR and -3 EBADF. In case of EINTR
+   // the errno has been reset and the method can be called again. Returns
+   // -4 in case the list did not contain any file handlers or file handlers
+   // with file descriptor >= 0.
 
    Int_t rc = -4;
 
@@ -874,7 +879,11 @@ Int_t TUnixSystem::Select(TList *act, Long_t to)
 Int_t TUnixSystem::Select(TFileHandler *h, Long_t to)
 {
    // Select on the file descriptor related to file handler h.
-   // The timeout to is in millisec.
+   // The timeout to is in millisec. Returns the number of ready descriptors,
+   // or 0 in case of timeout, or < 0 in case of an error, with -2 being EINTR
+   // and -3 EBADF. In case of EINTR the errno has been reset and the method
+   // can be called again. Returns -4 in case the file handler is 0 or does
+   // not have a file descriptor >= 0.
 
    Int_t rc = -4;
 
@@ -3328,7 +3337,10 @@ int TUnixSystem::UnixSelect(Int_t nfds, TFdSet *readready, TFdSet *writeready,
                             Long_t timeout)
 {
    // Wait for events on the file descriptors specified in the readready and
-   // writeready masks or for timeout (in milliseconds) to occur.
+   // writeready masks or for timeout (in milliseconds) to occur. Returns
+   // the number of ready descriptors, or 0 in case of timeout, or < 0 in
+   // case of an error, with -2 being EINTR and -3 EBADF. In case of EINTR
+   // the errno has been reset and the method can be called again.
 
    int retcode;
 
