@@ -1,4 +1,4 @@
-/* @(#)root/histpainter:$Name:  $:$Id: Hoption.h,v 1.7 2006/02/13 09:52:33 couet Exp $ */
+/* @(#)root/histpainter:$Name:  $:$Id: Hoption.h,v 1.8 2006/11/08 13:12:36 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -49,6 +49,7 @@ typedef struct Hoption_t {
    int Surf;        // "SURF"  Draw as a Surface (SURF,Surf=1, SURF1,Surf=11, SURF2,Surf=12)
    int Text;        // "TEXT"  Draw 2D plot with the content of each cell.
    int Tri;         // "TRI"   Draw 2D plot with Delaunay triangles.
+   int Pie;         // "PIE"   Draw 1D plot as a pie chart.
    int System;      // type of coordinate system(1=car,2=pol,3=cyl,4=sph,5=psr)
    int Zscale;      // "Z"   to display the Z scale (color palette)
    int FrontBox;    //  = 0 to suppress the front box

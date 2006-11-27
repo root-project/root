@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.28 2006/05/14 09:53:04 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.29 2006/11/25 09:02:22 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 class TGaxis;
 class TPainter3dAlgorithms;
 class TGraphPainter;
+class TPie;
 const Int_t kMaxCuts = 16;
 
 class THistPainter : public TVirtualHistPainter {
@@ -47,6 +48,7 @@ protected:
    TList                *fFunctions;         //pointer to histogram list of functions
    TPainter3dAlgorithms *fLego;              //pointer to a TPainter3dAlgorithms object
    TGraphPainter        *fGraphPainter;      //pointer to a fGraphPainter object
+   TPie                 *fPie;               //pointer to a TPie in case of option PIE
    Double_t             *fXbuf;              //X buffer coordinates
    Double_t             *fYbuf;              //Y buffer coordinates
    Int_t                 fNcuts;             //Number of graphical cuts
@@ -55,7 +57,7 @@ protected:
    TList                *fStack;             //Pointer to stack of histograms (if any)
    Int_t                 fShowProjection;    //True if a projection must be drawn
    TString               fShowOption;        //Option to draw the projection
-   
+
 public:
    THistPainter();
    virtual ~THistPainter();

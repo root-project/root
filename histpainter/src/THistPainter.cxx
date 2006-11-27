@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.273 2006/11/24 14:05:44 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.274 2006/11/25 09:02:22 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 #include "TPoints.h"
 #include "TStyle.h"
 #include "TGraph.h"
+#include "TPie.h"
 #include "TGaxis.h"
 #include "TColor.h"
 #include "TPainter3dAlgorithms.h"
@@ -116,6 +117,7 @@ THistPainter::THistPainter()
    fNcuts = 0;
    fStack = 0;
    fLego  = 0;
+   fPie   = 0;
    fGraphPainter = 0;
    fShowProjection = 0;
    fShowOption = "";
@@ -164,6 +166,8 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 
    const Int_t big = 9999;
    const Int_t kMaxDiff = 7;
+
+   if (fPie) return fPie->DistancetoPrimitive(px, py);
 
    Double_t x  = gPad->AbsPixeltoX(px);
    Double_t x1 = gPad->AbsPixeltoX(px+1);
@@ -344,6 +348,10 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    if (!gPad->IsEditable()) return;
 
+   if (fPie) {
+      fPie->ExecuteEvent(event, px, py);
+      return;
+   }
    //     come here if we have a lego/surface in the pad
    TView *view = gPad->GetView();
 
@@ -601,7 +609,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    Hoption.Char = Hoption.Color  = Hoption.Contour = Hoption.Logx  = 0;
    Hoption.Logy = Hoption.Logz   = Hoption.Lego    = Hoption.Surf  = 0;
    Hoption.Off  = Hoption.Tri    = Hoption.Proj    = Hoption.AxisPos = 0;
-   Hoption.Spec = 0;
+   Hoption.Spec = Hoption.Pie    = 0;
 
    //    special 2-D options
    Hoption.List     = 0;
@@ -656,6 +664,12 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (nch == 4) Hoption.Hist = 1;
       Hoption.Same = 1;
       strncpy(l,"    ",4);
+   }
+
+   l = strstr(chopt,"PIE");
+   if (l) {
+      Hoption.Pie = 1;
+      strncpy(l,"   ",3);
    }
 
    l = strstr(chopt,"LEGO");
@@ -999,6 +1013,7 @@ void THistPainter::Paint(Option_t *option)
    //    "L"      : Draw a line througth the bin contents
    //    "P"      : Draw current marker at each bin except empty bins
    //    "P0"     : Draw current marker at each bin including empty bins
+   //    "PIE"    : Draw a Pie Chart.
    //    "*H"     : Draw histogram with a * at each bin
    //    "LF2"    : Draw histogram like with option "L" but with a fill area.
    //             : Note that "L" draws also a fill area if the hist fillcolor is set
@@ -1486,6 +1501,15 @@ void THistPainter::Paint(Option_t *option)
       if (!gROOT->GetClass("TSpectrum2Painter")) gSystem->Load("libSpectrumPainter");
       gROOT->ProcessLineFast(Form("TSpectrum2Painter::PaintSpectrum((TH2F*)0x%x,\"%s\")",fH,option));
       return;
+   }
+
+   if (Hoption.Pie) {
+      if (!fPie) fPie = new TPie(fH);
+      fPie->Paint(option);
+      return;
+   } else {
+      if (fPie) delete fPie;
+      fPie = 0;
    }
 
    fXbuf  = new Double_t[kNMAX];
@@ -4681,14 +4705,14 @@ void THistPainter::PaintSpecialObjects(const TObject *obj, Option_t *option)
       R__TVectorF->SetBit(kCanDelete);
       R__TVectorF->Draw(option);
       
-    } else if (obj->InheritsFrom(TVectorD::Class())) {  
+   } else if (obj->InheritsFrom(TVectorD::Class())) {  
       //case TVectorD
       TH1D *R__TVectorD = new TH1D((TVectorD &)*obj);
       R__TVectorD->SetBit(kCanDelete);
       R__TVectorD->Draw(option);
    }
    
-  TH1::AddDirectory(status);   
+   TH1::AddDirectory(status);   
 }
 
 //______________________________________________________________________________
