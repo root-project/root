@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.37 2006/05/26 15:13:02 rdm Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.38 2006/10/08 15:28:01 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -306,7 +306,7 @@ TMultiLayerPerceptron::TMultiLayerPerceptron()
 TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
                                              TEventList * training,
                                              TEventList * test,
-                                             TNeuron::NeuronType type,
+                                             TNeuron::ENeuronType type,
                                              const char* extF, const char* extD)
 {
    // The network is described by a simple string:
@@ -363,7 +363,7 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
                                              const char * weight, TTree * data,
                                              TEventList * training,
                                              TEventList * test,
-                                             TNeuron::NeuronType type,
+                                             TNeuron::ENeuronType type,
                                              const char* extF, const char* extD)
 {
    // The network is described by a simple string:
@@ -418,7 +418,7 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
 TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
                                              const char * training,
                                              const char * test,
-                                             TNeuron::NeuronType type,
+                                             TNeuron::ENeuronType type,
                                              const char* extF, const char* extD)
 {
    // The network is described by a simple string:
@@ -483,7 +483,7 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
                                              const char * weight, TTree * data,
                                              const char * training,
                                              const char * test,
-                                             TNeuron::NeuronType type,
+                                             TNeuron::ENeuronType type,
                                              const char* extF, const char* extD)
 {
    // The network is described by a simple string:
@@ -635,7 +635,7 @@ void TMultiLayerPerceptron::SetTestDataSet(const char * test)
 }
 
 //______________________________________________________________________________
-void TMultiLayerPerceptron::SetLearningMethod(TMultiLayerPerceptron::LearningMethod method)
+void TMultiLayerPerceptron::SetLearningMethod(TMultiLayerPerceptron::ELearningMethod method)
 {
    // Sets the learning method.
    // Available methods are: kStochastic, kBatch,
@@ -1007,7 +1007,7 @@ Double_t TMultiLayerPerceptron::GetError(Int_t event) const
 }
 
 //______________________________________________________________________________
-Double_t TMultiLayerPerceptron::GetError(TMultiLayerPerceptron::DataSet set) const
+Double_t TMultiLayerPerceptron::GetError(TMultiLayerPerceptron::EDataSet set) const
 {
    // Error on the whole dataset
    TEventList *list =

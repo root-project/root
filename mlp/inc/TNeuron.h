@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.h,v 1.9 2006/01/09 15:47:30 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.h,v 1.10 2006/01/09 18:05:57 pcanal Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -49,9 +49,9 @@ class TNeuron : public TNamed {
    friend class TSynapse;
 
  public:
-   enum NeuronType { kOff, kLinear, kSigmoid, kTanh, kGauss, kSoftmax, kExternal };
+   enum ENeuronType { kOff, kLinear, kSigmoid, kTanh, kGauss, kSoftmax, kExternal };
 
-   TNeuron(NeuronType type = kSigmoid, 
+   TNeuron(ENeuronType type = kSigmoid, 
            const char* name = "", const char* title = "", 
            const char* extF = "", const char* extD  = "" );
    virtual ~ TNeuron() {}
@@ -66,7 +66,7 @@ class TNeuron : public TNamed {
    Double_t GetTarget() const;
    Double_t GetDeDw() const;
    Double_t GetBranch() const;
-   NeuronType GetType() const;
+   ENeuronType GetType() const;
    void SetWeight(Double_t w);
    inline Double_t GetWeight() const { return fWeight; }
    void SetNormalisation(Double_t mean, Double_t RMS);
@@ -89,7 +89,7 @@ class TNeuron : public TNamed {
    TObjArray flayer;      // pointers to the current level in a network (neurons, not synapses)
    Double_t fWeight;      // weight used for computation
    Double_t fNorm[2];     // normalisation to mean=0, RMS=1.
-   NeuronType fType;      // neuron type
+   ENeuronType fType;     // neuron type
    TFormula* fExtF;       // function   (external mode)
    TFormula* fExtD;       // derivative (external mode)
    //buffers

@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.h,v 1.10 2006/01/09 15:47:30 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.h,v 1.11 2006/05/26 15:13:02 rdm Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -59,31 +59,31 @@ class TMultiLayerPerceptron : public TObject {
  friend class TMLPAnalyzer;
 
  public:
-   enum LearningMethod { kStochastic, kBatch, kSteepestDescent,
-                         kRibierePolak, kFletcherReeves, kBFGS };
-   enum DataSet { kTraining, kTest };
+   enum ELearningMethod { kStochastic, kBatch, kSteepestDescent,
+                          kRibierePolak, kFletcherReeves, kBFGS };
+   enum EDataSet { kTraining, kTest };
    TMultiLayerPerceptron();
    TMultiLayerPerceptron(const char* layout, TTree* data = 0,
                          const char* training = "Entry$%2==0",
                          const char* test = "",
-                         TNeuron::NeuronType type = TNeuron::kSigmoid,
+                         TNeuron::ENeuronType type = TNeuron::kSigmoid,
                          const char* extF = "", const char* extD  = "");
    TMultiLayerPerceptron(const char* layout,
                          const char* weight, TTree* data = 0,
                          const char* training = "Entry$%2==0",
                          const char* test = "",
-                         TNeuron::NeuronType type = TNeuron::kSigmoid,
+                         TNeuron::ENeuronType type = TNeuron::kSigmoid,
                          const char* extF = "", const char* extD  = "");
    TMultiLayerPerceptron(const char* layout, TTree* data,
                          TEventList* training,
                          TEventList* test,
-                         TNeuron::NeuronType type = TNeuron::kSigmoid,
+                         TNeuron::ENeuronType type = TNeuron::kSigmoid,
                          const char* extF = "", const char* extD  = "");
    TMultiLayerPerceptron(const char* layout,
                          const char* weight, TTree* data,
                          TEventList* training,
                          TEventList* test,
-                         TNeuron::NeuronType type = TNeuron::kSigmoid,
+                         TNeuron::ENeuronType type = TNeuron::kSigmoid,
                          const char* extF = "", const char* extD  = "");
    virtual ~TMultiLayerPerceptron();
    void SetData(TTree*);
@@ -91,12 +91,12 @@ class TMultiLayerPerceptron : public TObject {
    void SetTestDataSet(TEventList* test);
    void SetTrainingDataSet(const char* train);
    void SetTestDataSet(const char* test);
-   void SetLearningMethod(TMultiLayerPerceptron::LearningMethod method);
+   void SetLearningMethod(TMultiLayerPerceptron::ELearningMethod method);
    void SetEventWeight(const char*);
    void Train(Int_t nEpoch, Option_t* option = "text");
    Double_t Result(Int_t event, Int_t index = 0) const;
    Double_t GetError(Int_t event) const;
-   Double_t GetError(TMultiLayerPerceptron::DataSet set) const;
+   Double_t GetError(TMultiLayerPerceptron::EDataSet set) const;
    void ComputeDEDw() const;
    void Randomize() const;
    void SetEta(Double_t eta);
@@ -112,7 +112,7 @@ class TMultiLayerPerceptron : public TObject {
    inline Double_t GetTau()      const { return fTau; }
    inline Int_t GetReset()       const { return fReset; }
    inline TString GetStructure() const { return fStructure; }
-   inline TNeuron::NeuronType GetType() const { return fType; }
+   inline TNeuron::ENeuronType GetType() const { return fType; }
    void DrawResult(Int_t index = 0, Option_t* option = "test") const;
    void DumpWeights(Option_t* filename = "-") const;
    void LoadWeights(Option_t* filename = "");
@@ -155,13 +155,13 @@ class TMultiLayerPerceptron : public TObject {
    TObjArray fSynapses;            // Collection of all the synapses in the network
    TString fStructure;             // String containing the network structure
    TString fWeight;                // String containing the event weight
-   TNeuron::NeuronType fType;      // Type of hidden neurons
-   TNeuron::NeuronType fOutType;   // Type of output neurons
+   TNeuron::ENeuronType fType;     // Type of hidden neurons
+   TNeuron::ENeuronType fOutType;  // Type of output neurons
    TString fextF;                  // String containing the function name
    TString fextD;                  // String containing the derivative name
    TEventList *fTraining;          //! EventList defining the events in the training dataset
    TEventList *fTest;              //! EventList defining the events in the test dataset
-   LearningMethod fLearningMethod; //! The Learning Method
+   ELearningMethod fLearningMethod; //! The Learning Method
    TTreeFormula* fEventWeight;     //! formula representing the event weight
    TTreeFormulaManager* fManager;  //! TTreeFormulaManager for the weight and neurons
    Double_t fEta;                  //! Eta - used in stochastic minimisation - Default=0.1

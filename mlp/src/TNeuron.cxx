@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.19 2006/05/12 08:19:02 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.20 2006/05/26 15:13:02 rdm Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -45,7 +45,7 @@
 ClassImp(TNeuron)
 
 //______________________________________________________________________________
-TNeuron::TNeuron(TNeuron::NeuronType type /*= kSigmoid*/,
+TNeuron::TNeuron(TNeuron::ENeuronType type /*= kSigmoid*/,
                  const char* name /*= ""*/, const char* title /*= ""*/,
                  const char* extF /*= ""*/, const char* extD  /*= ""*/ )
    :TNamed(name, title)
@@ -855,7 +855,7 @@ void TNeuron::AddInLayer(TNeuron * nearP)
 }
 
 //______________________________________________________________________________
-TNeuron::NeuronType TNeuron::GetType() const
+TNeuron::ENeuronType TNeuron::GetType() const
 {
    // Returns the neuron type.
    return fType;

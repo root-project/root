@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodTMlpANN.cxx,v 1.34 2006/11/17 00:21:35 stelzer Exp $ 
+// @(#)root/tmva $Id: MethodTMlpANN.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -59,8 +59,8 @@
 
 // some additional TMlpANN options
 const Bool_t EnforceNormalization__=kTRUE;
-const TMultiLayerPerceptron::LearningMethod LearningMethod__= TMultiLayerPerceptron::kStochastic;
-// const TMultiLayerPerceptron::LearningMethod LearningMethod__= TMultiLayerPerceptron::kBatch;
+const TMultiLayerPerceptron::ELearningMethod LearningMethod__= TMultiLayerPerceptron::kStochastic;
+// const TMultiLayerPerceptron::ELearningMethod LearningMethod__= TMultiLayerPerceptron::kBatch;
 
 ClassImp(TMVA::MethodTMlpANN)
    ;
