@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.7 2006/11/24 13:07:55 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.8 2006/11/24 17:03:37 couet Exp $
 // Author: Guido Volpi, Olivier Couet 03/11/2006
 
 /*************************************************************************
@@ -123,6 +123,9 @@ TPie::TPie(const TH1 *h) : TNamed(h->GetName(),h->GetTitle())
    } else {
       SetLabelFormat("%val");
    }
+   SetTextSize(axis->GetLabelSize());
+   SetTextColor(axis->GetLabelColor());
+   SetTextFont(axis->GetLabelFont());
 }
 
 
