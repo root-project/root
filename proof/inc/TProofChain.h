@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id:$
+// @(#)root/proof:$Name:  $:$Id: TProofChain.h,v 1.1 2006/11/27 14:14:23 rdm Exp $
 // Author: G. Ganis Nov 2006
 
 /*************************************************************************
@@ -54,7 +54,6 @@ public:
    virtual TLeaf       *FindLeaf(const char *name);
    virtual TBranch     *GetBranch(const char *name);
    virtual Bool_t       GetBranchStatus(const char *branchname) const;
-   static  Int_t        GetBranchStyle();
    virtual Long64_t     GetEntries() const;
    virtual Long64_t     GetEntries(const char *sel);
    virtual TList       *GetListOfClones() { return 0; }

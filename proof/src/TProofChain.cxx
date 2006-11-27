@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id:$
+// @(#)root/proof:$Name:  $:$Id: TProofChain.cxx,v 1.1 2006/11/27 14:14:24 rdm Exp $
 // Author: G. Ganis  Nov 2006
 
 /*************************************************************************
@@ -173,14 +173,6 @@ Bool_t TProofChain::GetBranchStatus(const char *branchname) const
    // See TTree::GetBranchStatus().
 
    return (fTree ? fTree->GetBranchStatus(branchname) : kFALSE);
-}
-
-//______________________________________________________________________________
-Int_t TProofChain::GetBranchStyle()
-{
-   // See TTree::GetBranchStyle().
-
-   return fgBranchStyle;
 }
 
 //______________________________________________________________________________
