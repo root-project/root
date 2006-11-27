@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.29 2006/05/24 15:31:40 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.30 2006/07/03 16:10:43 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -161,7 +161,7 @@ TPolyMarker3D& TPolyMarker3D::operator=(const TPolyMarker3D& tp3)
       fGLList=tp3.fGLList;
       fLastPoint=tp3.fLastPoint;
       fName=tp3.fName;
-   } 
+   }
    return *this;
 }
 
@@ -436,6 +436,8 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
                   xaxis->GetBinUpEdge(xaxis->GetLast()),
                   yaxis->GetBinUpEdge(yaxis->GetLast()),
                   zaxis->GetBinUpEdge(zaxis->GetLast()));
+
+   view->PadRange(gPad->GetFrameFillColor());
 
    if (entry == 0) return;
    Int_t nmk = TMath::Min(kMaxEntry,entry);
