@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6Decayer.h,v 1.2 2006/04/24 07:56:53 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6Decayer.h,v 1.3 2006/04/25 15:56:06 rdm Exp $
 // Author: Christian Holm Christensen   22/04/06
 
 /*************************************************************************
@@ -38,7 +38,7 @@ class TPythia6Decayer : public TVirtualMCDecayer {
 
 public:
    // enum of decay mode types
-   enum Decay_t {
+   enum EDecayType {
       kSemiElectronic,
       kDiElectron,
       kSemiMuonic,
@@ -65,9 +65,9 @@ public:
    };
 
 protected:
-   TString fDecayTableFile; // File to read decay table from
-   Decay_t fDecay;          // Forced decay mode
-   TArrayF fBraPart;        //! Branching ratios
+   TString    fDecayTableFile; // File to read decay table from
+   EDecayType fDecay;          // Forced decay mode
+   TArrayF    fBraPart;        //! Branching ratios
 
    static TPythia6Decayer *fgInstance;
 
@@ -93,7 +93,7 @@ public:
    // Extension member functions
    virtual void    SetDecayTableFile(const char* name);
    virtual void    WriteDecayTable();
-   virtual void    SetForceDecay(Decay_t type) { fDecay = type; }
+   virtual void    SetForceDecay(EDecayType type) { fDecay = type; }
 
    static  TPythia6Decayer *Instance();
 

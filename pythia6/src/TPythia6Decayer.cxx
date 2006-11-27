@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6Decayer.cxx,v 1.3 2006/05/11 10:12:36 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6Decayer.cxx,v 1.4 2006/05/12 08:17:01 brun Exp $
 // Author: Christian Holm Christensen   22/04/06
 // Much of this code has been lifted from AliROOT.
 
@@ -82,14 +82,14 @@ void TPythia6Decayer::SetForceDecay(Int_t type)
       Warning("SetForceDecay", "Invalid decay mode: %d", type);
       return;
    }
-   fDecay = Decay_t(type);
+   fDecay = EDecayType(type);
 }
 
 //______________________________________________________________________________
 void TPythia6Decayer::ForceDecay()
 {
    // Force a particle decay mode
-   Decay_t decay=fDecay;
+   EDecayType decay=fDecay;
    TPythia6::Instance()->SetMSTJ(21,2);
    if (decay == kNoDecayHeavy) return;
 
