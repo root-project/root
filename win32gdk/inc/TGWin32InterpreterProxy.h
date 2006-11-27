@@ -1,4 +1,4 @@
-// $Id: TGWin32InterpreterProxy.h,v 1.10 2004/08/13 17:00:29 rdm Exp $
+// $Id: TGWin32InterpreterProxy.h,v 1.11 2005/01/18 21:04:17 brun Exp $
 // Author: Valeriy Onuchin  15/11/03
 
 /*************************************************************************
@@ -74,8 +74,10 @@ public:
    TString  GetMangledName(TClass *cl, const char *method, const char *params);
    TString  GetMangledNameWithPrototype(TClass *cl, const char *method, const char *proto);
    Long_t   ExecuteMacro(const char *filename, EErrorCode *error = 0);
-   Bool_t   IsErrorMessagesEnabled();
+   Bool_t   IsErrorMessagesEnabled() const;
    Bool_t   SetErrorMessages(Bool_t enable = kTRUE);
+   Bool_t   IsProcessLineLocked() const;
+   void     SetProcessLineLock(Bool_t lock = kTRUE);
    void     ExecThreadCB(TWin32SendClass *) {}
    Int_t    GetExitCode() const { return RealObject()->GetExitCode();  }
    Int_t    GetMore() const {  return RealObject()->GetMore(); }
