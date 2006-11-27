@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.18 2006/05/24 15:31:40 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.19 2006/07/03 16:10:43 brun Exp $
 // Author: Rene Brun , Olivier Couet 31/10/97
 
 
@@ -84,8 +84,8 @@ TMarker3DBox::TMarker3DBox( Float_t x, Float_t y, Float_t z,
 
 //______________________________________________________________________________
 TMarker3DBox::TMarker3DBox(const TMarker3DBox& m3d) :
- TObject(m3d), 
- TAttLine(m3d), 
+ TObject(m3d),
+ TAttLine(m3d),
  TAttFill(m3d),
  TAtt3D(m3d),
  fX(m3d.fX),
@@ -97,7 +97,7 @@ TMarker3DBox::TMarker3DBox(const TMarker3DBox& m3d) :
  fTheta(m3d.fTheta),
  fPhi(m3d.fPhi),
  fRefObject(m3d.fRefObject)
-{ 
+{
    //copy constructor
 }
 
@@ -106,7 +106,7 @@ TMarker3DBox& TMarker3DBox::operator=(const TMarker3DBox& m3d)
 {
    //assignement operator
    if(this!=&m3d) {
-      TObject::operator=(m3d); 
+      TObject::operator=(m3d);
       TAttLine::operator=(m3d);
       TAttFill::operator=(m3d);
       TAtt3D::operator=(m3d);
@@ -119,7 +119,7 @@ TMarker3DBox& TMarker3DBox::operator=(const TMarker3DBox& m3d)
       fTheta=m3d.fTheta;
       fPhi=m3d.fPhi;
       fRefObject=m3d.fRefObject;
-   } 
+   }
    return *this;
 }
 
@@ -191,7 +191,7 @@ void TMarker3DBox::Paint(Option_t * /* option */ )
    // Paint marker 3D box.
 
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
-   
+
    buffer.ClearSectionsValid();
 
    // Section kCore
@@ -203,17 +203,17 @@ void TMarker3DBox::Paint(Option_t * /* option */ )
    } else {
       buffer.fID           = this;
    }
-   buffer.fColor        = GetLineColor();   
-   buffer.fTransparency = 0;    
-   buffer.fLocalFrame   = kFALSE; 
+   buffer.fColor        = GetLineColor();
+   buffer.fTransparency = 0;
+   buffer.fLocalFrame   = kFALSE;
    buffer.SetSectionsValid(TBuffer3D::kCore);
-   
+
    // We fill kCore and kRawSizes on first pass and try with viewer
    Int_t reqSections = gPad->GetViewer3D()->AddObject(buffer);
    if (reqSections == TBuffer3D::kNone) {
       return;
    }
-   
+
    if (reqSections & TBuffer3D::kRawSizes) {
       Int_t nbPnts = 8;
       Int_t nbSegs = 12;
@@ -229,7 +229,7 @@ void TMarker3DBox::Paint(Option_t * /* option */ )
       SetPoints(buffer.fPnts);
 
       // Transform points
-      if (gGeometry && !buffer.fLocalFrame) {   
+      if (gGeometry && !buffer.fLocalFrame) {
          Double_t dlocal[3];
          Double_t dmaster[3];
          for (UInt_t j=0; j<buffer.NbPnts(); j++) {
@@ -276,11 +276,11 @@ void TMarker3DBox::Paint(Option_t * /* option */ )
       buffer.fPols[33] = 5   ; buffer.fPols[34] = 6 ; buffer.fPols[35] = 7;
 
       buffer.SetSectionsValid(TBuffer3D::kRaw);
-      
+
       TAttLine::Modify();
       TAttFill::Modify();
    }
-   
+
    gPad->GetViewer3D()->AddObject(buffer);
 }
 
@@ -321,6 +321,8 @@ void TMarker3DBox::PaintH3(TH1 *h, Option_t *option)
                   xaxis->GetBinUpEdge(xaxis->GetLast()),
                   yaxis->GetBinUpEdge(yaxis->GetLast()),
                   zaxis->GetBinUpEdge(zaxis->GetLast()));
+
+   view->PadRange(gPad->GetFrameFillColor());
 
    //Draw TMarker3DBox with size proportional to cell content
    TMarker3DBox m3;
@@ -433,7 +435,7 @@ void TMarker3DBox::SetPoints(Double_t *points) const
       Double_t costh = TMath::Cos(theta);
       Double_t sinfi = TMath::Sin(phi);
       Double_t cosfi = TMath::Cos(phi);
-   
+
       // Matrix to convert from fruit frame to master frame
       Double_t m[9];
       m[0] =  costh * cosfi;       m[1] = -sinfi;          m[2] = sinth*cosfi;
@@ -443,7 +445,7 @@ void TMarker3DBox::SetPoints(Double_t *points) const
          x = points[3*i];
          y = points[3*i+1];
          z = points[3*i+2];
-   
+
          points[3*i]   = fX + m[0] * x + m[1] * y + m[2] * z;
          points[3*i+1] = fY + m[3] * x + m[4] * y + m[5] * z;
          points[3*i+2] = fZ + m[6] * x + m[7] * y + m[8] * z;
