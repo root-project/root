@@ -80,9 +80,7 @@ VOID_METHOD_ARG3(Interpreter,Execute,const char*,function,const char*,params,int
 VOID_METHOD_ARG5(Interpreter,Execute,TObject*,obj,TClass*,cl,const char*,method,const char*,params,int*,error,1)
 VOID_METHOD_ARG5(Interpreter,Execute,TObject*,object,TClass*,cl,TMethod*,method,TObjArray*,params,int*,error,1)
 RETURN_METHOD_ARG2(Interpreter,Long_t,ExecuteMacro,const char*,filename,TInterpreter::EErrorCode*,error)
-RETURN_METHOD_ARG0(Interpreter,Bool_t,IsErrorMessagesEnabled)
 RETURN_METHOD_ARG1(Interpreter,Bool_t,SetErrorMessages,Bool_t,enable)
 VOID_METHOD_ARG1(Interpreter,SetProcessLineLock,Bool_t,lock,1)
-RETURN_METHOD_ARG0(Interpreter,Bool_t,IsProcessLineLocked)
 RETURN_METHOD_ARG1(Interpreter,const char*,TypeName,const char*,s)
 //Bool_t TGWin32InterpreterProxy::CheckClassInfo(const char* name) { return RealObject()->CheckClassInfo(name); }
