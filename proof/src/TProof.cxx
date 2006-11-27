@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.168 2006/11/20 15:56:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.169 2006/11/22 14:16:54 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1702,6 +1702,8 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout)
 
    // Timeout counter
    Long_t nto = timeout;
+   if (gDebug > 2)
+      Info("Collect","active: %d", mon->GetActive());
    while (mon->GetActive() && (nto < 0 || nto > 0)) {
 
       // Wait for a ready socket
@@ -1709,14 +1711,24 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout)
 
       if (s && s != (TSocket *)(-1)) {
          // Get and analyse the info it did receive
-         if ((rc = CollectInputFrom(s)) == 1)
+         if ((rc = CollectInputFrom(s)) == 1) {
             // Deactivate it if we are done with it
             mon->DeActivate(s);
+            if (gDebug > 2)
+               Info("Collect","deactivating %p (active: %d, %p)",
+                              s, mon->GetActive(),
+                              mon->GetListOfActives()->First());
+         }
 
          // Update counter (if no error occured)
          if (rc >= 0)
             cnt++;
       } else {
+         // Exit if not stopped or not aborted (player exits status is finished
+         // in such a case); otherwise, we still need to collect the partial
+         // output info
+         if (fPlayer && (fPlayer->GetExitStatus() == TProofPlayer::kFinished))
+            mon->DeActivateAll();
          // Decrease the timeout counter if requested
          if (s == (TSocket *)(-1) && nto > 0)
             nto--;
@@ -1740,6 +1752,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout)
 
    return cnt;
 }
+
 //______________________________________________________________________________
 void TProof::CleanGDirectory(TList *ol)
 {
@@ -1780,8 +1793,10 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
    what = mess->What();
 
-   PDB(kGlobal,3)
-      Info("CollectInputFrom","got %d",what);
+   PDB(kGlobal,3) {
+      sl = FindSlave(s);
+      Info("CollectInputFrom","got %d from %s", what, sl->GetOrdinal());
+   }
 
    switch (what) {
 
@@ -1863,8 +1878,8 @@ Int_t TProof::CollectInputFrom(TSocket *s)
          sl = FindSlave(s);
          (*mess) >> sl->fStatus >> sl->fParallel;
          PDB(kGlobal,2)
-            Info("Collect:kPROOF_LOGDONE","status %d  parallel %d",
-                 sl->fStatus, sl->fParallel);
+            Info("CollectInputFrom","kPROOF_LOGDONE:%s: status %d  parallel %d",
+                 sl->GetOrdinal(), sl->fStatus, sl->fParallel);
          if (sl->fStatus != 0) fStatus = sl->fStatus; //return last nonzero status
          rc = 1;
          break;
@@ -1887,7 +1902,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_PACKAGE_LIST:
          {
-            PDB(kGlobal,2) Info("Collect:kPROOF_PACKAGE_LIST","Enter");
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_PACKAGE_LIST: enter");
             Int_t type = 0;
             (*mess) >> type;
             switch (type) {
@@ -1902,14 +1917,14 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                fAvailablePackages->SetOwner();
                break;
             default:
-               Info("Collect:kPROOF_PACKAGE_LIST","Unknown type: %d", type);
+               Info("CollectInputFrom","kPROOF_PACKAGE_LIST: unknown type: %d", type);
             }
          }
          break;
 
       case kPROOF_OUTPUTOBJECT:
          {
-            PDB(kGlobal,2) Info("Collect:kPROOF_OUTPUTOBJECT","Enter");
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_OUTPUTOBJECT: enter");
             Int_t type = 0;
             (*mess) >> type;
             // If a query result header, add it to the player list
@@ -1918,19 +1933,15 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                TQueryResult *pq =
                   (TQueryResult *) mess->ReadObject(TQueryResult::Class());
                if (pq) {
-                  // Remove duplicates of the data set from the official list
-                  gROOT->GetListOfDataSets()->Remove(pq->GetDSet());
                   // Add query to the result list in TProofPlayer
                   fPlayer->AddQueryResult(pq);
                   fPlayer->SetCurrentQuery(pq);
-
                   // Add the unique query tag as TNamed object to the input list
                   // so that it is available in TSelectors for monitoring
                   fPlayer->AddInput(new TNamed("PROOF_QueryTag",
                                     Form("%s:%s",pq->GetTitle(),pq->GetName())));
-
                } else {
-                  Warning("Collect:kPROOF_OUTPUTOBJECT","query result missing");
+                  Warning("CollectInputFrom","kPROOF_OUTPUTOBJECT: query result missing");
                }
             } else if (type > 0) {
                // Read object
@@ -1952,7 +1963,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_OUTPUTLIST:
          {
-            PDB(kGlobal,2) Info("Collect:kPROOF_OUTPUTLIST","Enter");
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_OUTPUTLIST: enter");
             TList *out = 0;
             if (IsMaster() || fProtocol < 7) {
                out = (TList *) mess->ReadObject(TList::Class());
@@ -1960,8 +1971,6 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                TQueryResult *pq =
                   (TQueryResult *) mess->ReadObject(TQueryResult::Class());
                if (pq) {
-                  // Remove duplicates of the data set from the official list
-                  gROOT->GetListOfDataSets()->Remove(pq->GetDSet());
                   // Add query to the result list in TProofPlayer
                   fPlayer->AddQueryResult(pq);
                   fPlayer->SetCurrentQuery(pq);
@@ -1974,7 +1983,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                   QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
                } else {
                   PDB(kGlobal,2)
-                     Info("Collect:kPROOF_OUTPUTLIST","query result missing");
+                     Info("CollectInputFrom","kPROOF_OUTPUTLIST: query result missing");
                }
             }
             if (out) {
@@ -1982,7 +1991,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                fPlayer->AddOutput(out); // Incorporate the list
                SafeDelete(out);
             } else {
-               PDB(kGlobal,2) Info("Collect:kPROOF_OUTPUTLIST","ouputlist is empty");
+               PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_OUTPUTLIST: ouputlist is empty");
             }
 
             // On clients at this point processing is over
@@ -2035,7 +2044,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_QUERYLIST:
          {
-            PDB(kGlobal,2) Info("Collect:kPROOF_QUERYLIST","Enter");
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_QUERYLIST: enter");
             (*mess) >> fOtherQueries >> fDrawQueries;
             if (fQueries) {
                fQueries->Delete();
@@ -2048,7 +2057,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_RETRIEVE:
          {
-            PDB(kGlobal,2) Info("Collect:kPROOF_RETRIEVE","Enter");
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_RETRIEVE: enter");
             TQueryResult *pq =
                (TQueryResult *) mess->ReadObject(TQueryResult::Class());
             if (pq) {
@@ -2057,14 +2066,14 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                QueryResultReady(Form("%s:%s", pq->GetTitle(), pq->GetName()));
             } else {
                PDB(kGlobal,2)
-                  Info("Collect:kPROOF_RETRIEVE", "query result missing");
+                  Info("CollectInputFrom","kPROOF_RETRIEVE: query result missing");
             }
          }
          break;
 
       case kPROOF_MAXQUERIES:
          {
-            PDB(kGlobal,2) Info("Collect:kPROOF_MAXQUERIES","Enter");
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_MAXQUERIES: enter");
             Int_t max = 0;
 
             (*mess) >> max;
@@ -2074,7 +2083,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_SERVERSTARTED:
          {
-            PDB(kGlobal,2) Info("Collect:kPROOF_SERVERSTARTED","Enter");
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_SERVERSTARTED: enter");
 
             UInt_t tot = 0, done = 0;
             TString action;
@@ -2109,7 +2118,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_DATASET_STATUS:
          {
-            PDB(kGlobal,2) Info("Collect:kPROOF_DATASET_STATUS","Enter");
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_DATASET_STATUS: enter");
 
             UInt_t tot = 0, done = 0;
             TString action;
@@ -2143,7 +2152,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_STARTPROCESS:
          {
-            PDB(kGlobal,2) Info("Collect:kPROOF_STARTPROCESS","Enter");
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_STARTPROCESS: enter");
 
             fIdle = kFALSE;
 
@@ -2168,7 +2177,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_SETIDLE:
          {
-            PDB(kGlobal,2) Info("Collect:kPROOF_SETIDLE","Enter");
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_SETIDLE: enter");
 
             // The session is idle
             fIdle = kTRUE;
@@ -2177,7 +2186,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_QUERYSUBMITTED:
          {
-            PDB(kGlobal,2) Info("Collect:kPROOF_QUERYSUBMITTED","Enter");
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_QUERYSUBMITTED: enter");
 
             // We have received the sequential number
             (*mess) >> fSeqNum;
@@ -2188,7 +2197,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_SESSIONTAG:
          {
-            PDB(kGlobal,2) Info("Collect:kPROOF_SESSIONTAG","Enter");
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_SESSIONTAG: enter");
 
             // We have received the unique tag and save it as name of this object
             TString stag;
@@ -2199,7 +2208,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_FEEDBACK:
          {
-            PDB(kGlobal,2) Info("Collect:kPROOF_FEEDBACK","Enter");
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_FEEDBACK: enter");
             TList *out = (TList *) mess->ReadObject(TList::Class());
             out->SetOwner();
             sl = FindSlave(s);
@@ -2230,7 +2239,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_PROGRESS:
          {
-            PDB(kGlobal,2) Info("Collect:kPROOF_PROGRESS","Enter");
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_PROGRESS: enter");
 
             sl = FindSlave(s);
 
@@ -2271,7 +2280,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_GETSLAVEINFO:
          {
-            PDB(kGlobal,2) Info("Collect:kPROOF_GETSLAVEINFO","Enter");
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_GETSLAVEINFO: enter");
 
             sl = FindSlave(s);
             Bool_t active = (GetListOfActiveSlaves()->FindObject(sl) != 0);
@@ -2299,11 +2308,11 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_VALIDATE_DSET:
          {
-            PDB(kGlobal,2) Info("Collect:kPROOF_VALIDATE_DSET","Enter");
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_VALIDATE_DSET: enter");
             TDSet* dset = 0;
             (*mess) >> dset;
             if (!fDSet)
-               Error("Collect:kPROOF_VALIDATE_DSET", "fDSet not set");
+               Error("CollectInputFrom","kPROOF_VALIDATE_DSET: fDSet not set");
             else
                fDSet->Validate(dset);
             delete dset;
@@ -2312,7 +2321,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_DATA_READY:
          {
-            PDB(kGlobal,2) Info("Collect:kPROOF_DATA_READY","Enter");
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_DATA_READY: enter");
             Bool_t dataready = kFALSE;
             Long64_t totalbytes, bytesready;
             (*mess) >> dataready >> totalbytes >> bytesready;
@@ -2328,7 +2337,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_MESSAGE:
          {
-            PDB(kGlobal,2) Info("Collect:kPROOF_MESSAGE","Enter");
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_MESSAGE: enter");
 
             // We have received the unique tag and save it as name of this object
             TString msg;

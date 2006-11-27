@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.95 2006/11/15 17:45:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.96 2006/11/22 14:16:54 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -1088,10 +1088,6 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                                           fPacketizer->GetProcTime());
       }
       StopFeedback();
-
-      if (IsClient() && GetExitStatus() == TProofPlayer::kStopped)
-         // We were stopped: collect the results before finalizing
-         fProof->Collect();
 
       if (!IsClient() || GetExitStatus() != TProofPlayer::kAborted)
          return Finalize(kFALSE,sync);

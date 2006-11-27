@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TTree.h,v 1.83 2005/09/04 15:35:08 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofQueryResult.cxx,v 1.1 2005/09/16 08:48:38 rdm Exp $
 // Author: G Ganis Sep 2005
 
 /*************************************************************************
@@ -30,11 +30,17 @@ ClassImp(TProofQueryResult)
 TProofQueryResult::TProofQueryResult(Int_t sn, const char *opt, TList *inlist,
                                      Long64_t ent, Long64_t fst, TDSet *dset,
                                      const char *sel, TEventList *elist)
-                  : TQueryResult(sn, opt, inlist, ent, fst, dset, sel, elist)
+                  : TQueryResult(sn, opt, inlist, ent, fst, sel)
 {
    // Main constructor.
 
    fStartLog = -1;
+
+   // Add data sets and event lists to the input list
+   if (dset)
+      fInputList->Add(dset);
+   if (elist)
+      fInputList->Add(elist);
 }
 
 //______________________________________________________________________________

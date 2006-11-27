@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.8 2006/08/10 14:14:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.9 2006/11/15 17:45:55 rdm Exp $
 // Author: G Ganis Sep 2005
 
 /*************************************************************************
@@ -34,8 +34,7 @@ ClassImp(TQueryResult)
 
 //______________________________________________________________________________
 TQueryResult::TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
-                           Long64_t entries, Long64_t first, TDSet *dset,
-                           const char *selec, TEventList *elist)
+                           Long64_t entries, Long64_t first, const char *selec)
              : fSeqNum(seqnum), fStatus(kSubmitted), fOptions(opt),
                fEntries(entries), fFirst(first),
                fBytes(0), fParList("-"), fOutputList(0),
@@ -59,15 +58,6 @@ TQueryResult::TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
       fInputList = (TList *) (inlist->Clone());
       fInputList->SetOwner();
    }
-
-   // Data set
-   fDSet = dset ? (TDSet *)(dset->Clone()) : 0;
-
-   // We keep only the original in the official list
-   gROOT->GetListOfDataSets()->Remove(fDSet);
-
-   // Save event list
-   fEventList = elist ? (TEventList *)(elist->Clone()) : 0;
 
    // Log file
    fLogFile = new TMacro("LogFile");
@@ -118,8 +108,6 @@ TQueryResult::~TQueryResult()
 {
    // Destructor.
 
-   SafeDelete(fDSet);
-   SafeDelete(fEventList);
    SafeDelete(fInputList);
    SafeDelete(fOutputList);
    SafeDelete(fLogFile);
@@ -137,7 +125,7 @@ TQueryResult *TQueryResult::CloneInfo()
 
    // Create instance
    TQueryResult *qr = new TQueryResult(fSeqNum, fOptions, 0, fEntries,
-                                       fFirst, 0, 0, 0);
+                                       fFirst, 0);
 
    // Correct fields
    qr->fStatus = fStatus;
@@ -290,6 +278,15 @@ void TQueryResult::AddLogLine(const char *logline)
 }
 
 //______________________________________________________________________________
+void TQueryResult::AddInput(TObject *obj)
+{
+   // Add obj to the input list
+
+   if (fInputList && obj)
+      fInputList->Add(obj);
+}
+
+//______________________________________________________________________________
 void TQueryResult::SetArchived(const char *archfile)
 {
    // Set (or update) query in archived state.
@@ -397,12 +394,8 @@ void TQueryResult::Browse(TBrowser *b)
 {
    // To support browsing of the results.
 
-#if 0
-   fOutputList->Browse(b);
-#else
    if (fOutputList)
       b->Add(fOutputList, fOutputList->Class(), "OutputList");
-#endif
 }
 
 //______________________________________________________________________________
@@ -477,4 +470,22 @@ Bool_t TQueryResult::Matches(const char *ref)
       return kTRUE;
 
    return kFALSE;
+}
+
+//______________________________________________________________________________
+TObject *TQueryResult::GetInputObject(const char *classname) const
+{
+   // Return first instance of class 'classname' in the input list.
+   // Usefull to access TDSet, TEventList, ...
+
+   TObject *o = 0;
+   if (classname && fInputList) {
+      TIter nxi(fInputList);
+      while ((o = nxi()))
+         if (!strncmp(o->ClassName(), classname, strlen(classname)))
+            return o;
+   }
+
+   // Not found
+   return o;
 }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TQueryResult.h,v 1.5 2006/08/10 14:14:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TQueryResult.h,v 1.6 2006/11/15 17:45:55 rdm Exp $
 // Author: G Ganis Sep 2005
 
 /*************************************************************************
@@ -35,8 +35,6 @@
 #endif
 
 class TBrowser;
-class TDSet;
-class TEventList;
 class TTreePlayer;
 class TProofPlayerRemote;
 class TProof;
@@ -67,9 +65,7 @@ protected:
    TDatime         fEnd;          //time when processing ended
    Float_t         fUsedCPU;      //real CPU time used (seconds)
    TString         fOptions;      //processing options + aclic mode (<opt>#<aclic_mode>)
-   TList          *fInputList;    //input list
-   TDSet          *fDSet;         //input data set
-   TEventList     *fEventList;    //input event list
+   TList          *fInputList;    //input list; contains also data sets, entry list, ...
    Long64_t        fEntries;      //number of entries processed
    Long64_t        fFirst;        //first entry processed
    Long64_t        fBytes;        //number of bytes processed
@@ -86,9 +82,10 @@ protected:
    Float_t         fProcTime;     //Processing time (seconds) (millisec precision)
 
    TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
-                Long64_t entries, Long64_t first, TDSet *dset,
-                const char *selec, TEventList *elist = 0);
+                Long64_t entries, Long64_t first,
+                const char *selec);
 
+   void            AddInput(TObject *obj);
    void            AddLogLine(const char *logline);
    TQueryResult   *CloneInfo();
    virtual void    RecordEnd(EQueryStatus status, TList *outlist = 0);
@@ -103,8 +100,7 @@ protected:
 
 public:
    TQueryResult() : fSeqNum(-1), fDraw(0), fStatus(kSubmitted), fUsedCPU(0.),
-                    fInputList(0), fDSet(0),
-                    fEventList(0), fEntries(-1), fFirst(-1), fBytes(0),
+                    fInputList(0), fEntries(-1), fFirst(-1), fBytes(0),
                     fLogFile(0), fSelecHdr(0), fSelecImp(0),
                     fLibList("-"), fOutputList(0),
                     fInitTime(0.), fProcTime(0.) { }
@@ -118,8 +114,7 @@ public:
    TDatime        GetEndTime() const { return fEnd; }
    const char    *GetOptions() const { return fOptions; }
    TList         *GetInputList() { return fInputList; }
-   TDSet         *GetDSet() const { return fDSet; }
-   TEventList    *GetEventList() const { return fEventList; }
+   TObject       *GetInputObject(const char *classname) const;
    Long64_t       GetEntries() const { return fEntries; }
    Long64_t       GetFirst() const { return fFirst; }
    Long64_t       GetBytes() const { return fBytes; }
@@ -143,7 +138,7 @@ public:
 
    void Print(Option_t *opt = "") const;
 
-   ClassDef(TQueryResult,2)  //Class describing a query
+   ClassDef(TQueryResult,3)  //Class describing a query
 };
 
 inline Bool_t operator!=(const TQueryResult &qr1,  const TQueryResult &qr2)

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.57 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.58 2006/09/18 15:13:51 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -28,9 +28,6 @@
 class TFile;
 class TBrowser;
 class TCut;
-class TChainProof;
-class TDSet;
-class TVirtualProof;
 
 class TChain : public TTree {
 
@@ -44,7 +41,7 @@ protected:
    TFile       *fFile;             //! Pointer to current file (We own the file).
    TObjArray   *fFiles;            //-> List of file names containing the trees (TChainElement, owned)
    TList       *fStatus;           //-> List of active/inactive branches (TChainElement, owned)
-   TChainProof *fChainProof;       //! wrapper class for a TDSet if this chain is to be processed by PROOF
+   TChain      *fProofChain;       //! chain proxy when going to be processed by PROOF
 
 private:
    TChain(const TChain&);            // not implemented
@@ -52,13 +49,13 @@ private:
 
 protected:
    void ReleaseChainProof();
-   virtual TDSet    *MakeTDSetWithoutFriends() const;
 
 public:
    // TChain constants
    enum {
       kGlobalWeight   = BIT(15),
       kAutoDelete     = BIT(16),
+      kProofUptodate  = BIT(17),
       kBigNumber      = 1234567890
    };
 
@@ -112,7 +109,6 @@ public:
            void      Lookup();
    virtual void      Loop(Option_t *option="", Long64_t nentries=kBigNumber, Long64_t firstentry=0); // *MENU*
    virtual void      ls(Option_t *option="") const;
-   virtual TDSet    *MakeTDSet() const;
    virtual Long64_t  Merge(const char *name, Option_t *option = "");
    virtual Long64_t  Merge(TCollection *list, Option_t *option = "");
    virtual Long64_t  Merge(TFile *file, Int_t basketsize, Option_t *option="");
@@ -131,8 +127,7 @@ public:
    virtual void      SetDirectory(TDirectory *dir);
    virtual void      SetMakeClass(Int_t make) { TTree::SetMakeClass(make); if (fTree) fTree->SetMakeClass(make);}
    virtual void      SetPacketSize(Int_t size = 100);
-   virtual void      SetProof(TVirtualProof* proof = (TVirtualProof*) -1,
-                              Bool_t refresh = kFALSE, Bool_t gettreeheader = kFALSE);
+   virtual void      SetProof(Bool_t on = kTRUE, Bool_t refresh = kFALSE, Bool_t gettreeheader = kFALSE);
    virtual void      SetWeight(Double_t w=1, Option_t *option="");
    virtual void      UseCache(Int_t maxCacheSize = 10, Int_t pageSize = 0);
 

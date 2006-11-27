@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofQueryResult.h,v 1.1 2005/09/16 08:48:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofQueryResult.h,v 1.2 2006/08/05 11:14:25 brun Exp $
 // Author: G Ganis Aug 2005
 
 /*************************************************************************
@@ -25,8 +25,9 @@
 #include "TQueryResult.h"
 #endif
 
+class TDSet;
+class TEventList;
 class TProofServ;
-
 
 class TProofQueryResult : public TQueryResult {
 

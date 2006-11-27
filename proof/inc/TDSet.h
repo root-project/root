@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.18 2006/07/26 14:17:22 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.19 2006/08/06 07:15:00 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -62,7 +62,7 @@ class TTree;
 class TChain;
 class TVirtualProof;
 class TEventList;
-
+class TProofChain;
 
 class TDSetElement : public TObject {
 public:
@@ -138,6 +138,7 @@ private:
    Bool_t         fIsTree;      // true if type is a TTree (or TTree derived)
    TIter         *fIterator;    //! iterator on fElements
    TEventList    *fEventList;   //! event list for processing
+   TProofChain   *fProofChain;  //! for browsing purposes
 
    TDSet(const TDSet &);           // not implemented
    void operator=(const TDSet &);  // not implemented
@@ -148,6 +149,7 @@ protected:
 public:
    TDSet();
    TDSet(const char *name, const char *objname = "*", const char *dir = "/", const char *type=0);
+   TDSet(const TChain &chain, Bool_t withfriends = kTRUE);
    virtual ~TDSet();
 
    virtual Bool_t        Add(const char *file, const char *objname = 0,

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSessionViewer.cxx,v 1.82 2006/11/17 15:42:13 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSessionViewer.cxx,v 1.1 2006/11/17 15:50:17 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -3061,7 +3061,7 @@ void TSessionQueryFrame::UpdateButtons(TQueryDescription *desc)
          fBtnFinalize->SetEnabled(kTRUE);
          if (((desc->fResult == 0) || (desc->fResult &&
               (desc->fResult->IsFinalized() ||
-              (desc->fResult->GetDSet() == 0)))) &&
+              (desc->fResult->GetInputObject("TDSet") == 0)))) &&
               !(fViewer->GetActDesc()->fLocal))
             fBtnFinalize->SetEnabled(kFALSE);
          fBtnStop->SetEnabled(kFALSE);
@@ -4829,8 +4829,9 @@ void TSessionViewer::QueryResultReady(char *query)
                TQueryDescription::kSessionQueryFinalized :
                (TQueryDescription::ESessionQueryStatus)lquery->fResult->GetStatus();
             // get data set
-            if (lquery->fResult->GetDSet())
-               lquery->fChain = lquery->fResult->GetDSet();
+            TObject *o = lquery->fResult->GetInputObject("TDSet");
+            if (o)
+               lquery->fChain = (TDSet *) o;
             item = fSessionHierarchy->FindItemByObj(fSessionItem, desc);
             if (item) {
                item2 = fSessionHierarchy->FindItemByObj(item, lquery);
@@ -4997,8 +4998,9 @@ void TSessionViewer::StartViewer()
    TObject *obj = (TObject *)item->GetUserData();
    if (obj->IsA() != TQueryDescription::Class()) return;
    TQueryDescription *query = (TQueryDescription *)obj;
-   if (!query->fChain && query->fResult && query->fResult->GetDSet()) {
-      query->fChain = query->fResult->GetDSet();
+   if (!query->fChain && query->fResult &&
+      (obj = query->fResult->GetInputObject("TDSet"))) {
+      query->fChain = (TDSet *) obj;
    }
    if (query->fChain->IsA() == TChain::Class())
       ((TChain *)query->fChain)->StartViewer();

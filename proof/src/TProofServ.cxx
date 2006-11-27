@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.148 2006/11/16 17:17:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.149 2006/11/20 15:56:35 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -2845,12 +2845,16 @@ void TProofServ::HandleProcess(TMessage *mess)
          // Get query info
          pq = (TProofQueryResult *)(fWaitingQueries->First());
          if (pq) {
-            dset     = pq->GetDSet();
             opt      = pq->GetOptions();
             input    = pq->GetInputList();
             nentries = pq->GetEntries();
             first    = pq->GetFirst();
-            evl      = pq->GetEventList();
+            // Attach to data set and event list (if any)
+            TObject *o = 0;
+            if ((o = pq->GetInputObject("TDSet")))
+               dset = (TDSet *) o;
+            if ((o = pq->GetInputObject("TEventList")))
+               evl = (TEventList *) o;
             //
             // Expand selector files
             if (pq->GetSelecImp()) {
@@ -2883,7 +2887,7 @@ void TProofServ::HandleProcess(TMessage *mess)
          // Signal the client that we are starting a new query
          TMessage m(kPROOF_STARTPROCESS);
          m << TString(pq->GetSelecImp()->GetName())
-           << pq->GetDSet()->GetListOfElements()->GetSize()
+           << dset->GetListOfElements()->GetSize()
            << pq->GetFirst() << pq->GetEntries();
          fSocket->Send(m);
 
@@ -3006,8 +3010,9 @@ void TProofServ::HandleProcess(TMessage *mess)
                fSocket->SendObject(p->GetOutputList(), kPROOF_OUTPUTLIST);
             }
          } else {
-            Warning("HandleProcess","The output list is empty!");
-            fSocket->SendObject(0,kPROOF_OUTPUTLIST);
+            if (p->GetExitStatus() != TProofPlayer::kAborted)
+               Warning("HandleProcess","The output list is empty!");
+            fSocket->SendObject(0, kPROOF_OUTPUTLIST);
          }
 
          // Remove aborted queries from the list

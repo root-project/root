@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.146 2006/10/06 16:45:41 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.147 2006/11/06 00:10:07 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -31,16 +31,16 @@
 #include "TBranch.h"
 #include "TBrowser.h"
 #include "TChainElement.h"
-#include "TChainProof.h"
 #include "TClass.h"
 #include "TCut.h"
-#include "TDSet.h"
 #include "TError.h"
 #include "TFile.h"
 #include "TFileInfo.h"
 #include "TFriendElement.h"
 #include "TLeaf.h"
+#include "TList.h"
 #include "TObjString.h"
+#include "TPluginManager.h"
 #include "TROOT.h"
 #include "TRegexp.h"
 #include "TSelector.h"
@@ -50,10 +50,6 @@
 #include "TTreeCache.h"
 #include "TUrl.h"
 #include "TVirtualIndex.h"
-#include "TVirtualProof.h"
-
-#include <queue>
-#include <set>
 
 ClassImp(TChain)
 
@@ -69,7 +65,7 @@ TChain::TChain()
 , fFile(0)
 , fFiles(0)
 , fStatus(0)
-, fChainProof(0)
+, fProofChain(0)
 {
    // -- Default constructor.
 
@@ -93,7 +89,7 @@ TChain::TChain(const char* name, const char* title)
 , fFile(0)
 , fFiles(0)
 , fStatus(0)
-, fChainProof(0)
+, fProofChain(0)
 {
    // -- Create a chain.
    //
@@ -125,6 +121,9 @@ TChain::TChain(const char* name, const char* title)
    gDirectory->GetList()->Remove(this);
    gROOT->GetListOfSpecials()->Add(this);
 
+   // Reset PROOF-related bits
+   ResetBit(kProofUptodate);
+
    // Add to the global list
    gROOT->GetListOfDataSets()->Add(this);
 }
@@ -134,7 +133,7 @@ TChain::~TChain()
 {
    // -- Destructor.
 
-   ReleaseChainProof();
+   SafeDelete(fProofChain);
    fStatus->Delete();
    delete fStatus;
    fStatus = 0;
@@ -190,10 +189,10 @@ Int_t TChain::Add(TChain* chain)
       fFiles->Add(newelement);
       nf++;
    }
-   if (fChainProof) {
-      // -- Update also the data set for PROOF.
-      SetProof(fChainProof->GetProof(), kTRUE);
-   }
+   if (fProofChain)
+      // This updates the proxy chain when we will really use PROOF
+      ResetBit(kProofUptodate);
+
    return nf;
 }
 
@@ -286,10 +285,10 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
       }
       l.Delete();
    }
-   if (fChainProof) {
-      // -- Update also the data set for PROOF.
-      SetProof(fChainProof->GetProof(), kTRUE);
-   }
+   if (fProofChain)
+      // This updates the proxy chain when we will really use PROOF
+      ResetBit(kProofUptodate);
+
    return nf;
 }
 
@@ -411,10 +410,10 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
 
    delete [] filename;
    if (cursav) cursav->cd();
-   if (fChainProof) {
-      // -- Update also the data set for PROOF.
-      SetProof(fChainProof->GetProof(), kTRUE);
-   }
+   if (fProofChain)
+      // This updates the proxy chain when we will really use PROOF
+      ResetBit(kProofUptodate);
+
    return 1;
 }
 
@@ -437,10 +436,10 @@ Int_t TChain::AddFileInfoList(TList* fileinfolist, Long64_t nfiles /* = kBigNumb
       if (cnt>=nfiles)
          break;
    }
-   if (fChainProof) {
-      // -- Update also the data set for PROOF.
-      SetProof(fChainProof->GetProof(), kTRUE);
-   }
+   if (fProofChain)
+      // This updates the proxy chain when we will really use PROOF
+      ResetBit(kProofUptodate);
+
    return 1;
 }
 
@@ -502,6 +501,10 @@ TFriendElement* TChain::AddFriend(const char* chain, const char* dummy /* = "" *
 
    fFriends->Add(fe);
 
+   if (fProofChain)
+      // This updates the proxy chain when we will really use PROOF
+      ResetBit(kProofUptodate);
+
    // We need to invalidate the loading of the current tree because its list
    // of real friends is now obsolete.  It is repairable only from LoadTree.
    fTreeNumber = -1;
@@ -525,6 +528,10 @@ TFriendElement* TChain::AddFriend(const char* chain, TFile* dummy)
 
    fFriends->Add(fe);
 
+   if (fProofChain)
+      // This updates the proxy chain when we will really use PROOF
+      ResetBit(kProofUptodate);
+
    // We need to invalidate the loading of the current tree because its list
    // of real friend is now obsolete.  It is repairable only from LoadTree
    fTreeNumber = -1;
@@ -546,6 +553,10 @@ TFriendElement* TChain::AddFriend(TTree* chain, const char* alias, Bool_t /* war
    R__ASSERT(fe);
 
    fFriends->Add(fe);
+
+   if (fProofChain)
+      // This updates the proxy chain when we will really use PROOF
+      ResetBit(kProofUptodate);
 
    // We need to invalidate the loading of the current tree because its list
    // of real friend is now obsolete.  It is repairable only from LoadTree
@@ -597,7 +608,8 @@ void TChain::CreatePackets()
 }
 
 //______________________________________________________________________________
-Long64_t TChain::Draw(const char* varexp, const TCut& selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
+Long64_t TChain::Draw(const char* varexp, const TCut& selection,
+                      Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
    // Draw expression varexp for selected entries.
    // Returns -1 in case of error or number of selected events in case of success.
@@ -606,24 +618,31 @@ Long64_t TChain::Draw(const char* varexp, const TCut& selection, Option_t* optio
    // Useful to use the string operator +, example:
    //    ntuple.Draw("x",cut1+cut2+cut3);
    //
-   if (fChainProof) {
-      fChainProof->SetEventList(fEventList);
-      return fChainProof->Draw(varexp, selection, option, nentries, firstentry);
+   if (fProofChain) {
+      // Make sure the element list is uptodate
+      if (!TestBit(kProofUptodate))
+         SetProof(kTRUE, kTRUE);
+      fProofChain->SetEventList(fEventList);
+      return fProofChain->Draw(varexp, selection, option, nentries, firstentry);
    }
 
    return TChain::Draw(varexp, selection.GetTitle(), option, nentries, firstentry);
 }
 
 //______________________________________________________________________________
-Long64_t TChain::Draw(const char* varexp, const char* selection, Option_t* option,Long64_t nentries, Long64_t firstentry)
+Long64_t TChain::Draw(const char* varexp, const char* selection,
+                      Option_t* option,Long64_t nentries, Long64_t firstentry)
 {
    // Process all entries in this chain and draw histogram corresponding to
    // expression varexp.
    // Returns -1 in case of error or number of selected events in case of success.
 
-   if (fChainProof) {
-      fChainProof->SetEventList(fEventList);
-      return fChainProof->Draw(varexp, selection, option, nentries, firstentry);
+   if (fProofChain) {
+      // Make sure the element list is uptodate
+      if (!TestBit(kProofUptodate))
+         SetProof(kTRUE, kTRUE);
+      fProofChain->SetEventList(fEventList);
+      return fProofChain->Draw(varexp, selection, option, nentries, firstentry);
    }
 
    if (LoadTree(firstentry) < 0) return 0;
@@ -635,8 +654,11 @@ TBranch* TChain::FindBranch(const char* branchname)
 {
    // -- See TTree::GetReadEntry().
 
-   if (fChainProof) {
-      return fChainProof->FindBranch(branchname);
+   if (fProofChain) {
+      // Make sure the element list is uptodate
+      if (!TestBit(kProofUptodate))
+         SetProof(kTRUE, kTRUE);
+      return fProofChain->FindBranch(branchname);
    }
    if (fTree) {
       return fTree->FindBranch(branchname);
@@ -653,8 +675,11 @@ TLeaf* TChain::FindLeaf(const char* searchname)
 {
    // -- See TTree::GetReadEntry().
 
-   if (fChainProof) {
-      return fChainProof->FindLeaf(searchname);
+   if (fProofChain) {
+      // Make sure the element list is uptodate
+      if (!TestBit(kProofUptodate))
+         SetProof(kTRUE, kTRUE);
+      return fProofChain->FindLeaf(searchname);
    }
    if (fTree) {
       return fTree->FindLeaf(searchname);
@@ -690,8 +715,11 @@ TBranch* TChain::GetBranch(const char* name)
 {
    // -- Return pointer to the branch name in the current tree.
 
-   if (fChainProof) {
-     return fChainProof->GetBranch(name);
+   if (fProofChain) {
+      // Make sure the element list is uptodate
+      if (!TestBit(kProofUptodate))
+         SetProof(kTRUE, kTRUE);
+     return fProofChain->GetBranch(name);
    }
    if (fTree) {
       return fTree->GetBranch(name);
@@ -707,8 +735,12 @@ TBranch* TChain::GetBranch(const char* name)
 Bool_t TChain::GetBranchStatus(const char* branchname) const
 {
    // -- See TTree::GetReadEntry().
-   if (fChainProof) {
-      return fChainProof->GetBranchStatus(branchname);
+   if (fProofChain) {
+      // Make sure the element list is uptodate
+      if (!TestBit(kProofUptodate))
+         Warning("GetBranchStatus", "PROOF proxy not up-to-date:"
+                                    " run TChain::SetProof(kTRUE, kTRUE) first");
+      return fProofChain->GetBranchStatus(branchname);
    }
    return TTree::GetBranchStatus(branchname);
 }
@@ -730,8 +762,12 @@ Long64_t TChain::GetEntries() const
    // In case the number of entries in each tree is not yet known,
    // the offset table is computed.
 
-   if (fChainProof) {
-      return fChainProof->GetEntries();
+   if (fProofChain) {
+      // Make sure the element list is uptodate
+      if (!TestBit(kProofUptodate))
+         Warning("GetBranchStatus", "PROOF proxy not up-to-date:"
+                                    " run TChain::SetProof(kTRUE, kTRUE) first");
+      return fProofChain->GetEntries();
    }
    if (fEntries >= kBigNumber) {
       const_cast<TChain*>(this)->LoadTree(fEntries-1);
@@ -799,8 +835,11 @@ TLeaf* TChain::GetLeaf(const char* name)
 {
    // -- Return a pointer to the leaf name in the current tree.
 
-   if (fChainProof) {
-      return fChainProof->GetLeaf(name);
+   if (fProofChain) {
+      // Make sure the element list is uptodate
+      if (!TestBit(kProofUptodate))
+         SetProof(kTRUE, kTRUE);
+      return fProofChain->GetLeaf(name);
    }
    if (fTree) {
       return fTree->GetLeaf(name);
@@ -820,8 +859,11 @@ TObjArray* TChain::GetListOfBranches()
    // Warning: May set current tree!
    //
 
-   if (fChainProof) {
-      return fChainProof->GetListOfBranches();
+   if (fProofChain) {
+      // Make sure the element list is uptodate
+      if (!TestBit(kProofUptodate))
+         SetProof(kTRUE, kTRUE);
+      return fProofChain->GetListOfBranches();
    }
    if (fTree) {
       return fTree->GetListOfBranches();
@@ -841,8 +883,11 @@ TObjArray* TChain::GetListOfLeaves()
    // Warning: May set the current tree!
    //
 
-   if (fChainProof) {
-      return fChainProof->GetListOfLeaves();
+   if (fProofChain) {
+      // Make sure the element list is uptodate
+      if (!TestBit(kProofUptodate))
+         SetProof(kTRUE, kTRUE);
+      return fProofChain->GetListOfLeaves();
    }
    if (fTree) {
       return fTree->GetListOfLeaves();
@@ -911,8 +956,12 @@ Long64_t TChain::GetReadEntry() const
 {
    // -- See TTree::GetReadEntry().
 
-   if (fChainProof) {
-      return fChainProof->GetReadEntry();
+   if (fProofChain) {
+      // Make sure the element list is uptodate
+      if (!TestBit(kProofUptodate))
+         Warning("GetBranchStatus", "PROOF proxy not up-to-date:"
+                                    " run TChain::SetProof(kTRUE, kTRUE) first");
+      return fProofChain->GetReadEntry();
    }
    return TTree::GetReadEntry();
 }
@@ -1398,77 +1447,6 @@ void TChain::ls(Option_t* option) const
    }
 }
 
-//_______________________________________________________________________
-TDSet* TChain::MakeTDSet() const
-{
-   // -- Creates a new TDSet containing files from this chain
-   // and creates separate TDSet for each friend of this
-   // chain and friends of friends of this chain, and so on.
-   // If a chain apprears more than once in this friendship
-   // graph only one TDSet will be created.
-   // All the chains from the friendship graph will be added as
-   // friends to the main TDSet (so friends hierarchy in the
-   // result TDSet will be flat.
-   // Keep in mind that the destructor of a TDSet does delete
-   // the friend TDSets.
-   // Returns the created TDSet or 0 in case of error.
-
-   TDSet * mainDSet = MakeTDSetWithoutFriends();
-   std::set<const TChain*> processed;
-   std::queue<const TChain*> chainsQueue;
-   chainsQueue.push(this);
-   processed.insert(this);
-   while (!chainsQueue.empty()) {
-      const TChain* chain = chainsQueue.front();
-      chainsQueue.pop();
-      TIter friendsIter(chain->GetListOfFriends());
-      while(TFriendElement *friendElement = dynamic_cast<TFriendElement*> (friendsIter()) ) {
-         if (TChain* friendChain = dynamic_cast<TChain*>(friendElement->GetTree())) {
-            if (processed.find(friendChain) == processed.end()) {    // if not yet processed
-               processed.insert(friendChain);
-               mainDSet->AddFriend(friendChain->MakeTDSetWithoutFriends(), friendElement->GetName());
-               chainsQueue.push(friendChain);                        // for further processing
-            }
-         }
-         else {
-            // cleanup
-            delete mainDSet;
-            Error("MakeTDSetWithFriends",
-                  "Only TChains supported. Illegal tree %s.\n", friendElement->GetTree()->GetName());
-            return 0;
-         }
-      }
-   }
-   return mainDSet;
-}
-
-//_______________________________________________________________________
-TDSet* TChain::MakeTDSetWithoutFriends() const
-{
-   // -- Creates a new TDSet containing files from this chain.
-
-   TIter next(GetListOfFiles());
-   TChainElement *element;
-   TDSet *dset = new TDSet("TTree", GetName());
-   while ((element = (TChainElement*)next())) {
-      TString file(element->GetTitle());
-      TString tree(element->GetName());
-      Int_t slashpos = tree.Index("/");
-      TString dir = "/";
-      if (slashpos>=0) {
-         // Copy the tree name specification
-         TString behindSlash = tree(slashpos+1,tree.Length()-slashpos-1);
-         // and remove it from basename
-         tree.Remove(slashpos);
-         dir = tree;
-         tree = behindSlash;
-      }
-      dset->Add(file, tree, dir);
-   }
-   dset->SetDirectory(0);
-   return dset;
-}
-
 //______________________________________________________________________________
 Long64_t TChain::Merge(const char* name, Option_t* option)
 {
@@ -1742,9 +1720,13 @@ Long64_t TChain::Process(const char *filename, Option_t *option, Long64_t nentri
    // in case of success.
    // See TTree::Process.
 
-   if (fChainProof) {
-      return fChainProof->Process(filename, option, nentries, firstentry);
+   if (fProofChain) {
+      // Make sure the element list is uptodate
+      if (!TestBit(kProofUptodate))
+         SetProof(kTRUE, kTRUE);
+      return fProofChain->Process(filename, option, nentries, firstentry);
    }
+
    if (LoadTree(firstentry) < 0) {
       return 0;
    }
@@ -1758,22 +1740,14 @@ Long64_t TChain::Process(TSelector* selector, Option_t* option, Long64_t nentrie
    // The return value is -1 in case of error and TSelector::GetStatus() in
    // in case of success.
 
-   if (fChainProof) {
-      return fChainProof->Process(selector, option, nentries, firstentry);
+   if (fProofChain) {
+      // Make sure the element list is uptodate
+      if (!TestBit(kProofUptodate))
+         SetProof(kTRUE, kTRUE);
+      return fProofChain->Process(selector, option, nentries, firstentry);
    }
+
    return TTree::Process(selector, option, nentries, firstentry);
-}
-
-//______________________________________________________________________________
-void TChain::ReleaseChainProof()
-{
-   // -- Removes the PROOF chain (if present).
-
-   if (!fChainProof) {
-      return;
-   }
-   fChainProof->GetProof()->RemoveChain(this);
-   SafeDelete(fChainProof);
 }
 
 //______________________________________________________________________________
@@ -1986,37 +1960,41 @@ void TChain::SetPacketSize(Int_t size)
 }
 
 //______________________________________________________________________________
-void TChain::SetProof(TVirtualProof *proof, Bool_t refresh, Bool_t gettreeheader)
+void TChain::SetProof(Bool_t on, Bool_t refresh, Bool_t gettreeheader)
 {
-   // -- Sets the PROOF to be used for processing.
+   // Enable/Disable PROOF processing on the current default Proof (gProof).
    //
    // "Draw" and "Processed" commands will be handled by the proof.
-   // If proof == (TVirtualProof*) -1 then the gProof is used.
-   // If proof == 0 no proof is connected and the previously connected
-   // proof is released.
+   // The refresh and gettreeheader are meaningfull only if on == kTRUE.
+   // If refresh is kTRUE the underline fProofChain (chain proxy) is always
+   // rebuilt (even if already existing).
    // If gettreeheader is kTRUE the header of the tree will be read from the
-   // PROOF cluster: this is only needed fro browsing and should be used with
+   // PROOF cluster: this is only needed for browsing and should be used with
    // care because it may take a long time to execute.
    //
 
-   if (proof == (TVirtualProof*) -1) {
-      proof = gProof;
-   }
-   if (fChainProof && proof == fChainProof->GetProof() && !refresh &&
-      (!gettreeheader || (gettreeheader && fChainProof->HasTreeHeader()))) {
-      return;
-   }
-   ReleaseChainProof();
-   if (proof) {
-      TDSet* set = MakeTDSet();
-      // Avoid duplications in the global list (the chain is already registered)
-      gROOT->GetListOfDataSets()->Remove(set);
-      R__ASSERT(set); // should always succeed
-      fChainProof = TChainProof::MakeChainProof(set, proof, gettreeheader);
-      if (!fChainProof) {
-         Error("SetProof", "can't set PROOF");
-      } else {
-         proof->AddChain(this);
+   if (!on) {
+      // Disable
+      SafeDelete(fProofChain);
+      // Reset related bit
+      ResetBit(kProofUptodate);
+   } else {
+      if (fProofChain && !refresh &&
+         (!gettreeheader || (gettreeheader && fProofChain->GetTree()))) {
+         return;
+      }
+      SafeDelete(fProofChain);
+      ResetBit(kProofUptodate);
+
+      // Make instance of TChainProof via the plugin manager
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TChain", "proof"))) {
+         if (h->LoadPlugin() == -1)
+           return;
+         if (!(fProofChain = reinterpret_cast<TChain *>(h->ExecPlugin(1, this))))
+            Error("SetProof", "creation of TChainProof failed");
+         // Set related bits
+         SetBit(kProofUptodate);
       }
    }
 }

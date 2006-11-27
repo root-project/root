@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.44 2006/10/03 13:31:07 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.45 2006/10/19 12:38:07 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -40,6 +40,7 @@
 #include "TProofQueryResult.h"
 #endif
 
+class TDSet;
 class TProof;
 class TProofPlayer;
 class TProofLockPath;

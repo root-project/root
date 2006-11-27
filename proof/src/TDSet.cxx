@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.34 2006/07/26 14:17:22 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.35 2006/08/06 07:15:00 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -47,6 +47,7 @@
 #include "TError.h"
 #include "TFile.h"
 #include "TFileInfo.h"
+#include "TFriendElement.h"
 #include "TKey.h"
 #include "TList.h"
 #include "TMap.h"
@@ -57,7 +58,7 @@
 #include "TRegexp.h"
 #include "TVirtualPerfStats.h"
 #include "TVirtualProof.h"
-#include "TChainProof.h"
+#include "TProofChain.h"
 #include "TPluginManager.h"
 #include "TChain.h"
 #include "TChainElement.h"
@@ -484,6 +485,7 @@ TDSet::TDSet()
    fIterator  = 0;
    fCurrent   = 0;
    fEventList = 0;
+   fProofChain = 0;
 
    // Add to the global list
    gROOT->GetListOfDataSets()->Add(this);
@@ -513,6 +515,7 @@ TDSet::TDSet(const char *name,
    fIterator = 0;
    fCurrent  = 0;
    fEventList = 0;
+   fProofChain = 0;
 
    fType = "TTree";
    TClass *c = 0;
@@ -560,11 +563,79 @@ TDSet::TDSet(const char *name,
 }
 
 //______________________________________________________________________________
+TDSet::TDSet(const TChain &chain, Bool_t withfriends)
+{
+   // Create a named TDSet object from existing TChain 'chain'.
+   // If 'eithfriends' is kTRUE add allso friends.
+   // This constructor substitutes for the static methods TChain::MakeTDSet
+   // allowing to keep all PROOF references in 'proof'.
+
+   fElements = new TList;
+   fElements->SetOwner();
+   fIterator = 0;
+   fCurrent  = 0;
+   fEventList = 0;
+   fProofChain = 0;
+
+   fType = "TTree";
+   fIsTree = kTRUE;
+   fObjName = chain.GetName();
+
+   // First fill elements without friends()
+   TIter next(chain.GetListOfFiles());
+   TChainElement *elem;
+   while ((elem = (TChainElement *)next())) {
+      TString file(elem->GetTitle());
+      TString tree(elem->GetName());
+      Int_t isl = tree.Index("/");
+      TString dir = "/";
+      if (isl >= 0) {
+         // Copy the tree name specification
+         TString behindSlash = tree(isl + 1, tree.Length() - isl - 1);
+         // and remove it from basename
+         tree.Remove(isl);
+         dir = tree;
+         tree = behindSlash;
+      }
+      Add(file, tree, dir);
+   }
+   SetDirectory(0);
+
+   // Add friends now, if requested
+   if (withfriends) {
+      TList processed;
+      TList chainsQueue;
+      chainsQueue.Add((TObject *)&chain);
+      processed.Add((TObject *)&chain);
+      while (chainsQueue.GetSize() > 0) {
+         TChain *c = (TChain *) chainsQueue.First();
+         chainsQueue.Remove(c);
+         TIter friendsIter(c->GetListOfFriends());
+         while(TFriendElement *fe = dynamic_cast<TFriendElement*> (friendsIter()) ) {
+            if (TChain *fc = dynamic_cast<TChain*>(fe->GetTree())) {
+               if (!processed.FindObject(fc)) {    // if not yet processed
+                  processed.AddFirst(fc);
+                  AddFriend(new TDSet((const TChain &)(*fc), kFALSE), fe->GetName());
+                  chainsQueue.Add(fc);                        // for further processing
+               }
+            } else {
+               Reset();
+               Error("TDSet", "Only TChains supported. Found illegal tree %s",
+                              fe->GetTree()->GetName());
+               return;
+            }
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
 TDSet::~TDSet()
 {
    // Cleanup.
-   delete fElements;
-   delete fIterator;
+   SafeDelete(fElements);
+   SafeDelete(fIterator);
+   SafeDelete(fProofChain);
 
    gROOT->GetListOfDataSets()->Remove(this);
 }
@@ -995,18 +1066,13 @@ void TDSet::StartViewer()
       Error("StartViewer", "TDSet contents should be of type TTree (or subtype)");
       return;
    }
-   TChainProof *w = TChainProof::MakeChainProof(this, gProof);
-   // TODO: w should be freed somewhere, probably in the TTreeViewer destructor.
-   if (!w) {
-      Error("StartViewer", "failure creating a TChainProof");
-      return;
-   }
+   fProofChain = new TProofChain(this, kTRUE);
 
    TPluginHandler *h;
    if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualTreeViewer"))) {
       if (h->LoadPlugin() == -1)
          return;
-      h->ExecPlugin(1,w);
+      h->ExecPlugin(1,fProofChain);
    }
 }
 
