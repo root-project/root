@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.16 2006/10/24 14:59:07 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.17 2006/11/20 15:56:35 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -103,10 +103,8 @@ public:
    int           Create();
    int           Destroy();
    int           Detach();
-   void          EraseServer(int psid);
    int           GetBuff(int quantum);
    int           GetData(const char *dtype, char *buff, int blen);
-   int           GetFreeServID();
    XrdProofServProxy *GetServer(int psid);
    int           Interrupt();
    int           Login();
@@ -266,12 +264,20 @@ class XrdProofClient {
                               { return (const char *)fClientID; }
    bool                    Match(const char *id)
                               { return (id ? !strcmp(id, fClientID) : 0); }
+   inline XrdOucRecMutex  *Mutex() const { return (XrdOucRecMutex *)&fMutex; }
    inline unsigned short   RefSid() const { return fRefSid; }
    inline short            Version() const { return fClientVers; }
    inline const char      *Workdir() const
                               { return (const char *)fWorkdir; }
+   inline std::vector<XrdProofServProxy *> *ProofServs()
+                           { return (std::vector<XrdProofServProxy *> *)&fProofServs; }
+   inline std::vector<XrdProofdProtocol *> *Clients()
+                           { return (std::vector<XrdProofdProtocol *> *)&fClients; }
+   void                    ResetClient(int i) { fClients[i] = 0; }
 
+   void                    EraseServer(int psid);
    int                     GetClientID(XrdProofdProtocol *p);
+   int                     GetFreeServID();
 
    void                    SetRefSid(unsigned short sid) { fRefSid = sid; }
    void                    SetWorkdir(const char *wrk)
@@ -284,12 +290,10 @@ class XrdProofClient {
    void                    SaveUNIXPath(); // Save path in the sandbox
    void                    SetUNIXSockSaved() { fUNIXSockSaved = 1;}
 
-   std::vector<XrdProofServProxy *> fProofServs; // Allocated ProofServ sessions
-   std::vector<XrdProofdProtocol *> fClients;    // Attached Client sessions
-
-   XrdOucMutex                      fMutex; // Local mutex
-
  private:
+
+   XrdOucRecMutex          fMutex; // Local mutex
+
    char                   *fClientID;   // String identifying this client
    short int               fClientVers; // PROOF version run by client
    unsigned short          fRefSid;     // Reference stream ID for this client
@@ -298,6 +302,9 @@ class XrdProofClient {
    XrdNet                 *fUNIXSock;     // UNIX server socket for internal connections
    char                   *fUNIXSockPath; // UNIX server socket path
    bool                    fUNIXSockSaved; // TRUE if the socket path has been saved
+
+   std::vector<XrdProofServProxy *> fProofServs; // Allocated ProofServ sessions
+   std::vector<XrdProofdProtocol *> fClients;    // Attached Client sessions
 };
 
 //////////////////////////////////////////////////////////////////////////

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.11 2006/10/23 14:44:40 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.12 2006/11/20 15:56:36 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -38,6 +38,7 @@ XrdProofServProxy::XrdProofServProxy()
 {
    // Constructor
 
+   fMutex = new XrdOucRecMutex;
    fLink = 0;
    fParent = 0;
    fPingSem = 0;
@@ -81,6 +82,7 @@ XrdProofServProxy::~XrdProofServProxy()
    SafeDelArray(fTag);
    SafeDelArray(fAlias);
    SafeDelArray(fOrdinal);
+   SafeDelete(fMutex);
    SafeDelArray(fUserEnvs);
 }
 
@@ -88,6 +90,8 @@ XrdProofServProxy::~XrdProofServProxy()
 void XrdProofServProxy::ClearWorkers()
 {
    // Decrease worker counters and clean-up the list
+
+   XrdOucMutexHelper mhp(fMutex); 
 
    // Decrease worker counters
    std::list<XrdProofWorker *>::iterator i;
@@ -101,7 +105,7 @@ void XrdProofServProxy::ClearWorkers()
 void XrdProofServProxy::Reset()
 {
    // Reset this instance
-   XrdOucMutexHelper mtxh(&fMutex);
+   XrdOucMutexHelper mhp(fMutex);
 
    fLink = 0;
    fParent = 0;
@@ -130,6 +134,8 @@ XrdClientID *XrdProofServProxy::GetClientID(int cid)
 {
    // Get instance corresponding to cid
    //
+
+   XrdOucMutexHelper mhp(fMutex); 
 
    XrdClientID *csid = 0;
    TRACE(ACT,"XrdProofServProxy::GetClientID: cid: "<<cid<<
@@ -170,6 +176,8 @@ int XrdProofServProxy::GetFreeID()
    // Get next free client ID. If none is found, increase the vector size
    // and get the first new one
 
+   XrdOucMutexHelper mhp(fMutex); 
+
    int ic = 0;
    // Search for free places in the existing vector
    for (ic = 0; ic < (int)fClients.size() ; ic++) {
@@ -193,6 +201,8 @@ int XrdProofServProxy::GetNClients()
 {
    // Get number of attached clients.
 
+   XrdOucMutexHelper mhp(fMutex); 
+
    int nc = 0;
    // Search for free places in the existing vector
    int ic = 0;
@@ -210,6 +220,8 @@ const char *XrdProofServProxy::StatusAsString() const
    // Return a string describing the status
 
    const char *sst[] = { "idle", "running", "shutting-down", "unknown" };
+
+   XrdOucMutexHelper mhp(fMutex); 
 
    // Check status range
    int ist = fStatus;
