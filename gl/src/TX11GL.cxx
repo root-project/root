@@ -1,4 +1,4 @@
-// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.20 2006/06/07 18:43:33 brun Exp $
+// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.21 2006/08/31 13:42:14 couet Exp $
 // Author: Timur Pocheptsov (TX11GLManager) / Valeriy Onuchin (TX11GL)
 
 /*************************************************************************
@@ -162,8 +162,16 @@ namespace {
     
    typedef std::deque<TX11GLManager::TGLContext_t> DeviceTable_t;
    typedef DeviceTable_t::size_type SizeType_t;
+#ifndef R__MACOSX
    typedef std::map<Int_t, XVisualInfo *> WinTable_t;
+#else
+   struct WinInfo_t {
+      Window_t     fGLWin;
+      XVisualInfo *fVisInfo;
+   };
    
+   typedef std::map<Int_t, WinInfo_t> WinTable_t;
+#endif
    XSetWindowAttributes dummyAttr;
 
    //RAII class for Pixmap
@@ -305,7 +313,7 @@ TX11GLManager::~TX11GLManager()
 Int_t TX11GLManager::InitGLWindow(Window_t winID)
 {
    // Try to find correct visual.
-   
+
    XVisualInfo *visInfo = glXChooseVisual(
                                           fPimpl->fDpy, DefaultScreen(fPimpl->fDpy), 
                                           const_cast<Int_t *>(dblBuff)
@@ -330,21 +338,37 @@ Int_t TX11GLManager::InitGLWindow(Window_t winID)
    ULong_t mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask | CWBackingStore | CWBitGravity;
    
    // Create window with specific visual.
+#ifdef R__MACOSX
+   Window glBack = XCreateWindow(
+                                 fPimpl->fDpy, winID,
+                                 x, y, w, h,
+                                 0, visInfo->depth, InputOutput,
+                                 visInfo->visual, mask, &attr
+                                );
+#endif                
    Window glWin = XCreateWindow(
                                 fPimpl->fDpy, winID,
                                 x, y, w, h,
                                 0, visInfo->depth, InputOutput,
                                 visInfo->visual, mask, &attr
                                );
-                
+
    // Check results.
+#ifdef R__MACOSX
+   XMapWindow(fPimpl->fDpy, glBack);
+#endif
    XMapWindow(fPimpl->fDpy, glWin);
 
    // Register window for gVirtualX.
    Int_t x11Ind = gVirtualX->AddWindow(glWin,  w, h);
 
    // Register this window for GL manager.
+#ifndef R__MACOSX
    fPimpl->fGLWindows[x11Ind] = visInfo;
+#else
+   fPimpl->fGLWindows[x11Ind].fVisInfo = visInfo;
+   fPimpl->fGLWindows[x11Ind].fGLWin   = glBack;
+#endif
    
    return x11Ind;
 }
@@ -355,8 +379,11 @@ Int_t TX11GLManager::CreateGLContext(Int_t winInd)
 {
    // Context creation requires Display * and XVisualInfo 
    // (was saved for such winInd).
-
+#ifndef R__MACOSX
    GLXContext glxCtx = glXCreateContext(fPimpl->fDpy, fPimpl->fGLWindows[winInd], None, True);
+#else
+   GLXContext glxCtx = glXCreateContext(fPimpl->fDpy, fPimpl->fGLWindows[winInd].fVisInfo, None, True);
+#endif
    
    if (!glxCtx) {
       Error("CreateContext", "glXCreateContext failed\n");
@@ -388,9 +415,13 @@ Int_t TX11GLManager::CreateGLContext(Int_t winInd)
 Bool_t TX11GLManager::MakeCurrent(Int_t ctxInd)
 {
    // Make GL context current.
-
+#ifndef R__MACOSX
    TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
    return glXMakeCurrent(fPimpl->fDpy, gVirtualX->GetWindowID(ctx.fWindowIndex), ctx.fGLXContext);
+#else
+   TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
+   return glXMakeCurrent(fPimpl->fDpy, fPimpl->fGLWindows[ctx.fWindowIndex].fGLWin, ctx.fGLXContext);
+#endif
 }
 
 
@@ -401,7 +432,7 @@ void TX11GLManager::Flush(Int_t ctxInd)
 
    TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
    Window winID = gVirtualX->GetWindowID(ctx.fWindowIndex);
-   
+
    if (ctx.fPixmapIndex == -1)
       glXSwapBuffers(fPimpl->fDpy, winID);
    else if (ctx.fXImage && ctx.fDirect) {
@@ -425,8 +456,13 @@ Bool_t TX11GLManager::CreateGLPixmap(TGLContext_t &ctx)
    // Create GL pixmap.
 
    // Create new x11 pixmap and XImage.
+#ifndef R__MACOSX
    Pixmap x11Pix = XCreatePixmap(fPimpl->fDpy, gVirtualX->GetWindowID(ctx.fWindowIndex), ctx.fW, 
                                  ctx.fH, fPimpl->fGLWindows[ctx.fWindowIndex]->depth);
+#else
+   Pixmap x11Pix = XCreatePixmap(fPimpl->fDpy, gVirtualX->GetWindowID(ctx.fWindowIndex), ctx.fW, 
+                                 ctx.fH, fPimpl->fGLWindows[ctx.fWindowIndex].fVisInfo->depth);
+#endif
 
    if (!x11Pix) {
       Error("CreateGLPixmap", "XCreatePixmap failed\n");
@@ -436,7 +472,11 @@ Bool_t TX11GLManager::CreateGLPixmap(TGLContext_t &ctx)
    TX11PixGuard pixGuard(fPimpl->fDpy, x11Pix);
 
    // XImage part here.
+#ifndef R__MACOSX
    XVisualInfo *visInfo = fPimpl->fGLWindows[ctx.fWindowIndex];
+#else
+   XVisualInfo *visInfo = fPimpl->fGLWindows[ctx.fWindowIndex].fVisInfo;
+#endif
    XImage *testIm = XCreateImage(fPimpl->fDpy, visInfo->visual, visInfo->depth, ZPixmap, 0, 0, ctx.fW, ctx.fH, 32, 0);
 
    if (testIm) {
@@ -565,7 +605,7 @@ void TX11GLManager::ReadGLBuffer(Int_t ctxInd)
          ctx.fPixmapGC = XCreateGC(fPimpl->fDpy, ctx.fX11Pixmap, 0, 0);
       if (ctx.fPixmapGC) {
          // GL buffer read operation gives bottom-up order of pixels, but XImage
-	 // require top-down. So, change RGB lines first.
+	      // require top-down. So, change RGB lines first.
          char *dest = ctx.fXImage->data;
          const UChar_t *src = &ctx.fBUBuffer[ctx.fW * 4 * (ctx.fH - 1)];
          for (UInt_t i = 0, e = ctx.fH; i < e; ++i) {
@@ -573,7 +613,6 @@ void TX11GLManager::ReadGLBuffer(Int_t ctxInd)
             dest += ctx.fW * 4;
             src -= ctx.fW * 4;
          }
-
          XPutImage(fPimpl->fDpy, ctx.fX11Pixmap, ctx.fPixmapGC, ctx.fXImage, 0, 0, 0, 0, ctx.fW, ctx.fH);
       } else 
          Error("ReadGLBuffer", "XCreateGC error while attempt to copy XImage\n");
