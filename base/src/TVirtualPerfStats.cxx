@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPerfStats.cxx,v 1.3 2005/11/16 20:04:12 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPerfStats.cxx,v 1.4 2006/05/19 07:30:04 brun Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -34,7 +34,8 @@ static const char *gEventTypeNames[] = {
    "Stop",
    "File",
    "FileOpen",
-   "FileRead"
+   "FileRead",
+   "Rate"
 };
 
 //______________________________________________________________________________
