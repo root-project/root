@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.151 2006/11/15 18:27:17 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.152 2006/11/15 23:51:28 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -779,6 +779,15 @@ TWinNTSystem::~TWinNTSystem()
 
    SafeDelete(fWin32Timer);
 
+   // Revert back the accuracy of Sleep() without needing to link to winmm.lib
+   typedef UINT (WINAPI* LPTIMEENDPERIOD)( UINT uPeriod );
+   HINSTANCE hInstWinMM = LoadLibrary( "winmm.dll" );
+   if( hInstWinMM ) {
+      LPTIMEENDPERIOD pTimeEndPeriod = (LPTIMEENDPERIOD)GetProcAddress( hInstWinMM, "timeEndPeriod" );
+      if( NULL != pTimeEndPeriod )
+         pTimeEndPeriod(1);
+      FreeLibrary(hInstWinMM);
+   }
    // Clean up the WinSocket connectios
    ::WSACleanup();
 
@@ -863,6 +872,15 @@ Bool_t TWinNTSystem::Init()
 
    SetThreadAffinityMask(GetCurrentThread(), 1);
 
+   // Increase the accuracy of Sleep() without needing to link to winmm.lib
+   typedef UINT (WINAPI* LPTIMEBEGINPERIOD)( UINT uPeriod );
+   HINSTANCE hInstWinMM = LoadLibrary( "winmm.dll" );
+   if( hInstWinMM ) {
+      LPTIMEBEGINPERIOD pTimeBeginPeriod = (LPTIMEBEGINPERIOD)GetProcAddress( hInstWinMM, "timeBeginPeriod" );
+      if( NULL != pTimeBeginPeriod )
+         pTimeBeginPeriod(1);
+      FreeLibrary(hInstWinMM);
+   }
    if (!gROOT->IsBatch()) {
       gConsoleEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
       gConsoleThreadHandle = (HANDLE)_beginthreadex(NULL, 0, &HandleConsoleThread,
