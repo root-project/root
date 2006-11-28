@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.149 2006/10/24 14:42:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.150 2006/11/15 18:27:17 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -361,8 +361,7 @@ Bool_t TSystem::ProcessEvents()
 
    gROOT->SetInterrupt(kFALSE);
 
-   if (!gROOT->IsBatch())
-      DispatchOneEvent(kTRUE);
+   DispatchOneEvent(kTRUE);
 
    return gROOT->IsInterrupted();
 }
