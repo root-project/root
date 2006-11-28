@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.170 2006/11/27 14:14:24 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.171 2006/11/28 12:10:52 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -4255,7 +4255,7 @@ Int_t TProof::UploadPackageOnClient(const TString &par, EUploadPackageOpt opt, T
       FileStat_t stat;
       Int_t st = gSystem->GetPathInfo(lpar, stat);
       // check if symlink, if so unlink, if not give error
-      // NOTE: GetPathnfo() returns 1 in case of symlink that does not point to
+      // NOTE: GetPathInfo() returns 1 in case of symlink that does not point to
       // existing file, but if fIsLink is true the symlink exists
       if (stat.fIsLink)
          gSystem->Unlink(lpar);
