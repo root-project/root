@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.147 2006/11/06 00:10:07 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.148 2006/11/27 14:14:24 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -719,7 +719,7 @@ TBranch* TChain::GetBranch(const char* name)
       // Make sure the element list is uptodate
       if (!TestBit(kProofUptodate))
          SetProof(kTRUE, kTRUE);
-     return fProofChain->GetBranch(name);
+      return fProofChain->GetBranch(name);
    }
    if (fTree) {
       return fTree->GetBranch(name);
