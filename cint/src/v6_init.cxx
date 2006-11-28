@@ -49,6 +49,7 @@ static int G__nlibs;
 typedef void G__parse_hook_t ();
 static G__parse_hook_t* G__afterparse_hook;
 static G__parse_hook_t* G__beforeparse_hook;
+void G__platformMacro();   
 
 /**************************************************************************
 * G__add_setup_func(char *libname, G__incsetup func)
@@ -1132,6 +1133,8 @@ int G__main(int argc,char **argv)
   }
 
   { 
+     if (G__globalcomp != G__NOLINK)
+        G__platformMacro(); // second round, now taking G__globalcomp into account
      int oldglobalcomp = G__globalcomp;
      G__globalcomp=G__NOLINK;
      if(G__cintv6) sprintf(temp,"G__CINTVERSION=%ld",(long)G__CINTVERSION_V6); 
@@ -1935,13 +1938,22 @@ void G__initcxx();
 ******************************************************************/
 static void G__defineMacro(const char* name, long value,
                            const char* cintname = 0,
-                           bool cap = true) {
+                           bool cap = true, bool compiler = false) {
   char temp[G__ONELINE];
-  sprintf(temp+2, "!%s=%ld", name, value);
 
-  if (G__globalcomp != G__NOLINK)
+  if (G__globalcomp != G__NOLINK && !compiler)
+     // not a compiler, and !=G__NOLINK - already dealt with in first pass
+     return;
+
+  sprintf(temp+2, "!%s=%ld", name, value);
+  
+  if (!compiler || G__globalcomp != G__NOLINK)
      // add system version, which starts with a '!'
      G__add_macro(temp+2);
+
+  if (G__globalcomp != G__NOLINK)
+     // already dealt with in first pass
+     return;
 
   char* start = temp;
   if (cintname) {
@@ -1970,20 +1982,41 @@ static void G__defineMacro(const char* name, long value,
 /* Define macro with value, both system macro and CINT macro
 */
 #define G__DEFINE_MACRO(macro) \
-    G__defineMacro(#macro, (long)macro)
+   G__defineMacro(#macro, (long)macro)
+
+/* Define compiler macro with value, both system macro and CINT macro
+*/
+#define G__DEFINE_MACRO_C(macro) \
+   G__defineMacro(#macro, (long)macro, 0, true, true)
+
 /* Define macro with value, both system macro and CINT macro,
   specifying the CINT macro name
 */
 #define G__DEFINE_MACRO_N(macro, name) \
-    G__defineMacro(#macro, (long)macro, name)
+   G__defineMacro(#macro, (long)macro, name)
+
+/* Define compiler macro with value, both system macro and CINT macro,
+  specifying the CINT macro name
+*/
+#define G__DEFINE_MACRO_N_C(macro, name) \
+   G__defineMacro(#macro, (long)macro, name, true, true)
+
 /* Define macro with value, both system macro and CINT macro,
   preventing capitalization of the CINT macro name
 */
 #define G__DEFINE_MACRO_S(macro) \
-    G__defineMacro(#macro, (long)macro, 0, false)
+   G__defineMacro(#macro, (long)macro, 0, false)
+
+/* Define compiler macro with value, both system macro and CINT macro,
+  preventing capitalization of the CINT macro name
+*/
+#define G__DEFINE_MACRO_S_C(macro) \
+   G__defineMacro(#macro, (long)macro, 0, false, true)
 
 /******************************************************************
 * G__platformMacro
+* (G__globalcomp == G__NOLINK) means first pass, before
+* G__globalcomp has been defined
 ******************************************************************/
 void G__platformMacro() 
 {
@@ -2038,20 +2071,22 @@ void G__platformMacro()
    * compiler and library
    ***********************************************************************/
 #ifdef G__MINGW /* Mingw */
-  G__DEFINE_MACRO(G__MINGW);
+  G__DEFINE_MACRO_C(G__MINGW);
 #endif
 #ifdef __CYGWIN__ /* Cygwin */
   G__DEFINE_MACRO(__CYGWIN__);
 #endif
 #ifdef __GNUC__  /* gcc/g++  GNU C/C++ compiler major version */
-  G__DEFINE_MACRO(__GNUC__);
+  G__DEFINE_MACRO_C(__GNUC__);
 #endif
 #ifdef __GNUC_MINOR__  /* gcc/g++ minor version */
-  G__DEFINE_MACRO(__GNUC_MINOR__);
+  G__DEFINE_MACRO_C(__GNUC_MINOR__);
 #endif
 #if defined(__GNUC__) && defined(__GNUC_MINOR__)
-  sprintf(temp,"G__GNUC_VER=%ld",(long)__GNUC__*1000+__GNUC_MINOR__); 
-  G__add_macro(temp);
+  if (G__globalcomp == G__NOLINK) {
+     sprintf(temp,"G__GNUC_VER=%ld",(long)__GNUC__*1000+__GNUC_MINOR__); 
+     G__add_macro(temp);
+  }
 #endif
 #ifdef __GLIBC__   /* GNU C library major version */
   G__DEFINE_MACRO(__GLIBC__);
@@ -2060,51 +2095,65 @@ void G__platformMacro()
   G__DEFINE_MACRO(__GLIBC_MINOR__);
 #endif
 #ifdef __HP_aCC     /* HP aCC C++ compiler */
-  sprintf(temp,"G__HP_aCC=%ld",(long)__HP_aCC); G__add_macro(temp);
-  G__DEFINE_MACRO_S(__HP_aCC);
+  if (G__globalcomp == G__NOLINK) {
+     sprintf(temp,"G__HP_aCC=%ld",(long)__HP_aCC); G__add_macro(temp);
+  }
+  G__DEFINE_MACRO_S_C(__HP_aCC);
 #if __HP_aCC > 15000
-  sprintf(temp,"G__ANSIISOLIB=1"); G__add_macro(temp);
+  if (G__globalcomp == G__NOLINK) {
+     sprintf(temp,"G__ANSIISOLIB=1"); G__add_macro(temp);
+  }
 #endif
 #endif
 #ifdef __SUNPRO_CC  /* Sun C++ compiler */
-  G__DEFINE_MACRO(__SUNPRO_CC);
+  G__DEFINE_MACRO_C(__SUNPRO_CC);
 #endif
 #ifdef __SUNPRO_C   /* Sun C compiler */
-  G__DEFINE_MACRO(__SUNPRO_C);
+  G__DEFINE_MACRO_C(__SUNPRO_C);
 #endif
 #ifdef G__VISUAL    /* Microsoft Visual C++ compiler */
-  sprintf(temp,"G__VISUAL=%ld",(long)G__VISUAL); G__add_macro(temp);
+  if (G__globalcomp == G__NOLINK) {
+     sprintf(temp,"G__VISUAL=%ld",(long)G__VISUAL); G__add_macro(temp);
+  }
 #endif
 #ifdef _MSC_VER     /* Microsoft Visual C++ version */
-  sprintf(temp,"G__VISUAL=%ld",(long)G__VISUAL); G__add_macro(temp);
-  G__DEFINE_MACRO(_MSC_VER);
+  if (G__globalcomp == G__NOLINK) {
+     sprintf(temp,"G__VISUAL=%ld",(long)G__VISUAL); G__add_macro(temp);
+  }
+  G__DEFINE_MACRO_C(_MSC_VER);
 #endif
 #ifdef __SC__       /* Symantec C/C++ compiler */
-  G__DEFINE_MACRO_N(__SC__, "G__SYMANTEC");
+  G__DEFINE_MACRO_N_C(__SC__, "G__SYMANTEC");
 #endif
 #ifdef __BORLANDC__ /* Borland C/C++ compiler */
-  G__DEFINE_MACRO(__BORLANDC__);
+  G__DEFINE_MACRO_C(__BORLANDC__);
 #endif
 #ifdef __BCPLUSPLUS__  /* Borland C++ compiler */
-  G__DEFINE_MACRO(__BCPLUSPLUS__);
+  G__DEFINE_MACRO_C(__BCPLUSPLUS__);
 #endif
 #ifdef G__BORLANDCC5 /* Borland C/C++ compiler 5.5 */
-  G__DEFINE_MACRO(__BORLANDCC5__);
+  G__DEFINE_MACRO_C(__BORLANDCC5__);
 #endif
 #ifdef __KCC        /* KCC  C++ compiler */
-  G__DEFINE_MACRO(__KCC__);
+  G__DEFINE_MACRO_C(__KCC__);
 #endif
 #if defined(__INTEL_COMPILER) && (__INTEL_COMPILER<810) /* icc and ecc C++ compilers */
-  G__DEFINE_MACRO(__INTEL_COMPILER);
+  G__DEFINE_MACRO_C(__INTEL_COMPILER);
 #endif
 #ifndef _AIX
 #ifdef __xlc__ /* IBM xlc compiler */
-  sprintf(temp,"G__GNUC=%ld",(long)3 /*__GNUC__*/); G__add_macro(temp);
-  sprintf(temp,"G__GNUC_MINOR=%ld",(long)3 /*__GNUC_MINOR__*/); G__add_macro(temp);
-  G__DEFINE_MACRO(__xlc__);
+  if (G__globalcomp == G__NOLINK) {
+     sprintf(temp,"G__GNUC=%ld",(long)3 /*__GNUC__*/); G__add_macro(temp);
+     sprintf(temp,"G__GNUC_MINOR=%ld",(long)3 /*__GNUC_MINOR__*/); G__add_macro(temp);
+  }
+  G__DEFINE_MACRO_C(__xlc__);
 #endif
 #endif
-  G__initcxx(); 
+
+  if (G__globalcomp == G__NOLINK) {
+     G__initcxx(); 
+  }
+  
   /***********************************************************************
    * micro processor
    ***********************************************************************/
@@ -2161,6 +2210,9 @@ void G__platformMacro()
 #ifdef __s390__ /* IBM S390 */
   G__DEFINE_MACRO_S(__s390__);
 #endif
+  if (G__globalcomp != G__NOLINK)
+     return;
+  
   /***********************************************************************
    * application environment
    ***********************************************************************/
