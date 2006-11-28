@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.cxx,v 1.9 2005/06/07 20:28:32 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.cxx,v 1.10 2006/05/15 09:45:03 brun Exp $
 // Author: Maarten Ballintijn   28/10/2003
 
 /*************************************************************************
@@ -34,7 +34,7 @@ ClassImp(TDrawFeedback)
 
 
 //______________________________________________________________________________
-TDrawFeedback::TDrawFeedback(TVirtualProof *proof, TSeqCollection *names)
+TDrawFeedback::TDrawFeedback(TProof *proof, TSeqCollection *names)
   : fAll(kFALSE)
 {
    // Constructor

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofMgr.h,v 1.1 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofMgr.h,v 1.2 2006/06/21 16:18:26 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -24,27 +24,116 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVirtualProofMgr
-#include "TVirtualProofMgr.h"
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
 #ifndef ROOT_TUrl
 #include "TUrl.h"
 #endif
 
-class TProofMgr : public TVirtualProofMgr {
+class TList;
+class TProof;
+class TProofDesc;
+class TProofMgr;
+
+typedef TProofMgr *(*TProofMgr_t)(const char *, Int_t, const char *);
+
+class TProofMgr : public TNamed {
+
+public:
+   enum EServType { kProofd = 0, kXProofd = 1 };
+
+private:
+   static TProofMgr_t fgTXProofMgrHook; // Constructor hooks for TXProofMgr
+   static TProofMgr_t GetXProofMgrHook();
+
+protected:
+   Int_t          fRemoteProtocol; // Protocol number run by the daemon server
+   EServType      fServType;       // Type of server: old-proofd, XrdProofd
+   TList         *fSessions;       // PROOF session managed by this server
+   TUrl           fUrl;            // Server URL
+
+   static TList   fgListOfManagers; // Sub-list of TROOT::ListOfProofs for managers
+
+   TProofMgr() : fRemoteProtocol(-1),
+                        fServType(kXProofd), fSessions(0), fUrl() { }
 
 public:
    TProofMgr(const char *url, Int_t loglevel = -1, const char *alias = "");
-   virtual ~TProofMgr() { }
+   virtual ~TProofMgr();
 
-   Bool_t      IsValid() const { return kTRUE; }
+   virtual Bool_t      IsProofd() const { return (fServType == kProofd); }
+   virtual Bool_t      IsValid() const { return kTRUE; }
 
-   TVirtualProof *AttachSession(Int_t id, Bool_t gui = kFALSE);
-   void           DetachSession(Int_t, Option_t * = "");
-   TList         *QuerySessions(Option_t *opt = "S");
-   Int_t          Reset(const char *usr = 0);
 
-   ClassDef(TProofMgr,0)  // PROOF session manager
+   virtual TProof *AttachSession(Int_t, Bool_t = kFALSE);
+   virtual TProof *CreateSession(const char * = 0, const char * = 0, Int_t = -1);
+   virtual void        DetachSession(Int_t, Option_t * = "");
+   virtual TProofDesc *GetProofDesc(Int_t id);
+   virtual Int_t       GetRemoteProtocol() const { return fRemoteProtocol; }
+   virtual const char *GetUrl() { return fUrl.GetUrl(); }
+   virtual Bool_t      MatchUrl(const char *url);
+   virtual TList      *QuerySessions(Option_t *opt = "S");
+   virtual Int_t       Reset(const char *usr = 0);
+   virtual void        ShowWorkers();
+   virtual void        SetAlias(const char *alias="") { TNamed::SetTitle(alias); }
+   virtual void        ShutdownSession(Int_t id) { DetachSession(id,"S"); }
+   virtual void        ShutdownSession(TProof *p);
+
+   static TList       *GetListOfManagers();
+
+   static void         SetTXProofMgrHook(TProofMgr_t pmh);
+
+   static TProofMgr *Create(const char *url, Int_t loglevel = -1,
+                                   const char *alias = 0, Bool_t xpd = kTRUE);
+
+   ClassDef(TProofMgr,0)  // Abstract PROOF manager interface
+};
+
+
+
+
+//
+// Metaclass describing the essentials of a PROOF session
+//
+class TProofDesc : public TNamed {
+public:
+   enum EStatus { kUnknown = -1, kIdle = 0, kRunning =1, kShutdown = 2};
+
+private:
+   Int_t          fLocalId;  // ID in the local list
+   Int_t          fStatus;   // Session status (see EStatus)
+   TProof *fProof;    // Related instance of TProof
+   Int_t          fRemoteId; // Remote ID assigned by the coordinator to the proofserv
+   TString        fUrl;      // Url of the connection
+
+public:
+   TProofDesc(const char *tag = 0, const char *alias = 0, const char *url = 0,
+                     Int_t id = -1, Int_t remid = -1, Int_t status = kIdle, TProof *p = 0)
+                    : TNamed(tag, alias),
+                      fLocalId(id), fProof(p), fRemoteId(remid), fUrl(url) { SetStatus(status); }
+   virtual ~TProofDesc() { }
+
+   Int_t          GetLocalId() const { return fLocalId; }
+   TProof *GetProof() const { return fProof; }
+   Int_t          GetRemoteId() const { return fRemoteId; }
+   Int_t          GetStatus() const { return fStatus; }
+   const char    *GetUrl() const { return fUrl; }
+
+   Bool_t         IsIdle() const { return (fStatus == kIdle) ? kTRUE : kFALSE; }
+   Bool_t         IsRunning() const { return (fStatus == kRunning) ? kTRUE : kFALSE; }
+   Bool_t         IsShuttingDown() const { return (fStatus == kShutdown) ? kTRUE : kFALSE; }
+
+   Bool_t         MatchId(Int_t id) const { return (fLocalId == id); }
+
+   void           Print(Option_t *opt = "") const;
+
+   void           SetStatus(Int_t st) { fStatus = (st < kIdle || st > kShutdown) ? -1 : st; }
+
+   void           SetProof(TProof *p) { fProof = p; }
+   void           SetRemoteId(Int_t id) { fRemoteId = id; }
+
+   ClassDef(TProofDesc,1)  // Small class describing a proof session
 };
 
 #endif

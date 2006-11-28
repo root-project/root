@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.20 2006/11/20 10:31:48 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.21 2006/11/20 15:56:36 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -376,7 +376,7 @@ Int_t TXProofServ::CreateServer()
       // (it is broken for xpd because of the locks on gCINTMutex)
       gEnv->SetValue("Proof.ParallelStartup", 0);
 
-      // Get plugin manager to load appropriate TVirtualProof from
+      // Get plugin manager to load appropriate TProof from
       TPluginManager *pm = gROOT->GetPluginManager();
       if (!pm) {
          Error("CreateServer", "no plugin manager found");
@@ -386,9 +386,9 @@ Int_t TXProofServ::CreateServer()
       }
 
       // Find the appropriate handler
-      TPluginHandler *h = pm->FindHandler("TVirtualProof", fConfFile);
+      TPluginHandler *h = pm->FindHandler("TProof", fConfFile);
       if (!h) {
-         Error("CreateServer", "no plugin found for TVirtualProof with a"
+         Error("CreateServer", "no plugin found for TProof with a"
                              " config file of '%s'", fConfFile.Data());
          SendLogFile(-99);
          Terminate(0);
@@ -397,7 +397,7 @@ Int_t TXProofServ::CreateServer()
 
       // load the plugin
       if (h->LoadPlugin() == -1) {
-         Error("CreateServer", "plugin for TVirtualProof could not be loaded");
+         Error("CreateServer", "plugin for TProof could not be loaded");
          SendLogFile(-99);
          Terminate(0);
          return -1;
@@ -410,7 +410,7 @@ Int_t TXProofServ::CreateServer()
                                                           fLogLevel,
                                                           fSessionTag.Data()));
       if (!fProof || !fProof->IsValid()) {
-         Error("CreateServer", "plugin for TVirtualProof could not be executed");
+         Error("CreateServer", "plugin for TProof could not be executed");
          delete fProof;
          fProof = 0;
          SendLogFile(-99);
@@ -790,7 +790,7 @@ Int_t TXProofServ::Setup()
    while (all_vars.Tokenize(name, from, ",")) {
       if (!name.IsNull()) {
          TString value = gSystem->Getenv(name);
-         TVirtualProof::AddEnvVar(name, value);
+         TProof::AddEnvVar(name, value);
       }
    }
 

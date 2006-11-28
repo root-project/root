@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.h,v 1.5 2005/09/16 08:48:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.h,v 1.6 2006/03/20 21:43:43 pcanal Exp $
 // Author: Maarten Ballintijn   28/10/2003
 
 /*************************************************************************
@@ -28,7 +28,7 @@
 #include "TObject.h"
 #endif
 
-class TVirtualProof;
+class TProof;
 class TProof;
 class THashList;
 class TSeqCollection;
@@ -43,7 +43,7 @@ protected:
    TProof        *fProof;  //handle to PROOF session
 
 public:
-   TDrawFeedback(TVirtualProof *proof = 0, TSeqCollection *names = 0);
+   TDrawFeedback(TProof *proof = 0, TSeqCollection *names = 0);
    ~TDrawFeedback();
 
    void Feedback(TList *objs);

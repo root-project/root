@@ -1,4 +1,4 @@
-// @(#)root/peac:$Name:$:$Id:$
+// @(#)root/peac:$Name:  $:$Id: TPEAC.h,v 1.1 2005/02/07 18:02:36 rdm Exp $
 // Author: Maarten Ballintijn    21/10/2004
 // Author: Kris Gulbrandsen      21/10/2004
 
@@ -32,7 +32,7 @@
 
 class TGM;
 class TDSet;
-class TVirtualProof;
+class TProof;
 
 
 class TPEAC : public TObject {
@@ -41,7 +41,7 @@ private:
    TGM           *fGM;        //global manager object
    TString        fSessionID; //session id gotten from clarens
    TString        fDataSet;   //dataset used to create session
-   TVirtualProof *fProof;     //proof session started in StartSession
+   TProof        *fProof;     //proof session started in StartSession
 
    TPEAC();
 

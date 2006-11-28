@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSessionViewer.cxx,v 1.1 2006/11/17 15:50:17 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSessionViewer.cxx,v 1.2 2006/11/27 14:14:24 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -42,7 +42,7 @@
 #include "TChain.h"
 #include "TDSet.h"
 #include "TFileInfo.h"
-#include "TVirtualProof.h"
+#include "TProof.h"
 #include "TRandom.h"
 #include "TSessionViewer.h"
 #include "TSessionLogView.h"
@@ -462,8 +462,8 @@ void TSessionServerFrame::OnBtnConnectClicked()
       url += fNumPort->GetIntNumber();
    }
 
-   TVirtualProofDesc *desc;
-   fViewer->GetActDesc()->fProofMgr = TVirtualProofMgr::Create(url);
+   TProofDesc *desc;
+   fViewer->GetActDesc()->fProofMgr = TProofMgr::Create(url);
    if (!fViewer->GetActDesc()->fProofMgr->IsValid()) {
       // hide connection progress bar from status bar
       fViewer->GetStatusBar()->GetBarPart(0)->HideFrame(fViewer->GetConnectProg());
@@ -484,7 +484,7 @@ void TSessionServerFrame::OnBtnConnectClicked()
    if (sessions) {
       TIter nextp(sessions);
       // loop over existing Proof sessions
-      while ((desc = (TVirtualProofDesc *)nextp())) {
+      while ((desc = (TProofDesc *)nextp())) {
          if ((desc->GetName() == fViewer->GetActDesc()->fTag) ||
              (desc->GetTitle() == fViewer->GetActDesc()->fName)) {
             fViewer->GetActDesc()->fProof =
@@ -524,7 +524,7 @@ void TSessionServerFrame::OnBtnConnectClicked()
          fViewer->GetActDesc()->fProof = fViewer->GetActDesc()->fProofMgr->CreateSession(
          fViewer->GetActDesc()->fConfigFile);
          sessions = fViewer->GetActDesc()->fProofMgr->QuerySessions("");
-         desc = (TVirtualProofDesc *)sessions->Last();
+         desc = (TProofDesc *)sessions->Last();
          if (desc) {
             fViewer->GetActDesc()->fProof->SetAlias(fViewer->GetActDesc()->fName);
             fViewer->GetActDesc()->fTag = desc->GetName();
@@ -542,7 +542,7 @@ void TSessionServerFrame::OnBtnConnectClicked()
          fViewer->GetActDesc()->fLogLevel = 0;
       fViewer->GetActDesc()->fAddress    = fViewer->GetActDesc()->fProof->GetMaster();
       fViewer->GetActDesc()->fConnected = kTRUE;
-      fViewer->GetActDesc()->fProof->SetBit(TVirtualProof::kUsingSessionGui);
+      fViewer->GetActDesc()->fProof->SetBit(TProof::kUsingSessionGui);
    }
    fViewer->UpdateListOfSessions();
 
@@ -553,7 +553,7 @@ void TSessionServerFrame::OnBtnConnectClicked()
       fViewer->GetActDesc()->fProof->SetLogLevel(fViewer->GetActDesc()->fLogLevel);
       // set query type (synch / asynch)
       fViewer->GetActDesc()->fProof->SetQueryType(fViewer->GetActDesc()->fSync ?
-                             TVirtualProof::kSync : TVirtualProof::kAsync);
+                             TProof::kSync : TProof::kAsync);
       // set connected flag
       fViewer->GetActDesc()->fConnected = kTRUE;
       // change list tree item picture to connected pixmap
@@ -2429,7 +2429,7 @@ void TSessionQueryFrame::Feedback(TList *objs)
        (fViewer->GetActDesc()->fActQuery->fStatus !=
         TQueryDescription::kSessionQueryRunning) )
       return;
-   TVirtualProof *sender = dynamic_cast<TVirtualProof*>((TQObject*)gTQSender);
+   TProof *sender = dynamic_cast<TProof*>((TQObject*)gTQSender);
    // if Proof sender match actual session one, update feedback histos
    if (sender && (sender == fViewer->GetActDesc()->fProof))
       UpdateHistos(objs);
@@ -2486,7 +2486,7 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
    if (!fViewer->GetActDesc()->fProof)
       return;
    // if Proof sender does't match actual session one, return
-   TVirtualProof *sender = dynamic_cast<TVirtualProof*>((TQObject*)gTQSender);
+   TProof *sender = dynamic_cast<TProof*>((TQObject*)gTQSender);
    if (!sender || (sender != fViewer->GetActDesc()->fProof))
       return;
 
@@ -2917,7 +2917,7 @@ void TSessionQueryFrame::OnBtnSubmit()
    // check for proof validity
    if (fViewer->GetActDesc()->fProof &&
        fViewer->GetActDesc()->fProof->IsValid()) {
-      fViewer->GetActDesc()->fProof->SetBit(TVirtualProof::kUsingSessionGui);
+      fViewer->GetActDesc()->fProof->SetBit(TProof::kUsingSessionGui);
       // set query description status to submitted
       newquery->fStatus = TQueryDescription::kSessionQuerySubmitted;
       // if feedback option selected
@@ -3678,13 +3678,13 @@ void TSessionViewer::UpdateListOfProofs()
    TSessionDescription *newdesc;
    if (proofs) {
       TObject *o = proofs->First();
-      if (o && dynamic_cast<TVirtualProofMgr *>(o)) {
-         TVirtualProofMgr *mgr = dynamic_cast<TVirtualProofMgr *>(o);
+      if (o && dynamic_cast<TProofMgr *>(o)) {
+         TProofMgr *mgr = dynamic_cast<TProofMgr *>(o);
          if (mgr->QuerySessions("L")) {
             TIter nxd(mgr->QuerySessions("L"));
-            TVirtualProofDesc *d = 0;
-            TVirtualProof *p = 0;
-            while ((d = (TVirtualProofDesc *)nxd())) {
+            TProofDesc *d = 0;
+            TProof *p = 0;
+            while ((d = (TProofDesc *)nxd())) {
                TIter nextfs(fSessions);
                // check if session exists in the list
                while ((desc = (TSessionDescription *)nextfs())) {
@@ -3833,9 +3833,9 @@ void TSessionViewer::UpdateListOfProofs()
          return;
       }
       TIter nextp(proofs);
-      TVirtualProof *proof;
+      TProof *proof;
       // loop over existing Proof sessions
-      while ((proof = (TVirtualProof *)nextp())) {
+      while ((proof = (TProof *)nextp())) {
          TIter nexts(fSessions);
          found = kFALSE;
          // check if session is already in the list
@@ -3890,11 +3890,11 @@ void TSessionViewer::UpdateListOfSessions()
    TList *sessions = fActDesc->fProofMgr->QuerySessions("");
    if (sessions) {
       TIter nextp(sessions);
-      TVirtualProofDesc *pdesc;
-      TVirtualProof *proof;
+      TProofDesc *pdesc;
+      TProof *proof;
       TSessionDescription *newdesc;
       // loop over existing Proof sessions
-      while ((pdesc = (TVirtualProofDesc *)nextp())) {
+      while ((pdesc = (TProofDesc *)nextp())) {
          TIter nexts(fSessions);
          TSessionDescription *desc = 0;
          Bool_t found = kFALSE;
@@ -4905,7 +4905,7 @@ void TSessionViewer::ResetSession()
          kMBYes | kMBNo | kMBCancel, &result);
    if (result == kMBYes) {
       // reset the session
-      TVirtualProof::Reset(fActDesc->fAddress.Data(),
+      TProof::Reset(fActDesc->fAddress.Data(),
                            fActDesc->fUserName.Data());
       // reset connected flag
       fActDesc->fAttached = kFALSE;

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.95 2006/11/20 15:56:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.96 2006/11/22 14:16:54 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -24,8 +24,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVirtualProof
-#include "TVirtualProof.h"
+#ifndef ROOT_TProof
+#include "TProof.h"
+#endif
+#ifndef ROOT_TProofMgr
+#include "TProofMgr.h"
 #endif
 #ifndef ROOT_TProofDebug
 #include "TProofDebug.h"
@@ -68,11 +71,14 @@ class TSlave;
 class TProofServ;
 class TProofInputHandler;
 class TProofInterruptHandler;
+class TProofLockPath;
 class TProofPlayer;
 class TProofPlayerRemote;
 class TProofProgressDialog;
-class TProofLockPath;
+class TQueryResult;
+class TChain;
 class TCondor;
+class TEventList;
 class TTree;
 class TDrawFeedback;
 class TDSet;
@@ -216,7 +222,7 @@ public:
    ClassDef(TSlaveInfo,2) //basic info on slave
 };
 
-class TProof : public TVirtualProof {
+class TProof : public TNamed, public TQObject {
 
 friend class TPacketizer;
 friend class TPacketizerDev;
@@ -232,6 +238,32 @@ friend class TXSocket;        // to access kPing
 friend class TXSocketHandler; // to access fCurrentMonitor and CollectInputFrom
 friend class TXProofMgr;      // to access EUrgent
 friend class TXProofServ;     // to access EUrgent
+
+public:
+   // PROOF status bits
+   enum EStatusBits {
+      kUsingSessionGui = BIT(14)
+   };
+   enum EQueryMode {
+      kSync = 0,
+      kAsync = 1
+   };
+   enum EUploadOpt {
+      kAppend             = 0x1,
+      kOverwriteDataSet   = 0x2,
+      kNoOverwriteDataSet = 0x4,
+      kOverwriteAllFiles  = 0x8,
+      kOverwriteNoFiles   = 0x10,
+      kAskUser            = 0x0
+   };
+   enum EUploadDataSetAnswer {
+      kError = -1,
+      kDataSetExists = -2
+   };
+   enum EUploadPackageOpt {
+      kUntar             = 0x0,  //Untar over existing dir [default]
+      kRemoveOld         = 0x1   //Remove existing dir with same name
+   };
 
 private:
    enum EUrgent {
@@ -342,6 +374,8 @@ private:
    TProofLockPath *fPackageLock;     //package lock
    TList          *fEnabledPackagesOnClient; //list of packages enabled on client
 
+   static TList   *fgProofEnvList;  // List of TNameds defining environment
+                                    // variables to pass to proofserv
 protected:
    enum ESlaves { kAll, kActive, kUnique, kAllUnique };
 
@@ -358,6 +392,11 @@ protected:
    Long64_t        fTotalBytes;     //number of bytes to be analyzed
    TList          *fAvailablePackages; //list of available packages
    TList          *fEnabledPackages;   //list of enabled packages
+
+   TString         fDataPoolUrl;    // default data pool entry point URL
+   TProofMgr::EServType fServType;  // type of server: proofd, XrdProofd
+   TProofMgr      *fManager;        // manager to which this session belongs (if any)
+   EQueryMode      fQueryMode;      // default query mode
 
    static TSemaphore *fgSemaphore;   //semaphore to control no of parallel startup threads
 
@@ -465,7 +504,7 @@ protected:
 public:
    TProof(const char *masterurl, const char *conffile = kPROOF_ConfFile,
           const char *confdir = kPROOF_ConfDir, Int_t loglevel = 0,
-          const char *alias = 0, TVirtualProofMgr *mgr = 0);
+          const char *alias = 0, TProofMgr *mgr = 0);
    virtual ~TProof();
 
    void        cd(Int_t id = -1);
@@ -550,6 +589,7 @@ public:
    const char *GetConfFile() const { return fConfFile; }
    const char *GetUser() const { return fUrl.GetUser(); }
    const char *GetWorkDir() const { return fWorkDir; }
+   const char *GetSessionTag() const { return GetName(); }
    const char *GetImage() const { return fImage; }
    const char *GetUrl() { return fUrl.GetUrl(); }
    Int_t       GetPort() const { return fUrl.GetPort(); }
@@ -564,11 +604,13 @@ public:
    EQueryMode  GetQueryMode() const;
    EQueryMode  GetQueryMode(Option_t *mode) const;
    void        SetQueryMode(EQueryMode mode);
+   void        SetQueryType(EQueryMode mode) { fQueryMode = mode; }
 
    Long64_t    GetBytesRead() const { return fBytesRead; }
    Float_t     GetRealTime() const { return fRealTime; }
    Float_t     GetCpuTime() const { return fCpuTime; }
 
+   Bool_t      IsProofd() const { return (fServType == TProofMgr::kProofd); }
    Bool_t      IsFolder() const { return kTRUE; }
    Bool_t      IsMaster() const { return fMasterServ; }
    Bool_t      IsValid() const { return fValid; }
@@ -632,18 +674,30 @@ public:
 
    void        Detach(Option_t *opt = "");
 
-   void        SetAlias(const char *alias="");
+   virtual void SetAlias(const char *alias="");
 
-   void        SetManager(TVirtualProofMgr *mgr);
+   TProofMgr  *GetManager() { return fManager; }
+   void        SetManager(TProofMgr *mgr);
 
    void        ActivateWorker(const char *ord);
    void        DeactivateWorker(const char *ord);
 
-   static TVirtualProof *Open(const char *url = 0, const char *conffile = 0,
-                              const char *confdir = 0, Int_t loglevel = 0);
-   static Int_t          Reset(const char *url, const char *usr = 0);
+   const char *GetDataPoolUrl() const { return fDataPoolUrl; }
+   void        SetDataPoolUrl(const char *url) { fDataPoolUrl = url; }
+
+   static TProof *Open(const char *url = 0, const char *conffile = 0,
+                       const char *confdir = 0, Int_t loglevel = 0);
+   static Int_t   Reset(const char *url, const char *usr = 0);
+
+   static void          AddEnvVar(const char *name, const char *value);
+   static void          DelEnvVar(const char *name);
+   static const TList  *GetEnvVars();
+   static void          ResetEnvVars();
 
    ClassDef(TProof,0)  //PROOF control class
 };
+
+// Global object with default PROOF session
+R__EXTERN TProof *gProof;
 
 #endif

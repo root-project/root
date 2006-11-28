@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSessionViewer.h,v 1.1 2006/11/17 15:50:17 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSessionViewer.h,v 1.2 2006/11/22 14:16:54 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -84,8 +84,8 @@ class TCanvas;
 class TEnv;
 struct UserGroup_t;
 
-class TVirtualProofMgr;
-class TVirtualProof;
+class TProofMgr;
+class TProof;
 class TSessionViewer;
 class TSessionLogView;
 class TQueryResult;
@@ -164,8 +164,8 @@ public:
    TList             *fQueries;     // list of queries in this session
    TList             *fPackages;    // list of packages
    TQueryDescription *fActQuery;    // current (actual) query
-   TVirtualProof     *fProof;       // pointer on TVirtualProof used by this session
-   TVirtualProofMgr  *fProofMgr;    // Proof sessions manager
+   TProof            *fProof;       // pointer on TProof used by this session
+   TProofMgr         *fProofMgr;    // Proof sessions manager
    Int_t              fNbHistos;    // number of feedback histos
 
    const char        *GetName() const { return fName; }

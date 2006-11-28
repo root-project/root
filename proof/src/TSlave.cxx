@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.54 2006/11/16 17:17:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.55 2006/11/20 15:56:35 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -146,7 +146,7 @@ void TSlave::Init(const char *host, Int_t port, Int_t stype)
    if (fSocket->GetRemoteProtocol() >= 14 ) {
       TMessage m(kPROOF_SETENV);
 
-      const TList *envs = TVirtualProof::GetEnvVars();
+      const TList *envs = TProof::GetEnvVars();
       if (envs != 0 ) {
          TIter next(envs);
          for (TObject *o = next(); o != 0; o = next()) {

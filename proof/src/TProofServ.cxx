@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.149 2006/11/20 15:56:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.150 2006/11/27 14:14:24 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -379,7 +379,7 @@ Int_t TProofServ::CreateServer()
          master += a.GetPort();
       }
 
-      // Get plugin manager to load appropriate TVirtualProof from
+      // Get plugin manager to load appropriate TProof from
       TPluginManager *pm = gROOT->GetPluginManager();
       if (!pm) {
          Error("CreateServer", "no plugin manager found");
@@ -389,9 +389,9 @@ Int_t TProofServ::CreateServer()
       }
 
       // Find the appropriate handler
-      TPluginHandler *h = pm->FindHandler("TVirtualProof", fConfFile);
+      TPluginHandler *h = pm->FindHandler("TProof", fConfFile);
       if (!h) {
-         Error("CreateServer", "no plugin found for TVirtualProof with a"
+         Error("CreateServer", "no plugin found for TProof with a"
                              " config file of '%s'", fConfFile.Data());
          SendLogFile(-99);
          Terminate(0);
@@ -400,7 +400,7 @@ Int_t TProofServ::CreateServer()
 
       // load the plugin
       if (h->LoadPlugin() == -1) {
-         Error("CreateServer", "plugin for TVirtualProof could not be loaded");
+         Error("CreateServer", "plugin for TProof could not be loaded");
          SendLogFile(-99);
          Terminate(0);
          return -1;
@@ -412,7 +412,7 @@ Int_t TProofServ::CreateServer()
                                                           GetConfDir(),
                                                           fLogLevel));
       if (!fProof || !fProof->IsValid()) {
-         Error("CreateServer", "plugin for TVirtualProof could not be executed");
+         Error("CreateServer", "plugin for TProof could not be executed");
          delete fProof;
          fProof = 0;
          SendLogFile(-99);
@@ -622,7 +622,7 @@ void TProofServ::GetOptions(Int_t *argc, char **argv)
       fMasterServ = kFALSE;
       fEndMaster = kFALSE;
    } else {
-      Fatal("GetOptions", "Must be started as proofmaster or proofslave");
+      Fatal("GetOptions", "Must be started as 'proofserv' or 'proofslave'");
       exit(1);
    }
 
@@ -1975,7 +1975,7 @@ Int_t TProofServ::Setup()
    while (all_vars.Tokenize(name, from, ",")) {
       if (!name.IsNull()) {
          TString value = gSystem->Getenv(name);
-         TVirtualProof::AddEnvVar(name, value);
+         TProof::AddEnvVar(name, value);
       }
    }
 
@@ -3438,7 +3438,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
 
    TString filenam;
    TMD5    md5;
-   UInt_t  opt = TVirtualProof::kUntar;
+   UInt_t  opt = TProof::kUntar;
 
    // Parse message
    (*mess) >> filenam >> md5;
@@ -3456,7 +3456,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
       // compare md5's to check if transmission was ok
       TMD5 *md5local = TMD5::FileChecksum(fPackageDir + "/" + filenam);
       if (md5local && md5 == (*md5local)) {
-         if ((opt & TVirtualProof::kRemoveOld)) {
+         if ((opt & TProof::kRemoveOld)) {
             // remove any previous package directory with same name
             st = gSystem->Exec(Form("%s %s/%s", kRM, fPackageDir.Data(),
                                packnam.Data()));

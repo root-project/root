@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.13 2006/11/20 15:56:36 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.14 2006/11/22 00:25:32 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -196,7 +196,7 @@ void TXSlave::Init(const char *host, Int_t stype)
    TString envlist;
    if (!fProof->GetManager() ||
         fProof->GetManager()->GetRemoteProtocol() > 1001) {
-         const TList *envs = TVirtualProof::GetEnvVars();
+         const TList *envs = TProof::GetEnvVars();
          if (envs != 0 ) {
             TIter next(envs);
             for (TObject *o = next(); o != 0; o = next()) {
@@ -209,7 +209,7 @@ void TXSlave::Init(const char *host, Int_t stype)
             }
          }
    } else {
-      if (fProof->GetManager() && TVirtualProof::GetEnvVars())
+      if (fProof->GetManager() && TProof::GetEnvVars())
          Info("Init", "** NOT ** sending user envs - RemoteProtocol : %d",
                       fProof->GetManager()->GetRemoteProtocol());
    }
@@ -248,7 +248,7 @@ void TXSlave::Init(const char *host, Int_t stype)
    fProtocol = fSocket->GetRemoteProtocol();
 
    // Set server type
-   fProof->fServType = TVirtualProofMgr::kXProofd;
+   fProof->fServType = TProofMgr::kXProofd;
 
    // Set remote session ID
    fProof->fSessionID = ((TXSocket *)fSocket)->GetSessionID();
@@ -513,7 +513,7 @@ Bool_t TXSlave::HandleError(const void *)
          // On clients the proof session should be removed from the lists
          // and deleted, since it is not valid anymore
          fProof->GetListOfSlaves()->Remove(this);
-         TVirtualProofMgr *mgr= fProof->GetManager();
+         TProofMgr *mgr= fProof->GetManager();
          if (mgr)
             mgr->ShutdownSession(fProof);
       }

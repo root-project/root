@@ -1,4 +1,4 @@
-// @(#)root/peac:$Name:$:$Id:$
+// @(#)root/peac:$Name:  $:$Id: TProofStartupDialog.cxx,v 1.1 2005/02/07 18:02:36 rdm Exp $
 // Author: Maarten Ballintijn    21/10/2004
 // Author: Kris Gulbrandsen      21/10/2004
 
@@ -24,13 +24,13 @@
 #include "TGProgressBar.h"
 #include "TSystem.h"
 #include "TTimer.h"
-#include "TVirtualProof.h"
+#include "TProof.h"
 
 
 ClassImp(TProofStartupDialog)
 
 //______________________________________________________________________________
-TProofStartupDialog::TProofStartupDialog(TVirtualProof *proof,
+TProofStartupDialog::TProofStartupDialog(TProof *proof,
                                          const Char_t *dataset,
                                          Int_t nfiles,
                                          Long64_t totalbytes)

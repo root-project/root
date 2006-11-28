@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.169 2006/11/22 14:16:54 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.170 2006/11/27 14:14:24 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -78,7 +78,12 @@
 #include "TFileInfo.h"
 #include "TFileMerger.h"
 
+TProof *gProof = 0;
 TVirtualMutex *gProofMutex = 0;
+
+TList   *TProof::fgProofEnvList = 0;  // List of env vars for proofserv
+
+ClassImp(TProof)
 
 //----- Helper classes used for parallel startup -------------------------------
 //______________________________________________________________________________
@@ -245,27 +250,11 @@ static char *CollapseSlashesInPath(const char *path)
 
 ClassImp(TProof)
 
-// Autoloading hooks.
-// These are needed to avoid using the plugin manager which may create problems
-// in multi-threaded environments.
-extern "C" {
-   TVirtualProof *GetTProof(const char *url, const char *file,
-                            const char *dir, Int_t log, const char *al,
-                            TVirtualProofMgr *mgr)
-   { return (new TProof(url, file, dir, log, al, mgr)); }
-}
-class TProofInit {
-public:
-   TProofInit() {
-      TVirtualProof::SetTProofHook(&GetTProof);
-}};
-static TProofInit gproof_init;
-
 TSemaphore    *TProof::fgSemaphore = 0;
 
 //______________________________________________________________________________
 TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
-               Int_t loglevel, const char *alias, TVirtualProofMgr *mgr)
+               Int_t loglevel, const char *alias, TProofMgr *mgr)
        : fUrl(masterurl)
 {
    // Create a PROOF environment. Starting PROOF involves either connecting
@@ -281,6 +270,9 @@ TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
 
    // This may be needed during init
    fManager = mgr;
+
+   // Default server type
+   fServType = TProofMgr::kXProofd;
 
    if (!conffile || strlen(conffile) == 0)
       conffile = kPROOF_ConfFile;
@@ -306,7 +298,7 @@ TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
 }
 
 //______________________________________________________________________________
-TProof::TProof() : fUrl("")
+TProof::TProof() : fUrl(""), fServType(TProofMgr::kXProofd)
 {
    // Protected constructor to be used by classes deriving from TProof
    // (they have to call Init themselves and override StartSlaves
@@ -362,6 +354,9 @@ TProof::~TProof()
       if (fLogFileName.Length())
          gSystem->Unlink(fLogFileName);
    }
+
+   // For those interested in our destruction ...
+   Emit("~TProof()");
 }
 
 //______________________________________________________________________________
@@ -380,7 +375,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fValid = kFALSE;
 
    if (strlen(fUrl.GetOptions()) > 0 && !(strncmp(fUrl.GetOptions(),"std",3))) {
-      fServType = TVirtualProofMgr::kProofd;
+      fServType = TProofMgr::kProofd;
       fUrl.SetOptions("");
    }
 
@@ -400,7 +395,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
       // A flag from the GUI
       TString opts = fUrl.GetOptions();
       if (opts.Contains("GUI")) {
-         SetBit(TVirtualProof::kUsingSessionGui);
+         SetBit(TProof::kUsingSessionGui);
          opts.Remove(opts.Index("GUI"));
          fUrl.SetOptions(opts);
       }
@@ -607,7 +602,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 }
 
 //______________________________________________________________________________
-void TProof::SetManager(TVirtualProofMgr *mgr)
+void TProof::SetManager(TProofMgr *mgr)
 {
    // Set manager and schedule its destruction after this for clean
    // operations.
@@ -966,7 +961,7 @@ void TProof::Close(Option_t *opt)
          if (gProof && gProof == this) {
             // Set previous proofd-related as default
             TIter pvp(gROOT->GetListOfProofs(), kIterBackward);
-            while ((gProof = (TVirtualProof *)pvp())) {
+            while ((gProof = (TProof *)pvp())) {
                if (gProof->IsProofd())
                   break;
             }
@@ -4286,7 +4281,7 @@ Int_t TProof::UploadPackageOnClient(const TString &par, EUploadPackageOpt opt, T
       if (!md5local || (*md5) != (*md5local)) {
          // if not, unzip and untar package in package directory
          Int_t st = 0;
-         if ((opt & TVirtualProof::kRemoveOld)) {
+         if ((opt & TProof::kRemoveOld)) {
             // remove any previous package directory with same name
             st = gSystem->Exec(Form("%s %s/%s", kRM, fPackageDir.Data(),
                                packnam.Data()));
@@ -4822,7 +4817,7 @@ TTree *TProof::GetTreeHeader(TDSet *dset)
 //______________________________________________________________________________
 TDrawFeedback *TProof::CreateDrawFeedback()
 {
-   // Draw feedback creation proxy. When accessed via TVirtualProof avoids
+   // Draw feedback creation proxy. When accessed via TProof avoids
    // link dependency on libProof.
 
    return new TDrawFeedback(this);
@@ -5200,7 +5195,7 @@ void TProof::cd(Int_t id)
    // the current session is set as default
 
    if (GetManager()) {
-      TVirtualProofDesc *d = GetManager()->GetProofDesc(id);
+      TProofDesc *d = GetManager()->GetProofDesc(id);
       if (d) {
          if (d->GetProof()) {
             gProof = d->GetProof();
@@ -5263,8 +5258,8 @@ void TProof::Detach(Option_t *opt)
    // Update info in the table of our manager, if any
    if (GetManager() && GetManager()->QuerySessions("L")) {
       TIter nxd(GetManager()->QuerySessions("L"));
-      TVirtualProofDesc *d = 0;
-      while ((d = (TVirtualProofDesc *)nxd())) {
+      TProofDesc *d = 0;
+      while ((d = (TProofDesc *)nxd())) {
          if (d->GetProof() == this) {
             d->SetProof(0);
             GetManager()->QuerySessions("L")->Remove(d);
@@ -5953,25 +5948,6 @@ Int_t TProof::VerifyDataSet(const char *dataSet)
 }
 
 //_____________________________________________________________________________
-TVirtualProof *TProof::Open(const char *url, const char *conffile,
-                            const char *confdir, Int_t loglevel)
-{
-   // Start a PROOF session on a specific cluster. Wrapper around
-   // TVirtualProof::Open().
-
-   return TVirtualProof::Open(url, conffile, confdir, loglevel);
-}
-
-//_____________________________________________________________________________
-Int_t TProof::Reset(const char *url, const char *usr)
-{
-   // Start a PROOF session on a specific cluster. Wrapper around
-   // TVirtualProof::Reset().
-
-   return TVirtualProof::Reset(url, usr);
-}
-
-//_____________________________________________________________________________
 void TProof::InterruptCurrentMonitor()
 {
    // If in active in a monitor set ready state
@@ -6076,3 +6052,223 @@ void TProof::ModifyWorkerLists(const char *ord, Bool_t add)
       Collect();
    }
 }
+
+//_____________________________________________________________________________
+TProof *TProof::Open(const char *cluster, const char *conffile,
+                                   const char *confdir, Int_t loglevel)
+{
+   // Start a PROOF session on a specific cluster. If cluster is 0 (the
+   // default) then the PROOF Session Viewer GUI pops up and 0 is returned.
+   // If cluster is "" (empty string) then we connect to a PROOF session
+   // on the localhost ("proof://localhost"). Via conffile a specific
+   // PROOF config file in the confir directory can be specified.
+   // Use loglevel to set the default loging level for debugging.
+   // The appropriate instance of TProofMgr is created, if not
+   // yet existing. The instantiated TProof object is returned.
+   // Use TProof::cd() to switch between PROOF sessions.
+   // For more info on PROOF see the TProof ctor.
+
+   const char *pn = "TProof::Open";
+
+   // Make sure libProof and dependents are loaded and TProof can be created,
+   // dependents are loaded via the information in the [system].rootmap file
+   if (!cluster) {
+
+      TPluginManager *pm = gROOT->GetPluginManager();
+      if (!pm) {
+         ::Error(pn, "plugin manager not found");
+         return 0;
+      }
+
+      if (gROOT->IsBatch()) {
+         ::Error(pn, "we are in batch mode, cannot show PROOF Session Viewer");
+         return 0;
+      }
+      // start PROOF Session Viewer
+      TPluginHandler *sv = pm->FindHandler("TSessionViewer", "");
+      if (!sv) {
+         ::Error(pn, "no plugin found for TSessionViewer");
+         return 0;
+      }
+      if (sv->LoadPlugin() == -1) {
+         ::Error(pn, "plugin for TSessionViewer could not be loaded");
+         return 0;
+      }
+      sv->ExecPlugin(0);
+      return 0;
+
+   } else {
+
+      TProof *proof = 0;
+
+      // If the master was specified as "", use "localhost"
+      TString fqdn = cluster;
+      if (fqdn == "")
+         fqdn = "localhost";
+
+      TUrl u(fqdn);
+      // in case user gave as url: "machine.dom.ain", replace
+      // "http" by "proof" and "80" by "1093"
+      if (!strcmp(u.GetProtocol(), TUrl("a").GetProtocol()))
+         u.SetProtocol("proof");
+      if (u.GetPort() == TUrl("a").GetPort())
+         u.SetPort(1093);
+
+      // Find out if we are required to attach to a specific session
+      TString o(u.GetOptions());
+      Int_t locid = -1;
+      Bool_t create = kFALSE;
+      if (o.Length() > 0) {
+         if (o.BeginsWith("N",TString::kIgnoreCase)) {
+            create = kTRUE;
+         } else if (o.IsDigit()) {
+            locid = o.Atoi();
+         }
+         u.SetOptions("");
+      }
+
+      // Attach-to or create the appropriate manager
+      TProofMgr *mgr = TProofMgr::Create(u.GetUrl());
+
+      if (mgr && mgr->IsValid()) {
+
+         // If XProofd we always attempt an attach first (unless
+         // explicitely not requested).
+         Bool_t attach = (create || mgr->IsProofd()) ? kFALSE : kTRUE;
+         if (attach) {
+            TProofDesc *d = 0;
+            if (locid < 0)
+               // Get the list of sessions
+               d = (TProofDesc *) mgr->QuerySessions("")->First();
+            else
+               d = (TProofDesc *) mgr->GetProofDesc(locid);
+            if (d) {
+               proof = (TProof*) mgr->AttachSession(d->GetLocalId());
+               if (!proof || !proof->IsValid()) {
+                  if (locid)
+                     ::Error(pn, "new session could not be attached");
+                  SafeDelete(proof);
+               }
+            }
+         }
+
+         // start the PROOF session
+         if (!proof) {
+            proof = (TProof*) mgr->CreateSession(conffile, confdir, loglevel);
+            if (!proof || !proof->IsValid()) {
+               ::Error(pn, "new session could not be created");
+               SafeDelete(proof);
+            }
+         }
+      }
+      return proof;
+   }
+}
+
+//_____________________________________________________________________________
+Int_t TProof::Reset(const char *url, const char *usr)
+{
+   // Reset the entry associated with the entity defined by 'url', which is
+   // in the form
+   //                "[proof://][user@]master.url[:port]"
+   // If 'user' has the privileges it can also ask to reset the entry of a
+   // different user specified by 'usr'; use 'usr'=='*' to reset all the
+   // sessions know remotely.
+   // 'Reset' means that all the PROOF sessions owned by the user at this
+   // master are terminated or killed, any other client connections (from other
+   // shells) closed, and the protocol instance reset and given back to the stack.
+   // After this call the user will be asked to login again and will start
+   // from scratch.
+   // To be used when the cluster is not behaving.
+   // Return 0 on success, -1 if somethign wrng happened.
+
+   if (!url)
+      return -1;
+
+   const char *pn = "TProof::Reset";
+
+   // If the master was specified as "", try to get the localhost FQDN
+   if (!strlen(url))
+      url = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
+
+   TUrl u(url);
+   // in case user gave as url: "machine.dom.ain", replace
+   // "http" by "proof" and "80" by "1093"
+   if (!strcmp(u.GetProtocol(), TUrl("a").GetProtocol()))
+      u.SetProtocol("proof");
+   if (u.GetPort() == TUrl("a").GetPort())
+      u.SetPort(1093);
+
+   // Attach-to or create the appropriate manager
+   TProofMgr *mgr = TProofMgr::Create(u.GetUrl());
+
+   if (mgr && mgr->IsValid())
+      if (!(mgr->IsProofd()))
+         // Ask the manager to reset the entry
+         return mgr->Reset(usr);
+      else
+         ::Info(pn,"proofd: functionality not supported by server");
+
+   else
+      ::Info(pn,"could not open a valid connection to %s", u.GetUrl());
+
+   // Done
+   return -1;
+}
+
+//_____________________________________________________________________________
+const TList *TProof::GetEnvVars()
+{
+   // Get environemnt variables.
+
+   return fgProofEnvList;
+}
+
+//_____________________________________________________________________________
+void TProof::AddEnvVar(const char *name, const char *value)
+{
+   // Add an variable to the list of environment variables passed to proofserv
+   // on the master and slaves
+
+   if (gDebug > 0) ::Info("TProof::AddEnvVar","%s=%s", name, value);
+
+   if (fgProofEnvList == 0) {
+      // initialize the list if needed
+      fgProofEnvList = new TList;
+      fgProofEnvList->SetOwner();
+   } else {
+      // replace old entries with the same name
+      TObject *o = fgProofEnvList->FindObject(name);
+      if (o != 0) {
+         fgProofEnvList->Remove(o);
+      }
+   }
+   fgProofEnvList->Add(new TNamed(name, value));
+}
+
+//_____________________________________________________________________________
+void TProof::DelEnvVar(const char *name)
+{
+   // Remove an variable from the list of environment variables passed to proofserv
+   // on the master and slaves
+
+   if (fgProofEnvList == 0) return;
+
+   TObject *o = fgProofEnvList->FindObject(name);
+   if (o != 0) {
+      fgProofEnvList->Remove(o);
+   }
+}
+
+//_____________________________________________________________________________
+void TProof::ResetEnvVars()
+{
+   // Clear the list of environment variables passed to proofserv
+   // on the master and slaves
+
+   if (fgProofEnvList == 0) return;
+
+   SafeDelete(fgProofEnvList);
+}
+
+

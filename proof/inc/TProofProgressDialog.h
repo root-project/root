@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.h,v 1.10 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.h,v 1.11 2006/11/15 17:45:54 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -35,7 +35,7 @@ class TGCheckButton;
 class TGLabel;
 class TGTextBuffer;
 class TGTextEntry;
-class TVirtualProof;
+class TProof;
 class TProofProgressLog;
 class TNtuple;
 class TGraph;
@@ -67,7 +67,7 @@ private:
    TGLabel            *fInit;
    TGLabel            *fSelector;
    TProofProgressLog  *fLogWindow;       // transient frame for logs
-   TVirtualProof      *fProof;
+   TProof             *fProof;
    TTime               fStartTime;
    TTime               fEndTime;
    Long64_t            fPrevProcessed;
@@ -88,7 +88,7 @@ private:
    static TString      fgTextQueryDefault;
 
 public:
-   TProofProgressDialog(TVirtualProof *proof, const char *selector,
+   TProofProgressDialog(TProof *proof, const char *selector,
                         Int_t files, Long64_t first, Long64_t entries);
    virtual ~TProofProgressDialog();
 

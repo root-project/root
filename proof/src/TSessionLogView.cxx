@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSessionLogView.cxx,v 1.4 2006/01/30 17:42:06 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSessionLogView.cxx,v 1.1 2006/11/17 15:50:17 rdm Exp $
 // Author: Bertrand Bellenot, Gerri Ganis 15/09/2005
 
 /*************************************************************************
@@ -11,7 +11,7 @@
 
 #include "TSessionLogView.h"
 #include "TSessionViewer.h"
-#include "TVirtualProof.h"
+#include "TProof.h"
 #include "KeySymbols.h"
 
 //____________________________________________________________________________

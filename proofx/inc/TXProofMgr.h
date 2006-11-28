@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.h,v 1.5 2006/06/05 22:51:14 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.h,v 1.6 2006/06/21 16:18:26 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -24,8 +24,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVirtualProofMgr
-#include "TVirtualProofMgr.h"
+#ifndef ROOT_TProofMgr
+#include "TProofMgr.h"
 #endif
 #ifndef ROOT_TUrl
 #include "TUrl.h"
@@ -42,7 +42,7 @@ const Int_t kXPROOF_Protocol = 1;
 
 class TXSocket;
 
-class TXProofMgr : public TVirtualProofMgr, public TXHandler {
+class TXProofMgr : public TProofMgr, public TXHandler {
 
 private:
 
@@ -58,7 +58,7 @@ public:
 
    Bool_t      IsValid() const { return fSocket; }
 
-   TVirtualProof *AttachSession(Int_t id, Bool_t gui = kFALSE);
+   TProof *AttachSession(Int_t id, Bool_t gui = kFALSE);
    void        DetachSession(Int_t, Option_t * = "");
    Bool_t      MatchUrl(const char *url);
    TList      *QuerySessions(Option_t *opt = "S");

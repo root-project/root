@@ -1,4 +1,4 @@
-// @(#)root/peac:$Name:$:$Id:$
+// @(#)root/peac:$Name:  $:$Id: TProofStartupDialog.h,v 1.1 2005/02/07 18:02:36 rdm Exp $
 // Author: Maarten Ballintijn    21/10/2004
 // Author: Kris Gulbrandsen      21/10/2004
 
@@ -31,13 +31,13 @@ class TGProgressBar;
 class TGTextButton;
 class TGCheckButton;
 class TGLabel;
-class TVirtualProof;
+class TProof;
 
 
 class TProofStartupDialog {
 
 private:
-   TVirtualProof      *fProof;
+   TProof             *fProof;
    TGTransientFrame   *fDialog;  // transient frame, main dialog window
    TGProgressBar      *fBar;     // progress bar
    TGLabel            *fFilesBytes;
@@ -52,7 +52,7 @@ private:
 
 
 public:
-   TProofStartupDialog(TVirtualProof *proof, const Char_t *dataset,
+   TProofStartupDialog(TProof *proof, const Char_t *dataset,
                        Int_t nfiles, Long64_t totalbytes);
    virtual ~TProofStartupDialog();
    void Progress(Long64_t totalbytes, Long64_t bytesready);

@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.13 2006/10/19 12:38:07 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.14 2006/11/15 17:45:55 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -34,27 +34,30 @@ ClassImp(TXProofMgr)
 // These are needed to avoid using the plugin manager which may create
 // problems in multi-threaded environments.
 extern "C" {
-   TVirtualProofMgr *GetTXProofMgr(const char *url, Int_t l, const char *al)
-   { return ((TVirtualProofMgr *) new TXProofMgr(url, l, al)); }
+   TProofMgr *GetTXProofMgr(const char *url, Int_t l, const char *al)
+   { return ((TProofMgr *) new TXProofMgr(url, l, al)); }
 }
 class TXProofMgrInit {
 public:
    TXProofMgrInit() {
-      TVirtualProofMgr::SetTProofMgrHook(&GetTXProofMgr, "xpd");
+      TProofMgr::SetTXProofMgrHook(&GetTXProofMgr);
 }};
 static TXProofMgrInit gxproofmgr_init;
 
 //______________________________________________________________________________
 TXProofMgr::TXProofMgr(const char *url, Int_t dbg, const char *alias)
-          : TVirtualProofMgr(url)
+          : TProofMgr(url)
 {
    // Create a PROOF manager for the standard (old) environment.
+
+   // Set the correct servert type
+   fServType = kXProofd;
 
    // Correct URL protocol
    if (!strcmp(fUrl.GetProtocol(), TUrl("a").GetProtocol()))
       fUrl.SetProtocol("proof");
    // Check port
-  if (fUrl.GetPort() == TUrl("a").GetPort()) {
+   if (fUrl.GetPort() == TUrl("a").GetPort()) {
       // For the time being we use 'rootd' service as default.
       // This will be changed to 'proofd' as soon as XRD will be able to
       // accept on multiple ports
@@ -108,7 +111,7 @@ Int_t TXProofMgr::Init(Int_t)
       if (!fSocket || !(fSocket->IsServProofd()))
          Error("Init", "while opening the connection to %s - exit", u.Data());
       if (fSocket && fSocket->IsServProofd())
-         fServType = TVirtualProofMgr::kProofd;
+         fServType = TProofMgr::kProofd;
       return -1;
    }
 
@@ -135,13 +138,13 @@ TXProofMgr::~TXProofMgr()
 }
 
 //______________________________________________________________________________
-TVirtualProof *TXProofMgr::AttachSession(Int_t id, Bool_t gui)
+TProof *TXProofMgr::AttachSession(Int_t id, Bool_t gui)
 {
    // Dummy version provided for completeness. Just returns a pointer to
    // existing session 'id' (as shown by TProof::QuerySessions) or 0 if 'id' is
    // not valid. The boolena 'gui' should be kTRUE when invoked from the GUI.
 
-   TVirtualProofDesc *d = GetProofDesc(id);
+   TProofDesc *d = GetProofDesc(id);
    if (d) {
       if (d->GetProof())
          // Nothing to do if already in contact with proofserv
@@ -156,15 +159,15 @@ TVirtualProof *TXProofMgr::AttachSession(Int_t id, Bool_t gui)
          u += "GUI";
 
       // Attach
-      TVirtualProof *p = new TProof(u);
+      TProof *p = new TProof(u);
       if (p && p->IsValid()) {
 
          // Set reference manager
          p->SetManager(this);
 
          // Save record about this session
-         Int_t st = (p->IsIdle()) ? TVirtualProofDesc::kIdle
-                                  : TVirtualProofDesc::kRunning;
+         Int_t st = (p->IsIdle()) ? TProofDesc::kIdle
+                                  : TProofDesc::kRunning;
          d->SetStatus(st);
          d->SetProof(p);
 
@@ -190,11 +193,11 @@ void TXProofMgr::DetachSession(Int_t id, Option_t *opt)
 
    if (id > 0) {
       // Single session request
-      TVirtualProofDesc *d = GetProofDesc(id);
+      TProofDesc *d = GetProofDesc(id);
       if (d) {
          if (fSocket)
             fSocket->DisconnectSession(d->GetRemoteId(), opt);
-         TVirtualProof *p = d->GetProof();
+         TProof *p = d->GetProof();
          SafeDelete(p);
          fSessions->Remove(d);
          delete d;
@@ -209,9 +212,9 @@ void TXProofMgr::DetachSession(Int_t id, Option_t *opt)
       if (fSessions) {
          // Delete PROOF sessions
          TIter nxd(fSessions);
-         TVirtualProofDesc *d = 0;
-         while ((d = (TVirtualProofDesc *)nxd())) {
-            TVirtualProof *p = d->GetProof();
+         TProofDesc *d = 0;
+         while ((d = (TProofDesc *)nxd())) {
+            TProof *p = d->GetProof();
             SafeDelete(p);
          }
          fSessions->Delete();
@@ -225,7 +228,7 @@ void TXProofMgr::DetachSession(Int_t id, Option_t *opt)
 Bool_t TXProofMgr::MatchUrl(const char *url)
 {
    // Checks if 'url' refers to the same 'user@host:port' entity as the URL
-   // in memory. TVirtualProofMgr::MatchUrl cannot be used here because of the
+   // in memory. TProofMgr::MatchUrl cannot be used here because of the
    // 'double' default port, implying an additional check on the port effectively
    // open.
 
@@ -301,7 +304,7 @@ TList *TXProofMgr::QuerySessions(Option_t *opt)
    if (os) {
       TObjArray *oa = TString(os->GetName()).Tokenize(TString("|"));
       if (oa) {
-         TVirtualProofDesc *d = 0;
+         TProofDesc *d = 0;
          TIter nxos(oa);
          TObjString *to = (TObjString *) nxos();
          while ((to = (TObjString *) nxos())) {
@@ -311,9 +314,9 @@ TList *TXProofMgr::QuerySessions(Option_t *opt)
             Int_t id = -1, st = -1, nc = 0;
             sscanf(to->GetName(),"%d %s %s %d %d", &id, tg, al, &st, &nc);
             // Add to the list, if not already there
-            if (!(d = (TVirtualProofDesc *) fSessions->FindObject(tg))) {
+            if (!(d = (TProofDesc *) fSessions->FindObject(tg))) {
                Int_t locid = fSessions->GetSize() + 1;
-               d = new TVirtualProofDesc(tg, al, GetUrl(), locid, id, st, 0);
+               d = new TProofDesc(tg, al, GetUrl(), locid, id, st, 0);
                fSessions->Add(d);
             } else {
                // Set missing / update info
@@ -332,8 +335,8 @@ TList *TXProofMgr::QuerySessions(Option_t *opt)
    // Printout and Garbage collection
    if (fSessions->GetSize() > 0) {
       TIter nxd(fSessions);
-      TVirtualProofDesc *d = 0;
-      while ((d = (TVirtualProofDesc *)nxd())) {
+      TProofDesc *d = 0;
+      while ((d = (TProofDesc *)nxd())) {
          if (ocl->FindObject(d->GetName())) {
             if (opt && !strncasecmp(opt,"S",1))
                d->Print("");
@@ -358,8 +361,8 @@ Bool_t TXProofMgr::HandleError(const void *)
    // Interrupt any PROOF session in Collect
    if (fSessions && fSessions->GetSize() > 0) {
       TIter nxd(fSessions);
-      TVirtualProofDesc *d = 0;
-      while ((d = (TVirtualProofDesc *)nxd())) {
+      TProofDesc *d = 0;
+      while ((d = (TProofDesc *)nxd())) {
          TProof *p = (TProof *) d->GetProof();
          if (p)
             p->InterruptCurrentMonitor();

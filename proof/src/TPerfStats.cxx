@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPerfStats.cxx,v 1.8 2006/06/01 16:26:57 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPerfStats.cxx,v 1.9 2006/11/15 17:45:55 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -113,7 +113,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
    // Normal Constructor.
 
    Int_t nslaves = 0;
-   TVirtualProof *proof = gProofServ->GetProof();
+   TProof *proof = gProofServ->GetProof();
    TList *l = proof ? proof->GetSlaveInfo() : 0 ;
    TIter nextslaveinfo(l);
    while (TSlaveInfo *si = dynamic_cast<TSlaveInfo*>(nextslaveinfo()))

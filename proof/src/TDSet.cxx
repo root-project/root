@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.35 2006/08/06 07:15:00 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.1 2006/11/27 14:14:24 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -57,7 +57,7 @@
 #include "TUrl.h"
 #include "TRegexp.h"
 #include "TVirtualPerfStats.h"
-#include "TVirtualProof.h"
+#include "TProof.h"
 #include "TProofChain.h"
 #include "TPluginManager.h"
 #include "TChain.h"
@@ -1077,7 +1077,7 @@ void TDSet::StartViewer()
 }
 
 //_______________________________________________________________________
-TTree* TDSet::GetTreeHeader(TVirtualProof* proof)
+TTree* TDSet::GetTreeHeader(TProof* proof)
 {
    // Returns a tree header containing the branches' structure of the dataset.
 

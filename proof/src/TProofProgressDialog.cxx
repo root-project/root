@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.26 2006/11/21 11:41:46 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.27 2006/11/22 16:52:54 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -49,7 +49,7 @@ TString TProofProgressDialog::fgTextQueryDefault = "last";
 ClassImp(TProofProgressDialog)
 
 //______________________________________________________________________________
-TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
+TProofProgressDialog::TProofProgressDialog(TProof *proof,
                                            const char *selector,
                                            Int_t files,
                                            Long64_t first,

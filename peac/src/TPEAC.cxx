@@ -1,4 +1,4 @@
-// @(#)root/peac:$Name:  $:$Id: TPEAC.cxx,v 1.1 2005/02/07 18:02:36 rdm Exp $
+// @(#)root/peac:$Name:  $:$Id: TPEAC.cxx,v 1.2 2006/08/09 07:15:42 rdm Exp $
 // Author: Maarten Ballintijn    21/10/2004
 // Author: Kris Gulbrandsen      21/10/2004
 
@@ -29,7 +29,7 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TUrl.h"
-#include "TVirtualProof.h"
+#include "TProof.h"
 
 
 namespace {
@@ -134,7 +134,7 @@ TDSet *TPEAC::StartSession(const Char_t *dataset)
    fDataSet   = dataset;
 
    // start proof
-   fProof = TVirtualProof::Open(purl.GetUrl(), Form("peac:%s", sessionid.Data()));
+   fProof = TProof::Open(purl.GetUrl(), Form("peac:%s", sessionid.Data()));
 
    if (!fProof || !fProof->IsValid()) {
       Error("StartSession", "PROOF session could not be started");
@@ -144,7 +144,7 @@ TDSet *TPEAC::StartSession(const Char_t *dataset)
    }
 
    //call EndSession when proof is destroyed
-   fProof->Connect("~TVirtualProof()", "TPEAC", this, "EndSessionCallback()");
+   fProof->Connect("~TProof()", "TPEAC", this, "EndSessionCallback()");
 
    //wait until data is ready
    Long64_t totalbytes, bytesready;
@@ -188,7 +188,7 @@ void TPEAC::EndSessionCallback()
    }
 
    if (fProof) {
-      fProof->Disconnect("~TVirtualProof()", this, "EndSessionCallback()");
+      fProof->Disconnect("~TProof()", this, "EndSessionCallback()");
       fProof = 0;
    }
    fGM->DestroySession(fSessionID);
@@ -212,7 +212,7 @@ void TPEAC::EndSession()
    }
 
    if (fProof) {
-      fProof->Disconnect("~TVirtualProof()", this, "EndSessionCallback()");
+      fProof->Disconnect("~TProof()", this, "EndSessionCallback()");
       delete fProof;
       fProof = 0;
    }

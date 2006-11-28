@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.19 2006/08/06 07:15:00 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.1 2006/11/27 14:14:23 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -60,7 +60,7 @@ class TFileInfo;
 class TCut;
 class TTree;
 class TChain;
-class TVirtualProof;
+class TProof;
 class TEventList;
 class TProofChain;
 
@@ -201,7 +201,7 @@ public:
    TList                *GetOutputList();
    virtual void          StartViewer(); // *MENU*
 
-   virtual TTree        *GetTreeHeader(TVirtualProof *proof);
+   virtual TTree        *GetTreeHeader(TProof *proof);
    virtual void          SetEventList(TEventList *evl) { fEventList = evl;}
    TEventList           *GetEventList() const {return fEventList; }
    void                  Validate();

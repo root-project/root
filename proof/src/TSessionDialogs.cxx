@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSessionDialogs.cxx,v 1.32 2006/11/17 15:42:13 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSessionDialogs.cxx,v 1.1 2006/11/17 15:50:17 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -39,7 +39,7 @@
 #include "TKey.h"
 #include "TGTableLayout.h"
 #include "TGFileDialog.h"
-#include "TVirtualProof.h"
+#include "TProof.h"
 #include "TFileInfo.h"
 #include "TGMsgBox.h"
 #include "TRegexp.h"
@@ -1152,17 +1152,17 @@ void TUploadDataSetDlg::UploadDataSet()
    }
    // Format upload flags with user selection
    if (fOverwriteDSet->IsOn())
-      flags |= TVirtualProof::kOverwriteDataSet;
+      flags |= TProof::kOverwriteDataSet;
    else
-      flags |= TVirtualProof::kNoOverwriteDataSet;
+      flags |= TProof::kNoOverwriteDataSet;
    if (fOverwriteFiles->IsOn())
-      flags |= TVirtualProof::kOverwriteAllFiles;
+      flags |= TProof::kOverwriteAllFiles;
    else
-      flags |= TVirtualProof::kOverwriteNoFiles;
+      flags |= TProof::kOverwriteNoFiles;
    if (fAppendFiles->IsOn()) {
-      flags |= TVirtualProof::kAppend;
-      if (flags & TVirtualProof::kNoOverwriteDataSet)
-         flags &= ~TVirtualProof::kNoOverwriteDataSet;
+      flags |= TProof::kAppend;
+      if (flags & TProof::kNoOverwriteDataSet)
+         flags &= ~TProof::kNoOverwriteDataSet;
    }
 
    Int_t ret = 0;
@@ -1182,7 +1182,7 @@ void TUploadDataSetDlg::UploadDataSet()
    if (strlen(destination) < 2) destination = 0;
    ret = fViewer->GetActDesc()->fProof->UploadDataSet(dsetName,
                   datasetFiles, destination, flags, skippedFiles);
-   if (ret == TVirtualProof::kDataSetExists) {
+   if (ret == TProof::kDataSetExists) {
       // ask user what to do :
       // cancel/overwrite and change option
       new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
@@ -1192,19 +1192,19 @@ void TUploadDataSetDlg::UploadDataSet()
       if (retval == kMBYes) {
          ret = fViewer->GetActDesc()->fProof->UploadDataSet(dsetName,
                           datasetFiles, destination,
-                          TVirtualProof::kOverwriteDataSet |
-                          TVirtualProof::kOverwriteNoFiles,
+                          TProof::kOverwriteDataSet |
+                          TProof::kOverwriteNoFiles,
                           skippedFiles);
       }
       if (retval == kMBAppend) {
          ret = fViewer->GetActDesc()->fProof->UploadDataSet(dsetName,
                           datasetFiles, destination,
-                          TVirtualProof::kAppend |
-                          TVirtualProof::kOverwriteNoFiles,
+                          TProof::kAppend |
+                          TProof::kOverwriteNoFiles,
                           skippedFiles);
       }
    }
-   if (ret == TVirtualProof::kError) {
+   if (ret == TProof::kError) {
       // Inform user
       new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
                    "Failed uploading dataset/files to the cluster",
@@ -1227,9 +1227,9 @@ void TUploadDataSetDlg::UploadDataSet()
          if (retval == kMBYesAll) {
             ret = fViewer->GetActDesc()->fProof->UploadDataSet(dsetName,
                            skippedFiles, destination,
-                           TVirtualProof::kAppend |
-                           TVirtualProof::kOverwriteAllFiles);
-            if (ret == TVirtualProof::kError) {
+                           TProof::kAppend |
+                           TProof::kOverwriteAllFiles);
+            if (ret == TProof::kError) {
                // Inform user
                new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
                             Form("Failed uploading \"%s\" to the cluster",
@@ -1253,8 +1253,8 @@ void TUploadDataSetDlg::UploadDataSet()
             // Append one file to the dataSet
             ret = fViewer->GetActDesc()->fProof->UploadDataSet(dsetName,
                   obj->GetFirstUrl()->GetUrl(), destination,
-                  TVirtualProof::kAppend | TVirtualProof::kOverwriteAllFiles);
-            if (ret == TVirtualProof::kError) {
+                  TProof::kAppend | TProof::kOverwriteAllFiles);
+            if (ret == TProof::kError) {
                // Inform user
                new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
                             Form("Failed uploading \"%s\" to the cluster",

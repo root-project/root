@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.33 2006/07/01 12:05:49 rdm Exp $ */
+/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.34 2006/11/27 14:14:23 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -26,6 +26,7 @@
 #pragma link C++ class TDSetElement+;
 #pragma link C++ class TProofChain+;
 #pragma link C++ class TProofMgr;
+#pragma link C++ class TProofDesc;
 #pragma link C++ class TProof;
 #pragma link C++ class TProofCondor;
 #pragma link C++ class TProofSuperMaster;
@@ -75,5 +76,7 @@
 #pragma link C++ class TProofVectorContainer<TProofDrawListOfPolyMarkers3D::Point4D_t>+;
 #pragma link C++ class std::pair<TDSet*, TString>;
 #pragma link C++ class std::pair<TDSetElement*, TString>;
+
+#pragma link C++ global gProof;
 
 #endif
