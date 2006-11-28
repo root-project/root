@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.31 2006/09/25 13:31:54 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.32 2006/09/27 08:45:42 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -265,7 +265,7 @@ void TGedEditor::GlobalSetModel(TVirtualPad *pad, TObject */*obj*/, Int_t ev)
 {
    // Set canvas to global editor.
 
-   if (ev != kButton1Down) return;
+   if ((ev != kButton1Down) || !IsMapped()) return;
 
    TCanvas* can = pad->GetCanvas();
    // Do nothing if canvas is the same as before or
