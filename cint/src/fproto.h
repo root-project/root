@@ -673,29 +673,29 @@ int G__bc_throw_runtime_error();
 int G__bc_objassignment(G__value *plresult ,G__value *prresult);
 
 int G__bc_exec_virtual_bytecode(G__value *result7
-			,char *funcname        // vtagnum
-			,struct G__param *libp
-			,int hash              // vtblindex
+                        ,char *funcname        /* vtagnum */
+                        ,struct G__param *libp
+                        ,int hash              /* vtblindex */
 			);
 int G__bc_exec_normal_bytecode(G__value *result7
-			,char *funcname        // ifunc
+			,char *funcname        /* ifunc */
 			,struct G__param *libp
-			,int hash              // ifn
+			,int hash              /* ifn */
 			);
 int G__bc_exec_ctor_bytecode(G__value *result7
-			,char *funcname        // ifunc
+			,char *funcname        /* ifunc */
 			,struct G__param *libp
-			,int hash              // ifn
+			,int hash              /* ifn */
 			);
 int G__bc_exec_ctorary_bytecode(G__value *result7
-			,char *funcname        // ifunc
+			,char *funcname        /* ifunc */
 			,struct G__param *libp
-			,int hash              // ifn, n
+			,int hash              /* ifn, n */
 			);
 int G__bc_exec_dtorary_bytecode(G__value *result7
-			,char *funcname        // ifunc
+			,char *funcname        /* ifunc */
 			,struct G__param *libp
-			,int hash              // ifn, n
+			,int hash              /* ifn, n */
 			);
 void G__bc_struct(int tagnum);
 
