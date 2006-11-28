@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.12 2006/11/20 08:10:22 brun Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.13 2006/11/23 15:09:27 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -220,7 +220,7 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    fConv->SetState(kButtonDisabled);
    fLayoutNone = new TGLayoutHints(kLHintsLeft,0,5,3,-10);
    fLayoutAdd  = new TGLayoutHints(kLHintsLeft,10,5,3,-10);
-   fLayoutConv = new TGLayoutHints(kLHintsLeft,10,0,3,-10);
+   fLayoutConv = new TGLayoutHints(kLHintsLeft,10,5,3,-10);
    bgr->SetLayoutHints(fLayoutNone,fNone);
    bgr->SetLayoutHints(fLayoutAdd,fAdd);
    bgr->SetLayoutHints(fLayoutConv,fConv);
@@ -651,6 +651,7 @@ void TFitEditor::ConnectSlots()
       fSliderZ->Connect("Pressed()","TFitEditor",this, "DoSliderZPressed()");
       fSliderZ->Connect("Released()","TFitEditor",this, "DoSliderZReleased()");
    }
+   fParentPad->Connect("RangeAxisChanged()", "TFitEditor", this, "UpdateGUI()");
 }
 
 //______________________________________________________________________________
@@ -717,6 +718,7 @@ void TFitEditor::DisconnectSlots()
       fSliderZ->Disconnect("Pressed()");
       fSliderZ->Disconnect("Released()");
    }
+   fParentPad->Disconnect("RangeAxisChanged()");
 }
 
 //______________________________________________________________________________
@@ -796,6 +798,9 @@ void TFitEditor::UpdateGUI()
 
    // sliders
    if (fDim > 0) {
+      fSliderX->Disconnect("PositionChanged()");
+      fSliderX->Disconnect("Pressed()");
+      fSliderX->Disconnect("Released()");
 
       switch (fType) {
          case kObjectHisto: {
@@ -839,13 +844,24 @@ void TFitEditor::UpdateGUI()
             break;
          }
       }
-      fSliderX->SetRange(1,fXrange);
-      fSliderX->SetPosition(fXmin,fXmax);
+      if (fXmin > 1 || fXmax < fXrange) {
+         fSliderX->SetRange(fXmin,fXmax);
+         fSliderX->SetPosition(fXmin, fXmax);
+      } else {
+         fSliderX->SetRange(1,fXrange);
+         fSliderX->SetPosition(fXmin,fXmax);
+      }
       fSliderX->SetScale(5);
+      fSliderX->Connect("PositionChanged()","TFitEditor",this, "DoSliderXMoved()");
+      fSliderX->Connect("Pressed()","TFitEditor",this, "DoSliderXPressed()");
+      fSliderX->Connect("Released()","TFitEditor",this, "DoSliderXReleased()");
    }
 
 /*  no implemented functionality for y & z sliders yet 
    if (fDim > 1) {
+      fSliderY->Disconnect("PositionChanged()");
+      fSliderY->Disconnect("Pressed()");
+      fSliderY->Disconnect("Released()");
 
       if (!fSliderYParent->IsMapped())
          fSliderYParent->MapWindow();
@@ -884,6 +900,10 @@ void TFitEditor::UpdateGUI()
    }
 
    if (fDim > 2) {
+      fSliderZ->Disconnect("PositionChanged()");
+      fSliderZ->Disconnect("Pressed()");
+      fSliderZ->Disconnect("Released()");
+
       if (!fSliderZParent->IsMapped())
          fSliderZParent->MapWindow();
 
@@ -1522,8 +1542,13 @@ void TFitEditor::DoReset()
       delete fFitFunc;
       fFitFunc = new TF1("fitFunc", fFunction.Data(), fXmin, fXmax);
    }
-   fSliderX->SetRange(1, fXrange);
-   fSliderX->SetPosition(fXmin, fXmax);
+   if (fXmin > 1 || fXmax < fXrange) {
+      fSliderX->SetRange(fXmin,fXmax);
+      fSliderX->SetPosition(fXmin, fXmax);
+   } else {
+      fSliderX->SetRange(1,fXrange);
+      fSliderX->SetPosition(fXmin,fXmax);
+   }
    fPlus = '+';
    if (fLinearFit->GetState() == kButtonDown)
       fLinearFit->SetState(kButtonUp, kFALSE);
