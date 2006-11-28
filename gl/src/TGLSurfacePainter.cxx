@@ -287,6 +287,7 @@ void TGLSurfacePainter::DrawPlot()const
          glEnable(GL_BLEND);
          glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       }
+      
    }
 
    if (Textured() && !fSelectionPass) {
@@ -357,25 +358,28 @@ void TGLSurfacePainter::DrawPlot()const
       fBoxCut.DrawBox(fSelectionPass, fSelectedPart);
 
    //Draw outlines here
-   if (!fSelectionPass && (fType == kSurf || fType == kSurf1 || fType == kSurf3)) {
-      const TGLDisableGuard lightGuard(GL_LIGHTING);
+   if (!fSelectionPass) {
       const TGLEnableGuard  blendGuard(GL_BLEND);
-      const TGLEnableGuard  smoothGuard(GL_LINE_SMOOTH);
+      
+      if (fType == kSurf || fType == kSurf1 || fType == kSurf3) {
+         const TGLDisableGuard lightGuard(GL_LIGHTING);
+         const TGLEnableGuard  smoothGuard(GL_LINE_SMOOTH);
 
-      glDepthMask(GL_FALSE);
+         glDepthMask(GL_FALSE);
 
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-      glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
-      glColor4d(0., 0., 0., 0.5);
+         glColor4d(0., 0., 0., 0.5);
 
-      for (Int_t i = 0; i < nX - 1; ++i) {
-         for (Int_t j = 0; j < nY - 1; ++j) {
-            Rgl::DrawQuadOutline(fMesh[i][j + 1], fMesh[i][j], fMesh[i + 1][j], fMesh[i + 1][j + 1]);
+         for (Int_t i = 0; i < nX - 1; ++i) {
+            for (Int_t j = 0; j < nY - 1; ++j) {
+               Rgl::DrawQuadOutline(fMesh[i][j + 1], fMesh[i][j], fMesh[i + 1][j], fMesh[i + 1][j + 1]);
+            }
          }
-      }
 
-      glDepthMask(GL_TRUE);
+         glDepthMask(GL_TRUE);
+      }
    }
 
    if (fType == kSurf3 && !fSelectionPass && fPalette.EnableTexture(GL_MODULATE)) {
