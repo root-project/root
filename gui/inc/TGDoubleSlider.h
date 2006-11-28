@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.13 2006/07/20 01:12:15 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.14 2006/08/10 06:33:54 brun Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -117,7 +117,10 @@ public:
    virtual Bool_t HandleMotion(Event_t *event) = 0;
 
    virtual void  SetScale(Int_t scale) { fScale = scale; }
-   virtual void  SetRange(Float_t min, Float_t max) { fVmin = min; fVmax = max; }
+   virtual void  SetRange(Float_t min, Float_t max) { 
+      fVmin = min; fVmax = max; 
+      FixBounds(fVmin, fVmax);
+   }
 
    virtual void SetPosition(Float_t min, Float_t max) {
       if (fReversedScale) { fSmin = fVmin+fVmax-max; fSmax = fVmin+fVmax-min; }

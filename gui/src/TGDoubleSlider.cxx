@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.16 2006/07/19 12:58:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.17 2006/07/20 01:12:15 rdm Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -221,6 +221,7 @@ TGDoubleVSlider::TGDoubleVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t
       Error("TGDoubleVSlider", "sliderv.xpm not found");
    // set initial values
    fSmin = h/8*3; fSmax = h/8*5; fVmin = 0; fVmax = h;
+   FixBounds(fVmin, fVmax);
    SetWindowName();
 }
 
@@ -413,6 +414,7 @@ TGDoubleHSlider::TGDoubleHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t
       Error("TGDoubleHSlider", "sliderh.xpm not found");
    // set initial values
    fSmin = w/8*3; fSmax = w/8*5; fVmin = 0; fVmax = w;
+   FixBounds(fVmin, fVmax);
    SetWindowName();
 }
 

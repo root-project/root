@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTripleSlider.cxx,v 1.4 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTripleSlider.cxx,v 1.5 2006/07/19 12:58:52 rdm Exp $
 // Author: Bertrand Bellenot   20/01/06
 
 /*************************************************************************
@@ -250,10 +250,12 @@ void TGTripleVSlider::SetConstrained(Bool_t on)
 
    fConstrained = on;
 
-   if (GetPointerPosition() < GetMinPosition()) 
-      SetPointerPos((Int_t)GetMinPosition(), 3);
-   else if (GetPointerPosition() > GetMaxPosition()) 
-      SetPointerPos((Int_t)GetMaxPosition(), 3);
+   if (fConstrained) {
+      if (GetPointerPosition() <= GetMinPosition()) 
+         SetPointerPos((Int_t)GetMinPosition(), 3);
+      else if (GetPointerPosition() >= GetMaxPosition()) 
+         SetPointerPos((Int_t)GetMaxPosition(), 3);
+   }
 }
 
 //________________________________________________________________________________
@@ -510,10 +512,12 @@ void TGTripleHSlider::SetConstrained(Bool_t on)
 
    fConstrained = on;
 
-   if (GetPointerPosition() < GetMinPosition()) 
-      SetPointerPos((Int_t)GetMinPosition(), 3);
-   else if (GetPointerPosition() > GetMaxPosition()) 
-      SetPointerPos((Int_t)GetMaxPosition(), 3);
+   if (fConstrained) {
+      if (GetPointerPosition() <= GetMinPosition()) 
+         SetPointerPos((Int_t)GetMinPosition(), 3);
+      else if (GetPointerPosition() >= GetMaxPosition()) 
+         SetPointerPos((Int_t)GetMaxPosition(), 3);
+   }
 }
 
 //________________________________________________________________________________
