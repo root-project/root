@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.13 2006/11/23 15:09:27 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.14 2006/11/28 14:08:38 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -751,6 +751,7 @@ void TFitEditor::Hide()
    if (fgFitDialog) {
       fgFitDialog->UnmapWindow();
    }
+   fParentPad->Disconnect("RangeAxisChanged()");
    DoReset();
    fCanvas = 0;
    fParentPad = 0;
@@ -1198,6 +1199,7 @@ void TFitEditor::DoFit()
       return;
    }
 
+   fParentPad->Disconnect("RangeAxisChanged()");
    TVirtualPad *save = 0;
    save = gPad;
    gPad = fParentPad;
@@ -1209,10 +1211,10 @@ void TFitEditor::DoFit()
    switch (fType) {
       case kObjectHisto: {
          TH1 *h1 = (TH1*)fFitObject;
-         Float_t xmin = fXaxis->GetBinLowEdge((Int_t)(fSliderX->GetMinPosition()));
-         Float_t xmax = fXaxis->GetBinUpEdge((Int_t)(fSliderX->GetMaxPosition()));
+         xmin = fXaxis->GetBinLowEdge((Int_t)(fSliderX->GetMinPosition()));
+         xmax = fXaxis->GetBinUpEdge((Int_t)(fSliderX->GetMaxPosition()));
          fFitFunc->SetRange(xmin,xmax);
-         h1->Fit(fFitFunc, fFitOption.Data(), fDrawOption.Data());
+         h1->Fit(fFitFunc, fFitOption.Data(), fDrawOption.Data(), xmin, xmax);
          break;
       }
       case kObjectGraph: {
@@ -1242,7 +1244,7 @@ void TFitEditor::DoFit()
             if (xmax > gxmax) xmax = gxmax;
          }
          fFitFunc->SetRange(xmin,xmax);
-         gr->Fit(fFitFunc, fFitOption.Data(), fDrawOption.Data());
+         gr->Fit(fFitFunc, fFitOption.Data(), fDrawOption.Data(), xmin, xmax);
          break;
       }
       case kObjectGraph2D: {
@@ -1262,6 +1264,7 @@ void TFitEditor::DoFit()
    fParentPad->Modified();
    fParentPad->Update();
    fParentPad->GetCanvas()->SetCursor(kPointer);
+   fParentPad->Connect("RangeAxisChanged()", "TFitEditor", this, "UpdateGUI()");
    
    if(save) gPad = save;
 }
