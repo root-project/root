@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.18 2006/11/06 15:33:14 brun Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.19 2006/11/24 14:24:54 rdm Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -43,6 +43,20 @@ namespace ROOT { namespace Cintex {
    {
       // Push back a context.
       StubContexts::Instance().push_back(this);
+
+      fFunction = mem.TypeOf();
+      fNpar    = fFunction.FunctionParameterSize();
+      fStub    = mem.Stubfunction();
+      fStubctx = mem.Stubcontext();
+      
+      // for constructor or destructor locate newdelfunctions pointers
+      if ( mem.IsConstructor() || mem.IsDestructor() ) {
+         Member getnewdelfuncs = fClass.MemberByName("__getNewDelFunctions");
+         if( getnewdelfuncs ) {
+            fNewdelfuncs = (NewDelFunctions_t*)( getnewdelfuncs.Invoke().Address() );
+         }
+      }
+
    }
 
    StubContext_t::~StubContext_t() {
@@ -52,10 +66,6 @@ namespace ROOT { namespace Cintex {
 
    void StubContext_t::Initialize() {
       // Initialise a context.
-      fFunction = fMember.TypeOf();
-      fNpar    = fFunction.FunctionParameterSize();
-      fStub    = fMember.Stubfunction();
-      fStubctx = fMember.Stubcontext();
       fParam.resize(fNpar);
       fParcnv.resize(fNpar);
       fTreat.resize(fNpar);
@@ -89,13 +99,6 @@ namespace ROOT { namespace Cintex {
       // for constructor the result block is the class itself
       if( fClass) fClass_tag = CintTag( CintType(fClass).second );
       else         fClass_tag = 0;
-      // for constructor or destructor locate newdelfunctions pointers
-      if ( fMember.IsConstructor() || fMember.IsDestructor() ) {
-         Member getnewdelfuncs = fClass.MemberByName("__getNewDelFunctions");
-         if( getnewdelfuncs ) {
-            fNewdelfuncs = (NewDelFunctions_t*)( getnewdelfuncs.Invoke().Address() );
-         }
-      }
       // Set initialized flag
       fInitialized = true;
    }
