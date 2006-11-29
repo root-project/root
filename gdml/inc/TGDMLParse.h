@@ -1,4 +1,4 @@
-/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.h,v 1.3 2006/11/21 23:34:39 rdm Exp $ */
+/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.h,v 1.4 2006/11/22 08:03:45 brun Exp $ */
 // Authors: Ben Lloyd 09/11/06
 
 /*************************************************************************
@@ -62,19 +62,19 @@ private:
  * TGDMLParse - base class for the import of GDML to ROOT.               * 
  *************************************************************************/
 
-class BaseMapHelper : public std::map<std::string, const void *>{
+class TGDMLBaseTGDMMapHelper : public std::map<std::string, const void *>{
 };
 
 //map's [] operator returns reference.
 //to avoid ugly UB casts like static_cast<SomeType * &>(voidPtrLValue)
 //I have this helper class.
 template<typename T>
-class AssignmentHelper{
+class TGDMAssignmentHelper{
 private:
-   BaseMapHelper::iterator fPosInMap;
+   TGDMLBaseTGDMMapHelper::iterator fPosInMap;
 
 public:
-   AssignmentHelper(BaseMapHelper &baseMap, const std::string &key)
+   TGDMAssignmentHelper(TGDMLBaseTGDMMapHelper &baseMap, const std::string &key)
    {
       baseMap[key];//if we do not have this key-value pair before, insert it now (with zero for pointer).
       //find iterator for this key now :)
@@ -86,7 +86,7 @@ public:
       return (T*)fPosInMap->second;//const_cast<T*>(static_cast<const T *>(fPosInMap->second));   
    }
    
-   AssignmentHelper & operator = (const T * ptr)
+   TGDMAssignmentHelper & operator = (const T * ptr)
    {
       fPosInMap->second = ptr;
       return *this;
@@ -94,11 +94,11 @@ public:
 };
 
 template<class T>
-class MapHelper : public BaseMapHelper{
+class TGDMMapHelper : public TGDMLBaseTGDMMapHelper{
 public:
-   AssignmentHelper<T> operator [] (const std::string &key)
+   TGDMAssignmentHelper<T> operator [] (const std::string &key)
    {
-      return AssignmentHelper<T>(*this, key);
+      return TGDMAssignmentHelper<T>(*this, key);
    }
 };
 
@@ -174,16 +174,16 @@ private:
    XMLNodePointer_t  TopProcess(TXMLEngine* gdml, XMLNodePointer_t node);
     
     
-   typedef MapHelper<TGeoTranslation> PosMap;
-   typedef MapHelper<TGeoRotation> RotMap;
-   typedef MapHelper<TGeoElement> EleMap;
-   typedef MapHelper<TGeoMaterial> MatMap;
-   typedef MapHelper<TGeoMedium> MedMap;
-   typedef MapHelper<TGeoMixture> MixMap;
-   typedef MapHelper<const char> ConMap;
-   typedef MapHelper<TGeoShape> SolMap;
-   typedef MapHelper<TGeoVolume> VolMap;
-   typedef MapHelper<TGDMLRefl> ReflSolidMap;
+   typedef TGDMMapHelper<TGeoTranslation> PosMap;
+   typedef TGDMMapHelper<TGeoRotation> RotMap;
+   typedef TGDMMapHelper<TGeoElement> EleMap;
+   typedef TGDMMapHelper<TGeoMaterial> MatMap;
+   typedef TGDMMapHelper<TGeoMedium> MedMap;
+   typedef TGDMMapHelper<TGeoMixture> MixMap;
+   typedef TGDMMapHelper<const char> ConMap;
+   typedef TGDMMapHelper<TGeoShape> SolMap;
+   typedef TGDMMapHelper<TGeoVolume> VolMap;
+   typedef TGDMMapHelper<TGDMLRefl> ReflSolidMap;
 
 
 
