@@ -1228,7 +1228,10 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
         /* if defining class member, it must not be  constructor call 
          * and if cin is not digit, not quotation and not '.'  this is 
          * a funciton definition */
-        if(G__def_struct_member!=0  ||         
+        if(G__def_struct_member!=0 
+           && ( G__tagdefining == -1
+           || G__struct.type[G__tagdefining] != 'n')
+           ||         
            ((!isdigit(cin))&&cin!='"'&&cin!='\''&&cin!='.'&&cin!='-'&&
             cin!='+'&&
             cin!='*'&&cin!='&')) {
