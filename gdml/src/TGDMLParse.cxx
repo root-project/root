@@ -1,4 +1,4 @@
-/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.cxx,v 1.6 2006/11/22 09:10:58 brun Exp $ */
+/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.cxx,v 1.7 2006/11/23 07:49:44 brun Exp $ */
 // Author: Ben Lloyd 09/11/06
 
 /*************************************************************************
@@ -486,7 +486,7 @@ XMLNodePointer_t TGDMLParse::PosProcess(TXMLEngine* gdml, XMLNodePointer_t node,
       else if (strcmp(tempattr, "z") == 0){
          zpos = FindConst(gdml->GetAttrValue(attr));
       }
-      else if (strcmp(tempattr, "lunit") == 0){
+      else if (strcmp(tempattr, "unit") == 0){
          lunit = gdml->GetAttrValue(attr);
       }
       
@@ -546,7 +546,7 @@ XMLNodePointer_t TGDMLParse::RotProcess(TXMLEngine* gdml, XMLNodePointer_t node,
       else if (strcmp(tempattr, "z") == 0){
          zpos = FindConst(gdml->GetAttrValue(attr));
       }
-      else if (strcmp(tempattr, "aunit") == 0){
+      else if (strcmp(tempattr, "unit") == 0){
          aunit = gdml->GetAttrValue(attr);
       }
       
