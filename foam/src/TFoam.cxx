@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.16 2006/05/14 07:18:41 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoam.cxx,v 1.17 2006/11/08 12:06:12 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //______________________________________________________________________________
@@ -129,6 +129,7 @@
 #include "TMethodCall.h"
 #include "TRandom.h"
 #include "TMath.h"
+#include "TCint.h"
 
 ClassImp(TFoam);
 

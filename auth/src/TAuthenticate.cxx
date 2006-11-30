@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.14 2006/05/10 14:06:06 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.15 2006/11/16 17:17:36 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -41,6 +41,8 @@
 #include "snprintf.h"
 #include "TVirtualMutex.h"
 #include "TTimer.h"
+
+#include <fcntl.h>
 
 #ifndef R__LYNXOS
 #include <sys/stat.h>

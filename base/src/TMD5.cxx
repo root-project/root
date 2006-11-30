@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.15 2005/09/02 07:51:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.16 2005/11/16 20:04:11 pcanal Exp $
 // Author: Fons Rademakers   29/9/2001
 
 /*************************************************************************
@@ -38,7 +38,10 @@
 #include <errno.h>
 #ifdef R__WIN32
 #include <io.h>
+#else
+#include <unistd.h>
 #endif
+#include <fcntl.h>
 
 ClassImp(TMD5)
 

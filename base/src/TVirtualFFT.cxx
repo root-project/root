@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFFT.cxx,v 1.4 2006/05/18 07:34:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFFT.cxx,v 1.5 2006/10/27 16:21:11 brun Exp $
 // Author: Anna Kreshuk  10/04/2006
 
 /*************************************************************************
@@ -88,7 +88,6 @@
 #include "TVirtualFFT.h"
 #include "TPluginManager.h"
 #include "TEnv.h"
-#include "Api.h"
 
 TVirtualFFT *TVirtualFFT::fgFFT    = 0;
 TString      TVirtualFFT::fgDefault   = "";

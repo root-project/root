@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.23 2006/05/18 07:34:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.24 2006/05/19 07:30:04 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -61,12 +61,7 @@
 #endif
 
 #ifndef NOCINT
-#define G__PVOID (-1)
-#ifndef WIN32
-extern long G__globalvarpointer;
-#else
 #include "G__ci.h"
-#endif
 #endif
 
 ULong_t       TStorage::fgHeapBegin = (ULong_t)-1L;
@@ -357,14 +352,9 @@ void TStorage::ObjectDealloc(void *vp)
 
 #ifndef NOCINT
    // to handle delete with placement called via CINT
-#ifndef WIN32
-   if ((long)vp == G__globalvarpointer && G__globalvarpointer != G__PVOID)
-      return;
-#else
    long gvp = G__getgvp();
    if ((long)vp == gvp && gvp != G__PVOID)
       return;
-#endif
 #endif
    ::operator delete(vp);
 }

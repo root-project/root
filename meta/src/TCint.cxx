@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.127 2006/11/25 00:16:34 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.128 2006/11/27 13:04:42 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TCint.h"
+#include "G__ci.h"
 #include "TROOT.h"
 #include "TApplication.h"
 #include "TGlobal.h"

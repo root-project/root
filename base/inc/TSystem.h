@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.61 2006/10/24 14:42:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.62 2006/11/15 18:27:17 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -24,10 +24,6 @@
 
 #ifndef __CINT__
 #include <stdio.h>
-#endif
-
-#ifndef NOCINT
-#include "G__ci.h"
 #endif
 
 #ifndef ROOT_TNamed

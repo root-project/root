@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.39 2006/04/19 09:11:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.40 2006/10/20 08:38:43 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -143,6 +143,7 @@
 
 #include "TObjArray.h"
 #include "TEnv.h"
+#include "TError.h"
 
 #include "TGeoMatrix.h"
 #include "TGeoManager.h"
@@ -426,7 +427,7 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
    // before kRaw can be filled
    if (reqSections & TBuffer3D::kRaw) {
       if (!(reqSections & TBuffer3D::kRawSizes) && !buffer.SectionsValid(TBuffer3D::kRawSizes)) {
-         assert(kFALSE);
+         R__ASSERT(kFALSE);
       }
    }
 
@@ -436,7 +437,7 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
  
       // Check/grab some objects we need
       if (!gGeoManager) { 
-         assert(kFALSE); 
+         R__ASSERT(kFALSE); 
          return; 
       }
       const TGeoVolume * paintVolume = gGeoManager->GetPaintVolume();
@@ -445,7 +446,7 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
          buffer.fID = const_cast<TGeoShape *>(this);
          buffer.fColor = 0;
          buffer.fTransparency = 0;
-//         assert(kFALSE); 
+//         R__ASSERT(kFALSE); 
 //         return; 
       } else {
          buffer.fID = const_cast<TGeoVolume *>(paintVolume);
@@ -488,7 +489,7 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
             }
          }
          if (!localMasterMat) { 
-            assert(kFALSE); 
+            R__ASSERT(kFALSE); 
             return; 
          }
          localMasterMat->GetHomogenousMatrix(buffer.fLocalMaster);
