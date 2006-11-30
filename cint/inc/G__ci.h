@@ -1062,6 +1062,32 @@ extern G__value G__null;
 #define G__MAINEXIST               1
 #define G__TCLMAIN                 2
 
+/**************************************************************************
+* struct forward declaration; real ones are in common.h
+**************************************************************************/
+struct G__ifunc_table;
+struct G__var_array;
+struct G__dictposition;
+struct G__comment_info;
+struct G__friendtag;
+#ifdef G__ASM_WHOLEFUNC
+struct G__bytecodefunc;
+#endif
+struct G__funcentry;
+#ifdef G__VMS
+struct G__funcentry_VMS;
+struct G__ifunc_table_VMS;
+#endif
+struct G__ifunc_table;
+struct G__inheritance;
+struct G__var_array;
+struct G__tagtable;
+struct G__input_file;
+#ifdef G__CLINK
+struct G__tempobject_list;
+#endif
+struct G__va_list_para;
+
 /*********************************************************************
 * return status flag
 *********************************************************************/
@@ -1153,24 +1179,6 @@ struct G__friendtag {
   struct G__friendtag *next;
 };
 
-#ifdef G__ASM_WHOLEFUNC
-/**************************************************************************
-* bytecode compiled interpreted function
-*
-**************************************************************************/
-struct G__bytecodefunc {
-  struct G__ifunc_table *ifunc;
-  int ifn;
-  struct G__var_array *var;
-  int varsize;
-  G__value *pstack; /* upper part of stack to store numerical constants */
-  int stacksize;
-  long *pinst;      /* instruction buffer */
-  int instsize;
-  char *asm_name;   /* name of used ANSI library function */
-};
-#endif
-
 /**************************************************************************
 * structure for function entry
 *
@@ -1180,195 +1188,6 @@ struct G__bytecodefunc {
 #define G__BYTECODE_SUCCESS   3
 #define G__BYTECODE_ANALYSIS  4 /* ON1164 */
 
-/**************************************************************************
- *                                                      1
- *                               2            2
- *                        proto   interpreted   bytecode  compiled
- * fpos_t pos;            hdrpos  src_fpos      src_fpos  ??
- * void* p;            2  NULL    src_fp        src_fp    ifmethod
- * int line_number;       -1      line          line      -1
- * short filenum;      1  fnum    fnum          fnum      fnum <<<change
- * ushort size;           0       size          size      -1   <<<change
- * void*  tp2f;           fname   fname         bytecode  (*p2f)|ifmethod
- * bcf* bytecode;      2  NULL    NULL          bytecode  NULL
- * int bytecodestatus;    NOTYET  NOTYET|FAIL   SUCCESS   ??
- **************************************************************************/
-
-struct G__funcentry {
-  /* file position and pointer for restoring start point */
-  fpos_t pos; /* Set if interpreted func body defined, unknown otherwise */
-  void *p;  /* FILE* for source file or  int (*)() for compiled function
-             * (void*)NULL if no function body */
-  int  line_number; /* -1 if no function body or compiled function */
-  short filenum;    /* -1 if compiled function, otherwise interpreted func */
-#ifdef G__ASM_FUNC
-  int size; /* size (number of lines) of function */
-#endif
-#ifdef G__TRUEP2F
-  void *tp2f;
-#endif
-#ifdef G__ASM_WHOLEFUNC
-  struct G__bytecodefunc *bytecode;
-  int bytecodestatus;
-#endif
-};
-
-#ifdef G__VMS
-/***************************************************************************
-*  Need for struct G__ifunc_table_VMS.  Neccessary for
-*  Cint_Method::FilePosition().
-***************************************************************************/
-struct G__funcentry_VMS {
-  /* file position and pointer for restoring start point */
-  fpos_tt pos; /* Set if interpreted func body defined, unknown otherwise */
-  void *p;     /* FILE* for source file or  int (*)() for compiled function
-                * (void*)NULL if no function body */
-  int  line_number; /* -1 if no function body or compiled function */
-  short filenum;    /* -1 if compiled function, otherwise interpreted func */
-};
-#endif
-
-
-/**************************************************************************
-* structure for ifunc (Interpleted FUNCtion) table
-*
-**************************************************************************/
-struct G__ifunc_table {
-  /* number of interpreted function */
-  int allifunc;
-
-  /* function name and hash for identification */
-  char *funcname[G__MAXIFUNC];
-  int  hash[G__MAXIFUNC];
-
-  struct G__funcentry entry[G__MAXIFUNC],*pentry[G__MAXIFUNC];
-
-  /* type of return value */
-  G__SIGNEDCHAR_T type[G__MAXIFUNC];
-  short p_tagtable[G__MAXIFUNC];
-  short p_typetable[G__MAXIFUNC];
-  G__SIGNEDCHAR_T reftype[G__MAXIFUNC];
-  short para_nu[G__MAXIFUNC];
-  G__SIGNEDCHAR_T isconst[G__MAXIFUNC];
-  G__SIGNEDCHAR_T isexplicit[G__MAXIFUNC];
-
-  /* number and type of function parameter */
-  /* G__inheritclass() depends on type of following members */
-  char para_reftype[G__MAXIFUNC][G__MAXFUNCPARA];
-  char para_type[G__MAXIFUNC][G__MAXFUNCPARA];
-  char para_isconst[G__MAXIFUNC][G__MAXFUNCPARA];
-  short para_p_tagtable[G__MAXIFUNC][G__MAXFUNCPARA];
-  short para_p_typetable[G__MAXIFUNC][G__MAXFUNCPARA];
-  G__value *para_default[G__MAXIFUNC][G__MAXFUNCPARA];
-  char *para_name[G__MAXIFUNC][G__MAXFUNCPARA];
-  char *para_def[G__MAXIFUNC][G__MAXFUNCPARA];
-
-  /* C or C++ */
-  char iscpp[G__MAXIFUNC];
-
-  /* ANSI or standard header format */
-  char ansi[G__MAXIFUNC];
-
-  /**************************************************
-   * if function is called, busy[] is incremented
-   **************************************************/
-  short busy[G__MAXIFUNC];
-
-  struct G__ifunc_table *next;
-  short page;
-
-  G__SIGNEDCHAR_T access[G__MAXIFUNC];  /* private, protected, public */
-  char staticalloc[G__MAXIFUNC];
-
-  int tagnum;
-  char isvirtual[G__MAXIFUNC]; /* virtual function flag */
-  char ispurevirtual[G__MAXIFUNC]; /* virtual function flag */
-
-#ifdef G__FRIEND
-  struct G__friendtag *friendtag[G__MAXIFUNC];
-#endif
-
-  G__SIGNEDCHAR_T globalcomp[G__MAXIFUNC];
-
-  struct G__comment_info comment[G__MAXIFUNC];
-
-  void* userparam[G__MAXIFUNC]; /* user parameter array */
-  short vtblindex[G__MAXIFUNC];
-  short vtblbasetagnum[G__MAXIFUNC];
-};
-
-
-#ifdef G__VMS
-/**************************************************************************
-* For VMS:
-*  This is the same struct as G__ifunc_table excep pentry becomes
-*  G__funcentry_VMS.  This is needed in Cint_method::FilePosition().
-**************************************************************************/
-struct G__ifunc_table_VMS {
-  /* number of interpreted function */
-  int allifunc;
-
-  /* function name and hash for identification */
-  char *funcname[G__MAXIFUNC];
-  int  hash[G__MAXIFUNC];
-
-  struct G__funcentry entry[G__MAXIFUNC];
-  struct G__funcentry_VMS *pentry[G__MAXIFUNC];
-
-  /* type of return value */
-  G__SIGNEDCHAR_T type[G__MAXIFUNC];
-  short p_tagtable[G__MAXIFUNC];
-  short p_typetable[G__MAXIFUNC];
-  G__SIGNEDCHAR_T reftype[G__MAXIFUNC];
-  short para_nu[G__MAXIFUNC];
-  G__SIGNEDCHAR_T isconst[G__MAXIFUNC];
-  G__SIGNEDCHAR_T isexplicit[G__MAXIFUNC];
-
-  /* number and type of function parameter */
-  /* G__inheritclass() depends on type of following members */
-  char para_reftype[G__MAXIFUNC][G__MAXFUNCPARA];
-  char para_type[G__MAXIFUNC][G__MAXFUNCPARA];
-  char para_isconst[G__MAXIFUNC][G__MAXFUNCPARA];
-  short para_p_tagtable[G__MAXIFUNC][G__MAXFUNCPARA];
-  short para_p_typetable[G__MAXIFUNC][G__MAXFUNCPARA];
-  G__value *para_default[G__MAXIFUNC][G__MAXFUNCPARA];
-  char *para_name[G__MAXIFUNC][G__MAXFUNCPARA];
-  char *para_def[G__MAXIFUNC][G__MAXFUNCPARA];
-
-  /* C or C++ */
-  char iscpp[G__MAXIFUNC];
-
-  /* ANSI or standard header format */
-  char ansi[G__MAXIFUNC];
-
-  /**************************************************
-   * if function is called, busy[] is incremented
-   **************************************************/
-  short busy[G__MAXIFUNC];
-
-  struct G__ifunc_table *next;
-  short page;
-
-  G__SIGNEDCHAR_T access[G__MAXIFUNC];  /* private, protected, public */
-  char staticalloc[G__MAXIFUNC];
-
-  int tagnum;
-  char isvirtual[G__MAXIFUNC]; /* virtual function flag */
-  char ispurevirtual[G__MAXIFUNC]; /* virtual function flag */
-
-#ifdef G__FRIEND
-  struct G__friendtag *friendtag[G__MAXIFUNC];
-#endif
-
-  G__SIGNEDCHAR_T globalcomp[G__MAXIFUNC];
-
-  struct G__comment_info comment[G__MAXIFUNC];
-
-  void* userparam[G__MAXIFUNC];  /* user parameter array */
-  short vtblindex[G__MAXIFUNC];
-  short vtblbasetagnum[G__MAXIFUNC];
-};
-#endif
 
 /**************************************************************************
 * structure for function and array parameter
@@ -1429,162 +1248,6 @@ extern "C" { /* extern C 3 */
 #define G__ISDIRECTINHERIT         0x0001
 #define G__ISVIRTUALBASE           0x0002
 #define G__ISINDIRECTVIRTUALBASE   0x0004
-struct G__inheritance {
-  int basen;
-  short basetagnum[G__MAXBASE];
-#ifdef G__VIRTUALBASE
-  long baseoffset[G__MAXBASE];
-#else
-  int baseoffset[G__MAXBASE];
-#endif
-  G__SIGNEDCHAR_T baseaccess[G__MAXBASE];
-  char property[G__MAXBASE];
-};
-
-/**************************************************************************
-* structure for variable table
-*
-**************************************************************************/
-struct G__var_array {
-  /* union for variable pointer */
-  long p[G__MEMDEPTH]; /* used to be int */
-  int allvar;
-  char *varnamebuf[G__MEMDEPTH]; /* variable name */
-  int hash[G__MEMDEPTH];                    /* hash table of varname */
-  int varlabel[G__MEMDEPTH+1][G__MAXVARDIM];  /* points varpointer */
-  short paran[G__MEMDEPTH];
-  char bitfield[G__MEMDEPTH];
-#ifdef G__VARIABLEFPOS
-  int filenum[G__MEMDEPTH];
-  int linenum[G__MEMDEPTH];
-#endif
-
-  /* type information,
-     if pointer : Char,Int,Short,Long,Double,U(struct,union)
-     if value   : char,int,short,long,double,u(struct,union) */
-  G__SIGNEDCHAR_T  type[G__MEMDEPTH];
-  G__SIGNEDCHAR_T constvar[G__MEMDEPTH];
-  short p_tagtable[G__MEMDEPTH];        /* tagname if struct,union */
-  short p_typetable[G__MEMDEPTH];       /* typename if typedef */
-  short statictype[G__MEMDEPTH];
-  G__SIGNEDCHAR_T reftype[G__MEMDEPTH];
-
-  /* chain for next G__var_array */
-  struct G__var_array *next;
-
-  G__SIGNEDCHAR_T access[G__MEMDEPTH];  /* private, protected, public */
-
-#ifdef G__SHOWSTACK /* not activated */
-  struct G__ifunc_table *ifunc;
-  int ifn;
-  struct G__var_array *prev_local;
-  int prev_filenum;
-  short prev_line_number;
-  long struct_offset;
-  int tagnum;
-  int exec_memberfunc;
-#endif
-#ifdef G__VAARG
-  struct G__param *libp;
-#endif
-
-#ifndef G__NEWINHERIT
-  char isinherit[G__MEMDEPTH];
-#endif
-  G__SIGNEDCHAR_T globalcomp[G__MEMDEPTH];
-
-  struct G__comment_info comment[G__MEMDEPTH];
-
-#ifndef G__OLDIMPLEMENTATION2038
-  struct G__var_array *enclosing_scope;
-  struct G__var_array **inner_scope;
-#endif
-
-} ;
-
-
-/**************************************************************************
-* structure struct,union tag information
-*
-**************************************************************************/
-
-
-struct G__tagtable {
-  /* tag entry information */
-  char type[G__MAXSTRUCT]; /* struct,union,enum,class */
-
-  char *name[G__MAXSTRUCT];
-  int  hash[G__MAXSTRUCT];
-  int  size[G__MAXSTRUCT];
-  /* member information */
-  struct G__var_array *memvar[G__MAXSTRUCT];
-  struct G__ifunc_table *memfunc[G__MAXSTRUCT];
-  struct G__inheritance *baseclass[G__MAXSTRUCT];
-  int virtual_offset[G__MAXSTRUCT];
-  G__SIGNEDCHAR_T globalcomp[G__MAXSTRUCT];
-  G__SIGNEDCHAR_T iscpplink[G__MAXSTRUCT];
-  char isabstract[G__MAXSTRUCT];
-  char protectedaccess[G__MAXSTRUCT];
-
-  int  line_number[G__MAXSTRUCT];
-  short filenum[G__MAXSTRUCT];
-
-  short parent_tagnum[G__MAXSTRUCT];
-  unsigned char funcs[G__MAXSTRUCT];
-  char istypedefed[G__MAXSTRUCT];
-  char istrace[G__MAXSTRUCT];
-  char isbreak[G__MAXSTRUCT];
-  int  alltag;
-
-#ifdef G__FRIEND
-  struct G__friendtag *friendtag[G__MAXSTRUCT];
-#endif
-
-  struct G__comment_info comment[G__MAXSTRUCT];
-
-  G__incsetup incsetup_memvar[G__MAXSTRUCT];
-  G__incsetup incsetup_memfunc[G__MAXSTRUCT];
-
-  char rootflag[G__MAXSTRUCT];
-  struct G__RootSpecial *rootspecial[G__MAXSTRUCT];
-
-  char isctor[G__MAXSTRUCT];
-
-#ifndef G__OLDIMPLEMENTATION1503
-  int defaulttypenum[G__MAXSTRUCT];
-#endif
-  void* userparam[G__MAXSTRUCT];     /* user parameter array */
-  char* libname[G__MAXSTRUCT];
-  void* vtable[G__MAXSTRUCT];
-  /* short vtabledepth[G__MAXSTRUCT]; */
-};
-
-/**************************************************************************
-* structure typedef information
-*
-**************************************************************************/
-
-struct G__typedef {
-  char type[G__MAXTYPEDEF];
-  char *name[G__MAXTYPEDEF];
-  int  hash[G__MAXTYPEDEF];
-  short  tagnum[G__MAXTYPEDEF];
-  char reftype[G__MAXTYPEDEF];
-#ifdef G__CPPLINK1
-  G__SIGNEDCHAR_T globalcomp[G__MAXTYPEDEF];
-#endif
-  int nindex[G__MAXTYPEDEF];
-  int *index[G__MAXTYPEDEF];
-  short parent_tagnum[G__MAXTYPEDEF];
-  char iscpplink[G__MAXTYPEDEF];
-  struct G__comment_info comment[G__MAXTYPEDEF];
-#ifdef G__TYPEDEFFPOS
-  int filenum[G__MAXTYPEDEF];
-  int linenum[G__MAXTYPEDEF];
-#endif
-  int alltype;
-  G__SIGNEDCHAR_T isconst[G__MAXTYPEDEF];
-};
 
 
 /**************************************************************************
@@ -1602,25 +1265,6 @@ struct G__input_file {
   int vindex;
 #endif
 };
-
-
-/**************************************************************************
-* tempobject list
-*
-**************************************************************************/
-#ifdef G__CLINK
-struct G__tempobject_list {
-  G__value obj;
-  int  level;
-#ifdef G__CPPLINK3
-  int cpplink;
-#endif
-  int no_exec;
-  struct G__tempobject_list *prev;
-};
-#endif
-
-
 
 /**************************************************************************
 * make hash value
