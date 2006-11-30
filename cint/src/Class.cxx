@@ -1221,8 +1221,9 @@ struct G__friendtag* Cint::G__ClassInfo::GetFriendInfo() {
 
 ///////////////////////////////////////////////////////////////////////////
 G__MethodInfo Cint::G__ClassInfo::AddMethod(const char* typenam,const char* fname
-				     ,const char *arg
-                         	     ,int isstatic,int isvirtual) {
+                                            ,const char *arg
+                                            ,int isstatic,int isvirtual,
+                                            void *methodAddress) {
   struct G__ifunc_table *ifunc;
   long index;
 
@@ -1286,35 +1287,51 @@ G__MethodInfo Cint::G__ClassInfo::AddMethod(const char* typenam,const char* fnam
 
   //////////////////////////////////////////////////
   // set argument infomation
-  char *argtype = (char*)arg;
-  struct G__param para;
-  G__argtype2param(argtype,&para);
+  if (strcmp(arg,"ellipsis")==0) {
+     // mimick ellipsis
+     ifunc->para_nu[index] = -1;
+     ifunc->ansi[index] = 0;
+  } else {
+     char *argtype = (char*)arg;
+     struct G__param para;
+     G__argtype2param(argtype,&para);
 
-  ifunc->para_nu[index] = para.paran;
-  for(int i=0;i<para.paran;i++) {
-    ifunc->para_type[index][i] = para.para[i].type;
-    if(para.para[i].type!='d' && para.para[i].type!='f') 
-      ifunc->para_reftype[index][i] = para.para[i].obj.reftype.reftype;
-    else 
-      ifunc->para_reftype[index][i] = G__PARANORMAL;
-    ifunc->para_p_tagtable[index][i] = para.para[i].tagnum;
-    ifunc->para_p_typetable[index][i] = para.para[i].typenum;
-    ifunc->para_name[index][i] = (char*)malloc(10);
-    sprintf(ifunc->para_name[index][i],"G__p%d",i);
-    ifunc->para_default[index][i] = (G__value*)NULL;
-    ifunc->para_def[index][i] = (char*)NULL;
+     ifunc->para_nu[index] = para.paran;
+     for(int i=0;i<para.paran;i++) {
+        ifunc->para_type[index][i] = para.para[i].type;
+        if(para.para[i].type!='d' && para.para[i].type!='f') 
+           ifunc->para_reftype[index][i] = para.para[i].obj.reftype.reftype;
+        else 
+           ifunc->para_reftype[index][i] = G__PARANORMAL;
+        ifunc->para_p_tagtable[index][i] = para.para[i].tagnum;
+        ifunc->para_p_typetable[index][i] = para.para[i].typenum;
+        ifunc->para_name[index][i] = (char*)malloc(10);
+        sprintf(ifunc->para_name[index][i],"G__p%d",i);
+        ifunc->para_default[index][i] = (G__value*)NULL;
+        ifunc->para_def[index][i] = (char*)NULL;
+     }
   }
 
   //////////////////////////////////////////////////
   ifunc->pentry[index] = &ifunc->entry[index];
   //ifunc->entry[index].pos
-  ifunc->entry[index].p = G__srcfile[G__struct.filenum[tagnum]].fp;
-  ifunc->entry[index].line_number=(-1==tagnum)?0:G__struct.line_number[tagnum];
-  ifunc->entry[index].filenum=(-1==tagnum)?0:G__struct.filenum[tagnum];
-  ifunc->entry[index].size = 1;
-  ifunc->entry[index].tp2f = (char*)NULL;
-  ifunc->entry[index].bytecode = (struct G__bytecodefunc*)NULL;
-  ifunc->entry[index].bytecodestatus = G__BYTECODE_NOTYET;
+  if (methodAddress) {
+     ifunc->entry[index].p = methodAddress;
+     ifunc->entry[index].line_number = -1;
+     ifunc->entry[index].filenum = -1;
+     ifunc->entry[index].size = -1;
+     ifunc->entry[index].tp2f = (char*)NULL;
+     ifunc->entry[index].bytecode = 0;
+     ifunc->entry[index].bytecodestatus = G__BYTECODE_NOTYET;
+  } else {
+     ifunc->entry[index].p = G__srcfile[G__struct.filenum[tagnum]].fp;
+     ifunc->entry[index].line_number=(-1==tagnum)?0:G__struct.line_number[tagnum];
+     ifunc->entry[index].filenum=(-1==tagnum)?0:G__struct.filenum[tagnum];
+     ifunc->entry[index].size = 1;
+     ifunc->entry[index].tp2f = (char*)NULL;
+     ifunc->entry[index].bytecode = 0;
+     ifunc->entry[index].bytecodestatus = G__BYTECODE_NOTYET;
+  }
 
   //////////////////////////////////////////////////
   ++ifunc->allifunc;

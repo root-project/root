@@ -133,7 +133,7 @@ G__ClassInfo {
   G__MethodInfo GetDestructor();
   G__MethodInfo GetAssignOperator();
   G__MethodInfo AddMethod(const char* typenam,const char* fname,const char *arg
-                         ,int isstatic=0,int isvirtual=0);
+                          ,int isstatic=0,int isvirtual=0,void *methodAddress=0);
   G__DataMemberInfo GetDataMember(const char *name,long* poffset);
   int HasMethod(const char *fname);
   int HasDataMember(const char *name);
