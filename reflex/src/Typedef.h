@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.16 2006/10/30 12:51:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Typedef.h,v 1.17 2006/11/24 13:21:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -248,6 +248,19 @@ namespace ROOT {
          virtual std::string Name( unsigned int mod = 0 ) const;
 
 
+         /**
+          * SimpleName returns the name of the type as a reference. It provides a 
+          * simplified but faster generation of a type name. Attention currently it
+          * is not guaranteed that Name() and SimpleName() return the same character 
+          * layout of a name (ie. spacing, commas, etc. )
+          * @param pos will indicate where in the returned reference the requested name starts
+          * @param mod The only 'mod' support is SCOPED
+          * @return name of type
+          */
+         virtual const std::string & SimpleName( size_t & pos, 
+                                                 unsigned int mod = 0 ) const;
+
+ 
          virtual Type_Iterator FunctionParameter_Begin() const;
          virtual Type_Iterator FunctionParameter_End() const;
          virtual Reverse_Type_Iterator FunctionParameter_RBegin() const;
@@ -746,6 +759,14 @@ inline std::string ROOT::Reflex::Typedef::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
    if ( 0 != ( mod & ( FINAL | F ))) return FinalType().Name( mod );
    else                              return TypeBase::Name( mod );
+}
+
+
+//-------------------------------------------------------------------------------
+inline const std::string&  ROOT::Reflex::Typedef::SimpleName( size_t & pos, 
+                                                              unsigned int mod ) const {
+//-------------------------------------------------------------------------------
+   return TypeBase::SimpleName( pos, mod );
 }
 
 

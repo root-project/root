@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.13 2006/10/31 15:23:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: NameLookup.cxx,v 1.14 2006/11/09 08:01:04 roiser Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -113,35 +113,56 @@ ROOT::Reflex::NameLookup::LookupInScope() {
       // ns A { using ns B; } ns B {using ns A;}
       return Dummy::Get< T >();
 
-   for ( Type_Iterator it = fCurrentScope.SubType_Begin(); it != fCurrentScope.SubType_End(); ++it ) {
-      if ( 0 == fLookupName.compare(fPosNamePart, fPosNamePartLen, (*it).Name() ) ) {
-         fPartialSuccess = true;
-         fLookedAtUsingDir.clear();
-         FindNextScopePos();
-         if (fPosNamePart == std::string::npos) return *it;
-         if (it->IsTypedef()) fCurrentScope = it->FinalType();
-         else fCurrentScope = *it;
-         return LookupInScope< T >();
+   //Type_Iterator subtype_end( fCurrentScope.SubType_End() );
+   int len = fCurrentScope.SubTypeSize();
+   int i = 0;
+   for ( Type_Iterator it = fCurrentScope.SubType_Begin(); /* it != subtype_end */ i<len; ++it, ++i ) {
+      const Type& type = *it;
+      const TypeBase *base = type.ToTypeBase();      
+      if ( base ) {
+         size_t pos;
+         const std::string &name( base->SimpleName(pos) );
+         if (fLookupName[fPosNamePart]==name[pos] &&
+             0 == fLookupName.compare(fPosNamePart, fPosNamePartLen, name, pos, name.length() ) ) {
+            fPartialSuccess = true;
+            fLookedAtUsingDir.clear();
+            FindNextScopePos();
+            if (fPosNamePart == std::string::npos) return type;
+            if (it->IsTypedef()) fCurrentScope = it->FinalType();
+            else fCurrentScope = type;
+            return LookupInScope< T >();
+         }
       }
    }
-
-   for ( Scope_Iterator in = fCurrentScope.SubScope_Begin(); in != fCurrentScope.SubScope_End(); ++in ) {
+   
+   Scope_Iterator subscope_end(  fCurrentScope.SubScope_End() );
+   for ( Scope_Iterator in = fCurrentScope.SubScope_Begin(); in != subscope_end; ++in ) {
       // only take namespaces into account - classes were checked as part of SubType
-      if (in->IsNamespace() && 
-         0 == fLookupName.compare(fPosNamePart, fPosNamePartLen, (*in).Name() ) ) {
-         fPartialSuccess = true;
-         fLookedAtUsingDir.clear();
-         FindNextScopePos();
-         if (fPosNamePart == std::string::npos) return (T) (*in);
-         fCurrentScope = (Scope) (*in);
-         return LookupInScope< T >();
+      if (in->IsNamespace()){
+         const Scope &scope = *in;
+         const ScopeBase *base = scope.ToScopeBase();
+         if (base) {
+            size_t pos;
+            const std::string &name( base->SimpleName(pos) );
+            
+            if (fLookupName[fPosNamePart]==name[pos] && 
+                0 == fLookupName.compare(fPosNamePart, fPosNamePartLen, name, pos, name.length() ) ) {
+               fPartialSuccess = true;
+               fLookedAtUsingDir.clear();
+               FindNextScopePos();
+               if (fPosNamePart == std::string::npos) return (T) (*in);
+               fCurrentScope = (Scope) (*in);
+               return LookupInScope< T >();
+            }
+         }
       }
    }
 
    if (fCurrentScope.UsingDirectiveSize()) {
       fLookedAtUsingDir.insert(fCurrentScope);
       Scope storeCurrentScope = fCurrentScope;
-      for ( Scope_Iterator si = storeCurrentScope.UsingDirective_Begin(); si != storeCurrentScope.UsingDirective_End(); ++si ) {
+      Scope_Iterator usingscope_end(  storeCurrentScope.UsingDirective_End() );
+      for ( Scope_Iterator si = storeCurrentScope.UsingDirective_Begin(); si != usingscope_end; ++si ) {
          fCurrentScope = *si;
          T t = LookupInScope< T >();
          if (fPartialSuccess) return t;
@@ -149,8 +170,9 @@ ROOT::Reflex::NameLookup::LookupInScope() {
       fCurrentScope = storeCurrentScope;
    }
 
-   if (fPosNamePart == 0) // only for "BaseClass...", not for "A::BaseClass..."
-      for ( Base_Iterator bi = fCurrentScope.Base_Begin(); bi != fCurrentScope.Base_End(); ++bi ) {
+   if (fPosNamePart == 0) { // only for "BaseClass...", not for "A::BaseClass..."
+      Base_Iterator base_end( fCurrentScope.Base_End() );
+      for ( Base_Iterator bi = fCurrentScope.Base_Begin(); bi != base_end; ++bi ) {
          if ( 0 == fLookupName.compare(fPosNamePart, fPosNamePartLen, (*bi).Name() ) ) {
             fPartialSuccess = true;
             fLookedAtUsingDir.clear();
@@ -160,10 +182,12 @@ ROOT::Reflex::NameLookup::LookupInScope() {
             return LookupInScope< T >();
          }
       }
+   }
 
    if (fCurrentScope.BaseSize()) {
       Scope storeCurrentScope = fCurrentScope;
-      for ( Base_Iterator bi = storeCurrentScope.Base_Begin(); bi != storeCurrentScope.Base_End(); ++bi ) {
+      Base_Iterator base_end( storeCurrentScope.Base_End() ); 
+      for ( Base_Iterator bi = storeCurrentScope.Base_Begin(); bi != base_end; ++bi ) {
          fCurrentScope = bi->ToScope();
          T t = LookupInScope< T >();
          if (fPartialSuccess) return t;

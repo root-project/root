@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ClassTemplateInstance.h,v 1.9 2006/09/05 17:13:15 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ClassTemplateInstance.h,v 1.10 2006/10/30 12:51:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -52,6 +52,19 @@ namespace ROOT {
          std::string Name( unsigned int mod = 0 ) const;
 
 
+         /**
+          * SimpleName returns the name of the type as a reference. It provides a 
+          * simplified but faster generation of a type name. Attention currently it
+          * is not guaranteed that Name() and SimpleName() return the same character 
+          * layout of a name (ie. spacing, commas, etc. )
+          * @param pos will indicate where in the returned reference the requested name starts
+          * @param mod The only 'mod' support is SCOPED
+          * @return name of type
+          */
+         virtual const std::string & SimpleName( size_t & pos, 
+                                                 unsigned int mod = 0 ) const;
+
+ 
          /**
           * TemplateArgumentAt will return a pointer to the nth template argument
           * @param  nth nth template argument

@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.31 2006/09/14 14:39:12 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: ScopeBase.cxx,v 1.32 2006/10/30 12:51:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -427,6 +427,20 @@ std::string ROOT::Reflex::ScopeBase::Name( unsigned int mod ) const {
    // Return name of this scope.
    if ( 0 != ( mod & ( SCOPED | S ))) return fScopeName->Name();
    return std::string(fScopeName->Name(), fBasePosition);
+}
+
+
+//-------------------------------------------------------------------------------
+const std::string& ROOT::Reflex::ScopeBase::SimpleName( size_t & pos, 
+                                                        unsigned int mod ) const {
+//-------------------------------------------------------------------------------
+   // Return name of this scope.
+   if ( 0 != ( mod & ( SCOPED | S ))) {
+      pos = 0;
+      return fScopeName->Name();
+   }
+   pos = fBasePosition;
+   return fScopeName->Name();
 }
 
 

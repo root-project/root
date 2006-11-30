@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Type.cxx,v 1.22 2006/10/26 17:49:22 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: Type.cxx,v 1.23 2006/10/30 12:51:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -264,6 +264,12 @@ ROOT::Reflex::MemberTemplate ROOT::Reflex::Type::MemberTemplateAt( size_t nth ) 
 std::string ROOT::Reflex::Type::Name( unsigned int mod ) const {
 //-------------------------------------------------------------------------------
 // Return the name of the type (qualified and scoped if requested)
+
+   if (( mod & ( QUALIFIED | Q ))==0 && (* this) ) { 
+      // most common case
+      return fTypeName->fTypeBase->Name( mod );
+   }
+
    std::string s = "";
    std::string cv = "";
 

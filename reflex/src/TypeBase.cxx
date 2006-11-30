@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.28 2006/10/31 16:46:37 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBase.cxx,v 1.29 2006/11/24 13:21:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -334,6 +334,20 @@ std::string ROOT::Reflex::TypeBase::Name( unsigned int mod ) const {
 // Return the name of the type.
    if ( 0 != ( mod & ( SCOPED | S ))) return fTypeName->Name();
    return std::string(fTypeName->Name(), fBasePosition);
+}
+
+
+//-------------------------------------------------------------------------------
+const std::string & ROOT::Reflex::TypeBase::SimpleName( size_t & pos, 
+                                                        unsigned int mod ) const {
+//-------------------------------------------------------------------------------
+// Return the name of the type.
+   if ( 0 != ( mod & ( SCOPED | S ))) {
+      pos = 0;
+      return fTypeName->Name();
+   }
+   pos = fBasePosition;
+   return fTypeName->Name();
 }
 
 
