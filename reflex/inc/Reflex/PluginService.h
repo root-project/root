@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: $:$Id: $
+// @(#)root/reflex:$Name:  $:$Id: PluginService.h,v 1.1 2006/11/30 08:27:08 roiser Exp $
 // Author: Pere Mato 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -38,20 +38,20 @@ namespace ROOT {
         
         template < typename R > 
            static R Create(const std::string& name ) {
-           return (R)create(name, GetType<R>(), std::vector<ValueObject>());
+           return (R)Create(name, GetType<R>(), std::vector<ValueObject>());
         }  
 
 
         template < typename R, typename A0 > 
            static R Create(const std::string& name, const A0& a0) {
-           return (R)create(name, GetType<R>(), 
+           return (R)Create(name, GetType<R>(), 
                             Tools::MakeVector(ValueObject(a0)));
         }  
 
 
         template < typename R, typename A0, typename A1 > 
            static R Create(const std::string& name, const A0& a0, const A1& a1) {
-           return (R)create(name, GetType<R>(), 
+           return (R)Create(name, GetType<R>(), 
                             Tools::MakeVector(ValueObject(a0), 
                                               ValueObject(a1)));
         }
@@ -60,7 +60,7 @@ namespace ROOT {
         template < typename R, typename A0, typename A1, typename A2 > 
           static R Create(const std::string& name, const A0& a0, const A1& a1, 
                           const A2& a2) {
-           return (R)create(name, GetType<R>(), 
+           return (R)Create(name, GetType<R>(), 
                             Tools::MakeVector(ValueObject(a0), 
                                               ValueObject(a1), 
                                               ValueObject(a2)));
@@ -70,7 +70,7 @@ namespace ROOT {
         template < typename R, typename A0, typename A1, typename A2, typename A3 > 
           static R Create(const std::string& name, const A0& a0, const A1& a1, 
                           const A2& a2, const A3& a3) {
-           return (R)create(name, GetType<R>(), 
+           return (R)Create(name, GetType<R>(), 
                             Tools::MakeVector(ValueObject(a0), 
                                               ValueObject(a1), 
                                               ValueObject(a2), 
@@ -82,7 +82,7 @@ namespace ROOT {
                    typename A4 > 
           static R Create(const std::string& name, const A0& a0, const A1& a1, 
                           const A2& a2, const A3& a3, const A4& a4 ) {
-           return (R)create(name, GetType<R>(), 
+           return (R)Create(name, GetType<R>(), 
                             Tools::MakeVector(ValueObject(a0), 
                                               ValueObject(a1), 
                                               ValueObject(a2), 
@@ -95,7 +95,7 @@ namespace ROOT {
                    typename A4, typename A5 > 
           static R Create(const std::string& name, const A0& a0, const A1& a1, 
                           const A2& a2, const A3& a3, const A4& a4, const A5& a5 ) {
-           return (R)create(name, GetType<R>(), 
+           return (R)Create(name, GetType<R>(), 
                             Tools::MakeVector(ValueObject(a0), 
                                               ValueObject(a1), 
                                               ValueObject(a2), 
@@ -110,7 +110,7 @@ namespace ROOT {
            static R Create(const std::string& name, const A0& a0, const A1& a1, 
                            const A2& a2, const A3& a3, const A4& a4, const A5& a5, 
                            const A6& a6 ) {
-           return (R)create(name, GetType<R>(), 
+           return (R)Create(name, GetType<R>(), 
                             Tools::MakeVector(ValueObject(a0), 
                                               ValueObject(a1), 
                                               ValueObject(a2), 
@@ -126,7 +126,7 @@ namespace ROOT {
           static R Create(const std::string& name, const A0& a0, const A1& a1, 
                           const A2& a2, const A3& a3, const A4& a4, const A5& a5, 
                           const A6& a6, const A7& a7 ) {
-           return (R)create(name, GetType<R>(), 
+           return (R)Create(name, GetType<R>(), 
                             Tools::MakeVector(ValueObject(a0), 
                                               ValueObject(a1), 
                                               ValueObject(a2), 
@@ -298,11 +298,11 @@ namespace {\
     PLUGINSVC_CNAME(type, serial)() {\
       std::string name = ROOT::Reflex::GetType<type>().Name(ROOT::Reflex::SCOPED); \
       ROOT::Reflex::Type sig = ROOT::Reflex::FunctionDistiller<signature>::Get(); \
-      std::string fname = (std::string(PLUGINSVC_FACTORY_NS "::")+ROOT::Reflex::PluginSvc::factoryName(name));\
+      std::string fname = (std::string(PLUGINSVC_FACTORY_NS "::")+ROOT::Reflex::PluginService::FactoryName(name));\
       ROOT::Reflex::FunctionBuilder( sig, fname.c_str(), \
         Factory<type, signature>::Func , 0, "", ROOT::Reflex::PUBLIC)\
         .AddProperty("name",name); \
-      if ( ROOT::Reflex::PluginService::debug() ) std::cout << "PluginService: Declared factory for class " << name << " with signature " << sig.Name() << std::endl; \
+      if ( ROOT::Reflex::PluginService::Debug() ) std::cout << "PluginService: Declared factory for class " << name << " with signature " << sig.Name() << std::endl; \
     }\
   };\
   PLUGINSVC_CNAME(type, serial) PLUGINSVC_CNAME(s_##type, serial);\
@@ -315,12 +315,12 @@ namespace {\
       std::string name = ROOT::Reflex::GetType<type>().Name(ROOT::Reflex::SCOPED); \
       ROOT::Reflex::Type sig = ROOT::Reflex::FunctionDistiller<signature>::Get(); \
       std::stringstream s; s << id; \
-      std::string fname = (std::string(PLUGINSVC_FACTORY_NS "::")+ROOT::Reflex::PluginSvc::factoryName(s.str()));\
+      std::string fname = (std::string(PLUGINSVC_FACTORY_NS "::")+ROOT::Reflex::PluginService::FactoryName(s.str()));\
       ROOT::Reflex::FunctionBuilder( sig, fname.c_str(), \
         Factory<type, signature>::Func , 0, "", ROOT::Reflex::PUBLIC)\
         .AddProperty("name",name) \
         .AddProperty("id",id); \
-      if ( ROOT::Reflex::PluginSvc::debug() ) std::cout << "PluginSvc: Declared factory for id " << fname << " with signature " << sig.Name() << std::endl; \
+      if ( ROOT::Reflex::PluginService::Debug() ) std::cout << "PluginService: Declared factory for id " << fname << " with signature " << sig.Name() << std::endl; \
     }\
   };\
   PLUGINSVC_CNAME(type, serial) PLUGINSVC_CNAME(s_##type, serial);\
