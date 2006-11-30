@@ -970,7 +970,6 @@ void RootShower::produce()
 void RootShower::OnShowerProduce()
 {
     Int_t     i,j,gifindex;
-    Char_t    gifname[80];
     fStatusBar->SetText("",1);
 
     SetWindowName("Root Shower Event Display");
