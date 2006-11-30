@@ -74,13 +74,8 @@ G__MethodInfo {
   void* PointerToFunc();
 #endif
   G__ClassInfo* MemberOf() { return(belongingclass); }
-  struct G__friendtag* GetFriendInfo() { 
-    if(IsValid()) {
-      struct G__ifunc_table *ifunc=(struct G__ifunc_table*)handle;
-      return(ifunc->friendtag[index]);
-    }
-    else return 0;
-  }
+  int GetDefiningScopeTagnum();
+  struct G__friendtag* GetFriendInfo();
   void SetGlobalcomp(int globalcomp);
   int IsValid();
   int SetFilePos(const char* fname);
@@ -101,6 +96,9 @@ G__MethodInfo {
   void SetIsVirtual(int isvirtual);
   void SetVtblBasetagnum(int basetagnum);
 
+  void  SetUserParam(void*);
+  void *GetUserParam();
+
  protected:
   long handle;
   long index;
@@ -109,6 +107,7 @@ G__MethodInfo {
 #endif
   G__ClassInfo* belongingclass;
   G__TypeInfo type;
+  
 };
 
 } // namespace Cint
