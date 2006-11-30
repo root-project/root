@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.47 2006/09/28 19:59:12 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.48 2006/10/17 06:09:16 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -281,7 +281,7 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
       if ( mb->IsEnum() ) {
          Long_t offset = 0;
          G__DataMemberInfo dmi = klass->GetClassInfo()->GetDataMember( mb->GetName(), &offset );
-         PyObject* val = PyInt_FromLong( *((int*)((G__var_array*)dmi.Handle())->p[dmi.Index()]) );
+         PyObject* val = PyInt_FromLong( *((int*)(dmi.Offset()) ) );
          PyObject_SetAttrString( pyclass, const_cast< char* >( mb->GetName() ), val );
          Py_DECREF( val );
       }

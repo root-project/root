@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.249 2006/08/28 14:17:52 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.250 2006/11/16 17:17:39 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -675,8 +675,12 @@ bool CheckInputOperator(G__ClassInfo &cl)
 
    Info(0, "Class %s: Do not generate operator>>()\n",
         cl.Fullname());
+   G__MethodArgInfo args( methodinfo );
+   args.Next(); args.Next();
    if (!methodinfo.IsValid() ||
-        methodinfo.ifunc()->para_p_tagtable[methodinfo.Index()][1] != cl.Tagnum() ||
+       !args.IsValid() ||
+        args.Type()==0 ||
+        args.Type()->Tagnum() != cl.Tagnum() ||
         strstr(methodinfo.FileName(),"TBuffer.h")!=0 ||
         strstr(methodinfo.FileName(),"Rtypes.h" )!=0) {
 
@@ -693,8 +697,12 @@ bool CheckInputOperator(G__ClassInfo &cl)
    // fprintf(stderr, "DEBUG: %s %d\n",methodinfo.FileName(),methodinfo.LineNumber());
 
    methodinfo = gcl.GetMethod("operator<<",proto,&offset);
+   args.Init(methodinfo);
+   args.Next(); args.Next();
    if (!methodinfo.IsValid() ||
-        methodinfo.ifunc()->para_p_tagtable[methodinfo.Index()][1] != cl.Tagnum() ||
+       !args.IsValid() ||
+        args.Type()==0 ||
+        args.Type()->Tagnum() != cl.Tagnum() ||
         strstr(methodinfo.FileName(),"TBuffer.h")!=0 ||
         strstr(methodinfo.FileName(),"Rtypes.h" )!=0) {
 
@@ -1003,8 +1011,8 @@ bool HasCustomOperatorNewPlacement(G__ClassInfo& cl)
       // hierarchy.  We still need to check that it has not been
       // overloaded by a simple operator new.
 
-      G__ClassInfo clNew(methodinfo.ifunc()->tagnum);
-      G__ClassInfo clPlacement(methodinfoPlacement.ifunc()->tagnum);
+      G__ClassInfo clNew(methodinfo.GetDefiningScopeTagnum());
+      G__ClassInfo clPlacement(methodinfoPlacement.GetDefiningScopeTagnum());
 
       if (clNew.IsBase(clPlacement)) {
          // the operator new hides the operator new with placement
@@ -1054,8 +1062,8 @@ bool HasCustomOperatorNewArrayPlacement(G__ClassInfo& cl)
       // hierarchy.  We still need to check that it has not been
       // overloaded by a simple operator new.
 
-      G__ClassInfo clNew(methodinfo.ifunc()->tagnum);
-      G__ClassInfo clPlacement(methodinfoPlacement.ifunc()->tagnum);
+      G__ClassInfo clNew(methodinfo.GetDefiningScopeTagnum());
+      G__ClassInfo clPlacement(methodinfoPlacement.GetDefiningScopeTagnum());
 
       if (clNew.IsBase(clPlacement)) {
          // the operator new[] hides the operator new with placement

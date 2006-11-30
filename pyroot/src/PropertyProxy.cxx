@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.10 2006/07/01 21:19:55 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.11 2006/08/14 00:21:56 rdm Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -185,7 +185,7 @@ void PyROOT::PropertyProxy::Set( TGlobal* gbl )
       G__DataMemberInfo dmi;
       Long_t address = (Long_t)gbl->GetAddress();
       while ( dmi.Next() ) {    // using G__ClassInfo().GetDataMember() would cause overwrite
-         if ( address == ((G__var_array*)dmi.Handle())->p[dmi.Index()] ) {
+         if ( address == dmi.Offset() ) { 
             fDMInfo = dmi;
             break;
          }
@@ -200,7 +200,7 @@ void PyROOT::PropertyProxy::Set( TGlobal* gbl )
 Long_t PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
 // class attributes, global properties
    if ( fProperty & kIsStatic )
-      return (Long_t)((G__var_array*)fDMInfo.Handle())->p[fDMInfo.Index()];
+      return fDMInfo.Offset();
 
 // special case: non-static lookup through class
    if ( ! pyobj )

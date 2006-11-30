@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyClassGenerator.cxx,v 1.9 2006/08/21 22:42:24 pcanal Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyClassGenerator.cxx,v 1.10 2006/11/24 14:24:54 rdm Exp $
 // Author: Wim Lavrijsen, May 2004
 
 // Bindings
@@ -29,9 +29,10 @@ namespace {
       // from cint/src/common.h
 #define G__RECMEMFUNCENV      (long)0x7fff0036
       G__CurrentCall( G__RECMEMFUNCENV, &ifunc, &index );
+      G__MethodInfo mi; mi.Init((long)ifunc, index, 0);
 
       PyObject* args = PyTuple_New( 0 );
-      PyObject* result =  PyObject_Call( (PyObject*)ifunc->userparam[index], args, NULL );
+      PyObject* result =  PyObject_Call( (PyObject*)mi.GetUserParam(), args, NULL );
       if ( ! result )
          PyErr_Print();
       Py_DECREF( args );
@@ -44,7 +45,7 @@ namespace {
       pti.tagnum = -1;
       pti.tagtype = 'c';
 
-      PyObject* str = PyObject_Str( (PyObject*)ifunc->userparam[index] );
+      PyObject* str = PyObject_Str( (PyObject*)mi.GetUserParam() );
       std::string clName = PyString_AS_STRING( str );
       Py_DECREF( str );
 
@@ -65,6 +66,7 @@ namespace {
       G__ifunc_table* ifunc = 0;
       long index = 0;
       G__CurrentCall( G__RECMEMFUNCENV, &ifunc, &index );
+      G__MethodInfo mi; mi.Init((long)ifunc, index, 0);
 
       PyObject* args = PyTuple_New( 1 + libp->paran );
       PyTuple_SetItem( args, 0, self );
@@ -122,7 +124,7 @@ namespace {
 
       PyObject* result = 0;
       if ( ! PyErr_Occurred() )
-         result =  PyObject_Call( (PyObject*)ifunc->userparam[index], args, NULL );
+         result =  PyObject_Call( (PyObject*)mi.GetUserParam(), args, NULL );
       Py_DECREF( args );
 
       if ( ! result )
@@ -205,23 +207,10 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
    G__ClassInfo gcl( tagnum );
 
 // special case: constructor
-   G__MethodInfo m = gcl.AddMethod( "", clName.c_str(), "0 - -" );
-
-   G__ifunc_table* ifunc = m.ifunc();
-   Long_t index = m.Index();
-
-   ifunc->pentry[index]->size        = -1;
-   ifunc->pentry[index]->filenum     = -1;
-   ifunc->pentry[index]->line_number = -1;
-   ifunc->pentry[index]->tp2f = NULL;
-   ifunc->pentry[index]->p    = (void*)PyCtorCallback;
+   G__MethodInfo m = gcl.AddMethod( "", clName.c_str(), "ellipsis", 0, 0, (void*)PyCtorCallback);
 
    Py_INCREF( pyclass );
-   ifunc->userparam[ index ] = (void*)pyclass;
-
-// mimick ellipsis
-   ifunc->para_nu[index] = -1;
-   ifunc->ansi[index] = 0;
+   m.SetUserParam( pyclass );
 
    for ( int i = 0; i < PyList_GET_SIZE( attrs ); ++i ) {
       PyObject* label = PyList_GET_ITEM( attrs, i );
@@ -232,23 +221,11 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
       if ( PyCallable_Check( attr ) ) {
          std::string mtName = PyString_AS_STRING( label );
 
-         G__MethodInfo m = gcl.AddMethod( "TPyReturn", mtName.c_str(), "0 - -" );
-
-         G__ifunc_table* ifunc = m.ifunc();
-         Long_t index = m.Index();
-
-         ifunc->pentry[index]->size        = -1;
-         ifunc->pentry[index]->filenum     = -1;
-         ifunc->pentry[index]->line_number = -1;
-         ifunc->pentry[index]->tp2f = NULL;
-         ifunc->pentry[index]->p    = (void*)PyMemFuncCallback;
+         G__MethodInfo m = gcl.AddMethod( "TPyReturn", mtName.c_str(), "ellipsis", 0, 0, (void*)PyMemFuncCallback );
 
          Py_INCREF( attr );
-         ifunc->userparam[ index ] = (void*)attr;
+         m.SetUserParam(attr);
 
-      // mimick ellipsis
-         ifunc->para_nu[index] = -1;
-         ifunc->ansi[index] = 0;
       }
 
       Py_DECREF( attr );

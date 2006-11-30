@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.31 2006/08/14 00:21:56 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.32 2006/10/17 06:09:15 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -300,9 +300,9 @@ PyObject* PyROOT::TMacroConverter::FromMemory( void* address )
    G__DataMemberInfo dmi;
    while ( dmi.Next() ) {    // using G__ClassInfo().GetDataMember() would cause overwrite
 
-      if ( (Long_t)address == ((G__var_array*)dmi.Handle())->p[dmi.Index()] ) {
+      if ( (Long_t)address == dmi.Offset() ) {
       // for now, only handle int, double, and C-string
-         switch ( ((G__var_array*)dmi.Handle())->type[dmi.Index()] ) {
+         switch ( dmi.Type()->Type() ) {
          case 'p':
             return PyInt_FromLong( (Long_t) *(Int_t*)address );
          case 'P':

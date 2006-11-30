@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.44 2006/10/17 06:09:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.45 2006/11/24 14:24:54 rdm Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -29,13 +29,13 @@
 
 // CINT
 #include "Api.h"
+#include "../cint/src/common.h"
 
 // Standard
 #include <stdexcept>
 #include <string>
 #include <stdio.h>
 #include <utility>
-
 
 namespace {
 
@@ -1287,7 +1287,8 @@ namespace {
 #define G__RECMEMFUNCENV      (long)0x7fff0036
       G__CurrentCall( G__RECMEMFUNCENV, &ifunc, &index );
 
-      CallInfo_t* ci = (CallInfo_t*)ifunc->userparam[index];
+      G__MethodInfo mi; mi.Init((long)ifunc, index, 0);
+      CallInfo_t* ci = (CallInfo_t*)mi.GetUserParam();
 
       if ( ci->first != 0 ) {
       // prepare arguments and call
@@ -1330,7 +1331,8 @@ namespace {
       long index = 0;
       G__CurrentCall( G__RECMEMFUNCENV, &ifunc, &index );
 
-      PyObject* pyfunc = (PyObject*)ifunc->userparam[index];
+      G__MethodInfo mi; mi.Init((long)ifunc, index, 0);
+      PyObject* pyfunc = (PyObject*)mi.GetUserParam();
 
       if ( pyfunc != 0 ) {
       // prepare arguments
@@ -1399,7 +1401,7 @@ namespace {
 
          if ( ! m.IsValid() ) {
          // create a new global function
-            m = gcl.AddMethod( retcode, name, signature );       // boundary safe
+            m = gcl.AddMethod( retcode, name, signature, 0, 0, callback );       // boundary safe
 
          // offset counter from this that services to associate pyobject with tp2f
             fgCount += 1;
@@ -1407,12 +1409,7 @@ namespace {
          // setup association for CINT
             G__ifunc_table* ifunc = m.ifunc();
             int index = m.Index();
-
-            ifunc->pentry[index]->size        = -1;
-            ifunc->pentry[index]->filenum     = -1;
-            ifunc->pentry[index]->line_number = -1;
             ifunc->pentry[index]->tp2f = (void*)((Long_t)this + fgCount);
-            ifunc->pentry[index]->p    = callback;
 
          // setup association for ourselves
             int tag = -6666 - fgCount;
@@ -1469,22 +1466,18 @@ namespace {
       // build placeholder, get CINT info
          G__MethodInfo m = Register( (void*)TFNPyCallback, name, "double*, double*", "D" );
  
-      // get proper table block of "interpreted" function and the index into it
-         G__ifunc_table* ifunc = m.ifunc();
-         int index = m.Index();
-
       // verify/setup the callback parameters
          int npar = 0;             // default value if not given
          if ( argc == reqNArgs+1 )
             npar = PyInt_AsLong( PyTuple_GET_ITEM( args, reqNArgs ) );
 
-         if ( ! ifunc->userparam[index] ) {
+         if ( ! m.GetUserParam() ) {
          // no func yet, install current one
             Py_INCREF( pyfunc );
-            ifunc->userparam[index] = (void*)new pairPyObjInt_t( pyfunc, npar );
+            m.SetUserParam((void*)new pairPyObjInt_t( pyfunc, npar ));
          } else {
          // old func: flip if different, keep if same
-            pairPyObjInt_t* oldp = (pairPyObjInt_t*)ifunc->userparam[index];
+            pairPyObjInt_t* oldp = (pairPyObjInt_t*)m.GetUserParam();
             if ( oldp->first != pyfunc ) {
                Py_INCREF( pyfunc ); Py_DECREF( oldp->first );
                oldp->first = pyfunc;
@@ -1507,7 +1500,7 @@ namespace {
                PyTuple_SET_ITEM( newArgs, iarg, item );
             } else {
                PyTuple_SET_ITEM( newArgs, iarg,
-                  PyCObject_FromVoidPtr( (void*)ifunc->pentry[index]->tp2f, NULL ) );
+                                 PyCObject_FromVoidPtr( (void*)m.PointerToFunc(), NULL ) );
             }
          }
 
@@ -1611,15 +1604,11 @@ namespace {
          G__MethodInfo m = Register( (void*)TMinuitPyCallback, name,
             "int&, double*, double&, double*, int", "V" );
 
-      // get proper table block of "interpreted" function and the index into it
-         G__ifunc_table* ifunc = m.ifunc();
-         int index = m.Index();
-
       // setup the callback parameter
          Py_INCREF( pyfunc );
-         if ( ifunc->userparam[index] )
-            Py_DECREF((PyObject*)ifunc->userparam[index]);
-         ifunc->userparam[index] = (void*)pyfunc;
+         if ( m.GetUserParam() )
+            Py_DECREF((PyObject*)m.GetUserParam());
+         m.SetUserParam((void*)pyfunc);
 
       // get function
          MethodProxy* method =
@@ -1628,7 +1617,7 @@ namespace {
       // build new argument array
          PyObject* newArgs = PyTuple_New( 1 );
          PyTuple_SET_ITEM( newArgs, 0,
-            PyCObject_FromVoidPtr( (void*)ifunc->pentry[index]->tp2f, NULL ) );
+                           PyCObject_FromVoidPtr( (void*)m.PointerToFunc(), NULL ) );
 
       // re-run
          PyObject* result = PyObject_CallObject( (PyObject*)method, newArgs );
