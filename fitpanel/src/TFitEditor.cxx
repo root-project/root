@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.14 2006/11/28 14:08:38 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.15 2006/11/29 15:13:34 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -551,9 +551,9 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    if (pad && obj) {
       fParentPad = (TPad *)pad;
       fFitObject = (TObject *)obj;
+      fFitObject->SetBit(kCanDelete);
       SetCanvas(pad->GetCanvas());
       pad->GetCanvas()->Selected(pad, obj, kButton1Down);
-      //SetFitObject(pad, obj, kButton1Down);
    } else {
       Error("FitPanel", "need to have an object drawn first");
       return;
