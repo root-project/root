@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.cxx,v 1.2 2006/10/31 08:51:07 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.cxx,v 1.3 2006/10/31 15:18:34 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -72,7 +72,8 @@ TEntryListBlock::TEntryListBlock(const TEntryListBlock &eblock) : TObject(eblock
    fType = eblock.fType;
    fPassing = eblock.fPassing;
    fCurrent = eblock.fCurrent;
-   fLastIndexReturned = eblock.fLastIndexReturned;
+   fLastIndexReturned = -1;
+   fLastIndexQueried = -1;
 }
 
 
@@ -340,6 +341,7 @@ Int_t TEntryListBlock::Next()
       fLastIndexQueried++;
 
       if (fLastIndexQueried==kBlockSize) {
+         fLastIndexQueried = -1;
          fLastIndexReturned = -1;
          return -1;
       }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.4 2006/11/02 15:12:33 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.5 2006/11/21 11:13:34 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -65,6 +65,15 @@
 //   - while the TTree::SetEntryList() function is only setting the TTree::fEntryList
 //     data member, the same function in TChain also finds correspondance between
 //     the TTrees of this TChain and the sub-lists of this TEntryList.
+//
+// TEntryList and the current directory:
+//   - TEntryList objects are automatically added to the current directory (like TTrees).
+//     However, in case of a TEntryList for a chain, only the top-level entry list is added,
+//     not the sub-lists for specific trees. Placing entry lists in the current directory
+//     allows calling them as a part of a TTreeFormula expression, so if the user wants 
+//     to extract a sublist from a TChain entry list via the GetEntryList() or some other
+//     function, he has to add it to the current directory to be able to use it in 
+//     TTreeFormula expressions.
 // 
 //////////////////////////////////////////////////////////////////////////
 
@@ -89,6 +98,7 @@ TEntryList::TEntryList()
    fNBlocks = 0;
    fTreeName = "";
    fFileName = "";
+   fStringHash = 0;
    fTreeNumber = -1;
    fDirectory = 0;
 
@@ -109,7 +119,9 @@ TEntryList::TEntryList(const char *name, const char *title):TNamed(name, title)
    fNBlocks = 0;
    fTreeName = "";
    fFileName = "";
+   fStringHash = 0;
    fTreeNumber = -1;
+
    fDirectory  = gDirectory;
    gDirectory->Append(this);
 
@@ -151,6 +163,7 @@ TEntryList::TEntryList(const char *name, const char *title, const char *treename
    fN = 0;
    SetTree(treename, filename);
    fTreeNumber = -1;
+
    fDirectory  = gDirectory;
    gDirectory->Append(this);
 
@@ -172,6 +185,7 @@ TEntryList::TEntryList(const TTree *tree)
 
    SetTree(tree);
    fTreeNumber = -1;
+
    fDirectory  = gDirectory;
    gDirectory->Append(this);
 
@@ -188,6 +202,7 @@ TEntryList::TEntryList(const TEntryList &elist) : TNamed(elist)
    fNBlocks = elist.fNBlocks;
    fTreeName = elist.fTreeName;
    fFileName = elist.fFileName;
+   fStringHash = elist.fStringHash;
    fTreeNumber = elist.fTreeNumber;
    fLastIndexQueried = -1;
    fLastIndexReturned = 0;
@@ -229,7 +244,6 @@ TEntryList::TEntryList(const TEntryList &elist) : TNamed(elist)
 TEntryList::~TEntryList()
 {
 // d-tor
-// !!! check for memory leaks!!!
 
    if (fBlocks){
       fBlocks->Delete();
@@ -237,16 +251,16 @@ TEntryList::~TEntryList()
       
    }
    fBlocks = 0;
-   //if (fLists){
-      //printf("deleting lists\n");
-   // fLists->Delete();
-   // delete fLists;
-   //}
+   if (fLists){
+      fLists->Delete();
+      delete fLists;
+   }
    
-   //fLists = 0;
+   fLists = 0;
+
    if (fDirectory) fDirectory->GetList()->Remove(this);
    fDirectory  = 0;
-   fLists = 0;
+
 }
 
 //______________________________________________________________________________
@@ -260,6 +274,7 @@ void TEntryList::Add(const TEntryList *elist)
       fNBlocks = elist->fNBlocks;
       fTreeName = elist->fTreeName;
       fFileName = elist->fFileName;
+      fStringHash = elist->fStringHash;
       fTreeNumber = elist->fTreeNumber;
       fLastIndexQueried = -1;
       fLastIndexReturned = 0;
@@ -287,7 +302,7 @@ void TEntryList::Add(const TEntryList *elist)
                fBlocks->Add(block2);
             }
          }
-         fCurrent = this;
+         fCurrent = 0;
 
       }
       return;
@@ -326,22 +341,30 @@ void TEntryList::Add(const TEntryList *elist)
                fNBlocks++;
             }
          }
+         fLastIndexQueried = -1;
+         fLastIndexReturned = 0;
       } else {
       //entry lists are for different trees. create a chain entry list with
       //2 sub lists for the first and second entry lists
-            fLists = new TList();
-            TEntryList *el = new TEntryList();
-            el->fTreeName = fTreeName;
-            el->fFileName = fFileName;
-            el->fBlocks = fBlocks;
-            fBlocks = 0;
-            el->fNBlocks = fNBlocks;
-            el->fN = fN;
-            fLists->Add(el);
-            el = new TEntryList(*elist);
-            fLists->Add(el);
-            fN+=el->GetN();
-            fCurrent = 0;
+         fLastIndexQueried = -1;
+         fLastIndexReturned = 0;
+         fLists = new TList();
+         TEntryList *el = new TEntryList();
+         el->fTreeName = fTreeName;
+         el->fFileName = fFileName;
+         el->fBlocks = fBlocks;
+         fBlocks = 0;
+         el->fNBlocks = fNBlocks;
+         el->fN = fN;
+         el->fLastIndexQueried = -1;
+         el->fLastIndexReturned = 0;
+         fLists->Add(el);
+         el = new TEntryList(*elist);
+         el->fLastIndexQueried = -1;
+         el->fLastIndexReturned = 0;
+         fLists->Add(el);
+         fN+=el->GetN();
+         fCurrent = 0;
       }
    } else {
       //there are already some sublists in this list, just add another one
@@ -353,6 +376,7 @@ void TEntryList::Add(const TEntryList *elist)
          while ((el = (TEntryList*)next())){
             if (!strcmp(el->fTreeName.Data(), elist->fTreeName.Data()) && 
                 !strcmp(el->fFileName.Data(), elist->fFileName.Data())){
+            // if (el->fStringHash == elist->fStringHash){
                //found a list for the same tree
                el->Add(elist);
                found = kTRUE;
@@ -421,7 +445,7 @@ Bool_t TEntryList::Enter(Long64_t entry, TTree *tree)
       if (!fLists) {
          if (!fBlocks) fBlocks = new TObjArray();
          TEntryListBlock *block = 0;
-         Int_t nblock = entry/kBlockSize;
+         Long64_t nblock = entry/kBlockSize;
          if (nblock >= fNBlocks) {
             if (fNBlocks>0){
                block = (TEntryListBlock*)fBlocks->UncheckedAt(fNBlocks-1);
@@ -448,7 +472,7 @@ Bool_t TEntryList::Enter(Long64_t entry, TTree *tree)
          }
       }
    } else {
-      Int_t localentry = tree->LoadTree(entry);
+      Long64_t localentry = tree->LoadTree(entry);
       SetTree(tree->GetTree());
       if (fCurrent){
          if (fCurrent->Enter(localentry)) {
@@ -475,7 +499,7 @@ Bool_t TEntryList::Remove(Long64_t entry, TTree *tree)
       if (!fLists) {
          if (!fBlocks) return 0;
          TEntryListBlock *block = 0;
-         Int_t nblock = entry/kBlockSize;
+         Long64_t nblock = entry/kBlockSize;
          block = (TEntryListBlock*)fBlocks->UncheckedAt(nblock);
          if (!block) return 0;
          Long64_t blockindex = entry - nblock*kBlockSize;
@@ -614,10 +638,31 @@ TEntryList *TEntryList::GetEntryList(const char *treename, const char *filename)
          return 0;
       }
    }
+
+   TString stotal = treename;
+   stotal.Append(filename);
+   ULong_t newhash = stotal.Hash();
+
    TIter next(fLists);
    TEntryList *templist;
    while ((templist = (TEntryList*)next())){
-      if (!strcmp(treename, templist->GetTreeName()) && !(strcmp(filename, templist->GetFileName()))){
+      if (newhash == templist->fStringHash){
+         return templist;
+      }
+   }
+
+   //didn't find anything for this filename, try the full name too
+   TString longname = filename;
+   gSystem->ExpandPathName(longname);
+   if (!gSystem->IsAbsoluteFileName(longname))
+      gSystem->PrependPathName(gSystem->pwd(), longname);
+   longname = gSystem->UnixPathName(longname);
+   stotal = treename;
+   stotal.Append(longname);
+   newhash = stotal.Hash();
+   next.Reset();
+   while ((templist = (TEntryList*)next())){
+      if (newhash == templist->fStringHash){
          return templist;
       }
    }
@@ -680,7 +725,13 @@ Long64_t TEntryList::Next()
          return fLastIndexReturned;
       }
    } else {
-      if (!fCurrent) fCurrent = (TEntryList*)fLists->First();
+      if (!fCurrent) {
+         fCurrent = (TEntryList*)fLists->First();
+         if (fShift) {
+            while (fCurrent->GetTreeNumber()<0)
+               fCurrent = (TEntryList*)fLists->After(fCurrent);
+         }
+      }
       result = fCurrent->Next();
       if (result>=0) {
          fLastIndexQueried++;
@@ -787,9 +838,21 @@ void TEntryList::Reset()
    fN = 0;
    fTreeName = "";
    fFileName = "";
+   fStringHash = 0;
    fTreeNumber = -1;
    fLastIndexQueried = -1;
    fLastIndexReturned = 0;
+}
+
+//______________________________________________________________________________
+void TEntryList::SetDirectory(TDirectory *dir)
+{
+   //Add reference to directory dir. dir can be 0.
+
+   if (fDirectory == dir) return;
+   if (fDirectory) fDirectory->GetList()->Remove(this);
+   fDirectory = dir;
+   if (fDirectory) fDirectory->GetList()->Add(this);
 }
 
 //______________________________________________________________________________
@@ -799,38 +862,53 @@ void TEntryList::SetTree(const char *treename, const char *filename)
    //If not, creates this list and sets it as the current sublist
 
    TEntryList *elist = 0;
-   //if (fCurrent->fTreeName==treename && fCurrent->fFileName==filename){
-      //this tree's entry list is current, do nothing
-   // return;
-   //}
+
+   TString stotal = treename;
+   stotal.Append(filename);
+   ULong_t newhash = stotal.Hash();
    if (fLists) {
       //find the corresponding entry list and make it current
       if (!fCurrent) fCurrent = (TEntryList*)fLists->First();
-      if (fCurrent->fTreeName==treename && fCurrent->fFileName==filename){
-         //this tree's entry list is current, do nothing
-         return;
+      if (fCurrent->fStringHash == 0){
+         stotal = fCurrent->fTreeName + fCurrent->fFileName;
+         fCurrent->fStringHash = stotal.Hash();
       }
+      if (newhash == fCurrent->fStringHash)
+         return; 
       TIter next(fLists);
       while ((elist = (TEntryList*)next())){
-         if (elist->fTreeName==treename && elist->fFileName== filename){
+         if (newhash == elist->fStringHash){
             fCurrent = elist;
+            //the current entry list was changed. reset the fLastIndexQueried,
+            //so that Next() doesn't start with the wrong current list
+            fLastIndexQueried = -3;
             return;
          }
       }
       //didn't find an entry list for this tree, create a new one
       elist = new TEntryList("", "", treename, filename);
+      if (elist->GetDirectory()) {
+         //sub lists are not added to the current directory
+         elist->GetDirectory()->GetList()->Remove(elist);
+         //elist->SetDirectory(0);
+      }
       fLists->Add(elist);
       fCurrent = elist;
       return;
    } else {
       if (fBlocks){
-         if(fTreeName!=treename || fFileName!=filename){
+         if (fStringHash == 0){
+            stotal = fTreeName + fFileName;
+            fStringHash = stotal.Hash();
+         }
+         if (newhash != fStringHash){
          //we have a chain and already have an entry list for the first tree
          //move the first entry list to the fLists
             fLists = new TList();
             elist = new TEntryList();
             elist->fTreeName = fTreeName;
             elist->fFileName = fFileName;
+            elist->fStringHash = fStringHash;
             elist->fN = fN;
             elist->fTreeNumber = fTreeNumber;
             elist->fBlocks = fBlocks;
@@ -838,8 +916,17 @@ void TEntryList::SetTree(const char *treename, const char *filename)
             elist->fNBlocks = fNBlocks;
             fLists->Add(elist);
             elist = new TEntryList("", "", treename, filename);
+            if (elist->GetDirectory()) {
+               //sub lists are not added to the current directory
+               elist->GetDirectory()->GetList()->Remove(elist);
+               //elist->SetDirectory(0);
+            }
             fLists->Add(elist);
             fCurrent = elist;
+            //the current entry list was changed. reset the fLastIndexQueried,
+            //so that Next() doesn't start with the wrong current list
+            fLastIndexQueried = -3;
+
          }
          else {
             //same tree as in the current entry list, don't do anything
@@ -848,6 +935,8 @@ void TEntryList::SetTree(const char *treename, const char *filename)
       } else {
          fTreeName = treename;
          fFileName = filename;
+         stotal = fTreeName + fFileName;
+         fStringHash = stotal.Hash();
       }
    }
 }
@@ -859,10 +948,17 @@ void TEntryList::SetTree(const TTree *tree)
    //If not, creates this list and sets it as the current sublist
 
    TString treename = tree->GetTree()->GetName();
-   TString filename = tree->GetTree()->GetCurrentFile()->GetName();
-   gSystem->ExpandPathName(filename);
-   if (!gSystem->IsAbsoluteFileName(filename))
-      gSystem->PrependPathName(gSystem->pwd(), filename);
+   TString filename;
+   if (tree->GetTree()->GetCurrentFile()){
+      filename = tree->GetTree()->GetCurrentFile()->GetName();
+      gSystem->ExpandPathName(filename);
+      if (!gSystem->IsAbsoluteFileName(filename))
+         gSystem->PrependPathName(gSystem->pwd(), filename);
+      filename = gSystem->UnixPathName(filename);
+   } else {
+      //memory-resident
+      filename = "";
+   }
    SetTree(treename, filename);
 
 }

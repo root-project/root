@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.h,v 1.2 2006/10/31 08:51:07 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.h,v 1.3 2006/11/02 15:12:33 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -32,6 +32,7 @@ class TEntryList: public TNamed
    Long64_t         fN;         //number of entries in the list
    TString          fTreeName;  //name of the tree
    TString          fFileName;  //name of the file, where the tree is
+   ULong_t          fStringHash;//! Hash value of a string of treename and filename
    Int_t            fTreeNumber;//! the index of the tree in the chain (used when the entry
                                 //list is used as input (TTree::SetEntryList())
 
@@ -74,12 +75,13 @@ class TEntryList: public TNamed
 
    virtual void        Print(const Option_t* option = "") const;
 
+   virtual void        SetDirectory(TDirectory *dir);
    virtual void        SetShift(Bool_t shift) { fShift = shift; };
    virtual void        SetTree(const TTree *tree);
    virtual void        SetTree(const char *treename, const char *filename);
    virtual void        SetTreeName(const char *treename){ fTreeName = treename; };
    virtual void        SetFileName(const char *filename){ fFileName = filename; };
-   virtual void        SetTreeNumber(Int_t index) { fTreeNumber=index; }
+   virtual void        SetTreeNumber(Int_t index) { fTreeNumber=index;  }
    virtual void        Subtract(const TEntryList *elist);
 
 
