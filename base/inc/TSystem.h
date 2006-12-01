@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.63 2006/11/30 23:19:47 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.64 2006/12/01 08:15:40 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #ifndef __CINT__
 #include <stdio.h>
 #include <ctype.h>
+#include <fcntl.h>
 #ifndef R__WIN32
 #include <unistd.h>
 #endif
