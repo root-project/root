@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.62 2006/09/04 15:33:35 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.63 2006/09/28 13:24:19 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -40,14 +40,10 @@
 #include "TMapFile.h"
 #include "TTabCom.h"
 #include "TError.h"
+#include "G__ci.h"
 
 #ifdef R__UNIX
 #include <signal.h>
-
-extern "C" {
-   extern int G__get_security_error();
-   extern int G__genericerror(const char* msg);
-}
 #endif
 
 //______________________________________________________________________________
