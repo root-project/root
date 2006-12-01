@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Array.cxx,v 1.10 2006/08/02 13:25:33 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Array.cxx,v 1.11 2006/08/03 16:49:21 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -46,7 +46,12 @@ std::string ROOT::Reflex::Array::BuildTypeName( const Type & typ,
                                                 unsigned int mod ) {
 //-------------------------------------------------------------------------------
 // Build an array type name.
-   std::ostringstream ost;
-   ost << typ.Name( mod ) << "[" << len << "]";
-   return ost.str();
+   std::ostringstream ost; 
+   Type t = typ;
+   ost << "[" << len << "]";
+   while ( t.IsArray() ) {
+      ost << "[" << t.ArrayLength() << "]";
+      t = t.ToType();
+   }
+   return t.Name(mod) + ost.str();
 }
