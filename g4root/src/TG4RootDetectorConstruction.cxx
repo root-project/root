@@ -1,4 +1,4 @@
-// @(#)root/g4root:$Name:  $:$Id: TG4RootDetectorConstruction.cxx,v 1.1 2006/11/22 17:14:01 brun Exp $
+// @(#)root/g4root:$Name:  $:$Id: TG4RootDetectorConstruction.cxx,v 1.2 2006/11/22 17:29:54 rdm Exp $
 // Author: Andrei Gheata   07/08/06
 
 /*************************************************************************
@@ -310,11 +310,7 @@ G4VPhysicalVolume *TG4RootDetectorConstruction::CreateG4PhysicalVolume(TGeoNode 
    G4LogicalVolume *pCurrentLogical = GetG4Volume(node->GetVolume());
    G4LogicalVolume *pMotherLogical = GetG4Volume(node->GetMotherVolume());
    G4bool pMany = false;
-//   G4int pCopyNo = node->GetNumber();
-   // Do not put real copy number here, but rather index in the list of nodes.
-   // This makes gGeoManager-CdDown(i) much faster since we know i.
-   G4int pCopyNo = 1;
-   if (node->GetMotherVolume()) pCopyNo = node->GetMotherVolume()->GetNodes()->IndexOf(node);
+   G4int pCopyNo = node->GetNumber();
    
    G4VPhysicalVolume *pPhysicalVolume = new G4PVPlacement(pRot,tlate,pCurrentLogical,pName,
                                                           pMotherLogical,pMany,pCopyNo);

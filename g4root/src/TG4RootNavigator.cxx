@@ -1,4 +1,4 @@
-// @(#)root/g4root:$Name:  $:$Id: TG4RootNavigator.cxx,v 1.2 2006/11/22 17:29:54 rdm Exp $
+// @(#)root/g4root:$Name:  $:$Id: TG4RootNavigator.cxx,v 1.3 2006/11/27 09:58:52 brun Exp $
 // Author: Andrei Gheata   07/08/06
 
 /*************************************************************************
@@ -117,6 +117,7 @@ G4double TG4RootNavigator::ComputeStep(const G4ThreeVector &pGlobalPoint,
    G4double step = (gGeoManager->GetStep()+tol)*cm;
 //   if (step >= pCurrentProposedStepLength) step = kInfinity;
    if (step < 2.*tol*cm) step = 0.;
+   if (step < 2.*tol*cm) step = 0.;
    fStepEntering = fGeometry->IsStepEntering();
    fStepExiting  = fGeometry->IsStepExiting();
    if (fStepEntering || fStepExiting) {
@@ -171,40 +172,39 @@ TGeoNode *TG4RootNavigator::SynchronizeGeoManager()
    Int_t nodeIndex, level;
    G4VPhysicalVolume *pvol;
    TGeoNode *pnode, *newnode=0;
-   for (level=0; level<=depth; level++) {
+   for (level=1; level<=depth; level++) {
       pvol = fHistory.GetVolume(level);
+      newnode = fDetConstruction->GetNode(pvol);
       if (level<=geolevel) {
          // TGeo has also something at this level - check if it matches what is
          // in fHistory
          pnode = fGeometry->GetMother(geolevel-level);
-         newnode = fDetConstruction->GetNode(pvol);
          // If the node at this level matches the one in the history, do nothing
          if (pnode==newnode) continue;
          // From this level down we need to update TGeo path.
-         if (level==0) {
-            // TO BE REMOVED IF NEVER HAPPENS !!!
-            G4cerr << "Top node does not match history !!!" << G4endl;
-            G4Exception("Aborting in SynchronizeGeoManager()");
-            return NULL;
-         }
          while (geolevel >= level) {
             fGeometry->CdUp();
             geolevel--;
          }
          // Now TGeo is at level-1 and needs to update level
          // this should be the index of the node to be used in CdDown(index)
-         nodeIndex = fHistory.GetReplicaNo(level);
+         nodeIndex = fGeometry->GetCurrentVolume()->GetIndex(newnode);
+         if (nodeIndex < 0) {
+            G4cerr << "SynchronizeGeoManager did not work (1)!!!" << G4endl;
+            return NULL;         
+         }
+//         nodeIndex = fHistory.GetReplicaNo(level);
          fGeometry->CdDown(nodeIndex);
          geolevel++;     // Should be equal to i now
       } else {
          // This level has to be synchronized
-         nodeIndex = fHistory.GetReplicaNo(level);
+         nodeIndex = fGeometry->GetCurrentVolume()->GetIndex(newnode);
+         if (nodeIndex < 0) {
+            G4cerr << "SynchronizeGeoManager did not work (2)!!!" << G4endl;
+            return NULL;         
+         }
+//         nodeIndex = fHistory.GetReplicaNo(level);
          fGeometry->CdDown(nodeIndex);
-         // Do the check for the moment - TO REMOVE AFTER CHECK !!!!!
-         if (fGeometry->GetCurrentNode() != fDetConstruction->GetNode(fHistory.GetVolume(level))) {
-            G4cerr << "WOOPS: CdDown(fHistory.GetReplica) did not work !!!" << G4endl;
-            return NULL;
-         }   
          geolevel++;     // Should be equal to i now
       }
    }
