@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.54 2006/11/14 14:19:15 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.55 2006/11/16 17:17:38 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -313,7 +313,7 @@ TTreeViewer::TTreeViewer(const char* treeName)
    gROOT->ProcessLine("TTree *tv__tree = 0;");
    fTreeList = new TList;
    gROOT->ProcessLine("TList *tv__tree_list = new TList;");
-   fFilename = 0;
+   fFilename = "";
    gROOT->ProcessLine("TFile *tv__tree_file = 0;");
    gInterpreter->SaveContext();
    BuildInterface();
@@ -334,7 +334,7 @@ TTreeViewer::TTreeViewer(const TTree *tree)
    gROOT->ProcessLine("TTree *tv__tree = 0;");
    fTreeList = new TList;
    gROOT->ProcessLine("TList *tv__tree_list = new TList;");
-   fFilename = 0;
+   fFilename = "";
    gROOT->ProcessLine("TFile *tv__tree_file = 0;");
    gInterpreter->SaveContext();
    BuildInterface();
@@ -530,11 +530,11 @@ void TTreeViewer::SetFile()
             cout << "File name : "<< fFilename << endl;
             return;
          } else {
-            fFilename = 0;
+            fFilename = "";
          }
       }
    }
-   fFilename = 0;
+   fFilename = "";
 }
 //______________________________________________________________________________
 void TTreeViewer::BuildInterface()
@@ -567,7 +567,7 @@ void TTreeViewer::BuildInterface()
    fDimension = 0;
    fVarDraw = kFALSE;
    fStopMapping = kFALSE;
-//   fFilename = 0;
+//   fFilename = "";
    fSourceFile = "treeviewer.C";
    //--- lists : trees and widgets to be removed
 //   fTreeList = 0;
