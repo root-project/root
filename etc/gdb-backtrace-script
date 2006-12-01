@@ -1,3 +1,5 @@
+# This script is used by TUnixSystem::StackTrace() on Mac OS X.
+
 echo \n
 echo ========== STACKS OF ALL THREADS ==========\n
 thread apply all bt
