@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.170 2006/11/16 17:17:38 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.171 2006/11/27 14:17:32 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -945,7 +945,7 @@ void TUnixSystem::DispatchSignals(ESignals sig)
          }
          Throw(sig);
       }
-      Abort(-1);
+      Exit(sig);
       break;
    case kSigSystem:
    case kSigPipe:
@@ -1906,14 +1906,14 @@ void TUnixSystem::StackTrace()
 #endif
    const char *cppfiltarg = "";
 #ifdef R__B64
-   const char *format1 = " 0x%016lx in %.100s %s 0x%lx from %.100s\n";
-   const char *format2 = " 0x%016lx in %.100s at %.100s from %.100s\n";
-   const char *format3 = " 0x%016lx in %.100s from %.100s\n";
+   const char *format1 = " 0x%016lx in %.200s %s 0x%lx from %.200s\n";
+   const char *format2 = " 0x%016lx in %.200s at %.200s from %.200s\n";
+   const char *format3 = " 0x%016lx in %.200s from %.200s\n";
    const char *format4 = " 0x%016lx in <unknown function>\n";
 #else
-   const char *format1 = " 0x%08lx in %.100s %s 0x%lx from %.100s\n";
-   const char *format2 = " 0x%08lx in %.100s at %.100s from %.100s\n";
-   const char *format3 = " 0x%08lx in %.100s from %.100s\n";
+   const char *format1 = " 0x%08lx in %.200s %s 0x%lx from %.200s\n";
+   const char *format2 = " 0x%08lx in %.200s at %.200s from %.200s\n";
+   const char *format3 = " 0x%08lx in %.200s from %.200s\n";
    const char *format4 = " 0x%08lx in <unknown function>\n";
 #endif
 
@@ -1938,101 +1938,121 @@ void TUnixSystem::StackTrace()
       ClosePipe(p);
    }
 #endif
-
-   // addr2line uses debug info to convert addresses into file names
-   // and line numbers
-   char *addr2line = Which(Getenv("PATH"), "addr2line", kExecutePermission);
-
-   if (addr2line) {
-      // might take some time so tell what we are doing...
-      write(fd, message, strlen(message));
-   }
-
-   // open tmp file for demangled stack trace
-   char tmpf1[L_tmpnam];
-   ofstream file1;
-   if (demangle) {
-      tmpnam(tmpf1);
-      file1.open(tmpf1);
-      if (!file1) {
-         Error("StackTrace", "could not open file %s", tmpf1);
-         Unlink(tmpf1);
-         demangle = kFALSE;
+   // gdb-backtrace.sh uses gdb to produce a backtrace. See if it is available.
+   // If it is, use it. If not proceed as before.
+   char *gdb = Which(Getenv("PATH"), "gdb", kExecutePermission);
+   if (gdb) {
+      // use gdb to get stack trace
+      TString gdbscript;
+# ifdef ROOTETCDIR
+      gdbscript.Form("%s/gdb-backtrace.sh ", ROOTETCDIR);
+# else
+      gdbscript.Form("%s/etc/gdb-backtrace.sh ", gSystem->Getenv("ROOTSYS"));
+# endif
+      gdbscript += GetPid();
+      Exec(gdbscript);
+      delete [] gdb;
+   } else {
+      // addr2line uses debug info to convert addresses into file names
+      // and line numbers
+      char *addr2line = Which(Getenv("PATH"), "addr2line", kExecutePermission);
+      if (addr2line) {
+         // might take some time so tell what we are doing...
+         write(fd, message, strlen(message));
       }
-   }
 
-   char buffer[2048];
-   void *trace[kMAX_BACKTRACE_DEPTH];
-   int  depth = backtrace(trace, kMAX_BACKTRACE_DEPTH);
-   for (int n = 5; n < depth; n++) {
-      ULong_t addr = (ULong_t) trace[n];
-      Dl_info info;
-
-      if (dladdr(trace[n], &info) && info.dli_fname && info.dli_fname[0]) {
-         const char   *libname = info.dli_fname;
-         const char   *symname = (info.dli_sname && info.dli_sname[0])
-                                 ? info.dli_sname : "<unknown>";
-         ULong_t libaddr = (ULong_t) info.dli_fbase;
-         ULong_t symaddr = (ULong_t) info.dli_saddr;
-         Bool_t        gte = (addr >= symaddr);
-         ULong_t diff = (gte) ? addr - symaddr : symaddr - addr;
-         if (addr2line && symaddr) {
-            ULong_t offset = (addr >= libaddr) ? addr - libaddr :
-                                                       libaddr - addr;
-            sprintf(buffer, "%s -e %s 0x%016lx", addr2line, libname, offset);
-            Bool_t nodebug = kTRUE;
-            if (FILE *pf = ::popen(buffer, "r")) {
-               char buf[1024];
-               if (fgets(buf, 1024, pf)) {
-                  buf[strlen(buf)-1] = 0;  // remove trailing \n
-                  if (strncmp(buf, "??", 2)) {
-                     sprintf(buffer, format2, addr, symname, buf, libname);
-                     nodebug = kFALSE;
-                  }
-               }
-               ::pclose(pf);
-            }
-            if (nodebug)
-               sprintf(buffer, format1, addr, symname,
-                       gte ? "+" : "-", diff, libname);
-         } else {
-            if (symaddr)
-               sprintf(buffer, format1, addr, symname,
-                       gte ? "+" : "-", diff, libname);
-            else
-               sprintf(buffer, format3, addr, symname, libname);
+      // open tmp file for demangled stack trace
+      char tmpf1[2*L_tmpnam];
+      ofstream file1;
+      if (demangle) {
+         tmpnam(tmpf1);
+         file1.open(tmpf1);
+         if (!file1) {
+            Error("StackTrace", "could not open file %s", tmpf1);
+            Unlink(tmpf1);
+            demangle = kFALSE;
          }
-      } else {
-         sprintf(buffer, format4, addr);
       }
 
-      if (demangle)
-         file1 << buffer;
-      else
-         write(fd, buffer, ::strlen(buffer));
-   }
+      char buffer[4096];
+      void *trace[kMAX_BACKTRACE_DEPTH];
+      int  depth = backtrace(trace, kMAX_BACKTRACE_DEPTH);
+      for (int n = 5; n < depth; n++) {
+         ULong_t addr = (ULong_t) trace[n];
+         Dl_info info;
 
-   delete [] addr2line;
+         if (dladdr(trace[n], &info) && info.dli_fname && info.dli_fname[0]) {
+            const char *libname = info.dli_fname;
+            const char *symname = (info.dli_sname && info.dli_sname[0]) ?
+                                   info.dli_sname : "<unknown>";
+            ULong_t libaddr = (ULong_t) info.dli_fbase;
+            ULong_t symaddr = (ULong_t) info.dli_saddr;
+            Bool_t  gte = (addr >= symaddr);
+            ULong_t diff = (gte) ? addr - symaddr : symaddr - addr;
+            if (addr2line && symaddr) {
+               ULong_t offset = (addr >= libaddr) ? addr - libaddr :
+                                                    libaddr - addr;
+               TString name   = TString(libname);
+               Bool_t noPath  = kFALSE;
+               Bool_t noShare = kTRUE;
+               if (name[0] != '/') noPath = kTRUE;
+               if (name.Contains(".so") || name.Contains(".sl")) noShare = kFALSE;
+               if (noShare) offset = addr;
+               if (noPath)  name = "which `" + name + "`";
+               sprintf(buffer, "%s -e %s 0x%016lx", addr2line, name.Data(), offset);
+               Bool_t nodebug = kTRUE;
+               if (FILE *pf = ::popen(buffer, "r")) {
+                  char buf[2048];
+                  if (fgets(buf, 2048, pf)) {
+                     buf[strlen(buf)-1] = 0;  // remove trailing \n
+                     if (strncmp(buf, "??", 2)) {
+                        sprintf(buffer, format2, addr, symname, buf, libname);
+                        nodebug = kFALSE;
+                     }
+                  }
+                  ::pclose(pf);
+               }
+               if (nodebug)
+                  sprintf(buffer, format1, addr, symname,
+                          gte ? "+" : "-", diff, libname);
+            } else {
+               if (symaddr)
+                  sprintf(buffer, format1, addr, symname,
+                          gte ? "+" : "-", diff, libname);
+               else
+                  sprintf(buffer, format3, addr, symname, libname);
+            }
+         } else {
+            sprintf(buffer, format4, addr);
+         }
 
-   if (demangle) {
-      char tmpf2[L_tmpnam];
-      tmpnam(tmpf2);
-      file1.close();
-      sprintf(buffer, "%s %s < %s > %s", filter, cppfiltarg, tmpf1, tmpf2);
-      system(buffer);
-      ifstream file2(tmpf2);
-      TString line;
-      while (file2) {
-         line = "";
-         line.ReadString(file2);
-         write(fd, line.Data(), line.Length());
+         if (demangle)
+            file1 << buffer;
+         else
+            write(fd, buffer, ::strlen(buffer));
       }
-      file2.close();
-      Unlink(tmpf1);
-      Unlink(tmpf2);
+
+      if (demangle) {
+         char tmpf2[2*L_tmpnam];
+         tmpnam(tmpf2);
+         file1.close();
+         sprintf(buffer, "%s %s < %s > %s", filter, cppfiltarg, tmpf1, tmpf2);
+         Exec(buffer);
+         ifstream file2(tmpf2);
+         TString line;
+         while (file2) {
+            line = "";
+            line.ReadString(file2);
+            write(fd, line.Data(), line.Length());
+         }
+         file2.close();
+         Unlink(tmpf1);
+         Unlink(tmpf2);
+      }
+
+      delete [] addr2line;
       delete [] filter;
    }
-
 #elif defined(PROG_PSTACK)                            // solaris
 # ifdef PROG_CXXFILT
 #  define CXXFILTER " | " PROG_CXXFILT
@@ -2044,7 +2064,7 @@ void TUnixSystem::StackTrace()
    sprintf(buffer, "%s %lu%s 1>&%d", PROG_PSTACK, (ULong_t) getpid(),
            "" CXXFILTER, fd);
    buffer[sizeof (buffer)-1] = 0;
-   system(buffer);
+   Exec(buffer);
 # undef CXXFILTER
 
 #elif defined(HAVE_EXCPT_H) && defined(HAVE_PDSC_H) && \
@@ -2065,7 +2085,7 @@ void TUnixSystem::StackTrace()
       Elf32_Addr addr = PDSC_CRD_BEGIN_ADDRESS(base, func);
       // const char *name = _rld_address_to_name(addr);
       const char *name = "<unknown function>";
-      sprintf(buffer, " 0x%012lx %.100s + 0x%lx\n",
+      sprintf(buffer, " 0x%012lx %.200s + 0x%lx\n",
               context.sc_pc, name, context.sc_pc - addr);
       write(fd, buffer, ::strlen(buffer));
       rc = exc_virtual_unwind(0, &context);
@@ -2138,11 +2158,11 @@ void TUnixSystem::StackTrace()
       // Print out the result
       if (libname && symname)
          write(fd, buffer, sprintf
-               (buffer, " 0x%012lx %.100s + 0x%lx [%.200s]\n",
+               (buffer, " 0x%012lx %.200s + 0x%lx [%.200s]\n",
                addr, symname, offset, libname));
       else if (symname)
          write(fd, buffer, sprintf
-               (buffer, " 0x%012lx %.100s + 0x%lx\n",
+               (buffer, " 0x%012lx %.200s + 0x%lx\n",
                addr, symname, offset));
       else
          write(fd, buffer, sprintf
