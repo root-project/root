@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PluginService.cxx,v 1.1 2006/11/30 08:27:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: PluginService.cxx,v 1.2 2006/12/01 08:10:02 roiser Exp $
 // Author: Pere Mato 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -18,6 +18,71 @@
 
 using namespace ROOT::Reflex;
 using namespace std;
+
+//_______________________________________________________________________________
+//
+//                 The Plugin Service
+//
+//  This classes have been developed to enhance Reflex with plugin capabilities. 
+//  The main goals have been:
+//
+//  - Simplification of the code. Replace existing factories
+//  - Compatibility with other plugins and dictionary systems since they are based 
+//    also on roopmap files
+//  - Dependent exclusively on Reflex
+//  - Possible replacement for the SEAL plugin manager that could be of interest 
+//    for CORAL, POOL, COOL, etc.
+//
+//
+//  Using the package
+//
+//  There is not predefined model on what a plugin/component can be. Any class 
+//  can be a plugin. The plugin factory is declared in the user code with the exact 
+//  signature of the constructor and the type returned (base class or interface) by 
+//  the factory.
+//
+// Begin_Html
+/*
+// <pre>
+//  class MyClass : public ICommon {
+//    MyClass(int, ISvc*);
+//    ...
+//  };
+//
+//  PLUGINSVC_FACTORY(MyClass,ICommon*(int,ISvc*));
+//  PLUGINSVC_FACTORY_WITH_ID(MyClass, 666, ICommon*(int,ISvc*));
+// </pre>
+*/
+// End_Html
+//
+//
+//  Implementation
+//
+//  The rootmap file, which is a text file containing the association between the 
+//  plugins and the libraries that implements them, is generated automatically at 
+//  build time with the help of the genmap utility program. This program loads each 
+//  library and discovers what plugins it contains. The plugin can be easily 
+//  instantiated in the user code by using the class name or an ID class with strong 
+//  type checking on the constructor arguments. An ID class can be any class that 
+//  defined operator==() and ostream& operator<<(). The library containing the plugin 
+//  will be loaded if needed. The classes are almost standalone with an exclusive 
+//  dependency on Reflex. 
+//
+// Begin_Html
+/*
+// <pre>
+//  ISvc* svc = ...
+//  ICommon* myc;
+//  myc = PluginSvc::create<ICommon*>(“MyClass”,10, svc);
+//  // or PluginSvc::createWithId<ICommon*>(666,10, svc);
+//  if ( myc ) {
+//    myc->doSomething();
+//  }
+// </pre>
+*/
+// End_Html
+
+
 
 //-------------------------------------------------------------------------------
 void* ROOT::Reflex::PluginService::Create( const string & name, 
