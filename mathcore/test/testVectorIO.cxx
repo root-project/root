@@ -25,6 +25,8 @@
 #include "Math/Vector3D.h"
 #include "Math/Point3D.h"
 
+#include "Track.h"
+
 #define DEBUG
 
 //#define READONLY
@@ -236,6 +238,68 @@ double read(const std::string & file_name) {
   return sav; 
 }
 
+template<class TrackType>
+double writeTrack(int n, const std::string & file_name, int compress = 0) { 
+
+  std::cout << "\n";
+  std::cout << "  Test writing .." << file_name << " .....\n";
+  std::cout << "**************************************************\n";
+
+  TRandom3 R(111);
+
+  TStopwatch timer;
+
+  //std::cout << "writing a tree with " << vector_type << std::endl; 
+
+  std::string fname = file_name + ".root";
+  TFile f1(fname.c_str(),"RECREATE","",compress);
+
+  // create tree
+  std::string tree_name="Tree with TrackD"; 
+  TTree t1("t1",tree_name.c_str());
+
+  TrackType *track = new TrackType();
+  std::cout << "typeID written : " << typeid(*track).name() << std::endl;
+
+  
+  //t1.Branch("Vector branch",&track,16000,0);
+  // default split model
+  t1.Branch("Vector branch",&track);
+
+  timer.Start();
+  double s = 0; 
+  ROOT::Math::XYZTVector q; 
+  ROOT::Math::XYZPoint p; 
+  for (int i = 0; i < n; ++i) { 
+    q.SetXYZT( R.Gaus(0,10),
+	       R.Gaus(0,10),
+	       R.Gaus(0,10),
+	       R.Gaus(100,10) ); 
+    p.SetXYZ( q.X(), q.Y(), q.Z() ); 
+	
+    track->Set(q,p); 
+    
+    t1.Fill();
+    s += getMag2( *track ); 
+  }
+
+  f1.Write();
+  timer.Stop();
+
+  double sav = std::sqrt(s/double(n));
+
+
+#ifdef DEBUG
+  t1.Print();
+  std::cout << " Time for Writing " << file_name << "\t: " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
+  int pr = std::cout.precision(18);  std::cout << "Average : " << sav << std::endl;   std::cout.precision(pr);
+#endif
+  
+  return sav; 
+
+}
+
+
 
 int testResult(double w1, double r1, const std::string & type) { 
 
@@ -285,7 +349,7 @@ int testVectorIO(bool readOnly = false) {
 
   //iret |= gSystem->Load("libSmatrixRflx");  
   //iret |= gSystem->Load("libMathAddRflx");  
-  iret |= gSystem->Load("libMathRflx");  
+  //iret |= gSystem->Load("libMathRflx");  
   if (iret |= 0) { 
     std::cerr <<"Failing to Load Reflex dictionaries " << std::endl;
     return iret; 
@@ -295,6 +359,7 @@ int testVectorIO(bool readOnly = false) {
 
   
   int nEvents = 100000;
+  //int nEvents = 100;
 
   double w1, r1 = 0;
   std::string fname; 
@@ -333,6 +398,65 @@ int testVectorIO(bool readOnly = false) {
   iret |= testResult(w1,r1,point3d_type); 
 
 
+  // test TrackD
+  fname = "track";
+  // load track dictionary 
+  gSystem->Load("libTrackDict");  
+
+  //nEvents = 10000; 
+
+  if (readOnly) {
+     fname += "_prev";
+  }
+  else 
+    w1 = writeTrack<TrackD>( nEvents,fname); 
+  
+  r1 = read<TrackD>(fname);
+  iret |= testResult(w1,r1,"TrackD"); 
+
+  // test TrackD32
+
+  fname = "trackD32";
+  // load track dictionary 
+  //  gSystem->Load("libTrackDict");  
+
+  if (readOnly) {
+     fname += "_prev";
+  }
+  else 
+    w1 = writeTrack<TrackD32>( nEvents,fname); 
+  
+  r1 = read<TrackD32>(fname);
+  iret |= testResult(w1,r1,"TrackD32"); 
+
+
+  // test vector of tracks
+  fname = "vectrack";
+
+  nEvents = 10000; 
+
+  if (readOnly) {
+     fname += "_prev";
+  }
+  else 
+    w1 = writeTrack<VecTrackD>( nEvents,fname); 
+  
+  r1 = read<VecTrackD>(fname);
+  iret |= testResult(w1,r1,"VecTrackD"); 
+
+  // test ClusterD (cotaining a vector of points) 
+  fname = "cluster";
+
+  nEvents = 10000; 
+
+  if (readOnly) {
+     fname += "_prev";
+  }
+  else 
+    w1 = writeTrack<ClusterD>( nEvents,fname); 
+  
+  r1 = read<ClusterD>(fname);
+  iret |= testResult(w1,r1,"ClusterD"); 
   
   return iret; 
 }
