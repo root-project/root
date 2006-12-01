@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: RotationY.h,v 1.6 2006/11/06 09:51:42 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: RotationY.h,v 1.7 2006/11/07 16:24:10 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Mon July 18  2005
 //
-// Last update: $Id: RotationY.h,v 1.6 2006/11/06 09:51:42 moneta Exp $
+// Last update: $Id: RotationY.h,v 1.7 2006/11/07 16:24:10 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_RotationY 
 #define ROOT_Math_GenVector_RotationY  1
@@ -58,7 +58,10 @@ public:
   */
   explicit RotationY( Scalar angle ) :   fAngle(angle),
                                          fSin(std::sin(angle)),
-                                         fCos(std::cos(angle)) { }
+                                         fCos(std::cos(angle)) 
+{
+   Rectify();
+}
 
   // The compiler-generated copy ctor, copy assignment, and dtor are OK.
 
@@ -82,6 +85,8 @@ public:
   void SetAngle (Scalar angle) {
     fSin=std::sin(angle);
     fCos=std::cos(angle);
+    fAngle= angle; 
+    Rectify(); 
   }
   void SetComponents (Scalar angle) { SetAngle(angle); }
 

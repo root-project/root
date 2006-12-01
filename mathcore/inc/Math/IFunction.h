@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: IFunction.h,v 1.1 2006/11/17 18:18:47 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: IFunction.h,v 1.2 2006/11/20 11:05:56 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -166,7 +166,7 @@ namespace Math {
 
       /** 
           Evaluate all the vector of function derivatives (gradient)  at a point x.
-          Derived classes must re-implement it if more efficient than evaluting one at a time
+          Derived classes must re-implement if it is more efficient than evaluting one at a time
       */
       virtual void  Gradient(const double *x, double * grad) const = 0; 
 

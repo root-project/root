@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: BoostY.h,v 1.6 2006/11/06 09:51:42 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: BoostY.h,v 1.7 2006/11/07 16:24:10 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Nov 1  2005
 // 
-// Last update: $Id: BoostY.h,v 1.6 2006/11/06 09:51:42 moneta Exp $
+// Last update: $Id: BoostY.h,v 1.7 2006/11/07 16:24:10 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_BoostY
 #define ROOT_Math_GenVector_BoostY 1
@@ -42,14 +42,14 @@ public:
 
   typedef double Scalar;
 
-  enum LorentzRotationMatrixIndex {
+  enum ELorentzRotationMatrixIndex {
       kLXX =  0, kLXY =  1, kLXZ =  2, kLXT =  3
     , kLYX =  4, kLYY =  5, kLYZ =  6, kLYT =  7
     , kLZX =  8, kLZY =  9, kLZZ = 10, kLZT = 11
     , kLTX = 12, kLTY = 13, kLTZ = 14, kLTT = 15
   };
 
-  enum BoostMatrixIndex {
+  enum EBoostMatrixIndex {
       kXX =  0, kXY =  1, kXZ =  2, kXT =  3
     	      , kYY =  4, kYZ =  5, kYT =  6
     		        , kZZ =  7, kZT =  8
@@ -66,7 +66,7 @@ public:
   /**
      Construct given a Scalar beta_y
    */
-  BoostY(Scalar beta_y) { SetComponents(beta_y); }
+  explicit BoostY(Scalar beta_y) { SetComponents(beta_y); }
 
 
   // The compiler-generated copy ctor, copy assignment, and dtor are OK.

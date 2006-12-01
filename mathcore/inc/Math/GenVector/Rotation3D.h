@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.11 2006/11/09 21:22:53 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Rotation3D.h,v 1.12 2006/11/10 11:04:42 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 //
 // Created by: Mark Fischler Thurs June 9  2005
 //
-// Last update: $Id: Rotation3D.h,v 1.11 2006/11/09 21:22:53 moneta Exp $
+// Last update: $Id: Rotation3D.h,v 1.12 2006/11/10 11:04:42 moneta Exp $
 //
 #ifndef ROOT_Math_GenVector_Rotation3D 
 #define ROOT_Math_GenVector_Rotation3D  1
@@ -60,7 +60,7 @@ public:
 
   typedef double Scalar;
 
-  enum Rotation3DMatrixIndex {
+  enum ERotation3DMatrixIndex {
       kXX = 0, kXY = 1, kXZ = 2
     , kYX = 3, kYY = 4, kYZ = 5
     , kZX = 6, kZY = 7, kZZ = 8

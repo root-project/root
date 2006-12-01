@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.11 2006/11/09 21:22:53 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LorentzRotation.h,v 1.12 2006/11/10 11:04:42 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Aug 8  2005
 // 
-// Last update: $Id: LorentzRotation.h,v 1.11 2006/11/09 21:22:53 moneta Exp $
+// Last update: $Id: LorentzRotation.h,v 1.12 2006/11/10 11:04:42 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_LorentzRotation 
 #define ROOT_Math_GenVector_LorentzRotation  1
@@ -56,7 +56,7 @@ public:
 
   typedef double Scalar;
 
-  enum LorentzRotationMatrixIndex {
+  enum ELorentzRotationMatrixIndex {
       kXX =  0, kXY =  1, kXZ =  2, kXT =  3
     , kYX =  4, kYY =  5, kYZ =  6, kYT =  7
     , kZX =  8, kZY =  9, kZZ = 10, kZT = 11

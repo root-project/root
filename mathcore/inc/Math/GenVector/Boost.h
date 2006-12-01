@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: Boost.h,v 1.8 2006/11/09 21:22:53 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: Boost.h,v 1.9 2006/11/10 11:04:41 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -12,7 +12,7 @@
 // 
 // Created by: Mark Fischler  Mon Nov 1  2005
 // 
-// Last update: $Id: Boost.h,v 1.8 2006/11/09 21:22:53 moneta Exp $
+// Last update: $Id: Boost.h,v 1.9 2006/11/10 11:04:41 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_Boost
 #define ROOT_Math_GenVector_Boost 1
@@ -48,14 +48,14 @@ public:
 
   typedef double Scalar;
 
-  enum LorentzRotationMatrixIndex {
+  enum ELorentzRotationMatrixIndex {
       kLXX =  0, kLXY =  1, kLXZ =  2, kLXT =  3
     , kLYX =  4, kLYY =  5, kLYZ =  6, kLYT =  7
     , kLZX =  8, kLZY =  9, kLZZ = 10, kLZT = 11
     , kLTX = 12, kLTY = 13, kLTZ = 14, kLTT = 15
   };
 
-  enum BoostMatrixIndex {
+  enum EBoostMatrixIndex {
       kXX =  0, kXY =  1, kXZ =  2, kXT =  3
     	      , kYY =  4, kYZ =  5, kYT =  6
     		        , kZZ =  7, kZT =  8
