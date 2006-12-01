@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PluginSvc.h,v 1.2 2006/11/21 18:14:59 mato Exp $
+// @(#)root/reflex:$Name:  $:$Id: dir_manip.h,v 1.1 2006/11/30 08:27:08 roiser Exp $
 // Author: Pere Mato 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -20,6 +20,7 @@
 #ifdef _WIN32     /* Windows  */
 #include "io.h"
 #include "direct.h"
+#include "errno.h"
 #define S_IRWXU _S_IREAD|_S_IWRITE
 #define S_IRGRP 0
 #define S_IROTH 0
