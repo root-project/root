@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.15 2006/11/16 17:17:36 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.16 2006/11/30 23:19:47 pcanal Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -57,7 +57,7 @@
 #ifdef WIN32
 #  include <io.h>
 #endif /* WIN32 */
-#if defined(R__FBSD) || defined(R__OBSD)
+#if defined(R__LINUX) || defined(R__FBSD) || defined(R__OBSD)
 #  include <unistd.h>
 #endif
 
