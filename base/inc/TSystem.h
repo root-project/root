@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.64 2006/12/01 08:15:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.65 2006/12/01 11:49:09 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <fcntl.h>
-#ifndef R__WIN32
+#ifndef WIN32
 #include <unistd.h>
 #endif
 #endif
