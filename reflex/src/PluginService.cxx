@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: $:$Id: $
+// @(#)root/reflex:$Name:  $:$Id: PluginService.cxx,v 1.1 2006/11/30 08:27:08 roiser Exp $
 // Author: Pere Mato 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -24,6 +24,7 @@ void* ROOT::Reflex::PluginService::Create( const string & name,
                                        const Type & ret, 
                                        const vector<ValueObject> & arg) {
 //-------------------------------------------------------------------------------
+// Create a Plugin.
    static Object dummy; 
    vector<void*> argv;
    vector<Type>  argt;
@@ -72,6 +73,7 @@ void* ROOT::Reflex::PluginService::CreateWithId(const Any& id,
                                                 const Type& ret, 
                                                 const vector<ValueObject>& arg) {
 //-------------------------------------------------------------------------------
+// Create plugin with Id.
    static Object dummy; 
    vector<void*> argv;
    vector<Type>  argt;
@@ -130,6 +132,7 @@ void* ROOT::Reflex::PluginService::CreateWithId(const Any& id,
 //-------------------------------------------------------------------------------
 string ROOT::Reflex::PluginService::FactoryName(const string& name) {
 //-------------------------------------------------------------------------------
+// Create a factory name out of the parameter given.
    static string chars(":<> *&, ");
    string::size_type pos1 = name.find_first_not_of(' ');
    string::size_type pos2 = name.find_last_not_of(' ');
@@ -144,6 +147,7 @@ string ROOT::Reflex::PluginService::FactoryName(const string& name) {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::PluginService::PluginService() : fDebugLevel(0) {
 //-------------------------------------------------------------------------------
+// Constructor.
    NamespaceBuilder(PLUGINSVC_FACTORY_NS);
    fFactories = Scope::ByName(PLUGINSVC_FACTORY_NS);
    fFactoryMap = new PluginFactoryMap();
@@ -153,6 +157,7 @@ ROOT::Reflex::PluginService::PluginService() : fDebugLevel(0) {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::PluginService::~PluginService() {
 //-------------------------------------------------------------------------------
+// Destructor.
    delete fFactoryMap;
 }
 
@@ -160,6 +165,7 @@ ROOT::Reflex::PluginService::~PluginService() {
 //-------------------------------------------------------------------------------
 PluginService& ROOT::Reflex::PluginService::Instance() {
 //-------------------------------------------------------------------------------
+// Get singleton.
    static PluginService s_instance;
    return s_instance;
 }
@@ -168,6 +174,7 @@ PluginService& ROOT::Reflex::PluginService::Instance() {
 //-------------------------------------------------------------------------------
 int ROOT::Reflex::PluginService::Debug() {
 //-------------------------------------------------------------------------------
+// Get debug level.
    return Instance().fDebugLevel;
 }
  
@@ -175,6 +182,7 @@ int ROOT::Reflex::PluginService::Debug() {
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::PluginService::SetDebug(int l) {
 //-------------------------------------------------------------------------------
+// Set debug level.
    PluginFactoryMap::SetDebug(l);
    Instance().fDebugLevel = l;
 }
@@ -183,6 +191,7 @@ void ROOT::Reflex::PluginService::SetDebug(int l) {
 //-------------------------------------------------------------------------------
 int ROOT::Reflex::PluginService::LoadFactoryLib(const string& name) {
 //-------------------------------------------------------------------------------
+// Load libraries needed for a plugin to instantiate. 
    list<string> libs = Instance().fFactoryMap->GetLibraries(name);
    for ( list<string>::reverse_iterator i = libs.rbegin(); i != libs.rend(); i++ ) {
       SharedLibrary sl(*i);

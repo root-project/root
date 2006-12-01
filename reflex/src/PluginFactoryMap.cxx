@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name: $:$Id: $
+// @(#)root/reflex:$Name:  $:$Id: PluginFactoryMap.cxx,v 1.1 2006/11/30 08:27:08 roiser Exp $
 // Author: Pere Mato 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -38,6 +38,7 @@ typedef std::map<std::string,std::list<std::string> > Map_t;
 //-------------------------------------------------------------------------------
 static Map_t & sMap() {
 //-------------------------------------------------------------------------------
+// Static wrapper for the map.
    static Map_t s_map;
    return s_map;
 }
@@ -47,26 +48,27 @@ int ROOT::Reflex::PluginFactoryMap::fgDebugLevel = 0;
 //-------------------------------------------------------------------------------
 ROOT::Reflex::PluginFactoryMap::PluginFactoryMap(const std::string& pathenv ) {
 //-------------------------------------------------------------------------------
+// Constructor.
    vector<char*> tokens;
    struct stat buf;
    dirent* e = 0;
    DIR* dir = 0;
    string path = ::getenv(pathenv.empty() ? PATHENV : pathenv.c_str());
    for(char* t=strtok((char*)path.c_str(),PATHSEP); t; t=strtok(0,PATHSEP))  {
-     if ( 0 == ::stat(t,&buf) && S_ISDIR(buf.st_mode) )
-       tokens.push_back(t);
+      if ( 0 == ::stat(t,&buf) && S_ISDIR(buf.st_mode) )
+         tokens.push_back(t);
    }
    for(vector<char*>::iterator i=tokens.begin();i != tokens.end(); ++i) {
-     if ( 0 != (dir=::opendir(*i)) )  {
-       while ( 0 != (e=::readdir(dir)) )  {
-         if ( strstr(::directoryname(e),"rootmap") != 0 )  {
-            std::string fn = *i;
-            fn += "/";
-            fn += ::directoryname(e);
-            FillMap(fn);
-          }
-        }
-        ::closedir(dir);
+      if ( 0 != (dir=::opendir(*i)) )  {
+         while ( 0 != (e=::readdir(dir)) )  {
+            if ( strstr(::directoryname(e),"rootmap") != 0 )  {
+               std::string fn = *i;
+               fn += "/";
+               fn += ::directoryname(e);
+               FillMap(fn);
+            }
+         }
+         ::closedir(dir);
       }
    }
 }
@@ -75,12 +77,14 @@ ROOT::Reflex::PluginFactoryMap::PluginFactoryMap(const std::string& pathenv ) {
 //-------------------------------------------------------------------------------
 ROOT::Reflex::PluginFactoryMap::~PluginFactoryMap() {
 //-------------------------------------------------------------------------------
+// Destructor.
 }
 
 
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::PluginFactoryMap::FillMap(const std::string& filename) {
 //-------------------------------------------------------------------------------
+// Fill the map from the content of the map files.
    fstream file;
    string rawline;
    file.open(filename.c_str(),ios::in);
@@ -117,6 +121,7 @@ void ROOT::Reflex::PluginFactoryMap::FillMap(const std::string& filename) {
 //-------------------------------------------------------------------------------
 std::list<std::string> ROOT::Reflex::PluginFactoryMap::GetLibraries(const std::string& name) const {
 //-------------------------------------------------------------------------------
+// Return all libs currently present.
    return sMap()[name];
 }
 
@@ -124,6 +129,7 @@ std::list<std::string> ROOT::Reflex::PluginFactoryMap::GetLibraries(const std::s
 //-------------------------------------------------------------------------------
 void ROOT::Reflex::PluginFactoryMap::SetDebug(int l) {
 //-------------------------------------------------------------------------------
+// Set debug level.
   fgDebugLevel = l;
 }
 
@@ -131,5 +137,6 @@ void ROOT::Reflex::PluginFactoryMap::SetDebug(int l) {
 //-------------------------------------------------------------------------------
 int ROOT::Reflex::PluginFactoryMap::Debug() {
 //-------------------------------------------------------------------------------
+// Get debug level.
   return fgDebugLevel;
 }
