@@ -1,4 +1,4 @@
-// @(#)root/gfal:$Name:  $:$Id: TGFALFile.h,v 1.2 2006/04/18 14:23:20 rdm Exp $
+// @(#)root/gfal:$Name:  $:$Id: TGFALFile.h,v 1.3 2006/12/01 08:15:40 brun Exp $
 // Author: Fons Rademakers   8/12/2005
 
 /*************************************************************************
@@ -70,7 +70,6 @@
 #ifndef ROOT_TSystem
 #include "TSystem.h"
 #endif
-#include <fcntl.h>	// open, O_RDWR
 
 
 class TGFALFile : public TFile {
