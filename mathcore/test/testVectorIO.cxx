@@ -70,6 +70,16 @@ inline double getMag2(const Vector & v) {
   return v.mag2();
 }
 
+inline double getMag2(const VecTrackD & v) { 
+   // print the read points
+   std::cout << "VecTRackD " << std::endl;
+   for (VecTrackD::It itr = v.begin() ; itr != v.end(); ++itr) 
+      std::cout << (*itr).Pos() << std::endl; 
+
+  return v.mag2();
+}
+
+
 inline double getMag2(const TVector3 & v) { 
   return v.Mag2();
 }
@@ -304,8 +314,9 @@ double writeTrack(int n, const std::string & file_name, int compress = 0) {
 int testResult(double w1, double r1, const std::string & type) { 
 
   int iret = 0; 
-
-  if ( fabs(w1-r1)  > tol) { 
+  std::cout << w1 << "  r " << r1 << std::endl; 
+  // do like this to avoid nan's
+  if (!( fabs(w1-r1)  < tol)) { 
     std::cout << "\nERROR: Differeces found  when reading " << std::endl;
     int pr = std::cout.precision(18);  std::cout << w1 << "   !=    " << r1 << std::endl; std::cout.precision(pr);
     iret = -1;
@@ -433,7 +444,7 @@ int testVectorIO(bool readOnly = false) {
   // test vector of tracks
   fname = "vectrack";
 
-  nEvents = 10000; 
+  nEvents = 2; 
 
   if (readOnly) {
      fname += "_prev";

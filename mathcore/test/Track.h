@@ -28,8 +28,8 @@ public:
 
    TrackD(const Vector4D & q, const Point3D & p) : fVec(q), fPos(p) {}
 
-   Vector4D & Vec() { return fVec; }
-   Point3D & Pos() { return fPos; }
+   const Vector4D & Vec() const { return fVec; }
+   const Point3D & Pos() const { return fPos; }
 
   double mag2() const { 
     return fVec.mag2() + fPos.mag2(); 
@@ -57,8 +57,8 @@ public:
 
    TrackD32(const Vector4D32 & q, const Point3D32 & p) : fVec(q), fPos(p) {}
 
-   Vector4D32 & Vec() { return fVec; }
-   Point3D32 & Pos() { return fPos; }
+   const Vector4D32 & Vec() const { return fVec; }
+   const Point3D32 & Pos() const { return fPos; }
 
   double mag2() const { 
     return fVec.mag2() + fPos.mag2(); 
@@ -80,14 +80,19 @@ class VecTrackD {
 
 public: 
 
+   typedef std::vector<TrackD>::const_iterator It;
+ 
   VecTrackD() {}
 
+  It begin() const { return fTrks.begin(); } 
+  It end() const  { return fTrks.end(); } 
 
 
   double mag2() const { 
     double s = 0; 
     for (unsigned int i = 0; i < fTrks.size() ; ++i) 
       s += fTrks[i].mag2(); 
+    
     return s; 
   }
 
