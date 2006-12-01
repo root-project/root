@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.24 2006/10/26 14:18:54 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.26 2006/10/27 10:35:21 brun Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -274,11 +274,11 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    Int_t ms = TMath::Abs(fMarkerStyle);
    static TPoint pt[20];
 
-   if (ms >= 6 && ms <= 19) ms = 20;
+   if (ms > 7 && ms <= 19) ms = 20;
    if (ms == 4) ms = 24;
 
    // Define the marker size
-   Double_t msize = 0.20*fMarkerSize*TMath::Max(fImage->GetWidth(), fImage->GetHeight())/20;
+   Double_t msize = 0.23*fMarkerSize*TMath::Max(fImage->GetWidth(), fImage->GetHeight())/20;
    if (ms == 6) msize *= 0.2;
    if (ms == 7) msize *= 0.3;
    Double_t m  = msize;
@@ -303,6 +303,12 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       // Dot (.)
       case 1:
          fImage->PutPixel((UInt_t)ix, (UInt_t)iy, col->AsHexString());
+         break;
+      case 6:
+         fImage->DrawCircle(ix, iy, 1, col->AsHexString(), 1);
+         break;
+      case 7:
+         fImage->DrawCircle(ix, iy, 2, col->AsHexString(), 1);
          break;
       // Plus (+)
       case 2:
@@ -331,7 +337,7 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       case 8:
       case 20:
          if (m < 4) fImage->FillRectangle(col->AsHexString(), UInt_t(ix-m2), UInt_t(iy-m2), UInt_t(m), UInt_t(m));
-         else fImage->DrawCircle(ix, iy, Int_t(msize/4), col->AsHexString(), Int_t(msize/8));
+         else fImage->DrawCircle(ix, iy, Int_t(msize/4), col->AsHexString(), Int_t(msize/4)+1);
          break;
       // Square
       case 21:
@@ -342,20 +348,21 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          break;
       // Down triangle
       case 23:
-      case 26:
          pt[0].fX = Short_t(ix-m2); pt[0].fY = Short_t(iy-m2);
          pt[1].fX = Short_t(ix+m2); pt[1].fY = Short_t(iy-m2);
          pt[2].fX = Short_t(ix);    pt[2].fY = Short_t(iy+m2);
          pt[3].fX = Short_t(ix-m2); pt[3].fY = Short_t(iy-m2);
-         ms == 26 ? fImage->DrawPolyLine(4, pt, col->AsHexString()) :
-                    fImage->FillPolygon(3, pt, col->AsHexString());
+         fImage->FillPolygon(3, pt, col->AsHexString());
          break;
       // Up triangle
       case 22:
+      case 26:
          pt[0].fX = Short_t(ix);    pt[0].fY = Short_t(iy-m2);
          pt[1].fX = Short_t(ix+m2); pt[1].fY = Short_t(iy+m2);
          pt[2].fX = Short_t(ix-m2); pt[2].fY = Short_t(iy+m2);
-         fImage->FillPolygon(3, pt, col->AsHexString());
+         pt[3].fX = Short_t(ix); pt[3].fY = Short_t(iy-m2);
+         ms == 26 ? fImage->DrawPolyLine(4, pt, col->AsHexString()) :
+                    fImage->FillPolygon(3, pt, col->AsHexString());
          break;
       case 27:
          fImage->DrawLine(UInt_t(ix), UInt_t(iy-m2), UInt_t(ix+m3), UInt_t(iy), col->AsHexString());
@@ -391,7 +398,7 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          pt[9].fX = Short_t(ix-0.112255*m);  pt[9].fY = Short_t(iy+0.15451*m);
          pt[10].fX = Short_t(ix);             pt[10].fY = Short_t(iy+m2);
          ms == 30 ? fImage->DrawPolyLine(11, pt, col->AsHexString()) :
-                    fImage->FillPolygon(10, pt, col->AsHexString());
+                    fImage->DrawFillArea(10, pt, col->AsHexString());
          break;
       default:
          fImage->PutPixel(UInt_t(ix), UInt_t(iy), col->AsHexString());
