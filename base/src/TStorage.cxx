@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.24 2006/05/19 07:30:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.25 2006/11/30 23:19:47 pcanal Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -352,8 +352,8 @@ void TStorage::ObjectDealloc(void *vp)
 
 #ifndef NOCINT
    // to handle delete with placement called via CINT
-   long gvp = G__getgvp();
-   if ((long)vp == gvp && gvp != G__PVOID)
+   Long_t gvp = G__getgvp();
+   if ((Long_t)vp == gvp && gvp != G__PVOID)
       return;
 #endif
    ::operator delete(vp);
