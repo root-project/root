@@ -74,6 +74,8 @@ namespace testclasses {
       int** ppi;
       int pa[5];
       int paa[5][5];
+      int paa2[5][4][3][2][1];
+      int ** paa3[5][3][1];
       MYFUNPTR fPtr2;
       int (*fPtr)(int,char,bool);
 

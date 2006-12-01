@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.35 2006/11/09 13:50:51 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_simple2.cxx,v 1.36 2006/11/24 09:55:07 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -1314,6 +1314,17 @@ void ReflexSimple2Test::fundamentalType() {
 
 
 void ReflexSimple2Test::testArray() {
+
+   //int a[5];
+
+   Type t0 = Type::ByName("int[5][4][3][2][1]");
+   CPPUNIT_ASSERT(t0);
+
+   //Type t1 = Type::ByTypeInfo(typeid(a));
+   //CPPUNIT_ASSERT(t1);
+
+   //Type t2 = Type::ByTypeInfo(typeid(int[5]));
+   //CPPUNIT_ASSERT(t2);
 
    Type t = Type::ByName("testclasses::WithArray");
    CPPUNIT_ASSERT(t);
