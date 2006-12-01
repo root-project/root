@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.15 2006/11/29 15:13:34 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.16 2006/11/30 16:43:12 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -551,7 +551,6 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    if (pad && obj) {
       fParentPad = (TPad *)pad;
       fFitObject = (TObject *)obj;
-      fFitObject->SetBit(kCanDelete);
       SetCanvas(pad->GetCanvas());
       pad->GetCanvas()->Selected(pad, obj, kButton1Down);
    } else {
@@ -987,7 +986,6 @@ void TFitEditor::SetFitObject(TVirtualPad *pad, TObject *obj, Int_t event)
    fEnteredFunc->SelectAll();
    if (!fFitFunc) {
       fFitFunc = new TF1("fitFunc",fFunction.Data(),fXmin,fXmax);
-      fFitFunc->SetBit(kCanDelete);
    }
 
    // Update the information about the selected object.
