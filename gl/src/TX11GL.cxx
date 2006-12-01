@@ -1,4 +1,4 @@
-// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.21 2006/08/31 13:42:14 couet Exp $
+// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.22 2006/11/27 11:11:04 brun Exp $
 // Author: Timur Pocheptsov (TX11GLManager) / Valeriy Onuchin (TX11GL)
 
 /*************************************************************************
@@ -28,7 +28,6 @@
 #include "TROOT.h"
 
 ClassImp(TX11GL)
-
 
 //______________________________________________________________________________
 TX11GL::TX11GL() : fDpy(0), fVisInfo(0)
@@ -166,6 +165,8 @@ namespace {
    typedef std::map<Int_t, XVisualInfo *> WinTable_t;
 #else
    struct WinInfo_t {
+      UInt_t       fW;
+      UInt_t       fH;
       Window_t     fGLWin;
       XVisualInfo *fVisInfo;
    };
@@ -356,6 +357,7 @@ Int_t TX11GLManager::InitGLWindow(Window_t winID)
    // Check results.
 #ifdef R__MACOSX
    XMapWindow(fPimpl->fDpy, glBack);
+   gVirtualX->AddWindow(glBack,  w, h);
 #endif
    XMapWindow(fPimpl->fDpy, glWin);
 
@@ -368,6 +370,8 @@ Int_t TX11GLManager::InitGLWindow(Window_t winID)
 #else
    fPimpl->fGLWindows[x11Ind].fVisInfo = visInfo;
    fPimpl->fGLWindows[x11Ind].fGLWin   = glBack;
+   fPimpl->fGLWindows[x11Ind].fW = w;
+   fPimpl->fGLWindows[x11Ind].fH = h;
 #endif
    
    return x11Ind;
@@ -556,6 +560,14 @@ Bool_t TX11GLManager::ResizeOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt
             if (ctx.fXImage) XDestroyImage(ctx.fXImage);
             ctx.fXImage = newCtx.fXImage;
             ctx.fBUBuffer.swap(newCtx.fBUBuffer);
+#ifdef R__MACOSX            
+            if (w > fPimpl->fGLWindows[ctx.fWindowIndex].fW || h > fPimpl->fGLWindows[ctx.fWindowIndex].fH)
+            {
+               XResizeWindow(fPimpl->fDpy, fPimpl->fGLWindows[ctx.fWindowIndex].fGLWin, w, h);
+               fPimpl->fGLWindows[ctx.fWindowIndex].fW = w;
+               fPimpl->fGLWindows[ctx.fWindowIndex].fH = h;
+            }
+#endif
             return kTRUE;
          } else
             Error("ResizeOffScreenDevice", "Resize failed\n");
