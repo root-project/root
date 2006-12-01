@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.38 2006/08/28 08:04:24 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.39 2006/11/06 16:55:50 rdm Exp $
 // Author: Fons Rademakers   20/01/99 + Giulia Taurelli 29/06/2006
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 #include "TROOT.h"
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <fcntl.h>	// open, O_RDWR
 #ifndef R__WIN32
 #include <unistd.h>
 #if defined(R__SUN) || defined(R__SGI) || defined(R__HPUX) ||         \
