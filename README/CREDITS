@@ -378,6 +378,10 @@ N: David Gonzalez Maline
 E: firemanworld@gmail.com
 D: contribution to GUI classes
 
+N: John Marraffino
+E: marafino@fnal.gov
+D: improvements in TUnixSystem::StackTrace()
+
 N: Jiri Masik
 E: Jiri.Masik@fzu.cz
 D: Numerous contributions to the system
