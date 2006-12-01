@@ -17,7 +17,7 @@ WINNTDS      := $(MODDIRS)/G__WinNT.cxx
 WINNTDO      := $(WINNTDS:.cxx=.o)
 WINNTDH      := $(WINNTDS:.cxx=.h)
 
-WINNTH1      := $(MODDIRI)/TWinNTSystem.h $(MODDIRI)/TWinNTInput.h
+WINNTH1      := $(MODDIRI)/TWinNTSystem.h
 WINNTH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 WINNTS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 WINNTO       := $(WINNTS:.cxx=.o)

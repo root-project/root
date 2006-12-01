@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.24 2005/11/24 23:30:05 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.25 2006/11/27 13:04:42 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -24,12 +24,6 @@
 
 #ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-
-#ifdef WIN32
-# ifndef ROOT_TWin32HookViaThread
-#include "TWin32HookViaThread.h"
-# endif
 #endif
 
 class TClass;

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.28 2006/11/24 14:24:54 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.29 2006/11/27 13:04:42 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -70,7 +70,6 @@ protected:
    TCint(const TCint&);
    TCint& operator=(const TCint&);
 
-   virtual void ExecThreadCB(TWin32SendClass *command);
    virtual Int_t LoadLibraryMap();
 
 public:

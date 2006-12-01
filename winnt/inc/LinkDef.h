@@ -1,4 +1,4 @@
-/* @(#)root/winnt:$Name$:$Id$ */
+/* @(#)root/winnt:$Name:  $:$Id: LinkDef.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -15,6 +15,5 @@
 #pragma link off all functions;
 
 #pragma link C++ class TWinNTSystem;
-#pragma link C++ class TWinNTInput;
 
 #endif

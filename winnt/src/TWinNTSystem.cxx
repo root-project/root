@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.152 2006/11/15 23:51:28 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.153 2006/11/28 13:59:19 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -34,11 +34,9 @@
 #include "TApplication.h"
 #include "TWin32SplashThread.h"
 #include "Win32Constants.h"
-#include "TWin32HookViaThread.h"
-#include "TWin32Timer.h"
-#include "TGWin32Command.h"
 #include "TInterpreter.h"
 #include "TObjString.h"
+#include "TVirtualX.h"
 
 #include <sys/utime.h>
 #include <sys/timeb.h>
@@ -408,34 +406,6 @@ namespace {
    }
 #pragma auto_inline(on)
 
-   ///////////////////////////////////////////////////////////////////////////////
-   class TTermInputLine :  public  TWin32HookViaThread {
-
-   protected:
-      void ExecThreadCB(TWin32SendClass *sentclass);
-   public:
-      TTermInputLine::TTermInputLine();
-   };
-
-   //______________________________________________________________________________
-   TTermInputLine::TTermInputLine()
-   {
-      //
-
-      TWin32SendWaitClass CodeOp(this);
-      ExecCommandThread(&CodeOp, kFALSE);
-      CodeOp.Wait();
-   }
-
-   //______________________________________________________________________________
-   void TTermInputLine::ExecThreadCB(TWin32SendClass *code)
-   {
-      // Dispatch a single event.
-
-      gROOT->GetApplication()->HandleTermInput();
-      ((TWin32SendWaitClass *)code)->Release();
-   }
-
    //______________________________________________________________________________
    unsigned __stdcall HandleConsoleThread(void *pArg )
    {
@@ -751,10 +721,6 @@ TWinNTSystem::TWinNTSystem() : TSystem("WinNT", "WinNT System")
 
    fhProcess = ::GetCurrentProcess();
    fDirNameBuffer = 0;
-   fShellName = 0;
-   fWin32Timer = 0;
-   fhSmallIconList = 0;
-   fhNormalIconList = 0;
 
    WSADATA WSAData;
    int initwinsock = 0;
@@ -777,8 +743,6 @@ TWinNTSystem::~TWinNTSystem()
 {
    // dtor
 
-   SafeDelete(fWin32Timer);
-
    // Revert back the accuracy of Sleep() without needing to link to winmm.lib
    typedef UINT (WINAPI* LPTIMEENDPERIOD)( UINT uPeriod );
    HINSTANCE hInstWinMM = LoadLibrary( "winmm.dll" );
@@ -794,16 +758,6 @@ TWinNTSystem::~TWinNTSystem()
    if (fDirNameBuffer) {
       delete [] fDirNameBuffer;
       fDirNameBuffer = 0;
-   }
-
-   if (fhSmallIconList) {
-      ImageList_Destroy(fhSmallIconList);
-      fhSmallIconList = 0;
-   }
-
-   if (fhNormalIconList) {
-      ImageList_Destroy(fhNormalIconList);
-      fhNormalIconList = 0;
    }
 
    if (gConsoleEvent) {
@@ -939,117 +893,6 @@ const char *TWinNTSystem::BaseName(const char *name)
    }
    Error("BaseName", "name = 0");
    return 0;
-}
-
-//______________________________________________________________________________
-void TWinNTSystem::CreateIcons()
-{
-   //
-
-   const char *shellname =  fShellName;
-
-   HINSTANCE hShellInstance = ::LoadLibrary(shellname);
-   fhSmallIconList  = 0;
-   fhNormalIconList = 0;
-
-   if (hShellInstance) {
-      fhSmallIconList = ImageList_Create(::GetSystemMetrics(SM_CXSMICON),
-                                         ::GetSystemMetrics(SM_CYSMICON),
-                                         ILC_MASK, kTotalNumOfICons, 1);
-
-      fhNormalIconList = ImageList_Create(::GetSystemMetrics(SM_CXICON),
-                                          ::GetSystemMetrics(SM_CYICON),
-                                          ILC_MASK, kTotalNumOfICons, 1);
-      HICON hicon;
-      HICON hDummyIcon = ::LoadIcon(NULL, IDI_APPLICATION);
-
-      // Add "ROOT" main icon
-      hicon = ::LoadIcon(::GetModuleHandle(NULL), MAKEINTRESOURCE(101));
-      if (!hicon) {
-         hicon = ::LoadIcon(hShellInstance, MAKEINTRESOURCE(101));
-      }
-      if (!hicon) hicon = hDummyIcon;
-      ImageList_AddIcon(fhSmallIconList, hicon);
-      ImageList_AddIcon(fhNormalIconList, hicon);
-      if (hicon != hDummyIcon) ::DeleteObject(hicon);
-
-      // Add "Canvas" icon
-      hicon = ::LoadIcon(hShellInstance, MAKEINTRESOURCE(16));
-      if (!hicon) hicon = hDummyIcon;
-      ImageList_AddIcon(fhSmallIconList, hicon);
-      ImageList_AddIcon(fhNormalIconList, hicon);
-      if (hicon != hDummyIcon) ::DeleteObject(hicon);
-
-      // Add "Browser" icon
-      hicon = ::LoadIcon(hShellInstance,MAKEINTRESOURCE(171));
-      if (!hicon) hicon = hDummyIcon;
-      ImageList_AddIcon(fhSmallIconList, hicon);
-      ImageList_AddIcon(fhNormalIconList, hicon);
-      if (hicon != hDummyIcon) ::DeleteObject(hicon);
-
-      // Add "Closed Folder" icon
-      hicon = ::LoadIcon(hShellInstance, MAKEINTRESOURCE(4));
-      if (!hicon) hicon = hDummyIcon;
-      ImageList_AddIcon(fhSmallIconList, hicon);
-      ImageList_AddIcon(fhNormalIconList, hicon);
-      if (hicon != hDummyIcon) ::DeleteObject(hicon);
-
-      //  Add the "Open Folder" icon
-      hicon = LoadIcon(hShellInstance, MAKEINTRESOURCE(5));
-      if (!hicon) hicon = hDummyIcon;
-      ImageList_AddIcon(fhSmallIconList, hicon);
-      ImageList_AddIcon(fhNormalIconList, hicon);
-      if (hicon != hDummyIcon) ::DeleteObject(hicon);
-
-      // Add the "Document" icon
-      hicon = ::LoadIcon(hShellInstance, MAKEINTRESOURCE(152));
-      if (!hicon) hicon = hDummyIcon;
-      ImageList_AddIcon(fhSmallIconList, hicon);
-      ImageList_AddIcon(fhNormalIconList, hicon);
-      if (hicon != hDummyIcon) ::DeleteObject(hicon);
-
-      ::FreeLibrary((HMODULE)hShellInstance);
-   }
-}
-
-//______________________________________________________________________________
-void  TWinNTSystem::SetShellName(const char *name)
-{
-   //
-
-   const char *shellname = "SHELL32.DLL";
-
-   if (name) {
-      fShellName = new char[lstrlen(name)+1];
-      strcpy((char *)fShellName, name);
-   } else {
-//*-* use the system "shell32.dll" file as the icons stock.
-//*-*  Check the type of the OS
-      OSVERSIONINFO OsVersionInfo;
-
-//*-*         Value                      Platform
-//*-*  ----------------------------------------------------
-//*-*  VER_PLATFORM_WIN32s              Win32s on Windows 3.1
-//*-*  VER_PLATFORM_WIN32_WINDOWS       Win32 on Windows 95
-//*-*  VER_PLATFORM_WIN32_NT            Windows NT
-//*-*
-      OsVersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-      GetVersionEx(&OsVersionInfo);
-      if (OsVersionInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
-        fShellName = strcpy(new char[lstrlen(shellname)+1], shellname);
-      } else {
-         //  for Windows 95 we have to create a local copy this file
-         const char *rootdir = gRootDir;
-         const char newshellname[] = "bin/RootShell32.dll";
-         fShellName = ConcatFileName(gRootDir, newshellname);
-
-         char sysdir[1024];
-         ::GetSystemDirectory(sysdir, 1024);
-         char *sysfile = (char *) ConcatFileName(sysdir, shellname);
-         CopyFile(sysfile, fShellName, TRUE);  // TRUE means "don't overwrite if fShellName is exists
-         delete [] sysfile;
-      }
-   }
 }
 
 //______________________________________________________________________________

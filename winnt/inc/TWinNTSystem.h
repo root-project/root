@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.43 2006/11/05 23:58:46 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.44 2006/11/15 18:27:17 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -66,8 +66,6 @@ struct group {
 };
 
 
-class TWin32Timer;
-
 class TWinNTSystem : public TSystem {
 
 private:
@@ -79,15 +77,9 @@ private:
    Bool_t            fGroupsInitDone;   // Flag used for Users and Groups initialization
 
    HANDLE            fhProcess;         // Handle of the current process
-   HANDLE            fhTermInputEvent;  // Handle of "event" to suspend "dummy" terminal loop
    char             *fDirNameBuffer;    // The string buffer to hold path name
    WIN32_FIND_DATA   fFindFileData;     // Structure to look for files (aka OpenDir under UNIX)
-   TWin32Timer      *fWin32Timer;       // Windows -asynch timer
-   HIMAGELIST        fhSmallIconList;   // List of the small icons
-   HIMAGELIST        fhNormalIconList;  // List of the normal icons
-   const char       *fShellName;        // The name of the "shell" file to pool the icons
 
-   void              CreateIcons();     // Create a list of the icons for ROOT appl
    Bool_t            DispatchTimers(Bool_t mode);
    Bool_t            CheckDescriptors();
    Bool_t            CheckSignals(Bool_t sync);
@@ -108,13 +100,7 @@ public:
    virtual ~TWinNTSystem();
 
    //---- non-TSystem methods ----------------------------------
-   HIMAGELIST        GetSmallIconList() { return fhSmallIconList; }
-   HICON             GetSmallIcon(Int_t IconIdx) { return fhSmallIconList  ? ImageList_GetIcon(fhSmallIconList,IconIdx,ILD_NORMAL):0; }
-   HICON             GetNormalIcon(Int_t IconIdx){ return fhNormalIconList ? ImageList_GetIcon(fhNormalIconList,IconIdx,ILD_NORMAL):0; }
-   HIMAGELIST        GetNormalIconList(){ return fhNormalIconList; }
    HANDLE            GetProcess();
-   const char        *GetShellName() {return fShellName;}
-   void              SetShellName(const char *name=0);
    Bool_t            HandleConsoleEvent();
 
    //---- Misc -------------------------------------------------

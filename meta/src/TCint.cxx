@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.128 2006/11/27 13:04:42 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.129 2006/11/30 23:19:47 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -41,13 +41,6 @@
 #include "TError.h"
 #include "TEnv.h"
 #include "THashTable.h"
-
-#ifdef R__WIN32
-#  ifndef ROOT_TGWin32Command
-#    include "TGWin32Command.h"
-#    undef GetClassInfo
-#  endif
-#endif
 
 #include <vector>
 #include <string>
@@ -217,14 +210,6 @@ void TCint::EndOfLineAction()
    // and ROOT prompt line.
 
    ProcessLineSynch(fantomline);
-}
-
-//______________________________________________________________________________
-void TCint::ExecThreadCB(TWin32SendClass *command)
-{
-   // This function must be called from the "Command thread only".
-
-   if (command) { }
 }
 
 //______________________________________________________________________________
