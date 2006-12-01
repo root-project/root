@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TDataSet.cxx,v 1.14 2006/06/23 04:59:33 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TDataSet.cxx,v 1.15 2006/07/11 09:05:02 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 #include "TBrowser.h"
 
 #include "TSystem.h"
+#include "assert.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
