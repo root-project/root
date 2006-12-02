@@ -111,6 +111,10 @@ D: updates in PDG codes and eventgenerator interface classes
 D: TSpline classes
 D: Support for gcc option -weffc++
 
+N: Evgeni Chernyaev
+E: Evgeni.Chernyaev@cern.ch
+D: Paint3DAlgorithms used by the LEGO and SURF options
+
 N: Gian Paolo Ciceri
 E: gp.ciceri@acm.org
 D: PostgreSQL interface
