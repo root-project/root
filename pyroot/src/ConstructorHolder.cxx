@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.11 2006/09/28 23:16:16 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.12 2006/10/17 06:09:15 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -70,7 +70,7 @@ PyObject* PyROOT::TConstructorHolder::operator()( ObjectProxy* self, PyObject* a
    // otherwise only deal with default ctor
 
       if ( klass->GetClassInfo() != 0 ) {
-         long tagnum = klass->GetClassInfo()->Tagnum();
+         Long_t tagnum = klass->GetClassInfo()->Tagnum();
 
       // data storage for an object of this class
          address = (Long_t)new char[ klass->Size() ];

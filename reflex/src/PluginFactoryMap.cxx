@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PluginFactoryMap.cxx,v 1.1 2006/11/30 08:27:08 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: PluginFactoryMap.cxx,v 1.2 2006/12/01 08:10:02 roiser Exp $
 // Author: Pere Mato 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -130,7 +130,7 @@ std::list<std::string> ROOT::Reflex::PluginFactoryMap::GetLibraries(const std::s
 void ROOT::Reflex::PluginFactoryMap::SetDebug(int l) {
 //-------------------------------------------------------------------------------
 // Set debug level.
-  fgDebugLevel = l;
+   fgDebugLevel = l;
 }
 
 
@@ -138,5 +138,5 @@ void ROOT::Reflex::PluginFactoryMap::SetDebug(int l) {
 int ROOT::Reflex::PluginFactoryMap::Debug() {
 //-------------------------------------------------------------------------------
 // Get debug level.
-  return fgDebugLevel;
+   return fgDebugLevel;
 }
