@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.17 2006/11/20 15:56:35 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.18 2006/11/27 14:19:58 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -73,6 +73,7 @@ class XrdLink;
 class XrdOucError;
 class XrdOucTrace;
 class XrdProofClient;
+class XrdProofdPInfo;
 class XrdProofdPriority;
 class XrdProofWorker;
 class XrdScheduler;
@@ -95,6 +96,8 @@ public:
 
    const char   *GetID() const { return (const char *)fClientID; }
 
+   static int    TrimTerminatedProcesses();
+
  private:
 
    int           Admin();
@@ -111,6 +114,9 @@ public:
    int           MapClient(bool all = 1);
    int           Ping();
    int           Process2();
+   int           ReadBuffer();
+   char         *ReadBufferLocal(const char *file, kXR_int64 ofs, int &len);
+   char         *ReadBufferRemote(const char *file, kXR_int64 ofs, int &len);
    void          Reset();
    int           SendData(XrdProofdResponse *resp, kXR_int32 sid = -1, XrdSrvBuffer **buf = 0);
    int           SendDataN(XrdProofServProxy *xps, XrdSrvBuffer **buf = 0);
@@ -198,6 +204,7 @@ public:
    //
    static EResourceType          fgResourceType; // resource type
    static int                    fgMaxSessions; // max number of sessions per client
+   static int                    fgMaxOldLogs; // max number of old sessions workdirs per client
    static int                    fgWorkerMax; // max number or workers per user
    static EStaticSelOpt          fgWorkerSel; // selection option
    static std::vector<XrdProofWorker *> fgWorkers;  // vector of possible workers
@@ -213,24 +220,37 @@ public:
    //
    static kXR_int32              fgShutdownOpt; // What to do when a client disconnects
    static kXR_int32              fgShutdownDelay; // Delay shutdown by this (if enabled)
+   // 
+   static int                    fgCron; // Cron thread option [1 ==> start]
+   static int                    fgCronFrequency; // Frequency for running cron checks in secs
+   //
+   static int                    fgOperationMode; // Operation mode
+   static XrdOucString           fgAllowedUsers; // Users allowed in controlled mode
 
    //
    // Static area: client section
    //
    static std::list<XrdProofClient *> fgProofClients;  // keeps track of all users
-   static std::list<int *>       fgTerminatedProcess; // List of pids of processes terminating
+   static std::list<XrdProofdPInfo *> fgTerminatedProcess; // List of pids of processes terminating
 
    //
    // Static area: methods
    //
+   static int    AddNewSession(XrdProofClient *client, const char *tag);
    static int    ChangeProcessPriority(int pid, int deltap);
    static int    CheckIf(XrdOucStream *s);
    static bool   CheckMaster(const char *m);
    static int    Config(const char *fn);
    static char  *Expand(char *p);
    static char  *FilterSecConfig(const char *cfn, int &nd);
+   static int    GetSessionDirs(XrdProofClient *pcl, int opt,
+                                std::list<XrdOucString *> *sdirs,
+                                XrdOucString *tag = 0);
    static int    GetWorkers(XrdOucString &workers, XrdProofServProxy *);
+   static int    GuessTag(XrdProofClient *pcl, XrdOucString &tag, int ridx = 1);
    static XrdSecService *LoadSecurity(char *seclib, char *cfn);
+   static int    MvOldSession(XrdProofClient *client,
+                              const char *tag, int maxold = 10);
    static int    ReadPROOFcfg();
    static int    SetProofServEnv(XrdProofdProtocol *p = 0, int psid = -1,
                                  int loglevel = -1, const char *cfg = 0);
@@ -365,6 +385,23 @@ public:
    XrdOucString            fUser;          // User to who this applies (wild cards accepted)
    int                     fDeltaPriority; // Priority change
    XrdProofdPriority(const char *usr, int dp) : fUser(usr), fDeltaPriority(dp) { }
+};
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// XrdProofdPInfo                                                       //
+//                                                                      //
+// Authors: G. Ganis, CERN, 2006                                        //
+//                                                                      //
+// Small class to describe a process.                                   //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+class XrdProofdPInfo {
+public:
+   int pid;
+   XrdOucString pname;
+   XrdProofdPInfo(int i, const char *n) : pid(i) { pname = n; }
 };
 
 #endif

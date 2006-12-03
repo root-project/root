@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.55 2006/11/20 15:56:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.56 2006/11/28 12:10:52 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -619,7 +619,7 @@ void TSlave::StopProcess(Bool_t abort, Int_t timeout)
 }
 
 //______________________________________________________________________________
-TObjString *TSlave::SendCoordinator(Int_t, const char *)
+TObjString *TSlave::SendCoordinator(Int_t, const char *, Int_t)
 {
    // Send message to intermediate coordinator. Only meaningful when there is one,
    // i.e. in XPD framework

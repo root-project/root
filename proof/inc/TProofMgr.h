@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofMgr.h,v 1.2 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofMgr.h,v 1.3 2006/11/28 12:10:52 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -32,8 +32,10 @@
 #endif
 
 class TList;
+class TObjString;
 class TProof;
 class TProofDesc;
+class TProofLog;
 class TProofMgr;
 
 typedef TProofMgr *(*TProofMgr_t)(const char *, Int_t, const char *);
@@ -66,14 +68,18 @@ public:
    virtual Bool_t      IsValid() const { return kTRUE; }
 
 
-   virtual TProof *AttachSession(Int_t, Bool_t = kFALSE);
-   virtual TProof *CreateSession(const char * = 0, const char * = 0, Int_t = -1);
+   virtual TProof     *AttachSession(Int_t, Bool_t = kFALSE);
+   virtual TProof     *CreateSession(const char * = 0, const char * = 0, Int_t = -1);
    virtual void        DetachSession(Int_t, Option_t * = "");
    virtual TProofDesc *GetProofDesc(Int_t id);
    virtual Int_t       GetRemoteProtocol() const { return fRemoteProtocol; }
+   virtual TProofLog  *GetSessionLogs(Int_t = 0, const char * = 0)
+                                                      { return (TProofLog *)0; }
    virtual const char *GetUrl() { return fUrl.GetUrl(); }
    virtual Bool_t      MatchUrl(const char *url);
    virtual TList      *QuerySessions(Option_t *opt = "S");
+   virtual TObjString *ReadBuffer(const char * = 0, Long64_t = 0,
+                             Int_t = 0) { return (TObjString *)0; }
    virtual Int_t       Reset(const char *usr = 0);
    virtual void        ShowWorkers();
    virtual void        SetAlias(const char *alias="") { TNamed::SetTitle(alias); }
@@ -89,9 +95,6 @@ public:
 
    ClassDef(TProofMgr,0)  // Abstract PROOF manager interface
 };
-
-
-
 
 //
 // Metaclass describing the essentials of a PROOF session

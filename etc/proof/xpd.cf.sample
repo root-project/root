@@ -106,6 +106,11 @@ xrd.protocol xproofd:1093 libXrdProofd.so
 ### Working directory for sessions [<User_Home>/proof]
 # xpd.workdir <work_dir>
 ###
+### Max number of old PROOF sessions for which the working directory
+### is kept with all the relevant files in (logs, env, ...); non-positive
+### values mean no limit [10]
+# xpd.maxoldlogs 10
+###
 ### Modify priority of sessions belonging to <user> by <delta_priority>
 ### If <user> is missing, apply the change to all sessions.
 ### This directive requires special privileges, so it may be ineffective
@@ -179,6 +184,14 @@ xrd.protocol xproofd:1093 libXrdProofd.so
 ###
 # xpd.trace fork -err rsp
 
+### Super-users directive: specify a comma-serarated list of users with
+### special privileges; the effective user under which the daemon is run
+### (-R option on the command line) is always privileged.
+# xpd.superusers usr1,usr2
+
+### User access control directive: specifies a comma-separated list
+### of users allowed to connect to the cluster.
+# xpd.allowedusers usr1,usr2,usr3
 
 ### xproofd specific security directives, allowing for independent
 ### rules from the ones applying to data serving.

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XProofProtocol.h,v 1.4 2006/06/02 15:14:35 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XProofProtocol.h,v 1.5 2006/06/21 16:18:26 rdm Exp $
 // Author: G. Ganis  June 2005
 
 #ifndef ROOT_XProofProtocol
@@ -36,13 +36,15 @@ enum XProofRequestTypes {
    kXP_admin        = 3113,    // admin request handled by the coordinator (not forwarded)
    kXP_interrupt    = 3114,    // urgent message
    kXP_ping         = 3115,    // ping request
-   kXP_cleanup      = 3116     // clean-up a session-ctx or a client section
+   kXP_cleanup      = 3116,    // clean-up a session-ctx or a client section
+   kXP_readbuf      = 3117     // read a buffer from a file
 };
 
 // XPROOFD VERSION  (0xMMmnpp : MM major, mm minor, pp patch)
 #define XPD_VERSION  0x010000
 
 // KINDS of SERVERS (modes)
+#define kXPD_Admin        4
 #define kXPD_Internal     3
 #define kXPD_TopMaster    2
 #define kXPD_MasterServer 1
@@ -50,6 +52,9 @@ enum XProofRequestTypes {
 #define kXPD_WorkerServer 0
 #define kXPD_AnyServer   -1
 
+// Operations modes
+#define kXPD_OpModeOpen       0
+#define kXPD_OpModeControlled 1
 
 // XPROOFD SERVER STATUS
 enum XProofSessionStatus {
@@ -93,7 +98,8 @@ enum XProofActionCode {
    kXPD_msgsid,    // 5105     // Generic message from server with ID
    kXPD_errmsg,    // 5106     // Error message from server with log string
    kXPD_timer,     // 5107     // Server request to start a timer for delayed termination
-   kXPD_urgent     // 5108     // Urgent message to be processed in the reader thread
+   kXPD_urgent,    // 5108     // Urgent message to be processed in the reader thread
+   kXPD_flush      // 5109     // Server request to flush stdout (before retrieving logs)
 };
 
 //_______________________________________________
@@ -152,6 +158,15 @@ struct XPClientProofRequest {
    kXR_int32 dlen;
 };
 
+struct XPClientReadbufRequest {
+   kXR_char  streamid[2];
+   kXR_unt16 requestid;
+   kXR_int32 len;
+   kXR_int64 ofs;
+   kXR_int32 int1;
+   kXR_int32 dlen;
+};
+
 struct XPClientSendRcvRequest {
    kXR_char  streamid[2];
    kXR_unt16 requestid;
@@ -184,6 +199,7 @@ typedef union {
    struct ClientLoginRequest login;
    struct ClientAuthRequest auth;
    struct XPClientProofRequest proof;
+   struct XPClientReadbufRequest readbuf;
    struct XPClientSendRcvRequest sendrcv;
    struct XPClientArchiveRequest archive;
    struct XPClientInterruptRequest interrupt;

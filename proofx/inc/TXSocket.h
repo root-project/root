@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.10 2006/11/15 17:45:55 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.h,v 1.11 2006/11/20 15:56:36 rdm Exp $
 // Author: G. Ganis Oct 2005
 
 /*************************************************************************
@@ -140,7 +140,9 @@ public:
    // Should be the same as in proofd/src/XrdProofdProtocol.cxx (local definitions)
    enum ECoordMsgType { kQuerySessions = 1000,
                         kSessionTag, kSessionAlias, kGetWorkers, kQueryWorkers,
-                        kCleanupSessions };
+                        kCleanupSessions,
+                        kQueryLogPaths,
+                        kReadBuffer };
    // Should be the same as in proofd/src/XrdProofdProtocol::Urgent
    enum EUrgentMsgType { kStopProcess = 2000 };
 
@@ -185,7 +187,9 @@ public:
    Int_t               SendRaw(const void *buf, Int_t len,
                                ESendRecvOptions opt = kDontBlock);
 
-   TObjString         *SendCoordinator(Int_t kind, const char *msg = 0);
+   TObjString         *SendCoordinator(Int_t kind,
+                                       const char *msg = 0, Int_t int2 = 0, Long64_t l64 = 0);
+
 
    // Recv interfaces
    Int_t               Recv(TMessage *&mess);

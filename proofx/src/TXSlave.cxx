@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.14 2006/11/22 00:25:32 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.15 2006/11/28 12:10:52 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -441,12 +441,12 @@ Int_t TXSlave::GetProofdProtocol(TSocket *s)
 }
 
 //______________________________________________________________________________
-TObjString *TXSlave::SendCoordinator(Int_t kind, const char *msg)
+TObjString *TXSlave::SendCoordinator(Int_t kind, const char *msg, Int_t int2)
 {
    // Send message to intermediate coordinator.
    // If any output is due, this is returned as a generic message
 
-   return ((TXSocket *)fSocket)->SendCoordinator(kind, msg);
+   return ((TXSocket *)fSocket)->SendCoordinator(kind, msg, int2);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.23 2006/11/20 15:56:36 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.24 2006/11/22 00:24:29 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -455,6 +455,19 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
             // Handle this input in this thread to avoid queuing on the
             // main thread
             XHandleIn_t hin = {acod, opt, delay, 0};
+            if (fHandler)
+               fHandler->HandleInput((const void *)&hin);
+            else
+               Error("ProcessUnsolicitedMsg","handler undefined");
+         }
+         break;
+      case kXPD_flush:
+         //
+         // Flush request
+         {
+            // Handle this input in this thread to avoid queuing on the
+            // main thread
+            XHandleIn_t hin = {acod, 0, 0, 0};
             if (fHandler)
                fHandler->HandleInput((const void *)&hin);
             else
@@ -1366,7 +1379,8 @@ Int_t TXSocket::Recv(TMessage *&mess)
 }
 
 //______________________________________________________________________________
-TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg)
+TObjString *TXSocket::SendCoordinator(Int_t kind,
+                                      const char *msg, Int_t int2, Long64_t l64)
 {
    // Send message to intermediate coordinator.
    // If any output is due, this is returned as an obj string to be
@@ -1383,14 +1397,22 @@ TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg)
    fConn->SetSID(reqhdr.header.streamid);
    reqhdr.header.requestid = kXP_admin;
    reqhdr.proof.int1 = kind;
+   reqhdr.proof.int2 = int2;
    switch (kind) {
       case kQuerySessions:
+      case kQueryWorkers:
          reqhdr.proof.sid = 0;
          reqhdr.header.dlen = 0;
          vout = (void **)&bout;
          break;
       case kCleanupSessions:
          reqhdr.proof.int2 = (kXR_int32) kXPD_TopMaster;
+         reqhdr.proof.sid = fSessionID;
+         reqhdr.header.dlen = (msg) ? strlen(msg) : 0;
+         buf = (msg) ? (const void *)msg : buf;
+         break;
+      case kQueryLogPaths:
+         vout = (void **)&bout;
       case kSessionTag:
       case kSessionAlias:
          reqhdr.proof.sid = fSessionID;
@@ -1402,9 +1424,16 @@ TObjString *TXSocket::SendCoordinator(Int_t kind, const char *msg)
          reqhdr.header.dlen = 0;
          vout = (void **)&bout;
          break;
-      case kQueryWorkers:
-         reqhdr.proof.sid = 0;
-         reqhdr.header.dlen = 0;
+      case kReadBuffer:
+         reqhdr.header.requestid = kXP_readbuf;
+         reqhdr.readbuf.ofs = l64;
+         reqhdr.readbuf.len = int2;
+         if (!msg || strlen(msg) <= 0) {
+            Info("SendCoordinator", "kReadBuffer: file path undefined");
+            return sout;
+         }
+         reqhdr.header.dlen = strlen(msg);
+         buf = (const void *)msg;
          vout = (void **)&bout;
          break;
       default:
@@ -1592,7 +1621,7 @@ void TXSocket::InitEnvs()
    if (pxybits.Length() > 0)
       gSystem->Setenv("XrdSecGSIPROXYKEYBITS",pxybits.Data());
 
-   TString crlcheck = gEnv->GetValue("XSec.GSI.CheckCRL","2");
+   TString crlcheck = gEnv->GetValue("XSec.GSI.CheckCRL","1");
    if (crlcheck.Length() > 0)
       gSystem->Setenv("XrdSecGSICRLCHECK",crlcheck.Data());
 

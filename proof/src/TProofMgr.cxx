@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofMgr.cxx,v 1.8 2006/10/03 13:31:07 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofMgr.cxx,v 1.9 2006/11/28 12:10:52 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -34,7 +34,7 @@ TProofMgr_t TProofMgr::fgTXProofMgrHook = 0;
 
 //______________________________________________________________________________
 TProofMgr::TProofMgr(const char *url, Int_t, const char *alias)
-   : TNamed("",""), fRemoteProtocol(-1), fServType(kXProofd), fSessions(0)
+          : TNamed("",""), fRemoteProtocol(-1), fServType(kXProofd), fSessions(0)
 {
    // Create a PROOF manager for the standard (old) environment.
 
@@ -56,6 +56,17 @@ TProofMgr::TProofMgr(const char *url, Int_t, const char *alias)
       SetAlias(alias);
    else
       SetAlias(fUrl.GetHost());
+}
+
+//______________________________________________________________________________
+TProofMgr::~TProofMgr()
+{
+   // Destroy a TProofMgr instance
+
+   SafeDelete(fSessions);
+
+   fgListOfManagers.Remove(this);
+   gROOT->GetListOfProofs()->Remove(this);
 }
 
 //______________________________________________________________________________
@@ -160,17 +171,6 @@ Int_t TProofMgr::Reset(const char *)
    Warning("Reset","functionality not supported");
 
    return -1;
-}
-
-//______________________________________________________________________________
-TProofMgr::~TProofMgr()
-{
-   // Destroy a TProofMgr instance
-
-   SafeDelete(fSessions);
-
-   fgListOfManagers.Remove(this);
-   gROOT->GetListOfProofs()->Remove(this);
 }
 
 //______________________________________________________________________________
@@ -332,12 +332,27 @@ TList *TProofMgr::GetListOfManagers()
 }
 
 //______________________________________________________________________________
-TProofMgr *TProofMgr::Create(const char *url, Int_t loglevel,
+TProofMgr *TProofMgr::Create(const char *uin, Int_t loglevel,
                              const char *alias, Bool_t xpd)
 {
    // Static method returning the appropriate TProofMgr object using
    // the plugin manager.
    TProofMgr *m= 0;
+
+   // Resolve url; if empty input try to get the localhost FQDN
+   TUrl u(uin);
+   if (!uin || !strlen(uin))
+      u.SetUrl("localhost");
+
+   // in case user gave as url: "machine.dom.ain", replace
+   // "http" by "proof" and "80" by "1093"
+   if (!strcmp(u.GetProtocol(), TUrl("a").GetProtocol()))
+      u.SetProtocol("proof");
+   if (u.GetPort() == TUrl("a").GetPort())
+      u.SetPort(1093);
+
+   // Avoid multiple calls to GetUrl
+   const char *url = u.GetUrl();
 
    // Make sure we do not have already a manager for this URL
    TList *lm = TProofMgr::GetListOfManagers();
@@ -428,6 +443,11 @@ void TProofMgr::SetTXProofMgrHook(TProofMgr_t pmh)
 
    fgTXProofMgrHook = pmh;
 }
+
+
+//
+//  TProofDesc
+//
 
 ClassImp(TProofDesc)
 

@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.h,v 1.6 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.h,v 1.7 2006/11/28 12:10:52 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -58,10 +58,12 @@ public:
 
    Bool_t      IsValid() const { return fSocket; }
 
-   TProof *AttachSession(Int_t id, Bool_t gui = kFALSE);
+   TProof     *AttachSession(Int_t id, Bool_t gui = kFALSE);
    void        DetachSession(Int_t, Option_t * = "");
+   TProofLog  *GetSessionLogs(Int_t ridx = 0, const char *stag = 0);
    Bool_t      MatchUrl(const char *url);
    TList      *QuerySessions(Option_t *opt = "S");
+   TObjString *ReadBuffer(const char *file, Long64_t ofs, Int_t len);
    Int_t       Reset(const char *usr = 0);
    void        ShowWorkers();
 

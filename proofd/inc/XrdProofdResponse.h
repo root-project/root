@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.h,v 1.4 2006/10/19 12:38:07 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdResponse.h,v 1.5 2006/11/20 15:56:35 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -35,7 +35,7 @@ class XrdLink;
 class XrdProofdResponse
 {
  public:
-   XrdProofdResponse() { fLink = 0; *fTrsid = '\0';
+   XrdProofdResponse() { fLink = 0; *fTrsid = '\0'; fSID = 0;
                          fRespIO[0].iov_base = (caddr_t)&fResp;
                          fRespIO[0].iov_len  = sizeof(fResp);
                          fTraceID = fgTraceID; }
@@ -69,7 +69,7 @@ class XrdProofdResponse
    int                   Send(kXR_int32 int1, kXR_int32 int2, void *data = 0, int dlen = 0);
    int                   Send(kXR_int32 int1, void *data = 0, int dlen = 0);
 
-   inline void           Set(XrdLink *lp) { fLink = lp;}
+   inline void           Set(XrdLink *lp) { fLink = lp; GetSID(fSID);}
    inline void           Set(const char *tid) { fTraceID = tid;}
    void                  Set(unsigned char *stream);
    void                  Set(unsigned short streamid);
@@ -87,6 +87,8 @@ class XrdProofdResponse
    struct iovec         fRespIO[4];
 
    char                 fTrsid[8];  // sizeof() does not work here
+
+   unsigned short       fSID;
 
    XrdOucString         fTraceID;
 

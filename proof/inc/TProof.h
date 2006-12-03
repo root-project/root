@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.96 2006/11/22 14:16:54 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.97 2006/11/28 12:10:52 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -207,10 +207,12 @@ public:
    Int_t        fPerfIndex;    //relative performance of this slave
    ESlaveStatus fStatus;       //slave status
 
-   TSlaveInfo(const char *ordinal = "", const char *host = "", Int_t perfidx = 0)
-      : fOrdinal(ordinal), fHostName(host), fPerfIndex(perfidx),
-        fStatus(kNotActive) { }
+   TSlaveInfo(const char *ordinal = "", const char *host = "", Int_t perfidx = 0,
+              const char *msd = "") :
+              fOrdinal(ordinal), fHostName(host), fMsd(msd),
+              fPerfIndex(perfidx), fStatus(kNotActive) { }
 
+   const char *GetMsd() const { return fMsd; }
    const char *GetName() const { return fHostName; }
    const char *GetOrdinal() const { return fOrdinal; }
    void        SetStatus(ESlaveStatus stat) { fStatus = stat; }
@@ -353,10 +355,10 @@ private:
    Bool_t          fIdle;            //on clients, true if no PROOF jobs running
    Bool_t          fSync;            //true if type of currently processed query is sync
 
-   Bool_t          fRedirLog;       //redirect received log info
-   TString         fLogFileName;    //name of the temp file for redirected logs
-   FILE           *fLogFileW;       //temp file to redirect logs
-   FILE           *fLogFileR;       //temp file to read redirected logs
+   Bool_t          fRedirLog;        //redirect received log info
+   TString         fLogFileName;     //name of the temp file for redirected logs
+   FILE           *fLogFileW;        //temp file to redirect logs
+   FILE           *fLogFileR;        //temp file to read redirected logs
    Bool_t          fLogToWindowOnly; //send log to window only
 
    TList          *fWaitingSlaves;   //stores a TPair of the slaves's TSocket and TMessage
@@ -490,6 +492,8 @@ protected:
                        Int_t perf, const char *image, const char *workdir);
    TSlave *CreateSubmaster(const char *url, const char *ord,
                            const char *image, const char *msd);
+
+   virtual void SaveWorkerInfo();
 
    Int_t    Collect(ESlaves list = kActive, Long_t timeout = -1);
    Int_t    Collect(TList *slaves, Long_t timeout = -1);
@@ -685,9 +689,9 @@ public:
    const char *GetDataPoolUrl() const { return fDataPoolUrl; }
    void        SetDataPoolUrl(const char *url) { fDataPoolUrl = url; }
 
-   static TProof *Open(const char *url = 0, const char *conffile = 0,
-                       const char *confdir = 0, Int_t loglevel = 0);
-   static Int_t   Reset(const char *url, const char *usr = 0);
+   static TProof       *Open(const char *url = 0, const char *conffile = 0,
+                             const char *confdir = 0, Int_t loglevel = 0);
+   static TProofMgr    *Mgr(const char *url);
 
    static void          AddEnvVar(const char *name, const char *value);
    static void          DelEnvVar(const char *name);

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.22 2006/06/05 22:51:13 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.23 2006/06/21 16:18:26 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -102,7 +102,7 @@ protected:
    void          Init(TSocket *s, Int_t stype);
    virtual void  Interrupt(Int_t type);
    virtual Int_t Ping();
-   virtual TObjString *SendCoordinator(Int_t kind, const char *msg = 0);
+   virtual TObjString *SendCoordinator(Int_t kind, const char *msg = 0, Int_t int2 = 0);
    virtual void  SetAlias(const char *alias);
    virtual void  SetStatus(Int_t st) { fStatus = st; }
    virtual void  StopProcess(Bool_t abort, Int_t timeout);

@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.14 2006/11/15 17:45:55 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.15 2006/11/28 12:10:52 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TProof.h"
+#include "TProofLog.h"
 #include "TXProofMgr.h"
 #include "TXSocket.h"
 #include "TROOT.h"
@@ -144,6 +145,11 @@ TProof *TXProofMgr::AttachSession(Int_t id, Bool_t gui)
    // existing session 'id' (as shown by TProof::QuerySessions) or 0 if 'id' is
    // not valid. The boolena 'gui' should be kTRUE when invoked from the GUI.
 
+   if (!IsValid()) {
+      Warning("AttachSession","invalid TXProofMgr - do nothing");
+      return 0;
+   }
+
    TProofDesc *d = GetProofDesc(id);
    if (d) {
       if (d->GetProof())
@@ -191,6 +197,11 @@ void TXProofMgr::DetachSession(Int_t id, Option_t *opt)
    // Detach session with 'id' from its proofserv. The 'id' is the number
    // shown by QuerySessions.
 
+   if (!IsValid()) {
+      Warning("DetachSession","invalid TXProofMgr - do nothing");
+      return;
+   }
+
    if (id > 0) {
       // Single session request
       TProofDesc *d = GetProofDesc(id);
@@ -232,6 +243,11 @@ Bool_t TXProofMgr::MatchUrl(const char *url)
    // 'double' default port, implying an additional check on the port effectively
    // open.
 
+   if (!IsValid()) {
+      Warning("MatchUrl","invalid TXProofMgr - do nothing");
+      return 0;
+   }
+
    TUrl u(url);
 
    // Correct URL protocol
@@ -262,9 +278,10 @@ void TXProofMgr::ShowWorkers()
 {
    // Show available workers
 
-   // Nothing to do if not in contact with proofserv
-   if (!IsValid())
+   if (!IsValid()) {
+      Warning("ShowWorkers","invalid TXProofMgr - do nothing");
       return;
+   }
 
    // Send the request
    TObjString *os = fSocket->SendCoordinator(TXSocket::kQueryWorkers);
@@ -290,7 +307,10 @@ TList *TXProofMgr::QuerySessions(Option_t *opt)
       return fSessions;
 
    // Nothing to do if not in contact with proofserv
-   if (!IsValid()) return 0;
+   if (!IsValid()) {
+      Warning("QuerySessions","invalid TXProofMgr - do nothing");
+      return 0;
+   }
 
    // Create list if not existing
    if (!fSessions) {
@@ -384,7 +404,105 @@ Int_t TXProofMgr::Reset(const char *usr)
    // user, specified by 'usr', or for all users (usr = *)
    // Return 0 on success, -1 in case of error.
 
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Warning("Reset","invalid TXProofMgr - do nothing");
+      return -1;
+   }
+
    fSocket->SendCoordinator(TXSocket::kCleanupSessions, usr);
 
    return 0;
+}
+
+//_____________________________________________________________________________
+TProofLog *TXProofMgr::GetSessionLogs(Int_t isess, const char *stag)
+{
+   // Get logs or log tails from last session associated with this manager
+   // instance.
+   // The arguments allow to specify a session different from the last one:
+   //      isess   specifies a position relative to the last one, i.e. -1
+   //              for the next to last session
+   //      stag    specifies the unique tag of the wanted session
+   // If 'stag' is specified 'isess' is ignored.
+   // Returns a TProofLog object (to be deleted by the caller) on success,
+   // 0 if something wrong happened.
+
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Warning("GetSessionLogs","invalid TXProofMgr - do nothing");
+      return 0;
+   }
+
+   TProofLog *pl = 0;
+
+   // Get the list of paths
+   TObjString *os = fSocket->SendCoordinator(TXSocket::kQueryLogPaths, stag, isess);
+
+   // Analyse it now
+   Int_t ii = 0;
+   if (os) {
+      TString rs(os->GetName());
+      Ssiz_t from = 0;
+      // The session tag
+      TString tag;
+      if (!rs.Tokenize(tag, from, "|")) {
+         Warning("GetSessionLogs", "Session tag undefined: corruption?\n"
+                                   " (received string: %s)", os->GetName());
+         return (TProofLog *)0;
+      }
+      // The pool url
+      TString purl;
+      if (!rs.Tokenize(purl, from, "|")) {
+         Warning("GetSessionLogs", "Pool URL undefined: corruption?\n"
+                                   " (received string: %s)", os->GetName());
+         return (TProofLog *)0;
+      }
+      // Create the instance now
+      if (!pl)
+         pl = new TProofLog(tag, purl, this);
+
+      // Per-node info
+      TString to;
+      while (rs.Tokenize(to, from, "|")) {
+         if (!to.IsNull()) {
+            TString ord(to);
+            ord.Strip(TString::kLeading, ' ');
+            TString url(ord);
+            if ((ii = ord.Index(" ")) != kNPOS)
+               ord.Remove(ii);
+            if ((ii = url.Index(" ")) != kNPOS)
+               url.Remove(0, ii + 1);
+            // Add to the list
+            pl->Add(ord, url);
+            // Notify
+            if (gDebug > 1)
+               Info("GetSessionLogs", "ord: %s, url: %s", ord.Data(), url.Data());
+         }
+      }
+      // Cleanup
+      SafeDelete(os);
+      // Retrieve the default part
+      if (pl)
+         pl->Retrieve();
+   }
+
+   // Done
+   return pl;
+}
+
+//______________________________________________________________________________
+TObjString *TXProofMgr::ReadBuffer(const char *fin, Long64_t ofs, Int_t len)
+{
+   // Read, via the coordinator, 'len' bytes from offset 'ofs' of 'file'.
+   // Returns a TObjString with the content or 0, in case of failure
+
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Warning("ReadBuffer","invalid TXProofMgr - do nothing");
+      return (TObjString *)0;
+   }
+
+   // Send the request
+   return fSocket->SendCoordinator(TXSocket::kReadBuffer, fin, len, ofs);
 }

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.171 2006/11/28 12:10:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.172 2006/11/28 20:49:54 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1719,11 +1719,12 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout)
          if (rc >= 0)
             cnt++;
       } else {
-         // Exit if not stopped or not aborted (player exits status is finished
-         // in such a case); otherwise, we still need to collect the partial
-         // output info
-         if (fPlayer && (fPlayer->GetExitStatus() == TProofPlayer::kFinished))
-            mon->DeActivateAll();
+         // If not timed-out, exit if not stopped or not aborted
+         // (player exits status is finished in such a case); otherwise,
+         // we still need to collect the partial output info
+         if (!s)
+            if (fPlayer && (fPlayer->GetExitStatus() == TProofPlayer::kFinished))
+               mon->DeActivateAll();
          // Decrease the timeout counter if requested
          if (s == (TSocket *)(-1) && nto > 0)
             nto--;
@@ -2445,6 +2446,9 @@ void TProof::MarkBad(TSlave *sl)
    sl->Close();
 
    fSendGroupView = kTRUE;
+
+   // Update session workers files
+   SaveWorkerInfo();
 }
 
 //______________________________________________________________________________
@@ -6099,20 +6103,8 @@ TProof *TProof::Open(const char *cluster, const char *conffile,
 
    } else {
 
-      TProof *proof = 0;
-
-      // If the master was specified as "", use "localhost"
-      TString fqdn = cluster;
-      if (fqdn == "")
-         fqdn = "localhost";
-
-      TUrl u(fqdn);
-      // in case user gave as url: "machine.dom.ain", replace
-      // "http" by "proof" and "80" by "1093"
-      if (!strcmp(u.GetProtocol(), TUrl("a").GetProtocol()))
-         u.SetProtocol("proof");
-      if (u.GetPort() == TUrl("a").GetPort())
-         u.SetPort(1093);
+      // Parse input URL
+      TUrl u(cluster);
 
       // Find out if we are required to attach to a specific session
       TString o(u.GetOptions());
@@ -6130,6 +6122,7 @@ TProof *TProof::Open(const char *cluster, const char *conffile,
       // Attach-to or create the appropriate manager
       TProofMgr *mgr = TProofMgr::Create(u.GetUrl());
 
+      TProof *proof = 0;
       if (mgr && mgr->IsValid()) {
 
          // If XProofd we always attempt an attach first (unless
@@ -6166,54 +6159,16 @@ TProof *TProof::Open(const char *cluster, const char *conffile,
 }
 
 //_____________________________________________________________________________
-Int_t TProof::Reset(const char *url, const char *usr)
+TProofMgr *TProof::Mgr(const char *url)
 {
-   // Reset the entry associated with the entity defined by 'url', which is
-   // in the form
-   //                "[proof://][user@]master.url[:port]"
-   // If 'user' has the privileges it can also ask to reset the entry of a
-   // different user specified by 'usr'; use 'usr'=='*' to reset all the
-   // sessions know remotely.
-   // 'Reset' means that all the PROOF sessions owned by the user at this
-   // master are terminated or killed, any other client connections (from other
-   // shells) closed, and the protocol instance reset and given back to the stack.
-   // After this call the user will be asked to login again and will start
-   // from scratch.
-   // To be used when the cluster is not behaving.
-   // Return 0 on success, -1 if somethign wrng happened.
+   // Get instance of the effective manager for 'url'
+   // Return 0 on failure
 
    if (!url)
-      return -1;
+      return (TProofMgr *)0;
 
-   const char *pn = "TProof::Reset";
-
-   // If the master was specified as "", try to get the localhost FQDN
-   if (!strlen(url))
-      url = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
-
-   TUrl u(url);
-   // in case user gave as url: "machine.dom.ain", replace
-   // "http" by "proof" and "80" by "1093"
-   if (!strcmp(u.GetProtocol(), TUrl("a").GetProtocol()))
-      u.SetProtocol("proof");
-   if (u.GetPort() == TUrl("a").GetPort())
-      u.SetPort(1093);
-
-   // Attach-to or create the appropriate manager
-   TProofMgr *mgr = TProofMgr::Create(u.GetUrl());
-
-   if (mgr && mgr->IsValid())
-      if (!(mgr->IsProofd()))
-         // Ask the manager to reset the entry
-         return mgr->Reset(usr);
-      else
-         ::Info(pn,"proofd: functionality not supported by server");
-
-   else
-      ::Info(pn,"could not open a valid connection to %s", u.GetUrl());
-
-   // Done
-   return -1;
+   // Attach or create the relevant instance
+   return TProofMgr::Create(url);
 }
 
 //_____________________________________________________________________________
@@ -6271,4 +6226,57 @@ void TProof::ResetEnvVars()
    SafeDelete(fgProofEnvList);
 }
 
+//______________________________________________________________________________
+void TProof::SaveWorkerInfo()
+{
+   // Save informations about the worker set in the file .workers in the working
+   // dir. Called each time there is a change in the worker setup, e.g. by
+   // TProof::MarkBad().
+
+   // We must be masters
+   if (!IsMaster())
+      return;
+
+   // We must have a server defined
+   if (!gProofServ) {
+      Error("SaveWorkerInfo","gProofServ undefined");
+      return;
+   }
+
+   // Update info
+   const_cast<TProof*>(this)->AskStatistics();
+
+   // The relevant lists must be defined
+   if (!fSlaves && !fBadSlaves) {
+      Warning("SaveWorkerInfo","all relevant worker lists is undefined");
+      return;
+   }
+
+   // Create or truncate the file first
+   TString fnwrk = Form("%s/.workers",
+                        gSystem->DirName(gProofServ->GetSessionDir()));
+   FILE *fwrk = fopen(fnwrk.Data(),"w");
+   if (!fwrk) {
+      Error("SaveWorkerInfo",
+            "cannot open %s for writing (errno: %d)", fnwrk.Data(), errno);
+      return;
+   }
+
+   // Loop over the list of workers (active is any worker not flagged as bad)
+   TIter nxa(fSlaves);
+   TSlave *wrk = 0;
+   while ((wrk = (TSlave *) nxa())) {
+      Int_t status = (fBadSlaves && fBadSlaves->FindObject(wrk)) ? 0 : 1;
+      // Write out record for this worker
+      fprintf(fwrk,"%s@%s:%d %d %s %s.log\n",
+                   wrk->GetUser(), wrk->GetName(), wrk->GetPort(), status,
+                   wrk->GetOrdinal(), wrk->GetWorkDir());
+   }
+
+   // Close file
+   fclose(fwrk);
+
+   // We are done
+   return;
+}
 

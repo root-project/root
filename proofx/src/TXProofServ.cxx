@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.21 2006/11/20 15:56:36 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.22 2006/11/28 12:10:52 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -420,8 +420,10 @@ Int_t TXProofServ::CreateServer()
       // Find out if we are a master in direct contact only with workers
       fEndMaster = fProof->IsEndMaster();
 
-      SendLogFile();
+      // Save worker info
+      fProof->SaveWorkerInfo();
 
+      SendLogFile();
    }
 
    // Done
@@ -763,9 +765,6 @@ Int_t TXProofServ::Setup()
       TMessage m(kPROOF_SESSIONTAG);
       m << fSessionTag;
       fSocket->Send(m);
-
-      // ... and to the coordinator to record in the session proxy
-      ((TXSocket *)fSocket)->SendCoordinator(TXSocket::kSessionTag, fSessionTag);
    }
 
    // Send packages off immediately to reduce latency
@@ -889,7 +888,7 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
    }
 
    // If user config files are enabled, check them first
-   if (gSystem->Getenv("ROOTUSEUSERCFG")) {
+   if (fEnvList->FindObject("ROOTUSEUSERCFG")) {
       Int_t pc = 1;
       TProofServ::EQueryAction rc = TProofServ::GetWorkers(workers, pc);
       if (rc == kQueryOK)
@@ -983,6 +982,11 @@ Bool_t TXProofServ::HandleInput(const void *in)
       else
          // Stop Shutdown timer, if any
          SetShutdownTimer(kFALSE);
+
+   } else if (acod == kXPD_flush) {
+      // Flush stdout, so that we can access the full log file
+      Info("HandleInput","kXPD_flush: flushing log file (stdout)");
+      fflush(stdout);
 
    } else if (acod == kXPD_urgent) {
       // Get type

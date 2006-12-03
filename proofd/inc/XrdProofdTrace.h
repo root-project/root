@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdTrace.h,v 1.5 2006/10/19 12:38:07 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdTrace.h,v 1.6 2006/10/23 14:44:40 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -53,13 +53,13 @@
 //
 // "Full-tracing" macros (pid, time, ...)
 //
-#define PRINT(x) \
+#define XPDPRT(x) \
    {XrdProofdTrace->Beg(TRACEID);   cerr <<x; XrdProofdTrace->End();}
 
-#define ERROR(x) \
+#define XPDERR(x) \
    {XrdProofdTrace->Beg(TRACEID);   cerr << ">>> ERROR: "<<x; XrdProofdTrace->End();}
 
-#define TRACE(act, x) if (TRACING(act)) PRINT(x)
+#define TRACE(act, x) if (TRACING(act)) XPDPRT(x)
 
 #define TRACEI(act, x) \
    if (TRACING(act)) \
@@ -88,13 +88,15 @@
 
 #define TRACING(x) 0
 
-#define PRINT(x)
+#define XPDPRT(x)
+#define XPDERR(x) \
 #define TRACE(act,x)
 #define TRACEI(act,x)
 #define TRACEP(act,x)
 #define TRACES(act,x)
 
 #define MPRINT(h,x)
+#define MERROR(h,x)
 #define MTRACE(act,h,x)
 
 #endif
