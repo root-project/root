@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XProofProtUtils.cxx,v 1.7 2006/10/19 14:53:24 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XProofProtUtils.cxx,v 1.8 2006/12/03 23:34:04 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -24,8 +24,9 @@
 #      define __macos__
 #   endif
 #endif
-
+#ifndef WIN32
 #include <netinet/in.h>
+#endif
 #include "XrdSys/XrdSysPlatform.hh"
 #include "XProofProtocol.h"
 #include "XProofProtUtils.h"
