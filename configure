@@ -597,6 +597,10 @@ check_symbol() {
 		    break 2
                 fi
              done
+        else
+            logmsg "$d/$symbollib readable"
+            symbolfile=$d/$symbollib
+            break
         fi
     done
 
@@ -2037,8 +2041,12 @@ if test ! "x$enable_g4root" = "xno"; then
     g4rootinc=$found_hdr
     g4incdir=$found_dir
 
+    if test ! "$G4LIB/$G4SYSTEM" = "/"; then
+        G4SYSLIBDIR=$G4LIB/$G4SYSTEM
+    fi
     check_library "libG4navigation" "$enable_shared" "$g4libdir" \
-	$G4LIB/$G4SYSTEM
+	$G4SYSLIBDIR
+
     g4rootlib=$found_lib
     g4libdir=$found_dir
 
@@ -2522,7 +2530,8 @@ if test ! "x$enable_python" = "xno" ; then
         /Library/Frameworks/Python.framework/Versions/Current \
         /System/Library/Frameworks/Python.framework/Versions/Current \
         /usr/local/lib /usr/lib \
-        /usr/local/lib/python2.2/config /usr/lib/python2.2/config"
+        /usr/local/lib/python2.2/config /usr/lib/python2.2/config \
+        /usr/local/lib/python2.4/config /usr/lib/python2.4/config"
 
     if test "x$platform" = xwin32 ; then
 	pythonlibdirs="$pythonlibdirs \
