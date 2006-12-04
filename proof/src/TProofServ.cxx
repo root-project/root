@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.150 2006/11/27 14:14:24 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.151 2006/11/28 12:10:52 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -3515,7 +3515,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
       } else {
          // forward to slaves
          fPackageLock->Unlock();
-         fProof->UploadPackage(fPackageDir + "/" + filenam);
+         fProof->UploadPackage(fPackageDir + "/" + filenam, (TProof::EUploadPackageOpt)opt);
       }
       delete md5local;
    } else if (filenam.BeginsWith("+")) {
