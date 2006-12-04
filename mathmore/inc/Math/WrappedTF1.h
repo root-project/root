@@ -1,4 +1,4 @@
-// @(#)root/fit:$Name:  $:$Id: WrappedTF1.h,v 1.2 2006/11/20 14:27:17 moneta Exp $
+// @(#)root/fit:$Name:  $:$Id: WrappedTF1.h,v 1.3 2006/11/24 10:37:13 moneta Exp $
 // Author: L. Moneta Wed Sep  6 09:52:26 2006
 
 /**********************************************************************
@@ -29,6 +29,9 @@ namespace ROOT {
 /** 
    Class to Wrap a ROOT Function class (like TF1)  in a IParamFunction interface
    of one dimensions to be used in the ROOT::Math numerical algorithms
+   The parameter are stored in the WrappedFunction so we don't rely on the TF1 state values. 
+   This allows for the copy of the wrapper function without the need to copy the TF1. 
+   The wrapper does not own the TF1 pointer, so it assumes it exists during the wrapper lifetime
 
    @ingroup CppFunctions
 */ 
@@ -42,17 +45,18 @@ public:
    WrappedTF1() {}
 
    /** 
-      constructor from a function pointer. A flag (default false) is specified if 
-      class owns the pointer
+      constructor from a function pointer. 
    */ 
    WrappedTF1 ( TF1 & f  )  : 
-      fFunc(&f) 
+      fFunc(&f), 
+      fParams(f.GetParameters(),f.GetParameters()+f.GetNpar())
+
    {
-      fFunc->InitArgs(fX, 0 );
+      fFunc->InitArgs(fX, &fParams.front() );
    }
 
    /** 
-      Destructor (no operations). Function pointer is not owned
+      Destructor (no operations). TF1 Function pointer is not owned
    */ 
    virtual ~WrappedTF1 () {}
 
@@ -62,9 +66,10 @@ public:
    WrappedTF1(const WrappedTF1 & rhs) :
       BaseFunc(),
       BaseGradFunc(),
-      fFunc(rhs.fFunc) 
+      fFunc(rhs.fFunc), 
+      fParams(rhs.fParams)
    {
-      fFunc->InitArgs(fX, 0 );
+      fFunc->InitArgs(fX,&fParams.front()  );
    }
 
    /** 
@@ -73,10 +78,10 @@ public:
    WrappedTF1 & operator = (const WrappedTF1 & rhs) { 
       if (this == &rhs) return *this;  // time saving self-test
       fFunc = rhs.fFunc; 
-      fFunc->InitArgs(fX, 0 );
+      fFunc->InitArgs(fX, &fParams.front() );
+      fParams = rhs.fParams;
       return *this;
    } 
-
 
 
    /** @name interface inherited from IFunction */
@@ -93,22 +98,25 @@ public:
 
    /// access the parameter values
    const double * Parameters() const {
-      return fFunc->GetParameters();   
+      return &fParams.front(); 
+      //return fFunc->GetParameters();   
    }
 
    /// set parameter values
    void SetParameters(const double * p) { 
-      fFunc->SetParameters(p); 
-      // need to re-initialize it
-      fFunc->InitArgs(fX, p );
+      std::copy(p,p+fParams.size(),fParams.begin());
+//       fFunc->SetParameters(p); 
+//       // need to re-initialize it
+//       fFunc->InitArgs(fX, p );
    } 
 
    /// return number of parameters 
    unsigned int NPar() const { 
-      return static_cast<unsigned int>(fFunc->GetNpar() );
+      return fParams.size();
+      //return static_cast<unsigned int>(fFunc->GetNpar() );
    }
 
-   /// return parameter name
+   /// return parameter name (from TF1)
    std::string ParameterName(unsigned int i) const { 
       return std::string(fFunc->GetParName(i)); 
    } 
@@ -131,19 +139,24 @@ private:
 
    /// evaluate function using parameter values cached in the TF1 
    double DoEval (double x) const { 
-      // no need to InitArg
+      // no need to InitArg (done in ctor)
       fX[0] = x; 
-      return fFunc->EvalPar(fX,0); 
+      return fFunc->EvalPar(fX,&fParams.front()); 
+      //return fFunc->EvalPar(fX,0); 
    }
 
    /// return the function derivatives w.r.t. x 
    double DoDerivative( double  x  ) const { 
       static const double kEps = 0.001;
-      return  fFunc->Derivative(x,0,kEps); 
+      // parameter are passed as non-const in Derivative
+      double * p = const_cast<double *>(&fParams.front() );
+      return  fFunc->Derivative(x,p,kEps); 
    }
 
    /// evaluate the derivative of the function with respect to the parameters
    void  DoParameterGradient(double x, double * grad ) const { 
+      // use stored params values
+      fFunc->SetParameters(&fParams.front() );
       static const double kEps = 0.001;
       fFunc->GradientPar(&x,grad,kEps); 
    }
@@ -152,6 +165,7 @@ private:
    // pointer to ROOT function
    TF1 * fFunc; 
    mutable double fX[1]; 
+   std::vector<double> fParams;
 }; 
 
    } // end namespace Fit

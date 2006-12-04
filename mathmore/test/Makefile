@@ -25,6 +25,8 @@ CXXFLAGS+=  -I$(CLHEPBASE)/include -DHAVE_CLHEP
 EXTRALIBS+=  $(CLHEPBASE)/lib/libCLHEP.a
 endif
 
+CXXFLAGS += -DHAVE_ROOTLIBS
+
 CHEBYSHEVOBJ      = testChebyshev.$(ObjSuf)
 CHEBYSHEVSRC      = testChebyshev.$(SrcSuf)
 CHEBYSHEV         = testChebyshev$(ExeSuf)

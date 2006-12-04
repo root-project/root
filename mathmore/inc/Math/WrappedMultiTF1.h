@@ -1,4 +1,4 @@
-// @(#)root/fit:$Name:  $:$Id: WrappedMultiTF1.h,v 1.2 2006/11/20 14:27:17 moneta Exp $
+// @(#)root/fit:$Name:  $:$Id: WrappedMultiTF1.h,v 1.3 2006/11/24 10:37:13 moneta Exp $
 // Author: L. Moneta Wed Sep  6 09:52:26 2006
 
 /**********************************************************************
@@ -29,6 +29,9 @@ namespace ROOT {
 /** 
    Class to Wrap a ROOT Function class (like TF1)  in a IParamFunction interface
    of multi-dimensions to be used in the ROOT::Math numerical algorithm
+   The parameter are stored in the WrappedFunction so we don't rely on the TF1 state values. 
+   This allows for the copy of the wrapper function without the need to copy the TF1
+   The wrapper does not own the TF1 pointer, so it assumes it exists during the wrapper lifetime
 
    @ingroup CppFunctions
 */ 
@@ -41,11 +44,12 @@ public:
  
 
    /** 
-      constructor from a function pointer. A flag (default false) is specified if 
-      class owns the pointer
+      constructor from a function pointer. 
+      
    */ 
    WrappedMultiTF1 (TF1 & f )  : 
-      fFunc(&f) 
+      fFunc(&f),
+      fParams(f.GetParameters(),f.GetParameters()+f.GetNpar())
    { }
 
    /** 
@@ -59,7 +63,8 @@ public:
    WrappedMultiTF1(const WrappedMultiTF1 & rhs) :
       BaseFunc(),
       BaseParamFunc(),
-      fFunc(rhs.fFunc) 
+      fFunc(rhs.fFunc),
+      fParams(rhs.fParams)
    {}
 
    /** 
@@ -68,6 +73,7 @@ public:
    WrappedMultiTF1 & operator = (const WrappedMultiTF1 & rhs) { 
       if (this == &rhs) return *this;  // time saving self-test
       fFunc = rhs.fFunc; 
+      fParams = rhs.fParams;
       return *this;
    } 
 
@@ -92,20 +98,22 @@ public:
 
    /// access the parameter values
    const double * Parameters() const {
-      return fFunc->GetParameters();   
+      return &fParams.front();   
+      //return fFunc->GetParameters();   
    }
 
    /// set parameter values
    void SetParameters(const double * p) { 
-      fFunc->SetParameters(p); 
+      std::copy(p,p+fParams.size(),fParams.begin());
    } 
 
    /// return number of parameters 
-   unsigned int NPar() const { 
-      return static_cast<unsigned int>(fFunc->GetNpar() );
+   unsigned int NPar() const {
+      return fParams.size();
+      // return static_cast<unsigned int>(fFunc->GetNpar() );
    }
 
-   /// return parameter name
+   /// return parameter name (from TF1)
    std::string ParameterName(unsigned int i) const { 
       return std::string(fFunc->GetParName(i)); 
    } 
@@ -128,8 +136,8 @@ private:
 
    /// evaluate function using parameter values cached in the TF1 
    double DoEval (const double * x) const { 
-      fFunc->InitArgs(x, 0 );
-      return fFunc->EvalPar(x,0); 
+      fFunc->InitArgs(x, &fParams.front() );
+      return fFunc->EvalPar(x,&fParams.front()); 
    }
 
 //    /// return the function derivatives w.r.t. x 
@@ -146,6 +154,7 @@ private:
 
    // pointer to ROOT function
    TF1 * fFunc; 
+   std::vector<double> fParams;
 
 }; 
 

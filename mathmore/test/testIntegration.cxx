@@ -1,9 +1,13 @@
 #include "Math/Polynomial.h"
 #include "Math/Integrator.h"
 #include "Math/Functor.h"
-//#include "TF1.h"
 #include <iostream>
 
+
+#ifdef HAVE_ROOTLIBS
+#include "TStopwatch.h"
+#include "TF1.h"
+#endif
 
 
 
@@ -92,11 +96,69 @@ void testIntegration() {
  
 }
 
+void  testIntegPerf(){
+
+   std::cout << "\n\n***************************************************************\n";
+   std::cout << "Test integration performances....\n\n";
+
+#ifdef HAVE_ROOTLIBS
+
+  ROOT::Math::Polynomial f1(2); 
+  double p[3] = {2,3,4};
+  f1.SetParameters(p);
+  
+  TStopwatch timer; 
+  int n = 1000000; 
+  double x1 = 0; double x2 = 10; 
+  double dx = (x2-x1)/double(n); 
+  double a = -1;
+
+  timer.Start(); 
+  ROOT::Math::Integrator ig(f1);
+  double s1 = 0; 
+  for (int i = 0; i < n; ++i) { 
+     double x = x1 + dx*i; 
+     s1+= ig.Integral(a,x);
+  }
+  timer.Stop(); 
+  std::cout << "Time using ROOT::Math::Integrator :\t" << timer.RealTime() << std::endl; 
+  int pr = std::cout.precision(18);  std::cout << s1 << std::endl;  std::cout.precision(pr);
+
+  timer.Start(); 
+  s1 = 0; 
+  for (int i = 0; i < n; ++i) { 
+     ROOT::Math::Integrator ig2(f1);
+     double x = x1 + dx*i; 
+     s1+= ig2.Integral(a,x);
+  }
+  timer.Stop(); 
+  std::cout << "Time using ROOT::Math::Integrator(2):\t" << timer.RealTime() << std::endl; 
+  pr = std::cout.precision(18);  std::cout << s1 << std::endl;  std::cout.precision(pr);
+
+
+  TF1 f2("pol","pol2",0,10);
+  f2.SetParameters(p);
+  
+  timer.Start(); 
+  double s2 = 0; 
+  for (int i = 0; i < n; ++i) { 
+     double x = x1 + dx*i; 
+     s2+= f2.Integral(a,x);
+  }
+  timer.Stop(); 
+  std::cout << "Time using TF1::Integral :\t\t" << timer.RealTime() << std::endl; 
+  pr = std::cout.precision(18);  std::cout << s1 << std::endl;  std::cout.precision(pr);
+
+#endif  
+
+}
+
 
 
 int main() {
 
   testIntegration();
+  testIntegPerf();
   return 0;
 
 }

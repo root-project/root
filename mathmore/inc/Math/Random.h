@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Random.h,v 1.3 2006/05/31 09:56:21 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Random.h,v 1.4 2006/06/08 16:36:17 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -67,11 +67,22 @@ namespace Math {
     } 
 
     /**
+       Create a Random generator based using teh default enfing constructor and 
+       then setting the given seed. 
+       Engine will  be initialized via Initialize() function in order to 
+       allocate resources
+     */
+    explicit Random(unsigned int seed)  {
+      fEngine.Initialize(); 
+      fEngine.SetSeed(seed);
+    } 
+
+    /**
        Create a Random generator based on a provided generic engine.
        Engine will  be initialized via Initialize() function in order to 
        allocate resources
      */
-    Random(const Engine & e) : fEngine(e) {
+    explicit Random(const Engine & e) : fEngine(e) {
       fEngine.Initialize(); 
     } 
 

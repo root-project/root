@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLFunctionWrapper.h,v 1.4 2006/06/08 16:36:17 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLFunctionWrapper.h,v 1.5 2006/11/17 18:26:50 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -36,6 +36,7 @@
 #include "Math/IFunctionfwd.h"
 #include "Math/IFunction.h"
 
+#include <cassert>
 
 namespace ROOT {
 namespace Math {
@@ -54,15 +55,23 @@ namespace Math {
   public: 
 
     GSLFunctionWrapper() : fIGenFunc(0) {}
-    ~GSLFunctionWrapper() {if (fIGenFunc) delete fIGenFunc;}
+    ~GSLFunctionWrapper() {
+#ifdef COPY_FUNC
+       if (fIGenFunc) delete fIGenFunc;       
+#endif
+    }
 
     void SetFuncPointer( GSLFuncPointer f) { fFunc.function = f; } 
     void SetParams ( void * p) { fFunc.params = p; }
     void SetFunction(const IGenFunction &f) { 
- 
-       if (fIGenFunc) delete fIGenFunc;
- 
+
+#ifdef COPY_FUNC 
+       if (fIGenFunc) delete fIGenFunc; 
        fIGenFunc = f.Clone();
+#else
+       fIGenFunc = &f;
+       assert(fIGenFunc != 0); 
+#endif
        const void * p = fIGenFunc; 
        //const void * p = 0; 
        SetFuncPointer(&GSLFunctionAdapter<IGenFunction >::F);
@@ -78,7 +87,7 @@ namespace Math {
 
   private: 
     gsl_function fFunc; 
-    IGenFunction * fIGenFunc;
+    const IGenFunction * fIGenFunc;
 
   };
 

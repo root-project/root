@@ -7,12 +7,16 @@
 #include <iostream>
 #include <cmath>
 #include <typeinfo>
+#include <iomanip>
+#include <fstream> 
+
+#include <limits>
 
 #ifndef PI
 #define PI       3.14159265358979323846264338328      /* pi */
 #endif
 
-//#define NEVT 10000
+#define NEVT 10000
 #ifndef NEVT
 #define NEVT 10000000
 #endif
@@ -154,6 +158,44 @@ int main() {
   generate(r8);
   generate(r9);
 
+
+  // generate 1000 number with GSL MT and check with TRandom3
+  int n = 1000;
+  std::vector<double> v1(n);
+  std::vector<double> v2(n);
+
+  Random<GSLRngMT>         gslRndm(4357);
+  TRandom3                 rootRndm(4357);
+
+  
+  gslRndm.RndmArray(n,&v1[0]); 
+  rootRndm.RndmArray(n,&v2[0]); 
+
+  int nfail=0; 
+  for (int i = 0; i < n; ++i) { 
+     double d = std::fabs(v1[i] - v2[i] );
+      if (d > std::numeric_limits<double>::epsilon()*v1[i] ) nfail++;
+  }
+  if (nfail > 0) { 
+     std::cout << "ERROR: Test failing comparing TRandom3 with GSL MT" << std::endl;
+     return -1;
+  }
+  // save the generated number
+  ofstream file("testRandom.out");
+  std::ostream & out = file; 
+  int  j = 0; 
+  int prec = std::cout.precision(9);
+  while ( j < n) { 
+     for (int l = 0; l < 8; ++l) {
+        out << std::setw(12) << v1[j+l] << ","; 
+//         int nws = int(-log10(v1[j+l])); 
+//         for (int k = nws; k >= 0; --k)
+//            out << " "; 
+     }
+     out << std::endl; 
+     j+= 8; 
+  }
+  std::cout.precision(prec);
 
   return 0;
 

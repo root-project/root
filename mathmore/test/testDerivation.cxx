@@ -6,11 +6,11 @@
 #include <iostream>
 #include <vector>
 
-// //#define HAVE_LIBHIST
-// #ifdef HAVE_LIBHIST
-// #include "TF1.h"
-// #include "TF2.h"
-// #endif
+#ifdef HAVE_ROOTLIBS
+#include "TStopwatch.h"
+#include "TF1.h"
+#endif
+
 
 typedef double ( * FP ) ( double, void * ); 
 typedef double ( * FP2 ) ( double ); 
@@ -100,9 +100,70 @@ void testDerivation() {
 }
 
 
+void testDerivPerf() { 
+
+#ifdef HAVE_ROOTLIBS
+
+   std::cout << "\n\n***************************************************************\n";
+   std::cout << "Test derivation performances....\n\n";
+
+  ROOT::Math::Polynomial f1(2); 
+  double p[3] = {2,3,4};
+  f1.SetParameters(p);
+  
+  TStopwatch timer; 
+  int n = 1000000; 
+  double x1 = 0; double x2 = 10; 
+  double dx = (x2-x1)/double(n); 
+
+  timer.Start(); 
+  double s1 = 0; 
+  ROOT::Math::Derivator der(f1);
+  for (int i = 0; i < n; ++i) { 
+     double x = x1 + dx*i; 
+     s1+= der.EvalCentral(x);
+  }
+  timer.Stop(); 
+  std::cout << "Time using ROOT::Math::Derivator :\t" << timer.RealTime() << std::endl; 
+  int pr = std::cout.precision(18); std::cout << s1 << std::endl; std::cout.precision(pr);
+
+  timer.Start(); 
+  s1 = 0; 
+  for (int i = 0; i < n; ++i) { 
+     ROOT::Math::Derivator der2(f1);
+     double x = x1 + dx*i; 
+     s1+= der2.EvalForward(x);
+  }
+  timer.Stop(); 
+  std::cout << "Time using ROOT::Math::Derivator(2):\t" << timer.RealTime() << std::endl; 
+  pr = std::cout.precision(18); std::cout << s1 << std::endl; std::cout.precision(pr);
+
+
+  TF1 f2("pol","pol2",0,10);
+  f2.SetParameters(p);
+  
+  timer.Start(); 
+  double s2 = 0; 
+  for (int i = 0; i < n; ++i) { 
+     double x = x1 + dx*i; 
+     s2+= f2.Derivative(x);
+  }
+  timer.Stop(); 
+  std::cout << "Time using TF1::Derivative :\t\t" << timer.RealTime() << std::endl; 
+  pr = std::cout.precision(18);
+  std::cout << s2 << std::endl;
+  std::cout.precision(pr);
+
+#endif  
+
+
+}
+
+
 int main() {
 
   testDerivation();
+  testDerivPerf();
   return 0;
 
 }
