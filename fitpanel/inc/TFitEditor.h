@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.6 2006/11/16 12:30:31 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.7 2006/11/16 15:39:52 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -141,6 +141,7 @@ public:
 
    static TFitEditor *&GetFP() { return fgFitDialog; }
    static  void       Open(TVirtualPad* pad, TObject *obj);
+   virtual Option_t  *GetDrawOption() const;
    virtual void       Hide();
    virtual void       Show(TVirtualPad* pad, TObject *obj);
            void       ShowObjectName(TObject* obj);
@@ -163,6 +164,7 @@ public:
    virtual void   DoAdvancedOptions();
    virtual void   DoAllWeights1();
    virtual void   DoBestErrors();
+   virtual void   DoBound(Bool_t set);
    virtual void   DoClose();
    virtual void   DoDrawSame();
    virtual void   DoEmptyBinsAllWeights1();

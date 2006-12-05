@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.16 2006/11/30 16:43:12 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.17 2006/12/01 16:21:08 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -551,6 +551,7 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    if (pad && obj) {
       fParentPad = (TPad *)pad;
       fFitObject = (TObject *)obj;
+      fDrawOption = GetDrawOption();
       SetCanvas(pad->GetCanvas());
       pad->GetCanvas()->Selected(pad, obj, kButton1Down);
    } else {
@@ -570,7 +571,6 @@ TFitEditor::~TFitEditor()
    DisconnectSlots();
    fCloseButton->Disconnect("Clicked()");
    TQObject::Disconnect("TCanvas", "Selected(TVirtualPad *, TObject *, Int_t)");
-   TQObject::Disconnect("TCanvas", "Closed()");
    gROOT->GetListOfCleanups()->Remove(this);
 
    if (fFitFunc) delete fFitFunc;
@@ -717,7 +717,6 @@ void TFitEditor::DisconnectSlots()
       fSliderZ->Disconnect("Pressed()");
       fSliderZ->Disconnect("Released()");
    }
-   fParentPad->Disconnect("RangeAxisChanged()");
 }
 
 //______________________________________________________________________________
@@ -970,6 +969,7 @@ void TFitEditor::SetFitObject(TVirtualPad *pad, TObject *obj, Int_t event)
    
    fParentPad = pad;
    fFitObject = obj;
+   fDrawOption = GetDrawOption();
    ShowObjectName(obj);
    UpdateGUI();
 
@@ -1177,10 +1177,16 @@ void TFitEditor::DoDrawSame()
    // Slot connected to 'same' draw option.
 
    fFitOption.ToUpper();
-   if (fDrawOption.Contains("SAME"))
-      return;
-   else
-      fDrawOption += "SAME";
+   
+   if (fDrawSame->GetState() == kButtonDown) {
+      if (fDrawOption.Contains("SAME"))
+         return;
+      else
+         fDrawOption += "SAME";
+   } else {
+      if (fDrawOption.Contains("SAME"))
+         fDrawOption.ReplaceAll("SAME", "");
+   }
 }
 
 //______________________________________________________________________________
@@ -1212,6 +1218,7 @@ void TFitEditor::DoFit()
          xmin = fXaxis->GetBinLowEdge((Int_t)(fSliderX->GetMinPosition()));
          xmax = fXaxis->GetBinUpEdge((Int_t)(fSliderX->GetMaxPosition()));
          fFitFunc->SetRange(xmin,xmax);
+         fDrawOption = GetDrawOption();
          h1->Fit(fFitFunc, fFitOption.Data(), fDrawOption.Data(), xmin, xmax);
          break;
       }
@@ -1242,6 +1249,7 @@ void TFitEditor::DoFit()
             if (xmax > gxmax) xmax = gxmax;
          }
          fFitFunc->SetRange(xmin,xmax);
+         fDrawOption = GetDrawOption();
          gr->Fit(fFitFunc, fFitOption.Data(), fDrawOption.Data(), xmin, xmax);
          break;
       }
@@ -1537,7 +1545,7 @@ void TFitEditor::DoReset()
    fParentPad->Modified();
    fParentPad->Update();
    fFitOption = 'R';
-   fDrawOption = "";
+   fDrawOption = GetDrawOption();
    fFunction = "gaus";
    if (fFitFunc) {
       delete fFitFunc;
@@ -1595,6 +1603,30 @@ void TFitEditor::DoRobust()
 }
 
 //______________________________________________________________________________
+void TFitEditor::DoBound(Bool_t on)
+{
+   // Slot connected to 'B' option setting.
+
+   TString s = fFitOption;
+   if (s.Contains("ROB")) {
+      s.ReplaceAll("ROB", "H");
+   }
+   if (on) {
+      if (s.Contains('B'))
+         return;
+      else 
+         fFitOption += 'B';
+   } else {
+      if (s.Contains('B')){
+      Int_t pos = fFitOption.First('B');
+      Int_t rob = fFitOption.Index("ROB");
+      if (pos != rob+2)
+         fFitOption.Remove(pos, 1);
+      }
+   }
+}
+
+//______________________________________________________________________________
 void TFitEditor::DoSetParameters()
 {
    // Open set parameters dialog.
@@ -1603,10 +1635,18 @@ void TFitEditor::DoSetParameters()
       printf("SetParamters - create fit function %s\n",fFunction.Data());
       fFitFunc = new TF1("fitFunc",Form("%s",fFunction.Data()), fXmin, fXmax);
    }
+   fParentPad->Disconnect("RangeAxisChanged()");
    Double_t xmin, xmax;
    fFitFunc->GetRange(xmin, xmax);
-   new TFitParametersDialog(gClient->GetDefaultRoot(), GetMainFrame(),
+   new TFitParametersDialog(gClient->GetDefaultRoot(), GetMainFrame(), 
                             fFitFunc, fParentPad, xmin, xmax);
+   TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
+   if ((fNone->GetState() == kButtonDown) && strcmp(te->GetTitle(), "user")) {
+      DoBound(kTRUE);
+   } else {
+      DoBound(kFALSE);
+   }
+   fParentPad->Connect("RangeAxisChanged()", "TFitEditor", this, "UpdateGUI()");
 }
 
 //______________________________________________________________________________
@@ -1966,5 +2006,20 @@ void TFitEditor::ShowObjectName(TObject* obj)
    fObjLabel->SetText(name.Data());
    fObjLabelParent->Resize(GetDefaultSize());
    Layout();
+}
+
+//______________________________________________________________________________
+Option_t *TFitEditor::GetDrawOption() const
+{
+   // Get draw options of the selected object.
+
+   if (!fParentPad) return "";
+
+   TListIter next(fParentPad->GetListOfPrimitives());
+   TObject *obj;
+   while ((obj = next())) {
+      if (obj == fFitObject) return next.GetOption();
+   }
+   return "";
 }
 
