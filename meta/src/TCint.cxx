@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.129 2006/11/30 23:19:47 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.130 2006/12/01 15:05:58 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -948,6 +948,70 @@ Long_t TCint::ExecuteMacro(const char *filename, EErrorCode *error)
       /*G__value result =*/ G__exec_tempfile((char*)filename);
    return 0;  // could get return value from result, but what about return type?
 }
+
+
+//______________________________________________________________________________
+const char *TCint::GetTopLevelMacroName()
+{
+   // Return the file name of the current un-included interpreted file.
+   // See the documentation for GetCurrentMacroName().
+
+   G__SourceFileInfo srcfile(G__get_ifile()->filenum);
+   while (srcfile.IncludedFrom().IsValid())
+      srcfile = srcfile.IncludedFrom();
+
+   return srcfile.Name();
+}
+
+//______________________________________________________________________________
+const char *TCint::GetCurrentMacroName()
+{
+   // Return the file name of the currently interpreted file,
+   // included or not. Example to illustrate the difference between
+   // GetCurrentMacroName() and GetTopLevelMacroName():
+   // BEGIN_HTML <!--
+   /* -->
+      <span style="color:#ffffff;background-color:#7777ff;padding-left:0.3em;padding-right:0.3em">inclfile.h</span>
+      <div style="border:solid 1px #ffff77;background-color: #ffffdd;float:left;padding:0.5em;margin-bottom:0.7em;">
+      <pre style="margin:0pt">#include &lt;iostream&gt;
+void inclfunc() {
+   std::cout &lt;&lt; "In inclfile.h" &lt;&lt std::endl;
+   std::cout &lt;&lt "  TCint::GetCurrentMacroName() returns  " &lt;&lt
+      TCint::GetCurrentMacroName() &lt;&lt std::endl;
+   std::cout &lt;&lt "  TCint::GetTopLevelMacroName() returns " &lt;&lt
+      TCint::GetTopLevelMacroName() &lt;&lt std::endl;
+}</pre></div>
+      <div style="clear:both"</div>
+      <span style="color:#ffffff;background-color:#7777ff;padding-left:0.3em;padding-right:0.3em">mymacro.C</span>
+      <div style="border:solid 1px #ffff77;background-color: #ffffdd;float:left;padding:0.5em;margin-bottom:0.7em;">
+      <pre style="margin:0pt">#include &lt;iostream&gt;
+#include "inclfile.h"
+void mymacro() {
+   std::cout &lt;&lt "In mymacro.C" &lt;&lt std::endl;
+   std::cout &lt;&lt "  TCint::GetCurrentMacroName() returns  " &lt;&lt
+      TCint::GetCurrentMacroName() &lt;&lt std::endl;
+   std::cout &lt;&lt "  TCint::GetTopLevelMacroName() returns " &lt;&lt
+      TCint::GetTopLevelMacroName() &lt;&lt std::endl;
+   std::cout &lt;&lt "  Now calling inclfunc..." &lt;&lt std::endl;
+   inclfunc();
+}</pre></div>
+<div style="clear:both"</div>
+<!-- */
+// --> END_HTML
+   // Running mymacro.C will print:
+   //
+   // root [0] .x mymacro.C
+   // In mymacro.C
+   //   TCint::GetCurrentMacroName() returns  ./mymacro.C
+   //   TCint::GetTopLevelMacroName() returns ./mymacro.C
+   //   Now calling inclfunc...
+   // In inclfile.h
+   //   TCint::GetCurrentMacroName() returns  inclfile.h
+   //   TCint::GetTopLevelMacroName() returns ./mymacro.C
+
+   return G__get_ifile()->name;
+}
+
 
 //______________________________________________________________________________
 const char *TCint::TypeName(const char *typeDesc)
