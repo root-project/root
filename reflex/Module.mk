@@ -73,8 +73,6 @@ RFLX_CPPUNITLL  = -L$(CPPUNIT)/lib -lcppunit
 RFLX_REFLEXLL   = -Llib -lReflex -ldl
 endif
 
-ALLEXECS += $(RFLX_GENREFLEX) $(RFLX_GENRFLXRC)
-
 RFLX_GENREFLEX_CMD = python ../../lib/python/genreflex/genreflex.py 
 
 RFLX_TESTD      = $(REFLEXDIR)/test
@@ -97,6 +95,8 @@ RFLX_UNITTESTX = $(subst .cxx,,$(RFLX_UNITTESTS))
 RFLX_GENMAPS   = $(REFLEXDIRS)/genmap/genmap.cxx
 RFLX_GENMAPO   = $(RFLX_GENMAPS:.cxx=.o)
 RFLX_GENMAPX   = bin/genmap$(EXEEXT)
+
+ALLEXECS += $(RFLX_GENREFLEX) $(RFLX_GENRFLXRC) $(RFLX_GENMAPX)
 
 ##### local rules #####
 include/Reflex/%.h: $(REFLEXDIRI)/Reflex/%.h
@@ -143,8 +143,8 @@ endif
 $(RFLX_GENMAPO) : $(RFLX_GENMAPS)
 	$(CXX) $(OPT) $(CXXFLAGS) -Iinclude -I$(REFLEXDIRS)/genmap -c $< $(CXXOUT)$@
 
-$(RFLX_GENMAPX) : $(RFXL_GENMAPO)
-	$(LD) $(LDFLAGS) -o $@ $(RFLX_GENMAPO)
+$(RFLX_GENMAPX) : $(RFLX_GENMAPO) $(REFLEXLIB)
+	$(LD) $(LDFLAGS) -o $@ $(RFLX_GENMAPO) $(RFLX_REFLEXLL)
 
 $(REFLEXLIB): $(RFLX_GENREFLEX) $(RFLX_GENRFLXRC) $(REFLEXO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"      \
