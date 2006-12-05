@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.123 2006/10/02 16:05:21 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.124 2006/11/24 16:01:02 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -5275,8 +5275,18 @@ void THtml::MakeTree(const char *className, Bool_t force)
 //
 
    // create canvas & set fill color
+   Bool_t wasBatch = gROOT->IsBatch();
+   if (!wasBatch)
+      gROOT->SetBatch();
    TVirtualPad *psCanvas = (TVirtualPad*)gROOT->ProcessLineFast("new TCanvas(\"R__THtml\",\"psCanvas\",0,0,1000,1200);");
-   if (!psCanvas) return;  //TO BE FIXED
+   if (!wasBatch)
+      gROOT->SetBatch(kFALSE);
+
+   if (!psCanvas) {
+      Error("MakeTree", "Cannot create a TCanvas!");
+      return;
+   }
+   
 
    TClass *classPtr = GetClass(className);
 
