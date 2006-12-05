@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.cxx,v 1.5 2006/11/17 18:43:37 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.cxx,v 1.6 2006/11/24 15:49:15 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 03/10/06
 
 /*************************************************************************
@@ -326,6 +326,7 @@ TFitParametersDialog::~TFitParametersDialog()
 {
    // Destructor.
 
+   DisconnectSlots();   
    Cleanup();
    delete [] fPval;
    delete [] fPmin;
@@ -362,6 +363,7 @@ void TFitParametersDialog::DoCancel()
 
    if (fHasChanges)
       DoReset();
+   DisconnectSlots();
    TTimer::SingleShot(50, "TFitParametersDialog", this, "CloseWindow()");
 }
 
@@ -377,8 +379,22 @@ void TFitParametersDialog::DoParBound(Bool_t on)
    for (Int_t i = 0; i < fNP; i++ ) {
       if (id == kBND*fNP+i) {
          if (on) {
-            Double_t val = (fParMax[i]->GetNumber()+fParMin[i]->GetNumber())/2.;
-            fParVal[i]->SetNumber(val);
+            if (fParMin[i]->GetNumber() >= fParMax[i]->GetNumber()) {
+               Int_t ret;
+               const char *txt;
+               txt = "'Min' value cannot be bigger or equal to 'Max' - set the limits first!";
+               new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
+                            "Parameter Limits", txt, kMBIconExclamation,kMBOk,&ret);
+
+               fParBnd[i]->SetState(kButtonUp, kFALSE);
+               return;            
+            }
+            if ((fParVal[i]->GetNumber() < fParMin[i]->GetNumber()) || 
+                (fParVal[i]->GetNumber() > fParMax[i]->GetNumber())) {
+               Double_t v = (fParMax[i]->GetNumber()+fParMin[i]->GetNumber())/2.;
+               fParVal[i]->SetNumber(v);
+               fClient->NeedRedraw(fParVal[i]);
+            }
             fParVal[i]->SetLimits(TGNumberFormat::kNELLimitMinMax, 
                                   fParMin[i]->GetNumber(),
                                   fParMax[i]->GetNumber());
@@ -386,10 +402,16 @@ void TFitParametersDialog::DoParBound(Bool_t on)
             fFunc->SetParLimits(i, fParMin[i]->GetNumber(), 
                                    fParMax[i]->GetNumber());
          } else {
-            fParVal[i]->SetLimits(TGNumberFormat::kNELNoLimits, 0., 0.);
-            fParMin[i]->SetNumber(0.);
-            fParMax[i]->SetNumber(0.);
+            fParVal[i]->SetLimits(TGNumberFormat::kNELNoLimits);
             fFunc->ReleaseParameter(i);
+            fFunc->GetParLimits(i, fPmin[i], fPmax[i]);
+            fPval[i] = fFunc->GetParameter(i);
+            fParMin[i]->SetNumber(fPmin[i]);
+            fParMax[i]->SetNumber(fPmax[i]);
+            fParVal[i]->SetNumber(fPval[i]);
+            fParSld[i]->SetRange(fParMin[i]->GetNumber(), fParMax[i]->GetNumber());
+            fParSld[i]->SetPosition(fParMin[i]->GetNumber(), fParMax[i]->GetNumber());
+            fParSld[i]->SetPointerPosition(fPval[i]);
          }
       }
    }
@@ -507,10 +529,13 @@ void TFitParametersDialog::DoOK()
       DrawFunction();
    fFunc->SetRange(fRangexmin, fRangexmax);
    for (Int_t i = 0; i < fNP; i++ ) {
-      if (fParFix[i]->GetState() == kButtonDown)
+      if (fParFix[i]->GetState() == kButtonDown) 
          fFunc->FixParameter(i, fParVal[i]->GetNumber());
+      if (fParBnd[i]->GetState() == kButtonDown)
+         fFunc->SetParLimits(i, fParMin[i]->GetNumber(), fParMax[i]->GetNumber());
    }
-   TTimer::SingleShot(50, "TFitParametersDialog", this, "CloseWindow()");
+   DisconnectSlots();
+   TTimer::SingleShot(150, "TFitParametersDialog", this, "CloseWindow()");
 }
 
 //______________________________________________________________________________
@@ -698,13 +723,14 @@ void TFitParametersDialog::DoParMinLimit()
 
    for (Int_t i = 0; i < fNP; i++ ) {
       if (id == kMIN*fNP+i) {
-         if (fParMin[i]->GetNumber() > fParMax[i]->GetNumber()) {
+         if ((fParMin[i]->GetNumber() >= fParMax[i]->GetNumber()) &&
+             (fParBnd[i]->GetState() == kButtonDown)) {
             Int_t ret;
             const char *txt;
-            txt = "The lower parameter bound cannot be bigger then the upper one.";
+            txt = "'Min' cannot be bigger then 'Max' if this parameter is bounded.";
             new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
-                         "Parameter Limits", txt, kMBIconExclamation,kMBOk,&ret);
-            fParMin[i]->SetNumber(fParVal[i]->GetNumber());
+                         "Parameter Limits", txt, kMBIconExclamation, kMBOk, &ret);
+            fParMin[i]->SetNumber(fParVal[i]->GetNumber()-fParStp[i]->GetNumber());
             return;
          }
          if (fParBnd[i]->GetState() == kButtonDown) {
@@ -740,13 +766,14 @@ void TFitParametersDialog::DoParMaxLimit()
 
    for (Int_t i = 0; i < fNP; i++ ) {
       if (id == kMAX*fNP+i) {
-         if (fParMin[i]->GetNumber() > fParMax[i]->GetNumber()) {
+         if ((fParMin[i]->GetNumber() >= fParMax[i]->GetNumber()) &&
+             (fParBnd[i]->GetState() == kButtonDown)) {
             Int_t ret;
             const char *txt;
-            txt = "The lower parameter bound cannot be bigger then the upper one.";
+            txt = "'Min' cannot be bigger then 'Max' if this parameter is bounded.";
             new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
-                         "Parameter Limits", txt, kMBIconExclamation,kMBOk,&ret);
-            fParMax[i]->SetNumber(fParVal[i]->GetNumber());
+                         "Parameter Limits", txt, kMBIconExclamation, kMBOk, &ret);
+            fParMax[i]->SetNumber(fParVal[i]->GetNumber()+fParStp[i]->GetNumber());
             return;
          }
          if (fParBnd[i]->GetState() == kButtonDown) {
@@ -810,3 +837,26 @@ void TFitParametersDialog::HandleButtons(Bool_t update)
       fApply->SetState(kButtonUp);
    }
 }
+
+//______________________________________________________________________________
+void TFitParametersDialog::DisconnectSlots()
+{
+   // Disconnect signals from slot methods.
+
+   for (Int_t i = 0; i < fNP; i++ ) {
+      fParFix[i]->Disconnect("Toggled(Bool_t)");
+      fParBnd[i]->Disconnect("Toggled(Bool_t)");
+      fParVal[i]->Disconnect("ValueSet(Long_t)");
+      fParMin[i]->Disconnect("ReturnPressed()");
+      fParMax[i]->Disconnect("ReturnPressed()");
+      fParSld[i]->Disconnect("PointerPositionChanged()");
+      fParSld[i]->Disconnect("PositionChanged()");
+      fParStp[i]->Disconnect("ValueSet(Long_t)");
+   }
+   fUpdate->Disconnect("Toggled(Bool_t)");
+   fReset->Disconnect("Clicked()");
+   fApply->Disconnect("Clicked()");
+   fOK->Disconnect("Clicked()");
+   fCancel->Disconnect("Clicked()");
+}
+

@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.h,v 1.3 2006/10/09 08:07:08 brun Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.h,v 1.4 2006/11/17 18:43:37 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 03/10/06
 
 /*************************************************************************
@@ -81,6 +81,7 @@ protected:
    TGTextButton        *fOK;              // OK button
    TGTextButton        *fCancel;          // Cancel button
 
+           void  DisconnectSlots();
 public:
    TFitParametersDialog(const TGWindow *p, const TGWindow *main, TF1 *func,
                         TVirtualPad *pad, Double_t rmin=1., Double_t rmax=2.);
@@ -98,8 +99,8 @@ public:
    virtual void  DoParValue();
    virtual void  DoReset();
    virtual void  DoSlider();
-   virtual void  HandleButtons(Bool_t update);
    virtual void  DrawFunction();
+   virtual void  HandleButtons(Bool_t update);
 
    ClassDef(TFitParametersDialog, 0)  // Fit function parameters dialog
 };
