@@ -1,3 +1,0 @@
-libroot-clarens@libvers@: postinst-has-useless-call-to-ldconfig
-libroot-clarens@libvers@: postrm-has-useless-call-to-ldconfig
-
