@@ -94,6 +94,10 @@ RFLX_UNITTESTS = $(RFLX_TESTD)/test_Reflex_generate.cxx    \
 RFLX_UNITTESTO = $(subst .cxx,.o,$(RFLX_UNITTESTS))
 RFLX_UNITTESTX = $(subst .cxx,,$(RFLX_UNITTESTS))
 
+RFLX_GENMAPS   = $(REFLEXDIRS)/src/genmap.cxx
+RFLX_GENMAPO   = $(RFLX_GENMAPS:.cxx=.o)
+RFLX_GENMAPX   = bin/genmap$(EXEEXT)
+
 ##### local rules #####
 include/Reflex/%.h: $(REFLEXDIRI)/Reflex/%.h
 		@(if [ ! -d "include/Reflex" ]; then          \
@@ -136,7 +140,13 @@ ifneq ($(PLATFORM),win32)
 		@chmod a+x $(RFLX_GENRFLXRC)
 endif
 
-$(REFLEXLIB): $(RFLX_GENREFLEX) $(RFLX_GENRFLXRC) $(REFLEXO) $(ORDER_) $(MAINLIBS)
+$(RFLX_GENMAPO) : $(RFLX_GENMAPS)
+	$(CXX) $(OPT) $(CXXFLAGS) -Iinclude -I$(REFLEXDIRS)/genmap -c $< $(CXXOUT)$@
+
+$(RFLX_GENMAPX) : $(RFXL_GENMAPO)
+	$(LD) $(LDFLAGS) -o $@ $(RFLX_GENMAPO)
+
+$(REFLEXLIB): $(RFLX_GENMAPX) $(RFLX_GENREFLEX) $(RFLX_GENRFLXRC) $(REFLEXO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"      \
 		"$(SOFLAGS)" libReflex.$(SOEXT) $@ "$(REFLEXO)" \
 		"$(REFLEXLIBEXTRA)"
@@ -157,6 +167,7 @@ clean-check-reflex:
 		@rm -f $(RFLX_TESTLIBS) $(RFLX_TESTLIBO) $(RFLX_UNITTESTO) $(RFLX_UNITTESTX)
 
 clean-reflex: clean-genreflex clean-check-reflex
+		@rm -f $(RFLX_GENMAPX)
 		@rm -f $(REFLEXO)
 
 clean::         clean-reflex
