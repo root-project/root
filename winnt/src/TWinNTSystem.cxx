@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.153 2006/11/28 13:59:19 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.154 2006/12/01 15:05:58 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -4743,7 +4743,7 @@ static char *GetWindowsVersion()
          strcpy(strReturn, "Microsoft Win32s");
          break;
    }
-   return strReturn;
+   return StrDup(strReturn);
 }
 
 //______________________________________________________________________________
