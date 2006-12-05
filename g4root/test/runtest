@@ -1,0 +1,66 @@
+#!/bin/bash
+# Script to compile and run tests with G4 native and via the interface
+# Requires G4INSTALL, G4LIB and G4SYSTEM to be defined
+#
+# Simply type ./runtest              to run the test
+#             ./runtest clean        to clean
+
+CURDIR=$ROOTSYS/g4root/test
+CPDIR=$G4INSTALL/examples/novice/N06
+
+run() {
+   if ! [ -f $CURDIR/exN06/include/ExN06PhysicsList.hh ]; then
+# Copy files from GEANT4 examples
+      cp -u $CPDIR/include/* $CURDIR/exN06/include
+      cp -u $CPDIR/src/ExN06EventAction.cc $CURDIR/exN06/src
+      cp -u $CPDIR/src/ExN06PhysicsList.cc $CURDIR/exN06/src
+      cp -u $CPDIR/src/ExN06PhysicsListMessenger.cc $CURDIR/exN06/src
+      cp -u $CPDIR/src/ExN06PrimaryGeneratorAction.cc $CURDIR/exN06/src
+      cp -u $CPDIR/src/ExN06PrimaryGeneratorMessenger.cc $CURDIR/exN06/src
+      cp -u $CPDIR/src/ExN06RunAction.cc $CURDIR/exN06/src
+      cp -u $CPDIR/src/ExN06StackingAction.cc $CURDIR/exN06/src
+   fi
+   cd exN06
+   make
+   cd $CURDIR
+   cp bin/*/* $CURDIR
+   rm -rf bin
+   ./exampleN06 > exN06.out
+   ./exampleN06 root > exN06root.out
+   $ROOTSYS/bin/root.exe drawTracks.C
+}
+
+clean() {
+   rm -f $CURDIR/exN06/include/ExN06DetectorConstruction.hh
+   rm -f $CURDIR/exN06/include/ExN06EventAction.hh
+   rm -f $CURDIR/exN06/include/ExN06PhysicsList.hh
+   rm -f $CURDIR/exN06/include/ExN06PhysicsListMessenger.hh
+   rm -f $CURDIR/exN06/include/ExN06PrimaryGeneratorAction.hh
+   rm -f $CURDIR/exN06/include/ExN06PrimaryGeneratorMessenger.hh
+   rm -f $CURDIR/exN06/include/ExN06RunAction.hh
+   rm -f $CURDIR/exN06/include/ExN06StackingAction.hh
+   rm -f $CURDIR/exN06/include/ExN06SteppingVerbose.hh
+   rm -f $CURDIR/exN06/src/ExN06EventAction.cc
+   rm -f $CURDIR/exN06/src/ExN06PhysicsList.cc
+   rm -f $CURDIR/exN06/src/ExN06PhysicsListMessenger.cc
+   rm -f $CURDIR/exN06/src/ExN06PrimaryGeneratorAction.cc
+   rm -f $CURDIR/exN06/src/ExN06PrimaryGeneratorMessenger.cc
+   rm -f $CURDIR/exN06/src/ExN06RunAction.cc
+   rm -f $CURDIR/exN06/src/ExN06StackingAction.cc
+   rm -rf $CURDIR/exN06/$G4SYSTEM
+   rm -f $CURDIR/*.out
+   rm -f $CURDIR/tracks_g4.root
+   rm -f $CURDIR/tracks_tgeo.root
+   rm -f $CURDIR/exampleN06
+}   
+
+case "$1" in
+run)
+   run
+   ;;
+clean)
+   clean
+   ;;
+*)
+   run
+esac
