@@ -1,5 +1,5 @@
 #
-# $Id: Rules.mk,v 1.65 2006/07/16 17:18:39 pcanal Exp $
+# $Id: Rules.mk,v 1.66 2006/08/07 20:11:44 pcanal Exp $
 #
 
 all: tests
@@ -76,13 +76,13 @@ $(TEST_TARGETS_DIR): %.test:  $(EVENTDIR)/$(SUCCESS_FILE)
 	@(cd $*; $(MAKE) CURRENTDIR=$* --no-print-directory $(TESTGOAL); \
      result=$$?; \
      if [ $$result -ne 0 ] ; then \
-         len=`echo Tests in $(CALLDIR)/$* | wc -m `;end=`expr 68 - $$len`;printf 'Test in %s %.*s ' $(CALLDIR)/$* $$end $(DOTS); \
+         len=`echo Tests in $(CALLDIR)/$* | wc -c `;end=`expr 68 - $$len`;printf 'Test in %s %.*s ' $(CALLDIR)/$* $$end $(DOTS); \
 	      printf 'FAIL\n' ; \
          false ; \
      fi )
 
 #     result=$$?; \
-#     len=`echo Test in $(CALLDIR)/$* | wc -m `;end=`expr 68 - $$len`;printf 'Test in %s %.*s ' $(CALLDIR)/$* $$end $(DOTS); \
+#     len=`echo Test in $(CALLDIR)/$* | wc -c `;end=`expr 68 - $$len`;printf 'Test in %s %.*s ' $(CALLDIR)/$* $$end $(DOTS); \
 #	  if [ -f $*/.success ] ; then printf 'OK\n' ; else printf 'FAIL\n' ; fi; \
 #     if [ $$result -ne 0 ] ; then false ; fi )
 
