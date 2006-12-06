@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.94 2006/11/03 21:22:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.95 2006/11/14 09:19:28 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -1876,6 +1876,48 @@ void TGeoVolume::RemoveNode(TGeoNode *node)
    if (fVoxels) fVoxels->SetNeedRebuild();
    if (IsAssembly()) fShape->ComputeBBox();
 }   
+
+//_____________________________________________________________________________
+TGeoNode *TGeoVolume::ReplaceNode(TGeoNode *nodeorig, TGeoShape *newshape, TGeoMatrix *newpos, TGeoMedium *newmed) 
+{
+// Replace an existing daughter with a new volume having the same name but
+// possibly a new shape, position or medium. Not allowed for positioned assemblies.
+// For division cells, the new shape/matrix are ignored.
+   Int_t ind = GetIndex(nodeorig);
+   if (ind < 0) return NULL;
+   TGeoVolume *oldvol = nodeorig->GetVolume();
+   if (oldvol->IsAssembly()) {
+      Error("ReplaceNode", "Cannot replace node %s since it is an assembly", nodeorig->GetName());
+      return NULL;
+   }   
+   TGeoShape  *shape = oldvol->GetShape();
+   if (newshape && !nodeorig->IsOffset()) shape = newshape;
+   TGeoMatrix *pos = nodeorig->GetMatrix();
+   if (newpos && !nodeorig->IsOffset())   pos = newpos;
+   TGeoMedium *med = oldvol->GetMedium();
+   if (newmed) med = newmed;
+   // Make a new volume
+   TGeoVolume *vol = new TGeoVolume(oldvol->GetName(), shape, med);
+   // copy volume attributes
+   vol->SetVisibility(oldvol->IsVisible());
+   vol->SetLineColor(oldvol->GetLineColor());
+   vol->SetLineStyle(oldvol->GetLineStyle());
+   vol->SetLineWidth(oldvol->GetLineWidth());
+   vol->SetFillColor(oldvol->GetFillColor());
+   vol->SetFillStyle(oldvol->GetFillStyle());
+   // copy field
+   vol->SetField(oldvol->GetField());
+   // Make a copy of the node
+   TGeoNode *newnode = nodeorig->MakeCopyNode();
+   // Change the volume for the new node
+   newnode->SetVolume(vol);
+   // Replace nodeorig with new one
+   fNodes->RemoveAt(ind);
+   fNodes->AddAt(newnode, ind);   
+   if (fVoxels) fVoxels->SetNeedRebuild();
+   if (IsAssembly()) fShape->ComputeBBox();
+   return newnode;
+}      
 
 //_____________________________________________________________________________
 void TGeoVolume::SelectVolume(Bool_t clear)

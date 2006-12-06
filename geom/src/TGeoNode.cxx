@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.38 2006/07/09 05:27:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.39 2006/10/20 08:38:43 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -730,6 +730,8 @@ TGeoNode *TGeoNodeOffset::MakeCopyNode() const
    node->SetName(GetName());
    // set the mother
    node->SetMotherVolume(fMother);
+   // set the copy number
+   node->SetNumber(fNumber);
    if (IsVirtual()) node->SetVirtual();
    // set the finder
    node->SetFinder(GetFinder());
