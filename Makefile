@@ -746,10 +746,10 @@ static: rootlibs
 	   "$(XLIBS)" "$(SYSLIBS)"
 
 importcint: distclean-cint
-	@$(IMPORTCINT) rea11y
+	@$(IMPORTCINT)
 
 importcint7: distclean-cint7
-	@$(IMPORTCINT) rea11y cint7
+	@$(IMPORTCINT) cint7
 
 changelog:
 	@$(MAKECHANGELOG)
