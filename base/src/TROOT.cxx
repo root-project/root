@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.192 2006/11/25 09:07:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.193 2006/12/01 11:50:14 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1652,7 +1652,7 @@ Long_t TROOT::Macro(const char *filename, Int_t *error)
 //______________________________________________________________________________
 void  TROOT::Message(Int_t id, const TObject *obj)
 {
-   // Process message id called by obj
+   // Process message id called by obj.
 
    TIter next(fMessageHandlers);
    TMessageHandler *mh;
@@ -1669,7 +1669,7 @@ void TROOT::ProcessLine(const char *line, Int_t *error)
    // it to the CINT interpreter thread. For explicit synchrounous processing
    // use ProcessLineSync(). On non-Win32 platforms there is not difference
    // between ProcessLine() and ProcessLineSync().
-   // The possible error codes are defined by TInterpreter::EErrorCode.  In
+   // The possible error codes are defined by TInterpreter::EErrorCode. In
    // particular, error will equal to TInterpreter::kProcessing until the
    // CINT interpreted thread has finished executing the line.
 
@@ -1883,6 +1883,11 @@ const char *TROOT::GetMacroPath()
 
    if (macroPath.Length() == 0) {
       macroPath = gEnv->GetValue("Root.MacroPath", (char*)0);
+#if defined(R__WIN32)
+      macroPath.ReplaceAll(" ", ";");
+#else
+      macroPath.ReplaceAll(" ", ":");
+#endif
       if (macroPath.Length() == 0)
 #if !defined (R__VMS) && !defined(R__WIN32)
    #ifdef ROOTMACRODIR
