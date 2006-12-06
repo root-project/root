@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ProbFuncMathMore.cxx,v 1.2 2005/09/18 20:41:25 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: ProbFuncMathMore.cxx,v 1.3 2005/09/21 09:23:42 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -15,7 +15,7 @@ namespace Math {
 
 
 
-  double chisquared_prob(double x, double r, double x0) {
+  double chisquared_cdf_c(double x, double r, double x0) {
 
     return gsl_cdf_chisq_Q(x-x0, r);
 
@@ -23,7 +23,7 @@ namespace Math {
 
 
 
-  double chisquared_quant(double x, double r, double x0) {
+  double chisquared_cdf(double x, double r, double x0) {
 
     return gsl_cdf_chisq_P(x-x0, r);
 
@@ -34,7 +34,7 @@ namespace Math {
 
 
   
-  double fdistribution_prob(double x, double n, double m, double x0) {
+  double fdistribution_cdf_c(double x, double n, double m, double x0) {
 
     return gsl_cdf_fdist_Q(x-x0, n, m);
 
@@ -42,7 +42,7 @@ namespace Math {
 
 
 
-  double fdistribution_quant(double x, double n, double m, double x0) {
+  double fdistribution_cdf(double x, double n, double m, double x0) {
 
     return gsl_cdf_fdist_P(x-x0, n, m);
 
@@ -50,7 +50,7 @@ namespace Math {
 
 
 
-  double gamma_prob(double x, double alpha, double theta, double x0) {
+  double gamma_cdf_c(double x, double alpha, double theta, double x0) {
 
     return gsl_cdf_gamma_Q(x-x0, alpha, theta);
 
@@ -58,7 +58,7 @@ namespace Math {
 
 
 
-  double gamma_quant(double x, double alpha, double theta, double x0) {
+  double gamma_cdf(double x, double alpha, double theta, double x0) {
 
     return gsl_cdf_gamma_P(x-x0, alpha, theta);
 
@@ -68,7 +68,7 @@ namespace Math {
 
 
 
-  double tdistribution_prob(double x, double r, double x0) {
+  double tdistribution_cdf_c(double x, double r, double x0) {
 
     return gsl_cdf_tdist_Q(x-x0, r);
 
@@ -76,7 +76,7 @@ namespace Math {
 
 
 
-  double tdistribution_quant(double x, double r, double x0) {
+  double tdistribution_cdf(double x, double r, double x0) {
 
     return gsl_cdf_tdist_P(x-x0, r);
 

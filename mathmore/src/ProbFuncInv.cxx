@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ProbFuncInv.cxx,v 1.1 2005/09/08 07:14:56 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: ProbFuncInv.cxx,v 1.2 2005/12/08 21:57:31 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 #include "gsl/gsl_cdf.h"
@@ -9,7 +9,7 @@ namespace Math {
 
 
 
-  double breitwigner_prob_inv(double z, double gamma) {
+  double breitwigner_quantile_c(double z, double gamma) {
 
     return gsl_cdf_cauchy_Qinv(z, gamma/2.0);
 
@@ -17,7 +17,7 @@ namespace Math {
 
 
 
-  double breitwigner_quant_inv(double z, double gamma) {
+  double breitwigner_quantile(double z, double gamma) {
 
     return gsl_cdf_cauchy_Pinv(z, gamma/2.0);
 
@@ -25,7 +25,7 @@ namespace Math {
 
 
 
-  double cauchy_prob_inv(double z, double b) {
+  double cauchy_quantile_c(double z, double b) {
 
     return gsl_cdf_cauchy_Qinv(z, b);
 
@@ -33,7 +33,7 @@ namespace Math {
 
 
 
-  double cauchy_quant_inv(double z, double b) {
+  double cauchy_quantile(double z, double b) {
 
     return gsl_cdf_cauchy_Pinv(z, b);
 
@@ -41,7 +41,7 @@ namespace Math {
 
 
 
-  double chisquared_prob_inv(double z, double r) {
+  double chisquared_quantile_c(double z, double r) {
 
     return gsl_cdf_chisq_Qinv(z, r);
 
@@ -49,7 +49,7 @@ namespace Math {
 
 
 
-  double chisquared_quant_inv(double z, double r) {
+  double chisquared_quantile(double z, double r) {
 
     return gsl_cdf_chisq_Pinv(z, r);
 
@@ -57,7 +57,7 @@ namespace Math {
 
 
 
-  double exponential_prob_inv(double z, double lambda) {
+  double exponential_quantile_c(double z, double lambda) {
 
     return gsl_cdf_exponential_Qinv(z, 1.0/lambda);
 
@@ -65,7 +65,7 @@ namespace Math {
 
 
 
-  double exponential_quant_inv(double z, double lambda) {
+  double exponential_quantile(double z, double lambda) {
 
     return gsl_cdf_exponential_Pinv(z, 1.0/lambda);
 
@@ -73,13 +73,13 @@ namespace Math {
 
 
 
-  double gamma_prob_inv(double z, double alpha, double theta) {
+  double gamma_quantile_c(double z, double alpha, double theta) {
 
     return gsl_cdf_gamma_Qinv(z, alpha, theta);
 
   }
 
-  double gamma_quant_inv(double z, double alpha, double theta) {
+  double gamma_quantile(double z, double alpha, double theta) {
 
     return gsl_cdf_gamma_Pinv(z, alpha, theta);
 
@@ -87,7 +87,7 @@ namespace Math {
 
 
 
-  double gaussian_prob_inv(double z, double sigma) {
+  double gaussian_quantile_c(double z, double sigma) {
 
     return gsl_cdf_gaussian_Qinv(z, sigma);
 
@@ -95,7 +95,7 @@ namespace Math {
 
 
 
-  double gaussian_quant_inv(double z, double sigma) {
+  double gaussian_quantile(double z, double sigma) {
 
     return gsl_cdf_gaussian_Pinv(z, sigma);
 
@@ -103,7 +103,7 @@ namespace Math {
 
 
 
-  double lognormal_prob_inv(double x, double m, double s) {
+  double lognormal_quantile_c(double x, double m, double s) {
 
     return gsl_cdf_lognormal_Qinv(x, m, s);
 
@@ -111,7 +111,7 @@ namespace Math {
 
 
 
-  double lognormal_quant_inv(double x, double m, double s) {
+  double lognormal_quantile(double x, double m, double s) {
 
     return gsl_cdf_lognormal_Pinv(x, m, s);
 
@@ -119,7 +119,7 @@ namespace Math {
 
 
 
-  double normal_prob_inv(double z, double sigma) {
+  double normal_quantile_c(double z, double sigma) {
 
     return gsl_cdf_gaussian_Qinv(z, sigma);
 
@@ -127,7 +127,7 @@ namespace Math {
 
 
 
-  double normal_quant_inv(double z, double sigma) {
+  double normal_quantile(double z, double sigma) {
 
     return gsl_cdf_gaussian_Pinv(z, sigma);
 
@@ -135,7 +135,7 @@ namespace Math {
 
 
 
-  double tdistribution_prob_inv(double z, double r) {
+  double tdistribution_quantile_c(double z, double r) {
 
     return gsl_cdf_tdist_Qinv(z, r);
 
@@ -143,7 +143,7 @@ namespace Math {
 
 
 
-  double tdistribution_quant_inv(double z, double r) {
+  double tdistribution_quantile(double z, double r) {
 
     return gsl_cdf_tdist_Pinv(z, r);
 
@@ -151,7 +151,7 @@ namespace Math {
 
 
 
-  double uniform_prob_inv(double z, double a, double b) {
+  double uniform_quantile_c(double z, double a, double b) {
 
     return gsl_cdf_flat_Qinv(z, a, b);
 
@@ -159,7 +159,7 @@ namespace Math {
 
 
 
-  double uniform_quant_inv(double z, double a, double b) {
+  double uniform_quantile(double z, double a, double b) {
 
     return gsl_cdf_flat_Pinv(z, a, b);
 
