@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.171 2006/11/27 14:17:32 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.172 2006/12/01 16:48:19 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -3907,6 +3907,7 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
    } else if (reset || !initialized) {
       initialized = kTRUE;
       TString rdynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
+      rdynpath.ReplaceAll(" ", ":");  // in case DynamicPath was extended
       if (rdynpath.IsNull()) {
 #ifdef ROOTLIBDIR
          rdynpath = ".:"; rdynpath += ROOTLIBDIR;

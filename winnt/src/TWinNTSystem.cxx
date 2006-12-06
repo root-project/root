@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.154 2006/12/01 15:05:58 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.155 2006/12/05 20:34:28 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -296,20 +296,20 @@ namespace {
    {
       // Get shared library search path.
 
-      static const char *dynpath = 0;
+      static TString dynpath;
 
-      if ((reset || newpath) && dynpath) {
-         delete [] (char*)dynpath;
-         dynpath = 0;
+      if (reset || newpath) {
+         dynpath = "";
       }
       if (newpath) {
 
-         dynpath = StrDup(newpath);
+         dynpath = newpath;
 
-      } else if (dynpath == 0) {
+      } else if (dynpath == "") {
          dynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
-         if (dynpath == 0) {
-            dynpath = StrDup(Form("%s;%s/bin;%s,", gProgPath, gRootDir, gSystem->Getenv("PATH")));
+         dynpath.ReplaceAll(" ", ";");  // in case DynamicPath was extended
+         if (dynpath == "") {
+            dynpath.Form("%s;%s/bin;%s,", gProgPath, gRootDir, gSystem->Getenv("PATH"));
          }
       }
       return dynpath;

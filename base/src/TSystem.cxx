@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.150 2006/11/15 18:27:17 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.151 2006/11/28 14:03:48 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1531,6 +1531,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
 char *TSystem::DynamicPathName(const char *, Bool_t)
 {
    // Need to return the equivalent of LD_LIBRARY_PATH.
+
    AbstractMethod("DynamicPathName");
    return 0;
 }
