@@ -35,6 +35,7 @@ options="                    \
    enable_castor             \
    enable_cern               \
    enable_chirp              \
+   enable_cint7              \
    enable_cintex             \
    enable_clarens            \
    enable_dcache             \
@@ -89,6 +90,7 @@ for c in $options ; do eval ${c}="yes" ; done
 for c in $options ; do eval ${c}_explicit="no" ; done
 
 enable_afs=no
+enable_cint7=no
 enable_gdml=no
 enable_explicitlink=no
 enable_qt=no
@@ -839,6 +841,7 @@ enable/disable options, prefix with either --enable- or --disable-
   castor             CASTOR support, requires libshift from CASTOR >= 1.5.2
   cern               CERNLIB usage, build h2root and g2root
   chirp              Chirp support (Condor remote I/O), requires libchirp_client
+  cint7              Build the *experimental* new Cint library
   cintex             Build the libCintex Reflex interface library
   clarens            Clarens RPC support, optionally used by PROOF
   dcache             dCache support, requires libdcap from DESY
@@ -3656,6 +3659,19 @@ check_explicit "$enable_mathmore" "$enable_mathmore_explicit" \
 
 ######################################################################
 #
+### echo %%% Experimental Cint7 Library
+#
+message "Checking whether to build CINT7"
+if test ! "x$enable_cint7" = "xno"; then
+    enable_cint7="yes"
+    result "yes"
+else
+    enable_cint7=""
+    result "no"
+fi
+
+######################################################################
+#
 ### echo %%% Cintex Library - Contributed library
 #
 message "Checking whether to build libCintex"
@@ -3862,6 +3878,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_castor"  = "xyes" && pkglist="$pkglist root-plugin-castor"
     test "x$enable_cern"    = "xyes" && pkglist="$pkglist root-plugin-hbook"
     test "x$enable_chirp"   = "xyes" && pkglist="$pkglist root-plugin-chirp"
+    test "x$enable_cint7"   = "xyes" && pkglist="$pkglist root-plugin-cint7"
     test "x$enable_clarens" = "xyes" && pkglist="$pkglist libroot-clarens"
     test "x$enable_dcache"  = "xyes" && pkglist="$pkglist root-plugin-dcache"
     test "x$enable_fftw3"   = "xyes" && pkglist="$pkglist root-plugin-fftw3"
@@ -4127,6 +4144,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@chirpincdir@|$chirpincdir|"          \
     -e "s|@chirplib@|$chirplib|"                \
     -e "s|@chirplibdir@|$chirplibdir|"          \
+    -e "s|@buildcint7@|$enable_cint7|"          \
     -e "s|@clarensincdir@|$clarensincdir|"      \
     -e "s|@clarenslibs@|$clarenslibs|"          \
     -e "s|@cintincdir@|$cintincdir|"            \

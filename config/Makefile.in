@@ -233,6 +233,8 @@ GSLFLAGS       := $(filter-out -I/usr/include, @gslflags@)
 GSLLIBDIR      := @gsllibdir@
 GSLLIBS        := @gsllibs@
 
+BUILDCINT7     := @buildcint7@
+
 BUILDCINTEX    := @buildcintex@
 
 BUILDREFLEX    := @buildreflex@

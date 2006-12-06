@@ -120,6 +120,8 @@ ROOFITLIBDEP        = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB) \
                       $(MINUITLIB) $(HTMLLIB)
 ROOFITLIBEXTRA      = lib/libHist.lib lib/libGraf.lib lib/libMatrix.lib \
                       lib/libTree.lib lib/libMinuit.lib lib/libHtml.lib
+CINT7LIBDEP         = $(REFLEXLIB)
+CINT7LIBEXTRA       = lib/libReflex.lib
 CINTEXLIBDEP        = $(REFLEXLIB)
 CINTEXLIBEXTRA      = lib/libReflex.lib
 KRB5AUTHLIBDEP      = $(ROOTAUTHLIB)
@@ -237,6 +239,8 @@ ALIENLIBEXTRA       = -Llib -lXMLIO -lNetx
 ROOFITLIBDEP        = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB) \
                       $(MINUITLIB) $(HTMLLIB)
 ROOFITLIBEXTRA      = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lHtml
+CINT7LIBDEP         = $(REFLEXLIB)
+CINT7LIBEXTRA       = -Llib -lReflex
 CINTEXLIBDEP        = $(REFLEXLIB)
 CINTEXLIBEXTRA      = -Llib -lReflex
 KRB5AUTHLIBDEP      = $(ROOTAUTHLIB)

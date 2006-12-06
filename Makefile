@@ -155,6 +155,9 @@ endif
 ifeq ($(BUILDUNURAN),yes)
 MODULES      += unuran
 endif
+ifeq ($(BUILDCINT7),yes)
+MOULES       += cint7
+endif
 ifeq ($(BUILDCINTEX),yes)
 MODULES      += cintex
 endif
@@ -220,7 +223,7 @@ MODULES      += unix winnt x11 x11ttf win32gdk gl rfio castor thread \
                 ldap mlp krb5auth rpdutils globusauth pyroot ruby gfal \
                 qt qtroot qtgsi xrootd netx proofx alien clarens peac oracle \
                 xmlparser mathcore mathmore reflex cintex roofit minuit2 \
-                monalisa fftw odbc unuran gdml g4root
+                monalisa fftw odbc unuran gdml g4root cint7
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
@@ -233,6 +236,7 @@ LPATH         = lib
 ifneq ($(PLATFORM),win32)
 RPATH        := -L$(LPATH)
 CINTLIBS     := -lCint
+CINT7LIBS     := -lCint7 -lReflex
 NEWLIBS      := -lNew
 ROOTLIBS     := -lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lMatrix
 ifneq ($(ROOTDICTTYPE),cint)
@@ -242,6 +246,7 @@ RINTLIBS     := -lRint
 PROOFLIBS    := -lProof -lTreePlayer -lThread
 else
 CINTLIBS     := $(LPATH)/libCint.lib
+CINT7LIBS     := $(LPATH)/libCint7.lib $(LPATH)/libReflex.lib
 NEWLIBS      := $(LPATH)/libNew.lib
 ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libHist.lib $(LPATH)/libGraf.lib \
@@ -425,6 +430,14 @@ cint/%.o: cint/%.c
 	$(MAKEDEP) -R -fcint/$*.d -Y -w 1000 -- $(CINTCFLAGS) -- $<
 	$(CC) $(OPT) $(CINTCFLAGS) $(CXXOUT)$@ -c $<
 
+cint7/%.o: cint7/%.cxx
+	$(MAKEDEP) -R -fcint7/$*.d -Y -w 1000 -- $(CINT7CXXFLAGS) -D__cplusplus -- $<
+	$(CXX) $(OPT) $(CINT7CXXFLAGS) $(CXXOUT)$@ -c $<
+
+cint7/%.o: cint7/%.c
+	$(MAKEDEP) -R -fcint7/$*.d -Y -w 1000 -- $(CINT7CFLAGS) -- $<
+	$(CC) $(OPT) $(CINT7CFLAGS) $(CXXOUT)$@ -c $<
+
 build/%.o: build/%.cxx
 	$(CXX) $(OPT) $(CXXFLAGS) $(CXXOUT)$@ -c $<
 
@@ -474,7 +487,7 @@ include cint/cintdlls.mk
 -include MyRules.mk            # allow local rules
 
 ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist \
-      distsrc version importcint install uninstall showbuild changelog html \
+      distsrc version importcint importcint7 install uninstall showbuild changelog html \
       debian redhat),)
 ifeq ($(findstring clean-,$(MAKECMDGOALS)),)
 ifeq ($(findstring skip,$(MAKECMDGOALS))$(findstring fast,$(MAKECMDGOALS)),)
@@ -733,7 +746,10 @@ static: rootlibs
 	   "$(XLIBS)" "$(SYSLIBS)"
 
 importcint: distclean-cint
-	@$(IMPORTCINT)
+	@$(IMPORTCINT) rea11y
+
+importcint7: distclean-cint7
+	@$(IMPORTCINT) rea11y cint7
 
 changelog:
 	@$(MAKECHANGELOG)

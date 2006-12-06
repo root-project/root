@@ -1,151 +1,106 @@
 #!/bin/sh
 
-# Script to import new version of CINT in the ROOT CVS tree.
-# Called by main Makefile. Assumes original CINT distribution
-# is in $HOME/cint.
+# Script to import new version of CINT in the ROOT CVS tree via a vendor branch.
+# Called by main Makefile.
+# If --dry-run we're doing a dry-run (no changes, just echo-ing).
+# Optional argument can be cint7 or "cint" is assumed.
 #
-# Author: Fons Rademakers, 29/2/2000
-# and Axel, 2006-04-07
+# Author: Axel Naumann 2006-12-06
 
-# Specify with trailing "." to not include subdirs (CVS is always ignored)
-IGNORE=".cvsignore .\# /\# README dl.exp Makefile .rej .pdb .manifest .~ .txt Makebcdict Makeapiold Makeapi HISTORY"
-IGNOREROOT="cint/include/errno.h cint/include/float.h cint/include/limits.h cint/include/locale.h \
-            cint/include/math.h cint/include/signal.h cint/include/stddef.h cint/include/stdio.h \
-            cint/include/stdlib.h cint/include/time.h cint/Module.mk cint/lib/ipc/ipcif.h.old"
-IGNORECINT="cint/demo/ cint/doc/ cint/glob /cint/src/cbstrm.cpp cint/test/ cint/platform cint/readline/ \
-            cint/lib/cintocx/ cint/lib/WildCard/ cint/lib/wintcldl/ cint/lib/wintcldl83/ cint/malloc/ \
-            cint/ARCHIVE cint/MAKEINFO cint/C2cxx cint/cxx2 cint/chmod.cxx cint/export cint/EXPOSE \
-            cint/INSTALLBIN cint/removesrc.bat cint/setup cint/src/v6_dmy"
+# Exit nicely on request.
+trap 'exit 0' 1 2 3 15
 
-# files containing list of new and old files
-ADDEDLIST=/tmp/cintadded
-REMOVEDLIST=/tmp/cintremoved
-[ -f $ADDEDLIST ] && rm $ADDEDLIST
-[ -f $REMOVEDLIST ] && rm $REMOVEDLIST
+# This variable is utterly useless, and only meant for testing on a copy of the CVS repository.
+# Should always be "root"
+ROOTCVSROOT=root2
 
-if [ ! -d $HOME/cint ]; then
-   echo "Cannot find original CINT directory: $HOME/cint"
+ECHO=echo
+if test ! "x$1" = "x--dry-run"; then
+   ECHO=
+else
+   shift
+   echo '"--dry-run" specified - running in debug mode without an actual import.'
+fi
+
+TEMP="/tmp"
+if test ! -d ${TEMP}; then
+    echo "Cannot find TEMP directory ${TEMP}."
+    exit 1
+fi
+
+USER=$LOGNAME
+if test "x${USER}" = "x"; then
+   USER=${USERNAME}
+   if test "x${USER}" = "x"; then
+      echo 'Neither $USER nor $USERNAME are set - but I need them.'
+      exit 1
+   fi
+fi
+
+CINT=$1
+if test ! "x${CINT}" = "xcint7"; then
+   CINT=cint
+fi
+
+if test "x${CINT}" = "xcint"; then
+   REVFILTER='v5-[-[:digit:]]+'
+   CINTVENDORBRANCH=CINT_VENDOR_BRANCH
+else
+   REVFILTER='v7-[-[:digit:]]+'
+   CINTVENDORBRANCH=CINT7_VENDOR_BRANCH
+fi
+
+NEWTAG=$(cvs -z9 -q -d ':pserver:cvs@root.cern.ch:/user/cvs' rlog -l -h cint/inc/G__ci.h | \
+	 egrep '^[[:space:]]'${REVFILTER}':' | \
+	 head -n1 | \
+	 sed -e 's,^[[:space:]]*v\(.*\):.*$,\1,' )
+
+if test "x${NEWTAG}" = "x"; then
+   echo "Cannot extract newest tag for ${CINT}"
    exit 1
 fi
 
-IMPORTCINT=1
-[ "$1" == "export" ] && IMPORTCINT=0
+OLDVENDORTAG=$(cvs -z9 -q -d ':pserver:cvs@root.cern.ch:/user/cvs' rlog -l -h ${ROOTCVSROOT}/${CINT}/inc/G__ci.h | \
+	       egrep '^[[:space:]]'${CINT}'.*:' | \
+	       head -n1 | \
+	       sed -e 's,^[[:space:]]*\(.*\):.*$,\1,' )
 
-function cint2root {
-    RET="${1/$HOME\//}"
-    RET="${RET/platform\/aixdlfcn/src}"
-    if [ "${RET/.h/}" != "$RET" ]; then
-		RET="$(echo $RET | sed 's,cint/src/,cint/inc/,')"
-		[ "$RET" == "cint/inc/dlfcn.h" ] && RET=cint/inc/aixdlfcn.h
-		[ "$RET" == "cint/G__ci.h" ] && RET=cint/inc/G__ci.h
-    fi
-}
-
-function root2cint {
-	RET="$(echo $1 | sed 's,cint/inc/,cint/src/,')"
-    [ "$1" == cint/inc/aixdlfcn.h ] && RET=cint/platform/aixdlfcn/dlfcn.h
-    [ "$1" == cint/src/dlfcn.c ] && RET=cint/platform/aixdlfcn/dlfcn.c
-    [ "$1" == cint/inc/G__ci.h ] && RET=cint/G__ci.h
-    RET="$HOME/$RET"
-}
-
-function checkfile {
-	root2cint "$1"
-	[ ! -f "$1"   ] && MISSINGR=1 || MISSINGR=0
-	[ ! -f "$RET" ] && MISSINGC=1 || MISSINGC=0
-	local ORDER="$1"" ""$RET"
-	[ $IMPORTCINT == 0 ] && ORDER="$RET"" ""$1"
-	[ $MISSINGR == 0 -a $MISSINGC == 0 ] \
-	  && diff -p -u -I '^//[\$]Id: .*$' $ORDER > /tmp/cintdiff \
-	  && RET=
-}
-
-ALLFILES=cint/inc/G__ci.h
-
-for f in $(find $HOME/cint -type f | grep -v CVS/ ); do
-	cint2root "$f"
-	for i in $IGNORECINT; do
-		if [ "${RET/$i/}" != "$RET" ]; then
-			RET=
-			break
-		fi
-	done
-	ALLFILES="$ALLFILES"" ""$RET"
-done
-for f in $(find cint -type f| grep -v CVS/ ); do
-	for i in $IGNOREROOT; do
-		if [ "${f/$i/}" != "$f" ]; then
-			f=
-			break
-		fi
-	done
-	ALLFILES="$ALLFILES"" ""$f"
-done
-
-IGNORE="`echo $IGNORE | sed -e 's, ,[^[:space:]]*\\\)\\\|\\\([^[:space:]]*,g' -e 's,\.,\\\.,g'`"
-IGNORE='\([^[:space:]]*'${IGNORE}'[^[:space:]]*\)'
-ALLFILES="$(echo "$ALLFILES"|sort|uniq \
-  | sed -e 's,cint/\(src/\|inc/\|include/\|\)\(done\|error\|iosenum.[^[:space:]]*\|systypes.h\|sys/types.h\),,g' \
-        -e "s,$IGNORE,,g" \
-		)"
-
-PATCHDIR=.
-[ $IMPORTCINT == 0 ] && PATCHDIR=$HOME
-for f in $ALLFILES; do
-	[ $IMPORTCINT == 0 ] && ( root2cint $f; f=$RET )
-	checkfile $f
-	REMOVED=$MISSINGC
-	ADDED=$MISSINGR
-	[ $IMPORTCINT == 0 ] && (REMOVED=$MISSINGR; ADDED=$MISSINGC)
-	if [ $REMOVED == 1 ]; then
-		if [ "${IGNOREROOT/$f/}" == "$IGNOREROOT" -a "$f" != "on" -a "$f" != "VisualBasic.lnk" ]; then
-			echo $f >> $REMOVEDLIST
-		fi
-	else if [ $ADDED == 1 ]; then 
-		if [ "${IGNORECINT/$f/}" == "$IGNORECINT" ]; then
-			echo $f >> $ADDEDLIST
-		fi
-	else if [ "$RET" != "" ]; then 
-		( cd $PATCHDIR \
-		&& patch -p0 < /tmp/cintdiff \
-		&& rm /tmp/cintdiff \
-		|| ( echo Error patching $f\!; exit 1 ) )
-	else rm /tmp/cintdiff
-	fi; fi; fi
-done
-
-# copy man pages directly to man directory
-if [ $IMPORTCINT == 1 ]; then
-	diff $HOME/cint/doc/man1/cint.1 man/man1/ >/dev/null \
-	  || cp $HOME/cint/doc/man1/cint.1 man/man1/
-	diff $HOME/cint/doc/man1/makecint.1 man/man1/ >/dev/null\
-	  || cp $HOME/cint/doc/man1/makecint.1 man/man1/
-else
-	diff man/man1/cint.1 $HOME/cint/doc/man1/ >/dev/null \
-	  || cp man/man1/cint.1 $HOME/cint/doc/man1/
-	diff man/man1/makecint.1 $HOME/cint/doc/man1/ >/dev/null \
-	  || cp man/man1/makecint.1 $HOME/cint/doc/man1/
+if test "x${OLDVENDORTAG}" = "x"; then
+   echo "Cannot extract current vendor tag for root/${CINT}"
+   exit 1
 fi
 
-if [ -f $ADDEDLIST ]; then
-	if [ "`cat $ADDEDLIST` " != "" ]; then
-		echo ""
-		echo "Files that exist in Cint but not in ROOT (add to ROOT CVS):"
-		cat $ADDEDLIST
-		for NEWFILE in `cat $ADDEDLIST`
-			do cp ~/$NEWFILE $NEWFILE
-		done
-	fi
-fi
-if [ -f $REMOVEDLIST ]; then 
-	if [ "`cat $REMOVEDLIST `" != "" ]; then
-		echo ""
-		echo "Files that exist in ROOT but not in Cint (remove from ROOT CVS):"
-		cat $REMOVEDLIST
-	fi
+if test "xcint${NEWTAG}" = "x${OLDVENDORTAG}"; then
+   echo "The newest ${CINT} tag v${NEWTAG} and the previous vendor branch tag ${OLDVENDORTAG}"
+   echo "indicate that CINT was not tagged, or that the newest tag is already imported"
+   echo "into ROOT."
+   exit 0
 fi
 
-# cleanup
-rm -rf $ADDEDLIST $REMOVEDLIST
+OLDPWD=$(pwd)
+
+echo "Importing ${CINT} revision ${NEWTAG} into vendor branch..."
+cd ${TEMP} || exit 1
+cvs -z9 -Q -d :pserver:cvs@root.cern.ch:/user/cvs checkout -r "v${NEWTAG}" cint || exit 1
+find cint -type d -name 'CVS' -exec rm -rf {} \; -prune || exit 1
+
+cd cint
+${ECHO} cvs -z9 -q -d :ext:${USER}@root.cern.ch:/user/cvs import \
+   -m "import v${NEWTAG}" -I! -Ireflex -ko \
+   ${ROOTCVSROOT}/cint "${CINTVENDORBRANCH}" cint"${NEWTAG}" || exit 1
+
+cd ..
+rm -rf cint
+
+echo "Updating ROOT/${CINT}..."
+
+cvs -z9 -Q -d :ext:${USER}@root.cern.ch:/user/cvs checkout ${ROOTCVSROOT}/${CINT} || exit 1
+cd ${ROOTCVSROOT}/${CINT} || exit 1
+
+${ECHO} cvs update -j "${OLDVENDORTAG}" -j "cint${NEWTAG}" || exit 1
+
+echo You will now have to run
+echo '  cvs -z9 -q commit -m "apply changes from CINT vendor branch, importing cint'"${NEWTAG}"'"'
+echo yourself, to upload the changes into ROOT.
 
 exit 0
