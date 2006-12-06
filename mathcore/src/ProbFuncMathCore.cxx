@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: ProbFuncMathCore.cxx,v 1.3 2006/06/19 09:02:24 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: ProbFuncMathCore.cxx,v 1.4 2006/06/22 08:36:27 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   06/2005 
 
 
@@ -17,7 +17,7 @@ namespace Math {
   
 
 
-   double breitwigner_prob(double x, double gamma, double x0) {
+   double breitwigner_cdf_c(double x, double gamma, double x0) {
       
       return 0.5 - std::atan(2.0 * (x-x0) / gamma) / M_PI;
       
@@ -25,7 +25,7 @@ namespace Math {
    
    
    
-   double breitwigner_quant(double x, double gamma, double x0) {
+   double breitwigner_cdf(double x, double gamma, double x0) {
       
       return 0.5 + std::atan(2.0 * (x-x0) / gamma) / M_PI;
       
@@ -33,7 +33,7 @@ namespace Math {
    
    
    
-   double cauchy_prob(double x, double b, double x0) {
+   double cauchy_cdf_c(double x, double b, double x0) {
       
       return 0.5 - std::atan( (x-x0) / b) / M_PI;
       
@@ -41,7 +41,7 @@ namespace Math {
    
    
    
-   double cauchy_quant(double x, double b, double x0) {
+   double cauchy_cdf(double x, double b, double x0) {
       
       return 0.5 + std::atan( (x-x0) / b) / M_PI;
       
@@ -49,7 +49,7 @@ namespace Math {
    
    /**
    
-    double chisquared_prob(double x, double r) {
+    double chisquared_cdf_c(double x, double r) {
        
        return gsl_cdf_chisq_Q(x, r);
        
@@ -57,7 +57,7 @@ namespace Math {
     
     
     
-    double chisquared_quant(double x, double r) {
+    double chisquared_cdf(double x, double r) {
        
        return gsl_cdf_chisq_P(x, r);
        
@@ -65,7 +65,7 @@ namespace Math {
     */
    
    
-   double exponential_prob(double x, double lambda, double x0) {
+   double exponential_cdf_c(double x, double lambda, double x0) {
       
       if ((x-x0) < 0) {
          
@@ -81,7 +81,7 @@ namespace Math {
    
    
    
-   double exponential_quant(double x, double lambda, double x0) {
+   double exponential_cdf(double x, double lambda, double x0) {
       
       if ((x-x0) < 0) {
          
@@ -97,7 +97,7 @@ namespace Math {
    
    
    /**
-   double fdistribution_prob(double x, double n, double m) {
+   double fdistribution_cdf_c(double x, double n, double m) {
       
       return gsl_cdf_fdist_Q(x, n, m);
       
@@ -105,7 +105,7 @@ namespace Math {
     
     
     
-    double fdistribution_quant(double x, double n, double m) {
+    double fdistribution_cdf(double x, double n, double m) {
        
        return gsl_cdf_fdist_P(x, n, m);
        
@@ -113,7 +113,7 @@ namespace Math {
     
     
     
-    double gamma_prob(double x, double alpha, double theta) {
+    double gamma_cdf_c(double x, double alpha, double theta) {
        
        return gsl_cdf_gamma_Q(x, alpha, theta);
        
@@ -121,7 +121,7 @@ namespace Math {
     
     
     
-    double gamma_quant(double x, double alpha, double theta) {
+    double gamma_cdf(double x, double alpha, double theta) {
        
        return gsl_cdf_gamma_P(x, alpha, theta);
        
@@ -130,7 +130,7 @@ namespace Math {
    
    
    
-   double gaussian_prob(double x, double sigma, double x0) {
+   double gaussian_cdf_c(double x, double sigma, double x0) {
       
       return 0.5*(1.0 - ROOT::Math::erf((x-x0)/(sigma*std::sqrt(2.0))));
       
@@ -138,7 +138,7 @@ namespace Math {
    
    
    
-   double gaussian_quant(double x, double sigma, double x0) {
+   double gaussian_cdf(double x, double sigma, double x0) {
       
       return 0.5*(1.0 + ROOT::Math::erf((x-x0)/(sigma*std::sqrt(2.0))));
       
@@ -146,7 +146,7 @@ namespace Math {
    
    
    
-   double lognormal_prob(double x, double m, double s, double x0) {
+   double lognormal_cdf_c(double x, double m, double s, double x0) {
       
       return 0.5*(1.0 - ROOT::Math::erf((std::log((x-x0))-m)/(s*std::sqrt(2.0))));
       
@@ -154,7 +154,7 @@ namespace Math {
    
    
    
-   double lognormal_quant(double x, double m, double s, double x0) {
+   double lognormal_cdf(double x, double m, double s, double x0) {
       
       return 0.5*(1.0 + ROOT::Math::erf((std::log((x-x0))-m)/(s*std::sqrt(2.0))));
       
@@ -162,7 +162,7 @@ namespace Math {
    
    
    
-   double normal_prob(double x, double sigma, double x0) {
+   double normal_cdf_c(double x, double sigma, double x0) {
       
       return 0.5*(1.0 - ROOT::Math::erf((x-x0)/(sigma*std::sqrt(2.0))));
       
@@ -170,7 +170,7 @@ namespace Math {
    
    
    
-   double normal_quant(double x, double sigma, double x0) {
+   double normal_cdf(double x, double sigma, double x0) {
       
       return 0.5*(1 + ROOT::Math::erf((x-x0)/(sigma*std::sqrt(2.0))));
       
@@ -178,7 +178,7 @@ namespace Math {
    
    
    /**
-   double tdistribution_prob(double x, double r) {
+   double tdistribution_cdf_c(double x, double r) {
       
       return gsl_cdf_tdist_Q(x, r);
       
@@ -186,7 +186,7 @@ namespace Math {
     
     
     
-    double tdistribution_quant(double x, double r) {
+    double tdistribution_cdf(double x, double r) {
        
        return gsl_cdf_tdist_P(x, r);
        
@@ -194,7 +194,7 @@ namespace Math {
     */
    
    
-   double uniform_prob(double x, double a, double b, double x0) {
+   double uniform_cdf_c(double x, double a, double b, double x0) {
       
       if ((x-x0) < a) {
          return 1.0;
@@ -207,7 +207,7 @@ namespace Math {
    
    
    
-   double uniform_quant(double x, double a, double b, double x0) {
+   double uniform_cdf(double x, double a, double b, double x0) {
       
       if ((x-x0) < a) {
          return 0.0;
