@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.h,v 1.7 2006/05/26 15:13:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.h,v 1.8 2006/05/30 15:27:52 brun Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -98,8 +98,8 @@ private:
    TPluginHandler(const char *base, const char *regexp,
                   const char *className, const char *pluginName,
                   const char *ctor);
-   TPluginHandler(const TPluginHandler&);
-   TPluginHandler& operator=(const TPluginHandler&);
+   TPluginHandler(const TPluginHandler&);            // not implemented
+   TPluginHandler& operator=(const TPluginHandler&); // not implemented
 
    ~TPluginHandler();
 
@@ -126,12 +126,8 @@ class TPluginManager : public TObject {
 private:
    TList  *fHandlers;    // list of plugin handlers
 
-protected:
-   TPluginManager(const TPluginManager& pm)
-     : TObject(pm), fHandlers(pm.fHandlers) { }
-   TPluginManager& operator=(const TPluginManager& pm)
-     {if(this!=&pm) {TObject::operator=(pm); fHandlers=pm.fHandlers;}
-     return *this;}
+   TPluginManager(const TPluginManager& pm);              // not implemented
+   TPluginManager& operator=(const TPluginManager& pm);   // not implemented
 
 public:
    TPluginManager() : fHandlers(0) { }
