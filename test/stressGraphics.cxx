@@ -98,6 +98,7 @@ TCanvas *gC;
 Int_t    gRefNb[33];
 Int_t    gErrNb[33];
 Bool_t   gOptionR;
+Bool_t   gOptionK;
 TH2F    *gH2;
 TFile   *gFile;
 
@@ -113,11 +114,14 @@ int main(int argc,const char *argv[])
    opt = argv[1];
 
    if (opt.Contains("-h")) {
-      printf("Usage: stressGraphics [-h] [-r]\n");
+      printf("Usage: stressGraphics [-h] [-r] [-k]\n");
       printf("Options:\n");
       printf("  -r : Generate de reference output.\n");
       printf("       Redirect the output in the file \"stressGraphics.ref\"\n");
       printf("       to redefine the reference file.\n");
+      printf("\n");
+      printf("  -k : Keep the PS files even for passed tests.\n");
+      printf("       By default PS files for passed tests are deleted.\n");
       printf("\n");
       printf("  -h : Print usage\n");
       return 0;
@@ -127,6 +131,12 @@ int main(int argc,const char *argv[])
       gOptionR = kTRUE;
    } else {
       gOptionR = kFALSE;
+   }
+
+   if (opt.Contains("-k")) {
+      gOptionK = kTRUE;
+   } else {
+      gOptionK = kFALSE;
    }
 
    stressGraphics(verbose);
@@ -279,7 +289,7 @@ void StatusPrint(Int_t id, const TString &title, Int_t res, Int_t ref, Int_t err
       if (TMath::Abs(res-ref)<=err) {
          for (Int_t i = nch; i < 63; i++) header += '.';
          cout << header <<  " OK" << endl;
-         gSystem->Unlink(Form("sg%2.2d.ps",id));
+         if (!gOptionK) gSystem->Unlink(Form("sg%2.2d.ps",id));
       } else {
          for (Int_t i = nch; i < 59; i++) header += '.';
          cout << header << " FAILED" << endl;
