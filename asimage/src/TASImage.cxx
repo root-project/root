@@ -337,7 +337,7 @@ static void init_icon_paths()
    const char *icons = "/icons";
 #ifdef R__WIN32
       icons = "\\icons";
-#endif 
+#endif
 
    TString homeIcons = gSystem->HomeDirectory();
    homeIcons += icons;
@@ -374,7 +374,7 @@ void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
    // off. On success this extension will be used to load subimage from
    // the file with that number. Subimage is supported for GIF files
    // (ICO, BMP, CUR, TIFF, XCF to be supported in futute).
-   //  For example, 
+   //  For example,
    //    i1 = TImage::Open("anim.gif.0"); // read the first subimage
    //    i4 = TImage::Open("anim.gif.3"); // read the forth subimage
    //
@@ -488,7 +488,7 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
    // to determine the file type. The quality and compression is derived from
    // the TAttImage values.
    // It's posiible to write image into an animated GIF file by specifying file name as
-   // "myfile.gif+" of "myfile.gif+NN", where NN is delay of displaying 
+   // "myfile.gif+" of "myfile.gif+NN", where NN is delay of displaying
    // subimages during animation in 10ms seconds units.
    // If NN is ommitted the delay between subimages is zero.
    // For repeated animation the last subimage must be specified as "myfile.gif++NN",
@@ -571,7 +571,7 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
       s += 4; // skip "gif+"
       int delay = atoi(s);
 
-      
+
       if (delay < 0) {
          delay = 0;
       }
@@ -584,9 +584,9 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
       parms.gif.animate_delay = delay;
 
       int i1 = fname.Index("gif+");
-      if (i1 != kNPOS) { // 
+      if (i1 != kNPOS) {
          fname = fname(0, i1 + 3);
-      }  
+      }
       break;
    }
    case kTiff:
@@ -1285,13 +1285,21 @@ void TASImage::Paint(Option_t *option)
       gVirtualPS->SetFillColor(color->GetNumber());
       gVirtualPS->SetFillStyle(1001);
 
-      Double_t xconv = (gPad->AbsPixeltoX(to_w) - gPad->AbsPixeltoX(0)) / image->width;
-      Double_t yconv = (gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(to_h)) / image->height;
+      Double_t dx = gPad->GetX2()-gPad->GetX1();
+      Double_t dy = gPad->GetY2()-gPad->GetY1();
+      Double_t x1,x2,y1,y2;
 
-      Double_t x1 = 0;
-      Double_t x2 = 1 * xconv;
-      Double_t y1 = 1 - yconv;
-      Double_t y2 = 1;
+      if (expand) {
+         x1 = gPad->GetX1();
+         x2 = x1+dx/image->width;
+         y1 = gPad->GetY2();
+         y2 = y1+dy/image->height;
+      } else {
+         x1 = gPad->GetX1()+dx*gPad->GetLeftMargin();
+         x2 = x1+(dx*(1-gPad->GetRightMargin()-gPad->GetLeftMargin()))/image->width;
+         y1 = gPad->GetY2()-dy*gPad->GetTopMargin();
+         y2 = y1+(dy*(1-gPad->GetTopMargin()-gPad->GetBottomMargin()))/image->height;
+      }
 
       gVirtualPS->CellArrayBegin(image->width, image->height, x1, x2, y1, y2);
 
@@ -1309,8 +1317,8 @@ void TASImage::Paint(Option_t *option)
 
       // print the color bar
       if (grad_im) {
-         xconv = (gPad->AbsPixeltoX(pal_Ax + pal_w) - gPad->AbsPixeltoX(pal_Ax)) / grad_im->width;
-         yconv = (gPad->AbsPixeltoY(pal_Ay - pal_h) - gPad->AbsPixeltoY(pal_Ay)) / grad_im->height;
+         Double_t xconv = (gPad->AbsPixeltoX(pal_Ax + pal_w) - gPad->AbsPixeltoX(pal_Ax)) / grad_im->width;
+         Double_t yconv = (gPad->AbsPixeltoY(pal_Ay - pal_h) - gPad->AbsPixeltoY(pal_Ay)) / grad_im->height;
          x1 = gPad->AbsPixeltoX(pal_Ax);
          x2 = x1 + xconv;
          y2 = gPad->AbsPixeltoY(pal_Ay);
@@ -3184,7 +3192,7 @@ UInt_t *TASImage::GetRgbaArray()
          a = argb >> 24;
          rgb =  argb & 0x00ffffff;
          rgba = (rgb <<  8) + a;
-         ret[idx] = rgba; 
+         ret[idx] = rgba;
       }
       y += img->width;
    }
@@ -5957,10 +5965,10 @@ Bool_t TASImage::SetJpegDpi(const char *name, UInt_t set)
 
    int dpi = 0; // start of dpi data
    for (i = 0; i < 20; i++) {
-      if ((buf[i] == 0x4a) && (buf[i+1] == 0x46) &&  (buf[i+2] == 0x49) &&  
+      if ((buf[i] == 0x4a) && (buf[i+1] == 0x46) &&  (buf[i+2] == 0x49) &&
           (buf[i+3] == 0x46) && (buf[i+4] == 0x00) ) {
          dpi = i + 7;
-         break;         
+         break;
       }
    }
 
