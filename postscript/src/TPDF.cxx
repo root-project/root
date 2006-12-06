@@ -1937,6 +1937,18 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    // Text color
    SetColor(Int_t(fTextColor));
 
+   // Clipping
+   PrintStr(" q");
+   Double_t x1 = XtoPDF(gPad->GetX1());
+   Double_t x2 = XtoPDF(gPad->GetX2());
+   Double_t y1 = YtoPDF(gPad->GetY1());
+   Double_t y2 = YtoPDF(gPad->GetY2());
+   WriteReal(x1);
+   WriteReal(y1);
+   WriteReal(x2 - x1);
+   WriteReal(y2 - y1);
+   PrintStr(" re W n");
+
    // Start the text
    if (!fCompress) PrintStr("@");
    PrintStr(" BT");
@@ -2018,7 +2030,7 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
          PrintStr(str);
       }
    }
-   PrintStr(") Tj ET");
+   PrintStr(") Tj ET Q");
    if (!fCompress) PrintStr("@");
 }
 
