@@ -131,7 +131,7 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          // - (color-to-object map, previously read from gl-buffer).
          fGLPainter->InvalidateSelection();
          if (fGLPainter->CutAxisSelected())
-            fGLPainter->Pan(px, py);
+            gGLManager->PanObject(fGLPainter.get(), px, py);
          else
             fCamera.RotateCamera(px, py);
          //Draw modified scene onto canvas' window.
