@@ -73,6 +73,10 @@ RFLX_CPPUNITLL  = -L$(CPPUNIT)/lib -lcppunit
 RFLX_REFLEXLL   = -Llib -lReflex -ldl
 endif
 
+ifeq ($(PLATFORM),solaris)
+RFLX_REFLEXLL   += -ldemangle
+endif
+
 RFLX_GENREFLEX_CMD = python ../../lib/python/genreflex/genreflex.py 
 
 RFLX_TESTD      = $(REFLEXDIR)/test
