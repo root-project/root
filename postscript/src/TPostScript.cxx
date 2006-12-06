@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.66 2006/07/12 14:01:32 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.67 2006/09/19 14:27:39 couet Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -116,7 +116,7 @@ Where:
    <li> 2 : Landscape mode with a small margin at the bottom of the page.
    <li> 4 : Portrait mode with a large margin at the bottom of the page.
    <li> 5 : Landscape mode with a large margin at the bottom of the page.
-            The large margin is useful for some PostScript printers (very often 
+            The large margin is useful for some PostScript printers (very often
             for the colour printers) as they need more space to grip the paper for
             mechanical reasons. Note that some PostScript colour printers can also use
             the so called special A4 format permitting the full usage of the A4 area; in
@@ -191,7 +191,7 @@ Note that <b>c1-&gt;Update</b> must be called at the end of the first picture
 </pre>
 
 <H2>Color Model</H2>
-TPostScript support two color model RGB and CMYK. CMY and CMYK models are 
+TPostScript support two color model RGB and CMYK. CMY and CMYK models are
 subtractive color models unlike RGB which is an additive. They are mainly
 used for printing purposes. CMY means Cyan Magenta Yellow to convert RGB
 to CMY it is enough to do: C=1-R, M=1-G and Y=1-B. CMYK has one more
@@ -246,6 +246,7 @@ c = 1 means TPostScript will use CMYK color model
 #include "TPostScript.h"
 #include "TStyle.h"
 #include "TMath.h"
+#include "TText.h"
 #include "TSystem.h"
 
 // to scale fonts to the same size as the old TT version
@@ -517,7 +518,7 @@ void TPostScript::CellArrayBegin(Int_t W, Int_t /*H*/, Double_t x1, Double_t x2,
 //______________________________________________________________________________
 void TPostScript::CellArrayFill(Int_t r, Int_t g, Int_t b)
 {
-   // Paint the Cell Array 
+   // Paint the Cell Array
 
    if (fLastCellRed == r && fLastCellGreen == g && fLastCellBlue == b) {
       fNBSameColorCell++;
@@ -1523,7 +1524,7 @@ void TPostScript::Initialize()
    TDatime t;
    PrintStr(t.AsString());
    PrintStr("@");
-   
+
    if ( fMode == 1 || fMode == 4) PrintStr("%%Orientation: Portrait@");
    if ( fMode == 2 || fMode == 5) PrintStr("%%Orientation: Landscape@");
 
@@ -1670,7 +1671,7 @@ void TPostScript::Initialize()
    }
 
    PrintStr("%%EndProlog@");
-   PrintStr("%%BeginSetup@"); 	 
+   PrintStr("%%BeginSetup@");
    PrintStr("%%EndSetup@");
    PrintFast(8,"newpath ");
    SaveRestore(1);
@@ -2254,11 +2255,11 @@ void TPostScript::SetLineJoin( Int_t linejoin )
 {
    // Set the value of the global parameter TPostScript::fgLineJoin.
    // This parameter determines the appearance of joining lines in a PostScript
-   // output. 
-   // It takes one argument which may be: 
+   // output.
+   // It takes one argument which may be:
    //   - 0 (miter join)
    //   - 1 (round join)
-   //   - 2 (bevel join) 
+   //   - 2 (bevel join)
    // The default value is 0 (miter join).
    //
    //Begin_Html
@@ -2377,72 +2378,18 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    //
    // This routine writes the string chars into a PostScript file
    // at position xx,yy in world coordinates.
-   //
-   // Note the special action of the following special characters:
-   //
-   //       ` : go to Greek
-   //       ' : go to special
-   //       ~ : go to ZapfDingbats
-   //       ? : go to subscript
-   //       ^ : go to superscript
-   //       ! : go to normal level of script
-   //       & : backspace one character
-   //       # : end of Greek or of ZapfDingbats
-   //
-   // Note1: This special characters have no effect on the screen.
-   // Note2: To print one of the characters above in the Postscript file
-   //        use the escape character "@" in front of the character.
-
-   // npiece= max number of pieces of text ( separated by escape characters)
-   const Int_t npiece = 50;
-   const Int_t kline  = 80;
-   Int_t ifnb[npiece], level[npiece], lback[npiece];
-   Double_t ifns[npiece];
-
-   // maximum length of a (PostScript) string
-   Int_t ideb, n1, n2, ipiece, fnb;
-   ideb = 0;
-   const char *psfnb;
-   char *pc;
-   char *lunps;
-   char *scape;
-   char *piece[npiece];
-   static char newtext[512];
-   static char char2[512];
-   static char kpiece[kline*npiece];
-   static char klunps[80];
-   static char pstemp[3];
-
-   Bool_t roman,greek,special,zapf,subscript,superscript,escape;
-   Bool_t show;
-
-   const char *cflip = "`'\?^@#!~&";
-   static const char *cflipc[] = {"120","47","77","136","100","43","41","176","46"};
 
    static const char *psfont[] = {
-    "/Times-Italic", "/Times-Bold", "/Times-BoldItalic",
-    "/Helvetica", "/Helvetica-Oblique", "/Helvetica-Bold",
-    "/Helvetica-BoldOblique", "/Courier", "/Courier-Oblique",
-    "/Courier-Bold", "/Courier-BoldOblique", "/Symbol","/Times-Roman",
-    "/ZapfDingbats", "/Times-Italic", "/Times-Bold", "/Times-BoldItalic",
-    "/Helvetica", "/Helvetica-Oblique", "/Helvetica-Bold",
-    "/Helvetica-BoldOblique", "/Symbol", "/Times-Roman", "/ZapfDingbats",
-    "/Special", "/ZapfChancery-MediumItalic", "/AvantGarde-Book",
-    "/AvantGarde-BookOblique", "/AvantGarde-Demi",
-    "/AvantGarde-DemiOblique", "/Bookman-Demi", "/Bookman-DemiItalic",
-    "/Bookman-Light", "/Bookman-LightItalic", "/Palatino-Roman",
-    "/Palatino-Italic", "/Palatino-Bold", "/Palatino-BoldItalic",
-    "/NewCenturySchlbk-Roman", "/NewCenturySchlbk-Italic",
-    "/NewCenturySchlbk-Bold", "/NewCenturySchlbk-BoldItalic"};
+    "/Times-Italic"         , "/Times-Bold"         , "/Times-BoldItalic",
+    "/Helvetica"            , "/Helvetica-Oblique"  , "/Helvetica-Bold"  ,
+    "/Helvetica-BoldOblique", "/Courier"            , "/Courier-Oblique" ,
+    "/Courier-Bold"         , "/Courier-BoldOblique", "/Symbol"          ,
+    "/Times-Roman"          , "/ZapfDingbats"};
 
    const Double_t kDEGRAD = TMath::Pi()/180.;
    Double_t x = xx;
    Double_t y = yy;
-   lunps   = &klunps[0];
    if (!gPad) return;
-   Int_t nold = strlen(chars);
-   if (nold == 0) return;
-   if (nold > 512) nold = 512;
 
    // Compute the font size. Exit if it is 0
    // The font size is computed from the TTF size to get exactly the same
@@ -2452,13 +2399,13 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    Float_t tsize, ftsize;
 
    if (wh < hh) {
-      tsize = fTextSize*wh;
+      tsize         = fTextSize*wh;
       Int_t sizeTTF = (Int_t)(tsize*kScale+0.5); // TTF size
-      ftsize = (sizeTTF*fXsize*gPad->GetAbsWNDC())/wh;
+      ftsize        = (sizeTTF*fXsize*gPad->GetAbsWNDC())/wh;
    } else {
-      tsize = fTextSize*hh;
+      tsize         = fTextSize*hh;
       Int_t sizeTTF = (Int_t)(tsize*kScale+0.5); // TTF size
-      ftsize = (sizeTTF*fYsize*gPad->GetAbsHNDC())/hh;
+      ftsize        = (sizeTTF*fYsize*gPad->GetAbsHNDC())/hh;
    }
    Double_t fontsize = 4*(72*(ftsize)/2.54);
    if( fontsize <= 0) return;
@@ -2467,696 +2414,76 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    Float_t tsizey = gPad->AbsPixeltoY(0)-gPad->AbsPixeltoY(Int_t(tsize));
 
    Int_t font = abs(fTextFont)/10;
-   if( font > 42 || font < 1) font = 1;
+   if( font > 14 || font < 1) font = 1;
 
-   // Text colour and vertical alignment
+   // Text color.
    SetColor(Int_t(fTextColor));
-   Int_t txalh   = fTextAlign/10;
+
+   // Text alignment.
+   Int_t txalh = fTextAlign/10;
    if (txalh <1) txalh = 1; if (txalh > 3) txalh = 3;
-   Int_t txalv   = fTextAlign%10;
+   Int_t txalv = fTextAlign%10;
    if (txalv <1) txalv = 1; if (txalv > 3) txalv = 3;
-   if( txalv == 3) {
+   if (txalv == 3) {
       y -= 0.8*tsizey*TMath::Cos(kDEGRAD*fTextAngle);
       x += 0.8*tsizex*TMath::Sin(kDEGRAD*fTextAngle);
-   }
-   else if( txalv == 2) {
+   } else if (txalv == 2) {
       y -= 0.4*tsizey*TMath::Cos(kDEGRAD*fTextAngle);
       x += 0.4*tsizex*TMath::Sin(kDEGRAD*fTextAngle);
    }
+   UInt_t w, h;
 
-   // The hollow fonts are set on by the roman font number
-   show = kFALSE;
-   if( font > 14 && font < 25) show = kTRUE;
+   TText t;
+   t.SetTextSize(fTextSize);
+   t.SetTextFont(fTextFont);
+   t.GetTextExtent(w, h, chars);
+   Double_t charsLength = gPad->AbsPixeltoX(w)-gPad->AbsPixeltoX(0);
+   Double_t charsHeight = gPad->AbsPixeltoY(0)-gPad->AbsPixeltoY(h);
+   if(txalh == 2) x = x - charsLength/2;
+   if(txalh == 3) x = x - charsLength;
 
-   // Start a first parsing:
-   //   manage the '@' escape character
-   //   check if the input string is not too long (J<=505)
-   Bool_t curlybracket = kFALSE;
-   escape  = kFALSE;
-   Int_t j = 0;
-   Int_t i = 0;
-   Int_t flip;
-
-   for (i=0; i<nold; i++) {
-      if( j >= 505) {
-         Error("Text", "too many characters in input string (%d)", j);
-         return;
-      }
-      if( escape) { escape = kFALSE; continue; }
-      if( chars[i] == '{') curlybracket = kTRUE;
-      if( chars[i] == '@') {
-         for (flip=0; flip<9;flip++) {
-            if (chars[i+1] == cflip[flip]) {
-               newtext[j] = kBackslash;
-               j++;
-               strcpy(&newtext[j], cflipc[flip]);
-               j = strlen(&newtext[0]);
-               escape = kTRUE;
-               break;
-            }
-         }
-         if (escape) continue;
-      }
-
-   // in case of ntuple selections, escape ! and &
-      if (curlybracket) {
-         flip = 0;
-         if (chars[i] == cflip[6]) flip = 6;
-         if (chars[i] == cflip[8]) flip = 8;
-         if (flip) {
-            newtext[j] = kBackslash;
-            j++;
-            strcpy(&newtext[j], cflipc[flip]);
-            j = strlen(&newtext[0]);
-            continue;
-         }
-      }
-      if( chars[i] == '\n') continue;
-      newtext[j] = chars[i];
-      j++;
-      newtext[j] = 0;
-   }
-   Int_t nchp = strlen(&newtext[0]);
-
-   // Now a second parsing to search for the PostScript
-   //  characters (following a \) and ( , ), \  *******
-   Int_t iold = 1;
-   Int_t inew = 0;
-   Int_t nnew = 0;
-   Int_t knew = 0;
-
-   // loop on nchp old characters and look for backslash
-   while (iold <= nchp ) {
-
-   //              1. find a backslash
-   //                 ================
-   // if this backslash is not the last character of the string, then
-   // study the character following this backslash
-   //
-
-      char2[inew] = 0;
-      if (newtext[iold-1] == kBackslash)  {
-         if ( iold == nchp) goto L60;
-
-   //  1.1  the character following this backslash is also a backslash
-         if (newtext[iold] == kBackslash)  {
-            char2[inew] = kBackslash;     //  copy both backslashes
-            inew++;
-            char2[inew] = kBackslash;
-            inew++;
-            iold++;                    // and go to the next character
-            goto LOOPEND;
-         }
-
-   //  1.2  the character following this backslash is a parenthesis: ( or )
-         if ( newtext[iold] == '('  || newtext[iold] == ')')  {
-            char2[inew] = kBackslash;           // copy the backslash and the parenthesis
-            inew++;
-            char2[inew] = newtext[iold];
-            inew++;
-            iold++;                            // and go to the following character
-            goto LOOPEND;
-         }
-
-   //  1.3  the character following this backslash is also a special PostScript character:
-   //      \n    linefeed (newline)
-   //      \r    carriage return
-   //      \t    horizontal tab
-   //      \f    form feed
-         if (newtext[iold] == 'n'  ||
-            newtext[iold] == 'r'  ||
-            newtext[iold] == 't'  ||
-            newtext[iold] == 'f')  {
-            iold++;      // copy nothing and go to the following character
-            goto LOOPEND;
-         }
-
-   //  1.4  the character following this backslash is the special PostScript character:
-   //      \b    back space
-   //
-         if ( newtext[iold] == 'b')  {
-            char2[inew]='&';        // replace the sequence \b by the & escape character
-            inew++;
-            iold++;                 //  and forget the b
-            goto LOOPEND;
-         }
-
-   //  1.5  the character following this backslash is a digit between 0 and 7,
-   //  which means that the input text contains a string like \123 where
-   //  123 is an octal number the accepted ranges are 40-176 and 241-376
-   //  ( all others are ASCII control characters )
-   //
-   //    =>   first, study the range 40-77 (case of 2 digits after the \)
-         Int_t k;
-         for ( k=40; k<78; k++) {
-            sprintf(&pstemp[0],"%d", k);
-            Int_t iadd = 0;
-            if( strncmp(&pstemp[0], &newtext[iold], 2)) {
-               if( newtext[iold] != '0' || strncmp(&pstemp[0], &newtext[iold+1], 2)) continue;
-               iadd = 1;
-            }
-            char2[inew]   = kBackslash;    // OK:copy the backslash and the 2 following digits and add a 0
-            char2[inew+1] = '0';
-            strncpy(&char2[inew+2], &newtext[iold+iadd], 2);
-            inew += 4;
-            iold += 2+iadd;              // and go parsing the next following old character
-            goto LOOPEND;
-         }
-
-   //    =>   then, study the ranges  100-177 and 241-377
-   //           (case of 3 digits after the backslash)
-         for (k=100; k<378; k++) {
-            if( k >= 178  &&  k <= 240) continue;
-            sprintf(&pstemp[0],"%d", k);
-            if( !strncmp(&pstemp[0], &newtext[iold], 3) ) {
-               strncpy(&char2[inew], &newtext[iold-1],4);     // OK:  copy the backslash and the 3 following digits
-               inew += 4;
-               iold += 3;      //  and go parsing the next following old character
-               goto LOOPEND;
-            }
-         }
-L60:
-
-   //  1.6 this backslash is followed by nothing understandable in PostScript,
-   //   it is an "isolated backslash" which will appear as \\.  Copy two backslashes
-         char2[inew] = kBackslash;
-         inew++;
-         char2[inew] = kBackslash;
-         inew++;
-         goto LOOPEND;
-      }
-
-   // 2. find ( or ) not preceded by a backslash : include one backslash
-      else if( newtext[iold-1] == '(' ||  newtext[iold-1] == ')')  {
-         if( i == 1 || newtext[iold-2] != kBackslash)  {
-            char2[inew] = kBackslash;
-            inew++;
-            char2[inew] = newtext[iold-1];
-            inew++;
-            goto LOOPEND;
-         }
-         goto LOOPEND;
-      }
-
-   // 3. treat normal text
-      else {
-         char2[inew] = newtext[iold-1];
-         if (font != 12) { 
-            if (char2[inew] == '\345') char2[inew] = '\357';  //a Angstroem
-            if (char2[inew] == '\305') char2[inew] = '\362';  //A Angstroem
-         }
-         inew++;
-      }
-LOOPEND:
-      iold++;
-      char2[inew] = 0;
-   }
-
-   // now a third parsing to cut the text into pieces
-   // for each piece of text, I define
-   //      a. the string content = PIECE(I)
-   //      b. the font # = IFNB(I)= font: roman, 12: Greek ,
-   //                         14: ZapfdingBats
-   //      c. the font size = IFNS(I)
-   //      d. a level flag = LEVEL(I) = 1: normal
-   //                                   2: superscript
-   //                                   3: subscript
-   //      e. a "backward" flag = LBACK(I) = 0: normal text ,
-   //                                      = 1: superscript and
-   //                                           subscript start at
-   //                                           the same x
-   //                                      = -n: for n backspaces
-   char * kl = &kpiece[0];
-   for (i=0;i<npiece;i++) {
-      piece[i] = kl;
-      strcpy(kl," ");
-      kl += kline;
-      ifns[i]  = 0;
-      ifnb[i]  = 0;
-      level[i] = 0;
-      lback[i] = 0;
-   }
-
-   roman       = kTRUE;
-   greek       = kFALSE;
-   special     = kFALSE;
-   zapf        = kFALSE;
-   superscript = kFALSE;
-   subscript   = kFALSE;
-
-   Int_t nt   = 0;          // NT=number for pieces  of text
-   Int_t ich  = 0;
-   nchp       = strlen(&char2[0]);
-   while (ich < nchp ) {
-      ich++;
-      Int_t nbas = 0;
-
-   // read character number I and check if it is a escape character
-      scape = 0;
-      if (TestBit(kLatex)) scape = 0;
-      else                 scape  = (char*)strchr(cflip, char2[ich-1]);
-      if( scape )  {
-         if ( *scape == cflip[0] ) {
-            greek = kTRUE;          //- find ` : go to Greek
-         }
-         else  if( *scape == cflip[1] ) {
-            special = kTRUE;        //- find ' : go to special
-         }
-         else  if( *scape == cflip[2] ) {
-            subscript   = kTRUE;      //- find ? : go to subscript
-            superscript = kFALSE;
-         }
-         else  if( *scape == cflip[3] ) {
-            superscript = kTRUE;     //- find ^ : go to superscript
-            subscript   = kFALSE;
-         }
-         else  if( *scape == cflip[5] )  {
-            roman   = kTRUE;       //- find # : end of special, Greek or of Zapf => go to roman
-            zapf    = kFALSE;
-            special = kFALSE;
-            greek   = kFALSE;
-         }
-         else  if( *scape == cflip[6] )  {
-            superscript = kFALSE;     //- find ! : go to normal level of script
-            subscript   = kFALSE;
-         }
-         else  if( *scape == cflip[7] ) {
-            zapf = kTRUE;    //- find ~ : go to ZapfDingbats
-         }
-         else  if( *scape == cflip[8] )  {
-            nbas = 1;                                // find & : backspace is required
-            for (j=i; j<nchp;j++) {                  // check if many backspaces are required:
-               if( char2[j] != cflip[8] ) break;     // compute how many consecutive backspaces
-               nbas++;                               // in the nchp-I remaining characters
-            }
-
-   // Since I have to backspace some text, (part of the preceding piece),
-   // I define two pieces:
-   //
-   // a. the string which follows normally the & ( i.e. up to the next
-   //    escape character)
-   //
-   // b. the string to be backspaced, i.e. a part of the preceding piece so
-   //    I create a new piece which is a copy the preceding with LBACK<0
-            if (nt <= 0) return;
-            lback[nt] = -nbas;          // and the other parameters identical
-            strcpy(piece[nt], piece[nt-1]);
-            ifnb[nt]  = ifnb[nt-1];
-            ifns[nt]  = ifns[nt-1];
-            level[nt] = 0;     // except the level, since the backspaced piece is not printed
-            nt++;
-            if( nbas > 1 )  { ich += nbas-1; continue; }    // however, in case of multiple backspaces,
-         }                                                  // take the &&&...&&& as a whole
-      }
-      else {          // the character is not a control character
-
-   // START of a new text: on the first character, or on the
-   //    first non escape char. which follows an escape char.
-         if( ich != 1) scape = (char*)strchr(cflip, char2[ich-2]);
-         if (TestBit(kLatex)) scape = 0;
-         if( scape || ich == 1)  {
-            ideb = ich;
-            if( roman)       ifnb[nt]   = font;     //- set font # (IFNB)
-            if( greek)       ifnb[nt]   = 12;
-            if( zapf)        ifnb[nt]   = 14;
-            if( special)     ifnb[nt]   = 25;
-            ifns[nt] = fontsize;                    //- set font size (IFNS)
-            if( superscript) ifns[nt]   = 0.7*fontsize;
-            if( subscript)   ifns[nt]   = 0.7*fontsize;
-            level[nt]   = 0;                        //- set level flag (LEVEL)
-            if( superscript) level[nt]  = Int_t(0.5 + fontsize/2);
-            if( subscript)   level[nt]  = Int_t(0.5 - fontsize/3);
-            nt++;
-         }
-         if( superscript || subscript) lback[nt-1] = 1;     //set LBACK flag (1 for sub/uperscript)
-
-   // END of this text: on the last character or on
-   //      the last non escape which precedes an escape (but
-   //      the terminating escape character itself is not known)
-         if( ich != nchp) scape = (char*)strchr(cflip, char2[ich]);
-         if (TestBit(kLatex)) scape = 0;
-         if( scape || ich == nchp)  {
-            Int_t ifin = ich;                 // compute text length and make one piece
-            Int_t ilen = ifin - ideb + 1;     // if length <74 and not 80, because of
-            pc = piece[nt-1];                 // () and \040 on the PostScript file
-            if( ilen < 74)  {
-               strncpy(pc, &char2[ideb-1], ilen);
-               pc[ilen] = 0;
-               if( char2[ifin-1] == ' ') {     // if the last character is ' '
-                  pc[ilen-1] = kBackslash;     // it is replaced with \040
-                  strcpy(pc+ilen, "040");
-               }
-            }
-            else {                      // make several pieces if length > 74
-               Int_t i1  = ideb;
-               Int_t i2  = i1+73;
-               Int_t nts = nt;
-L120:           // check if CHAR2 will not be cut in the middle of an octal code
-               Int_t ib = 0;
-               if (char2[i2-3] == kBackslash ) ib = 1;
-               if (char2[i2-2] == kBackslash ) ib = 2;
-               if (char2[i2-1] == kBackslash ) ib = 3;
-               if (ib && i2-i1 == 73 && i2 != nchp) i2 += ib - 4;
-               pc = piece[nt-1];                    // copy CHAR2 in the piece number NT
-               strncpy(pc, &char2[i1-1], i2-i1+1);    // with I2 readjusted
-               pc[i2-i1+1] = 0;
-               if( char2[i2-1] == ' ') {
-                  Int_t ilp  = strlen(pc);
-                  pc[ilp]    = kBackslash;          // if the last character is ' '
-                  strcpy(pc+ilp+1, "040");          // it is replaced with \040
-               }
-               if (i2 != ilen) {
-                  i1        = i2+1;
-                  if (ilen < i1+73) i2 = ilen;
-                  else              i2 = i1+73;
-                  ifnb[nt]  = ifnb[nts-1];
-                  ifns[nt]  = ifns[nts-1];
-                  level[nt] = level[nts-1];
-                  lback[nt] = lback[nts-1];
-                  nt++;
-                  goto L120;
-               }
-            }
-         }
-      }
-   }
-
-   // Finally, a fourth parsing for 3 reasons:
-   for (i=0; i<nt; i++) {
-
-   // 1. LEVEL of sub/superscript after a multiple backsp. text:
-   //      one has:
-   //      i-2: text normally output lback=0
-   //      i-1 : text following in superscript mode
-   //      i : part of the preceding (not printed) in which one
-   //          computes the backspace
-   //      i+1: text following the backspace
-   //      =>  since PIECE(i-1) and PIECE(I+1) are superposed;
-   //      I increase the level such that LEVEL(I-1)=IFNS(I-1)
-
-      if( lback[i] < -1)  {
-         if ( i > 0 ) {
-            if( level[i-1] > 0) level[i-1] =  (Int_t)ifns[i-1];       //   superscript
-            if( level[i-1] < 0) level[i-1] = -(Int_t)ifns[i-1];       //   subscript
-         }
-      }
-
-   // 2. LEVEL of sub/ superscript after ONE backspaced text:
-   //   put the LEVEL to +(current font size) for superscript
-   //    and to - (current font size) for subscript
-      if ( i > 0 ) {
-         if( lback[i-1] == -1)  {
-            if( level[i] > 0) level[i] = (Int_t)ifns[i];     //   superscript
-            if( level[i] < 0) level[i] =-(Int_t)ifns[i];     //   subscript
-         }
-      }
-
-   // 3. correct in the Greek text the 4 characters in the /Symbol font
-   //   which are not " at their correct place" w.r.t. the HIGZ official table
-      if( ifnb[i] == 12)  {
-         pc = piece[i];
-         for ( j=0;j<(int)strlen(pc);j++) {
-            //if(      pc[j] == 'J')  pc[j]='I';
-            //else if( pc[j] == 'V')  pc[j]='C';
-            //else if( pc[j] == 'C')  pc[j]='H';
-            //else if( pc[j] == 'H')  pc[j]='C';
-            //else if( pc[j] == 'j')  pc[j]='i';
-            //else if( pc[j] == 'v')  pc[j]='c';
-            //else if( pc[j] == 'c')  pc[j]='h';
-            //else if( pc[j] == 'h')  pc[j]='c';
-         }
-      }
-   }
-
-   // write PS
-   // position of text from arguments
+   // Text angle.
    Int_t psangle = Int_t(0.5 + fTextAngle);
 
+   // Save context.
    PrintStr("@");
+   SaveRestore(1);
 
-   // 1. text is left aligned
-   if( txalh <= 1)  {
-      SaveRestore(1);
-      WriteInteger(XtoPS(x));
-      WriteInteger(YtoPS(y));
-      PrintStr("@");
-      sprintf(lunps, " t %d r 0 0 m", psangle);
-      PrintStr(lunps);
-   }
+   // Clipping
+   Int_t xc1 = XtoPS(gPad->GetX1());
+   Int_t xc2 = XtoPS(gPad->GetX2());
+   Int_t yc1 = YtoPS(gPad->GetY1());
+   Int_t yc2 = YtoPS(gPad->GetY2());
+   WriteInteger(xc2 - xc1);
+   WriteInteger(yc2 - yc1);
+   WriteInteger(xc1);
+   WriteInteger(yc1);
+   PrintStr(" C");
 
-   // 2. the text is centered or right-adjusted => compute the whole length
-   else if( txalh == 2 || txalh == 3)  {
+   // Output text position and angle.
+   WriteInteger(XtoPS(x));
+   WriteInteger(YtoPS(y));
+   PrintStr(Form(" t %d r ", psangle));
+   PrintStr(psfont[font-1]);
+   PrintStr(Form(" findfont %g sf 0 0 m (",fontsize));
 
-      PrintStr(" /xs 0 def ");   // initialize variable containing the string length
-
-      ipiece = 0;
-L170:
-      ipiece++;                // loop on all pieces and add the length of each piece
-      if( ipiece > nt) goto L250;
-
-   // 2.1. ONE backspaced text: forget the piece to be backspaced
-   //      and the piece which follows
-      if( lback[ipiece-1] == -1)  {
-         ipiece++;
-         goto L170;
-      }
-
-   // 2.2  backspaced text by more than one backspace
-      pc    = piece[ipiece-1];
-      fnb   = ifnb[ipiece-1];
-      psfnb = psfont[fnb-1];
-      if( lback[ipiece-1] < -1)  {
-         sprintf(lunps, "(%s)", pc);
-         PrintStr(lunps);
-         sprintf(lunps, " %d %s%g stwb ", abs(lback[ipiece-1]), psfnb, ifns[ipiece-1]);
-         PrintStr(lunps);
-         goto L170;
-      }
-
-   // 2.3  many superscript and many subscript at the same x
-      if( lback[ipiece-1] == 1 && lback[ipiece] == 1)  {
-         n1 = 0;
-         n2 = 0;
-         for (j=ipiece-1;j<nt;j++) {                  // loop on pieces,
-            if( lback[j] != 1) break;                 // computes how many pieces with LBACK=1
-            if( level[j] == level[ipiece-1]) n1++;    // and check if they are all at the same level
-            else           n2++;                      // if yes, this is "standard" text
+   // Output text.
+   char str[8];
+   Int_t len=strlen(chars);
+   for (Int_t i=0; i<len;i++) {
+      if (chars[i]!='\n') {
+         if (chars[i]=='(' || chars[i]==')') {
+            sprintf(str,"\\%c",chars[i]);
+         } else {
+            sprintf(str,"%c",chars[i]);
          }
-         if( n1 == 0 || n2 == 0) goto L240;
-
-   // since many fonts are possible in sub/superscript, we output all
-   // the pieces in super/subscript then thoses in sub/superscript
-         PrintStr(" /s1 0 def ");          //- a) first pieces subscript or superscript
-         for (j=ipiece-1;j<nt;j++) {
-            if( level[j] != level[ipiece-1]) break;
-            Int_t fnbj    = ifnb[j];
-            const char * psfnbj = psfont[fnbj-1];
-            sprintf(lunps, " %s findfont %g sf",  psfnbj, ifns[ipiece-1]);
-            PrintStr(lunps);
-            sprintf(lunps," (%s) sw pop s1 add /s1 exch def", piece[j]);
-            PrintStr(lunps);
-            knew = j+1;
-         }
-
-         PrintStr(" /s2 0 def ");        //- b) then superscript or subscript
-         knew++;
-         for ( j=knew-1;j<nt;j++) {
-            if( level[j] != level[knew-1]) break;
-            Int_t fnbj    = ifnb[j];
-            const char * psfnbj = psfont[fnbj-1];
-            sprintf(lunps, " %s findfont %g sf",  psfnbj, ifns[ipiece-1]);
-            PrintStr(lunps);
-            sprintf(lunps," (%s) sw pop s2 add /s2 exch def", piece[j]);
-            PrintStr(lunps);
-            nnew = j+1;
-         }
-
-   //- between subscript and superscript, which one is the longest?
-         PrintStr(" s1 s2 ge { xs s1 add /xs exch def} { xs s2 add /xs exch def} ifelse ");
-         ipiece = nnew;          //- since many pieces are treated
-         goto L170;              //  :increase piece counter accordingly
-      }
-
-   //- 2.4. "standard" text:
-L240:
-      if( lback[ipiece-1] == 0 || lback[ipiece-1] == 1)  {
-         pc    = piece[ipiece-1];
-         fnb   = ifnb[ipiece-1];
-         psfnb = psfont[fnb-1];
-         sprintf(lunps,"(%s)", pc);
-         PrintStr(lunps);
-         sprintf(lunps," %s %g stwn ", psfnb, ifns[ipiece-1]);
-         PrintStr(lunps);
-      }
-      goto L170;
-L250:
-
-      if( txalh == 2)  {             //- Centered text
-         SaveRestore(1);
-         WriteInteger(XtoPS(x));
-         WriteInteger(YtoPS(y));
-         PrintStr("@");
-         sprintf(lunps," t %d r xs 2 div neg 0 t 0 0 m", psangle);
-         PrintStr(lunps);
-      }
-      else if( txalh == 3)  {       //- Right adjusted text
-         SaveRestore(1);
-         WriteInteger(XtoPS(x));
-         WriteInteger(YtoPS(y));
-         PrintStr("@");
-         sprintf(lunps," t %d r  xs neg 0 t 0 0 m", psangle);
-         PrintStr(lunps);
+         PrintStr(str);
       }
    }
 
-   ipiece = 0;
-L260:                       //-   now output the pieces
-   ipiece++;
-   pc    = piece[ipiece-1];
-   fnb   = ifnb[ipiece-1];
-   psfnb = psfont[fnb-1];
-   if( ipiece > nt) goto L340;
+   PrintStr(") show NC");
 
-   // make the PostScript file:
-   //
-   // 1. ONE backspace: output "piece" to be backspaced AND following piece
-   //    first save current graphic state, compute backward distance,
-   //    and move to that point
-   if( lback[ipiece-1] == -1)  {
-      SaveRestore(1);
-      sprintf(lunps,"%s findfont %g sf ", psfnb, ifns[ipiece-1]);
-      PrintStr(lunps);
-      sprintf(lunps,"(%s)", pc);
-      PrintStr(lunps);
-      PrintStr(" dup length 1 sub 1 getinterval ");
-      sprintf(lunps," stringwidth pop 2 div neg %d rm ", level[ipiece-1]);
-      PrintStr(lunps);
-
-   // then, text following one backspace: backspace also 1/2 of text
-   //   ( normally one character) print and restore preceding graphic state
-      Int_t fnb1   = ifnb[ipiece];
-      const char *psfnb1 = psfont[fnb1-1];
-      sprintf(lunps," %s findfont %g sf 0 %d rm ",  psfnb1, ifns[ipiece], level[ipiece]);
-      PrintStr(lunps);
-      sprintf(lunps,"(%s)", piece[ipiece]);
-      PrintStr(lunps);
-      PrintStr(" stringwidth pop 2 div neg 0 rm ");
-      sprintf(lunps,"(%s)", piece[ipiece]);
-      PrintStr(lunps);
-      if( show) PrintStr(" oshow");
-      else      PrintStr(" show");
-      SaveRestore(-1);
-      ipiece++;       // since two pieces are treated increase piece counter
-      goto L260;
-   }
-
-   // 2. Many Backspaces
-   if( lback[ipiece-1] < -1)  {
-
-   // first, protect against a number of backspaces larger than
-   // the total number of characters in the string to be
-   // backspaced
-      sprintf(lunps," %d /nbas exch def ", abs(lback[ipiece-1]));
-      PrintStr(lunps);
-      sprintf(lunps," (%s)", pc);
-      PrintStr(lunps);
-      PrintStr(" length /tlen exch def nbas tlen gt { /nbas tlen def } if ");
-      sprintf(lunps, " %s findfont %g sf",  psfnb, ifns[ipiece-1]);
-      PrintStr(lunps);
-      sprintf(lunps,"(%s)", pc);
-      PrintStr(lunps);
-      PrintStr(" dup length nbas sub nbas getinterval stringwidth pop neg 0 t ");
-      goto L260;
-   }
-
-   // 3.  superscript and subscript at the same x
-   if( lback[ipiece-1] == 1 && lback[ipiece] == 1)  {
-      n1=0;
-      n2=0;
-      for (j=ipiece-1; j<nt; j++) {                 // loop on pieces,
-         if( lback[j] != 1) break;                  // computes how many pieces with LBACK=1
-         if( level[j] == level[ipiece-1])  n1++;    // if yes, this is "standard" text
-         else           n2++;
-      }
-      if( n1 == 0 || n2 == 0) goto L330;
-
-   // since many fonts are possible in sub/superscript, we output all
-   // the pieces in super/subscript then thoses in sub/superscript
-
-   //   a) first pieces subscript or superscript
-      SaveRestore(1);
-      SaveRestore(1);
-      sprintf(lunps," 0 %d rm ", level[ipiece-1]);
-      PrintStr(lunps);
-
-      for ( j=ipiece-1; j<nt; j++) {
-         if( level[j] != level[ipiece-1]) break;
-         Int_t fnb1 = ifnb[j];
-         const char *psfnb1 = psfont[fnb1-1];
-         sprintf(lunps, " %s findfont %g sf",  psfnb1, ifns[ipiece-1]);
-         PrintStr(lunps);
-         sprintf(lunps,"(%s)", piece[j]);
-         PrintStr(lunps);
-         if( show) PrintStr(" dup oshow  true charpath currentpoint pop /s1 exch def");
-         else      PrintStr(" show currentpoint pop /s1 exch def");
-         knew = j + 1;
-      }
-      SaveRestore(-1);
-
-   //   b) then superscript or subscript
-      knew++;
-
-      sprintf(lunps," 0 %d rm ", level[knew-1]);
-      PrintStr(lunps);
-      for ( j=knew-1; j<nt; j++) {
-         if( level[j] != level[knew-1] ) break;
-         Int_t fnb1 = ifnb[j];
-         const char *psfnb1 = psfont[fnb1-1];
-         sprintf(lunps, " %s findfont %g sf",  psfnb1, ifns[ipiece-1]);
-         PrintStr(lunps);
-         sprintf(lunps,"(%s)", piece[j]);
-         PrintStr(lunps);
-         if( show) PrintStr(" dup oshow  true charpath currentpoint pop /s2 exch def");
-         else      PrintStr(" show currentpoint pop /s2 exch def");
-         nnew = j + 1;
-      }
-
-      SaveRestore(-1);
-
-   // at which x- value, should one translate the current state?
-      PrintStr(" s1 s2 ge {s1 0 t} {s2 0 t} ifelse ");
-      ipiece = nnew;           // since many pieces are treated
-      goto L260;               // :increase piece counter accordingly
-   }
-
-   // 4. "standard" text: output current "piece" of text
-L330:
-   if( lback[ipiece-1] == 0 || lback[ipiece-1] == 1)  {
-      fnb   = ifnb[ipiece-1];
-      psfnb = psfont[fnb-1];
-      sprintf(lunps," %s findfont %g sf 0 %d m ", psfnb, ifns[ipiece-1],level[ipiece-1]);
-      PrintStr(lunps);
-      sprintf(lunps,"(%s)", piece[ipiece-1]);
-      PrintStr(lunps);
-      if( show)  {
-         PrintStr(" dup oshow");
-
-   // move currentpoint ( if not last piece of text)
-         if( ipiece != nt) PrintStr(" true charpath currentpoint pop 0 t ");
-      }
-      else {
-         PrintStr(" show ");
-
-   // move currentpoint ( if not last piece of text)
-         if( ipiece != nt) PrintStr(" currentpoint pop 0 t ");
-      }
-      goto L260;
-   }
-
-L340:                 //  end of loop on pieces
-
-   SaveRestore(-1);   // save current graphic state after
-                      // the last piece of text
+   SaveRestore(-1);
 }
 
 //______________________________________________________________________________
