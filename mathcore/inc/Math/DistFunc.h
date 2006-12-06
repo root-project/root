@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DistFunc.h,v 1.4 2005/11/24 17:08:35 rdm Exp $
+// @(#)root/mathcore:$Name:  $:$Id: DistFunc.h,v 1.5 2005/12/08 21:56:39 moneta Exp $
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
 
 /**********************************************************************
@@ -45,7 +45,11 @@ namespace Math {
 
 
   /** @name Probability Density Functions (PDF)
-   *  Probability density functions of various distributions. 
+   *  Probability density functions of various distributions.
+   *  The probability density function returns the probability that 
+   *  the variate has the value x. 
+   *  In statistics the PDF is called also as the frequency function.
+   * 
    */
   //@{
 

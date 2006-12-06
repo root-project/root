@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: ProbFuncMathCore.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: ProbFuncMathCore.h,v 1.2 2005/12/08 21:56:39 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   06/2005 
 
 #ifndef ROOT_Math_ProbFuncMathCore
@@ -10,16 +10,25 @@ namespace Math {
 
   /** @name Cumulative Distribution Functions (CDF)
    *  Cumulative distribution functions of various distributions.
-   *  The functions with the extension _quant calculate the
+   *  The functions with the extension <em>_cdf</em> calculate the
    *  lower tail integral of the probability density function
    *
    *  \f[ D(x) = \int_{-\infty}^{x} p(x') dx' \f]
    *
-   *  while those with the _prob extension calculate the 
-   *  upper tail integral of the probability density function
+   *  while those with the <em>_cdf_c</em> extension calculate the complement of 
+   *  cumulative distribution function, called in statistics the survival 
+   *  function. 
+   *  It corresponds to the upper tail integral of the 
+   *  probability density function
    *
    *  \f[ D(x) = \int_{x}^{+\infty} p(x') dx' \f]
    *
+   * 
+   * <bf>NOTE:</bf> In the old releases (< 5.14) the <em>_cdf</em> functions were called 
+   * <em>_quant</em> and the <em>_cdf_c</em> functions were called 
+   * <em>_prob</em>. 
+   * These names are currently kept for backward compatibility, but 
+   * their usage is deprecated.
    */
   //@{
 
@@ -29,9 +38,9 @@ namespace Math {
 
   /**
 
-  Cumulative distribution function (upper tail) of the Breit_Wigner 
+  Complement of the cumulative distribution function (upper tail) of the Breit_Wigner 
   distribution and it is similar (just a different parameter definition) to the 
-  Cauchy distribution (see #cauchy_prob )
+  Cauchy distribution (see #cauchy_cdf_c )
 
   \f[ D(x) = \int_{x}^{+\infty} \frac{1}{\pi} \frac{\frac{1}{2} \Gamma}{x'^2 + (\frac{1}{2} \Gamma)^2} dx' \f]
 
@@ -39,14 +48,14 @@ namespace Math {
   @ingroup StatFunc
 
   */
-  double breitwigner_prob(double x, double gamma, double x0 = 0);
+  double breitwigner_cdf_c(double x, double gamma, double x0 = 0);
 
 
   /**
 
   Cumulative distribution function (lower tail) of the Breit_Wigner 
   distribution and it is similar (just a different parameter definition) to the 
-  Cauchy distribution (see #cauchy_quant )
+  Cauchy distribution (see #cauchy_cdf )
 
   \f[ D(x) = \int_{-\infty}^{x} \frac{1}{\pi} \frac{b}{x'^2 + (\frac{1}{2} \Gamma)^2} dx' \f]
  
@@ -54,16 +63,16 @@ namespace Math {
   @ingroup StatFunc
 
   */
-  double breitwigner_quant(double x, double gamma, double x0 = 0);
+  double breitwigner_cdf(double x, double gamma, double x0 = 0);
 
 
 
   /**
 
-  Cumulative distribution function (upper tail) of the 
+  Complement of the cumulative distribution function (upper tail) of the 
   Cauchy distribution which is also Lorentzian distribution.
   It is similar (just a different parameter definition) to the 
-  Breit_Wigner distribution (see #breitwigner_prob )
+  Breit_Wigner distribution (see #breitwigner_cdf_c )
 
   \f[ D(x) = \int_{x}^{+\infty} \frac{1}{\pi} \frac{ b }{ (x'-m)^2 + b^2} dx' \f]
 
@@ -74,7 +83,7 @@ namespace Math {
   @ingroup StatFunc
 
   */
-  double cauchy_prob(double x, double b, double x0 = 0);
+  double cauchy_cdf_c(double x, double b, double x0 = 0);
 
 
 
@@ -84,7 +93,7 @@ namespace Math {
   Cumulative distribution function (lower tail) of the 
   Cauchy distribution which is also Lorentzian distribution.
   It is similar (just a different parameter definition) to the 
-  Breit_Wigner distribution (see #breitwigner_quant )
+  Breit_Wigner distribution (see #breitwigner_cdf )
 
   \f[ D(x) = \int_{-\infty}^{x} \frac{1}{\pi} \frac{ b }{ (x'-m)^2 + b^2} dx' \f]
 
@@ -96,7 +105,7 @@ namespace Math {
   @ingroup StatFunc
 
   */
-  double cauchy_quant(double x, double b, double x0 = 0);
+  double cauchy_cdf(double x, double b, double x0 = 0);
 
 
 
@@ -149,7 +158,7 @@ namespace Math {
 
   /**
 
-  Cumulative distribution function of the exponential distribution 
+  Complement of the cumulative distribution function of the exponential distribution 
   (upper tail).
 
   \f[ D(x) = \int_{x}^{+\infty} \lambda e^{-\lambda x'} dx' \f]
@@ -162,8 +171,7 @@ namespace Math {
 
   */
 
-  double exponential_prob(double x, double lambda, double x0 = 0);
-
+  double exponential_cdf_c(double x, double lambda, double x0 = 0);
 
 
 
@@ -182,14 +190,15 @@ namespace Math {
 
   */
 
-  double exponential_quant(double x, double lambda, double x0 = 0);
+
+  double exponential_cdf(double x, double lambda, double x0 = 0);
 
 
 
   /**
   \if later
 
-  Cumulative distribution function of the F-distribution 
+  Complement of the cumulative distribution function of the F-distribution 
   (upper tail).
 
   \f[ D_{n,m}(x) = \int_{x}^{+\infty} \frac{\Gamma(\frac{n+m}{2})}{\Gamma(\frac{n}{2}) \Gamma(\frac{m}{2})} n^{n/2} m^{m/2} x'^{n/2 -1} (m+nx')^{-(n+m)/2} dx' \f] 
@@ -278,21 +287,21 @@ namespace Math {
 
   /**
 
-  Cumulative distribution function of the normal (Gaussian) 
+  Complement of the cumulative distribution function of the normal (Gaussian) 
   distribution (upper tail).
 
   \f[ D(x) = \int_{x}^{+\infty} {1 \over \sqrt{2 \pi \sigma^2}} e^{-x'^2 / 2\sigma^2} dx' \f]
 
   For detailed description see 
   <A HREF="http://mathworld.wolfram.com/NormalDistribution.html">
-  Mathworld</A>. It can also be evaluated using #normal_prob which will 
+  Mathworld</A>. It can also be evaluated using #normal_cdf_c which will 
   call the same implementation. 
 
   @ingroup StatFunc
 
   */
 
-  double gaussian_prob(double x, double sigma, double x0 = 0);
+  double gaussian_cdf_c(double x, double sigma, double x0 = 0);
 
 
 
@@ -312,14 +321,13 @@ namespace Math {
  
   */
 
-  double gaussian_quant(double x, double sigma, double x0 = 0);
-
+  double gaussian_cdf(double x, double sigma, double x0 = 0);
 
 
 
   /**
 
-  Cumulative distribution function of the lognormal distribution 
+  Complement of the cumulative distribution function of the lognormal distribution 
   (upper tail).
 
   \f[ D(x) = \int_{x}^{+\infty} {1 \over x' \sqrt{2 \pi s^2} } e^{-(\ln{x'} - m)^2/2 s^2} dx' \f]
@@ -332,7 +340,7 @@ namespace Math {
 
   */
 
-  double lognormal_prob(double x, double m, double s, double x0 = 0);
+  double lognormal_cdf_c(double x, double m, double s, double x0 = 0);
 
 
 
@@ -352,14 +360,14 @@ namespace Math {
 
   */
 
-  double lognormal_quant(double x, double m, double s, double x0 = 0);
+  double lognormal_cdf(double x, double m, double s, double x0 = 0);
 
 
 
 
   /**
 
-  Cumulative distribution function of the normal (Gaussian) 
+  Complement of the cumulative distribution function of the normal (Gaussian) 
   distribution (upper tail).
 
   \f[ D(x) = \int_{x}^{+\infty} {1 \over \sqrt{2 \pi \sigma^2}} e^{-x'^2 / 2\sigma^2} dx' \f]
@@ -373,7 +381,7 @@ namespace Math {
 
   */
 
-  double normal_prob(double x, double sigma, double x0 = 0);
+  double normal_cdf_c(double x, double sigma, double x0 = 0);
 
 
 
@@ -393,7 +401,7 @@ namespace Math {
  
   */
 
-  double normal_quant(double x, double sigma, double x0 = 0);
+  double normal_cdf(double x, double sigma, double x0 = 0);
 
 
 
@@ -444,7 +452,7 @@ namespace Math {
 
   /**
 
-  Cumulative distribution function of the uniform (flat)  
+  Complement of the cumulative distribution function of the uniform (flat)  
   distribution (upper tail).
 
   \f[ D(x) = \int_{x}^{+\infty} {1 \over (b-a)} dx' \f]
@@ -457,7 +465,7 @@ namespace Math {
 
   */
 
-  double uniform_prob(double x, double a, double b, double x0 = 0);
+  double uniform_cdf_c(double x, double a, double b, double x0 = 0);
 
 
 
@@ -477,7 +485,7 @@ namespace Math {
 
   */
 
-  double uniform_quant(double x, double a, double b, double x0 = 0);
+  double uniform_cdf(double x, double a, double b, double x0 = 0);
 
 
 
@@ -485,7 +493,57 @@ namespace Math {
 
 
   //@}
+   /** @name Backward compatible functions */ 
 
+
+   inline double breitwigner_prob(double x, double gamma, double x0 = 0) {
+      return  breitwigner_cdf_c(x,gamma,x0);
+   }
+   inline double breitwigner_quant(double x, double gamma, double x0 = 0) { 
+      return  breitwigner_cdf(x,gamma,x0);
+   }
+
+   inline double cauchy_prob(double x, double b, double x0 = 0) { 
+      return cauchy_cdf_c(x,b,x0);
+   }
+   inline double cauchy_quant(double x, double b, double x0 = 0) {
+      return cauchy_cdf  (x,b,x0);
+   }
+
+   inline double exponential_prob(double x, double lambda, double x0 = 0) { 
+      return exponential_cdf_c(x, lambda, x0 );
+   }
+   inline double exponential_quant(double x, double lambda, double x0 = 0) {
+      return exponential_cdf  (x, lambda, x0 );
+   }
+
+   inline double gaussian_prob(double x, double sigma, double x0 = 0) {
+      return  gaussian_cdf_c( x, sigma, x0 );
+   }
+   inline double gaussian_quant(double x, double sigma, double x0 = 0) { 
+      return  gaussian_cdf  ( x, sigma, x0 );
+   }
+
+   inline double lognormal_prob(double x, double m, double s, double x0 = 0) {
+      return lognormal_cdf_c( x, m, s, x0 );   
+   }
+   inline double lognormal_quant(double x, double m, double s, double x0 = 0) {
+      return lognormal_cdf  ( x, m, s, x0 );   
+   }
+
+   inline double normal_prob(double x, double sigma, double x0 = 0) {
+      return  normal_cdf_c( x, sigma, x0 );
+   }
+   inline double normal_quant(double x, double sigma, double x0 = 0) {
+      return  normal_cdf  ( x, sigma, x0 );
+   }
+
+   inline double uniform_prob(double x, double a, double b, double x0 = 0) { 
+      return uniform_cdf_c( x, a, b, x0 ); 
+   }
+   inline double uniform_quant(double x, double a, double b, double x0 = 0) {
+      return uniform_cdf  ( x, a, b, x0 ); 
+   }
 
 
 

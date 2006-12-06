@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Func.h,v 1.2 2006/11/17 18:18:47 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Func.h,v 1.3 2006/12/06 15:08:52 moneta Exp $
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
 
 /**********************************************************************
@@ -34,33 +34,33 @@
 #pragma link C++ function ROOT::Math::beta( double , double);
 
 #pragma link C++ function ROOT::Math::binomial_pdf( unsigned int , double, unsigned int);
-#pragma link C++ function ROOT::Math::breitwigner_pdf( double , double);
-#pragma link C++ function ROOT::Math::cauchy_pdf( double , double);
-#pragma link C++ function ROOT::Math::chisquared_pdf( double , double);
-#pragma link C++ function ROOT::Math::exponential_pdf( double , double);
-#pragma link C++ function ROOT::Math::fdistribution_pdf( double , double, double);
-#pragma link C++ function ROOT::Math::gamma_pdf( double , double, double);
-#pragma link C++ function ROOT::Math::gaussian_pdf( double , double);
-#pragma link C++ function ROOT::Math::lognormal_pdf( double , double, double);
-#pragma link C++ function ROOT::Math::normal_pdf( double , double);
+#pragma link C++ function ROOT::Math::breitwigner_pdf( double , double, double);
+#pragma link C++ function ROOT::Math::cauchy_pdf( double , double, double);
+#pragma link C++ function ROOT::Math::chisquared_pdf( double , double, double);
+#pragma link C++ function ROOT::Math::exponential_pdf( double , double, double);
+#pragma link C++ function ROOT::Math::fdistribution_pdf( double , double, double, double);
+#pragma link C++ function ROOT::Math::gamma_pdf( double , double, double, double);
+#pragma link C++ function ROOT::Math::gaussian_pdf( double , double, double);
+#pragma link C++ function ROOT::Math::lognormal_pdf( double , double, double, double);
+#pragma link C++ function ROOT::Math::normal_pdf( double , double, double);
 #pragma link C++ function ROOT::Math::poisson_pdf( unsigned int , double);
-#pragma link C++ function ROOT::Math::tdistribution_pdf( double , double);
-#pragma link C++ function ROOT::Math::uniform_pdf( double , double, double);
+#pragma link C++ function ROOT::Math::tdistribution_pdf( double , double, double);
+#pragma link C++ function ROOT::Math::uniform_pdf( double , double, double, double);
 
-#pragma link C++ function ROOT::Math::breitwigner_prob( double , double);
-#pragma link C++ function ROOT::Math::breitwigner_quant( double , double);
-#pragma link C++ function ROOT::Math::cauchy_prob( double , double);
-#pragma link C++ function ROOT::Math::cauchy_quant( double , double);
-#pragma link C++ function ROOT::Math::exponential_prob( double , double);
-#pragma link C++ function ROOT::Math::exponential_quant( double , double);
-#pragma link C++ function ROOT::Math::gaussian_prob( double , double);
-#pragma link C++ function ROOT::Math::gaussian_quant( double , double);
-#pragma link C++ function ROOT::Math::lognormal_prob( double , double, double);
-#pragma link C++ function ROOT::Math::lognormal_quant( double , double, double);
-#pragma link C++ function ROOT::Math::normal_prob( double , double);
-#pragma link C++ function ROOT::Math::normal_quant( double , double);
-#pragma link C++ function ROOT::Math::uniform_prob( double , double, double);
-#pragma link C++ function ROOT::Math::uniform_quant( double , double, double);
+#pragma link C++ function ROOT::Math::breitwigner_cdf_c( double , double, double);
+#pragma link C++ function ROOT::Math::breitwigner_cdf( double , double, double);
+#pragma link C++ function ROOT::Math::cauchy_cdf_c( double , double, double);
+#pragma link C++ function ROOT::Math::cauchy_cdf( double , double, double);
+#pragma link C++ function ROOT::Math::exponential_cdf_c( double , double, double);
+#pragma link C++ function ROOT::Math::exponential_cdf( double , double, double);
+#pragma link C++ function ROOT::Math::gaussian_cdf_c( double , double, double);
+#pragma link C++ function ROOT::Math::gaussian_cdf( double , double, double);
+#pragma link C++ function ROOT::Math::lognormal_cdf_c( double , double, double, double);
+#pragma link C++ function ROOT::Math::lognormal_cdf( double , double, double, double);
+#pragma link C++ function ROOT::Math::normal_cdf_c( double , double, double);
+#pragma link C++ function ROOT::Math::normal_cdf( double , double, double);
+#pragma link C++ function ROOT::Math::uniform_cdf_c( double , double, double, double);
+#pragma link C++ function ROOT::Math::uniform_cdf( double , double, double, double);
 
 
 #endif
