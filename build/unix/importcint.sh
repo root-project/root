@@ -12,7 +12,7 @@ trap 'exit 0' 1 2 3 15
 
 # This variable is utterly useless, and only meant for testing on a copy of the CVS repository.
 # Should always be "root"
-ROOTCVSROOT=root2
+ROOTCVSROOT=root
 
 ECHO=echo
 if test ! "x$1" = "x--dry-run"; then
@@ -81,13 +81,23 @@ OLDPWD=$(pwd)
 
 echo "Importing ${CINT} revision ${NEWTAG} into vendor branch..."
 cd ${TEMP} || exit 1
+
+if test -d cint; then
+   echo "${TEMP}/cint already exists, please remove it first"
+   exit 1
+fi
+if test -d root; then
+   echo "${TEMP}/root already exists, please remove it first"
+   exit 1
+fi
+
 cvs -z9 -Q -d :pserver:cvs@root.cern.ch:/user/cvs checkout -r "v${NEWTAG}" cint || exit 1
 find cint -type d -name 'CVS' -exec rm -rf {} \; -prune || exit 1
 
 cd cint
 ${ECHO} cvs -z9 -q -d :ext:${USER}@root.cern.ch:/user/cvs import \
    -m "import v${NEWTAG}" -I! -Ireflex -ko \
-   ${ROOTCVSROOT}/cint "${CINTVENDORBRANCH}" cint"${NEWTAG}" || exit 1
+   ${ROOTCVSROOT}/${CINT} ${CINTVENDORBRANCH} cint"${NEWTAG}" || exit 1
 
 cd ..
 rm -rf cint
@@ -99,6 +109,10 @@ cd ${ROOTCVSROOT}/${CINT} || exit 1
 
 ${ECHO} cvs update -j "${OLDVENDORTAG}" -j "cint${NEWTAG}" || exit 1
 
+# see the changes
+cvs -z9 -q update
+
+echo
 echo You will now have to run
 echo '  cvs -z9 -q commit -m "apply changes from CINT vendor branch, importing cint'"${NEWTAG}"'"'
 echo yourself, to upload the changes into ROOT.
