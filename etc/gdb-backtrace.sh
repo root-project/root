@@ -32,17 +32,8 @@ fi
 
 GDB=${GDB:-gdb}
 
-if $GDB -nx --quiet --batch --readnever > /dev/null 2>&1; then
-    readnever=--readnever
-else
-    readnever=
-fi
-
 # Run GDB, strip out unwanted noise.
-$GDB --quiet $readnever -nx /proc/$1/exe $1 <<EOF 2>&1 | 
+$GDB --quiet -nx /proc/$1/exe $1 <<EOF 2>&1 | 
 $backtrace
 EOF
-sed -n \
-    -e 's/^(gdb) //' \
-    -e '/^#/p' \
-    -e '/^Thread/p'
+egrep -v '^Reading |^Loaded |(gdb)' 
