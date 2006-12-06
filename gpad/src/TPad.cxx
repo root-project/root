@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.241 2006/10/20 21:07:40 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.242 2006/10/26 14:18:54 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3631,11 +3631,7 @@ void TPad::PaintText(Double_t x, Double_t y, const char *text)
       gVirtualX->DrawText(px, py, angle, gVirtualX->GetTextMagnitude(), text, TVirtualX::kClear);
    }
 
-   if (gVirtualPS) {
-      if (x < fX1 || x > fX2) return;
-      if (y < fY1 || y > fY2) return;
-      gVirtualPS->Text(x, y, text);
-   }
+   if (gVirtualPS) gVirtualPS->Text(x, y, text);
 }
 
 
@@ -3936,9 +3932,9 @@ void TPad::Print(const char *filenam, Option_t *option)
    //    c1.Print("file.ps]");   // No actual print, just close.
    //
    // It's posiible to Print pad into an animated GIF file by specifying file name as
-   // "myfile.gif+" of "myfile.gif+NN" , where NN is delay of displaying subimages 
+   // "myfile.gif+" of "myfile.gif+NN" , where NN is delay of displaying subimages
    // during animation in 10ms units. If NN is ommitted the delay between subimages is zero.
-   // 
+   //
    //    for (int i=0; i<10; ++i) {
    //      // fill canvas for context i
    //      // ...
