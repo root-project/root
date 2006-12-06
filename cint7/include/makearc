@@ -1,0 +1,13 @@
+/* -*- C++ -*- */
+/*************************************************************************
+ * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ *
+ * For the licensing terms see the file COPYING
+ *
+ ************************************************************************/
+#
+# make archived version 
+#
+makecint -mk make.arc -o ../cint -c statistics.c array.c carray.c fft.c lsm.c xgraph.c -H ReadF.h RegE.h -C++ ReadF.C RegE.C
+make -f make.arc
+#rm G__*

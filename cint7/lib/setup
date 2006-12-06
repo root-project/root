@@ -1,0 +1,10 @@
+cd $CINTSYSDIR/lib/longlong;sh setup
+cd $CINTSYSDIR/lib/posix;sh setup
+cd $CINTSYSDIR/lib/socket;sh setup
+cd $CINTSYSDIR/lib/ipc;sh setup
+cd $CINTSYSDIR/lib/pthread;sh setup
+cd $CINTSYSDIR/lib/stdstrct;sh setup
+cd $CINTSYSDIR/lib/xlib;sh setup
+cd $CINTSYSDIR/lib/gl;sh setup
+cd $CINTSYSDIR/lib/dll_stl;sh setup
+cd $CINTSYSDIR/lib

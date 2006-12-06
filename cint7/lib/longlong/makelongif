@@ -1,0 +1,28 @@
+/* -*- C++ -*- */
+/*************************************************************************
+ * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ *
+ * For the licensing terms see the file COPYING
+ *
+ ************************************************************************/
+MV = mv
+
+../../src/longif.cxx : ../../cint longlong.h longdbl.h
+	cint -zlongif -Nlongif -nlongif.cxx -D__MAKECINT__ -c-1 -A longlong.h longdbl.h
+	$(MV) longif.cxx ../../src/longif.cxx
+	$(MV) longif.h ../../src/longif.h
+	
+#
+# CAUTION1: 
+#  You must run this makefile with a cint compiled with <iostream.h>
+#
+# CAUTION2:
+#  After running 'make -f makelongif', you have to mannually merge
+#  longlong.h and longdbl.h into longif.h
+#	
+
+
+
+
+
+

@@ -1,0 +1,1584 @@
+
+
+Parser
+    1. gcc2xml
+    2. legacy cint parser
+    3. new parser
+
+==========================================================================
+00:0D:93:EA:65:A2
+==========================================================================
+# test2/t1300.cxx exception handling does
+
+# test/telea2.cxx, virtual base class, This is quite complicated and to be 
+  implemented.
+# test/VPersonTest.cxx,  don't know exactly why but this fails
+# test/Test1.cxx, conversion ctor + operator=, 
+# test/vbase.cxx , virtual base
+# test/vbase1.cxx , virtual base
+# test/t215.cxx , virtual base ?
+
+# test/t358.cxx, TTRAP *** trap;  trap[k][i][0];
+
+# maincmplx.cxx, temporarily fix done in bc_assign.cxx 
+# funcmacro.cxx, fixed
+
+==========================================================================
+
+case '::'
+     class_name::member
+     ::member
+
+case '.'
+     object.member
+        G__getexpr(object)
+        PUSHSTROS
+        SETSTROS
+        -> member
+        POPSTROS
+
+case '->'
+     pointer->member
+        G__getexpr(pointer)
+        PUSHSTROS
+        SETSTROS
+        -> member
+        POPSTROS
+
+     object->member      (object.operator->())->member
+        G__getexpr(object)
+        PUSHSTROS
+        SETSTROS
+        operator->
+        PUSHSTROS
+        SETSTROS
+        -> member
+        POPSTROS
+        POPSTROS
+
+case '['
+     pointer[expr]
+     array[expr][expr][expr]
+        G__getexpr(expr)
+        LD_VAR pointer index=1
+        
+     object[expr]
+        SETMEMFUNCENV
+        G__getexpr(expr)
+        RECMEMFUNCENV
+        G__getexpr(object)
+        PUSHSTROS
+        SETSTROS
+        LD_FUNC operator[] paran=1
+        POPSTROS
+
+case '('
+     (type)expr
+        G__getexpr(expr)
+        CAST type
+
+     (expr)
+        G__getexpr(expr)
+
+     object(expr,expr)
+        G__getexpr(expr)
+        G__getexpr(expr)
+        G__getexpr(object)
+        PUSHSTROS
+        SETSTROS
+        LD_FUNC operator() paran
+        POPSTROS
+
+     // This happens the last, since function overloading makes it complicated
+     function(expr,expr)
+        G__getexpr(expr)
+        G__getexpr(expr)
+        LD_FUNC function paran
+
+Things to search for
+  object             has block scope
+  scope              no block scope
+  type               no block scope
+  function           no block scope
+
+Scopes to look for
+  block -> enclosing block    var = G__blockscope::m_var 
+                                var->enclosing_scope
+  tag -> base                 tagnum=G__blockscope::m_ifunc->tagnum[m_iexist] 
+   |     using scope            basciass=G__struct.baseclass 
+  enclosing scope -> global     next_tagnum=G__struct.parent_tagnum[tagnum]
+
+==========================================================================
+# TODO, bug fix
+
+
+# TODO, Assignment, initialization and type conversion
+
+initialization
+
+  initscalar
+  //  type varname ;
+  //  type varname = expr;
+  //  type varname [] = { } ;
+  //  type objname (arglist);
+  //  type funcname(arglist);
+
+  initscalarary
+  // char* ary[] =  { "a", "b" }; 
+  // char* ary[n]=  { "a", "b" }; 
+  // char  ary[] =  "abc"; 
+  // char  ary[4]=  "abc"; 
+  // char  ary[3]=  "abc"; // ary[4]=0; +1 element is allocated in allocvar
+  // type ary[]  =  { 1,2,3 };
+  // type ary[n] =  { 1,2,3 };
+
+  initstruct
+  // A x   = { "abc" , 123, 3.45 };
+  // A x[] = { {"abc",123,3.45},{"def",456,6.78} };
+
+  initstructary
+  // string a[] = { "abc" , "def" , "hij" };
+  // not supported
+
+  init_w_ctor
+  // type name (arglist);
+  // type x  = type(arg);  -> ctor
+
+  init_w_defaultctor
+  // type  a; 
+
+  init_w_expr
+  // type x  = func(arg);
+  // type x  = expr;
+
+  If target is class
+    X A: + copy constructor ?? or default constructor + A: ??
+    B: constructor
+    C: conversion operator + copy constructor
+       with C++ compiler, construction is done on the local variable
+
+  if target is fundamental type, -> initscalar, initscalarary
+    C: conversion operator 
+
+assignment
+  // varname = expr;
+  // varname[i] = expr;
+  // *pvarname = expr;
+  // pvarname[i] = expr;
+  // *ppvarname[i] = expr;
+
+  A: target::operator=(const origin& x);
+    0  LD_LVAR origin
+    1  LD_LVAR target
+    2  PUSHSTROS
+    2  SETSTROS
+    1  LD_FUNC operator=(const origin& x)
+    1  POPSTROS
+   This case has to be disabled with a flag.
+
+  B: target::target(const origin& x);
+    0  LD_LVAR
+    1  ALLOCTEMP
+    1  SETTEMP
+    1  LD_FUNC target(const origin& x)
+    1  POPTEMP
+  - 1  ST_LVAR target
+
+  C: origin::operator target();
+    0  LD_LVAR origin
+    1  PUSHSTROS
+    1  SETSTROS
+    1  LD_FUUNC operator target()  // ?? temp object?
+    1  POPSTROS
+  - 1  ST_LVAR target
+
+  A. G__Isvalidassignment() generates conversion bytecode also
+     Eliminate G__blockscope::conversion(... vartype,paran) 
+     + Need to consider var_type and paran attached to target variable.
+       This appears only for assignment and not for initialization.
+       a. leave conversion as is ??
+       b. add var_type and paran arguments to Isvalidassignment
+
+    ??? Je ne sais pas pourquoi telea0/1.cxx va bien sans A, mais soulement
+        avec B.  
+        C'etais mon errour. Le problem anchor existes.
+
+ *B. done, GetMethod() somehow generates bytecode for argument conversions.  
+     Need to investigate how.
+       a. Add an argument to GetMethod(.. doconvert) so that GetMethod()
+          also generates conversion bytecode. 
+	  - Je crois c'est une bonne idee. 
+
+
+# TODO, virtual base class  with iostream::setw, 
+
+ - set virtual base offset (dynamic) before ctor call, done
+  // generate instruction for setting virtual base offset
+  //  xxVVVV        yyvvvv
+  //  AAAAAAAA ???? BBBBBBBB
+  //  DDDDDDDDDDDDDDDDDDDDDDDDDD
+  //  |------------>| baseoffset of B. (static)
+  //    |<----------| virtual base offset of B. Contents of yy (dynamic)
+
+ - offset and tagnum
+   Normal base class virtual function, virtual baseclass non-virtual function
+      LD_VAR     <<< object tagnum is ignored
+      PUSHSTROS
+      SETSTROS
+      ADDSTROS (offset for base class conversion) <<< casting
+      LD_FUNC  ifunc->tagnum, <<< tagnum of the method, bc_virtual_bytecode
+      ADDSTROS -(offset for base class conversion)
+      POPSTROS
+
+  - Virtual base class
+   *a.  cast with G__getvirtualbaseoffset
+      LD_VAR     <<< object tagnum is ignored
+      PUSHSTROS
+      SETSTROS
+      VIRTUALADDSTROS (offset for base class conversion) <<< dynamic casting
+      LD_FUNC  ifunc->tagnum, <<< tagnum of the method
+      //ADDSTROS -(offset for base class conversion)
+      POPSTROS
+     This option is implemented but uses legacy code.
+
+    b.  cast with G__getvirtualbaseoffset
+      LD_VAR     <<< object tagnum is ignored
+      PUSHSTROS
+      SETSTROS   
+      LD_FUNC    tagnum, <<< tagnum of the object, stored as local_tagnum
+		 Create a new function G__bc_virtualbase_bytecode
+      POPSTROS
+
+   TODO, Complicated virtual base access may not be possible in legacy code.
+         For the moment, virtual base access mechanism is a reuse from legacy.
+
+     D ---- B ---- A --- X 
+       ---- C ----
+
+       X  G__INDIRECTVIRTUALBASE must be set to X
+
+      D d;
+      d.g()  -> A::g()  D --> A
+      d.f()  -> X::f()  D --> A --> X
+      d.h()  -> B::h()  D -> B
+      d.x()  -> D::x()  D
+
+     a.  getbase(void* pobj,int obj_tagnum,orig_tagnum,dest_tagnum);
+      obj_tagnum: tagnum embedded as G__virtualinfo in object
+      orig_tagnum: current type
+      dest_tagnum: destination type
+        offset_orig = table[obj_tagnum]->offset(orig_tagnum);
+        offset_dest = table[obj_tagnum]->offset(dest_tagnum);
+        return(offset_dest-offset_orig);
+      
+
+
+# array of pointer to function 
+   aryp2f[2](a,b);
+
+# pointer to function reengineering
+
+  G__bc_p2f_base <|--- G__bc_interpreted_p2f 
+		       G__bc_bytecode_p2f
+		       G__bc_true_p2f
+		       G__bc_wrapper_p2f
+
+  struct G__p2f {
+    G__ifunc_table* ifunc;
+    int ifn;
+  };
+
+  struct G__ifunc_table {
+    ...
+    struct G__p2f p2f;
+  };
+
+  class G__bc_p2f {
+   protected:
+    struct G__p2f *m_p2f;
+   public:
+    G__bc_p2f_base(ifunc,ifn);
+    G__ClassInfo MemberOf();
+    G__MethodInfo GetMethod();
+    virtual int exec() = 0;
+  };
+
+  G__bc_p2f_base* G__bc_p2f_factory(ifunc,ifn);
+
+
+
+
+# done, different argument name in header and function definintion
+  argument name differs between header and function definioton
+    void f(int abc);
+    void f(int def) { def=xx; } << become an error need fix
+  a. in G__make_ifunctable, override argument name
+
+# done, argument definition slightly differ from definition
+    void f(array x);
+    void f(array& x) { } << should detect and warn
+
+# done, missing implicit conversion
+
+# TODO, implicit copy ctor, array as member
+  done for interpreted class, TODO for compiled class
+  class A { int a[5]; B b[3]; };
+
+ 1. bc_cfunc.cxx G__functionscope::Baseclasscopyctor_member(G__ClassInfo& cls
+    if(dat.ArrayDim()) ,   n=var->varlabel[ig15][1]
+    1.1. class/struct obbject call_func ???, done 
+         LD_FUNC(bc_exec_ctor_bytecode)
+         SETARYINDEX, LD_FUNC(bc_exec_ctorary_bytecode), RESETARYINDEX 0
+    1.2. fundamental type,  done
+         ST_MSTR 
+         LD_MSTR, LD SIZE, MEMCPY
+
+ 2. bc_exec.cxx  bc_exec_ctorary_bytecode, done
+    increment libp->para[0].obj.i and libp->para[0].ref
+
+ 2'. copy constructor generation in dictionary code has to be changed too.
+    TODO, need to review how to implement this.
+
+ 3. bc_parse.cxx  call_func, done
+    according to change 1 and 2, need to modify call_func 
+
+ 4. add MEMCPY instruction, done
+     LD SRC
+     LD DEST
+     LD SIZE
+     MEMCPY
+
+# cint/test/cpp5.cxx, test2/t1313.cxx, done
+  operator=  with implicit ctor
+  ???
+
+==========================================================================
+# TODO, ctor/dtor  reengineering
+
+ How to give arena to ctor
+  Legacy
+    compiled     G__globalvarpointer -> new operator
+    interpreted  G__store_struct_offset
+
+------------------------------
+
+ 1. default ctor
+   1.1. implicit
+   1.2. explicit
+
+ 2. copy ctor
+   1.1. implicit
+   1.2. explicit
+
+ 3. assignment opr
+   1.1. implicit
+   1.2. explicit
+
+ 4. dtor
+   1.1. implicit
+   1.2. explicit
+
+-------------------------------
+
+ A. static, global
+   A.a. object
+   A.b. array
+        default ctor
+	dtor
+
+ B. local
+   B.a. object
+   B.b. array
+        default ctor
+	dtor
+
+ C. base class
+   C.a. object
+
+ D. member
+   D.a. object
+        default ctor     interpreted, compiled
+	dtor             X if 
+	copy ctor        interpreted, compiled
+	assignment opr   interpreted, compiled
+   D.b. array
+        default ctor     interpreted
+	dtor             X
+	copy ctor        interpreted
+	assignment opr   X
+
+
+==========================================================================
+Execution and debug,  current status
+
+# Execution
+
+ - main function
+    G__main  
+    G__interpret_func  (G__compile_bytecode/G__bc_compile_function)
+    G__exec_bytecode
+    G__exec_asm
+    (G__interpret_func)/G__bc_exec_virtual_bytecode/G__bc_exec_normal_bytecode
+    G__exec_bytecode
+    G__exec_asm
+    (G__interpret_func)/G__bc_exec_virtual_bytecode/G__bc_exec_normal_bytecode
+    G__exec_bytecode
+    G__exec_asm
+      G__pause
+      G__process_cmd
+
+  - no main function
+    G__main
+      G__pause
+      G__process_cmd
+
+  - ROOT prompt
+      G__process_cmd
+
+# interactive run
+  - p,s,S command , this is fine for now
+      G__pause
+      G__process_cmd
+      G__calc_internal
+      G__getexpr            <<< compile and run
+        G__getitem
+        G__getfunction
+        G__interpret_func  (G__compile_bytecode/G__bc_compile_function)
+        G__exec_bytecode
+        G__exec_asm
+
+  - X command , named macro , this is fine for now
+      G__calc_internal  (G__loadfile)
+      G__getexpr            <<< compile and run
+      G__getitem
+      G__getfunction
+      G__interpret_func  (G__compile_bytecode/G__bc_compile_function)
+      G__exec_bytecode
+      G__exec_asm
+
+  - x command , unnamed macro
+      G__exec_tempfile
+      G__exec_tempfile_core    <<< compile and run
+      G__exec_statement()
+
+  - '{' command
+      G__pause
+      G__process_cmd
+      G__exec_tempfile_fp/G__exec_tempfile
+      G__exec_tempfile_core    <<< compile and run
+      G__exec_statement()
+
+  - G__exec_text
+      G__exec_tempfile_fp/G__exec_tempfile
+      G__exec_tempfile_core    <<< compile and run
+      G__exec_statement()
+
+  - G__load_text ,  this should be fine for now
+      G__loadfile/G__loadfile_tmpfile
+      G__exec_statement
+
+TODO
+ bytecode version of following function
+  1. G__calc_internal
+  2. G__exec_tempfile_core
+
+
+==========================================================================
+### Debugging 1, done
+  - Insert more CL instruction for step execution
+  - Provide a way to display source code position at G__pause() 
+
+### Debugging 2, TODO
+  - Function call stack is not traced in bytecode function
+  - This should have been a performance reason, not an implementation issue
+
+ Legacy code:
+  G__p_local->prev_local; each prev_local has own unique object
+
+  a. Use same G__p_local->prev_local
+     pros: can use same mechnism for tracing function call stack
+     cons: need to allocate G__var_array just for this purpose.
+           bytecode->var is not an unique object.
+
+ *b. G__CL has line+filenum done
+     pros: Small or no futher overhead
+           Can trace current bytecode execution
+     cons: Can not trace function call stack
+
+ *c. Add new stack trace container done
+     push into stack in G__exec_bytecode (bc_exec.cxx)
+     class G__bc_funccallstack {
+       // file position
+       int filenum;
+       int line_number;
+
+       // scope variable table and offset
+       struct G__var_array* m_var;  // 0 if not in function
+       long m_localmem;             // 0 if not in function
+
+       // memberfunc info
+       int m_tagnum;          // -1 if global function
+       long m_struct_offset;  // 0 if static function
+       // int m_exec_memberfunc;
+
+       // instruction buffer
+       long* m_asm_inst;
+       int* m_pc;
+       //G__value *m_stack; // may not be needed
+     };
+
+  done,  bug,  'c' and 'b' command on loop causes stack underflow
+
+### Debugging 3, step execution,  done
+   Temporary implemented, but there are issues, todo
+   *1. can not step over -> done
+          -> set flag in G__exec_asm()
+          's' G__stepover=0; ignore=G__PAUSE_NORMAL;   G__step=1;
+          'S' G__stepover=3; ignore=G__PAUSE_STEPOVER; G__step=1;
+          'c' G__stepover=0; ignore=0;                 G__step=0;
+
+   *2. stops after execution, done
+          -> move m_bc_inst.CL() in G__blockscope::compile_core
+
+### Debugging 4, TODO
+  - Local variable access
+    This issue comes back to interactive evaluation issue described above.
+    a. Use legacy code for local variable access,
+    b. compile
+
+==========================================================================
+TODO, 
+
+  unnamed macro
+
+==========================================================================
+TODO, 
+
+  runtime error
+
+==========================================================================
+TODO, 
+
+ special function handling, typeid
+
+
+==========================================================================
+TODO, // not implemented in legacy code
+
+  dynamic_cast
+  static_cast
+  reinterpret_cast
+  const_cast
+
+
+==========================================================================
+TODO, Naming convention
+  040602 Re: [CINT] cint5.15.137/6.0.1
+
+	G__code_function
+	G__code_scope
+   Or if we want to be more modern in the naming
+	namespace Cint {
+	   namespace Code {
+             class FunctionScope;
+             class BlockScope;
+          }
+        }
+   I.e. the 2 classes have a full name
+
+	Cint::Code::FunctionScope;
+	Cint::Code::BlockScope;
+
+   And we would also have
+
+	namespace Cint {
+	   class Function; // User interface to the functions and/or methods
+           class Namespace;
+           class Class;
+           etc...
+        }
+
+
+
+==========================================================================
+todo, Access rule
+
+  Preliminarily solution has been implemented. 
+
+//////////////////////////////////////////////////////////////////////////////
+TODO,  // For now, legacy macro expander works as is.
+
+# How to deal with macro?
+   ZEXTERN WORD MAX(INT X,INT Y);
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+# How to deal with comments and in which level
+  done
+
+  G__srcreader<T>::fgetc(); // simple fgetc() from source stream
+  G__srcreader<T>::fgetc_gettoken(); // fgetc() + comment stripped
+
+  in most case, fgetc_gettoken() is used.
+  fgetc() is still needed where there is no comment. 
+    a. string   " /* */ "  must use fgetc()
+    b. operator   ::  >> <<  => =< == != etc...
+    c. division or comment,  a/b,  a //    a /*  */, -> G__blockscope
+        b and c, may be okey to use fgetc_gettoken()
+
+
+//////////////////////////////////////////////////////////////////////////////
+# How to deal with preprocessor commands
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+# How to deal with expr,expr
+   // expr,expr
+   look into G__getexpr
+    (1,2,3) -> getexpr -> getitem -> getfunction 2755, ON1340
+    But 1,2 are not evaluated
+    1,2,3;     not handled
+
+# Type reader implementation
+   //  static const unsigned long long int x;
+   done
+
+     G__TypeReader class takes care of type information 
+
+  ??? todo, template instantiation in declaration ???
+  turns out this is fine.
+  G__TypeReader::append() need modification
+  G__blockscope::compile_operator_LESS()
+
+# Type reader for template class, template instantiation
+   //  tmplt<tmparg> var;
+   //  tmplt<tmplt<tmparg> > var;             -> declaration
+   //  tmplt<tmparg>::enclosedclass::member;  -> expr
+   //  tmplt<tmparg>(arg);
+   look into G__exec_statement and G__getexpr
+    Seems like this is handled in G__exec_statement. 
+    if G__defined_templateclass(token) is true, read complete template
+    class name and continue the loop.
+
+   Just return to G__blockscope::compile()
+
+# How to deal with scope operator
+   //  scope1::member; -> expr
+   //  scope1::type x; -> declaration
+   look into G__exec_statement and G__getexpr
+
+   Just return to G__blockscope::compile()
+
+==========================================================================
+TODO, virtual base initialization
+
+  as described above
+
+
+==========================================================================
+TODO,
+
+  G__getvariable() re-engineering, not right now, but in future
+
+    obj[i](j)[k](l,m,n)[3];
+
+  class A { public: A& operator(int i) { }
+
+                       G__parenthesisovldobj
+  G__parenthesisovld,  G__operatorfunction:841
+  G__getfunction
+  G__getitem
+  G__getexpr
+
+
+
+==========================================================================
+Related function in ver 1 implementation
+
+void G__free_bytecode(bytecode)
+void G__asm_storebytecodefunc(ifunc,ifn,var,pstack,sp,pinst,instsize)
+int G__exec_bytecode(result7,funcname,libp,hash)
+int G__compile_bytecode(ifunc,iexist)
+
+static void G__free_gotolabel(pgotolabel,pn)
+void G__init_jumptable_bytecode()
+void G__add_label_bytecode(label)
+void G__add_jump_bytecode(label)
+void G__resolve_jumptable_bytecode()
+
+
+
+Bytecode compiler ver 2
+
+ 1. Create G__compie_bytecode_ver2.  This accepts all functions.
+  1-1. Take out limitation
+  1-2. G__asm_wholefunction = G__ASM_BLOCK_COMPILE;
+  1-3. 
+
+
+=====================================================================
+
+type fname(arglist) const throw(expr)=0 {
+
+  type fname(argdef) const throw(expr); >>> ignore, G__get_startement ???
+
+#define macro  anything                 >>> G__define_macro ???
+
+  {
+    type obj;  
+    type obj = expr;  
+    type obj(arglist);  
+    type obj = type(arglist);  
+  }
+  type* ptr = expr;
+  type& ref = obj;
+  type*& ptrref = ptr;
+  type  ary[][y][z] = {1,2,3,4};   <<< G__initary -> modification
+  type  ary[x][y][z] = {1,2,3,4};  <<< G__initary -> modification
+
+  expr;                            >>> G__getexpr
+
+  {  }
+  for(expr;expr;expr) expr;  <<< G__exec_for
+  for(expr;expr;expr) { 
+    if(expr) continue;       <<< G__exec_statement
+    if(expr) break;          <<< G__exec_statement
+  }
+  while(expr) expr;          <<< G__exec_while
+  while(expr) { }
+  do { } while(expr) expr;
+
+  if(expr) expr;
+  if(expr) { }
+  if(expr) expr; else expr;	
+  if(expr) { } else { }
+  switch(expr) {
+  case expr:
+    break;
+  }
+}
+
+# G__compile_function
+   
+
+# G__compile_block
+  Not tribial. Need more investigation to choose between 1-3.
+    1. reuse G__exec_statement
+    2. make a branch of G__exec_statement
+    3. Start over from scratch
+       a. with manual parsing
+       b. with yacc/lex
+
+# G__compile_declaration
+  This has interaction with enclosing scope
+
+# G__compile_expression
+  G__getexpr
+     G__getitem
+        G__getfunction
+        G__getvariable
+        G__getitem+G__operatorovld
+     G__bstore
+  For the time being, use G__getexpr as is with G__no_exec_compile flag.
+  Later, make branch from G__getexpr
+
+# G__compile_loop
+  Not difficult to implement.  Start over from scratch.
+
+# G__compile_if
+  Not difficult to implement.  Start over from scratch.
+
+# G__compile_switch
+  Not a big function.  Start over from scratch.
+
+# G__compile_breakcontinue
+  This has heavy interaction with enclosing blocks for label resolution
+
+# G__compile_label
+# G__compile_goto
+  This has heavy interaction with enclosing blocks for label resolution
+  
+# G__gotolabel 
+  Already organized, but can be reimplemented in C++ 
+
+### class G__bytecode_instruction
+  As a basis for reengineering, instruction factory has to be implemented
+  - The first path reengineering has been done. The library does exactly 
+    the same. We can consider further reengineering for better data 
+    portability.
+  
+
+REENGINEERING
+====================================================================
+STRATEGY:
+
+### Re-use
+  - Keep existing source code untouched whereever possible
+  - Re-use existing source code by creating a new branch
+
+### Execution mode
+  - With the new bytecode compiler, program execution is always done by
+    bytecode. Debugging becomes an issue.
+
+=====================================================================
+THINGS TO CONSIDER:
+
+### Instruction buffer size, done
+  - Realloc instruction buffer.  Need to varify if this works
+     Currently G__asm_inst=asm_inst_g[G__MAXINST] is allocated as auto object 
+     in G__interpret_func.
+
+ OLD
+  G__functionscope  ----|> G__blockscope
+        <*>                     <*>
+         |                       |
+         |                       |
+     asm_inst_[X] -+        G__bc_inst
+         |         |            <*>
+         |         |             |
+     *G__asm_inst  +----  (*m_asm_inst)
+                          (not used at all)
+
+ NEW
+  G__functionscope  ----|> G__blockscope
+        < >                     <*>
+         |                       |
+         |                       |
+         |                  G__bc_inst
+         |         
+         |         
+     *G__asm_inst  
+      G__asm_instsize
+
+ *1. add G__asm_instsize in global.h, global2.c
+     -- add G__asm_stacksize
+ *2. add store_asm_instsize in G__functionscope
+     -- add store_asm_stacksize
+ *3. malloc and assign G__asm_inst and G__asm_instsize 
+     -- malloc and assign G__asm_stack and G__asm_stacksize 
+     in G__functionscope::Init
+ *4. Delete G__asm_inst in ~G__functionscope
+     -- Delete G__asm_stack in ~G__functionscope
+ *5. restore G__asm_inst also in ~G__functionscope? or keep it in Restore?
+     -- restore G__asm_stack also in ~G__functionscope? or keep it in Restore?
+     Maybe do it in dtor is a better solution, move it from Restore
+ *6. Resize G__asm_inst in G__bc_inst::inc_cp and G__asm_inc_cp
+     -- Resize G__asm_stack in G__bc_inst::inc_cp and G__asm_inc_cp
+
+ TODO?
+  Seems like it is not difficult to extend this capability to legacy 
+  bytecode. Shall I do this?
+
+  In legacy bytecode compilation in G__interpret_func, line 7057, 7072 and 7562
+  returns without restoring G__asm_xxx environment. Althought those are mostly
+  error state.  May need to clean this.
+
+
+### Data stack size, decided not to do this.
+  - Compile time data stack is allocated in G__interpret_func
+  - Run time data stack is allocated in G__exec_bytecode
+     It will be possible to have variable data stack for compile time and
+     optimize it at run time. A few changes will be needed.
+
+ *A. Seek a way to count needed stack depth for execution.
+    a. in G__asm_optimize3 ?
+ *B. Change G__LD instruction so that it gets data from stack[offset+-inst[1]]
+ *C. increment G__asm_dt in G__asm_inc_cp(), resize if necessary
+ *D. Change G__asm_storebytecodefunc, how stack data is copied
+     Add stack offset and stack size in G__bytecode struct
+ *E. Change G__exec_bytecode() for setting up stack buffer
+ *F. Need to give const stack offset to G__exec_asm
+
+ Above changes were once done and tried, but it failed. 2114,2115.  
+ Archive is backup/cint6.0.13C.tar.gz
+
+
+### Block scope, done
+  - Need modification to G__var_array so that we can find appropriate
+    object in the inner most scope.
+     a. search objects in reverse order
+    *b. each block has independent var_array and var_array has chain of
+        var_array for enclosing scopes
+          - add G__var_array* enclosing_scope in G__var_array
+             this is used or variable search
+          - change searchvariable() 
+          - add G__var_array* inner_scope[] in G__var_array
+	     this is used for deleting the table
+          - G__free_bytecode should free added vartable for enclosed scope
+    The new scheme should be applied only to the new bytecode compiler.
+
+### Exception , done
+  - Exception hasn't been implemented in bytecode.  How to deal with it?
+   Memory system of the exception handling and the block scope has to be 
+   implemented consistently in same mechanism.
+
+### auto object, temp object, stack , done
+         memory              lifetime
+  auto:  localmem         to the end of block
+  temp:  heap->tmpbuf     to the end of expr
+  stack:  both                 N/A
+
+# Free tmp object, done
+  This change has to be done on current implemetation.
+
+** G__calldtor(void* pobj,int tagnum,int isheap); << re-write free_tempobject
+  done
+     isheap=1 : temp object , memory in heap
+     isheap=0 : auto object , memory in var_array* localmem
+
+  In case of alternative a.  Hense, I choose b, no need to do following items.
+   G__free_tempobject
+     should not generate bytecode SETTEMP,FREETEMP
+     should call G__calldtor() for destruction
+   G__compile_bytecode
+     Probably, it is ok to leave G__tempobject++,--
+   G__exec_bytecode
+     Add G__tempobject++,--
+   G__asm_exec
+     G__tempobject++,-- or G__free_tempobject at CL instruction
+
+  Alternatives:
+   a. add auto objects in existing tempbuf
+       can not keep current implementation. Has to change it
+  *b. keep auto objects in a new and dedicated buffer ,  2027, 2039
+       can keep current implementation for tempobject
+  ?c. setup a new stack buffer for both of auto and temp object
+
+    Choose b , then later move to c
+
+    It may be more feasible to directly move to c.
+
+
+
+### Reference, ???
+  Reference object hasn't been supported in bytecode function.??Is this true??
+
+=====================================================================
+
+type fname(arglist) const throw(expr)=0 {
+
+  type fname(argdef) const throw(expr); >>> ignore, G__get_startement ???
+
+#define macro  anything                 >>> G__define_macro ???
+
+  {
+    type obj;  
+    type obj = expr;  
+    type obj(arglist);  
+    type obj = type(arglist);  
+  }
+  type* ptr = expr;
+  type& ref = obj;
+  type*& ptrref = ptr;
+  type  ary[][y][z] = {1,2,3,4};   <<< G__initary -> modification
+  type  ary[x][y][z] = {1,2,3,4};  <<< G__initary -> modification
+
+  expr;                            >>> G__getexpr
+
+  {  }
+  for(expr;expr;expr) expr;  <<< G__exec_for
+  for(expr;expr;expr) { 
+    if(expr) continue;       <<< G__exec_statement
+    if(expr) break;          <<< G__exec_statement
+  }
+  while(expr) expr;          <<< G__exec_while
+  while(expr) { }
+  do { } while(expr) expr;
+
+  if(expr) expr;
+  if(expr) { }
+  if(expr) expr; else expr;	
+  if(expr) { } else { }
+  switch(expr) {
+  case expr:
+    break;
+  }
+}
+
+# G__compile_function
+  - Reuse G__compile_bytecode
+  - Integrate part of G__interpret_func
+  a. Allocate appropriate buffers for compilation
+  b. push/pop necessary data
+  c. Generate bytecode for parameters and base constructors
+
+# G__compile_block
+  Not tribial. Need more investigation to choose between 1-3.
+    1. reuse G__exec_statement
+    2. make a branch of G__exec_statement
+    3. Start over from scratch
+       a. with manual parsing
+       b. with yacc/lex
+
+# G__compile_declaration
+  This has interaction with enclosing scope
+
+# G__compile_expression
+  G__getexpr
+     G__getitem
+        G__getfunction
+        G__getvariable
+        G__getitem+G__operatorovld
+     G__bstore
+  Use G__getexpr as is, for the time being. 
+
+# G__compile_loop
+  Not difficult to implement.  Start over from scratch.
+
+# G__compile_if
+  Not difficult to implement.  Start over from scratch.
+
+# G__compile_switch
+  Not a big function.  Start over from scratch.
+
+# G__compile_breakcontinue
+  This has heavy interaction with enclosing blocks for label resolution
+
+# G__compile_label
+# G__compile_goto
+  This has heavy interaction with enclosing blocks for label resolution
+  
+# G__gotolabel 
+  Already organized, but can be reimplemented in C++ 
+
+### class G__bytecode_instruction
+  As a basis for reengineering, instruction factory has to be implemented
+  - The first path reengineering has been done. The library does exactly 
+    the same. We can consider further reengineering for better data 
+    portability.
+
+
+=====================================================================
+OTHER CHANGES
+
+# G__MAXBASE -> eliminate upper limit
+
+=====================================================================
+=====================================================================
+=====================================================================
+
+*1. G__ci.h, struct G__var_array , 2038
+      add    struct G__var_array *enclosing_scope;
+             this is used or variable search
+      add    struct G__var_array **inner_scope;
+	     this is used for deleting the table
+
+*2. src/var.c, Change G__searchvariable() , 2038
+      a. look for enclosing_scope if not found in local
+      b. if not found in local, go to member, base, then to global
+
+*3. src/ifunc.c, Change G__free_bytecode() , 2038
+      a. free inner_scope
+
+ ---
+*4. design class G__autoobject , new design
+     extern "C" wrapper is also needed.
+       class G__autoobject {
+         int scopelevel; // 
+         a. G__value obj; //independent obj for array elements
+         b. void *p;int tagnum;int num; //
+         c. struct G__var_array *var; int ig15; // 
+         // cpplink, no_exec << not needed for the new implementation
+       };
+    stack<G__autoobject> G__autoobjectStack;
+
+*5. pcode.c, add ENTERSCOPE, EXITSCOPE instruction , 2042
+     global G__scopelevel;
+     Data structure
+        0 ENTERSCOPE
+     Operation
+        Increment scopelevel
+
+     Data structure
+        0 EXITSCOPE
+     Operation
+        Destroy autoobjects in that scope
+        Decrement scopelevel
+
+*6. Implement new compiler wrapper 
+      to be investigated
+
+*7. Implement new G__exec_statement
+
+ 8. Implement new G__define_var, almost done
+
+*9. Implement a way to access local variable within bytecode executor.
+
+
+
+========================================================================
+done
+
+  1. fgetc()
+     Read 1 char from stream
+
+  2. putback()
+     Putback 1 char to stream
+
+  3. storepos()
+     Store reading position, in same stream
+
+  4. rewindpos()
+     Restore reading position, in same stream
+
+  5. Set function entry, (different stream)
+  6. Store current stream, (different stream)
+
+  7. Want to have file and string as input stream
+
+Implementation alternative
+  template 
+  virtual func
+
+   G__reader::Init(fname,fp,pos,line);
+   G__reader::Init(const string& source);
+
+
+G__mfpos encapsulation:
+  Don't use directly G__ifile or fp.
+  Every file reading has to interface G__mfpos
+
+  1. G__mfpos also has string streamer
+  2. putback, fgetc should be implemented
+
+  3. G__reader::fgetc() -> use G__mfpos::fgetc()
+  4. G__reader::putback() -> use G__mfpos::putback()
+
+  5. direct use of G__ifile, -> use G__mfpos
+
+        reader <--- file_reader
+          ^    <--- string_reader
+          |
+         fpos  <--- file_position
+               <--- string_position
+
+
+==========================================================================
+G__interpret_func analysis
+
+
+  if(p_ifunc->pentry[ifn]->bytecode
+     && G__BYTECODE_ANALYSIS!=p_ifunc->pentry[ifn]->bytecodestatus
+     ) {
+    // 6762
+    G__exec_bytecode(result7,(char*)p_ifunc->pentry[ifn]->bytecode,libp,hash);
+    return(1);
+  }
+
+  // 6880
+  // virtual function resolution
+  // 6919
+
+  // 7115
+  // argument passing
+  // 7361
+
+    switch(memfunc_flag) {
+    case G__CALLCONSTRUCTOR:
+    case G__TRYCONSTRUCTOR:
+#ifndef G__OLDIMPLEMENTATIO1250
+    case G__TRYIMPLICITCONSTRUCTOR:
+#endif
+      // 7375
+      G__baseconstructorwp();
+    }
+
+
+   G__exec_statement();
+
+
+    G__basedestructor();
+
+==========================================================================
+
+ 1.  Done
+  Generate G__LD_FUNC if bytecode or compiled function
+  Generate G__LD_IFUNC otherwise
+
+ 2. Change definition of G__LD_IFUNC so that it calls -> DONE
+    G__functionblock::compile
+
+==========================================================================
+done
+
+ operator=, if not found, generate default one automatically
+   a. When reading class definition.  in G__define_struct()
+   b. When operator= is first called
+       b1. Reserve operation= entry with special flag
+           This has to be done in G__define_struct()
+       b2. At runtime, generate bytecode at first call, then reset flag
+
+==========================================================================
+done
+
+ virtual function calling mechanism
+
+ 1. G__tagtable has virtual table
+ 2. In G__define_struct(), generate virtual table
+
+    virtual table
+       G__ifunc_table.vtblindex[] 
+       G__struct.vtbl[]   ->   f1,f2,f3...   fx -> {ifunc,ifn} or *bytecode
+    p2mf
+       {offsset,index,vtbl}
+
+    object
+       tagnum
+
+    a. LD_VFUNC
+    a. LD_FUNC   -> G__exec_virtual_bytecode
+
+       ifunc->vtagnum
+       vtblindex  -> G__struct.vtbl[tagnum][vtblindex]
+       tagnum                  |
+                               V
+                          ifunc,ifn -- on-tye-fly compilation -> bytecode
+
+==========================================================================
+TODO: almost done
+
+ Multiple inheritance
+
+*1. How to combine multiple virtual table?,   DONE
+     class A     f1  f2  f3
+     class B                 f4  f5  f6  f7
+     class C     f1  f2  f3  f4  f5  f6  f7
+
+      f5 vtblindex = 1 for B, 4 for C
+ 
+   G__ifunc_table <>--* func  <>-- vtblindex,basetag  ...(used by compiler)
+   LD_FUNC(bytecode) <>--- tagnum,vtblindex,basetag
+                            |            |
+                            v            v
+   G__tagtable <>-----* class <>--1 vtbl[ ]   <>--* vfunc <>-- ifunc,ifn,offset
+                              <>--1 vtblos[ ]
+
+     vfunc = vtbl[vtblindex+vtblos[basetag]];
+
+   Base *p        vtagnum,vtblindex
+   *(p+voffset)    tagnum
+
+
+*2. How to cast to base class pointer
+  Xa. generate CAST instruction for static conversion
+      add a special instruction for virtual base resolution
+  *b. generate CAST instruction. It takes care of both normal and virtual
+      base class offset calculation.
+        pros: easier bytecode generation
+        cons: slower
+  ?c. generate BASECONV instruction for static conversion
+      generate CAST instruction for virtual conversion
+        pros: a litle trickier bytecode generation
+        cons: faster in case of static conversion
+  Xd. Let ST_xVAR resolve base class conversion
+
+
+  Where to generate bytecode
+  *a. in G__asm_gen_stvar
+      Shoulding harm anything. If already converted, tagnum should match and
+      no instruction will be generated.
+      In case of function argument, conversion is already done in 
+      G__convert_param(). Hence, INIT_REF should work without problem.
+   b. - 
+
+   Select b-a.
+
+ 3. How to resolve virtual base class offset?
+  (Not sure, how much this item is done)
+
+   Current implementation
+   - Compiled class
+      Offset calculation function G__2vbo_derived_base_N(pobject)
+      is set to baseclass->baseoffset
+   - Interpret class
+      G__baseconstructor() -> set virtual_offset -> need more investigation
+      G__ispublicbase() -> G__getvirtualbaseoffset() 
+
+      xxVVVV        yyvvvv
+      AAAAAAAA ???? BBBBBBBB
+      DDDDDDDDDDDDDDDDDDDDDDDDDD
+      |------------>| baseoffset of B. (static)
+        |<----------| virtual base offset of B. Contents of yy (dynamic)
+
+      xx : virtual offset from A to V. Normally 8==G__DOUBLEALLOC
+      yy : virtual offset from B to V. yy<0
+
+     Difficulty is to cast from B to V. (V to B is not allowed)
+
+
+==========================================================================
+new operator and array ctor,:  done
+
+ 1. type X[n];  class object array initialization
+    a. introduce this functionality in a bytecode instruction
+    b. generate loop instruction in bytecode
+
+
+ 2. operator new
+    new type X;(dtor)(dtor)
+    new type X(x);
+    new type X[n];      -> LD(n), SETARYINDEX(): also need to modify LD_IFUNC
+    new (arena) type X;
+
+ 3. How to modify new X[n] for interpreted class. ctor and dtor
+  *a. generate 2 other versions of G__exec_bytecode for ctor and dtor
+          G__bc_exec_ctorary_bytecode
+          G__bc_exec_dtorary_bytecode
+   b. Iterate in G__exec_bytecode
+   c. generate bytecode iteration
+
+
+==========================================================================
+vaarg.  Turned out we can not support AMD64.
+
+                  Environment : 
+                  CPU : AMD64 3200+ 
+                  Memory : 512M 
+                  OS : Fedora Core 2 / Kernel 2.6.5 
+                  CC : GNU Compiler 3.3.3 
+
+                  -------------------------------------------------------- 
+                  0x7fbffff538 0x400cee sdisrcu 
+                  0x7fbffff534 2 
+
+                  0x7fbffff510 : 10 0 0 0 
+                  0x7fbffff514 : 30 0 0 0 
+                  0x7fbffff518 : 0 f6 ff bf 
+                  0x7fbffff51c : 7f 0 0 0 
+                  0x7fbffff520 : 40 f5 ff bf 
+                  0x7fbffff524 : 7f 0 0 0 
+                  0x7fbffff528 : 30 78 43 18 
+                  0x7fbffff52c : 3d 0 0 0 
+                  0x7fbffff530 : 30 6c 41 18 
+                  0x7fbffff534 : 2 0 0 0       // (int)argn
+                  0x7fbffff538 : ee c 40 0     // char* fmt
+                  0x7fbffff53c : 0 0 0 0 
+                  0x7fbffff540 : 6 0 0 0 
+                  0x7fbffff544 : 0 0 0 0 
+                  0x7fbffff548 : 30 ca 57 95 
+                  0x7fbffff54c : 2a 0 0 0 
+                  0x7fbffff550 : df c 40 0 
+                  0x7fbffff554 : 0 0 0 0 
+                  0x7fbffff558 : d2 4 0 0  // (int)1234
+                  0x7fbffff55c : 0 0 0 0 
+                  0x7fbffff560 : dd c 40 0 
+                  0x7fbffff564 : 0 0 0 0 
+                  0x7fbffff568 : c 0 0 0   // (short)12 ???
+                  0x7fbffff56c : 0 0 0 0 
+                  0x7fbffff570 : 1f 85 eb 51 
+                  0x7fbffff510 (char*)abcdefghijklmn 0x400cdf 0x7fbffff510 
+                  0x7fbffff510 (double)3.14 0x7fbffff510 
+                  0x7fbffff510 (int)1234 0x7fbffff510 
+                  0x7fbffff510 (char*)A 0x400cdd 0x7fbffff510 
+                  0x7fbffff510 (int)12 0x7fbffff510 
+                  0x7fbffff510 (int)97 0x7fbffff510 
+                  0x7fbffff510 'a=345 b=6.28 c=3229 d=x e=1.4142' 0x400cdd 
+                  0x7fbffff510 
+
+                  0x7fbffff510 : 30 0 0 0 
+                  0x7fbffff514 : 40 0 0 0 
+                  0x7fbffff518 : 28 f6 ff bf 
+                  0x7fbffff51c : 7f 0 0 0 
+                  0x7fbffff520 : 40 f5 ff bf 
+                  0x7fbffff524 : 7f 0 0 0 
+                  0x7fbffff528 : 30 78 43 18 
+                  0x7fbffff52c : 3d 0 0 0 
+                  0x7fbffff530 : 30 6c 41 18 
+                  0x7fbffff534 : 2 0 0 0       // (int)argn
+                  0x7fbffff538 : f5 c 40 0     // char* fmt ???
+                  0x7fbffff53c : 0 0 0 0 
+                  0x7fbffff540 : 6 0 0 0 
+                  0x7fbffff544 : 0 0 0 0 
+                  0x7fbffff548 : 30 ca 57 95 
+                  0x7fbffff54c : 2a 0 0 0 
+                  0x7fbffff550 : df c 40 0 
+                  0x7fbffff554 : 0 0 0 0 
+                  0x7fbffff558 : d2 4 0 0      // (int)1234
+                  0x7fbffff55c : 0 0 0 0 
+                  0x7fbffff560 : dd c 40 0 
+                  0x7fbffff564 : 0 0 0 0 
+                  0x7fbffff568 : c 0 0 0       // (short)12
+                  0x7fbffff56c : 0 0 0 0 
+                  0x7fbffff570 : 1f 85 eb 51 
+                  0x7fbffff5e8 0x400cf6 sdis 
+                  0x7fbffff5e4 2 
+                  0x7fbffff600 
+
+
+
+
+
+                        out_AMD64_Fedora_Core2.txt
+                         Description:
+
+                        Download
+                         Filename: out_AMD64_Fedora_Core2.txt
+                         Filesize: 2.05 KB
+                         Downloaded: 1 Time(s)
+
+==========================================================================
+Exception, done
+
+  try {
+  }
+  catch(Type x) {
+  }
+  catch(...) {
+  }
+
+  throw x;
+
+ + Exception
+
+   user_defined_free
+   exception <|-- user_defined1
+             <|-- G__exception <|-- user_defined2
+                               <|-- G__cintexception <|-- G__compilererror
+                                                     <|-- G__runtimeerror
+
+  Issue: How to distinguish compilererror and runtimeerror. Same error 
+    function G__genericerror() is used.
+    *a. No distinction between compiler and runtime error. It is categrized
+        in catch block. It is always guaranteed that the inner most try 
+        block stands for which mode we are in.
+     b. Separate error function.
+     c. Set flag before G__genericerror. In there, we throw appropriate
+        exception object according to the flag.
+
+*+ class G__bc_exception {
+     G__value buf;
+   };
+
+*+ try 
+ * TRYBLOCK   endof_catchblock first_catchblock  // new instruction
+ * G__blockscope::compile(); //ENTERSCOPE, EXITSCOPE
+ * RETURN
+
+*  G__bc_exec_try_bytecode()
+  * store_scopelevel = G__scopelevel;
+  * try {
+  *   G__exec_asm(...);       // ENTERSCOPE to RETURN
+  *   _JMP endof_catchblock
+  * }
+  * catch(G__bc_exception& x) {
+      // interpreted exception
+  *   G__scopelevel = store_scopelevel;
+  *   G__delete_autoobjectstack(....,G__scopelevel,...);
+      ??? G__stack[sp++] = x.buf; ???
+      or  G__bc_exception_obj = x; // whether to set static buffer here(2) or 1
+  *   _JMP catchblock << depend on exception type
+    }
+ //todo,  something has been done, at least.
+    catch(G__compiledexception& x) {
+      // currently, compiled exception is caught in G__ExceptionWrapper
+      // and re-thrown as interpreted exception G__exception
+      a. Use G__exception, re-throw as G__bc_exception_buffer
+      b. Don't use G__ExceptionWrapper, catch exception in G__bc_try_bytecode
+    * c. variation of b. Reset G__catchexception flag while in try { } block
+         interpretation.
+    }
+
+ + catch(type x)
+   * TYPEMATCH type_oprand -> a. in stack_buffer, b. in instruction
+   * CNDJMP next_catchblock
+   * ENTERSCOPE
+   * catch(Expresion& x) {  -> argument passing, INIT_REF, LET_LVAR
+   * G__blockscope::compile_core()
+   * EXITSCOPE
+   * destroy G__bc_exception_obj
+   * JMP endof_catchblock
+
+ + catch(...)
+     //ENTERSCOPE
+     //POP
+   * G__blockscope::compile()
+     //EXITSCOPE
+   * destroy G__bc_exception_obj
+     //JMP endof_catchblock,  // no jump, this is the end of catch block
+
+ + if there is no catch(...)
+   * THROW stack[sp-1]
+
+*+ throw
+-  G__blockscope::comple_expression(expr); -> stack[sp++];
+*  THROW stack[sp-1]
+
+*  G__bc_exec_throw()
+*    G__bc_exception_obj = x; // whether to set static buffer here(1) or 2
+*    throw G__bc_exception_buffer(stack[sp-1]);
+    
+
+==========================================================================
+Error check, done
+
+ + What is an expected behavior of compile error?
+  *a. display message, abort compiler &  exit from current execution
+     In case of main() execution, get out from interpretation.
+     In case of cint>  return to prompt
+   b. ???
+
+
+ + How to implement it?
+  *a. C++ exception        for aborting compilation
+  *b. legacy return chain  for aborting bytecode execution
+
+    G__functionscope::compile_function()
+    G__functionscope::abort()
+    G__blockscope::abort()
+
+   exception - G__exception - G__compile_error
+                            - G__runtime_error -
+
+ + abort compilation
+  * throw in G__genericerror()
+    
+    try - catch in 
+     a. G__bc_compile_function
+   * b. G__functionscope::compile_function -> compile_normalfunction
+
+                       try - catch in G__bc_struct
+                          compile_implicitdefaultctor ???
+                          compile_implicitassign ???
+
+     c. G__functionscope::compile() // new function replacing compile_function
+
+ + abort bytecode execution
+    Legacy bytecode machine works in legacy exception returns
+      set G__return , G__RETURN_NOW or ?G__RETURN_TRY?
+      set G__security_error, G__RECOVERABLE (or G__FATAL)
+
+  In future
+    New C++ bytecode machine (in future) should use C++ exception
+      throw in G__functionscope::compile_function catch block
+      try - catch in
+       a. Newly designed bytecode runtime wrapper
+    
+    
+
+====================================================================
+done, Array and struct initialization
+
+### Array initialization by list, 
+  This hasn't been implemented in legacy implementation.
+   1. Create a static image by interpretation, memcpy the image in bytecode
+   2. Create bytecode sequence to initialize the array with variable
+
+# scalar array initialization
+ - global         // legacy
+ - local static   // legacy
+ - static member  // legacy
+
+ - local const    // done
+ - local variable // done
+
+# struct initialization
+ - done
+
+  done, implicit default and copy constructor
+
+# struct array initialization
+  done, this is handled as error
+
+==========================================================================

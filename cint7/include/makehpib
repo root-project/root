@@ -1,0 +1,25 @@
+/* -*- C++ -*- */
+/*************************************************************************
+ * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ *
+ * For the licensing terms see the file COPYING
+ *
+ ************************************************************************/
+#!/bin/sh
+
+machine=`uname -m`   # 9000/7xx , 9000/8xx , 9000/3xx , 9000/4xx , Sun4c
+LANG=C
+
+case $machine in
+9000/3*)
+	makecint -dl hpib.sl -c hpib.c
+	;;
+*)
+	echo 'HP-IB may not be supported on '$machine
+	if test ! -r hpib.c
+	then
+		echo > hpib.sl
+	fi
+	;;
+esac
+

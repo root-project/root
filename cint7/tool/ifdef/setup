@@ -1,0 +1,8 @@
+
+cat $CINTSYSDIR/MAKEINFO Makefile.base > Makefile
+make clean
+make
+cp ifdef $CINTSYSDIR/ifdef
+make clean
+rm Makefile
+

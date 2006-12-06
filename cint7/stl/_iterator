@@ -1,0 +1,16 @@
+/* -*- C++ -*- */
+/*************************************************************************
+ * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ *
+ * For the licensing terms see the file COPYING
+ *
+ ************************************************************************/
+#if !defined(G__ITERATOR_DLL) && !defined(G__NOCINTDLL)
+#pragma include_noerr <iterator.dll>
+#endif
+
+#ifdef __MAKECINT__
+#include <prec_stl/iterator>
+#else
+#include <_iterator.h>
+#endif

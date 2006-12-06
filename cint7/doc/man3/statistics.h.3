@@ -1,0 +1,62 @@
+.PU
+.TH STATISTICS 3 
+.SH NAME
+statistics.h \- Array and complex calculation library for cint
+
+.SH SYNOPSIS
+.br
+#include <statistics.h>
+
+.nf
+class statistics {
+	double min,max;
+	double sigma,sigma2;
+	int nsample;
+	int error;
+public:
+	statistics(void);
+	int add(double data,double lowlimit, double uplimit);
+	double min(void);
+	double max(void);
+	double stddev(void);
+	double mean(void);
+	int nsample(void);
+	int error(void);
+} ;
+.fi
+
+
+.SH DESCRIPTION
+ <statistics.h> is header file for a statistics calculation library for CINT.  
+
+.B Declaration
+ Standard deviation can be calculated by statistics type object. First, you
+instantiate a statistics type object and add data points, then you will get
+standard deviation, mean, min, max and number of sample.
+
+.nf
+	int i;
+	double data[NDAT];
+	statistics a;
+
+	for(i=0;i<NDAT;i++) a.add(data[i]);
+
+	cout << "min=" << a.min() << "  max=" << a.max() << "\n" ;
+	cout << "mean=" << a.mean() << " stddev=" << a.stddev() << "\n" ;
+	cout << "nsample= << a.nsample() << "\n";
+.fi
+
+ You can optionally give test limit when you add data.
+.nf
+	            // lowlimit, uplimit
+	a.add(data[i],-100e-12 , 100e-12);
+.fi
+
+.SH COMPATIBILITY
+	HP-UX 8.0 or later
+.SH SEE ALSO
+	cint(1),makecint(1)
+.SH AUTHOR
+Masaharu Goto
+
+Copyright (c) 1996~1999 Masaharu Goto

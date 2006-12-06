@@ -1,0 +1,11 @@
+/* -*- C++ -*- */
+/*************************************************************************
+ * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ *
+ * For the licensing terms see the file COPYING
+ *
+ ************************************************************************/
+makecint -mk Makefile -dl $CINTSYSDIR/include/long.dll -H longlong.h longdbl.h -cint -M0x1c -Z0
+make -f Makefile
+rm G__* Makefile 
+

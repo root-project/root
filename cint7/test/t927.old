@@ -1,0 +1,8 @@
+0 1 2 3 4 14vector<double>
+0 1 2 3 4 13vector<float>
+0 1 2 3 4 11vector<int>
+0 1 2 3 4 13vector<short>
+0 1 2 3 4 12vector<long>
+0 1 2 3 4 12list<double>
+0 1 2 3 4 9list<int>
+0 1 2 3 4 10list<long>

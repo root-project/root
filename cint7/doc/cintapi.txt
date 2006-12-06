@@ -1,0 +1,329 @@
+CINT(API) 
+
+
+CAUTION:  Please refer to doc/ref.txt. This file is getting old.
+
+
+ This document describes CINT C/C++ interpreter API functions.
+
+
+
+CINT API functions
+        Following  functions  are  supplied by cint for debugging
+       and source code analysis purposes.
+
+            char *G__input(const char *prompt);
+            int G__pause();
+            int G__tracemode(int on_off);
+            int G__setbreakpoint(char *breakline,char *breakfile);
+            int G__stepmode(int on_off);
+            [anytype] G__calc(const char *expression);
+            [anytype] G__exec_tempfile(const char *file);
+            int G__loadfile(const char *file);
+            int G__unloadfile(const char *file);
+            int G__reloadfile(const char *file);
+            char *G__search_next_member(const char *name,int state);
+            void *G__what_type(const char *name,char *type,char *tagname,char *typename);
+            int G__lock_variable(char *varname);
+            int G__unlock_variable(char *varname);
+            G__graph(double xdata[],double ydata[],int ndata,char *title,int mode);
+
+# char *G__input(const char *prompt);
+
+        G__input() reads keyboard input. It  returns  pointer  to
+       char  declared  as  static  opject  in G__pause(). So, the
+       returned pointer must not be freed.
+
+            main() {  // example program
+                 char *command;
+                 while(1) {
+                      command = G__input("input command > ");
+                      if(strcmp(command,"exit")==0) exit();
+                      system(command);
+                 }
+            }
+
+# int G__pause();
+
+       When  G__pause()  is  called,  interactive  interface  is
+       started.   Debug commands can be used.  G__pause() returns
+       1 if 'I' command is given.   So  you  can  repeat  calling
+       G__pause() until 'i' input by following example.
+
+         while(G__pause()==0);
+
+# int G__tracemode(int on_off);
+
+      G__tracemode() sets trace mode.
+
+# int G__breakline(int line);
+
+      G__breakline()  sets break point.  If 0 is given as argument, 
+      break point is cleared.
+
+# int G__stepmode(int on_off);
+
+       G__stepmode() switchs on/off step execution mode.
+
+
+# [anytype] G__calc(char *expression);
+
+        G__calc() evaluates C expression.  It returns the type of
+       object  the  argument  expression  returns.  Variables and
+       function calls can be used in  the  expression.   Declara-
+       tion,  loop  and  conditional statement can not be used in
+       the expression.
+
+            int i;
+            double a;
+            i = G__calc("1+2+3");  // returns int
+            a = G__calc("3.14*i");  // returns double
+
+# [anytype] G__exec_tempfile(char *file);
+
+        G__exec_tempfile() opens temporal source file and execute
+       it  in  the  current  context.   The tempfile can contain,
+       variable   declaration,   struct,union,enum    definition.
+       expression,  loop and control statement and cannot contain
+       function definition.  G__exec_tempfile() executes a state-
+       ment or statement list surrounded by '{' , '}' and returns
+       the last evaluated value.
+
+            {    // example of tempfile
+                 int i;
+                 double ary[100];
+                 for(i=0;i<100;i++) ary[i] = i;
+            }
+
+       Then in the main program, you can execute above  statement
+       by G__exec_tempfile.
+
+
+# int G__loadfile(const char *file);
+
+        G__loadfile() incrementally loads source file. If file
+
+# int G__unloadfile(const char *file);
+
+        G__unloadfile()  unloads source file. If any of the func-
+       tions  included  in  the  file  is  busy,  G__unloadfile()
+       returns error code (-1) and won't unload it.
+
+# int G__reloadfile(const char *file);
+
+        G__reloadfile() does G__unloadfile() and G__loadfile() at
+       once.
+
+# char *G__search_next_member(const char *name,int state);
+
+        G__search_next_member() searches for function  and  vari-
+       able  name in current scope which start with name. state=0
+       must be given at the first call of G__search_next_member()
+       for  initialization.  In consequitive calls, state must be 1.
+        G__search_next_member() returns malloced pointer. If  you
+       call  this  function, you must free() the returned pointer
+       afterwards.
+
+# void *G__what_type(const char *name,char *type,char  *tagname
+                     ,char *typename);
+
+        G__what_type()  returns  pointer  and type information of
+       the object of name.  Sufficient length of  string  pointer
+       must be given to typa,tagname and typename argument.
+
+# int  G__lock_variable(char  *varname); 
+# int G__unlock_variable(char *varname);
+
+       (THIS CAPABILITY IS OBSOLETED IN CINT-5.14.5)
+        G__lock_variable()   and   G__unlock_variable()   control
+       assignment  locking.  Assignement to specific variable can
+       be locked/unlocked.
+
+# G__graph(double  xdata[],double   ydata[],int   ndata,char *title,int mode);
+
+        G__graph()  uses  xgraph  to  plot 2 dimentinal graph. If
+       mode is 0, G__graph() waits for xgraph process to be  ter-
+       minated. If mode is 1, xgraph becomes a background job. If
+       mode is 3, G__graph() appends x and y data  to  "G__graph"
+       file and will not invoke xgraph process.
+
+
+
+# ERTTI (Extensive Run Time Type Identification)
+        Many people are interested in Cint as basement for build-
+       ing class browser or program analyzer. For  those  people,
+       ERTTI  API which gives an access to Cint's symbol table is
+       a useful interface. Information about ERTTI is  documented
+       in doc/ref.txt
+
+
+
+# pragma compile
+        Source  file  can  be partially compiled by '#pragma com-
+       pile' statement.  In the following example, 'int globals;'
+       and  'func()'  are  compiled  when they are updated.  When
+       this program  is  first  executed  by  cint,  makecint  is
+       invoked  and  source  code surrounded by '#pragma compile'
+       and '#pragma endcompile' will be compiled into  a  dynamic
+       link library 'G__autocc.sl'. The G__autocc.sl is automati-
+       cally loaded and compiled version of 'func()' will be exe-
+       cuted.
+        This feature is only available on HP-UX 8.0 or later ver-
+       sion.
+
+            // #pragma disablecomppile
+            #pragma compile
+            int globals; /* this global variable is compiled */
+            #pragma endcompile
+
+            main(int argc,char **argv) {
+                 func(argv[1]);
+            }
+
+            #pragma compile
+            int func(char *string)
+            {
+                 /* this function is compiled and dynamically linked */
+            }
+
+
+    #pragma compile
+        Specifies beginning of compiled  section  which  must  be
+       ended by '#pragma endcompile'. Multiple compile,endcompile
+       pair can appear in the source code.
+
+    #pragma endcompile
+        Specifies end of compiled section.
+
+    #pragma disablecompile
+        Turn off '#pragma compile'. Pragma compile is  turned  on
+       by  default. '#pragma disablecompile' must be described if
+       you turn off the mode.
+
+    #pragma enablecompile
+        Turn on '#pragma compile'.
+
+
+
+
+Undeclared symbol
+        Cint can execute C code which  includes  undeclared  sym-
+       bols.   Undeclared  symbols  are  detected  and handled by
+       interpreter at run time.  As cint detects undeclared  sym-
+       bols, warning message is printed out and execution will be
+       continued.
+
+       Assigning to undeclared variable:
+        If assignment to undeclared variable appears, cint  allo-
+       cates  automatic  variable.  If assignment value is double
+       or float, double type variable is  allocated.   Otherwise,
+       int  type  variable  is allocated.  For example, following
+       program works as intended.
+
+            main() {
+                 double dat[10];
+                 for(i=0;i<10;i++) {    /* i allocated as int */
+                      dat[i]=i;
+                      sum += dat[i]; /* sum allocated as double */
+                 }
+                 printf("sum=%g\n",sum);
+            }
+
+       If undeclared symbol first appears as array form, array of
+       appropriate  size  will  be  allocated.   For  example, if
+       'data[1][10]=3.14' appears without declaration of 'data' ,
+       'double  data[2][11]'  is allocated and 'data[1][10]=3.14'
+       is assigned.  Array can not be expanded  after  the  auto-
+       matic  allocation.  So, 'data[2][15]=15;' will be rejected
+       because array index is out of range.
+
+            main() {
+                 data[1][10]=3.14;  // double data[2][11]; data[1][10]=3.14;
+                 data[0][3]=153.3;  // OK
+                 data[2][15]=-15.0; // rejected, array can not be expanded
+            }
+
+       Pointer to automatically allocated  variable  can  not  be
+       used.   If  undeclared  variable  appears with referencing
+       operator '*' or '&', these operators are ignored.
+
+       Referencing undeclared variable:
+        If undeclared variable is referenced, cint  returns  NULL
+       or zero as its value.
+
+       Undeclared function:
+        If  undeclared  function is called, it is simply skipped.
+       Parameter list will be evaluated.
+
+            main() {
+                 int i=0;
+                 undeclaredfunc(i++); // function call skipped
+                 // i is 1 here because i++ was evaluated above
+            }
+
+
+
+
+
+BUGS
+        Report  bugs  and  requirements  to cint@pcroot.cern.ch. Bugs
+       tend to be fixed very quickly. Any  kind  of  comments  or
+       messages will be appreciated.
+
+SEE ALSO
+            doc/makecint.txt 
+
+
+AUTHOR
+       Masaharu Goto  (cint@pcroot.cern.ch)
+       Copyright  (c)  1995~1999 Masaharu Goto
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+2                            function                           6
+

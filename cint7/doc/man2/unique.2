@@ -1,0 +1,279 @@
+.PU
+.TH Unique feature of CINT 2 
+
+ This document describes unique feature of CINT C/C++ interpreter.
+
+
+.SH CINT API functions
+ Following functions are supplied by cint for debugging and source code 
+analysis purposes.
+
+.nf
+	char *G__input(const char *prompt);
+	int G__pause();
+	int G__tracemode(int on_off);
+	int G__breakline(int line);
+	int G__stepmode(int on_off);
+	[anytype] G__calc(const char *expression);
+	[anytype] G__exec_tempfile(const char *file);
+	int G__loadfile(const char *file);
+	int G__unloadfile(const char *file);
+	int G__reloadfile(const char *file);
+	char *G__search_next_member(const char *name,int state);
+	void *G__what_type(const char *name,char *type,char *tagname,char *typename);
+	int G__lock_variable(char *varname);
+	int G__unlock_variable(char *varname);
+	G__graph(double xdata[],double ydata[],int ndata,char *title,int mode);
+.fi
+
+.I char *G__input(const char *prompt);
+
+ G__input() reads keyboard input. It returns pointer to char declared as
+static opject in G__pause(). So, the returned pointer must not be freed.
+
+.nf
+	main() {  // example program
+		char *command;	
+		while(1) {
+			command = G__input("input command > "); 
+			if(strcmp(command,"exit")==0) exit();
+			system(command);
+		}
+	}
+.fi
+
+.I int G__pause();
+
+ When G__pause() is called, interactive interface is started.
+Debug commands can be used.
+G__pause() returns 1 if 'I' command is given.
+So you can repeat calling G__pause() until 'i' input by following example.
+
+.nf
+	while(G__pause()==0);
+.fi
+
+.I int G__tracemode(int on_off);
+
+ G__tracemode() sets trace mode.
+
+.I int G__breakline(int line);
+
+ G__breakline() sets break point.
+If 0 is given as argument, break point is cleared.
+
+.I int G__stepmode(int on_off);
+
+ G__stepmode() switchs on/off step execution mode.
+ 
+
+.I [anytype] G__calc(char *expression);
+
+ G__calc() evaluates C expression.
+It returns the type of object the argument expression returns.
+Variables and function calls can be used in the expression.
+Declaration, loop and conditional statement can not be used in the
+expression.
+
+.nf
+	int i;
+	double a;
+	i = G__calc("1+2+3");  // returns int
+	a = G__calc("3.14*i");  // returns double
+.fi
+
+.I [anytype] G__exec_tempfile(char *file);
+
+ G__exec_tempfile() opens temporal source file and execute it in the current
+context.
+The tempfile can contain, variable declaration, struct,union,enum definition.
+expression, loop and control statement and cannot contain function definition.
+G__exec_tempfile() executes a statement or statement list surrounded 
+by '{' , '}' and returns the last evaluated value.
+
+.nf
+	{	// example of tempfile
+		int i;
+		double ary[100];
+		for(i=0;i<100;i++) ary[i] = i;
+	}
+.fi
+
+Then in the main program, you can execute above statement by G__exec_tempfile.
+
+
+.I int G__loadfile(const char *file);
+
+ G__loadfile() incrementally loads source file. If file
+
+.I int G__unloadfile(const char *file);
+
+ G__unloadfile() unloads source file. If any of the functions included in 
+the file is busy, G__unloadfile() returns error code (-1) and won't unload it.
+
+.I int G__reloadfile(const char *file);
+
+ G__reloadfile() does G__unloadfile() and G__loadfile() at once.
+
+.I  char *G__search_next_member(const char *name,int state);
+
+ G__search_next_member() searches for function and variable name in current
+scope which start with name. state=0 must be given at the first call of
+G__search_next_member() for initialization. In consequitive calls, state must
+be 1.
+ G__search_next_member() returns malloced pointer. If you call this function,
+you must free() the returned pointer afterwards.
+
+.I  void *G__what_type(const char *name,char *type,char *tagname,char *typename);
+
+ G__what_type() returns pointer and type information of the object of name.
+Sufficient length of string pointer must be given to typa,tagname and typename
+argument.
+
+.I  int G__lock_variable(char *varname);
+.I  int G__unlock_variable(char *varname);
+
+ G__lock_variable() and G__unlock_variable() control assignment locking.
+Assignement to specific variable can be locked/unlocked. 
+
+.I  G__graph(double xdata[],double ydata[],int ndata,char *title,int mode);
+
+ G__graph() uses xgraph to plot 2 dimentinal graph. If mode is 0, G__graph()
+waits for xgraph process to be terminated. If mode is 1, xgraph becomes a
+background job. If mode is 3, G__graph() appends x and y data to "G__graph"
+file and will not invoke xgraph process.
+
+
+.SH ERTTI (Extensive Run Time Type Identification)
+
+ Many people are interested in Cint as basement for building class browser
+or program analyzer. For those people, ERTTI API which gives an access to
+Cint's symbol table is a useful interface. Information about ERTTI is 
+documented in doc/ref.txt
+
+
+.SH pragma compile
+
+ Source file can be partially compiled by '#pragma compile' statement.
+In the following example, 'int globals;' and 'func()' are compiled when
+they are updated.  When this program is first executed by cint, makecint
+is invoked and source code surrounded by '#pragma compile' 
+and '#pragma endcompile' will be compiled into a dynamic link 
+library 'G__autocc.sl'. The G__autocc.sl is automatically loaded and
+compiled version of 'func()' will be executed.
+ This feature is only available on HP-UX 8.0 or later version.
+
+.nf
+	// #pragma disablecomppile
+	#pragma compile 
+	int globals; /* this global variable is compiled */
+	#pragma endcompile 
+
+	main(int argc,char **argv) {
+		func(argv[1]);
+	}
+
+	#pragma compile
+	int func(char *string)
+	{
+		/* this function is compiled and dynamically linked */
+	}
+	#pragma endcompile 
+.fi
+
+.I #pragma compile
+ Specifies beginning of compiled section which must be ended 
+by '#pragma endcompile'. Multiple compile,endcompile pair can appear
+in the source code.
+
+.I #pragma endcompile
+ Specifies end of compiled section.
+
+.I #pragma disablecompile
+ Turn off '#pragma compile'. Pragma compile is turned on by default. '#pragma
+disablecompile' must be described if you turn off the mode.
+
+.I #pragma enablecompile
+ Turn on '#pragma compile'. 
+
+
+
+.SH Undeclared symbol
+
+ Cint can execute C code which includes undeclared symbols.
+Undeclared symbols are detected and handled by interpreter at run time.
+As cint detects undeclared symbols, warning message is printed out
+and execution will be continued.
+
+.I Assigning to undeclared variable:
+ If assignment to undeclared variable appears, cint allocates automatic
+variable.
+If assignment value is double or float, double type variable is allocated.
+Otherwise, int type variable is allocated.
+For example, following program works as intended.
+
+.nf
+	main() {
+		double dat[10];
+		for(i=0;i<10;i++) {    /* i allocated as int */
+			dat[i]=i;
+			sum += dat[i]; /* sum allocated as double */
+		}
+		printf("sum=%g\\n",sum);
+	}
+.fi
+
+If undeclared symbol first appears as array form, array of appropriate
+size will be allocated.
+For example, if 'data[1][10]=3.14' appears without declaration of 'data'
+, 'double data[2][11]' is allocated and 'data[1][10]=3.14' is assigned.
+Array can not be expanded after the automatic allocation.  
+So, 'data[2][15]=15;' will be rejected because array index is out of range.
+
+.nf
+	main() {
+		data[1][10]=3.14;  // double data[2][11]; data[1][10]=3.14;
+		data[0][3]=153.3;  // OK
+		data[2][15]=-15.0; // rejected, array can not be expanded
+	}
+.fi
+
+Pointer to automatically allocated variable can not be used.
+If undeclared variable appears with referencing operator '*' or '&',
+these operators are ignored.
+
+.I Referencing undeclared variable:
+ If undeclared variable is referenced, cint returns NULL or zero as its value.
+
+.I Undeclared function:
+ If undeclared function is called, it is simply skipped.
+Parameter list will be evaluated.
+
+.nf
+	main() {
+		int i=0;
+		undeclaredfunc(i++); // function call skipped
+		// i is 1 here because i++ was evaluated above
+	}
+.fi
+
+
+
+
+.SH COMPATIBILITY
+.TP 10
+HP-UX 8.x, 9.x , Linux 1.1.0 ,(SunOS 4.1.2)
+
+.SH BUGS
+ Report bugs and requirements to
+.BR gotom@jpn.hp.com
+Bugs tend to be fixed very quickly. Any kind of comments or messages will be
+appreciated.
+
+.SH SEE ALSO
+	makecint(1),fft.h(3),array.h(3)
+
+.SH AUTHOR
+Masaharu Goto
+
+Copyright (c) 1995~1999 Masaharu Goto

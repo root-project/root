@@ -1,0 +1,34 @@
+#
+# setup and test
+#
+
+######################################################################
+# Dynamic Link Library test
+######################################################################
+
+# Create Makefile
+makecint -mk Makefile -dl compiled.dll -H compiled.h -C++ compiled.cxx -i++ stub.h
+make -f Makefile clean
+make -f Makefile
+
+# Test
+cint main.cxx
+
+cint main.cxx > cint.out
+g++ compiled.cxx main.cxx
+
+a.exe       > cc.out
+diff cint.out cc.out
+
+rm *.dll
+
+cint compiled.cxx main.cxx 
+cint compiled.cxx main.cxx > cint.out
+diff cint.out cc.out
+
+rm *.out a.exe
+make -f Makefile clean
+rm Makefile
+
+
+

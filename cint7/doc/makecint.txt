@@ -1,0 +1,867 @@
+MAKECINT(1)                                           MAKECINT(1)
+
+
+NAME
+       makecint - C/C++ interpreter-compiler. (cint utility)
+
+
+DESCRIPTION
+        "makecint" is an utility to link  compiled  C/C++ objects
+       with the Cint C/C++ interpreter. Functions, global variables
+       and  classes defined in a C/C++ pre-compiled library can be
+       seamlessly accessed from the interpreter. As you call yacc/lex 
+       a compiler-compiler, we call makecint an interpreter-compiler.
+       A pre-compiled library can be dynamically loaded as Dynamic
+       Link Library (DLL) if operating system provides appropriate 
+       capability. SEE ALSO CINT(1)
+
+        (This sounds smooth, however, I recommend to  start  from
+       very simple example.  Linking non-trivial library won't be
+       easy. Contact cint@pcroot.cern.ch if you need help.)
+
+
+
+SYNOPSIS
+   makecint -mk [Makefile] -o [Object] -H [C++header] -C++ [C++source]
+            <-m> <-p>      -dl [DLL]   -h [Cheader]   -C   [Csource]
+                            -l [Lib] -i [StubC] -i++ [StubC++]
+       -o [obj]      :Object name
+       -dl [dynlib]  :Generate dynamic link library object
+       -mk [mkfile]  :Create makefile (no actual compilation)
+       -p            :Use preprocessor for header files
+       -m            :Needed if main() is included in the source file
+       -D [macro]    :Define macro
+       -I [incldpath]:Set Include file search path
+       -H [sut].h    :C++ header as parameter information file
+       -h [sut].h    :C header as parameter information file
+         +P          :Turn on preprocessor mode for following header files
+         -P          :Turn off preprocessor mode for following header files
+         +V          :Turn on class title loading for following header files
+         -V          :Turn off class title loading for following header files
+       -C++ [sut].C  :Link C++ object. Not accessed unless -H [sut].h is given
+       -C [sut].c    :Link C object. Not accessed unless -h [sut].h is given
+       -i++ [stub].h :C++ STUB function parameter information file
+       -i [stub].h   :C STUB function parameter information file
+       -c [sut].c    :Same as '-h [sut].c -C [sut].c'
+       -l -l[lib]    :Compiled object, Library or linker options
+       -U [dir]      :Directory to disable interface method generation
+       -Y [0|1]      :Ignore std namespace (default=1:ignore)
+       -Z [0|1]      :Automatic loading of standard header files
+       -cc   [opt]   :Compiler option
+       -cint [opt]   :Cint option
+       -B [funcname] :Initialization function name
+       -y [LIBNAME]  :Name of CINT core DLL, LIBCINT or WILDC(WinNT/95 only)
+
+       (Space  between  option  specifier  and option argument is
+       needed) Detail about command line  options  are  explained
+       later in this manual.
+
+
+OPERATING ENVIRONMENT
+        You must install  complete file set  of  the  Cint  C/C++ 
+       interpreter   for   using   makecint.       Please    read 
+       $CINTSYSDIR/README.txt and $CINTSYSDIR/platform/README.txt
+       for Cint installation.  $CINTSYSDIR represents a directory 
+       where cint package is copied and installed.
+
+        CINTSYSDIR  environment variable  must be set to the name 
+       of directory where you installed Cint. It is very important
+       that you have correct version of $CINTSYSDIR/MAKEINFO file.
+       Please read $CINTSYSDIR/platform/README.txt for detail of 
+       $CINTSYSDIR/MAKEINFO.
+
+
+
+OUTLINE OF MAKING A PRECOMPILED LIBRARY
+        Generic  outline of making a precompiled library  will be 
+       described in this section.
+
+   Files
+        You need to prepare header files [xxx.h]  which  includes 
+       interface of the encapsulated C/C++ library. You also need 
+       either source files [xxx.C] [xxx.c], object files [xxx.o], 
+       library files [xxx].a or combination of those.
+
+   Procedure
+
+     - Create a Makefile
+        First of all, you need to create a Makefile by using 
+       makecint. Makecint will automate a process of generating  
+       Makefile. In following example, makecint will create a
+       Makefile which compiles "mycint" executable. The "mycint"
+       embeds xxx.C and yyy.o as precompiled library. 
+
+            $ makecint -mk Makefile -o mycint -H xxx.h yyy.h -C++ xxx.C yyy.o
+
+       Command line options will be explained later in this document.
+
+     - Modify Makefile
+        Please check the created Makefile and modify it if needed. 
+       If your library is simple, modification may not be needed.
+       However, when linking non-trivial libraries, you may need 
+       to carefully examine and modify Makefile by hand.
+
+     - Do make
+        Do make. "mycint" will be compiled and linked. "mycint" is 
+       a  customized C/C++  interpreter  which  pre-includes 
+       interface to xxx.h and yyy.h.
+
+            $ make
+
+        Inside the make, Cint is invoked for making dictionary 
+       source code G__cpp_[XXX].C and/or G__c_[XXX].c. These source
+       files include interface methods for enabling seamless 
+       access between the interpreter and a compiled code.
+
+   Examples
+        $CINTSYSDIR/demo/makecint   directory  contains examples.
+       Refer to $CINTSYSDIR/demo/makecint/README.txt for details.
+
+
+
+WHAT CAN BE DONE WITH THE PRECOMPILED LIBRARY
+     - Non static global variable and function
+        Non static global variables and functions can be accessed
+       from the interpreter.
+
+     - Class members
+        Public member of classes and structs can be accessed from
+       the  interpreter. You can not access private and protected 
+       members from the interpreter. Size of class/struct objects 
+       and data-member/base-class offsets match to the compiled code.
+       (If you use a special technique, you can access protected
+        member from the interpreter. SEE '#pragma link C++ class+protected')
+
+     - Template
+        Instantiated template class and template function  can be
+       accessed   from  the  interpreter. Template itself can not 
+       be precompiled.
+
+     - typedef
+        Typedef information is precompiled and can be  used  from
+       the interpreter.
+
+     - Inheritance, Class object as member
+        Inheritance and class object members are handled properly
+       when they are precompiled.  Precompiled  class  can  be  a
+       super-class of an interpreted class.  Also, object of pre-
+       compiled class can be a member of  an  interpreted  class.
+       Virtual function defined in precompiled class is only vir-
+       tual within the precompiled object  because  compiler  and
+       interpreter  has  different  virtual  function  resolution
+       mechanism. There will be a  possible  enhancement  in  the
+       future.
+
+     - Default constructor, copy constructor , destructor
+        If  one  of  default  constructor,  copy  constructor  or
+       destructor is declared private (or protected),  the  class
+       can not be accessed from the interpreter.
+
+
+
+OPTIONS
+        Space  between  option  specifier  and option argument is
+       significant.  You must put space between them.  For  exam-
+       ple,  '-o  object'  is valid but '-oobject' is not. Excep-
+       tions are -D and -I options which accepts  arguments  like
+
+       '-DMACRO1' and '-I/home/mydir/include'.
+
+
+       -mk [mkfile]  :  Create interface routine and makefile, no
+           compilation
+
+           The '-mk [mkfile]' option will specify name of created
+           makefile.  For example,
+
+                $ makecint -mk make.prog1 -o prog1 -H prog1.h -C++ prog1.C
+                $ make -f make.prog1
+                $ prog1
+
+
+
+       -o  [obj]   : specify object(customized C/C++ interpreter)
+           name
+
+           -o option specifies object name which becomes  a  cus-
+           tomized C/C++ interpreter.  -o option can not be omit-
+           ted, otherwise -dl option must be given.  -o  and  -dl
+           options are exclusive. Only one of them must be given.
+           For example,
+
+                $ makecint -mk Makefile -o mycint -H prog.h -C++ prog.C
+                $ make
+
+           Will make customized cint  "mycint"  including  prog.C
+           user specific library.
+
+
+
+       -dl [DLL].sl : Generate dynamic link library
+
+           -dl  option  generates dynamic link library(DLL) which
+           can be dynamically linked with cint at run  time.  For
+           example,
+
+                $ makecint -mk Makefile -dl func.dl -H func1.h func2.h -C++ func1.C func2.C
+                $ make
+
+           This  will  generate  a  DLL  'func.dl' which includes
+           Position Independent Code  of  func1.C,  func2.C.  -dl
+           option  compiles  user  specific Suffix of the dynamic
+           link library can be either '.dl',  '.sl',  or  '.DLL'.
+           You  can link func.dl by passing it to cint.  Multiple
+           DLL can be linked at a time if there is no cyclic sym-
+           bol dependency.
+
+                $ cint func.dl othersource.c
+                $ cint func1.dl func2.dl othersource.c
+
+           You  can  link  the  DLL  by  '#include'  or  '#pragma
+           include' statement in the source code. '#include'  and
+
+           '#pragma include' behaves exactly the same except that
+           when you try to compile the source code by a  compiler
+           '#include' will cause an error.
+
+           For example,
+
+                // Interpreted source file
+                #include "func1.dl"
+                #pragma include "func1.dl"
+                main() {
+                     .
+                }
+
+           Operation   of   the   dynamic   link   library  func-
+           tion/global/stub are identical  to  that  of  archived
+           version.  Option  '-o'  and  '-m' can not be used with
+           '-dl'.  Installation and all makecint activity must be
+           done under same OS and compiler environment.
+
+           If    you    use    Linux,    you    need    to    set
+           'LD_ELF_LIBRARY_PATH=.:$LD_LIBRARY_PATH'    to     use
+           Dynamic  Link  Library.  Otherwise you need to specify
+           full path.
+
+
+
+       -H  [sutpi].h :C++ header as parameter information file
+
+           With '-H' option, [sutpi].h file is used as  parameter
+           information file for the encapsulated C++ object. Cint
+           will analyze the  header  file  and  create  interface
+           method in G__cpp_[XXX].C. Multiple header files can be
+           given      after       single       '-H'       option.
+           Class,struct,union,enum,public  member  functions  and
+           data members, non-static  global  function  and  vari-
+           ables,  typedefs and macros in precompiled library can
+           be used from interpreter.
+
+                $ makecint -mk Mkit -o mycint -H src1.h src2.h -C++ src1.C src2.C
+                $ make -f Mkit
+
+           [sutpi].h file must be compliant to cint syntax  limi-
+           tations   described   in   man   page  file  $CINTSYS-
+           DIR/doc/limitati.txt.  If [sutpi].h uses C++ language
+           constructs  which  is not supported by cint, that part
+           must be excluded by "#ifndef __MAKECINT__" or "#ifndef
+           __CINT__". The macro __CINT__ is defined both for cint
+           and makecint and  __MAKECINT__  is  defined  only  for
+           makecint.
+
+                class A {
+                     // supported feature
+                #ifndef __MAKECINT__
+                     // unsupported feature
+                #endif
+                };
+
+
+
+       -i++
+           [stub].h  :  give parameter information files for stub
+           function
+
+           -i++ option does  opposite  of  -H  option.  While  -H
+           option  enables  access  of  precompiled  object  from
+           interpreter, -i++ option enables access of interpreted
+           functions from compiled code.
+
+              #### Example is in $CINTSYSDIR/demo/makecint/Stub directory
+              $ makecint -mk Makefile -o mycint -H Src.h -i++ Stub.h -C++ Src.C
+              $ make -f Makefile
+              $ mycint Stub.C
+
+           [stub].h file must be compliant to cint syntax limita-
+           tions   described   in   man   page   file   $CINTSYS-
+           DIR/doc/limitati.txt.  Only  non-static  global func-
+           tions can be specified in [stub].h file.  Behavior  of
+           class,struct,union,enum and non-static global variable
+           defined in [stub].h is undefined.
+
+
+
+       -C++
+           [sut].C :Link C++ source code or object
+
+           With '-C++' option, [sut].C file is used  as  body  of
+           C++ compiled object.
+
+           If  appropriate  header  file is given by '-H' option,
+           those compiled object can be accessed from the  inter-
+           preter.  At  least one header file must be given by -H
+           option when using  -C++  option.  Otherwise,  makecint
+           fails.   Multiple  source files can be given after one
+           '-C++'.  Suffix of the C++ source files must be  prop-
+           erly set in the $CINTSYSDIR/MAKEINFO file.
+
+
+
+       -h  [sutpi].h :C header as parameter information file
+
+           With  '-h' option, [sutpi].h file is used as parameter
+           information file for the encapsulated C  object.  Cint
+           will  analyze  the file and create interface method in
+           G__c_[XXX].c. Multiple header files can be given after
+           one  '-h'.  Header file must be written in ANSI-C for-
+           mat.   K&R   style    header    is    not    accepted.
+           struct,union,enum,   non-static  global  function  and
+           variables, typedefs and macros in precompiled  library
+           can be used from interpreter.
+
+                $ makecint -mk Makeit -A -o mycint -h csrc1.h csrc2.h -C csrc1.c csrc2.c
+                $ make -f Makeit
+
+           [sut].h  file must be compliant to cint syntax limita-
+           tions   described   in   man   page   file   $CINTSYS-
+           DIR/doc/limitati.txt.   If  [sut].h uses C++ language
+           constructs which is not supported by cint,  that  part
+           must be excluded by "#ifndef __MAKECINT__" or "#ifndef
+           __CINT__". The macro __CINT__ is defined both for cint
+           and  makecint  and  __MAKECINT__  is  defined only for
+           makecint.
+
+
+
+       -i  [stub].h : give parameter information files  for  stub
+           function
+
+           -i  option does opposite of -h option. While -h option
+           enables access of precompiled object from interpreter,
+           -i option enables access of interpreted functions from
+           compiled code.
+
+                $ makecint -mk Makefile -o mycint -h Src.h -i Stub.h -C Src.c
+                $ make -f Makefile
+                $ mycint Stub.c
+
+           [stub].h file must be compliant to cint syntax limita-
+           tions   described   in   man   page   file   $CINTSYS-
+           DIR/doc/limitati.txt. Only  non-static  global  func-
+           tions  can  be specified in [stub].h file. Behavior of
+           struct,union,enum  and  non-static   global   variable
+           defined in [stub].h is undefined.
+
+
+
+
+       -C  [sut].c  :Link C source code or object
+
+           With  '-C'  option,  [sut].c file is used as body of C
+           compiled object.
+
+           If appropriate header file is given  by  '-h'  option,
+           those  compiled object can be accessed from the inter-
+           preter. At least one header file must be given  by  -h
+           option  when  using  -C option.  Multiple source files
+           can be given after one '-C'.  Suffix of the  C  source
+           files must be properly set in the $CINTSYSDIR/MAKEINFO
+           file.
+
+
+
+
+       -m  : specify main() is included in linked object
+
+           If main() function  is  included  in  the  precompiled
+           object,  '-m' option must be given. This option avoids
+           linking  Cint  main  function.   You  need   to   call
+           G__init_cint()  and  G__calc()  to  start C/C++ inter-
+           preter from your host  program.  (See  example  below)
+           Header file $CINTSYSDIR/G__ci.h has to be included.
+
+                /* Example host program host.c
+                * $ makecint -mk Makefile -o host -m -I$CINTSYSDIR -h host.h -C host.c
+                * $ make
+                */
+                #include <G__ci.h>
+                #include "host.h"   /* host.h can be an empty file */
+                main() {
+                  int state;
+                  char command[100], macrofile[100], *p;
+                  state=G__init_cint("cint");
+                  while(0==state) {
+                    strcpy(macrofile,G__input("Input macro file >"));
+                    if(strcmp(macrofile,"exit")==0) break;
+                    if(0==G__loadfile(macrofile)) {
+                      strcpy(command,macrofile);
+                      p = strchr(command,'.');
+                      if(p) {
+                     strcpy(p,"()");
+                     G__calc(command);
+                      }
+                      G__unloadfile(macrofile);
+                    }
+                  }
+                  G__scratch_all();
+                }
+
+           int G__init_cint(char* command)
+
+            This  function  will initialize Cint. main() function
+           is automatically executed if exists and returns 1.  If
+           main() is not found in it returns 0.  It returns -1 if
+           initialization fails.
+
+                int state;
+                state=G__init_cint("cint source.c");
+                // 0==state : initialized but no main()
+                // 1==state : initialized and main() called
+                // -1==state: initialization failed
+
+
+           After the initialization you can use  following  func-
+           tions.
+
+           G__value G__calc(char* expression)
+
+            This  function  evaluates C/C++ expression as string.
+           Returned value  is  in  the  form  of  generic  object
+           G__value. G__value can be translated to long or double
+           value by 'int G__int(G__value val)' or 'double G__dou-
+           ble(G__value val)' functions. For example,
+
+                // double f(int a) and void g(void) in source.c
+                double d;
+                G__init_cint("cint source.c");
+                G__calc("g()");
+                d=G__double(G__calc("f(1234)"));
+                G__scratch_all();
+
+           long G__int(G__value buf)
+
+            This  function converts G__value object to a long int
+           value.
+
+
+           double G__double(G__value buf)
+
+            This function converts G__value object  to  a  double
+           precision float value.
+
+
+           int G__loadfile(char* filename)
+
+            This function loads C/C++ source code or Dynamic Link
+           Library(DLL). If suffix of the filename is .dl , .sl ,
+           .so  , .dll or .DLL, the file is linked as DLL. Other-
+           wise, C/C++ source file. It returns 0 if the  file  is
+           successfully  loaded,  1 if the file is already loaded
+           and -1 if the file can not  be  loaded.   In  case  of
+           fatal error, it returns -2.
+
+                G__init_cint("cint");
+                G__loadfile("src1.C");
+                G__loadfile("myLib.dl");
+                G__loadfile("src2.c");
+                G__calc("f()");
+
+
+           int G__unloadfile(char* filename)
+
+            This  function  unloads  C/C++ source code or Dynamic
+           Link Library(DLL). In order to keep  consistency,  all
+           the  files  loaded  after  the  specified file will be
+           unloaded. It  returns  0  if  files  are  successfully
+           unloaded,  -1  if  not.  It first checks if any of the
+           function defined in the unloading files are busy.
+
+                G__init_cint("cint src0.c");
+                G__loadfile("src1.C");
+                G__loadfile("myLib.dl");
+                G__loadfile("src2.c");
+                G__loadfile("src3.C");
+                ....
+                G__unloadfile("src2.c"); // unload src2.c and src3.C
+                ....
+                G__loadfile("src4.C");
+                ....
+                G__unloadfile("src4.C"); // unload src4.C
+                ....
+                G__unloadfile("src0.c"); // unload all files
+
+
+           int G__pause(void)
+
+            This function starts debugger interface. It returns 0
+           except  'i'(ignore)  or 'q'(quit) command is used. You
+           can start interactive interface as follows.
+
+                G__init_cint("cint source.c");
+                while(G__pause()==0); // pause until 'i' command
+                G__scratch_all();
+
+           char* G__input(char* prompt)
+
+            This function is a command line input front-end func-
+           tion.  Although  this  is not an essential function to
+           the  C/C++  interpreter,  this  is  often   convenient
+           because  readline  history  and  command  line editing
+           capability is built-in  using  GNU  readline  library.
+           This  function  returns  pointer  to  a  static string
+           buffer.
+
+                char *buf[100];
+                G__init_cint("cint");
+                strcpy(buf,G__input("Input your command >");
+                G__calc(buf);
+
+
+           void G__scratch_all(void)
+
+            This function terminates interpreter. All  the  files
+           are unloaded and environment is reset.
+
+
+
+
+       -p  :  Use  preprocessor before parsing parameter informa-
+           tion files (OLD)
+
+           If '-p' option is added, parameter  information  files
+           are  preprocessed  by real preprocessor. Cint does not
+           parse define macro perfectly. It is recommended to use
+           -p option when you link non-trivial library with heavy
+           define macro usage.  Name of C/C++  preprocessor  must
+           be set in the $CINTSYSDIR/MAKEINFO file.
+
+                $ makecint -mk Makeit -p -o mycint -H prog.h -C++ prog.C
+                $ make -f Makeit
+
+           This option is being obsoleted. Use +P,-P instead.
+
+
+
+       +P,-P
+           : Turn on/off preprocessor
+
+           The  +P  and -P are suboptions of -h , -H option which
+           turns on/off  preprocessor  option  on  file  by  file
+           basis.  Files  after +P will be preprocessed and files
+           after -P won't be preprocessed.  You  can  selectively
+           use preprocessor in following manner. In this example,
+           only C.h and D.h , which are enclosed by +P/-P ,  will
+           be preprocessed by real C/C++ preprocessor.
+            You must not use -p option when you use +P/-P option.
+           +P option must always come before -P , however, -P can
+           be omitted if all files after +P are preprocessed.
+            Name  of  C/C++  preprocessor  must  be  set  in  the
+           $CINTSYSDIR/MAKEINFO file.
+
+              $ makecint -mk Makeit -o mycint -H A.h B.h +P C.h D.h -P E.h F.h -C++ all.C
+              $ make -f Makeit
+
+
+
+       +V,-V
+           : Turn on/off class title loading
+
+           The +V and -V are suboptions for -h , -H option  which
+           turns  on/off loading class title by file basis. Class
+           title will be loaded for the  files  after  +V.  Class
+           title won't be loaded for the files after -V.
+
+              $ makecint -mk Makeit -o mycint -H A.h B.h +V C.h D.h -V E.h F.h -C++ all.C
+              $ make -f Makeit
+
+           Class  title has to be described in class/struct defi-
+           nition in header  file  as  follows.  Basically,  '//'
+           style comment right after each member declaration will
+           be loaded as class member comment.
+
+                class ABC {
+                   int a;         // title of the member variable
+                   double b;      // title of the member variable
+                   int c();       // title of the member function
+                   ClassDef(ABC)  // title of the class
+                } ;
+
+
+       -D  [macro] : Define macro
+
+           -D option defines macro for global variable  parameter
+           information  file.  Global variable parameter informa-
+           tion file will be conditionally  parsed  with  '#ifdef
+           [macro]' statement.
+            You can not put multiple macro names after '-D'. '-D'
+           must be given  before  every  individual  macro  name.
+           Space  between  -D  and macro name is not significant.
+           You can either go '-Dmacro' or '-D macro'.
+
+              $ makecint -mk Makeit -DONLINE -o mycint -H source.h -C++ source.C
+              $ make -f Makeit
+
+
+       -I  [incldpath] : Include file search path
+
+           -I option specifies include file search path.
+            You can not put multiple path after '-I'.  '-I'  must
+           be  given  before every individual include path. Space
+           between -I and pathname is not  significant.  You  can
+           either go '-Ipath' or '-I path'.
+
+              $ makecint -mk Makeit -I/users/include -I/include -H src.h -C++ src.C
+              $ make -f Makeit
+
+
+       -u [undeffile] : Handle undefined typename as class name
+
+           Fighting againt undefined typename is a tidious work, 
+           especially when you do not need public access to those.
+           -u option ignores such symbols and generates dummy code 
+           to eliminate this kind of problem. It handles unknown 
+           typename as a class name which is not exposed. -u option 
+           takes output file name as an argument. All of the undefined 
+           typenames will be written out.
+
+                $ makecint -mk Makeit -u undef.h -H src.h -C++ src.C 
+                $ make -mk Makeit
+
+           -u option is not perfect. If you find problem, you need to
+           fix it manually.
+
+
+       -U [dir] : Directory to disable interface method generation
+
+           If you give this option, cint/makecint will disable dictionary
+           generation for header files exist under given directory. For
+           example, 
+
+                $ makecint -mk makefile -dl src.dll -I/x/inc -U/x/inc -H src.h 
+                $ make -f makefile
+                $ cint src.dll
+
+           Suppose you have /x/inc/mylib.h and it is included from src.h, 
+           things defined in /x/inc/mylib.h can not be accessed from the
+           interpreter.
+
+
+       -Z [0|1] : Automatic loading of standard header files
+
+           If you give this option, cint/makecint will automatically
+	   load standard header files used in header file given by -h/-H
+	   option. Default is off(0). -Z1 must be given to makecint when 
+	   making dictinoary. For example,
+
+                // src.h
+                #include <string>     // this will trigger implicit loading
+                class myclass { .. };
+               
+                $ makecint -mk makefile -dl src.dll -Z1 -H src.h 
+                $ make -f makefile
+                $ cint src.dll
+                cint> .file
+                0: myheader.dll      // explicitly loaded
+                1: string            // loaded implicitly by shared library
+                2: string.dll        //      "
+                3: bool.h            //      "
+
+
+       -cint  [opt] : Cint option
+
+           -cint option specifies  command line  option  directly 
+           gieven to cint. Multiple  cint options  can  be  given 
+           after -cint.  There are  a few  important cint options 
+           which are described below.
+
+
+       -cint  -H [1-100] : level of inclusion activated for dictionary gen
+
+	   This option controls level of header file inclusion which is
+	   activated for dictionary generation. By default, Cint generates
+	   dictionary for all include files. With -H option, you can limit
+	   up to what level, you want to expose simbols to Cint.
+
+                $ makecint -mk makefile -dl src.dll -H src.h -cint -H1
+
+	   Above example limits the level of inclusion to 1, which means
+	   dictionary is generated for things declared in src.h only and
+	   not for files included from src.h.
+
+	   Do not be confused about makecint's -H option and cint's -H
+	   option. 
+
+
+       -cint  -M [newdelmask] : Mask operator new/delete generation
+
+         Caution: 
+
+           When making cint dictionary or interface method source 
+           code, it usually overloads global new and delete operators.
+           If you have yourown new/delete operator, you may want to 
+           elimitate new and delete from the dictionary source code. 
+           -M option turns off automatic creation of operator new/delete
+           in the dictionary source code. Mask flag is given as hex 
+           number described below. 
+
+             #define G__IS_OPERATOR_NEW      0x01
+                 Global operator new is found in user header file. Cint 
+                 automatically stops generating operator new function in 
+                 the dictionary.
+
+             #define G__IS_OPERATOR_DELETE   0x02
+                 Global operator delete is found in user header file. Cint 
+                 automatically stops generating operator delete function 
+                 in the dictionary.
+
+             #define G__MASK_OPERATOR_NEW    0x04
+                 Cint does not generate operator new function in the 
+                 dictionary because it is explicitly masked by -M0x4 
+                 command line option.
+
+             #define G__MASK_OPERATOR_DELETE 0x08
+                 Cint does not generate operator new function in the 
+                 dictionary because it is explicitly masked by -M0x8 
+                 command line option.
+
+             #define G__NOT_USING_2ARG_NEW   0x10
+                 Cint uses operator new function with 1 argument in 
+                 dictionary source code.
+
+	   From cint5.14.60, a new scheme is introduced. In the new method, 
+	   following flags dominates others. This scheme is intended to fix 
+	   problems associated with global operator new/delete. 
+
+           Before 5.14.59, -M0x1c or -M0x10 was needed for HP-UX aCC, Solaris
+           CC5 and few other compilers. From 5.14.60, this option is not 
+	   needed for those platforms any more.
+
+             #define G__DUMMYARG_NEWDELETE        0x100
+		 If this flag is set, a new operator new/delete scheme
+		 is turned on. With this scheme, cint dictionary generates
+		 following functions.
+
+                    void* operator new(size_t size,[DLLID]_tag* p);
+                    void operator delete(void *p,[DLLID]_tag* x);
+                    static void G__operator_delete(void *p);
+
+             #define G__DUMMYARG_NEWDELETE_STATIC 0x200
+	         This flag makes operator new a static function. So,
+		 following functions will be generated.
+
+                    static void* operator new(size_t size,[DLLID]_tag* p);
+                    static void operator delete(void *p,[DLLID]_tag* x);
+                    static void G__operator_delete(void *p);
+
+            Default value is -M0x100 for pure CINT and -M0x1c for ROOTCINT.
+
+
+                $ makecint -mk Makeit -H src.h -C++ src.C -cint -M0x1c
+                $ make -mk Makeit
+
+            If you have one argument operator new in your source code, your
+            operator new should look like below.
+
+                #define G__PVOID (-1)
+                extern "C" long G__getgvp();
+                void* operator new(size_t size) {
+                  if(G__PVOID!=G__getgvp()) {
+                    void* tmp=G__getgvp();
+		    G__setgvp(G__PVOID);
+                    return(tmp);
+                  }
+                  // Yourown things...
+                }
+
+            If you have two argument operator new in your source code, your
+            operator new should look like below.
+
+                #define G__PVOID (-1)
+                extern "C" long G__getgvp();
+                void* operator new(size_t size,void* p) {
+                  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) {
+                    G__setgvp(G__PVOID);
+                    return(p);
+                  }
+                  // Yourown things...
+                }
+
+            If you have operator delete in your source code, your operator
+            delete should look like below.
+
+                #define G__PVOID (-1)
+                extern "C" long G__getgvp();
+                void operator delete(void *p) {
+                  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) {
+                    G__setgvp(G__PVOID);
+                    return;
+                  }
+                  // Yourown things...
+                }
+
+
+       -cint  -u [undeffile] : Handle undefined typename as class name
+
+           Fighting againt undefined typename is a tidious work, 
+           especially when you do not need public access to those.
+           -u option ignores such symbols and generates dummy code 
+           to eliminate this kind of problem. It handles unknown 
+           typename as a class name which is not exposed. -u option 
+           takes output file name as an argument. All of the undefined 
+           typenames will be written out.
+
+                $ makecint -mk Makeit -H src.h -C++ src.C -cint -u undef.h
+                $ make -mk Makeit
+
+           -u option is not perfect. If you find problem, you need to
+           fix it manually.
+
+       -cint  -Z [0|1] : Automatic loading of standard header files
+
+           If you give this option, cint/makecint will automatically
+	   load standard header files used in header file given by -h/-H
+	   option. Default is off(0). -Z1 must be given to makecint when 
+	   making dictinoary. For example,
+
+                // src.h
+                #include <string>     // this will trigger implicit loading
+                class myclass { .. };
+               
+                $ makecint -mk makefile -dl src.dll -H src.h -cint -Z1
+                $ make -f makefile
+                $ cint src.dll
+                cint> .file
+                0: myheader.dll      // explicitly loaded
+                1: string            // loaded implicitly by shared library
+                2: string.dll        //      "
+                3: bool.h            //      "
+
+
+BUGS
+        Report  bugs  and  requirements to: cint@pcroot.cern.ch. Bugs
+       tend actually to be fixed if they can be isolated,  so  it
+       is in your interest to report them in such a way that they
+       can be easily reproduced.  If will be helpful if you  send
+       your source code with the bug report.
+
+
+
+SEE ALSO
+            doc/cint.txt
+
+
+AUTHOR
+       Masaharu Goto (cint@pcroot.cern.ch)
+       Copyright (c) 1995~2000 Masaharu Goto
+

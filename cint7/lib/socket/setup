@@ -1,0 +1,14 @@
+cp $CINTSYSDIR/MAKEINFO Makefile
+echo 'mksockh : mksockh.c' >> Makefile
+echo '	$(CC) $(SYSMACRO) -o mksockh mksockh.c' >> Makefile
+make -f Makefile
+./mksockh
+rm mksockh
+rm mksockh.exe
+
+makecint -mk Makefile -dl $CINTSYSDIR/include/cintsock.dll -h cintsock.h -C cintsock.c -cint -Z0
+make -f Makefile
+rm G__* Makefile
+rm *.o
+
+

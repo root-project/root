@@ -1,0 +1,69 @@
+/* include/platform/iosenum.h
+ *  This file contains platform dependent ios enum value.
+ *  Run 'cint iosenum.cxx' to create this file. It is done
+ *  only once at installation. */
+#pragma ifndef G__TMPLTIOS 
+static int ios::goodbit=0;
+static int ios::eofbit=1;
+static int ios::failbit=2;
+static int ios::badbit=4;
+static int ios::in=1;
+static int ios::out=2;
+static int ios::ate=4;
+static int ios::app=8;
+static int ios::trunc=16;
+static int ios::binary=32;
+static int ios::beg=0;
+static int ios::cur=1;
+static int ios::end=2;
+static int ios::boolalpha=16384;
+static int ios::adjustfield=448;
+static int ios::basefield=3584;
+static int ios::floatfield=12288;
+static int ios::skipws=1;
+static int ios::left=64;
+static int ios::right=128;
+static int ios::internal=256;
+static int ios::dec=512;
+static int ios::oct=1024;
+static int ios::hex=2048;
+static int ios::showbase=8;
+static int ios::showpoint=16;
+static int ios::uppercase=4;
+static int ios::showpos=32;
+static int ios::scientific=4096;
+static int ios::fixed=8192;
+static int ios::unitbuf=2;
+#pragma else 
+static ios_base::fmtflags ios_base::boolalpha=16384;
+static ios_base::fmtflags ios_base::dec=512;
+static ios_base::fmtflags ios_base::fixed=8192;
+static ios_base::fmtflags ios_base::hex=2048;
+static ios_base::fmtflags ios_base::internal=256;
+static ios_base::fmtflags ios_base::left=64;
+static ios_base::fmtflags ios_base::oct=1024;
+static ios_base::fmtflags ios_base::right=128;
+static ios_base::fmtflags ios_base::scientific=4096;
+static ios_base::fmtflags ios_base::showbase=8;
+static ios_base::fmtflags ios_base::showpoint=16;
+static ios_base::fmtflags ios_base::showpos=32;
+static ios_base::fmtflags ios_base::skipws=1;
+static ios_base::fmtflags ios_base::unitbuf=2;
+static ios_base::fmtflags ios_base::uppercase=4;
+static ios_base::fmtflags ios_base::adjustfield=448;
+static ios_base::fmtflags ios_base::basefield=3584;
+static ios_base::fmtflags ios_base::floatfield=12288;
+static ios_base::fmtflags ios_base::badbit=4;
+static ios_base::fmtflags ios_base::eofbit=1;
+static ios_base::fmtflags ios_base::failbit=2;
+static ios_base::fmtflags ios_base::goodbit=0;
+static ios_base::fmtflags ios_base::app=8;
+static ios_base::fmtflags ios_base::ate=4;
+static ios_base::fmtflags ios_base::binary=32;
+static ios_base::fmtflags ios_base::in=1;
+static ios_base::fmtflags ios_base::out=2;
+static ios_base::fmtflags ios_base::trunc=16;
+static ios_base::fmtflags ios_base::beg=0;
+static ios_base::fmtflags ios_base::cur=1;
+static ios_base::fmtflags ios_base::end=2;
+#pragma endif 

@@ -1,0 +1,1060 @@
+cpp0.cxx 
+cpp1.cxx 
+cpp2.cxx 
+cpp3.cxx 
+cpp4.cxx 
+cpp5.cxx 
+cpp6.cxx 
+cpp8.cxx 
+refassign.cxx 
+ostream.cxx 
+setw0.cxx 
+inherit0.cxx 
+inherit1.cxx 
+inherit2.cxx 
+virtualfunc0.cxx 
+virtualfunc1.cxx 
+virtualfunc2.cxx 
+oprovld0.cxx 
+oprovld2.cxx 
+constary.cxx 
+const.cxx 
+scope0.cxx 
+idxscope0.cxx 
+access0.cxx 
+staticmem0.cxx 
+staticmem1.cxx 
+  4c  X : N = 25 Sum = 481.6 Mean = 19.264 Var = 0.235809 Sigma = 0.485602
+  4i  X : N = 25 Sum = 481.6 Mean = 19.264 Var = 0.235772 Sigma = 0.485564
+  6c  X : N = 26 Sum = 518.6 Mean = 19.9462 Var = 11.8601 Sigma = 3.44385
+  6i  X : N = 26 Sum = 518.6 Mean = 19.9462 Var = 11.8601 Sigma = 3.44384
+  8c  X : N = 25 Sum = 481.6 Mean = 19.264 Var = 0.235809 Sigma = 0.485602
+  8i  X : N = 25 Sum = 481.6 Mean = 19.264 Var = 0.235772 Sigma = 0.485564
+ 10c  X : N = 3 Sum = 6 Mean = 2 Var = 0.666667 Sigma = 0.816496
+ 10i  X : N = 3 Sum = 6 Mean = 2 Var = 0.666667 Sigma = 0.816497
+ 12c  X : N = 3 Sum = 6 Mean = 2 Var = 0.666667 Sigma = 0.816496
+ 12i  X : N = 3 Sum = 6 Mean = 2 Var = 0.666667 Sigma = 0.816497
+staticary.cxx 
+minexam.cxx 
+btmplt.cxx 
+loopcompile1.cxx 
+loopcompile2.cxx 
+loopcompile3.cxx 
+loopcompile4.cxx 
+loopcompile5.cxx 
+mfstatic.cxx 
+new0.cxx 
+template0.cxx 
+template1.cxx 
+template2.cxx 
+template4.cxx 
+template5.cxx 
+template6.cxx 
+template3.cxx 
+minherit0.cxx 
+enumscope.cxx 
+baseconv0.cxx 
+friend0.cxx 
+anonunion.cxx 
+init1.cxx 
+init2.cxx 
+include.cxx 
+eh1.cxx 
+ifs.cxx 
+bitfield.cxx 
+cout1.cxx 
+explicitdtor.cxx 
+nick3.cxx 
+nick4.cxx 
+nick4.cxx -DDEST
+telea0.cxx 
+telea1.cxx 
+telea2.cxx 
+  2i b1=6.28 b2=4.77556e-306
+  3c b1=2 b2=6.28
+  4c ~B()
+  6i c1=16.28 c2=4.57355e+233
+  8c c1=3 c2=16.28
+  9c ~C()
+ 10i d1=26.28 d2=1.53515e-303
+ 13c d1=4 d2=26.28
+ 14c ~D()
+ 15c ~C()
+ 16c ~B()
+ 14i b1=6.28 b2=2.90522e-310
+ 20c b1=2 b2=6.28
+ 21c ~B()
+ 18i b1=6.28 b2=2.90522e-310
+ 25c b1=2 b2=6.28
+ 26c ~B()
+ 22i b1=6.28 b2=2.90522e-310
+ 30c b1=2 b2=6.28
+ 31c ~B()
+ 26i b1=6.28 b2=0
+ 35c b1=2 b2=6.28
+ 36c ~B()
+ 30i b1=6.28 b2=0
+ 40c b1=2 b2=6.28
+ 41c ~B()
+ 34i c1=16.28 c2=2.90522e-310
+ 45c c1=3 c2=16.28
+ 46c ~C()
+ 38i c1=16.28 c2=2.90522e-310
+ 50c c1=3 c2=16.28
+ 51c ~C()
+ 42i c1=16.28 c2=2.90522e-310
+ 55c c1=3 c2=16.28
+ 56c ~C()
+ 46i c1=16.28 c2=0
+ 60c c1=3 c2=16.28
+ 61c ~C()
+ 50i c1=16.28 c2=0
+ 65c c1=3 c2=16.28
+ 66c ~C()
+ 54i d1=26.28 d2=2.90522e-310
+ 56i ~A()
+ 57i a1=1 a2=3.14
+ 58i d1=26.28 d2=0
+ 71c ~D()
+ 72c ~C()
+ 73c ~B()
+ 62i d1=26.28 d2=0
+ 64i ~A()
+ 65i a1=1 a2=3.14
+ 66i d1=26.28 d2=0
+ 78c ~D()
+ 79c ~C()
+ 80c ~B()
+ 70i d1=26.28 d2=0
+ 84c d1=4 d2=26.28
+ 85c ~D()
+ 86c ~C()
+ 87c ~B()
+ 89c a1=1 a2=3.14
+ 90c d1=4 d2=26.28
+ 91c d1=4 d2=26.28
+ 92c ~D()
+ 93c ~C()
+ 94c ~B()
+ 95c ~A()
+ 96c a1=1 a2=3.14
+ 97c d1=4 d2=26.28
+ 98c d1=4 d2=26.28
+ 99c ~D()
+100c ~C()
+101c ~B()
+102c ~A()
+telea3.cxx 
+telea5.cxx 
+telea6.cxx 
+telea7.cxx 
+fwdtmplt.cxx 
+VPersonTest.cxx 
+  2c name syozoku1
+  2i 
+  3c company country2
+  3i cint>   4c name syozoku3
+  5c company country4
+  6c company country0
+  7c name syozoku1
+  8c company country2
+  9c name syozoku3
+ 10c company country4
+convopr0.cxx 
+nstmplt1.cxx 
+aoki0.cxx 
+borg1.cxx 
+borg2.cxx 
+bruce1.cxx 
+fons3.cxx 
+Test0.cxx 
+Test1.cxx 
+  1c 0 1 2 3 4 
+  1i 
+  2c (0,0) (1,2) (2,4) (3,6) (4,8) 
+  2i cint>   3c 0 1 2 3 4 
+  4c isum=10
+  5c csum=(10,20)
+  6c ssum=01234
+delete0.cxx 
+pb19.cxx 
+maincmplx.cxx 
+funcmacro.cxx 
+template.cxx 
+template.cxx  -Dmakecint
+vbase.cxx 
+  2c  ad=1.25 ai=100 ad=1.25 ai=100 bd=0 bi=0
+  2i  ad=1.25 ai=100 ad=1.6976e-313 ai=1072955392 bd=0
+  3c  ad=1.5 ai=101 ad=1.5 ai=101 bd=10000 bi=100000
+  3i cint>   4c  ad=1.25 ai=100 bd=0 bi=0
+  5c  ad=1.5 ai=101 bd=10000 bi=100000
+  6c  ad=1.5 ai=101 bd=10000 bi=100000 ad=1.5 ai=101 ad=1.25 ai=100 bd=0 bi=0 ad=1.25 ai=100CTEST==========================
+  7c  ad=1.75 ai=102 ad=1.75 ai=102 cd=0 ci=0
+  8c  ad=2 ai=103 ad=2 ai=103 cd=10000 ci=100000
+  9c  ad=1.75 ai=102 cd=0 ci=0
+ 10c  ad=2 ai=103 cd=10000 ci=100000
+ 11c  ad=2 ai=103 cd=10000 ci=100000 ad=2 ai=103 ad=1.75 ai=102 cd=0 ci=0 ad=1.75 ai=102DTEST==========================
+ 12c  ad=2.25 ai=104 ad=2.25 ai=104 bd=10 bi=100 ad=2.25 ai=104 cd=100 ci=1000 ad=2.25 ai=104 ad=2.25 ai=104 bd=10 bi=100 ad=2.25 ai=104 cd=100 ci=1000 dd=0 di=0
+ 13c  ad=2.5 ai=105 ad=2.5 ai=105 bd=10010 bi=100100 ad=2.5 ai=105 cd=10100 ci=101000 ad=2.5 ai=105 ad=2.5 ai=105 bd=10010 bi=100100 ad=2.5 ai=105 cd=10100 ci=101000 dd=10000 di=100000
+ 14c  ad=2.25 ai=104 ad=2.25 ai=104 bd=10 bi=100 ad=2.25 ai=104 cd=100 ci=1000 dd=0 di=0
+ 15c  ad=2.5 ai=105 ad=2.5 ai=105 bd=10010 bi=100100 ad=2.5 ai=105 cd=10100 ci=101000 dd=10000 di=100000
+ 16c  ad=2.5 ai=105 ad=2.5 ai=105 bd=10010 bi=100100 ad=2.5 ai=105 cd=10100 ci=101000 dd=10000 di=100000 ad=2.5 ai=105 cd=10100 ci=101000 ad=2.5 ai=105 bd=10010 bi=100100 ad=2.5 ai=105 ad=2.25 ai=104 ad=2.25 ai=104 bd=10 bi=100 ad=2.25 ai=104 cd=100 ci=1000 dd=0 di=0 ad=2.25 ai=104 cd=100 ci=1000 ad=2.25 ai=104 bd=10 bi=100 ad=2.25 ai=104ETEST==========================
+ 17c  ad=2.75 ai=106 ad=2.75 ai=106 bd=10 bi=100 ad=2.75 ai=106 cd=100 ci=1000 ad=2.75 ai=106 ad=2.75 ai=106 bd=10 bi=100 ad=2.75 ai=106 cd=100 ci=1000 ed=0 ei=0
+ 18c  ad=3 ai=107 ad=3 ai=107 bd=10010 bi=100100 ad=3 ai=107 cd=10100 ci=101000 ad=3 ai=107 ad=3 ai=107 bd=10010 bi=100100 ad=3 ai=107 cd=10100 ci=101000 ed=10000 ei=100000
+ 19c  ad=2.75 ai=106 ad=2.75 ai=106 bd=10 bi=100 ad=2.75 ai=106 cd=100 ci=1000 ed=0 ei=0
+ 20c  ad=3 ai=107 ad=3 ai=107 bd=10010 bi=100100 ad=3 ai=107 cd=10100 ci=101000 ed=10000 ei=100000
+ 21c  ad=3 ai=107 ad=3 ai=107 bd=10010 bi=100100 ad=3 ai=107 cd=10100 ci=101000 ed=10000 ei=100000 ad=3 ai=107 cd=10100 ci=101000 ad=3 ai=107 bd=10010 bi=100100 ad=3 ai=107 ad=2.75 ai=106 ad=2.75 ai=106 bd=10 bi=100 ad=2.75 ai=106 cd=100 ci=1000 ed=0 ei=0 ad=2.75 ai=106 cd=100 ci=1000 ad=2.75 ai=106 bd=10 bi=100 ad=2.75 ai=106ETEST==========================
+ 22c  ad=3.25 ai=108 ad=3.25 ai=108 bd=10 bi=100 ad=3.25 ai=108 cd=100 ci=1000 ad=3.25 ai=108 ad=3.25 ai=108 bd=10 bi=100 ad=3.25 ai=108 cd=100 ci=1000 fd=0 fi=0
+ 23c  ad=3.5 ai=109 ad=3.5 ai=109 bd=10010 bi=100100 ad=3.5 ai=109 cd=10100 ci=101000 ad=3.5 ai=109 ad=3.5 ai=109 bd=10010 bi=100100 ad=3.5 ai=109 cd=10100 ci=101000 fd=10000 fi=100000
+ 24c  ad=3.25 ai=108 ad=3.25 ai=108 bd=10 bi=100 ad=3.25 ai=108 cd=100 ci=1000 fd=0 fi=0
+ 25c  ad=3.5 ai=109 ad=3.5 ai=109 bd=10010 bi=100100 ad=3.5 ai=109 cd=10100 ci=101000 fd=10000 fi=100000
+ 26c  ad=3.5 ai=109 ad=3.5 ai=109 bd=10010 bi=100100 ad=3.5 ai=109 cd=10100 ci=101000 fd=10000 fi=100000 ad=3.5 ai=109 cd=10100 ci=101000 ad=3.5 ai=109 bd=10010 bi=100100 ad=3.5 ai=109 ad=3.25 ai=108 ad=3.25 ai=108 bd=10 bi=100 ad=3.25 ai=108 cd=100 ci=1000 fd=0 fi=0 ad=3.25 ai=108 cd=100 ci=1000 ad=3.25 ai=108 bd=10 bi=100 ad=3.25 ai=108ETEST==========================
+ 27c  ad=3.75 ai=110 ad=3.75 ai=110 bd=10 bi=100 ad=3.75 ai=110 cd=100 ci=1000 ad=3.75 ai=110 ad=3.75 ai=110 bd=10 bi=100 ad=3.75 ai=110 cd=100 ci=1000 gd=0 gi=0
+ 28c  ad=4 ai=111 ad=4 ai=111 bd=10010 bi=100100 ad=4 ai=111 cd=10100 ci=101000 ad=4 ai=111 ad=4 ai=111 bd=10010 bi=100100 ad=4 ai=111 cd=10100 ci=101000 gd=10000 gi=100000
+ 29c  ad=3.75 ai=110 ad=3.75 ai=110 bd=10 bi=100 ad=3.75 ai=110 cd=100 ci=1000 gd=0 gi=0
+ 30c  ad=4 ai=111 ad=4 ai=111 bd=10010 bi=100100 ad=4 ai=111 cd=10100 ci=101000 gd=10000 gi=100000
+ 31c  ad=4 ai=111 ad=4 ai=111 bd=10010 bi=100100 ad=4 ai=111 cd=10100 ci=101000 gd=10000 gi=100000 ad=4 ai=111 cd=10100 ci=101000 ad=4 ai=111 bd=10010 bi=100100 ad=4 ai=111 ad=3.75 ai=110 ad=3.75 ai=110 bd=10 bi=100 ad=3.75 ai=110 cd=100 ci=1000 gd=0 gi=0 ad=3.75 ai=110 cd=100 ci=1000 ad=3.75 ai=110 bd=10 bi=100 ad=3.75 ai=110vbase.cxx  -Dmakecint
+vbase1.cxx 
+  2c  ad=1.25 ai=100 ad=1.25 ai=100 bd=0 bi=0
+  2i  ad=1.25 ai=100 ad=1.6976e-313 ai=1072955392 bd=0
+  3c  ad=1.5 ai=101 ad=1.5 ai=101 bd=10000 bi=100000
+  3i cint>   4c  ad=1.25 ai=100 bd=0 bi=0
+  5c  ad=1.5 ai=101 bd=10000 bi=100000
+  6c  ad=1.5 ai=101 bd=10000 bi=100000 ad=1.5 ai=101 ad=1.25 ai=100 bd=0 bi=0 ad=1.25 ai=100CTEST==========================
+  7c  ad=1.75 ai=102 ad=1.75 ai=102 cd=0 ci=0
+  8c  ad=2 ai=103 ad=2 ai=103 cd=10000 ci=100000
+  9c  ad=1.75 ai=102 cd=0 ci=0
+ 10c  ad=2 ai=103 cd=10000 ci=100000
+ 11c  ad=2 ai=103 cd=10000 ci=100000 ad=2 ai=103 ad=1.75 ai=102 cd=0 ci=0 ad=1.75 ai=102DTEST==========================
+ 12c  ad=2.25 ai=104 ad=2.25 ai=104 bd=10 bi=100 ad=2.25 ai=104 cd=100 ci=1000 ad=2.25 ai=104 ad=2.25 ai=104 bd=10 bi=100 ad=2.25 ai=104 cd=100 ci=1000 dd=0 di=0
+ 13c  ad=2.5 ai=105 ad=2.5 ai=105 bd=10010 bi=100100 ad=2.5 ai=105 cd=10100 ci=101000 ad=2.5 ai=105 ad=2.5 ai=105 bd=10010 bi=100100 ad=2.5 ai=105 cd=10100 ci=101000 dd=10000 di=100000
+ 14c  ad=2.25 ai=104 ad=2.25 ai=104 bd=10 bi=100 ad=2.25 ai=104 cd=100 ci=1000 dd=0 di=0
+ 15c  ad=2.5 ai=105 ad=2.5 ai=105 bd=10010 bi=100100 ad=2.5 ai=105 cd=10100 ci=101000 dd=10000 di=100000
+ 16c  ad=2.5 ai=105 ad=2.5 ai=105 bd=10010 bi=100100 ad=2.5 ai=105 cd=10100 ci=101000 dd=10000 di=100000 ad=2.5 ai=105 cd=10100 ci=101000 ad=2.5 ai=105 bd=10010 bi=100100 ad=2.5 ai=105 ad=2.25 ai=104 ad=2.25 ai=104 bd=10 bi=100 ad=2.25 ai=104 cd=100 ci=1000 dd=0 di=0 ad=2.25 ai=104 cd=100 ci=1000 ad=2.25 ai=104 bd=10 bi=100 ad=2.25 ai=104ETEST==========================
+ 17c  ad=2.75 ai=106 ad=2.75 ai=106 bd=10 bi=100 ad=2.75 ai=106 cd=100 ci=1000 ad=2.75 ai=106 ad=2.75 ai=106 bd=10 bi=100 ad=2.75 ai=106 cd=100 ci=1000 ed=0 ei=0
+ 18c  ad=3 ai=107 ad=3 ai=107 bd=10010 bi=100100 ad=3 ai=107 cd=10100 ci=101000 ad=3 ai=107 ad=3 ai=107 bd=10010 bi=100100 ad=3 ai=107 cd=10100 ci=101000 ed=10000 ei=100000
+ 19c  ad=2.75 ai=106 ad=2.75 ai=106 bd=10 bi=100 ad=2.75 ai=106 cd=100 ci=1000 ed=0 ei=0
+ 20c  ad=3 ai=107 ad=3 ai=107 bd=10010 bi=100100 ad=3 ai=107 cd=10100 ci=101000 ed=10000 ei=100000
+ 21c  ad=3 ai=107 ad=3 ai=107 bd=10010 bi=100100 ad=3 ai=107 cd=10100 ci=101000 ed=10000 ei=100000 ad=3 ai=107 cd=10100 ci=101000 ad=3 ai=107 bd=10010 bi=100100 ad=3 ai=107 ad=2.75 ai=106 ad=2.75 ai=106 bd=10 bi=100 ad=2.75 ai=106 cd=100 ci=1000 ed=0 ei=0 ad=2.75 ai=106 cd=100 ci=1000 ad=2.75 ai=106 bd=10 bi=100 ad=2.75 ai=106ETEST==========================
+ 22c  ad=3.25 ai=108 ad=3.25 ai=108 bd=10 bi=100 ad=3.25 ai=108 cd=100 ci=1000 ad=3.25 ai=108 ad=3.25 ai=108 bd=10 bi=100 ad=3.25 ai=108 cd=100 ci=1000 fd=0 fi=0
+ 23c  ad=3.5 ai=109 ad=3.5 ai=109 bd=10010 bi=100100 ad=3.5 ai=109 cd=10100 ci=101000 ad=3.5 ai=109 ad=3.5 ai=109 bd=10010 bi=100100 ad=3.5 ai=109 cd=10100 ci=101000 fd=10000 fi=100000
+ 24c  ad=3.25 ai=108 ad=3.25 ai=108 bd=10 bi=100 ad=3.25 ai=108 cd=100 ci=1000 fd=0 fi=0
+ 25c  ad=3.5 ai=109 ad=3.5 ai=109 bd=10010 bi=100100 ad=3.5 ai=109 cd=10100 ci=101000 fd=10000 fi=100000
+ 26c  ad=3.5 ai=109 ad=3.5 ai=109 bd=10010 bi=100100 ad=3.5 ai=109 cd=10100 ci=101000 fd=10000 fi=100000 ad=3.5 ai=109 cd=10100 ci=101000 ad=3.5 ai=109 bd=10010 bi=100100 ad=3.5 ai=109 ad=3.25 ai=108 ad=3.25 ai=108 bd=10 bi=100 ad=3.25 ai=108 cd=100 ci=1000 fd=0 fi=0 ad=3.25 ai=108 cd=100 ci=1000 ad=3.25 ai=108 bd=10 bi=100 ad=3.25 ai=108ETEST==========================
+ 27c  ad=3.75 ai=110 ad=3.75 ai=110 bd=10 bi=100 ad=3.75 ai=110 cd=100 ci=1000 ad=3.75 ai=110 ad=3.75 ai=110 bd=10 bi=100 ad=3.75 ai=110 cd=100 ci=1000 gd=0 gi=0
+ 28c  ad=4 ai=111 ad=4 ai=111 bd=10010 bi=100100 ad=4 ai=111 cd=10100 ci=101000 ad=4 ai=111 ad=4 ai=111 bd=10010 bi=100100 ad=4 ai=111 cd=10100 ci=101000 gd=10000 gi=100000
+ 29c  ad=3.75 ai=110 ad=3.75 ai=110 bd=10 bi=100 ad=3.75 ai=110 cd=100 ci=1000 gd=0 gi=0
+ 30c  ad=4 ai=111 ad=4 ai=111 bd=10010 bi=100100 ad=4 ai=111 cd=10100 ci=101000 gd=10000 gi=100000
+ 31c  ad=4 ai=111 ad=4 ai=111 bd=10010 bi=100100 ad=4 ai=111 cd=10100 ci=101000 gd=10000 gi=100000 ad=4 ai=111 cd=10100 ci=101000 ad=4 ai=111 bd=10010 bi=100100 ad=4 ai=111 ad=3.75 ai=110 ad=3.75 ai=110 bd=10 bi=100 ad=3.75 ai=110 cd=100 ci=1000 gd=0 gi=0 ad=3.75 ai=110 cd=100 ci=1000 ad=3.75 ai=110 bd=10 bi=100 ad=3.75 ai=110vbase1.cxx  -Dmakecint
+t215.cxx 
+ 42i 0.~A1() 8
+ 43i 0.~B1() 1
+ 43c 0.~B1() 1
+ 44c 0.~A1() 0
+ 53i 0.~A1() 8
+ 54i 0.~B1() 11
+ 54c 0.~B1() 11
+ 55c 0.~A1() 10
+ 64i 0.~A1() 8
+ 65i 0.~B1() 21
+ 65c 0.~B1() 21
+ 66c 0.~A1() 20
+t358.cxx 
+  3c 8
+  3i 
+  4c 9
+  4i cint>   5c 8
+  6c 8
+  7c 8
+  8c 7
+  9c f-----------------
+ 10c 10
+ 11c 10
+ 12c 11
+ 13c 11
+ 14c 12
+ 15c 12
+ 16c 13
+ 17c 13
+ 18c 14
+ 19c 14
+ 20c 15
+ 21c 15
+t488.cxx 
+  1c 3
+  1i 
+  2i cint> t516.cxx 
+  1c 3.14
+  2c 0
+  3c 1
+  4c 10
+  5c 11
+  6c 100
+  7c 101
+  8c 110
+  9c 111
+ 10c 200
+ 11c 201
+ 12c 210
+ 13c 211
+t603.cxx 
+t627.cxx 
+  2i TGC::operator()(2)
+  3i f(x=2.46)
+  4i GetDefaultGC()
+  6i f(x=1.23)
+  4c TGC::operator()(3)
+  5c GetDefaultGC()
+  6c TGC::operator()(2)
+  7c f(x=2.46)
+  8c GetDefaultGC()
+ 12c TGC::operator()(1)
+ 13c GetDefaultGC()
+ 12i f(x=0)
+ 19c TGC::operator()(0)
+ 20c f(x=0)
+ 21c GetDefaultGC()
+ 18i f(x=1.23)
+ 21i f(x=1.23)
+ 26c TGC::operator()(1)
+ 27c f(x=1.23)
+ 28c GetDefaultGC()
+ 29c TGC::operator()(1)
+ 30c f(x=1.23)
+ 31c GetDefaultGC()
+ 32c TGC::operator()(1)
+ 33c GetDefaultGC()
+ 35c GetDefaultGC()
+ 36c TGC::operator()(1)
+ 37c f(x=1.23)
+ 38c GetDefaultGC()
+ 39c TGC::operator()(2)
+t627.cxx  -Dmakecint
+  2i TGC::operator()(2)
+  3i f(x=2.46)
+  4i GetDefaultGC()
+  6i f(x=1.23)
+  4c TGC::operator()(3)
+  5c GetDefaultGC()
+  6c TGC::operator()(2)
+  7c f(x=2.46)
+  8c GetDefaultGC()
+ 12c TGC::operator()(1)
+ 13c GetDefaultGC()
+ 12i f(x=0)
+ 19c TGC::operator()(0)
+ 20c f(x=0)
+ 21c GetDefaultGC()
+ 18i f(x=1.23)
+ 21i f(x=1.23)
+ 26c TGC::operator()(1)
+ 27c f(x=1.23)
+ 28c GetDefaultGC()
+ 29c TGC::operator()(1)
+ 30c f(x=1.23)
+ 31c GetDefaultGC()
+ 32c TGC::operator()(1)
+ 33c GetDefaultGC()
+ 35c GetDefaultGC()
+ 36c TGC::operator()(1)
+ 37c f(x=1.23)
+ 38c GetDefaultGC()
+ 39c TGC::operator()(2)
+t630.cxx 
+t633.cxx 
+t633.cxx  -Dmakecint
+  2c x chip.a=2  &chip=1
+  2i x chip.a=0  &chip=524289
+  3c 4 chip.a=1  &chip=0
+  3i 4 chip.a=13691  &chip=0
+  4c 4 chip.a=2  &chip=1
+  4i 4 chip.a=0  &chip=524289
+  5c 4 chip.a=3  &chip=2
+  5i 4 chip.a=1764436736  &chip=0
+  7c 4 chip.a=1  &chip=3
+  7i 4 chip.a=0  &chip=0
+  8c 4 chip.a=2  &chip=4
+  8i 4 chip.a=0  &chip=0
+  9c 4 chip.a=3  &chip=5
+  9i 4 chip.a=0  &chip=0
+ 11c 1 chip.a=1  &chip=6
+ 11i 1 chip.a=13691  &chip=0
+ 12c 2 chip.a=100  &chip=6
+ 12i 2 chip.a=100  &chip=0
+ 13c 1 chip.a=2  &chip=7
+ 13i 1 chip.a=0  &chip=732769
+ 14c 2 chip.a=101  &chip=7
+ 14i 2 chip.a=101  &chip=732769
+ 15c 1 chip.a=3  &chip=8
+ 15i 1 chip.a=1025860640  &chip=539386728
+ 16c 2 chip.a=102  &chip=8
+ 16i 2 chip.a=102  &chip=539386728
+ 17c 4 chip.a=100  &chip=6
+ 17i 4 chip.a=100  &chip=0
+ 18c 4 chip.a=101  &chip=7
+ 18i 4 chip.a=101  &chip=732769
+ 19c 4 chip.a=102  &chip=8
+ 19i 4 chip.a=102  &chip=539386728
+t634.cxx 
+t674.cxx -DINTERPRET
+  1c string(abc)
+  2c string(def)
+  3c string(hij)
+  4c string(ABC)
+  5c string(DEF)
+  6c string(HIJ)
+  7c 0:abc,ABC 1:def,DEF 2:hij,HIJ 
+  8c string(XYZ)
+  9c string(YZ)
+ 10c string(Z)
+ 11c string((string)XYZ)
+ 12c string((string)YZ)
+ 13c string((string)Z)
+ 14c 0:XYZ 1:YZ 2:Z 
+ 15c ~string(Z)
+ 16c ~string(YZ)
+ 17c ~string(XYZ)
+ 18c ~string(Z)
+ 19c ~string(YZ)
+ 20c ~string(XYZ)
+ 21c ~string(HIJ)
+ 22c ~string(DEF)
+ 23c ~string(ABC)
+ 24c ~string(hij)
+ 25c ~string(def)
+ 26c ~string(abc)
+t694.cxx  -Dmakecint
+t694.cxx -DINTERPRET
+  1c 5 1 f(0) f(789) g(0) g(123) 
+  1i 5 1 f(0) f(789) g(0) 
+  2c 6 3 f(1) f(789) g(1) g(123) 
+  2i cint> t695.cxx 
+  1c A() 3.14 0
+  2c A() 0 123
+  3c A() 6.28 0
+  4c A() 0 567
+  5c A() 7.28 0
+  6c A() 0 568
+  7c A() 8.28 0
+  8c A() 0 569
+  9c B() 3.14 0
+ 10c B() 0 123
+ 11c template specialization template specialization B() 6.28 0
+ 12c B() 0 567
+ 13c template specialization template specialization B() 7.28 0
+ 14c B() 0 568
+ 15c template specialization template specialization B() 8.28 0
+ 16c B() 0 569
+t705.cxx  -Dmakecint
+  1c a: aa
+  2c a: aa
+  3c b:1
+  4c b:2
+t705.cxx -DINTERPRET
+  1c a: aa
+  2c a: aa
+  3c b:1
+  4c b:2
+t714.cxx 
+t733.cxx 
+  1o iter
+  1i 
+  2o iterator_traits<iter>
+  2i cint>   3o     iterator_traits<iter>::pointer a
+  4o     iter b
+  5o     iter* c
+  6o iterator_traits<int*>
+  7o     iterator_traits<int*>::pointer a
+  8o     int b
+  9o     int* c
+ 10o iterator_traits<const int*>
+ 11o     iterator_traits<const int*>::pointer a
+ 12o     const int b
+ 13o     const int* c
+t749.cxx 
+t751.cxx 
+t764.cxx 
+t767.cxx 
+t776.cxx 
+t777.cxx 
+t784.cxx 
+t825.cxx 
+t910.cxx 
+t916.cxx 
+t927.cxx 
+  1o 0 1 2 3 4 14vector<double>
+  2o 0 1 2 3 4 13vector<float>
+  3o 0 1 2 3 4 11vector<int>
+  4o 0 1 2 3 4 13vector<short>
+  5o 0 1 2 3 4 12vector<long>
+  6o 0 1 2 3 4 12list<double>
+  7o 0 1 2 3 4 9list<int>
+  8o 0 1 2 3 4 10list<long>
+t928.cxx  -Dmakecint2
+t930.cxx 
+  1c 3
+t938.cxx 
+t958.cxx 
+t959.cxx 
+t961.cxx  -Dmakecint
+t963.cxx 
+  1c TPhTopoData<T>::TPhTopoData()
+  2c TPhTopoData<T>.disp()
+  3c TPhTopoData<T>.disp()
+  4c TPhTopoData<T>::TError.disp()
+t966.cxx  -Dmakecint
+t968.cxx  -Dmakecint
+t970.cxx  -Dmakecint
+  4c ~TMatrixRow()
+  7c ~TMatrixRow()
+ 10c ~TMatrixRow()
+ 13c ~TMatrixRow()
+ 11i ~TMatrixRow()
+ 12i ~TMatrixRow()
+ 13i ~TMatrixRow()
+ 14i ~TMatrixRow()
+t972.cxx  -Dmakecint2
+t980.cxx  -Dmakecint
+  1c A part of a whole. A part of a whole.
+  1i 
+  2c A part of a whole. A part of a whole.
+  2i cint>   3c A part of a whole. A part of a whole.
+  4c true
+  5c false
+  6c true
+  7c false
+t986.cxx -DTEST
+  1c maxsize=10 : 0 1.2 2.4 3.6 4.8 6 7.2 8.4 9.6 10.8 
+  2c name=t986
+  3c bbbeta
+t987.cxx  -Dmakecint
+t991.cxx  -Dmakecint2
+  1c success
+  2c Master::Container::func(N6Slave26ObjectE)
+t992.cxx  -Dmakecint
+  1c 0 
+  2c 100 101 
+  3c 200 201 202 
+  4c 300 301 302 303 
+t993.c  -Dmakecint
+  1c s2::a=12
+  2c s2::a=12
+  3c s2::a=12
+  4c s3::b=12
+  5c s3::c=34
+t995.cxx  -Dmakecint
+t996.cxx  -Dmakecint
+t998.cxx 
+  1c 1.6 2.3 3.4 4.5 5.6 1.6 2.3 3.4 4.5 5.6 1.6 2.3 3.4 4.5 5.6 1.6 2.3 3.4 4.5 5.6 1.6 2.3 3.4 4.5 5.6 1.6 2.3 3.4 
+  2c 138
+  3c 1000
+  4c 1000
+  5c 2000
+  6c 1200
+t1002.cxx  -Dmakecint
+t1004.cxx 
+t1011.cxx 
+  1c success
+  2c fully templated version
+t1011.cxx  -Dmakecint
+t1015.cxx 
+  1c 0x0
+  2c 0x0
+t1016.cxx 
+  2c aaa2 offset = 1
+  2i aaa2 offset = 0
+t1016.cxx  -Dmakecint
+  2c aaa2 offset = 1
+  2i aaa2 offset = 0
+t1023.cxx 
+t1024.cxx 
+  2c     0     1     2     3     4     5     6     7     8     9 
+  2i 
+  3c   100   101   102   103   104   105   106   107   108   109 
+  3i cint>   4c   200   201   202   203   204   205   206   207   208   209 
+  5c   300   301   302   303   304   305   306   307   308   309 
+  6c   400   401   402   403   404   405   406   407   408   409 
+  7c   500   501   502   503   504   505   506   507   508   509 
+  8c   600   601   602   603   604   605   606   607   608   609 
+  9c   700   701   702   703   704   705   706   707   708   709 
+ 10c   800   801   802   803   804   805   806   807   808   809 
+ 11c   900   901   902   903   904   905   906   907   908   909 
+ 12c  1000  1001  1002  1003  1004  1005  1006  1007  1008  1009 
+ 13c  1100  1101  1102  1103  1104  1105  1106  1107  1108  1109 
+ 14c  1200  1201  1202  1203  1204  1205  1206  1207  1208  1209 
+ 15c  1300  1301  1302  1303  1304  1305  1306  1307  1308  1309 
+ 16c  1400  1401  1402  1403  1404  1405  1406  1407  1408  1409 
+ 17c  1500  1501  1502  1503  1504  1505  1506  1507  1508  1509 
+ 18c  1600  1601  1602  1603  1604  1605  1606  1607  1608  1609 
+ 19c  1700  1701  1702  1703  1704  1705  1706  1707  1708  1709 
+ 20c  1800  1801  1802  1803  1804  1805  1806  1807  1808  1809 
+ 21c  1900  1901  1902  1903  1904  1905  1906  1907  1908  1909 
+ 22c -------------------------------
+ 23c     0     1     2     3     4     5     6     7     8     9 
+ 24c   200   201   202   203   204   205   206   207   208   209 
+ 25c   400   401   402   403   404   405   406   407   408   409 
+ 26c   600   601   602   603   604   605   606   607   608   609 
+ 27c   800   801   802   803   804   805   806   807   808   809 
+ 28c  1000  1001  1002  1003  1004  1005  1006  1007  1008  1009 
+ 29c  1200  1201  1202  1203  1204  1205  1206  1207  1208  1209 
+ 30c  1400  1401  1402  1403  1404  1405  1406  1407  1408  1409 
+ 31c  1600  1601  1602  1603  1604  1605  1606  1607  1608  1609 
+ 32c  1800  1801  1802  1803  1804  1805  1806  1807  1808  1809 
+ 33c  2000  2001  2002  2003  2004  2005  2006  2007  2008  2009 
+ 34c  2200  2201  2202  2203  2204  2205  2206  2207  2208  2209 
+ 35c  2400  2401  2402  2403  2404  2405  2406  2407  2408  2409 
+ 36c  2600  2601  2602  2603  2604  2605  2606  2607  2608  2609 
+ 37c  2800  2801  2802  2803  2804  2805  2806  2807  2808  2809 
+ 38c  3000  3001  3002  3003  3004  3005  3006  3007  3008  3009 
+ 39c  3200  3201  3202  3203  3204  3205  3206  3207  3208  3209 
+ 40c  3400  3401  3402  3403  3404  3405  3406  3407  3408  3409 
+ 41c  3600  3601  3602  3603  3604  3605  3606  3607  3608  3609 
+ 42c  3800  3801  3802  3803  3804  3805  3806  3807  3808  3809 
+ 43c -------------------------------
+ 44c     0     1     2     3     4     5     6     7     8     9 
+ 45c   200   201   202   203   204   205   206   207   208   209 
+ 46c   400   401   402   403   404   405   406   407   408   409 
+ 47c   600   601   602   603   604   605   606   607   608   609 
+ 48c   800   801   802   803   804   805   806   807   808   809 
+ 49c  1000  1001  1002  1003  1004  1005  1006  1007  1008  1009 
+ 50c  1200  1201  1202  1203  1204  1205  1206  1207  1208  1209 
+ 51c  1400  1401  1402  1403  1404  1405  1406  1407  1408  1409 
+ 52c  1600  1601  1602  1603  1604  1605  1606  1607  1608  1609 
+ 53c  1800  1801  1802  1803  1804  1805  1806  1807  1808  1809 
+ 54c  2000  2001  2002  2003  2004  2005  2006  2007  2008  2009 
+ 55c  2200  2201  2202  2203  2204  2205  2206  2207  2208  2209 
+ 56c  2400  2401  2402  2403  2404  2405  2406  2407  2408  2409 
+ 57c  2600  2601  2602  2603  2604  2605  2606  2607  2608  2609 
+ 58c  2800  2801  2802  2803  2804  2805  2806  2807  2808  2809 
+ 59c  3000  3001  3002  3003  3004  3005  3006  3007  3008  3009 
+ 60c  3200  3201  3202  3203  3204  3205  3206  3207  3208  3209 
+ 61c  3400  3401  3402  3403  3404  3405  3406  3407  3408  3409 
+ 62c  3600  3601  3602  3603  3604  3605  3606  3607  3608  3609 
+ 63c  3800  3801  3802  3803  3804  3805  3806  3807  3808  3809 
+t1024.cxx  -Dmakecint
+  2c     0     1     2     3     4     5     6     7     8     9 
+  2i 
+  3c   100   101   102   103   104   105   106   107   108   109 
+  3i cint>   4c   200   201   202   203   204   205   206   207   208   209 
+  5c   300   301   302   303   304   305   306   307   308   309 
+  6c   400   401   402   403   404   405   406   407   408   409 
+  7c   500   501   502   503   504   505   506   507   508   509 
+  8c   600   601   602   603   604   605   606   607   608   609 
+  9c   700   701   702   703   704   705   706   707   708   709 
+ 10c   800   801   802   803   804   805   806   807   808   809 
+ 11c   900   901   902   903   904   905   906   907   908   909 
+ 12c  1000  1001  1002  1003  1004  1005  1006  1007  1008  1009 
+ 13c  1100  1101  1102  1103  1104  1105  1106  1107  1108  1109 
+ 14c  1200  1201  1202  1203  1204  1205  1206  1207  1208  1209 
+ 15c  1300  1301  1302  1303  1304  1305  1306  1307  1308  1309 
+ 16c  1400  1401  1402  1403  1404  1405  1406  1407  1408  1409 
+ 17c  1500  1501  1502  1503  1504  1505  1506  1507  1508  1509 
+ 18c  1600  1601  1602  1603  1604  1605  1606  1607  1608  1609 
+ 19c  1700  1701  1702  1703  1704  1705  1706  1707  1708  1709 
+ 20c  1800  1801  1802  1803  1804  1805  1806  1807  1808  1809 
+ 21c  1900  1901  1902  1903  1904  1905  1906  1907  1908  1909 
+ 22c -------------------------------
+ 23c     0     1     2     3     4     5     6     7     8     9 
+ 24c   200   201   202   203   204   205   206   207   208   209 
+ 25c   400   401   402   403   404   405   406   407   408   409 
+ 26c   600   601   602   603   604   605   606   607   608   609 
+ 27c   800   801   802   803   804   805   806   807   808   809 
+ 28c  1000  1001  1002  1003  1004  1005  1006  1007  1008  1009 
+ 29c  1200  1201  1202  1203  1204  1205  1206  1207  1208  1209 
+ 30c  1400  1401  1402  1403  1404  1405  1406  1407  1408  1409 
+ 31c  1600  1601  1602  1603  1604  1605  1606  1607  1608  1609 
+ 32c  1800  1801  1802  1803  1804  1805  1806  1807  1808  1809 
+ 33c  2000  2001  2002  2003  2004  2005  2006  2007  2008  2009 
+ 34c  2200  2201  2202  2203  2204  2205  2206  2207  2208  2209 
+ 35c  2400  2401  2402  2403  2404  2405  2406  2407  2408  2409 
+ 36c  2600  2601  2602  2603  2604  2605  2606  2607  2608  2609 
+ 37c  2800  2801  2802  2803  2804  2805  2806  2807  2808  2809 
+ 38c  3000  3001  3002  3003  3004  3005  3006  3007  3008  3009 
+ 39c  3200  3201  3202  3203  3204  3205  3206  3207  3208  3209 
+ 40c  3400  3401  3402  3403  3404  3405  3406  3407  3408  3409 
+ 41c  3600  3601  3602  3603  3604  3605  3606  3607  3608  3609 
+ 42c  3800  3801  3802  3803  3804  3805  3806  3807  3808  3809 
+ 43c -------------------------------
+ 44c     0     1     2     3     4     5     6     7     8     9 
+ 45c   200   201   202   203   204   205   206   207   208   209 
+ 46c   400   401   402   403   404   405   406   407   408   409 
+ 47c   600   601   602   603   604   605   606   607   608   609 
+ 48c   800   801   802   803   804   805   806   807   808   809 
+ 49c  1000  1001  1002  1003  1004  1005  1006  1007  1008  1009 
+ 50c  1200  1201  1202  1203  1204  1205  1206  1207  1208  1209 
+ 51c  1400  1401  1402  1403  1404  1405  1406  1407  1408  1409 
+ 52c  1600  1601  1602  1603  1604  1605  1606  1607  1608  1609 
+ 53c  1800  1801  1802  1803  1804  1805  1806  1807  1808  1809 
+ 54c  2000  2001  2002  2003  2004  2005  2006  2007  2008  2009 
+ 55c  2200  2201  2202  2203  2204  2205  2206  2207  2208  2209 
+ 56c  2400  2401  2402  2403  2404  2405  2406  2407  2408  2409 
+ 57c  2600  2601  2602  2603  2604  2605  2606  2607  2608  2609 
+ 58c  2800  2801  2802  2803  2804  2805  2806  2807  2808  2809 
+ 59c  3000  3001  3002  3003  3004  3005  3006  3007  3008  3009 
+ 60c  3200  3201  3202  3203  3204  3205  3206  3207  3208  3209 
+ 61c  3400  3401  3402  3403  3404  3405  3406  3407  3408  3409 
+ 62c  3600  3601  3602  3603  3604  3605  3606  3607  3608  3609 
+ 63c  3800  3801  3802  3803  3804  3805  3806  3807  3808  3809 
+t1025.cxx  -Dmakecint
+  3c the printed value should equal to 22: 22.000000
+  3i the printed value should equal to 22: 17178592.000000
+  4c should also be 11: 22
+  4i should also be 11: 1.71786e+07
+t1026.cxx 
+t1026.cxx  -Dmakecint
+t1027.cxx 
+  1o created an int of value 3
+  1i created an int of value 1
+t1032.cxx 
+t1032.cxx 
+t1034.cxx 
+  1o sizeof(long long)=8
+  2o sizeof(long long int)=8
+  3o sizeof(unsigned long long)=8
+  4o sizeof(unsigned long long int)=8
+  5o sizeof(long double)=8
+  6o typeid(long long).name()=9long long
+  7o typeid(unsigned long long).name()=18unsigned long long
+  8o typeid(long double).name()=11long double
+  9o 'long long' 'long long' 20
+ 10o 'unsigned long long' 'unsigned long long' 20
+ 11o 'long double' 'long double' 20
+ 12o sizeof(long long)=8
+ 13o sizeof(long long int)=8
+ 14o sizeof(unsigned long long)=8
+ 15o sizeof(unsigned long long int)=8
+ 16o sizeof(long double)=8
+ 17o typeid(long long).name()=9long long
+ 18o typeid(unsigned long long).name()=18unsigned long long
+ 19o typeid(long double).name()=11long double
+ 20o 'long long' 'long long' 20
+ 21o 'unsigned long long' 'unsigned long long' 20
+ 22o 'long double' 'long double' 20
+ 23o a 'long long' 'long long' 220
+ 24o b 'unsigned long long' 'unsigned long long' 220
+ 25o c 'long double' 'long double' 220
+t1035.cxx 
+t1035.cxx  -Dmakecint
+  1c 1234
+  1i 0
+t1036.cxx 
+t1040.cxx  -Dmakecint
+t1042.cxx 
+  9o disp() 0 0 0 0 0 
+  9i 
+ 10o ~B()
+ 10i cint>  11o B(6)
+ 12o Set(1,0.1)
+ 13o disp() 1 1.1 1.2 1.3 1.4 1.5 
+ 14o ~B()
+ 15o B(7)
+ 16o Set(2,0.2)
+ 17o disp() 2 2.2 2.4 2.6 2.8 3 3.2 
+ 18o ~B()
+t1046.cxx 
+t1046.cxx  -Dmakecint
+  2c test1 This is a std::exception 'St9exception'
+  2i test1   3c test2 This is a std::exception 'St9exception'
+  4c test3 This is a std::exception 'St9exception'
+  5c test4 This is a std::exception 'St9exception'
+  6c test5 This is a std::exception 'St9exception'
+  7c test6 This is a std::exception 'St9exception'
+  8c test7 This is a std::exception 'St9exception'
+  9c -------- END --------
+t1047.cxx 
+t1047.cxx  -Dmakecint
+t1048.cxx 
+  1c sum = 49950
+  2c sum = 499600
+  3c sum = -4940
+  4c sum = 990
+t1157.cxx 
+  1c aaa
+  2c bbb
+  3c ccc
+  4c ddd
+  5c eee
+  6c fff
+  7c 
+  8c casted value of p[1][1]:fff
+  9c value of p[1][1]       :fff
+ 10c  I see:fff
+ 11c 
+ 12c casted value of p[1][1]:fff
+ 13c value of p[1][1]       :fff
+ 14c  I see:fff
+ 15c 
+ 16c fff
+t1158.cxx 
+  1c aaa
+  2c bbb
+  3c ccc
+  4c ddd
+  5c eee
+  6c fff
+  7c 
+  8c casted value of p[1][1]:fff
+  9c value of p[1][1]       :fff
+ 10c  I see:fff
+ 11c 
+ 12c casted value of p[1][1]:fff
+ 13c value of p[1][1]       :fff
+ 14c  I see:fff
+ 15c 
+ 16c fff
+t1160.cxx 
+  4c 1 2 0 0 0  : 3 4 0 0 0  : 5 6 7 0 0  : 0 0 0 0 0  : 
+  4i 
+  5c 8 9 0 0 0  : 10 11 0 0 0  : 0 0 0 0 0  : 0 0 0 0 0  : 
+  5i cint>   6c 12 13 0 0 0  : 14 15 0 0 0  : 0 0 0 0 0  : 0 0 0 0 0  : 
+  7c 1 2 3 4 5  : 6 7 8 9 10  : 11 12 13 14 15  : 16 17 18 19 20  : 
+  8c 21 22 23 24 25  : 26 0 0 0 0  : 0 0 0 0 0  : 0 0 0 0 0  : 
+  9c 0 0 0 0 0  : 0 0 0 0 0  : 0 0 0 0 0  : 0 0 0 0 0  : 
+ 10c 1 2 0 0 0  : 3 4 0 0 0  : 5 6 7 0 0  : 0 0 0 0 0  : 
+ 11c 8 9 0 0 0  : 10 11 0 0 0  : 0 0 0 0 0  : 0 0 0 0 0  : 
+ 12c 12 13 0 0 0  : 14 15 0 0 0  : 0 0 0 0 0  : 0 0 0 0 0  : 
+ 13c 1 2 0 0 0  : 3 4 0 0 0  : 5 6 7 0 0  : 0 0 0 0 0  : 
+ 14c 8 9 0 0 0  : 10 11 0 0 0  : 0 0 0 0 0  : 0 0 0 0 0  : 
+ 15c 12 13 0 0 0  : 14 15 0 0 0  : 0 0 0 0 0  : 0 0 0 0 0  : 
+aryinit0.cxx 
+aryinit1.cxx 
+t1164.cxx 
+t1165.cxx 
+t1178.cxx 
+  1c CTest::CTest()
+  2c CTest::Execute(PointVectorIterator&)
+  3c CTest::f(double**&)
+  4c CTest::g(vector<double*>&)
+  5c CTest::h(vector<FPoint*>&)
+  6c CTest::~CTest()
+t1187.cxx  -Dmakecint
+  1c Iter 1 1.1
+  1i Iter 1 
+  2c Iter 2 2.2
+  2i cint>   3c Iter 3 3.3
+  4c Iter 4 4.4
+  5c Iter 5 5.5
+  6c Iter 6 6.6
+  7c Iter 7 7.7
+  8c Iter 8 8.8
+  9c Iter 9 9.9
+ 10c Iter 10 11
+ 11c Iter 11 12.1
+ 12c Iter 12 13.2
+ 13c Iter 13 14.3
+ 14c Iter 14 15.4
+ 15c Iter 15 16.5
+ 16c Iter 16 17.6
+ 17c Iter 17 18.7
+ 18c Iter 18 19.8
+ 19c Iter 19 20.9
+ 20c 1.234
+t1192.cxx 
+t1193.cxx  -Dmakecint
+t1203.cxx 
+t1205.cxx 
+  2c Called Compiled1::publicFunc1()
+  2i 
+  3c Called DerivedStub::publicFunc1()
+  3i cint> t1205.cxx  -Dmakecint
+  1c Calling compiled func (will call Virtual publicFunc1)
+  1i 
+  2c Called Compiled1::publicFunc1()
+  2i FILE:t1205.cxx LINE:16 cint>   3c Called DerivedStub::publicFunc1()
+t1213.cxx 
+t1214.cxx 
+t1215.cxx 
+t1215.cxx  -Dmakecint
+t1221.cxx 
+  1c void f(DListIterator&) 123.45
+t1222.cxx 
+t1223.cxx 
+t1224.cxx 
+  1c .	2
+  2c This	1
+  3c a	1
+  4c is	1
+  5c iterator	1
+  6c of	1
+  7c operation	1
+  8c test	2
+  9c .	2
+ 10c This	1
+ 11c a	1
+ 12c is	1
+ 13c iterator	1
+ 14c of	1
+ 15c operation	1
+ 16c test	2
+t1228.cxx 
+  1o IsValid=1  10 1
+  1i IsValid=0  
+  2o IsValid=1  20 1
+  2i cint>   3o IsValid=1  30 1
+  4o IsValid=1  40 0
+  5o IsValid=1  50 0
+  6o IsValid=1  60 0
+t1048.cxx -I$CINTSYSDIR -I$CINTSYSDIR/src -Dmakecint
+  3c sum = -4940
+  3i 
+  4c sum = 990
+  4i cint> t1049.cxx 
+t1054.cxx 
+t1055.cxx 
+t1061.cxx  -Dmakecint
+t1062.cxx  -Dmakecint
+t1067.cxx 
+t1067.cxx  -Dmakecint
+t1068.cxx 
+  1c FOO::operator+(const bug&,int c);
+  2c A::disp() 0
+  3c FOO::bug::disp() 20
+  4c FOO::operator+(const bug&,int c);
+  5c A::disp() 0
+  6c FOO::bug::disp() 20
+t1068.cxx  -Dmakecint
+  1c FOO::operator+(const bug&,int c);
+  2c A::disp() 0
+  3c FOO::bug::disp() 20
+  4c FOO::operator+(const bug&,int c);
+  5c A::disp() 0
+  6c FOO::bug::disp() 20
+t1079.cxx 
+t1079.cxx  -Dmakecint
+t1084.cxx 
+  2c 1 argument
+  3c 2 argument
+  4c 1 argument
+  6c 1 argument
+  7c 2 argument
+  9c 1 argument
+ 10c 2 argument
+ 11c 0 argument
+ 12c 1 argument
+ 14c 0 argument
+ 15c 1 argument
+ 16c 2 argument
+ 18c 0 argument
+ 19c 1 argument
+ 20c 2 argument
+ 21c 0 argument
+t1085.cxx 
+t1086.cxx 
+  1c Cmd_no (start)=-1
+  2c Cmd_no (start)=0
+  3c Cmd_no (start)=-1
+  4c Cmd_no (end) =0
+  5c Cmd_no (start)=0
+  6c Cmd_no (end) =-3
+t1088.cxx 
+  1c operator== (const A&, const A&) called
+  2c 1
+t1094.cxx 
+  1c 3.2
+  2c 5.4
+  3c  no arg
+  4c 3.2
+  5c 5.4 and 3
+t1101.cxx 
+t1115.cxx  -Dmakecint
+  3i 
+  4i cint> t1124.cxx 
+t1125.cxx 
+  1c f((BIT*))
+t1126.cxx 
+  1c locate0 : 0
+  1i 
+  2c #include <iostream>
+  2i cint>   3c #include <
+  4c locate1 : 30
+  5c locate2 : 849
+t1127.cxx 
+  1c sdisrcu 2 (char*)abcdefghijklmn (double)3.14 (int)1234 (char*)A (int)12 (int)97 'a=345 b=6.28 c=3229 d=x e=1.4142'
+  2c sdisrcu 2 (char*)abcdefghijklmn (double)3.14 (int)1234 (char*)A (int)12 (int)97 'a=345 b=6.28 c=3229 d=x e=1.4142'
+t1127.cxx  -Dmakecint
+  2c sdisrcu 2 (char*)abcdefghijklmn (double)3.14 (int)1234 (char*)A (int)12 (int)97 'a=345 b=6.28 c=3229 d=x e=1.4142'
+  2i sdisrcu 2 (char*)abcdefghijklmn (double)3.14 (int)1234 (char*)A (int)12 (int)97 'a=17840720 b=0 c=0 d=t1128.cxx 
+  1c 3
+  2c operator+=(A&,int)
+  3c 7
+  4c operator+=(const A&,const A&)
+  5c 7
+  6c 4
+  7c operator+=(const A&,const A&)
+  8c 4
+  9c operator+=(const A&,const A&)
+ 10c 4
+t1129.cxx 
+t1134.cxx 
+  1c 123 456 1.234 5.678
+  1i 123 1958505086976 2.122E-314 5.678
+  3c 1.234
+  3i 2.122E-314
+t1136.cxx 
+t1140.cxx 
+  1c success
+t1144.cxx 
+t1144.cxx 
+t1144.cxx 
+t1148.cxx 
+t1247.cxx  -Dmakecint2
+t1276.cxx  -Dmakecint
+  1c Success
+t1277.cxx  -Dmakecint
+  1c 0.1
+  2c first vector, first element = 0.1
+  3c first vector, second element = 0.2
+  4c second vector, first element = 1.1
+  5c second vector, second element = 1.2
+t674.cxx  -Dmakecint
+  1c string(abc)
+  2c string(def)
+  3c string(hij)
+  4c string(ABC)
+  5c string(DEF)
+  6c string(HIJ)
+  7c 0:abc,ABC 1:def,DEF 2:hij,HIJ 
+  8c string(XYZ)
+  9c string(YZ)
+ 10c string(Z)
+ 11c string((string)XYZ)
+ 12c string((string)YZ)
+ 13c string((string)Z)
+ 14c 0:XYZ 1:YZ 2:Z 
+ 15c ~string(Z)
+ 16c ~string(YZ)
+ 17c ~string(XYZ)
+ 18c ~string(Z)
+ 19c ~string(YZ)
+ 20c ~string(XYZ)
+ 21c ~string(HIJ)
+ 22c ~string(DEF)
+ 23c ~string(ABC)
+ 24c ~string(hij)
+ 25c ~string(def)
+ 26c ~string(abc)
+t648.cxx 
+  1c 8 8 8
+  2c 3.14159 2 0
+  3c 8 8 8
+  4c 3.14159 2 6.28319
+  5c 8 8 8
+  6c 3.14159 2 12.5664
+t977.cxx  -Dmakecint
+  1c caught exception St9exception
+  2c caught r_exception 11r_exception
+  3c caught r_space::r_space_exception N7r_space17r_space_exceptionE
+  4c caught r_space::eh1::eh_exception1 N7r_space3eh113eh_exception1E
+  5c caught r_space::eh1::errorhandling::eh_exception N7r_space3eh113errorhandling12eh_exceptionE
+  6c caught int 1234
+t980.cxx 
+  1c A part of a whole. A part of a whole.
+  1i A part. A part of a whole.
+  2c A part of a whole. A part of a whole.
+  2i A part. A part of a whole.
+  3c A part of a whole. A part of a whole.
+  3i A part of a whole. A part.
+  4c true
+  6c true
+  6i false
+  7i false

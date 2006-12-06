@@ -1,0 +1,172 @@
+/* -*- C++ -*- */
+/*************************************************************************
+ * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ *
+ * For the licensing terms see the file COPYING
+ *
+ ************************************************************************/
+// include/_iostream
+
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDL& i) 
+	{return(std::endl(ostr));}
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDS& i) 
+	{return(std::ends(ostr));}
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_FLUSH& i) 
+	{return(std::flush(ostr));}
+std::ios_base& operator<<(std::ostream& ostr,std::G__CINT_SCIENTIFIC& i) 
+	{return(std::scientific(ostr));}
+std::ios_base& operator<<(std::ostream& ostr,std::G__CINT_FIXED& i) 
+	{return(std::fixed(ostr));}
+
+std::istream& operator>>(std::istream& istr,std::G__CINT_ws& i) 
+	{return(std::ws(istr));}
+std::istream& operator>>(std::istream& istr,std::G__CINT_WS& i) 
+	{return(std::WS(istr));}
+
+
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_HEX& i) {
+#pragma ifndef G__TMPLTIOS
+  ostr.unsetf(ios::dec);
+  ostr.unsetf(ios::oct);
+  ostr.setf(ios::hex);
+#pragma else
+  ostr.unsetf(ios_base::dec);
+  ostr.unsetf(ios_base::oct);
+  ostr.setf(ios_base::hex);
+#pragma endif
+  return(ostr);
+}
+std::istream& operator>>(std::istream& istr,std::G__CINT_HEX& i) {
+#pragma ifndef G__TMPLTIOS
+  istr.unsetf(ios::dec);
+  istr.unsetf(ios::oct);
+  istr.setf(ios::hex);
+#pragma else
+  istr.unsetf(ios_base::dec);
+  istr.unsetf(ios_base::oct);
+  istr.setf(ios_base::hex);
+#pragma endif
+  return(istr);
+}
+
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_DEC& i) {
+#pragma ifndef G__TMPLTIOS
+  ostr.unsetf(ios::hex);
+  ostr.unsetf(ios::oct);
+  ostr.setf(ios::dec);
+#pragma else
+  ostr.unsetf(ios_base::hex);
+  ostr.unsetf(ios_base::oct);
+  ostr.setf(ios_base::dec);
+#pragma endif
+  return(ostr);
+}
+std::istream& operator>>(std::istream& istr,std::G__CINT_DEC& i) {
+#pragma ifndef G__TMPLTIOS
+  istr.unsetf(ios::hex);
+  istr.unsetf(ios::oct);
+  istr.setf(ios::dec);
+#pragma else
+  istr.unsetf(ios_base::hex);
+  istr.unsetf(ios_base::oct);
+  istr.setf(ios_base::dec);
+#pragma endif
+  return(istr);
+}
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_OCT& i) {
+#pragma ifndef G__TMPLTIOS
+  ostr.unsetf(ios::hex);
+  ostr.unsetf(ios::dec);
+  ostr.setf(ios::oct);
+#pragma else
+  ostr.unsetf(ios_base::hex);
+  ostr.unsetf(ios_base::dec);
+  ostr.setf(ios_base::oct);
+#pragma endif
+  return(ostr);
+}
+std::istream& operator>>(std::istream& istr,std::G__CINT_OCT& i) {
+#pragma ifndef G__TMPLTIOS
+  istr.unsetf(ios::hex);
+  istr.unsetf(ios::dec);
+  istr.setf(ios::oct);
+#pragma else
+  istr.unsetf(ios_base::hex);
+  istr.unsetf(ios_base::dec);
+  istr.setf(ios_base::oct);
+#pragma endif
+  return(istr);
+}
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_NOSUPPORT& i) {
+  fprintf(stderr,"Limitation: dec,hex,oct manipurator not supported\n");
+  return(ostr);
+}
+std::istream& operator<<(std::istream& istr,std::G__CINT_NOSUPPORT& i) {
+  fprintf(stderr,"Limitation: dec,hex,oct manipurator not supported\n");
+  return(istr);
+}
+
+#ifdef G__NATIVELONGLONG
+std::ostream& operator<<(std::ostream& ostr,long long i) {
+  char buf[200];
+  sprintf(buf,"%lld",i);
+  ostr << buf ;
+  return(ostr);
+}
+std::ostream& operator<<(std::ostream& ostr,unsigned long long i) {
+  char buf[200];
+  sprintf(buf,"%llu",i);
+  ostr << buf ;
+  return(ostr);
+}
+std::ostream& operator<<(std::ostream& ostr,long double i) {
+  char buf[200];
+  sprintf(buf,"%Lg",i);
+  ostr << buf ;
+  return(ostr);
+}
+std::istream& operator>>(std::istream& istr,long long &i) {
+  char buf[200];
+  istr >> buf ;
+  sscanf(buf,"%lld",&i);
+  return(istr);
+}
+std::istream& operator>>(std::istream& istr,unsigned long long &i) {
+  char buf[200];
+  istr >> buf ;
+  sscanf(buf,"%llu",&i);
+  return(istr);
+}
+std::istream& operator>>(std::istream& istr,long double &i) {
+  char buf[200];
+  istr >> buf ;
+  sscanf(buf,"%Lg",&i);
+  return(istr);
+}
+#endif
+
+// Value evaluation
+//template<class T> int G__ateval(const T* x) {return(0);}
+//template<class T> int G__ateval(const T& x) {return(0);}
+int G__ateval(const char* const &x) {return(0);}
+//int G__ateval(const void* const &x) {return(0);}
+int G__ateval(double x) {return(0);}
+int G__ateval(float x) {return(0);}
+int G__ateval(bool x) {return(0);}
+int G__ateval(char x) {return(0);}
+int G__ateval(short x) {return(0);}
+int G__ateval(int x) {return(0);}
+int G__ateval(long x) {return(0);}
+int G__ateval(unsigned char x) {return(0);}
+int G__ateval(unsigned short x) {return(0);}
+int G__ateval(unsigned int x) {return(0);}
+int G__ateval(unsigned long x) {return(0);}
+
+#if defined(G__ROOT) && !defined(__MAKECINT__)
+class TString;
+int G__ateval(const TString& x) {
+  //std::cout << "(class TString " << &x << ")\"" << x << "\"" << std::endl;
+  std::cout << "(class TString)" << "\"" << x << "\"" << std::endl;
+  return(1);
+}
+#endif

@@ -1,0 +1,22 @@
+I=3229  pi=3.14159
+(complex)C=(1.5,2.5)
+c=a
+b=255
+s=-1
+r=65535
+I=3229
+h=4294967295
+l=-1234567
+k=15
+f=3.14
+d=-1e-15
+pc=hijklmn
+pb=0xff
+ps=0xffff
+pr=0xffff
+pI=0xc9d
+ph=0xffffffff
+pl=0xffed2979
+pk=0xf
+pf=0x13a
+pd=0xffffff8d

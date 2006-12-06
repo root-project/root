@@ -1,0 +1,2 @@
+betterTakeTheMainOne:
+	$(MAKE) -C ..

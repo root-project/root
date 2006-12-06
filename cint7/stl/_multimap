@@ -1,0 +1,18 @@
+/* -*- C++ -*- */
+/*************************************************************************
+ * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ *
+ * For the licensing terms see the file COPYING
+ *
+ ************************************************************************/
+#if !defined(G__MULTIMAP_DLL) && !defined(G__NOCINTDLL)
+//#pragma include_noerr <pair.dll> 
+#pragma include_noerr <multimap.dll>
+#pragma include_noerr <multimap2.dll>
+#endif
+
+#ifdef __MAKECINT__
+#include <prec_stl/multimap>
+#else
+#include <_multimap.h>
+#endif
