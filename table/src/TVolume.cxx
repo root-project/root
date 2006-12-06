@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolume.cxx,v 1.14 2006/07/11 09:05:02 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TVolume.cxx,v 1.15 2006/07/19 17:23:41 pcanal Exp $
 // Author: Valery Fine   10/12/98
 
 /*************************************************************************
@@ -519,6 +519,7 @@ TRotMatrix *TVolume::GetIdentity()
          gIdentity->SetTitle("Identity matrix");
          gIdentity->SetMatrix((Double_t *)0);
          identityMatrix = gIdentity->GetMatrix();
+         memset(identityMatrix,0,9*sizeof(Double_t));
                                 *identityMatrix = 1;
          identityMatrix += 4;   *identityMatrix = 1;
          identityMatrix += 4;   *identityMatrix = 1;
