@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLFunctionWrapper.h,v 1.5 2006/11/17 18:26:50 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLFunctionWrapper.h,v 1.6 2006/12/04 17:34:55 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -33,8 +33,7 @@
 
 #include "gsl/gsl_math.h"
 
-#include "Math/IFunctionfwd.h"
-#include "Math/IFunction.h"
+#include "Math/GSLFunctionAdapter.h"
 
 #include <cassert>
 
@@ -43,56 +42,59 @@ namespace Math {
 
 
 
-  typedef double ( * GSLFuncPointer ) ( double, void *);
-  typedef void ( * GSLFdfPointer ) ( double, void *, double *, double *);
+typedef double ( * GSLFuncPointer ) ( double, void *);
+typedef void ( * GSLFdfPointer ) ( double, void *, double *, double *);
 
 
-  /**
-     class to wrap a gsl_function and have a signature like a ROOT::Math::IGenFunction
-   */
-  class GSLFunctionWrapper { 
+/**
+   Wrapper class to the gsl_function C structure. 
+   This class to fill the GSL C structure  gsl_function with 
+   the C++ function objcet. 
+   Use the class ROOT::Math::GSLFunctionAdapter to adapt the 
+   C++ function object to the right signature (function pointer type) 
+   requested by GSL 
+*/
+class GSLFunctionWrapper { 
 
-  public: 
+public: 
 
-    GSLFunctionWrapper() : fIGenFunc(0) {}
-    ~GSLFunctionWrapper() {
-#ifdef COPY_FUNC
-       if (fIGenFunc) delete fIGenFunc;       
-#endif
-    }
+   GSLFunctionWrapper() 
+   {
+      fFunc.function = 0; 
+      fFunc.params = 0;
+   }
 
-    void SetFuncPointer( GSLFuncPointer f) { fFunc.function = f; } 
-    void SetParams ( void * p) { fFunc.params = p; }
-    void SetFunction(const IGenFunction &f) { 
+   /// set in the GSL C struct the pointer to the function evaluation 
+   void SetFuncPointer( GSLFuncPointer f) { fFunc.function = f; } 
 
-#ifdef COPY_FUNC 
-       if (fIGenFunc) delete fIGenFunc; 
-       fIGenFunc = f.Clone();
-#else
-       fIGenFunc = &f;
-       assert(fIGenFunc != 0); 
-#endif
-       const void * p = fIGenFunc; 
-       //const void * p = 0; 
-       SetFuncPointer(&GSLFunctionAdapter<IGenFunction >::F);
-       SetParams(const_cast<void *>(p));
-       //SetFuncPointer(const_cast<void *>(p));
-       //SetParams(0);
-     }
+   /// set in the GSL C struct the extra-object pointer
+   void SetParams ( void * p) { fFunc.params = p; }
+
+   /// fill the GSL C struct from a generic C++ callable object 
+   /// implementing operator() 
+   template<class FuncType> 
+   void SetFunction(const FuncType &f) { 
+      const void * p = &f;
+      assert (p != 0); 
+      SetFuncPointer(&GSLFunctionAdapter<FuncType >::F);
+      SetParams(const_cast<void *>(p));
+   }
     
-    gsl_function * GetFunc() { return &fFunc; } 
+   gsl_function * GetFunc() { return &fFunc; } 
 
-    // evaluate the function 
-    double operator() (double x) {  return GSL_FN_EVAL(&fFunc, x); }
+   GSLFuncPointer FunctionPtr() { return fFunc.function; }
 
-  private: 
-    gsl_function fFunc; 
-    const IGenFunction * fIGenFunc;
+      // evaluate the function 
+      double operator() (double x) {  return GSL_FN_EVAL(&fFunc, x); }
 
-  };
+private: 
+   gsl_function fFunc; 
 
 
-  /**
+};
+
+
+   /**
      class to wrap a gsl_function_fdf (with derivatives)   
    */
   class GSLFunctionDerivWrapper { 

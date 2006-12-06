@@ -1,4 +1,4 @@
-// @(#)root/fit:$Name:  $:$Id: WrappedMultiTF1.h,v 1.3 2006/11/24 10:37:13 moneta Exp $
+// @(#)root/fit:$Name:  $:$Id: WrappedMultiTF1.h,v 1.4 2006/12/04 17:34:55 moneta Exp $
 // Author: L. Moneta Wed Sep  6 09:52:26 2006
 
 /**********************************************************************
@@ -35,12 +35,12 @@ namespace ROOT {
 
    @ingroup CppFunctions
 */ 
-class WrappedMultiTF1 : public ROOT::Math::IParamFunction<ROOT::Math::MultiDim> {
+class WrappedMultiTF1 : public ROOT::Math::IParamMultiFunction {
 
 public: 
 
-   typedef  ROOT::Math::IParamFunction<ROOT::Math::MultiDim>            BaseParamFunc; 
-   typedef  ROOT::Math::IParamFunction<ROOT::Math::MultiDim>::BaseFunc  BaseFunc; 
+   typedef  ROOT::Math::IParamMultiFunction            BaseParamFunc; 
+   typedef  ROOT::Math::IParamMultiFunction::BaseFunc  BaseFunc; 
  
 
    /** 

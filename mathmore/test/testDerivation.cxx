@@ -2,13 +2,19 @@
 #include "Math/Derivator.h"
 #include "Math/IFunction.h"
 #include "Math/Functor.h"
-//#include "Math/WrappedTF1.h"
+#include "Math/WrappedFunction.h"
+#include "Math/WrappedParamFunction.h"
+#include "Math/DistFunc.h"
 #include <iostream>
 #include <vector>
+#include <cassert>
+#include <cmath>
 
 #ifdef HAVE_ROOTLIBS
 #include "TStopwatch.h"
 #include "TF1.h"
+#include "Math/WrappedTF1.h"
+#include "Math/WrappedMultiTF1.h"
 #endif
 
 
@@ -77,11 +83,17 @@ void testDerivation() {
   ROOT::Math::Functor1D<ROOT::Math::IGenFunction> *f3 = new ROOT::Math::Functor1D<ROOT::Math::IGenFunction>(myfunc2);
 
   std::cout << "Derivative of a free function wrapped in a Functor f(x) = x^(3/2) at x = 2" << std::endl;
-  std::cout << "EvalCentral:  " << der->EvalCentral( *f3, x0) << std::endl;
+  std::cout << "EvalCentral:  " << der->Eval( *f3, x0) << std::endl;
   der->SetFunction(*f3);
   std::cout << "EvalForward:  " << der->EvalForward(x0) << std::endl;
   std::cout << "EvalBackward: " << der->EvalBackward(x0) << std::endl;
   std::cout << "Exact result: " << 1.5*sqrt(x0) << std::endl << std::endl;
+
+  // tets case when an empty Derivator is used 
+
+  ROOT::Math::Derivator der2;
+  std::cout << "Tes a derivator without a function" << std::endl;
+  std::cout << der2.Eval(1.0) << std::endl; 
   
   // Derivative of a multidim TF1 function
   
@@ -138,6 +150,16 @@ void testDerivPerf() {
   std::cout << "Time using ROOT::Math::Derivator(2):\t" << timer.RealTime() << std::endl; 
   pr = std::cout.precision(18); std::cout << s1 << std::endl; std::cout.precision(pr);
 
+  timer.Start(); 
+  s1 = 0; 
+  for (int i = 0; i < n; ++i) { 
+     double x = x1 + dx*i; 
+     s1+= ROOT::Math::Derivator::Eval(f1,x);
+  }
+  timer.Stop(); 
+  std::cout << "Time using ROOT::Math::Derivator(3):\t" << timer.RealTime() << std::endl; 
+  pr = std::cout.precision(18); std::cout << s1 << std::endl; std::cout.precision(pr);
+
 
   TF1 f2("pol","pol2",0,10);
   f2.SetParameters(p);
@@ -159,11 +181,171 @@ void testDerivPerf() {
 
 }
 
+double userFunc(const double *x, const double *  = 0) { 
+   return std::exp(-x[0]); 
+}
+double userFunc1(double x) { return userFunc(&x); }
+
+double userFunc2(const double * x) { return userFunc(x); }
+
+void testDerivPerfUser() { 
+
+#ifdef HAVE_ROOTLIBS
+
+   std::cout << "\n\n***************************************************************\n";
+   std::cout << "Test derivation performances - using a User function\n\n";
+
+  ROOT::Math::WrappedFunction<> f1(userFunc1); 
+  
+  TStopwatch timer; 
+  int n = 1000000; 
+  double x1 = 0; double x2 = 10; 
+  double dx = (x2-x1)/double(n); 
+
+  timer.Start(); 
+  double s1 = 0; 
+  ROOT::Math::Derivator der(f1);
+  for (int i = 0; i < n; ++i) { 
+     double x = x1 + dx*i; 
+     s1+= der.EvalCentral(x);
+  }
+  timer.Stop(); 
+  std::cout << "Time using ROOT::Math::Derivator :\t" << timer.RealTime() << std::endl; 
+  int pr = std::cout.precision(18); std::cout << s1 << std::endl; std::cout.precision(pr);
+
+  timer.Start(); 
+  s1 = 0; 
+  for (int i = 0; i < n; ++i) { 
+     ROOT::Math::Derivator der2(f1);
+     double x = x1 + dx*i; 
+     s1+= der2.EvalForward(x);
+  }
+  timer.Stop(); 
+  std::cout << "Time using ROOT::Math::Derivator(2):\t" << timer.RealTime() << std::endl; 
+  pr = std::cout.precision(18); std::cout << s1 << std::endl; std::cout.precision(pr);
+
+  timer.Start(); 
+  s1 = 0; 
+  for (int i = 0; i < n; ++i) { 
+     double x = x1 + dx*i; 
+     s1+= ROOT::Math::Derivator::Eval(f1,x);
+  }
+  timer.Stop(); 
+  std::cout << "Time using ROOT::Math::Derivator(3):\t" << timer.RealTime() << std::endl; 
+  pr = std::cout.precision(18); std::cout << s1 << std::endl; std::cout.precision(pr);
+
+
+  TF1 f2("uf",userFunc,0,10,0);
+  
+  timer.Start(); 
+  double s2 = 0; 
+  for (int i = 0; i < n; ++i) { 
+     double x = x1 + dx*i; 
+     s2+= f2.Derivative(x);
+  }
+  timer.Stop(); 
+  std::cout << "Time using TF1::Derivative :\t\t" << timer.RealTime() << std::endl; 
+  pr = std::cout.precision(18);
+  std::cout << s2 << std::endl;
+  std::cout.precision(pr);
+
+  //typedef double( * FN ) (const double *, const double * ); 
+  ROOT::Math::WrappedMultiFunction<> f3(userFunc2,1); 
+  timer.Start(); 
+  s1 = 0; 
+  double xx[1]; 
+  for (int i = 0; i < n; ++i) { 
+     xx[0] = x1 + dx*i; 
+     s1+= ROOT::Math::Derivator::Eval(f3,xx,0);
+  }
+  timer.Stop(); 
+  std::cout << "Time using ROOT::Math::Derivator Multi:\t" << timer.RealTime() << std::endl; 
+  pr = std::cout.precision(18); std::cout << s1 << std::endl; std::cout.precision(pr);
+
+
+#endif  
+
+}
+
+double gausFunc( const double * x, const double * p) { 
+   return p[0] * ROOT::Math::normal_pdf(x[0], p[2], p[1] ); 
+}
+
+void testDerivPerfParam() { 
+
+#ifdef HAVE_ROOTLIBS
+
+   std::cout << "\n\n***************************************************************\n";
+   std::cout << "Test derivation performances - using a Gaussian Param function\n\n";
+
+   //TF1 gaus("gaus","gaus",-10,10);
+   TF1 gaus("gaus",gausFunc,-10,10,3);
+  double params[3] = {10,1.,1.};
+  gaus.SetParameters(params);
+
+  ROOT::Math::WrappedTF1 f1(gaus); 
+  
+  TStopwatch timer; 
+  int n = 300000; 
+  double x1 = 0; double x2 = 10; 
+  double dx = (x2-x1)/double(n); 
+
+  timer.Start(); 
+  double s1 = 0; 
+  for (int i = 0; i < n; ++i) { 
+     double x = x1 + dx*i; 
+     // param derivatives
+     s1 += ROOT::Math::Derivator::Eval(f1,x,params,0);
+     s1 += ROOT::Math::Derivator::Eval(f1,x,params,1);
+     s1 += ROOT::Math::Derivator::Eval(f1,x,params,2);
+  }
+  timer.Stop(); 
+  std::cout << "Time using ROOT::Math::Derivator (1D) :\t" << timer.RealTime() << std::endl; 
+  int pr = std::cout.precision(18); std::cout << s1 << std::endl; std::cout.precision(pr);
+
+  ROOT::Math::WrappedParamFunction<> f2(gausFunc,1,params,params+3); 
+  double xx[1]; 
+
+  timer.Start(); 
+  s1 = 0; 
+  for (int i = 0; i < n; ++i) { 
+     xx[0] = x1 + dx*i; 
+     s1 += ROOT::Math::Derivator::Eval(f2,xx,params,0);
+     s1 += ROOT::Math::Derivator::Eval(f2,xx,params,1);
+     s1 += ROOT::Math::Derivator::Eval(f2,xx,params,2);
+  }
+  timer.Stop(); 
+  std::cout << "Time using ROOT::Math::Derivator(ND):\t" << timer.RealTime() << std::endl; 
+  pr = std::cout.precision(18); std::cout << s1 << std::endl; std::cout.precision(pr);
+
+  // test that func parameters have not been changed 
+  assert( std::fabs(params[0] - gaus.GetParameter(0)) < 1.E-15); 
+  assert( std::fabs(params[1] - gaus.GetParameter(1)) < 1.E-15); 
+  assert( std::fabs(params[2] - gaus.GetParameter(2)) < 1.E-15); 
+
+  timer.Start(); 
+  s1 = 0; 
+  double g[3];
+  for (int i = 0; i < n; ++i) { 
+     xx[0] = x1 + dx*i; 
+     gaus.GradientPar(xx,g,1E-8);
+     s1 += g[0];
+     s1 += g[1];
+     s1 += g[2];
+  }
+  timer.Stop(); 
+  std::cout << "Time using TF1::ParamGradient:\t\t" << timer.RealTime() << std::endl; 
+  pr = std::cout.precision(18); std::cout << s1 << std::endl; std::cout.precision(pr);
+
+#endif  
+}
 
 int main() {
 
   testDerivation();
   testDerivPerf();
+  testDerivPerfUser();
+  testDerivPerfParam();
   return 0;
 
 }

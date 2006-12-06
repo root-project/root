@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLDerivator.cxxv 1.0 2005/06/23 12:00:00 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLDerivator.cxx,v 1.1 2005/09/08 07:14:56 brun Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -37,58 +37,72 @@
 // for OLD GSL versions
 //#include "gsl/gsl_diff.h"
 
+#include <iostream>
+
 namespace ROOT {
 namespace Math {
 
 
 
-GSLDerivator::GSLDerivator(const IGenFunction &f) 
-{
-  // allocate GSLFunctionWrapper
-   fFunction = new GSLFunctionWrapper(); 
-   SetFunction(f);
+double GSLDerivator::EvalCentral( double x, double h) {    
+   // Central evaluation using previously set function  
+   if (fFunction.FunctionPtr() == 0) { 
+      std::cerr << "GSLDerivator: Error : The function has not been specified" << std::endl;
+      fStatus = -1; 
+      return 0; 
+   }
+   fStatus =  gsl_deriv_central(  fFunction.GetFunc(), x, h, &fResult, &fError); 
+   return fResult;
 }
 
-GSLDerivator::GSLDerivator(const GSLFuncPointer &f) 
-{
-  // allocate GSLFunctionWrapper
-   fFunction = new GSLFunctionWrapper(); 
-   SetFunction(f);
-}
-
-GSLDerivator::~GSLDerivator() 
-{
-  if (fFunction) delete fFunction;
-}
-
-
-GSLDerivator::GSLDerivator(const GSLDerivator &) 
-{
-}
-
-GSLDerivator & GSLDerivator::operator = (const GSLDerivator &rhs) 
-{
-   if (this == &rhs) return *this;  // time saving self-test
-
-   return *this;
-}
-
-double GSLDerivator::EvalCentral( double x, double h) { 
-  fStatus =  gsl_deriv_central(  fFunction->GetFunc(), x, h, &fResult, &fError); 
-  //fStatus =  gsl_diff_central(  fFunction->GetFunc(), x, &fResult, &fError); 
-  return fResult;
-}
-
-double GSLDerivator::EvalForward( double x, double h) { 
-  fStatus =  gsl_deriv_forward(  fFunction->GetFunc(), x, h, &fResult, &fError); 
-  //fStatus =  gsl_diff_forward(  fFunction->GetFunc(), x, &fResult, &fError); 
-  return fResult;
+double GSLDerivator::EvalForward( double x, double h) {
+   // Forward evaluation using previously set function  
+   if (fFunction.FunctionPtr() == 0) { 
+      std::cerr << "GSLDerivator: Error : The function has not been specified" << std::endl;
+      fStatus = -1; 
+      return 0; 
+   }
+   fStatus =  gsl_deriv_forward(  fFunction.GetFunc(), x, h, &fResult, &fError); 
+   return fResult;
 }
 
 double GSLDerivator::EvalBackward( double x, double h) { 
-  fStatus =  gsl_deriv_backward(  fFunction->GetFunc(), x, h, &fResult, &fError); 
-  //fStatus =  gsl_diff_backward(  fFunction->GetFunc(), x, &fResult, &fError); 
-  return fResult;
+   // Backward evaluation using previously set function  
+   if (fFunction.FunctionPtr() == 0) { 
+      std::cerr << "GSLDerivator: Error : The function has not been specified" << std::endl;
+      fStatus = -1; 
+      return 0; 
+   }
+   fStatus =  gsl_deriv_backward(  fFunction.GetFunc(), x, h, &fResult, &fError); 
+   return fResult;
+}
+
+// static methods not requiring the function
+double GSLDerivator::EvalCentral(const IGenFunction & f, double x, double h) { 
+   // Central evaluation using given function 
+   GSLFunctionWrapper gslfw; 
+   double result, error = 0; 
+   gslfw.SetFunction(f); 
+   gsl_deriv_central(  gslfw.GetFunc(), x, h, &result, &error);
+   return result;
+}
+
+double GSLDerivator::EvalForward(const IGenFunction & f, double x, double h) { 
+   // Forward evaluation using given function 
+   GSLFunctionWrapper gslfw; 
+   double result, error = 0; 
+   gslfw.SetFunction(f); 
+   gsl_deriv_forward(  gslfw.GetFunc(), x, h, &result, &error);
+   return result;
+}
+
+double GSLDerivator::EvalBackward(const IGenFunction & f, double x, double h) { 
+   // Backward evaluation using given function 
+   GSLFunctionWrapper gslfw; 
+   double result, error = 0; 
+   gslfw.SetFunction(f); 
+   gsl_deriv_backward(  gslfw.GetFunc(), x, h, &result, &error);
+   return result;
 }
 
 
@@ -100,14 +114,14 @@ int GSLDerivator::Status() const { return fStatus; }
 
 // fill GSLFunctionWrapper with the pointer to the function
 
-void  GSLDerivator::FillGSLFunction( GSLFuncPointer  fp, void * p) {  
-  fFunction->SetFuncPointer( fp ); 
-  fFunction->SetParams ( p ); 
+void  GSLDerivator::SetFunction( GSLFuncPointer  fp, void * p) {  
+  fFunction.SetFuncPointer( fp ); 
+  fFunction.SetParams ( p ); 
 }
 
 
-void  GSLDerivator::FillGSLFunction(const IGenFunction &f) {  
-  fFunction->SetFunction(f); 
+void  GSLDerivator::SetFunction(const IGenFunction &f) {  
+  fFunction.SetFunction(f); 
 }
 
 } // namespace Math

@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Derivator.cxx,v 1.3 2006/06/16 10:34:08 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Derivator.cxx,v 1.4 2006/11/17 18:26:50 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -30,9 +30,11 @@
 // 
 
 #include "Math/IFunction.h"
+#include "Math/IParamFunction.h"
 #include "Math/Derivator.h"
 #include "GSLDerivator.h"
 
+#include "OneDimFunctionAdapter.h"
 
 // for GSL greater then 1.5
 #include "gsl/gsl_deriv.h"
@@ -42,18 +44,23 @@
 namespace ROOT {
 namespace Math {
 
-
+Derivator::Derivator() {
+   fDerivator = new GSLDerivator();
+}
    
 Derivator::Derivator(const IGenFunction &f) 
 {
-   // allocate GSLDerivator
-   fDerivator = new GSLDerivator(f);  
+   // allocate a  GSLDerivator
+   fDerivator = new GSLDerivator();
+   fDerivator->SetFunction(f);   
 }
 
-Derivator::Derivator(const GSLFuncPointer &f) 
+Derivator::Derivator(const GSLFuncPointer &f, void * p) 
 {
-   // allocate GSLDerivator
-   fDerivator = new GSLDerivator(f);  
+   // allocate a GSLDerivator
+   fDerivator = new GSLDerivator();
+   fDerivator->SetFunction(f,p);
+  
 }
 
 Derivator::~Derivator() 
@@ -78,25 +85,8 @@ void Derivator::SetFunction(const IGenFunction &f) {
    fDerivator->SetFunction(f);
 }
 
-void Derivator::SetFunction( const GSLFuncPointer &f) {
-   fDerivator->SetFunction(f);
-}
-
-
-double Derivator::Eval(const IGenFunction & f, double x, double h ) const {
-   return fDerivator->Eval(f, x, h);
-}
-
-double Derivator::EvalCentral(const IGenFunction & f, double x, double h) const {
-   return fDerivator->EvalCentral(f, x, h);
-}
-
-double Derivator::EvalForward(const IGenFunction & f, double x, double h) const {
-   return fDerivator->EvalForward(f, x, h);
-} 
-
-double Derivator::EvalBackward(const IGenFunction & f, double x, double h) const {
-   return fDerivator->EvalBackward(f, x, h);
+void Derivator::SetFunction( const GSLFuncPointer &f, void * p) {
+   fDerivator->SetFunction(f,p);
 }
 
 
@@ -114,6 +104,48 @@ double Derivator::EvalForward( double x, double h) const {
 
 double Derivator::EvalBackward( double x, double h) const { 
    return fDerivator->EvalBackward(x, h);
+}
+
+// static methods 
+double Derivator::Eval(const IGenFunction & f, double x, double h ) {
+   return GSLDerivator::EvalCentral(f, x, h );
+}
+
+double Derivator::EvalCentral(const IGenFunction & f, double x, double h)  {
+   return GSLDerivator::EvalCentral(f,x,h);
+}
+
+double Derivator::EvalForward(const IGenFunction & f, double x, double h)  {
+   return GSLDerivator::EvalForward(f, x, h);
+} 
+
+double Derivator::EvalBackward(const IGenFunction & f, double x, double h)  {
+   return GSLDerivator::EvalBackward(f, x, h);
+}
+
+double Derivator::Eval(const IMultiGenFunction & f, const double * x, unsigned int icoord, double h ) {
+   // partial derivative for a  multi-dim function
+   GSLDerivator d; 
+   OneDimMultiFunctionAdapter<> adapter(f,x,icoord);
+   d.SetFunction( &GSLFunctionAdapter<OneDimMultiFunctionAdapter<> >::F,static_cast<void *>(&adapter) ); 
+   return d.EvalCentral(x[icoord],h); 
+}
+
+double Derivator::Eval(IParamFunction & f, double  x, const double * p, unsigned int ipar, double h ) {
+   // derivative w.r.t parameter  for a one-dim param function
+   GSLDerivator d; 
+   const double xx = x; 
+   OneDimParamFunctionAdapter<IParamFunction &> adapter(f,&xx,p,ipar);
+   d.SetFunction( &GSLFunctionAdapter<OneDimParamFunctionAdapter<IParamFunction &> >::F,static_cast<void *>(&adapter) ); 
+   return d.EvalCentral(p[ipar],h); 
+}
+
+double Derivator::Eval(IParamMultiFunction & f, const double * x, const double * p, unsigned int ipar, double h ) {
+   // derivative w.r.t parameter  for a multi-dim param function
+   GSLDerivator d; 
+   OneDimParamFunctionAdapter<IParamMultiFunction &> adapter(f,x,p,ipar);
+   d.SetFunction( &GSLFunctionAdapter<OneDimParamFunctionAdapter<IParamMultiFunction &> >::F,static_cast<void *>(&adapter) ); 
+   return d.EvalCentral(p[ipar],h); 
 }
 
 

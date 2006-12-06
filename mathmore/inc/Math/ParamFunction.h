@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ParamFunction.h,v 1.4 2006/11/17 18:26:50 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: ParamFunction.h,v 1.5 2006/11/23 17:28:57 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -58,12 +58,12 @@ namespace Math {
 
 
    
-class ParamFunction : virtual public IParamGradFunction<ROOT::Math::OneDim> {
+class ParamFunction : virtual public IParamGradFunction {
 
 public: 
 
-   typedef IParamGradFunction<ROOT::Math::OneDim> BaseParFunc; 
-   typedef IParamGradFunction<ROOT::Math::OneDim>::BaseFunc BaseFunc; 
+   typedef IParamGradFunction           BaseParFunc; 
+   typedef IParamGradFunction::BaseFunc BaseFunc; 
 
    /**
       Construct a parameteric function with npar parameters

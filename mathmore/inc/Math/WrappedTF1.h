@@ -1,4 +1,4 @@
-// @(#)root/fit:$Name:  $:$Id: WrappedTF1.h,v 1.3 2006/11/24 10:37:13 moneta Exp $
+// @(#)root/fit:$Name:  $:$Id: WrappedTF1.h,v 1.4 2006/12/04 17:34:55 moneta Exp $
 // Author: L. Moneta Wed Sep  6 09:52:26 2006
 
 /**********************************************************************
@@ -35,12 +35,12 @@ namespace ROOT {
 
    @ingroup CppFunctions
 */ 
-class WrappedTF1 : public ROOT::Math::IParamGradFunction<ROOT::Math::OneDim> {
+class WrappedTF1 : public ROOT::Math::IParamGradFunction {
 
 public: 
 
-   typedef  ROOT::Math::IParamGradFunction<ROOT::Math::OneDim> BaseGradFunc; 
-   typedef  ROOT::Math::IParamGradFunction<ROOT::Math::OneDim>::BaseFunc BaseFunc; 
+   typedef  ROOT::Math::IParamGradFunction BaseGradFunc; 
+   typedef  ROOT::Math::IParamGradFunction::BaseFunc BaseFunc; 
  
    WrappedTF1() {}
 
