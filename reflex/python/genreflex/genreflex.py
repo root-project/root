@@ -24,6 +24,7 @@ class genreflex:
     self.opts            = {}
     self.gccxmlpath      = None
     self.gccxmlopt       = ''
+    self.gccxmlvers      = '0.6.0_patch3'
     self.selector        = None
     self.gccxml          = ''
     self.quiet           = False
@@ -80,7 +81,7 @@ class genreflex:
       --no_membertypedefs
          Disable the definition of class member typedefs \n
       --no_templatetypedefs
-         Disable resolving of typedefs in template parameters for selection names. E.g. std::vector<MYINT>.
+         Disable resolving of typedefs in template parameters for selection names. E.g. std::vector<MYINT>.\n
       --fail_on_warnings
          The genreflex command fails (retuns the value 1) if any warning message is issued \n
       --gccxmlpath=<path>
@@ -232,7 +233,12 @@ class genreflex:
       print '--->> genreflex: WARNING: Could not invoke %s --print' % self.gccxml
       print '--->> genreflex: WARNING: %s' % serr
       return s
-    s += sout
+    gccxmlv = sout.split('\n')[0].split()[-1]
+    # For 0.6.0 we can't do much because we have not put in a patch info into the version string 
+    if gccxmlv != '0.6.0' and gccxmlv != self.gccxmlvers :
+      print '--->> genreflex: WARNING: gccxml versions differ. Used version: %s. Recommended version: %s. ' % ( gccxmlv, self.gccxmlvers)
+      print '--->> genreflex: WARNING: gccxml binary used: %s' % ( self.gccxml )
+    s += sout    
     compiler = ''
     for l in sout.split('\n'):
       ll = l.split('"')
