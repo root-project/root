@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: IParamFunction.h,v 1.2 2006/11/20 11:05:56 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: IParamFunction.h,v 1.3 2006/11/23 17:24:38 moneta Exp $
 // Author: L. Moneta Tue Nov 14 14:20:07 2006
 
 /**********************************************************************
@@ -100,7 +100,7 @@ public:
    @ingroup  CppFunctions
 */ 
 template<class DimensionType = MultiDim> 
-class IParamFunction : 
+class IParametricFunction : 
          virtual public IBaseFunction<DimensionType>, 
          public IBaseParam {
 
@@ -136,7 +136,7 @@ public:
    @ingroup  CppFunctions
 */ 
 template<> 
-class IParamFunction<ROOT::Math::OneDim> : 
+class IParametricFunction<ROOT::Math::OneDim> : 
          virtual public IBaseFunction<ROOT::Math::OneDim>, 
          public IBaseParam { 
 
@@ -183,15 +183,15 @@ public:
    @ingroup  CppFunctions
 */ 
 template<class DimensionType=MultiDim> 
-class IParamGradFunction : 
-         public IParamFunction<DimensionType>, 
+class IParametricGradFunction : 
+         public IParametricFunction<DimensionType>, 
          public IGradientFunction<DimensionType>   {
 
 public: 
 
-   typedef IParamFunction<DimensionType>                     BaseParamFunc; 
+   typedef IParametricFunction<DimensionType>                     BaseParamFunc; 
    typedef IGradientFunction<DimensionType>                  BaseGradFunc; 
-   typedef typename IParamFunction<DimensionType>::BaseFunc  BaseFunc; 
+   typedef typename IParametricFunction<DimensionType>::BaseFunc  BaseFunc; 
 
    /// default constructor (needed to initialize parent classes)
 //    IParamGradFunction() :
@@ -203,7 +203,7 @@ public:
    /** 
       Virtual Destructor (no operations)
    */ 
-   virtual ~IParamGradFunction ()  {}  
+   virtual ~IParametricGradFunction ()  {}  
 
 
    //using BaseFunc::operator();
@@ -241,26 +241,21 @@ private:
    @ingroup  CppFunctions
 */ 
 template<> 
-class IParamGradFunction<ROOT::Math::OneDim> : 
-         public IParamFunction<ROOT::Math::OneDim>, 
+class IParametricGradFunction<ROOT::Math::OneDim> : 
+         public IParametricFunction<ROOT::Math::OneDim>, 
          public IGradientFunction<ROOT::Math::OneDim>   {
 
 public: 
 
-   typedef IParamFunction<ROOT::Math::OneDim>            BaseParamFunc; 
-   typedef IGradientFunction<ROOT::Math::OneDim>         BaseGradFunc; 
-   typedef IParamFunction<ROOT::Math::OneDim>::BaseFunc  BaseFunc; 
+   typedef IParametricFunction<ROOT::Math::OneDim>            BaseParamFunc; 
+   typedef IGradientFunction<ROOT::Math::OneDim>              BaseGradFunc; 
+   typedef IParametricFunction<ROOT::Math::OneDim>::BaseFunc  BaseFunc; 
 
-   /// default constructor (needed to initialize parent classes)
-//    IParamGradFunction() :
-//       BaseParamFunc(),  
-//       BaseGradFunc()  
-//    {}
 
    /** 
       Virtual Destructor (no operations)
    */ 
-   virtual ~IParamGradFunction ()  {}  
+   virtual ~IParametricGradFunction ()  {}  
 
 
    //using BaseFunc::operator();

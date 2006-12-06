@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name: v5-13-04 $:$Id: WrappedFunction.h,v 1.3 2006/06/08 16:36:17 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: WrappedFunction.h,v 1.1 2006/11/20 11:05:56 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -43,6 +43,8 @@ namespace Math {
 struct NullTypeFunc1D {}; 
 
 typedef double( * FreeFunctionPtr ) (double ); 
+
+typedef double( * FreeMultiFunctionPtr ) (const double *); 
 
 /**
    Template class to wrap any C++ callable object which takes one argument 
@@ -137,6 +139,52 @@ private:
 
 }; // WrappedMemFunction
 
+
+/**
+   Template class to wrap any C++ callable object 
+   implementing operator() (const double * x) in a multi-dimensional function interface.
+   It provides a ROOT::Math::IGenMultiFunction-like signature
+
+   @ingroup  CppFunctions
+
+ */
+template< typename Func =  FreeMultiFunctionPtr   >
+class WrappedMultiFunction : public IMultiGenFunction {
+
+
+ public:
+
+   /**
+      construct from the pointer to the object and the member function
+    */
+   WrappedMultiFunction( Func f , unsigned int dim) : 
+      fFunc( f ), 
+      fDim( dim)
+   { /* no op */ }
+
+   // use default  copy contructor and assignment operator
+
+   /// clone (required by the interface)
+   WrappedMultiFunction * Clone() const {
+      return new WrappedMultiFunction(fFunc,fDim);
+   }
+
+   unsigned int NDim() const { return fDim; }
+   
+   //  virtual ~WrappedFunction() { /**/ }
+
+private:
+
+   virtual double DoEval (const double * x) const {
+      return fFunc( x );
+   }
+
+
+   Func fFunc; 
+   unsigned int fDim; 
+
+
+}; // WrappedMultiFunction
 
 
 
