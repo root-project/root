@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ProbFunc.h,v 1.2 2005/09/30 09:47:00 rdm Exp $
+// @(#)root/mathmore:$Name:  $:$Id: DistFunc.h,v 1.3 2006/11/16 17:17:37 rdm Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -22,17 +22,19 @@
   *                                                                    *
   **********************************************************************/
 
+#ifndef ROOT_Math_DistFuncMathMore
+#define ROOT_Math_DistFuncMathMore
 
-#include "RConfigure.h"
 
-
-#ifdef R__HAS_MATHMORE
-
-#include "Math/ProbFuncMathCore.h"
+#ifndef ROOT_Math_ProbFuncMathMore
 #include "Math/ProbFuncMathMore.h"
-
-#else
-
-#include "Math/ProbFuncMathCore.h"
-
 #endif
+
+// inverse (quantiles) are all in mathmore
+#ifndef ROOT_Math_ProbFuncInv
+#include "Math/ProbFuncInv.h"
+#endif
+
+
+
+#endif  // ROOT_Math_DistFuncMathMore

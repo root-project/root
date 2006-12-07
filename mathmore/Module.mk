@@ -26,8 +26,7 @@ MATHMORELINC := $(MODDIRI)/Math/LinkDef_SpecFunc.h \
 MATHMOREDS   := $(MODDIRS)/G__MathMore.cxx
 MATHMOREDO   := $(MATHMOREDS:.cxx=.o)
 MATHMOREDH   := $(MATHMOREDS:.cxx=.h)
-MATHMOREDH1  := $(MODDIRI)/Math/ProbFuncMathMore.h \
-		$(MODDIRI)/Math/ProbFuncInv.h \
+MATHMOREDH1  := $(MODDIRI)/Math/DistFuncMathMore.h \
 		$(MODDIRI)/Math/SpecFuncMathMore.h \
 		$(MODDIRI)/Math/Polynomial.h \
 		$(MODDIRI)/Math/Derivator.h \
