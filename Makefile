@@ -156,7 +156,7 @@ ifeq ($(BUILDUNURAN),yes)
 MODULES      += unuran
 endif
 ifeq ($(BUILDCINT7),yes)
-MOULES       += cint7
+MODULES      += cint7
 endif
 ifeq ($(BUILDCINTEX),yes)
 MODULES      += cintex
