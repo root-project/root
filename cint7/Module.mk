@@ -266,9 +266,9 @@ endif
 ##### local rules #####
 $(CINT7LIB) : $(CINT7O) $(CINT7LIBDEP)
 	@echo "Making $@"
-	$(CMDECHO)$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" libCint.$(SOEXT) $@ "$^" "$(CINT7LIBEXTRA)"
+	$(CMDECHO)$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" libCint7.$(SOEXT) $@ "$^" "$(CINT7LIBEXTRA)"
 
-$(CINT7) : $(CINT7EXEO) $(CINT7LIB)
+$(CINT7) : $(CINT7EXEO) $(CINT7LIB) $(REFLEXLIB)
 	@echo "Linking $@"
 	$(CMDECHO)$(LD) $(LDFLAGS) -o $@ $(CINT7EXEO) $(RPATH) $(CINT7LIBS) $(CILIBS)
 
