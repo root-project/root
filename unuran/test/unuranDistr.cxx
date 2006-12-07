@@ -14,7 +14,6 @@
 //#include "TApplication.h"
 #include "TCanvas.h"
 
-#include "Math/ProbFunc.h"
 #include "Math/DistFunc.h"
 
 #include <iostream> 
@@ -27,7 +26,7 @@ double norm(double *x, double *p) {
 }
 
 double cdf(double *x, double *p) { 
-   return ROOT::Math::normal_quant(x[0],p[0]); 
+   return ROOT::Math::normal_cdf(x[0],p[0]); 
 }
 
 

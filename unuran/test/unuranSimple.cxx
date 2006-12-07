@@ -10,7 +10,7 @@
 //#include "TRint.h"
 #include "TVirtualFitter.h"
 #include "TFitter.h"
-#include "Math/ProbFunc.h"
+#include "Math/DistFunc.h"
 
 #include <iostream> 
 
@@ -51,7 +51,7 @@ void unuranSimple() {
    for (int i = 0; i < n; ++i) {
       double x = unr.Sample();
       // x = gRandom->Gaus(0,1); 
-      h1->Fill( ROOT::Math::normal_quant( x , 1.0) ); 
+      h1->Fill( ROOT::Math::normal_cdf( x , 1.0) ); 
    }
 //    gSystem->Load("libMinuit2");
 //    TVirtualFitter::SetDefaultFitter("Minuit2");
