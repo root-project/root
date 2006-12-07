@@ -2040,7 +2040,9 @@ check_explicit "$enable_gfal" "$enable_gfal_explicit" \
 #
 if test ! "x$enable_g4root" = "xno"; then
     # Check for GEANT4 include and library
-    check_header "G4Navigator.hh" "$g4incdir" "$g4incdir" $G4INCLUDE
+    check_header "G4Navigator.hh" "$g4incdir" "$g4incdir" \
+        $G4INCLUDE /opt/geant4/include /opt/g4/include \
+        /usr/local/include /usr/include
     g4rootinc=$found_hdr
     g4incdir=$found_dir
 
@@ -2048,7 +2050,7 @@ if test ! "x$enable_g4root" = "xno"; then
         G4SYSLIBDIR=$G4LIB/$G4SYSTEM
     fi
     check_library "libG4navigation" "$enable_shared" "$g4libdir" \
-	$G4SYSLIBDIR
+	$G4SYSLIBDIR /opt/geant4/lib /opt/g4/lib /usr/local/lib /usr/lib
 
     g4rootlib=$found_lib
     g4libdir=$found_dir
