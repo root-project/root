@@ -1,5 +1,5 @@
 #
-# $Id: Rules.mk,v 1.66 2006/08/07 20:11:44 pcanal Exp $
+# $Id: Rules.mk,v 1.67 2006/12/06 21:39:06 pcanal Exp $
 #
 
 all: tests
@@ -165,7 +165,7 @@ ifeq ($(RCONFIG_INC),)
    export RCONFIG_INC   := $(shell root-config --incdir)
 endif
 CXXFLAGS      += $(CXXOPT) -nologo -I$(RCONFIG_INC) -FIw32pragma.h
-CXXFLAGS      += /TP 
+CXXFLAGS      += -TP 
 LD            = link -nologo
 #LDOPT         = -opt:ref
 #LDOPT         = -debug

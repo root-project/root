@@ -13,7 +13,7 @@ local_all: main
 
 
 #ifeq ($(PLATFORM),win32)
-#CXXFLAGS += /TP
+#CXXFLAGS += -TP
 #LIBSFORLINK = $(LIBS)
 #else
 #ifeq ($(ARCH),solarisCC)

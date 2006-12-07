@@ -54,15 +54,15 @@ endif
 endif
 
 ifeq ($(PLATFORM),win32)
-CXXFLAGS += /TP /GX 
+CXXFLAGS += -TP -GX 
 LIBSFORLINK = $(LIBS)
-CLDFLAGS := /link $(LDFLAGS) -debug
+CLDFLAGS := -link $(LDFLAGS) -debug
 SYSLIBS += msvcprt.lib 
 else
 LIBSFORLINK = 
 endif
 
-CXXFLAGS := $(patsubst -O2,/Z7,$(CXXFLAGS))
+CXXFLAGS := $(patsubst -O2,-Z7,$(CXXFLAGS))
 
 ifeq ($(FAIL),)
 #Make sure the failing code is excluded

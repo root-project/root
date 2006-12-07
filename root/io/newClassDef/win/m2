@@ -4,7 +4,7 @@ local_all: main
 include $(ROOTSYS)/test/Makefile
 
 ifeq ($(ARCH),win32)
-CXXFLAGS += /TP /GX
+CXXFLAGS += -TP -GX
 LIBSFORLINK = $(LIBS)
 else
 LIBSFORLINK = 
