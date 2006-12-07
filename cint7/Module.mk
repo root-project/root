@@ -257,8 +257,14 @@ CINT7CFLAGS += -DG__CINTBODY -DG__HAVE_CONFIG -DG__NOMAKEINFO
 CINT7CXXFLAGS += -I$(CINT7DIRI) -I$(CINT7DIRS) -I$(CINT7DIR)/reflex/inc -Iinclude
 CINT7CFLAGS += -I$(CINT7DIRI) -I$(CINT7DIRS) -I$(CINT7DIR)/reflex/inc -Iinclude
 
+ifeq ($(PLATFORM),win32)
+REFLEXLL := lib/libReflex.lib
+else
+REFLEXLL := -Llib -lReflex -ldl
+endif
+
 ##### local rules #####
-$(CINT7LIB) : $(CINT7O)
+$(CINT7LIB) : $(CINT7O) $(CINT7LIBDEP)
 	@echo "Making $@"
 	$(CMDECHO)$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" libCint.$(SOEXT) $@ "$^" "$(CINT7LIBEXTRA)"
 
@@ -273,9 +279,9 @@ $(CINT7) : $(CINT7EXEO) $(CINT7LIB)
 #          $(SETUPO) $(MAINO) $(CINTTMPOBJ) $(REFLEXLINK) \
 #          $(G__CFG_READLINELIB) $(G__CFG_CURSESLIB) $(G__CFG_DEFAULTLIBS)
 
-$(CINT7TMP) : $(CINT7EXEO) $(CINT7TMPO)
+$(CINT7TMP) : $(CINT7EXEO) $(CINT7TMPO) $(REFLEXLIB)
 	@echo "Linking $@"
-	$(CMDECHO)$(LD) $(LDFLAGS) -o $@ $(CINT7EXEO) $(CINT7TMPO) $(RPATH) $(CINT7LIBEXTRA) $(CILIBS)
+	$(CMDECHO)$(LD) $(LDFLAGS) -o $@ $(CINT7EXEO) $(CINT7TMPO) $(RPATH) $(REFLEXLL) $(CILIBS)
 
 $(MAKECINT7) : $(MAKECINT7O)
 	@echo "Linking $@"
