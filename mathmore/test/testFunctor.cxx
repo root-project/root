@@ -23,9 +23,10 @@
 #include "Math/Functor.h"
 
 #include <functional>
+#include <vector>
 
 #define NLOOP 100
-#define NTIMES 1000000
+#define NTIMES 500000
 #define FUNC x[0]+x[1]
 //#define FUNC x[0]*std::exp(x[1])
 //#define FUNC 100 * (x[1]-x[0]*x[0])*(x[1]-x[0]*x[0]) + (1.-x[0])*(1-x[0])
@@ -132,10 +133,12 @@ const int Ntimes = NTIMES;
 
 template <class Func> 
 void TestTime(const Func & f) { 
-   double x[Ntimes]; 
+  //double x[Ntimes]; 
+  // use std::vector's to avoid crashes on Windows 
+   std::vector<double> x(Ntimes); 
    TStopwatch w; 
    TRandom2 r; 
-   r.RndmArray(Ntimes,x);
+   r.RndmArray(Ntimes,&x[0]);
    w. Start(); 
    double s=0;
    for (int ipass = 0; ipass <NLOOP; ++ipass) {  
@@ -155,10 +158,11 @@ void TestTimeGF(const ROOT::Math::IGenFunction & f) {
 
 
 void TestTimeTF1(TF1 & f) { 
-   double x[Ntimes]; 
+  //double x[Ntimes]; 
+   std::vector<double> x(Ntimes); 
    TStopwatch w; 
    TRandom2 r; 
-   r.RndmArray(Ntimes,x);
+   r.RndmArray(Ntimes,&x[0]);
    w. Start(); 
    double s=0;
    for (int ipass = 0; ipass <NLOOP; ++ipass) {  
@@ -174,10 +178,11 @@ void TestTimeTF1(TF1 & f) {
 
 #ifdef HAVE_ROOFIT
 void TestTimeRooPdf(RooAbsPdf & f, RooRealVar * vars) { 
-   double x[Ntimes]; 
+   //double x[Ntimes];    
+   std::vector<double> x(Ntimes); 
    TStopwatch w; 
    TRandom2 r; 
-   r.RndmArray(Ntimes,x);
+   r.RndmArray(Ntimes,&x[0]);
    w. Start(); 
    double s=0;
 //    RooArgSet * varSet = f.getVariables(); 
