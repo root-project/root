@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.94 2006/10/19 13:35:52 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.95 2006/11/02 11:03:37 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -228,7 +228,7 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
 }
 
 //______________________________________________________________________________
-TGaxis::TGaxis(const TGaxis& ax) : 
+TGaxis::TGaxis(const TGaxis& ax) :
   TLine(ax),
   TAttText(ax),
   fWmin(ax.fWmin),
@@ -249,12 +249,12 @@ TGaxis::TGaxis(const TGaxis& ax) :
   fFunctionName(ax.fFunctionName),
   fFunction(ax.fFunction),
   fAxis(ax.fAxis)
-{ 
+{
    //copy constructor
 }
 
 //______________________________________________________________________________
-TGaxis& TGaxis::operator=(const TGaxis& ax) 
+TGaxis& TGaxis::operator=(const TGaxis& ax)
 {
    //assignement operator
    if(this!=&ax) {
@@ -278,7 +278,7 @@ TGaxis& TGaxis::operator=(const TGaxis& ax)
       fFunctionName=ax.fFunctionName;
       fFunction=ax.fFunction;
       fAxis=ax.fAxis;
-   } 
+   }
    return *this;
 }
 
@@ -391,21 +391,6 @@ void TGaxis::Paint(Option_t *)
    Double_t x2 = gPad->XtoPad(fX2);
    Double_t y2 = gPad->YtoPad(fY2);
 
-/*
-   TString opt = fChopt;
-   opt.ToUpper();
-   if (gPad->GetLogx()) {
-      if ((y1 == y2) && !opt.Contains("G")) opt += "G";
-   } else {
-      if ((y1 == y2) && opt.Contains("G")) opt.ReplaceAll("G","");
-   }
-   if (gPad->GetLogy()) {
-      if ((x1 == x2) && !opt.Contains("G")) opt += "G";
-   } else {
-      if ((x1 == x2) && opt.Contains("G")) opt.ReplaceAll("G","");
-   }
-*/
-   
    PaintAxis(x1,y1,x2,y2,wmin,wmax,ndiv,fChopt.Data(),fGridLength);
 }
 //______________________________________________________________________________
@@ -690,6 +675,11 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       linegrid->SetLineWidth(gStyle->GetGridWidth());
    }
 
+//*-*-              No labels if the axis label offset is big.
+//*-*-              In that case the labels are not visible anyway.
+
+   if (GetLabelOffset() > 1.1 ) optionUnlab = 1;
+
 //*-*-              Determine time format
 
    Int_t idF = fTimeFormat.Index("%F");
@@ -699,7 +689,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       timeformat = fTimeFormat;
    }
 
-// determine the time offset and correct for time offset not being integer
+// Determine the time offset and correct for time offset not being integer.
    Double_t timeoffset =0;
    if (optionTime) {
       if (idF>=0) {
@@ -1949,14 +1939,14 @@ void TGaxis::SavePrimitive(ostream &out, Option_t * /*= ""*/)
       if (fLabelColor > 228) {
          TColor::SaveColor(out, fLabelColor);
          out<<"   gaxis->SetLabelColor(ci);" << endl;
-      } else 
+      } else
          out<<"   gaxis->SetLabelColor("<<GetLabelColor()<<");"<<endl;
    }
    if (fLineColor != 1) {
       if (fLineColor > 228) {
          TColor::SaveColor(out, fLineColor);
          out<<"   gaxis->SetLineColor(ci);" << endl;
-      } else 
+      } else
          out<<"   gaxis->SetLineColor("<<GetLineColor()<<");"<<endl;
    }
    if (fLineStyle != 1) {
