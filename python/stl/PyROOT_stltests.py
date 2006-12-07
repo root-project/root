@@ -1,7 +1,7 @@
 # File: roottest/python/stl/PyROOT_stltests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 10/25/05
-# Last: 10/13/06
+# Last: 11/22/06
 
 """STL unit tests for PyROOT package."""
 
@@ -33,7 +33,17 @@ class STL1VectorTestCase( unittest.TestCase ):
 
       self.assertEqual( len(a), self.N )
 
-   def test2GeneratedVectorType( self ):
+   def test2BuiltinVectorType( self ):
+      """Test access to a vector<double> (part of cintdlls)"""
+
+      a = std.vector( 'double' )()
+      for i in range(self.N):
+         a.push_back( float(i) )
+         self.assertEqual( a[i], i )
+
+      self.assertEqual( len(a), self.N )
+
+   def test3GeneratedVectorType( self ):
       """Test access to a ACLiC generated vector type"""
 
       a = std.vector( JustAClass )()
@@ -63,6 +73,7 @@ class STL2ListTestCase( unittest.TestCase ):
          a.push_back( i )
 
       self.assertEqual( len(a), self.N )
+      self.failUnless( 11 in a )
 
       ll = list(a)
       for i in range(self.N):
