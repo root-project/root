@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.24 2006/09/14 13:38:25 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.h,v 1.25 2006/10/03 15:13:59 axel Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -187,8 +187,10 @@ namespace ROOT {
          RFLX_API const Member & Member();
          RFLX_API const MemberTemplate & MemberTemplate();
          RFLX_API const Scope & Scope();
-         template< class T >
-         RFLX_API const T & Get();
+         template< class T > RFLX_API const T & Get() {
+            static T t;
+            return t;
+         }
       }
 
 

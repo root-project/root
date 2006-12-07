@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Kernel.cxx,v 1.21 2006/10/03 15:13:59 axel Exp $
+// @(#)root/reflex:$Name:  $:$Id: Kernel.cxx,v 1.22 2006/11/24 13:21:14 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -330,13 +330,6 @@ const ROOT::Reflex::Scope & ROOT::Reflex::Dummy::Scope() {
    return Get< ROOT::Reflex::Scope >();
 }
 
-//-------------------------------------------------------------------------------
-template< class T >
-const T & ROOT::Reflex::Dummy::Get() {
-//-------------------------------------------------------------------------------
-   static T t;
-   return t;
-}
 
 //-------------------------------------------------------------------------------
 const std::string & ROOT::Reflex::Reflex::Argv0() {
@@ -345,6 +338,7 @@ const std::string & ROOT::Reflex::Reflex::Argv0() {
    static std::string str = "REFLEX";
    return str;
 }
+
 
 //-------------------------------------------------------------------------------
 namespace {
