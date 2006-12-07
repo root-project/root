@@ -58,6 +58,7 @@ struct Primitives {
   std::string m_str;
   std::vector<double> m_vd;
 
+  void b(bool & b) { b = m_b; }
   bool b() { return m_b;}
   char c() { return m_c;}
   short s() { return m_s;}
@@ -72,12 +73,13 @@ struct Primitives {
   unsigned long long ull() { return m_ull; }
   float f() { return m_f;}
   double d() { return m_d;}
+  void d ( double & d ) { d = m_d; }
   std::string str() { return m_str;}
   const char* ccstr() { return m_str.c_str();}
   char* cstr() { return const_cast<char*>(m_str.c_str());}
   std::vector<double>& doubles() { return m_vd; }
 
-  void set_b( bool a)  { m_b = a;}
+  void set_b( const bool & a)  { m_b = a;}
   void set_c( char a)  { m_c = a;}
   void set_s( short a) { m_s = a;}
   void set_i( const int a) { m_i = a;}

@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.19 2006/11/24 14:24:54 rdm Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.20 2006/11/29 16:13:44 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -73,7 +73,7 @@ namespace ROOT { namespace Cintex {
       for (int i = 0; i < fNpar; i++ ) {
          Type pt = fFunction.FunctionParameterAt(i);
          while ( pt.IsTypedef() ) pt = pt.ToType();
-         if ( pt.IsReference() )
+         if ( pt.IsReference() && ! pt.IsConst() )
             if( pt.IsPointer() ) fTreat[i] = '*';
             else                 fTreat[i] = '&';
          else if ( pt.IsFundamental() || pt.IsEnum() )
