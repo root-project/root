@@ -124,6 +124,10 @@ bool test_CallingModes() {
   calling.setByReference(myobj);
   failUnlessEqual( calling.retByPointer()->magic(), 44444444 , "CallingModes: fail set by reference");
   failUnlessEqual( myobj.magic(),  999999 , "CallingModes: fail set by reference");
+  myobj.setMagic(44445555);
+  calling.setByConstReference(myobj);
+  failUnlessEqual( calling.retByPointer()->magic(), 44445555 , "CallingModes: fail set by reference");
+  failUnlessEqual( myobj.magic(),  44445555 , "CallingModes: fail set by reference");
   myobj.setMagic(55555555);
   calling.setByRefPointer(&myobj);
   failUnlessEqual( calling.retByPointer()->magic(), 55555555 , "CallingModes: fail set by reference pointer");

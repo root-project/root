@@ -86,6 +86,15 @@ class BasicsTestCase(unittest.TestCase):
     self.failUnless( calling.retByRefPointer().magic() == 1234567890 , 'fail return by reference pointer')
     self.failUnless( calling.retByVoidPointer(), 'fail return by void pointer')
 
+    myobj.setMagic(111111111)
+    self.failUnless( myobj.magic() == 111111111 )
+    calling = self.A.B.C.Calling()
+    calling.setByConstReference(myobj)
+    self.failUnless( calling.retByValue().magic() == 111111111 , 'fail return by value')
+    self.failUnless( calling.retByPointer().magic() == 111111111 , 'fail return by pointer')
+    self.failUnless( calling.retByReference().magic() == 111111111 , 'fail return by reference')
+    self.failUnless( calling.retByRefPointer().magic() == 111111111 , 'fail return by reference pointer')
+    self.failUnless( calling.retByVoidPointer(), 'fail return by void pointer')
 
   def test04UnknownTypes(self) :
     calling = self.A.B.C.Calling()

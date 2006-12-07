@@ -113,7 +113,7 @@ public:
   MyClass();
   MyClass(const MyClass& );
   virtual ~MyClass();
-  MyClass& operator=(MyClass&);
+  MyClass& operator=(const MyClass&);
   int doSomething(const std::string& );
   int magic() { return m_magic; }
   void setMagic(int v) { m_magic = v; }
@@ -159,6 +159,7 @@ public:
   void setByPointer( MyClass* m ) { 
     if (m) m_object = *m, m->setMagic(999999);
     else   m_object.setMagic(0);  }
+  void setByConstReference( const MyClass& m ) { m_object = m; }
   void setByReference( MyClass& m ) { m_object = m;  m.setMagic(999999); }
   void setByRefPointer( MyClass*& m ) { m_object = *m; m->setMagic(999999); }
   void setByRefPointerAbstract( Abstract*& m ) { static Concrete c; m = &c; }
@@ -193,7 +194,7 @@ MyClass::MyClass(const MyClass& c) {
 MyClass::~MyClass() {
   s_instances--;
 }
-MyClass& MyClass::operator=(MyClass& c) {
+MyClass& MyClass::operator=(const MyClass& c) {
   m_magic = c.m_magic;
   return *this;
 }
