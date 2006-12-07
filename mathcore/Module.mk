@@ -44,8 +44,7 @@ MATHCOREDH1  :=  $(MODDIRI)/Math/Vector3D.h \
                  $(MODDIRI)/Math/Transform3D.h \
                  $(MODDIRI)/Math/Plane3D.h \
                  $(MODDIRI)/Math/SpecFuncMathCore.h \
-                 $(MODDIRI)/Math/ProbFuncMathCore.h \
-                 $(MODDIRI)/Math/DistFunc.h \
+                 $(MODDIRI)/Math/DistFuncMathCore.h \
                  $(MODDIRI)/Math/VectorUtil_Cint.h \
                  $(MODDIRI)/Math/IParamFunction.h \
                  $(MODDIRI)/Math/IFunction.h 

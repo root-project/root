@@ -8,46 +8,20 @@
   *                                                                    *
   **********************************************************************/
 
-/** 
-    Header file declaring all distributions, pdf, cdf and quantiles present in 
-    MathCore and optionally MathMore. 
-    The MathMore ones are included only if ROOT has been built with MathMore. 
-*/
-
-#ifndef ROOT_Math_DistFunc
-#define ROOT_Math_DistFunc
-
-
-#ifndef ROOT_RConfigure
-#include "RConfigure.h"
-#endif
+#ifndef ROOT_Math_DistFuncMathCore
+#define ROOT_Math_DistFuncMathCore
 
 
 
-
-// pdf functions are all in MathCore
+// pdf functions are all in Mathcore
 #ifndef ROOT_Math_PdfFunc
 #include "Math/PdfFunc.h"
 #endif
 
-// some cdf are in MathCore others in mathmore
+// some cdf are in mathcore others in mathmore
 #ifndef ROOT_Math_ProbFuncMathCore
 #include "Math/ProbFuncMathCore.h"
 #endif
 
-// include distributions from MathMore when is there
-#ifdef R__HAS_MATHMORE  
-
-// extra cdf in MathMore
-#ifndef ROOT_Math_ProbFuncMathMore
-#include "Math/ProbFuncMathMore.h"
-#endif
-
-// inverse (quantiles) are all in mathmore
-#ifndef ROOT_Math_ProbFuncInv
-#include "Math/ProbFuncInv.h"
-#endif
-
-#endif
 
 #endif  // ROOT_Math_DistFunc
