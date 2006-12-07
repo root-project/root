@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.12 2006/07/03 10:27:23 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.13 2006/07/03 11:39:27 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -505,7 +505,7 @@ namespace ROOT { namespace Cintex {
                Member mem = cl.DataMemberAt(m);
                if ( ! mem.IsTransient() ) {
                   Type typ = mem.TypeOf();
-                  string nam = mem.Properties().HasKey("ioname") ? 
+                  string nam = mem.Properties().HasProperty("ioname") ? 
                      mem.Properties().PropertyAsString("ioname") : mem.Name();
                   if( typ.IsPointer() ) nam = "*" + nam;
                   if( typ.IsArray() ) {
@@ -520,7 +520,7 @@ namespace ROOT { namespace Cintex {
                   }
                   insp.Inspect(tcl, par, nam.c_str(), add);
                   if ( !typ.IsFundamental() && !typ.IsPointer() ) {
-                     string tnam  = mem.Properties().HasKey("iotype") ? CintName(mem.Properties().PropertyAsString("iotype")) : CintName(typ);
+                     string tnam  = mem.Properties().HasProperty("iotype") ? CintName(mem.Properties().PropertyAsString("iotype")) : CintName(typ);
                      TClass* tmcl = ROOT::GetROOT()->GetClass(tnam.c_str());
                      if ( tmcl ) {
                         ::strcat(par,nam.c_str());
