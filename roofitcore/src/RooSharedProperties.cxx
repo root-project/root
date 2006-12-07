@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooSharedProperties.cc,v 1.1 2005/12/01 16:10:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -28,6 +28,10 @@ ClassImp(RooSharedProperties)
 
 
 RooSharedProperties::RooSharedProperties() 
+{
+} 
+
+RooSharedProperties::RooSharedProperties(const char* uuidstr) : _uuid(uuidstr) 
 {
 } 
 

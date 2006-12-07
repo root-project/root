@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooRealVarSharedProperties.rdl,v 1.1 2005/12/01 16:10:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,6 +24,7 @@ class RooRealVarSharedProperties : public RooSharedProperties {
 public:
 
   RooRealVarSharedProperties() ;
+  RooRealVarSharedProperties(const char* uuidstr) ;
   virtual ~RooRealVarSharedProperties() ;
 
 protected:

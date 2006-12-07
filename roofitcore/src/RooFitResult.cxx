@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFitResult.cc,v 1.34 2005/12/05 14:58:16 wverkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.35 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -103,6 +103,15 @@ void RooFitResult::setConstParList(const RooArgList& list)
   // Fill the list of constant parameters
   if (_constPars) delete _constPars ;
   _constPars = (RooArgList*) list.snapshot() ;
+  TIterator* iter = _constPars->createIterator() ;
+  RooAbsArg* arg ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    RooRealVar* rrv = dynamic_cast<RooRealVar*>(arg) ;
+    if (rrv) {
+      rrv->deleteSharedProperties() ;
+    }
+  }
+  delete iter ;
 }
 
 
@@ -111,6 +120,15 @@ void RooFitResult::setInitParList(const RooArgList& list)
   // Fill the list of initial values of the floating parameters 
   if (_initPars) delete _initPars ;
   _initPars = (RooArgList*) list.snapshot() ;
+  TIterator* iter = _initPars->createIterator() ;
+  RooAbsArg* arg ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    RooRealVar* rrv = dynamic_cast<RooRealVar*>(arg) ;
+    if (rrv) {
+      rrv->deleteSharedProperties() ;
+    }
+  }
+  delete iter ;
 }
 
 
@@ -119,6 +137,16 @@ void RooFitResult::setFinalParList(const RooArgList& list)
   // Fill the list of final values of the floating parameters 
   if (_finalPars) delete _finalPars ;
   _finalPars = (RooArgList*) list.snapshot() ;
+
+  TIterator* iter = _finalPars->createIterator() ;
+  RooAbsArg* arg ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    RooRealVar* rrv = dynamic_cast<RooRealVar*>(arg) ;
+    if (rrv) {
+      rrv->deleteSharedProperties() ;
+    }
+  }
+  delete iter ;
 }
 
 RooPlot *RooFitResult::plotOn(RooPlot *frame, const char *parName1, const char *parName2,
