@@ -3666,6 +3666,7 @@ check_explicit "$enable_mathmore" "$enable_mathmore_explicit" \
 message "Checking whether to build CINT7"
 if test ! "x$enable_cint7" = "xno"; then
     enable_cint7="yes"
+    enable_reflex="yes"
     result "yes"
 else
     enable_cint7=""
