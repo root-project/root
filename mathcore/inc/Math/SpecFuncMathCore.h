@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: SpecFuncMathCore.h,v 1.1 2005/06/24 18:54:24 brun Exp $
+// @(#)root/mathcore:$Name:  $:$Id: SpecFuncMathCore.h,v 1.1 2005/09/18 17:33:47 brun Exp $
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
 
 /**********************************************************************
@@ -122,7 +122,7 @@ namespace Math {
   \f[ B(x,y) = \frac{\Gamma(x) \Gamma(y)}{\Gamma(x+y)} \f]
 
   for x>0 and y>0. For detailed description see 
-  <A HREF="http://mathworld.wolfram.com/BetaFunction.html">
+  <A HREF="http://mathworld.wolfram.com/BetaDistribution.html">
   Mathworld</A>. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC120">GSL</A>.
 

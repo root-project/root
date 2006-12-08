@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DistFunc.h,v 1.3 2006/11/16 17:17:37 rdm Exp $
+// @(#)root/mathcore:$Name:  $:$Id: DistFunc.h,v 1.7 2006/12/07 11:07:03 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -25,9 +25,9 @@
 
 
 
-// pdf functions are all in MathCore
-#ifndef ROOT_Math_PdfFunc
-#include "Math/PdfFunc.h"
+// pdf functions from MathCore
+#ifndef ROOT_Math_PdfFuncMathCore
+#include "Math/PdfFuncMathCore.h"
 #endif
 
 // some cdf are in MathCore others in mathmore
@@ -37,6 +37,11 @@
 
 // include distributions from MathMore when is there
 #ifdef R__HAS_MATHMORE  
+
+// extra pdf functions from MathMore
+#ifndef ROOT_Math_PdfFuncMathMore
+#include "Math/PdfFuncMathMore.h"
+#endif
 
 // extra cdf in MathMore
 #ifndef ROOT_Math_ProbFuncMathMore

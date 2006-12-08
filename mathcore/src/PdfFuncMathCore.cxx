@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DistFunc.cxx,v 1.8 2006/06/22 08:36:27 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PdfFunc.cxx,v 1.1 2006/12/07 11:07:03 moneta Exp $
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
 
 /**********************************************************************

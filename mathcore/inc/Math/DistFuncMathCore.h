@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: DistFunc.h,v 1.3 2006/11/16 17:17:37 rdm Exp $
+// @(#)root/mathcore:$Name:  $:$Id: DistFuncMathCore.h,v 1.1 2006/12/07 11:07:03 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -13,9 +13,9 @@
 
 
 
-// pdf functions are all in Mathcore
-#ifndef ROOT_Math_PdfFunc
-#include "Math/PdfFunc.h"
+// pdf functions from Mathcore
+#ifndef ROOT_Math_PdfFuncMathCore
+#include "Math/PdfFuncMathCore.h"
 #endif
 
 // some cdf are in mathcore others in mathmore
