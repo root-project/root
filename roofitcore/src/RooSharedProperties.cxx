@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSharedProperties.cc,v 1.1 2005/12/01 16:10:20 wverkerke Exp $
+ *    File: $Id: RooSharedProperties.cc,v 1.2 2006/12/07 21:21:33 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,7 @@
 
 #include "RooFitCore/RooFit.hh"
 #include "RooFitCore/RooSharedProperties.hh"
+#include "RooFitCore/RooTrace.hh"
 
 #include <iostream>
 using std::cout ;
@@ -29,15 +30,18 @@ ClassImp(RooSharedProperties)
 
 RooSharedProperties::RooSharedProperties() 
 {
+  RooTrace::create(this) ;
 } 
 
 RooSharedProperties::RooSharedProperties(const char* uuidstr) : _uuid(uuidstr) 
 {
+  RooTrace::create(this) ;
 } 
 
 
 RooSharedProperties::~RooSharedProperties() 
 {
+  RooTrace::destroy(this) ;
 } 
 
 

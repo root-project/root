@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.cc,v 1.59 2006/07/04 15:07:58 wverkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.60 2006/12/07 21:21:33 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -845,6 +845,7 @@ void RooRealVar::Streamer(TBuffer &R__b)
 	if (!(_nullProp==*tmpSharedProp)) {
 	  _sharedProp = (RooRealVarSharedProperties*) _sharedPropList.registerProperties(tmpSharedProp) ;
 	} else {
+	  delete tmpSharedProp ;
 	  _sharedProp = 0 ;
 	}
       }
