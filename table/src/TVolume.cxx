@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolume.cxx,v 1.15 2006/07/19 17:23:41 pcanal Exp $
+// @(#)root/table:$Name:  $:$Id: TVolume.cxx,v 1.16 2006/12/06 05:53:33 brun Exp $
 // Author: Valery Fine   10/12/98
 
 /*************************************************************************
@@ -108,8 +108,7 @@ TVolume::TVolume(const Text_t *name, const Text_t *title, const Text_t *shapenam
    fOption = option;
    fVisibility = kBothVisible;
 
-   if(!fShape) {Printf("Illegal referenced shape"); return;}
-   ImportShapeAttributes();
+   if(fShape) ImportShapeAttributes();
 }
 
 
@@ -136,8 +135,7 @@ TVolume::TVolume(const Text_t *name, const Text_t *title, TShape *shape, Option_
    fOption = option;
    fVisibility = kBothVisible;
    SetTitle(title);
-   if(!shape) {Printf("Illegal referenced shape"); return;}
-   ImportShapeAttributes();
+   if(shape) ImportShapeAttributes();
 }
 
 //______________________________________________________________________________
