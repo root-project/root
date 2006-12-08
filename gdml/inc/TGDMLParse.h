@@ -1,4 +1,4 @@
-/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.h,v 1.4 2006/11/22 08:03:45 brun Exp $ */
+/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.h,v 1.5 2006/11/29 11:38:26 brun Exp $ */
 // Authors: Ben Lloyd 09/11/06
 
 /*************************************************************************
@@ -37,12 +37,11 @@ public:
 
 
    TGDMLRefl() {              //constructor
-    
       fNameS = ""; 
       fSolid = "";
-      fMatrix = 0;
-      
-   }            
+      fMatrix = 0;  
+   }       
+     
    virtual ~TGDMLRefl() {}    //destructor 
    TGDMLRefl(const char* name, const char* solid, TGeoMatrix* matrix);
    TGeoMatrix* GetMatrix();  
@@ -52,7 +51,6 @@ private:
    const char*     fNameS;      //!reflected solid name
    const char*     fSolid;      //!solid name being reflected
    TGeoMatrix     *fMatrix;     //!matrix of reflected solid
-
    
    ClassDef(TGDMLRefl, 0)     //helper class used for the storage of reflected solids
     
@@ -69,25 +67,23 @@ class TGDMLBaseTGDMMapHelper : public std::map<std::string, const void *>{
 //to avoid ugly UB casts like static_cast<SomeType * &>(voidPtrLValue)
 //I have this helper class.
 template<typename T>
+
 class TGDMAssignmentHelper{
 private:
    TGDMLBaseTGDMMapHelper::iterator fPosInMap;
 
 public:
-   TGDMAssignmentHelper(TGDMLBaseTGDMMapHelper &baseMap, const std::string &key)
-   {
+   TGDMAssignmentHelper(TGDMLBaseTGDMMapHelper &baseMap, const std::string &key) {
       baseMap[key];//if we do not have this key-value pair before, insert it now (with zero for pointer).
       //find iterator for this key now :)
       fPosInMap = baseMap.find(key);
    }
-   
-   operator T * ()const
-   {
+
+   operator T * ()const {
       return (T*)fPosInMap->second;//const_cast<T*>(static_cast<const T *>(fPosInMap->second));   
    }
-   
-   TGDMAssignmentHelper & operator = (const T * ptr)
-   {
+
+   TGDMAssignmentHelper & operator = (const T * ptr) {
       fPosInMap->second = ptr;
       return *this;
    }
@@ -107,28 +103,33 @@ class TGDMLParse : public TObject {
 
 public:
   
+   const char* fWorldName; //top volume of geometry name
    TGeoVolume* fWorld; //top volume of geometry
    int fVolID;   //volume ID, incremented as assigned.
-   
+   int fFILENO; //Holds which level of file the parser is at
+   TXMLEngine* fFileEngine[20]; //array of dom object pointers
+   const char* fStartFile; //name of originating file
+   const char* fCurrentFile; //current file name being parsed
+
    TGDMLParse() {              //constructor
       fVolID = 0;
-   }            
-   virtual ~TGDMLParse() {}    //destructor
-   static TGeoVolume* StartGDML(const char* filename){
+      fFILENO = 0;
+   }       
      
+   virtual ~TGDMLParse() {}    //destructor
+
+   static TGeoVolume* StartGDML(const char* filename){
       TGDMLParse* fParser = new TGDMLParse;
       TGeoVolume* fWorld = fParser->GDMLReadFile(filename);
-      
       return fWorld;
-      
    }
    
    TGeoVolume*       GDMLReadFile(const char* filename = "test.gdml");
     
 private:
     
-   void              ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node, Int_t level) ;
-   const char*             GetScale(const char* unit);
+   const char*       ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node) ;
+   const char*       GetScale(const char* unit);
    const char*       FindConst(const char* retval);
    double            Evaluate(const char* evalline);
    const char*       NameShort(const char* name);
@@ -169,7 +170,7 @@ private:
    XMLNodePointer_t  VolProcess(TXMLEngine* gdml, XMLNodePointer_t node);
    XMLNodePointer_t  AssProcess(TXMLEngine* gdml, XMLNodePointer_t node);
    Int_t             SetAxis(const char* axisString); //Set Axis for Division
-    
+
    //'setup' section
    XMLNodePointer_t  TopProcess(TXMLEngine* gdml, XMLNodePointer_t node);
     
@@ -184,21 +185,8 @@ private:
    typedef TGDMMapHelper<TGeoShape> SolMap;
    typedef TGDMMapHelper<TGeoVolume> VolMap;
    typedef TGDMMapHelper<TGDMLRefl> ReflSolidMap;
-
-
-
-  /* typedef std::map<std::string, TGeoTranslation*> PosMap;
-   typedef std::map<std::string, TGeoRotation*> RotMap;
-   typedef std::map<std::string, TGeoElement*> EleMap;
-   typedef std::map<std::string, TGeoMaterial*> MatMap;
-   typedef std::map<std::string, TGeoMedium*> MedMap;
-   typedef std::map<std::string, TGeoMixture*> MixMap;
-   typedef std::map<std::string, const char*> ConMap;
-   typedef std::map<std::string, TGeoShape*> SolMap;
-   typedef std::map<std::string, TGeoVolume*> VolMap;
-*/
+   typedef TGDMMapHelper<const char> FileMap;
    typedef std::map<std::string, std::string> ReflectionsMap;
-//   typedef std::map<std::string, TGDMLRefl*> ReflSolidMap;
    typedef std::map<std::string, std::string> ReflVolMap; 
    typedef std::map<std::string, double> FracMap;
 
@@ -214,8 +202,9 @@ private:
    ReflectionsMap freflectmap;    //!Map containing reflection names and the Solid name ir references to
    ReflSolidMap freflsolidmap;    //!Map containing reflection names and the TGDMLRefl for it - containing refl matrix
    ReflVolMap freflvolmap;        //!Map containing reflected volume names and the solid ref for it
-    
-   ClassDef(TGDMLParse, 1)    //imports GDML using DOM and binds it to ROOT
+   FileMap ffilemap;              //!Map containing files parsed during entire parsing, with their world volume name
+
+   ClassDef(TGDMLParse, 0)    //imports GDML using DOM and binds it to ROOT
       
 };
       
