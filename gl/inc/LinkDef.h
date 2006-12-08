@@ -85,4 +85,5 @@
 #pragma link C++ class TGLObject+;
 #pragma link C++ class TPointSet3DGL+;
 
+#pragma link C++ namespace Rgl;
 #endif

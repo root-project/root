@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.33 2006/10/11 10:26:23 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.34 2006/10/24 14:20:41 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -960,11 +960,13 @@ namespace Rgl {
                              Double_t yMax, Double_t zMin, Double_t zMax, 
                              Double_t tMin, Double_t tMax, Int_t front);
 
+#ifndef __CINT__
    void DrawTrapezoidTextured(const Double_t ver[][2], Double_t zMin, Double_t zMax,
                               Double_t tMin, Double_t tMax);
    void DrawTrapezoidTextured(const Double_t ver[][3], Double_t texMin, Double_t texMax);
    void DrawTrapezoidTextured2(const Double_t ver[][2], Double_t zMin, Double_t zMax,
                                Double_t tMin, Double_t tMax);
+#endif
 
    void DrawCylinder(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin, 
                      Double_t yMax, Double_t zMin, Double_t zMax);
@@ -972,8 +974,12 @@ namespace Rgl {
                    Double_t yMax, Double_t zMin, Double_t zMax);
    void DrawError(Double_t xMin, Double_t xMax, Double_t yMin, 
                   Double_t yMax, Double_t zMin, Double_t zMax);
+
+#ifndef __CINT__
    void DrawTrapezoid(const Double_t ver[][2], Double_t zMin, Double_t zMax, Bool_t color = kTRUE);
    void DrawTrapezoid(const Double_t ver[][3]);
+#endif
+
    void DrawAxes(Int_t frontPoint, const Int_t *viewport, const TGLVertex3 *box2D, 
                  const TGLPlotCoordinates *plotCoord, TAxis *xAxis, TAxis *yAxis, 
                  TAxis *zAxis);
