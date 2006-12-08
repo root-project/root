@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.13 2006/07/03 11:39:27 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.14 2006/12/07 10:03:00 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -178,7 +178,7 @@ namespace ROOT { namespace Cintex {
       // Setup root class enhance.
       std::string nam = TypeGet().Name(SCOPED);
       if ( Cintex::Debug() > 1 )  {
-         std::cout << "Enhancing:" << nam << std::endl;
+         std::cout << "Cintex: Enhancing:" << nam << std::endl;
       }
       if ( ! IsSTLext(nam) && (IsSTL(nam) || IsSTLinternal(nam)) )  {
          //--- create TGenericClassInfo Instance
@@ -324,7 +324,7 @@ namespace ROOT { namespace Cintex {
             fSub_types[fLastType=&typ] = fLastClass;
          }
       }
-      //std::cout << "IsA:" << TypeNth.Name(SCOPED) << " dynamic:" << dtype.Name(SCOPED) << std::endl;
+      //std::cout << "Cintex: IsA:" << TypeNth.Name(SCOPED) << " dynamic:" << dtype.Name(SCOPED) << std::endl;
       return fLastClass;
    }
   
@@ -374,7 +374,7 @@ namespace ROOT { namespace Cintex {
                Member method = typ.MemberByName("createCollFuncTable");
                if ( !method )   {
                   if ( Cintex::Debug() )  {
-                     cout << Name << "' Setup failed to create this class! "
+                     cout << "Cintex: " << Name << "' Setup failed to create this class! "
                           << "The function createCollFuncTable is not availible."
                           << endl;
                   }
@@ -488,11 +488,11 @@ namespace ROOT { namespace Cintex {
 
          void* ROOTClassEnhancerInfo::Stub_ShowMembers(void* obj, const vector<void*>& args, void* ctx) {
             // Create show members.
-            const Type& TypeNth = context(ctx).TypeGet();
+            Type typ = context(ctx).TypeGet();
             TClass* tcl = context(ctx).Tclass();
             TMemberInspector& insp = *(TMemberInspector*)args[0];
             char* par = (char*)args[1];
-            if( tcl ) Stub_ShowMembers( tcl, TypeNth, obj, insp, par);
+            if( tcl ) Stub_ShowMembers( tcl, typ, obj, insp, par);
             return 0;
          }
 
@@ -515,7 +515,7 @@ namespace ROOT { namespace Cintex {
                   }
                   char*  add = (char*)obj + mem.Offset();
                   if ( Cintex::Debug() > 2 )  {
-                     cout << "Showmembers: ("<< tcl->GetName() << ") " << par << nam.c_str() 
+                     cout << "Cintex: Showmembers: ("<< tcl->GetName() << ") " << par << nam.c_str() 
                           << " = " << (void*)add << " Offset:" << mem.Offset() << endl;
                   }
                   insp.Inspect(tcl, par, nam.c_str(), add);

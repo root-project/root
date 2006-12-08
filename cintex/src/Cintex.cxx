@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: Cintex.cxx,v 1.10 2006/07/03 09:22:46 roiser Exp $
+// @(#)root/cintex:$Name: v5-13-04b $:$Id: Cintex.cxx,v 1.11 2006/07/03 12:13:08 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -173,11 +173,11 @@ namespace ROOT {
       void Callback::operator () ( const Member& m ) {
          int autoload = G__set_class_autoloading(0); // To avoid recursive loads
          if ( m.IsFunctionMember() ) {
-            if( Cintex::Debug() ) cout << "Building function " << m.Name(SCOPED|QUALIFIED) << endl; 
+            if( Cintex::Debug() ) cout << "Cintex: Building function " << m.Name(SCOPED|QUALIFIED) << endl; 
             CINTFunctionBuilder(m).Setup();
          }
          else if ( m.IsDataMember() ) {
-            if( Cintex::Debug() ) cout << "Building variable " << m.Name(SCOPED|QUALIFIED) << endl; 
+            if( Cintex::Debug() ) cout << "Cintex: Building variable " << m.Name(SCOPED|QUALIFIED) << endl; 
             CINTVariableBuilder(m).Setup();
          } 
          G__set_class_autoloading(autoload);

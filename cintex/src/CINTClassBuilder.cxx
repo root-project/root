@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name: v5-12-00e $:$Id: CINTClassBuilder.cxx,v 1.17 2006/07/03 10:22:13 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.18 2006/11/06 15:33:14 brun Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -85,7 +85,7 @@ namespace ROOT { namespace Cintex {
          }
          else  {
             fPending = false;
-            if( Cintex::Debug() > 1 ) std::cout << "Precompiled class:" << fName << std::endl;
+            if( Cintex::Debug() > 1 ) std::cout << "Cintex: Precompiled class:" << fName << std::endl;
          }
       }
    }
@@ -100,7 +100,7 @@ namespace ROOT { namespace Cintex {
    void CINTClassBuilder::Setup() {
       // Setup a Cint class.
       if ( fPending ) {
-         if ( Cintex::Debug() ) std::cout << "Building class " << fName << std::endl;
+         if ( Cintex::Debug() ) std::cout << "Cintex: Building class " << fName << std::endl;
          fPending = false;
 
          // Setup_memfunc();        // It is delayed
@@ -305,7 +305,7 @@ namespace ROOT { namespace Cintex {
                   offset = base.Offset(fgFakeAddress);
                }
                if( Cintex::Debug() > 1 )  {
-                  std::cout << fClass.Name(SCOPED) << " Base:" << btype.Name(SCOPED) << " Offset:" << offset << std::endl;
+                  std::cout << "Cintex: " << fClass.Name(SCOPED) << " Base:" << btype.Name(SCOPED) << " Offset:" << offset << std::endl;
                }
                int mod = base.IsPublic() ? G__PUBLIC : ( base.IsPrivate() ? G__PRIVATE : G__PROTECTED );
                ::G__inheritance_setup(fTaginfo->tagnum, b_tagnum, offset, mod, type );

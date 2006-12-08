@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name: v5-12-00e $:$Id: CINTVariableBuilder.cxx,v 1.5 2006/07/03 10:27:23 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTVariableBuilder.cxx,v 1.6 2006/11/06 15:33:14 brun Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -101,13 +101,13 @@ namespace ROOT { namespace Cintex {
       Type t = dm.TypeOf();
       while ( t.IsTypedef() ) t = t.ToType();
       if ( !t && dm.IsTransient() )  {
-         if( Cintex::Debug() ) cout << "Ignore transient member: " 
+         if( Cintex::Debug() ) cout << "Cintex: Ignore transient member: " 
                                     << dm.Name(SCOPED) << " [No valid reflection class]" << endl;
          return;
       }
       else if ( !t )  {
          if( Cintex::Debug() > 0 )  {
-            cout << "WARNING: Member: " 
+            cout << "Cintex: WARNING: Member: " 
                  << dm.Name(SCOPED) << " [No valid reflection class]" << endl;
          }
          //throw std::runtime_error("Member: "+fName+"::"+dm.Name()+" [No valid reflection class]");
@@ -176,8 +176,8 @@ namespace ROOT { namespace Cintex {
       else if ( dm.IsPublic() )    member_access = G__PUBLIC;
 
       if ( Cintex::Debug() > 2 )  {
-         std::cout
-            << std::setw(16) << std::left << "declareField>"
+         std::cout 
+            << std::setw(24) << std::left << "Cintex: declareField>"
             << "  [" << char(member_type) 
             << "," << std::right << std::setw(3) << dm.Offset()
             << "," << std::right << std::setw(2) << member_indir 
@@ -189,7 +189,7 @@ namespace ROOT { namespace Cintex {
             << std::left << std::setw(24) << dname
             << " \"" << (char*)(comment ? comment : "(None)") << "\""
             << std::endl
-            << std::setw(16) << std::left << "declareField>"
+            << std::setw(24) << std::left << "Cintex: declareField>"
             << "  Type:" 
             << std::left << std::setw(24) << ("[" + dm.Properties().HasProperty("iotype") ? dm.Properties().PropertyAsString("iotype") : t.Name(SCOPED) + "]")
             << " DeclBy:" << fClass.Name(SCOPED)

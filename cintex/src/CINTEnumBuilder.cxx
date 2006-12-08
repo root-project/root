@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTEnumBuilder.cxx,v 1.9 2006/07/03 09:22:46 roiser Exp $
+// @(#)root/cintex:$Name: v5-13-04b $:$Id: CINTEnumBuilder.cxx,v 1.10 2006/07/03 10:22:13 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -33,7 +33,7 @@ namespace ROOT { namespace Cintex {
          if( -1 != tagnum ) return;
 
          if ( Cintex::Debug() )  {
-            cout << "Building enum " << name << endl;
+            cout << "Cintex: Building enum " << name << endl;
          }
 
          Scope scope = e.DeclaringScope();
@@ -71,7 +71,7 @@ namespace ROOT { namespace Cintex {
             else                  s << (int)e.DataMemberAt(i).Offset();
         
             string item = s.str();
-            if ( Cintex::Debug() ) cout << "  item " << i << " " << item  <<endl;
+            if ( Cintex::Debug() ) cout << "Cintex:          item " << i << " " << item  <<endl;
             if ( isCPPMacroEnum )
                ::G__memvar_setup((void*)G__PVOID, 'p', 0, 0, -1, -1, -1, 1, item.c_str(), 1, (char*)NULL);
             else

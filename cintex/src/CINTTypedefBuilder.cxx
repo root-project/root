@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTTypedefBuilder.cxx,v 1.12 2006/07/03 09:22:46 roiser Exp $
+// @(#)root/cintex:$Name: v5-13-04b $:$Id: CINTTypedefBuilder.cxx,v 1.13 2006/07/03 10:22:13 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -51,7 +51,7 @@ namespace ROOT {
             if( -1 != G__defined_typename(nam.c_str()) ) return -1;
 	
             if ( Cintex::Debug() )  {
-               std::cout << "Building typedef " << nam << std::endl;
+               std::cout << "Cintex: Building typedef " << nam << std::endl;
             }
 
             int rtypenum;
