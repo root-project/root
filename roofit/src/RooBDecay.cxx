@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBDecay.cc,v 1.11 2005/06/20 15:51:06 wverkerke Exp $
+ *    File: $Id: RooBDecay.cc,v 1.12 2005/06/21 16:46:33 wverkerke Exp $
  * Authors:                                                                  *
  *   PL, Parker C Lund,   UC Irvine                                          *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -119,74 +119,42 @@ Int_t RooBDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVa
   return 0;
 }
 
+
 void RooBDecay::generateEvent(Int_t code)
 {
   assert(code==1);
-  //Generate delta-t dependent
+  Double_t gammamin = 1/_tau-fabs(_dgamma)/2;
   while(1) {
-    Double_t rand = RooRandom::uniform();
-    Double_t rand2 = RooRandom::uniform();
-    Double_t rand3 = RooRandom::uniform();
-    Double_t tval(0);
-    Double_t y;
-    Double_t f;
-    Double_t w;
-    Double_t gammamin = 1/_tau-TMath::Abs(_dgamma)/2;
+    Double_t t = -log(RooRandom::uniform())/gammamin;
+    if (_type == Flipped || (_type == DoubleSided && RooRandom::uniform() <0.5) ) t *= -1;
+    if ( t<_t.min() || t>_t.max() ) continue;
 
- 
-    // used rejection method with comparison function: w = (1+sqrt(f2*f2+f3*f3))exp(-abs(t)*gammamin)
-    // see Numerical Recipes in C for explanation of rejection method
-
-    switch(_type)
-      {
-      case SingleSided:
-	tval = -1/gammamin*log(rand);
-	break;
-      case Flipped:
-	tval = 1/gammamin*log(rand);
-	break;
-      case DoubleSided:
-	if(rand3 > 0.5)
-	  {
-	    tval = -1/gammamin*log(rand);
-	    break;
-	  }
-	
-	if (rand3 <= 0.5)
-	  {
-	    tval = 1/gammamin*log(rand);
-	    break;
-	  }
-      }
-    Double_t dgt = _dgamma*tval/2;
-    Double_t dmt = _dm*tval;
-    Double_t ftval = fabs(tval);
-    
-       w = (_f0+sqrt(_f2*_f2+_f3*_f3))*exp(-ftval*gammamin);
-    y = w*rand2;
-    f = exp(-ftval/_tau)*(_f0*cosh(dgt)+_f1*sinh(dgt)+_f2*cos(dmt)+_f3*sin(dmt));
-    if (tval<_t.max() && tval>_t.min())
-    {
-	if(w < f)
-	  {
-	    cout << "Error!!!! Comparison function less than f(x)" << endl;
-	if(f < 0)
-	  {
-	    cout << "Error!!!! PDF less than Zero" << endl;
-	  }
-	  }
-	if(w >= f)
-	  {
-	    if(y < f)
-	      {
-		_t = tval;
-		break;
-	      }
-	  }
+    Double_t dgt = _dgamma*t/2;
+    Double_t dmt = _dm*t;
+    Double_t ft = fabs(t);
+    Double_t f = exp(-ft/_tau)*(_f0*cosh(dgt)+_f1*sinh(dgt)+_f2*cos(dmt)+_f3*sin(dmt));
+    if(f < 0) {
+      cout << "RooBDecay::generateEvent(" << GetName() << ") ERROR: PDF value less than zero" << endl;
+      ::abort();
     }
-    
+    Double_t w = 1.001*exp(-ft*gammamin)*(TMath::Abs(_f0)+TMath::Abs(_f1)+sqrt(_f2*_f2+_f3*_f3));
+    if(w < f) {
+      cout << "RooBDecay::generateEvent(" << GetName() << ") ERROR: Envelope function less than p.d.f. " << endl;
+      cout << _f0 << endl;
+      cout << _f1 << endl;
+      cout << _f2 << endl;
+      cout << _f3 << endl;
+      ::abort();
+    }
+    if(w*RooRandom::uniform() > f) continue;
+    _t = t;
+    break;
   }
 }
+
+
+
+
 
 
 
