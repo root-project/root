@@ -485,13 +485,10 @@ void G__bstore(int operatortag,G__value expressionin,G__value *defined)
       }
       defined->ref=0;
       break;
-#ifdef G__NONANSIOPR
     case '!': 
-      if(fexpression==0) G__letdouble(defined,'i',1);
-      else               G__letdouble(defined,'i',0);
+      G__letint(defined,'i',!fexpression);
       defined->ref=0;
       break;
-#endif /* G__NONANSIOPR */
     case 'E': /* == */
       if(defined->type==G__null.type) 
         G__letdouble(defined,'i',0==fexpression); 
