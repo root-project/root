@@ -32,8 +32,15 @@
 
 using namespace ROOT::Math;
 
-template <typename T1, typename T2,
-     bool=std::numeric_limits<T1>::digits <= std::numeric_limits<T2>::digits>
+
+
+
+template <typename T1, typename T2 > 
+struct Precision { 
+  enum { result = std::numeric_limits<T1>::digits <= std::numeric_limits<T2>::digits   }; 
+}; 
+
+template <typename T1, typename T2, bool>
 struct LessPreciseType {
   typedef T1 type;
 };
@@ -50,7 +57,7 @@ closeEnough ( Scalar1 s1, Scalar2 s2, std::string const & coord, int ticks ) {
   int pr = std::cout.precision(18);
   Scalar1 eps1 = std::numeric_limits<Scalar1>::epsilon();
   Scalar2 eps2 = std::numeric_limits<Scalar2>::epsilon();
-  typedef typename LessPreciseType<Scalar1, Scalar2>::type Scalar;
+  typedef typename LessPreciseType<Scalar1, Scalar2,Precision<Scalar1,Scalar2>::result>::type Scalar;
   Scalar epsilon = (eps1 >= eps2) ? eps1 : eps2;
   Scalar ss1 (s1);
   Scalar ss2 (s2);
