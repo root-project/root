@@ -1216,47 +1216,47 @@ modes we introduce a set of examples. Default values:
 <p><li> <b>modeGroup = kModeGroupLightHeight </b>
 <p><li> <b>displayMode = kDisplayModeSurface </b>
 </ul>
-<p><center><img src="Painter2_files/image001.jpg"></center>
+<p><center><img src="gif/spectrumpainter001.jpg"></center>
 <p>Simple modes group, display mode = points, 256 x 256 channels.
-<p><center><img src="Painter2_files/image002.jpg"></center>
+<p><center><img src="gif/spectrumpainter002.jpg"></center>
 <p>Simple modes group, display mode = grid, 64 x 64 channels.
-<p><center><img src="Painter2_files/image003.jpg"></center>
+<p><center><img src="gif/spectrumpainter003.jpg"></center>
 <p>Simple modes group, display mode = contours, 64 x 64 channels.
-<p><center><img src="Painter2_files/image004.jpg"></center>
+<p><center><img src="gif/spectrumpainter004.jpg"></center>
 <p>Simple modes group, display mode = bars, 64 x 64 channels.
-<p><center><img src="Painter2_files/image005.jpg"></center>
+<p><center><img src="gif/spectrumpainter005.jpg"></center>
 <p>Simple modes group, display mode = linesX, 64 x 64 channels.
-<p><center><img src="Painter2_files/image006.jpg"></center>
+<p><center><img src="gif/spectrumpainter006.jpg"></center>
 <p>Simple modes group, display mode = linesY, 64 x 64 channels.
-<p><center><img src="Painter2_files/image007.jpg"></center>
+<p><center><img src="gif/spectrumpainter007.jpg"></center>
 <p>Simple modes group, display mode = barsX, 64 x 64 channels.
-<p><center><img src="Painter2_files/image008.jpg"></center>
+<p><center><img src="gif/spectrumpainter008.jpg"></center>
 <p>Simple modes group, display mode = barsY, 64 x 64 channels.
-<p><center><img src="Painter2_files/image009.jpg"></center>
+<p><center><img src="gif/spectrumpainter009.jpg"></center>
 <p>Simple modes group, display mode = needles, 64 x 64 channels.
-<p><center><img src="Painter2_files/image010.jpg"></center>
+<p><center><img src="gif/spectrumpainter010.jpg"></center>
 <p>Simple modes group, display mode = triangles, 64 x 64 channels.
-<p><center><img src="Painter2_files/image011.jpg"></center>
+<p><center><img src="gif/spectrumpainter011.jpg"></center>
 <p>Light modes group, display mode = points, 256 x 256 channels.
-<p><center><img src="Painter2_files/image012.jpg"></center>
+<p><center><img src="gif/spectrumpainter012.jpg"></center>
 <p>Light modes group, display mode = grid, 256 x 256 channels.
-<p><center><img src="Painter2_files/image013.jpg"></center>
+<p><center><img src="gif/spectrumpainter013.jpg"></center>
 <p>Light modes group, display mode = surface, 64 x 64 channels.
-<p><center><img src="Painter2_files/image014.jpg"></center>
+<p><center><img src="gif/spectrumpainter014.jpg"></center>
 <p>Light modes group, display mode = triangles, 64 x 64 channels.
-<p><center><img src="Painter2_files/image015.jpg"></center>
+<p><center><img src="gif/spectrumpainter015.jpg"></center>
 <p>Height modes group, display mode = points, 256 x 256 channels.
-<p><center><img src="Painter2_files/image016.jpg"></center>
+<p><center><img src="gif/spectrumpainter016.jpg"></center>
 <p>Height modes group, display mode = grid, 256 x 256 channels.
-<p><center><img src="Painter2_files/image017.jpg"></center>
+<p><center><img src="gif/spectrumpainter017.jpg"></center>
 <p>Height modes group, display mode = contours, 64 x 64 channels.
-<p><center><img src="Painter2_files/image018.jpg"></center>
+<p><center><img src="gif/spectrumpainter018.jpg"></center>
 <p>Height modes group, display mode = bars, 64 x 64 channels.
-<p><center><img src="Painter2_files/image019.jpg"></center>
+<p><center><img src="gif/spectrumpainter019.jpg"></center>
 <p>Height modes group, display mode = surface, 64 x 64 channels.
-<p><center><img src="Painter2_files/image020.jpg"></center>
+<p><center><img src="gif/spectrumpainter020.jpg"></center>
 <p>Height modes group, display mode = triangles, 64 x 64 channels.
-<p><center><img src="Painter2_files/image021.jpg"></center>
+<p><center><img src="gif/spectrumpainter021.jpg"></center>
 <p>
 Light - height modes group, display mode = surface, 64 x 64 channels. The weight
 between both shading algorithms is set to 0.5. One can observe the influence of
@@ -1278,7 +1278,7 @@ Possible pen styles are:
 <p><li><b> style = kPenStyleSolid</b>
 <p><li><b> width = 1</b>
 </ul>
-<p><center><img src="Painter2_files/image022.jpg"></center>
+<p><center><img src="gif/spectrumpainter022.jpg"></center>
 <p>Simple modes group, display mode = linesX, 64 x 64 channels. Pen width = 3.
 <h2><i>Function:</i></h2>
 <h2>TSpectrum2Painter::SetNodes(Int_t nodesx,Int_t nodesy)</h2>
@@ -1293,7 +1293,7 @@ example of the above presented spectrum with number of nodes set to 64x64.
 <p><li><b> nodesx = Xmax-Xmin+1</b>
 <p><li><b> nodesy = Ymax-Ymin+1</b>
 </ul>
-<p><center><img src="Painter2_files/image023.jpg"></center>
+<p><center><img src="gif/spectrumpainter023.jpg"></center>
 <p>Simple modes group, display mode = grid, 256 x 256 channels.
 Number of nodes is 64x64.
 <h2><i>Function:</i></h2>
@@ -1310,10 +1310,10 @@ Allowed values are 0, 90, 180 and 270 degrees respectively.
 <p><li><b> beta = 60</b>
 <p><li><b> view = 0</b>
 </ul>
-<p><center><img src="Painter2_files/image024.jpg"></center>
+<p><center><img src="gif/spectrumpainter024.jpg"></center>
 <p>Light modes group, display mode = surface, 256 x 256 channels. Angles are
 set as follows: alpha=40, beta=30, view=0.
-<p><center><img src="Painter2_files/image025.jpg"></center>
+<p><center><img src="gif/spectrumpainter025.jpg"></center>
 <p>Light modes group, display mode = surface, 256 x 256 channels. Angles are
 set as follows: alpha=30, beta=30, view=90.
 <h2><i>Function:</i></h2>
@@ -1328,7 +1328,7 @@ set as follows: alpha=30, beta=30, view=90.
 <ul>
 <p><li><b> scale = kZScaleLinear</b>
 </ul>
-<p><center><img src="Painter2_files/image026.jpg"></center>
+<p><center><img src="gif/spectrumpainter026.jpg"></center>
 <p>Height modes group, display mode = surface, 64 x 64 channels, log scale.
 <h2><i>Function:</i></h2>
 <h2>TSpectrum2Painter::SetColorIncrements(Float_t r,Float_t g,Float_t b);</h2>
@@ -1340,10 +1340,10 @@ increments of the r, g, b components to the previous level. Using this function
 one can change the color increments between two neighboring color levels. The
 function does not apply for <b>kModeGroupSimple</b> display modes group.
 Default values: <b>r=1, g=1, b=1;</b>
-<p><center><img src="Painter2_files/image027.jpg"></center>
+<p><center><img src="gif/spectrumpainter027.jpg"></center>
 <p>Light modes group, display mode = surface, 64 x 64 channels, color increments
 r=1, g=2, b=3.
-<p><center><img src="Painter2_files/image028.jpg"></center>
+<p><center><img src="gif/spectrumpainter028.jpg"></center>
 <p>Light modes group, display mode = surface, 64 x 64 channels, color
 increments r=4, g=2, b=1.
 <h2><i>Function:</i></h2>
@@ -1371,19 +1371,19 @@ Default value is:
 <ul>
 <p><li><b> colorAlgorithm = kColorAlgRgbSmooth</b>
 </ul>
-<p><center><img src="Painter2_files/image029.jpg"></center>
+<p><center><img src="gif/spectrumpainter029.jpg"></center>
 <p>Light modes group, display mode = surface, 64 x 64 channels, color algorithm
 is cmy smooth.
-<p><center><img src="Painter2_files/image030.jpg"></center>
+<p><center><img src="gif/spectrumpainter030.jpg"></center>
 <p>Light modes group, display mode = surface, 64 x 64 channels, color algorithm
 is hvs smooth.
-<p><center><img src="Painter2_files/image031.jpg"></center>
+<p><center><img src="gif/spectrumpainter031.jpg"></center>
 <p>Light modes group, display mode = surface, 64 x 64 channels, color algorithm
 is yiq smooth.
-<p><center><img src="Painter2_files/image032.jpg"></center>
+<p><center><img src="gif/spectrumpainter032.jpg"></center>
 <p>Light modes group, display mode = surface, 64 x 64 channels, color algorithm
 is rgb modulo.
-<p><center><img src="Painter2_files/image033.jpg"></center>
+<p><center><img src="gif/spectrumpainter033.jpg"></center>
 <p>Height modes group, display mode = surface, 256 x 256 channels, color
 algorithm is rgb modulo, increments r=5, g=5, b=5, angles alpha=0, beta=90,
 view=0.
@@ -1395,7 +1395,7 @@ position in 3-d space. Using this function one can change the position of the
 source and thus to achieve various graphical effects. The function does not
 apply for <b>kModeGroupSimple</b> and<b> kModeGroupHeight </b>display modes
 groups. Default values are: <b>x=1000, y=1000, z=1000.</b>
-<p><center><img src="Painter2_files/image034.jpg"></center>
+<p><center><img src="gif/spectrumpainter034.jpg"></center>
 <p>Light modes group, display mode = surface, 64 x 64 channels. Position of the
 light source was set to x=0, y=1000, z=1000.
 <h2><i>Function:</i></h2>
@@ -1419,9 +1419,9 @@ shadow can be painted as well. The function does not apply for
 <p><li><b> shading = kShaded</b>
 <p><li><b> shadow = kShadowsNotPainted</b>
 </ul>
-<p><center><img src="Painter2_files/image035.jpg"></center>
+<p><center><img src="gif/spectrumpainter035.jpg"></center>
 <p>Light modes group, display mode = surface, 64 x 64 channels, not shaded.
-<p><center><img src="Painter2_files/image036.jpg"></center>
+<p><center><img src="gif/spectrumpainter036.jpg"></center>
 <p>Light modes group, display mode = surface, 64 x 64 channels, shaded, with
 shadow.
 <h2><i>Function:</i></h2>
@@ -1438,7 +1438,7 @@ for other display modes groups and display modes. Possible values are:
 <ul>
 <p><li><b> bezier = kNoBezierInterpol.</b>
 </ul>
-<p><center><img src="Painter2_files/image005.jpg"></center>
+<p><center><img src="gif/spectrumpainter005.jpg"></center>
 <p>Simple modes group, display mode = linesX, 64 x 64 channels with Bezier
 smoothing.
 <h2><i>Function:</i></h2>
@@ -1446,7 +1446,7 @@ smoothing.
 <p>This function applies only for <b>kDisplayModeContours</b> display mode.
 One can change the width between horizontal slices and thus their density.
 Default value: <b>width=50.</b>
-<p><center><img src="Painter2_files/image037.jpg"></center>
+<p><center><img src="gif/spectrumpainter037.jpg"></center>
 <p>Simple modes group, display mode = contours, 64 x 64 channels. Width between
 slices was set to 30.
 <h2><i>Function:</i></h2>
@@ -1454,7 +1454,7 @@ slices was set to 30.
 <p>For <b>kModeGroupLightHeight</b> display modes group one can change the
 weight between both shading algorithm. The function does not apply for other
 display modes groups. Default value is: <b>weight=0.5.</b>
-<p><center><img src="Painter2_files/image038.jpg"></center>
+<p><center><img src="gif/spectrumpainter038.jpg"></center>
 <p>Light - height modes group, display mode = surface, 64 x 64 channels.
 The weight between both shading algorithms is set to 0.7.
 <h2><i>Function:</i></h2>
@@ -1476,7 +1476,7 @@ The possible styles can be chosen from the set:
 <p><li><b> kChannelMarksStyleDiamond</b>
 <p><li><b> kChannelMarksStyleTriangle.</b>
 </ul>
-<p><center><img src="Painter2_files/image039.jpg"></center>
+<p><center><img src="gif/spectrumpainter039.jpg"></center>
 <p><b>Light modes group, display mode = surface, 64 x 64 channels,
 with marks (red circles).</b></p>
 <h2><i>Function:</i></h2>
@@ -1487,9 +1487,9 @@ display grid using the color parameter. The parameter enable can be set to:
 <p><li><b> kChannelGridNotDrawn</b>
 <p><li><b> kChannelGridDrawn.</b>
 </ul>
-<p><center><img src="Painter2_files/image040.jpg"></center>
+<p><center><img src="gif/spectrumpainter040.jpg"></center>
 <p>Height modes group, display mode = surface, 64 x 64 channels, with blue grid.
-<p><center><img src="Painter2_files/image041.jpg"></center>
+<p><center><img src="gif/spectrumpainter041.jpg"></center>
 <p>Height modes group, display mode = surface, 64 x 64 channels, with marks
 (red circles) and blue grid.
 <h2><i>References:</i></h2>
