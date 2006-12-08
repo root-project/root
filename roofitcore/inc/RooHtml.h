@@ -27,12 +27,12 @@ public:
   inline RooHtml(const char *version) : _version(version), _hfColor("#FFCC00") { };
   inline virtual ~RooHtml() { };
 
-  virtual void WriteHtmlHeader(ofstream &out, const char *title, const char* dir="",TClass* cls=0);
+   virtual void WriteHtmlHeader(ofstream &out, const char *title, const char* dir="", TClass* cls=0);
   virtual void  WriteHtmlFooter(ofstream &out, const char *dir="", const char *lastUpdate="",
 				const char *author="", const char *copyright="");
 
   inline const char *getVersion() const { return _version.Data(); }
-  void MakeIndexNew(const char *filter="*");
+  void GetModuleName(TString& module, const char* filename) const;
   
   void addTopic(const char* tag, const char* description) ;
   void MakeIndexOfTopics() ;
@@ -46,7 +46,7 @@ protected:
   TList _topicTagList ;
   TList _topicDescList ;
 
-  char* getClassGroup(const char* fileName) ;
+  char* getClassGroup(const char* fileName) const;
 
 private:
   RooHtml(const RooHtml&) ;

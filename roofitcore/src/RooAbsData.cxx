@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsData.cc,v 1.27 2005/06/16 09:31:22 wverkerke Exp $
+ *    File: $Id: RooAbsData.cc,v 1.28 2005/06/20 15:44:44 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -342,7 +342,7 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   //
   // Binning(const char* name)                    -- Apply binning with given name to x axis of histogram
   // Binning(RooAbsBinning& binning)              -- Apply specified binning to x axis of histogram
-  // Binning(double lo, double hi, int nbins)     -- Apply specified binning to x axis of histogram
+  // Binning(int nbins, double lo, double hi)     -- Apply specified binning to x axis of histogram
   //
   // YVar(const RooAbsRealLValue& var,...)    -- Observable to be mapped on y axis of ROOT histogram
   // ZVar(const RooAbsRealLValue& var,...)    -- Observable to be mapped on z axis of ROOT histogram

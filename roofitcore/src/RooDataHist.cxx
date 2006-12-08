@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.cc,v 1.49 2005/06/20 15:44:50 wverkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.50 2005/12/05 14:58:16 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -265,7 +265,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
       Double_t zloAdj = zbins.binLow(zbins.binNumber(zlo+1e-6)) ;
       Double_t zhiAdj = zbins.binHigh(zbins.binNumber(zhi-1e-6)) ;
       zbins.setRange(zloAdj,zhiAdj) ;
-      ((RooRealVar*)vars.at(0))->setRange(zloAdj,zhiAdj) ;
+      ((RooRealVar*)vars.at(2))->setRange(zloAdj,zhiAdj) ;
       if (fabs(zloAdj-zlo)>1e-6||fabs(zhiAdj-zhi)) {
 	cout << "RooDataHist::ctor(" << GetName() << "): fit range of variable " << zvar->GetName() << " expanded to nearest bin boundaries: [" 
 	     << zlo << "," << zhi << "] --> [" << zloAdj << "," << zhiAdj << "]" << endl ;

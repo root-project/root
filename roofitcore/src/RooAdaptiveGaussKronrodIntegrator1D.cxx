@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAdaptiveGaussKronrodIntegrator1D.cc,v 1.6 2005/06/20 15:44:47 wverkerke Exp $
+ *    File: $Id: RooAdaptiveGaussKronrodIntegrator1D.cc,v 1.7 2006/07/03 15:37:10 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -41,7 +41,7 @@
 #include "RooFitCore/RooFit.hh"
 
 #include <assert.h>
-#include <assert.h>
+#include <stdlib.h>
 #include "Riostream.h"
 #include "RooFitCore/RooAdaptiveGaussKronrodIntegrator1D.hh"
 #include "RooFitCore/RooArgSet.hh"
@@ -379,7 +379,6 @@ gsl_coerce_double (const double x)
 
 // INCLUDED BELOW #include <gsl/gsl_integration.h>
 
-#include <stdlib.h>
 
 /* Workspace for adaptive integrators */
 // WVE MOVED TO HEAD OF FILE
@@ -449,8 +448,6 @@ int gsl_integration_qag (const gsl_function * f,
                          gsl_integration_workspace * workspace,
                          double *result, double *abserr);
 
-#include <config.h>
-#include <stdlib.h>
 
 // INCLUDED BELOW #include "initialise.c"
 static inline

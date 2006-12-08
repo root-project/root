@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHist.cc,v 1.33 2005/07/12 15:43:06 wverkerke Exp $
+ *    File: $Id: RooHist.cc,v 1.34 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -444,9 +444,16 @@ RooHist* RooHist::makeResidHist(const RooCurve& curve,bool normalize) const {
     Double_t dyh = GetErrorYhigh(i) ;
     if (normalize) {
         Double_t norm = (y>0?dyh:dyl);
-        y   /= norm;
-        dyh /= norm;
-        dyl /= norm;
+	if (norm==0.) {
+	  cout << "RooHist::makeResisHist(" << GetName() << ") WARNING: point " << i << " has zero error, setting residual to zero" << endl ;
+	  y=0 ;
+	  dyh=0 ;
+	  dyl=0 ;
+	} else {
+	  y   /= norm;
+	  dyh /= norm;
+	  dyl /= norm;
+	}
     }
     hist->addBinWithError(x,y,dyl,dyh);
   }

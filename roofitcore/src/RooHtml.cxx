@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHtml.cc,v 1.20 2006/08/31 14:22:47 wverkerke Exp $
+ *    File: $Id: RooHtml.cc,v 1.19 2005/07/12 15:43:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,8 +17,6 @@
 // -- CLASS DESCRIPTION [MISC] --
 
 #include "RooFitCore/RooFit.hh"
-
-#include "RooFitCore/RooHtml.hh"
 #include "RooFitCore/RooHtml.hh"
 
 #include "TDatime.h"
@@ -27,7 +25,6 @@
 #include "TClass.h"
 #include "TSystem.h"
 #include "TObjString.h"
-#include "RVersion.h"
 
 #include <ctype.h>
 #include "Riostream.h"
@@ -49,7 +46,7 @@ const char   *formatStr      = "%12s %5s %s";
 ClassImp(RooHtml)
   ;
 
-void RooHtml::WriteHtmlHeader(ofstream &out, const char *title, const char* dir/*=""*/, TClass* /*cls*/)
+void RooHtml::WriteHtmlHeader(ofstream &out, const char *title, const char* dir, TClass* /*cls*/)
 {
   // Write a custom html header for RooFit class documentation to the specified output stream.  
 
@@ -84,7 +81,7 @@ void RooHtml::WriteHtmlHeader(ofstream &out, const char *title, const char* dir/
     << "  </font></i></b></td>" << endl
     << "  <td><div align=right><b><i><font color=\"#000000\">" << endl
     //-------------------------------------------------
-    << "    <a href=\"IndexByTopic.html\"" << endl
+    << "    <a href=\"" << dir << "IndexByTopic.html\"" << endl
     << "      title=\"Visit List of Classes\">" << endl;
   out << getVersion() << " Version</a>" << endl;
   //-------------------------------------------------
@@ -120,94 +117,14 @@ void RooHtml::WriteHtmlFooter(ofstream &out, const char * /*dir*/, const char *l
 }
 
 
-
-void RooHtml::MakeIndexNew(const char *filter)
+void RooHtml::GetModuleName(TString& module, const char* filename) const
 {
-  // WVE modified clone of THtml::MakeIndex that subclasses index files
-  // based on tag in 'CLASS DESCRIPTION' instead of source file subdirectory
-
-   // It makes an index files
-   // by default makes an index of all classes (if filter="*")
-   // To generate an index for all classes starting with "XX", do
-   //    html.MakeIndex("XX*");
-
-   CreateListOfTypes();
-
-   // get total number of classes
-   Int_t numberOfClasses = gClassTable->Classes();
-
-
-   // allocate memory
-   const char **classNames = new const char *[numberOfClasses];
-   char       **fileNames  = new       char *[numberOfClasses];
-
-   // start from begining
-   gClassTable->Init();
-
-   // get class names
-   Int_t len = 0;
-   Int_t maxLen = 0;
-   Int_t numberOfImpFiles = 0;
-
-   TString reg = filter;
-   TRegexp re(reg, kTRUE);
-   Int_t nOK = 0;
-   
-   for( Int_t i = 0; i < numberOfClasses; i++ ) {
-
-      // get class name
-      const char *cname = gClassTable->Next();
-      TString s = cname;
-      if (s.Index(re) == kNPOS) continue;
-      classNames[nOK] = cname;
-      len    = strlen( classNames[nOK] );
-      maxLen = maxLen > len ? maxLen : len;
-
-      // get class & filename
-      TClass *classPtr = GetClass( (const char * ) classNames[nOK] );
-      const char *impname = classPtr->GetImplFileName();
-
-      if( impname ) {
-         fileNames[numberOfImpFiles] = StrDup( impname, 64 );
-
-         char *underline = strchr( fileNames[numberOfImpFiles], '_');
-         if( underline )
-            strcpy( underline + 1, classNames[nOK] );
-         else {
-            // WVE modified to use getClassGroup instead of subdir to determine index file
-	   char* srcdir = getClassGroup(fileNames[numberOfImpFiles]) ;
-	   strcpy( fileNames[nOK], srcdir);
-	   strcat( fileNames[nOK], "_" );
-	   strcat( fileNames[nOK], classNames[nOK] );
-         }
-         numberOfImpFiles++;
-      }
-      else cout << "WARNING class:" << classNames[i] << " has no implementation file name !" << endl;
-
-      nOK++;
-   }
-   maxLen += kSpaceNum;
-
-   // quick sort
-   SortNames( classNames, nOK );
-   SortNames( (const char ** ) fileNames,  numberOfImpFiles );
-
-   // create an index
-   CreateIndex( classNames, nOK);
-
-#if ROOT_VERSION_CODE >= ROOT_VERSION(5,12,00)
-   CreateIndexByTopic( fileNames, nOK         );
-#else
-   CreateIndexByTopic( fileNames, nOK, maxLen );
-#endif
-
-   // free allocated memory
-   delete [] classNames;
-   delete [] fileNames;
+  // Return module name based on tag in 'CLASS DESCRIPTION' 
+  // instead of source file subdirectory
+   module = getClassGroup(filename);
 }
 
-
-char* RooHtml::getClassGroup(const char* fileName) 
+char* RooHtml::getClassGroup(const char* fileName) const
 {
   // Scan file for 'CLASS DESCRIPTION [<tag>]' sequence
   // If found, return <tag>, otherwise return "USER"

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGaussKronrodIntegrator1D.cc,v 1.6 2005/06/20 15:44:52 wverkerke Exp $
+ *    File: $Id: RooGaussKronrodIntegrator1D.cc,v 1.7 2006/07/03 15:37:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -39,7 +39,9 @@
 #include "RooFitCore/RooFit.hh"
 
 #include <assert.h>
-#include <assert.h>
+#include <math.h>
+#include <float.h>
+#include <stdlib.h>
 #include "Riostream.h"
 #include "TMath.h"
 #include "RooFitCore/RooGaussKronrodIntegrator1D.hh"
@@ -232,10 +234,6 @@ Double_t RooGaussKronrodIntegrator1D::integral(const Double_t *yvec)
 
 
 // INCLUDED BELOW #include "qng.c"
-#include <config.h>
-#include <math.h>
-#include <float.h>
-#include <stdlib.h>
 
 int gsl_integration_qng (const gsl_function * f,
                          double a, double b,
