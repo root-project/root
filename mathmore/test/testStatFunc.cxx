@@ -11,10 +11,11 @@
 
 
 #include <iostream>
+#include <limits>
 
 using namespace ROOT::Math; 
 
-int compare( const std::string & name, double v1, double v2, double scale = 2.0) {
+int compare( std::string name, double v1, double v2, double scale = 2.0) {
   //  ntest = ntest + 1; 
 
    //std::cout << std::setw(50) << std::left << name << ":\t";   
@@ -44,7 +45,7 @@ int compare( const std::string & name, double v1, double v2, double scale = 2.0)
       std::cout <<".";
    else { 
       int pr = std::cout.precision (18);
-      std::cout << "\nDiscrepancy in " << name << "() :\n  " << v1 << " != " << v2 << " discr = " << int(delta/d/eps) 
+      std::cout << "\nDiscrepancy in " << name.c_str() << "() :\n  " << v1 << " != " << v2 << " discr = " << int(delta/d/eps) 
                 << "   (Allowed discrepancy is " << eps  << ")\n\n";
       std::cout.precision (pr);
       //nfail = nfail + 1;

@@ -35,6 +35,7 @@ if the value is right against values copied from the GSL tests.
 #include <iostream> 
 #include <iomanip> 
 #include <string>
+#include <limits>
 
 #include "Math/SpecFuncMathMore.h"
 #ifndef NO_MATHCORE
