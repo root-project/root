@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.243 2006/09/08 06:56:24 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.244 2006/11/08 13:16:35 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1014,7 +1014,7 @@ void TStreamerInfo::BuildOld()
             } else {
                element->SetNewType(-2);
             }
-         } else if (oldClass->GetCollectionProxy() && newClass->GetCollectionProxy()) {
+         } else if (oldClass  && oldClass->GetCollectionProxy() && newClass->GetCollectionProxy()) {
             if (CollectionMatch(oldClass, newClass)) {
                element->Update(oldClass, newClass.GetClass());
                // Is this needed ? : element->SetSTLtype(newelement->GetSTLtype());
