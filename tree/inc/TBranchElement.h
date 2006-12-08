@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.51 2006/07/14 20:51:08 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.52 2006/07/26 13:36:43 rdm Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -76,9 +76,10 @@ private:
    TBranchElement& operator=(const TBranchElement&); // not implemented
 
 // Implementation use only functions.
-private:
+protected:
    void                     BuildTitle(const char* name);
-   void                     InitializeOffsets();
+   virtual void             InitializeOffsets();
+   void                     InitInfo();
    Bool_t                   IsMissingCollection() const;
    TClass                  *GetCurrentClass(); // Class referenced by transient description
    TClass                  *GetParentClass(); // Class referenced by fParentName

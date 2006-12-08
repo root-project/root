@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.209 2006/09/13 07:14:20 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.210 2006/10/09 17:13:35 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -696,6 +696,20 @@ TBranchElement::~TBranchElement()
    fCollProxy = 0;
 }
 
+//
+// This function is located here to allow inlining by the optimizer.
+//
+//______________________________________________________________________________
+TStreamerInfo* TBranchElement::GetInfo() const
+{
+   // -- Get streamer info for the branch class.
+
+   if (!fInfo || (fInfo && (!fInit || !fInfo->GetOffsets()))) {
+      const_cast<TBranchElement*>(this)->InitInfo();
+   }
+   return fInfo;
+}
+
 //______________________________________________________________________________
 void TBranchElement::Browse(TBrowser* b)
 {
@@ -1199,20 +1213,20 @@ char* TBranchElement::GetAddress() const
 }
 
 //______________________________________________________________________________
-TStreamerInfo* TBranchElement::GetInfo() const
+void TBranchElement::InitInfo()
 {
-   // -- Get streamer info for the branch class, try to compensate for class code unload/reload and schema evolution.
+   // -- Init the streamer info for the branch class, try to compensate for class code unload/reload and schema evolution.
 
    if (!fInfo) {
       // We did not already have streamer info, so now we must find it.
       TClass* cl = fBranchClass.GetClass();
       if (cl) {
          if (cl == TClonesArray::Class()) {
-            const_cast<TBranchElement*>(this)->fClassVersion = TClonesArray::Class()->GetClassVersion();
+            fClassVersion = TClonesArray::Class()->GetClassVersion();
          }
          Bool_t optim = TStreamerInfo::CanOptimize();
          TStreamerInfo::Optimize(kFALSE);
-         const_cast<TBranchElement*>(this)->fInfo = cl->GetStreamerInfo(fClassVersion);
+         fInfo = cl->GetStreamerInfo(fClassVersion);
          TStreamerInfo::Optimize(optim);
          // FIXME: Check that the found streamer info checksum matches our branch class checksum here.
          // Check to see if the class code was unloaded/reloaded
@@ -1228,10 +1242,10 @@ TStreamerInfo* TBranchElement::GetInfo() const
                   continue;
                }
                if (info->GetCheckSum() == fCheckSum) {
-                  const_cast<TBranchElement*>(this)->fClassVersion = i;
+                  fClassVersion = i;
                   Bool_t optim = TStreamerInfo::CanOptimize();
                   TStreamerInfo::Optimize(kFALSE);
-                  const_cast<TBranchElement*>(this)->fInfo = cl->GetStreamerInfo(fClassVersion);
+                  fInfo = cl->GetStreamerInfo(fClassVersion);
                   TStreamerInfo::Optimize(optim);
                   break;
                }
@@ -1252,7 +1266,7 @@ TStreamerInfo* TBranchElement::GetInfo() const
          // Optimizing does not work with splitting.
          Bool_t optim = TStreamerInfo::CanOptimize();
          TStreamerInfo::Optimize(kFALSE);
-         const_cast<TBranchElement*>(this)->fInfo->Compile();
+         fInfo->Compile();
          TStreamerInfo::Optimize(optim);
       }
       if (!fInit) {
@@ -1278,17 +1292,15 @@ TStreamerInfo* TBranchElement::GetInfo() const
                ULong_t* elems = fInfo->GetElems();
                for (size_t i = 0; i < ndata; ++i) {
                   if (((TStreamerElement*) elems[i]) == elt) {
-                     const_cast<TBranchElement*>(this)->fID = i;
+                     fID = i;
                      break;
                   }
                }
             }
          }
-         const_cast<TBranchElement*>(this)->fInit = kTRUE;
+         fInit = kTRUE;
       }
    }
-
-   return fInfo;
 }
 
 //______________________________________________________________________________
