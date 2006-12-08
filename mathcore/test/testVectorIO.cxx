@@ -70,14 +70,14 @@ inline double getMag2(const Vector & v) {
   return v.mag2();
 }
 
-inline double getMag2(const VecTrackD & v) { 
-   // print the read points
-   std::cout << "VecTRackD " << std::endl;
-   for (VecTrackD::It itr = v.begin() ; itr != v.end(); ++itr) 
-      std::cout << (*itr).Pos() << std::endl; 
+// inline double getMag2(const VecTrackD & v) { 
+//    // print the read points
+//    std::cout << "VecTRackD " << std::endl;
+//    for (VecTrackD::It itr = v.begin() ; itr != v.end(); ++itr) 
+//       std::cout << (*itr).Pos() << std::endl; 
 
-  return v.mag2();
-}
+//   return v.mag2();
+// }
 
 
 inline double getMag2(const TVector3 & v) { 
@@ -444,7 +444,7 @@ int testVectorIO(bool readOnly = false) {
   // test vector of tracks
   fname = "vectrack";
 
-  nEvents = 2; 
+  nEvents = 10000; 
 
   if (readOnly) {
      fname += "_prev";
