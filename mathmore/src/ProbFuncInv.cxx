@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ProbFuncInv.cxx,v 1.2 2005/12/08 21:57:31 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: ProbFuncInv.cxx,v 1.3 2006/12/06 17:53:47 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 #include "gsl/gsl_cdf.h"
@@ -71,6 +71,18 @@ namespace Math {
 
   }
 
+
+  double fdistribution_quantile_c(double z, double n, double m) {
+
+    return gsl_cdf_fdist_Qinv(z, n, m);
+
+  }
+
+  double fdistribution_quantile(double z, double n, double m) {
+
+    return gsl_cdf_fdist_Pinv(z, n, m);
+
+  }
 
 
   double gamma_quantile_c(double z, double alpha, double theta) {
@@ -165,6 +177,19 @@ namespace Math {
 
   }
 
+
+  double beta_quantile_c(double x, double a, double b) {
+
+    return gsl_cdf_beta_Qinv(x, a, b);
+
+  }
+
+
+  double beta_quantile(double x, double a, double b ) {
+
+    return gsl_cdf_beta_Pinv(x, a, b);
+
+  }
 
 
 

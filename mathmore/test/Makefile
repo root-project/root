@@ -13,6 +13,8 @@ include $(ROOTSYS)/test/Makefile.arch
 #------------------------------------------------------------------------------
 CXXFLAGS += -g
 
+#CXXFLAGS += $(GSLFLAGS)
+
 
 ifeq ($(PLATFORM),win32)
 EXTRALIBS        = "$(ROOTSYS)/lib/libMathMore.lib" "$(ROOTSYS)/lib/libMathCore.lib" $(GSLLIBS)
@@ -26,6 +28,7 @@ EXTRALIBS+=  $(CLHEPBASE)/lib/libCLHEP.a
 endif
 
 CXXFLAGS += -DHAVE_ROOTLIBS
+
 
 CHEBYSHEVOBJ      = testChebyshev.$(ObjSuf)
 CHEBYSHEVSRC      = testChebyshev.$(SrcSuf)
@@ -59,16 +62,28 @@ RANDOMDISTOBJ      = testRandomDist.$(ObjSuf)
 RANDOMDISTSRC      = testRandomDist.$(SrcSuf)
 RANDOMDIST         = testRandomDist$(ExeSuf)
 
+SPECFUNCOBJ      = testSpecFunc.$(ObjSuf)
+SPECFUNCSRC      = testSpecFunc.$(SrcSuf)
+SPECFUNC         = testSpecFunc$(ExeSuf)
+
+STATFUNCOBJ      = testStatFunc.$(ObjSuf)
+STATFUNCSRC      = testStatFunc.$(SrcSuf)
+STATFUNC         = testStatFunc$(ExeSuf)
+
+
+
 TESTFUNCTOROBJ      = testFunctor.$(ObjSuf)
 TESTFUNCTORSRC      = testFunctor.$(SrcSuf)
 TESTFUNCTOR         = testFunctor$(ExeSuf)
 
 
 OBJS          = $(CHEBYSHEVOBJ) $(DERIVATIONOBJ) $(INTEGRATIONOBJ) $(ROOTFINDEROBJ) \
-                  $(MINIMIZATION1DOBJ) $(INTERPOLATIONOBJ)  $(RANDOMOBJ) $(RANDOMDISTOBJ) $(TESTFUNCTOROBJ)
+                  $(MINIMIZATION1DOBJ) $(INTERPOLATIONOBJ)  $(RANDOMOBJ) $(RANDOMDISTOBJ) \
+	          $(SPECFUNCOBJ) $(STATFUNCOBJ) $(TESTFUNCTOROBJ)
 
 PROGRAMS      = $(CHEBYSHEV)  $(DERIVATION) $(INTEGRATION) $(ROOTFINDER) \
-                  $(MINIMIZATION1D) $(INTERPOLATION) $(RANDOM) $(RANDOMDIST) $(TESTFUNCTOR)
+                  $(MINIMIZATION1D) $(INTERPOLATION) $(RANDOM) $(RANDOMDIST) \
+	          $(SPECFUNC) $(STATFUNC) $(TESTFUNCTOR)
 		  
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
 
@@ -107,6 +122,16 @@ $(RANDOM):  	$(RANDOMOBJ)
 $(RANDOMDIST):  $(RANDOMDISTOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
+
+$(SPECFUNC):  	$(SPECFUNCOBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+
+$(STATFUNC):  	$(STATFUNCOBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
 
 $(TESTFUNCTOR): $(TESTFUNCTOROBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@

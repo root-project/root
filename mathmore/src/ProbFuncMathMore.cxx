@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ProbFuncMathMore.cxx,v 1.3 2005/09/21 09:23:42 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: ProbFuncMathMore.cxx,v 1.4 2006/12/06 17:53:47 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -11,6 +11,7 @@ namespace ROOT {
 namespace Math {
 
   
+
 
 
 
@@ -28,9 +29,6 @@ namespace Math {
     return gsl_cdf_chisq_P(x-x0, r);
 
   }
-
-
-
 
 
   
@@ -83,8 +81,42 @@ namespace Math {
   }
 
 
+  double beta_cdf_c(double x, double a, double b) {
+
+    return gsl_cdf_beta_Q(x, a, b);
+
+  }
 
 
+  double beta_cdf(double x, double a, double b ) {
+
+    return gsl_cdf_beta_P(x, a, b);
+
+  }
+
+   double poisson_cdf_c(unsigned int n, double mu) {
+
+          return gsl_cdf_poisson_Q(n, mu);
+
+   }
+
+   double poisson_cdf(unsigned int n, double mu) {
+
+          return gsl_cdf_poisson_P(n, mu);
+
+   }
+
+   double binomial_cdf_c(unsigned int k, double p, unsigned int n) {
+
+          return gsl_cdf_binomial_Q(k, p, n);
+
+   }
+
+   double binomial_cdf(unsigned int k, double p, unsigned int n) {
+
+          return gsl_cdf_binomial_P(k, p, n);
+
+   }
 
 } // namespace Math
 } // namespace ROOT

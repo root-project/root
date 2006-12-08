@@ -1,5 +1,6 @@
-// @(#)root/mathmore:$Name:  $:$Id: DistFuncMathMore.h,v 1.1 2006/12/07 11:07:55 moneta Exp $
-// Authors: L. Moneta, A. Zsenei   08/2005
+// @(#)root/mathmore:$Name:  $:$Id: PdfFuncMathMore.cxx,v 1.1 2006/12/07 11:07:03 moneta Exp $
+// Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
+
 
  /**********************************************************************
   *                                                                    *
@@ -22,23 +23,39 @@
   *                                                                    *
   **********************************************************************/
 
-#ifndef ROOT_Math_DistFuncMathMore
-#define ROOT_Math_DistFuncMathMore
-
-#ifndef ROOT_Math_PdfFuncMathMore
-#include "Math/PdfFuncMathMore.h"
-#endif
 
 
-#ifndef ROOT_Math_ProbFuncMathMore
+#include <cmath>
 #include "Math/ProbFuncMathMore.h"
-#endif
-
-// inverse (quantiles) are all in mathmore
-#ifndef ROOT_Math_ProbFuncInv
-#include "Math/ProbFuncInv.h"
-#endif
+#include "gsl/gsl_randist.h"
 
 
 
-#endif  // ROOT_Math_DistFuncMathMore
+namespace ROOT {
+namespace Math {
+
+
+
+   
+   double beta_pdf(double x, double a, double b ) {
+      return gsl_ran_beta_pdf(x,a,b); 
+   }
+   
+   
+   double landau_pdf(double x, double sigma, double x0 ) {
+      
+      double s = (x - x0)/sigma; 
+      return gsl_ran_landau_pdf(s); 
+            
+   }
+   
+   
+
+
+} // namespace Math
+} // namespace ROOT
+
+
+
+
+

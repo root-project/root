@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ProbFuncInv.h,v 1.3 2005/12/08 21:57:31 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: ProbFuncInv.h,v 1.4 2006/12/06 17:53:47 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -26,9 +26,6 @@
   *                                                                    *
   **********************************************************************/
 
-/**
-   @defgroup StatFunc Statistical functions
-*/
 
 #ifndef ROOT_Math_ProbFuncInv
 #define ROOT_Math_ProbFuncInv
@@ -74,7 +71,7 @@ namespace Math {
   /**
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
-  function of the upper tail of the Breit-Wigner distribution (#breitwigner_prob) 
+  function of the upper tail of the Breit-Wigner distribution (#breitwigner_cdf_c) 
   which is similar to the Cauchy distribution. For 
   detailed description see 
   <A HREF="http://mathworld.wolfram.com/CauchyDistribution.html">
@@ -94,7 +91,7 @@ namespace Math {
   /**
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
-  function of the lower tail of the Breit_Wigner distribution (#breitwigner_quant) 
+  function of the lower tail of the Breit_Wigner distribution (#breitwigner_cdf) 
   which is similar to the Cauchy distribution. For  
   detailed description see 
   <A HREF="http://mathworld.wolfram.com/CauchyDistribution.html">
@@ -114,7 +111,7 @@ namespace Math {
   /**
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
-  function of the upper tail of the Cauchy distribution (#cauchy_prob) 
+  function of the upper tail of the Cauchy distribution (#cauchy_cdf_c) 
   which is also called Lorentzian distribution. For 
   detailed description see 
   <A HREF="http://mathworld.wolfram.com/CauchyDistribution.html">
@@ -133,7 +130,7 @@ namespace Math {
   /**
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
-  function of the lower tail of the Cauchy distribution (#cauchy_quant) 
+  function of the lower tail of the Cauchy distribution (#cauchy_cdf) 
   which is also called Breit-Wigner or Lorentzian distribution. For 
   detailed description see 
   <A HREF="http://mathworld.wolfram.com/CauchyDistribution.html">
@@ -153,7 +150,7 @@ namespace Math {
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
   function of the upper tail of the \f$\chi^2\f$ distribution 
-  with \f$r\f$ degrees of freedom (#chisquared_prob). For detailed description see 
+  with \f$r\f$ degrees of freedom (#chisquared_cdf_c). For detailed description see 
   <A HREF="http://mathworld.wolfram.com/Chi-SquaredDistribution.html">
   Mathworld</A>. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC303">GSL</A>.
@@ -171,7 +168,7 @@ namespace Math {
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
   function of the lower tail of the \f$\chi^2\f$ distribution 
-  with \f$r\f$ degrees of freedom (#chisquared_quant). For detailed description see 
+  with \f$r\f$ degrees of freedom (#chisquared_cdf). For detailed description see 
   <A HREF="http://mathworld.wolfram.com/Chi-SquaredDistribution.html">
   Mathworld</A>. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC303">GSL</A>.
@@ -189,7 +186,7 @@ namespace Math {
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
   function of the upper tail of the exponential distribution
-  (#exponential_prob). For detailed description see 
+  (#exponential_cdf_c). For detailed description see 
   <A HREF="http://mathworld.wolfram.com/ExponentialDistribution.html">
   Mathworld</A>. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC291">GSL</A>.
@@ -207,7 +204,7 @@ namespace Math {
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
   function of the lower tail of the exponential distribution
-  (#exponential_quant). For detailed description see 
+  (#exponential_cdf). For detailed description see 
   <A HREF="http://mathworld.wolfram.com/ExponentialDistribution.html">
   Mathworld</A>. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC291">GSL</A>.
@@ -218,14 +215,42 @@ namespace Math {
 
   double exponential_quantile(double z, double lambda);
 
+  
 
+  /**
+
+  Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
+  function of the lower tail of the f distribution
+  (#fdistribution_cdf). For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/F-Distribution.html">
+  Mathworld</A>. The implementation used is that of 
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC291">GSL</A>.
+  
+  @ingroup StatFunc
+
+  */
+   double fdistribution_quantile(double z, double n, double m);  
+
+  /**
+
+  Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
+  function of the upper tail of the f distribution
+  (#fdistribution_cdf_c). For detailed description see 
+  <A HREF="http://mathworld.wolfram.com/F-Distribution.html">
+  Mathworld</A>. The implementation used is that of 
+  <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC300">GSL</A>.
+  
+  @ingroup StatFunc
+  */
+
+   double fdistribution_quantile_c(double z, double n, double m);  
 
 
   /**
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
   function of the upper tail of the gamma distribution
-  (#gamma_prob). For detailed description see 
+  (#gamma_cdf_c). For detailed description see 
   <A HREF="http://mathworld.wolfram.com/GammaDistribution.html">
   Mathworld</A>. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC300">GSL</A>.
@@ -243,7 +268,7 @@ namespace Math {
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
   function of the lower tail of the gamma distribution
-  (#gamma_quant). For detailed description see 
+  (#gamma_cdf). For detailed description see 
   <A HREF="http://mathworld.wolfram.com/GammaDistribution.html">
   Mathworld</A>. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC300">GSL</A>.
@@ -261,7 +286,7 @@ namespace Math {
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
   function of the upper tail of the normal (Gaussian) distribution
-  (#gaussian_prob). For detailed description see 
+  (#gaussian_cdf_c). For detailed description see 
   <A HREF="http://mathworld.wolfram.com/NormalDistribution.html">
   Mathworld</A>. It can also be evaluated using #normal_quantile_c which will 
   call the same implementation. The implementation used is that of 
@@ -280,7 +305,7 @@ namespace Math {
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
   function of the lower tail of the normal (Gaussian) distribution
-  (#gaussian_quant). For detailed description see 
+  (#gaussian_cdf). For detailed description see 
   <A HREF="http://mathworld.wolfram.com/NormalDistribution.html">
   Mathworld</A>. It can also be evaluated using #normal_quantile which will 
   call the same implementation. The implementation used is that of 
@@ -299,7 +324,7 @@ namespace Math {
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
   function of the upper tail of the lognormal distribution
-  (#lognormal_prob). For detailed description see 
+  (#lognormal_cdf_c). For detailed description see 
   <A HREF="http://mathworld.wolfram.com/LogNormalDistribution.html">
   Mathworld</A>. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC302">GSL</A>.
@@ -317,7 +342,7 @@ namespace Math {
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
   function of the lower tail of the lognormal distribution
-  (#lognormal_quant). For detailed description see 
+  (#lognormal_cdf). For detailed description see 
   <A HREF="http://mathworld.wolfram.com/LogNormalDistribution.html">
   Mathworld</A>. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC302">GSL</A>.
@@ -335,7 +360,7 @@ namespace Math {
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
   function of the upper tail of the normal (Gaussian) distribution
-  (#normal_prob). For detailed description see 
+  (#normal_cdf_c). For detailed description see 
   <A HREF="http://mathworld.wolfram.com/NormalDistribution.html">
   Mathworld</A>. It can also be evaluated using #gaussian_quantile_c which will 
   call the same implementation. The implementation used is that of 
@@ -354,7 +379,7 @@ namespace Math {
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
   function of the lower tail of the normal (Gaussian) distribution
-  (#normal_quant). For detailed description see 
+  (#normal_cdf). For detailed description see 
   <A HREF="http://mathworld.wolfram.com/NormalDistribution.html">
   Mathworld</A>. It can also be evaluated using #gaussian_quantile which will 
   call the same implementation. The implementation used is that of 
@@ -373,7 +398,7 @@ namespace Math {
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
   function of the upper tail of Student's t-distribution
-  (#tdistribution_prob). For detailed description see 
+  (#tdistribution_cdf_c). For detailed description see 
   <A HREF="http://mathworld.wolfram.com/Studentst-Distribution.html">
   Mathworld</A>. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC305">GSL</A>.
@@ -391,7 +416,7 @@ namespace Math {
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
   function of the lower tail of Student's t-distribution
-  (#tdistribution_quant). For detailed description see 
+  (#tdistribution_cdf). For detailed description see 
   <A HREF="http://mathworld.wolfram.com/Studentst-Distribution.html">
   Mathworld</A>. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC305">GSL</A>.
@@ -409,7 +434,7 @@ namespace Math {
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
   function of the upper tail of the uniform (flat) distribution
-  (#uniform_prob). For detailed description see 
+  (#uniform_cdf_c). For detailed description see 
   <A HREF="http://mathworld.wolfram.com/UniformDistribution.html">
   Mathworld</A>. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC301">GSL</A>.
@@ -427,7 +452,7 @@ namespace Math {
 
   Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
   function of the lower tail of the uniform (flat) distribution
-  (#uniform_quant). For detailed description see 
+  (#uniform_cdf). For detailed description see 
   <A HREF="http://mathworld.wolfram.com/UniformDistribution.html">
   Mathworld</A>. The implementation used is that of 
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC301">GSL</A>.
@@ -439,6 +464,27 @@ namespace Math {
   double uniform_quantile(double z, double a, double b);
 
 
+  /**
+     
+  Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
+  function of the upper tail of the beta distribution
+  (#beta_cdf_c). 
+  
+  @ingroup StatFunc
+
+  */
+  double beta_quantile(double x, double a, double b);
+
+  /**
+
+  Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
+  function of the lower tail of the beta distribution
+  (#beta_cdf). 
+
+  @ingroup StatFunc
+
+  */
+  double beta_quantile_c(double x, double a, double b);
 
 
 

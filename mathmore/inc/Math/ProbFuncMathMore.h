@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ProbFuncMathMore.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: ProbFuncMathMore.h,v 1.2 2006/12/06 17:53:47 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -53,10 +53,38 @@ namespace Math {
    * <em>_prob</em>. 
    * These names are currently kept for backward compatibility, but 
    * their usage is deprecated.
+   *
+   * The implementation used is that of 
+   * <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Random-Number-Distributions.html">GSL</A>.
+   *
+   * 
    */
   //@{
 
 
+  /**
+
+  Complement of the cumulative distribution function of the beta distribution. 
+  Upper tail of the integral of the #beta_pdf
+  
+  @ingroup StatFunc
+
+  */
+
+  double beta_cdf_c(double x, double a, double b);
+
+
+
+  /**
+
+  Cumulative distribution function of the beta distribution 
+  Upper tail of the integral of the #beta_pdf
+  
+  @ingroup StatFunc
+
+  */
+
+  double beta_cdf(double x, double a, double b);
 
 
 
@@ -228,6 +256,49 @@ namespace Math {
 
 
 
+  /**
+
+  Complement of the cumulative distribution function of the Poisson distribution. 
+  Upper tail of the integral of the #poisson_pdf
+  
+  @ingroup StatFunc
+
+  */
+
+  double poisson_cdf_c(unsigned int n, double mu);
+
+  /**
+
+  Cumulative distribution function of the Poisson distribution 
+  Lower tail of the integral of the #poisson_pdf
+  
+  @ingroup StatFunc
+
+  */
+
+  double poisson_cdf(unsigned int n, double mu);
+
+  /**
+
+  Complement of the cumulative distribution function of the Binomial distribution. 
+  Upper tail of the integral of the #binomial_pdf
+  
+  @ingroup StatFunc
+
+  */
+
+  double binomial_cdf_c(unsigned int k, double p, unsigned int n); 
+
+  /**
+
+  Cumulative distribution function of the Binomial distribution 
+  Lower tail of the integral of the #binomial_pdf
+  
+  @ingroup StatFunc
+
+  */
+
+  double binomial_cdf(unsigned int k, double p, unsigned int n); 
 
 
   //@}
