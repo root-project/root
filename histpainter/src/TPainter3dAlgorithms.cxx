@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.30 2006/02/23 14:15:21 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.31 2006/03/01 14:19:00 couet Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -69,9 +69,9 @@ static Double_t gTT[4*kVSizeMax];
 static Int_t gColorMain[kVSizeMax+1];
 static Int_t gColorDark[kVSizeMax+1];
 
-R__EXTERN TH1  *gCurrentHist;
-R__EXTERN Hoption_t Hoption;
-R__EXTERN Hparam_t  Hparam;
+extern TH1  *gCurrentHist; //these 3 globals should be replaced by class members
+extern Hoption_t Hoption;
+extern Hparam_t  Hparam;
 
 ClassImp(TPainter3dAlgorithms)
 
