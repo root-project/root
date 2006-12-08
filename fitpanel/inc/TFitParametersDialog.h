@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.h,v 1.4 2006/11/17 18:43:37 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.h,v 1.5 2006/12/05 15:44:09 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 03/10/06
 
 /*************************************************************************
@@ -30,6 +30,10 @@
 #include "TF1.h"
 #endif
 
+enum EFPDialogBound {
+   kFPDBounded,
+   kFPDNoneBounded
+};
 
 class TGNumberEntry;
 class TGTextEntry;
@@ -49,6 +53,7 @@ protected:
    Double_t             fRXmax;           // original max range
    Bool_t               fHasChanges;      // kTRUE if function was redrawn;
    Bool_t               fImmediateDraw;   // kTRUE if function is updated on run-time
+   Int_t               *fRetCode;         // address to store return code
    Int_t                fNP;              // number of function parameters
    Double_t             fRangexmin;       // min function range
    Double_t             fRangexmax;       // max function range
@@ -84,7 +89,8 @@ protected:
            void  DisconnectSlots();
 public:
    TFitParametersDialog(const TGWindow *p, const TGWindow *main, TF1 *func,
-                        TVirtualPad *pad, Double_t rmin=1., Double_t rmax=2.);
+                        TVirtualPad *pad, Double_t rmin=1., Double_t rmax=2.,
+                        Int_t *ret_code = 0);
    virtual ~TFitParametersDialog();
 
    virtual void  CloseWindow();

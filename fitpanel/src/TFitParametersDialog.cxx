@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.cxx,v 1.6 2006/11/24 15:49:15 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.cxx,v 1.7 2006/12/05 15:44:09 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 03/10/06
 
 /*************************************************************************
@@ -58,14 +58,16 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
                                            const TGWindow *main,
                                            TF1 *func,
                                            TVirtualPad *pad,
-                                           Double_t rx, Double_t ry) :
+                                           Double_t rxmin, Double_t rxmax,
+                                           Int_t *ret_code) :
    TGTransientFrame(p, main, 10, 10, kVerticalFrame),
    fFunc           (func),
    fFpad           (pad),
-   fRXmin          (rx),
-   fRXmax          (ry),
+   fRXmin          (rxmin),
+   fRXmax          (rxmax),
    fHasChanges     (kFALSE),
-   fImmediateDraw  (kTRUE)
+   fImmediateDraw  (kTRUE),
+   fRetCode        (ret_code)
    
 {
    // Create a dialog for fit function parameters' settings.
@@ -74,8 +76,6 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
 
    fFunc->GetRange(fRangexmin, fRangexmax);
    fNP = fFunc->GetNpar();
-   fHasChanges = kFALSE;
-   fImmediateDraw = kTRUE;
    fPmin = new Double_t[fNP];
    fPmax = new Double_t[fNP];
    fPval = new Double_t[fNP];
@@ -292,6 +292,7 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
    f3->AddFrame(fCancel, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX,2,2,5,5));
    fCancel->SetToolTipText("Close this dialog with no parameter changes");
    fCancel->Connect("Clicked()", "TFitParametersDialog", this, "DoCancel()");
+   *fRetCode = kFPDNoneBounded; // default setting
 
    MapSubwindows();
    Resize(GetDefaultSize());
@@ -306,11 +307,18 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
          fParMax[i]->SetEnabled(kFALSE);
          fParSld[i]->UnmapWindow();
       } else {
-         Double_t smin = fPval[i] - 10*fPstp[i];
-         Double_t smax = fPval[i] + 10*fPstp[i];
-         fParSld[i]->SetRange(smin, smax);
-         fParSld[i]->SetPosition(smin, smax);
-         fParSld[i]->SetPointerPosition(fPval[i]);
+         if (fPmin[i]*fPmax[i] == 0 && fPmin[i] >= fPmax[i]) { //init
+            if (!fPval[i]) { 
+               fParMin[i]->SetNumber(-10);
+               fParMax[i]->SetNumber(10); 
+            } else {
+               fParMin[i]->SetNumber(-3*TMath::Abs(fPval[i]));
+               fParMax[i]->SetNumber(3*TMath::Abs(fPval[i]));
+            }
+         }
+         fParSld[i]->SetRange(fParMin[i]->GetNumber(), fParMax[i]->GetNumber());
+         fParSld[i]->SetPosition(fParMin[i]->GetNumber(), fParMax[i]->GetNumber());
+         fParSld[i]->SetPointerPosition(fParVal[i]->GetNumber());
          fParSld[i]->Connect("PointerPositionChanged()", "TFitParametersDialog",
                              this, "DoSlider()");
          fParSld[i]->Connect("PositionChanged()", "TFitParametersDialog",
@@ -363,6 +371,10 @@ void TFitParametersDialog::DoCancel()
 
    if (fHasChanges)
       DoReset();
+   for (Int_t i = 0; i < fNP; i++ ) {
+      if (fParBnd[i]->GetState() == kButtonDown)
+         *fRetCode = kFPDBounded;
+   }
    DisconnectSlots();
    TTimer::SingleShot(50, "TFitParametersDialog", this, "CloseWindow()");
 }
@@ -393,6 +405,7 @@ void TFitParametersDialog::DoParBound(Bool_t on)
                 (fParVal[i]->GetNumber() > fParMax[i]->GetNumber())) {
                Double_t v = (fParMax[i]->GetNumber()+fParMin[i]->GetNumber())/2.;
                fParVal[i]->SetNumber(v);
+               fFunc->SetParameter(i, v);
                fClient->NeedRedraw(fParVal[i]);
             }
             fParVal[i]->SetLimits(TGNumberFormat::kNELLimitMinMax, 
@@ -406,9 +419,15 @@ void TFitParametersDialog::DoParBound(Bool_t on)
             fFunc->ReleaseParameter(i);
             fFunc->GetParLimits(i, fPmin[i], fPmax[i]);
             fPval[i] = fFunc->GetParameter(i);
-            fParMin[i]->SetNumber(fPmin[i]);
-            fParMax[i]->SetNumber(fPmax[i]);
-            fParVal[i]->SetNumber(fPval[i]);
+            if (fPmin[i]*fPmax[i] == 0 && fPmin[i] >= fPmax[i]) { //init
+               if (!fPval[i]) { 
+                  fParMin[i]->SetNumber(-10);
+                  fParMax[i]->SetNumber(10); 
+               } else {
+                  fParMin[i]->SetNumber(-10*TMath::Abs(fPval[i]));
+                  fParMax[i]->SetNumber(10*TMath::Abs(fPval[i]));
+               }
+            }
             fParSld[i]->SetRange(fParMin[i]->GetNumber(), fParMax[i]->GetNumber());
             fParSld[i]->SetPosition(fParMin[i]->GetNumber(), fParMax[i]->GetNumber());
             fParSld[i]->SetPointerPosition(fPval[i]);
@@ -419,6 +438,7 @@ void TFitParametersDialog::DoParBound(Bool_t on)
       DrawFunction();
    else if ((fApply->GetState() == kButtonDisabled) && fHasChanges)
       fApply->SetState(kButtonUp);
+   *fRetCode = kFPDBounded;
 }
 
 //______________________________________________________________________________
@@ -529,10 +549,19 @@ void TFitParametersDialog::DoOK()
       DrawFunction();
    fFunc->SetRange(fRangexmin, fRangexmax);
    for (Int_t i = 0; i < fNP; i++ ) {
-      if (fParFix[i]->GetState() == kButtonDown) 
+      if (fParFix[i]->GetState() == kButtonDown) {
+         fFunc->SetParameter(i, fParVal[i]->GetNumber());
          fFunc->FixParameter(i, fParVal[i]->GetNumber());
-      if (fParBnd[i]->GetState() == kButtonDown)
-         fFunc->SetParLimits(i, fParMin[i]->GetNumber(), fParMax[i]->GetNumber());
+         *fRetCode = kFPDBounded;
+      } else {
+         if (fParBnd[i]->GetState() == kButtonDown) {
+            fFunc->SetParameter(i, fParVal[i]->GetNumber());
+            fFunc->SetParLimits(i, fParMin[i]->GetNumber(), fParMax[i]->GetNumber());
+            *fRetCode = kFPDBounded;
+         } else {
+            fFunc->ReleaseParameter(i);
+         }
+      }
    }
    DisconnectSlots();
    TTimer::SingleShot(150, "TFitParametersDialog", this, "CloseWindow()");
@@ -641,6 +670,7 @@ void TFitParametersDialog::DoReset()
    else if ((fApply->GetState() == kButtonDisabled) && fHasChanges)
       fApply->SetState(kButtonUp);
    fHasChanges = kFALSE;
+   *fRetCode = kFPDBounded;   
    fReset->SetState(kButtonDisabled);
 }
 
@@ -700,8 +730,11 @@ void TFitParametersDialog::DoParValue()
          }
          fClient->NeedRedraw(fParSld[i]);
          fFunc->SetParameter(i,fParSld[i]->GetPointerPosition());
-         fFunc->SetParLimits(i,fParSld[i]->GetMinPosition(),
-                               fParSld[i]->GetMaxPosition());
+         if (fParBnd[i]->GetState() == kButtonDown)
+            fFunc->SetParLimits(i,fParSld[i]->GetMinPosition(),
+                                  fParSld[i]->GetMaxPosition());
+         else
+            fFunc->ReleaseParameter(i);
       }
    }
    fHasChanges = kTRUE;
@@ -824,6 +857,7 @@ void TFitParametersDialog::DrawFunction()
 
    fFunc->SetLineStyle(st);
    if (save) gPad = save;
+   *fRetCode = kFPDBounded;
 }
 
 //______________________________________________________________________________
