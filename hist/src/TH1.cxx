@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.318 2006/11/13 11:24:15 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.319 2006/11/25 09:07:05 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1517,7 +1517,6 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
          }
       }
    }
-   
    //get number of events in histogramm
    if (opt.Contains("UU") && opt.Contains("NORM")) {
       for (i=i_start; i<=i_end; i++) {
@@ -1558,7 +1557,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
       Error("ChistatTestX","one of the histograms is empty");
       return 0;
    }
-   
+
    //THE TEST
    Int_t m=0, n=0;
    
@@ -1589,6 +1588,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                      bin2 = Double_t(bin2);
                   }
 
+
                   binsum = bin1 + bin2;
                   temp1 = binsum*sum1/sum;
                   temp2 = binsum*sum2/sum;
@@ -1611,6 +1611,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
             }
          }
       }
+
       chi2 /= sum1*sum2;
       if (m) {
          igood = 1;
@@ -1623,7 +1624,9 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
       
       Double_t prob = TMath::Prob(chi2,ndf);
       return prob;
+
    }
+
    
    //Experiment - MC comparison
    if (opt.Contains("UW")) {
@@ -1651,9 +1654,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                   var1 = sum2*bin2 - sum1*err2;
                   var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
                }
-               
                var2 = TMath::Sqrt(var2);
-               
                while (var1+var2 == 0) {
                   sum1++;
                   bin1++;
@@ -7388,13 +7389,25 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
    }
    if (opt.Contains("PH")) {
       if (type.Contains("2C") || type.Contains("2HC")){
-         Double_t re, im;
+         Double_t re, im, ph;
          for (binx = 1; binx<=hout->GetNbinsX(); binx++){
             for (biny=1; biny<=hout->GetNbinsY(); biny++){
                ind[0] = binx-1; ind[1] = biny-1;
                fft->GetPointComplex(ind, re, im);
-               if (re!=0)
-                  hout->SetBinContent(binx, biny, TMath::ATan(im/re));
+               if (TMath::Abs(re) > 1e-13){
+                  ph = TMath::ATan(im/re);
+                  //find the correct quadrant
+                  if (re<0 && im<0)
+                     ph -= TMath::Pi();
+                  if (re<0 && im>0)
+                     ph += TMath::Pi();
+               } else {
+                  if (im>0)
+                     ph = TMath::Pi()*0.5;
+                  else
+                     ph = -TMath::Pi()*0.5;
+               }
+               hout->SetBinContent(binx, biny, ph);
             }
          }
       } else {
