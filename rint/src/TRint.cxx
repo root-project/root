@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.63 2006/09/28 13:24:19 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.64 2006/12/01 11:29:13 pcanal Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -260,8 +260,11 @@ void TRint::ExecLogon()
       ProcessFile(s);
    }
    delete [] s;
-   if (!gSystem->AccessPathName(name, kReadPermission))
-      ProcessFile(name);
+   // avoid executing ~/.rootlogon.C twice
+   if (strcmp(gSystem->HomeDirectory(), gSystem->WorkingDirectory())) {
+      if (!gSystem->AccessPathName(name, kReadPermission))
+         ProcessFile(name);
+   }
 
    // execute also the logon macro specified by "Rint.Logon"
    const char *logon = gEnv->GetValue("Rint.Logon", (char*)0);
