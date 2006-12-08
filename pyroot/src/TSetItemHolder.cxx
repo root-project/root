@@ -4,22 +4,25 @@
 #include "PyROOT.h"
 #include "TSetItemHolder.h"
 #include "Executors.h"
+#include "Adapters.h"
 
 // ROOT
 #include "TFunction.h"
 
 
 //- protected members --------------------------------------------------------
-Bool_t PyROOT::TSetItemHolder::InitExecutor_( TExecutor*& executor )
+template< class T, class M >
+Bool_t PyROOT::TSetItemHolder< T, M >::InitExecutor_( TExecutor*& executor )
 {
 // basic call will do
-   if ( ! TMethodHolder::InitExecutor_( executor ) )
+   if ( ! TMethodHolder< T, M >::InitExecutor_( executor ) )
       return kFALSE;
 
 // check to make sure we're dealing with a RefExecutor
    if ( ! dynamic_cast< TRefExecutor* >( executor ) ) {
       PyErr_Format( PyExc_NotImplementedError,
-         "no __setitem__ handler for return type (%s)", GetMethod()->GetReturnTypeName() );
+         "no __setitem__ handler for return type (%s)",
+         GetMethod().TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S ).c_str() );
       return kFALSE;
    }
 
@@ -28,14 +31,17 @@ Bool_t PyROOT::TSetItemHolder::InitExecutor_( TExecutor*& executor )
 
 
 //- constructor --------------------------------------------------------------
-PyROOT::TSetItemHolder::TSetItemHolder( TClass* klass, TFunction* method ) :
-      TMethodHolder( klass, method )
+template< class T, class M >
+PyROOT::TSetItemHolder< T, M >::TSetItemHolder( const T& klass, const M& method ) :
+      TMethodHolder< T, M >( klass, method )
 {
 }
 
 
 //____________________________________________________________________________
-PyObject* PyROOT::TSetItemHolder::FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds )
+template< class T, class M >
+PyObject* PyROOT::TSetItemHolder< T, M >::FilterArgs(
+      ObjectProxy*& self, PyObject* args, PyObject* kwds )
 {
 // Prepare executor with a buffer for the return value.
 
@@ -78,8 +84,14 @@ PyObject* PyROOT::TSetItemHolder::FilterArgs( ObjectProxy*& self, PyObject* args
    }
 
 // actual call into C++
-   PyObject* result = TMethodHolder::FilterArgs( self, unrolled ? unrolled : subset, kwds );
+   PyObject* result = TMethodHolder< T, M >::FilterArgs( self, unrolled ? unrolled : subset, kwds );
    Py_XDECREF( unrolled );
    Py_DECREF( subset );
    return result;
 }
+
+//____________________________________________________________________________
+template class PyROOT::TSetItemHolder< PyROOT::TScopeAdapter, PyROOT::TMemberAdapter >;
+#ifdef PYROOT_USE_REFLEX
+template class PyROOT::TSetItemHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >;
+#endif

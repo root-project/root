@@ -1,5 +1,5 @@
 from __future__ import generators
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.43 2006/09/28 19:59:12 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.44 2006/10/17 06:09:15 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
 # Last: 09/22/06
@@ -167,12 +167,12 @@ _root.gVirtualX = _ExpandMacroFunction( "TVirtualX",   "Instance" )
 
 ### special case pythonization --------------------------------------------------
 def _TTree__iter__( self ):
-  n = self.GetEntries()
-  i = 0
-  while i < n:
-    self.GetEntry( i )
-    yield self                  # TODO: not sure how to do this w/ C-API ...
-    i += 1
+   n = self.GetEntries()
+   i = 0
+   while i < n:
+      self.GetEntry(i)
+      yield self                   # TODO: not sure how to do this w/ C-API ...
+      i += 1
 
 _root.MakeRootClass( "TTree" ).__iter__    = _TTree__iter__
 

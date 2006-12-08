@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.21 2005/10/25 05:13:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.22 2006/10/17 06:09:16 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H
@@ -19,6 +19,16 @@ namespace PyROOT {
    typedef PyDictEntry* (*DictLookup_t) ( PyDictObject*, PyObject*, Long_t );
    R__EXTERN DictLookup_t gDictLookupOrg;
    R__EXTERN Bool_t gDictLookupActive;
+
+// general place holder for function parameters
+   union Parameter {
+      Long_t      l;
+      ULong_t    ul;
+      Long64_t   ll;
+      ULong64_t ull;
+      Double_t    d;
+      void*       v;
+   };
 
    namespace Utility {
 

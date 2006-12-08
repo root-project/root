@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.h,v 1.4 2005/10/25 05:13:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.h,v 1.5 2006/04/19 06:20:22 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 #ifndef PYROOT_PROPERTYPROXY_H
@@ -11,6 +11,11 @@
 #include "DllImport.h"
 class TDataMember;
 class TGlobal;
+
+// Reflex
+#ifdef PYROOT_USE_REFLEX
+#include "Reflex/Member.h"
+#endif
 
 // CINT
 #include "DataMbr.h"
@@ -33,7 +38,10 @@ namespace PyROOT {
    public:
       void Set( TDataMember* );
       void Set( TGlobal* );
- 
+#ifdef PYROOT_USE_REFLEX
+      void Set( const ROOT::Reflex::Member& ) {}
+#endif
+
       std::string GetName() { return fDMInfo.Name(); }
       Long_t GetAddress( ObjectProxy* pyobj /* owner */ );
 
@@ -65,7 +73,7 @@ namespace PyROOT {
 
 //- creation -----------------------------------------------------------------
    template< class T >
-   inline PropertyProxy* PropertyProxy_New( T* dmi )
+   inline PropertyProxy* PropertyProxy_New( const T& dmi )
    {
       PropertyProxy* pyprop =
          (PropertyProxy*)PropertyProxy_Type.tp_new( &PropertyProxy_Type, 0, 0 );

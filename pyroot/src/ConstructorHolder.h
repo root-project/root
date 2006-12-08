@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.h,v 1.2 2005/06/10 14:30:22 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.h,v 1.3 2005/09/09 05:19:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_TCONSTRUCTORHOLDER_H
@@ -17,14 +17,16 @@ namespace PyROOT {
 /** Python side holder for ROOT constructor
       @author  WLAV
       @date    09/30/2003
-      @version 2.0
+      @version 3.0
  */
 
    class TExecutor;
 
-   class TConstructorHolder : public TMethodHolder {
+   template< class T, class M >
+   class TConstructorHolder : public TMethodHolder< T, M > {
    public:
-      TConstructorHolder( TClass* klass, TMethod* method );
+      TConstructorHolder( const T& klass, const M& method );
+      TConstructorHolder( const T& klass );
 
    public:
       virtual PyObject* GetDocString();

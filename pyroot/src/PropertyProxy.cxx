@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.11 2006/08/14 00:21:56 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.12 2006/11/30 23:18:32 pcanal Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -57,7 +57,8 @@ namespace {
       const int errret = -1;
 
    // filter const objects and enums to prevent changing their values
-      if ( pyprop->fProperty & ( kIsConstant | kIsEnum ) ) {
+      if ( ( pyprop->fProperty & kIsConstant ) ||
+           ( ! ( ~pyprop->fProperty & ( kIsEnum | G__BIT_ISSTATIC ) ) ) ) {
          PyErr_SetString( PyExc_TypeError, "assignment to const data not allowed" );
          return errret;
       }
@@ -185,7 +186,7 @@ void PyROOT::PropertyProxy::Set( TGlobal* gbl )
       G__DataMemberInfo dmi;
       Long_t address = (Long_t)gbl->GetAddress();
       while ( dmi.Next() ) {    // using G__ClassInfo().GetDataMember() would cause overwrite
-         if ( address == dmi.Offset() ) { 
+         if ( address == dmi.Offset() ) {
             fDMInfo = dmi;
             break;
          }

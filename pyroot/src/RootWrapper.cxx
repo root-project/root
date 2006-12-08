@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.48 2006/10/17 06:09:16 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.49 2006/11/30 23:18:32 pcanal Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -16,6 +16,7 @@
 #include "TSetItemHolder.h"
 #include "MemoryRegulator.h"
 #include "Utility.h"
+#include "Adapters.h"
 
 // ROOT
 #include "TROOT.h"
@@ -29,6 +30,14 @@
 
 // CINT
 #include "Api.h"
+
+// Reflex
+#ifdef PYROOT_USE_REFLEX
+#include "Reflex/Scope.h"
+#include "Reflex/Base.h"
+#include "Reflex/Member.h"
+#include "Reflex/Object.h"
+#endif
 
 // Standard
 #include <assert.h>
@@ -45,7 +54,7 @@ R__EXTERN PyObject* gRootModule;
 namespace {
 
 // to prevent having to walk scopes, track python classes by ROOT class
-   typedef std::map< TClass*, PyObject* > PyClassMap_t;
+   typedef std::map< void*, PyObject* > PyClassMap_t;
    PyClassMap_t gPyClasses;
 
 // helper for creating new ROOT python types
@@ -69,6 +78,21 @@ namespace {
       return pyclass;
    }
 
+// helper to split between CINT and Reflex
+   Long_t GetDataMemberAddress( TClass* klass, TDataMember* mb )
+   {
+      Long_t offset = 0;
+      G__DataMemberInfo dmi = klass->GetClassInfo()->GetDataMember( mb->GetName(), &offset );
+      return dmi.Offset();
+   }
+
+#ifdef PYROOT_USE_REFLEX
+   Long_t GetDataMemberAddress( const ROOT::Reflex::Scope&, const ROOT::Reflex::Member& mb )
+   {
+      return (Long_t)mb.Offset();
+   }
+#endif
+
 } // unnamed namespace
 
 
@@ -81,44 +105,73 @@ namespace {
          PyROOT::BindRootObject( obj, klass ) );
    }
 
-   std::set< std::string > gSTLTypes;
+   std::set< std::string > gSTLTypes, gLoadedSTLTypes;
    struct InitSTLTypes_t {
       InitSTLTypes_t()
       {
          const char* stlTypes[] = { "complex", "exception",
-            "deque", "list", "queue", "stack", /* "vector", : preloaded */
+            "deque", "list", "queue", "stack", "vector",
             "map", "multimap", "set", "multiset" };
          std::string nss = "std::";
          for ( int i = 0; i < int(sizeof(stlTypes)/sizeof(stlTypes[0])); ++i ) {
             gSTLTypes.insert( stlTypes[ i ] );
             gSTLTypes.insert( nss + stlTypes[ i ] );
          }
+         gLoadedSTLTypes.insert( "vector" );
       }
    } initSTLTypes_;
 
-   void LoadDictionaryForSTLType( const std::string& tname )
+   Bool_t LoadDictionaryForSTLType( const std::string& tname, void* klass )
    {
-   // if name is of a known STL class, load the appropriate CINT dll(s)
-       std::string sub = tname.substr( 0, tname.find( "<" ) );
-       if ( gSTLTypes.find( sub ) != gSTLTypes.end() ) {
-          if ( sub.substr( 0, 5 ) == "std::" )
-             sub = sub.substr( 5, std::string::npos );
+   // if name is of a known STL class, load the appropriate CINT dll(s), always reset klass
 
-          if ( 0 <= G__loadfile( (sub+".dll").c_str() ) ) {
-          // special case for map and multimap, which are spread over 2 files
-             if ( sub == "map" || sub == "multimap" ) {
-                G__loadfile( (sub+"2.dll").c_str() );
-             }
+      std::string sub = tname.substr( 0, tname.find( "<" ) );
+      if ( gSTLTypes.find( sub ) != gSTLTypes.end() ) {
+      // removal is required or the dictionary can't be updated properly
+         if ( klass != 0 )
+            gROOT->RemoveClass( (TClass*)klass );
 
-          // success; prevent second attempt to load by erasing name
-             gSTLTypes.erase( sub );
-             gSTLTypes.erase( "std::" + sub );
+         Bool_t result = kTRUE;
 
-          } else {
-             PyErr_Warn( PyExc_RuntimeWarning,
-                const_cast< char* >( ( "could not load dict lib for " + sub ).c_str() ) );
-          }
-       }
+      // make sure to only load once
+         if ( gLoadedSTLTypes.find( sub ) == gLoadedSTLTypes.end() ) {
+
+         // strip std:: part as needed to form proper file name
+            if ( sub.substr( 0, 5 ) == "std::" )
+               sub = sub.substr( 5, std::string::npos );
+
+         // attempt to load file (may not be built and therefore unavailable)
+            int result = G__loadfile( (sub+".dll").c_str() );
+            if ( 0 <= result ) {
+            // special case for map and multimap, which are spread over 2 files
+               if ( sub == "map" || sub == "multimap" ) {
+                  result = G__loadfile( (sub+"2.dll").c_str() );
+               }
+
+            // success; prevent second attempt to load by erasing name
+               gLoadedSTLTypes.insert( sub );
+               gLoadedSTLTypes.insert( "std::" + sub );
+
+               if ( result < 0 ) {
+                  PyErr_Warn( PyExc_RuntimeWarning,
+                     const_cast< char* >( ( "could not load dict lib for " + sub ).c_str() ) );
+                  result = kFALSE;
+               }
+            }
+
+         }
+
+      // verify that CINT understands the class, then add it for gROOT
+         if ( G__ClassInfo( tname.c_str() ).IsValid() ) {
+            TClass* cl = new TClass( tname.c_str() );
+            gROOT->AddClass( cl );
+         }
+
+         return result;
+      }
+
+   // this point is only reached if this is not an STL class, but that's ok
+      return kTRUE;
    }
 
 } // unnamed namespace
@@ -141,32 +194,29 @@ void PyROOT::InitRoot()
 }
 
 //____________________________________________________________________________
-int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
-   assert( klass != 0 );
-
-// in case of namespaces, get the unscoped name
-   G__ClassInfo* clInfo = klass->GetClassInfo();
-   std::string clName = clInfo ? clInfo->Name() : klass->GetName();
+template< class T, class B, class M >
+int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
+// get the unscoped class name
+   std::string clName = klass.Name();
 
 // some properties that'll affect building the dictionary
-   Bool_t isNamespace = klass->Property() & G__BIT_ISNAMESPACE;
+   Bool_t isNamespace = klass.IsNamespace();
    Bool_t hasConstructor = kFALSE;
-
-// special cases for C++ facilities that have no python equivalent
-   TMethod* assign = 0;
 
 // load all public methods and data members
    typedef std::vector< PyCallable* > Callables_t;
    typedef std::map< std::string, Callables_t > CallableCache_t;
    CallableCache_t cache;
 
-   TIter nextmethod( klass->GetListOfMethods() );
-   while ( TMethod* method = (TMethod*)nextmethod() ) {
+   const size_t nMethods = klass.FunctionMemberSize();
+   for ( size_t inm = 0; inm < nMethods; ++inm ) {
+      const M& method = klass.FunctionMemberAt( inm );
+
    // special case tracker
       Bool_t setupSetItem = kFALSE;
 
    // retrieve method name
-      std::string mtName = method->GetName();
+      std::string mtName = method.Name();
 
    // filter empty names (happens for namespaces, is bug?)
       if ( mtName == "" )
@@ -182,7 +232,6 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
 
       // filter assignment operator for later use
          if ( op == "=" ) {
-            assign = method;
             continue;
          }
 
@@ -190,57 +239,59 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
          Utility::TC2POperatorMapping_t::iterator pop = Utility::gC2POperatorMapping.find( op );
          if ( pop != Utility::gC2POperatorMapping.end() ) {
             mtName = pop->second;
-         } else if ( op == "[]" || op == "()" ) {   // index or call
+         } else if ( op == "[]" || op == "()" ) {        // index or call
             mtName = op == "()" ? "__call__" : "__getitem__";
 
          // operator[]/() returning a reference type will be used for __setitem__
-            std::string cpd = Utility::Compound( method->GetReturnTypeName() );
+            std::string cpd = Utility::Compound(
+               method.TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S ) );
             if ( cpd[ cpd.size() - 1 ] == '&' )
                setupSetItem = kTRUE;
          } else if ( op == "*" ) {
-            if ( method->GetNargs() == 0 )   // dereference
+            if ( method.FunctionParameterSize() == 0 )   // dereference
                mtName = "__deref__";
-            else                             // multiplier (is python equivalent)
+            else                                         // multiplier (is python equivalent)
                mtName = "__mul__";
          } else if ( op == "++" ) {
-            if ( method->GetNargs() == 0 )   // prefix increment
+            if ( method.FunctionParameterSize() == 0 )   // prefix increment
                mtName = "__preinc__"; 
-            else                             // postfix increment
+            else                                         // postfix increment
                mtName = "__postinc__";
          } else if ( op == "--" ) {
-            if ( method->GetNargs() == 0 )   // prefix decrement
+            if ( method.FunctionParameterSize() == 0 )   // prefix decrement
                mtName = "__predec__";
-            else                             // postfix decrement
+            else                                         // postfix decrement
                mtName = "__postdec__";
-         } else if ( op == "->" ) {          // class member access
+         } else if ( op == "->" ) {                      // class member access
              mtName = "__follow__";
          } else {
-            continue;                        // operator not handled (new, delete, etc.)
+            continue;                                    // not handled (new, delete, etc.)
          }
       }
 
    // decide on method type: member or static (which includes globals)
-      Bool_t isStatic = isNamespace || ( method->Property() & G__BIT_ISSTATIC );
+      Bool_t isStatic = isNamespace || method.IsStatic();
 
    // public methods are normally visible, private methods are mangled python-wise
    // note the overload implications which are name based, and note that rootcint
    // does not create the interface methods for private/protected methods ...
-      if ( !( method->Property() & kIsPublic ) )
+      if ( ! method.IsPublic() ) {
          if ( mtName == clName )             // don't expose private ctors
             continue;
          else                                // mangle private methods
             mtName = "_" + clName + "__" + mtName;
+      }
 
    // construct the holder
       PyCallable* pycall = 0;
       if ( isStatic == kTRUE )               // class method
-         pycall = new TClassMethodHolder( klass, method );
+         pycall = new TClassMethodHolder< T, M >( klass, method );
       else if ( mtName == clName ) {         // constructor
-         pycall = new TConstructorHolder( klass, method );
+         pycall = new TConstructorHolder< T, M >( klass, method );
          mtName = "__init__";
          hasConstructor = kTRUE;
       } else                                 // member function
-         pycall = new TMethodHolder( klass, method );
+         pycall = new TMethodHolder< T, M >( klass, method );
 
    // lookup method dispatcher and store method
       Callables_t& md = (*(cache.insert(
@@ -251,16 +302,13 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
       if ( setupSetItem ) {
          Callables_t& setitem = (*(cache.insert(
             std::make_pair( std::string( "__setitem__" ), Callables_t() ) ).first)).second;
-         setitem.push_back( new TSetItemHolder( klass, method ) );
+         setitem.push_back( new TSetItemHolder< T, M >( klass, method ) );
       }
    }
 
 // add a pseudo-default ctor, if none defined
    if ( ! isNamespace && ! hasConstructor )
-      cache[ "__init__" ].push_back( new TConstructorHolder( klass, 0 ) );
-
-//   if ( assign != 0 )
-//      std::cout << "found assignment operator for: " << klass->GetName() << std::endl;
+      cache[ "__init__" ].push_back( new TConstructorHolder< T, M >( klass ) );
 
 // add the methods to the class dictionary
    for ( CallableCache_t::iterator imd = cache.begin(); imd != cache.end(); ++imd ) {
@@ -271,24 +319,24 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
    }
 
 // collect data members
-   TIter nextmember( klass->GetListOfDataMembers() );
-   while ( TDataMember* mb = (TDataMember*)nextmember() ) {
+   const size_t nDataMembers = klass.DataMemberSize();
+   for ( size_t ind = 0; ind < nDataMembers; ++ind ) {
+      const M& mb = klass.DataMemberAt( ind );
+
    // allow only public members
-      if ( !( mb->Property() & kIsPublic ) )
+      if ( ! mb.IsPublic() )
          continue;
 
-   // enums
-      if ( mb->IsEnum() ) {
-         Long_t offset = 0;
-         G__DataMemberInfo dmi = klass->GetClassInfo()->GetDataMember( mb->GetName(), &offset );
-         PyObject* val = PyInt_FromLong( *((int*)(dmi.Offset()) ) );
-         PyObject_SetAttrString( pyclass, const_cast< char* >( mb->GetName() ), val );
+   // enums (static enums are the defined values, non-static are data members, i.e. properties)
+      if ( mb.TypeOf().IsEnum() && mb.IsStatic() ) {
+         PyObject* val = PyInt_FromLong( *((Long_t*)GetDataMemberAddress( klass, mb ) ) );
+         PyObject_SetAttrString( pyclass, const_cast<char*>(mb.Name().c_str()), val );
          Py_DECREF( val );
       }
 
    // properties
       else {
-         PropertyProxy* property = PropertyProxy_New< TDataMember >( mb );
+         PropertyProxy* property = PropertyProxy_New( mb );
          PyObject_SetAttrString(
             pyclass, const_cast< char* >( property->GetName().c_str() ), (PyObject*)property );
          Py_DECREF( property );
@@ -300,21 +348,18 @@ int PyROOT::BuildRootClassDict( TClass* klass, PyObject* pyclass ) {
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::BuildRootClassBases( TClass* klass )
+template< class T, class B, class M >
+PyObject* PyROOT::BuildRootClassBases( const T& klass )
 {
-   TList* allbases = klass->GetListOfBases();
-
-   std::vector< std::string >::size_type nbases = 0;
-   if ( allbases != 0 )
-      nbases = allbases->GetSize();
+   size_t nbases = klass.BaseSize();
 
 // collect bases while removing duplicates
    std::vector< std::string > uqb;
    uqb.reserve( nbases );
 
-   TIter nextbase( allbases );
-   while ( TBaseClass* base = (TBaseClass*)nextbase() ) {
-      std::string name = base->GetName();
+   for ( size_t inb = 0; inb < nbases; ++inb ) {
+      const B& base = klass.BaseAt( inb );
+      std::string name = base.Name();
       if ( std::find( uqb.begin(), uqb.end(), name ) == uqb.end() ) {
          uqb.push_back( name );
       }
@@ -333,7 +378,7 @@ PyObject* PyROOT::BuildRootClassBases( TClass* klass )
       PyTuple_SET_ITEM( pybases, 0, (PyObject*)&ObjectProxy_Type );
    } else {
       for ( std::vector< std::string >::size_type ibase = 0; ibase < nbases; ++ibase ) {
-         PyObject* pyclass = MakeRootClassFromString( uqb[ ibase ] );
+         PyObject* pyclass = MakeRootClassFromString< T, B, M >( uqb[ ibase ] );
          if ( ! pyclass ) {
             Py_DECREF( pybases );
             return 0;
@@ -346,6 +391,12 @@ PyObject* PyROOT::BuildRootClassBases( TClass* klass )
    return pybases;
 }
 
+#ifdef PYROOT_USE_REFLEX
+template PyObject* PyROOT::BuildRootClassBases< \
+   ROOT::Reflex::Scope, ROOT::Reflex::Base, ROOT::Reflex::Member >( const ROOT::Reflex::Scope& );
+#endif
+
+
 //____________________________________________________________________________
 PyObject* PyROOT::MakeRootClass( PyObject*, PyObject* args )
 {
@@ -354,14 +405,14 @@ PyObject* PyROOT::MakeRootClass( PyObject*, PyObject* args )
    if ( PyErr_Occurred() )
       return 0;
 
-   return MakeRootClassFromString( cname );
+   return MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( cname );
 }
 
 //____________________________________________________________________________
 PyObject* PyROOT::MakeRootClassFromType( TClass* klass )
 {
 // locate class by full name, if possible to prevent parsing scopes/templates anew
-   PyClassMap_t::iterator pci = gPyClasses.find( klass );
+   PyClassMap_t::iterator pci = gPyClasses.find( (void*)klass );
    if ( pci != gPyClasses.end() ) {
       PyObject* pyclass = PyWeakref_GetObject( pci->second );
       if ( pyclass ) {
@@ -371,10 +422,11 @@ PyObject* PyROOT::MakeRootClassFromType( TClass* klass )
    }
 
 // still here ... pyclass not created or no longer valid, need full parsing
-   return MakeRootClassFromString( klass->GetName() );
+   return MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( klass->GetName() );
 }
 
 //____________________________________________________________________________
+template< class T, class B, class M >
 PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject* scope )
 {
 // force building of the class if a scope is specified (prevents loops)
@@ -404,19 +456,16 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
 
 // retrieve ROOT class (this verifies name)
    const std::string& lookup = scope ? (scName+"::"+name) : name;
-   TClass* klass = gROOT->GetClass( lookup.c_str() );
-   if ( ! klass || ( klass != 0 && klass->GetNmethods() == 0 ) ) {
-   // removal is required or the dictionary can't be updated properly
-      if ( klass != 0 ) gROOT->RemoveClass( klass );
-
+   T klass = T::ByName( lookup );
+   if ( ! (bool)klass || ( (bool)klass && klass.FunctionMemberSize() == 0 ) ) {
    // special action for STL classes to enforce loading dict lib
-      LoadDictionaryForSTLType( name );
+      LoadDictionaryForSTLType( name, klass.Id() );
 
    // lookup again, if this was an STL class, we (may) now have a full dictionary
-      klass = gROOT->GetClass( lookup.c_str() );
+      klass = T::ByName( lookup );
    }
 
-   if ( ! klass && G__defined_templateclass( const_cast< char* >( lookup.c_str() ) ) ) {
+   if ( ! (bool)klass && G__defined_templateclass( const_cast< char* >( lookup.c_str() ) ) ) {
    // a "naked" templated class is requested: return callable proxy for instantiations
       PyObject* pytcl = PyObject_GetAttrString( gRootModule, const_cast< char* >( "Template" ) );
       PyObject* pytemplate = PyObject_CallFunction(
@@ -431,7 +480,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       return pytemplate;
    }
 
-   if ( ! klass && G__defined_tagname( lookup.c_str(), 2 ) != -1 ) {
+   if ( ! (bool)klass && G__defined_tagname( lookup.c_str(), 2 ) != -1 ) {
    // an unloaded namespace is requested
       PyObject* pyns = CreateNewROOTPythonClass( lookup, NULL );
 
@@ -443,9 +492,8 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       return pyns;
    }
 
-   if ( ! klass ) {   // if so, all options have been exhausted: it doesn't exist as such
-      if ( ! scope && fullname.find( "std::" ) == std::string::npos && // catch special cases
-           fullname.find( "ROOT::" ) == std::string::npos ) {          // not already in ROOT::
+   if ( ! (bool)klass ) {   // if so, all options have been exhausted: it doesn't exist as such
+      if ( ! scope && fullname.find( "ROOT::" ) == std::string::npos ) { // not already in ROOT::
       // final attempt, for convenience, the "ROOT" namespace isn't required, try again ...
          PyObject* rtns = PyObject_GetAttrString( gRootModule, const_cast< char* >( "ROOT" ) );
          PyObject* pyclass = PyObject_GetAttrString( rtns, (char*)fullname.c_str() );
@@ -483,7 +531,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
 
             if ( ! next ) {           // lookup failed, try to create it
                PyErr_Clear();
-               next = MakeRootClassFromString( part, scope );
+               next = MakeRootClassFromString< T, B, M >( part, scope );
             }
             Py_XDECREF( scope );
 
@@ -507,14 +555,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
    }
 
 // use actual class name for binding
-   G__ClassInfo* clInfo = klass->GetClassInfo();
-   std::string actual = clInfo ? clInfo->Name() : klass->GetName();
-
-// in case of missing dictionaries, the scope won't have been stripped
-   if ( actual.rfind( "::" ) != std::string::npos ) {
-   // this is somewhat of a gamble, but the alternative is a guaranteed crash
-      actual = actual.substr( actual.rfind( "::" )+2, std::string::npos );
-   }
+   std::string actual = klass.Name( ROOT::Reflex::FINAL );
 
 // first try to retrieve an existing class representation
    PyObject* pyactual = PyString_FromString( actual.c_str() );
@@ -528,16 +569,16 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       PyErr_Clear();
 
    // construct the base classes
-      PyObject* pybases = BuildRootClassBases( klass );
+      PyObject* pybases = BuildRootClassBases< T, B, M >( klass );
       if ( pybases != 0 ) {
       // create a fresh Python class, given bases, name, and empty dictionary
-         pyclass = CreateNewROOTPythonClass( klass->GetName(), pybases );
+         pyclass = CreateNewROOTPythonClass( klass.Name( ROOT::Reflex::SCOPED ), pybases );
          Py_DECREF( pybases );
       }
 
    // fill the dictionary, if successful
       if ( pyclass != 0 ) {
-         if ( BuildRootClassDict( klass, pyclass ) != 0 ) {
+         if ( BuildRootClassDict< T, B, M >( klass, pyclass ) != 0 ) {
          // something failed in building the dictionary
             Py_DECREF( pyclass );
             pyclass = 0;
@@ -553,18 +594,23 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
    Py_DECREF( scope );
 
    if ( ! bClassFound ) {               // add python-style features to newly minted classes
-      if ( ! Pythonize( pyclass, klass->GetName() ) ) {
+      if ( ! Pythonize( pyclass, klass.Name() ) ) {
          Py_XDECREF( pyclass );
          pyclass = 0;
       }
    }
 
    if ( pyclass )                      // store a ref from ROOT TClass to new python class
-      gPyClasses[ klass ] = PyWeakref_NewRef( pyclass, NULL );
+      gPyClasses[ klass.Id() ] = PyWeakref_NewRef( pyclass, NULL );
 
 // all done
    return pyclass;
 }
+
+#ifdef PYROOT_USE_REFLEX
+template PyObject* PyROOT::MakeRootClassFromString< ROOT::Reflex::Scope,\
+   ROOT::Reflex::Base, ROOT::Reflex::Member >( const std::string&, PyObject* scope );
+#endif
 
 //____________________________________________________________________________
 PyObject* PyROOT::GetRootGlobal( PyObject*, PyObject* args )
@@ -596,7 +642,9 @@ PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
 // still here ... try functions (first ROOT, then CINT: sync is too slow)
    TFunction* func =
       (TFunction*)gROOT->GetListOfGlobalFunctions( kFALSE )->FindObject( name.c_str() );
-   if ( func ) return (PyObject*)MethodProxy_New( name, new TFunctionHolder( func ) );
+   if ( func )
+      return (PyObject*)MethodProxy_New( name,
+                new TFunctionHolder< TScopeAdapter, TMemberAdapter >( func ) );
 
    std::vector< PyCallable* > overloads;
    G__MethodInfo mt;
@@ -606,7 +654,7 @@ PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
          TFunction* func = new TFunction( new G__MethodInfo( mt ) );
          gROOT->GetListOfGlobalFunctions()->Add( func );
 
-         overloads.push_back( new TFunctionHolder( func ) );
+         overloads.push_back( new TFunctionHolder< TScopeAdapter, TMemberAdapter >( func ) );
       }
    }
 
@@ -725,5 +773,5 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
    }
 
 // for built-in types, to ensure setability
-   return (PyObject*)PropertyProxy_New< TGlobal >( gbl );
+   return (PyObject*)PropertyProxy_New< TGlobal* >( gbl );
 }

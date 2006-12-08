@@ -16,14 +16,15 @@ namespace PyROOT {
 /** Special holder to allow byref return as extra argument
       @author  WLAV
       @date    10/05/2003
-      @version 1.0
+      @version 2.0
  */
 
    class TExecutor;
 
-   class TSetItemHolder : public TMethodHolder {
+   template< class T, class M >
+   class TSetItemHolder : public TMethodHolder< T, M > {
    public:
-      TSetItemHolder( TClass* klass, TFunction* method );
+      TSetItemHolder( const T& klass, const M& method );
 
    public:
       virtual PyObject* FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );

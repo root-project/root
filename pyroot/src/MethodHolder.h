@@ -12,10 +12,16 @@
 #include "TClassRef.h"
 class TMethod;
 
+// Reflex
+#ifdef PYROOT_USE_REFLEX
+#include "Reflex/Scope.h"
+#include "Reflex/Member.h"
+#endif
+
 // CINT
 namespace Cint {
-class G__CallFunc;
-class G__ClassInfo;
+   class G__CallFunc;
+   class G__ClassInfo;
 }
 using namespace Cint;
 
@@ -29,15 +35,16 @@ namespace PyROOT {
 /** Python side ROOT method
       @author  WLAV
       @date    05/06/2004
-      @version 2.2
+      @version 3.0
  */
 
    class TExecutor;
    class TConverter;
 
+   template< class T, class M >
    class TMethodHolder : public PyCallable {
    public:
-      TMethodHolder( TClass* klass, TFunction* method );
+      TMethodHolder( const T& klass, const M& method );
       TMethodHolder( const TMethodHolder& );
       TMethodHolder& operator=( const TMethodHolder& );
       virtual ~TMethodHolder();
@@ -56,9 +63,10 @@ namespace PyROOT {
       virtual PyObject* Execute( void* self );
 
    protected:
-      TClass* GetClass() { return fClass.GetClass(); }
-      TFunction* GetMethod() { return fMethod; }
+      const M& GetMethod() { return fMethod; }
+      const T& GetClass() { return fClass; }
       TExecutor* GetExecutor() { return fExecutor; }
+      const std::string& GetSignatureString();
 
       virtual Bool_t InitExecutor_( TExecutor*& );
 
@@ -69,19 +77,25 @@ namespace PyROOT {
       PyObject* CallFast( void* );
       PyObject* CallSafe( void* );
 
-      Bool_t InitCallFunc_( std::string& );
+      Bool_t InitCallFunc_();
 
+      void CreateSignature_();
       void SetPyError_( PyObject* msg );
 
    private:
    // representation
-      TClassRef    fClass;
-      TFunction*   fMethod;
+      M fMethod;
+      T fClass;
       G__CallFunc* fMethodCall;
       TExecutor*   fExecutor;
 
+      std::string fSignature;
+
    // call dispatch buffers
       std::vector< TConverter* > fConverters;
+
+      std::vector< Parameter > fParameters;
+      std::vector< void* >     fParamPtrs;
 
    // cached values
       Int_t        fArgsRequired;

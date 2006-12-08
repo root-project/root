@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.27 2006/08/01 12:37:59 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.28 2006/09/28 19:59:12 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -10,6 +10,11 @@
 #include "PyBufferFactory.h"
 #include "RootWrapper.h"
 #include "Utility.h"
+#include "Adapters.h"
+
+#ifdef PYROOT_USE_REFLEX
+#include "TRflxCallback.h"
+#endif
 
 // ROOT
 #include "TROOT.h"
@@ -47,7 +52,7 @@ namespace {
 
       // 2nd attempt: construct name as a class
          PyErr_Clear();
-         attr = MakeRootClassFromString( name );
+         attr = MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( name );
          if ( attr != 0 )
             return attr;
 
@@ -189,7 +194,7 @@ namespace {
       std::string name = PyString_AS_STRING( pyname );
       Py_DECREF( pyname );
 
-      return MakeRootClassFromString( name );
+      return MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( name );
    }
 
 //____________________________________________________________________________
@@ -350,6 +355,12 @@ static PyMethodDef gPyROOTMethods[] = {
      METH_VARARGS, (char*) "Trap signals in safe mode to prevent interpreter abort" },
    { (char*) "SetOwnership", (PyCFunction)SetOwnership,
      METH_VARARGS, (char*) "Modify held C++ object ownership" },
+#ifdef PYROOT_USE_REFLEX
+   { (char*) "EnableReflex", (PyCFunction)PyROOT::TRflxCallback::Enable,
+     METH_NOARGS, (char*) "Enable PyReflex notification of new types from Reflex" },
+   { (char*) "DisableReflex", (PyCFunction)PyROOT::TRflxCallback::Disable,
+     METH_NOARGS, (char*) "Disable PyReflex notification of new types from Reflex" },
+#endif
    { NULL, NULL, 0, NULL }
 };
 
@@ -399,5 +410,6 @@ extern "C" void initlibPyROOT()
    Utility::SetSignalPolicy( gROOT->IsBatch() ? Utility::kFast : Utility::kSafe );
 
 // inject ROOT namespace for convenience
-   PyModule_AddObject( gRootModule, (char*)"ROOT", MakeRootClassFromString( "ROOT" ) );
+   PyModule_AddObject( gRootModule, (char*)"ROOT",
+      MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( "ROOT" ) );
 }

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.45 2006/11/24 14:24:54 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.46 2006/11/30 23:18:32 pcanal Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -13,6 +13,7 @@
 #include "FunctionHolder.h"
 #include "Converters.h"
 #include "MemoryRegulator.h"
+#include "Adapters.h"
 
 // ROOT
 #include "TClass.h"
@@ -36,6 +37,7 @@
 #include <string>
 #include <stdio.h>
 #include <utility>
+
 
 namespace {
 
@@ -1283,7 +1285,7 @@ namespace {
       G__ifunc_table* ifunc = 0;
       long index = 0;
 
-      // from cint/src/common.h
+   // from cint/src/common.h
 #define G__RECMEMFUNCENV      (long)0x7fff0036
       G__CurrentCall( G__RECMEMFUNCENV, &ifunc, &index );
 
@@ -1500,7 +1502,7 @@ namespace {
                PyTuple_SET_ITEM( newArgs, iarg, item );
             } else {
                PyTuple_SET_ITEM( newArgs, iarg,
-                                 PyCObject_FromVoidPtr( (void*)m.PointerToFunc(), NULL ) );
+                  PyCObject_FromVoidPtr( (void*)m.PointerToFunc(), NULL ) );
             }
          }
 
@@ -1558,7 +1560,7 @@ namespace {
       }
 
       PyObject* newArgs = PyTuple_GetSlice( args, 1, PyTuple_GET_SIZE( args ) );
-      PyObject* result = TFunctionHolder(
+      PyObject* result = TFunctionHolder< TScopeAdapter, TMemberAdapter >(
          (TFunction*)((ObjectProxy*)PyTuple_GET_ITEM( args, 0 ))->GetObject() )( 0, newArgs, 0 );
       Py_DECREF( newArgs );
 
@@ -1617,7 +1619,7 @@ namespace {
       // build new argument array
          PyObject* newArgs = PyTuple_New( 1 );
          PyTuple_SET_ITEM( newArgs, 0,
-                           PyCObject_FromVoidPtr( (void*)m.PointerToFunc(), NULL ) );
+            PyCObject_FromVoidPtr( (void*)m.PointerToFunc(), NULL ) );
 
       // re-run
          PyObject* result = PyObject_CallObject( (PyObject*)method, newArgs );

@@ -7,6 +7,7 @@
 #include "Executors.h"
 #include "ObjectProxy.h"
 #include "MemoryRegulator.h"
+#include "Adapters.h"
 
 // ROOT
 #include "TClass.h"
@@ -20,32 +21,53 @@
 
 
 //- protected members --------------------------------------------------------
-Bool_t PyROOT::TConstructorHolder::InitExecutor_( TExecutor*& executor )
+template< class T, class M >
+Bool_t PyROOT::TConstructorHolder< T, M >::InitExecutor_( TExecutor*& executor )
 {
 // pick up special case new object executor
    executor = (gExecFactories[ "__init__" ])();
    return kTRUE;
 }
 
-
-//- constructor --------------------------------------------------------------
-PyROOT::TConstructorHolder::TConstructorHolder( TClass* klass, TMethod* method ) :
-      TMethodHolder( klass, method )
+//- constructors -------------------------------------------------------------
+template< class T, class M >
+PyROOT::TConstructorHolder< T, M >::TConstructorHolder( const T& klass, const M& method ) :
+      TMethodHolder< T, M >( klass, method )
 {
-}
-
-
-//- public members -----------------------------------------------------------
-PyObject* PyROOT::TConstructorHolder::GetDocString()
-{
-// GetMethod() may return zero if this is just a special case place holder
-   const char* clName = GetClass()->GetName();
-   return PyString_FromFormat( "%s::%s%s",
-      clName, clName, GetMethod() ? GetMethod()->GetSignature() : "()" );
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::TConstructorHolder::operator()( ObjectProxy* self, PyObject* args, PyObject* kwds )
+template<>
+PyROOT::TConstructorHolder< PyROOT::TScopeAdapter, PyROOT::TMemberAdapter >::TConstructorHolder(
+      const PyROOT::TScopeAdapter& klass ) :
+   TMethodHolder< PyROOT::TScopeAdapter, PyROOT::TMemberAdapter >( klass, (TFunction*)0 )
+{
+}
+
+#ifdef PYROOT_USE_REFLEX
+template<>
+PyROOT::TConstructorHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::TConstructorHolder(
+      const ROOT::Reflex::Scope& klass ) :
+   TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >( klass, ROOT::Reflex::Member() )
+{
+}
+#endif
+
+//- public members -----------------------------------------------------------
+template< class T, class M >
+PyObject* PyROOT::TConstructorHolder< T, M >::GetDocString()
+{
+// GetMethod() may return an empty function if this is just a special case place holder
+   std::string clName = GetClass().Name();
+   return PyString_FromFormat( "%s::%s%s",
+      clName.c_str(), clName.c_str(), GetMethod() ? GetSignatureString().c_str() : "()" );
+}
+
+//____________________________________________________________________________
+#ifdef PYROOT_USE_REFLEX
+template<>
+PyObject* PyROOT::TConstructorHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::operator()(
+      ObjectProxy* self, PyObject* args, PyObject* kwds )
 {
 // setup as necessary
    if ( ! Initialize() )
@@ -61,7 +83,50 @@ PyObject* PyROOT::TConstructorHolder::operator()( ObjectProxy* self, PyObject* a
       return 0;
    }
 
-   TClass* klass = GetClass();
+// perform the call, and set address if successful
+   Long_t address = (Long_t)Execute( 0 );
+   if ( address != 0 ) {
+      Py_INCREF( self );
+
+   // TODO: Fix ownership once ObjectProxy can deal with Reflex
+      self->Set( (void*)address, 0 );
+
+   // done with self
+      Py_DECREF( self );
+
+      Py_INCREF( Py_None );
+      return Py_None;                        // by definition
+   }
+
+   if ( ! PyErr_Occurred() )   // should be set, otherwise write a generic error msg
+      PyErr_SetString( PyExc_TypeError, const_cast< char* >(
+         ( GetClass().Name() + " constructor failed" ).c_str() ) );
+
+// do not throw an exception, '0' might trigger the overload handler to choose a
+// different constructor, which if all fails will throw an exception
+   return 0;
+}
+#endif
+
+template< class T, class M >
+PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
+      ObjectProxy* self, PyObject* args, PyObject* kwds )
+{
+// setup as necessary
+   if ( ! Initialize() )
+      return 0;                              // important: 0, not Py_None
+
+// fetch self, verify, and put the arguments in usable order
+   if ( ! ( args = FilterArgs( self, args, kwds ) ) )
+      return 0;
+
+// translate the arguments
+   if ( ! SetMethodArgs( args ) ) {
+      Py_DECREF( args );
+      return 0;
+   }
+
+   TClass* klass = (TClass*)GetClass().Id();
 
 // perform the call (fails for loaded macro's)
    Long_t address = (Long_t)Execute( klass );
@@ -122,7 +187,7 @@ PyObject* PyROOT::TConstructorHolder::operator()( ObjectProxy* self, PyObject* a
       Py_INCREF( self );
 
    // note "kIsOwner" for ROOT object deletion from the python side
-      self->Set( (void*) address, klass, ObjectProxy::kIsOwner );
+      self->Set( (void*)address, klass, ObjectProxy::kIsOwner );
 
    // allow lookup upon destruction on the ROOT/CINT side for TObjects
       TObject* object = (TObject*) klass->DynamicCast( TObject::Class(), (void*)address );
@@ -144,3 +209,9 @@ PyObject* PyROOT::TConstructorHolder::operator()( ObjectProxy* self, PyObject* a
 // different constructor, which if all fails will throw an exception
    return 0;
 }
+
+//____________________________________________________________________________
+template class PyROOT::TConstructorHolder< PyROOT::TScopeAdapter, PyROOT::TMemberAdapter >;
+#ifdef PYROOT_USE_REFLEX
+template class PyROOT::TConstructorHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >;
+#endif

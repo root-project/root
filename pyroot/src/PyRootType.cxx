@@ -1,10 +1,11 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyRootType.cxx,v 1.5 2006/05/28 19:05:24 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyRootType.cxx,v 1.6 2006/08/14 00:21:56 rdm Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
 #include "PyROOT.h"
 #include "PyRootType.h"
 #include "RootWrapper.h"
+#include "Adapters.h"
 
 // Standard
 #include <string>
@@ -27,7 +28,8 @@ namespace {
       // filter for python specials and lookup qualified class or function
          std::string name = PyString_AS_STRING( pyname );
          if ( name.size() <= 2 || name.substr( 0, 2 ) != "__" ) {
-            attr = MakeRootClassFromString( name, pyclass );
+
+            attr = MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( name, pyclass );
 
             if ( ! attr ) {
                PyErr_Clear();
@@ -50,7 +52,7 @@ namespace {
 } // unnamed namespace
 
 
-//= PyROOT object proxy type =================================================
+//= PyROOT object proxy type type ============================================
 PyTypeObject PyRootType_Type = {
    PyObject_HEAD_INIT( &PyType_Type )
    0,                         // ob_size

@@ -1,20 +1,23 @@
-// @(#)root/pyroot:$Name:  $:$Id: ClassMethodHolder.cxx,v 1.4 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ClassMethodHolder.cxx,v 1.5 2006/03/23 06:20:22 brun Exp $
 // Author: Wim Lavrijsen, Aug 2004
 
 // Bindings
 #include "PyROOT.h"
 #include "ClassMethodHolder.h"
+#include "Adapters.h"
 
 
 //- constructors/destructor -----------------------------------------------------
-PyROOT::TClassMethodHolder::TClassMethodHolder( TClass* klass, TFunction* method ) :
-      TMethodHolder( klass, method )
+template< class T, class M >
+PyROOT::TClassMethodHolder< T, M >::TClassMethodHolder( const T& klass, const M& method ) :
+      TMethodHolder< T, M >( klass, method )
 {
 }
 
 
 //- public members --------------------------------------------------------------
-PyObject* PyROOT::TClassMethodHolder::operator()( ObjectProxy*, PyObject* args, PyObject* )
+template< class T, class M >
+PyObject* PyROOT::TClassMethodHolder< T, M >::operator()( ObjectProxy*, PyObject* args, PyObject* )
 {
 // setup as necessary
    if ( ! Initialize() )
@@ -27,3 +30,9 @@ PyObject* PyROOT::TClassMethodHolder::operator()( ObjectProxy*, PyObject* args, 
 // execute function
    return Execute( 0 );
 }
+
+//____________________________________________________________________________
+template class PyROOT::TClassMethodHolder< PyROOT::TScopeAdapter, PyROOT::TMemberAdapter >;
+#ifdef PYROOT_USE_REFLEX
+template class PyROOT::TClassMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >;
+#endif

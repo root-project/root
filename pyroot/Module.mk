@@ -51,7 +51,7 @@ include/%.h:    $(PYROOTDIRI)/%.h
 %.pyo: %.py;    python -O -c 'import py_compile; py_compile.compile( "$<" )'
 
 $(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(ROOTPY) $(ROOTPYC) $(ROOTPYO) \
-                $(ROOTLIBSDEP) 
+                $(ROOTLIBSDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		  "$(SOFLAGS)" libPyROOT.$(SOEXT) $@ \
 		  "$(PYROOTO) $(PYROOTDO)" \
@@ -83,4 +83,11 @@ distclean-pyroot: clean-pyroot
 distclean::     distclean-pyroot
 
 ##### extra rules ######
+# Require Reflex support?
+ifeq ($(BUILDREFLEX),yes)
+$(PYROOTO): CXXFLAGS += -DPYROOT_USE_REFLEX $(PYTHONINCDIR:%=-I%)
+$(PYROOTLIB): ROOTLIBS += $(RFLX_REFLEXLL)
+$(PYROOTLIB): $(LPATH)/libReflex.$(SOEXT)
+else
 $(PYROOTO): CXXFLAGS += $(PYTHONINCDIR:%=-I%)
+endif

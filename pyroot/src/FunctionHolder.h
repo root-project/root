@@ -15,12 +15,13 @@ namespace PyROOT {
 /** Python side ROOT global function
       @author  WLAV
       @date    08/03/2004
-      @version 3.0
+      @version 4.0
  */
 
-   class TFunctionHolder : public TMethodHolder {
+   template< class T, class M >
+   class TFunctionHolder : public TMethodHolder< T, M > {
    public:
-      TFunctionHolder( TFunction* function );
+      TFunctionHolder( const M& function );
 
       virtual PyObject* FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );
       virtual PyObject* operator()( ObjectProxy*, PyObject* args, PyObject* kwds );

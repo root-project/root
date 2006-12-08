@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.50 2006/09/28 19:59:12 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.51 2006/10/17 06:09:15 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -10,6 +10,7 @@
 #include "RootWrapper.h"
 #include "TPyException.h"
 #include "Utility.h"
+#include "Adapters.h"
 
 // ROOT
 #include "TROOT.h"
@@ -31,6 +32,8 @@
 #include <exception>
 #include <string>
 
+#include <typeinfo>
+
 
 //- data and local helpers ---------------------------------------------------
 namespace {
@@ -50,12 +53,9 @@ namespace {
 
 
 //- private helpers ----------------------------------------------------------
-inline void PyROOT::TMethodHolder::Copy_( const TMethodHolder& other )
+template< class T, class M >
+inline void PyROOT::TMethodHolder< T, M >::Copy_( const TMethodHolder& other )
 {
-// yes, these pointer copy semantics are proper
-   fClass  = other.fClass;
-   fMethod = other.fMethod;
-
 // do not copy caches
    fMethodCall = 0;
    fExecutor   = 0;
@@ -63,12 +63,15 @@ inline void PyROOT::TMethodHolder::Copy_( const TMethodHolder& other )
    fArgsRequired = -1;
    fOffset       =  0;
 
+   fSignature = other.fSignature;
+
 // being uninitialized will trigger setting up caches as appropriate
    fIsInitialized  = kFALSE;
 }
 
 //____________________________________________________________________________
-inline void PyROOT::TMethodHolder::Destroy_() const
+template< class T, class M >
+inline void PyROOT::TMethodHolder< T, M >::Destroy_() const
 {
 // no deletion of fMethod (ROOT responsibility)
    delete fMethodCall;
@@ -81,7 +84,8 @@ inline void PyROOT::TMethodHolder::Destroy_() const
 }
 
 //____________________________________________________________________________
-inline PyObject* PyROOT::TMethodHolder::CallFast( void* self )
+template< class T, class M >
+inline PyObject* PyROOT::TMethodHolder< T, M >::CallFast( void* self )
 {
 // helper code to prevent some duplication; this is called from CallSafe() as well
 // as directly from TMethodHolder::Execute in fast mode
@@ -104,7 +108,8 @@ inline PyObject* PyROOT::TMethodHolder::CallFast( void* self )
 }
 
 //____________________________________________________________________________
-inline PyObject* PyROOT::TMethodHolder::CallSafe( void* self )
+template< class T, class M >
+inline PyObject* PyROOT::TMethodHolder< T, M >::CallSafe( void* self )
 {
 // helper code to prevent some code duplication; this code embeds a ROOT "try/catch"
 // block that saves the stack for restoration in case of an otherwise fatal signal
@@ -123,20 +128,47 @@ inline PyObject* PyROOT::TMethodHolder::CallSafe( void* self )
 }
 
 //____________________________________________________________________________
-Bool_t PyROOT::TMethodHolder::InitCallFunc_( std::string& callString )
+#ifdef PYROOT_USE_REFLEX
+template<>
+Bool_t PyROOT::TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::InitCallFunc_()
 {
-// buffers for argument dispatching
-   const int nArgs = fMethod ? fMethod->GetNargs() : 0;
-   if ( nArgs == 0 )
-      return kTRUE;
-
-   fConverters.resize( nArgs );    // id.
+// build buffers for argument dispatching
+   const size_t nArgs = fMethod.FunctionParameterSize();
+   fConverters.resize( nArgs );
+   fParameters.resize( nArgs );
+   fParamPtrs.resize( nArgs );
 
 // setup the dispatch cache
-   int iarg = 0;
-   TIter nextarg( fMethod->GetListOfMethodArgs() );
-   while ( TMethodArg* arg = (TMethodArg*)nextarg() ) {
-      std::string fullType = arg->GetFullTypeName();
+   for ( size_t iarg = 0; iarg < nArgs; ++iarg ) {
+      std::string fullType =
+         fMethod.TypeOf().FunctionParameterAt( iarg ).Name( ROOT::Reflex::QUALIFIED );
+      fConverters[ iarg ] = CreateConverter( fullType );
+
+      if ( ! fConverters[ iarg ] ) {
+         PyErr_Format( PyExc_TypeError, "argument type %s not handled", fullType.c_str() );
+         return kFALSE;
+      }
+
+   }
+
+   return kTRUE;
+}
+#endif
+
+template< class T, class M >
+Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
+{
+// build buffers for argument dispatching
+   const size_t nArgs = fMethod.FunctionParameterSize();
+   fConverters.resize( nArgs );
+   fParameters.resize( nArgs );
+   fParamPtrs.resize( nArgs );
+
+// setup the dispatch cache
+   std::string callString = "";
+   for ( size_t iarg = 0; iarg < nArgs; ++iarg ) {
+      std::string fullType =
+         fMethod.TypeOf().FunctionParameterAt( iarg ).Name( ROOT::Reflex::QUALIFIED );
       fConverters[ iarg ] = CreateConverter( fullType );
 
       if ( ! fConverters[ iarg ] ) {
@@ -149,19 +181,32 @@ Bool_t PyROOT::TMethodHolder::InitCallFunc_( std::string& callString )
          callString = fullType;
       else
          callString += "," + fullType;
-
-   // advance argument counter
-      iarg += 1;
    }
+
+// setup call func
+   assert( fMethodCall == 0 );
+
+   fMethodCall = new G__CallFunc();
+   fMethodCall->Init();
+
+   G__ClassInfo* gcl = ((TClass*)fClass.Id())->GetClassInfo();
+   if ( ! gcl )
+      gcl = GetGlobalNamespaceInfo();
+   
+   fMethodCall->SetFunc( gcl->GetMethod(
+      fMethod ? fMethod.Name().c_str() : fClass.Name().c_str(), callString.c_str(), &fOffset ) );
 
    return kTRUE;
 }
 
 //____________________________________________________________________________
-Bool_t PyROOT::TMethodHolder::InitExecutor_( TExecutor*& executor )
+template< class T, class M >
+Bool_t PyROOT::TMethodHolder< T, M >::InitExecutor_( TExecutor*& executor )
 {
 // install executor conform to the return type
-   executor = CreateExecutor( fMethod ? fMethod->GetReturnTypeName() : fClass->GetName() );
+   executor = CreateExecutor( fMethod ?
+      fMethod.TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S | ROOT::Reflex::F )
+      : fClass.Name( ROOT::Reflex::S | ROOT::Reflex::F ) );
    if ( ! executor )
       return kFALSE;
 
@@ -169,7 +214,51 @@ Bool_t PyROOT::TMethodHolder::InitExecutor_( TExecutor*& executor )
 }
 
 //____________________________________________________________________________
-void PyROOT::TMethodHolder::SetPyError_( PyObject* msg )
+template< class T, class M >
+void PyROOT::TMethodHolder< T, M >::CreateSignature_()
+{
+// built a signature a la TFunction::GetSignature as python string, using Adapters
+   Int_t ifirst = 0;
+   fSignature = "(";
+   const size_t nArgs = fMethod.FunctionParameterSize();
+   for ( size_t iarg = 0; iarg < nArgs; ++iarg ) {
+      if ( ifirst ) fSignature += ", ";
+
+      fSignature += fMethod.TypeOf().FunctionParameterAt( iarg ).Name( ROOT::Reflex::QUALIFIED );
+
+      std::string parname = fMethod.FunctionParameterNameAt( iarg );
+      if ( ! parname.empty() ) {
+         fSignature += " ";
+         fSignature += parname;
+      }
+
+      std::string defvalue = fMethod.FunctionParameterDefaultAt( iarg );
+      if ( ! defvalue.empty() ) {
+         fSignature += " = ";
+      //            const char* charstar = strstr(arg.Type()->TrueName(),"char*");
+      //            if (charstar) fSignature += "\"";
+         fSignature += defvalue;
+      //            if (charstar) fSignature += "\"";
+      }
+      ifirst++;
+   }
+   fSignature += ")";
+}
+
+//____________________________________________________________________________
+template< class T, class M >
+const std::string& PyROOT::TMethodHolder< T, M >::GetSignatureString()
+{
+// construct python string from the method's signature
+   if ( fSignature.empty() )
+      CreateSignature_();
+
+   return fSignature;
+}
+
+//____________________________________________________________________________
+template< class T, class M >
+void PyROOT::TMethodHolder< T, M >::SetPyError_( PyObject* msg )
 {
 // helper to report errors in a consistent format (derefs msg)
    PyObject *etype, *evalue, *etrace;
@@ -199,8 +288,9 @@ void PyROOT::TMethodHolder::SetPyError_( PyObject* msg )
 }
 
 //- constructors and destructor ----------------------------------------------
-PyROOT::TMethodHolder::TMethodHolder( TClass* klass, TFunction* method ) :
-      fClass( klass ), fMethod( method )
+template< class T, class M >
+PyROOT::TMethodHolder< T, M >::TMethodHolder( const T& klass, const M& method ) :
+      fMethod( method ), fClass( klass )
 {
 // constructor; initialization is deferred
    fMethodCall    =  0;
@@ -212,26 +302,33 @@ PyROOT::TMethodHolder::TMethodHolder( TClass* klass, TFunction* method ) :
 }
 
 //____________________________________________________________________________
-PyROOT::TMethodHolder::TMethodHolder( const TMethodHolder& other ) : PyCallable( other )
+template< class T, class M >
+PyROOT::TMethodHolder< T, M >::TMethodHolder( const TMethodHolder< T, M >& other ) :
+       PyCallable( other ), fMethod( other.fMethod ), fClass( other.fClass )
 {
 // copy constructor
    Copy_( other );
 }
 
 //____________________________________________________________________________
-PyROOT::TMethodHolder& PyROOT::TMethodHolder::operator=( const TMethodHolder& other )
+template< class T, class M >
+PyROOT::TMethodHolder< T, M >& PyROOT::TMethodHolder< T, M >::operator=(
+      const TMethodHolder< T, M >& other )
 {
 // assignment operator
    if ( this != &other ) {
       Destroy_();
       Copy_( other );
+      fClass  = other.fClass;
+      fMethod = other.fMethod;
    }
 
    return *this;
 }
 
 //____________________________________________________________________________
-PyROOT::TMethodHolder::~TMethodHolder()
+template< class T, class M >
+PyROOT::TMethodHolder< T, M >::~TMethodHolder()
 {
 // destructor
    Destroy_();
@@ -239,22 +336,33 @@ PyROOT::TMethodHolder::~TMethodHolder()
 
 
 //- public members -----------------------------------------------------------
-PyObject* PyROOT::TMethodHolder::GetSignature()
+template< class T, class M >
+PyObject* PyROOT::TMethodHolder< T, M >::GetSignature()
 {
 // construct python string from the method's signature
-   return PyString_FromFormat( "%s", fMethod->GetSignature() );
+   return PyString_FromString( GetSignatureString().c_str() );
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::TMethodHolder::GetPrototype()
+template< class T, class M >
+PyObject* PyROOT::TMethodHolder< T, M >::GetPrototype()
 {
 // construct python string from the method's prototype
-   return PyString_FromFormat( "%s%s",
-      ( fMethod->Property() & G__BIT_ISSTATIC ) ? "static " : "", fMethod->GetPrototype() );
+   return PyString_FromFormat( "%s%s %s%s",
+      ( fMethod.IsStatic() ? "static " : "" ),
+      fMethod.TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S ).c_str(),
+      fMethod.DeclaringScope().Name().c_str(),
+      GetSignatureString().c_str() );
 }
 
 //____________________________________________________________________________
-Int_t PyROOT::TMethodHolder::GetPriority()
+#ifdef PYROOT_USE_REFLEX
+template<>
+Int_t PyROOT::TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::GetPriority();
+#endif
+
+template< class T, class M >
+Int_t PyROOT::TMethodHolder< T, M >::GetPriority()
 {
 // Method priorities exist (in lieu of true overloading) there to prevent
 // void* or <unknown>* from usurping otherwise valid calls. TODO: extend this
@@ -262,56 +370,57 @@ Int_t PyROOT::TMethodHolder::GetPriority()
 
    Int_t priority = 0;
 
-   TIter nextarg( fMethod->GetListOfMethodArgs() );
-   while ( TMethodArg* arg = (TMethodArg*)nextarg() ) {
-      G__TypeInfo ti( arg->GetFullTypeName() );
+   const size_t nArgs = fMethod.FunctionParameterSize();
+   for ( size_t iarg = 0; iarg < nArgs; ++iarg ) {
+      const T& arg = fMethod.TypeOf().FunctionParameterAt( iarg );
 
    // the following numbers are made up and may cause problems in specific
    // situations: use <obj>.<meth>.disp() for choice of exact dispatch
-      if ( ! ti.IsValid() )
+      if ( ! (bool)arg )
          priority -= 10000;   // class is gibberish
-      else if ( (ti.Property() & (kIsClass|kIsStruct)) && ! ti.IsLoaded() )
+      else if ( (arg.IsClass() || arg.IsStruct()) && ! arg.IsComplete() )
          priority -= 1000;    // class is known, but no dictionary available
-      else if ( TClassEdit::CleanType( ti.TrueName(), 1 ) == "void*" )
-         priority -= 100;     // void* shouldn't be too greedy
-      else if ( TClassEdit::CleanType( ti.TrueName(), 1 ) == "float" )
-         priority -= 30;      // double preferred over float (no float in python)
-      else if ( TClassEdit::CleanType( ti.TrueName(), 1 ) == "double" )
-         priority -= 10;      // char, int, long preferred over double
+      else {
+         const std::string aname = arg.Name( ROOT::Reflex::F | ROOT::Reflex::Q );
+         if ( aname == "void*" )
+            priority -= 100;  // void* shouldn't be too greedy
+         else if ( aname == "float" )
+            priority -= 30;   // double preferred over float (no float in python)
+         else if ( aname == "double" )
+            priority -= 10;   // char, int, long preferred over double
+      }
+
    }
 
    return priority;
 }
 
+#ifdef PYROOT_USE_REFLEX
+template<>
+Int_t PyROOT::TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::GetPriority()
+{
+// Scope, Type, what's in a name ...
+   return ((TMethodHolder< ROOT::Reflex::Type, ROOT::Reflex::Member >*)this)->
+      TMethodHolder< ROOT::Reflex::Type, ROOT::Reflex::Member >::GetPriority();
+}
+#endif
+
 //____________________________________________________________________________
-Bool_t PyROOT::TMethodHolder::Initialize()
+template< class T, class M >
+Bool_t PyROOT::TMethodHolder< T, M >::Initialize()
 {
 // done if cache is already setup
    if ( fIsInitialized == kTRUE )
       return kTRUE;
 
-   std::string callString = "";
-   if ( ! InitCallFunc_( callString ) )
+   if ( ! InitCallFunc_() )
       return kFALSE;
 
    if ( ! InitExecutor_( fExecutor ) )
       return kFALSE;
 
-// setup call func
-   assert( fMethodCall == 0 );
-
-   fMethodCall = new G__CallFunc();
-   fMethodCall->Init();
-
-   G__ClassInfo* gcl = fClass->GetClassInfo();
-   if ( ! gcl )
-      gcl = GetGlobalNamespaceInfo();
-   
-   fMethodCall->SetFunc( gcl->GetMethod(
-      fMethod ? fMethod->GetName() : fClass->GetName(), callString.c_str(), &fOffset ) );
-
 // minimum number of arguments when calling
-   fArgsRequired = fMethod ? fMethod->GetNargs() - fMethod->GetNargsOpt() : 0;
+   fArgsRequired = fMethod ? fMethod.FunctionParameterSize( true ) : 0;
 
 // init done
    fIsInitialized = kTRUE;
@@ -320,7 +429,8 @@ Bool_t PyROOT::TMethodHolder::Initialize()
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::TMethodHolder::FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* )
+template< class T, class M >
+PyObject* PyROOT::TMethodHolder< T, M >::FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* )
 {
 // verify existence of self, return if ok
    if ( self != 0 ) {
@@ -334,9 +444,9 @@ PyObject* PyROOT::TMethodHolder::FilterArgs( ObjectProxy*& self, PyObject* args,
 
    // demand PyROOT object, and an argument that may match down the road
       if ( ObjectProxy_Check( pyobj ) &&
-           ( strlen( fClass->GetName() ) == 0 ||            // free global
+           ( fClass.Name().size() == 0 ||                   // free global
            ( pyobj->ObjectIsA() == 0 ) ||                   // null pointer or ctor call
-           ( pyobj->ObjectIsA()->GetBaseClass( fClass ) ) ) // matching types
+           ( pyobj->ObjectIsA()->GetBaseClass( (TClass*)fClass.Id() ) ) ) // matching types
          ) {
       // reset self (will live for the life time of args; i.e. call of function)
          self = pyobj;
@@ -349,15 +459,17 @@ PyObject* PyROOT::TMethodHolder::FilterArgs( ObjectProxy*& self, PyObject* args,
 // no self, set error and lament
    SetPyError_( PyString_FromFormat(
       "unbound method %s::%s must be called with a %s instance as first argument",
-      fClass->GetName(), fMethod->GetName(), fClass->GetName() ) );
+      fClass.Name().c_str(), fMethod.Name().c_str(), fClass.Name().c_str() ) );
    return 0;
 }
 
 //____________________________________________________________________________
-Bool_t PyROOT::TMethodHolder::SetMethodArgs( PyObject* args )
+template< class T, class M >
+Bool_t PyROOT::TMethodHolder< T, M >::SetMethodArgs( PyObject* args )
 {
 // clean slate
-   fMethodCall->ResetArg();
+   if ( fMethodCall )
+      fMethodCall->ResetArg();
 
    int argc = PyTuple_GET_SIZE( args );
    int argMax = fConverters.size();
@@ -375,17 +487,46 @@ Bool_t PyROOT::TMethodHolder::SetMethodArgs( PyObject* args )
 
 // convert the arguments to the method call array
    for ( int i = 0; i < argc; i++ ) {
-      if ( ! fConverters[ i ]->SetArg( PyTuple_GET_ITEM( args, i ), fMethodCall ) ) {
+      if ( ! fConverters[ i ]->SetArg( PyTuple_GET_ITEM( args, i ), fParameters[i], fMethodCall ) ) {
          SetPyError_( PyString_FromFormat( "could not convert argument %d", i+1 ) );
          return kFALSE;
       }
+      fParamPtrs[i] = &fParameters[i];
    }
 
    return kTRUE;
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::TMethodHolder::Execute( void* self )
+#ifdef PYROOT_USE_REFLEX
+template<>
+PyObject* PyROOT::TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::Execute( void* self )
+{
+// my first Reflex call ... this is all pretty wrong, but hey, it's a proto-prototype :)
+
+   if ( fMethod.IsConstructor() )
+      return (PyObject*)((ROOT::Reflex::Type)fClass).Construct( fMethod.TypeOf(), fParamPtrs ).Address();
+
+   ROOT::Reflex::Object obj( fClass, (void*)((Long_t)self + fOffset) );
+   ROOT::Reflex::Object result = fMethod.Invoke( obj, fParamPtrs );
+   std::string retname =
+      fMethod.TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S | ROOT::Reflex::F );
+   if ( retname != "void" ) {
+      TConverter* converter = CreateConverter( retname );
+      if ( converter ) {
+         PyObject* pyresult = converter->FromMemory( result.Address() );
+         delete converter;
+         return pyresult;
+      }
+   }
+
+   Py_INCREF( Py_None );
+   return Py_None;
+}
+#endif
+
+template< class T, class M >
+PyObject* PyROOT::TMethodHolder< T, M >::Execute( void* self )
 {
 // call the interface method
    R__LOCKGUARD2( gCINTMutex );
@@ -415,7 +556,9 @@ PyObject* PyROOT::TMethodHolder::Execute( void* self )
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::TMethodHolder::operator()( ObjectProxy* self, PyObject* args, PyObject* kwds )
+template< class T, class M >
+PyObject* PyROOT::TMethodHolder< T, M >::operator()(
+      ObjectProxy* self, PyObject* args, PyObject* kwds )
 {
 // setup as necessary
    if ( ! Initialize() )
@@ -443,16 +586,19 @@ PyObject* PyROOT::TMethodHolder::operator()( ObjectProxy* self, PyObject* args, 
 
 // get its class
    TClass* klass = self->ObjectIsA();
-
-// reset this method's offset for the object as appropriate
-   int objTag  = klass->GetClassInfo()  ? klass->GetClassInfo()->Tagnum()  : -1;   // derived
-   int methTag = fClass->GetClassInfo() ? fClass->GetClassInfo()->Tagnum() : -1;   // base
-   fOffset = objTag == methTag ? 0 : G__isanybase( methTag, objTag, (Long_t)object );
+   if ( klass ) {             // TODO: check should not be needed; only for Reflex, which'll fail
+   // reset this method's offset for the object as appropriate
+      int objTag  = klass->GetClassInfo()  ? klass->GetClassInfo()->Tagnum()  : -1;   // derived
+      G__ClassInfo* cli = ((TClass*)fClass.Id())->GetClassInfo();
+      int methTag = cli ? cli->Tagnum() : -1;                                         // base
+      fOffset = objTag == methTag ? 0 : G__isanybase( methTag, objTag, (Long_t)object );
+   }
 
 // actual call; recycle self instead of new object for same address objects
    ObjectProxy* pyobj = (ObjectProxy*)Execute( object );
    if ( ObjectProxy_Check( pyobj ) &&
-        pyobj->GetObject() == object && pyobj->ObjectIsA() == klass ) {
+        pyobj->GetObject() == object &&
+        klass && pyobj->ObjectIsA() == klass ) {
       Py_INCREF( (PyObject*)self );
       Py_DECREF( pyobj );
       return (PyObject*)self;
@@ -460,3 +606,9 @@ PyObject* PyROOT::TMethodHolder::operator()( ObjectProxy* self, PyObject* args, 
 
    return (PyObject*)pyobj;
 }
+
+//____________________________________________________________________________
+template class PyROOT::TMethodHolder< PyROOT::TScopeAdapter, PyROOT::TMemberAdapter >;
+#ifdef PYROOT_USE_REFLEX
+template class PyROOT::TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >;
+#endif

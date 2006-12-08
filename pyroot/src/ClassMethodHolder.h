@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ClassMethodHolder.h,v 1.4 2005/09/09 05:19:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ClassMethodHolder.h,v 1.5 2006/03/23 06:20:22 brun Exp $
 // Author: Wim Lavrijsen, Aug 2004
 
 #ifndef PYROOT_TCLASSMETHODHOLDER_H
@@ -17,12 +17,13 @@ namespace PyROOT {
 /** Python side ROOT static function
       @author  WLAV
       @date    08/03/2004
-      @version 2.0
+      @version 3.0
  */
 
-   class TClassMethodHolder : public TMethodHolder {
+   template< class T, class M >
+   class TClassMethodHolder : public TMethodHolder< T, M > {
    public:
-      TClassMethodHolder( TClass* klass, TFunction* method );
+      TClassMethodHolder( const T& klass, const M& method );
 
       virtual PyObject* operator()( ObjectProxy*, PyObject* args, PyObject* kwds );
    };
