@@ -3,9 +3,9 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := cint7
-MODDIRS      := $(MODDIR)/src
-MODDIRI      := $(MODDIR)/inc
+MODDIR        := cint7
+MODDIRS       := $(MODDIR)/src
+MODDIRI       := $(MODDIR)/inc
 
 CINT7DIR      := $(MODDIR)
 CINT7DIRS     := $(CINT7DIR)/src
@@ -232,8 +232,8 @@ IOSENUM7A     := $(MODDIR)/include/iosenum.$(ARCH)
 endif
 endif
 
-CINT7_STDIOH := $(MODDIR)/include/stdio.h
-CINT7_MKINCLD := $(MODDIR)/include/mkincld
+CINT7_STDIOH   := $(MODDIR)/include/stdio.h
+CINT7_MKINCLD  := $(MODDIR)/include/mkincld
 CINT7_MKINCLDS := $(MODDIR)/include/mkincld.c
 CINT7_MKINCLDO := $(MODDIR)/include/mkincld.o
 
@@ -264,13 +264,12 @@ REFLEXLL := -Llib -lReflex -ldl
 endif
 
 ##### local rules #####
-$(CINT7LIB) : $(CINT7O) $(CINT7LIBDEP)
-	@echo "Making $@"
-	$(CMDECHO)$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" libCint7.$(SOEXT) $@ "$^" "$(CINT7LIBEXTRA)"
+$(CINT7LIB): $(CINT7O) $(CINT7LIBDEP)
+	$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" \
+	   libCint7.$(SOEXT) $@ "$^" "$(CINT7LIBEXTRA)"
 
-$(CINT7) : $(CINT7EXEO) $(CINT7LIB) $(REFLEXLIB)
-	@echo "Linking $@"
-	$(CMDECHO)$(LD) $(LDFLAGS) -o $@ $(CINT7EXEO) $(RPATH) $(CINT7LIBS) $(CILIBS)
+$(CINT7): $(CINT7EXEO) $(CINT7LIB) $(REFLEXLIB)
+	$(LD) $(LDFLAGS) -o $@ $(CINT7EXEO) $(RPATH) $(CINT7LIBS) $(CILIBS)
 
 #From cint7:
 #$(CINTTMP): $(SETUPO) $(MAINO) $(G__CFG_READLINELIB) $(CINTTMPOBJ) $(REFLEXLIBDEP)
@@ -280,44 +279,38 @@ $(CINT7) : $(CINT7EXEO) $(CINT7LIB) $(REFLEXLIB)
 #          $(G__CFG_READLINELIB) $(G__CFG_CURSESLIB) $(G__CFG_DEFAULTLIBS)
 
 $(CINT7TMP) : $(CINT7EXEO) $(CINT7TMPO) $(REFLEXLIB)
-	@echo "Linking $@"
-	$(CMDECHO)$(LD) $(LDFLAGS) -o $@ $(CINT7EXEO) $(CINT7TMPO) $(RPATH) $(REFLEXLL) $(CILIBS)
+	$(LD) $(LDFLAGS) -o $@ $(CINT7EXEO) $(CINT7TMPO) $(RPATH) \
+	   $(REFLEXLL) $(CILIBS)
 
 $(MAKECINT7) : $(MAKECINT7O)
-	@echo "Linking $@"
-	$(CMDECHO)$(LD) $(LDFLAGS) -o $@ $(MAKECINT7O)
+	$(LD) $(LDFLAGS) -o $@ $(MAKECINT7O)
 
 $(IOSENUM7) : $(IOSENUM7A)
-	@echo "Copying $@"
-	$(CMDECHO)cp $< $@
+	cp $< $@
 
 $(IOSENUM7A) : $(CINT7TMP) $(CINT7_STDIOH)
-	@echo "Making $@"
-	$(CMDECHO)if test ! -r $@ ; \
+	@(if test ! -r $@ ; \
 	  then \
 	    $(CINT7TMP) $(CINT7TMPINC) $(IOSENUM7C) > /dev/null ; \
 	    mv iosenum.h $@ ; \
 	  else \
 	    touch $@ ; \
-	  fi
+	  fi)
 
 $(CINT7_STDIOH) : $(CINT7_MKINCLDS)
-	@echo "Compiling $<."
-	$(CMDECHO)$(CC) $(OPT) $(CINT7CFLAGS) $(CXXOUT)$(CINT7_MKINCLDO) -c $<
-	@echo "Linking $(CINT7_MKINCLD)."
-	$(CMDECHO)$(LD) $(LDFLAGS) -o $(CINT7_MKINCLD) $(CINT7_MKINCLDO)
-	@echo "Running mkincld."
-	$(CMDECHO)cd $(dir $(CINT7_MKINCLD)) ; ./mkincld
+	$(CC) $(OPT) $(CINT7CFLAGS) $(CXXOUT)$(CINT7_MKINCLDO) -c $<
+	$(LD) $(LDFLAGS) -o $(CINT7_MKINCLD) $(CINT7_MKINCLDO)
+	cd $(dir $(CINT7_MKINCLD)) ; ./mkincld
 
 all-cint7 : $(CINT7LIB) $(CINT7) $(CINT7TMP) $(MAKECINT7) $(IOSENUM7)
 
 clean-cint7 :
-	$(CMDECHO)rm -f $(CINT7TMPO) $(CINT7ALLO) $(CINT7EXEO) $(MAKECINT7O)
+	@rm -f $(CINT7TMPO) $(CINT7ALLO) $(CINT7EXEO) $(MAKECINT7O)
 
 clean :: clean-cint7
 
 distclean-cint7 : clean-cint7
-	$(CMDECHO)rm -rf $(CINT7ALLDEP) $(CINT7LIB) $(IOSENUM7) $(IOSENUM7A) \
+	@rm -rf $(CINT7ALLDEP) $(CINT7LIB) $(IOSENUM7) $(IOSENUM7A) \
 	  $(CINT7EXEDEP) \
           $(CINT7) $(CINT7TMP) $(MAKECINT7) $(CINT7DIRM)/*.exp \
           $(CINT7DIRM)/*.lib $(CINT7DIRS)/v6_loadfile_tmp.cxx \
@@ -339,24 +332,20 @@ $(CINT7DIRS)/v6_loadfile_tmp.o : CINT7CXXFLAGS += -UHAVE_CONFIG -DROOTBUILD -DG_
 $(CINT7DIRS)/v6_pragma_tmp.o : CINT7CXXFLAGS += -UHAVE_CONFIG -DROOTBUILD -DG__BUILDING_CINTTMP
 
 $(CINT7DIRS)/v6_loadfile_tmp.cxx : $(CINT7DIRS)/v6_loadfile.cxx
-	@echo "Copying $<"
-	@cp -f $< $@
+	cp -f $< $@
 
 $(CINT7DIRS)/v6_pragma_tmp.cxx : $(CINT7DIRS)/v6_pragma.cxx
-	@echo "Copying $<"
-	@cp -f $< $@
+	cp -f $< $@
 
 #$(CINT7H1T) : include/% : $(CINT7DIRS)/%
-#	@echo "Copying $<"
-#	@cp $< $@
+#	cp $< $@
 #	@if test ! -d $(CINT7DIR)/inc; then mkdir $(CINT7DIR)/inc; fi
-#	@cp $< $(CINT7DIR)/inc/$(notdir $<)
+#	cp $< $(CINT7DIR)/inc/$(notdir $<)
 
 #$(CINT7H2T) : include/% : $(CINT7DIR)/%
-#	@echo "Copying $<"
-#	@cp $< $@
+#	cp $< $@
 #	@if test ! -d $(CINT7DIR)/inc; then mkdir $(CINT7DIR)/inc; fi
-#	@cp $< $(CINT7DIR)/inc/$(notdir $<)
+#	cp $< $(CINT7DIR)/inc/$(notdir $<)
 
 ##### configcint.h
 ifeq ($(CPPPREP),)
