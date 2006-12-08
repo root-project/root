@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.14 2006/12/07 10:03:00 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.15 2006/12/08 09:36:06 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -27,6 +27,9 @@
 #include "Reflex/Builder/TypeBuilder.h"
 #include "Reflex/Builder/CollectionProxy.h"
 #include "Api.h"
+#define G__DICTIONARY
+#include "RtypesImp.h"
+#undef  G__DICTIONARY
 
 #include <sstream>
 
@@ -522,12 +525,15 @@ namespace ROOT { namespace Cintex {
                   if ( !typ.IsFundamental() && !typ.IsPointer() ) {
                      string tnam  = mem.Properties().HasProperty("iotype") ? CintName(mem.Properties().PropertyAsString("iotype")) : CintName(typ);
                      TClass* tmcl = ROOT::GetROOT()->GetClass(tnam.c_str());
+                     ::strcat(par,nam.c_str());
+                     ::strcat(par,".");
                      if ( tmcl ) {
-                        ::strcat(par,nam.c_str());
-                        ::strcat(par,".");
-                        Stub_ShowMembers(tmcl, typ, add, insp, par);
+                        ::ROOT::GenericShowMembers(tnam.c_str(), add, insp, par, false); // last arg is transient, this must be false
                         par[ncp] = 0;
                      }
+//                      else {
+//                         Stub_ShowMembers(tmcl, typ, add, insp, par);
+//                      }
                   }
                }
             }
