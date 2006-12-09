@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttBBox.cxx,v 1.2 2006/04/07 09:20:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttBBox.cxx,v 1.3 2006/05/09 19:08:44 brun Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -53,4 +53,18 @@ void TAttBBox::BBoxClear()
    // Remove BBox information.
 
    delete [] fBBox; fBBox = 0;
+}
+
+//______________________________________________________________________________
+void TAttBBox::AssertBBoxExtents(Float_t epsilon)
+{
+   // Assert extents of all sides of the bounding-box are at least epsilon.
+
+   for (Int_t i=0; i<6; i+=2) {
+      if (fBBox[i+1] - fBBox[i] < epsilon) {
+         Float_t b  = 0.5*(fBBox[i] + fBBox[i+1]);
+         fBBox[i]   = b - 0.5*epsilon;
+         fBBox[i+1] = b + 0.5*epsilon;
+      }
+   } 
 }

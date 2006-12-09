@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttBBox.h,v 1.5 2006/05/13 11:00:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttBBox.h,v 1.6 2006/05/23 04:47:35 brun Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -27,6 +27,8 @@ protected:
 
    void BBoxCheckPoint(Float_t x, Float_t y, Float_t z);
    void BBoxCheckPoint(const Float_t* p);
+
+   void AssertBBoxExtents(Float_t epsilon=0.005);
 
    TAttBBox(const TAttBBox& tab)
      : fBBox(tab.fBBox) { }
