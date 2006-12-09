@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ClassMethodHolder.cxx,v 1.5 2006/03/23 06:20:22 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ClassMethodHolder.cxx,v 1.6 2006/12/08 07:42:31 brun Exp $
 // Author: Wim Lavrijsen, Aug 2004
 
 // Bindings
@@ -20,15 +20,15 @@ template< class T, class M >
 PyObject* PyROOT::TClassMethodHolder< T, M >::operator()( ObjectProxy*, PyObject* args, PyObject* )
 {
 // setup as necessary
-   if ( ! Initialize() )
+   if ( ! this->Initialize() )
       return 0;                              // important: 0, not Py_None
 
 // translate the arguments
-   if ( ! SetMethodArgs( args ) )
+   if ( ! this->SetMethodArgs( args ) )
       return 0;                              // important: 0, not Py_None
 
 // execute function
-   return Execute( 0 );
+   return this->Execute( 0 );
 }
 
 //____________________________________________________________________________

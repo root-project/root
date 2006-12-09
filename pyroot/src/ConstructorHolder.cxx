@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.12 2006/10/17 06:09:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.14 2006/12/08 07:42:31 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -58,9 +58,9 @@ template< class T, class M >
 PyObject* PyROOT::TConstructorHolder< T, M >::GetDocString()
 {
 // GetMethod() may return an empty function if this is just a special case place holder
-   std::string clName = GetClass().Name();
+   std::string clName = this->GetClass().Name();
    return PyString_FromFormat( "%s::%s%s",
-      clName.c_str(), clName.c_str(), GetMethod() ? GetSignatureString().c_str() : "()" );
+      clName.c_str(), clName.c_str(), this->GetMethod() ? this->GetSignatureString().c_str() : "()" );
 }
 
 //____________________________________________________________________________
@@ -70,21 +70,21 @@ PyObject* PyROOT::TConstructorHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member 
       ObjectProxy* self, PyObject* args, PyObject* kwds )
 {
 // setup as necessary
-   if ( ! Initialize() )
+   if ( ! this->Initialize() )
       return 0;                              // important: 0, not Py_None
 
 // fetch self, verify, and put the arguments in usable order
-   if ( ! ( args = FilterArgs( self, args, kwds ) ) )
+   if ( ! ( args = this->FilterArgs( self, args, kwds ) ) )
       return 0;
 
 // translate the arguments
-   if ( ! SetMethodArgs( args ) ) {
+   if ( ! this->SetMethodArgs( args ) ) {
       Py_DECREF( args );
       return 0;
    }
 
 // perform the call, and set address if successful
-   Long_t address = (Long_t)Execute( 0 );
+   Long_t address = (Long_t)this->Execute( 0 );
    if ( address != 0 ) {
       Py_INCREF( self );
 
@@ -100,7 +100,7 @@ PyObject* PyROOT::TConstructorHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member 
 
    if ( ! PyErr_Occurred() )   // should be set, otherwise write a generic error msg
       PyErr_SetString( PyExc_TypeError, const_cast< char* >(
-         ( GetClass().Name() + " constructor failed" ).c_str() ) );
+         ( this->GetClass().Name() + " constructor failed" ).c_str() ) );
 
 // do not throw an exception, '0' might trigger the overload handler to choose a
 // different constructor, which if all fails will throw an exception
@@ -113,23 +113,23 @@ PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
       ObjectProxy* self, PyObject* args, PyObject* kwds )
 {
 // setup as necessary
-   if ( ! Initialize() )
+   if ( ! this->Initialize() )
       return 0;                              // important: 0, not Py_None
 
 // fetch self, verify, and put the arguments in usable order
-   if ( ! ( args = FilterArgs( self, args, kwds ) ) )
+   if ( ! ( args = this->FilterArgs( self, args, kwds ) ) )
       return 0;
 
 // translate the arguments
-   if ( ! SetMethodArgs( args ) ) {
+   if ( ! this->SetMethodArgs( args ) ) {
       Py_DECREF( args );
       return 0;
    }
 
-   TClass* klass = (TClass*)GetClass().Id();
+   TClass* klass = (TClass*)this->GetClass().Id();
 
 // perform the call (fails for loaded macro's)
-   Long_t address = (Long_t)Execute( klass );
+   Long_t address = (Long_t)this->Execute( klass );
    if ( ! address && ( ! PyErr_Occurred() /* exception thrown */ ) ) {
    // the ctor call fails for interpreted classes, can deal with limited info, or
    // otherwise only deal with default ctor

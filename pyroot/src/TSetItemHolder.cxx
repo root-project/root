@@ -22,7 +22,7 @@ Bool_t PyROOT::TSetItemHolder< T, M >::InitExecutor_( TExecutor*& executor )
    if ( ! dynamic_cast< TRefExecutor* >( executor ) ) {
       PyErr_Format( PyExc_NotImplementedError,
          "no __setitem__ handler for return type (%s)",
-         GetMethod().TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S ).c_str() );
+         this->GetMethod().TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S ).c_str() );
       return kFALSE;
    }
 
@@ -52,7 +52,7 @@ PyObject* PyROOT::TSetItemHolder< T, M >::FilterArgs(
    }
 
 // strip the last element of args to be used on return
-   ((TRefExecutor*)GetExecutor())->SetAssignable( PyTuple_GET_ITEM( args, nArgs - 1 ) );
+   ((TRefExecutor*)this->GetExecutor())->SetAssignable( PyTuple_GET_ITEM( args, nArgs - 1 ) );
    PyObject* subset = PyTuple_GetSlice( args, 0, nArgs - 1 );
 
 // see whether any of the arguments is a tuple itself

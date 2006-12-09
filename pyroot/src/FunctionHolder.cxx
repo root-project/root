@@ -69,22 +69,22 @@ PyObject* PyROOT::TFunctionHolder< T, M >::operator()(
       ObjectProxy* self, PyObject* args, PyObject* kwds )
 {
 // setup as necessary
-   if ( ! Initialize() )
+   if ( ! this->Initialize() )
       return 0;                              // important: 0, not Py_None
 
 // reorder self into args, if necessary
-   if ( ! ( args = FilterArgs( self, args, kwds ) ) )
+   if ( ! ( args = this->FilterArgs( self, args, kwds ) ) )
       return 0;
 
 // translate the arguments
-   Bool_t bConvertOk = SetMethodArgs( args );
+   Bool_t bConvertOk = this->SetMethodArgs( args );
    Py_DECREF( args );
 
    if ( bConvertOk == kFALSE )
       return 0;                              // important: 0, not Py_None
 
 // execute function
-   return Execute( 0 );
+   return this->Execute( 0 );
 }
 
 //____________________________________________________________________________
