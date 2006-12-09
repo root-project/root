@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.53 2006/08/23 15:32:48 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.54 2006/10/05 18:19:09 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -1360,6 +1360,7 @@ void TGLViewer::SetCurrentCamera(ECameraType cameraType)
 
    // Ensure any viewport has been propigated to the current camera
    fCurrentCamera->SetViewport(fViewport);
+   RefreshPadEditor(this);
 
    // And viewer is redrawn
    RequestDraw(TGLDrawFlags::kLODHigh);

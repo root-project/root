@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.32 2006/10/05 18:19:09 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.33 2006/10/11 10:26:23 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -49,6 +49,7 @@ class TGLRedrawTimer;
 class TGLViewerEditor;
 class TGLWindow; // Remove - TGLManager
 class TContextMenu;
+class TGLCameraMarkupStyle;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -184,7 +185,6 @@ protected:
    // Cameras
    void        SetViewport(Int_t x, Int_t y, UInt_t width, UInt_t height);
    void        SetupCameras(Bool_t reset);
-   TGLCamera & CurrentCamera() const { return *fCurrentCamera; }
 
    // Lights
    void        SetupLights();
@@ -244,6 +244,7 @@ public:
 
    // External GUI component interface
    void SetDrawStyle(TGLDrawFlags::EStyle style);
+   TGLCamera & CurrentCamera() const { return *fCurrentCamera; }
    void SetCurrentCamera(ECameraType camera);
    void SetOrthoCamera(ECameraType camera, Double_t left, Double_t right, Double_t top, Double_t bottom);
    void SetPerspectiveCamera(ECameraType camera, Double_t fov, Double_t dolly, 
@@ -257,6 +258,8 @@ public:
    void SetClipState(EClipType type, const Double_t data[6]);
    void GetCurrentClip(EClipType & type, Bool_t & edit) const;
    void SetCurrentClip(EClipType type, Bool_t edit);
+   TGLCameraMarkupStyle* GetCameraMarkup() const { return fScene.GetCameraMarkup(); }
+   void SetCameraMarkup(TGLCameraMarkupStyle* m) { fScene.SetCameraMarkup(m); }
    void SetSelectedColor(const Float_t rgba[17]);
    void SetColorOnSelectedFamily(const Float_t rgba[17]);
    void SetSelectedGeom(const TGLVertex3 & trans, const TGLVector3 & scale);
