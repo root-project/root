@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.14 2006/08/23 14:39:40 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.cxx,v 1.15 2006/08/31 13:42:14 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -475,4 +475,116 @@ void TGLOrthoCamera::ZoomOut()
 {
    //Zoom out.
    fZoom *= 1.2;
+}
+
+//______________________________________________________________________________
+void TGLOrthoCamera::Markup(TGLCameraMarkupStyle* ms) const
+{
+   // Write viewport dimensions on screen.
+
+   static const UChar_t
+      digits[][8] = {{0x38, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x38},//0
+                     {0x10, 0x10, 0x10, 0x10, 0x10, 0x70, 0x10, 0x10},//1
+                     {0x7c, 0x44, 0x20, 0x18, 0x04, 0x04, 0x44, 0x38},//2
+                     {0x38, 0x44, 0x04, 0x04, 0x18, 0x04, 0x44, 0x38},//3
+                     {0x04, 0x04, 0x04, 0x04, 0x7c, 0x44, 0x44, 0x44},//4
+                     {0x7c, 0x44, 0x04, 0x04, 0x7c, 0x40, 0x40, 0x7c},//5
+                     {0x7c, 0x44, 0x44, 0x44, 0x7c, 0x40, 0x40, 0x7c},//6
+                     {0x20, 0x20, 0x20, 0x10, 0x08, 0x04, 0x44, 0x7c},//7
+                     {0x38, 0x44, 0x44, 0x44, 0x38, 0x44, 0x44, 0x38},//8
+                     {0x7c, 0x44, 0x04, 0x04, 0x7c, 0x44, 0x44, 0x7c},//9
+                     {0x18, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},//.
+                     {0x00, 0x00, 0x00, 0x00, 0x7c, 0x00, 0x00, 0x00},//-
+                     {0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10}};//|
+
+   TGLVector3 extents = fVolume.Extents();
+   Double_t width     = extents.X()/fZoom;
+   Double_t maxbarw0  = ms->Barsize()*width;
+
+   // get 10-exponent
+   Int_t exp = (Int_t) TMath::Floor(TMath::Log10(maxbarw0));
+
+   Double_t fact = maxbarw0/TMath::Power(10, exp);
+   Float_t barw;
+
+   if (fact > 5) {
+      barw = 5*TMath::Power(10, exp);
+      glColor3d(1., 0., 1.0);
+   }
+   else if (fact > 2) { 
+      barw = 2*TMath::Power(10, exp);
+      glColor3d(0., 1., 1.0);
+   } else {
+      barw = TMath::Power(10, exp);
+      glColor3d(0., 0., 1.0);
+   }
+   Double_t wproc = barw / width;
+   TString str = Form("%.*f", (exp < 0) ? -exp : 0, barw);
+   Int_t screenw = fViewport.Width();
+   Int_t screenh = fViewport.Height();
+
+   Double_t sX, sY;
+   Double_t offX, offY, txtOffX, txtOffY;
+   ms->Offsets(offX, offY, txtOffX, txtOffY);
+
+   switch (ms->Position()) {
+   case TGLCameraMarkupStyle::kLUp:
+      sX = offX;
+      sY = screenh - offY -  txtOffY - 8;
+      break;
+   case TGLCameraMarkupStyle::kLDn:
+      sX = offX;
+      sY = offY;
+      break;
+   case TGLCameraMarkupStyle::kRUp:
+      sX = screenw -  ms->Barsize()*screenw - offX;
+      sY = screenh -  offY  -  txtOffY - 8;
+      break;
+   case TGLCameraMarkupStyle::kRDn:
+      sX = screenw -  ms->Barsize()*screenw -  offX;
+      sY = offY;
+      break;
+   default:
+      sX = 0.5*screenw;
+      sY = 0.5*screenh;
+      break;
+   }
+
+   glTranslatef(sX, sY, 0);
+
+   glLineWidth(2.);
+   glColor3d(1., 1., 1.);
+   
+   Double_t mH = 2;
+
+   glBegin(GL_LINES);
+    // horizontal static
+   glVertex3d(0, 0.,0.);
+   glVertex3d(ms->Barsize()*screenw, 0., 0.);
+   // corner bars
+   glVertex3d(ms->Barsize()*screenw,  mH, 0.);
+   glVertex3d(ms->Barsize()*screenw, -mH, 0.);
+   // marker cormer bar
+   glColor3d(1., 0., 0.);
+   glVertex3d(0.,  mH, 0.);
+   glVertex3d(0., -mH, 0.);
+   // marker pointer
+   glVertex3d(screenw*wproc, 0., 0.);
+   glVertex3d(screenw*wproc, mH, 0.);
+   //marker line
+   glVertex3d(0, 0.,0.);
+   glVertex3d(screenw*wproc, 0., 0.);
+   glEnd();
+
+   glTranslated(-sX, -sY, 0);
+
+   glRasterPos3d(sX + txtOffX , sY + txtOffY, -1.);
+   Double_t ox = 0.;
+   Double_t oy = 0.;
+   for (Ssiz_t i = 0, e = str.Length(); i < e; ++i) {
+      if (str[i] == '.')
+         glBitmap(8, 8, ox, oy, 7.0, 0.0, digits[10]);
+      else
+         glBitmap(8, 8, ox, oy, 7.0, 0.0, digits[str[i] - '0']);
+   }
 }

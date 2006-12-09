@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.12 2006/08/23 14:39:40 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLOrthoCamera.h,v 1.13 2006/08/31 13:42:14 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -81,6 +81,7 @@ public:
    virtual Bool_t Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta);
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta);
    virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = 0) const;
+   virtual void   Markup (TGLCameraMarkupStyle* ms) const;
 
    // External scripting control
    void Configure(Double_t left, Double_t right, Double_t top, Double_t bottom);
@@ -96,6 +97,7 @@ public:
    void   ZoomOut();
    void   SetCamera()const;
    void   Apply()const;
+
    Bool_t ViewportChanged()const{return fVpChanged;}
    Int_t  GetX()const;
    Int_t  GetY()const;
