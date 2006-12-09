@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPolyMarker.cxx,v 1.2 2006/05/31 07:48:56 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPolyMarker.cxx,v 1.3 2006/08/25 10:15:56 couet Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history
@@ -50,7 +50,7 @@ void TGLPolyMarker::DirectDraw(const TGLDrawFlags & flags) const
    const Double_t *vertices = &fVertices[0];
    UInt_t size = fVertices.size();
    Int_t stacks = 6, slices = 6;
-   Float_t pointSize  = fSize;
+   Float_t pixelSize  = 1;
    Double_t topRadius = fSize;
 
    switch (fStyle) {
@@ -86,22 +86,17 @@ void TGLPolyMarker::DirectDraw(const TGLDrawFlags & flags) const
    case 3: case 2: case 5:
       DrawStars();
       break;
-   case 1: case 9: case 10: case 11: default:{
-      glBegin(GL_POINTS);
-      for (UInt_t i = 0; i < size; i += 3)
-         glVertex3dv(vertices + i);
-      glEnd();
-   }
-   break;
-   case 6:
-      //pointSize = 3.f;
    case 7:
-      glPointSize(pointSize);
+      pixelSize += 1;
+   case 6:
+      pixelSize += 1;
+   case 1: case 9: case 10: case 11: default:
+      glPointSize(pixelSize);
       glBegin(GL_POINTS);
       for (UInt_t i = 0; i < size; i += 3)
          glVertex3dv(vertices + i);
       glEnd();
-      glPointSize(1.f);
+      break;
    }
 }
 
