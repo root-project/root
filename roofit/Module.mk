@@ -67,7 +67,6 @@ ROOFITH3     := $(patsubst %,$(MODDIRI)/%,$(ROOFITH3))
 ROOFITH      := $(ROOFITH1) $(ROOFITH2) $(ROOFITH3)
 ROOFITS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 ROOFITO      := $(ROOFITS:.cxx=.o)
-ROOFITO      := $(ROOFITS:.cxx=.o)
 
 ROOFITDEP    := $(ROOFITO:.o=.d) $(ROOFITDO:.o=.d)
 ROOFITLIB    := $(LPATH)/libRooFit.$(SOEXT)
@@ -83,6 +82,12 @@ INCLUDEFILES += $(ROOFITDEP)
 endif
 
 ##### local rules #####
+
+# force untar in first pass, so that in second pass ROOFITS is correctly set
+ifeq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
+-include $(ROOFITETAG)
+endif
+
 $(ROOFITETAG): $(ROOFITSRCS)
 		@(if [ ! -d src ]; then \
 		   echo "*** Extracting roofit source ..."; \
@@ -99,7 +104,7 @@ $(ROOFITETAG): $(ROOFITSRCS)
 $(ROOFITH) $(ROOFITL1) $(ROOFITL2) $(ROOFITL3):     $(ROOFITETAG)
 
 # Use static rule here instead of implicit rule
-$(ROOFITINCH):  include/%.h: $(ROOFITDIRI)/%.h
+$(ROOFITINCH):  include/%.h: $(ROOFITDIRI)/%.h $(ROOFITETAG)
 		cp $< $@
 
 $(ROOFITLIB):   $(ROOFITO) $(ROOFITDO) $(ORDER_) $(MAINLIBS) $(ROOFITLIBDEP)
