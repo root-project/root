@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.21 2006/08/23 14:39:40 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCamera.h,v 1.22 2006/08/28 18:28:33 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -24,6 +24,56 @@
 
 #include <assert.h>
 #include <math.h>
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGLCameraMarkupStyle                                                 //
+//                                                                      //
+// Class which defines position, alignment and size of                  //
+// camera markup.                                                       //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+class TGLCameraMarkupStyle
+{
+public:
+   enum EPos { kLUp, kLDn, kRUp, kRDn, kCenter };
+
+protected:
+   Bool_t       fShow;    // is visible
+
+   Int_t        fPos;     // location of markup 
+
+   Double_t     fOffX;    // X offset of horizontal bar 
+   Double_t     fOffY;    // Y offset of horizontal bar
+
+   Double_t     fTxtOffX; // X offset relative to horizontal bar
+   Double_t     fTxtOffY; // Y offset relative to horizontal bar 
+
+   Double_t     fBarsize; // horizontal bar marker size in screen units
+ 
+public:
+   Bool_t   Show()  const { return fShow; }
+   void     SetShow(Bool_t v) { fShow = v; }
+  
+   Int_t    Position() const { return fPos; }
+   void     SetPosition(Int_t p) { fPos = p; }
+   
+   Double_t Barsize() const { return fBarsize; }
+   void     SetBarsize(Double_t b) { fBarsize = b; }
+ 
+   void Offsets(Double_t& oX, Double_t& oY, Double_t& txtX, Double_t& txtY) const
+   { oX = fOffX; oY = fOffY; txtX = fTxtOffX ; txtY = fTxtOffY; }
+   void SetOffsets(Double_t oX, Double_t oY, Double_t txtX, Double_t txtY) 
+   { fOffX = oX; fOffY = oY; fTxtOffX = txtX; fTxtOffY = txtY; }
+
+public:
+   TGLCameraMarkupStyle() : fShow(kTRUE), fPos(kRUp), fOffX(4), fOffY(4),
+      fTxtOffX(5), fTxtOffY(2), fBarsize(0.14) {}
+   virtual ~TGLCameraMarkupStyle() {}
+
+   ClassDef(TGLCameraMarkupStyle,0) // camera markup style
+};
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -116,6 +166,7 @@ public:
    virtual Bool_t Truck(Int_t x, Int_t y, Int_t xDelta, Int_t yDelta) = 0;
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta) = 0;
    virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = 0) const = 0;
+   virtual void   Markup( TGLCameraMarkupStyle* /* ms */) const {}
 
    // Current orientation and frustum
          TGLVertex3 EyePoint() const;
@@ -143,6 +194,8 @@ public:
    void WindowToViewport(TPoint & point)             const { point.SetY(fViewport.Height() - point.GetY()); }
    void WindowToViewport(TGLRect & rect)             const { rect.Y() = fViewport.Height() - rect.Y(); }
    void WindowToViewport(TGLVertex3 & vertex)        const { vertex.Y() = fViewport.Height() - vertex.Y(); }
+
+   const TGLRect& RefViewport() const { return fViewport; }
 
    // Cameras expanded-frustum interest box
    Bool_t OfInterest(const TGLBoundingBox & box, Bool_t ignoreSize) const;
