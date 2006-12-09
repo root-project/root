@@ -40,6 +40,8 @@
 #pragma link C++ class TGLOrthoCamera;
 #pragma link C++ class TGLPerspectiveCamera;
 
+#pragma link C++ class TGLCameraMarkupStyle;
+
 #pragma link C++ class TGLScene;
 #pragma link C++ class TGLDisplayListCache;
 
