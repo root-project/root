@@ -855,7 +855,7 @@ enable/disable options, prefix with either --enable- or --disable-
   krb5               Kerberos5 support, requires Kerberos libs
   ldap               LDAP support, requires (Open)LDAP libs
   mathcore           Build the new libMathCore math library
-  mathmore           Build the new libMathMore extended math library, requires GSL (vers. >= 1.5)
+  mathmore           Build the new libMathMore extended math library, requires GSL (vers. >= 1.8)
   minuit2            Build the new libMinuit2 minimizer library
   monalisa           Monalisa monitoring support, requires libapmoncpp
   mysql              MySQL support, requires libmysqlclient
@@ -3544,11 +3544,11 @@ if test ! "x$enable_mathmore" = "xno"; then
 	$GSL/api /usr/local/include /usr/include /opt/gsl/include \
 	$finkdir/include
 
-    # check for gsl version >= 1.5
+    # check for gsl version >= 1.8
     if test ! "x$found_dir" = "x"; then
-	message "Checking for GSL version >= 1.5"
+	message "Checking for GSL version >= 1.8"
 	gsl_version=`grep "define GSL" $found_dir/gsl/gsl_version.h | sed 's/^.*"\([0-9]\.[0-9]\)"/\1/' |  awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
-	if test $gsl_version -lt 1005; then
+	if test $gsl_version -lt 1008; then
 	    gslskip="skip"
 	    result "no"
             enable_mathmore="no"
@@ -3613,9 +3613,9 @@ if test ! "x$enable_mathmore" = "xno"; then
 	if `$cwhich gsl-config > /dev/null 2>&1` ; then
 	    $cwhich gsl-config
             # we found gsl-config - now check the version number
-            message "Checking for GSL version >= 1.5"
+            message "Checking for GSL version >= 1.8"
             gsl_version=`gsl-config --version | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
-            if test $gsl_version -lt 1005 ; then
+            if test $gsl_version -lt 1008 ; then
                 result "no (`gsl-config --version`)"
                 enable_mathmore="no"
             else
@@ -3632,7 +3632,7 @@ if test ! "x$enable_mathmore" = "xno"; then
 	fi
     fi
 fi
-message "Checking whether to build libMathmore"
+message "Checking whether to build libMathMore"
 if test "x$enable_mathmore" = "xyes"; then
     result "yes"
     hasmathmore="define"
