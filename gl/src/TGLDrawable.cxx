@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.14 2006/05/24 14:49:21 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDrawable.cxx,v 1.15 2006/08/23 14:39:40 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -146,12 +146,12 @@ void TGLDrawable::Draw(const TGLDrawFlags & flags) const
       // Attempt to capture the shape draw into cache now
       // If the cache is disabled the capture is ignored and
       // the shape is directly drawn
-      cache.OpenCapture(*this, flags);
+      Bool_t captureOn = cache.OpenCapture(*this, flags);
       DirectDraw(flags);
 
       // If capture was done then DL was just GL_COMPILE - we need to actually
       // draw it from the cache now
-      if (cache.CloseCapture()) {
+      if (captureOn && cache.CloseCapture()) {
          Bool_t ok = cache.Draw(*this, flags);
          assert(ok);
       }

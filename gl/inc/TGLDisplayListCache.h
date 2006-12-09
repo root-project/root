@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.h,v 1.7 2006/01/11 13:44:39 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.h,v 1.8 2006/02/08 10:49:26 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -54,6 +54,7 @@ class TGLDisplayListCache
    UInt_t         fDLBase;       //!
    UInt_t         fDLNextFree;   //!
    CacheDLMap_t   fCacheDLMap;   //!
+   Bool_t         fCaptureFullReported; //!
 
    // Static Fields
    static TGLDisplayListCache * fgInstance; //! the singleton cache instance

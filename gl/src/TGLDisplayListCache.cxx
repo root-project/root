@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.11 2006/02/08 10:49:26 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.12 2006/02/23 16:44:52 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -55,7 +55,8 @@ TGLDisplayListCache & TGLDisplayListCache::Instance()
 //______________________________________________________________________________
 TGLDisplayListCache::TGLDisplayListCache(Bool_t enable, UInt_t size) :
       fSize(size), fInit(kFALSE), fEnabled(enable), fCaptureOpen(kFALSE),
-      fDLBase(fgInvalidDLName), fDLNextFree(fgInvalidDLName)
+      fDLBase(fgInvalidDLName), fDLNextFree(fgInvalidDLName),
+      fCaptureFullReported(kFALSE)
 {
    // Construct display list cache.
    // Private constructor - cache is singleton obtained through 
@@ -129,7 +130,10 @@ Bool_t TGLDisplayListCache::OpenCapture(const TGLDrawable & drawable, const TGLD
    // Cache full?
    // TODO: Start to loop or recycle in another fashion?
    if (fDLNextFree > fDLBase + fSize) {
-      Warning("TGLDisplayListCache::OpenCapture", "cache is full");
+      if (!fCaptureFullReported) {
+         Warning("TGLDisplayListCache::OpenCapture", "cache is full");
+         fCaptureFullReported = kTRUE;
+      }
       return kFALSE;
    }
 
@@ -187,6 +191,7 @@ void TGLDisplayListCache::Purge()
    glDeleteLists(fDLBase,fSize);
    fCacheDLMap.erase(fCacheDLMap.begin(), fCacheDLMap.end());
    fInit = kFALSE;
+   fCaptureFullReported = kFALSE;
 }
 
 //______________________________________________________________________________
