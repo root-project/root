@@ -12,6 +12,7 @@
 #include "TGLabel.h"
 #include "TClass.h"
 #include "TGTab.h"
+#include "TGComboBox.h"
 
 #include "TGLViewerEditor.h"
 #include "TGLViewer.h"
@@ -49,6 +50,9 @@ TGLViewerEditor::TGLViewerEditor(const TGWindow *p,  Int_t width, Int_t height, 
    fReferencePosX(0),
    fReferencePosY(0),
    fReferencePosZ(0),
+   fCamContainer(0),
+   fCamMode(0),
+   fCamMarkupOn(0),
    fCurrentClip(kClipNone),
    fTypeButtons(0),
    fPlanePropFrame(0),
@@ -98,6 +102,9 @@ void TGLViewerEditor::ConnectSignals2Slots()
    fReferencePosX->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateViewerGuides()");
    fReferencePosY->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateViewerGuides()");
    fReferencePosZ->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateViewerGuides()");
+
+   fCamMode->Connect("Selected(Int_t)", "TGLViewerEditor", this, "DoCameraMarkup()");
+   fCamMarkupOn->Connect("Clicked()", "TGLViewerEditor", this, "DoCameraMarkup()");
 
    fTypeButtons->Connect("Pressed(Int_t)", "TGLViewerEditor", this, "ClipTypeChanged(Int_t)");
    fEdit->Connect("Clicked()", "TGLViewerEditor", this, "UpdateViewerClip()");
@@ -214,6 +221,19 @@ void TGLViewerEditor::DoCameraHome()
 }
 
 //______________________________________________________________________________
+void TGLViewerEditor::DoCameraMarkup()
+{
+   // Update viewer with GUI state.
+
+   TGLCameraMarkupStyle* ms = fViewer->GetCameraMarkup();
+   if (ms) {
+      ms->SetPosition(fCamMode->GetSelected());
+      fViewer->RequestDraw();
+      ms->SetShow(fCamMarkupOn->IsDown());
+   }
+}
+
+//______________________________________________________________________________
 void TGLViewerEditor::UpdateViewerGuides()
 {
    // Update viewer with GUI state.
@@ -294,12 +314,11 @@ void TGLViewerEditor::CreateGuidesTab()
    fAxesEdge = new TGRadioButton(fAxesContainer, "Edge");
    fAxesOrigin = new TGRadioButton(fAxesContainer, "Origin");
    fGuidesFrame->AddFrame(fAxesContainer, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
-  
 
    //Reference container
    fRefContainer = new TGGroupFrame(fGuidesFrame, "Reference Marker");
    fGuidesFrame->AddFrame(fRefContainer, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
- 
+
    //Reference options
    fReferenceOn = new TGCheckButton(fRefContainer, "Show");
    fRefContainer->AddFrame(fReferenceOn, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
@@ -318,6 +337,30 @@ void TGLViewerEditor::CreateGuidesTab()
    fRefContainer->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 0, 3, 3));  
    fReferencePosZ = new TGNumberEntry(fRefContainer, 0.0, 8);
    fRefContainer->AddFrame(fReferencePosZ, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
+
+   // camera markup
+   fCamContainer = new TGGroupFrame(fGuidesFrame, "Camera Markup");
+   fGuidesFrame->AddFrame(fCamContainer, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
+
+   fCamMarkupOn = new TGCheckButton(fCamContainer, "Show");
+   fCamMarkupOn->SetToolTipText("Implemented for orthographic mode");
+
+   fCamContainer->AddFrame(fCamMarkupOn, new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 3, 3, 3, 3));
+
+   TGHorizontalFrame* chf = new TGHorizontalFrame(fCamContainer);
+   TGLabel* lab = new TGLabel(chf, "Mode");
+   chf->AddFrame(lab, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 4, 1, 2));
+   fCamMode = new TGComboBox(chf);
+   fCamMode->AddEntry("Left Up", 0);
+   fCamMode->AddEntry("Left Down", 1);
+   fCamMode->AddEntry("Right Up", 2);
+   fCamMode->AddEntry("Right Down", 3);
+   fCamMode->AddEntry("Center", 4);
+   TGListBox* lb = fCamMode->GetListBox();
+   lb->Resize(lb->GetWidth(), 5*16);
+   fCamMode->Resize(90, 20);
+   chf->AddFrame(fCamMode, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
+   fCamContainer->AddFrame(chf);
 }
 
 namespace
@@ -510,6 +553,14 @@ void TGLViewerEditor::SetGuides()
    fReferencePosY->SetNumber(referencePos[1]);
    fReferencePosZ->SetNumber(referencePos[2]);
    UpdateReferencePos();
+
+   if (fViewer->CurrentCamera().IsA()->InheritsFrom("TGLOrthoCamera")) {
+      fGuidesFrame->ShowFrame(fCamContainer);
+      fCamMarkupOn->SetDown(fViewer->GetCameraMarkup()->Show());
+      fCamMode->Select(fViewer->GetCameraMarkup()->Position(), kFALSE);
+   } else {
+      fGuidesFrame->HideFrame(fCamContainer);
+   }
 }
 
 //______________________________________________________________________________

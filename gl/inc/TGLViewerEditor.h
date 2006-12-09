@@ -17,6 +17,7 @@ class TGButtonGroup;
 class TGroupFrame;
 class TGRadioButton;
 class TGColorSelect;
+class TGComboBox;
 class TGButton;
 class TGLViewer;
 class TGTab;
@@ -46,12 +47,16 @@ private:
    TGRadioButton    *fAxesNone;
    TGRadioButton    *fAxesEdge;
    TGRadioButton    *fAxesOrigin;
-   TGGroupFrame     *fRefContainer;
 
+   TGGroupFrame     *fRefContainer;
    TGCheckButton    *fReferenceOn;
    TGNumberEntry    *fReferencePosX;
    TGNumberEntry    *fReferencePosY;
    TGNumberEntry    *fReferencePosZ;
+
+   TGGroupFrame     *fCamContainer;
+   TGComboBox*       fCamMode;
+   TGCheckButton*    fCamMarkupOn;
 
    //"Cplipping" tab's controls
    EClipType         fCurrentClip;
@@ -99,6 +104,7 @@ public:
    //Axis manipulation
    void UpdateViewerGuides();
    void UpdateReferencePos();
+   void DoCameraMarkup();
    //Clipping manipulation
    void ClipValueChanged();
    void ClipTypeChanged(Int_t);
