@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.43 2006/08/23 14:39:40 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.cxx,v 1.44 2006/10/05 18:19:09 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -72,10 +72,12 @@ TGLScene::TGLScene() :
    fSelectBuffer(4096),
    fSortedHits(),
    fClipPlane(0), fClipBox(0), fCurrentClip(0),
+   fCameraMarkup(0),
    fTransManip(), fScaleManip(), fRotateManip()
 {
    // Construct scene object
 
+   fCameraMarkup = new TGLCameraMarkupStyle;
    // Default manip is translation manipulator
    fCurrentManip = &fTransManip;
 }
@@ -90,6 +92,7 @@ TGLScene::~TGLScene()
    // Delete clip objects
    ClearClips();
 
+   if (fCameraMarkup) delete fCameraMarkup;
    // Destroy scene objects
    TakeLock(kModifyLock);
    DestroyPhysicals(kTRUE); // including modified
@@ -567,6 +570,28 @@ void TGLScene::Draw(const TGLCamera & camera, TGLDrawFlags sceneFlags,
 
    // If select draw clip and manips are not drawn (pickable)
    if (!forSelect) {
+
+      if (fCameraMarkup && fCameraMarkup->Show()) {
+         glMatrixMode(GL_PROJECTION);
+         glPushMatrix();
+         glLoadIdentity();  
+         const TGLRect& vp = camera.RefViewport();
+         gluOrtho2D(0., vp.Width(), 0., vp.Height());
+         glMatrixMode(GL_MODELVIEW);
+         glPushMatrix();
+         glLoadIdentity();
+         glDisable(GL_LIGHTING);   
+         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+         glDisable(GL_DEPTH_TEST);
+         camera.Markup(fCameraMarkup);
+         glEnable(GL_DEPTH_TEST);
+         glEnable(GL_LIGHTING);
+         glMatrixMode(GL_PROJECTION);
+         glPopMatrix();
+         glMatrixMode(GL_MODELVIEW);
+         glPopMatrix();
+      }
+
       // Draw the clip shape (unclipped!) if it is being manipulated
       if (fCurrentClip && fCurrentManip->GetAttached() == fCurrentClip) {
          // Clip objects are always drawn with normal fill style

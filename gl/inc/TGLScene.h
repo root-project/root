@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.25 2006/04/07 08:43:59 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLScene.h,v 1.26 2006/08/23 14:39:40 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 // Parts taken from original TGLRender by Timur Pocheptsov
 
@@ -43,6 +43,7 @@ class TGLPhysicalShape;
 class TGLClip;
 class TGLClipPlane;
 class TGLClipBox;
+class TGLCameraMarkupStyle;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -126,6 +127,9 @@ private:
    TGLClipPlane         * fClipPlane;
    TGLClipBox           * fClipBox;
    TGLClip              * fCurrentClip;  //! the current clipping shape
+
+   // Guides
+   TGLCameraMarkupStyle * fCameraMarkup; //  overlay GL text config
 
    // Object manipulators - physical + clipping shapes
    TGLTransManip          fTransManip;    //! translation manipulator
@@ -218,6 +222,10 @@ public:
    void  SetClipState(EClipType type, const Double_t data[6]);
    void  GetCurrentClip(EClipType & type, Bool_t & edit) const;
    void  SetCurrentClip(EClipType type, Bool_t edit);
+
+   // Viewport/camera screen markup
+   TGLCameraMarkupStyle* GetCameraMarkup() const  { return fCameraMarkup; }
+   void SetCameraMarkup(TGLCameraMarkupStyle*  m) { fCameraMarkup = m; }
 
    // Manipulators
    void       SetCurrentManip(EManipType type);
