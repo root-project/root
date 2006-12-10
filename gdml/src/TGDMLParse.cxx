@@ -1,4 +1,4 @@
-/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.cxx,v 1.8 2006/11/29 17:39:04 brun Exp $ */
+/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.cxx,v 1.9 2006/12/08 15:57:19 brun Exp $ */
 // Author: Ben Lloyd 09/11/06
 
 /*************************************************************************
@@ -262,7 +262,7 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
       ((strcmp(name, "firstposition")) != 0) &&  ((strcmp(name, "firstpositionref")) != 0) &&
       ((strcmp(name, "firstrotation")) != 0) &&  ((strcmp(name, "firstrotationref")) != 0) &&
       ((strcmp(name, "section")) != 0) &&  ((strcmp(name, "world")) != 0)){
-     std::cout << "Error: Unsupported GDML Tag Used :" << name << ". Please Check Geometry/Schema." << std::endl;
+      std::cout << "Error: Unsupported GDML Tag Used :" << name << ". Please Check Geometry/Schema." << std::endl;
    }
    
    // Check for Child node - if present call this funct. recursively until no more
@@ -379,11 +379,11 @@ const char* TGDMLParse::FindConst(const char* retval)
    //constant name is found, the corresponding value is returned, if not,
    //the original is returned.
 
-  const char* tempconst = retval;
+   const char* tempconst = retval;
 
-  if((strcmp(fCurrentFile,fStartFile)) != 0){
-     retval = Form("%s_%s", retval, fCurrentFile);
-  }
+   if((strcmp(fCurrentFile,fStartFile)) != 0){
+      retval = Form("%s_%s", retval, fCurrentFile);
+   }
 
    if(fconmap.find(retval) != fconmap.end()){
       tempconst = fconmap[retval];

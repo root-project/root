@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.h,v 1.5 2006/12/05 15:44:09 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.h,v 1.6 2006/12/08 15:51:43 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 03/10/06
 
 /*************************************************************************
@@ -86,7 +86,7 @@ protected:
    TGTextButton        *fOK;              // OK button
    TGTextButton        *fCancel;          // Cancel button
 
-           void  DisconnectSlots();
+   void  DisconnectSlots();
 public:
    TFitParametersDialog(const TGWindow *p, const TGWindow *main, TF1 *func,
                         TVirtualPad *pad, Double_t rmin=1., Double_t rmax=2.,

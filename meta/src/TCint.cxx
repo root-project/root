@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.130 2006/12/01 15:05:58 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.131 2006/12/05 10:55:29 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1498,8 +1498,8 @@ const char *TCint::GetIncludePath()
    G__IncludePathInfo path;
 
    while (path.Next()) {
-     const char *pathname = path.Name();
-     fIncludePath.Append(" -I\"").Append(pathname).Append("\" ");
+      const char *pathname = path.Name();
+      fIncludePath.Append(" -I\"").Append(pathname).Append("\" ");
    }
 
    return fIncludePath;
