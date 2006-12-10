@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.h,v 1.7 2006/07/03 16:10:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.h,v 1.8 2006/09/21 20:02:20 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -40,13 +40,13 @@ protected:
    Float_t    fMargin;         //Text margin
    TList      *fLines;         //List of labels
 
-   TPaveText& operator=(const TPaveText&);
 
 public:
    TPaveText();
    TPaveText(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, Option_t *option="br");
    TPaveText(const TPaveText &pavetext);
    virtual ~TPaveText();
+   TPaveText& operator=(const TPaveText&);
 
    virtual TBox    *AddBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2);
    virtual TLine   *AddLine(Double_t x1=0, Double_t y1=0, Double_t x2=0, Double_t y2=0);
