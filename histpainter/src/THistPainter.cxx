@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.275 2006/11/27 10:38:30 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.276 2006/11/27 15:22:28 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2073,7 +2073,6 @@ void THistPainter::PaintBarH(Option_t *)
    }
 
    PaintFrame();
-   PaintAxis(kFALSE);
 
    Int_t bar = Hoption.Bar - 20;
    Double_t xmin,xmax,ymin,ymax,umin,umax,w;
@@ -2122,6 +2121,8 @@ void THistPainter::PaintBarH(Option_t *)
       }
       PaintStat(gStyle->GetOptStat(),(TF1*)obj);
    }
+
+   PaintAxis(kFALSE);
 }
 
 //______________________________________________________________________________
