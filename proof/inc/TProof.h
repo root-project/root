@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.97 2006/11/28 12:10:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.98 2006/12/03 23:34:03 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -244,27 +244,27 @@ friend class TXProofServ;     // to access EUrgent
 public:
    // PROOF status bits
    enum EStatusBits {
-      kUsingSessionGui = BIT(14)
+      kUsingSessionGui     = BIT(14)
    };
    enum EQueryMode {
-      kSync = 0,
-      kAsync = 1
+      kSync                = 0,
+      kAsync               = 1
    };
    enum EUploadOpt {
-      kAppend             = 0x1,
-      kOverwriteDataSet   = 0x2,
-      kNoOverwriteDataSet = 0x4,
-      kOverwriteAllFiles  = 0x8,
-      kOverwriteNoFiles   = 0x10,
-      kAskUser            = 0x0
+      kAppend              = 0x1,
+      kOverwriteDataSet    = 0x2,
+      kNoOverwriteDataSet  = 0x4,
+      kOverwriteAllFiles   = 0x8,
+      kOverwriteNoFiles    = 0x10,
+      kAskUser             = 0x0
    };
    enum EUploadDataSetAnswer {
-      kError = -1,
-      kDataSetExists = -2
+      kError               = -1,
+      kDataSetExists       = -2
    };
    enum EUploadPackageOpt {
-      kUntar             = 0x0,  //Untar over existing dir [default]
-      kRemoveOld         = 0x1   //Remove existing dir with same name
+      kUntar               = 0x0,  //Untar over existing dir [default]
+      kRemoveOld           = 0x1   //Remove existing dir with same name
    };
 
 private:
@@ -316,6 +316,12 @@ private:
    enum EProofWrkListAction {
       kActivateWorker      = 1,
       kDeactivateWorker    = 2
+   };
+   enum EBuildPackageOpt {
+      kDontBuildOnClient   = -2,
+      kBuildOnSlavesNoWait = -1,
+      kBuildAll            = 0,
+      kCollectBuildResults = 1
    };
 
    Bool_t          fValid;           //is this a valid proof object
@@ -425,9 +431,9 @@ private:
    Int_t    GoParallel(Int_t nodes, Bool_t accept = kFALSE);
    Int_t    SetParallelSilent(Int_t nodes);
    void     RecvLogFile(TSocket *s, Int_t size);
-   Int_t    BuildPackage(const char *package, Int_t opt = 0);
+   Int_t    BuildPackage(const char *package, EBuildPackageOpt opt = kBuildAll);
    Int_t    BuildPackageOnClient(const TString &package);
-   Int_t    LoadPackage(const char *package);
+   Int_t    LoadPackage(const char *package, Bool_t notOnClient = kFALSE);
    Int_t    LoadPackageOnClient(const TString &package);
    Int_t    UnloadPackage(const char *package);
    Int_t    UnloadPackages();
@@ -554,7 +560,7 @@ public:
    void        ShowEnabledPackages(Bool_t all = kFALSE);
    Int_t       ClearPackages();
    Int_t       ClearPackage(const char *package);
-   Int_t       EnablePackage(const char *package);
+   Int_t       EnablePackage(const char *package, Bool_t notOnClient = kFALSE);
    Int_t       UploadPackage(const char *par, EUploadPackageOpt opt = kUntar);
 
    Int_t       AddDynamicPath(const char *libpath);

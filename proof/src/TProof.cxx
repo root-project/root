@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.172 2006/11/28 20:49:54 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.173 2006/12/03 23:34:03 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -3688,6 +3688,12 @@ void TProof::ShowPackages(Bool_t all)
 
    if (!IsValid()) return;
 
+   if (!IsMaster()) {
+      printf("*** Package cache client:%s ***\n", fPackageDir.Data());
+      fflush(stdout);
+      gSystem->Exec(Form("%s %s", kLS, fPackageDir.Data()));
+   }
+
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kShowPackages) << all;
    Broadcast(mess, kUnique);
@@ -3711,6 +3717,13 @@ void TProof::ShowEnabledPackages(Bool_t all)
    // have the same packages enabled.
 
    if (!IsValid()) return;
+
+   if (!IsMaster()) {
+      printf("*** Enabled packages on client on %s\n", gSystem->HostName());
+      TIter next(fEnabledPackagesOnClient);
+      while (TObjString *str = (TObjString*) next())
+         printf("%s\n", str->GetName());
+   }
 
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kShowEnabledPackages) << all;
@@ -3813,7 +3826,7 @@ Int_t TProof::DisablePackages()
 }
 
 //______________________________________________________________________________
-Int_t TProof::BuildPackage(const char *package, Int_t opt)
+Int_t TProof::BuildPackage(const char *package, EBuildPackageOpt opt)
 {
    // Build specified package. Executes the PROOF-INF/BUILD.sh
    // script if it exists on all unique nodes. If opt is -1
@@ -3837,6 +3850,12 @@ Int_t TProof::BuildPackage(const char *package, Int_t opt)
       pac.Remove(pac.Length()-4);
    pac = gSystem->BaseName(pac);
 
+   Bool_t buildOnClient = kTRUE;
+   if (opt == kDontBuildOnClient) {
+      buildOnClient = kFALSE;
+      opt = kBuildAll;
+   }
+
    if (opt <= 0) {
       TMessage mess(kPROOF_CACHE);
       mess << Int_t(kBuildPackage) << pac;
@@ -3850,7 +3869,9 @@ Int_t TProof::BuildPackage(const char *package, Int_t opt)
    if (opt >= 0) {
       // by first forwarding the build commands to the master and slaves
       // and only then building locally we build in parallel
-      Int_t st = BuildPackageOnClient(pac);
+      Int_t st = 0;
+      if (buildOnClient)
+         st = BuildPackageOnClient(pac);
 
       Collect(kAllUnique);
 
@@ -3896,10 +3917,32 @@ Int_t TProof::BuildPackageOnClient(const TString &package)
       gSystem->ChangeDirectory(pdir);
 
       // check for BUILD.sh and execute
-      if (!gSystem->AccessPathName(pdir + "/PROOF-INF/BUILD.sh")) {
+      if (!gSystem->AccessPathName("PROOF-INF/BUILD.sh")) {
+
+         // read version from file proofvers.txt, and if current version is
+         // not the same do a "BUILD.sh clean"
+         FILE *f = fopen("PROOF-INF/proofvers.txt", "r");
+         if (f) {
+            TString v;
+            v.Gets(f);
+            fclose(f);
+            if (v != gROOT->GetVersion()) {
+               if (gSystem->Exec("PROOF-INF/BUILD.sh clean")) {
+                  Error("BuildPackageOnClient", "cleaning package %s on the client failed", package.Data());
+                  status = -1;
+               }
+            }
+         }
+
          if (gSystem->Exec("PROOF-INF/BUILD.sh")) {
             Error("BuildPackageOnClient", "building package %s on the client failed", package.Data());
             status = -1;
+         }
+
+         f = fopen("PROOF-INF/proofvers.txt", "w");
+         if (f) {
+            fputs(gROOT->GetVersion(), f);
+            fclose(f);
          }
       } else {
          PDB(kPackage, 1)
@@ -3917,10 +3960,11 @@ Int_t TProof::BuildPackageOnClient(const TString &package)
 }
 
 //______________________________________________________________________________
-Int_t TProof::LoadPackage(const char *package)
+Int_t TProof::LoadPackage(const char *package, Bool_t notOnClient)
 {
    // Load specified package. Executes the PROOF-INF/SETUP.C script
-   // on all active nodes.
+   // on all active nodes. If notOnClient = true, don't load package
+   // on the client. The default is to load the package also on the client.
    // Returns 0 in case of success and -1 in case of error.
 
    if (!IsValid()) return -1;
@@ -3936,8 +3980,9 @@ Int_t TProof::LoadPackage(const char *package)
       pac.Remove(pac.Length()-4);
    pac = gSystem->BaseName(pac);
 
-   if (LoadPackageOnClient(pac) == -1)
-      return -1;
+   if (!notOnClient)
+      if (LoadPackageOnClient(pac) == -1)
+         return -1;
 
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kLoadPackage) << pac;
@@ -4069,10 +4114,12 @@ Int_t TProof::UnloadPackages()
 }
 
 //______________________________________________________________________________
-Int_t TProof::EnablePackage(const char *package)
+Int_t TProof::EnablePackage(const char *package, Bool_t notOnClient)
 {
    // Enable specified package. Executes the PROOF-INF/BUILD.sh
    // script if it exists followed by the PROOF-INF/SETUP.C script.
+   // In case notOnClient = true, don't enable the package on the client.
+   // The default is to enable packages also on the client.
    // Returns 0 in case of success and -1 in case of error.
 
    if (!IsValid()) return -1;
@@ -4088,10 +4135,14 @@ Int_t TProof::EnablePackage(const char *package)
       pac.Remove(pac.Length()-4);
    pac = gSystem->BaseName(pac);
 
-   if (BuildPackage(pac) == -1)
+   EBuildPackageOpt opt = kBuildAll;
+   if (notOnClient)
+      opt = kDontBuildOnClient;
+
+   if (BuildPackage(pac, opt) == -1)
       return -1;
 
-   if (LoadPackage(pac) == -1)
+   if (LoadPackage(pac, notOnClient) == -1)
       return -1;
 
    return 0;
@@ -4110,7 +4161,7 @@ Int_t TProof::UploadPackage(const char *tpar, EUploadPackageOpt opt)
    // SETUP.C which sets the right environment variables to use the package,
    // like LD_LIBRARY_PATH, etc.
    // The 'opt' allows to specify whether the .PAR should be just unpacked
-   // in the exiting dir (opt = kUntar, default) or a remove of the existing
+   // in the existing dir (opt = kUntar, default) or a remove of the existing
    // directory should be executed (opt = kRemoveOld), so triggering a full
    // re-build. The option if effective only for PROOF protocol > 8 .
    // Returns 0 in case of success and -1 in case of error.

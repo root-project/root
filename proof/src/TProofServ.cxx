@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.151 2006/11/28 12:10:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.152 2006/12/04 15:15:06 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -3690,7 +3690,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
             gSystem->ChangeDirectory(pdir);
 
             // check for BUILD.sh and execute
-            if (!gSystem->AccessPathName(pdir + "/PROOF-INF/BUILD.sh")) {
+            if (!gSystem->AccessPathName("PROOF-INF/BUILD.sh")) {
                // Notify the upper level
                notm.Reset();
                notm << TString(Form("%s: building %s ...", noth.Data(), package.Data())) << notln;
@@ -3698,11 +3698,31 @@ Int_t TProofServ::HandleCache(TMessage *mess)
 
                // forward build command to slaves, but don't wait for results
                if (IsMaster())
-                  fProof->BuildPackage(package, -1);
+                  fProof->BuildPackage(package, TProof::kBuildOnSlavesNoWait);
+
+               // read version from file proofvers.txt, and if current version is
+               // not the same do a "BUILD.sh clean"
+               FILE *f = fopen("PROOF-INF/proofvers.txt", "r");
+               if (f) {
+                  TString v;
+                  v.Gets(f);
+                  fclose(f);
+                  if (v != gROOT->GetVersion()) {
+                     if (gSystem->Exec("PROOF-INF/BUILD.sh clean"))
+                        status = -1;
+                  }
+               }
 
                // build the package
                if (gSystem->Exec("PROOF-INF/BUILD.sh"))
                   status = -1;
+
+               // write version file
+               f = fopen("PROOF-INF/proofvers.txt", "w");
+               if (f) {
+                  fputs(gROOT->GetVersion(), f);
+                  fclose(f);
+               }
             }
 
             gSystem->ChangeDirectory(ocwd);
@@ -3719,7 +3739,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          } else {
             // collect built results from slaves
             if (IsMaster())
-               fProof->BuildPackage(package, 1);
+               fProof->BuildPackage(package, TProof::kCollectBuildResults);
             PDB(kPackage, 1)
                Info("HandleCache", "package %s successfully built", package.Data());
          }
