@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.51 2006/10/17 06:09:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.52 2006/12/08 07:42:31 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -128,9 +128,11 @@ inline PyObject* PyROOT::TMethodHolder< T, M >::CallSafe( void* self )
 }
 
 //____________________________________________________________________________
+namespace PyROOT {
+
 #ifdef PYROOT_USE_REFLEX
 template<>
-Bool_t PyROOT::TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::InitCallFunc_()
+Bool_t TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::InitCallFunc_()
 {
 // build buffers for argument dispatching
    const size_t nArgs = fMethod.FunctionParameterSize();
@@ -154,6 +156,8 @@ Bool_t PyROOT::TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::InitC
    return kTRUE;
 }
 #endif
+
+} // namespace PyROOT
 
 template< class T, class M >
 Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
@@ -356,10 +360,14 @@ PyObject* PyROOT::TMethodHolder< T, M >::GetPrototype()
 }
 
 //____________________________________________________________________________
+namespace PyROOT {
+
 #ifdef PYROOT_USE_REFLEX
 template<>
-Int_t PyROOT::TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::GetPriority();
+Int_t TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::GetPriority();
 #endif
+
+} // namespace PyROOT
 
 template< class T, class M >
 Int_t PyROOT::TMethodHolder< T, M >::GetPriority()
@@ -395,15 +403,19 @@ Int_t PyROOT::TMethodHolder< T, M >::GetPriority()
    return priority;
 }
 
+namespace PyROOT {
+
 #ifdef PYROOT_USE_REFLEX
 template<>
-Int_t PyROOT::TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::GetPriority()
+Int_t TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::GetPriority()
 {
 // Scope, Type, what's in a name ...
    return ((TMethodHolder< ROOT::Reflex::Type, ROOT::Reflex::Member >*)this)->
       TMethodHolder< ROOT::Reflex::Type, ROOT::Reflex::Member >::GetPriority();
 }
 #endif
+
+} // endif
 
 //____________________________________________________________________________
 template< class T, class M >
@@ -498,9 +510,11 @@ Bool_t PyROOT::TMethodHolder< T, M >::SetMethodArgs( PyObject* args )
 }
 
 //____________________________________________________________________________
+namespace PyROOT {
+
 #ifdef PYROOT_USE_REFLEX
 template<>
-PyObject* PyROOT::TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::Execute( void* self )
+PyObject* TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::Execute( void* self )
 {
 // my first Reflex call ... this is all pretty wrong, but hey, it's a proto-prototype :)
 
@@ -524,6 +538,8 @@ PyObject* PyROOT::TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::Ex
    return Py_None;
 }
 #endif
+
+} // namespace PyROOT
 
 template< class T, class M >
 PyObject* PyROOT::TMethodHolder< T, M >::Execute( void* self )

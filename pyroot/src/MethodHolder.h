@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.22 2006/06/13 06:39:05 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.24 2006/12/08 07:42:31 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_TMETHODHOLDER_H
@@ -94,8 +94,8 @@ namespace PyROOT {
    // call dispatch buffers
       std::vector< TConverter* > fConverters;
 
-      std::vector< Parameter > fParameters;
-      std::vector< void* >     fParamPtrs;
+      std::vector< TParameter > fParameters;
+      std::vector< void* >      fParamPtrs;
 
    // cached values
       Int_t        fArgsRequired;

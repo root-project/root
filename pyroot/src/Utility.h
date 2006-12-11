@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.22 2006/10/17 06:09:16 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.23 2006/12/08 07:42:31 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H
@@ -21,13 +21,13 @@ namespace PyROOT {
    R__EXTERN Bool_t gDictLookupActive;
 
 // general place holder for function parameters
-   union Parameter {
-      Long_t      l;
-      ULong_t    ul;
-      Long64_t   ll;
-      ULong64_t ull;
-      Double_t    d;
-      void*       v;
+   union TParameter {
+      Long_t      fl;
+      ULong_t    ful;
+      Long64_t   fll;
+      ULong64_t full;
+      Double_t    fd;
+      void*       fv;
    };
 
    namespace Utility {

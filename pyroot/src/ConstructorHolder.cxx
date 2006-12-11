@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.14 2006/12/08 07:42:31 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ConstructorHolder.cxx,v 1.15 2006/12/09 06:11:46 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -37,21 +37,24 @@ PyROOT::TConstructorHolder< T, M >::TConstructorHolder( const T& klass, const M&
 }
 
 //____________________________________________________________________________
+namespace PyROOT {
+
 template<>
-PyROOT::TConstructorHolder< PyROOT::TScopeAdapter, PyROOT::TMemberAdapter >::TConstructorHolder(
-      const PyROOT::TScopeAdapter& klass ) :
-   TMethodHolder< PyROOT::TScopeAdapter, PyROOT::TMemberAdapter >( klass, (TFunction*)0 )
+TConstructorHolder< TScopeAdapter, TMemberAdapter >::TConstructorHolder( const TScopeAdapter& klass ) :
+   TMethodHolder< TScopeAdapter, TMemberAdapter >( klass, (TFunction*)0 )
 {
 }
 
 #ifdef PYROOT_USE_REFLEX
 template<>
-PyROOT::TConstructorHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::TConstructorHolder(
+TConstructorHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::TConstructorHolder(
       const ROOT::Reflex::Scope& klass ) :
    TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >( klass, ROOT::Reflex::Member() )
 {
 }
 #endif
+
+} // namespace PyROOT
 
 //- public members -----------------------------------------------------------
 template< class T, class M >
@@ -64,9 +67,11 @@ PyObject* PyROOT::TConstructorHolder< T, M >::GetDocString()
 }
 
 //____________________________________________________________________________
+namespace PyROOT {
+
 #ifdef PYROOT_USE_REFLEX
 template<>
-PyObject* PyROOT::TConstructorHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::operator()(
+PyObject* TConstructorHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::operator()(
       ObjectProxy* self, PyObject* args, PyObject* kwds )
 {
 // setup as necessary
@@ -107,6 +112,8 @@ PyObject* PyROOT::TConstructorHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member 
    return 0;
 }
 #endif
+
+} // namespace PyROOT
 
 template< class T, class M >
 PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
