@@ -1,4 +1,4 @@
-# @(#)root/mathcore:$Name:  $:$Id: src_Makefile.am,v 1.4 2005/12/06 17:17:48 moneta Exp $
+# @(#)root/mathcore:$Name:  $:$Id: src_Makefile.am,v 1.5 2006/08/22 09:45:32 moneta Exp $
 # Author: L. Moneta    2005  
 #
 ## Process this file with automake to produce Makefile.in .
@@ -21,10 +21,10 @@ libMathCore_la_SOURCES =		\
          AxisAngle.cxx                  \
          AxisAngleXother.cxx            \
          BitReproducible.cxx            \
-         DistFunc.cxx                   \
          EulerAngles.cxx                \
          GenVector_exception.cxx        \
          LorentzRotation.cxx            \
+         PdfFuncMathCore.cxx            \
 	 Plane3D.cxx                    \
          ProbFuncMathCore.cxx           \
          Quaternion.cxx                 \

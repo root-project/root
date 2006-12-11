@@ -1,4 +1,4 @@
-# @(#)root/mathcore:$Name:  $:$Id: inc_Math_Makefile.am,v 1.4 2005/12/06 17:17:48 moneta Exp $
+# @(#)root/mathcore:$Name:  $:$Id: inc_Math_Makefile.am,v 1.5 2006/11/20 14:26:12 moneta Exp $
 # Author: L. Moneta    2005  
 #
 ## Process this file with automake to produce Makefile.in .
@@ -23,6 +23,7 @@ math_HEADERS =           	        \
          CylindricalEta3D.h             \
          DisplacementVector3D.h         \
          DistFunc.h                     \
+         DistFuncMathCore.h             \
          EulerAngles.h                  \
          Functor.h                      \
          IFunction.h                    \
@@ -31,11 +32,14 @@ math_HEADERS =           	        \
          IParamFunctionfwd.h            \
          LorentzRotation.h              \
          LorentzVector.h                \
+         PdfFunc.h                      \
+         PdfFuncMathCore.h              \
          Plane3D.h                      \
          Point3D.h                      \
          Point3Dfwd.h                   \
          Polar3D.h                      \
          PositionVector3D.h             \
+         ProbFunc.h                     \
          ProbFuncMathCore.h             \
          PtEtaPhiE4D.h                  \
          PtEtaPhiM4D.h                  \
@@ -46,6 +50,7 @@ math_HEADERS =           	        \
          RotationX.h                    \
          RotationY.h                    \
          RotationZ.h                    \
+         SpecFunc.h                     \
          SpecFuncMathCore.h             \
          Transform3D.h                  \
          Util.h                         \
@@ -55,6 +60,7 @@ math_HEADERS =           	        \
          Vector4Dfwd.h                  \
          VectorUtil.h                   \
          VectorUtil_Cint.h              \
-         WrappedFunction.h    
+         WrappedFunction.h              \
+         WrappedParamFunction.h
 
 

@@ -3,10 +3,10 @@ dnl
 dnl Author: Paul F. Kunz <Paul_Kunz@slac.stanford.edu>
 dnl
 
-AC_INIT(src/DistFunc.cxx)
+AC_INIT(src/Rotation3D.cxx)
 AM_CONFIG_HEADER(config.h)
 AC_CONFIG_AUX_DIR(config)
-AM_INIT_AUTOMAKE(MathCore, 5.13.06)
+AM_INIT_AUTOMAKE(MathCore, 5.14.00)
 
 dnl Checks for programs.
 AC_PROG_CXX

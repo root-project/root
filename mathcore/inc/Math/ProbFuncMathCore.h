@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: ProbFuncMathCore.h,v 1.2 2005/12/08 21:56:39 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: ProbFuncMathCore.h,v 1.3 2006/12/06 17:51:13 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   06/2005 
 
 #ifndef ROOT_Math_ProbFuncMathCore
@@ -24,11 +24,16 @@ namespace Math {
    *  \f[ D(x) = \int_{x}^{+\infty} p(x') dx' \f]
    *
    * 
-   * <bf>NOTE:</bf> In the old releases (< 5.14) the <em>_cdf</em> functions were called 
+   * <strong>NOTE:</strong> In the old releases (< 5.14) the <em>_cdf</em> functions were called 
    * <em>_quant</em> and the <em>_cdf_c</em> functions were called 
    * <em>_prob</em>. 
    * These names are currently kept for backward compatibility, but 
    * their usage is deprecated.
+   *
+   *
+   *   Additional CDF's are provided in the 
+   *  <A HREF="../../MathMore/html/group__StatFunc.html">MathMore</A> library. 
+   *
    */
   //@{
 

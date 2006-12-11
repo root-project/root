@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: PdfFunc.h,v 1.1 2006/12/07 11:07:03 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PdfFuncMathCore.h,v 1.1 2006/12/08 16:42:52 moneta Exp $
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
 
 /**********************************************************************
@@ -13,13 +13,17 @@
 /**
 
 Probability density functions, cumulative distribution functions 
-and their inverses of the different distributions.
+and their inverses for various statistical distributions (continuous and discrete).
 Whenever possible the conventions followed are those of the
 CRC Concise Encyclopedia of Mathematics, Second Edition
 (or <A HREF="http://mathworld.wolfram.com/">Mathworld</A>).
 By convention the distributions are centered around 0, so for
 example in the case of a Gaussian there is no parameter mu. The
-user must calculate the shift himself if he wishes.
+user must calculate the shift himself if he wishes. 
+
+MathCore provides the majority of the probability density funcitons and a sub-set of the 
+cumulative distributions. Additional distributions and all the inverses cumulative distributions 
+(quantiles) are provided by <A HREF="../../MathMore/html/group__StatFunc.html">MathMore</A> library. 
 
 
 @author Created by Andras Zsenei on Wed Nov 17 2004
@@ -45,10 +49,14 @@ namespace Math {
 
 
   /** @name Probability Density Functions (PDF)
-   *  Probability density functions of various distributions.
+   *  Probability density functions of various statistical distributions 
+   *  (continuous and discrete).
    *  The probability density function returns the probability that 
    *  the variate has the value x. 
-   *  In statistics the PDF is called also as the frequency function.
+   *  In statistics the PDF is also called the frequency function.
+   *  
+   *  Additional PDF's are provided in the 
+   *  <A HREF="../../MathMore/html/group__StatFunc.html">MathMore</A> library. 
    * 
    */
   //@{
