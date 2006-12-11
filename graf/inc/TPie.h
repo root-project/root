@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPie.h,v 1.3 2006/11/22 15:42:22 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPie.h,v 1.4 2006/11/24 13:07:55 couet Exp $
 // Author: Guido Volpi, Olivier Couet  03/11/2006
 
 /*************************************************************************
@@ -32,13 +32,6 @@ private:
    void MakeSlices(Bool_t force=kFALSE);
    void DrawGhost();
 
-   Int_t    fCurrent_slice; //!Current slice under mouse
-   Double_t fCurrent_phi1;  //!Phimin of the current slice
-   Double_t fCurrent_phi2;  //!Phimax of the current slice
-   Double_t fCurrent_rad;   //!Current distance from the vertex of the current slice
-   Double_t fCurrent_x;     //!Current x in the pad metric
-   Double_t fCurrent_y;     //!Current y in the pad metric
-   Double_t fCurrent_ang;   //!Current angular, within current_phi1 and current_phi2
    Float_t  fSum;           //!Sum for the slice values
    Float_t *fSlices;        //!Subdivisions of the slices
 
@@ -49,7 +42,7 @@ protected:
    Double_t  fAngularOffset;  // Offset angular offset for the first slice
    Float_t   fLabelsOffset;   // LabelsOffset offset of label
    TString   fLabelFormat;    // Format format of the slices' label
-   TString   fValFormat;      // Vform numeric format for the value
+   TString   fValueFormat;    // Vform numeric format for the value
    TString   fFractionFormat; // Rform numeric format for the fraction of a slice
    TString   fPercentFormat;  // Pfrom numeric format for the percent of a slice
    Int_t     fNvals;          // Number of elements
@@ -61,7 +54,8 @@ protected:
    Int_t    *fLineStyles;     //[fNvals] Line style
    Int_t    *fLineWidths;     //[fNvals] Line width
    Double_t *fRadiusOffsets;  //[fNvals] Distance of a slice from the center
-   Bool_t fIs3D;              //! true if the pseudo-3d is enabled
+   Bool_t    fIs3D;           //! true if the pseudo-3d is enabled
+   Double_t  fHeight;         // Pheight height of the slice
 
 public:
 
@@ -77,6 +71,8 @@ public:
    Int_t          DistancetoSlice(Int_t,Int_t);
    virtual void   Draw(Option_t *option="l");
    virtual void   ExecuteEvent(Int_t,Int_t,Int_t);
+   Double_t       GetAngularOffset() { return fAngularOffset; }
+   Double_t       GetHeight() { return fHeight; }
    const char*    GetEntryLabel(Int_t);
    Int_t          GetEntryFillColor(Int_t);
    Int_t          GetEntryFillStyle(Int_t);
@@ -85,10 +81,9 @@ public:
    const char    *GetFractionFormat() { return fFractionFormat.Data(); }
    const char    *GetLabelFormat() { return fLabelFormat.Data(); }
    Float_t        GetLabelsOffset() { return fLabelsOffset; }
-   Double_t       GetAngularOffset() { return fAngularOffset; }
    const char    *GetPercentFormat() { return fPercentFormat.Data(); }
    Double_t       GetRadius() { return fRadius;}
-   const char    *GetValFormat() { return fValFormat.Data(); }
+   const char    *GetValueFormat() { return fValueFormat.Data(); }
    Double_t       GetX() { return fX; }
    Double_t       GetY() { return fY; }
    virtual void   Paint(Option_t *);
@@ -105,13 +100,14 @@ public:
    void           SetEntryVal(Int_t, Double_t);
    void           SetFillColors(Int_t*);
    void           SetFractionFormat(const char*); // *MENU*
+   void           SetHeight(Double_t val=0.08); // *MENU*
    void           SetLabel(const char *); // *MENU*
    void           SetLabelFormat(const char *); // *MENU*
    void           SetLabels(const char *[]);
    void           SetLabelsOffset(Float_t); // *MENU*
    void           SetPercentFormat(const char *); // *MENU*
-   void           SetRadius(Double_t);
-   void           SetValFormat(const char *); // *MENU*
+   void           SetRadius(Double_t); // *MENU*
+   void           SetValueFormat(const char *); // *MENU*
    void           SetX(Double_t); // *MENU*
    void           SetY(Double_t); // *MENU*
 
