@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ProbFuncInv.h,v 1.4 2006/12/06 17:53:47 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: ProbFuncInv.h,v 1.5 2006/12/08 16:39:54 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -53,7 +53,7 @@ namespace Math {
    *
    *  \f[ D(x) = \int_{x}^{+\infty} p(x') dx' \f]
    *
-   * <bf>NOTE:</bf> In the old releases (< 5.14) the <em>_quantile</em> functions were called 
+   * <strong>NOTE:</strong> In the old releases (< 5.14) the <em>_quantile</em> functions were called 
    * <em>_quant_inv</em> and the <em>_quantile_c</em> functions were called 
    * <em>_prob_inv</em>. 
    * These names are currently kept for backward compatibility, but 

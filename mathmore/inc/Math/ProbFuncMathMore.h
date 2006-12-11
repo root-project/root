@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ProbFuncMathMore.h,v 1.2 2006/12/06 17:53:47 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: ProbFuncMathMore.h,v 1.3 2006/12/08 16:39:54 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -48,7 +48,7 @@ namespace Math {
    *  \f[ D(x) = \int_{x}^{+\infty} p(x') dx' \f]
    *
    * 
-   * <bf>NOTE:</bf> In the old releases (< 5.14) the <em>_cdf</em> functions were called 
+   * <strong>NOTE:</strong> In the old releases (< 5.14) the <em>_cdf</em> functions were called 
    * <em>_quant</em> and the <em>_cdf_c</em> functions were called 
    * <em>_prob</em>. 
    * These names are currently kept for backward compatibility, but 
@@ -56,7 +56,8 @@ namespace Math {
    *
    * The implementation used is that of 
    * <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Random-Number-Distributions.html">GSL</A>.
-   *
+   * Additional CDF are provided in the 
+   *  <A HREF="../../MathCore/html/group__StatFunc.html">MathCore</A> library. 
    * 
    */
   //@{

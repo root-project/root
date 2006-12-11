@@ -1,4 +1,4 @@
-# @(#)root/mathcore:$Name:  $:$Id: inc_Math_Makefile.am,v 1.4 2006/10/05 15:23:42 moneta Exp $
+# @(#)root/mathcore:$Name:  $:$Id: inc_Math_Makefile.am,v 1.5 2006/11/20 14:27:17 moneta Exp $
 # Author: L. Moneta    2005  
 #
 ## Process this file with automake to produce Makefile.in .
@@ -13,6 +13,7 @@ mathdir = $(includedir)/Math
 math_HEADERS =           	       \
          Chebyshev.h                   \
          Derivator.h                   \
+         DistFuncMathMore.h            \
          GSLFunctionAdapter.h          \
 	 GSLRndmEngines.h	       \
          GSLRootFinder.h               \
@@ -24,14 +25,13 @@ math_HEADERS =           	       \
          Interpolator.h                \
          Minimizer1D.h                 \
          ParamFunction.h               \
+         PdfFuncMathMore.h             \
          Polynomial.h                  \
-         ProbFunc.h                    \
          ProbFuncInv.h                 \
          ProbFuncMathMore.h            \
 	 Random.h                      \
          RootFinder.h                  \
          RootFinderAlgorithms.h        \
-         SpecFunc.h                    \
          SpecFuncMathMore.h            \
          WrappedFunction.h             \
          WrappedTF1.h                  \
@@ -42,6 +42,7 @@ math_HEADERS =           	       \
          IParamFunctionfwd.h           \
          Functor.h                     \
          Util.h                        \
+         WrappedParamFunction.h        \
          WrappedFunction.h    
 
 

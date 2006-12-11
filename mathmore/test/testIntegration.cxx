@@ -110,10 +110,11 @@ void testIntegration() {
 
 void  testIntegPerf(){
 
+#ifdef HAVE_ROOTLIBS
+
    std::cout << "\n\n***************************************************************\n";
    std::cout << "Test integration performances....\n\n";
 
-#ifdef HAVE_ROOTLIBS
 
   ROOT::Math::Polynomial f1(2); 
   double p[3] = {2,3,4};

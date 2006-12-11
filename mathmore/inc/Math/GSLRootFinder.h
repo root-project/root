@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinder.h,v 1.2 2006/11/17 18:26:50 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinder.h,v 1.3 2006/12/11 15:06:37 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -77,16 +77,10 @@ namespace Math {
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY)  
       void SetFunction( const IGradFunction & , double ) { 
-         std::cerr <<"GSLRootFinder - Error : this methoid must be used with a Root Finder method using derivatives" << std::endl;  
+         std::cerr <<"GSLRootFinder - Error : this method must be used with a Root Finder algorithm using derivatives" << std::endl;  
       }
 #endif
    
-     /**  
-     void SetFunction( const IGenFunction & f, double xlow, double xup) { 
-       const void * p = &f; 
-       SetFunction(  &GSLFunctionAdapter<IGenFunction>::F, const_cast<void *>(p), xlow, xup ); 
-     }
-     */
      void SetFunction( const IGenFunction & f, double xlow, double xup);
 
      typedef double ( * GSLFuncPointer ) ( double, void *);

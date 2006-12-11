@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLDerivator.cxx,v 1.2 2006/12/06 15:16:02 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLDerivator.cxx,v 1.3 2006/12/11 15:06:37 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -46,7 +46,7 @@ namespace Math {
 
 double GSLDerivator::EvalCentral( double x, double h) {    
    // Central evaluation using previously set function  
-   if (fFunction.FunctionPtr() == 0) { 
+   if ( !fFunction.IsValid() ) { 
       std::cerr << "GSLDerivator: Error : The function has not been specified" << std::endl;
       fStatus = -1; 
       return 0; 
@@ -57,7 +57,7 @@ double GSLDerivator::EvalCentral( double x, double h) {
 
 double GSLDerivator::EvalForward( double x, double h) {
    // Forward evaluation using previously set function  
-   if (fFunction.FunctionPtr() == 0) { 
+   if ( !fFunction.IsValid() ) { 
       std::cerr << "GSLDerivator: Error : The function has not been specified" << std::endl;
       fStatus = -1; 
       return 0; 
@@ -68,7 +68,7 @@ double GSLDerivator::EvalForward( double x, double h) {
 
 double GSLDerivator::EvalBackward( double x, double h) { 
    // Backward evaluation using previously set function  
-   if (fFunction.IsValid() ) { 
+   if ( !fFunction.IsValid() ) { 
       std::cerr << "GSLDerivator: Error : The function has not been specified" << std::endl;
       fStatus = -1; 
       return 0; 

@@ -4,17 +4,19 @@
 #include "Math/Functor.h"
 #include "Math/WrappedFunction.h"
 #include "Math/WrappedParamFunction.h"
-#include "Math/DistFunc.h"
 #include <iostream>
 #include <vector>
 #include <cassert>
 #include <cmath>
 
 #ifdef HAVE_ROOTLIBS
+
 #include "TStopwatch.h"
 #include "TF1.h"
 #include "Math/WrappedTF1.h"
 #include "Math/WrappedMultiTF1.h"
+#include "Math/DistFunc.h"
+
 #endif
 
 
@@ -112,9 +114,10 @@ void testDerivation() {
 }
 
 
+#ifdef HAVE_ROOTLIBS
+
 void testDerivPerf() { 
 
-#ifdef HAVE_ROOTLIBS
 
    std::cout << "\n\n***************************************************************\n";
    std::cout << "Test derivation performances....\n\n";
@@ -176,7 +179,6 @@ void testDerivPerf() {
   std::cout << s2 << std::endl;
   std::cout.precision(pr);
 
-#endif  
 
 
 }
@@ -190,7 +192,6 @@ double userFunc2(const double * x) { return userFunc(x); }
 
 void testDerivPerfUser() { 
 
-#ifdef HAVE_ROOTLIBS
 
    std::cout << "\n\n***************************************************************\n";
    std::cout << "Test derivation performances - using a User function\n\n";
@@ -263,17 +264,17 @@ void testDerivPerfUser() {
   pr = std::cout.precision(18); std::cout << s1 << std::endl; std::cout.precision(pr);
 
 
-#endif  
 
 }
+
 
 double gausFunc( const double * x, const double * p) { 
    return p[0] * ROOT::Math::normal_pdf(x[0], p[2], p[1] ); 
 }
 
+
 void testDerivPerfParam() { 
 
-#ifdef HAVE_ROOTLIBS
 
    std::cout << "\n\n***************************************************************\n";
    std::cout << "Test derivation performances - using a Gaussian Param function\n\n";
@@ -337,15 +338,20 @@ void testDerivPerfParam() {
   std::cout << "Time using TF1::ParamGradient:\t\t" << timer.RealTime() << std::endl; 
   pr = std::cout.precision(18); std::cout << s1 << std::endl; std::cout.precision(pr);
 
-#endif  
 }
+
+#endif
 
 int main() {
 
   testDerivation();
+
+#ifdef HAVE_ROOTLIBS
   testDerivPerf();
   testDerivPerfUser();
   testDerivPerfParam();
+#endif
+
   return 0;
 
 }

@@ -16,7 +16,7 @@
 #define PI       3.14159265358979323846264338328      /* pi */
 #endif
 
-#define NEVT 10000
+//#define NEVT 10000
 #ifndef NEVT
 #define NEVT 10000000
 #endif

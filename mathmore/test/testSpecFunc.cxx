@@ -115,7 +115,7 @@ int testSpecFunc() {
 
    std::cout.precision(20);
 
-//#ifndef NO_MATHCORE 
+#ifndef NO_MATHCORE 
    // explicit put namespace to be sure to use right ones
 
   iret |= compare("tgamma(9.0) ", ROOT::Math::tgamma(9.0), 40320.0, 4);
@@ -126,7 +126,7 @@ int testSpecFunc() {
 
  iret |= compare("beta(1.0, 5.0) ", ROOT::Math::beta(1.0, 5.0), 0.2);
 
-//#endif
+#endif
 
    iret |= compare("assoc_laguerre(4,  2, 0.5) ", assoc_laguerre(4, 2, 0.5), 6.752604166666666667,8);
 

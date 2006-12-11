@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: ProbFuncMathMore.h,v 1.2 2006/12/06 17:53:47 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: PdfFuncMathMore.h,v 1.1 2006/12/08 16:44:27 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -27,13 +27,21 @@
 /**
 
 Probability density functions, cumulative distribution functions 
-and their inverses of the different distributions.
+and their inverses for various statistical distributions (continuous and discrete).
 Whenever possible the conventions followed are those of the
 CRC Concise Encyclopedia of Mathematics, Second Edition
 (or <A HREF="http://mathworld.wolfram.com/">Mathworld</A>).
 By convention the distributions are centered around 0, so for
 example in the case of a Gaussian there is no parameter mu. The
-user must calculate the shift himself if he wishes.
+user must calculate the shift himself if he wishes. 
+
+MathMore complements the functions provided also by the <A HREF="../../MathCore/html/group__StatFunc.html">MathCore</A> library using  
+<A HREF="http://www.gnu.org/software/gsl/manual/html_node/Random-Number-Distributions.html">GSL</A> 
+for the implementation. 
+It provides few  probability density funcitons,  a sub-set of the 
+cumulative distributions and all inverses cumulative distributions 
+(quantiles).  
+
 
 
 @author Created by Andras Zsenei on Wed Nov 17 2004
@@ -50,10 +58,15 @@ namespace ROOT {
 namespace Math {
 
   /** @name Probability Density Functions (PDF)
-   *  Probability density functions of various distributions.
+   *  Probability density functions of various distributions (continuous and discrete).
    *  The probability density function returns the probability that 
    *  the variate has the value x. 
-   *  In statistics the PDF is called also as the frequency function.
+   *  In statistics the PDF is called also the frequency function.
+   * 
+   *  The PDF's in MathMore are implemented using 
+   *  <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Random-Number-Distributions.html">GSL</A>.  
+   *   Additional PDF's are provided in the 
+   *  <A HREF="../../MathCore/html/group__StatFunc.html">MathCore</A> library. 
    *   
    */
 
