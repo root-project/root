@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.34 2006/12/08 07:42:31 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.35 2006/12/11 06:01:05 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -672,7 +672,10 @@ Bool_t PyROOT::T##name##Converter::SetArg( PyObject* pyobject, TParameter& para,
       return kTRUE;                                                           \
    }                                                                          \
                                                                               \
-   return TRootObjectConverter::SetArg( pyobject, para, func );               \
+   if ( ! ( PyInt_Check( pyobject ) || PyLong_Check( pyobject ) ) )           \
+      return TRootObjectConverter::SetArg( pyobject, para, func );            \
+                                                                              \
+   return kFALSE;                                                             \
 }                                                                             \
                                                                               \
 PyObject* PyROOT::T##name##Converter::FromMemory( void* address )             \
