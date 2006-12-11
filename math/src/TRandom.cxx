@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.32 2006/05/26 16:38:56 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.33 2006/05/28 06:15:54 brun Exp $
 // Author: Rene Brun, Lorenzo Moneta   15/12/95
 
 /*************************************************************************
@@ -308,7 +308,7 @@ Double_t TRandom::Landau(Double_t mpv, Double_t sigma)
 //  with mpv(most probable value) and sigma
 //  Converted by Rene Brun from CERNLIB routine ranlan(G110)
 
-   const Double_t f[982] = {
+   static Double_t f[982] = {
        0       , 0       , 0       ,0        ,0        ,-2.244733,
       -2.204365,-2.168163,-2.135219,-2.104898,-2.076740,-2.050397,
       -2.025605,-2.002150,-1.979866,-1.958612,-1.938275,-1.918760,
