@@ -22,14 +22,18 @@ namespace {
 
 
 //- constructor -----------------------------------------------------------------
+namespace PyROOT {
+
 #ifdef PYROOT_USE_REFLEX
 template<>
-PyROOT::TFunctionHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::TFunctionHolder(
+TFunctionHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::TFunctionHolder(
       const ROOT::Reflex::Member& function ) :
    TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >( ROOT::Reflex::Scope(), function )
 {
 }
 #endif
+
+} // namespace PyROOT
 
 template< class T, class M >
 PyROOT::TFunctionHolder< T, M >::TFunctionHolder( const M& function ) :
