@@ -15,7 +15,7 @@ void shapes() {
    TBRIK *brik  = new TBRIK("BRIK","BRIK","void",200,150,150);
    TTRD1 *trd1  = new TTRD1("TRD1","TRD1","void",200,50,100,100);
    TTRD2 *trd2  = new TTRD2("TRD2","TRD2","void",200,50,200,50,100);
-   TTRAL *trap  = new TTRAP("TRAP","TRAP","void",190,0,0,60,40,90,15,120,80,180,15);
+   TTRAP *trap  = new TTRAP("TRAP","TRAP","void",190,0,0,60,40,90,15,120,80,180,15);
    TPARA *para  = new TPARA("PARA","PARA","void",100,200,200,15,30,30);
    TGTRA *gtra  = new TGTRA("GTRA","GTRA","void",390,0,0,20,60,40,90,15,120,80,180,15);
    TTUBE *tube  = new TTUBE("TUBE","TUBE","void",150,200,400);
