@@ -349,7 +349,7 @@ int testStatFunc() {
 
    std::cout << "Chisquare distribution\t: "; 
    tol = 4; 
-   TESTDIST1(chisquared,10.,tol);
+   TESTDIST1(chisquared,9.,tol);
 
    tol = 2; 
    

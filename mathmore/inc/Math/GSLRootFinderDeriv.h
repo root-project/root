@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinderDeriv.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinderDeriv.h,v 1.2 2006/11/17 18:26:50 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -78,10 +78,12 @@ namespace Math {
    public: 
 
 
-     void SetFunction( const IGenFunction & , double , double ) { 
-        std::cerr <<"GSLRootFinderDeriv - Error : Algorithm requirs derivatives" << std::endl;  
-     }
-    
+
+#if defined(__MAKECINT__) || defined(G__DICTIONARY)     
+      void SetFunction( const IGenFunction & , double , double ) { 
+         std::cerr <<"GSLRootFinderDeriv - Error : Algorithm requirs derivatives" << std::endl;  
+      }
+#endif    
      
      void SetFunction( const IGradFunction & f, double Root) { 
        const void * p = &f; 

@@ -128,7 +128,7 @@ int testSpecFunc() {
 
 //#endif
 
-   iret |= compare("assoc_laguerre(4,  2, 0.5) ", assoc_laguerre(4, 2, 0.5), 6.752604166666666667);
+   iret |= compare("assoc_laguerre(4,  2, 0.5) ", assoc_laguerre(4, 2, 0.5), 6.752604166666666667,8);
 
    iret |= compare("assoc_legendre(10, 1, -0.5) ", assoc_legendre(10, 1, -0.5), -2.0066877394361256516);
 

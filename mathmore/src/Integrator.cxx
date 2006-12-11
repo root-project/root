@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Integrator.cxx,v 1.4 2006/06/16 10:34:08 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Integrator.cxx,v 1.5 2006/11/17 18:26:50 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -43,45 +43,67 @@
 namespace ROOT {
 namespace Math {
 
+// full constructors
 
-
+Integrator::Integrator(Integration::Type type , Integration::GKRule rule, double absTol, double relTol, size_t size) {
+   // full constructor 
+   fIntegrator = new GSLIntegrator(type, rule, absTol, relTol, size);
+}
   
 
 Integrator::Integrator(const IGenFunction &f, Integration::Type type , Integration::GKRule rule, double absTol, double relTol, size_t size) {
    // full constructor with IGenFunction
-   fIntegrator = new GSLIntegrator(f, type, rule, absTol, relTol, size);
+   fIntegrator = new GSLIntegrator(type, rule, absTol, relTol, size);
+   fIntegrator->SetFunction(f);
+}
+
+Integrator::Integrator(GSLFuncPointer f, Integration::Type type , Integration::GKRule rule, double absTol, double relTol, size_t size) {
+   // full constructor with GSL function pointer type
+   fIntegrator = new GSLIntegrator(type, rule, absTol, relTol, size);
+   fIntegrator->SetFunction(f);
+}
+
+// constructors using default type
+
+Integrator::Integrator(double absTol, double relTol, size_t size) {
+   // constructor with default type (ADaptiveSingular) ,  rule is not needed  
+   fIntegrator = new GSLIntegrator(absTol, relTol, size);
 }
 
 
 Integrator::Integrator(const IGenFunction &f, double absTol, double relTol, size_t size) {
    // constructor with default type (ADaptiveSingular) ,  rule is not needed  
-   fIntegrator = new GSLIntegrator(f, absTol, relTol, size);
+   fIntegrator = new GSLIntegrator(absTol, relTol, size);
+   fIntegrator->SetFunction(f);
 }
-
-
-
-Integrator::Integrator(const IGenFunction &f, Integration::Type type , double absTol, double relTol, size_t size) {
-   // constructor with default rule (gauss31) passing the type
-   fIntegrator = new GSLIntegrator(f, type, absTol, relTol, size);
-}
-
-Integrator::Integrator(GSLFuncPointer f, Integration::Type type , Integration::GKRule rule, double absTol, double relTol, size_t size) {
-   // full constructor with GSL function pointer type
-   fIntegrator = new GSLIntegrator(f, type, rule, absTol, relTol, size);
-}
-
 
 
 Integrator::Integrator(GSLFuncPointer f, double absTol, double relTol, size_t size) {
    // constructor with GSL function pointer type and with default type (ADaptiveSingular) ,  rule is not needed  
-   fIntegrator = new GSLIntegrator(f, absTol, relTol, size);
+   fIntegrator = new GSLIntegrator(absTol, relTol, size);
+   fIntegrator->SetFunction(f);
 }
 
+
+// constructor using default integration rule but requiring a type
+
+Integrator::Integrator(Integration::Type type , double absTol, double relTol, size_t size) {
+   // constructor with default rule (gauss31) passing the type
+   fIntegrator = new GSLIntegrator(type, absTol, relTol, size);
+}
+
+
+Integrator::Integrator(const IGenFunction &f, Integration::Type type , double absTol, double relTol, size_t size) {
+   // constructor with default rule (gauss31) passing the type
+   fIntegrator = new GSLIntegrator(type, absTol, relTol, size);
+   fIntegrator->SetFunction(f);
+}
 
 
 Integrator::Integrator(GSLFuncPointer f, Integration::Type type , double absTol, double relTol, size_t size) {
    // constructor with GSL function pointer type and with default rule (gauss31) passing the type
-   fIntegrator = new GSLIntegrator(f, type, absTol, relTol, size);
+   fIntegrator = new GSLIntegrator(type, absTol, relTol, size);
+   fIntegrator->SetFunction(f);
 }
 
 Integrator::~Integrator()

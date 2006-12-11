@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrator.cxx,v 1.5 2006/06/19 08:44:08 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrator.cxx,v 1.6 2006/11/17 18:26:50 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -37,6 +37,7 @@
 #include "GSLIntegrationWorkspace.h"
 #include "GSLFunctionWrapper.h"
 
+#include <iostream>
 
 
 
@@ -46,130 +47,62 @@ namespace Math {
 
  
 
-GSLIntegrator::GSLIntegrator(const IGenFunction &f, const Integration::Type type , const Integration::GKRule rule, double absTol, double relTol, size_t size) :
+GSLIntegrator::GSLIntegrator(const Integration::Type type , const Integration::GKRule rule, double absTol, double relTol, size_t size) :
    fType(type),
    fRule(rule),
    fAbsTol(absTol),
    fRelTol(relTol),
    fSize(size),
    fMaxIntervals(size),
-   fWorkspace(0),
-   fFunction(0)
+   fWorkspace(0)
 {
-   // full constructor 
+   // constructor for all types of integrations 
    // allocate workspace (only if not adaptive algorithm)
    if (type !=  Integration::NONADAPTIVE)
-   fWorkspace = new GSLIntegrationWorkspace( fSize);
+      fWorkspace = new GSLIntegrationWorkspace( fSize);
       
-   fFunction = new GSLFunctionWrapper();
-   SetFunction(f);
       
 }
 
 
 
-GSLIntegrator::GSLIntegrator(const IGenFunction &f, double absTol, double relTol, size_t size) :
+GSLIntegrator::GSLIntegrator(double absTol, double relTol, size_t size) :
    fType(Integration::ADAPTIVESINGULAR),
    fRule(Integration::GAUSS31),
    fAbsTol(absTol),
    fRelTol(relTol),
    fSize(size),
    fMaxIntervals(size),
-   fWorkspace(0),
-   fFunction(0)
+   fWorkspace(0)
 {
    // constructor with default type (ADaptiveSingular) ,  rule is not needed  
    fWorkspace = new GSLIntegrationWorkspace( fSize);
-   fFunction = new GSLFunctionWrapper();
-   SetFunction(f);
    
 }
 
 
 
-GSLIntegrator::GSLIntegrator(const IGenFunction &f, const Integration::Type type , double absTol, double relTol, size_t size) :
-fType(type),
-fRule(Integration::GAUSS31),
-fAbsTol(absTol),
-fRelTol(relTol),
-fSize(size),
-fMaxIntervals(size),
-fWorkspace(0),
-fFunction(0)
+GSLIntegrator::GSLIntegrator(const Integration::Type type , double absTol, double relTol, size_t size) :
+   fType(type),
+   fRule(Integration::GAUSS31),
+   fAbsTol(absTol),
+   fRelTol(relTol),
+   fSize(size),
+   fMaxIntervals(size),
+   fWorkspace(0)
 {
    // constructor with default rule (gauss31) passing the type
    // allocate workspace (only if not adaptive algorithm)
    if (type !=  Integration::NONADAPTIVE)
       fWorkspace = new GSLIntegrationWorkspace( fSize);
    
-   fFunction = new GSLFunctionWrapper();
-   SetFunction(f);
 }
 
-GSLIntegrator::GSLIntegrator(GSLFuncPointer f, const Integration::Type type , const Integration::GKRule rule, double absTol, double relTol, size_t size) :
-fType(type),
-fRule(rule),
-fAbsTol(absTol),
-fRelTol(relTol),
-fSize(size),
-fMaxIntervals(size),
-fWorkspace(0),
-fFunction(0)
-{
-   // constructor
-   // allocate workspace (only if not adaptive algorithm)
-   if (type !=  Integration::NONADAPTIVE)
-      fWorkspace = new GSLIntegrationWorkspace( fSize);
-   
-   fFunction = new GSLFunctionWrapper();
-   SetFunction(f);
-   
-}
-
-
-
-GSLIntegrator::GSLIntegrator(GSLFuncPointer f, double absTol, double relTol, size_t size) :
-fType(Integration::ADAPTIVESINGULAR),
-fRule(Integration::GAUSS31),
-fAbsTol(absTol),
-fRelTol(relTol),
-fSize(size),
-fMaxIntervals(size),
-fWorkspace(0),
-fFunction(0)
-{
-   // constructor with default type (ADaptiveSingular) ,  rule is not needed
-   fWorkspace = new GSLIntegrationWorkspace( fSize);
-   fFunction = new GSLFunctionWrapper();
-   SetFunction(f);
-}
-
-
-
-GSLIntegrator::GSLIntegrator(GSLFuncPointer f, const Integration::Type type , double absTol, double relTol, size_t size) :
-fType(type),
-fRule(Integration::GAUSS31),
-fAbsTol(absTol),
-fRelTol(relTol),
-fSize(size),
-fMaxIntervals(size),
-fWorkspace(0),
-fFunction(0)
-{
-   // constructor with default rule (gauss31) passing the type
-   // allocate workspace (only if not adaptive algorithm)
-   if (type !=  Integration::NONADAPTIVE)
-      fWorkspace = new GSLIntegrationWorkspace( fSize);
-   
-   fFunction = new GSLFunctionWrapper();
-   SetFunction(f);
-}
 
 GSLIntegrator::~GSLIntegrator()
 {
-   // delete workspace and function holders
+   // delete workspace 
    if (fWorkspace) delete fWorkspace;
-   if (fFunction) delete fFunction;
 }
 
 GSLIntegrator::GSLIntegrator(const GSLIntegrator &)
@@ -188,15 +121,15 @@ GSLIntegrator & GSLIntegrator::operator = (const GSLIntegrator &rhs)
 
 
 
-void  GSLIntegrator::FillGSLFunction( GSLFuncPointer  fp, void * p) {
+void  GSLIntegrator::SetFunction( GSLFuncPointer  fp, void * p) {
    // fill GSLFunctionWrapper with the pointer to the function 
-   fFunction->SetFuncPointer( fp );
-   fFunction->SetParams ( p );
+   fFunction.SetFuncPointer( fp );
+   fFunction.SetParams ( p );
 }
 
-void  GSLIntegrator::FillGSLFunction(const IGenFunction &f) {
+void  GSLIntegrator::SetFunction(const IGenFunction &f) {
    // set function
-   fFunction->SetFunction(f);
+   fFunction.SetFunction(f);
 }
 
 // evaluation methods
@@ -205,27 +138,29 @@ double  GSLIntegrator::Integral(double a, double b) {
    // defined integral evaluation
    // need here look at all types of algorithms
    // find more elegant solution ? Use template OK, but need to chose algorithm statically , t.b.i.
-   
+
+   if (!CheckFunction()) return 0;  
    
    if ( fType == Integration::NONADAPTIVE) {
       size_t neval = 0; // need to export  this ?
-      fStatus = gsl_integration_qng( fFunction->GetFunc(), a, b , fAbsTol, fRelTol, &fResult, &fError, &neval);
+      fStatus = gsl_integration_qng( fFunction.GetFunc(), a, b , fAbsTol, fRelTol, &fResult, &fError, &neval);
    }
    else if (fType ==  Integration::ADAPTIVE) {
-      fStatus = gsl_integration_qag( fFunction->GetFunc(), a, b , fAbsTol, fRelTol, fMaxIntervals, fRule, fWorkspace->GetWS(), &fResult, &fError);
+      fStatus = gsl_integration_qag( fFunction.GetFunc(), a, b , fAbsTol, fRelTol, fMaxIntervals, fRule, fWorkspace->GetWS(), &fResult, &fError);
    }
    else if (fType ==  Integration::ADAPTIVESINGULAR) {
       
       // singular integration - look if we know about singular points
       
       
-      fStatus = gsl_integration_qags( fFunction->GetFunc(), a, b , fAbsTol, fRelTol, fMaxIntervals, fWorkspace->GetWS(), &fResult, &fError);
+      fStatus = gsl_integration_qags( fFunction.GetFunc(), a, b , fAbsTol, fRelTol, fMaxIntervals, fWorkspace->GetWS(), &fResult, &fError);
    }
    else {
       
       fResult = 0;
       fError = 0;
       fStatus = -1;
+      std::cerr << "GSLIntegrator - Error: Unknown integration type" << std::endl;
       throw std::exception(); //"Unknown integration type");
    }
    
@@ -236,16 +171,20 @@ double  GSLIntegrator::Integral(double a, double b) {
 
 double  GSLIntegrator::Integral( const std::vector<double> & pts) {
    // integral eval with singularities
+
+   if (!CheckFunction()) return 0;  
+
    if (fType == Integration::ADAPTIVESINGULAR && pts.size() >= 2 ) {
       // remove constness ( should be const in GSL ? )
       double * p = const_cast<double *>(&pts.front() );
-      fStatus = gsl_integration_qagp( fFunction->GetFunc(), p, pts.size() , fAbsTol, fRelTol, fMaxIntervals,  fWorkspace->GetWS(), &fResult, &fError);
+      fStatus = gsl_integration_qagp( fFunction.GetFunc(), p, pts.size() , fAbsTol, fRelTol, fMaxIntervals,  fWorkspace->GetWS(), &fResult, &fError);
    }
    else {
       fResult = 0;
       fError = 0;
       fStatus = -1;
-      throw std::exception(); //"Wrong integration type or no singular points defined");
+      std::cerr << "GSLIntegrator - Error: Unknown integration type or not enough singular points defined" << std::endl;
+      return 0; 
    }
    return fResult;
 }
@@ -256,9 +195,12 @@ double  GSLIntegrator::Integral( const std::vector<double> & pts) {
 double  GSLIntegrator::Integral( ) {
    // Eval for indefined integrals: use QAGI method
    // if method was choosen NO_ADAPTIVE WS does not exist create it
+
+   if (!CheckFunction()) return 0;  
+
    if (!fWorkspace) fWorkspace = new GSLIntegrationWorkspace( fSize);
    
-   fStatus = gsl_integration_qagi( fFunction->GetFunc(), fAbsTol, fRelTol, fMaxIntervals, fWorkspace->GetWS(), &fResult, &fError);
+   fStatus = gsl_integration_qagi( fFunction.GetFunc(), fAbsTol, fRelTol, fMaxIntervals, fWorkspace->GetWS(), &fResult, &fError);
    
    return fResult;
 }
@@ -268,9 +210,12 @@ double  GSLIntegrator::Integral( ) {
 double  GSLIntegrator::IntegralUp( double a ) {
    // Integral between [a, + inf]
    // if method was choosen NO_ADAPTIVE WS does not exist create it
+
+   if (!CheckFunction()) return 0;  
+
    if (!fWorkspace) fWorkspace = new GSLIntegrationWorkspace( fSize);
    
-   fStatus = gsl_integration_qagiu( fFunction->GetFunc(), a, fAbsTol, fRelTol, fMaxIntervals, fWorkspace->GetWS(), &fResult, &fError);
+   fStatus = gsl_integration_qagiu( fFunction.GetFunc(), a, fAbsTol, fRelTol, fMaxIntervals, fWorkspace->GetWS(), &fResult, &fError);
    
    return fResult;
 }
@@ -280,9 +225,12 @@ double  GSLIntegrator::IntegralUp( double a ) {
 double  GSLIntegrator::IntegralLow( double b ) {
    // Integral between [-inf, + b]
    // if method was choosen NO_ADAPTIVE WS does not exist create it
+
+   if (!CheckFunction()) return 0;  
+
    if (!fWorkspace) fWorkspace = new GSLIntegrationWorkspace( fSize);
    
-   fStatus = gsl_integration_qagil( fFunction->GetFunc(), b, fAbsTol, fRelTol, fMaxIntervals, fWorkspace->GetWS(), &fResult, &fError);
+   fStatus = gsl_integration_qagil( fFunction.GetFunc(), b, fAbsTol, fRelTol, fMaxIntervals, fWorkspace->GetWS(), &fResult, &fError);
    
    return fResult;
 }
@@ -325,31 +273,31 @@ double  GSLIntegrator::Integral(const IGenFunction & f, const std::vector<double
 
 double  GSLIntegrator::Integral( GSLFuncPointer f , void * p, double a, double b) {
    // use c free function pointer
-   FillGSLFunction( f, p);
+   SetFunction( f, p);
    return Integral(a,b);
 }
 
 double  GSLIntegrator::Integral( GSLFuncPointer f, void * p ) {
    // use c free function pointer
-   FillGSLFunction( f, p);
+   SetFunction( f, p);
    return Integral();
 }
 
 double  GSLIntegrator::IntegralUp( GSLFuncPointer f, void * p, double a ) {
    // use c free function pointer
-   FillGSLFunction( f, p);
+   SetFunction( f, p);
    return IntegralUp(a);
 }
 
 double  GSLIntegrator::IntegralLow( GSLFuncPointer f, void * p, double b ) {
    // use c free function pointer
-   FillGSLFunction( f, p);
+   SetFunction( f, p);
    return IntegralLow(b);
 }
 
 double  GSLIntegrator::Integral( GSLFuncPointer f, void * p, const std::vector<double> & pts ) {
    // use c free function pointer
-   FillGSLFunction( f, p);
+   SetFunction( f, p);
    return Integral(pts);
 }
 
@@ -374,6 +322,13 @@ void GSLIntegrator::SetRelTolerance(double relTol){ this->fRelTol = relTol; }
 
 
 void GSLIntegrator::SetIntegrationRule(Integration::GKRule rule){ this->fRule = rule; }
+
+bool GSLIntegrator::CheckFunction() { 
+   if (fFunction.IsValid()) return true; 
+   fStatus = -1; fResult = 0; fError = 0;
+   std::cerr << "GS:Integrator - Error : Function has not been specified " << std::endl; 
+   return false; 
+}
 
 
 } // namespace Math

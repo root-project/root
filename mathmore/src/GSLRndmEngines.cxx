@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRndmEngines.cxx,v 1.6 2006/07/06 10:37:25 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRndmEngines.cxx,v 1.7 2006/07/06 11:01:51 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -185,37 +185,28 @@ namespace Math {
   
   double GSLRandomEngine::Gaussian(double sigma)  
   {
-    // Gaussian distribution
-    // only for GSL >= 1/8
-#ifdef HAVE_GSL_VERSION_GT_1_8
+    // Gaussian distribution. Use fast ziggurat algorithm implemented since GSL 1.8 
      return gsl_ran_gaussian_ziggurat(  fRng->Rng(), sigma);
-//     static float gslVersion = GSL_VERSION;
-//     if (gslVersion >= 1.8) 
-//     else 
-//       return gsl_ran_gaussian(  fRng->Rng(), sigma);
-#else    
-     return gsl_ran_gaussian(  fRng->Rng(), sigma);
-#endif
   }
 
 
   double GSLRandomEngine::GaussianTail(double a , double sigma) 
   {
-    // Gaussian Tail distribution: eeturn values larger than a distributed 
-    // according to the gaussian 
-    return gsl_ran_gaussian_tail(  fRng->Rng(), a, sigma);
+     // Gaussian Tail distribution: eeturn values larger than a distributed 
+     // according to the gaussian 
+     return gsl_ran_gaussian_tail(  fRng->Rng(), a, sigma);
   }
 
   void GSLRandomEngine::Gaussian2D(double sigmaX, double sigmaY, double rho, double &x, double &y) 
   { 
-    // Gaussian Bivariate distribution, with correlation coefficient rho
-    gsl_ran_bivariate_gaussian(  fRng->Rng(), sigmaX, sigmaY, rho, &x, &y);
+     // Gaussian Bivariate distribution, with correlation coefficient rho
+     gsl_ran_bivariate_gaussian(  fRng->Rng(), sigmaX, sigmaY, rho, &x, &y);
   }
   
   double GSLRandomEngine::Exponential(double mu)  
   {
-    // Exponential distribution
-    return gsl_ran_exponential(  fRng->Rng(), mu);
+     // Exponential distribution
+     return gsl_ran_exponential(  fRng->Rng(), mu);
   }
 
   double GSLRandomEngine::Cauchy(double a) 

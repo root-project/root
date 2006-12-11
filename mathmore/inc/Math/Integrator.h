@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Integrator.h,v 1.2 2006/06/16 10:34:08 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Integrator.h,v 1.3 2006/11/17 18:26:50 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -108,6 +108,10 @@ For detailed description on GSL integration algorithms see the
        @param size maximum number of sub-intervals
     */
 
+    explicit 
+    Integrator(double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
+
+    explicit 
     Integrator(const IGenFunction &f, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
 
     /**
@@ -115,6 +119,7 @@ For detailed description on GSL integration algorithms see the
     */
     typedef double ( * GSLFuncPointer ) ( double, void * );
 
+    explicit
     Integrator(GSLFuncPointer f, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
 
 
@@ -126,6 +131,7 @@ For detailed description on GSL integration algorithms see the
        @param size maximum number of sub-intervals
     */
 
+    explicit Integrator(Integration::Type type, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
 
     Integrator(const IGenFunction &f, Integration::Type type, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
 
@@ -141,6 +147,8 @@ For detailed description on GSL integration algorithms see the
        @param size maximum number of sub-intervals
 
     */
+
+    Integrator(Integration::Type type, Integration::GKRule rule, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
 
     Integrator(const IGenFunction &f, Integration::Type type, Integration::GKRule rule, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
 

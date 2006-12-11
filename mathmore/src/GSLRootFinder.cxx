@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinder.cxx,v 1.3 2006/06/16 10:34:08 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinder.cxx,v 1.4 2006/11/17 18:26:50 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -97,6 +97,10 @@ void GSLRootFinder::FreeSolver( ) {
 
 int GSLRootFinder::Iterate() {
    // iterate  
+   if (!fFunction->IsValid() ) {
+      std::cerr << "GSLRootFinder - Error: Function is not valid" << std::endl;
+      return -1; 
+   }
    int status =  gsl_root_fsolver_iterate(fS->Solver());
    // update Root 
    fRoot = gsl_root_fsolver_root(fS->Solver() );
@@ -132,6 +136,7 @@ int GSLRootFinder::Solve (int maxIter, double absTol, double relTol)
    do { 
       iter++; 
       status = Iterate();
+      if (status != GSL_SUCCESS) return status; 
       status =  GSLRootHelper::TestInterval(fXlow, fXup, absTol, relTol); 
       if (status == GSL_SUCCESS) { 
          fIter = iter;

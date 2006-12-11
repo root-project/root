@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinderDeriv.cxx,v 1.4 2006/06/19 08:44:08 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinderDeriv.cxx,v 1.5 2006/11/17 18:26:50 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -95,15 +95,10 @@ void GSLRootFinderDeriv::FreeSolver( ) {
 int GSLRootFinderDeriv::Iterate() { 
    // iterate........
    
-   //     // function values (for debugging)
-   //     const gsl_function_fdf * func = fFunction->getFunc(); 
-   
-   //     double f = GSL_FN_FDF_EVAL_F(func, fRoot); 
-   //     //double df = func->df(fRoot,func->params);
-   //     double df =  GSL_FN_FDF_EVAL_DF(func, fRoot); 
-   //     std::cout << " r = " << fRoot << " f(r) = " << f << " df = " << df;
-   //     GSL_FN_FDF_EVAL_F_DF(func,fRoot, &f, &df); 
-   //     std::cout << " Fdf = " << f << "  " << df << std::endl;
+   if (!fFunction->IsValid() ) {
+      std::cerr << "GSLRootFinderDeriv - Error: Function is not valid" << std::endl;
+      return -1; 
+   }
    
    int status = gsl_root_fdfsolver_iterate(fS->Solver()); 
    // update Root
@@ -131,6 +126,7 @@ int GSLRootFinderDeriv::Solve (int maxIter, double absTol, double relTol)
       iter++; 
       
       status = Iterate();
+      if (status != GSL_SUCCESS) return status; 
       status = GSLRootHelper::TestDelta(fRoot, fPrevRoot, absTol, relTol);
       if (status == GSL_SUCCESS) { 
          fIter = iter;

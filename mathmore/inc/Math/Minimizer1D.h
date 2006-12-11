@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Integrator.h,v 1.2 2006/06/16 10:34:08 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Minimizer1D.h,v 1.1 2006/10/05 15:23:42 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
  /**********************************************************************
   *                                                                    *
@@ -83,7 +83,7 @@ This class does not support copying
          Construct the minimizer passing the minimizer type using the Minim1D::Algorithm enumeration
       */
       
-      Minimizer1D(Minim1D::Type type=Minim1D::BRENT);
+      explicit Minimizer1D(Minim1D::Type type=Minim1D::BRENT);
  
       /**
          Destructor: free allocated resources

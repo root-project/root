@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Derivator.h,v 1.3 2006/11/17 18:26:50 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Derivator.h,v 1.4 2006/12/06 15:16:02 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -80,14 +80,14 @@ public:
    /**
       Construct using a ROOT::Math::IGenFunction interface 
     */
-   Derivator(const IGenFunction &f);
+   explicit Derivator(const IGenFunction &f);
    /**
       Construct using a GSL function pointer type 
        @param f :  free function pointer of the GSL required type
        @param p :  pointer to the object carrying the function state 
                     (for example the function object itself)
     */
-   Derivator(const GSLFuncPointer &f, void * p = 0);
+   explicit Derivator(const GSLFuncPointer &f, void * p = 0);
 
    /// destructor 
    virtual ~Derivator(); 

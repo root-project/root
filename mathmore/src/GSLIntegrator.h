@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrator.h,v 1.5 2006/06/22 08:39:19 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrator.h,v 1.6 2006/11/17 18:26:50 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -37,6 +37,8 @@
 #include <vector>
 
 #include "Math/Integrator.h"
+
+#include "GSLFunctionWrapper.h"
 
 
 
@@ -105,10 +107,9 @@ namespace Math {
       @param size maximum number of sub-intervals
       */
       
-      GSLIntegrator(const IGenFunction &f, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
+      GSLIntegrator(double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
       
       
-      GSLIntegrator(GSLFuncPointer f, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
       
       
       /** constructor of GSL Integrator. In the case of Adaptive integration the Gauss-Krond rule of 31 points is used
@@ -120,9 +121,8 @@ namespace Math {
          */
       
       
-      GSLIntegrator(const IGenFunction &f, const Integration::Type type, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
+      GSLIntegrator(const Integration::Type type, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
       
-      GSLIntegrator(GSLFuncPointer f, const Integration::Type type, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
       
       /**
          generic constructor for GSL Integrator
@@ -135,9 +135,8 @@ namespace Math {
        
        */
       
-      GSLIntegrator(const IGenFunction &f, const Integration::Type type, const Integration::GKRule rule, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
+      GSLIntegrator(const Integration::Type type, const Integration::GKRule rule, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
       
-      GSLIntegrator(GSLFuncPointer f, const Integration::Type type, const Integration::GKRule rule, double absTol = 1.E-9, double relTol = 1E-6, size_t size = 1000);
       
       virtual ~GSLIntegrator();
       //~GSLIntegrator();
@@ -161,15 +160,9 @@ namespace Math {
           */
          
          
-         void SetFunction(const IGenFunction &f) {
-            //const void * p = &f;
-            //FillGSLFunction(  &GSLFunctionAdapter<IGenFunction>::F, const_cast<void *>(p) );
-            FillGSLFunction(f);
-         }
+      void SetFunction(const IGenFunction &f); 
       
-      inline void SetFunction( const GSLFuncPointer &f) {
-         FillGSLFunction( f, 0);
-      }
+      void SetFunction( GSLFuncPointer f, void * p = 0); 
       
       // methods using IGenFunction
       
@@ -328,9 +321,8 @@ namespace Math {
       
    protected:
          
-      // internal method to create GSL function adapter
-      void FillGSLFunction( GSLFuncPointer fp, void *);
-      void FillGSLFunction(const IGenFunction & f);
+      // internal method to check validity of GSL function pointer
+      bool CheckFunction(); 
       
    private:
          
@@ -350,7 +342,7 @@ namespace Math {
       // GSLIntegrationAlgorithm * fAlgorithm;
       
       GSLIntegrationWorkspace * fWorkspace;
-      GSLFunctionWrapper * fFunction;
+      GSLFunctionWrapper  fFunction;
      
    };
    

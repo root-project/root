@@ -27,7 +27,10 @@ double exactIntegral ( const std::vector<double> & par, double a, double b) {
 }
 
 double singularFunction(double x) { 
-   return 1./sqrt(x);
+   if (x >= 0) 
+      return 1./sqrt(x);
+   else 
+      return 1./sqrt(-x);
 }
 
 
@@ -71,18 +74,19 @@ void testIntegration() {
 
   
   std::cout << "Testing SetFunction member function" << std::endl;
+  ROOT::Math::Integrator ig3;
   ROOT::Math::Polynomial *pol = new ROOT::Math::Polynomial(2);
-
+  
   pol->SetParameters(&p.front());
   ROOT::Math::IGenFunction &func2 = *pol; 
-  ig.SetFunction(func2);
-  std::cout << "Result      " << ig.Integral( 0, 3) << " +/- " << ig.Error() << std::endl; 
+  ig3.SetFunction(func2);
+  std::cout << "Result      " << ig3.Integral( 0, 3) << " +/- " << ig3.Error() << std::endl; 
  
 
   // test error 
   //typedef double ( * FreeFunc ) ( double);
 
-  std::cout << "Testing a singular function" << std::endl;
+  std::cout << "Testing a singular function: 1/sqrt(x)" << std::endl;
   //ROOT::Math::WrappedFunction<FreeFunc> wf(&singularFunction); 
   ROOT::Math::Functor1D<ROOT::Math::IGenFunction> wf(&singularFunction);
   
@@ -91,8 +95,16 @@ void testIntegration() {
   if (ig.Status() != 0) 
      std::cout << "Error integrating a singular function " << std::endl; 
   else 
-     std::cout << "Result      " << r << " +/- " << ig.Error() << std::endl; 
+     std::cout << "Result:(0,1]      " << r << " +/- " << ig.Error() << std::endl; 
   
+  double singularPts[3] = {-1,0,1};
+  std::vector<double> sp(singularPts, singularPts+3);
+  double r2 = ig.Integral(sp); 
+  if (ig.Status() != 0) 
+     std::cout << "Error integrating a singular function using vector of points" << std::endl; 
+  else 
+     std::cout << "Result:[-1,1]      " << r2 << " +/- " << ig.Error() << std::endl; 
+
  
 }
 

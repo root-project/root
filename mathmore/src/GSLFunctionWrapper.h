@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLFunctionWrapper.h,v 1.6 2006/12/04 17:34:55 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLFunctionWrapper.h,v 1.7 2006/12/06 15:16:02 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -84,8 +84,13 @@ public:
 
    GSLFuncPointer FunctionPtr() { return fFunc.function; }
 
-      // evaluate the function 
-      double operator() (double x) {  return GSL_FN_EVAL(&fFunc, x); }
+   // evaluate the function 
+   double operator() (double x) {  return GSL_FN_EVAL(&fFunc, x); }
+
+   /// check if function is valid (has been set) 
+   bool IsValid() { 
+      return (fFunc.function != 0) ? true : false;  
+   }
 
 private: 
    gsl_function fFunc; 
@@ -100,6 +105,15 @@ private:
   class GSLFunctionDerivWrapper { 
 
   public: 
+
+     GSLFunctionDerivWrapper() 
+     {
+        fFunc.f = 0; 
+        fFunc.df = 0; 
+        fFunc.fdf = 0; 
+        fFunc.params = 0;
+     }
+
 
     void SetFuncPointer( GSLFuncPointer f) { fFunc.f = f; } 
     void SetDerivPointer( GSLFuncPointer f) { fFunc.df = f; } 
@@ -117,6 +131,11 @@ private:
     void Fdf(double x, double & f, double & df) { 
       return GSL_FN_FDF_EVAL_F_DF(&fFunc, x, &f, &df);
     }
+
+   /// check if function is valid (has been set) 
+   bool IsValid() { 
+      return (fFunc.f != 0 ) ? true : false;  
+   }
 
   private: 
     gsl_function_fdf fFunc; 

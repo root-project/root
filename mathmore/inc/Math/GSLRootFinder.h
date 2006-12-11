@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinder.h,v 1.1 2005/09/18 17:33:47 brun Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRootFinder.h,v 1.2 2006/11/17 18:26:50 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -75,10 +75,11 @@ namespace Math {
    public: 
      
 
-     void SetFunction( const IGradFunction & , double ) { 
-        std::cerr <<"GSLRootFinder - Error : use other Setfunction" << std::endl;  
-      //SetFunction( f, Root -1, Root + 1); // temporary 
-     }
+#if defined(__MAKECINT__) || defined(G__DICTIONARY)  
+      void SetFunction( const IGradFunction & , double ) { 
+         std::cerr <<"GSLRootFinder - Error : this methoid must be used with a Root Finder method using derivatives" << std::endl;  
+      }
+#endif
    
      /**  
      void SetFunction( const IGenFunction & f, double xlow, double xup) { 
