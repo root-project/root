@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.319 2006/11/25 09:07:05 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.320 2006/12/08 19:01:22 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -7399,10 +7399,12 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
                   //find the correct quadrant
                   if (re<0 && im<0)
                      ph -= TMath::Pi();
-                  if (re<0 && im>0)
+                  if (re<0 && im>=0)
                      ph += TMath::Pi();
                } else {
-                  if (im>0)
+                  if (TMath::Abs(im) < 1e-13)
+                     ph = 0;
+                  else if (im>0)
                      ph = TMath::Pi()*0.5;
                   else
                      ph = -TMath::Pi()*0.5;
