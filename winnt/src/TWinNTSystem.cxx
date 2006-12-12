@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.155 2006/12/05 20:34:28 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.156 2006/12/06 10:20:08 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -4535,8 +4535,13 @@ static char *GetWindowsVersion()
    SYSTEM_INFO si;
    PGNSI pGNSI;
    BOOL bOsVersionInfoEx;
-   char strReturn[2048];
+   static char *strReturn = 0;
    char temp[512];
+
+   if (strReturn == 0)
+      strReturn = new char[2048];
+   else
+      return strReturn;
 
    ZeroMemory(&si, sizeof(SYSTEM_INFO));
    ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
@@ -4743,7 +4748,7 @@ static char *GetWindowsVersion()
          strcpy(strReturn, "Microsoft Win32s");
          break;
    }
-   return StrDup(strReturn);
+   return strReturn;
 }
 
 //______________________________________________________________________________
