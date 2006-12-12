@@ -23,10 +23,13 @@ void geodemo ()
 // The same can procedure can be performed for visualizing other shapes.
 // When drawing one shape after another, the old geometry/canvas will be deleted.
    gSystem->Load("libGeom");
-   gROOT->LoadMacro("$ROOTSYS/tutorials/rootgeom.C");
+   TString dir = gSystem->UnixPathName(TCint::GetCurrentMacroName());
+   dir.ReplaceAll("geodemo.C","");
+   dir.ReplaceAll("/./","/");
+   gROOT->LoadMacro(dir+"rootgeom.C");
    bar = new TControlBar("vertical", "TGeo shapes",10,10);
    bar->AddButton("How to run  ","help()","Instructions for running this macro"); 
-   bar->AddButton("ROOTgeom    ","rgeom()","A simple geometry example.");
+   bar->AddButton("ROOTgeom    ","rootgeom()","A simple geometry example.");
    bar->AddButton("Arb8        ","arb8()","An arbitrary polyedron defined by vertices (max 8) sitting on 2 parallel planes");
    bar->AddButton("Box         ","box()","A box shape.");
    bar->AddButton("Composite   ","composite()","A composite shape");
