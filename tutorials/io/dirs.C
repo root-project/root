@@ -23,8 +23,6 @@ void dirs() {
 //   Root > h3_90N->Draw();
 //Author: Rene Brun
 
-   //gROOT->Reset();
-
     // create a new Root file
    TFile *top = new TFile("top.root","recreate");
 
