@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.34 2006/12/03 23:34:04 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.35 2006/12/12 14:32:06 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -85,7 +85,6 @@
 #include "XrdVersion.hh"
 #include "XrdClient/XrdClientMessage.hh"
 #include "XrdClient/XrdClientUrlInfo.hh"
-#include "XrdXrootd/XrdXrootdTrace.hh"
 #include "XrdSys/XrdSysPriv.hh"
 #include "XrdOuc/XrdOucErrInfo.hh"
 #include "XrdOuc/XrdOucError.hh"
@@ -2916,6 +2915,14 @@ int XrdProofdProtocol::MapClient(bool all)
             fclose(f);
          }
 
+         TRACEP(DBG,"MapClient: client "<<pmgr<<" added to the list (ref sid: "<< sid<<")");
+
+         XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
+         if (!pGuard.Valid()) {
+            TRACEP(XERR, "MapClient: could not get privileges");
+            return -1;
+         }
+
          // Mv inactive sessions, if needed
          if (tobemv.length() > 0) {
             char del = '|';
@@ -2925,14 +2932,6 @@ int XrdProofdProtocol::MapClient(bool all)
                if (XrdProofdProtocol::MvOldSession(fPClient, tag.c_str(), fgMaxOldLogs) == -1)
                   TRACEP(REQ, "MapClient: problems recording session as old in sandbox");
             }
-         }
-
-         TRACEP(DBG,"MapClient: client "<<pmgr<<" added to the list (ref sid: "<< sid<<")");
-
-         XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
-         if (!pGuard.Valid()) {
-            TRACEP(XERR, "MapClient: could not get privileges");
-            return -1;
          }
 
          // Set ownership of the socket file to the client
@@ -3928,9 +3927,16 @@ int XrdProofdProtocol::Create()
 
    // Record this session in the sandbox
    if (fSrvType != kXPD_Internal) {
-      if (XrdProofdProtocol::AddNewSession(fPClient, xps->Tag()) == -1)
-         TRACEP(REQ, "Create: problems recording session in sandbox");
+
+      XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
+      if (pGuard.Valid()) {
+         if (XrdProofdProtocol::AddNewSession(fPClient, xps->Tag()) == -1)
+            TRACEP(REQ, "Create: problems recording session in sandbox");
+      } else {
+         TRACEP(REQ, "Create: could not get privileges to run AddNewSession");
+      }
    }
+
 
    // Over
    return rc;
