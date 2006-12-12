@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.33 2006/10/04 16:08:48 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.34 2006/10/30 17:15:22 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -469,6 +469,7 @@ class TQtInputHandler : public TFileHandler
     }
 };
 
+#if ROOT_VERSION_CODE < ROOT_VERSION(5,13,0)
 //______________________________________________________________________________
 QPixmap *TGQt::MakeIcon(Int_t i)
 {
@@ -503,6 +504,7 @@ QPixmap *TGQt::MakeIcon(Int_t i)
 #endif
    return tempIcon;
 }
+#endif
 
 #define NoOperation (QPaintDevice *)(-1)
 
@@ -668,7 +670,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.33 2006/10/04 16:08:48 antcheva Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.140 2006/12/12 03:03:42 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;

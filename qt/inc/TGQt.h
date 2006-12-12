@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.17 2006/06/27 09:14:00 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.18 2006/10/04 16:08:47 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -218,7 +218,9 @@ public:
    static QPaintDevice  *iwid(Int_t wid);
    static QPaintDevice  *iwid(Window_t wid);
 #ifndef __CINT__
+#if ROOT_VERSION_CODE < ROOT_VERSION(5,13,0)
    static QPixmap       *MakeIcon(Int_t indx);
+#endif
    static TVirtualX     *GetVirtualX();
    static QWidget       *winid(Window_t id);
    static QWidget       *wid(Window_t id);
