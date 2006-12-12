@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.115 2006/08/31 11:05:20 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.116 2006/11/10 20:00:45 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1077,15 +1077,22 @@ TFile* TBranch::GetFile(Int_t mode)
       // if not, get filename where tree header is stored
       const char *tfn = fTree->GetCurrentFile()->GetName();
 
-      // if this is an absolute path or a URL then prepend this path
-      // to the branch file name
-      char *tname = gSystem->ExpandPathName(tfn);
-      if (gSystem->IsAbsoluteFileName(tname) || strstr(tname, ":/")) {
-         bFileName = gSystem->DirName(tname);
-         bFileName += "/";
-         bFileName += fFileName;
+      // If it is an archive file we need a special treatment
+      TUrl arc(tfn);
+      if (strlen(arc.GetAnchor()) > 0) {
+         arc.SetAnchor(gSystem->BaseName(fFileName));
+         bFileName = arc.GetUrl();
+      } else {
+         // if this is an absolute path or a URL then prepend this path
+         // to the branch file name
+         char *tname = gSystem->ExpandPathName(tfn);
+         if (gSystem->IsAbsoluteFileName(tname) || strstr(tname, ":/")) {
+            bFileName = gSystem->DirName(tname);
+            bFileName += "/";
+            bFileName += fFileName;
+         }
+         delete [] tname;
       }
-      delete [] tname;
    }
    delete [] bname;
 
