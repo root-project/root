@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.19 2006/06/26 15:35:38 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.20 2006/08/24 16:31:21 rdm Exp $
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 /*************************************************************************
@@ -50,10 +50,6 @@ public:
 
    // Destructor
    virtual ~TVirtualMC();
-
-   // Copy constructor
-   TVirtualMC(const TVirtualMC &mc) : TNamed(mc), fApplication(mc.fApplication),
-     fStack(mc.fStack), fDecayer(mc.fDecayer), fRandom(mc.fRandom) {}
 
    // Static access method
    static TVirtualMC* GetMC() { return fgMC; }
@@ -311,7 +307,7 @@ public:
                          EMCOpSurfaceModel model,
                          EMCOpSurfaceType surfaceType,
                          EMCOpSurfaceFinish surfaceFinish,
-                         Double_t sigmaAlpha);
+                         Double_t sigmaAlpha) = 0;
 
    // Define the optical surface border
    // name        border surface name
@@ -324,7 +320,7 @@ public:
    virtual void  SetBorderSurface(const char* name,
                          const char* vol1Name, int vol1CopyNo,
                          const char* vol2Name, int vol2CopyNo,
-                         const char* opSurfaceName);
+                         const char* opSurfaceName) = 0;
 
    // Define the optical skin surface
    // name        skin surface name
@@ -333,7 +329,7 @@ public:
    // (Geant4 only)
    virtual void  SetSkinSurface(const char* name,
                          const char* volName,
-                         const char* opSurfaceName);
+                         const char* opSurfaceName) = 0;
 
    // Define material property via a table of values
    // itmed         tracking medium id
@@ -344,7 +340,7 @@ public:
    // (Geant4 only)
    virtual void  SetMaterialProperty(
                          Int_t itmed, const char* propertyName,
-                         Int_t np, Double_t* pp, Double_t* values);
+                         Int_t np, Double_t* pp, Double_t* values) = 0;
 
    // Define material property via a value
    // itmed         tracking medium id
@@ -353,7 +349,7 @@ public:
    // (Geant4 only)
    virtual void  SetMaterialProperty(
                          Int_t itmed, const char* propertyName,
-                         Double_t value);
+                         Double_t value) = 0;
 
    // Define optical surface property via a table of values
    // surfaceName   optical surface name
@@ -364,7 +360,7 @@ public:
    // (Geant4 only)
    virtual void  SetMaterialProperty(
                          const char* surfaceName, const char* propertyName,
-                         Int_t np, Double_t* pp, Double_t* values);
+                         Int_t np, Double_t* pp, Double_t* values) = 0;
 
    //
    // functions for access to geometry
@@ -374,19 +370,19 @@ public:
    // Return the transformation matrix between the volume specified by
    // the path volumePath and the top or master volume.
    virtual Bool_t GetTransformation(const TString& volumePath,
-                         TGeoHMatrix& matrix);
+                         TGeoHMatrix& matrix) = 0;
 
    // Return the name of the shape (shapeType)  and its parameters par
    // for the volume specified by the path volumePath .
    virtual Bool_t GetShape(const TString& volumePath,
-                         TString& shapeType, TArrayD& par);
+                         TString& shapeType, TArrayD& par) = 0;
 
    // Return the material parameters for the volume specified by
    // the volumeName.
    virtual Bool_t GetMaterial(const TString& volumeName,
                                TString& name, Int_t& imat,
                                Double_t& a, Double_t& z, Double_t& density,
-                               Double_t& radl, Double_t& inter, TArrayD& par);
+                               Double_t& radl, Double_t& inter, TArrayD& par) = 0;
 
    // Return the medium parameters for the volume specified by the
    // volumeName.
@@ -395,7 +391,7 @@ public:
                              Int_t& nmat, Int_t& isvol, Int_t& ifield,
                              Double_t& fieldm, Double_t& tmaxfd, Double_t& stemax,
                              Double_t& deemax, Double_t& epsil, Double_t& stmin,
-                             TArrayD& par);
+                             TArrayD& par) = 0;
 
    //
    // functions for drawing
@@ -435,6 +431,9 @@ public:
 
    // Return the volume name for a given volume identifier id
    virtual const char* VolName(Int_t id) const = 0;
+
+   // Return the unique numeric identifier for medium name mediumName
+   virtual Int_t MediumId(const Text_t* mediumName) const;
 
    // Return total number of volumes in the geometry
    virtual Int_t NofVolumes() const = 0;
@@ -580,7 +579,7 @@ public:
                        Float_t &dens, Float_t &radl, Float_t &absl) const =0;
 
    // Return the number of the current medium
-   virtual Int_t    CurrentMedium() const;
+   virtual Int_t    CurrentMedium() const = 0;
                          // new function (to replace GetMedium() const)
 
    // Return the number of the current event
@@ -615,10 +614,6 @@ public:
 
    // Return the maximum number of steps allowed in the current medium
    virtual Int_t    GetMaxNStep() const = 0;
-
-   // Return the number of the current medium
-   // Deprecated - replaced with CurrentMedium(), to be removed
-   virtual Int_t    GetMedium() const = 0;
 
    //
    // get methods
@@ -813,7 +808,8 @@ protected:
    TVirtualMCApplication* fApplication; //! User MC application
 
 private:
-   TVirtualMC & operator=(const TVirtualMC &) {return (*this);}
+   TVirtualMC(const TVirtualMC &mc);
+   TVirtualMC & operator=(const TVirtualMC &);
 
    static TVirtualMC*  fgMC;     // Monte Carlo singleton instance
 
@@ -826,76 +822,8 @@ private:
 
 // new functions
 
-inline void  TVirtualMC::DefineOpSurface(const char* /*name*/,
-                EMCOpSurfaceModel /*model*/, EMCOpSurfaceType /*surfaceType*/,
-                EMCOpSurfaceFinish /*surfaceFinish*/, Double_t /*sigmaAlpha*/) {
-
-   Warning("DefineOpSurface", "New function - not yet implemented.");
-}
-
-inline void  TVirtualMC::SetBorderSurface(const char* /*name*/,
-                const char* /*vol1Name*/, int /*vol1CopyNo*/,
-                const char* /*vol2Name*/, int /*vol2CopyNo*/,
-                const char* /*opSurfaceName*/) {
-   Warning("SetBorderSurface", "New function - not yet implemented.");
-}
-
-inline void  TVirtualMC::SetSkinSurface(const char* /*name*/,
-                const char* /*volName*/,
-                const char* /*opSurfaceName*/) {
-   Warning("SetSkinSurface", "New function - not yet implemented.");
-}
-
-inline void  TVirtualMC::SetMaterialProperty(
-                Int_t /*itmed*/, const char* /*propertyName*/,
-                Int_t /*np*/, Double_t* /*pp*/, Double_t* /*values*/) {
-   Warning("SetMaterialProperty", "New function - not yet implemented.");
-}
-
-inline void  TVirtualMC::SetMaterialProperty(
-                Int_t /*itmed*/, const char* /*propertyName*/,
-                Double_t /*value*/) {
-   Warning("SetMaterialProperty", "New function - not yet implemented.");
-}
-
-inline void  TVirtualMC::SetMaterialProperty(
-                const char* /*surfaceName*/, const char* /*propertyName*/,
-                Int_t /*np*/, Double_t* /*pp*/, Double_t* /*values*/) {
-   Warning("SetMaterialProperty", "New function - not yet implemented.");
-}
-
-inline Bool_t TVirtualMC::GetTransformation(const TString& /*volumePath*/,
-                 TGeoHMatrix& /*matrix*/) {
-   Warning("GetTransformation", "New function - not yet implemented.");
-   return kFALSE;
-}
-
-inline Bool_t TVirtualMC::GetShape(const TString& /*volumeName*/,
-                 TString& /*shapeType*/, TArrayD& /*par*/) {
-   Warning("GetShape", "New function - not yet implemented.");
-   return kFALSE;
-}
-
-inline Bool_t TVirtualMC::GetMaterial(const TString& /*volumeName*/,
-                 TString& /*name*/, Int_t& /*imat*/,
-                 Double_t& /*a*/, Double_t& /*z*/, Double_t& /*density*/,
-                 Double_t& /*radl*/, Double_t& /*inter*/, TArrayD& /*par*/) {
-   Warning("GetMaterial", "New function - not yet implemented.");
-   return kFALSE;
-}
-
-inline Bool_t TVirtualMC::GetMedium(const TString& /*volumeName*/,
-                 TString& /*name*/, Int_t& /*imed*/,
-                 Int_t& /*nmat*/, Int_t& /*isvol*/, Int_t& /*ifield*/,
-                 Double_t& /*fieldm*/, Double_t& /*tmaxfd*/, Double_t& /*stemax*/,
-                 Double_t& /*deemax*/, Double_t& /*epsil*/, Double_t& /*stmin*/,
-                 TArrayD& /*par*/) {
-   Warning("GetMedium", "New function - not yet implemented.");
-   return kFALSE;
-}
-
-inline Int_t TVirtualMC::CurrentMedium() const {
-   Warning("CurrentMedium", "New function - not yet implemented.");
+inline Int_t TVirtualMC::MediumId(const Text_t* /*mediumName*/) const {
+   Warning("MediumId", "New function - not yet implemented.");
    return 0;
 }
 

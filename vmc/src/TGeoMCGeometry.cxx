@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.9 2006/05/13 20:57:20 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.10 2006/08/24 16:31:21 rdm Exp $
 // Authors: Alice collaboration 25/06/2002
 
 /*************************************************************************
@@ -72,15 +72,6 @@ TGeoMCGeometry::~TGeoMCGeometry()
 // private methods
 //
 
-
-//_____________________________________________________________________________
-TGeoMCGeometry::TGeoMCGeometry(const TGeoMCGeometry &geom)
-  : TVirtualMCGeometry(geom)
-{
-   //
-   // Copy constructor
-   //
-}
 
 //_____________________________________________________________________________
 Double_t* TGeoMCGeometry::CreateDoubleArray(Float_t* array, Int_t size) const
@@ -552,6 +543,20 @@ Int_t TGeoMCGeometry::VolId(const Text_t *name) const
       return 0;
    }
    return uid;
+}
+
+//_____________________________________________________________________________
+Int_t TGeoMCGeometry::MediumId(const Text_t *name) const
+{
+  //
+  // Return the unique numeric identifier for medium name
+  //
+
+   TGeoMedium* medium = gGeoManager->GetMedium(name);
+   if (medium) return medium->GetId();
+
+   printf("MediumId: Medium %s not found\n",name);
+   return 0;
 }
 
 //_____________________________________________________________________________

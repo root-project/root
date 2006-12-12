@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCGeometry.cxx,v 1.2 2006/05/13 20:57:20 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCGeometry.cxx,v 1.3 2006/08/24 16:31:21 rdm Exp $
 // Authors: Alice collaboration 25/06/2002
 
 /*************************************************************************
@@ -19,8 +19,6 @@
 
 ClassImp(TVirtualMCGeometry)
 
-TVirtualMCGeometry* TVirtualMCGeometry::fgInstance=0;
-
 //_____________________________________________________________________________
 TVirtualMCGeometry::TVirtualMCGeometry(const char *name, const char *title)
   : TNamed(name,title)
@@ -28,10 +26,6 @@ TVirtualMCGeometry::TVirtualMCGeometry(const char *name, const char *title)
    //
    // Standard constructor
    //
-   if (fgInstance)
-      Warning("TVirtualMCGeometry","TVirtualMCGeometry instance already exists");
-   else
-      fgInstance=this;
 }
 
 //_____________________________________________________________________________
@@ -49,5 +43,4 @@ TVirtualMCGeometry::~TVirtualMCGeometry()
    //
    // Destructor
    //
-   fgInstance=0;
 }

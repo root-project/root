@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCGeometry.h,v 1.9 2006/06/26 15:35:38 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCGeometry.h,v 1.10 2006/08/24 16:31:21 rdm Exp $
 // Authors: Alice collaboration 25/06/2002
 
 /*************************************************************************
@@ -36,9 +36,6 @@ public:
 
    // Destructor
    virtual ~TVirtualMCGeometry();
-
-   // Static access method
-   static TVirtualMCGeometry* Instance() { return fgInstance; }
 
    //
    // detector composition
@@ -274,6 +271,9 @@ public:
    // Return the volume name for a given volume identifier id
    virtual const char* VolName(Int_t id) const = 0;
 
+   // Return the unique numeric identifier for medium name mediumName
+   virtual Int_t MediumId(const Text_t* mediumName) const = 0;
+
    // Return total number of volumes in the geometry
    virtual Int_t NofVolumes() const = 0;
 
@@ -290,10 +290,8 @@ public:
    virtual Int_t VolId2Mate(Int_t id) const = 0;
 
 protected:
-   TVirtualMCGeometry(const TVirtualMCGeometry &mc) : TNamed(mc) {}
-   TVirtualMCGeometry & operator=(const TVirtualMCGeometry &) {return (*this);}
-
-   static TVirtualMCGeometry*  fgInstance; // singleton instance
+   TVirtualMCGeometry(const TVirtualMCGeometry& /*rhs*/);
+   TVirtualMCGeometry & operator=(const TVirtualMCGeometry& /*rhs*/);
 
    ClassDef(TVirtualMCGeometry,1)  //Interface to Monte Carlo geometry construction
 };

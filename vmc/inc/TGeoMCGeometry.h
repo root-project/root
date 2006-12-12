@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.h,v 1.10 2006/08/24 16:31:21 rdm Exp $
+// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.h,v 1.11 2006/08/28 07:44:19 brun Exp $
 // Authors: Al;ice collaboration 25/06/2002
 
 /*************************************************************************
@@ -123,6 +123,7 @@ public:
    // get methods
    virtual Int_t VolId(const Text_t* volName) const;
    virtual const char* VolName(Int_t id) const;
+   virtual Int_t MediumId(const Text_t* mediumName) const;
    virtual Int_t NofVolumes() const;
    virtual Int_t NofVolDaughters(const char* volName) const;
    virtual const char*  VolDaughterName(const char* volName, Int_t i) const;
@@ -130,11 +131,12 @@ public:
    virtual Int_t VolId2Mate(Int_t id) const;
 
 private:
+   TGeoMCGeometry(const TGeoMCGeometry& /*rhs*/);
+   TGeoMCGeometry& operator=(const TGeoMCGeometry& /*rhs*/);
+
    Double_t* CreateDoubleArray(Float_t* array, Int_t size) const;
    void     Vname(const char *name, char *vname) const;
 
-   TGeoMCGeometry(const TGeoMCGeometry& rhs);
-   TGeoMCGeometry& operator=(const TGeoMCGeometry& /*rhs*/) {return (*this);}
    Bool_t  fG3CompatibleVolumeNames;   // option to convert volumes names to
                                         // be compatible with G3
 
