@@ -10,6 +10,11 @@ SCRIPT=build/version.cxx
 
 $CINT $SCRIPT
 
+if test "x`uname | grep -i cygwin`" != "x"; then
+    echo 'Need to run "dos2unix base/inc/RVersion.h"'
+    dos2unix base/inc/RVersion.h
+fi
+
 echo "New version is `cat build/version_number`. Updating dependencies..."
 
 # compile all files that were out-of-date prior to makeversion.sh
