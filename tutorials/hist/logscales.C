@@ -1,9 +1,8 @@
+void logscales() {
 //Draw parametric functions with log scales
 //Author: Olivier Couet
    
-{
-   gROOT->Reset();
-   c1 = new TCanvas("c1","Various options on LOG scales plots",0,0,700,900);
+   TCanvas *c1 = new TCanvas("c1","Various options on LOG scales plots",0,0,700,900);
    c1->SetFillColor(30);
 
    pad1 = new TPad("pad1","pad1",0.03,0.62,0.50,0.92,32);

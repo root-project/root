@@ -1,7 +1,8 @@
 {
    //
    // This macro displays the Tree data structures
-   //
+   //Author: Rene Brun
+   
    gROOT->Reset();
    c1 = new TCanvas("c1","Tree Data Structure",200,10,750,940);
    c1->Range(0,-0.1,1,1.15);

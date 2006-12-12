@@ -1,6 +1,7 @@
-{
-// example of use of TGenPhaseSpace by Valerio Filippini
-   gROOT.Reset();
+void PhaseSpace() {
+// example of use of TGenPhaseSpace  
+//Author: Valerio Filippini
+
    if (!gROOT->GetClass("TGenPhaseSpace")) gSystem.Load("libPhysics");
 
    TLorentzVector target(0.0, 0.0, 0.0, 0.938);
@@ -12,7 +13,7 @@
    TGenPhaseSpace event;
    event.SetDecay(W, 3, masses);
 
-   TH2F h2("h2","h2", 50,1.1,1.8, 50,1.1,1.8);
+   TH2F *h2 = new TH2F("h2","h2", 50,1.1,1.8, 50,1.1,1.8);
 
    for (Int_t n=0;n<100000;n++) {
       Double_t weight = event.Generate();
@@ -25,7 +26,7 @@
       TLorentzVector pPPip = *pProton + *pPip;
       TLorentzVector pPPim = *pProton + *pPim;
 
-      h2.Fill(pPPip.M2() ,pPPim.M2() ,weight);
+      h2->Fill(pPPip.M2() ,pPPim.M2() ,weight);
    }
-   h2.Draw();
+   h2->Draw();
 }
