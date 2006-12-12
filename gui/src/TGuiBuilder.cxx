@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.cxx,v 1.7 2006/05/26 09:16:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.cxx,v 1.8 2006/05/28 20:08:00 brun Exp $
 // Author: Valeriy Onuchin   12/08/04
 
 /*************************************************************************
@@ -21,7 +21,8 @@
 //  With the GUI builder, we try to make the next step from WYSIWYG
 //  to embedded editing concept - WYSIWYE ("what you see is what you edit").
 //  The ROOT GUI Builder allows modifying real GUI objects.
-//  For example, one can edit the existing GUI application $ROOTSYS/tutorials/guitest.C.
+//  For example, one can edit the existing GUI application created by
+//  $ROOTSYS/tutorials/gui/guitest.C.
 //  GUI components can be added to a design area from a widget palette,
 //  or can be borrowed from another application.
 //  One can drag and and drop TCanvas's menu bar into the application.
