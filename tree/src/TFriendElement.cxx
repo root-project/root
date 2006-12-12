@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.14 2006/07/14 19:52:44 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.15 2006/12/08 17:29:26 pcanal Exp $
 // Author: Rene Brun   07/04/2001
 
 /*************************************************************************
@@ -196,7 +196,7 @@ TFile *TFriendElement::GetFile()
    TDirectory::TContext ctxt(gDirectory, 0);
 
    if (strlen(GetTitle())) {
-      fFile = new TFile(GetTitle());
+      fFile = TFile::Open(GetTitle());
       fOwnFile = kTRUE;
    } else {
       TDirectory *dir = fParentTree->GetDirectory();
