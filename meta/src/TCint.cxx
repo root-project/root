@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.131 2006/12/05 10:55:29 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.132 2006/12/10 22:21:18 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -644,9 +644,15 @@ Bool_t TCint::CheckClassInfo(const char *name)
    strcpy(classname,name);
 
    Int_t tagnum = G__defined_tagname(classname, 2); // This function might modify the name (to add space between >>).
-   if (tagnum >= 0) return kTRUE;
+   if (tagnum >= 0) {
+      delete [] classname;
+      return kTRUE;
+   }
    G__TypedefInfo t(name);
-   if (t.IsValid() && !(t.Property()&G__BIT_ISFUNDAMENTAL)) return kTRUE;
+   if (t.IsValid() && !(t.Property()&G__BIT_ISFUNDAMENTAL)) {
+      delete [] classname;
+      return kTRUE;
+   }
 
    delete [] classname;
    return kFALSE;
