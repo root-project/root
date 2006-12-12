@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.10 2005/11/18 16:55:07 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.11 2006/08/24 16:36:42 rdm Exp $
 // Author: Christian Stratowa 30/09/2001
 
 /*************************************************************************
@@ -35,7 +35,7 @@ ClassImp(TGraphSmooth);
 // TGraphSmooth
 //
 // A helper class to smooth TGraph
-// see examples in $ROOTSYS/tutorials/motorcycle.C and approx.C
+// see examples in $ROOTSYS/tutorials/graphs/motorcycle.C and approx.C
 //
 //______________________________________________________________________
 TGraphSmooth::TGraphSmooth(): TNamed()

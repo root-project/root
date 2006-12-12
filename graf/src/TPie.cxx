@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.9 2006/11/27 10:06:32 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.10 2006/12/11 11:00:27 couet Exp $
 // Author: Guido Volpi, Olivier Couet 03/11/2006
 
 /*************************************************************************
@@ -27,7 +27,8 @@ ClassImp(TPie)
 //
 // Draw a Pie Chart
 //
-// The macro $ROOTSYS/tutorials/piechart.C produces the following picture:
+// The macro $ROOTSYS/tutorials/graphics/piechart.C produces the following
+// picture:
 //Begin_Html
 /*
 <img src="gif/piechart.gif">
