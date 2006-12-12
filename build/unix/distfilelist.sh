@@ -15,19 +15,27 @@ else
    cd $PREPENDDIR || exit 1
 fi
 
+# clean tutorials so we can include the entire directory
+# (copy of code in main Makefile, so change there too if needed)
+mv -f tutorials/gallery.root tutorials/gallery.root-
+mv -f tutorials/mlp/mlpHiggs.root tutorials/mlp/mlpHiggs.root-
+mv -f tutorials/quadp/stock.root tutorials/quadp/stock.root-
+find tutorials -name "*.root" -exec rm -rf {} \; >/dev/null 2>&1;true
+find tutorials -name "*.ps" -exec rm -rf {} \; >/dev/null 2>&1;true
+find tutorials -name "*.gif" -exec rm -rf {} \; >/dev/null 2>&1;true
+find tutorials -name "so_locations" -exec rm -rf {} \; >/dev/null 2>&1;true
+find tutorials -name "pca.C" -exec rm -rf {} \; >/dev/null 2>&1;true
+find tutorials -name "*.so" -exec rm -rf {} \; >/dev/null 2>&1;true
+find tutorials -name "work.pc" -exec rm -rf {} \; >/dev/null 2>&1;true
+find tutorials -name "work.pcl" -exec rm -rf {} \; >/dev/null 2>&1;true
+mv -f tutorials/gallery.root- tutorials/gallery.root
+mv -f tutorials/mlp/mlpHiggs.root- tutorials/mlp/mlpHiggs.root
+mv -f tutorials/quadp/stock.root- tutorials/quadp/stock.root
 
 # mixture of files, wildcards, and directories
 WILDCARDS="LICENSE README bin \
-   include lib cint/include \
-   cint/lib cint/stl gdml/*.py tutorials/*.cxx tutorials/*.C \
-   tutorials/*.h tutorials/*.dat tutorials/mlpHiggs.root \
-   tutorials/gallery.root tutorials/galaxy.root \
-   tutorials/stock.root tutorials/worldmap.jpg tutorials/rose512.jpg \
-   tutorials/mditestbg.xpm tutorials/fore.xpm \
-   tutorials/runcatalog.sql tutorials/*.py tutorials/*.rb \
-   tutorials/saxexample.xml tutorials/person.xml \
-   tutorials/person.dtd tutorials/FileDialog.png \
-   tutorials/rose512.jpg tutorials/foam_README \
+   include lib cint/include tutorials \
+   cint/lib cint/stl gdml/*.py \
    test/*.cxx test/*.h test/Makefile* test/README \
    test/*.C test/*.sh test/dt_Makefile test/linearIO.root \
    test/RootShower/*.h test/RootShower/*.cxx \

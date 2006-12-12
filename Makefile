@@ -710,16 +710,20 @@ distclean:: clean
 ifeq ($(PLATFORM),macosx)
 	@rm -f lib/*.so
 endif
-	-@mv -f tutorials/gallery.root tutorials/gallery.roott
-	-@mv -f tutorials/galaxy.root tutorials/galaxy.roott
-	-@mv -f tutorials/mlpHiggs.root tutorials/mlpHiggs.roott
-	-@mv -f tutorials/stock.root tutorials/stock.roott
-	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif so_locations
-	-@mv -f tutorials/gallery.roott tutorials/gallery.root
-	-@mv -f tutorials/galaxy.roott tutorials/galaxy.root
-	-@mv -f tutorials/mlpHiggs.roott tutorials/mlpHiggs.root
-	-@mv -f tutorials/stock.roott tutorials/stock.root
-	@rm -f tutorials/pca.C tutorials/*.so work.pc work.pcl
+	-@mv -f tutorials/gallery.root tutorials/gallery.root-
+	-@mv -f tutorials/mlp/mlpHiggs.root tutorials/mlp/mlpHiggs.root-
+	-@mv -f tutorials/quadp/stock.root tutorials/quadp/stock.root-
+	@(find tutorials -name "*.root" -exec rm -rf {} \; >/dev/null 2>&1;true)
+	@(find tutorials -name "*.ps" -exec rm -rf {} \; >/dev/null 2>&1;true)
+	@(find tutorials -name "*.gif" -exec rm -rf {} \; >/dev/null 2>&1;true)
+	@(find tutorials -name "so_locations" -exec rm -rf {} \; >/dev/null 2>&1;true)
+	@(find tutorials -name "pca.C" -exec rm -rf {} \; >/dev/null 2>&1;true)
+	@(find tutorials -name "*.so" -exec rm -rf {} \; >/dev/null 2>&1;true)
+	@(find tutorials -name "work.pc" -exec rm -rf {} \; >/dev/null 2>&1;true)
+	@(find tutorials -name "work.pcl" -exec rm -rf {} \; >/dev/null 2>&1;true)
+	-@mv -f tutorials/gallery.root- tutorials/gallery.root
+	-@mv -f tutorials/mlp/mlpHiggs.root- tutorials/mlp/mlpHiggs.root
+	-@mv -f tutorials/quadp/stock.root- tutorials/quadp/stock.root
 	@rm -f bin/roota bin/proofserva lib/libRoot.a
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
 	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog build/dummy.d
