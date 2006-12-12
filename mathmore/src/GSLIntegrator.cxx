@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrator.cxx,v 1.6 2006/11/17 18:26:50 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLIntegrator.cxx,v 1.7 2006/12/11 15:06:37 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
@@ -324,6 +324,7 @@ void GSLIntegrator::SetRelTolerance(double relTol){ this->fRelTol = relTol; }
 void GSLIntegrator::SetIntegrationRule(Integration::GKRule rule){ this->fRule = rule; }
 
 bool GSLIntegrator::CheckFunction() { 
+   // check if a function has been previously set.
    if (fFunction.IsValid()) return true; 
    fStatus = -1; fResult = 0; fError = 0;
    std::cerr << "GS:Integrator - Error : Function has not been specified " << std::endl; 
