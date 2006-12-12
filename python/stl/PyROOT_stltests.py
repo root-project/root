@@ -38,7 +38,7 @@ class STL1VectorTestCase( unittest.TestCase ):
 
       a = std.vector( 'double' )()
       for i in range(self.N):
-         a.push_back( float(i) )
+         a.push_back( i )
          self.assertEqual( a[i], i )
 
       self.assertEqual( len(a), self.N )

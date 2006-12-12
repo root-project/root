@@ -30,7 +30,7 @@ class TTree1ReadWriteSimpleObjectsTestCase( unittest.TestCase ):
 
       for i in range( self.N ):
          for j in range( self.M ):
-            v.push_back( float(i*self.M+j) )
+            v.push_back( i*self.M+j )
          t.Fill()
          v.clear()
       f.Write()
@@ -105,7 +105,7 @@ class TTree1ReadWriteSimpleObjectsTestCase( unittest.TestCase ):
 
       for i in range( self.N ):
          for j in range( self.M ):
-            d.Floats.push_back( float(i*self.M+j) )
+            d.Floats.push_back( i*self.M+j )
 
          d.NLabel = i
          d.Label  = '%d' % i
