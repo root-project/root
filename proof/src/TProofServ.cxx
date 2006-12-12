@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.152 2006/12/04 15:15:06 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.153 2006/12/11 13:24:49 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -3761,9 +3761,11 @@ Int_t TProofServ::HandleCache(TMessage *mess)
          gSystem->ChangeDirectory(pdir);
 
          // check for SETUP.C and execute
-         if (!gSystem->AccessPathName(pdir + "/PROOF-INF/SETUP.C")) {
+         if (!gSystem->AccessPathName("PROOF-INF/SETUP.C")) {
             Int_t err = 0;
-            gROOT->Macro("PROOF-INF/SETUP.C", &err);
+            Int_t errm = gROOT->Macro("PROOF-INF/SETUP.C", &err);
+            if (errm < 0)
+               status = -1;
             if (err > TInterpreter::kNoError && err <= TInterpreter::kFatal)
                status = -1;
          }
