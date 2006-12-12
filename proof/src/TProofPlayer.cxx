@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.96 2006/11/22 14:16:54 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.97 2006/11/27 14:14:24 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 #include "TVirtualPacketizer.h"
 #include "TPacketizer.h"
 #include "TPacketizerProgressive.h"
+#include "TAdaptivePacketizer.h"
 #include "TSelector.h"
 #include "TSocket.h"
 #include "TProofServ.h"
