@@ -1446,7 +1446,7 @@ void earth()
    TH2F *h3 = new TH2F("h3","Sinusoidal",50, -180, 180, 50, -90.5, 90.5);
    TH2F *h4 = new TH2F("h4","Parabolic", 50, -180, 180, 50, -90.5, 90.5);
    ifstream in;
-   in.open("../tutorials/earth.dat");
+   in.open("../tutorials/image/earth.dat");
    Float_t x,y;
    while (1) {
      in >> x >> y;
@@ -1727,21 +1727,21 @@ void timage()
    
    StartTest(800,800);
 
-   TImage *img = TImage::Open("../tutorials/rose512.jpg");
+   TImage *img = TImage::Open("../tutorials/image/rose512.jpg");
    if (!img) {
       printf("Could not create an image... exit\n");
       return;
    }
-   TImage *i1 = TImage::Open("../tutorials/rose512.jpg");
+   TImage *i1 = TImage::Open("../tutorials/image/rose512.jpg");
    i1->SetConstRatio(kFALSE);
    i1->Flip(90);
-   TImage *i2 = TImage::Open("../tutorials/rose512.jpg");
+   TImage *i2 = TImage::Open("../tutorials/image/rose512.jpg");
    i2->SetConstRatio(kFALSE);
    i2->Flip(180);
-   TImage *i3 = TImage::Open("../tutorials/rose512.jpg");
+   TImage *i3 = TImage::Open("../tutorials/image/rose512.jpg");
    i3->SetConstRatio(kFALSE);
    i3->Flip(270);
-   TImage *i4 = TImage::Open("../tutorials/rose512.jpg");
+   TImage *i4 = TImage::Open("../tutorials/image/rose512.jpg");
    i4->SetConstRatio(kFALSE);
    i4->Mirror(kTRUE);
    float d = 0.40;
