@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.10 2005/09/04 09:51:19 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.11 2006/05/16 08:13:31 brun Exp $
 // Author: Rene Brun , Valerio Filippini  06/09/2000 
 
 //_____________________________________________________________________________________
@@ -14,7 +14,7 @@
 //  using the Raubold and Lynch method
 //      F. James, Monte Carlo Phase Space, CERN 68-15 (1968)
 //
-// see example of use in $ROOTSYS/tutorials/PhaseSpace.C
+// see example of use in $ROOTSYS/tutorials/physics/PhaseSpace.C
 
 #include "TGenPhaseSpace.h"
 #include "TRandom.h"
