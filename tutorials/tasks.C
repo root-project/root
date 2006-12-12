@@ -6,10 +6,14 @@
 // see also other functions in the TTask context menu, such as
 //   -setting a breakpoint in one or more tasks
 //   -enabling/disabling one task, etc
-   
+//Author: Rene Brun
+      
 void tasks()
 {
-   gROOT->ProcessLine(".L MyTasks.cxx+");
+   TString dir = gSystem->UnixPathName(TCint::GetCurrentMacroName());
+   dir.ReplaceAll("tasks.C","");
+   dir.ReplaceAll("/./","/");
+   gROOT->LoadMacro(dir +"MyTasks.cxx+");
    
    TTask *run      = new MyRun("run","Process one run");
    TTask *event    = new MyEvent("event","Process one event");
