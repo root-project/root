@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.141 2006/09/29 08:42:18 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.142 2006/11/10 10:49:13 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -858,7 +858,7 @@ void TGCompositeFrame::SetEditable(Bool_t on)
    //    m->SetEditable();
    //    gSystem->Load("$ROOTSYS/test/Aclock"); // load Aclock demo
    //    Aclock a;
-   //    gROOT->Macro("$ROOTSYS/tutorials/guitest.C");
+   //    gROOT->Macro("$ROOTSYS/tutorials/gui/guitest.C");
    //    m->SetEditable(0);
    //    m->MapWindow();
    //
