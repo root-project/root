@@ -23,8 +23,8 @@
 #include "process.h"
 #endif
 
-#if defined(HAVE_CONFIG)
-#include "config.h"
+#if defined(R__HAVE_CONFIG)
+#include "RConfigure.h"
 #endif
 
 #if defined(G__HAVE_CONFIG)
