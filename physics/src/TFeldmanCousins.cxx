@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TFeldmanCousins.cxx,v 1.10 2005/08/30 12:27:21 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TFeldmanCousins.cxx,v 1.11 2006/05/16 08:13:31 brun Exp $
 // Author: Adrian Bevan  2001
 
 /*************************************************************************
@@ -34,7 +34,7 @@
 // but there is total flexibility in changing this should you desire.
 //
 //
-// see example of use in $ROOTSYS/tutorials/FeldmanCousins.C
+// see example of use in $ROOTSYS/tutorials/math/FeldmanCousins.C
 //
 // see note about: "Should I use TRolke, TFeldmanCousins, TLimit?"
 //  in the TRolke class description.
