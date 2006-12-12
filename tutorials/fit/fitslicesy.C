@@ -1,4 +1,4 @@
-{
+void fitslicesy() {
 //
 // To see the output of this macro, click begin_html <a href="gif/fitslicesy.gif" >here</a> end_html
 //    This macro illustrates how to use the TH1::FitSlicesY function
@@ -9,8 +9,6 @@
 //    some pad parameters.
 //Author: Rene Brun
    
-   gROOT->Reset();
-
 // Change some default parameters in the current style
    gStyle->SetLabelSize(0.06,"x");
    gStyle->SetLabelSize(0.06,"y");

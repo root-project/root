@@ -1,11 +1,9 @@
-{
+void xtruDraw() {
 // Draw a "representative" TXTRU shape
 // Canvas saved as xtru.gif can be used for TXTRU THtml output
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
-  gROOT->Reset();
-
-  canvas = new TCanvas("xtru","Example XTRU object",200,10,640,640);
+  TCanvas *canvas = new TCanvas("xtru","Example XTRU object",200,10,640,640);
 
 // Create a new geometry
   TGeometry* geometry = new TGeometry("geometry","geometry");
