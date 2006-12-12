@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.33 2006/11/27 14:19:58 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.34 2006/12/03 23:34:04 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -85,6 +85,7 @@
 #include "XrdVersion.hh"
 #include "XrdClient/XrdClientMessage.hh"
 #include "XrdClient/XrdClientUrlInfo.hh"
+#include "XrdXrootd/XrdXrootdTrace.hh"
 #include "XrdSys/XrdSysPriv.hh"
 #include "XrdOuc/XrdOucErrInfo.hh"
 #include "XrdOuc/XrdOucError.hh"
@@ -600,7 +601,7 @@ int XrdProofdProtocol::Broadcast(int type, const char *msg)
             TRACEP(HDBG,"Broadcast: sending request to "<<u);
             // Send request
             if (!(xrsp = SendCoordinator(u.c_str(), type, msg, srvtype))) {
-               TRACEP(ERR,"Broadcast: problems sending request to "<<u);
+               TRACEP(XERR,"Broadcast: problems sending request to "<<u);
             }
             // Cleanup answer
             SafeDelete(xrsp);
@@ -658,7 +659,7 @@ XrdClientMessage *XrdProofdProtocol::SendCoordinator(const char *url,
             break;
          default:
             ok = 0;
-            TRACEP(ERR,"SendCoordinator: invalid request type "<<type);
+            TRACEP(XERR,"SendCoordinator: invalid request type "<<type);
             break;
       }
 
@@ -673,7 +674,7 @@ XrdClientMessage *XrdProofdProtocol::SendCoordinator(const char *url,
       SafeDelete(conn);
 
    } else {
-      TRACEP(ERR,"SendCoordinator: could not open connection to "<<url);
+      TRACEP(XERR,"SendCoordinator: could not open connection to "<<url);
       XrdOucString cmsg = "failure attempting connection to ";
       cmsg += url;
       fResponse.Send(kXR_attn, kXPD_srvmsg, (char *) cmsg.c_str(), cmsg.length());
@@ -700,7 +701,7 @@ int XrdProofdProtocol::ChangeProcessPriority(int pid, int dp)
    errno = 0;
    int priority = getpriority(PRIO_PROCESS, pid);
    if (priority == -1 && errno != 0) {
-      TRACE(ERR, "ChangeProcessPriority:"
+      TRACE(XERR, "ChangeProcessPriority:"
                  " getpriority: errno: " << errno);
       return -errno;
    }
@@ -710,7 +711,7 @@ int XrdProofdProtocol::ChangeProcessPriority(int pid, int dp)
 
    // Chaneg the priority
    if (setpriority(PRIO_PROCESS, pid, refpriority) != 0) {
-      TRACE(ERR, "ChangeProcessPriority:"
+      TRACE(XERR, "ChangeProcessPriority:"
                  " setpriority: errno: " << errno);
       return ((errno != 0) ? -errno : -1);
    }
@@ -718,12 +719,12 @@ int XrdProofdProtocol::ChangeProcessPriority(int pid, int dp)
    // Check that it worked out
    errno = 0;
    if ((priority = getpriority(PRIO_PROCESS, pid)) == -1 && errno != 0) {
-      TRACE(ERR, "ChangeProcessPriority:"
+      TRACE(XERR, "ChangeProcessPriority:"
                  " getpriority: errno: " << errno);
       return -errno;
    }
    if (priority != refpriority) {
-      TRACE(ERR, "ChangeProcessPriority:"
+      TRACE(XERR, "ChangeProcessPriority:"
                  " unexpected result of action: found " << priority <<
                  ", expected "<<refpriority);
       errno = EPERM;
@@ -1293,7 +1294,7 @@ int XrdProofdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
    fgPort         = pi->Port;
 
    // Debug flag
-   TRACESET(ERR, 1);
+   TRACESET(XERR, 1);
    if (pi->DebugON)
       XrdProofdTrace->What |= (TRACE_REQ | TRACE_LOGIN | TRACE_FORK);
 
@@ -1728,7 +1729,7 @@ int XrdProofdProtocol::Config(const char *cfn)
                   } else if (!strcmp(val,"hdbg")) {
                      TRACESET(HDBG, on);
                   } else if (!strcmp(val,"err")) {
-                     TRACESET(ERR, on);
+                     TRACESET(XERR, on);
                   } else if (!strcmp(val,"all")) {
                      // Everything
                      XrdProofdTrace->What = TRACE_ALL;
@@ -1919,7 +1920,7 @@ int XrdProofdProtocol::Process2()
       case kXP_login:
          return Login();
       default:
-         TRACEP(ERR,"Process2: invalid request: " <<fRequest.header.requestid);
+         TRACEP(XERR,"Process2: invalid request: " <<fRequest.header.requestid);
          fResponse.Send(kXR_InvalidRequest,"Invalid request; user not logged in");
          return fLink->setEtext("protocol sequence error 1");
       }
@@ -2061,7 +2062,7 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
                      if (SetShutdownTimer(psrv) != 0) {
                         // Just notify locally: link is closed!
                         XrdOucString msg("Recycle: could not send shutdown info to proofsrv");
-                        TRACEP(ERR, msg.c_str());
+                        TRACEP(XERR, msg.c_str());
                      }
                      // Set in shutdown state
                      psrv->SetStatus(kXPD_shutdown);
@@ -2331,7 +2332,7 @@ int XrdProofdProtocol::GetWorkers(XrdOucString &lw, XrdProofServProxy *xps)
 
       // Read the configuration file
       if (ReadPROOFcfg() != 0) {
-         TRACE(ERR, "GetWorkers: unable to read the configuration file");
+         TRACE(XERR, "GetWorkers: unable to read the configuration file");
          return -1;
       }
 
@@ -2516,7 +2517,7 @@ int XrdProofdProtocol::Login()
    if (fRequest.login.role[0] != 'i' &&
        fgSrvType == kXPD_WorkerServer || fgSrvType == kXPD_MasterServer) {
       if (!CheckMaster(fLink->Host())) {
-         TRACEP(ERR,"Login: master not allowed to connect - "
+         TRACEP(XERR,"Login: master not allowed to connect - "
                     "ignoring request ("<<fLink->Host()<<")");
          fResponse.Send(kXR_InvalidRequest,
                     "Login: master not allowed to connect - request ignored");
@@ -2563,7 +2564,7 @@ int XrdProofdProtocol::Login()
 
    // No 'root' logins
    if (!strncmp(uname, "root", 4)) {
-      TRACEP(ERR,"Login: 'root' logins not accepted ");
+      TRACEP(XERR,"Login: 'root' logins not accepted ");
       fResponse.Send(kXR_InvalidRequest,"Login: 'root' logins not accepted");
       return rc;
    }
@@ -2572,7 +2573,7 @@ int XrdProofdProtocol::Login()
    // If not, we fail for now.
    // In the future we may try to get a temporary account
    if (GetUserInfo(uname, fUI) != 0) {
-      TRACEP(ERR,"Login: unknown ClientID: "<<uname);
+      TRACEP(XERR,"Login: unknown ClientID: "<<uname);
       fResponse.Send(kXR_InvalidRequest,"Login: unknown ClientID");
       return rc;
    }
@@ -2591,7 +2592,7 @@ int XrdProofdProtocol::Login()
          }
       }
       if (notok) {
-         TRACEP(ERR,"Login: ClientID not currently authorized to log in");
+         TRACEP(XERR,"Login: ClientID not currently authorized to log in");
          fResponse.Send(kXR_InvalidRequest, "Login: controlled operations: "
                          "ClientID not currently authorized to log in");
          return rc;
@@ -2608,7 +2609,7 @@ int XrdProofdProtocol::Login()
       strcpy(fClientID, uname);
       TRACEP(LOGIN,"Login: ClientID =" << fClientID);
    } else {
-      TRACEP(ERR,"Login: no space for ClientID");
+      TRACEP(XERR,"Login: no space for ClientID");
       fResponse.Send(kXR_InvalidRequest,"Login: unknown ClientID");
       fResponse.Send(kXR_NoMemory, "Login: ClientID: out-of-resources");
       return rc;
@@ -2634,7 +2635,7 @@ int XrdProofdProtocol::Login()
          needauth = 1;
          fResponse.Set(" : mst->clnt ");
       } else {
-         TRACEP(ERR,"Login: top master mode not allowed - ignoring request");
+         TRACEP(XERR,"Login: top master mode not allowed - ignoring request");
          fResponse.Send(kXR_InvalidRequest,
                         "Server not allowed to be top master - ignoring request");
          return rc;
@@ -2645,7 +2646,7 @@ int XrdProofdProtocol::Login()
          fSrvType = kXPD_MasterServer;
          fResponse.Set(" : mst->mst ");
       } else {
-         TRACEP(ERR,"Login: submaster mode not allowed - ignoring request");
+         TRACEP(XERR,"Login: submaster mode not allowed - ignoring request");
          fResponse.Send(kXR_InvalidRequest,
                         "Server not allowed to be submaster - ignoring request");
          return rc;
@@ -2656,14 +2657,14 @@ int XrdProofdProtocol::Login()
          fSrvType = kXPD_WorkerServer;
          fResponse.Set(" : wrk->mst ");
       } else {
-         TRACEP(ERR,"Login: worker mode not allowed - ignoring request");
+         TRACEP(XERR,"Login: worker mode not allowed - ignoring request");
          fResponse.Send(kXR_InvalidRequest,
                         "Server not allowed to be worker - ignoring request");
          return rc;
       }
       break;
    default:
-      TRACEP(ERR, "Login: unknown mode: '" << fRequest.login.role[0] <<"'");
+      TRACEP(XERR, "Login: unknown mode: '" << fRequest.login.role[0] <<"'");
       fResponse.Send(kXR_InvalidRequest, "Server type: invalide mode");
       return rc;
    }
@@ -2723,7 +2724,7 @@ int XrdProofdProtocol::MapClient(bool all)
    if (proofsrv) {
       memcpy(&psid, (const void *)&(fRequest.login.reserved[0]), 2);
       if (psid < 0) {
-         TRACEP(ERR,"MapClient: proofsrv callback: sent invalid session id");
+         TRACEP(XERR,"MapClient: proofsrv callback: sent invalid session id");
          fResponse.Send(kXR_InvalidRequest,
                         "MapClient: proofsrv callback: sent invalid session id");
          return rc;
@@ -2767,7 +2768,7 @@ int XrdProofdProtocol::MapClient(bool all)
             psrv = 0;
          }
          if (!psrv) {
-            TRACEP(ERR, "MapClient: proofsrv callback:"
+            TRACEP(XERR, "MapClient: proofsrv callback:"
                         " wrong target session: protocol error");
             fResponse.Send(kXP_nosession, "MapClient: proofsrv callback:"
                            " wrong target session: protocol error");
@@ -2817,7 +2818,7 @@ int XrdProofdProtocol::MapClient(bool all)
 
       // Proofsrv callbacks need something to attach to
       if (proofsrv) {
-         TRACEP(ERR, "MapClient: proofsrv callback:"
+         TRACEP(XERR, "MapClient: proofsrv callback:"
                      " no manager to attach to: protocol error");
          return -1;
       }
@@ -2840,7 +2841,7 @@ int XrdProofdProtocol::MapClient(bool all)
       if (AssertDir(udir.c_str(), fUI) == -1) {
          XrdOucString emsg("MapClient: unable to create work dir: ");
          emsg += udir;
-         TRACEP(ERR, emsg);
+         TRACEP(XERR, emsg);
          return -1;
       }
 
@@ -2930,13 +2931,13 @@ int XrdProofdProtocol::MapClient(bool all)
 
          XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
          if (!pGuard.Valid()) {
-            TRACEP(ERR, "MapClient: could not get privileges");
+            TRACEP(XERR, "MapClient: could not get privileges");
             return -1;
          }
 
          // Set ownership of the socket file to the client
          if (chown(pmgr->UNIXSockPath(), fUI.fUid, fUI.fGid) == -1) {
-            TRACEP(ERR, "MapClient: cannot set user ownership"
+            TRACEP(XERR, "MapClient: cannot set user ownership"
                                " on UNIX socket (errno: "<<errno<<")");
             return -1;
          }
@@ -2988,7 +2989,7 @@ int XrdProofdProtocol::Auth()
       fLink->Name(&netaddr);
       if (!(fAuthProt = fgCIA->getProtocol(fLink->Host(), netaddr, &cred, &eMsg))) {
          eText = eMsg.getErrText(rc);
-         TRACEP(ERR,"Auth: user authentication failed; "<<eText);
+         TRACEP(XERR,"Auth: user authentication failed; "<<eText);
          fResponse.Send(kXR_NotAuthorized, eText);
          return -EACCES;
       }
@@ -3020,7 +3021,7 @@ int XrdProofdProtocol::Auth()
          fAuthProt->Delete();
          fAuthProt = 0;
       }
-      TRACEP(ERR,"Auth: security requested additional auth w/o parms!");
+      TRACEP(XERR,"Auth: security requested additional auth w/o parms!");
       fResponse.Send(kXR_ServerError,"invalid authentication exchange");
       return -EACCES;
    }
@@ -3031,7 +3032,7 @@ int XrdProofdProtocol::Auth()
       fAuthProt = 0;
    }
    eText = eMsg.getErrText(rc);
-   TRACEP(ERR, "Auth: user authentication failed; "<<eText);
+   TRACEP(XERR, "Auth: user authentication failed; "<<eText);
    fResponse.Send(kXR_NotAuthorized, eText);
    return -EACCES;
 }
@@ -3084,7 +3085,7 @@ int XrdProofdProtocol::GetData(const char *dtype, char *buff, int blen)
 
    if (rlen  < 0)
       if (rlen != -ENOMSG) {
-         TRACEP(ERR, "GetData: link read error");
+         TRACEP(XERR, "GetData: link read error");
          return fLink->setEtext("link read error");
       } else {
          TRACEP(DBG, "GetData: connection closed by peer");
@@ -3092,7 +3093,7 @@ int XrdProofdProtocol::GetData(const char *dtype, char *buff, int blen)
       }
    if (rlen < blen) {
       fBuff = buff+rlen; fBlen = blen-rlen;
-      TRACEP(ERR, "GetData: " << dtype <<
+      TRACEP(XERR, "GetData: " << dtype <<
                   " timeout; read " <<rlen <<" of " <<blen <<" bytes");
       return 1;
    }
@@ -3116,7 +3117,7 @@ int XrdProofdProtocol::Attach()
    XrdProofServProxy *xps = 0;
    if (!fPClient || !INRANGE(psid, fPClient->ProofServs()) ||
        !(xps = fPClient->ProofServs()->at(psid))) {
-      TRACEP(ERR, "Attach: session ID not found");
+      TRACEP(XERR, "Attach: session ID not found");
       fResponse.Send(kXR_InvalidRequest,"session ID not found");
       return rc;
    }
@@ -3150,14 +3151,14 @@ int XrdProofdProtocol::Attach()
 
    // Send saved query num message
    if (xps->QueryNum()) {
-      TRACEP(ERR, "Attach: sending query num message ("<<
+      TRACEP(XERR, "Attach: sending query num message ("<<
                   xps->QueryNum()->fSize<<" bytes)");
       fResponse.Send(kXR_attn, kXPD_msg,
                      xps->QueryNum()->fBuff, xps->QueryNum()->fSize);
    }
    // Send saved start processing message, if not idle
    if (xps->Status() == kXPD_running && xps->StartMsg()) {
-      TRACEP(ERR, "Attach: sending start process message ("<<
+      TRACEP(XERR, "Attach: sending start process message ("<<
                   xps->StartMsg()->fSize<<" bytes)");
       fResponse.Send(kXR_attn, kXPD_msg,
                      xps->StartMsg()->fBuff, xps->StartMsg()->fSize);
@@ -3184,7 +3185,7 @@ int XrdProofdProtocol::Detach()
    XrdProofServProxy *xps = 0;
    if (!fPClient || !INRANGE(psid, fPClient->ProofServs()) ||
        !(xps = fPClient->ProofServs()->at(psid))) {
-      TRACEP(ERR, "Detach: session ID not found");
+      TRACEP(XERR, "Detach: session ID not found");
       fResponse.Send(kXR_InvalidRequest,"session ID not found");
       return rc;
    }
@@ -3230,7 +3231,7 @@ int XrdProofdProtocol::Destroy()
       // Request for a specific session
       if (!fPClient || !INRANGE(psid, fPClient->ProofServs()) ||
           !(xpsref = fPClient->ProofServs()->at(psid))) {
-         TRACEP(ERR, "Destroy: reference session ID not found");
+         TRACEP(XERR, "Destroy: reference session ID not found");
          fResponse.Send(kXR_InvalidRequest,"reference session ID not found");
          return rc;
       }
@@ -3272,7 +3273,7 @@ int XrdProofdProtocol::Destroy()
             // Send a terminate signal to the proofserv
             if (TerminateProofServ(xps) != 0)
                if (KillProofServ(xps,1) != 0) {
-                  TRACEP(ERR, "Destroy: problems terminating request to proofsrv");
+                  TRACEP(XERR, "Destroy: problems terminating request to proofsrv");
                }
 
             // Reset instance
@@ -3707,7 +3708,7 @@ int XrdProofdProtocol::Create()
       execv(fgPrgmSrv, argvv);
 
       // We should not be here!!!
-      MTRACE(ERR, MHEAD, "child::Create: returned from execv: bad, bad sign !!!");
+      MTRACE(XERR, MHEAD, "child::Create: returned from execv: bad, bad sign !!!");
       exit(1);
    }
 
@@ -3899,7 +3900,7 @@ int XrdProofdProtocol::Create()
       if (nmmx > -1) {
          // Changing child process priority for this user
          if (ChangeProcessPriority(pid, dp) != 0) {
-            TRACEP(ERR, "Create: problems changing child process priority");
+            TRACEP(XERR, "Create: problems changing child process priority");
          } else {
             TRACEP(DBG, "Create: priority of the child process changed by "
                         << dp << " units");
@@ -4068,7 +4069,7 @@ int XrdProofdProtocol::SendMsg()
    XrdProofServProxy *xps = 0;
    if (!fPClient || !INRANGE(psid, fPClient->ProofServs()) ||
        !(xps = fPClient->ProofServs()->at(psid))) {
-      TRACEP(ERR, "SendMsg: session ID not found");
+      TRACEP(XERR, "SendMsg: session ID not found");
       fResponse.Send(kXR_InvalidRequest,"session ID not found");
       return rc;
    }
@@ -4133,13 +4134,13 @@ int XrdProofdProtocol::SendMsg()
          XrdClientID *csid = 0;
          if (!xps || !INRANGE(cid, xps->Clients()) ||
              !(csid = xps->Clients()->at(cid))) {
-            TRACEP(ERR, "SendMsg: INT: client ID not found (cid: "<<cid<<
+            TRACEP(XERR, "SendMsg: INT: client ID not found (cid: "<<cid<<
                         ", size: "<<xps->Clients()->size()<<")");
             fResponse.Send(kXR_InvalidRequest,"Client ID not found");
             return rc;
          }
          if (!csid || !(csid->fP)) {
-            TRACEP(ERR, "SendMsg: INT: client not connected: csid: "<<csid<<
+            TRACEP(XERR, "SendMsg: INT: client not connected: csid: "<<csid<<
                         ", cid: "<<cid<<", fSid: " << csid->fSid);
             // Notify to proofsrv
             fResponse.Send();
@@ -4201,7 +4202,7 @@ int XrdProofdProtocol::Urgent()
    XrdProofServProxy *xps = 0;
    if (!fPClient || !INRANGE(psid, fPClient->ProofServs()) ||
        !(xps = fPClient->ProofServs()->at(psid))) {
-      TRACEP(ERR, "Urgent: session ID not found");
+      TRACEP(XERR, "Urgent: session ID not found");
       fResponse.Send(kXR_InvalidRequest,"Urgent: session ID not found");
       return rc;
    }
@@ -4263,14 +4264,14 @@ int XrdProofdProtocol::Admin()
       for (ip = fPClient->ProofServs()->begin(); ip != fPClient->ProofServs()->end(); ++ip)
          if ((xps = *ip) && xps->IsValid() && (xps->SrvType() == kXPD_TopMaster)) {
             ns++;
-            TRACEP(ERR, "Admin: found: " << xps << "(" << xps->IsValid() <<")");
+            TRACEP(XERR, "Admin: found: " << xps << "(" << xps->IsValid() <<")");
          }
 
       // Generic info about all known sessions
       int len = (kXPROOFSRVTAGMAX+kXPROOFSRVALIASMAX+30)* (ns+1);
       char *buf = new char[len];
       if (!buf) {
-         TRACEP(ERR, "Admin: no resources for results");
+         TRACEP(XERR, "Admin: no resources for results");
          fResponse.Send(kXR_NoMemory, "Admin: out-of-resources for results");
          return rc;
       }
@@ -4308,7 +4309,7 @@ int XrdProofdProtocol::Admin()
 
       XrdOucString tag = (!stag && ridx >= 0) ? "last" : stag;
       if (!stag && XrdProofdProtocol::GuessTag(fPClient, tag, ridx) != 0) {
-         TRACEP(ERR, "Admin: query sess logs: session tag not found");
+         TRACEP(XERR, "Admin: query sess logs: session tag not found");
          fResponse.Send(kXR_InvalidRequest,"Admin: query log: session tag not found");
          return rc;
       }
@@ -4332,7 +4333,7 @@ int XrdProofdProtocol::Admin()
       if (!dir) {
          XrdOucString msg("Admin: cannot open dir ");
          msg += sdir; msg += " (errno: "; msg += errno; msg += ")";
-         TRACEP(ERR, msg.c_str());
+         TRACEP(XERR, msg.c_str());
          fResponse.Send(kXR_InvalidRequest, msg.c_str());
          return rc;
       }
@@ -4507,7 +4508,7 @@ int XrdProofdProtocol::Admin()
                            XrdOucString msg = "Admin: CleanupSessions: WARNING: process ";
                            msg += *pid;
                            msg += " could not be signalled for termination";
-                           TRACEP(ERR, msg.c_str());
+                           TRACEP(XERR, msg.c_str());
                         } else
                            signalledpid.push_back(pid);
                      } else
@@ -4559,7 +4560,7 @@ int XrdProofdProtocol::Admin()
       XrdProofServProxy *xps = 0;
       if (!fPClient || !INRANGE(psid, fPClient->ProofServs()) ||
           !(xps = fPClient->ProofServs()->at(psid))) {
-         TRACEP(ERR, "Admin: session ID not found");
+         TRACEP(XERR, "Admin: session ID not found");
          fResponse.Send(kXR_InvalidRequest,"Admin: session ID not found");
          return rc;
       }
@@ -4586,7 +4587,7 @@ int XrdProofdProtocol::Admin()
       XrdProofServProxy *xps = 0;
       if (!fPClient || !INRANGE(psid, fPClient->ProofServs()) ||
           !(xps = fPClient->ProofServs()->at(psid))) {
-         TRACEP(ERR, "Admin: session ID not found");
+         TRACEP(XERR, "Admin: session ID not found");
          fResponse.Send(kXR_InvalidRequest,"Admin: session ID not found");
          return rc;
       }
@@ -4612,7 +4613,7 @@ int XrdProofdProtocol::Admin()
       XrdProofServProxy *xps = 0;
       if (!fPClient || !INRANGE(psid, fPClient->ProofServs()) ||
           !(xps = fPClient->ProofServs()->at(psid))) {
-         TRACEP(ERR, "Admin: session ID not found");
+         TRACEP(XERR, "Admin: session ID not found");
          fResponse.Send(kXR_InvalidRequest,"session ID not found");
          return rc;
       }
@@ -4668,7 +4669,7 @@ int XrdProofdProtocol::Admin()
       fResponse.Send(buf, len);
 
    } else {
-      TRACEP(ERR, "Admin: unknown request type");
+      TRACEP(XERR, "Admin: unknown request type");
       fResponse.Send(kXR_InvalidRequest,"Admin: unknown request type");
       return rc;
    }
@@ -4693,7 +4694,7 @@ int XrdProofdProtocol::Interrupt()
    XrdProofServProxy *xps = 0;
    if (!fPClient || !INRANGE(psid, fPClient->ProofServs()) ||
        !(xps = fPClient->ProofServs()->at(psid))) {
-      TRACEP(ERR, "Interrupt: session ID not found");
+      TRACEP(XERR, "Interrupt: session ID not found");
       fResponse.Send(kXR_InvalidRequest,"nterrupt: session ID not found");
       return rc;
    }
@@ -4742,7 +4743,7 @@ int XrdProofdProtocol::Ping()
    XrdProofServProxy *xps = 0;
    if (!fPClient || !INRANGE(psid,fPClient->ProofServs()) ||
        !(xps = fPClient->ProofServs()->at(psid))) {
-      TRACEP(ERR, "Ping: session ID not found");
+      TRACEP(XERR, "Ping: session ID not found");
       fResponse.Send(kXR_InvalidRequest,"session ID not found");
       return rc;
    }
@@ -4759,7 +4760,7 @@ int XrdProofdProtocol::Ping()
 
          // Send the request
          if ((pingres = (kXR_int32) VerifyProofServ(xps)) == -1) {
-            TRACEP(ERR, "Ping: EXT: could not verify proofsrv");
+            TRACEP(XERR, "Ping: EXT: could not verify proofsrv");
             fResponse.Send(kXR_ServerError, "EXT: could not verify proofsrv");
             return rc;
          }
@@ -4786,7 +4787,7 @@ int XrdProofdProtocol::Ping()
    }
 
    // Failure
-   TRACEP(ERR, "Ping: session ID not found");
+   TRACEP(XERR, "Ping: session ID not found");
    fResponse.Send(kXR_ok, pingres);
    return rc;
 }
@@ -4830,7 +4831,7 @@ int XrdProofdProtocol::SetUserEnvironment()
       putenv(h);
 
    } else {
-      MTRACE(ERR, MHEAD, "SetUserEnvironment: working directory undefined!");
+      MTRACE(XERR, MHEAD, "SetUserEnvironment: working directory undefined!");
    }
 
    // Set access control list from /etc/initgroup
@@ -4840,7 +4841,7 @@ int XrdProofdProtocol::SetUserEnvironment()
 
       XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
       if (!pGuard.Valid()) {
-         MTRACE(ERR, MHEAD, "SetUserEnvironment: could not get privileges");
+         MTRACE(XERR, MHEAD, "SetUserEnvironment: could not get privileges");
          return -1;
       }
 
@@ -4900,7 +4901,7 @@ int XrdProofdProtocol::VerifyProofServ(XrdProofServProxy *xps)
 
    // Propagate the ping request
    if (xps->ProofSrv()->Send(kXR_attn, kXPD_ping, 0, 0) != 0) {
-      TRACEP(ERR, "VerifyProofServ: could not propagate ping to proofsrv");
+      TRACEP(XERR, "VerifyProofServ: could not propagate ping to proofsrv");
       xps->DeletePingSem();
       return rc;
    }
@@ -4911,7 +4912,7 @@ int XrdProofdProtocol::VerifyProofServ(XrdProofServProxy *xps)
       XrdOucString msg = "VerifyProofServ: did not receive ping reply after ";
       msg += fgInternalWait;
       msg += " secs";
-      TRACEP(ERR, msg.c_str());
+      TRACEP(XERR, msg.c_str());
       rc = 0;
    }
 
@@ -4948,7 +4949,7 @@ int XrdProofdProtocol::SetShutdownTimer(XrdProofServProxy *xps, bool on)
    memcpy(buf + sizeof(kXR_int32), &itmp, sizeof(kXR_int32));
    // Send over
    if (xps->ProofSrv()->Send(kXR_attn, kXPD_timer, buf, len) != 0) {
-      TRACEP(ERR, "SetShutdownTimer: could not send shutdown info to proofsrv");
+      TRACEP(XERR, "SetShutdownTimer: could not send shutdown info to proofsrv");
    } else {
       rc = 0;
       XrdOucString msg = "SetShutdownTimer: ";
@@ -4991,7 +4992,7 @@ int XrdProofdProtocol::VerifyProcessByID(int pid, const char *pname)
 
    // Check input consistency
    if (pid < 0) {
-      TRACE(ERR, "VerifyProcessByID: invalid pid");
+      TRACE(XERR, "VerifyProcessByID: invalid pid");
       return -1;
    }
 
@@ -5013,7 +5014,7 @@ int XrdProofdProtocol::VerifyProcessByID(int pid, const char *pname)
          emsg += fn;
          emsg += ": errno: ";
          emsg += errno;
-         TRACE(ERR, emsg.c_str());
+         TRACE(XERR, emsg.c_str());
          return -1;
       }
    }
@@ -5028,7 +5029,7 @@ int XrdProofdProtocol::VerifyProcessByID(int pid, const char *pname)
       emsg += fn;
       emsg += ": errno: ";
       emsg += errno;
-      TRACE(ERR, emsg.c_str());
+      TRACE(XERR, emsg.c_str());
       fclose(ffn);
       return -1;
    }
@@ -5051,7 +5052,7 @@ int XrdProofdProtocol::VerifyProcessByID(int pid, const char *pname)
          emsg += fn;
          emsg += ": errno: ";
          emsg += errno;
-         TRACE(ERR, emsg.c_str());
+         TRACE(XERR, emsg.c_str());
          return -1;
       }
    }
@@ -5062,7 +5063,7 @@ int XrdProofdProtocol::VerifyProcessByID(int pid, const char *pname)
       emsg += fn;
       emsg += ": errno: ";
       emsg += errno;
-      TRACE(ERR, emsg.c_str());
+      TRACE(XERR, emsg.c_str());
       close(ffd);
       return -1;
    }
@@ -5084,7 +5085,7 @@ int XrdProofdProtocol::VerifyProcessByID(int pid, const char *pname)
    if ((ern = GetMacProcList(&pl, np)) != 0) {
       XrdOucString emsg("VerifyProcessByID: cannot get the process list: errno: ");
       emsg += ern;
-      TRACE(ERR, emsg.c_str());
+      TRACE(XERR, emsg.c_str());
       return -1;
    }
 
@@ -5298,7 +5299,7 @@ int XrdProofdProtocol::CleanupProofServ(bool all, const char *usr)
          if (read(ffd, &psi, sizeof(psinfo_t)) != sizeof(psinfo_t)) {
             XrdOucString emsg("CleanupProofServ: cannot read ");
             emsg += fn; emsg += ": errno: "; emsg += errno;
-            TRACE(ERR, emsg.c_str());
+            TRACE(XERR, emsg.c_str());
             close(ffd);
             continue;
          }
@@ -5344,7 +5345,7 @@ int XrdProofdProtocol::CleanupProofServ(bool all, const char *usr)
    if ((ern = GetMacProcList(&pl, np)) != 0) {
       XrdOucString emsg("CleanupProofServ: cannot get the process list: errno: ");
       emsg += ern;
-      TRACE(ERR, emsg.c_str());
+      TRACE(XERR, emsg.c_str());
       return -1;
    }
 
@@ -5462,7 +5463,7 @@ int XrdProofdProtocol::KillProofServ(int pid, bool forcekill, bool add)
                if (errno != ESRCH) {
                   XrdOucString msg = "KillProofServ: could not send SIGKILL to process: ";
                   msg += pid;
-                  TRACEP(ERR, msg.c_str());
+                  TRACEP(XERR, msg.c_str());
                   return -1;
                }
                signalled = 0;
@@ -5473,7 +5474,7 @@ int XrdProofdProtocol::KillProofServ(int pid, bool forcekill, bool add)
                if (errno != ESRCH) {
                   XrdOucString msg = "KillProofServ: could not send SIGTERM to process: ";
                   msg += pid;
-                  TRACEP(ERR, msg.c_str());
+                  TRACEP(XERR, msg.c_str());
                   return -1;
                }
                signalled = 0;
@@ -5493,7 +5494,7 @@ int XrdProofdProtocol::KillProofServ(int pid, bool forcekill, bool add)
             tag += pid;
             if (XrdProofdProtocol::GuessTag(fPClient, tag) == 0) {
                if (XrdProofdProtocol::MvOldSession(fPClient, tag.c_str(), fgMaxOldLogs) == -1)
-                  TRACEP(ERR, "KillProofServ: problems recording session as old in sandbox");
+                  TRACEP(XERR, "KillProofServ: problems recording session as old in sandbox");
             } else {
                   TRACEP(DBG, "KillProofServ: problems guessing tag");
             }
@@ -5502,7 +5503,7 @@ int XrdProofdProtocol::KillProofServ(int pid, bool forcekill, bool add)
          }
       } else {
         XrdOucString msg = "KillProofServ: could not get privileges";
-        TRACEP(ERR, msg.c_str());
+        TRACEP(XERR, msg.c_str());
         return -1;
       }
    } else {
@@ -5532,11 +5533,11 @@ int XrdProofdProtocol::KillProofServ(XrdProofServProxy *xps,
    if (pid > -1) {
       // Kill by ID
       if (KillProofServ(pid, forcekill, add) != 0) {
-         TRACEP(ERR, "KillProofServ: problems killing process by ID ("<<pid<<")");
+         TRACEP(XERR, "KillProofServ: problems killing process by ID ("<<pid<<")");
          return -1;
       }
    } else {
-      TRACEP(ERR, "KillProofServ: invalid session process ID ("<<pid<<")");
+      TRACEP(XERR, "KillProofServ: invalid session process ID ("<<pid<<")");
       return -1;
    }
 
@@ -5598,7 +5599,7 @@ int XrdProofdProtocol::ReadBuffer()
       file[dlen] = 0;
    } else {
       emsg = "ReadBuffer: file name not not found";
-      TRACEP(ERR, emsg);
+      TRACEP(XERR, emsg);
       fResponse.Send(kXR_InvalidRequest, emsg.c_str());
       return rc;
    }
@@ -5634,7 +5635,7 @@ int XrdProofdProtocol::ReadBuffer()
       emsg = "ReadBuffer: could not read buffer from ";
       emsg += (local) ? "local file " : "remote file ";
       emsg += file;
-      TRACEP(ERR, emsg);
+      TRACEP(XERR, emsg);
       fResponse.Send(kXR_InvalidRequest, emsg.c_str());
       return rc;
    }
@@ -5661,7 +5662,7 @@ char *XrdProofdProtocol::ReadBufferLocal(const char *file, kXR_int64 ofs, int &l
 
    // Check input
    if (!file || strlen(file) <= 0) {
-      TRACEP(ERR, "ReadBufferLocal: file path undefined!");
+      TRACEP(XERR, "ReadBufferLocal: file path undefined!");
       return (char *)0;
    }
 
@@ -5670,7 +5671,7 @@ char *XrdProofdProtocol::ReadBufferLocal(const char *file, kXR_int64 ofs, int &l
    if (fd < 0) {
       emsg = "ReadBufferLocal: could not open ";
       emsg += file;
-      TRACEP(ERR, emsg);
+      TRACEP(XERR, emsg);
       return (char *)0;
    }
 
@@ -5679,7 +5680,7 @@ char *XrdProofdProtocol::ReadBufferLocal(const char *file, kXR_int64 ofs, int &l
    if (fstat(fd, &st) != 0) {
       emsg = "ReadBufferLocal: could not get size of file with stat: errno: ";
       emsg += (int)errno;
-      TRACEP(ERR, emsg);
+      TRACEP(XERR, emsg);
       close(fd);
       return (char *)0;
    }
@@ -5721,7 +5722,7 @@ char *XrdProofdProtocol::ReadBufferLocal(const char *file, kXR_int64 ofs, int &l
          errno = 0;
       TRACEP(HDBG, "ReadBufferLocal: read "<<nr<<" bytes: "<< buf);
       if (nr < 0) {
-         TRACEP(ERR, "ReadBufferLocal: error reading from file: errno: "<< errno);
+         TRACEP(XERR, "ReadBufferLocal: error reading from file: errno: "<< errno);
          break;
       }
 
@@ -5754,7 +5755,7 @@ char *XrdProofdProtocol::ReadBufferRemote(const char *url,
 
    // Check input
    if (!url || strlen(url) <= 0) {
-      TRACEP(ERR, "ReadBufferRemote: url undefined!");
+      TRACEP(XERR, "ReadBufferRemote: url undefined!");
       return (char *)0;
    }
 
@@ -5821,7 +5822,7 @@ int XrdProofdProtocol::GuessTag(XrdProofClient *pcl, XrdOucString &tag, int ridx
 
    // Check inputs
    if (!pcl) {
-      TRACE(ERR, "GuessTag: client undefined");
+      TRACE(XERR, "GuessTag: client undefined");
       return -1;
    }
    bool found = 0;
@@ -5878,7 +5879,7 @@ int XrdProofdProtocol::GuessTag(XrdProofClient *pcl, XrdOucString &tag, int ridx
       std::list<XrdOucString *> staglst;
       int rc = GetSessionDirs(pcl, 3, &staglst, &tag);
       if (rc < 0) {
-         TRACE(ERR, "GuessTag: cannot scan dir "<<pcl->Workdir());
+         TRACE(XERR, "GuessTag: cannot scan dir "<<pcl->Workdir());
          return -1;
       }
       found = (rc == 1) ? 1 : 0;
@@ -5940,7 +5941,7 @@ int XrdProofdProtocol::AddNewSession(XrdProofClient *pcl, const char *tag)
    // Open the file for appending
    FILE *fact = fopen(fn.c_str(), "a+");
    if (!fact) {
-      TRACE(ERR, "AddNewSession: cannot open file "<<fn<<
+      TRACE(XERR, "AddNewSession: cannot open file "<<fn<<
                  " for appending (errno: "<<errno<<")");
       return -1;
    }
@@ -5948,7 +5949,7 @@ int XrdProofdProtocol::AddNewSession(XrdProofClient *pcl, const char *tag)
    // Lock the file
    lseek(fileno(fact), 0, SEEK_SET);
    if (lockf(fileno(fact), F_LOCK, 0) == -1) {
-      TRACE(ERR, "AddNewSession: cannot lock file "<<fn<<
+      TRACE(XERR, "AddNewSession: cannot lock file "<<fn<<
                  " (errno: "<<errno<<")");
       fclose(fact);
       return -1;
@@ -5980,7 +5981,7 @@ int XrdProofdProtocol::AddNewSession(XrdProofClient *pcl, const char *tag)
    // Unlock the file
    lseek(fileno(fact), 0, SEEK_SET);
    if (lockf(fileno(fact), F_ULOCK, 0) == -1)
-      TRACE(ERR, "AddNewSession: cannot unlock file "<<fn<<
+      TRACE(XERR, "AddNewSession: cannot unlock file "<<fn<<
                  " (errno: "<<errno<<")");
 
    // Close the file
@@ -6005,7 +6006,7 @@ int XrdProofdProtocol::MvOldSession(XrdProofClient *pcl,
 
    // Check inputs
    if (!pcl || !tag) {
-      TRACE(ERR, "MvOldSession: invalid inputs");
+      TRACE(XERR, "MvOldSession: invalid inputs");
       return -1;
    }
    TRACE(ACT, "MvOldSession: enter: client: "<< pcl->ID()<<
@@ -6018,14 +6019,14 @@ int XrdProofdProtocol::MvOldSession(XrdProofClient *pcl,
    // Open the file
    FILE *fact = fopen(fna.c_str(), "a+");
    if (!fact) {
-      TRACE(ERR, "MvOldSession: cannot open file "<<fna<<
+      TRACE(XERR, "MvOldSession: cannot open file "<<fna<<
                  " (errno: "<<errno<<")");
       return -1;
    }
 
    // Lock the file
    if (lockf(fileno(fact), F_LOCK, 0) == -1) {
-      TRACE(ERR, "MvOldSession: cannot lock file "<<fna<<
+      TRACE(XERR, "MvOldSession: cannot lock file "<<fna<<
                  " (errno: "<<errno<<")");
       fclose(fact);
       return -1;
@@ -6047,7 +6048,7 @@ int XrdProofdProtocol::MvOldSession(XrdProofClient *pcl,
 
    // Truncate the file
    if (ftruncate(fileno(fact), 0) == -1) {
-      TRACE(ERR, "MvOldSession: cannot truncate file "<<fna<<
+      TRACE(XERR, "MvOldSession: cannot truncate file "<<fna<<
                  " (errno: "<<errno<<")");
       lseek(fileno(fact), 0, SEEK_SET);
       lockf(fileno(fact), F_ULOCK, 0);
@@ -6069,8 +6070,8 @@ int XrdProofdProtocol::MvOldSession(XrdProofClient *pcl,
    // Unlock the file
    lseek(fileno(fact), 0, SEEK_SET);
    if (lockf(fileno(fact), F_ULOCK, 0) == -1)
-      TRACE(ERR, "MvOldSession: cannot unlock file "<<fna<<
-                 " (errno: "<<errno<<")");
+      TRACE(XERR, "MvOldSession: cannot unlock file "<<fna<<
+                  " (errno: "<<errno<<")");
 
    // Close the file
    fclose(fact);
@@ -6078,7 +6079,7 @@ int XrdProofdProtocol::MvOldSession(XrdProofClient *pcl,
    // Unlink the file if empty
    if (unlk)
       if (unlink(fna.c_str()) == -1) 
-         TRACE(ERR, "MvOldSession: cannot unlink file "<<fna<<
+         TRACE(XERR, "MvOldSession: cannot unlink file "<<fna<<
                     " (errno: "<<errno<<")");
 
    // Flag the session as closed
@@ -6089,7 +6090,7 @@ int XrdProofdProtocol::MvOldSession(XrdProofClient *pcl,
    // Create the file
    FILE *ft = fopen(fterm.c_str(), "w");
    if (!ft) {
-      TRACE(ERR, "MvOldSession: cannot open file "<<fterm<<
+      TRACE(XERR, "MvOldSession: cannot open file "<<fterm<<
                  " (errno: "<<errno<<")");
       return -1;
    }
@@ -6101,7 +6102,7 @@ int XrdProofdProtocol::MvOldSession(XrdProofClient *pcl,
       // Get list of terminated session working dirs
       std::list<XrdOucString *> staglst;
       if (GetSessionDirs(pcl, 2, &staglst) != 0) {
-         TRACE(ERR, "MvOldSession: cannot get list of dirs ");
+         TRACE(XERR, "MvOldSession: cannot get list of dirs ");
          return -1;
       }
       TRACE(DBG, "MvOldSession: number of working dirs: "<<staglst.size());
@@ -6160,7 +6161,7 @@ int XrdProofdProtocol::GetSessionDirs(XrdProofClient *pcl, int opt,
 
    // Check inputs
    if (!pcl || (opt < 3 && !sdirs) || (opt == 3 && !tag)) {
-      TRACE(ERR, "GetSessionDirs: invalid inputs");
+      TRACE(XERR, "GetSessionDirs: invalid inputs");
       return -1;
    }
 
@@ -6169,7 +6170,7 @@ int XrdProofdProtocol::GetSessionDirs(XrdProofClient *pcl, int opt,
    // Open dir
    DIR *dir = opendir(pcl->Workdir());
    if (!dir) {
-      TRACE(ERR, "GetSessionDirs: cannot open dir "<<pcl->Workdir()<<
+      TRACE(XERR, "GetSessionDirs: cannot open dir "<<pcl->Workdir()<<
             " (errno: "<<errno<<")");
       return -1;
    }
@@ -6299,14 +6300,14 @@ int XrdProofClient::CreateUNIXSock(XrdOucError *edest, char *tmpdir)
 
    // Make sure we do not have inconsistencies
    if (fUNIXSock || fUNIXSockPath) {
-       TRACE(ERR,"CreateUNIXSock: inconsistent values: corruption? (sock: " <<
+       TRACE(XERR,"CreateUNIXSock: inconsistent values: corruption? (sock: " <<
                  fUNIXSock<<", path: "<< fUNIXSockPath);
        return -1;
    }
 
    // Inputs must make sense
    if (!edest || !tmpdir) {
-       TRACE(ERR,"CreateUNIXSock: invalid inputs: edest: " <<
+       TRACE(XERR,"CreateUNIXSock: invalid inputs: edest: " <<
                  (int *)edest <<", tmpdir: "<< (int *)tmpdir);
        return -1;
    }
@@ -6321,13 +6322,13 @@ int XrdProofClient::CreateUNIXSock(XrdOucError *edest, char *tmpdir)
    if (fd > -1) {
       close(fd);
       if (fUNIXSock->Bind(fUNIXSockPath)) {
-         TRACE(ERR,"CreateUNIXSock: warning:"
+         TRACE(XERR,"CreateUNIXSock: warning:"
                    " problems binding to UNIX socket; path: " <<fUNIXSockPath);
          return -1;
       } else
          TRACE(DBG, "CreateUNIXSock: path for UNIX for socket is " <<fUNIXSockPath);
    } else {
-      TRACE(ERR,"CreateUNIXSock: unable to generate unique"
+      TRACE(XERR,"CreateUNIXSock: unable to generate unique"
             " path for UNIX socket; tried path " << fUNIXSockPath);
       return -1;
    }
@@ -6351,7 +6352,7 @@ void XrdProofClient::SaveUNIXPath()
 
    // Make sure we do not have already a socket
    if (!fUNIXSockPath) {
-       TRACE(ERR,"SaveUNIXPath: UNIX path undefined!");
+       TRACE(XERR,"SaveUNIXPath: UNIX path undefined!");
        return;
    }
 
@@ -6362,7 +6363,7 @@ void XrdProofClient::SaveUNIXPath()
    // Open the file for appending
    FILE *fup = fopen(fn.c_str(), "a+");
    if (!fup) {
-      TRACE(ERR, "SaveUNIXPath: cannot open file "<<fn<<
+      TRACE(XERR, "SaveUNIXPath: cannot open file "<<fn<<
             " for appending (errno: "<<errno<<")");
       return;
    }
@@ -6370,7 +6371,7 @@ void XrdProofClient::SaveUNIXPath()
    // Lock the file
    lseek(fileno(fup), 0, SEEK_SET);
    if (lockf(fileno(fup), F_LOCK, 0) == -1) {
-      TRACE(ERR, "SaveUNIXPath: cannot lock file "<<fn<<
+      TRACE(XERR, "SaveUNIXPath: cannot lock file "<<fn<<
             " (errno: "<<errno<<")");
       fclose(fup);
       return;
@@ -6398,7 +6399,7 @@ void XrdProofClient::SaveUNIXPath()
          // Not running: remove the socket path
          TRACE(DBG, "SaveUNIXPath: unlinking socket path "<< path);
          if (unlink(path) != 0 && errno != ENOENT) {
-            TRACE(ERR, "SaveUNIXPath: problems unlinking socket path "<< path<<
+            TRACE(XERR, "SaveUNIXPath: problems unlinking socket path "<< path<<
                     " (errno: "<<errno<<")");
          }
       }
@@ -6406,7 +6407,7 @@ void XrdProofClient::SaveUNIXPath()
 
    // Truncate the file
    if (ftruncate(fileno(fup), 0) == -1) {
-      TRACE(ERR, "SaveUNIXPath: cannot truncate file "<<fn<<
+      TRACE(XERR, "SaveUNIXPath: cannot truncate file "<<fn<<
                  " (errno: "<<errno<<")");
       lseek(fileno(fup), 0, SEEK_SET);
       lockf(fileno(fup), F_ULOCK, 0);
@@ -6430,7 +6431,7 @@ void XrdProofClient::SaveUNIXPath()
    // Unlock the file
    lseek(fileno(fup), 0, SEEK_SET);
    if (lockf(fileno(fup), F_ULOCK, 0) == -1)
-      TRACE(ERR, "SaveUNIXPath: cannot unlock file "<<fn<<
+      TRACE(XERR, "SaveUNIXPath: cannot unlock file "<<fn<<
                  " (errno: "<<errno<<")");
 
    // Close the file
@@ -6526,7 +6527,7 @@ void XrdProofWorker::Reset(const char *str)
          fPerfIdx = strtol(tok.c_str(), (char **)0, 10);
       } else {
          // Unknown
-         TRACE(ERR, "XrdProofWorker::Reset: unknown option "<<tok);
+         TRACE(XERR, "XrdProofWorker::Reset: unknown option "<<tok);
       }
    }
 

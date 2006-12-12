@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.12 2006/11/20 15:56:36 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.13 2006/11/27 14:19:58 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -142,7 +142,7 @@ XrdClientID *XrdProofServProxy::GetClientID(int cid)
              ", size: "<<fClients.size());
 
    if (cid < 0) {
-      TRACE(ERR,"XrdProofServProxy::GetClientID: negative ID: protocol error!");
+      TRACE(XERR,"XrdProofServProxy::GetClientID: negative ID: protocol error!");
       return csid;
    }
 
