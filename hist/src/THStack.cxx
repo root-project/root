@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.46 2006/05/26 15:13:02 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.47 2006/07/03 16:10:46 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -51,7 +51,7 @@ ClassImp(THStack)
 //      c1.cd(2);
 //      hs->Draw("nostack");
 //
-//  See a more complex example in $ROOTSYS/tutorials/hstack.C
+//  See a more complex example in $ROOTSYS/tutorials/hist/hstack.C
 //
 //  Note that picking is supported for all drawing modes.
 

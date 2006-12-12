@@ -7628,7 +7628,7 @@ void TSpectrum2Painter::PaintSpectrum(TH2* h2, Option_t *option)
    //
    //                               * * *
    //
-   // See example in $ROOTSYS/tutorials/spectrumpainter.C
+   // See example in $ROOTSYS/tutorials/spectrum/spectrumpainter.C
    //Begin_Html
    /*
    <img src="gif/spectrumpainter.gif">

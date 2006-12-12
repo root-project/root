@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.320 2006/12/08 19:01:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.321 2006/12/11 15:38:23 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -161,15 +161,15 @@
 //        1- call TAxis::SetBinLabel(bin,label);
 //           This can always be done before or after filling.
 //           When the histogram is drawn, bin labels will be automatically drawn.
-//           See example in $ROOTSYS/tutorials/labels1.C, labels2.C
+//           See example in $ROOTSYS/tutorials/graphs/labels1.C, labels2.C
 //        2- call to a Fill function with one of the arguments being a string, eg
 //           hist1->Fill(somename,weigth);
 //           hist2->Fill(x,somename,weight);
 //           hist2->Fill(somename,y,weight);
 //           hist2->Fill(somenamex,somenamey,weight);
-//           See example in $ROOTSYS/tutorials/hlabels1.C, hlabels2.C
+//           See example in $ROOTSYS/tutorials/hist/hlabels1.C, hlabels2.C
 //        3- via TTree::Draw.
-//           see for example $ROOTSYS/tutorials/cern.C
+//           see for example $ROOTSYS/tutorials/tree/cernstaff.C
 //           tree.Draw("Nation::Division"); where "Nation" and "Division"
 //           are two branches of a Tree.
 //     When using the options 2 or 3 above, the labels are automatically

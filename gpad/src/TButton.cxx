@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.12 2006/03/17 09:08:48 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.13 2006/07/03 16:10:44 brun Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -62,8 +62,8 @@ ClassImp(TButton)
 //   but3->Draw();
 //
 //// Create last button with no name. Instead a graph is draw inside the button
-//// Clicking on this button will invoke the macro tutorials/graph.C
-//   button = new TButton("",".x tutorials/graph.C",0.15,0.15,0.85,0.38);
+//// Clicking on this button will invoke the macro $ROOTSYS/tutorials/graphs/graph.C
+//   button = new TButton("",".x tutorials/graphs/graph.C",0.15,0.15,0.85,0.38);
 //   button->SetFillColor(42);
 //   button->Draw();
 //   button->SetEditable(kTRUE);

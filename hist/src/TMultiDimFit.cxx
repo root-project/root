@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.27 2006/09/19 12:38:03 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.28 2006/09/22 09:09:47 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -66,7 +66,7 @@ text for more information.
 And example of usage is given in
 <A NAME="tex2html1"
   HREF="
-  ./examples/multidimfit.C"><TT>$ROOTSYS/tutorials/multidimfit.C</TT></A>.
+  ./examples/multidimfit.C"><TT>$ROOTSYS/tutorials/fit/multidimfit.C</TT></A>.
 
 <P>
 

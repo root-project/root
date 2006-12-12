@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $Id: TGenericTable.cxx,v 1.5 2006/05/20 14:06:09 brun Exp $
+// @(#)root/table:$Name:  $Id: TGenericTable.cxx,v 1.6 2006/07/11 09:05:02 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   30/06/2001
 
 /*************************************************************************
@@ -19,7 +19,7 @@
 //  This is the class to represent the array of C-struct                //
 //  defined at run-time                                                 //
 //                                                                      //
-//   Example: see $ROOTSYS/tutorials/staff.C                            //
+//   Example: see $ROOTSYS/tutorials/tree/staff.C                       //
 //   -------                                                            //
 // !{
 // !//   example of macro to read data from an ascii file and

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.276 2006/11/27 15:22:28 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.277 2006/12/11 09:26:50 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1240,7 +1240,7 @@ void THistPainter::Paint(Option_t *option)
    //
    //  Use TH1::SetBarWidth to control the bar width (default is the bin width)
    //  Use TH1::SetBarOffset to control the bar offset (default is 0)
-   //    See example in $ROOTSYS/tutorials/hbars.C
+   //    See example in $ROOTSYS/tutorials/hist/hbars.C
    //Begin_Html
    /*
    <img src="gif/PaintBar.gif">
@@ -1261,7 +1261,7 @@ void THistPainter::Paint(Option_t *option)
    //
    //  Use TH1::SetBarWidth to control the bar width (default is the bin width)
    //  Use TH1::SetBarOffset to control the bar offset (default is 0)
-   //    See example in $ROOTSYS/tutorials/hbars.C
+   //    See example in $ROOTSYS/tutorials/hist/hbars.C
    //Begin_Html
    /*
    <img src="gif/PaintBarH.gif">
@@ -1988,7 +1988,7 @@ void THistPainter::PaintBar(Option_t *)
    //
    // Use TH1::SetBarWidth to control the bar width (default is the bin width)
    // Use TH1::SetBarOffset to control the bar offset (default is 0)
-   //   See example in $ROOTSYS/tutorials/hbars.C
+   //   See example in $ROOTSYS/tutorials/hist/hbars.C
    //Begin_Html
    /*
    <img src="gif/PaintBar.gif">
@@ -2054,7 +2054,7 @@ void THistPainter::PaintBarH(Option_t *)
    //
    // Use TH1::SetBarWidth to control the bar width (default is the bin width)
    // Use TH1::SetBarOffset to control the bar offset (default is 0)
-   //   See example in $ROOTSYS/tutorials/hbars.C
+   //   See example in $ROOTSYS/tutorials/hist/hbars.C
    //Begin_Html
    /*
    <img src="gif/PaintBarH.gif">

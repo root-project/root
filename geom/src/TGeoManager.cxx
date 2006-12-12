@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.166 2006/11/17 17:36:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.167 2006/11/22 16:02:10 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -283,7 +283,7 @@
 // ------------------------
 //
 //   Provided that a geometry was successfully built and closed (for instance the
-// previous example $ROOTSYS/tutorials/rootgeom.C ), the manager class will register
+// previous example $ROOTSYS/tutorials/geom/rootgeom.C ), the manager class will register
 // itself to ROOT and the logical/physical structures will become immediately browsable.
 // The ROOT browser will display starting from the geometry folder : the list of
 // transformations and media, the top volume and the top logical node. These last

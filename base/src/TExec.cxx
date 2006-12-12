@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TExec.cxx,v 1.7 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TExec.cxx,v 1.8 2006/07/03 16:10:43 brun Exp $
 // Author: Rene Brun   29/12/99
 
 /*************************************************************************
@@ -74,7 +74,7 @@ ClassImp(TExec)
 // which type of event and the X,Y position of the mouse.
 // By default, the list of TExecs is executed. This can be disabled
 // via the canvas menu "Option".
-// See $ROOTSYS/tutorials/exec2.C for an example.
+// See $ROOTSYS/tutorials/hist/exec2.C for an example.
 //    Root > TFile f("hsimple.root");
 //    Root > hpxpy.Draw();
 //    Root > c1.AddExec("ex2",".x exec2.C");

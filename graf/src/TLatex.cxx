@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.61 2006/07/09 05:27:54 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.62 2006/11/15 18:04:08 couet Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -143,7 +143,7 @@ ClassImp(TLatex)
 //
 //   ** Example1
 //   -----------
-//     The following macro (tutorials/latex.C) produces the following picture:
+//     The following macro (tutorials/graphics/latex.C) produces the following picture:
 //  {
 //     gROOT->Reset();
 //     TCanvas c1("c1","Latex",600,700);
@@ -163,7 +163,7 @@ ClassImp(TLatex)
 //
 //   ** Example2
 //   -----------
-//     The following macro (tutorials/latex2.C) produces the following picture:
+//     The following macro (tutorials/graphics/latex2.C) produces the following picture:
 //  {
 //     gROOT->Reset();
 //     TCanvas c1("c1","Latex",600,700);
@@ -183,7 +183,7 @@ ClassImp(TLatex)
 //
 //   ** Example3
 //   -----------
-//     The following macro (tutorials/latex3.C) produces the following picture:
+//     The following macro (tutorials/graphics/latex3.C) produces the following picture:
 //  {
 //     gROOT->Reset();
 //   TCanvas c1("c1");
