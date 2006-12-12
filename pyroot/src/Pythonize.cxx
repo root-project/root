@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.46 2006/11/30 23:18:32 pcanal Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.47 2006/12/08 07:42:31 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -803,7 +803,7 @@ namespace {
       } else if ( ! PyErr_ExceptionMatches( PyExc_IndexError ) ) {
          if ( PyErr_Occurred() )
             PyErr_Clear();
-         return CallPySelfMethod( args, "_getitem__unchecked", "OO:__getitem__" );
+         return CallPySelfObjMethod( args, "_getitem__unchecked", "OO:__getitem__" );
       }
 
       return 0;   // to make compiler happy; never get here
