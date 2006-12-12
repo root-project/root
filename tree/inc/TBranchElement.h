@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.51 2006/07/14 20:51:08 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.52 2006/07/26 13:36:43 rdm Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -124,7 +124,7 @@ public:
            Bool_t           IsBranchFolder() const { return TestBit(kBranchFolder); }
            Bool_t           IsFolder() const;
    virtual Bool_t           IsObjectOwner() const { return TestBit(kDeleteObject); }
-   virtual Bool_t           Notify() { if (fAddress) { SetAddress(0); } return 1; }
+   virtual Bool_t           Notify() { if (fAddress) { ResetAddress(); } return 1; }
    virtual void             Print(Option_t* option = "") const;
            void             PrintValue(Int_t i) const;
    virtual void             ReadLeaves(TBuffer& b);
