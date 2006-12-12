@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XProofProtUtils.cxx,v 1.8 2006/12/03 23:34:04 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XProofProtUtils.cxx,v 1.9 2006/12/04 07:51:38 brun Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #   endif
 #endif
 #ifndef WIN32
+#include <sys/types.h>
 #include <netinet/in.h>
 #endif
 #include "XrdSys/XrdSysPlatform.hh"
