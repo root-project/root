@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.52 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.53 2006/12/08 17:33:28 pcanal Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -79,7 +79,7 @@ private:
 protected:
    void                     BuildTitle(const char* name);
    virtual void             InitializeOffsets();
-   void                     InitInfo();
+   virtual void             InitInfo();
    Bool_t                   IsMissingCollection() const;
    TClass                  *GetCurrentClass(); // Class referenced by transient description
    TClass                  *GetParentClass(); // Class referenced by fParentName
