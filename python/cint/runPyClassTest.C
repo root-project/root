@@ -1,6 +1,9 @@
 {
+   int eil = gErrorIgnoreLevel;
+   gErrorIgnoreLevel = 3000;
    gSystem->Load( "libPyROOT" );
    TPython::LoadMacro( "MyPyClass.py" );
+   gErrorIgnoreLevel = eil;
 
    MyPyClass m;
    printf( "string (aap): %s\n", (char*)m.gime( "aap" ) );
