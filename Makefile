@@ -777,6 +777,7 @@ install: all
 	   $(INSTALL) $(CINT)                   $(DESTDIR)$(BINDIR); \
 	   $(INSTALL) $(MAKECINT)               $(DESTDIR)$(BINDIR); \
 	   $(INSTALL) $(ROOTCINTEXE)            $(DESTDIR)$(BINDIR); \
+	   $(INSTALL) $(RLIBMAP)                $(DESTDIR)$(BINDIR); \
 	   $(INSTALL) $(RMKDEP)                 $(DESTDIR)$(BINDIR); \
 	   if [ "x$(BINDEXP)" != "x" ] ; then \
 	      $(INSTALL) $(BINDEXP)             $(DESTDIR)$(BINDIR); \
