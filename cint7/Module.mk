@@ -264,9 +264,9 @@ REFLEXLL := -Llib -lReflex -ldl
 endif
 
 ##### local rules #####
-$(CINT7LIB): $(CINT7O) $(CINT7LIBDEP)
+$(CINT7LIB): $(CINT7O) $(CINT7LIBDEP) $(REFLEXLIB)
 	$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" \
-	   libCint7.$(SOEXT) $@ "$^" "$(CINT7LIBEXTRA)"
+	   libCint7.$(SOEXT) $@ "$(CINT7O)" "$(CINT7LIBEXTRA) $(REFLEXLL)"
 
 $(CINT7): $(CINT7EXEO) $(CINT7LIB) $(REFLEXLIB)
 	$(LD) $(LDFLAGS) -o $@ $(CINT7EXEO) $(RPATH) $(CINT7LIBS) $(CILIBS)
