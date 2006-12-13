@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TSelectorList.cxx,v 1.1 2005/11/08 17:22:09 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TSelectorList.cxx,v 1.2 2005/11/11 22:16:04 pcanal Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -62,13 +62,12 @@ Bool_t TSelectorList::CheckDuplicateName(TObject *obj)
 
    TObject *org = FindObject(obj->GetName());
    if (org == obj) {
-      Error("CheckDuplicateName", "object already in the list");
+      Error("CheckDuplicateName","object with name: %s already in the list",obj->GetName());
       return kFALSE;
    }
 
    if (org) {
-      Error("CheckDuplicateName",
-            "an object with the same name is already in the list");
+      Error("CheckDuplicateName","an object with the same name: %s is already in the list",obj->GetName());
       return kFALSE;
    }
 
