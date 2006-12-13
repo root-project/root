@@ -94,10 +94,28 @@ class STL3MapTestCase( unittest.TestCase ):
 
       self.assertEqual( len(a), self.N )
 
+   def test2KeyedMapType( self ):
+      """Test access to a map<std::string,int> (part of cintdlls)"""
+
+      a = std.map( std.string, int )()
+      for i in range(self.N):
+         a[str(i)] = i
+         self.assertEqual( a[str(i)], i )
+
+      self.assertEqual( len(a), self.N )
+
+
 
 ### Protocol mapping for an STL like class ===================================
 class STL4STLLikeClassTestCase( unittest.TestCase ):
-   def test1STLLikeClassIterators( self ):
+   def test1STLLikeClassIndexingOverloads( self ):
+      """Test overloading of operator[] in STL like class"""
+
+      a = STLLikeClass( int )()
+      self.assertEqual( a[ "some string" ], 'string' )
+      self.assertEqual( a[ 3.1415 ], 'double' )
+
+   def test2STLLikeClassIterators( self ):
       """Test the iterator protocol mapping for an STL like class"""
 
       a = STLLikeClass( int )()

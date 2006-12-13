@@ -3,6 +3,8 @@ Test access to a vector<double> (part of cintdlls) ... ok
 Test access to a ACLiC generated vector type ... ok
 Test access to a list<int> (part of cintdlls) ... ok
 Test access to a map<int,int> (part of cintdlls) ... ok
+Test access to a map<std::string,int> (part of cintdlls) ... ok
+Test overloading of operator[] in STL like class ... ok
 Test the iterator protocol mapping for an STL like class ... ok
 Test mapping of python strings and std::string ... ok
 Test access to std::string object data members ... ok

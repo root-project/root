@@ -23,7 +23,9 @@ public:
    NoDictAvailable* begin() { return 0; }
    NoDictAvailable* end() { return 0; }
    int size() { return 4; }
-   int operator[]( int i ) { return i;}
+   int operator[]( int i ) { return i; }
+   std::string operator[]( double ) { return "double"; }
+   std::string operator[]( const std::string& ) { return "string"; }
 };
 
 class StringyClass {
