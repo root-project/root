@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.31 2006/10/24 14:20:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.32 2006/11/24 10:45:13 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -1009,7 +1009,7 @@ namespace Rgl {
                                 {{255, 255, 0}}, 
                                 {{255, 0, 255}}, 
                                 {{0, 255, 255}}, 
-                                {{128, 128, 128}}};
+                                {{255, 255, 255}}};
 
       Bool_t operator < (const RGB_t &lhs, const RGB_t &rhs)
       {
@@ -1048,8 +1048,7 @@ namespace Rgl {
          //Initialize lookup tables.
             for (Int_t i = 0, id = 1; i < Int_t(sizeof gColorTriplets / sizeof(RGB_t)); ++i, ++id)
                gObjectIDToColor[id] = gColorTriplets[i];
-            //6 is a number of "clean" colors, which cannot be distorted in high-color.
-            for (Int_t i = 0, id = 1; i < 6; ++i, ++id)
+            for (Int_t i = 0, id = 1; i < Int_t(sizeof gColorTriplets / sizeof(RGB_t)); ++i, ++id)
                gColorToObjectID[gColorTriplets[i]] = id;
          }
 
@@ -1078,8 +1077,6 @@ namespace Rgl {
 
          if (it != gColorToObjectID.end())
             return it->second;
-         else if(pixel[0] && pixel[1] && pixel[2])
-            return 7;
          else
             return 0;
       }

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.9 2006/11/24 10:45:13 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.10 2006/11/24 15:57:44 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -147,7 +147,7 @@ public:
       kZAxis = 9
    };
 
-   Bool_t           CutAxisSelected()const{return fSelectedPart <= kZAxis && fSelectedPart >= kXAxis;}
+   Bool_t           CutAxisSelected()const{return !fHighColor && fSelectedPart <= kZAxis && fSelectedPart >= kXAxis;}
 
 protected:
    Int_t            GetGLContext()const;
