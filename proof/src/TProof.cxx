@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.174 2006/12/11 13:24:49 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.175 2006/12/12 14:05:41 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -72,7 +72,7 @@
 #include "TProofNodeInfo.h"
 #include "TProofResourcesStatic.h"
 #include "TInterpreter.h"
-
+#include "TParameter.h"
 #include "TRandom.h"
 #include "TRegexp.h"
 #include "TFileInfo.h"
@@ -2960,43 +2960,6 @@ void TProof::StopProcess(Bool_t abort, Int_t timeout)
 }
 
 //______________________________________________________________________________
-void TProof::AddInput(TObject *obj)
-{
-   // Add objects that might be needed during the processing of
-   // the selector (see Process()).
-
-   fPlayer->AddInput(obj);
-}
-
-//______________________________________________________________________________
-void TProof::ClearInput()
-{
-   // Clear input object list.
-
-   fPlayer->ClearInput();
-
-   // the system feedback list is always in the input list
-   AddInput(fFeedback);
-}
-
-//______________________________________________________________________________
-TObject *TProof::GetOutput(const char *name)
-{
-   // Get specified object that has been produced during the processing
-   // (see Process()).
-
-   return fPlayer->GetOutput(name);
-}
-
-//______________________________________________________________________________
-TList *TProof::GetOutputList()
-{
-   // Get list with all object created during processing (see Process()).
-
-   return fPlayer->GetOutputList();
-}
-
-//______________________________________________________________________________
 void TProof::RecvLogFile(TSocket *s, Int_t size)
 {
    // Receive the log file of the slave with socket s.
@@ -4773,6 +4736,161 @@ void TProof::ValidateDSet(TDSet *dset)
    PDB(kGlobal,1) Info("ValidateDSet","Calling Collect");
    Collect(&usedslaves);
    SetDSet(0);
+}
+
+//______________________________________________________________________________
+void TProof::AddInput(TObject *obj)
+{
+   // Add objects that might be needed during the processing of
+   // the selector (see Process()).
+
+   fPlayer->AddInput(obj);
+}
+
+//______________________________________________________________________________
+void TProof::ClearInput()
+{
+   // Clear input object list.
+
+   fPlayer->ClearInput();
+
+   // the system feedback list is always in the input list
+   AddInput(fFeedback);
+}
+
+//______________________________________________________________________________
+TObject *TProof::GetOutput(const char *name)
+{
+   // Get specified object that has been produced during the processing
+   // (see Process()).
+
+   return fPlayer->GetOutput(name);
+}
+
+//______________________________________________________________________________
+TList *TProof::GetOutputList()
+{
+   // Get list with all object created during processing (see Process()).
+
+   return fPlayer->GetOutputList();
+}
+
+//______________________________________________________________________________
+void TProof::SetParameter(const char *par, const char *value)
+{
+   // Set input list parameter. If the parameter is already
+   // set it will be set to the new value.
+
+   TList *il = fPlayer->GetInputList();
+   TObject *item = il->FindObject(par);
+   if (item) {
+      il->Remove(item);
+      delete item;
+   }
+   il->Add(new TNamed(par, value));
+}
+
+//______________________________________________________________________________
+void TProof::SetParameter(const char *par, Long_t value)
+{
+   // Set an input list parameter.
+
+   TList *il = fPlayer->GetInputList();
+   TObject *item = il->FindObject(par);
+   if (item) {
+      il->Remove(item);
+      delete item;
+   }
+   il->Add(new TParameter<Long_t>(par, value));
+}
+
+//______________________________________________________________________________
+void TProof::SetParameter(const char *par, Long64_t value)
+{
+   // Set an input list parameter.
+
+   TList *il = fPlayer->GetInputList();
+   TObject *item = il->FindObject(par);
+   if (item) {
+      il->Remove(item);
+      delete item;
+   }
+   il->Add(new TParameter<Long64_t>(par, value));
+}
+
+//______________________________________________________________________________
+void TProof::SetParameter(const char *par, Double_t value)
+{
+   // Set an input list parameter.
+
+   TList *il = fPlayer->GetInputList();
+   TObject *item = il->FindObject(par);
+   if (item) {
+      il->Remove(item);
+      delete item;
+   }
+   il->Add(new TParameter<Double_t>(par, value));
+}
+
+//______________________________________________________________________________
+TObject *TProof::GetParameter(const char *par) const
+{
+   // Get specified parameter. A parameter set via SetParameter() is either
+   // a TParameter or a TNamed or 0 in case par is not defined.
+
+   TList *il = fPlayer->GetInputList();
+   return il->FindObject(par);
+}
+
+//______________________________________________________________________________
+void TProof::DeleteParameters(const char *wildcard)
+{
+   // Delete the input list parameters specified by a wildcard (e.g. PROOF_*)
+   // or exact name (e.g. PROOF_MaxSlavesPerNode).
+
+   if (!wildcard) wildcard = "";
+   TRegexp re(wildcard, kTRUE);
+   Int_t nch = strlen(wildcard);
+
+   TList *il = fPlayer->GetInputList();
+   TObject *p;
+   TIter next(il);
+   while ((p = next())) {
+      TString s = p->GetName();
+      if (nch && s != wildcard && s.Index(re) == kNPOS) continue;
+      il->Remove(p);
+      delete p;
+   }
+}
+
+//______________________________________________________________________________
+void TProof::ShowParameters(const char *wildcard) const
+{
+   // Show the input list parameters specified by the wildcard.
+   // Default is the special PROOF control parameters (PROOF_*).
+
+   if (!wildcard) wildcard = "";
+   TRegexp re(wildcard, kTRUE);
+   Int_t nch = strlen(wildcard);
+
+   TList *il = fPlayer->GetInputList();
+   TObject *p;
+   TIter next(il);
+   while ((p = next())) {
+      TString s = p->GetName();
+      if (nch && s != wildcard && s.Index(re) == kNPOS) continue;
+      if (p->IsA() == TNamed::Class()) {
+         Printf("%s\t\t\t%s", s.Data(), p->GetTitle());
+      } else if (p->IsA() == TParameter<Long_t>::Class()) {
+         Printf("%s\t\t\t%ld", s.Data(), dynamic_cast<TParameter<Long_t>*>(p)->GetVal());
+      } else if (p->IsA() == TParameter<Long64_t>::Class()) {
+         Printf("%s\t\t\t%lld", s.Data(), dynamic_cast<TParameter<Long64_t>*>(p)->GetVal());
+      } else if (p->IsA() == TParameter<Double_t>::Class()) {
+         Printf("%s\t\t\t%f", s.Data(), dynamic_cast<TParameter<Double_t>*>(p)->GetVal());
+      } else {
+         Printf("%s\t\t\t%s", s.Data(), p->GetTitle());
+      }
+   }
 }
 
 //______________________________________________________________________________

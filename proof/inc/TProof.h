@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.99 2006/12/11 13:24:49 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.100 2006/12/12 11:20:49 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -540,11 +540,7 @@ public:
    Int_t       Retrieve(const char *queryref, const char *path = 0);
 
    void        StopProcess(Bool_t abort, Int_t timeout = -1);
-   void        AddInput(TObject *obj);
    void        Browse(TBrowser *b);
-   void        ClearInput();
-   TObject    *GetOutput(const char *name);
-   TList      *GetOutputList();
 
    Int_t       SetParallel(Int_t nodes = 9999);
    void        SetLogLevel(Int_t level, UInt_t mask = TProofDebug::kAll);
@@ -627,6 +623,20 @@ public:
    Bool_t      IsValid() const { return fValid; }
    Bool_t      IsParallel() const { return GetParallel() > 0 ? kTRUE : kFALSE; }
    Bool_t      IsIdle() const { return fIdle; }
+
+   //-- input list parameter handling
+   void        SetParameter(const char *par, const char *value);
+   void        SetParameter(const char *par, Long_t value);
+   void        SetParameter(const char *par, Long64_t value);
+   void        SetParameter(const char *par, Double_t value);
+   TObject    *GetParameter(const char *par) const;
+   void        DeleteParameters(const char *wildcard);
+   void        ShowParameters(const char *wildcard = "PROOF_*") const;
+
+   void        AddInput(TObject *obj);
+   void        ClearInput();
+   TObject    *GetOutput(const char *name);
+   TList      *GetOutputList();
 
    void        AddFeedback(const char *name);
    void        RemoveFeedback(const char *name);
