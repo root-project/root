@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolumeView.cxx,v 1.18 2006/07/11 09:05:02 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TVolumeView.cxx,v 1.19 2006/10/18 15:38:07 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -340,7 +340,7 @@ TVolumeView::TVolumeView(Double_t *translate, Double_t *rotate, UInt_t positionI
       thisNode =  (TVolume *)topNode->Find(thisNodePath);
       if (!thisNode->InheritsFrom("TVolume")) {
          thisNode = 0;
-         fprintf(stderr,"Error wrong node <%s> on path: \"%s\"\n",thisNode->GetName(),thisNodePath);
+         Error("TVolumeView","wrong node <%s> on path: \"%s\"",thisNode->GetName(),thisNodePath);
       }
    }
 

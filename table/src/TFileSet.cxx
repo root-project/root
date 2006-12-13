@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TFileSet.cxx,v 1.5 2006/05/21 18:05:26 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TFileSet.cxx,v 1.6 2006/07/11 09:05:02 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -89,7 +89,7 @@ TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, I
          if (!dir) {
 #ifndef WIN32
             perror("can not be open due error\n");
-            fprintf(stderr, " directory: %s",name);
+            Error("TFileSet", "directory: %s",name);
 #endif
          }
       }

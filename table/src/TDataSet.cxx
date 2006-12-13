@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TDataSet.cxx,v 1.16 2006/12/01 08:43:06 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TDataSet.cxx,v 1.17 2006/12/01 15:19:29 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -393,7 +393,7 @@ TDataSet *TDataSet::First() const
 TObject *TDataSet::GetObject() const
 {
    // The depricated method (left here for the sake of the backward compatibility)
-   printf("***DUMMY GetObject***\n");
+   Print("***DUMMY GetObject***\n");
    return 0;
 }
 
@@ -441,7 +441,7 @@ TDataSet *TDataSet::Prev() const
 void TDataSet::SetObject(TObject * /*obj*/)
 {
    // The depricated method (left here for the sake of the backward compatibility)
-   printf("***DUMMY PutObject***\n");
+   Print("***DUMMY PutObject***\n");
 }
 
 //______________________________________________________________________________
@@ -572,7 +572,7 @@ void TDataSet::PrintContents(Option_t *opt) const {
    // This is to allow to sepoarate navigation and the custom invormation
    // in the derived classes (see; TTable::PrintContents for example
    if (opt) { /* no used */ }
-   printf("%3d - %s\t%s\n",TROOT::GetDirLevel(),(const char*)Path(),(char*)GetTitle());
+   Printf("%3d - %s\t%s\n",TROOT::GetDirLevel(),(const char*)Path(),(char*)GetTitle());
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TTable.cxx,v 1.16 2006/07/03 16:10:46 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TTable.cxx,v 1.17 2006/07/11 09:05:02 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 
 /*************************************************************************
@@ -518,7 +518,7 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
 
 
 //--------------------------------------------------
-   printf(" Draw %s for <%s>\n", varexp00, selection);
+   Printf(" Draw %s for <%s>\n", varexp00, selection);
    Char_t *exprFileName = MakeExpression(expressions,colIndex+1);
    if (!exprFileName) {
       delete [] varexp0;
@@ -763,7 +763,7 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
       case G__LOADFILE_DUPLICATE:
          break;
       default:
-         fprintf(stderr,"Error: loading file %s\n",exprFileName);
+         Error("EntryLoop","Error: loading file %s",exprFileName);
          G__unloadfile((Char_t *)exprFileName);
          return kFALSE; // can not load file
    }
@@ -782,7 +782,7 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
    // Compile bytecode
    struct G__bytecodefunc *pbc = func.GetBytecode();
    if(!pbc) {
-      fprintf(stderr,"Error: Bytecode compilation %s\n",funcName);
+      Error("EntryLoop","Bytecode compilation %s",funcName);
       G__unloadfile((Char_t *)exprFileName);
       return kFALSE; // can not get bytecode
    }
@@ -1397,14 +1397,14 @@ void TTable::Fit(const Text_t *formula ,const Text_t *varexp, const Text_t *sele
 
    TH1 *hfit = gCurrentTableHist;
    if (hfit) {
-      printf("hname=%s, formula=%s, option=%s, goption=%s\n",hfit->GetName(),formula,option,goption);
+      Printf("hname=%s, formula=%s, option=%s, goption=%s\n",hfit->GetName(),formula,option,goption);
       // remove bit temporary
       Bool_t canDeleteBit = hfit->TestBit(kCanDelete);
       if (canDeleteBit)  hfit->ResetBit(kCanDelete);
       hfit->Fit(formula,option,goption);
       if (TestBit(canDeleteBit))   hfit->SetBit(kCanDelete);
    }
-   else      printf("ERROR hfit=0\n");
+   else      Printf("ERROR hfit=0\n");
 }
 
 //______________________________________________________________________________
@@ -1742,7 +1742,7 @@ void TTable::PrintContents(Option_t *) const
    //to be documented
    TDataSet::PrintContents();
    TROOT::IndentLevel();
-   printf("\tclass %s: public TTable\t --> Allocated rows: %d\t Used rows: %d\t Row size: %d bytes\n",
+   Printf("\tclass %s: public TTable\t --> Allocated rows: %d\t Used rows: %d\t Row size: %d bytes\n",
          IsA()->GetName(),int(fN),int(fMaxIndex),int(fSize));
 
 }

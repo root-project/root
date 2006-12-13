@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TTableDescriptor.cxx,v 1.14 2006/07/11 09:05:02 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TTableDescriptor.cxx,v 1.15 2006/07/19 17:23:41 pcanal Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************
@@ -324,21 +324,21 @@ Int_t TTableDescriptor::UpdateOffsets(const TTableDescriptor *newDescriptor)
          && ColumnType(colCounter) == newType)  {
          SetOffset(newDescriptor->Offset(colNewIndx),colCounter);
          if (colNewIndx != colCounter) {
-            printf("Schema evolution: \t%d column of the \"%s\" table has been moved to %d-th column\n",
+            Printf("Schema evolution: \t%d column of the \"%s\" table has been moved to %d-th column\n",
             colCounter,ColumnName(colCounter),colNewIndx);
             mismathes++;
          }
       } else {
-         printf("Schema evolution: \t%d column \"%s\" of %d type has been lost\n",
+         Printf("Schema evolution: \t%d column \"%s\" of %d type has been lost\n",
          colCounter,ColumnName(colCounter),ColumnType(colCounter));
-         printf(" Indx = %d, name = %s \n", colNewIndx, ColumnName(colCounter));
+         Printf(" Indx = %d, name = %s \n", colNewIndx, ColumnName(colCounter));
          SetOffset(UInt_t(-1),colCounter);
          mismathes++;
       }
    }
    if (!mismathes && UInt_t(maxColumns) != newDescriptor->NumberOfColumns()) {
       mismathes++;
-      printf("Warning: One extra column has been introduced\n");
+      Printf("Warning: One extra column has been introduced\n");
    }
    return mismathes;
 }
