@@ -29,7 +29,7 @@ void glsurfaces() {
    f2->SetFillColor(45);
    f2->Draw("glsurf4");
 
-   TF2 *f2clone = new TF2("f2","x**2 + y**2 - x**3 -8*x*y**4", -1., 1.2, -1.5, 1.5);
+   TF2 *f2clone = new TF2("f2clone","x**2 + y**2 - x**3 -8*x*y**4", -1., 1.2, -1.5, 1.5);
    // Draw this function in pad2 with color mesh option
    pad2->cd();
    pad2->SetLogz();
