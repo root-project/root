@@ -47,12 +47,13 @@ namespace {
 }
 
 #ifdef __MAKECINT__
-#pragma link C++ class std::vector< JustAClass >-;
-#pragma link C++ class std::vector< JustAClass >::iterator-;
-#pragma link C++ class std::vector< JustAClass >::const_iterator-;
-#pragma link C++ class std::list< JustAClass* >-;
-#pragma link C++ class std::list< JustAClass* >::iterator-;
-#pragma link C++ class std::list< JustAClass* >::const_iterator-;
+using namespace std;  // instead of std:: to make cint7 happy
+#pragma link C++ class vector< JustAClass >-;
+#pragma link C++ class vector< JustAClass >::iterator-;
+#pragma link C++ class vector< JustAClass >::const_iterator-;
+#pragma link C++ class list< JustAClass* >-;
+#pragma link C++ class list< JustAClass* >::iterator-;
+#pragma link C++ class list< JustAClass* >::const_iterator-;
 #ifdef G__WIN32
 #pragma link C++ class _Ranit<JustAClass,long,JustAClass*,JustAClass&>-;
 #pragma link C++ class iterator<random_access_iterator_tag,JustAClass,long,JustAClass*,JustAClass&>-;
