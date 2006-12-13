@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.99 2006/12/11 13:24:49 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.1 2006/12/12 11:20:49 rdm Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************
@@ -298,18 +298,21 @@ public:
    Float_t     GetCurRate() {
       return (fCurProcTime?fCurProcessed/fCurProcTime:0); }
    Int_t       GetLocalEventsLeft() {
-       return fFileNode?(fFileNode->GetEventsLeftPerSlave()):0; }
+      return fFileNode?(fFileNode->GetEventsLeftPerSlave()):0; }
 };
 
+//______________________________________________________________________________
 TAdaptivePacketizer::TSlaveStat::TSlaveStat(TSlave *slave)
    : fSlave(slave), fFileNode(0), fCurFile(0), fCurElem(0), fProcessed(0),
      fProcTime(0), fCurProcessed(0), fCurProcTime(0)
 {
+   //constructor
 }
 
-void TAdaptivePacketizer::TSlaveStat::UpdateRates(Long64_t nEvents,
-                                                  Float_t time)
+//______________________________________________________________________________
+void TAdaptivePacketizer::TSlaveStat::UpdateRates(Long64_t nEvents, Float_t time)
 {
+   //Update packetizer rates
    if (fCurFile->IsDone()) {
       fCurProcTime = 0;
       fCurProcessed = 0;
