@@ -1,4 +1,4 @@
-EventDict.cxx: Event.h EventLinkDef.h $(ROOTSYS)/bin/rootcint $(ROOTSYS)/lib/libCint.$(DllSuf)
+EventDict.cxx: Event.h EventLinkDef.h $(ROOTCINT) $(ROOTSYS)/lib/libCint.$(DllSuf)
 	$(CMDECHO) rootcint -f EventDict.cxx -c Event.h EventLinkDef.h
 
 EVENTO        = Event.$(ObjSuf) EventDict.$(ObjSuf)

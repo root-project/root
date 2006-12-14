@@ -15,7 +15,7 @@ defaultArgTest: dict.cc mylist_C.so
 #	$(CMDECHO)echo Running 'mytest' in `pwd`
 	$(CMDECHO) echo mytest > /dev/null
 
-dict.cc: mylist.C $(ROOTSYS)/bin/rootcint
+dict.cc: mylist.C $(ROOTCINT)
 	$(CMDECHO) rootcint -f dict.cc -c mylist.C LinkDef.h
 
 mylist_C.so:
