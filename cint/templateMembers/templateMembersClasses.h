@@ -3,7 +3,7 @@
 
 using namespace std;
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__CINT__)
 #define SHOW std::cout << __FUNCSIG__ << std::endl;
 #define SHOWMEM std::cout << "Mem: "; SHOW
 #else
