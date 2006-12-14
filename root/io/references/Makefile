@@ -27,7 +27,7 @@ ifeq ($(FAIL),)
 	$(WarnFailTest)
 endif
 
-MasterDict.C: MyClass.hh MasterLinkDef.hh $(ROOTSYS)/bin/rootcint
+MasterDict.C: MyClass.hh MasterLinkDef.hh $(ROOTCINT)
 	$(CMDECHO) rootcint -f $@ -c MyClass.hh MasterLinkDef.hh
 
 libmaster.$(DllSuf): MasterDict.o MyClass.o

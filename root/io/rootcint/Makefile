@@ -24,7 +24,7 @@ testDict.cxx: test.h testLinkDef.h
 
 rootcintIntTest: testDict.$(ObjSuf)
 
-constMemberDict.cxx: constMember.h linkdef.h $(ROOTSYS)/bin/rootcint
+constMemberDict.cxx: constMember.h linkdef.h $(ROOTCINT)
 	$(CMDECHO) rootcint -f constMemberDict.cxx -c constMember.h linkdef.h 
 
 constMemberTest: constMemberDict.$(ObjSuf)

@@ -141,7 +141,7 @@ endif
 infodriver: tmain.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOTSYS)/include/Rtypes.h
 	$(CMDECHO)$(CXX) -g -o infodriver $(CFLAGS) $(CXXFLAGS) tmain.cc mydict.cc $(LIBS) 
 
-mydict.cc:  LinkDef.h RootData.h RootCaloHit.h  RootPCellID.h $(ROOTSYS)/bin/rootcint 
+mydict.cc:  LinkDef.h RootData.h RootCaloHit.h  RootPCellID.h $(ROOTCINT) 
 	$(CMDECHO)rootcint -f mydict.cc -c $(CFLAGS) RootData.h RootCaloHit.h LinkDef.h > mydict.log 2>&1
 	$(CMDECHO)test `cat mydict.log | wc -l` == "1"; # mydict.log should only have one line!
 

@@ -9,10 +9,10 @@ tests: dicto
 
 CLEAN_TARGETS += *.build.log
 
-MyClassDict.C: Header.h Linkdef.h $(ROOTSYS)/bin/rootcint
+MyClassDict.C: Header.h Linkdef.h $(ROOTCINT)
 	$(CMDECHO) rootcint -f MyClassDict.C -c Header.h Linkdef.h
 
-TeleDict.C: Tele.h TeleLinkdef.h $(ROOTSYS)/bin/rootcint
+TeleDict.C: Tele.h TeleLinkdef.h $(ROOTCINT)
 	$(CMDECHO) test ! `(rootcint -f TeleDict.C -c Tele.h TeleLinkdef.h >TeleDict.log 2>&1 )`  && touch TeleDict.C 
 
 dicto : MyClassDict.o TeleDict.o

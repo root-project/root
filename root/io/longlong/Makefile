@@ -11,7 +11,7 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-longlongdict.C: Class.h $(ROOTSYS)/bin/rootcint
+longlongdict.C: Class.h $(ROOTCINT)
 	$(CMDECHO)rootcint -f longlongdict.C -c Class.h linkdef.h
 
 longlongtest: longlongdict.C

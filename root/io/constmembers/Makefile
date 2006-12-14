@@ -18,10 +18,10 @@ else
 FileInfoTest: dict.o dictold.o
 endif
 
-dict.cxx: TFileInfo.h LinkDef.h $(ROOTSYS)/bin/rootcint
+dict.cxx: TFileInfo.h LinkDef.h $(ROOTCINT)
 	$(CMDECHO)rootcint -f dict.cxx -c TFileInfo.h LinkDef.h
 
-dictold.cxx: old.h TFileInfo.h oldLinkDef.h $(ROOTSYS)/bin/rootcint
+dictold.cxx: old.h TFileInfo.h oldLinkDef.h $(ROOTCINT)
 	$(CMDECHO)rootcint -f dictold.cxx -c old.h TFileInfo.h oldLinkDef.h
 
 

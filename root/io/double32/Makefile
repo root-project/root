@@ -56,10 +56,10 @@ endif
 # By default the TestDiff variable is set to compare the .log and .ref files
 # To run a diff and ignore whitespacing use $(TestDiffW)
 
-dict.cxx: runtemplate32.h linkdef.h $(ROOTSYS)/bin/rootcint
+dict.cxx: runtemplate32.h linkdef.h $(ROOTCINT)
 	$(CMDECHO) rootcint -f dict.cxx -c runtemplate32.h linkdef.h
 
-dict32.cxx: runtemplate32.h linkdef32.h $(ROOTSYS)/bin/rootcint
+dict32.cxx: runtemplate32.h linkdef32.h $(ROOTCINT)
 	$(CMDECHO) rootcint -f dict32.cxx -c runtemplate32.h linkdef32.h
 
 twoInOneLib.$(DllSuf): dict.$(ObjSuf) dict32.$(ObjSuf)

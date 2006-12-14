@@ -14,7 +14,7 @@ clone: tester
 endif
 	
 
-RtObjDict.C: RtObj.h RtObjLinkDef.h $(ROOTSYS)/bin/rootcint
+RtObjDict.C: RtObj.h RtObjLinkDef.h $(ROOTCINT)
 	$(CMDECHO)rootcint -f RtObjDict.C -c RtObj.h RtObjLinkDef.h
 
 .C.o:
