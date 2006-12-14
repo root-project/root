@@ -8,7 +8,7 @@
 template <class T>
 struct B { int i; };
 
-struct C : B<void> { int j; };
+class C : public B<void> { public: int j; };
 
 
 void plot_my_i()
@@ -37,7 +37,7 @@ void plot_my_i()
   //t->StartViewer();
 }
 
-struct C2 { int i; };
+class C2 { public: int i; };
 void makeclass()
 {
   C2 c, *cp(&c);
