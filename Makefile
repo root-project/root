@@ -236,17 +236,16 @@ LPATH         = lib
 ifneq ($(PLATFORM),win32)
 RPATH        := -L$(LPATH)
 CINTLIBS     := -lCint
-CINT7LIBS     := -lCint7 -lReflex
+CINT7LIBS    := -lCint7 -lReflex
 NEWLIBS      := -lNew
 ROOTLIBS     := -lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lMatrix
 ifneq ($(ROOTDICTTYPE),cint)
 ROOTLIBS     += -lCintex -lReflex
 endif
 RINTLIBS     := -lRint
-PROOFLIBS    := -lProof -lTreePlayer -lThread
 else
 CINTLIBS     := $(LPATH)/libCint.lib
-CINT7LIBS     := $(LPATH)/libCint7.lib $(LPATH)/libReflex.lib
+CINT7LIBS    := $(LPATH)/libCint7.lib $(LPATH)/libReflex.lib
 NEWLIBS      := $(LPATH)/libNew.lib
 ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libHist.lib $(LPATH)/libGraf.lib \
@@ -256,8 +255,6 @@ ifneq ($(ROOTDICTTYPE),cint)
 ROOTLIBS     += $(LPATH)/libCintex.lib $(LPATH)/libReflex.lib
 endif
 RINTLIBS     := $(LPATH)/libRint.lib
-PROOFLIBS    := $(LPATH)/libProof.lib $(LPATH)/libTreePlayer.lib \
-                $(LPATH)/libThread.lib
 endif
 
 # ROOTLIBSDEP is intended to match the content of ROOTLIBS
