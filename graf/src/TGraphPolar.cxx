@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.4 2006/11/15 17:44:57 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.5 2006/11/15 17:54:16 couet Exp $
 // Author: Sebastian Boser, Mathieu Demaret 02/02/06
 
 /*************************************************************************
@@ -46,12 +46,10 @@
 #include "TGaxis.h"
 #include "TGraphPolar.h"
 #include "THLimitsFinder.h"
-#include "Hoption.h"
 #include "TPaveText.h"
 #include "TStyle.h"
 #include "TString.h"
 
-Hoption_t Hoption;
 
 ClassImp(TGraphPolar);
 
@@ -368,7 +366,6 @@ void TGraphPolar::PaintTitle()
 {
    // Paint the title.
 
-   if (Hoption.Same) return;
    if (TestBit(TH1::kNoTitle)) return;
    Int_t nt = strlen(GetTitle());
    TPaveText *title = 0;
