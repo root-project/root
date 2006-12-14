@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.100 2006/12/12 11:20:49 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.101 2006/12/13 11:21:55 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -709,6 +709,7 @@ public:
    static TProof       *Open(const char *url = 0, const char *conffile = 0,
                              const char *confdir = 0, Int_t loglevel = 0);
    static TProofMgr    *Mgr(const char *url);
+   static void          Reset(const char *url);
 
    static void          AddEnvVar(const char *name, const char *value);
    static void          DelEnvVar(const char *name);

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.175 2006/12/12 14:05:41 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.176 2006/12/13 11:21:55 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -6333,13 +6333,28 @@ TProof *TProof::Open(const char *cluster, const char *conffile,
 TProofMgr *TProof::Mgr(const char *url)
 {
    // Get instance of the effective manager for 'url'
-   // Return 0 on failure
+   // Return 0 on failure.
 
    if (!url)
       return (TProofMgr *)0;
 
    // Attach or create the relevant instance
    return TProofMgr::Create(url);
+}
+
+//_____________________________________________________________________________
+void TProof::Reset(const char *url)
+{
+   // Wrapper around TProofMgr::Reset().
+
+   if (url) {
+      TProofMgr *mgr = TProof::Mgr(url);
+      if (mgr && mgr->IsValid())
+         mgr->Reset();
+      else
+         ::Error("TProof::Reset",
+                 "unable to initialize a valid manager instance");
+   }
 }
 
 //_____________________________________________________________________________
