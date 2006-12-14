@@ -21,7 +21,7 @@ endif
 RealArraySave: RealArraySave.log
 	$(CMDECHO) diff -u  RealArraySave.log  RealArraySave.ref
 
-RealArraySave.log: foo_C.$(DllSuf) bar_C.$(DllSuf) main_C.$(DllSuf) $(ROOTSYS)/lib/libTreePlayer.so
+RealArraySave.log: foo_C.$(DllSuf) bar_C.$(DllSuf) main_C.$(DllSuf) $(ROOT_LOC)/lib/libTreePlayer.$(DllSuf)
 	$(CMDECHO) root.exe -q -b -l RealArraySave.C > RealArraySave.log
 
 #main: main.C fooDict.C barDict.C foo.C bar.C

@@ -19,7 +19,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 ArraySyntax: main_C.$(DllSuf)  $(ROOTCORELIBS) $(ROOTV)
 	$(CMDECHO) root.exe -b -l -q run.C > ArraySyntax.log
 
-#main$(ExeSuf) $(ROOTSYS)/lib/libTreePlayer.$(DllSuf)
+#main$(ExeSuf) $(ROOT_LOC)/lib/libTreePlayer.$(DllSuf)
 #	$(CMDECHO) ./main
 
 main$(ExeSuf): main.C fooDict.C barDict.C foo.C bar.C $(ROOTCORELIBS) $(ROOTV)

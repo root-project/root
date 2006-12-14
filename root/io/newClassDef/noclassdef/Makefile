@@ -99,7 +99,7 @@ otest:   driver$(ExeSuf)
 
 
 
-#driver: main.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOTSYS)/include/Rtypes.h
+#driver: main.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOT_LOC)/include/Rtypes.h
 
 
 driver$(ExeSuf): main.cc mydict.cc 
@@ -138,7 +138,7 @@ endif
 
 #	$(CXX) -g -o driver $(CXXFLAGS) main.cc mydict.cc $(LIBS) 
 
-infodriver: tmain.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOTSYS)/include/Rtypes.h
+infodriver: tmain.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOT_LOC)/include/Rtypes.h
 	$(CMDECHO)$(CXX) -g -o infodriver $(CFLAGS) $(CXXFLAGS) tmain.cc mydict.cc $(LIBS) 
 
 mydict.cc:  LinkDef.h RootData.h RootCaloHit.h  RootPCellID.h $(ROOTCINT) 
@@ -155,7 +155,7 @@ libIotest.dll: main.$(ObjSuf) mydict.$(ObjSuf)
 #	$(CMDECHO)$(LD) $(SOFLAGS) $(LDFLAGS) $^ libIotest.exp $(LIBS) \
 #                   $(OutPutOpt)$@
 else
-libIotest.so: main.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOTSYS)/include/Rtypes.h
+libIotest.so: main.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOT_LOC)/include/Rtypes.h
 	$(CMDECHO)$(CXX) -g -shared -o libIotest.so -DSHARED $(CFLAGS) $(CXXFLAGS) main.cc mydict.cc $(LIBS) 
 endif
 

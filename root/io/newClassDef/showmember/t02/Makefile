@@ -798,7 +798,7 @@ distclean:      clean
 Event.$(ObjSuf): Event.h
 MainEvent.$(ObjSuf): Event.h
 
-EventLinkDef.h: $(shell which rootcint) $(ROOTSYS)/include/Rtypes.h
+EventLinkDef.h: $(shell which rootcint) $(ROOT_LOC)/include/Rtypes.h
 	touch EventLinkDef.h
 
 EventDict.$(SrcSuf): Event.h EventLinkDef.h

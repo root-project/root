@@ -42,10 +42,10 @@ clean:
 	rm -rf *.o *.so ti_files ii_files 
 	rm -rf mydict.* driver
 
-driver: main.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOTSYS)/include/Rtypes.h
+driver: main.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOT_LOC)/include/Rtypes.h
 	$(CC) -g -o driver $(CXXFLAGS) main.cc mydict.cc $(LIBS) 
 
-infodriver: tmain.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOTSYS)/include/Rtypes.h
+infodriver: tmain.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOT_LOC)/include/Rtypes.h
 	$(CC) -g -o infodriver $(CXXFLAGS) tmain.cc mydict.cc $(LIBS) 
 
 mydict.cc:  LinkDef.h RootData.h RootCaloHit.h  RootPCellID.h $(ROOTCINT)
@@ -54,5 +54,5 @@ mydict.cc:  LinkDef.h RootData.h RootCaloHit.h  RootPCellID.h $(ROOTCINT)
 .cc.o:
 	g++ -v
 
-libIotest.so: main.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOTSYS)/include/Rtypes.h
+libIotest.so: main.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOT_LOC)/include/Rtypes.h
 	$(CC) -g -shared -o libIotest.so -DSHARED $(CXXFLAGS) main.cc mydict.cc $(LIBS) 

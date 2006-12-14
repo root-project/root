@@ -43,7 +43,7 @@ ifeq ($(FAIL),)
 	$(WarnFailTest)
 endif
 
-#BoolOrder.log: runBoolOrder.C BoolOrder.ref $(ROOTSYS)/lib/libTreePlayer.$(DllSuf)
+#BoolOrder.log: runBoolOrder.C BoolOrder.ref $(ROOT_LOC)/lib/libTreePlayer.$(DllSuf)
 #	$(CMDECHO) root.exe -q -b -l runBoolOrder.C 2>&1 | grep -v -e LorentzVector -e TVector3 > $@
 
 BoolOrder: BoolOrder.log
