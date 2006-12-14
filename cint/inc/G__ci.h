@@ -1522,7 +1522,8 @@ typedef struct {
 #define G__VAARG_INC_COPY_N 8
 /* #define G__VAARG_PASS_BY_REFERENCE 8 */
 
-#elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)
+#elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C) || \
+      defined(__SUNPRO_CC)
 /**********************************************
  * Sun Sparc architecture
  * Alignment is similar to Intel, but class/struct

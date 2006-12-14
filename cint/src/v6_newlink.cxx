@@ -3032,7 +3032,8 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
           for (i = G__VAARG_SIZE / sizeof(long) - 1; i > G__VAARG_SIZE / sizeof(long) - 100; --i) {
             fprintf(fp,     ", G__va_arg_bufobj.x.i[%d]", i);
           }
-#elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)) || \
+#elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C) || \
+       defined(__SUNPRO_CC)) || \
       ((defined(__PPC__) || defined(__ppc__)) && (defined(_AIX) || defined(__APPLE__)))
           int i;
           for (i = 0; i < 100; ++i) {
@@ -3070,7 +3071,8 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
           for (i = G__VAARG_SIZE / sizeof(long) - 1; i > G__VAARG_SIZE / sizeof(long) - 100; --i) {
             fprintf(fp,     ", G__va_arg_bufobj.x.i[%d]", i);
           }
-#elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)) || \
+#elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C) || \
+       defined(__SUNPRO_CC)) || \
       ((defined(__PPC__) || defined(__ppc__)) && (defined(_AIX) || defined(__APPLE__)))
           int i;
           for (i = 0; i < 100; ++i) {
@@ -3119,7 +3121,8 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
       for (i = G__VAARG_SIZE / sizeof(long) - 1; i > G__VAARG_SIZE / sizeof(long) - 100; --i) {
         fprintf(fp,         ", G__va_arg_bufobj.x.i[%d]", i);
       }
-#elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)) || \
+#elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C) || \
+       defined(__SUNPRO_CC)) || \
     ((defined(__PPC__) || defined(__ppc__)) && (defined(_AIX) || defined(__APPLE__)))
       int i;
       for (i = 0; i < 100; ++i) {
@@ -3156,7 +3159,8 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
       for (i = G__VAARG_SIZE / sizeof(long) - 1; i > G__VAARG_SIZE / sizeof(long) - 100; --i) {
         fprintf(fp,         ", G__va_arg_bufobj.x.i[%d]", i);
       }
-#elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)) || \
+#elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C) || \
+       defined(__SUNPRO_CC)) || \
     ((defined(__PPC__) || defined(__ppc__)) && (defined(_AIX) || defined(__APPLE__)))
       int i;
       for (i = 0; i < 100; ++i) {
@@ -4114,7 +4118,8 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
         int i;
         for (i = G__VAARG_SIZE/sizeof(long) - 1; i > G__VAARG_SIZE/sizeof(long) - 100; i--)
           fprintf(fp, ", G__va_arg_bufobj.x.i[%d]", i);
-#elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)) || \
+#elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C) || \
+       defined(__SUNPRO_CC)) || \
       ((defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__)))
         int i;
         for (i = 0; i < 100; i++) fprintf(fp, ", G__va_arg_bufobj.x.i[%d]", i);
@@ -4185,7 +4190,8 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
       //FIXME:  This loops only 99 times, the other clause loops 100 times.
       int i;
       for (i = G__VAARG_SIZE/sizeof(long) - 1; i > G__VAARG_SIZE/sizeof(long) - 100; --i) fprintf(fp, ", G__va_arg_bufobj.x.i[%d]", i);
-#elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)) || \
+#elif (defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C) || \
+       defined(__SUNPRO_CC)) || \
       ((defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__)))
       int i;
       for (i = 0; i < 100; i++) fprintf(fp, ", G__va_arg_bufobj.x.i[%d]", i);

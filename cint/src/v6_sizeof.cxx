@@ -1245,7 +1245,8 @@ void G__va_arg_put(G__va_arg_buf *pbuf,G__param *libp,int n)
       j2 = (j2 - objsize) & (objsize > 4 ? 0xfffffff8 : 0xfffffffc );
       j = j2 + ((8 - objsize) % 4);
     }
-#elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)
+#elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C) || \
+      defined(__SUNPRO_CC)
     /* nothing */
 #elif (defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__))
     /* nothing */
@@ -1266,7 +1267,8 @@ void G__va_arg_put(G__va_arg_buf *pbuf,G__param *libp,int n)
     if(mod) j = j-mod+G__va_arg_align_size;
 #elif defined(__hpux) || defined(__hppa__)
     /* nothing */
-#elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)
+#elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C) || \
+      defined(__SUNPRO_CC)
     j += objsize;
     mod = j%G__va_arg_align_size;
     if(mod) j = j-mod+G__va_arg_align_size;
