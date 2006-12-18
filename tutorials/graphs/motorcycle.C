@@ -19,7 +19,9 @@ void motorcycle()
 
 
 // data taken from R library MASS: mcycle.txt
-   TString vInFile ="motorcycle.dat";
+   TString dir = gSystem->UnixPathName(TCint::GetCurrentMacroName());
+   dir.ReplaceAll("motorcycle.C","");
+   dir.ReplaceAll("/./","/");
 
 // read file and add to fit object
    Double_t *x = new Double_t[133];
@@ -27,7 +29,7 @@ void motorcycle()
    Double_t vX, vY;
    Int_t vNData = 0;
    ifstream vInput;
-   vInput.open(vInFile);
+   vInput.open(Form("%smotorcycle.dat",dir.Data()));
    while (1) {
       vInput >> vX >> vY;
       if (!vInput.good()) break;
