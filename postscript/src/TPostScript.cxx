@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.67 2006/09/19 14:27:39 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.68 2006/12/06 17:05:30 couet Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -1949,7 +1949,9 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
    if (fPatterns[ipat] == 0) {
 
    // Define the Patterns. Line width must be 1
-      fLineWidth = 1;
+   // Setting fLineWidth to -1 will force the line width definition next time
+   // TPostScript::SetLineWidth will be called.
+      fLineWidth = -1;
       PrintFast(5," 1 lw");
       PrintStr(" << /PatternType 1 /PaintType 2 /TilingType 1");
       switch (ipat) {
@@ -2438,7 +2440,6 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    t.SetTextFont(fTextFont);
    t.GetTextExtent(w, h, chars);
    Double_t charsLength = gPad->AbsPixeltoX(w)-gPad->AbsPixeltoX(0);
-   Double_t charsHeight = gPad->AbsPixeltoY(0)-gPad->AbsPixeltoY(h);
    if(txalh == 2) x = x - charsLength/2;
    if(txalh == 3) x = x - charsLength;
 
