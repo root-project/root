@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.cxx,v 1.3 2006/10/31 15:18:34 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.cxx,v 1.4 2006/11/30 07:49:39 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -62,12 +62,12 @@ TEntryListBlock::TEntryListBlock(const TEntryListBlock &eblock) : TObject(eblock
    //copy c-tor
 
    Int_t i;
+   fN = eblock.fN;
    if (eblock.fIndices){
-      fIndices = new UShort_t[eblock.fN];
-      for (i=0; i<eblock.fN; i++)
+      fIndices = new UShort_t[fN];
+      for (i=0; i<fN; i++)
          fIndices[i] = eblock.fIndices[i];
    }
-   fN = eblock.fN;
    fNPassed = eblock.fNPassed;
    fType = eblock.fType;
    fPassing = eblock.fPassing;
@@ -186,8 +186,23 @@ Int_t TEntryListBlock::Contains(Int_t entry)
 Int_t TEntryListBlock::Merge(TEntryListBlock *block)
 {
    //Merge with the other block
+   //Returns the resulting number of entries in the block
 
    Int_t i;
+   if (block->fNPassed == 0) return fNPassed;
+   if (fNPassed == 0){
+      fN = block->fN;
+      fIndices = new UShort_t[fN];
+      for (Int_t i=0; i<fN; i++)
+         fIndices[i] = block->fIndices[i];
+      fNPassed = block->fNPassed;
+      fType = block->fType;
+      fPassing = block->fPassing;
+      fCurrent = block->fCurrent;
+      fLastIndexReturned = -1;
+      fLastIndexQueried = -1;
+      return fNPassed;
+   }
    if (fType==0){
       //stored as bits
       if (block->fType == 0){
@@ -429,7 +444,7 @@ void TEntryListBlock::Transform(Bool_t dir, UShort_t *indexnew)
    Int_t ilist = 0;
    Int_t ibite, ibit;
    if (!dir) {
-      for (i=0; i<kBlockSize; i++){
+      for (i=0; i<kBlockSize*16; i++){
          ibite = i >> 4;
          ibit = i & 15;
          Bool_t result = (fIndices[ibite] & (1<<ibit))!=0;
@@ -438,7 +453,8 @@ void TEntryListBlock::Transform(Bool_t dir, UShort_t *indexnew)
             ilist++;
          }
       }
-      delete [] fIndices;
+      if (fIndices)
+         delete [] fIndices;
       fIndices = indexnew;
       fType = 1;
       fN = fNPassed;
@@ -452,7 +468,8 @@ void TEntryListBlock::Transform(Bool_t dir, UShort_t *indexnew)
       ibit = fIndices[i] & 15;
       indexnew[ibite] |= 1<<ibit;
    }
-   delete [] fIndices;
+   if (fIndices)
+      delete [] fIndices;
    fIndices = indexnew;
    fType = 0;
    fN = kBlockSize;

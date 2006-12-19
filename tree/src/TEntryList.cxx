@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.5 2006/11/21 11:13:34 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.6 2006/11/30 07:49:39 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -305,6 +305,7 @@ void TEntryList::Add(const TEntryList *elist)
          fCurrent = 0;
 
       }
+
       return;
    }
 
@@ -324,12 +325,13 @@ void TEntryList::Add(const TEntryList *elist)
          TEntryListBlock *block2=0;
          Int_t i;
          Int_t nmin = TMath::Min(fNBlocks, elist->fNBlocks);
-         Int_t nnew;
+         Long64_t nnew, nold;
          for (i=0; i<nmin; i++){
             block1 = (TEntryListBlock*)fBlocks->UncheckedAt(i);
             block2 = (TEntryListBlock*)elist->fBlocks->UncheckedAt(i);
+            nold = block1->GetNPassed();
             nnew = block1->Merge(block2);
-            fN=nnew;
+            fN = fN - nold + nnew;
          }
          if (fNBlocks<elist->fNBlocks){
             Int_t nmax = elist->fNBlocks; 
@@ -378,8 +380,10 @@ void TEntryList::Add(const TEntryList *elist)
                 !strcmp(el->fFileName.Data(), elist->fFileName.Data())){
             // if (el->fStringHash == elist->fStringHash){
                //found a list for the same tree
+               Long64_t oldn = el->GetN();
                el->Add(elist);
                found = kTRUE;
+               fN = fN - oldn + el->GetN();
                break;
             }
          }
@@ -395,6 +399,7 @@ void TEntryList::Add(const TEntryList *elist)
          while ((el = (TEntryList*)next())){
             Add(el);
          }
+         fCurrent = 0;
       }
    }
 
@@ -937,6 +942,7 @@ void TEntryList::SetTree(const char *treename, const char *filename)
          fFileName = filename;
          stotal = fTreeName + fFileName;
          fStringHash = stotal.Hash();
+         fCurrent = this;
       }
    }
 }
@@ -947,6 +953,7 @@ void TEntryList::SetTree(const TTree *tree)
    //If a list for a tree with such name and filename exists, sets it as the current sublist
    //If not, creates this list and sets it as the current sublist
 
+   if (!tree) return;
    TString treename = tree->GetTree()->GetName();
    TString filename;
    if (tree->GetTree()->GetCurrentFile()){
@@ -1007,8 +1014,11 @@ void TEntryList::Subtract(const TEntryList *elist)
       //this list has sublists
       TIter next2(fLists);
       templist = 0;
+      Long64_t oldn=0;
       while ((templist = (TEntryList*)next2())){
+         oldn = templist->GetN();
          templist->Subtract(elist);
+         fN = fN - oldn + templist->GetN();
       }
    }
    return;
