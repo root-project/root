@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.19 2005/08/23 17:00:40 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.20 2005/11/23 11:03:12 couet Exp $
 // Author: Rene Brun   08/01/2000
 
 /*************************************************************************
@@ -72,6 +72,8 @@ TInspectCanvas::TInspectCanvas() : TCanvas()
    fForward    = 0;
    fCurObject  = 0;
    fObjects    = 0;
+   fLogx       = kFALSE;
+   fLogy       = kFALSE;
 }
 
 
@@ -85,6 +87,8 @@ TInspectCanvas::TInspectCanvas(UInt_t ww, UInt_t wh)
    fForward    = 0;
    fCurObject  = 0;
    fObjects    = new TList;
+   fLogx       = kFALSE;
+   fLogy       = kFALSE;
 }
 
 
@@ -188,6 +192,7 @@ void TInspectCanvas::InspectObject(TObject *obj)
    Float_t y4 = y3 + 1.5;
    Float_t db = 25./GetWh();
    Float_t btop = 0.999;
+
    // Draw buttons
    fBackward = new TButton("backward","TInspectCanvas::GoBackward();",.01,btop-db,.15,btop);
    fBackward->Draw();
