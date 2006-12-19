@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.321 2006/12/11 15:38:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.322 2006/12/12 13:44:46 couet Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -42,22 +42,22 @@
 //     ROOT supports the following histogram types:
 //
 //      1-D histograms:
-//         TH1C : histograms with one byte per channel.   Maximum bin content = 255
-//         TH1S : histograms with one short per channel.  Maximum bin content = 65535
+//         TH1C : histograms with one byte per channel.   Maximum bin content = 127
+//         TH1S : histograms with one short per channel.  Maximum bin content = 32767
 //         TH1I : histograms with one int per channel.    Maximum bin content = 2147483647
 //         TH1F : histograms with one float per channel.  Maximum precision 7 digits
 //         TH1D : histograms with one double per channel. Maximum precision 14 digits
 //
 //      2-D histograms:
-//         TH2C : histograms with one byte per channel.   Maximum bin content = 255
-//         TH2S : histograms with one short per channel.  Maximum bin content = 65535
+//         TH2C : histograms with one byte per channel.   Maximum bin content = 127
+//         TH2S : histograms with one short per channel.  Maximum bin content = 32767
 //         TH2I : histograms with one int per channel.    Maximum bin content = 2147483647
 //         TH2F : histograms with one float per channel.  Maximum precision 7 digits
 //         TH2D : histograms with one double per channel. Maximum precision 14 digits
 //
 //      3-D histograms:
-//         TH3C : histograms with one byte per channel.   Maximum bin content = 255
-//         TH3S : histograms with one short per channel.  Maximum bin content = 65535
+//         TH3C : histograms with one byte per channel.   Maximum bin content = 127
+//         TH3S : histograms with one short per channel.  Maximum bin content = 32767
 //         TH3I : histograms with one int per channel.    Maximum bin content = 2147483647
 //         TH3F : histograms with one float per channel.  Maximum precision 7 digits
 //         TH3D : histograms with one double per channel. Maximum precision 14 digits
@@ -246,7 +246,7 @@
 //
 //     In case of histograms of type TH1C, TH1S, TH2C, TH2S, TH3C, TH3S
 //     a check is made that the bin contents do not exceed the maximum positive
-//     capacity (127 or 65535). Histograms of all types may have positive
+//     capacity (127 or 32767). Histograms of all types may have positive
 //     or/and negative bin contents.
 //
 //     Rebinning
