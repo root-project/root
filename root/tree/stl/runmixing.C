@@ -29,7 +29,7 @@ void runmixing(bool scan = false)
 
    for(int i = 0; i<len; ++i) {
       p->push_back( MyClass( i*12 ) );
-      t->Fill();
+      if (scan) t->Fill();
    }
    t->SetBranchAddress("value",&p);
 
