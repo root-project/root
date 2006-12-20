@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.16 2006/12/08 16:36:49 roiser Exp $
+// @(#)root/cintex:$Name: v5-14-00 $:$Id: ROOTClassEnhancer.cxx,v 1.17 2006/12/14 18:05:18 brun Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -500,7 +500,12 @@ namespace ROOT { namespace Cintex {
          }
 
          void ROOTClassEnhancerInfo::Stub_ShowMembers(TClass* tcl, const Type& cl, void* obj, TMemberInspector& insp, char* par) {
-            // Create show members.
+           if ( tcl->GetShowMembersWrapper() )    {
+              tcl->GetShowMembersWrapper()(obj, insp, par);
+              return;
+           }
+
+           // Create show members.
             int ncp = ::strlen(par);
             // Loop over data members
             if ( IsSTL(cl.Name(SCOPED)) || cl.IsArray() ) return;
@@ -528,12 +533,9 @@ namespace ROOT { namespace Cintex {
                      if ( tmcl ) {
                         ::strcat(par,nam.c_str());
                         ::strcat(par,".");
-                        ::ROOT::GenericShowMembers(tnam.c_str(), add, insp, par, false); // last arg is transient, this must be false
+                        Stub_ShowMembers(tmcl, typ, add, insp, par);
                         par[ncp] = 0;
                      }
-//                      else {
-//                         Stub_ShowMembers(tmcl, typ, add, insp, par);
-//                      }
                   }
                }
             }
