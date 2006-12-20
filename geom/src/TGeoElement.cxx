@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.18 2006/10/20 09:38:11 rdm Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.19 2006/11/16 17:17:37 rdm Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -705,7 +705,7 @@ void TGeoElementTable::AddElement(const char *name, const char *title, Int_t z, 
 {
 // Add an element to the table.
    if (!fList) fList = new TObjArray(128);
-   fList->AddAt(new TGeoElement(name,title,z,a), fNelements++);
+   fList->AddAtAndExpand(new TGeoElement(name,title,z,a), fNelements++);
 }
 
 //______________________________________________________________________________
