@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.17 2006/12/14 18:05:18 brun Exp $
+// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.18 2006/12/20 20:08:49 pcanal Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -500,10 +500,10 @@ namespace ROOT { namespace Cintex {
          }
 
          void ROOTClassEnhancerInfo::Stub_ShowMembers(TClass* tcl, const Type& cl, void* obj, TMemberInspector& insp, char* par) {
-           if ( tcl->GetShowMembersWrapper() )    {
-              tcl->GetShowMembersWrapper()(obj, insp, par);
-              return;
-           }
+            if ( tcl->GetShowMembersWrapper() )    {
+               tcl->GetShowMembersWrapper()(obj, insp, par);
+               return;
+            }
 
            // Create show members.
             int ncp = ::strlen(par);
