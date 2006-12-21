@@ -33,11 +33,11 @@ void piechart()
    cpie->cd(3);
    pie3->SetEntryVal(0,.8);
    pie3->SetLabelsOffset(-.1);
-   pie3->Draw("3d t");
+   pie3->Draw("3d t nol");
 
    cpie->cd(4);
    pie4->SetRadius(.2);
    pie4->SetLabelsOffset(.01);
    pie4->SetLabelFormat("#splitline{%val (%perc)}{%txt}");
-   pie4->Draw();
+   pie4->Draw("nol");
 }
