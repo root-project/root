@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.95 2006/11/14 09:19:28 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.96 2006/12/06 15:09:11 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -2231,8 +2231,16 @@ void TGeoVolumeMulti::AddVolume(TGeoVolume *vol)
          fDivision->AddVolume(cell);
       }
    }      
-   if (fNodes)
-      vol->MakeCopyNodes(this);
+   if (fNodes) {
+      Int_t nd = fNodes->GetEntriesFast();
+      for (Int_t id=0; id<nd; id++) {
+         TGeoNode *node = (TGeoNode*)fNodes->At(id);
+         Bool_t many = node->IsOverlapping();
+         if (many) vol->AddNodeOverlap(node->GetVolume(), node->GetNumber(), node->GetMatrix());
+         else      vol->AddNode(node->GetVolume(), node->GetNumber(), node->GetMatrix());
+      }
+   }      
+//      vol->MakeCopyNodes(this);
 }
    
 
