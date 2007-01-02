@@ -1,20 +1,22 @@
 class A {
 public:
-   A() { m_a = 1; }
+   A() { m_a = 1; m_da = 1.1; }
    virtual ~A() {}
    virtual int GetValue() = 0;
 
 public:
    int m_a;
+   double m_da;
 };
 
 class B : public virtual A {
 public:
-   B() { m_b = 2; }
+   B() { m_b = 2; m_db = 2.2;}
    virtual int GetValue() { return m_b; }
 
 public:
    int m_b;
+   double m_db;
 };
 
 // NOTE: class C : public virtual A, public virtual B

@@ -24,15 +24,24 @@ class Cpp1InheritenceTestCase( unittest.TestCase ):
     #-----
       b = B()
       self.assertEqual( b.m_a,         1 )
+      self.assertEqual( b.m_da,      1.1 )
       self.assertEqual( b.m_b,         2 )
+      self.assertEqual( b.m_db,      2.2 )
 
       b.m_a = 11
       self.assertEqual( b.m_a,        11 )
 
+      b.m_da = 11.11
+      self.assertEqual( b.m_da,    11.11 )
+
       b.m_b = 22
       self.assertEqual( b.m_a,        11 )
+      self.assertEqual( b.m_da,    11.11 )
       self.assertEqual( b.m_b,        22 )
       self.assertEqual( b.GetValue(), 22 )
+
+      b.m_db = 22.22
+      self.assertEqual( b.m_db,    22.22 )
 
       del b
 
