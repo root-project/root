@@ -50,13 +50,22 @@ class Basic2SetupTestCase( unittest.TestCase ):
 
       ROOT.gDebug = oldval
 
-   def test3AutoLoading( self ):
+   def test3AccessToGlobalsFromROOT( self ):
+      """Test creation and access of new ROOT globals"""
+
+      import ROOT
+      ROOT.gMyOwnGlobal = 3.1415
+
+      proxy = gROOT.GetGlobal( 'gMyOwnGlobal', 1 )
+      self.assertEqual( proxy.__get__( proxy ), 3.1415 )
+
+   def test4AutoLoading( self ):
       """Test auto-loading by retrieving a non-preloaded class"""
 
       t = TLorentzVector()
       self.failUnless( isinstance( t, TLorentzVector ) )
 
-   def test4MacroLoading( self ):
+   def test5MacroLoading( self ):
       """Test accessibility to macro classes"""
 
       gROOT.LoadMacro( 'SimpleClass.C' )

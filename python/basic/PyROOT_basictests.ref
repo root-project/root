@@ -1,6 +1,7 @@
 Test import error handling ... ok
 Test the availability of ROOT globals ... ok
 Test overwritability of ROOT globals ... ok
+Test creation and access of new ROOT globals ... ok
 Test auto-loading by retrieving a non-preloaded class ... ok
 Test accessibility to macro classes ... ok
 Test doc strings existence ... ok
