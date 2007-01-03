@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddition.cc,v 1.4 2005/06/16 09:31:25 wverkerke Exp $
+ *    File: $Id: RooAddition.cc,v 1.5 2005/06/20 15:44:48 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -127,7 +127,11 @@ RooAddition::RooAddition(const RooAddition& other, const char* name) :
 {
   // Copy constructor
   _setIter1 = _set1.createIterator() ;
-  _setIter2 = _set2.createIterator() ;
+  if (other._setIter2) {
+    _setIter2 = _set2.createIterator() ;
+  } else {
+    _setIter2 = 0 ;
+  }
 
   // Member _ownedList is intentionally not copy-constructed -- ownership is not transferred
 }

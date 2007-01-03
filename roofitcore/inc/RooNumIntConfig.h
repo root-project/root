@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumIntConfig.rdl,v 1.5 2005/06/20 15:44:55 wverkerke Exp $
+ *    File: $Id: RooNumIntConfig.rdl,v 1.6 2005/07/12 15:43:07 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,6 +19,7 @@
 #include "TObject.h"
 #include "RooFitCore/RooCategory.hh"
 #include "RooFitCore/RooLinkedList.hh"
+class RooNumIntFactory ;
 class RooAbsIntegrator ;
 
 class RooNumIntConfig : public TObject, public RooPrintable {
