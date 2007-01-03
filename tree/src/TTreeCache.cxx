@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.10 2006/08/31 11:09:10 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.11 2006/10/19 19:35:52 pcanal Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -129,23 +129,26 @@ void TTreeCache::AddBranch(TBranch *b)
 //_____________________________________________________________________________
 Bool_t TTreeCache::FillBuffer()
 {
-   //Fill the cache buffer with the branches in the cache
+   // Fill the cache buffer with the branches in the cache.
 
    if (fNbranches <= 0) return kFALSE;
    TTree *tree = fBranches[0]->GetTree();
    Long64_t entry = tree->GetReadEntry();
    if (entry < fEntryNext) return kFALSE;
 
-   // estimate number of entries that can fit in the cache
-   // compare it to the original value of fBufferSize not
-   // to the real one
-   fEntryNext = entry + tree->GetEntries()*fBufferSizeMin/fZipBytes;
-
+   // Estimate number of entries that can fit in the cache compare it
+   // to the original value of fBufferSize not to the real one
+   if (fZipBytes==0) {
+      fEntryNext = entry + tree->GetEntries();;    
+   } else {
+      fEntryNext = entry + tree->GetEntries()*fBufferSizeMin/fZipBytes;
+   }
    if (fEntryMax <= 0) fEntryMax = tree->GetEntries();
    if (fEntryNext > fEntryMax) fEntryNext = fEntryMax+1;
 
-   //check if owner has a TEventList set. If yes we optimize for this special case
-   //reading only the baskets containing entries in the list
+   // Check if owner has a TEventList set. If yes we optimize for this
+   // Special case reading only the baskets containing entries in the
+   // list.
    TEventList *elist = fOwner->GetEventList();
    Long64_t chainOffset = 0;
    if (elist) {
@@ -242,10 +245,13 @@ TTree *TTreeCache::GetTree() const
 Int_t TTreeCache::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
    // Read buffer at position pos.
-   // If pos is in the list of prefetched blocks read from fBuffer,
-   // then try to fill the cache from the list of selected branches,
-   // otherwise normal read from file. Returns -1 in case of read
-   // failure, 0 in case not in cache and 1 in case read from cache.
+   // If pos is in the list of prefetched blocks read from fBuffer.
+   // Otherwise try to fill the cache from the list of selected branches,
+   // and recheck if pos is now in the list.
+   // Returns 
+   //    -1 in case of read failure, 
+   //     0 in case not in cache,
+   //     1 in case read from cache.
    // This function overloads TFileCacheRead::ReadBuffer.
 
    //Is request already in the cache?
