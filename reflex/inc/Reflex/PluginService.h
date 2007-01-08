@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: PluginService.h,v 1.1 2006/11/30 08:27:08 roiser Exp $
+// @(#)root/reflex:$Name: v5-14-00-patches $:$Id: PluginService.h,v 1.2 2006/11/30 14:12:00 roiser Exp $
 // Author: Pere Mato 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -146,7 +146,8 @@ namespace ROOT {
         template < typename T > 
            static bool CompareId(const Any& id1, 
                                  const Any& id2 ) {
-           try { return any_cast<T>(id1) == any_cast<T>(id2); }
+           try { return id1.TypeInfo()   == id2.TypeInfo() && 
+                        any_cast<T>(id1) == any_cast<T>(id2); }
            catch ( const BadAnyCast& ) { return false; }
         }
 
