@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.243 2006/12/06 17:08:05 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.244 2006/12/07 10:00:19 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -470,7 +470,7 @@ void TPad::Clear(Option_t *option)
       if (fPrimitives) fPrimitives->Clear(option);
       delete fFrame; fFrame = 0;
    }
-   fCanvas->Cleared(this);
+   if (fCanvas) fCanvas->Cleared(this);
 
    cd();
 
