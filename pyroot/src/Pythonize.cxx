@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.47 2006/12/08 07:42:31 brun Exp $
+// @(#)root/pyroot:$Name: v5-14-00-patches $:$Id: Pythonize.cxx,v 1.48 2006/12/12 09:15:01 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -23,6 +23,7 @@
 #include "TClonesArray.h"
 #include "TObject.h"
 #include "TFunction.h"
+#include "TError.h"
 
 #include "TTree.h"
 #include "TBranch.h"
@@ -1658,7 +1659,11 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    if ( HasAttrDirect( pyclass, "begin" ) && HasAttrDirect( pyclass, "end" ) ) {
    // some classes may not have dicts for their iterators, making begin/end useless
       std::string itername = name + "::iterator";
+
+      Int_t oldl = gErrorIgnoreLevel; gErrorIgnoreLevel = 3000;
       TClass* klass = gROOT->GetClass( itername.c_str() );
+      gErrorIgnoreLevel = oldl;
+
       if ( klass && klass->GetClassInfo() ) {
          Utility::AddToClass( pyclass, "__iter__", (PyCFunction) StlSequenceIter );
       } else if ( HasAttrDirect( pyclass, "__getitem__" ) && HasAttrDirect( pyclass, "__len__" ) ) {
