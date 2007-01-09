@@ -419,7 +419,8 @@ class BasicsTestCase(unittest.TestCase):
     self.failUnless('unknown' not in str(self.gbl.MyClass4()) )
 
   def test28PrimitiveArgumentsByReference(self):
-    c = 10.0+0.0
+    c = PyCintex.libPyROOT.Double(10.0+0.0)
+    d = PyCintex.libPyROOT.Double(c)
     calling = self.A.B.C.Calling()
     self.failUnlessEqual( calling.GetByPrimitiveReference(c), 10.0 )
     self.failUnlessEqual( c, 999.99 )
