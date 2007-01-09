@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.310 2006/11/14 20:06:51 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.311 2006/11/25 00:15:26 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3428,6 +3428,8 @@ TBranch* TTree::GetBranch(const char* name)
 {
    // -- Return pointer to the branch with the given name in this tree or its friends.
 
+   if (name == 0 || name[0] == '0') return 0;
+
    // We already have been visited while recursively
    // looking through the friends tree, let's return.
    if (kGetBranch & fFriendLockStatus) {
@@ -3904,6 +3906,8 @@ TLeaf* TTree::GetLeaf(const char* aname)
    // -- Return pointer to the 1st Leaf named name in any Branch of this Tree or any branch in the list of friend trees.
    //
    //  aname may be of the form branchname/leafname
+
+   if (aname == 0 || aname[0] == '0') return 0;
 
    // We already have been visited while recursively looking
    // through the friends tree, let return
