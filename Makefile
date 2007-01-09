@@ -786,24 +786,17 @@ install: all
 	   $(INSTALL) $(ALLEXECS)               $(DESTDIR)$(BINDIR); \
 	   echo "Installing libraries in $(DESTDIR)$(LIBDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(LIBDIR); \
+	   $(INSTALLDATA) lib/*                 $(DESTDIR)$(LIBDIR); \
 	   if [ x"$(ARCH)" = x"win32gcc" ]; then \
-	      vers=`sed 's|\(.*\)\..*/.*|\1|' < build/version_number` ; \
-	      for lib in $(ALLLIBS) $(CINTLIB); do \
-		 rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib` ; \
-		 rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib`.$$vers ; \
-		 bindll=`echo $$lib | sed 's,lib,bin,'`; \
-		 baselib=`basename $$lib`; \
-		 $(INSTALL) $$bindll $(DESTDIR)$(BINDIR); \
-		 ln -s $(DESTDIR)$(BINDIR)/$$baselib $(DESTDIR)$(LIBDIR)/$$baselib ; \
-		 ln -s $(DESTDIR)$(BINDIR)/$$baselib $(DESTDIR)$(LIBDIR)/$$baselib.$$vers ; \
+	      $(INSTALLDATA) bin/*.dll             $(DESTDIR)$(BINDIR); \
+	      for f in $(DESTDIR)$(LIBDIR)/*.dll; do \
+	         bindll=$$(basename $$f | sed 's,\..*$$,,'); \
+	         bindll=$$(ls $(DESTDIR)$(BINDIR)/$${bindll}.*dll); \
+	         ln -sf $${bindll} $$f; \
 	      done; \
-	   else \
-	      $(INSTALLDATA) lib/*              $(DESTDIR)$(LIBDIR); \
-              if [ x"$(PLATFORM)" = x"win32" ]; then \
-		 $(INSTALLDATA) lib/*.dll       $(DESTDIR)$(BINDIR); \
-		 $(INSTALLDATA) $(GDKDLL)       $(DESTDIR)$(BINDIR); \
-		 $(INSTALLDATA) $(GDKDLLS)      $(DESTDIR)$(BINDIR); \
-	      fi; \
+           elif [ x"$(PLATFORM)" = x"win32" ]; then \
+	      $(INSTALLDATA) $(GDKDLL)             $(DESTDIR)$(BINDIR); \
+	      $(INSTALLDATA) $(GDKDLLS)            $(DESTDIR)$(BINDIR); \
 	   fi; \
 	   echo "Installing headers in $(DESTDIR)$(INCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(INCDIR); \
