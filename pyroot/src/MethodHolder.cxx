@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.52 2006/12/08 07:42:31 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.53 2006/12/11 06:01:05 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -31,8 +31,6 @@
 #include <string.h>
 #include <exception>
 #include <string>
-
-#include <typeinfo>
 
 
 //- data and local helpers ---------------------------------------------------

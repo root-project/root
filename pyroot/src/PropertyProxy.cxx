@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.12 2006/11/30 23:18:32 pcanal Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.13 2006/12/08 07:42:31 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -40,14 +40,14 @@ namespace {
 
    // for fixed size arrays
       void* ptr = (void*)address;
-      if ( pyprop->fDMInfo.ArrayDim() != 0 )
+      if ( pyprop->fProperty & kIsArray )
          ptr = &address;
 
       if ( pyprop->fConverter != 0 )
          return pyprop->fConverter->FromMemory( ptr );
 
       PyErr_Format( PyExc_NotImplementedError,
-         "no converter available for \"%s\"", pyprop->fDMInfo.Name() );
+         "no converter available for \"%s\"", pyprop->GetName().c_str() );
       return 0;
    }
 
@@ -69,7 +69,7 @@ namespace {
 
    // for fixed size arrays
       void* ptr = (void*)address;
-      if ( pyprop->fDMInfo.ArrayDim() != 0 )
+      if ( pyprop->fProperty & kIsArray )
          ptr = &address;
 
    // actual conversion; return on success
@@ -84,15 +84,25 @@ namespace {
       return errret;
    }
 
-
-//= PyROOT property proxy construciton =======================================
+//= PyROOT property proxy construction/destruction ===========================
    PropertyProxy* pp_new( PyTypeObject* pytype, PyObject*, PyObject* )
    {
       PropertyProxy* pyprop = (PropertyProxy*)pytype->tp_alloc( pytype, 0 );
-      new ( &pyprop->fDMInfo ) G__DataMemberInfo();
+      pyprop->fConverter = 0;
+      new ( &pyprop->fName ) std::string();
 
       return pyprop;
    }
+
+//____________________________________________________________________________
+   void pp_dealloc( PropertyProxy* pyprop )
+   {
+      using namespace std;
+      pyprop->fName.~string();
+      delete pyprop->fConverter;
+      pyprop->ob_type->tp_free( (PyObject*)pyprop );
+   }
+
 
 } // unnamed namespace
 
@@ -104,7 +114,7 @@ PyTypeObject PropertyProxy_Type = {
    (char*)"ROOT.PropertyProxy",                  // tp_name
    sizeof(PropertyProxy),     // tp_basicsize
    0,                         // tp_itemsize
-   0,                         // tp_dealloc
+   (destructor)pp_dealloc,    // tp_dealloc
    0,                         // tp_print
    0,                         // tp_getattr
    0,                         // tp_setattr
@@ -158,50 +168,54 @@ PyTypeObject PropertyProxy_Type = {
 void PyROOT::PropertyProxy::Set( TDataMember* dm )
 {
 // initialize from <dm> info
-   G__ClassInfo* clInfo = dm->GetClass()->GetClassInfo();
-   if ( clInfo ) {
-      Long_t offset = 0;
-      fDMInfo = clInfo->GetDataMember( dm->GetName(), &offset );
-   }
-
+   fOffset    = dm->GetOffsetCint();
    std::string fullType = dm->GetFullTypeName();
    if ( (int)dm->GetArrayDim() != 0 || ( ! dm->IsBasic() && dm->IsaPointer() ) ) {
       fullType.append( "*" );
    }
-
-   fProperty = (Long_t)fDMInfo.Property();
+   fProperty  = (Long_t)dm->Property();
    fConverter = CreateConverter( fullType, dm->GetMaxIndex( 0 ) );
+   fName      = dm->GetName();
+
+   if ( dm->GetClass()->GetClassInfo() )
+      fOwnerTagnum = dm->GetClass()->GetClassInfo()->Tagnum();
 }
 
 //____________________________________________________________________________
 void PyROOT::PropertyProxy::Set( TGlobal* gbl )
 {
 // initialize from <gbl> info
-   TClass* klass = gROOT->GetClass( gbl->GetTypeName() );
-   G__ClassInfo* clInfo = klass ? klass->GetClassInfo() : 0;
-   if ( clInfo ) {
-      Long_t offset = 0;
-      fDMInfo = clInfo->GetDataMember( gbl->GetName(), &offset );
-   } else {
-      G__DataMemberInfo dmi;
-      Long_t address = (Long_t)gbl->GetAddress();
-      while ( dmi.Next() ) {    // using G__ClassInfo().GetDataMember() would cause overwrite
-         if ( address == dmi.Offset() ) {
-            fDMInfo = dmi;
-            break;
-         }
-      }
-   }
-
-   fProperty = gbl->Property() | kIsStatic;       // force static flag
+   fOffset    = (Long_t)gbl->GetAddress();
+   fProperty  = gbl->Property() | kIsStatic;    // force static flag
    fConverter = CreateConverter( gbl->GetFullTypeName(), gbl->GetMaxIndex( 0 ) );
+   fName      = gbl->GetName();
+
+// no owner (global scope)
+   fOwnerTagnum = -1;
 }
+
+//____________________________________________________________________________
+#ifdef PYROOT_USE_REFLEX
+void PyROOT::PropertyProxy::Set( const ROOT::Reflex::Member& mb )
+{
+// initialize from Reflex <mb> info
+   fOffset    = (Long_t)mb.Offset();
+   fProperty  = ( mb.IsStatic()         ? kIsStatic : 0 ) |
+                ( mb.TypeOf().IsEnum()  ? kIsEnum   : 0 ) |
+                ( mb.TypeOf().IsArray() ? kIsArray  : 0 );
+   fConverter = CreateConverter( mb.TypeOf().Name( ROOT::Reflex::SCOPED | ROOT::Reflex::FINAL ) );
+   fName      = mb.Name();
+
+// unknown owner (TODO: handle this case)
+   fOwnerTagnum = -1;
+}
+#endif
 
 //____________________________________________________________________________
 Long_t PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
 // class attributes, global properties
    if ( fProperty & kIsStatic )
-      return fDMInfo.Offset();
+      return fOffset;
 
 // special case: non-static lookup through class
    if ( ! pyobj )
@@ -210,7 +224,7 @@ Long_t PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
 // instance attributes; requires valid object for full address
    if ( ! ObjectProxy_Check( pyobj ) ) {
       PyErr_Format( PyExc_TypeError,
-         "object instance required for access to property \"%s\"", fDMInfo.Name() );
+         "object instance required for access to property \"%s\"", GetName().c_str() );
       return 0;
    }
 
@@ -220,7 +234,12 @@ Long_t PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
       return 0;
    }
 
-   Long_t offset = G__isanybase(
-      fDMInfo.MemberOf()->Tagnum(), pyobj->ObjectIsA()->GetClassInfo()->Tagnum(), (Long_t)obj );
-   return (Long_t)obj + offset + fDMInfo.Offset();
+   Long_t offset = 0;
+   if ( 0 < fOwnerTagnum ) {
+      Int_t realTagnum = pyobj->ObjectIsA()->GetClassInfo()->Tagnum();
+      if ( fOwnerTagnum != realTagnum )
+         offset = G__isanybase( fOwnerTagnum, realTagnum, (Long_t)obj );
+   }
+
+   return (Long_t)obj + offset + fOffset;
 }

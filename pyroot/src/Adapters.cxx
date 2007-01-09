@@ -185,7 +185,12 @@ PyROOT::TReturnTypeAdapter PyROOT::TMemberAdapter::ReturnType() const
 PyROOT::TScopeAdapter PyROOT::TMemberAdapter::DeclaringScope() const
 {
 // get the declaring scope (class) of the wrapped function/method
-   return ((TMethod*)fMember)->GetClass();
+   TMethod* method = (TMethod*)*this;
+   if ( method )
+      return method->GetClass();
+
+// happens for free-standing functions (i.e. global scope)
+   return std::string( "" );
 }
 
 
