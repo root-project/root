@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.101 2006/10/04 09:23:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.102 2006/10/09 06:31:09 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2291,7 +2291,6 @@ void TH2C::Copy(TObject &newth2) const
    // Copy.
 
    TH2::Copy((TH2C&)newth2);
-   TArrayC::Copy((TH2C&)newth2);
 }
 
 //______________________________________________________________________________
@@ -2554,7 +2553,6 @@ void TH2S::Copy(TObject &newth2) const
    // Copy.
    
    TH2::Copy((TH2S&)newth2);
-   TArrayS::Copy((TH2S&)newth2);
 }
 
 //______________________________________________________________________________
@@ -2817,7 +2815,6 @@ void TH2I::Copy(TObject &newth2) const
    // Copy.
 
    TH2::Copy((TH2I&)newth2);
-   TArrayI::Copy((TH2I&)newth2);
 }
 
 //______________________________________________________________________________
@@ -3043,7 +3040,6 @@ void TH2F::Copy(TObject &newth2) const
    // Copy.
 
    TH2::Copy((TH2F&)newth2);
-   TArrayF::Copy((TH2F&)newth2);
 }
 
 //______________________________________________________________________________
@@ -3315,7 +3311,6 @@ void TH2D::Copy(TObject &newth2) const
    // Copy.
 
    TH2::Copy((TH2D&)newth2);
-   TArrayD::Copy((TH2D&)newth2);
 }
 
 //______________________________________________________________________________

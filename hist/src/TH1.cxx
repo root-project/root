@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.322 2006/12/12 13:44:46 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.323 2006/12/19 07:53:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1828,7 +1828,6 @@ void TH1::Copy(TObject &obj) const
    TNamed::Copy(obj);
    ((TH1&)obj).fDimension = fDimension;
    ((TH1&)obj).fNormFactor= fNormFactor;
-   ((TH1&)obj).fEntries   = fEntries;
    ((TH1&)obj).fNcells    = fNcells;
    ((TH1&)obj).fBarOffset = fBarOffset;
    ((TH1&)obj).fBarWidth  = fBarWidth;
@@ -1841,12 +1840,18 @@ void TH1::Copy(TObject &obj) const
    ((TH1&)obj).fOption    = fOption;
    ((TH1&)obj).fBuffer    = 0;
    ((TH1&)obj).fBufferSize= fBufferSize;
+   Int_t i;
    if (fBuffer) {
       Double_t *buf = new Double_t[fBufferSize];
-      for (Int_t i=0;i<fBufferSize;i++) buf[i] = fBuffer[i];
+      for (i=0;i<fBufferSize;i++) buf[i] = fBuffer[i];
       ((TH1&)obj).fBuffer    = buf;
    }
 
+   TArray* a = dynamic_cast<TArray*>(&obj);
+   if (a) a->Set(fNcells);
+   for (i=0;i<fNcells;i++) ((TH1&)obj).SetBinContent(i,this->GetBinContent(i));
+   ((TH1&)obj).fEntries   = fEntries;
+   
    TAttLine::Copy(((TH1&)obj));
    TAttFill::Copy(((TH1&)obj));
    TAttMarker::Copy(((TH1&)obj));
@@ -7518,10 +7523,9 @@ void TH1C::AddBinContent(Int_t bin, Double_t w)
 //______________________________________________________________________________
 void TH1C::Copy(TObject &newth1) const
 {
-   // Copy.
+   // Copy this to newth1
    
    TH1::Copy(newth1);
-   TArrayC::Copy((TH1C&)newth1);
 }
 
 //______________________________________________________________________________
@@ -7752,10 +7756,9 @@ void TH1S::AddBinContent(Int_t bin, Double_t w)
 //______________________________________________________________________________
 void TH1S::Copy(TObject &newth1) const
 {
-   // Copy.
+   // Copy this to newth1
 
    TH1::Copy(newth1);
-   TArrayS::Copy((TH1S&)newth1);
 }
 
 //______________________________________________________________________________
@@ -7984,10 +7987,9 @@ void TH1I::AddBinContent(Int_t bin, Double_t w)
 //______________________________________________________________________________
 void TH1I::Copy(TObject &newth1) const
 {
-   // Copy.
+   // Copy this to newth1
 
    TH1::Copy(newth1);
-   TArrayI::Copy((TH1I&)newth1);
 }
 
 //______________________________________________________________________________
@@ -8199,7 +8201,7 @@ TH1F::TH1F(const TVectorF &v)
 //______________________________________________________________________________
 TH1F::TH1F(const TH1F &h) : TH1(), TArrayF()
 {
-   // Constructor.
+   // Copy Constructor.
 
    ((TH1F&)h).Copy(*this);
 }
@@ -8213,10 +8215,9 @@ TH1F::~TH1F()
 //______________________________________________________________________________
 void TH1F::Copy(TObject &newth1) const
 {
-   // Copy constructor.
+   // Copy this to newth1.
 
    TH1::Copy(newth1);
-   TArrayF::Copy((TH1F&)newth1);
 }
 
 //______________________________________________________________________________
@@ -8443,10 +8444,9 @@ TH1D::TH1D(const TH1D &h1d) : TH1(), TArrayD()
 //______________________________________________________________________________
 void TH1D::Copy(TObject &newth1) const
 {
-   // Copy.
+   // Copy this to newth1
    
    TH1::Copy(newth1);
-   TArrayD::Copy((TH1D&)newth1);
 }
 
 //______________________________________________________________________________
