@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolume.cxx,v 1.16 2006/12/06 05:53:33 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TVolume.cxx,v 1.17 2006/12/08 18:09:37 brun Exp $
 // Author: Valery Fine   10/12/98
 
 /*************************************************************************
@@ -536,6 +536,7 @@ Text_t *TVolume::GetObjectInfo(Int_t px, Int_t py) const
    sprintf(info,"%s/%s",GetName(),GetTitle());
    Double_t x[3];
    ((TPad *)gPad)->AbsPixeltoXY(px,py,x[0],x[1]);
+   x[3] = 0;
    TView *view =gPad->GetView();
    if (view) view->NDCtoWC(x, x);
 

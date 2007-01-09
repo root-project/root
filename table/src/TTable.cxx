@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TTable.cxx,v 1.17 2006/07/11 09:05:02 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TTable.cxx,v 1.18 2006/12/13 21:28:14 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 
 /*************************************************************************
@@ -1047,6 +1047,7 @@ TTable::TTable(const TTable &table):TDataSet(table)
    fTable    = 0;
    SetUsedRows(table.GetNRows());
    fSize     = table.GetRowSize();
+   SetfN(table.fN);
    Set(table.fN, table.fTable);
 }
 
