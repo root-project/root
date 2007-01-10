@@ -51,7 +51,7 @@
   Authors: Rene Brun, Dirk Geppert, Sven A. Schmidt, sven.schmidt@cern.ch
          : rewritten from scratch by Rene Brun (30 November 2005)
             to support files with nested directories.
-           Tobby Burnett implemented the possibility to use indirect files.
+           Toby Burnett implemented the possibility to use indirect files.
  */
 
 #include "RConfig.h"
