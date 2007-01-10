@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.53 2006/10/21 07:56:20 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.54 2007/01/10 16:11:35 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -381,6 +381,7 @@ public:
    Bool_t       Tokenize(TString &tok, Ssiz_t &from, const char *delim = " ") const;
 
    // Static member functions
+   static ULong_t Hash(const void *txt, Int_t ntxt);    // Calculates hash index from any char string.
    static Ssiz_t  InitialCapacity(Ssiz_t ic = 15);      // Initial allocation capacity
    static Ssiz_t  MaxWaste(Ssiz_t mw = 15);             // Max empty space before reclaim
    static Ssiz_t  ResizeIncrement(Ssiz_t ri = 16);      // Resizing increment
