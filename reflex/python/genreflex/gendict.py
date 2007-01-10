@@ -7,8 +7,9 @@
 # This software is provided "as is" without express or implied warranty.
 
 import xml.parsers.expat
-import os, sys, string, time
+import os, sys, string, time, operator
 import gccdemangler
+
 class genDictionary(object) :
 #----------------------------------------------------------------------------------
   def __init__(self, hfile, opts):
@@ -409,6 +410,8 @@ class genDictionary(object) :
             self.getdependent(b, types)
 #----------------------------------------------------------------------------------
   def generate(self, file, selclasses, selfunctions, selenums, selvariables, cppinfo) :
+    for c in selclasses :  c['fullname'] = self.genTypeName(c['id'])
+    selclasses.sort(key=operator.itemgetter('fullname'))
     names = []
     f = open(file,'w') 
     f.write(self.genHeaders(cppinfo))
@@ -417,9 +420,8 @@ class genDictionary(object) :
     f_shadow += 'namespace __shadow__ {\n'
     for c in selclasses :
       if 'incomplete' not in c :
-        cname = self.genTypeName(c['id'])
-        if not self.quiet : print  'class '+ cname
-        names.append(cname)
+        if not self.quiet : print  'class '+ c['fullname']
+        names.append(c['fullname'])
         self.completeClass( c )
         self.enhanceClass( c )
         scons, stubs   = self.genClassDict( c )
@@ -602,7 +604,7 @@ class genDictionary(object) :
     c = 'namespace {\n  struct Dictionaries {\n    Dictionaries() {\n'
     for attrs in selclasses :
       if 'incomplete' not in attrs : 
-        clf = self.genTypeName(attrs['id'], colon=True)
+        clf = '::'+ attrs['fullname']
         clt = string.translate(str(clf), self.transtable)
         c += '      %s_dict(); \n' % (clt)
     c += self.genFunctions(selfunctions)
@@ -611,8 +613,7 @@ class genDictionary(object) :
     c += '    }\n    ~Dictionaries() {\n'
     for attrs in selclasses :
       if 'incomplete' not in attrs : 
-        cls = self.genTypeName(attrs['id'])
-        c += '      %s.Unload(); // class %s \n' % (self.genTypeID(attrs['id']), cls)
+        c += '      %s.Unload(); // class %s \n' % (self.genTypeID(attrs['id']), attrs['fullname'])
     c += '    }\n  };\n'
     c += '  static Dictionaries instance;\n}\n'
     return c
@@ -620,8 +621,8 @@ class genDictionary(object) :
   def genClassDict(self, attrs):
     members, bases = [], []
     cl  = attrs['name']
-    clf = self.genTypeName(attrs['id'],colon=True)
-    cls = self.genTypeName(attrs['id'])
+    clf = '::' + attrs['fullname']
+    cls = attrs['fullname']
     clt = string.translate(str(clf), self.transtable)
     bases = self.getBases( attrs['id'] )
     if 'members' in attrs : members = string.split(attrs['members'])

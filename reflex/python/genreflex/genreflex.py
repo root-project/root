@@ -204,7 +204,10 @@ class genreflex:
       except:
         pass
     if self.gccxmlpath :
-      self.gccxml = self.gccxmlpath + os.sep + 'gccxml'
+      if sys.platform == 'win32' :
+        self.gccxml = self.gccxmlpath + os.sep + 'gccxml.exe'
+      else :
+        self.gccxml = self.gccxmlpath + os.sep + 'gccxml'
       if not os.path.isfile(self.gccxml) :
         print '--->> genreflex: ERROR: Path to gccxml given, but no executable found at', self.gccxml
     elif self.which('gccxml') :
