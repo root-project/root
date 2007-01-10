@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainIndex.cxx,v 1.4 2005/09/03 02:21:32 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainIndex.cxx,v 1.6 2007/01/06 09:24:09 brun Exp $
 // Author: Marek Biskup   07/06/2005
 
 /*************************************************************************
@@ -101,7 +101,8 @@ void TChainIndex::DeleteIndices()
          if (fTree->GetTree()->GetTreeIndex() == fEntries[i].fTreeIndex) {
             fTree->GetTree()->SetTreeIndex(0);
          }
-         SafeDelete(fEntries[i].fTreeIndex);
+         //do not delete the vector element (deleted by ~TChainIndex)
+         //SafeDelete(fEntries[i].fTreeIndex);
       }
    }
 }
