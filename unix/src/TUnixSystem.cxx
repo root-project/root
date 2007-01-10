@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.172 2006/12/01 16:48:19 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.173 2006/12/06 10:20:06 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1348,8 +1348,13 @@ int TUnixSystem::Unlink(const char *name)
    if (helper)
       return helper->Unlink(name);
 
+#if defined(R__SEEK64)
+   struct stat64 finfo;
+   if (lstat64(name, &finfo) < 0)
+#else
    struct stat finfo;
    if (lstat(name, &finfo) < 0)
+#endif
       return -1;
 
    if (S_ISDIR(finfo.st_mode))
@@ -1566,9 +1571,15 @@ const char *TUnixSystem::FindFile(const char *search, TString& wfil, EAccessMode
    gSystem->ExpandPathName(wfil);
 
    if (wfil[0] == '/') {
+#if defined(R__SEEK64)
+      struct stat64 finfo;
+      if (access(wfil.Data(), mode) == 0 &&
+          stat64(wfil.Data(), &finfo) == 0 && S_ISREG(finfo.st_mode)) {
+#else
       struct stat finfo;
       if (access(wfil.Data(), mode) == 0 &&
           stat(wfil.Data(), &finfo) == 0 && S_ISREG(finfo.st_mode)) {
+#endif
          if (show != "")
             Printf("%s %s", show.Data(), wfil.Data());
          return wfil.Data();
@@ -1602,9 +1613,15 @@ const char *TUnixSystem::FindFile(const char *search, TString& wfil, EAccessMode
       name += wfil;
 
       gSystem->ExpandPathName(name);
+#if defined(R__SEEK64)
+      struct stat64 finfo;
+      if (access(name.Data(), mode) == 0 &&
+          stat64(name.Data(), &finfo) == 0 && S_ISREG(finfo.st_mode)) {
+#else
       struct stat finfo;
       if (access(name.Data(), mode) == 0 &&
           stat(name.Data(), &finfo) == 0 && S_ISREG(finfo.st_mode)) {
+#endif
          if (show != "")
             Printf("%s %s", show.Data(), name.Data());
          wfil = name;
