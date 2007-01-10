@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.33 2006/08/09 16:11:01 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.35 2007/01/10 17:43:14 antcheva Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -323,7 +323,7 @@ TGFileItem::TGFileItem(const TGWindow *p,
    time_t loctime = (time_t) fModTime;
    newtime = localtime(&loctime);
    sprintf(tmp, "%d-%02d-%02d %02d:%02d", newtime->tm_year + 1900,
-           newtime->tm_mon, newtime->tm_mday, newtime->tm_hour,
+           newtime->tm_mon+1, newtime->tm_mday, newtime->tm_hour,
            newtime->tm_min);
    fSubnames[4] = new TGString(tmp);
 
