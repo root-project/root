@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.311 2006/11/25 00:15:26 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.312 2007/01/09 18:24:18 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1071,7 +1071,7 @@ Int_t TTree::Branch(TCollection* li, Int_t bufsize /* = 32000 */, Int_t splitlev
                branchname.Form("%s", obj->GetName());
             }
          }
-         if (splitlevel > 1) {
+         if (splitlevel > 99) {
             branchname += ".";
          }
          Bronch(branchname, obj->ClassName(), li->GetObjectRef(obj), bufsize, splitlevel - 1);
