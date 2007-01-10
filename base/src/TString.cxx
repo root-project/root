@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.57 2006/10/18 09:26:58 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.58 2006/10/21 07:56:20 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1264,7 +1264,7 @@ Ssiz_t TString::MaxWaste(Ssiz_t mw)
 
 //______________________________________________________________________________
 TSubString::TSubString(const TString &str, Ssiz_t start, Ssiz_t nextent)
-   : fStr((TString*)&str), fBegin(start), fExtent(nextent)
+   : fStr((TString&)str), fBegin(start), fExtent(nextent)
 {
    // Private constructor.
 }
@@ -1304,8 +1304,8 @@ char& TSubString::operator[](Ssiz_t i)
    // Return character at pos i from sub-string. Check validity of i.
 
    AssertElement(i);
-   fStr->Cow();
-   return fStr->fData[fBegin+i];
+   fStr.Cow();
+   return fStr.fData[fBegin+i];
 }
 
 //______________________________________________________________________________
@@ -1313,8 +1313,8 @@ char& TSubString::operator()(Ssiz_t i)
 {
    // Return character at pos i from sub-string. No check on i.
 
-   fStr->Cow();
-   return fStr->fData[fBegin+i];
+   fStr.Cow();
+   return fStr.fData[fBegin+i];
 }
 
 //______________________________________________________________________________
@@ -1350,7 +1350,7 @@ TSubString& TSubString::operator=(const TString &str)
    // Assign string to sub-string.
 
    if (!IsNull())
-      fStr->Replace(fBegin, fExtent, str.Data(), str.Length());
+      fStr.Replace(fBegin, fExtent, str.Data(), str.Length());
 
    return *this;
 }
@@ -1361,7 +1361,7 @@ TSubString& TSubString::operator=(const char *cs)
    // Assign char* to sub-string.
 
    if (!IsNull())
-      fStr->Replace(fBegin, fExtent, cs, cs ? strlen(cs) : 0);
+      fStr.Replace(fBegin, fExtent, cs, cs ? strlen(cs) : 0);
 
    return *this;
 }
@@ -1373,7 +1373,7 @@ Bool_t operator==(const TSubString& ss, const char *cs)
 
    if (ss.IsNull()) return *cs =='\0'; // Two null strings compare equal
 
-   const char* data = ss.fStr->Data() + ss.fBegin;
+   const char* data = ss.fStr.Data() + ss.fBegin;
    Ssiz_t i;
    for (i = 0; cs[i]; ++i)
       if (cs[i] != data[i] || i == ss.fExtent) return kFALSE;
@@ -1387,7 +1387,7 @@ Bool_t operator==(const TSubString& ss, const TString &s)
 
    if (ss.IsNull()) return s.IsNull(); // Two null strings compare equal.
    if (ss.fExtent != s.Length()) return kFALSE;
-   return !memcmp(ss.fStr->Data() + ss.fBegin, s.Data(), ss.fExtent);
+   return !memcmp(ss.fStr.Data() + ss.fBegin, s.Data(), ss.fExtent);
 }
 
 //______________________________________________________________________________
@@ -1397,7 +1397,7 @@ Bool_t operator==(const TSubString &s1, const TSubString &s2)
 
    if (s1.IsNull()) return s2.IsNull();
    if (s1.fExtent != s2.fExtent) return kFALSE;
-   return !memcmp(s1.fStr->Data()+s1.fBegin, s2.fStr->Data()+s2.fBegin,
+   return !memcmp(s1.fStr.Data()+s1.fBegin, s2.fStr.Data()+s2.fBegin,
                   s1.fExtent);
 }
 
@@ -1407,8 +1407,8 @@ void TSubString::ToLower()
    // Convert sub-string to lower-case.
 
    if (!IsNull()) {                             // Ignore null substrings
-      fStr->Cow();
-      register char *p = (char*)(fStr->Data() + fBegin); // Cast away constness
+      fStr.Cow();
+      register char *p = (char*)(fStr.Data() + fBegin); // Cast away constness
       Ssiz_t n = fExtent;
       while (n--) { *p = tolower((unsigned char)*p); p++;}
    }
@@ -1419,8 +1419,8 @@ void TSubString::ToUpper()
 {
    // Convert sub-string to upper-case.
    if (!IsNull()) {                             // Ignore null substrings
-      fStr->Cow();
-      register char *p = (char*)(fStr->Data() + fBegin); // Cast away constness
+      fStr.Cow();
+      register char *p = (char*)(fStr.Data() + fBegin); // Cast away constness
       Ssiz_t n = fExtent;
       while (n--) { *p = toupper((unsigned char)*p); p++;}
    }

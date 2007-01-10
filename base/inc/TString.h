@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.52 2006/10/07 18:01:59 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.53 2006/10/21 07:56:20 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -135,7 +135,7 @@ friend Bool_t operator==(const TSubString &s1, const TString &s2);
 friend Bool_t operator==(const TSubString &s1, const char *s2);
 
 private:
-   TString      *fStr;           // Referenced string
+   TString      &fStr;           // Referenced string
    Ssiz_t        fBegin;         // Index of starting character
    Ssiz_t        fExtent;        // Length of TSubString
 
@@ -160,6 +160,7 @@ public:
    const char   *Data() const;
    Ssiz_t        Length() const          { return fExtent; }
    Ssiz_t        Start() const           { return fBegin; }
+   TString&      String()                { return fStr; }
    void          ToLower();              // Convert self to lower-case
    void          ToUpper();              // Convert self to upper-case
 
@@ -583,14 +584,14 @@ inline char TString::operator()(Ssiz_t i) const
 { return fData[i]; }
 
 inline const char *TSubString::Data() const
-{ return fStr->Data() + fBegin; }
+{ return fStr.Data() + fBegin; }
 
 // Access to elements of sub-string with bounds checking
 inline char TSubString::operator[](Ssiz_t i) const
-{ AssertElement(i); return fStr->fData[fBegin+i]; }
+{ AssertElement(i); return fStr.fData[fBegin+i]; }
 
 inline char TSubString::operator()(Ssiz_t i) const
-{ return fStr->fData[fBegin+i]; }
+{ return fStr.fData[fBegin+i]; }
 
 // String Logical operators
 #if !defined(R__ALPHA)
