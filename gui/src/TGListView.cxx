@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.42 2006/08/09 16:11:01 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.43 2006/10/23 11:44:34 antcheva Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -1158,6 +1158,15 @@ void TGListView::SetDefaultColumnWidth(TGVFileSplitter* splitter)
          Layout();
       }
    }
+}
+
+//______________________________________________________________________________
+void TGListView::ResizeColumns()
+{
+   // Resize column headers to show whole item names. 
+
+   for (int i = 0; i < fNColumns; ++i) 
+      SetDefaultColumnWidth(fSplitHeader[i]);
 }
 
 //______________________________________________________________________________

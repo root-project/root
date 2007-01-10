@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.30 2006/07/24 16:11:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.31 2006/08/01 10:54:37 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -159,6 +159,7 @@ public:
               Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGListView();
 
+   virtual void   ResizeColumns();
    virtual void   Layout();
    virtual void   LayoutHeader(TGFrame *head);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
