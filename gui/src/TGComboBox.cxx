@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.48 2006/08/01 10:54:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.49 2006/08/15 10:06:19 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -727,8 +727,8 @@ TGFontTypeComboBox::TGFontTypeComboBox(const TGWindow *p, Int_t id,
    }
 
    if (noFonts < kMaxFonts - 1)
-      ;
-   fFonts[noFonts] = 0;
+      fFonts[noFonts] = 0;
+      
    Select(1, kFALSE);  // to have first entry selected
    SetWindowName();
 }
