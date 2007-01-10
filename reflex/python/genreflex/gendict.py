@@ -7,7 +7,7 @@
 # This software is provided "as is" without express or implied warranty.
 
 import xml.parsers.expat
-import os, sys, string, time, operator
+import os, sys, string, time
 import gccdemangler
 
 class genDictionary(object) :
@@ -411,7 +411,7 @@ class genDictionary(object) :
 #----------------------------------------------------------------------------------
   def generate(self, file, selclasses, selfunctions, selenums, selvariables, cppinfo) :
     for c in selclasses :  c['fullname'] = self.genTypeName(c['id'])
-    selclasses.sort(key=operator.itemgetter('fullname'))
+    selclasses.sort( lambda x,y: cmp(x['fullname'], y['fullname']))
     names = []
     f = open(file,'w') 
     f.write(self.genHeaders(cppinfo))
