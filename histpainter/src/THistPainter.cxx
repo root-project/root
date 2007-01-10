@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.277 2006/12/11 09:26:50 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.279 2007/01/03 14:24:58 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2109,8 +2109,6 @@ void THistPainter::PaintBarH(Option_t *)
    }
 
    PaintTitle();
-   fXaxis = xaxis;
-   fYaxis = yaxis;
    //    Draw box with histogram statistics and/or fit parameters
    if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
       TIter next(fFunctions);
@@ -2123,6 +2121,8 @@ void THistPainter::PaintBarH(Option_t *)
    }
 
    PaintAxis(kFALSE);
+   fXaxis = xaxis;
+   fYaxis = yaxis;
 }
 
 //______________________________________________________________________________
