@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.12 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.13 2006/07/03 16:10:43 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -9,9 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <cmath>
 #include "Riostream.h"
 #include "TFile.h"
-#include "TMath.h"
 #include "TAttAxis.h"
 #include "TStyle.h"
 #include "TVirtualPad.h"
@@ -117,19 +117,19 @@ void TAttAxis::SaveAttributes(ostream &out, const char *name, const char *subnam
    if (fLabelFont != 62) {
       out<<"   "<<name<<subname<<"->SetLabelFont("<<fLabelFont<<");"<<endl;
    }
-   if (TMath::Abs(fLabelOffset-0.005) > 0.0001) {
+   if (abs(fLabelOffset-0.005) > 0.0001) {
       out<<"   "<<name<<subname<<"->SetLabelOffset("<<fLabelOffset<<");"<<endl;
    }
-   if (TMath::Abs(fLabelSize-0.04) > 0.001) {
+   if (abs(fLabelSize-0.04) > 0.001) {
       out<<"   "<<name<<subname<<"->SetLabelSize("<<fLabelSize<<");"<<endl;
    }
-   if (TMath::Abs(fTitleSize-0.04) > 0.001) {
+   if (abs(fTitleSize-0.04) > 0.001) {
       out<<"   "<<name<<subname<<"->SetTitleSize("<<fTitleSize<<");"<<endl;
    }
-   if (TMath::Abs(fTickLength-0.03) > 0.001) {
+   if (abs(fTickLength-0.03) > 0.001) {
       out<<"   "<<name<<subname<<"->SetTickLength("<<fTickLength<<");"<<endl;
    }
-   if (TMath::Abs(fTitleOffset-1) > 0.001) {
+   if (abs(fTitleOffset-1) > 0.001) {
       out<<"   "<<name<<subname<<"->SetTitleOffset("<<fTitleOffset<<");"<<endl;
    }
    if (fTitleColor != 1) {
@@ -219,7 +219,7 @@ void TAttAxis::SetNdivisions(Int_t n, Bool_t optim)
    // maximum values.
 
    fNdivisions = n;
-   if (!optim) fNdivisions = -TMath::Abs(n);
+   if (!optim) fNdivisions = -abs(n);
    if (gPad) gPad->Modified();
 }
 
