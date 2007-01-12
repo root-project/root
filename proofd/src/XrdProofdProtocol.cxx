@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.35 2006/12/12 14:32:06 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.36 2006/12/12 21:28:01 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -6188,7 +6188,7 @@ int XrdProofdProtocol::GetSessionDirs(XrdProofClient *pcl, int opt,
    while ((ent = (struct dirent *)readdir(dir))) {
       if (!strncmp(ent->d_name, "session-", 8)) {
          bool keep = 1;
-         if (opt == 3) {
+         if (opt == 3 && tag->length() > 0) {
             if (strstr(ent->d_name, tag->c_str())) {
                *tag = ent->d_name;
                found = 1;
