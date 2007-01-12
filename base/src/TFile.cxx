@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.194 2007/01/12 10:20:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.195 2007/01/12 16:03:15 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 #   include <sys/types.h>
 #endif
 
+#include <cmath>
 #include "Bytes.h"
 #include "Riostream.h"
 #include "Strlen.h"
