@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.153 2006/12/11 13:24:49 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.154 2006/12/12 14:05:41 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -450,16 +450,25 @@ TProofServ::~TProofServ()
 //______________________________________________________________________________
 Int_t TProofServ::CatMotd()
 {
-   // Print message of the day (in fConfDir/etc/proof/motd). The motd
-   // is not shown more than once a day. If the file fConfDir/etc/proof/noproof
-   // exists, show its contents and close the connection.
+   // Print message of the day (in the file pointed by the env PROOFMOTD
+   // or from fConfDir/etc/proof/motd). The motd is not shown more than
+   // once a day. If the file pointed by env PROOFNOPROOF exists (or the
+   // file fConfDir/etc/proof/noproof exists), show its contents and close
+   // the connection.
 
    TString lastname;
    FILE   *motd;
    Bool_t  show = kFALSE;
 
+   // If we are disabled just print the message and close the connection 
    TString motdname(GetConfDir());
-   motdname += "/etc/proof/noproof";
+   // The env variable PROOFNOPROOF allows to put the file in an alternative
+   // location not overwritten by a new installation
+   if (gSystem->Getenv("PROOFNOPROOF")) {
+      motdname = gSystem->Getenv("PROOFNOPROOF");
+   } else {
+      motdname += "/etc/proof/noproof";
+   }
    if ((motd = fopen(motdname, "r"))) {
       Int_t c;
       printf("\n");
@@ -483,8 +492,14 @@ Int_t TProofServ::CatMotd()
    if (time(0) - lasttime > (time_t)86400)
       show = kTRUE;
 
-   motdname = GetConfDir();
-   motdname += "/etc/proof/motd";
+   // The env variable PROOFMOTD allows to put the file in an alternative
+   // location not overwritten by a new installation
+   if (gSystem->Getenv("PROOFMOTD")) {
+      motdname = gSystem->Getenv("PROOFMOTD");
+   } else {
+      motdname = GetConfDir();
+      motdname += "/etc/proof/motd";
+   }
    if (gSystem->GetPathInfo(motdname, &id, &size, &flags, &modtime) == 0) {
       if (modtime > lasttime || show) {
          if ((motd = fopen(motdname, "r"))) {
