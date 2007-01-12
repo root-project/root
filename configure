@@ -262,7 +262,7 @@ check_lib64() {
 	ret=$?
     fi
     logmsg "result: $ret"
-    if test $? -eq 0 ; then
+    if test $ret -eq 0 ; then
         is_lib64=1
 	logmsg "is a 64bit library"
     fi
