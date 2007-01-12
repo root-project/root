@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofChain.cxx,v 1.2 2006/11/27 15:57:11 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofChain.cxx,v 1.3 2006/11/28 12:10:52 rdm Exp $
 // Author: G. Ganis  Nov 2006
 
 /*************************************************************************
@@ -57,8 +57,6 @@ TProofChain::~TProofChain()
    // Destructor
 
    if (fChain) {
-      if (fChain)
-         gProof->RemoveChain(fChain);
       SafeDelete(fSet);
    } else {
       // Not owner

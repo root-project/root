@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.176 2006/12/13 11:21:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.177 2006/12/14 00:03:45 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -320,6 +320,7 @@ TProof::~TProof()
    while (TChain *chain = dynamic_cast<TChain*> (fChains->First()) ) {
       // remove "chain" from list
       chain->SetProof(0);
+      RemoveChain(chain);
    }
 
    Close();
@@ -2941,7 +2942,8 @@ void TProof::StopProcess(Bool_t abort, Int_t timeout)
    if (!IsValid())
       return;
 
-   fPlayer->StopProcess(abort, timeout);
+   if (fPlayer)
+      fPlayer->StopProcess(abort, timeout);
 
    // Stop any blocking 'Collect' request
    if (!IsMaster())
