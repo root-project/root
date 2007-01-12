@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjectTable.cxx,v 1.9 2006/05/24 14:34:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjectTable.cxx,v 1.10 2006/07/26 13:36:42 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -280,7 +280,7 @@ Int_t TObjectTable::FindElement(TObject *op)
       return 0;
 
    //slot = Int_t(((ULong_t) op >> 2) % fSize);
-   slot = Int_t(TMath::Hash(&op, sizeof(TObject*)) % fSize);
+   slot = Int_t(TString::Hash(&op, sizeof(TObject*)) % fSize);
    for (n = 0; n < fSize; n++) {
       if ((slotOp = fTable[slot]) == 0)
          break;

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.29 2006/04/20 18:49:43 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.30 2006/10/11 10:26:23 rdm Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -64,7 +64,7 @@ static inline ULong_t Void_Hash(const void *ptr)
 {
    // Return hash value for this object.
 
-   return TMath::Hash(&ptr, sizeof(void*));
+   return TString::Hash(&ptr, sizeof(void*));
 }
 
 //______________________________________________________________________________

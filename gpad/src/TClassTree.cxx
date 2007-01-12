@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.12 2006/10/20 21:07:40 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.13 2006/11/16 17:17:37 rdm Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -607,8 +607,8 @@ void TClassTree::Paint(Option_t *)
    Int_t dxpixels = gPad->XtoAbsPixel(gLabdx) - gPad->XtoAbsPixel(0);
    Int_t dypixels = gPad->YtoAbsPixel(0)     - gPad->YtoAbsPixel(gLabdy);
    gCsize  = dxpixels/(10.*dypixels);
-   gCsize = TMath::Max(gCsize,Float_t(0.75));
-   gCsize = TMath::Min(gCsize,Float_t(1.1));
+   gCsize = std::max(gCsize,Float_t(0.75));
+   gCsize = std::min(gCsize,Float_t(1.1));
    // draw classes level 0
    for (i=0;i<fNclasses;i++) {
       if (fCstatus[i] == 0) continue;

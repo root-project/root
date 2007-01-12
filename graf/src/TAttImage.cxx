@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.9 2005/09/02 10:20:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.10 2006/07/03 16:10:44 brun Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************
@@ -67,6 +67,7 @@
 #include "TPluginManager.h"
 #include "Riostream.h"
 #include "TColor.h"
+#include "TMath.h"
 
 
 ClassImp(TPaletteEditor)

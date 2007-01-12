@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.57 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.58 2006/07/09 05:27:53 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -55,6 +55,7 @@
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "TMath.h"
 
 ClassImp(TGeoPcon)
 

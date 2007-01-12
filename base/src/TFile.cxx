@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.193 2006/11/07 15:18:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.194 2007/01/12 10:20:08 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -50,6 +50,7 @@
 #include "TEnv.h"
 #include "TVirtualMonitoring.h"
 #include "TVirtualMutex.h"
+#include "TMathBase.h"
 
 TFile *gFile;                 //Pointer to current file
 
@@ -864,7 +865,7 @@ Int_t TFile::GetBestBuffer() const
 
    if (!fWritten) return TBuffer::kInitialSize;
    Double_t mean = fSumBuffer/fWritten;
-   Double_t rms2 = std::abs(fSum2Buffer/fSumBuffer -mean*mean);
+   Double_t rms2 = TMath::Abs(fSum2Buffer/fSumBuffer -mean*mean);
    return (Int_t)(mean + sqrt(rms2));
 }
 

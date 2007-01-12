@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.116 2006/11/10 20:00:45 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.117 2006/12/12 17:29:03 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "TROOT.h"
 #include "TStreamerInfo.h"
 #include "TSystem.h"
+#include "TMath.h"
 #include "TTree.h"
 #include "TTreeCache.h"
 #include "TVirtualPad.h"

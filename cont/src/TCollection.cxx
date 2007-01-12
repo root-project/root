@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.33 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.34 2006/08/08 17:02:26 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -44,6 +44,7 @@
 #include "TObjectTable.h"
 #include "TRegexp.h"
 #include "TVirtualMutex.h"
+#include "TMath.h"
 
 
 TVirtualMutex *gCollectionMutex = 0;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.9 2006/11/15 17:45:55 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.10 2006/11/27 14:14:24 rdm Exp $
 // Author: G Ganis Sep 2005
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #include "TQueryResult.h"
 #include "TRegexp.h"
 #include "TROOT.h"
+#include "TMath.h"
 #include "TSelector.h"
 #include "TSystem.h"
 #include "TTimeStamp.h"

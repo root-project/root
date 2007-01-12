@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.34 2005/11/18 16:07:59 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.35 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoTrd2::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -40,6 +40,7 @@
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
 #include "TGeoTrd2.h"
+#include "TMath.h"
 
 ClassImp(TGeoTrd2)
    

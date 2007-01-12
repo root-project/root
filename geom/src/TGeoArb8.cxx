@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.53 2006/07/11 09:14:05 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.54 2007/01/11 10:21:31 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
 #include "TGeoArb8.h"
+#include "TMath.h"
 
 ClassImp(TGeoArb8)
     

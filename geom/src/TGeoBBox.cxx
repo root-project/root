@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.50 2006/07/03 16:10:44 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.51 2006/11/03 21:22:32 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -81,6 +81,7 @@
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "TMath.h"
 
 ClassImp(TGeoBBox)
    

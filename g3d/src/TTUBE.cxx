@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.15 2006/05/23 04:47:36 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.16 2006/05/24 15:31:40 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TBuffer3DTypes.h"
 #include "TGeometry.h"
 #include "TClass.h"
+#include "TMath.h"
 
 ClassImp(TTUBE)
 

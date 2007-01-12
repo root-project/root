@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoHalfSpace.cxx,v 1.9 2005/11/18 16:07:58 brun Exp $
+// @(#):$Name:  $:$Id: TGeoHalfSpace.cxx,v 1.10 2006/07/03 16:10:44 brun Exp $
 // Author: Mihaela Gheata   03/08/04
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 
 #include "Riostream.h"
 #include "TGeoHalfSpace.h"
+#include "TMath.h"
 
 ClassImp(TGeoHalfSpace)
    

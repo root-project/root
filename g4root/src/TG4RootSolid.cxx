@@ -1,4 +1,4 @@
-// @(#)root/g4root:$Name:  $:$Id: TG4RootSolid.cxx,v 1.1 2006/11/22 17:14:01 brun Exp $
+// @(#)root/g4root:$Name:  $:$Id: TG4RootSolid.cxx,v 1.2 2006/11/22 17:29:54 rdm Exp $
 // Author: Andrei Gheata   07/08/06
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "G4VisExtent.hh"
 
 #include "TG4RootSolid.h"
+#include "TMath.h"
 
 //ClassImp(TG4RootSolid)
 static const Double_t gCm = 1./cm;

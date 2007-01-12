@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShapeAssembly.cxx,v 1.6 2006/04/10 08:38:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShapeAssembly.cxx,v 1.7 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   02/06/05
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 #include "TGeoShapeAssembly.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "TMath.h"
 
 //_____________________________________________________________________________
 // TGeoShapeAssembly - The shape encapsulating an assembly (union) of volumes.

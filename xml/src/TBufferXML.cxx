@@ -1,4 +1,4 @@
-// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.12 2006/05/09 10:24:27 brun Exp $
+// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.13 2006/05/12 08:10:33 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -494,7 +494,7 @@ Bool_t TBufferXML::ProcessPointer(const void* ptr, XMLNodePointer_t node)
    else {
       if (fObjMap==0) return kFALSE;
 
-      ULong_t hash = TMath::Hash(&ptr, sizeof(void*));
+      ULong_t hash = TString::Hash(&ptr, sizeof(void*));
 
       XMLNodePointer_t refnode = (XMLNodePointer_t) fObjMap->GetValue(hash, (Long_t) ptr);
       if (refnode==0) return kFALSE;
@@ -526,7 +526,7 @@ void TBufferXML::RegisterPointer(const void* ptr, XMLNodePointer_t node)
 
    if ((node==0) || (ptr==0)) return;
 
-   ULong_t hash = TMath::Hash(&ptr, sizeof(void*));
+   ULong_t hash = TString::Hash(&ptr, sizeof(void*));
 
    if (fObjMap==0) fObjMap = new TExMap();
 

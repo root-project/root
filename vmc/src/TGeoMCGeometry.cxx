@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.10 2006/08/24 16:31:21 rdm Exp $
+// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.11 2006/12/12 16:12:55 brun Exp $
 // Authors: Alice collaboration 25/06/2002
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include "TGeoPara.h"
 #include "TGeoEltu.h"
 #include "TGeoHype.h"
+#include "TMath.h"
 
 ClassImp(TGeoMCGeometry)
 

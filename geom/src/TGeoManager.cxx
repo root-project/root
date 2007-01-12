@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.167 2006/11/22 16:02:10 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.168 2006/12/12 13:52:23 couet Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -441,6 +441,7 @@
 #include "TPluginManager.h"
 #include "TVirtualGeoTrack.h"
 #include "TQObject.h"
+#include "TMath.h"
 
 // statics and globals
 

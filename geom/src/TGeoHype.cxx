@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.12 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.13 2006/07/03 16:10:44 brun Exp $
 // Author: Mihaela Gheata   20/11/04
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "TMath.h"
 
 //_____________________________________________________________________________
 // TGeoHype - Hyperboloid class defined by 5 parameters. Bounded by:

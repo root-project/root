@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.12 2005/06/13 19:19:07 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.13 2005/11/11 23:21:43 pcanal Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 
 #include "TTreeIndex.h"
 #include "TTree.h"
+#include "TMath.h"
 
 ClassImp(TTreeIndex)
 

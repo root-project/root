@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.148 2006/11/27 14:14:24 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.149 2006/11/28 07:38:18 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 #include "TClass.h"
 #include "TCut.h"
 #include "TError.h"
+#include "TMath.h"
 #include "TFile.h"
 #include "TFileInfo.h"
 #include "TFriendElement.h"

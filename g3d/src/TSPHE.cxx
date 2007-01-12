@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.18 2005/11/24 17:28:07 couet Exp $
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.19 2006/03/20 21:43:41 pcanal Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TBuffer3DTypes.h"
 #include "TGeometry.h"
 #include "TClass.h"
+#include "TMath.h"
 
 ClassImp(TSPHE)
 

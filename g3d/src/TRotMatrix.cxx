@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TRotMatrix.cxx,v 1.3 2000/11/21 20:18:03 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TRotMatrix.cxx,v 1.4 2005/11/24 17:28:07 couet Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include "TGeometry.h"
 #include "TRotMatrix.h"
 #include "TClass.h"
+#include "TMath.h"
 
 ClassImp(TRotMatrix)
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.68 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.69 2006/11/16 11:26:23 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -102,6 +102,7 @@
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "TMath.h"
 
 ClassImp(TGeoTube)
 

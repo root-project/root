@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.12 2006/05/22 08:55:58 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.13 2006/06/22 08:21:22 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -325,7 +325,7 @@ Int_t TBufferSQL2::SqlWriteObject(const void* obj, const TClass* cl, TMemberStre
       objid = 0;
    else 
    if (fObjMap!=0) {
-      ULong_t hash = TMath::Hash(&obj, sizeof(void*));
+      ULong_t hash = TString::Hash(&obj, sizeof(void*));
       Long_t value = fObjMap->GetValue(hash, (Long_t) obj);
       if (value>0)
          objid = fFirstObjId + value - 1;
@@ -344,7 +344,7 @@ Int_t TBufferSQL2::SqlWriteObject(const void* obj, const TClass* cl, TMemberStre
 
    Stack()->SetObjectRef(objid, cl);
    
-   ULong_t hash = TMath::Hash(&obj, sizeof(void*));
+   ULong_t hash = TString::Hash(&obj, sizeof(void*));
    if (fObjMap==0) fObjMap = new TExMap();
    if (fObjMap->GetValue(hash, (Long_t) obj)==0)
       fObjMap->Add(hash, (Long_t) obj, (Long_t) objid - fFirstObjId + 1);

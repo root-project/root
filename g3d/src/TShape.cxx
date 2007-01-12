@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.14 2006/05/23 04:47:36 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.15 2006/05/24 15:31:40 brun Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "TBuffer3DTypes.h"
 #include "TVirtualViewer3D.h"
 #include "TClass.h"
+#include "TMath.h"
 
 #include <assert.h>
 

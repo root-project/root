@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.49 2005/11/21 09:31:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.50 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -35,6 +35,7 @@
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "TMath.h"
 
 ClassImp(TGeoSphere)
    

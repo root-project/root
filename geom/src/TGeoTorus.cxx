@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.33 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.34 2006/08/23 14:48:05 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -36,6 +36,7 @@
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "TMath.h"
 
 ClassImp(TGeoTorus)
 

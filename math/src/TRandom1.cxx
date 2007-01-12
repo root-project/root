@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom1.cxx,v 1.6 2006/05/30 11:53:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom1.cxx,v 1.7 2007/01/12 09:27:32 brun Exp $
 // Author: Rene Brun from CLHEP & CERNLIB  04/05/2006
 
 //////////////////////////////////////////////////////////////////////////
@@ -16,6 +16,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <cmath>
 #include "TRandom1.h"
 #include "TRandom3.h"
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.11 2006/09/28 18:08:51 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.12 2006/10/06 16:45:41 pcanal Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #include "TBranchRef.h"
 #include "TError.h"
 #include "TProcessID.h"
+#include "TMath.h"
 #include "TTree.h"
 #include "TTreeCloner.h"
 #include "TFile.h"

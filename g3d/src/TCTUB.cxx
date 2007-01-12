@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TCTUB.cxx,v 1.4 2005/03/09 18:19:26 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TCTUB.cxx,v 1.5 2005/11/24 17:28:07 couet Exp $
 // Author: Rene Brun   26/06/97
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "TCTUB.h"
 #include "TClass.h"
+#include "TMath.h"
 
 ClassImp(TCTUB)
 

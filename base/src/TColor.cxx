@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.24 2006/07/03 16:10:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.25 2007/01/12 10:20:08 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
 #include "TError.h"
+#include "TMathBase.h"
 
 
 ClassImp(TColor)
@@ -459,11 +460,11 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
 
    // Loop over all defined colors
    while ((color = (TColor*)next())) {
-      if (std::abs(color->GetRed() - rr) > thres)
+      if (TMath::Abs(color->GetRed() - rr) > thres)
          continue;
-      if (std::abs(color->GetGreen() - gg) > thres)
+      if (TMath::Abs(color->GetGreen() - gg) > thres)
          continue;
-      if (std::abs(color->GetBlue() - bb) > thres)
+      if (TMath::Abs(color->GetBlue() - bb) > thres)
          continue;
 
       // We found a matching color in the color table

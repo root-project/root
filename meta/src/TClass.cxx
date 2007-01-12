@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.203 2006/10/05 17:10:09 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.204 2006/11/24 16:00:41 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -51,6 +51,7 @@
 #include "TObjArray.h"
 #include "TPluginManager.h"
 #include "TROOT.h"
+#include "TMath.h"
 #include "TRealData.h"
 #include "TStreamer.h"
 #include "TStreamerElement.h"

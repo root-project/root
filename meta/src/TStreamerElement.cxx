@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.87 2006/03/06 22:58:18 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.88 2006/10/05 17:38:05 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "Api.h"
 #include "TInterpreter.h"
 #include "TError.h"
+#include "TMath.h"
 
 #include <string>
 namespace std {} using namespace std;

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.28 2006/07/03 16:10:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.29 2006/07/09 05:27:54 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TMath.h"
 #include "TVirtualPad.h"
 #include "TPolyLine.h"
 #include "TClass.h"

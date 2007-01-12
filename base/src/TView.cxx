@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.39 2006/05/26 09:01:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.40 2006/06/06 08:32:32 rdm Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 #include "TList.h"
 #include "TFile.h"
 #include "TPluginManager.h"
+#include "TMath.h"
 
 // Remove when TViewer3DPad fix in ExecuteRotateView() is removed
 #include "TVirtualViewer3D.h"

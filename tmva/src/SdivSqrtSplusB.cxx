@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: SdivSqrtSplusB.cxx,v 1.9 2006/11/16 22:51:59 helgevoss Exp $   
+// @(#)root/tmva $Id: SdivSqrtSplusB.cxx,v 1.9 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -29,6 +29,7 @@
  **********************************************************************************/
 
 #include "TMVA/SdivSqrtSplusB.h"
+#include <cmath>
 
 ClassImp(TMVA::SdivSqrtSplusB)
    ;

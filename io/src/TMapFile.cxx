@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.19 2006/07/25 18:58:50 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.20 2007/01/12 10:20:08 brun Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -1049,7 +1049,7 @@ Int_t TMapFile::GetBestBuffer()
 
    if (!fWritten) return TBuffer::kMinimalSize;
    Double_t mean = fSumBuffer/fWritten;
-   Double_t rms2 = std::abs(fSum2Buffer/fSumBuffer - mean*mean);
+   Double_t rms2 = TMath::Abs(fSum2Buffer/fSumBuffer - mean*mean);
    return (Int_t)(mean + sqrt(rms2));
 }
 

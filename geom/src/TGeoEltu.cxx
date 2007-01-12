@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.29 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.30 2006/07/07 15:01:44 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TGeoEltu.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "TMath.h"
 
 ClassImp(TGeoEltu)
    

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.210 2006/10/09 17:13:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.211 2006/12/08 17:33:28 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TDataMember.h"
 #include "TDataType.h"
 #include "TError.h"
+#include "TMath.h"
 #include "TFile.h"
 #include "TFolder.h"
 #include "TLeafElement.h"

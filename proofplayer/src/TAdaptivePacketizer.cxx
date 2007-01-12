@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.1 2006/12/12 11:20:49 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.2 2006/12/13 08:24:09 brun Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************
@@ -54,6 +54,7 @@
 #include "TUrl.h"
 #include "TClass.h"
 #include "TRandom.h"
+#include "TMath.h"
 
 //
 // The following three utility classes manage the state of the

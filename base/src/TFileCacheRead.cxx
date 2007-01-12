@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheRead.cxx,v 1.5 2006/10/19 19:36:54 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheRead.cxx,v 1.6 2006/10/25 14:38:38 brun Exp $
 // Author: Rene Brun   18/05/2006
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #include "TFile.h"
 #include "TFileCacheRead.h"
 #include "TFileCacheWrite.h"
+#include "TMath.h"
 
 ClassImp(TFileCacheRead)
 

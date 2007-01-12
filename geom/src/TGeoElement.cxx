@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.19 2006/11/16 17:17:37 rdm Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.20 2006/12/20 08:23:03 brun Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TVirtualGeoPainter.h"
 #include "TGeoManager.h"
 #include "TGeoElement.h"
+#include "TMath.h"
 
 // statics and globals
 static const Int_t gMaxElem  = 110;

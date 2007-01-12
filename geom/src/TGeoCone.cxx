@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.56 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.57 2006/11/16 11:26:23 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -70,6 +70,7 @@
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "TMath.h"
 
 ClassImp(TGeoCone)
 

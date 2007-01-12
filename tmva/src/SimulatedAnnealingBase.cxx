@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: SimulatedAnnealingBase.cxx,v 1.10 2006/11/16 22:51:59 helgevoss Exp $   
+// @(#)root/tmva $Id: SimulatedAnnealingBase.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -33,6 +33,7 @@
 //_______________________________________________________________________
 
 #include "Riostream.h"
+#include "TMath.h"
 #include "TMVA/SimulatedAnnealingBase.h"
 
 ClassImp(TMVA::SimulatedAnnealingBase)

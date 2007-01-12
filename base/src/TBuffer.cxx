@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.97 2006/05/23 08:49:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.98 2007/01/12 10:20:08 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -715,7 +715,7 @@ Int_t TBuffer::ReadBuf(void *buf, Int_t max)
 
    if (max == 0) return 0;
 
-   Int_t n = std::min(max, (Int_t)(fBufMax - fBufCur));
+   Int_t n = TMath::Min(max, (Int_t)(fBufMax - fBufCur));
 
    memcpy(buf, fBufCur, n);
    fBufCur += n;
@@ -732,7 +732,7 @@ void TBuffer::WriteBuf(const void *buf, Int_t max)
 
    if (max == 0) return;
 
-   if (fBufCur + max > fBufMax) Expand(std::max(2*fBufSize, fBufSize+max));
+   if (fBufCur + max > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+max));
 
    memcpy(fBufCur, buf, max);
    fBufCur += max;
@@ -1618,7 +1618,7 @@ void TBuffer::WriteArray(const Bool_t *b, Int_t n)
    R__ASSERT(b);
 
    Int_t l = sizeof(UChar_t)*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
    if (sizeof(Bool_t) > 1) {
       for (int i = 0; i < n; i++)
@@ -1643,7 +1643,7 @@ void TBuffer::WriteArray(const Char_t *c, Int_t n)
    R__ASSERT(c);
 
    Int_t l = sizeof(Char_t)*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
    memcpy(fBufCur, c, l);
    fBufCur += l;
@@ -1663,7 +1663,7 @@ void TBuffer::WriteArray(const Short_t *h, Int_t n)
    R__ASSERT(h);
 
    Int_t l = sizeof(Short_t)*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
 #ifdef R__BYTESWAP
 # ifdef USE_BSWAPCPY
@@ -1693,7 +1693,7 @@ void TBuffer::WriteArray(const Int_t *ii, Int_t n)
    R__ASSERT(ii);
 
    Int_t l = sizeof(Int_t)*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
 #ifdef R__BYTESWAP
 # ifdef USE_BSWAPCPY
@@ -1723,7 +1723,7 @@ void TBuffer::WriteArray(const Long_t *ll, Int_t n)
    R__ASSERT(ll);
 
    Int_t l = 8*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
    for (int i = 0; i < n; i++) tobuf(fBufCur, ll[i]);
 }
 
@@ -1743,7 +1743,7 @@ void TBuffer::WriteArray(const ULong_t *ll, Int_t n)
    R__ASSERT(ll);
 
    Int_t l = 8*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
    for (int i = 0; i < n; i++) tobuf(fBufCur, ll[i]);
 }
 
@@ -1761,7 +1761,7 @@ void TBuffer::WriteArray(const Long64_t *ll, Int_t n)
    R__ASSERT(ll);
 
    Int_t l = sizeof(Long64_t)*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
 #ifdef R__BYTESWAP
    for (int i = 0; i < n; i++)
@@ -1786,7 +1786,7 @@ void TBuffer::WriteArray(const Float_t *f, Int_t n)
    R__ASSERT(f);
 
    Int_t l = sizeof(Float_t)*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
 #ifdef R__BYTESWAP
 # ifdef USE_BSWAPCPY
@@ -1816,7 +1816,7 @@ void TBuffer::WriteArray(const Double_t *d, Int_t n)
    R__ASSERT(d);
 
    Int_t l = sizeof(Double_t)*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
 #ifdef R__BYTESWAP
    for (int i = 0; i < n; i++)
@@ -1842,7 +1842,7 @@ void TBuffer::WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElement *e
    R__ASSERT(d);
 
    Int_t l = sizeof(Float_t)*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
    WriteFastArrayDouble32(d,n,ele);
 }
@@ -1855,7 +1855,7 @@ void TBuffer::WriteFastArray(const Bool_t *b, Int_t n)
    if (n <= 0) return;
 
    Int_t l = sizeof(UChar_t)*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
    if (sizeof(Bool_t) > 1) {
       for (int i = 0; i < n; i++)
@@ -1874,7 +1874,7 @@ void TBuffer::WriteFastArray(const Char_t *c, Int_t n)
    if (n <= 0) return;
 
    Int_t l = sizeof(Char_t)*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
    memcpy(fBufCur, c, l);
    fBufCur += l;
@@ -1895,7 +1895,7 @@ void TBuffer::WriteFastArrayString(const Char_t *c, Int_t n)
    if (n <= 0) return;
 
    Int_t l = sizeof(Char_t)*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
    memcpy(fBufCur, c, l);
    fBufCur += l;
@@ -1909,7 +1909,7 @@ void TBuffer::WriteFastArray(const Short_t *h, Int_t n)
    if (n <= 0) return;
 
    Int_t l = sizeof(Short_t)*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
 #ifdef R__BYTESWAP
 # ifdef USE_BSWAPCPY
@@ -1933,7 +1933,7 @@ void TBuffer::WriteFastArray(const Int_t *ii, Int_t n)
    if (n <= 0) return;
 
    Int_t l = sizeof(Int_t)*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
 #ifdef R__BYTESWAP
 # ifdef USE_BSWAPCPY
@@ -1957,7 +1957,7 @@ void TBuffer::WriteFastArray(const Long_t *ll, Int_t n)
    if (n <= 0) return;
 
    Int_t l = 8*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
    for (int i = 0; i < n; i++) tobuf(fBufCur, ll[i]);
 }
@@ -1972,7 +1972,7 @@ void TBuffer::WriteFastArray(const ULong_t *ll, Int_t n)
    if (n <= 0) return;
 
    Int_t l = 8*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
    for (int i = 0; i < n; i++) tobuf(fBufCur, ll[i]);
 }
@@ -1985,7 +1985,7 @@ void TBuffer::WriteFastArray(const Long64_t *ll, Int_t n)
    if (n <= 0) return;
 
    Int_t l = sizeof(Long64_t)*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
 #ifdef R__BYTESWAP
    for (int i = 0; i < n; i++)
@@ -2004,7 +2004,7 @@ void TBuffer::WriteFastArray(const Float_t *f, Int_t n)
    if (n <= 0) return;
 
    Int_t l = sizeof(Float_t)*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
 #ifdef R__BYTESWAP
 # ifdef USE_BSWAPCPY
@@ -2028,7 +2028,7 @@ void TBuffer::WriteFastArray(const Double_t *d, Int_t n)
    if (n <= 0) return;
 
    Int_t l = sizeof(Double_t)*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
 #ifdef R__BYTESWAP
    for (int i = 0; i < n; i++)
@@ -2048,7 +2048,7 @@ void TBuffer::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerElemen
    if (n <= 0) return;
 
    Int_t l = sizeof(Float_t)*n;
-   if (fBufCur + l > fBufMax) Expand(std::max(2*fBufSize, fBufSize+l));
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
 
    if (ele && ele->GetFactor()) {
       Double_t factor = ele->GetFactor();

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.14 2006/05/23 04:47:36 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.15 2006/05/24 15:31:40 brun Exp $
 // Author: Nenad Buncic   29/09/95
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "TPCON.h"
 #include "TNode.h"
+#include "TMath.h"
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.54 2007/01/10 16:11:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.55 2007/01/10 16:49:04 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -28,10 +28,6 @@
 #include <stdio.h>
 #endif
 
-#ifndef ROOT_TMath
-#include "TMath.h"
-#endif
-
 #ifndef ROOT_TRefCnt
 #include "TRefCnt.h"
 #endif
@@ -42,6 +38,10 @@
 
 #ifndef ROOT_Riosfwd
 #include "Riosfwd.h"
+#endif
+
+#ifndef ROOT_TMathBase
+#include "TMathBase.h"
 #endif
 
 #include <string>
@@ -150,8 +150,9 @@ public:
    TSubString(const TSubString &s)
      : fStr(s.fStr), fBegin(s.fBegin), fExtent(s.fExtent) { }
 
-   TSubString   &operator=(const char *s);       // Assignment to char*
-   TSubString   &operator=(const TString &s);    // Assignment to TString
+   TSubString   &operator=(const char *s);       // Assignment from a char*
+   TSubString   &operator=(const TString &s);    // Assignment from a TString
+   TSubString   &operator=(const TSubString &s); // Assignment from a TSubString
    char         &operator()(Ssiz_t i);           // Index with optional bounds checking
    char         &operator[](Ssiz_t i);           // Index with bounds checking
    char          operator()(Ssiz_t i) const;     // Index with optional bounds checking
@@ -593,6 +594,10 @@ inline char TSubString::operator[](Ssiz_t i) const
 
 inline char TSubString::operator()(Ssiz_t i) const
 { return fStr.fData[fBegin+i]; }
+ 
+inline TSubString &TSubString::operator=(const TSubString &s)
+{ fStr = s.fStr; fBegin = s.fBegin; fExtent = s.fExtent; return *this; }
+
 
 // String Logical operators
 #if !defined(R__ALPHA)
