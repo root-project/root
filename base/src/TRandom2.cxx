@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom2.cxx,v 1.10 2006/05/18 08:04:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom2.cxx,v 1.11 2006/05/18 09:37:04 brun Exp $
 // Author: Rene Brun, Lorenzo Moneta  17/05/2006
 
 //////////////////////////////////////////////////////////////////////////
@@ -20,7 +20,6 @@
 //  http://www.iro.umontreal.ca/~lecuyer/myftp/papers/tausme2.ps
 //////////////////////////////////////////////////////////////////////////
 
-#include "TMath.h"
 #include "TRandom2.h"
 #include "TRandom3.h"
 
