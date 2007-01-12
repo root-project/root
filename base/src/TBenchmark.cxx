@@ -10,7 +10,6 @@
 #include "TBenchmark.h"
 #include "TROOT.h"
 #include "TStopwatch.h"
-#include "TMath.h"
 
 
 TBenchmark *gBenchmark = 0;

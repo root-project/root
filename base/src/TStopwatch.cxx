@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.12 2005/11/21 11:17:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.13 2006/05/18 10:46:26 brun Exp $
 // Author: Fons Rademakers   11/10/95
 
 /*************************************************************************
@@ -234,8 +234,8 @@ void TStopwatch::Print(Option_t *opt) const
    realt -= min * 60;
    Int_t  sec   = Int_t(realt);
 
-   realt = TMath::Max(realt, 0.);
-   cput  = TMath::Max(cput, 0.);
+   realt = std::max(realt, 0.);
+   cput  = std::max(cput, 0.);
 
    if (opt && *opt == 'm') {
       if (Counter() > 1) {

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.192 2006/10/20 07:30:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.193 2006/11/07 15:18:29 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -864,8 +864,8 @@ Int_t TFile::GetBestBuffer() const
 
    if (!fWritten) return TBuffer::kInitialSize;
    Double_t mean = fSumBuffer/fWritten;
-   Double_t rms2 = TMath::Abs(fSum2Buffer/fSumBuffer -mean*mean);
-   return (Int_t)(mean + TMath::Sqrt(rms2));
+   Double_t rms2 = std::abs(fSum2Buffer/fSumBuffer -mean*mean);
+   return (Int_t)(mean + sqrt(rms2));
 }
 
 //______________________________________________________________________________

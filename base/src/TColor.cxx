@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.23 2006/03/28 16:43:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.24 2006/07/03 16:10:43 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -459,11 +459,11 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
 
    // Loop over all defined colors
    while ((color = (TColor*)next())) {
-      if (TMath::Abs(color->GetRed() - rr) > thres)
+      if (std::abs(color->GetRed() - rr) > thres)
          continue;
-      if (TMath::Abs(color->GetGreen() - gg) > thres)
+      if (std::abs(color->GetGreen() - gg) > thres)
          continue;
-      if (TMath::Abs(color->GetBlue() - bb) > thres)
+      if (std::abs(color->GetBlue() - bb) > thres)
          continue;
 
       // We found a matching color in the color table

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.59 2006/07/09 05:27:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.60 2006/08/03 21:17:44 pcanal Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -212,7 +212,7 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
    if (cxlevel && fObjlen > 256) {
       if (cxlevel == 2) cxlevel--;
       Int_t nbuffers = fObjlen/kMAXBUF;
-      Int_t buflen = TMath::Max(512,fKeylen + fObjlen + 9*nbuffers + 28); //add 28 bytes in case object is placed in a deleted gap
+      Int_t buflen = std::max(512,fKeylen + fObjlen + 9*nbuffers + 28); //add 28 bytes in case object is placed in a deleted gap
       fBuffer = new char[buflen];
       char *objbuf = fBufferRef->Buffer() + fKeylen;
       char *bufcur = &fBuffer[fKeylen];
@@ -297,7 +297,7 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
    if (cxlevel && fObjlen > 256) {
       if (cxlevel == 2) cxlevel--;
       Int_t nbuffers = fObjlen/kMAXBUF;
-      Int_t buflen = TMath::Max(512,fKeylen + fObjlen + 9*nbuffers + 28); //add 28 bytes in case object is placed in a deleted gap
+      Int_t buflen = std::max(512,fKeylen + fObjlen + 9*nbuffers + 28); //add 28 bytes in case object is placed in a deleted gap
       fBuffer = new char[buflen];
       char *objbuf = fBufferRef->Buffer() + fKeylen;
       char *bufcur = &fBuffer[fKeylen];

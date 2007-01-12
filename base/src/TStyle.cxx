@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.66 2006/05/19 07:03:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.67 2006/07/03 16:10:43 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -12,7 +12,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <math.h>
+#include <cmath>
 
 #include "Riostream.h"
 #include "TApplication.h"
@@ -771,7 +771,7 @@ void TStyle::SetColorModelPS(Int_t c)
 // Yellow to convert RGB to CMY it is enough to do: C=1-R, M=1-G and Y=1-B.
 // CMYK has one more component K (black). The conversion from RGB to CMYK is:
 //
-// Double_t Black   = TMath::Min(TMath::Min(1-Red,1-Green),1-Blue);
+// Double_t Black   = std::min(std::min(1-Red,1-Green),1-Blue);
 // Double_t Cyan    = (1-Red-Black)/(1-Black);
 // Double_t Magenta = (1-Green-Black)/(1-Black);
 // Double_t Yellow  = (1-Blue-Black)/(1-Black);

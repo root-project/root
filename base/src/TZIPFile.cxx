@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TZIPFile.cxx,v 1.4 2004/09/30 10:14:30 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TZIPFile.cxx,v 1.5 2005/05/16 21:40:30 rdm Exp $
 // Author: Fons Rademakers and Lassi Tuura  30/6/04
 
 /*************************************************************************
@@ -59,7 +59,6 @@
 #include "TZIPFile.h"
 #include "TFile.h"
 #include "TObjArray.h"
-#include "TMath.h"
 
 
 ClassImp(TZIPFile)
@@ -104,17 +103,17 @@ Long64_t TZIPFile::FindEndHeader()
 
    const Int_t kBUFSIZE = 1024;
    Long64_t    size = fFile->GetSize();
-   Long64_t    limit = TMath::Min(size, Long64_t(kMAX_VAR_LEN));
+   Long64_t    limit = std::min(size, Long64_t(kMAX_VAR_LEN));
    char        buf[kBUFSIZE+4];
 
    // Note, this works correctly even if the signature straddles read
    // boundaries since we always read an overlapped area of four
    // bytes on the next read
    for (Long64_t offset = 4; offset < limit; ) {
-      offset = TMath::Min(offset + kBUFSIZE, limit);
+      offset = std::min(offset + kBUFSIZE, limit);
 
       Long64_t pos = size - offset;
-      Int_t    n = TMath::Min(kBUFSIZE+4, Int_t(offset));
+      Int_t    n = std::min(kBUFSIZE+4, Int_t(offset));
 
       fFile->Seek(pos);
       if (fFile->ReadBuffer(buf, n)) {

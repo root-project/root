@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.59 2007/01/10 16:11:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.60 2007/01/10 16:49:04 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -698,7 +698,7 @@ TString &TString::Replace(Ssiz_t pos, Ssiz_t n1, const char *cs, Ssiz_t n2)
    // Remove at most n1 characters from self beginning at pos,
    // and replace them with the first n2 characters of cs.
 
-   n1 = TMath::Min(n1, Length()-pos);
+   n1 = std::min(n1, Length()-pos);
    if (!cs) n2 = 0;
 
    Ssiz_t tot = Length()-n1+n2;  // Final string length
