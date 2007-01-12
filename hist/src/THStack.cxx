@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.47 2006/07/03 16:10:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.48 2006/12/12 13:46:15 couet Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "TStyle.h"
 #include "Riostream.h"
 #include "TBrowser.h"
+#include "TObjString.h"
 
 ClassImp(THStack)
 
@@ -678,6 +679,22 @@ void THStack::Paint(Option_t *option)
          else                           fHistogram->SetMinimum(themin);
       }
    }
+
+   // Copy the axis labels if needed.
+   TH1 *hfirst;
+   TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
+   hfirst = (TH1*)lnk->GetObject();
+   THashList* labels = hfirst->GetXaxis()->GetLabels();
+   if (labels) {
+      TIter iL(labels);
+      TObjString* lb;
+      Int_t ilab = 1;
+      while ((lb=(TObjString*)iL())) {
+         fHistogram->GetXaxis()->SetBinLabel(ilab,lb->String().Data());
+         ilab++;
+      }
+   }
+
    if (!lsame) fHistogram->Paint(loption);
 
    if (fHistogram->GetDimension() > 1) SetDrawOption(loption);
