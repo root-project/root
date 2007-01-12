@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.80 2006/10/20 07:31:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.81 2006/10/20 21:07:40 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -51,7 +51,6 @@
 #include "TObjString.h"
 #include "TDatime.h"
 #include "TProcessID.h"
-#include "TMath.h"
 #include "TSystem.h"
 #include "TRefTable.h"
 
@@ -500,7 +499,7 @@ ULong_t TObject::Hash() const
 
    //return (ULong_t) this >> 2;
    const void *ptr = this;
-   return TMath::Hash(&ptr, sizeof(void*));
+   return TString::Hash(&ptr, sizeof(void*));
 }
 
 //______________________________________________________________________________
