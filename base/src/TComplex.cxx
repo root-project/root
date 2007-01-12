@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TComplex.cxx,v 1.3 2005/12/24 17:06:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TComplex.cxx,v 1.4 2007/01/12 10:20:08 brun Exp $
 // Author: Federico Carminati   22/04/2004
 
 /*************************************************************************
@@ -27,8 +27,8 @@ TComplex::TComplex(Double_t re, Double_t im, Bool_t polar) : fRe(re), fIm(im)
    // Standard constructor
 
    if (polar) {
-      fRe=re*std::cos(im);
-      fIm=re*std::sin(im);
+      fRe=re*TMath::Cos(im);
+      fIm=re*TMath::Sin(im);
    }
 }
 
