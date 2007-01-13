@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.312 2007/01/09 18:24:18 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.313 2007/01/10 11:30:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -4884,13 +4884,20 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
    //separated by ":"
    void *address = &bd[9000];
    char *bdcur = bd;
+   TString desc="", olddesc="";
    while (bdcur) {
       char *colon = strchr(bdcur,':');
       if (colon) *colon = 0;
       strcpy(bdname,bdcur);
       char *slash = strchr(bdname,'/');
-      if (slash) *slash = 0;
-      branch = new TBranch(bdname,address,bdcur,32000);
+      if (slash) {
+         *slash = 0;
+         desc = bdcur;
+         olddesc = slash+1;
+      } else {
+         desc = Form("%s/%s",bdname,olddesc.Data());
+      }
+      branch = new TBranch(bdname,address,desc.Data(),32000);
       if (branch->IsZombie()) {
          delete branch;
          Warning("ReadFile","Illegal branch definition: %s",bdcur);
