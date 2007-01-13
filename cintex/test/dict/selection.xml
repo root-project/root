@@ -32,13 +32,19 @@
   <class name="std::vector<const Pbase*>"/>
   <class name="std::vector<int>"/>
   <class name="std::vector<double>" />
+  <class name="std::vector<std::string>" />
+  <class name="std::vector<unsigned long>" />
   
   <class name="Obj"/>
   <class name="ExceptionGenerator"/>
 
   <function pattern="by*"/>
 
-  <class pattern="std::list<*>"/>
+  <!--class name="std::list<int>"/>
+  <class name="std::list<int>::iterator"/>
+  <class name="std::list<A::B::C::MyClass*>"/>
+  <class name="std::list<A::B::C::MyClass*>::iterator"/-->
+ 
   <class name="N::WithPrivateTypes"/>
   
   <enum name="MyEnum" />
@@ -57,6 +63,7 @@
   <class pattern="SpecialET<*>"/>
 
   <function pattern="*theFunction*" />
+  <class name="MarcoCl::MyClass" />
 
   <exclusion>
     <class name="A::B::C::MyClass::InnerClass"/>

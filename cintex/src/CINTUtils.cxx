@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTUtils.cxx,v 1.8 2006/06/13 08:19:01 brun Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTUtils.cxx,v 1.9 2006/07/03 09:22:46 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -12,6 +12,8 @@
 #include "Reflex/Reflex.h"
 #include "Reflex/Type.h"
 #include "CINTdefs.h"
+#include "Api.h"
+
 
 using namespace ROOT::Reflex;
 using namespace std;
@@ -295,14 +297,24 @@ namespace ROOT { namespace Cintex {
          if( indir.first == 0 ) arg_sig +=  ctype.first;
          else                   arg_sig += (ctype.first - ('a'-'A'));  // if pointer: 'f' -> 'F' etc.
          arg_sig += " ";
-         if( ctype.second == "-") arg_sig += "-";
-         else {
-            int tagnum = G__defined_tagname(ctype.second.c_str(), 2);
-            if ( tagnum != -1 ) arg_sig += "'" + string(G__fulltagname(tagnum, 1)) + "'";
-            else                arg_sig += "'" + ctype.second + "'";  // object type name
+         //---Fill the true-type and eventually the typedef
+         if( ctype.second == "-") {
+            arg_sig += "-";
+            if ( pt.IsTypedef() ) arg_sig += " '" + CintName(pt.Name(SCOPED)) + "' ";
+            else                  arg_sig += " - ";                    
          }
-         if ( pt.IsTypedef() ) arg_sig += " '" + CintName(pt.Name(SCOPED)) + "' ";
-         else                  arg_sig += " - ";                    
+         else {
+            G__TypedefInfo tdef(ctype.second.c_str());
+            int tagnum = G__defined_tagname(ctype.second.c_str(), 2);
+            if ( tdef.IsValid() )    arg_sig += "'" + string(tdef.TrueName()) + "'";
+            else if ( tagnum != -1 ) arg_sig += "'" + string(G__fulltagname(tagnum, 1)) + "'";
+            else                     arg_sig += "'" + ctype.second + "'";  // object type name
+
+            if ( pt.IsTypedef() || 
+                 tdef.IsValid() ) arg_sig += " '" + CintName(pt.Name(SCOPED)) + "' ";
+            else                  arg_sig += " - ";                    
+
+         }
          // Assign indirection. First indirection already taken into account by uppercasing type
          if( indir.first == 0 || indir.first == 1 ) {
             if ( pt.IsReference() && pt.IsConst() )          arg_sig += "11";
