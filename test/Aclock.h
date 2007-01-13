@@ -20,6 +20,7 @@
 #include <TPolyLine.h>
 #include <TDatime.h>
 #include <TPoints.h>
+#include <TMath.h>
 
 
 class TPolygon : public TPolyLine {
