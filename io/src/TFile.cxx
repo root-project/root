@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.196 2007/01/12 16:59:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.197 2007/01/15 11:52:01 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -51,6 +51,7 @@
 #include "TVirtualMonitoring.h"
 #include "TVirtualMutex.h"
 #include "TMathBase.h"
+#include <cmath>
 
 TFile *gFile;                 //Pointer to current file
 

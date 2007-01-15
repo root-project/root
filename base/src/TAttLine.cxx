@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.14 2007/01/12 10:20:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.15 2007/01/15 11:52:01 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TVirtualX.h"
 #include "TVirtualPadEditor.h"
 #include "TColor.h"
+#include <cmath>
 
 
 ClassImp(TAttLine)

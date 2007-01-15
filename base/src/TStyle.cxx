@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.69 2007/01/12 16:03:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.70 2007/01/15 11:52:01 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <cmath>
 
 #include "Riostream.h"
 #include "TApplication.h"
