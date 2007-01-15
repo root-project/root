@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.16 2006/05/16 08:13:31 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.17 2007/01/15 12:46:55 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 
 /*************************************************************************
@@ -67,10 +67,10 @@ public:
    // Get the components into an array
    // not checked!
 
-   inline Double_t Phi() const;
+   Double_t Phi() const;
    // The azimuth angle. returns phi from -pi to pi 
 
-   inline Double_t Theta() const;
+   Double_t Theta() const;
    // The polar angle.
 
    inline Double_t CosTheta() const;
@@ -79,13 +79,13 @@ public:
    inline Double_t Mag2() const;
    // The magnitude squared (rho^2 in spherical coordinate system).
 
-   inline Double_t Mag() const;
+   Double_t Mag() const;
    // The magnitude (rho in spherical coordinate system).
 
-   inline void SetPhi(Double_t);
+   void SetPhi(Double_t);
    // Set phi keeping mag and theta constant (BaBar).
 
-   inline void SetTheta(Double_t);
+   void SetTheta(Double_t);
    // Set theta keeping mag and phi constant (BaBar).
 
    inline void SetMag(Double_t);
@@ -95,7 +95,7 @@ public:
    // The transverse component squared (R^2 in cylindrical coordinate system).
 
    inline Double_t Pt() const;
-   inline Double_t Perp() const;
+   Double_t Perp() const;
    // The transverse component (R in cylindrical coordinate system).
 
    inline void SetPerp(Double_t);
@@ -105,14 +105,14 @@ public:
    // The transverse component w.r.t. given axis squared.
 
    inline Double_t Pt(const TVector3 &) const;
-   inline Double_t Perp(const TVector3 &) const;
+   Double_t Perp(const TVector3 &) const;
    // The transverse component w.r.t. given axis.
 
    inline Double_t DeltaPhi(const TVector3 &) const;
-   inline Double_t DeltaR(const TVector3 &) const;
+   Double_t DeltaR(const TVector3 &) const;
    inline Double_t DrEtaPhi(const TVector3 &) const;
    inline TVector2 EtaPhiVector() const;
-   inline void SetMagThetaPhi(Double_t mag, Double_t theta, Double_t phi);
+   void SetMagThetaPhi(Double_t mag, Double_t theta, Double_t phi);
 
    inline TVector3 & operator = (const TVector3 &);
    // Assignment.
@@ -133,7 +133,7 @@ public:
    inline TVector3 & operator *= (Double_t);
    // Scaling with real numbers.
 
-   inline TVector3 Unit() const;
+   TVector3 Unit() const;
    // Unit vector parallel to this.
 
    inline TVector3 Orthogonal() const;
@@ -145,7 +145,7 @@ public:
    inline TVector3 Cross(const TVector3 &) const;
    // Cross product.
 
-   inline Double_t Angle(const TVector3 &) const;
+   Double_t Angle(const TVector3 &) const;
    // The angle w.r.t. another 3-vector.
 
    Double_t PseudoRapidity() const;

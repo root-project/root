@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.cxx,v 1.10 2006/07/28 15:15:01 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.cxx,v 1.11 2007/01/15 12:46:55 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 //    Aug 11 1999: added Pt == 0 guard to Eta()
 //    Oct  8 1999: changed Warning to Error and
@@ -274,7 +274,7 @@ Double_t TVector3::Phi() const
 }
 
 //______________________________________________________________________________
-inline Double_t TVector3::Theta() const 
+Double_t TVector3::Theta() const 
 {
    //return the polar angle
    return fX == 0.0 && fY == 0.0 && fZ == 0.0 ? 0.0 : TMath::ATan2(Perp(),fZ);
