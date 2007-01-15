@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataDens.h,v 1.6 2006/06/03 05:42:18 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataDens.h,v 1.7 2006/06/28 05:17:13 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -43,17 +43,8 @@
 #ifndef ROOT_TQpDataDens
 #define ROOT_TQpDataDens
 
-#ifndef ROOT_TROOT
-#include "TROOT.h"
-#endif
-#ifndef ROOT_TClass
-#include "TClass.h"
-#endif
 #ifndef ROOT_TError
 #include "TError.h"
-#endif
-#ifndef ROOT_TMath
-#include "TMath.h"
 #endif
 #ifndef ROOT_TQpDataBase
 #include "TQpDataBase.h"

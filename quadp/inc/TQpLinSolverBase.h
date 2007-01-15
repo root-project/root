@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverBase.h,v 1.4 2006/03/21 05:20:33 pcanal Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverBase.h,v 1.5 2006/06/03 05:42:19 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -43,17 +43,8 @@
 #ifndef ROOT_TQpLinSolverBase
 #define ROOT_TQpLinSolverBase
 
-#ifndef ROOT_TROOT
-#include "TROOT.h"
-#endif
-#ifndef ROOT_TClass
-#include "TClass.h"
-#endif
 #ifndef ROOT_TError
 #include "TError.h"
-#endif
-#ifndef ROOT_TMath
-#include "TMath.h"
 #endif
 
 #ifndef ROOT_TQpVar
