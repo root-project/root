@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.5 2006/11/15 17:54:16 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.6 2006/12/14 08:37:33 couet Exp $
 // Author: Sebastian Boser, Mathieu Demaret 02/02/06
 
 /*************************************************************************
@@ -48,7 +48,7 @@
 #include "THLimitsFinder.h"
 #include "TPaveText.h"
 #include "TStyle.h"
-#include "TString.h"
+#include "TMath.h"
 
 
 ClassImp(TGraphPolar);
@@ -1334,4 +1334,12 @@ void TGraphPolargram::SetToRadian()
    fGrad   = kFALSE;
    fDegree = kFALSE;
    ChangeRangePolar(0,2*TMath::Pi());
+}
+
+
+//______________________________________________________________________________
+void TGraphPolargram::SetTwoPi()
+{
+   //set range from 0 to 2*pi
+   SetRangePolar(0,2*TMath::Pi());
 }

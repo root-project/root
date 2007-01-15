@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.85 2006/10/09 06:31:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.86 2007/01/09 17:01:34 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 #include "TRandom.h"
 #include "TFile.h"
 #include "TError.h"
+#include "TMath.h"
 #include "TObjString.h"
 
 ClassImp(TH3)

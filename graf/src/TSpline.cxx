@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.17 2006/07/09 05:27:54 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.18 2006/10/20 21:07:40 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 #include "TSystem.h"
 #include "Riostream.h"
 #include "TClass.h"
+#include "TMath.h"
 
 ClassImp(TSplinePoly)
 ClassImp(TSplinePoly3)

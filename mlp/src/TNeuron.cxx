@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.20 2006/05/26 15:13:02 rdm Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.21 2006/11/27 17:10:33 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -40,6 +40,7 @@
 #include "TROOT.h"
 #include "TH1D.h"
 #include "TRegexp.h"
+#include "TMath.h"
 #include "Riostream.h"
 
 ClassImp(TNeuron)

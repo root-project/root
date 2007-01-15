@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.83 2006/10/04 09:23:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.84 2006/10/09 15:33:27 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -56,9 +56,6 @@
 #ifndef ROOT_TArrayD
 #include "TArrayD.h"
 #endif
-#ifndef ROOT_TMath
-#include "TMath.h"
-#endif
 #include "Foption.h"
 
 #ifndef ROOT_TVectorFfwd
@@ -67,6 +64,8 @@
 #ifndef ROOT_TVectorDfwd
 #include "TVectorDfwd.h"
 #endif
+
+#include <float.h>
 
 class TF1;
 class TH1D;

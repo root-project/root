@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.48 2006/12/12 13:46:15 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.49 2007/01/12 10:59:16 couet Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "TStyle.h"
 #include "Riostream.h"
 #include "TBrowser.h"
+#include "TMath.h"
 #include "TObjString.h"
 
 ClassImp(THStack)

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphPolar.h,v 1.1 2006/05/18 16:12:09 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphPolar.h,v 1.3 2006/11/15 17:44:57 couet Exp $
 // Author: Sebastian Boser, 02/02/06
 
 /*************************************************************************
@@ -22,9 +22,6 @@
 #include "TGaxis.h"
 #include "TFrame.h"
 #include "Riostream.h"
-#include "TString.h"
-
-const Double_t kPi = TMath::Pi();
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -126,7 +123,7 @@ public:
    void     SetToDegree(); //*MENU*
    void     SetToGrad(); //*MENU*
    void     SetToRadian(); //*MENU*
-   void     SetTwoPi() { SetRangePolar(0,2*TMath::Pi()); }; 
+   void     SetTwoPi();
    
    ClassDef(TGraphPolargram,0); // Polar axis
 };

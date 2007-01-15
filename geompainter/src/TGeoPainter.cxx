@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.93 2006/09/17 14:16:37 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.94 2006/10/20 08:38:43 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -35,6 +35,7 @@
 #include "TGeoCompositeShape.h"
 #include "TGeoShapeAssembly.h"
 #include "TGeoPainter.h"
+#include "TMath.h"
 
 #include "X3DBuffer.h"
 

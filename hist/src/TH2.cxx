@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.102 2006/10/09 06:31:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.103 2007/01/09 17:01:34 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "TMatrixDBase.h"
 #include "THLimitsFinder.h"
 #include "TError.h"
+#include "TMath.h"
 #include "TObjString.h"
 
 

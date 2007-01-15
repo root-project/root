@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.10 2005/06/21 17:09:25 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.11 2005/06/22 15:37:47 brun Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TDirectory.h"
 #include "TFile.h"
 #include "TLine.h"
+#include "TMath.h"
 
 #ifdef WIN32
 #include "Windows4root.h"

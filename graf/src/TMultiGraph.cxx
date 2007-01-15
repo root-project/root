@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.34 2006/09/15 15:16:57 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.35 2006/10/05 13:50:11 couet Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 #include "Riostream.h"
 #include "TVirtualFitter.h"
 #include "TClass.h"
+#include "TMath.h"
 
 #include <ctype.h>
 

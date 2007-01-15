@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.30 2006/07/03 16:10:43 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.31 2006/11/27 15:39:40 couet Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "TVirtualViewer3D.h"
 #include "TGeometry.h"
 #include "TROOT.h"
+#include "TMath.h"
 
 #include <assert.h>
 

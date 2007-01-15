@@ -35,6 +35,7 @@
 #include "TCreatePrimitives.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TMath.h"
 
 //______________________________________________________________________________
 TCreatePrimitives::TCreatePrimitives()

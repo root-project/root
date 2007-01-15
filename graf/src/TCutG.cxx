@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.19 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.20 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -68,6 +68,7 @@
 #include "TPaveText.h"
 #include "TH2.h"
 #include "TClass.h"
+#include "TMath.h"
 
 ClassImp(TCutG)
 
