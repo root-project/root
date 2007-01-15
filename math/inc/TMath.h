@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.69 2006/03/14 10:52:26 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.70 2007/01/12 16:03:15 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -17,7 +17,9 @@
 //                                                                      //
 // TMath                                                                //
 //                                                                      //
-// Encapsulate math routines. For the time being avoid templates.       //
+// Encapsulate most frequently used Math functions.                     //
+// NB. The basic functions Min, Max, Abs, Sign and Range are defined    //
+// in TMathBase.                                                        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

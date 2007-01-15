@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.69 2006/03/14 10:52:26 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMathBase.h,v 1.1 2007/01/12 16:03:15 brun Exp $
 // Authors: Rene Brun, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -17,8 +17,8 @@
 //                                                                      //
 // TMath  Base functions                                                //
 //                                                                      //
-// Define the functions Min, Max, Abs, Sign, Range for all types        //
-// NB: These functions are unfortunately available in a portable        //
+// Define the functions Min, Max, Abs, Sign, Range for all types        //                                                      //
+// NB: These functions are unfortunately not available in a portable    //
 // way in std::                                                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
