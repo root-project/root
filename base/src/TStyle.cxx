@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.68 2007/01/12 10:20:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.69 2007/01/12 16:03:15 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -12,7 +12,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <cmath>
 
 #include "Riostream.h"
 #include "TApplication.h"
@@ -248,7 +247,7 @@ void TStyle::cd()
 void TStyle::Copy(TObject &obj) const
 {
    //copy this style
-   
+
    TAttLine::Copy(((TStyle&)obj));
    TAttFill::Copy(((TStyle&)obj));
    TAttMarker::Copy(((TStyle&)obj));

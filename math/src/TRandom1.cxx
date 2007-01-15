@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom1.cxx,v 1.7 2007/01/12 09:27:32 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom1.cxx,v 1.8 2007/01/12 16:03:15 brun Exp $
 // Author: Rene Brun from CLHEP & CERNLIB  04/05/2006
 
 //////////////////////////////////////////////////////////////////////////
@@ -16,7 +16,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <cmath>
 #include "TRandom1.h"
 #include "TRandom3.h"
 
@@ -535,8 +534,8 @@ void TRandom1::SetSeed2(UInt_t seed, int lux)
 // (Fred James) published in Computer Physics Communications 60 (1990)
 // pages 329-344
 //
-// modified for the case of seed = 0. In that case a random 64 bits seed based on 
-// TUUID (using TRandom3(0) ) is generated in order to have a unique seed 
+// modified for the case of seed = 0. In that case a random 64 bits seed based on
+// TUUID (using TRandom3(0) ) is generated in order to have a unique seed
 //
 
    const int ecuyer_a = 53668;
@@ -548,10 +547,10 @@ void TRandom1::SetSeed2(UInt_t seed, int lux)
 
    UInt_t int_seed_table[24];
 
-   // case of seed == 0 
+   // case of seed == 0
    // use a random seed based on TRandom3(0) which is base don the UUID
-   if (seed == 0) { 
-      TRandom3 r3(0); 
+   if (seed == 0) {
+      TRandom3 r3(0);
       seed =  static_cast<UInt_t> (4294967296.*r3.Rndm());
    }
 

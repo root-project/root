@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.205 2007/01/12 16:03:16 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.206 2007/01/15 10:03:12 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -67,7 +67,6 @@
 #include <set>
 #include <sstream>
 #include <string>
-#include <cmath>
 
 using namespace std;
 

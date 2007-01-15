@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.13 2006/07/03 16:10:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.14 2007/01/12 10:20:08 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <cmath>
 #include "Riostream.h"
 #include "TAttLine.h"
 #include "TVirtualPad.h"
@@ -67,7 +66,7 @@ TAttLine::TAttLine(Color_t color, Style_t style, Width_t width)
 //*-*                      ===========================
 //*-*  Line attributes are taking from the argument list
 //*-*    color : must be one of the valid color index
-//*-*    style : 1=solid, 2=dash, 3=dash-dot, 4=dot-dot. New styles can be 
+//*-*    style : 1=solid, 2=dash, 3=dash-dot, 4=dot-dot. New styles can be
 //*-*            defined using TStyle::SetLineStyleString.
 //*-*    width : expressed in pixel units
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -148,7 +147,7 @@ Int_t TAttLine::DistancetoLine(Int_t px, Int_t py, Double_t xp1, Double_t yp1, D
    if (c <= 0)  return 9999;
    Double_t v     = sqrt(c);
    Double_t u     = (a - b + c)/(2*v);
-   Double_t d     = abs(a - u*u);
+   Double_t d     = TMath::Abs(a - u*u);
    if (d < 0)   return 9999;
 
    return Int_t(sqrt(d) - 0.5*Double_t(fLineWidth));
@@ -161,7 +160,7 @@ void TAttLine::Modify()
 //*-*                ===========================================
 
    if (!gPad) return;
-   Int_t lineWidth = abs(fLineWidth%100);
+   Int_t lineWidth = TMath::Abs(fLineWidth%100);
    if (!gPad->IsBatch()) {
       gVirtualX->SetLineColor(fLineColor);
       if (fLineStyle > 0 && fLineStyle < 30) gVirtualX->SetLineStyle(fLineStyle);
@@ -193,7 +192,7 @@ void TAttLine::SaveLineAttributes(ostream &out, const char *name, Int_t coldef, 
       if (fLineColor > 228) {
          TColor::SaveColor(out, fLineColor);
          out<<"   "<<name<<"->SetLineColor(ci);" << endl;
-      } else 
+      } else
          out<<"   "<<name<<"->SetLineColor("<<fLineColor<<");"<<endl;
    }
    if (fLineStyle != stydef) {

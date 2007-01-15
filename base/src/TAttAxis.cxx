@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.13 2006/07/03 16:10:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.14 2007/01/12 09:31:33 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <cmath>
 #include "Riostream.h"
 #include "TFile.h"
 #include "TAttAxis.h"
@@ -17,6 +16,7 @@
 #include "TVirtualPad.h"
 #include "TColor.h"
 #include "TClass.h"
+#include "TMathBase.h"
 
 ClassImp(TAttAxis)
 
@@ -104,39 +104,39 @@ void TAttAxis::SaveAttributes(ostream &out, const char *name, const char *subnam
       if (fAxisColor > 228) {
          TColor::SaveColor(out, fAxisColor);
          out<<"   "<<name<<subname<<"->SetAxisColor(ci);" << endl;
-      } else 
+      } else
          out<<"   "<<name<<subname<<"->SetAxisColor("<<fAxisColor<<");"<<endl;
    }
    if (fLabelColor != 1) {
       if (fLabelColor > 228) {
          TColor::SaveColor(out, fLabelColor);
          out<<"   "<<name<<subname<<"->SetLabelColor(ci);" << endl;
-      } else 
+      } else
          out<<"   "<<name<<subname<<"->SetLabelColor("<<fLabelColor<<");"<<endl;
    }
    if (fLabelFont != 62) {
       out<<"   "<<name<<subname<<"->SetLabelFont("<<fLabelFont<<");"<<endl;
    }
-   if (abs(fLabelOffset-0.005) > 0.0001) {
+   if (TMath::Abs(fLabelOffset-0.005) > 0.0001) {
       out<<"   "<<name<<subname<<"->SetLabelOffset("<<fLabelOffset<<");"<<endl;
    }
-   if (abs(fLabelSize-0.04) > 0.001) {
+   if (TMath::Abs(fLabelSize-0.04) > 0.001) {
       out<<"   "<<name<<subname<<"->SetLabelSize("<<fLabelSize<<");"<<endl;
    }
-   if (abs(fTitleSize-0.04) > 0.001) {
+   if (TMath::Abs(fTitleSize-0.04) > 0.001) {
       out<<"   "<<name<<subname<<"->SetTitleSize("<<fTitleSize<<");"<<endl;
    }
-   if (abs(fTickLength-0.03) > 0.001) {
+   if (TMath::Abs(fTickLength-0.03) > 0.001) {
       out<<"   "<<name<<subname<<"->SetTickLength("<<fTickLength<<");"<<endl;
    }
-   if (abs(fTitleOffset-1) > 0.001) {
+   if (TMath::Abs(fTitleOffset-1) > 0.001) {
       out<<"   "<<name<<subname<<"->SetTitleOffset("<<fTitleOffset<<");"<<endl;
    }
    if (fTitleColor != 1) {
       if (fTitleColor > 228) {
          TColor::SaveColor(out, fTitleColor);
          out<<"   "<<name<<subname<<"->SetTitleColor(ci);" << endl;
-      } else 
+      } else
          out<<"   "<<name<<subname<<"->SetTitleColor("<<fTitleColor<<");"<<endl;
    }
    if (fTitleFont != 62) {
@@ -211,7 +211,7 @@ void TAttAxis::SetNdivisions(Int_t n, Bool_t optim)
    //
    // Where n1 is the number of primary divisions,
    // n2 is the number of second order divisions and
-   // n3 is the number of third order divisions. 
+   // n3 is the number of third order divisions.
    //
    // e.g. 512 means 12 primary and 5 secondary divisions.
    //

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.20 2007/01/12 10:20:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.21 2007/01/12 16:03:15 brun Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -84,7 +84,6 @@
 #  define INVALID_HANDLE_VALUE -1
 #endif
 
-#include <cmath>
 #include <fcntl.h>
 #include <errno.h>
 
@@ -435,7 +434,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
    }
 
    mapfil->InitDirectory();
-   {   
+   {
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfMappedFiles()->AddFirst(mapfil);
    }
