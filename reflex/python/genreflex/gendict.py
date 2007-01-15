@@ -409,9 +409,26 @@ class genDictionary(object) :
             if b[:8]  == 'private:'   : b = b[8:]
             self.getdependent(b, types)
 #----------------------------------------------------------------------------------
+  def sortselclasses(self, l):
+    nolit = [' ', ':', '<', '>']
+    l2 = []
+    for x in l:
+      ap = 1
+      for i in range(len(l2)):
+        l2ifn = l2[i]['fullname']
+        xfn = x['fullname']
+        bpos = l2ifn.find(xfn)
+        epos = bpos + len(xfn)
+        if bpos != -1 and ( bpos == 0 or l2ifn[bpos-1] in nolit  ) and ( epos == len(l2ifn) or l2ifn[epos] in nolit ) :
+          l2.insert(i,x)
+          ap = 0
+          break
+      if ap : l2.append(x)
+    return l2
+#----------------------------------------------------------------------------------
   def generate(self, file, selclasses, selfunctions, selenums, selvariables, cppinfo) :
     for c in selclasses :  c['fullname'] = self.genTypeName(c['id'])
-    selclasses.sort( lambda x,y: cmp(x['fullname'], y['fullname']))
+    selclasses = self.sortselclasses(selclasses)
     names = []
     f = open(file,'w') 
     f.write(self.genHeaders(cppinfo))
