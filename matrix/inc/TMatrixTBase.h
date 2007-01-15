@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.14 2006/11/25 09:05:47 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.15 2007/01/15 10:16:15 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -67,8 +67,8 @@
 
 #include <limits>
 
-#ifndef ROOT_TROOT
-#include "TROOT.h"
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
 #ifndef ROOT_TMatrixFBasefwd
 #include "TMatrixFBasefwd.h"
