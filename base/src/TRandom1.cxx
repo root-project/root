@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom1.cxx,v 1.8 2007/01/12 16:03:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom1.cxx,v 1.9 2007/01/15 11:52:01 rdm Exp $
 // Author: Rene Brun from CLHEP & CERNLIB  04/05/2006
 
 //////////////////////////////////////////////////////////////////////////
@@ -18,6 +18,7 @@
 
 #include "TRandom1.h"
 #include "TRandom3.h"
+#include <cmath>
 
 // Number of instances with automatic seed selection
 int TRandom1::fgNumEngines = 0;

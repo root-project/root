@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.21 2007/01/12 16:03:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.22 2007/01/15 11:52:01 rdm Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -95,6 +95,7 @@
 #include "TSystem.h"
 #include "TClass.h"
 #include "TVirtualMutex.h"
+#include <cmath>
 
 #if defined(R__UNIX) && !defined(R__MACOSX) && !defined(R__WINGCC)
 #define HAVE_SEMOP
