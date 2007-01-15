@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.204 2006/11/24 16:00:41 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.205 2007/01/12 16:03:16 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -51,7 +51,6 @@
 #include "TObjArray.h"
 #include "TPluginManager.h"
 #include "TROOT.h"
-#include "TMath.h"
 #include "TRealData.h"
 #include "TStreamer.h"
 #include "TStreamerElement.h"
@@ -68,6 +67,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <cmath>
 
 using namespace std;
 
@@ -407,7 +407,7 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
             int sz = proxy->Size();
 
             char fmt[] = {"#%09d"};
-            fmt[3]  = '0'+(int)TMath::Log10(sz)+1;
+            fmt[3]  = '0'+(int)log10(double(sz))+1;
             char buf[20];
             for (int i=0;i<sz;i++) {
                void *p = proxy->At(i);
@@ -1557,7 +1557,7 @@ namespace {
          if (thread_ptr) {
             if (*thread_ptr==0) *thread_ptr = new TExMap();
             TExMap *lmap = (TExMap*)(*thread_ptr);
-            ULong_t hash = TMath::Hash(&cl, sizeof(void*));
+            ULong_t hash = TString::Hash(&cl, sizeof(void*));
             ULong_t local = 0;
             UInt_t slot;
             if ((local = (ULong_t)lmap->GetValue(hash, (Long_t)cl, slot)) != 0) {

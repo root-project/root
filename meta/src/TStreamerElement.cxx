@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.88 2006/10/05 17:38:05 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.89 2007/01/12 16:03:16 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -30,7 +30,6 @@
 #include "Api.h"
 #include "TInterpreter.h"
 #include "TError.h"
-#include "TMath.h"
 
 #include <string>
 namespace std {} using namespace std;
@@ -73,6 +72,7 @@ static void GetRange(const char *comments, Double_t &xmin, Double_t &xmax, Doubl
    // Currently the range specifier is used only to stream a Double32_t type
    // see TBuffer::WriteDouble32
 
+   const Double_t kPi =3.14159265358979323846 ;
    factor = xmin = xmax = 0;
    if (!comments) return;
    const char *left = strstr(comments,"[");
@@ -108,12 +108,12 @@ static void GetRange(const char *comments, Double_t &xmin, Double_t &xmax, Doubl
    sxmin.ToLower();
    sxmin.ReplaceAll(" ","");
    if (sxmin.Contains("pi")) {
-      if      (sxmin.Contains("2pi"))   xmin = TMath::TwoPi();
-      else if (sxmin.Contains("2*pi"))  xmin = TMath::TwoPi();
-      else if (sxmin.Contains("twopi")) xmin = TMath::TwoPi();
-      else if (sxmin.Contains("pi/2"))  xmin = TMath::PiOver2();
-      else if (sxmin.Contains("pi/4"))  xmin = TMath::PiOver4();
-      else if (sxmin.Contains("pi"))    xmin = TMath::Pi();
+      if      (sxmin.Contains("2pi"))   xmin = 2*kPi;
+      else if (sxmin.Contains("2*pi"))  xmin = 2*kPi;
+      else if (sxmin.Contains("twopi")) xmin = 2*kPi;
+      else if (sxmin.Contains("pi/2"))  xmin = kPi/2;
+      else if (sxmin.Contains("pi/4"))  xmin = kPi/4;
+      else if (sxmin.Contains("pi"))    xmin = kPi;
       if (sxmin.Contains("-"))          xmin = -xmin;
    } else {
       sscanf(sxmin.Data(),"%lg",&xmin);
@@ -122,12 +122,12 @@ static void GetRange(const char *comments, Double_t &xmin, Double_t &xmax, Doubl
    sxmax.ToLower();
    sxmax.ReplaceAll(" ","");
    if (sxmax.Contains("pi")) {
-      if      (sxmax.Contains("2pi"))   xmax = TMath::TwoPi();
-      else if (sxmax.Contains("2*pi"))  xmax = TMath::TwoPi();
-      else if (sxmax.Contains("twopi")) xmax = TMath::TwoPi();
-      else if (sxmax.Contains("pi/2"))  xmax = TMath::PiOver2();
-      else if (sxmax.Contains("pi/4"))  xmax = TMath::PiOver4();
-      else if (sxmax.Contains("pi"))    xmax = TMath::Pi();
+      if      (sxmax.Contains("2pi"))   xmax = 2*kPi;
+      else if (sxmax.Contains("2*pi"))  xmax = 2*kPi;
+      else if (sxmax.Contains("twopi")) xmax = 2*kPi;
+      else if (sxmax.Contains("pi/2"))  xmax = kPi/2;
+      else if (sxmax.Contains("pi/4"))  xmax = kPi/4;
+      else if (sxmax.Contains("pi"))    xmax = kPi;
       if (sxmax.Contains("-"))          xmax = -xmax;
    } else {
       sscanf(sxmax.Data(),"%lg",&xmax);
