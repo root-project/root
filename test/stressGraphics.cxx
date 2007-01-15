@@ -43,6 +43,7 @@
 #include <TMultiGraph.h>
 #include <TGraph2D.h>
 #include <TImage.h>
+#include <TMath.h>
 
 
 void     stressGraphics (Int_t verbose=0);
