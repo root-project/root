@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.14 2006/05/24 16:44:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.15 2006/07/03 16:10:44 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -19,9 +19,6 @@
 #endif
 #ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TMath
-#include "TMath.h"
 #endif
 
 //////////////////////////////////////////////////////////////////////////
