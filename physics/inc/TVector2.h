@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.13 2006/05/18 13:31:59 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.14 2006/07/11 09:05:01 rdm Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -12,11 +12,6 @@
 #ifndef ROOT_TVector2
 #define ROOT_TVector2
 
-#ifndef __CINT__
-//#include <limits.h>
-#endif
-
-#include "TMath.h"
 #include "TObject.h"
 
 
@@ -67,7 +62,7 @@ public:
                                         // ****** other member functions
 
    Double_t Mod2() const { return fX*fX+fY*fY; };
-   Double_t Mod () const { return sqrt(Mod2()); };
+   Double_t Mod () const;
 
    Double_t Px()   const { return fX; };
    Double_t Py()   const { return fY; };
@@ -76,7 +71,7 @@ public:
 
                                         // phi() is defined in [0,TWOPI]
 
-   Double_t Phi           () const { return TMath::Pi()+TMath::ATan2(-fY,-fX); };
+   Double_t Phi           () const;
    Double_t DeltaPhi(const TVector2& v) const;
    void     SetMagPhi(Double_t mag, Double_t phi);
 
@@ -166,8 +161,6 @@ inline Double_t   operator ^ (const TVector2& v1, const TVector2& v2) {
 
 inline  Double_t TVector2::DeltaPhi(const TVector2& v) const { return Phi_mpi_pi(Phi()-v.Phi()); }
 
-inline  TVector2 TVector2::Unit() const {return (Mod2()) ? *this/Mod() : TVector2(); }
-
 inline  TVector2 TVector2::Ort () const { return Unit(); }
 
 inline  TVector2 TVector2::Proj(const TVector2& v) const { return v*(((*this)*v)/v.Mod2()); }
@@ -179,11 +172,5 @@ inline  TVector2 TVector2::Norm(const TVector2& v) const {return *this-Proj(v); 
 inline void TVector2::Set(const TVector2& v   )     { fX = v.fX; fY = v.fY; }
 inline void TVector2::Set(Double_t x0, Double_t y0) { fX = x0  ; fY = y0 ;  }
 inline void TVector2::Set(float  x0, float  y0)     { fX = x0  ; fY = y0 ;  }
-
-inline void TVector2::SetMagPhi(Double_t mag, Double_t phi) {
-  Double_t amag = TMath::Abs(mag);
-   fX = amag * TMath::Cos(phi);
-   fY = amag * TMath::Sin(phi);
-}
 
 #endif
