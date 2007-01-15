@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodLikelihood.cxx,v 1.55 2006/11/17 00:21:35 stelzer Exp $ 
+// @(#)root/tmva $Id: MethodLikelihood.cxx,v 1.12 2006/11/20 15:35:28 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -107,6 +107,7 @@
 #include "TObjString.h"
 #include "TFile.h"
 #include "TKey.h"
+#include "TClass.h"
 
 #ifndef ROOT_TMVA_MethodLikelihood
 #include "TMVA/MethodLikelihood.h"
