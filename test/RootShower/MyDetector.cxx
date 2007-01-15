@@ -8,7 +8,8 @@
  *************************************************************************/
 
 #include <stdlib.h>
-#include <TROOT.h>
+#include "TROOT.h"
+#include "TMath.h"
 
 #ifndef MYDETECTOR_H
 #include "MyDetector.h"
