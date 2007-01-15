@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.109 2006/10/13 07:52:00 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.110 2006/11/16 17:17:37 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 #include "TFile.h"
 #include "TInterpreter.h"
 #include "TEnv.h"
+#include "TMath.h"
 #include "Riostream.h"
 #include "TGDockableFrame.h"
 

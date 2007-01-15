@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTubeEditor.cxx,v 1.6 2006/07/14 20:00:52 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTubeEditor.cxx,v 1.7 2006/09/25 13:45:17 rdm Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include "TPad.h"
 #include "TView.h"
 #include "TGTab.h"
+#include "TMath.h"
 #include "TGComboBox.h"
 #include "TGButton.h"
 #include "TGTextEntry.h"

@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoHypeEditor.cxx,v 1.2 2006/07/14 20:00:52 brun Exp $
+// @(#):$Name:  $:$Id: TGeoHypeEditor.cxx,v 1.3 2006/09/25 13:45:17 rdm Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 #include "TVirtualGeoPainter.h"
 #include "TPad.h"
 #include "TView.h"
+#include "TMath.h"
 #include "TGTab.h"
 #include "TGComboBox.h"
 #include "TGButton.h"
