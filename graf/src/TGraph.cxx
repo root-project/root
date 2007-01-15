@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.198 2006/11/24 09:20:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.199 2006/11/24 10:17:46 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -195,7 +195,8 @@ TGraph& TGraph::operator=(const TGraph &gr)
       fMaxSize = gr.fMaxSize;
       if (gr.fFunctions) fFunctions = (TList*)gr.fFunctions->Clone();
       else fFunctions = new TList;
-      fHistogram = new TH1F(*fHistogram);
+      if (gr.fHistogram) fHistogram = new TH1F(*(gr.fHistogram));
+      else fHistogram = 0;
       fMinimum = gr.fMinimum;
       fMaximum = gr.fMaximum;
       if (!fMaxSize) {
