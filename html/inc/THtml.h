@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.28 2006/08/22 14:07:21 rdm Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.29 2006/09/25 08:58:56 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -27,9 +27,6 @@
 #include "Api.h"
 #endif
 
-#ifndef ROOT_TROOT
-#include "TROOT.h"
-#endif
 #ifndef ROOT_TClass
 #include "TClass.h"
 #endif
