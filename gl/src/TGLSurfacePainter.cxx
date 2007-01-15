@@ -6,6 +6,7 @@
 #include "KeySymbols.h"
 #include "TVirtualGL.h"
 #include "Buttons.h"
+#include "TROOT.h"
 #include "TString.h"
 #include "TStyle.h"
 #include "TColor.h"

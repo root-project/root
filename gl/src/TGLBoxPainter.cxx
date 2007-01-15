@@ -2,6 +2,8 @@
 
 #include "KeySymbols.h"
 #include "Buttons.h"
+#include "TROOT.h"
+#include "TClass.h"
 #include "TColor.h"
 #include "TStyle.h"
 #include "TMath.h"

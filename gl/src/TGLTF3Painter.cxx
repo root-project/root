@@ -1,6 +1,7 @@
 #include "TVirtualGL.h"
 #include "KeySymbols.h"
 #include "Buttons.h"
+#include "TROOT.h"
 #include "TColor.h"
 #include "TH1.h"
 #include "TF3.h"
