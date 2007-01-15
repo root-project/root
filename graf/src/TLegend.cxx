@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.30 2006/07/03 16:10:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.31 2006/07/09 05:27:54 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -613,7 +613,7 @@ void TLegend::SetHeader( const char *header )
    // Sets the header, which is the "title" that appears at the top of the
    //  TLegend
 
-   if ( !fPrimitives ) new TList;
+   if ( !fPrimitives ) fPrimitives = new TList;
    TIter next(fPrimitives);
    TLegendEntry *first;   // header is always the first entry
    if ((  first = (TLegendEntry*)next() )) {
