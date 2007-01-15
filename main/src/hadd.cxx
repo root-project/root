@@ -95,11 +95,11 @@ int main( int argc, char **argv ) {
    noTrees = (!strcmp(argv[1],"-T") || !strcmp(argv[2],"-T"));
    Int_t newcomp = 1;
    char ft[4];
-   for (int j=0;j<9;j++) {
+   for (int j=0;j<=9;j++) {
       sprintf(ft,"-f%d",j);
       if (!strcmp(argv[1],ft) || !strcmp(argv[2],ft)) {
          force = kTRUE;
-          newcomp = j;
+         newcomp = j;
          break;
       }
    }
@@ -109,6 +109,7 @@ int main( int argc, char **argv ) {
    if (noTrees) ffirst++;
 
    cout << "Target file: " << argv[ffirst-1] << endl;
+   
    Target = TFile::Open( argv[ffirst-1], (force?"RECREATE":"CREATE") );
    if (!Target || Target->IsZombie()) {
       cerr << "Error opening target file (does " << argv[ffirst-1] << " exist?)." << endl;
