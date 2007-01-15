@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.56 2006/08/08 16:02:44 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.57 2006/08/08 17:02:26 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -55,7 +55,6 @@
 
 #include <stdlib.h>
 #include "TClonesArray.h"
-#include "TMath.h"
 #include "TError.h"
 #include "TClass.h"
 #include "TROOT.h"

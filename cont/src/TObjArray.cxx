@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.28 2006/08/08 17:02:26 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.29 2006/11/11 15:21:30 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -26,7 +26,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TObjArray.h"
-#include "TMath.h"
 #include "TError.h"
 #include "TROOT.h"
 #include "TRandom.h"
