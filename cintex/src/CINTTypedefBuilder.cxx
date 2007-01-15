@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name: v5-13-04b $:$Id: CINTTypedefBuilder.cxx,v 1.13 2006/07/03 10:22:13 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTTypedefBuilder.cxx,v 1.15 2007/01/13 19:53:41 brun Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -67,6 +67,15 @@ namespace ROOT {
             return r;
          }
          return -1;
+      }
+
+      void CINTTypedefBuilder::Set(const char* name, const char* value) {
+         G__linked_taginfo taginfo;
+         taginfo.tagnum  = -1;   // >> need to be pre-initialized to be understood by CINT
+         taginfo.tagtype = 'c';
+         taginfo.tagname = value;
+         G__search_typename2(name, 117, G__get_linked_tagnum(&taginfo),0,-1);
+         G__setnewtype(-1,NULL,0);
       }
    }
 }

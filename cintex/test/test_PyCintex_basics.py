@@ -212,6 +212,7 @@ class BasicsTestCase(unittest.TestCase):
     self.failUnlessEqual(vs[0], 36 )
 
   """
+
   def test11ListSemantics(self) :
     li = self.std.list('int')()
     for i in range(30) : li.push_back(i*i)
@@ -398,7 +399,8 @@ class BasicsTestCase(unittest.TestCase):
     self.failUnlessEqual(p.doubles()[0], 1.0 )
 
   def test25STLIterator(self):
-    self.failUnless( PyCintex.makeClass('std::vector<MyA>') )
+    vector = PyCintex.makeClass('std::vector<MyA>')
+    self.failUnless( vector )
     self.failUnless( PyCintex.makeClass('std::vector<MyA>::iterator') )
     self.failUnless( PyCintex.makeClass('std::vector<MyA>::reverse_iterator') )
 	
@@ -419,10 +421,25 @@ class BasicsTestCase(unittest.TestCase):
     self.failUnless('unknown' not in str(self.gbl.MyClass4()) )
 
   def test28PrimitiveArgumentsByReference(self):
-    c = 10.0+0.0
+    c = PyCintex.libPyROOT.Double(10.0+0.0)
+    d = PyCintex.libPyROOT.Double(c)
     calling = self.A.B.C.Calling()
     self.failUnlessEqual( calling.GetByPrimitiveReference(c), 10.0 )
     self.failUnlessEqual( c, 999.99 )
+    
+  def test29MarcoClemencic(self) :
+    a = self.gbl.MarcoCl.MyClass()
+    i = 0
+    self.failUnlessEqual( a.echo("hi there!"), 1)
+    self.failUnlessEqual( a.echo(i), 2)
+
+  def test30VectorArguments(self) :
+    calling = self.A.B.C.Calling()
+    self.gbl.gEnv.SetValue("Root.ErrorIgnoreLevel", "Error")
+    self.failUnlessEqual(calling.vectorargument(self.std.vector('double')(3)), 3)
+    self.failUnlessEqual(calling.vectorargument(self.std.vector('unsigned long')(4)), 4)
+    self.failUnlessEqual(calling.vectorargument(self.std.vector('string')(2)), 2)
+    #self.gbl.gEnv.SetValue("Root.ErrorIgnoreLevel", "Warning")
 
 suite = unittest.makeSuite(BasicsTestCase,'test')
 if __name__ == '__main__':
