@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.24 2006/06/02 05:11:20 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.25 2006/10/06 06:52:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -112,6 +112,7 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #include "TDecompBase.h"
+#include "TMath.h"
 #include "TError.h"
 
 ClassImp(TDecompBase)

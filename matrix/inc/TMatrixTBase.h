@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.13 2006/10/19 20:45:44 pcanal Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.h,v 1.14 2006/11/25 09:05:47 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -70,9 +70,6 @@
 #ifndef ROOT_TROOT
 #include "TROOT.h"
 #endif
-#ifndef ROOT_TClass
-#include "TClass.h"
-#endif
 #ifndef ROOT_TMatrixFBasefwd
 #include "TMatrixFBasefwd.h"
 #endif
@@ -87,9 +84,6 @@
 #endif
 #ifndef ROOT_TError
 #include "TError.h"
-#endif
-#ifndef ROOT_TMath
-#include "TMath.h"
 #endif
 
 template<class Element> class TVectorT;

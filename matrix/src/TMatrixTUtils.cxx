@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.cxx,v 1.6 2006/08/30 12:54:13 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.cxx,v 1.7 2006/10/06 06:52:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 #include "TMatrixT.h"
 #include "TMatrixTSym.h"
 #include "TMatrixTSparse.h"
+#include "TMath.h"
 #include "TVectorT.h"
 
 //______________________________________________________________________________

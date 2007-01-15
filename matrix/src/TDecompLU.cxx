@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.28 2006/06/03 06:00:43 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.29 2006/10/06 06:52:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TDecompLU.h"
+#include "TMath.h"
 
 ClassImp(TDecompLU)
 
