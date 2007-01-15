@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TTablePoints.h,v 1.3 2006/07/11 09:05:02 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TTablePoints.h,v 1.4 2007/01/12 16:03:17 brun Exp $
 // Author: Valery Fine   14/05/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************
@@ -15,7 +15,6 @@
 #include "TPoints3DABC.h"
 #include "TTableSorter.h"
 #include "TTable.h"
-#include "TMath.h"
 
 class TTablePoints : public TPoints3DABC
 {
