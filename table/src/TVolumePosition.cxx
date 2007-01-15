@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolumePosition.cxx,v 1.9 2006/07/11 09:05:02 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TVolumePosition.cxx,v 1.10 2006/10/18 15:38:07 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -212,6 +212,13 @@ void TVolumePosition::ExecuteEvent(Int_t, Int_t, Int_t)
 
 //   if (!gPad->GetListOfPrimitives()->FindObject(this)) gPad->SetCursor(kCross);
    gPad->SetCursor(kHand);
+}
+
+//______________________________________________________________________________
+const Char_t *TVolumePosition::GetName() const
+{
+   //return VolumePosition name
+   return GetNode()?GetNode()->GetName():IsA()->GetName();
 }
 
 //______________________________________________________________________________
