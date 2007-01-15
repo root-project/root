@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.34 2006/10/24 14:20:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.35 2006/12/08 10:00:39 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -15,13 +15,11 @@
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif
-#ifndef ROOT_TMath
-#include "TMath.h"
-#endif
 #ifndef ROOT_TError
 #include "TError.h"
 #endif
 
+#include <cmath>
 #include <vector>
 #include <assert.h>
 
@@ -313,27 +311,6 @@ inline TGLVector3 Cross(const TGLVector3 & v1, const TGLVector3 & v2)
     return TGLVector3(v1[1]*v2[2] - v2[1]*v1[2],
                       v1[2]*v2[0] - v2[2]*v1[0],
                       v1[0]*v2[1] - v2[0]*v1[1]);
-}
-
-//______________________________________________________________________________
-inline Double_t Angle(const TGLVector3 & v1, const TGLVector3 & v2)
-{
-   // Calculate unsigned angle between vectors v1 and v2
-   return TMath::ACos(Dot(v1, v2) / (v1.Mag() * v2.Mag()));
-}
-
-//______________________________________________________________________________
-inline Double_t Angle(const TGLVector3 & v1, const TGLVector3 & v2, const TGLVector3 & ref)
-{
-   // Calculate signed angle between vectors v1 and v2, using ref to define right handed coord system
-   // If v1.v2 parallel to ref vector: +ive for clockwise, -ive for anticlockwise
-   // If v1.v2 antiparallel to ref vector: -ive for clockwise, +ive for anticlockwise
-   TGLVector3 cross = Cross(v1, v2);
-   if (Dot(cross,ref) > 0.0) {
-      return Angle(v1, v2);
-   } else {
-      return -Angle(v1, v2);
-   }
 }
 
 //______________________________________________________________________________

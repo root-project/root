@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.32 2006/11/24 10:45:13 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.33 2006/12/13 09:33:29 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -21,9 +21,6 @@
 #include "TGaxis.h"
 #include "TColor.h"
 #include "TError.h"
-#include "TROOT.h"
-#include "TMath.h"
-#include "TAxis.h"
 #include "TH1.h"
 
 #include "TGLBoundingBox.h"

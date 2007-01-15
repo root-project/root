@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.18 2006/01/18 16:57:59 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLBoundingBox.cxx,v 1.19 2006/05/26 09:12:37 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -12,8 +12,7 @@
 #include "Riostream.h"
 #include "TGLBoundingBox.h"
 #include "TGLIncludes.h"
-
-#include <math.h>
+#include "TMath.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
