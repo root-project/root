@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSessionDialogs.cxx,v 1.1 2006/11/17 15:50:17 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSessionDialogs.cxx,v 1.2 2006/11/28 12:10:52 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -122,7 +122,7 @@ TNewChainDlg::TNewChainDlg(const TGWindow *p, const TGWindow *main) :
    gClient->GetColorByName("white",white);
    fContents = new TGFileContainer(lv, kSunkenFrame, white);
    fContents->SetCleanup(kDeepCleanup);
-   fContents->SetFilter("*.C");
+   fContents->SetFilter("*.[C|c]*");
    fContents->SetViewMode(kLVSmallIcons);
    fContents->Associate(this);
    fContents->SetDefaultHeaders();
