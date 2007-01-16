@@ -1,6 +1,5 @@
 #include "TROOT.h"
 #include "TFitterMinuit.h"
-#include "TMath.h"
 #include "TF1.h"
 #include "TH1.h"
 #include "TGraph.h"

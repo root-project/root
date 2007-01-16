@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.173 2006/12/06 10:20:06 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.174 2007/01/10 18:10:20 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -24,7 +24,6 @@
 #include "TUnixSystem.h"
 #include "TROOT.h"
 #include "TError.h"
-#include "TMath.h"
 #include "TOrdCollection.h"
 #include "TRegexp.h"
 #include "TPRegexp.h"

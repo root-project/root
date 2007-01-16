@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.50 2006/07/04 09:21:56 antcheva Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.51 2006/07/05 07:02:22 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -17,7 +17,6 @@
 #include "TTimer.h"
 #include "TList.h"
 #include "TSystem.h"
-#include "TMath.h"
 #include "TROOT.h"
 #include "TColor.h"
 #include "TImage.h"

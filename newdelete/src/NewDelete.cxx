@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.8 2006/05/18 21:25:26 pcanal Exp $
+// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.9 2006/06/06 08:33:31 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -63,7 +63,6 @@
 #include "MemCheck.h"
 #include "TObjectTable.h"
 #include "TError.h"
-#include "TMath.h"
 #include "TMapFile.h"
 #include "TSystem.h"
 #include "mmalloc.h"
