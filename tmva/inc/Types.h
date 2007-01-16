@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Types.h,v 1.9 2006/11/20 15:35:28 brun Exp $   
+// @(#)root/tmva $Id: Types.h,v 1.10 2006/11/23 17:43:39 rdm Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -38,7 +38,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <map>
-#include "TROOT.h"
 #include "Riostream.h"
 
 #ifndef ROOT_TMVA_MsgLogger

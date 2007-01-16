@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Ranking.h,v 1.9 2006/11/16 22:51:59 helgevoss Exp $
+// @(#)root/tmva $Id: Ranking.h,v 1.6 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -24,7 +24,7 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: Ranking.h,v 1.9 2006/11/16 22:51:59 helgevoss Exp $          
+ * $Id: Ranking.h,v 1.6 2006/11/20 15:35:28 brun Exp $          
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Ranking
@@ -39,7 +39,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
-#include "TROOT.h"
 
 #ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"

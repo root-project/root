@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TNodeDiv.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TNodeDiv.h"
 

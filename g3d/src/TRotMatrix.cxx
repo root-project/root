@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TRotMatrix.cxx,v 1.4 2005/11/24 17:28:07 couet Exp $
+// @(#)root/g3d:$Name:  $:$Id: TRotMatrix.cxx,v 1.5 2007/01/12 16:03:15 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TROOT.h"
 #include "TGeometry.h"
 #include "TRotMatrix.h"
 #include "TClass.h"

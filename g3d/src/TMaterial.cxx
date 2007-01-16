@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMaterial.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMaterial.cxx,v 1.2 2001/04/16 19:15:00 brun Exp $
 // Author: Rene Brun   03/10/95
 
 /*************************************************************************
@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TROOT.h"
 #include "TGeometry.h"
 #include "TMaterial.h"
 

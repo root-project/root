@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: IMethod.h,v 1.6 2006/11/20 15:35:28 brun Exp $   
+// @(#)root/tmva $Id: IMethod.h,v 1.7 2006/11/23 17:43:38 rdm Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -40,7 +40,6 @@
 
 #include <vector>
 #include <iostream>
-#include "TROOT.h"
 #include "TTree.h"
 #include "TDirectory.h"
 

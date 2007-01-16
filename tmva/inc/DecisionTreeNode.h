@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTreeNode.h,v 1.10 2006/11/20 15:35:28 brun Exp $    
+// @(#)root/tmva $Id: DecisionTreeNode.h,v 1.11 2006/11/23 17:43:38 rdm Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -37,8 +37,6 @@
 // Node for the Decision Tree                                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
-#include "TROOT.h"
 
 #ifndef ROOT_TMVA_Node
 #include "TMVA/Node.h"
