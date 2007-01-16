@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.69 2006/11/16 11:26:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.70 2007/01/12 16:03:16 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -93,7 +93,6 @@
 //End_Html
 
 #include "Riostream.h"
-#include "TROOT.h"
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"

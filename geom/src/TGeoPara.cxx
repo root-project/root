@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.30 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.31 2007/01/12 16:03:16 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -42,7 +42,6 @@
 //End_Html
 
 #include "Riostream.h"
-#include "TROOT.h"
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"

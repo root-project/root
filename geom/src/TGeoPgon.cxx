@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.60 2006/07/11 09:14:05 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.61 2007/01/12 16:03:16 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -32,7 +32,6 @@
 //End_Html
 
 #include "Riostream.h"
-#include "TROOT.h"
 
 #include "TGeoPgon.h"
 

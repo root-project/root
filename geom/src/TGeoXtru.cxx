@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.35 2006/07/09 05:27:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.36 2007/01/12 16:03:16 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -46,8 +46,6 @@
 // within x3d produces incorrect end-faces
 
 #include "Riostream.h"
-#include "TROOT.h"
-#include "TClass.h"
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"

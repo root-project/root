@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.34 2006/08/23 14:48:05 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.35 2007/01/12 16:03:16 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -26,7 +26,6 @@
 //End_Html
 
 #include "Riostream.h"
-#include "TROOT.h"
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"

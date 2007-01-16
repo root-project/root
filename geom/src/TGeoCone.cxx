@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.57 2006/11/16 11:26:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.58 2007/01/12 16:03:16 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -61,7 +61,6 @@
 //End_Html
 
 #include "Riostream.h"
-#include "TROOT.h"
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"

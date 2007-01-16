@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.51 2006/11/03 21:22:32 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.52 2007/01/12 16:03:15 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -72,7 +72,6 @@
 //_____________________________________________________________________________
 
 #include "Riostream.h"
-#include "TROOT.h"
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"

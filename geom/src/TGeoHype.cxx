@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.13 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.14 2007/01/12 16:03:16 brun Exp $
 // Author: Mihaela Gheata   20/11/04
 
 /*************************************************************************
@@ -11,7 +11,6 @@
 
 
 #include "Riostream.h"
-#include "TROOT.h"
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
