@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.193 2006/12/01 11:50:14 rdm Exp $
+// @(#)root/base:$Name: v5-14-00-patches $:$Id: TROOT.cxx,v 1.194 2006/12/06 10:19:14 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1884,9 +1884,9 @@ const char *TROOT::GetMacroPath()
    if (macroPath.Length() == 0) {
       macroPath = gEnv->GetValue("Root.MacroPath", (char*)0);
 #if defined(R__WIN32)
-      macroPath.ReplaceAll(" ", ";");
+      macroPath.ReplaceAll("; ", ";");
 #else
-      macroPath.ReplaceAll(" ", ":");
+      macroPath.ReplaceAll(": ", ":");
 #endif
       if (macroPath.Length() == 0)
 #if !defined (R__VMS) && !defined(R__WIN32)

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.156 2006/12/06 10:20:08 rdm Exp $
+// @(#)root/winnt:$Name: v5-14-00-patches $:$Id: TWinNTSystem.cxx,v 1.157 2006/12/12 21:29:46 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -307,7 +307,7 @@ namespace {
 
       } else if (dynpath == "") {
          dynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
-         dynpath.ReplaceAll(" ", ";");  // in case DynamicPath was extended
+         dynpath.ReplaceAll("; ", ";");  // in case DynamicPath was extended
          if (dynpath == "") {
             dynpath.Form("%s;%s/bin;%s,", gProgPath, gRootDir, gSystem->Getenv("PATH"));
          }
