@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1K.cxx,v 1.9 2006/05/17 16:37:26 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1K.cxx,v 1.10 2006/07/03 16:10:46 brun Exp $
 // Author: Victor Perevoztchikov <perev@bnl.gov>  21/02/2001
 
 /*************************************************************************
@@ -12,7 +12,6 @@
 #include <stdlib.h>
 
 #include "Riostream.h"
-#include "TROOT.h"
 #include "TH1K.h"
 #include "TMath.h"
 
