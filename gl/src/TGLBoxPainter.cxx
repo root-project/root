@@ -6,8 +6,6 @@
 #include "TClass.h"
 #include "TColor.h"
 #include "TStyle.h"
-#include "TMath.h"
-#include "TH1.h"
 #include "TH3.h"
 
 #include "TGLOrthoCamera.h"
