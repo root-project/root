@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMathBase.h,v 1.2 2007/01/15 14:27:07 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMathBase.h,v 1.3 2007/01/15 22:11:37 rdm Exp $
 // Authors: Rene Brun, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -20,6 +20,9 @@
 // Define the functions Min, Max, Abs, Sign, Range for all types.       //
 // NB: These functions are unfortunately not available in a portable    //
 // way in std::.                                                        //
+//                                                                      //
+// More functions are defined in TMath.h. TMathBase.h is designed to be //
+// a stable file and used in place of TMath.h in the ROOT miniCore.     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
