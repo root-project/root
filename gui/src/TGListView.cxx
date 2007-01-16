@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.43 2006/10/23 11:44:34 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.44 2007/01/10 14:54:30 antcheva Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -44,7 +44,6 @@
 #include "TGScrollBar.h"
 #include "TGResourcePool.h"
 #include "TList.h"
-#include "TMath.h"
 #include "TSystem.h"
 #include "TGMimeTypes.h"
 #include "TObjString.h"

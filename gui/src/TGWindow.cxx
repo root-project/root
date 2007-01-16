@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.25 2006/03/23 15:56:03 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.26 2006/05/18 16:32:02 antcheva Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -29,7 +29,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGWindow.h"
-#include "TMath.h"
 #include "Riostream.h"
 
 ClassImp(TGWindow)
