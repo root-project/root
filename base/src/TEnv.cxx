@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.29 2006/04/06 13:47:57 rdm Exp $
+// @(#)root/base:$Name: v5-14-00-patches $:$Id: TEnv.cxx,v 1.30 2006/11/16 17:17:37 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -406,7 +406,8 @@ TEnv::TEnv(const char *name)
       s = gSystem->ConcatFileName(gSystem->HomeDirectory(), name);
       ReadFile(s, kEnvUser);
       delete [] s;
-      ReadFile(name, kEnvLocal);
+      if (gSystem && strcmp(gSystem->HomeDirectory(), gSystem->WorkingDirectory()))
+         ReadFile(name, kEnvLocal);
    }
 }
 
