@@ -1,4 +1,4 @@
-// @(#)root/foam:$Name:  $:$Id: TFoamMaxwt.cxx,v 1.9 2005/08/30 08:27:42 brun Exp $
+// @(#)root/foam:$Name:  $:$Id: TFoamMaxwt.cxx,v 1.10 2006/05/13 15:40:17 brun Exp $
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
 //____________________________________________________________________________
@@ -16,7 +16,6 @@
 
 
 #include "Riostream.h"
-#include "TMath.h"
 #include "TH1.h"
 #include "TFoamMaxwt.h"
 
