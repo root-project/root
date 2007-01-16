@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.cxx,v 1.7 2005/06/25 20:39:41 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.cxx,v 1.8 2005/06/26 23:36:52 rdm Exp $
 // Author: Fons Rademakers   15/10/2001
 
 /*************************************************************************
@@ -45,6 +45,59 @@ TImage *TImage::Create()
    if (img) img->SetName("dummy_image");
 
    return img;
+}
+
+//______________________________________________________________________________
+TImage::EImageFileTypes TImage::GetImageFileTypeFromFilename(const char* filename)
+{
+   // Return the image type for the extension specified in filename.
+   // Case of the extension is ignored. E.g. for a filename "myimg.GIF", 
+   // kGif is returned.
+   // kAnimGif is returned if the file extension is ".anim.gif".
+
+   if (!filename) return kUnknown;
+   
+   TString sFilename(filename);
+   if (sFilename.EndsWith(".xpm.gz", TString::kIgnoreCase))
+      return kGZCompressedXpm;
+   else if (sFilename.EndsWith(".xpm.z", TString::kIgnoreCase))
+      return kZCompressedXpm;
+   else if (sFilename.EndsWith(".png", TString::kIgnoreCase))
+      return kPng;
+   else if (sFilename.EndsWith(".jpeg", TString::kIgnoreCase))
+      return kJpeg;
+   else if (sFilename.EndsWith(".jpg", TString::kIgnoreCase))
+      return kJpeg;
+   else if (sFilename.EndsWith(".xcf", TString::kIgnoreCase))
+      return kXcf;
+   else if (sFilename.EndsWith(".ppm", TString::kIgnoreCase))
+      return kPpm;
+   else if (sFilename.EndsWith(".pnm", TString::kIgnoreCase))
+      return kPnm;
+   else if (sFilename.EndsWith(".bmp", TString::kIgnoreCase))
+      return kBmp;
+   else if (sFilename.EndsWith(".ico", TString::kIgnoreCase))
+      return kIco;
+   else if (sFilename.EndsWith(".cur", TString::kIgnoreCase))
+      return kCur;
+   else if (sFilename.EndsWith(".gif", TString::kIgnoreCase))
+      return kGif;
+   else if (sFilename.EndsWith(".tiff", TString::kIgnoreCase))
+      return kTiff;
+   else if (sFilename.EndsWith(".tif", TString::kIgnoreCase))
+      return kTiff;
+   else if (sFilename.EndsWith(".xbm", TString::kIgnoreCase))
+      return kXbm;
+   else if (sFilename.EndsWith(".fits", TString::kIgnoreCase))
+      return kFits;
+   else if (sFilename.EndsWith(".tga", TString::kIgnoreCase))
+      return kTga;
+   else if (sFilename.EndsWith(".xml", TString::kIgnoreCase))
+      return kXml;
+   else if (sFilename.EndsWith(".anim.gif", TString::kIgnoreCase))
+      return kAnimGif;
+
+   return kUnknown;
 }
 
 //______________________________________________________________________________
