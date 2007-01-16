@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.37 2005/11/16 20:07:50 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.38 2006/08/16 14:50:24 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -28,7 +28,6 @@
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TROOT.h"
-#include "TMath.h"
 #include "TString.h"
 #include "TError.h"
 #include "TRegexp.h"
@@ -141,7 +140,7 @@ TClassTable::TClassTable()
 
    if (gClassTable) return;
 
-   fgSize  = (int)TMath::NextPrime(1000);
+   fgSize  = 1009;  //this is thge result of (int)TMath::NextPrime(1000);
    fgTable = new TClassRec* [fgSize];
    fgIdMap = new IdMap_t;
    memset(fgTable, 0, fgSize*sizeof(TClassRec*));

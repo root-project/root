@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TSliderBox.cxx,v 1.7 2006/07/03 16:10:44 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TSliderBox.cxx,v 1.8 2007/01/12 16:03:16 brun Exp $
 // Author: Rene Brun   23/11/96
 
 /*************************************************************************
@@ -13,7 +13,6 @@
 #include "TROOT.h"
 #include "TSlider.h"
 #include "TSliderBox.h"
-#include "TMath.h"
 
 #include <string.h>
 
