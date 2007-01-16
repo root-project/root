@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TOracleResult.h,v 1.4 2005/04/25 17:21:11 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TOracleResult.h,v 1.5 2006/04/12 20:53:45 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -15,6 +15,8 @@
 #ifndef ROOT_TSQLResult
 #include "TSQLResult.h"
 #endif
+
+#include <vector>
 
 #if !defined(__CINT__)
 #ifndef R__WIN32

@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: inc/Math/TUnuranDistrMulti.h,v 1.0 2006/01/01 12:00:00 moneta Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuranDistrMulti.h,v 1.1 2006/11/15 17:40:36 brun Exp $
 // Author: L. Moneta Wed Sep 27 17:07:37 2006
 
 /**********************************************************************
@@ -16,6 +16,7 @@
 
 #include "TF1.h"
 
+#include <vector>
 #include <cassert>
 
 /** 

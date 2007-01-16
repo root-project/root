@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.15 2006/05/13 11:00:50 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.16 2006/07/26 13:36:42 rdm Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <typeinfo>
+#include <vector>
 
 // Forward declarations
 class TBuffer;

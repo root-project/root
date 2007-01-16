@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: SimulatedAnnealingBase.h,v 1.7 2006/11/16 22:51:59 helgevoss Exp $   
+// @(#)root/tmva $Id: SimulatedAnnealingBase.h,v 1.6 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -38,6 +38,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <vector>
 #include "TObject.h"
 #include "TRandom.h"
 
