@@ -72,7 +72,9 @@ Bool_t fastMethod;
 int AddFile(TList* sourcelist, std::string entry, int newcomp) ;
 void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir );
 
-int main( int argc, char **argv ) {
+//___________________________________________________________________________
+int main( int argc, char **argv ) 
+{
 
    if ( argc < 4 || "-h" == string(argv[1]) || "--help" == string(argv[1]) ) {
       cout << "Usage: " << argv[0] << " [-f] [-T] targetfile source1 source2 [source3 ...]" << endl;
@@ -140,39 +142,44 @@ int main( int argc, char **argv ) {
    return 0;
 }
 
-int AddFile(TList* sourcelist, std::string entry, int newcomp) {
-    static int count(0);
-    if( entry.empty() ) return 0;
-    size_t j =entry.find_first_not_of(' ');
-    if( j==std::string::npos ) return 0;
-    entry = entry.substr(j);
-    if( entry.substr(0,1)=="@"){
-        std::ifstream indirect_file(entry.substr(1).c_str() );
-        if( ! indirect_file.is_open() ) {
-            std::cerr<< "Could not open indirect file " << entry.substr(1) << std::endl;
-            return 1;
-        }
-        while( indirect_file ){
-            std::string line;
-            std::getline(indirect_file, line);
-            if( AddFile(sourcelist, line, newcomp)!=0 )return 1;;
-        }
-        return 0;
-    }
-    cout << "Source file " << (++count) << ": " << entry << endl;
+//___________________________________________________________________________
+int AddFile(TList* sourcelist, std::string entry, int newcomp) 
+{
+   // add a new file to the list of files
+   static int count(0);
+   if( entry.empty() ) return 0;
+   size_t j =entry.find_first_not_of(' ');
+   if( j==std::string::npos ) return 0;
+   entry = entry.substr(j);
+   if( entry.substr(0,1)=="@"){
+      std::ifstream indirect_file(entry.substr(1).c_str() );
+      if( ! indirect_file.is_open() ) {
+         std::cerr<< "Could not open indirect file " << entry.substr(1) << std::endl;
+         return 1;
+      }
+      while( indirect_file ){
+         std::string line;
+         std::getline(indirect_file, line);
+         if( AddFile(sourcelist, line, newcomp)!=0 )return 1;;
+      }
+      return 0;
+   }
+   cout << "Source file " << (++count) << ": " << entry << endl;
 
-    TFile* Source = TFile::Open( entry.c_str());
-    if( Source==0 ){
-        return 1;
-    }
-    sourcelist->Add(Source);
-    if (newcomp != Source->GetCompressionLevel())  fastMethod = kFALSE;
-    return 0;
+   TFile* source = TFile::Open( entry.c_str());
+   if( source==0 ){
+      return 1;
+   }
+   sourcelist->Add(source);
+   if (newcomp != source->GetCompressionLevel())  fastMethod = kFALSE;
+   return 0;
 }
 
 
-void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir ) {
-
+//___________________________________________________________________________
+void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir ) 
+{
+   // Merge all objects in a directory
    cout << "Target path: " << target->GetPath() << endl;
    TString path( (char*)strstr( target->GetPath(), ":" ) );
    path.Remove( 0, 2 );
