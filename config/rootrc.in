@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.155 2006/11/27 14:14:24 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.156 2006/11/28 12:10:52 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -7,10 +7,10 @@
 # Path used by dynamic loader to find shared libraries and macros.
 # Paths are different for Unix and Windows. The example shows the defaults
 # for all ROOT applications for either Unix or Windows.
-Unix.*.Root.DynamicPath:    .:@libdir@
-Unix.*.Root.MacroPath:      .:@macrodir@
-WinNT.*.Root.DynamicPath:   .;@bindir@;$(PATH)
-WinNT.*.Root.MacroPath:     .;@macrodir@
+Unix.*.Root.DynamicPath:    .:@libdir@:
+Unix.*.Root.MacroPath:      .:@macrodir@:
+WinNT.*.Root.DynamicPath:   .;@bindir@;$(PATH):
+WinNT.*.Root.MacroPath:     .;@macrodir@:
 
 # Path where to look for TrueType fonts.
 Unix.*.Root.UseTTFonts:     true
