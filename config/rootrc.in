@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.156 2006/11/28 12:10:52 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.157 2007/01/16 14:38:50 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -9,8 +9,8 @@
 # for all ROOT applications for either Unix or Windows.
 Unix.*.Root.DynamicPath:    .:@libdir@:
 Unix.*.Root.MacroPath:      .:@macrodir@:
-WinNT.*.Root.DynamicPath:   .;@bindir@;$(PATH):
-WinNT.*.Root.MacroPath:     .;@macrodir@:
+WinNT.*.Root.DynamicPath:   .;@bindir@;$(PATH);
+WinNT.*.Root.MacroPath:     .;@macrodir@;
 
 # Path where to look for TrueType fonts.
 Unix.*.Root.UseTTFonts:     true
