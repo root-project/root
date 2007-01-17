@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector2.cxx,v 1.8 2006/07/11 09:05:02 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector2.cxx,v 1.9 2007/01/15 12:46:55 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -66,7 +66,7 @@ TVector2 TVector2::Unit() const
 Double_t TVector2::Phi() const
 {
    // return vector phi
-  return TMath::Pi()+TMath::ATan2(-fY,-fX); 
+   return TMath::Pi()+TMath::ATan2(-fY,-fX); 
 } 
 
 //______________________________________________________________________________
