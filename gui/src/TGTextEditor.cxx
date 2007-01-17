@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditor.cxx,v 1.4 2006/06/21 09:21:47 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditor.cxx,v 1.5 2006/07/11 09:05:01 rdm Exp $
 // Author: Bertrand Bellenot   20/06/06
 
 /*************************************************************************
@@ -177,6 +177,7 @@
 #include "TGTextEditDialogs.h"
 #include "TGTextEditor.h"
 #include "TGComboBox.h"
+#include "TObjString.h"
 #include "TRootHelpDialog.h"
 #include "HelpText.h"
 #ifdef WIN32
