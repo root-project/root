@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.53 2006/12/11 06:01:05 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.54 2007/01/09 05:31:11 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -556,7 +556,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::Execute( void* self )
       result = CallSafe( self );
    }
 
-   if ( result && PyErr_Occurred() ) {
+   if ( result && result != (PyObject*)TPyExceptionMagic && PyErr_Occurred() ) {
    // can happen in the case of a CINT error: trigger exception processing
       Py_DECREF( result );
       result = 0;
@@ -610,7 +610,8 @@ PyObject* PyROOT::TMethodHolder< T, M >::operator()(
 
 // actual call; recycle self instead of new object for same address objects
    ObjectProxy* pyobj = (ObjectProxy*)Execute( object );
-   if ( ObjectProxy_Check( pyobj ) &&
+   if ( pyobj != (ObjectProxy*)TPyExceptionMagic &&
+        ObjectProxy_Check( pyobj ) &&
         pyobj->GetObject() == object &&
         klass && pyobj->ObjectIsA() == klass ) {
       Py_INCREF( (PyObject*)self );

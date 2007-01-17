@@ -94,7 +94,7 @@ Bool_t PyROOT::TPyROOTApplication::CreatePyROOTApplication( Bool_t bLoadLibs )
       argv[ 0 ] = Py_GetProgramName();
 
       gApplication = new TPyROOTApplication( "PyROOT", &argc, argv, bLoadLibs );
-      delete[] argv;     // TApplication ctor has copied argv, so donw with it
+      delete[] argv;     // TApplication ctor has copied argv, so done with it
 
       return kTRUE;
    }
