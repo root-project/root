@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.157 2006/12/12 21:29:46 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.158 2007/01/16 14:38:50 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1372,7 +1372,7 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
 
       // serious error has happened -> reset all file descrptors
       if ((fNfd < 0) && (fNfd != -2)) {
-         int fd, rc, i;
+         int rc, i;
 
          for (i = 0; i < fReadmask->GetCount(); i++) {
             TFdSet t;
@@ -2144,7 +2144,6 @@ int TWinNTSystem::Link(const char *from, const char *to)
    // Create a link from file1 to file2.
 
    struct   _stati64 finfo;
-   char     winPath[256];
    char     winDrive[256];
    char     winDir[256];
    char     winName[256];
@@ -2314,10 +2313,9 @@ Bool_t TWinNTSystem::ExpandPathName(TString &patbuf0)
    // Expand a pathname getting rid of special shell characaters like ~.$, etc.
 
    const char *patbuf = (const char *)patbuf0;
-   const char *hd, *p;
+   const char *p;
    char   *cmd = 0;
    char  *q;
-   int    ch, i;
 
    // skip leading blanks
    while (*patbuf == ' ') {
@@ -2668,8 +2666,6 @@ Long_t TWinNTSystem::LookupSID (const char *lpszAccountName, int what,
    PUCHAR puchar_SubAuthCount = NULL;
    SID_IDENTIFIER_AUTHORITY sid_identifier_authority;
    PSID_IDENTIFIER_AUTHORITY psid_identifier_authority = NULL;
-   char szIdentAuthValue[80];
-   int i;
    unsigned char j = 0;
    DWORD dwLastError = 0;
 
@@ -2712,7 +2708,6 @@ Long_t TWinNTSystem::LookupSID (const char *lpszAccountName, int what,
    // Now obtain all the sub-authority values from the current SID.
    DWORD dwSubAuth = 0;
    PDWORD pdwSubAuth = NULL;
-   char szSubAuthValue[80];
    // Obtain the current sub-authority DWORD (referenced by a pointer)
    pdwSubAuth = (PDWORD)GetSidSubAuthority (
                 (PSID)pSid,  // address of security identifier to query
@@ -3382,7 +3377,6 @@ const char *TWinNTSystem::GetLinkedLibraries()
 {
    // Get list of shared libraries loaded at the start of the executable.
    // Returns 0 in case list cannot be obtained or in case of error.
-   char winPath[256];
    char winDrive[256];
    char winDir[256];
    char winName[256];
@@ -3827,7 +3821,6 @@ TInetAddress TWinNTSystem::GetHostByName(const char *hostname)
    // Get Internet Protocol (IP) address of host.
 
    struct hostent *host_ptr;
-   struct in_addr  ad;
    const char     *host;
    int             type;
    UInt_t          addr;    // good for 4 byte addresses
@@ -4167,8 +4160,8 @@ int  TWinNTSystem::SetSockOpt(int socket, int opt, int value)
       }
       break;
 #endif
-   kAtMark:       // read-only option (see GetSockOpt)
-   kBytesToRead:  // read-only option
+   case kAtMark:       // read-only option (see GetSockOpt)
+   case kBytesToRead:  // read-only option
    default:
       Error("SetSockOpt", "illegal option (%d)", opt);
       return -1;
@@ -4799,7 +4792,6 @@ static void GetWinNTSysInfo(SysInfo_t *sysinfo)
    DWORD dwBufLen;
    LONG  status;
    PROCNTQSI  NtQuerySystemInformation;
-   int i;
 
    NtQuerySystemInformation = (PROCNTQSI)GetProcAddress(
          GetModuleHandle("ntdll"), "NtQuerySystemInformation");
