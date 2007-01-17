@@ -53,7 +53,7 @@ ifeq ($(PLATFORM),win32)
 NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
 else
 NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
-		$(XROOTDDIRL)/libXrdNet.a
+		$(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdSys.a
 endif
 
 ##### local rules #####
