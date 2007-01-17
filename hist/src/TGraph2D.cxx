@@ -442,23 +442,28 @@ Int_t TGraph2D::DistancetoPrimitive(Int_t px, Int_t py)
 //______________________________________________________________________________
 void TGraph2D::Draw(Option_t *option)
 {
-// Specific drawing options can be used to paint a TGraph2D:
-//   "TRI"  : The Delaunay triangles are drawn using filled area.
-//            An hidden surface drawing technique is used. The surface is
-//            painted with the current fill area color. The edges of each
-//            triangles are painted with the current line color.
-//   "TRIW" : The Delaunay triangles are drawn as wire frame
-//   "TRI1" : The Delaunay triangles are painted with color levels. The edges
-//            of each triangles are painted with the current line color.
-//   "TRI2" : the Delaunay triangles are painted with color levels.
-//   "P"    : Draw a marker at each vertex
-//   "P0"   : Draw a circle at each vertex. Each circle background is white.
-//
-// A TGraph2D can be also drawn with ANY options valid to draw a 2D histogram.
-//
-// When a TGraph2D is drawn with one of the 2D histogram drawing option,
-// a intermediate 2D histogram is filled using the Delaunay triangles
-// technique to interpolate the data set.
+   // Specific drawing options can be used to paint a TGraph2D:
+   //
+   //   "TRI"  : The Delaunay triangles are drawn using filled area.
+   //            An hidden surface drawing technique is used. The surface is
+   //            painted with the current fill area color. The edges of each
+   //            triangles are painted with the current line color.
+   //   "TRIW" : The Delaunay triangles are drawn as wire frame
+   //   "TRI1" : The Delaunay triangles are painted with color levels. The edges
+   //            of each triangles are painted with the current line color.
+   //   "TRI2" : the Delaunay triangles are painted with color levels.
+   //   "P"    : Draw a marker at each vertex
+   //   "P0"   : Draw a circle at each vertex. Each circle background is white.
+   //   "PCOL" : Draw a marker at each vertex. The color of each marker is
+   //            defined according to its Z position.
+   //   "CONT" : Draw contours
+   //   "LINE" : Draw a 3D polyline
+   //
+   // A TGraph2D can be also drawn with ANY options valid to draw a 2D histogram.
+   //
+   // When a TGraph2D is drawn with one of the 2D histogram drawing option,
+   // a intermediate 2D histogram is filled using the Delaunay triangles
+   // technique to interpolate the data set.
 
    TString opt = option;
    opt.ToLower();
@@ -551,7 +556,7 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    //            = "C" In case of linear fitting, not calculate the chisquare
    //                  (saves time)
    //            = "ROB" In case of linear fitting, compute the LTS regression
-   //                     coefficients (robust(resistant) regression), using 
+   //                     coefficients (robust(resistant) regression), using
    //                     the default fraction of good points
    //              "ROB=0.x" - compute the LTS regression coefficients, using
    //                           0.x as a fraction of good points
@@ -697,7 +702,7 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    if (opt.Contains("+")) fitOption.Plus    = 1;
    if (opt.Contains("B")) fitOption.Bound   = 1;
    if (opt.Contains("C")) fitOption.Nochisq = 1;
-   if (opt.Contains("H")) fitOption.Robust  = 1; 
+   if (opt.Contains("H")) fitOption.Robust  = 1;
 
  ///xmin    = fX[0];
 ///xmax    = fX[fNpoints-1];
@@ -1397,7 +1402,7 @@ void TGraph2D::SetDirectory(TDirectory *dir)
 void TGraph2D::SetHistogram(TH2 *h)
 {
    // Sets the histogram to be filled
-                                                                                           
+
    fUserHisto = kTRUE;
    fHistogram = (TH2D*)h;
    fNpx       = h->GetNbinsX();
