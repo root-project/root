@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.194 2006/12/06 10:19:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.195 2007/01/16 14:38:49 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1662,7 +1662,7 @@ void  TROOT::Message(Int_t id, const TObject *obj)
 }
 
 //______________________________________________________________________________
-void TROOT::ProcessLine(const char *line, Int_t *error)
+Long_t TROOT::ProcessLine(const char *line, Int_t *error)
 {
    // Process interpreter command via TApplication::ProcessLine().
    // On Win32 the line will be processed a-synchronously by sending
@@ -1672,6 +1672,7 @@ void TROOT::ProcessLine(const char *line, Int_t *error)
    // The possible error codes are defined by TInterpreter::EErrorCode. In
    // particular, error will equal to TInterpreter::kProcessing until the
    // CINT interpreted thread has finished executing the line.
+   // Returns the result of the command, cast to a Long_t.
 
    if (!fApplication) {
       // circular Form() buffer will be re-used in CreateApplication() (too
@@ -1682,11 +1683,11 @@ void TROOT::ProcessLine(const char *line, Int_t *error)
       delete [] sline;
    }
 
-   fApplication->ProcessLine(line, kFALSE, error);
+   return fApplication->ProcessLine(line, kFALSE, error);
 }
 
 //______________________________________________________________________________
-void TROOT::ProcessLineSync(const char *line, Int_t *error)
+Long_t TROOT::ProcessLineSync(const char *line, Int_t *error)
 {
    // Process interpreter command via TApplication::ProcessLine().
    // On Win32 the line will be processed synchronously (i.e. it will
@@ -1694,6 +1695,7 @@ void TROOT::ProcessLineSync(const char *line, Int_t *error)
    // the line). On non-Win32 platforms there is not difference between
    // ProcessLine() and ProcessLineSync().
    // The possible error codes are defined by TInterpreter::EErrorCode.
+   // Returns the result of the command, cast to a Long_t.
 
    if (!fApplication) {
       // circular Form() buffer will be re-used in CreateApplication() (too
@@ -1704,7 +1706,7 @@ void TROOT::ProcessLineSync(const char *line, Int_t *error)
       delete [] sline;
    }
 
-   fApplication->ProcessLine(line, kTRUE, error);
+   return fApplication->ProcessLine(line, kTRUE, error);
 }
 
 //______________________________________________________________________________

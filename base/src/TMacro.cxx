@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.8 2006/06/26 09:29:13 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.9 2006/07/03 16:10:43 brun Exp $
 // Author: Rene Brun   16/08/2005
 
 /*************************************************************************
@@ -67,9 +67,10 @@ TMacro::TMacro(const char *name, const char *title)
        :TNamed(name,title)
 {
    // Create a macro with a name and a title.
-   // If name is the name of a file, the macro is automatically filled
-   // by reading all the lines in the file. In this case, if the title
-   // is empty, it will be the name of the file.
+   // If name contains a '.' it is assumed to be the name of a file, and
+   // * the macro is automatically filled by reading all the lines in the file,
+   // * if the title is empty, it will be set to the name of the file,
+   // * the name will be set to the filename without path or extension.
 
    fLines  = new TList();
    fParams = "";
@@ -77,12 +78,12 @@ TMacro::TMacro(const char *name, const char *title)
    Int_t nch = strlen(name);
    char *s = new char[nch+1];
    strcpy(s,name);
-   char *dot   = (char*)strchr(s,'.');
    char *slash = (char*)strrchr(s,'/');
+   if (!slash) slash = s;
+   char *dot   = (char*)strchr(slash,'.');
    if (dot) {
       *dot = 0;
-      if (slash) fName = slash+1;
-      else       fName = s;
+      fName = slash;
       if (fTitle.Length() == 0) fTitle = name;
       ReadFile(name);
    }
@@ -231,10 +232,12 @@ TMD5 *TMacro::Checksum()
 }
 
 //______________________________________________________________________________
-void TMacro::Exec(const char *params)
+Long_t TMacro::Exec(const char *params)
 {
    // Execute this macro with params, if params is 0, default parameters
    // (set via SetParams) are used.
+   // Returns the result of the macro (return value or value of the last 
+   // expression), cast to a Long_t.
 
    //the current implementation uses a file in the current directory.
    //should be replaced by a direct execution from memory by CINT
@@ -249,11 +252,13 @@ void TMacro::Exec(const char *params)
    if (p == "") p = fParams;
    if (p != "")
       exec += "(" + p + ")";
-   gROOT->ProcessLine(exec);
+   Long_t ret = gROOT->ProcessLine(exec);
    //enable gROOT->Reset
    gROOT->SetExecutingMacro(kFALSE);
    //delete the temporary file
    gSystem->Unlink(fname);
+
+   return ret;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.55 2006/08/06 02:04:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.56 2006/12/01 11:50:14 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -225,8 +225,8 @@ public:
    Long_t            Macro(const char *filename, Int_t *error = 0);
    void              Message(Int_t id, const TObject *obj);
    Bool_t            MustClean() const { return fMustClean; }
-   void              ProcessLine(const char *line, Int_t *error = 0);
-   void              ProcessLineSync(const char *line, Int_t *error = 0);
+   Long_t            ProcessLine(const char *line, Int_t *error = 0);
+   Long_t            ProcessLineSync(const char *line, Int_t *error = 0);
    Long_t            ProcessLineFast(const char *line, Int_t *error = 0);
    Bool_t            ReadingObject() const { return fReadingObject; }
    void              RefreshBrowsers();

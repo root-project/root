@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMacro.h,v 1.5 2006/06/26 09:29:12 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMacro.h,v 1.6 2006/07/03 16:10:43 brun Exp $
 // Author: Rene Brun   16/08/2005
 
 /*************************************************************************
@@ -50,7 +50,7 @@ public:
    virtual void         Browse(TBrowser *b);
    virtual TMD5        *Checksum();
    virtual TObjString  *GetLineWith(const char *text) const;
-   virtual void         Exec(const char *params=0);  //*MENU*
+   virtual Long_t       Exec(const char *params=0);  //*MENU*
    TList               *GetListOfLines() const {return fLines;}
    virtual void         Paint(Option_t *option="");
    virtual void         Print(Option_t *option="") const;  //*MENU*
