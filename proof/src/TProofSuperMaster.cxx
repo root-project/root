@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.14 2006/05/15 09:45:03 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.15 2006/08/06 07:15:00 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 
 #include "TProofSuperMaster.h"
 #include "TString.h"
+#include "TObjString.h"
 #include "TError.h"
 #include "TList.h"
 #include "TSortedList.h"

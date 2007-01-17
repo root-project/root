@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.9 2006/07/03 16:10:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMacro.cxx,v 1.10 2007/01/17 11:55:01 brun Exp $
 // Author: Rene Brun   16/08/2005
 
 /*************************************************************************
@@ -45,26 +45,24 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Riostream.h"
-#include "TROOT.h"
 #include "TEnv.h"
-#include "TSystem.h"
+#include "TList.h"
 #include "TMacro.h"
 #include "TMD5.h"
+#include "TObjString.h"
+#include "TROOT.h"
+#include "TSystem.h"
 
 ClassImp(TMacro)
 
 //______________________________________________________________________________
-TMacro::TMacro(): TNamed()
+TMacro::TMacro(): TNamed(), fLines(0)
 {
    // Create an empty macro, use AddLine() or ReadFile() to fill this macro.
-
-   fLines  = 0;
-   fParams = "";
 }
 
 //______________________________________________________________________________
-TMacro::TMacro(const char *name, const char *title)
-       :TNamed(name,title)
+TMacro::TMacro(const char *name, const char *title): TNamed(name,title)
 {
    // Create a macro with a name and a title.
    // If name contains a '.' it is assumed to be the name of a file, and
@@ -73,13 +71,13 @@ TMacro::TMacro(const char *name, const char *title)
    // * the name will be set to the filename without path or extension.
 
    fLines  = new TList();
-   fParams = "";
    if (!name) return;
    Int_t nch = strlen(name);
    char *s = new char[nch+1];
    strcpy(s,name);
    char *slash = (char*)strrchr(s,'/');
    if (!slash) slash = s;
+   else ++slash;
    char *dot   = (char*)strchr(slash,'.');
    if (dot) {
       *dot = 0;
@@ -101,6 +99,7 @@ TMacro::TMacro(const TMacro &macro): TNamed(macro)
    while ((obj = (TObjString*) next())) {
       fLines->Add(new TObjString(obj->GetName()));
    }
+   fParams = macro.fParams;
 }
 
 //______________________________________________________________________________
@@ -126,6 +125,7 @@ TMacro& TMacro::operator=(const TMacro &macro)
       while ((obj = (TObjString*) next())) {
          fLines->Add(new TObjString(obj->GetName()));
       }
+      fParams = macro.fParams;
    }
    return *this;
 }
@@ -232,10 +232,11 @@ TMD5 *TMacro::Checksum()
 }
 
 //______________________________________________________________________________
-Long_t TMacro::Exec(const char *params)
+Long_t TMacro::Exec(const char *params, Int_t* error)
 {
    // Execute this macro with params, if params is 0, default parameters
    // (set via SetParams) are used.
+   // error is set to an TInterpreter::EErrorCode by TApplication::ProcessLine().
    // Returns the result of the macro (return value or value of the last 
    // expression), cast to a Long_t.
 
@@ -252,7 +253,7 @@ Long_t TMacro::Exec(const char *params)
    if (p == "") p = fParams;
    if (p != "")
       exec += "(" + p + ")";
-   Long_t ret = gROOT->ProcessLine(exec);
+   Long_t ret = gROOT->ProcessLine(exec, error);
    //enable gROOT->Reset
    gROOT->SetExecutingMacro(kFALSE);
    //delete the temporary file
