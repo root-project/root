@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.245 2007/01/08 14:40:58 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.246 2007/01/15 16:10:10 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3941,8 +3941,25 @@ void TPad::Print(const char *filenam, Option_t *option)
    //      c1.Print("file.gif+5");  // print canvas to GIF file with 50ms delays
    //    }// end loop
 
-   TString psname;
-   char *filename = gSystem->ExpandPathName(filenam);
+   TString psname, fs1, fs2;
+   char *filename;
+
+   // "[" and "]" are special characters for ExpandPathName. When they are at the end
+   // of the file name (see help) they must be removed before doing ExpandPathName.
+   fs1 = filenam;
+   if (fs1.EndsWith("[")) {
+      fs1.Replace((fs1.Length()-1),1," ");
+      fs2 = gSystem->ExpandPathName(fs1.Data());
+      fs2.Replace((fs2.Length()-1),1,"[");
+   } else if (fs1.EndsWith("]")) {
+      fs1.Replace((fs1.Length()-1),1," ");
+      fs2 = gSystem->ExpandPathName(fs1.Data());
+      fs2.Replace((fs2.Length()-1),1,"]");
+   } else {
+      fs2 = gSystem->ExpandPathName(fs1.Data());
+   }
+   filename = (char*)fs2.Data();
+
    Int_t lenfil =  filename ? strlen(filename) : 0;
    const char *opt = option;
    Bool_t image = kFALSE;
@@ -3965,8 +3982,6 @@ void TPad::Print(const char *filenam, Option_t *option)
       psname.Prepend("/");
       psname.Prepend(gEnv->GetValue("Canvas.PrintDirectory","."));
    }
-
-   delete [] filename;
 
    // Save pad/canvas in alternative formats
    TImage::EImageFileTypes gtype = TImage::kUnknown;
