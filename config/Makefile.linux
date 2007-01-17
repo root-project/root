@@ -44,12 +44,19 @@ CILIBS        = -lm -ldl -rdynamic
 CRYPTLIBS     = -lcrypt
 
 # Fortran:
+ifeq ($(shell which gfortran 2>&1 | sed -ne "s/.*\/gfortran/gfortran/p"),gfortran)
+F77           = gfortran
+F77FLAGS      = -fPIC -std=legacy
+F77LIBS       = -lnsl
+F77LD         = gfortran
+else
 F77           = g77
 F77FLAGS      = -fPIC
 ifneq ($(shell $(F77) -print-file-name=libg2c.so),libg2c.so)
 F77LIBS      := $(shell $(F77) -print-file-name=libg2c.so) -lnsl
 else
 F77LIBS      := $(shell $(F77) -print-file-name=libg2c.a) -lnsl
+endif
 endif
 
 # Extras
