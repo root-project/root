@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.22 2006/11/28 12:10:52 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.23 2006/12/03 23:34:04 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include <netinet/in.h>
 
 #include "TXProofServ.h"
+#include "TObjString.h"
 #include "TEnv.h"
 #include "TError.h"
 #include "TException.h"
