@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.32 2006/09/27 08:45:42 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.33 2006/11/28 11:05:48 antcheva Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -14,10 +14,44 @@
 //                                                                      //
 // TGedEditor                                                           //
 //                                                                      //
-// Editor is a composite frame that contains TGedToolBox and            //
-// TGedAttFrames. It is connected to a Canvas and listens for           //
-// selected objects                                                     //
+// The main class of ROOT graphics editor. It manages the appearance    //
+// of objects editors according to the selected object in the canvas    //
+// (an object became selected after the user click on it using the      //
+// left-mouse button).                                                  //
 //                                                                      //
+// Every object editor provides an object specific GUI and follows a    //
+// simple naming convention: it has as a name the object class name     //
+// concatinated with 'Editor' (e.g. for TGraph objects the object       //
+// editor is TGraphEditor).                                             //
+//                                                                      //
+// The ROOT graphics editor can be activated by selecting 'Editor'      //
+// from the View canvas menu, or SetLine/Fill/Text/MarkerAttributes     //
+// from the context menu. The algorithm in use is simple: according to  //
+// the selected object <obj> in the canvas it looks for a class name    // 
+// <obj>Editor. If a class with this name exists, the editor verifies   //
+// that this class derives from the base editor class TGedFrame.        //
+// It makes an instance of the object editor, scans all object base     //
+// classes searching the corresponding object editors and makes an      //
+// instance of the base class editor too. Once the object editor is in  //
+// place, it sets the user interface elements according to the object   //
+// state and is ready for interactions. When a new object of a          //
+// different class is selected, a new object editor is loaded in the    //
+// editor frame. The old one is cached in memory for potential reuse.   //
+//                                                                      //
+// Any created canvas will be shown with the editor if you have a       //
+// .rootrc file in your working directory containing the the line:      //
+// Canvas.ShowEditor:      true                                         // 
+//                                                                      //
+// An created object can be set as selected in a macro by:              //
+// canvas->Selected(parent_pad_of_object, object, 1);                   //
+// The first parameter can be the canvas itself or the pad containing   //
+// 'object'.                                                            //
+//                                                                      //
+// Begin_Html                                                           //
+/*
+<img src="gif/TGedEditor.gif">
+*/
+//End_Html
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGedEditor.h" 
@@ -50,6 +84,7 @@ TGedEditor* TGedEditor::fgFrameCreator = 0;
 TGedEditor* TGedEditor::GetFrameCreator()
 {
    // Returns TGedEditor that currently creates TGedFrames.
+   
    return fgFrameCreator;
 }
 
@@ -57,6 +92,7 @@ TGedEditor* TGedEditor::GetFrameCreator()
 void TGedEditor::SetFrameCreator(TGedEditor* e)
 {
    // Set the TGedEditor that currently creates TGedFrames.
+   
    fgFrameCreator = e;
 }
 
@@ -151,6 +187,7 @@ void TGedEditor::Update(TGedFrame* /*frame*/)
 TGCompositeFrame* TGedEditor::GetEditorTab(const Text_t* name)
 {
    // Find or create tab with name.
+   
    return GetEditorTabInfo(name)->fContainer;
 }
 
