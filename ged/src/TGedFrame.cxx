@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.16 2006/09/27 08:45:42 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.17 2006/09/28 11:03:19 rdm Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -245,7 +245,7 @@ Bool_t TGedNameFrame::HandleCrossing(Event_t *event)
 }
 
 //______________________________________________________________________________
-Bool_t TGedNameFrame::HandleButton(Event_t */*event*/)
+Bool_t TGedNameFrame::HandleButton(Event_t * /*event*/)
 {
    // Handle mouse button event.
 
