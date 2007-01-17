@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.33 2006/11/28 11:05:48 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.34 2007/01/17 16:15:00 antcheva Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -298,7 +298,7 @@ void TGedEditor::GlobalClosed()
 }
 
 //______________________________________________________________________________
-void TGedEditor::GlobalSetModel(TVirtualPad *pad, TObject */*obj*/, Int_t ev)
+void TGedEditor::GlobalSetModel(TVirtualPad *pad, TObject * /*obj*/, Int_t ev)
 {
    // Set canvas to global editor.
 
