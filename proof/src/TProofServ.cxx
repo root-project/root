@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.154 2006/12/12 14:05:41 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.155 2007/01/12 11:04:30 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -4234,8 +4234,9 @@ TProofServ::EQueryAction TProofServ::GetWorkers(TList *workers,
    if (master)
       fImage = master->GetImage();
    if (!master || (fImage.Length() == 0)) {
-      Error("GetWorkers",
-            "no appropriate master line found in %s", fConfFile.Data());
+      PDB(kAll,1)
+         Info("GetWorkers",
+              "no appropriate master line found in %s", fConfFile.Data());
       return kQueryStop;
    }
 

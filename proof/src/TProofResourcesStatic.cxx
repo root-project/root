@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofResourcesStatic.cxx,v 1.6 2006/03/31 07:42:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofResourcesStatic.cxx,v 1.7 2006/05/10 14:06:06 rdm Exp $
 // Author: Paul Nilsson   7/12/2005
 
 /*************************************************************************
@@ -61,7 +61,8 @@ TProofResourcesStatic::TProofResourcesStatic(const char *confDir,
 
    // Open and read the PROOF config file
    if (!ReadConfigFile(confDir, fileName)) {
-      Error("TProofResourcesStatic", "error encountered while reading config file");
+      PDB(kAll,1)
+         Info("TProofResourcesStatic", "error encountered while reading config file");
       fValid = kFALSE;
    }
 }
@@ -154,7 +155,8 @@ Bool_t TProofResourcesStatic::ReadConfigFile(const char *confDir,
          PDB(kGlobal,2)
             Info("ReadConfigFile", "checking PROOF config file %s", fFileName.Data());
          if (gSystem->AccessPathName(fFileName, kReadPermission)) {
-            Error("ReadConfigFile", "no PROOF config file found");
+            PDB(kAll,1)
+               Info("ReadConfigFile", "no PROOF config file found");
             return kFALSE;
          }
       }
