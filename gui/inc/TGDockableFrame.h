@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.h,v 1.8 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.h,v 1.9 2006/11/07 15:45:30 antcheva Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -34,10 +34,6 @@
 
 #ifndef ROOT_TGButton
 #include "TGButton.h"
-#endif
-
-#ifndef ROOT_TMessage
-#include "TMessage.h"
 #endif
 
 #ifndef ROOT_TGWindow
