@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Varargs.h,v 1.4 2006/10/05 21:06:35 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Varargs.h,v 1.5 2006/10/06 06:48:00 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -44,7 +44,7 @@
 #endif
 
 #if !defined(R__VA_COPY)
-#  if defined(__GNUC__)
+#  if defined(__GNUC__) && !defined(__FreeBSD__)
 #     define R__VA_COPY(to, from) __va_copy((to), (from))
 #  elif defined(__va_copy)
 #     define R__VA_COPY(to, from) __va_copy((to), (from))
