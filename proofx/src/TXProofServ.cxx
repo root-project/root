@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.23 2006/12/03 23:34:04 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.24 2007/01/17 21:24:26 brun Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -61,7 +61,6 @@
 
 // debug hook
 static volatile Int_t gProofServDebug = 1;
-
 
 //----- Interrupt signal handler -----------------------------------------------
 //______________________________________________________________________________
@@ -633,10 +632,6 @@ Int_t TXProofServ::Setup()
 
    // deny write access for group and world
    gSystem->Umask(022);
-
-   // Set $HOME and $PATH. The HOME directory was already set to the
-   // user's home directory by proofd.
-   gSystem->Setenv("HOME", gSystem->HomeDirectory());
 
 #ifdef R__UNIX
    TString bindir;
