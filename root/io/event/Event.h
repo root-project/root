@@ -13,6 +13,7 @@
 #include "TH1.h"
 #include "TObject.h"
 #include "TRef.h"
+#include "TMath.h"
 
 #include <cmath>
 #include <cstring>
