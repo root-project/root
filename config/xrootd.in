@@ -11,6 +11,7 @@
 # config:
 
 XROOTD=@bindir@/xrootd
+XRDLIBS=@libdir@
 
 # Source function library.
 . /etc/init.d/functions
@@ -20,6 +21,9 @@ XROOTD=@bindir@/xrootd
 
 # Get xrootd config
 [ -f /etc/sysconfig/xrootd ] && . /etc/sysconfig/xrootd
+
+# Configure the environment (optional)
+[ ! -z "$XRDENVCONFIG" ] && [ -f "$XRDENVCONFIG" ] && . $XRDENVCONFIG
 
 # Check that networking is up.
 if [ ${NETWORKING} = "no" ]
@@ -37,6 +41,7 @@ start() {
         # Options are specified in /etc/sysconfig/xrootd .
         # See $ROOTSYS/etc/daemons/xrootd.sysconfig for an example.
         # $XRDUSER *must* be the name of an existing non-privileged user.
+        export LD_LIBRARY_PATH=$XRDLIBS:$LD_LIBRARY_PATH
         daemon $XROOTD -b -l $XRDLOG -R $XRDUSER -c $XRDCF $XRDDEBUG
         RETVAL=$?
         echo

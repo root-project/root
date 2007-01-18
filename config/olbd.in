@@ -10,6 +10,7 @@
 # config:
 
 OLBD=@bindir@/olbd
+OLBDLIBS=@libdir@
 
 # Source function library.
 . /etc/init.d/functions
@@ -19,6 +20,9 @@ OLBD=@bindir@/olbd
 
 # Get olbd config
 [ -f /etc/sysconfig/olbd ] && . /etc/sysconfig/olbd
+
+# Configure the environment
+[ ! -z "$OLBDENVCONFIG" ] && [ -f "$OLBDENVCONFIG" ] && . $OLBDENVCONFIG
 
 # Check that networking is up.
 if [ ${NETWORKING} = "no" ]
@@ -36,6 +40,7 @@ start() {
         # Options are specified in /etc/sysconfig/olbd .
         # See $ROOTSYS/etc/daemons/olbd.sysconfig for an example.
         # $OLBDUSER *must* be the name of an existing non-privileged user.
+        export LD_LIBRARY_PATH=$OLBDLIBS:$LD_LIBRARY_PATH
         daemon $OLBD -b -l $OLBDLOG -R $OLBDUSER -c $OLBDCF $OLBDDEBUG
         RETVAL=$?
         echo
