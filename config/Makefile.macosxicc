@@ -39,6 +39,19 @@ CXXFLAGS     += -wd1572 -wd873 -wd672
 CFLAGS       += -wd1572
 CINTCXXFLAGS += -wd1572 -wd873
 CINTCFLAGS   += -wd1572
+USE_PCH       = -use_pch
+CREATE_PCH    = -create_pch
+ICC_GE_9      = 9
+endif
+
+ifeq ($(ICC_MAJOR),10)
+CXXFLAGS     += -wd1572 -wd873 -wd672
+CFLAGS       += -wd1572
+CINTCXXFLAGS += -wd1572 -wd873
+CINTCFLAGS   += -wd1572
+USE_PCH       = -pch-use
+CREATE_PCH    = -pch-create
+ICC_GE_9      = 10
 endif
 
 # OS version
@@ -86,9 +99,9 @@ F77LIBS       = $(LIBFRTBEGIN) $(LIBG2C) \
 PCHSUPPORTED := $(ENABLEPCH)
 ifeq ($(PCHSUPPORTED),yes)
   PCHFILE          = include/precompile.pchi
-  PCHCXXFLAGS      = -DUSEPCH -include precompile.h -use_pch $(PCHFILE)
+  PCHCXXFLAGS      = -DUSEPCH -include precompile.h $(USE_PCH) $(PCHFILE)
   PCHEXTRAOBJBUILD = $(CXX) $(OPT) $(CXXFLAGS) -DUSEPCH \
-                     -include precompile.h -create_pch $(PCHFILE) \
+                     -include precompile.h $(CREATE_PCH) $(PCHFILE) \
                      -c $(PCHEXTRASRC) -o $(PCHEXTRAOBJ)
 endif
 

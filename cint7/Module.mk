@@ -158,18 +158,10 @@ endif
 ifeq ($(CXXCMD),icc)
 CINT7S2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINT7S2))
 CINT7S2       := $(filter-out $(MODDIRS)/longif.%,$(CINT7S2))
-ifeq ($(ICC_MAJOR),8)
-ifneq ($(ICC_MINOR),0)
+ifneq ($(ICC_GE_9),)
 CINT7S2       += $(MODDIRS)/gcc3strm.cxx
 else
 CINT7S2       += $(MODDIRS)/iccstrm.cxx
-endif
-else
-ifeq ($(ICC_MAJOR),9)
-CINT7S2       += $(MODDIRS)/gcc3strm.cxx
-else
-CINT7S2       += $(MODDIRS)/iccstrm.cxx
-endif
 endif
 CINT7S2       += $(MODDIRS)/longif3.cxx
 endif

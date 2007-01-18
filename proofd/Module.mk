@@ -158,7 +158,7 @@ distclean::     distclean-proofd
 $(PROOFDEXEO): CXXFLAGS += $(AUTHFLAGS)
 
 $(XPDO): $(XRDPLUGINS)
-ifeq ($(ICC_MAJOR),9)
+ifneq ($(ICC_GE_9),)
 # remove when xrootd has moved from strstream.h -> sstream.
 $(XPDO): CXXFLAGS += -Wno-deprecated $(XPDINCEXTRA)
 else
