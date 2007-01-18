@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.15 2006/11/28 12:10:52 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.16 2006/12/03 23:34:04 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -286,7 +286,7 @@ Int_t TXSlave::SetupServ(Int_t, const char *)
    // The Init method is technology specific and is overwritten by derived
    // classes.
 
-   // get back startup message of proofserv (we are now talking with
+   // Get back startup message of proofserv (we are now talking with
    // the real proofserver and not anymore with the proofd front-end)
    Int_t what;
    char buf[512];
@@ -472,7 +472,8 @@ Bool_t TXSlave::HandleError(const void *)
    Info("HandleError", "%p: got called ... fProof: %p", this, fProof);
 
    // Interrupt underlying socket operations
-   ((TXSocket *)fSocket)->SetInterrupt();
+   if (fSocket)
+      ((TXSocket *)fSocket)->SetInterrupt();
 
    // Remove signal handler
    SetInterruptHandler(kFALSE);
@@ -489,7 +490,7 @@ Bool_t TXSlave::HandleError(const void *)
       if (gDebug > 2)
          Info("HandleError", "%p: proof: %p, mon: %p", this, fProof, mon);
 
-      if (mon && mon->GetListOfActives()->FindObject(fSocket)) {
+      if (mon && fSocket && mon->GetListOfActives()->FindObject(fSocket)) {
          // Synchronous collection in TProof
          if (gDebug > 2)
             Info("HandleError", "%p: deactivating from monitor %p", this, mon);
@@ -507,7 +508,8 @@ Bool_t TXSlave::HandleError(const void *)
          else
             Warning("HandleError", "%p: global reference to TProofServ missing");
          // The session is gone
-         ((TXSocket *)fSocket)->SetSessionID(-1);
+         if (fSocket)
+            ((TXSocket *)fSocket)->SetSessionID(-1);
          fProof->MarkBad(this);
       } else {
          // On clients the proof session should be removed from the lists
