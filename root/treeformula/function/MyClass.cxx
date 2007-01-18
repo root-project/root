@@ -1,4 +1,5 @@
 #include "MyClass.h"
+#include "TMath.h"
 
 ClassImp(MyClass)
 
