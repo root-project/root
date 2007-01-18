@@ -7,5 +7,6 @@
   // check compiled funcs overload resolution
   gROOT->ProcessLine(".L TheClass.h+");
   gROOT->ProcessLine(".x testOverloadResolution.C");
+  return 0;
 }
 
