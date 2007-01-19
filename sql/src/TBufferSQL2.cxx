@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.14 2007/01/12 16:03:16 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.15 2007/01/19 16:48:00 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -302,7 +302,7 @@ void TBufferSQL2::WriteObject(const TObject *obj)
    // Use SqlWrite() functions to convert your object to sql
    // Redefined here to avoid gcc 3.x warning
 
-   TBuffer::WriteObject(obj);
+   TBufferFile::WriteObject(obj);
 }
 
 //______________________________________________________________________________

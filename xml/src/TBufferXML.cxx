@@ -1,4 +1,4 @@
-// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.15 2007/01/19 16:48:00 brun Exp $
+// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.16 2007/01/19 17:31:55 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -265,7 +265,7 @@ void TBufferXML::WriteObject(const TObject *obj)
    // Use ConvertToXML() methods to convert your object to xml
    // Redefined here to avoid gcc 3.x warning
 
-   TBuffer::WriteObject(obj);
+   TBufferFile::WriteObject(obj);
 }
 
 // TXMLStackObj is used to keep stack of object hierarchy,
@@ -1899,7 +1899,7 @@ void TBufferXML::ReadFastArray(void  *start, const TClass *cl, Int_t n, TMemberS
 {
    // redefined here to avoid warning message from gcc
 
-   TBuffer::ReadFastArray(start, cl, n, s);
+   TBufferFile::ReadFastArray(start, cl, n, s);
 }
 
 //______________________________________________________________________________
@@ -1907,7 +1907,7 @@ void TBufferXML::ReadFastArray(void **startp, const TClass *cl, Int_t n, Bool_t 
 {
    // redefined here to avoid warning message from gcc
 
-   TBuffer::ReadFastArray(startp, cl, n, isPreAlloc, s);
+   TBufferFile::ReadFastArray(startp, cl, n, isPreAlloc, s);
 }
 
 // macro to write content of noncompressed array
@@ -2237,7 +2237,7 @@ void  TBufferXML::WriteFastArray(void  *start,  const TClass *cl, Int_t n, TMemb
 {
    // Recall TBuffer function to avoid gcc warning message
 
-   TBuffer::WriteFastArray(start, cl, n, s);
+   TBufferFile::WriteFastArray(start, cl, n, s);
 }
 
 //______________________________________________________________________________
@@ -2245,7 +2245,7 @@ Int_t TBufferXML::WriteFastArray(void **startp, const TClass *cl, Int_t n, Bool_
 {
    // Recall TBuffer function to avoid gcc warning message
 
-   return TBuffer::WriteFastArray(startp, cl, n, isPreAlloc, s);
+   return TBufferFile::WriteFastArray(startp, cl, n, isPreAlloc, s);
 }
 
 //______________________________________________________________________________
