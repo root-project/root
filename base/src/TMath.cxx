@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.116 2006/12/11 10:44:21 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.117 2007/01/10 16:54:00 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -4018,6 +4018,10 @@ Double_t TMath::BinomialI(Double_t p, Int_t n, Int_t k)
    // ("Numerical Recipes")
    //     --implementation by Anna Kreshuk
 
+   if(k <= 0) return 1.0;
+   if(k > n) return 0.0;
+   if(k == n) return TMath::Power(p, n);
+   
    return BetaIncomplete(p, Double_t(k), Double_t(n-k+1));
 }
 
