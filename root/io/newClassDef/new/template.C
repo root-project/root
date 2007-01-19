@@ -1,4 +1,5 @@
 #include "template.h"
+#include "TBufferFile.h"
 
 const double dvalue = 33.3;
 
@@ -38,7 +39,7 @@ void func2() {
 
 TBuffer* t_writetest() 
 {
-  TBuffer *b = new TBuffer(TBuffer::kWrite);
+  TBuffer *b = new TBufferFile(TBuffer::kWrite);
   *b << &dummy;
   *b << &dummy2;
   *b << &dummy3;

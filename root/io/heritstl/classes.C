@@ -1,6 +1,7 @@
 #include "TObject.h"
 #include "TFile.h"
 #include "TTree.h"
+#include "TBufferFile.h"
 
 #include <vector>
 class PlexCalib;
@@ -29,7 +30,7 @@ public:
 };
 
 void testing_old() {
-   TBuffer b(TBuffer::kWrite);
+   TBufferFile b(TBuffer::kWrite);
    b.SetWriteMode();
    PlexSTL p;
    //b << *p;
@@ -42,7 +43,7 @@ void testing_old() {
 }
 
 void testing_direct() {
-   TBuffer b(TBuffer::kWrite);
+   TBufferFile b(TBuffer::kWrite);
    b.SetWriteMode();
    Object p;
    //b << *p;

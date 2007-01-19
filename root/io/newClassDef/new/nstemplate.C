@@ -1,4 +1,5 @@
 #include "nstemplate.h"
+#include "TBufferFile.h"
 
 const double dvalue = 33.3;
 
@@ -24,7 +25,7 @@ namespace MySpace {
 
 TBuffer* nt_writetest() 
 {
-  TBuffer *b = new TBuffer(TBuffer::kWrite);
+  TBuffer *b = new TBufferFile(TBuffer::kWrite);
   *b << &MySpace::dummy;
   *b << &MySpace::dummy4;
   return b;

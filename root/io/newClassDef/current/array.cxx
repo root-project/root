@@ -2,7 +2,7 @@
 
 
 #include "TArrayI.h"
-#include "TBuffer.h"
+#include "TBufferFile.h"
 
 void a_write(TBuffer &buf) {
 
@@ -46,7 +46,7 @@ void a_read(TBuffer &buf) {
 };
 
 void array_driver() {
-  TBuffer* buf = new TBuffer(TBuffer::kWrite);
+  TBuffer* buf = new TBufferFile(TBuffer::kWrite);
   a_write(*buf);
   a_read(*buf);
   delete buf;

@@ -5,7 +5,7 @@
 //setStreamer();
 
    cout << "Hard2Stream version #" << cl->GetClassVersion() << endl;
-   TBuffer buf(TBuffer::kWrite);
+   TBufferFile buf(TBuffer::kWrite);
    Hard2Stream myobj(33.33);
    myobj.print();
    buf.WriteObjectAny(&myobj,cl);

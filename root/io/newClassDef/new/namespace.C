@@ -1,4 +1,5 @@
 #include "namespace.h"
+#include "TBufferFile.h"
 
 #ifndef __CINT__
 //namespace MySpace {
@@ -24,7 +25,7 @@ void testNamespaceWrite() {
   
 TBuffer* n_writetest() 
 {
-  TBuffer *b = new TBuffer(TBuffer::kWrite);
+  TBuffer *b = new TBufferFile(TBuffer::kWrite);
   *b << &nested0;
   return b;
 }

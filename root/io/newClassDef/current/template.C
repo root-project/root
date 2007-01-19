@@ -1,4 +1,5 @@
 #include "template.h"
+#include "TBufferFile.h"
 
 //ClassImpT(MyTemplate,const int)
 
@@ -43,7 +44,7 @@ static MyTemplate<const double*> *pdummy3 = 0;
 
 TBuffer* t_writetest() 
 {
-  TBuffer *b = new TBuffer(TBuffer::kWrite);
+  TBuffer *b = new TBufferFile(TBuffer::kWrite);
   *b << &dummy;
   *b << &dummy2;
   *b << &dummy3;

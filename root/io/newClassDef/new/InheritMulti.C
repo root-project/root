@@ -1,5 +1,5 @@
 #include "InheritMulti.h"
-#include "TBuffer.h"
+#include "TBufferFile.h"
 
 void A::Streamer(TBuffer &R__b)
 {
@@ -75,7 +75,7 @@ bool read(TBuffer &buf) {
 
 
 bool InheritMulti_driver() {
-  TBuffer* buf = new TBuffer(TBuffer::kWrite);
+  TBuffer* buf = new TBufferFile(TBuffer::kWrite);
   bool result = write(*buf);
   result &= read(*buf);
    
