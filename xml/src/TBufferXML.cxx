@@ -1,4 +1,4 @@
-// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.14 2007/01/12 16:03:17 brun Exp $
+// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.15 2007/01/19 16:48:00 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -2406,6 +2406,17 @@ void TBufferXML::ReadCharP(Char_t    *c)
    strcpy(c, buf);
 }
 
+//______________________________________________________________________________
+void TBufferXML::ReadTString(TString &s)
+{
+   // Reads a TString
+
+   //BeforeIOoperation();
+   //const char* buf = XmlReadValue(xmlio::CharStar);
+   //strcpy(c, buf);
+   //TO BE IMPLEMENTED
+}
+
 // macro for left shift operator for basic types
 #define TBufferXML_operatorout(vname) \
 {                                     \
@@ -2524,6 +2535,16 @@ void TBufferXML::WriteCharP(const Char_t *c)
 
    BeforeIOoperation();
    XmlWriteValue(c, xmlio::CharStar);
+}
+
+//______________________________________________________________________________
+void TBufferXML::WriteTString(const TString &s)
+{
+   // Writes a TString
+
+   //BeforeIOoperation();
+   //XmlWriteValue(c, xmlio::CharStar);
+   //TO BE IMPLEMENTED
 }
 
 //______________________________________________________________________________
