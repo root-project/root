@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.313 2007/01/10 11:30:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.314 2007/01/13 20:26:01 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -256,6 +256,7 @@
 
 #include "Api.h"
 #include "TArrayC.h"
+#include "TBufferFile.h"
 #include "TBaseClass.h"
 #include "TBasket.h"
 #include "TBranchClones.h"
@@ -4625,7 +4626,7 @@ void TTree::Print(Option_t* option) const
    if (fZipBytes > 0) {
       total += fTotBytes;
    }
-   TBuffer b(TBuffer::kWrite, 10000);
+   TBufferFile b(TBuffer::kWrite, 10000);
    TTree::Class()->WriteBuffer(b, (TTree*) this);
    total += b.Length();
    Long64_t file = fZipBytes + s;

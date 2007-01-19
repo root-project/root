@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TBits.h,v 1.14 2006/06/14 11:47:11 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TBits.h,v 1.15 2006/07/11 09:05:01 rdm Exp $
 // Author: Philippe Canal 05/02/01
 
 /*************************************************************************
@@ -25,6 +25,9 @@
 #endif
 #ifndef ROOT_Riosfwd
 #include "Riosfwd.h"
+#endif
+#ifndef __CINT__
+#include <string.h>
 #endif
 
 class TBits : public TObject {

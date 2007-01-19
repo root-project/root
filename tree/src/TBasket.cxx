@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.42 2006/06/26 06:47:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.43 2006/07/03 08:11:33 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include "TBasket.h"
+#include "TBufferFile.h"
 #include "TTree.h"
 #include "TBranch.h"
 #include "TFile.h"
@@ -80,7 +81,7 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch) :
    fEntryOffset = 0;  //Must be set to 0 before calling Sizeof
    fDisplacement= 0;  //Must be set to 0 before calling Sizeof
    fBuffer      = 0;  //Must be set to 0 before calling Sizeof
-   fBufferRef   = new TBuffer(TBuffer::kWrite, fBufferSize);
+   fBufferRef   = new TBufferFile(TBuffer::kWrite, fBufferSize);
    fVersion    += 1000;
    if (branch->GetDirectory()) {
       TFile *file = branch->GetFile();
@@ -193,7 +194,7 @@ Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    // This function is called by TTreeCloner.
    // The function returns 0 in case of success, 1 in case of error.
 
-   fBufferRef = new TBuffer(TBuffer::kRead, len);
+   fBufferRef = new TBufferFile(TBuffer::kRead, len);
    fBufferRef->SetParent(file);
    char *buffer = fBufferRef->Buffer();
    file->Seek(pos);
@@ -270,7 +271,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
 
    if (fBranch->GetTree()->MemoryFull(fBufferSize)) fBranch->DropBaskets();
 
-   fBufferRef = new TBuffer(TBuffer::kRead, len);
+   fBufferRef = new TBufferFile(TBuffer::kRead, len);
    fBufferRef->SetParent(file);
    
    char *buffer = fBufferRef->Buffer();
@@ -433,7 +434,7 @@ void TBasket::Streamer(TBuffer &b)
          }
       }
       if (flag == 1 || flag > 10) {
-         fBufferRef = new TBuffer(TBuffer::kRead,fBufferSize);
+         fBufferRef = new TBufferFile(TBuffer::kRead,fBufferSize);
          fBufferRef->SetParent(b.GetParent());
          char *buf  = fBufferRef->Buffer();
          if (v > 1) b.ReadFastArray(buf,fLast);

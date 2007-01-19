@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.61 2007/01/12 10:20:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.62 2007/01/12 16:03:15 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -52,6 +52,7 @@
 #include "TDirectory.h"
 #include "TFile.h"
 #include "TKey.h"
+#include "TBufferFile.h"
 #include "TFree.h"
 #include "TBrowser.h"
 #include "Bytes.h"
@@ -197,7 +198,7 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
    Build(motherDir, obj->ClassName(), -1);
 
    Int_t lbuf, nout, noutot, bufmax, nzip;
-   fBufferRef = new TBuffer(TBuffer::kWrite, bufsize);
+   fBufferRef = new TBufferFile(TBuffer::kWrite, bufsize);
    fBufferRef->SetParent(GetFile());
    fCycle     = fMotherDir->AppendKey(this);
 
@@ -279,7 +280,7 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
 
    Build(motherDir, clActual->GetName(), -1);
 
-   fBufferRef = new TBuffer(TBuffer::kWrite, bufsize);
+   fBufferRef = new TBufferFile(TBuffer::kWrite, bufsize);
    fBufferRef->SetParent(GetFile());
    fCycle     = fMotherDir->AppendKey(this);
 
@@ -656,12 +657,12 @@ TObject *TKey::ReadObj()
       Error("ReadObj", "Unknown class %s", fClassName.Data());
       return 0;
    }
-   if (!cl->InheritsFrom(TObject::Class())) {
+   if (!cl->InheritsFrom(TObject::Class())) { 
       // in principle user should call TKey::ReadObjectAny!
       return (TObject*)ReadObjectAny(0);
    }
 
-   fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
+   fBufferRef = new TBufferFile(TBuffer::kRead, fObjlen+fKeylen);
    if (!fBufferRef) {
       Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
       return 0;
@@ -779,7 +780,7 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
    //  object of the class type it describes. This new object now calls its
    //  Streamer function to rebuilt itself.
 
-   fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
+   fBufferRef = new TBufferFile(TBuffer::kRead, fObjlen+fKeylen);
    if (!fBufferRef) {
       Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
       return 0;
@@ -899,7 +900,7 @@ Int_t TKey::Read(TObject *obj)
 
    if (!obj || (GetFile()==0)) return 0;
 
-   fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
+   fBufferRef = new TBufferFile(TBuffer::kRead, fObjlen+fKeylen);
    fBufferRef->SetParent(GetFile());
    fBufferRef->SetPidOffset(fPidOffset);
 

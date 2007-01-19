@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.27 2006/07/09 05:27:54 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.28 2006/09/21 20:02:20 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 #include "Riostream.h"
+#include "TBufferFile.h"
 #include "TROOT.h"
 #include "TStyle.h"
 #include "TPaveText.h"
@@ -88,7 +89,7 @@ TPaveText::TPaveText(const TPaveText &pavetext) : TPave(), TAttText()
 {
    // pavetext copy constructor.
 
-   TBuffer b(TBuffer::kWrite);
+   TBufferFile b(TBuffer::kWrite);
    TPaveText *p = (TPaveText*)(&pavetext);
    p->Streamer(b);
    b.SetReadMode();

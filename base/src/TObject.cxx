@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.81 2006/10/20 21:07:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.82 2007/01/12 09:21:41 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include "Riostream.h"
 #include "TObject.h"
 #include "TFile.h"
+#include "TBufferFile.h"
 #include "TDirectory.h"
 #include "TClass.h"
 #include "TGuiFactory.h"
@@ -211,7 +212,7 @@ TObject *TObject::Clone(const char *) const
    TFile *filsav = gFile;
    gFile = 0;
    const Int_t bufsize = 10000;
-   TBuffer *buffer = new TBuffer(TBuffer::kWrite,bufsize);
+   TBuffer *buffer = new TBufferFile(TBuffer::kWrite,bufsize);
    buffer->MapObject(this);  //register obj in map to handle self reference
    ((TObject*)this)->Streamer(*buffer);
 

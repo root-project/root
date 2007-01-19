@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.61 2007/01/12 10:20:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.62 2007/01/12 16:03:15 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1084,7 +1084,7 @@ void TString::WriteString(TBuffer &b, const TString *a)
       b.SetByteCount(cntpos);
    }
 }
-
+#ifdef ONEDAY
 //_______________________________________________________________________
 TBuffer &operator>>(TBuffer &buf, TString &s)
 {
@@ -1102,7 +1102,7 @@ TBuffer &operator<<(TBuffer &buf, const TString &s)
    ((TString&)s).Streamer(buf);
    return buf;
 }
-
+#endif
 //_______________________________________________________________________
 #if defined(R__TEMPLATE_OVERLOAD_BUG)
 template <>

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.117 2006/12/12 17:29:03 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.118 2007/01/12 16:03:17 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1184,7 +1184,7 @@ Long64_t TBranch::GetTotalSize() const
    // Return total number of bytes in the branch (including current buffer)
    // =====================================================================
 
-   TBuffer b(TBuffer::kWrite,10000);
+   TBufferFile b(TBuffer::kWrite,10000);
    TBranch::Class()->WriteBuffer(b,(TBranch*)this);
    Long64_t totbytes = 0;
    if (fZipBytes > 0) totbytes = fTotBytes;

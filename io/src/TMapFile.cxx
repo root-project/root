@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.22 2007/01/15 11:52:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.23 2007/01/15 12:51:25 brun Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -94,6 +94,7 @@
 #include "TString.h"
 #include "TSystem.h"
 #include "TClass.h"
+#include "TBufferFile.h"
 #include "TVirtualMutex.h"
 #include <cmath>
 
@@ -581,12 +582,12 @@ void TMapFile::Update(TObject *obj)
    TMapRec *mr = fFirst;
    while (mr) {
       if (all || mr->fObject == obj) {
-         TBuffer *b;
+         TBufferFile *b;
          if (!mr->fBufSize) {
-            b = new TBuffer(TBuffer::kWrite, GetBestBuffer());
+            b = new TBufferFile(TBuffer::kWrite, GetBestBuffer());
             mr->fClassName = StrDup(mr->fObject->ClassName());
          } else
-            b = new TBuffer(TBuffer::kWrite, mr->fBufSize, mr->fBuffer);
+            b = new TBufferFile(TBuffer::kWrite, mr->fBufSize, mr->fBuffer);
          b->MapObject(mr->fObject);  //register obj in map to handle self reference
          mr->fObject->Streamer(*b);
          mr->fBufSize = b->BufferSize();
@@ -731,7 +732,7 @@ TObject *TMapFile::Get(const char *name, TObject *delObj)
          }
 
          fGetting = obj;
-         TBuffer *b = new TBuffer(TBuffer::kRead, mr->fBufSize, mr->GetBuffer(fOffset));
+         TBufferFile *b = new TBufferFile(TBuffer::kRead, mr->fBufSize, mr->GetBuffer(fOffset));
          b->MapObject(obj);  //register obj in map to handle self reference
          obj->Streamer(*b);
          b->DetachBuffer();

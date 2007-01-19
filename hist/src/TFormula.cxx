@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.127 2006/09/15 15:16:57 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.128 2006/10/06 09:26:53 couet Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2278,10 +2278,9 @@ void TFormula::Copy(TObject &obj) const
       if (fPredefined) {
          ((TFormula&)obj).fPredefined      = new TFormulaPrimitive*[fNoper];
       }
-      ((TFormula&)obj).fOperOffset      = new TOperOffset[fNoper];
+      ((TFormula&)obj).fOperOffset         = new TOperOffset[fNoper];
       for (i=0;i<fNoper;i++)  ((TFormula&)obj).fExprOptimized[i]   = fExprOptimized[i];
       for (i=0;i<fNoper;i++)  ((TFormula&)obj).fOperOptimized[i]   = fOperOptimized[i];
-      ((TFormula&)obj).fOperOffset  = new TOperOffset[fNoper];
       for (i=0;i<fNoper;i++) {((TFormula&)obj).fPredefined[i] = fPredefined[i];}
       for (i=0;i<fNoper;i++) {((TFormula&)obj).fOperOffset[i] = fOperOffset[i];}
    }

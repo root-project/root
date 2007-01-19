@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.40 2006/11/24 16:08:33 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.41 2006/11/25 09:07:59 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -94,8 +94,8 @@
 #pragma link C++ function operator!=(const char*,const TString&);
 #pragma link C++ function operator>>(istream&,TString&);
 #pragma link C++ function operator<<(ostream&,const TString&);
-#pragma link C++ function operator>>(TBuffer&,TString&);
-#pragma link C++ function operator<<(TBuffer&,const TString&);
+//#pragma link C++ function operator>>(TBuffer&,TString&);
+//#pragma link C++ function operator<<(TBuffer&,const TString&);
 //#pragma link C++ function operator>>(TBuffer&,const TObject*&);
 //#pragma link C++ function operator<<(TBuffer&,const TObject*);
 
@@ -131,6 +131,7 @@
 #pragma link C++ class TBrowser+;
 #pragma link C++ class TBrowserImp+;
 #pragma link C++ class TBuffer;
+#pragma link C++ class TBufferFile;
 #pragma link C++ class TCanvasImp;
 #pragma link C++ class TColor+;
 #pragma link C++ class TContextMenu+;

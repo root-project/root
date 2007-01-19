@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.55 2007/01/10 16:49:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.56 2007/01/12 16:03:15 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -397,8 +397,6 @@ public:
 // Related global functions
 istream  &operator>>(istream &str,       TString &s);
 ostream  &operator<<(ostream &str, const TString &s);
-TBuffer  &operator>>(TBuffer &buf,       TString &s);
-TBuffer  &operator<<(TBuffer &buf, const TString &s);
 #if defined(R__TEMPLATE_OVERLOAD_BUG)
 template <>
 #endif

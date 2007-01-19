@@ -1,4 +1,4 @@
-// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.13 2006/05/12 08:10:33 brun Exp $
+// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.14 2007/01/12 16:03:17 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -55,7 +55,7 @@ ClassImp(TBufferXML);
 
 //______________________________________________________________________________
 TBufferXML::TBufferXML() :
-   TBuffer(),
+   TBufferFile(),
    TXMLSetup(),
    fXML(0)
 {
@@ -64,7 +64,7 @@ TBufferXML::TBufferXML() :
 
 //______________________________________________________________________________
 TBufferXML::TBufferXML(TBuffer::EMode mode) :
-   TBuffer(mode),
+   TBufferFile(mode),
    TXMLSetup(),
    fXML(0),
    fStack(),
@@ -89,7 +89,7 @@ TBufferXML::TBufferXML(TBuffer::EMode mode) :
 
 //______________________________________________________________________________
 TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile* file) :
-   TBuffer(mode),
+   TBufferFile(mode),
    TXMLSetup(*file),
    fStack(),
    fVersionBuf(-111),
@@ -2290,11 +2290,10 @@ void TBufferXML::StreamObject(void *obj, const TClass *cl)
 {                                    \
   BeforeIOoperation();               \
   XmlReadBasic(vname);               \
-  return *this;                      \
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator>>(Bool_t    &b)
+void TBufferXML::ReadBool(Bool_t    &b)
 {
    // Reads Bool_t value from buffer
 
@@ -2302,7 +2301,7 @@ TBuffer& TBufferXML::operator>>(Bool_t    &b)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator>>(Char_t    &c)
+void TBufferXML::ReadChar(Char_t    &c)
 {
    // Reads Char_t value from buffer
 
@@ -2310,7 +2309,7 @@ TBuffer& TBufferXML::operator>>(Char_t    &c)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator>>(UChar_t   &c)
+void TBufferXML::ReadUChar(UChar_t   &c)
 {
    // Reads UChar_t value from buffer
 
@@ -2318,7 +2317,7 @@ TBuffer& TBufferXML::operator>>(UChar_t   &c)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator>>(Short_t   &h)
+void TBufferXML::ReadShort(Short_t   &h)
 {
    // Reads Short_t value from buffer
 
@@ -2326,7 +2325,7 @@ TBuffer& TBufferXML::operator>>(Short_t   &h)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator>>(UShort_t  &h)
+void TBufferXML::ReadUShort(UShort_t  &h)
 {
    // Reads UShort_t value from buffer
 
@@ -2334,7 +2333,7 @@ TBuffer& TBufferXML::operator>>(UShort_t  &h)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator>>(Int_t     &i)
+void TBufferXML::ReadInt(Int_t     &i)
 {
    // Reads Int_t value from buffer
 
@@ -2342,7 +2341,7 @@ TBuffer& TBufferXML::operator>>(Int_t     &i)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator>>(UInt_t    &i)
+void TBufferXML::ReadUInt(UInt_t    &i)
 {
    // Reads UInt_t value from buffer
 
@@ -2350,7 +2349,7 @@ TBuffer& TBufferXML::operator>>(UInt_t    &i)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator>>(Long_t    &l)
+void TBufferXML::ReadLong(Long_t    &l)
 {
    // Reads Long_t value from buffer
 
@@ -2358,7 +2357,7 @@ TBuffer& TBufferXML::operator>>(Long_t    &l)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator>>(ULong_t   &l)
+void TBufferXML::ReadULong(ULong_t   &l)
 {
    // Reads ULong_t value from buffer
 
@@ -2366,7 +2365,7 @@ TBuffer& TBufferXML::operator>>(ULong_t   &l)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator>>(Long64_t  &l)
+void TBufferXML::ReadLong64(Long64_t  &l)
 {
    // Reads Long64_t value from buffer
 
@@ -2374,7 +2373,7 @@ TBuffer& TBufferXML::operator>>(Long64_t  &l)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator>>(ULong64_t &l)
+void TBufferXML::ReadULong64(ULong64_t &l)
 {
    // Reads ULong64_t value from buffer
 
@@ -2382,7 +2381,7 @@ TBuffer& TBufferXML::operator>>(ULong64_t &l)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator>>(Float_t   &f)
+void TBufferXML::ReadFloat(Float_t   &f)
 {
    // Reads Float_t value from buffer
 
@@ -2390,7 +2389,7 @@ TBuffer& TBufferXML::operator>>(Float_t   &f)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator>>(Double_t  &d)
+void TBufferXML::ReadDouble(Double_t  &d)
 {
    // Reads Double_t value from buffer
 
@@ -2398,14 +2397,13 @@ TBuffer& TBufferXML::operator>>(Double_t  &d)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator>>(Char_t    *c)
+void TBufferXML::ReadCharP(Char_t    *c)
 {
    // Reads array of characters from buffer
 
    BeforeIOoperation();
    const char* buf = XmlReadValue(xmlio::CharStar);
    strcpy(c, buf);
-   return *this;
 }
 
 // macro for left shift operator for basic types
@@ -2413,11 +2411,10 @@ TBuffer& TBufferXML::operator>>(Char_t    *c)
 {                                     \
   BeforeIOoperation();                \
   XmlWriteBasic(vname);               \
-  return *this;                       \
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator<<(Bool_t    b)
+void TBufferXML::WriteBool(Bool_t    b)
 {
    // Writes Bool_t value to buffer
 
@@ -2425,7 +2422,7 @@ TBuffer& TBufferXML::operator<<(Bool_t    b)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator<<(Char_t    c)
+void TBufferXML::WriteChar(Char_t    c)
 {
    // Writes Char_t value to buffer
 
@@ -2433,7 +2430,7 @@ TBuffer& TBufferXML::operator<<(Char_t    c)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator<<(UChar_t   c)
+void TBufferXML::WriteUChar(UChar_t   c)
 {
    // Writes UChar_t value to buffer
 
@@ -2441,7 +2438,7 @@ TBuffer& TBufferXML::operator<<(UChar_t   c)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator<<(Short_t   h)
+void TBufferXML::WriteShort(Short_t   h)
 {
    // Writes Short_t value to buffer
 
@@ -2449,7 +2446,7 @@ TBuffer& TBufferXML::operator<<(Short_t   h)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator<<(UShort_t  h)
+void TBufferXML::WriteUShort(UShort_t  h)
 {
    // Writes UShort_t value to buffer
 
@@ -2457,7 +2454,7 @@ TBuffer& TBufferXML::operator<<(UShort_t  h)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator<<(Int_t     i)
+void TBufferXML::WriteInt(Int_t     i)
 {
    // Writes Int_t value to buffer
 
@@ -2465,7 +2462,7 @@ TBuffer& TBufferXML::operator<<(Int_t     i)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator<<(UInt_t    i)
+void TBufferXML::WriteUInt(UInt_t    i)
 {
    // Writes UInt_t value to buffer
 
@@ -2473,7 +2470,7 @@ TBuffer& TBufferXML::operator<<(UInt_t    i)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator<<(Long_t    l)
+void TBufferXML::WriteLong(Long_t    l)
 {
    // Writes Long_t value to buffer
 
@@ -2481,7 +2478,7 @@ TBuffer& TBufferXML::operator<<(Long_t    l)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator<<(ULong_t   l)
+void TBufferXML::WriteULong(ULong_t   l)
 {
    // Writes ULong_t value to buffer
 
@@ -2489,7 +2486,7 @@ TBuffer& TBufferXML::operator<<(ULong_t   l)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator<<(Long64_t  l)
+void TBufferXML::WriteLong64(Long64_t  l)
 {
    // Writes Long64_t value to buffer
 
@@ -2497,7 +2494,7 @@ TBuffer& TBufferXML::operator<<(Long64_t  l)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator<<(ULong64_t l)
+void TBufferXML::WriteULong64(ULong64_t l)
 {
    // Writes ULong64_t value to buffer
 
@@ -2505,7 +2502,7 @@ TBuffer& TBufferXML::operator<<(ULong64_t l)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator<<(Float_t   f)
+void TBufferXML::WriteFloat(Float_t   f)
 {
    // Writes Float_t value to buffer
 
@@ -2513,7 +2510,7 @@ TBuffer& TBufferXML::operator<<(Float_t   f)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator<<(Double_t  d)
+void TBufferXML::WriteDouble(Double_t  d)
 {
    // Writes Double_t value to buffer
 
@@ -2521,13 +2518,12 @@ TBuffer& TBufferXML::operator<<(Double_t  d)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferXML::operator<<(const Char_t *c)
+void TBufferXML::WriteCharP(const Char_t *c)
 {
    // Writes array of characters to buffer
 
    BeforeIOoperation();
    XmlWriteValue(c, xmlio::CharStar);
-   return *this;
 }
 
 //______________________________________________________________________________

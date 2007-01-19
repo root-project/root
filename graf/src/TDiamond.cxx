@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TDiamond.cxx,v 1.10 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/graf:$Name:  $:$Id: TDiamond.cxx,v 1.11 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   22/06/96
 
 /*************************************************************************
@@ -12,6 +12,7 @@
 #include <stdlib.h>
 
 #include "Riostream.h"
+#include "TBufferFile.h"
 #include "TROOT.h"
 #include "TDiamond.h"
 #include "TVirtualPad.h"
@@ -65,7 +66,7 @@ TDiamond::TDiamond(const TDiamond &diamond) : TPaveText()
 {
    // Copy constructor.
 
-   TBuffer b(TBuffer::kWrite);
+   TBufferFile b(TBuffer::kWrite);
    TDiamond *p = (TDiamond*)(&diamond);
    p->Streamer(b);
    b.SetReadMode();
