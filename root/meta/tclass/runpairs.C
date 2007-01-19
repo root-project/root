@@ -1,6 +1,8 @@
 #ifdef __CINT__
 
 
+#include <vector>
+
 //NEW CODE!!
 #pragma link C++ class std::vector<std::pair<Char_t, UChar_t> >+;
 #pragma link C++ class std::pair<Char_t, UChar_t>+;
