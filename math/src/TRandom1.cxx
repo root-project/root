@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom1.cxx,v 1.9 2007/01/15 11:52:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom1.cxx,v 1.10 2007/01/15 12:51:25 brun Exp $
 // Author: Rene Brun from CLHEP & CERNLIB  04/05/2006
 
 //////////////////////////////////////////////////////////////////////////
@@ -18,7 +18,7 @@
 
 #include "TRandom1.h"
 #include "TRandom3.h"
-#include <cmath>
+#include "TMath.h"
 
 // Number of instances with automatic seed selection
 int TRandom1::fgNumEngines = 0;
@@ -249,8 +249,8 @@ ClassImp(TRandom1)
 //______________________________________________________________________________
 TRandom1::TRandom1(UInt_t seed, Int_t lux)
         : fIntModulus(0x1000000),
-          fMantissaBit24( pow(0.5,24.) ),
-          fMantissaBit12( pow(0.5,12.) )
+          fMantissaBit24( TMath::Power(0.5,24.) ),
+          fMantissaBit12( TMath::Power(0.5,12.) )
 {
 // Luxury level is set in the same way as the original FORTRAN routine.
 //  level 0  (p=24): equivalent to the original RCARRY of Marsaglia
@@ -277,8 +277,8 @@ TRandom1::TRandom1(UInt_t seed, Int_t lux)
 //______________________________________________________________________________
 TRandom1::TRandom1()
         : fIntModulus(0x1000000),
-          fMantissaBit24( pow(0.5,24.) ),
-          fMantissaBit12( pow(0.5,12.) )
+          fMantissaBit24( TMath::Power(0.5,24.) ),
+          fMantissaBit12( TMath::Power(0.5,12.) )
 {
    //default constructor
    fTheSeeds = &fSeed;
@@ -303,8 +303,8 @@ TRandom1::TRandom1()
 //______________________________________________________________________________
 TRandom1::TRandom1(int rowIndex, int colIndex, int lux)
         : fIntModulus(0x1000000),
-          fMantissaBit24( pow(0.5,24.) ),
-          fMantissaBit12( pow(0.5,12.) )
+          fMantissaBit24( TMath::Power(0.5,24.) ),
+          fMantissaBit12( TMath::Power(0.5,12.) )
 {
    //constructor
    fTheSeeds = &fSeed;
