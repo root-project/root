@@ -1478,7 +1478,7 @@ typedef struct {
 } G__va_arg_buf;
 
 
-#if (defined(__i386__) && (defined(__linux) || defined(__APPLE__))) || \
+#if (defined(__i386__) && (defined(__linux) || defined(__APPLE__) || defined(__sun))) ||\
     defined(_WIN32) || defined(G__CYGWIN)
 /**********************************************
  * Intel architecture, aligns in multiple of 4

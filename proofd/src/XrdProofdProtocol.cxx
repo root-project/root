@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.36 2006/12/12 21:28:01 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.37 2007/01/12 11:03:41 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -22,6 +22,11 @@
 #ifdef __APPLE__
 #   ifndef __macos__
 #      define __macos__
+#   endif
+#endif
+#ifdef __sun
+#   ifndef __solaris__
+#      define __solaris__
 #   endif
 #endif
 
@@ -296,7 +301,7 @@ static int GetUserInfo(const char *usr, XrdProofUI &ui)
    struct passwd pw;
    struct passwd *ppw = 0;
    char buf[2048];
-#if defined(__sun)
+#if defined(__sun) && !defined(__GNUC__)
    ppw = getpwnam_r(usr, &pw, buf, sizeof(buf));
 #else
    getpwnam_r(usr, &pw, buf, sizeof(buf), &ppw);
@@ -332,7 +337,7 @@ static int GetUserInfo(int uid, XrdProofUI &ui)
    struct passwd pw;
    struct passwd *ppw = 0;
    char buf[2048];
-#if defined(__sun)
+#if defined(__sun) && !defined(__GNUC__)
    ppw = getpwuid_r((uid_t)uid, &pw, buf, sizeof(buf));
 #else
    getpwuid_r((uid_t)uid, &pw, buf, sizeof(buf), &ppw);

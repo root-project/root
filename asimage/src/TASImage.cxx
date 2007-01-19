@@ -3238,7 +3238,7 @@ UInt_t *TASImage::GetScanline(UInt_t y)
 
 /////////////////////////////// vector graphics ///////////////////////////////
 // a couple of macros which can be "assembler accelerated"
-#if defined(R__GNU) && defined(__i386__)
+#if defined(R__GNU) && defined(__i386__) && !defined(__sun)
 #define _MEMSET_(dst, lng, val)   __asm__("movl  %0,%%eax \n"\
                                       "movl  %1,%%edi \n"              \
                                       "movl  %2,%%ecx \n"              \
