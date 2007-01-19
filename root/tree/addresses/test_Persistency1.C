@@ -3,6 +3,7 @@
 #include "TBranch.h"
 #include <iostream>
 #include "TFile.h"
+#include <vector>
 
 static int s_smartRefCount = 0;
 
