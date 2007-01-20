@@ -1,4 +1,5 @@
 Test handling of twice 'from ROOT import*' ... ok
+Test handling of a thrown TPyException object ... ok
 
 ----------------------------------------------------------------------
 
