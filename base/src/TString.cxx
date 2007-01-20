@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.63 2007/01/19 16:47:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.64 2007/01/20 09:49:58 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #include <list>
 
 #include "snprintf.h"
+#include "Varargs.h"
 #include "TString.h"
 #include "TBuffer.h"
 #include "TError.h"

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.82 2007/01/12 09:21:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.83 2007/01/19 16:47:59 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "Varargs.h"
 #include "Riostream.h"
 #include "TObject.h"
 #include "TFile.h"

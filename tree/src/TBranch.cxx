@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.118 2007/01/12 16:03:17 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.119 2007/01/19 16:48:00 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include "TBranchBrowsable.h"
 #include "TBrowser.h"
 #include "TClass.h"
+#include "TBufferFile.h"
 #include "TClonesArray.h"
 #include "TFile.h"
 #include "TLeaf.h"
@@ -599,7 +600,7 @@ Int_t TBranch::Fill()
       if (fEntryBuffer->IsA() == TMessage::Class()) {
          objectStart = 8;
       }
-      if (fEntryBuffer->TestBit(TBuffer::kNotDecompressed)) {
+      if (fEntryBuffer->TestBit(TBufferFile::kNotDecompressed)) {
          // The buffer given as input as not been decompressed.
          if (basket->GetNevBuf()) {
             // If the basket already contains entry we need to close it
@@ -619,7 +620,7 @@ Int_t TBranch::Fill()
          // last now contains the decompressed number of bytes.
          fEntryBuffer->SetBufferOffset(startpos);
          buf->SetBufferOffset(0);
-         buf->SetBit(TBuffer::kNotDecompressed);
+         buf->SetBit(TBufferFile::kNotDecompressed);
          basket->Update(lold);
       } else {
          // We are required to copy starting at the version number (so not
@@ -660,7 +661,7 @@ Int_t TBranch::Fill()
          len = fEntryBuffer->BufferSize() - objectStart;
       }
       buf->WriteBuf(fEntryBuffer->Buffer() + objectStart, len);
-      if (fEntryBuffer->TestBit(TBuffer::kNotDecompressed)) {
+      if (fEntryBuffer->TestBit(TBufferFile::kNotDecompressed)) {
          // The original buffer came pre-compressed and thus the buffer Length
          // does not really show the really object size
          // lnew = nbytes = basket->GetLast();
@@ -693,7 +694,7 @@ Int_t TBranch::Fill()
    // fSkipZip force one entry per buffer
    // Transfer full compressed buffer only
 
-   if ((fSkipZip && (lnew >= TBuffer::kMinimalSize)) || (buf->TestBit(TBuffer::kNotDecompressed)) || ((lnew + (2 * nsize) + nbytes) >= fBasketSize)) {
+   if ((fSkipZip && (lnew >= TBuffer::kMinimalSize)) || (buf->TestBit(TBufferFile::kNotDecompressed)) || ((lnew + (2 * nsize) + nbytes) >= fBasketSize)) {
       if (fTree->TestBit(TTree::kCircular)) {
          return nbytes;
       }
@@ -840,7 +841,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    TDirectory *cursav = gDirectory;
    TFile *file = GetFile(0);
    basket = new TBasket(file);
-   if (fSkipZip) basket->SetBit(TBuffer::kNotDecompressed);
+   if (fSkipZip) basket->SetBit(TBufferFile::kNotDecompressed);
    basket->SetBranch(this);
    if (fBasketBytes[basketnumber] == 0) {
       fBasketBytes[basketnumber] = basket->ReadBasketBytes(fBasketSeek[basketnumber],file);

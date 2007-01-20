@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.56 2007/01/12 16:03:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.57 2007/01/19 16:47:59 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -30,10 +30,6 @@
 
 #ifndef ROOT_TRefCnt
 #include "TRefCnt.h"
-#endif
-
-#ifndef ROOT_Varargs
-#include  "Varargs.h"
 #endif
 
 #ifndef ROOT_Riosfwd

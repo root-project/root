@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfoReadBuffer.cxx,v 1.40 2006/02/09 20:44:00 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfoReadBuffer.cxx,v 1.41 2006/02/22 19:53:12 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -12,6 +12,7 @@
 #include "TBuffer.h"
 #include "TFile.h"
 #include "TClass.h"
+#include "TBufferFile.h"
 #include "TClonesArray.h"
 #include "TError.h"
 #include "TRef.h"
@@ -889,10 +890,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
             {
                UInt_t start,count;
                Version_t vers = b.ReadVersion(&start, &count, cle);
-               if ( vers & TBuffer::kStreamedMemberWise ) {
+               if ( vers & TBufferFile::kStreamedMemberWise ) {
                   // Collection was saved member-wise
 
-                  vers &= ~( TBuffer::kStreamedMemberWise );
+                  vers &= ~( TBufferFile::kStreamedMemberWise );
                   TVirtualCollectionProxy *proxy = aElement->GetClassPointer()->GetCollectionProxy();
                   TStreamerInfo *subinfo = proxy->GetValueClass()->GetStreamerInfo();
                   DOLOOP {
@@ -945,10 +946,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
             {
                UInt_t start,count;
                Version_t vers = b.ReadVersion(&start, &count, cle);
-               if ( vers & TBuffer::kStreamedMemberWise ) {
+               if ( vers & TBufferFile::kStreamedMemberWise ) {
                   // Collection was saved member-wise
 
-                  vers &= ~( TBuffer::kStreamedMemberWise );
+                  vers &= ~( TBufferFile::kStreamedMemberWise );
                   TVirtualCollectionProxy *proxy = aElement->GetClassPointer()->GetCollectionProxy();
                   TStreamerInfo *subinfo = proxy->GetValueClass()->GetStreamerInfo();
                   DOLOOP {

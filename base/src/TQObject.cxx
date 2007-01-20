@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.48 2006/05/14 08:19:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.49 2006/11/16 17:17:37 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -58,6 +58,7 @@
 //
 /////////////////////////////////////////////////////////////////////
 
+#include "Varargs.h"
 #include "TQObject.h"
 #include "TQConnection.h"
 #include "TROOT.h"

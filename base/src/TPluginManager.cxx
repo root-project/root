@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.31 2006/10/17 12:28:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.32 2006/12/06 10:21:03 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -59,6 +59,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TPluginManager.h"
+#include "Varargs.h"
 #include "TEnv.h"
 #include "TRegexp.h"
 #include "TROOT.h"

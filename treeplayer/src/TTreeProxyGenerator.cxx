@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.24 2005/11/11 23:21:43 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.25 2006/04/19 08:22:26 rdm Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -46,6 +46,7 @@
 #include "TBranchProxyClassDescriptor.h"
 
 #include "TList.h"
+#include "Varargs.h"
 #include <stdio.h>
 
 class TTree;

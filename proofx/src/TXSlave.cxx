@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.16 2006/12/03 23:34:04 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.17 2007/01/18 17:10:22 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include "TThread.h"
 #include "TXSocket.h"
 #include "TXSocketHandler.h"
+#include "Varargs.h"
 
 ClassImp(TXSlave)
 

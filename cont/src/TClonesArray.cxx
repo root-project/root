@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.57 2006/08/08 17:02:26 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.58 2007/01/15 10:15:47 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -57,6 +57,7 @@
 #include "TClonesArray.h"
 #include "TError.h"
 #include "TClass.h"
+#include "TBufferFile.h"
 #include "TROOT.h"
 #include "TStreamerInfo.h"
 #include "TObjectTable.h"
@@ -636,7 +637,7 @@ void TClonesArray::Streamer(TBuffer &b)
       fLast = nobjects-1;
 
       TStreamerInfo *sinfo = fClass->GetStreamerInfo(clv);
-      if (CanBypassStreamer() && !b.TestBit(TBuffer::kCannotHandleMemberWiseStreaming)) {
+      if (CanBypassStreamer() && !b.TestBit(TBufferFile::kCannotHandleMemberWiseStreaming)) {
          for (Int_t i = 0; i < nobjects; i++) {
             if (!fKeep->fCont[i]) {
                fKeep->fCont[i] = (TObject*)fClass->New();
@@ -687,7 +688,7 @@ void TClonesArray::Streamer(TBuffer &b)
       nobjects = GetEntriesFast();
       b << nobjects;
       b << fLowerBound;
-      if (CanBypassStreamer() && !b.TestBit(TBuffer::kCannotHandleMemberWiseStreaming)) {
+      if (CanBypassStreamer() && !b.TestBit(TBufferFile::kCannotHandleMemberWiseStreaming)) {
          sinfo->WriteBufferClones(b,this,nobjects,-1,0);
       } else {
          for (Int_t i = 0; i < nobjects; i++) {

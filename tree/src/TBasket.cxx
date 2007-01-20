@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.43 2006/07/03 08:11:33 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.44 2007/01/19 16:48:00 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -13,6 +13,7 @@
 #include "TTree.h"
 #include "TBranch.h"
 #include "TFile.h"
+#include "TBufferFile.h"
 #include "TMath.h"
 
 R__EXTERN  TBranch *gBranch;
@@ -287,7 +288,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
         && GetBranch()->GetCompressionLevel()!=0
         && file->GetVersion()<=30401;
    if (fObjlen > fNbytes-fKeylen || oldCase) {
-      if (TestBit(TBuffer::kNotDecompressed) && (fNevBuf==1)) {
+      if (TestBit(TBufferFile::kNotDecompressed) && (fNevBuf==1)) {
          // By-passing buffer unzipping has been requested and is
          // possible (only 1 entry in this basket).
          fBuffer = fBufferRef->Buffer();
@@ -296,7 +297,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
          fBufferRef->SetBufferOffset(fNbytes);
         
          // Indicate that this buffer is weird.
-         fBufferRef->SetBit(TBuffer::kNotDecompressed); 
+         fBufferRef->SetBit(TBufferFile::kNotDecompressed); 
         
          // Usage of this mode assume the existance of only ONE 
          // entry in this basket.
@@ -561,7 +562,7 @@ Int_t TBasket::WriteBuffer()
    
    fMotherDir = fBranch->GetDirectory();
    
-   if (fBufferRef->TestBit(TBuffer::kNotDecompressed)) {
+   if (fBufferRef->TestBit(TBufferFile::kNotDecompressed)) {
       // Read the basket information that was saved inside the buffer.
       Bool_t writing = fBufferRef->IsWriting();
       fBufferRef->SetReadMode();

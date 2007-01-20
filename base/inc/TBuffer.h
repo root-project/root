@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.55 2006/05/12 12:25:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.56 2007/01/19 16:47:59 brun Exp $
 // Author: Rene Brun, Philippe Canal, Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -61,12 +61,7 @@ protected:
 public:
    enum EMode { kRead = 0, kWrite = 1 };
    enum { kInitialSize = 1024, kMinimalSize = 128 };
-   enum { kMapSize = 503 };
-   enum { kStreamedMemberWise = BIT(14) }; //added to version number to know if a collection has been stored member-wise
-   enum { kNotDecompressed = BIT(15) };    //indicates a weird buffer, used by TBasket
    enum { kIsOwner = BIT(16) };            //if set TBuffer owns fBuffer
-   enum { kCannotHandleMemberWiseStreaming = BIT(17), //if set TClonesArray should not use memeber wise streaming
-          kTextBasedStreaming = BIT(18) };            // indicates if buffer used for XML/SQL object streaming
 
    TBuffer(EMode mode);
    TBuffer(EMode mode, Int_t bufsiz);
@@ -81,11 +76,11 @@ public:
    void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE);
    void     SetBufferOffset(Int_t offset = 0) { fBufCur = fBuffer+offset; }
    void     SetParent(TObject *parent);
-   TObject *GetParent() const;
-   char    *Buffer() const { return fBuffer; }
+   TObject *GetParent()  const;
+   char    *Buffer()     const { return fBuffer; }
    Int_t    BufferSize() const { return fBufSize; }
    void     DetachBuffer() { fBuffer = 0; }
-   Int_t    Length() const { return (Int_t)(fBufCur - fBuffer); }
+   Int_t    Length()     const { return (Int_t)(fBufCur - fBuffer); }
 
 
 

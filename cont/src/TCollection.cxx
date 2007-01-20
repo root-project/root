@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.35 2007/01/12 16:03:15 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.36 2007/01/15 10:15:47 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -38,6 +38,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TCollection.h"
+#include "Varargs.h"
 #include "TClass.h"
 #include "TROOT.h"
 #include "TBrowser.h"

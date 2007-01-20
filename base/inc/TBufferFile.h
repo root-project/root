@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBufferFile.h,v 1.55 2006/05/12 12:25:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBufferFile.h,v 1.1 2007/01/19 16:47:59 brun Exp $
 // Author: Rene Brun   17/01/2007
 
 /*************************************************************************
@@ -75,6 +75,11 @@ protected:
    virtual  void     WriteObject(const void *actualObjStart, const TClass *actualClass);
    
 public:
+   enum { kMapSize = 503 };
+   enum { kStreamedMemberWise = BIT(14) }; //added to version number to know if a collection has been stored member-wise
+   enum { kNotDecompressed = BIT(15) };    //indicates a weird buffer, used by TBasket
+   enum { kCannotHandleMemberWiseStreaming = BIT(17), //if set TClonesArray should not use memeber wise streaming
+          kTextBasedStreaming = BIT(18) };            // indicates if buffer used for XML/SQL object streaming
    enum { kUser1 = BIT(21), kUser2 = BIT(22), kUser3 = BIT(23)}; //free for user
 
    TBufferFile(TBuffer::EMode mode);
