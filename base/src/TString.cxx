@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.62 2007/01/12 16:03:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.63 2007/01/19 16:47:59 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1084,25 +1084,7 @@ void TString::WriteString(TBuffer &b, const TString *a)
       b.SetByteCount(cntpos);
    }
 }
-#ifdef ONEDAY
-//_______________________________________________________________________
-TBuffer &operator>>(TBuffer &buf, TString &s)
-{
-   // Read string from TBuffer.
 
-   s.Streamer(buf);
-   return buf;
-}
-
-//_______________________________________________________________________
-TBuffer &operator<<(TBuffer &buf, const TString &s)
-{
-   // Write string to TBuffer.
-
-   ((TString&)s).Streamer(buf);
-   return buf;
-}
-#endif
 //_______________________________________________________________________
 #if defined(R__TEMPLATE_OVERLOAD_BUG)
 template <>
