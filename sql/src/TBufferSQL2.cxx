@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.15 2007/01/19 16:48:00 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.16 2007/01/19 18:25:12 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -2061,6 +2061,26 @@ void TBufferSQL2::ReadCharP(Char_t    *c)
 
    const char* buf = SqlReadCharStarValue();
    strcpy(c, buf);
+}
+
+//________________________________________________________________________
+void TBufferSQL2::ReadTString(TString   &)
+{
+   // Operator>>
+
+   //strcpy(str,(*fRowPtr)->GetField(*fIter));
+   //if (fIter != fColumnVec->end()) ++fIter;
+   printf("ERROR NOT IMPLEMENTED\n");
+}
+
+//________________________________________________________________________
+void TBufferSQL2::WriteTString(const TString   &)
+{
+   // Operator>>
+
+   //strcpy(str,(*fRowPtr)->GetField(*fIter));
+   //if (fIter != fColumnVec->end()) ++fIter;
+   printf("ERROR NOT IMPLEMENTED\n");
 }
 
 // macro for right shift operator for basic types

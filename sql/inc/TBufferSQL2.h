@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.h,v 1.9 2007/01/19 16:48:00 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.h,v 1.10 2007/01/19 18:25:12 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 
@@ -270,7 +270,7 @@ public:
    virtual   void     ReadFloat(Float_t     &f);
    virtual   void     ReadDouble(Double_t   &d);
    virtual   void     ReadCharP(Char_t      *c);
-   virtual   void     ReadTString(TString   &s) {}
+   virtual   void     ReadTString(TString   &s) ;
 
    virtual   void     WriteBool(Bool_t       b);
    virtual   void     WriteChar(Char_t       c);
@@ -286,7 +286,7 @@ public:
    virtual   void     WriteFloat(Float_t     f);
    virtual   void     WriteDouble(Double_t   d);
    virtual   void     WriteCharP(const Char_t *c);
-   virtual   void     WriteTString(const TString  &s) {}
+   virtual   void     WriteTString(const TString  &s);
 
 
    // end of redefined virtual functions
