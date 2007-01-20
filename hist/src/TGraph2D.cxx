@@ -1468,6 +1468,19 @@ void TGraph2D::SetName(const char *name)
    if (fDirectory) fDirectory->GetList()->Add(this);
 }
 
+//______________________________________________________________________________
+void TGraph2D::SetNameTitle(const char *name, const char *title)
+{
+   // Change the name and title of this 2D graph
+   //
+
+   //  2D graphs are named objects in a THashList.
+   //  We must update the hashlist if we change the name
+   if (fDirectory) fDirectory->GetList()->Remove(this);
+   fName  = name;
+   SetTitle(title);
+   if (fDirectory) fDirectory->GetList()->Add(this);
+}
 
 //______________________________________________________________________________
 void TGraph2D::SetNpx(Int_t npx)

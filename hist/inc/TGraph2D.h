@@ -129,6 +129,7 @@ public:
    void             SetMinimum(Double_t minimum=-1111); // *MENU*
    void             SetMaxIter(Int_t n=100000) {fMaxIter = n;} // *MENU*
    virtual void     SetName(const char *name); // *MENU*
+   virtual void     SetNameTitle(const char *name, const char *title);
    void             SetNpx(Int_t npx=40); // *MENU*
    void             SetNpy(Int_t npx=40); // *MENU*
    void             SetPoint(Int_t point, Double_t x, Double_t y, Double_t z); // *MENU*
