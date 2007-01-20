@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBufferFile.cxx,v 1.99 2007/01/12 16:03:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBufferFile.cxx,v 1.1 2007/01/19 16:47:59 brun Exp $
 // Author: Rene Brun 17/01/2007
 
 /*************************************************************************
@@ -209,9 +209,6 @@ void TBufferFile::ReadTString(TString &s)
 {
    // Read string from TBuffer.
 
-   //s.Streamer(buf);
-   //return buf;
-   printf("in TBufferFile::operator>>(TString &s)\n");
    s.Streamer(*this);
 }
 
@@ -221,9 +218,6 @@ void TBufferFile::WriteTString(const TString &s)
 {
    // Write string to TBuffer.
 
-   //((TString&)s).Streamer();
-   //return buf;
-   printf("in TBufferFile::operator>>(const TString &s)\n");
    ((TString&)s).Streamer(*this);
 }
 
