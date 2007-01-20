@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.31 2006/10/20 21:07:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.32 2007/01/20 19:29:34 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -36,6 +36,7 @@
 #ifndef ROOT_Riosfwd
 #include "Riosfwd.h"
 #endif
+#include <stdarg.h>
 
 #ifdef WIN32
 #undef RemoveDirectory
