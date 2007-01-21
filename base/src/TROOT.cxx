@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.195 2007/01/16 14:38:49 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.196 2007/01/17 11:55:01 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -115,10 +115,7 @@ namespace std {} using namespace std;
 #include "TUnixSystem.h"
 #elif defined(R__WIN32)
 #include "TWinNTSystem.h"
-#elif defined(R__VMS)
-#include "TVmsSystem.h"
 #endif
-
 // Mutex for protection of concurrent gROOT access
 TVirtualMutex* gROOTMutex = 0;
 
@@ -1378,8 +1375,6 @@ void TROOT::InitSystem()
       gSystem = new TUnixSystem;
 #elif defined(R__WIN32)
       gSystem = new TWinNTSystem;
-#elif defined(R__VMS)
-      gSystem = new TVmsSystem;
 #else
       gSystem = new TSystem;
 #endif
@@ -1891,20 +1886,18 @@ const char *TROOT::GetMacroPath()
       macroPath.ReplaceAll(": ", ":");
 #endif
       if (macroPath.Length() == 0)
-#if !defined (R__VMS) && !defined(R__WIN32)
+#if !defined(R__WIN32)
    #ifdef ROOTMACRODIR
          macroPath = ".:" ROOTMACRODIR;
    #else
          macroPath = TString(".:") + gRootDir + "/macros";
    #endif
-#elif !defined(__VMS)
+#else
    #ifdef ROOTMACRODIR
          macroPath = ".;" ROOTMACRODIR;
    #else
          macroPath = TString(".;") + gRootDir + "/macros";
    #endif
-#else
-         macroPath = TString(gRootDir) + "MACROS]";
 #endif
    }
 
