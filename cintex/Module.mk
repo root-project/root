@@ -48,9 +48,14 @@ CINTEXLL = lib/libCintex.lib
 SHEXT    = .bat
 DICTEXT  = dll
 else
-REFLEXLL = -Llib -lReflex -ldl
+REFLEXLL = -Llib -lReflex
 CINTEXLL = -Llib -lCintex
 SHEXT    = .sh
+ifneq ($(PLATFORM),fbsd) 
+ifneq ($(PLATFORM),obsd)
+REFLEXLL   += -ldl 
+endif 
+endif
 ifeq ($(PLATFORM),macosx)
 DICTEXT  = so
 else

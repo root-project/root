@@ -252,7 +252,13 @@ CINT7CFLAGS += -I$(CINT7DIRI) -I$(CINT7DIRS) -I$(CINT7DIR)/reflex/inc -Iinclude
 ifeq ($(PLATFORM),win32)
 REFLEXLL := lib/libReflex.lib
 else
-REFLEXLL := -Llib -lReflex -ldl
+REFLEXLL := -Llib -lReflex
+endif
+
+ifneq ($(PLATFORM),fbsd) 
+ifneq ($(PLATFORM),obsd)
+REFLEXLL   += -ldl 
+endif 
 endif
 
 ##### local rules #####
