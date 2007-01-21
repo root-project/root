@@ -34,6 +34,17 @@ ICC_MAJOR    := $(shell $(CXX) -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
 ICC_MINOR    := $(shell $(CXX) -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
                 cut -d'.' -f2)
 
+ifeq ($(ICC_MAJOR),8)
+ifneq ($(ICC_MINOR),0)
+CXXFLAGS     += -wd1572
+CFLAGS       += -wd1572
+CINTCXXFLAGS += -wd1572
+CINTCFLAGS   += -wd1572
+USE_PCH       = -use_pch
+CREATE_PCH    = -create_pch
+endif
+endif
+
 ifeq ($(ICC_MAJOR),9)
 CXXFLAGS     += -wd1572 -wd873 -wd672
 CFLAGS       += -wd1572
