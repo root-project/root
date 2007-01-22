@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.14 2006/06/25 18:43:24 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.15 2006/06/27 14:36:27 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -346,7 +346,7 @@ TSQLFile::TSQLFile(const char* dbname, Option_t* option, const char* user, const
    gDirectory = 0;
    SetName(dbname);
    SetTitle("TFile interface to SQL DB");
-   TDirectory::Build();
+   TDirectoryFile::Build();
    fFile = this;
 
    if (strstr(dbname,"oracle://")!=0) {
@@ -691,7 +691,7 @@ void TSQLFile::Close(Option_t *option)
    }
 
    // Delete all supported directories structures from memory
-   TDirectory::Close();
+   TDirectoryFile::Close();
    cd();      // Close() sets gFile = 0
 
    if (cursav)
@@ -860,7 +860,7 @@ Bool_t TSQLFile::WriteSpecialObject(Long64_t keyid, TObject* obj, const char* na
 {
 // write special kind of object like streamer infos or file itself    
 // keys for that objects should exist in tables but not indicated in list of keys,
-// therefore users can not get them with TDirectory::Get() method
+// therefore users can not get them with TDirectoryFile::Get() method
     
    DeleteKeyFromDB(keyid);  
    if (obj==0) return kTRUE;
@@ -2626,7 +2626,7 @@ void TSQLFile::DirWriteHeader(TDirectory* dir)
 {
    // Update dir header in the file
    
-   TSQLClassInfo* sqlinfo = FindSQLClassInfo("TDirectory",TDirectory::Class()->GetClassVersion());
+   TSQLClassInfo* sqlinfo = FindSQLClassInfo("TDirectory",TDirectoryFile::Class()->GetClassVersion());
    if (sqlinfo==0) return;
    
    // try to identify key with data for our directory
@@ -2636,10 +2636,10 @@ void TSQLFile::DirWriteHeader(TDirectory* dir)
    const char* valuequote = SQLValueQuote();
    const char* quote = SQLIdentifierQuote();
 
-   TString timeC = dir->GetCreationDate().AsSQLString();
+   TString timeC = fDatimeC.AsSQLString();
    TSQLStructure::AddStrBrackets(timeC, valuequote);
    
-   TString timeM = dir->GetModificationDate().AsSQLString();
+   TString timeM = fDatimeM.AsSQLString();
    TSQLStructure::AddStrBrackets(timeM, valuequote);
    
    TString uuid = dir->GetUUID().AsString();

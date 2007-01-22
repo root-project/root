@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.cxx,v 1.7 2006/02/03 21:55:39 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.cxx,v 1.8 2006/09/11 09:15:11 brun Exp $
 // Author: Rene Brun   15/01/2003
 
 /*************************************************************************
@@ -397,7 +397,7 @@ Bool_t TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, char 
       TDirectory *curdir = gDirectory;
       TClass *cl = gROOT->GetClass(key->GetClassName());
       // a TDirectory ?
-      if (cl && cl == TDirectory::Class()) {
+      if (cl && cl == TDirectoryFile::Class()) {
          curdir->cd(key->GetName());
          TDirectory *subdir = gDirectory;
          Bool_t gotInfo = GetObjectInfoDir(subdir, px, py, info);
@@ -559,7 +559,7 @@ void TFileDrawMap::PaintDir(TDirectory *dir, const char *keys)
       TString s = key->GetName();
       if (strcmp(fKeys.Data(),key->GetName()) && s.Index(re) == kNPOS) continue;
       // a TDirectory ?
-      if (cl && cl == TDirectory::Class()) {
+      if (cl && cl == TDirectoryFile::Class()) {
          TDirectory *curdir = gDirectory;
          gDirectory->cd(key->GetName());
          TDirectory *subdir = gDirectory;

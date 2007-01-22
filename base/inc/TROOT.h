@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.56 2006/12/01 11:50:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.57 2007/01/17 11:55:01 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -195,7 +195,7 @@ public:
    TSeqCollection   *GetListOfDataSets() const { return fDataSets; }
    TList            *GetListOfBrowsables() const { return fBrowsables; }
    TDataType        *GetType(const char *name, Bool_t load = kFALSE) const;
-   TFile            *GetFile() const { return fFile; }
+   TFile            *GetFile() const { if (gDirectory != this) return gDirectory->GetFile(); else return 0;}
    TFile            *GetFile(const char *name) const;
    TStyle           *GetStyle(const char *name) const;
    TObject          *GetFunction(const char *name) const;

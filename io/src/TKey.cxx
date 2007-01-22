@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.62 2007/01/12 16:03:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.63 2007/01/19 16:47:59 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -40,7 +40,7 @@
 //    - to write a new ntuple buffer                                    //
 //                                                                      //
 //  The structure of a file is shown in TFile::TFile.                   //
-//  The structure of a directory is shown in TDirectory::TDirectory.    //
+//  The structure of a directory is shown in TDirectoryFile ctor.       //
 //  The TKey class is used by the TBasket class.                        //
 //  See also TTree.                                                     //
 //                                                                      //
@@ -49,7 +49,7 @@
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TClass.h"
-#include "TDirectory.h"
+#include "TDirectoryFile.h"
 #include "TFile.h"
 #include "TKey.h"
 #include "TBufferFile.h"
@@ -142,7 +142,7 @@ TKey::TKey(TDirectory* motherDir) : TNamed(), fDatime((UInt_t)0)
 TKey::TKey(Long64_t pointer, Int_t nbytes, TDirectory* motherDir) : TNamed()
 {
    // Create a TKey object to read keys.
-   // Constructor called by TDirectory::ReadKeys and by TFile::TFile.
+   // Constructor called by TDirectoryFile::ReadKeys and by TFile::TFile.
    // A TKey object is created to read the keys structure itself.
 
    Build(motherDir, "", pointer);
@@ -367,7 +367,7 @@ void TKey::Browse(TBrowser *b)
 {
    // Read object from disk and call its Browse() method.
    // If object with same name already exist in memory delete it (like
-   // TDirectory::Get() is doing), except when the key references a
+   // TDirectoryFile::Get() is doing), except when the key references a
    // folder in which case we don't want to re-read the folder object
    // since it might contain new objects not yet saved.
 
@@ -737,8 +737,8 @@ TObject *TKey::ReadObj()
 
    if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
 
-   if (cl == TDirectory::Class()) {
-      TDirectory *dir = dynamic_cast<TDirectory*>(tobj);
+   if (cl == TDirectoryFile::Class()) {
+      TDirectory *dir = dynamic_cast<TDirectoryFile*>(tobj);
       dir->SetName(GetName());
       dir->SetTitle(GetTitle());
       dir->SetMother(fMotherDir);
@@ -873,8 +873,8 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
       // See similar adjustments in ReadObj
       if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
 
-      if (cl == TDirectory::Class()) {
-         TDirectory *dir = dynamic_cast<TDirectory*>(tobj);
+      if (cl == TDirectoryFile::Class()) {
+         TDirectory *dir = dynamic_cast<TDirectoryFile*>(tobj);
          dir->SetName(GetName());
          dir->SetTitle(GetTitle());
          gDirectory->Append(dir);

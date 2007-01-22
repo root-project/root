@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.41 2006/11/25 09:07:59 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.42 2007/01/19 16:47:59 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -139,7 +139,8 @@
 #pragma link C++ class TControlBarImp+;
 #pragma link C++ class TInspectorImp+;
 #pragma link C++ class TDatime-;
-#pragma link C++ class TDirectory-;
+#pragma link C++ class TDirectory;
+#pragma link C++ class TDirectoryFile-;
 #pragma link C++ class TEnv+;
 #pragma link C++ class TEnvRec+;
 #pragma link C++ class TFile-;

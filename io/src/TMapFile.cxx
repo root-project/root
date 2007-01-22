@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.23 2007/01/15 12:51:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.24 2007/01/19 16:47:59 brun Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -89,7 +89,7 @@
 
 #include "TMapFile.h"
 #include "TKeyMapFile.h"
-#include "TDirectory.h"
+#include "TDirectoryFile.h"
 #include "TBrowser.h"
 #include "TString.h"
 #include "TSystem.h"
@@ -519,7 +519,7 @@ void TMapFile::InitDirectory()
    // Create the directory associated to this mapfile
 
    gDirectory = 0;
-   fDirectory = new TDirectory();
+   fDirectory = new TDirectoryFile();
    fDirectory->SetName(GetName());
    fDirectory->SetTitle(GetTitle());
    fDirectory->Build();

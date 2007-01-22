@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.56 2006/09/11 08:11:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.57 2006/10/05 14:53:48 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -21,8 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TDirectory
-#include "TDirectory.h"
+#ifndef ROOT_TDirectoryFile
+#include "TDirectoryFile.h"
 #endif
 #ifndef ROOT_TUrl
 #include "TUrl.h"
@@ -35,8 +35,8 @@ class TFileOpenHandle;
 class TFileCacheRead;
 class TFileCacheWrite;
 
-class TFile : public TDirectory {
-  friend class TDirectory;
+class TFile : public TDirectoryFile {
+  friend class TDirectoryFile;
 
 public:
    // Asynchronous open request status

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.197 2007/01/15 11:52:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.198 2007/01/15 22:08:28 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -70,7 +70,7 @@ ClassImp(TFile)
 //*-*x17 macros/layout_file
 
 //______________________________________________________________________________
-TFile::TFile() : TDirectory(), fInfoCache(0)
+TFile::TFile() : TDirectoryFile(), fInfoCache(0)
 {
    // File default Constructor.
 
@@ -103,7 +103,7 @@ TFile::TFile() : TDirectory(), fInfoCache(0)
 
 //_____________________________________________________________________________
 TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t compress)
-           : TDirectory(), fUrl(fname1,kTRUE), fInfoCache(0)
+           : TDirectoryFile(), fUrl(fname1,kTRUE), fInfoCache(0)
 {
    // Opens or creates a local ROOT file whose name is fname1. It is
    // recommended to specify fname1 as "<file>.root". The suffix ".root"
@@ -228,7 +228,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 */
 //End_Html
    //
-   // The structure of a directory is shown in TDirectory::TDirectory
+   // The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 
    if (!gROOT)
       ::Fatal("TFile::TFile", "ROOT system not initialized");
@@ -261,7 +261,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fAsyncHandle = 0;
    fAsyncOpenStatus = kAOSNotAsync;
 
-   TDirectory::Build(this, 0);
+   TDirectoryFile::Build(this, 0);
 
    fD            = -1;
    fFree         = 0;
@@ -417,7 +417,7 @@ zombie:
 }
 
 //______________________________________________________________________________
-TFile::TFile(const TFile &file) : TDirectory(), fInfoCache(0)
+TFile::TFile(const TFile &file) : TDirectoryFile(), fInfoCache(0)
 {
    // Copy constructor.
 
@@ -509,7 +509,7 @@ void TFile::Init(Bool_t create)
 
       //*-* Write Directory info
       Int_t namelen= TNamed::Sizeof();
-      Int_t nbytes = namelen + TDirectory::Sizeof();
+      Int_t nbytes = namelen + TDirectoryFile::Sizeof();
       TKey *key    = new TKey(fName, fTitle, IsA(), nbytes, this);
       fNbytesName  = key->GetKeylen() + namelen;
       fSeekDir     = key->GetSeekKey();
@@ -518,7 +518,7 @@ void TFile::Init(Bool_t create)
       WriteHeader();
       char *buffer = key->GetBuffer();
       TNamed::FillBuffer(buffer);
-      TDirectory::FillBuffer(buffer);
+      TDirectoryFile::FillBuffer(buffer);
       key->WriteFile();
       delete key;
    } else {
@@ -573,7 +573,7 @@ void TFile::Init(Bool_t create)
          }
       }
       //*-*-------------Read directory info
-      Int_t nbytes = fNbytesName + TDirectory::Sizeof();
+      Int_t nbytes = fNbytesName + TDirectoryFile::Sizeof();
       header       = new char[nbytes];
       buffer       = header;
       Seek(fBEGIN);
@@ -621,7 +621,7 @@ void TFile::Init(Bool_t create)
       //*-* -------------Read keys of the top directory
       if (fSeekKeys > fBEGIN && fEND <= size) {
          //normal case. Recover only if file has no keys
-         TDirectory::ReadKeys();
+         TDirectoryFile::ReadKeys();
          gDirectory = this;
          if (!GetNkeys()) Recover();
       } else if ((fBEGIN+nbytes == fEND) && (fEND == size)) {
@@ -714,8 +714,8 @@ void TFile::Close(Option_t *option)
 
    // Delete all supported directories structures from memory
    // If gDirectory points to this object or any of the nested
-   // TDirectory, TDirectory::Close will induce the proper cd.
-   TDirectory::Close();
+   // TDirectoryFile, TDirectoryFile::Close will induce the proper cd.
+   TDirectoryFile::Close();
 
    if (IsWritable()) {
       TFree *f1 = (TFree*)fFree->First();
@@ -796,7 +796,7 @@ void TFile::Delete(const char *namecycle)
    if (gDebug)
       Info("Delete", "deleting name = %s", namecycle);
 
-   TDirectory::Delete(namecycle);
+   TDirectoryFile::Delete(namecycle);
 }
 
 //______________________________________________________________________________
@@ -1071,7 +1071,7 @@ void TFile::ls(Option_t *option) const
    TROOT::IndentLevel();
    cout <<ClassName()<<"**\t\t"<<GetName()<<"\t"<<GetTitle()<<endl;
    TROOT::IncreaseDirLevel();
-   TDirectory::ls(option);
+   TDirectoryFile::ls(option);
    TROOT::DecreaseDirLevel();
 }
 
@@ -1715,7 +1715,7 @@ Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
    }
 
    fMustFlush = kFALSE;
-   Int_t nbytes = TDirectory::Write(0, opt, bufsiz); // Write directory tree
+   Int_t nbytes = TDirectoryFile::Write(0, opt, bufsiz); // Write directory tree
    WriteStreamerInfo();
    WriteFree();                       // Write free segments linked list
    WriteHeader();                     // Now write file header

@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.22 2006/06/27 14:36:28 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.23 2006/10/05 10:28:49 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -37,8 +37,8 @@
 //   TFile::Open("file.xml","recreate");
 // TFile::Open returns a TXMLFile object. When a XML file is open in write mode,
 // one can use the normal TObject::Write to write an object in the file.
-// Alternatively one can use the new functions TDirectory::WriteObject and
-// TDirectory::WriteObjectAny to write a TObject* or any class not deriving
+// Alternatively one can use the new functions TDirectoryFile::WriteObject and
+// TDirectoryFile::WriteObjectAny to write a TObject* or any class not deriving
 // from TObject.
 //
 // example of a session saving a histogram to a XML file
@@ -146,7 +146,7 @@ TXMLFile::TXMLFile(const char* filename, Option_t* option, const char* title, In
    gDirectory = 0;
    SetName(filename);
    SetTitle(title);
-   TDirectory::Build(this, 0);
+   TDirectoryFile::Build(this, 0);
 
    fD          = -1;
    fFile       = this;
@@ -345,7 +345,7 @@ void TXMLFile::Close(Option_t *option)
    }
 
    // Delete all supported directories structures from memory
-   TDirectory::Close();
+   TDirectoryFile::Close();
    cd();      // Close() sets gFile = 0
 
    if (cursav)
