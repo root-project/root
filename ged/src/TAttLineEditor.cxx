@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.11 2006/06/23 15:19:22 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.12 2006/09/25 13:35:58 rdm Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -146,7 +146,7 @@ void TAttLineEditor::DoLineWidth(Int_t width)
    // Slot connected to the line width.
 
    if (fAvoidSignal) return;
-     if (dynamic_cast<TGraph*>(fAttLine)) {
+   if (dynamic_cast<TGraph*>(fAttLine)) {
       Int_t graphLineWidth = 100*Int_t(fAttLine->GetLineWidth()/100);
       if (graphLineWidth >= 0) {
          fAttLine->SetLineWidth(graphLineWidth+width);
