@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.156 2007/01/18 17:09:00 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.157 2007/01/22 11:39:56 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1826,9 +1826,8 @@ Int_t TProofServ::Setup()
                fWorkDir = tmpWorkDir;
          }
       } else {
-         Error("Setup", "reading config file %s",
+         Info("Setup", "invalid config file %s (missing or unreadable",
                         resources.GetFileName().Data());
-         return -1;
       }
    }
 
