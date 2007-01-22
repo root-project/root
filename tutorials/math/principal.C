@@ -35,7 +35,7 @@ void principal(Int_t n=10, Int_t m=10000)
   // final argument, if you don't wan't the covariance
   // matrix. Normalising the covariance matrix is a good idea if your
   // variables have different orders of magnitude. 
-  TPrincipal* principal = new TPrincipal(n,"N");
+  TPrincipal* principal = new TPrincipal(n,"ND");
   
   // Use a pseudo-random number generator
   TRandom* random = new TRandom;
