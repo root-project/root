@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.64 2007/01/22 05:58:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.65 2007/01/22 15:38:37 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -353,6 +353,8 @@ void TKey::Build(TDirectory* motherDir, const char* classname, Long64_t filepos)
    fSeekKey    = 0;
 
    fClassName = classname;
+   //the following test required for forward and backward compatibility
+   if (fClassName == "TDirectoryFile") fClassName = "TDirectory";
 
    fVersion = TKey::Class_Version();
 
@@ -652,6 +654,7 @@ TObject *TKey::ReadObj()
    //
    //  Of course, dynamic_cast<> can also be used in the example 1.
 
+//printf("in TKey::ReadObj, fClassname=%s\n",fClassName.Data());
    TClass *cl = gROOT->GetClass(fClassName.Data());
    if (!cl) {
       Error("ReadObj", "Unknown class %s", fClassName.Data());
@@ -989,8 +992,8 @@ void TKey::ReadKeyBuffer(char *&buffer)
       frombuf(buffer, &seekkey); fSeekKey = (Long64_t)seekkey;
       frombuf(buffer, &seekdir); fSeekPdir= (Long64_t)seekdir;
    }
-   fClassName.ReadBuffer(buffer);
-   //we must execute the next statement for back compatibility
+   fClassName.ReadBuffer(buffer);   
+   //the following test required for forward and backward compatibility
    if (fClassName == "TDirectory") fClassName = "TDirectoryFile";
    
    fName.ReadBuffer(buffer);
