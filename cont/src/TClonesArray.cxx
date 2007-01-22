@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.58 2007/01/15 10:15:47 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.59 2007/01/20 19:29:34 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -188,7 +188,7 @@ TClonesArray::TClonesArray(const TClonesArray& tc): TObjArray(tc)
    BypassStreamer(kTRUE);
 
    for (Int_t i = 0; i < fSize; i++) {
-      fCont[i] = tc.fCont[i]->Clone();
+      if (tc.fCont[i]) fCont[i] = tc.fCont[i]->Clone();
       fKeep->fCont[i] = fCont[i];
    }
 }
@@ -222,7 +222,7 @@ TClonesArray& TClonesArray::operator=(const TClonesArray& tc)
    BypassStreamer(kTRUE);
 
    for (i = 0; i < tc.fSize; i++) {
-      fKeep->fCont[i] = tc.fCont[i]->Clone();
+      if (tc.fCont[i]) fKeep->fCont[i] = tc.fCont[i]->Clone();
       fCont[i] = fKeep->fCont[i];
    }
 
