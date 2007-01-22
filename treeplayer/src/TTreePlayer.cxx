@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.231 2006/10/25 11:59:45 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.232 2006/11/22 16:52:54 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -218,6 +218,7 @@
 #include "TSystem.h"
 #include "TFile.h"
 #include "TEventList.h"
+#include "TEntryList.h"
 #include "TBranchObject.h"
 #include "TBranchElement.h"
 #include "TStreamerInfo.h"
@@ -268,6 +269,7 @@
 #include "TVirtualMonitoring.h"
 #include "TTreeCache.h"
 
+
 R__EXTERN Foption_t Foption;
 R__EXTERN  TTree *gTree;
 
@@ -293,6 +295,7 @@ TTreePlayer::TTreePlayer()
    fSelector         = new TSelectorDraw();
    fSelectorFromFile = 0;
    fSelectorClass    = 0;
+   fSelectorUpdate   = kFALSE;
    fInput            = new TList();
    fInput->Add(new TNamed("varexp",""));
    fInput->Add(new TNamed("selection",""));
@@ -821,19 +824,22 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //  The option=prof is automatically selected in case of z:y:x>>pf
 //  where pf is an existing TProfile2D histogram.
 //
-//     Saving the result of Draw to a TEventList
-//     =========================================
+//     Saving the result of Draw to a TEventList or a TEntryList
+//     =========================================================
 //  TTree::Draw can be used to fill a TEventList object (list of entry numbers)
 //  instead of histogramming one variable.
 //  If varexp0 has the form >>elist , a TEventList object named "elist"
 //  is created in the current directory. elist will contain the list
 //  of entry numbers satisfying the current selection.
+//  If option "entrylist" is used, a TEntryList object is created
 //  Example:
 //    tree.Draw(">>yplus","y>0")
 //    will create a TEventList object named "yplus" in the current directory.
 //    In an interactive session, one can type (after TTree::Draw)
 //       yplus.Print("all")
 //    to print the list of entry numbers in the list.
+//    tree.Draw(">>yplus", "y>0", "entrylist")
+//    will create a TEntryList object names "yplus" in the current directory
 //
 //  By default, the specified entry list is reset.
 //  To continue to append data to an existing list, use "+" in front
@@ -842,14 +848,24 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //      will not reset yplus, but will enter the selected entries at the end
 //      of the existing list.
 //
-//      Using a TEventList as Input
+//      Using a TEventList or a TEntryList as Input
 //      ===========================
-//  Once a TEventList object has been generated, it can be used as input
-//  for TTree::Draw. Use TTree::SetEventList to set the current event list
-//  Example:
+//  Once a TEventList or a TEntryList object has been generated, it can be used as input
+//  for TTree::Draw. Use TTree::SetEventList or TTree::SetEntryList to set the 
+//  current event list
+//  Example1:
 //     TEventList *elist = (TEventList*)gDirectory->Get("yplus");
 //     tree->SetEventList(elist);
 //     tree->Draw("py");
+//  Example2:
+//     TEntryList *elist = (TEntryList*)gDirectory->Get("yplus");
+//     tree->SetEntryList(elist);
+//     tree->Draw("py");
+//  If a TEventList object is used as input, a new TEntryList object is created
+//  inside the SetEventList function. In case of a TChain, all tree headers are loaded
+//  for this transformation. This new object is owned by the chain and is deleted
+//  with it, unless the user extracts it by calling GetEntryList() function.
+//  See also comments to SetEventList() function of TTree and TChain.
 //
 //  If arrays are used in the selection critera, the event entered in the
 //  list are all the event that have at least one element of the array that
@@ -954,7 +970,11 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
    }
 
    Long64_t oldEstimate  = fTree->GetEstimate();
-   TEventList *elist  = fTree->GetEventList();
+   TEventList *evlist  = fTree->GetEventList();
+   TEntryList *elist = fTree->GetEntryList();
+   if (evlist && elist){
+      elist->SetBit(kCanDelete, kTRUE);
+   }
    TNamed *cvarexp    = (TNamed*)fInput->FindObject("varexp");
    TNamed *cselection = (TNamed*)fInput->FindObject("selection");
    if (cvarexp) cvarexp->SetTitle(varexp0);
@@ -965,7 +985,6 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 
    // invoke the selector
    Long64_t nrows = Process(fSelector,option,nentries,firstentry);
-
    fSelectedRows = nrows;
    fDimension = fSelector->GetDimension();
 
@@ -974,7 +993,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
       fTree->SetEstimate(oldEstimate);
       if (fSelector->GetCleanElist()) {
          // We are in the case where the input list was reset!
-         fTree->SetEventList(elist);
+         fTree->SetEntryList(elist);
          delete fSelector->GetObject();
       }
       return nrows;
@@ -1117,7 +1136,9 @@ Long64_t TTreePlayer::GetEntriesToProcess(Long64_t firstentry, Long64_t nentries
       lastentry  = fTree->GetEntriesFriend() - 1;
       nentries   = lastentry - firstentry + 1;
    }
-   TEventList *elist = fTree->GetEventList();
+   //TEventList *elist = fTree->GetEventList();
+   //if (elist && elist->GetN() < nentries) nentries = elist->GetN();
+   TEntryList *elist = fTree->GetEntryList();
    if (elist && elist->GetN() < nentries) nentries = elist->GetN();
    return nentries;
 }
@@ -2637,6 +2658,12 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       if (gMonitoringWriter)
          gMonitoringWriter->SendProcessingProgress(0,0,kTRUE);
 
+      //trying to set the first tree, because in the Draw function
+      //the tree corresponding to firstentry has already been loaded,
+      //so it is not set in the entry list
+      fSelectorUpdate = kTRUE;
+      UpdateFormulaLeaves();
+
       for (entry=firstentry;entry<firstentry+nentries;entry++) {
          entryNumber = fTree->GetEntryNumber(entry);
          if (entryNumber < 0) break;
@@ -2663,7 +2690,7 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       selector->SlaveTerminate();   //<==call user termination function
       selector->Terminate();        //<==call user termination function
    }
-
+   fSelectorUpdate = kFALSE;
    if (gMonitoringWriter)
       gMonitoringWriter->SendProcessingStatus("DONE");
 
@@ -3491,7 +3518,30 @@ void TTreePlayer::UpdateFormulaLeaves()
    // Because Trees in a TChain may have a different list of leaves, one
    // must update the leaves numbers in the TTreeFormula used by the TreePlayer.
 
-   if (fSelector) fSelector->Notify();
+   if (fSelector)  fSelector->Notify();
+   if (fSelectorUpdate){
+      //If the selector is writing into a TEntryList, the entry list's
+      //sublists need to be changed according to the loaded tree
+      if (fSelector) {
+         //FIXME: should be more consistent with selector from file
+         TObject *obj = fSelector->GetObject();
+         if (obj){
+            if (fSelector->GetObject()->InheritsFrom(TEntryList::Class())){
+               ((TEntryList*)fSelector->GetObject())->SetTree(fTree->GetTree());
+            }
+         }
+      }   
+      if (fSelectorFromFile) {
+         TIter next(fSelectorFromFile->GetOutputList());
+         TEntryList *elist=0;
+         while ((elist=(TEntryList*)next())){
+            if (elist->InheritsFrom(TEntryList::Class())){
+               elist->SetTree(fTree->GetTree());
+            }
+         }
+      }
+   }
+
    if (fFormulaList->GetSize()) {
       TObjLink *lnk = fFormulaList->FirstLink();
       while (lnk) {

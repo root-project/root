@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.205 2006/11/08 19:23:12 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.206 2007/01/15 16:10:11 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -41,6 +41,8 @@
 #include "TMethod.h"
 #include "TBaseClass.h"
 #include "TFormLeafInfoReference.h"
+
+#include "TEntryList.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -294,7 +296,7 @@ TTreeFormula::~TTreeFormula()
    TIter next(&fMethods);
    TObject *obj;
    while ((obj=next())) {
-      if (obj->InheritsFrom("TCutG")) temp.Add(obj);
+      if (obj->InheritsFrom("TCutG") || obj->InheritsFrom("TEntryList")) temp.Add(obj);
    }
    TIter next2(&temp);
    while ((obj=next2())) {
@@ -2631,6 +2633,19 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
       fLookupType[code] = -1;
       return code;
    }
+
+   //may be an entrylist
+   TEntryList *elist = (TEntryList*)gDirectory->Get(name.Data());
+   if (elist) {
+      Int_t code = fNcodes;
+      fCodes[code] = 0;
+      fMethods.AddAtAndExpand(elist, code);
+      fNcodes++;
+      fLookupType[code] = kEntryList;
+      return code;
+
+   }
+
    return -1;
 }
 
@@ -3200,6 +3215,7 @@ void* TTreeFormula::EvalObject(int instance)
       case kLength:
       case kLengthFunc:
       case kIteration:
+      case kEntryList:
          return 0;
    }
 
@@ -3368,6 +3384,10 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
          case kLengthFunc:   return ((TTreeFormula*)fAliases.UncheckedAt(0))->GetNdata();
          case kIteration:    return instance;
          case kSum:          return Summing((TTreeFormula*)fAliases.UncheckedAt(0));
+         case kEntryList: {
+            TEntryList *elist = (TEntryList*)fMethods.At(0);
+            return elist->Contains(fTree->GetReadEntry());
+         }
          case -1: break;
       }
       switch (fCodes[0]) {
@@ -3600,6 +3620,9 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                case kMethod:     { TT_EVAL_INIT_LOOP; tab[pos++] = GetValueFromMethod(code,leaf); continue; }
                case kDataMember: { TT_EVAL_INIT_LOOP; tab[pos++] = ((TFormLeafInfo*)fDataMembers.UncheckedAt(code))->
                                           GetValue(leaf,real_instance); continue; }
+               case kEntryList: { TEntryList *elist = (TEntryList*)fMethods.At(code);
+                  tab[pos++] = elist->Contains(fTree->GetReadEntry());
+                  continue;}
                case -1: break;
                default: tab[pos++] = 0; continue;
             }
@@ -3937,6 +3960,7 @@ Bool_t TTreeFormula::IsInteger() const
          case kIteration:
            return kTRUE;
          case kSum:
+         case kEntryList:
          default:
            return kFALSE;
       }
@@ -3964,6 +3988,7 @@ Bool_t TTreeFormula::IsLeafInteger(Int_t code) const
          case kIteration:
            return kTRUE;
          case kSum:
+         case kEntryList:
          default:
            return kFALSE;
       }

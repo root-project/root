@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.92 2006/09/17 19:08:13 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.93 2006/11/22 16:52:54 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -82,6 +82,7 @@ class TH1;
 class TTreeFormula;
 class TPolyMarker;
 class TEventList;
+class TEntryList;
 class TSQLResult;
 class TSelector;
 class TPrincipal;
@@ -123,6 +124,7 @@ protected:
    TObjArray      fLeaves;            //  Direct pointers to individual branch leaves
    TList         *fAliases;           //  List of aliases for expressions based on the tree branches.
    TEventList    *fEventList;         //! Pointer to event selection list (if one)
+   TEntryList    *fEntryList;         //! Pointer to event selection list (if one)
    TArrayD        fIndexValues;       //  Sorted index values
    TArrayI        fIndex;             //  Index of sorted values
    TVirtualIndex *fTreeIndex;         //  Pointer to the tree Index (if any)
@@ -262,6 +264,7 @@ public:
    virtual Long64_t        GetEntryNumberWithBestIndex(Int_t major, Int_t minor = 0) const;
    virtual Long64_t        GetEntryNumberWithIndex(Int_t major, Int_t minor = 0) const;
    TEventList             *GetEventList() const { return fEventList; }
+   virtual TEntryList     *GetEntryList();
    virtual Long64_t        GetEntryNumber(Long64_t entry) const;
    virtual Int_t           GetFileNumber() const { return fFileNumber; }
    virtual const char     *GetFriendAlias(TTree*) const;
@@ -365,7 +368,8 @@ public:
    virtual Long64_t        SetEntries(Long64_t n = -1);
    virtual void            SetEstimate(Long64_t nentries = 10000);
    virtual void            SetFileNumber(Int_t number = 0);
-   virtual void            SetEventList(TEventList* list) { fEventList = list; }
+   virtual void            SetEventList(TEventList* list);
+   virtual void            SetEntryList(TEntryList* list);
    virtual void            SetMakeClass(Int_t make) { fMakeClass = make; }
    virtual void            SetMaxEntryLoop(Long64_t maxev = 1000000000) { fMaxEntryLoop = maxev; } // *MENU*
    static  void            SetMaxTreeSize(Long64_t maxsize = 1900000000);

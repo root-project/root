@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.314 2007/01/13 20:26:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.315 2007/01/19 16:48:00 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -272,6 +272,7 @@
 #include "TDataType.h"
 #include "TDirectory.h"
 #include "TError.h"
+#include "TEntryList.h"
 #include "TEventList.h"
 #include "TFile.h"
 #include "TFolder.h"
@@ -416,6 +417,7 @@ TTree::TTree()
 , fLeaves()
 , fAliases(0)
 , fEventList(0)
+, fEntryList(0)
 , fIndexValues()
 , fIndex()
 , fTreeIndex(0)
@@ -474,6 +476,7 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */)
 , fLeaves()
 , fAliases(0)
 , fEventList(0)
+, fEntryList(0)
 , fIndexValues()
 , fIndex()
 , fTreeIndex(0)
@@ -601,6 +604,12 @@ TTree::~TTree()
       // Note: fClones does not own its content.
       delete fClones;
       fClones = 0;
+   if (fEntryList){
+      if (fEntryList->TestBit(kCanDelete)){
+         delete fEntryList;
+         fEntryList=0;
+      }
+   }
    }
    delete fTreeIndex;
    fTreeIndex = 0;
@@ -626,6 +635,7 @@ void TTree::AddClone(TTree* clone)
       fClones->Add(clone);
    }
 }
+
 
 //______________________________________________________________________________
 TFriendElement* TTree::AddFriend(const char* treename, const char* filename)
@@ -2915,19 +2925,22 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //  The option=prof is automatically selected in case of y:x>>pf
    //  where pf is an existing TProfile histogram.
    //
-   //     Saving the result of Draw to a TEventList
-   //     =========================================
+   //     Saving the result of Draw to a TEventList or a TEntryList
+   //     =========================================================
    //  TTree::Draw can be used to fill a TEventList object (list of entry numbers)
    //  instead of histogramming one variable.
    //  If varexp0 has the form >>elist , a TEventList object named "elist"
    //  is created in the current directory. elist will contain the list
    //  of entry numbers satisfying the current selection.
+   //  If option "entrylist" is used, a TEntryList object is created
    //  Example:
    //    tree.Draw(">>yplus","y>0")
    //    will create a TEventList object named "yplus" in the current directory.
    //    In an interactive session, one can type (after TTree::Draw)
    //       yplus.Print("all")
    //    to print the list of entry numbers in the list.
+   //    tree.Draw(">>yplus", "y>0", "entrylist")
+   //    will create a TEntryList object names "yplus" in the current directory
    //
    //  By default, the specified entry list is reset.
    //  To continue to append data to an existing list, use "+" in front
@@ -2936,14 +2949,24 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //      will not reset yplus, but will enter the selected entries at the end
    //      of the existing list.
    //
-   //      Using a TEventList as Input
+   //      Using a TEventList or a TEntryList as Input
    //      ===========================
-   //  Once a TEventList object has been generated, it can be used as input
-   //  for TTree::Draw. Use TTree::SetEventList to set the current event list
-   //  Example:
+   //  Once a TEventList or a TEntryList object has been generated, it can be used as input
+   //  for TTree::Draw. Use TTree::SetEventList or TTree::SetEntryList to set the 
+   //  current event list
+   //  Example1:
    //     TEventList *elist = (TEventList*)gDirectory->Get("yplus");
    //     tree->SetEventList(elist);
    //     tree->Draw("py");
+   //  Example2:
+   //     TEntryList *elist = (TEntryList*)gDirectory->Get("yplus");
+   //     tree->SetEntryList(elist);
+   //     tree->Draw("py");
+   //  If a TEventList object is used as input, a new TEntryList object is created
+   //  inside the SetEventList function. In case of a TChain, all tree headers are loaded
+   //  for this transformation. This new object is owned by the chain and is deleted
+   //  with it, unless the user extracts it by calling GetEntryList() function.
+   //  See also comments to SetEventList() function of TTree and TChain.
    //
    //  If arrays are used in the selection critera, the entry entered in the
    //  list are all the entries that have at least one element of the array that
@@ -2956,7 +2979,7 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //  a positive fPy.
    //
    //  To select only the elements that did match the original selection
-   //  use TEventList::SetReapplyCut.
+   //  use TEventList::SetReapplyCut or TEntryList::SetReapplyCut.
    //  Example:
    //      tree.Draw(">>pyplus","fTracks.fPy>0");
    //      pyplus->SetReapplyCut(kTRUE);
@@ -3720,18 +3743,38 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    return nbytes;
 }
 
+TEntryList* TTree::GetEntryList()
+{
+//Returns the entry list, set to this tree
+//
+//The returned object is not owned by the tree, even if the entry list was created
+//by the SetEventList() function (see also comments of SetEventList())
+
+   if (!fEntryList) return 0;
+
+   //check, if the entry list is owned by the tree.
+   //This lack of "constness" is caused by the SetEventList() function
+   //creating an entry list.
+   if (fEntryList->TestBit(kCanDelete) == kTRUE){
+      fEntryList->SetBit(kCanDelete, kFALSE);
+   }
+   return fEntryList;
+}
+
+//______________________________________________________________________________
 //______________________________________________________________________________
 Long64_t TTree::GetEntryNumber(Long64_t entry) const
 {
    // -- Return entry number corresponding to entry.
    //
-   // if no selection list returns entry
+   // if no TEntryList set returns entry
    // else returns the entry number corresponding to the list index=entry
 
-   if (!fEventList) {
+   if (!fEntryList) {
       return entry;
    }
-   return fEventList->GetEntry(entry);
+
+   return fEntryList->GetEntry(entry);
 }
 
 //______________________________________________________________________________
@@ -5522,6 +5565,59 @@ Long64_t TTree::SetEntries(Long64_t n)
    }
    fEntries = nMax;
    return fEntries;
+}
+
+//_______________________________________________________________________
+void TTree::SetEntryList(TEntryList *enlist)
+{
+   //Set an EntryList
+   
+   if (fEntryList) {
+      //check if the previous entry list is owned by the tree
+      if (fEntryList->TestBit(kCanDelete)){
+         delete fEntryList;
+      }
+   }
+   fEventList = 0;
+   if (!enlist) {
+      fEntryList = 0;
+      return;
+   }
+   fEntryList = enlist;
+   fEntryList->SetTree(this);
+
+}
+
+//_______________________________________________________________________
+void TTree::SetEventList(TEventList *evlist)
+{
+//This function transfroms the given TEventList into a TEntryList
+//The new TEntryList is owned by the TTree and gets deleted when the tree
+//is deleted. This TEntryList can be returned by GetEntryList() function, and after
+//GetEntryList() function is called, the TEntryList is not owned by the tree 
+//any more.
+
+   if (!evlist) {
+      if (fEntryList){
+         if (fEntryList->TestBit(kCanDelete)){
+            delete fEntryList;
+         }
+      }
+      fEntryList = 0;
+      fEventList = 0;
+      return;
+   }
+
+   fEventList = evlist;
+   fEntryList = new TEntryList(evlist->GetName(), evlist->GetTitle());
+   Int_t nsel = evlist->GetN();
+   fEntryList->SetTree(this);
+   Long64_t entry;
+   for (Int_t i=0; i<nsel; i++){
+      entry = evlist->GetEntry(i);
+      fEntryList->Enter(entry);
+   }
+   fEntryList->SetBit(kCanDelete, kTRUE);
 }
 
 //_______________________________________________________________________

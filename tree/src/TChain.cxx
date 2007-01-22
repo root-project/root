@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.149 2006/11/28 07:38:18 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.150 2007/01/12 16:03:17 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -51,6 +51,8 @@
 #include "TTreeCache.h"
 #include "TUrl.h"
 #include "TVirtualIndex.h"
+#include "TEventList.h"
+#include "TEntryList.h"
 
 ClassImp(TChain)
 
@@ -148,6 +150,12 @@ TChain::~TChain()
    delete[] fTreeOffset;
    fTreeOffset = 0;
 
+   if (fEntryList){
+      if (fEntryList->TestBit(kCanDelete)){
+         delete fEntryList;
+         fEntryList = 0;
+      }
+   }
    gROOT->GetListOfSpecials()->Remove(this);
 
    // Remove from the global list
@@ -256,7 +264,7 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = kBigNumber */)
       directory = basename(0,slashpos); // Copy the directory name
       basename.Remove(0,slashpos+1);      // and remove it from basename
    } else {
-      directory = gSystem->WorkingDirectory();
+      directory = gSystem->UnixPathName(gSystem->WorkingDirectory());
    }
 
    const char *file;
@@ -645,7 +653,7 @@ Long64_t TChain::Draw(const char* varexp, const char* selection,
       fProofChain->SetEventList(fEventList);
       return fProofChain->Draw(varexp, selection, option, nentries, firstentry);
    }
-
+   GetPlayer();
    if (LoadTree(firstentry) < 0) return 0;
    return TTree::Draw(varexp,selection,option,nentries,firstentry);
 }
@@ -794,6 +802,37 @@ Int_t TChain::GetEntry(Long64_t entry, Int_t getall)
       return 0;
    }
    return fTree->GetEntry(fReadEntry, getall);
+}
+
+//______________________________________________________________________________
+Long64_t TChain::GetEntryNumber(Long64_t entry) const
+{
+   // -- Return entry number corresponding to entry.
+   //
+   // if no TEntryList set returns entry
+   // else returns entry #entry from this entry list and 
+   // also computes the global entry number (loads all tree headers)
+
+
+   if (fEntryList){
+      Int_t treenum = 0;
+      Long64_t localentry = fEntryList->GetEntryAndTree(entry, treenum);
+      //find the global entry number
+      //same const_cast as in the GetEntries() function
+      if (localentry<0) return -1;
+      if (treenum != fTreeNumber){
+         if (fTreeOffset[treenum]==kBigNumber){
+            for (Int_t i=0; i<=treenum; i++){
+               if (fTreeOffset[i]==kBigNumber)
+                  (const_cast<TChain*>(this))->LoadTree(fTreeOffset[i-1]);
+            }
+         }
+         (const_cast<TChain*>(this))->LoadTree(fTreeOffset[treenum]);
+      }
+      Long64_t globalentry = fTreeOffset[treenum] + localentry;
+      return globalentry;
+   }
+   return entry;
 }
 
 //______________________________________________________________________________
@@ -1945,6 +1984,179 @@ void TChain::SetDirectory(TDirectory* dir)
    } else {
       fFile = 0;
    }
+}
+
+//_______________________________________________________________________
+void TChain::SetEntryList(TEntryList *elist)
+{
+   //Set the input entry list (processing the entries of the chain will then be
+   //limited to the entries in the list)
+   //This function finds correspondance between the sub-lists of the TEntryList
+   //and the trees of the TChain
+
+   if (fEntryList){
+      //check, if the chain is the owner of the previous entry list 
+      //(it happens, if the previous entry list was created from a user-defined
+      //TEventList in SetEventList() function)
+      if (fEntryList->TestBit(kCanDelete)){
+         delete fEntryList;
+      }
+      fEntryList = 0;
+   }
+   if (!elist){
+      fEntryList = 0;
+      fEventList = 0;
+      return;
+   }
+   if (!elist->TestBit(kCanDelete)){
+      //this is a direct call to SetEntryList, not via SetEventList
+      fEventList = 0;
+   }
+   if (elist->GetN() == 0){
+      fEntryList = elist;
+      return;
+   }
+   Int_t ne = fFiles->GetEntries();
+   Int_t listfound=0;
+   ULong_t *hashtable = new ULong_t[ne];
+   TString *nametitle = new TString(100);
+   TString filename;
+   //hash the chain elements (treename+filename)
+   for (Int_t ie=0; ie<ne; ie++){
+      (*nametitle)="";
+      nametitle->Append(((TChainElement*)fFiles->UncheckedAt(ie))->GetName());
+      filename = ((TChainElement*)fFiles->UncheckedAt(ie))->GetTitle();
+      gSystem->ExpandPathName(filename);
+      if (!gSystem->IsAbsoluteFileName(filename))
+          gSystem->PrependPathName(gSystem->pwd(), filename);
+      filename = gSystem->UnixPathName(filename);
+      nametitle->Append(filename);
+      hashtable[ie]=nametitle->Hash();
+   }
+
+   //sort the table???
+   TEntryList *templist = 0;
+   ULong_t temphash = 0;
+   Int_t i;
+   TList *elists = elist->GetLists();
+   if (!elists){
+      //the entry list is only for one tree
+      (*nametitle)="";
+      nametitle->Append(elist->GetTreeName());
+      nametitle->Append(elist->GetFileName());
+      temphash = nametitle->Hash();
+      for (i=0; i<ne; i++){
+         if (temphash == hashtable[i]){
+            //found, check if it's the right one
+            filename = ((TChainElement*)fFiles->UncheckedAt(i))->GetTitle();
+            gSystem->ExpandPathName(filename);
+            if (!gSystem->IsAbsoluteFileName(filename))
+               gSystem->PrependPathName(gSystem->pwd(), filename);
+            filename = gSystem->UnixPathName(filename);
+            if (!(strcmp(elist->GetTreeName(),((TChainElement*)fFiles->UncheckedAt(i))->GetName())) && 
+                !(strcmp(elist->GetFileName(),filename.Data()))) {
+               break;
+            }
+         }
+      }
+      if (i==ne) {
+         Error("SetEntryList", "No list found for the trees of this chain");
+         delete [] hashtable;
+         fEntryList = 0;
+         return;
+      }
+
+      elist->SetTreeNumber(i);
+      delete [] hashtable;
+      fEntryList = elist;
+      return;
+   }
+
+   TIter next(elists);
+   while((templist = (TEntryList*)next())){
+      (*nametitle)="";
+      nametitle->Append(templist->GetTreeName());
+      nametitle->Append(templist->GetFileName());
+      temphash = nametitle->Hash();
+
+      for (i=0; i<ne; i++){
+         if (temphash == hashtable[i]){
+            //found, check if it's the right one
+            filename = ((TChainElement*)fFiles->UncheckedAt(i))->GetTitle();
+            gSystem->ExpandPathName(filename);
+            if (!gSystem->IsAbsoluteFileName(filename))
+               gSystem->PrependPathName(gSystem->pwd(), filename);
+            filename = gSystem->UnixPathName(filename);
+            if (!(strcmp(templist->GetTreeName(),((TChainElement*)fFiles->UncheckedAt(i))->GetName())) && 
+                !(strcmp(templist->GetFileName(),filename.Data()))) {
+               break;
+            }
+         }
+      }
+      if (i==ne) i=-1;
+      else listfound++;
+      templist->SetTreeNumber(i);
+   }
+
+   delete [] hashtable;
+   delete nametitle;
+   if (listfound == 0){
+      Error("SetEntryList", "No list found for the trees in this chain");
+      fEntryList = 0;
+      return;
+   }
+   fEntryList = elist;
+   elists = fEntryList->GetLists();
+   Bool_t shift = kFALSE;
+   next.Reset();
+   //check, if there are sub-lists in the entry list, that don't
+   //correspond to any trees in the chain
+   while((templist = (TEntryList*)next())){
+      if (templist->GetTreeNumber() < 0){
+         shift = kTRUE;
+         break;
+      }
+   }
+   fEntryList->SetShift(shift);
+
+}
+
+//_______________________________________________________________________
+void TChain::SetEventList(TEventList *evlist)
+{
+//This function transfroms the given TEventList into a TEntryList
+//
+//NOTE, that this function loads all tree headers, because the entry numbers
+//in the TEventList are global and have to be recomputed, taking into account
+//the number of entries in each tree. 
+//
+//The new TEntryList is owned by the TChain and gets deleted when the chain
+//is deleted. This TEntryList is returned by GetEntryList() function, and after
+//GetEntryList() function is called, the TEntryList is not owned by the chain 
+//any more and will not be deleted with it.
+
+
+   if (!evlist) {
+      if (fEntryList){
+         if (fEntryList->TestBit(kCanDelete)){
+            delete fEntryList;
+         }
+      }
+      fEntryList = 0;
+      fEventList = 0;
+      return;
+   }
+   fEventList = evlist;
+   TEntryList *enlist = new TEntryList(evlist->GetName(), evlist->GetTitle());
+   Int_t nsel = evlist->GetN();
+   Long64_t globalentry, localentry;
+   for (Int_t i=0; i<nsel; i++){
+      globalentry = evlist->GetEntry(i);
+      localentry = LoadTree(globalentry);
+      enlist->Enter(localentry, fTree);
+   }
+   enlist->SetBit(kCanDelete, kTRUE);
+   SetEntryList(enlist);
 }
 
 //_______________________________________________________________________

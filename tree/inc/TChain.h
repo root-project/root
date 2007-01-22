@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.58 2006/09/18 15:13:51 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.59 2006/11/27 14:14:24 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -28,6 +28,9 @@
 class TFile;
 class TBrowser;
 class TCut;
+class TEntryList;
+class TEventList;
+
 
 class TChain : public TTree {
 
@@ -87,6 +90,7 @@ public:
    virtual Long64_t  GetEntries() const;
    virtual Long64_t  GetEntries(const char *sel) { return TTree::GetEntries(sel); }
    virtual Int_t     GetEntry(Long64_t entry=0, Int_t getall=0);
+   virtual Long64_t  GetEntryNumber(Long64_t entry) const;
    virtual Int_t     GetEntryWithIndex(Int_t major, Int_t minor=0);
    TFile            *GetFile() const;
    virtual TLeaf    *GetLeaf(const char* name);
@@ -125,6 +129,8 @@ public:
 
    virtual void      SetBranchStatus(const char *bname, Bool_t status=1, UInt_t *found=0);
    virtual void      SetDirectory(TDirectory *dir);
+   virtual void      SetEntryList(TEntryList *elist);
+   virtual void      SetEventList(TEventList *evlist);
    virtual void      SetMakeClass(Int_t make) { TTree::SetMakeClass(make); if (fTree) fTree->SetMakeClass(make);}
    virtual void      SetPacketSize(Int_t size = 100);
    virtual void      SetProof(Bool_t on = kTRUE, Bool_t refresh = kFALSE, Bool_t gettreeheader = kFALSE);

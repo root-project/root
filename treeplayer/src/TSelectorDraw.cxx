@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.63 2006/08/06 07:15:01 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.64 2006/11/22 16:52:54 rdm Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "TEnv.h"
 #include "TTree.h"
 #include "TCut.h"
+#include "TEntryList.h"
 #include "TEventList.h"
 #include "THLimitsFinder.h"
 #include "TStyle.h"
@@ -114,18 +115,35 @@ void TSelectorDraw::Begin(TTree *tree)
    opt = option;
    opt.ToLower();
    fOldHistogram = 0;
-   TEventList *elist = 0;
+   TEntryList *enlist = 0;
+   TEventList *evlist = 0;
    char htitle[2560]; htitle[0] = '\0';
    Bool_t profile = kFALSE;
    Bool_t optSame = kFALSE;
+   Bool_t optEnlist = kFALSE;
    if (opt.Contains("same")) {
       optSame = kTRUE;
       opt.ReplaceAll("same","");
    }
+   if (opt.Contains("entrylist")){
+      optEnlist = kTRUE;
+      opt.ReplaceAll("entrylist", "");
+   }
    TCut realSelection(selection);
-   TEventList *inElist = fTree->GetEventList();
+   //input list - only TEntryList
+   TEntryList *inElist = fTree->GetEntryList();
+   evlist = fTree->GetEventList();
+   if (evlist && inElist){
+      //this is needed because the input entry list was created
+      //by the fTree from the input TEventList and is owned by the fTree.
+      //Calling GetEntryList function changes ownership and here
+      //we want fTree to still delete this entry list
+
+      inElist->SetBit(kCanDelete, kTRUE);
+   }
    fCleanElist = kFALSE;
    fTreeElist = inElist;
+
    if ( inElist && inElist->GetReapplyCut() ) {
       realSelection *= inElist->GetTitle();
    }
@@ -336,36 +354,72 @@ void TSelectorDraw::Begin(TTree *tree)
             delete fOldHistogram; fOldHistogram=0;
          }
 
-      } else { // if (i)  // make selection list (i.e. varexp0 starts with ">>")
+      } else { 
+         // make selection list (i.e. varexp0 starts with ">>")
          TObject *oldObject = gDirectory->Get(hname);
-         elist = oldObject ? dynamic_cast<TEventList*>(oldObject) : 0;
-
-         if (!elist && oldObject) {
-            Error("Begin","An object of type '%s' has the same name as the requested event list (%s)",
+         if (optEnlist){
+            //write into a TEntryList
+            enlist = oldObject ? dynamic_cast<TEntryList*>(oldObject) : 0;
+            
+            if (!enlist && oldObject) {
+               Error("Begin","An object of type '%s' has the same name as the requested event list (%s)",
                   oldObject->IsA()->GetName(),hname);
-            SetStatus(-1);
-            return;
-         }
-         if (!elist) {
-            elist = new TEventList(hname,realSelection.GetTitle(),1000,0);
-         }
-         if (elist) {
-            if (!hnameplus) {
-               if (elist==inElist) {
-                  // We have been asked to reset the input list!!
-                  // Let's set it aside for now ...
-                  inElist = new TEventList(*elist);
-                  fCleanElist = kTRUE;
-                  fTree->SetEventList(inElist);
+               SetStatus(-1);
+               return;
+            }
+            if (!enlist) {
+               enlist = new TEntryList(hname, realSelection.GetTitle());
+            }
+            if (enlist) {
+               if (!hnameplus) {
+                  if (enlist==inElist) {
+                     // We have been asked to reset the input list!!
+                     // Let's set it aside for now ...
+                     inElist = new TEntryList(*enlist);
+                     fCleanElist = kTRUE;
+                     fTree->SetEntryList(inElist);
+                  }
+                  enlist->Reset();
+                  enlist->SetTitle(realSelection.GetTitle());
+               } else {
+                  TCut old = enlist->GetTitle();
+                  TCut upd = old || realSelection.GetTitle();
+                  enlist->SetTitle(upd.GetTitle());
                }
-               elist->Reset();
-               elist->SetTitle(realSelection.GetTitle());
-            } else {
-               TCut old = elist->GetTitle();
-               TCut upd = old || realSelection.GetTitle();
-               elist->SetTitle(upd.GetTitle());
             }
          }
+         else {
+            //write into a TEventList
+            evlist = oldObject ? dynamic_cast<TEventList*>(oldObject) : 0;
+            
+            if (!evlist && oldObject) {
+               Error("Begin","An object of type '%s' has the same name as the requested event list (%s)",
+                  oldObject->IsA()->GetName(),hname);
+               SetStatus(-1);
+               return;
+            }
+            if (!evlist) {
+               evlist = new TEventList(hname,realSelection.GetTitle(),1000,0);
+            }
+            if (evlist) {
+               if (!hnameplus) {
+                  if (evlist==fTree->GetEventList()) {
+                     // We have been asked to reset the input list!!
+                     // Let's set it aside for now ...
+                     Error("Begin", "Input and output lists are the same!\n");
+                     SetStatus(-1);
+                     return;
+                  }
+                  evlist->Reset();
+                  evlist->SetTitle(realSelection.GetTitle());
+               } else {
+                  TCut old = evlist->GetTitle();
+                  TCut upd = old || realSelection.GetTitle();
+                  evlist->SetTitle(upd.GetTitle());
+               }
+            }
+         }
+
       }  // if (i)
    } else { // if (hname)
       hname  = hdefault;
@@ -737,11 +791,16 @@ void TSelectorDraw::Begin(TTree *tree)
          }
       }
       // An Event List
-   } else if (elist) {
+   } else if (enlist) {
       fAction = 5;
       fOldEstimate = fTree->GetEstimate();
       fTree->SetEstimate(1);
-      fObject = elist;
+      fObject = enlist;
+   } else if (evlist) {
+      fAction = 5;
+      fOldEstimate = fTree->GetEstimate();
+      fTree->SetEstimate(1);
+      fObject = evlist;
    }
    if (hkeep) delete [] varexp;
    if (hnamealloc) delete [] hnamealloc;
@@ -1173,9 +1232,18 @@ void TSelectorDraw::TakeAction()
    else if (fAction ==  4) ((TProfile*)fObject)->FillN(fNfill,fV2,fV1,fW);
    //__________________________Event List______________________________
    else if (fAction ==  5) {
-      TEventList *elist = (TEventList*)fObject;
-      Long64_t enumb = fTree->GetChainOffset() + fTree->GetReadEntry();
-      if (elist->GetIndex(enumb) < 0) elist->Enter(enumb);
+      if (fObject->InheritsFrom("TEntryList")){
+         TEntryList *enlist = (TEntryList*)fObject;
+         // Long64_t enumb = fTree->GetChainOffset() + fTree->GetReadEntry();
+         //if (elist->GetIndex(enumb) < 0) elist->Enter(enumb);
+         Long64_t enumb = fTree->GetReadEntry();
+         enlist->Enter(enumb);
+      }
+      else {
+         TEventList *evlist = (TEventList*)fObject;
+         Long64_t enumb = fTree->GetChainOffset() + fTree->GetReadEntry();
+         if (evlist->GetIndex(enumb) < 0) evlist->Enter(enumb);
+      }
    }
    //__________________________2D scatter plot_______________________
    else if (fAction == 12) {

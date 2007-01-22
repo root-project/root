@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.cxx,v 1.4 2006/11/30 07:49:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.cxx,v 1.5 2006/12/19 14:02:39 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -141,7 +141,6 @@ Bool_t TEntryListBlock::Remove(Int_t entry)
          fNPassed--;
          return 1;
       } else { 
-         printf("not entered\n");
          return 0;
       }
    }
