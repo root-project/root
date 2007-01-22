@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TAttImage.h,v 1.8 2005/11/15 14:04:51 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TAttImage.h,v 1.9 2006/07/03 16:10:44 brun Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************
@@ -93,6 +93,7 @@ public:
    TImagePalette();
    TImagePalette(const TImagePalette &palette);
    TImagePalette(UInt_t numPoints);
+   TImagePalette(Int_t ncolors, Int_t *colors);
    virtual ~TImagePalette();
    virtual Int_t FindColor(UShort_t r, UShort_t g, UShort_t b);
    virtual Int_t *GetRootColors();
