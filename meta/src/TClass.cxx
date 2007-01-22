@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.207 2007/01/15 11:52:01 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.208 2007/01/22 13:50:53 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -83,7 +83,7 @@ TVirtualMutex* gCINTMutex = 0;
 Int_t TClass::fgClassCount;
 TClass::ENewType TClass::fgCallingNew = kRealNew;
 static std::multimap<void*, Version_t> fgObjectVersionRepository;
-/
+
 //______________________________________________________________________________
 //______________________________________________________________________________
 //______________________________________________________________________________
