@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.7 2006/11/16 15:39:52 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.8 2006/12/05 15:43:26 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -130,6 +130,8 @@ protected:
    TGComboBox *BuildFunctionList(TGFrame *parent, Int_t id);
    TGComboBox *BuildMethodList(TGFrame *parent, Int_t id);
    Int_t       CheckFunctionString(const char* str);
+   void        CreateGeneralTab();
+   void        CreateMinimizationTab();
 
 private:
    TFitEditor(const TFitEditor&);              // not implemented

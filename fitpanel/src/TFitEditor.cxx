@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.18 2006/12/05 15:43:26 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.19 2006/12/08 15:52:20 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -181,11 +181,106 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    fObjLabel->SetTextColor(color, kFALSE);
    fObjLabel->SetTextJustify(kTextLeft);
 
-   // 'General' tab
    fTab = new TGTab(this, 10, 10);
    AddFrame(fTab, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
    fTab->SetCleanup(kDeepCleanup);
    fTab->Associate(this);
+
+   CreateGeneralTab();
+   CreateMinimizationTab();
+   
+   fTab->SetEnabled(1, kFALSE);
+
+   TGHorizontalFrame *cf1 = new TGHorizontalFrame(this, 250, 20, kFixedWidth);
+   cf1->SetCleanup(kDeepCleanup);
+   fFitButton = new TGTextButton(cf1, "&Fit", kFP_FIT);
+   fFitButton->Associate(this);
+   cf1->AddFrame(fFitButton, new TGLayoutHints(kLHintsTop |
+                                               kLHintsExpandX, 2, 2, 2, 2));
+
+   fResetButton = new TGTextButton(cf1, "&Reset", kFP_RESET);
+   fResetButton->Associate(this);
+   cf1->AddFrame(fResetButton, new TGLayoutHints(kLHintsTop |
+                                                 kLHintsExpandX, 3, 2, 2, 2));
+
+   fCloseButton = new TGTextButton(cf1, "&Close", kFP_CLOSE);
+   fCloseButton->Associate(this);
+   cf1->AddFrame(fCloseButton, new TGLayoutHints(kLHintsTop |
+                                                 kLHintsExpandX, 3, 2, 2, 2));
+   AddFrame(cf1, new TGLayoutHints(kLHintsBottom |
+                                   kLHintsRight, 0, 5, 5, 5));
+
+   gROOT->GetListOfCleanups()->Add(this);
+
+   MapSubwindows();
+   // not ready yet for 2 & 3 dim
+   fGeneral->HideFrame(fSliderYParent);
+   fGeneral->HideFrame(fSliderZParent);
+
+   // do not allow resizing
+   TGDimension size = GetDefaultSize();
+   SetWMSize(size.fWidth, size.fHeight);
+   SetWMSizeHints(size.fWidth, size.fHeight, size.fWidth, size.fHeight, 0, 0);
+   SetWindowName("New Fit Panel");
+   SetIconName("New Fit Panel");
+   SetClassHints("New Fit Panel", "New Fit Panel");
+
+   SetMWMHints(kMWMDecorAll | kMWMDecorResizeH  | kMWMDecorMaximize |
+                              kMWMDecorMinimize | kMWMDecorMenu,
+               kMWMFuncAll  | kMWMFuncResize    | kMWMFuncMaximize |
+                              kMWMFuncMinimize,
+               kMWMInputModeless);
+   if (pad && obj) {
+      fParentPad = (TPad *)pad;
+      fFitObject = (TObject *)obj;
+      fDrawOption = GetDrawOption();
+      SetCanvas(pad->GetCanvas());
+      pad->GetCanvas()->Selected(pad, obj, kButton1Down);
+   } else {
+      Error("FitPanel", "need to have an object drawn first");
+      return;
+   }
+   UInt_t dw = fClient->GetDisplayWidth();
+   UInt_t cw = pad->GetCanvas()->GetWindowWidth();
+   UInt_t cx = (UInt_t)pad->GetCanvas()->GetWindowTopX();
+   UInt_t cy = (UInt_t)pad->GetCanvas()->GetWindowTopY();
+
+   if (cw + size.fWidth < dw) {
+      Int_t gedx = 0, gedy = 0;
+      gedx = cx+cw+4;
+      gedy = cy-20;
+      MoveResize(gedx, gedy,size.fWidth, size.fHeight);
+      SetWMPosition(gedx, gedy);
+   } 
+   
+   Resize(size);
+   MapWindow();
+   gVirtualX->RaiseWindow(GetId());
+}
+
+//______________________________________________________________________________
+TFitEditor::~TFitEditor()
+{
+   // Fit editor destructor.
+
+   DisconnectSlots();
+   fCloseButton->Disconnect("Clicked()");
+   TQObject::Disconnect("TCanvas", "Selected(TVirtualPad *, TObject *, Int_t)");
+   gROOT->GetListOfCleanups()->Remove(this);
+
+   if (fFitFunc) delete fFitFunc;
+   Cleanup();
+   delete fLayoutNone;
+   delete fLayoutAdd;
+   delete fLayoutConv;
+   fgFitDialog = 0;
+}
+
+//______________________________________________________________________________
+void TFitEditor::CreateGeneralTab()
+{
+   // Create 'General' tab.
+   
    fTabContainer = fTab->AddTab("General");
    fGeneral = new TGCompositeFrame(fTabContainer, 10, 10, kVerticalFrame);
    fTabContainer->AddFrame(fGeneral, new TGLayoutHints(kLHintsTop |
@@ -260,7 +355,7 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    fSelLabel = new TGLabel(tf4, Form("%s", txt->GetTitle()));
    tf4->AddFrame(fSelLabel, new TGLayoutHints(kLHintsNormal |
                                               kLHintsCenterY, 0, 6, 2, 0));
-
+   Pixel_t color;
    gClient->GetColorByName("#336666", color);
    fSelLabel->SetTextColor(color, kFALSE);
    TGCompositeFrame *tf5 = new TGCompositeFrame(tf4, 120, 20,
@@ -500,98 +595,19 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    fSliderZParent->AddFrame(fSliderZ, new TGLayoutHints(kLHintsExpandX | 
                                                         kLHintsCenterY));
    fGeneral->AddFrame(fSliderZParent, new TGLayoutHints(kLHintsExpandX, 5, 5, 0, 0));
+}
 
-   // 'Minimization' tab
+
+//______________________________________________________________________________
+void TFitEditor::CreateMinimizationTab()
+{
+   // Create 'Minimization' tab.
+   
    fTabContainer = fTab->AddTab("Minimization");
    fMinimization = new TGCompositeFrame(fTabContainer, 10, 10, kVerticalFrame);
    fTabContainer->AddFrame(fMinimization, new TGLayoutHints(kLHintsTop |
                                                             kLHintsExpandX,
                                                             5, 5, 2, 2));
-   fTab->SetEnabled(1, kFALSE);
-
-   TGHorizontalFrame *cf1 = new TGHorizontalFrame(this, 250, 20, kFixedWidth);
-   cf1->SetCleanup(kDeepCleanup);
-   fFitButton = new TGTextButton(cf1, "&Fit", kFP_FIT);
-   fFitButton->Associate(this);
-   cf1->AddFrame(fFitButton, new TGLayoutHints(kLHintsTop |
-                                               kLHintsExpandX, 2, 2, 2, 2));
-
-   fResetButton = new TGTextButton(cf1, "&Reset", kFP_RESET);
-   fResetButton->Associate(this);
-   cf1->AddFrame(fResetButton, new TGLayoutHints(kLHintsTop |
-                                                 kLHintsExpandX, 3, 2, 2, 2));
-
-   fCloseButton = new TGTextButton(cf1, "&Close", kFP_CLOSE);
-   fCloseButton->Associate(this);
-   cf1->AddFrame(fCloseButton, new TGLayoutHints(kLHintsTop |
-                                                 kLHintsExpandX, 3, 2, 2, 2));
-   AddFrame(cf1, new TGLayoutHints(kLHintsBottom |
-                                   kLHintsRight, 0, 5, 5, 5));
-
-   gROOT->GetListOfCleanups()->Add(this);
-
-   MapSubwindows();
-   // not ready yet for 2 & 3 dim
-   fGeneral->HideFrame(fSliderYParent);
-   fGeneral->HideFrame(fSliderZParent);
-
-   // do not allow resizing
-   TGDimension size = GetDefaultSize();
-   SetWMSize(size.fWidth, size.fHeight);
-   SetWMSizeHints(size.fWidth, size.fHeight, size.fWidth, size.fHeight, 0, 0);
-   SetWindowName("New Fit Panel");
-   SetIconName("New Fit Panel");
-   SetClassHints("New Fit Panel", "New Fit Panel");
-
-   SetMWMHints(kMWMDecorAll | kMWMDecorResizeH  | kMWMDecorMaximize |
-                              kMWMDecorMinimize | kMWMDecorMenu,
-               kMWMFuncAll  | kMWMFuncResize    | kMWMFuncMaximize |
-                              kMWMFuncMinimize,
-               kMWMInputModeless);
-   if (pad && obj) {
-      fParentPad = (TPad *)pad;
-      fFitObject = (TObject *)obj;
-      fDrawOption = GetDrawOption();
-      SetCanvas(pad->GetCanvas());
-      pad->GetCanvas()->Selected(pad, obj, kButton1Down);
-   } else {
-      Error("FitPanel", "need to have an object drawn first");
-      return;
-   }
-   UInt_t dw = fClient->GetDisplayWidth();
-   UInt_t cw = pad->GetCanvas()->GetWindowWidth();
-   UInt_t cx = (UInt_t)pad->GetCanvas()->GetWindowTopX();
-   UInt_t cy = (UInt_t)pad->GetCanvas()->GetWindowTopY();
-
-   if (cw + size.fWidth < dw) {
-      Int_t gedx = 0, gedy = 0;
-      gedx = cx+cw+4;
-      gedy = cy-20;
-      MoveResize(gedx, gedy,size.fWidth, size.fHeight);
-      SetWMPosition(gedx, gedy);
-   } 
-   
-   Resize(size);
-   MapWindow();
-   gVirtualX->RaiseWindow(GetId());
-}
-
-//______________________________________________________________________________
-TFitEditor::~TFitEditor()
-{
-   // Fit editor destructor.
-
-   DisconnectSlots();
-   fCloseButton->Disconnect("Clicked()");
-   TQObject::Disconnect("TCanvas", "Selected(TVirtualPad *, TObject *, Int_t)");
-   gROOT->GetListOfCleanups()->Remove(this);
-
-   if (fFitFunc) delete fFitFunc;
-   Cleanup();
-   delete fLayoutNone;
-   delete fLayoutAdd;
-   delete fLayoutConv;
-   fgFitDialog = 0;
 }
 
 //______________________________________________________________________________
