@@ -82,6 +82,9 @@ xrd.protocol xproofd:1093 libXrdProofd.so
 ### Max number of PROOF sessions [-1, i.e. no limit]
 # xpd.maxsessions 10
 ###
+### Number of workers for local sessions [number of CPUs]
+# xpd.localwrks 2
+###
 ### Defines what to do when no client sessions are attached to a client area.
 # Format:
 #          xpd.shutdown <opt> <delay>
@@ -202,3 +205,21 @@ xrd.protocol xproofd:1093 libXrdProofd.so
 ### defined for data serving.
 # xpd.seclib libXrdSec.so
 # xpd.sec.protocol gsi -crl:0 -gmapopt:1 -dlgpxy:1
+
+###
+### This directive may be used to set additional environment variables
+### for 'proofserv'. This is useful, for instance, to set client-side
+### security options. It is possible to set some context depending
+### keyworks which will be expanded before launching 'proofserv'; the
+### syntax is <keyword>; keywords currently recognized are:
+###            <workdir>  -->   expanded to workdir (see above)
+###            <user>     -->   expanded to the user's username
+### Example:
+###
+### xpd.putenv  MYENV=<workdir>/<user>/.creds
+###
+### with 'xpd.workdir /tmp/proof' will set MYENV to "/tmp/proof/minni/.creds"
+### for user 'minni' and to "/tmp/proof/pippo/.creds" for user 'pippo'.
+### There can be as 'putenv' directives as needed.
+# xpd.putenv  XrdSecPWDSRVPUK=<workdir>/<user>/.creds/pwdsrvpuk
+
