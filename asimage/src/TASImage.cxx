@@ -1004,8 +1004,55 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y)
       return;
    }
 
+   UInt_t hh = im->height;
+   UInt_t ow = im->width%8;
+   UInt_t ww = im->width - ow + (ow ? 8 : 0);
+
+   UInt_t bit = 0;
+   int i = 0;
+   UInt_t yy = 0;
+   UInt_t xx = 0;
+   Pixmap_t mask = 0;
+
+   char *bits = new char[ww*hh]; //an array of bits
+
+   ASImageDecoder *imdec = start_image_decoding(fgVisual, im, SCL_DO_ALPHA,
+                                                0, 0, ww, 0, 0);
+   if(imdec) {
+      for (yy = 0; yy < hh; yy++) {
+         imdec->decode_image_scanline(imdec);
+         CARD32 *a = imdec->buffer.alpha;
+
+         for (xx = 0; xx < ww; xx++) {
+            if (a[xx]) {
+               SETBIT(bits[i], bit);
+            } else {
+               CLRBIT(bits[i], bit);
+            }
+            bit++;
+            if (bit == 8) {
+               bit = 0;
+               i++;
+            }
+         }
+      }
+
+      stop_image_decoding(&imdec);
+
+      mask = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), 
+                                          (const char *)bits, ww, hh);
+      delete [] bits;
+   }
+
+   gv.fMask = kGCClipMask | kGCClipXOrigin | kGCClipYOrigin;
+   gv.fClipMask = mask;
+   gv.fClipXOrigin = x;
+   gv.fClipYOrigin = y;
+
    if (!gc) {
       gc = gVirtualX->CreateGC(gVirtualX->GetDefaultRootWindow(), &gv);
+   } else {
+      gVirtualX->ChangeGC(gc, &gv);
    }
 
    static int x11 = -1;
@@ -1033,7 +1080,12 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y)
          destroy_asimage(&img);
       }
    }
+
+   gv.fMask = kGCClipMask;
+   gv.fClipMask = kNone;
+   if (gc) gVirtualX->ChangeGC(gc, &gv);
 }
+
 //______________________________________________________________________________
 void TASImage::PaintImage(Drawable_t wid, Int_t x, Int_t y)
 {
@@ -4998,6 +5050,22 @@ static void fill_hline_notile_argb32(ASDrawContext *ctx, int x_from, int y,
 }
 
 //_____________________________________________________________________________
+static void apply_tool_point_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CARD32)
+{
+   //
+
+	int cw = ctx->canvas_width;
+
+	if (curr_x >= 0 && curr_x < cw && curr_y >= 0 && curr_y < ctx->canvas_height)  {	
+		CARD32 value = ctx->tool->matrix[0]; //color
+		CARD32 *dst = (CARD32 *)(ctx->canvas);
+		dst += curr_y * cw; 
+
+      _alphaBlend(&dst[curr_x], &value);
+	}
+}
+
+//_____________________________________________________________________________
 static void apply_tool_2D_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CARD32)
 {
    //
@@ -5063,8 +5131,12 @@ static ASDrawContext *create_draw_context_argb32(ASImage *im, ASDrawTool *brush)
 
    ctx->tool = brush;
    ctx->fill_hline_func = fill_hline_notile_argb32;
-   ctx->apply_tool_func = apply_tool_2D_argb32;
 
+   if ((ctx->tool->width == 1) && (ctx->tool->height == 1)) {
+      ctx->apply_tool_func = apply_tool_point_argb32;
+   } else {
+      ctx->apply_tool_func = apply_tool_2D_argb32;
+   }
    return ctx;
 }
 
