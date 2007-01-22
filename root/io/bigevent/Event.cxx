@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.3 2004/02/16 16:20:38 pcanal Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.4 2006/06/15 19:11:34 pcanal Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -311,7 +311,7 @@ void Event::SetMeasure(UChar_t which, Int_t what) {
 //______________________________________________________________________________
 void Event::SetRandomVertex() {
    // This delete is to test the relocation of variable length array
-   delete fClosestDistance;
+   delete [] fClosestDistance;
    if (!fNvertex) {
       fClosestDistance = 0;
       return;
