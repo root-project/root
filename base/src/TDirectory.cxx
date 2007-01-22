@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.89 2006/09/14 07:02:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.90 2007/01/22 05:58:29 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -39,7 +39,7 @@ ClassImp(TDirectory)
 //
 
 //______________________________________________________________________________
-TDirectory::TDirectory() : TNamed(), fMother(0)
+   TDirectory::TDirectory() : TNamed(), fMother(0),fList(0)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Directory default constructor-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    =============================
@@ -47,7 +47,7 @@ TDirectory::TDirectory() : TNamed(), fMother(0)
 
 //______________________________________________________________________________
 TDirectory::TDirectory(const char *name, const char *title, Option_t * /*classname*/, TDirectory* initMotherDir)
-           : TNamed(name, title), fMother(0)
+   : TNamed(name, title), fMother(0), fList(0)
 {
 //*-*-*-*-*-*-*-*-*-*-*-* Create a new Directory *-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                     ======================
