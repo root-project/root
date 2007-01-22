@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.63 2006/12/12 13:54:35 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.64 2007/01/15 10:26:29 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -308,7 +308,7 @@ TLatex::TLatex(const TLatex &text) : TText(text), TAttLine(text)
 }
 
 //______________________________________________________________________________
-TLatex& TLatex::operator=(const TLatex& lt) 
+TLatex& TLatex::operator=(const TLatex& lt)
 {
    //assignment operator
    if(this!=&lt) {
@@ -323,7 +323,7 @@ TLatex& TLatex::operator=(const TLatex& lt)
       fOriginSize=lt.fOriginSize;
       fTabSize=lt.fTabSize;
       fTabSize=lt.fTabSize;
-   } 
+   }
    return *this;
 }
 
@@ -988,7 +988,6 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
       TextSpec_t newSpec = spec;
       newSpec.fFont = 122;
       char letter = 97 + opGreek;
- //        Double_t yoffset = GetHeight()*spec.fSize/20.; // Greek letter too low
       Double_t yoffset = 0.; // Greek letter too low
       if (opGreek>25) letter -= 58;
       if (opGreek == 52) letter = '\241'; //varUpsilon
@@ -1139,7 +1138,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
                   gVirtualPS = saveps;
                   gVirtualPS->SetTextAlign(22);
                   gVirtualPS->Text(xx, yy, "~");
-               } 
+               }
             }
             break;
          case 9: // slash
@@ -1894,7 +1893,13 @@ TLatexFormSize TLatex::FirstParse(Double_t angle, Double_t size, const Char_t *t
 
    TextSpec_t spec;
    spec.fAngle = angle;
-   spec.fSize  = size;
+   if (fTextFont%10 == 3) {
+      Double_t hw = TMath::Max((Double_t)gPad->XtoPixel(gPad->GetX2()),
+                               (Double_t)gPad->YtoPixel(gPad->GetY1()));
+      spec.fSize = size/hw;
+   } else {
+      spec.fSize  = size;
+   }
    spec.fColor = GetTextColor();
    spec.fFont  = GetTextFont();
    Short_t halign = fTextAlign/10;
