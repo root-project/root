@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.63 2007/01/19 16:47:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.64 2007/01/22 05:58:29 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -990,6 +990,9 @@ void TKey::ReadKeyBuffer(char *&buffer)
       frombuf(buffer, &seekdir); fSeekPdir= (Long64_t)seekdir;
    }
    fClassName.ReadBuffer(buffer);
+   //we must execute the next statement for back compatibility
+   if (fClassName == "TDirectory") fClassName = "TDirectoryFile";
+   
    fName.ReadBuffer(buffer);
    fTitle.ReadBuffer(buffer);
 }
