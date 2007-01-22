@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.68 2006/10/05 17:10:09 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.69 2006/11/24 14:24:54 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -39,7 +39,7 @@
 #include "TStreamerInfo.h"
 #endif
 
-#include <map>
+//#include <map>
 
 class TBaseClass;
 class TBrowser;
@@ -140,13 +140,6 @@ private:
    static ENewType    fgCallingNew;     //Intent of why/how TClass::New() is called
    static Int_t       fgClassCount;     //provides unique id for a each class
                                         //stored in TObject::fUniqueID
-#if 0
-   // FIXME: Turn off for now, trouble when ptr is reallocated to
-   //        some different type and we don't know.
-#endif
-   static std::multimap<void*, Version_t> fgObjectVersionRepository; // Record what version of a class was used to construct an object
-//#endif
-
    // Internal status bits
    enum { kLoading = BIT(14) };
    // Internal streamer type.
@@ -270,13 +263,6 @@ public:
    void               AdoptStreamer(TClassStreamer *strm);
    void               AdoptMemberStreamer(const char *name, TMemberStreamer *strm);
    void               SetMemberStreamer(const char *name, MemberStreamerFunc_t strm);
-
-#if 0
-   // FIXME: Turn off for now, trouble when ptr is reallocated to
-   //        some different type and we don't know.
-#endif
-   static std::multimap<void*, Version_t>& GetObjectVersionRepository() { return fgObjectVersionRepository; }
-//#endif
 
    // Function to retrieve the TClass object and dictionary function
    static TClass        *GetClass(const char *name, Bool_t load = kTRUE);

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.206 2007/01/15 10:03:12 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.207 2007/01/15 11:52:01 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -67,6 +67,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <map>
 
 using namespace std;
 
@@ -81,13 +82,8 @@ TVirtualMutex* gCINTMutex = 0;
 
 Int_t TClass::fgClassCount;
 TClass::ENewType TClass::fgCallingNew = kRealNew;
-#if 0
-// FIXME: Turn off for now, trouble when ptr is reallocated to
-//        some different type and we don't know.
-#endif
-std::multimap<void*, Version_t> TClass::fgObjectVersionRepository;
-//#endif
-
+static std::multimap<void*, Version_t> fgObjectVersionRepository;
+/
 //______________________________________________________________________________
 //______________________________________________________________________________
 //______________________________________________________________________________
