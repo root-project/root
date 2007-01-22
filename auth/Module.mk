@@ -25,12 +25,12 @@ RAUTHS       := $(filter-out $(MODDIRS)/DaemonUtils.cxx,$(RAUTHS))
 
 RAUTHO       := $(RAUTHS:.cxx=.o)
 
-RAUTHDEP     := $(RAUTHO:.o=.d) $(RAUTHDO:.o=.d)
-
-RAUTHLIB     := $(LPATH)/libRootAuth.$(SOEXT)
-
 #### for libSrvAuth (built in rpdutils/Module.mk) ####
 DAEMONUTILSO := $(MODDIRS)/DaemonUtils.o
+
+RAUTHDEP     := $(RAUTHO:.o=.d) $(RAUTHDO:.o=.d) $(DAEMONUTILSO:.o=.d)
+
+RAUTHLIB     := $(LPATH)/libRootAuth.$(SOEXT)
 
 #### for rootd and proofd ####
 RSAO         := $(AUTHDIRS)/rsaaux.o $(AUTHDIRS)/rsalib.o $(AUTHDIRS)/rsafun.o
