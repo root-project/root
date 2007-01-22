@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.155 2007/01/12 11:04:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.156 2007/01/18 17:09:00 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -908,8 +908,11 @@ void TProofServ::HandleSocketInput()
       case kPROOF_PARALLEL:
          if (IsMaster()) {
             Int_t nodes;
+            Bool_t random = kFALSE;
             (*mess) >> nodes;
-            fProof->SetParallel(nodes);
+            if ((mess->BufferSize() > mess->Length()))
+               (*mess) >> random;
+            fProof->SetParallel(nodes, random);
             SendLogFile();
          }
          break;

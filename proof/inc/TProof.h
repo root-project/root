@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.101 2006/12/13 11:21:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.102 2006/12/14 00:03:45 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -429,8 +429,8 @@ private:
    void     Interrupt(EUrgent type, ESlaves list = kActive);
    void     AskStatistics();
    void     AskParallel();
-   Int_t    GoParallel(Int_t nodes, Bool_t accept = kFALSE);
-   Int_t    SetParallelSilent(Int_t nodes);
+   Int_t    GoParallel(Int_t nodes, Bool_t accept = kFALSE, Bool_t random = kFALSE);
+   Int_t    SetParallelSilent(Int_t nodes, Bool_t random = kFALSE);
    void     RecvLogFile(TSocket *s, Int_t size);
    Int_t    BuildPackage(const char *package, EBuildPackageOpt opt = kBuildAll);
    Int_t    BuildPackageOnClient(const TString &package);
@@ -542,7 +542,7 @@ public:
    void        StopProcess(Bool_t abort, Int_t timeout = -1);
    void        Browse(TBrowser *b);
 
-   Int_t       SetParallel(Int_t nodes = 9999);
+   Int_t       SetParallel(Int_t nodes = 9999, Bool_t random = kFALSE);
    void        SetLogLevel(Int_t level, UInt_t mask = TProofDebug::kAll);
 
    void        Close(Option_t *option="");

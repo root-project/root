@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.177 2006/12/14 00:03:45 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.178 2007/01/12 11:02:56 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -3477,21 +3477,22 @@ void TProof::SetLogLevel(Int_t level, UInt_t mask)
 }
 
 //______________________________________________________________________________
-Int_t TProof::SetParallelSilent(Int_t nodes)
+Int_t TProof::SetParallelSilent(Int_t nodes, Bool_t random)
 {
-   // Tell RPOOF how many slaves to use in parallel. Returns the number of
-   // parallel slaves. Returns -1 in case of error.
+   // Tell RPOOF how many slaves to use in parallel. If random is TRUE a random
+   // selection is done (if nodes is less than the available nodes).
+   // Returns the number of parallel slaves. Returns -1 in case of error.
 
    if (!IsValid()) return -1;
 
    if (IsMaster()) {
-      GoParallel(nodes);
+      GoParallel(nodes, kFALSE, random);
       return SendCurrentState();
    } else {
       PDB(kGlobal,1) Info("SetParallelSilent", "request %d node%s", nodes,
           nodes == 1 ? "" : "s");
       TMessage mess(kPROOF_PARALLEL);
-      mess << nodes;
+      mess << nodes << random;
       Broadcast(mess);
       Collect();
       Int_t n = GetParallel();
@@ -3501,28 +3502,33 @@ Int_t TProof::SetParallelSilent(Int_t nodes)
 }
 
 //______________________________________________________________________________
-Int_t TProof::SetParallel(Int_t nodes)
+Int_t TProof::SetParallel(Int_t nodes, Bool_t random)
 {
-   // Tell RPOOF how many slaves to use in parallel. Returns the number of
+   // Tell PROOF how many slaves to use in parallel. Returns the number of
    // parallel slaves. Returns -1 in case of error.
 
-   Int_t n = SetParallelSilent(nodes);
+   Int_t n = SetParallelSilent(nodes, random);
    if (!IsMaster()) {
-      if (n < 1)
-         printf("PROOF set to sequential mode\n");
-      else
-         printf("PROOF set to parallel mode (%d worker%s)\n",
-                n, n == 1 ? "" : "s");
+      if (n < 1) {
+         Printf("PROOF set to sequential mode");
+      } else {
+         TString subfix = (n == 1) ? "" : "s";
+         if (random)
+            subfix += ", randomly selected";
+         Printf("PROOF set to parallel mode (%d worker%s)", n, subfix.Data());
+      }
    }
    return n;
 }
 
 //______________________________________________________________________________
-Int_t TProof::GoParallel(Int_t nodes, Bool_t attach)
+Int_t TProof::GoParallel(Int_t nodes, Bool_t attach, Bool_t random)
 {
    // Go in parallel mode with at most "nodes" slaves. Since the fSlaves
    // list is sorted by slave performace the active list will contain first
    // the most performant nodes. Returns the number of active slaves.
+   // If random is TRUE, and nodes is less than the number of available workers,
+   // a random selection is done.
    // Returns -1 in case of error.
 
    if (!IsValid()) return -1;
@@ -3532,49 +3538,84 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach)
    fActiveSlaves->Clear();
    fActiveMonitor->RemoveAll();
 
-   TIter next(fSlaves);
-   //Simple algorithm for going parallel - fill up first nodes
-   int cnt = 0;
-   TSlave *sl;
-   fEndMaster = IsMaster() ? kTRUE : kFALSE;
-   while (cnt < nodes && (sl = (TSlave *)next())) {
-      if (sl->IsValid()) {
+   // Prepare the list of candidates first.
+   // Algorithm depends on random option.
+   TSlave *sl = 0;
+   TList *wlst = new TList;
+   TIter nxt(fSlaves);
+   fInactiveSlaves->Clear();
+   while ((sl = (TSlave *)nxt())) {
+      if (sl->IsValid() && !fBadSlaves->FindObject(sl)) {
          if (strcmp("IGNORE", sl->GetImage()) == 0) continue;
-         Int_t slavenodes = 0;
-         if (sl->GetSlaveType() == TSlave::kSlave) {
-            fActiveSlaves->Add(sl);
-            fActiveMonitor->Add(sl->GetSocket());
-            slavenodes = 1;
-         } else if (sl->GetSlaveType() == TSlave::kMaster) {
-            fEndMaster = kFALSE;
-            TMessage mess(kPROOF_PARALLEL);
-            if (!attach) {
-               mess << nodes-cnt;
-            } else {
-               // To get the number of slaves
-               mess.SetWhat(kPROOF_LOGFILE);
-               mess << -1 << -1;
-            }
-            if (sl->GetSocket()->Send(mess) == -1) {
-               MarkBad(sl);
-               slavenodes = 0;
-            } else {
-               Collect(sl);
-               fActiveSlaves->Add(sl);
-               fActiveMonitor->Add(sl->GetSocket());
-               if (sl->GetParallel() > 0) {
-                  slavenodes = sl->GetParallel();
-               } else {
-                  slavenodes = 0;
-               }
-            }
-         } else {
+         if ((sl->GetSlaveType() != TSlave::kSlave) &&
+             (sl->GetSlaveType() != TSlave::kMaster)) {
             Error("GoParallel", "TSlave is neither Master nor Slave");
             R__ASSERT(0);
          }
-         cnt += slavenodes;
+         // Good candidate
+         wlst->Add(sl);
+         // Set it inactive
+         fInactiveSlaves->Add(sl);
+         sl->SetStatus(TSlave::kInactive);
       }
    }
+   Int_t nwrks = (nodes > wlst->GetSize()) ? wlst->GetSize() : nodes;
+   int cnt = 0;
+   fEndMaster = IsMaster() ? kTRUE : kFALSE;
+   while (cnt < nwrks) {
+      // Random choice, if requested
+      if (random) {
+         Int_t iwrk = (Int_t) (gRandom->Rndm() * wlst->GetSize());
+         sl = (TSlave *) wlst->At(iwrk);
+      } else {
+         // The first available
+         sl = (TSlave *) wlst->First();
+      }
+      if (!sl) {
+         Error("GoParallel", "attaching to candidate!");
+         break;
+      }
+      Int_t slavenodes = 0;
+      if (sl->GetSlaveType() == TSlave::kSlave) {
+         sl->SetStatus(TSlave::kActive);
+         fActiveSlaves->Add(sl);
+         fInactiveSlaves->Remove(sl);
+         fActiveMonitor->Add(sl->GetSocket());
+         slavenodes = 1;
+      } else if (sl->GetSlaveType() == TSlave::kMaster) {
+         fEndMaster = kFALSE;
+         TMessage mess(kPROOF_PARALLEL);
+         if (!attach) {
+            mess << nodes-cnt;
+         } else {
+            // To get the number of slaves
+            mess.SetWhat(kPROOF_LOGFILE);
+            mess << -1 << -1;
+         }
+         if (sl->GetSocket()->Send(mess) == -1) {
+            MarkBad(sl);
+            slavenodes = 0;
+         } else {
+            Collect(sl);
+            sl->SetStatus(TSlave::kActive);
+            fActiveSlaves->Add(sl);
+            fInactiveSlaves->Remove(sl);
+            fActiveMonitor->Add(sl->GetSocket());
+            if (sl->GetParallel() > 0) {
+               slavenodes = sl->GetParallel();
+            } else {
+               slavenodes = 0;
+            }
+         }
+      }
+      // Remove from the list
+      wlst->Remove(sl);
+      cnt += slavenodes;
+   }
+
+   // Cleanup list
+   wlst->SetOwner(0);
+   SafeDelete(wlst);
 
    // Get slave status (will set the slaves fWorkDir correctly)
    AskStatistics();
