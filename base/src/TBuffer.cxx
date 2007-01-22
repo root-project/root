@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.99 2007/01/12 16:03:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.100 2007/01/19 16:47:59 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -17,40 +17,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <string.h>
-
 #include "TROOT.h"
-#include "TFile.h"
 #include "TBuffer.h"
-#include "TExMap.h"
-#include "TClass.h"
-#include "TStorage.h"
-#include "TError.h"
-#include "TObjArray.h"
-#include "TStreamer.h"
-#include "TStreamerInfo.h"
-#include "TStreamerElement.h"
 
-#if (defined(__linux) || defined(__APPLE__)) && defined(__i386__) && \
-     defined(__GNUC__)
-#define USE_BSWAPCPY
-#endif
-
-#ifdef USE_BSWAPCPY
-#include "Bswapcpy.h"
-#endif
-
-
-const UInt_t kNullTag           = 0;
-const UInt_t kNewClassTag       = 0xFFFFFFFF;
-const UInt_t kClassMask         = 0x80000000;  // OR the class index with this
-const UInt_t kByteCountMask     = 0x40000000;  // OR the byte count with this
-const UInt_t kMaxMapCount       = 0x3FFFFFFE;  // last valid fMapCount and byte count
-const Version_t kByteCountVMask = 0x4000;      // OR the version byte count with this
-const Version_t kMaxVersion     = 0x3FFF;      // highest possible version number
 const Int_t  kExtraSpace        = 8;   // extra space at end of buffer (used for free block count)
-const Int_t  kMapOffset         = 2;   // first 2 map entries are taken by null obj and self obj
-
 
 ClassImp(TBuffer)
 
