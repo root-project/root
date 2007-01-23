@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: PDF.h,v 1.10 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: PDF.h,v 1.11 2006/11/23 17:43:38 rdm Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -38,13 +38,15 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TSpline.h"
-#include "TH1.h"
-#include "TGraph.h"
+#include "TObject.h"
 
 #ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
 #endif
+
+class TH1;
+class TGraph;
+class TSpline;
 
 namespace TMVA {
 
