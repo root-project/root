@@ -75,7 +75,6 @@
 #include "Riostream.h"
 #include "THashTable.h"
 #include "TPluginManager.h"
-#include "TFile.h"
 #include "TEnv.h"
 #include "TStyle.h"
 
@@ -5475,31 +5474,28 @@ void TASImage::Streamer(TBuffer &b)
       }
 
       if ( version == 1 ) {
-         TObject * parent = b.GetParent();
-         if ( parent->IsA() == TFile::Class() ) {
-            Int_t file_version = ((TFile*)parent)->GetVersion();
-            if ( file_version < 50000 ) {
-               TImage::Streamer(b);
-               b >> fMaxValue;
-               b >> fMinValue;
-               b >> fZoomOffX;
-               b >> fZoomOffY;
-               b >> fZoomWidth;
-               b >> fZoomHeight;
-               if ( file_version < 40200 ) {
-                  Bool_t zoomUpdate;
-                  b >> zoomUpdate;
-                  fZoomUpdate = zoomUpdate;
-               } else {
-                  b >> fZoomUpdate;
-                  b >> fEditable;
-                  Bool_t paintMode;
-                  b >> paintMode;
-                  fPaintMode = paintMode;
-               }
-               b.CheckByteCount(R__s, R__c, TASImage::IsA());
-               return;
+         Int_t fileVersion = b.GetVersionOwner(); 
+         if (fileVersion > 0 && fileVersion < 50000 ) {
+            TImage::Streamer(b);
+            b >> fMaxValue;
+            b >> fMinValue;
+            b >> fZoomOffX;
+            b >> fZoomOffY;
+            b >> fZoomWidth;
+            b >> fZoomHeight;
+            if ( fileVersion < 40200 ) {
+               Bool_t zoomUpdate;
+               b >> zoomUpdate;
+               fZoomUpdate = zoomUpdate;
+            } else {
+               b >> fZoomUpdate;
+               b >> fEditable;
+               Bool_t paintMode;
+               b >> paintMode;
+               fPaintMode = paintMode;
             }
+            b.CheckByteCount(R__s, R__c, TASImage::IsA());
+            return;
          }
       }
 
@@ -5570,7 +5566,7 @@ const char *TASImage::GetTitle() const
 {
    // title is used to keep 32x32 xpm image's thumbnail
 
-   if (!gFile || !gFile->IsOpen() || !gFile->IsWritable()) {
+   if (!gDirectory || !gDirectory->IsWritable()) {
       return 0;
    }
 
