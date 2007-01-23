@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:  $:$Id: TQRootCanvas.h,v 1.5 2006/04/13 09:46:06 brun Exp $
+// @(#)root/qtgsi:$Name:  $:$Id: TQRootCanvas.h,v 1.6 2006/04/18 10:15:52 rdm Exp $
 // Author: Denis Bertini, M. AL-Turany  01/11/2000
 
 /*************************************************************************
@@ -31,8 +31,8 @@
 #include "qdragobject.h"
 #endif
 
-#ifndef ROOT_TPad
-#include "TPad.h"
+#ifndef ROOT_TVirtualPad
+#include "TVirtualPad.h"
 #endif
 
 
@@ -41,6 +41,7 @@ class QMouseEvent;
 class QResizeEvent;
 class QPaintEvent;
 
+class TPad;
 class TContextMenu;
 class TControlBar;
 class TCanvas;
