@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.40 2006/06/06 08:32:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.41 2007/01/12 16:03:15 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -16,7 +16,6 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TList.h"
-#include "TFile.h"
 #include "TPluginManager.h"
 #include "TMath.h"
 
@@ -1989,8 +1988,7 @@ void TView::Streamer(TBuffer &R__b)
       //unfortunately we forgot to increment the TView version number
       //when the class was upgraded to double precision in version 2.25.
       //we are forced to use the file version number to recognize old files.
-      TFile *file = (TFile*)R__b.GetParent();
-      if (file && file->GetVersion() < 22500) { //old version in single precision
+      if (R__b.GetVersionOwner() < 22500) { //old version in single precision
          TObject::Streamer(R__b);
          TAttLine::Streamer(R__b);
          Float_t single, sa[12];

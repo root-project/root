@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.20 2006/11/27 15:46:12 couet Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.21 2007/01/15 16:10:09 brun Exp $
 // Author: Rene Brun , Olivier Couet 31/10/97
 
 
@@ -17,7 +17,6 @@
 #include "TVirtualPad.h"
 #include "TH1.h"
 #include "TH3.h"
-#include "TFile.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TVirtualViewer3D.h"
@@ -471,9 +470,8 @@ void TMarker3DBox::Streamer(TBuffer &R__b)
       TObject::Streamer(R__b);
       TAttLine::Streamer(R__b);
       TAttFill::Streamer(R__b);
-      TFile *file = (TFile*)R__b.GetParent();
-      if (file) {
-         if (file->GetVersion() > 22300) TAtt3D::Streamer(R__b);
+      if (R__b.GetVersionOwner() > 22300) {
+         TAtt3D::Streamer(R__b);
       } else {
          TAtt3D::Streamer(R__b);
       }
