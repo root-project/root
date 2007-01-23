@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.11 2005/06/22 15:37:47 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.12 2007/01/15 16:10:09 brun Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -22,13 +22,12 @@
 #include "TRootEmbeddedCanvas.h"
 #include "TCanvas.h"
 #include "TH1.h"
+#include "TFile.h"
 #include "TASPaletteEditor.h"
 #include "TGXYLayout.h"
 #include "TGButton.h"
 #include "TGComboBox.h"
 #include "TGFileDialog.h"
-#include "TDirectory.h"
-#include "TFile.h"
 #include "TLine.h"
 #include "TMath.h"
 
@@ -440,18 +439,8 @@ void TASPaletteEditor::Save()
          sprintf(fn, "%s%s", fi.fFilename, ".pal.root");
       else
          strcpy(fn, fi.fFilename);
-      TDirectory *dirsav = gDirectory;
-      TFile *fsave = new TFile(fn, "RECREATE");
-      if (!fsave->IsOpen()) {
-         delete fsave;
-         return;
-      }
-
-      fPalette->Write();
-      fsave->Close();
-      delete fsave;
-      if (dirsav)
-         dirsav->cd();
+      
+      gROOT->ProcessLine(Form("TFile::SaveObjectAs((TASPaletteEditor*)0x%x,\"%s\",\"%s\");",this,fn,"q"));
    }
 }
 
