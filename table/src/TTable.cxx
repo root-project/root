@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TTable.cxx,v 1.18 2006/12/13 21:28:14 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TTable.cxx,v 1.19 2007/01/09 05:35:29 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 
 /*************************************************************************
@@ -150,7 +150,6 @@
 #include "TTable.h"
 #include "TTableDescriptor.h"
 #include "TColumnView.h"
-#include "TFile.h"
 
 #include "TGaxis.h"
 #include "TH1.h"

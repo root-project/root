@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.86 2007/01/09 17:01:34 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.87 2007/01/15 16:10:10 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -17,7 +17,6 @@
 #include "TVirtualPad.h"
 #include "THLimitsFinder.h"
 #include "TRandom.h"
-#include "TFile.h"
 #include "TError.h"
 #include "TMath.h"
 #include "TObjString.h"
@@ -2581,8 +2580,7 @@ void TH3C::Streamer(TBuffer &R__b)
 
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
-      TFile *file = (TFile*)R__b.GetParent();
-      if (file && file->GetVersion() < 22300) return;
+      if (R__b.GetVersionOwner() < 22300) return;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
          TH3C::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
@@ -2826,8 +2824,7 @@ void TH3S::Streamer(TBuffer &R__b)
 
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
-      TFile *file = (TFile*)R__b.GetParent();
-      if (file && file->GetVersion() < 22300) return;
+      if (R__b.GetVersionOwner() < 22300) return;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
          TH3S::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
@@ -3262,8 +3259,7 @@ void TH3F::Streamer(TBuffer &R__b)
 
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
-      TFile *file = (TFile*)R__b.GetParent();
-      if (file && file->GetVersion() < 22300) return;
+      if (R__b.GetVersionOwner() < 22300) return;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
          TH3F::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
@@ -3487,8 +3483,7 @@ void TH3D::Streamer(TBuffer &R__b)
 
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
-      TFile *file = (TFile*)R__b.GetParent();
-      if (file && file->GetVersion() < 22300) return;
+      if (R__b.GetVersionOwner() < 22300) return;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
          TH3D::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
