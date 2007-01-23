@@ -97,7 +97,7 @@ void TGLViewerEditor::ConnectSignals2Slots()
    fUpdateScene->Connect("Pressed()", "TGLViewerEditor", this, "DoUpdateScene()");
    fCameraHome->Connect("Pressed()", "TGLViewerEditor", this, "DoCameraHome()");
 
-   fAxesContainer->Connect("Pressed(Int_t)", "TGLViewerEditor", this, "UpdateViewerGuides()");
+   fAxesContainer->Connect("Clicked(Int_t)", "TGLViewerEditor", this, "UpdateViewerGuides()");
    fReferenceOn->Connect("Clicked()", "TGLViewerEditor", this, "UpdateViewerGuides()");
    fReferencePosX->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateViewerGuides()");
    fReferencePosY->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateViewerGuides()");
@@ -106,7 +106,7 @@ void TGLViewerEditor::ConnectSignals2Slots()
    fCamMode->Connect("Selected(Int_t)", "TGLViewerEditor", this, "DoCameraMarkup()");
    fCamMarkupOn->Connect("Clicked()", "TGLViewerEditor", this, "DoCameraMarkup()");
 
-   fTypeButtons->Connect("Pressed(Int_t)", "TGLViewerEditor", this, "ClipTypeChanged(Int_t)");
+   fTypeButtons->Connect("Clicked(Int_t)", "TGLViewerEditor", this, "ClipTypeChanged(Int_t)");
    fEdit->Connect("Clicked()", "TGLViewerEditor", this, "UpdateViewerClip()");
 
    for (Int_t i = 0; i < 4; ++i)

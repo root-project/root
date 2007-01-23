@@ -171,7 +171,7 @@ void TPadEditor::ConnectSignals2Slots()
    fLogX->Connect("Toggled(Bool_t)","TPadEditor",this,"DoLogX(Bool_t)");
    fLogY->Connect("Toggled(Bool_t)","TPadEditor",this,"DoLogY(Bool_t)");
    fLogZ->Connect("Toggled(Bool_t)","TPadEditor",this,"DoLogZ(Bool_t)");
-   fBgroup->Connect("Released(Int_t)","TPadEditor",this,"DoBorderMode()");
+   fBgroup->Connect("Clicked(Int_t)","TPadEditor",this,"DoBorderMode()");
    fBsize->Connect("Selected(Int_t)", "TPadEditor", this, "DoBorderSize(Int_t)");
    fInit = kFALSE;
 }

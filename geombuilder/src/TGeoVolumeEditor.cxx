@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoVolumeEditor.cxx,v 1.6 2006/07/14 20:00:52 brun Exp $
+// @(#):$Name:  $:$Id: TGeoVolumeEditor.cxx,v 1.7 2006/09/25 13:45:17 rdm Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -275,6 +275,7 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
    bg->Insert(fBView[0]);
    bg->Insert(fBView[1]);
    bg->Insert(fBView[2]);
+   bg->SetRadioButtonExclusive();
    container->AddFrame(bg, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
 
    f1 = new TGCompositeFrame(container, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame | kDoubleBorder);
@@ -308,6 +309,7 @@ TGeoVolumeEditor::TGeoVolumeEditor(const TGWindow *p, Int_t width,
    bg->Insert(fBDiv[0]);
    bg->Insert(fBDiv[1]);
    bg->Insert(fBDiv[2]);
+   bg->SetRadioButtonExclusive();
    f1->AddFrame(bg, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
    fApplyDiv = new TGTextButton(f1, "Apply");
    fApplyDiv->SetToolTipText("Apply new division settings");
@@ -461,9 +463,9 @@ void TGeoVolumeEditor::SetModel(TObject* obj)
    }   
    fBVis[0]->SetState((fVolume->IsVisible())?kButtonDown:kButtonUp);
    fBVis[1]->SetState((fVolume->IsVisibleDaughters())?kButtonDown:kButtonUp);
-   fBView[0]->SetState((fVolume->IsVisContainers())?kButtonDown:kButtonUp);
-   fBView[1]->SetState((fVolume->IsVisLeaves())?kButtonDown:kButtonUp);
-   fBView[2]->SetState((fVolume->IsVisOnly())?kButtonDown:kButtonUp);
+   fBView[0]->SetState((fVolume->IsVisContainers())?kButtonDown:kButtonUp, kTRUE);
+   fBView[1]->SetState((fVolume->IsVisLeaves())?kButtonDown:kButtonUp, kTRUE);
+   fBView[2]->SetState((fVolume->IsVisOnly())?kButtonDown:kButtonUp, kTRUE);
    fBRaytrace->SetState((fVolume->IsRaytracing())?kButtonDown:kButtonUp);
    fBAuto->SetState((fGeometry->GetVisLevel())?kButtonUp:kButtonDown);
    fEVisLevel->SetNumber(fGeometry->GetVisLevel());
@@ -491,7 +493,7 @@ void TGeoVolumeEditor::SetModel(TObject* obj)
          fSelectedShape->GetAxisRange(iaxis,start,end);
          step = 0;
       }
-      fBDiv[iaxis-1]->SetState(kButtonDown);
+      fBDiv[iaxis-1]->SetState(kButtonDown, kTRUE);
       fEDivFrom->SetNumber(start);
       fEDivStep->SetNumber(step);
       fEDivN->SetNumber(ndiv);   
@@ -636,7 +638,7 @@ void TGeoVolumeEditor::DoRemoveNode()
       Int_t ndiv = 2, iaxis = 1;
       fSelectedShape->GetAxisRange(iaxis,start,end);
       step = end-start;
-      fBDiv[iaxis-1]->SetState(kButtonDown);
+      fBDiv[iaxis-1]->SetState(kButtonDown, kTRUE);
       fEDivFrom->SetNumber(start);
       fEDivStep->SetNumber(step);
       fEDivN->SetNumber(ndiv);      

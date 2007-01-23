@@ -112,21 +112,18 @@ void TFrameEditor::SetModel(TObject* obj)
 
    fFrame = (TFrame *)obj;
    
-   fAvoidSignal = kTRUE;
    Int_t par;
 
    par = fFrame->GetBorderMode();
-   if (par == -1) fBmode->SetState(kButtonDown);
-   else if (par == 1) fBmode1->SetState(kButtonDown);
-   else fBmode0->SetState(kButtonDown);
+   if (par == -1) fBmode->SetState(kButtonDown, kTRUE);
+   else if (par == 1) fBmode1->SetState(kButtonDown, kTRUE);
+   else fBmode0->SetState(kButtonDown, kTRUE);
 
    par = fFrame->GetBorderSize();
    if (par < 1) par = 1;
    if (par > 16) par = 16;
    fBsize->Select(par, kFALSE);
 
-   fAvoidSignal = kFALSE;
-   
    if (fInit) ConnectSignals2Slots();
 }
 

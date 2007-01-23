@@ -551,7 +551,7 @@ void TH1Editor::ConnectSignals2Slots()
    fAddSimple->Connect("Toggled(Bool_t)", "TH1Editor", this, "DoAddSimple(Bool_t)");
 
    //change 2D <-> 3D plot
-   fDimGroup->Connect("Released(Int_t)","TH1Editor",this,"DoHistView()");
+   fDimGroup->Connect("Clicked(Int_t)","TH1Editor",this,"DoHistView()");
 
    // change Bar Width/Offset, the second connection is needed to have the ability to confirm the value also with enter
    fBarWidth->Connect("ValueSet(Long_t)", "TH1Editor", this, "DoBarWidth()");

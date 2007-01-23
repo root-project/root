@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGraphEditor.cxx,v 1.19 2006/06/23 15:19:22 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGraphEditor.cxx,v 1.20 2006/09/25 13:35:58 rdm Exp $
 // Author: Carsten Hof   16/08/04
 
 /*************************************************************************
@@ -145,7 +145,7 @@ void TGraphEditor::ConnectSignals2Slots()
    // Connect signals to slots.
 
    fTitle->Connect("TextChanged(const char *)","TGraphEditor",this,"DoTitle(const char *)");
-   fgr->Connect("Released(Int_t)","TGraphEditor",this,"DoShape()");
+   fgr->Connect("Clicked(Int_t)","TGraphEditor",this,"DoShape()");
    fMarkerOnOff->Connect("Toggled(Bool_t)","TGraphEditor",this,"DoMarkerOnOff(Bool_t)");
    fWidthCombo->Connect("Selected(Int_t)", "TGraphEditor", this, "DoGraphLineWidth()");
    fExSide->Connect("Clicked()","TGraphEditor",this,"DoGraphLineWidth()");

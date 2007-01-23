@@ -692,7 +692,7 @@ void TH2Editor::ConnectSignals2Slots()
    // Connect signals to slots.
 
    fTitle->Connect("TextChanged(const char *)", "TH2Editor", this, "DoTitle(const char *)");
-   fDimGroup->Connect("Released(Int_t)","TH2Editor",this,"DoHistView()");
+   fDimGroup->Connect("Clicked(Int_t)","TH2Editor",this,"DoHistView()");
    fTypeCombo->Connect("Selected(Int_t)", "TH2Editor", this, "DoHistChanges()");   
    fCoordsCombo->Connect("Selected(Int_t)", "TH2Editor", this, "DoHistChanges()");
    fContCombo->Connect("Selected(Int_t)", "TH2Editor", this, "DoHistChanges()");   
@@ -1415,10 +1415,10 @@ void TH2Editor::DoAddError(Bool_t on)
    } else if (fAddError->GetState() == kButtonUp) {
       if (str.Contains("E")) {
          if (fDim->GetState() == kButtonDown)
-             str = GetHistContLabel()+GetHistAdditiveLabel();
+            str = GetHistContLabel()+GetHistAdditiveLabel();
           else
-             str= GetHistTypeLabel()+GetHistCoordsLabel()+
-                  GetHistAdditiveLabel(); 
+            str= GetHistTypeLabel()+GetHistCoordsLabel()+
+                 GetHistAdditiveLabel(); 
          make=kTRUE;
       }
    }
