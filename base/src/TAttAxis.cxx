@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.14 2007/01/12 09:31:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.15 2007/01/15 11:52:01 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -10,7 +10,6 @@
  *************************************************************************/
 
 #include "Riostream.h"
-#include "TFile.h"
 #include "TAttAxis.h"
 #include "TStyle.h"
 #include "TVirtualPad.h"
@@ -301,9 +300,8 @@ void TAttAxis::Streamer(TBuffer &R__b)
       R__b >> fLabelSize;
       R__b >> fTickLength;
       R__b >> fTitleOffset;
-      // !file is the case of only TMapFile
-      TFile *file = (TFile*)R__b.GetParent();
-      if (R__v > 1 && (!file || (file && file->GetVersion() > 900)))
+
+      if (R__v > 1 && R__b.GetVersionOwner() > 900)
          R__b >> fTitleSize;
       else
          fTitleSize = fLabelSize;
