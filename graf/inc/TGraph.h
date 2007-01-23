@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.56 2006/11/10 08:32:21 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.57 2006/11/24 10:17:46 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -24,17 +24,26 @@
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
-#ifndef ROOT_TH1
-#include "TH1.h"
+#ifndef ROOT_TAttLine
+#include "TAttLine.h"
 #endif
-#ifndef ROOT_TVectorfwd
-#include "TVectorfwd.h"
+#ifndef ROOT_TAttFill
+#include "TAttFill.h"
+#endif
+#ifndef ROOT_TAttMarker
+#include "TAttMarker.h"
+#endif
+#ifndef ROOT_TVectorFfwd
+#include "TVectorFfwd.h"
 #endif
 #ifndef ROOT_TVectorDfwd
 #include "TVectorDfwd.h"
 #endif
 
 class TBrowser;
+class TAxis;
+class TH1;
+class TH1F;
 class TF1;
 class TSpline;
 

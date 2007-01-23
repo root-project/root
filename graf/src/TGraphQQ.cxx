@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphQQ.cxx,v 1.5 2006/05/09 15:41:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphQQ.cxx,v 1.6 2006/06/26 13:05:16 brun Exp $
 // Author: Anna Kreshuk 18/11/2005
 
 /*************************************************************************
@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TGraphQQ.h"
+#include "TAxis.h"
 #include "TF1.h"
 #include "TMath.h"
 #include "TVirtualPad.h"

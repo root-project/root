@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.60 2006/07/03 16:10:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.61 2006/07/09 05:27:54 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 #include "TArrow.h"
 #include "TBox.h"
 #include "TVirtualPad.h"
+#include "TH1.h"
 #include "TF1.h"
 #include "TVector.h"
 #include "TVectorD.h"

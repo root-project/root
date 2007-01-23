@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.7 2007/01/15 16:10:10 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.8 2007/01/23 10:35:23 brun Exp $
 // Author: Sebastian Boser, Mathieu Demaret 02/02/06
 
 /*************************************************************************
@@ -52,6 +52,7 @@
 #include "TROOT.h"
 #include "TLatex.h"
 #include "TEllipse.h"
+#include "TH1.h"
 #include "TMath.h"
 
 
