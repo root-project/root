@@ -1003,16 +1003,16 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y)
       return;
    }
 
-   UInt_t hh = im->height;
-   UInt_t ow = im->width%8;
-   UInt_t ww = im->width - ow + (ow ? 8 : 0);
+///UInt_t hh = im->height;
+///UInt_t ow = im->width%8;
+///UInt_t ww = im->width - ow + (ow ? 8 : 0);
 
-   UInt_t bit = 0;
-   int i = 0;
-   UInt_t yy = 0;
-   UInt_t xx = 0;
-   Pixmap_t mask = 0;
-
+///UInt_t bit = 0;
+///int i = 0;
+///UInt_t yy = 0;
+///UInt_t xx = 0;
+   Pixmap_t mask = kNone;
+/*
    char *bits = new char[ww*hh]; //an array of bits
 
    ASImageDecoder *imdec = start_image_decoding(fgVisual, im, SCL_DO_ALPHA,
@@ -1042,7 +1042,7 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y)
                                           (const char *)bits, ww, hh);
       delete [] bits;
    }
-
+*/
    gv.fMask = kGCClipMask | kGCClipXOrigin | kGCClipYOrigin;
    gv.fClipMask = mask;
    gv.fClipXOrigin = x;
