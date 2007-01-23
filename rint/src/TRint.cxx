@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.64 2006/12/01 11:29:13 pcanal Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.65 2006/12/08 22:58:43 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -36,7 +36,6 @@
 #include "TInterpreter.h"
 #include "TObjArray.h"
 #include "TObjString.h"
-#include "TFile.h"
 #include "TMapFile.h"
 #include "TTabCom.h"
 #include "TError.h"
