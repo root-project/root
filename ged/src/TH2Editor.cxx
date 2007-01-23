@@ -1412,10 +1412,13 @@ void TH2Editor::DoAddError(Bool_t on)
          str += "E";
          make=kTRUE;
       }
-   } else if (fAddError->GetState()==kButtonUp) {
+   } else if (fAddError->GetState() == kButtonUp) {
       if (str.Contains("E")) {
-         str= GetHistTypeLabel()+GetHistCoordsLabel()+
-              GetHistContLabel()+GetHistAdditiveLabel(); 
+         if (fDim->GetState() == kButtonDown)
+             str = GetHistContLabel()+GetHistAdditiveLabel();
+          else
+             str= GetHistTypeLabel()+GetHistCoordsLabel()+
+                  GetHistAdditiveLabel(); 
          make=kTRUE;
       }
    }
