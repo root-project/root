@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.18 2006/10/20 21:07:40 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.19 2007/01/15 16:10:10 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 
 #include "TSpline.h"
 #include "TVirtualPad.h"
+#include "TH1.h"
 #include "TF1.h"
 #include "TSystem.h"
 #include "Riostream.h"
@@ -51,6 +52,15 @@ TSpline::TSpline(const TSpline &sp) :
 { 
    //copy constructor
 }
+
+//____________________________________________________________________________
+TSpline::~TSpline() 
+{
+   //destructor
+  if(fHistogram) delete fHistogram; 
+  if(fGraph) delete fGraph; 
+}
+  
 
 //____________________________________________________________________________
 TSpline& TSpline::operator=(const TSpline &sp)
