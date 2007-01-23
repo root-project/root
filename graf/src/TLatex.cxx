@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.64 2007/01/15 10:26:29 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.65 2007/01/22 16:48:54 couet Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1956,7 +1956,7 @@ Double_t TLatex::GetXsize()
 
 
 //______________________________________________________________________________
-void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h)
+void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 {
    // Return text size in pixels
 
@@ -1971,11 +1971,28 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h)
    }
    fError = 0 ;
 
-   const Char_t *text = newText.Data() ;
-   TLatexFormSize fs = FirstParse(GetTextAngle(),GetTextSize(),text);
-   delete[] fTabSize;
-   w = (UInt_t)fs.Width();
-   h = (UInt_t)fs.Height();
+   if (angle) {
+      Int_t CBoxX[4], CBoxY[4];
+      GetControlBox(fX, fY, fTextAngle, CBoxX, CBoxY);
+      Int_t x1 = CBoxX[0];
+      Int_t x2 = CBoxX[0];
+      Int_t y1 = CBoxY[0];
+      Int_t y2 = CBoxY[0];
+      for (Int_t i=1; i<4; i++) {
+         if (CBoxX[i] < x1) x1 = CBoxX[i];
+         if (CBoxX[i] > x2) x2 = CBoxX[i];
+         if (CBoxY[i] < y1) y1 = CBoxY[i];
+         if (CBoxY[i] > y2) y2 = CBoxY[i];
+      }
+      w = x2-x1;
+      h = y2-y1;
+   } else {
+      const Char_t *text = newText.Data() ;
+      TLatexFormSize fs = FirstParse(GetTextAngle(),GetTextSize(),text);
+      delete[] fTabSize;
+      w = (UInt_t)fs.Width();
+      h = (UInt_t)fs.Height();
+   }
 }
 
 
