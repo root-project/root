@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.13 2006/11/16 17:17:37 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.14 2007/01/12 16:03:16 brun Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -28,7 +28,6 @@
 #include "TText.h"
 #include "TSystem.h"
 #include "TObjString.h"
-#include "TFile.h"
 #include "Riostream.h"
 
 const Int_t kIsClassTree = BIT(7);
@@ -692,27 +691,16 @@ void TClassTree::PaintClass(Int_t iclass, Float_t xleft, Float_t y)
 
 
 //______________________________________________________________________________
-void TClassTree::SaveAs(const char *filename, Option_t *) const
+void TClassTree::SaveAs(const char *filename, Option_t *option) const
 {
    // save current configuration in a Root file
    // if filename is blank, the name of the file will be the current objectname.root
    // all the current settings are preserved
    // the Root file produced can be looked at by a another Root session
    // with no access to the original classes.
+   // By default a message is printed. Specify option "Q" to remove the message
 
-   if (!filename || strlen(filename) == 0) {
-      char fname[100];
-      sprintf(fname,"%s.root",GetName());
-      TFile local(fname,"recreate");
-      if (local.IsZombie()) return;
-      ((TClassTree*)this)->Write();
-      printf("TClassTree::SaveAs, file: %s has been written\n",fname);
-   } else {
-      TFile local(filename,"recreate");
-      if (local.IsZombie()) return;
-      ((TClassTree*)this)->Write();
-      printf("TClassTree::SaveAs, file: %s has been written\n",filename);
-   }
+   gROOT->ProcessLine(Form("TFile::SaveObjectAs((TClassTree*)0x%x,\"%s\",\"%s\");",this,filename,option));
 }
 
 
