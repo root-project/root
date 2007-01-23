@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.h,v 1.2 2006/06/29 22:15:36 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheWrite.h,v 1.3 2006/08/26 16:28:32 rdm Exp $
 // Author: Rene Brun   19/05/2006
 
 /*************************************************************************
@@ -21,9 +21,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TFile
-#include "TFile.h"
+#ifndef ROOT_TObject
+#include "TObject.h"
 #endif
+
+class TFile;
 
 class TFileCacheWrite : public TObject {
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileCacheRead.h,v 1.3 2006/07/04 12:58:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFileCacheRead.h,v 1.4 2006/08/26 16:28:32 rdm Exp $
 // Author: Rene Brun   19/05/2006
 
 /*************************************************************************
@@ -21,9 +21,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TFile
-#include "TFile.h"
+#ifndef ROOT_TObject
+#include "TObject.h"
 #endif
+
+class TFile;
 
 class TFileCacheRead : public TObject {
 
