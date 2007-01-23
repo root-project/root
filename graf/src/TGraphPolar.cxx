@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.6 2006/12/14 08:37:33 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.7 2007/01/15 16:10:10 brun Exp $
 // Author: Sebastian Boser, Mathieu Demaret 02/02/06
 
 /*************************************************************************
@@ -48,6 +48,10 @@
 #include "THLimitsFinder.h"
 #include "TPaveText.h"
 #include "TStyle.h"
+#include "TPad.h"
+#include "TROOT.h"
+#include "TLatex.h"
+#include "TEllipse.h"
 #include "TMath.h"
 
 
