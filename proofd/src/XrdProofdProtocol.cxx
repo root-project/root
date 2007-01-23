@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.38 2007/01/19 15:43:10 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.39 2007/01/22 11:36:41 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -948,7 +948,7 @@ static int AssertDir(const char *path, XrdProofUI ui)
          return -1;
       }
 
-      // Set ownership of the socket file to the client
+      // Set ownership of the path to the client
       if (chown(path, ui.fUid, ui.fGid) == -1) {
          MERROR(MHEAD, "AssertDir: cannot set user ownership"
                        " on path (errno: "<<errno<<")");
@@ -2682,67 +2682,6 @@ int XrdProofdProtocol::Login()
       return rc;
    }
 
-#if 0
-   int i, pid;
-   char uname[9];
-
-   // Unmarshall the data
-   pid = (int)ntohl(fRequest.login.pid);
-   for (i = 0; i < (int)sizeof(uname)-1; i++) {
-      if (fRequest.login.username[i] == '\0' || fRequest.login.username[i] == ' ')
-         break;
-      uname[i] = fRequest.login.username[i];
-   }
-   uname[i] = '\0';
-
-   // No 'root' logins
-   if (!strncmp(uname, "root", 4)) {
-      TRACEP(XERR,"Login: 'root' logins not accepted ");
-      fResponse.Send(kXR_InvalidRequest,"Login: 'root' logins not accepted");
-      return rc;
-   }
-
-   // Here we check if the user is known locally.
-   // If not, we fail for now.
-   // In the future we may try to get a temporary account
-   if (GetUserInfo(uname, fUI) != 0) {
-      TRACEP(XERR,"Login: unknown ClientID: "<<uname);
-      fResponse.Send(kXR_InvalidRequest,"Login: unknown ClientID");
-      return rc;
-   }
-
-   // If we are in controlled mode we have to check if the user in the
-   // authorized list; otherwise we fail. Privileged users are always
-   // allowed to connect.
-   if (fgOperationMode == kXPD_OpModeControlled) {
-      bool notok = 1;
-      XrdOucString us;
-      int from = 0;
-      while ((from = fgAllowedUsers.tokenize(us, from, ',')) != -1) {
-         if (us == (const char *)uname) {
-            notok = 0;
-            break;
-         }
-      }
-      if (notok) {
-         TRACEP(XERR,"Login: ClientID not currently authorized to log in");
-         fResponse.Send(kXR_InvalidRequest, "Login: controlled operations: "
-                         "ClientID not currently authorized to log in");
-         return rc;
-      }
-   }
-
-
-   // Establish the ID for this link
-   fLink->setID(uname, pid);
-   fCapVer = fRequest.login.capver[0];
-
-   // Establish the ID for this client
-   fClientID = new char[strlen(uname)+4];
-   strcpy(fClientID, uname);
-   TRACEP(LOGIN,"Login: ClientID =" << fClientID);
-#else
-
    int i, pid;
    XrdOucString uname;
 
@@ -2824,8 +2763,6 @@ int XrdProofdProtocol::Login()
    strcpy(fClientID, uname.c_str());
    TRACEP(LOGIN,"Login: ClientID =" << fClientID);
 
-#endif
-
    // Assert the workdir directory ...
    fUI.fWorkDir = fUI.fHomeDir;
    if (fgWorkDir) {
@@ -2842,7 +2779,7 @@ int XrdProofdProtocol::Login()
    }
    // Make sure the directory exists
    if (AssertDir(fUI.fWorkDir.c_str(), fUI) == -1) {
-      XrdOucString emsg("MapClient: unable to create work dir: ");
+      XrdOucString emsg("Login: unable to create work dir: ");
       emsg += fUI.fWorkDir;
       TRACEP(XERR, emsg);
       fResponse.Send(kXP_ServerError, emsg.c_str());
@@ -2855,7 +2792,7 @@ int XrdProofdProtocol::Login()
       XrdOucString credsdir = fUI.fWorkDir;
       credsdir += "/.creds";
       if (AssertDir(credsdir.c_str(), fUI) == -1) {
-         XrdOucString emsg("MapClient: unable to create credential dir: ");
+         XrdOucString emsg("Login: unable to create credential dir: ");
          emsg += credsdir;
          TRACEP(XERR, emsg);
          fResponse.Send(kXP_ServerError, emsg.c_str());
