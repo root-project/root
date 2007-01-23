@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.15 2006/05/24 15:31:40 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.16 2007/01/12 16:03:15 brun Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -15,7 +15,6 @@
 #include "TVirtualPad.h"
 #include "TGeometry.h"
 #include "TMaterial.h"
-#include "TFile.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TVirtualViewer3D.h"
@@ -179,9 +178,8 @@ void TShape::Streamer(TBuffer &R__b)
       TNamed::Streamer(R__b);
       TAttLine::Streamer(R__b);
       TAttFill::Streamer(R__b);
-      TFile *file = (TFile*)R__b.GetParent();
-      if (file) {
-         if (file->GetVersion() > 22300) TAtt3D::Streamer(R__b);
+      if (R__b.GetVersionOwner() > 22300) {
+         TAtt3D::Streamer(R__b);
       } else {
          TAtt3D::Streamer(R__b);
       }
