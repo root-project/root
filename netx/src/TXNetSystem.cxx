@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.14 2006/10/07 18:06:11 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.15 2007/01/21 22:04:20 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -79,10 +79,8 @@ TXNetSystem::TXNetSystem(const char *url, Bool_t owner) : TNetSystem(owner)
    TNetSystem::InitRemoteEntity(url);
 
    TXNetSystemConnectGuard cguard(this, url);
-   if (!cguard.IsValid() && !fIsRootd) {
+   if (!cguard.IsValid() && !fIsRootd)
       Error("TXNetSystem","fatal error: connection creation failed.");
-      gSystem->Abort();
-   }
 
    return;
 }
