@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.57 2007/01/19 16:47:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.58 2007/01/20 19:29:34 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -40,6 +40,7 @@
 #include "TMathBase.h"
 #endif
 
+#include <stdarg.h>
 #include <string>
 
 #ifdef R__GLOBALSTL
@@ -588,7 +589,7 @@ inline char TSubString::operator[](Ssiz_t i) const
 
 inline char TSubString::operator()(Ssiz_t i) const
 { return fStr.fData[fBegin+i]; }
- 
+
 inline TSubString &TSubString::operator=(const TSubString &s)
 { fStr = s.fStr; fBegin = s.fBegin; fExtent = s.fExtent; return *this; }
 
