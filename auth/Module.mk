@@ -22,6 +22,11 @@ RAUTHS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 
 RAUTHH       := $(filter-out $(MODDIRI)/DaemonUtils.h,$(RAUTHH))
 RAUTHS       := $(filter-out $(MODDIRS)/DaemonUtils.cxx,$(RAUTHS))
+RAUTHH       := $(filter-out $(MODDIRI)/AFSAuth.h,$(RAUTHH))
+RAUTHH       := $(filter-out $(MODDIRI)/AFSAuthTypes.h,$(RAUTHH))
+RAUTHS       := $(filter-out $(MODDIRS)/AFSAuth.cxx,$(RAUTHS))
+RAUTHH       := $(filter-out $(MODDIRI)/TAFS.h,$(RAUTHH))
+RAUTHS       := $(filter-out $(MODDIRS)/TAFS.cxx,$(RAUTHS))
 
 RAUTHO       := $(RAUTHS:.cxx=.o)
 
@@ -32,8 +37,31 @@ RAUTHDEP     := $(RAUTHO:.o=.d) $(RAUTHDO:.o=.d) $(DAEMONUTILSO:.o=.d)
 
 RAUTHLIB     := $(LPATH)/libRootAuth.$(SOEXT)
 
+##### libAFSAuth #####
+ifneq ($(AFSLIB),)
+AFSAUTHL       := $(MODDIRI)/LinkDefAFS.h
+AFSAUTHDS      := $(MODDIRS)/G__AFSAuth.cxx
+AFSAUTHDO      := $(AFSAUTHDS:.cxx=.o)
+AFSAUTHDH      := $(AFSAUTHDS:.cxx=.h)
+
+AFSAUTHH     := $(MODDIRI)/AFSAuth.h $(MODDIRI)/AFSAuthTypes.h $(MODDIRI)/TAFS.h
+AFSAUTHS     := $(MODDIRS)/AFSAuth.cxx $(MODDIRS)/TAFS.cxx
+
+AFSAUTHO     := $(AFSAUTHS:.cxx=.o)
+
+AFSAUTHDEP   := $(AFSAUTHO:.o=.d) $(AFSAUTHDO:.o=.d)
+
+AFSAUTHLIB   := $(LPATH)/libAFSAuth.$(SOEXT)
+endif
+
+#### for libSrvAuth (built in rpdutils/Module.mk) ####
+DAEMONUTILSO := $(MODDIRS)/DaemonUtils.o
+
 #### for rootd and proofd ####
 RSAO         := $(AUTHDIRS)/rsaaux.o $(AUTHDIRS)/rsalib.o $(AUTHDIRS)/rsafun.o
+ifneq ($(AFSLIB),)
+RSAO         += $(MODDIRS)/AFSAuth.o
+endif
 
 # Add SSL flags, if required
 EXTRA_RAUTHFLAGS = $(EXTRA_AUTHFLAGS)
@@ -47,9 +75,16 @@ endif
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RAUTHH)) \
                 include/DaemonUtils.h
 ALLLIBS      += $(RAUTHLIB)
+ifneq ($(AFSLIB),)
+ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(AFSAUTHH))
+ALLLIBS      += $(AFSAUTHLIB)
+endif
 
 # include all dependency files
 INCLUDEFILES += $(RAUTHDEP)
+ifneq ($(AFSLIB),)
+INCLUDEFILES += $(AFSAUTHDEP)
+endif
 
 ##### local rules #####
 include/%.h:    $(AUTHDIRI)/%.h
@@ -64,23 +99,38 @@ $(RAUTHDS):     $(RAUTHH) $(RAUTHL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(RAUTHH) $(RAUTHL)
 
-all-auth:       $(RAUTHLIB)
+$(AFSAUTHLIB):  $(AFSAUTHO) $(AFSAUTHDO) $(ORDER_) $(MAINLIBS) $(AFSAUTHLIBDEP)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+		   "$(SOFLAGS)" libAFSAuth.$(SOEXT) $@ "$(AFSAUTHO) $(AFSAUTHDO)" \
+		   "$(AFSLIBDIR) $(AFSLIB) $(RESOLVLIB)"
+
+$(AFSAUTHDS):   $(AFSAUTHH) $(AFSAUTHL) $(ROOTCINTTMPEXE)
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ -c $(AFSAUTHH) $(AFSAUTHL)
+
+all-auth:       $(RAUTHLIB) $(AFSAUTHLIB)
 
 map-auth:       $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(RAUTHLIB) \
 		   -d $(RAUTHLIBDEP) -c $(RAUTHL)
 
-map::           map-auth
+map-afs:        $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(AFSAUTHLIB) \
+		   -d $(AFSAUTHLIBDEP) -c $(AFSAUTHL)
+
+map::           map-auth map-afs
 
 clean-auth:
-		@rm -f $(RAUTHO) $(RAUTHDO) $(DAEMONUTILSO)
+		@rm -f $(RAUTHO) $(RAUTHDO) $(DAEMONUTILSO) $(AFSAUTHO) $(AFSAUTHDO)
 
 clean::         clean-auth
 
 distclean-auth: clean-auth
-		@rm -f $(RAUTHDEP) $(RAUTHDS) $(RAUTHDH) $(RAUTHLIB)
+		@rm -f $(RAUTHDEP) $(RAUTHDS) $(RAUTHDH) $(RAUTHLIB)\
+		       $(AFSAUTHDEP) $(AFSAUTHDS) $(AFSAUTHLIB)
 
 distclean::     distclean-auth
 
 ##### extra rules ######
 $(RAUTHO):      CXXFLAGS += $(EXTRA_RAUTHFLAGS)
+$(AFSAUTHO):    CXXFLAGS += $(AFSINCDIR)
