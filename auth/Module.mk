@@ -101,7 +101,8 @@ $(RAUTHDS):     $(RAUTHH) $(RAUTHL) $(ROOTCINTTMPEXE)
 
 $(AFSAUTHLIB):  $(AFSAUTHO) $(AFSAUTHDO) $(ORDER_) $(MAINLIBS) $(AFSAUTHLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libAFSAuth.$(SOEXT) $@ "$(AFSAUTHO) $(AFSAUTHDO)" \
+		   "$(SOFLAGS)" libAFSAuth.$(SOEXT) $@ \
+		   "$(AFSAUTHO) $(AFSAUTHDO)" \
 		   "$(AFSLIBDIR) $(AFSLIB) $(RESOLVLIB)"
 
 $(AFSAUTHDS):   $(AFSAUTHH) $(AFSAUTHL) $(ROOTCINTTMPEXE)
@@ -114,14 +115,19 @@ map-auth:       $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(RAUTHLIB) \
 		   -d $(RAUTHLIBDEP) -c $(RAUTHL)
 
+ifneq ($(AFSLIB),)
 map-afs:        $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(AFSAUTHLIB) \
 		   -d $(AFSAUTHLIBDEP) -c $(AFSAUTHL)
 
-map::           map-auth map-afs
+map::           map-afs
+endif
+
+map::           map-auth
 
 clean-auth:
-		@rm -f $(RAUTHO) $(RAUTHDO) $(DAEMONUTILSO) $(AFSAUTHO) $(AFSAUTHDO)
+		@rm -f $(RAUTHO) $(RAUTHDO) $(DAEMONUTILSO) $(AFSAUTHO) \
+		       $(AFSAUTHDO)
 
 clean::         clean-auth
 
