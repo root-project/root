@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.168 2006/12/12 13:52:23 couet Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.169 2007/01/12 16:03:16 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -5394,7 +5394,6 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
       //Save geometry as a gdml file
       Info("Export","Exporting %s %s as gdml code", GetName(), GetTitle());
       gROOT->ProcessLine("TPython::Exec(\"from math import *\")");
-      gROOT->ProcessLine("TPython::Exec(\"from units import *\")");
 
       gROOT->ProcessLine("TPython::Exec(\"import writer\")");
       gROOT->ProcessLine("TPython::Exec(\"import ROOTwriter\")");
@@ -5417,12 +5416,13 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
       gROOT->ProcessLine("TPython::Exec(\"binding.dumpSolids(shapelist)\")");
 
       // dump geo tree
-      gROOT->ProcessLine("TPython::Exec(\"print 'Traversing geometry tree'\")");
+      gROOT->ProcessLine("TPython::Exec(\"print 'Info in <TPython::Exec>: Traversing geometry tree'\")");
       gROOT->ProcessLine("TPython::Exec(\"gdmlwriter.addSetup('default', '1.0', topV.GetName())\")");
       gROOT->ProcessLine("TPython::Exec(\"binding.examineVol(topV)\")");
 
       // write file
       gROOT->ProcessLine("TPython::Exec(\"gdmlwriter.writeFile()\")");
+      printf("Info in <TPython::Exec>: GDML Export complete - %s is ready\n", filename);
       return 1;
    }
    if (sfile.Contains(".root") || sfile.Contains(".xml")) {  
@@ -5505,16 +5505,22 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
       // import from a gdml file
       const char* cmd = Form("TGDMLParse::StartGDML(\"%s\")", filename);
       TGeoVolume* world = (TGeoVolume*)gROOT->ProcessLineFast(cmd);
-      gGeoManager->SetTopVolume(world);
-      gGeoManager->CloseGeometry();
-      gGeoManager->DefaultColors();
+
+      if(world == 0) {
+         printf("Error in <TGeoManager::Import>: Cannot open file\n");
+      }
+      else {
+         gGeoManager->SetTopVolume(world);
+         gGeoManager->CloseGeometry();
+         gGeoManager->DefaultColors();
+      }
    } else {   
       // import from a root file
       TFile *old = gFile;
       TFile *f = TFile::Open(filename);
       if (!f || f->IsZombie()) {
          if (old) old->cd();
-         printf("Error: TGeoManager::Import : Cannot open file\n");
+         printf("Error in <TGeoManager::Import>: Cannot open file\n");
          return 0;
       }
       if (name && strlen(name) > 0) {
