@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.25 2005/11/21 13:57:42 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.26 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -19,7 +19,6 @@
 #include "TPaveLabel.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
-#include "TFile.h"
 #include "TClass.h"
 #include "TLatex.h"
 
@@ -388,8 +387,7 @@ void TPaveStats::Streamer(TBuffer &R__b)
       TPaveText::Streamer(R__b);
       R__b >> fOptFit;
       R__b >> fOptStat;
-      TFile *file = (TFile*)R__b.GetParent();
-      if (R__v > 1 || (file && file->GetVersion() == 22304)) {
+      if (R__v > 1 || R__b.GetVersionOwner() == 22304) {
          fFitFormat.Streamer(R__b);
          fStatFormat.Streamer(R__b);
       } else {
