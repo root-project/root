@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.246 2007/01/15 16:10:10 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.247 2007/01/17 15:54:20 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -17,9 +17,7 @@
 #include "TError.h"
 #include "TMath.h"
 #include "TSystem.h"
-#include "TFile.h"
 #include "TStyle.h"
-#include "TDirectory.h"
 #include "TH1.h"
 #include "TClass.h"
 #include "TBaseClass.h"
@@ -4061,27 +4059,14 @@ void TPad::Print(const char *filenam, Option_t *option)
 
    //==============Save pad/canvas as a root file===============================
    if (strstr(opt,"root")) {
-      TDirectory *dirsav = gDirectory;
-      TFile *fsave = new TFile(psname, "RECREATE");
-      Write();
-      fsave->Close();
-      delete fsave;
-      if (dirsav) dirsav->cd();
-      if (!gSystem->AccessPathName(psname)) Info("Print", "ROOT file %s has been created", psname.Data());
+      gROOT->ProcessLine(Form("TFile::SaveObjectAs((TPad*)0x%x,\"%s\",\"%s\");",this,psname.Data(),""));
       return;
    }
 
    //==============Save pad/canvas as a XML file================================
    if (strstr(opt,"xml")) {
       // Plugin XML driver
-      TDirectory *dirsav = gDirectory;
-      TFile *file = TFile::Open(psname,"recreate");
-      if (file) {
-         Write();
-         delete file;
-      }
-      if (dirsav) dirsav->cd();
-      if (!gSystem->AccessPathName(psname)) Info("Print", "XML file %s has been created", psname.Data());
+      gROOT->ProcessLine(Form("TFile::SaveObjectAs((TPad*)0x%x,\"%s\",\"%s\");",this,psname.Data(),""));
       return;
    }
 

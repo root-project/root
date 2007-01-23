@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.119 2006/10/06 12:12:34 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.120 2006/10/12 15:20:26 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -16,7 +16,6 @@
 #include "TROOT.h"
 #include "TCanvas.h"
 #include "TClass.h"
-#include "TDirectory.h"
 #include "TStyle.h"
 #include "TText.h"
 #include "TBox.h"
