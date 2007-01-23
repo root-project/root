@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.56 2007/01/19 16:47:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.57 2007/01/20 19:29:34 brun Exp $
 // Author: Rene Brun, Philippe Canal, Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -93,6 +93,7 @@ public:
    virtual char      *ReadString(char *s, Int_t max) = 0;
    virtual void       WriteString(const char *s) = 0;
 
+   virtual Int_t      GetVersionOwner() const  = 0;
    virtual Int_t      GetMapCount() const  = 0;
    virtual void       GetMappedObject(UInt_t tag, void* &ptr, TClass* &ClassPtr) const = 0;
    virtual void       MapObject(const TObject *obj, UInt_t offset = 1) = 0;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBufferFile.h,v 1.1 2007/01/19 16:47:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBufferFile.h,v 1.2 2007/01/20 19:29:34 brun Exp $
 // Author: Rene Brun   17/01/2007
 
 /*************************************************************************
@@ -103,9 +103,10 @@ public:
    Bool_t   CheckObject(const TObject *obj);
    Bool_t   CheckObject(const void *obj, const TClass *ptrClass);
    
-   virtual   Int_t    CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss);
-   virtual   Int_t    CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname);
-   virtual   void     SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE);
+   virtual Int_t      GetVersionOwner() const;
+   virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss);
+   virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname);
+   virtual void       SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE);
 
    virtual Version_t  ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, const TClass *cl = 0);
    virtual UInt_t     WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);

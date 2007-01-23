@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBufferFile.cxx,v 1.1 2007/01/19 16:47:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBufferFile.cxx,v 1.2 2007/01/20 09:46:36 brun Exp $
 // Author: Rene Brun 17/01/2007
 
 /*************************************************************************
@@ -142,6 +142,15 @@ TBufferFile::~TBufferFile()
    delete fClassMap;
 }
 
+
+//______________________________________________________________________________
+Int_t TBufferFile::GetVersionOwner() const
+{
+   // return the version number of the owner file
+   TFile *file = (TFile*)GetParent();
+   if (file) return file->GetVersion();
+   else return 0;
+}
 
 //______________________________________________________________________________
 void TBufferFile::IncrementLevel(TStreamerInfo* info)
