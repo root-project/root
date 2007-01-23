@@ -1,4 +1,4 @@
-// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.16 2007/01/19 17:31:55 brun Exp $
+// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.17 2007/01/19 18:25:11 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -2407,7 +2407,7 @@ void TBufferXML::ReadCharP(Char_t    *c)
 }
 
 //______________________________________________________________________________
-void TBufferXML::ReadTString(TString &s)
+void TBufferXML::ReadTString(TString & /*s*/)
 {
    // Reads a TString
 
@@ -2538,7 +2538,7 @@ void TBufferXML::WriteCharP(const Char_t *c)
 }
 
 //______________________________________________________________________________
-void TBufferXML::WriteTString(const TString &s)
+void TBufferXML::WriteTString(const TString & /*s*/)
 {
    // Writes a TString
 
