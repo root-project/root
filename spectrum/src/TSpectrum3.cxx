@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum3.cxx,v 1.4 2006/10/23 10:06:50 couet Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum3.cxx,v 1.5 2006/10/23 13:15:05 couet Exp $
 // Author: Miroslav Morhac   25/09/2006
 
 /////////////////////////////////////////////////////////////////////////////
@@ -52,6 +52,7 @@
 
     
 #include "TSpectrum3.h"
+#include "TH1.h"
 #include "TMath.h"
 #define PEAK_WINDOW 1024
 
