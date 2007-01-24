@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAFS.cxx,v 1.1 2007/01/23 11:31:33 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: TAFS.cxx,v 1.2 2007/01/24 08:09:03 brun Exp $
 // Author: G. Ganis, Nov 2006
 
 /*************************************************************************
@@ -45,8 +45,12 @@ ClassImp(TAFS)
 // which may create problems in multi-threaded environments.
 extern "C" {
    TAFS *GetTAFS(const char *f, const char *u, Int_t lf) {
+      // Create and instance and return it only if valid
       TAFS *afs = new TAFS(f, u, lf);
-      return (afs->Verify() > 0 ? afs : 0); 
+      if (afs->Verify())
+         return afs;
+      delete afs;
+      return 0;
    }
 }
 
