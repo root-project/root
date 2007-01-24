@@ -1416,7 +1416,7 @@ void TH2Editor::DoAddError(Bool_t on)
       if (str.Contains("E")) {
          if (fDim->GetState() == kButtonDown)
             str = GetHistContLabel()+GetHistAdditiveLabel();
-          else
+         else
             str= GetHistTypeLabel()+GetHistCoordsLabel()+
                  GetHistAdditiveLabel(); 
          make=kTRUE;

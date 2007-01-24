@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.19 2007/01/15 16:10:10 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.20 2007/01/23 11:27:13 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -57,8 +57,8 @@ TSpline::TSpline(const TSpline &sp) :
 TSpline::~TSpline() 
 {
    //destructor
-  if(fHistogram) delete fHistogram; 
-  if(fGraph) delete fGraph; 
+   if(fHistogram) delete fHistogram; 
+   if(fGraph) delete fGraph; 
 }
   
 

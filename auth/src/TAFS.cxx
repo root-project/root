@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id:$
+// @(#)root/auth:$Name:  $:$Id: TAFS.cxx,v 1.1 2007/01/23 11:31:33 rdm Exp $
 // Author: G. Ganis, Nov 2006
 
 /*************************************************************************
@@ -44,9 +44,10 @@ ClassImp(TAFS)
 // Hook to the constructor. This is needed to avoid using the plugin manager
 // which may create problems in multi-threaded environments.
 extern "C" {
-   TAFS *GetTAFS(const char *f, const char *u, Int_t lf)
-   { TAFS *afs = new TAFS(f, u, lf);
-     return (afs->Verify() > 0 ? afs : 0); }
+   TAFS *GetTAFS(const char *f, const char *u, Int_t lf) {
+      TAFS *afs = new TAFS(f, u, lf);
+      return (afs->Verify() > 0 ? afs : 0); 
+   }
 }
 
 //________________________________________________________________________
