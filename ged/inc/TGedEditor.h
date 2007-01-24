@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.11 2006/09/26 06:42:42 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.12 2006/09/27 08:45:42 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva   02/12/2003
 
 /*************************************************************************
@@ -66,7 +66,7 @@ protected:
    TClass           *fClass;            //class of the selected object
    Bool_t            fGlobal;           //true if editor is global
 
-   void              ConfigureGedFrames();
+   void              ConfigureGedFrames(Bool_t objChaged);
 
    static TGedEditor *fgFrameCreator; 
 

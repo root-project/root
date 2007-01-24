@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.34 2007/01/17 16:15:00 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.35 2007/01/17 17:06:11 antcheva Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -396,9 +396,10 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
             fTab->AddFrame(ti->fContainer,0);
          }  
       }
+      ConfigureGedFrames(kTRUE);
+   } else {
+      ConfigureGedFrames(kFALSE);
    } // end fModel != obj
-
-   ConfigureGedFrames();
 
    if (mapTabs) { // selected object is different class
       TGedTabInfo* ti;
@@ -611,7 +612,7 @@ void TGedEditor::InsertGedFrame(TGedFrame* f)
 }
 
 //______________________________________________________________________________
-void TGedEditor::ConfigureGedFrames()
+void TGedEditor::ConfigureGedFrames(Bool_t objChanged)
 {
    // Call SetModel in class editors.
 
@@ -626,21 +627,27 @@ void TGedEditor::ConfigureGedFrames()
       TIter fr(ti->fContainer->GetList());
       el = (TGFrameElement*) fr();
       ((TGedFrame*) el->fFrame)->SetModel(fModel);
-      do {
-         el->fFrame->MapSubwindows();
-         el->fFrame->Layout();
-         el->fFrame->MapWindow();
-      } while((el = (TGFrameElement *) fr()));
+      if(objChanged) {
+         do {
+            el->fFrame->MapSubwindows();
+            el->fFrame->Layout();
+            el->fFrame->MapWindow();
+         } while((el = (TGFrameElement *) fr()));
+      }
       ti->fContainer->Layout();
    }
 
    TIter next(fTabContainer->GetList());
    while ((el = (TGFrameElement *) next())) {
       if ((el->fFrame)->InheritsFrom(TGedFrame::Class())) {
+         if (objChanged) {
          el->fFrame->MapSubwindows();
          ((TGedFrame *)(el->fFrame))->SetModel(fModel);
          el->fFrame->Layout();
          el->fFrame->MapWindow();
+         } else {
+            ((TGedFrame *)(el->fFrame))->SetModel(fModel);
+         }
       }
    }
    fTabContainer->Layout();
