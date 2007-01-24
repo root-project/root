@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.31 2006/06/07 09:10:53 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.32 2006/06/21 13:09:26 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -142,7 +142,7 @@ tryfile:
    // allow x:/path as Windows filename
    if ((s = strstr(u, ":/")) && u+1 != s) {
       if (*(s+2) != '/') {
-         Error("TUrl", "malformed, URL must contain \"://\"");
+         Error("TUrl", "%s malformed, URL must contain \"://\"", u0);
          fPort = -1;
          goto cleanup;
       }
