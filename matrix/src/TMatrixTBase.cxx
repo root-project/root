@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.12 2006/11/25 09:05:47 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.13 2006/12/06 09:00:36 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -461,7 +461,7 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::InsertRow(Int_t rown,Int_t coln,co
          return *this;
       }
 
-      if (acoln+nr >= fNcols || nr < 0) {
+      if (acoln+nr > fNcols || nr < 0) {
          Error("InsertRow","row length %d out of range",nr);
          return *this;
       }
