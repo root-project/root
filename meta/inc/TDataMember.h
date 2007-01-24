@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.14 2006/05/23 04:47:40 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.15 2006/11/24 14:24:54 rdm Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -44,7 +44,7 @@ private:
    TClass             *fClass;        //pointer to the class
    TDataType          *fDataType;     //pointer to data basic type descriptor
 
-   Int_t               fOffset;       //offset 
+   Long_t              fOffset;       //offset 
    Int_t               fSTLCont;      //STL type 
    Long_t              fProperty;     //Property
 
@@ -71,8 +71,8 @@ public:
    Int_t          GetMaxIndex(Int_t dim) const;
    TClass        *GetClass() const { return fClass; }
    TDataType     *GetDataType() const { return fDataType; } //only for basic type
-   Int_t          GetOffset() const;
-   Int_t          GetOffsetCint() const;
+   Long_t         GetOffset() const;
+   Long_t         GetOffsetCint() const;
    const char    *GetTypeName() const;
    const char    *GetFullTypeName() const;
    const char    *GetTrueTypeName() const;

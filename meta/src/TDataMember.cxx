@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.31 2006/05/26 09:18:35 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.32 2006/07/09 05:27:55 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -533,7 +533,7 @@ const char *TDataMember::GetTrueTypeName() const
 }
 
 //______________________________________________________________________________
-Int_t TDataMember::GetOffset() const
+Long_t TDataMember::GetOffset() const
 {
    // Get offset from "this".
 
@@ -581,7 +581,7 @@ Int_t TDataMember::GetOffset() const
 }
 
 //______________________________________________________________________________
-Int_t TDataMember::GetOffsetCint() const
+Long_t TDataMember::GetOffsetCint() const
 {
    // Get offset from "this" using the information in CINT only.
 

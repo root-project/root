@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.208 2007/01/22 13:50:53 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.209 2007/01/22 13:56:33 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -251,7 +251,7 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
       }
    }
    strcat(rname, mname);
-   Int_t offset = Int_t(((Long_t) add) - ((Long_t) fRealDataObject));
+   Long_t offset = Long_t(((Long_t) add) - ((Long_t) fRealDataObject));
 
    if (dm->IsaPointer()) {
       // Data member is a pointer.
@@ -1104,29 +1104,29 @@ void TClass::BuildRealData(void* pointer)
 }
 
 //______________________________________________________________________________
-void TClass::BuildEmulatedRealData(const char *name, Int_t offset, TClass *cl)
+void TClass::BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl)
 {
    // Build the list of real data for an emulated class
 
    TIter next(GetStreamerInfo()->GetElements());
    TStreamerElement *element;
    while ((element = (TStreamerElement*)next())) {
-      Int_t etype   = element->GetType();
-      Int_t eoffset = element->GetOffset();
-      TClass *cle   = element->GetClassPointer();
+      Int_t etype    = element->GetType();
+      Long_t eoffset = element->GetOffset();
+      TClass *cle    = element->GetClassPointer();
       if (etype == TStreamerInfo::kTObject || etype == TStreamerInfo::kTNamed || etype == TStreamerInfo::kBase) {
          //base class
          if (cle) cle->BuildEmulatedRealData(name,offset+eoffset,cl);
       } else if (etype == TStreamerInfo::kObject || etype == TStreamerInfo::kAny) {
          //member class
          TRealData *rd = new TRealData(Form("%s%s",name,element->GetFullName()),offset+eoffset,0);
-         if (gDebug > 0) printf(" Class: %s, adding TRealData=%s, offset=%d\n",cl->GetName(),rd->GetName(),rd->GetThisOffset());
+         if (gDebug > 0) printf(" Class: %s, adding TRealData=%s, offset=%ld\n",cl->GetName(),rd->GetName(),rd->GetThisOffset());
          cl->GetListOfRealData()->Add(rd);
          if (cle) cle->BuildEmulatedRealData(Form("%s%s.",name,element->GetFullName()),offset+eoffset,cl);
       } else {
          //others
          TRealData *rd = new TRealData(Form("%s%s",name,element->GetFullName()),offset+eoffset,0);
-         if (gDebug > 0) printf(" Class: %s, adding TRealData=%s, offset=%d\n",cl->GetName(),rd->GetName(),rd->GetThisOffset());
+         if (gDebug > 0) printf(" Class: %s, adding TRealData=%s, offset=%ld\n",cl->GetName(),rd->GetName(),rd->GetThisOffset());
          cl->GetListOfRealData()->Add(rd);
       }
       //if (fClassInfo==0 && element->IsBase()) {
@@ -1683,7 +1683,7 @@ TDataMember *TClass::GetDataMember(const char *datamember) const
 }
 
 //______________________________________________________________________________
-Int_t TClass::GetDataMemberOffset(const char *name) const
+Long_t TClass::GetDataMemberOffset(const char *name) const
 {
    // return offset for member name. name can be a data member in
    // the class itself, one of its base classes, or one member in

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRealData.cxx,v 1.5 2005/05/26 12:48:55 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TRealData.cxx,v 1.6 2005/11/16 20:04:11 pcanal Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************
@@ -37,7 +37,7 @@ TRealData::TRealData() : TObject(), fDataMember(0), fThisOffset(-1),
 
 
 //______________________________________________________________________________
-TRealData::TRealData(const char *name, Int_t offset, TDataMember *datamember)
+TRealData::TRealData(const char *name, Long_t offset, TDataMember *datamember)
    : TObject(), fDataMember(datamember), fThisOffset(offset), fName(name),
      fStreamer(0), fIsObject(kFALSE)
 {

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.69 2006/11/24 14:24:54 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.70 2007/01/22 13:50:53 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -167,7 +167,7 @@ public:
    void               AddRef(TClassRef *ref); 
    virtual void       Browse(TBrowser *b);
    void               BuildRealData(void *pointer=0);
-   void               BuildEmulatedRealData(const char *name, Int_t offset, TClass *cl);
+   void               BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl);
    Bool_t             CanSplit() const;
    Bool_t             CanIgnoreTObjectStreamer() { return TestBit(kIgnoreTObjectStreamer);}
    void               CopyCollectionProxy(const TVirtualCollectionProxy&);
@@ -182,7 +182,7 @@ public:
    TVirtualIsAProxy  *GetIsAProxy() const;
    Version_t          GetClassVersion() const { ((TClass*)this)->fVersionUsed = kTRUE; return (fClassVersion>=0) ? fClassVersion : (-fClassVersion); }
    TDataMember       *GetDataMember(const char *datamember) const;
-   Int_t              GetDataMemberOffset(const char *membername) const;
+   Long_t              GetDataMemberOffset(const char *membername) const;
    const char        *GetDeclFileName() const { return fDeclFileName; }
    Short_t            GetDeclFileLine() const { return fDeclFileLine; }
    ROOT::DelFunc_t    GetDelete() const;

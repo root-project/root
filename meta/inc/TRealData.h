@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRealData.h,v 1.6 2002/11/24 14:07:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRealData.h,v 1.7 2004/01/10 10:52:29 brun Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************
@@ -35,7 +35,7 @@ class TRealData : public TObject {
 
 private:
    TDataMember     *fDataMember;     //pointer to data member descriptor
-   Int_t            fThisOffset;     //offset with the THIS object pointer
+   Long_t           fThisOffset;     //offset with the THIS object pointer
    TString          fName;           //Concatenated names of this realdata
    TMemberStreamer *fStreamer;       //Object to stream the data member.
    Bool_t           fIsObject;       //true if member is an object
@@ -45,14 +45,14 @@ private:
 
 public:
    TRealData();
-   TRealData(const char *name, Int_t offset, TDataMember *datamember);
+   TRealData(const char *name, Long_t offset, TDataMember *datamember);
    virtual     ~TRealData();
 
    void                AdoptStreamer(TMemberStreamer *p);
    virtual const char *GetName() const {return fName.Data();}
    TDataMember        *GetDataMember() const {return fDataMember;}
    TMemberStreamer    *GetStreamer() const; 
-   Int_t               GetThisOffset() const {return fThisOffset;}
+   Long_t              GetThisOffset() const {return fThisOffset;}
    Bool_t              IsObject() const {return fIsObject;}
    void                SetIsObject(Bool_t isObject) {fIsObject=isObject;}
    void                WriteRealData(void *pointer, char *&buffer);
