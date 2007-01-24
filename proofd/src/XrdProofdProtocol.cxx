@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.39 2007/01/22 11:36:41 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.40 2007/01/23 13:11:14 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -2380,7 +2380,8 @@ int XrdProofdProtocol::ReadPROOFcfg()
             // Replace the default line (the first with what found in the file)
             fgWorkers[0]->Reset(lin);
             // If the image was not specified use the default
-            if (fgWorkers[0]->fImage == "")
+            if (fgWorkers[0]->fImage == "" ||
+                fgWorkers[0]->fHost.beginswith(fgWorkers[0]->fImage))
                fgWorkers[0]->fImage = fgImage;
          }
          SafeDelete(pw);
