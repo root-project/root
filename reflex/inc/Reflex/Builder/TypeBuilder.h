@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.h,v 1.12 2006/08/01 09:14:32 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: TypeBuilder.h,v 1.14 2006/09/12 13:06:46 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -470,6 +470,15 @@ namespace ROOT{
          }
       };
 
+#ifndef TYPEDISTILLER_STRING_SPECIALIZATION
+#define TYPEDISTILLER_STRING_SPECIALIZATION
+      template<> class TypeDistiller<std::string> {
+      public:
+         static Type Get() {
+            return TypeBuilder("std::basic_string<char>");
+         }
+      };
+#endif
 
       /**
        * getType will return a reference to a Type (create it if necessery) 
