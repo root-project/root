@@ -813,6 +813,7 @@ install: all
 	   $(INSTALLDIR)                        $(DESTDIR)$(ICONPATH); \
 	   $(INSTALLDATA) icons/*.xpm           $(DESTDIR)$(ICONPATH); \
 	   $(INSTALLDATA) icons/*.png           $(DESTDIR)$(ICONPATH); \
+	   $(INSTALLDATA) icons/*.gif           $(DESTDIR)$(ICONPATH); \
 	   echo "Installing fonts in $(DESTDIR)$(TTFFONTDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(TTFFONTDIR); \
 	   $(INSTALLDATA) fonts/*               $(DESTDIR)$(TTFFONTDIR); \
