@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.7 2006/12/19 14:02:38 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.8 2007/01/22 07:57:13 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -414,6 +414,8 @@ void TEntryList::Add(const TEntryList *elist)
          }
          if (!found){       
             el = new TEntryList(*elist);
+            el->fLastIndexQueried = -1;
+            el->fLastIndexReturned = 0;
             fLists->Add(el);
             fN+=el->GetN();
          }
@@ -425,6 +427,15 @@ void TEntryList::Add(const TEntryList *elist)
             Add(el);
          }
          fCurrent = 0;
+      }
+      if (fCurrent){
+         if (fCurrent->fBlocks){
+            Int_t currentblock = (fCurrent->fLastIndexReturned)/kBlockSize;
+            TEntryListBlock *block = (TEntryListBlock*)fCurrent->fBlocks->UncheckedAt(currentblock);
+            block->ResetIndices();
+            fCurrent->fLastIndexReturned = 0;
+            fCurrent->fLastIndexQueried = -1;
+         }
       }
       fCurrent = 0;
    }
