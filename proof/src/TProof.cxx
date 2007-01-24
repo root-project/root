@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.178 2007/01/12 11:02:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.179 2007/01/22 11:39:56 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2356,7 +2356,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
                // Just send the message one level up
                TMessage m(kPROOF_MESSAGE);
-               m << msg;
+               m << msg << lfeed;
                gProofServ->GetSocket()->Send(m);
             }
          }
