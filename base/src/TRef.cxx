@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.33 2006/02/17 05:16:38 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.34 2006/03/20 21:43:41 pcanal Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -206,14 +206,12 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TProcessUUID.h"
-#include "TFile.h"
 #include "TRefTable.h"
 #include "TObjArray.h"
 #include "TExec.h"
 #include "TSystem.h"
+#include "TVirtualIO.h"
 #include "TObjString.h"
-#include "TStreamerInfo.h"
-#include "TStreamerElement.h"
 
 TObjArray  *TRef::fgExecs  = 0;
 TObject    *TRef::fgObject = 0;
@@ -400,18 +398,7 @@ void TRef::SetAction(TObject *parent)
    // following this keyword.
 
    if (!parent) return;
-   Int_t offset = (char*)this - (char*)parent;
-   TClass *cl = parent->IsA();
-   cl->BuildRealData(parent);
-   TStreamerInfo *info = cl->GetStreamerInfo();
-   TIter next(info->GetElements());
-   TStreamerElement *element;
-   while((element = (TStreamerElement*)next())) {
-      if (element->GetOffset() != offset) continue;
-      Int_t execid = element->GetExecID();
-      if (execid > 0) SetBit(execid << 8);
-      return;
-   }
+   TVirtualIO::GetIO()->SetRefAction(this,parent);
 }
 
  //______________________________________________________________________________
@@ -447,7 +434,6 @@ void TRef::Streamer(TBuffer &R__b)
    // Stream an object of class TRef.
 
    UShort_t pidf;
-   TFile *file = (TFile*)R__b.GetParent();
    if (R__b.IsReading()) {
       TObject::Streamer(R__b);
       if (TestBit(kHasUUID)) {
@@ -461,14 +447,13 @@ void TRef::Streamer(TBuffer &R__b)
             printf("Reading TRef (HasUUID) uid=%d, obj=%lx\n",GetUniqueID(),(Long_t)GetObject());
          }
       } else {
-         R__b >> pidf;
-         pidf += R__b.GetPidOffset();
-         fPID = TProcessID::ReadProcessID(pidf,file);
+         TVirtualIO *io = TVirtualIO::GetIO();
+         pidf = io->ReadProcessID(R__b,fPID);
          //The execid has been saved in the unique id of the TStreamerElement
          //being read by TStreamerElement::Streamer
          //The current element (fgElement) is set as a static global
          //by TStreamerInfo::ReadBuffer (Clones) when reading this TRef
-         Int_t execid = TStreamerInfo::GetCurrentElement()->GetUniqueID();
+         Int_t execid = io->GetTRefExecId();
          if (execid) SetBit(execid<<16);
          if (gDebug > 1) {
             printf("Reading TRef, pidf=%d, fPID=%lx, uid=%d, obj=%lx\n",pidf,(Long_t)fPID,GetUniqueID(),(Long_t)GetObject());
@@ -484,8 +469,7 @@ void TRef::Streamer(TBuffer &R__b)
             printf("Writing TRef (HasUUID) uid=%d, obj=%lx\n",GetUniqueID(),(Long_t)GetObject());
          }
       } else {
-         pidf = TProcessID::WriteProcessID(fPID,file);
-         R__b << pidf;
+         pidf = TVirtualIO::GetIO()->WriteProcessID(R__b,fPID);
          if (gDebug > 1) {
             printf("Writing TRef, pidf=%d, fPID=%lx, uid=%d, obj=%lx\n",pidf,(Long_t)fPID,GetUniqueID(),(Long_t)GetObject());
          }
