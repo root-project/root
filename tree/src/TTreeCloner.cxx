@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.12 2006/10/06 16:45:41 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.13 2007/01/12 16:03:17 brun Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -355,12 +355,36 @@ void TTreeCloner::CopyProcessIds()
    TDirectory::TContext cur(gDirectory,fromfile);
    while ((key = (TKey*)next())) {
       if (!strcmp(key->GetClassName(),"TProcessID")) {
-         TProcessID *id = (TProcessID*)key->ReadObjectAny(0);
+         TProcessID *pid = (TProcessID*)key->ReadObjectAny(0);
 
-         UShort_t out = TProcessID::WriteProcessID(id,tofile);
+         //UShort_t out = TProcessID::WriteProcessID(id,tofile);
+         UShort_t out = 0;
+         TObjArray *pids = tofile->GetListOfProcessIDs();
+         Int_t npids = tofile->GetNProcessIDs();
+         Bool_t wasIn = kFALSE;
+         for (Int_t i=0;i<npids;i++) {
+            if (pids->At(i) == pid) {out = (UShort_t)i; wasIn = kTRUE; break;}
+         }
+
+         if (!wasIn) {
+            TDirectory *dirsav = gDirectory;
+            tofile->cd();
+            tofile->SetBit(TFile::kHasReferences);
+            pids->AddAtAndExpand(pid,npids);
+            pid->IncrementCount();
+            char name[32];
+            sprintf(name,"ProcessID%d",npids);
+            pid->Write(name);
+            tofile->IncrementProcessIDs();
+            if (gDebug > 0) {
+               printf("WriteProcessID, name=%s, file=%s\n",name,tofile->GetName());
+            }
+            if (dirsav) dirsav->cd();
+            out = (UShort_t)npids;
+         }
          if (out<fPidOffset) {
             Error("CopyProcessIDs","Copied %s from %s might already exist!\n",
-                  id->GetName(),fromfile->GetName());
+                  pid->GetName(),fromfile->GetName());
          }
       }
    }
