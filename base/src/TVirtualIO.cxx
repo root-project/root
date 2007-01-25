@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualIO.cxx,v 1.17 2006/07/09 05:27:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualIO.cxx,v 1.1 2007/01/25 11:46:20 brun Exp $
 // Author: Rene Brun   24/01/2007
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -57,8 +57,8 @@ TVirtualIO::~TVirtualIO()
 {
    // destructor
 
-   delete fgIO;
-   fgIO = 0;
+   //delete fgIO;  do not delete these statics
+   //fgIO = 0;
 }
 
 //______________________________________________________________________________
