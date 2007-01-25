@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.315 2007/01/19 16:48:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.316 2007/01/22 07:57:13 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -574,7 +574,10 @@ TTree::~TTree()
       // the clones to release their pointers to them.
       for (TObjLink* lnk = fClones->FirstLink(); lnk; lnk = lnk->Next()) {
          TTree* clone = (TTree*) lnk->GetObject();
-         clone->ResetBranchAddresses();
+         // clone->ResetBranchAddresses();
+
+         // Reset only the branch we have set the address of.
+         CopyAddresses(clone,kTRUE);
       }
    }
    // Get rid of our branches, note that this will also release
@@ -2350,9 +2353,11 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
 }
 
 //______________________________________________________________________________
-void TTree::CopyAddresses(TTree* tree)
+void TTree::CopyAddresses(TTree* tree, Bool_t undo)
 {
    // -- Set branch addresses of passed tree equal to ours.
+   // -- If undo is true, reset the branch address instead of copying them.
+   //    This insures 'separation' of a cloned tree from its original
 
    // Copy branch addresses starting from branches.
    TObjArray* branches = GetListOfBranches();
@@ -2362,23 +2367,28 @@ void TTree::CopyAddresses(TTree* tree)
       if (branch->TestBit(kDoNotProcess)) {
          continue;
       }
-      char* addr = branch->GetAddress();
-      if (!addr) {
-         // Note: This may cause an object to be allocated.
-         branch->SetAddress(0);
-         addr = branch->GetAddress();
-      }
-      // FIXME: The GetBranch() function is braindead and may
-      //        not find the branch!
-      TBranch* br = tree->GetBranch(branch->GetName());
-      if (br) {
-         br->SetAddress(addr);
-         // The copy does not own any object allocated by SetAddress().
-         if (br->InheritsFrom("TBranchElement")) {
-            ((TBranchElement*) br)->ResetDeleteObject();
-         }
+      if (undo) {
+         TBranch* br = tree->GetBranch(branch->GetName());
+         tree->ResetBranchAddress(br);
       } else {
-         Warning("CopyAddresses", "Could not find branch named '%s' in tree named '%s'", branch->GetName(), tree->GetName());
+         char* addr = branch->GetAddress();
+         if (!addr) {
+            // Note: This may cause an object to be allocated.
+            branch->SetAddress(0);
+            addr = branch->GetAddress();
+         }
+         // FIXME: The GetBranch() function is braindead and may
+         //        not find the branch!
+         TBranch* br = tree->GetBranch(branch->GetName());
+         if (br) {
+            br->SetAddress(addr);
+            // The copy does not own any object allocated by SetAddress().
+            if (br->InheritsFrom("TBranchElement")) {
+               ((TBranchElement*) br)->ResetDeleteObject();
+            }
+         } else {
+            Warning("CopyAddresses", "Could not find branch named '%s' in tree named '%s'", branch->GetName(), tree->GetName());
+         }
       }
    }
 
@@ -2399,31 +2409,42 @@ void TTree::CopyAddresses(TTree* tree)
       if (branch->TestBit(kDoNotProcess)) {
          continue;
       }
-      if (!branch->GetAddress() && !leaf->GetValuePointer()) {
-         // We should attempts to set the address of the branch.
-         // something like:
-         //(TBranchElement*)branch->GetMother()->SetAddress(0)
-         //plus a few more subtilities (see TBranchElement::GetEntry).
-         //but for now we go the simpliest route:
-         //
-         // Note: This may result in the allocation of an object.
-         branch->GetEntry(0);
-      }
-      if (branch->GetAddress()) {
-         tree->SetBranchAddress(branch->GetName(), (void*) branch->GetAddress());
-         TBranch* br = tree->GetBranch(branch->GetName());
-         if (br) {
-            // The copy does not own any object allocated by SetAddress().
-            // FIXME: We do too much here, br may not be a top-level branch.
-            if (br->InheritsFrom("TBranchElement")) {
-               ((TBranchElement*) br)->ResetDeleteObject();
+      if (undo) {
+         // Now we know wether the address has been transfered
+         tree->ResetBranchAddress(tbranch);
+      } else {
+         if (!branch->GetAddress() && !leaf->GetValuePointer()) {
+            // We should attempts to set the address of the branch.
+            // something like:
+            //(TBranchElement*)branch->GetMother()->SetAddress(0)
+            //plus a few more subtilities (see TBranchElement::GetEntry).
+            //but for now we go the simpliest route:
+            //
+            // Note: This may result in the allocation of an object.
+            branch->GetEntry(0);
+         }
+         if (branch->GetAddress()) {
+            tree->SetBranchAddress(branch->GetName(), (void*) branch->GetAddress());
+            TBranch* br = tree->GetBranch(branch->GetName());
+            if (br) {
+               // The copy does not own any object allocated by SetAddress().
+               // FIXME: We do too much here, br may not be a top-level branch.
+               if (br->InheritsFrom("TBranchElement")) {
+                  ((TBranchElement*) br)->ResetDeleteObject();
+               }
+            } else {
+               Warning("CopyAddresses", "Could not find branch named '%s' in tree named '%s'", branch->GetName(), tree->GetName());
             }
          } else {
-            Warning("CopyAddresses", "Could not find branch named '%s' in tree named '%s'", branch->GetName(), tree->GetName());
+            tleaf->SetAddress(leaf->GetValuePointer());
          }
-      } else {
-         tleaf->SetAddress(leaf->GetValuePointer());
       }
+   }
+
+   if (undo && 
+       ( tree->IsA()->InheritsFrom("TNtuple") || tree->IsA()->InheritsFrom("TNtupleD") )
+       ) { 
+      tree->ResetBranchAddresses();
    }
 }
 
@@ -5066,6 +5087,17 @@ void TTree::Reset(Option_t* option)
 
    if (fBranchRef) {
       fBranchRef->Reset();
+   }
+}
+
+//______________________________________________________________________________
+void TTree::ResetBranchAddress(TBranch *br)
+{
+   // -- Tell the branch to drop their current objects and allocate new ones
+   //    or to return to the default address (TNtuple and TNtupleD)
+
+   if (br && br->GetTree()) {
+      br->ResetAddress();
    }
 }
 

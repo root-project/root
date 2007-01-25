@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.14 2006/05/24 15:10:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.15 2006/07/26 13:36:44 rdm Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -100,6 +100,20 @@ TNtuple::~TNtuple()
 
    delete [] fArgs;
    fArgs = 0;
+}
+
+//______________________________________________________________________________
+void TNtuple::ResetBranchAddress(TBranch *branch)
+{
+   // Reset the branch addresses to the internal fArgs array. Use this
+   // method when the addresses were changed via calls to SetBranchAddress().
+
+   if (branch) {
+      UInt_t index = fBranches.IndexOf(branch);
+      if (index>=0) {
+         branch->SetAddress(&fArgs[index]);
+      }
+   }
 }
 
 //______________________________________________________________________________

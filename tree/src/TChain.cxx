@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.150 2007/01/12 16:03:17 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.151 2007/01/22 07:57:13 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1088,7 +1088,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
       }
    }
 
-   // Caculate the entry number relative to the found tree.
+   // Calculate the entry number relative to the found tree.
    fReadEntry = entry - fTreeOffset[treenum];
 
    // If entry belongs to the current tree return entry.
@@ -1839,6 +1839,16 @@ void TChain::SetAutoDelete(Bool_t autodelete)
       SetBit(kAutoDelete, 1);
    } else {
       SetBit(kAutoDelete, 0);
+   }
+}
+
+//______________________________________________________________________________
+void TChain::ResetBranchAddress(TBranch *branch)
+{
+   // -- Reset the addresses of the branch.
+
+   if (fTree) {
+      fTree->ResetBranchAddress(branch);
    }
 }
 

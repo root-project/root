@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.211 2006/12/08 17:33:28 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.212 2007/01/12 16:03:17 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -2476,7 +2476,7 @@ void TBranchElement::ReadLeaves(TBuffer& b)
    // FIXME: Does this mean that pointers to objects which
    //        do not inherit from tobject are not handled correctly?
 
-   if ((fType <= 2) && TestBit(kBranchObject)) {
+   if ((fType <= 2) && TestBit(kBranchObject) && fBranchClass->IsLoaded()) {
       b.MapObject((TObject*) fObject);
    }
 

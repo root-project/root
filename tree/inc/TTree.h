@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.93 2006/11/22 16:52:54 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.94 2007/01/22 07:57:13 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -226,7 +226,7 @@ public:
    virtual Int_t           BuildIndex(const char* majorname, const char* minorname = "0");
    TStreamerInfo          *BuildStreamerInfo(TClass* cl, void* pointer = 0);
    virtual TTree          *CloneTree(Long64_t nentries = -1, Option_t* option = "");
-   virtual void            CopyAddresses(TTree*);
+   virtual void            CopyAddresses(TTree*,Bool_t undo = kFALSE);
    virtual Long64_t        CopyEntries(TTree* tree, Long64_t nentries = -1);
    virtual TTree          *CopyTree(const char* selection, Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
    virtual TBasket        *CreateBasket(TBranch*);
@@ -338,6 +338,7 @@ public:
    virtual void            Refresh();
    virtual void            RemoveFriend(TTree*);
    virtual void            Reset(Option_t* option = "");
+   virtual void            ResetBranchAddress(TBranch *);
    virtual void            ResetBranchAddresses();
    virtual Long64_t        Scan(const char* varexp = "", const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0); // *MENU*
    virtual Bool_t          SetAlias(const char* aliasName, const char* aliasFormula);
