@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.209 2007/01/22 13:56:33 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.210 2007/01/24 21:28:41 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -2085,20 +2085,6 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
          // We should also inform all the TBranchElement :( but we do not have a master list :(
       }
    }
-
-   //we must notify all Trees in all files. In particular
-   //TLeafObjects must update pointers to the class.
-   TObject * obj;
-   TDirectory *cursav = gDirectory;
-   TFile *file;
-   TIter nextf(gROOT->GetListOfFiles());
-   while ((file = (TFile*)nextf())) {
-      TIter next(file->GetList()); //in principle we should scan all sub-directories
-      while ((obj = next())) {
-         if (obj->InheritsFrom("TTree")) obj->Notify();
-      }
-   }
-   if (cursav) cursav->cd();
 
    TIter delIter( &tobedeleted );
    while ((acl = (TClass*)delIter())) {
