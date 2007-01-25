@@ -370,7 +370,7 @@ $(TBENCHSO):    $(TBENCHO)
                 $(MT_DLL)
 
 clean:
-                @del *.obj *Dict.* *.def *.exp *.d *.log .def *.pdb *.ilk
+                @del *.obj *Dict.* *.def *.exp *.d *.log .def *.pdb *.ilk *.manifest
 
 distclean:      clean
        @del *.exe *.root *.ps *.lib *.dll

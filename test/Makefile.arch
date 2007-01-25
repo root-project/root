@@ -515,6 +515,13 @@ LDFLAGS       = $(LDOPT) -nologo
 SOFLAGS       = -DLL
 
 EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
+ifeq ($(VC_MAJOR),14)
+MT_EXE        = mt -nologo -manifest $@.manifest -outputresource:$@\;1; rm -f $@.manifest
+MT_DLL        = mt -nologo -manifest $@.manifest -outputresource:$@\;2; rm -f $@.manifest
+else
+MT_EXE        = 
+MT_DLL        = 
+endif
 endif
 
 ifeq ($(ARCH),win32old)
