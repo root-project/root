@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.31 2006/03/01 14:19:00 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.32 2006/12/08 13:26:17 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2253,7 +2253,7 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
    vv[2] = Hparam.factor*gCurrentHist->GetCellContent(ixt, iyt);
 
 // In linear scale, 3D boxes all start from 0. 
-   if (Hparam.zmin<0 && !Hoption.Logz) {
+   if (Hparam.zmin<0 && !Hoption.Logz && gStyle->GetHistMinimumZero()) {
       if (vv[2]<0) {
          vv[1] = vv[2];
          vv[2] = 0;
