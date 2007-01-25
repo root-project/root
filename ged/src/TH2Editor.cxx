@@ -366,6 +366,8 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t width,
    fFramePattern->Associate(f38);
    f38->AddFrame(f21, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
    AddFrame(f38, new TGLayoutHints(kLHintsTop));
+   
+   fCutString = "";
 
    CreateBinTab();
 }
@@ -801,6 +803,7 @@ void TH2Editor::SetModel(TObject* obj)
    const char *text = fHist->GetTitle();
    fTitle->SetText(text);
    TString str = GetDrawOption();
+   fCutString = GetCutOptionString();
    str.ToUpper();
    
    if (str == "") {
@@ -1094,7 +1097,7 @@ void TH2Editor::DoHistSimple()
       fAddPalette->SetState(kButtonUp);
 
    str = GetHistContLabel()+GetHistAdditiveLabel();
-   if (str=="" || str=="SCAT") {
+   if (str=="" || str=="SCAT" || str==fCutString) {
       fAddScat->SetState(kButtonDisabled); 
       fAddPalette->SetState(kButtonDisabled);
    } else if (fAddScat->GetState()==kButtonDisabled) 
@@ -1105,6 +1108,10 @@ void TH2Editor::DoHistSimple()
  
    ((TGMainFrame*)GetMainFrame())->Layout();
 
+   TString ocut = fCutString;
+   ocut.ToUpper();
+   if (!str.Contains(fCutString) && !str.Contains(ocut)) 
+      str+=fCutString;
    SetDrawOption(str);
    Update();
 }
@@ -1149,6 +1156,10 @@ void TH2Editor::DoHistComplex()
    
    ((TGMainFrame*)GetMainFrame())->Layout();
 
+   TString ocut = fCutString;
+   ocut.ToUpper();
+   if (!str.Contains(fCutString) && !str.Contains(ocut)) 
+      str+=fCutString;
    SetDrawOption(str);
    Update();
 }
@@ -1169,7 +1180,7 @@ void TH2Editor::DoHistChanges()
          if (str.Contains("Z")) fAddPalette->SetState(kButtonDown);
          else fAddPalette->SetState(kButtonUp);
       } else fAddPalette->SetState(kButtonDisabled);
-      if (str=="" || str=="SCAT") {
+      if (str=="" || str=="SCAT" || str==fCutString) {
          fAddScat->SetState(kButtonDisabled);
          fAddPalette->SetState(kButtonDisabled);
       } else if (fAddScat->GetState()==kButtonDisabled) 
@@ -1220,6 +1231,10 @@ void TH2Editor::DoHistChanges()
          fColContLbl1->Disable() ;
    }
 
+   TString ocut = fCutString;
+   ocut.ToUpper();
+   if (!str.Contains(fCutString) && !str.Contains(ocut)) 
+      str+=fCutString;
    SetDrawOption(str);
    Update();
 }
@@ -1244,7 +1259,7 @@ void TH2Editor::DoAddArr(Bool_t on)
    } else if (fAddArr->GetState()==kButtonUp) {
       if (str.Contains("ARR")) {
          str.Remove(strstr(str.Data(),"ARR")-str.Data(),3);
-         if (str=="" || str=="SCAT") {
+         if (str=="" || str=="SCAT" || str==fCutString) {
             fAddScat->SetState(kButtonDisabled);
             fAddPalette->SetState(kButtonDisabled);
          }
@@ -1252,8 +1267,7 @@ void TH2Editor::DoAddArr(Bool_t on)
       }
    }
    if (make) {
-      SetDrawOption(str);
-      Update();
+      DoHistChanges();
    }    
 }
 
@@ -1277,7 +1291,7 @@ void TH2Editor::DoAddBox(Bool_t on)
    } else if (fAddBox->GetState()==kButtonUp) {
       if (str.Contains("BOX")) {
          str.Remove(strstr(str.Data(),"BOX")-str.Data(),3);
-         if (str=="" || str=="SCAT") {
+         if (str=="" || str=="SCAT" || str==fCutString) {
             fAddScat->SetState(kButtonDisabled);
             fAddPalette->SetState(kButtonDisabled);
          }
@@ -1285,8 +1299,7 @@ void TH2Editor::DoAddBox(Bool_t on)
       }
    }
    if (make) {
-      SetDrawOption(str);
-      Update();
+      DoHistChanges();
    }    
 }
 
@@ -1320,7 +1333,7 @@ void TH2Editor::DoAddCol(Bool_t on)
             if (str.Contains("Z")) 
                str.Remove(strstr(str.Data(),"Z")-str.Data(),1);
          }
-         if (str=="" || str=="SCAT" ) 
+         if (str=="" || str=="SCAT" || str==fCutString) 
             fAddScat->SetState(kButtonDisabled);
          if (fContCombo->GetSelected()!= kCONT_NONE) 
             fColContLbl->Enable() ;
@@ -1329,8 +1342,7 @@ void TH2Editor::DoAddCol(Bool_t on)
       }
    }
    if (make) {
-      SetDrawOption(str);
-      Update();
+      DoHistChanges();
    }    
 }
 
@@ -1356,8 +1368,7 @@ void TH2Editor::DoAddScat(Bool_t on)
       }
    }
    if (make) {
-      SetDrawOption(str);
-      Update();
+      DoHistChanges();
    }    
 }
 
@@ -1381,14 +1392,13 @@ void TH2Editor::DoAddText(Bool_t on)
    } else if (fAddText->GetState()==kButtonUp) {
       if (str.Contains("TEXT")) {
          str.Remove(strstr(str.Data(),"TEXT")-str.Data(),4);
-         if (str=="" || str=="SCAT" ) 
+         if (str=="" || str=="SCAT" || str==fCutString) 
             fAddScat->SetState(kButtonDisabled);
          make=kTRUE;
       }
    }
    if (make) {
-      SetDrawOption(str);
-      Update();
+      DoHistChanges();
    }    
 }
 
@@ -1423,8 +1433,7 @@ void TH2Editor::DoAddError(Bool_t on)
       }
    }
    if (make) {
-      SetDrawOption(str);
-      Update();
+      DoHistChanges();
    }    
 }
 
@@ -1451,8 +1460,7 @@ void TH2Editor::DoAddPalette(Bool_t on)
       }
    }
    if (make) {
-      SetDrawOption(str);
-      Update();
+      DoHistChanges();
    }    
 }
 
@@ -1486,8 +1494,7 @@ void TH2Editor::DoAddFB()
       }
    }
    if (make) {
-      SetDrawOption(str);
-      Update();
+      DoHistChanges();
    }    
 }
 
@@ -1518,8 +1525,7 @@ void TH2Editor::DoAddBB()
       }
    }
    if (make) {
-      SetDrawOption(str);
-      Update();
+      DoHistChanges();
    }    
 }
 
@@ -2741,6 +2747,21 @@ TString TH2Editor::GetHistAdditiveLabel()
       if (fAddBB->GetState()==kButtonUp) s+="BB";    
    }
    return s;
+}
+
+//______________________________________________________________________________
+TString TH2Editor::GetCutOptionString()
+{
+   // Return draw option string related to graphical cut in use.
+   
+   TString cutopt = " ";
+   TString opt = GetDrawOption();
+   Int_t scut = opt.First('[');
+   if (scut != -1) {
+      Int_t ecut = opt.First(']');
+      cutopt += opt(scut,ecut);
+   }
+   return cutopt;
 }
 
 //______________________________________________________________________________

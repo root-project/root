@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TH2Editor.h,v 1.12 2006/06/23 15:19:21 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TH2Editor.h,v 1.13 2006/09/25 13:38:45 rdm Exp $
 // Author: Carsten Hof 08/08/04
 
 /*************************************************************************
@@ -114,19 +114,22 @@ protected:
    TGCheckButton       *fDelaydraw;       // Delayed drawing of the new axis range
    TGColorSelect       *fFrameColor;      // Select the Frame Color
    TGedPatternSelect   *fFramePattern;    // Select the Frame Pattern Style
+   TString              fCutString;       // Contais info about graphical cuts (if any)
 
    static  TGComboBox *BuildHistTypeComboBox(TGFrame *parent, Int_t id);
    static  TGComboBox *BuildHistCoordsComboBox(TGFrame *parent, Int_t id);
    static  TGComboBox *BuildHistContComboBox(TGFrame* parent, Int_t id);
 
    virtual void   ConnectSignals2Slots();
-   void           CreateBinTab();       // Creates the Bin Tab (part of the SetGedEditor)
+           void   CreateBinTab();       // Creates the Bin Tab (part of the SetGedEditor)
+
 private:
-   void PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4);
+   void    PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4);
    TString GetHistTypeLabel();
    TString GetHistCoordsLabel();
    TString GetHistContLabel();
    TString GetHistAdditiveLabel();
+   TString GetCutOptionString();
 
    Int_t     fPx1old,
              fPy1old,
