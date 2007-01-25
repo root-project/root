@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.9 2005/11/16 20:07:50 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.10 2006/05/19 07:30:04 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -24,7 +24,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGenCollectionStreamer.h"
-#include "TStreamerInfo.h"
 #include "TClassEdit.h"
 #include "TError.h"
 #include "TROOT.h"

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedMapProxy.cxx,v 1.8 2006/02/09 20:41:12 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedMapProxy.cxx,v 1.9 2006/05/19 07:30:04 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -24,7 +24,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TEmulatedMapProxy.h"
-#include "TStreamerInfo.h"
 #include "TClassEdit.h"
 #include "TError.h"
 
