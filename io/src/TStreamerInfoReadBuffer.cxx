@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfoReadBuffer.cxx,v 1.41 2006/02/22 19:53:12 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfoReadBuffer.cxx,v 1.42 2007/01/20 19:29:34 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 #include "TRef.h"
 #include "TProcessID.h"
 #include "TStreamer.h"
+#include "TVirtualIO.h"
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
 #include "TVirtualCollectionProxy.h"
@@ -777,11 +778,9 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
             DOLOOP {
                UInt_t *x=(UInt_t*)(arr[k]+ioffset); b >> *x;
                if ((*x & kIsReferenced) != 0) {
-                  UShort_t pidf;
-                  b >> pidf;
-                  pidf += b.GetPidOffset();
-                  TFile* file = (TFile*)b.GetParent();
-                  TProcessID *pid = TProcessID::ReadProcessID(pidf,file);
+                  TProcessID *pid = 0;
+                  //UShort_t pidf = TProcessID::ReadProcessID(b,pid);
+                  TVirtualIO::GetIO()->ReadProcessID(b,pid);
                   if (pid!=0) {
                      TObject *obj = (TObject*)(arr[k]+eoffset);
                      UInt_t gpid = pid->GetUniqueID();
