@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.11 2006/04/25 16:36:00 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.12 2006/05/14 08:25:47 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -40,8 +40,7 @@
 
 #include "TRefTable.h"
 #include "TObjArray.h"
-#include "TStreamerInfo.h"
-#include "TFile.h"
+#include "TVirtualIO.h"
 #include "TProcessID.h"
 #include <algorithm>
 
@@ -335,19 +334,7 @@ void TRefTable::ReadBuffer(TBuffer &b)
       // old format, only one PID
       numIids = 1;
 
-      TFile *file = dynamic_cast<TFile*>(b.GetParent());
-      // warn if the file contains > 1 PID (i.e. if we might have ambiguity)
-      if (file && !TestBit(kHaveWarnedReadingOld) && file->GetNProcessIDs()>1) {
-         Warning("ReadBuffer", "The file was written during several processes with an "
-            "older ROOT version; the TRefTable entries might be inconsistent.");
-         SetBit(kHaveWarnedReadingOld);
-      }
-
-      // the file's last PID is the relevant one, all others might have their tables overwritten
-      TProcessID *fileProcessID = TProcessID::GetProcessID(0);
-      if (file && file->GetNProcessIDs() > 0)
-         // take the last loaded PID
-         fileProcessID = (TProcessID *) file->GetListOfProcessIDs()->Last();
+      TProcessID *fileProcessID = TVirtualIO::GetIO()->GetLastProcessID(b,this);
 
       startIid = GetInternalIdxForPID(fileProcessID);
       if (startIid == -1) {
