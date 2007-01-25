@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.26 2006/10/20 21:07:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.27 2007/01/23 09:45:08 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -85,6 +85,7 @@
 #include "TClass.h"
 #include "TError.h"
 #include "TRegexp.h"
+#include "TVirtualIO.h"
 
 static const char *gFolderD[64];
 static Int_t gFolderLevel = -1;
@@ -416,7 +417,7 @@ void TFolder::SaveAs(const char *filename, Option_t *option) const
 // Each object in this folder will have a key in the file where the name of
 // the key will be the name of the object.
 
-   gROOT->ProcessLine(Form("TFile::SaveObjectAs((TFolder*)0x%x,\"%s\",\"%s\");",this,filename,option));
+   TVirtualIO::GetIO()->SaveObjectAs(this,filename,option);
 }
 
 //______________________________________________________________________________
