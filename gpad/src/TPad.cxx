@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.247 2007/01/17 15:54:20 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.248 2007/01/23 09:24:15 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -56,6 +56,7 @@
 #include "TCreatePrimitives.h"
 #include "TLegend.h"
 #include "TAtt3D.h"
+#include "TVirtualIO.h"
 #include "TObjString.h"
 // Local scratch buffer for screen points, faster than allocating buffer on heap
 const Int_t kPXY       = 1002;
@@ -4059,14 +4060,14 @@ void TPad::Print(const char *filenam, Option_t *option)
 
    //==============Save pad/canvas as a root file===============================
    if (strstr(opt,"root")) {
-      gROOT->ProcessLine(Form("TFile::SaveObjectAs((TPad*)0x%x,\"%s\",\"%s\");",this,psname.Data(),""));
+      TVirtualIO::GetIO()->SaveObjectAs(this,psname.Data(),"");
       return;
    }
 
    //==============Save pad/canvas as a XML file================================
    if (strstr(opt,"xml")) {
       // Plugin XML driver
-      gROOT->ProcessLine(Form("TFile::SaveObjectAs((TPad*)0x%x,\"%s\",\"%s\");",this,psname.Data(),""));
+      TVirtualIO::GetIO()->SaveObjectAs(this,psname.Data(),"");
       return;
    }
 
