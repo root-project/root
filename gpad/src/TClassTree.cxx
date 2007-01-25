@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.14 2007/01/12 16:03:16 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.15 2007/01/23 09:04:13 brun Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #include "TArrow.h"
 #include "TText.h"
 #include "TSystem.h"
+#include "TVirtualIO.h"
 #include "TObjString.h"
 #include "Riostream.h"
 
@@ -700,7 +701,7 @@ void TClassTree::SaveAs(const char *filename, Option_t *option) const
    // with no access to the original classes.
    // By default a message is printed. Specify option "Q" to remove the message
 
-   gROOT->ProcessLine(Form("TFile::SaveObjectAs((TClassTree*)0x%x,\"%s\",\"%s\");",this,filename,option));
+   TVirtualIO::GetIO()->SaveObjectAs(this,filename,option);
 }
 
 
