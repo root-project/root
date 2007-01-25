@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.58 2007/01/22 05:58:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.59 2007/01/23 08:50:31 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -228,7 +228,6 @@ public:
    static Long64_t     GetFileBytesWritten();
    static Int_t        GetFileReadCalls();
 
-   static Int_t        SaveObjectAs(const TObject *obj, const char *filename="", Option_t *option="");
    static void         SetFileBytesRead(Long64_t bytes = 0);
    static void         SetFileBytesWritten(Long64_t bytes = 0);
    static void         SetFileReadCalls(Int_t readcalls = 0);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.200 2007/01/23 08:50:31 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.201 2007/01/23 09:13:41 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -2568,35 +2568,6 @@ Long64_t TFile::GetFileCounter() { return fgFileCounter; }
 
 //______________________________________________________________________________
 void TFile::IncrementFileCounter() { fgFileCounter++; }
-
-//______________________________________________________________________________
-Int_t TFile::SaveObjectAs(const TObject *obj, const char *filename, Option_t *option)
-{
-   // Save object in filename (static function)
-   // if filename is null or "", a file with "objectname.root" is created.
-   // The name of the key is the object name.
-   // If the operation is successful, it returns the number of bytes written to the file
-   // otherwise it returns 0.
-   // By default a message is printed. Use option "q" to not print the message.
-   
-   if (!obj) return 0;
-   TDirectory *dirsav = gDirectory;
-   TString fname = filename;
-   if (!filename || strlen(filename) == 0) {
-      fname = Form("%s.root",obj->GetName());
-   }
-   TFile *local = TFile::Open(fname.Data(),"recreate");
-   if (!local) return 0;
-   Int_t nbytes = obj->Write();
-   delete local;
-   if (dirsav) dirsav->cd();
-   TString opt = option;
-   opt.ToLower();
-   if (!opt.Contains("q")) {
-      if (!gSystem->AccessPathName(fname.Data())) obj->Info("SaveAs", "ROOT file %s has been created", fname.Data());
-   }
-   return nbytes;
-}
 
 //______________________________________________________________________________
 Bool_t TFile::Matches(const char *url)
