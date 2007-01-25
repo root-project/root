@@ -8,6 +8,7 @@
 #include "TStreamerInfo.h"
 #include "TVirtualCollectionProxy.h"
 #include "TRefTable.h"
+#include "TVirtualIO.h"
 
 //==========CPP macros
 
@@ -325,8 +326,8 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                TProcessID *pid = TProcessID::GetProcessWithUID(obj->GetUniqueID(),obj);
                TRefTable *table = TRefTable::GetRefTable();
                if(table) table->Add(obj->GetUniqueID(),pid);
-               UShort_t pidf = TProcessID::WriteProcessID(pid,(TFile *)b.GetParent());
-               b << pidf;
+               //UShort_t pidf = TProcessID::WriteProcessID(b,pid);
+               TVirtualIO::GetIO()->WriteProcessID(b,pid);
             }
          }
          continue; }
