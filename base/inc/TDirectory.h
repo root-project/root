@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.38 2007/01/22 05:58:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.39 2007/01/26 15:39:16 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -166,7 +166,7 @@ public:
    virtual Int_t       Write(const char * /*name*/=0, Int_t /*opt*/=0, Int_t /*bufsize*/=0){return 0;}
    virtual Int_t       Write(const char * /*name*/=0, Int_t /*opt*/=0, Int_t /*bufsize*/=0) const {return 0;}
    virtual Int_t       WriteTObject(const TObject *, const char * /*name*/=0, Option_t * /*option*/="", Int_t /*bufsize*/ =0) {return 0;}
-   template <class T> inline Int_t WriteObject(const T* obj, const char* name, Option_t *option="") // see TDirectory::WriteObject or TDirectoryWriteObjectAny for explanation
+   template <class T> inline Int_t WriteObject(const T* obj, const char* name, Option_t *option="", Int_t bufsize=0) // see TDirectory::WriteTObject or TDirectoryWriteObjectAny for explanation
       {
          return WriteObjectAny(obj,TBuffer::GetClass(typeid(T)),name,option,bufsize);
       }
