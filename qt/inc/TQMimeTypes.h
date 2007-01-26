@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQMimeTypes.h,v 1.4 2006/03/24 15:31:10 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TQMimeTypes.h,v 1.5 2006/04/07 09:29:06 rdm Exp $
 // Author: Valeri Fine   21/01/2003
 
 /*************************************************************************
@@ -72,11 +72,8 @@ public:
 
 class TQMimeTypes : public TObject {
 private:
-#if !defined(_MSC_VER)  || _MSC_VER >= 1310
-      void operator=(const TQMimeTypes&) const {}
-#endif
-      void operator=(const TQMimeTypes&)  {}
-      TQMimeTypes(const TQMimeTypes&) : TObject()  {}
+   void operator=(const TQMimeTypes&);
+   TQMimeTypes(const TQMimeTypes&);
 
 protected:
    TString          fIconPath;   // the path to the icon directory

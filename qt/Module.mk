@@ -1,4 +1,4 @@
-# $Id: Module.mk,v 1.18 2006/04/14 16:28:05 rdm Exp $
+# $Id: Module.mk,v 1.19 2006/05/03 22:06:18 pcanal Exp $
 # Module.mk for qt module
 # Copyright (c) 2001 Valeri Fine
 #
@@ -22,7 +22,8 @@ GQTH1         := $(GQTDIRI)/TGQt.h  $(GQTDIRI)/TQtTimer.h              \
                  $(GQTDIRI)/TQtApplication.h $(GQTDIRI)/TQtBrush.h     \
                  $(GQTDIRI)/TQMimeTypes.h $(GQTDIRI)/TQtClientFilter.h \
                  $(GQTDIRI)/TQtClientWidget.h $(GQTDIRI)/TQtWidget.h   \
-                 $(GQTDIRI)/TQtMarker.h $(GQTDIRI)/TQtTimer.h
+                 $(GQTDIRI)/TQtMarker.h $(GQTDIRI)/TQtTimer.h \
+                 $(GQTDIRI)/TQtRootSlot.h
 
 GQTH          := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GQTS          := $(filter-out $(MODDIRS)/moc_%,\
