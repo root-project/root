@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.250 2006/11/16 17:17:39 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.251 2006/11/30 23:18:32 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1488,7 +1488,8 @@ void WriteAuxFunctions(G__ClassInfo &cl)
       (*dictSrcOut) << "new " << classname.c_str() << args << ";" << std::endl
           << "   }" << std::endl;
 
-      if (args.size()==0) {
+      if (args.size()==0 && NeedDestructor(cl)) {
+         // Can not can newArray if the destructor is not public.
          (*dictSrcOut) << "   static void *newArray_" << mappedname.c_str() << "(Long_t nElements, void *p) {" << std::endl;
          (*dictSrcOut) << "      return p ? ";
          if (HasCustomOperatorNewArrayPlacement(cl)) {
@@ -2332,7 +2333,7 @@ void WriteClassInit(G__ClassInfo &cl)
 
    if (HasDefaultConstructor(cl,&args)) {
       (*dictSrcOut) << "   static void *new_" << mappedname.c_str() << "(void *p = 0);" << std::endl;
-      if (args.size()==0)
+      if (args.size()==0 && NeedDestructor(cl))
          (*dictSrcOut) << "   static void *newArray_" << mappedname.c_str()
                        << "(Long_t size, void *p);" << std::endl;
    }
@@ -2448,7 +2449,7 @@ void WriteClassInit(G__ClassInfo &cl)
        << "                  sizeof(" << csymbol.c_str() << ") );" << std::endl;
    if (HasDefaultConstructor(cl,&args)) {
       (*dictSrcOut) << "      instance.SetNew(&new_" << mappedname.c_str() << ");" << std::endl;
-      if (args.size()==0)
+      if (args.size()==0 && NeedDestructor(cl))
          (*dictSrcOut) << "      instance.SetNewArray(&newArray_" << mappedname.c_str() << ");" << std::endl;
    }
    if (NeedDestructor(cl)) {
@@ -4559,17 +4560,18 @@ int main(int argc, char **argv)
        << "//" << std::endl << std::endl
 
        << "#include \"RConfig.h\"" << std::endl
-       << "#if !defined(R__ACCESS_IN_SYMBOL)" << std::endl
-       << "//Break the privacy of classes -- Disabled for the moment" << std::endl
-       << "#define private public" << std::endl
-       << "#define protected public" << std::endl
-       << "#endif" << std::endl << std::endl;
+//        << "#if !defined(R__ACCESS_IN_SYMBOL)" << std::endl
+//        << "//Break the privacy of classes -- Disabled for the moment" << std::endl
+//        << "#define private public" << std::endl
+//        << "#define protected public" << std::endl
+//        << "#endif" << std::endl 
+          << std::endl;
 #ifndef R__SOLARIS
    (*dictSrcOut) << "// Since CINT ignores the std namespace, we need to do so in this file." << std::endl
        << "namespace std {} using namespace std;" << std::endl << std::endl;
-   int linesToSkip = 15; // number of lines up to here.
+   int linesToSkip = 10; // number of lines up to here.
 #else
-   int linesToSkip = 12; // number of lines up to here.
+   int linesToSkip = 07; // number of lines up to here.
 #endif
 
    (*dictSrcOut) << "#include \"TClass.h\"" << std::endl
@@ -4583,6 +4585,7 @@ int main(int argc, char **argv)
        << "#include \"RtypesImp.h\"" << std::endl
        << "#include \"TCollectionProxy.h\"" << std::endl
        << "#include \"TIsAProxy.h\"" << std::endl;
+   (*dictSrcOut) << std::endl;
 #ifdef R__SOLARIS
    (*dictSrcOut) << "// Since CINT ignores the std namespace, we need to do so in this file." << std::endl
        << "namespace std {} using namespace std;" << std::endl << std::endl;
