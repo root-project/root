@@ -95,7 +95,6 @@ private:
    //Overriders
    void    InitGL()const;
    void    DrawPlot()const;
-   void    ClearBuffers()const;
 
    void    SetPlotColor()const;
 

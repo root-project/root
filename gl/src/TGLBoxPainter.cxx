@@ -305,20 +305,6 @@ void TGLBoxPainter::DrawPlot()const
    }
 }
 
-
-//______________________________________________________________________________
-void TGLBoxPainter::ClearBuffers()const
-{
-   // Clear buffer.
-
-   Float_t rgb[3] = {1.f, 1.f, 1.f};
-   if (const TColor *color = GetPadColor())
-      color->GetRGB(rgb[0], rgb[1], rgb[2]);
-   glClearColor(rgb[0], rgb[1], rgb[2], 1.);
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-
-
 //______________________________________________________________________________
 void TGLBoxPainter::SetPlotColor()const
 {

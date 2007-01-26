@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.10 2006/11/24 15:57:44 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.h,v 1.11 2006/12/13 09:33:29 brun Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -119,6 +119,7 @@ protected:
 public:
    TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, Int_t context,
                   Bool_t xoySelectable, Bool_t xozSelectable, Bool_t yozSelectable);
+   TGLPlotPainter(TGLOrthoCamera *camera, Int_t context);
 
    virtual void     Paint();
    //Checks, if mouse cursor is above plot.
@@ -161,8 +162,9 @@ protected:
    virtual void     DrawSectionXOY()const = 0;
 
    virtual void     InitGL()const = 0;
-   virtual void     ClearBuffers()const = 0;
    virtual void     DrawPlot()const = 0;
+
+   virtual void     ClearBuffers()const;
 
    void             PrintPlot()const;
    //

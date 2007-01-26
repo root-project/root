@@ -256,17 +256,6 @@ void TGLSurfacePainter::SetSurfaceColor()const
 }
 
 //______________________________________________________________________________
-void TGLSurfacePainter::ClearBuffers()const
-{
-   //Clears gl buffers (possibly with pad's background color).
-   Float_t rgb[3] = {1.f, 1.f, 1.f};
-   if (GetPadColor())
-      GetPadColor()->GetRGB(rgb[0], rgb[1], rgb[2]);
-   glClearColor(rgb[0], rgb[1], rgb[2], 1.);
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-
-//______________________________________________________________________________
 void TGLSurfacePainter::DrawPlot()const
 {
    //Draw surf/surf1/surf2/surf4
