@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.84 2007/01/20 19:29:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.85 2007/01/25 11:49:16 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -599,7 +599,8 @@ Int_t TObject::Read(const char *name)
    // The object must have been created before via the default constructor.
    // See TObject::Write().
 
-   return TVirtualIO::GetIO()->ReadObject(this,name);
+   if (gDirectory) return gDirectory->ReadTObject(this,name);
+   else            return 0;
 }
 
 //______________________________________________________________________________
@@ -747,7 +748,13 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize) const
    //  The function returns the total number of bytes written to the file.
    //  It returns 0 if the object cannot be written.
 
-   return TVirtualIO::GetIO()->WriteObject(this,name,option,bufsize);
+   TString opt = "";
+   if (option & kSingleKey)   opt += "SingleKey";
+   if (option & kOverwrite)   opt += "OverWrite";
+   if (option & kWriteDelete) opt += "WriteDelete";
+
+   if (gDirectory) return gDirectory->WriteTObject(this,name,opt.Data(),bufsize);
+   else            return 0;
 }
 
 //______________________________________________________________________________
