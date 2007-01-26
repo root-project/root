@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.90 2007/01/22 05:58:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.91 2007/01/22 23:04:57 pcanal Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 #include "TVirtualMutex.h"
 
 TDirectory    *gDirectory;      //Pointer to current directory in memory
+Bool_t TDirectory::fgAddDirectory = kTRUE;
 
 const Int_t  kMaxLen = 2048;
 
@@ -113,6 +114,32 @@ TDirectory::~TDirectory()
    if (gDebug) {
       Info("~TDirectory", "dtor called for %s", GetName());
    }
+}
+
+//______________________________________________________________________________
+void TDirectory::AddDirectory(Bool_t add)
+{
+// Sets the flag controlling the automatic add objects like histograms, TGraph2D, etc
+// in memory
+//
+// By default (fAddDirectory = kTRUE), these objects are automatically added
+// to the list of objects in memory.
+// Note that in the classes like TH1, TGraph2D supporting this facility,
+// one object can be removed from its support directory
+// by calling object->SetDirectory(0) or object->SetDirectory(dir) to add it
+// to the list of objects in the directory dir.
+//
+//  NOTE that this is a static function. To call it, use;
+//     TDirectory::AddDirectory
+
+   fgAddDirectory = add;
+}
+
+//______________________________________________________________________________
+Bool_t TDirectory::AddDirectoryStatus()
+{
+   //static function: see TDirectory::AddDirectory for more comments
+   return fgAddDirectory;
 }
 
 //______________________________________________________________________________

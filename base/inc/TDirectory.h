@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.37 2006/06/20 18:17:34 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.38 2007/01/22 05:58:29 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -43,10 +43,11 @@ R__EXTERN TDirectory *gDirectory;
 class TDirectory : public TNamed {
 
 protected:
-   TObject    *fMother;          //pointer to mother of the directory
-   TList      *fList;            //List of objects in memory
-   TUUID       fUUID;            //Unique identifier
-   TString     fPathBuffer;      //!Buffer for GetPath() function   
+   TObject      *fMother;          //pointer to mother of the directory
+   TList        *fList;            //List of objects in memory
+   TUUID         fUUID;            //Unique identifier
+   TString       fPathBuffer;      //!Buffer for GetPath() function   
+   static Bool_t fgAddDirectory;   //!flag to add histograms, graphs,etc to the directory
    
           Bool_t cd1(const char *path);
    static Bool_t Cd1(const char *path);
@@ -96,6 +97,8 @@ public:
    TDirectory();
    TDirectory(const char *name, const char *title, Option_t *option="", TDirectory* motherDir = 0);
    virtual ~TDirectory();
+   static  void        AddDirectory(Bool_t add=kTRUE);
+   static  Bool_t      AddDirectoryStatus();
    virtual void        Append(TObject *obj);
    virtual void        Add(TObject *obj) { Append(obj); }
    virtual Int_t       AppendKey(TKey *) {return 0;}
@@ -148,6 +151,7 @@ public:
    virtual void        pwd() const;
    virtual void        ReadAll(Option_t * /*option*/="") {}
    virtual Int_t       ReadKeys() {return 0;}
+   virtual Int_t       ReadTObject(TObject * /*obj*/, const char * /*keyname*/) {return 0;}
    virtual void        RecursiveRemove(TObject *obj);
    virtual void        rmdir(const char *name);
    virtual void        Save() {}
@@ -159,15 +163,15 @@ public:
    virtual void        SetSeekDir(Long64_t) {}
    virtual void        SetWritable(Bool_t) {}
    virtual Int_t       Sizeof() const {return 0;}
-   virtual Int_t       Write(const char * /*name*/=0, Int_t /*opt*/=0, Int_t /*bufsiz*/=0){return 0;}
-   virtual Int_t       Write(const char * /*name*/=0, Int_t /*opt*/=0, Int_t /*bufsiz*/=0) const {return 0;}
-   virtual Int_t       WriteTObject(const TObject *, const char * /*name*/=0, Option_t * /*option*/="") {return 0;}
+   virtual Int_t       Write(const char * /*name*/=0, Int_t /*opt*/=0, Int_t /*bufsize*/=0){return 0;}
+   virtual Int_t       Write(const char * /*name*/=0, Int_t /*opt*/=0, Int_t /*bufsize*/=0) const {return 0;}
+   virtual Int_t       WriteTObject(const TObject *, const char * /*name*/=0, Option_t * /*option*/="", Int_t /*bufsize*/ =0) {return 0;}
    template <class T> inline Int_t WriteObject(const T* obj, const char* name, Option_t *option="") // see TDirectory::WriteObject or TDirectoryWriteObjectAny for explanation
       {
-         return WriteObjectAny(obj,TBuffer::GetClass(typeid(T)),name,option);
+         return WriteObjectAny(obj,TBuffer::GetClass(typeid(T)),name,option,bufsize);
       }
-   virtual Int_t       WriteObjectAny(const void *, const char * /*classname*/, const char * /*name*/, Option_t * /*option*/="") {return 0;}
-   virtual Int_t       WriteObjectAny(const void *, const TClass * /*cl*/, const char * /*name*/, Option_t * /*option*/="") {return 0;}
+   virtual Int_t       WriteObjectAny(const void *, const char * /*classname*/, const char * /*name*/, Option_t * /*option*/="", Int_t /*bufsize*/ =0) {return 0;}
+   virtual Int_t       WriteObjectAny(const void *, const TClass * /*cl*/, const char * /*name*/, Option_t * /*option*/="", Int_t /*bufsize*/ =0) {return 0;}
    virtual void        WriteDirHeader() {}
    virtual void        WriteKeys() {}
 
