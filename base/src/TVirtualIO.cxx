@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualIO.cxx,v 1.1 2007/01/25 11:46:20 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualIO.cxx,v 1.2 2007/01/25 14:31:27 brun Exp $
 // Author: Rene Brun   24/01/2007
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -12,7 +12,8 @@
 //                                                                      
 // TVirtualIO                                                       
 //                                                                     
-// TVirtualIO is an interface class for File I/O operations.
+// TVirtualIO is an interface class for File I/O operations that cannot
+// be performed via TDirectory.
 // The class is used to decouple the base classes from the I/O packages.
 // The concrete I/O sub-system is dynamically linked by the PluginManager.
 // The default implementation TFileIO can be changed in system.rootrc.

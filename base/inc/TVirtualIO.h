@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualIO.h,v 1.3 2006/10/27 16:21:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualIO.h,v 1.1 2007/01/25 11:46:20 brun Exp $
 // Author: Rene Brun 24/01/2007
 
 #ifndef ROOT_TVirtualIO
@@ -8,7 +8,8 @@
 //                                                                      
 // TVirtualIO                                                       
 //                                                                     
-// TVirtualIO is an interface class for File I/O operations.
+// TVirtualIO is an interface class for File I/O operations that cannot
+// be performed via TDirectory.
 // The class is used to decouple the base classes from the I/O packages.
 // The concrete I/O sub-system is dynamically linked by the PluginManager.
 // The default implementation TFileIO can be changed in system.rootrc.
@@ -44,7 +45,6 @@ class TVirtualIO: public TObject {
    virtual TObject    *FindObjectAny(const char *name) const = 0;
    virtual TProcessID *GetLastProcessID(TBuffer &b, TRefTable *reftable) const = 0;
    virtual UInt_t      GetTRefExecId() = 0;
-   virtual Int_t       ReadObject(TObject *obj, const char *name) = 0;
    virtual TObject    *Open(const char *name, Option_t *option = "",
                             const char *ftitle = "", Int_t compress = 1,
                             Int_t netopt = 0) = 0;
@@ -52,7 +52,6 @@ class TVirtualIO: public TObject {
    virtual void        ReadRefUniqueID(TBuffer &b, TObject *obj) = 0;    
    virtual Int_t       SaveObjectAs(const TObject *obj, const char *filename="", Option_t *option="") = 0;
    virtual void        SetRefAction(TObject *ref, TObject *parent) = 0;
-   virtual Int_t       WriteObject(const TObject *obj, const char *name=0, Int_t opt=0, Int_t bufsiz=0) const = 0;
    virtual UShort_t    WriteProcessID(TBuffer &b, TProcessID *pid) = 0;
    virtual void        WriteRefUniqueID(TBuffer &b, TObject *obj) = 0;
    
