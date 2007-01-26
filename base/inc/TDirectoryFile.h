@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectoryFile.h,v 1.37 2006/06/20 18:17:34 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectoryFile.h,v 1.1 2007/01/22 06:03:53 brun Exp $
 // Author: Rene Brun   22/01/2007
 
 /*************************************************************************
@@ -98,6 +98,7 @@ public:
    virtual void        Purge(Short_t nkeep=1);
    virtual void        ReadAll(Option_t *option="");
    virtual Int_t       ReadKeys();
+   virtual Int_t       ReadTObject(TObject *obj, const char *keyname);
    virtual void        rmdir(const char *name);
    virtual void        Save();
    virtual void        SaveSelf(Bool_t force = kFALSE);
@@ -106,15 +107,15 @@ public:
    void                SetSeekDir(Long64_t v) { fSeekDir = v; }
    void                SetWritable(Bool_t writable=kTRUE);
    virtual Int_t       Sizeof() const;
-   virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
-   virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0) const ;
-   virtual Int_t       WriteTObject(const TObject *obj, const char *name=0, Option_t *option="");
-   template <class T> inline Int_t WriteObject(const T* obj, const char* name, Option_t *option="") // see TDirectory::WriteObject or TDirectoryWriteObjectAny for explanation
-      {
-         return WriteObjectAny(obj,TBuffer::GetClass(typeid(T)),name,option);
-      }
-   virtual Int_t       WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option="");
-   virtual Int_t       WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option="");
+   virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsize=0);
+   virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsize=0) const ;
+   virtual Int_t       WriteTObject(const TObject *obj, const char *name=0, Option_t *option="", Int_t bufsize=0);
+//   template <class T> inline Int_t WriteObject(const T* obj, const char* name, Option_t *option="", Int_t bufsize=0) // see TDirectory::WriteObject or TDirectoryWriteObjectAny for explanation
+//      {
+//         return WriteObjectAny(obj,TBuffer::GetClass(typeid(T)),name,option,bufsize);
+//      }
+   virtual Int_t       WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option="", Int_t bufsize=0);
+   virtual Int_t       WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option="", Int_t bufsize=0);
    virtual void        WriteDirHeader();
    virtual void        WriteKeys();
 

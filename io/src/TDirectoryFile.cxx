@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectoryFile.cxx,v 1.89 2006/09/14 07:02:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectoryFile.cxx,v 1.1 2007/01/22 06:03:53 brun Exp $
 // Author: Rene Brun   22/01/2007
 
 /*************************************************************************
@@ -1166,6 +1166,23 @@ Int_t TDirectoryFile::ReadKeys()
    return nkeys;
 }
 
+
+//______________________________________________________________________________
+Int_t TDirectoryFile::ReadTObject(TObject *obj, const char *keyname)
+{
+   // Read object with keyname from the current directory
+   // Read contents of object with specified name from the current directory.
+   // First the key with keyname is searched in the current directory,
+   // next the key buffer is deserialized into the object.
+   // The object must have been created before via the default constructor.
+   // See TObject::Write().
+
+   if (!fFile) { Error("Read","No file open"); return 0; }
+   TKey *key = (TKey*)fKeys->FindObject(keyname);
+   if (!key)   { Error("Read","Key not found"); return 0; }
+   return key->Read(obj);
+}
+
 //______________________________________________________________________________
 void TDirectoryFile::rmdir(const char *name)
 {
@@ -1400,7 +1417,7 @@ void TDirectoryFile::Streamer(TBuffer &b)
 }
 
 //______________________________________________________________________________
-Int_t TDirectoryFile::Write(const char *, Int_t opt, Int_t bufsiz)
+Int_t TDirectoryFile::Write(const char *, Int_t opt, Int_t bufsize)
 {
    // Write all objects in memory to disk.
    // Loop on all objects in memory (including subdirectories).
@@ -1416,7 +1433,7 @@ Int_t TDirectoryFile::Write(const char *, Int_t opt, Int_t bufsiz)
    TObject *obj;
    Int_t nbytes = 0;
    while ((obj=next())) {
-      nbytes += obj->Write(0,opt,bufsiz);
+      nbytes += obj->Write(0,opt,bufsize);
    }
    SaveSelf(kTRUE);   // force save itself
 
@@ -1433,7 +1450,7 @@ Int_t TDirectoryFile::Write(const char *n, Int_t opt, Int_t bufsize) const
 }
 
 //____________________________________________________________________________________
-Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_t *option)
+Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_t *option, Int_t bufsize)
 {
    // Write object obj to this directory
    // The data structure corresponding to this object is serialized.
@@ -1498,6 +1515,7 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
 
    TKey *key=0, *oldkey=0;
    Int_t bsize = GetBufferSize();
+   if (bufsize > 0) bsize = bufsize;
 
    const char *oname;
    if (name && *name)
@@ -1536,22 +1554,26 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
    if (!key->GetSeekKey()) {
       fKeys->Remove(key);
       delete key;
+      if (bufsize) fFile->SetBufferSize(bufsize);
       return 0;
    }
    fFile->SumBuffer(key->GetObjlen());
    Int_t nbytes = key->WriteFile(0);
-   if (fFile->TestBit(TFile::kWriteError)) return 0;
-
+   if (fFile->TestBit(TFile::kWriteError)) {
+      if (bufsize) fFile->SetBufferSize(bufsize);
+      return 0;
+   }
    if (oldkey) {
       oldkey->Delete();
       delete oldkey;
    }
+   if (bufsize) fFile->SetBufferSize(bufsize);
 
    return nbytes;
 }
 
 //______________________________________________________________________________
-Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option)
+Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option, Int_t bufsize)
 {
    // Write object from pointer of class classname in this directory
    // obj may not derive from TObject
@@ -1578,11 +1600,11 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, con
       Error("WriteObjectAny","Unknown class: %s",classname);
       return 0;
    }
-   return WriteObjectAny(obj,cl,name,option);
+   return WriteObjectAny(obj,cl,name,option,bufsize);
 }
 
 //______________________________________________________________________________
-Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option)
+Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option, Int_t bufsize)
 {
    // Write object of class with dictionary cl in this directory
    // obj may not derive from TObject
@@ -1606,7 +1628,8 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
    if (!obj || !cl) return 0;
    TKey *key, *oldkey=0;
    Int_t bsize = GetBufferSize();
-
+   if (bufsize > 0) bsize = bufsize;
+   
    TString opt = option;
    opt.ToLower();
 
