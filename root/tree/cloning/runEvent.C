@@ -51,6 +51,9 @@ void runEvent()
       result = false;
    }
 
+   double a;
+   clone3->Branch("MT",&a,"MT/D");
+
    // Switch to the second tree in the chain.
    // Note: This should force the branch addresses to
    //       be changed in clone3.
@@ -65,6 +68,11 @@ void runEvent()
       result = false;
    }
 
+   if (clone3->GetBranch("MT")->GetAddress() != &a) {
+      cerr << "We have a problem since the address of the branch MT (" << (void*)(clone3->GetBranch("MT")->GetAddress())
+           << " is not the address of the variable (" << (void*)&a << ")" << endl;
+   }
+    
    // We are deleting a clone of a chain, it should not
    // attempt to delete any allocated objects.
    delete clone3;

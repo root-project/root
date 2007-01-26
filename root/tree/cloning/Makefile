@@ -16,7 +16,7 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
-Event.new.split0.root: copiedEvent$(ExeSuf)
+Event.new.split0.root: copiedEvent$(ExeSuf) $(ROOTCORELIBS) 
 	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) Event.new.split0.root
 
 hsimple1.root: hsimple.C
@@ -24,11 +24,11 @@ hsimple1.root: hsimple.C
 	$(CMDECHO) mv hsimple.root hsimple1.root
 	$(CMDECHO) cp hsimple1.root hsimple2.root
 
-event1.root: Event.new.split0.root
+event1.root: Event.new.split0.root 
 	$(CMDECHO) cp Event.new.split0.root event1.root
 	$(CMDECHO) cp event1.root event2.root
 
-treeCloneTest.log: hsimple1.root event1.root runEvent.C
+treeCloneTest.log: hsimple1.root event1.root runEvent.C run.C  $(ROOTCORELIBS) 
 	$(CMDECHO) ( root.exe -q -b -l run.C && root.exe -q -b -l runEvent.C ) > treeCloneTest.log 2>&1
 
 treeCloneTest: treeCloneTest.log treeCloneTest.good 
@@ -45,7 +45,7 @@ endif
 mergeWithDir: mergeWithDir.log
 	$(TestDiff)
 
-CopyTree.root: make_CopyTree.C ver_40200.root
+CopyTree.root: make_CopyTree.C ver_40200.root $(ROOTCORELIBS) 
 	$(CMDECHO) root.exe -q -b -l make_CopyTree.C > make_CopyTree.log 2>&1
 
 deepClass.log: CopyTree.root

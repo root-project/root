@@ -46,6 +46,9 @@
     }
     
     TTree *tupleClone3 = (TTree*)chain->GetTree()->CloneTree(0);
+    double a;
+    tupleClone3->Branch("MT",&a,"MT/D");
+
     chain->LoadTree(0);
     origleaf  = chain->GetLeaf("pz");
     clone3leaf = tupleClone3->GetLeaf("pz");
@@ -53,6 +56,10 @@
     if (origleaf->GetValuePointer() != clone3leaf->GetValuePointer()) {
        cerr << "We have a problem since the address of the value is different in the original and in the third copy!" << endl;
        result = false;
+    }
+    if (tupleClone3->GetBranch("MT")->GetAddress() != &a) {
+       cerr << "We have a problem since the address of the branch MT (" << (void*)(tupleClone3->GetBranch("MT")->GetAddress())
+            << " is not the address of the variable (" << (void*)&a  << ")" << endl;
     }
     
     float py;
