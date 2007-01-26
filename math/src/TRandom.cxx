@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.34 2006/12/11 10:44:21 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.35 2007/01/25 11:48:39 brun Exp $
 // Author: Rene Brun, Lorenzo Moneta   15/12/95
 
 /*************************************************************************
@@ -656,7 +656,7 @@ void TRandom::ReadRandom(const char *filename)
    TObject *file = TVirtualIO::GetIO()->Open(fntmp,"r");
    delete [] fntmp;
    if(file) {
-      TVirtualIO::GetIO()->ReadObject(this,GetName());
+      gDirectory->ReadTObject(this,GetName());
       delete file;
    }
 }
@@ -789,7 +789,7 @@ void TRandom::WriteRandom(const char *filename)
    TObject *file = TVirtualIO::GetIO()->Open(fntmp,"recreate");
    delete [] fntmp;
    if(file) {
-      TVirtualIO::GetIO()->WriteObject(this,GetName());
+      gDirectory->WriteTObject(this,GetName());
       delete file;
    }
 }
