@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFileIO.cxx,v 1.17 2006/07/09 05:27:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFileIO.cxx,v 1.1 2007/01/25 11:47:06 brun Exp $
 // Author: Rene Brun   24/01/2007
 /*************************************************************************
  * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
@@ -146,23 +146,6 @@ TObject *TFileIO::Open(const char *name, Option_t *option,const char *ftitle, In
    
    return TFile::Open(name,option,ftitle,compress,netopt);
 
-}
-
-
-//______________________________________________________________________________
-Int_t TFileIO::ReadObject(TObject *obj, const char *keyname)
-{
-   // Read object with keyname from the current directory
-   // Read contents of object with specified name from the current directory.
-   // First the key with keyname is searched in the current directory,
-   // next the key buffer is deserialized into the object.
-   // The object must have been created before via the default constructor.
-   // See TObject::Write().
-
-   if (!gFile) { Error("Read","No file open"); return 0; }
-   TKey *key = (TKey*)gDirectory->GetListOfKeys()->FindObject(keyname);
-   if (!key)   { Error("Read","Key not found"); return 0; }
-   return key->Read(obj);
 }
 
 //______________________________________________________________________________
@@ -313,71 +296,6 @@ void TFileIO::WriteRefUniqueID(TBuffer &R__b, TObject *obj)
 
    //UShort_t pidf = TProcessID::WriteProcessID(R__b,pid);
    WriteProcessID(R__b,pid);
-}
-
-//______________________________________________________________________________
-Int_t TFileIO::WriteObject(const TObject *obj, const char *name, Int_t option, Int_t bufsize) const
-{
-   // Write this object to the current directory.
-   // The data structure corresponding to this object is serialized.
-   // The corresponding buffer is written to the current directory
-   // with an associated key with name "name".
-   //
-   // Writing an object to a file involves the following steps:
-   //
-   //  -Creation of a support TKey object in the current directory.
-   //   The TKey object creates a TBuffer object.
-   //
-   //  -The TBuffer object is filled via the class::Streamer function.
-   //
-   //  -If the file is compressed (default) a second buffer is created to
-   //   hold the compressed buffer.
-   //
-   //  -Reservation of the corresponding space in the file by looking
-   //   in the TFree list of free blocks of the file.
-   //
-   //  -The buffer is written to the file.
-   //
-   //  Bufsize can be given to force a given buffer size to write this object.
-   //  By default, the buffersize will be taken from the average buffer size
-   //  of all objects written to the current file so far.
-   //
-   //  If a name is specified, it will be the name of the key.
-   //  If name is not given, the name of the key will be the name as returned
-   //  by GetName().
-   //
-   //  The option can be a combination of:
-   //    kSingleKey, kOverwrite or kWriteDelete
-   //  Using the kOverwrite option a previous key with the same name is
-   //  overwritten. The previous key is deleted before writing the new object.
-   //  Using the kWriteDelete option a previous key with the same name is
-   //  deleted only after the new object has been written. This option
-   //  is safer than kOverwrite but it is slower.
-   //  The kSingleKey option is only used by TCollection::Write() to write
-   //  a container with a single key instead of each object in the container
-   //  with its own key.
-   //
-   //  An object is read from the file into memory via TKey::Read() or
-   //  via TObject::Read().
-   //
-   //  The function returns the total number of bytes written to the file.
-   //  It returns 0 if the object cannot be written.
-   // destructor
-
-   if (!gFile) {
-      Error("Write","No file open");
-      return 0;
-   }
-   if (bufsize) gFile->SetBufferSize(bufsize);
-   TString opt = "";
-   if (option & kSingleKey)   opt += "SingleKey";
-   if (option & kOverwrite)   opt += "OverWrite";
-   if (option & kWriteDelete) opt += "WriteDelete";
-
-   Int_t nbytes = gDirectory->WriteTObject(obj,name,opt.Data());
-   if (bufsize) gFile->SetBufferSize(0);
-   return nbytes;
-
 }
 
 //______________________________________________________________________________
