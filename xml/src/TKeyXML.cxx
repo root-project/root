@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TKeyXML.cxx,v 1.9 2007/01/20 19:29:35 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TKeyXML.cxx,v 1.10 2007/01/22 05:58:29 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -179,7 +179,7 @@ void TKeyXML::StoreObject(const void* obj, const TClass* cl)
 
    TBufferXML buffer(TBuffer::kWrite, f);
    if (f->GetIOVersion()==1)
-      buffer.SetBit(TBufferFile::kCannotHandleMemberWiseStreaming, kFALSE);
+      buffer.SetBit(TBuffer::kCannotHandleMemberWiseStreaming, kFALSE);
    
    XMLNodePointer_t node = buffer.XmlWriteAny(obj, cl);
 
@@ -289,7 +289,7 @@ void* TKeyXML::XmlReadAny(void* obj, const TClass* expectedClass)
    
    TBufferXML buffer(TBuffer::kRead, f);
    if (f->GetIOVersion()==1)
-      buffer.SetBit(TBufferFile::kCannotHandleMemberWiseStreaming, kFALSE);
+      buffer.SetBit(TBuffer::kCannotHandleMemberWiseStreaming, kFALSE);
 
    XMLNodePointer_t blocknode = xml->GetChild(fKeyNode);
    xml->SkipEmpty(blocknode);
