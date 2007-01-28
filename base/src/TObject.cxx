@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.85 2007/01/25 11:49:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.86 2007/01/26 15:40:20 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -33,7 +33,6 @@
 #include "Varargs.h"
 #include "Riostream.h"
 #include "TObject.h"
-#include "TVirtualIO.h"
 #include "TClass.h"
 #include "TGuiFactory.h"
 #include "TDataMember.h"
@@ -48,6 +47,8 @@
 #include "TMemberInspector.h"
 #include "TObjString.h"
 #include "TDatime.h"
+#include "TRefTable.h"
+#include "TProcessID.h"
 #include "TSystem.h"
 
 class TDumpMembers : public TMemberInspector {
@@ -199,7 +200,8 @@ TObject *TObject::Clone(const char *) const
    // by TNamed::Clone. TNamed::Clone uses the optional argument to set
    // a new name to the newly created object.
 
-   return TVirtualIO::GetIO()->CloneObject(this);
+   if (gDirectory) return gDirectory->CloneObject(this);
+   else            return 0;
 }
 
 //______________________________________________________________________________
@@ -772,6 +774,7 @@ void TObject::Streamer(TBuffer &R__b)
    // Stream an object of class TObject.
 
    if (IsA()->CanIgnoreTObjectStreamer()) return;
+   UShort_t pidf;
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(); if (R__v) { }
       R__b >> fUniqueID;
@@ -780,7 +783,18 @@ void TObject::Streamer(TBuffer &R__b)
       if (TestBit(kIsReferenced)) {
          //if the object is referenced, we must read its old address
          //and store it in the ProcessID map in gROOT
-         TVirtualIO::GetIO()->ReadRefUniqueID(R__b,this);
+         R__b >> pidf;
+         pidf += R__b.GetPidOffset();
+         TProcessID *pid = R__b.ReadProcessID(pidf);
+         if (pid) {
+            UInt_t gpid = pid->GetUniqueID();
+            if (gpid>=0xff) {
+               fUniqueID = fUniqueID | 0xff000000;
+            } else {
+               fUniqueID = ( fUniqueID & 0xffffff) + (gpid<<24);
+            }
+            pid->PutObjectWithID(this);
+         }
       }
    } else {
       R__b.WriteVersion(TObject::IsA());
@@ -792,7 +806,12 @@ void TObject::Streamer(TBuffer &R__b)
          UInt_t uid = fUniqueID & 0xffffff;
          R__b << uid;
          R__b << fBits;
-         TVirtualIO::GetIO()->WriteRefUniqueID(R__b,this);
+         TProcessID *pid = TProcessID::GetProcessWithUID(fUniqueID,this);
+         //add uid to the TRefTable if there is one
+         TRefTable *table = TRefTable::GetRefTable();
+         if(table) table->Add(uid, pid);
+         pidf = R__b.WriteProcessID(pid);
+         R__b << pidf;
       }
    }
 }

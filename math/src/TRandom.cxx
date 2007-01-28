@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.35 2007/01/25 11:48:39 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.36 2007/01/26 15:40:38 brun Exp $
 // Author: Rene Brun, Lorenzo Moneta   15/12/95
 
 /*************************************************************************
@@ -193,7 +193,6 @@
 #include "TMath.h"
 #include "TRandom.h"
 #include "TRandom3.h"
-#include "TVirtualIO.h"
 #include "TSystem.h"
 #include <time.h>
 
@@ -652,10 +651,11 @@ void TRandom::ReadRandom(const char *filename)
    //
    // Reads saved random generator status from filename
    //
+   if (!gDirectory) return;
    char *fntmp = gSystem->ExpandPathName(filename);
-   TObject *file = TVirtualIO::GetIO()->Open(fntmp,"r");
+   TDirectory *file = (TDirectory*)gDirectory->OpenFile(fntmp,"r");
    delete [] fntmp;
-   if(file) {
+   if(file && file->GetFile()) {
       gDirectory->ReadTObject(this,GetName());
       delete file;
    }
@@ -785,10 +785,11 @@ void TRandom::WriteRandom(const char *filename)
    //
    // Writes random generator status to filename
    //
+   if (!gDirectory) return;
    char *fntmp = gSystem->ExpandPathName(filename);
-   TObject *file = TVirtualIO::GetIO()->Open(fntmp,"recreate");
+   TDirectory *file = (TDirectory*)gDirectory->OpenFile(fntmp,"recreate");
    delete [] fntmp;
-   if(file) {
+   if(file && file->GetFile()) {
       gDirectory->WriteTObject(this,GetName());
       delete file;
    }

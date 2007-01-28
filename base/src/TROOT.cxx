@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.197 2007/01/21 06:51:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.198 2007/01/25 11:52:29 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -77,7 +77,6 @@
 #include "TClassEdit.h"
 #include "TClassGenerator.h"
 #include "TDataType.h"
-#include "TVirtualIO.h"
 #include "TDatime.h"
 #include "TStyle.h"
 #include "TObjectTable.h"
@@ -757,7 +756,7 @@ TObject *TROOT::FindObjectAny(const char *name) const
 
    TObject *obj = fRootFolder->FindObjectAny(name);
    if (obj) return obj;
-   return TVirtualIO::GetIO()->FindObjectAny(name);
+   return gDirectory->FindObjectAnyFile(name);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.34 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.35 2007/01/25 11:50:36 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -210,7 +210,6 @@
 #include "TObjArray.h"
 #include "TExec.h"
 #include "TSystem.h"
-#include "TVirtualIO.h"
 #include "TObjString.h"
 
 TObjArray  *TRef::fgExecs  = 0;
@@ -398,7 +397,7 @@ void TRef::SetAction(TObject *parent)
    // following this keyword.
 
    if (!parent) return;
-   TVirtualIO::GetIO()->SetRefAction(this,parent);
+   if (gDirectory) gDirectory->SetTRefAction(this,parent);
 }
 
  //______________________________________________________________________________
@@ -447,13 +446,14 @@ void TRef::Streamer(TBuffer &R__b)
             printf("Reading TRef (HasUUID) uid=%d, obj=%lx\n",GetUniqueID(),(Long_t)GetObject());
          }
       } else {
-         TVirtualIO *io = TVirtualIO::GetIO();
-         pidf = io->ReadProcessID(R__b,fPID);
+         R__b >> pidf;
+         pidf += R__b.GetPidOffset();
+         fPID = R__b.ReadProcessID(pidf);
          //The execid has been saved in the unique id of the TStreamerElement
          //being read by TStreamerElement::Streamer
          //The current element (fgElement) is set as a static global
          //by TStreamerInfo::ReadBuffer (Clones) when reading this TRef
-         Int_t execid = io->GetTRefExecId();
+         Int_t execid = R__b.GetTRefExecId();
          if (execid) SetBit(execid<<16);
          if (gDebug > 1) {
             printf("Reading TRef, pidf=%d, fPID=%lx, uid=%d, obj=%lx\n",pidf,(Long_t)fPID,GetUniqueID(),(Long_t)GetObject());
@@ -469,7 +469,8 @@ void TRef::Streamer(TBuffer &R__b)
             printf("Writing TRef (HasUUID) uid=%d, obj=%lx\n",GetUniqueID(),(Long_t)GetObject());
          }
       } else {
-         pidf = TVirtualIO::GetIO()->WriteProcessID(R__b,fPID);
+         pidf = R__b.WriteProcessID(fPID);
+         R__b << pidf;
          if (gDebug > 1) {
             printf("Writing TRef, pidf=%d, fPID=%lx, uid=%d, obj=%lx\n",pidf,(Long_t)fPID,GetUniqueID(),(Long_t)GetObject());
          }
