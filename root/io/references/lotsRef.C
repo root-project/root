@@ -64,7 +64,7 @@ void lotsRef(int what) {
       TFile *_file0 = TFile::Open(filename,"RECREATE");
       for(int i=0;i<size;++i) {
          TProcessID *id = TProcessID::AddProcessID();
-         TProcessID::WriteProcessID(id,_file0);
+         _file0->WriteProcessID(id);
       }
       AddTree();
       _file0->Write(); delete _file0;
@@ -80,7 +80,7 @@ void lotsRef(int what) {
       TFile *_file0 = TFile::Open(filename,"UPDATE");
 
       int i=0;
-      while( TProcessID::ReadProcessID(++i,_file0) ) {};
+      while( _file0->ReadProcessID(++i) ) {};
 
       TNamed *n;_file0->GetObject("mine",n);
       TRef *r;_file0->GetObject("TRef",r);
