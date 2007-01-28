@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.57 2007/01/20 19:29:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.58 2007/01/23 06:10:39 brun Exp $
 // Author: Rene Brun, Philippe Canal, Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -29,6 +29,9 @@ class TStreamerInfo;
 class TStreamerElement;
 class TClass;
 class TString;
+class TProcessID;
+class TClonesArray;
+class TRefTable;
 
 class TBuffer : public TObject {
 
@@ -60,8 +63,9 @@ protected:
 
 public:
    enum EMode { kRead = 0, kWrite = 1 };
+   enum { kIsOwner = BIT(16) };                        //if set TBuffer owns fBuffer
+   enum { kCannotHandleMemberWiseStreaming = BIT(17)}; //if set TClonesArray should not use member wise streaming
    enum { kInitialSize = 1024, kMinimalSize = 128 };
-   enum { kIsOwner = BIT(16) };            //if set TBuffer owns fBuffer
 
    TBuffer(EMode mode);
    TBuffer(EMode mode, Int_t bufsiz);
@@ -138,6 +142,7 @@ public:
    virtual void       SetBufferDisplacement() = 0;
    virtual void       SetBufferDisplacement(Int_t skipped) = 0;
 
+   // basic types and arrays of basic types
    virtual   void     ReadDouble32 (Double_t *d, TStreamerElement *ele=0) = 0;
    virtual   void     WriteDouble32(Double_t *d, TStreamerElement *ele=0) = 0;
 
@@ -258,6 +263,17 @@ public:
    virtual   void     WriteDouble(Double_t   d) = 0;
    virtual   void     WriteCharP(const Char_t *c) = 0;
    virtual   void     WriteTString(const TString &s) = 0;
+   
+   // Special basic ROOT objects and collections
+   virtual   TProcessID *GetLastProcessID(TRefTable *reftable) const = 0;
+   virtual   UInt_t      GetTRefExecId() = 0;
+   virtual   TProcessID *ReadProcessID(UShort_t pidf) = 0;
+   virtual   UShort_t    WriteProcessID(TProcessID *pid) = 0;
+   
+   // Utilities for TClonesArray
+   virtual   void     ForceWriteInfo(TClonesArray *a) = 0;
+   virtual   Int_t    ReadClones (TClonesArray *a, Int_t nobjects) = 0;
+   virtual   Int_t    WriteClones(TClonesArray *a, Int_t nobjects) = 0;
 
    static TClass *GetClass(const type_info &typeinfo);
    static TClass *GetClass(const char *className);

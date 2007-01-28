@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.100 2007/01/19 16:47:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.101 2007/01/22 14:15:28 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 
 #include "TROOT.h"
 #include "TBuffer.h"
+#include "TProcessID.h"
 
 const Int_t  kExtraSpace        = 8;   // extra space at end of buffer (used for free block count)
 
@@ -213,3 +214,21 @@ TClass *TBuffer::GetClass(const char *className)
    return gROOT->GetClass(className);
 }
 
+
+//______________________________________________________________________________
+TProcessID *TBuffer::ReadProcessID(UShort_t pidf)
+{
+   //Return the current PRocessID
+
+   if (!pidf) return TProcessID::GetPID(); //may happen when cloning an object
+   return 0;
+}
+
+
+//______________________________________________________________________________
+UShort_t TBuffer::WriteProcessID(TProcessID *)
+{
+   // Always return 0 (current processID)
+
+   return 0;
+}
