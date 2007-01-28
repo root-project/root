@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.12 2006/05/14 08:25:47 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.13 2007/01/25 11:51:13 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -40,7 +40,6 @@
 
 #include "TRefTable.h"
 #include "TObjArray.h"
-#include "TVirtualIO.h"
 #include "TProcessID.h"
 #include <algorithm>
 
@@ -334,7 +333,7 @@ void TRefTable::ReadBuffer(TBuffer &b)
       // old format, only one PID
       numIids = 1;
 
-      TProcessID *fileProcessID = TVirtualIO::GetIO()->GetLastProcessID(b,this);
+      TProcessID *fileProcessID = b.GetLastProcessID(this);
 
       startIid = GetInternalIdxForPID(fileProcessID);
       if (startIid == -1) {
