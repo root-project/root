@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.26 2006/10/13 07:52:01 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.27 2007/01/25 11:50:54 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -44,7 +44,6 @@
 
 #include "TRefArray.h"
 #include "TRefTable.h"
-#include "TVirtualIO.h"
 #include "TError.h"
 #include "TSystem.h"
 
@@ -377,7 +376,9 @@ void TRefArray::Streamer(TBuffer &R__b)
       R__b >> fLowerBound;
       if (nobjects >= fSize) Expand(nobjects);
       fLast = -1;
-      pidf = TVirtualIO::GetIO()->ReadProcessID(R__b, fPID);
+      R__b >> pidf;
+      pidf += R__b.GetPidOffset();
+      fPID = R__b.ReadProcessID(pidf);
       if (gDebug > 1) printf("Reading TRefArray, pidf=%d, fPID=%lx, nobjects=%d\n",pidf,(Long_t)fPID,nobjects);
       for (Int_t i = 0; i < nobjects; i++) {
          R__b >> fUIDs[i];
@@ -396,7 +397,8 @@ void TRefArray::Streamer(TBuffer &R__b)
       nobjects = GetLast()+1;
       R__b << nobjects;
       R__b << fLowerBound;
-      pidf = TVirtualIO::GetIO()->WriteProcessID(R__b,fPID);
+      pidf = R__b.WriteProcessID(fPID);
+      R__b << pidf;
       if (gDebug > 1) printf("Writing TRefArray, pidf=%d, fPID=%lx, nobjects=%d\n",pidf,(Long_t)fPID,nobjects);
 
       for (Int_t i = 0; i < nobjects; i++) {
