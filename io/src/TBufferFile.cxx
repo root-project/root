@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBufferFile.cxx,v 1.2 2007/01/20 09:46:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBufferFile.cxx,v 1.3 2007/01/23 06:10:39 brun Exp $
 // Author: Rene Brun 17/01/2007
 
 /*************************************************************************
@@ -25,9 +25,11 @@
 #include "TBufferFile.h"
 #include "TExMap.h"
 #include "TClass.h"
+#include "TProcessID.h"
+#include "TRefTable.h"
 #include "TStorage.h"
 #include "TError.h"
-#include "TObjArray.h"
+#include "TClonesArray.h"
 #include "TStreamer.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
@@ -2742,3 +2744,99 @@ Int_t TBufferFile::GetGlobalWriteParam()
 
    return fgMapSize;
 }
+
+
+//______________________________________________________________________________
+TProcessID *TBufferFile::GetLastProcessID(TRefTable *reftable) const
+{
+   // Return the last TProcessID in the file
+   
+   TFile *file = (TFile*)GetParent();
+   // warn if the file contains > 1 PID (i.e. if we might have ambiguity)
+   if (file && !reftable->TestBit(TRefTable::kHaveWarnedReadingOld) && file->GetNProcessIDs()>1) {
+      Warning("ReadBuffer", "The file was written during several processes with an "
+         "older ROOT version; the TRefTable entries might be inconsistent.");
+      reftable->SetBit(TRefTable::kHaveWarnedReadingOld);
+   }
+
+   // the file's last PID is the relevant one, all others might have their tables overwritten
+   TProcessID *fileProcessID = TProcessID::GetProcessID(0);
+   if (file && file->GetNProcessIDs() > 0) {
+      // take the last loaded PID
+      fileProcessID = (TProcessID *) file->GetListOfProcessIDs()->Last();
+   }
+   return fileProcessID;
+}
+
+//______________________________________________________________________________
+TProcessID *TBufferFile::ReadProcessID(UShort_t pidf)
+{
+   //The TProcessID with number pidf is read from file.
+   //If the object is not already entered in the gROOT list, it is added.
+
+   TFile *file = (TFile*)GetParent();
+   if (!file) {
+      if (!pidf) return TProcessID::GetPID(); //may happen when cloning an object
+      return 0;
+   }
+   return file->ReadProcessID(pidf);
+}
+
+//______________________________________________________________________________
+UInt_t TBufferFile::GetTRefExecId()
+{
+   // Return the exec id stored in the current TStreamerInfo element
+   // The execid has been saved in the unique id of the TStreamerElement
+   // being read by TStreamerElement::Streamer
+   // The current element (fgElement) is set as a static global
+   // by TStreamerInfo::ReadBuffer (Clones) when reading this TRef
+   
+   return TStreamerInfo::GetCurrentElement()->GetUniqueID();
+}   
+
+//______________________________________________________________________________
+UShort_t TBufferFile::WriteProcessID(TProcessID *pid)
+{
+   // Check if the ProcessID pid is already in the file.
+   // if not, add it and return the index  number in the local file list
+
+   TFile *file = (TFile*)GetParent();
+   return file->WriteProcessID(pid);
+}
+   
+   // Utilities for TClonesArray
+
+//______________________________________________________________________________
+void TBufferFile::ForceWriteInfo(TClonesArray *a)
+{
+   //Make sure TStreamerInfo is not optimized, otherwise it will not be
+   //possible to support schema evolution in read mode.
+   //In case the StreamerInfo has already been computed and optimized,
+   //one must disable the option BypassStreamer.
+   
+   Bool_t optim = TStreamerInfo::CanOptimize();
+   if (optim) TStreamerInfo::Optimize(kFALSE);
+   TStreamerInfo *sinfo = a->GetClass()->GetStreamerInfo();
+   sinfo->ForceWriteInfo((TFile *)GetParent());
+   if (optim) TStreamerInfo::Optimize(kTRUE);
+   if (sinfo->IsOptimized()) a->BypassStreamer(kFALSE);
+}
+
+//______________________________________________________________________________
+Int_t TBufferFile::ReadClones(TClonesArray *a, Int_t nobjects)
+{
+   // Interface to TStreamerInfo::ReadBufferClones
+   
+   char **arr = (char **)a->GetObjectRef(0);
+   //a->GetClass()->GetStreamerInfo()->ReadBufferClones(*this,a,nobjects,-1,0);
+   return a->GetClass()->GetStreamerInfo()->ReadBuffer(*this,arr,-1,nobjects,0,1);
+}   
+
+//______________________________________________________________________________
+Int_t TBufferFile::WriteClones(TClonesArray *a, Int_t nobjects)
+{
+   // Interface to TStreamerInfo::WriteBufferClones
+   char **arr = reinterpret_cast<char**>(a->GetObjectRef(0));
+   //a->GetClass()->GetStreamerInfo()->WriteBufferClones(*this,(TClonesArray*)a,nobjects,-1,0);
+   return a->GetClass()->GetStreamerInfo()->WriteBufferAux(*this,arr,-1,nobjects,0,1);
+}   

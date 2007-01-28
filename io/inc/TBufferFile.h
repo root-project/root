@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBufferFile.h,v 1.2 2007/01/20 19:29:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBufferFile.h,v 1.3 2007/01/23 06:10:39 brun Exp $
 // Author: Rene Brun   17/01/2007
 
 /*************************************************************************
@@ -78,8 +78,7 @@ public:
    enum { kMapSize = 503 };
    enum { kStreamedMemberWise = BIT(14) }; //added to version number to know if a collection has been stored member-wise
    enum { kNotDecompressed = BIT(15) };    //indicates a weird buffer, used by TBasket
-   enum { kCannotHandleMemberWiseStreaming = BIT(17), //if set TClonesArray should not use memeber wise streaming
-          kTextBasedStreaming = BIT(18) };            // indicates if buffer used for XML/SQL object streaming
+   enum { kTextBasedStreaming = BIT(18) }; //indicates if buffer used for XML/SQL object streaming
    enum { kUser1 = BIT(21), kUser2 = BIT(22), kUser3 = BIT(23)}; //free for user
 
    TBufferFile(TBuffer::EMode mode);
@@ -147,6 +146,7 @@ public:
    void     SetBufferDisplacement(Int_t skipped)
             { fDisplacement =  (Int_t)(Length() - skipped); }
 
+   // basic types and arrays of basic types
    virtual   void     ReadDouble32 (Double_t *d, TStreamerElement *ele=0);
    virtual   void     WriteDouble32(Double_t *d, TStreamerElement *ele=0);
 
@@ -266,7 +266,18 @@ public:
    virtual   void     WriteFloat(Float_t     f);
    virtual   void     WriteDouble(Double_t   d);
    virtual   void     WriteCharP(const Char_t *c);
-   virtual   void     WriteTString(const TString  &s);
+   virtual   void     WriteTString(const TString &s);
+   
+   // Special basic ROOT objects and collections
+   virtual   TProcessID *GetLastProcessID(TRefTable *reftable) const;
+   virtual   UInt_t      GetTRefExecId();
+   virtual   TProcessID *ReadProcessID(UShort_t pidf);
+   virtual   UShort_t    WriteProcessID(TProcessID *pid);
+   
+   // Utilities for TClonesArray
+   virtual   void   ForceWriteInfo(TClonesArray *a);
+   virtual   Int_t  ReadClones (TClonesArray *a, Int_t nobjects);
+   virtual   Int_t  WriteClones(TClonesArray *a, Int_t nobjects);
 
    static void    SetGlobalReadParam(Int_t mapsize);
    static void    SetGlobalWriteParam(Int_t mapsize);
