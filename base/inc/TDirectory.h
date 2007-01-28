@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.39 2007/01/26 15:39:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.40 2007/01/26 15:47:58 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -105,6 +105,7 @@ public:
    virtual void        Browse(TBrowser *b);
    virtual void        Build(TFile* motherFile = 0, TDirectory* motherDir = 0);
    virtual void        Clear(Option_t *option="");
+   virtual TObject    *CloneObject(const TObject *obj);
    virtual void        Close(Option_t *option="");
    virtual void        Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
    virtual Bool_t      cd(const char *path = 0);
@@ -116,6 +117,7 @@ public:
    virtual TObject    *FindObject(const char *name) const;
    virtual TObject    *FindObject(const TObject *obj) const;
    virtual TObject    *FindObjectAny(const char *name) const;
+   virtual TObject    *FindObjectAnyFile(const char * /*name*/) const {return 0;}
    virtual TObject    *Get(const char *namecycle);
    virtual TDirectory *GetDirectory(const char *namecycle, Bool_t printError = false, const char *funcname = "GetDirectory");
    template <class T> inline void GetObject(const char* namecycle, T*& ptr) // See TDirectory::Get for information
@@ -145,6 +147,9 @@ public:
    virtual Bool_t      IsWritable() const { return kFALSE; }
    virtual void        ls(Option_t *option="") const;
    virtual TDirectory *mkdir(const char *name, const char *title="");
+   virtual TFile      *OpenFile(const char * /*name*/, Option_t * /*option*/ = "",
+                            const char * /*ftitle*/ = "", Int_t /*compress*/ = 1,
+                            Int_t /*netopt*/ = 0) {return 0;}
    virtual void        Paint(Option_t *option="");
    virtual void        Print(Option_t *option="") const;
    virtual void        Purge(Short_t /*nkeep*/=1) {}
@@ -155,11 +160,13 @@ public:
    virtual void        RecursiveRemove(TObject *obj);
    virtual void        rmdir(const char *name);
    virtual void        Save() {}
+   virtual Int_t       SaveObjectAs(const TObject * /*obj*/, const char * /*filename*/="", Option_t * /*option*/="");
    virtual void        SaveSelf(Bool_t /*force*/ = kFALSE) {}
    virtual void        SetBufferSize(Int_t /* bufsize */) {}
    virtual void        SetModified() {}
    virtual void        SetMother(const TObject *mother) {fMother = (TObject*)mother;}
    virtual void        SetName(const char* newname);
+   virtual void        SetTRefAction(TObject * /*ref*/, TObject * /*parent*/) {}
    virtual void        SetSeekDir(Long64_t) {}
    virtual void        SetWritable(Bool_t) {}
    virtual Int_t       Sizeof() const {return 0;}

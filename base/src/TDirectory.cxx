@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.91 2007/01/22 23:04:57 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.92 2007/01/26 15:39:16 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "TError.h"
 #include "TClass.h"
 #include "TRegexp.h"
+#include "TSystem.h"
 #include "TVirtualMutex.h"
 
 TDirectory    *gDirectory;      //Pointer to current directory in memory
@@ -186,6 +187,39 @@ void TDirectory::Build(TFile* /*motherFile*/, TDirectory* motherDir)
    fMother     = motherDir;
    SetBit(kCanDelete);
 }
+
+//______________________________________________________________________________
+TObject *TDirectory::CloneObject(const TObject *obj)
+{
+   // Clone an object.
+   // This function is called when the directory is not a TDirectoryFile.
+   // This version has to load the I/O package, hence via CINT
+
+   // if no default ctor return immediately (error issued by New())
+   TObject *newobj = (TObject *)obj->IsA()->New();
+   if (!newobj) return 0;
+
+   //create a buffer where the object will be streamed 
+   //We are forced to go via the I/O package (ie TBufferFile).
+   //Invoking TBufferFile via CINT will automatically load the I/O library
+   TBuffer *buffer = (TBuffer*)gROOT->ProcessLine(Form("new TBufferFile(%d,10000);",TBuffer::kWrite));
+   if (!buffer) return 0;
+   buffer->MapObject(obj);  //register obj in map to handle self reference
+   ((TObject*)obj)->Streamer(*buffer);
+
+   // read new object from buffer
+   buffer->SetReadMode();
+   buffer->ResetMap();
+   buffer->SetBufferOffset(0);
+   buffer->MapObject(newobj);  //register obj in map to handle self reference
+   newobj->Streamer(*buffer);
+   newobj->ResetBit(kIsReferenced);
+   newobj->ResetBit(kCanDelete);
+
+   delete buffer;
+   return newobj;
+}
+
 
 //______________________________________________________________________________
 TDirectory *TDirectory::GetDirectory(const char *apath,
@@ -892,6 +926,36 @@ void TDirectory::rmdir(const char *name)
    TString mask(name);
    mask+=";*";
    Delete(mask);
+}
+
+//______________________________________________________________________________
+Int_t TDirectory::SaveObjectAs(const TObject *obj, const char *filename, Option_t *option)
+{
+   // Save object in filename (static function)
+   // if filename is null or "", a file with "objectname.root" is created.
+   // The name of the key is the object name.
+   // If the operation is successful, it returns the number of bytes written to the file
+   // otherwise it returns 0.
+   // By default a message is printed. Use option "q" to not print the message.
+   
+   if (!obj) return 0;
+   if (!gDirectory) return 0;
+   TDirectory *dirsav = gDirectory;
+   TString fname = filename;
+   if (!filename || strlen(filename) == 0) {
+      fname = Form("%s.root",obj->GetName());
+   }
+   TDirectory *local = (TDirectory*)gDirectory->OpenFile(fname.Data(),"recreate");
+   if (!local) return 0;
+   Int_t nbytes = obj->Write();
+   delete local;
+   if (dirsav) dirsav->cd();
+   TString opt = option;
+   opt.ToLower();
+   if (!opt.Contains("q")) {
+      if (!gSystem->AccessPathName(fname.Data())) obj->Info("SaveAs", "ROOT file %s has been created", fname.Data());
+   }
+   return nbytes;
 }
 
 //______________________________________________________________________________
