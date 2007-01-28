@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectoryFile.cxx,v 1.1 2007/01/22 06:03:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectoryFile.cxx,v 1.2 2007/01/26 15:39:33 brun Exp $
 // Author: Rene Brun   22/01/2007
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include "Strlen.h"
 #include "TDirectoryFile.h"
 #include "TFile.h"
+#include "TBufferFile.h"
 #include "TMapFile.h"
 #include "TClassTable.h"
 #include "TInterpreter.h"
@@ -25,6 +26,8 @@
 #include "Bytes.h"
 #include "TClass.h"
 #include "TRegexp.h"
+#include "TSystem.h"
+#include "TStreamerElement.h"
 #include "TProcessUUID.h"
 #include "TVirtualMutex.h"
 
@@ -307,6 +310,56 @@ Bool_t TDirectoryFile::cd(const char *path)
    if (ok) gFile = fFile;
    return ok;
 }
+
+//______________________________________________________________________________
+TObject *TDirectoryFile::CloneObject(const TObject *obj)
+{
+   // Make a clone of an object using the Streamer facility.
+   // If the object derives from TNamed, this function is called
+   // by TNamed::Clone. TNamed::Clone uses the optional argument newname to set
+   // a new name to the newly created object.
+
+   // if no default ctor return immediately (error issued by New())
+   TObject *newobj = (TObject *)obj->IsA()->New();
+   if (!newobj) return 0;
+
+   //create a buffer where the object will be streamed
+   TFile *filsav = gFile;
+   gFile = 0;
+   const Int_t bufsize = 10000;
+   TBuffer *buffer = new TBufferFile(TBuffer::kWrite,bufsize);
+   buffer->MapObject(obj);  //register obj in map to handle self reference
+   ((TObject*)obj)->Streamer(*buffer);
+
+   // read new object from buffer
+   buffer->SetReadMode();
+   buffer->ResetMap();
+   buffer->SetBufferOffset(0);
+   buffer->MapObject(newobj);  //register obj in map to handle self reference
+   newobj->Streamer(*buffer);
+   newobj->ResetBit(kIsReferenced);
+   newobj->ResetBit(kCanDelete);
+   gFile = filsav;
+
+   delete buffer;
+   return newobj;
+}
+
+//______________________________________________________________________________
+TObject *TDirectoryFile::FindObjectAnyFile(const char *name) const
+{
+   // Scan the memory lists of all files for an object with name
+   
+   TFile *f;
+   TIter next(gROOT->GetListOfFiles());
+   while ((f = (TFile*)next())) {
+      TObject *obj = f->GetList()->FindObject(name);
+      if (obj) return obj;
+   }
+   return 0;
+}
+
+
 
 //______________________________________________________________________________
 TDirectory *TDirectoryFile::GetDirectory(const char *apath,
@@ -983,6 +1036,15 @@ void TDirectoryFile::ls(Option_t *option) const
    TROOT::DecreaseDirLevel();
 }
 
+//______________________________________________________________________________
+TFile *TDirectoryFile::OpenFile(const char *name, Option_t *option,const char *ftitle, Int_t compress, Int_t netopt)
+{
+   // Interface to TFile::Open
+   
+   return TFile::Open(name,option,ftitle,compress,netopt);
+
+}
+
 
 //______________________________________________________________________________
 TDirectory *TDirectoryFile::mkdir(const char *name, const char *title)
@@ -1222,6 +1284,35 @@ void TDirectoryFile::Save()
 }
 
 //______________________________________________________________________________
+Int_t TDirectoryFile::SaveObjectAs(const TObject *obj, const char *filename, Option_t *option)
+{
+   // Save object in filename (static function)
+   // if filename is null or "", a file with "objectname.root" is created.
+   // The name of the key is the object name.
+   // If the operation is successful, it returns the number of bytes written to the file
+   // otherwise it returns 0.
+   // By default a message is printed. Use option "q" to not print the message.
+   
+   if (!obj) return 0;
+   TDirectory *dirsav = gDirectory;
+   TString fname = filename;
+   if (!filename || strlen(filename) == 0) {
+      fname = Form("%s.root",obj->GetName());
+   }
+   TFile *local = TFile::Open(fname.Data(),"recreate");
+   if (!local) return 0;
+   Int_t nbytes = obj->Write();
+   delete local;
+   if (dirsav) dirsav->cd();
+   TString opt = option;
+   opt.ToLower();
+   if (!opt.Contains("q")) {
+      if (!gSystem->AccessPathName(fname.Data())) obj->Info("SaveAs", "ROOT file %s has been created", fname.Data());
+   }
+   return nbytes;
+}
+
+//______________________________________________________________________________
 void TDirectoryFile::SaveSelf(Bool_t force)
 {
 //*-*-*-*-*-*-*-*-*-*Save Directory keys and header*-*-*-*-*-*-*-*-*-*-*-*
@@ -1259,6 +1350,31 @@ void TDirectoryFile::SetBufferSize(Int_t bufsize)
    // see also TDirectoryFile::GetBufferSize
 
    fBufferSize = bufsize;
+}
+
+//______________________________________________________________________________
+void TDirectoryFile::SetTRefAction(TObject *ref, TObject *parent)
+{
+   // Find the action to be executed in the dictionary of the parent class
+   // and store the corresponding exec number into fBits.
+   // This function searches a data member in the class of parent with an
+   // offset corresponding to this.
+   // If a comment "TEXEC:" is found in the comment field of the data member,
+   // the function stores the exec identifier of the exec statement
+   // following this keyword.
+   
+   Int_t offset = (char*)ref - (char*)parent;
+   TClass *cl = parent->IsA();
+   cl->BuildRealData(parent);
+   TStreamerInfo *info = cl->GetStreamerInfo();
+   TIter next(info->GetElements());
+   TStreamerElement *element;
+   while((element = (TStreamerElement*)next())) {
+      if (element->GetOffset() != offset) continue;
+      Int_t execid = element->GetExecID();
+      if (execid > 0) ref->SetBit(execid << 8);
+      return;
+   }
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectoryFile.h,v 1.1 2007/01/22 06:03:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectoryFile.h,v 1.2 2007/01/26 15:39:33 brun Exp $
 // Author: Rene Brun   22/01/2007
 
 /*************************************************************************
@@ -63,6 +63,7 @@ public:
            Int_t       AppendKey(TKey *key);
    virtual void        Browse(TBrowser *b);
            void        Build(TFile* motherFile = 0, TDirectory* motherDir = 0);
+   virtual TObject    *CloneObject(const TObject *obj);
    virtual void        Close(Option_t *option="");
    virtual void        Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
    virtual Bool_t      cd(const char *path = 0);
@@ -71,6 +72,7 @@ public:
    virtual TKey       *FindKey(const char *keyname) const;
    virtual TKey       *FindKeyAny(const char *keyname) const;
    virtual TObject    *FindObjectAny(const char *name) const;
+   virtual TObject    *FindObjectAnyFile(const char *name) const;
    virtual TObject    *Get(const char *namecycle);
    virtual TDirectory *GetDirectory(const char *namecycle, Bool_t printError = false, const char *funcname = "GetDirectory");
    template <class T> inline void GetObject(const char* namecycle, T*& ptr) // See TDirectory::Get for information
@@ -95,6 +97,9 @@ public:
    Bool_t              IsWritable() const { return fWritable; }
    virtual void        ls(Option_t *option="") const;
    virtual TDirectory *mkdir(const char *name, const char *title="");
+   virtual TFile      *OpenFile(const char *name, Option_t *option= "",
+                            const char *ftitle = "", Int_t compress = 1,
+                            Int_t netopt = 0);
    virtual void        Purge(Short_t nkeep=1);
    virtual void        ReadAll(Option_t *option="");
    virtual Int_t       ReadKeys();
@@ -102,18 +107,16 @@ public:
    virtual void        rmdir(const char *name);
    virtual void        Save();
    virtual void        SaveSelf(Bool_t force = kFALSE);
+   virtual Int_t       SaveObjectAs(const TObject *obj, const char *filename="", Option_t *option="");
    virtual void        SetBufferSize(Int_t bufsize);
    void                SetModified() {fModified = kTRUE;}
    void                SetSeekDir(Long64_t v) { fSeekDir = v; }
+   virtual void        SetTRefAction(TObject *ref, TObject *parent);
    void                SetWritable(Bool_t writable=kTRUE);
    virtual Int_t       Sizeof() const;
    virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsize=0);
    virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsize=0) const ;
    virtual Int_t       WriteTObject(const TObject *obj, const char *name=0, Option_t *option="", Int_t bufsize=0);
-//   template <class T> inline Int_t WriteObject(const T* obj, const char* name, Option_t *option="", Int_t bufsize=0) // see TDirectory::WriteObject or TDirectoryWriteObjectAny for explanation
-//      {
-//         return WriteObjectAny(obj,TBuffer::GetClass(typeid(T)),name,option,bufsize);
-//      }
    virtual Int_t       WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option="", Int_t bufsize=0);
    virtual Int_t       WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option="", Int_t bufsize=0);
    virtual void        WriteDirHeader();
