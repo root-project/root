@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.43 2007/01/22 05:58:29 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.44 2007/01/25 11:47:21 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -144,7 +144,6 @@
 #pragma link C++ class TEnv+;
 #pragma link C++ class TEnvRec+;
 #pragma link C++ class TFile-;
-#pragma link C++ class TFileIO;
 #pragma link C++ class TFileCacheRead+;
 #pragma link C++ class TFileCacheWrite+;
 #pragma link C++ class TFileHandler+;
@@ -155,7 +154,6 @@
 #pragma link C++ class TVirtualFitter+;
 #pragma link C++ class TVirtualPad-;
 // Those are NOT going to be saved ... so no need for a +
-#pragma link C++ class TVirtualIO;
 #pragma link C++ class TVirtualViewer3D;
 #pragma link C++ class TBuffer3D;
 #pragma link C++ class TPadView3D;
