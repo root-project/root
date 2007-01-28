@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.201 2007/01/23 09:13:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.202 2007/01/25 11:47:37 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1358,6 +1358,56 @@ void TFile::ReadFree()
 }
 
 //______________________________________________________________________________
+TProcessID  *TFile::ReadProcessID(UShort_t pidf)
+{
+   //The TProcessID with number pidf is read from this file.
+   //If the object is not already entered in the gROOT list, it is added.
+
+   TProcessID *pid = 0;
+   TObjArray *pids = GetListOfProcessIDs();
+   if (pidf < pids->GetSize()) pid = (TProcessID *)pids->UncheckedAt(pidf);
+   if (pid) {
+      pid->CheckInit();
+      return pid;
+   }
+
+   //check if fProcessIDs[uid] is set in file
+   //if not set, read the process uid from file
+   char pidname[32];
+   sprintf(pidname,"ProcessID%d",pidf);
+   TDirectory *dirsav = gDirectory;
+   this->cd();
+   pid = (TProcessID *)Get(pidname);
+   if (dirsav) dirsav->cd();
+   if (gDebug > 0) {
+      printf("ReadProcessID, name=%s, file=%s, pid=%lx\n",pidname,GetName(),(Long_t)pid);
+   }
+   if (!pid) {
+      //file->Error("ReadProcessID","Cannot find %s in file %s",pidname,file->GetName());
+      return pid;
+   }
+      //check that a similar pid is not already registered in fgPIDs
+   TObjArray *pidslist = TProcessID::GetPIDs();
+   TIter next(pidslist);
+   TProcessID *p;
+   while ((p = (TProcessID*)next())) {
+      if (!strcmp(p->GetTitle(),pid->GetTitle())) {
+         delete pid;
+         pids->AddAtAndExpand(p,pidf);
+         p->IncrementCount();
+         return p;
+      }
+   }
+   pids->AddAtAndExpand(pid,pidf);
+   pid->IncrementCount();
+   pidslist->Add(pid);
+   Int_t ind = pidslist->IndexOf(pid);
+   pid->SetUniqueID((UInt_t)ind);
+   return pid;
+}
+
+
+//______________________________________________________________________________
 Int_t TFile::Recover()
 {
    // Attempt to recover file if not correctly closed.
@@ -2164,6 +2214,38 @@ void TFile::ShowStreamerInfo()
    list->ls();
    delete list;
 }
+
+
+//______________________________________________________________________________
+UShort_t TFile::WriteProcessID(TProcessID *pidd)
+{
+   // Check if the ProcessID pidd is already in the file.
+   // if not, add it and return the index  number in the local file list
+
+   TProcessID *pid = pidd;
+   if (!pid) pid = TProcessID::GetPID();
+   TObjArray *pids = GetListOfProcessIDs();
+   Int_t npids = GetNProcessIDs();
+   for (Int_t i=0;i<npids;i++) {
+      if (pids->At(i) == pid) return (UShort_t)i;
+   }
+
+   TDirectory *dirsav = gDirectory;
+   this->cd();
+   this->SetBit(TFile::kHasReferences);
+   pids->AddAtAndExpand(pid,npids);
+   pid->IncrementCount();
+   char name[32];
+   sprintf(name,"ProcessID%d",npids);
+   pid->Write(name);
+   this->IncrementProcessIDs();
+   if (gDebug > 0) {
+      printf("WriteProcessID, name=%s, file=%s\n",name,GetName());
+   }
+   if (dirsav) dirsav->cd();
+   return (UShort_t)npids;
+}
+
 
 //______________________________________________________________________________
 void TFile::WriteStreamerInfo()

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.59 2007/01/23 08:50:31 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.60 2007/01/25 11:47:37 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -34,6 +34,7 @@ class TArchiveFile;
 class TFileOpenHandle;
 class TFileCacheRead;
 class TFileCacheWrite;
+class TProcessID;
 
 class TFile : public TDirectoryFile {
   friend class TDirectoryFile;
@@ -188,6 +189,7 @@ public:
    virtual Bool_t      ReadBuffer(char *buf, Int_t len);
    virtual Bool_t      ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
    virtual void        ReadFree();
+   virtual TProcessID *ReadProcessID(UShort_t pidf);
    virtual void        ReadStreamerInfo();
    virtual Int_t       Recover();
    virtual Int_t       ReOpen(Option_t *mode);
@@ -207,6 +209,7 @@ public:
    virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0) const;
    virtual void        WriteFree();
    virtual void        WriteHeader();
+   virtual UShort_t    WriteProcessID(TProcessID *pid);
    virtual void        WriteStreamerInfo();
 
    static TFileOpenHandle
