@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.54 2006/10/05 18:19:09 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.55 2006/12/09 23:06:32 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -109,6 +109,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fAcceptedPhysicals(0),
    fRejectedPhysicals(0),
    fIsPrinting(kFALSE),
+   fUseSpecular(kTRUE),
    fGLWindow(0),
    fGLDevice(-1),
    fPadEditor(0),
@@ -158,6 +159,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fAcceptedPhysicals(0),
    fRejectedPhysicals(0),
    fIsPrinting(kFALSE),
+   fUseSpecular(kTRUE),
    fGLWindow(0),
    fGLDevice(fPad->GetGLDevice()),
    fPadEditor(0),
@@ -959,6 +961,13 @@ void TGLViewer::SetupLights()
       Float_t sideLightColor[] = {0.7, 0.7, 0.7, 1.0};
       glLightfv(GL_LIGHT0, GL_POSITION, pos0);
       glLightfv(GL_LIGHT0, GL_DIFFUSE, frontLightColor);
+      if (fUseSpecular) {
+         const Float_t whiteSpec[] = {1.f, 1.f, 1.f, 1.f};
+         glLightfv(GL_LIGHT0, GL_SPECULAR, whiteSpec);
+      } else {
+         const Float_t nullSpec[] = {0.f, 0.f, 0.f, 1.f};
+         glLightfv(GL_LIGHT0, GL_SPECULAR, nullSpec);
+      }
       glLightfv(GL_LIGHT1, GL_POSITION, pos1);
       glLightfv(GL_LIGHT1, GL_DIFFUSE, sideLightColor);
       glLightfv(GL_LIGHT2, GL_POSITION, pos2);
@@ -1464,14 +1473,16 @@ void TGLViewer::ToggleLight(ELight light)
 
    // N.B. We can't directly call glEnable here as may not be in correct gl context
    // adjust mask and set when drawing
-   if (light >= kLightMask) {
+   if (light == kLightSpecular) {
+      fUseSpecular = !fUseSpecular;
+   } else if (light >= kLightMask) {
       Error("TGLViewer::ToggleLight", "invalid light type");
       return;
+   } else {
+      fLightState ^= light;
+      if (fGLDevice != -1)
+         gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
    }
-
-   fLightState ^= light;
-   if (fGLDevice != -1)
-      gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
 
    RequestDraw();
 }

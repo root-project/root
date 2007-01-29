@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.33 2006/10/11 10:26:23 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.h,v 1.34 2006/12/09 23:06:32 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -91,7 +91,8 @@ public:
                       kLightBottom = 0x00000004,
                       kLightLeft   = 0x00000008,
                       kLightRight  = 0x00000010, 
-                      kLightMask   = 0x0000001f }; 
+                      kLightMask   = 0x0000001f,
+                      kLightSpecular = 0x00000100}; 
 
    enum EAxesType  { kAxesNone, kAxesEdge, kAxesOrigin };
 
@@ -163,6 +164,8 @@ protected:
    UInt_t         fAcceptedPhysicals;     //! number of physicals accepted in last rebuild
    UInt_t         fRejectedPhysicals;     //! number of physicals rejected in last rebuild
    Bool_t         fIsPrinting;
+
+   Bool_t         fUseSpecular;
 
    ///////////////////////////////////////////////////////////////////////
    // Methods
