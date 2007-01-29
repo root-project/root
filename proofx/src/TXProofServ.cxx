@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.25 2007/01/18 17:09:50 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.26 2007/01/29 10:06:50 brun Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -307,7 +307,7 @@ Int_t TXProofServ::CreateServer()
 
    if (!fLogFile) {
       RedirectOutput();
-      // If for some reason we failed setting a redirection fole for the logs
+      // If for some reason we failed setting a redirection file for the logs
       // we cannot continue
       if (!fLogFile || (fLogFileDes = fileno(fLogFile)) < 0) {
          Terminate(0);
@@ -449,6 +449,9 @@ void TXProofServ::HandleUrgentData()
 {
    // Handle high priority data sent by the master or client.
 
+   // Real-time notification of messages
+   TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
+
    // Get interrupt
    Int_t iLev = ((TXSocket *)fSocket)->GetInterrupt();
    if (iLev < 0) {
@@ -536,6 +539,9 @@ void TXProofServ::HandleUrgentData()
 void TXProofServ::HandleSigPipe()
 {
    // Called when the client is not alive anymore; terminate the session.
+
+   // Real-time notification of messages
+   TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
 
    // If master server, propagate interrupt to slaves
    // (shutdown interrupt send internally).

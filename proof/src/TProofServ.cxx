@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.157 2007/01/22 11:39:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.158 2007/01/22 12:21:38 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -71,7 +71,6 @@
 #include "TSelector.h"
 #include "TSocket.h"
 #include "TStopwatch.h"
-#include "TSysEvtHandler.h"
 #include "TSystem.h"
 #include "TTimeStamp.h"
 #include "TUrl.h"
@@ -85,9 +84,8 @@
 #include "TTimer.h"
 #include "TMutex.h"
 
-
 // global proofserv handle
-TProofServ *gProofServ;
+TProofServ *gProofServ = 0;
 
 // debug hook
 static volatile Int_t gProofServDebug = 1;
@@ -155,6 +153,150 @@ Bool_t TProofServInputHandler::Notify()
 
    fServ->HandleSocketInput();
    return kTRUE;
+}
+
+TString TProofServLogHandler::fgPfx = ""; // Default prefix to be prepended to messages
+//______________________________________________________________________________
+TProofServLogHandler::TProofServLogHandler(const char *cmd,
+                                             TSocket *s, const char *pfx)
+                     : TFileHandler(-1, 1), fSocket(s), fPfx(pfx)
+{
+   // Execute 'cmd' in a pipe and handle output messages from the related file
+
+   ResetBit(kFileIsPipe);
+   fFile = 0;
+   if (s && cmd) {
+      fFile = gSystem->OpenPipe(cmd, "r");
+      if (fFile) {
+         SetFd(fileno(fFile));
+         // Notify what already in the file
+         Notify();
+         // Used in the destructor
+         SetBit(kFileIsPipe);
+      } else {
+         fSocket = 0;
+         Error("TProofServLogHandler", "executing command in pipe");
+      }
+   } else {
+      Error("TProofServLogHandler",
+            "undefined command (%p) or socket (%p)", (int *)cmd, s);
+   }
+}
+//______________________________________________________________________________
+TProofServLogHandler::TProofServLogHandler(FILE *f, TSocket *s, const char *pfx)
+                     : TFileHandler(-1, 1), fSocket(s), fPfx(pfx)
+{
+   // Handle available message from the open file 'f'
+
+   ResetBit(kFileIsPipe);
+   fFile = 0;
+   if (s && f) {
+      fFile = f;
+      SetFd(fileno(fFile));
+      // Notify what already in the file
+      Notify();
+   } else {
+      Error("TProofServLogHandler", "undefined file (%p) or socket (%p)", f, s);
+   }
+}
+//______________________________________________________________________________
+TProofServLogHandler::~TProofServLogHandler()
+{
+   // Handle available message in the open file
+
+   if (TestBit(kFileIsPipe) && fFile)
+      gSystem->ClosePipe(fFile);
+   fFile = 0;
+   fSocket = 0;
+   ResetBit(kFileIsPipe);
+}
+//______________________________________________________________________________
+Bool_t TProofServLogHandler::Notify()
+{
+   // Handle available message in the open file
+
+   if (IsValid()) {
+      TMessage m(kPROOF_MESSAGE);
+      // Read buffer
+      char line[4096];
+      char *plf = 0;
+      while (fgets(line, sizeof(line), fFile)) {
+         if ((plf = strchr(line, '\n')))
+            *plf = 0;
+         // Send the message one level up
+         m.Reset(kPROOF_MESSAGE);
+         if (fPfx.Length() > 0) {
+            // Prepend prefix specific to this instance
+            m << TString(Form("%s: %s", fPfx.Data(), line));
+         } else if (fgPfx.Length() > 0) {
+            // Prepend default prefix
+            m << TString(Form("%s: %s", fgPfx.Data(), line));
+         } else {
+            // Nothing to prepend
+            m << TString(line);
+         }
+         fSocket->Send(m);
+      }
+   }
+   return kTRUE;
+}
+//______________________________________________________________________________
+void TProofServLogHandler::SetDefaultPrefix(const char *pfx)
+{
+   // Static method to set the default prefix
+
+   fgPfx = pfx;
+}
+
+//______________________________________________________________________________
+TProofServLogHandlerGuard::TProofServLogHandlerGuard(const char *cmd, TSocket *s,
+                                                     const char *pfx, Bool_t on)
+{
+   // Init a guard for executing a command in a pipe
+
+   fExecHandler = 0;
+   if (cmd && on) {
+      fExecHandler = new TProofServLogHandler(cmd, s, pfx);
+      if (fExecHandler->IsValid()) {
+         gSystem->AddFileHandler(fExecHandler);
+      } else {
+         Error("TProofServLogHandlerGuard","invalid handler");
+      }
+   } else {
+      if (on)
+         Error("TProofServLogHandlerGuard","undefined command");
+   }
+}
+
+//______________________________________________________________________________
+TProofServLogHandlerGuard::TProofServLogHandlerGuard(FILE *f, TSocket *s,
+                                                     const char *pfx, Bool_t on)
+{
+   // Init a guard for executing a command in a pipe
+
+   fExecHandler = 0;
+   if (f && on) {
+      fExecHandler = new TProofServLogHandler(f, s, pfx);
+      if (fExecHandler->IsValid()) {
+         gSystem->AddFileHandler(fExecHandler);
+      } else {
+         Error("TProofServLogHandlerGuard","invalid handler");
+      }
+   } else {
+      if (on)
+         Error("TProofServLogHandlerGuard","undefined file");
+   }
+}
+
+//______________________________________________________________________________
+TProofServLogHandlerGuard::~TProofServLogHandlerGuard()
+{
+   // Close a guard for executing a command in a pipe
+
+   if (fExecHandler && fExecHandler->IsValid()) {
+      gSystem->RemoveFileHandler(fExecHandler);
+      SafeDelete(fExecHandler);
+   }
 }
 
 ClassImp(TProofServ)
@@ -233,6 +375,8 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fPreviousQueries = 0;
    fIdle            = kTRUE;
 
+   fRealTimeLog     = kTRUE;
+
    fShutdownWhenIdle = kTRUE;
    fShutdownTimer   = 0;
    fShutdownTimerMtx = 0;
@@ -245,10 +389,16 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
 
    gProofDebugMask = (TProofDebug::EProofDebugMask) gEnv->GetValue("Proof.DebugMask",~0);
    if (gProofDebugLevel > 0)
-      Info("TProofServ", "DebugLevel %d Mask %u", gProofDebugLevel, gProofDebugMask);
+      Info("TProofServ", "DebugLevel %d Mask 0x%x", gProofDebugLevel, gProofDebugMask);
 
    // Parse options
    GetOptions(argc, argv);
+
+   // Default prefix in the form '<role>-<ordinal>'
+   TString pfx = (IsMaster() ? "master-" : "worker-");
+   if (fOrdinal != "-1")
+      pfx += fOrdinal;
+   TProofServLogHandler::SetDefaultPrefix(pfx);
 
    // Set global to this instance
    gProofServ = this;
@@ -298,6 +448,14 @@ Int_t TProofServ::CreateServer()
       Terminate(0);
       return -1;
    }
+
+   // Set the default prefix in the form '<role>-<ordinal>' (it was already done
+   // in the constructor, but for standard PROOF the ordinal number is only set in
+   // Setup(), so we need to do it again here)
+   TString pfx = (IsMaster() ? "master-" : "worker-");
+   pfx += GetOrdinal();
+   TProofServLogHandler::SetDefaultPrefix(pfx);
+
    if (!fLogFile) {
       RedirectOutput();
       // If for some reason we failed setting a redirection fole for the logs
@@ -692,7 +850,8 @@ void TProofServ::HandleSocketInput()
          if (IsMaster() && IsParallel()) {
             fProof->SendCommand(str);
          } else {
-            PDB(kGlobal, 1) Info("HandleSocketInput:kMESS_CINT", "processing: %s...", str);
+            PDB(kGlobal, 1)
+               Info("HandleSocketInput:kMESS_CINT", "processing: %s...", str);
             ProcessLine(str);
          }
          SendLogFile();
@@ -766,9 +925,11 @@ void TProofServ::HandleSocketInput()
          break;
 
       case kPROOF_PROCESS:
+         {  TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
 
-         HandleProcess(mess);
-
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_PROCESS","enter");
+            HandleProcess(mess);
+         }
          // Notify
          SendLogFile();
          break;
@@ -918,7 +1079,9 @@ void TProofServ::HandleSocketInput()
          break;
 
       case kPROOF_CACHE:
-         {
+         {  TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_CACHE","enter");
+
             Int_t status = HandleCache(mess);
 
             // Notify
@@ -1090,6 +1253,20 @@ void TProofServ::HandleSocketInput()
          SendLogFile();
          break;
 
+      case kPROOF_REALTIMELOG:
+         {
+            Bool_t on;
+            (*mess) >> on;
+            PDB(kGlobal, 1)
+               Info("HandleSocketInput:kPROOF_REALTIMELOG",
+                    "setting real-time logging %s", (on ? "ON" : "OFF"));
+            fRealTimeLog = on;
+            // Forward the request to lower levels
+            if (IsMaster())
+               fProof->SetRealTimeLog(on);
+         }
+         break;
+
       default:
          Error("HandleSocketInput", "unknown command %d", what);
          break;
@@ -1135,10 +1312,13 @@ void TProofServ::HandleSocketInputDuringProcess()
 
       case kPROOF_PROCESS:
 
-         HandleProcess(mess);
+         {  TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
 
-         // Notify
-         SendLogFile();
+            HandleProcess(mess);
+
+            // Notify
+            SendLogFile();
+         }
          break;
 
       case kPROOF_GETSTATS:
@@ -1207,7 +1387,7 @@ void TProofServ::HandleSocketInputDuringProcess()
          break;
 
       case kPROOF_CACHE:
-         {
+         {  TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
             Int_t status = HandleCache(mess);
             // Notify
             SendLogFile(status);
@@ -1267,6 +1447,9 @@ void TProofServ::HandleUrgentData()
 
    const Int_t kBufSize = 1024;
    char waste[kBufSize];
+
+   // Real-time notification of messages
+   TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
 
    PDB(kGlobal, 5)
       Info("HandleUrgentData", "handling oob...");
@@ -1393,6 +1576,9 @@ void TProofServ::HandleSigPipe()
 {
    // Called when the client is not alive anymore (i.e. when kKeepAlive
    // has failed).
+
+   // Real-time notification of messages
+   TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
 
    if (IsMaster()) {
       // Check if we are here because client is closed. Try to ping client,
@@ -2942,6 +3128,7 @@ void TProofServ::HandleProcess(TMessage *mess)
          p->AddInput(new TNamed("PROOF_QueryTag",Form("%s:%s",pq->GetTitle(),pq->GetName())));
 
          // Process
+         PDB(kGlobal, 1) Info("HandleProcess", "calling TProofPlayerRemote::Process()");
          p->Process(dset, filename, opt, nentries, first);
 
          // Return number of events processed
@@ -2972,7 +3159,7 @@ void TProofServ::HandleProcess(TMessage *mess)
                // Objects in the output list
                Int_t olsz = p->GetOutputList()->GetSize();
                // Message for the client
-               m << TString(Form("Master-%s: sending output: %d objs",
+               m << TString(Form("master-%s: sending output: %d objs",
                                    fOrdinal.Data(), olsz));
                m << (Bool_t) kFALSE;
                fSocket->Send(m);
@@ -2993,7 +3180,7 @@ void TProofServ::HandleProcess(TMessage *mess)
                   mbuf.WriteObject(o);
                   totsz += mbuf.Length();
                   m.Reset();
-                  m << TString(Form("Master-%s: sending obj %d/%d (%d bytes)",
+                  m << TString(Form("master-%s: sending obj %d/%d (%d bytes)",
                                     fOrdinal.Data(), ns, olsz, mbuf.Length()));
                   m << (Bool_t) kFALSE;
                   fSocket->Send(m);
@@ -3001,7 +3188,7 @@ void TProofServ::HandleProcess(TMessage *mess)
                }
                // Total size
                m.Reset();
-               m << TString(Form("Master-%s: grand total: sent %d objects, size: %d bytes",
+               m << TString(Form("master-%s: grand total: sent %d objects, size: %d bytes",
                                       fOrdinal.Data(), olsz, totsz));
                m << (Bool_t) kTRUE;
                fSocket->Send(m);
@@ -3014,7 +3201,7 @@ void TProofServ::HandleProcess(TMessage *mess)
                Int_t blen = mbuf.Length();
                Int_t olsz = p->GetOutputList()->GetSize();
                // Message for the client
-               TString cmsg = Form("Master-%s: sending output: %d objs, %d bytes",
+               TString cmsg = Form("master-%s: sending output: %d objs, %d bytes",
                                    fOrdinal.Data(), olsz, blen);
                TMessage m(kPROOF_MESSAGE);
                m << cmsg;
@@ -3086,6 +3273,7 @@ void TProofServ::HandleProcess(TMessage *mess)
       }
 
       // Process
+      PDB(kGlobal, 1) Info("HandleProcess", "calling TProofPlayer::Process()");
       p->Process(dset, filename, opt, nentries, first);
 
       // Return number of events processed
@@ -3293,7 +3481,7 @@ void TProofServ::HandleRetrieve(TMessage *mess)
                   qsz /= 1000.;
                   ilb++;
                }
-               m << TString(Form("Master-%s: sending result of %s:%s (%'.1f %s)",
+               m << TString(Form("master-%s: sending result of %s:%s (%'.1f %s)",
                                   fOrdinal.Data(), pqr->GetTitle(), pqr->GetName(),
                                   qsz, clb[ilb]));
                m << (Bool_t) kTRUE;
@@ -3619,7 +3807,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
 
    // Notification message
    TMessage notm(kPROOF_MESSAGE);
-   TString noth = Form("worker-%s-%s", fOrdinal.Data(), fSessionTag.Data());
+   TString noth = Form("worker-%s", fOrdinal.Data());
    if (IsMaster())
       noth.ReplaceAll("worker", "master");
    Bool_t notln = kTRUE;
@@ -3706,16 +3894,16 @@ Int_t TProofServ::HandleCache(TMessage *mess)
             ocwd = gSystem->WorkingDirectory();
             gSystem->ChangeDirectory(pdir);
 
+            // forward build command to slaves, but don't wait for results
+            if (IsMaster())
+               fProof->BuildPackage(package, TProof::kBuildOnSlavesNoWait);
+
             // check for BUILD.sh and execute
             if (!gSystem->AccessPathName("PROOF-INF/BUILD.sh")) {
                // Notify the upper level
                notm.Reset();
                notm << TString(Form("%s: building %s ...", noth.Data(), package.Data())) << notln;
                fSocket->Send(notm);
-
-               // forward build command to slaves, but don't wait for results
-               if (IsMaster())
-                  fProof->BuildPackage(package, TProof::kBuildOnSlavesNoWait);
 
                // read version from file proofvers.txt, and if current version is
                // not the same do a "BUILD.sh clean"
@@ -3730,9 +3918,13 @@ Int_t TProofServ::HandleCache(TMessage *mess)
                   }
                }
 
-               // build the package
-               if (gSystem->Exec("PROOF-INF/BUILD.sh"))
-                  status = -1;
+               // To build the package we execute PROOF-INF/BUILD.sh via a pipe
+               // so that we can send back the log in (almost) real-time to the
+               // (impatient) client. Note that this operation will block, so
+               // the messages from builds on the workers will reach the client
+               // shortly after the master ones.
+               { TProofServLogHandlerGuard hg("PROOF-INF/BUILD.sh", fSocket);
+               }
 
                // write version file
                f = fopen("PROOF-INF/proofvers.txt", "w");

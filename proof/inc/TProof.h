@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.102 2006/12/14 00:03:45 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.103 2007/01/22 11:39:56 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -432,6 +432,7 @@ private:
    Int_t    GoParallel(Int_t nodes, Bool_t accept = kFALSE, Bool_t random = kFALSE);
    Int_t    SetParallelSilent(Int_t nodes, Bool_t random = kFALSE);
    void     RecvLogFile(TSocket *s, Int_t size);
+   void     NotifyLogMsg(const char *msg, const char *sfx = "\n");
    Int_t    BuildPackage(const char *package, EBuildPackageOpt opt = kBuildAll);
    Int_t    BuildPackageOnClient(const TString &package);
    Int_t    LoadPackage(const char *package, Bool_t notOnClient = kFALSE);
@@ -608,10 +609,10 @@ public:
    Int_t       GetSessionID() const { return fSessionID; }
    TList      *GetSlaveInfo();
 
-   EQueryMode  GetQueryMode() const;
-   EQueryMode  GetQueryMode(Option_t *mode) const;
+   EQueryMode  GetQueryMode(Option_t *mode = 0) const;
    void        SetQueryMode(EQueryMode mode);
-   void        SetQueryType(EQueryMode mode) { fQueryMode = mode; }
+
+   void        SetRealTimeLog(Bool_t on = kTRUE);
 
    Long64_t    GetBytesRead() const { return fBytesRead; }
    Float_t     GetRealTime() const { return fRealTime; }

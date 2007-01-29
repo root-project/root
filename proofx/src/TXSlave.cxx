@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.17 2007/01/18 17:10:22 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.18 2007/01/20 19:29:34 brun Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -364,8 +364,30 @@ void TXSlave::Interrupt(Int_t type)
    if (!IsValid()) return;
 
    if (type == TProof::kLocalInterrupt) {
-      // Equivalent to an error condition on the socket
-      HandleError();
+
+      // Deactivate and flush the local socket (we are not - yet - closing
+      // the session, so we do less things that in case of an error ...)
+      if (fProof) {
+
+         // Attach to the monitor instance, if any
+         TMonitor *mon = fProof->fCurrentMonitor;
+         if (mon && fSocket && mon->GetListOfActives()->FindObject(fSocket)) {
+            // Synchronous collection in TProof
+            if (gDebug > 2)
+               Info("Interrupt", "%p: deactivating from monitor %p", this, mon);
+            mon->DeActivate(fSocket);
+         }
+      } else {
+         Warning("Interrupt", "%p: reference to PROOF missing", this);
+      }
+
+      // Post semaphore to wake up anybody waiting; send as many posts as needed
+      if (fSocket) {
+         R__LOCKGUARD(((TXSocket *)fSocket)->fAMtx);
+         TSemaphore *sem = &(((TXSocket *)fSocket)->fASem);
+         while (sem->TryWait() != 1)
+            sem->Post();
+      }
       return;
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDebug.cxx,v 1.1 2002/07/17 12:29:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDebug.cxx,v 1.2 2002/07/17 15:14:37 rdm Exp $
 // Author: Maarten Ballintijn 19/6/2002
 
 /*************************************************************************
@@ -20,5 +20,5 @@
 
 #include "TProofDebug.h"
 
-TProofDebug::EProofDebugMask gProofDebugMask = TProofDebug::kNone;
+TProofDebug::EProofDebugMask gProofDebugMask = TProofDebug::kAll;
 Int_t gProofDebugLevel = 0;

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSessionViewer.cxx,v 1.3 2006/11/28 12:10:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSessionViewer.cxx,v 1.4 2006/12/03 23:34:03 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -552,7 +552,7 @@ void TSessionServerFrame::OnBtnConnectClicked()
       // set log level
       fViewer->GetActDesc()->fProof->SetLogLevel(fViewer->GetActDesc()->fLogLevel);
       // set query type (synch / asynch)
-      fViewer->GetActDesc()->fProof->SetQueryType(fViewer->GetActDesc()->fSync ?
+      fViewer->GetActDesc()->fProof->SetQueryMode(fViewer->GetActDesc()->fSync ?
                              TProof::kSync : TProof::kAsync);
       // set connected flag
       fViewer->GetActDesc()->fConnected = kTRUE;

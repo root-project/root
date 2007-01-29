@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.179 2007/01/22 11:39:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.180 2007/01/24 15:15:40 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -273,6 +273,9 @@ TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
 
    // Default server type
    fServType = TProofMgr::kXProofd;
+
+   // Default query mode
+   fQueryMode = kSync;
 
    if (!conffile || strlen(conffile) == 0)
       conffile = kPROOF_ConfFile;
@@ -854,7 +857,6 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
 
                // Set interrupt PROOF handler from now on
                fIntHandler = new TProofInterruptHandler(this);
-               fIntHandler->Add();
 
                Collect(slave);
                Int_t slStatus = slave->GetStatus();
@@ -914,8 +916,6 @@ Bool_t TProof::StartSlaves(Bool_t parallel, Bool_t attach)
             fAllMonitor->Add(slave->GetSocket());
 
             fIntHandler = new TProofInterruptHandler(this);
-            fIntHandler->Add();
-
          }
 
       } else {
@@ -937,7 +937,8 @@ void TProof::Close(Option_t *opt)
    // shutdown the remote counterpart.
 
    if (fSlaves) {
-      if (fIntHandler) fIntHandler->Remove();
+      if (fIntHandler)
+         fIntHandler->Remove();
 
       TIter nxs(fSlaves);
       TSlave *sl = 0;
@@ -1700,6 +1701,11 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout)
    Long_t nto = timeout;
    if (gDebug > 2)
       Info("Collect","active: %d", mon->GetActive());
+
+   // On clients, handle Ctrl-C during collection
+   if (fIntHandler)
+      fIntHandler->Add();
+
    while (mon->GetActive() && (nto < 0 || nto > 0)) {
 
       // Wait for a ready socket
@@ -1732,9 +1738,13 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout)
       }
    }
 
-   // If timed-out, decativate the remaining sockets
+   // If timed-out, deactivate the remaining sockets
    if (nto == 0)
       mon->DeActivateAll();
+
+   // Deactivate Ctrl-C special handler
+   if (fIntHandler)
+      fIntHandler->Remove();
 
    // make sure group view is up to date
    SendGroupView();
@@ -1792,7 +1802,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
    PDB(kGlobal,3) {
       sl = FindSlave(s);
-      Info("CollectInputFrom","got %d from %s", what, sl->GetOrdinal());
+      Info("CollectInputFrom","got %d from %s", what, (sl ? sl->GetOrdinal() : "undef"));
    }
 
    switch (what) {
@@ -1998,7 +2008,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                if (fPlayer->GetExitStatus() == TProofPlayer::kAborted) {
                   if (fSync)
                      Info("CollectInputFrom",
-                          "the processing was aborted - %lld events processed",
+                          "processing was aborted - %lld events processed",
                           fPlayer->GetEventsProcessed());
 
                   if (GetRemoteProtocol() > 11) {
@@ -2014,7 +2024,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                if (fPlayer->GetExitStatus() == TProofPlayer::kStopped) {
                   if (fSync)
                      Info("CollectInputFrom",
-                          "the processing was stopped - %lld events processed",
+                          "processing was stopped - %lld events processed",
                           fPlayer->GetEventsProcessed());
 
                   if (GetRemoteProtocol() > 11) {
@@ -2345,12 +2355,8 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
             if (!IsMaster()) {
 
-               // Notify locally ...
-               if (lfeed) {
-                  fprintf(stderr, "%s\n", msg.Data());
-               } else {
-                  fprintf(stderr, "%s\r", msg.Data());
-               }
+               // Notify locally taking care of redirection, windows logs, ...
+               NotifyLogMsg(msg, (lfeed ? "\n" : "\r"));
 
             } else {
 
@@ -2878,18 +2884,6 @@ void TProof::SetQueryMode(EQueryMode mode)
            "Sync" : "Async");
 }
 
-//_____________________________________________________________________________
-TProof::EQueryMode TProof::GetQueryMode() const
-{
-   // Get query running mode.
-
-   if (gDebug > 0)
-      Info("GetQueryMode","query mode is set to: %s", fQueryMode == kSync ?
-           "Sync" : "Async");
-
-   return fQueryMode;
-}
-
 //______________________________________________________________________________
 TProof::EQueryMode TProof::GetQueryMode(Option_t *mode) const
 {
@@ -2897,7 +2891,7 @@ TProof::EQueryMode TProof::GetQueryMode(Option_t *mode) const
 
    EQueryMode qmode = fQueryMode;
 
-   if (mode) {
+   if (mode && (strlen(mode) > 0)) {
       TString m(mode);
       m.ToUpper();
       if (m.Contains("ASYN")) {
@@ -2906,6 +2900,11 @@ TProof::EQueryMode TProof::GetQueryMode(Option_t *mode) const
          qmode = kSync;
       }
    }
+
+   if (gDebug > 0)
+      Info("GetQueryMode","query mode is set to: %s", qmode == kSync ?
+           "Sync" : "Async");
+
    return qmode;
 }
 
@@ -3001,7 +3000,7 @@ void TProof::RecvLogFile(TSocket *s, Int_t size)
                w = write(fdout, p, r);
 
                if (w < 0) {
-                  SysError("RecvLogFile", "error writing to stdout");
+                  SysError("RecvLogFile", "error writing to unit: %d", fdout);
                   break;
                }
                r -= w;
@@ -3016,6 +3015,62 @@ void TProof::RecvLogFile(TSocket *s, Int_t size)
          buf[rec] = 0;
          EmitVA("LogMessage(const char*,Bool_t)", 2, buf, kFALSE);
       }
+   }
+
+   // If idle restore logs to main session window
+   if (fRedirLog && IsIdle())
+      fRedirLog = kFALSE;
+}
+
+//______________________________________________________________________________
+void TProof::NotifyLogMsg(const char *msg, const char *sfx)
+{
+   // Notify locally 'msg' to the appropriate units (file, stdout, window)
+   // If defined, 'sfx' is added after 'msg' (typically a line-feed);
+
+   // Must have somenthing to notify
+   Int_t len = 0;
+   if (!msg || (len = strlen(msg)) <= 0)
+      return;
+
+   // Get suffix length if any
+   Int_t lsfx = (sfx) ? strlen(sfx) : 0;
+
+   // Append messages to active logging unit
+   Int_t fdout = -1;
+   if (!fLogToWindowOnly) {
+      fdout = (fRedirLog) ? fileno(fLogFileW) : fileno(stdout);
+      if (fdout < 0) {
+         Warning("NotifyLogMsg", "file descriptor for outputs undefined (%d):"
+                 " will not notify msgs", fdout);
+         return;
+      }
+      lseek(fdout, (off_t) 0, SEEK_END);
+   }
+
+   if (!fLogToWindowOnly) {
+      // Write to output unit (stdout or a log file)
+      if (len > 0) {
+         char *p = (char *)msg;
+         Int_t r = len;
+         while (r) {
+            Int_t w = write(fdout, p, r);
+            if (w < 0) {
+               SysError("NotifyLogMsg", "error writing to unit: %d", fdout);
+               break;
+            }
+            r -= w;
+            p += w;
+         }
+         // Add a suffix, if requested
+         if (lsfx > 0)
+            write(fdout, sfx, lsfx);
+      }
+   }
+   if (len > 0) {
+      // Publish the message to the separate window (if the latter is missing
+      // the message will just get lost)
+      EmitVA("LogMessage(const char*,Bool_t)", 2, msg, kFALSE);
    }
 
    // If idle restore logs to main session window
@@ -3474,6 +3529,24 @@ void TProof::SetLogLevel(Int_t level, UInt_t mask)
    gProofDebugMask  = (TProofDebug::EProofDebugMask) mask;
    sprintf(str, "%d %u", level, mask);
    Broadcast(str, kPROOF_LOGLEVEL, kAll);
+}
+
+//______________________________________________________________________________
+void TProof::SetRealTimeLog(Bool_t on)
+{
+   // Switch ON/OFF the real-time logging facility. When this option is
+   // ON, log messages from processing are sent back as they come, instead of
+   // being sent back at the end in one go. This may help debugging or monitoring
+   // in some cases, but, depending on the amount of log, it may have significant
+   // consequencies on the load over the network, so it must be used with care.
+
+   if (IsValid()) {
+      TMessage mess(kPROOF_REALTIMELOG);
+      mess << on;
+      Broadcast(mess);
+   } else {
+      Warning("SetRealTimeLog","session is invalid - do nothing");
+   }
 }
 
 //______________________________________________________________________________
