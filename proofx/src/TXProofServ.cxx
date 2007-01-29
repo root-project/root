@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.24 2007/01/17 21:24:26 brun Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.25 2007/01/18 17:09:50 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 #include "TProofPlayer.h"
 #include "TProofQueryResult.h"
 #include "TRegexp.h"
+#include "TClass.h"
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TPluginManager.h"

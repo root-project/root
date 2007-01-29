@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:  $:$Id: TQCanvasMenu.cxx,v 1.1 2006/04/11 16:33:46 rdm Exp $
+// @(#)root/qtgsi:$Name:  $:$Id: TQCanvasMenu.cxx,v 1.2 2006/04/12 10:07:21 brun Exp $
 // Author: Denis Bertini, M. Al-Turany  01/11/2000
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 #include "qpopupmenu.h"
 
 #include "TQCanvasMenu.h"
+#include "TClass.h"
 #include "TROOT.h"
 #include "TMethod.h"
 #include "TMethodCall.h"

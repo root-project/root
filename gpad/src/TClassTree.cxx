@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.16 2007/01/25 11:48:08 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.17 2007/01/28 18:30:57 brun Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TROOT.h"
 #include "TClassTree.h"
 #include "TClassTable.h"
+#include "TClass.h"
 #include "TBaseClass.h"
 #include "TDataMember.h"
 #include "TDataType.h"

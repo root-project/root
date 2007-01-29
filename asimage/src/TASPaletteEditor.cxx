@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.12 2007/01/15 16:10:09 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.13 2007/01/23 09:41:46 brun Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TGComboBox.h"
 #include "TGFileDialog.h"
 #include "TLine.h"
+#include "TClass.h"
 #include "TMath.h"
 
 #ifdef WIN32

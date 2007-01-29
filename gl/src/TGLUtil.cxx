@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.35 2007/01/15 16:10:09 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.36 2007/01/26 14:06:54 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 #include "TError.h"
 #include "TH1.h"
 #include "TMath.h"
+#include "TClass.h"
 
 #include "TGLBoundingBox.h"
 #include "TGLPlotPainter.h"

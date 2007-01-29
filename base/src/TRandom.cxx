@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.36 2007/01/26 15:40:38 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.37 2007/01/28 18:29:34 brun Exp $
 // Author: Rene Brun, Lorenzo Moneta   15/12/95
 
 /*************************************************************************
@@ -194,6 +194,7 @@
 #include "TRandom.h"
 #include "TRandom3.h"
 #include "TSystem.h"
+#include "TDirectory.h"
 #include <time.h>
 
 ClassImp(TRandom)

@@ -1,5 +1,6 @@
 #include <cstring>
 
+#include "TClass.h"
 #include "TVirtualPad.h"
 #include "TVirtualGL.h"
 #include "KeySymbols.h"

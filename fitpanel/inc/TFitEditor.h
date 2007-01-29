@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.8 2006/12/05 15:43:26 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.9 2007/01/22 18:19:29 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -39,6 +39,7 @@ enum EObjectType {
 
 
 class TGTab;
+class TVirtualPad;
 class TCanvas;
 class TGLabel;
 class TGComboBox;

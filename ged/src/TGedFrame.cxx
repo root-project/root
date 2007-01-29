@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.17 2006/09/28 11:03:19 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.18 2007/01/17 17:06:46 antcheva Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 #include "TGedEditor.h"
 #include "TGClient.h"
 #include "TG3DLine.h"
+#include "TClass.h"
 #include "TCanvas.h"
 #include "TGLabel.h"
 #include "TGToolTip.h"

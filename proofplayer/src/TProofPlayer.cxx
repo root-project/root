@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.97 2006/11/27 14:14:24 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.98 2006/12/12 11:20:49 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TProof.h"
 #include "TProofSuperMaster.h"
 #include "TSlave.h"
+#include "TClass.h"
 #include "TROOT.h"
 #include "TError.h"
 #include "TException.h"
