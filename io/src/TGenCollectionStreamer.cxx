@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.10 2006/05/19 07:30:04 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.11 2007/01/25 11:53:06 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #include "TClassEdit.h"
 #include "TError.h"
 #include "TROOT.h"
+#include "TStreamerInfo.h"
 #include "Riostream.h"
 
 TGenCollectionStreamer::TGenCollectionStreamer(const TGenCollectionStreamer& copy)
