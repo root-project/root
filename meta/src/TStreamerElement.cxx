@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.89 2007/01/12 16:03:16 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.90 2007/01/15 10:03:12 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -44,7 +44,7 @@ static TStreamerBasicType *InitCounter(const char *countClass, const char *count
    // Helper function to initialize the 'index/counter' value of
    // the Pointer streamerElements.
 
-   TClass *cl = gROOT->GetClass(countClass);
+   TClass *cl = TClass::GetClass(countClass);
 
    if (cl==0) return 0;
 
@@ -230,7 +230,7 @@ TClass *TStreamerElement::GetClassPointer() const
    if (fClassObject!=(TClass*)(-1)) return fClassObject;
    TString className = fTypeName.Strip(TString::kTrailing, '*');
    if (className.Index("const ")==0) className.Remove(0,6);
-   ((TStreamerElement*)this)->fClassObject = gROOT->GetClass(className);
+   ((TStreamerElement*)this)->fClassObject = TClass::GetClass(className);
    return fClassObject;
 }
 
@@ -490,7 +490,7 @@ TStreamerBase::TStreamerBase(const char *name, const char *title, Int_t offset)
    if (strcmp(name,"TObject") == 0) fType = TStreamerInfo::kTObject;
    if (strcmp(name,"TNamed")  == 0) fType = TStreamerInfo::kTNamed;
    fNewType = fType;
-   fBaseClass = gROOT->GetClass(GetName());
+   fBaseClass = TClass::GetClass(GetName());
    fBaseVersion = fBaseClass->GetClassVersion();
    Init();
 }
@@ -506,7 +506,7 @@ TClass *TStreamerBase::GetClassPointer() const
 {
    // Returns a pointer to the TClass of this element.
    if (fBaseClass!=(TClass*)(-1)) return fBaseClass;
-   ((TStreamerBase*)this)->fBaseClass = gROOT->GetClass(GetName());
+   ((TStreamerBase*)this)->fBaseClass = TClass::GetClass(GetName());
    return fBaseClass;
 }
 
@@ -526,12 +526,12 @@ void TStreamerBase::Init(TObject *)
    // Setup the element.
 
    if (fType == TStreamerInfo::kTObject || fType == TStreamerInfo::kTNamed) return;
-   fBaseClass = gROOT->GetClass(GetName());
+   fBaseClass = TClass::GetClass(GetName());
    if (!fBaseClass) return;
    if (!fBaseClass->GetMethodAny("StreamerNVirtual")) return;
    fMethod = new TMethodCall();
    fMethod->InitWithPrototype(fBaseClass,"StreamerNVirtual","TBuffer &");
-   //fBaseClass = gROOT->GetClass(GetName());
+   //fBaseClass = TClass::GetClass(GetName());
 }
 
 //______________________________________________________________________________
@@ -600,7 +600,7 @@ void TStreamerBase::Streamer(TBuffer &R__b)
          R__b >> fBaseVersion;
       } else {
          // could have been: fBaseVersion = GetClassPointer()->GetClassVersion();
-         fBaseClass = gROOT->GetClass(GetName());         
+         fBaseClass = TClass::GetClass(GetName());         
          fBaseVersion = fBaseClass->GetClassVersion();
       }
       R__b.ClassEnd(TStreamerBase::Class());
@@ -1437,7 +1437,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
       if (isPointer) fCtype += TStreamerInfo::kOffsetP;
    } else {
      // this could also be a nested enums ... which should work ... be let's see.
-      TClass *cl = gROOT->GetClass(sopen);
+      TClass *cl = TClass::GetClass(sopen);
       if (cl) {
          if (isPointer) fCtype = TStreamerInfo::kObjectp;
          else           fCtype = TStreamerInfo::kObject;

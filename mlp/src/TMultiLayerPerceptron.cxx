@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.39 2006/11/27 17:10:33 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.40 2007/01/02 14:05:48 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -246,7 +246,7 @@ In addition, the paw version of mlpfit had additional limitations on the number 
 #include "TMultiLayerPerceptron.h"
 #include "TSynapse.h"
 #include "TNeuron.h"
-#include "TROOT.h"
+#include "TClass.h"
 #include "TTree.h"
 #include "TEventList.h"
 #include "TRandom3.h"
@@ -274,7 +274,7 @@ ClassImp(TMultiLayerPerceptron)
 TMultiLayerPerceptron::TMultiLayerPerceptron()
 {
    // Default constructor
-   if(!gROOT->GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
+   if(!TClass::GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
    fNetwork.SetOwner(true);
    fFirstLayer.SetOwner(false);
    fLastLayer.SetOwner(false);
@@ -326,7 +326,7 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    // Both the TTree and the TEventLists  can be defined in the constructor,
    // or later with the suited setter method.
 
-   if(!gROOT->GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
+   if(!TClass::GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
    fNetwork.SetOwner(true);
    fFirstLayer.SetOwner(false);
    fLastLayer.SetOwner(false);
@@ -383,7 +383,7 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
    // Both the TTree and the TEventLists  can be defined in the constructor,
    // or later with the suited setter method.
 
-   if(!gROOT->GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
+   if(!TClass::GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
    fNetwork.SetOwner(true);
    fFirstLayer.SetOwner(false);
    fLastLayer.SetOwner(false);
@@ -439,7 +439,7 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    // Both the TTree and the cut can be defined in the constructor,
    // or later with the suited setter method.
 
-   if(!gROOT->GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
+   if(!TClass::GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
    fNetwork.SetOwner(true);
    fFirstLayer.SetOwner(false);
    fLastLayer.SetOwner(false);
@@ -504,7 +504,7 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
    // Both the TTree and the cut can be defined in the constructor,
    // or later with the suited setter method.
 
-   if(!gROOT->GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
+   if(!TClass::GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
    fNetwork.SetOwner(true);
    fFirstLayer.SetOwner(false);
    fLastLayer.SetOwner(false);

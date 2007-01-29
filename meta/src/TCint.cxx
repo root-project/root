@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.132 2006/12/10 22:21:18 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.133 2006/12/12 21:38:16 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1305,7 +1305,7 @@ namespace {
             }
          }
 
-         TClass *cl = gROOT->GetClass(item, load);
+         TClass *cl = TClass::GetClass(item, load);
          if (cl) cl->ResetClassInfo(tagnum);
       }
    };

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.32 2006/07/09 05:27:55 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.33 2007/01/24 21:28:41 pcanal Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -598,8 +598,8 @@ Int_t TDataMember::GetUnitSize() const
    if (IsEnum()    ) return sizeof(Int_t);
    if (IsBasic()   ) return GetDataType()->Size();
 
-   TClass *cl = gROOT->GetClass(GetTypeName());
-   if (!cl) cl = gROOT->GetClass(GetTrueTypeName());
+   TClass *cl = TClass::GetClass(GetTypeName());
+   if (!cl) cl = TClass::GetClass(GetTrueTypeName());
    if ( cl) return cl->Size();
 
    Warning("GetUnitSize","Can not determine sizeof(%s)",GetTypeName());

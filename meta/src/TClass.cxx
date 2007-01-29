@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.211 2007/01/25 17:47:36 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.212 2007/01/29 15:10:49 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -427,7 +427,7 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
 
    std::string clmName(TClassEdit::ShortType(m.Type()->Name(),
                                              TClassEdit::kDropTrailStar) );
-   TClass * clm = gROOT->GetClass(clmName.c_str());
+   TClass * clm = TClass::GetClass(clmName.c_str());
    R__ASSERT(clm);
    if (!(prop&G__BIT_ISPOINTER)) {
       size = clm->Size();
@@ -562,7 +562,7 @@ TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
    // of a class. It has list to baseclasses, datamembers and methods.
    // Use this ctor to create a standalone TClass object. Most useful
    // to get a TClass interface to an interpreted class. Used by TTabCom.
-   // Normally you would use gROOT->GetClass("class") to get access to a
+   // Normally you would use TClass::GetClass("class") to get access to a
    // TClass object for a certain class.
 
    if (!gROOT)
@@ -1123,7 +1123,7 @@ void TClass::BuildRealData(void* pointer)
       TBuildRealData brd(realDataObject, this);
 
       // Force a call to InheritsFrom. This function indirectly
-      // calls gROOT->GetClass.  It forces the loading of new
+      // calls TClass::GetClass.  It forces the loading of new
       // typedefs in case some of them were not yet loaded.
       InheritsFrom(TObject::Class());
 
@@ -1262,7 +1262,7 @@ Bool_t TClass::CanSplit() const
 
          TClass *valueClass = GetCollectionProxy()->GetValueClass();
          if (valueClass == 0) return kFALSE;
-         if (valueClass==TString::Class() || valueClass==gROOT->GetClass("string"))
+         if (valueClass==TString::Class() || valueClass==TClass::GetClass("string"))
             return kFALSE;
          if (!valueClass->CanSplit()) return kFALSE;
          if (valueClass->GetCollectionProxy() != 0) return kFALSE;
@@ -1280,7 +1280,7 @@ Bool_t TClass::CanSplit() const
    TIter nextb(ncThis->GetListOfBases());
    TBaseClass *base;
    while((base = (TBaseClass*)nextb())) {
-      if (!gROOT->GetClass(base->GetName())) return kFALSE;
+      if (!TClass::GetClass(base->GetName())) return kFALSE;
    }
 
    return kTRUE;
@@ -1765,7 +1765,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load)
             if (cl->IsLoaded()) return cl;
 
             //we may pass here in case of a dummy class created by TStreamerInfo
-            //return gROOT->GetClass(cl->GetName(),kTRUE);
+            //return TClass::GetClass(cl->GetName(),kTRUE);
             return TClass::GetClass(cl->GetName(),kTRUE);
          }
 
@@ -3545,7 +3545,7 @@ TClass *TClass::Load(TBuffer &b)
       b.ReadString(s, maxsize);
    }
 
-   TClass *cl = gROOT->GetClass(s, kTRUE);
+   TClass *cl = TClass::GetClass(s, kTRUE);
    if (!cl)
       ::Error("TClass::Load", "dictionary of class %s not found", s);
 
@@ -3884,7 +3884,7 @@ TStreamerInfo *TClass::SetStreamerInfo(Int_t /*version*/, const char * /*info*/)
             }
 
          } else {
-            if (gROOT->GetClass(token,update)) {
+            if (TClass::GetClass(token,update)) {
                //a class name
                strcat(final,token); strcat(final,";");
             } else {
@@ -3931,7 +3931,7 @@ TStreamerInfo *TClass::SetStreamerInfo(Int_t /*version*/, const char * /*info*/)
       if (!dm->IsPersistent()) continue;
       Long_t property = dm->Property();
       if (property & kIsStatic) continue;
-      TClass *acl = gROOT->GetClass(dm->GetTypeName(),update);
+      TClass *acl = TClass::GetClass(dm->GetTypeName(),update);
       update = kFALSE;
       if (acl) {
          if (acl->GetClassVersion() == 0) continue;

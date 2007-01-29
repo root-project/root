@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.244 2006/11/08 13:16:35 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.245 2006/12/08 17:27:38 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -346,7 +346,7 @@ void TStreamerInfo::Build()
          } else if (dm->IsSTLContainer()) {
             element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dm->GetTrueTypeName(), dmIsPtr);
          } else {
-            TClass* clm = gROOT->GetClass(dmType);
+            TClass* clm = TClass::GetClass(dmType);
             if (!clm) {
                Error("Build", "%s, unknown type: %s %s\n", GetName(), dmFull, dmName);
                continue;
@@ -419,7 +419,7 @@ void TStreamerInfo::BuildCheck()
    // This method is called by TFile::ReadStreamerInfo.
 
    TObjArray* array = 0;
-   fClass = gROOT->GetClass(GetName());
+   fClass = TClass::GetClass(GetName());
    if (!fClass) {
       // FIXME: Is this the proper version number?
       fClass = new TClass(GetName(), fClassVersion, 0, 0, -1, -1);
@@ -940,7 +940,7 @@ void TStreamerInfo::BuildOld()
             }
          }
          if (newType == 0) {
-            newClass = gROOT->GetClass(dm->GetTypeName());
+            newClass = TClass::GetClass(dm->GetTypeName());
          }
       } else {
          // Either the class is not loaded or the data member is gone
@@ -982,7 +982,7 @@ void TStreamerInfo::BuildOld()
          // In that case we migth already have fix up the streamer element.
          // So we need to go back to the original information!
          newClass.Reset();
-         TClass* oldClass = gROOT->GetClass(TClassEdit::ShortType(element->GetTypeName(), TClassEdit::kDropTrailStar).c_str());
+         TClass* oldClass = TClass::GetClass(TClassEdit::ShortType(element->GetTypeName(), TClassEdit::kDropTrailStar).c_str());
          if (oldClass == newClass.GetClass()) {
             // Nothing to do :)
          } else if (ClassWasMovedToNamespace(oldClass, newClass.GetClass())) {
@@ -1134,7 +1134,7 @@ void TStreamerInfo::BuildUserInfo(const char * /*info*/)
                continue;
             }
             // Is type a class name?
-            TClass *clt = gROOT->GetClass(pos);
+            TClass *clt = TClass::GetClass(pos);
             if (clt) {
                //checks that the class matches with the data member declaration
                if (strcmp(pos,dm->GetTypeName()) == 0) {
@@ -1169,7 +1169,7 @@ void TStreamerInfo::BuildUserInfo(const char * /*info*/)
             }
          } else {
             // very likely a base class
-            TClass *base = gROOT->GetClass(pos);
+            TClass *base = TClass::GetClass(pos);
             if (base && fClass->GetBaseClass(pos)) {
                printf("base class:%s\n",pos);
                //get pointer to method baseclass::Streamer
@@ -1430,7 +1430,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
    // the function is called by TFile::MakeProject for each class in the file
 
    if (strstr(GetName(),"<")) return 0;
-   TClass *cl = gROOT->GetClass(GetName());
+   TClass *cl = TClass::GetClass(GetName());
    if (cl) {
       if (cl->GetClassInfo()) return 0; // skip known classes
    }
@@ -1753,7 +1753,7 @@ TStreamerElement* TStreamerInfo::GetStreamerElement(const char* datamember, Int_
       TIter nextb(fClass->GetListOfBases());
       // Iterate on list of base classes.
       while ((base = (TBaseClass*) nextb())) {
-         base_cl = gROOT->GetClass(base->GetName());
+         base_cl = TClass::GetClass(base->GetName());
          base_element = (TStreamerElement*) fElements->FindObject(base->GetName());
          if (!base_cl || !base_element) {
             continue;
@@ -1800,7 +1800,7 @@ TStreamerElement* TStreamerInfo::GetStreamerElementReal(Int_t i, Int_t j) const
    //       elements as one single element in fElems.
    //
    //  example with the class TAttLine
-   //   gROOT->GetClass("TAttLine")->GetStreamerInfo()->ls(); produces;
+   //   TClass::GetClass("TAttLine")->GetStreamerInfo()->ls(); produces;
    //      StreamerInfo for class: TAttLine, version=1
    //       short        fLineColor      offset=  4 type= 2 line color
    //       short        fLineStyle      offset=  6 type= 2 line style
@@ -2711,5 +2711,5 @@ void TStreamerInfo::TCompInfo::Update(const TClass *oldcl, TClass *newcl)
    if (fClass == oldcl)
       fClass = newcl;
    else if (fClass == 0)
-      fClass =gROOT->GetClass(fClassName);
+      fClass =TClass::GetClass(fClassName);
 }
