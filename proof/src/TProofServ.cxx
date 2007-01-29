@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.158 2007/01/22 12:21:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.159 2007/01/29 15:11:10 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -375,7 +375,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fPreviousQueries = 0;
    fIdle            = kTRUE;
 
-   fRealTimeLog     = kTRUE;
+   fRealTimeLog     = kFALSE;
 
    fShutdownWhenIdle = kTRUE;
    fShutdownTimer   = 0;
