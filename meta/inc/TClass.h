@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.72 2007/01/29 10:54:47 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.73 2007/01/29 15:10:49 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -297,8 +297,8 @@ namespace ROOT {
       template <typename T> Bool_t IsPointer(const T** /* dummy */) { return true; };
    #endif
 
-   template <typename T> TClass* GetClass(      T* /* dummy */)        { return GetClass(typeid(T)); }
-   template <typename T> TClass* GetClass(const T* /* dummy */)        { return GetClass(typeid(T)); }
+   template <typename T> TClass* GetClass(      T* /* dummy */)        { return TClass::GetClass(typeid(T)); }
+   template <typename T> TClass* GetClass(const T* /* dummy */)        { return TClass::GetClass(typeid(T)); }
 
    #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
       // This can only be used when the template overload resolution can distringuish between
