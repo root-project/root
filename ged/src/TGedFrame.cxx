@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.18 2007/01/17 17:06:46 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.19 2007/01/29 10:06:50 brun Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -112,7 +112,7 @@ void TGedFrame::MakeTitle(const char *title)
    // Create attribute frame title.
 
    TGCompositeFrame *f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame |
-                                                              kLHintsExpandX |
+                                                              kFitWidth |
                                                               kFixedWidth |
                                                               kOwnBackground);
    f1->AddFrame(new TGLabel(f1, title),
