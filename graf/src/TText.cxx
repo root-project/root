@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.20 2006/07/03 16:10:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.21 2007/01/23 13:10:41 couet Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -372,7 +372,15 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 
    if (angle) {
       Int_t CBoxX[4], CBoxY[4];
-      GetControlBox(fX, fY, fTextAngle, CBoxX, CBoxY);
+      Int_t ptx, pty;
+      if (TestBit(kTextNDC)) {
+         ptx = gPad->UtoPixel(fX);
+         pty = gPad->VtoPixel(fY);
+      } else {
+         ptx = gPad->XtoAbsPixel(gPad->XtoPad(fX));
+         pty = gPad->YtoAbsPixel(gPad->YtoPad(fY));
+      }
+      GetControlBox(ptx, pty, fTextAngle, CBoxX, CBoxY);
       Int_t x1 = CBoxX[0];
       Int_t x2 = CBoxX[0];
       Int_t y1 = CBoxY[0];

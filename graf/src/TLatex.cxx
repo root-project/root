@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.66 2007/01/23 13:10:40 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.67 2007/01/29 15:10:48 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1974,7 +1974,15 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 
    if (angle) {
       Int_t CBoxX[4], CBoxY[4];
-      GetControlBox(fX, fY, fTextAngle, CBoxX, CBoxY);
+      Int_t ptx, pty;
+      if (TestBit(kTextNDC)) {
+         ptx = gPad->UtoPixel(fX);
+         pty = gPad->VtoPixel(fY);
+      } else {
+         ptx = gPad->XtoAbsPixel(gPad->XtoPad(fX));
+         pty = gPad->YtoAbsPixel(gPad->YtoPad(fY));
+      }
+      GetControlBox(ptx, pty, fTextAngle, CBoxX, CBoxY);
       Int_t x1 = CBoxX[0];
       Int_t x2 = CBoxX[0];
       Int_t y1 = CBoxY[0];
