@@ -1,4 +1,4 @@
-# $Id: Module.mk,v 1.19 2006/05/03 22:06:18 pcanal Exp $
+# $Id: Module.mk,v 1.20 2007/01/26 07:51:08 brun Exp $
 # Module.mk for qt module
 # Copyright (c) 2001 Valeri Fine
 #
@@ -32,7 +32,8 @@ GQTO          := $(GQTS:.cxx=.o)
 
 GQTMOCH       := $(MODDIRI)/TQtWidget.h       $(MODDIRI)/TQtEmitter.h \
                  $(MODDIRI)/TQtClientFilter.h $(MODDIRI)/TQtClientGuard.h \
-                 $(MODDIRI)/TQtClientWidget.h  $(MODDIRI)/TQtTimer.h
+                 $(MODDIRI)/TQtClientWidget.h  $(MODDIRI)/TQtTimer.h \
+                 $(MODDIRI)/TQtRootSlot.h
 
 GQTMOC        := $(subst $(MODDIRI)/,$(MODDIRS)/moc_,$(patsubst %.h,%.cxx,$(GQTMOCH))) 
 GQTMOCO       := $(GQTMOC:.cxx=.o)
