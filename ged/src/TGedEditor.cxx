@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.35 2007/01/17 17:06:11 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.36 2007/01/24 17:58:38 antcheva Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -239,13 +239,9 @@ void TGedEditor::CloseWindow()
 void TGedEditor::ReinitWorkspace()
 {  
    // Clears windows in editor tab.
-   // Moves all visible GedFrames to the map of available frames and hide them. 
-
-   TIter it(fTabContainer->GetList());
-   it(); // skip name-frame
-
    // Unmap and withdraw currently shown frames and thus prepare for
    // construction of a new class layout or destruction.
+
    TIter next(&fVisibleTabs);
    TGedTabInfo* ti;
    while ((ti = (TGedTabInfo*)next())) {
@@ -255,21 +251,17 @@ void TGedEditor::ReinitWorkspace()
       fTab->RemoveFrame(te);
       fTab->RemoveFrame(tc);
 
-      // printf("ReinitWorkspace remove %d from %s \n", tc->GetList()->GetSize(),tc->GetName());
       TIter frames(tc->GetList());
       frames(); // skip name-frame
       TGFrameElement* fr;
       while ((fr = (TGFrameElement *) frames()) != 0) {
          TGFrame *f = fr->fFrame;
-         {
-            tc->RemoveFrame(f);
-            f->UnmapWindow();
-         }
+         tc->RemoveFrame(f);
+         f->UnmapWindow();
          te->UnmapWindow();
          tc->UnmapWindow();
-
-         fVisibleTabs.Remove(ti);
       }
+      fVisibleTabs.Remove(ti);
    }
 }
 
