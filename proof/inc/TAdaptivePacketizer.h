@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.99 2006/12/11 13:24:49 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TAdaptivePacketizer.h,v 1.1 2006/12/12 11:20:49 rdm Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************
@@ -83,13 +83,16 @@ private:
                                           // unalloc files on non-worker loc.
    Float_t        fProcTime;      // sum of proc time of all packets so far
 
+   Float_t        fBaseLocalPreference;   // indicates how much more likely
+   // the nodes will be to open their local files (1 means indifferent)
+
    TAdaptivePacketizer();
    TAdaptivePacketizer(const TAdaptivePacketizer&);    // no implementation, will generate
    void operator=(const TAdaptivePacketizer&);         // error on accidental usage
 
    virtual Bool_t HandleTimer(TTimer *timer);
 
-   TFileNode     *NextUnAllocNode();
+   TFileNode     *NextNode();
    void           RemoveUnAllocNode(TFileNode *);
 
    TFileNode     *NextActiveNode();

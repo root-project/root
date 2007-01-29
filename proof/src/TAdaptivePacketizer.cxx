@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.2 2006/12/13 08:24:09 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.3 2007/01/12 16:03:16 brun Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************
@@ -107,10 +107,11 @@ private:
    TList         *fActFiles;        // files with work remaining
    TObject       *fActFileNext;     // cursor in fActFiles
    Int_t          fMySlaveCnt;      // number of slaves running on this node
-   Int_t          fSlaveCnt;        // number of external slaves processing
+                                    // (which can process remote files)
+   Int_t          fExtSlaveCnt;     // number of external slaves processing
                                     // files on this node
-                                    // TODO: change to fExtSlaveCnt
-   Int_t          fRunSlaveCnt;     // number of external slaves processing
+   Int_t          fRunSlaveCnt;     // total number of slaves processing files
+                                    // on this node
    Long64_t       fProcessed;       // number of events processed on this node
    Long64_t       fEvents;          // number of entries in files on this node
 
@@ -119,14 +120,14 @@ public:
    ~TFileNode() { delete fFiles; delete fActFiles; }
 
    void        IncMySlaveCnt() { fMySlaveCnt++; }
-   Int_t       GetMySlaveCnt() const {return fMySlaveCnt;}
-   void        IncSlaveCnt(const char *slave) { if (fNodeName != slave) fSlaveCnt++; }
-   void        DecSlaveCnt(const char *slave) { if (fNodeName != slave) fSlaveCnt--; R__ASSERT(fSlaveCnt >= 0); }
-   Int_t       GetSlaveCnt() const {return fMySlaveCnt + fSlaveCnt;}
+   Int_t       GetMySlaveCnt() const { return fMySlaveCnt; }
+   void        IncExtSlaveCnt(const char *slave) { if (fNodeName != slave) fExtSlaveCnt++; }
+   void        DecExtSlaveCnt(const char *slave) { if (fNodeName != slave) fExtSlaveCnt--; R__ASSERT(fExtSlaveCnt >= 0); }
+   Int_t       GetSlaveCnt() const { return fMySlaveCnt + fExtSlaveCnt; }
    void        IncRunSlaveCnt() { fRunSlaveCnt++; }
    void        DecRunSlaveCnt() { fRunSlaveCnt--; R__ASSERT(fRunSlaveCnt >= 0); }
-   Int_t       GetRunSlaveCnt() const {return fRunSlaveCnt;}
-   Int_t       GetExtSlaveCnt() const {return fSlaveCnt;}
+   Int_t       GetRunSlaveCnt() const { return fRunSlaveCnt; }
+   Int_t       GetExtSlaveCnt() const { return fExtSlaveCnt; }
    Int_t       GetNumberOfActiveFiles() const { return fActFiles->GetSize(); }
    Bool_t      IsSortable() const { return kTRUE; }
    Int_t       GetNumberOfFiles() { return fFiles->GetSize(); }
@@ -201,7 +202,22 @@ public:
       Int_t myExtSlaves = GetExtSlaveCnt();
       Int_t otherExtSlaves = obj->GetExtSlaveCnt();
       Long64_t avEventsLeft = (GetEventsLeftPerSlave() + obj->GetEventsLeftPerSlave())/2;
-      if (myExtSlaves < otherExtSlaves) {
+      // # my workers processing remote files
+      Int_t mySlavesProcRemote = GetSlaveCnt() - GetRunSlaveCnt();
+      Int_t otherSlavesProcRemote = obj->GetSlaveCnt() - obj->GetRunSlaveCnt();
+      if ( mySlavesProcRemote < otherSlavesProcRemote ) {
+         if (diffEvents < -(avEventsLeft / 2)
+             && obj->GetExtSlaveCnt() < TAdaptivePacketizer::fgMaxSlaveCnt)
+            return 1;
+         else
+            return -1;
+      } else if ( mySlavesProcRemote > otherSlavesProcRemote ) {
+         if (diffEvents > (avEventsLeft / 2)
+             && GetExtSlaveCnt() < TAdaptivePacketizer::fgMaxSlaveCnt)
+            return -1;
+         else
+            return 1;
+      } else if (myExtSlaves < otherExtSlaves) {
          if (diffEvents < -(avEventsLeft / 3)
              && obj->GetExtSlaveCnt() < TAdaptivePacketizer::fgMaxSlaveCnt)
             return 1;
@@ -245,7 +261,7 @@ public:
    {
       cout << "OBJ: " << IsA()->GetName() << "\t" << fNodeName
            << "\tMySlaveCount " << fMySlaveCnt
-           << "\tSlaveCount " << fSlaveCnt << endl;
+           << "\tSlaveCount " << fExtSlaveCnt << endl;
    }
 
    void Reset()
@@ -253,7 +269,7 @@ public:
       fUnAllocFileNext = fFiles->First();
       fActFiles->Clear();
       fActFileNext = 0;
-      fSlaveCnt = 0;
+      fExtSlaveCnt = 0;
       fMySlaveCnt = 0;
       fRunSlaveCnt = 0;
    }
@@ -262,7 +278,7 @@ public:
 
 TAdaptivePacketizer::TFileNode::TFileNode(const char *name)
    : fNodeName(name), fFiles(new TList), fUnAllocFileNext(0),fActFiles(new TList),
-     fActFileNext(0), fMySlaveCnt(0), fSlaveCnt(0), fProcessed(0), fEvents(0)
+     fActFileNext(0), fMySlaveCnt(0), fExtSlaveCnt(0), fProcessed(0), fEvents(0)
 {
    // Constructor
 
@@ -311,7 +327,8 @@ TAdaptivePacketizer::TSlaveStat::TSlaveStat(TSlave *slave)
 }
 
 //______________________________________________________________________________
-void TAdaptivePacketizer::TSlaveStat::UpdateRates(Long64_t nEvents, Float_t time)
+void TAdaptivePacketizer::TSlaveStat::UpdateRates(Long64_t nEvents,
+                                                  Float_t time)
 {
    //Update packetizer rates
    if (fCurFile->IsDone()) {
@@ -329,7 +346,7 @@ void TAdaptivePacketizer::TSlaveStat::UpdateRates(Long64_t nEvents, Float_t time
 
 ClassImp(TAdaptivePacketizer)
 
-Int_t TAdaptivePacketizer::fgMaxSlaveCnt = 4;
+Int_t TAdaptivePacketizer::fgMaxSlaveCnt = 2;
 
 //______________________________________________________________________________
 TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
@@ -373,6 +390,11 @@ TAdaptivePacketizer::TAdaptivePacketizer(TDSet *dset, TList *slaves,
    obj = input->FindObject("PROOF_MaxSlavesPerNode");
    par = (obj == 0) ? 0 : dynamic_cast<TParameter<Long_t>*>(obj);
    fgMaxSlaveCnt = (par == 0) ? 4 : par->GetVal();
+
+   obj = input->FindObject("PROOF_BaseLocalPreference");
+   TParameter<Float_t> *localPrefPar = (obj == 0) ? 0 :
+                             dynamic_cast<TParameter<Float_t>*>(obj);
+   fBaseLocalPreference = (localPrefPar == 0) ? 1.2 : localPrefPar->GetVal();
 
    fPackets = new TList;
    fPackets->SetOwner();
@@ -574,7 +596,7 @@ TAdaptivePacketizer::~TAdaptivePacketizer()
 TAdaptivePacketizer::TFileStat *TAdaptivePacketizer::GetNextUnAlloc(TFileNode *node)
 {
    // Get next unallocated file from 'node' or other nodes:
-   // First try node. If there is no more files, keep trying to
+   // First try 'node'. If there is no more files, keep trying to
    // find an unallocated file on other nodes.
 
    TFileStat *file = 0;
@@ -583,7 +605,7 @@ TAdaptivePacketizer::TFileStat *TAdaptivePacketizer::GetNextUnAlloc(TFileNode *n
       file = node->GetNextUnAlloc();
       if (file == 0) RemoveUnAllocNode(node);
    } else {
-      while (file == 0 && ((node = NextUnAllocNode()) != 0)) {
+      while (file == 0 && ((node = NextNode()) != 0)) {
          file = node->GetNextUnAlloc();
          if (file == 0) RemoveUnAllocNode(node);
       }
@@ -601,21 +623,20 @@ TAdaptivePacketizer::TFileStat *TAdaptivePacketizer::GetNextUnAlloc(TFileNode *n
 
 
 //______________________________________________________________________________
-TAdaptivePacketizer::TFileNode *TAdaptivePacketizer::NextUnAllocNode()
+TAdaptivePacketizer::TFileNode *TAdaptivePacketizer::NextNode()
 {
    // Get next node which has unallocated files.
    // the order is determined by TFileNode::Compare
 
    fUnAllocated->Sort();
    PDB(kPacketizer,2) {
-      cout << "TAdaptivePacketizer::NextUnAllocNode()" << endl;
       fUnAllocated->Print();
    }
 
    TFileNode *fn = (TFileNode*) fUnAllocated->First();
    if (fn != 0 && fn->GetExtSlaveCnt() >= fgMaxSlaveCnt) {
       // unlike in TPacketizer we look at the number of ext slaves only.
-      PDB(kPacketizer,1) Info("NextUnAllocNode",
+      PDB(kPacketizer,1) Info("NextNode",
                               "Reached Slaves per Node Limit (%d)", fgMaxSlaveCnt);
       fn = 0;
    }
@@ -789,7 +810,7 @@ void TAdaptivePacketizer::ValidateFiles(TDSet *dset, TList *slaves)
             RemoveActive(file);
 
             slstat->fCurFile = file;
-            file->GetNode()->IncSlaveCnt(slstat->GetName());
+            file->GetNode()->IncExtSlaveCnt(slstat->GetName());
             TMessage m(kPROOF_GETENTRIES);
             TDSetElement *elem = file->GetElement();
             m << dset->IsTree()
@@ -865,7 +886,7 @@ void TAdaptivePacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 
       TSlaveStat *slavestat = (TSlaveStat*) fSlaveStats->GetValue( slave );
       TDSetElement *e = slavestat->fCurFile->GetElement();
-      slavestat->fCurFile->GetNode()->DecSlaveCnt(slavestat->GetName());
+      slavestat->fCurFile->GetNode()->DecExtSlaveCnt(slavestat->GetName());
       Long64_t entries;
 
       (*reply) >> entries;
@@ -1032,23 +1053,22 @@ Int_t TAdaptivePacketizer::CalculatePacketSize(TObject *slStatPtr)
 
    TSlaveStat* slstat = (TSlaveStat*)slStatPtr;
    Long64_t num;
-   Int_t packetSizeAsFraction = 10;
+   Int_t packetSizeAsFraction = 4;
    Float_t rate = slstat->GetCurRate();
    if (!rate)
       rate = slstat->GetAvgRate();
    if (rate) {
       Float_t avgProcRate = (fProcessed/(fProcTime / fSlaveStats->GetSize()));
       Float_t packetTime;
-      if (fProcessed < 0.8 * fTotalEntries)
-         packetTime = ((fTotalEntries - fProcessed)/avgProcRate)/packetSizeAsFraction;
-      else
-         packetTime = (fTotalEntries/avgProcRate)/(packetSizeAsFraction * 5);
-      if (packetTime < 1)
-         packetTime = 1;
+      packetTime = ((fTotalEntries - fProcessed)/avgProcRate)/packetSizeAsFraction;
+      if (packetTime < 2)
+         packetTime = 2;
       num = (Long64_t)(rate * packetTime);
    } else { //first packet for this slave in this query
-      Int_t packetSize = (fTotalEntries - fProcessed)/(packetSizeAsFraction * fSlaveStats->GetSize());
-      num = Long64_t(packetSize*(Float_t)slstat->fSlave->GetPerfIdx()/fMaxPerfIdx);
+      Int_t packetSize = (fTotalEntries - fProcessed)
+                         / (8 * packetSizeAsFraction * fSlaveStats->GetSize());
+      num = Long64_t(packetSize *
+            ((Float_t)slstat->fSlave->GetPerfIdx() / fMaxPerfIdx));
    }
    if (num < 1) num = 1;
 
@@ -1129,7 +1149,7 @@ TDSetElement *TAdaptivePacketizer::GetNextPacket(TSlave *sl, TMessage *r)
    TFileStat *file = slstat->fCurFile;
    // if current file is just finished
    if ( file != 0 && file->IsDone() ) {
-      file->GetNode()->DecSlaveCnt(slstat->GetName());
+      file->GetNode()->DecExtSlaveCnt(slstat->GetName());
       file->GetNode()->DecRunSlaveCnt();
       if (gPerfStats != 0) {
          gPerfStats->FileEvent(sl->GetOrdinal(), sl->GetName(), file->GetNode()->GetName(),
@@ -1146,18 +1166,25 @@ TDSetElement *TAdaptivePacketizer::GetNextPacket(TSlave *sl, TMessage *r)
    if ( file == 0) {
       // needs a new file
       Bool_t openLocal;
-      Float_t localPreference = 1.5 - (fNEventsOnRemLoc / (fTotalEntries - fProcessed));
+      // aiming for localPrefernece == 1 when #local == #remote events left
+      Float_t localPreference = fBaseLocalPreference - (fNEventsOnRemLoc /
+                                (0.4 *(fTotalEntries - fProcessed)));
       if ( slstat->GetFileNode() != 0 ) {
          // local file node exists and has more events to process.
          fUnAllocated->Sort();
          TFileNode* firstNonLocalNode = (TFileNode*)fUnAllocated->First();
          Bool_t nonLocalNodePossible =
-            firstNonLocalNode?(firstNonLocalNode->GetSlaveCnt() < fgMaxSlaveCnt):0;
+            firstNonLocalNode?(firstNonLocalNode->GetExtSlaveCnt() < fgMaxSlaveCnt):0;
          openLocal = !nonLocalNodePossible;
          Float_t slaveRate = slstat->GetAvgRate();
          if ( nonLocalNodePossible ) {
             //openLocal is set to kFALSE
-            if ( slaveRate == 0 ) { // first file for this slave
+            if ( slstat->GetFileNode()->GetRunSlaveCnt() >
+                 slstat->GetFileNode()->GetMySlaveCnt() - 1 )
+                // external slaves help slstat -> don't open nonlocal files
+                // -1 because, at this point slstat is not running
+                  openLocal = kTRUE;
+            else if ( slaveRate == 0 ) { // first file for this slave
                // GetLocalEventsLeft() counts the potential slave
                // as running on its fileNode.
                if ( slstat->GetLocalEventsLeft() * localPreference > (avgEventsLeftPerSlave))
@@ -1165,7 +1192,9 @@ TDSetElement *TAdaptivePacketizer::GetNextPacket(TSlave *sl, TMessage *r)
                else if ( (firstNonLocalNode->GetEventsLeftPerSlave())
                      < slstat->GetLocalEventsLeft() * localPreference )
                   openLocal = kTRUE;
-               else if (firstNonLocalNode->GetExtSlaveCnt() > 1)
+               else if ( firstNonLocalNode->GetExtSlaveCnt() > 1 )
+                  openLocal = kTRUE;
+               else if ( firstNonLocalNode->GetRunSlaveCnt() == 0 )
                   openLocal = kTRUE;
             } else {
                // at this point slstat has a non zero avg rate > 0
@@ -1211,7 +1240,7 @@ TDSetElement *TAdaptivePacketizer::GetNextPacket(TSlave *sl, TMessage *r)
          fNEventsOnRemLoc -= file->GetElement()->GetNum();
          R__ASSERT(fNEventsOnRemLoc >= 0);
       }
-      file->GetNode()->IncSlaveCnt(slstat->GetName());
+      file->GetNode()->IncExtSlaveCnt(slstat->GetName());
       file->GetNode()->IncRunSlaveCnt();
       if (gPerfStats != 0) {
          gPerfStats->FileEvent(sl->GetOrdinal(), sl->GetName(),
