@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.70 2007/01/22 13:50:53 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.71 2007/01/24 21:28:41 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -33,13 +33,6 @@
 #ifndef ROOT_TObjArray
 #include "TObjArray.h"
 #endif
-#ifndef ROOT_TStreamerInfo
-// This include is no longer necessary but is kept to be 
-// backward compatible with user code.
-#include "TStreamerInfo.h"
-#endif
-
-//#include <map>
 
 class TBaseClass;
 class TBrowser;
