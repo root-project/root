@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.23 2006/05/19 07:30:04 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.24 2006/10/05 17:00:04 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -103,7 +103,7 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx()
    if (fClass) return this;
 
 
-   TClass *cl = gROOT->GetClass(fName.c_str());
+   TClass *cl = TClass::GetClass(fName.c_str());
    fEnv = 0;
    fKey = 0;
    if ( cl )  {
@@ -127,7 +127,7 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx()
             case TClassEdit::kMultiMap:
                nam = "pair<"+inside[1]+","+inside[2];
                nam += (nam[nam.length()-1]=='>') ? " >" : ">";
-               if (0==gROOT->GetClass(nam.c_str())) {
+               if (0==TClass::GetClass(nam.c_str())) {
                   // We need to emulate the pair
                   R__GenerateTClassForPair(inside[1],inside[2]);
                }
@@ -542,7 +542,7 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char
       if (TClassEdit::IsSTLCont(dmType)) {
          return new TStreamerSTL(dmName,dmTitle,offset,dmFull,dmFull,dmIsPtr);
       }
-      TClass *clm = gROOT->GetClass(dmType);
+      TClass *clm = TClass::GetClass(dmType);
       if (!clm) {
          // either we have an Emulated enum or a really unknown class!
          // let's just claim its an enum :(
@@ -575,7 +575,7 @@ static TStreamerInfo *R__GenerateTClassForPair(const string &fname, const string
    // This TStreamerInfo is then used as if it was read from a file to generate
    // and emulated TClass.
 
-   TStreamerInfo *i = (TStreamerInfo*)gROOT->GetClass("pair<const int,int>")->GetStreamerInfo()->Clone();
+   TStreamerInfo *i = (TStreamerInfo*)TClass::GetClass("pair<const int,int>")->GetStreamerInfo()->Clone();
    std::string pname = "pair<"+fname+","+sname;
    pname += (pname[pname.length()-1]=='>') ? " >" : ">";
    i->SetName(pname.c_str());

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.27 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.28 2006/05/19 07:30:04 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -235,7 +235,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
    std::string intype = TClassEdit::ShortType(inside.c_str(),TClassEdit::kDropTrailStar );
    if ( inside.substr(0,6) == "string" || inside.substr(0,11) == "std::string" ) {
       fCase = kBIT_ISSTRING;
-      fType = gROOT->GetClass("string");
+      fType = TClass::GetClass("string");
       fCtor = fType->GetNew();
       fDtor = fType->GetDestructor();
       fDelete = fType->GetDelete();
@@ -255,7 +255,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
       // calling G__TypeInfo ti(inside.c_str());
       // might fail because CINT does not known the nesting
       // scope, so let's first look for an emulated class:
-      fType = gROOT->GetClass(intype.c_str());
+      fType = TClass::GetClass(intype.c_str());
       if (fType && !fType->IsLoaded()) {
          if (intype != inside) {
             fCase |= G__BIT_ISPOINTER;
@@ -272,7 +272,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
                fCase |= G__BIT_ISPOINTER;
                fSize = sizeof(void*);
             }
-            fType = gROOT->GetClass(intype.c_str());
+            fType = TClass::GetClass(intype.c_str());
             if (fType) {
                fCase  |= G__BIT_ISCLASS;
                fCtor   = fType->GetNew();
@@ -296,7 +296,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
                prop |= G__BIT_ISCLASS;
             }
             if ( prop&G__BIT_ISCLASS ) {
-               fType = gROOT->GetClass(intype.c_str());
+               fType = TClass::GetClass(intype.c_str());
                R__ASSERT(fType);
                fCtor   = fType->GetNew();
                fDtor   = fType->GetDestructor();
@@ -504,7 +504,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
    R__LOCKGUARD2(gCollectionMutex);
    if (fClass) return this;
 
-   TClass *cl = gROOT->GetClass(fTypeinfo);
+   TClass *cl = TClass::GetClass(fTypeinfo);
    if ( cl ) {
       fEnv    = 0;
       fName   = cl->GetName();

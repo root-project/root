@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.22 2007/01/20 19:29:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.23 2007/01/29 15:10:48 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -195,7 +195,7 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
       ;                       // function
    else {
       gcl.Init(class_name);   // class
-      cl = gROOT->GetClass(class_name);
+      cl = TClass::GetClass(class_name);
    }
 
    if (params) {

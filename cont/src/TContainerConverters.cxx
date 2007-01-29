@@ -1,4 +1,4 @@
-// @(#)root/cony:$Name:  $:$Id: TContainerConverters.cxx,v 1.6 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/cony:$Name:  $:$Id: TContainerConverters.cxx,v 1.7 2007/01/29 15:10:48 brun Exp $
 // Author: Philippe Canal  11/11/2004
 
 /*************************************************************************
@@ -20,7 +20,6 @@
 #include "TClonesArray.h"
 #include "TStreamerInfo.h"
 #include "TVirtualCollectionProxy.h"
-#include "TROOT.h"
 #include "TError.h"
 
 namespace {
@@ -173,7 +172,7 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
          *semicolon = 0;
          clv = atoi(semicolon+1);
       }
-      TClass *cl = gROOT->GetClass(classv);
+      TClass *cl = TClass::GetClass(classv);
       if (!cl) {
          printf("TClonesArray::Streamer expecting class %s\n", classv);
          b.CheckByteCount(start, bytecount, TClonesArray::Class());

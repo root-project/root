@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMessageHandler.cxx,v 1.4 2005/06/22 20:18:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMessageHandler.cxx,v 1.5 2005/06/23 06:24:27 brun Exp $
 // Author: Rene Brun   11/11/99
 
 /*************************************************************************
@@ -62,7 +62,7 @@ TMessageHandler::TMessageHandler(const char *cl, Bool_t derived)
    // Create a new message handler for class named cl and add it to the list
    // of message handlers.
 
-   fClass   = gROOT->GetClass(cl);
+   fClass   = TClass::GetClass(cl);
    fMessObj = 0;
    fMessId  = 0;
    fSize    = 0;

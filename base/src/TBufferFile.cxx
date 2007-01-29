@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBufferFile.cxx,v 1.3 2007/01/23 06:10:39 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBufferFile.cxx,v 1.4 2007/01/28 18:27:18 brun Exp $
 // Author: Rene Brun 17/01/2007
 
 /*************************************************************************
@@ -20,7 +20,6 @@
 
 #include <string.h>
 
-#include "TROOT.h"
 #include "TFile.h"
 #include "TBufferFile.h"
 #include "TExMap.h"
@@ -2266,7 +2265,7 @@ void TBufferFile::StreamObject(void *obj, const type_info &typeinfo)
 {
    // Stream an object given its C++ typeinfo information.
 
-   TClass *cl = gROOT->GetClass(typeinfo);
+   TClass *cl = TClass::GetClass(typeinfo);
    cl->Streamer(obj, *this);
 }
 
@@ -2275,7 +2274,7 @@ void TBufferFile::StreamObject(void *obj, const char *className)
 {
    // Stream an object given the name of its actual class.
 
-   TClass *cl = gROOT->GetClass(className);
+   TClass *cl = TClass::GetClass(className);
    cl->Streamer(obj, *this);
 }
 

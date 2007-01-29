@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.65 2007/01/22 15:38:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.66 2007/01/22 16:36:57 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -585,7 +585,7 @@ Bool_t TKey::IsFolder() const
 
    Bool_t ret = kFALSE;
 
-   TClass *classPtr = gROOT->GetClass((const char *) fClassName);
+   TClass *classPtr = TClass::GetClass((const char *) fClassName);
    if (classPtr && classPtr->GetClassInfo()) {
       TObject *obj = (TObject *) classPtr->New(TClass::kDummyNew);
       if (obj) {
@@ -655,7 +655,7 @@ TObject *TKey::ReadObj()
    //  Of course, dynamic_cast<> can also be used in the example 1.
 
 //printf("in TKey::ReadObj, fClassname=%s\n",fClassName.Data());
-   TClass *cl = gROOT->GetClass(fClassName.Data());
+   TClass *cl = TClass::GetClass(fClassName.Data());
    if (!cl) {
       Error("ReadObj", "Unknown class %s", fClassName.Data());
       return 0;
@@ -807,7 +807,7 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
 
    fBufferRef->SetBufferOffset(fKeylen);
    TDirectory *cursav = gDirectory;
-   TClass *cl = gROOT->GetClass(fClassName.Data());
+   TClass *cl = TClass::GetClass(fClassName.Data());
    if (!cl) {
       Error("ReadObjectAny", "Unknown class %s", fClassName.Data());
       return 0;

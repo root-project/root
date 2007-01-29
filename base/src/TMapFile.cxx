@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.24 2007/01/19 16:47:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.25 2007/01/22 05:58:29 brun Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -719,7 +719,7 @@ TObject *TMapFile::Get(const char *name, TObject *delObj)
    while (OrgAddress(mr)) {
       if (!strcmp(mr->GetName(fOffset), name)) {
          if (!mr->fBufSize) goto release;
-         TClass *cl = gROOT->GetClass(mr->GetClassName(fOffset));
+         TClass *cl = TClass::GetClass(mr->GetClassName(fOffset));
          if (!cl) {
             Error("Get", "unknown class %s", mr->GetClassName(fOffset));
             goto release;

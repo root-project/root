@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.38 2006/08/16 14:50:24 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.39 2007/01/16 07:44:01 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -197,7 +197,7 @@ void TClassTable::Print(Option_t *option) const
       TString s = r->fName;
       if (nch && strcmp(option,r->fName) && s.Index(re) == kNPOS) continue;
       nl++;
-      if (gROOT->GetClass(r->fName, kFALSE)) {
+      if (TClass::GetClass(r->fName, kFALSE)) {
          ninit++;
          Printf("%-35s %6d %7d       Yes", r->fName, r->fId, r->fBits);
       } else
@@ -392,7 +392,7 @@ char *TClassTable::Next()
 {
     // Returns next class from sorted class table. Don't use this iterator
     // while modifying the class table. The class table can be modified
-    // when making calls like gROOT->GetClass(), etc.
+    // when making calls like TClass::GetClass(), etc.
 
    if (fgCursor < fgTally) {
       TClassRec *r = fgSortedTable[fgCursor++];
@@ -421,7 +421,7 @@ void TClassTable::PrintTable()
    for (int i = 0; i < fgTally; i++) {
       TClassRec *r = fgSortedTable[i];
       n++;
-      if (gROOT->GetClass(r->fName, kFALSE)) {
+      if (TClass::GetClass(r->fName, kFALSE)) {
          ninit++;
          Printf("%-35s %6d %7d       Yes", r->fName, r->fId, r->fBits);
       } else

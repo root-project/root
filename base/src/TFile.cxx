@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.202 2007/01/25 11:47:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.203 2007/01/28 18:28:33 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -2382,7 +2382,7 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
       if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
          if (h->LoadPlugin() == -1)
             return 0;
-         TClass *cl = gROOT->GetClass(h->GetClass());
+         TClass *cl = TClass::GetClass(h->GetClass());
          if (cl && cl->InheritsFrom("TNetFile"))
             f = (TFile*) h->ExecPlugin(5, name, option, ftitle, compress, netopt);
          else

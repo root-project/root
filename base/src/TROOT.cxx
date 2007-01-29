@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.199 2007/01/28 18:29:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.200 2007/01/29 15:10:48 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -507,7 +507,7 @@ void TROOT::AddClass(TClass *cl)
 //______________________________________________________________________________
 void TROOT::AddClassGenerator(TClassGenerator *generator)
 {
-   // Add a class generator.  This generator will be called by TROOT::GetClass
+   // Add a class generator.  This generator will be called by TClass::GetClass
    // in case its does not find a loaded rootcint dictionary to request the
    // creation of a TClass object.
 
@@ -773,7 +773,7 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
 
       const char *altname = gInterpreter->GetInterpreterTypeName(name);
       if (altname && strcmp(altname,name)!=0) {
-         cl = gROOT->GetClass(altname,load);
+         cl = TClass::GetClass(altname,load);
       }
    }
    if (cl==0) {
@@ -783,17 +783,17 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
    }
    if (cl == 0) {
       TString resolvedName = TClassEdit::ResolveTypedef(name,kFALSE).c_str();
-      if (resolvedName != name) cl = GetClass(resolvedName,load);
+      if (resolvedName != name) cl = TClass::GetClass(resolvedName,load);
    }
    if (cl == 0 && (strncmp(name,"std::",5)==0)) {
       // CINT sometime ignores the std namespace for stl containers,
       // so let's try without it.
-      if (strlen(name+5)) cl = GetClass(name+5,load);
+      if (strlen(name+5)) cl = TClass::GetClass(name+5,load);
    }
 
    if (load && cl==0) {
       // Create an Emulated class for this container.
-      cl = new TClass(name, GetClass("TStreamerInfo")->GetClassVersion(), 0, 0, -1, -1 );
+      cl = new TClass(name, TClass::GetClass("TStreamerInfo")->GetClassVersion(), 0, 0, -1, -1 );
       cl->SetBit(TClass::kIsEmulation);
    }
 
@@ -1115,7 +1115,7 @@ Int_t TROOT::IgnoreInclude(const char *fname, const char * /*expandedfname*/)
    if (where != kNPOS) className.Remove( where );
    className = gSystem->BaseName(className);
 
-   TClass *cla = GetClass(className);
+   TClass *cla = TClass::GetClass(className);
    if ( cla ) {
       if (cla->GetDeclFileLine() < 0) return 0; // to a void an error with VisualC++
       const char *decfile = gSystem->BaseName(cla->GetDeclFileName());
@@ -1190,7 +1190,7 @@ void TROOT::InitThreads()
 //______________________________________________________________________________
 TClass *TROOT::LoadClass(const char *classname) const
 {
-   // Helper function used by TROOT::GetClass().
+   // Helper function used by TClass::GetClass().
    // This function attempts to load the dictionary for 'classname'
    // either from the TClassTable or from the list of generator.
 
@@ -1224,7 +1224,7 @@ TClass *TROOT::LoadClass(const char *classname) const
       // The dictionary generation might change/delete classname
       TString clname(classname);
       (dict)();
-      TClass *ncl = GetClass(clname, kFALSE);
+      TClass *ncl = TClass::GetClass(clname, kFALSE);
       if (ncl) ncl->PostLoadCheck();
       return ncl;
    }
@@ -1566,7 +1566,7 @@ void TROOT::SetCutClassName(const char *name)
       Error("SetCutClassName","Invalid class name");
       return;
    }
-   TClass *cl = GetClass(name);
+   TClass *cl = TClass::GetClass(name);
    if (!cl) {
       Error("SetCutClassName","Unknown class:%s",name);
       return;

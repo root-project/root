@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.62 2007/01/28 19:43:48 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.63 2007/01/29 15:10:48 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -101,7 +101,7 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
    if (!gROOT)
       ::Fatal("TClonesArray::TClonesArray", "ROOT system not initialized");
 
-   fClass = gROOT->GetClass(classname);
+   fClass = TClass::GetClass(classname);
    char *name = new char[strlen(classname)+2];
    sprintf(name, "%ss", classname);
    SetName(name);
@@ -601,7 +601,7 @@ void TClonesArray::Streamer(TBuffer &b)
          *semicolon = 0;
          clv = atoi(semicolon+1);
       }
-      TClass *cl = gROOT->GetClass(classv);
+      TClass *cl = TClass::GetClass(classv);
       if (!cl) {
          printf("TClonesArray::Streamer expecting class %s\n", classv);
          b.CheckByteCount(R__s, R__c,TClonesArray::IsA());

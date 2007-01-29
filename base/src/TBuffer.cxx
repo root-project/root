@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.101 2007/01/22 14:15:28 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.102 2007/01/28 18:26:10 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -17,8 +17,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TROOT.h"
 #include "TBuffer.h"
+#include "TClass.h"
 #include "TProcessID.h"
 
 const Int_t  kExtraSpace        = 8;   // extra space at end of buffer (used for free block count)
@@ -203,7 +203,7 @@ TClass *TBuffer::GetClass(const type_info &typeinfo)
 {
    // Forward to TROOT::GetClass
 
-   return gROOT->GetClass(typeinfo);
+   return TClass::GetClass(typeinfo);
 }
 
 //______________________________________________________________________________
@@ -211,7 +211,7 @@ TClass *TBuffer::GetClass(const char *className)
 {
    // Forward to TROOT::GetClass
 
-   return gROOT->GetClass(className);
+   return TClass::GetClass(className);
 }
 
 

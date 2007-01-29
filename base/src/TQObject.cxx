@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.49 2006/11/16 17:17:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.50 2007/01/20 19:29:34 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -62,6 +62,7 @@
 #include "TQObject.h"
 #include "TQConnection.h"
 #include "TROOT.h"
+#include "TClass.h"
 #include "TSystem.h"
 #include "TMethod.h"
 #include "TBaseClass.h"
@@ -307,7 +308,7 @@ Int_t TQObject::CheckConnectArgs(TQObject *sender,
 
    // if delegation object TQObjSender is used get the real sender class
    if (sender && sender_class == TQObjSender::Class()) {
-      sender_class = gROOT->GetClass(sender->GetSenderClassName());
+      sender_class = TClass::GetClass(sender->GetSenderClassName());
       if (!sender_class) {
          ::Error("TQObject::CheckConnectArgs", "for signal/slot consistency\n"
                  "checking need to specify class name as argument to "
@@ -1159,7 +1160,7 @@ Bool_t TQObject::ConnectToClass(const char *class_name,
    // of the same class to the receiver object.
    // Receiver class needs to have a dictionary.
 
-   TClass *sender = gROOT->GetClass(class_name);
+   TClass *sender = TClass::GetClass(class_name);
 
    // sender class should be TQObject (i.e. TQClass)
    if (!sender || !sender->IsA()->InheritsFrom(TQObject::Class()))
@@ -1251,7 +1252,7 @@ Bool_t TQObject::Connect(TQObject *sender,
    //  In case of class derived from TQObject it is done automatically.
 
    if (cl) {
-      TClass *rcv_cl = gROOT->GetClass(cl);
+      TClass *rcv_cl = TClass::GetClass(cl);
       if (rcv_cl) return ConnectToClass(sender, signal, rcv_cl, receiver, slot);
    }
 
@@ -1348,7 +1349,7 @@ Bool_t TQObject::Connect(const char *class_name,
    //  In case of class derived from TQObject it is done automatically.
 
    if (cl) {
-      TClass *rcv_cl = gROOT->GetClass(cl);
+      TClass *rcv_cl = TClass::GetClass(cl);
       if (rcv_cl) return ConnectToClass(class_name, signal, rcv_cl, receiver,
                                         slot);
    }
@@ -1356,7 +1357,7 @@ Bool_t TQObject::Connect(const char *class_name,
    // the following is case of receiver class without dictionary
    // e.g. interpreted class or function.
 
-   TClass *sender = gROOT->GetClass(class_name);
+   TClass *sender = TClass::GetClass(class_name);
 
    // sender class should be TQObject (i.e. TQClass)
    if (!sender || !sender->IsA()->InheritsFrom(TQObject::Class()))
@@ -1436,7 +1437,7 @@ Bool_t TQObject::Connect(const char *signal,
    // check consitency of signal/slot methods/args
    TClass *cl = 0;
    if (receiver_class)
-      cl = gROOT->GetClass(receiver_class);
+      cl = TClass::GetClass(receiver_class);
    Int_t nsigargs;
    if ((nsigargs = CheckConnectArgs(this, IsA(), signal_name, cl, slot_name)) == -1)
       return kFALSE;
@@ -1574,7 +1575,7 @@ Bool_t TQObject::Disconnect(const char *class_name,
    // Disconnects "class signal". The class is defined by class_name.
    // See also Connect(class_name,signal,receiver,slot).
 
-   TClass *sender = gROOT->GetClass(class_name);
+   TClass *sender = TClass::GetClass(class_name);
 
    // sender should be TQClass (which derives from TQObject)
    if (!sender->IsA()->InheritsFrom(TQObject::Class()))

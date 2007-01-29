@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectoryFile.cxx,v 1.3 2007/01/28 18:28:12 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectoryFile.cxx,v 1.4 2007/01/29 10:53:16 brun Exp $
 // Author: Rene Brun   22/01/2007
 
 /*************************************************************************
@@ -110,7 +110,7 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
       return;
    }
    TClass *cl = IsA();
-   if (strlen(classname) != 0) cl = gROOT->GetClass(classname);
+   if (strlen(classname) != 0) cl = TClass::GetClass(classname);
 
    if (!cl) {
       Error("TDirectoryFile","Invalid class name: %s",classname);
@@ -1726,7 +1726,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
    // Write object of class with dictionary cl in this directory
    // obj may not derive from TObject
    // To get the TClass* cl pointer, one can use
-   //    TClass *cl = gROOT->GetClass("classname");
+   //    TClass *cl = TClass::GetClass("classname");
    // An alternative is to call the function WriteObjectAny above.
    // see TDirectoryFile::WriteObject for comments
 
