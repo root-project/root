@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.cxx,v 1.10 2005/11/22 20:42:37 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.cxx,v 1.11 2005/11/28 23:22:31 pcanal Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -104,6 +104,7 @@
 #include "TXMLPlayer.h"
 
 #include "Riostream.h"
+#include "TROOT.h"
 #include "TClass.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"

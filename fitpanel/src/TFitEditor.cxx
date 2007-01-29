@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.20 2007/01/22 18:19:29 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.21 2007/01/29 10:06:50 brun Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -90,6 +90,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TFitEditor.h"
+#include "TROOT.h"
 #include "TClass.h"
 #include "TCanvas.h"
 #include "TGTab.h"

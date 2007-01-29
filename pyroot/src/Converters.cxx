@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.36 2006/12/11 07:49:08 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.37 2007/01/09 05:31:11 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -11,6 +11,7 @@
 #include "RootWrapper.h"
 
 // ROOT
+#include "TROOT.h"
 #include "TClass.h"
 #include "TClassEdit.h"
 

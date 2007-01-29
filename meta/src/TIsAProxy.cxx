@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TIsAProxy.cxx,v 1.4 2006/05/23 04:47:40 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TIsAProxy.cxx,v 1.5 2006/05/24 15:09:22 brun Exp $
 // Author: Markus Frank 20/05/2005
 
 /*************************************************************************
@@ -113,7 +113,7 @@ TClass* TIsAProxy::operator()(const void *obj)
 
    if ( !fInit )  {
       fInit = kTRUE;
-      if ( !fClass && fType ) fClass = gROOT->GetClass(*fType);
+      if ( !fClass && fType ) fClass = TClass::GetClass(*fType);
       fClass->Property();
       if ( fClass->GetClassInfo() )  {
          fVirtual = (fClass->GetClassInfo()->ClassProperty()&G__CLS_HASVIRTUAL) == G__CLS_HASVIRTUAL;
@@ -142,7 +142,7 @@ TClass* TIsAProxy::operator()(const void *obj)
       }
       // Last resort: lookup root class
       else   {
-         fLastClass = ROOT::GetROOT()->GetClass(*typ);
+         fLastClass = TClass::GetClass(*typ);
          fLastType = typ;
          (*GetMap(fSubTypes))[long(fLastType)] = fLastClass;
       }

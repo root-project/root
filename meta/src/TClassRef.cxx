@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClassRef.cxx,v 1.6 2005/06/08 21:13:48 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClassRef.cxx,v 1.7 2005/06/09 18:20:02 pcanal Exp $
 // Author: Philippe Canal 15/03/2005
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TClassRef.h"
+#include "TROOT.h"
 
 //______________________________________________________________________________
 TClassRef::TClassRef(const TClassRef &org) :

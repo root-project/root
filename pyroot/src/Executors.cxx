@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.21 2006/09/28 23:16:16 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.22 2006/10/17 06:09:15 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -10,6 +10,7 @@
 #include "Utility.h"
 
 // ROOT
+#include "TROOT.h"
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "DllImport.h"

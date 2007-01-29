@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTabManager.cxx,v 1.8 2006/09/27 08:48:18 rdm Exp $
+// @(#):$Name:  $:$Id: TGeoTabManager.cxx,v 1.9 2007/01/29 10:06:50 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TROOT.h"
 #include "TClass.h"
 #include "TVirtualPad.h"
 #include "TGeoGedFrame.h"

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.96 2006/12/06 15:09:11 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.97 2006/12/21 13:32:32 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -338,6 +338,7 @@
 #include "TStyle.h"
 #include "TH2F.h"
 #include "TPad.h"
+#include "TROOT.h"
 #include "TClass.h"
 #include "TEnv.h"
 #include "TMap.h"

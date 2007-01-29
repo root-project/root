@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.cxx,v 1.8 2006/11/24 15:57:45 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.cxx,v 1.9 2007/01/26 14:06:54 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -14,6 +14,7 @@
 #include "KeySymbols.h"
 #include "Buttons.h"
 #include "TColor.h"
+#include "TROOT.h"
 #include "TClass.h"
 #include "TStyle.h"
 #include "TAxis.h"

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyClassGenerator.cxx,v 1.10 2006/11/24 14:24:54 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyClassGenerator.cxx,v 1.11 2006/11/30 23:18:32 pcanal Exp $
 // Author: Wim Lavrijsen, May 2004
 
 // Bindings
@@ -8,6 +8,7 @@
 #include "TPyReturn.h"
 
 // ROOT
+#include "TROOT.h"
 #include "TClass.h"
 
 // CINT

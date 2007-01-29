@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.71 2007/01/24 21:28:41 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.72 2007/01/29 10:54:47 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -27,9 +27,6 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
-#ifndef ROOT_TROOT
-#include "TROOT.h"
-#endif
 #ifndef ROOT_TObjArray
 #include "TObjArray.h"
 #endif
@@ -54,6 +51,11 @@ class TVirtualRefProxy;
 
 namespace ROOT { class TGenericClassInfo; }
 
+namespace ROOT {
+   class TMapTypeToTClass;
+}
+typedef ROOT::TMapTypeToTClass IdMap_t;
+
 class TClass : public TDictionary {
 
 friend class TCint;
@@ -71,6 +73,7 @@ public:
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
 
 private:
+
    TObjArray         *fStreamerInfo;    //Array of TStreamerInfo
    TList             *fRealData;        //linked list for persistent members including base classes
    TList             *fBase;            //linked list for base classes
@@ -130,6 +133,7 @@ private:
    void               SetClassVersion(Version_t version) { fClassVersion = version; fCurrentInfo = 0; }
    void               SetClassSize(Int_t sizof) { fSizeof = sizof; }
 
+   static IdMap_t    *fgIdMap;          //Map from typeid to TClass pointer
    static ENewType    fgCallingNew;     //Intent of why/how TClass::New() is called
    static Int_t       fgClassCount;     //provides unique id for a each class
                                         //stored in TObject::fUniqueID
@@ -258,6 +262,8 @@ public:
    void               SetMemberStreamer(const char *name, MemberStreamerFunc_t strm);
 
    // Function to retrieve the TClass object and dictionary function
+   static void           AddClass(TClass *cl);
+   static void           RemoveClass(TClass *cl);
    static TClass        *GetClass(const char *name, Bool_t load = kTRUE);
    static TClass        *GetClass(const type_info &typeinfo, Bool_t load = kTRUE);
    static VoidFuncPtr_t  GetDict (const char *cname);
@@ -291,8 +297,8 @@ namespace ROOT {
       template <typename T> Bool_t IsPointer(const T** /* dummy */) { return true; };
    #endif
 
-   template <typename T> TClass* GetClass(      T* /* dummy */)        { return GetROOT()->GetClass(typeid(T)); }
-   template <typename T> TClass* GetClass(const T* /* dummy */)        { return GetROOT()->GetClass(typeid(T)); }
+   template <typename T> TClass* GetClass(      T* /* dummy */)        { return GetClass(typeid(T)); }
+   template <typename T> TClass* GetClass(const T* /* dummy */)        { return GetClass(typeid(T)); }
 
    #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
       // This can only be used when the template overload resolution can distringuish between

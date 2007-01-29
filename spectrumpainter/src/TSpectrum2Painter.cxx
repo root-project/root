@@ -26,6 +26,8 @@
 // Pysica Slovaca Vol. 54/ 4 (2004), pp. 385-400.
 
 
+#include "TROOT.h"
+#include "TClass.h"
 #include "TClass.h"
 #include "TColor.h"
 #include "TMath.h"

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.21 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.22 2007/01/20 19:29:34 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -26,6 +26,7 @@
 
 #include "Varargs.h"
 #include "TQConnection.h"
+#include "TROOT.h"
 #include "TRefCnt.h"
 #include "TClass.h"
 #include "TMethod.h"

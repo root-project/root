@@ -1,4 +1,4 @@
-// @(#)root/qtgsi:$Name:  $:$Id: TQRootCanvas.cxx,v 1.4 2006/04/13 09:46:06 brun Exp $
+// @(#)root/qtgsi:$Name:  $:$Id: TQRootCanvas.cxx,v 1.5 2007/01/29 10:06:50 brun Exp $
 // Author: Denis Bertini, M. Al-Turany  01/11/2000
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 #include "qpainter.h"
 
 #include "TQRootCanvas.h"
+#include "TROOT.h"
 #include "TClass.h"
 #include "TCanvas.h"
 #include "TQCanvasMenu.h"

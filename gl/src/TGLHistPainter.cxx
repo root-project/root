@@ -1,5 +1,6 @@
 #include <cstring>
 
+#include "TROOT.h"
 #include "TClass.h"
 #include "TVirtualPad.h"
 #include "TVirtualGL.h"

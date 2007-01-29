@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.198 2007/01/25 11:52:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.199 2007/01/28 18:29:16 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -178,65 +178,6 @@ static void CleanUpROOTAtExit()
    }
 }
 
-//______________________________________________________________________________
-namespace ROOT {
-#define R__USE_STD_MAP
-   class TMapTypeToTClass {
-#if defined R__USE_STD_MAP
-     // This wrapper class allow to avoid putting #include <map> in the
-     // TROOT.h header file.
-   public:
-#ifdef R__GLOBALSTL
-      typedef map<string,TClass*>                 IdMap_t;
-#else
-      typedef std::map<std::string,TClass*>       IdMap_t;
-#endif
-      typedef IdMap_t::key_type                   key_type;
-      typedef IdMap_t::const_iterator             const_iterator;
-      typedef IdMap_t::size_type                  size_type;
-#ifdef R__WIN32
-     // Window's std::map does NOT defined mapped_type
-      typedef TClass*                             mapped_type;
-#else
-      typedef IdMap_t::mapped_type                mapped_type;
-#endif
-
-   private:
-      IdMap_t fMap;
-
-   public:
-      void Add(const key_type &key, mapped_type &obj) {
-         fMap[key] = obj;
-      }
-      mapped_type Find(const key_type &key) const {
-         IdMap_t::const_iterator iter = fMap.find(key);
-         mapped_type cl = 0;
-         if (iter != fMap.end()) cl = iter->second;
-         return cl;
-      }
-      void Remove(const key_type &key) { fMap.erase(key); }
-#else
-   private:
-      TMap fMap;
-
-   public:
-      void Add(const char *key, TClass *&obj) {
-         TObjString *realkey = new TObjString(key);
-         fMap.Add(realkey, obj);
-      }
-      TClass* Find(const char *key) const {
-         const TPair *a = (const TPair *)fMap.FindObject(key);
-         if (a) return (TClass*) a->Value();
-         return 0;
-      }
-      void Remove(const char *key) {
-         TObjString realkey(key);
-         TObject *actual = fMap.Remove(&realkey);
-         delete actual;
-      }
-#endif
-   };
-}
 
 
 Int_t         TROOT::fgDirLevel = 0;
@@ -342,7 +283,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fBuiltTime       = ITIMQQ(__TIME__);
 
    fClasses         = new THashTable(800,3);
-   fIdMap           = new IdMap_t;
+   //fIdMap           = new IdMap_t;
    fStreamerInfo    = new TObjArray(100);
    fClassGenerators = new TList;
 
@@ -555,11 +496,12 @@ void TROOT::AddClass(TClass *cl)
 {
    // Add a class to the list and map of classes.
 
-   if (!cl) return;
-   GetListOfClasses()->Add(cl);
-   if (cl->GetTypeInfo()) {
-      fIdMap->Add(cl->GetTypeInfo()->name(),cl);
-   }
+   //if (!cl) return;
+   //GetListOfClasses()->Add(cl);
+   //if (cl->GetTypeInfo()) {
+   //   fIdMap->Add(cl->GetTypeInfo()->name(),cl);
+   //}
+   TClass::AddClass(cl);
 }
 
 //______________________________________________________________________________
@@ -861,193 +803,19 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
 //______________________________________________________________________________
 TClass *TROOT::GetClass(const char *name, Bool_t load) const
 {
-   // Return pointer to class with name.
-
-   if (!name || !strlen(name)) return 0;
-   if (!GetListOfClasses())    return 0;
-
-   TString resolvedName;
-
-   TClass *cl = (TClass*)GetListOfClasses()->FindObject(name);
-
-   if (!cl) {
-      resolvedName = TClassEdit::ResolveTypedef(name,kTRUE).c_str();
-      cl = (TClass*)GetListOfClasses()->FindObject(resolvedName);
-   }
-
-   if (cl) {
-
-      if (cl->IsLoaded()) return cl;
-
-      //we may pass here in case of a dummy class created by TStreamerInfo
-      load = kTRUE;
-
-      if (TClassEdit::IsSTLCont(name)) {
-
-         const char *altname = gInterpreter->GetInterpreterTypeName(name);
-         if (altname && strcmp(altname,name)!=0) {
-
-            // Remove the existing (soon to be invalid) TClass object to
-            // avoid an infinite recursion.
-            GetListOfClasses()->Remove(cl);
-            TClass *newcl = GetClass(altname,load);
-
-            // since the name are different but we got a TClass, we assume
-            // we need to replace and delete this class.
-            assert(newcl!=cl);
-            cl->ReplaceWith(newcl);
-            delete cl;
-            return newcl;
-         }
-      }
-
-   } else {
-
-      if (!TClassEdit::IsSTLCont(name)) {
-
-         // If the name is actually an STL container we prefer the
-         // short name rather than the true name (at least) in
-         // a first try!
-
-         TDataType *objType = GetType(name, load);
-         if (objType) {
-            const char *typdfName = objType->GetTypeName();
-            if (typdfName && strcmp(typdfName, name)) {
-               cl = GetClass(typdfName, load);
-               return cl;
-            }
-         }
-
-      } else {
-
-         cl = FindSTLClass(name,kFALSE);
-
-         if (cl) {
-            if (cl->IsLoaded()) return cl;
-
-            //we may pass here in case of a dummy class created by TStreamerInfo
-            return gROOT->GetClass(cl->GetName(),kTRUE);
-         }
-
-      }
-
-   }
-
-   if (!load) return 0;
-
-   TClass *loadedcl = 0;
-   if (cl) loadedcl = LoadClass(cl->GetName());
-   else    loadedcl = LoadClass(name);
-
-   if (loadedcl) return loadedcl;
-
-   if (cl) return cl;  // If we found the class but we already have a dummy class use it.
-
-   static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
-   if (strcmp(name,full_string_name)==0
-      || ( strncmp(name,"std::",5)==0 && ((strcmp(name+5,"string")==0)||(strcmp(name+5,full_string_name)==0)))) {
-      return gROOT->GetClass("string");
-   }
-   if (TClassEdit::IsSTLCont(name)) {
-
-      return FindSTLClass(name,kTRUE);
-
-   } else if ( strncmp(name,"std::",5)==0 ) {
-
-      return GetClass(name+5,load);
-
-   } else if ( strstr(name,"std::") != 0 ) {
-
-      // Let's try without the std:: in the template parameters.
-      TString rname( TClassEdit::ResolveTypedef(name,kTRUE) );
-      if (rname != name) {
-         return GetClass( rname, load );
-      }
-   }
-
-   if (!strcmp(name, "long long")||!strcmp(name,"unsigned long long"))
-      return 0; // reject long longs
-
-   //last attempt. Look in CINT list of all (compiled+interpreted) classes
-
-   // CheckClassInfo might modify the content of its parameter if it is
-   // a template and has extra or missing space (eg. one<two<tree>> becomes
-   // one<two<three> >
-   char *modifiable_name = new char[strlen(name)*2];
-   strcpy(modifiable_name,name);
-   if (gInterpreter->CheckClassInfo(modifiable_name)) {
-      const char *altname = gInterpreter->GetInterpreterTypeName(modifiable_name,kTRUE);
-      if (strcmp(altname,name)!=0) {
-         // altname now contains the full name of the class including a possible
-         // namespace if there has been a using namespace statement.
-         delete [] modifiable_name;
-         return GetClass(altname,load);
-      }
-      TClass *ncl = new TClass(name, 1, 0, 0, -1, -1);
-      if (!ncl->IsZombie()) {
-         delete [] modifiable_name;
-         return ncl;
-      }
-      delete ncl;
-   }
-   delete [] modifiable_name;
-   return 0;
+   // Return pointer to class with name. Obsolete, use TClass::GetClass directly
+   
+   return TClass::GetClass(name,load);
 }
+
 
 //______________________________________________________________________________
 TClass *TROOT::GetClass(const type_info& typeinfo, Bool_t load) const
 {
-   // Return pointer to class with name.
+   // Return pointer to class from its name. Obsolete, use TClass::GetClass directly
+   // See TClass::GetClass
 
-   if (!GetListOfClasses())    return 0;
-
-   TClass* cl = fIdMap->Find(typeinfo.name());
-
-   if (cl) {
-      if (cl->IsLoaded()) return cl;
-      //we may pass here in case of a dummy class created by TStreamerInfo
-      load = kTRUE;
-   } else {
-     // Note we might need support for typedefs and simple types!
-
-     //      TDataType *objType = GetType(name, load);
-     //if (objType) {
-     //    const char *typdfName = objType->GetTypeName();
-     //    if (typdfName && strcmp(typdfName, name)) {
-     //       cl = GetClass(typdfName, load);
-     //       return cl;
-     //    }
-     // }
-   }
-
-   if (!load) return 0;
-
-   VoidFuncPtr_t dict = TClassTable::GetDict(typeinfo);
-   if (dict) {
-      (dict)();
-      TClass *cl = GetClass(typeinfo);
-      if (cl) cl->PostLoadCheck();
-      return cl;
-   }
-   if (cl) return cl;
-
-   TIter next(fClassGenerators);
-   TClassGenerator *gen;
-   while( (gen = (TClassGenerator*) next()) ) {
-      cl = gen->GetClass(typeinfo,load);
-      if (cl) {
-         cl->PostLoadCheck();
-         return cl;
-      }
-   }
-
-   //last attempt. Look in CINT list of all (compiled+interpreted) classes
-   //   if (gInterpreter->CheckClassInfo(name)) {
-   //      TClass *ncl = new TClass(name, 1, 0, 0, 0, -1, -1);
-   //      if (!ncl->IsZombie()) return ncl;
-   //      delete ncl;
-   //   }
-   return 0;
+   return TClass::GetClass(typeinfo,load);
 }
 
 //______________________________________________________________________________
@@ -1743,11 +1511,12 @@ void TROOT::RemoveClass(TClass *oldcl)
 {
    // Remove a class from the list and map of classes
 
-   if (!oldcl) return;
-   GetListOfClasses()->Remove(oldcl);
-   if (oldcl->GetTypeInfo()) {
-      fIdMap->Remove(oldcl->GetTypeInfo()->name());
-   }
+   //if (!oldcl) return;
+   //GetListOfClasses()->Remove(oldcl);
+   //if (oldcl->GetTypeInfo()) {
+   //   fIdMap->Remove(oldcl->GetTypeInfo()->name());
+   //}
+   TClass::RemoveClass(oldcl);
 }
 
 //______________________________________________________________________________
