@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.158 2007/01/16 14:38:50 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.159 2007/01/17 15:26:48 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1324,6 +1324,9 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
       fReadready->Zero();
       fWriteready->Zero();
 
+      if (pendingOnly && !pollOnce)
+         return;
+
       // check synchronous signals
       if (fSigcnt > 0 && fSignalHandler->GetSize() > 0) {
          if (CheckSignals(kTRUE)) {
@@ -1336,24 +1339,23 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
       fSignals->Zero();
 
       // handle past due timers
+      Long_t nextto = -1;
       if (fTimers && fTimers->GetSize() > 0) {
          if (DispatchTimers(kTRUE)) {
             // prevent timers from blocking the rest types of events
-            Long_t to = NextTimeOut(kTRUE);
-            if (to > kItimerResolution || to == -1) {
+            nextto = NextTimeOut(kTRUE);
+            if (nextto > kItimerResolution || nextto == -1) {
                return;
             }
          }
       }
 
       // if in pendingOnly mode poll once file descriptor activity
-      Long_t nextto = NextTimeOut(kTRUE);
       if (pendingOnly) {
-         if (pollOnce && fFileHandler && fFileHandler->GetSize() > 0) {
-            nextto = 0;
-            pollOnce = kFALSE;
-         } else
+         if (fFileHandler && fFileHandler->GetSize() == 0)
             return;
+         nextto = 0;
+         pollOnce = kFALSE;
       }
 
       if (fReadmask && !fReadmask->GetBits() &&

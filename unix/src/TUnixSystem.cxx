@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.175 2007/01/16 08:23:46 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.176 2007/01/16 14:38:50 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -756,6 +756,9 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
       fReadready->Zero();
       fWriteready->Zero();
 
+      if (pendingOnly && !pollOnce)
+         return;
+
       // check synchronous signals
       if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
          if (CheckSignals(kTRUE))
@@ -764,22 +767,21 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
       fSignals->Zero();
 
       // check synchronous timers
+      Long_t nextto = -1;
       if (fTimers && fTimers->GetSize() > 0)
          if (DispatchTimers(kTRUE)) {
             // prevent timers from blocking file descriptor monitoring
-            Long_t to = NextTimeOut(kTRUE);
-            if (to > kItimerResolution || to == -1)
+            nextto = NextTimeOut(kTRUE);
+            if (nextto > kItimerResolution || nextto == -1)
                return;
          }
 
       // if in pendingOnly mode poll once file descriptor activity
-      Long_t nextto = NextTimeOut(kTRUE);
       if (pendingOnly) {
-         if (pollOnce && fFileHandler && fFileHandler->GetSize() > 0) {
-            nextto = 0;
-            pollOnce = kFALSE;
-         } else
+         if (fFileHandler && fFileHandler->GetSize() == 0)
             return;
+         nextto = 0;
+         pollOnce = kFALSE;
       }
 
       // nothing ready, so setup select call
