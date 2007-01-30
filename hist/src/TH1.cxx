@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.324 2007/01/09 17:01:34 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.325 2007/01/30 11:49:14 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5092,7 +5092,7 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       hnew->SetBins(newbins,bins); //this also changes errors array (if any)
       delete [] bins;
    } else if (xbins) {
-      ngroup = 1;
+      ngroup = newbins;
       hnew->SetBins(newbins,xbins);
    } else {
       hnew->SetBins(newbins,xmin,xmax);
@@ -5117,14 +5117,19 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    for (bin = 1;bin<=newbins;bin++) {
       binContent = 0;
       binError   = 0;
+      Int_t imax = ngroup;
       for (i=0;i<ngroup;i++) {
-         if (oldbin+i > nbins) break;
+         if (fXaxis.GetBinCenter(oldbin+i) > hnew->GetXaxis()->GetBinUpEdge(bin)) {
+            imax = i;
+            break;
+         }
          binContent += oldBins[oldbin+i];
          if (oldErrors) binError += oldErrors[oldbin+i]*oldErrors[oldbin+i];
       }
       hnew->SetBinContent(bin,binContent);
       if (oldErrors) hnew->SetBinError(bin,TMath::Sqrt(binError));
-      oldbin += ngroup;
+      printf("bin=%d, imax=%d\n",bin,imax);
+      oldbin += imax;
    }
    hnew->SetBinContent(0,oldBins[0]);
    hnew->SetBinContent(newbins+1,oldBins[nbins+1]);
