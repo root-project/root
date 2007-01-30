@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.31 2006/07/26 13:36:42 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.32 2007/01/29 10:18:52 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -207,6 +207,14 @@ public:
 extern Bool_t ConnectCINT(TQObject *sender, const char *signal,
                           const char *slot);
 
+#ifdef G__DICTIONARY
+// This include makes it possible to have a single connection
+// from all objects of the same class but is only needed in
+// the dictionary.
+#include "TQClass.h"
+#endif 
+
+ 
 //---- ClassImpQ macro ----------------------------------------------
 //
 // This macro used to correspond to the ClassImp macro and should be used
