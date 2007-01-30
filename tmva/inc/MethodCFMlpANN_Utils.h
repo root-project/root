@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCFMlpANN_Utils.h,v 1.14 2006/11/16 22:51:58 helgevoss Exp $ 
+// @(#)root/tmva $Id: MethodCFMlpANN_Utils.h,v 1.10 2006/11/20 15:35:28 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -39,7 +39,7 @@
 #include "TMVA/MethodCFMlpANN_def.h"
 #endif
 
-#include "TROOT.h"
+#include "TObject.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -128,7 +128,7 @@ namespace TMVA {
                if (0 != xx && ievt < fNevt && ivar < fNvar) return xx[ievt][ivar];
                else {
                   printf( "*** ERROR in varn3_(): xx is zero pointer ==> abort ***\n") ;
-                  exit(1);
+                  //exit(1);
                }
             }
          void Delete( void ) {
