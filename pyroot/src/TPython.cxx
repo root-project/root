@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.16 2006/06/16 18:18:04 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.17 2006/09/28 19:59:12 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -177,7 +177,7 @@ void TPython::LoadMacro( const char* name )
                fullname += PyString_AS_STRING( pyClName );
 
             // force class creation
-               gROOT->GetClass( fullname.c_str() );
+               TClass::GetClass( fullname.c_str() );
             }
 
             Py_XDECREF( pyClName );
@@ -316,7 +316,7 @@ const TPyReturn TPython::Eval( const char* expr )
       Py_DECREF( pyclass );
 
    // locate ROOT style class with this name
-      TClass* klass = gROOT->GetClass( qname.c_str() );
+      TClass* klass = TClass::GetClass( qname.c_str() );
 
    // construct general ROOT python object that pretents to be of class 'klass'
       if ( klass != 0 )

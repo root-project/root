@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.29 2006/12/08 07:42:31 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.30 2007/01/09 05:31:11 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -271,7 +271,7 @@ namespace {
          Py_INCREF( pyname );
       }
 
-      TClass* klass = gROOT->GetClass( PyString_AS_STRING( pyname ) );
+      TClass* klass = TClass::GetClass( PyString_AS_STRING( pyname ) );
       Py_DECREF( pyname );
 
       if ( ! klass ) {

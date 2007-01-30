@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.49 2006/11/30 23:18:32 pcanal Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.50 2006/12/08 07:42:31 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -129,7 +129,7 @@ namespace {
       if ( gSTLTypes.find( sub ) != gSTLTypes.end() ) {
       // removal is required or the dictionary can't be updated properly
          if ( klass != 0 )
-            gROOT->RemoveClass( (TClass*)klass );
+            TClass::RemoveClass( (TClass*)klass );
 
          Bool_t result = kTRUE;
 
@@ -164,7 +164,7 @@ namespace {
       // verify that CINT understands the class, then add it for gROOT
          if ( G__ClassInfo( tname.c_str() ).IsValid() ) {
             TClass* cl = new TClass( tname.c_str() );
-            gROOT->AddClass( cl );
+            TClass::AddClass( cl );
          }
 
          return result;
@@ -759,7 +759,7 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
    }
 
 // determine type and cast as appropriate
-   TClass* klass = gROOT->GetClass( gbl->GetTypeName() );
+   TClass* klass = TClass::GetClass( gbl->GetTypeName() );
    if ( klass != 0 ) {
       if ( Utility::Compound( gbl->GetFullTypeName() ) != "" )
          return BindRootObject( (void*)gbl->GetAddress(), klass, kTRUE );

@@ -10,7 +10,6 @@
 #include "TMethod.h"
 #include "TFunction.h"
 #include "TMethodArg.h"
-#include "TROOT.h"
 #include "TError.h"
 
 // CINT
@@ -212,7 +211,7 @@ PyROOT::TScopeAdapter::TScopeAdapter( TClass* klass ) : fClass( klass )
 
 //____________________________________________________________________________
 PyROOT::TScopeAdapter::TScopeAdapter( const std::string& name ) :
-   fClass( gROOT->GetClass( name.c_str() ) ), fName( name )
+   fClass( TClass::GetClass( name.c_str() ) ), fName( name )
 {
    /* empty */
 }
@@ -227,7 +226,7 @@ PyROOT::TScopeAdapter::TScopeAdapter( const TMemberAdapter& mb ) :
 PyROOT::TScopeAdapter PyROOT::TScopeAdapter::ByName( const std::string & name )
 {
 // lookup a scope (class) by name
-   return gROOT->GetClass( name.c_str() );
+   return TClass::GetClass( name.c_str() );
 }
 
 //____________________________________________________________________________

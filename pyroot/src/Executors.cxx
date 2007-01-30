@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.22 2006/10/17 06:09:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.23 2007/01/29 15:10:49 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -10,7 +10,6 @@
 #include "Utility.h"
 
 // ROOT
-#include "TROOT.h"
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "DllImport.h"
@@ -276,7 +275,7 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
 
 // ROOT classes and special cases (enum)
    TExecutor* result = 0;
-   if ( TClass* klass = gROOT->GetClass( realType.c_str() ) ) {
+   if ( TClass* klass = TClass::GetClass( realType.c_str() ) ) {
       result = cpd != ""  ? \
          new TRootObjectExecutor( klass ) : new TRootObjectByValueExecutor( klass );
    } else {

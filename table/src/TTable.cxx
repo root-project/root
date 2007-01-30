@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TTable.cxx,v 1.19 2007/01/09 05:35:29 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TTable.cxx,v 1.20 2007/01/23 10:07:43 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 
 /*************************************************************************
@@ -1492,7 +1492,7 @@ TTable *TTable::New(const Char_t *name, const Char_t *type, void *array, UInt_t 
       Char_t *classname = new Char_t[strlen(t.Data())+extralen];
       strcpy(classname,classprefix);
       strcat(classname,t.Data());
-      TClass *cl = gROOT->GetClass(classname);
+      TClass *cl = TClass::GetClass(classname);
       if (cl) {
          table = (TTable *)cl->New();
          if (table) {
@@ -1820,7 +1820,7 @@ void TTable::SavePrimitive(ostream &out, Option_t * /*= ""*/)
        << dscT->GetName()<<"["<<rowNumber-1 <<"]"            << endl;
    out << "// ====================================================================" << endl;
    out << "// ------  Test whether this table share library was loaded ------"      << endl;
-   out << "  if (!gROOT->GetClass(\"" << className << "\")) return 0;"    << endl;
+   out << "  if (!TClass::GetClass(\"" << className << "\")) return 0;"    << endl;
    out <<    dscT->GetName() << " " << rowId << ";" << endl
        <<  className << " *" << tableId << " = new "
        <<  className
@@ -2369,7 +2369,7 @@ const char *TTable::TableDictionary(const char *className,const char *structName
    // Query the TClass instance for the C-stucture dicitonary
    // This method is to be used  with TableImp CPP macro (see $ROOTSYS/table/inc/Ttypes.h
    if (className){/*NotUsed*/};
-   TClass *r = gROOT->GetClass(structName,1);
+   TClass *r = TClass::GetClass(structName,1);
    ColDescriptors = new TTableDescriptor(r);
    return structName;
 }

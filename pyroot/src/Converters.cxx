@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.37 2007/01/09 05:31:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.38 2007/01/29 15:10:49 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -11,7 +11,6 @@
 #include "RootWrapper.h"
 
 // ROOT
-#include "TROOT.h"
 #include "TClass.h"
 #include "TClassEdit.h"
 
@@ -668,7 +667,7 @@ Bool_t PyROOT::TLongLongArrayConverter::SetArg( PyObject* pyobject, TParameter& 
 //- converters for special cases ----------------------------------------------
 #define PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( name, strtype, DF1 )  \
 PyROOT::T##name##Converter::T##name##Converter() :                            \
-      TRootObjectConverter( gROOT->GetClass( #strtype ) ) {}                  \
+      TRootObjectConverter( TClass::GetClass( #strtype ) ) {}                 \
                                                                               \
 Bool_t PyROOT::T##name##Converter::SetArg( PyObject* pyobject, TParameter& para, G__CallFunc* func )\
 {                                                                             \
@@ -964,7 +963,7 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
 
 // converters for known/ROOT classes and default (void*)
    TConverter* result = 0;
-   if ( TClass* klass = gROOT->GetClass( realType.c_str() ) ) {
+   if ( TClass* klass = TClass::GetClass( realType.c_str() ) ) {
       if ( cpd == "**" || cpd == "*&" || cpd == "&*" )
          result = new TRootObjectPtrConverter( klass, control );
       else if ( cpd == "*" )

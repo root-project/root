@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.48 2006/12/12 09:15:01 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.49 2007/01/09 05:31:11 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -1026,7 +1026,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       TBranch* branch = tree->GetBranch( name );
       if ( branch ) {
       // found a branched object, wrap its address for the object it represents
-         TClass* klass = gROOT->GetClass( branch->GetClassName() );
+         TClass* klass = TClass::GetClass( branch->GetClassName() );
          if ( klass && branch->GetAddress() )
             return BindRootObjectNoCast( *(char**)branch->GetAddress(), klass );
       }
@@ -1661,7 +1661,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       std::string itername = name + "::iterator";
 
       Int_t oldl = gErrorIgnoreLevel; gErrorIgnoreLevel = 3000;
-      TClass* klass = gROOT->GetClass( itername.c_str() );
+      TClass* klass = TClass::GetClass( itername.c_str() );
       gErrorIgnoreLevel = oldl;
 
       if ( klass && klass->GetClassInfo() ) {
