@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.32 2006/07/13 05:32:25 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.33 2006/09/06 07:53:36 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -43,6 +43,7 @@
 
 #include "TFormLeafInfo.h"
 
+#include "TROOT.h"
 #include "TArrayI.h"
 #include "TClonesArray.h"
 #include "TError.h"
@@ -448,7 +449,7 @@ Bool_t TFormLeafInfo::Update()
    // class to the real class.
 
    if (fClass) {
-      TClass * new_class = gROOT->GetClass(fClassName);
+      TClass * new_class = TClass::GetClass(fClassName);
       if (new_class==fClass) {
          if (fNext) fNext->Update();
          if (fCounter) fCounter->Update();
@@ -1362,7 +1363,7 @@ Bool_t TFormLeafInfoCollection::Update()
    // class to the real class.
 
    Bool_t changed = kFALSE;
-   TClass * new_class = gROOT->GetClass(fCollClassName);
+   TClass * new_class = TClass::GetClass(fCollClassName);
    if (new_class!=fCollClass) {
       delete fCollProxy; fCollProxy = 0;
       fCollClass = new_class;
@@ -1641,7 +1642,7 @@ Bool_t TFormLeafInfoCollectionSize::Update()
    // class to the real class.
 
    Bool_t changed = kFALSE;
-   TClass *new_class = gROOT->GetClass(fCollClassName);
+   TClass *new_class = TClass::GetClass(fCollClassName);
    if (new_class!=fCollClass) {
       delete fCollProxy; fCollProxy = 0;
       fCollClass = new_class;
@@ -1896,7 +1897,7 @@ TClass* TFormLeafInfoMethod::GetClass() const
    TMethodCall::EReturnType r = fMethod->ReturnType();
    if (r!=TMethodCall::kOther) return 0;
    TString return_type = gInterpreter->TypeName(fMethod->GetMethod()->GetReturnTypeName());
-   return gROOT->GetClass(return_type.Data());
+   return TClass::GetClass(return_type.Data());
 }
 
 //______________________________________________________________________________
@@ -2572,7 +2573,7 @@ Bool_t TFormLeafInfoCast::Update()
    // class to the real class.
 
    if (fCasted) {
-      TClass * new_class = gROOT->GetClass(fCastedName);
+      TClass * new_class = TClass::GetClass(fCastedName);
       if (new_class!=fCasted) {
          fCasted = new_class;
       }

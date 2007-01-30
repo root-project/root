@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.cxx,v 1.11 2005/11/28 23:22:31 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.cxx,v 1.12 2007/01/29 15:10:49 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -32,8 +32,8 @@
 //      gSystem->Load("libuser.so");   // load user ROOT library
 //
 //      TList lst;
-//      lst.Add(gROOT->GetClass("TUserClass1"));
-//      lst.Add(gROOT->GetClass("TUserClass2"));
+//      lst.Add(TClass::GetClass("TUserClass1"));
+//      lst.Add(TClass::GetClass("TUserClass2"));
 //      ...
 //      TXMLPlayer player;
 //      player.ProduceCode(&lst, "streamers");    // create xml streamers
@@ -1003,7 +1003,7 @@ Bool_t TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el,
             if (buf=="string")
                argtype[n] = TStreamerInfo::kSTLstring;
             else {
-               argcl[n] = gROOT->GetClass(buf);
+               argcl[n] = TClass::GetClass(buf);
                if (argcl[n]!=0) argtype[n]=TStreamerInfo::kObject;
             }
             if (argtype[n]<0) stltyp = -1;

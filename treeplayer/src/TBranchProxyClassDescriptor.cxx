@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.8 2005/11/11 23:21:43 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.9 2006/04/19 08:22:26 rdm Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -12,7 +12,6 @@
 #include "TBranchProxyDescriptor.h"
 #include "TBranchProxyClassDescriptor.h"
 
-#include "TROOT.h"
 #include "TClass.h"
 #include "TError.h"
 #include "TStreamerInfo.h"
@@ -184,7 +183,7 @@ namespace ROOT {
    Bool_t TBranchProxyClassDescriptor::IsLoaded() const
    {
       // Return true if the class needed by the branch is loaded
-      TClass *cl = gROOT->GetClass(GetTitle());
+      TClass *cl = TClass::GetClass(GetTitle());
       return (cl && cl->IsLoaded());
    }
 

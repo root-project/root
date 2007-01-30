@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofChain.cxx,v 1.3 2006/11/28 12:10:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofChain.cxx,v 1.4 2007/01/12 11:02:56 rdm Exp $
 // Author: G. Ganis  Nov 2006
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 
 #include "TProofChain.h"
 #include "TDSet.h"
+#include "TROOT.h"
 #include "TProof.h"
 
 

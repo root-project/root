@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBranchProxy.cxx,v 1.6 2006/04/19 08:22:26 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBranchProxy.cxx,v 1.7 2006/05/23 08:15:50 brun Exp $
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************
@@ -230,7 +230,7 @@ Bool_t ROOT::TBranchProxy::Setup()
             if (fClass) fClassName = fClass->GetName();
          } else {
             fClassName = be->GetClassName();
-            fClass = gROOT->GetClass(fClassName);
+            fClass = TClass::GetClass(fClassName);
          }
 
          if (be->GetType()==3) {
@@ -264,7 +264,7 @@ Bool_t ROOT::TBranchProxy::Setup()
          }
       } else {
          fClassName = fBranch->GetClassName();
-         fClass = gROOT->GetClass(fClassName);
+         fClass = TClass::GetClass(fClassName);
       }
 
 
@@ -282,7 +282,7 @@ Bool_t ROOT::TBranchProxy::Setup()
 
         }
         }
-        if (fClass==0 && fClassName.Length()) fClass = gROOT->GetClass(fClassName);
+        if (fClass==0 && fClassName.Length()) fClass = TClass::GetClass(fClassName);
       */
       //fprintf(stderr,"For %s fClass is %p which is %s\n",
       //        fBranchName.Data(),fClass,fClass==0?"not set":fClass->GetName());

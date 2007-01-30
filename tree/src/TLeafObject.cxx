@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.16 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.17 2006/06/02 15:33:31 pcanal Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -14,7 +14,6 @@
 // A TLeaf for a general object derived from TObject.                   //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TROOT.h"
 #include "TLeafObject.h"
 #include "TBranch.h"
 #include "TClass.h"
@@ -43,7 +42,7 @@ TLeafObject::TLeafObject(const char *name, const char *type)
 //*-*
 
    SetTitle(type);
-   fClass      = gROOT->GetClass(type);
+   fClass      = TClass::GetClass(type);
    fObjAddress = 0;
    fVirtual    = kTRUE;
 }
@@ -103,7 +102,7 @@ TMethodCall *TLeafObject::GetMethodCall(const char *name)
    if (params) { *params = 0; params++; }
    else params = (char *) ")";
 
-   if (!fClass) fClass      = gROOT->GetClass(GetTitle());
+   if (!fClass) fClass      = TClass::GetClass(GetTitle());
    TMethodCall *m = new TMethodCall(fClass, namecpy, params);
    delete [] namecpy;
    if (m->GetMethod()) return m;
@@ -126,7 +125,7 @@ Bool_t TLeafObject::Notify()
 {
    // This method must be overridden to handle object notifcation.
 
-   fClass      = gROOT->GetClass(GetTitle());
+   fClass      = TClass::GetClass(GetTitle());
    return kFALSE;
 }
 
@@ -149,7 +148,7 @@ void TLeafObject::ReadBasket(TBuffer &b)
    if (fVirtual) {
       b >> n;
       b.ReadFastArray(classname,n+1);
-      fClass      = gROOT->GetClass(classname);
+      fClass      = TClass::GetClass(classname);
    }
    if (fClass) {
       TObject *object;
@@ -208,14 +207,14 @@ void TLeafObject::Streamer(TBuffer &b)
          TLeafObject::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
          if (R__v == 2) fVirtual = kTRUE;
          fObjAddress = 0;
-         fClass  = gROOT->GetClass(fTitle.Data());
+         fClass  = TClass::GetClass(fTitle.Data());
          if (!fClass) Warning("Streamer","Cannot find class:%s",fTitle.Data());
          return;
       }
       //====process old versions before automatic schema evolution
       TLeaf::Streamer(b);
       fObjAddress = 0;
-      fClass  = gROOT->GetClass(fTitle.Data());
+      fClass  = TClass::GetClass(fTitle.Data());
       if (!fClass) Warning("Streamer","Cannot find class:%s",fTitle.Data());
       if (R__v  < 1) fVirtual = kFALSE;
       if (R__v == 1) fVirtual = kTRUE;

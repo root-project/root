@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLSetup.cxx,v 1.9 2005/11/24 16:57:23 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLSetup.cxx,v 1.10 2006/01/20 01:12:13 pcanal Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -265,7 +265,7 @@ TClass* TXMLSetup::XmlDefineClass(const char* xmlClassName)
    // define class for the converted class name, where
    // special symbols were replaced by '_' 
     
-   if (strchr(xmlClassName,'_')==0) return gROOT->GetClass(xmlClassName);
+   if (strchr(xmlClassName,'_')==0) return TClass::GetClass(xmlClassName);
 
    TIter iter(gROOT->GetListOfClasses());
    TClass* cl = 0;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.94 2007/01/22 07:57:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.95 2007/01/25 22:53:05 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -70,8 +70,8 @@
 #include "TDataType.h"
 #endif
 
-#ifndef ROOT_TROOT
-#include "TROOT.h"
+#ifndef ROOT_TClass
+#include "TClass.h"
 #endif
 
 class TBrowser;
@@ -350,13 +350,13 @@ public:
    virtual void         SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t isptr);
    virtual void         SetBranchAddress(const char *bname,void *add, TBranch **ptr, TClass *realClass, EDataType datatype, Bool_t isptr);
    template <class T> void SetBranchAddress(const char *bname, T **add, TBranch **ptr = 0) {
-      SetBranchAddress(bname,add,ptr,gROOT->GetClass(typeid(T)),TDataType::GetType(typeid(T)),true);
+      SetBranchAddress(bname,add,ptr,TClass::GetClass(typeid(T)),TDataType::GetType(typeid(T)),true);
    }
 #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
    // This can only be used when the template overload resolution can distringuish between
    // T* and T**
    template <class T> void SetBranchAddress(const char *bname, T *add, TBranch **ptr = 0) {
-      SetBranchAddress(bname,add,ptr,gROOT->GetClass(typeid(T)),TDataType::GetType(typeid(T)),false);
+      SetBranchAddress(bname,add,ptr,TClass::GetClass(typeid(T)),TDataType::GetType(typeid(T)),false);
    }
 #endif
    virtual void            SetBranchStatus(const char* bname, Bool_t status = 1, UInt_t* found = 0);

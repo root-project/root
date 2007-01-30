@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.21 2006/07/13 05:26:29 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.22 2006/08/18 18:46:35 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -25,7 +25,6 @@
 #include "TDataType.h"
 #include "TFile.h"
 #include "TLeafI.h"
-#include "TROOT.h"
 #include "TRealData.h"
 #include "TTree.h"
 
@@ -125,7 +124,7 @@ TBranchClones::TBranchClones(const char* name, void* pointer, Int_t basketsize, 
             continue;
          }
       }
-      gTree->BuildStreamerInfo(gROOT->GetClass(member->GetFullTypeName()));
+      gTree->BuildStreamerInfo(TClass::GetClass(member->GetFullTypeName()));
       TDataType* membertype = member->GetDataType();
       Int_t type = membertype->GetType();
       if (!type) {
@@ -373,7 +372,7 @@ void TBranchClones::Streamer(TBuffer& b)
          leaf->SetOffset(-1);
       }
       fRead = 1;
-      TClass* cl = gROOT->GetClass((const char*) fClassName);
+      TClass* cl = TClass::GetClass((const char*) fClassName);
       if (!cl) {
          Warning("Streamer", "Unknown class: %s. Cannot read BranchClones: %s", fClassName.Data(), GetName());
          SetBit(kDoNotProcess);

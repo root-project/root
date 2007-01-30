@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.316 2007/01/22 07:57:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.317 2007/01/25 22:53:05 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -903,7 +903,7 @@ TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass*
    //
 
    if (!ptrClass) {
-      TClass* claim = gROOT->GetClass(classname);
+      TClass* claim = TClass::GetClass(classname);
       if (claim && claim->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(claim->GetCollectionProxy())) {
          Error("Branch", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
                "Please generate the dictionary for this class (%s)", 
@@ -912,7 +912,7 @@ TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass*
       }
       return Branch(branchname, classname, (void*) addobj, bufsize, splitlevel);
    }
-   TClass* claim = gROOT->GetClass(classname);
+   TClass* claim = TClass::GetClass(classname);
    TClass* actualClass = 0;
    void** addr = (void**) addobj;
    if (addr) {
@@ -1274,7 +1274,7 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
    //    the entries in the Tree randomly and your Tree is in split mode.
 
    gTree = this;
-   TClass* cl = gROOT->GetClass(classname);
+   TClass* cl = TClass::GetClass(classname);
    if (!cl) {
       Error("BranchOld", "Cannot find class: '%s'", classname);
       return 0;
@@ -1326,7 +1326,7 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
          // info to the current directory's file.
          // Oh yes, and we also do this for all of
          // their base classes.
-         TClass* clm = gROOT->GetClass(dm->GetFullTypeName());
+         TClass* clm = TClass::GetClass(dm->GetFullTypeName());
          if (clm) {
             BuildStreamerInfo(clm, (char*) obj + rd->GetThisOffset());
          }
@@ -1368,7 +1368,7 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
          // -- We have a pointer to an object or a pointer to an array of basic types.
          TClass* clobj = 0;
          if (!dm->IsBasic()) {
-            clobj = gROOT->GetClass(dm->GetTypeName());
+            clobj = TClass::GetClass(dm->GetTypeName());
          }
          if (clobj && clobj->InheritsFrom("TClonesArray")) {
             // -- We have a pointer to a clones array.
@@ -1600,7 +1600,7 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* add, Int_t
    //    not issue a warning if the class can not be split.
 
    gTree = this;
-   TClass* cl = gROOT->GetClass(classname);
+   TClass* cl = TClass::GetClass(classname);
    if (!cl) {
       Error("Bronch", "Cannot find class:%s", classname);
       return 0;
@@ -1899,7 +1899,7 @@ TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */)
       if (base->IsSTLContainer()) {
          continue;
       }
-      TClass* clm = gROOT->GetClass(base->GetName());
+      TClass* clm = TClass::GetClass(base->GetName());
       BuildStreamerInfo(clm);
    }
    return sinfo;

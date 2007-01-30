@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.cxx,v 1.8 2006/09/11 09:15:11 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.cxx,v 1.9 2007/01/22 05:58:29 brun Exp $
 // Author: Rene Brun   15/01/2003
 
 /*************************************************************************
@@ -395,7 +395,7 @@ Bool_t TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, char 
    TKey *key;
    while ((key = (TKey*)next())) {
       TDirectory *curdir = gDirectory;
-      TClass *cl = gROOT->GetClass(key->GetClassName());
+      TClass *cl = TClass::GetClass(key->GetClassName());
       // a TDirectory ?
       if (cl && cl == TDirectoryFile::Class()) {
          curdir->cd(key->GetName());
@@ -548,7 +548,7 @@ void TFileDrawMap::PaintDir(TDirectory *dir, const char *keys)
    while ((key = (TKey*)next())) {
       Int_t nbytes = key->GetNbytes();
       Long64_t bseek = key->GetSeekKey();
-      TClass *cl = gROOT->GetClass(key->GetClassName());
+      TClass *cl = TClass::GetClass(key->GetClassName());
       if (cl) {
          color = (Int_t)(cl->GetUniqueID()%20);
       } else {

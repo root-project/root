@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.15 2006/07/26 13:36:44 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.16 2007/01/25 22:53:05 pcanal Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -109,7 +109,7 @@ void TNtuple::ResetBranchAddress(TBranch *branch)
    // method when the addresses were changed via calls to SetBranchAddress().
 
    if (branch) {
-      UInt_t index = fBranches.IndexOf(branch);
+      Int_t index = fBranches.IndexOf(branch);
       if (index>=0) {
          branch->SetAddress(&fArgs[index]);
       }

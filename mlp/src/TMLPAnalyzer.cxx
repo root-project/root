@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.15 2006/01/09 15:47:30 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.16 2006/05/26 15:13:02 rdm Exp $
 // Author: Christophe.Delaere@cern.ch   25/04/04
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
+#include "TROOT.h"
 #include "TSynapse.h"
 #include "TNeuron.h"
 #include "TMultiLayerPerceptron.h"

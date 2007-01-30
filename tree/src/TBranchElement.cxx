@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.212 2007/01/12 16:03:17 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.213 2007/01/25 22:53:05 pcanal Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -34,7 +34,6 @@
 #include "TFile.h"
 #include "TFolder.h"
 #include "TLeafElement.h"
-#include "TROOT.h"
 #include "TRealData.h"
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
@@ -271,7 +270,7 @@ TBranchElement::TBranchElement(const char* bname, TStreamerInfo* sinfo, Int_t id
             //        in that case is not the base streamer element it is the
             //        STL streamer element.
             fType = 1;
-            TClass* clOfElement = gROOT->GetClass(element->GetName());
+            TClass* clOfElement = TClass::GetClass(element->GetName());
             Int_t nbranches = fBranches.GetEntriesFast();
             // Note: The following code results in base class branches
             //       having two different cases for what their parent
@@ -377,14 +376,14 @@ TBranchElement::TBranchElement(const char* bname, TStreamerInfo* sinfo, Int_t id
             return;
          } else if (((fSTLtype >= TClassEdit::kVector) && (fSTLtype <= TClassEdit::kMultiSet)) || ((fSTLtype >= -TClassEdit::kMultiSet) && (fSTLtype <= -TClassEdit::kVector))) {
             // -- We are an STL container element.
-            TClass* contCl = gROOT->GetClass(elem_type);
+            TClass* contCl = TClass::GetClass(elem_type);
             fCollProxy = contCl->GetCollectionProxy()->Generate();
             TClass* valueClass = GetCollectionProxy()->GetValueClass();
             // Check to see if we can split the container.
             Bool_t cansplit = kTRUE;
             if (!valueClass) {
                cansplit = kFALSE;
-            } else if ((valueClass == TString::Class()) || (valueClass == gROOT->GetClass("string"))) {
+            } else if ((valueClass == TString::Class()) || (valueClass == TClass::GetClass("string"))) {
                cansplit = kFALSE;
             } else if (GetCollectionProxy()->HasPointers()) {
                cansplit = kFALSE;
@@ -436,7 +435,7 @@ TBranchElement::TBranchElement(const char* bname, TStreamerInfo* sinfo, Int_t id
             //       (usually by TClass::Bronch) because Unroll never
             //       calls us for an element of this type.
             fType = 2;
-            TClass* clm = gROOT->GetClass(elem_type);
+            TClass* clm = TClass::GetClass(elem_type);
             Int_t err = Unroll(name, clm, clm, pointer, basketsize, splitlevel, 0);
             if (err >= 0) {
                // Return on success.
@@ -729,9 +728,9 @@ void TBranchElement::Browse(TBrowser* b)
             if (strlen(GetClonesName()))
                // this works both for top level branches and for sub-branches,
                // as GetClonesName() is properly updated for sub-branches
-               cl=gROOT->GetClass(GetClonesName());
+               cl=TClass::GetClass(GetClonesName());
             else {
-               cl=gROOT->GetClass(GetClassName());
+               cl=TClass::GetClass(GetClassName());
 
                // check if we're in a sub-branch of this class
                // we can only find out asking the streamer given our ID
@@ -1048,7 +1047,7 @@ void TBranchElement::FillLeaves(TBuffer& b)
       // -- TClonesArray top-level branch.  Write out number of entries, sub-branch writes the entries themselves.
       if (fTree->GetMakeClass()) {
          // FIXME: What if GetClonesName() is the zero pointer or an empty string?
-         TClass* cl = gROOT->GetClass(GetClonesName());
+         TClass* cl = TClass::GetClass(GetClonesName());
          // FIXME: What if cl is a zero pointer here?
          TStreamerInfo* si = cl->GetStreamerInfo();
          if (!si) {
@@ -1327,7 +1326,7 @@ TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
          TStreamerElement* se = (TStreamerElement*) si->GetElems()[fID];
          className = se->GetTypeName();
       }
-      TClass* cl = gROOT->GetClass(className);
+      TClass* cl = TClass::GetClass(className);
       TVirtualCollectionProxy* proxy = cl->GetCollectionProxy();
       fCollProxy = proxy->Generate();
       fSTLtype = TClassEdit::IsSTLCont(className);
@@ -1353,7 +1352,7 @@ TClass* TBranchElement::GetCurrentClass()
 
    TStreamerInfo* brInfo = GetInfo();
    if (!brInfo) {
-      cl = gROOT->GetClass(GetClassName());
+      cl = TClass::GetClass(GetClassName());
       R__ASSERT(cl && cl->GetCollectionProxy());
       fCurrentClass = cl;
       return cl;
@@ -1382,7 +1381,7 @@ TClass* TBranchElement::GetCurrentClass()
    } else {
       newType = dm->GetTypeName();
    }
-   cl = gROOT->GetClass(newType);
+   cl = TClass::GetClass(newType);
    if (cl) {
       fCurrentClass = cl;
    }
@@ -1999,7 +1998,7 @@ void TBranchElement::InitializeOffsets()
                // FIXME: This is probably wrong!
                // Assume parent class is our parent branch's clones class or value class.
                if (GetClonesName() && (strlen(GetClonesName()) != 0)) {
-                  pClass = gROOT->GetClass(GetClonesName());
+                  pClass = TClass::GetClass(GetClonesName());
                   Warning("InitializeOffsets", "subBranch: '%s' has no parent class!  Assuming parent class is: '%s'.", subBranch->GetName(), pClass->GetName());
                }
                if (fBranchCount && fBranchCount->fCollProxy && fBranchCount->fCollProxy->GetValueClass()) {
@@ -2825,7 +2824,7 @@ void TBranchElement::SetAddress(void* add)
 
    if (fType == 3) {
       // split TClonesArray, counter/master branch.
-      TClass* clm = gROOT->GetClass(fClonesName.Data());
+      TClass* clm = TClass::GetClass(fClonesName.Data());
       if (clm) {
          // In case clm derives from an abstract class.
          clm->BuildRealData();
@@ -2902,7 +2901,7 @@ void TBranchElement::SetAddress(void* add)
                fClonesName = oldProxy->GetValueClass()->GetName();
                delete fCollProxy;
                fCollProxy = 0;
-               TClass* clm = gROOT->GetClass(fClonesName);
+               TClass* clm = TClass::GetClass(fClonesName);
                if (clm) {
                   clm->BuildRealData(); //just in case clm derives from an abstract class
                   clm->GetStreamerInfo();
@@ -3202,7 +3201,7 @@ void TBranchElement::SetupAddresses()
    }
 
    TBranchElement* mother = (TBranchElement*) GetMother();
-   TClass* cl = gROOT->GetClass(mother->GetClassName());
+   TClass* cl = TClass::GetClass(mother->GetClassName());
 
    // FIXME: Should this go after the mother and cl test?
    if (GetInfo() && GetInfo()->GetOffsets()) {
@@ -3378,7 +3377,7 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
       // FIXME: See InitializeOffsets() for the proper test.
       if (elem->IsA() == TStreamerBase::Class()) {
          // -- This is a base class of cl.
-         TClass* clOfBase = gROOT->GetClass(elem->GetName());
+         TClass* clOfBase = TClass::GetClass(elem->GetName());
          if ((clOfBase->Property() & kIsAbstract) && cl->InheritsFrom("TCollection")) {
             // -- Do nothing if we are abstract.
             // FIXME: We should not test for TCollection here.
@@ -3441,7 +3440,7 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
             // Ignore an abstract class.
             // FIXME: How could an abstract class get here?
             //        Partial answer: It is a base class.  But this is a data member!
-            TClass* elemClass = gROOT->GetClass(elem->GetTypeName());
+            TClass* elemClass = TClass::GetClass(elem->GetTypeName());
             if (elemClass->Property() & kIsAbstract) {
                return -1;
             }

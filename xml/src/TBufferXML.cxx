@@ -1,4 +1,4 @@
-// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.17 2007/01/19 18:25:11 brun Exp $
+// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.18 2007/01/23 08:48:29 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -559,7 +559,7 @@ Bool_t TBufferXML::ExtractPointer(XMLNodePointer_t node, void* &ptr, TClass* &cl
    TNamed* obj = (TNamed*) fIdArray->FindObject(ptrid);
    if (obj) {
       ptr = (void*) fObjMap->GetValue((Long_t) fIdArray->IndexOf(obj));
-      cl = gROOT->GetClass(obj->GetTitle());
+      cl = TClass::GetClass(obj->GetTitle());
       return kTRUE;
    }
    return kFALSE;
@@ -1044,7 +1044,7 @@ void TBufferXML::ClassMember(const char* name, const char* typeName, Int_t arrsi
 
    if (typ_id<0)
       if (strcmp(name, typeName)==0) {
-         TClass* cl = gROOT->GetClass(tname.Data());
+         TClass* cl = TClass::GetClass(tname.Data());
          if (cl!=0) typ_id = TStreamerInfo::kBase;
       }
 
@@ -1054,7 +1054,7 @@ void TBufferXML::ClassMember(const char* name, const char* typeName, Int_t arrsi
          tname.Resize(tname.Length()-1);
          isptr = kTRUE;
       }
-      TClass* cl = gROOT->GetClass(tname.Data());
+      TClass* cl = TClass::GetClass(tname.Data());
       if (cl==0) {
          Error("ClassMember","Invalid class specifier %s", typeName);
          fErrorFlag = 1;
@@ -1078,7 +1078,7 @@ void TBufferXML::ClassMember(const char* name, const char* typeName, Int_t arrsi
 
 
    if (typ_id==TStreamerInfo::kBase) {
-      TClass* cl = gROOT->GetClass(tname.Data());
+      TClass* cl = TClass::GetClass(tname.Data());
       if (cl!=0) {
          TStreamerBase* b = new TStreamerBase(tname.Data(), "title", 0);
          b->SetBaseVersion(cl->GetClassVersion());
@@ -2253,7 +2253,7 @@ void TBufferXML::StreamObject(void *obj, const type_info &typeinfo)
 {
    // steram object to/from buffer
 
-   StreamObject(obj, gROOT->GetClass(typeinfo));
+   StreamObject(obj, TClass::GetClass(typeinfo));
 }
 
 //______________________________________________________________________________
@@ -2261,7 +2261,7 @@ void TBufferXML::StreamObject(void *obj, const char *className)
 {
    // steram object to/from buffer
 
-   StreamObject(obj, gROOT->GetClass(className));
+   StreamObject(obj, TClass::GetClass(className));
 }
 
 void TBufferXML::StreamObject(TObject *obj)

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.25 2006/04/19 08:22:26 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.26 2007/01/20 19:29:35 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -380,7 +380,7 @@ namespace ROOT {
    {
       // Add a header inclusion request.
 
-      AddHeader(gROOT->GetClass(classname));
+      AddHeader(TClass::GetClass(classname));
    }
 
    void TTreeProxyGenerator::AddDescriptor(TBranchProxyDescriptor *desc)
@@ -553,8 +553,8 @@ namespace ROOT {
                         TBranchElement *parent = (TBranchElement*)branch->GetMother()->GetSubBranch(branch);
                         const char *pclname = parent->GetClassName();
 
-                        TClass *clparent = gROOT->GetClass(pclname);
-                        // TClass *clm = gROOT->GetClass(GetClassName());
+                        TClass *clparent = TClass::GetClass(pclname);
+                        // TClass *clm = TClass::GetClass(GetClassName());
                         Int_t lOffset = 0; // offset in the local streamerInfo.
                         if (clparent) lOffset = clparent->GetStreamerInfo()->GetOffset(ename);
                         else Error("AnalyzeBranch", "Missing parent for %s.", branch->GetName());
@@ -602,7 +602,7 @@ namespace ROOT {
          // See AnalyzeTree for similar code!
          TBranchProxyClassDescriptor *cldesc = 0;
 
-         TClass *cl = gROOT->GetClass(cname);
+         TClass *cl = TClass::GetClass(cname);
          if (cl) {
             TStreamerInfo *info = branch->GetInfo();
             if (strcmp(cl->GetName(),info->GetName())!=0) {
@@ -630,7 +630,7 @@ namespace ROOT {
          // See AnalyzeTree for similar code!
          TBranchProxyClassDescriptor *cldesc = 0;
 
-         TClass *cl = gROOT->GetClass(cname);
+         TClass *cl = TClass::GetClass(cname);
          if (cl) {
             TStreamerInfo *info = branch->GetInfo();
             if (strcmp(cl->GetName(),info->GetName())!=0) {
@@ -1198,7 +1198,7 @@ namespace ROOT {
          }
 
          TBranchProxyClassDescriptor *desc = 0;
-         TClass *cl = gROOT->GetClass(classname);
+         TClass *cl = TClass::GetClass(classname);
          TString type = "unknown";
          if (cl) {
             Bool_t isclones = false;
@@ -1206,7 +1206,7 @@ namespace ROOT {
                isclones = true;
                if (branch->IsA()==TBranchElement::Class()) {
                   const char *cname = ((TBranchElement*)branch)->GetClonesName();
-                  TClass *ncl = gROOT->GetClass(cname);
+                  TClass *ncl = TClass::GetClass(cname);
                   if (ncl) {
                      cl = ncl;
                   } else {
@@ -1497,7 +1497,7 @@ namespace ROOT {
          // See AnalyzeTree for similar code!
          TBranchProxyClassDescriptor *cldesc;
 
-         TClass *cl = gROOT->GetClass(cname);
+         TClass *cl = TClass::GetClass(cname);
          if (cl && cl->CanSplit()) {
             cldesc = new TBranchProxyClassDescriptor(cl->GetName(), cl->GetStreamerInfo(),
                                                      branch->GetName(),
@@ -1779,7 +1779,7 @@ namespace ROOT {
       fprintf(hf,   ",\n      fInput(0)");
       fprintf(hf,   ",\n      htemp(0)");
       fprintf(hf,   ",\n      fDirector(tree,-1)");
-      fprintf(hf,   ",\n      fClass                (gROOT->GetClass(\"%s\"))",classname.Data());
+      fprintf(hf,   ",\n      fClass                (TClass::GetClass(\"%s\"))",classname.Data());
       fprintf(hf,   ",\n      fBeginMethod          (fClass,\"%s_Begin\",\"(TTree*)0\")",scriptfunc.Data());
       fprintf(hf,   ",\n      fSlaveBeginMethod     (fClass,\"%s_SlaveBegin\",\"(TTree*)0\")",scriptfunc.Data());
       fprintf(hf,   ",\n      fNotifyMethod         (fClass,\"%s_Notify\",\"\")",scriptfunc.Data());

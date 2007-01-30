@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.151 2007/01/22 07:57:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.152 2007/01/25 22:53:05 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1898,7 +1898,7 @@ void TChain::SetBranchAddress(const char *bname, void* add, TBranch** ptr)
          *ptr = branch;
       }
       if (branch) {
-         CheckBranchAddressType(branch, gROOT->GetClass(element->GetBaddressClassName()), (EDataType) element->GetBaddressType(), element->GetBaddressIsPtr());
+         CheckBranchAddressType(branch, TClass::GetClass(element->GetBaddressClassName()), (EDataType) element->GetBaddressType(), element->GetBaddressIsPtr());
          if (fClones) {
             void* oldAdd = branch->GetAddress();
             for (TObjLink* lnk = fClones->FirstLink(); lnk; lnk = lnk->Next()) {

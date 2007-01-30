@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.23 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.24 2006/08/31 11:05:20 rdm Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -32,6 +32,7 @@
 #include "THLimitsFinder.h"
 #include "TView.h"
 #include "TStyle.h"
+#include "TDirectory.h"
 
 #include <algorithm>
 using namespace std;

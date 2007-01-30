@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.232 2006/11/22 16:52:54 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.233 2007/01/22 07:57:14 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -301,8 +301,8 @@ TTreePlayer::TTreePlayer()
    fInput->Add(new TNamed("selection",""));
    fSelector->SetInputList(fInput);
    gROOT->GetListOfCleanups()->Add(this);
-   gROOT->GetClass("TRef")->AdoptReferenceProxy(new TRefProxy());
-   gROOT->GetClass("TRefArray")->AdoptReferenceProxy(new TRefArrayProxy());
+   TClass::GetClass("TRef")->AdoptReferenceProxy(new TRefProxy());
+   TClass::GetClass("TRefArray")->AdoptReferenceProxy(new TRefArrayProxy());
 }
 
 //______________________________________________________________________________
@@ -1470,13 +1470,13 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             continue;
          }
          if (bre->GetStreamerType() == 0) {
-            if (!gROOT->GetClass(bre->GetClassName())->GetClassInfo()) {leafStatus[l] = 1; head = headcom;}
+            if (!TClass::GetClass(bre->GetClassName())->GetClassInfo()) {leafStatus[l] = 1; head = headcom;}
             fprintf(fp,"%s%-15s *%s;\n",head,bre->GetClassName(), bre->GetName());
             if (leafStatus[l] == 0) mustInit.Add(bre);
             continue;
          }
          if (bre->GetStreamerType() > 60) {
-            TClass *cle = gROOT->GetClass(bre->GetClassName());
+            TClass *cle = TClass::GetClass(bre->GetClassName());
             if (!cle) {leafStatus[l] = 1; continue;}
             if (bre->GetStreamerType() == 66) leafStatus[l] = 0;
             char brename[256];
@@ -1489,12 +1489,12 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             TStreamerElement *elem = (TStreamerElement*)cle->GetStreamerInfo()->GetElements()->FindObject(bren);
             if (elem) {
                if (elem->IsA() == TStreamerBase::Class()) {leafStatus[l] = 1; continue;}
-               if (!gROOT->GetClass(elem->GetTypeName())) {leafStatus[l] = 1; continue;}
-               if (!gROOT->GetClass(elem->GetTypeName())->GetClassInfo()) {leafStatus[l] = 1; head = headcom;}
+               if (!TClass::GetClass(elem->GetTypeName())) {leafStatus[l] = 1; continue;}
+               if (!TClass::GetClass(elem->GetTypeName())->GetClassInfo()) {leafStatus[l] = 1; head = headcom;}
                if (leafcount) fprintf(fp,"%s%-15s %s[kMax%s];\n",head,elem->GetTypeName(), branchname,blen);
                else           fprintf(fp,"%s%-15s %s;\n",head,elem->GetTypeName(), branchname);
             } else {
-               if (!gROOT->GetClass(bre->GetClassName())->GetClassInfo()) {leafStatus[l] = 1; head = headcom;}
+               if (!TClass::GetClass(bre->GetClassName())->GetClassInfo()) {leafStatus[l] = 1; head = headcom;}
                fprintf(fp,"%s%-15s %s;\n",head,bre->GetClassName(), branchname);
             }
             continue;

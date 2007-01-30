@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSessionDialogs.cxx,v 1.2 2006/11/28 12:10:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSessionDialogs.cxx,v 1.3 2007/01/15 16:15:40 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 
 #include "TSessionDialogs.h"
 #include "TSessionViewer.h"
+#include "TROOT.h"
 #include "TSystem.h"
 #include "TGButton.h"
 #include "TList.h"

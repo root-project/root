@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.13 2007/01/12 16:03:17 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.14 2007/01/25 11:48:59 brun Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -302,7 +302,7 @@ void TTreeCloner::CopyStreamerInfos()
    TStreamerInfo *oldInfo;
    while ( (oldInfo = (TStreamerInfo*)next()) ) {
       TStreamerInfo *curInfo = 0;
-      TClass *cl = gROOT->GetClass(oldInfo->GetName());
+      TClass *cl = TClass::GetClass(oldInfo->GetName());
 
       // Insure that the TStreamerInfo is loaded
       curInfo = cl->GetStreamerInfo(oldInfo->GetClassVersion());

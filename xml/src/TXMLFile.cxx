@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.23 2006/10/05 10:28:49 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.24 2007/01/22 05:58:29 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -738,7 +738,7 @@ TList* TXMLFile::GetStreamerInfoList()
          TString fname = fXML->GetAttr(sinfonode,"name");
          TString ftitle = fXML->GetAttr(sinfonode,"title");
 
-         TStreamerInfo* info = new TStreamerInfo(gROOT->GetClass(fname), ftitle);
+         TStreamerInfo* info = new TStreamerInfo(TClass::GetClass(fname), ftitle);
 
          list->Add(info);
 
@@ -830,7 +830,7 @@ void TXMLFile::ReadStreamerElement(XMLNodePointer_t node, TStreamerInfo* info)
 {
   // read and reconstruct single TStreamerElement from xml node
 
-   TClass* cl = gROOT->GetClass(fXML->GetNodeName(node));
+   TClass* cl = TClass::GetClass(fXML->GetNodeName(node));
    if ((cl==0) || !cl->InheritsFrom(TStreamerElement::Class())) return;
 
    TStreamerElement* elem = (TStreamerElement*) cl->New();

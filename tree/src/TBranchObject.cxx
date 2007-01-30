@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.36 2006/07/14 20:51:08 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.37 2006/08/04 10:08:17 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -27,7 +27,6 @@
 #include "TDataType.h"
 #include "TFile.h"
 #include "TLeafObject.h"
-#include "TROOT.h"
 #include "TRealData.h"
 #include "TStreamerInfo.h"
 #include "TTree.h"
@@ -53,7 +52,7 @@ TBranchObject::TBranchObject(const char* name, const char* classname, void* addo
 {
    // Create a BranchObject.
 
-   TClass* cl = gROOT->GetClass(classname);
+   TClass* cl = TClass::GetClass(classname);
 
    if (!cl) {
       Error("TBranchObject", "Cannot find class:%s", classname);
@@ -195,7 +194,7 @@ Int_t TBranchObject::GetEntry(Long64_t entry, Int_t getall)
       if (fAddress == 0) {
          // try to create object
          if (!TestBit(kWarn)) {
-            TClass* cl = gROOT->GetClass(fClassName);
+            TClass* cl = TClass::GetClass(fClassName);
             if (cl) {
                TObject** voidobj = (TObject**) new Long_t[1];
                *voidobj = (TObject*) cl->New();
@@ -309,7 +308,7 @@ void TBranchObject::SetAddress(void* add)
       obj = *ppointer;
    }
 
-   TClass* cl = gROOT->GetClass(fClassName.Data());
+   TClass* cl = TClass::GetClass(fClassName.Data());
 
    if (!cl) {
       for (Int_t i = 0; i < nbranches; ++i)  {
@@ -380,7 +379,7 @@ void TBranchObject::SetAddress(void* add)
       if (dm->IsaPointer()) {
          TClass* clobj = 0;
          if (!dm->IsBasic()) {
-            clobj = gROOT->GetClass(dm->GetTypeName());
+            clobj = TClass::GetClass(dm->GetTypeName());
          }
          if (clobj && clobj->InheritsFrom("TClonesArray")) {
             if (isDot) {
@@ -512,7 +511,7 @@ void TBranchObject::Streamer(TBuffer& R__b)
 
       // make sure that all TStreamerInfo objects referenced by
       // this class are written to the file
-      gROOT->GetClass(fClassName.Data())->GetStreamerInfo()->ForceWriteInfo((TFile *)R__b.GetParent(), kTRUE);
+      TClass::GetClass(fClassName.Data())->GetStreamerInfo()->ForceWriteInfo((TFile *)R__b.GetParent(), kTRUE);
 
       // if branch is in a separate file save this branch
       // as an independent key

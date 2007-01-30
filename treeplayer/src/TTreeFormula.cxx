@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.206 2007/01/15 16:10:11 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.207 2007/01/22 07:57:14 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -763,7 +763,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
 
    if (leaf->InheritsFrom("TLeafObject") ) {
       TBranchObject *bobj = (TBranchObject*)leaf->GetBranch();
-      cl = gROOT->GetClass(bobj->GetClassName());
+      cl = TClass::GetClass(bobj->GetClassName());
    } else if (leaf->InheritsFrom("TLeafElement")) {
       TBranchElement *branchEl = (TBranchElement *)leaf->GetBranch();
       branchEl->SetupAddresses();
@@ -867,7 +867,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                collectioninfo =
                   new TFormLeafInfoCollection(collectionCl, 0, collectionElement, kTRUE);
             } else {
-               TClass *collectionCl = gROOT->GetClass(count->GetClassName());
+               TClass *collectionCl = TClass::GetClass(count->GetClassName());
                collectioninfo =
                   new TFormLeafInfoCollection(collectionCl, 0, collectionCl, kTRUE);
             }
@@ -1280,7 +1280,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                         TString return_type =
                           gInterpreter->TypeName(method->GetMethod()->GetReturnTypeName());
                         leafinfo = new TFormLeafInfoMethod(cl,method);
-                        cl = (return_type == "void") ? 0 : gROOT->GetClass(return_type.Data());
+                        cl = (return_type == "void") ? 0 : TClass::GetClass(return_type.Data());
                      }
                      break;
                   default:
@@ -1799,7 +1799,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
       return -1;
    }
 
-   static TClassRef stdStringClass = gROOT->GetClass("string");
+   static TClassRef stdStringClass = TClass::GetClass("string");
    TClass *objClass = EvalClass(code);
    if (IsLeafString(code) || objClass == TString::Class() || objClass == stdStringClass) {
 
@@ -1859,7 +1859,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
 
          TClass *rcl = 0;
          TFunction *f = method->GetMethod();
-         if (f) rcl = gROOT->GetClass(gInterpreter->TypeName(f->GetReturnTypeName()));
+         if (f) rcl = TClass::GetClass(gInterpreter->TypeName(f->GetReturnTypeName()));
          if ((rcl == TString::Class() || rcl == stdStringClass)
              && SwitchToFormLeafInfo(code) ) {
 
@@ -1933,7 +1933,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
          // Let's see if work is a classname.
          *(--current) = 0;
          TString cast_name = gInterpreter->TypeName(work);
-         TClass *cast_cl = gROOT->GetClass(cast_name);
+         TClass *cast_cl = TClass::GetClass(cast_name);
          if (cast_cl) {
             // We must have a cast
             castqueue.AddAtAndExpand(cast_cl,paran_level);
@@ -3177,9 +3177,9 @@ TClass* TTreeFormula::EvalClass(Int_t oper) const
                   // we probably do not have a way to know the class of the object.
                   return 0;
                } else {
-                  return gROOT->GetClass( elem->GetTypeName() );
+                  return TClass::GetClass( elem->GetTypeName() );
                }
-            } else return gROOT->GetClass( branch->GetClassName() );
+            } else return TClass::GetClass( branch->GetClassName() );
          } else {
             return 0;
          }
@@ -4903,7 +4903,7 @@ Bool_t TTreeFormula::SwitchToFormLeafInfo(Int_t code)
                collectioninfo =
                   new TFormLeafInfoCollection(collectionCl, 0, collectionElement, kTRUE);
             } else {
-               TClass *collectionCl = gROOT->GetClass(count->GetClassName());
+               TClass *collectionCl = TClass::GetClass(count->GetClassName());
                collectioninfo =
                   new TFormLeafInfoCollection(collectionCl, 0, collectionCl, kTRUE);
             }
