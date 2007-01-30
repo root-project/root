@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.279 2007/01/03 14:24:58 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.280 2007/01/25 16:28:41 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TClass.h"
 #include "TSystem.h"
 #include "THistPainter.h"
 #include "TH3.h"
@@ -459,7 +460,7 @@ void THistPainter::FitPanel()
       return;
    }
 
-   if (!gROOT->GetClass("TFitEditor")) gSystem->Load("libFitPanel");
+   if (!TClass::GetClass("TFitEditor")) gSystem->Load("libFitPanel");
    gROOT->ProcessLine(Form("TFitEditor::Open((TVirtualPad*)0x%x,(TObject*)0x%x)",gPad,fH));
 }
 
@@ -1498,7 +1499,7 @@ void THistPainter::Paint(Option_t *option)
    // Paint using TSpectrum2Painter
    if (Hoption.Spec) {
       if (!TableInit()) return;
-      if (!gROOT->GetClass("TSpectrum2Painter")) gSystem->Load("libSpectrumPainter");
+      if (!TClass::GetClass("TSpectrum2Painter")) gSystem->Load("libSpectrumPainter");
       gROOT->ProcessLineFast(Form("TSpectrum2Painter::PaintSpectrum((TH2F*)0x%x,\"%s\")",fH,option));
       return;
    }

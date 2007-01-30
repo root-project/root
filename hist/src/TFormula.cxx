@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.128 2006/10/06 09:26:53 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.129 2007/01/19 16:48:00 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -390,7 +390,7 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    if (nargs) proto.Remove(proto.Length()-1);
 
 
-   TClass *ns = (spaceName.Length()) ? gROOT->GetClass(spaceName) : 0;
+   TClass *ns = (spaceName.Length()) ? TClass::GetClass(spaceName) : 0;
    TMethodCall *method = new TMethodCall();
    if (ns) {
       method->Init(ns,functionName,proto);

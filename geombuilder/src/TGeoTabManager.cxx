@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoTabManager.cxx,v 1.9 2007/01/29 10:06:50 brun Exp $
+// @(#):$Name:  $:$Id: TGeoTabManager.cxx,v 1.10 2007/01/29 15:10:48 brun Exp $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -153,7 +153,7 @@ void TGeoTabManager::GetEditors(TClass *cl)
 // Get editor for a class.
    // Look in fVolumeTab for any object deriving from TGedFrame,
 
-   TClass *class2 = gROOT->GetClass(Form("%sEditor",cl->GetName()));
+   TClass *class2 = TClass::GetClass(Form("%sEditor",cl->GetName()));
    if (class2 && class2->InheritsFrom(TGedFrame::Class())) {
       TGFrameElement *fr;
       TIter next(fVolumeTab->GetList());
@@ -750,7 +750,7 @@ void TGeoTransientPanel::GetEditors(TClass *cl)
 // Get editor for a class.
    // Look in fStyle for any object deriving from TGedFrame,
 
-   TClass *class2 = gROOT->GetClass(Form("%sEditor",cl->GetName()));
+   TClass *class2 = TClass::GetClass(Form("%sEditor",cl->GetName()));
    if (class2 && class2->InheritsFrom(TGedFrame::Class())) {
       TGFrameElement *fr;
       TIter next(fStyle->GetList());

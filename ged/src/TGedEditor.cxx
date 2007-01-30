@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.37 2007/01/29 14:28:31 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.38 2007/01/29 15:10:48 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -503,7 +503,7 @@ void TGedEditor::ActivateEditor(TClass* cl, Bool_t recurse)
    TGedFrame *frame = 0;
 
    if (pair == 0) {
-      edClass = gROOT->GetClass(Form("%sEditor", cl->GetName()));
+      edClass = TClass::GetClass(Form("%sEditor", cl->GetName()));
 
       if (edClass && edClass->InheritsFrom(TGedFrame::Class())) {
          TGWindow *exroot = (TGWindow*) fClient->GetRoot();

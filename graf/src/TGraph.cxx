@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.199 2006/11/24 10:17:46 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.200 2007/01/15 16:50:09 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1384,7 +1384,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    }
    if (linear){
       //
-      TClass *cl = gROOT->GetClass("TLinearFitter");
+      TClass *cl = TClass::GetClass("TLinearFitter");
       if (isSet && strdiff!=0) {
          delete TVirtualFitter::GetFitter();
          isSet = kFALSE;
@@ -1565,7 +1565,7 @@ void TGraph::FitPanel()
       return;
    }
 
-   if (!gROOT->GetClass("TFitEditor")) gSystem->Load("libFitPanel");
+   if (!TClass::GetClass("TFitEditor")) gSystem->Load("libFitPanel");
    gROOT->ProcessLine(Form("TFitEditor::Open((TVirtualPad*)0x%x,(TObject*)0x%x)",gPad,this));
 }
 

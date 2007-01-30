@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLink.cxx,v 1.6 2001/07/01 08:31:55 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLink.cxx,v 1.7 2005/11/21 13:57:42 couet Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************
@@ -13,7 +13,6 @@
 
 #include "TVirtualPad.h"
 #include "TClass.h"
-#include "TROOT.h"
 #include "TLink.h"
 
 ClassImp(TLink)
@@ -82,7 +81,7 @@ void TLink::ExecuteEvent(Int_t event, Int_t, Int_t)
    if (TestBit(kIsStarStar)) return;
    TObject *idcur = (TObject*)fLink;
    if (!idcur) return;
-   TClass *cl = gROOT->GetClass(GetName());
+   TClass *cl = TClass::GetClass(GetName());
    if (!cl) return;
 
    // check if link points to a TObject

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.35 2006/10/05 13:50:11 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.36 2007/01/15 16:10:10 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -511,7 +511,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
       strdiff = strcmp(TVirtualFitter::GetFitter()->IsA()->GetName(), l);
    }
    if (linear){
-      TClass *cl = gROOT->GetClass("TLinearFitter");
+      TClass *cl = TClass::GetClass("TLinearFitter");
       if (isSet && strdiff!=0) {
          delete TVirtualFitter::GetFitter();
          isSet=kFALSE;

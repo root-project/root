@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.125 2006/12/05 17:17:37 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.126 2007/01/29 15:10:49 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -777,7 +777,7 @@ namespace {
          }
          if (fgClass->InheritsFrom(l)) {
             if (fgClass->InheritsFrom(r)) {
-               if (gROOT->GetClass(l)->InheritsFrom(r))
+               if (TClass::GetClass(l)->InheritsFrom(r))
                   return -1;
                else return 1;
             } else return -1;
@@ -3763,7 +3763,7 @@ void THtml::CreateListOfClasses(const char* filter)
 
       // get class & filename - use TROOT::GetClass, as we also
       // want those classes without decl file name!
-      TClass *classPtr = gROOT->GetClass((const char *) cname, kTRUE);
+      TClass *classPtr = TClass::GetClass((const char *) cname, kTRUE);
       if (!classPtr) continue;
 
       TString srcGuess;

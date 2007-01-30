@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.17 2007/01/28 18:30:57 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.18 2007/01/29 10:06:50 brun Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -392,7 +392,7 @@ void TClassTree::Init()
    Int_t i,j;
    for (i=0;i<fNclasses;i++) {
       fCnames[i]   = new TString(gClassTable->Next());
-      fCpointer[i] = gROOT->GetClass(fCnames[i]->Data());
+      fCpointer[i] = TClass::GetClass(fCnames[i]->Data());
       fCtitles[i]  = new TString(fCpointer[i]->GetTitle());
       fCstatus[i]  = 0;
       fOptions[i]  = new TString("ID");

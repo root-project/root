@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.52 2007/01/16 08:20:37 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.53 2007/01/29 10:06:50 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -317,7 +317,7 @@ void TGuiBldMenuDialog::Build()
          if (datatype) {
             strcpy(basictype, datatype->GetTypeName());
          } else {
-            TClass *cl = gROOT->GetClass(type);
+            TClass *cl = TClass::GetClass(type);
             if (strncmp(type, "enum", 4) && (cl && !(cl->Property() & kIsEnum)))
                Warning("Dialog", "data type is not basic type, assuming (int)");
             strcpy(basictype, "int");

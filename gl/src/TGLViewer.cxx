@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.56 2007/01/29 08:52:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.57 2007/01/29 10:06:50 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -2102,7 +2102,7 @@ TClass* TGLViewer::FindDirectRendererClass(TClass* cls)
 {
    TString rnr( cls->GetName() );
    rnr += "GL";
-   TClass* c = gROOT->GetClass(rnr);
+   TClass* c = TClass::GetClass(rnr);
    if (c != 0)
       return c;
 

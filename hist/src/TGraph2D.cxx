@@ -740,7 +740,7 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    }
    if (linear){
       //
-      TClass *cl = gROOT->GetClass("TLinearFitter");
+      TClass *cl = TClass::GetClass("TLinearFitter");
       if (isSet && strdiff!=0) {
          delete TVirtualFitter::GetFitter();
          isSet=kFALSE;
