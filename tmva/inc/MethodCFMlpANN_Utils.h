@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCFMlpANN_Utils.h,v 1.10 2006/11/20 15:35:28 brun Exp $ 
+// @(#)root/tmva $Id: MethodCFMlpANN_Utils.h,v 1.11 2007/01/30 10:19:25 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -129,6 +129,7 @@ namespace TMVA {
                else {
                   printf( "*** ERROR in varn3_(): xx is zero pointer ==> abort ***\n") ;
                   //exit(1);
+                  return xx[0][0];
                }
             }
          void Delete( void ) {
