@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.16 2007/01/19 18:25:12 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.17 2007/01/20 09:34:58 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -403,7 +403,7 @@ void* TBufferSQL2::SqlReadObject(void* obj, TClass** cl, TMemberStreamer *stream
             TString clname;
             Version_t version;
             if ((cl!=0) && SqlObjectInfo(objid, clname, version))
-              *cl = gROOT->GetClass(clname);
+              *cl = TClass::GetClass(clname);
          }
       }
 
@@ -447,7 +447,7 @@ void* TBufferSQL2::SqlReadObjectDirect(void* obj, TClass** cl, Long64_t objid, T
 
    TSQLClassInfo* sqlinfo = fSQL->FindSQLClassInfo(clname.Data(), version);
 
-   TClass* objClass = gROOT->GetClass(clname);
+   TClass* objClass = TClass::GetClass(clname);
    if ((objClass==0) || (sqlinfo==0)) {
       Error("SqlReadObjectDirect","Class %s is not known", clname.Data());
       return obj;
@@ -687,7 +687,7 @@ void TBufferSQL2::ClassMember(const char* name, const char* typeName, Int_t arrs
    
    if (typ_id<0) 
       if (strcmp(name, typeName)==0) {
-         TClass* cl = gROOT->GetClass(tname.Data());
+         TClass* cl = TClass::GetClass(tname.Data());
          if (cl!=0) typ_id = TStreamerInfo::kBase;
       }
    
@@ -697,7 +697,7 @@ void TBufferSQL2::ClassMember(const char* name, const char* typeName, Int_t arrs
          tname.Resize(tname.Length()-1);
          isptr = kTRUE;
       }
-      TClass* cl = gROOT->GetClass(tname.Data());
+      TClass* cl = TClass::GetClass(tname.Data());
       if (cl==0) {
          Error("ClassMember","Invalid class specifier %s", typeName);
          fErrorFlag = 1;
@@ -720,7 +720,7 @@ void TBufferSQL2::ClassMember(const char* name, const char* typeName, Int_t arrs
    } else
    
    if (typ_id==TStreamerInfo::kBase) {
-      TClass* cl = gROOT->GetClass(tname.Data());
+      TClass* cl = TClass::GetClass(tname.Data());
       if (cl!=0) {
          TStreamerBase* b = new TStreamerBase(tname.Data(), "title", 0);
          b->SetBaseVersion(cl->GetClassVersion());
@@ -1895,7 +1895,7 @@ void TBufferSQL2::StreamObject(void *obj, const type_info &typeinfo)
 {
    // steram object to/from buffer
 
-   StreamObject(obj, gROOT->GetClass(typeinfo));
+   StreamObject(obj, TClass::GetClass(typeinfo));
 }
 
 //______________________________________________________________________________
@@ -1903,7 +1903,7 @@ void TBufferSQL2::StreamObject(void *obj, const char *className)
 {
    // steram object to/from buffer
 
-   StreamObject(obj, gROOT->GetClass(className));
+   StreamObject(obj, TClass::GetClass(className));
 }
 
 //______________________________________________________________________________
