@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.98 2006/12/12 11:20:49 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.99 2007/01/29 10:06:50 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -943,7 +943,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       TNamed *packetizer;
       if ((packetizer = (TNamed*)fInput->FindObject("PROOF_Packetizer")) != 0) {
          Info("Process","Using Alternate Packetizer: %s", packetizer->GetTitle());
-         TClass *cl = gROOT->GetClass(packetizer->GetTitle());
+         TClass *cl = TClass::GetClass(packetizer->GetTitle());
          if (cl == 0) {
             Error("Process","Class '%s' not found", packetizer->GetTitle());
             fExitStatus = kAborted;

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.1 2006/11/27 14:14:24 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.2 2006/11/28 12:10:52 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -523,7 +523,7 @@ TDSet::TDSet(const char *name,
    if (name && strlen(name) > 0) {
       // In the old constructor signature it was the 'type'
       if (!type) {
-         if ((c = gROOT->GetClass(name)))
+         if ((c = TClass::GetClass(name)))
             fType = name;
          else
             // Default type is 'TTree'
@@ -533,16 +533,16 @@ TDSet::TDSet(const char *name,
          fName = name;
          // Check type
          if (strlen(type) > 0)
-            if ((c = gROOT->GetClass(type)))
+            if ((c = TClass::GetClass(type)))
                fType = type;
       }
    } else if (type && strlen(type) > 0) {
       // Check the type
-      if ((c = gROOT->GetClass(type)))
+      if ((c = TClass::GetClass(type)))
          fType = type;
    }
    // The correct class type
-   c = gROOT->GetClass(fType);
+   c = TClass::GetClass(fType);
 
    fIsTree = (c->InheritsFrom("TTree")) ? kTRUE : kFALSE;
 
