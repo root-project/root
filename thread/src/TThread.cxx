@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.48 2006/11/20 10:02:00 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.49 2007/01/20 19:29:34 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -42,8 +42,8 @@ Long_t          TThread::fgMainId = 0;
 TThread        *TThread::fgMain = 0;
 TMutex         *TThread::fgMainMutex;
 char  *volatile TThread::fgXAct = 0;
-TMutex         *TThread::fgXActMutex;
-TCondition     *TThread::fgXActCondi;
+TMutex         *TThread::fgXActMutex = 0;
+TCondition     *TThread::fgXActCondi = 0;
 void **volatile TThread::fgXArr = 0;
 volatile Int_t  TThread::fgXAnb = 0;
 volatile Int_t  TThread::fgXArt = 0;
@@ -241,9 +241,6 @@ void TThread::Init()
    fgThreadImp = gThreadFactory->CreateThreadImp();
    fgMainId    = fgThreadImp->SelfId();
    fgMainMutex = new TMutex(kTRUE);
-   fgXActMutex = new TMutex(kTRUE);
-   new TThreadTimer;
-   fgXActCondi = new TCondition;
    gThreadTsd  = TThread::Tsd;
    gThreadXAR  = TThread::XARequest;
 
@@ -585,7 +582,8 @@ Int_t TThread::CleanUp()
 
    fgThreadImp->CleanUp(&(th->fClean));
    fgMainMutex->CleanUp();
-   fgXActMutex->CleanUp();
+   if (fgXActMutex)
+      fgXActMutex->CleanUp();
 
    if (th->fHolder)
       delete th;
@@ -876,6 +874,13 @@ Int_t TThread::XARequest(const char *xact, Int_t nb, void **ar, Int_t *iret)
    // Static method used to allow commands to be executed by the main thread.
 
    if (!gApplication || !gApplication->IsRunning()) return 0;
+
+   // The first time, create the related static vars
+   if (!fgXActMutex) {
+      fgXActMutex = new TMutex(kTRUE);
+      new TThreadTimer;
+      fgXActCondi = new TCondition;
+   }
 
    TThread *th = Self();
    if (th && th->fId != fgMainId) {   // we are in the thread
