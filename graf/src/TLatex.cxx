@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.67 2007/01/29 15:10:48 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.68 2007/01/29 15:34:45 couet Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1973,7 +1973,7 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
    fError = 0 ;
 
    if (angle) {
-      Int_t CBoxX[4], CBoxY[4];
+      Int_t cBoxX[4], cBoxY[4];
       Int_t ptx, pty;
       if (TestBit(kTextNDC)) {
          ptx = gPad->UtoPixel(fX);
@@ -1982,16 +1982,16 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
          ptx = gPad->XtoAbsPixel(gPad->XtoPad(fX));
          pty = gPad->YtoAbsPixel(gPad->YtoPad(fY));
       }
-      GetControlBox(ptx, pty, fTextAngle, CBoxX, CBoxY);
-      Int_t x1 = CBoxX[0];
-      Int_t x2 = CBoxX[0];
-      Int_t y1 = CBoxY[0];
-      Int_t y2 = CBoxY[0];
+      GetControlBox(ptx, pty, fTextAngle, cBoxX, cBoxY);
+      Int_t x1 = cBoxX[0];
+      Int_t x2 = cBoxX[0];
+      Int_t y1 = cBoxY[0];
+      Int_t y2 = cBoxY[0];
       for (Int_t i=1; i<4; i++) {
-         if (CBoxX[i] < x1) x1 = CBoxX[i];
-         if (CBoxX[i] > x2) x2 = CBoxX[i];
-         if (CBoxY[i] < y1) y1 = CBoxY[i];
-         if (CBoxY[i] > y2) y2 = CBoxY[i];
+         if (cBoxX[i] < x1) x1 = cBoxX[i];
+         if (cBoxX[i] > x2) x2 = cBoxX[i];
+         if (cBoxY[i] < y1) y1 = cBoxY[i];
+         if (cBoxY[i] > y2) y2 = cBoxY[i];
       }
       w = x2-x1;
       h = y2-y1;

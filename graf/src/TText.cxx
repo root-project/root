@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.21 2007/01/23 13:10:41 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.22 2007/01/29 15:34:45 couet Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -98,13 +98,13 @@ Int_t TText::DistancetoPrimitive(Int_t px, Int_t py)
    }
 
    // Get the text control box
-   Int_t CBoxX[5], CBoxY[5];
-   GetControlBox(ptx, pty, -fTextAngle, CBoxX, CBoxY);
-   CBoxY[4] = CBoxY[0];
-   CBoxX[4] = CBoxX[0];
+   Int_t cBoxX[5], cBoxY[5];
+   GetControlBox(ptx, pty, -fTextAngle, cBoxX, cBoxY);
+   cBoxY[4] = cBoxY[0];
+   cBoxX[4] = cBoxX[0];
 
    // Check if the point (px,py) is inside the text control box
-   if(TMath::IsInside(px, py, 5, CBoxX, CBoxY)){
+   if(TMath::IsInside(px, py, 5, cBoxX, cBoxY)){
       return 0;
    } else {
       return 9999;
@@ -159,11 +159,11 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Double_t co, si, dtheta, norm;
    static Bool_t droite;
    static Double_t theta;
-   Int_t Ax, Ay, Bx, By, Cx, Cy;
-   Ax = Ay = 0;
+   Int_t ax, ay, bx, by, cx, cy;
+   ax = ay = 0;
    Double_t lambda, x2,y2;
    Double_t dpx,dpy,xp1,yp1;
-   Int_t CBoxX[4], CBoxY[4], Part;
+   Int_t cBoxX[4], cBoxY[4], part;
 
    if (!gPad->IsEditable()) return;
    switch (event) {
@@ -187,10 +187,10 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       si     = TMath::Sin(fTextAngle*0.017453293);
       resize = kFALSE;
       turn   = kFALSE;
-      GetControlBox(px1, py1, -theta, CBoxX, CBoxY);
-      Part   = (Int_t)(3*((px-CBoxX[0])*co-(py-CBoxY[0])*si)/
-                      ((CBoxX[3]-CBoxX[0])*co-(CBoxY[3]-CBoxY[0])*si));
-      switch (Part) {
+      GetControlBox(px1, py1, -theta, cBoxX, cBoxY);
+      part   = (Int_t)(3*((px-cBoxX[0])*co-(py-cBoxY[0])*si)/
+                      ((cBoxX[3]-cBoxX[0])*co-(cBoxY[3]-cBoxY[0])*si));
+      switch (part) {
       case 0:
 	 if (halign == 3) {
             turn   = kTRUE;
@@ -239,31 +239,31 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          si = TMath::Sin(fTextAngle*0.017453293);
          if (largeur == 1) {
             switch (valign) {
-               case 1 : Ax = px1; Ay = py1; break;
-               case 2 : Ax = px1+Int_t(si*h/2); Ay = py1+Int_t(co*h/2); break;
-               case 3 : Ax = px1+Int_t(si*h*3/2); Ay = py1+Int_t(co*h*3/2); break;
+               case 1 : ax = px1; ay = py1; break;
+               case 2 : ax = px1+Int_t(si*h/2); ay = py1+Int_t(co*h/2); break;
+               case 3 : ax = px1+Int_t(si*h*3/2); ay = py1+Int_t(co*h*3/2); break;
             }
          }
          if (largeur == 2) {
             switch (valign) {
-               case 1 : Ax = px1-Int_t(co*w/2); Ay = py1+Int_t(si*w/2); break;
-               case 2 : Ax = px1-Int_t(co*w/2+si*h/2); Ay = py1+Int_t(si*w/2+co*h/2); break;
-               case 3 : Ax = px1-Int_t(co*w/2+si*h*3/2); Ay = py1+Int_t(si*w/2+co*h*3/2); break;
+               case 1 : ax = px1-Int_t(co*w/2); ay = py1+Int_t(si*w/2); break;
+               case 2 : ax = px1-Int_t(co*w/2+si*h/2); ay = py1+Int_t(si*w/2+co*h/2); break;
+               case 3 : ax = px1-Int_t(co*w/2+si*h*3/2); ay = py1+Int_t(si*w/2+co*h*3/2); break;
             }
          }
          if (largeur == 3) {
             switch (valign) {
-               case 1 : Ax = px1-Int_t(co*w); Ay = py1+Int_t(si*w); break;
-               case 2 : Ax = px1-Int_t(co*w+si*h/2); Ay = py1+Int_t(si*w+co*h/2); break;
-               case 3 : Ax = px1-Int_t(co*w+si*h*3/2); Ay = py1+Int_t(si*w+co*h*3/2); break;
+               case 1 : ax = px1-Int_t(co*w); ay = py1+Int_t(si*w); break;
+               case 2 : ax = px1-Int_t(co*w+si*h/2); ay = py1+Int_t(si*w+co*h/2); break;
+               case 3 : ax = px1-Int_t(co*w+si*h*3/2); ay = py1+Int_t(si*w+co*h*3/2); break;
             }
          }
-         if (hauteur == 3) {Bx = Ax-Int_t(si*h); By = Ay-Int_t(co*h);}
-         else {Bx = Ax; By = Ay;}
-         Cx = Bx+Int_t(co*w); Cy = By-Int_t(si*w);
-         lambda = Double_t(((px-Bx)*(Cx-Bx)+(py-By)*(Cy-By)))/Double_t(((Cx-Bx)*(Cx-Bx)+(Cy-By)*(Cy-By)));
-         x2 = Double_t(px) - lambda*Double_t(Cx-Bx)-Double_t(Bx);
-         y2 = Double_t(py) - lambda*Double_t(Cy-By)-Double_t(By);
+         if (hauteur == 3) {bx = ax-Int_t(si*h); by = ay-Int_t(co*h);}
+         else {bx = ax; by = ay;}
+         cx = bx+Int_t(co*w); cy = by-Int_t(si*w);
+         lambda = Double_t(((px-bx)*(cx-bx)+(py-by)*(cy-by)))/Double_t(((cx-bx)*(cx-bx)+(cy-by)*(cy-by)));
+         x2 = Double_t(px) - lambda*Double_t(cx-bx)-Double_t(bx);
+         y2 = Double_t(py) - lambda*Double_t(cy-by)-Double_t(by);
          Size = Int_t(TMath::Sqrt(x2*x2+y2*y2)*2);
          if (Size<4) Size = 4;
 
@@ -314,50 +314,50 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 //______________________________________________________________________________
 void TText::GetControlBox(Int_t x, Int_t y, Double_t theta, 
-                          Int_t CBoxX[4], Int_t CBoxY[4])
+                          Int_t cBoxX[4], Int_t cBoxY[4])
 {
    // Return the text control box. The text position coordinates is (x,y) and
-   // the text angle is theta. The control box coordinates are returned in CBoxX
-   // and CBoxY.
+   // the text angle is theta. The control box coordinates are returned in cBoxX
+   // and cBoxY.
 
    Short_t halign = fTextAlign/10;          // horizontal alignment
    Short_t valign = fTextAlign - 10*halign; // vertical alignment
-   UInt_t CBoxW, CBoxH;                     // control box width and heigh
+   UInt_t cBoxW, cBoxH;                     // control box width and heigh
    UInt_t Dx = 0, Dy = 0;                   // delta along x and y to align the box
 
-   GetBoundingBox(CBoxW, CBoxH);
+   GetBoundingBox(cBoxW, cBoxH);
 
    // compute the translations (Dx, Dy) required by the alignments
    switch (halign) {
       case 1 : Dx = 0      ; break;
-      case 2 : Dx = CBoxW/2; break;
-      case 3 : Dx = CBoxW  ; break;
+      case 2 : Dx = cBoxW/2; break;
+      case 3 : Dx = cBoxW  ; break;
    }
    switch (valign) {
       case 1 : Dy = 0      ; break;
-      case 2 : Dy = CBoxH/2; break;
-      case 3 : Dy = CBoxH  ; break;
+      case 2 : Dy = cBoxH/2; break;
+      case 3 : Dy = cBoxH  ; break;
    }
 
    // compute the control box coordinates before rotation
-   CBoxX[0] = x-Dx;
-   CBoxY[0] = y+Dy;
-   CBoxX[1] = x-Dx;
-   CBoxY[1] = y-CBoxH+Dy;
-   CBoxX[2] = x+CBoxW-Dx;
-   CBoxY[2] = y-CBoxH+Dy;
-   CBoxX[3] = x+CBoxW-Dx;
-   CBoxY[3] = y+Dy;
+   cBoxX[0] = x-Dx;
+   cBoxY[0] = y+Dy;
+   cBoxX[1] = x-Dx;
+   cBoxY[1] = y-cBoxH+Dy;
+   cBoxX[2] = x+cBoxW-Dx;
+   cBoxY[2] = y-cBoxH+Dy;
+   cBoxX[3] = x+cBoxW-Dx;
+   cBoxY[3] = y+Dy;
 
    // rotate the control box if needed
    if (theta) {
       Double_t cosTheta = TMath::Cos(theta*0.017453293);
       Double_t sinTheta = TMath::Sin(theta*0.017453293);
       for (int i=0; i<4 ; i++) {
-         Int_t HCBoxX = CBoxX[i];
-         Int_t HCBoxY = CBoxY[i];
-         CBoxX[i] = (Int_t)((HCBoxX-x)*cosTheta-(HCBoxY-y)*sinTheta+x);
-         CBoxY[i] = (Int_t)((HCBoxX-x)*sinTheta+(HCBoxY-y)*cosTheta+y);
+         Int_t hcBoxX = cBoxX[i];
+         Int_t hcBoxY = cBoxY[i];
+         cBoxX[i] = (Int_t)((hcBoxX-x)*cosTheta-(hcBoxY-y)*sinTheta+x);
+         cBoxY[i] = (Int_t)((hcBoxX-x)*sinTheta+(hcBoxY-y)*cosTheta+y);
       }
    }
 }
@@ -371,7 +371,7 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
    // w and h take the angle into account.
 
    if (angle) {
-      Int_t CBoxX[4], CBoxY[4];
+      Int_t cBoxX[4], cBoxY[4];
       Int_t ptx, pty;
       if (TestBit(kTextNDC)) {
          ptx = gPad->UtoPixel(fX);
@@ -380,16 +380,16 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
          ptx = gPad->XtoAbsPixel(gPad->XtoPad(fX));
          pty = gPad->YtoAbsPixel(gPad->YtoPad(fY));
       }
-      GetControlBox(ptx, pty, fTextAngle, CBoxX, CBoxY);
-      Int_t x1 = CBoxX[0];
-      Int_t x2 = CBoxX[0];
-      Int_t y1 = CBoxY[0];
-      Int_t y2 = CBoxY[0];
+      GetControlBox(ptx, pty, fTextAngle, cBoxX, cBoxY);
+      Int_t x1 = cBoxX[0];
+      Int_t x2 = cBoxX[0];
+      Int_t y1 = cBoxY[0];
+      Int_t y2 = cBoxY[0];
       for (Int_t i=1; i<4; i++) {
-         if (CBoxX[i] < x1) x1 = CBoxX[i];
-         if (CBoxX[i] > x2) x2 = CBoxX[i];
-         if (CBoxY[i] < y1) y1 = CBoxY[i];
-         if (CBoxY[i] > y2) y2 = CBoxY[i];
+         if (cBoxX[i] < x1) x1 = cBoxX[i];
+         if (cBoxX[i] > x2) x2 = cBoxX[i];
+         if (cBoxY[i] < y1) y1 = cBoxY[i];
+         if (cBoxY[i] > y2) y2 = cBoxY[i];
       }
       w = x2-x1;
       h = y2-y1;
@@ -481,19 +481,19 @@ void TText::PaintControlBox(Int_t x, Int_t y, Double_t theta)
    // Paint the text control box. (x,y) are the coordinates where the control
    // box should be painted and theta is the angle of the box.
 
-   Int_t CBoxX[4], CBoxY[4];
+   Int_t cBoxX[4], cBoxY[4];
    Short_t halign = fTextAlign/10;               // horizontal alignment
    Short_t valign = fTextAlign - 10*halign;      // vertical alignment
 
-   GetControlBox(x, y, theta, CBoxX, CBoxY);
+   GetControlBox(x, y, theta, cBoxX, cBoxY);
    // Draw the text control box outline
    gVirtualX->SetLineStyle((Style_t)1);
    gVirtualX->SetLineWidth(1);
    gVirtualX->SetLineColor(1);
-   gVirtualX->DrawLine(CBoxX[0], CBoxY[0], CBoxX[1], CBoxY[1]);
-   gVirtualX->DrawLine(CBoxX[1], CBoxY[1], CBoxX[2], CBoxY[2]);
-   gVirtualX->DrawLine(CBoxX[2], CBoxY[2], CBoxX[3], CBoxY[3]);
-   gVirtualX->DrawLine(CBoxX[3], CBoxY[3], CBoxX[0], CBoxY[0]);
+   gVirtualX->DrawLine(cBoxX[0], cBoxY[0], cBoxX[1], cBoxY[1]);
+   gVirtualX->DrawLine(cBoxX[1], cBoxY[1], cBoxX[2], cBoxY[2]);
+   gVirtualX->DrawLine(cBoxX[2], cBoxY[2], cBoxX[3], cBoxY[3]);
+   gVirtualX->DrawLine(cBoxX[3], cBoxY[3], cBoxX[0], cBoxY[0]);
 
    // Draw a symbol at the text starting point
    TPoint p;
@@ -521,8 +521,8 @@ void TText::PaintControlBox(Int_t x, Int_t y, Double_t theta)
          }
       break;
    }
-   p.fX = (CBoxX[ix]+CBoxX[iy])/2;
-   p.fY = (CBoxY[ix]+CBoxY[iy])/2;
+   p.fX = (cBoxX[ix]+cBoxX[iy])/2;
+   p.fY = (cBoxY[ix]+cBoxY[iy])/2;
    gVirtualX->SetMarkerColor(1);
    gVirtualX->SetMarkerStyle(24);
    gVirtualX->SetMarkerSize(0.7);
