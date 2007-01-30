@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodRuleFit.cxx,v 1.43 2006/11/17 00:21:35 stelzer Exp $
+// @(#)root/tmva $Id: MethodRuleFit.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss 
 
 /**********************************************************************************
@@ -31,6 +31,7 @@
 #include "TMVA/MethodRuleFit.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Timer.h"
+#include "TDirectory.h"
 #include "TMatrix.h"
 #include "Riostream.h"
 #include <algorithm>

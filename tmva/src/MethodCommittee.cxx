@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCommittee.cxx,v 1.14 2006/11/17 14:59:23 stelzer Exp $ 
+// @(#)root/tmva $Id: MethodCommittee.cxx,v 1.6 2006/11/20 15:35:28 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -49,6 +49,7 @@
 #include "TMVA/Tools.h"
 #include "TMVA/Timer.h"
 #include "Riostream.h"
+#include "TDirectory.h"
 #include "TRandom.h"
 #include <algorithm>
 #include "TObjString.h"
