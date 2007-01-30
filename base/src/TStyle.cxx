@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.70 2007/01/15 11:52:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.71 2007/01/15 22:08:28 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -758,7 +758,7 @@ Float_t TStyle::GetTitleSize( Option_t *axis) const
 void TStyle::Paint(Option_t *option)
 {
    //show the options from the current style
-   //if (gROOT->GetClass("TStyleManager")) gSystem->Load("libGed");
+   //if (TClass::GetClass("TStyleManager")) gSystem->Load("libGed");
    gROOT->ProcessLine(Form("TStyleManager::PaintStyle((TStyle*)0x%x,\"%s\")",this,option));
 }
 
