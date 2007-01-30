@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.176 2007/01/16 14:38:50 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.177 2007/01/30 11:33:59 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -777,6 +777,7 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
          }
 
       // if in pendingOnly mode poll once file descriptor activity
+      nextto = NextTimeOut(kTRUE);
       if (pendingOnly) {
          if (fFileHandler && fFileHandler->GetSize() == 0)
             return;

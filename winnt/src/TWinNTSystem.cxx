@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.159 2007/01/17 15:26:48 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.160 2007/01/30 11:33:59 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1351,6 +1351,7 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
       }
 
       // if in pendingOnly mode poll once file descriptor activity
+      nextto = NextTimeOut(kTRUE);
       if (pendingOnly) {
          if (fFileHandler && fFileHandler->GetSize() == 0)
             return;
