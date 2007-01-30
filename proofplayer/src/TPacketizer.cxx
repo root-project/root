@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.41 2007/01/12 16:03:16 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.42 2007/01/29 15:11:10 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -644,7 +644,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
    TSlave   *slave;
    while ((slave = (TSlave*)si.Next()) != 0) {
       PDB(kPacketizer,3)
-        Info("ValidateFiles","socket added to monitor: %p (%s)",
+          Info("ValidateFiles","socket added to monitor: %p (%s)",
           slave->GetSocket(), slave->GetName());
       mon.Add(slave->GetSocket());
       slaves_by_sock.Add(slave->GetSocket(),slave);
