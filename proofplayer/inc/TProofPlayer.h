@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.39 2006/11/15 17:45:54 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.40 2006/11/22 14:16:54 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -71,6 +71,7 @@ protected:
    TSelector    *fSelector;        //!  the latest selector
    TClass       *fSelectorClass;   //!  class of the latest selector
    TTimer       *fFeedbackTimer;   //!  timer for sending intermediate results
+   Int_t         fFeedbackPeriod;  //!  period (ms) for sending intermediate results
    TEventIter   *fEvIter;          //!  iterator on events or objects
    TStatus      *fSelStatus;       //!  status of query in progress
    EExitStatus   fExitStatus;      //   exit status
@@ -85,6 +86,8 @@ protected:
 
    TTimer       *fStopTimer;       //Timer associated with a stop request
    TMutex       *fStopTimerMtx;    //To protect the stop timer
+
+   TTimer       *fDispatchTimer;    //Dispatch pending events while processing
 
    void         *GetSender() { return this; }  //used to set gTQSender
 
@@ -103,6 +106,8 @@ protected:
    };
 
 public:
+   enum EStatusBits { kDispatchOneEvent = BIT(15) };
+
    TProofPlayer();
    virtual ~TProofPlayer();
 
@@ -157,9 +162,9 @@ public:
    virtual Long64_t    GetEventsProcessed() const { return fEventsProcessed; }
    virtual void        AddEventsProcessed(Long64_t ev) { fEventsProcessed += ev; }
 
-   virtual void      HandleAbortTimer();
-   virtual void      HandleStopTimer();
-   virtual void      SetStopTimer(Bool_t on = kTRUE, Bool_t abort = kFALSE, Int_t timeout = 0);
+   virtual void      SetDispatchTimer(Bool_t on = kTRUE);
+   virtual void      SetStopTimer(Bool_t on = kTRUE,
+                                  Bool_t abort = kFALSE, Int_t timeout = 0);
 
    ClassDef(TProofPlayer,0)  // Abstract PROOF player
 };
