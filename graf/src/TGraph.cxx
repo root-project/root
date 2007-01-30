@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.200 2007/01/15 16:50:09 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.201 2007/01/30 11:49:14 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2340,7 +2340,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
 
       // Create a temporary histogram and fill each channel with the
       // function value.
-      char chopth[8] = "";
+      char chopth[8] = " ";
       if (strstr(chopt,"x+")) strcat(chopth, "x+");
       if (strstr(chopt,"y+")) strcat(chopth, "y+");
       if (!fHistogram) {
