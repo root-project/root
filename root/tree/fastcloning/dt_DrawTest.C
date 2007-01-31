@@ -2,6 +2,7 @@
 #include "TFile.h"
 #include "TList.h"
 #include <TBenchmark.h>
+#include "TROOT.h"
 
 int gHasLibrary = kFALSE;
 int gBranchStyle = 1;
