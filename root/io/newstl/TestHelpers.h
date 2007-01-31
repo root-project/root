@@ -1,7 +1,9 @@
 #ifndef TEST__HELPER
 #define TEST__HELPER
 
-#include "TObject.h"
+#include "TNamed.h"
+#include "TMath.h"
+#include "TString.h"
 
 bool IsEquiv(float orig, float copy) {
    float epsilon = 1e-6;

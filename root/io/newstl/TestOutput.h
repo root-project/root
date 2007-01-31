@@ -153,7 +153,7 @@ void TestError(const std::string &test,
 }
 
 template <class T> void TestError(const std::string &test, const GHelper<T> &orig, const GHelper<T> &copy) {
-   TClass *cl = gROOT->GetClass(typeid(T));
+   TClass *cl = TClass::GetClass(typeid(T));
    const char* classname = cl?cl->GetName():typeid(T).name();   
    std::stringstream s;
    s << test << " on GHelper of " << classname; //  << std::ends;
@@ -205,7 +205,7 @@ void TestError(const std::string &test, Helper* orig, Helper* copy) {
 */
 
 template <class T> void TestError(const std::string &test, T* orig, T* copy) {
-   TClass *cl = gROOT->GetClass(typeid(T));
+   TClass *cl = TClass::GetClass(typeid(T));
    const char* classname = cl?cl->GetName():typeid(T).name();   
    
    if (orig==0 || copy==0) {

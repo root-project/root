@@ -1,4 +1,5 @@
 #include "TTree.h"
+#include "TROOT.h"
 
 #if defined(__CINT__) && !defined(__MAKECINT__)
 // do nothing
@@ -8,7 +9,7 @@
 
 void treeBranch() 
 {
-   if (gROOT->GetClass("TopLevel")==0) gROOT->ProcessLine(".L userClass.C+");
+   if (TClass::GetClass("TopLevel")==0) gROOT->ProcessLine(".L userClass.C+");
    TopLevel *one = new BottomOne;
 #ifndef __CINT__
    TopLevel *missing = new BottomMissing;
