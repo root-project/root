@@ -1,3 +1,4 @@
+#include "TClass.h"
 class Hard2Stream {
 private:
 #ifndef __CINT__
@@ -15,7 +16,7 @@ public:
 
 // Various streamers
 void hard2StreamStreamer(TBuffer &b, void *objadd) {
-   TClass *R__cl = gROOT->GetClass("Hard2Stream");
+   TClass *R__cl = TClass::GetClass("Hard2Stream");
 
    Hard2Stream *obj = (Hard2Stream*)objadd;
    UInt_t R__s, R__c;
@@ -44,7 +45,7 @@ void hard2StreamStreamer(TBuffer &b, void *objadd) {
 #include "TStreamer.h"
 #include "TClass.h"
 void setStreamer() {
-   TClass *cl = gROOT->GetClass("Hard2Stream");
+   TClass *cl = TClass::GetClass("Hard2Stream");
 cl->AdoptStreamer(new TClassStreamer(hard2StreamStreamer));
 
 }
