@@ -5,7 +5,10 @@
 #     python benchmarks.py
 #
 
+import os
 import ROOT
 
+macrodir = os.path.dirname( os.path.join( os.getcwd(), __file__ ) )
+
 # use ROOT macro to make sure that bench numbers get updated in one place
-ROOT.gROOT.Macro( 'rootmarks.C' )
+ROOT.gROOT.Macro( os.path.join( macrodir, os.pardir, 'rootmarks.C' ) )
