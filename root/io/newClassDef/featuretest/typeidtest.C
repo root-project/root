@@ -13,12 +13,12 @@ namespace std {}
 using namespace std;
 
 #if CONST_STRING
-typedef map<const string,TClass*> IdMap_t;
+typedef map<const string,TClass*> IdMap0_t;
 #else
-typedef map<string,TClass*> IdMap_t;
+typedef map<string,TClass*> IdMap0_t;
 #endif
 
-IdMap_t *fIdMap       = new IdMap_t;
+IdMap0_t *fIdMap       = new IdMap0_t;
 
 void testAddClass(const type_info *info, TClass *cl)
 {
@@ -66,10 +66,10 @@ bool typeidtest() {
   cerr << "Expect A: "; func(a);
   cerr << "Expect B: "; func(b);
 
-  testAddClass(& ( typeid(A) ), gROOT->GetClass("A") );
-  testAddClass(& ( typeid(B) ), gROOT->GetClass("B") );
-  testAddClass(& ( typeid(C) ), gROOT->GetClass("C") );
-  testAddClass(& ( typeid(D) ), gROOT->GetClass("D") );
+  testAddClass(& ( typeid(A) ), TClass::GetClass("A") );
+  testAddClass(& ( typeid(B) ), TClass::GetClass("B") );
+  testAddClass(& ( typeid(C) ), TClass::GetClass("C") );
+  testAddClass(& ( typeid(D) ), TClass::GetClass("D") );
 
   funca pfunc;
   pfunc = &func;
