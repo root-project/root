@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.251 2006/11/30 23:18:32 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.252 2007/01/26 22:06:29 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -4376,10 +4376,10 @@ int main(int argc, char **argv)
          argvv[argcc++] = "+V";        // turn on class comment mode
          if (!use_preprocessor) {
 #ifdef ROOTBUILD
-            argvv[argcc++] = "base/inc/TROOT.h";
+            argvv[argcc++] = "base/inc/TObject.h";
             argvv[argcc++] = "base/inc/TMemberInspector.h";
 #else
-            argvv[argcc++] = "TROOT.h";
+            argvv[argcc++] = "TObject.h";
             argvv[argcc++] = "TMemberInspector.h";
 #endif
          }
@@ -4404,7 +4404,7 @@ int main(int argc, char **argv)
                  argv[0], bundlename.c_str());
          use_preprocessor = 0;
       } else {
-         fprintf(bundle,"#include \"TROOT.h\"\n");
+         fprintf(bundle,"#include \"TObject.h\"\n");
          fprintf(bundle,"#include \"TMemberInspector.h\"\n");
       }
    }
@@ -4518,10 +4518,11 @@ int main(int argc, char **argv)
             gccxml_rootcint_call+=" -Dexternalref=extern";
             gccxml_rootcint_call+=" -DSYSV";
 #ifdef ROOTBUILD
-            gccxml_rootcint_call+=" base/inc/TROOT.h";
+            //gccxml_rootcint_call+=" base/inc/TROOT.h";
+            gccxml_rootcint_call+=" base/inc/TObject.h";
             gccxml_rootcint_call+=" base/inc/TMemberInspector.h";
 #else
-            gccxml_rootcint_call+=" TROOT.h";
+            gccxml_rootcint_call+=" TObject.h";
             gccxml_rootcint_call+=" TMemberInspector.h";
 #endif
          }
@@ -4576,8 +4577,8 @@ int main(int argc, char **argv)
 
    (*dictSrcOut) << "#include \"TClass.h\"" << std::endl
        << "#include \"TBuffer.h\"" << std::endl
-       << "#include \"TStreamerInfo.h\"" << std::endl
        << "#include \"TMemberInspector.h\"" << std::endl
+       << "#include \"TStreamerInfo.h\"" << std::endl
        << "#include \"TError.h\"" << std::endl << std::endl
        << "#ifndef G__ROOT" << std::endl
        << "#define G__ROOT" << std::endl
