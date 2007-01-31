@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.152 2007/01/25 22:53:05 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.153 2007/01/30 11:24:31 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -333,7 +333,7 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
    //    each tree.
    //
 
-   TDirectory *cursav = gDirectory;
+   TDirectory::TContext ctxt(0);
    const char *treename = GetName();
    if (tname && strlen(tname) > 0) treename = tname;
    char *dot = (char*)strstr(name,".root");
@@ -418,7 +418,6 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
    }
 
    delete [] filename;
-   if (cursav) cursav->cd();
    if (fProofChain)
       // This updates the proxy chain when we will really use PROOF
       ResetBit(kProofUptodate);
@@ -1174,16 +1173,12 @@ Long64_t TChain::LoadTree(Long64_t entry)
    }
 
    // Delete the current tree and open the new tree.
-   TDirectory* cursav = gDirectory;
    TTreeCache* tpf = 0;
 
    // Delete file unless the file owns this chain!
    // FIXME: The "unless" case here causes us to leak memory.
    if (fFile) {
       if (!fDirectory->GetList()->FindObject(this)) {
-         if (cursav && (cursav->GetFile() == fFile)) {
-            cursav = gROOT;
-         }
          tpf = (TTreeCache*) fFile->GetCacheRead();
          fFile->SetCacheRead(0);
          if (fCanDeleteRefs) {
@@ -1195,6 +1190,8 @@ Long64_t TChain::LoadTree(Long64_t entry)
          fTree = 0;
       }
    }
+
+   TDirectory::TContext ctxt(0);
 
    TChainElement* element = (TChainElement*) fFiles->At(treenum);
    if (!element) {
@@ -1272,7 +1269,6 @@ Long64_t TChain::LoadTree(Long64_t entry)
       element->SetNumberEntries(nentries);
       // Below we must test >= in case the tree has no entries.
       if (entry >= fTreeOffset[fTreeNumber+1]) {
-         cursav->cd();
          if ((fTreeNumber < (fNtrees - 1)) && (entry < fTreeOffset[fTreeNumber+2])) {
             return LoadTree(entry);
          } else {
@@ -1361,11 +1357,6 @@ Long64_t TChain::LoadTree(Long64_t entry)
             }
          }
       }
-   }
-
-   // Return to our original directory.
-   if (cursav) {
-      cursav->cd();
    }
 
    // Update the addresses of the chain's cloned trees, if any.

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.37 2006/08/04 10:08:17 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.38 2007/01/30 11:24:31 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -534,10 +534,8 @@ void TBranchObject::Streamer(TBuffer& R__b)
          motherFileName = mother->GetFileName();
       }
       if ((fFileName.Length() > 0) && strcmp(motherFileName, fFileName.Data())) {
-         TDirectory* cursav = gDirectory;
-         dirsav->cd();
+         TDirectory::TContext ctxt(dirsav);
          Write();
-         cursav->cd();
       }
       fDirectory = dirsav;
    }

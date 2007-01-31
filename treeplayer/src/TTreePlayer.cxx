@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.233 2007/01/22 07:57:14 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.234 2007/01/30 11:24:32 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2608,7 +2608,7 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
 
    nentries = GetEntriesToProcess(firstentry, nentries);
 
-   TDirectory *cursav = gDirectory;
+   TDirectory::TContext ctxt(0);
 
    fTree->SetNotify(selector);
 
@@ -2694,7 +2694,6 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
    if (gMonitoringWriter)
       gMonitoringWriter->SendProcessingStatus("DONE");
 
-   if (cursav) cursav->cd();
    return selector->GetStatus();
 }
 

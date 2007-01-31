@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.44 2007/01/19 16:48:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.45 2007/01/20 19:29:35 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -267,7 +267,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    // The function returns 0 in case of success, 1 in case of error
 
    Int_t badread= 0;
-   TDirectory *cursav = gDirectory;
+   TDirectory::TContext ctxt(0);
    fBranch->GetDirectory()->cd();
 
    if (fBranch->GetTree()->MemoryFull(fBufferSize)) fBranch->DropBaskets();
@@ -340,7 +340,6 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       fBuffer = fBufferRef->Buffer();
    }
 AfterBuffer:
-   cursav->cd();
 
    fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
 
@@ -550,13 +549,12 @@ Int_t TBasket::WriteBuffer()
    //
 
    const Int_t kWrite = 1;
-   TDirectory *cursav = gDirectory;
+   TDirectory::TContext ctxt(0);
    TFile *file = fBranch->GetFile(kWrite);
    if (!file) return 0;
 
    fBranch->GetDirectory()->cd();
    if (!file->IsWritable()) { 
-      cursav->cd(); 
       return -1;
    }
    
@@ -581,7 +579,6 @@ Int_t TBasket::WriteBuffer()
       Streamer(*fBufferRef);         //write key itself again
       int nBytes = WriteFile(0);
       fHeaderOnly = kFALSE;
-      cursav->cd();
       return nBytes>0 ? fKeylen+nout : -1;
    }
 
@@ -659,7 +656,6 @@ Int_t TBasket::WriteBuffer()
 WriteFile:
    Int_t nBytes = WriteFile(0);
    fHeaderOnly = kFALSE;
-   cursav->cd();
    return nBytes>0 ? fKeylen+nout : -1;
 }
 

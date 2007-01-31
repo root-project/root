@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.207 2007/01/22 07:57:14 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.208 2007/01/30 11:24:32 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -178,6 +178,8 @@ void TTreeFormula::Init(const char*name, const char* expression)
 {
    // Initialiation called from the constructors.
 
+   TDirectory *const savedir=gDirectory;
+
    fNindex       = kMAXFOUND;
    fLookupType   = new Int_t[fNindex];
    fNcodes       = 0;
@@ -203,7 +205,11 @@ void TTreeFormula::Init(const char*name, const char* expression)
 
    fDimensionSetup = new TList;
 
-   if (Compile(expression)) {fTree = 0; fNdim = 0; return; }
+   if (Compile(expression)) {
+     fTree = 0; fNdim = 0; 
+     if(savedir) savedir->cd();
+     return; 
+   }
 
    if (fNcodes >= kMAXFOUND) {
       Warning("TTreeFormula","Too many items in expression:%s",expression);
@@ -260,7 +266,9 @@ void TTreeFormula::Init(const char*name, const char* expression)
             Error("TTreeFormula",
                   "Index %d for dimension #%d in %s is too high (max is %d)",
                   fIndexes[k0][k1],k1+1, expression,fFixedSizes[k0][k1]-1);
-            fTree = 0; fNdim = 0; return;
+            fTree = 0; fNdim = 0; 
+	    if(savedir) savedir->cd();
+	    return;
          }
       }
    }
@@ -275,6 +283,8 @@ void TTreeFormula::Init(const char*name, const char* expression)
       }
       fBranches.AddAtAndExpand(branch,k);
    }
+
+   if(savedir) savedir->cd();
 }
 
 //______________________________________________________________________________

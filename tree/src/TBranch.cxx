@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.119 2007/01/19 16:48:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.120 2007/01/20 19:29:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -838,7 +838,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    gBranch = this;
 
      // create/decode basket parameters from buffer
-   TDirectory *cursav = gDirectory;
+   TDirectory::TContext ctxt(0);
    TFile *file = GetFile(0);
    basket = new TBasket(file);
    if (fSkipZip) basket->SetBit(TBufferFile::kNotDecompressed);
@@ -852,7 +852,6 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    //now read basket
    Int_t badread = basket->ReadBasketBuffers(fBasketSeek[basketnumber],fBasketBytes[basketnumber],file);
    if (badread || basket->GetSeekKey() != fBasketSeek[basketnumber]) {
-      cursav->cd();
       nerrors++;
       if (nerrors > 10) return 0;
       if (nerrors == 10) {
@@ -871,7 +870,6 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
       return 0;
    }
 
-   cursav->cd();
    fBaskets.AddAt(basket,basketnumber);
    if (fNBasketRAM < kMaxRAM) fBasketRAM[fNBasketRAM] = basketnumber;
    fNBasketRAM++;
