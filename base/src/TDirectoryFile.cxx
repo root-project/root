@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectoryFile.cxx,v 1.4 2007/01/29 10:53:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectoryFile.cxx,v 1.5 2007/01/29 15:53:35 brun Exp $
 // Author: Rene Brun   22/01/2007
 
 /*************************************************************************
@@ -863,7 +863,7 @@ void *TDirectoryFile::GetObjectChecked(const char *namecycle, const char* classn
 {
 // See documentation of TDirectoryFile::GetObjectCheck(const char *namecycle, const TClass *cl)
 
-   return GetObjectChecked(namecycle,ROOT::GetROOT()->GetClass(classname));
+   return GetObjectChecked(namecycle,TClass::GetClass(classname));
 }
 
 
@@ -1712,7 +1712,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, con
    //      TopClass *top = ....;
    //      directory->WriteObject(top,"name of object")
 
-   TClass *cl = ROOT::GetROOT()->GetClass(classname);
+   TClass *cl = TClass::GetClass(classname);
    if (!cl) {
       Error("WriteObjectAny","Unknown class: %s",classname);
       return 0;

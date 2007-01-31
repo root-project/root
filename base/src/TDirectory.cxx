@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.92 2007/01/26 15:39:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.93 2007/01/28 18:27:46 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -666,7 +666,7 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const char* classname)
 {
 // See documentation of TDirectory::GetObjectCheck(const char *namecycle, const TClass *cl)
 
-   return GetObjectChecked(namecycle,ROOT::GetROOT()->GetClass(classname));
+   return GetObjectChecked(namecycle,TClass::GetClass(classname));
 }
 
 
