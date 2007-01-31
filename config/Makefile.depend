@@ -22,7 +22,7 @@ ASIMAGEGUILIBDEP    = $(GRAFLIB) $(HISTLIB) $(GUILIB) $(ASIMAGELIB)
 ASIMAGEGUILIBEXTRA  = lib/libGraf.lib lib/libHist.lib lib/libGui.lib \
                       lib/libASImage.lib
 ASIMAGEGSLIBDEP     = $(GRAFLIB) $(ASIMAGELIB)
-ASIMAGEGSLIBEXTRA   = lib/libGraf.lib lib/libASImage.lib
+ASIMAGEGSLIBEXTRA   = lib/libGraf.lib lib/libASImage.lib7
 GEDLIBDEP           = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) $(TREELIB) \
                       $(TREEPLAYERLIB)
 GEDLIBEXTRA         = lib/libHist.lib lib/libGpad.lib lib/libGraf.lib \
@@ -131,6 +131,9 @@ QTGSILIBEXTRA       = lib/libGui.lib lib/libGpad.lib
 FITPANELLIBDEP      = $(GUILIB) $(GPADLIB) $(HISTLIB) $(GRAFLIB) $(TREELIB)
 FITPANELLIBEXTRA    = lib/libGui.lib lib/libGpad.lib lib/libHist.lib \
                       lib/libGraf.lib lib/libTree.lib 
+
+CINTDLLDICTDEP      = $(CORELIB)
+CINTDLLDICTLIBEXTRA = 
 
 else
 
@@ -249,5 +252,8 @@ QTGSILIBDEP         = $(GUILIB) $(GPADLIB)
 QTGSILIBEXTRA       = -Llib -lGui -lGpad
 FITPANELLIBDEP      = $(GUILIB) $(GPADLIB) $(HISTLIB) $(GRAFLIB) $(TREELIB)
 FITPANELLIBEXTRA    = -Llib -lGui -lGpad -lHist -lGraf -lTree 
+
+CINTDLLDICTDEP      = $(CORELIB)
+CINTDLLDICTLIBEXTRA = 
 
 endif
