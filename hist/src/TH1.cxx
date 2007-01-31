@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.325 2007/01/30 11:49:14 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.326 2007/01/30 16:07:14 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5128,7 +5128,6 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       }
       hnew->SetBinContent(bin,binContent);
       if (oldErrors) hnew->SetBinError(bin,TMath::Sqrt(binError));
-      printf("bin=%d, imax=%d\n",bin,imax);
       oldbin += imax;
    }
    hnew->SetBinContent(0,oldBins[0]);
