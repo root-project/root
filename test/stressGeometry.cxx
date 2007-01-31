@@ -42,6 +42,7 @@
 #include "TGeoMedium.h"
 #include "TGeoMaterial.h"
 #include "TGeoBBox.h"
+#include "TROOT.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "TRandom3.h"
