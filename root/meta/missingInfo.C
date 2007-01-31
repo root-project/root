@@ -13,7 +13,7 @@ void missingInfo() {
 
    TClass *cl;
    
-   cl = gROOT->GetClass(typeid(TopLevel));
+   cl = TClass::GetClass(typeid(TopLevel));
    TClass *top = cl;
    if (cl) {
       cout << "For toplevel found " << endl; 
@@ -23,7 +23,7 @@ void missingInfo() {
       cout << "For toplevel cl is missing \n";
    }
 
-   cl = gROOT->GetClass(typeid(*one));
+   cl = TClass::GetClass(typeid(*one));
    if (cl) {
       cout << "For one found " << endl; 
       //cout << (void*)cl << endl;
@@ -32,7 +32,7 @@ void missingInfo() {
       cout << "For one cl is missing \n";
    }
 
-   cl = gROOT->GetClass(typeid(*missing));
+   cl = TClass::GetClass(typeid(*missing));
    if (cl) {
       cout << "For missing found " << endl; 
       //cout << (void*)cl << endl;
