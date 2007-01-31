@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.252 2007/01/26 22:06:29 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.253 2007/01/31 15:47:31 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2392,7 +2392,7 @@ void WriteClassInit(G__ClassInfo &cl)
    if (cl.HasMethod("Class_Version")) {
       (*dictSrcOut) << csymbol.c_str() << "::Class_Version(), ";
    } else if (stl) {
-      (*dictSrcOut) << "::TStreamerInfo::Class_Version(), ";
+      (*dictSrcOut) << "-2, "; // "::TStreamerInfo::Class_Version(), ";
    } else { // if (cl.RootFlag() & G__USEBYTECOUNT ) {
 
       // Need to find out if the operator>> is actually defined for this class.
@@ -4578,7 +4578,6 @@ int main(int argc, char **argv)
    (*dictSrcOut) << "#include \"TClass.h\"" << std::endl
        << "#include \"TBuffer.h\"" << std::endl
        << "#include \"TMemberInspector.h\"" << std::endl
-       << "#include \"TStreamerInfo.h\"" << std::endl
        << "#include \"TError.h\"" << std::endl << std::endl
        << "#ifndef G__ROOT" << std::endl
        << "#define G__ROOT" << std::endl

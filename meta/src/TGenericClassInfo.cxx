@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.15 2006/05/23 04:47:40 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.16 2006/08/04 20:58:52 pcanal Exp $
 // Author: Philippe Canal 08/05/2002
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "TROOT.h"
 #include "TClass.h"
+#include "TStreamerInfo.h"
 #include "TStreamer.h"
 #include "TVirtualIsAProxy.h"
 #include "TVirtualCollectionProxy.h"
@@ -158,6 +159,7 @@ namespace ROOT {
    {
       // Initilization routine.
 
+      if (fVersion==-2) fVersion = TStreamerInfo::Class_Version();
       if (!fAction) return;
       GetAction().Register(fClassName,
                            fVersion,
