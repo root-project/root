@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSessionDialogs.cxx,v 1.3 2007/01/15 16:15:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSessionDialogs.cxx,v 1.4 2007/01/30 11:24:32 brun Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -61,7 +61,7 @@ const char *datasettypes[] = {
 };
 
 const char *filetypes[] = {
-   "C files",       "*.C",
+   "C files",       "*.[C|c]*",
    "ROOT files",    "*.root",
    "All files",     "*",
    0,               0

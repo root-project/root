@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSessionViewer.cxx,v 1.5 2007/01/29 15:11:11 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSessionViewer.cxx,v 1.6 2007/01/30 11:24:32 brun Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -100,7 +100,7 @@ const char *pkgtypes[] = {
 };
 
 const char *macrotypes[] = {
-   "C files",       "*.C",
+   "C files",       "*.[C|c]*",
    "All files",     "*",
    0,               0
 };
