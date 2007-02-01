@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSessionViewer.cxx,v 1.7 2007/01/31 16:46:10 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSessionViewer.cxx,v 1.8 2007/02/01 14:58:44 brun Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -2130,6 +2130,20 @@ void TEditQueryFrame::Build(TSessionViewer *gui)
    fNumFirstEntry->Associate(this);
    fTxtEventList->Associate(this);
 
+   fTxtQueryName->Connect("TextChanged(char*)", "TEditQueryFrame", this,
+                        "SettingsChanged()");
+   fTxtChain->Connect("TextChanged(char*)", "TEditQueryFrame", this,
+                        "SettingsChanged()");
+   fTxtSelector->Connect("TextChanged(char*)", "TEditQueryFrame", this,
+                        "SettingsChanged()");
+   fTxtOptions->Connect("TextChanged(char*)", "TEditQueryFrame", this,
+                        "SettingsChanged()");
+   fNumEntries->Connect("ValueChanged(Long_t)", "TEditQueryFrame", this,
+                        "SettingsChanged()");
+   fNumFirstEntry->Connect("ValueChanged(Long_t)", "TEditQueryFrame", this,
+                        "SettingsChanged()");
+   fTxtEventList->Connect("TextChanged(char*)", "TEditQueryFrame", this,
+                        "SettingsChanged()");
 }
 
 //______________________________________________________________________________
@@ -2180,7 +2194,7 @@ void TEditQueryFrame::OnBrowseSelector()
    fi.fFileTypes = macrotypes;
    new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
    if (!fi.fFilename) return;
-   fTxtSelector->SetText(gSystem->BaseName(fi.fFilename));
+   fTxtSelector->SetText(gSystem->UnixPathName(fi.fFilename));
 }
 
 //______________________________________________________________________________
@@ -2235,12 +2249,41 @@ void TEditQueryFrame::OnBtnSave()
    fTxtQueryName->SelectAll();
    fTxtQueryName->SetFocus();
    fViewer->WriteConfiguration();
-   if (fViewer->GetActDesc()->fConnected &&
+   if (fViewer->GetActDesc()->fLocal ||
+      (fViewer->GetActDesc()->fConnected &&
        fViewer->GetActDesc()->fAttached &&
        fViewer->GetActDesc()->fProof &&
-       fViewer->GetActDesc()->fProof->IsValid()) {
+       fViewer->GetActDesc()->fProof->IsValid())) {
       fViewer->GetQueryFrame()->GetTab()->SetTab("Status");
       fViewer->GetQueryFrame()->OnBtnSubmit();
+   }
+}
+
+//______________________________________________________________________________
+void TEditQueryFrame::SettingsChanged()
+{
+   // Settings have changed, update GUI accordingly.
+
+   if (fQuery) {
+      if ((strcmp(fQuery->fSelectorString.Data(), fTxtSelector->GetText())) ||
+          (strcmp(fQuery->fQueryName.Data(), fTxtQueryName->GetText())) ||
+          (strcmp(fQuery->fOptions.Data(), fTxtOptions->GetText())) ||
+          (fQuery->fNoEntries  != fNumEntries->GetIntNumber()) ||
+          (fQuery->fFirstEntry != fNumFirstEntry->GetIntNumber()) ||
+          (fQuery->fChain != fChain)) {
+         fViewer->GetQueryFrame()->Modified(kTRUE);
+      }
+      else {
+         fViewer->GetQueryFrame()->Modified(kFALSE);
+      }
+   }
+   else {
+      if ((fTxtQueryName->GetText()) &&
+         ((fTxtQueryName->GetText()) ||
+          (fTxtChain->GetText())))
+         fViewer->GetQueryFrame()->Modified(kTRUE);
+      else
+         fViewer->GetQueryFrame()->Modified(kFALSE);
    }
 }
 
@@ -2292,6 +2335,7 @@ void TSessionQueryFrame::Build(TSessionViewer *gui)
    fFirst = fEntries = fPrevTotal = 0;
    fPrevProcessed = 0;
    fViewer = gui;
+   fModified = kFALSE;
 
    // main query tab
    fTab = new TGTab(this, 200, 200);
@@ -2386,8 +2430,9 @@ void TSessionQueryFrame::Build(TSessionViewer *gui)
    fFD->Build(fViewer);
    tf->AddFrame(fFD, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 10, 0));
    TString btntxt;
-   if (fViewer->GetActDesc()->fProof &&
-       fViewer->GetActDesc()->fProof->IsValid()) {
+   if (fViewer->GetActDesc()->fLocal ||
+      (fViewer->GetActDesc()->fProof &&
+       fViewer->GetActDesc()->fProof->IsValid())) {
       btntxt = "         Submit         ";
    }
    else {
@@ -2411,7 +2456,26 @@ void TSessionQueryFrame::Build(TSessionViewer *gui)
          "OnBtnShowLog()");
    fBtnRetrieve->Connect("Clicked()", "TSessionQueryFrame", this,
          "OnBtnRetrieve()");
+//   fBtnSave->SetState(kButtonDisabled);
    Resize(350, 310);
+}
+
+//______________________________________________________________________________
+void TSessionQueryFrame::Modified(Bool_t mod)
+{
+   // Notify changes in query editor settings.
+
+   fModified = mod;
+   if (fModified) {
+      fBtnSave->SetState(kButtonUp);
+   }
+   else {
+      fBtnSave->SetState(kButtonDisabled);
+   }
+   if (fViewer->GetActDesc()->fLocal ||
+      (fViewer->GetActDesc()->fProof &&
+       fViewer->GetActDesc()->fProof->IsValid()))
+      fBtnSave->SetState(kButtonUp);
 }
 
 //______________________________________________________________________________
@@ -3148,10 +3212,11 @@ void TSessionQueryFrame::UpdateInfos()
    if (fViewer->GetActDesc()->fActQuery)
       fFD->UpdateFields(fViewer->GetActDesc()->fActQuery);
 
-   if (fViewer->GetActDesc()->fConnected &&
+   if (fViewer->GetActDesc()->fLocal ||
+      (fViewer->GetActDesc()->fConnected &&
        fViewer->GetActDesc()->fAttached &&
        fViewer->GetActDesc()->fProof &&
-       fViewer->GetActDesc()->fProof->IsValid()) {
+       fViewer->GetActDesc()->fProof->IsValid())) {
       fBtnSave->SetText("         Submit         ");
    }
    else {

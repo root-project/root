@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSessionViewer.h,v 1.2 2006/11/22 14:16:54 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSessionViewer.h,v 1.3 2006/11/28 12:10:52 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -382,6 +382,7 @@ public:
    void     OnBrowseEventList();
    void     OnBtnSave();
    void     OnElementSelected(TObject *obj);
+   void     SettingsChanged();
    void     UpdateFields(TQueryDescription *desc);
 
    ClassDef(TEditQueryFrame, 0) // Edit query frame
@@ -410,6 +411,7 @@ private:
    TGTextButton         *fBtnSave;           // save query button
    TGTextView           *fInfoTextView;      // summary on current query
 
+   Bool_t                fModified;          // kTRUE if settings have changed
    Int_t                 fFiles;             // number of files processed
    Long64_t              fFirst;             // first event/entry to process
    Long64_t              fEntries;           // number of events/entries to process
@@ -440,6 +442,7 @@ public:
    TGTab   *GetTab() const { return fTab; }
 
    void     Feedback(TList *objs);
+   void     Modified(Bool_t mod = kTRUE);
    void     Progress(Long64_t total, Long64_t processed);
    void     Progress(Long64_t total, Long64_t processed,
                      Long64_t bytesread, Float_t initTime,
