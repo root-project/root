@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:$:$Id:$
+// @(#)root/proof:$Name:  $:$Id: TStatus.h,v 1.1 2004/07/09 01:34:51 rdm Exp $
 // Author: Maarten Ballintijn   12/03/2004
 
 /*************************************************************************
@@ -33,6 +33,8 @@
 namespace std { using ::set; using ::string; }
 #endif
 
+
+class TCollection;
 
 class TStatus : public TNamed {
 
