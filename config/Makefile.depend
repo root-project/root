@@ -4,8 +4,8 @@
 
 ifeq ($(PLATFORM),win32)
 
-GDMLLIBDEP          = $(GEOMLIB) $(XMLLIB) $(HISTLIB) 
-GDMLLIBEXTRA        = lib/libGeom.lib lib/libXMLIO.lib lib/libHist.lib 
+GDMLLIBDEP          = $(GEOMLIB) $(XMLLIB) $(HISTLIB)
+GDMLLIBEXTRA        = lib/libGeom.lib lib/libXMLIO.lib lib/libHist.lib
 HISTLIBDEP          = $(MATRIXLIB)
 HISTLIBEXTRA        = lib/libMatrix.lib
 GRAFLIBDEP          = $(HISTLIB) $(MATRIXLIB)
@@ -130,10 +130,7 @@ QTGSILIBDEP         = $(GUILIB) $(GPADLIB)
 QTGSILIBEXTRA       = lib/libGui.lib lib/libGpad.lib
 FITPANELLIBDEP      = $(GUILIB) $(GPADLIB) $(HISTLIB) $(GRAFLIB) $(TREELIB)
 FITPANELLIBEXTRA    = lib/libGui.lib lib/libGpad.lib lib/libHist.lib \
-                      lib/libGraf.lib lib/libTree.lib 
-
-CINTDLLDICTDEP      = $(CORELIB)
-CINTDLLDICTLIBEXTRA = 
+                      lib/libGraf.lib lib/libTree.lib
 
 else
 
@@ -217,7 +214,7 @@ MLPLIBDEP           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
 MLPLIBEXTRA         = -Llib -lHist -lMatrix -lTree -lGraf -lGpad \
                       -lTreePlayer
 SPECTRUMLIBDEP      = $(HISTLIB) $(MATRIXLIB)
-SPECTRUMLIBEXTRA    = -Llib -lHist -lMatrix 
+SPECTRUMLIBEXTRA    = -Llib -lHist -lMatrix
 TMVALIBDEP          = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(GPADLIB) $(TREEPLAYERLIB) $(MLPLIB)
 TMVALIBEXTRA        = -Llib -lHist -lMatrix -lTree -lGraf -lGpad -lTreePlayer \
@@ -251,9 +248,6 @@ KRB5AUTHLIBEXTRA    = -Llib -lRootAuth
 QTGSILIBDEP         = $(GUILIB) $(GPADLIB)
 QTGSILIBEXTRA       = -Llib -lGui -lGpad
 FITPANELLIBDEP      = $(GUILIB) $(GPADLIB) $(HISTLIB) $(GRAFLIB) $(TREELIB)
-FITPANELLIBEXTRA    = -Llib -lGui -lGpad -lHist -lGraf -lTree 
-
-CINTDLLDICTDEP      = $(CORELIB)
-CINTDLLDICTLIBEXTRA = 
+FITPANELLIBEXTRA    = -Llib -lGui -lGpad -lHist -lGraf -lTree
 
 endif
