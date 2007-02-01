@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.32 2007/01/29 10:18:52 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.33 2007/01/30 17:58:38 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -37,9 +37,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Varargs
-#include "Varargs.h"
-#endif
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
