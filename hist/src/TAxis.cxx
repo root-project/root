@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.78 2007/01/15 16:10:10 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.79 2007/01/29 15:10:48 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TStyle.h"
 #include "TView.h"
 #include "TError.h"
+#include "THashList.h"
 #include "TH1.h"
 #include "TObjString.h"
 #include "TDatime.h"

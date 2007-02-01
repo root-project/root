@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.130 2006/11/24 10:19:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.131 2006/11/24 13:44:21 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 #include "TBrowser.h"
 #include "TColor.h"
 #include "TClass.h"
+#include "TMethodCall.h"
 
 Bool_t TF1::fgAbsValue    = kFALSE;
 Bool_t TF1::fgRejectPoint = kFALSE;

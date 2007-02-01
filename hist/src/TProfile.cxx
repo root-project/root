@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.82 2006/08/05 05:16:03 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.83 2006/08/23 15:50:26 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "TProfile.h"
 #include "TMath.h"
+#include "THashList.h"
 #include "TF1.h"
 #include "THLimitsFinder.h"
 #include "Riostream.h"

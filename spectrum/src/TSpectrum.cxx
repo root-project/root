@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum.cxx,v 1.5 2006/10/23 08:18:21 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum.cxx,v 1.6 2007/01/23 11:09:42 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 //__________________________________________________________________________
@@ -51,6 +51,7 @@
 #include "TSpectrum.h"
 #include "TPolyMarker.h"
 #include "TVirtualPad.h"
+#include "TList.h"
 #include "TH1.h"
 #include "TMath.h"
 

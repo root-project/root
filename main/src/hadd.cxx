@@ -58,6 +58,7 @@
 #include <string>
 #include "TChain.h"
 #include "TFile.h"
+#include "THashList.h"
 #include "TH1.h"
 #include "TKey.h"
 #include "TObjString.h"

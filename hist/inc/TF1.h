@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.57 2006/07/03 16:10:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.58 2006/11/24 13:44:21 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -35,13 +35,11 @@
 #ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
 #endif
-#ifndef ROOT_TMethodCall
-#include "TMethodCall.h"
-#endif
 
 class TF1;
 class TH1;
 class TAxis;
+class TMethodCall;
 
 class TF1 : public TFormula, public TAttLine, public TAttFill, public TAttMarker {
 

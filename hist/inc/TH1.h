@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.85 2007/01/15 16:10:10 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.86 2007/02/01 14:21:00 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -68,6 +68,7 @@ class TH1D;
 class TBrowser;
 class TDirectory;
 class TList;
+class TCollection;
 class TVirtualFFT;
 class TVirtualHistPainter;
 

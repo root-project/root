@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSessionViewer.cxx,v 1.6 2007/01/30 11:24:32 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TSessionViewer.cxx,v 1.7 2007/01/31 16:46:10 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 
 #include "TApplication.h"
 #include "TROOT.h"
+#include "THashList.h"
 #include "TClass.h"
 #include "TSystem.h"
 #include "TGFileDialog.h"

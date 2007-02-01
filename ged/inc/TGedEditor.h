@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.12 2006/09/27 08:45:42 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.13 2007/01/24 17:58:38 antcheva Exp $
 // Author: Marek Biskup, Ilka Antcheva   02/12/2003
 
 /*************************************************************************
@@ -28,6 +28,9 @@
 #endif
 #ifndef ROOT_TVirtualPadEditor
 #include "TVirtualPadEditor.h"
+#endif
+#ifndef ROOT_TList
+#include "TList.h"
 #endif
 
 #include "TMap.h"

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.104 2007/01/15 16:10:10 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.105 2007/02/01 14:21:01 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "TROOT.h"
 #include "TClass.h"
+#include "THashList.h"
 #include "TH2.h"
 #include "TVirtualPad.h"
 #include "TF2.h"
