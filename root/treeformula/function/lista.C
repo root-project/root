@@ -2,6 +2,7 @@
 #include "TObject.h"
 #include "TH1F.h"
 #include "TTree.h"
+#include "TClonesArray.h"
 #include <list>
 
 //_____________________________________________________________________________

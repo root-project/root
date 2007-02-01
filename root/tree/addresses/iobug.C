@@ -1,6 +1,7 @@
 #include "TGraphErrors.h"
 #include "TFile.h"
 #include "TTree.h"
+#include "TClonesArray.h"
 
 void iobug(int split = 0, int classtype = 0, int clonesmode = 0, int show = 0, int dumpmode = 0)
 {
