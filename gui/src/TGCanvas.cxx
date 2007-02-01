@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.49 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.50 2007/01/16 07:57:59 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -60,6 +60,7 @@
 #include "TGTextEditDialogs.h"
 #include "TGMsgBox.h"
 #include "TGResourcePool.h"
+#include "TList.h"
 #include "Riostream.h"
 
 
