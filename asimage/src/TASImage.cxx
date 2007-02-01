@@ -5192,11 +5192,18 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
 
    Int_t dots = Int_t(source->width * source->rows);
    r = g = b = 0;
+   Int_t bxx, byy;
 
    yy = y0 = by * fImage->width;
    for (y = 0; y < (int) source->rows; y++) {
+      byy = by + y;
+      if ((byy >= (int)fImage->height) || (byy <0)) continue;
+
       for (x = 0; x < (int) source->width; x++) {
-         idx = bx + x + yy;
+         bxx = bx + x;
+         if ((bxx >= (int)fImage->width) || (bxx < 0)) continue;
+
+         idx = bxx + yy;
          r += ((fImage->alt.argb32[idx] & 0xff0000) >> 16);
          g += ((fImage->alt.argb32[idx] & 0x00ff00) >> 8);
          b += (fImage->alt.argb32[idx] & 0x0000ff);
@@ -5226,13 +5233,19 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
 
    yy = y0;
    for (y = 0; y < (int) source->rows; y++) {
+      byy = by + y;
+      if ((byy >= (int)fImage->height) || (byy <0)) continue;
+
       for (x = 0; x < (int) source->width; x++) {
+         bxx = bx + x;
+         //if ((bxx >= (int)fImage->width) || (bxx < 0)) continue;
+
          d = *s++ & 0xff;
          d = ((d + 10) * 5) >> 8;
          if (d > 4) d = 4;
 
-         if (d && x < (int) source->width) {
-            idx = (bx + x) + yy;
+         if (d && (x < (int) source->width) && (bxx < (int)fImage->width) && (bxx >= 0)) {
+            idx = bxx + yy;
             fImage->alt.argb32[idx] = (ARGB32)col[d];
          }
       }
