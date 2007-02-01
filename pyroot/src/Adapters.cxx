@@ -10,6 +10,7 @@
 #include "TMethod.h"
 #include "TFunction.h"
 #include "TMethodArg.h"
+#include "TList.h"
 #include "TError.h"
 
 // CINT
