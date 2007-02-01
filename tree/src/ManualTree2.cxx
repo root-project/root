@@ -27,7 +27,6 @@ namespace std {} using namespace std;
 #endif
 
 #include "RtypesImp.h"
-#include "TCollectionProxy.h"
 #include "TIsAProxy.h"
 // START OF SHADOWS
 

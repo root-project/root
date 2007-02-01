@@ -26,8 +26,6 @@ namespace std {} using namespace std;
 
 #include "RtypesImp.h"
 
-#include "TCollectionProxy.h"
-
 namespace ROOT {
    namespace Shadow {
    } // Of namespace ROOT::Shadow
@@ -152,27 +150,27 @@ extern "C" void G__cpp_setup_typetableManualBase4() {
 -1);
    G__setnewtype(-1,"Option string (const char)",0);
    G__search_typename2("vector<TStreamerInfo*>",117,G__get_linked_tagnum(&G__ManualBase4LN_vectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualBase4.cxx,v 1.4 2005/01/12 17:59:52 brun Exp $",0);
    G__search_typename2("_Ranit<TStreamerInfo*,difference_type,const_pointer,const_reference>",117,G__get_linked_tagnum(&G__ManualBase4LN__RanitlETStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR),0,G__get_linked_tagnum(&G__ManualBase4LN_vectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgR));
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualBase4.cxx,v 1.4 2005/01/12 17:59:52 brun Exp $",0);
    G__search_typename2("reverse_iterator<iterator>",117,G__get_linked_tagnum(&G__ManualBase4LN_reverse_iteratorlEvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorgR),0,G__get_linked_tagnum(&G__ManualBase4LN_vectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgR));
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualBase4.cxx,v 1.4 2005/01/12 17:59:52 brun Exp $",0);
    G__search_typename2("iterator<iterator_traits<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::iterator>::iterator_category,iterator_traits<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::iterator>::value_type,iterator_traits<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::iterator>::difference_type,iterator_traits<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::iterator>::pointer,iterator_traits<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::iterator>::reference>",117,G__get_linked_tagnum(&G__ManualBase4LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorcLcLdifference_typecOTStreamerInfomUmUcOTStreamerInfomUaNgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualBase4.cxx,v 1.4 2005/01/12 17:59:52 brun Exp $",0);
    G__search_typename2("iterator<random_access_iterator_tag,TStreamerInfo*>",117,G__get_linked_tagnum(&G__ManualBase4LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorcLcLdifference_typecOTStreamerInfomUmUcOTStreamerInfomUaNgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualBase4.cxx,v 1.4 2005/01/12 17:59:52 brun Exp $",0);
    G__search_typename2("iterator<random_access_iterator_tag,TStreamerInfo*>vector<TStreamerInfo*,allocator<TStreamerInfo*> >::iterator::difference_type>",117,G__get_linked_tagnum(&G__ManualBase4LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorcLcLdifference_typecOTStreamerInfomUmUcOTStreamerInfomUaNgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualBase4.cxx,v 1.4 2005/01/12 17:59:52 brun Exp $",0);
    G__search_typename2("iterator<random_access_iterator_tag,TStreamerInfo*>vector<TStreamerInfo*,allocator<TStreamerInfo*> >::iterator::difference_type>TStreamerInfo**>",117,G__get_linked_tagnum(&G__ManualBase4LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorcLcLdifference_typecOTStreamerInfomUmUcOTStreamerInfomUaNgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualBase4.cxx,v 1.4 2005/01/12 17:59:52 brun Exp $",0);
    G__search_typename2("reverse_iterator<const_iterator>",117,G__get_linked_tagnum(&G__ManualBase4LN_reverse_iteratorlEvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLconst_iteratorgR),0,G__get_linked_tagnum(&G__ManualBase4LN_vectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgR));
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualBase4.cxx,v 1.4 2005/01/12 17:59:52 brun Exp $",0);
    G__search_typename2("iterator<iterator_traits<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::const_iterator>::iterator_category,iterator_traits<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::const_iterator>::value_type,iterator_traits<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::const_iterator>::difference_type,iterator_traits<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::const_iterator>::pointer,iterator_traits<vector<TStreamerInfo*,allocator<TStreamerInfo*> >::const_iterator>::reference>",117,G__get_linked_tagnum(&G__ManualBase4LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualBase4.cxx,v 1.4 2005/01/12 17:59:52 brun Exp $",0);
    G__search_typename2("iterator<random_access_iterator_tag,TStreamerInfo*>long>",117,G__get_linked_tagnum(&G__ManualBase4LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualBase4.cxx,v 1.4 2005/01/12 17:59:52 brun Exp $",0);
    G__search_typename2("iterator<random_access_iterator_tag,TStreamerInfo*>long>TStreamerInfo**>",117,G__get_linked_tagnum(&G__ManualBase4LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.41 2004/11/19 07:25:43 brun Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualBase4.cxx,v 1.4 2005/01/12 17:59:52 brun Exp $",0);
 }
 
 /*********************************************************
