@@ -6,6 +6,7 @@
 */
 
 #include "TError.h"
+#include <string>
 
 class MyA {
 public:
