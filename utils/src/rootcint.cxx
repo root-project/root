@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.253 2007/01/31 15:47:31 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.254 2007/01/31 19:59:53 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -336,6 +336,8 @@ char autold[64];
 
 std::ostream* dictSrcOut=&std::cout;
 G__ShadowMaker *shadowMaker=0;
+
+bool gNeedCollectionProxy = false;
 
 enum EDictType {
    kDictTypeCint,
@@ -2476,10 +2478,10 @@ void WriteClassInit(G__ClassInfo &cl)
             methodTCP="Insert";
             break;
       }
-      (*dictSrcOut) << "      instance.AdoptStreamer(TCollectionProxy::GenClassStreamer(TCollectionProxy::"
-          << methodTCP << "< " << classname.c_str() << " >()));" << std::endl
-          << "      instance.AdoptCollectionProxy(TCollectionProxy::GenProxy(TCollectionProxy::"
-          << methodTCP << "< " << classname.c_str() << " >()));" << std::endl;
+      (*dictSrcOut) << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::"
+                    << methodTCP << "< " << classname.c_str() << " >()));" << std::endl;
+
+      gNeedCollectionProxy = true;
    }
    (*dictSrcOut) << "      return &instance;"  << std::endl
                  << "   }" << std::endl;
@@ -4561,18 +4563,18 @@ int main(int argc, char **argv)
        << "//" << std::endl << std::endl
 
        << "#include \"RConfig.h\"" << std::endl
-//        << "#if !defined(R__ACCESS_IN_SYMBOL)" << std::endl
-//        << "//Break the privacy of classes -- Disabled for the moment" << std::endl
-//        << "#define private public" << std::endl
-//        << "#define protected public" << std::endl
-//        << "#endif" << std::endl 
-          << std::endl;
+       << "#if !defined(R__ACCESS_IN_SYMBOL)" << std::endl
+       << "//Break the privacy of classes -- Disabled for the moment" << std::endl
+       << "#define private public" << std::endl
+       << "#define protected public" << std::endl
+       << "#endif" << std::endl 
+       << std::endl;
 #ifndef R__SOLARIS
    (*dictSrcOut) << "// Since CINT ignores the std namespace, we need to do so in this file." << std::endl
        << "namespace std {} using namespace std;" << std::endl << std::endl;
-   int linesToSkip = 10; // number of lines up to here.
+   int linesToSkip = 15; // number of lines up to here.
 #else
-   int linesToSkip = 07; // number of lines up to here.
+   int linesToSkip = 12; // number of lines up to here.
 #endif
 
    (*dictSrcOut) << "#include \"TClass.h\"" << std::endl
@@ -4583,7 +4585,6 @@ int main(int argc, char **argv)
        << "#define G__ROOT" << std::endl
        << "#endif" << std::endl << std::endl
        << "#include \"RtypesImp.h\"" << std::endl
-       << "#include \"TCollectionProxy.h\"" << std::endl
        << "#include \"TIsAProxy.h\"" << std::endl;
    (*dictSrcOut) << std::endl;
 #ifdef R__SOLARIS
@@ -4965,6 +4966,9 @@ int main(int argc, char **argv)
                   fprintf(fpd, "#include \"%s/%s\"\n", dictpathname.c_str(), inclf);
                } else {
                   fprintf(fpd, "#include \"%s\"\n", inclf);
+               }
+               if (gNeedCollectionProxy) {
+                  fprintf(fpd, "\n#include \"TCollectionProxyInfo.h\"");
                }
             }
          }
