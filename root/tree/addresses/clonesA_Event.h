@@ -1,5 +1,6 @@
 #include "TTree.h"
 #include "Riostream.h"
+#include "TClonesArray.h"
 
 class TUsrHit:public TObject {
  public:

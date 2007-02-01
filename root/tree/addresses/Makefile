@@ -33,7 +33,9 @@ headerTest.log: runHeader.C header_h.$(DllSuf)
 headerTest: headerTest.log
 	$(CMDECHO) diff -bw headerTest.log headerTest.ref
 
-clonesA.log: clonesA_rw.C clonesA_Event.h clonesA_Event.cxx
+clonesA_Event_cxx.$(DllSuf): clonesA_Event.h clonesA_Event.cxx
+
+clonesA.log: clonesA_rw.C clonesA_Event_cxx.$(DllSuf)
 	$(CMDECHO) root.exe -q -b -l clonesA_rw.C > clonesA.log 2>&1
 
 clonesATest: clonesA.log
@@ -44,7 +46,7 @@ Embedded_load_C.$(DllSuf) : buildEmbedded.C Embedded_load.C Embedded_objects.cpp
 Embedded.root: Embedded_load_C.$(DllSuf) embwrite.C
 	$(CMDECHO) root.exe -q -b -l embwrite.C > embwrite.log
 
-relations_load_C.$(DllSuf) : relations.h
+relations_load_C.$(DllSuf) : relations.h relationsLinkdef.h
 
 relations_write_C.$(DllSuf) : relations.h
 

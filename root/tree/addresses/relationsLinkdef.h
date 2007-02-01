@@ -8,7 +8,7 @@
 #pragma link C++ class DataTObject+;
 #pragma link C++ class IInterface+;
 #pragma link C++ class Relation1D<int,float>+;
-#pragma link C++ class std::pair<int,float>+;
+//#pragma link C++ class std::pair<int,float>+;
 #pragma link C++ class std::vector<std::pair<int,float> >;
 //the next line work around issue with CINT's typedef mechanism
 //#pragma link C++ class std::vector<pair<int,float> >;
