@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.h,v 1.2 2005/02/25 17:06:34 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.h,v 1.3 2005/11/16 20:04:47 pcanal Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -47,6 +47,7 @@ public:
 
    // Initializing constructor
    TGenCollectionStreamer(Info_t typ, size_t iter_size);
+   TGenCollectionStreamer(const ROOT::TCollectionProxyInfo &info);
 
    // Standard destructor
    virtual ~TGenCollectionStreamer();

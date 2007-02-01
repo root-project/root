@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.10 2005/11/16 20:04:47 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.11 2006/05/19 07:30:04 brun Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -31,14 +31,19 @@
 #include <string>
 
 class TGenCollectionProxy
-   : public TVirtualCollectionProxy,
-     public TCollectionProxy
+   : public TVirtualCollectionProxy
 {
 
    // Friend declaration
    friend class TCollectionProxy;
 
 public:
+
+#ifdef R__HPUX
+   typedef const type_info&      Info_t;
+#else
+   typedef const std::type_info& Info_t;
+#endif
 
    enum {
       // Those 'bits' are used in conjunction with CINT's bit to store the 'type'
@@ -198,7 +203,7 @@ public:
    };
 
 protected:
-   typedef ROOT::Environ<char[64]> Env_t;
+   typedef ROOT::TCollectionProxyInfo::Environ<char[64]> Env_t;
    typedef std::vector<Env_t*>     Proxies_t;
 
    std::string   fName;      // Name of the class being proxied.
@@ -242,6 +247,7 @@ public:
 
    // Initializing constructor
    TGenCollectionProxy(Info_t typ, size_t iter_size);
+   TGenCollectionProxy(const ROOT::TCollectionProxyInfo &info);
 
    // Standard destructor.
    virtual ~TGenCollectionProxy();

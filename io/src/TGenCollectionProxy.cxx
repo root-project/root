@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.28 2006/05/19 07:30:04 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.29 2007/01/29 15:53:35 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -266,7 +266,17 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
          fDtor   = fType->GetDestructor();
          fDelete = fType->GetDelete();
       } else {
+#if defined(NOT_YET)
+         // Because the TStreamerInfo of the contained classes
+         // is stored only when tbere at least one element in
+         // the collection, we might not even have an emulated
+         // class.  So go the long route to avoid errors 
+         // issued by CINT ....
+         G__value gval = G__string2type_body(inside.c_str(),2);
+         G__TypeInfo ti(gval);
+#else
          G__TypeInfo ti(inside.c_str());
+#endif
          if ( !ti.IsValid() ) {
             if (intype != inside) {
                fCase |= G__BIT_ISPOINTER;
@@ -406,14 +416,50 @@ TGenCollectionProxy::TGenCollectionProxy(Info_t info, size_t iter_size)
    }
 }
 
+//______________________________________________________________________________
+TGenCollectionProxy::TGenCollectionProxy(const ROOT::TCollectionProxyInfo &info)
+   : TVirtualCollectionProxy(0),
+     fTypeinfo(info.fInfo)
+{
+   // Build a proxy for a collection whose type is described by 'collectionClass'.
+   fEnv            = 0;
+   fValDiff        = info.fValueDiff;
+   fValOffset      = info.fValueOffset;
+   fSize.call      = info.fSizeFunc;
+   fResize.call    = info.fResizeFunc;
+   fNext.call      = info.fNextFunc;
+   fFirst.call     = info.fFirstFunc;
+   fClear.call     = info.fClearFunc;
+   fConstruct.call = info.fConstructFunc;
+   fDestruct.call  = info.fDestructFunc;
+   fFeed.call      = info.fFeedFunc;
+   fCollect.call   = info.fCollectFunc;
+   CheckFunctions();
+
+   fValue           = 0;
+   fKey             = 0;
+   fVal             = 0;
+   fPointers        = false;
+
+   Env_t e;
+   if ( info.fIterSize > sizeof(e.buff) ) {
+      Fatal("TGenCollectionProxy",
+            "%s %s are too large:%d bytes. Maximum is:%d bytes",
+            "Iterators for collection",
+            fClass->GetName(),
+            info.fIterSize,
+            sizeof(e.buff));
+   }
+}
+
 namespace {
-   typedef std::vector<ROOT::Environ<char[64]>* > Proxies_t;
+   typedef std::vector<ROOT::TCollectionProxyInfo::Environ<char[64]>* > Proxies_t;
    void clearProxies(Proxies_t& v)
    {
       // Clear out the proxies.
 
       for(Proxies_t::iterator i=v.begin(); i != v.end(); ++i) {
-         ROOT::Environ<char[64]> *e = *i;
+         ROOT::TCollectionProxyInfo::Environ<char[64]> *e = *i;
          if ( e ) {
             if ( e->temp ) ::free(e->temp);
             delete e;
