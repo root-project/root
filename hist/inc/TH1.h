@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.84 2006/10/09 15:33:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.85 2007/01/15 16:10:10 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -20,10 +20,6 @@
 // 1-Dim histogram base class.                                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TVirtualHistPainter
-#include "TVirtualHistPainter.h"
-#endif
 
 #ifndef ROOT_TAxis
 #include "TAxis.h"
@@ -71,7 +67,9 @@ class TF1;
 class TH1D;
 class TBrowser;
 class TDirectory;
+class TList;
 class TVirtualFFT;
+class TVirtualHistPainter;
 
 class TH1 : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 

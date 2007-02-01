@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.87 2007/01/15 16:10:10 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.88 2007/01/23 10:06:17 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include "TH2.h"
 #include "TF1.h"
 #include "TVirtualPad.h"
+#include "TVirtualHistPainter.h"
 #include "THLimitsFinder.h"
 #include "TRandom.h"
 #include "TError.h"

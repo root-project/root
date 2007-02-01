@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.326 2007/01/30 16:07:14 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.327 2007/01/31 11:43:12 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include "TBrowser.h"
 #include "TObjString.h"
 #include "TError.h"
+#include "TVirtualHistPainter.h"
 #include "TVirtualFFT.h"
 
 //______________________________________________________________________________

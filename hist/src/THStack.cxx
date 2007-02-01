@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.49 2007/01/12 10:59:16 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.50 2007/01/15 16:10:10 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include "TClass.h"
 #include "THStack.h"
 #include "TVirtualPad.h"
+#include "TVirtualHistPainter.h"
 #include "TFrame.h"
 #include "TH2.h"
 #include "TH3.h"

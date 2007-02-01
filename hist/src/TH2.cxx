@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.103 2007/01/09 17:01:34 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.104 2007/01/15 16:10:10 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 #include "TError.h"
 #include "TMath.h"
 #include "TObjString.h"
+#include "TVirtualHistPainter.h"
 
 
 ClassImp(TH2)
