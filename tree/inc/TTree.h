@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.95 2007/01/25 22:53:05 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.96 2007/01/30 11:24:31 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -83,6 +83,7 @@ class TTreeFormula;
 class TPolyMarker;
 class TEventList;
 class TEntryList;
+class TList;
 class TSQLResult;
 class TSelector;
 class TPrincipal;
@@ -277,7 +278,7 @@ public:
    virtual TObjArray      *GetListOfBranches() { return &fBranches; }
    virtual TObjArray      *GetListOfLeaves() { return &fLeaves; }
    virtual TList          *GetListOfFriends() const { return fFriends; }
-   virtual TSeqCollection *GetListOfAliases() const { return fAliases; }
+   virtual TList          *GetListOfAliases() const { return fAliases; }
 
    // GetMakeClass is left non-virtual for efficiency reason.
    // Making it virtual affects the performance of the I/O

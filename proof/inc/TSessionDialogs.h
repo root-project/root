@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSessionDialogs.h,v 1.12 2006/08/01 11:01:42 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSessionDialogs.h,v 1.1 2006/11/17 15:50:17 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #endif
 
 class TList;
+class TSeqCollection;
 class TChain;
 class TDSet;
 class TGTextEntry;

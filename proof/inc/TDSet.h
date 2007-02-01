@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.1 2006/11/27 14:14:23 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.2 2006/11/28 12:10:52 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -48,6 +48,10 @@
 
 #ifndef ROOT_TEventList
 #include "TEventList.h"
+#endif
+
+#ifndef ROOT_TList
+#include "TList.h"
 #endif
 
 #include <set>
