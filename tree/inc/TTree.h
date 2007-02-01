@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.96 2007/01/30 11:24:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.97 2007/02/01 14:21:28 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -26,16 +26,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
-#include "TNamed.h"
+#ifndef ROOT_TBranch
+#include "TBranch.h"
 #endif
 
 #ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
-
-#ifndef ROOT_TClonesArray
-#include "TClonesArray.h"
 #endif
 
 #ifndef ROOT_TAttLine
@@ -50,20 +46,12 @@
 #include "TAttMarker.h"
 #endif
 
-#ifndef ROOT_TBranch
-#include "TBranch.h"
-#endif
-
 #ifndef ROOT_TArrayD
 #include "TArrayD.h"
 #endif
 
 #ifndef ROOT_TArrayI
 #include "TArrayI.h"
-#endif
-
-#ifndef ROOT_TVirtualTreePlayer
-#include "TVirtualTreePlayer.h"
 #endif
 
 #ifndef ROOT_TDataType
@@ -74,6 +62,12 @@
 #include "TClass.h"
 #endif
 
+#ifndef ROOT_TVirtualTreePlayer
+#include "TVirtualTreePlayer.h"
+#endif
+
+class TBranch;
+class TVirtualTreePlayer;
 class TBrowser;
 class TFile;
 class TDirectory;
@@ -91,6 +85,7 @@ class TFriendElement;
 class TCut;
 class TVirtualIndex;
 class TBranchRef;
+class TBasket;
 
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 

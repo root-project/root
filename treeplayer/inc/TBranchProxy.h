@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.7 2005/01/27 06:16:43 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.8 2005/09/03 02:21:32 pcanal Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -18,17 +18,14 @@
 #ifndef ROOT_TTree
 #include "TTree.h"
 #endif
+#ifndef ROOT_TBranch
+#include "TBranch.h"
+#endif
+#ifndef ROOT_TClonesArray
+#include "TClonesArray.h"
+#endif
 #ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TBranchElement
-#include "TBranchElement.h"
-#endif
-#ifndef ROOT_TStreamerInfo
-#include "TStreamerInfo.h"
-#endif
-#ifndef ROOT_TStreamerElement
-#include "TStreamerElement.h"
 #endif
 #ifndef ROOT_Riostream
 #include "Riostream.h"
@@ -39,6 +36,9 @@
 
 #include <list>
 #include <algorithm>
+
+class TBranch;
+class TStreamerElement;
 
 // Note we could protect the arrays more by introducing a class TArrayWrapper<class T> which somehow knows
 // its internal dimensions and check for them ...

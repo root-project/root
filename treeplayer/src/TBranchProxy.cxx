@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBranchProxy.cxx,v 1.7 2006/05/23 08:15:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBranchProxy.cxx,v 1.8 2007/01/30 11:24:32 brun Exp $
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************
@@ -17,6 +17,9 @@
 
 #include "TBranchProxy.h"
 #include "TLeaf.h"
+#include "TBranchElement.h"
+#include "TStreamerElement.h"
+#include "TStreamerInfo.h"
 
 
 ROOT::TBranchProxy::TBranchProxy() :

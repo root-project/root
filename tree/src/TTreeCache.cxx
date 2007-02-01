@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.11 2006/10/19 19:35:52 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCache.cxx,v 1.12 2007/01/03 18:50:36 pcanal Exp $
 // Author: Rene Brun   04/06/2006
 
 /*************************************************************************
@@ -44,6 +44,7 @@
 
 #include "TTreeCache.h"
 #include "TChain.h"
+#include "TList.h"
 #include "TBranch.h"
 #include "TEventList.h"
 #include "TObjString.h"

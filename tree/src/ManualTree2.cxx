@@ -17,6 +17,7 @@ namespace std {} using namespace std;
 
 #include "TClass.h"
 #include "TBuffer.h"
+#include "TBasket.h"
 #include "TStreamerInfo.h"
 #include "TMemberInspector.h"
 #include "TError.h"
