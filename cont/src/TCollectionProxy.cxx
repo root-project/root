@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.cxx,v 1.6 2005/11/16 20:07:50 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.cxx,v 1.7 2006/04/19 08:22:22 rdm Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -100,136 +100,35 @@ TCollectionProxy::GenEmulatedMemberStreamer(const char* class_name)
 }
 
 TCollectionProxy::Proxy_t*
-TCollectionProxy::GenExplicitProxy( Info_t info,
-                                    size_t iter_size,
-                                    size_t value_diff,
-                                    int    value_offset,
-                                    void*  (*size_func)(void*),
-                                    void*  (*resize_func)(void*),
-                                    void*  (*clear_func)(void*),
-                                    void*  (*first_func)(void*),
-                                    void*  (*next_func)(void*),
-                                    void*  (*construct_func)(void*),
-                                    void*  (*destruct_func)(void*),
-                                    void*  (*feed_func)(void*),
-                                    void*  (*collect_func)(void*)
-                                    )
+TCollectionProxy::GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info )
 {
    // Generate proxy from static functions.
-   TGenCollectionProxy* ptr = new TGenCollectionProxy(info, iter_size);
-   ptr->fValDiff        = value_diff;
-   ptr->fValOffset      = value_offset;
-   ptr->fSize.call      = size_func;
-   ptr->fResize.call    = resize_func;
-   ptr->fNext.call      = next_func;
-   ptr->fFirst.call     = first_func;
-   ptr->fClear.call     = clear_func;
-   ptr->fConstruct.call = construct_func;
-   ptr->fDestruct.call  = destruct_func;
-   ptr->fFeed.call      = feed_func;
-   ptr->fCollect.call   = collect_func;
-   ptr->CheckFunctions();
-   return ptr;
+  return new TGenCollectionProxy(info);
 }
 
 TGenCollectionStreamer*
-TCollectionProxy::GenExplicitStreamer(  Info_t  info,
-                                        size_t  iter_size,
-                                        size_t  value_diff,
-                                        int     value_offset,
-                                        void*  (*size_func)(void*),
-                                        void*  (*resize_func)(void*),
-                                        void*  (*clear_func)(void*),
-                                        void*  (*first_func)(void*),
-                                        void*  (*next_func)(void*),
-                                        void*  (*construct_func)(void*),
-                                        void*  (*destruct_func)(void*),
-                                        void*  (*feed_func)(void*),
-                                        void*  (*collect_func)(void*)
-                                        )
+TCollectionProxy::GenExplicitStreamer( const ::ROOT::TCollectionProxyInfo &info )
 {
    // Generate streamer from static functions.
-   TGenCollectionStreamer* ptr = new TGenCollectionStreamer(info, iter_size);
-   ptr->fValDiff        = value_diff;
-   ptr->fValOffset      = value_offset;
-   ptr->fSize.call      = size_func;
-   ptr->fResize.call    = resize_func;
-   ptr->fNext.call      = next_func;
-   ptr->fFirst.call     = first_func;
-   ptr->fClear.call     = clear_func;
-   ptr->fConstruct.call = construct_func;
-   ptr->fDestruct.call  = destruct_func;
-   ptr->fFeed.call      = feed_func;
-   ptr->fCollect.call   = collect_func;
-   ptr->CheckFunctions();
+   TGenCollectionStreamer* ptr = new TGenCollectionStreamer(info);
    return ptr;
 }
 
 TClassStreamer*
-TCollectionProxy::GenExplicitClassStreamer( Info_t info,
-                                            size_t iter_size,
-                                            size_t value_diff,
-                                            int    value_offset,
-                                            void*  (*size_func)(void*),
-                                            void*  (*resize_func)(void*),
-                                            void*  (*clear_func)(void*),
-                                            void*  (*first_func)(void*),
-                                            void*  (*next_func)(void*),
-                                            void*  (*construct_func)(void*),
-                                            void*  (*destruct_func)(void*),
-                                            void*  (*feed_func)(void*),
-                                            void*  (*collect_func)(void*)
-                                            )
+TCollectionProxy::GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &info )
 {
    // Generate class streamer from static functions.
    TCollectionClassStreamer* s = new TCollectionClassStreamer();
-   s->AdoptStreamer(GenExplicitStreamer(info,
-                                        iter_size,
-                                        value_diff,
-                                        value_offset,
-                                        size_func,
-                                        resize_func,
-                                        clear_func,
-                                        first_func,
-                                        next_func,
-                                        construct_func,
-                                        destruct_func,
-                                        feed_func,
-                                        collect_func));
+   s->AdoptStreamer(GenExplicitStreamer(info));
    return s;
 }
 
 TMemberStreamer*
-TCollectionProxy::GenExplicitMemberStreamer(Info_t info,
-                                            size_t iter_size,
-                                            size_t value_diff,
-                                            int    value_offset,
-                                            void*  (*size_func)(void*),
-                                            void*  (*resize_func)(void*),
-                                            void*  (*clear_func)(void*),
-                                            void*  (*first_func)(void*),
-                                            void*  (*next_func)(void*),
-                                            void*  (*construct_func)(void*),
-                                            void*  (*destruct_func)(void*),
-                                            void*  (*feed_func)(void*),
-                                            void*  (*collect_func)(void*)
-                                            )
+TCollectionProxy::GenExplicitMemberStreamer( const ::ROOT::TCollectionProxyInfo &info)
 {
    // Generate member streamer from static functions.
    TCollectionMemberStreamer* s = new TCollectionMemberStreamer();
-   s->AdoptStreamer(GenExplicitStreamer(info,
-                                        iter_size,
-                                        value_diff,
-                                        value_offset,
-                                        size_func,
-                                        resize_func,
-                                        clear_func,
-                                        first_func,
-                                        next_func,
-                                        construct_func,
-                                        destruct_func,
-                                        feed_func,
-                                        collect_func));
+   s->AdoptStreamer(GenExplicitStreamer(info));
    return s;
 }
 
