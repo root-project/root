@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofResourcesStatic.cxx,v 1.7 2006/05/10 14:06:06 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofResourcesStatic.cxx,v 1.8 2007/01/18 17:09:00 rdm Exp $
 // Author: Paul Nilsson   7/12/2005
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "TProofNodeInfo.h"
 #include "TProofDebug.h"
 #include "TUrl.h"
+#include "TList.h"
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TError.h"
