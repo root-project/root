@@ -22,7 +22,7 @@ ASIMAGEGUILIBDEP    = $(GRAFLIB) $(HISTLIB) $(GUILIB) $(ASIMAGELIB)
 ASIMAGEGUILIBEXTRA  = lib/libGraf.lib lib/libHist.lib lib/libGui.lib \
                       lib/libASImage.lib
 ASIMAGEGSLIBDEP     = $(GRAFLIB) $(ASIMAGELIB)
-ASIMAGEGSLIBEXTRA   = lib/libGraf.lib lib/libASImage.lib7
+ASIMAGEGSLIBEXTRA   = lib/libGraf.lib lib/libASImage.lib
 GEDLIBDEP           = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) $(TREELIB) \
                       $(TREEPLAYERLIB)
 GEDLIBEXTRA         = lib/libHist.lib lib/libGpad.lib lib/libGraf.lib \
