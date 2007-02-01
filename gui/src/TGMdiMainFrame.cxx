@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.21 2006/05/11 12:50:07 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMainFrame.cxx,v 1.22 2006/07/03 16:10:45 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -47,6 +47,7 @@
 #include "TGGC.h"
 #include "TGResourcePool.h"
 #include "Riostream.h"
+#include "TList.h"
 
 ClassImp(TGMdiMainFrame)
 ClassImp(TGMdiContainer)

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.21 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.22 2006/09/25 08:26:42 antcheva Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 
 #include "TGStatusBar.h"
 #include "TGResourcePool.h"
+#include "TList.h"
 #include "Riostream.h"
 
 

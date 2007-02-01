@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.79 2006/08/01 10:54:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.80 2006/08/10 06:33:54 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -43,8 +43,10 @@
 #ifndef ROOT_TGString
 #include "TGString.h"
 #endif
+#ifndef ROOT_TList
+#include "TList.h"
+#endif
 
-class TList;
 class TGResourcePool;
 class TGTextButton;
 class TGVFileSplitter;
