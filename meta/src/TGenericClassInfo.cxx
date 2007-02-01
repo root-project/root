@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.16 2006/08/04 20:58:52 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.17 2007/01/31 19:59:53 pcanal Exp $
 // Author: Philippe Canal 08/05/2002
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include "TStreamer.h"
 #include "TVirtualIsAProxy.h"
 #include "TVirtualCollectionProxy.h"
+#include "TCollectionProxyInfo.h"
 
 namespace ROOT {
 
@@ -29,6 +30,7 @@ namespace ROOT {
       return &theDefault;
    }
 
+   
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname,
                                         const char *declFileName, Int_t declFileLine,
                                         const type_info &info, const TInitBehavior  *action,
@@ -60,7 +62,8 @@ namespace ROOT {
         fIsA(isa), fShowMembers(showmembers),
         fVersion(version),
         fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fStreamer(0),
-        fCollectionProxy(0), fSizeof(sizof)
+        fCollectionProxy(0), fSizeof(sizof),
+        fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
    {
       // Constructor with version number.
 
@@ -79,7 +82,9 @@ namespace ROOT {
         fIsA(isa), fShowMembers(0),
         fVersion(version),
         fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fStreamer(0),
-        fCollectionProxy(0), fSizeof(sizof)
+        fCollectionProxy(0), fSizeof(sizof),
+        fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
+
    {
       // Constructor with version number and no showmembers.
 
@@ -99,7 +104,9 @@ namespace ROOT {
         fIsA(0), fShowMembers(0),
         fVersion(version),
         fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fStreamer(0),
-        fCollectionProxy(0), fSizeof(0)
+        fCollectionProxy(0), fSizeof(0),
+        fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
+
    {
       // Constructor for namespace
 
@@ -155,6 +162,7 @@ namespace ROOT {
      } return *this;
    }
   */
+
    void TGenericClassInfo::Init(Int_t pragmabits)
    {
       // Initilization routine.
@@ -172,6 +180,8 @@ namespace ROOT {
    {
       // Destructor.
 
+      delete fCollectionProxyInfo;
+      delete fCollectionStreamerInfo;
       if (!fClass) delete fIsA; // fIsA is adopted by the class if any.
       fIsA = 0;
       if (!gROOT) return;
@@ -207,8 +217,12 @@ namespace ROOT {
          fClass->AdoptStreamer(fStreamer); fStreamer = 0;
          // If IsZombie is true, something went wront and we will not be
          // able to properly copy the collection proxy
-         if (!fClass->IsZombie()
-             && fCollectionProxy) fClass->CopyCollectionProxy(*fCollectionProxy);
+         if (!fClass->IsZombie()) {
+            if (fCollectionProxy) fClass->CopyCollectionProxy(*fCollectionProxy);
+            else if (fCollectionProxyInfo) {
+               fClass->SetCollectionProxy(*fCollectionProxyInfo);
+            }
+         }
          fClass->SetClassSize(fSizeof);
       }
       return fClass;
@@ -219,6 +233,21 @@ namespace ROOT {
       // Return the class name
 
       return fClassName;
+   }
+
+
+   TCollectionProxyInfo *TGenericClassInfo::GetCollectionProxyInfo() const
+   {
+      // Return the set of info we have for the CollectionProxy, if any
+
+      return fCollectionProxyInfo;
+   }
+
+   TCollectionProxyInfo *TGenericClassInfo::GetCollectionStreamerInfo() const
+   {
+      // Return the set of info we have for the Collection Streamer, if any
+
+      return fCollectionProxyInfo;
    }
 
    const type_info &TGenericClassInfo::GetInfo() const
@@ -269,6 +298,20 @@ namespace ROOT {
       ROOT::ResetClassVersion(fClass, GetClassName(),version);
       fVersion = version;
       return version;
+   }
+
+   void TGenericClassInfo::AdoptCollectionProxyInfo(TCollectionProxyInfo *info)
+   {
+      // Set the info for the CollectionProxy
+
+      fCollectionProxyInfo = info;
+   }
+
+   void TGenericClassInfo::AdoptCollectionStreamerInfo(TCollectionProxyInfo *info)
+   {
+      // Set the info for the Collection Streamer
+
+      fCollectionProxyInfo = info;
    }
 
    Short_t TGenericClassInfo::AdoptStreamer(TClassStreamer *streamer)
@@ -436,4 +479,6 @@ namespace ROOT {
 
       return fDestructor;
    }
+
+
 }

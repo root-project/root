@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.73 2007/01/29 15:10:49 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.74 2007/01/29 15:14:13 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -49,7 +49,7 @@ class TMethodCall;
 class TVirtualIsAProxy;
 class TVirtualRefProxy;
 
-namespace ROOT { class TGenericClassInfo; }
+namespace ROOT { class TGenericClassInfo; class TCollectionProxyInfo; }
 
 namespace ROOT {
    class TMapTypeToTClass;
@@ -243,6 +243,7 @@ public:
    void               ResetInstanceCount() { fInstanceCount = fOnHeap = 0; }
    void               ResetMenuList();
    Int_t              Size() const;
+   void               SetCollectionProxy(const ROOT::TCollectionProxyInfo&);
    void               SetContextMenuTitle(const char *title);
    void               SetGlobalIsA(IsAGlobalFunc_t);
    void               SetDeclFile(const char *name, int line) { fDeclFileName = name; fDeclFileLine = line; }

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.212 2007/01/29 15:10:49 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.213 2007/01/29 16:09:47 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -63,6 +63,8 @@
 #include "TVirtualMutex.h"
 #include "TVirtualMutex.h"
 #include "TVirtualPad.h"
+
+#include "TGenericClassInfo.h"
 
 #include <cstdio>
 #include <set>
@@ -3769,6 +3771,22 @@ Long_t TClass::Property() const
    return fProperty;
 }
 
+#include "TGenCollectionProxy.h"
+
+//_____________________________________________________________________________
+void TClass::SetCollectionProxy(const ROOT::TCollectionProxyInfo &info)
+{
+   // Create the collection proxy object (and the streamer object) from
+   // using the information in the TCollectionProxyInfo.
+
+   delete fCollectionProxy;
+   
+   TVirtualCollectionProxy *p = TCollectionProxy::GenExplicitProxy(info);
+   p->GetCollectionClass(); // Force the initialization.
+   fCollectionProxy = p;
+  
+   AdoptStreamer(TCollectionProxy::GenExplicitClassStreamer(info));
+}
 
 //______________________________________________________________________________
 void TClass::SetContextMenuTitle(const char *title)
