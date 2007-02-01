@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.57 2006/11/24 10:17:46 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.58 2007/01/23 11:12:02 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -44,6 +44,7 @@ class TBrowser;
 class TAxis;
 class TH1;
 class TH1F;
+class TCollection;
 class TF1;
 class TSpline;
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.h,v 1.4 2006/11/30 07:49:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.h,v 1.5 2007/01/22 07:57:13 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -20,6 +20,9 @@ class TTree;
 class TDirectory;
 class TObjArray;
 class TString;
+
+class TList;
+class TCollection;
 
 class TEntryList: public TNamed 
 {
