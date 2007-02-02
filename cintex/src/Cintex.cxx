@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: Cintex.cxx,v 1.12 2006/12/08 09:36:06 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: Cintex.cxx,v 1.13 2007/01/13 19:53:41 brun Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -80,12 +80,14 @@ namespace {
 
    void Declare_additional_CINT_typedefs() {
      char name[256], value[512];
+     int autoload = G__set_class_autoloading(0); // To avoid recursive loads
      for ( size_t i = 0; i < sizeof(btypes)/sizeof(char*); i ++ ) {
        //--- vector ---
        sprintf(name,"vector<%s>", btypes[i]);
        sprintf(value,"vector<%s,allocator<%s> >", btypes[i], btypes[i]);
        CINTTypedefBuilder::Set(name, value);
      }
+     G__set_class_autoloading(autoload);
    }
 }
 
