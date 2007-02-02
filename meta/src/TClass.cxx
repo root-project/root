@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.213 2007/01/29 16:09:47 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.214 2007/02/01 21:59:28 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -85,7 +85,7 @@ TVirtualMutex* gCINTMutex = 0;
 
 Int_t TClass::fgClassCount;
 TClass::ENewType TClass::fgCallingNew = kRealNew;
-static std::multimap<void*, Version_t> fgObjectVersionRepository;
+static std::multimap<void*, Version_t> gObjectVersionRepository;
 
 //______________________________________________________________________________
 //______________________________________________________________________________
@@ -2929,17 +2929,17 @@ void *TClass::New(ENewType defConstructor)
 #endif
       // Register the object for special handling in the destructor.
       if (p) {
-         //if (!fgObjectVersionRepository.count(p)) {
+         //if (!gObjectVersionRepository.count(p)) {
          //   Warning("New", "Registering address %p of class '%s' version %d", p, GetName(), fClassVersion);
          //} else {
          //   Warning("New", "Registering address %p again of class '%s' version %d", p, GetName(), fClassVersion);
          //}
-         fgObjectVersionRepository.insert(std::pair<void* const,Version_t>(p, fClassVersion));
-         //std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+         gObjectVersionRepository.insert(std::pair<void* const,Version_t>(p, fClassVersion));
+         //std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = gObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
          //if (!tmp.second) {
             //Warning("New", "Reregistering an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
-            //fgObjectVersionRepository.erase(tmp.first);
-            //tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+            //gObjectVersionRepository.erase(tmp.first);
+            //tmp = gObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
             //if (!tmp.second) {
                //Warning("New", "Failed to reregister an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
             //}
@@ -3031,17 +3031,17 @@ void *TClass::New(void *arena, ENewType defConstructor)
       // Register the object for special handling in the destructor.
 #endif
       if (p) {
-         //if (!fgObjectVersionRepository.count(p)) {
+         //if (!gObjectVersionRepository.count(p)) {
          //   Warning("New with placement", "Registering address %p of class '%s' version %d", p, GetName(), fClassVersion);
          //} else {
          //   Warning("New with placement", "Registering address %p again of class '%s' version %d", p, GetName(), fClassVersion);
          //}
-         fgObjectVersionRepository.insert(std::pair<void* const,Version_t>(p, fClassVersion));
-         //std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+         gObjectVersionRepository.insert(std::pair<void* const,Version_t>(p, fClassVersion));
+         //std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = gObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
          //if (!tmp.second) {
             //Warning("New with placement", "Reregistering an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
-            //fgObjectVersionRepository.erase(tmp.first);
-            //tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+            //gObjectVersionRepository.erase(tmp.first);
+            //tmp = gObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
             //if (!tmp.second) {
                //Warning("New with placement", "Failed to reregister an object of class '%s' version %d at address %0lx", GetName(), fClassVersion, p);
             //}
@@ -3134,17 +3134,17 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor)
 #endif
       // Register the object for special handling in the destructor.
       if (p) {
-         //if (!fgObjectVersionRepository.count(p)) {
+         //if (!gObjectVersionRepository.count(p)) {
          //   Warning("NewArray", "Registering address %p of class '%s' version %d", p, GetName(), fClassVersion);
          //} else {
          //   Warning("NewArray", "Registering address %p again of class '%s' version %d", p, GetName(), fClassVersion);
          //}
-         fgObjectVersionRepository.insert(std::pair<void* const,Version_t>(p, fClassVersion));
-         //std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+         gObjectVersionRepository.insert(std::pair<void* const,Version_t>(p, fClassVersion));
+         //std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = gObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
          //if (!tmp.second) {
             //Warning("NewArray", "Reregistering an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
-            //fgObjectVersionRepository.erase(tmp.first);
-            //tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+            //gObjectVersionRepository.erase(tmp.first);
+            //tmp = gObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
             //if (!tmp.second) {
                //Warning("NewArray", "Failed to reregister an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
             //}
@@ -3241,17 +3241,17 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor)
 #endif
       // Register the object for special handling in the destructor.
       if (p) {
-         //if (!fgObjectVersionRepository.count(p)) {
+         //if (!gObjectVersionRepository.count(p)) {
          //   Warning("NewArray with placement", "Registering address %p of class '%s' version %d", p, GetName(), fClassVersion);
          //} else {
          //   Warning("NewArray with placement", "Registering address %p again of class '%s' version %d", p, GetName(), fClassVersion);
          //}
-         fgObjectVersionRepository.insert(std::pair<void* const,Version_t>(p, fClassVersion));
-         //std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+         gObjectVersionRepository.insert(std::pair<void* const,Version_t>(p, fClassVersion));
+         //std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = gObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
          //if (!tmp.second) {
             //Warning("NewArray with placement", "Reregistering an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
-            //fgObjectVersionRepository.erase(tmp.first);
-            //tmp = fgObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
+            //gObjectVersionRepository.erase(tmp.first);
+            //tmp = gObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
             //if (!tmp.second) {
                //Warning("NewArray with placement", "Failed to reregister an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
             //}
@@ -3311,14 +3311,14 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
 
       // Was this object allocated through TClass?
       std::multiset<Version_t> knownVersions;
-      std::multimap<void*, Version_t>::iterator iter = fgObjectVersionRepository.find(p);
-      if (iter == fgObjectVersionRepository.end()) {
+      std::multimap<void*, Version_t>::iterator iter = gObjectVersionRepository.find(p);
+      if (iter == gObjectVersionRepository.end()) {
          // No, it wasn't, skip special version handling.
          //Error("Destructor2", "Attempt to delete unregistered object of class '%s' at address %p!", GetName(), p);
          inRepo = kFALSE;
       } else {
          //objVer = iter->second;
-         for (; (iter != fgObjectVersionRepository.end()) && (iter->first == p); ++iter) {
+         for (; (iter != gObjectVersionRepository.end()) && (iter->first == p); ++iter) {
             Version_t ver = iter->second;
             knownVersions.insert(ver);
             if (ver == fClassVersion) {
@@ -3371,13 +3371,13 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
       }
 
       if (inRepo && verFound && p) {
-         std::multimap<void*, Version_t>::iterator cur = fgObjectVersionRepository.find(p);
-         for (; cur != fgObjectVersionRepository.end();) {
+         std::multimap<void*, Version_t>::iterator cur = gObjectVersionRepository.find(p);
+         for (; cur != gObjectVersionRepository.end();) {
             std::multimap<void*, Version_t>::iterator tmp = cur++;
             if ((tmp->first == p) && (tmp->second == fClassVersion)) {
                // -- We still have an address, version match.
                //Error("Destructor", "Deregistering addr %p of class '%s' version %d", p, GetName(), fClassVersion);
-               fgObjectVersionRepository.erase(tmp);
+               gObjectVersionRepository.erase(tmp);
             } else {
                // -- No address, version match, we've reached the end.
                break;
@@ -3433,13 +3433,13 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
 
       // Was this array object allocated through TClass?
       std::multiset<Version_t> knownVersions;
-      std::multimap<void*, Version_t>::iterator iter = fgObjectVersionRepository.find(p);
-      if (iter == fgObjectVersionRepository.end()) {
+      std::multimap<void*, Version_t>::iterator iter = gObjectVersionRepository.find(p);
+      if (iter == gObjectVersionRepository.end()) {
          // No, it wasn't, we cannot know what to do.
          //Error("DeleteArray", "Attempt to delete unregistered array object, element type '%s', at address %p!", GetName(), p);
          inRepo = kFALSE;
       } else {
-         for (; (iter != fgObjectVersionRepository.end()) && (iter->first == p); ++iter) {
+         for (; (iter != gObjectVersionRepository.end()) && (iter->first == p); ++iter) {
             Version_t ver = iter->second;
             knownVersions.insert(ver);
             if (ver == fClassVersion) {
@@ -3498,13 +3498,13 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
 
       // Deregister the object for special handling in the destructor.
       if (inRepo && verFound && p) {
-         std::multimap<void*, Version_t>::iterator cur = fgObjectVersionRepository.find(p);
-         for (; cur != fgObjectVersionRepository.end();) {
+         std::multimap<void*, Version_t>::iterator cur = gObjectVersionRepository.find(p);
+         for (; cur != gObjectVersionRepository.end();) {
             std::multimap<void*, Version_t>::iterator tmp = cur++;
             if ((tmp->first == p) && (tmp->second == fClassVersion)) {
                // -- We still have an address, version match.
                //Error("DeleteArray", "Deregistering addr %p of class '%s' version %d", p, GetName(), fClassVersion);
-               fgObjectVersionRepository.erase(tmp);
+               gObjectVersionRepository.erase(tmp);
             } else {
                // -- No address, version match, we've reached the end.
                break;

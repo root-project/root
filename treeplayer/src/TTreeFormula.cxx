@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.208 2007/01/30 11:24:32 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.209 2007/01/31 07:33:31 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -206,9 +206,9 @@ void TTreeFormula::Init(const char*name, const char* expression)
    fDimensionSetup = new TList;
 
    if (Compile(expression)) {
-     fTree = 0; fNdim = 0; 
-     if(savedir) savedir->cd();
-     return; 
+      fTree = 0; fNdim = 0; 
+      if(savedir) savedir->cd();
+      return; 
    }
 
    if (fNcodes >= kMAXFOUND) {
@@ -267,8 +267,8 @@ void TTreeFormula::Init(const char*name, const char* expression)
                   "Index %d for dimension #%d in %s is too high (max is %d)",
                   fIndexes[k0][k1],k1+1, expression,fFixedSizes[k0][k1]-1);
             fTree = 0; fNdim = 0; 
-	    if(savedir) savedir->cd();
-	    return;
+            if(savedir) savedir->cd();
+            return;
          }
       }
    }
