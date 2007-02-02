@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.24 2006/10/05 17:00:04 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.25 2007/01/29 15:53:35 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -290,7 +290,9 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
    size_t i;
    PCont_t c   = PCont_t(fEnv->object);
    c->resize(left*fValDiff,0);
+   void *oldstart = fEnv->start;
    fEnv->start = left>0 ? &(*c->begin()) : 0;
+   
    char* addr = ((char*)fEnv->start) + fValDiff*nCurr;
    switch ( fSTL_type )  {
       case TClassEdit::kMap:
@@ -300,6 +302,15 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
             case G__BIT_ISENUM:
                break;
             case G__BIT_ISCLASS:
+               if (oldstart && oldstart != fEnv->start) {
+                  Long_t offset = 0;
+                  for( i=0; i<=nCurr; ++i, offset += fValDiff ) {
+                     // For now 'Move' only register the change of location
+                     // so per se this is wrong since the object are copied via memcpy
+                     // rather than a copy (or move) constructor.
+                     fVal->fType->Move(((char*)oldstart)+offset,((char*)fEnv->start)+offset);
+                  }
+               }
                for( i=nCurr; i<left; ++i, addr += fValDiff )
                   fKey->fType->New(addr);
                break;
@@ -324,6 +335,15 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
             case G__BIT_ISENUM:
                break;
             case G__BIT_ISCLASS:
+               if (oldstart && oldstart != fEnv->start) {
+                  Long_t offset = 0;
+                  for( i=0; i<=nCurr; ++i, offset += fValDiff ) {
+                     // For now 'Move' only register the change of location
+                     // so per se this is wrong since the object are copied via memcpy
+                     // rather than a copy (or move) constructor.
+                     fVal->fType->Move(((char*)oldstart)+offset,((char*)fEnv->start)+offset);
+                  }
+               }
                for( i=nCurr; i<left; ++i, addr += fValDiff ) {
                   fVal->fType->New(addr);
                }
