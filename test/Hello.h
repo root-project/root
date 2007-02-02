@@ -22,6 +22,7 @@
 #include <TCanvas.h>
 #include <TText.h>
 
+class TList;
 
 class TChar : public TText {
 
@@ -56,8 +57,8 @@ public:
 
    Float_t GetWidth();
    void    Paint(Option_t* option="");
-   void    Print(Option_t * = "") const  { fList->Print(); }
-   void    ls(Option_t * = "") const     { fList->ls(); }
+   void    Print(Option_t * = "") const;
+   void    ls(Option_t * = "") const;
    TList  *GetList() { return fList; }
 
    ClassDef(Hello,0)   // animated text with cool wave effect
