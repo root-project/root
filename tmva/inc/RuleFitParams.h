@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleFitParams.h,v 1.8 2006/11/23 17:43:39 rdm Exp $
+// @(#)root/tmva $Id: RuleFitParams.h,v 1.9 2007/01/12 16:03:17 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -39,8 +39,8 @@
 #ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
 #endif
-#ifndef ROOT_TMath
-#include "TMath.h"
+#ifndef ROOT_TMathBase
+#include "TMathBase.h"
 #endif
 
 class TTree;
