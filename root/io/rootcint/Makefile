@@ -4,7 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log  MidadCint*
 
 #Set the list of target to make while testing
-TEST_TARGETS += sigbug virtualbase templateKeyword mytest rootcintIntTest constMemberTest
+TEST_TARGETS += sigbug virtualbase templateKeyword mytest rootcintIntTest constMemberTest cltest
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -50,3 +50,11 @@ out.cxx: foo.hh foo_linkdef.h
 	$(CMDECHO) rootcint -f out.cxx foo.hh foo_linkdef.h
 
 namespacetemp: out.$(ObjSuf)
+
+cltest_C.$(DllSuf): cltestClass.h cltestClass.cxx cltestLinkdef.h
+
+cltest.log: cltest_C.$(DllSuf)
+	$(CMDECHO) root.exe -b -q -l cltest.C+ > cltest.log 2>&1 
+
+cltest: cltest.log
+	$(TestDiff)
