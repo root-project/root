@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TFeldmanCousins.cxx,v 1.11 2006/05/16 08:13:31 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TFeldmanCousins.cxx,v 1.12 2006/12/12 14:14:15 couet Exp $
 // Author: Adrian Bevan  2001
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #include "Riostream.h"
+#include "TMath.h"
 #include "TFeldmanCousins.h"
 
 ClassImp(TFeldmanCousins)

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TFeldmanCousins.h,v 1.5 2004/02/13 14:27:00 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TFeldmanCousins.h,v 1.6 2006/05/16 08:13:31 brun Exp $
 // Author: Adrian Bevan  2001
 
 /*************************************************************************
@@ -41,7 +41,6 @@
 // Copyright Liverpool University 2001       bevan@slac.stanford.edu
 ///////////////////////////////////////////////////////////////////////////
 
-#include "TMath.h"
 #include "TObject.h"
 #include "TString.h"
 
