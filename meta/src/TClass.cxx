@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.214 2007/02/01 21:59:28 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.215 2007/02/02 08:12:27 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -85,7 +85,56 @@ TVirtualMutex* gCINTMutex = 0;
 
 Int_t TClass::fgClassCount;
 TClass::ENewType TClass::fgCallingNew = kRealNew;
+
 static std::multimap<void*, Version_t> gObjectVersionRepository;
+
+static void RegisterAddressInRepository(const char *where, void *location, const TClass *what) 
+{
+   // Register the object for special handling in the destructor.
+
+   Version_t version = what->GetClassVersion();
+//    if (!gObjectVersionRepository.count(location)) {
+//       Info(where, "Registering address %p of class '%s' version %d", location, what->GetName(), version);
+//    } else {
+//       Warning(where, "Registering address %p again of class '%s' version %d", location, what->GetName(), version);
+//    }
+   gObjectVersionRepository.insert(std::pair<void* const,Version_t>(location, version));
+
+#if 0
+   // This code could be used to prevent an address to be registered twice.
+   std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = gObjectVersionRepository.insert(std::pair<void*,Version_t>(location, version));
+   if (!tmp.second) {
+      Warning(where, "Reregistering an object of class '%s' version %d at address %p", what->GetName(), version, p);
+      gObjectVersionRepository.erase(tmp.first);
+      tmp = gObjectVersionRepository.insert(std::pair<void*,Version_t>(location, version));
+      if (!tmp.second) {
+         Warning(where, "Failed to reregister an object of class '%s' version %d at address %p", what->GetName(), version, location);
+      }
+   }
+#endif
+}
+
+static void UnregisterAddressInRepository(const char *where, void *location, const TClass *what)
+{ 
+   std::multimap<void*, Version_t>::iterator cur = gObjectVersionRepository.find(location);
+   for (; cur != gObjectVersionRepository.end();) {
+      std::multimap<void*, Version_t>::iterator tmp = cur++;
+      if ((tmp->first == location) && (tmp->second == what->GetClassVersion())) {
+         // -- We still have an address, version match.
+         // Info(where, "Unregistering address %p of class '%s' version %d", location, what->GetName(), what->GetClassVersion());
+         gObjectVersionRepository.erase(tmp);
+      } else {
+         // -- No address, version match, we've reached the end.
+         break;
+      }
+   }
+}
+
+void MoveAddressInRepository(const char *where, void *oldadd, void *newadd, const TClass *what)
+{
+   UnregisterAddressInRepository(where,oldadd,what);
+   RegisterAddressInRepository(where,newadd,what);
+}
 
 //______________________________________________________________________________
 //______________________________________________________________________________
@@ -1211,10 +1260,12 @@ void TClass::BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl)
          TRealData *rd = new TRealData(Form("%s%s",name,element->GetFullName()),offset+eoffset,0);
          if (gDebug > 0) printf(" Class: %s, adding TRealData=%s, offset=%ld\n",cl->GetName(),rd->GetName(),rd->GetThisOffset());
          cl->GetListOfRealData()->Add(rd);
-         if (cle) cle->BuildEmulatedRealData(Form("%s%s.",name,element->GetFullName()),offset+eoffset,cl);
+         TString rdname(Form("%s%s.",name,element->GetFullName()));
+         if (cle) cle->BuildEmulatedRealData(rdname,offset+eoffset,cl);
       } else {
          //others
-         TRealData *rd = new TRealData(Form("%s%s",name,element->GetFullName()),offset+eoffset,0);
+         TString rdname(Form("%s%s",name,element->GetFullName()));
+         TRealData *rd = new TRealData(rdname,offset+eoffset,0);
          if (gDebug > 0) printf(" Class: %s, adding TRealData=%s, offset=%ld\n",cl->GetName(),rd->GetName(),rd->GetThisOffset());
          cl->GetListOfRealData()->Add(rd);
       }
@@ -2430,6 +2481,18 @@ void TClass::MakeCustomMenuList()
 }
 
 //______________________________________________________________________________
+void TClass::Move(void *arenaFrom, void *arenaTo) const
+{
+   // Register the fact that an object was moved from the memory location 
+   // 'arenaFrom' to the memory location 'arenaTo'.
+
+   // If/when we have access to a copy constructor (or better to a move 
+   // constructor), this function should also perform the data move.
+   // For now we just information the repository.
+
+   MoveAddressInRepository("TClass::Move",arenaFrom,arenaTo,this);
+}
+
 TMethod *TClass::GetMethodAny(const char *method)
 {
    // Return pointer to method without looking at parameters.
@@ -2923,29 +2986,10 @@ void *TClass::New(ENewType defConstructor)
       // Allow TObject's to be registered again.
       SetObjectStat(statsave);
 
-#if 0
-      // FIXME: Turn off for now, trouble when ptr is reallocated to
-      //        some different type and we don't know.
-#endif
       // Register the object for special handling in the destructor.
       if (p) {
-         //if (!gObjectVersionRepository.count(p)) {
-         //   Warning("New", "Registering address %p of class '%s' version %d", p, GetName(), fClassVersion);
-         //} else {
-         //   Warning("New", "Registering address %p again of class '%s' version %d", p, GetName(), fClassVersion);
-         //}
-         gObjectVersionRepository.insert(std::pair<void* const,Version_t>(p, fClassVersion));
-         //std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = gObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
-         //if (!tmp.second) {
-            //Warning("New", "Reregistering an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
-            //gObjectVersionRepository.erase(tmp.first);
-            //tmp = gObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
-            //if (!tmp.second) {
-               //Warning("New", "Failed to reregister an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
-            //}
-         //}
+         RegisterAddressInRepository("New",p,this);
       }
-//#endif
    } else {
       Error("New", "This cannot happen!");
    }
@@ -3025,29 +3069,10 @@ void *TClass::New(void *arena, ENewType defConstructor)
       // Allow TObject's to be registered again.
       SetObjectStat(statsave);
 
-#if 0
-      // FIXME: Turn off for now, trouble when ptr is reallocated to
-      //        some different type and we don't know.
       // Register the object for special handling in the destructor.
-#endif
       if (p) {
-         //if (!gObjectVersionRepository.count(p)) {
-         //   Warning("New with placement", "Registering address %p of class '%s' version %d", p, GetName(), fClassVersion);
-         //} else {
-         //   Warning("New with placement", "Registering address %p again of class '%s' version %d", p, GetName(), fClassVersion);
-         //}
-         gObjectVersionRepository.insert(std::pair<void* const,Version_t>(p, fClassVersion));
-         //std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = gObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
-         //if (!tmp.second) {
-            //Warning("New with placement", "Reregistering an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
-            //gObjectVersionRepository.erase(tmp.first);
-            //tmp = gObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
-            //if (!tmp.second) {
-               //Warning("New with placement", "Failed to reregister an object of class '%s' version %d at address %0lx", GetName(), fClassVersion, p);
-            //}
-         //}
+         RegisterAddressInRepository("TClass::New with placement",p,this);
       }
-//#endif
    } else {
       Error("New with placement", "This cannot happen!");
    }
@@ -3128,29 +3153,10 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor)
       // Allow TObject's to be registered again.
       SetObjectStat(statsave);
 
-#if 0
-      // FIXME: Turn off for now, trouble when ptr is reallocated to
-      //        some different type and we don't know.
-#endif
       // Register the object for special handling in the destructor.
       if (p) {
-         //if (!gObjectVersionRepository.count(p)) {
-         //   Warning("NewArray", "Registering address %p of class '%s' version %d", p, GetName(), fClassVersion);
-         //} else {
-         //   Warning("NewArray", "Registering address %p again of class '%s' version %d", p, GetName(), fClassVersion);
-         //}
-         gObjectVersionRepository.insert(std::pair<void* const,Version_t>(p, fClassVersion));
-         //std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = gObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
-         //if (!tmp.second) {
-            //Warning("NewArray", "Reregistering an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
-            //gObjectVersionRepository.erase(tmp.first);
-            //tmp = gObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
-            //if (!tmp.second) {
-               //Warning("NewArray", "Failed to reregister an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
-            //}
-         //}
+         RegisterAddressInRepository("TClass::NewArray",p,this);
       }
-//#endif
    } else {
       Error("NewArray", "This cannot happen!");
    }
@@ -3235,29 +3241,10 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor)
          // use the streamer info to destroy them.
       }
 
-#if 0
-      // FIXME: Turn off for now, trouble when ptr is reallocated to
-      //        some different type and we don't know.
-#endif
       // Register the object for special handling in the destructor.
       if (p) {
-         //if (!gObjectVersionRepository.count(p)) {
-         //   Warning("NewArray with placement", "Registering address %p of class '%s' version %d", p, GetName(), fClassVersion);
-         //} else {
-         //   Warning("NewArray with placement", "Registering address %p again of class '%s' version %d", p, GetName(), fClassVersion);
-         //}
-         gObjectVersionRepository.insert(std::pair<void* const,Version_t>(p, fClassVersion));
-         //std::pair<std::map<void*, Version_t>::iterator, Bool_t> tmp = gObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
-         //if (!tmp.second) {
-            //Warning("NewArray with placement", "Reregistering an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
-            //gObjectVersionRepository.erase(tmp.first);
-            //tmp = gObjectVersionRepository.insert(std::pair<void*,Version_t>(p, fClassVersion));
-            //if (!tmp.second) {
-               //Warning("NewArray with placement", "Failed to reregister an object of class '%s' version %d at address %p", GetName(), fClassVersion, p);
-            //}
-         //}
+         RegisterAddressInRepository("TClass::NewArray with placement",p,this);
       }
-//#endif
    } else {
       Error("NewArray with placement", "This cannot happen!");
    }
@@ -3349,7 +3336,7 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
          // The loaded class version is not the same as the version of the code
          // which was used to allocate this object.  The best we can do is use
          // the TStreamerInfo to try to free up some of the allocated memory.
-         Error("Destructor", "Loaded class version %d is not registered for addr %p", fClassVersion, p);
+         Error("Destructor", "Loaded class %s version %d is not registered for addr %p", GetName(), fClassVersion, p);
 #if 0
          TStreamerInfo* si = (TStreamerInfo*) fStreamerInfo->At(objVer);
          if (si) {
@@ -3371,18 +3358,7 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
       }
 
       if (inRepo && verFound && p) {
-         std::multimap<void*, Version_t>::iterator cur = gObjectVersionRepository.find(p);
-         for (; cur != gObjectVersionRepository.end();) {
-            std::multimap<void*, Version_t>::iterator tmp = cur++;
-            if ((tmp->first == p) && (tmp->second == fClassVersion)) {
-               // -- We still have an address, version match.
-               //Error("Destructor", "Deregistering addr %p of class '%s' version %d", p, GetName(), fClassVersion);
-               gObjectVersionRepository.erase(tmp);
-            } else {
-               // -- No address, version match, we've reached the end.
-               break;
-            }
-         }
+         UnregisterAddressInRepository("TClass::Destructor",p,this);
       }
    } else {
       Error("Destructor", "This cannot happen! (class %s)", GetName());
@@ -3498,18 +3474,7 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
 
       // Deregister the object for special handling in the destructor.
       if (inRepo && verFound && p) {
-         std::multimap<void*, Version_t>::iterator cur = gObjectVersionRepository.find(p);
-         for (; cur != gObjectVersionRepository.end();) {
-            std::multimap<void*, Version_t>::iterator tmp = cur++;
-            if ((tmp->first == p) && (tmp->second == fClassVersion)) {
-               // -- We still have an address, version match.
-               //Error("DeleteArray", "Deregistering addr %p of class '%s' version %d", p, GetName(), fClassVersion);
-               gObjectVersionRepository.erase(tmp);
-            } else {
-               // -- No address, version match, we've reached the end.
-               break;
-            }
-         }
+         UnregisterAddressInRepository("TClass::DeleteArray",p,this);
       }
    } else {
       Error("DeleteArray", "This cannot happen! (class '%s')", GetName());

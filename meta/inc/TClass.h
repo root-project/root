@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.74 2007/01/29 15:14:13 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.75 2007/02/01 21:59:28 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -229,6 +229,7 @@ public:
    Bool_t             IsStartingWithTObject() const;
    Bool_t             IsTObject() const;
    void               MakeCustomMenuList();
+   void               Move(void *arenaFrom, void *arenaTo) const;
    void              *New(ENewType defConstructor = kClassNew);
    void              *New(void *arena, ENewType defConstructor = kClassNew);
    void              *NewArray(Long_t nElements, ENewType defConstructor = kClassNew);
