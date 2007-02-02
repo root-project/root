@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.215 2007/02/02 08:12:27 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.216 2007/02/02 17:03:43 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -130,7 +130,7 @@ static void UnregisterAddressInRepository(const char *where, void *location, con
    }
 }
 
-void MoveAddressInRepository(const char *where, void *oldadd, void *newadd, const TClass *what)
+static void MoveAddressInRepository(const char *where, void *oldadd, void *newadd, const TClass *what)
 {
    UnregisterAddressInRepository(where,oldadd,what);
    RegisterAddressInRepository(where,newadd,what);
@@ -2490,7 +2490,9 @@ void TClass::Move(void *arenaFrom, void *arenaTo) const
    // constructor), this function should also perform the data move.
    // For now we just information the repository.
 
-   MoveAddressInRepository("TClass::Move",arenaFrom,arenaTo,this);
+   if (!fClassInfo && !fCollectionProxy) {
+      MoveAddressInRepository("TClass::Move",arenaFrom,arenaTo,this);
+   }
 }
 
 TMethod *TClass::GetMethodAny(const char *method)
