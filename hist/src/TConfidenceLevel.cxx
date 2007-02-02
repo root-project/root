@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TConfidenceLevel.cxx,v 1.6 2006/05/17 16:37:25 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TConfidenceLevel.cxx,v 1.7 2006/05/26 15:13:02 rdm Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -17,6 +17,7 @@
 
 #include "TConfidenceLevel.h"
 #include "TH1F.h"
+#include "TMath.h"
 #include "Riostream.h"
 
 ClassImp(TConfidenceLevel)
@@ -441,4 +442,22 @@ void  TConfidenceLevel::Draw(const Option_t*)
    b_hist->Draw();
    sb_hist->Draw("Same");
    sb_hist->SetLineStyle(3);
+}
+
+
+//______________________________________________________________________________
+void  TConfidenceLevel::SetTSB(Double_t * in)
+{
+   // Set the TSB.
+   fTSB = in; 
+   TMath::Sort(fNNMC, fTSB, fISB, 0); 
+}
+
+
+//______________________________________________________________________________
+void  TConfidenceLevel::SetTSS(Double_t * in)
+{
+   // Set the TSS.
+   fTSS = in; 
+   TMath::Sort(fNNMC, fTSS, fISS, 0); 
 }
