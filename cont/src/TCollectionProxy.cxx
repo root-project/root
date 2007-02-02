@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.cxx,v 1.7 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.cxx,v 1.8 2007/02/01 22:00:47 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -103,7 +103,7 @@ TCollectionProxy::Proxy_t*
 TCollectionProxy::GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info )
 {
    // Generate proxy from static functions.
-  return new TGenCollectionProxy(info);
+   return new TGenCollectionProxy(info);
 }
 
 TGenCollectionStreamer*

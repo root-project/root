@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.17 2007/01/16 14:31:49 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.18 2007/02/01 22:00:47 pcanal Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -94,7 +94,7 @@ public:
 
 
    /// Generate proxy from static functions
-    static Proxy_t* GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info );
+   static Proxy_t* GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info );
 
    /// Generate proxy from template
    template <class T> static Proxy_t* GenProxy(const T &arg)  {      
