@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.117 2007/01/10 16:54:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.118 2007/01/19 07:21:23 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -1029,6 +1029,7 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
          ib++;
          if (ib > nb) {ok = kTRUE; break;}
       } else {
+	 rdiff += sb - sa; 
          ia++;
          ib++;
          if (ia > na) {ok = kTRUE; break;}
