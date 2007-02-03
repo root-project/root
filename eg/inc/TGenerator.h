@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.h,v 1.10 2006/05/27 20:31:54 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.h,v 1.11 2006/08/24 16:31:21 rdm Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -137,12 +137,11 @@
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
-#ifndef ROOT_TClonesArray
-#include "TClonesArray.h"
-#endif
 
 class TBrowser;
 class TParticle;
+class TClonesArray;
+class TObjArray;
 
 class TGenerator : public TNamed {
 
@@ -175,7 +174,7 @@ public:
    virtual Int_t           ImportParticles(TClonesArray *particles, Option_t *option="");
    virtual TObjArray      *ImportParticles(Option_t *option="");
    virtual TParticle      *GetParticle(Int_t i) const;
-   Int_t                   GetNumberOfParticles() const {return fParticles->GetLast()+1;}
+   Int_t                   GetNumberOfParticles() const;
    virtual TObjArray      *GetListOfParticles() const {return fParticles;}
    virtual TObjArray      *GetPrimaries(Option_t *option="") {return ImportParticles(option);}
    Float_t                 GetPtCut() const {return fPtCut;}

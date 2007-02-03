@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.12 2006/05/26 09:07:18 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.13 2006/08/24 16:31:21 rdm Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -483,9 +483,16 @@ void TGenerator::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
+Int_t TGenerator::GetNumberOfParticles() const
+{
+   // Return the number of particles in the stack
+   
+   return fParticles->GetLast()+1;
+}
+
+//______________________________________________________________________________
 TParticle *TGenerator::GetParticle(Int_t i) const
 {
-//
 //  Returns pointer to primary number i;
 //
 
