@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.17 2006/04/28 08:43:05 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.18 2006/07/03 16:10:46 brun Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
@@ -16,6 +16,8 @@
 #include "TStyle.h"
 #include "TMath.h"
 #include "TView.h"
+#include "TH1.h"
+#include "TGaxis.h"
 
 ClassImp(TPaletteAxis)
 
