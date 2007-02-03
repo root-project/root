@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.27 2007/01/25 11:50:54 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.28 2007/01/28 18:38:02 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 #include "TRefArray.h"
 #include "TRefTable.h"
 #include "TError.h"
+#include "TBits.h"
 #include "TSystem.h"
 
 ClassImp(TRefArray)
