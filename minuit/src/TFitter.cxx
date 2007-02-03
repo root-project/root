@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.46 2006/11/16 13:47:34 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.47 2007/01/15 16:10:11 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,6 +14,7 @@
 #include "TF1.h"
 #include "TF2.h"
 #include "TF3.h"
+#include "TList.h"
 #include "TGraph.h"
 #include "TGraph2D.h"
 #include "TMultiGraph.h"
