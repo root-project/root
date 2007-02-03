@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.10 2006/10/20 16:21:30 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.11 2007/01/30 11:24:31 brun Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TBrowser.h"
 #include "TTree.h"
 #include "TLeafObject.h"
+#include "TClonesArray.h"
 #include "TPad.h"
 #include "TClass.h"
 #include "TBaseClass.h"

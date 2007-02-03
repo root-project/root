@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.22 2006/08/18 18:46:35 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.23 2007/01/30 11:24:31 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 
 #include "TBasket.h"
 #include "TClass.h"
+#include "TClonesArray.h"
 #include "TDataMember.h"
 #include "TDataType.h"
 #include "TFile.h"

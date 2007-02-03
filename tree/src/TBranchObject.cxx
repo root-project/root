@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.38 2007/01/30 11:24:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.39 2007/01/31 07:33:31 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 #include "TBranchClones.h"
 #include "TBrowser.h"
 #include "TClass.h"
+#include "TClonesArray.h"
 #include "TDataMember.h"
 #include "TDataType.h"
 #include "TFile.h"

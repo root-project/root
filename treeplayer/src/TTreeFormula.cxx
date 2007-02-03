@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.209 2007/01/31 07:33:31 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.210 2007/02/02 08:08:54 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include "TBranch.h"
 #include "TBranchObject.h"
 #include "TFunction.h"
+#include "TClonesArray.h"
 #include "TLeafC.h"
 #include "TLeafObject.h"
 #include "TDataMember.h"
