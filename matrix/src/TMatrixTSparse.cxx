@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.cxx,v 1.11 2007/01/15 10:16:15 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.cxx,v 1.12 2007/02/03 06:40:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -2094,7 +2094,7 @@ Element &TMatrixTSparse<Element>::operator()(Int_t rown,Int_t coln)
 
 //______________________________________________________________________________
 template <class Element>
-inline Element TMatrixTSparse<Element>::operator()(Int_t rown,Int_t coln) const
+Element TMatrixTSparse<Element>::operator()(Int_t rown,Int_t coln) const
 {
    R__ASSERT(this->IsValid());
    if (this->fNrowIndex > 0 && this->fRowIndex[this->fNrowIndex-1] == 0) {
