@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGraphEditor.h,v 1.8 2006/06/23 15:19:21 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGraphEditor.h,v 1.9 2006/09/25 13:40:06 rdm Exp $
 // Author: Carsten Hof 28/07/04
 
 /*************************************************************************
@@ -26,10 +26,8 @@
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
 #endif
-#ifndef ROOT_TGraph
-#include "TGraph.h"
-#endif
 
+class TGraph;
 class TGLabel;
 class TGTextEntry;
 class TGCheckButton;

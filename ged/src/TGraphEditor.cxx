@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGraphEditor.cxx,v 1.20 2006/09/25 13:35:58 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGraphEditor.cxx,v 1.21 2007/01/23 14:22:45 rdm Exp $
 // Author: Carsten Hof   16/08/04
 
 /*************************************************************************
@@ -41,6 +41,7 @@
 #include "TGToolTip.h"
 #include "TGLabel.h"
 #include "TGClient.h"
+#include "TGraph.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
