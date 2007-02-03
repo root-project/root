@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TF1Editor.cxx,v 1.4 2006/07/10 13:18:57 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TF1Editor.cxx,v 1.5 2006/09/25 13:35:58 rdm Exp $
 // Author: Ilka Antcheva 21/03/06
 
 /*************************************************************************
@@ -19,7 +19,8 @@
 
 #include "TF1Editor.h"
 #include "TGedEditor.h"
-#include "TH1.h"
+//#include "TH1.h"
+#include "TF1.h"
 #include "TGedFrame.h"
 #include "TGTextEntry.h"
 #include "TGToolTip.h"

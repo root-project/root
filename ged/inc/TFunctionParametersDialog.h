@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:$:$Id:$
+// @(#)root/ged:$Name:  $:$Id: TFunctionParametersDialog.h,v 1.3 2006/07/10 13:18:57 rdm Exp $
 // Author: Ilka Antcheva 08/05/06
 
 /*************************************************************************
@@ -26,11 +26,9 @@
 #ifndef ROOT_TGFrame
 #include "TGFrame.h"
 #endif
-#ifndef ROOT_TF1
-#include "TF1.h"
-#endif
 
 
+class TF1;
 class TGNumberEntry;
 class TGTextEntry;
 class TGCheckButton;
