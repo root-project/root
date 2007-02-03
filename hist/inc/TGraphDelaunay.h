@@ -25,10 +25,8 @@
 #ifndef ROOT_TNamed 
 #include "TNamed.h"  
 #endif
-#ifndef ROOT_TGraph2D
-#include "TGraph2D.h"
-#endif
 
+class TGraph2D;
 class TView;
 
 class TGraphDelaunay : public TNamed {

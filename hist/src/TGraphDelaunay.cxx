@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TMath.h"
+#include "TGraph2D.h"
 #include "TGraphDelaunay.h"
 
 ClassImp(TGraphDelaunay)
