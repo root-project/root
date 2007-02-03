@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TF1Editor.h,v 1.4 2006/07/10 13:18:57 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TF1Editor.h,v 1.5 2006/09/25 13:35:58 rdm Exp $
 // Author: Ilka Antcheva 21/03/06
 
 /*************************************************************************
@@ -26,10 +26,6 @@
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
 #endif
-#ifndef ROOT_TF1
-#include "TF1.h"
-#endif
-
 
 class TGNumberEntry;
 class TGTextEntry;
