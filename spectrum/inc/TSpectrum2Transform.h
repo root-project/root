@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2Transform.h,v 1.1 2006/09/28 19:29:30 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2Transform.h,v 1.2 2006/10/02 10:58:42 brun Exp $
 // Author: Miroslav Morhac   25/09/06
 
 /*************************************************************************
@@ -23,8 +23,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TH2
-#include "TH2.h"
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
 
 class TSpectrum2Transform : public TObject {
