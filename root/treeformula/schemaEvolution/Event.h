@@ -14,6 +14,7 @@
 #include "TRefArray.h"
 #include "TRef.h"
 #include "TH1.h"
+#include "TBits.h"
 #include "TMath.h"
 
 
