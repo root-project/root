@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainIndex.cxx,v 1.5 2006/04/19 08:22:26 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainIndex.cxx,v 1.6 2007/01/06 09:24:09 brun Exp $
 // Author: Marek Biskup   07/06/2005
 
 /*************************************************************************
@@ -17,6 +17,8 @@
 
 #include "TChainIndex.h"
 #include "TChain.h"
+#include "TTreeFormula.h"
+#include "TTreeIndex.h"
 #include "TError.h"
 
 ClassImp(TChainIndex)
