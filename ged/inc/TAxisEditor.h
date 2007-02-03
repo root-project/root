@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.h,v 1.3 2004/06/30 13:04:44 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAxisEditor.h,v 1.4 2006/09/25 13:35:58 rdm Exp $
 // Author: Ilka  Antcheva 11/05/04
 
 /*************************************************************************
@@ -26,10 +26,8 @@
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
 #endif
-#ifndef ROOT_TAxis
-#include "TAxis.h"
-#endif
 
+class TAxis;
 class TGLabel;
 class TGComboBox;
 class TGNumberEntry;
