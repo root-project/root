@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.13 2006/06/23 15:19:22 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.14 2006/09/25 13:35:58 rdm Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -36,6 +36,7 @@
 
 
 #include "TAxisEditor.h"
+#include "TAxis.h"
 #include "TGedFrame.h"
 #include "TGedEditor.h"
 #include "TGColorSelect.h"

@@ -23,6 +23,7 @@
 #include "THLimitsFinder.h"
 #include "TStyle.h"
 #include "Hoption.h"
+#include "TH1.h"
 
 R__EXTERN TH1  *gCurrentHist;
 R__EXTERN Hoption_t Hoption;

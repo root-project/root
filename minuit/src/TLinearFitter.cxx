@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.35 2007/02/03 06:40:26 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.36 2007/02/03 18:07:29 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 #include "TRandom.h"
 #include "TObjString.h"
 #include "TF2.h"
+#include "TH1.h"
 #include "TList.h"
 
 
