@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.32 2006/12/08 13:26:17 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.33 2007/01/25 09:45:27 couet Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "TVirtualPad.h"
 #include "THistPainter.h"
 #include "TH1.h"
+#include "TF3.h"
 #include "TView.h"
 #include "TVirtualX.h"
 #include "Hoption.h"
