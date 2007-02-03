@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.14 2007/01/24 16:29:27 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.15 2007/01/29 15:10:49 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -206,6 +206,7 @@
 #include "TVectorT.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "TMath.h"
 
 Int_t gMatrixCheck = 1;
 

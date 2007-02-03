@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpSolverBase.cxx,v 1.7 2006/06/27 04:38:29 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpSolverBase.cxx,v 1.8 2006/06/28 05:17:13 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -51,6 +51,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TMath.h"
 #include "TQpSolverBase.h"
 
 ClassImp(TQpSolverBase)

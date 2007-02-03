@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPrincipal.cxx,v 1.31 2006/05/23 04:47:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TPrincipal.cxx,v 1.32 2006/05/24 14:55:26 brun Exp $
 // Author: Christian Holm Christensen    1/8/2000
 
 /*************************************************************************
@@ -667,8 +667,8 @@ in the transformed space.
 <!--*/
 // -->End_Html
 
-// $Id: TPrincipal.cxx,v 1.31 2006/05/23 04:47:40 brun Exp $
-// $Date: 2006/05/23 04:47:40 $
+// $Id: TPrincipal.cxx,v 1.32 2006/05/24 14:55:26 brun Exp $
+// $Date: 2006/05/24 14:55:26 $
 // $Author: brun $
 
 #include "TPrincipal.h"
@@ -676,6 +676,7 @@ in the transformed space.
 #include "TVectorD.h"
 #include "TMatrixD.h"
 #include "TMatrixDSymEigen.h"
+#include "TMath.h"
 #include "TList.h"
 #include "TH2.h"
 #include "TDatime.h"

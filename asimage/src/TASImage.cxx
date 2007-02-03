@@ -58,6 +58,7 @@
 #include "TASImage.h"
 #include "TASImagePlugin.h"
 #include "TROOT.h"
+#include "TMath.h"
 #include "TSystem.h"
 #include "TVirtualX.h"
 #include "TCanvas.h"

@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.33 2006/10/07 05:38:16 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.34 2006/11/13 11:24:15 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TLinearFitter.h"
+#include "TMath.h"
 #include "TDecompChol.h"
 #include "TGraph.h"
 #include "TGraph2D.h"

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.cxx,v 1.10 2006/10/06 06:52:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSparse.cxx,v 1.11 2007/01/15 10:16:15 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -2090,6 +2090,35 @@ Element &TMatrixTSparse<Element>::operator()(Int_t rown,Int_t coln)
          return fElements[0];
       }
    }
+}
+
+//______________________________________________________________________________
+template <class Element>
+inline Element TMatrixTSparse<Element>::operator()(Int_t rown,Int_t coln) const
+{
+   R__ASSERT(this->IsValid());
+   if (this->fNrowIndex > 0 && this->fRowIndex[this->fNrowIndex-1] == 0) {
+      Error("operator()(Int_t,Int_t) const","row/col indices are not set");
+      Info("operator()","fNrowIndex = %d fRowIndex[fNrowIndex-1] = %d\n",this->fNrowIndex,this->fRowIndex[this->fNrowIndex-1]);
+      return 0.0;
+   }
+   const Int_t arown = rown-this->fRowLwb;
+   const Int_t acoln = coln-this->fColLwb;
+
+   if (arown >= this->fNrows || arown < 0) {
+      Error("operator()","Request row(%d) outside matrix range of %d - %d",rown,this->fRowLwb,this->fRowLwb+this->fNrows);
+      return 0.0;
+   }
+   if (acoln >= this->fNcols || acoln < 0) {
+      Error("operator()","Request column(%d) outside matrix range of %d - %d",coln,this->fColLwb,this->fColLwb+this->fNcols);
+      return 0.0;
+   }
+
+   const Int_t sIndex = fRowIndex[arown];
+   const Int_t eIndex = fRowIndex[arown+1];
+   const Int_t index = (Int_t)TMath::BinarySearch(eIndex-sIndex,fColIndex+sIndex,acoln)+sIndex;
+   if (index < sIndex || fColIndex[index] != acoln) return 0.0;
+   else                                             return fElements[index];
 }
 
 //______________________________________________________________________________

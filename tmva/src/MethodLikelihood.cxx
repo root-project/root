@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodLikelihood.cxx,v 1.14 2007/01/23 11:26:36 brun Exp $ 
+// @(#)root/tmva $Id: MethodLikelihood.cxx,v 1.15 2007/01/30 10:19:25 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -102,6 +102,7 @@
 //End_Html
 //_______________________________________________________________________
 
+#include <cmath>
 #include "TMatrixD.h"
 #include "TVector.h"
 #include "TObjString.h"

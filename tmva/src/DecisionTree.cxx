@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DecisionTree.cxx,v 1.49 2006/11/19 15:35:34 helgevoss Exp $
+// @(#)root/tmva $Id: DecisionTree.cxx,v 1.11 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -27,7 +27,7 @@
  * (http://mva.sourceforge.net/license.txt)                                       *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: DecisionTree.cxx,v 1.49 2006/11/19 15:35:34 helgevoss Exp $
+ * $Id: DecisionTree.cxx,v 1.11 2006/11/20 15:35:28 brun Exp $
  **********************************************************************************/
 
 //_______________________________________________________________________
@@ -59,6 +59,7 @@
 #include <iostream>
 #include <algorithm>
 
+#include "TMath.h"
 #include "TMVA/DecisionTree.h"
 #include "TMVA/DecisionTreeNode.h"
 #include "TMVA/BinarySearchTree.h"

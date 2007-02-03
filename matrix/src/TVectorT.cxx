@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.21 2007/01/20 19:29:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.22 2007/01/29 15:10:49 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -36,6 +36,7 @@
 
 #include "TVectorT.h"
 #include "TClass.h"
+#include "TMath.h"
 #include "TROOT.h"
 #include "Varargs.h"
 

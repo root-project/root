@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.13 2006/05/16 08:13:31 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.14 2006/07/11 09:05:01 rdm Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 
 /*************************************************************************
@@ -21,6 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TMath
+#include "TMath.h"
+#endif
 #ifndef ROOT_TVector3
 #include "TVector3.h"
 #endif

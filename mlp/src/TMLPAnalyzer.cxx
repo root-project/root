@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.16 2006/05/26 15:13:02 rdm Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.17 2007/01/30 11:24:32 brun Exp $
 // Author: Christophe.Delaere@cern.ch   25/04/04
 
 /*************************************************************************
@@ -36,6 +36,7 @@
 #include "TCanvas.h"
 #include "TGaxis.h"
 #include "TRegexp.h"
+#include "TMath.h"
 #include "Riostream.h"
 
 ClassImp(TMLPAnalyzer)

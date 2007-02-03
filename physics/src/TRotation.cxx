@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.12 2006/07/28 15:15:01 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.13 2007/01/03 14:43:10 brun Exp $
 // Author: Peter Malzacher   19/06/99
 
 //______________________________________________________________________________
@@ -179,6 +179,7 @@ a rotation of a <TT>TVector3</TT> analog to the mathematical notation
 //
 
 #include "TRotation.h"
+#include "TMath.h"
 #include "TQuaternion.h"
 #include "TError.h"
 
