@@ -21,20 +21,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGraph2D
-#include "TGraph2D.h"
-#endif
-#ifndef ROOT_TGraph
-#include "TGraph.h"
-#endif
-#ifndef ROOT_TList
-#include "TList.h"
-#endif
-#ifndef ROOT_TGraphDelaunay
-#include "TGraphDelaunay.h"
+#ifndef ROOT_Object
+#include "TObject.h"
 #endif
 
-class TView;
+class TGraph2D;
+class TGraphDelaunay;
+class TList;
 
 class TGraphPainter : public TObject {
 
@@ -82,7 +75,7 @@ public:
    void   PaintPolyLine(Option_t *option);
    void   PaintContour(Option_t *option);
 
-   ClassDef(TGraphPainter,1)  // TGraph painter
+   ClassDef(TGraphPainter,0)  // TGraph painter
 };
 
 #endif
