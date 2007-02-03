@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.55 2006/11/01 07:31:57 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.56 2006/12/12 13:56:54 couet Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -626,7 +626,8 @@ TObject *TMinuit::Contour(Int_t npoints, Int_t pa1, Int_t pa2)
   // to n^2. The fcn function has to be set before the routine is called.
   //
   // The TGraph object is created via the interpreter. The user must cast it
-  // to a TGraph*
+  // to a TGraph*. Note that the TGraph is created with npoints+1 in order to
+  // close the contour (setting last point equal to first point).
   //
   // You can find an example in $ROOTSYS/tutorials/fit/fitcont.C
 
@@ -654,7 +655,7 @@ TObject *TMinuit::Contour(Int_t npoints, Int_t pa1, Int_t pa2)
    TPluginHandler *h;
    if ((h = gROOT->GetPluginManager()->FindHandler("TMinuitGraph"))) {
       if (h->LoadPlugin() != -1)
-      gr = (TObject*)h->ExecPlugin(3,npoints,xcoor,ycoor);
+      gr = (TObject*)h->ExecPlugin(3,npoints+1,xcoor,ycoor);
    }
    delete [] xcoor;
    delete [] ycoor;
