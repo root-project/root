@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSessionViewer.cxx,v 1.8 2007/02/01 14:58:44 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TSessionViewer.cxx,v 1.9 2007/02/01 16:55:52 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -2249,6 +2249,7 @@ void TEditQueryFrame::OnBtnSave()
    fTxtQueryName->SelectAll();
    fTxtQueryName->SetFocus();
    fViewer->WriteConfiguration();
+   fViewer->GetQueryFrame()->Modified(kFALSE);
    if (fViewer->GetActDesc()->fLocal ||
       (fViewer->GetActDesc()->fConnected &&
        fViewer->GetActDesc()->fAttached &&
