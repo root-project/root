@@ -50,6 +50,7 @@
 #include "TCanvas.h"
 #include "TError.h"
 #include "TApplication.h"
+#include "TMath.h"
 
 #ifndef __CINT__
 void stressGeometry(const char*);

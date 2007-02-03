@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.19 2004/03/22 16:13:24 brun Exp $
+// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.21 2005/12/22 09:54:37 brun Exp $
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -26,6 +26,7 @@
 #include "TFile.h"
 #include "Riostream.h"
 #include "TVectorD.h"
+#include "TMath.h"
 
 void stress_vector       (Int_t verbose);
 void stress_allocation   ();
