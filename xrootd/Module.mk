@@ -208,6 +208,7 @@ else
 		@(if [ -d $(XROOTDDIRD) ]; then \
 		   rm -rf $(XROOTDDIRD); \
 		fi;)
+		@rm -f $(XROOTDETAG)
 endif
 
 clean::         clean-xrootd
