@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.249 2007/01/25 12:00:58 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.250 2007/01/28 18:31:19 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -43,10 +43,7 @@
 #include "TPadView3D.h"
 #include "TDatime.h"
 #include "TColor.h"
-#include "TAttFillCanvas.h"
-#include "TAttLineCanvas.h"
-#include "TAttMarkerCanvas.h"
-#include "TAttTextCanvas.h"
+#include "TCanvas.h"
 #include "TPluginManager.h"
 #include "TEnv.h"
 #include "TImage.h"
@@ -59,7 +56,7 @@
 #include "TObjString.h"
 // Local scratch buffer for screen points, faster than allocating buffer on heap
 const Int_t kPXY       = 1002;
-
+ 
 static TPoint gPXY[kPXY];
 static Int_t gReadLevel = 0;
 
