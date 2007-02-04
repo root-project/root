@@ -9,7 +9,7 @@
 
 ifeq ($(INCLUDEPCHRULES),)
 
-PCHHEADERS    = TH1.h
+PCHHEADERS    = TObject.h
 
 PCHEXTRASRC   = base/src/precompile.cxx
 PCHEXTRAOBJ   = $(PCHEXTRASRC:.cxx=.o)

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.46 2006/11/27 14:14:23 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.47 2007/01/29 15:11:10 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -32,9 +32,6 @@
 #endif
 #ifndef ROOT_TSysEvtHandler
 #include "TSysEvtHandler.h"
-#endif
-#ifndef ROOT_Htypes
-#include "Htypes.h"
 #endif
 #ifndef ROOT_TStopwatch
 #include "TStopwatch.h"

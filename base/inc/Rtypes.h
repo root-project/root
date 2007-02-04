@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.56 2005/12/12 23:17:16 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.57 2006/02/09 20:37:48 pcanal Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -76,12 +76,26 @@ typedef const char     Option_t;    //Option string (const char)
 typedef int            Ssiz_t;      //String size (int)
 typedef float          Real_t;      //TVector and TMatrix element type (float)
 #if defined(R__WIN32) && !defined(__CINT__)
-typedef __int64            Long64_t;  //Portable signed long integer 8 bytes
-typedef unsigned __int64   ULong64_t; //Portable unsigned long integer 8 bytes
+typedef __int64          Long64_t;  //Portable signed long integer 8 bytes
+typedef unsigned __int64 ULong64_t; //Portable unsigned long integer 8 bytes
 #else
-typedef long long          Long64_t;  //Portable signed long integer 8 bytes
-typedef unsigned long long ULong64_t; //Portable unsigned long integer 8 bytes
+typedef long long          Long64_t; //Portable signed long integer 8 bytes
+typedef unsigned long long ULong64_t;//Portable unsigned long integer 8 bytes
 #endif
+typedef double         Axis_t;      //Axis values type (double)
+typedef double         Stat_t;      //Statistics type (double)
+
+typedef short          Font_t;      //Font number (short)
+typedef short          Style_t;     //Style number (short)
+typedef short          Marker_t;    //Marker number (short)
+typedef short          Width_t;     //Line width (short)
+typedef short          Color_t;     //Color number (short)
+typedef short          SCoord_t;    //Screen coordinates (short)
+typedef double         Coord_t;     //Pad world coordinates (double)
+typedef float          Angle_t;     //Graphics angle (float)
+typedef float          Size_t;      //Attribute size (float)
+
+enum EColor { kWhite, kBlack, kRed, kGreen, kBlue, kYellow, kMagenta, kCyan };
 
 // There is several streamer concepts.
 class TClassStreamer;   // Streamer functor for a class

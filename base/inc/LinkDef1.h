@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.44 2007/01/25 11:47:21 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.45 2007/01/28 18:33:21 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -41,6 +41,9 @@
 
 #pragma link C++ enum EObjBits;
 #pragma link C++ enum EEnvLevel;
+#pragma link C++ enum EColor;
+#pragma link C++ enum ELineStyle;
+#pragma link C++ enum EMarkerStyle;
 
 #pragma link C++ global gROOT;
 #pragma link C++ global gEnv;

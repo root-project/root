@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPadView3D.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPadView3D.h,v 1.2 2005/11/16 20:02:34 pcanal Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   30/05/97
 
 /*************************************************************************
@@ -21,12 +21,6 @@
 // For a concrete viewer see TGLViewer.                                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TObjectView
-// +SEQ,TObjectView.
-#endif
-
-#include "Gtypes.h"
 
 #ifndef ROOT_TObject
 #include "TObject.h"

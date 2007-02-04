@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSphere.h $
+// @(#)root/gl:$Name:  $:$Id: TGLSphere.h,v 1.1 2006/02/20 11:10:06 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history
@@ -19,25 +19,7 @@
 #endif
 
 class TBuffer3DSphere;
-/*
-#include <utility>
 
-#ifndef ROOT_TObject
-#include "TObject.h"
-#endif
-#ifndef ROOT_Gtypes
-#include "Gtypes.h"
-#endif
-#ifndef ROOT_CsgOps
-#include "CsgOps.h"
-#endif
-#ifndef ROOT_TGLUtil
-#include "TGLUtil.h"
-#endif
-
-class TBuffer3D;
-class TBuffer3DTube;
-*/
 class TGLSphere : public TGLLogicalShape 
 {
 private:

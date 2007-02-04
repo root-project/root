@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.33 2006/08/31 13:42:14 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.34 2006/10/24 14:20:41 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -30,9 +30,6 @@
 
 #ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_Gtypes
-#include "Gtypes.h"
 #endif
 #ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
