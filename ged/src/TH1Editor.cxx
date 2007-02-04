@@ -124,6 +124,7 @@
 
 
 #include "TH1Editor.h"
+#include "TH1.h"
 #include "TGedEditor.h"
 #include "TGedFrame.h"
 #include "TGComboBox.h"

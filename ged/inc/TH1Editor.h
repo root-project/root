@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TH1Editor.h,v 1.14 2006/06/23 15:19:21 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TH1Editor.h,v 1.15 2006/09/25 13:38:45 rdm Exp $
 // Author: Carsten Hof 16/08/04
 
 /*************************************************************************
@@ -22,11 +22,9 @@
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
 #endif
-#ifndef ROOT_TH1
-#include "TH1.h"
-#endif
 
 
+class TH1;
 class TGComboBox;
 class TGNumberEntry;
 class TGCheckButton;
