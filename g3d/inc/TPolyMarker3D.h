@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.13 2006/05/23 04:47:36 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.14 2006/07/03 16:10:43 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -29,6 +29,9 @@
 #endif
 #ifndef ROOT_TAtt3D
 #include "TAtt3D.h"
+#endif
+#ifndef ROOT_TString
+#include "TString.h"
 #endif
 
 class TH1;
