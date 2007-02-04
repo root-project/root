@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.280 2007/01/25 16:28:41 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.281 2007/01/30 11:49:14 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 #include "TH2.h"
 #include "TF2.h"
 #include "TF3.h"
+#include "TCutG.h"
 #include "TMatrixDBase.h"
 #include "TMatrixFBase.h"
 #include "TVectorD.h"

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.29 2006/11/25 09:02:22 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.30 2006/11/27 10:38:29 couet Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -24,14 +24,14 @@
 #ifndef ROOT_TVirtualHistPainter
 #include "TVirtualHistPainter.h"
 #endif
-
-#ifndef ROOT_TH1
-#include "TH1.h"
-#endif
-#ifndef ROOT_TCutG
-#include "TCutG.h"
+#ifndef ROOT_TString
+#include "TString.h"
 #endif
 
+
+class TH1;
+class TAxis;
+class TCutG;
 class TGaxis;
 class TPainter3dAlgorithms;
 class TGraphPainter;
