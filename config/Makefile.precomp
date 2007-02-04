@@ -2,7 +2,7 @@
 #
 # Makefile containing precompiled header rules
 # Get the list of all included ROOT headers and how often they are
-# included by running
+# included by running : 
 #   cat */src/*.d|egrep '.o: '|sed 's,^[^:]*: ,,'|tr ' ' '\n'|sort \
 #     |awk '{if(o!=$1){if(n)printf "%8d %s\n",n,o;o=$1;n=0;};n++}' \
 #     |sort -n -r | head
