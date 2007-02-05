@@ -2861,9 +2861,11 @@ Int_t* TH2Editor::Dividers(Int_t n)
    return div;
 }   
    
+//______________________________________________________________________________
 void TH2Editor::ActivateBaseClassEditors(TClass* /*cl*/)
 {
    // Skip TH1Editor in building list of editors in fGedEditor.   
 
    fGedEditor->ActivateEditors(TH1::Class()->GetListOfBases(), kTRUE);
 }
+
