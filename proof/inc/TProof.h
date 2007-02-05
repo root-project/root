@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.103 2007/01/22 11:39:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.104 2007/01/29 15:11:10 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -438,9 +438,11 @@ private:
    Int_t    LoadPackage(const char *package, Bool_t notOnClient = kFALSE);
    Int_t    LoadPackageOnClient(const TString &package);
    Int_t    UnloadPackage(const char *package);
+   Int_t    UnloadPackageOnClient(const char *package);
    Int_t    UnloadPackages();
    Int_t    UploadPackageOnClient(const TString &package, EUploadPackageOpt opt, TMD5 *md5);
    Int_t    DisablePackage(const char *package);
+   Int_t    DisablePackageOnClient(const char *package);
    Int_t    DisablePackages();
 
    void     Activate(TList *slaves = 0);

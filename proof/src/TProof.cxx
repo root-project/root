@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.181 2007/01/29 15:11:10 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.182 2007/02/05 14:20:25 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -80,9 +80,9 @@
 
 // to ne moved to RConfig.h once it works every where
 #if defined(__GNUC__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3))
-#    define R__PRIVATE __attribute__((__visibility__("hidden")))
+#    define R__HIDDEN __attribute__((__visibility__("hidden")))
 #else
-#    define R__PRIVATE
+#    define R__HIDDEN
 #endif
 
 TProof *gProof = 0;
@@ -1768,7 +1768,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout)
 }
 
 //______________________________________________________________________________
-R__PRIVATE void TProof::CleanGDirectory(TList *ol)
+R__HIDDEN void TProof::CleanGDirectory(TList *ol)
 {
    // Remove links to objects in list 'ol' from gDirectory
 
@@ -3178,7 +3178,7 @@ Int_t TProof::Exec(const char *cmd, Bool_t plusMaster)
 }
 
 //______________________________________________________________________________
-R__PRIVATE Int_t TProof::Exec(const char *cmd, ESlaves list, Bool_t plusMaster)
+R__HIDDEN Int_t TProof::Exec(const char *cmd, ESlaves list, Bool_t plusMaster)
 {
    // Send command to be executed on the PROOF master and/or slaves.
    // Command can be any legal command line command. Commands like
@@ -3821,6 +3821,7 @@ void TProof::ShowEnabledPackages(Bool_t all)
 Int_t TProof::ClearPackages()
 {
    // Remove all packages.
+   // Returns 0 in case of success and -1 in case of error.
 
    if (!IsValid()) return -1;
 
@@ -3837,6 +3838,7 @@ Int_t TProof::ClearPackages()
 Int_t TProof::ClearPackage(const char *package)
 {
    // Remove a specific package.
+   // Returns 0 in case of success and -1 in case of error.
 
    if (!IsValid()) return -1;
 
@@ -3861,9 +3863,10 @@ Int_t TProof::ClearPackage(const char *package)
 }
 
 //______________________________________________________________________________
-Int_t TProof::DisablePackage(const char *package)
+R__HIDDEN Int_t TProof::DisablePackage(const char *package)
 {
    // Remove a specific package.
+   // Returns 0 in case of success and -1 in case of error.
 
    if (!IsValid()) return -1;
 
@@ -3877,6 +3880,9 @@ Int_t TProof::DisablePackage(const char *package)
    if (pac.EndsWith(".par"))
       pac.Remove(pac.Length()-4);
    pac = gSystem->BaseName(pac);
+
+   if (DisablePackageOnClient(pac) == -1)
+      return -1;
 
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kDisablePackage) << pac;
@@ -3892,11 +3898,36 @@ Int_t TProof::DisablePackage(const char *package)
 }
 
 //______________________________________________________________________________
-Int_t TProof::DisablePackages()
+R__HIDDEN Int_t TProof::DisablePackageOnClient(const char *package)
+{
+   // Remove a specific package from the client.
+   // Returns 0 in case of success and -1 in case of error.
+
+   if (!IsMaster()) {
+      // remove package directory and par file
+      fPackageLock->Lock();
+      gSystem->Exec(Form("%s %s/%s", kRM, fPackageDir.Data(), package));
+      gSystem->Exec(Form("%s %s/%s.par", kRM, fPackageDir.Data(), package));
+      fPackageLock->Unlock();
+   }
+
+   return 0;
+}
+
+//______________________________________________________________________________
+R__HIDDEN Int_t TProof::DisablePackages()
 {
    // Remove all packages.
+   // Returns 0 in case of success and -1 in case of error.
 
    if (!IsValid()) return -1;
+
+   // remove all packages on client
+   if (!IsMaster()) {
+      fPackageLock->Lock();
+      gSystem->Exec(Form("%s %s/*", kRM, fPackageDir.Data()));
+      fPackageLock->Unlock();
+   }
 
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kDisablePackages);
@@ -4079,7 +4110,7 @@ Int_t TProof::LoadPackage(const char *package, Bool_t notOnClient)
 }
 
 //______________________________________________________________________________
-Int_t TProof::LoadPackageOnClient(const TString &package)
+R__HIDDEN Int_t TProof::LoadPackageOnClient(const TString &package)
 {
    // Load specified package in the client. Executes the PROOF-INF/SETUP.C
    // script on the client. Returns 0 in case of success and -1 in case of error.
@@ -4159,7 +4190,7 @@ Int_t TProof::LoadPackageOnClient(const TString &package)
 }
 
 //______________________________________________________________________________
-Int_t TProof::UnloadPackage(const char *package)
+R__HIDDEN Int_t TProof::UnloadPackage(const char *package)
 {
    // Unload specified package.
    // Returns 0 in case of success and -1 in case of error.
@@ -4177,6 +4208,9 @@ Int_t TProof::UnloadPackage(const char *package)
       pac.Remove(pac.Length()-4);
    pac = gSystem->BaseName(pac);
 
+   if (UnloadPackageOnClient(pac) == -1)
+      return -1;
+
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kUnloadPackage) << pac;
    Broadcast(mess);
@@ -4186,12 +4220,55 @@ Int_t TProof::UnloadPackage(const char *package)
 }
 
 //______________________________________________________________________________
-Int_t TProof::UnloadPackages()
+R__HIDDEN Int_t TProof::UnloadPackageOnClient(const char *package)
+{
+   // Unload a specific package on the client.
+   // Returns 0 in case of success and -1 in case of error.
+   // The code is equivalent to the one in TProofServ.cxx (TProof::UnloadPackage
+   // case). Keep in sync in case of changes.
+
+   if (!IsMaster()) {
+      TObjString *pack = (TObjString *) fEnabledPackagesOnClient->FindObject(package);
+      if (pack) {
+
+         // Remove entry from include path
+         TString aclicincpath = gSystem->GetIncludePath();
+         TString cintincpath = gInterpreter->GetIncludePath();
+         // remove interpreter part of gSystem->GetIncludePath()
+         aclicincpath.Remove(aclicincpath.Length() - cintincpath.Length() - 1);
+         // remove package's include path
+         aclicincpath.ReplaceAll(TString(" -I") + package, "");
+         gSystem->SetIncludePath(aclicincpath);
+
+         //TODO reset interpreter include path
+
+         // remove entry from enabled packages list
+         delete fEnabledPackagesOnClient->Remove(pack);
+      }
+
+      // Cleanup the link, if there
+      if (!gSystem->AccessPathName(package))
+         if (gSystem->Unlink(package) != 0)
+            Warning("UnloadPackageOnClient", "unable to remove symlink to %s", package);
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+R__HIDDEN Int_t TProof::UnloadPackages()
 {
    // Unload all packages.
    // Returns 0 in case of success and -1 in case of error.
 
    if (!IsValid()) return -1;
+
+   if (!IsMaster()) {
+      // Iterate over packages on the client and remove each package
+      TIter nextpackage(fEnabledPackagesOnClient);
+      while (TObjString *objstr = dynamic_cast<TObjString*>(nextpackage()))
+         if (UnloadPackageOnClient(objstr->String()) == -1 )
+            return -1;
+   }
 
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kUnloadPackages);

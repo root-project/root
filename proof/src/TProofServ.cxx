@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.160 2007/01/29 16:21:14 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.161 2007/02/05 10:40:30 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -631,7 +631,7 @@ Int_t TProofServ::CatMotd()
    FILE   *motd;
    Bool_t  show = kFALSE;
 
-   // If we are disabled just print the message and close the connection 
+   // If we are disabled just print the message and close the connection
    TString motdname(GetConfDir());
    // The env variable PROOFNOPROOF allows to put the file in an alternative
    // location not overwritten by a new installation
@@ -1886,6 +1886,7 @@ Int_t TProofServ::UnloadPackage(const char *package)
    // removes entry from include path,
    // removes entry from enabled package list,
    // does not currently remove entry from interpreter include path.
+   // Returns -1 in case of error, 0 otherwise.
 
    TObjString *pack = (TObjString *) fEnabledPackages->FindObject(package);
    if (pack) {
@@ -1906,7 +1907,6 @@ Int_t TProofServ::UnloadPackage(const char *package)
       PDB(kPackage, 1)
          Info("UnloadPackage",
               "package %s successfully unloaded", package);
-
    }
 
    // Cleanup the link, if there
@@ -1921,7 +1921,7 @@ Int_t TProofServ::UnloadPackage(const char *package)
 //______________________________________________________________________________
 Int_t TProofServ::UnloadPackages()
 {
-   // Unloads all enabled packages.
+   // Unloads all enabled packages. Returns -1 in case of error, 0 otherwise.
 
    // Iterate over packages and remove each package
    TIter nextpackage(fEnabledPackages);
