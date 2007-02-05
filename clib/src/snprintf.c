@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: snprintf.c,v 1.8 2005/12/12 03:33:51 pcanal Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: snprintf.c,v 1.9 2006/06/14 18:09:38 pcanal Exp $ */
 /* Author: Tomi Salo & Fons Rademakers */
 
 /*
@@ -373,6 +373,7 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
                   if (precision >= 0) {
                      precision_specified = 1;
                   } else {
+                     precision_specified = 0;
                      precision = 0;
                   }
                   format_ptr += status;
