@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.75 2007/02/01 21:59:28 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.76 2007/02/02 17:03:43 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -43,7 +43,7 @@ namespace Cint {
 class G__ClassInfo;
 }
 using namespace Cint;
-class TStreamerInfo;
+class TVirtualStreamerInfo;
 class TVirtualCollectionProxy;
 class TMethodCall;
 class TVirtualIsAProxy;
@@ -74,7 +74,7 @@ public:
 
 private:
 
-   TObjArray         *fStreamerInfo;    //Array of TStreamerInfo
+   TObjArray         *fStreamerInfo;    //Array of TVirtualStreamerInfo
    TList             *fRealData;        //linked list for persistent members including base classes
    TList             *fBase;            //linked list for base classes
    TList             *fData;            //linked list for data members
@@ -115,16 +115,12 @@ private:
    void              *fInterStreamer;   //!saved info to call Streamer
    Long_t             fOffsetStreamer;  //!saved info to call Streamer
    Int_t              fStreamerType;    //!cached of the streaming method to use
-   TStreamerInfo     *fCurrentInfo;     //!cached current streamer info.
+   TVirtualStreamerInfo     *fCurrentInfo;     //!cached current streamer info.
    TClassRef         *fRefStart;        //!List of references to this object
    TVirtualRefProxy  *fRefProxy;        //!Pointer to reference proxy if this class represents a reference
    TMethod           *GetClassMethod(Long_t faddr);
    TMethod           *GetClassMethod(const char *name, const char *signature);
    Int_t              GetBaseClassOffsetRecurse(const TClass *base);
-   TStreamerInfo     *GetCurrentStreamerInfo() {
-      if (fCurrentInfo) return fCurrentInfo;
-      else return (fCurrentInfo=(TStreamerInfo*)(fStreamerInfo->At(fClassVersion)));
-   }
    void Init(const char *name, Version_t cversion, const type_info *info,
              TVirtualIsAProxy *isa, ShowMembersFunc_t showmember,
              const char *dfil, const char *ifil,
@@ -172,7 +168,7 @@ public:
    void               Dump() const { TDictionary::Dump(); }
    void               Dump(void *obj) const;
    char              *EscapeChars(const char *text) const;
-   TStreamerInfo     *FindStreamerInfo(UInt_t checksum) const;
+   TVirtualStreamerInfo     *FindStreamerInfo(UInt_t checksum) const;
    Bool_t             HasDefaultConstructor() const;
    UInt_t             GetCheckSum(UInt_t code=0) const;
    TVirtualCollectionProxy *GetCollectionProxy() const;
@@ -187,6 +183,10 @@ public:
    ROOT::DelArrFunc_t GetDeleteArray() const;
    G__ClassInfo      *GetClassInfo() const { return fClassInfo; }
    const char        *GetContextMenuTitle() const { return fContextMenuTitle; }
+   TVirtualStreamerInfo     *GetCurrentStreamerInfo() {
+      if (fCurrentInfo) return fCurrentInfo;
+      else return (fCurrentInfo=(TVirtualStreamerInfo*)(fStreamerInfo->At(fClassVersion)));
+   }
    TList             *GetListOfDataMembers();
    TList             *GetListOfBases();
    TList             *GetListOfMethods();
@@ -218,7 +218,7 @@ public:
    ShowMembersFunc_t  GetShowMembersWrapper() const { return fShowMembers; }
    TClassStreamer    *GetStreamer() const; 
    TObjArray         *GetStreamerInfos() const { return fStreamerInfo; }
-   TStreamerInfo     *GetStreamerInfo(Int_t version=0);
+   TVirtualStreamerInfo     *GetStreamerInfo(Int_t version=0);
    const type_info   *GetTypeInfo() const { return fTypeInfo; };
    void               IgnoreTObjectStreamer(Bool_t ignore=kTRUE);
    Bool_t             InheritsFrom(const char *cl) const;
@@ -246,6 +246,7 @@ public:
    Int_t              Size() const;
    void               SetCollectionProxy(const ROOT::TCollectionProxyInfo&);
    void               SetContextMenuTitle(const char *title);
+   void               SetCurrentStreamerInfo(TVirtualStreamerInfo *info);
    void               SetGlobalIsA(IsAGlobalFunc_t);
    void               SetDeclFile(const char *name, int line) { fDeclFileName = name; fDeclFileLine = line; }
    void               SetDelete(ROOT::DelFunc_t deleteFunc);
@@ -254,7 +255,7 @@ public:
    void               SetImplFileName(const char *implFileName) { fImplFileName = implFileName; }
    void               SetNew(ROOT::NewFunc_t newFunc);
    void               SetNewArray(ROOT::NewArrFunc_t newArrayFunc);
-   TStreamerInfo     *SetStreamerInfo(Int_t version, const char *info="");
+   TVirtualStreamerInfo     *SetStreamerInfo(Int_t version, const char *info="");
    void               SetUnloaded();
    Int_t              WriteBuffer(TBuffer &b, void *pointer, const char *info="");
 

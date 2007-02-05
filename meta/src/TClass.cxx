@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.217 2007/02/02 17:22:35 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.218 2007/02/05 10:36:38 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -55,8 +55,7 @@
 #include "TRealData.h"
 #include "TStreamer.h"
 #include "TStreamerElement.h"
-#include "TStreamerInfo.h"
-#include "TStreamerInfo.h"
+#include "TVirtualStreamerInfo.h"
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualIsAProxy.h"
 #include "TVirtualRefProxy.h"
@@ -88,7 +87,7 @@ TClass::ENewType TClass::fgCallingNew = kRealNew;
 
 static std::multimap<void*, Version_t> gObjectVersionRepository;
 
-static void RegisterAddressInRepository(const char * /*where*/, void *location, const TClass *what)
+static void RegisterAddressInRepository(const char * /*where*/, void *location, const TClass *what) 
 {
    // Register the object for special handling in the destructor.
 
@@ -115,7 +114,7 @@ static void RegisterAddressInRepository(const char * /*where*/, void *location, 
 }
 
 static void UnregisterAddressInRepository(const char * /*where*/, void *location, const TClass *what)
-{
+{ 
    std::multimap<void*, Version_t>::iterator cur = gObjectVersionRepository.find(location);
    for (; cur != gObjectVersionRepository.end();) {
       std::multimap<void*, Version_t>::iterator tmp = cur++;
@@ -752,10 +751,10 @@ void TClass::Init(const char *name, Version_t cversion,
       if (oldcl->CanIgnoreTObjectStreamer()) {
          IgnoreTObjectStreamer();
       }
-      TStreamerInfo *info;
+      TVirtualStreamerInfo *info;
 
       TIter next(oldcl->GetStreamerInfos());
-      while ((info = (TStreamerInfo*)next())) {
+      while ((info = (TVirtualStreamerInfo*)next())) {
          // We need to force a call to BuildOld
          info->Clear("build");
          info->SetClass(this);
@@ -812,7 +811,7 @@ void TClass::Init(const char *name, Version_t cversion,
    fgClassCount++;
    SetUniqueID(fgClassCount);
 
-   //In case a class with the same name had been created by TStreamerInfo
+   //In case a class with the same name had been created by TVirtualStreamerInfo
    //we must delete the old class, importing only the StreamerInfo structure
    //from the old dummy class.
    if (oldcl) {
@@ -824,7 +823,7 @@ void TClass::Init(const char *name, Version_t cversion,
 
       // Check for existing equivalent.
 
-      TStreamerInfo *info;
+      TVirtualStreamerInfo *info;
       TIter next( gROOT->GetListOfClasses() );
 
       TString resolvedThis = TClassEdit::ResolveTypedef(name,kTRUE);
@@ -842,7 +841,7 @@ void TClass::Init(const char *name, Version_t cversion,
             }
 
             TIter next(oldcl->GetStreamerInfos());
-            while ((info = (TStreamerInfo*)next())) {
+            while ((info = (TVirtualStreamerInfo*)next())) {
                info->Clear("build");
                info->SetClass(this);
                fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
@@ -1252,10 +1251,12 @@ void TClass::BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl)
       Int_t etype    = element->GetType();
       Long_t eoffset = element->GetOffset();
       TClass *cle    = element->GetClassPointer();
-      if (etype == TStreamerInfo::kTObject || etype == TStreamerInfo::kTNamed || etype == TStreamerInfo::kBase) {
+      if (etype == TVirtualStreamerInfo::kTObject || 
+          etype == TVirtualStreamerInfo::kTNamed ||
+          etype == TVirtualStreamerInfo::kBase) {
          //base class
          if (cle) cle->BuildEmulatedRealData(name,offset+eoffset,cl);
-      } else if (etype == TStreamerInfo::kObject || etype == TStreamerInfo::kAny) {
+      } else if (etype == TVirtualStreamerInfo::kObject || etype == TVirtualStreamerInfo::kAny) {
          //member class
          TRealData *rd = new TRealData(Form("%s%s",name,element->GetFullName()),offset+eoffset,0);
          if (gDebug > 0) printf(" Class: %s, adding TRealData=%s, offset=%ld\n",cl->GetName(),rd->GetName(),rd->GetThisOffset());
@@ -1283,7 +1284,7 @@ Bool_t TClass::CanSplit() const
    // Return true if the data member of this TClass can be saved separately.
 
    // Note: add the possibility to set it for the class and the derived class.
-   // save the info in TStreamerInfo
+   // save the info in TVirtualStreamerInfo
    // deal with the info in MakeProject
    if (fRefProxy)                 return kFALSE;
    if (InheritsFrom("TRef"))      return kFALSE;
@@ -1573,7 +1574,7 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
    if (cl == this) return 0;
 
    if (!fClassInfo) {
-      TStreamerInfo *sinfo = GetCurrentStreamerInfo();
+      TVirtualStreamerInfo *sinfo = GetCurrentStreamerInfo();
       if (!sinfo) return -1;
       TStreamerElement *element;
       Int_t offset = 0;
@@ -1771,7 +1772,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load)
 
       if (cl->IsLoaded()) return cl;
 
-      //we may pass here in case of a dummy class created by TStreamerInfo
+      //we may pass here in case of a dummy class created by TVirtualStreamerInfo
       load = kTRUE;
 
       if (TClassEdit::IsSTLCont(name)) {
@@ -1817,7 +1818,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load)
          if (cl) {
             if (cl->IsLoaded()) return cl;
 
-            //we may pass here in case of a dummy class created by TStreamerInfo
+            //we may pass here in case of a dummy class created by TVirtualStreamerInfo
             //return TClass::GetClass(cl->GetName(),kTRUE);
             return TClass::GetClass(cl->GetName(),kTRUE);
          }
@@ -1898,7 +1899,7 @@ TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load)
 
    if (cl) {
       if (cl->IsLoaded()) return cl;
-      //we may pass here in case of a dummy class created by TStreamerInfo
+      //we may pass here in case of a dummy class created by TVirtualStreamerInfo
       load = kTRUE;
    } else {
      // Note we might need support for typedefs and simple types!
@@ -2366,7 +2367,7 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
    //we must update the class pointers pointing to 'this' in all TStreamerElements
    TIter nextClass(gROOT->GetListOfClasses());
    TClass *acl;
-   TStreamerInfo *info;
+   TVirtualStreamerInfo *info;
    TList tobedeleted;
 
    TString corename( TClassEdit::ResolveTypedef(newcl->GetName()) );
@@ -2391,7 +2392,7 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
       }
 
       TIter nextInfo(acl->GetStreamerInfos());
-      while ((info = (TStreamerInfo*)nextInfo())) {
+      while ((info = (TVirtualStreamerInfo*)nextInfo())) {
 
          info->Update(this, newcl);
       }
@@ -2710,9 +2711,9 @@ Int_t TClass::GetNmethods()
 }
 
 //______________________________________________________________________________
-TStreamerInfo* TClass::GetStreamerInfo(Int_t version)
+TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version)
 {
-   // returns a pointer to the TStreamerInfo object for version
+   // returns a pointer to the TVirtualStreamerInfo object for version
    // If the object doest not exist, it is created
    //
    // Note: There are two special version numbers:
@@ -2741,17 +2742,17 @@ TStreamerInfo* TClass::GetStreamerInfo(Int_t version)
          version = 0;
       }
    }
-   TStreamerInfo* sinfo = (TStreamerInfo*) fStreamerInfo->At(version);
+   TVirtualStreamerInfo* sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(version);
    if (!sinfo && (version != fClassVersion)) {
       // When the requested version does not exist we return
-      // the TStreamerInfo for the currently loaded class vesion.
+      // the TVirtualStreamerInfo for the currently loaded class vesion.
       // FIXME: This arguably makes no sense, we should warn and return nothing instead.
       // Note: fClassVersion could be -1 here (for an emulated class).
-      sinfo = (TStreamerInfo*) fStreamerInfo->At(fClassVersion);
+      sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(fClassVersion);
    }
    if (!sinfo) {
       // We just were not able to find a streamer info, we have to make a new one.
-      sinfo = new TStreamerInfo(this, "");
+      sinfo = TVirtualStreamerInfo::Factory(this);
       fStreamerInfo->AddAtAndExpand(sinfo, fClassVersion);
       if (gDebug > 0) {
          printf("Creating StreamerInfo for class: %s, version: %d\n", GetName(), fClassVersion);
@@ -2774,7 +2775,7 @@ TStreamerInfo* TClass::GetStreamerInfo(Int_t version)
          // Or it didn't have a dictionary before, but does now?
          sinfo->BuildOld();
       }
-      if (sinfo->IsOptimized() && !TStreamerInfo::CanOptimize()) {
+      if (sinfo->IsOptimized() && !TVirtualStreamerInfo::CanOptimize()) {
          // Undo optimization if the global flag tells us to.
          sinfo->Compile();
       }
@@ -2803,11 +2804,11 @@ void TClass::IgnoreTObjectStreamer(Bool_t ignore)
 
    if ( ignore &&  TestBit(kIgnoreTObjectStreamer)) return;
    if (!ignore && !TestBit(kIgnoreTObjectStreamer)) return;
-   TStreamerInfo *sinfo = GetCurrentStreamerInfo();
+   TVirtualStreamerInfo *sinfo = GetCurrentStreamerInfo();
    if (sinfo) {
       if (sinfo->GetOffsets()) {
          // -- Warn the user that what he is doing cannot work.
-         // Note: The reason is that TStreamerInfo::Build() examines
+         // Note: The reason is that TVirtualStreamerInfo::Build() examines
          // the kIgnoreTObjectStreamer bit and sets the TStreamerElement
          // type for the TObject base class streamer element it creates
          // to -1 as a flag.  Later on the TStreamerInfo::Compile()
@@ -2847,7 +2848,7 @@ Bool_t TClass::InheritsFrom(const TClass *cl) const
    if (cl == this) return kTRUE;
 
    if (!fClassInfo) {
-      TStreamerInfo *sinfo = ((TClass *)this)->GetCurrentStreamerInfo();
+      TVirtualStreamerInfo *sinfo = ((TClass *)this)->GetCurrentStreamerInfo();
       if (sinfo==0) sinfo = ((TClass *)this)->GetStreamerInfo();
       TIter next(sinfo->GetElements());
       TStreamerElement *element;
@@ -2974,7 +2975,7 @@ void *TClass::New(ENewType defConstructor)
       Bool_t statsave = GetObjectStat();
       SetObjectStat(kFALSE);
 
-      TStreamerInfo* sinfo = GetStreamerInfo();
+      TVirtualStreamerInfo* sinfo = GetStreamerInfo();
       if (!sinfo) {
          Error("New", "Cannot construct class '%s' version %d, no streamer info available!", GetName(), fClassVersion);
          return 0;
@@ -3057,7 +3058,7 @@ void *TClass::New(void *arena, ENewType defConstructor)
       Bool_t statsave = GetObjectStat();
       SetObjectStat(kFALSE);
 
-      TStreamerInfo* sinfo = GetStreamerInfo();
+      TVirtualStreamerInfo* sinfo = GetStreamerInfo();
       if (!sinfo) {
          Error("New with placement", "Cannot construct class '%s' version %d at address %p, no streamer info available!", GetName(), fClassVersion, arena);
          return 0;
@@ -3141,7 +3142,7 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor)
       Bool_t statsave = GetObjectStat();
       SetObjectStat(kFALSE);
 
-      TStreamerInfo* sinfo = GetStreamerInfo();
+      TVirtualStreamerInfo* sinfo = GetStreamerInfo();
       if (!sinfo) {
          Error("NewArray", "Cannot construct class '%s' version %d, no streamer info available!", GetName(), fClassVersion);
          return 0;
@@ -3224,7 +3225,7 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor)
       Bool_t statsave = GetObjectStat();
       SetObjectStat(kFALSE);
 
-      TStreamerInfo* sinfo = GetStreamerInfo();
+      TVirtualStreamerInfo* sinfo = GetStreamerInfo();
       if (!sinfo) {
          Error("NewArray with placement", "Cannot construct class '%s' version %d at address %p, no streamer info available!", GetName(), fClassVersion, arena);
          return 0;
@@ -3319,7 +3320,7 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
       if (!inRepo || verFound) {
          // The object was allocated using code for the same class version
          // as is loaded now.  We may proceed without worry.
-         TStreamerInfo* si = GetStreamerInfo();
+         TVirtualStreamerInfo* si = GetStreamerInfo();
          if (si) {
             si->Destructor(p, dtorOnly);
          } else {
@@ -3330,17 +3331,17 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
                Error("Destructor", "fStreamerInfo->At(%d): %p", i, fStreamerInfo->At(i));
                if (fStreamerInfo->At(i) != 0) {
                   Error("Destructor", "Doing Dump() ...");
-                  ((TStreamerInfo*)fStreamerInfo->At(i))->Dump();
+                  ((TVirtualStreamerInfo*)fStreamerInfo->At(i))->Dump();
                }
             }
          }
       } else {
          // The loaded class version is not the same as the version of the code
          // which was used to allocate this object.  The best we can do is use
-         // the TStreamerInfo to try to free up some of the allocated memory.
+         // the TVirtualStreamerInfo to try to free up some of the allocated memory.
          Error("Destructor", "Loaded class %s version %d is not registered for addr %p", GetName(), fClassVersion, p);
 #if 0
-         TStreamerInfo* si = (TStreamerInfo*) fStreamerInfo->At(objVer);
+         TVirtualStreamerInfo* si = (TVirtualStreamerInfo*) fStreamerInfo->At(objVer);
          if (si) {
             si->Destructor(p, dtorOnly);
          } else {
@@ -3352,7 +3353,7 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
                if (fStreamerInfo->At(i) != 0) {
                   // Do some debugging output.
                   Error("Destructor2", "Doing Dump() ...");
-                  ((TStreamerInfo*)fStreamerInfo->At(i))->Dump();
+                  ((TVirtualStreamerInfo*)fStreamerInfo->At(i))->Dump();
                }
             }
          }
@@ -3429,7 +3430,7 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
       if (!inRepo || verFound) {
          // The object was allocated using code for the same class version
          // as is loaded now.  We may proceed without worry.
-         TStreamerInfo* si = GetStreamerInfo();
+         TVirtualStreamerInfo* si = GetStreamerInfo();
          if (si) {
             si->DeleteArray(ary, dtorOnly);
          } else {
@@ -3440,20 +3441,20 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
                Error("DeleteArray", "fStreamerInfo->At(%d): %p", v, fStreamerInfo->At(i));
                if (fStreamerInfo->At(i)) {
                   Error("DeleteArray", "Doing Dump() ...");
-                  ((TStreamerInfo*)fStreamerInfo->At(i))->Dump();
+                  ((TVirtualStreamerInfo*)fStreamerInfo->At(i))->Dump();
                }
             }
          }
       } else {
          // The loaded class version is not the same as the version of the code
          // which was used to allocate this array.  The best we can do is use
-         // the TStreamerInfo to try to free up some of the allocated memory.
+         // the TVirtualStreamerInfo to try to free up some of the allocated memory.
          Error("DeleteArray", "Loaded class version %d is not registered for addr %p", fClassVersion, p);
 
 
 
 #if 0
-         TStreamerInfo* si = (TStreamerInfo*) fStreamerInfo->At(objVer);
+         TVirtualStreamerInfo* si = (TVirtualStreamerInfo*) fStreamerInfo->At(objVer);
          if (si) {
             si->DeleteArray(ary, dtorOnly);
          } else {
@@ -3465,7 +3466,7 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
                if (fStreamerInfo->At(i)) {
                   // Print some debugging info.
                   Error("DeleteArray", "Doing Dump() ...");
-                  ((TStreamerInfo*)fStreamerInfo->At(i))->Dump();
+                  ((TVirtualStreamerInfo*)fStreamerInfo->At(i))->Dump();
                }
             }
          }
@@ -3481,6 +3482,14 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
    } else {
       Error("DeleteArray", "This cannot happen! (class '%s')", GetName());
    }
+}
+
+//______________________________________________________________________________
+void TClass::SetCurrentStreamerInfo(TVirtualStreamerInfo *info)
+{
+   // Set pointer to current TVirtualStreamerInfo
+   
+   fCurrentInfo = info;
 }
 
 //______________________________________________________________________________
@@ -3636,7 +3645,7 @@ void TClass::PostLoadCheck()
    // been fully populated and can not be delayed efficiently.
 
    // In the case of a Foreign class (loaded class without a Streamer function)
-   // we reset fClassVersion to be -1 so that the current TStreamerInfo will not
+   // we reset fClassVersion to be -1 so that the current TVirtualStreamerInfo will not
    // be confused with a previously loaded streamerInfo.
 
    if (IsLoaded() && fClassInfo && fClassVersion==1 && fStreamerInfo
@@ -3646,8 +3655,8 @@ void TClass::PostLoadCheck()
    }
    else if (IsLoaded() && fClassInfo && fStreamerInfo && !IsForeign() )
    {
-      TStreamerInfo *info = dynamic_cast<TStreamerInfo*>(fStreamerInfo->At(fClassVersion));
-      // Here we need to check whether this TStreamerInfo (which presumably has been
+      TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)(fStreamerInfo->At(fClassVersion));
+      // Here we need to check whether this TVirtualStreamerInfo (which presumably has been
       // loaded from a file) is consisten with the definition in the library we just loaded.
       // BuildCheck is not appropriate here since it check a streamerinfo against the
       // 'current streamerinfo' which, at time point, would be the same as 'info'!
@@ -3811,7 +3820,7 @@ void TClass::SetUnloaded()
 }
 
 //______________________________________________________________________________
-TStreamerInfo *TClass::SetStreamerInfo(Int_t /*version*/, const char * /*info*/)
+TVirtualStreamerInfo *TClass::SetStreamerInfo(Int_t /*version*/, const char * /*info*/)
 {
    // Info is a string describing the names and types of attributes
    // written by the class Streamer function.
@@ -4077,32 +4086,7 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start,
    //   start    is the starting position in the buffer b
    //   count    is the number of bytes for this object in the buffer
 
-   //the StreamerInfo should exist at this point
-   Int_t ninfos = fStreamerInfo->GetSize();
-   if (version < 0 || version >= ninfos) {
-      Error("ReadBuffer1","class: %s, attempting to access a wrong version: %d",GetName(),version);
-      b.CheckByteCount(start,count,this);
-      return 0;
-   }
-   TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(version);
-   if (sinfo == 0) {
-      BuildRealData(pointer);
-      sinfo = new TStreamerInfo(this,"");
-      fStreamerInfo->AddAtAndExpand(sinfo,version);
-      if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",GetName(),version);
-      sinfo->Build();
-   } else if (!fRealData) {
-      BuildRealData(pointer);
-      sinfo->BuildOld();
-   }
-
-   //deserialize the object
-   sinfo->ReadBuffer(b, (char**)&pointer,-1);
-   if (sinfo->IsRecovered()) count=0;
-
-   //check that the buffer position corresponds to the byte count
-   b.CheckByteCount(start,count,this);
-   return 0;
+   return b.ReadClassBuffer(this,pointer,version,start,count);
 }
 
 //______________________________________________________________________________
@@ -4111,84 +4095,19 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer)
    // Function called by the Streamer functions to deserialize information
    // from buffer b into object at p.
 
-   // read the class version from the buffer
-   UInt_t R__s, R__c;
-   Version_t version = b.ReadVersion(&R__s, &R__c, this);
-   TFile *file = (TFile*)b.GetParent();
-   if (file && file->GetVersion() < 30000) version = -1; //This is old file
-
-   //the StreamerInfo should exist at this point
-   Int_t ninfos = fStreamerInfo->GetSize();
-   if (version < -1 || version >= ninfos) {
-      Error("ReadBuffer2","class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
-            GetName(),version,b.Length());
-      b.CheckByteCount(R__s, R__c,this);
-      return 0;
-   }
-   TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(version);
-   if (sinfo == 0) {
-      BuildRealData(pointer);
-      sinfo = new TStreamerInfo(this,"");
-      fStreamerInfo->AddAtAndExpand(sinfo,version);
-      if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",GetName(),version);
-      sinfo->Build();
-
-      if (version == -1) sinfo->BuildEmulated((TFile *)b.GetParent());
-
-   } else if (!sinfo->GetOffsets()) {
-      BuildRealData(pointer);
-      sinfo->BuildOld();
-   }
-
-   //deserialize the object
-   sinfo->ReadBuffer(b, (char**)&pointer,-1);
-   if (sinfo->IsRecovered()) R__c=0;
-
-   //check that the buffer position corresponds to the byte count
-   b.CheckByteCount(R__s, R__c,this);
-
-   if (gDebug > 2) printf(" ReadBuffer for class: %s has read %d bytes\n",GetName(),R__c);
-
-   return 0;
+   return b.ReadClassBuffer(this,pointer);
 }
 
 //______________________________________________________________________________
-Int_t TClass::WriteBuffer(TBuffer &b, void *pointer, const char *info)
+Int_t TClass::WriteBuffer(TBuffer &b, void *pointer, const char * /*info*/)
 {
    // Function called by the Streamer functions to serialize object at p
    // to buffer b. The optional argument info may be specified to give an
    // alternative StreamerInfo instead of using the default StreamerInfo
    // automatically built from the class definition.
-   // For more information, see class TStreamerInfo.
+   // For more information, see class TVirtualStreamerInfo.
 
-   //build the StreamerInfo if first time for the class
-   TStreamerInfo *sinfo = GetCurrentStreamerInfo();
-   if (sinfo == 0) {
-      BuildRealData(pointer);
-      fCurrentInfo = sinfo = new TStreamerInfo(this,info);
-      fStreamerInfo->AddAtAndExpand(sinfo,fClassVersion);
-      if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",GetName(),fClassVersion);
-      sinfo->Build();
-   } else if (!sinfo->GetOffsets()) {
-      BuildRealData(pointer);
-      sinfo->BuildOld();
-   }
-   // This is necessary because it might be induced later anyway if an object
-   // of the same type is either a base class or a pointer data member of this
-   // class of any contained objects.
-   if (sinfo->IsOptimized() && !TStreamerInfo::CanOptimize()) sinfo->Compile();
-
-   //write the class version number and reserve space for the byte count
-   UInt_t R__c = b.WriteVersion(this, kTRUE);
-
-   //serialize the object
-   sinfo->WriteBufferAux(b,(char**)&pointer,-1,1,0,0); // NOTE: expanded
-
-   //write the byte count at the start of the buffer
-   b.SetByteCount(R__c, kTRUE);
-
-   if (gDebug > 2) printf(" WriteBuffer for class: %s version %d has written %d bytes\n",GetName(),GetClassVersion(),R__c);
-
+   b.WriteClassBuffer(this,pointer);
    return 0;
 }
 
@@ -4219,19 +4138,7 @@ void TClass::Streamer(void *object, TBuffer &b)
       return;
 
       case kTObject|kEmulated : {
-         UInt_t start,count;
-         //We assume that the class was written with a standard streamer
-         //We attempt to recover if a version count was not written
-         Version_t v = b.ReadVersion(&start,&count);
-         if (count) {
-            TStreamerInfo *sinfo = GetStreamerInfo(v);
-            sinfo->ReadBuffer(b,(char**)&object,-1);
-            if (sinfo->IsRecovered()) count=0;
-            b.CheckByteCount(start,count,this);
-         } else {
-            b.SetBufferOffset(start);
-            GetStreamerInfo( )->ReadBuffer(b,(char**)&object,-1);
-         }
+         b.ReadClassEmulated(this, object);
       }
       return;
 
@@ -4261,10 +4168,13 @@ void TClass::Streamer(void *object, TBuffer &b)
       case kInstrumented|kEmulated:
       case kEmulated:
       {
-         if (b.IsReading())
-            ReadBuffer (b, object);
-         else
-            WriteBuffer(b, object);
+         if (b.IsReading()) {
+            b.ReadClassBuffer(this, object);
+            //ReadBuffer (b, object);
+         } else {
+            //WriteBuffer(b, object);
+            b.WriteClassBuffer(this, object);
+         }
       }
       return;
 
@@ -4338,15 +4248,15 @@ void TClass::SetDestructor(ROOT::DesFunc_t destructorFunc)
 }
 
 //______________________________________________________________________________
-TStreamerInfo *TClass::FindStreamerInfo(UInt_t checksum) const
+TVirtualStreamerInfo *TClass::FindStreamerInfo(UInt_t checksum) const
 {
-   // Find the TStreamerInfo in the StreamerInfos corresponding to checksum
+   // Find the TVirtualStreamerInfo in the StreamerInfos corresponding to checksum
 
    Int_t ninfos = GetStreamerInfos()->GetEntriesFast();
    for (Int_t i=-1;i<ninfos;i++) {
       // TClass::fStreamerInfos has a lower bound not equal to 0,
       // so we have to use At and should not use UncheckedAt
-      TStreamerInfo *info = (TStreamerInfo*)GetStreamerInfos()->At(i);
+      TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)GetStreamerInfos()->At(i);
       if (!info) continue;
       if (info->GetCheckSum() == checksum) {
          R__ASSERT(i==info->GetClassVersion() || (i==-1&&info->GetClassVersion()==1));
