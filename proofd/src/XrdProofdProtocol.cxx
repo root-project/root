@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.40 2007/01/23 13:11:14 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.41 2007/01/24 15:17:52 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -1998,8 +1998,6 @@ int XrdProofdProtocol::Process2()
 
    TRACEP(REQ, "Process2: enter: req id: " << fRequest.header.requestid);
 
-   XPDPRT("Process2: this: "<<this<<", auth: "<<fAuthProt);
-
    // If the user is not yet logged in, restrict what the user can do
    if (!fStatus || !(fStatus & XPD_LOGGEDIN))
       switch(fRequest.header.requestid) {
@@ -2152,8 +2150,6 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
                         XrdOucString msg("Recycle: could not send shutdown info to proofsrv");
                         TRACEP(XERR, msg.c_str());
                      }
-                     // Set in shutdown state
-                     psrv->SetStatus(kXPD_shutdown);
                   }
                }
             }
@@ -2792,6 +2788,15 @@ int XrdProofdProtocol::Login()
       // ... make sure that the directory for credentials exists in the sandbox ...
       XrdOucString credsdir = fUI.fWorkDir;
       credsdir += "/.creds";
+      // Acquire user identity
+      XrdSysPrivGuard pGuard((uid_t)fUI.fUid, (gid_t)fUI.fGid);
+      if (!pGuard.Valid()) {
+         XrdOucString emsg("Login: could not get privileges to create credential dir ");
+         emsg += credsdir;
+         TRACEP(XERR, emsg);
+         fResponse.Send(kXP_ServerError, emsg.c_str());
+         return rc;
+      }
       if (AssertDir(credsdir.c_str(), fUI) == -1) {
          XrdOucString emsg("Login: unable to create credential dir: ");
          emsg += credsdir;
@@ -2988,7 +2993,7 @@ int XrdProofdProtocol::MapClient(bool all)
             for (is = 0; is < (int) pmgr->ProofServs()->size(); is++) {
                if ((psrv = pmgr->ProofServs()->at(is)) &&
                     psrv->IsValid() && (psrv->SrvType() == kXPD_TopMaster) &&
-                    psrv->Status() == kXPD_shutdown) {
+                    psrv->IsShutdown()) {
                   if (SetShutdownTimer(psrv, 0) != 0) {
                      XrdOucString msg("MapClient: could not stop shutdown timer in proofsrv ");
                      msg += psrv->SrvID();
@@ -4417,8 +4422,7 @@ int XrdProofdProtocol::SendMsg()
       // Additional info about the message
       if (opt & kXPD_setidle) {
          TRACEP(DBG, "SendMsg: INT: setting proofserv in 'idle' state");
-         if (xps->Status() != kXPD_shutdown)
-            xps->SetStatus(kXPD_idle);
+         xps->SetStatus(kXPD_idle);
          // Clean start processing message, if any
          xps->DeleteStartMsg();
       } else if (opt & kXPD_querynum) {
@@ -5281,9 +5285,11 @@ int XrdProofdProtocol::SetShutdownTimer(XrdProofServProxy *xps, bool on)
             msg += "; action: when idle";
          else if (fgShutdownOpt == 2)
             msg += "; action: immediate";
+         xps->SetShutdown(1);
       } else {
          msg += "cancellation of shutdown action notified to process ";
          msg += xps->SrvID();
+         xps->SetShutdown(0);
       }
       TRACEP(DBG, msg.c_str());
    }

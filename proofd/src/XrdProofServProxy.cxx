@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.13 2006/11/27 14:19:58 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.14 2006/12/12 14:32:06 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -48,6 +48,7 @@ XrdProofServProxy::XrdProofServProxy()
    fSrvID = -1;
    fSrvType = kXPD_AnyServer;
    fID = -1;
+   fIsShutdown = false;
    fIsValid = true;  // It is created for a valid server ...
    fProtVer = -1;
    fFileout = 0;
@@ -116,6 +117,7 @@ void XrdProofServProxy::Reset()
    fSrvID = -1;
    fSrvType = kXPD_AnyServer;
    fID = -1;
+   fIsShutdown = false;
    fIsValid = 0;
    fProtVer = -1;
    SafeDelArray(fClient);
