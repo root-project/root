@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: PxPyPzM4D.h,v 1.1 2005/12/06 17:17:48 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PxPyPzM4D.h,v 1.2 2006/11/25 09:30:08 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by: fischler at Wed Jul 20   2005
 //   (starting from PxPyPzM4D by moneta)
 // 
-// Last update: $Id: PxPyPzM4D.h,v 1.1 2005/12/06 17:17:48 moneta Exp $
+// Last update: $Id: PxPyPzM4D.h,v 1.2 2006/11/25 09:30:08 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_PxPyPzM4D 
 #define ROOT_Math_GenVector_PxPyPzM4D  1
@@ -67,15 +67,13 @@ public :
       				    fX(x), fY(y), fZ(z), fM(m) { }
 
   /**
-    construct from any vector or  coordinate system class 
-    implementing x(), y() and z() and t()
+    construct from any 4D  coordinate system class 
+    implementing X(), Y(), X() and M()
    */
   template <class CoordSystem> 
   explicit PxPyPzM4D(const CoordSystem & v) : 
-    fX( v.x() ), fY( v.y() ), fZ( v.z() ), fM(0)  
-  { 
-    fM = std::sqrt( v.t()*v.t() - P2() ); 
-  }
+    fX( v.X() ), fY( v.Y() ), fZ( v.Z() ), fM( v.M() )  
+   { }
 
   // no reason for a custom destructor  ~Cartesian3D() {} and copy constructor
 
