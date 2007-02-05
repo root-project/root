@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name: v5-11-02 $:$Id: TStreamerInfo.h,v 1.64 2006/03/20 21:35:47 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.65 2006/05/23 04:47:40 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -21,8 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
-#include "TNamed.h"
+#ifndef ROOT_TVirtualStreamerInfo
+#include "TVirtualStreamerInfo.h"
 #endif
 
 #if (defined(_MSC_VER) && (_MSC_VER < 1300)) || defined(R__ALPHA) || \
@@ -40,7 +40,7 @@ class TStreamerElement;
 class TStreamerBasicType;
 class TVirtualCollectionProxy;
 
-class TStreamerInfo : public TNamed {
+class TStreamerInfo : public TVirtualStreamerInfo {
 
 #ifdef R__BROKEN_FUNCTION_TEMPLATES
 public:
@@ -79,9 +79,6 @@ private:
    Bool_t            fIsBuilt;           //! true if the TStreamerInfo has been 'built'
 
    static  Int_t     fgCount;            //Number of TStreamerInfo instances
-   static  Bool_t    fgCanDelete;        //True if ReadBuffer can delete object
-   static  Bool_t    fgOptimize;         //True if optimization on
-   static  Bool_t    fgStreamMemberWise; //True if the collections are to be stream "member-wise" (when possible).
    static TStreamerElement *fgElement;   //Pointer to current TStreamerElement
    void              BuildUserInfo(const char *info);
    static Double_t   GetValueAux(Int_t type, void *ladd, int k, Int_t len);
@@ -167,7 +164,6 @@ public:
    Int_t               GetSizeElements()    const;
    TStreamerElement   *GetStreamerElement(const char*datamember, Int_t& offset) const;
    TStreamerElement   *GetStreamerElementReal(Int_t i, Int_t j) const;
-   static Bool_t       GetStreamMemberWise();
    Int_t              *GetTypes()   const {return fType;}
    Double_t            GetValue(char *pointer, Int_t i, Int_t j, Int_t len) const;
    Double_t            GetValueClones(TClonesArray *clones, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;
@@ -176,6 +172,7 @@ public:
    Bool_t              IsOptimized() const {return fOptimized;}
    Int_t               IsRecovered() const {return TestBit(kRecovered);}
    void                ls(Option_t *option="") const;
+   TVirtualStreamerInfo *NewInfo(TClass *cl) {return new TStreamerInfo(cl,0);}
    void               *New(void *obj = 0);
    void               *NewArray(Long_t nElements, void* ary = 0);
    void                Destructor(void* p, Bool_t dtorOnly = kFALSE);
@@ -206,7 +203,6 @@ public:
    void                SetCheckSum(UInt_t checksum) {fCheckSum = checksum;}
    void                SetClass(TClass *cl) {fClass = cl;}
    void                SetClassVersion(Int_t vers) {fClassVersion=vers;}
-   static Bool_t       SetStreamMemberWise(Bool_t enable = kTRUE);
    void                TagFile(TFile *fFile);
    Int_t               WriteBuffer(TBuffer &b, char *pointer, Int_t first);
    Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
@@ -214,11 +210,7 @@ public:
    virtual void        Update(const TClass *oldClass, TClass *newClass);
 
    static TStreamerElement   *GetCurrentElement();
-   static TStreamerBasicType *GetElementCounter(const char *countName, TClass *cl);
-   static Bool_t       CanOptimize();
-   static void         Optimize(Bool_t opt=kTRUE);
-   static Bool_t       CanDelete();
-   static void         SetCanDelete(Bool_t opt=kTRUE);
+
 
 #ifdef R__BROKEN_FUNCTION_TEMPLATES
    // Support for non standard compilers
@@ -229,7 +221,8 @@ public:
    Int_t               WriteBufferAux      (TBuffer &b, const T &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
 #endif
 
-   ClassDef(TStreamerInfo,4)  //Streamer information for one class version
+   //WARNING this class version must be the same as TVirtualStreamerInfo
+   ClassDef(TStreamerInfo,5)  //Streamer information for one class version
 };
 
 

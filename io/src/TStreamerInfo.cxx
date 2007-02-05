@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.245 2006/12/08 17:27:38 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.246 2007/01/29 16:09:47 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -42,11 +42,8 @@
 #include "TInterpreter.h"
 #include "TContainerConverters.h"
 
-Int_t   TStreamerInfo::fgCount = 0;
-Bool_t  TStreamerInfo::fgCanDelete        = kTRUE;
-Bool_t  TStreamerInfo::fgOptimize         = kTRUE;
-Bool_t  TStreamerInfo::fgStreamMemberWise = kFALSE;
 TStreamerElement *TStreamerInfo::fgElement = 0;
+Int_t   TStreamerInfo::fgCount = 0;
 
 const Int_t kRegrouped = TStreamerInfo::kOffsetL;
 
@@ -80,7 +77,7 @@ TStreamerInfo::TStreamerInfo()
 
 //______________________________________________________________________________
 TStreamerInfo::TStreamerInfo(TClass *cl, const char *info)
-: TNamed(cl->GetName(), info)
+: TVirtualStreamerInfo(cl)
 {
    // Create a TStreamerInfo object.
 
@@ -108,7 +105,7 @@ TStreamerInfo::TStreamerInfo(TClass *cl, const char *info)
 
 //______________________________________________________________________________
 TStreamerInfo::TStreamerInfo(const TStreamerInfo& si) :
-  TNamed(si),
+  TVirtualStreamerInfo(si),
   fCheckSum(si.fCheckSum),
   fClassVersion(si.fClassVersion),
   fNumber(si.fNumber),
@@ -135,7 +132,7 @@ TStreamerInfo& TStreamerInfo::operator=(const TStreamerInfo& si)
 {
    //assignement operator
    if(this!=&si) {
-      TNamed::operator=(si);
+      TVirtualStreamerInfo::operator=(si);
       fCheckSum=si.fCheckSum;
       fClassVersion=si.fClassVersion;
       fNumber=si.fNumber;
@@ -824,7 +821,7 @@ void TStreamerInfo::BuildOld()
             }
             baseclass->BuildRealData();
             Int_t version = base->GetBaseVersion();
-            TStreamerInfo* infobase = baseclass->GetStreamerInfo(version);
+            TStreamerInfo* infobase = (TStreamerInfo*)baseclass->GetStreamerInfo(version);
             if (infobase->GetTypes() == 0) {
                infobase->BuildOld();
             }
@@ -1195,20 +1192,6 @@ void TStreamerInfo::BuildUserInfo(const char * /*info*/)
    delete [] newoffset;
    delete [] newmethod;
 #endif
-}
-
-//______________________________________________________________________________
-Bool_t TStreamerInfo::CanDelete()
-{
-   // static function returning true if ReadBuffer can delete object
-   return fgCanDelete;
-}
-
-//______________________________________________________________________________
-Bool_t TStreamerInfo::CanOptimize()
-{
-   // static function returning true if optimization can be on
-   return fgOptimize;
 }
 
 //______________________________________________________________________________
@@ -1658,32 +1641,6 @@ Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, TMemberStreamer *&stre
 }
 
 //______________________________________________________________________________
-TStreamerBasicType *TStreamerInfo::GetElementCounter(const char *countName, TClass *cl)
-{
-   // Get pointer to a TStreamerBasicType in TClass *cl
-   //static function
-
-   TObjArray *sinfos = cl->GetStreamerInfos();
-   TStreamerInfo *info = (TStreamerInfo *)sinfos->At(cl->GetClassVersion());
-
-   if (!info || !info->IsBuilt()) {
-      // Even if the streamerInfo exist, it could still need to be 'build'
-      // It is important to figure this out, because
-      //   a) if it is not build, we need to build
-      //   b) if is build, we should not build it (or we could end up in an
-      //      infinite loop, if the element and its counter are in the same
-      //      class!
-
-      info = cl->GetStreamerInfo();
-   }
-   if (!info) return 0;
-   TStreamerElement *element = (TStreamerElement *)info->fElements->FindObject(countName);
-   if (!element) return 0;
-   if (element->IsA() == TStreamerBasicType::Class()) return (TStreamerBasicType*)element;
-   return 0;
-}
-
-//______________________________________________________________________________
 Int_t TStreamerInfo::GetOffset(const char *elementName) const
 {
    // return the offset of the data member as indicated by this StreamerInfo
@@ -1759,7 +1716,7 @@ TStreamerElement* TStreamerInfo::GetStreamerElement(const char* datamember, Int_
             continue;
          }
          base_offset = base_element->GetOffset();
-         element = base_cl->GetStreamerInfo()->GetStreamerElement(datamember, local_offset);
+         element = ((TStreamerInfo*)base_cl->GetStreamerInfo())->GetStreamerElement(datamember, local_offset);
          if (element) {
             offset = base_offset + local_offset;
             return element;
@@ -1777,7 +1734,7 @@ TStreamerElement* TStreamerInfo::GetStreamerElement(const char* datamember, Int_
             }
             Int_t base_offset = curelem->GetOffset();
             Int_t local_offset = 0;
-            element = baseClass->GetStreamerInfo()->GetStreamerElement(datamember, local_offset);
+            element = ((TStreamerInfo*)baseClass->GetStreamerInfo())->GetStreamerElement(datamember, local_offset);
             if (element) {
                offset = base_offset + local_offset;
                return element;
@@ -1834,21 +1791,6 @@ TStreamerElement* TStreamerInfo::GetStreamerElementReal(Int_t i, Int_t j) const
       return (TStreamerElement*)fElements->UncheckedAt(ise+j);
    }
    return 0;
-}
-
-//______________________________________________________________________________
-Bool_t TStreamerInfo::GetStreamMemberWise()
-{
-   // Return whether the TStreamerInfos will save the collections in
-   // "member-wise" order whenever possible.    The default is to store member-wise.
-   // kTRUE indicates member-wise storing
-   // kFALSE inddicates object-wise storing
-   //
-   // A collection can be saved member wise when it contain is guaranteed to be
-   // homogeneous.  For example std::vector<THit> can be stored member wise,
-   // while std::vector<THit*> can not (possible use of polymorphism).
-
-   return fgStreamMemberWise;
 }
 
 //______________________________________________________________________________
@@ -2310,18 +2252,6 @@ void TStreamerInfo::DeleteArray(void* ary, Bool_t dtorOnly)
 }
 
 //______________________________________________________________________________
-void TStreamerInfo::Optimize(Bool_t opt)
-{
-   //  This is a static function.
-   //  Set optimization option.
-   //  When this option is activated (default), consecutive data members
-   //  of the same type are merged into an array (faster).
-   //  Optimization must be off in TTree split mode.
-
-   fgOptimize = opt;
-}
-
-//______________________________________________________________________________
 void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t len, Int_t lenmax) const
 {
    //  print value of element i in object at pointer
@@ -2407,37 +2337,6 @@ void TStreamerInfo::PrintValueSTL(const char *name, TVirtualCollectionProxy *con
       if (k < nc-1) printf(", ");
    }
    printf("\n");
-}
-
-//______________________________________________________________________________
-void TStreamerInfo::SetCanDelete(Bool_t opt)
-{
-   //  This is a static function.
-   //  Set object delete option.
-   //  When this option is activated (default), ReadBuffer automatically
-   //  delete objects when a data member is a pointer to an object.
-   //  If your constructor is not presetting pointers to 0, you must
-   //  call this static function TStreamerInfo::SetCanDelete(kFALSE);
-
-   fgCanDelete = opt;
-}
-
-//______________________________________________________________________________
-Bool_t TStreamerInfo::SetStreamMemberWise(Bool_t enable)
-{
-   // Set whether the TStreamerInfos will save the collections in
-   // "member-wise" order whenever possible.  The default is to store member-wise.
-   // kTRUE indicates member-wise storing
-   // kFALSE inddicates object-wise storing
-   // This function returns the previous value of fgStreamMemberWise.
-
-   // A collection can be saved member wise when it contain is guaranteed to be
-   // homogeneous.  For example std::vector<THit> can be stored member wise,
-   // while std::vector<THit*> can not (possible use of polymorphism).
-
-   Bool_t prev = fgStreamMemberWise;
-   fgStreamMemberWise = enable;
-   return prev;
 }
 
 //______________________________________________________________________________
