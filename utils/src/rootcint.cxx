@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.254 2007/01/31 19:59:53 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.255 2007/02/01 21:57:35 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -3098,9 +3098,9 @@ void WriteAutoStreamer(G__ClassInfo &cl)
        << "{" << std::endl
        << "   // Stream an object of class " << cl.Fullname() << "." << std::endl << std::endl
        << "   if (R__b.IsReading()) {" << std::endl
-       << "      " << cl.Fullname() << "::Class()->ReadBuffer(R__b, this);" << std::endl
+       << "      R__b.ReadClassBuffer(" <<cl.Fullname() << "::Class(),this);" << std::endl
        << "   } else {" << std::endl
-       << "      " << cl.Fullname() << "::Class()->WriteBuffer(R__b, this);" << std::endl
+       << "      R__b.WriteClassBuffer(" <<cl.Fullname() << "::Class(),this);" << std::endl
        << "   }" << std::endl
        << "}" << std::endl << std::endl;
 
