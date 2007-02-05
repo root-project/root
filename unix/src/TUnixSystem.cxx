@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.177 2007/01/30 11:33:59 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.178 2007/01/30 15:38:36 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -767,7 +767,7 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
       fSignals->Zero();
 
       // check synchronous timers
-      Long_t nextto = -1;
+      Long_t nextto;
       if (fTimers && fTimers->GetSize() > 0)
          if (DispatchTimers(kTRUE)) {
             // prevent timers from blocking file descriptor monitoring
@@ -789,7 +789,13 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
       *fReadready  = *fReadmask;
       *fWriteready = *fWritemask;
 
-      int mxfd = TMath::Max(fMaxrfd, fMaxwfd) + 1;
+      int mxfd = TMath::Max(fMaxrfd, fMaxwfd);
+      if (mxfd) mxfd++;
+
+      // if nothing to select (socket or timer) return
+      if (mxfd == 0 && nextto == -1)
+         return;
+
       fNfd = UnixSelect(mxfd, fReadready, fWriteready, nextto);
       if (fNfd < 0 && fNfd != -2) {
          int fd, rc;

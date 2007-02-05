@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.160 2007/01/30 11:33:59 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.161 2007/01/30 15:38:36 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1339,7 +1339,7 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
       fSignals->Zero();
 
       // handle past due timers
-      Long_t nextto = -1;
+      Long_t nextto;
       if (fTimers && fTimers->GetSize() > 0) {
          if (DispatchTimers(kTRUE)) {
             // prevent timers from blocking the rest types of events
