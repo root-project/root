@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectoryFile.cxx,v 1.5 2007/01/29 15:53:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectoryFile.cxx,v 1.6 2007/01/31 13:31:49 brun Exp $
 // Author: Rene Brun   22/01/2007
 
 /*************************************************************************
@@ -1367,7 +1367,7 @@ void TDirectoryFile::SetTRefAction(TObject *ref, TObject *parent)
    Int_t offset = (char*)ref - (char*)parent;
    TClass *cl = parent->IsA();
    cl->BuildRealData(parent);
-   TStreamerInfo *info = cl->GetStreamerInfo();
+   TStreamerInfo *info = (TStreamerInfo*)cl->GetStreamerInfo();
    TIter next(info->GetElements());
    TStreamerElement *element;
    while((element = (TStreamerElement*)next())) {
