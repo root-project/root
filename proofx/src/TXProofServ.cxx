@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.27 2007/01/29 15:11:11 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.28 2007/02/05 10:40:30 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -1083,11 +1083,10 @@ void TXProofServ::Terminate(Int_t status)
 
    // Shot once a timer to wake up the main thread (this async timer must
    // be created dynamically, otherwise it gets destructed before it fires;
-   // all this represents a small memory leak, but since we are going to exit
+   // this represents a small memory leak, but since we are going to exit
    // anyhow, we do not care too much).
    TTimer *t = new TTimer(1000, kFALSE);
    t->Start(-1, kTRUE);
-   
 
    // Avoid communicating back anything to the coordinator (it is gone)
    ((TXSocket *)fSocket)->SetSessionID(-1);
