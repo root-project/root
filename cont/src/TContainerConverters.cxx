@@ -1,4 +1,4 @@
-// @(#)root/cony:$Name:  $:$Id: TContainerConverters.cxx,v 1.7 2007/01/29 15:10:48 brun Exp $
+// @(#)root/cony:$Name:  $:$Id: TContainerConverters.cxx,v 1.8 2007/01/29 15:53:35 brun Exp $
 // Author: Philippe Canal  11/11/2004
 
 /*************************************************************************
@@ -44,7 +44,7 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
 {
    // Read a TClonesArray in the TBuffer b and load it into a (stl) collection
 
-   TStreamerInfo *subinfo = fProxy->GetValueClass()->GetStreamerInfo();
+   TStreamerInfo *subinfo = (TStreamerInfo*)fProxy->GetValueClass()->GetStreamerInfo();
    R__ASSERT(subinfo);
 
    Int_t   nobjects, dummy;

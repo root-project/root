@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.11 2007/01/30 11:24:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.12 2007/02/03 18:33:15 brun Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************
@@ -595,7 +595,7 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& li, const TBranch* branch,
 
    TClass* clContained=0;
    GetCollectionContainedType(branch, parent, clContained);
-   TStreamerInfo* streamerInfo=clContained?clContained->GetStreamerInfo():0;
+   TVirtualStreamerInfo* streamerInfo= clContained?clContained->GetStreamerInfo():0;
    if (!streamerInfo 
       || !streamerInfo->GetElements() 
       || !streamerInfo->GetElements()->GetSize())  return 0;
@@ -638,7 +638,7 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& li, const TBranch* branch,
          if (!clElements) continue;
 
          // now loop over the class's streamer elements
-         TStreamerInfo* streamerInfo=clElements->GetStreamerInfo();
+         TVirtualStreamerInfo* streamerInfo= clElements->GetStreamerInfo();
          TIter iElem(streamerInfo->GetElements());
          TStreamerElement* elem=0;
          while ((elem=(TStreamerElement*)iElem())) {

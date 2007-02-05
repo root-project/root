@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfoReadBuffer.cxx,v 1.43 2007/01/25 11:51:58 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfoReadBuffer.cxx,v 1.44 2007/01/28 18:31:37 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -894,7 +894,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
 
                   vers &= ~( TBufferFile::kStreamedMemberWise );
                   TVirtualCollectionProxy *proxy = aElement->GetClassPointer()->GetCollectionProxy();
-                  TStreamerInfo *subinfo = proxy->GetValueClass()->GetStreamerInfo();
+                  TStreamerInfo *subinfo = (TStreamerInfo*)proxy->GetValueClass()->GetStreamerInfo();
                   DOLOOP {
                      void* env;
                      void **contp = (void**)(arr[k]+ioffset);
@@ -950,7 +950,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
 
                   vers &= ~( TBufferFile::kStreamedMemberWise );
                   TVirtualCollectionProxy *proxy = aElement->GetClassPointer()->GetCollectionProxy();
-                  TStreamerInfo *subinfo = proxy->GetValueClass()->GetStreamerInfo();
+                  TStreamerInfo *subinfo = (TStreamerInfo*)proxy->GetValueClass()->GetStreamerInfo();
                   DOLOOP {
                      int objectSize = cle->Size();
                      char *obj = arr[k]+ioffset;
@@ -1029,7 +1029,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
             } else {
 
                Int_t clversion = ((TStreamerBase*)aElement)->GetBaseVersion();
-               cle->GetStreamerInfo(clversion)->ReadBuffer(b,arr,-1,narr,ioffset,arrayMode);
+               ((TStreamerInfo*)cle->GetStreamerInfo(clversion))->ReadBuffer(b,arr,-1,narr,ioffset,arrayMode);
             }
             continue;
 

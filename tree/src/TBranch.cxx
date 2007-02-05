@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.120 2007/01/20 19:29:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.121 2007/01/31 07:33:31 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -30,7 +30,6 @@
 #include "TLeafS.h"
 #include "TMessage.h"
 #include "TROOT.h"
-#include "TStreamerInfo.h"
 #include "TSystem.h"
 #include "TMath.h"
 #include "TTree.h"

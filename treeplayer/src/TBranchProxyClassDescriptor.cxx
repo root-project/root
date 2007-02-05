@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.9 2006/04/19 08:22:26 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.10 2007/01/30 11:24:32 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -14,7 +14,7 @@
 
 #include "TClass.h"
 #include "TError.h"
-#include "TStreamerInfo.h"
+#include "TVirtualStreamerInfo.h"
 
 namespace ROOT {
 
@@ -41,7 +41,7 @@ namespace ROOT {
    }
 
    TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *type,
-                                                            TStreamerInfo *info,
+                                                            TVirtualStreamerInfo *info,
                                                             const char *branchname,
                                                             UInt_t isclones,
                                                             UInt_t splitlevel) :
@@ -77,7 +77,7 @@ namespace ROOT {
       if (fSubBranchPrefix.Length() && fSubBranchPrefix[fSubBranchPrefix.Length()-1]=='.') fSubBranchPrefix.Remove(fSubBranchPrefix.Length()-1);
    }
 
-   TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *type, TStreamerInfo *info,
+   TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *type, TVirtualStreamerInfo *info,
                                                             const char *branchname,
                                                             const char *branchPrefix, UInt_t isclones,
                                                             UInt_t splitlevel) :

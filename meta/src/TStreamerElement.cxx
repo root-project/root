@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.90 2007/01/15 10:03:12 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.91 2007/01/29 16:09:47 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -17,7 +17,7 @@
 
 #include "TROOT.h"
 #include "TStreamerElement.h"
-#include "TStreamerInfo.h"
+#include "TVirtualStreamerInfo.h"
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TBaseClass.h"
@@ -48,11 +48,11 @@ static TStreamerBasicType *InitCounter(const char *countClass, const char *count
 
    if (cl==0) return 0;
 
-   TStreamerBasicType *counter = TStreamerInfo::GetElementCounter(countName,cl);
+   TStreamerBasicType *counter = TVirtualStreamerInfo::GetElementCounter(countName,cl);
 
    //at this point the counter is may be declared to skip
    if (counter) {
-      if (counter->GetType() < TStreamerInfo::kCounter) counter->SetType(TStreamerInfo::kCounter);
+      if (counter->GetType() < TVirtualStreamerInfo::kCounter) counter->SetType(TVirtualStreamerInfo::kCounter);
    }
    return counter;
 }
@@ -209,11 +209,11 @@ Bool_t TStreamerElement::CannotSplit() const
    if (!cl) return kFALSE;  //basic type
 
    switch(fType) {
-      case TStreamerInfo::kAny    +TStreamerInfo::kOffsetL:
-      case TStreamerInfo::kObject +TStreamerInfo::kOffsetL:
-      case TStreamerInfo::kTObject+TStreamerInfo::kOffsetL:
-      case TStreamerInfo::kTString+TStreamerInfo::kOffsetL:
-      case TStreamerInfo::kTNamed +TStreamerInfo::kOffsetL:
+      case TVirtualStreamerInfo::kAny    +TVirtualStreamerInfo::kOffsetL:
+      case TVirtualStreamerInfo::kObject +TVirtualStreamerInfo::kOffsetL:
+      case TVirtualStreamerInfo::kTObject+TVirtualStreamerInfo::kOffsetL:
+      case TVirtualStreamerInfo::kTString+TVirtualStreamerInfo::kOffsetL:
+      case TVirtualStreamerInfo::kTNamed +TVirtualStreamerInfo::kOffsetL:
          return kTRUE;
    }
 
@@ -358,7 +358,7 @@ void TStreamerElement::SetArrayDim(Int_t dim)
    // Set number of array dimensions.
 
    fArrayDim = dim;
-   if (dim) fType += TStreamerInfo::kOffsetL;
+   if (dim) fType += TVirtualStreamerInfo::kOffsetL;
    fNewType = fType;
 }
 
@@ -483,12 +483,12 @@ TStreamerBase::TStreamerBase()
 
 //______________________________________________________________________________
 TStreamerBase::TStreamerBase(const char *name, const char *title, Int_t offset)
-        : TStreamerElement(name,title,offset,TStreamerInfo::kBase,"BASE")
+        : TStreamerElement(name,title,offset,TVirtualStreamerInfo::kBase,"BASE")
 {
    // Create a TStreamerBase object.
 
-   if (strcmp(name,"TObject") == 0) fType = TStreamerInfo::kTObject;
-   if (strcmp(name,"TNamed")  == 0) fType = TStreamerInfo::kTNamed;
+   if (strcmp(name,"TObject") == 0) fType = TVirtualStreamerInfo::kTObject;
+   if (strcmp(name,"TNamed")  == 0) fType = TVirtualStreamerInfo::kTNamed;
    fNewType = fType;
    fBaseClass = TClass::GetClass(GetName());
    fBaseVersion = fBaseClass->GetClassVersion();
@@ -525,7 +525,7 @@ void TStreamerBase::Init(TObject *)
 {
    // Setup the element.
 
-   if (fType == TStreamerInfo::kTObject || fType == TStreamerInfo::kTNamed) return;
+   if (fType == TVirtualStreamerInfo::kTObject || fType == TVirtualStreamerInfo::kTNamed) return;
    fBaseClass = TClass::GetClass(GetName());
    if (!fBaseClass) return;
    if (!fBaseClass->GetMethodAny("StreamerNVirtual")) return;
@@ -674,7 +674,7 @@ TStreamerBasicPointer::TStreamerBasicPointer(const char *name, const char *title
 {
    // Create a TStreamerBasicPointer object.
 
-   fType += TStreamerInfo::kOffsetP;
+   fType += TVirtualStreamerInfo::kOffsetP;
    fCountName    = countName;
    fCountClass   = countClass;
    fCountVersion = countVersion;  //currently unused
@@ -722,7 +722,7 @@ void TStreamerBasicPointer::SetArrayDim(Int_t dim)
    // Set number of array dimensions.
 
    fArrayDim = dim;
-   //if (dim) fType += TStreamerInfo::kOffsetL;
+   //if (dim) fType += TVirtualStreamerInfo::kOffsetL;
    fNewType = fType;
 }
 
@@ -771,7 +771,7 @@ TStreamerLoop::TStreamerLoop() : fCounter(0)
 
 //______________________________________________________________________________
 TStreamerLoop::TStreamerLoop(const char *name, const char *title, Int_t offset, const char *countName, const char *countClass, Int_t countVersion, const char *typeName)
-        : TStreamerElement(name,title,offset,TStreamerInfo::kStreamLoop,typeName)
+        : TStreamerElement(name,title,offset,TVirtualStreamerInfo::kStreamLoop,typeName)
 {
    // Create a TStreamerLoop object.
 
@@ -886,8 +886,8 @@ ULong_t TStreamerBasicType::GetMethod() const
 {
    // return address of counter
 
-   if (fType ==  TStreamerInfo::kCounter ||
-       fType == (TStreamerInfo::kCounter+TStreamerInfo::kSkip)) return (ULong_t)&fCounter;
+   if (fType ==  TVirtualStreamerInfo::kCounter ||
+       fType == (TVirtualStreamerInfo::kCounter+TVirtualStreamerInfo::kSkip)) return (ULong_t)&fCounter;
    return 0;
 }
 
@@ -943,9 +943,9 @@ TStreamerObject::TStreamerObject(const char *name, const char *title, Int_t offs
 {
    // Create a TStreamerObject object.
 
-   fType = TStreamerInfo::kObject;
-   if (strcmp(typeName,"TObject") == 0) fType = TStreamerInfo::kTObject;
-   if (strcmp(typeName,"TNamed")  == 0) fType = TStreamerInfo::kTNamed;
+   fType = TVirtualStreamerInfo::kObject;
+   if (strcmp(typeName,"TObject") == 0) fType = TVirtualStreamerInfo::kTObject;
+   if (strcmp(typeName,"TNamed")  == 0) fType = TVirtualStreamerInfo::kTNamed;
    fNewType = fType;
    Init();
 }
@@ -1029,7 +1029,7 @@ TStreamerObjectAny::TStreamerObjectAny()
 
 //______________________________________________________________________________
 TStreamerObjectAny::TStreamerObjectAny(const char *name, const char *title, Int_t offset, const char *typeName)
-        : TStreamerElement(name,title,offset,TStreamerInfo::kAny,typeName)
+        : TStreamerElement(name,title,offset,TVirtualStreamerInfo::kAny,typeName)
 {
    // Create a TStreamerObjectAny object.
    Init();
@@ -1116,11 +1116,11 @@ TStreamerObjectPointer::TStreamerObjectPointer()
 //______________________________________________________________________________
 TStreamerObjectPointer::TStreamerObjectPointer(const char *name, const char *title,
                                                Int_t offset, const char *typeName)
-   : TStreamerElement(name,title,offset,TStreamerInfo::kObjectP,typeName)
+   : TStreamerElement(name,title,offset,TVirtualStreamerInfo::kObjectP,typeName)
 {
    // Create a TStreamerObjectPointer object.
 
-   if (strncmp(title,"->",2) == 0) fType = TStreamerInfo::kObjectp;
+   if (strncmp(title,"->",2) == 0) fType = TVirtualStreamerInfo::kObjectp;
    fNewType = fType;
    Init();
 }
@@ -1170,7 +1170,7 @@ void TStreamerObjectPointer::SetArrayDim(Int_t dim)
    // Set number of array dimensions.
 
    fArrayDim = dim;
-   //if (dim) fType += TStreamerInfo::kOffsetL;
+   //if (dim) fType += TVirtualStreamerInfo::kOffsetL;
    fNewType = fType;
 }
 
@@ -1214,11 +1214,11 @@ TStreamerObjectAnyPointer::TStreamerObjectAnyPointer()
 //______________________________________________________________________________
 TStreamerObjectAnyPointer::TStreamerObjectAnyPointer(const char *name, const char *title,
                                                      Int_t offset, const char *typeName)
-   : TStreamerElement(name,title,offset,TStreamerInfo::kAnyP,typeName)
+   : TStreamerElement(name,title,offset,TVirtualStreamerInfo::kAnyP,typeName)
 {
    // Create a TStreamerObjectAnyPointer object.
 
-   if (strncmp(title,"->",2) == 0) fType = TStreamerInfo::kAnyp;
+   if (strncmp(title,"->",2) == 0) fType = TVirtualStreamerInfo::kAnyp;
    fNewType = fType;
    Init();
 }
@@ -1268,7 +1268,7 @@ void TStreamerObjectAnyPointer::SetArrayDim(Int_t dim)
    // Set number of array dimensions.
 
    fArrayDim = dim;
-   //if (dim) fType += TStreamerInfo::kOffsetL;
+   //if (dim) fType += TVirtualStreamerInfo::kOffsetL;
    fNewType = fType;
 }
 
@@ -1303,7 +1303,7 @@ TStreamerString::TStreamerString()
 
 //______________________________________________________________________________
 TStreamerString::TStreamerString(const char *name, const char *title, Int_t offset)
-        : TStreamerElement(name,title,offset,TStreamerInfo::kTString,"TString")
+        : TStreamerElement(name,title,offset,TVirtualStreamerInfo::kTString,"TString")
 {
    // Create a TStreamerString object.
 
@@ -1413,7 +1413,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
    else if (strstr(s,"multimap")) fSTLtype = kSTLmultimap;
    else if (strstr(s,"multiset")) fSTLtype = kSTLmultiset;
    if (fSTLtype == 0) { delete [] s; return;}
-   if (dmPointer) fSTLtype += TStreamerInfo::kOffsetP;
+   if (dmPointer) fSTLtype += TVirtualStreamerInfo::kOffsetP;
 
    // find STL contained type
    while (*sopen==' ') sopen++;
@@ -1434,22 +1434,22 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
    TDataType *dt = (TDataType*)gROOT->GetListOfTypes()->FindObject(sopen);
    if (dt) {
       fCtype = dt->GetType();
-      if (isPointer) fCtype += TStreamerInfo::kOffsetP;
+      if (isPointer) fCtype += TVirtualStreamerInfo::kOffsetP;
    } else {
      // this could also be a nested enums ... which should work ... be let's see.
       TClass *cl = TClass::GetClass(sopen);
       if (cl) {
-         if (isPointer) fCtype = TStreamerInfo::kObjectp;
-         else           fCtype = TStreamerInfo::kObject;
+         if (isPointer) fCtype = TVirtualStreamerInfo::kObjectp;
+         else           fCtype = TVirtualStreamerInfo::kObject;
       } else {
          G__ClassInfo info(sopen);
          if (info.IsValid() && info.Property()&G__BIT_ISENUM) {
-            if (isPointer) fCtype += TStreamerInfo::kOffsetP;
+            if (isPointer) fCtype += TVirtualStreamerInfo::kOffsetP;
          } else {
             if(strcmp(sopen,"string")) {
                // This case can happens when 'this' is a TStreamerElement for
                // a STL container containing something for which we do not have
-               // a TStreamerInfo (This happens in particular is the collection 
+               // a TVirtualStreamerInfo (This happens in particular is the collection 
                // objects themselves are always empty) and we do not have the
                // dictionary/shared library for the container.
                if (GetClassPointer() && GetClassPointer()->IsLoaded()) {
@@ -1461,7 +1461,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
    }
    delete [] s;
 
-   if (TStreamerSTL::IsaPointer()) fType = TStreamerInfo::kSTLp;
+   if (TStreamerSTL::IsaPointer()) fType = TVirtualStreamerInfo::kSTLp;
 }
 
 //______________________________________________________________________________
@@ -1561,10 +1561,10 @@ void TStreamerSTL::SetStreamer(TMemberStreamer  *streamer)
    //set pointer to Streamer function for this element
    //NOTE: we do not take ownership
 
-   if (fType==TStreamerInfo::kSTLp || 1) return;
+   if (fType==TVirtualStreamerInfo::kSTLp || 1) return;
    fStreamer = streamer;
    if (streamer && !IsaPointer() ) {
-      fType = TStreamerInfo::kStreamer;
+      fType = TVirtualStreamerInfo::kStreamer;
       fNewType = fType;
    }
 }
@@ -1586,13 +1586,13 @@ void TStreamerSTL::Streamer(TBuffer &R__b)
          R__b >> fCtype;
          R__b.CheckByteCount(R__s, R__c, TStreamerSTL::IsA());
       }
-      if (IsaPointer()) fType = TStreamerInfo::kSTLp;
-      else fType = TStreamerInfo::kSTL;
+      if (IsaPointer()) fType = TVirtualStreamerInfo::kSTLp;
+      else fType = TVirtualStreamerInfo::kSTL;
       return;
    } else {
       // To enable forward compatibility we actually save with the old value
       Int_t tmp = fType;
-      fType = TStreamerInfo::kStreamer;
+      fType = TVirtualStreamerInfo::kStreamer;
       TStreamerSTL::Class()->WriteBuffer(R__b,this);
       fType = tmp;
    }
@@ -1625,9 +1625,9 @@ TStreamerSTLstring::TStreamerSTLstring(const char *name, const char *title, Int_
    SetTitle(title);
 
    if (dmPointer) {
-      fType = TStreamerInfo::kSTLp;
+      fType = TVirtualStreamerInfo::kSTLp;
    } else {
-      fType = TStreamerInfo::kSTL;
+      fType = TVirtualStreamerInfo::kSTL;
    }
 
    fNewType = fType;

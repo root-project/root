@@ -420,7 +420,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
 
                   UInt_t pos = b.WriteVersionMemberWise(thisVar->IsA(),kTRUE);
                   TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
-                  TStreamerInfo *subinfo = proxy->GetValueClass()->GetStreamerInfo();
+                  TStreamerInfo *subinfo = (TStreamerInfo*)proxy->GetValueClass()->GetStreamerInfo();
                   DOLOOP {
                      char **contp = (char**)(arr[k]+ioffset);
                      for(int j=0;j<fLength[i];++j) {
@@ -460,7 +460,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
 
                   UInt_t pos = b.WriteVersionMemberWise(thisVar->IsA(),kTRUE);
                   TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
-                  TStreamerInfo *subinfo = proxy->GetValueClass()->GetStreamerInfo();
+                  TStreamerInfo *subinfo = (TStreamerInfo*)proxy->GetValueClass()->GetStreamerInfo();
                   DOLOOP {
                      char *obj = (char*)(arr[k]+ioffset);
                      Int_t n = fLength[i];
@@ -528,7 +528,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                }
             } else {
                TClass *cl                 = fComp[i].fClass;
-               cl->GetStreamerInfo()->WriteBufferAux(b,arr,-1,narr,ioffset,arrayMode);
+               ((TStreamerInfo*)cl->GetStreamerInfo())->WriteBufferAux(b,arr,-1,narr,ioffset,arrayMode);
             }
             continue;
 

@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.15 2006/06/27 14:36:27 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.16 2007/01/22 05:58:29 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -174,7 +174,7 @@
 #include "TObjString.h"
 #include "TList.h"
 #include "TArrayC.h"
-#include "TStreamerInfo.h"
+#include "TVirtualStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TProcessID.h"
 #include "TError.h"
@@ -824,7 +824,7 @@ void TSQLFile::WriteHeader()
 //______________________________________________________________________________
 void TSQLFile::WriteStreamerInfo()
 {
-   // Store all TStreamerInfo, used in file, in sql database
+   // Store all TVirtualStreamerInfo, used in file, in sql database
 
    // return;
 
@@ -838,9 +838,9 @@ void TSQLFile::WriteStreamerInfo()
 
    TIter iter(gROOT->GetListOfStreamerInfo());
 
-   TStreamerInfo* info = 0;
+   TVirtualStreamerInfo* info = 0;
 
-   while ((info = (TStreamerInfo*) iter()) !=0 ) {
+   while ((info = (TVirtualStreamerInfo*) iter()) !=0 ) {
       Int_t uid = info->GetNumber();
       if (fClassIndex->fArray[uid]) {
          if (gDebug>1) Info("WriteStreamerInfo","Add %s",info->GetName());
@@ -848,11 +848,11 @@ void TSQLFile::WriteStreamerInfo()
       }
    }
    if (list.GetSize()==0) return;
-   fClassIndex->fArray[0] = 2; //to prevent adding classes in TStreamerInfo::TagFile
+   fClassIndex->fArray[0] = 2; //to prevent adding classes in TVirtualStreamerInfo::TagFile
 
    WriteSpecialObject(sqlio::Ids_StreamerInfos, &list, "StreamerInfo", "StreamerInfos of this file");
 
-   fClassIndex->fArray[0] = 0; //to prevent adding classes in TStreamerInfo::TagFile
+   fClassIndex->fArray[0] = 0; //to prevent adding classes in TVirtualStreamerInfo::TagFile
 }
 
 //______________________________________________________________________________
@@ -1263,14 +1263,14 @@ TString TSQLFile::MakeSelectQuery(TClass* cl)
 }
 
 //______________________________________________________________________________
-Bool_t TSQLFile::ProduceClassSelectQuery(TStreamerInfo* info, 
+Bool_t TSQLFile::ProduceClassSelectQuery(TVirtualStreamerInfo* info, 
                                          TSQLClassInfo* sqlinfo, 
                                          TString& columns, 
                                          TString& tables, 
                                          Int_t& tablecnt)
 {
    // used by MakeClassSelectQuery method to add columns from table of 
-   // class, specified by TStreamerInfo structure
+   // class, specified by TVirtualStreamerInfo structure
     
    if ((info==0) || (sqlinfo==0)) return kFALSE;
    
@@ -2572,7 +2572,7 @@ Long64_t TSQLFile::StoreObjectInTables(Long64_t keyid, const void* obj, const TC
 const char* TSQLFile::SQLCompatibleType(Int_t typ) const
 {
    // returns sql type name which is most closer to ROOT basic type
-   // typ should be from TStreamerInfo:: constansts like TStreamerInfo::kInt
+   // typ should be from TVirtualStreamerInfo:: constansts like TVirtualStreamerInfo::kInt
 
    return (typ<0) || (typ>18) ? 0 : fBasicTypes[typ];
 }
@@ -2582,7 +2582,7 @@ const char* TSQLFile::SQLIntType() const
 {
    // return SQL integer type
 
-   return SQLCompatibleType(TStreamerInfo::kInt);
+   return SQLCompatibleType(TVirtualStreamerInfo::kInt);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.210 2007/02/02 08:08:54 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.211 2007/02/03 18:33:15 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -452,7 +452,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo,
       TStreamerBasicPointer *array = (TStreamerBasicPointer*)elem;
       TClass *cl = leafinfo->fClass;
       Int_t offset;
-      TStreamerElement* counter = cl->GetStreamerInfo()->GetStreamerElement(array->GetCountName(),offset);
+      TStreamerElement* counter = ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(array->GetCountName(),offset);
       if (maininfo==0 || maininfo==leafinfo || 1) {
          leafinfo->fCounter = new TFormLeafInfo(cl,offset,counter);
       } else {
@@ -470,7 +470,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo,
 
       TClass * clonesClass = TClonesArray::Class();
       Int_t c_offset;
-      TStreamerElement *counter = clonesClass->GetStreamerInfo()->GetStreamerElement("fLast",c_offset);
+      TStreamerElement *counter = ((TStreamerInfo*)clonesClass->GetStreamerInfo())->GetStreamerElement("fLast",c_offset);
       leafinfo->fCounter = new TFormLeafInfo(clonesClass,c_offset,counter);
 
    } else if (!useCollectionObject && elem->GetClassPointer() && elem->GetClassPointer()->GetCollectionProxy() ) {
@@ -1483,7 +1483,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
             if (!cl) {
                Warning("DefinedVariable","Missing class for %s!",name.Data());
             } else {
-               element = cl->GetStreamerInfo()->GetStreamerElement(work,offset);
+               element = ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(work,offset);
             }
 
             if (!element && !prevUseCollectionObject) {
@@ -1494,7 +1494,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                while ((curelem = (TStreamerElement*)next())) {
                   if (curelem->GetClassPointer() ==  TClonesArray::Class()) {
                      Int_t clones_offset;
-                     cl->GetStreamerInfo()->GetStreamerElement(curelem->GetName(),clones_offset);
+                     ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(curelem->GetName(),clones_offset);
                      TFormLeafInfo* clonesinfo =
                         new TFormLeafInfo(cl, clones_offset, curelem);
                      TClonesArray * clones;
@@ -1509,7 +1509,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                      }
 
                      TClass *sub_cl = clones->GetClass();
-                     if (sub_cl) element = sub_cl->GetStreamerInfo()->GetStreamerElement(work,offset);
+                     if (sub_cl) element = ((TStreamerInfo*)sub_cl->GetStreamerInfo())->GetStreamerElement(work,offset);
                      delete clonesinfo;
 
                      if (element) {
@@ -1528,12 +1528,12 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                   } else if (curelem->GetClassPointer() && curelem->GetClassPointer()->GetCollectionProxy()) {
 
                      Int_t coll_offset;
-                     cl->GetStreamerInfo()->GetStreamerElement(curelem->GetName(),coll_offset);
+                     ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(curelem->GetName(),coll_offset);
 
                      TClass *sub_cl =
                         curelem->GetClassPointer()->GetCollectionProxy()->GetValueClass();
                      if (sub_cl) {
-                        element = sub_cl->GetStreamerInfo()->GetStreamerElement(work,offset);
+                        element = ((TStreamerInfo*)sub_cl->GetStreamerInfo())->GetStreamerElement(work,offset);
                      }
                      if (element) {
                         if (numberOfVarDim>1) {
@@ -1779,7 +1779,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                         Error("DefinedVariable","Failed to access class type of reference target (%s)",element->GetName());
                         return -1;
                      }
-                     element = cl->GetStreamerInfo()->GetStreamerElement(work,offset);
+                     element = ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(work,offset);
                   }
                   else  {
                      Error("DefinedVariable","Failed to access class type of reference target (%s)",element->GetName());
@@ -2751,7 +2751,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, const char* ne
          // Now that we have the class, let's check if the topchoice is of its datamember
          // or if the nextchoice is a datamember of one of its datamember.
          Int_t offset;
-         TStreamerInfo* info =  cl->GetStreamerInfo();
+         TStreamerInfo* info =  (TStreamerInfo*)cl->GetStreamerInfo();
          TStreamerElement* element = info?info->GetStreamerElement(topchoice,offset):0;
          if (!element) {
             TIter next( cl->GetStreamerInfo()->GetElements() );
@@ -2779,7 +2779,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, const char* ne
                   }
 
                   Int_t clones_offset;
-                  cl->GetStreamerInfo()->GetStreamerElement(curelem->GetName(),clones_offset);
+                  ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(curelem->GetName(),clones_offset);
                   TFormLeafInfo* sub_clonesinfo = new TFormLeafInfo(cl, clones_offset, curelem);
                   if (leafinfo)
                      if (leafinfo->fNext) leafinfo->fNext->fNext = sub_clonesinfo;
@@ -2799,7 +2799,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, const char* ne
                   TClass *sub_cl = clones->GetClass();
 
                   // Now that we finally have the inside class, let's query it.
-                  element = sub_cl->GetStreamerInfo()->GetStreamerElement(nextchoice,offset);
+                  element = ((TStreamerInfo*)sub_cl->GetStreamerInfo())->GetStreamerElement(nextchoice,offset);
                   if (element) break;
                } // if clones array
                else if (curelem->GetClassPointer() && curelem->GetClassPointer()->GetCollectionProxy()) {
@@ -2810,7 +2810,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, const char* ne
                      sub_cl = sub_cl->GetCollectionProxy()->GetValueClass();
 
                   // Now that we finally have the inside class, let's query it.
-                  if (sub_cl) element = sub_cl->GetStreamerInfo()->GetStreamerElement(nextchoice,offset);
+                  if (sub_cl) element = ((TStreamerInfo*)sub_cl->GetStreamerInfo())->GetStreamerElement(nextchoice,offset);
                   if (element) break;
 
                }

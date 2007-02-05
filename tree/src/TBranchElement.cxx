@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.214 2007/01/30 11:24:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.215 2007/01/31 07:33:31 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -180,7 +180,7 @@ TBranchElement::TBranchElement(const char* bname, TStreamerInfo* sinfo, Int_t id
    //
 
    fEntryOffsetLen = 0;
-   if (btype || (fStreamerType <= TStreamerInfo::kBase) || (fStreamerType == TStreamerInfo::kCharStar) || (fStreamerType == TStreamerInfo::kBits) || (fStreamerType > TStreamerInfo::kBool)) {
+   if (btype || (fStreamerType <= TVirtualStreamerInfo::kBase) || (fStreamerType == TVirtualStreamerInfo::kCharStar) || (fStreamerType == TVirtualStreamerInfo::kBits) || (fStreamerType > TVirtualStreamerInfo::kBool)) {
       fEntryOffsetLen = 1000;
    }
 
@@ -230,7 +230,7 @@ TBranchElement::TBranchElement(const char* bname, TStreamerInfo* sinfo, Int_t id
       // -- We are a sub-branch of a split object.
       ULong_t* elems = sinfo->GetElems();
       TStreamerElement* element = (TStreamerElement*) elems[id];
-      if ((fStreamerType == TStreamerInfo::kObject) || (fStreamerType == TStreamerInfo::kBase) || (fStreamerType == TStreamerInfo::kTNamed) || (fStreamerType == TStreamerInfo::kTObject) || (fStreamerType == TStreamerInfo::kObjectp) || (fStreamerType == TStreamerInfo::kObjectP)) {
+      if ((fStreamerType == TVirtualStreamerInfo::kObject) || (fStreamerType == TVirtualStreamerInfo::kBase) || (fStreamerType == TVirtualStreamerInfo::kTNamed) || (fStreamerType == TVirtualStreamerInfo::kTObject) || (fStreamerType == TVirtualStreamerInfo::kObjectp) || (fStreamerType == TVirtualStreamerInfo::kObjectP)) {
          // -- If we are an object data member which inherits from TObject,
          // flag it so that later during i/o we will register the object
          // with the buffer so that pointers are handled correctly.
@@ -428,7 +428,7 @@ TBranchElement::TBranchElement(const char* bname, TStreamerInfo* sinfo, Int_t id
                BuildTitle(name);
                return;
             }
-         } else if (!strchr(elem_type, '*') && ((fStreamerType == TStreamerInfo::kObject) || (fStreamerType == TStreamerInfo::kAny))) {
+         } else if (!strchr(elem_type, '*') && ((fStreamerType == TVirtualStreamerInfo::kObject) || (fStreamerType == TVirtualStreamerInfo::kAny))) {
             // -- Create sub-branches for members that are classes.
             //
             // Note: This can only happen if we were called directly
@@ -473,7 +473,7 @@ TBranchElement::TBranchElement(const char* bname, TClonesArray* clones, Int_t ba
 , fClassName("TClonesArray")
 , fParentName()
 // FIXME: Bad, the streamer info will be optimized here.
-, fInfo(TClonesArray::Class()->GetStreamerInfo())
+, fInfo((TStreamerInfo*)TClonesArray::Class()->GetStreamerInfo())
 , fCurrentClass()
 , fParentClass()
 , fBranchClass(TClonesArray::Class())
@@ -593,7 +593,7 @@ TBranchElement::TBranchElement(const char* bname, TVirtualCollectionProxy* cont,
    fInfo          = 0;
    fID            = -1;
    fInit          = kTRUE;
-   fStreamerType  = -1; // TStreamerInfo::kSTLp;
+   fStreamerType  = -1; // TVirtualStreamerInfo::kSTLp;
    fType          = 0;
    fClassVersion  = cont->GetCollectionClass()->GetClassVersion();
    fCheckSum      = cont->GetCollectionClass()->GetCheckSum();
@@ -1040,7 +1040,7 @@ void TBranchElement::FillLeaves(TBuffer& b)
          return;
       }
       Int_t n = si->WriteBufferAux(b, &fObject, fID, 1, 0, 0);
-      if ((fStreamerType == TStreamerInfo::kCounter) && (n > fMaximum)) {
+      if ((fStreamerType == TVirtualStreamerInfo::kCounter) && (n > fMaximum)) {
          fMaximum = n;
       }
    } else if (fType == 3) {
@@ -1049,7 +1049,7 @@ void TBranchElement::FillLeaves(TBuffer& b)
          // FIXME: What if GetClonesName() is the zero pointer or an empty string?
          TClass* cl = TClass::GetClass(GetClonesName());
          // FIXME: What if cl is a zero pointer here?
-         TStreamerInfo* si = cl->GetStreamerInfo();
+         TVirtualStreamerInfo* si = cl->GetStreamerInfo();
          if (!si) {
             Error("FillLeaves", "Cannot get streamer info for branch '%s' class '%s'", GetName(), cl->GetName());
             return;
@@ -1126,15 +1126,15 @@ void TBranchElement::FillLeaves(TBuffer& b)
          }
          switch (atype) {
             // Note: Type 0 is a base class and cannot happen here, see Unroll().
-            case TStreamerInfo::kChar     /*  1 */: { b.WriteFastArray((Char_t*)    fAddress, n); break; }
-            case TStreamerInfo::kShort    /*  2 */: { b.WriteFastArray((Short_t*)   fAddress, n); break; }
-            case TStreamerInfo::kInt      /*  3 */: { b.WriteFastArray((Int_t*)     fAddress, n); break; }
-            case TStreamerInfo::kLong     /*  4 */: { b.WriteFastArray((Long_t*)    fAddress, n); break; }
-            case TStreamerInfo::kFloat    /*  5 */: { b.WriteFastArray((Float_t*)   fAddress, n); break; }
-            case TStreamerInfo::kCounter  /*  6 */: { b.WriteFastArray((Int_t*)     fAddress, n); break; }
-            // FIXME: We do nothing with type 7 (TStreamerInfo::kCharStar, char*) here!
-            case TStreamerInfo::kDouble   /*  8 */: { b.WriteFastArray((Double_t*)  fAddress, n); break; }
-            case TStreamerInfo::kDouble32 /*  9 */: {
+            case TVirtualStreamerInfo::kChar     /*  1 */: { b.WriteFastArray((Char_t*)    fAddress, n); break; }
+            case TVirtualStreamerInfo::kShort    /*  2 */: { b.WriteFastArray((Short_t*)   fAddress, n); break; }
+            case TVirtualStreamerInfo::kInt      /*  3 */: { b.WriteFastArray((Int_t*)     fAddress, n); break; }
+            case TVirtualStreamerInfo::kLong     /*  4 */: { b.WriteFastArray((Long_t*)    fAddress, n); break; }
+            case TVirtualStreamerInfo::kFloat    /*  5 */: { b.WriteFastArray((Float_t*)   fAddress, n); break; }
+            case TVirtualStreamerInfo::kCounter  /*  6 */: { b.WriteFastArray((Int_t*)     fAddress, n); break; }
+            // FIXME: We do nothing with type 7 (TVirtualStreamerInfo::kCharStar, char*) here!
+            case TVirtualStreamerInfo::kDouble   /*  8 */: { b.WriteFastArray((Double_t*)  fAddress, n); break; }
+            case TVirtualStreamerInfo::kDouble32 /*  9 */: {
                Double_t* xx = (Double_t*) fAddress;
                for (Int_t ii = 0; ii < n; ++ii) {
                   b << (Float_t) xx[ii];
@@ -1142,15 +1142,15 @@ void TBranchElement::FillLeaves(TBuffer& b)
                break;
             }
             // Note: Type 10 is unused for now.
-            case TStreamerInfo::kUChar    /* 11 */: { b.WriteFastArray((UChar_t*)   fAddress, n); break; }
-            case TStreamerInfo::kUShort   /* 12 */: { b.WriteFastArray((UShort_t*)  fAddress, n); break; }
-            case TStreamerInfo::kUInt     /* 13 */: { b.WriteFastArray((UInt_t*)    fAddress, n); break; }
-            case TStreamerInfo::kULong    /* 14 */: { b.WriteFastArray((ULong_t*)   fAddress, n); break; }
-            // FIXME: This is wrong!!! TStreamerInfo::kBits is a variable length type.
-            case TStreamerInfo::kBits     /* 15 */: { b.WriteFastArray((UInt_t*)    fAddress, n); break; }
-            case TStreamerInfo::kLong64   /* 16 */: { b.WriteFastArray((Long64_t*)  fAddress, n); break; }
-            case TStreamerInfo::kULong64  /* 17 */: { b.WriteFastArray((ULong64_t*) fAddress, n); break; }
-            case TStreamerInfo::kBool     /* 18 */: { b.WriteFastArray((Bool_t*)    fAddress, n); break; }
+            case TVirtualStreamerInfo::kUChar    /* 11 */: { b.WriteFastArray((UChar_t*)   fAddress, n); break; }
+            case TVirtualStreamerInfo::kUShort   /* 12 */: { b.WriteFastArray((UShort_t*)  fAddress, n); break; }
+            case TVirtualStreamerInfo::kUInt     /* 13 */: { b.WriteFastArray((UInt_t*)    fAddress, n); break; }
+            case TVirtualStreamerInfo::kULong    /* 14 */: { b.WriteFastArray((ULong_t*)   fAddress, n); break; }
+            // FIXME: This is wrong!!! TVirtualStreamerInfo::kBits is a variable length type.
+            case TVirtualStreamerInfo::kBits     /* 15 */: { b.WriteFastArray((UInt_t*)    fAddress, n); break; }
+            case TVirtualStreamerInfo::kLong64   /* 16 */: { b.WriteFastArray((Long64_t*)  fAddress, n); break; }
+            case TVirtualStreamerInfo::kULong64  /* 17 */: { b.WriteFastArray((ULong64_t*) fAddress, n); break; }
+            case TVirtualStreamerInfo::kBool     /* 18 */: { b.WriteFastArray((Bool_t*)    fAddress, n); break; }
             // Note: Type 19 is unused for now.
          }
       } else {
@@ -1160,7 +1160,7 @@ void TBranchElement::FillLeaves(TBuffer& b)
          } else {
             TClonesArray* clones = (TClonesArray*) fObject;
             Int_t n = clones->GetEntriesFast();
-            TStreamerInfo* si = GetInfo();
+            TStreamerInfo* si = (TStreamerInfo*)GetInfo();
             if (!si) {
                Error("FillLeaves", "Cannot get streamer info for branch '%s'", GetName());
                return;
@@ -1180,7 +1180,7 @@ void TBranchElement::FillLeaves(TBuffer& b)
          TVirtualCollectionProxy::TPushPop helper(GetCollectionProxy(), fObject);
          n = GetCollectionProxy()->Size();
          // Note: We cannot pop the proxy here because we need it for the i/o.
-         TStreamerInfo* si = GetInfo();
+         TStreamerInfo* si = (TStreamerInfo*)GetInfo();
          if (!si) {
             Error("FillLeaves", "Cannot get streamer info for branch '%s'", GetName());
             return;
@@ -1224,29 +1224,29 @@ void TBranchElement::InitInfo()
          if (cl == TClonesArray::Class()) {
             fClassVersion = TClonesArray::Class()->GetClassVersion();
          }
-         Bool_t optim = TStreamerInfo::CanOptimize();
-         TStreamerInfo::Optimize(kFALSE);
-         fInfo = cl->GetStreamerInfo(fClassVersion);
-         TStreamerInfo::Optimize(optim);
+         Bool_t optim = TVirtualStreamerInfo::CanOptimize();
+         TVirtualStreamerInfo::Optimize(kFALSE);
+         fInfo = (TStreamerInfo*)cl->GetStreamerInfo(fClassVersion);
+         TVirtualStreamerInfo::Optimize(optim);
          // FIXME: Check that the found streamer info checksum matches our branch class checksum here.
          // Check to see if the class code was unloaded/reloaded
          // since we were created.
-         if (fCheckSum && (cl->IsForeign() || (!cl->IsLoaded() && (fClassVersion == 1) && cl->GetStreamerInfos()->At(1) && (fCheckSum != ((TStreamerInfo*) cl->GetStreamerInfos()->At(1))->GetCheckSum())))) {
+         if (fCheckSum && (cl->IsForeign() || (!cl->IsLoaded() && (fClassVersion == 1) && cl->GetStreamerInfos()->At(1) && (fCheckSum != ((TVirtualStreamerInfo*) cl->GetStreamerInfos()->At(1))->GetCheckSum())))) {
             // Try to compensate for a class that got unloaded on us.
             // Search through the streamer infos by checksum
             // and take the first match.
             Int_t ninfos = cl->GetStreamerInfos()->GetEntriesFast();
             for (Int_t i = 1; i < ninfos; ++i) {
-               TStreamerInfo* info = (TStreamerInfo*) cl->GetStreamerInfos()->At(i);
+               TVirtualStreamerInfo* info = (TVirtualStreamerInfo*) cl->GetStreamerInfos()->At(i);
                if (!info) {
                   continue;
                }
                if (info->GetCheckSum() == fCheckSum) {
                   fClassVersion = i;
-                  Bool_t optim = TStreamerInfo::CanOptimize();
-                  TStreamerInfo::Optimize(kFALSE);
-                  fInfo = cl->GetStreamerInfo(fClassVersion);
-                  TStreamerInfo::Optimize(optim);
+                  Bool_t optim = TVirtualStreamerInfo::CanOptimize();
+                  TVirtualStreamerInfo::Optimize(kFALSE);
+                  fInfo = (TStreamerInfo*)cl->GetStreamerInfo(fClassVersion);
+                  TVirtualStreamerInfo::Optimize(optim);
                   break;
                }
             }
@@ -1264,10 +1264,10 @@ void TBranchElement::InitInfo()
          // Streamer info has not yet been compiled.
          //
          // Optimizing does not work with splitting.
-         Bool_t optim = TStreamerInfo::CanOptimize();
-         TStreamerInfo::Optimize(kFALSE);
+         Bool_t optim = TVirtualStreamerInfo::CanOptimize();
+         TVirtualStreamerInfo::Optimize(kFALSE);
          fInfo->Compile();
-         TStreamerInfo::Optimize(optim);
+         TVirtualStreamerInfo::Optimize(optim);
       }
       if (!fInit) {
          // We were read in from a file, figure out what our fID should be,
@@ -1322,7 +1322,7 @@ TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
          }
       } else {
          // We are not a top-level branch.
-         TStreamerInfo* si = thiscast->GetInfo();
+         TVirtualStreamerInfo* si = thiscast->GetInfo();
          TStreamerElement* se = (TStreamerElement*) si->GetElems()[fID];
          className = se->GetTypeName();
       }
@@ -1350,7 +1350,7 @@ TClass* TBranchElement::GetCurrentClass()
       return cl;
    }
 
-   TStreamerInfo* brInfo = GetInfo();
+   TVirtualStreamerInfo* brInfo = GetInfo();
    if (!brInfo) {
       cl = TClass::GetClass(GetClassName());
       R__ASSERT(cl && cl->GetCollectionProxy());
@@ -1372,7 +1372,7 @@ TClass* TBranchElement::GetCurrentClass()
    if (!dm) {
       // Either the class is not loaded or the data member is gone
       if (! motherCl->IsLoaded()) {
-         TStreamerInfo* newInfo = motherCl->GetStreamerInfo();
+         TVirtualStreamerInfo* newInfo = motherCl->GetStreamerInfo();
          if (newInfo != brInfo) {
             TStreamerElement* newElems = (TStreamerElement*) newInfo->GetElements()->FindObject(currentStreamerElement->GetName());
             newType = newElems->GetClassPointer()->GetName();
@@ -1735,7 +1735,7 @@ void TBranchElement::InitializeOffsets()
          // member of a base class or a split class, in which case our
          // streamer info will be for our containing sub-object, while
          // we are actually a different type.
-         TStreamerInfo* si = GetInfo();
+         TVirtualStreamerInfo* si = GetInfo();
          // Note: We tested to make sure the streamer info was available previously.
          ULong_t* elems = si->GetElems();
          if (!elems) {
@@ -1768,7 +1768,7 @@ void TBranchElement::InitializeOffsets()
             continue;
          }
          TBranchElement* subBranch = (TBranchElement*) aSubBranch;
-         TStreamerInfo* sinfo = subBranch->GetInfo();
+         TVirtualStreamerInfo* sinfo = subBranch->GetInfo();
          if (!sinfo) {
             Warning("InitializeOffsets", "No streamer info for branch: %s subbranch: %s", GetName(), subBranch->GetName());
             fInitOffsets = kTRUE;
@@ -2204,12 +2204,12 @@ void TBranchElement::PrintValue(Int_t lenmax) const
       } else if (fType == 31 || fType == 41) {
          // TClonesArray or STL container sub-branch.
          Int_t n = TMath::Min(10, fNdata);
-         Int_t atype = fStreamerType + TStreamerInfo::kOffsetL;
-         if (fStreamerType == TStreamerInfo::kChar) {
-            // TStreamerInfo::kOffsetL + TStreamerInfo::kChar is
+         Int_t atype = fStreamerType + TVirtualStreamerInfo::kOffsetL;
+         if (fStreamerType == TVirtualStreamerInfo::kChar) {
+            // TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kChar is
             // printed as a string and could print weird characters.
             // So we print an unsigned char instead (not perfect, but better).
-            atype = TStreamerInfo::kOffsetL + TStreamerInfo::kUChar;
+            atype = TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kUChar;
          }
          if (atype > 54) {
             // FIXME: More logic required here (like in ReadLeaves)
@@ -2580,7 +2580,7 @@ void TBranchElement::ReadLeaves(TBuffer& b)
          return;
       }
       GetInfo()->ReadBuffer(b, (char**) &fObject, fID);
-      if (fStreamerType == TStreamerInfo::kCounter) {
+      if (fStreamerType == TVirtualStreamerInfo::kCounter) {
          fNdata = (Int_t) GetValue(0, 0);
       }
    }
@@ -2619,8 +2619,8 @@ void TBranchElement::ReleaseObject()
          // -- We are a TClonesArray master branch.
          TClonesArray::Class()->Destructor(fObject);
          fObject = 0;
-         if ((fStreamerType == TStreamerInfo::kObjectp) ||
-             (fStreamerType == TStreamerInfo::kObjectP)) {
+         if ((fStreamerType == TVirtualStreamerInfo::kObjectp) ||
+             (fStreamerType == TVirtualStreamerInfo::kObjectP)) {
             // -- We are a pointer to a TClonesArray.
             // We must zero the pointer in the object.
             *((char**) fAddress) = 0;
@@ -2635,7 +2635,7 @@ void TBranchElement::ReleaseObject()
             proxy->Destructor(fObject);
             fObject = 0;
          }
-         if (fStreamerType == TStreamerInfo::kSTLp) {
+         if (fStreamerType == TVirtualStreamerInfo::kSTLp) {
             // -- We are a pointer to an STL container.
             // We must zero the pointer in the object.
             *((char**) fAddress) = 0;
@@ -2886,16 +2886,16 @@ void TBranchElement::SetAddress(void* add)
                // Reset the proxy.
                fSTLtype = kNone;
                switch(fStreamerType) {
-                  case TStreamerInfo::kAny:
-                  case TStreamerInfo::kSTL:
-                     fStreamerType = TStreamerInfo::kObject;
+                  case TVirtualStreamerInfo::kAny:
+                  case TVirtualStreamerInfo::kSTL:
+                     fStreamerType = TVirtualStreamerInfo::kObject;
                      break;
-                  case TStreamerInfo::kAnyp:
-                  case TStreamerInfo::kSTLp:
-                     fStreamerType = TStreamerInfo::kObjectp;
+                  case TVirtualStreamerInfo::kAnyp:
+                  case TVirtualStreamerInfo::kSTLp:
+                     fStreamerType = TVirtualStreamerInfo::kObjectp;
                      break;
-                  case TStreamerInfo::kAnyP:
-                     fStreamerType = TStreamerInfo::kObjectP;
+                  case TVirtualStreamerInfo::kAnyP:
+                     fStreamerType = TVirtualStreamerInfo::kObjectP;
                      break;
                }
                fClonesName = oldProxy->GetValueClass()->GetName();
@@ -2935,7 +2935,7 @@ void TBranchElement::SetAddress(void* add)
       // -- We are a TClonesArray master branch.
       if (fAddress) {
          // -- We have been given a non-zero address, allocate if necessary.
-         if (fStreamerType == TStreamerInfo::kObject) {
+         if (fStreamerType == TVirtualStreamerInfo::kObject) {
             // -- We are *not* a top-level branch and we are *not* a pointer to a TClonesArray.
             // Case of an embedded TClonesArray.
             fObject = fAddress;
@@ -2948,8 +2948,8 @@ void TBranchElement::SetAddress(void* add)
             // -- We are either a top-level branch or we are a subbranch which is a pointer to a TClonesArray.
             // Streamer type should be -1 (for a top-level branch) or kObject(p|P) here.
             if ((fStreamerType != -1) &&
-                (fStreamerType != TStreamerInfo::kObjectp) &&
-                (fStreamerType != TStreamerInfo::kObjectP)) {
+                (fStreamerType != TVirtualStreamerInfo::kObjectp) &&
+                (fStreamerType != TVirtualStreamerInfo::kObjectP)) {
                Error("SetAddress", "TClonesArray with fStreamerType: %d", fStreamerType);
             } else if (fStreamerType == -1) {
                // -- We are a top-level branch.
@@ -2973,7 +2973,7 @@ void TBranchElement::SetAddress(void* add)
          }
       } else {
          // -- We have been given a zero address, allocate for top-level only.
-         if (fStreamerType == TStreamerInfo::kObject) {
+         if (fStreamerType == TVirtualStreamerInfo::kObject) {
             // -- We are *not* a top-level branch and we are *not* a pointer to a TClonesArray.
             // Case of an embedded TClonesArray.
             Error("SetAddress", "Embedded TClonesArray given a zero address for branch '%s'", GetName());
@@ -2981,8 +2981,8 @@ void TBranchElement::SetAddress(void* add)
             // -- We are either a top-level branch or we are a subbranch which is a pointer to a TClonesArray.
             // Streamer type should be -1 (for a top-level branch) or kObject(p|P) here.
             if ((fStreamerType != -1) &&
-                (fStreamerType != TStreamerInfo::kObjectp) &&
-                (fStreamerType != TStreamerInfo::kObjectP)) {
+                (fStreamerType != TVirtualStreamerInfo::kObjectp) &&
+                (fStreamerType != TVirtualStreamerInfo::kObjectP)) {
                Error("SetAddress", "TClonesArray with fStreamerType: %d", fStreamerType);
             } else if (fStreamerType == -1) {
                // -- We are a top-level branch.
@@ -3003,16 +3003,16 @@ void TBranchElement::SetAddress(void* add)
       TVirtualCollectionProxy* proxy = GetCollectionProxy();
       if (fAddress) {
          // -- We have been given a non-zero address, allocate if necessary.
-         if ((fStreamerType == TStreamerInfo::kObject) ||
-             (fStreamerType == TStreamerInfo::kAny) ||
-             (fStreamerType == TStreamerInfo::kSTL)) {
+         if ((fStreamerType == TVirtualStreamerInfo::kObject) ||
+             (fStreamerType == TVirtualStreamerInfo::kAny) ||
+             (fStreamerType == TVirtualStreamerInfo::kSTL)) {
             // We are *not* a top-level branch and we are *not* a pointer to an STL container.
             // Case of an embedded STL container.
             fObject = fAddress;
          } else {
             // We are either a top-level branch or subbranch which is a pointer to an STL container.
             // Streamer type should be -1 (for a top-level branch) or kSTLp here.
-            if ((fStreamerType != -1) && (fStreamerType != TStreamerInfo::kSTLp)) {
+            if ((fStreamerType != -1) && (fStreamerType != TVirtualStreamerInfo::kSTLp)) {
                Error("SetAddress", "STL container with fStreamerType: %d", fStreamerType);
             } else if (fStreamerType == -1) {
                // -- We are a top-level branch.
@@ -3050,16 +3050,16 @@ void TBranchElement::SetAddress(void* add)
          }
       } else {
          // -- We have been given a zero address, allocate for top-level only.
-         if ((fStreamerType == TStreamerInfo::kObject) ||
-             (fStreamerType == TStreamerInfo::kAny) ||
-             (fStreamerType == TStreamerInfo::kSTL)) {
+         if ((fStreamerType == TVirtualStreamerInfo::kObject) ||
+             (fStreamerType == TVirtualStreamerInfo::kAny) ||
+             (fStreamerType == TVirtualStreamerInfo::kSTL)) {
             // We are *not* a top-level branch and we are *not* a pointer to an STL container.
             // Case of an embedded STL container.
             Error("SetAddress", "Embedded STL container given a zero address for branch '%s'", GetName());
          } else {
             // We are either a top-level branch or sub-branch which is a pointer to an STL container.
             // Streamer type should be -1 (for a top-level branch) or kSTLp here.
-            if ((fStreamerType != -1) && (fStreamerType != TStreamerInfo::kSTLp)) {
+            if ((fStreamerType != -1) && (fStreamerType != TVirtualStreamerInfo::kSTLp)) {
                Error("SetAddress", "STL container with fStreamerType: %d", fStreamerType);
             } else if (fStreamerType == -1) {
                // -- We are a top-level branch, allocate.
@@ -3258,7 +3258,7 @@ void TBranchElement::Streamer(TBuffer& R__b)
       //        something just because we got written to disk.
       TBranchElement::Class()->WriteBuffer(R__b, this);
 
-      // make sure that all TStreamerInfo objects referenced by
+      // make sure that all TVirtualStreamerInfo objects referenced by
       // this class are written to the file
       if (GetInfo()) {
          GetInfo()->ForceWriteInfo((TFile *)R__b.GetParent(), kTRUE);
@@ -3342,12 +3342,12 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
    //  independently in the tree.
    //
 
-   Bool_t optim = TStreamerInfo::CanOptimize();
+   Bool_t optim = TVirtualStreamerInfo::CanOptimize();
    if (splitlevel > 0) {
-      TStreamerInfo::Optimize(kFALSE);
+      TVirtualStreamerInfo::Optimize(kFALSE);
    }
    TStreamerInfo* sinfo = fTree->BuildStreamerInfo(cl);
-   TStreamerInfo::Optimize(optim);
+   TVirtualStreamerInfo::Optimize(optim);
 
    //
    //  Do nothing if we couldn't build the streamer info for cl.

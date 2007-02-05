@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.14 2007/01/25 11:48:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeCloner.cxx,v 1.15 2007/01/30 11:24:32 brun Exp $
 // Author: Philippe Canal 07/11/2005
 
 /*************************************************************************
@@ -305,11 +305,11 @@ void TTreeCloner::CopyStreamerInfos()
       TClass *cl = TClass::GetClass(oldInfo->GetName());
 
       // Insure that the TStreamerInfo is loaded
-      curInfo = cl->GetStreamerInfo(oldInfo->GetClassVersion());
+      curInfo = (TStreamerInfo*)cl->GetStreamerInfo(oldInfo->GetClassVersion());
       if (oldInfo->GetClassVersion()==1) {
          // We may have a Foreign class let's look using the
          // checksum:
-         curInfo = cl->FindStreamerInfo(oldInfo->GetCheckSum());
+         curInfo = (TStreamerInfo*)cl->FindStreamerInfo(oldInfo->GetCheckSum());
       }
       curInfo->TagFile(toFile);
    }

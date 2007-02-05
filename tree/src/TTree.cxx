@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.317 2007/01/25 22:53:05 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.318 2007/01/30 11:24:32 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1888,7 +1888,7 @@ TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */)
       return 0;
    }
    cl->BuildRealData(pointer);
-   TStreamerInfo* sinfo = cl->GetStreamerInfo(cl->GetClassVersion());
+   TStreamerInfo* sinfo = (TStreamerInfo*)cl->GetStreamerInfo(cl->GetClassVersion());
    if (fDirectory) {
       sinfo->ForceWriteInfo(fDirectory->GetFile());
    }

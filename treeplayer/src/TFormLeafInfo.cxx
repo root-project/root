@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.33 2006/09/06 07:53:36 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.34 2007/01/30 11:24:32 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -470,7 +470,7 @@ Bool_t TFormLeafInfo::Update()
             // A delimiter happened let's see if what we have seen
             // so far does point to a data member.
             *current = '\0';
-            element = cl->GetStreamerInfo()->GetStreamerElement(work,offset);
+            element = ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(work,offset);
             if (element) {
                Int_t type = element->GetNewType();
                if (type<60) {
@@ -1016,7 +1016,7 @@ Int_t TFormLeafInfoClones::GetCounterValue(TLeaf* leaf)
    if (!fCounter) {
       TClass *clonesClass = TClonesArray::Class();
       Int_t c_offset;
-      TStreamerElement *counter = clonesClass->GetStreamerInfo()->GetStreamerElement("fLast",c_offset);
+      TStreamerElement *counter = ((TStreamerInfo*)clonesClass->GetStreamerInfo())->GetStreamerElement("fLast",c_offset);
       fCounter = new TFormLeafInfo(clonesClass,c_offset,counter);
    }
    return (Int_t)fCounter->ReadValue((char*)GetLocalValuePointer(leaf)) + 1;
@@ -1030,7 +1030,7 @@ Int_t TFormLeafInfoClones::ReadCounterValue(char* where)
    if (!fCounter) {
       TClass *clonesClass = TClonesArray::Class();
       Int_t c_offset;
-      TStreamerElement *counter = clonesClass->GetStreamerInfo()->GetStreamerElement("fLast",c_offset);
+      TStreamerElement *counter = ((TStreamerInfo*)clonesClass->GetStreamerInfo())->GetStreamerElement("fLast",c_offset);
       fCounter = new TFormLeafInfo(clonesClass,c_offset,counter);
    }
    return (Int_t)fCounter->ReadValue(where) + 1;
@@ -2055,7 +2055,7 @@ TFormLeafInfoMultiVarDim::TFormLeafInfoMultiVarDim( TClass* classptr,
       TStreamerBasicPointer * elem = (TStreamerBasicPointer*)element;
 
       Int_t counterOffset;
-      TStreamerElement* counter = classptr->GetStreamerInfo()->GetStreamerElement(elem->GetCountName(),counterOffset);
+      TStreamerElement* counter = ((TStreamerInfo*)classptr->GetStreamerInfo())->GetStreamerElement(elem->GetCountName(),counterOffset);
       if (!parent) return;
       fCounter2 = parent->DeepCopy();
       TFormLeafInfo ** next = &(fCounter2->fNext);
