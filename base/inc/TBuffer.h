@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.58 2007/01/23 06:10:39 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.59 2007/01/28 18:26:10 brun Exp $
 // Author: Rene Brun, Philippe Canal, Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -274,6 +274,12 @@ public:
    virtual   void     ForceWriteInfo(TClonesArray *a) = 0;
    virtual   Int_t    ReadClones (TClonesArray *a, Int_t nobjects) = 0;
    virtual   Int_t    WriteClones(TClonesArray *a, Int_t nobjects) = 0;
+   
+   // Utilities for TClass
+   virtual   Int_t    ReadClassEmulated(TClass *cl, void *object) = 0;
+   virtual   Int_t    ReadClassBuffer(TClass *cl, void *pointer) = 0;
+   virtual   Int_t    ReadClassBuffer(TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count) = 0;
+   virtual   Int_t    WriteClassBuffer(TClass *cl, void *pointer) = 0;
 
    static TClass *GetClass(const type_info &typeinfo);
    static TClass *GetClass(const char *className);

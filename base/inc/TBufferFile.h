@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBufferFile.h,v 1.3 2007/01/23 06:10:39 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBufferFile.h,v 1.4 2007/01/28 18:27:18 brun Exp $
 // Author: Rene Brun   17/01/2007
 
 /*************************************************************************
@@ -278,6 +278,12 @@ public:
    virtual   void   ForceWriteInfo(TClonesArray *a);
    virtual   Int_t  ReadClones (TClonesArray *a, Int_t nobjects);
    virtual   Int_t  WriteClones(TClonesArray *a, Int_t nobjects);
+   
+   // Utilities for TClass
+   virtual   Int_t  ReadClassEmulated(TClass *cl, void *object);
+   virtual   Int_t  ReadClassBuffer(TClass *cl, void *pointer);
+   virtual   Int_t  ReadClassBuffer(TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count);
+   virtual   Int_t  WriteClassBuffer(TClass *cl, void *pointer);
 
    static void    SetGlobalReadParam(Int_t mapsize);
    static void    SetGlobalWriteParam(Int_t mapsize);
