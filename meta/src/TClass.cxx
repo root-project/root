@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.216 2007/02/02 17:03:43 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.217 2007/02/02 17:22:35 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -88,7 +88,7 @@ TClass::ENewType TClass::fgCallingNew = kRealNew;
 
 static std::multimap<void*, Version_t> gObjectVersionRepository;
 
-static void RegisterAddressInRepository(const char *where, void *location, const TClass *what) 
+static void RegisterAddressInRepository(const char * /*where*/, void *location, const TClass *what)
 {
    // Register the object for special handling in the destructor.
 
@@ -114,8 +114,8 @@ static void RegisterAddressInRepository(const char *where, void *location, const
 #endif
 }
 
-static void UnregisterAddressInRepository(const char *where, void *location, const TClass *what)
-{ 
+static void UnregisterAddressInRepository(const char * /*where*/, void *location, const TClass *what)
+{
    std::multimap<void*, Version_t>::iterator cur = gObjectVersionRepository.find(location);
    for (; cur != gObjectVersionRepository.end();) {
       std::multimap<void*, Version_t>::iterator tmp = cur++;
@@ -2483,10 +2483,10 @@ void TClass::MakeCustomMenuList()
 //______________________________________________________________________________
 void TClass::Move(void *arenaFrom, void *arenaTo) const
 {
-   // Register the fact that an object was moved from the memory location 
+   // Register the fact that an object was moved from the memory location
    // 'arenaFrom' to the memory location 'arenaTo'.
 
-   // If/when we have access to a copy constructor (or better to a move 
+   // If/when we have access to a copy constructor (or better to a move
    // constructor), this function should also perform the data move.
    // For now we just information the repository.
 
@@ -3747,11 +3747,11 @@ void TClass::SetCollectionProxy(const ROOT::TCollectionProxyInfo &info)
    // using the information in the TCollectionProxyInfo.
 
    delete fCollectionProxy;
-   
+
    TVirtualCollectionProxy *p = TCollectionProxy::GenExplicitProxy(info);
    p->GetCollectionClass(); // Force the initialization.
    fCollectionProxy = p;
-  
+
    AdoptStreamer(TCollectionProxy::GenExplicitClassStreamer(info));
 }
 
