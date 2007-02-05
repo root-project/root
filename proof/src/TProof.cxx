@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.180 2007/01/24 15:15:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.181 2007/01/29 15:11:10 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -77,6 +77,13 @@
 #include "TRegexp.h"
 #include "TFileInfo.h"
 #include "TFileMerger.h"
+
+// to ne moved to RConfig.h once it works every where
+#if defined(__GNUC__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3))
+#    define R__PRIVATE __attribute__((__visibility__("hidden")))
+#else
+#    define R__PRIVATE
+#endif
 
 TProof *gProof = 0;
 TVirtualMutex *gProofMutex = 0;
@@ -1761,7 +1768,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout)
 }
 
 //______________________________________________________________________________
-void TProof::CleanGDirectory(TList *ol)
+R__PRIVATE void TProof::CleanGDirectory(TList *ol)
 {
    // Remove links to objects in list 'ol' from gDirectory
 
@@ -3171,7 +3178,7 @@ Int_t TProof::Exec(const char *cmd, Bool_t plusMaster)
 }
 
 //______________________________________________________________________________
-Int_t TProof::Exec(const char *cmd, ESlaves list, Bool_t plusMaster)
+R__PRIVATE Int_t TProof::Exec(const char *cmd, ESlaves list, Bool_t plusMaster)
 {
    // Send command to be executed on the PROOF master and/or slaves.
    // Command can be any legal command line command. Commands like
