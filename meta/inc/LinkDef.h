@@ -1,4 +1,4 @@
-/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.16 2005/05/27 03:00:05 pcanal Exp $ */
+/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.17 2005/05/27 16:42:58 pcanal Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -35,6 +35,7 @@
 #pragma link C++ class TInterpreter;
 #pragma link C++ class TClassMenuItem;
 #pragma link C++ class TVirtualIsAProxy;
+#pragma link C++ class TVirtualStreamerInfo-;
 #pragma link C++ class TIsAProxy;
 
 #pragma link C++ class TStreamerBase-;
