@@ -253,12 +253,11 @@ ifeq ($(PLATFORM),win32)
 REFLEXLL := lib/libReflex.lib
 else
 REFLEXLL := -Llib -lReflex
-endif
-
 ifneq ($(PLATFORM),fbsd) 
 ifneq ($(PLATFORM),obsd)
 REFLEXLL   += -ldl 
 endif 
+endif
 endif
 
 ##### local rules #####
