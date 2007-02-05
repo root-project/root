@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: TUnuranDistrMulti.h,v 1.1 2006/11/15 17:40:36 brun Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuranDistrMulti.h,v 1.2 2007/01/16 14:28:19 brun Exp $
 // Author: L. Moneta Wed Sep 27 17:07:37 2006
 
 /**********************************************************************
@@ -14,10 +14,11 @@
 #define ROOT_Math_TUnuranDistrMulti
 
 
-#include "TF1.h"
 
 #include <vector>
 #include <cassert>
+
+class TF1; 
 
 /** 
    TUnuranDistrMulti class 
@@ -38,13 +39,8 @@ public:
    /** 
       Constructor from a TF1 objects
    */ 
-   TUnuranDistrMulti (TF1 * func) : 
-      fFunc(func), 
-      fHasDomain(0)
-   {
-      assert(func != 0); 
-      fDim = func->GetNdim();
-   } 
+   TUnuranDistrMulti (TF1 * func);  
+
 
    /** 
       Destructor (no operations)
@@ -52,17 +48,15 @@ public:
    ~TUnuranDistrMulti (); 
 
 
-   // usually copying is non trivial, so we make this unaccessible
+   /** 
+      Copy constructor
+   */ 
+   TUnuranDistrMulti(const TUnuranDistrMulti &); 
 
-//    /** 
-//       Copy constructor
-//    */ 
-//    TUnuranDistrMulti(const TUnuranDistrMulti &); 
-
-//    /** 
-//       Assignment operator
-//    */ 
-//    TUnuranDistrMulti & operator = (const TUnuranDistrMulti & rhs); 
+   /** 
+      Assignment operator
+   */ 
+   TUnuranDistrMulti & operator = (const TUnuranDistrMulti & rhs); 
 
 
 
@@ -71,9 +65,7 @@ public:
    }
 
    /// evaluate the destribution 
-   inline double operator() ( const double * x) const {  
-      return fFunc->EvalPar(x); 
-   }
+   double operator() ( const double * x) const;
 
    /// evaluate the derivative of the function
    void Gradient( const double * x, double * grad) const;  
@@ -94,10 +86,6 @@ public:
       fHasDomain = true;
    }
 
-//    /// get the mode   (x location of function maximum)  
-//    double Mode() const { 
-//       return fFunc->GetMaximumX(fXmin, fXmax); 
-//    }
 
 
 

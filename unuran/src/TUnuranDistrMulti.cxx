@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: src/TUnuranDistrMulti.cxx,v 1.0 2006/01/01 12:00:00 moneta Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuranDistrMulti.cxx,v 1.1 2006/11/15 17:40:36 brun Exp $
 // Author: L. Moneta Wed Sep 27 17:07:37 2006
 
 /**********************************************************************
@@ -12,7 +12,23 @@
 
 #include "TUnuranDistrMulti.h"
 
+#include "TF1.h"
+
 #include <limits>
+
+
+
+   /** 
+
+   */ 
+TUnuranDistrMulti::TUnuranDistrMulti (TF1 * func) : 
+   fFunc(func), 
+   fHasDomain(0)
+{
+   //Constructor from a TF1 objects
+   assert(func != 0); 
+   fDim = func->GetNdim();
+} 
 
 
 TUnuranDistrMulti::~TUnuranDistrMulti() 
@@ -20,17 +36,31 @@ TUnuranDistrMulti::~TUnuranDistrMulti()
    // Destructor implementation.
 }
 
-// TUnuranDistrMulti::TUnuranDistrMulti(const TUnuranDistrMulti &) 
-// {
-//    // Implementation of copy constructor.
-// }
+TUnuranDistrMulti::TUnuranDistrMulti(const TUnuranDistrMulti & rhs) 
+{
+   // Implementation of copy ctor using aassignment operator
+   operator=(rhs);
+}
 
-// TUnuranDistrMulti & TUnuranDistrMulti::operator = (const TUnuranDistrMulti &rhs) 
-// {
-//    // Implementation of assignment operator.
-//    if (this == &rhs) return *this;  // time saving self-test
-//    return *this;
-// }
+TUnuranDistrMulti & TUnuranDistrMulti::operator = (const TUnuranDistrMulti &rhs) 
+{
+   // Implementation of assignment operator (copy only the funciton pointer not the function itself)
+   if (this == &rhs) return *this;  // time saving self-test
+   fFunc = rhs.fFunc;
+   fDim = rhs.fDim;
+   fXmin = rhs.fXmin;
+   fXmax = rhs.fXmax;
+   fHasDomain = rhs.fHasDomain;
+   return *this;
+}
+
+
+
+double TUnuranDistrMulti::operator() ( const double * x) const {  
+   // evaluate the destribution 
+   return fFunc->EvalPar(x); 
+}
+
 
 void TUnuranDistrMulti::Gradient( const double * x, double * grad) const { 
       // do numerical derivation of gradient

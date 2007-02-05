@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: TUnuranDistr.h,v 1.1 2006/11/15 17:40:36 brun Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuranDistr.h,v 1.2 2006/11/24 09:42:54 moneta Exp $
 // Author: L. Moneta Wed Sep 27 11:53:27 2006
 
 /**********************************************************************
@@ -15,7 +15,8 @@
 
 
 #include <cassert> 
-#include "TF1.h"
+
+class TF1;
 
 /** 
    TUnuranDistr class 
@@ -42,17 +43,7 @@ public:
    /** 
       Constructor from a TF1 objects
    */ 
-   TUnuranDistr (const TF1 * func, const TF1 * cdf = 0, const TF1 * deriv = 0 ) : 
-      fFunc(func), 
-      fCdf(cdf),
-      fDeriv(deriv), 
-      fXmin(1.), fXmax(-1.), // if min > max range is undef.
-      fHasDomain(0)
-   {
-      assert(func != 0); 
-      // use by default the range specified in TF1
-      func->GetRange(fXmin, fXmax);
-   } 
+   TUnuranDistr (const TF1 * func, const TF1 * cdf = 0, const TF1 * deriv = 0 );
 
    /** 
       Destructor (no operations)
@@ -72,23 +63,13 @@ public:
 
 
    /// evaluate the destribution 
-   inline double operator() ( double x) const { 
-      return fFunc->Eval(x); 
-   }
+   double operator() ( double x) const; 
 
    /// evaluate the derivative of the function
-   inline double Derivative( double x) const { 
-      if (fDeriv != 0) return fDeriv->Eval(x); 
-      // do numerical derivation
-      return fFunc->Derivative(x); 
-   }
+   double Derivative( double x) const; 
 
    /// evaluate the integral (cdf)  on the domain
-   inline double Cdf(double x) const {   
-      if (fCdf != 0) return fCdf->Eval(x);
-      TF1 * f =  const_cast<TF1*>(fFunc);
-      return f->Integral(fXmin, x); 
-   }
+   double Cdf(double x) const;   
 
    bool GetDomain(double & xmin, double & xmax) const { 
       xmin = fXmin; 
@@ -103,9 +84,7 @@ public:
    }
 
    /// get the mode   (x location of function maximum)  
-   double Mode() const { 
-      return fFunc->GetMaximumX(fXmin, fXmax); 
-   }
+   double Mode() const; 
 
 protected: 
 
