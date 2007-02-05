@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.17 2007/01/30 11:55:33 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.18 2007/02/05 11:55:38 antcheva Exp $
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************
@@ -294,6 +294,7 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
          Text_t       *argname    = fContextMenu->CreateArgumentTitle(argument);
          const Text_t *type       = argument->GetTypeName();
          TDataType    *datatype   = gROOT->GetType(type);
+         const Text_t *charstar   = "char*";
          Text_t        basictype[32];
 
          if (datatype) {
@@ -307,8 +308,10 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
 
          if (strchr(argname, '*')) {
             strcat(basictype, "*");
+            if (!strncmp(type, "char", 4)) 
+               type = charstar;
          }
-
+         
          TDataMember *m = argument->GetDataMember();
          if (m && m->GetterMethod(object->IsA())) {
 
