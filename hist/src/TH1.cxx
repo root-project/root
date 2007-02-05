@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.329 2007/02/01 14:58:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.330 2007/02/03 06:40:25 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5121,8 +5121,10 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       binContent = 0;
       binError   = 0;
       Int_t imax = ngroup;
+      Double_t xbinmax = hnew->GetXaxis()->GetBinUpEdge(bin);
       for (i=0;i<ngroup;i++) {
-         if (fXaxis.GetBinCenter(oldbin+i) > hnew->GetXaxis()->GetBinUpEdge(bin)) {
+         if( (hnew == this && (oldbin+i > nbins)) || 
+             ( hnew != this && (fXaxis.GetBinCenter(oldbin+i) > xbinmax)) ) {
             imax = i;
             break;
          }
