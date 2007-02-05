@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.159 2007/01/29 15:11:10 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.160 2007/01/29 16:21:14 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -81,7 +81,6 @@
 #include "TProofResourcesStatic.h"
 #include "TProofNodeInfo.h"
 #include "TFileInfo.h"
-#include "TTimer.h"
 #include "TMutex.h"
 
 // global proofserv handle
@@ -297,6 +296,20 @@ TProofServLogHandlerGuard::~TProofServLogHandlerGuard()
       gSystem->RemoveFileHandler(fExecHandler);
       SafeDelete(fExecHandler);
    }
+}
+
+//--- Special timer to constrol delayed shutdowns ----------------------------//
+//______________________________________________________________________________
+Bool_t TShutdownTimer::Notify()
+{
+   // Handle expiration of the shutdown timer. The Terminate() method is called
+   // which will exit the main loop.
+
+//   if (gDebug > 0)
+      Info ("Notify","called!");
+
+   fProofServ->HandleTermination();
+   return kTRUE;
 }
 
 ClassImp(TProofServ)

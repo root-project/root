@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.47 2007/01/29 15:11:10 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.48 2007/02/04 17:39:44 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -35,6 +35,9 @@
 #endif
 #ifndef ROOT_TStopwatch
 #include "TStopwatch.h"
+#endif
+#ifndef ROOT_TTimer
+#include "TTimer.h"
 #endif
 #ifndef ROOT_TProofQueryResult
 #include "TProofQueryResult.h"
@@ -193,6 +196,7 @@ public:
    virtual void   HandleSocketInput();
    virtual void   HandleUrgentData();
    virtual void   HandleSigPipe();
+   virtual void   HandleTermination() { Terminate(0); }
    void           Interrupt() { fInterrupt = kTRUE; }
    Bool_t         IsEndMaster() const { return fEndMaster; }
    Bool_t         IsMaster() const { return fMasterServ; }
@@ -285,6 +289,18 @@ public:
    TProofServLogHandlerGuard(FILE *f, TSocket *s,
                              const char *pfx = "", Bool_t on = kTRUE);
    virtual ~TProofServLogHandlerGuard();
+};
+
+//--- Special timer to constrol delayed shutdowns
+//______________________________________________________________________________
+class TShutdownTimer : public TTimer {
+private:
+   TProofServ    *fProofServ;
+
+public:
+   TShutdownTimer(TProofServ *p, Int_t delay) : TTimer(delay, kFALSE), fProofServ(p) { }
+
+   Bool_t Notify();
 };
 
 #endif

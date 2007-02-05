@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.26 2007/01/29 10:06:50 brun Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.27 2007/01/29 15:11:11 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -579,9 +579,6 @@ void TXProofServ::HandleTermination()
          fProof->Close("S");
    }
 
-   // Avoid communicating back anything to the coordinator (it is gone)
-   ((TXSocket *)fSocket)->SetSessionID(-1);
-
    Terminate(0);  // will not return from here....
 }
 
@@ -1081,13 +1078,24 @@ void TXProofServ::Terminate(Int_t status)
          fQueryLock->Unlock();
    }
 
-   // Remove input handler to avoid spurious signals in socket
-   // selection for closing activities executed upon exit()
+   // Stop processing events (set a flag to exit the event loop)
+   gSystem->ExitLoop();
+
+   // Shot once a timer to wake up the main thread (this async timer must
+   // be created dynamically, otherwise it gets destructed before it fires;
+   // all this represents a small memory leak, but since we are going to exit
+   // anyhow, we do not care too much).
+   TTimer *t = new TTimer(1000, kFALSE);
+   t->Start(-1, kTRUE);
+   
+
+   // Avoid communicating back anything to the coordinator (it is gone)
+   ((TXSocket *)fSocket)->SetSessionID(-1);
+
+   // Remove input and signal handlers to avoid spurious "signals"
+   // for closing activities executed upon exit()
    gSystem->RemoveFileHandler(fInputHandler);
    gSystem->RemoveSignalHandler(fInterruptHandler);
-
-   // Stop processing events
-   gSystem->ExitLoop();
 
    // Notify
    Info("Terminate", "termination operations ended: quitting!");
@@ -1171,14 +1179,12 @@ void TXProofServ::SetShutdownTimer(Bool_t on, Int_t delay)
       delay = 1;
    }
    // Set a minimum value (0 does not seem to start the timer ...)
-   delay = (delay <= 0) ? 1 : delay;
+   Int_t del = (delay <= 0) ? 10 : delay * 1000;
 
    if (on) {
       if (!fShutdownTimer) {
          // First setup call: create timer
-         fShutdownTimer = new TTimer((delay * 1000), kFALSE);
-         // Connect it to the HandleTermination
-         fShutdownTimer->Connect("Timeout()", "TXProofServ", this, "HandleTermination()");
+         fShutdownTimer = new TShutdownTimer(this, del);
          // Start the countdown if requested
          if (!fShutdownWhenIdle || fIdle)
             fShutdownTimer->Start(-1, kTRUE);
@@ -1191,11 +1197,7 @@ void TXProofServ::SetShutdownTimer(Bool_t on, Int_t delay)
               "session will be shutdown in %d seconds", delay);
    } else {
       if (fShutdownTimer) {
-         // Stop timer (client has reattached)
-         fShutdownTimer->Stop();
-         // Disconnect from HandleTermination
-         fShutdownTimer->Disconnect("Timeout()", this, "HandleTermination()");
-         // Clean-up the timer
+         // Stop and Clean-up the timer
          SafeDelete(fShutdownTimer);
          // Notify
          Info("SetShutdownTimer", "shutdown countdown timer stopped: resuming session");
