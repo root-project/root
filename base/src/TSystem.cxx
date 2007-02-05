@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.151 2006/11/28 14:03:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.152 2006/12/06 10:20:06 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -155,8 +155,8 @@ Bool_t TSystem::Init()
    // Initialize the OS interface.
 
    fNfd    = 0;
-   fMaxrfd = 0;
-   fMaxwfd = 0;
+   fMaxrfd = -1;
+   fMaxwfd = -1;
 
    fSigcnt = 0;
    fLevel  = 0;

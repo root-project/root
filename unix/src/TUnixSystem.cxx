@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.179 2007/02/05 09:41:09 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.180 2007/02/05 10:38:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -529,8 +529,8 @@ TFileHandler *TUnixSystem::RemoveFileHandler(TFileHandler *h)
    if (oh) {       // found
       TFileHandler *th;
       TIter next(fFileHandler);
-      fMaxrfd = 0;
-      fMaxwfd = 0;
+      fMaxrfd = -1;
+      fMaxwfd = -1;
       fReadmask->Zero();
       fWritemask->Zero();
       while ((th = (TFileHandler *) next())) {
@@ -790,10 +790,10 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
       *fWriteready = *fWritemask;
 
       int mxfd = TMath::Max(fMaxrfd, fMaxwfd);
-      if (mxfd) mxfd++;
+      if (mxfd > -1) mxfd++;
 
       // if nothing to select (socket or timer) return
-      if (mxfd == 0 && nextto == -1)
+      if (mxfd == -1 && nextto == -1)
          return;
 
       fNfd = UnixSelect(mxfd, fReadready, fWriteready, nextto);
