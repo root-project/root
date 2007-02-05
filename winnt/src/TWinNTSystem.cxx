@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.161 2007/01/30 15:38:36 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.162 2007/02/05 09:41:09 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -3619,8 +3619,8 @@ Bool_t TWinNTSystem::DispatchTimers(Bool_t mode)
    Bool_t  timedout = kFALSE;
 
    while ((t = (TTimer *) it.Next())) {
+      // NB: the timer resolution is added in TTimer::CheckTimer()
       TTime now = Now();
-      now += TTime(kItimerResolution);
       if (mode && t->IsSync()) {
          if (t->CheckTimer(now)) {
             timedout = kTRUE;

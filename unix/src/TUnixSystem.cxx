@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.178 2007/01/30 15:38:36 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.179 2007/02/05 09:41:09 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2523,7 +2523,8 @@ Bool_t TUnixSystem::DispatchTimers(Bool_t mode)
    Bool_t  timedout = kFALSE;
 
    while ((t = (TTimer *) it.Next())) {
-      Long_t now = UnixNow()+kItimerResolution;
+      // NB: the timer resolution is added in TTimer::CheckTimer()
+      Long_t now = UnixNow();
       if (mode && t->IsSync()) {
          if (t->CheckTimer(now))
             timedout = kTRUE;
