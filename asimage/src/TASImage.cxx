@@ -891,7 +891,6 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
 
       if (itmp && itmp->fImage) {
          fImage = clone_asimage(itmp->fImage, SCL_DO_ALL);
-
          if (itmp->fImage->alt.argb32) {
             UInt_t sz = itmp->fImage->width*itmp->fImage->height;
             fImage->alt.argb32 = new ARGB32[sz];
@@ -3652,9 +3651,13 @@ void TASImage::DrawRectangle(UInt_t x, UInt_t y, UInt_t w, UInt_t h,
    }
 
    if (!fImage) {
-      fImage = create_asimage(w ? w : 20, h ? h : 20, 0);
+      w = w ? w : 20;
+      h = h ? h : 20;
       x = 0;
       y = 0;
+      fImage = create_asimage(w, h, 0);
+      FillRectangle(col, 0, 0, w, h);
+      return;
    }
 
    if (!fImage->alt.argb32) {
@@ -3689,7 +3692,11 @@ void TASImage::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, const char *col,
    ARGB32 color;
 
    if (!fImage) {
-      fImage = create_asimage(w ? x+w : x+20, h ? y+h : y+20, 0);
+      w = w ? x+w : x+20;
+      h = h ? y+h : y+20;
+      fImage = create_asimage(w, h, 0);
+      FillRectangle(col, 0, 0, w, h);
+      return;
    }
 
    if (x1 == x2) {
