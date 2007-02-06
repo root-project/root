@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.161 2007/02/05 10:40:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.162 2007/02/05 23:12:28 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -305,7 +305,7 @@ Bool_t TShutdownTimer::Notify()
    // Handle expiration of the shutdown timer. The Terminate() method is called
    // which will exit the main loop.
 
-//   if (gDebug > 0)
+   if (gDebug > 0)
       Info ("Notify","called!");
 
    fProofServ->HandleTermination();
