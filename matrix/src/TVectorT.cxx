@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.22 2007/01/29 15:10:49 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.23 2007/02/03 06:40:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -2137,7 +2137,7 @@ void TVectorT<Element>::Streamer(TBuffer &R__b)
       Version_t R__v = R__b.ReadVersion(&R__s,&R__c);
       if (R__v > 1) {
          Clear();
-         TVectorT<Element>::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
+         R__b.ReadClassBuffer(TVectorT<Element>::Class(),this,R__v,R__s,R__c);
       } else { //====process old versions before automatic schema evolution
          TObject::Streamer(R__b);
          R__b >> fRowLwb;
@@ -2154,7 +2154,7 @@ void TVectorT<Element>::Streamer(TBuffer &R__b)
       if (R__v < 3)
          MakeValid();
     } else {
-       TVectorT<Element>::Class()->WriteBuffer(R__b,this);
+       R__b.WriteClassBuffer(TVectorT<Element>::Class(),this);
    }
 }
 

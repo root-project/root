@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.17 2006/10/06 06:52:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTSym.cxx,v 1.18 2007/02/03 06:40:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -2007,7 +2007,7 @@ void TMatrixTSym<Element>::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       Clear();
-      TMatrixTBase<Element>::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
+      R__b.ReadClassBuffer(TMatrixTBase<Element>::Class(),this,R__v,R__s,R__c);
       fElements = new Element[this->fNelems];
       Int_t i;
       for (i = 0; i < this->fNrows; i++) {
@@ -2025,7 +2025,7 @@ void TMatrixTSym<Element>::Streamer(TBuffer &R__b)
          fElements = fDataStack;
       }
    } else {
-      TMatrixTBase<Element>::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TMatrixTBase<Element>::Class(),this);
       // Only write the Upper right triangle
       for (Int_t i = 0; i < this->fNrows; i++) {
          R__b.WriteFastArray(fElements+i*this->fNcols+i,this->fNcols-i);
