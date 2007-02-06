@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.49 2007/01/20 19:29:34 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.50 2007/01/30 16:35:37 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -319,7 +319,7 @@ Int_t TThread::Delete(TThread *th)
       return -1;
    }
 
-   th->CleanUp();
+   CleanUp();
    return 0;
 }
 
