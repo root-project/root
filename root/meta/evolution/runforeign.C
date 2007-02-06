@@ -7,7 +7,7 @@
    cout << "\n==> Looking at the StreamerInfo before loading the library\n"; 
 
    TClass *cl = gROOT->GetClass("data");
-   TStreamerInfo *info = cl->GetStreamerInfo();
+   TVirtualStreamerInfo *info = cl->GetStreamerInfo();
    info->ls();
    cout << cl->GetName() << "'s streamerInfo #" 
       << info->GetClassVersion() << " has a checksum of " 
