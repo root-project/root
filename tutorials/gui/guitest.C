@@ -4,7 +4,8 @@
 // test program in the interpreter. Do either:
 // .x guitest.C
 // .x guitest.C++
-// Authors: Bertrand Bellenot, Ilka Antcheva, Fons Rademakers
+// Authors: Bertrand Bellenot, Ilka Antcheva, Fons Rademakers,
+//          Valeri Onuchin
 
 #include <stdlib.h>
 
