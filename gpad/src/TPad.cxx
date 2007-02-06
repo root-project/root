@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.250 2007/01/28 18:31:19 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.251 2007/02/04 17:36:35 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -5095,7 +5095,7 @@ void TPad::Streamer(TBuffer &b)
          gReadLevel++;
          gROOT->SetReadingObject(kTRUE);
 
-         TPad::Class()->ReadBuffer(b, this, v, R__s, R__c);
+         b.ReadClassBuffer(TPad::Class(), this, v, R__s, R__c);
 
          fModified = kTRUE;
          fPadPointer = 0;
@@ -5271,7 +5271,7 @@ void TPad::Streamer(TBuffer &b)
       //====end of old versions
 
    } else {
-      TPad::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TPad::Class(),this);
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.37 2007/01/16 09:04:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.38 2007/01/29 10:06:50 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -1099,10 +1099,10 @@ void TGeoXtru::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TGeoVolume.
    if (R__b.IsReading()) {
-      TGeoXtru::Class()->ReadBuffer(R__b, this);
+      R__b.ReadClassBuffer(TGeoXtru::Class(), this);
       if (fPoly) fPoly->SetXY(fXc,fYc); // initialize with current coordinates   
    } else {
-      TGeoXtru::Class()->WriteBuffer(R__b, this);
+      R__b.WriteClassBuffer(TGeoXtru::Class(), this);
    }
 }
 

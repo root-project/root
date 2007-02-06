@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.169 2007/01/12 16:03:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.170 2007/01/23 15:20:15 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -5345,13 +5345,13 @@ void TGeoManager::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TGeoManager.
    if (R__b.IsReading()) {
-      TGeoManager::Class()->ReadBuffer(R__b, this);
+      R__b.ReadClassBuffer(TGeoManager::Class(), this);
       fIsGeomReading = kTRUE;
       CloseGeometry();
       fStreamVoxels = kFALSE;
       fIsGeomReading = kFALSE;
    } else {
-      TGeoManager::Class()->WriteBuffer(R__b, this);
+      R__b.WriteClassBuffer(TGeoManager::Class(), this);
    }
 }
 
