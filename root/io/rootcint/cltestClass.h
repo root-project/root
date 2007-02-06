@@ -1,5 +1,5 @@
 //
-// $Id: TestClass.h 3153 2006-08-10 20:15:49Z loizides $
+// $Id: cltestClass.h,v 1.1 2007/02/02 11:37:36 pcanal Exp $
 //
 
 #ifndef HIROOT_TestClass
@@ -17,8 +17,9 @@ protected:
    struct TIE_t { /*IndexElement*/
       public:
       UInt_t fIndex; //index in common block 
-      T      fVal;   //corresponding value 
-      TIE_t(UInt_t i=0, T v=0) : fIndex(i),fVal(v) {}
+      T      fVal;   //corresponding value
+      TIE_t() : fIndex(0), fVal(0) {} 
+      TIE_t(UInt_t i, T v) : fIndex(i),fVal(v) {}
       virtual ~TIE_t() {}
       ClassDefT(TIE_t,1) // Generic parameter given by an index (in common block)
   };
@@ -27,8 +28,9 @@ protected:
    struct IE_t { /*IndexElement*/
       public:
       UInt_t fIndex; //index in common block 
-      T      fVal;   //corresponding value 
-      IE_t(UInt_t i=0, T v=0) : fIndex(i),fVal(v) {}
+      T      fVal;   //corresponding value
+      IE_t() : fIndex(0),fVal(0) {} 
+      IE_t(UInt_t i, T v) : fIndex(i),fVal(v) {}
       virtual ~IE_t() {}
   };
 
