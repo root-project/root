@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.100 2007/01/30 09:59:07 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.101 2007/01/30 16:34:54 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -115,6 +115,9 @@ Bool_t TDispatchTimer::Notify()
       Info ("Notify","called!");
 
    fPlayer->SetBit(TProofPlayer::kDispatchOneEvent);
+
+   // Needed for the next shot
+   Reset();
    return kTRUE;
 }
 
@@ -131,12 +134,15 @@ public:
 
    Bool_t Notify();
 };
+
 //______________________________________________________________________________
 TStopTimer::TStopTimer(TProofPlayer *p, Bool_t abort, Int_t to)
-           : TTimer(-1, kFALSE)
+           : TTimer(((to <= 0 || to > 864000) ? 10 : to * 1000), kFALSE)
 {
    // Constructor for the timer to stop/abort processing.
    // The 'timeout' is in seconds.
+   // Make sure that 'to' make sense, i.e. not larger than 10 days; 
+   // the minimum value is 10 ms (0 does not seem to start the timer ...).
 
    if (gDebug > 0)
       Info ("TStopTimer","enter: %d, timeout: %d", abort, to);
@@ -144,16 +150,10 @@ TStopTimer::TStopTimer(TProofPlayer *p, Bool_t abort, Int_t to)
    fPlayer = p;
    fAbort = abort;
 
-   // Make sure that 'to' make sense, i.e. not larger than 10 days
-   if (to > 864000) {
-      Warning("TStopTimer",
-              "Abnormous timeout value (%d): corruption? setting to 0", to);
-      to = 0;
-   }
-   // Set a minimum value to 10 ms (0 does not seem to start the timer ...)
-   to = (to <= 10) ? 10 : to * 1000;
-   SetTime(to);
+   if (gDebug > 1)
+      Info ("TStopTimer","timeout set to %s ms", fTime.AsString());
 }
+
 //______________________________________________________________________________
 Bool_t TStopTimer::Notify()
 {
@@ -254,13 +254,13 @@ void TProofPlayer::SetStopTimer(Bool_t on, Bool_t abort, Int_t timeout)
    // Clean-up the timer
    SafeDelete(fStopTimer);
    if (on) {
-      if (gDebug > 0)
-         Info ("SetStopTimer", "%s timer STARTED (timeout: %d)",
-                               (abort ? "ABORT" : "STOP"), timeout);
       // create timer
       fStopTimer = new TStopTimer(this, abort, timeout);
       // Start the countdown
       fStopTimer->Start();
+      if (gDebug > 0)
+         Info ("SetStopTimer", "%s timer STARTED (timeout: %d)",
+                               (abort ? "ABORT" : "STOP"), timeout);
    } else {
       if (gDebug > 0)
          Info ("SetStopTimer", "timer STOPPED");
