@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TArrowEditor.h,v 1.5 2006/04/25 08:14:20 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TArrowEditor.h,v 1.6 2006/09/25 13:35:58 rdm Exp $
 // Author: Ilka  Antcheva 20/10/04
 
 /*************************************************************************
@@ -20,9 +20,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
-#include "TGWidget.h"
-#endif
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
 #endif

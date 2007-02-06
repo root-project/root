@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.h,v 1.4 2006/09/25 13:35:58 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TAxisEditor.h,v 1.5 2007/02/03 17:21:00 brun Exp $
 // Author: Ilka  Antcheva 11/05/04
 
 /*************************************************************************
@@ -20,9 +20,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
-#include "TGWidget.h"
-#endif
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
 #endif

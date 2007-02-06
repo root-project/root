@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.cxx,v 1.9 2006/06/23 15:19:22 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.cxx,v 1.10 2006/09/25 13:35:58 rdm Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -27,14 +27,11 @@
 #include "TAttTextEditor.h"
 #include "TGedEditor.h"
 #include "TGColorSelect.h"
-#include "TGColorDialog.h"
 #include "TGComboBox.h"
-#include "TGClient.h"
 #include "TColor.h"
 #include "TPaveLabel.h"
-#include "TVirtualPad.h"
 #include "snprintf.h"
-#include "TClass.h"
+#include "TVirtualPad.h"
 
 ClassImp(TAttTextEditor)
 

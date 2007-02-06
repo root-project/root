@@ -27,14 +27,12 @@
 //End_Html
 
 #include "TFrameEditor.h"
-#include "TGClient.h"
-#include "TGButton.h"
+#include "TGedEditor.h"
 #include "TGComboBox.h"
 #include "TGButtonGroup.h"
 #include "TGLabel.h"
 #include "TFrame.h"
 #include "TVirtualPad.h"
-#include "TClass.h"
 
 ClassImp(TFrameEditor)
 
@@ -50,8 +48,6 @@ TFrameEditor::TFrameEditor(const TGWindow *p, Int_t width,
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor of TFrame editor GUI.
-
-   fFrame = 0;   
 
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    TGButtonGroup *bgr = new TGButtonGroup(f2,3,1,3,0, "Frame Border Mode");
@@ -70,7 +66,7 @@ TFrameEditor::TFrameEditor(const TGWindow *p, Int_t width,
    f2->AddFrame(bgr, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 4, 1, 0, 0));
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
    
-   f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   TGCompositeFrame *f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    TGLabel *fSizeLbl = new TGLabel(f3, "Size:");                              
    f3->AddFrame(fSizeLbl, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 6, 1, 0, 0));
    fBsize = new TGLineWidthComboBox(f3, kFR_BSIZE);
@@ -110,7 +106,7 @@ void TFrameEditor::SetModel(TObject* obj)
 {
    // Pick up the frame attributes.
 
-   fFrame = (TFrame *)obj;
+   TFrame *fFrame = (TFrame *)obj;
    
    Int_t par;
 
@@ -133,14 +129,16 @@ void TFrameEditor::DoBorderMode()
    // Slot connected to the border mode settings.
    
    Int_t mode = 0;
+   TFrame *fFrame = (TFrame *)fGedEditor->GetModel();;
    if (fBmode->GetState() == kButtonDown) mode = -1;
    else if (fBmode0->GetState() == kButtonDown) mode = 0;
    else mode = 1;
 
-   if (!mode) HideFrame(f3);
-   else ShowFrame(f3);
-   Layout();
-   
+   if (!mode) {
+      fBsize->SetEnabled(kFALSE);
+   } else {
+      fBsize->SetEnabled(kTRUE);
+   }
    fFrame->SetBorderMode(mode);
    Update();
    gPad->Modified();
@@ -152,6 +150,7 @@ void TFrameEditor::DoBorderSize(Int_t size)
 {
    // Slot connected to the border size settings.
    
+   TFrame *fFrame = (TFrame *)fGedEditor->GetModel();;
    fFrame->SetBorderSize(size);
    Update();
 }

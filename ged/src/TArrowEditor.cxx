@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TArrowEditor.cxx,v 1.11 2006/06/23 15:19:22 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TArrowEditor.cxx,v 1.12 2006/09/25 13:35:58 rdm Exp $
 // Author: Ilka Antcheva   20/10/04
 
 /*************************************************************************
@@ -28,8 +28,6 @@
 #include "TGLabel.h"
 #include "TGNumberEntry.h"
 #include "TArrow.h"
-#include "TVirtualPad.h"
-#include "TClass.h"
 
 ClassImp(TArrowEditor)
 

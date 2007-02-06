@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.12 2006/09/25 13:35:58 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.13 2007/01/22 18:01:16 antcheva Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -26,15 +26,9 @@
 
 #include "TAttLineEditor.h"
 #include "TGColorSelect.h"
-#include "TGColorDialog.h"
-#include "TGClient.h"
 #include "TGComboBox.h"
 #include "TColor.h"
-#include "TAttLine.h"
-#include "TVirtualPad.h"
-#include "TClass.h"
 #include "TGraph.h"
-#include "TGedEditor.h"
 
 ClassImp(TAttLineEditor)
 
@@ -51,8 +45,8 @@ TAttLineEditor::TAttLineEditor(const TGWindow *p, Int_t width,
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor of line attributes GUI.
-   fPriority = 1;
 
+   fPriority = 1;
    fAttLine = 0;
 
    MakeTitle("Line");

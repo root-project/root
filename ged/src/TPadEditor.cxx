@@ -33,14 +33,10 @@
 
 #include "TPadEditor.h"
 #include "TGedEditor.h"
-#include "TGClient.h"
-#include "TGButton.h"
 #include "TGComboBox.h"
 #include "TGButtonGroup.h"
 #include "TGLabel.h"
-#include "TColor.h"
 #include "TCanvas.h"
-#include "TClass.h"
 
 ClassImp(TPadEditor)
 

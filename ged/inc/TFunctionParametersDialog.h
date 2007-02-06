@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TFunctionParametersDialog.h,v 1.3 2006/07/10 13:18:57 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TFunctionParametersDialog.h,v 1.4 2007/02/03 17:44:59 brun Exp $
 // Author: Ilka Antcheva 08/05/06
 
 /*************************************************************************
@@ -20,9 +20,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
-#include "TGWidget.h"
-#endif
 #ifndef ROOT_TGFrame
 #include "TGFrame.h"
 #endif

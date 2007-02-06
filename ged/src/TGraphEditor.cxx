@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGraphEditor.cxx,v 1.21 2007/01/23 14:22:45 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGraphEditor.cxx,v 1.22 2007/02/03 18:12:31 brun Exp $
 // Author: Carsten Hof   16/08/04
 
 /*************************************************************************
@@ -33,19 +33,13 @@
 //End_Html
 
 #include "TGComboBox.h"
-#include "TGButton.h"
 #include "TGButtonGroup.h"
 #include "TGraphEditor.h"
-#include "TGedFrame.h"
 #include "TGTextEntry.h"
 #include "TGToolTip.h"
 #include "TGLabel.h"
-#include "TGClient.h"
 #include "TGraph.h"
-#include "TColor.h"
 #include "TVirtualPad.h"
-#include "TStyle.h"
-#include "TClass.h"
 
 ClassImp(TGraphEditor)
 

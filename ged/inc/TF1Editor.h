@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TF1Editor.h,v 1.5 2006/09/25 13:35:58 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TF1Editor.h,v 1.6 2007/02/03 17:35:51 brun Exp $
 // Author: Ilka Antcheva 21/03/06
 
 /*************************************************************************
@@ -20,9 +20,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
-#include "TGWidget.h"
-#endif
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
 #endif
@@ -54,7 +51,10 @@ public:
    TF1Editor(const TGWindow *p = 0,  Int_t width = 140, Int_t height = 30,
              UInt_t options = kChildFrame, Pixel_t back = GetDefaultFrameBackground());
    virtual ~TF1Editor();
+
    virtual void   SetModel(TObject* obj);
+   virtual void   ActivateBaseClassEditors(TClass* cl);
+
    virtual void   DoParameterSettings();
    virtual void   DoXPoints();
    virtual void   DoSliderXMoved();
@@ -62,7 +62,7 @@ public:
    virtual void   DoSliderXReleased();
    virtual void   DoXRange();
 
-   ClassDef(TF1Editor,0)  // TF1 editor
+   ClassDef(TF1Editor,0)  // user interface for TF1 objects
 };
 
 #endif

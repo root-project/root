@@ -23,28 +23,22 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
-#include "TGWidget.h"
-#endif
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
 #endif
 
 class TGRadioButton;
 class TGLineWidthComboBox;
-class TFrame;
-
+class TGLayoutHints;
 
 class TFrameEditor : public TGedFrame {
 
 protected:
-   TFrame              *fFrame;            // TFrame object
    TGRadioButton       *fBmode;            // set sinken frame border mode
    TGRadioButton       *fBmode0;           // set no border
    TGRadioButton       *fBmode1;           // set raised frame border mode
    TGLayoutHints       *fBmodelh;          // layout hints for border mode buttons
    TGLineWidthComboBox *fBsize;            // set frame border size
-   TGCompositeFrame    *f3;                // container frame;  
    
    virtual void ConnectSignals2Slots();
  

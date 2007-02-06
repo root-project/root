@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.12 2006/06/23 15:19:22 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.13 2006/09/25 13:35:58 rdm Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -26,13 +26,7 @@
 #include "TAttFillEditor.h"
 #include "TGedPatternSelect.h"
 #include "TGColorSelect.h"
-#include "TGColorDialog.h"
-#include "TGClient.h"
 #include "TColor.h"
-#include "TVirtualPad.h"
-#include "TClass.h"
-#include "TVirtualPad.h"
-#include "TGedEditor.h"
 
 ClassImp(TAttFillEditor)
 

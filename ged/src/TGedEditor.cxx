@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.38 2007/01/29 15:10:48 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.39 2007/01/30 11:49:13 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -60,11 +60,9 @@
 #include "TGTab.h"
 #include "TGedFrame.h"
 #include "TGLabel.h"
-#include "TGFrame.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TBaseClass.h"
-#include "TSystem.h"
 
 class TGedTabInfo : public TObject {
    // Helper class for managing visibility and order of created tabs.

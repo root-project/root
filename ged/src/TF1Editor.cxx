@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TF1Editor.cxx,v 1.6 2007/02/03 17:44:59 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TF1Editor.cxx,v 1.7 2007/02/03 19:36:16 brun Exp $
 // Author: Ilka Antcheva 21/03/06
 
 /*************************************************************************
@@ -21,13 +21,10 @@
 #include "TGedEditor.h"
 #include "TH1.h"
 #include "TF1.h"
-#include "TGedFrame.h"
 #include "TGTextEntry.h"
 #include "TGToolTip.h"
 #include "TGLabel.h"
 #include "TGDoubleSlider.h"
-#include "TGClient.h"
-#include "TVirtualPad.h"
 #include "TString.h"
 #include "TGNumberEntry.h"
 #include "TG3DLine.h"
@@ -322,5 +319,14 @@ void TF1Editor::DoXRange()
    Int_t nxbinmax = x->GetLast();
    fSliderX->SetPosition((Double_t)(nxbinmin),(Double_t)(nxbinmax));
    Update();
+}
+
+//______________________________________________________________________________
+void TF1Editor::ActivateBaseClassEditors(TClass* cl)
+{
+   // Exclude TAttFillEditor from this interface.
+
+   fGedEditor->ExcludeClassEditor(TAttFill::Class());
+   TGedFrame::ActivateBaseClassEditors(cl);
 }
 
