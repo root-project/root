@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.20 2006/07/03 16:10:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.21 2007/01/15 16:10:10 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -351,9 +351,9 @@ void TCutG::Streamer(TBuffer &R__b)
    // Stream an object of class TCutG.
 
    if (R__b.IsReading()) {
-      TCutG::Class()->ReadBuffer(R__b, this);
+      R__b.ReadClassBuffer(TCutG::Class(), this);
       gROOT->GetListOfSpecials()->Add(this);
    } else {
-      TCutG::Class()->WriteBuffer(R__b, this);
+      R__b.WriteClassBuffer(TCutG::Class(), this);
    }
 }

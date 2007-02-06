@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.59 2006/07/03 16:10:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.60 2006/07/09 05:27:54 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -1214,7 +1214,7 @@ void TGraphAsymmErrors::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TGraphAsymmErrors::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         b.ReadClassBuffer(TGraphAsymmErrors::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -1252,7 +1252,7 @@ void TGraphAsymmErrors::Streamer(TBuffer &b)
       //====end of old versions
 
    } else {
-      TGraphAsymmErrors::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TGraphAsymmErrors::Class(),this);
    }
 }
 

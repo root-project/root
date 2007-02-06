@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.95 2006/11/02 11:03:37 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.96 2006/12/07 10:08:35 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2152,7 +2152,7 @@ void TGaxis::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 3) {
-         TGaxis::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TGaxis::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -2183,6 +2183,6 @@ void TGaxis::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TGaxis::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TGaxis::Class(),this);
    }
 }

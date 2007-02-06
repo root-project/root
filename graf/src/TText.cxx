@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.22 2007/01/29 15:34:45 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.23 2007/01/30 08:50:56 couet Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -604,7 +604,7 @@ void TText::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TText::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TText::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -616,6 +616,6 @@ void TText::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TText::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TText::Class(),this);
    }
 }

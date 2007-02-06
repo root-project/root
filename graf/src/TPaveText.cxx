@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.28 2006/09/21 20:02:20 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.29 2007/01/19 16:48:00 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -890,7 +890,7 @@ void TPaveText::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TPaveText::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TPaveText::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -904,7 +904,7 @@ void TPaveText::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TPaveText::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TPaveText::Class(),this);
    }
 }
 

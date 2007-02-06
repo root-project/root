@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.14 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.15 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -311,7 +311,7 @@ void TMarker::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TMarker::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TMarker::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -323,6 +323,6 @@ void TMarker::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TMarker::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TMarker::Class(),this);
    }
 }

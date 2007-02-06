@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.201 2007/01/30 11:49:14 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.202 2007/01/30 17:26:35 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -4465,7 +4465,7 @@ void TGraph::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TGraph::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         b.ReadClassBuffer(TGraph::Class(), this, R__v, R__s, R__c);
          if (fHistogram) fHistogram->SetDirectory(0);
          TIter next(fFunctions);
          TObject *obj;
@@ -4519,7 +4519,7 @@ void TGraph::Streamer(TBuffer &b)
       //====end of old versions
 
    } else {
-      TGraph::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TGraph::Class(),this);
    }
 }
 
