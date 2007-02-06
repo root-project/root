@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.182 2007/02/05 14:20:25 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.183 2007/02/05 23:12:28 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -331,6 +331,21 @@ TProof::~TProof()
       // remove "chain" from list
       chain->SetProof(0);
       RemoveChain(chain);
+   }
+
+   // remove links to packages enabled on the client
+   if (!IsMaster()) {
+      // iterate over all packages
+      TIter nextpackage(fEnabledPackagesOnClient);
+      while (TObjString *package = dynamic_cast<TObjString*>(nextpackage())) {
+         FileStat_t stat;
+         gSystem->GetPathInfo(package->String(), stat);
+         // check if symlink, if so unlink
+         // NOTE: GetPathnfo() returns 1 in case of symlink that does not point to
+         // existing file or to a directory, but if fIsLink is true the symlink exists
+         if (stat.fIsLink)
+            gSystem->Unlink(package->String());
+      }
    }
 
    Close();
