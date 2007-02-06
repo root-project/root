@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.91 2007/01/29 16:09:47 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.92 2007/02/05 18:11:28 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -735,7 +735,7 @@ void TStreamerBasicPointer::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TStreamerBasicPointer::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TStreamerBasicPointer::Class(), this, R__v, R__s, R__c);
          //Init();
          //fCounter = InitCounter( fCountClass, fCountName );
          return;
@@ -747,7 +747,7 @@ void TStreamerBasicPointer::Streamer(TBuffer &R__b)
       fCountClass.Streamer(R__b);
       R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
    } else {
-      TStreamerBasicPointer::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerBasicPointer::Class(),this);
    }
 }
 
@@ -835,7 +835,7 @@ void TStreamerLoop::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TStreamerLoop::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TStreamerLoop::Class(), this, R__v, R__s, R__c);
          //Init();
          return;
       }
@@ -846,7 +846,7 @@ void TStreamerLoop::Streamer(TBuffer &R__b)
       fCountClass.Streamer(R__b);
       R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
    } else {
-      TStreamerLoop::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerLoop::Class(),this);
    }
 }
 
@@ -908,14 +908,14 @@ void TStreamerBasicType::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TStreamerBasicType::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TStreamerBasicType::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
       TStreamerElement::Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TStreamerBasicType::IsA());
    } else {
-      TStreamerBasicType::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerBasicType::Class(),this);
    }
 }
 
@@ -999,14 +999,14 @@ void TStreamerObject::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TStreamerObject::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TStreamerObject::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
       TStreamerElement::Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TStreamerObject::IsA());
    } else {
-      TStreamerObject::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerObject::Class(),this);
    }
 }
 
@@ -1084,14 +1084,14 @@ void TStreamerObjectAny::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TStreamerObjectAny::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TStreamerObjectAny::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
       TStreamerElement::Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TStreamerObjectAny::IsA());
    } else {
-      TStreamerObjectAny::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerObjectAny::Class(),this);
    }
 }
 
@@ -1183,14 +1183,14 @@ void TStreamerObjectPointer::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TStreamerObjectPointer::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TStreamerObjectPointer::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
       TStreamerElement::Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TStreamerObjectPointer::IsA());
    } else {
-      TStreamerObjectPointer::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerObjectPointer::Class(),this);
    }
 }
 
@@ -1278,9 +1278,9 @@ void TStreamerObjectAnyPointer::Streamer(TBuffer &R__b)
    // Stream an object of class TStreamerObjectAnyPointer.
 
    if (R__b.IsReading()) {
-      TStreamerObjectAnyPointer::Class()->ReadBuffer(R__b, this);
+      R__b.ReadClassBuffer(TStreamerObjectAnyPointer::Class(), this);
    } else {
-      TStreamerObjectAnyPointer::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerObjectAnyPointer::Class(),this);
    }
 }
 
@@ -1333,14 +1333,14 @@ void TStreamerString::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TStreamerString::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TStreamerString::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
       TStreamerElement::Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TStreamerString::IsA());
    } else {
-      TStreamerString::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerString::Class(),this);
    }
 }
 
@@ -1578,7 +1578,7 @@ void TStreamerSTL::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TStreamerSTL::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TStreamerSTL::Class(), this, R__v, R__s, R__c);
       } else {
          //====process old versions before automatic schema evolution
          TStreamerElement::Streamer(R__b);
@@ -1593,7 +1593,7 @@ void TStreamerSTL::Streamer(TBuffer &R__b)
       // To enable forward compatibility we actually save with the old value
       Int_t tmp = fType;
       fType = TVirtualStreamerInfo::kStreamer;
-      TStreamerSTL::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerSTL::Class(),this);
       fType = tmp;
    }
 }
@@ -1671,13 +1671,13 @@ void TStreamerSTLstring::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TStreamerSTLstring::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TStreamerSTLstring::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
       TStreamerSTL::Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TStreamerSTLstring::IsA());
    } else {
-      TStreamerSTLstring::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerSTLstring::Class(),this);
    }
 }
