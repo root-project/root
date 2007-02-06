@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.14 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.15 2006/06/16 11:01:16 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -388,7 +388,7 @@ void TEventList::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TEventList::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         b.ReadClassBuffer(TEventList::Class(), this, R__v, R__s, R__c);
          fDirectory = gDirectory;
          gDirectory->Append(this);
          return;
@@ -411,7 +411,7 @@ void TEventList::Streamer(TBuffer &b)
       //====end of old versions
 
    } else {
-      TEventList::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TEventList::Class(),this);
    }
 }
 

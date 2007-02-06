@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.17 2006/06/02 15:33:31 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.18 2007/01/30 11:24:32 brun Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -204,7 +204,7 @@ void TLeafObject::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 3 || R__v == 2) {
-         TLeafObject::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         b.ReadClassBuffer(TLeafObject::Class(), this, R__v, R__s, R__c);
          if (R__v == 2) fVirtual = kTRUE;
          fObjAddress = 0;
          fClass  = TClass::GetClass(fTitle.Data());
@@ -222,7 +222,7 @@ void TLeafObject::Streamer(TBuffer &b)
       //====end of old versions
 
    } else {
-      TLeafObject::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TLeafObject::Class(),this);
    }
 }
 

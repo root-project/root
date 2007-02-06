@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.22 2006/08/18 10:18:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.23 2006/08/18 18:46:35 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -341,7 +341,7 @@ void TLeaf::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TLeaf::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         b.ReadClassBuffer(TLeaf::Class(), this, R__v, R__s, R__c);
       } else {
          // -- Process old versions before automatic schema evolution.
          TNamed::Streamer(b);
@@ -360,7 +360,7 @@ void TLeaf::Streamer(TBuffer &b)
       ResetBit(kNewValue);
       SetAddress();
    } else {
-      TLeaf::Class()->WriteBuffer(b, this);
+      b.WriteClassBuffer(TLeaf::Class(), this);
    }
 }
 

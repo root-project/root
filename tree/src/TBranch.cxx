@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.121 2007/01/31 07:33:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.122 2007/02/05 18:11:29 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1641,7 +1641,7 @@ void TBranch::Streamer(TBuffer& b)
       gROOT->SetReadingObject(kTRUE);
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 9) {
-         TBranch::Class()->ReadBuffer(b, this, v, R__s, R__c);
+         b.ReadClassBuffer(TBranch::Class(), this, v, R__s, R__c);
 
          fDirectory = gDirectory;
          if (fFileName.Length() != 0) fDirectory = 0;
@@ -1762,7 +1762,7 @@ void TBranch::Streamer(TBuffer& b)
       Int_t maxBaskets = fMaxBaskets;
       fMaxBaskets = fBaskets.GetEntriesFast();
       if (fMaxBaskets < 10) fMaxBaskets=10;
-      TBranch::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TBranch::Class(),this);
       fMaxBaskets = maxBaskets;
    }
 }

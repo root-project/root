@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.215 2007/01/31 07:33:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.216 2007/02/05 18:11:29 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -3231,7 +3231,7 @@ void TBranchElement::Streamer(TBuffer& R__b)
    // -- Stream an object of class TBranchElement.
 
    if (R__b.IsReading()) {
-      TBranchElement::Class()->ReadBuffer(R__b, this);
+      R__b.ReadClassBuffer(TBranchElement::Class(), this);
       fParentClass.SetName(fParentName);
       fBranchClass.SetName(fClassName);
 
@@ -3256,7 +3256,7 @@ void TBranchElement::Streamer(TBuffer& R__b)
       //        If we did we would have to remember to old value and
       //        put it back, we wouldn't want to forget that we owned
       //        something just because we got written to disk.
-      TBranchElement::Class()->WriteBuffer(R__b, this);
+      R__b.WriteClassBuffer(TBranchElement::Class(), this);
 
       // make sure that all TVirtualStreamerInfo objects referenced by
       // this class are written to the file

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.318 2007/01/30 11:24:32 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.319 2007/02/05 18:11:29 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -5862,7 +5862,7 @@ void TTree::Streamer(TBuffer& b)
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 4) {
          fDirectory = gDirectory;
-         TTree::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         b.ReadClassBuffer(TTree::Class(), this, R__v, R__s, R__c);
          if (fTreeIndex) {
             fTreeIndex->SetTree(this);
          }
@@ -5912,7 +5912,7 @@ void TTree::Streamer(TBuffer& b)
       if (fBranchRef) {
          fBranchRef->Clear();
       }
-      TTree::Class()->WriteBuffer(b, this);
+      b.WriteClassBuffer(TTree::Class(), this);
    }
 }
 

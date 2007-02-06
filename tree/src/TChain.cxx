@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.153 2007/01/30 11:24:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.154 2007/01/31 07:33:31 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -2249,7 +2249,7 @@ void TChain::Streamer(TBuffer& b)
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TChain::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         b.ReadClassBuffer(TChain::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -2266,7 +2266,7 @@ void TChain::Streamer(TBuffer& b)
       //====end of old versions
 
    } else {
-      TChain::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TChain::Class(),this);
    }
 }
 

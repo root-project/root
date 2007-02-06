@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.39 2007/01/31 07:33:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.40 2007/02/03 18:33:15 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -503,12 +503,12 @@ void TBranchObject::Streamer(TBuffer& R__b)
    // Stream an object of class TBranchObject.
 
    if (R__b.IsReading()) {
-      TBranchObject::Class()->ReadBuffer(R__b, this);
+      R__b.ReadClassBuffer(TBranchObject::Class(), this);
    } else {
       TDirectory* dirsav = fDirectory;
       fDirectory = 0;  // to avoid recursive calls
 
-      TBranchObject::Class()->WriteBuffer(R__b, this);
+      R__b.WriteClassBuffer(TBranchObject::Class(), this);
 
       // make sure that all TStreamerInfo objects referenced by
       // this class are written to the file
