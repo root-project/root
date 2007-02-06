@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.21 2007/01/15 16:10:09 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.22 2007/01/23 09:53:36 brun Exp $
 // Author: Rene Brun , Olivier Couet 31/10/97
 
 
@@ -463,7 +463,7 @@ void TMarker3DBox::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TMarker3DBox::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TMarker3DBox::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -488,6 +488,6 @@ void TMarker3DBox::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TMarker3DBox::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TMarker3DBox::Class(),this);
    }
 }

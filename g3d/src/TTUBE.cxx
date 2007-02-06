@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.16 2006/05/24 15:31:40 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTUBE.cxx,v 1.17 2007/01/12 16:03:15 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -323,7 +323,7 @@ void TTUBE::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TTUBE::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TTUBE::Class(), this, R__v, R__s, R__c);
          return;  
       }
       //====process old versions before automatic schema evolution
@@ -336,7 +336,7 @@ void TTUBE::Streamer(TBuffer &R__b)
       R__b.CheckByteCount(R__s, R__c, TTUBE::IsA());
       //====end of old versions
    } else {
-      TTUBE::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TTUBE::Class(),this);
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.16 2006/07/03 16:10:43 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.17 2007/01/12 16:03:15 brun Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -620,7 +620,7 @@ void THelix::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
       if (R__v > 1) {
-         THelix::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(THelix::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -639,6 +639,6 @@ void THelix::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      THelix::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(THelix::Class(),this);
    }
 }

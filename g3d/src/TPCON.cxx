@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.15 2006/05/24 15:31:40 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.16 2007/01/12 16:03:15 brun Exp $
 // Author: Nenad Buncic   29/09/95
 
 /*************************************************************************
@@ -272,7 +272,7 @@ void TPCON::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TPCON::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         b.ReadClassBuffer(TPCON::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -291,7 +291,7 @@ void TPCON::Streamer(TBuffer &b)
       //====end of old versions
       
    } else {
-      TPCON::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TPCON::Class(),this);
    }
 }
 

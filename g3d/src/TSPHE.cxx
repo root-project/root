@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.19 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.20 2007/01/12 16:03:15 brun Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -283,7 +283,7 @@ void TSPHE::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TSPHE::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         b.ReadClassBuffer(TSPHE::Class(), this, R__v, R__s, R__c);
          Int_t ndiv = fNdiv;
          fNdiv = 0;
          SetNumberOfDivisions (ndiv);
@@ -309,7 +309,7 @@ void TSPHE::Streamer(TBuffer &b)
       //====end of old versions
       
    } else {
-      TSPHE::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TSPHE::Class(),this);
    }
 }
 
