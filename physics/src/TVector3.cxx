@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.cxx,v 1.11 2007/01/15 12:46:55 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.cxx,v 1.12 2007/01/15 13:24:03 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 //    Aug 11 1999: added Pt == 0 guard to Eta()
 //    Oct  8 1999: changed Warning to Error and
@@ -422,7 +422,7 @@ void TVector3::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TVector3::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TVector3::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -434,7 +434,7 @@ void TVector3::Streamer(TBuffer &R__b)
       //====end of old versions
       
    } else {
-      TVector3::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TVector3::Class(),this);
    }
 }
 

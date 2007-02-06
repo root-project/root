@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector2.cxx,v 1.9 2007/01/15 12:46:55 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector2.cxx,v 1.10 2007/01/17 08:37:49 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -117,7 +117,7 @@ void TVector2::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TVector2::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TVector2::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -128,7 +128,7 @@ void TVector2::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TVector2::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TVector2::Class(),this);
    }
 }
 

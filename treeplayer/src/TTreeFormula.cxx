@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.211 2007/02/03 18:33:15 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.212 2007/02/05 18:11:29 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -4275,7 +4275,7 @@ void TTreeFormula::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TTreeFormula::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TTreeFormula::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -4295,7 +4295,7 @@ void TTreeFormula::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TTreeFormula::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TTreeFormula::Class(),this);
    }
 }
 

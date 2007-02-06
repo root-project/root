@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolumePosition.cxx,v 1.10 2006/10/18 15:38:07 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TVolumePosition.cxx,v 1.11 2007/01/15 13:45:28 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -598,11 +598,11 @@ void TVolumePosition::Streamer(TBuffer &R__b)
    TRotMatrix     *save = fMatrix;
    if (R__b.IsReading()) {
       fMatrix = 0;
-      TVolumePosition::Class()->ReadBuffer(R__b, this);
+      R__b.ReadClassBuffer(TVolumePosition::Class(), this);
       if (!fMatrix) fMatrix = save;
    } else {
       if (save == TVolume::GetIdentity() ) fMatrix = 0;
-      TVolumePosition::Class()->WriteBuffer(R__b, this);
+      R__b.WriteClassBuffer(TVolumePosition::Class(), this);
       fMatrix = save;
    }
 }

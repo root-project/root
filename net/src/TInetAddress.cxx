@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TInetAddress.cxx,v 1.7 2005/06/22 20:18:11 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TInetAddress.cxx,v 1.8 2005/06/23 00:29:37 rdm Exp $
 // Author: Fons Rademakers   16/12/96
 
 /*************************************************************************
@@ -171,7 +171,7 @@ void TInetAddress::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
       if (R__v > 2) {
-         TInetAddress::Class()->ReadBuffer(R__b, this);
+         R__b.ReadClassBuffer(TInetAddress::Class(), this);
          return;
       }
       // process old versions before automatic schema evolution
@@ -203,6 +203,6 @@ void TInetAddress::Streamer(TBuffer &R__b)
       }
       R__b.CheckByteCount(R__s, R__c, TInetAddress::IsA());
    } else {
-      TInetAddress::Class()->WriteBuffer(R__b, this);
+      R__b.WriteClassBuffer(TInetAddress::Class(), this);
    }
 }
