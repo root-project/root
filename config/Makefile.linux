@@ -49,7 +49,7 @@ ifeq ($(shell which gfortran 2>&1 | sed -ne "s/.*\/gfortran/gfortran/p"),gfortra
 ifeq ($(shell gfortran -print-libgcc-file-name),$(shell $(CC) -print-libgcc-file-name))
 F77           = gfortran
 F77FLAGS      = -fPIC -std=legacy
-F77LIBS       = -lnsl
+F77LIBS       = -lgfortran -lgfortranbegin -lnsl
 F77LD         = gfortran
 endif
 endif
