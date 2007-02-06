@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.14 2006/06/16 13:05:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.15 2007/01/12 09:27:32 brun Exp $
 // Author: Peter Malzacher   31/08/99
 
 //////////////////////////////////////////////////////////////////////////
@@ -213,7 +213,7 @@ void TRandom3::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TRandom3::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TRandom3::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -224,6 +224,6 @@ void TRandom3::Streamer(TBuffer &R__b)
       //====end of old versions
       
    } else {
-      TRandom3::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TRandom3::Class(),this);
    }
 }

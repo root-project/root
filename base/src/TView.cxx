@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.41 2007/01/12 16:03:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.42 2007/01/23 09:48:41 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -1981,7 +1981,7 @@ void TView::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TView::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TView::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -2038,6 +2038,6 @@ void TView::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TView::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TView::Class(),this);
    }
 }

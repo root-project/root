@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.15 2007/01/15 11:52:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.16 2007/01/23 08:11:15 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -288,7 +288,7 @@ void TAttAxis::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 3) {
-         TAttAxis::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TAttAxis::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -312,6 +312,6 @@ void TAttAxis::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TAttAxis::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TAttAxis::Class(),this);
    }
 }
