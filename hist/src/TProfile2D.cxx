@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.52 2006/07/03 16:10:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.53 2007/02/01 14:58:44 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -1778,7 +1778,7 @@ void TProfile2D::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TProfile2D::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TProfile2D::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -1797,6 +1797,6 @@ void TProfile2D::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TProfile2D::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TProfile2D::Class(),this);
    }
 }

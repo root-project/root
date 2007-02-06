@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.330 2007/02/03 06:40:25 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.331 2007/02/05 18:05:40 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5588,7 +5588,7 @@ void TH1::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TH1::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         b.ReadClassBuffer(TH1::Class(), this, R__v, R__s, R__c);
 
          fXaxis.SetParent(this);
          fYaxis.SetParent(this);
@@ -5646,7 +5646,7 @@ void TH1::Streamer(TBuffer &b)
       b.CheckByteCount(R__s, R__c, TH1::IsA());
 
    } else {
-      TH1::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TH1::Class(),this);
    }
 }
 

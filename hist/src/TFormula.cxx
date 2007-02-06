@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.129 2007/01/19 16:48:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.130 2007/01/30 11:49:14 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -3175,7 +3175,7 @@ void TFormula::Streamer(TBuffer &b)
             Error("Streamer","version 6 is not supported");
             return;
          }
-         TFormula::Class()->ReadBuffer(b, this, v, R__s, R__c);
+         b.ReadClassBuffer(TFormula::Class(), this, v, R__s, R__c);
          if (!TestBit(kNotGlobal)) gROOT->GetListOfFunctions()->Add(this);
 
          // We need to reinstate (if possible) the TMethodCall.
@@ -3225,7 +3225,7 @@ void TFormula::Streamer(TBuffer &b)
       //====end of old versions
 
    } else {
-      TFormula::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TFormula::Class(),this);
    }
 }
 

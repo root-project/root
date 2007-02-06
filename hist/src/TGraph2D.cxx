@@ -1581,7 +1581,7 @@ void TGraph2D::Streamer(TBuffer &b)
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
-      TGraph2D::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+      b.ReadClassBuffer(TGraph2D::Class(), this, R__v, R__s, R__c);
 
       if (!gROOT->ReadingObject()) {
          fDirectory = gDirectory;
@@ -1589,6 +1589,6 @@ void TGraph2D::Streamer(TBuffer &b)
       }
       ResetBit(kCanDelete);
    } else {
-      TGraph2D::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TGraph2D::Class(),this);
    }
 }

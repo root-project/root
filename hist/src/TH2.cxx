@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.105 2007/02/01 14:21:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.106 2007/02/01 14:58:44 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2175,7 +2175,7 @@ void TH2::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TH2::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TH2::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -2187,7 +2187,7 @@ void TH2::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TH2::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TH2::Class(),this);
    }
 }
 
@@ -2363,7 +2363,7 @@ void TH2C::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TH2C::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TH2C::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -2384,7 +2384,7 @@ void TH2C::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TH2C::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TH2C::Class(),this);
    }
 }
 
@@ -2625,7 +2625,7 @@ void TH2S::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TH2S::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TH2S::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -2646,7 +2646,7 @@ void TH2S::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TH2S::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TH2S::Class(),this);
    }
 }
 

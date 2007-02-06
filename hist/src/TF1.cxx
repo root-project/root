@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.131 2006/11/24 13:44:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.132 2007/02/01 14:58:44 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -3029,7 +3029,7 @@ void TF1::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 4) {
-         TF1::Class()->ReadBuffer(b, this, v, R__s, R__c);
+         b.ReadClassBuffer(TF1::Class(), this, v, R__s, R__c);
          if (v == 5 && fNsave > 0) {
             //correct badly saved fSave in 3.00/06
             Int_t np = fNsave - 3;
@@ -3097,7 +3097,7 @@ void TF1::Streamer(TBuffer &b)
       Int_t saved = 0;
       if (fType > 0 && fNsave <= 0) { saved = 1; Save(fXmin,fXmax,0,0,0,0);}
 
-      TF1::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TF1::Class(),this);
 
       if (saved) {delete [] fSave; fSave = 0; fNsave = 0;}
    }

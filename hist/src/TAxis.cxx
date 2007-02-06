@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.79 2007/01/29 15:10:48 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.80 2007/02/01 14:58:44 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1122,7 +1122,7 @@ void TAxis::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 5) {
-         TAxis::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TAxis::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -1162,7 +1162,7 @@ void TAxis::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TAxis::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TAxis::Class(),this);
    }
 }
 

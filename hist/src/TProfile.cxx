@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.83 2006/08/23 15:50:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.84 2007/02/01 14:58:44 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -1829,7 +1829,7 @@ void TProfile::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TProfile::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TProfile::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -1848,6 +1848,6 @@ void TProfile::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TProfile::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TProfile::Class(),this);
    }
 }
