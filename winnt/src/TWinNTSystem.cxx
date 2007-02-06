@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.162 2007/02/05 09:41:09 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.163 2007/02/05 10:38:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -44,6 +44,7 @@
 #include <io.h>
 #include <direct.h>
 #include <ctype.h>
+#include <float.h>
 #include <sys/stat.h>
 #include <signal.h>
 #include <stdio.h>
