@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.27 2006/12/01 08:26:10 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.28 2007/02/05 16:24:00 couet Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -55,6 +55,7 @@ TImageDump::TImageDump() : TVirtualPS()
 
    fStream = 0;
    fImage  = 0;
+   fCanvas = kFALSE;
    gVirtualPS = this;
 }
 
@@ -82,6 +83,7 @@ void TImageDump::Open(const char *fname, Int_t type)
    fStream = 0;
    fImage  = TImage::Create();
    fType   = type;
+   fCanvas = kFALSE;
    SetName(fname);
 }
 
@@ -122,10 +124,10 @@ void TImageDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    }
 
    static Double_t x[4], y[4];
-   Int_t ix1 = x1 < x2 ? gPad->XtoPixel(x1) : gPad->XtoPixel(x2);
-   Int_t ix2 = x1 < x2 ? gPad->XtoPixel(x2) : gPad->XtoPixel(x1);
-   Int_t iy1 = y1 < y2 ? gPad->YtoPixel(y1) : gPad->YtoPixel(y2);
-   Int_t iy2 = y1 < y2 ? gPad->YtoPixel(y2) : gPad->YtoPixel(y1);
+   Int_t ix1 = x1 < x2 ? XtoPixel(x1) : XtoPixel(x2);
+   Int_t ix2 = x1 < x2 ? XtoPixel(x2) : XtoPixel(x1);
+   Int_t iy1 = y1 < y2 ? YtoPixel(y1) : YtoPixel(y2);
+   Int_t iy2 = y1 < y2 ? YtoPixel(y2) : YtoPixel(y1);
 
    Int_t fillis = fFillStyle/1000;
    Int_t fillsi = fFillStyle%1000;
@@ -202,8 +204,8 @@ void TImageDump::DrawFrame(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
    Short_t pxl,pyl,pxt,pyt,px1,py1,px2,py2;
    Double_t xl, xt, yl, yt;
 
-   px1 = gPad->XtoPixel(x1);   py1 = gPad->YtoPixel(y1);
-   px2 = gPad->XtoPixel(x2);   py2 = gPad->YtoPixel(y2);
+   px1 = XtoPixel(x1);   py1 = YtoPixel(y1);
+   px2 = XtoPixel(x2);   py2 = YtoPixel(y2);
    if (px1 < px2) {pxl = px1; pxt = px2; xl = x1; xt = x2; }
    else           {pxl = px2; pxt = px1; xl = x2; xt = x1;}
    if (py1 > py2) {pyl = py1; pyt = py2; yl = y1; yt = y2;}
@@ -298,8 +300,8 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    // Draw the marker according to the type
    Short_t ix,iy;
    for (Int_t i=0;i<n;i++) {
-      ix = gPad->XtoPixel(xw[i]);
-      iy = gPad->YtoPixel(yw[i]);
+      ix = XtoPixel(xw[i]);
+      iy = YtoPixel(yw[i]);
 
       switch (ms) {
       // Dot (.)
@@ -442,7 +444,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
             fFillColor = 1;
             col = gROOT->GetColor(fFillColor);
          }
-         px1 = gPad->XtoPixel(x[0]);   py1 = gPad->YtoPixel(y[0]);
+         px1 = XtoPixel(x[0]);   py1 = YtoPixel(y[0]);
          fImage->PutPixel(px1, py1, col->AsHexString());
          break;
 
@@ -453,8 +455,8 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
             fLineColor = 1;
             col = gROOT->GetColor(fLineColor);
          }
-         px1 = gPad->XtoPixel(x[0]);   py1 = gPad->YtoPixel(y[0]);
-         px2 = gPad->XtoPixel(x[1]);   py2 = gPad->YtoPixel(y[1]);
+         px1 = XtoPixel(x[0]);   py1 = YtoPixel(y[0]);
+         px2 = XtoPixel(x[1]);   py2 = YtoPixel(y[1]);
 
          switch (fLineStyle) {
             case 1:
@@ -505,8 +507,8 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
          }
 
          for (UInt_t i = 0; i < n; i++) {
-            pt[i].fX = gPad->XtoPixel(x[i]);
-            pt[i].fY = gPad->YtoPixel(y[i]);
+            pt[i].fX = XtoPixel(x[i]);
+            pt[i].fY = YtoPixel(y[i]);
          }
          pt[n].fX = pt[0].fX;
          pt[n].fY = pt[0].fY;
@@ -550,6 +552,7 @@ void TImageDump::NewPage()
       UInt_t w = UInt_t(gPad->GetWw()*gPad->GetWNDC());
       UInt_t h = UInt_t(gPad->GetWh()*gPad->GetHNDC());
       fImage->DrawRectangle(0, 0, w, h, "#ffffffff");
+      fCanvas = (gPad == gPad->GetMother());
    }
    return;
 }
@@ -563,15 +566,14 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
    // yy: y position of the text
 
    // To scale fonts to the same size as the old TT version
-   const Float_t kScale = 1;
-   const Double_t kDEGRAD = TMath::Pi()/180.;
+   const Float_t kScale = 0.96;
 
    if (!gPad || !fImage || (fTextSize < 0)) {
       return;
    }
 
-   Double_t x = gPad->XtoPixel(xx);
-   Double_t y = gPad->YtoPixel(yy);
+   Double_t x = XtoPixel(xx);
+   Double_t y = YtoPixel(yy);
 
    // Added by cholm for use of DFSG - fonts - based on Kevins fix.
    // Table of Microsoft and (for non-MSFT operating systems) backup
@@ -595,7 +597,7 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
       /*14 */ { "wingding.ttf",  "opens___.ttf"            }
    };
 
-   int fontid = fTextFont / 10;
+   int fontid = fTextFont/10;
    if (fontid < 0 || fontid > 14) fontid = 0;
 
     // try to load font (font must be in Root.TTFontPath resource)
@@ -646,16 +648,14 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
    t.SetTextFont(fTextFont);
    t.GetTextExtent(w, h, chars);
 
-   if (txalh == 2) x -= (w>>1);
+   if (txalh == 2) x -= w/2;
    if (txalh == 3) x -= w;
 
-   Float_t angle = kDEGRAD*fTextAngle;
-
    if (txalv == 3) {
-      y += (fTextAngle != 0. ? h * TMath::Cos(angle) : h);
+      y -= h;
    }
    if (txalv == 2) {
-      y += (fTextAngle != 0. ? (h>>1) * TMath::Cos(angle) : h>>1);
+      y -= (h/2);
    }
 
    TColor *col = gROOT->GetColor(fTextColor);
@@ -663,7 +663,11 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
       fTextColor = 1;   //black
       col = gROOT->GetColor(fTextColor);
    }
-   fImage->DrawText((int)x, angle ? (int)y - w: (int)y - h, chars, ttfsize, col->AsHexString(),
+
+   y -= h;
+   Double_t angle = 0.6*w*TMath::Abs(TMath::Sin(fTextAngle*TMath::Pi()/180.));
+   fImage->DrawText((int)x, fTextAngle != 0. ? int(y - angle) : (int)y, 
+                     chars, ttfsize, col->AsHexString(),
                      ttfont, TImage::kPlain, 0, fTextAngle);
 
    delete [] ttfont;
@@ -700,10 +704,10 @@ void TImageDump::CellArrayBegin(Int_t w, Int_t h, Double_t x1, Double_t x2,
    gCellArrayH = h;
    gCellArrayColors = new UInt_t[gCellArrayN];
 
-   gCellArrayX1 = x1 < x2 ? gPad->XtoPixel(x1) : gPad->XtoPixel(x2);
-   gCellArrayX2 = x1 > x2 ? gPad->XtoPixel(x2) : gPad->XtoPixel(x1);
-   gCellArrayY1 = y1 < y2 ? gPad->YtoPixel(y1) : gPad->YtoPixel(y2);
-   gCellArrayY2 = y1 < y2 ? gPad->YtoPixel(y2) : gPad->YtoPixel(y1);
+   gCellArrayX1 = x1 < x2 ? XtoPixel(x1) : XtoPixel(x2);
+   gCellArrayX2 = x1 > x2 ? XtoPixel(x2) : XtoPixel(x1);
+   gCellArrayY1 = y1 < y2 ? YtoPixel(y1) : YtoPixel(y2);
+   gCellArrayY2 = y1 < y2 ? YtoPixel(y2) : YtoPixel(y1);
 
    gCellArrayIdx = 0;
 }
@@ -754,3 +758,18 @@ void TImageDump::SetColor(Float_t /*r*/, Float_t /*g*/, Float_t /*b*/)
 
 }
 
+//______________________________________________________________________________
+Int_t TImageDump::XtoPixel(Double_t x)
+{
+   // x to pixel
+
+   return fCanvas ? gPad->XtoAbsPixel(x) : gPad->XtoPixel(x);
+}
+
+//______________________________________________________________________________
+Int_t TImageDump::YtoPixel(Double_t y)
+{
+   // y to pixel
+
+   return fCanvas ? gPad->YtoAbsPixel(y) : gPad->YtoPixel(y);
+}

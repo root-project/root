@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.h,v 1.7 2005/05/30 22:38:39 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.h,v 1.8 2005/08/30 10:51:15 brun Exp $
 // Author: Valeriy Onuchin   29/04/2005
 
 /*************************************************************************
@@ -32,6 +32,10 @@ class TImageDump : public TVirtualPS {
 protected:
    TImage           *fImage;     // image
    Int_t             fType;      // PostScript workstation type
+   Bool_t            fCanvas;    // kTRUE - if canvas is saved,  kFALSE - for TPad 
+
+   Int_t  XtoPixel(Double_t x);
+   Int_t  YtoPixel(Double_t y);
 
 public:
    TImageDump();
