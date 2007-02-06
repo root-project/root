@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.24 2006/08/31 11:05:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.25 2007/01/30 11:24:32 brun Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -1339,7 +1339,6 @@ void TProofDrawGraph::Terminate(void)
       gPad->Update();
 
       fGraph->SetEditable(kFALSE);
-      fGraph->SetBit(kCanDelete);
       // FIXME set color, marker size, etc.
 
       if (fTreeDrawArgsParser.GetShouldDraw()) {
