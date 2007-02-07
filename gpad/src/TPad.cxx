@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.251 2007/02/04 17:36:35 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.252 2007/02/06 14:22:28 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2014,6 +2014,194 @@ again:
    }
 }
 
+
+//______________________________________________________________________________
+void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
+{
+   // Execute action corresponding to one event for a TAxis object
+   // (called by TAxis::ExecuteEvent.)
+   //  This member function is called when an axis is clicked with the locator
+   //
+   //  The axis range is set between the position where the mouse is pressed
+   //  and the position where it is released.
+   //  If the mouse position is outside the current axis range when it is released
+   //  the axis is unzoomed with the corresponding proportions.
+   //  Note that the mouse does not need to be in the pad or even canvas
+   //  when it is released.
+
+   if (!IsEditable()) return;
+
+   SetCursor(kHand);
+
+   TView *view = GetView();
+   static Int_t axisNumber;
+   static Double_t ratio1, ratio2;
+   static Int_t px1old, py1old, px2old, py2old;
+   Int_t bin1, bin2, first, last;
+   Double_t temp, xmin,xmax;
+
+   switch (event) {
+
+   case kButton1Down:
+      axisNumber = 1;
+      if (!strcmp(axis->GetName(),"xaxis")) {
+         axisNumber = 1;
+         if (!IsVertical()) axisNumber = 2;
+      }
+      if (!strcmp(axis->GetName(),"yaxis")) {
+         axisNumber = 2;
+         if (!IsVertical()) axisNumber = 1;
+      }
+      if (!strcmp(axis->GetName(),"zaxis")) {
+         axisNumber = 3;
+      }
+      if (view) {
+         view->GetDistancetoAxis(axisNumber, px, py, ratio1);
+      } else {
+         if (axisNumber == 1) {
+            ratio1 = (AbsPixeltoX(px) - GetUxmin())/(GetUxmax() - GetUxmin());
+            px1old = XtoAbsPixel(GetUxmin()+ratio1*(GetUxmax() - GetUxmin()));
+            py1old = YtoAbsPixel(GetUymin());
+            px2old = px1old;
+            py2old = YtoAbsPixel(GetUymax());
+         } else if (axisNumber == 2) {
+            ratio1 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
+            py1old = YtoAbsPixel(GetUymin()+ratio1*(GetUymax() - GetUymin()));
+            px1old = XtoAbsPixel(GetUxmin());
+            px2old = XtoAbsPixel(GetUxmax());
+            py2old = py1old;
+         } else {
+            ratio1 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
+            py1old = YtoAbsPixel(GetUymin()+ratio1*(GetUymax() - GetUymin()));
+            px1old = XtoAbsPixel(GetUxmax());
+            px2old = XtoAbsPixel(GetX2());
+            py2old = py1old;
+         }
+         gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
+      }
+      gVirtualX->SetLineColor(-1);
+      // No break !!!
+
+   case kButton1Motion:
+      if (view) {
+         view->GetDistancetoAxis(axisNumber, px, py, ratio2);
+      } else {
+         gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
+         if (axisNumber == 1) {
+            ratio2 = (AbsPixeltoX(px) - GetUxmin())/(GetUxmax() - GetUxmin());
+            px2old = XtoAbsPixel(GetUxmin()+ratio2*(GetUxmax() - GetUxmin()));
+         } else {
+            ratio2 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
+            py2old = YtoAbsPixel(GetUymin()+ratio2*(GetUymax() - GetUymin()));
+         }
+         gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
+      }
+   break;
+
+   case kButton1Up:
+      if (gROOT->IsEscaped()) {
+         gROOT->SetEscape(kFALSE);
+         break;
+      }
+
+      if (view) {
+         view->GetDistancetoAxis(axisNumber, px, py, ratio2);
+         if (ratio1 > ratio2) {
+            temp   = ratio1;
+            ratio1 = ratio2;
+            ratio2 = temp;
+         }
+         if (ratio2 - ratio1 > 0.05) {
+            TH1 *hobj = (TH1*)axis->GetParent();
+            if (axisNumber == 3 && hobj && hobj->GetDimension() != 3) {
+               Float_t zmin = hobj->GetMinimum();
+               Float_t zmax = hobj->GetMaximum();
+               if(GetLogz()){
+                  if (zmin <= 0 && zmax > 0) zmin = TMath::Min((Double_t)1,
+                                                               (Double_t)0.001*zmax);
+                  zmin = TMath::Log10(zmin);
+                  zmax = TMath::Log10(zmax);
+               }
+               Float_t newmin = zmin + (zmax-zmin)*ratio1;
+               Float_t newmax = zmin + (zmax-zmin)*ratio2;
+               if(newmin < zmin)newmin = hobj->GetBinContent(hobj->GetMinimumBin());
+               if(newmax > zmax)newmax = hobj->GetBinContent(hobj->GetMaximumBin());
+               if(GetLogz()){
+                  newmin = TMath::Exp(2.302585092994*newmin);
+                  newmax = TMath::Exp(2.302585092994*newmax);
+               }
+               hobj->SetMinimum(newmin);
+               hobj->SetMaximum(newmax);
+               hobj->SetBit(TH1::kIsZoomed);
+            } else {
+               first = axis->GetFirst();
+               last  = axis->GetLast();
+               bin1 = first + Int_t((last-first+1)*ratio1);
+               bin2 = first + Int_t((last-first+1)*ratio2);
+               axis->SetRange(bin1, bin2);
+            }
+            delete view;
+            SetView(0);
+            Modified(kTRUE);
+         }
+      } else {
+         if (axisNumber == 1) {
+            ratio2 = (AbsPixeltoX(px) - GetUxmin())/(GetUxmax() - GetUxmin());
+            xmin = GetUxmin() +ratio1*(GetUxmax() - GetUxmin());
+            xmax = GetUxmin() +ratio2*(GetUxmax() - GetUxmin());
+            if (GetLogx()) {
+               xmin = PadtoX(xmin);
+               xmax = PadtoX(xmax);
+            }
+         } else if (axisNumber == 2) {
+            ratio2 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
+            xmin = GetUymin() +ratio1*(GetUymax() - GetUymin());
+            xmax = GetUymin() +ratio2*(GetUymax() - GetUymin());
+            if (GetLogy()) {
+               xmin = PadtoY(xmin);
+               xmax = PadtoY(xmax);
+            }
+         } else {
+            ratio2 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
+            xmin = ratio1;
+            xmax = ratio2;
+         }
+         if (xmin > xmax) {
+            temp   = xmin;
+            xmin   = xmax;
+            xmax   = temp;
+            temp   = ratio1;
+            ratio1 = ratio2;
+            ratio2 = temp;
+         }
+         if (!strcmp(axis->GetName(),"xaxis")) axisNumber = 1;
+         if (!strcmp(axis->GetName(),"yaxis")) axisNumber = 2;
+         if (ratio2 - ratio1 > 0.05) {
+            TH1 *hobj = (TH1*)axis->GetParent();
+            bin1 = axis->FindFixBin(xmin);
+            bin2 = axis->FindFixBin(xmax);
+            if (axisNumber == 1) axis->SetRange(bin1,bin2);
+            if (axisNumber == 2 && hobj) {
+               if (hobj->GetDimension() == 1) {
+                  if (hobj->GetNormFactor() != 0) {
+                     Double_t norm = hobj->GetSumOfWeights()/hobj->GetNormFactor();
+                     xmin *= norm;
+                     xmax *= norm;
+                  }
+                  hobj->SetMinimum(xmin);
+                  hobj->SetMaximum(xmax);
+                  hobj->SetBit(TH1::kIsZoomed);
+               } else {
+                  axis->SetRange(bin1,bin2);
+               }
+            }
+            Modified(kTRUE);
+         }
+      }
+      gVirtualX->SetLineColor(-1);
+      break;
+   }
+}
 
 //______________________________________________________________________________
 TObject *TPad::FindObject(const char *name) const
@@ -4932,6 +5120,14 @@ void TPad::SetPad(const char *name, const char *title,
    SetPad(xlow, ylow, xup, yup);
 }
 
+//______________________________________________________________________________
+void TPad::SetView(TView *view)
+{
+   // Set the current TView. Delete previous view if view=0
+   
+   if (!view) delete fView;
+   fView = view;
+}
 
 //______________________________________________________________________________
 void TPad::SetAttFillPS(Color_t color, Style_t style)
