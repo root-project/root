@@ -30,10 +30,12 @@
 class TGRadioButton;
 class TGLineWidthComboBox;
 class TGLayoutHints;
+class TFrame;
 
 class TFrameEditor : public TGedFrame {
 
 protected:
+   TFrame              *fFrame;
    TGRadioButton       *fBmode;            // set sinken frame border mode
    TGRadioButton       *fBmode0;           // set no border
    TGRadioButton       *fBmode1;           // set raised frame border mode

@@ -246,7 +246,7 @@ void TPadEditor::SetModel(TObject* obj)
 //______________________________________________________________________________
 void TPadEditor::ActivateBaseClassEditors(TClass* cl)
 {
-   // Add editors to fGedFrame and exclude TLineEditor.
+   // Exclude TAttLineEditor from this interface.
 
    fGedEditor->ExcludeClassEditor(TAttLine::Class());
    TGedFrame::ActivateBaseClassEditors(cl);

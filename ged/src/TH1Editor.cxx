@@ -126,12 +126,10 @@
 #include "TH1Editor.h"
 #include "TH1.h"
 #include "TGedEditor.h"
-#include "TGedFrame.h"
 #include "TGComboBox.h"
 #include "TGTextEntry.h"
 #include "TGToolTip.h"
 #include "TGLabel.h"
-#include "TGClient.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
 #include "TString.h"
@@ -143,15 +141,11 @@
 #include "TGSlider.h"
 #include "TView.h"
 #include "TCanvas.h"
-#include "TTree.h"
 #include "TTreePlayer.h"
 #include "TSelectorDraw.h"
-#include "TGTab.h"
-#include "TGFrame.h"
 #include "TGMsgBox.h"
-#include "TClass.h"
+#include "TGTab.h"
 
-R__EXTERN TTree *gTree;
 
 ClassImp(TH1Editor)
 

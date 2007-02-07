@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TH2Editor.h,v 1.13 2006/09/25 13:38:45 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TH2Editor.h,v 1.14 2007/01/25 17:35:56 antcheva Exp $
 // Author: Carsten Hof 08/08/04
 
 /*************************************************************************
@@ -19,11 +19,9 @@
 //  Editor changing histogram attributes                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
-#endif
-#ifndef ROOT_TH2
-#include "TH2.h"
 #endif
 
 class TH2;
@@ -35,14 +33,11 @@ class TString;
 class TGDoubleHSlider;
 class TGHSlider;
 class TGNumberEntry;
-class TGButtonGroup;
 class TGHButtonGroup;
 class TGRadioButton;
 class TGNumberEntryField;
 class TGColorSelect;
 class TGedPatternSelect;
-class TAttFill;
-class TGTab;
 class TGTextButton;
 
 class TH2Editor : public TGedFrame {

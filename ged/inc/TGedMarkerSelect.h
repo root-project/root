@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.h,v 1.6 2005/11/11 15:38:30 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.h,v 1.7 2006/07/03 16:10:43 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   24/07/03
 
 /*************************************************************************
@@ -30,15 +30,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
-#include "TGButton.h"
-#endif
-#ifndef ROOT_TGToolTip
-#include "TGToolTip.h"
-#endif
 #ifndef ROOT_TGedPatternSelect
 #include "TGedPatternSelect.h"
 #endif
+
+class TGToolTip;
+class TGPicture;
 
 
 class TGedMarkerPopup : public TGedPopup {

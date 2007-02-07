@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TH1Editor.h,v 1.15 2006/09/25 13:38:45 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TH1Editor.h,v 1.16 2007/02/04 07:48:27 brun Exp $
 // Author: Carsten Hof 16/08/04
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 //  Editor changing histogram attributes (Type, Coords, Error, Style)   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
 #endif
@@ -36,9 +37,6 @@ class TGDoubleHSlider;
 class TGHSlider;
 class TGTextEntry;
 class TGNumberEntryField;
-class TGTab;
-class TPad;
-class TGMainFrame;
 class TGTextButton;
 
 class TH1Editor : public TGedFrame {

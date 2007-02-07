@@ -123,13 +123,11 @@
 
 
 #include "TH2Editor.h"
-#include "TGedFrame.h"
 #include "TGedEditor.h"
 #include "TGComboBox.h"
 #include "TGTextEntry.h"
 #include "TGToolTip.h"
 #include "TGLabel.h"
-#include "TGClient.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
 #include "TString.h"
@@ -142,17 +140,13 @@
 #include "TCanvas.h"
 #include "TGedPatternSelect.h"
 #include "TGColorSelect.h"
-#include "TGColorDialog.h"
 #include "TColor.h"
-#include "TTree.h"
 #include "TTreePlayer.h"
 #include "TSelectorDraw.h"
 #include "TGTab.h"
-#include "TGFrame.h"
 #include "TGMsgBox.h"
-#include "TClass.h"
+#include "TH2.h"
 
-R__EXTERN TTree *gTree;
 
 ClassImp(TH2Editor)
 
@@ -2864,7 +2858,7 @@ Int_t* TH2Editor::Dividers(Int_t n)
 //______________________________________________________________________________
 void TH2Editor::ActivateBaseClassEditors(TClass* /*cl*/)
 {
-   // Skip TH1Editor in building list of editors in fGedEditor.   
+   // Skip TH1Editor in building list of editors.   
 
    fGedEditor->ActivateEditors(TH1::Class()->GetListOfBases(), kTRUE);
 }

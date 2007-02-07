@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.13 2007/01/24 17:58:38 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.14 2007/02/01 14:58:43 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   02/12/2003
 
 /*************************************************************************
@@ -32,8 +32,9 @@
 #ifndef ROOT_TList
 #include "TList.h"
 #endif
-
+#ifndef ROOT_TMap
 #include "TMap.h"
+#endif
 
 class TCanvas;
 class TGCanvas;

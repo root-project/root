@@ -106,7 +106,7 @@ void TFrameEditor::SetModel(TObject* obj)
 {
    // Pick up the frame attributes.
 
-   TFrame *fFrame = (TFrame *)obj;
+   fFrame = (TFrame *)obj;
    
    Int_t par;
 
@@ -129,7 +129,6 @@ void TFrameEditor::DoBorderMode()
    // Slot connected to the border mode settings.
    
    Int_t mode = 0;
-   TFrame *fFrame = (TFrame *)fGedEditor->GetModel();;
    if (fBmode->GetState() == kButtonDown) mode = -1;
    else if (fBmode0->GetState() == kButtonDown) mode = 0;
    else mode = 1;
@@ -150,7 +149,6 @@ void TFrameEditor::DoBorderSize(Int_t size)
 {
    // Slot connected to the border size settings.
    
-   TFrame *fFrame = (TFrame *)fGedEditor->GetModel();;
    fFrame->SetBorderSize(size);
    Update();
 }
