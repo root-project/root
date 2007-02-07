@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id:  Exp $
+// @(#)root/cont:$Name:  $:$Id: TContainerConverters.h,v 1.1 2004/11/17 06:29:22 brun Exp $
 // Author: Philippe Canal 11/11/2004
 
 /*************************************************************************
@@ -8,8 +8,8 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#ifndef ROOT_TCollectionProxy
-#define ROOT_TCollectionProxy
+#ifndef ROOT_TContainerConverters
+#define ROOT_TContainerConverters
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
