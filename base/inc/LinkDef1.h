@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.45 2007/01/28 18:33:21 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.46 2007/02/04 17:39:44 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -152,7 +152,6 @@
 #pragma link C++ class TFileHandler+;
 #pragma link C++ class TGuiFactory;
 #pragma link C++ class TStyle+;
-#pragma link C++ class TView-;
 #pragma link C++ class TVirtualX+;
 #pragma link C++ class TVirtualFitter+;
 #pragma link C++ class TVirtualPad-;
