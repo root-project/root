@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.20 2006/10/19 10:58:24 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.21 2006/10/20 21:07:40 brun Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -43,6 +43,7 @@
 #endif
 
 // forward declarations
+class TAxis;
 class TObject;
 class TObjLink;
 class TView;
@@ -81,6 +82,7 @@ public:
    virtual void     Draw(Option_t *option="") = 0;
    virtual void     DrawClassObject(const TObject *obj, Option_t *option="") = 0;
    virtual TH1F    *DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title="") = 0;
+   virtual void     ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis) = 0;
    virtual Short_t  GetBorderMode() const = 0;
    virtual Short_t  GetBorderSize() const = 0;
    virtual Int_t    GetCanvasID() const = 0;
@@ -219,7 +221,7 @@ public:
    virtual void     SetPhi(Double_t phi=30) = 0;
    virtual void     SetToolTipText(const char *text, Long_t delayms = 1000) = 0;
    virtual void     SetVertical(Bool_t vert=kTRUE) = 0;
-   virtual void     SetView(TView *view) = 0;
+   virtual void     SetView(TView *view=0) = 0;
    virtual void     SetViewer3D(TVirtualViewer3D * /*viewer3d*/) {}
    virtual TObject *WaitPrimitive(const char *pname="", const char *emode="") = 0;
    virtual void     Update() = 0;
