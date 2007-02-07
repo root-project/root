@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.218 2007/02/05 10:36:38 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.219 2007/02/05 18:10:36 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -36,14 +36,11 @@
 #include "TClassMenuItem.h"
 #include "TClassRef.h"
 #include "TClassTable.h"
-#include "TCollectionProxy.h"
 #include "TDataMember.h"
 #include "TDataType.h"
 #include "TError.h"
 #include "TExMap.h"
-#include "TFile.h"
 #include "TInterpreter.h"
-#include "TMapFile.h"
 #include "TMemberInspector.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
@@ -81,6 +78,8 @@ extern Long_t G__globalvarpointer;
 // (exported to be used for similar cases in related classes)
 
 TVirtualMutex* gCINTMutex = 0;
+
+void *gMmallocDesc = 0; //is used and set in TMapFile
 
 Int_t TClass::fgClassCount;
 TClass::ENewType TClass::fgCallingNew = kRealNew;
@@ -864,10 +863,10 @@ void TClass::Init(const char *name, Version_t cversion,
    Int_t stl = TClassEdit::IsSTLCont(GetName(), 0);
 
    if ( stl || !strncmp(GetName(),"stdext::hash_",13) || !strncmp(GetName(),"__gnu_cxx::hash_",16) ) {
-      fCollectionProxy = TCollectionProxy::GenEmulatedProxy( GetName() );
+      fCollectionProxy = TVirtualStreamerInfo::Factory(this)->GenEmulatedProxy( GetName() );
       fSizeof = fCollectionProxy->Sizeof();
       if (fStreamer==0) {
-         fStreamer =  TCollectionProxy::GenEmulatedClassStreamer( GetName() );
+         fStreamer =  TVirtualStreamerInfo::Factory(this)->GenEmulatedClassStreamer( GetName() );
       }
    }
 
@@ -3757,11 +3756,11 @@ void TClass::SetCollectionProxy(const ROOT::TCollectionProxyInfo &info)
 
    delete fCollectionProxy;
 
-   TVirtualCollectionProxy *p = TCollectionProxy::GenExplicitProxy(info);
+   TVirtualCollectionProxy *p = TVirtualStreamerInfo::Factory(this)->GenExplicitProxy(info);
    p->GetCollectionClass(); // Force the initialization.
    fCollectionProxy = p;
 
-   AdoptStreamer(TCollectionProxy::GenExplicitClassStreamer(info));
+   AdoptStreamer(TVirtualStreamerInfo::Factory(this)->GenExplicitClassStreamer(info));
 }
 
 //______________________________________________________________________________
