@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.183 2007/02/05 23:12:28 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.184 2007/02/06 01:07:24 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -4708,6 +4708,35 @@ TList *TProof::GetListOfEnabledPackages()
 }
 
 //______________________________________________________________________________
+void TProof::PrintProgress(Long64_t total, Long64_t processed, Float_t procTime)
+{
+   // Print a progress bar on stderr. Used in batch mode.
+
+   fprintf(stderr, "[TProof::Progress] Total %lld events\t|", total);
+
+   for (int l = 0; l < 20; l++) {
+      if (total > 0) {
+         if (l < 20*processed/total)
+            fprintf(stderr, "=");
+         else if (l == 20*processed/total)
+            fprintf(stderr, ">");
+         else if (l > 20*processed/total)
+            fprintf(stderr, ".");
+      } else
+         fprintf(stderr, "=");
+   }
+   Float_t evtrti = (procTime > 0. && processed > 0) ? processed / procTime : -1.;
+   if (evtrti > 0.)
+      fprintf(stderr, "| %.02f %% [%.1f evts/s]\r",
+              100.0*(total ? (processed/total) : 1), evtrti);
+   else
+      fprintf(stderr, "| %.02f %%\r",
+              100.0*(total ? (processed/total) : 1));
+   if (processed >= total)
+      fprintf(stderr, "\n");
+}
+
+//______________________________________________________________________________
 void TProof::Progress(Long64_t total, Long64_t processed)
 {
    // Get query progress information. Connect a slot to this signal
@@ -4716,7 +4745,12 @@ void TProof::Progress(Long64_t total, Long64_t processed)
    PDB(kGlobal,1)
       Info("Progress","%2f (%lld/%lld)", 100.*processed/total, processed, total);
 
-   EmitVA("Progress(Long64_t,Long64_t)", 2, total, processed);
+   if (gROOT->IsBatch()) {
+      // Simple progress bar
+      PrintProgress(total, processed);
+   } else {
+      EmitVA("Progress(Long64_t,Long64_t)", 2, total, processed);
+   }
 }
 
 //______________________________________________________________________________
@@ -4731,8 +4765,13 @@ void TProof::Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
       Info("Progress","%lld %lld %lld %f %f %f %f", total, processed, bytesread,
                                 initTime, procTime, evtrti, mbrti);
 
-   EmitVA("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
-          7, total, processed, bytesread, initTime, procTime, evtrti, mbrti);
+   if (gROOT->IsBatch()) {
+      // Simple progress bar
+      PrintProgress(total, processed, procTime);
+   } else {
+      EmitVA("Progress(Long64_t,Long64_t,Long64_t,Float_t,Float_t,Float_t,Float_t)",
+             7, total, processed, bytesread, initTime, procTime, evtrti, mbrti);
+   }
 }
 
 //______________________________________________________________________________

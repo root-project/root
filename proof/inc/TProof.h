@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.104 2007/01/29 15:11:10 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.105 2007/02/05 23:12:28 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -485,6 +485,8 @@ private:
    void     DeActivateAsyncInput();
    void     HandleAsyncInput(TSocket *s);
    Int_t    GetQueryReference(Int_t qry, TString &ref);
+
+   void     PrintProgress(Long64_t total, Long64_t processed, Float_t procTime = -1.);
 
 protected:
    TProof(); // For derived classes to use
