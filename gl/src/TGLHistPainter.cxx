@@ -181,11 +181,11 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          //'s'/'S' - specific events processed by TGLTF3Painter,
          //'c'/'C' - turn on/off box cut.
          gGLManager->MarkForDirectCopy(glContext, kTRUE);
-         if (event == 5 || py == kKey_J || py == kKey_j) {
+         if (event == 6 || py == kKey_J || py == kKey_j) {
             fCamera.ZoomIn();
             fGLPainter->InvalidateSelection();
             gGLManager->PaintSingleObject(fGLPainter.get());
-         } else if (event == 6 || py == kKey_K || py == kKey_k) {
+         } else if (event == 5 || py == kKey_K || py == kKey_k) {
             fCamera.ZoomOut();
             fGLPainter->InvalidateSelection();
             gGLManager->PaintSingleObject(fGLPainter.get());

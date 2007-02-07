@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.57 2007/01/29 10:06:50 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.58 2007/01/30 11:49:14 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -1702,7 +1702,7 @@ void TGLViewer::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          HandleKey(&eventSt);
       }
       break;
-      case 5://trick :)
+      case 6://trick :)
          //
          if (CurrentCamera().Zoom(+50, kFALSE, kFALSE)) { //TODO : val static const somewhere
             if (fGLDevice != -1) {
@@ -1712,7 +1712,7 @@ void TGLViewer::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             RequestDraw();
          }
          break;
-      case 6://trick :)
+      case 5://trick :)
          if (CurrentCamera().Zoom(-50, kFALSE, kFALSE)) { //TODO : val static const somewhere
             if (fGLDevice != -1) {
                gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
@@ -1849,14 +1849,14 @@ Bool_t TGLViewer::HandleButton(Event_t * event)
          // Buttons 4/5 are mouse wheel
          // Note: Modifiers (ctrl/shift) disabled as fState doesn't seem to
          // have correct modifier flags with mouse wheel under Windows..
-         case(kButton4): {
+         case(kButton5): {
                // Zoom out (adjust camera FOV)
             if (CurrentCamera().Zoom(+50, kFALSE, kFALSE)) { //TODO : val static const somewhere
                RequestDraw();
             }
             break;
          }
-         case(kButton5): {
+         case(kButton4): {
             // Zoom in (adjust camera FOV)
             if (CurrentCamera().Zoom(-50, kFALSE, kFALSE)) { //TODO : val static const somewhere
                RequestDraw();
