@@ -31,7 +31,6 @@
 #pragma link C++ class TFunctionParametersDialog;
 #pragma link C++ class TPaveStatsEditor;
 #pragma link C++ class TPadEditor;
-#pragma link C++ class TGedToolBox;
 #pragma link C++ class TGedEditor;
 #pragma link C++ class TCurlyArcEditor;
 #pragma link C++ class TCurlyLineEditor;
