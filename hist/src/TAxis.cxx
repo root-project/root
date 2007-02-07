@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.80 2007/02/01 14:58:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.81 2007/02/06 15:00:56 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -14,7 +14,6 @@
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
 #include "TStyle.h"
-#include "TView.h"
 #include "TError.h"
 #include "THashList.h"
 #include "TH1.h"
@@ -264,180 +263,8 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    //  Note that the mouse does not need to be in the pad or even canvas
    //  when it is released.
 
-   if (!gPad->IsEditable()) return;
-
-   gPad->SetCursor(kHand);
-
-   TView *view = gPad->GetView();
-   static Int_t axisNumber;
-   static Double_t ratio1, ratio2;
-   static Int_t px1old, py1old, px2old, py2old;
-   Int_t bin1, bin2, first, last;
-   Double_t temp, xmin,xmax;
-
-   switch (event) {
-
-   case kButton1Down:
-      axisNumber = 1;
-      if (!strcmp(GetName(),"xaxis")) {
-         axisNumber = 1;
-         if (!gPad->IsVertical()) axisNumber = 2;
-      }
-      if (!strcmp(GetName(),"yaxis")) {
-         axisNumber = 2;
-         if (!gPad->IsVertical()) axisNumber = 1;
-      }
-      if (!strcmp(GetName(),"zaxis")) {
-         axisNumber = 3;
-      }
-      if (view) {
-         view->GetDistancetoAxis(axisNumber, px, py, ratio1);
-      } else {
-         if (axisNumber == 1) {
-            ratio1 = (gPad->AbsPixeltoX(px) - gPad->GetUxmin())/(gPad->GetUxmax() - gPad->GetUxmin());
-            px1old = gPad->XtoAbsPixel(gPad->GetUxmin()+ratio1*(gPad->GetUxmax() - gPad->GetUxmin()));
-            py1old = gPad->YtoAbsPixel(gPad->GetUymin());
-            px2old = px1old;
-            py2old = gPad->YtoAbsPixel(gPad->GetUymax());
-         } else if (axisNumber == 2) {
-            ratio1 = (gPad->AbsPixeltoY(py) - gPad->GetUymin())/(gPad->GetUymax() - gPad->GetUymin());
-            py1old = gPad->YtoAbsPixel(gPad->GetUymin()+ratio1*(gPad->GetUymax() - gPad->GetUymin()));
-            px1old = gPad->XtoAbsPixel(gPad->GetUxmin());
-            px2old = gPad->XtoAbsPixel(gPad->GetUxmax());
-            py2old = py1old;
-         } else {
-            ratio1 = (gPad->AbsPixeltoY(py) - gPad->GetUymin())/(gPad->GetUymax() - gPad->GetUymin());
-            py1old = gPad->YtoAbsPixel(gPad->GetUymin()+ratio1*(gPad->GetUymax() - gPad->GetUymin()));
-            px1old = gPad->XtoAbsPixel(gPad->GetUxmax());
-            px2old = gPad->XtoAbsPixel(gPad->GetX2());
-            py2old = py1old;
-         }
-         gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
-      }
-      gVirtualX->SetLineColor(-1);
-      // No break !!!
-
-   case kButton1Motion:
-      if (view) {
-         view->GetDistancetoAxis(axisNumber, px, py, ratio2);
-      } else {
-         gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
-         if (axisNumber == 1) {
-            ratio2 = (gPad->AbsPixeltoX(px) - gPad->GetUxmin())/(gPad->GetUxmax() - gPad->GetUxmin());
-            px2old = gPad->XtoAbsPixel(gPad->GetUxmin()+ratio2*(gPad->GetUxmax() - gPad->GetUxmin()));
-         } else {
-            ratio2 = (gPad->AbsPixeltoY(py) - gPad->GetUymin())/(gPad->GetUymax() - gPad->GetUymin());
-            py2old = gPad->YtoAbsPixel(gPad->GetUymin()+ratio2*(gPad->GetUymax() - gPad->GetUymin()));
-         }
-         gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
-      }
-   break;
-
-   case kButton1Up:
-      if (gROOT->IsEscaped()) {
-         gROOT->SetEscape(kFALSE);
-         break;
-      }
-
-      if (view) {
-         view->GetDistancetoAxis(axisNumber, px, py, ratio2);
-         if (ratio1 > ratio2) {
-            temp   = ratio1;
-            ratio1 = ratio2;
-            ratio2 = temp;
-         }
-         if (ratio2 - ratio1 > 0.05) {
-            TH1 *hobj = (TH1*)fParent;
-            if (axisNumber == 3 && hobj && hobj->GetDimension() != 3) {
-               Float_t zmin = hobj->GetMinimum();
-               Float_t zmax = hobj->GetMaximum();
-               if(gPad->GetLogz()){
-                  if (zmin <= 0 && zmax > 0) zmin = TMath::Min((Double_t)1,
-                                                               (Double_t)0.001*zmax);
-                  zmin = TMath::Log10(zmin);
-                  zmax = TMath::Log10(zmax);
-               }
-               Float_t newmin = zmin + (zmax-zmin)*ratio1;
-               Float_t newmax = zmin + (zmax-zmin)*ratio2;
-               if(newmin < zmin)newmin = hobj->GetBinContent(hobj->GetMinimumBin());
-               if(newmax > zmax)newmax = hobj->GetBinContent(hobj->GetMaximumBin());
-               if(gPad->GetLogz()){
-                  newmin = TMath::Exp(2.302585092994*newmin);
-                  newmax = TMath::Exp(2.302585092994*newmax);
-               }
-               hobj->SetMinimum(newmin);
-               hobj->SetMaximum(newmax);
-               hobj->SetBit(TH1::kIsZoomed);
-            } else {
-               if (fFirst > 0) first = fFirst;
-               else            first = 1;
-               if (fLast > 0) last = fLast;
-               else           last = fNbins;
-               bin1 = first + Int_t((last-first+1)*ratio1);
-               bin2 = first + Int_t((last-first+1)*ratio2);
-               SetRange(bin1, bin2);
-            }
-            delete view;
-            gPad->SetView(0);
-            gPad->Modified(kTRUE);
-         }
-      } else {
-         if (axisNumber == 1) {
-            ratio2 = (gPad->AbsPixeltoX(px) - gPad->GetUxmin())/(gPad->GetUxmax() - gPad->GetUxmin());
-            xmin = gPad->GetUxmin() +ratio1*(gPad->GetUxmax() - gPad->GetUxmin());
-            xmax = gPad->GetUxmin() +ratio2*(gPad->GetUxmax() - gPad->GetUxmin());
-            if (gPad->GetLogx()) {
-               xmin = gPad->PadtoX(xmin);
-               xmax = gPad->PadtoX(xmax);
-            }
-         } else if (axisNumber == 2) {
-            ratio2 = (gPad->AbsPixeltoY(py) - gPad->GetUymin())/(gPad->GetUymax() - gPad->GetUymin());
-            xmin = gPad->GetUymin() +ratio1*(gPad->GetUymax() - gPad->GetUymin());
-            xmax = gPad->GetUymin() +ratio2*(gPad->GetUymax() - gPad->GetUymin());
-            if (gPad->GetLogy()) {
-               xmin = gPad->PadtoY(xmin);
-               xmax = gPad->PadtoY(xmax);
-            }
-         } else {
-            ratio2 = (gPad->AbsPixeltoY(py) - gPad->GetUymin())/(gPad->GetUymax() - gPad->GetUymin());
-            xmin = ratio1;
-            xmax = ratio2;
-         }
-         if (xmin > xmax) {
-            temp   = xmin;
-            xmin   = xmax;
-            xmax   = temp;
-            temp   = ratio1;
-            ratio1 = ratio2;
-            ratio2 = temp;
-         }
-         if (!strcmp(GetName(),"xaxis")) axisNumber = 1;
-         if (!strcmp(GetName(),"yaxis")) axisNumber = 2;
-         if (ratio2 - ratio1 > 0.05) {
-            TH1 *hobj = (TH1*)fParent;
-            bin1 = FindFixBin(xmin);
-            bin2 = FindFixBin(xmax);
-            if (axisNumber == 1) SetRange(bin1,bin2);
-            if (axisNumber == 2 && hobj) {
-               if (hobj->GetDimension() == 1) {
-                  if (hobj->GetNormFactor() != 0) {
-                     Double_t norm = hobj->GetSumOfWeights()/hobj->GetNormFactor();
-                     xmin *= norm;
-                     xmax *= norm;
-                  }
-                  hobj->SetMinimum(xmin);
-                  hobj->SetMaximum(xmax);
-                  hobj->SetBit(TH1::kIsZoomed);
-               } else {
-                  SetRange(bin1,bin2);
-               }
-            }
-            gPad->Modified(kTRUE);
-         }
-      }
-      gVirtualX->SetLineColor(-1);
-      break;
-   }
+   if (!gPad) return;
+   gPad->ExecuteEventAxis(event,px,py,this);
 }
 
 //______________________________________________________________________________
@@ -1171,12 +998,9 @@ void TAxis::UnZoom()
 {
    // Reset first & last bin to the full range
 
-   if (!gPad) return;
-   TView *view = gPad->GetView();
-   if (view) {
-      delete view;
-      gPad->SetView(0);
-   }
+
+   gPad->SetView();
+
    SetRange(0,0);
    if (!strstr(GetName(),"xaxis")) {
       TH1 *hobj = (TH1*)GetParent();
