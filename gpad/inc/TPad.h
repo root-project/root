@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.49 2006/10/20 21:07:40 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.50 2006/10/23 16:41:33 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -181,6 +181,7 @@ public:
 ///   void              DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2);
 ///   void              DrawText(Double_t x, Double_t y, const char *text);
 ///   void              DrawTextNDC(Double_t u, Double_t v, const char *text);
+   virtual void      ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis);
    virtual TObject  *FindObject(const char *name) const;
    virtual TObject  *FindObject(const TObject *obj) const;
    virtual void      UseCurrentStyle();  // *MENU*
@@ -334,7 +335,7 @@ public:
    virtual void      SetPhi(Double_t phi=30) {fPhi = phi; Modified();}
    virtual void      SetToolTipText(const char *text, Long_t delayms = 1000);
    virtual void      SetVertical(Bool_t vert=kTRUE);
-   virtual void      SetView(TView *view) {fView = view;}
+   virtual void      SetView(TView *view = 0);
    virtual void      SetViewer3D(TVirtualViewer3D *viewer3d) {fViewer3D = viewer3d;}
 
    virtual void      SetCopyGLDevice(Bool_t copy) {fCopyGLDevice = copy;}
