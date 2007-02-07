@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.21 2007/01/29 10:06:50 brun Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.22 2007/01/29 15:10:48 brun Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -103,6 +103,7 @@
 #include "TGButtonGroup.h"
 #include "TGNumberEntry.h"
 #include "TGDoubleSlider.h"
+#include "TGStatusBar.h"
 #include "TFitParametersDialog.h"
 #include "TGMsgBox.h"
 #include "TAxis.h"
@@ -111,7 +112,7 @@
 #include "TF1.h"
 #include "TTimer.h"
 #include "THStack.h"
-
+#include "TVirtualFitter.h"
 
 enum EFitPanel {
    kFP_FLIST, kFP_GAUS,  kFP_GAUSN, kFP_EXPO,  kFP_LAND,  kFP_LANDN,
@@ -122,6 +123,10 @@ enum EFitPanel {
    kFP_MLIST, kFP_MCHIS, kFP_MBINL, kFP_MUBIN, kFP_MUSER, kFP_MLINF, kFP_MUSR,
    kFP_DSAME, kFP_DNONE, kFP_DADVB, kFP_DNOST, kFP_PDEF,  kFP_PVER,  kFP_PQET,
    kFP_XMIN,  kFP_XMAX,  kFP_YMIN,  kFP_YMAX,  kFP_ZMIN,  kFP_ZMAX,
+   
+   kFP_LMIN,  kFP_LMIN2, kFP_LFUM,  kFP_MIGRAD,kFP_SIMPLX,kFP_FUMILI,
+   kFP_MERR,  kFP_MTOL,  kFP_MITR,
+   
    kFP_FIT,   kFP_RESET, kFP_CLOSE
 };
 
@@ -187,12 +192,7 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    AddFrame(fTab, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
    fTab->SetCleanup(kDeepCleanup);
    fTab->Associate(this);
-
-   CreateGeneralTab();
-   CreateMinimizationTab();
    
-   fTab->SetEnabled(1, kFALSE);
-
    TGHorizontalFrame *cf1 = new TGHorizontalFrame(this, 250, 20, kFixedWidth);
    cf1->SetCleanup(kDeepCleanup);
    fFitButton = new TGTextButton(cf1, "&Fit", kFP_FIT);
@@ -209,8 +209,19 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    fCloseButton->Associate(this);
    cf1->AddFrame(fCloseButton, new TGLayoutHints(kLHintsTop |
                                                  kLHintsExpandX, 3, 2, 2, 2));
-   AddFrame(cf1, new TGLayoutHints(kLHintsBottom |
+   AddFrame(cf1, new TGLayoutHints(kLHintsNormal |
                                    kLHintsRight, 0, 5, 5, 5));
+
+   // Create status bar
+   int parts[] = { 20, 20, 20, 20, 20 };
+   fStatusBar = new TGStatusBar(this, 10, 10);
+   fStatusBar->SetParts(parts, 5);
+   AddFrame(fStatusBar, new TGLayoutHints(kLHintsBottom | 
+                                          kLHintsLeft   | 
+                                          kLHintsExpandX));
+
+   CreateGeneralTab();
+   CreateMinimizationTab();
 
    gROOT->GetListOfCleanups()->Add(this);
 
@@ -535,34 +546,6 @@ void TFitEditor::CreateGeneralTab()
    h6->AddFrame(v6, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
    gf->AddFrame(h6, new TGLayoutHints(kLHintsExpandX, 20, 0, 2, 0));
 
-   // 'print option' sub-group
-   TGHorizontalFrame *h7 = new TGHorizontalFrame(gf);
-   TGLabel *label7 = new TGLabel(h7, "Print Options");
-   h7->AddFrame(label7, new TGLayoutHints(kLHintsNormal |
-                                          kLHintsCenterY, 2, 2, 2, 2));
-   TGHorizontal3DLine *hline4 = new TGHorizontal3DLine(h7);
-   h7->AddFrame(hline4, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX));
-   gf->AddFrame(h7, new TGLayoutHints(kLHintsExpandX));
-
-   TGHorizontalFrame *h8 = new TGHorizontalFrame(gf);
-   fOptDefault = new TGRadioButton(h8, "Default", kFP_PDEF);
-   fOptDefault->Associate(this);
-   fOptDefault->SetToolTipText("Default is between Verbose and Quiet");
-   h8->AddFrame(fOptDefault, new TGLayoutHints(kLHintsNormal, 0, 0, 0, 1));
-   fOptDefault->SetState(kButtonDown);
-
-   fOptVerbose = new TGRadioButton(h8, "Verbose", kFP_PVER);
-   fOptVerbose->Associate(this);
-   fOptVerbose->SetToolTipText("'V'- print results after each iteration");
-   h8->AddFrame(fOptVerbose, new TGLayoutHints(kLHintsNormal, 30, 0, 0, 1));
-
-   fOptQuiet = new TGRadioButton(h8, "Quiet", kFP_PQET);
-   fOptQuiet->Associate(this);
-   fOptQuiet->SetToolTipText("'Q'- no print");
-   h8->AddFrame(fOptQuiet, new TGLayoutHints(kLHintsNormal, 30, 0, 0, 1));
-
-   gf->AddFrame(h8, new TGLayoutHints(kLHintsExpandX, 20, 0, 1, 1));
-
    fGeneral->AddFrame(gf, new TGLayoutHints(kLHintsExpandX |
                                             kLHintsExpandY, 5, 5, 0, 0));
    // sliderX
@@ -610,6 +593,119 @@ void TFitEditor::CreateMinimizationTab()
    fTabContainer->AddFrame(fMinimization, new TGLayoutHints(kLHintsTop |
                                                             kLHintsExpandX,
                                                             5, 5, 2, 2));
+   MakeTitle(fMinimization, "Library");
+
+   TGHorizontalFrame *hl = new TGHorizontalFrame(fMinimization);
+   fLibMinuit = new TGRadioButton(hl, "Minuit", kFP_LMIN);
+   fLibMinuit->Associate(this);
+   fLibMinuit->SetToolTipText("Use minimization from libMinuit (default)");
+   hl->AddFrame(fLibMinuit, new TGLayoutHints(kLHintsNormal, 40, 0, 0, 1));
+   fLibMinuit->SetState(kButtonDown);
+   fStatusBar->SetText("LIB Minuit",0);
+
+   fLibMinuit2 = new TGRadioButton(hl, "Minuit2", kFP_LMIN2);
+   fLibMinuit2->Associate(this);
+   fLibMinuit2->SetToolTipText("New C++ version of Minuit");
+   hl->AddFrame(fLibMinuit2, new TGLayoutHints(kLHintsNormal, 35, 0, 0, 1));
+
+   fLibFumili = new TGRadioButton(hl, "Fumili", kFP_LFUM);
+   fLibFumili->Associate(this);
+   fLibFumili->SetToolTipText("Use minimization from libFumili");
+   hl->AddFrame(fLibFumili, new TGLayoutHints(kLHintsNormal, 30, 0, 0, 1));
+   fMinimization->AddFrame(hl, new TGLayoutHints(kLHintsExpandX, 20, 0, 5, 1));
+
+   MakeTitle(fMinimization, "Method");
+
+   TGHorizontalFrame *hm = new TGHorizontalFrame(fMinimization);
+   fMigrad = new TGRadioButton(hm, "MIGRAD", kFP_MIGRAD);
+   fMigrad->Associate(this);
+   fMigrad->SetToolTipText("Use MIGRAD as minimization method");
+   hm->AddFrame(fMigrad, new TGLayoutHints(kLHintsNormal, 40, 0, 0, 1));
+   fMigrad->SetState(kButtonDown);
+   fStatusBar->SetText("MIGRAD",1);
+
+   fSimplex = new TGRadioButton(hm, "SIMPLEX", kFP_SIMPLX);
+   fSimplex->Associate(this);
+   fSimplex->SetToolTipText("Use SIMPLEX as minimization method");
+   // Simplex functionality will come with the new fitter design    
+   fSimplex->SetState(kButtonDisabled);
+   hm->AddFrame(fSimplex, new TGLayoutHints(kLHintsNormal, 20, 0, 0, 1));
+
+   fFumili = new TGRadioButton(hm, "FUMILI", kFP_FUMILI);
+   fFumili->Associate(this);
+   fFumili->SetToolTipText("Use FUMILI as minimization method");
+   fFumili->SetState(kButtonDisabled);
+   hm->AddFrame(fFumili, new TGLayoutHints(kLHintsNormal, 18, 0, 0, 1));
+   fMinimization->AddFrame(hm, new TGLayoutHints(kLHintsExpandX, 20, 0, 5, 1));
+
+   MakeTitle(fMinimization, "Settings");
+   TGLabel *hslabel1 = new TGLabel(fMinimization,"Use ENTER key to validate a new value or click");
+   fMinimization->AddFrame(hslabel1, new TGLayoutHints(kLHintsNormal, 61, 0, 5, 1));
+   TGLabel *hslabel2 = new TGLabel(fMinimization,"on Reset button to set the defaults.");
+   fMinimization->AddFrame(hslabel2, new TGLayoutHints(kLHintsNormal, 61, 0, 1, 10));
+
+   TGHorizontalFrame *hs = new TGHorizontalFrame(fMinimization);
+   
+   TGVerticalFrame *hsv1 = new TGVerticalFrame(hs, 180, 10, kFixedWidth);
+   TGLabel *errlabel = new TGLabel(hsv1,"Error definition (default = 1): ");
+   hsv1->AddFrame(errlabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 
+                                              1, 1, 5, 7));
+   TGLabel *tollabel = new TGLabel(hsv1,"Max tolerance (precision): ");
+   hsv1->AddFrame(tollabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 
+                                              1, 1, 5, 7));
+   TGLabel *itrlabel = new TGLabel(hsv1,"Max number of iterations: ");
+   hsv1->AddFrame(itrlabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 
+                                              1, 1, 5, 5));
+   hs->AddFrame(hsv1, new TGLayoutHints(kLHintsNormal, 60, 0, 0, 0));
+   
+   TGVerticalFrame *hsv2 = new TGVerticalFrame(hs, 90,10, kFixedWidth);
+   fErrorScale = new TGNumberEntryField(hsv2, kFP_MERR, 1.0,
+                                        TGNumberFormat::kNESRealTwo,
+                                        TGNumberFormat::kNEAPositive,
+                                        TGNumberFormat::kNELLimitMinMax,0.,100.);
+   hsv2->AddFrame(fErrorScale, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 
+                                                 1, 1, 0, 3));
+   fTolerance = new TGNumberEntryField(hsv2, kFP_MTOL, 1.0E-9, 
+                                       TGNumberFormat::kNESReal,
+                                       TGNumberFormat::kNEAPositive,
+                                       TGNumberFormat::kNELLimitMinMax, 0., 1.);
+   fTolerance->SetNumber(TVirtualFitter::GetPrecision());
+   hsv2->AddFrame(fTolerance, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 
+                                                1, 1, 3, 3));
+   fIterations = new TGNumberEntryField(hsv2, kFP_MITR, 5000, 
+                                   TGNumberFormat::kNESInteger,
+                                   TGNumberFormat::kNEAPositive,
+                                   TGNumberFormat::kNELNoLimits);
+   fIterations->SetNumber(TVirtualFitter::GetMaxIterations());
+   hsv2->AddFrame(fIterations, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 
+                                                 1, 1, 3, 3));
+   hs->AddFrame(hsv2, new TGLayoutHints(kLHintsNormal, 0, 0, 0, 0));
+   fMinimization->AddFrame(hs, new TGLayoutHints(kLHintsExpandX, 0, 0, 1, 1));
+   fStatusBar->SetText("Itr: 5000",2);
+
+
+   MakeTitle(fMinimization, "Print Options");
+
+   TGHorizontalFrame *h8 = new TGHorizontalFrame(fMinimization);
+   fOptDefault = new TGRadioButton(h8, "Default", kFP_PDEF);
+   fOptDefault->Associate(this);
+   fOptDefault->SetToolTipText("Default is between Verbose and Quiet");
+   h8->AddFrame(fOptDefault, new TGLayoutHints(kLHintsNormal, 40, 0, 0, 1));
+   fOptDefault->SetState(kButtonDown);
+   fStatusBar->SetText("Prn: DEF",3);
+
+   fOptVerbose = new TGRadioButton(h8, "Verbose", kFP_PVER);
+   fOptVerbose->Associate(this);
+   fOptVerbose->SetToolTipText("'V'- print results after each iteration");
+   h8->AddFrame(fOptVerbose, new TGLayoutHints(kLHintsNormal, 30, 0, 0, 1));
+
+   fOptQuiet = new TGRadioButton(h8, "Quiet", kFP_PQET);
+   fOptQuiet->Associate(this);
+   fOptQuiet->SetToolTipText("'Q'- no print");
+   h8->AddFrame(fOptQuiet, new TGLayoutHints(kLHintsNormal, 25, 0, 0, 1));
+
+   fMinimization->AddFrame(h8, new TGLayoutHints(kLHintsExpandX, 20, 0, 5, 1));
+
 }
 
 //______________________________________________________________________________
@@ -647,12 +743,6 @@ void TFitEditor::ConnectSlots()
    fNoStoreDrawing->Connect("Toggled(Bool_t)","TFitEditor",this,"DoNoStoreDrawing()");
    fNoDrawing->Connect("Toggled(Bool_t)","TFitEditor",this,"DoNoDrawing()");
    fDrawSame->Connect("Toggled(Bool_t)","TFitEditor",this,"DoDrawSame()");
-
-   // print options
-   fOptDefault->Connect("Toggled(Bool_t)","TFitEditor",this,"DoPrintOpt(Bool_t)");
-   fOptVerbose->Connect("Toggled(Bool_t)","TFitEditor",this,"DoPrintOpt(Bool_t)");
-   fOptQuiet->Connect("Toggled(Bool_t)","TFitEditor",this,"DoPrintOpt(Bool_t)");
-
    // fit method
    fMethodList->Connect("Selected(Int_t)", "TFitEditor", this, "DoMethod(Int_t)");
 
@@ -682,6 +772,29 @@ void TFitEditor::ConnectSlots()
       fSliderZ->Connect("Released()","TFitEditor",this, "DoSliderZReleased()");
    }
    fParentPad->Connect("RangeAxisChanged()", "TFitEditor", this, "UpdateGUI()");
+   
+   // 'Minimization' tab
+   // library
+   fLibMinuit->Connect("Toggled(Bool_t)","TFitEditor",this,"DoLibrary(Bool_t)");
+   fLibMinuit2->Connect("Toggled(Bool_t)","TFitEditor",this,"DoLibrary(Bool_t)");
+   fLibFumili->Connect("Toggled(Bool_t)","TFitEditor",this,"DoLibrary(Bool_t)");
+
+   // minimization method
+   fMigrad->Connect("Toggled(Bool_t)","TFitEditor",this,"DoMinMethod(Bool_t)");
+   // Simplex functionality will come with the new fitter design
+   //fSimplex->Connect("Toggled(Bool_t)","TFitEditor",this,"DoMinMethod(Bool_t)");
+   fFumili->Connect("Toggled(Bool_t)","TFitEditor",this,"DoMinMethod(Bool_t)");
+
+   // fitter settings
+   fErrorScale->Connect("ReturnPressed()", "TFitEditor", this, "DoErrorsDef()");
+   fTolerance->Connect("ReturnPressed()", "TFitEditor", this, "DoMaxTolerance()");
+   fIterations->Connect("ReturnPressed()", "TFitEditor", this, "DoMaxIterations()");
+   
+   // print options
+   fOptDefault->Connect("Toggled(Bool_t)","TFitEditor",this,"DoPrintOpt(Bool_t)");
+   fOptVerbose->Connect("Toggled(Bool_t)","TFitEditor",this,"DoPrintOpt(Bool_t)");
+   fOptQuiet->Connect("Toggled(Bool_t)","TFitEditor",this,"DoPrintOpt(Bool_t)");
+
 }
 
 //______________________________________________________________________________
@@ -717,11 +830,6 @@ void TFitEditor::DisconnectSlots()
    fNoDrawing->Disconnect("Toggled(Bool_t)");
    fDrawSame->Disconnect("Toggled(Bool_t)");
 
-   // print options
-   fOptDefault->Disconnect("Toggled(Bool_t)");
-   fOptVerbose->Disconnect("Toggled(Bool_t)");
-   fOptQuiet->Disconnect("Toggled(Bool_t)");
-
    // fit method
    fMethodList->Disconnect("Selected(Int_t)");
 
@@ -748,6 +856,28 @@ void TFitEditor::DisconnectSlots()
       fSliderZ->Disconnect("Pressed()");
       fSliderZ->Disconnect("Released()");
    }
+   
+   // slots related to 'Minimization' tab
+   fLibMinuit->Disconnect("Toggled(Bool_t)");
+   fLibMinuit2->Disconnect("Toggled(Bool_t)");
+   fLibFumili->Disconnect("Toggled(Bool_t)");
+
+   // minimization method
+   fMigrad->Disconnect("Toggled(Bool_t)");
+   // Simplex functionality will come with the new fitter design
+   //fSimplex->Disconnect("Toggled(Bool_t)");
+   fFumili->Disconnect("Toggled(Bool_t)");
+
+   // fitter settings
+   fErrorScale->Disconnect("ReturnPressed()");
+   fTolerance->Disconnect("ReturnPressed()");
+   fIterations->Disconnect("ReturnPressed()");
+
+   // print options
+   fOptDefault->Disconnect("Toggled(Bool_t)");
+   fOptVerbose->Disconnect("Toggled(Bool_t)");
+   fOptQuiet->Disconnect("Toggled(Bool_t)");
+
 }
 
 //______________________________________________________________________________
@@ -1129,7 +1259,7 @@ TGComboBox* TFitEditor::BuildFunctionList(TGFrame* parent, Int_t id)
 //______________________________________________________________________________
 TGComboBox* TFitEditor::BuildMethodList(TGFrame* parent, Int_t id)
 {
-   // Create method list combo box.
+   // Create method list in a combo box.
 
    TGComboBox *c = new TGComboBox(parent, id);
    c->AddEntry("Chi-square", kFP_MCHIS);
@@ -1554,6 +1684,7 @@ void TFitEditor::DoPrintOpt(Bool_t on)
                fFitOption.ReplaceAll('V', "");
             }
          }
+         fStatusBar->SetText("Prn: DEF",3);
          break;
       case kFP_PVER:
          if (on) {
@@ -1565,6 +1696,7 @@ void TFitEditor::DoPrintOpt(Bool_t on)
             }
             fFitOption += 'V';
          }
+         fStatusBar->SetText("Prn: VER",3);
          break;
       case kFP_PQET:
          if (on) {
@@ -1576,6 +1708,7 @@ void TFitEditor::DoPrintOpt(Bool_t on)
             }
             fFitOption += 'Q';
          }
+         fStatusBar->SetText("Prn: QT",3);
       default:
          break;
    }
@@ -1625,9 +1758,22 @@ void TFitEditor::DoReset()
       fNoDrawing->SetState(kButtonUp, kFALSE);
    if (fNoStoreDrawing->GetState() == kButtonDown)
       fNoStoreDrawing->SetState(kButtonUp, kFALSE);
-   fOptDefault->SetState(kButtonDown);
    fNone->SetState(kButtonDown);
    fFuncList->Select(1, kTRUE);
+
+   // minimization tab
+   if (fLibMinuit->GetState() != kButtonDown)
+      fLibMinuit->SetState(kButtonDown, kTRUE);
+   if (fMigrad->GetState() != kButtonDown)
+      fMigrad->SetState(kButtonDown, kTRUE);
+   if (fOptDefault->GetState() != kButtonDown)
+      fOptDefault->SetState(kButtonDown, kTRUE);
+   fErrorScale->SetNumber(1.0);
+   fErrorScale->ReturnPressed();
+   fTolerance->SetNumber(1e-6);
+   fTolerance->ReturnPressed();
+   fIterations->SetIntNumber(5000);
+   fIterations->ReturnPressed();
 }
 
 //______________________________________________________________________________
@@ -2080,5 +2226,182 @@ Option_t *TFitEditor::GetDrawOption() const
       if (obj == fFitObject) return next.GetOption();
    }
    return "";
+}
+
+//______________________________________________________________________________
+void TFitEditor::DoLibrary(Bool_t on)
+{
+   // Set selected minimization library in use.
+
+   TGButton *bt = (TGButton *)gTQSender;
+   Int_t id = bt->WidgetId(); 
+
+   switch (id) {
+
+      case kFP_LMIN:
+         {
+            if (on) {
+               fLibMinuit->SetState(kButtonDown);
+               fLibMinuit2->SetState(kButtonUp);
+               fLibFumili->SetState(kButtonUp);
+               if (fFumili->GetState() != kButtonDisabled) {
+                  fFumili->SetState(kButtonDisabled);
+               }
+               fMigrad->SetState(kButtonDown);
+               fStatusBar->SetText("MIGRAD", 1);
+               // Simplex functionality will come with the new fitter design    
+               //if (fSimplex->GetState() == kButtonDisabled)
+               //   fSimplex->SetState(kButtonUp);
+               TVirtualFitter::SetDefaultFitter("Minuit");
+               fStatusBar->SetText("LIB Minuit", 0);
+            }
+            
+         }
+         break;
+      
+      case kFP_LMIN2:
+         {
+            if (on) {
+               fLibMinuit->SetState(kButtonUp);
+               fLibMinuit2->SetState(kButtonDown);
+               fLibFumili->SetState(kButtonUp);
+               // Simplex functionality will come with the new fitter design    
+               //if (fSimplex->GetState() == kButtonDisabled)
+               //   fSimplex->SetState(kButtonUp);
+               if (fMigrad->GetState() == kButtonDisabled)
+                  fMigrad->SetState(kButtonUp);
+               if (fFumili->GetState() == kButtonDisabled)
+                  fFumili->SetState(kButtonUp);
+               if (fMigrad->GetState() == kButtonDown)
+                  TVirtualFitter::SetDefaultFitter("Minuit2");
+               else if (fFumili->GetState() == kButtonDown)
+                  TVirtualFitter::SetDefaultFitter("Fumili2");
+               fStatusBar->SetText("LIB Minuit2", 0);
+            }
+         }
+         break;
+      
+      case kFP_LFUM:
+         {
+            if (on) {
+               if (fFumili->GetState() != kButtonDown) {
+                  fFumili->SetState(kButtonDown);
+                  fStatusBar->SetText("FUMILI", 1);
+               }
+               fLibMinuit->SetState(kButtonUp);
+               fLibMinuit2->SetState(kButtonUp);
+               fLibFumili->SetState(kButtonDown);
+               TVirtualFitter::SetDefaultFitter("Fumili");
+               fMigrad->SetState(kButtonDisabled);
+               // Simplex functionality will come with the new fitter design    
+               //fSimplex->SetState(kButtonDisabled);
+               fStatusBar->SetText("LIB Fumili", 0);
+            }
+         }
+      default:
+         break;
+   }
+   
+}
+
+//______________________________________________________________________________
+void TFitEditor::DoMinMethod(Bool_t on)
+{
+   // Set selected minimization method in use.
+
+   TGButton *bt = (TGButton *)gTQSender;
+   Int_t id = bt->WidgetId(); 
+
+   switch (id) {
+
+      case kFP_MIGRAD:
+         {
+            if (on) {
+               // Simplex functionality will come with the new fitter design    
+               //fSimplex->SetState(kButtonUp);
+               if (fLibMinuit->GetState() == kButtonDown)
+                  fFumili->SetState(kButtonDisabled);
+               else
+                  fFumili->SetState(kButtonUp);
+               fMigrad->SetState(kButtonDown);
+               fStatusBar->SetText("MIGRAD",1);
+            }
+         }
+         break;
+      
+      case kFP_SIMPLX:
+         {
+            if (on) {
+               // Simplex functionality will come with the new fitter design    
+               //fMigrad->SetState(kButtonUp);
+               //if (fLibMinuit->GetState() == kButtonDown)
+               //   fFumili->SetState(kButtonDisabled);
+               //else
+               //   fFumili->SetState(kButtonUp);
+               //fSimplex->SetState(kButtonDown);
+               //fStatusBar->SetText("SIMPLEX",1);
+            }
+         }
+         break;
+      
+      case kFP_FUMILI:
+         {
+            if (on) {
+               fMigrad->SetState(kButtonUp);
+               // Simplex functionality will come with the new fitter design    
+               //fSimplex->SetState(kButtonUp);
+               fFumili->SetState(kButtonDown);
+               fStatusBar->SetText("FUMILI",1);
+               if (fLibMinuit2->GetState() == kButtonDown)
+                  TVirtualFitter::SetDefaultFitter("Fumili2");
+               else
+                  TVirtualFitter::SetDefaultFitter("Fumili");
+            }
+         }
+         break;
+      
+   }
+}
+
+//______________________________________________________________________________
+void TFitEditor::DoErrorsDef()
+{
+   // Set the error definition for default fitter.
+   
+   Double_t err = fErrorScale->GetNumber();
+   TVirtualFitter::SetErrorDef(err);
+}
+
+//______________________________________________________________________________
+void TFitEditor::DoMaxTolerance()
+{
+   // Set the fit relative precision.
+   
+   Double_t tol = fTolerance->GetNumber();
+   TVirtualFitter::SetPrecision(tol);
+}
+
+//______________________________________________________________________________
+void TFitEditor::DoMaxIterations()
+{
+   // Set the maximum number of iterations.
+
+   Long_t itr = fIterations->GetIntNumber();
+   TVirtualFitter::SetMaxIterations(itr);
+   fStatusBar->SetText(Form("Itr: %ld",itr),2);
+}
+
+//______________________________________________________________________________
+void TFitEditor::MakeTitle(TGCompositeFrame *parent, const char *title)
+{
+   // Create section title in the GUI.
+
+   TGCompositeFrame *ht = new TGCompositeFrame(parent, 350, 10, 
+                                               kFixedWidth | kHorizontalFrame);
+   ht->AddFrame(new TGLabel(ht, title),
+                new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   ht->AddFrame(new TGHorizontal3DLine(ht),
+                new TGLayoutHints(kLHintsExpandX | kLHintsCenterY, 5, 5, 2, 2));
+   parent->AddFrame(ht, new TGLayoutHints(kLHintsTop, 5, 0, 5, 0));
 }
 

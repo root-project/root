@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.9 2007/01/22 18:19:29 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.10 2007/01/29 10:06:49 brun Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -47,6 +47,8 @@ class TGTextEntry;
 class TGNumberEntry;
 class TGDoubleHSlider;
 class TGNumberEntry;
+class TGNumberEntryField;
+class TGStatusBar;
 class TAxis;
 class TF1;
 
@@ -126,6 +128,18 @@ protected:
                         fPx2old,
                         fPy2old;
 
+   TGRadioButton       *fLibMinuit;        // set default minimization library (Minuit)
+   TGRadioButton       *fLibMinuit2;       // set Minuit2 as minimization library
+   TGRadioButton       *fLibFumili;        // set Fumili as minimization library
+   TGRadioButton       *fMigrad;           // set default minimization method (MIGRAD)
+   TGRadioButton       *fSimplex;          // set Simplex as minimization method
+   TGRadioButton       *fFumili;           // set Fumili as minimization method
+   TGNumberEntryField  *fErrorScale;       // contains error scale set for minimization
+   TGNumberEntryField  *fTolerance;        // contains tolerance set for minimization
+   TGNumberEntryField  *fIterations;       // contains maximum number of iterations
+
+   TGStatusBar         *fStatusBar;        // statusbar widget
+   
    static TFitEditor *fgFitDialog;         // singleton fit panel
 
    TGComboBox *BuildFunctionList(TGFrame *parent, Int_t id);
@@ -133,6 +147,7 @@ protected:
    Int_t       CheckFunctionString(const char* str);
    void        CreateGeneralTab();
    void        CreateMinimizationTab();
+   void        MakeTitle(TGCompositeFrame *parent, const char *title);
 
 private:
    TFitEditor(const TFitEditor&);              // not implemented
@@ -147,6 +162,7 @@ public:
    virtual Option_t  *GetDrawOption() const;
    virtual void       Hide();
    virtual void       Show(TVirtualPad* pad, TObject *obj);
+
            void       ShowObjectName(TObject* obj);
            Bool_t     SetObjectType(TObject* obj);
    virtual void       Terminate();
@@ -161,7 +177,7 @@ public:
    virtual void   SetFitObject(TVirtualPad *pad, TObject *obj, Int_t event);
    virtual void   SetFunction(const char *function);
 
-   // slot methods
+   // slot methods 'General' tab
    virtual void   DoAddition(Bool_t on);
    virtual void   DoAddtoList();
    virtual void   DoAdvancedOptions();
@@ -173,6 +189,9 @@ public:
    virtual void   DoEmptyBinsAllWeights1();
    virtual void   DoEnteredFunction();
    virtual void   DoFit();
+   virtual void   DoErrorsDef();
+   virtual void   DoMaxTolerance();
+   virtual void   DoMaxIterations();
    virtual void   DoFunction(Int_t sel);
    virtual void   DoImproveResults();
    virtual void   DoIntegral();
@@ -183,7 +202,6 @@ public:
    virtual void   DoNoOperation(Bool_t on);
    virtual void   DoNoSelection();
    virtual void   DoNoStoreDrawing();
-   virtual void   DoPrintOpt(Bool_t on);
    virtual void   DoReset();
    virtual void   DoRobust();
    virtual void   DoSetParameters();
@@ -199,6 +217,12 @@ public:
    virtual void   DoUserDialog();
    virtual void   DoUseRange();
 
+   // slot methods 'Minimization' tab
+   virtual void   DoLibrary(Bool_t on);
+   virtual void   DoMinMethod(Bool_t on);
+   virtual void   DoPrintOpt(Bool_t on);
+   
+   
    ClassDef(TFitEditor,0)  //new fit panel interface
 };
 
