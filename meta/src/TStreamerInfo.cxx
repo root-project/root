@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.246 2007/01/29 16:09:47 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.247 2007/02/05 18:09:13 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -37,10 +37,12 @@
 #include "TError.h"
 #include "TRef.h"
 #include "TProcessID.h"
-#include "TVirtualCollectionProxy.h"
+
 #include "TStreamer.h"
-#include "TInterpreter.h"
 #include "TContainerConverters.h"
+#include "TCollectionProxyFactory.h"
+#include "TVirtualCollectionProxy.h"
+#include "TInterpreter.h"
 
 TStreamerElement *TStreamerInfo::fgElement = 0;
 Int_t   TStreamerInfo::fgCount = 0;
@@ -997,7 +999,10 @@ void TStreamerInfo::BuildOld()
                Int_t elemType = element->GetType();
                Bool_t isPrealloc = (elemType == kObjectp) || (elemType == kAnyp) || (elemType == (kObjectp + kOffsetL)) || (elemType == (kAnyp + kOffsetL));
                element->Update(oldClass, newClass.GetClass());
-               element->SetStreamer(new TConvertClonesArrayToProxy(newClass->GetCollectionProxy(), element->IsaPointer(), isPrealloc));
+               TVirtualCollectionProxy *cp = newClass->GetCollectionProxy();
+               TConvertClonesArrayToProxy *ms = new TConvertClonesArrayToProxy(cp, element->IsaPointer(), isPrealloc);
+               element->SetStreamer(ms);
+               //element->SetStreamer(new TConvertClonesArrayToProxy(newClass->GetCollectionProxy(), element->IsaPointer(), isPrealloc));
                // When the type is kObject, the TObject::Streamer is used instead
                // of the TStreamerElement's streamer.  So let force the usage
                // of our streamer
@@ -2611,4 +2616,44 @@ void TStreamerInfo::TCompInfo::Update(const TClass *oldcl, TClass *newcl)
       fClass = newcl;
    else if (fClass == 0)
       fClass =TClass::GetClass(fClassName);
+}
+
+
+//______________________________________________________________________________
+//______________________________________________________________________________
+
+//______________________________________________________________________________
+TVirtualCollectionProxy*
+TStreamerInfo::GenEmulatedProxy(const char* class_name)
+{
+   // Generate emulated collection proxy for a given class.
+
+   return TCollectionProxyFactory::GenEmulatedProxy(class_name);
+}
+
+//______________________________________________________________________________
+TClassStreamer*
+TStreamerInfo::GenEmulatedClassStreamer(const char* class_name)
+{
+   // Generate emulated class streamer for a given collection class.
+
+   return TCollectionProxyFactory::GenEmulatedClassStreamer(class_name);
+}
+
+//______________________________________________________________________________
+TVirtualCollectionProxy*
+TStreamerInfo::GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info )
+{
+   // Generate proxy from static functions.
+   
+   return TCollectionProxyFactory::GenExplicitProxy(info);
+}
+
+//______________________________________________________________________________
+TClassStreamer*
+TStreamerInfo::GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &info )
+{
+   // Generate class streamer from static functions.
+
+   return TCollectionProxyFactory::GenExplicitClassStreamer(info);
 }

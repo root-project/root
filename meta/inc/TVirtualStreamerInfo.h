@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TVirtualStreamerInfo.h,v 1.65 2006/05/23 04:47:40 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TVirtualStreamerInfo.h,v 1.1 2007/02/05 18:06:25 brun Exp $
 // Author: Rene Brun   05/02/2007
 
 /*************************************************************************
@@ -30,6 +30,9 @@ class TClass;
 class TObjArray;
 class TStreamerElement;
 class TStreamerBasicType;
+class TVirtualCollectionProxy;
+class TClassStreamer;
+class ROOT::TCollectionProxyInfo;
 
 class TVirtualStreamerInfo : public TNamed {
 
@@ -135,6 +138,11 @@ public:
    static Bool_t       CanDelete();
    static void         SetCanDelete(Bool_t opt=kTRUE);
    static TVirtualStreamerInfo *Factory(TClass *cl);
+   
+   virtual TVirtualCollectionProxy *GenEmulatedProxy(const char* class_name) = 0;
+   virtual TClassStreamer *GenEmulatedClassStreamer(const char* class_name) = 0;
+   virtual TVirtualCollectionProxy *GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info ) = 0;
+   virtual TClassStreamer *GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &info ) = 0;
 
    //WARNING this class version must be the same as TStreamerInfo
    ClassDef(TVirtualStreamerInfo,5)  //Abstract Interface describing Streamer information for one class

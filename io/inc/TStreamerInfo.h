@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.65 2006/05/23 04:47:40 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.66 2007/02/05 18:09:13 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -39,6 +39,8 @@ class TMemberStreamer;
 class TStreamerElement;
 class TStreamerBasicType;
 class TVirtualCollectionProxy;
+class TClassStreamer;
+class ROOT::TCollectionProxyInfo;
 
 class TStreamerInfo : public TVirtualStreamerInfo {
 
@@ -208,6 +210,11 @@ public:
    Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
    Int_t               WriteBufferSTL   (TBuffer &b, TVirtualCollectionProxy *cont,   Int_t nc, Int_t first, Int_t eoffset);
    virtual void        Update(const TClass *oldClass, TClass *newClass);
+   
+   virtual TVirtualCollectionProxy *GenEmulatedProxy(const char* class_name);
+   virtual TClassStreamer *GenEmulatedClassStreamer(const char* class_name);
+   virtual TVirtualCollectionProxy *GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info );
+   virtual TClassStreamer *GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &info );
 
    static TStreamerElement   *GetCurrentElement();
 
