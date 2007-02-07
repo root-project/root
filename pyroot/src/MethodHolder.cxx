@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.54 2007/01/09 05:31:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.55 2007/01/17 07:32:39 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -350,10 +350,10 @@ template< class T, class M >
 PyObject* PyROOT::TMethodHolder< T, M >::GetPrototype()
 {
 // construct python string from the method's prototype
-   return PyString_FromFormat( "%s%s %s%s",
+   return PyString_FromFormat( "%s%s %s::%s%s",
       ( fMethod.IsStatic() ? "static " : "" ),
       fMethod.TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S ).c_str(),
-      fMethod.DeclaringScope().Name().c_str(),
+      fMethod.DeclaringScope().Name().c_str(), fMethod.Name().c_str(),
       GetSignatureString().c_str() );
 }
 

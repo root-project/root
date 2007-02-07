@@ -1,8 +1,8 @@
 from __future__ import generators
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.44 2006/10/17 06:09:15 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.45 2006/12/08 07:42:31 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 09/22/06
+# Last: 02/06/07
 
 """PyROOT user module.
 
@@ -88,7 +88,18 @@ if needsGlobal:
 del needsGlobal
 
 
-### choose interactive-favoured policies ----------------------------------------
+### configuration ---------------------------------------------------------------
+class _Configuration( object ):
+   __slots__ = [ 'StartGuiThread' ]
+
+   def __init__( self ):
+      self.StartGuiThread = 1
+
+PyConfig = _Configuration()
+del _Configuration
+
+
+### choose interactive-favored policies -----------------------------------------
 _root.SetMemoryPolicy( _root.kMemoryHeuristics )
 _root.SetSignalPolicy( _root.kSignalSafe )
 
@@ -262,10 +273,40 @@ class ModuleFacade( object ):
       self.__dict__[ '__name__' ] = self.module.__name__
 
       self.__dict__[ 'keeppolling' ] = 0
+      self.__dict__[ 'PyConfig' ]    = self.module.PyConfig
 
+      class gROOTWrapper( object ):
+         def __init__( self, gROOT, master ):
+            self.__dict__[ '_gROOT' ]  = gROOT
+            self.__dict__[ '_master' ] = master
+
+         def __getattr__( self, name ):
+           if name != 'SetBatch':
+              self._master._ModuleFacade__finalSetup()
+              self._master.__dict__[ 'gROOT' ] = self._gROOT
+           return getattr( self._gROOT, name )
+
+         def __setattr__( self, name, value ):
+           return setattr( self._gROOT, name, value )
+              
+      self.__dict__[ 'gROOT' ] = gROOTWrapper( _root.gROOT, self )
+
+    # begin with startup gettattr/setattr
       self.__class__.__getattr__ = self.__class__.__getattr1
+      self.__class__.__setattr__ = self.__class__.__setattr1
 
-   def __setattr__( self, name, value ):
+   def __setattr1( self, name, value ):      # "start-up" setattr
+    # switch to running gettattr/setattr
+      self.__class__.__getattr__ = self.__class__.__getattr2
+      self.__class__.__setattr__ = self.__class__.__setattr2
+
+    # create application, thread etc.
+      self.__finalSetup()
+
+    # let "running" setattr handle setting
+      return setattr( self, name, value )
+
+   def __setattr2( self, name, value ):     # "running" getattr
     # to allow assignments to ROOT globals such as ROOT.gDebug
       if not name in self.__dict__:
          try:
@@ -287,48 +328,38 @@ class ModuleFacade( object ):
     # actual assignment through descriptor, or normal python way
       super( self.__class__, self ).__setattr__( name, value )
 
-   def __getattr1( self, name ):
-    # this is the "start-up" getattr, which handles the special cases
+   def __getattr1( self, name ):             # "start-up" getattr
+    # special case, to allow "from ROOT import gROOT" w/o starting GUI thread
+      if name == '__path__':
+         raise AttributeError( name )
 
+    # switch to running gettattr/setattr
+      self.__class__.__getattr__ = self.__class__.__getattr2
+      self.__class__.__setattr__ = self.__class__.__setattr2
+
+    # create application, thread etc.
+      self.__finalSetup()
+
+    # let "running" getattr handle lookup
+      return getattr( self, name )
+
+   def __getattr2( self, name ):             # "running" getattr
+    # handle "from ROOT import *" ... can be called multiple times
       if name == '__all__':
-       # support for "from ROOT import *" at the module level
          caller = sys.modules[ sys._getframe( 1 ).f_globals[ '__name__' ] ]
 
+       # we may be calling in from __getattr1, verify and if so, go one frame up
+         if caller == self:
+            caller = sys.modules[ sys._getframe( 2 ).f_globals[ '__name__' ] ]
+
+       # setup the pre-defined globals
          for name in self.module.__pseudo__all__:
             caller.__dict__[ name ] = getattr( _root, name )
 
-       # make the dictionary of the calling module ROOT lazy
+       # install the hook
          _root.SetRootLazyLookup( caller.__dict__ )
 
-       # all bets are off with import *, so follow application flags
-         self.__finalSetup()
-
-       # done with this version of __getattr__, move to general one
-         self.__class__.__getattr__ = self.__class__.__getattr2
-
-       # the actual __all__ is empty
-         return self.module.__all__
-
-      elif name[0] != '_':
-       # first request for non-private (i.e. presumable ROOT) entity
-         self.__finalSetup()
-
-       # done with this version of __getattr__, move to general one
-         self.__class__.__getattr__ = self.__class__.__getattr2
-         return getattr( self, name )
-
-   def __getattr2( self, name ):
-    # this is the "running" getattr, which is simpler
-
-      if name == '__all__':
-       # secondary "from ROOT import *", simpler but same as before
-         caller = sys.modules[ sys._getframe( 1 ).f_globals[ '__name__' ] ]
-
-         for name in self.module.__pseudo__all__:
-            caller.__dict__[ name ] = getattr( _root, name )
-
-         _root.SetRootLazyLookup( caller.__dict__ )
-
+       # return empty list, to prevent further copying
          return self.module.__all__
 
     # lookup into ROOT (which may cause python-side enum/class/global creation)
@@ -337,11 +368,11 @@ class ModuleFacade( object ):
     # the call above will raise AttributeError as necessary; so if we get here,
     # attr is valid: cache as appropriate, so we don't come back
       if type(attr) == _root.PropertyProxy:
-          setattr( self.__class__, name, attr )        # descriptor
-          return getattr( self, name )
+         setattr( self.__class__, name, attr )         # descriptor
+         return getattr( self, name )
       else:
-          self.__dict__[ name ] = attr                 # normal member
-          return attr
+         self.__dict__[ name ] = attr                  # normal member
+         return attr
 
     # reaching this point means failure ...
       raise AttributeError( name )
@@ -361,7 +392,8 @@ class ModuleFacade( object ):
          sys.modules[ '__main__' ].__builtins__ = __builtins__
 
     # root thread, if needed, to prevent GUIs from starving, as needed
-      if not self.keeppolling and not _root.gROOT.IsBatch():
+      if self.PyConfig.StartGuiThread and \
+            not ( self.keeppolling or _root.gROOT.IsBatch() ):
          import threading
          self.__dict__[ 'keeppolling' ] = 1
          self.__dict__[ 'thread' ] = \
@@ -391,6 +423,10 @@ def cleanup():
       sys.excepthook = sys.__excepthook__
 
    facade = sys.modules[ __name__ ]
+
+ # prevent spurious lookups into ROOT libraries
+   del facade.__class__.__getattr__
+   del facade.__class__.__setattr__
 
  # shutdown GUI thread, as appropriate
    if hasattr( facade, 'thread' ):

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyException.cxx,v 1.4 2006/03/16 06:07:32 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyException.cxx,v 1.5 2007/01/17 07:32:39 brun Exp $
 // Author: Scott Snyder, Apr 2004
 
 // Bindings
@@ -24,9 +24,9 @@ ClassImp(PyROOT::TPyException)
 void* PyROOT::TPyExceptionMagic = (PyObject*)1;
 namespace {
 
-   struct ManageMagic {  // ensures that no valid PyObject can occupy the magic
-      ManageMagic() { PyROOT::TPyExceptionMagic = new int(1); }
-      ~ManageMagic() { delete (int*)PyROOT::TPyExceptionMagic; }
+   struct TManageMagic {  // ensures that no valid PyObject can occupy the magic
+      TManageMagic() { PyROOT::TPyExceptionMagic = new int(1); }
+      ~TManageMagic() { delete (int*)PyROOT::TPyExceptionMagic; }
    } manageMagic;
 
 } // unnamed namespace
