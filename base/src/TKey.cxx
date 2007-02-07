@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.66 2007/01/22 16:36:57 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.67 2007/01/29 15:53:35 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -93,19 +93,19 @@ TKey::TKey() : TNamed(), fDatime((UInt_t)0)
 
 //______________________________________________________________________________
 TKey::TKey(const TKey& tk) :
-  TNamed(tk), fVersion(tk.fVersion), fNbytes(tk.fNbytes), fObjlen(tk.fObjlen), 
-  fDatime(tk.fDatime), fKeylen(tk.fKeylen), fCycle(tk.fCycle), fSeekKey(tk.fSeekKey), 
-  fSeekPdir(tk.fSeekPdir), fClassName(tk.fClassName), fLeft(tk.fLeft), fBuffer(tk.fBuffer), 
+  TNamed(tk), fVersion(tk.fVersion), fNbytes(tk.fNbytes), fObjlen(tk.fObjlen),
+  fDatime(tk.fDatime), fKeylen(tk.fKeylen), fCycle(tk.fCycle), fSeekKey(tk.fSeekKey),
+  fSeekPdir(tk.fSeekPdir), fClassName(tk.fClassName), fLeft(tk.fLeft), fBuffer(tk.fBuffer),
   fBufferRef(tk.fBufferRef), fPidOffset(tk.fPidOffset), fMotherDir(tk.fMotherDir)
 {
   // copy constructor
 }
 
 //______________________________________________________________________________
-TKey& TKey::operator=(const TKey& tk) 
-{ 
+TKey& TKey::operator=(const TKey& tk)
+{
    // assignment operator
-  
+
    if(this!=&tk) {
       TNamed::operator=(tk);
       fVersion=tk.fVersion;
@@ -125,7 +125,7 @@ TKey& TKey::operator=(const TKey& tk)
    }
    return *this;
 }
-  
+
 //______________________________________________________________________________
 TKey::TKey(TDirectory* motherDir) : TNamed(), fDatime((UInt_t)0)
 {
@@ -188,9 +188,9 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
    R__ASSERT(obj);
 
    if (!obj->IsA()->HasDefaultConstructor()) {
-      Warning("TKey", "since %s had no public constructor\n"
+      Warning("TKey", "since %s has no public constructor\n"
               "\twhich can be called without argument, objects of this class\n"
-              "\tcan not be read with the current library. You would need to\n"
+              "\tcan not be read with the current library. You will need to\n"
               "\tadd a default constructor before attempting to read it.",
               obj->ClassName());
    }
@@ -258,9 +258,9 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
    R__ASSERT(obj && cl);
 
    if (!cl->HasDefaultConstructor()) {
-      Warning("TKey", "since %s had no public constructor\n"
+      Warning("TKey", "since %s has no public constructor\n"
               "\twhich can be called without argument, objects of this class\n"
-              "\tcan not be read with the current library. You would need to\n"
+              "\tcan not be read with the current library. You will need to\n"
               "\tadd a default constructor before attempting to read it.",
               cl->GetName());
    }
@@ -660,7 +660,7 @@ TObject *TKey::ReadObj()
       Error("ReadObj", "Unknown class %s", fClassName.Data());
       return 0;
    }
-   if (!cl->InheritsFrom(TObject::Class())) { 
+   if (!cl->InheritsFrom(TObject::Class())) {
       // in principle user should call TKey::ReadObjectAny!
       return (TObject*)ReadObjectAny(0);
    }
@@ -992,10 +992,10 @@ void TKey::ReadKeyBuffer(char *&buffer)
       frombuf(buffer, &seekkey); fSeekKey = (Long64_t)seekkey;
       frombuf(buffer, &seekdir); fSeekPdir= (Long64_t)seekdir;
    }
-   fClassName.ReadBuffer(buffer);   
+   fClassName.ReadBuffer(buffer);
    //the following test required for forward and backward compatibility
    if (fClassName == "TDirectory") fClassName = "TDirectoryFile";
-   
+
    fName.ReadBuffer(buffer);
    fTitle.ReadBuffer(buffer);
 }

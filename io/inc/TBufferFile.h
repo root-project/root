@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBufferFile.h,v 1.4 2007/01/28 18:27:18 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBufferFile.h,v 1.5 2007/02/05 18:08:45 brun Exp $
 // Author: Rene Brun   17/01/2007
 
 /*************************************************************************
@@ -73,7 +73,7 @@ protected:
    UInt_t CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass = kFALSE);
 
    virtual  void     WriteObject(const void *actualObjStart, const TClass *actualClass);
-   
+
 public:
    enum { kMapSize = 503 };
    enum { kStreamedMemberWise = BIT(14) }; //added to version number to know if a collection has been stored member-wise
@@ -85,7 +85,6 @@ public:
    TBufferFile(TBuffer::EMode mode, Int_t bufsiz);
    TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE);
    virtual ~TBufferFile();
-
 
    Int_t    GetMapCount() const { return fMapCount; }
    void     GetMappedObject(UInt_t tag, void* &ptr, TClass* &ClassPtr) const;
@@ -101,7 +100,7 @@ public:
 
    Bool_t   CheckObject(const TObject *obj);
    Bool_t   CheckObject(const void *obj, const TClass *ptrClass);
-   
+
    virtual Int_t      GetVersionOwner() const;
    virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss);
    virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname);
@@ -127,7 +126,7 @@ public:
 
    virtual char      *ReadString(char *s, Int_t max);
    virtual void       WriteString(const char *s);
-   
+
    virtual TClass    *ReadClass(const TClass *cl = 0, UInt_t *objTag = 0);
    virtual void       WriteClass(const TClass *cl);
 
@@ -267,18 +266,18 @@ public:
    virtual   void     WriteDouble(Double_t   d);
    virtual   void     WriteCharP(const Char_t *c);
    virtual   void     WriteTString(const TString &s);
-   
+
    // Special basic ROOT objects and collections
    virtual   TProcessID *GetLastProcessID(TRefTable *reftable) const;
    virtual   UInt_t      GetTRefExecId();
    virtual   TProcessID *ReadProcessID(UShort_t pidf);
    virtual   UShort_t    WriteProcessID(TProcessID *pid);
-   
+
    // Utilities for TClonesArray
    virtual   void   ForceWriteInfo(TClonesArray *a);
    virtual   Int_t  ReadClones (TClonesArray *a, Int_t nobjects);
    virtual   Int_t  WriteClones(TClonesArray *a, Int_t nobjects);
-   
+
    // Utilities for TClass
    virtual   Int_t  ReadClassEmulated(TClass *cl, void *object);
    virtual   Int_t  ReadClassBuffer(TClass *cl, void *pointer);
@@ -289,11 +288,11 @@ public:
    static void    SetGlobalWriteParam(Int_t mapsize);
    static Int_t   GetGlobalReadParam();
    static Int_t   GetGlobalWriteParam();
-   
+
    ClassDef(TBufferFile,0)  //concrete implementation of TBuffer for writing/reading to/from a ROOT file or socket.
 };
 
-   
+
 //---------------------- TBufferFile inlines ---------------------------------------
 
 //______________________________________________________________________________

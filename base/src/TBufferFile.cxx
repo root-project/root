@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBufferFile.cxx,v 1.5 2007/01/29 15:53:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBufferFile.cxx,v 1.6 2007/02/05 18:08:45 brun Exp $
 // Author: Rene Brun 17/01/2007
 
 /*************************************************************************
@@ -66,7 +66,6 @@ static inline ULong_t Void_Hash(const void *ptr)
    return TString::Hash(&ptr, sizeof(void*));
 }
 
-
 //______________________________________________________________________________
 TBufferFile::TBufferFile(TBuffer::EMode mode)
             :TBuffer(mode),
@@ -86,7 +85,7 @@ TBufferFile::TBufferFile(TBuffer::EMode mode)
 }
 
 //______________________________________________________________________________
-TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz) 
+TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz)
             :TBuffer(mode,bufsiz),
              fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
              fInfo(0), fInfoStack()
@@ -121,33 +120,19 @@ TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t ad
 }
 
 //______________________________________________________________________________
-TBufferFile::TBufferFile(const TBufferFile &b) : TBuffer (b)
-{
-   // TBuffer copy ctor.
-}
-
-//______________________________________________________________________________
-void TBufferFile::operator=(const TBufferFile&)
-{
-   // TBuffer assignment operator.
-   //return *this;
-}
-
-//______________________________________________________________________________
 TBufferFile::~TBufferFile()
 {
    // Delete an I/O buffer object.
-
 
    delete fMap;
    delete fClassMap;
 }
 
-
 //______________________________________________________________________________
 Int_t TBufferFile::GetVersionOwner() const
 {
-   // return the version number of the owner file
+   // Return the version number of the owner file.
+
    TFile *file = (TFile*)GetParent();
    if (file) return file->GetVersion();
    else return 0;
@@ -156,7 +141,8 @@ Int_t TBufferFile::GetVersionOwner() const
 //______________________________________________________________________________
 void TBufferFile::IncrementLevel(TStreamerInfo* info)
 {
-   //increment level
+   // Increment level.
+
    fInfoStack.push_back(fInfo);
    fInfo = info;
 }
@@ -164,7 +150,8 @@ void TBufferFile::IncrementLevel(TStreamerInfo* info)
 //______________________________________________________________________________
 void TBufferFile::DecrementLevel(TStreamerInfo* /*info*/)
 {
-   //decrement level
+   // Decrement level.
+
    fInfo = fInfoStack.back();
    fInfoStack.pop_back();
 }
@@ -201,11 +188,11 @@ static void frombufOld(char *&buf, Long_t *x)
    buf += sizeof(Long_t);
 }
 
-
 //______________________________________________________________________________
 void TBufferFile::ReadLong(Long_t &l)
 {
-   //operator >>
+   // Read Long from TBuffer.
+
    TFile *file = (TFile*)fParent;
    if (file && file->GetVersion() < 30006) {
       frombufOld(fBufCur, &l);
@@ -221,7 +208,6 @@ void TBufferFile::ReadTString(TString &s)
 
    s.Streamer(*this);
 }
-
 
 //_______________________________________________________________________
 void TBufferFile::WriteTString(const TString &s)
@@ -349,8 +335,8 @@ Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *clas
 //______________________________________________________________________________
 void TBufferFile::ReadDouble32 (Double_t *d, TStreamerElement *ele)
 {
-   // read a Double32_t from the buffer
-   // see comments about Double32_t encoding at TBufferFile::WriteDouble32
+   // Read a Double32_t from the buffer,
+   // see comments about Double32_t encoding at TBufferFile::WriteDouble32().
 
    if (ele && ele->GetFactor() != 0) {
       UInt_t aint; *this >> aint; d[0] = (Double_t)(aint/ele->GetFactor() + ele->GetXmin());
@@ -359,11 +345,10 @@ void TBufferFile::ReadDouble32 (Double_t *d, TStreamerElement *ele)
    }
 }
 
-
 //______________________________________________________________________________
 void TBufferFile::WriteDouble32 (Double_t *d, TStreamerElement *ele)
 {
-   // write a Double32_t to the buffer
+   // write a Double32_t to the buffer.
    // The following cases are supported for streaming a Double32_t type
    // depending on the range declaration in the comment field of the data member:
    //  A-    Double32_t     fNormal;
@@ -396,7 +381,7 @@ void TBufferFile::WriteDouble32 (Double_t *d, TStreamerElement *ele)
    */
    //End_Html
 
-      if (ele && ele->GetFactor() != 0) {
+   if (ele && ele->GetFactor() != 0) {
       Double_t x = d[0];
       Double_t xmin = ele->GetXmin();
       Double_t xmax = ele->GetXmax();
@@ -1899,9 +1884,9 @@ void TBufferFile::WriteObject(const void *actualObjectStart, const TClass *actua
          // A warning to let the user know it will need to change the class code
          // to  be able to read this back.
          if (actualClass->HasDefaultConstructor() == 0) {
-            Warning("WriteObjectAny", "since %s had no public constructor\n"
+            Warning("WriteObjectAny", "since %s has no public constructor\n"
                "\twhich can be called without argument, objects of this class\n"
-               "\tcan not be read with the current library. You would need to\n"
+               "\tcan not be read with the current library. You will need to\n"
                "\tadd a default constructor before attempting to read it.",
                actualClass->GetName());
          }
@@ -2262,7 +2247,6 @@ UInt_t TBufferFile::WriteVersionMemberWise(const TClass *cl, Bool_t useBcnt)
    return cntpos;
 }
 
-
 //______________________________________________________________________________
 void TBufferFile::StreamObject(void *obj, const type_info &typeinfo)
 {
@@ -2292,13 +2276,10 @@ void TBufferFile::StreamObject(void *obj, const TClass *cl)
 //______________________________________________________________________________
 void TBufferFile::StreamObject(TObject *obj)
 {
-   // Stream an object inheriting from TObject using its streamer
+   // Stream an object inheriting from TObject using its streamer.
 
    obj->Streamer(*this);
 }
-
-
-
 
 //______________________________________________________________________________
 void TBufferFile::CheckCount(UInt_t offset)
@@ -2389,12 +2370,6 @@ UInt_t TBufferFile::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClas
 
    return offset;
 }
-
-
-
-
-
-
 
 //______________________________________________________________________________
 void TBufferFile::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt)
@@ -2628,7 +2603,6 @@ void TBufferFile::ResetMap()
    ResetBit(kUser3);
 }
 
-
 //______________________________________________________________________________
 Int_t TBufferFile::ReadBuf(void *buf, Int_t max)
 {
@@ -2700,59 +2674,11 @@ void TBufferFile::WriteString(const Text_t *s)
    WriteBuf(s, (strlen(s)+1)*sizeof(Text_t));
 }
 
-//---- Static functions --------------------------------------------------------
-
-//______________________________________________________________________________
-void TBufferFile::SetGlobalReadParam(Int_t mapsize)
-{
-   // Set the initial size of the map used to store object and class
-   // references during reading. The default size is kMapSize=503.
-   // Increasing the default has the benefit that when reading many
-   // small objects the array does not need to be resized too often
-   // (the system is always dynamic, even with the default everything
-   // will work, only the initial resizing will cost some time).
-   // Per TBuffer object this option can be changed using SetReadParam().
-
-   fgMapSize = mapsize;
-}
-
-//______________________________________________________________________________
-void TBufferFile::SetGlobalWriteParam(Int_t mapsize)
-{
-   // Set the initial size of the hashtable used to store object and class
-   // references during writing. The default size is kMapSize=503.
-   // Increasing the default has the benefit that when writing many
-   // small objects the hashtable does not get too many collisions
-   // (the system is always dynamic, even with the default everything
-   // will work, only a large number of collisions will cost performance).
-   // For optimal performance hashsize should always be a prime.
-   // Per TBuffer object this option can be changed using SetWriteParam().
-
-   fgMapSize = mapsize;
-}
-
-//______________________________________________________________________________
-Int_t TBufferFile::GetGlobalReadParam()
-{
-   // Get default read map size.
-
-   return fgMapSize;
-}
-
-//______________________________________________________________________________
-Int_t TBufferFile::GetGlobalWriteParam()
-{
-   // Get default write map size.
-
-   return fgMapSize;
-}
-
-
 //______________________________________________________________________________
 TProcessID *TBufferFile::GetLastProcessID(TRefTable *reftable) const
 {
-   // Return the last TProcessID in the file
-   
+   // Return the last TProcessID in the file.
+
    TFile *file = (TFile*)GetParent();
    // warn if the file contains > 1 PID (i.e. if we might have ambiguity)
    if (file && !reftable->TestBit(TRefTable::kHaveWarnedReadingOld) && file->GetNProcessIDs()>1) {
@@ -2773,8 +2699,8 @@ TProcessID *TBufferFile::GetLastProcessID(TRefTable *reftable) const
 //______________________________________________________________________________
 TProcessID *TBufferFile::ReadProcessID(UShort_t pidf)
 {
-   //The TProcessID with number pidf is read from file.
-   //If the object is not already entered in the gROOT list, it is added.
+   // The TProcessID with number pidf is read from file.
+   // If the object is not already entered in the gROOT list, it is added.
 
    TFile *file = (TFile*)GetParent();
    if (!file) {
@@ -2787,35 +2713,35 @@ TProcessID *TBufferFile::ReadProcessID(UShort_t pidf)
 //______________________________________________________________________________
 UInt_t TBufferFile::GetTRefExecId()
 {
-   // Return the exec id stored in the current TStreamerInfo element
+   // Return the exec id stored in the current TStreamerInfo element.
    // The execid has been saved in the unique id of the TStreamerElement
-   // being read by TStreamerElement::Streamer
+   // being read by TStreamerElement::Streamer.
    // The current element (fgElement) is set as a static global
-   // by TStreamerInfo::ReadBuffer (Clones) when reading this TRef
-   
+   // by TStreamerInfo::ReadBuffer (Clones) when reading this TRef.
+
    return TStreamerInfo::GetCurrentElement()->GetUniqueID();
-}   
+}
 
 //______________________________________________________________________________
 UShort_t TBufferFile::WriteProcessID(TProcessID *pid)
 {
    // Check if the ProcessID pid is already in the file.
-   // if not, add it and return the index  number in the local file list
+   // If not, add it and return the index  number in the local file list.
 
    TFile *file = (TFile*)GetParent();
    return file->WriteProcessID(pid);
 }
-   
-   // Utilities for TClonesArray
+
+//---- Utilities for TClonesArray ----------------------------------------------
 
 //______________________________________________________________________________
 void TBufferFile::ForceWriteInfo(TClonesArray *a)
 {
-   //Make sure TStreamerInfo is not optimized, otherwise it will not be
-   //possible to support schema evolution in read mode.
-   //In case the StreamerInfo has already been computed and optimized,
-   //one must disable the option BypassStreamer.
-   
+   // Make sure TStreamerInfo is not optimized, otherwise it will not be
+   // possible to support schema evolution in read mode.
+   // In case the StreamerInfo has already been computed and optimized,
+   // one must disable the option BypassStreamer.
+
    Bool_t optim = TStreamerInfo::CanOptimize();
    if (optim) TStreamerInfo::Optimize(kFALSE);
    TStreamerInfo *sinfo = (TStreamerInfo*)a->GetClass()->GetStreamerInfo();
@@ -2827,30 +2753,30 @@ void TBufferFile::ForceWriteInfo(TClonesArray *a)
 //______________________________________________________________________________
 Int_t TBufferFile::ReadClones(TClonesArray *a, Int_t nobjects)
 {
-   // Interface to TStreamerInfo::ReadBufferClones
-   
+   // Interface to TStreamerInfo::ReadBufferClones.
+
    char **arr = (char **)a->GetObjectRef(0);
    //a->GetClass()->GetStreamerInfo()->ReadBufferClones(*this,a,nobjects,-1,0);
    TStreamerInfo *info = (TStreamerInfo*)a->GetClass()->GetStreamerInfo();
    return info->ReadBuffer(*this,arr,-1,nobjects,0,1);
-}   
+}
 
 //______________________________________________________________________________
 Int_t TBufferFile::WriteClones(TClonesArray *a, Int_t nobjects)
 {
-   // Interface to TStreamerInfo::WriteBufferClones
+   // Interface to TStreamerInfo::WriteBufferClones.
+
    char **arr = reinterpret_cast<char**>(a->GetObjectRef(0));
    //a->GetClass()->GetStreamerInfo()->WriteBufferClones(*this,(TClonesArray*)a,nobjects,-1,0);
    TStreamerInfo *info = (TStreamerInfo*)a->GetClass()->GetStreamerInfo();
    return info->WriteBufferAux(*this,arr,-1,nobjects,0,1);
-}   
-
+}
 
 //______________________________________________________________________________
 Int_t TBufferFile::ReadClassEmulated(TClass *cl, void *object)
 {
-   //Read emulated class
-   
+   // Read emulated class.
+
    UInt_t start,count;
    //We assume that the class was written with a standard streamer
    //We attempt to recover if a version count was not written
@@ -2955,6 +2881,7 @@ Int_t TBufferFile::ReadClassBuffer(TClass *cl, void *pointer)
 
    return 0;
 }
+
 //______________________________________________________________________________
 Int_t TBufferFile::WriteClassBuffer(TClass *cl, void *pointer)
 {
@@ -2993,4 +2920,51 @@ Int_t TBufferFile::WriteClassBuffer(TClass *cl, void *pointer)
 
    if (gDebug > 2) printf(" WriteBuffer for class: %s version %d has written %d bytes\n",cl->GetName(),cl->GetClassVersion(),R__c);
    return 0;
+}
+
+//---- Static functions --------------------------------------------------------
+
+//______________________________________________________________________________
+void TBufferFile::SetGlobalReadParam(Int_t mapsize)
+{
+   // Set the initial size of the map used to store object and class
+   // references during reading. The default size is kMapSize=503.
+   // Increasing the default has the benefit that when reading many
+   // small objects the array does not need to be resized too often
+   // (the system is always dynamic, even with the default everything
+   // will work, only the initial resizing will cost some time).
+   // Per TBuffer object this option can be changed using SetReadParam().
+
+   fgMapSize = mapsize;
+}
+
+//______________________________________________________________________________
+void TBufferFile::SetGlobalWriteParam(Int_t mapsize)
+{
+   // Set the initial size of the hashtable used to store object and class
+   // references during writing. The default size is kMapSize=503.
+   // Increasing the default has the benefit that when writing many
+   // small objects the hashtable does not get too many collisions
+   // (the system is always dynamic, even with the default everything
+   // will work, only a large number of collisions will cost performance).
+   // For optimal performance hashsize should always be a prime.
+   // Per TBuffer object this option can be changed using SetWriteParam().
+
+   fgMapSize = mapsize;
+}
+
+//______________________________________________________________________________
+Int_t TBufferFile::GetGlobalReadParam()
+{
+   // Get default read map size.
+
+   return fgMapSize;
+}
+
+//______________________________________________________________________________
+Int_t TBufferFile::GetGlobalWriteParam()
+{
+   // Get default write map size.
+
+   return fgMapSize;
 }
