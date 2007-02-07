@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.19 2006/12/21 10:21:57 brun Exp $
+// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.20 2007/02/01 21:59:48 pcanal Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -18,7 +18,7 @@
 #include "TClassEdit.h"
 #include "TClassTable.h"
 #include "TClassStreamer.h"
-#include "TCollectionProxy.h"
+#include "TCollectionProxyFactory.h"
 #include "TVirtualCollectionProxy.h"
 #include "TMemberInspector.h"
 #include "RVersion.h"
