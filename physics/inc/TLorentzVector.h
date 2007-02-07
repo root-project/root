@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.14 2006/07/11 09:05:01 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.15 2007/02/03 06:40:26 brun Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 
 /*************************************************************************
@@ -334,7 +334,10 @@ inline void TLorentzVector::SetPxPyPzE(Double_t px, Double_t py, Double_t pz, Do
 }
 
 inline void TLorentzVector::SetXYZM(Double_t  x, Double_t  y, Double_t  z, Double_t m) {
-   SetXYZT( x, y, z, TMath::Sqrt(x*x+y*y+z*z+m*m) );
+   if ( m  >= 0 ) 
+      SetXYZT( x, y, z, TMath::Sqrt(x*x+y*y+z*z+m*m) );
+   else 
+      SetXYZT( x, y, z, TMath::Sqrt( TMath::Max((x*x+y*y+z*z-m*m), 0. ) ) );
 }
 
 inline void TLorentzVector::SetPtEtaPhiM(Double_t pt, Double_t eta, Double_t phi, Double_t m) {
@@ -508,8 +511,7 @@ inline Double_t TLorentzVector::Gamma() const {
 }
 
 inline void TLorentzVector::SetVectMag(const TVector3 & spatial, Double_t magnitude) {
-   SetVect(spatial);
-   SetT(TMath::Sqrt(magnitude * magnitude + spatial * spatial));
+   SetXYZM(spatial.X(), spatial.Y(), spatial.Z(), magnitude);
 }
 
 inline void TLorentzVector::SetVectM(const TVector3 & spatial, Double_t mass) {
