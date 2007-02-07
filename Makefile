@@ -56,7 +56,7 @@ MODULES       = build cint metautils pcre utils base cont meta net auth zip \
                 minuit histpainter treeplayer treeviewer physics postscript \
                 rint html eg geom geompainter vmc fumili mlp ged quadp \
                 guibuilder xml foam splot smatrix sql tmva geombuilder spectrum \
-                spectrumpainter fitpanel math io
+                spectrumpainter fitpanel
 
 ifeq ($(ARCH),win32)
 MODULES      += winnt win32gdk
