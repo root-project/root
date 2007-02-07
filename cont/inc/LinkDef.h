@@ -1,4 +1,4 @@
-/* @(#)root/cont:$Name:  $:$Id: LinkDef.h,v 1.14 2005/10/21 22:01:35 pcanal Exp $ */
+/* @(#)root/cont:$Name:  $:$Id: LinkDef.h,v 1.15 2006/11/22 14:15:13 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -58,7 +58,7 @@
 #pragma link C++ nestedclass;
 #pragma link C++ nestedtypedef;
 
-#pragma link C++ class TCollectionProxy-;
+#pragma link C++ class TCollectionProxyFactory-;
 #pragma link C++ class TEmulatedCollectionProxy-;
 #pragma link C++ class TEmulatedMapProxy-;
 #pragma link C++ class TGenCollectionProxy-;

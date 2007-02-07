@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.11 2006/05/19 07:30:04 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.12 2007/02/01 22:02:48 pcanal Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -26,7 +26,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TVirtualCollectionProxy.h"
-#include "TCollectionProxy.h"
+#include "TCollectionProxyFactory.h"
 #include <typeinfo>
 #include <string>
 
@@ -35,7 +35,7 @@ class TGenCollectionProxy
 {
 
    // Friend declaration
-   friend class TCollectionProxy;
+   friend class TCollectionProxyFactory;
 
 public:
 
