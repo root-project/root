@@ -1,4 +1,4 @@
-/* @(#)root/html:$Name:  $:$Id: LinkDef.h,v 1.2 2003/01/30 11:33:48 brun Exp $ */
+/* @(#)root/html:$Name:  $:$Id: LinkDef.h,v 1.3 2006/04/25 17:25:33 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -17,4 +17,13 @@
 #pragma link C++ global gHtml;
 
 #pragma link C++ class THtml;
+#pragma link C++ class TDocParser;
+#pragma link C++ class TDocOutput;
+#pragma link C++ class TDocDirective;
+#pragma link C++ class TDocHtmlDirective;
+#pragma link C++ class TDocMacroDirective;
+#pragma link C++ class TDocLatexDirective;
+#pragma link C++ class TClassDocOutput;
+#pragma link C++ class TClassDocInfo;
+#pragma link C++ class TModuleDocInfo;
 #endif

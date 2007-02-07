@@ -1,0 +1,97 @@
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.29 2006/09/25 08:58:56 brun Exp $
+// Author: Axel Naumann 2007-01-09
+
+/*************************************************************************
+ * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef ROOT_TDocOutput
+#define ROOT_TDocOutput
+
+
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// ROOT_TDocOutput                                                        //
+//                                                                        //
+// Generates documentation output using XHTML 1.0 transitional            //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
+
+#ifndef ROOT_TObject
+#include "TObject.h"
+#endif
+#ifndef ROOT_Riosfwd
+#include "Riosfwd.h"
+#endif
+#ifndef ROOT_TDocParser
+#include "TDocParser.h"
+#endif
+
+class TClass;
+class TDataMember;
+class TDataType;
+class THtml;
+class TString;
+class TSubString;
+class TVirtualPad;
+
+class TDocOutput: public TObject {
+protected:
+   THtml*         fHtml; // THtml object we belong to
+
+   int            CaseInsensitiveSort(const void *name1, const void *name2);
+   void           AddLink(TSubString& str, TString& link, const char* comment);
+   Bool_t         RunDot(const char* filename, std::ostream* outMap = 0);
+   void           WriteHtmlHeader(std::ostream& out, const char *titleNoSpecial, 
+                                  const char* dir /*=""*/, TClass *cls /*=0*/,
+                                  const char* header);
+   void           WriteHtmlFooter(std::ostream& out, const char *dir,
+                                  const char *lastUpdate, const char *author,
+                                  const char *copyright, const char* footer);
+
+public:
+   enum EFileType { kSource, kInclude, kTree };
+
+   TDocOutput(THtml& html);
+   virtual ~TDocOutput();
+
+   virtual void   AdjustSourcePath(TString& line, const char* relpath = "../");
+   void           Convert(std::istream& in, const char* outfilename, const char *title,
+                          const char *relpath = "../");
+   Bool_t         CopyHtmlFile(const char *sourceName, const char *destName="");
+
+   virtual void   CreateHierarchy();
+   virtual void   CreateIndex();
+   virtual void   CreateIndexByTopic();
+   virtual void   CreateTypeIndex();
+   virtual void   DecorateEntityBegin(TString& str, Ssiz_t& pos, TDocParser::EParseContext type);
+   virtual void   DecorateEntityEnd(TString& str, Ssiz_t& pos, TDocParser::EParseContext type);
+   virtual void   FixupAuthorSourceInfo(TString& authors);
+   const char*    GetExtension() const { return ".html"; }
+   THtml*         GetHtml() { return fHtml; }
+   virtual Bool_t IsModified(TClass *classPtr, EFileType type);
+   virtual void   NameSpace2FileName(TString &name);
+
+   virtual void   ReferenceEntity(TSubString& str, TClass* entity, const char* comment = 0);
+   virtual void   ReferenceEntity(TSubString& str, TDataMember* entity, const char* comment = 0);
+   virtual void   ReferenceEntity(TSubString& str, TDataType* entity, const char* comment = 0);
+   virtual void   ReferenceEntity(TSubString& str, TMethod* entity, const char* comment = 0);
+   virtual Bool_t ReferenceIsRelative(const char* reference) const;
+
+   virtual const char* ReplaceSpecialChars(const char c);
+   void           ReplaceSpecialChars(std::ostream &out, const char *string);
+   void           ReplaceSpecialChars(TString& text);
+   void           ReplaceSpecialChars(TString& text, Ssiz_t &pos);
+
+   virtual void   WriteHtmlHeader(std::ostream &out, const char *title, const char* dir="", TClass *cls=0);
+   virtual void   WriteHtmlFooter(std::ostream &out, const char *dir="", const char *lastUpdate="",
+                                  const char *author="", const char *copyright="");
+
+   ClassDef(TDocOutput, 0); // generates documentation web pages
+};
+
+#endif // ROOT_TDocOutput
