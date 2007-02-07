@@ -1,61 +1,47 @@
 The $ROOTSYS/gdml directory contains a set of Python modules designed
-for processing (reading in as well as writing out) Geometry
-Description Markup Language (GDML) files. They act as a converter
-between the GDML geometry files and the TGeo geometry structures (and
-vice versa).
+for writing out Geometry Description Markup Language (GDML) files. 
+There is also a C++ implementation for the import of GDML into ROOT.
+They act as a converter between the GDML geometry files and the TGeo 
+geometry structures (and vice versa).
 
 GDML->ROOT
 ----------
 
-The GDML to TGeo converter uses the xml.sax module for parsing
-XML. The GDMLContentHandler module contains a concrete implementation
-of xml.sax.ContentHandler, specific for GDML processing. In addition
-to the standard methods used by the parser (startElement and
-endElement), the GDMLContentHanler class also two additional methods:
-WorldVolume method and AuxiliaryData method. The WorldVolume method
-allows the user to access the top volume object (the top of the
-geometry tree) once the parsing is finished. The AuxiliaryData method
-returns the map of auxiliary (optional) attributes (like colour,
-visibility, sensitive detectors, etc) associated to any volume. The
-GDMLContentHandler requires two other modules for processing the GDML
-file: the 'processes' module and the 'ROOTBinding' module. The
-'processes' module contains specific methods (processes) for each of
-the GDML elements. These methods then use particular 'binding' (in our
-case ROOTBinding) in order to instanciate the appropriate geometry
-(TGeo) object. Please refere to the comment part of ROOTBinding.py
-file for the list of supported TGeo classes.
+As this binding is integrated into the ROOT installation, you need to 
+enable the use of the binding at the configure point of the ROOT 
+installation.  This can be done like so:
 
-The GDML to ROOT converter is now interfaced to the
-TGeoManager::Import method which automatically calls the appropriate
-Python scripts whenever a file with .gdml extension is given as
-argument.
+./configure  --enable-gdml
 
-Alternatively, one can also use GDML->ROOT converter directly from the
-Python prompt, for instance:
+On doing this the libraries will be built by issuing the standard ROOT 
+make command. The GDML to TGeo converter uses the TXMLEngine to parse 
+the GDML files. This XML parser is a DOM parser and returns the DOM 
+tree to the class TGDMLParse.  This class then interprets the GDML file 
+and adds the bindings in their TGeo equivilent.
 
-###################
-import sys
-import xml.sax
-import ROOT
-import ROOTBinding
-import GDMLContentHandler
- 
-ROOT.gSystem.Load("libGeom")
- 
-gdmlhandler = GDMLContentHandler.GDMLContentHandler(ROOTBinding.ROOTBinding())
- 
-xml.sax.parse('mygeometry.gdml', gdmlhandler)
-geomgr = ROOT.gGeoManager
- 
-geomgr.SetTopVolume(gdmlhandler.WorldVolume())
-geomgr.CloseGeometry()
-geomgr.DefaultColors()
- 
-gdmlhandler.WorldVolume().Draw("ogl")
-###################
+The GDML schema is fully supported with a few exceptions:
 
-where 'mygeometry.gdml' should be replace by the name of the GDML file
-to be read.
+Replica Volumes are not supported
+Loops           are not supported
+Matrices        are not supported
+
+These will hopefully be added in the near future.
+
+Once you have enabled GDML in the configure process for ROOT, to import
+a GDML file, this can be done using TGeoManager::Import. This automatically
+calls the right method to parse the GDML by detecting the .gdml file
+extension. Here is how to do it:
+
+TGeoManager::Import("test.gdml");
+
+Replace test.gdml with the gdml filename you want to import. Once the
+GDML file has been successfully imported, you can view the geometry by
+calling:
+
+gGeoManager->GetTopVolume()->Draw("ogl");
+
+
+For any questions or comments about the GDML->ROOT binding please contact ben.lloyd@cern.ch 
 
 
 ROOT->GDML
@@ -81,9 +67,9 @@ Alternatively, one can also use the ROOT->GDML converter directly from
 the Python prompt (assuming the TGeo geometry has already been loaded
 into memory in one or another way), for example:
 
+
 ###################
 from math import *
-from units import *
  
 import ROOT
 import writer
@@ -115,9 +101,6 @@ binding.examineVol(topV)
 gdmlwriter.writeFile()
 ###################
 
-
-
-For any questions or comments about those converters as well as about
-GDML in general please email Witold.Pokorski@cern.ch.
+For all other functionality questions or comments, or even GDML in general, please email Witold.Pokorski@cern.ch
 
 
