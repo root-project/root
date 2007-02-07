@@ -300,7 +300,7 @@ macosx)
       forcelibs=$rootulibs
       forceglibs=$rootuglibs
    else
-      auxcflags="-Wno-long-double"
+      auxcflags=
       auxlibs="-lm -ldl"
    fi
    ;;
@@ -317,7 +317,7 @@ macosx64)
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    # cannot find the one linked to libGraf if relocated after built
    rootlibs="$rootlibs -lfreetype"
-   auxcflags="-m64 -Wno-long-double"
+   auxcflags="-m64"
    auxldflags="-m64"
    auxlibs="-lm -ldl"
    ;;
