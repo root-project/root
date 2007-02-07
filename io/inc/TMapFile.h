@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.h,v 1.3 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.h,v 1.4 2001/04/11 11:10:44 brun Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -203,6 +203,6 @@ inline TMapFile *TMapFile::WhichMapFile(void *addr)
    return 0;
 }
 
-R__EXTERN void *gMmallocDesc;
+R__EXTERN void *gMmallocDesc;  //is initialized in TClass.cxx
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.25 2007/01/22 05:58:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.26 2007/01/29 15:53:35 brun Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -122,7 +122,7 @@ union semun {
 Long_t TMapFile::fgMapAddress = 0;
 void  *TMapFile::fgMmallocDesc = 0;
 
-void *gMmallocDesc = 0;
+//void *gMmallocDesc = 0; //is initialized in TClass.cxx
 
 
 
