@@ -6,6 +6,7 @@
 ** a constructor, and a destroy() slot in place of a destructor.
 *****************************************************************************/
 #include "TCanvas.h"
+#include "TClass.h"
 
 static QPixmap uic_load_pixmap( const QString &name )
 {
