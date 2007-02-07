@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: PtEtaPhiE4D.h,v 1.4 2006/02/06 17:22:03 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PtEtaPhiE4D.h,v 1.5 2006/11/25 09:30:08 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by: fischler at Wed Jul 20 2005
 //   based on CylindricalEta4D by moneta
 // 
-// Last update: $Id: PtEtaPhiE4D.h,v 1.4 2006/02/06 17:22:03 moneta Exp $
+// Last update: $Id: PtEtaPhiE4D.h,v 1.5 2006/11/25 09:30:08 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_PtEtaPhiE4D 
 #define ROOT_Math_GenVector_PtEtaPhiE4D  1
@@ -170,7 +170,7 @@ public :
   /** 
     transverse mass squared
     */
-  Scalar Mt2() const { Scalar pz = Pz(); return fE*fE  - pz*pz; } 
+  Scalar Mt2() const {  Scalar pz = Pz(); return fE*fE  - pz*pz; } 
 
   /**
     transverse mass
@@ -190,14 +190,18 @@ public :
   /**
     transverse energy
    */
+  /**
+    transverse energy
+   */
   Scalar Et() const { 
-    return fE / std::cosh(fEta); // TODO -- not sure if this is fastest impl.
+    return fE / std::cosh(fEta); // faster using eta
   }
 
   /** 
     transverse energy squared
     */
   Scalar Et2() const { Scalar et = Et(); return et*et; }
+
 
 private:
   inline static double pi() { return 3.14159265358979323; } 
