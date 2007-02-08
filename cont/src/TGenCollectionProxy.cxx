@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.29 2007/01/29 15:53:35 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.30 2007/02/01 22:02:48 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -417,8 +417,8 @@ TGenCollectionProxy::TGenCollectionProxy(Info_t info, size_t iter_size)
 }
 
 //______________________________________________________________________________
-TGenCollectionProxy::TGenCollectionProxy(const ROOT::TCollectionProxyInfo &info)
-   : TVirtualCollectionProxy(0),
+TGenCollectionProxy::TGenCollectionProxy(const ROOT::TCollectionProxyInfo &info, TClass *cl)
+   : TVirtualCollectionProxy(cl),
      fTypeinfo(info.fInfo)
 {
    // Build a proxy for a collection whose type is described by 'collectionClass'.
@@ -484,7 +484,7 @@ TGenCollectionProxy::~TGenCollectionProxy()
 TVirtualCollectionProxy* TGenCollectionProxy::Generate() const
 {
    // Virtual copy constructor
-   if ( !fClass ) Initialize();
+   if ( !fValue ) Initialize();
    switch(fSTL_type) {
    case TClassEdit::kVector:
       return new TGenVectorProxy(*this);
@@ -506,7 +506,7 @@ TGenCollectionProxy *TGenCollectionProxy::Initialize() const
 {
    // Proxy initializer
    TGenCollectionProxy* p = const_cast<TGenCollectionProxy*>(this);
-   if ( fClass ) return p;
+   if ( fValue ) return p;
    return p->InitializeEx();
 }
 
@@ -548,9 +548,9 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx()
 {
    // Proxy initializer
    R__LOCKGUARD2(gCollectionMutex);
-   if (fClass) return this;
+   if (fValue) return this;
 
-   TClass *cl = TClass::GetClass(fTypeinfo);
+   TClass *cl = fClass ? fClass.GetClass() : TClass::GetClass(fTypeinfo);
    if ( cl ) {
       fEnv    = 0;
       fName   = cl->GetName();
@@ -633,6 +633,8 @@ Bool_t TGenCollectionProxy::HasPointers() const
 TClass *TGenCollectionProxy::GetValueClass()
 {
    // Return a pointer to the TClass representing the content.
+
+   if (!fValue) Initialize();
    return fValue ? fValue->fType.GetClass() : 0;
 }
 
@@ -640,6 +642,8 @@ TClass *TGenCollectionProxy::GetValueClass()
 void TGenCollectionProxy::SetValueClass(TClass *new_Value_type)
 {
    // Set pointer to the TClass representing the content.
+
+   if (!fValue) Initialize();
    fValue->fType = new_Value_type;
 }
 
@@ -647,6 +651,8 @@ void TGenCollectionProxy::SetValueClass(TClass *new_Value_type)
 EDataType TGenCollectionProxy::GetType()
 {
    // If the content is a simple numerical value, return its type (see TDataType)
+
+   if ( !fValue ) Initialize(); 
    return fValue->fKind;
 }
 
@@ -811,7 +817,7 @@ void TGenCollectionProxy::PushProxy(void *objstart)
 {
    // Add an object.
 
-   if ( !fClass ) Initialize();
+   if ( !fValue ) Initialize();
    if ( !fProxyList.empty() ) {
       Env_t* back = fProxyList.back();
       if ( back->object == objstart ) {
