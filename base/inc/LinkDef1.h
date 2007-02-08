@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.46 2007/02/04 17:39:44 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.47 2007/02/07 21:14:49 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -51,8 +51,6 @@
 #pragma link C++ global gApplication;
 #pragma link C++ global gBenchmark;
 #pragma link C++ global gDirectory;
-#pragma link C++ global gFile;
-#pragma link C++ global gRandom;
 #pragma link C++ global gDebug;
 #pragma link C++ global gErrorIgnoreLevel;
 #pragma link C++ global gErrorAbortLevel;
@@ -134,7 +132,6 @@
 #pragma link C++ class TBrowser+;
 #pragma link C++ class TBrowserImp+;
 #pragma link C++ class TBuffer;
-#pragma link C++ class TBufferFile;
 #pragma link C++ class TCanvasImp;
 #pragma link C++ class TColor+;
 #pragma link C++ class TContextMenu+;
@@ -143,12 +140,8 @@
 #pragma link C++ class TInspectorImp+;
 #pragma link C++ class TDatime-;
 #pragma link C++ class TDirectory;
-#pragma link C++ class TDirectoryFile-;
 #pragma link C++ class TEnv+;
 #pragma link C++ class TEnvRec+;
-#pragma link C++ class TFile-;
-#pragma link C++ class TFileCacheRead+;
-#pragma link C++ class TFileCacheWrite+;
 #pragma link C++ class TFileHandler+;
 #pragma link C++ class TGuiFactory;
 #pragma link C++ class TStyle+;

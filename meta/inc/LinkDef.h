@@ -1,4 +1,4 @@
-/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.17 2005/05/27 16:42:58 pcanal Exp $ */
+/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.18 2007/02/05 18:07:10 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -50,7 +50,6 @@
 #pragma link C++ class TStreamerSTL-;
 #pragma link C++ class TStreamerSTLstring-;
 #pragma link C++ class TStreamerElement-;
-#pragma link C++ class TStreamerInfo-;
 #pragma link C++ class TToggle;
 #pragma link C++ class TToggleGroup;
 
