@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.170 2007/01/23 15:20:15 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.171 2007/02/06 14:22:28 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -3273,7 +3273,7 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    // first check if inside a division
    if (finder) {
       node=finder->FindNode(&point[0]);
-      if (node) {
+      if (node && node!=skipnode) {
          // go inside the division cell and search downwards
          fIsSameLocation = kFALSE;
          CdDown(node->GetIndex());
