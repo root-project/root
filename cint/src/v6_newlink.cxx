@@ -2685,9 +2685,11 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table *ifunc,
       } else {
          // write return type
          char *typestring = G__type2string(type, ptagnum, typenum, reftype, isconst);
-         if (ifunc->staticalloc[ifn]) {
+         if (ifunc->staticalloc[ifn] || G__struct.type[ifunc->tagnum] == 'n') {
+            // static method or function in namespace
             fprintf(fp, "  %s (*fptr)(", typestring);
          } else {
+            // class method
             fprintf(fp, "  %s (%s::*fptr)(", typestring, cls);
          }
 
