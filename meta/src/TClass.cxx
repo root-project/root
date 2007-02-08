@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.219 2007/02/05 18:10:36 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.220 2007/02/07 08:52:57 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -3756,11 +3756,14 @@ void TClass::SetCollectionProxy(const ROOT::TCollectionProxyInfo &info)
 
    delete fCollectionProxy;
 
-   TVirtualCollectionProxy *p = TVirtualStreamerInfo::Factory(this)->GenExplicitProxy(info);
-   p->GetCollectionClass(); // Force the initialization.
+   // We can not use GetStreamerInfo() instead of TVirtualStreamerInfo::Factory(this)
+   // because GetStreamerInfo call TStreamerInfo::Build which need to have fCollectionProxy
+   // set correctly.
+
+   TVirtualCollectionProxy *p = TVirtualStreamerInfo::Factory(this)->GenExplicitProxy(info,this);
    fCollectionProxy = p;
 
-   AdoptStreamer(TVirtualStreamerInfo::Factory(this)->GenExplicitClassStreamer(info));
+   AdoptStreamer(TVirtualStreamerInfo::Factory(this)->GenExplicitClassStreamer(info,this));
 }
 
 //______________________________________________________________________________

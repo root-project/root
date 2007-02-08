@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxyFactory.h,v 1.19 2007/02/02 08:06:38 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxyFactory.h,v 1.1 2007/02/07 08:52:23 brun Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -94,33 +94,33 @@ public:
 
 
    /// Generate proxy from static functions
-   static Proxy_t* GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info );
+   static Proxy_t* GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info, TClass *cl );
 
    /// Generate proxy from template
-   template <class T> static Proxy_t* GenProxy(const T &arg)  {      
-      return GenExplicitProxy( ::ROOT::TCollectionProxyInfo::Get(arg) ); 
+   template <class T> static Proxy_t* GenProxy(const T &arg, TClass *cl)  {      
+      return GenExplicitProxy( ::ROOT::TCollectionProxyInfo::Get(arg), cl ); 
    }
 
    /// Generate streamer from static functions
    static TGenCollectionStreamer*
-      GenExplicitStreamer( const ::ROOT::TCollectionProxyInfo &info );
+      GenExplicitStreamer( const ::ROOT::TCollectionProxyInfo &info, TClass *cl );
 
    /// Generate class streamer from static functions
    static TClassStreamer*
-      GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &info );
+      GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &info, TClass *cl );
 
    /// Generate class streamer from template
-   template <class T> static TClassStreamer* GenClassStreamer(const T &arg)  {
-      return GenExplicitClassStreamer(::ROOT::TCollectionProxyInfo::Get(arg));
+   template <class T> static TClassStreamer* GenClassStreamer(const T &arg, TClass *cl)  {
+      return GenExplicitClassStreamer(::ROOT::TCollectionProxyInfo::Get(arg), cl);
    }
 
    /// Generate member streamer from static functions
    static TMemberStreamer*
-      GenExplicitMemberStreamer(const ::ROOT::TCollectionProxyInfo &info);
+      GenExplicitMemberStreamer(const ::ROOT::TCollectionProxyInfo &info, TClass *cl);
 
    /// Generate member streamer from template
-   template <class T> static TMemberStreamer* GenMemberStreamer(const T &arg)  {
-      return GenExplicitMemberStreamer(::ROOT::TCollectionProxyInfo::Get(arg));
+   template <class T> static TMemberStreamer* GenMemberStreamer(const T &arg, TClass *cl)  {
+      return GenExplicitMemberStreamer(::ROOT::TCollectionProxyInfo::Get(arg), cl);
    }
 };
 
@@ -183,6 +183,8 @@ public:
    virtual TClassStreamer *Generate() {
       return new TCollectionClassStreamer(*this);
    }
+
+   TGenCollectionProxy *GetXYZ() { return TCollectionStreamer::fStreamer; }
 
 };
 

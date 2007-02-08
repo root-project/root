@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.12 2007/02/01 22:02:48 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.13 2007/02/07 08:52:23 brun Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -247,7 +247,7 @@ public:
 
    // Initializing constructor
    TGenCollectionProxy(Info_t typ, size_t iter_size);
-   TGenCollectionProxy(const ROOT::TCollectionProxyInfo &info);
+   TGenCollectionProxy(const ROOT::TCollectionProxyInfo &info, TClass *cl);
 
    // Standard destructor.
    virtual ~TGenCollectionProxy();

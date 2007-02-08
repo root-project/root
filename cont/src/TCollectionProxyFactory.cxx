@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.cxx,v 1.9 2007/02/02 08:06:38 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxyFactory.cxx,v 1.1 2007/02/07 08:52:24 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -100,35 +100,35 @@ TCollectionProxyFactory::GenEmulatedMemberStreamer(const char* class_name)
 }
 
 TCollectionProxyFactory::Proxy_t*
-TCollectionProxyFactory::GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info )
+TCollectionProxyFactory::GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info, TClass *cl)
 {
    // Generate proxy from static functions.
-   return new TGenCollectionProxy(info);
+   return new TGenCollectionProxy(info,cl);
 }
 
 TGenCollectionStreamer*
-TCollectionProxyFactory::GenExplicitStreamer( const ::ROOT::TCollectionProxyInfo &info )
+TCollectionProxyFactory::GenExplicitStreamer( const ::ROOT::TCollectionProxyInfo &info, TClass *cl )
 {
    // Generate streamer from static functions.
-   TGenCollectionStreamer* ptr = new TGenCollectionStreamer(info);
+   TGenCollectionStreamer* ptr = new TGenCollectionStreamer(info,cl);
    return ptr;
 }
 
 TClassStreamer*
-TCollectionProxyFactory::GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &info )
+TCollectionProxyFactory::GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &info, TClass *cl )
 {
    // Generate class streamer from static functions.
    TCollectionClassStreamer* s = new TCollectionClassStreamer();
-   s->AdoptStreamer(GenExplicitStreamer(info));
+   s->AdoptStreamer(GenExplicitStreamer(info,cl));
    return s;
 }
 
 TMemberStreamer*
-TCollectionProxyFactory::GenExplicitMemberStreamer( const ::ROOT::TCollectionProxyInfo &info)
+TCollectionProxyFactory::GenExplicitMemberStreamer( const ::ROOT::TCollectionProxyInfo &info, TClass *cl)
 {
    // Generate member streamer from static functions.
    TCollectionMemberStreamer* s = new TCollectionMemberStreamer();
-   s->AdoptStreamer(GenExplicitStreamer(info));
+   s->AdoptStreamer(GenExplicitStreamer(info,cl));
    return s;
 }
 

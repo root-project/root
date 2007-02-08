@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.247 2007/02/05 18:09:13 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.248 2007/02/07 08:52:41 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -746,6 +746,23 @@ namespace {
       }
       return kFALSE;
    }
+
+   Bool_t CollectionMatchDouble32(const TClass *oldClass, const TClass* newClass)
+   {
+      // Return true if oldClass and newClass points to 2 compatible collection.
+      // i.e. they contains the exact same type.
+
+      TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+      TVirtualCollectionProxy *newProxy = newClass->GetCollectionProxy();
+
+      if (oldProxy->GetValueClass() == 0 && newProxy->GetValueClass() == 00
+          && (oldProxy->GetType() == kDouble_t || oldProxy->GetType() == kDouble32_t) 
+          && (newProxy->GetType() == kDouble_t || newProxy->GetType() == kDouble32_t )) {
+            // We have compatibles collections (they have the same content!
+         return (TClassEdit::IsSTLCont(oldClass->GetName()) == TClassEdit::IsSTLCont(newClass->GetName()));
+      }
+      return kFALSE;
+   }
 }
 
 //______________________________________________________________________________
@@ -1023,6 +1040,8 @@ void TStreamerInfo::BuildOld()
                if (gDebug > 0) {
                   Warning("BuildOld","element: %s::%s %s has new type %s", GetName(), element->GetTypeName(), element->GetName(), newClass->GetName());
                }
+            } else if (CollectionMatchDouble32(oldClass,newClass)) {
+               // Actually nothing to do, since both are the same collection of double in memory.
             } else {
                element->SetNewType(-2);
             }
@@ -2642,18 +2661,18 @@ TStreamerInfo::GenEmulatedClassStreamer(const char* class_name)
 
 //______________________________________________________________________________
 TVirtualCollectionProxy*
-TStreamerInfo::GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info )
+TStreamerInfo::GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info, TClass *cl )
 {
    // Generate proxy from static functions.
    
-   return TCollectionProxyFactory::GenExplicitProxy(info);
+   return TCollectionProxyFactory::GenExplicitProxy(info, cl);
 }
 
 //______________________________________________________________________________
 TClassStreamer*
-TStreamerInfo::GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &info )
+TStreamerInfo::GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &info, TClass *cl )
 {
    // Generate class streamer from static functions.
 
-   return TCollectionProxyFactory::GenExplicitClassStreamer(info);
+   return TCollectionProxyFactory::GenExplicitClassStreamer(info, cl);
 }

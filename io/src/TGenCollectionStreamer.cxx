@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.12 2007/01/29 10:53:16 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.13 2007/02/01 22:02:48 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -42,8 +42,8 @@ TGenCollectionStreamer::TGenCollectionStreamer(Info_t info, size_t iter_size)
    // Build a Streamer for a collection whose type is described by 'collectionClass'.
 }
 
-TGenCollectionStreamer::TGenCollectionStreamer(const ::ROOT::TCollectionProxyInfo &info) 
-   : TGenCollectionProxy(info)
+TGenCollectionStreamer::TGenCollectionStreamer(const ::ROOT::TCollectionProxyInfo &info, TClass *cl) 
+   : TGenCollectionProxy(info,cl)
 {
    // Build a Streamer for a collection whose type is described by 'collectionClass'.
 }

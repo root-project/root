@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TVirtualStreamerInfo.h,v 1.1 2007/02/05 18:06:25 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TVirtualStreamerInfo.h,v 1.2 2007/02/07 08:52:41 brun Exp $
 // Author: Rene Brun   05/02/2007
 
 /*************************************************************************
@@ -141,8 +141,8 @@ public:
    
    virtual TVirtualCollectionProxy *GenEmulatedProxy(const char* class_name) = 0;
    virtual TClassStreamer *GenEmulatedClassStreamer(const char* class_name) = 0;
-   virtual TVirtualCollectionProxy *GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info ) = 0;
-   virtual TClassStreamer *GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &info ) = 0;
+   virtual TVirtualCollectionProxy *GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info, TClass *cl ) = 0;
+   virtual TClassStreamer *GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &info, TClass *cl ) = 0;
 
    //WARNING this class version must be the same as TStreamerInfo
    ClassDef(TVirtualStreamerInfo,5)  //Abstract Interface describing Streamer information for one class
