@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.46 2007/02/04 17:39:44 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef.h,v 1.1 2007/02/08 17:20:17 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -27,6 +27,7 @@
 //was in base/inc/LinkDef2.h
 #pragma link C++ class TKey-;
 #pragma link C++ class TMapFile;
+#pragma link C++ class TMapRec;
 
 //was in base/inc/LinkDef3.h
 #pragma link C++ class TArchiveFile+;
