@@ -2358,7 +2358,7 @@ static void G__if_ary_union(FILE *fp, int ifn, G__ifunc_table *ifunc)
     if (ifunc->para_name[ifn][k]) {
       p = strchr(ifunc->para_name[ifn][k], '[');
       if (p) {
-        fprintf(fp, "  struct G__aRyp%d { %s a[1]%s; }* G__Ap%d = (struct G__aRyp%d*) G__int(libp->para[%d]);\n", k, 
+        fprintf(fp, "  struct G__aRyp%d { %s a[1]%s; }* G__Ap%d = (struct G__aRyp%d*) G__int(libp->para[%d]);\n", k,
            G__type2string(ifunc->para_type[ifn][k], ifunc->para_p_tagtable[ifn][k], G__get_typenum(ifunc->para_p_typetable[ifn][k]), 0 , 0), p + 2, k, k, k);
       }
     }
@@ -2606,9 +2606,11 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table *ifunc,
       } else {
          // write return type
          char *typestring = G__type2string(type, ptagnum, G__get_typenum(typenum), reftype, isconst);
-         if (ifunc->staticalloc[ifn]) {
+         if (ifunc->staticalloc[ifn] || G__struct.type[ifunc->tagnum] == 'n') {
+            // static method or function in namespace
             fprintf(fp, "  %s (*fptr)(", typestring);
          } else {
+            // class method
             fprintf(fp, "  %s (%s::*fptr)(", typestring, cls);
          }
 
@@ -4166,7 +4168,7 @@ int Cint::Internal::G__cppif_returntype(FILE *fp, int ifn, G__ifunc_table *ifunc
   isconst = ifunc->isconst[ifn];
 
   /* Promote link-off typedef to link-on if used in function */
-  if ((typenum) && G__get_properties(typenum) && G__get_properties(typenum)->globalcomp == G__NOLINK 
+  if ((typenum) && G__get_properties(typenum) && G__get_properties(typenum)->globalcomp == G__NOLINK
      && (G__get_properties(typenum)->iscpplink == G__NOLINK)) {
     G__get_properties(typenum)->globalcomp = G__globalcomp;
   }
@@ -4357,7 +4359,7 @@ void Cint::Internal::G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table *ifunc,
   isconst=ifunc->para_isconst[ifn][k];
 
   /* Promote link-off typedef to link-on if used in function */
-  if(typenum && G__get_properties(typenum) 
+  if(typenum && G__get_properties(typenum)
      && G__get_properties(typenum)->globalcomp == G__NOLINK &&
      G__get_properties(typenum)->iscpplink == G__NOLINK)
     G__get_properties(typenum)->globalcomp = G__globalcomp;
@@ -5103,8 +5105,8 @@ void Cint::Internal::G__cpplink_typetable(FILE *fp, FILE * /*hfp*/)
          if (!iTypedef->IsTypedef()) continue;
          G__RflxProperties* props = G__get_properties(*iTypedef);
          if(props && G__NOLINK>props->globalcomp) {
-            if (!(   iTypedef->DeclaringScope()==::ROOT::Reflex::Scope::GlobalScope() 
-                  ||(G__nestedtypedef 
+            if (!(   iTypedef->DeclaringScope()==::ROOT::Reflex::Scope::GlobalScope()
+                  ||(G__nestedtypedef
                      &&
                     (G__struct.globalcomp[G__get_tagnum(iTypedef->DeclaringScope())]<G__NOLINK)
                     )
@@ -6994,7 +6996,7 @@ extern "C" int G__memfunc_next()
    * Allocate and initialize function table list
    ***************************************************************/
   if(G__p_ifunc->allifunc==G__MAXIFUNC) {
-     G__p_ifunc->next=new G__ifunc_table; 
+     G__p_ifunc->next=new G__ifunc_table;
     G__p_ifunc->next->allifunc=0;
     G__p_ifunc->next->next=(struct G__ifunc_table *)NULL;
     G__p_ifunc->next->page = G__p_ifunc->page+1;
@@ -7157,7 +7159,7 @@ static void G__linknestedtypedef(int tagnum,int globalcomp)
 static void G__link_unamed_nested_types(int tagnum,int globalcomp)
 {
    ::ROOT::Reflex::Scope scope = G__Dict::GetDict().GetScope(tagnum);
-   for ( ::ROOT::Reflex::Type_Iterator it = scope.SubType_Begin(); it != scope.SubType_End(); ++it ) 
+   for ( ::ROOT::Reflex::Type_Iterator it = scope.SubType_Begin(); it != scope.SubType_End(); ++it )
    {
       std::string s(it->Name());
       if (s.length() && s[s.length()-1]=='$')
@@ -7174,7 +7176,7 @@ static void G__link_unamed_nested_types(int tagnum,int globalcomp)
 /**************************************************************************
 * G__link_enclosing()
 **************************************************************************/
-void G__link_enclosing(const std::string &buf, int globalcomp) 
+void G__link_enclosing(const std::string &buf, int globalcomp)
 {
    const char *p=G__find_last_scope_operator((char*) buf.c_str());
    if (p) {
@@ -7390,7 +7392,7 @@ void Cint::Internal::G__specify_link(int link_stub)
      default:
         break;
    }
-   
+
    /*************************************************************************
    * #pragma link [spec] class [name];
    *************************************************************************/
@@ -7961,7 +7963,7 @@ void Cint::Internal::G__specify_link(int link_stub)
       ::ROOT::Reflex::Type_Iterator iter;
       for (iter = ::ROOT::Reflex::Type::Type_Begin();
            iter != ::ROOT::Reflex::Type::Type_End();
-           ++iter) 
+           ++iter)
          {
             ::ROOT::Reflex::Type typedf = *iter;
             if (typedf.IsTypedef()) {
@@ -7988,7 +7990,7 @@ void Cint::Internal::G__specify_link(int link_stub)
       ::ROOT::Reflex::Type_Iterator iter;
       for (iter = ::ROOT::Reflex::Type::Type_Begin();
            iter != ::ROOT::Reflex::Type::Type_End();
-           ++iter) 
+           ++iter)
          {
             ::ROOT::Reflex::Type typedf = *iter;
             if(0!=regex(re,typdef.Name().c_str())){
@@ -8009,7 +8011,7 @@ void Cint::Internal::G__specify_link(int link_stub)
       ::ROOT::Reflex::Type_Iterator iter;
       for (iter = ::ROOT::Reflex::Type::Type_Begin();
          iter != ::ROOT::Reflex::Type::Type_End();
-         ++iter) 
+         ++iter)
       {
          ::ROOT::Reflex::Type typedf = *iter;
          if (typedf.IsTypedef()) {
@@ -8042,7 +8044,7 @@ void Cint::Internal::G__specify_link(int link_stub)
           }
           if (strstr(buf,"<")) {
              // When using reflex, the typedef name will always
-             // be the long template name, including the 
+             // be the long template name, including the
              // expliciting of the default argument.
              G__link_enclosing(buf,globalcomp);
           }
@@ -8172,7 +8174,7 @@ void Cint::Internal::G__specify_link(int link_stub)
                     ::ROOT::Reflex::Type_Iterator iter;
                     for (iter = ::ROOT::Reflex::Type::Type_Begin();
                        iter != ::ROOT::Reflex::Type::Type_End();
-                       ++iter) 
+                       ++iter)
                     {
                        if (iter->IsTypedef()) {
                           G__RflxProperties *prop = G__get_properties(*iter);
@@ -8331,7 +8333,7 @@ void Cint::Internal::G__specify_link(int link_stub)
      }
      else if(strncmp(buf,"typedef",3)==0) {
         for(::ROOT::Reflex::Type_Iterator iTypedef=::ROOT::Reflex::Type::Type_Begin();
-           iTypedef!=::ROOT::Reflex::Type::Type_End();++iTypedef) 
+           iTypedef!=::ROOT::Reflex::Type::Type_End();++iTypedef)
         {
            if (!iTypedef->IsTypedef()) continue;
            G__RflxProperties* props = G__get_properties(*iTypedef);
@@ -8456,10 +8458,10 @@ namespace Cint { namespace Internal {
 extern "C" void G__setnewtype(int globalcomp,const char *comment,int nindex)
 {
    bool typenum_isvalid = G__setnewtype_typenum;
-   assert( typenum_isvalid); 
-   // If G__setnewtype_typenum is invalid, the previous implementation 
+   assert( typenum_isvalid);
+   // If G__setnewtype_typenum is invalid, the previous implementation
    // was defaulting on the last created typedefs (globally).
-   
+
    G__RflxProperties *prop = G__get_properties(G__setnewtype_typenum);
    if (prop) {
       prop->iscpplink = globalcomp;
@@ -8467,7 +8469,7 @@ extern "C" void G__setnewtype(int globalcomp,const char *comment,int nindex)
       if(comment) prop->comment.filenum = -2;
       else        prop->comment.filenum = -1;
    }
-   // Now this is the start of making an array out of the 
+   // Now this is the start of making an array out of the
    // typedef.
    G__setnewtype_nindex = nindex;
    G__setnewtype_index.clear();
@@ -8480,8 +8482,8 @@ extern "C" void G__setnewtype(int globalcomp,const char *comment,int nindex)
 extern "C" void G__setnewtypeindex(int /*j*/, int index)
 {
    bool typenum_isvalid = G__setnewtype_typenum;
-   assert( typenum_isvalid); 
-   // If G__setnewtype_typenum is invalid, the previous implementation 
+   assert( typenum_isvalid);
+   // If G__setnewtype_typenum is invalid, the previous implementation
    // was defaulting on the last created typedefs (globally).
    G__setnewtype_index.push_back(index);
    assert( ((int) G__setnewtype_index.size()) == (index+1) );
