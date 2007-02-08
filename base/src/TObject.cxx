@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.86 2007/01/26 15:40:20 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.87 2007/01/28 18:28:56 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -981,3 +981,32 @@ void TObject::operator delete[](void *ptr, void *vp)
    TStorage::ObjectDealloc(ptr, vp);
 }
 #endif
+
+// TMath::NextPrime is declared in TMathBase.h
+// It is implemented in this file because there is no TMathBase.cxx
+// and we want to keep TMathBase as short as possible
+//______________________________________________________________________________
+Long_t TMath::NextPrime(Long_t x)
+{
+   // Return next prime number after x, unless x is a prime in which case
+   // x is returned.
+
+   if (x <= 2)
+      return 2;
+   if (x == 3)
+      return 3;
+
+   if (x % 2 == 0)
+      x++;
+
+   Long_t sqr = (Long_t) sqrt((Double_t)x) + 1;
+
+   for (;;) {
+      Long_t n;
+      for (n = 3; (n <= sqr) && ((x % n) != 0); n += 2)
+         ;
+      if (n > sqr)
+         return x;
+      x += 2;
+   }
+}

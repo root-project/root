@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.119 2007/02/02 18:03:13 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.120 2007/02/03 09:03:35 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -132,32 +132,6 @@ Double_t TMath::ATanH(Double_t x)
 Double_t TMath::Log2(Double_t x)
 {
    return log(x)/log(2.0);
-}
-
-//______________________________________________________________________________
-Long_t TMath::NextPrime(Long_t x)
-{
-   // Return next prime number after x, unless x is a prime in which case
-   // x is returned.
-
-   if (x <= 2)
-      return 2;
-   if (x == 3)
-      return 3;
-
-   if (x % 2 == 0)
-      x++;
-
-   Long_t sqr = (Long_t) sqrt((Double_t)x) + 1;
-
-   for (;;) {
-      Long_t n;
-      for (n = 3; (n <= sqr) && ((x % n) != 0); n += 2)
-         ;
-      if (n > sqr)
-         return x;
-      x += 2;
-   }
 }
 
 //______________________________________________________________________________

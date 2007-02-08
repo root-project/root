@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.70 2007/01/12 16:03:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.71 2007/01/15 14:27:07 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -148,7 +148,6 @@ namespace TMath {
    inline Int_t    IsNaN(Double_t x);
 
    // Some integer math
-   Long_t   NextPrime(Long_t x);   // Least prime number greater than x
    Long_t   Hypot(Long_t x, Long_t y);     // sqrt(px*px + py*py)
 
    // Min, Max of an array
