@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolumePosition.cxx,v 1.11 2007/01/15 13:45:28 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TVolumePosition.cxx,v 1.12 2007/02/06 15:20:31 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -19,7 +19,6 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TVirtualPad.h"
-#include "TView.h"
 #include "TGeometry.h"
 #include "TRotMatrix.h"
 #include "TBrowser.h"
