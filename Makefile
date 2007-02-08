@@ -372,11 +372,11 @@ ROOTMAP       = etc/system.rootmap
 ##### libCore #####
 
 COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) $(NETL) \
-                $(SYSTEML) $(CLIBL) $(METAUTILSL)
+                $(SYSTEML) $(CLIBL) $(METAUTILSL) $(IOL) $(MATHL)
 COREO         = $(BASEO) $(CONTO) $(METAO) $(NETO) $(SYSTEMO) $(ZIPO) $(CLIBO) \
-                $(METAUTILSO)
+                $(METAUTILSO) $(IOO) $(MATHO)
 COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(NETDO) $(SYSTEMDO) $(CLIBDO) \
-                $(METAUTILSDO)
+                $(METAUTILSDO) $(IODO) $(MATHDO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
 ifneq ($(BUILTINZLIB),yes)
