@@ -52,7 +52,7 @@ endif
 ##### Modules to build #####
 
 MODULES       = build cint metautils pcre utils base cont meta net auth zip \
-                clib matrix newdelete hist tree freetype graf g3d gpad gui \
+                clib matrix newdelete hist tree freetype graf gpad g3d gui \
                 minuit histpainter treeplayer treeviewer physics postscript \
                 rint html eg geom geompainter vmc fumili mlp ged quadp \
                 guibuilder xml foam splot smatrix sql tmva geombuilder spectrum \
