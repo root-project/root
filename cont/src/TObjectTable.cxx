@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjectTable.cxx,v 1.10 2006/07/26 13:36:42 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjectTable.cxx,v 1.11 2007/01/12 16:03:15 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -81,7 +81,6 @@
 #include "TObjectTable.h"
 #include "TROOT.h"
 #include "TClass.h"
-#include "TMath.h"
 #include "TError.h"
 
 

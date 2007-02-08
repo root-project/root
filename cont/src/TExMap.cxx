@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.13 2006/07/26 13:36:42 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.14 2007/01/19 16:47:59 brun Exp $
 // Author: Fons Rademakers   26/05/99
 
 /*************************************************************************
@@ -21,8 +21,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TExMap.h"
-#include "TMath.h"
 #include "TError.h"
+#include "TMathBase.h"
 #include <string.h>
 
 
