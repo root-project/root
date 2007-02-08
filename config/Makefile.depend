@@ -97,9 +97,9 @@ HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(TREEPLAYERLIB)
 HBOOKLIBEXTRA       = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
                       lib/libGraf.lib lib/libTreePlayer.lib
-GEOMPAINTERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB)
+GEOMPAINTERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB) $(GPADLIB)
 GEOMPAINTERLIBEXTRA = lib/libGeom.lib lib/libTree.lib lib/libGraf3d.lib \
-                      lib/libHist.lib
+                      lib/libHist.lib lib/libGpad.lib
 GEOMBUILDERLIBDEP   = $(GEOMLIB) $(G3DLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) \
 		      $(GEDLIB)
 GEOMBUILDERLIBEXTRA = lib/libGeom.lib  lib/libGraf3d.lib lib/libGpad.lib \
@@ -198,8 +198,8 @@ GLLIBEXTRA          = -Llib -lGpad -lGraf3d -lGui -lGraf -lHist -lGed
 HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(TREEPLAYERLIB)
 HBOOKLIBEXTRA       = -Llib -lHist -lMatrix -lTree -lGraf -lTreePlayer
-GEOMPAINTERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB)
-GEOMPAINTERLIBEXTRA = -Llib -lGeom -lTree -lGraf3d -lHist
+GEOMPAINTERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB) $(GPADLIB)
+GEOMPAINTERLIBEXTRA = -Llib -lGeom -lTree -lGraf3d -lHist -lGpad
 GEOMBUILDERLIBDEP   = $(GEOMLIB) $(G3DLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) \
 		      $(GEDLIB)
 GEOMBUILDERLIBEXTRA = -Llib -lGeom -lGraf3d -lGpad -lGraf -lGui -lGed
