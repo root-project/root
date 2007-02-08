@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.125 2006/12/05 17:17:37 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.1 2007/02/07 20:40:39 brun Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -1714,18 +1714,20 @@ Bool_t TDocParser::ProcessComment()
       TString lineAllOneChar(commentLine.Strip());
 
       Ssiz_t len = lineAllOneChar.Length();
-      Char_t c = lineAllOneChar[len - 1];
-      if (c == lineAllOneChar[len - 2] && c == lineAllOneChar[len - 3]) {
-         TString lineAllOneCharStripped(lineAllOneChar.Strip(TString::kTrailing, c));
-         Strip(lineAllOneCharStripped);
-         if (!lineAllOneCharStripped.Length())
-            commentLine.Remove(0);
+      if (len > 0) {
+         Char_t c = lineAllOneChar[len - 1];
+         if (c == lineAllOneChar[len - 2] && c == lineAllOneChar[len - 3]) {
+            TString lineAllOneCharStripped(lineAllOneChar.Strip(TString::kTrailing, c));
+            Strip(lineAllOneCharStripped);
+            if (!lineAllOneCharStripped.Length())
+               commentLine.Remove(0);
 
-         // also a class doc signature: line consists of ////
-         if (!fFoundClassDescription && !fComment.Length() 
-            && fDocContext == kIgnore && start_or_end=='/') {
-            fDocContext = kDocClass;
-            fFoundClassDescription = kTRUE;
+            // also a class doc signature: line consists of ////
+            if (!fFoundClassDescription && !fComment.Length() 
+                && fDocContext == kIgnore && start_or_end=='/') {
+               fDocContext = kDocClass;
+               fFoundClassDescription = kTRUE;
+            }
          }
       }
    }

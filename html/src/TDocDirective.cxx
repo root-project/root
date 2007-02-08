@@ -97,7 +97,7 @@ void TDocHtmlDirective::AddLine(const TSubString& line)
       // remove <pre> in fVerbatim environments, and 
       // </pre> in !fVerbatim environments.
       while (posPre != kNPOS && posPre > 0) {
-         Bool_t isOpen = line[posPre - 1] == '<';
+         Bool_t isOpen = line[posPre - 1 - line.Start()] == '<';
          if (fVerbatim) {
             if (isOpen) {
                // skip

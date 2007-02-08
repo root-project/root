@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.125 2006/12/05 17:17:37 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.1 2007/02/07 20:40:38 brun Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -1449,7 +1449,7 @@ Bool_t TDocOutput::RunDot(const char* filename, std::ostream* outMap /* =0 */) {
       return kFALSE;
 
    TString runDot("dot");
-   if (fHtml->GetDotDir())
+   if (fHtml->GetDotDir() && *fHtml->GetDotDir())
       gSystem->PrependPathName(fHtml->GetDotDir(), runDot);
    runDot += " -q1 -Tgif -o";
    runDot += filename;
