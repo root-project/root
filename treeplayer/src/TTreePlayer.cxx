@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.234 2007/01/30 11:24:32 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.235 2007/01/31 07:33:31 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -233,7 +233,6 @@
 #include "TMath.h"
 #include "TH2.h"
 #include "TH3.h"
-#include "TView.h"
 #include "TPolyMarker.h"
 #include "TPolyMarker3D.h"
 #include "TDirectory.h"
