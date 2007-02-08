@@ -328,13 +328,31 @@ div.access {
    margin-left: 0em;
    margin-bottom: 1em;
 }
-#funcpubl, #datapubl, #enumpubl {
+#funcpubl {
    border-left-color: #77ff77;
 }
-#funcprot, #dataprot, #enumprot {
+#datapubl {
+   border-left-color: #77ff77;
+}
+#enumpubl {
+   border-left-color: #77ff77;
+}
+#funcprot {
    border-left-color: #ffff00;
 }
-#funcpriv, #datapriv,#enumpriv {
+#dataprot {
+   border-left-color: #ffff00;
+}
+#enumprot {
+   border-left-color: #ffff00;
+}
+#funcpriv {
+   border-left-color: #ff7777;
+}
+#datapriv {
+   border-left-color: #ff7777;
+}
+#enumpriv {
    border-left-color: #ff7777;
 }
 
@@ -344,11 +362,14 @@ table.func /* but not table.data! */ {
 tr.func, tr.data {
    white-space: nowrap;
 }
-tr.funcinh, tr.datainh {
+tr.datainh {
    display: none;
    white-space: nowrap;
 }
-
+tr.funcinh {
+   display: none;
+   white-space: nowrap;
+}
 span.baseclass {
    color: #aaaaaa;
    font-weight: normal;
