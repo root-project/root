@@ -39,8 +39,7 @@ BASEDH       := $(BASEDS:.cxx=.h)
 
 BASEH1       := $(wildcard $(MODDIRI)/T*.h)
 BASEH3       := GuiTypes.h KeySymbols.h Buttons.h TTimeStamp.h TVirtualMutex.h \
-                TVirtualPerfStats.h \
-                TVirtualX.h TParameter.h TArchiveFile.h TZIPFile.h \
+                TVirtualPerfStats.h TVirtualX.h TParameter.h \
                 TVirtualAuth.h TFileInfo.h TRedirectOutputGuard.h \
                 TVirtualMonitoring.h TObjectSpy.h
 BASEH3       := $(patsubst %,$(MODDIRI)/%,$(BASEH3))
