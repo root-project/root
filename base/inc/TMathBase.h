@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMathBase.h,v 1.4 2007/01/16 05:52:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMathBase.h,v 1.5 2007/02/08 09:07:50 brun Exp $
 // Authors: Rene Brun, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -81,8 +81,8 @@ namespace TMath {
    inline Long_t    Range(Long_t lb, Long_t ub, Long_t x);
    inline ULong_t   Range(ULong_t lb, ULong_t ub, ULong_t x);
    inline Double_t  Range(Double_t lb, Double_t ub, Double_t x);
-   
-   //NextPrime is used by the Core classes. Implementation in TObject.cxx
+
+   //NextPrime is used by the Core classes.
    Long_t   NextPrime(Long_t x);   // Least prime number greater than x
 }
 
