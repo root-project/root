@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.37 2007/02/08 18:16:01 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.38 2007/02/08 18:38:52 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -9,10 +9,6 @@
  *************************************************************************/
 
 #ifdef __CINT__
-
-#ifndef G__KCC
-#include "cint/lib/dll_stl/str.h"
-#endif
 
 #pragma extra_include "vector";
 #pragma extra_include "string";
