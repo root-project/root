@@ -42,7 +42,20 @@ const char* TDocDirective::GetOutputDir() const
 }
 
 //______________________________________________________________________________
-void TDocDirective::SetParameters(const char* params) {
+void TDocDirective::SetParameters(const char* params)
+{
+   // Given a string containing parameters in params,
+   // we call AddParameter() for each of them.
+   // This function splits the parameter names and
+   // extracts their values if they are given.
+   // Parameters are separated by ",", values are
+   // separated from parameter names by "=".
+   // params being
+   //    a = "a, b, c", b='d,e'
+   // will issue two calls to AddParameter(), one for 
+   // a with value "a, b, c" and one for b with value
+   // "d,e" (each without the quotation marks).
+
    fParameters = params; 
 
    if (!fParameters.Length())
@@ -130,6 +143,9 @@ void TDocHtmlDirective::AddLine(const TSubString& line)
 //______________________________________________________________________________
 Bool_t TDocHtmlDirective::GetResult(TString& result)
 {
+   // Set result to the HTML code that was passed in via AddLine().
+   // Prepend a closing </pre>, append an opening <pre>
+
    result = "</pre><!-- TDocHtmlDirective start -->";
    result += fText + "<!-- TDocHtmlDirective end --><pre>";
    return kTRUE;
@@ -165,6 +181,10 @@ void TDocMacroDirective::AddLine(const TSubString& line)
 //______________________________________________________________________________
 Bool_t TDocMacroDirective::GetResult(TString& result)
 {
+   // Get the result (i.e. an HTML img tag) for the macro invocation.
+   // If fShowSource is set, a second tab will be created which shows
+   // the source.
+
    if (!fMacro)
       return kFALSE;
 
@@ -192,8 +212,11 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
       while (filename.Length() == 0)
          filename = ((TObjString*)iLine())->String().Strip();
 
-      TString pwd(GetHtml()->GetImplFileName(GetDocParser()->GetCurrentClass()));
-      pwd = gSystem->DirName(pwd);
+      TString pwd;
+      if (GetHtml() && GetDocParser() && GetDocParser()->GetCurrentClass()) {
+         pwd = GetHtml()->GetImplFileName(GetDocParser()->GetCurrentClass());
+         pwd = gSystem->DirName(pwd);
+      } else pwd = gSystem->pwd();
       TString macroPath(GetHtml()->GetMacroPath());
       const char* pathDelimiter = 
 #ifdef R__WIN32
@@ -274,7 +297,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
 
          GetDocOutput()->NameSpace2FileName(filename);
          TString id(filename);
-         filename += ".png";
+         filename += ".gif";
          TString basename(filename);
 
          result += "\" title=\"MACRO\" src=\"";
@@ -288,6 +311,8 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
                objRet->IsA()->GetName(), filename.Data());
 
          objRet->SaveAs(filename);
+         gSystem->ProcessEvents();
+         
          if (objRet != gPad)
             delete objRet;
 

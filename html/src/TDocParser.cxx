@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.1 2007/02/07 20:40:39 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.2 2007/02/08 05:50:25 brun Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -90,11 +90,12 @@ namespace {
 // Also handles special macros like
 /* Begin_Macro(GUI, source)
 {
-   TGMainFrame* f = new TGMainFrame(0, 100, 100);
+   TGMainFrame* f = new TGMainFrame(gClient->GetRoot(), 100, 100);
    f->SetName("testMainFrame"); // that's part of the name of the image
    TGButton* b = new TGTextButton(f, "Test Button");
    f->AddFrame(b);
    f->MapSubwindows();
+   f->Resize(f->GetDefaultSize());
    f->MapWindow();
    return f;
 }
@@ -1695,16 +1696,17 @@ Bool_t TDocParser::ProcessComment()
       fFoundClassDescription = kTRUE;
    }
 
-   char start_or_end = 0; // * or /
+   char start_or_end = 0;
    // remove leading /*, //
-   if (commentLine.Length()>1 && commentLine[0] == '/' && 
-      (commentLine[1] == '/' || commentLine[1] == '*')) {
+   if (commentLine.Length()>1 && commentLine[0] == '/' 
+       && (commentLine[1] == '/' || commentLine[1] == '*')) {
       start_or_end = commentLine[1];
       commentLine.Remove(0, 2);
    }
    // remove trailing */
-   if (commentLine.Length()>1 && commentLine[commentLine.Length() - 2] == '*' && 
-      commentLine[commentLine.Length() - 1] == '/') {
+   if (start_or_end != '/' && commentLine.Length()>1 
+       && commentLine[commentLine.Length() - 2] == '*' 
+       && commentLine[commentLine.Length() - 1] == '/') {
       start_or_end = commentLine[commentLine.Length() - 2];
       commentLine.Remove(commentLine.Length()-2);
    }
@@ -1717,28 +1719,32 @@ Bool_t TDocParser::ProcessComment()
       if (len > 0) {
          Char_t c = lineAllOneChar[len - 1];
          if (c == lineAllOneChar[len - 2] && c == lineAllOneChar[len - 3]) {
-            TString lineAllOneCharStripped(lineAllOneChar.Strip(TString::kTrailing, c));
+            TString lineAllOneCharStripped = lineAllOneChar.Strip(TString::kTrailing, c);
             Strip(lineAllOneCharStripped);
-            if (!lineAllOneCharStripped.Length())
+            if (!lineAllOneCharStripped.Length()) {
                commentLine.Remove(0);
 
-            // also a class doc signature: line consists of ////
-            if (!fFoundClassDescription && !fComment.Length() 
-                && fDocContext == kIgnore && start_or_end=='/') {
-               fDocContext = kDocClass;
-               fFoundClassDescription = kTRUE;
+               // also a class doc signature: line consists of ////
+               if (!fFoundClassDescription && !fComment.Length() 
+                   && fDocContext == kIgnore && start_or_end=='/') {
+                  fDocContext = kDocClass;
+                  fFoundClassDescription = kTRUE;
+               }
             }
          }
       }
    }
 
-   // remove leading and trailing '*' from e.g. * some doc *
-   while (! start_or_end && Context() != kDirective
-      && commentLine.Length() > 2
-      && commentLine[0] == '*' 
-      && commentLine[commentLine.Length() - 1] == '*')
-      commentLine = commentLine.Strip(TString::kBoth, commentLine[0]);
+   // remove leading and trailing chars from e.g. // some doc //
+   if (commentLine.Length() > 0 && start_or_end == commentLine[commentLine.Length() - 1])
+      // we already removed it as part of // or / *; also remove the trailing
+      commentLine = commentLine.Strip(TString::kTrailing, start_or_end);
 
+   if (commentLine.Length() > 2 && Context() != kDirective)
+      while (commentLine.Length() > 2
+             && commentLine[0] == commentLine[commentLine.Length() - 1])
+         commentLine = commentLine.Strip(TString::kBoth, commentLine[0]);
+   
    fComment += commentLine + "\n";
 
    return kTRUE;

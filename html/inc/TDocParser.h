@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.29 2006/09/25 08:58:56 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TDocParser.h,v 1.1 2007/02/07 20:40:38 brun Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -146,8 +146,8 @@ protected:
    void  WriteSourceLine(std::ostream& out);
 
 public:
-                 TDocParser(TClassDocOutput& docOutput, TClass* cl);
-                 TDocParser(TDocOutput& docOutput);
+   TDocParser(TClassDocOutput& docOutput, TClass* cl);
+   TDocParser(TDocOutput& docOutput);
    virtual       ~TDocParser();
 
    void          Convert(std::ostream& out, std::istream& in, const char* relpath);

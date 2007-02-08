@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.29 2006/09/25 08:58:56 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TDocInfo.h,v 1.1 2007/02/07 20:40:38 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -36,7 +36,8 @@ class TClassDocInfo: public TObject {
 public:
    // initialize the object
    TClassDocInfo(TClass* cl, const char* filename): 
-      fClass(cl), fModule(0), fHtmlFileName(filename), fSelected(kTRUE) { }
+      fClass(cl), fModule(0), fHtmlFileName(filename),
+      fSelected(kTRUE), fHaveSource(kFALSE) { }
    virtual ~TClassDocInfo() {}
 
            TClass*         GetClass() const { return fClass; }
@@ -48,6 +49,9 @@ public:
 
            void            SetSelected(Bool_t sel = kTRUE) { fSelected = sel; }
            Bool_t          IsSelected() const { return fSelected; }
+           Bool_t          HaveSource() const { return fHaveSource; }
+   
+           void            SetHaveSource(Bool_t have = kTRUE) { fHaveSource = have; }
 
            ULong_t         Hash() const;
 
@@ -61,6 +65,7 @@ private:
    TModuleDocInfo*         fModule; // module this class is in
    TString                 fHtmlFileName; // name of the HTML doc file
    Bool_t                  fSelected; // selected for doc output
+   Bool_t                  fHaveSource; // whether we can find the source locally
 
    ClassDef(TClassDocInfo,0); // info cache for class documentation
 };

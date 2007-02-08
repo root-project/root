@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.127 2007/01/30 11:49:14 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.128 2007/02/07 20:40:39 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -472,30 +472,38 @@ void THtml::AddMacroPath(const char* path)
    fMacroPath += path;
 }
 
+
 //______________________________________________________________________________
-const char* THtml::GetEtcDir() const {
-// Get the directory containing THtml's auxillary files ($ROOTSYS/etc/html)
+void THtml::CreateAuxiliaryFiles() const
+{
+   // copy CSS, javascript file, etc to the output dir
+   CreateJavascript();
+   CreateStyleSheet();
+   CopyFileFromEtcDir("HELP.html");
+}
 
-   static TString etcHtmlDir;
+//______________________________________________________________________________
+const char* THtml::GetEtcDir() {
+// Get the directory containing THtml's auxiliary files ($ROOTSYS/etc/html)
 
-   if (etcHtmlDir.Length())
-      return etcHtmlDir;
+   if (fEtcDir.Length())
+      return fEtcDir;
 
-   etcHtmlDir = "html";
+   fEtcDir = "html";
 
 #ifdef ROOTETCDIR
-   gSystem->PrependPathName(ROOTETCDIR, etcHtmlDir);
+   gSystem->PrependPathName(ROOTETCDIR, fEtcDir);
 #else
-   gSystem->PrependPathName("etc", etcHtmlDir);
+   gSystem->PrependPathName("etc", fEtcDir);
 # ifdef ROOTPREFIX
-   gSystem->PrependPathName(ROOTPREFIX, etcHtmlDir);
+   gSystem->PrependPathName(ROOTPREFIX, fEtcDir);
 # else
    if (getenv("ROOTSYS"))
-      gSystem->PrependPathName(getenv("ROOTSYS"), etcHtmlDir);
+      gSystem->PrependPathName(getenv("ROOTSYS"), fEtcDir);
 # endif
 #endif
 
-   return etcHtmlDir;
+   return fEtcDir;
 }
 
 //______________________________________________________________________________
@@ -745,6 +753,9 @@ void THtml::CreateListOfClasses(const char* filter)
       GetHtmlFileName(classPtr, htmlfilename);
       TClassDocInfo* cdi = new TClassDocInfo(classPtr, htmlfilename.Data());
       cdi->SetSelected(!(filter && filter[0] && strcmp(filter,"*") && s.Index(re) == kNPOS));
+      char* realFile = gSystem->Which(fSourceDir, impname, kReadPermission); // delete at end of block
+      cdi->SetHaveSource((realFile));
+
       fClasses.Add(cdi);
 
       TString modulename;
@@ -758,19 +769,12 @@ void THtml::CreateListOfClasses(const char* filter)
       if (module) {
          module->AddClass(cdi);
          cdi->SetModule(module);
-         if (!module->IsSelected() && cdi->IsSelected()
-            || !module->GetSourceDir().Length()) {
-            // need to check whether file is accessible
-            char* realFile = gSystem->Which(fSourceDir, impname, kReadPermission);
-            if (realFile) {
-               if (!module->IsSelected() && cdi->IsSelected())
-                  module->SetSelected();
-               if (!module->GetSourceDir().Length())
-                  module->SetSourceDir(gSystem->DirName(realFile));
-               delete realFile;
-            }
-         }
+         if (cdi->HaveSource() && cdi->IsSelected())
+            module->SetSelected();
+         if (cdi->HaveSource() && !module->GetSourceDir().Length())
+            module->SetSourceDir(gSystem->DirName(realFile));
       }
+      delete[] realFile;
    }
 
    fClasses.Sort();
@@ -1182,6 +1186,10 @@ void THtml::MakeTree(const char *className, Bool_t force)
 //______________________________________________________________________________
 void THtml::SetSourcePrefix(const char *prefix)
 {
+   // Sets the source prefix, see GetSourceFileName().
+   // Also resets the class structure, in case new files can
+   // be found after this call.
+
    fSourcePrefix = prefix;
 
    // reset class table
@@ -1194,6 +1202,14 @@ void THtml::SetSourcePrefix(const char *prefix)
 //______________________________________________________________________________
 void THtml::SetSourceDir(const char *dir)
 {
+   // Set the directory containing the source files.
+   // The source file for a class MyClass will be searched
+   // by prepending dir to the value of
+   // MyClass::Class()->GetImplFileName() - which can contain
+   // directory information!
+   // Also resets the class structure, in case new files can
+   // be found after this call.
+
    fSourceDir = dir;
 
    // reset class table

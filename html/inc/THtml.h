@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.30 2007/01/15 16:57:37 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.31 2007/02/07 20:40:38 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -42,11 +42,11 @@ public:
    //__________________________________________________________________________
    // map of lib name to map of module names contained in lib,
    // and their library dependencies. Wraps a long STL name.
-   class MapModuleDepMap: public std::map<std::string, std::set<std::string> > {
+   class TMapModuleDepMap: public std::map<std::string, std::set<std::string> > {
    public:
-      MapModuleDepMap() {}
+      TMapModuleDepMap() {}
    };
-   typedef std::map<std::string, MapModuleDepMap > LibDep_t;
+   typedef std::map<std::string, TMapModuleDepMap > LibDep_t;
 
 protected:
    TString        fXwho;            // URL for name lookup
@@ -54,6 +54,7 @@ protected:
    TString        fSourceDir;       // source path
    TString        fOutputDir;       // output directory
    TString        fDotDir;          // directory of GraphViz's dot binary
+   TString        fEtcDir;          // directory containing auxiliary files
    Int_t          fFoundDot;        // whether dot is accessible (-1 dunno, 1 yes, 0 no)
    TString        fCounter;         // counter string
    TString        fCounterFormat;   // counter printf-like format
@@ -67,6 +68,8 @@ protected:
    std::map<TClass*,std::string> fGuessedImplFileNames; // names of additional impl file names
    LibDep_t       fSetLibDeps;      // Library dependencies
 
+   virtual void    CreateJavascript() const;
+   virtual void    CreateStyleSheet() const;
    void            CreateListOfTypes();
    void            CreateListOfClasses(const char* filter);
    void            MakeClass(void* cdi, Bool_t force=kFALSE);
@@ -78,8 +81,7 @@ public:
                          const char *dirname = "", const char *relpath="../");
    Bool_t        CopyFileFromEtcDir(const char* filename) const;
    void          CreateHierarchy();
-   virtual void  CreateJavascript() const;
-   virtual void  CreateStyleSheet() const;
+   virtual void  CreateAuxiliaryFiles() const;
    virtual TClass *GetClass(const char *name);
    const char*   GetCounter() const { return fCounter; }
    const char*   GetCounterFormat() const { return fCounterFormat; }
@@ -87,7 +89,7 @@ public:
    void          GetDerivedClasses(TClass* cl, std::set<TClass*>& derived) const;
    const char*   GetDotDir() const { return fDotDir; }
    virtual const char *GetImplFileName(TClass* cl) const;
-   virtual const char* GetEtcDir() const;
+   virtual const char* GetEtcDir();
    virtual const char* GetFileName(const char *filename);
    virtual void  GetHtmlFileName(TClass *classPtr, TString& filename);
    virtual const char* GetHtmlFileName(const char* classname);
@@ -115,6 +117,7 @@ public:
    void          SetCounterFormat(const char* format) { fCounterFormat = format; }
    void          SetDeclFileName(TClass* cl, const char* filename);
    void          SetEscape(char /*esc*/ ='\\') {} // for backward comp
+   void          SetEtcDir(const char* dir) { fEtcDir = dir; }
    void          SetFoundDot(Bool_t found = kTRUE) { fFoundDot = found; }
    void          SetImplFileName(TClass* cl, const char* filename);
    void          SetMacroPath(const char* path) {fMacroPath = path;}

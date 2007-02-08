@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.125 2006/12/05 17:17:37 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TClassDocOutput.cxx,v 1.1 2007/02/07 20:40:38 brun Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -31,12 +31,16 @@ ClassImp(TClassDocOutput);
 TClassDocOutput::TClassDocOutput(THtml& html, TClass* cl):
    TDocOutput(html), fHierarchyLines(0), fCurrentClass(cl), fParser(0)
 {
+   // Create an object given the invoking THtml object, and the TClass
+   // object that we will generate output for.
+
    fParser = new TDocParser(*this, fCurrentClass);
 }
 
 //______________________________________________________________________________
 TClassDocOutput::~TClassDocOutput()
 {
+   // Destructor, deletes fParser
    delete fParser;
 }
 
@@ -548,7 +552,8 @@ void TClassDocOutput::ClassTree(TVirtualPad * psCanvas, Bool_t force)
 }
 
 //______________________________________________________________________________
-Bool_t TClassDocOutput::CreateDotClassChartInh(const char* filename) {
+Bool_t TClassDocOutput::CreateDotClassChartInh(const char* filename)
+{
 // Build the class tree for one class in GraphViz/Dot format
 //
 //

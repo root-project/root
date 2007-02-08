@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.1 2007/02/07 20:40:38 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.2 2007/02/08 05:50:25 brun Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -406,6 +406,8 @@ void TDocOutput::CreateHierarchy()
    TClassDocInfo* cdi = 0;
    TIter iClass(fHtml->GetListOfClasses());
    while ((cdi = (TClassDocInfo*)iClass())) {
+      if (!cdi->HaveSource())
+         continue;
 
       // get class
       TClass *basePtr = cdi->GetClass();
@@ -429,8 +431,7 @@ void TDocOutput::CreateIndex()
 //
 
    // create CSS file, we need it
-   fHtml->CreateStyleSheet();
-   fHtml->CreateJavascript();
+   fHtml->CreateAuxiliaryFiles();
 
    TString filename("ClassIndex.html");
    gSystem->PrependPathName(fHtml->GetOutputDir(), filename);
@@ -469,7 +470,7 @@ void TDocOutput::CreateIndex()
          TIter iClass(fHtml->GetListOfClasses());
          TClassDocInfo* cdi = 0;
          while ((cdi = (TClassDocInfo*)iClass()))
-            if (cdi->IsSelected())
+            if (cdi->IsSelected() && cdi->HaveSource())
                classNames.push_back(cdi->GetName());
       }
 
@@ -521,7 +522,7 @@ void TDocOutput::CreateIndex()
    TClassDocInfo* cdi = 0;
    Int_t i = 0;
    while ((cdi = (TClassDocInfo*)iClass())) {
-      if (!cdi->IsSelected())
+      if (!cdi->IsSelected() || !cdi->HaveSource())
          continue;
 
       // get class
@@ -706,7 +707,7 @@ void TDocOutput::CreateIndexByTopic()
          TIter iClass(module->GetClasses());
          TClassDocInfo* cdi = 0;
          while ((cdi = (TClassDocInfo*) iClass())) {
-            if (!cdi->IsSelected())
+            if (!cdi->IsSelected() || !cdi->HaveSource())
                continue;
             classNames.push_back(cdi->GetName());
 
@@ -769,7 +770,7 @@ void TDocOutput::CreateIndexByTopic()
       UInt_t count = 0;
       UInt_t currentIndexEntry = 0;
       while ((cdi = (TClassDocInfo*) iClass())) {
-         if (!cdi->IsSelected())
+         if (!cdi->IsSelected() || !cdi->HaveSource())
             continue;
 
          TClass *classPtr = cdi->GetClass();
@@ -840,9 +841,9 @@ void TDocOutput::CreateIndexByTopic()
 
          for (std::set<std::string>::iterator iLib = iModule->second.begin();
             iLib != iModule->second.end(); ++iLib) {
-            const THtml::MapModuleDepMap& modDep = fHtml->GetLibraryDependencies()[*iLib];
+            const THtml::TMapModuleDepMap& modDep = fHtml->GetLibraryDependencies()[*iLib];
             if (modDep.size()) {
-               THtml::MapModuleDepMap::const_iterator iModDep = modDep.begin();
+               THtml::TMapModuleDepMap::const_iterator iModDep = modDep.begin();
                const std::string& mod = iModDep->first;
                sstrDeps << "\"" << iModule->first << "\" -> \"" << mod << "\" [lhead=cluster" << *iLib << "];" << endl;
             }
