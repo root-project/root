@@ -538,7 +538,7 @@ void TDocLatexDirective::CreateLatex(const char* filename)
          if (!str) continue;
          char align = 'l';
          if ((UInt_t)fAlignment.Length() > iCol)
-            align = fAlignment[iCol];
+            align = fAlignment[(Int_t)iCol];
          Float_t x = posX[iCol];
          switch (align) {
             case 'l': break;
