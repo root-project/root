@@ -1,4 +1,0 @@
-# Extra include files and library path
-INCFLAGS += -I$(ROOTSYS)/include
-LDLIBS   += -L$(ROOTSYS)/lib -ldl -lCint -lCore -lGeom -lG4root -lMatrix \
-            -lGraf -lHist -lGraf3d
