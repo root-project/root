@@ -84,6 +84,9 @@ $(BASEDS3):     $(BASEH3) $(BASEL3) $(ROOTCINTTMPEXE)
 $(BASEDS4):
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(BASEH4) $(BASEL4)
+		@echo "You need to manually fix the generated file as follow:"
+		@echo "1. In ManualBase4Body.h, modify the name of the 2 functions to match the name of the CINT wrapper functions in ManualBase4.cxx"
+		@echo "2. Replace the implementation of both functions by #include \"ManualBase4Body.h\" "
 
 all-base:       $(BASEO) $(BASEDO)
 
