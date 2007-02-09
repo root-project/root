@@ -1,5 +1,9 @@
 Test handling of twice 'from ROOT import*' ... ok
-Test handling of a thrown TPyException object ... ok
+Test thrown TPyException object processing ... ok
+Test handling of a temporary for user defined operator new ... ok
+Test the special role that gROOT plays vis-a-vis threading ... ok
+Test different import styles vis-a-vis threading ... ok
+Test various ways of preventing GUI thread startup ... ok
 
 ----------------------------------------------------------------------
 
