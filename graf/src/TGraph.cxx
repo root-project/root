@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.202 2007/01/30 17:26:35 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.203 2007/02/06 14:35:45 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -3872,6 +3872,10 @@ void TGraph::SetPoint(Int_t i, Double_t x, Double_t y)
    // Set x and y values for point number i.
 
    if (i < 0) return;
+   if (fHistogram) {
+      delete fHistogram;
+      fHistogram = 0;
+   }
    if (i >= fMaxSize) {
       Double_t **ps = ExpandAndCopy(i+1, fNpoints);
       CopyAndRelease(ps, 0,0,0);
