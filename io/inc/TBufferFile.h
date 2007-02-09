@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBufferFile.h,v 1.5 2007/02/05 18:08:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBufferFile.h,v 1.6 2007/02/07 15:41:06 rdm Exp $
 // Author: Rene Brun   17/01/2007
 
 /*************************************************************************
@@ -38,6 +38,7 @@ namespace std {
 }
 #endif
 
+class TVirtualStreamerInfo;
 class TStreamerInfo;
 class TStreamerElement;
 class TClass;
@@ -113,10 +114,10 @@ public:
    virtual void      *ReadObjectAny(const TClass* cast);
    virtual void       SkipObjectAny();
 
-   virtual void       IncrementLevel(TStreamerInfo* info);
+   virtual void       IncrementLevel(TVirtualStreamerInfo* info);
    virtual void       SetStreamerElementNumber(Int_t) {}
-   virtual void       DecrementLevel(TStreamerInfo*);
-   TStreamerInfo     *GetInfo() {return fInfo;}
+   virtual void       DecrementLevel(TVirtualStreamerInfo*);
+   TVirtualStreamerInfo     *GetInfo() {return (TVirtualStreamerInfo*)fInfo;}
    virtual void       ClassBegin(const TClass*, Version_t = -1) {}
    virtual void       ClassEnd(const TClass*) {}
    virtual void       ClassMember(const char*, const char* = 0, Int_t = -1, Int_t = -1) {}

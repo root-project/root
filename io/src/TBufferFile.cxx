@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBufferFile.cxx,v 1.6 2007/02/05 18:08:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBufferFile.cxx,v 1.7 2007/02/07 15:41:06 rdm Exp $
 // Author: Rene Brun 17/01/2007
 
 /*************************************************************************
@@ -139,16 +139,16 @@ Int_t TBufferFile::GetVersionOwner() const
 }
 
 //______________________________________________________________________________
-void TBufferFile::IncrementLevel(TStreamerInfo* info)
+void TBufferFile::IncrementLevel(TVirtualStreamerInfo* info)
 {
    // Increment level.
 
    fInfoStack.push_back(fInfo);
-   fInfo = info;
+   fInfo = (TStreamerInfo*)info;
 }
 
 //______________________________________________________________________________
-void TBufferFile::DecrementLevel(TStreamerInfo* /*info*/)
+void TBufferFile::DecrementLevel(TVirtualStreamerInfo* /*info*/)
 {
    // Decrement level.
 

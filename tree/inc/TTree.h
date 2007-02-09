@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.97 2007/02/01 14:21:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.98 2007/02/01 15:26:18 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -86,6 +86,7 @@ class TCut;
 class TVirtualIndex;
 class TBranchRef;
 class TBasket;
+class TStreamerInfo;
 
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 

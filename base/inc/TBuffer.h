@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.59 2007/01/28 18:26:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.60 2007/02/05 18:08:45 brun Exp $
 // Author: Rene Brun, Philippe Canal, Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -25,7 +25,7 @@
 #include "TObject.h"
 #endif
 
-class TStreamerInfo;
+class TVirtualStreamerInfo;
 class TStreamerElement;
 class TClass;
 class TString;
@@ -119,14 +119,14 @@ public:
    virtual void      *ReadObjectAny(const TClass* cast) = 0;
    virtual void       SkipObjectAny() = 0;
 
-   virtual void       IncrementLevel(TStreamerInfo* info) = 0;
+   virtual void       IncrementLevel(TVirtualStreamerInfo* info) = 0;
    virtual void       SetStreamerElementNumber(Int_t) = 0;
-   virtual void       DecrementLevel(TStreamerInfo*) = 0;
+   virtual void       DecrementLevel(TVirtualStreamerInfo*) = 0;
    
    virtual void       ClassBegin(const TClass*, Version_t = -1) = 0;
    virtual void       ClassEnd(const TClass*) = 0;
    virtual void       ClassMember(const char*, const char* = 0, Int_t = -1, Int_t = -1) = 0;
-   virtual TStreamerInfo     *GetInfo() = 0;
+   virtual TVirtualStreamerInfo     *GetInfo() = 0;
 
    virtual TClass    *ReadClass(const TClass *cl = 0, UInt_t *objTag = 0) = 0;
    virtual void       WriteClass(const TClass *cl) = 0;
