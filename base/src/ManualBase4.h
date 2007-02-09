@@ -27,22 +27,13 @@ extern void G__set_cpp_environmentManualBase4();
 }
 
 
-#include "base/inc/TROOT.h"
+#include "base/inc/TObject.h"
 #include "base/inc/TMemberInspector.h"
 #include "TDirectory.h"
-#include <algorithm>
-namespace std { }
-using namespace std;
 
 #ifndef G__MEMFUNCBODY
 #endif
 
-extern G__linked_taginfo G__ManualBase4LN_vectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgR;
-extern G__linked_taginfo G__ManualBase4LN__RanitlETStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR;
-extern G__linked_taginfo G__ManualBase4LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOlongcOTStreamerInfomUmUcOTStreamerInfomUaNgR;
-extern G__linked_taginfo G__ManualBase4LN_reverse_iteratorlEvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorgR;
-extern G__linked_taginfo G__ManualBase4LN_iteratorlErandom_access_iterator_tagcOTStreamerInfomUcOvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLiteratorcLcLdifference_typecOTStreamerInfomUmUcOTStreamerInfomUaNgR;
-extern G__linked_taginfo G__ManualBase4LN_reverse_iteratorlEvectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgRcLcLconst_iteratorgR;
 extern G__linked_taginfo G__ManualBase4LN_TDirectory;
 
 /* STUB derived class for protected member access */
