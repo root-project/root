@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TDirectoryFile.cxx,v 1.7 2007/02/05 18:09:46 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TDirectoryFile.cxx,v 1.8 2007/02/09 10:16:07 rdm Exp $
 // Author: Rene Brun   22/01/2007
 
 /*************************************************************************
@@ -8,6 +8,21 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
+//______________________________________________________________________________
+//
+// A ROOT file is structured in Directories (like a file system).
+// Each Directory has a list of Keys (see TKeys) and a list of objects
+// in memory. A Key is a small object that describes the type and location
+// of a persistent object in a file. The persistent object may be a directory.
+//Begin_Html
+/*
+<img src="gif/fildir.gif">
+*/
+//End_Html
+//
+//      The structure of a file is shown in TFile::TFile
+//______________________________________________________________________________
 
 #include "Riostream.h"
 #include "Strlen.h"
@@ -35,29 +50,8 @@
 const UInt_t kIsBigFile = BIT(16);
 const Int_t  kMaxLen = 2048;
 
-//______________________________________________________________________________
-//Begin_Html
-/*
-<img src="gif/tdirectory_classtree.gif">
-*/
-//End_Html
-
 ClassImp(TDirectoryFile)
 
-//______________________________________________________________________________
-//
-// A ROOT file is structured in Directories (like a file system).
-// Each Directory has a list of Keys (see TKeys) and a list of objects
-// in memory. A Key is a small object that describes the type and location
-// of a persistent object in a file. The persistent object may be a directory.
-//Begin_Html
-/*
-<img src="gif/fildir.gif">
-*/
-//End_Html
-//
-//      The structure of a file is shown in TFile::TFile
-//
 
 //______________________________________________________________________________
 TDirectoryFile::TDirectoryFile() : TDirectory()
