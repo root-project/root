@@ -16,14 +16,16 @@
 #define G__DICTIONARY
 #include "G__ci.h"
 extern "C" {
-extern void G__cpp_setup_tagtableG__API();
-extern void G__cpp_setup_inheritanceG__API();
-extern void G__cpp_setup_typetableG__API();
-extern void G__cpp_setup_memvarG__API();
-extern void G__cpp_setup_globalG__API();
-extern void G__cpp_setup_memfuncG__API();
-extern void G__cpp_setup_funcG__API();
-extern void G__set_cpp_environmentG__API();
+extern G__DLLEXPORT int G__cpp_dllrevG__API();
+extern G__DLLEXPORT void G__set_cpp_environmentG__API();
+extern G__DLLEXPORT void G__cpp_setup_tagtableG__API();
+extern G__DLLEXPORT void G__cpp_setup_inheritanceG__API();
+extern G__DLLEXPORT void G__cpp_setup_typetableG__API();
+extern G__DLLEXPORT void G__cpp_setup_memvarG__API();
+extern G__DLLEXPORT void G__cpp_setup_globalG__API();
+extern G__DLLEXPORT void G__cpp_setup_memfuncG__API();
+extern G__DLLEXPORT void G__cpp_setup_funcG__API();
+extern G__DLLEXPORT void G__cpp_setupG__API();
 }
 
 
@@ -32,8 +34,8 @@ extern void G__set_cpp_environmentG__API();
 #ifndef G__MEMFUNCBODY
 #endif
 
-extern G__linked_taginfo G__G__APILN_basic_ostreamlEcharcOchar_traitslEchargRsPgR;
 extern G__linked_taginfo G__G__APILN_string;
+extern G__linked_taginfo G__G__APILN_basic_ostreamlEcharcOchar_traitslEchargRsPgR;
 extern G__linked_taginfo G__G__APILN_G__value;
 extern G__linked_taginfo G__G__APILN_G__friendtag;
 extern G__linked_taginfo G__G__APILN_G__bytecodefunc;
