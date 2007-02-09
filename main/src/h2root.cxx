@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.26 2006/05/13 18:02:56 brun Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.27 2006/05/14 07:27:42 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -201,13 +201,23 @@ extern "C" void  type_of_call hdcofl();
 extern "C" void  type_of_call hmaxim(const int&,const float&);
 extern "C" void  type_of_call hminim(const int&,const float&);
 extern "C" void  type_of_call hdelet(const int&);
+extern "C" void  type_of_call hix(const int&,const int&,const float&);
+extern "C" void  type_of_call hijxy(const int&,const int&,const int&,const float&,const float&);
+
+#ifndef R__B64
 extern "C" float type_of_call hi(const int&,const int&);
 extern "C" float type_of_call hie(const int&,const int&);
 extern "C" float type_of_call hif(const int&,const int&);
 extern "C" float type_of_call hij(const int&,const int&,const int&);
-extern "C" void  type_of_call hix(const int&,const int&,const float&);
-extern "C" void  type_of_call hijxy(const int&,const int&,const int&,const float&,const float&);
 extern "C" float type_of_call hije(const int&,const int&,const int&);
+#else
+extern "C" double type_of_call hi(const int&,const int&);
+extern "C" double type_of_call hie(const int&,const int&);
+extern "C" double type_of_call hif(const int&,const int&);
+extern "C" double type_of_call hij(const int&,const int&,const int&);
+extern "C" double type_of_call hije(const int&,const int&,const int&);
+#endif
+
 #ifndef WIN32
 extern "C" void  type_of_call hcdir(DEFCHAR,DEFCHAR ,const int,const int);
 #else
