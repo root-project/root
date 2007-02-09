@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.220 2007/02/07 08:52:57 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.221 2007/02/08 15:09:08 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -765,7 +765,7 @@ void TClass::Init(const char *name, Version_t cversion,
 
    SetBit(kLoading);
    // Advertise ourself as the loading class for this class name
-   gROOT->AddClass(this);
+   TClass::AddClass(this);
 
    Bool_t isStl = kFALSE;
 
@@ -795,7 +795,7 @@ void TClass::Init(const char *name, Version_t cversion,
             gInterpreter->InitializeDictionaries();
             gInterpreter->SetClassInfo(this);
             if (IsZombie()) {
-               gROOT->RemoveClass(this);
+               TClass::RemoveClass(this);
                return;
             }
          }
@@ -833,7 +833,7 @@ void TClass::Init(const char *name, Version_t cversion,
             // we found at least one equivalent.
             // let's force a reload
 
-            gROOT->RemoveClass(oldcl);
+            TClass::RemoveClass(oldcl);
 
             if (oldcl->CanIgnoreTObjectStreamer()) {
                IgnoreTObjectStreamer();
@@ -1005,7 +1005,7 @@ TClass::~TClass()
    delete fStreamerInfo; fStreamerInfo=0;
 
    if (fDeclFileLine >= -1)
-      gROOT->RemoveClass(this);
+      TClass::RemoveClass(this);
 
    delete fClassInfo;  fClassInfo=0;
 
