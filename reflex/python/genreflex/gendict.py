@@ -635,6 +635,12 @@ class genDictionary(object) :
     c += '  static Dictionaries instance;\n}\n'
     return c
 #---------------------------------------------------------------------------------
+
+  def translate_typedef (self, id):
+    while self.xref[id]['elem'] in ['CvQualifiedType', 'Typedef']:
+      id = self.xref[id]['attrs']['type']
+    return self.genTypeName(id,enum=True, const=True)
+
   def genClassDict(self, attrs):
     members, bases = [], []
     cl  = attrs['name']
@@ -999,7 +1005,9 @@ class genDictionary(object) :
       narg  = len(args)
       if ndarg : iden = '  '
       else     : iden = ''
-      if returns != 'void' and returns in self.basictypes :
+      if returns != 'void' and (returns in self.basictypes or
+                                self.translate_typedef (f['returns']) in
+                                self.basictypes):
         s += '  static %s ret;\n' % returns
       for n in range(narg-ndarg, narg+1) :
         if ndarg :
@@ -1016,7 +1024,8 @@ class genDictionary(object) :
           elif returns[-1] == '&' :
             first = iden + '  return (void*)&%s(' % ( name, )
             s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
-          elif returns in self.basictypes :
+          elif (returns in self.basictypes or
+                self.translate_typedef (f['returns']) in self.basictypes):
             first = iden + '  ret = %s(' % ( name, )
             s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
             s += iden + '  return &ret;\n'        
@@ -1218,7 +1227,9 @@ class genDictionary(object) :
     if ndarg : iden = '  '
     else     : iden = ''
     if returns != 'void' :
-      if returns in self.basictypes or name == 'operator %s'%tdfname:
+      if (returns in self.basictypes or
+          self.translate_typedef (attrs['returns']) in self.basictypes or
+          name == 'operator %s'%tdfname):
         s += '  static %s ret;\n' % returns
       elif returns.find('::*)') != -1 :
         s += '  static %s;\n' % returns.replace('::*','::* ret')
@@ -1240,7 +1251,10 @@ class genDictionary(object) :
         elif returns[-1] == '&' :
           first = iden + '  return (void*)&((%s*)o)->%s(' % ( cl, name )
           s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
-        elif returns in self.basictypes or returns.find('::*') != -1 or name == 'operator '+tdfname:
+        elif (returns in self.basictypes or
+              self.translate_typedef (attrs['returns']) in self.basictypes or
+              returns.find('::*') != -1 or
+              name == 'operator '+tdfname):
           first = iden + '  ret = ((%s*)o)->%s(' % ( cl, name )
           s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
           s += iden + '  return &ret;\n'        
