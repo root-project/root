@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: testGraph.cxx,v 1.2 2005/10/27 17:22:16 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: testGraph.cxx,v 1.3 2005/12/09 09:49:00 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -16,6 +16,7 @@
 #include "TPaveLabel.h"
 #include "TStopwatch.h"
 #include "TVirtualFitter.h"
+#include "TMath.h"
 
 #include <vector>
 
@@ -99,7 +100,7 @@ void doFit(int n,const char * fitter)
 
 }
 
-void fitGraph(int n = 500) { 
+void testGraph(int n = 500) { 
 //   TCanvas *myc = new TCanvas("myc", "Fitting 3 TGraphErrors with linear functions");
 //   myc->Divide(1,2);
 //   myc->SetFillColor(42);
@@ -116,9 +117,14 @@ void fitGraph(int n = 500) {
 #ifndef __CINT__
 int main(int argc, char **argv)
 {
-   TApplication theApp("App", &argc, argv);
-   fitGraph(500);
-   theApp.Run();
+   if (argc > 1) { 
+      TApplication theApp("App", &argc, argv);
+      testGraph(500);
+      theApp.Run();
+   } 
+   else 
+      testGraph(500);
+
    return 0;
 }
 #endif

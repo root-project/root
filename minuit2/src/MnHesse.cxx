@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnHesse.cxx,v 1.3 2006/04/12 16:30:30 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnHesse.cxx,v 1.4 2006/07/03 22:06:42 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -17,7 +17,12 @@
 #include "Minuit2/InitialGradientCalculator.h"
 #include "Minuit2/MinimumState.h"
 #include "Minuit2/VariableMetricEDMEstimator.h"
+
+//#define DEBUG
+
+#if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h"
+#endif
 
 namespace ROOT {
 
@@ -85,8 +90,12 @@ MinimumState MnHesse::operator()(const MnFcn& mfcn, const MinimumState& st, cons
    MnAlgebraicVector grd = st.Gradient().Grad();
    MnAlgebraicVector dirin = st.Gradient().Gstep();
    MnAlgebraicVector yy(n);
-   if(st.Gradient().IsAnalytical()) {
-      InitialGradientCalculator igc(mfcn, trafo, fStrategy);
+
+
+   // case gradient is not numeric (could be analytical or from FumiliGradientCalculator)
+
+   if(st.Gradient().IsAnalytical()  ) {
+      Numerical2PGradientCalculator igc(mfcn, trafo, fStrategy);
       FunctionGradient tmp = igc(st.Parameters());
       gst = tmp.Gstep();
       dirin = tmp.Gstep();
@@ -94,6 +103,17 @@ MinimumState MnHesse::operator()(const MnFcn& mfcn, const MinimumState& st, cons
    }
    
    MnAlgebraicVector x = st.Parameters().Vec(); 
+
+#ifdef DEBUG
+   std::cout << "\nMnHesse " << std::endl;
+   std::cout << " x " << x << std::endl;
+   std::cout << " amin " << amin << "  " << st.Fval() << std::endl;
+   std::cout << " grd " << grd << std::endl;
+   std::cout << " gst " << gst << std::endl;
+   std::cout << " g2  " << g2 << std::endl;
+   std::cout << " Gradient is analytical  " << st.Gradient().IsAnalytical() << std::endl;
+#endif
+
    
    for(unsigned int i = 0; i < n; i++) {
       

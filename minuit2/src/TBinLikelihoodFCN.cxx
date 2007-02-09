@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TBinLikelihoodFCN.cxx,v 1.5 2006/07/04 10:36:52 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TBinLikelihoodFCN.cxx,v 1.6 2006/07/05 08:32:39 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -26,9 +26,10 @@
 
 
 TBinLikelihoodFCN::TBinLikelihoodFCN( const TVirtualFitter & fitter) : 
-  fUp(0.5), fOwner(true)
+  fUp(1.0), fOwner(true)
 { 
    // constructor (create fit data class) and keep a pointer to the model function
+   // use errordef of 1 since we multiply the lokelihood by a factor of 2 
    fFunc = dynamic_cast<TF1 *> ( fitter.GetUserFunc() );
    assert(fFunc != 0);
    // to do: use class for likelihood data (errors are not necessary)
@@ -100,7 +101,7 @@ double TBinLikelihoodFCN::operator()(const std::vector<double>& par) const {
    // reset the number of fitting data points
    if (nRejected != 0)  fFunc->SetNumberFitPoints(n-nRejected);
    
-   return loglike;
+   return 2.*loglike;
 }
 
 

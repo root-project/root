@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: FumiliBuilder.cxx,v 1.4 2006/07/03 15:48:06 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: FumiliBuilder.cxx,v 1.5 2006/07/04 10:36:52 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -10,6 +10,7 @@
 #include "Minuit2/FumiliBuilder.h"
 #include "Minuit2/FumiliStandardMaximumLikelihoodFCN.h"
 #include "Minuit2/GradientCalculator.h"
+//#include "Minuit2/Numerical2PGradientCalculator.h"
 #include "Minuit2/MinimumState.h"
 #include "Minuit2/MinimumError.h"
 #include "Minuit2/FunctionGradient.h"
@@ -26,14 +27,15 @@
 #include "Minuit2/MnHesse.h"
 
 
-#include "Minuit2/MnPrint.h" 
 
 //#define DEBUG 1
 #ifdef DEBUG
 #ifndef WARNINGMSG
 #define WARNINGMSG
 #endif
+#include "Minuit2/MnPrint.h" 
 #endif
+
 
 
 namespace ROOT {
@@ -50,6 +52,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
    // iterate on a minimum search in case of first attempt is not succesfull
    
    edmval *= 0.0001;
+   //edmval *= 0.1; // use small factor for Fumili
    
    
 #ifdef DEBUG
@@ -67,8 +70,9 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
    FunctionMinimum min(seed, fcn.Up() );
    
    if(edm < 0.) {
+#ifdef WARNINGMSG
       std::cout<<"FumiliBuilder: initial matrix not pos.def."<<std::endl;
-      //assert(!seed.Error().IsPosDef());
+#endif
       return min;
    }
    
@@ -82,7 +86,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
    
    
    // try first with a maxfxn = 50% of maxfcn 
-   // FUmili in principle needs much less iterations
+   // Fumili in principle needs much less iterations
    int maxfcn_eff = int(0.5*maxfcn);
    int ipass = 0;
    double edmprev = 1;
@@ -91,6 +95,8 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
       
       
       min = Minimum(fcn, gc, seed, result, maxfcn_eff, edmval);
+
+
       // second time check for validity of function Minimum 
       if (ipass > 0) { 
          if(!min.IsValid()) {
@@ -103,38 +109,57 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
       
       // resulting edm of minimization
       edm = result.back().Edm();
+
+#ifdef DEBUG
+      std::cout << "approximate edm is  " << edm << std::endl;
+      std::cout << "npass is " << ipass << std::endl;
+#endif
       
-      if( (strategy.Strategy() == 2) || 
-          (strategy.Strategy() == 1 && min.Error().Dcovar() > 0.05) ) {
+      // call always Hesse (error matrix from Fumili is never accurate since is approximate) 
          
 #ifdef DEBUG
-         std::cout<<"MnMigrad will verify convergence and Error matrix. "<< std::endl;
-         std::cout<<"dcov is =  "<<  min.Error().Dcovar() << std::endl;
+      std::cout<<"FumiliBuilder will verify convergence and Error matrix. "<< std::endl;
+      std::cout<<"dcov is =  "<<  min.Error().Dcovar() << std::endl;
 #endif
+
+//       // recalculate the gradient using the numerical gradient calculator
+//       Numerical2PGradientCalculator ngc(fcn, min.Seed().Trafo(), strategy);
+//       FunctionGradient ng = ngc( min.State().Parameters() );
+//       MinimumState tmp( min.State().Parameters(), min.State().Error(), ng, min.State().Edm(), min.State().NFcn() ); 
          
-         MinimumState st = MnHesse(strategy)(fcn, min.State(), min.Seed().Trafo());
-         result.push_back( st );
+      MinimumState st = MnHesse(strategy)(fcn, min.State(), min.Seed().Trafo());
+      result.push_back( st );
          
-         // check edm 
-         edm = st.Edm();
+
+      // check edm 
+      edm = st.Edm();
 #ifdef DEBUG
-         std::cout << "edm after Hesse calculation " << edm << std::endl;
+      std::cout << "edm after Hesse calculation " << edm << std::endl;
+      std::cout << "state after Hessian calculation  " << st << std::endl;
 #endif
          
-         // break the loop if edm is NOT getting smaller 
-         if (ipass > 0 && edm >= edmprev) { 
+      // break the loop if edm is NOT getting smaller 
+      if (ipass > 0 && edm >= edmprev) { 
 #ifdef WARNINGMSG
-            std::cout << "FumiliBuilder: Exit iterations, no improvements after Hesse. edm is  " << edm << " previous " << edmprev << std::endl;
+         std::cout << "FumiliBuilder: Exit iterations, no improvements after Hesse. edm is  " << edm << " previous " << edmprev << std::endl;
 #endif
-            break; 
-         } 
-         if (edm > edmval) { 
+         break; 
+      } 
+      if (edm > edmval) { 
 #ifdef DEBUG
-            std::cout << "FumiliBuilder: Tolerance is not sufficient - edm is " << edm << " requested " << edmval 
-            << " continue the minimization" << std::endl;
+         std::cout << "FumiliBuilder: Tolerance is not sufficient - edm is " << edm << " requested " << edmval 
+                   << " continue the minimization" << std::endl;
 #endif
-         }
       }
+      else { 
+         // Case when edm < edmval after Heasse but min is flagged eith a  bad edm: 
+         // make then a new Funciton minimum since now edm is ok 
+         if (min.IsAboveMaxEdm() ) {
+            min = FunctionMinimum( min.Seed(), min.States(), min.Up() );
+            break;
+         }
+         
+      } 
       
       // end loop on iterations
       // ? need a maximum here (or max of function calls is enough ? ) 
@@ -199,10 +224,10 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
    
 #ifdef DEBUG
    std::cout << "\n\nDEBUG FUMILI Builder  \nInitial State: "  
-      << " Parameter " << initialState().Vec()       
+      << " Parameter " << initialState.Vec()       
       << " Gradient " << initialState.Gradient().Vec() 
       << " Inv Hessian " << initialState.Error().InvHessian()  
-      << " edm = " << initialState().Edm() 
+      << " edm = " << initialState.Edm() 
       << " maxfcn = " << maxfcn 
       << " tolerance = " << edmval 
       << std::endl; 
@@ -215,7 +240,6 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
    
    // initial lambda Value
    double lambda = 0.001; 
-   //double lambda = 0.0; 
    
    
    do {   
@@ -235,13 +259,17 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
       
       double gdel = inner_product(step, s0.Gradient().Grad());
       if(gdel > 0.) {
+#ifdef WARNINGMSG
          std::cout<<"FumiliBuilder: matrix not pos.def."<<std::endl;
          std::cout<<"gdel > 0: "<<gdel<<std::endl;
+#endif
          MnPosDef psdf;
          s0 = psdf(s0, prec);
          step = -1.*s0.Error().InvHessian()*s0.Gradient().Vec();
          gdel = inner_product(step, s0.Gradient().Grad());
-         std::cout<<"gdel: "<<gdel<<std::endl;
+#ifdef WARNINGMSG
+         std::cout<<"After correction : gdel: "<<gdel<<std::endl;
+#endif
          if(gdel > 0.) {
             result.push_back(s0);
             return FunctionMinimum(seed, result, fcn.Up());
@@ -265,9 +293,9 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
       
       MinimumParameters p(s0.Vec() + step,  fcn( s0.Vec() + step ) );
       
-      // check that taking the full step does not do crazy things 
-      // in that case do a line search (use a cut if 10)  
-      if ( p.Fval() > 10*s0.Fval()  ) {
+      // check that taking the full step does not deteriorate minimum
+      // in that case do a line search  
+      if ( p.Fval() >= s0.Fval()  ) {
          MnLineSearch lsearch;   
          MnParabolaPoint pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
          
@@ -301,6 +329,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
       
 #ifdef DEBUG
       std::cout << "Updated new point: \n " 
+         << " FVAL      " << p.Fval()       
          << " Parameter " << p.Vec()       
          << " Gradient " << g.Vec() 
          << " InvHessian " << e.Matrix() 
@@ -326,29 +355,21 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
       if ( p.Fval() < s0.Fval()  ) 
          // fcn is decreasing along the step
          lambda *= 0.1;
-      else 
-         lambda *= 10; 
+      else { 
+         lambda *= 10;
+         // if close to minimum stop to avoid oscillations around minimum value 
+         if ( edm < 0.1 ) break;
+      }
       
 #ifdef DEBUG
       std::cout <<  " finish iteration- " << result.size() << " lambda =  "  << lambda << " f1 = " << p.Fval() << " f0 = " << s0.Fval() << " num of calls = " << fcn.NumOfCalls() << " edm " << edm << std::endl; 
 #endif
-      
-      
-      //std::cout << "FumiliBuilder DEBUG e.Matrix()" << e.Matrix() << std::endl;
-      //std::cout << "DEBUG FumiliBuilder e.Hessian()" << e.Hessian() << std::endl;
-      
+            
       result.push_back(MinimumState(p, e, g, edm, fcn.NumOfCalls())); 
-      
-      //std::cout << "FumiliBuilder DEBUG " << FunctionMinimum(seed, result, fcn.Up()) << std::endl;
       
       
       edm *= (1. + 3.*e.Dcovar());
-      
-      /**std::cout << "DEBUG FumiliBuilder edm: " << edm << " edmval: " << edmval <<
-         " fcn.numOfCalls: " << fcn.NumOfCalls() << " maxfcn: " << maxfcn << 
-         " condition: " << (edm > edmval && fcn.NumOfCalls() < maxfcn) <<std::endl;
-      */
-      
+            
       
    } while(edm > edmval && fcn.NumOfCalls() < maxfcn);
    

@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: NegativeG2LineSearch.cxx,v 1.2 2006/07/04 10:36:52 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: NegativeG2LineSearch.cxx,v 1.3 2006/07/05 08:32:39 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -15,6 +15,12 @@
 #include "Minuit2/MnLineSearch.h"
 #include "Minuit2/MnParabolaPoint.h"
 #include "Minuit2/VariableMetricEDMEstimator.h"
+
+#include <cmath>
+//#define DEBUG
+#ifdef DEBUG
+#include <iostream>
+#endif
 
 namespace ROOT {
 
@@ -42,25 +48,54 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn& fcn, const MinimumSta
    do {
       iterate = false;
       for(unsigned int i = 0; i < n; i++) {
-         
-         //       std::cout << "negative G2 - iter " << iter << " param " << i << "  grad2 " << dgrad.G2()(i) << " grad " << dgrad.Vec()(i) 
-         // 		<< " grad step " << dgrad.Gstep()(i) << std::endl; 
+
+#ifdef DEBUG         
+         std::cout << "negative G2 - iter " << iter << " param " << i << "   " << pa.Vec()(i) << "  grad2 " << dgrad.G2()(i) << " grad " << dgrad.Vec()(i) 
+                   << " grad step " << dgrad.Gstep()(i) << " step size " << pa.Dirin()(i) << std::endl; 
+#endif
          if(dgrad.G2()(i) <= 0) {      
+
+            // check also the gradient (if it is zero ) I can skip the param) 
+     
+            if ( std::fabs(dgrad.Vec()(i) ) < prec.Eps() && std::fabs(dgrad.G2()(i) ) < prec.Eps() ) continue; 
             //       if(dgrad.G2()(i) < prec.Eps()) {
             // do line search if second derivative negative
             MnAlgebraicVector step(n);
             MnLineSearch lsearch;
-            step(i) = dgrad.Gstep()(i)*dgrad.Vec()(i);
-            //	if(fabs(dgrad.Vec()(i)) >  prec.Eps2()) 
-            if(fabs(dgrad.Vec()(i)) >  0 ) 
-               step(i) *= (-1./fabs(dgrad.Vec()(i)));
+
+            if ( dgrad.Vec()(i) < 0) 
+               step(i) = dgrad.Gstep()(i); //*dgrad.Vec()(i);
+            else 
+               step(i) = - dgrad.Gstep()(i); // *dgrad.Vec()(i);
+
             double gdel = step(i)*dgrad.Vec()(i);
-            MnParabolaPoint pp = lsearch(fcn, pa, step, gdel, prec);
-            //	std::cout << " line search result " << pp.x() << "  " << pp.y() << std::endl;
+
+            // if using sec derivative information
+            // double g2del = step(i)*step(i) * dgrad.G2()(i);
+            bool debugLS = false;
+
+#ifdef DEBUG
+            std::cout << "step(i) " << step(i) << " gdel " << gdel << std::endl; 
+//            std::cout << " g2del " << g2del << std::endl;
+            bool debugLS = true;
+#endif
+            MnParabolaPoint pp = lsearch(fcn, pa, step, gdel, prec,debugLS);
+
+
+
+#ifdef DEBUG
+            std::cout << "\nLine search result " << pp.x() << " f(0)  " << pa.Fval() << " f(1) " << pp.y() << std::endl;
+#endif
+
             step *= pp.x();
             pa = MinimumParameters(pa.Vec() + step, pp.y());    
+
             dgrad = gc(pa, dgrad);         
-            //  	std::cout << "Line search - iter" << iter << " param " << i << " step " << step(i) << " new grad2 " << dgrad.G2()(i) << " new grad " <<  dgrad.Vec()(i) << std::endl;
+
+#ifdef DEBUG
+            std::cout << "Line search - iter" << iter << " param " << i << "   " << pa.Vec()(i) << " step " << step(i) << " new grad2 " << dgrad.G2()(i) << " new grad " <<  dgrad.Vec()(i) << " grad step " << dgrad.Gstep()(i) << std::endl;
+#endif
+
             iterate = true;
             break;
             } 
@@ -81,14 +116,20 @@ bool NegativeG2LineSearch::HasNegativeG2(const FunctionGradient& grad, const MnM
    // check if function gradient has any component which is neegative
          
    for(unsigned int i = 0; i < grad.Vec().size(); i++) 
-      //     if(grad.G2()(i) < prec.Eps2()) { 
+
       if(grad.G2()(i) <= 0 ) { 
-         //      std::cout << "negative G2 " << i << "  grad " << grad.G2()(i) << " precision " << prec.Eps2() << std::endl;
+
          return true;
       }
          
    return false;
 }
+
+
+
+
+
+
 
    }  // namespace Minuit2
 
