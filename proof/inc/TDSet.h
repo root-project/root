@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.2 2006/11/28 12:10:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.3 2007/02/01 14:21:28 brun Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -93,8 +93,10 @@ private:
 
    Bool_t           HasBeenLookedUp() const { return TestBit(kHasBeenLookedUp); }
 
+   TDSetElement& operator=(const TDSetElement &); // Not implemented
+
 public:
-   TDSetElement() { fValid = kFALSE; fEventList = 0; fEntries = -1; fFriends = 0; }
+   TDSetElement();
    TDSetElement(const char *file, const char *objname = 0,
                 const char *dir = 0, Long64_t first = 0, Long64_t num = -1,
                 const char *msd = 0);

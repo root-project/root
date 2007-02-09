@@ -1,4 +1,4 @@
-// @(#)root/monalisa:$Name:  $:$Id: TMonaLisaWriter.h,v 1.1 2006/06/26 16:17:05 rdm Exp $
+// @(#)root/monalisa:$Name:  $:$Id: TMonaLisaWriter.h,v 1.2 2006/10/05 16:10:22 rdm Exp $
 // Author: Andreas Peters   5/10/2005
 
 /*************************************************************************
@@ -50,6 +50,9 @@ class TMonaLisaValue : public TNamed {
 
 private:
    Double_t fValue;  // double monitor value
+
+   TMonaLisaValue(const TMonaLisaValue&); // Not implented
+   TMonaLisaValue& operator=(const TMonaLisaValue&); // Not implented
 
 public:
    TMonaLisaValue(const char *name, Double_t value)

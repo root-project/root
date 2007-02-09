@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.2 2006/11/28 12:10:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.3 2007/01/30 09:58:07 brun Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -69,6 +69,24 @@
 
 ClassImp(TDSetElement)
 ClassImp(TDSet)
+
+//______________________________________________________________________________
+TDSetElement::TDSetElement() :
+   fFileName(),
+   fObjName(),
+   fDirectory(),
+   fFirst(0),
+   fNum(0),
+   fMsd(),
+   fTDSetOffset(0),
+   fEventList(NULL),
+   fValid(kFALSE),
+   fEntries(0),
+   fFriends(NULL),
+   fIsTree(kFALSE)
+{
+   // Default constructor
+}
 
 //______________________________________________________________________________
 TDSetElement::TDSetElement(const char *file, const char *objname, const char *dir,

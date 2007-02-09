@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.31 2006/08/01 10:54:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.32 2007/01/10 14:54:30 antcheva Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -58,6 +58,10 @@ class TGHeaderFrame;
 
 
 class TGLVEntry : public TGFrame {
+
+private:
+   TGLVEntry(const TGLVEntry&); // Not implented
+   TGLVEntry& operator=(const TGLVEntry&); // Not implented
 
 protected:
    TGString           *fItemName;    // name of item
@@ -132,6 +136,10 @@ public:
 
 class TGListView : public TGCanvas {
 
+private:
+   TGListView(const TGListView&); // Not implemented
+   TGListView& operator=(const TGListView&); // Not implemented
+
 protected:
    Int_t                 fNColumns;      // number of columns
    Int_t                *fColumns;       // column width
@@ -189,6 +197,10 @@ public:
 
 
 class TGLVContainer : public TGContainer {
+
+private:
+   TGLVContainer(const TGLVContainer&); // Not implented
+   TGLVContainer& operator=(const TGLVContainer&); // Not implented
 
 protected:
    TGLayoutHints     *fItemLayout;    // item layout hints

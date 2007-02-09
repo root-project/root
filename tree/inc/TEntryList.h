@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.h,v 1.5 2007/01/22 07:57:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.h,v 1.6 2007/02/01 16:04:48 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -26,6 +26,9 @@ class TCollection;
 
 class TEntryList: public TNamed 
 {
+ private:
+   TEntryList& operator=(const TEntryList&); // Not implemented
+
  protected:
    TList      *fLists;   //a list of underlying entry lists for each tree of a chain
    TEntryList *fCurrent; //! currently filled entry list

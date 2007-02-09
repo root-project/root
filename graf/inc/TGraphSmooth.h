@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.h,v 1.2 2001/10/01 16:07:33 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.h,v 1.3 2005/11/18 16:55:06 couet Exp $
 // Author: Christian Stratowa 30/09/2001
 
 /******************************************************************************
@@ -36,6 +36,10 @@
 
 
 class TGraphSmooth: public TNamed {
+
+private:
+   TGraphSmooth(const TGraphSmooth&); // Not implented
+   TGraphSmooth& operator=(const TGraphSmooth&); // Not implented
 
 protected:
    Int_t       fNin;        //Number of input points

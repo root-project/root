@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTableLayout.h,v 1.4 2005/09/05 07:33:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTableLayout.h,v 1.5 2006/07/03 16:10:45 brun Exp $
 // Author: Brett Viren   04/15/2001
 
 /*************************************************************************
@@ -35,6 +35,10 @@ enum ETableLayoutHints {
 //////////////////////////////////////////////////////////////////////////
 
 class TGTableLayoutHints : public TGLayoutHints {
+
+private:
+   TGTableLayoutHints(const TGTableLayoutHints&); // Not implemented
+   TGTableLayoutHints& operator=(const TGTableLayoutHints&); // Not implemented
 
 protected:
    UInt_t fAttachLeft;         // Column/row division number on which

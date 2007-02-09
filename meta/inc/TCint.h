@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.30 2006/12/01 15:05:58 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.31 2006/12/05 10:55:29 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -63,7 +63,8 @@ private:
    Bool_t          fLockProcessLine;//true if ProcessLine should lock gCINTMutex
 
    TCint() : fMore(-1), fExitCode(0), fDictPos(), fDictPosGlobals(),
-     fSharedLibs(), fIncludePath(), fMapfile(0) { }  //for Dictionary() only
+     fSharedLibs(), fIncludePath(), fMapfile(0), fLockProcessLine(kFALSE)
+     { }  //for Dictionary() only
    virtual void Execute(TMethod *, TObjArray *, int * /*error*/ = 0) { }
 
 protected:
