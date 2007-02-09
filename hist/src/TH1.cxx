@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.331 2007/02/05 18:05:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.332 2007/02/06 15:00:56 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5923,8 +5923,14 @@ void TH1::SavePrimitiveHelp(ostream &out, Option_t *option /*= ""*/)
    Int_t ncontours = GetContour();
    if (ncontours > 0) {
       out<<"   "<<GetName()<<"->SetContour("<<ncontours<<");"<<endl;
+      Double_t zlevel;
       for (Int_t bin=0;bin<ncontours;bin++) {
-         out<<"   "<<GetName()<<"->SetContourLevel("<<bin<<","<<GetContourLevel(bin)<<");"<<endl;
+         if (gPad->GetLogz()) {
+            zlevel = TMath::Power(10,GetContourLevel(bin));
+         } else {
+            zlevel = GetContourLevel(bin);
+         }
+         out<<"   "<<GetName()<<"->SetContourLevel("<<bin<<","<<zlevel<<");"<<endl;
       }
    }
 
