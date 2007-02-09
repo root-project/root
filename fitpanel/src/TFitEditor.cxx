@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.22 2007/01/29 15:10:48 brun Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.23 2007/02/07 17:08:20 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -2325,6 +2325,9 @@ void TFitEditor::DoMinMethod(Bool_t on)
                   fFumili->SetState(kButtonUp);
                fMigrad->SetState(kButtonDown);
                fStatusBar->SetText("MIGRAD",1);
+               if (fLibMinuit2->GetState() == kButtonDown)
+                  if (strncmp(TVirtualFitter::GetDefaultFitter(),"Minuit2",7) != 0) 
+                     TVirtualFitter::SetDefaultFitter("Minuit2");
             }
          }
          break;
