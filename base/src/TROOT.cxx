@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.200 2007/01/29 15:10:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.201 2007/01/29 15:53:35 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -793,7 +793,7 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
 
    if (load && cl==0) {
       // Create an Emulated class for this container.
-      cl = new TClass(name, TClass::GetClass("TStreamerInfo")->GetClassVersion(), 0, 0, -1, -1 );
+      cl = new TClass(name, TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion(), 0, 0, -1, -1 );
       cl->SetBit(TClass::kIsEmulation);
    }
 
