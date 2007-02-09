@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.216 2007/02/05 18:11:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.217 2007/02/06 15:30:25 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -2039,6 +2039,16 @@ void TBranchElement::InitializeOffsets()
          //
 
          if (isContDataMember) {
+/*
+            if (isBaseSubBranch) {
+               TClass* pClass = subBranch->GetParentClass();
+               TClass* thisclass = subBranchElement->GetClassPointer();
+               if (pClass && thisclass) {
+                  Int_t boffs = pClass->GetBaseClassOffset (thisclass);
+                  if (boffs >= 0) offset += boffs;
+               }
+            }
+*/
             // -- Container data members set fOffset instead of fBranchOffset.
             // The fOffset is what should be added to the start of the entry
             // in the collection (i.e., its current absolute address) to find
