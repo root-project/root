@@ -7,7 +7,7 @@
  * Description:
  *  Struct, class, enum, union handling
  ************************************************************************
- * Copyright(c) 1995~2005  Masaharu Goto 
+ * Copyright(c) 1995~2005  Masaharu Goto
  *
  * For the licensing terms see the file COPYING
  *
@@ -21,7 +21,7 @@ extern "C" {
 /******************************************************************
 * G__check_semicolumn_after_classdef
 ******************************************************************/
-static int G__check_semicolumn_after_classdef(int isclassdef) 
+static int G__check_semicolumn_after_classdef(int isclassdef)
 {
   char checkbuf[G__ONELINE];
   int store_linenum = G__ifile.line_number;
@@ -30,14 +30,14 @@ static int G__check_semicolumn_after_classdef(int isclassdef)
   fpos_t store_pos;
   fgetpos(G__ifile.fp,&store_pos);
   G__disp_mask=1000;
-  
+
   store_c = G__fgetname(checkbuf,";,(");
   if(isspace(store_c) && '*'!=checkbuf[0] && 0==strchr(checkbuf,'[')) {
     char checkbuf2[G__ONELINE];
     store_c = G__fgetname(checkbuf2,";,(");
     if(isalnum(checkbuf2[0])) errflag=1;
   }
-  
+
   G__disp_mask=0;
   fsetpos(G__ifile.fp,&store_pos);
   G__ifile.line_number = store_linenum;
@@ -103,11 +103,11 @@ int G__using_namespace()
       }
     }
     else {
-      /* using directive in global scope, to be implemented 
+      /* using directive in global scope, to be implemented
        * 1. global scope has baseclass information
        * 2. G__searchvariable() looks for global scope baseclass
        */
-       /* first check whether we already have this directive in 
+       /* first check whether we already have this directive in
           memory */
        int j;
        int found;
@@ -194,7 +194,7 @@ int G__using_namespace()
     else {
       int tagnum = G__defined_tagname(buf,1);
       if(-1!=tagnum) {
-        /* using scope::classname; to be implemented 
+        /* using scope::classname; to be implemented
         *  Now, G__tagtable is not ready */
       }
       else result=1;
@@ -252,7 +252,7 @@ int G__isenclosingclassbase(int enclosingtagnum,int env_tagnum)
   if(0>env_tagnum || 0>enclosingtagnum) return(0);
   tagnum = G__struct.parent_tagnum[env_tagnum];
   while(-1!=tagnum) {
-    if (-1 != G__isanybase (enclosingtagnum, tagnum, G__STATICRESOLUTION)) 
+    if (-1 != G__isanybase (enclosingtagnum, tagnum, G__STATICRESOLUTION))
       return 1;
     if(tagnum==enclosingtagnum) return(1);
     tagnum = G__struct.parent_tagnum[tagnum];
@@ -286,9 +286,9 @@ char* G__find_first_scope_operator (char *name)
         return p;
     }
 
-    if('\''==c && 0==double_quote) 
+    if('\''==c && 0==double_quote)
       single_quote = single_quote ^ 1 ;
-    else if('"'==c && 0==single_quote) 
+    else if('"'==c && 0==single_quote)
       double_quote = double_quote ^ 1 ;
 
     ++p;
@@ -323,9 +323,9 @@ char* G__find_last_scope_operator (char *name)
         return p-1;
     }
 
-    if('\''==c && 0==double_quote) 
+    if('\''==c && 0==double_quote)
       single_quote = single_quote ^ 1 ;
-    else if('"'==c && 0==single_quote) 
+    else if('"'==c && 0==single_quote)
       double_quote = double_quote ^ 1 ;
 
     --p;
@@ -345,7 +345,7 @@ int (*G__p_class_autoloading) G__P((char*,char*));
 * G__set_class_autloading
 ************************************************************************/
 int G__set_class_autoloading(int newvalue)
-{  
+{
   int oldvalue =  G__enable_autoloading;
   G__enable_autoloading = newvalue;
   return oldvalue;
@@ -408,7 +408,7 @@ void G__set_class_autoloading_table(char *classname,char *libname)
 /******************************************************************
  * G__class_autoloading
  ******************************************************************/
-int G__class_autoloading(int tagnum) 
+int G__class_autoloading(int tagnum)
 {
   char* libname;
   if(tagnum<0 || !G__enable_autoloading) return(0);
@@ -446,8 +446,8 @@ int G__class_autoloading(int tagnum)
 *
 * Description:
 *   Scan tagname table and return tagnum. If not match, error message
-*  is shown and -1 will be returned. 
-*  If non zero value is given to second argument 'noerror', error 
+*  is shown and -1 will be returned.
+*  If non zero value is given to second argument 'noerror', error
 *  message will be suppressed.
 *
 *  noerror = 0   if not found try to instantiate template class
@@ -566,7 +566,7 @@ int G__defined_tagname(const char *tagname,int noerror)
   /* Search for old tagname */
   len=strlen(atom_tagname);
   int candidateTag = -1;
-     
+
  try_again:
 
   for(i=G__struct.alltag-1;i>=0;i--) {
@@ -576,7 +576,7 @@ int G__defined_tagname(const char *tagname,int noerror)
            G__class_autoloading(i);
            return(i);
         }
-        
+
         if ( candidateTag == -1 &&(
 #ifdef G__VIRTUALBASE
         -1!=G__isanybase(G__struct.parent_tagnum[i],env_tagnum
@@ -613,7 +613,7 @@ int G__defined_tagname(const char *tagname,int noerror)
 
   /* if tagname not found, try instantiating class template */
   len=strlen(tagname);
-  if('>'==tagname[len-1] && noerror<2 && (len<2||'-'!=tagname[len-2])) { 
+  if('>'==tagname[len-1] && noerror<2 && (len<2||'-'!=tagname[len-2])) {
     if(G__loadingDLL) {
       G__fprinterr(G__serr,
                    "Error: '%s' Incomplete template resolution in shared library"
@@ -630,7 +630,7 @@ int G__defined_tagname(const char *tagname,int noerror)
   }
   else if(noerror<2) {
     G__Definedtemplateclass *deftmplt=G__defined_templateclass((char*)tagname);
-    if(deftmplt 
+    if(deftmplt
        && deftmplt->def_para
        && deftmplt->def_para->default_parameter) {
       i=G__instantiate_templateclass((char*)tagname,noerror);
@@ -753,14 +753,14 @@ int G__search_tagname(const char *tagname,int type)
   else {
     envtagnum = G__get_envtagnum();
   }
-  
+
   /* if new tagname, initialize tag table */
   if(-1==i
      || (envtagnum != G__struct.parent_tagnum[i] && isstructdecl)
      ) {
 
     i=G__struct.alltag;
-    
+
     if(i==G__MAXSTRUCT) {
       G__fprinterr(G__serr,
               "Limitation: Number of struct/union tag exceed %d FILE:%s LINE:%d\nFatal error, exit program. Increase G__MAXSTRUCT in G__ci.h and recompile %s\n"
@@ -768,7 +768,7 @@ int G__search_tagname(const char *tagname,int type)
               ,G__ifile.name
               ,G__ifile.line_number
               ,G__nam);
-      
+
       G__eof=1;
 #ifndef G__OLDIMPLEMENTATION1823
       if(buf!=temp) free((void*)temp);
@@ -809,17 +809,17 @@ int G__search_tagname(const char *tagname,int type)
     else {
       len=strlen(atom_tagname);
     }
-    
+
     G__struct.userparam[i]=0;
     G__struct.name[i]=(char*)malloc((size_t)(len+1));
     strcpy(G__struct.name[i],atom_tagname);
     G__struct.hash[i]=len;
-    
+
     G__struct.size[i]=0;
     G__struct.type[i]=type; /* 's' struct ,'u' union ,'e' enum , 'c' class */
-    
+
     /***********************************************************
-     * Allocate and initialize member variable table 
+     * Allocate and initialize member variable table
      ************************************************************/
     G__struct.memvar[i] = (struct G__var_array *)malloc(sizeof(struct G__var_array));
 #ifdef G__OLDIMPLEMENTATION1776_YET
@@ -835,14 +835,14 @@ int G__search_tagname(const char *tagname,int type)
     G__struct.memvar[i]->allvar=0;
     G__struct.memvar[i]->next = NULL;
     G__struct.memvar[i]->tagnum = i;
-    { 
+    {
       int ix;
       for(ix=0;ix<G__MEMDEPTH;ix++) {
         G__struct.memvar[i]->varnamebuf[ix]=(char*)NULL;
         G__struct.memvar[i]->p[ix] = 0;
       }
     }
-    
+
     /***********************************************************
      * Allocate and initialize member function table list
      ***********************************************************/
@@ -869,27 +869,27 @@ int G__search_tagname(const char *tagname,int type)
     G__struct.memfunc[i]->pentry[0]->bytecode=(struct G__bytecodefunc*)NULL;
     G__struct.memfunc[i]->friendtag[0]=(struct G__friendtag*)NULL;
 #ifndef G__OLDIMPLEMENTATION2039
-    G__struct.memfunc[i]->pentry[0]->size = 0; 
-    G__struct.memfunc[i]->pentry[0]->filenum = 0; 
-    G__struct.memfunc[i]->pentry[0]->line_number = 0; 
+    G__struct.memfunc[i]->pentry[0]->size = 0;
+    G__struct.memfunc[i]->pentry[0]->filenum = 0;
+    G__struct.memfunc[i]->pentry[0]->line_number = 0;
     G__struct.memfunc[i]->pentry[0]->bytecodestatus = G__BYTECODE_NOTYET;
     G__struct.memfunc[i]->ispurevirtual[0] = 0;
     G__struct.memfunc[i]->access[0] = G__PUBLIC;
-    G__struct.memfunc[i]->ansi[0] = 1; 
-    G__struct.memfunc[i]->isconst[0] = 0; 
-    G__struct.memfunc[i]->reftype[0] = 0; 
-    G__struct.memfunc[i]->type[0] = 0; 
-    G__struct.memfunc[i]->p_tagtable[0] = -1; 
-    G__struct.memfunc[i]->p_typetable[0] = -1; 
-    G__struct.memfunc[i]->staticalloc[0] = 0; 
-    G__struct.memfunc[i]->busy[0] = 0; 
+    G__struct.memfunc[i]->ansi[0] = 1;
+    G__struct.memfunc[i]->isconst[0] = 0;
+    G__struct.memfunc[i]->reftype[0] = 0;
+    G__struct.memfunc[i]->type[0] = 0;
+    G__struct.memfunc[i]->p_tagtable[0] = -1;
+    G__struct.memfunc[i]->p_typetable[0] = -1;
+    G__struct.memfunc[i]->staticalloc[0] = 0;
+    G__struct.memfunc[i]->busy[0] = 0;
     G__struct.memfunc[i]->isvirtual[0] = 0;
     G__struct.memfunc[i]->globalcomp[0] = G__NOLINK;
 #endif
 
     G__struct.memfunc[i]->comment[0].filenum = -1;
 
-    { 
+    {
        struct G__ifunc_table *store_ifunc;
        store_ifunc = G__p_ifunc;
        G__p_ifunc = G__struct.memfunc[i];
@@ -903,14 +903,14 @@ int G__search_tagname(const char *tagname,int type)
      ***********************************************************/
     G__struct.baseclass[i] = (struct G__inheritance *)malloc(sizeof(struct G__inheritance));
     G__struct.baseclass[i]->basen=0;
-    
+
     /***********************************************************
      * Initialize iden information for virtual function
      ***********************************************************/
     G__struct.virtual_offset[i] = -1; /* -1 means no virtual function */
-    
+
     G__struct.isabstract[i]=0;
-    
+
     G__struct.globalcomp[i] = G__default_link?G__globalcomp:G__NOLINK;
     G__struct.iscpplink[i] = 0;
     G__struct.protectedaccess[i] = 0;
@@ -946,10 +946,10 @@ int G__search_tagname(const char *tagname,int type)
 
     G__struct.alltag++;
   }
-  else if(0==G__struct.type[i] 
+  else if(0==G__struct.type[i]
           || 'a'==G__struct.type[i]
           ) {
-    G__struct.type[i]=type; 
+    G__struct.type[i]=type;
   }
 
   /* return tag table number */
@@ -984,7 +984,7 @@ G__var_array* G__alloc_var_array(G__var_array *var,int *pig15)
     var->paran[0]=0;
     var->next=NULL;
     var->allvar=0;
-    { 
+    {
       int ix;
       for(ix=0;ix<G__MEMDEPTH;ix++) {
         var->varnamebuf[ix]=(char*)NULL;
@@ -1007,7 +1007,7 @@ static void G__copy_unionmember(G__var_array *var,int ig15
   envvar->p[envig15]=offset;
   G__savestring(&envvar->varnamebuf[envig15],var->varnamebuf[ig15]);
   envvar->hash[envig15]=var->hash[ig15];
-  for(i=0;i<G__MAXVARDIM;i++) 
+  for(i=0;i<G__MAXVARDIM;i++)
     envvar->varlabel[envig15][i]=var->varlabel[ig15][i];
   envvar->paran[envig15]=var->paran[ig15];
   envvar->bitfield[envig15]=var->bitfield[ig15];
@@ -1092,108 +1092,113 @@ static void G__add_anonymousunion(int tagnum
 *
 ******************************************************************/
 void G__define_struct(char type)
-/* struct G__input_file *fin; */
 {
-  /* fpos_t rewind_fpos; */
+  // struct G__input_file* fin;
+  // fpos_t rewind_fpos;
   int c;
-  char tagname[G__LONGLINE],category[10],memname[G__ONELINE],val[G__ONELINE];
-  int /* itag=0, */ mparen,store_tagnum ,store_def_struct_member=0;
-  struct G__var_array *store_local;
-  /* char store_tagname[G__LONGLINE]; */
+  char tagname[G__LONGLINE];
+  char category[10];
+  char memname[G__ONELINE];
+  char val[G__ONELINE];
+  int mparen;
+  int store_tagnum;
+  int store_def_struct_member = 0;
+  struct G__var_array* store_local;
   G__value enumval;
-  
   int tagdefining;
   int store_access;
   char basename[G__LONGLINE];
-  int *pbasen;
-  struct G__inheritance *baseclass;
+  int* pbasen;
+  struct G__inheritance* baseclass;
   int baseaccess;
   int newdecl;
-  /* int lenheader; */
   int store_static_alloc;
   int len;
-  int ispointer=0;
+  int ispointer = 0;
   int store_prerun;
   int store_def_tagnum;
-  int isvirtualbase=0;
-  int isclassdef=0;
-  
+  int isvirtualbase = 0;
+  int isclassdef = 0;
+
 #ifdef G__ASM
 #ifdef G__ASM_DBG
   if(G__asm_dbg&&G__asm_noverflow)
     G__fprinterr(G__serr,"LOOP COMPILE ABORTED FILE:%s LINE:%d\n"
-            ,G__ifile.name
-            ,G__ifile.line_number);
+      ,G__ifile.name
+      ,G__ifile.line_number);
 #endif
   G__abortbytecode();
 #endif
-  
-  /*
-   * [struct|union|enum]   tagname  { member }  item ;
-   *                    ^
-   * read tagname
-   */
-  /* fgetpos(G__ifile.fp,&rewind_fpos); */
-  
-  c=G__fgetname_template(tagname,"{:;=&");
 
-  if(strlen(tagname)>=G__LONGLINE) {
-    G__fprinterr(G__serr,"Limitation: class name too long. Must be < %d"
-            ,G__LONGLINE);
-    G__genericerror((char*)NULL);
+  //
+  // [struct|union|enum]   tagname  { member }  item ;
+  //                    ^
+  // read tagname
+  //
+
+  c = G__fgetname_template(tagname, "{:;=&");
+
+  if (strlen(tagname) >= G__LONGLINE) {
+    G__fprinterr(G__serr, "Limitation: class name too long. Must be < %d", G__LONGLINE);
+    G__genericerror(0);
   }
 
- doitagain:
-  
-  /*
-   * [struct|union|enum]   tagname{ member }  item ;
-   *                               ^
-   *                     OR
-   * [struct|union|enum]          { member }  item ;
-   *                               ^
-   * push back before '{' and fgetpos 
-   */
-  if(c=='{') {
-    fseek(G__ifile.fp,-1,SEEK_CUR);
-    if(G__dispsource) G__disp_mask=1;
-  }
-  
-  /*
-   * [struct|union|enum]   tagname   { member }  item ;
-   *                               ^
-   *                     OR
-   * [struct|union|enum]   tagname     item ;
-   *                               ^
-   *                     OR
-   * [struct|union|enum]   tagname      ;
-   *                               ^
-   * skip space and push back
-   */
-  else if(isspace(c)) {
-    c=G__fgetspace(); /* '{' , 'a-zA-Z' or ';' are expected */
-    /* if(c==';') return; */
-    if(c!=':') {
-      fseek(G__ifile.fp,-1,SEEK_CUR);
-      if(G__dispsource) G__disp_mask=1;
+  doitagain:
+
+  //
+  // [struct|union|enum]   tagname{ member }  item ;
+  //                               ^
+  //                     OR
+  // [struct|union|enum]          { member }  item ;
+  //                               ^
+  // push back before '{' and fgetpos
+  //
+
+  if (c == '{') {
+    fseek(G__ifile.fp, -1, SEEK_CUR);
+    if (G__dispsource) {
+      G__disp_mask = 1;
     }
   }
-  else if(c==':') {
-    /* inheritance or nested class */
+  else if (isspace(c)) {
+    //
+    // [struct|union|enum]   tagname   { member }  item ;
+    //                               ^
+    //                     OR
+    // [struct|union|enum]   tagname     item ;
+    //                               ^
+    //                     OR
+    // [struct|union|enum]   tagname      ;
+    //                               ^
+    // skip space and push back
+    //
+    c = G__fgetspace(); // '{' , 'a-zA-Z' or ';' are expected
+    if (c != ':') {
+      fseek(G__ifile.fp, -1, SEEK_CUR);
+      if (G__dispsource) {
+        G__disp_mask = 1;
+      }
+    }
+  }
+  else if (c == ':') {
+    // Inheritance or nested class.
     c = G__fgetc();
-    if(':'==c) {
-      strcat(tagname,"::");
-      len=strlen(tagname);
-      c=G__fgetname_template(tagname+len,"{:;=&");
+    if (c == ':') {
+      strcat(tagname, "::");
+      len = strlen(tagname);
+      c = G__fgetname_template(tagname + len, "{:;=&");
       goto doitagain;
     }
     else {
-      fseek(G__ifile.fp,-1,SEEK_CUR);
-      if(G__dispsource) G__disp_mask=1;
-      c=':';
+      fseek(G__ifile.fp, -1, SEEK_CUR);
+      if (G__dispsource) {
+        G__disp_mask = 1;
+      }
+      c = ':';
     }
   }
-  else if(c==';') {
-    /* tagname declaration */
+  else if (c == ';') {
+    // Tagname declaration.
   }
   else if(c=='=' && 'n'==type) {
     /* namespace alias=nsn; treat as typedef */
@@ -1221,89 +1226,89 @@ void G__define_struct(char type)
   else {
     G__genericerror("Syntax error in class/struct definition");
   }
-  
-  /*
-   * set default tagname if tagname is omitted
-   */
-  if(tagname[0]=='\0') {
-    if('e'==type) {
-      strcpy(tagname,"$");
+
+  //
+  // Set default tagname if tagname is omitted.
+  //
+
+  if (tagname[0] == '\0') {
+    if (type == 'e') {
+      strcpy(tagname, "$");
     }
-    else if('n'==type) {
-      /* unnamed namespace, treat as global scope, namespace has no effect. 
-       * This implementation may be wrong. 
+    else if (type == 'n') {
+      /* unnamed namespace, treat as global scope, namespace has no effect.
+       * This implementation may be wrong.
        * Should fix later with using directive in global scope */
-      G__var_type='p';
+      G__var_type = 'p';
       G__exec_statement();
       return;
     }
     else {
-      sprintf(tagname,"G__NONAME%d",G__struct.alltag);
+      sprintf(tagname, "G__NONAME%d", G__struct.alltag);
     }
   }
-#ifndef G__STD_NAMESPACE /* ON667 */
-  else if('n'==type && strcmp(tagname,"std")==0
-          && (G__ignore_stdnamespace
-              || -1!=G__def_tagnum
-              )
-          ) {
-    /* namespace std, treat as global scope, namespace has no effect. */
-    G__var_type='p';
+#ifndef G__STD_NAMESPACE // ON667
+  else if ((type == 'n') && (strcmp(tagname, "std") == 0) && (G__ignore_stdnamespace || (G__def_tagnum != -1))) {
+    // Namespace std, treat as global scope, namespace has no effect.
+    G__var_type = 'p';
     G__exec_statement();
     return;
   }
 #endif
-  
-  /* BUG FIX, 17 Nov 1992
-   *  tagnum wasn't saved
-   */
-  store_tagnum=G__tagnum;
+
+  store_tagnum = G__tagnum;
   store_def_tagnum = G__def_tagnum;
-  /*
-   * Get tagnum, new tagtable is allocated if new
-   */
-  len=strlen(tagname);
-  if(len&&'*'==tagname[len-1]) {
-    ispointer=1;
-    tagname[len-1]='\0';
+
+  //
+  // Get tagnum, new tagtable entry is allocated if new.
+  //
+
+  len = strlen(tagname);
+  if (len && (tagname[len-1] == '*')) {
+    ispointer = 1;
+    tagname[len-1] = '\0';
   }
-  switch(c) {
+
+  switch (c) {
   case '{':
   case ':':
   case ';':
-    G__tagnum=G__search_tagname(tagname,toupper(type));
+    G__tagnum = G__search_tagname(tagname, toupper(type));
     break;
   default:
-    G__tagnum=G__search_tagname(tagname,type);
+    G__tagnum = G__search_tagname(tagname, type);
     break;
   }
 
-  if(';'==c) {
-    /* in case of class name declaration 'class A;' */
-    G__tagnum=store_tagnum;
+  if (c == ';') {
+    // Case of class name declaration 'class A;'
+    G__tagnum = store_tagnum;
     return;
   }
-  if(G__tagnum<0) {
-    /* This case might not happen */
+
+  if (G__tagnum < 0) {
+    // This case might not happen.
     G__fignorestream(";");
-    G__tagnum=store_tagnum;
+    G__tagnum = store_tagnum;
     return;
   }
+
   G__def_tagnum = G__tagnum;
-  
-  /*
-   * judge if new declaration by size
-   */
-  if(G__struct.size[G__tagnum]==0) {
-    newdecl=1;
+
+  //
+  // Judge if new declaration by size.
+  //
+
+  if (G__struct.size[G__tagnum] == 0) {
+    newdecl = 1;
   }
   else {
-    newdecl=0;
+    newdecl = 0;
   }
-  
-  /* typenum is -1 for struct,union,enum without typedef */
+
+  // typenum is -1 for struct,union,enum without typedef.
   G__typenum = -1;
-  
+
   /* Now came to
    * [struct|union|enum]   tagname   { member }  item ;
    *                                 ^
@@ -1315,222 +1320,228 @@ void G__define_struct(char type)
    *                                   ^
    * member declaration if exist
    */
-  
+
   /**************************************************************
    * base class declaration
    **************************************************************/
-  if(c==':') c=',';
-  while(c==',') {
-    /* [struct|class] <tagname> : <private|public> base_class { 
-     *                           ^                                */
 
-    /* reset virtualbase flag */
+  if (c == ':') {
+    c = ',';
+  }
+
+  while (c == ',') {
+    // [struct|class] <tagname> : <private|protected|public|virtual> base_class {}
+    //                           ^
+
+    // Reset virtualbase flag.
     isvirtualbase = 0;
-    
-    /* read base class name */
+
+    // Read base class name.
 #ifdef G__TEMPLATECLASS
-    c=G__fgetname_template(basename,"{,"); /* case 2) */
+    c = G__fgetname_template(basename, "{,"); // case 2
 #else
-    c=G__fgetname(basename,"{,");
+    c = G__fgetname(basename, "{,");
 #endif
 
-    if(strlen(basename)>=G__LONGLINE) {
-      G__fprinterr(G__serr,"Limitation: class name too long. Must be < %d"
-              ,G__LONGLINE);
-      G__genericerror((char*)NULL);
+    if (strlen(basename) >= G__LONGLINE) {
+      G__fprinterr(G__serr, "Limitation: class name too long. Must be < %d", G__LONGLINE);
+      G__genericerror(0);
     }
-    
-    /* [struct|class] <tagname> : <private|public> base1 , base2 { 
-     *                                            ^  or ^         */
 
-    if(strcmp(basename,"virtual")==0) {
+    // [struct|class] <tagname> : <private|protected|public|virtual> base1 , base2 {}
+    //                                                              ^  or ^
+
+    if (strcmp(basename, "virtual") == 0) {
 #ifndef G__VIRTUALBASE
-      if(G__NOLINK==G__globalcomp&&G__NOLINK==G__store_globalcomp)
+      if ((G__globalcomp == G__NOLINK) && (G__store_globalcomp == G__NOLINK)) {
+        G__genericerror("Limitation: virtual base class not supported in interpretation");
+      }
+#endif
+      c = G__fgetname_template(basename, "{,");
+      isvirtualbase = G__ISVIRTUALBASE;
+      if (strlen(basename) >= G__LONGLINE) {
+        G__fprinterr(G__serr, "Limitation: class name too long. Must be < %d", G__LONGLINE);
+        G__genericerror(0);
+      }
+    }
+
+    if (type == 'c') {
+      baseaccess = G__PRIVATE;
+    } else {
+      baseaccess = G__PUBLIC;
+    }
+
+    if (strcmp(basename, "public") == 0) {
+      baseaccess = G__PUBLIC;
+#ifdef G__TEMPLATECLASS
+      c = G__fgetname_template(basename, "{,");
+#else
+      c = G__fgetname(basename, "{,");
+#endif
+      if (strlen(basename) >= G__LONGLINE) {
+        G__fprinterr(G__serr, "Limitation: class name too long. Must be < %d", G__LONGLINE);
+        G__genericerror(0);
+      }
+    } else if (strcmp(basename, "private") == 0) {
+      baseaccess = G__PRIVATE;
+#ifdef G__TEMPLATECLASS
+      c = G__fgetname_template(basename, "{,");
+#else
+      c = G__fgetname(basename, "{,");
+#endif
+      if (strlen(basename) >= G__LONGLINE) {
+        G__fprinterr(G__serr, "Limitation: class name too long. Must be < %d", G__LONGLINE);
+        G__genericerror(0);
+      }
+    } else if (strcmp(basename, "protected") == 0) {
+      baseaccess = G__PROTECTED;
+#ifdef G__TEMPLATECLASS
+      c = G__fgetname_template(basename, "{,");
+#else
+      c = G__fgetname(basename, "{,");
+#endif
+      if (strlen(basename) >= G__LONGLINE) {
+        G__fprinterr(G__serr, "Limitation: class name too long. Must be < %d", G__LONGLINE);
+        G__genericerror(0);
+      }
+    }
+
+    if (strcmp(basename, "virtual") == 0) {
+#ifndef G__VIRTUALBASE
+      if ((G__globalcomp == G__NOLINK) && (G__store_globalcomp == G__NOLINK))
         G__genericerror("Limitation: virtual base class not supported in interpretation");
 #endif
-      c=G__fgetname_template(basename,"{,");
+      c = G__fgetname_template(basename, "{,");
       isvirtualbase = G__ISVIRTUALBASE;
-      if(strlen(basename)>=G__LONGLINE) {
-        G__fprinterr(G__serr,"Limitation: class name too long. Must be < %d"
-                ,G__LONGLINE);
-        G__genericerror((char*)NULL);
-      }
-    }
-    
-    if('c'==type) baseaccess=G__PRIVATE;
-    else          baseaccess=G__PUBLIC;
-    if(strcmp(basename,"public")==0) {
-      baseaccess=G__PUBLIC;
-#ifdef G__TEMPLATECLASS
-      c=G__fgetname_template(basename,"{,");
-#else
-      c=G__fgetname(basename,"{,");
-#endif
-      if(strlen(basename)>=G__LONGLINE) {
-        G__fprinterr(G__serr,"Limitation: class name too long. Must be < %d"
-                ,G__LONGLINE);
-        G__genericerror((char*)NULL);
-      }
-    }
-    else if(strcmp(basename,"private")==0) {
-      baseaccess=G__PRIVATE;
-#ifdef G__TEMPLATECLASS
-      c=G__fgetname_template(basename,"{,");
-#else
-      c=G__fgetname(basename,"{,");
-#endif
-      if(strlen(basename)>=G__LONGLINE) {
-        G__fprinterr(G__serr,"Limitation: class name too long. Must be < %d"
-                ,G__LONGLINE);
-        G__genericerror((char*)NULL);
-      }
-    }
-    else if(strcmp(basename,"protected")==0) {
-      baseaccess=G__PROTECTED;
-#ifdef G__TEMPLATECLASS
-      c=G__fgetname_template(basename,"{,");
-#else
-      c=G__fgetname(basename,"{,");
-#endif
-      if(strlen(basename)>=G__LONGLINE) {
-        G__fprinterr(G__serr,"Limitation: class name too long. Must be < %d"
-                ,G__LONGLINE);
-        G__genericerror((char*)NULL);
+      if (strlen(basename) >= G__LONGLINE) {
+        G__fprinterr(G__serr, "Limitation: class name too long. Must be < %d", G__LONGLINE);
+        G__genericerror(0);
       }
     }
 
-    if(strcmp(basename,"virtual")==0) {
-#ifndef G__VIRTUALBASE
-      if(G__NOLINK==G__globalcomp&&G__NOLINK==G__store_globalcomp)
-        G__genericerror("Limitation: virtual base class not supported in interpretation");
-#endif
-      c=G__fgetname_template(basename,"{,");
-      isvirtualbase = G__ISVIRTUALBASE;
-      if(strlen(basename)>=G__LONGLINE) {
-        G__fprinterr(G__serr,"Limitation: class name too long. Must be < %d"
-                ,G__LONGLINE);
-        G__genericerror((char*)NULL);
-      }
-    }
-
-    if ( strlen(basename)!=0 && isspace(c) ) {
-      /* maybe basename is namespace that got cut because
-       * G__fgetname_template stop at spaces and the user add:
-       * class MyClass : public MyNamespace ::MyTopClass !
-       * or 
-       * class MyClass : public MyNamespace:: MyTopClass !
-      */
-      int namespace_tagnum;
+    if ((strlen(basename) != 0) && isspace(c)) {
+      // Maybe basename is namespace that got cut because
+      // G__fgetname_template stops at spaces and the user wrote:
+      //
+      //      class MyClass : public MyNamespace ::MyTopClass
+      //
+      // or:
+      //
+      //      class MyClass : public MyNamespace:: MyTopClass
+      //
       char temp[G__LONGLINE];
-  
-      namespace_tagnum = G__defined_tagname(basename,2);
-      while ( ( ( (namespace_tagnum!=-1)
-                  && (G__struct.type[namespace_tagnum]=='n') )
-                || (strcmp("std",basename)==0)
-                || (basename[strlen(basename)-1]==':') )
-              && isspace(c) ) {
-        c = G__fgetname_template(temp,"{,");
-        strcat(basename,temp);
-        namespace_tagnum = G__defined_tagname(basename,2);
+      int namespace_tagnum = G__defined_tagname(basename, 2);
+      while (
+        isspace(c) &&
+        (
+          ((namespace_tagnum != -1) && (G__struct.type[namespace_tagnum] == 'n')) ||
+          (strcmp(basename, "std") == 0) ||
+          (basename[strlen(basename)-1] == ':')
+        )
+      ) {
+        c = G__fgetname_template(temp, "{,");
+        strcat(basename, temp);
+        namespace_tagnum = G__defined_tagname(basename, 2);
       }
     }
 
-    if(newdecl) {
-      int lstore_tagnum=G__tagnum;
-      int lstore_def_tagnum=G__def_tagnum;
-      int lstore_tagdefining=G__tagdefining;
-      int lstore_def_struct_member=G__def_struct_member;
+    if (newdecl) {
+      int lstore_tagnum = G__tagnum;
+      int lstore_def_tagnum = G__def_tagnum;
+      int lstore_tagdefining = G__tagdefining;
+      int lstore_def_struct_member = G__def_struct_member;
       G__tagnum = G__struct.parent_tagnum[lstore_tagnum];
       G__def_tagnum = G__tagnum;
       G__tagdefining = G__tagnum;
-      if(-1!=G__tagnum) G__def_struct_member=1 ;
-      else              G__def_struct_member=0 ;
-      /* copy pointer for readability */
-      /* member = G__struct.memvar[lstore_tagnum]; */
+      G__def_struct_member = 0;
+      if (G__tagnum != -1) {
+        G__def_struct_member = 1;
+      }
+      // Copy pointer for readability.
+      // member = G__struct.memvar[lstore_tagnum];
       baseclass = G__struct.baseclass[lstore_tagnum];
-      pbasen= &(baseclass->basen);
-      
-      /* 
-       * set base class information to tag info table 
-       */
-      baseclass->property[*pbasen]=G__ISDIRECTINHERIT + isvirtualbase;
-      baseclass->basetagnum[*pbasen]=G__defined_tagname(basename,0);
-      if(1==G__struct.size[lstore_tagnum]
-         && 0==G__struct.memvar[lstore_tagnum]->allvar 
-         && 0==G__struct.baseclass[lstore_tagnum]->basen
-         )
-        baseclass->baseoffset[*pbasen]=0;
-      else
-        baseclass->baseoffset[*pbasen]=G__struct.size[lstore_tagnum];
-      baseclass->baseaccess[*pbasen]=baseaccess;
+      pbasen = &baseclass->basen;
+
+      // Enter parsed information into base class information table.
+      baseclass->property[*pbasen] = G__ISDIRECTINHERIT + isvirtualbase;
+      // Note: We are requiring the base class to exist here, we get an error message if it does not.
+      baseclass->basetagnum[*pbasen] = G__defined_tagname(basename, 0);
+      if (
+        (G__struct.size[lstore_tagnum] == 1) &&
+        (G__struct.memvar[lstore_tagnum]->allvar == 0) &&
+        (G__struct.baseclass[lstore_tagnum]->basen == 0)
+      ) {
+        baseclass->baseoffset[*pbasen] = 0;
+      } else {
+        baseclass->baseoffset[*pbasen] = G__struct.size[lstore_tagnum];
+      }
+      baseclass->baseaccess[*pbasen] = baseaccess;
       G__tagnum = lstore_tagnum;
       G__def_tagnum = lstore_def_tagnum;
       G__tagdefining = lstore_tagdefining;
-      G__def_struct_member=lstore_def_struct_member;
-      /* virtual base class for interpretation to be implemented and
-       * 2 limitation messages above should be deleted. */
-      if(1==G__struct.size[baseclass->basetagnum[*pbasen]]
-         && 0==G__struct.memvar[baseclass->basetagnum[*pbasen]]->allvar 
-         && 0==G__struct.baseclass[baseclass->basetagnum[*pbasen]]->basen
-         ) {
-        if(isvirtualbase)
+      G__def_struct_member = lstore_def_struct_member;
+      // Virtual base classes for interpretation to be implemented
+      // and the two limitation messages above should be deleted.
+      if (
+        (G__struct.size[baseclass->basetagnum[*pbasen]] == 1) &&
+        (G__struct.memvar[baseclass->basetagnum[*pbasen]]->allvar == 0) &&
+        (G__struct.baseclass[baseclass->basetagnum[*pbasen]]->basen == 0)
+      ) {
+        if (isvirtualbase) {
           G__struct.size[G__tagnum] += G__DOUBLEALLOC;
-        else
+        } else {
           G__struct.size[G__tagnum] += 0;
+        }
+      } else {
+        if (isvirtualbase) {
+          G__struct.size[G__tagnum] += (G__struct.size[baseclass->basetagnum[*pbasen]] + G__DOUBLEALLOC);
+        } else {
+          G__struct.size[G__tagnum] += G__struct.size[baseclass->basetagnum[*pbasen]];
+        }
       }
-      else {
-        if(isvirtualbase)
-          G__struct.size[G__tagnum] 
-            += (G__struct.size[baseclass->basetagnum[*pbasen]]+G__DOUBLEALLOC);
-        else
-          G__struct.size[G__tagnum] 
-            += G__struct.size[baseclass->basetagnum[*pbasen]];
-      }
-      
-      /* 
-       * inherit base class info, variable member, function member 
-       */
-      G__inheritclass(G__tagnum,baseclass->basetagnum[*pbasen],baseaccess);
 
-      /* ++(*pbasen); */
+      // Inherit base class info, variable member, function member.
+      G__inheritclass(G__tagnum, baseclass->basetagnum[*pbasen], baseaccess);
+
+      // ++(*pbasen);
     }
-    
-    /* 
-     * reading remaining space 
-     */
-    if(isspace(c)) {
-      c=G__fignorestream("{,");
+
+    // Read remaining whitespace.
+    if (isspace(c)) {
+      c = G__fignorestream("{,");
     }
-    
-    /* rewind 1 char if '{' */
-    if(c=='{') {
-      fseek(G__ifile.fp,-1,SEEK_CUR);
-      if(G__dispsource) G__disp_mask=1;
+
+    // Rewind one character if '{' terminated read.
+    if (c == '{') {
+      fseek(G__ifile.fp, -1, SEEK_CUR);
+      if (G__dispsource) {
+        G__disp_mask = 1;
+      }
     }
-    
-  } /* end of base class declaration */
+  } // End of loop over each base class.
 
 
   /**************************************************************
    * virtual base class isabstract count duplication check
    **************************************************************/
   baseclass = G__struct.baseclass[G__tagnum];
-  /* When it is not a new declaration, updating purecount is going to
-     make us fail because the rest of the code is not going to be run.
-     Anyway we already checked once. */
+  // When it is not a new declaration, updating purecount is going to
+  // make us fail because the rest of the code is not going to be run.
+  // Anyway we already checked once.
   if (newdecl) {
-    int purecount= 0;
+    int purecount = 0;
     int lastdirect = 0;
     int ivb;
     for (ivb = 0; ivb < baseclass->basen; ++ivb) {
       struct G__ifunc_table* itab;
 
-      if (baseclass->property[ivb]&G__ISDIRECTINHERIT)
+      if (baseclass->property[ivb] & G__ISDIRECTINHERIT) {
         lastdirect = ivb;
+      }
 
 #ifndef G__OLDIMPLEMENTATION2037
-      /* insure the loading of the memfunc */
-      G__incsetup_memfunc(baseclass->basetagnum[ivb]); 
+      // Insure the loading of the memfunc.
+      G__incsetup_memfunc(baseclass->basetagnum[ivb]);
 #endif
 
       itab = G__struct.memfunc[baseclass->basetagnum[ivb]];
@@ -1538,19 +1549,19 @@ void G__define_struct(char type)
         int ifunc;
         for (ifunc = 0; ifunc < itab->allifunc; ++ifunc) {
           if (itab->ispurevirtual[ifunc]) {
-            /* Search to see if this function has an overrider.
-               If we get this class through virtual derivation, search
-               all classes; otherwise, search only those derived
-               from it. */
-            int firstb, lastb;
+            // Search to see if this function has an overrider.
+            // If we get this class through virtual derivation,
+            // search all classes; otherwise, search only those
+            // derived from it.
+            int firstb;
+            int lastb;
             int b2;
             int found_flag = 0;
 
             if (baseclass->property[ivb] & G__ISVIRTUALBASE) {
               firstb = 0;
               lastb = baseclass->basen;
-            }
-            else {
+            } else {
               firstb = lastdirect;
               lastb = ivb;
             }
@@ -1559,26 +1570,22 @@ void G__define_struct(char type)
               struct G__ifunc_table* found_tab;
               int found_ndx;
               int basetag;
-
-              if (b2 == ivb)
+              if (b2 == ivb) {
                 continue;
-
+              }
               basetag = baseclass->basetagnum[b2];
-              if (G__isanybase (baseclass->basetagnum[ivb], basetag
-                                , G__STATICRESOLUTION) < 0)
+              if (G__isanybase(baseclass->basetagnum[ivb], basetag, G__STATICRESOLUTION) < 0) {
                 continue;
-
-              found_tab = G__ifunc_exist (itab, ifunc,
-                                          G__struct.memfunc[basetag],
-                                          &found_ndx,0xffff);
+              }
+              found_tab = G__ifunc_exist(itab, ifunc, G__struct.memfunc[basetag], &found_ndx, 0xffff);
               if (found_tab) {
                 found_flag = 1;
                 break;
               }
             }
-
-            if (!found_flag)
+            if (!found_flag) {
               ++purecount;
+            }
           }
         }
         itab = itab->next;
@@ -1586,17 +1593,18 @@ void G__define_struct(char type)
     }
     G__struct.isabstract[G__tagnum] = purecount;
   }
-  
-  /* fsetpos(G__ifile.fp,&rewind_fpos); */
-  if(c=='{') { /* member declarations */
+
+  // fsetpos(G__ifile.fp,&rewind_fpos);
+  if (c == '{') {
+    // Member declarations.
 
     isclassdef=1;
-    
+
     if(newdecl || 'n'==type) {
-      
+
       G__struct.line_number[G__tagnum] = G__ifile.line_number;
       G__struct.filenum[G__tagnum] = G__ifile.filenum;
-      
+
       store_access=G__access;
       G__access = G__PUBLIC;
       switch(type) {
@@ -1682,14 +1690,14 @@ void G__define_struct(char type)
         G__enumdef=0;
         G__access=store_access;
       }
-      
+
       else { /* class, struct or union */
         /********************************************
          * Parsing member declaration
          ********************************************/
         store_local = G__p_local;
         G__p_local=G__struct.memvar[G__tagnum];
-        
+
         store_def_struct_member=G__def_struct_member;
         G__def_struct_member=1;
         G__switch = 0; /* redundant */
@@ -1708,7 +1716,7 @@ void G__define_struct(char type)
         G__access=store_access;
         G__prerun=store_prerun;
         G__static_alloc=store_static_alloc;
-        
+
         /********************************************
          * Padding for PA-RISC, Spark, etc
          * If struct size can not be divided by G__DOUBLEALLOC
@@ -1719,7 +1727,7 @@ void G__define_struct(char type)
            ) {
           /* this is still questionable, inherit0.c */
           struct G__var_array *v=G__struct.memvar[G__tagnum];
-          if('c'==v->type[0]) { 
+          if('c'==v->type[0]) {
             if(isupper(v->type[0])) {
               G__struct.size[G__tagnum] = G__LONGALLOC*(v->varlabel[0][1]+1);
             }
@@ -1740,9 +1748,9 @@ void G__define_struct(char type)
         if(0==G__struct.size[G__tagnum]) {
           G__struct.size[G__tagnum] = G__CHARALLOC;
         }
-        
+
         G__tagdefining = tagdefining;
-        
+
         G__def_struct_member=store_def_struct_member;
         G__mparen=mparen;
         G__p_local = store_local;
@@ -1753,8 +1761,8 @@ void G__define_struct(char type)
       c=G__fignorestream("}");
     }
   }
-  
-  
+
+
   /*
    * Now came to
    * [struct|union|enum]   tagname   { member }  item ;
@@ -1767,22 +1775,22 @@ void G__define_struct(char type)
    *                                   ^
    * item declaration
    */
-  
+
   G__var_type = 'u';
-  
+
   /* Need to think about this */
   if(type=='e') G__var_type='i';
 
   if(ispointer) G__var_type=toupper(G__var_type);
 
   if(G__return>G__RETURN_NORMAL) return;
-  
+
   if('u'==type) { /* union */
     fpos_t pos;
     int linenum;
     fgetpos(G__ifile.fp,&pos);
     linenum=G__ifile.line_number;
-    
+
     c = G__fgetstream(basename,";");
     if(basename[0]) {
       fsetpos(G__ifile.fp,&pos);
@@ -1809,7 +1817,7 @@ void G__define_struct(char type)
     G__def_tagnum = store_def_tagnum;
     G__define_var(G__tagnum,-1);
   }
-  
+
   G__tagnum=store_tagnum;
   G__def_tagnum = store_def_tagnum;
 

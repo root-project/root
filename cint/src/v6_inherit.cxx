@@ -866,7 +866,7 @@ int G__isanybase(int basetagnum,int derivedtagnum
   }
   if(basetagnum==derivedtagnum) return(0);
   derived = G__struct.baseclass[derivedtagnum];
-  n = derived->basen;
+  n = derived ? derived->basen : -1;
 
   for(i=0;i<n;i++) {
     if(basetagnum == derived->basetagnum[i]) {

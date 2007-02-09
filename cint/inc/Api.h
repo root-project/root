@@ -225,14 +225,17 @@ private:
    G__ShadowMaker(const G__ShadowMaker&); // intentionally not implemented
    G__ShadowMaker& operator =(const G__ShadowMaker&); // intentionally not implemented
    void GetFullShadowNameRecurse(G__ClassInfo &cl, std::string &fullname);
-
+#ifndef __CINT__
    std::ostream& fOut; // where to write to
+#endif
    std::string fNSPrefix; // shadow classes are in this namespace's namespace "Shadow"
    char fCacheNeedShadow[G__MAXSTRUCT]; // whether we need a shadow for a tagnum
    static bool fgVetoShadow; // whether WritaAllShadowClasses should write the shadow
    bool (*fNeedTypedefShadow)(G__ClassInfo &cl); // func deciding whether the shadow is a tyepdef
 };
 
+   unsigned long G__long_random(unsigned long limit);
+   
 } // namespace Cint
 
 using namespace Cint;
@@ -242,6 +245,8 @@ using namespace Cint;
 #pragma link off class $G__COMPLETIONLIST;
 #pragma link off class $G__linked_taginfo;
 #pragma link off class G__includepath;
+#pragma link C++ namespace Cint;
+#pragma link off namespace Cint::Internal;
 #endif
 
 #endif

@@ -7,7 +7,7 @@
  * Description:
  *  Variable declaration
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto 
+ * Copyright(c) 1995~2003  Masaharu Goto
  *
  * For the licensing terms see the file COPYING
  *
@@ -133,7 +133,7 @@ int G__get_newname(char *new_name)
    * and operator function
    *********************************************************/
   /*********************************************************
-   * C++ 
+   * C++
    * Definition of operator function
    * type operator [/+-*%^&|] (type para1 , type para2)
    *********************************************************/
@@ -170,7 +170,7 @@ int G__get_newname(char *new_name)
     }
     else if(strcmp(new_name,"&*")==0 || strcmp(new_name,"*&")==0) {
       cin=G__fgetvarname(new_name+2,",;=():");
-    } 
+    }
 
     if(strcmp(new_name,"double")==0
        && 'l'!=G__var_type
@@ -435,7 +435,7 @@ int G__get_newname(char *new_name)
           /*
              G__genericerror(
              "Warning: name 'operator' will be a keyword for C++"
-             ); 
+             );
              */
           break;
         }
@@ -443,11 +443,11 @@ int G__get_newname(char *new_name)
       } /* if(strcmp(new_name,"operator")==0) */
 
       store_len = strlen(new_name);
-      
+
       do {
         cin = G__fgetstream(new_name+strlen(new_name),",;=():");
         if(']'==cin) strcpy(new_name+strlen(new_name),"]");
-      } while(']'==cin); 
+      } while(']'==cin);
 
       if(store_len>1&&isalnum(new_name[store_len])&&
          isalnum(new_name[store_len-1])) {
@@ -458,12 +458,12 @@ int G__get_newname(char *new_name)
       }
 
       return(cin);
-      
+
     } /* of isspace(cin) */
   } /* of isspace(cin) */
   else if('('==cin && 0==new_name[0]) {
     /* check which case
-     *  1. f(type (*p)(int))  -> do nothing here 
+     *  1. f(type (*p)(int))  -> do nothing here
      *  2. f(type (*p)[4][4]) -> convert to f(type p[][4][4])  */
     fpos_t tmppos;
     int tmpline = G__ifile.line_number;;
@@ -486,7 +486,7 @@ int G__get_newname(char *new_name)
     strcpy(new_name,temp);
 
     return(cin);
-    
+
   escapehere:
     if(G__dispsource) G__disp_mask=0;
     fsetpos(G__ifile.fp,&tmppos);
@@ -495,7 +495,7 @@ int G__get_newname(char *new_name)
     cin = '(';
   }
 
-  if(strncmp(new_name,"operator",8)==0 && 
+  if(strncmp(new_name,"operator",8)==0 &&
      (G__isoperator(new_name[8]) || '\0'==new_name[8])) {
     if('='==cin) {
       fseek(G__ifile.fp,-1,SEEK_CUR);
@@ -542,7 +542,7 @@ int G__get_newname(char *new_name)
       strcpy(new_name+10,"()");
     }
     return(cin);
-  }  
+  }
 
   return(cin);
 
@@ -569,7 +569,7 @@ int G__unsignedintegral(int *pspaceflag,int *piout,int mparen)
   else if(strcmp(name,"char*")==0)  G__var_type='C'-1;
   else if(strcmp(name,"short*")==0) G__var_type='S'-1;
   else if(strcmp(name,"long*")==0)  G__var_type='L'-1;
-  else if(strcmp(name,"int&")==0) { 
+  else if(strcmp(name,"int&")==0) {
     G__var_type='i'-1;
     G__reftype=G__PARAREFERENCE;
   }
@@ -656,18 +656,18 @@ static int G__setvariablecomment(char *new_name)
       switch(name[j]) {
         case '<': ++nest; break;
         case '>': --nest; break;
-        case ':': 
+        case ':':
            if (nest==0 && name[j+1]==':') {
               scope = j;
            }; break;
       };
    }
-   
+
    if (scope==0) {
      /* If scope is not null, this means that we are not really inside the
         the class declaration.  This might actually be an instantiation inside
         a namespace */
-  
+
      G__hash(name,hash,i)
      /* only interpretation. no need to check for cpplink memvar setup */
      var = G__rawvarentry(name,hash,&ig15,G__struct.memvar[G__tagdefining]);
@@ -687,7 +687,7 @@ static int G__setvariablecomment(char *new_name)
 /******************************************************************
 * G__removespacetemplate()
 ******************************************************************/
-void G__removespacetemplate(char *name) 
+void G__removespacetemplate(char *name)
 {
   char buf[G__LONGLINE];
   int c;
@@ -754,20 +754,20 @@ void G__initstructary(char *new_name,int tagnum)
   index = strchr(new_name,'[');
   if(*(index+1)==']') {
     fpos_t store_pos;
-    int store_line = G__ifile.line_number; 
+    int store_line = G__ifile.line_number;
     fgetpos(G__ifile.fp,&store_pos);
 
     p_inc=0;
     do {
       cin = G__fgetstream(buf,",}");
       ++p_inc;
-    } while(cin!='}'); 
+    } while(cin!='}');
 
     strcpy(buf,index+1);
     sprintf(index+1,"%d",p_inc);
     strcat(new_name,buf);
 
-    G__ifile.line_number = store_line; 
+    G__ifile.line_number = store_line;
     fsetpos(G__ifile.fp,&store_pos);
   }
   else {
@@ -796,7 +796,7 @@ void G__initstructary(char *new_name,int tagnum)
     }
     reg=G__getfunction(buf,&known,G__CALLCONSTRUCTOR);
     ++i;
-  } while(cin!='}'); 
+  } while(cin!='}');
 
   /* post processing */
   G__store_struct_offset = store_struct_offset;
@@ -841,7 +841,6 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
 
   int initary=0;
 
-  int flag;
   int  known;
   long  store_struct_offset; /* used to be int */
   int  store_prerun;
@@ -934,7 +933,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
     }
 
     /************************************************************
-     * if ANSI function parameter 
+     * if ANSI function parameter
      *   funcname(type var1  , type var2,...)
      *                      ^    or         ^
      *   funcname(type var1= 5 , type var2,...)
@@ -1022,9 +1021,9 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
       else {
         temp[0]='\0';
       }
- 
-      if(G__reftype 
-         == G__PARAREFERENCE 
+
+      if(G__reftype
+         == G__PARAREFERENCE
          ) {
         G__globalvarpointer = G__ansipara.ref;
         reg=G__null;
@@ -1080,9 +1079,9 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
       }
 
       G__var_type = var_type ;
-      
+
       /**************************************************
-      * initialization of formal parameter 
+      * initialization of formal parameter
       *C++: G__COPYCONSTRUCTOR
       * Default and user specified copy constructor is
       * switched in G__letvariable()
@@ -1193,14 +1192,14 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
             goto define_function;
           }
         }
-        
+
         /* initialization of pointer to function
          * CAUTION: Now, I don't do this.
          *   G__var_type = 'q';
          * Thus, type of function pointer is declared type
          */
         /* G__letvariable(new_name,reg,&G__global,G__p_local); */
-        
+
         /* read to =,; */
         cin=G__fignorestream("=,;}");
         G__constvar=0;
@@ -1216,26 +1215,26 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
         /***************************************************
          * distinguish constructor or function definition
          ***************************************************/
-        
+
       define_function:
-        
+
         /* read next non space char, and rewind */
         cin=G__fgetspace();
         fseek(G__ifile.fp,-1,SEEK_CUR);
         if(cin=='\n' /* ||cin=='\r' */) --G__ifile.line_number;
         if(G__dispsource) G__disp_mask=1;
-        
-        /* if defining class member, it must not be  constructor call 
-         * and if cin is not digit, not quotation and not '.'  this is 
+
+        /* if defining class member, it must not be  constructor call
+         * and if cin is not digit, not quotation and not '.'  this is
          * a funciton definition */
-        if(G__def_struct_member!=0 
+        if(G__def_struct_member!=0
            && ( G__tagdefining == -1
            || G__struct.type[G__tagdefining] != 'n')
-           ||         
+           ||
            ((!isdigit(cin))&&cin!='"'&&cin!='\''&&cin!='.'&&cin!='-'&&
             cin!='+'&&
             cin!='*'&&cin!='&')) {
-          
+
           /* It is clear that above check is not sufficient to distinguish
            * class object instantiation and function header. Following
            * code is added to make it fully compliant to ANSI C++ */
@@ -1245,12 +1244,12 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
           cin = G__fgetname(temp,",)*&<=");
           if (strlen(temp) && isspace(cin)) {
             /* There was an argument and the parsing was stopped by a white
-             * space rather than on of ",)*&<=", it is possible that 
+             * space rather than on of ",)*&<=", it is possible that
              * we have a namespace followed by '::' in which case we have
              * to grab more before stopping! */
             int namespace_tagnum;
             char more[G__LONGLINE];
-   
+
             namespace_tagnum = G__defined_tagname(temp,2);
             while ( ( ( (namespace_tagnum!=-1)
                         && (G__struct.type[namespace_tagnum]=='n') )
@@ -1266,13 +1265,13 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
           if(G__dispsource) G__disp_mask=1;
           G__ifile.line_number = store_line;
 
-          if((!G__iscpp)||'\0'==temp[0]|| 
+          if((!G__iscpp)||'\0'==temp[0]||
              -1==tagnum || /* this is a problem for 'int f(A* b);' */
              G__istypename(temp)||('\0'==temp[0]&&')'==cin)
              || 0==strncmp(new_name,"operator",8)
              || ('<'==cin&&G__defined_templateclass(temp))
              ) {
-            
+
 
             G__var_type = var_type;
             /* function definition
@@ -1281,8 +1280,8 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
             sprintf(temp,"%s(",new_name);
             G__make_ifunctable(temp);
             G__isfuncreturnp2f=0; /* this is set above in this function */
-            
-            /* body of the function is skipped all 
+
+            /* body of the function is skipped all
              * the way
              *   type funcname(type var1,..) {....}
              *                                     ^     */
@@ -1298,15 +1297,15 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
           }
           G__var_type = var_type;
         }
-        
-        
-        /* If didn't meet above conditions, this is a 
+
+
+        /* If didn't meet above conditions, this is a
          * constructor call */
-        
+
         /* C++ constructor
          *   type varname( const,const);
          *                 ^            */
-        
+
         /* read parameter list and build command string */
         cin = G__fgetstream_newtemplate(temp,")");
 
@@ -1341,11 +1340,11 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
               G__genericerror((char*)NULL);
             }
             G__globalvarpointer = reg.ref;
-          }        
+          }
           goto create_body;
         }
         sprintf(temp1,"%s(%s)",G__struct.name[G__tagnum],temp);
-        
+
         /* store flags */
         store_prerun = G__prerun;
         G__prerun = 0;
@@ -1380,18 +1379,18 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
             }
           }
         }
-        
-        
+
+
         /* skip until , or ; */
         cin = G__fignorestream(",;");
         /*   type varname( const,const) , ;
          *                               ^
          */
-        
+
 
         /* allocate memory area */
         G__var_type = var_type;
-        
+
         store_struct_offset = G__store_struct_offset ;
         if(G__CPPLINK!=G__struct.iscpplink[tagnum]) {
           G__prerun=store_prerun;
@@ -1421,14 +1420,14 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
         else {
           G__store_struct_offset = G__PVOID;
         }
-        
+
         if(G__dispsource) {
           G__fprinterr(G__serr,
                   "\n!!!Calling constructor 0x%lx.%s for declaration of %s"
                   ,G__store_struct_offset,temp1,new_name);
         }
-        
-        
+
+
 #define G__OLDIMPLEMENTATION1306
         /* call constructor, error if no constructor */
         G__decl = 0;
@@ -1439,7 +1438,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
         if(G__CPPLINK==G__struct.iscpplink[tagnum]) {
           /* These has to be stored because G__getfunction can call bytecode
            * compiler */
-          int bc_tagnum=G__tagnum; 
+          int bc_tagnum=G__tagnum;
           int bc_typenum=G__typenum;
           reg = G__getfunction(temp1,&known,G__CALLCONSTRUCTOR);
           G__tagnum=bc_tagnum;
@@ -1449,7 +1448,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
           G__static_alloc = store_static_alloc;
           G__prerun = store_prerun;
           G__cppconstruct = 1;
-          if(G__globalvarpointer||G__no_exec_compile) 
+          if(G__globalvarpointer||G__no_exec_compile)
           {
             int store_constvar2 = G__constvar;
             G__constvar=store_constvar;
@@ -1488,7 +1487,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
             }
 #endif
           }
-          else 
+          else
 #ifndef G__OLDIMPLEMENTATION510_TEMP
             /* tempolary solution, later this must be deleted */
             if(G__ASM_FUNC_NOP==G__asm_wholefunction||G__asm_noverflow)
@@ -1516,13 +1515,13 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
           G__globalvarpointer = G__PVOID;
           return;
         }
-        
+
         if(largestep) {
           G__step=1;
           G__setdebugcond();
           largestep=0;
         }
-        
+
         /* restore flags */
         if(store_prerun) {
           G__debug = store_debug;
@@ -1531,11 +1530,11 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
         }
         G__prerun = store_prerun;
         G__store_struct_offset = store_struct_offset;
-        
+
         /* to skip following condition */
         new_name[0] = '\0';
-        
-        
+
+
       }
     }
 
@@ -1596,7 +1595,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
           }
         case ';':
           /* PHILIPPE17: the following is fixed in 1306! */
-          /* static class object member must call constructor 
+          /* static class object member must call constructor
            * TO BE IMPLEMENTED */
           sprintf(temp,"%s::%s",G__fulltagname(G__def_tagnum,1),new_name+i);
           strcpy(new_name,temp);
@@ -1607,9 +1606,9 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
           G__def_tagnum = store_def_tagnum;
           G__tagdefining  = store_tagdefining;
           continue; /* big while(1) loop */
-          /* If neither case, handle as member function definition 
-           * It is possible that this is initialization of class object as 
-           * static member, like 'type X::obj(1,2)' . This syntax is not 
+          /* If neither case, handle as member function definition
+           * It is possible that this is initialization of class object as
+           * static member, like 'type X::obj(1,2)' . This syntax is not
            * handled correctly. */
         }
         if(strcmp(new_name+i,"operator")==0) {
@@ -1678,11 +1677,11 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
       G__tagnum = G__get_envtagnum();
       if('u'==var_type)
         cin=G__fgetstream_newtemplate(temp,",;{}"); /* TEMPLATECLASS case12 */
-      else 
-        cin=G__fgetstream_new(temp,",;{"); 
+      else
+        cin=G__fgetstream_new(temp,",;{");
 
       if(G__def_struct_member && G__CONSTVAR!=G__constvar && G__static_alloc &&
-         -1!=G__tagdefining && 
+         -1!=G__tagdefining &&
          ('c'==G__struct.type[G__tagdefining]||
           's'==G__struct.type[G__tagdefining])) {
         if(G__dispmsg>=G__DISPWARN) {
@@ -1709,8 +1708,8 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
       G__var_type = 'p';
 
       /* ON199 */
-      if(G__reftype 
-         == G__PARAREFERENCE 
+      if(G__reftype
+         == G__PARAREFERENCE
         ) {
         int store_reftype = G__reftype;
         /*#define G__OLDIMPLEMENTATION1093*/
@@ -1816,13 +1815,13 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
             G__assign_error(new_name+1,&reg);
             reg = G__null;
           }
-        }        
+        }
       }
       G__tagnum = store_tagnumB;
     }
     else {
       if(
-         '\0'!=new_name[0] && 
+         '\0'!=new_name[0] &&
          G__NOLINK==G__globalcomp &&
          G__reftype== G__PARAREFERENCE && 0==G__def_struct_member) {
         G__fprinterr(G__serr,"Error: reference type %s with no initialization "
@@ -1834,7 +1833,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
 
 
     /***************************************************************
-     * Create body of variable 
+     * Create body of variable
      *
      ***************************************************************/
     create_body:
@@ -1937,7 +1936,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
 #endif
         }
         else {
-          /* precompiled class, 
+          /* precompiled class,
            * memory will be allocated by new in constructor function below */
           G__store_struct_offset = G__PVOID;
         }
@@ -1956,109 +1955,110 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
         }
         G__prerun = 0; /* FOR RUNNING CONSTRUCTOR */
 
-        if(G__store_struct_offset) {
-          if(temp[0] == '\0'
-             && -1!=G__tagnum 
-             ) {
+        if (G__store_struct_offset) {
+          if ((temp[0] == '\0') && (G__tagnum != -1)) {
             /********************************************
-             * type a; 
+             * type a;
              * call default constructor
              ********************************************/
-            sprintf(temp,"%s()",G__struct.name[G__tagnum]);
-            if(G__dispsource){
-                G__fprinterr(G__serr,
-            "\n!!!Calling default constructor 0x%lx.%s for declaration of %s"
-                        ,G__store_struct_offset
-                        ,temp,new_name);
+            sprintf(temp, "%s()", G__struct.name[G__tagnum]);
+            if (G__dispsource) {
+                G__fprinterr(G__serr, "\n!!!Calling default constructor 0x%lx.%s for declaration of %s", G__store_struct_offset, temp, new_name);
             }
             /******************************************************
             * Calling constructor to array of object
             ******************************************************/
-            G__decl=0; 
-            if((index=strchr(new_name,'['))) {
-              p_inc=G__getarrayindex(index);
-              if(G__CPPLINK==G__struct.iscpplink[tagnum]) {
-                /* precompiled class. First, call constructor (new) function */
+            G__decl = 0;
+            if ((index = strchr(new_name, '['))) {
+              p_inc = G__getarrayindex(index);
+              if (G__CPPLINK == G__struct.iscpplink[tagnum]) {
+                // -- Precompiled class. First, call constructor (new) function.
 #ifdef G__ASM
-                if(G__asm_noverflow && p_inc>1) {
+                if (G__asm_noverflow && (p_inc > 1)) {
 #ifdef G__ASM_DBG
-                  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: SETARYINDEX\n" ,G__asm_cp);
+                  if (G__asm_dbg) G__fprinterr(G__serr, "%3x: SETARYINDEX\n", G__asm_cp);
 #endif
-                  G__asm_inst[G__asm_cp]=G__SETARYINDEX;
-                  G__asm_inst[G__asm_cp+1]= 0;
-                  G__inc_cp_asm(2,0);
+                  G__asm_inst[G__asm_cp] = G__SETARYINDEX;
+                  G__asm_inst[G__asm_cp+1] = 0;
+                  G__inc_cp_asm(2, 0);
                 }
 #endif
-                G__cpp_aryconstruct=p_inc;
-                reg=G__getfunction(temp,&known,G__CALLCONSTRUCTOR);
-                G__cpp_aryconstruct=0;
-                /* Register the pointer we get from new to member variable table */
-                G__globalvarpointer=G__int(reg);
+                G__cpp_aryconstruct = p_inc;
+                reg = G__getfunction(temp, &known, G__CALLCONSTRUCTOR);
+                G__cpp_aryconstruct = 0;
+                // Register the pointer we get from new to member variable table.
+                G__globalvarpointer = G__int(reg);
                 G__cppconstruct = 1;
                 G__var_type = var_type;
-                G__letvariable(new_name,G__null,&G__global,G__p_local);
+                G__letvariable(new_name, G__null, &G__global, G__p_local);
                 G__cppconstruct = 0;
 #ifdef G__ASM
-                if(G__asm_noverflow && p_inc>1) {
+                if (G__asm_noverflow && (p_inc > 1)) {
 #ifdef G__ASM_DBG
-                  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: RESETARYINDEX\n" ,G__asm_cp);
+                  if (G__asm_dbg) {
+                    G__fprinterr(G__serr, "%3x: RESETARYINDEX\n", G__asm_cp);
+                  }
 #endif
-                  G__asm_inst[G__asm_cp]=G__RESETARYINDEX;
-                  G__asm_inst[G__asm_cp+1]= 0;
-                  G__inc_cp_asm(2,0);
+                  G__asm_inst[G__asm_cp] = G__RESETARYINDEX;
+                  G__asm_inst[G__asm_cp+1] = 0;
+                  G__inc_cp_asm(2, 0);
                 }
 #endif
-                G__globalvarpointer=G__PVOID;
+                G__globalvarpointer = G__PVOID;
 #ifndef G__OLDIMPLEMENTATION1073
-                if(G__asm_wholefunction&&G__no_exec_compile) {
+                if (G__asm_wholefunction && G__no_exec_compile) {
 #ifdef G__ASM_DBG
-                  if(G__asm_dbg) 
-                    G__fprinterr(G__serr,"%3x: SETGVP -1\n",G__asm_cp);
+                  if (G__asm_dbg) {
+                    G__fprinterr(G__serr, "%3x: SETGVP -1\n", G__asm_cp);
+                  }
 #endif
-                  G__asm_inst[G__asm_cp]=G__SETGVP;
+                  G__asm_inst[G__asm_cp] = G__SETGVP;
                   G__asm_inst[G__asm_cp+1] = -1;
-                  G__inc_cp_asm(2,0);
+                  G__inc_cp_asm(2, 0);
                 }
 #endif
               }
               else {
-                /* interpreterd class, memory area is alread allocated above */
-                for(i=0;i<p_inc;i++) {
-                  if(G__struct.isctor[tagnum]) 
-                    G__getfunction(temp,&known,G__CALLCONSTRUCTOR);
-                  else
-                    G__getfunction(temp,&known,G__TRYCONSTRUCTOR);
-                  if(G__return>G__RETURN_NORMAL||0==known) break;
-                  G__store_struct_offset+=G__struct.size[G__tagnum];
-                  if(G__asm_noverflow) {
+                // -- Interpreted class, memory area was already allocated above.
+                for (i = 0; i < p_inc; ++i) {
+                  if (G__struct.isctor[tagnum]) {
+                    G__getfunction(temp, &known, G__CALLCONSTRUCTOR);
+                  }
+                  else {
+                    G__getfunction(temp, &known, G__TRYCONSTRUCTOR);
+                  }
+                  if ((G__return > G__RETURN_NORMAL) || (known == 0)) {
+                    break;
+                  }
+                  G__store_struct_offset += G__struct.size[G__tagnum];
+                  if (G__asm_noverflow) {
 #ifdef G__ASM_DBG
-                    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ADDSTROS %d\n"
-                                           ,G__asm_cp
-                                           ,G__struct.size[G__tagnum]);
+                    if (G__asm_dbg) G__fprinterr(G__serr, "%3x: ADDSTROS %d\n", G__asm_cp, G__struct.size[G__tagnum]);
 #endif
-                    G__asm_inst[G__asm_cp]=G__ADDSTROS;
-                    G__asm_inst[G__asm_cp+1]=G__struct.size[G__tagnum];
-                    G__inc_cp_asm(2,0);
+                    G__asm_inst[G__asm_cp] = G__ADDSTROS;
+                    G__asm_inst[G__asm_cp+1] = G__struct.size[G__tagnum];
+                    G__inc_cp_asm(2, 0);
                   }
 #ifndef G__OLDIMPLEMENTATION1073
-                  if(G__asm_wholefunction && G__asm_noverflow) {
+                  if (G__asm_wholefunction && G__asm_noverflow) {
 #ifdef G__ASM_DBG
-                    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: ADDSTROS %d\n"
-                                      ,G__asm_cp,G__struct.size[G__tagnum]);
+                    if (G__asm_dbg) G__fprinterr(G__serr,"%3x: ADDSTROS %d\n", G__asm_cp, G__struct.size[G__tagnum]);
 #endif
-                    G__asm_inst[G__asm_cp]=G__POPSTROS; /* ??? ADDSTROS */
-                    G__asm_inst[G__asm_cp+1]=G__struct.size[G__tagnum];
-                    G__inc_cp_asm(2,0);
+                    G__asm_inst[G__asm_cp] = G__POPSTROS; // ??? ADDSTROS
+                    G__asm_inst[G__asm_cp+1] = G__struct.size[G__tagnum];
+                    G__inc_cp_asm(2, 0);
                   }
 #endif
                 }
 #ifndef G__OLDIMPLEMENTATION1073
-                if(G__asm_wholefunction && G__asm_noverflow) {
+                if (G__asm_wholefunction && G__asm_noverflow) {
 #ifdef G__ASM_DBG
-                  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp);
+                  if (G__asm_dbg) {
+                    G__fprinterr(G__serr, "%3x: POPSTROS\n", G__asm_cp);
+                  }
 #endif
-                  G__asm_inst[G__asm_cp]=G__POPSTROS;
-                  G__inc_cp_asm(1,0);
+                  G__asm_inst[G__asm_cp] = G__POPSTROS;
+                  G__inc_cp_asm(1, 0);
                 }
 #endif
               }
@@ -2075,7 +2075,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
                 G__cppconstruct = 1;
                 G__var_type = var_type;
                 if((known && (G__globalvarpointer||G__asm_noverflow))
-                   || G__NOLINK != G__globalcomp 
+                   || G__NOLINK != G__globalcomp
                    ) {
                   G__letvariable(new_name,G__null,&G__global,G__p_local);
                 }
@@ -2094,7 +2094,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1073
                 if(G__asm_wholefunction&&G__no_exec_compile) {
 #ifdef G__ASM_DBG
-                  if(G__asm_dbg) 
+                  if(G__asm_dbg)
                     G__fprinterr(G__serr,"%3x: SETGVP -1\n",G__asm_cp);
 #endif
                   G__asm_inst[G__asm_cp]=G__SETGVP;
@@ -2105,7 +2105,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
               }
               else {
                 /* interpreterd class, memory area is alread allocated above */
-                if(G__struct.isctor[tagnum]) 
+                if(G__struct.isctor[tagnum])
                   G__getfunction(temp,&known,G__CALLCONSTRUCTOR);
                 else
                   G__getfunction(temp,&known,G__TRYCONSTRUCTOR);
@@ -2144,7 +2144,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
                 G__genericerror((char*)NULL);
                 cin=G__fignorestream("}");
                 cin=G__fignorestream(",;");
-                
+
               }
               else {
                 if(store_prerun) {
@@ -2163,49 +2163,61 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
              * If temp == 'classname(arg)', this is OK,
              * If temp == 'classobject', copy constructor
              ********************************************/
-            if(staticclassobject) G__tagnum=store_tagnum; /* to pass G__getfunction() */
-            sprintf(temp1,"%s(",G__struct.name[G__tagnum]);
-#ifdef G__TEMPLATECLASS
-            /* G__TEMPLATECLASS Need to evaluate template argument list here */
-#endif
-            if( temp == strstr(temp,temp1)) {
-              int c,isrc=0;
+            int flag = 0;
+            if (staticclassobject) {
+              // to pass G__getfunction()
+              G__tagnum = store_tagnum;
+            }
+            sprintf(temp1, "%s(", G__struct.name[G__tagnum]);
+            // FIXME: ifdef G__TEMPLATECLASS: Need to evaluate template argument list here.
+            if (temp == strstr(temp, temp1)) {
+              int c;
+              int isrc = 0;
               char buf[G__LONGLINE];
-              flag=1;
-              c=G__getstream_template(temp,&isrc,buf,"(");
-              if('('==c) {
-                c=G__getstream_template(temp,&isrc,buf,")");
-                if(')'==c) {
-                  if(temp[isrc]) flag=0;
+              flag = 1;
+              c = G__getstream_template(temp, &isrc, buf, "(");
+              if (c == '(') {
+                c = G__getstream_template(temp, &isrc, buf, ")");
+                if (c == ')') {
+                  if (temp[isrc]) {
+                    flag = 0;
+                  }
                 }
               }
             }
-            else if(G__struct.istypedefed[G__tagnum]) {
-              index=strchr(temp,'(');
-              if(index) {
-                *index='\0';
-                flag=G__defined_typename(temp);
-                if(-1!=flag&&G__newtype.tagnum[flag]==G__tagnum) {
-                  sprintf(temp1,"%s(%s",G__struct.name[G__tagnum],index+1);
-                  strcpy(temp,temp1);
-                  flag=1;
+            else if (G__struct.istypedefed[G__tagnum]) {
+              index = strchr(temp, '(');
+              if (index) {
+                *index = '\0';
+                flag = G__defined_typename(temp);
+                if ((flag != -1) && (G__newtype.tagnum[flag] == G__tagnum)) {
+                  sprintf(temp1, "%s(%s", G__struct.name[G__tagnum], index + 1);
+                  strcpy(temp, temp1);
+                  flag = 1;
                 }
-                else flag=0;
-              if(!flag) *index='(';
+                else {
+                  flag = 0;
+                }
+                if (!flag) {
+                  *index = '(';
+                }
               }
-              else flag=0;
+              else {
+                flag = 0;
+              }
             }
-            else flag=0;
-
-            if( flag ) {
-              /* call explicit constructor, error if no constructor */
+            else {
+              flag = 0;
+            }
+            if (flag) {
+              // Call explicit constructor, error if no constructor.
               if(G__dispsource){
                 G__fprinterr(G__serr,
-                   "\n!!!Calling constructor 0x%lx.%s for declaration of %s"
-                        ,G__store_struct_offset
-                        ,temp,new_name);
+                    "\n!!!Calling constructor 0x%lx.%s for declaration of %s"
+                    ,G__store_struct_offset
+                    ,temp,new_name);
               }
-              G__decl=0; 
+              G__decl=0;
               if(G__CPPLINK==G__struct.iscpplink[tagnum]) {
                 reg=G__getfunction(temp,&known,G__CALLCONSTRUCTOR);
                 G__var_type=var_type;
@@ -2258,7 +2270,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1073
               if(G__asm_noverflow&&G__asm_wholefunction) {
 #ifdef G__ASM_DBG
-                if(G__asm_dbg) 
+                if(G__asm_dbg)
                   G__fprinterr(G__serr,"%3x: SETMEMFUNCENV\n",G__asm_cp);
 #endif
                 G__asm_inst[G__asm_cp]=G__SETMEMFUNCENV;
@@ -2270,7 +2282,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION1073
               if(G__asm_noverflow&&G__asm_wholefunction) {
 #ifdef G__ASM_DBG
-                if(G__asm_dbg) 
+                if(G__asm_dbg)
                   G__fprinterr(G__serr,"%3x: RECMEMFUNCENV\n",G__asm_cp);
 #endif
                 G__asm_inst[G__asm_cp]=G__RECMEMFUNCENV;
@@ -2284,12 +2296,12 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
               G__tagdefining = store_tagdefiningB;
               if(G__CPPLINK==G__struct.iscpplink[tagnum]) {
                 if(reg.tagnum==tagnum && 'u'==reg.type) {
-                  if(reg.obj.i<0) 
+                  if(reg.obj.i<0)
                     sprintf(temp,"%s((%s)(%ld))" ,G__struct.name[tagnum]
-                            ,G__struct.name[tagnum] ,G__int(reg));
+                        ,G__struct.name[tagnum] ,G__int(reg));
                   else
                     sprintf(temp,"%s((%s)%ld)" ,G__struct.name[tagnum]
-                            ,G__struct.name[tagnum] ,G__int(reg));
+                        ,G__struct.name[tagnum] ,G__int(reg));
                 }
                 else {
                   char tttt[G__ONELINE];
@@ -2327,7 +2339,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
                 if(G__asm_wholefunction) {
                   G__oprovld=0;
 #ifdef G__ASM_DBG
-                  if(G__asm_dbg) 
+                  if(G__asm_dbg)
                     G__fprinterr(G__serr,"%3x: SETGVP -1\n",G__asm_cp);
 #endif
                   G__asm_inst[G__asm_cp]=G__SETGVP;
@@ -2447,7 +2459,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
       }
       /**************************************************************
       * end of if(var_type=='u'&&G__def_struct_member==0&&new_name[0]!='*'&&
-      *           G__reftype==G__PARANORMAL) 
+      *           G__reftype==G__PARANORMAL)
       *        else
       **************************************************************/
 
@@ -2456,13 +2468,13 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
     /***************************************************************
      * end of if(new_name[0]!='\0')
      ***************************************************************/
-      
-      
+
+
       G__globalvarpointer=G__PVOID;
-      
-      
+
+
     /***************************************************************
-     * end of declaration or read next variable name 
+     * end of declaration or read next variable name
      *
      ***************************************************************/
   readnext:
@@ -2476,7 +2488,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
       G__tagnum = store_tagnum;
       G__typenum = store_typenum;
       G__reftype=G__PARANORMAL;
-      
+
       if(G__fons_comment && G__def_struct_member) {
         G__setvariablecomment(new_name);
       }
@@ -2484,7 +2496,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
 #ifdef G__ASM
         if(G__asm_noverflow) G__asm_clear();
 #endif
-      
+
       G__static_alloc=store_static_alloc2;
       G__dynconst=0;
       G__globalvarpointer = G__PVOID;
@@ -2537,7 +2549,7 @@ void G__define_var(int tagnum,int typenum) /* overrides global variables */
        */
     }
 
-  }  
+  }
 
 }
 
@@ -2564,16 +2576,16 @@ int G__initary(char *new_name)
   int prev;
   long tmp;
   int stringflag=0;
-  int typedary=0; 
-  
+  int typedary=0;
+
   /* G__ASSERT(0==G__store_struct_offset); */
 
-  
+
   /* separate variable name header */
   strcpy(name,new_name);
   p=strchr(name,'[');
   if(p) *p='\0';
-  
+
   /* handling static declaration */
   if(G__static_alloc==1) {
     if(G__prerun==0) {
@@ -2590,12 +2602,12 @@ int G__initary(char *new_name)
                   ,G__memberfunc_tagnum);
         else
           sprintf(namestatic,"%s\\%x\\%x" ,name,G__func_page,G__func_now);
-        
+
         G__hash(namestatic,hashstatic,i)
           varstatic = G__getvarentry(namestatic,hashstatic,&ig15static
                                      ,&G__global,G__p_local);
         if(varstatic) {
-          for(i=0;i<G__MAXVARDIM;i++) 
+          for(i=0;i<G__MAXVARDIM;i++)
             var->varlabel[ig15][i] = varstatic->varlabel[ig15static][i];
         }
       }
@@ -2619,7 +2631,7 @@ int G__initary(char *new_name)
   G__abortbytecode();
 #endif
 
-  { 
+  {
     char *pp = G__strrstr(name,"::");
     if(pp && G__prerun && -1==G__func_now) {
       /* Handle static data member initialization */
@@ -2664,14 +2676,14 @@ int G__initary(char *new_name)
       return(c);
     }
   }
-  
+
   /*******************************************************
    * multidimensional array number of dimension
    *******************************************************/
   pindex=var->paran[ig15];
-  
+
   /*******************************************************
-   * check if  a[], a[][B][C] isauto sized array 
+   * check if  a[], a[][B][C] isauto sized array
    *******************************************************/
   if(INT_MAX==var->varlabel[ig15][1]) {
     /* set isauto flag and reset varlabel[ig15][1] */
@@ -2698,14 +2710,14 @@ int G__initary(char *new_name)
   }
 
   G__ASSERT(G__COMPILEDGLOBAL!=var->statictype[ig15]);
-  
+
   /* initialize buf */
   buf.type=toupper(var->type[ig15]);
   buf.tagnum=var->p_tagtable[ig15];
   buf.typenum=var->p_typetable[ig15];
   buf.ref=0;
   buf.obj.reftype.reftype=var->reftype[ig15];
-  
+
   /* getting size */
   if(islower(var->type[ig15])) {
 #ifndef G__OLDIMPLEMENTATION1329
@@ -2713,7 +2725,7 @@ int G__initary(char *new_name)
       char store_var_type = G__var_type;
       size=G__Lsizeof(G__newtype.name[buf.typenum]);
       G__var_type = store_var_type;
-      typedary=1; 
+      typedary=1;
     }
     else {
       size=G__sizeof(&buf);
@@ -2727,10 +2739,10 @@ int G__initary(char *new_name)
     size=G__LONGALLOC;
   }
   G__ASSERT(0<var->varlabel[ig15][0]&&0<size);
-  
-  
+
+
   /*******************************************************
-   * read initialization list 
+   * read initialization list
    *******************************************************/
   mparen=1;
   inc=0;
@@ -2780,7 +2792,7 @@ int G__initary(char *new_name)
             }
           }
           G__genericerror((char*)NULL);
-          while(mparen--&&';'!=c) c=G__fignorestream("};"); 
+          while(mparen--&&';'!=c) c=G__fignorestream("};");
           if(';'!=c) c=G__fignorestream(";");
           return(c);
         }
@@ -2841,7 +2853,7 @@ int G__initary(char *new_name)
       break;
     }
   }
-  
+
   /**********************************************************
    * initialize remaining object to 0
    **********************************************************/
@@ -2863,7 +2875,7 @@ int G__initary(char *new_name)
     G__letvalue(&buf,G__null);
   }
 #endif
-  
+
   if(0==G__asm_noverflow && 1==G__no_exec_compile) {
     G__no_exec = 1;
   }
@@ -2875,7 +2887,7 @@ int G__initary(char *new_name)
    * came to                        ^  or ^
    */
   return(c);
-  
+
 }
 
 /**************************************************************************
@@ -2974,18 +2986,18 @@ int G__initstruct(char *new_name)
   struct G__var_array *memvar;
   int memindex;
   /* int offset; */
-  
+
   /* G__ASSERT(0==G__store_struct_offset); */
 
 #ifdef G__ASM
   G__abortbytecode();
 #endif
-  
+
   /* separate variable name header */
   strcpy(name,new_name);
   p=strchr(name,'[');
   if(p) *p='\0';
-  
+
   /* handling static declaration */
   if(G__static_alloc==1) {
     if(G__prerun==0) {
@@ -3046,7 +3058,7 @@ int G__initstruct(char *new_name)
   /* get variable table entry */
   var = G__getvarentry(name,hash,&ig15,&G__global,G__p_local);
 #endif
-  
+
 
 #ifndef G__OLDIMPLEMENTATION871
   if(!var) {
@@ -3069,14 +3081,14 @@ int G__initstruct(char *new_name)
      * came to                        ^  or ^ */
     return(c);
   }
-  
+
   /*******************************************************
    * multidimensional array number of dimension
    *******************************************************/
   pindex=var->paran[ig15];
-  
+
   /*******************************************************
-   * check if  a[], a[][B][C] isauto sized array 
+   * check if  a[], a[][B][C] isauto sized array
    *******************************************************/
   if(INT_MAX==var->varlabel[ig15][1]) {
     /* set isauto flag and reset varlabel[ig15][1] */
@@ -3102,14 +3114,14 @@ int G__initstruct(char *new_name)
   }
 
   G__ASSERT(G__COMPILEDGLOBAL!=var->statictype[ig15]);
-  
+
   /* initialize buf */
   buf.type=toupper(var->type[ig15]);
   buf.tagnum=var->p_tagtable[ig15];
   buf.typenum=var->p_typetable[ig15];
   buf.ref=0;
   buf.obj.reftype.reftype=var->reftype[ig15];
-  
+
   /* getting size */
   if(islower(var->type[ig15])) {
     size=G__sizeof(&buf);
@@ -3119,12 +3131,12 @@ int G__initstruct(char *new_name)
     size=G__LONGALLOC;
   }
   G__ASSERT(0<var->varlabel[ig15][0]&&0<size);
-  
-  
+
+
   /* initialize data member pointer */
   memvar=G__initmemvar(var->p_tagtable[ig15],&memindex,&buf);
   /*******************************************************
-   * read initialization list 
+   * read initialization list
    *******************************************************/
   mparen=1;
   inc=0;
@@ -3174,9 +3186,9 @@ int G__initstruct(char *new_name)
         if(isupper(memvar->type[memindex])) {
           *(long *)(buf.obj.i)=(long)G__int(reg);
         }
-        else if('c'==memvar->type[memindex] && 
+        else if('c'==memvar->type[memindex] &&
                 0<memvar->varlabel[memindex][1] && '"'==expr[0]) {
-          if(memvar->varlabel[memindex][1]+1>(int)strlen((char*)reg.obj.i)) 
+          if(memvar->varlabel[memindex][1]+1>(int)strlen((char*)reg.obj.i))
             strcpy((char*)buf.obj.i,(char*)reg.obj.i);
           else
             strncpy((char*)buf.obj.i,(char*)reg.obj.i
@@ -3206,7 +3218,7 @@ int G__initstruct(char *new_name)
       break;
     }
   }
-  
+
   /**********************************************************
    * read upto next , or ;
    **********************************************************/

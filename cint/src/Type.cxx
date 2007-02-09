@@ -234,3 +234,8 @@ G__value Cint::G__TypeInfo::Value() const {
    return(buf);
 }
 ///////////////////////////////////////////////////////////////////////////
+int Cint::G__TypeInfo::Next()
+{
+   return 0;
+}
+
