@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: minuit2GausFit.C,v 1.1 2005/10/27 14:11:07 brun Exp $
+// @(#)root/minuit2:$Name:  $:$Id: minuit2GausFit.C,v 1.1 2006/12/11 21:56:34 brun Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -45,7 +45,8 @@ void testGausFit( std::string type = "Minuit2", int n = 1000) {
   TH1D * h4 = new TH1D(*h1); 
   c1->cd(1);
   cout << "\nDo Fit 1\n";
-  h1->Fit("gaus","Q"); 
+
+  h1->Fit("gaus",""); 
   h1->SetName("Chi2 Fit");
   h1->Draw();
   c1->cd(2);
