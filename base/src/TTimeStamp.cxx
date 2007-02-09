@@ -1,4 +1,4 @@
-// @(#)root/base:$Name: v5-12-00 $:$Id: TTimeStamp.cxx,v 1.21 2005/09/02 07:51:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.22 2006/10/12 08:38:39 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -402,7 +402,8 @@ Bool_t TTimeStamp::IsLeapYear(Bool_t inUTC, Int_t secOffset) const
 Int_t TTimeStamp::GetZoneOffset()
 {
    // Static method returning local (current) time zone offset from UTC.
-   // This is the difference in seconds between UTC and local standard time.
+   // This is the value in seconds one must add to the local time to arrive at
+   // Coordinated Universal Time, so it is negative east of the Prime Meridian.
 
    // ?? should tzset (_tzset) be called?
 #ifndef R__WIN32
@@ -415,7 +416,7 @@ Int_t TTimeStamp::GetZoneOffset()
 #else
    time_t tp = 0;
    time(&tp);
-   return localtime(&tp)->tm_gmtoff;
+   return -localtime(&tp)->tm_gmtoff;
 #endif
 #endif
 #else
