@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.2 2007/02/08 05:50:25 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.3 2007/02/08 22:56:05 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -1716,7 +1716,7 @@ Bool_t TDocParser::ProcessComment()
       TString lineAllOneChar(commentLine.Strip());
 
       Ssiz_t len = lineAllOneChar.Length();
-      if (len > 0) {
+      if (len > 2) {
          Char_t c = lineAllOneChar[len - 1];
          if (c == lineAllOneChar[len - 2] && c == lineAllOneChar[len - 3]) {
             TString lineAllOneCharStripped = lineAllOneChar.Strip(TString::kTrailing, c);

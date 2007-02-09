@@ -310,8 +310,13 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
             Info("HandleDirective_Macro", "Saving returned %s to file %s.",
                objRet->IsA()->GetName(), filename.Data());
 
-         objRet->SaveAs(filename);
+         if (fNeedGraphics)
+            // to get X11 to sync :-( gVirtualX->Update()/Sync() don't do it
+            gSystem->Sleep(100);
+
          gSystem->ProcessEvents();
+         objRet->SaveAs(filename);
+         gSystem->ProcessEvents(); // SaveAs triggers an event
          
          if (objRet != gPad)
             delete objRet;
