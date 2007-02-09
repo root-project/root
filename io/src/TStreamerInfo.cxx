@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.248 2007/02/07 08:52:41 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TStreamerInfo.cxx,v 1.249 2007/02/08 15:09:08 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -125,12 +125,12 @@ TStreamerInfo::TStreamerInfo(const TStreamerInfo& si) :
   fElements(si.fElements),
   fOldVersion(si.fOldVersion),
   fIsBuilt(si.fIsBuilt)
-{ 
+{
    //copy constructor
 }
 
 //______________________________________________________________________________
-TStreamerInfo& TStreamerInfo::operator=(const TStreamerInfo& si) 
+TStreamerInfo& TStreamerInfo::operator=(const TStreamerInfo& si)
 {
    //assignement operator
    if(this!=&si) {
@@ -152,7 +152,7 @@ TStreamerInfo& TStreamerInfo::operator=(const TStreamerInfo& si)
       fElements=si.fElements;
       fOldVersion=si.fOldVersion;
       fIsBuilt=si.fIsBuilt;
-   } 
+   }
    return *this;
 }
 
@@ -756,7 +756,7 @@ namespace {
       TVirtualCollectionProxy *newProxy = newClass->GetCollectionProxy();
 
       if (oldProxy->GetValueClass() == 0 && newProxy->GetValueClass() == 00
-          && (oldProxy->GetType() == kDouble_t || oldProxy->GetType() == kDouble32_t) 
+          && (oldProxy->GetType() == kDouble_t || oldProxy->GetType() == kDouble32_t)
           && (newProxy->GetType() == kDouble_t || newProxy->GetType() == kDouble32_t )) {
             // We have compatibles collections (they have the same content!
          return (TClassEdit::IsSTLCont(oldClass->GetName()) == TClassEdit::IsSTLCont(newClass->GetName()));
@@ -1450,7 +1450,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
    if (colon2) {
       fName = colon2+2;
    }
-   
+
    Int_t nch = strlen(dirname) + strlen(GetName()) + 4;
    char *filename = new char[nch];
    sprintf(filename,"%s/%s.h",dirname,GetName());
@@ -2178,7 +2178,7 @@ void TStreamerInfo::Destructor(void* obj, Bool_t dtorOnly)
          case TStreamerInfo::kOffsetP + TStreamerInfo::kLong:   DeleteBasicPointer(eaddr,ele,Long_t);  continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kLong64: DeleteBasicPointer(eaddr,ele,Long64_t);  continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kFloat:  DeleteBasicPointer(eaddr,ele,Float_t);  continue;
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble32: 
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble32:
          case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble: DeleteBasicPointer(eaddr,ele,Double_t);  continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kUChar:  DeleteBasicPointer(eaddr,ele,UChar_t);  continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kUShort: DeleteBasicPointer(eaddr,ele,UShort_t);  continue;
@@ -2186,8 +2186,8 @@ void TStreamerInfo::Destructor(void* obj, Bool_t dtorOnly)
          case TStreamerInfo::kOffsetP + TStreamerInfo::kULong:  DeleteBasicPointer(eaddr,ele,ULong_t);  continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kULong64:DeleteBasicPointer(eaddr,ele,ULong64_t);  continue;
       }
-   
-      
+
+
 
       TClass* cle = ele->GetClassPointer();
       if (!cle) continue;
@@ -2664,7 +2664,7 @@ TVirtualCollectionProxy*
 TStreamerInfo::GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info, TClass *cl )
 {
    // Generate proxy from static functions.
-   
+
    return TCollectionProxyFactory::GenExplicitProxy(info, cl);
 }
 

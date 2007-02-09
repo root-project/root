@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TArchiveFile.cxx,v 1.5 2006/10/05 14:53:48 rdm Exp $
+// @(#)root/io:$Name:  $:$Id: TArchiveFile.cxx,v 1.6 2006/10/10 06:43:22 brun Exp $
 // Author: Fons Rademakers   30/6/04
 
 /*************************************************************************

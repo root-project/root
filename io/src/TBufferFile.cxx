@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBufferFile.cxx,v 1.7 2007/02/07 15:41:06 rdm Exp $
+// @(#)root/io:$Name:  $:$Id: TBufferFile.cxx,v 1.8 2007/02/09 08:37:21 brun Exp $
 // Author: Rene Brun 17/01/2007
 
 /*************************************************************************

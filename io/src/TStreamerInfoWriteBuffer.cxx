@@ -1,3 +1,14 @@
+// @(#)root/io:$Name:  $:$Id: TStreamerInfoReadBuffer.cxx,v 1.45 2007/02/05 18:11:28 brun Exp $
+// Author: Rene Brun   12/10/2000
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "TBuffer.h"
 #include "TClass.h"
 #include "TClonesArray.h"

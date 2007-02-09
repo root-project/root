@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.13 2007/02/01 22:02:48 pcanal Exp $
+// @(#)root/io:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.14 2007/02/08 15:09:08 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -42,7 +42,7 @@ TGenCollectionStreamer::TGenCollectionStreamer(Info_t info, size_t iter_size)
    // Build a Streamer for a collection whose type is described by 'collectionClass'.
 }
 
-TGenCollectionStreamer::TGenCollectionStreamer(const ::ROOT::TCollectionProxyInfo &info, TClass *cl) 
+TGenCollectionStreamer::TGenCollectionStreamer(const ::ROOT::TCollectionProxyInfo &info, TClass *cl)
    : TGenCollectionProxy(info,cl)
 {
    // Build a Streamer for a collection whose type is described by 'collectionClass'.
@@ -61,7 +61,7 @@ TVirtualCollectionProxy* TGenCollectionStreamer::Generate() const
 }
 
 void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b)
-{ 
+{
    // Primitive input streamer.
    size_t len = fValDiff*nElements;
    char   buffer[8096];

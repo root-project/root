@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.h,v 1.3 2005/11/16 20:04:47 pcanal Exp $
+// @(#)root/io:$Name:  $:$Id: TEmulatedCollectionProxy.h,v 1.4 2006/02/09 20:39:16 pcanal Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -82,10 +82,10 @@ public:
 
    // Virtual destructor
    virtual void  Destructor(void* p, Bool_t dtorOnly = kFALSE);
-   
+
    // Virtual array destructor
    virtual void  DeleteArray(void* p, Bool_t dtorOnly = kFALSE);
-   
+
    // TVirtualCollectionProxy overload: Return the sizeof the collection object.
    virtual UInt_t Sizeof() const           {  return sizeof(Cont_t);     }
 

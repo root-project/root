@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedMapProxy.h,v 1.2 2005/02/25 17:06:34 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TEmulatedMapProxy.h,v 1.3 2005/11/16 20:04:47 pcanal Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************

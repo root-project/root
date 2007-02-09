@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxyFactory.cxx,v 1.1 2007/02/07 08:52:24 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TCollectionProxyFactory.cxx,v 1.2 2007/02/08 15:09:08 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************

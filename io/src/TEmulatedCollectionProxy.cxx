@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.25 2007/01/29 15:53:35 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.26 2007/02/02 17:05:04 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -237,7 +237,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
          }
          addr = ((char*)fEnv->start)+fValOffset+fValDiff*left;
          // DO NOT break; just continue
-         
+
          // General case for all values
       default:
          switch( fVal->fCase )  {
@@ -292,7 +292,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
    c->resize(left*fValDiff,0);
    void *oldstart = fEnv->start;
    fEnv->start = left>0 ? &(*c->begin()) : 0;
-   
+
    char* addr = ((char*)fEnv->start) + fValDiff*nCurr;
    switch ( fSTL_type )  {
       case TClassEdit::kMap:
@@ -327,7 +327,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
          }
          addr = ((char*)fEnv->start)+fValOffset+fValDiff*nCurr;
          // DO NOT break; just continue
-         
+
          // General case for all values
       default:
          switch(fVal->fCase)  {
@@ -540,7 +540,7 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char
    const char *dmTitle = "Emulation";
 
    TDataType *dt = gROOT->GetType(dmType);
-   if (dt && dt->GetType() > 0 ) {  // found a basic type 
+   if (dt && dt->GetType() > 0 ) {  // found a basic type
       Int_t dsize,dtype;
       dtype = dt->GetType();
       dsize = dt->Size();
@@ -601,7 +601,7 @@ static TStreamerInfo *R__GenerateTClassForPair(const string &fname, const string
    i->SetName(pname.c_str());
    i->SetClass(0);
    i->GetElements()->Clear();
-   TStreamerElement *fel = R__CreateEmulatedElement("first", fname.c_str(), 0);  
+   TStreamerElement *fel = R__CreateEmulatedElement("first", fname.c_str(), 0);
    i->GetElements()->Add( fel );
    Int_t size = 0;
    if (fel) {

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfoReadBuffer.cxx,v 1.44 2007/01/28 18:31:37 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TStreamerInfoReadBuffer.cxx,v 1.45 2007/02/05 18:11:28 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************

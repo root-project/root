@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxyFactory.h,v 1.1 2007/02/07 08:52:23 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TCollectionProxyFactory.h,v 1.2 2007/02/08 15:09:08 pcanal Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -97,8 +97,8 @@ public:
    static Proxy_t* GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info, TClass *cl );
 
    /// Generate proxy from template
-   template <class T> static Proxy_t* GenProxy(const T &arg, TClass *cl)  {      
-      return GenExplicitProxy( ::ROOT::TCollectionProxyInfo::Get(arg), cl ); 
+   template <class T> static Proxy_t* GenProxy(const T &arg, TClass *cl)  {
+      return GenExplicitProxy( ::ROOT::TCollectionProxyInfo::Get(arg), cl );
    }
 
    /// Generate streamer from static functions

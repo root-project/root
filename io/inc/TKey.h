@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.h,v 1.17 2006/02/01 18:54:51 pcanal Exp $
+// @(#)root/io:$Name:  $:$Id: TKey.h,v 1.18 2006/05/23 04:47:35 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -50,15 +50,15 @@ protected:
    Int_t       fLeft;        //Number of bytes left in current segment
    char       *fBuffer;      //Object buffer
    TBuffer    *fBufferRef;   //Pointer to the TBuffer object
-   UShort_t    fPidOffset;   //! Offset to be added to the pid index in this key/buffer.  This is actually saved in the high bits of fSeekPdir 
+   UShort_t    fPidOffset;   //! Offset to be added to the pid index in this key/buffer.  This is actually saved in the high bits of fSeekPdir
    TDirectory *fMotherDir;   //! pointer to mother directory
-   
+
    virtual Int_t    Read(const char *name) { return TObject::Read(name); }
    virtual void     Create(Int_t nbytes, TFile* f = 0);
            void     Build(TDirectory* motherDir, const char* classname, Long64_t filepos);
-   
+
    TKey(const TKey&);
-   TKey& operator=(const TKey&); 
+   TKey& operator=(const TKey&);
 
  public:
    TKey();
@@ -69,7 +69,7 @@ protected:
    TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory* motherDir = 0);
    TKey(Long64_t pointer, Int_t nbytes, TDirectory* motherDir = 0);
    virtual ~TKey();
-   
+
    virtual void        Browse(TBrowser *b);
    virtual void        Delete(Option_t *option="");
    virtual void        DeleteBuffer();
@@ -107,7 +107,7 @@ protected:
            void        SetMotherDir(TDirectory* dir) { fMotherDir = dir; }
    virtual Int_t       Sizeof() const;
    virtual Int_t       WriteFile(Int_t cycle=1, TFile* f = 0);
-   
+
    ClassDef(TKey,4); //Header description of a logical record on file.
 };
 

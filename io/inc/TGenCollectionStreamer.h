@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.h,v 1.4 2007/02/01 22:02:48 pcanal Exp $
+// @(#)root/io:$Name:  $:$Id: TGenCollectionStreamer.h,v 1.5 2007/02/08 15:09:08 pcanal Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************

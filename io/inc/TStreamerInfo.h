@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.67 2007/02/07 08:52:41 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TStreamerInfo.h,v 1.68 2007/02/08 15:09:08 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -88,15 +88,15 @@ private:
 
 protected:
    TStreamerInfo(const TStreamerInfo&);
-   TStreamerInfo& operator=(const TStreamerInfo&); 
+   TStreamerInfo& operator=(const TStreamerInfo&);
 
 public:
 
    //status bits
    enum { kCannotOptimize        = BIT(12),
           kIgnoreTObjectStreamer = BIT(13),  // eventhough BIT(13) is taken up by TObject (to preserverse forward compatibility)
-          kRecovered             = BIT(14), 
-          kNeedCheck             = BIT(15) 
+          kRecovered             = BIT(14),
+          kNeedCheck             = BIT(15)
    };
 
    enum EReadWrite {
@@ -210,7 +210,7 @@ public:
    Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
    Int_t               WriteBufferSTL   (TBuffer &b, TVirtualCollectionProxy *cont,   Int_t nc, Int_t first, Int_t eoffset);
    virtual void        Update(const TClass *oldClass, TClass *newClass);
-   
+
    virtual TVirtualCollectionProxy *GenEmulatedProxy(const char* class_name);
    virtual TClassStreamer *GenEmulatedClassStreamer(const char* class_name);
    virtual TVirtualCollectionProxy *GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info, TClass *cl );

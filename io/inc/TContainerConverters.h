@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TContainerConverters.h,v 1.1 2004/11/17 06:29:22 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TContainerConverters.h,v 1.2 2007/02/07 08:51:41 brun Exp $
 // Author: Philippe Canal 11/11/2004
 
 /*************************************************************************

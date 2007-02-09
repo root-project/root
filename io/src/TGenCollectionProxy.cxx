@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.30 2007/02/01 22:02:48 pcanal Exp $
+// @(#)root/io:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.31 2007/02/08 15:05:34 pcanal Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -270,7 +270,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type)
          // Because the TStreamerInfo of the contained classes
          // is stored only when tbere at least one element in
          // the collection, we might not even have an emulated
-         // class.  So go the long route to avoid errors 
+         // class.  So go the long route to avoid errors
          // issued by CINT ....
          G__value gval = G__string2type_body(inside.c_str(),2);
          G__TypeInfo ti(gval);
@@ -652,7 +652,7 @@ EDataType TGenCollectionProxy::GetType()
 {
    // If the content is a simple numerical value, return its type (see TDataType)
 
-   if ( !fValue ) Initialize(); 
+   if ( !fValue ) Initialize();
    return fValue->fKind;
 }
 
