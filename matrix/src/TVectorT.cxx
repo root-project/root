@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.23 2007/02/03 06:40:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.24 2007/02/06 15:47:59 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1833,14 +1833,35 @@ TVectorT<Element> &AddElemDiv(TVectorT<Element> &target,Element scalar,
    const Element * const ftp = tp+target.GetNrows();
 
    if (scalar == 1.0 ) {
-      while ( tp < ftp )
-         *tp++ += *sp1++ / *sp2++;
+      while ( tp < ftp ) {
+         if (*sp2 != 0.0)
+            *tp += *sp1 / *sp2;
+         else {
+            const Int_t irow = (sp2-source2.GetMatrixArray())/source2.GetNrows();
+            Error("AddElemDiv","source2 (%d) is zero",irow);
+         }
+         tp++; sp1++; sp2++;
+      }
    } else if (scalar == -1.0) {
-      while ( tp < ftp )
-         *tp++ -= *sp1++ / *sp2++;
+      while ( tp < ftp ) {
+         if (*sp2 != 0.0)
+            *tp -= *sp1 / *sp2;
+         else {
+            const Int_t irow = (sp2-source2.GetMatrixArray())/source2.GetNrows();
+            Error("AddElemDiv","source2 (%d) is zero",irow);
+         }
+         tp++; sp1++; sp2++;
+      }
    } else {
-      while ( tp < ftp )
-         *tp++ += scalar * *sp1++ / *sp2++;
+      while ( tp < ftp ) {
+         if (*sp2 != 0.0)
+            *tp += scalar * *sp1 / *sp2;
+         else {
+            const Int_t irow = (sp2-source2.GetMatrixArray())/source2.GetNrows();
+            Error("AddElemDiv","source2 (%d) is zero",irow);
+         }
+         tp++; sp1++; sp2++;
+      }
    }
 
    return target;
@@ -1869,17 +1890,38 @@ TVectorT<Element> &AddElemDiv(TVectorT<Element> &target,Element scalar,
 
    if (scalar == 1.0 ) {
       while ( tp < ftp ) {
-         if (*mp) *tp += *sp1 / *sp2;
+         if (*mp) {
+            if (*sp2 != 0.0)
+               *tp += *sp1 / *sp2;
+            else {
+               const Int_t irow = (sp2-source2.GetMatrixArray())/source2.GetNrows();
+               Error("AddElemDiv","source2 (%d) is zero",irow);
+            }
+         }
          mp++; tp++; sp1++; sp2++;
       }
    } else if (scalar == -1.0) {
       while ( tp < ftp ) {
-         if (*mp) *tp -= *sp1 / *sp2;
+         if (*mp) {
+            if (*sp2 != 0.0)
+               *tp -= *sp1 / *sp2;
+            else {
+               const Int_t irow = (sp2-source2.GetMatrixArray())/source2.GetNrows();
+               Error("AddElemDiv","source2 (%d) is zero",irow);
+            }
+         }
          mp++; tp++; sp1++; sp2++;
       }
    } else {
       while ( tp < ftp ) {
-         if (*mp) *tp += scalar * *sp1 / *sp2;
+         if (*mp) {
+            if (*sp2 != 0.0)
+               *tp += scalar * *sp1 / *sp2;
+            else {
+               const Int_t irow = (sp2-source2.GetMatrixArray())/source2.GetNrows();
+               Error("AddElemDiv","source2 (%d) is zero",irow);
+            }
+         }
          mp++; tp++; sp1++; sp2++;
       }
    }
@@ -1944,8 +1986,14 @@ TVectorT<Element> &ElementDiv(TVectorT<Element> &target,const TVectorT<Element> 
    const Element *       sp  = source.GetMatrixArray();
          Element *       tp  = target.GetMatrixArray();
    const Element * const ftp = tp+target.GetNrows();
-   while ( tp < ftp )
-      *tp++ /= *sp++;
+   while ( tp < ftp ) {
+      if (*sp  != 0.0)
+         *tp++ /= *sp++;
+      else {
+         const Int_t irow = (sp-source.GetMatrixArray())/source.GetNrows();
+         Error("ElementDiv","source (%d) is zero",irow);
+      }
+   }
 
    return target;
 }
@@ -1966,7 +2014,14 @@ TVectorT<Element> &ElementDiv(TVectorT<Element> &target,const TVectorT<Element> 
          Element *       tp  = target.GetMatrixArray();
    const Element * const ftp = tp+target.GetNrows();
    while ( tp < ftp ) {
-      if (*mp) *tp /= *sp;
+      if (*mp) {
+         if (*sp != 0.0)
+            *tp /= *sp;
+         else {
+            const Int_t irow = (sp-source.GetMatrixArray())/source.GetNrows();
+            Error("ElementDiv","source (%d) is zero",irow);
+         }
+      }
       mp++; tp++; sp++;
    }
 
