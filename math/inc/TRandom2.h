@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom2.h,v 1.4 2006/05/17 17:32:40 brun Exp $
+// @(#)root/math:$Name:  $:$Id: TRandom2.h,v 1.5 2006/05/18 08:04:25 brun Exp $
 // Author: Rene Brun   04/03/99
 
 /*************************************************************************
@@ -33,7 +33,7 @@ protected:
    UInt_t   fSeed2;  //Random number generator seed 2
 
 public:
-   TRandom2(UInt_t seed=1);     
+   TRandom2(UInt_t seed=1);
    virtual ~TRandom2();
    virtual  Double_t Rndm(Int_t i=0);
    virtual  void     RndmArray(Int_t n, Float_t *array);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.15 2007/01/12 09:27:32 brun Exp $
+// @(#)root/math:$Name:  $:$Id: TRandom3.cxx,v 1.16 2007/02/06 14:17:24 brun Exp $
 // Author: Peter Malzacher   31/08/99
 
 //////////////////////////////////////////////////////////////////////////
@@ -118,7 +118,7 @@ Double_t TRandom3::Rndm(Int_t)
 void TRandom3::RndmArray(Int_t n, Float_t *array)
 {
   // Return an array of n random numbers uniformly distributed in ]0,1]
-   
+
   for(Int_t i=0; i<n; i++) array[i]=(Float_t)Rndm();
 }
 
@@ -126,9 +126,9 @@ void TRandom3::RndmArray(Int_t n, Float_t *array)
 void TRandom3::RndmArray(Int_t n, Double_t *array)
 {
   // Return an array of n random numbers uniformly distributed in ]0,1]
-   
+
    Int_t k = 0;
-  
+
    UInt_t y;
 
    const Int_t  kM = 397;
@@ -178,10 +178,10 @@ void TRandom3::SetSeed(UInt_t seed)
 // if seed is 0 (default value) a TUUID is generated and used to fill
 // the first 8 integers of the seed array.
 // In this case the seed is guaranteed to be unique in space and time.
-// Use upgraded seeding procedure to fix a known problem when seeding with values 
+// Use upgraded seeding procedure to fix a known problem when seeding with values
 // with many zero in the bit pattern (like 2**28).
 // see http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/MT2002/emt19937ar.html
-   
+
    TRandom::SetSeed(seed);
    fCount624 = 624;
    Int_t i,j;
@@ -198,7 +198,7 @@ void TRandom3::SetSeed(UInt_t seed)
       }
       j = 8;
    }
-   // use multipliers from  Knuth's "Art of Computer Programming" Vol. 2, 3rd Ed. p.106 
+   // use multipliers from  Knuth's "Art of Computer Programming" Vol. 2, 3rd Ed. p.106
    for(i=j; i<624; i++) {
       fMt[i] = (1812433253 * ( fMt[i-1]  ^ ( fMt[i-1] >> 30)) + i);
    }
@@ -222,7 +222,7 @@ void TRandom3::Streamer(TBuffer &R__b)
       R__b >> fCount624;
       R__b.CheckByteCount(R__s, R__c, TRandom3::IsA());
       //====end of old versions
-      
+
    } else {
       R__b.WriteClassBuffer(TRandom3::Class(),this);
    }

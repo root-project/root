@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.120 2007/02/03 09:03:35 brun Exp $
+// @(#)root/math:$Name:  $:$Id: TMath.cxx,v 1.121 2007/02/08 09:07:50 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -1003,7 +1003,7 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
          ib++;
          if (ib > nb) {ok = kTRUE; break;}
       } else {
-         rdiff += sb - sa; 
+         rdiff += sb - sa;
          ia++;
          ib++;
          if (ia > na) {ok = kTRUE; break;}
@@ -3996,7 +3996,7 @@ Double_t TMath::BinomialI(Double_t p, Int_t n, Int_t k)
    if(k <= 0) return 1.0;
    if(k > n) return 0.0;
    if(k == n) return TMath::Power(p, n);
-   
+
    return BetaIncomplete(p, Double_t(k), Double_t(n-k+1));
 }
 

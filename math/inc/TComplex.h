@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TComplex.h,v 1.6 2005/12/24 17:06:27 rdm Exp $
+// @(#)root/math:$Name:  $:$Id: TComplex.h,v 1.7 2006/08/31 11:05:20 rdm Exp $
 // Author: Federico Carminati   22/04/2004
 
 /*************************************************************************

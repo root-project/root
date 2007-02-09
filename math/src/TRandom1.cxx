@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom1.cxx,v 1.10 2007/01/15 12:51:25 brun Exp $
+// @(#)root/math:$Name:  $:$Id: TRandom1.cxx,v 1.11 2007/01/19 18:55:30 brun Exp $
 // Author: Rene Brun from CLHEP & CERNLIB  04/05/2006
 
 //////////////////////////////////////////////////////////////////////////

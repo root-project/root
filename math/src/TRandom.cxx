@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.37 2007/01/28 18:29:34 brun Exp $
+// @(#)root/math:$Name:  $:$Id: TRandom.cxx,v 1.38 2007/01/29 10:06:49 brun Exp $
 // Author: Rene Brun, Lorenzo Moneta   15/12/95
 
 /*************************************************************************
@@ -14,22 +14,22 @@
 // TRandom
 //
 // basic Random number generator class (periodicity = 10**9).
-// Note that this is a very simple generator (linear congruential) 
-// which is known to have defects (the lower random bits are correlated) 
+// Note that this is a very simple generator (linear congruential)
+// which is known to have defects (the lower random bits are correlated)
 // and therefore should NOT be used in any statistical study.
-// One should use instead TRandom1, TRandom2 or TRandom3. 
-// TRandom3, is based on the "Mersenne Twister generator", and is the recommended one, 
-// since it has good random proprieties (period of about 10**6000 ) and it is fast. 
-// TRandom1, based on the RANLUX algorithm, has mathematically proven random proprieties 
-// and a period of about 10**171. It is however slower than the others. 
-// TRandom2, is based on the Tausworthe generator of L'Ecuyer, and it has the advantage 
-// of being fast and using only 3 words (of 32 bits) for the state. The period is 10**26.  
+// One should use instead TRandom1, TRandom2 or TRandom3.
+// TRandom3, is based on the "Mersenne Twister generator", and is the recommended one,
+// since it has good random proprieties (period of about 10**6000 ) and it is fast.
+// TRandom1, based on the RANLUX algorithm, has mathematically proven random proprieties
+// and a period of about 10**171. It is however slower than the others.
+// TRandom2, is based on the Tausworthe generator of L'Ecuyer, and it has the advantage
+// of being fast and using only 3 words (of 32 bits) for the state. The period is 10**26.
 //
 // The following table shows some timings (in nanoseconds/call)
 // for the random numbers obtained using an Intel Pentium 3.0 GHz running Linux
 // and using the gcc 3.2.3 compiler
 //
-//    TRandom           34   ns/call     (BAD Generator) 
+//    TRandom           34   ns/call     (BAD Generator)
 //    TRandom1          242  ns/call
 //    TRandom2          37   ns/call
 //    TRandom3          45   ns/call
@@ -245,18 +245,18 @@ Int_t TRandom::Binomial(Int_t ntot, Double_t prob)
 Double_t TRandom::BreitWigner(Double_t mean, Double_t gamma)
 {
 //  Return a number distributed following a BreitWigner function with mean and gamma
-  
+
    Double_t rval, displ;
    rval = 2*Rndm() - 1;
    displ = 0.5*gamma*TMath::Tan(rval*TMath::PiOver2());
 
    return (mean+displ);
 }
-   
+
 //______________________________________________________________________________
 void TRandom::Circle(Double_t &x, Double_t &y, Double_t r)
 {
-   // generates random vectors, uniformly distributed over a circle of given radius. 
+   // generates random vectors, uniformly distributed over a circle of given radius.
    //   Input : r = circle radius
    //   Output: x,y a random 2-d vector of length r
 
@@ -514,18 +514,18 @@ Int_t TRandom::Poisson(Double_t mean)
 // Generates a random integer N according to a Poisson law.
 // Prob(N) = exp(-mean)*mean^N/Factorial(N)
 //
-// Use a different procedure according to the mean value. 
+// Use a different procedure according to the mean value.
 // The algorithm is the same used by CLHEP
-// For lower value (mean < 25) use the rejection method based on 
-// the exponential 
-// For higher values use a rejection method comparing with a Lorentzian 
-// distribution, as suggested by several authors 
+// For lower value (mean < 25) use the rejection method based on
+// the exponential
+// For higher values use a rejection method comparing with a Lorentzian
+// distribution, as suggested by several authors
 // This routine since is returning 32 bits integer will not work for values larger than 2*10**9
 // One should then use the Trandom::PoissonD for such large values
 //
    Int_t n;
    if (mean <= 0) return 0;
-   if (mean < 25) { 
+   if (mean < 25) {
       Double_t expmean = TMath::Exp(-mean);
       Double_t pir = 1;
       n = -1;
@@ -545,7 +545,7 @@ Int_t TRandom::Poisson(Double_t mean)
       sq = TMath::Sqrt(2.0*mean);
       alxm = TMath::Log(mean);
       g = mean*alxm - TMath::LnGamma(mean + 1.0);
-    
+
       do {
          do {
             y = TMath::Tan(pi*Rndm());
@@ -559,8 +559,8 @@ Int_t TRandom::Poisson(Double_t mean)
       return static_cast<Int_t> (em);
 
    }
-   else { 
-      // use Gaussian approximation vor very large values 
+   else {
+      // use Gaussian approximation vor very large values
       n = Int_t(Gaus(0,1)*TMath::Sqrt(mean) + mean +0.5);
       return n;
    }
@@ -577,7 +577,7 @@ Double_t TRandom::PoissonD(Double_t mean)
 //
    Int_t n;
    if (mean <= 0) return 0;
-   if (mean < 25) { 
+   if (mean < 25) {
       Double_t expmean = TMath::Exp(-mean);
       Double_t pir = 1;
       n = -1;
@@ -597,7 +597,7 @@ Double_t TRandom::PoissonD(Double_t mean)
       sq = TMath::Sqrt(2.0*mean);
       alxm = TMath::Log(mean);
       g = mean*alxm - TMath::LnGamma(mean + 1.0);
-    
+
       do {
          do {
             y = TMath::Tan(pi*Rndm());
@@ -610,12 +610,12 @@ Double_t TRandom::PoissonD(Double_t mean)
 
       return em;
 
-   } else { 
-      // use Gaussian approximation vor very large values 
+   } else {
+      // use Gaussian approximation vor very large values
       return Gaus(0,1)*TMath::Sqrt(mean) + mean +0.5;
    }
 }
-   
+
 //______________________________________________________________________________
 void TRandom::Rannor(Float_t &a, Float_t &b)
 {
@@ -669,17 +669,17 @@ Double_t TRandom::Rndm(Int_t)
 //  Based on the BSD Unix (Rand) Linear congrential generator
 //  Produces uniformly-distributed floating points between 0 and 1.
 //  Identical sequence on all machines of >= 32 bits.
-//  Periodicity = 2**31 
+//  Periodicity = 2**31
 //  generates a number in ]0,1]
-//  Note that this is a generator which is known to have defects 
-//  (the lower random bits are correlated) and therefore should NOT be 
-//  used in any statistical study. 
+//  Note that this is a generator which is known to have defects
+//  (the lower random bits are correlated) and therefore should NOT be
+//  used in any statistical study.
 
 #ifdef OLD_TRANDOM_IMPL
    const Double_t kCONS = 4.6566128730774E-10;
    const Int_t kMASK24  = 2147483392;
 
-   fSeed *= 69069;      
+   fSeed *= 69069;
    UInt_t jy = (fSeed&kMASK24); // Set lower 8 bits to zero to assure exact float
    if (jy) return kCONS*jy;
    return Rndm();
@@ -709,7 +709,7 @@ void TRandom::RndmArray(Int_t n, Double_t *array)
 void TRandom::RndmArray(Int_t n, Float_t *array)
 {
    // Return an array of n random numbers uniformly distributed in ]0,1]
-   
+
    const Double_t kCONS = 4.6566128730774E-10; // (1/pow(2,31))
    const Int_t  kMASK24 = 0x7fffff00;
    UInt_t jy;
@@ -720,7 +720,7 @@ void TRandom::RndmArray(Int_t n, Float_t *array)
       if (fSeed) {array[i] = Float_t(kCONS*fSeed); i++;}
    }
 }
-   
+
 //______________________________________________________________________________
 void TRandom::SetSeed(UInt_t seed)
 {
@@ -738,24 +738,24 @@ void TRandom::SetSeed(UInt_t seed)
       fSeed = seed;
    }
 }
-   
+
 //______________________________________________________________________________
 void TRandom::Sphere(Double_t &x, Double_t &y, Double_t &z, Double_t r)
 {
-   // generates random vectors, uniformly distributed over the surface 
-   // of a sphere of given radius. 
+   // generates random vectors, uniformly distributed over the surface
+   // of a sphere of given radius.
    //   Input : r = sphere radius
    //   Output: x,y,z a random 3-d vector of length r
    // Method:  (based on algorithm suggested by Knuth and attributed to Robert E Knop)
-   //          which uses less random numbers than the CERNLIB RN23DIM algorithm  
+   //          which uses less random numbers than the CERNLIB RN23DIM algorithm
 
    Double_t a=0,b=0,r2=1;
    while (r2 > 0.25) {
       a  = Rndm() - 0.5;
       b  = Rndm() - 0.5;
       r2 =  a*a + b*b;
-   } 
-   z = r* ( -1. + 8.0 * r2 );  
+   }
+   z = r* ( -1. + 8.0 * r2 );
 
    Double_t scale = 8.0 * r * TMath::Sqrt(0.25 - r2);
    x = a*scale;
