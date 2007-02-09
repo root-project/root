@@ -1,4 +1,4 @@
-// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.18 2007/01/23 08:48:29 brun Exp $
+// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.19 2007/01/30 11:24:32 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -806,14 +806,14 @@ void* TBufferXML::XmlReadObject(void* obj, TClass** cl)
 }
 
 //______________________________________________________________________________
-void TBufferXML::IncrementLevel(TStreamerInfo* info)
+void TBufferXML::IncrementLevel(TVirtualStreamerInfo* info)
 {
    // Function is called from TStreamerInfo WriteBuffer and Readbuffer functions
    // and indent new level in xml structure.
    // This call indicates, that TStreamerInfo functions starts streaming
    // object data of correspondent class
 
-   WorkWithClass(info);
+   WorkWithClass((TStreamerInfo*)info);
 }
 
 //______________________________________________________________________________
@@ -876,7 +876,7 @@ void  TBufferXML::WorkWithClass(TStreamerInfo* sinfo, const TClass* cl)
 }
 
 //______________________________________________________________________________
-void TBufferXML::DecrementLevel(TStreamerInfo* info)
+void TBufferXML::DecrementLevel(TVirtualStreamerInfo* info)
 {
    // Function is called from TStreamerInfo WriteBuffer and Readbuffer functions
    // and decrease level in xml structure.

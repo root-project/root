@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TBufferXML.h,v 1.5 2006/01/25 16:00:11 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TBufferXML.h,v 1.6 2007/01/19 16:48:00 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 
 
 class TExMap;
+class TVirtualStreamerInfo;
 class TStreamerInfo;
 class TStreamerElement;
 class TObjArray;
@@ -71,9 +72,9 @@ public:
    virtual void*    ReadObjectAny(const TClass* clCast);
    virtual void     SkipObjectAny();
 
-   virtual void     IncrementLevel(TStreamerInfo*);
+   virtual void     IncrementLevel(TVirtualStreamerInfo*);
    virtual void     SetStreamerElementNumber(Int_t);
-   virtual void     DecrementLevel(TStreamerInfo*);
+   virtual void     DecrementLevel(TVirtualStreamerInfo*);
    
    virtual void     ClassBegin(const TClass*, Version_t = -1);
    virtual void     ClassEnd(const TClass*);

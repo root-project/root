@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.h,v 1.10 2007/01/19 18:25:12 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.h,v 1.11 2007/01/20 09:34:58 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 
@@ -28,7 +28,7 @@
 
 class TMap;
 class TExMap;
-class TStreamerInfo;
+class TVirtualStreamerInfo;
 class TStreamerElement;
 class TObjArray;
 class TMemberStreamer;
@@ -158,9 +158,9 @@ public:
    virtual void*    ReadObjectAny(const TClass* clCast);
    virtual void     SkipObjectAny();
 
-   virtual void     IncrementLevel(TStreamerInfo*);
+   virtual void     IncrementLevel(TVirtualStreamerInfo*);
    virtual void     SetStreamerElementNumber(Int_t);
-   virtual void     DecrementLevel(TStreamerInfo*);
+   virtual void     DecrementLevel(TVirtualStreamerInfo*);
    
    virtual void     ClassBegin(const TClass*, Version_t = -1);
    virtual void     ClassEnd(const TClass*);

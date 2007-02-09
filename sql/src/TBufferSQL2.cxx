@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.17 2007/01/20 09:34:58 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.18 2007/01/30 10:11:47 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -511,7 +511,7 @@ void* TBufferSQL2::SqlReadObjectDirect(void* obj, TClass** cl, Long64_t objid, T
 }
 
 //______________________________________________________________________________
-void  TBufferSQL2::IncrementLevel(TStreamerInfo* info)
+void  TBufferSQL2::IncrementLevel(TVirtualStreamerInfo* info)
 {
    // Function is called from TStreamerInfo WriteBuffer and Readbuffer functions
    // and indent new level in data structure.
@@ -520,7 +520,7 @@ void  TBufferSQL2::IncrementLevel(TStreamerInfo* info)
 
    if (info==0) return;
 
-   PushStack()->SetStreamerInfo(info);
+   PushStack()->SetStreamerInfo((TStreamerInfo*)info);
 
    if (gDebug>2)
       cout << " IncrementLevel " << info->GetName() << endl;
@@ -529,7 +529,7 @@ void  TBufferSQL2::IncrementLevel(TStreamerInfo* info)
 }
 
 //______________________________________________________________________________
-void  TBufferSQL2::DecrementLevel(TStreamerInfo* info)
+void  TBufferSQL2::DecrementLevel(TVirtualStreamerInfo* info)
 {
    // Function is called from TStreamerInfo WriteBuffer and Readbuffer functions
    // and decrease level in sql structure.
