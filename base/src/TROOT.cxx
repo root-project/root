@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.202 2007/02/09 08:24:06 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.203 2007/02/10 13:37:53 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -206,7 +206,7 @@ Int_t       gDebug;
 
 
 
-extern "C" void R__SetZipMode(int mode); //function defined in zip/inc/Bits.h
+//extern "C" void R__SetZipMode(int mode); //function defined in zip/inc/Bits.h
 
 ClassImp(TROOT)
 
@@ -1147,8 +1147,9 @@ void TROOT::InitSystem()
 
       gDebug = gEnv->GetValue("Root.Debug", 0);
 
-      Int_t zipmode = gEnv->GetValue("Root.ZipMode",1);
-      R__SetZipMode(zipmode);
+      //By default the zipmode is 1 (see Bits.h)
+      //Int_t zipmode = gEnv->GetValue("Root.ZipMode",1);
+      //R__SetZipMode(zipmode);
 
       const char *sdeb;
       if ((sdeb = gSystem->Getenv("ROOTDEBUG")))
