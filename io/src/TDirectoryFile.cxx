@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TDirectoryFile.cxx,v 1.8 2007/02/09 10:16:07 rdm Exp $
+// @(#)root/io:$Name:  $:$Id: TDirectoryFile.cxx,v 1.9 2007/02/09 18:07:05 brun Exp $
 // Author: Rene Brun   22/01/2007
 
 /*************************************************************************
@@ -65,7 +65,7 @@ TDirectoryFile::TDirectoryFile() : TDirectory()
 
 //______________________________________________________________________________
 TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *classname, TDirectory* initMotherDir)
-           : TDirectory(name, title,classname,initMotherDir)
+           : TDirectory()
 {
 //*-*-*-*-*-*-*-*-*-*-*-* Create a new DirectoryFile *-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                     ==========================
@@ -78,7 +78,10 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
 //  In this case, classname must be the name of the derived class.
 //
 //  Note that the directory name cannot contain slashes.
-//
+
+   fName = name;
+   fTitle = title;
+   
    if (initMotherDir==0) initMotherDir = gDirectory;
 
    if (strchr(name,'/')) {
@@ -422,7 +425,7 @@ TDirectory *TDirectoryFile::GetDirectory(const char *apath,
       }
 
       //Check return object is a directory
-      if (!obj->InheritsFrom(TDirectory::Class())) {
+      if (!obj->InheritsFrom(TDirectoryFile::Class())) {
          if (printError) Error(funcname,"Object %s is not a directory", path);
          delete [] path; return 0;
       }
@@ -447,7 +450,7 @@ TDirectory *TDirectoryFile::GetDirectory(const char *apath,
    }
 
    //Check return object is a directory
-   if (!obj->InheritsFrom(TDirectory::Class())) {
+   if (!obj->InheritsFrom(TDirectoryFile::Class())) {
       if (printError) Error(funcname,"Object %s is not a directory", subdir);
       delete [] path; return 0;
    }
@@ -1386,7 +1389,7 @@ void TDirectoryFile::SetWritable(Bool_t writable)
       TObject *idcur;
       TIter    next(fList);
       while ((idcur = next())) {
-         if (idcur->InheritsFrom(TDirectory::Class())) {
+         if (idcur->InheritsFrom(TDirectoryFile::Class())) {
             TDirectoryFile *dir = (TDirectoryFile*)idcur;
             dir->SetWritable(writable);
          }
