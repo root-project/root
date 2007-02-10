@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.20 2005/12/04 01:29:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.21 2007/02/10 12:21:05 brun Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -138,10 +138,18 @@ TUUID::TUUID()
       if (gSystem) {
          // try to get a unique seed per process
          UInt_t seed = (UInt_t) (long(gSystem->Now()) + gSystem->GetPid());
-         srand(seed);;
+#ifdef R__WIN32
+         srand(seed);
+#else
+         srandom(seed);
+#endif
       }
       GetCurrentTime(&time_last);
+#ifdef R__WIN32
       clockseq = 1+(UShort_t)(65536*rand()/(RAND_MAX+1.0));
+#else
+      clockseq = 1+(UShort_t)(65536*random()/(RAND_MAX+1.0));
+#endif
       firstTime = kFALSE;
    }
 
