@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.39 2007/02/08 19:06:40 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.40 2007/02/09 07:44:04 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -78,7 +78,6 @@
 #pragma link C++ class TExec+;
 #pragma link C++ class TFolder+;
 #pragma link C++ class TFree;
-#pragma link C++ class TKeyMapFile;
 #pragma link C++ class TMacro+;
 #pragma link C++ class TMD5+;
 #pragma link C++ class TMemberInspector;
