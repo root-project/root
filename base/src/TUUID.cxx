@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.19 2005/09/18 13:00:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.20 2005/12/04 01:29:43 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -108,7 +108,6 @@
 #include "TUUID.h"
 #include "TError.h"
 #include "TSystem.h"
-#include "TRandom.h"
 #include "TInetAddress.h"
 #include "TMD5.h"
 #include "Bytes.h"
@@ -134,16 +133,16 @@ TUUID::TUUID()
 
    static uuid_time_t time_last;
    static UShort_t    clockseq;
-   static TRandom    *rnd = 0;
-   if (!rnd) {
+   static Bool_t firstTime = kTRUE;
+   if (firstTime) {
       if (gSystem) {
          // try to get a unique seed per process
          UInt_t seed = (UInt_t) (long(gSystem->Now()) + gSystem->GetPid());
-         rnd = new TRandom(seed);
-      } else
-         rnd = new TRandom(0);
+         srand(seed);;
+      }
       GetCurrentTime(&time_last);
-      clockseq = (UShort_t) rnd->Integer(65536);
+      clockseq = 1+(UShort_t)(65536*rand()/(RAND_MAX+1.0));
+      firstTime = kFALSE;
    }
 
    uuid_time_t timestamp;
