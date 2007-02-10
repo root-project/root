@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TBufferFile.cxx,v 1.8 2007/02/09 08:37:21 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TBufferFile.cxx,v 1.9 2007/02/09 10:16:07 rdm Exp $
 // Author: Rene Brun 17/01/2007
 
 /*************************************************************************
@@ -2729,6 +2729,7 @@ UShort_t TBufferFile::WriteProcessID(TProcessID *pid)
    // If not, add it and return the index  number in the local file list.
 
    TFile *file = (TFile*)GetParent();
+   if (!file) return 0;
    return file->WriteProcessID(pid);
 }
 
