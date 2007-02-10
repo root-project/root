@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.319 2007/02/05 18:11:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.320 2007/02/06 15:30:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2032,7 +2032,6 @@ TFile* TTree::ChangeFile(TFile* file)
    }
    delete file;
    file = 0;
-   gFile = newfile;
    delete[] fname;
    fname = 0;
    return newfile;
@@ -2580,9 +2579,11 @@ void TTree::Delete(Option_t* option /* = "" */)
          for (Int_t i=0;i<nbaskets;i++) {
             Long64_t pos = branch->GetBasketSeek(i);
             if (!pos) continue;
-            gFile->GetRecordHeader(header,pos,16,nbytes,objlen,keylen);
+            TFile *branchFile = branch->GetFile();
+            if (!branchFile) continue;
+            branchFile->GetRecordHeader(header,pos,16,nbytes,objlen,keylen);
             if (nbytes <= 0) continue;
-            gFile->MakeFree(pos,pos+nbytes-1);
+            branchFile->MakeFree(pos,pos+nbytes-1);
             ntot += nbytes;
             nbask++;
          }
