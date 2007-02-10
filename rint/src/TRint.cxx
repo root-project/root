@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.65 2006/12/08 22:58:43 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.66 2007/01/23 09:59:39 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -36,7 +36,6 @@
 #include "TInterpreter.h"
 #include "TObjArray.h"
 #include "TObjString.h"
-#include "TMapFile.h"
 #include "TTabCom.h"
 #include "TError.h"
 #include "G__ci.h"
@@ -44,6 +43,8 @@
 #ifdef R__UNIX
 #include <signal.h>
 #endif
+
+R__EXTERN void *gMmallocDesc; //is used and set in TMapFile and TClass
 
 //______________________________________________________________________________
 static Int_t Key_Pressed(Int_t key)
