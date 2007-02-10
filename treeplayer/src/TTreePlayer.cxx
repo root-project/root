@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.235 2007/01/31 07:33:31 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.236 2007/02/08 07:45:23 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2660,7 +2660,7 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       //trying to set the first tree, because in the Draw function
       //the tree corresponding to firstentry has already been loaded,
       //so it is not set in the entry list
-      fSelectorUpdate = kTRUE;
+      fSelectorUpdate = selector;
       UpdateFormulaLeaves();
 
       for (entry=firstentry;entry<firstentry+nentries;entry++) {
@@ -2689,7 +2689,7 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       selector->SlaveTerminate();   //<==call user termination function
       selector->Terminate();        //<==call user termination function
    }
-   fSelectorUpdate = kFALSE;
+   fSelectorUpdate = 0;
    if (gMonitoringWriter)
       gMonitoringWriter->SendProcessingStatus("DONE");
 
@@ -3520,7 +3520,7 @@ void TTreePlayer::UpdateFormulaLeaves()
    if (fSelectorUpdate){
       //If the selector is writing into a TEntryList, the entry list's
       //sublists need to be changed according to the loaded tree
-      if (fSelector) {
+      if (fSelector==fSelectorUpdate) {
          //FIXME: should be more consistent with selector from file
          TObject *obj = fSelector->GetObject();
          if (obj){
@@ -3529,7 +3529,7 @@ void TTreePlayer::UpdateFormulaLeaves()
             }
          }
       }   
-      if (fSelectorFromFile) {
+      if (fSelectorFromFile==fSelectorUpdate) {
          TIter next(fSelectorFromFile->GetOutputList());
          TEntryList *elist=0;
          while ((elist=(TEntryList*)next())){

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.38 2006/11/05 23:59:39 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.39 2007/01/22 07:57:14 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -58,7 +58,7 @@ protected:
    TClass        *fSelectorClass;   //! Pointer to the actual class of the TSelectorFromFile
    TList         *fInput;           //! input list to the selector
    TList         *fFormulaList;     //! Pointer to a list of coordinated list TTreeFormula (used by Scan and Query)
-   Bool_t         fSelectorUpdate;  //! True when selector's entry list needs to be updated by the UpdateFormulaLeaves function
+   TSelector     *fSelectorUpdate;  //! Set to the selector address when it's entry list needs to be updated by the UpdateFormulaLeaves function
 
 protected:
    const   char  *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex);
