@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.236 2007/02/08 07:45:23 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.237 2007/02/10 07:36:56 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -294,7 +294,7 @@ TTreePlayer::TTreePlayer()
    fSelector         = new TSelectorDraw();
    fSelectorFromFile = 0;
    fSelectorClass    = 0;
-   fSelectorUpdate   = kFALSE;
+   fSelectorUpdate   = 0;
    fInput            = new TList();
    fInput->Add(new TNamed("varexp",""));
    fInput->Add(new TNamed("selection",""));
