@@ -19,7 +19,7 @@ void runcd() {
    gDirectory->cd("subdir");
    gDirectory->mkdir("lowerdir");
 
-   gROOT->cd();
+   gROOT->cd(); 
    printLoc();
    TDirectory::Cd("runcd.root:/toplevel");
    printLoc();
