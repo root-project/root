@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.30 2007/01/15 10:15:47 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.31 2007/02/06 11:48:48 rdm Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -28,7 +28,6 @@
 #include "TObjArray.h"
 #include "TError.h"
 #include "TROOT.h"
-#include "TRandom.h"
 
 ClassImp(TObjArray)
 
@@ -615,7 +614,7 @@ void TObjArray::Randomize(Int_t ntimes)
 
    for (Int_t i=0;i<ntimes;i++) {
       for (Int_t j=0;j<fLast;j++) {
-         Int_t k = (Int_t)gRandom->Uniform(0,fLast);
+         Int_t k = (Int_t)(fLast*rand()/(RAND_MAX+1.0));
          if (k == j) continue;
          TObject *obj = fCont[j];
          fCont[j] = fCont[k];
