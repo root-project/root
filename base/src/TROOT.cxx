@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.201 2007/01/29 15:53:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.202 2007/02/09 08:24:06 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -95,7 +95,6 @@
 #include "TApplication.h"
 #include "TCint.h"
 #include "TGuiFactory.h"
-#include "TRandom3.h"
 #include "TMessageHandler.h"
 #include "TFolder.h"
 #include "TQObject.h"
@@ -198,7 +197,6 @@ namespace ROOT {
 }
 
 TROOT      *gROOT = ROOT::GetROOT();     // The ROOT of EVERYTHING
-TRandom    *gRandom;                     // Global pointer to random generator
 
 // Global debug flag (set to > 0 to get debug output).
 // Can be set either via the interpreter (gDebug is exported to CINT),
@@ -374,7 +372,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fLineIsProcessing = 1;   // This prevents WIN32 "Windows" thread to pick ROOT objects with mouse
    gDirectory     = this;
    gPad           = 0;
-   gRandom        = new TRandom3;
 
    //set name of graphical cut class for the graphics editor
    //cannot call SetCutClassName at this point because the TClass of TCutG

@@ -1,4 +1,4 @@
-// @(#)root/math:$Name:  $:$Id: TRandom3.cxx,v 1.16 2007/02/06 14:17:24 brun Exp $
+// @(#)root/math:$Name:  $:$Id: TRandom3.cxx,v 1.17 2007/02/09 10:15:39 rdm Exp $
 // Author: Peter Malzacher   31/08/99
 
 //////////////////////////////////////////////////////////////////////////
@@ -46,6 +46,8 @@
 #include "TRandom3.h"
 #include "TClass.h"
 #include "TUUID.h"
+
+TRandom *gRandom = new TRandom3();
 
 ClassImp(TRandom3)
 
