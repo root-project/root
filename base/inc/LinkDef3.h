@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.27 2006/11/28 12:10:52 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.28 2007/02/08 18:16:01 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -249,6 +249,7 @@
 #pragma link C++ class std::pair<const double,char*>+;
 
 #pragma extra_include "Rtypes.h";
+#pragma link C++ class TParameter<Float_t>+;
 #pragma link C++ class TParameter<Double_t>+;
 #pragma link C++ class TParameter<Int_t>+;
 #pragma link C++ class TParameter<Long_t>+;
