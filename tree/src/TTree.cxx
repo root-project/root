@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.320 2007/02/06 15:30:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.321 2007/02/10 10:17:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -32,11 +32,6 @@
 //  Making several branches is particularly interesting in the data analysis
 //  phase, when one wants to histogram some attributes of an object (entry)
 //  without reading all the attributes.
-//Begin_Html
-/*
-<img src="gif/ttree_classtree.gif">
-*/
-//End_Html
 //
 //  ==> TTree *tree = new TTree(name, title)
 //     Creates a Tree with name and title.
