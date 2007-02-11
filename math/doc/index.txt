@@ -1,0 +1,12 @@
+This directory contains the low level MATH classes.
+BEGIN_HTML
+ See:
+<ul>
+<li><a href="http://root.cern.ch/root/HowtoStats.html">ROOT Statistic classes
+    </a></li>
+<li><a href="http://root.cern.ch/root/HowtoMathematica.html">How to call Mathematica functions from the interpreter
+    </a></li>
+<li><a href="http://root.cern.ch/root/HowtoCERNLIB.html">How to call CERNLIB routines from the interpreter
+    </a></li>
+</ul>
+END_HTML
