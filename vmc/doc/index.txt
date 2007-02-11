@@ -8,6 +8,8 @@ BEGIN_HTML
     </a></li>
 <li><a href="http://root.cern.ch/root/vmc/Geant4VMC.html">the Geant4 Virtual Monte Carlo
     </a></li>
+<li><a href="http://root.cern.ch/root/vmc/HowtoMC.html">How to use ROOT with Monte Carlo programs like Geant3, Geant4
+    </a></li>
 <li><a href="http://fca.web.cern.ch/fca/vmc.htm">Alice Virtual Monte Carlo
       </A></li>
 </ul>
