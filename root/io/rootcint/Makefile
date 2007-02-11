@@ -56,5 +56,10 @@ cltest_C.$(DllSuf): cltestClass.h cltestClass.cxx cltestLinkdef.h
 cltest.log: cltest_C.$(DllSuf)
 	$(CMDECHO) root.exe -b -q -l cltest.C+ > cltest.log 2>&1 
 
+ifeq ($(FAIL)$(PLATFORM),win32)
+cltest: 
+	$(WarnFailTest)
+else
 cltest: cltest.log
 	$(TestDiff)
+endif
