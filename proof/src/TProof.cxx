@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.186 2007/02/12 13:05:32 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.187 2007/02/12 13:15:29 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -20,8 +20,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <vector>
-
 #include <fcntl.h>
 #include <errno.h>
 #ifdef WIN32
@@ -36,8 +34,9 @@
 #ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
 #endif
-#include "Riostream.h"
 
+#include "Riostream.h"
+#include "Getline.h"
 #include "TBrowser.h"
 #include "TChain.h"
 #include "TCondor.h"
@@ -76,7 +75,7 @@
 #include "TThread.h"
 #include "TTree.h"
 #include "TUrl.h"
-#include "Getline.h"
+
 
 // to ne moved to RConfig.h once it works every where
 #if defined(__GNUC__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3))
