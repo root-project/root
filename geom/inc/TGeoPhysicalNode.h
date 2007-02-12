@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.h,v 1.9 2006/09/19 14:37:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.h,v 1.10 2007/02/12 10:22:13 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -108,6 +108,9 @@ public:
 class TGeoPNEntry : public TNamed
 {
 private:
+   enum EPNEntryFlags {
+      kPNEntryOwnMatrix = BIT(14)
+   };   
    TGeoPhysicalNode   *fNode;        // Physical node to which this applies
    const TGeoHMatrix  *fMatrix;      // Additional matrix
 
@@ -121,7 +124,7 @@ protected:
 public:
    TGeoPNEntry();
    TGeoPNEntry(const char *unique_name, const char *path);
-   virtual ~TGeoPNEntry() {;}
+   virtual ~TGeoPNEntry();
    
    inline const char   *GetPath() const {return GetTitle();}
    const TGeoHMatrix   *GetMatrix()  const {return fMatrix;}
