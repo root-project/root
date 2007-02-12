@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridResult.h,v 1.8 2005/12/09 18:36:52 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGridResult.h,v 1.9 2006/10/05 14:56:24 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -27,9 +27,7 @@
 #include "TList.h"
 #endif
 
-#ifndef ROOT_TEventList
-#include "TEventList.h"
-#endif
+class TEventList;
 
 
 class TGridResult : public TList {
