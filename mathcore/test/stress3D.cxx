@@ -5,6 +5,7 @@
 #include "TStopwatch.h"
 #include "TRandom3.h"
 
+#include <vector>
 
 class VectorTest { 
 
