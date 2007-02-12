@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: VariableMetricBuilder.cxx,v 1.8 2006/10/27 11:21:14 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: VariableMetricBuilder.cxx,v 1.9 2007/02/09 17:24:50 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -23,15 +23,13 @@
 #include "Minuit2/LaProd.h"
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnHesse.h"
-#include "Minuit2/MnPrint.h"
 
 //#define DEBUG 
-
-
-#ifdef DEBUG
-#define WARNINGMSG
-#include "Minuit2/MnPrint.h"
+#if defined(DEBUG) || defined(WARNINGMSG)
+#include "Minuit2/MnPrint.h" 
 #endif
+
+
 
 namespace ROOT {
 
@@ -249,12 +247,16 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       
       
       if(edm < 0.) {
-         std::cout<<"VariableMetricBuilder: matrix not pos.def."<<std::endl;
-         std::cout<<"edm < 0"<<std::endl;
+#ifdef WARNINGMSG
+         std::cout<<"VariableMetricBuilder: matrix not pos.def. : edm is < 0. Make pos def..."<<std::endl;
+#endif
          MnPosDef psdf;
          s0 = psdf(s0, prec);
          edm = Estimator().Estimate(g, s0.Error());
          if(edm < 0.) {
+#ifdef WARNINGMSG
+            std::cout<<"VariableMetricBuilder: matrix still not pos.def. : exit iterations "<<std::endl;
+#endif
             result.push_back(s0);
             return FunctionMinimum(seed, result, fcn.Up());
          }

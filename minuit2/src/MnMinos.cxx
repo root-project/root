@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnMinos.cxx,v 1.3 2006/07/03 22:06:42 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnMinos.cxx,v 1.4 2006/07/04 10:36:52 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -13,7 +13,11 @@
 #include "Minuit2/MnFunctionCross.h"
 #include "Minuit2/MnCross.h"
 #include "Minuit2/MinosError.h"
-#include "Minuit2/MnPrint.h"
+
+#if defined(DEBUG) || defined(WARNINGMSG)
+#include "Minuit2/MnPrint.h" 
+#endif
+
 
 namespace ROOT {
 

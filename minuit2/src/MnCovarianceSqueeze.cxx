@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnCovarianceSqueeze.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnCovarianceSqueeze.cxx,v 1.2 2006/07/03 15:48:06 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -11,7 +11,10 @@
 #include "Minuit2/MnUserCovariance.h"
 #include "Minuit2/MinimumError.h"
 
-#include "Minuit2/MnPrint.h"
+#if defined(DEBUG) || defined(WARNINGMSG)
+#include "Minuit2/MnPrint.h" 
+#endif
+
 
 namespace ROOT {
 
@@ -35,7 +38,9 @@ MnUserCovariance MnCovarianceSqueeze::operator()(const MnUserCovariance& cov, un
    int ifail = Invert(hess);
    
    if(ifail != 0) {
+#ifdef WARNINGMSG
       std::cout<<"MnUserCovariance inversion failed; return diagonal matrix;"<<std::endl;
+#endif
       MnUserCovariance result(cov.Nrow() - 1);
       for(unsigned int i = 0, j =0; i < cov.Nrow(); i++) {
          if(i == n) continue;
@@ -49,7 +54,9 @@ MnUserCovariance MnCovarianceSqueeze::operator()(const MnUserCovariance& cov, un
    
    ifail = Invert(squeezed);
    if(ifail != 0) {
+#ifdef WARNINGMSG
       std::cout<<"MnUserCovariance back-inversion failed; return diagonal matrix;"<<std::endl;
+#endif
       MnUserCovariance result(squeezed.Nrow());
       for(unsigned int i = 0; i < squeezed.Nrow(); i++) {
          result(i,i) = 1./squeezed(i,i);
@@ -68,7 +75,9 @@ MinimumError MnCovarianceSqueeze::operator()(const MinimumError& err, unsigned i
    MnAlgebraicSymMatrix squeezed = (*this)(hess, n);
    int ifail = Invert(squeezed);
    if(ifail != 0) {
+#ifdef WARNINGMSG
       std::cout<<"MnCovarianceSqueeze: MinimumError inversion fails; return diagonal matrix."<<std::endl;
+#endif
       MnAlgebraicSymMatrix tmp(squeezed.Nrow());
       for(unsigned int i = 0; i < squeezed.Nrow(); i++) {
          tmp(i,i) = 1./squeezed(i,i);

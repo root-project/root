@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnPrint.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnPrint.h,v 1.2 2006/04/12 16:30:30 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -16,6 +16,13 @@
 //#define WARNINGMSG
 
 #include <iostream>
+
+#ifdef DEBUG
+#ifndef WARNINGMSG
+#define WARNINGMSG
+#endif
+#endif
+
 
 namespace ROOT {
 

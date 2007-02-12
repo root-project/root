@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: Numerical2PGradientCalculator.cxx,v 1.3 2006/06/26 09:46:13 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: Numerical2PGradientCalculator.cxx,v 1.4 2006/07/04 10:36:52 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -15,8 +15,9 @@
 #include "Minuit2/MinimumParameters.h"
 #include "Minuit2/FunctionGradient.h"
 #include "Minuit2/MnStrategy.h"
-#ifdef DEBUG
-#include "Minuit2/MnPrint.h"
+
+#if defined(DEBUG) || defined(WARNINGMSG)
+#include "Minuit2/MnPrint.h" 
 #endif
 
 #include <math.h>

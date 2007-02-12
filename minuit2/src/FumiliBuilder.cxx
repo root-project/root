@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: FumiliBuilder.cxx,v 1.5 2006/07/04 10:36:52 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: FumiliBuilder.cxx,v 1.6 2007/02/09 17:24:50 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -29,10 +29,7 @@
 
 
 //#define DEBUG 1
-#ifdef DEBUG
-#ifndef WARNINGMSG
-#define WARNINGMSG
-#endif
+#if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h" 
 #endif
 
