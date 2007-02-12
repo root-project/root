@@ -1,4 +1,4 @@
-/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.18 2007/02/05 18:07:10 brun Exp $ */
+/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.19 2007/02/08 18:16:01 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -37,7 +37,7 @@
 #pragma link C++ class TVirtualIsAProxy;
 #pragma link C++ class TVirtualStreamerInfo-;
 #pragma link C++ class TIsAProxy;
-
+#pragma link C++ class TRealData+;
 #pragma link C++ class TStreamerBase-;
 #pragma link C++ class TStreamerBasicPointer-;
 #pragma link C++ class TStreamerLoop-;
