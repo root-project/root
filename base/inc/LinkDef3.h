@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.28 2007/02/08 18:16:01 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.29 2007/02/10 11:09:33 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -168,6 +168,8 @@
 #pragma link C++ class TVirtualMonitoringReader;
 #pragma link C++ class TObjectSpy;
 #pragma link C++ class TObjectRefSpy;
+#pragma link C++ class TUrl;
+#pragma link C++ class TInetAddress-;
 
 // Insure the creation of the TClass object for pairs that might be
 // inside the cintdlls.
