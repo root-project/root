@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.105 2007/02/05 23:12:28 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.106 2007/02/07 09:07:14 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -42,9 +42,6 @@
 #ifndef ROOT_TMD5
 #include "TMD5.h"
 #endif
-#ifndef ROOT_TSocket
-#include "TSocket.h"
-#endif
 #ifndef ROOT_TSysEvtHandler
 #include "TSysEvtHandler.h"
 #endif
@@ -63,29 +60,30 @@ namespace std { using ::map; }
 
 #define CANNOTUSE(x) Info(x,"Not manager: cannot use this method")
 
+class TChain;
+class TCondor;
+class TCondorSlave;
+class TDrawFeedback;
+class TDSet;
+class TEventList;
+class TList;
 class TMessage;
 class TMonitor;
-class TSignalHandler;
 class TPluginHandler;
-class TSlave;
-class TProofServ;
+class TProof;
 class TProofInputHandler;
 class TProofInterruptHandler;
 class TProofLockPath;
 class TProofPlayer;
 class TProofPlayerRemote;
 class TProofProgressDialog;
+class TProofServ;
 class TQueryResult;
-class TChain;
-class TCondor;
-class TEventList;
-class TTree;
-class TDrawFeedback;
-class TDSet;
+class TSignalHandler;
+class TSlave;
 class TSemaphore;
-class TCondorSlave;
-class TList;
-class TProof;
+class TSocket;
+class TTree;
 class TVirtualMutex;
 
 // protocol changes:
@@ -190,8 +188,7 @@ private:
    TSocket *fSocket;
    TProof  *fProof;
 public:
-   TProofInputHandler(TProof *p, TSocket *s)
-      : TFileHandler(s->GetDescriptor(), 1) { fProof = p; fSocket = s; }
+   TProofInputHandler(TProof *p, TSocket *s);
    Bool_t Notify();
    Bool_t ReadNotify() { return Notify(); }
 };

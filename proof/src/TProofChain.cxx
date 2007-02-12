@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofChain.cxx,v 1.4 2007/01/12 11:02:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofChain.cxx,v 1.5 2007/01/30 11:24:32 brun Exp $
 // Author: G. Ganis  Nov 2006
 
 /*************************************************************************
@@ -20,8 +20,9 @@
 
 #include "TProofChain.h"
 #include "TDSet.h"
-#include "TROOT.h"
+#include "TList.h"
 #include "TProof.h"
+#include "TROOT.h"
 
 
 ClassImp(TProofChain)

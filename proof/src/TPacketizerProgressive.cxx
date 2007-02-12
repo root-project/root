@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.6 2006/07/26 14:18:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.7 2006/08/10 23:31:08 rdm Exp $
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************
@@ -26,7 +26,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TError.h"
 #include "TMessage.h"
 #include "TObjString.h"
 #include "TParameter.h"
@@ -37,6 +36,14 @@
 #include "TSocket.h"
 #include "Riostream.h"
 #include "TClass.h"
+
+#include "TDSet.h"
+#include "TError.h"
+#include "TList.h"
+#include "TMap.h"
+#include "TSlave.h"
+#include "TTimer.h"
+#include "TUrl.h"
 
 //______________________________________________________________________________
 TPacketizerProgressive::TFileNode::TFileNode(const char *name)
@@ -50,6 +57,15 @@ TPacketizerProgressive::TFileNode::TFileNode(const char *name)
 }
 
 //______________________________________________________________________________
+TPacketizerProgressive::TFileNode::~TFileNode()
+{
+   // Destructor
+
+   SafeDelete(fFiles);
+   SafeDelete(fActFiles);
+}
+
+//______________________________________________________________________________
 void TPacketizerProgressive::TFileNode::Add(TDSetElement *elem)
 {
    // Add data set element
@@ -57,6 +73,17 @@ void TPacketizerProgressive::TFileNode::Add(TDSetElement *elem)
    TFileStat *f = new TFileStat(this,elem);
    fFiles->Add(f);
    if (fUnAllocFileNext == 0) fUnAllocFileNext = fFiles->First();
+}
+
+//______________________________________________________________________________
+void TPacketizerProgressive::TFileNode::DecSlaveCnt(const char *wrk)
+{
+   // Decrement worker counter
+
+   if (fNodeName != wrk)
+      fSlaveCnt--;
+
+   R__ASSERT(fSlaveCnt >= 0);
 }
 
 //______________________________________________________________________________
@@ -145,6 +172,23 @@ void TPacketizerProgressive::TFileNode::Reset()
    fMySlaveCnt = 0;
 }
 
+//______________________________________________________________________________
+Int_t TPacketizerProgressive::TFileNode::GetNumberOfActiveFiles() const
+{
+   // Number of active files
+
+   return (fActFiles ? fActFiles->GetSize() : 0);
+}
+
+//______________________________________________________________________________
+Bool_t TPacketizerProgressive::TFileNode::HasActiveFiles()
+{
+   // TRUE if at least one file is active
+
+   if (fActFiles && fActFiles->GetSize() > 0)
+      return kTRUE;
+   return kFALSE;
+}
 
 //______________________________________________________________________________
 TPacketizerProgressive::TFileStat::TFileStat(TFileNode *node, TDSetElement *elem)
@@ -161,6 +205,13 @@ TPacketizerProgressive::TSlaveStat::TSlaveStat(TSlave *slave)
    // Constructor
 }
 
+//______________________________________________________________________________
+const char *TPacketizerProgressive::TSlaveStat::GetName() const
+{
+   // Worker name
+
+   return (fSlave ? fSlave->GetName() : "");
+}
 
 ClassImp(TPacketizerProgressive)
 

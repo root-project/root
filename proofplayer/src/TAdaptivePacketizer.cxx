@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.3 2007/01/12 16:03:16 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TAdaptivePacketizer.cxx,v 1.4 2007/01/29 15:17:56 rdm Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 #include "Riostream.h"
 #include "TDSet.h"
 #include "TError.h"
+#include "TEventList.h"
 #include "TMap.h"
 #include "TMessage.h"
 #include "TMonitor.h"

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.15 2006/04/11 17:51:08 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.16 2006/07/01 11:39:37 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -24,15 +24,6 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
-#ifndef ROOT_TError
-#include "TError.h"
-#endif
-#ifndef ROOT_TList
-#include "TList.h"
-#endif
-
-#include <map>
-#include <list>
 
 class TDSet;
 class TDSetElement;
@@ -115,7 +106,7 @@ class TEventIterTree : public TEventIter {
 private:
    TString     fTreeName;    // name of the tree object to iterate over
    TTree      *fTree;        // tree we are iterating over
-   std::list<TTree*> fAcquiredTrees;   // a list of acquired trees.
+   TList      *fAcquiredTrees;   // a list of acquired trees.
 
    static TTreeFileCache *fgTreeFileCache;   // tree <-> file cache
 

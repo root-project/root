@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.162 2007/02/05 23:12:28 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.163 2007/02/06 00:08:40 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -55,6 +55,7 @@
 #include "TDSetProxy.h"
 #include "TEnv.h"
 #include "TError.h"
+#include "TEventList.h"
 #include "TException.h"
 #include "TFile.h"
 #include "TInterpreter.h"

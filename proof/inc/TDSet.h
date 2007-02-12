@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.3 2007/02/01 14:21:28 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.4 2007/02/09 11:51:09 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -46,27 +46,19 @@
 #include "TNamed.h"
 #endif
 
-#ifndef ROOT_TEventList
-#include "TEventList.h"
-#endif
-
-#ifndef ROOT_TList
-#include "TList.h"
-#endif
-
 #include <set>
 #include <list>
 
-class TList;
+class TChain;
+class TCut;
 class TDSet;
 class TEventList;
 class TFileInfo;
-class TCut;
-class TTree;
-class TChain;
+class TIter;
+class TList;
 class TProof;
-class TEventList;
 class TProofChain;
+class TTree;
 
 class TDSetElement : public TObject {
 public:

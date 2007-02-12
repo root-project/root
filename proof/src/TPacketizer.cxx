@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.43 2007/01/30 08:56:06 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.44 2007/01/31 08:31:31 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "Riostream.h"
 #include "TDSet.h"
 #include "TError.h"
+#include "TEventList.h"
 #include "TMap.h"
 #include "TMessage.h"
 #include "TMonitor.h"

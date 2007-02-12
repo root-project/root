@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofChain.h,v 1.2 2006/11/27 15:57:11 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofChain.h,v 1.3 2007/02/01 14:21:28 brun Exp $
 // Author: G. Ganis Nov 2006
 
 /*************************************************************************
@@ -25,13 +25,10 @@
 #ifndef ROOT_TChain
 #include "TChain.h"
 #endif
-#ifndef ROOT_TList
-#include "TList.h"
-#endif
 
 class TDSet;
 class TDrawFeedback;
-
+class TList;
 
 class TProofChain : public TChain {
 

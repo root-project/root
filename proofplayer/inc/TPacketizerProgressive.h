@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizerProgressive.h,v 1.2 2005/09/18 23:44:11 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizerProgressive.h,v 1.3 2006/04/19 08:22:25 rdm Exp $
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************
@@ -32,31 +32,15 @@
 #ifndef ROOT_TVirtualPacketizer
 #include "TVirtualPacketizer.h"
 #endif
-#ifndef ROOT_TList
-#include "TList.h"
-#endif
-#ifndef ROOT_TMap
-#include "TMap.h"
-#endif
-#ifndef ROOT_TUrl
-#include "TUrl.h"
-#endif
-#ifndef ROOT_TDSet
-#include "TDSet.h"
-#endif
-#ifndef ROOT_TSlave
-#include "TSlave.h"
-#endif
-#ifndef ROOT_TObjString
-#include "TObjString.h"
-#endif
-#ifndef ROOT_TTimer
-#include "TTimer.h"
-#endif
 
-
+class TDSet;
+class TDSetElement;
+class THashTable;
+class TList;
+class TMap;
 class TMessage;
-
+class TSlave;
+class TTimer;
 
 class TPacketizerProgressive : public TVirtualPacketizer {
 
@@ -74,20 +58,20 @@ public:
       Int_t          fSlaveCnt;        // number of external slaves processing files on this node
    public:
       TFileNode(const char *name);
-      ~TFileNode() { delete fFiles; delete fActFiles; }
+      ~TFileNode();
 
       void        IncMySlaveCnt() { fMySlaveCnt++; }
       void        IncSlaveCnt(const char *slave) { if (fNodeName != slave) fSlaveCnt++; }
-      void        DecSlaveCnt(const char *slave) { if (fNodeName != slave) fSlaveCnt--; R__ASSERT(fSlaveCnt >= 0); }
+      void        DecSlaveCnt(const char *slave);
       Int_t       GetSlaveCnt() const { return fMySlaveCnt + fSlaveCnt; }
-      Int_t       GetNumberOfActiveFiles() const { return fActFiles->GetSize(); }
+      Int_t       GetNumberOfActiveFiles() const;
       Bool_t      IsSortable() const { return kTRUE; }
       const char *GetName() const { return fNodeName; }
       void        Add(TDSetElement *elem);
       TFileStat  *GetNextUnAlloc();
       TFileStat  *GetNextActive();
       void        RemoveActive(TFileStat *file);
-      Bool_t      HasActiveFiles() { if (fActFiles->GetSize()) return kTRUE; return kFALSE; }
+      Bool_t      HasActiveFiles();
       Bool_t      HasUnAllocFiles() {if (fUnAllocFileNext) return kTRUE; return kFALSE; }
       Int_t       Compare(const TObject *other) const;
       void        Print(Option_t *opt ="") const;
@@ -124,7 +108,7 @@ public:
       TFileNode      *GetFileNode() const { return fFileNode; }
       TFileStat      *GetCurrentFile() const { return fCurFile; }
       TDSetElement   *GetCurrentElement() const { return fCurElem; }
-      const char     *GetName() const { return fSlave->GetName(); }
+      const char     *GetName() const;
       Long64_t        GetEntriesProcessed() const { return fProcessed; }
       void            SetFileNode(TFileNode *node) { fFileNode = node; }
       void            SetCurrentFile(TFileStat *file) { fCurFile = file; }

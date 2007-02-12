@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.3 2007/01/30 09:58:07 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.4 2007/02/09 11:51:09 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 #include "TClassTable.h"
 #include "TCut.h"
 #include "TError.h"
+#include "TEventList.h"
 #include "TFile.h"
 #include "TFileInfo.h"
 #include "TFriendElement.h"

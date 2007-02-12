@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.184 2007/02/06 01:07:24 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.185 2007/02/07 09:07:15 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -33,50 +33,50 @@
 #endif
 #include <vector>
 
+#include "Getline.h"
 #ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
 #endif
-#include "TProof.h"
-#include "TSortedList.h"
-#include "TSlave.h"
-#include "TMonitor.h"
-#include "TMessage.h"
-#include "TSystem.h"
-#include "TError.h"
-#include "TUrl.h"
-#include "TFTP.h"
-#include "TROOT.h"
-#include "TFile.h"
-#include "TH1.h"
-#include "TProofPlayer.h"
-#include "TQueryResult.h"
-#include "TDSet.h"
-#include "TEnv.h"
-#include "TPluginManager.h"
-#include "TCondor.h"
 #include "Riostream.h"
-#include "TTree.h"
-#include "TDrawFeedback.h"
-#include "TEventList.h"
-#include "TMonitor.h"
+
 #include "TBrowser.h"
 #include "TChain.h"
-#include "TProofServ.h"
-#include "TMap.h"
-#include "TThread.h"
-#include "TSemaphore.h"
-#include "TMutex.h"
-#include "TObjString.h"
-#include "TObjArray.h"
-#include "Getline.h"
-#include "TProofNodeInfo.h"
-#include "TProofResourcesStatic.h"
-#include "TInterpreter.h"
-#include "TParameter.h"
-#include "TRandom.h"
-#include "TRegexp.h"
+#include "TCondor.h"
+#include "TDSet.h"
+#include "TDrawFeedback.h"
+#include "TError.h"
+#include "TEnv.h"
+#include "TEventList.h"
+#include "TFile.h"
 #include "TFileInfo.h"
 #include "TFileMerger.h"
+#include "TFTP.h"
+#include "TH1.h"
+#include "TInterpreter.h"
+#include "TMap.h"
+#include "TMessage.h"
+#include "TMonitor.h"
+#include "TMutex.h"
+#include "TObjArray.h"
+#include "TObjString.h"
+#include "TParameter.h"
+#include "TProof.h"
+#include "TProofNodeInfo.h"
+#include "TProofPlayer.h"
+#include "TProofServ.h"
+#include "TPluginManager.h"
+#include "TQueryResult.h"
+#include "TRandom.h"
+#include "TRegexp.h"
+#include "TROOT.h"
+#include "TSemaphore.h"
+#include "TSlave.h"
+#include "TSocket.h"
+#include "TSortedList.h"
+#include "TSystem.h"
+#include "TThread.h"
+#include "TTree.h"
+#include "TUrl.h"
 
 // to ne moved to RConfig.h once it works every where
 #if defined(__GNUC__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3))
@@ -155,6 +155,14 @@ Bool_t TProofInterruptHandler::Notify()
 }
 
 //----- Input handler for messages from TProofServ -----------------------------
+//______________________________________________________________________________
+TProofInputHandler::TProofInputHandler(TProof *p, TSocket *s)
+                   : TFileHandler(s->GetDescriptor(),1),
+                     fSocket(s), fProof(p)
+{
+   // Constructor
+}
+
 //______________________________________________________________________________
 Bool_t TProofInputHandler::Notify()
 {

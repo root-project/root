@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.23 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.24 2006/12/03 23:34:03 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -30,14 +30,12 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
-#ifndef ROOT_TSocket
-#include "TSocket.h"
-#endif
 
 class TFileHandler;
 class TObjString;
 class TProof;
 class TSlave;
+class TSocket;
 
 // Special type for the hook to external function setting up authentication
 // related stuff for old versions. For backward compatibility.
