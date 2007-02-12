@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.32 2007/02/10 13:32:37 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.33 2007/02/10 15:33:52 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -617,7 +617,7 @@ void TObjArray::Randomize(Int_t ntimes)
 #ifdef R__WIN32
          Int_t k = (Int_t)(fLast*rand()/(RAND_MAX+1.0));
 #else
-         Int_t k = (Int_t)(fLast*rand()/(RAND_MAX+1.0));
+         Int_t k = (Int_t)(fLast*random()/(RAND_MAX+1.0));
 #endif
          if (k == j) continue;
          TObject *obj = fCont[j];
