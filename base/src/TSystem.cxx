@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.152 2006/12/06 10:20:06 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.153 2007/02/05 16:07:00 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -42,7 +42,6 @@
 #include "TObjString.h"
 #include "TError.h"
 #include "TPluginManager.h"
-#include "TNetFile.h"
 #include "TUrl.h"
 #include "TVirtualMutex.h"
 #include "compiledata.h"
@@ -647,20 +646,12 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
    TRegexp re("^root.*:");  // also roots, rootk, etc
    TString pname = path;
    if (pname.Index(re) != kNPOS) {
-      // rootd daemon ...
-      if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path)) &&
-          h->LoadPlugin() == 0)
+      // (x)rootd daemon ...
+      if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path))) {
+         if (h->LoadPlugin() == -1)
+            return 0;
          helper = (TSystem*) h->ExecPlugin(2, path, kFALSE);
-      else
-         helper = new TNetSystem(path, kFALSE);
-   } else if (!strcmp(url.GetProtocol(), "http") &&
-              pname.BeginsWith("http")) {
-      // http ...
-      if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path)) &&
-          h->LoadPlugin() == 0)
-         helper = (TSystem*) h->ExecPlugin(0);
-      else
-         ; // no default helper yet
+      }
    } else if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path))) {
       if (h->LoadPlugin() == -1)
          return 0;
