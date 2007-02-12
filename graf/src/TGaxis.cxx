@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.96 2006/12/07 10:08:35 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.97 2007/02/06 14:35:45 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -753,7 +753,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          tp0->tm_hour  = 0;
          tp0->tm_min   = 0;
          tp0->tm_sec   = 0;
-         tp0->tm_isdst =-1; // see comments above
+         tp0->tm_isdst = 1; // daylight saving time is on.
          rangeBase = (timetp-mktime(tp0)); // years
          rangeOffset = (Double_t) (rangeBase);
       }
