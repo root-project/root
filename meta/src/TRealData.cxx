@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRealData.cxx,v 1.6 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TRealData.cxx,v 1.7 2007/01/24 21:28:41 pcanal Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************
@@ -71,7 +71,7 @@ void TRealData::WriteRealData(void *, char *&)
 void TRealData::AdoptStreamer(TMemberStreamer *str)
 {
    //fDataMember->SetStreamer(str);
-   //delete fStreamer; 
+   //delete fStreamer;
    fStreamer = str;
 }
 
