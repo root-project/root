@@ -151,6 +151,8 @@ CASTORLIBDEP        = $(NETLIB)
 CASTORLIBEXTRA      = lib/libNet.lib
 PGSQLLIBDEP         = $(NETLIB)
 PGSQLLIBEXTRA       = lib/libNet.lib
+KRB5AUTHLIBDEP      = $(NETLIB)
+KRB5AUTHLIBEXTRA    = lib/libNet.lib
 
 else
 
@@ -288,5 +290,7 @@ CASTORLIBDEP        = $(NETLIB)
 CASTORLIBEXTRA      = -Llib -lNet
 PGSQLLIBDEP         = $(NETLIB)
 PGSQLLIBEXTRA       = -Llib -lNet
+KRB5AUTHLIBDEP      = $(NETLIB)
+KRB5AUTHLIBEXTRA    = -Llib -lNet
 
 endif
