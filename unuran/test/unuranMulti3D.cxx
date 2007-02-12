@@ -8,6 +8,7 @@
 #include "TH3.h"
 #include "TF3.h"
 #include "TCanvas.h"
+#include "TMath.h"
 
 #include "TRandom.h"
 #include "TSystem.h"

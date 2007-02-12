@@ -7,6 +7,7 @@
 
 #include "TRandom.h"
 #include "TSystem.h"
+#include "TRoot.h"
 //#include "TApplication.h"
 //#include "TRint.h"
 #include "TVirtualFitter.h"
