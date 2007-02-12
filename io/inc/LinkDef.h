@@ -1,4 +1,4 @@
-/* @(#)root/io:$Name:  $:$Id: LinkDef.h,v 1.3 2007/02/09 10:16:07 rdm Exp $ */
+/* @(#)root/io:$Name:  $:$Id: LinkDef.h,v 1.4 2007/02/10 15:46:16 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,32 +14,23 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-//was in base/inc/LinkDef1.h
 #pragma link C++ global gFile;
 
-//was in base/inc/LinkDef1.h
 #pragma link C++ class TBufferFile;
 #pragma link C++ class TDirectoryFile-;
 #pragma link C++ class TFile-;
 #pragma link C++ class TFileCacheRead+;
 #pragma link C++ class TFileCacheWrite+;
-
-//was in base/inc/LinkDef2.h
+#pragma link C++ class TFree;
 #pragma link C++ class TKey-;
 #pragma link C++ class TKeyMapFile;
 #pragma link C++ class TMapFile;
 #pragma link C++ class TMapRec;
-
-//was in base/inc/LinkDef3.h
 #pragma link C++ class TArchiveFile+;
 #pragma link C++ class TArchiveMember+;
 #pragma link C++ class TZIPFile+;
 #pragma link C++ class TZIPMember+;
-
-//was in meta/inc/LinkDef.h
 #pragma link C++ class TStreamerInfo-;
-
-//was in cont/inc/LinkDef.h
 #pragma link C++ class TCollectionProxyFactory-;
 #pragma link C++ class TEmulatedCollectionProxy-;
 #pragma link C++ class TEmulatedMapProxy-;
