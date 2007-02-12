@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.162 2007/02/05 18:07:40 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.163 2007/02/12 15:37:44 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -451,12 +451,14 @@ Plugin.TFile:        ^http:    TWebFile      Net     "TWebFile(const char*)"
 +Plugin.TFile:       ^mysql:   TSQLFile      SQL     "TSQLFile(const char*,Option_t*,const char*,const char*)"
 +Plugin.TFile:       ^oracle:  TSQLFile      SQL     "TSQLFile(const char*,Option_t*,const char*,const char*)"
 @hasxrd@+Plugin.TFile:       ^root:    TXNetFile     Netx    "TXNetFile(const char*,Option_t*,const char*,Int_t,Int_t,Bool_t)"
+@hasnotxrd@+Plugin.TFile:  ^root: TNetFile   Net     "TNetFile(const char*,Option_t*,const char*,Int_t,Int_t)"
 Plugin.TSystem:      ^rfio:    TRFIOSystem   RFIO    "TRFIOSystem()"
 +Plugin.TSystem:     ^castor:  TRFIOSystem   RFIO    "TRFIOSystem()"
 +Plugin.TSystem:     ^dcache:  TDCacheSystem DCache  "TDCacheSystem()"
 +Plugin.TSystem:     ^dcap:    TDCacheSystem DCache  "TDCacheSystem()"
 +Plugin.TSystem:     ^alien:   TAlienSystem  RAliEn  "TAlienSystem()"
 @hasxrd@+Plugin.TSystem:     ^root:    TXNetSystem   Netx    "TXNetSystem(const char *,Bool_t)"
+@hasnotxrd@+Plugin.TSystem:  ^root:    TNetSystem   Net    "TNetSystem(const char *,Bool_t)"
 Plugin.TArchiveFile: .+[.]zip$ TZIPFile      Core    "TZIPFile(const char*,const char*,TFile*)"
 Plugin.TSQLServer:   ^mysql:   TMySQLServer  RMySQL   "TMySQLServer(const char*,const char*,const char*)"
 +Plugin.TSQLServer:  ^pgsql:   TPgSQLServer  PgSQL   "TPgSQLServer(const char*,const char*,const char*)"

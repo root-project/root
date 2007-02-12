@@ -2752,9 +2752,11 @@ result $xrdcomm
 if test "x$enable_xrootd" = "xyes"; then
     buildxrd="yes"
     hasxrd=""
+    hasnotxrd="#"
 else
     buildxrd="no"
     hasxrd="#"
+    hasnotxrd=""
 fi
 check_explicit "$enable_xrootd" "$enable_xrootd_explicit" \
      "Explicitly required Xrootd dependencies not fulfilled"
@@ -4458,7 +4460,8 @@ sed -e "s|@libdir@|$libdir|"               \
     -e "s|@etcdir@|$etcdir|"               \
     -e "s|@ttffontdir@|$fontdir|"          \
     -e "s|@iconpath@|$iconpath|"           \
-    -e "s|@hasxrd@|$hasxrd|"             \
+    -e "s|@hasxrd@|$hasxrd|"               \
+    -e "s|@hasnotxrd@|$hasnotxrd|"         \
    < rootrc.tmp > $ROOTRCOUT
 rm -f rootrc.tmp
 result "done"
