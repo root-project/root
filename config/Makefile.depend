@@ -149,6 +149,8 @@ ORACLELIBDEP        = $(NETLIB)
 ORACLELIBEXTRA      = lib/libNet.lib
 CASTORLIBDEP        = $(NETLIB)
 CASTORLIBEXTRA      = lib/libNet.lib
+PGSQLLIBDEP         = $(NETLIB)
+PGSQLLIBEXTRA       = lib/libNet.lib
 
 else
 
@@ -284,5 +286,7 @@ ORACLELIBDEP        = $(NETLIB)
 ORACLELIBEXTRA      = -Llib -lNet
 CASTORLIBDEP        = $(NETLIB)
 CASTORLIBEXTRA      = -Llib -lNet
+PGSQLLIBDEP         = $(NETLIB)
+PGSQLLIBEXTRA       = -Llib -lNet
 
 endif
