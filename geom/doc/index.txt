@@ -1,0 +1,9 @@
+This directory contains all the geometry  classes.
+BEGIN_HTML
+ Several documents describing these classes are listed below:
+<ul>
+<li>The main histogram class is documented in class TGeoManager.</li>
+<li><a href="ftp://root.cern.ch/root/doc/chapter19.pdf">The Chapter about the TGeo classes in the Users Guide
+    </a></li>
+</ul>
+END_HTML
