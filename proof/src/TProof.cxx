@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.185 2007/02/07 09:07:15 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.186 2007/02/12 13:05:32 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -33,7 +33,6 @@
 #endif
 #include <vector>
 
-#include "Getline.h"
 #ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
 #endif
@@ -77,6 +76,7 @@
 #include "TThread.h"
 #include "TTree.h"
 #include "TUrl.h"
+#include "Getline.h"
 
 // to ne moved to RConfig.h once it works every where
 #if defined(__GNUC__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3))
