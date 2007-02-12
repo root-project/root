@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TFile.cxx,v 1.205 2007/02/09 10:16:07 rdm Exp $
+// @(#)root/io:$Name:  $:$Id: TFile.cxx,v 1.206 2007/02/09 18:07:05 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -84,7 +84,6 @@
 #include "TFree.h"
 #include "TInterpreter.h"
 #include "TKey.h"
-#include "TNetFile.h"
 #include "TPluginManager.h"
 #include "TProcessUUID.h"
 #include "TRegexp.h"
@@ -93,7 +92,6 @@
 #include "TSystem.h"
 #include "TTimeStamp.h"
 #include "TVirtualPerfStats.h"
-#include "TWebFile.h"
 #include "TArchiveFile.h"
 #include "TEnv.h"
 #include "TVirtualMonitoring.h"
@@ -2356,20 +2354,20 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
    } else if (type == kNet) {
 
       // Network files
-      if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
-           h->LoadPlugin() == 0)
+      if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
+         if (h->LoadPlugin() == -1)
+            return 0;
          f = (TFile*) h->ExecPlugin(5, name, option, ftitle, compress, netopt);
-      else
-         f = new TNetFile(name, option, ftitle, compress, netopt);
+      }
 
    } else if (type == kWeb) {
 
       // Web files
-      if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
-          h->LoadPlugin() == 0)
+      if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
+         if (h->LoadPlugin() == -1)
+            return 0;
          f = (TFile*) h->ExecPlugin(1, name);
-      else
-         f = new TWebFile(name);
+      }
 
    } else if (type == kFile) {
 
