@@ -11,7 +11,7 @@ IODIR        := $(MODDIR)
 IODIRS       := $(IODIR)/src
 IODIRI       := $(IODIR)/inc
 
-##### libIO #####
+##### libRIO #####
 IOL          := $(MODDIRI)/LinkDef.h
 IODS         := $(MODDIRS)/G__IO.cxx
 IODO         := $(IODS:.cxx=.o)
@@ -26,8 +26,8 @@ IODEP        := $(IOO:.o=.d) $(IODO:.o=.d)
 IOLIB        := $(LPATH)/libRIO.$(SOEXT)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(IOH))
-#ALLLIBS     += $(IOLIB)
+ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(IOH))
+#ALLLIBS      += $(IOLIB)
 
 # include all dependency files
 INCLUDEFILES += $(IODEP)
@@ -61,5 +61,6 @@ clean::         clean-io
 
 distclean-io:   clean-io
 		@rm -f $(IODEP) $(IODS) $(IODH)
+#		@rm -f $(IODEP) $(IODS) $(IODH) $(IOLIB)
 
 distclean::     distclean-io
