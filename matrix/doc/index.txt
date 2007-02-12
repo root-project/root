@@ -2,6 +2,8 @@ This directory contains the ROOT Matrix Linear Algebra package
 BEGIN_HTML
  Several documents describing the I/O classes are listed below:
 <ul>
+<li><a href="ftp://root.cern.ch/root/doc/chapter14.pdf">The Chapter about the Linear Algebra classes in the Users Guide
+    </a></li>
 <li><a href="http://root.cern.ch/root/HowtoCreateMatrix.html">How to Create and Fill a matrix
     </a></li>
 <li><a href="http://root.cern.ch/root/HowtoInvertMatrix.html">How to Invert a matrix

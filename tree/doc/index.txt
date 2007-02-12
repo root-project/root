@@ -3,6 +3,14 @@ BEGIN_HTML
  Several documents describing the TTree classes are listed below:
 <ul>
 <li>The TTree data structure is documented in class TTree.</li>
+<li><a href="ftp://root.cern.ch/root/doc/chapter12.pdf">The Chapter about Trees in the Users Guide
+    </a></li>
+<li><a href="ftp://root.cern.ch/root/doc/chapter22.pdf">The Chapter about Selectors in the Users Guide
+    </a></li>
+<li><a href="ftp://root.cern.ch/root/doc/chapter25.pdf">The Chapter about PROOF in the Users Guide
+    </a></li>
+<li><a href="ftp://root.cern.ch/root/doc/chapter11.pdf">The Chapter about IO in the Users Guide
+    </a></li>
 <li><a href="http://root.cern.ch/root/HowtoWriteTree.html">How to Create and Fill a Tree 
     </a></li>
 <li><a href="http://root.cern.ch/root/HowtoReadTree.html">How to Read a Tree 

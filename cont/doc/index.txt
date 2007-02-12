@@ -34,6 +34,7 @@ the ROOT system. In this tutorial the following features will be demonstrated:
 <li>How collection elements are hashed (<tt>Hash()</tt>) in hash tables
 </ul>
 <dl>
+<dt><a href=ftp://root.cern.ch/root/doc/chapter17.pdf>Chapter about Collections in the Users Guide</a>
 <dt><a href=http://root.cern.ch/root/Collection2.html>Understanding collections</a>
 <dt><a href=http://root.cern.ch/root/html/examples/tcollex.C.html>Using collections</a>
 </dl>
