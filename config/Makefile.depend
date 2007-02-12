@@ -45,18 +45,22 @@ MINUIT2LIBDEP       = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
 MINUIT2LIBEXTRA     = lib/libGraf.lib lib/libHist.lib lib/libMatrix.lib
 FUMILILIBDEP        = $(GRAFLIB) $(HISTLIB)
 FUMILILIBEXTRA      = lib/libGraf.lib lib/libHist.lib
+TREELIBDEP          = $(NETLIB)
+TREELIBEXTRA        = lib/libNet.lib
 TREEPLAYERLIBDEP    = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB)
 TREEPLAYERLIBEXTRA  = lib/libTree.lib lib/libGraf3d.lib lib/libGpad.lib \
                       lib/libGraf.lib lib/libHist.lib
 TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
 TREEVIEWERLIBEXTRA  = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib \
                       lib/libHist.lib lib/libGui.lib
-PROOFLIBDEP         = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB) \
-                      $(TREEPLAYERLIB) $(THREADLIB)
-PROOFLIBEXTRA       = lib/libTree.lib lib/libGraf3d.lib lib/libGraf.lib lib/libGpad.lib \
+PROOFLIBDEP         = $(NETLIB) $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
+                      $(GPADLIB) $(TREEPLAYERLIB) $(THREADLIB)
+PROOFLIBEXTRA       = lib/libNet.lib lib/libTree.lib lib/libGraf3d.lib \
+                      lib/libGraf.lib lib/libGpad.lib \
                       lib/libHist.lib lib/libTreePlayer.lib lib/libThread.lib
-PROOFXLIBDEP        = $(PROOFLIB) $(THREADLIB) $(XPDLIB)
-PROOFXLIBEXTRA      = lib/libProof.lib lib/libThread.lib lib/libXrdProofd.lib
+PROOFXLIBDEP        = $(NETLIB) $(PROOFLIB) $(THREADLIB) $(XPDLIB)
+PROOFXLIBEXTRA      = lib/libNet.lib lib/libProof.lib lib/libThread.lib \
+                      lib/libXrdProofd.lib
 PROOFGUILIBDEP      = $(PROOFLIB) $(GUILIB) $(GPADLIB) $(GRAFLIB) $(TREELIB)
 PROOFGUILIBEXTRA    = lib/libProof.lib lib/libGui.lib lib/libGpad.lib \
                       lib/libGraf.lib lib/libTree.lib
@@ -126,6 +130,8 @@ CINT7LIBDEP         = $(REFLEXLIB)
 CINT7LIBEXTRA       = lib/libReflex.lib
 CINTEXLIBDEP        = $(REFLEXLIB)
 CINTEXLIBEXTRA      = lib/libReflex.lib
+RAUTHLIBDEP         = $(NETLIB)
+RAUTHLIBEXTRA       = lib/libNet.lib
 KRB5AUTHLIBDEP      = $(ROOTAUTHLIB)
 KRB5AUTHLIBEXTRA    = lib/libRootAuth.lib
 QTGSILIBDEP         = $(GUILIB) $(GPADLIB)
@@ -133,6 +139,12 @@ QTGSILIBEXTRA       = lib/libGui.lib lib/libGpad.lib
 FITPANELLIBDEP      = $(GUILIB) $(GPADLIB) $(HISTLIB) $(GRAFLIB) $(TREELIB)
 FITPANELLIBEXTRA    = lib/libGui.lib lib/libGpad.lib lib/libHist.lib \
                       lib/libGraf.lib lib/libTree.lib
+SQLLIBDEP           = $(NETLIB)
+SQLLIBEXTRA         = lib/libNet.lib
+ODBCLIBDEP          = $(NETLIB)
+ODBCLIBEXTRA        = lib/libNet.lib
+NETXLIBDEP          = $(NETLIB)
+NETXLIBEXTRA        = lib/libNet.lib
 
 else
 
@@ -167,15 +179,18 @@ MINUIT2LIBDEP       = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
 MINUIT2LIBEXTRA     = -Llib -lGraf -lHist -lMatrix
 FUMILILIBDEP        = $(GRAFLIB) $(HISTLIB)
 FUMILILIBEXTRA      = -Llib -lGraf -lHist
+TREELIBDEP          = $(NETLIB)
+TREELIBEXTRA        = -Llib -lNet
 TREEPLAYERLIBDEP    = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB)
 TREEPLAYERLIBEXTRA  = -Llib -lTree -lGraf3d -lGraf -lHist -lGpad
 TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
 TREEVIEWERLIBEXTRA  = -Llib -lTree -lGpad -lGraf -lHist -lGui
-PROOFLIBDEP         = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB) \
-                      $(TREEPLAYERLIB) $(THREADLIB)
-PROOFLIBEXTRA       = -Llib -lTree -lGraf3d -lGraf -lGpad -lHist -lTreePlayer -lThread
-PROOFXLIBDEP        = $(PROOFLIB) $(THREADLIB) $(XPDLIB)
-PROOFXLIBEXTRA      = -Llib -lProof -lThread -lXrdProofd
+PROOFLIBDEP         = $(NETLIB) $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
+                      $(GPADLIB) $(TREEPLAYERLIB) $(THREADLIB)
+PROOFLIBEXTRA       = -Llib -lNet -lTree -lGraf3d -lGraf -lGpad -lHist \
+                      -lTreePlayer -lThread
+PROOFXLIBDEP        = $(NETLIB) $(PROOFLIB) $(THREADLIB) $(XPDLIB)
+PROOFXLIBEXTRA      = -Llib -lNet -lProof -lThread -lXrdProofd
 PROOFGUILIBDEP      = $(PROOFLIB) $(GUILIB) $(GPADLIB) $(GRAFLIB) $(TREELIB)
 PROOFGUILIBEXTRA    = -Llib -lProof -lGui -lGpad -lGraf -lTree
 PEACLIBDEP          = $(PROOFLIB) $(CLARENSLIB)
@@ -247,11 +262,19 @@ CINT7LIBDEP         = $(REFLEXLIB)
 CINT7LIBEXTRA       = -Llib -lReflex
 CINTEXLIBDEP        = $(REFLEXLIB)
 CINTEXLIBEXTRA      = -Llib -lReflex
+RAUTHLIBDEP         = $(NETLIB)
+RAUTHLIBEXTRA       = -Llib -lNet
 KRB5AUTHLIBDEP      = $(ROOTAUTHLIB)
 KRB5AUTHLIBEXTRA    = -Llib -lRootAuth
 QTGSILIBDEP         = $(GUILIB) $(GPADLIB)
 QTGSILIBEXTRA       = -Llib -lGui -lGpad
 FITPANELLIBDEP      = $(GUILIB) $(GPADLIB) $(HISTLIB) $(GRAFLIB) $(TREELIB)
 FITPANELLIBEXTRA    = -Llib -lGui -lGpad -lHist -lGraf -lTree
+SQLLIBDEP           = $(NETLIB)
+SQLLIBEXTRA         = -Llib -lNet
+ODBCLIBDEP          = $(NETLIB)
+ODBCLIBEXTRA        = -Llib -lNet
+NETXLIBDEP          = $(NETLIB)
+NETXLIBEXTRA        = -Llib -lNet
 
 endif
