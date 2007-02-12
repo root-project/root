@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.88 2007/02/08 09:07:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.89 2007/02/08 09:51:39 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -35,10 +35,7 @@
 #include "TObject.h"
 #include "TClass.h"
 #include "TGuiFactory.h"
-#include "TDataMember.h"
 #include "TMethod.h"
-#include "TDataType.h"
-#include "TRealData.h"
 #include "TROOT.h"
 #include "TError.h"
 #include "TObjectTable.h"
@@ -46,10 +43,8 @@
 #include "TInterpreter.h"
 #include "TMemberInspector.h"
 #include "TObjString.h"
-#include "TDatime.h"
 #include "TRefTable.h"
 #include "TProcessID.h"
-#include "TSystem.h"
 
 class TDumpMembers : public TMemberInspector {
    // Implemented in TClass.cxx
