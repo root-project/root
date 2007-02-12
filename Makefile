@@ -51,7 +51,7 @@ endif
 
 ##### Modules to build #####
 
-MODULES       = build cint metautils pcre utils base cont meta net io math \
+MODULES       = build cint metautils pcre utils base cont meta io net math \
                 zip clib matrix newdelete hist tree freetype graf gpad g3d gui \
                 minuit histpainter treeplayer treeviewer physics postscript \
                 rint html eg geom geompainter vmc fumili mlp ged quadp auth \
@@ -238,7 +238,8 @@ RPATH        := -L$(LPATH)
 CINTLIBS     := -lCint
 CINT7LIBS    := -lCint7 -lReflex
 NEWLIBS      := -lNew
-ROOTLIBS     := -lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lMatrix
+ROOTLIBS     := -lCore -lCint -lNet -lHist -lGraf -lGraf3d -lGpad \
+                -lTree -lMatrix
 ifneq ($(ROOTDICTTYPE),cint)
 ROOTLIBS     += -lCintex -lReflex
 endif
@@ -248,6 +249,7 @@ CINTLIBS     := $(LPATH)/libCint.lib
 CINT7LIBS    := $(LPATH)/libCint7.lib $(LPATH)/libReflex.lib
 NEWLIBS      := $(LPATH)/libNew.lib
 ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
+                $(LPATH)/libNet.lib \
                 $(LPATH)/libHist.lib $(LPATH)/libGraf.lib \
                 $(LPATH)/libGraf3d.lib $(LPATH)/libGpad.lib \
                 $(LPATH)/libTree.lib $(LPATH)/libMatrix.lib
@@ -258,7 +260,7 @@ RINTLIBS     := $(LPATH)/libRint.lib
 endif
 
 # ROOTLIBSDEP is intended to match the content of ROOTLIBS
-ROOTLIBSDEP   = $(ORDER_) $(CORELIB) $(CINTLIB) $(HISTLIB) \
+ROOTLIBSDEP   = $(ORDER_) $(CORELIB) $(CINTLIB) $(NETLIB) $(HISTLIB) \
                 $(GRAFLIB) $(G3DLIB) $(GPADLIB) $(TREELIB) $(MATRIXLIB)
 ifneq ($(ROOTDICTTYPE),cint)
 ROOTLIBSDEP  += $(CINTEXLIB) $(REFLEXLIB)
@@ -267,27 +269,30 @@ endif
 # Force linking of not referenced libraries
 ifeq ($(FORCELINK),yes)
 ifeq ($(PLATFORM),aix5)
-ROOTULIBS    := -Wl,-u,.G__cpp_setupG__Hist     \
+ROOTULIBS    := -Wl,-u,.G__cpp_setupG__Net      \
+                -Wl,-u,.G__cpp_setupG__Hist     \
                 -Wl,-u,.G__cpp_setupG__Graf1    \
                 -Wl,-u,.G__cpp_setupG__G3D      \
                 -Wl,-u,.G__cpp_setupG__GPad     \
                 -Wl,-u,.G__cpp_setupG__Tree     \
                 -Wl,-u,.G__cpp_setupG__Matrix
 else
-ROOTULIBS    := -Wl,-u,_G__cpp_setupG__Hist    \
-                -Wl,-u,_G__cpp_setupG__Graf1   \
-                -Wl,-u,_G__cpp_setupG__G3D     \
-                -Wl,-u,_G__cpp_setupG__GPad    \
-                -Wl,-u,_G__cpp_setupG__Tree    \
+ROOTULIBS    := -Wl,-u,_G__cpp_setupG__Net      \
+                -Wl,-u,_G__cpp_setupG__Hist     \
+                -Wl,-u,_G__cpp_setupG__Graf1    \
+                -Wl,-u,_G__cpp_setupG__G3D      \
+                -Wl,-u,_G__cpp_setupG__GPad     \
+                -Wl,-u,_G__cpp_setupG__Tree     \
                 -Wl,-u,_G__cpp_setupG__Matrix
 endif
 endif
 ifeq ($(PLATFORM),win32)
-ROOTULIBS    := -include:_G__cpp_setupG__Hist    \
-                -include:_G__cpp_setupG__Graf1   \
-                -include:_G__cpp_setupG__G3D     \
-                -include:_G__cpp_setupG__GPad    \
-                -include:_G__cpp_setupG__Tree    \
+ROOTULIBS    := -include:_G__cpp_setupG__Net    \
+                -include:_G__cpp_setupG__Hist   \
+                -include:_G__cpp_setupG__Graf1  \
+                -include:_G__cpp_setupG__G3D    \
+                -include:_G__cpp_setupG__GPad   \
+                -include:_G__cpp_setupG__Tree   \
                 -include:_G__cpp_setupG__Matrix
 endif
 
@@ -371,11 +376,11 @@ ROOTMAP       = etc/system.rootmap
 
 ##### libCore #####
 
-COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) $(NETL) \
+COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) \
                 $(SYSTEML) $(CLIBL) $(METAUTILSL) $(IOL) $(MATHL)
-COREO         = $(BASEO) $(CONTO) $(METAO) $(NETO) $(SYSTEMO) $(ZIPO) $(CLIBO) \
+COREO         = $(BASEO) $(CONTO) $(METAO) $(SYSTEMO) $(ZIPO) $(CLIBO) \
                 $(METAUTILSO) $(IOO) $(MATHO)
-COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(NETDO) $(SYSTEMDO) $(CLIBDO) \
+COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(SYSTEMDO) $(CLIBDO) \
                 $(METAUTILSDO) $(IODO) $(MATHDO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)

@@ -29,7 +29,7 @@ fi
 ### ROOT libraries ###
 
 newlib="-lNew"
-rootlibs="-lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lRint \
+rootlibs="-lCore -lCint -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lRint \
           -lPostscript -lMatrix -lPhysics $zliblib"
 rootglibs="-lGui"
 
@@ -38,7 +38,8 @@ if test "$dicttype" = "reflex" || test "$dicttype" = "gccxml"; then
 fi
 
 if test "$platform" = "win32"; then
-   rootulibs="-include:_G__cpp_setupG__Hist       \
+   rootulibs="-include:_G__cpp_setupG__Net        \
+              -include:_G__cpp_setupG__Hist       \
               -include:_G__cpp_setupG__Graf1      \
               -include:_G__cpp_setupG__G3D        \
               -include:_G__cpp_setupG__GPad       \
@@ -49,7 +50,8 @@ if test "$platform" = "win32"; then
               -include:_G__cpp_setupG__Physics"
    rootuglibs="-include:_G__cpp_setupG__Gui1"
 elif test "$platform" = "aix5"; then
-   rootulibs="-Wl,-u,.G__cpp_setupG__Hist       \
+   rootulibs="-Wl,-u,.G__cpp_setupG__Net        \
+              -Wl,-u,.G__cpp_setupG__Hist       \
               -Wl,-u,.G__cpp_setupG__Graf1      \
               -Wl,-u,.G__cpp_setupG__G3D        \
               -Wl,-u,.G__cpp_setupG__GPad       \
@@ -60,7 +62,8 @@ elif test "$platform" = "aix5"; then
               -Wl,-u,.G__cpp_setupG__Physics"
    rootuglibs="-Wl,-u,.G__cpp_setupG__Gui1"
 else
-   rootulibs="-Wl,-u,_G__cpp_setupG__Hist       \
+   rootulibs="-Wl,-u,_G__cpp_setupG__Net        \
+              -Wl,-u,_G__cpp_setupG__Hist       \
               -Wl,-u,_G__cpp_setupG__Graf1      \
               -Wl,-u,_G__cpp_setupG__G3D        \
               -Wl,-u,_G__cpp_setupG__GPad       \

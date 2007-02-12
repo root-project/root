@@ -4,6 +4,8 @@
 
 ifeq ($(PLATFORM),win32)
 
+#NETLIBDEP           = $(IOLIB)
+#NETLIBEXTRA         = lib/libRIO.lib
 GDMLLIBDEP          = $(GEOMLIB) $(XMLLIB) $(HISTLIB)
 GDMLLIBEXTRA        = lib/libGeom.lib lib/libXMLIO.lib lib/libHist.lib
 HISTLIBDEP          = $(MATRIXLIB)
@@ -134,6 +136,8 @@ FITPANELLIBEXTRA    = lib/libGui.lib lib/libGpad.lib lib/libHist.lib \
 
 else
 
+#NETLIBDEP           = $(IOLIB)
+#NETLIBEXTRA         = -Llib -lRIO
 GDMLLIBDEP          = $(GEOMLIB) $(XMLLIB) $(HISTLIB)
 GDMLLIBEXTRA        = -Llib -lGeom -lXMLIO -lHist
 HISTLIBDEP          = $(MATRIXLIB)
