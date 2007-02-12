@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.21 2006/09/19 14:37:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.22 2006/10/06 19:15:05 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -360,10 +360,11 @@ void TGeoPNEntry::SetPhysicalNode(TGeoPhysicalNode *node)
 }
    
 //_____________________________________________________________________________
-void TGeoPNEntry::SetMatrix(TGeoHMatrix *mat)
+void TGeoPNEntry::SetMatrix(const TGeoHMatrix *mat)
 {
 // Set the additional matrix for this node entry. The matrix has to be created 
 // with 'new' by user and becomes owned by TGeo.
    fMatrix = mat;
-   if (fMatrix) fMatrix->RegisterYourself();
+   TGeoHMatrix *ncmat = (TGeoHMatrix*)mat;
+   if (fMatrix && gGeoManager) ncmat->RegisterYourself();
 }
