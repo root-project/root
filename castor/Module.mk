@@ -39,7 +39,7 @@ include/%.h:    $(CASTORDIRI)/%.h
 $(CASTORLIB):   $(CASTORO) $(CASTORDO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRCastor.$(SOEXT) $@ \
-		   "$(CASTORO) $(CASTORDO)" "$(CASTORLIBDIR) $(CASTORCLILIB)"
+		   "$(CASTORO) $(CASTORDO)" "$(CASTORLIBEXTRA) $(CASTORLIBDIR) $(CASTORCLILIB)"
 
 $(CASTORDS):    $(CASTORH) $(CASTORL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."

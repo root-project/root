@@ -145,6 +145,10 @@ ODBCLIBDEP          = $(NETLIB)
 ODBCLIBEXTRA        = lib/libNet.lib
 NETXLIBDEP          = $(NETLIB)
 NETXLIBEXTRA        = lib/libNet.lib
+ORACLELIBDEP        = $(NETLIB)
+ORACLELIBEXTRA      = lib/libNet.lib
+CASTORLIBDEP        = $(NETLIB)
+CASTORLIBEXTRA      = lib/libNet.lib
 
 else
 
@@ -276,5 +280,9 @@ ODBCLIBDEP          = $(NETLIB)
 ODBCLIBEXTRA        = -Llib -lNet
 NETXLIBDEP          = $(NETLIB)
 NETXLIBEXTRA        = -Llib -lNet
+ORACLELIBDEP        = $(NETLIB)
+ORACLELIBEXTRA      = -Llib -lNet
+CASTORLIBDEP        = $(NETLIB)
+CASTORLIBEXTRA      = -Llib -lNet
 
 endif
