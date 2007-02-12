@@ -1,0 +1,18 @@
+This directory contains the GUI Builder classes.
+BEGIN_HTML
+ Several documents describing the I/O classes are listed below:
+<ul>
+<li><a href="ftp://root.cern.ch/root/doc/chapter26.pdf">The Chapter about Writing a Graphical User Interface in the Users Guide
+    </a></li>
+<li><a href="ftp://root.cern.ch/root/doc/chapter9.pdf">The Chapter about Graphics and Graphical User Interface in the Users Guide
+    </a></li>
+<li><a href="http://root.cern.ch/root/HowtoGUI.html">How to use the GUI classes
+    </a></li>
+<li><a href="http://root.cern.ch/root/HowtoSignalslot.html">How to use the Signal/Slot communication mechanism
+      </A></li>
+<li><a href="http://root.cern.ch/root/HowtoGuiBuilder.html">How to use the GUI Builder
+      </A></li>
+<li><a href="http://root.cern.ch/root/HowtoStyle.html">How to Create or Modify a style
+      </A></li>
+</ul>
+END_HTML
