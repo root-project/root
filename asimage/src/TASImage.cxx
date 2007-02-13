@@ -571,7 +571,6 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
       s += 4; // skip "gif+"
       int delay = atoi(s);
 
-
       if (delay < 0) {
          delay = 0;
       }
@@ -913,7 +912,13 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    TCanvas *canvas = pad->GetCanvas();
    Int_t wid = (pad == canvas) ? canvas->GetCanvasID() : pad->GetPixmapID();
    gVirtualX->SelectWindow(wid);
+
+   // syncronization
    gVirtualX->Update(1);
+   gSystem->ProcessEvents();
+   gSystem->Sleep(10);
+   gSystem->ProcessEvents();
+
    Window_t wd = (Window_t)gVirtualX->GetCurrentWindow();
    if (!wd) return;
 
@@ -5942,6 +5947,12 @@ void TASImage::FromWindow(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
 
    x = x < 0 ? 0 : x;
    y = y < 0 ? 0 : y;
+
+   // syncronization
+   gVirtualX->Update(1);
+   gSystem->ProcessEvents();
+   gSystem->Sleep(10);
+   gSystem->ProcessEvents();
 
    if (!w || !h) {
       gVirtualX->GetWindowSize(wid, xy, xy, w, h);
