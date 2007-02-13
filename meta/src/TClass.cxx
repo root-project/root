@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.221 2007/02/08 15:09:08 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.222 2007/02/09 14:16:37 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -86,7 +86,7 @@ TClass::ENewType TClass::fgCallingNew = kRealNew;
 
 static std::multimap<void*, Version_t> gObjectVersionRepository;
 
-static void RegisterAddressInRepository(const char * /*where*/, void *location, const TClass *what) 
+static void RegisterAddressInRepository(const char * /*where*/, void *location, const TClass *what)
 {
    // Register the object for special handling in the destructor.
 
@@ -113,7 +113,7 @@ static void RegisterAddressInRepository(const char * /*where*/, void *location, 
 }
 
 static void UnregisterAddressInRepository(const char * /*where*/, void *location, const TClass *what)
-{ 
+{
    std::multimap<void*, Version_t>::iterator cur = gObjectVersionRepository.find(location);
    for (; cur != gObjectVersionRepository.end();) {
       std::multimap<void*, Version_t>::iterator tmp = cur++;
@@ -1250,7 +1250,7 @@ void TClass::BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl)
       Int_t etype    = element->GetType();
       Long_t eoffset = element->GetOffset();
       TClass *cle    = element->GetClassPointer();
-      if (etype == TVirtualStreamerInfo::kTObject || 
+      if (etype == TVirtualStreamerInfo::kTObject ||
           etype == TVirtualStreamerInfo::kTNamed ||
           etype == TVirtualStreamerInfo::kBase) {
          //base class
@@ -1753,7 +1753,10 @@ TVirtualIsAProxy* TClass::GetIsAProxy() const
 //______________________________________________________________________________
 TClass *TClass::GetClass(const char *name, Bool_t load)
 {
-   // static: Return pointer to class with name.
+   // Static method returning pointer to TClass of the specified class name.
+   // If load is true an attempt is made to obtain the class by loading
+   // the appropriate shared library (directed by the rootmap file).
+   // Returns 0 in case class is not found.
 
    if (!name || !strlen(name)) return 0;
    if (!gROOT->GetListOfClasses())    return 0;
@@ -3487,7 +3490,7 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
 void TClass::SetCurrentStreamerInfo(TVirtualStreamerInfo *info)
 {
    // Set pointer to current TVirtualStreamerInfo
-   
+
    fCurrentInfo = info;
 }
 
