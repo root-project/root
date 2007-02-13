@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.166 2007/02/13 08:37:12 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.167 2007/02/13 14:27:43 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -515,7 +515,6 @@ Plugin.TVirtualX:    x11       TGX11         GX11         "TGX11(const char*,con
 +Plugin.TVirtualX:   qt        TGQt          GQt          "TGQt(const char*,const char*)"
 Plugin.TVirtualStreamerInfo: * TStreamerInfo Core         "TStreamerInfo()"
 Plugin.TGuiFactory:  root      TRootGuiFactory Gui        "TRootGuiFactory()"
-+Plugin.TGuiFactory: win32     TWin32GuiFactory Win32     "TWin32GuiFactory()"
 +Plugin.TGuiFactory: qt        TQtRootGuiFactory QtRoot   "TQtRootGuiFactory()"
 Plugin.TGPasswdDialog: *       TGPasswdDialog Gui         "TGPasswdDialog(const char*,char*,Int_t,UInt_t,UInt_t)"
 Plugin.TProof:  ^condor:       TProofCondor Proof         "TProofCondor(const char*,const char*,const char*,Int_t)"
