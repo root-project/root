@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.78 2006/11/16 17:17:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.79 2007/02/13 14:23:15 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -44,9 +44,11 @@
 #include "TClassTable.h"
 #include "TSystemDirectory.h"
 #include "TPluginManager.h"
+#include "TClassTable.h"
 
 
 TApplication *gApplication = 0;
+Bool_t TApplication::fgGraphInit = kFALSE;
 
 //______________________________________________________________________________
 class TIdleTimer : public TTimer {
@@ -146,24 +148,60 @@ TApplication::TApplication(const char *appClassName,
    fSigHandler    = 0;
    fIsRunning     = kFALSE;
    fReturnFromRun = kFALSE;
-   fAppImp        = 0;
+   fAppImp        = gGuiFactory->CreateApplicationImp(appClassName, argc, argv);
 
    // Enable autoloading
    gInterpreter->EnableAutoLoading();
 
+   // Initialize the graphics environment
+   if (gClassTable->GetDict("TPad") && !fgGraphInit)
+      InitializeGraphics();
+
+   // Make sure all registered dictionaries have been initialized
+   // and that all types have been loaded
+   gInterpreter->InitializeDictionaries();
+   gInterpreter->UpdateListOfTypes();
+
+   // Save current interpreter context
+   gInterpreter->SaveContext();
+   gInterpreter->SaveGlobalsContext();
+
+   // to allow user to interact with TCanvas's under WIN32
+   gROOT->SetLineHasBeenProcessed();
+}
+
+//______________________________________________________________________________
+TApplication::~TApplication()
+{
+   // TApplication dtor.
+
+   for (int i = 0; i < fArgc; i++)
+      if (fArgv[i]) delete [] fArgv[i];
+   delete [] fArgv;
+   SafeDelete(fAppImp);
+}
+
+//______________________________________________________________________________
+void TApplication::InitializeGraphics()
+{
+   // Initialize the graphics environment.
+
+   // Load the graphics related libraries
    LoadGraphicsLibs();
 
    // Create WM dependent application environment
-   fAppImp = gGuiFactory->CreateApplicationImp(appClassName, argc, argv);
+   if (fAppImp)
+      delete fAppImp;
+   fAppImp = gGuiFactory->CreateApplicationImp(gROOT->GetName(), &fArgc, fArgv);
    if (!fAppImp) {
       MakeBatch();
-      fAppImp = gGuiFactory->CreateApplicationImp(appClassName, argc, argv);
+      fAppImp = gGuiFactory->CreateApplicationImp(gROOT->GetName(), &fArgc, fArgv);
    }
 
    // Try to load TrueType font renderer. Only try to load if not in batch
    // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
    // if libttf or libGX11TTF are not found in $ROOTSYS/lib or $ROOTSYS/ttf/lib.
-   if (strcmp(appClassName, "proofserv")) {
+   if (strcmp(gROOT->GetName(), "proofserv")) {
       const char *ttpath = gEnv->GetValue("Root.TTFontPath",
 #ifdef TTFFONTDIR
                                           TTFFONTDIR);
@@ -205,29 +243,7 @@ TApplication::TApplication(const char *appClassName,
          if (h > 0 && h < 1000) gStyle->SetScreenFactor(0.0011*h);
       }
    }
-
-   // Make sure all registered dictionaries have been initialized
-   // and that all types have been loaded
-   gInterpreter->InitializeDictionaries();
-   gInterpreter->UpdateListOfTypes();
-
-   // Save current interpreter context
-   gInterpreter->SaveContext();
-   gInterpreter->SaveGlobalsContext();
-
-   // to allow user to interact with TCanvas's under WIN32
-   gROOT->SetLineHasBeenProcessed();
-}
-
-//______________________________________________________________________________
-TApplication::~TApplication()
-{
-   // TApplication dtor.
-
-   for (int i = 0; i < fArgc; i++)
-      if (fArgv[i]) delete [] fArgv[i];
-   delete [] fArgv;
-   SafeDelete(fAppImp);
+   fgGraphInit = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -258,7 +274,6 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    //    -h      : print usage
    //    --help  : print usage
    //    -config : print ./configure options
-
 
    fNoLog = kFALSE;
    fQuit  = kFALSE;

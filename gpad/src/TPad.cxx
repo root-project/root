@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.252 2007/02/06 14:22:28 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.253 2007/02/07 20:57:59 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -54,9 +54,22 @@
 #include "TLegend.h"
 #include "TAtt3D.h"
 #include "TObjString.h"
+#include "TApplication.h"
+
+
+// Load and initialize the graphics libraries
+class TLoadGraphicsLibs {
+public:
+   TLoadGraphicsLibs() { if (gApplication) gApplication->InitializeGraphics(); }
+};
+
+static TLoadGraphicsLibs gLoadGraphicsLibs;
+
+
+
 // Local scratch buffer for screen points, faster than allocating buffer on heap
 const Int_t kPXY       = 1002;
- 
+
 static TPoint gPXY[kPXY];
 static Int_t gReadLevel = 0;
 
@@ -5124,7 +5137,7 @@ void TPad::SetPad(const char *name, const char *title,
 void TPad::SetView(TView *view)
 {
    // Set the current TView. Delete previous view if view=0
-   
+
    if (!view) delete fView;
    fView = view;
 }
