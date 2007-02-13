@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.66 2007/01/23 09:59:39 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.67 2007/02/10 15:40:38 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -146,10 +146,11 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    // Everybody expects iostream to be available, so load it...
    ProcessLine("#include <iostream>", kTRUE);
    ProcessLine("#include <_string>", kTRUE); // for std::string iostream.
-   ProcessLine("#include <vector>", kTRUE);  // Needed because std::vector and std::pair are
-   ProcessLine("#include <pair>", kTRUE);    //   used within the core ROOT dictionaries
-                                             //   and CINT will not be able to properly unload these files
-
+   if (gEnv->GetValue("Rint.IncludeVector",1) > 0) {
+      ProcessLine("#include <vector>", kTRUE);  // Needed because std::vector and std::pair are
+      ProcessLine("#include <pair>", kTRUE);    //   used within the core ROOT dictionaries
+                                                //   and CINT will not be able to properly unload these files
+   }
    // Allow the usage of ClassDef and ClassImp in interpreted macros
    ProcessLine("#include <RtypesCint.h>", kTRUE);
 
@@ -157,11 +158,6 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    ProcessLine("#define ROOT_Rtypes 0", kTRUE);
    ProcessLine("#define ROOT_TError 0", kTRUE);
    ProcessLine("#define ROOT_TGenericClassInfo 0", kTRUE);
-
-   // The following libs are also useful to have, make sure they are loaded...
-   //gROOT->LoadClass("TMinuit",     "Minuit");
-   //gROOT->LoadClass("TPostScript", "Postscript");
-   //gROOT->LoadClass("THtml",       "Html");
 
    // Load user functions
    const char *logon;
