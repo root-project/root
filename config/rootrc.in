@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.163 2007/02/12 15:37:44 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.164 2007/02/12 23:40:24 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -180,6 +180,10 @@ Rint.History:            $(HOME)/.root_hist
 # Rint.HistSize:         500
 # Set to -1 for sensible default (80% of HistSize), set to 0 to disable history.
 # Rint.HistSave:         400
+# set Rint.IncludeVector to 0 to disable the "include <vector>"
+# setting Rint.IncludeVector to 0 saves 5 Mbytes in memory if you do not use
+# std::vector in your interpreted scripts.
+Rint.IncludeVector:      1
 
 # ACLiC customization.
 # ACLiC.Linkdef specifies the suffix that will be added to the script name to
