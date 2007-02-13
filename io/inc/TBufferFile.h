@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TBufferFile.h,v 1.7 2007/02/09 08:37:21 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TBufferFile.h,v 1.8 2007/02/09 10:16:07 rdm Exp $
 // Author: Rene Brun   17/01/2007
 
 /*************************************************************************
@@ -91,13 +91,12 @@ public:
    void     GetMappedObject(UInt_t tag, void* &ptr, TClass* &ClassPtr) const;
    void     MapObject(const TObject *obj, UInt_t offset = 1);
    void     MapObject(const void *obj, const TClass *cl, UInt_t offset = 1);
-   virtual void Reset() { TBuffer::SetBufferOffset(); ResetMap(); }
+   void     Reset() { SetBufferOffset(); ResetMap(); }
    void     InitMap();
    void     ResetMap();
    void     SetReadParam(Int_t mapsize);
    void     SetWriteParam(Int_t mapsize);
    void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE);
-   void     SetBufferOffset(Int_t offset = 0) { fBufCur = fBuffer+offset; }
 
    Bool_t   CheckObject(const TObject *obj);
    Bool_t   CheckObject(const void *obj, const TClass *ptrClass);

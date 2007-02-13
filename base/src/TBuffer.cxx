@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.102 2007/01/28 18:26:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.103 2007/01/29 15:53:35 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -35,7 +35,7 @@ static inline ULong_t Void_Hash(const void *ptr)
 
 
 //______________________________________________________________________________
-TBuffer::TBuffer(EMode mode) 
+TBuffer::TBuffer(EMode mode)
 {
    // Create an I/O buffer object. Mode should be either TBuffer::kRead or
    // TBuffer::kWrite. By default the I/O buffer has a size of
@@ -55,7 +55,7 @@ TBuffer::TBuffer(EMode mode)
 }
 
 //______________________________________________________________________________
-TBuffer::TBuffer(EMode mode, Int_t bufsiz) 
+TBuffer::TBuffer(EMode mode, Int_t bufsiz)
 {
    // Create an I/O buffer object. Mode should be either TBuffer::kRead or
    // TBuffer::kWrite.
@@ -75,7 +75,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz)
 }
 
 //______________________________________________________________________________
-TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt) 
+TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt)
 {
    // Create an I/O buffer object. Mode should be either TBuffer::kRead or
    // TBuffer::kWrite. By default the I/O buffer has a size of
@@ -101,19 +101,6 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt)
 }
 
 //______________________________________________________________________________
-TBuffer::TBuffer(const TBuffer &b) : TObject(b)
-{
-   // TBuffer copy ctor.
-}
-
-//______________________________________________________________________________
-void TBuffer::operator=(const TBuffer&)
-{
-   // TBuffer assignment operator.
-   //return *this;
-}
-
-//______________________________________________________________________________
 TBuffer::~TBuffer()
 {
    // Delete an I/O buffer object.
@@ -124,9 +111,6 @@ TBuffer::~TBuffer()
    }
    fBuffer = 0;
    fParent = 0;
-
-   //delete fMap;
-   //delete fClassMap;
 }
 
 //______________________________________________________________________________
@@ -201,7 +185,7 @@ void TBuffer::SetWriteMode()
 //______________________________________________________________________________
 TClass *TBuffer::GetClass(const type_info &typeinfo)
 {
-   // Forward to TROOT::GetClass
+   // Forward to TROOT::GetClass().
 
    return TClass::GetClass(typeinfo);
 }
@@ -209,26 +193,24 @@ TClass *TBuffer::GetClass(const type_info &typeinfo)
 //______________________________________________________________________________
 TClass *TBuffer::GetClass(const char *className)
 {
-   // Forward to TROOT::GetClass
+   // Forward to TROOT::GetClass().
 
    return TClass::GetClass(className);
 }
 
-
 //______________________________________________________________________________
 TProcessID *TBuffer::ReadProcessID(UShort_t pidf)
 {
-   //Return the current PRocessID
+   // Return the current PRocessID.
 
    if (!pidf) return TProcessID::GetPID(); //may happen when cloning an object
    return 0;
 }
 
-
 //______________________________________________________________________________
 UShort_t TBuffer::WriteProcessID(TProcessID *)
 {
-   // Always return 0 (current processID)
+   // Always return 0 (current processID).
 
    return 0;
 }

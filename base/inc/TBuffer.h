@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.60 2007/02/05 18:08:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.61 2007/02/09 08:37:21 brun Exp $
 // Author: Rene Brun, Philippe Canal, Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -36,7 +36,6 @@ class TRefTable;
 class TBuffer : public TObject {
 
 protected:
-
    Bool_t          fMode;          //Read or write mode
    Int_t           fVersion;       //Buffer format version
    Int_t           fBufSize;       //Size of buffer
@@ -44,7 +43,7 @@ protected:
    char           *fBufCur;        //Current position in buffer
    char           *fBufMax;        //End of buffer
    TObject        *fParent;        //Pointer to parent object owning this buffer
-   
+
    // Default ctor
    TBuffer() : TObject(), fMode(0), fVersion(0), fBufSize(0), fBuffer(0),
                fBufCur(0), fBufMax(0), fParent(0) {}
@@ -86,11 +85,9 @@ public:
    void     DetachBuffer() { fBuffer = 0; }
    Int_t    Length()     const { return (Int_t)(fBufCur - fBuffer); }
 
-
-
    virtual Bool_t     CheckObject(const TObject *obj) = 0;
    virtual Bool_t     CheckObject(const void *obj, const TClass *ptrClass) = 0;
-   
+
    virtual Int_t      ReadBuf(void *buf, Int_t max) = 0;
    virtual void       WriteBuf(const void *buf, Int_t max) = 0;
 
@@ -107,7 +104,7 @@ public:
    virtual void       ResetMap() = 0;
    virtual void       SetReadParam(Int_t mapsize) = 0;
    virtual void       SetWriteParam(Int_t mapsize) = 0;
-   
+
    virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss) = 0;
    virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname) = 0;
    virtual void       SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE)= 0;
@@ -122,11 +119,11 @@ public:
    virtual void       IncrementLevel(TVirtualStreamerInfo* info) = 0;
    virtual void       SetStreamerElementNumber(Int_t) = 0;
    virtual void       DecrementLevel(TVirtualStreamerInfo*) = 0;
-   
+
    virtual void       ClassBegin(const TClass*, Version_t = -1) = 0;
    virtual void       ClassEnd(const TClass*) = 0;
    virtual void       ClassMember(const char*, const char* = 0, Int_t = -1, Int_t = -1) = 0;
-   virtual TVirtualStreamerInfo     *GetInfo() = 0;
+   virtual TVirtualStreamerInfo *GetInfo() = 0;
 
    virtual TClass    *ReadClass(const TClass *cl = 0, UInt_t *objTag = 0) = 0;
    virtual void       WriteClass(const TClass *cl) = 0;
@@ -263,18 +260,18 @@ public:
    virtual   void     WriteDouble(Double_t   d) = 0;
    virtual   void     WriteCharP(const Char_t *c) = 0;
    virtual   void     WriteTString(const TString &s) = 0;
-   
+
    // Special basic ROOT objects and collections
    virtual   TProcessID *GetLastProcessID(TRefTable *reftable) const = 0;
    virtual   UInt_t      GetTRefExecId() = 0;
    virtual   TProcessID *ReadProcessID(UShort_t pidf) = 0;
    virtual   UShort_t    WriteProcessID(TProcessID *pid) = 0;
-   
+
    // Utilities for TClonesArray
    virtual   void     ForceWriteInfo(TClonesArray *a) = 0;
    virtual   Int_t    ReadClones (TClonesArray *a, Int_t nobjects) = 0;
    virtual   Int_t    WriteClones(TClonesArray *a, Int_t nobjects) = 0;
-   
+
    // Utilities for TClass
    virtual   Int_t    ReadClassEmulated(TClass *cl, void *object) = 0;
    virtual   Int_t    ReadClassBuffer(TClass *cl, void *pointer) = 0;
@@ -304,7 +301,6 @@ inline TBuffer &operator>>(TBuffer &buf, Float_t &f)  { buf.ReadFloat(f);  retur
 inline TBuffer &operator>>(TBuffer &buf, Double_t &d) { buf.ReadDouble(d); return buf; }
 inline TBuffer &operator>>(TBuffer &buf, Char_t *c)   { buf.ReadCharP(c);  return buf; }
 inline TBuffer &operator>>(TBuffer &buf, TString &s)  { buf.ReadTString(s);return buf; }
-
 
 inline TBuffer &operator<<(TBuffer &buf, Bool_t b)   { buf.WriteBool(b);   return buf; }
 inline TBuffer &operator<<(TBuffer &buf, Char_t c)   { buf.WriteChar(c);   return buf; }
@@ -357,8 +353,6 @@ template <class Tmpl> TBuffer &operator<<(TBuffer &buf, Tmpl *&obj);
 #endif
 #endif
 
-
-//______________________________________________________________________________
 #if defined(R__TEMPLATE_OVERLOAD_BUG)
 template <>
 #endif
