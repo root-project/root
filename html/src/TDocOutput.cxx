@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.2 2007/02/08 05:50:25 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.3 2007/02/08 22:56:05 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -474,14 +474,17 @@ void TDocOutput::CreateIndex()
                classNames.push_back(cdi->GetName());
       }
 
-      indexFile << "<div id=\"indxShortX\"><h4>Jump to</h4>" << endl;
-      // find index chars
-      GetIndexChars(classNames, 50 /*sections*/, indexChars);
-      for (UInt_t iIdxEntry = 0; iIdxEntry < indexChars.size(); ++iIdxEntry) {
-         indexFile << "<a href=\"#idx" << iIdxEntry << "\">" << indexChars[iIdxEntry] 
-                   << "</a>" << endl;
+      if (classNames.size() > 10) {
+         indexFile << "<div id=\"indxShortX\"><h4>Jump to</h4>" << endl;
+         // find index chars
+         GetIndexChars(classNames, 50 /*sections*/, indexChars);
+         for (UInt_t iIdxEntry = 0; iIdxEntry < indexChars.size(); ++iIdxEntry) {
+            indexFile << "<a href=\"#idx" << iIdxEntry << "\">";
+            ReplaceSpecialChars(indexFile, indexChars[iIdxEntry].c_str());
+            indexFile << "</a>" << endl;
+         }
+         indexFile << "</div><br />" << endl;
       }
-      indexFile << "</div><br />" << endl;
    }
 
    // check for a search engine
@@ -642,8 +645,10 @@ void TDocOutput::CreateIndexByTopic()
                   if (filename.EndsWith(".txt", TString::kIgnoreCase)) {
                      std::ifstream in(filename);
                      if (in) {
+                        outputFile << "<pre>"; // this is what e.g. the html directive expects
                         TDocParser parser(*this);
                         parser.Convert(outputFile, in, "../");
+                        outputFile << "</pre>";
                      }
                   } else if (filename.EndsWith(".html", TString::kIgnoreCase)) {
                      std::ifstream in(filename);
@@ -681,8 +686,10 @@ void TDocOutput::CreateIndexByTopic()
                   std::ifstream in(filename);
                   std::ofstream out(outfile);
                   if (in && out) {
+                     outputFile << "<pre>"; // this is what e.g. the html directive expects
                      TDocParser parser(*this);
                      parser.Convert(out, in, "../");
+                     outputFile << "</pre>";
                   }
                } else {
                   if (gSystem->CopyFile(filename, outfile, kTRUE) == -1)
@@ -710,6 +717,8 @@ void TDocOutput::CreateIndexByTopic()
             if (!cdi->IsSelected() || !cdi->HaveSource())
                continue;
             classNames.push_back(cdi->GetName());
+
+            if (classNames.size() > 1) continue;
 
             TString libs(cdi->GetClass()->GetSharedLibs());
             Ssiz_t posDepLibs = libs.Index(' ');
@@ -758,8 +767,9 @@ void TDocOutput::CreateIndexByTopic()
          // find index chars
          GetIndexChars(classNames, numSections, indexChars);
          for (UInt_t iIdxEntry = 0; iIdxEntry < indexChars.size(); ++iIdxEntry) {
-            outputFile << "<a href=\"#idx" << iIdxEntry << "\">" << indexChars[iIdxEntry] 
-                       << "</a>" << endl;
+            outputFile << "<a href=\"#idx" << iIdxEntry << "\">";
+            ReplaceSpecialChars(outputFile, indexChars[iIdxEntry].c_str());
+            outputFile << "</a>" << endl;
          }
          outputFile << "</div><br />" << endl;
       }
@@ -813,12 +823,14 @@ void TDocOutput::CreateIndexByTopic()
 
    // libCint is missing as we don't have class doc for it
    // We need it for dependencies nevertheless, so add it by hand.
+   /*
    sstrCluster << "subgraph clusterlibCint {" << endl
       << "style=filled;" << endl
       << "color=lightgray;" << endl
       << "label=\"libCint\";" << endl
       << "\"CINT\" [style=filled,color=white,fontsize=10]" << endl
       << "}" << endl;
+   */
 
    for (THtml::LibDep_t::iterator iLibDep = fHtml->GetLibraryDependencies().begin();
       iLibDep != fHtml->GetLibraryDependencies().end(); ++iLibDep) {
@@ -827,7 +839,10 @@ void TDocOutput::CreateIndexByTopic()
       sstrCluster << "subgraph cluster" << iLibDep->first << " {" << endl
          << "style=filled;" << endl
          << "color=lightgray;" << endl
-         << "label=\"" << iLibDep->first << "\";" << endl;
+         << "label=\"";
+      if (iLibDep->first == "libCore")
+         sstrCluster << "Everything depends on ";
+      sstrCluster << iLibDep->first << "\";" << endl;
 
       for (std::map<std::string, std::set<std::string> >::iterator iModule = iLibDep->second.begin();
          iModule != iLibDep->second.end(); ++iModule) {
@@ -835,9 +850,11 @@ void TDocOutput::CreateIndexByTopic()
             << iModule->first << "_Index.html\",fontsize=10];" << endl;
 
          // GetSharedLib doesn't mention libCore or libCint; add them by hand
+         /*
          if (iLibDep->first != "libCore")
             sstrDeps << "\"" << iModule->first << "\" -> \"BASE\" [lhead=clusterlibCore];" << endl;
          sstrDeps << "\"" << iModule->first << "\" -> \"CINT\" [lhead=clusterlibCint];" << endl;
+         */
 
          for (std::set<std::string>::iterator iLib = iModule->second.begin();
             iLib != iModule->second.end(); ++iLib) {
@@ -933,8 +950,9 @@ void TDocOutput::CreateTypeIndex()
       // find index chars
       GetIndexChars(typeNames, 10 /*sections*/, indexChars);
       for (UInt_t iIdxEntry = 0; iIdxEntry < indexChars.size(); ++iIdxEntry) {
-         typesList << "<a href=\"#idx" << iIdxEntry << "\">" << indexChars[iIdxEntry] 
-                   << "</a>" << endl;
+         typesList << "<a href=\"#idx" << iIdxEntry << "\">";
+         ReplaceSpecialChars(typesList, indexChars[iIdxEntry].c_str());
+         typesList << "</a>" << endl;
       }
       typesList << "</div><br />" << endl;
    }

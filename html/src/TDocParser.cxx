@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.3 2007/02/08 22:56:05 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.4 2007/02/09 13:59:29 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -134,7 +134,8 @@ std::set<std::string>  TDocParser::fgKeywords;
 TDocParser::TDocParser(TClassDocOutput& docOutput, TClass* cl):
    fHtml(docOutput.GetHtml()), fDocOutput(&docOutput), fLineNo(0),
    fCurrentClass(cl), fDocContext(kIgnore), fCheckForMethod(kFALSE),
-   fFoundClassDescription(kFALSE), fCommentAtBOL(kFALSE)
+   fFoundClassDescription(kFALSE), fLookForClassDescription(kTRUE),
+   fCommentAtBOL(kFALSE)
 {
    // Constructor called for parsing class sources
 
@@ -170,7 +171,8 @@ TDocParser::TDocParser(TClassDocOutput& docOutput, TClass* cl):
 TDocParser::TDocParser(TDocOutput& docOutput):
    fHtml(docOutput.GetHtml()), fDocOutput(&docOutput), fLineNo(0),
    fCurrentClass(0), fDocContext(kIgnore), fCheckForMethod(kFALSE), 
-   fFoundClassDescription(kFALSE), fCommentAtBOL(kFALSE)
+   fFoundClassDescription(kFALSE), fLookForClassDescription(kTRUE),
+   fCommentAtBOL(kFALSE)
 {
    // constructor called for parsing text files with Convert()
    InitKeywords();
@@ -374,7 +376,8 @@ void TDocParser::Convert(std::ostream& out, std::istream& in, const char* relpat
       ProcessComment();
 
       GetDocOutput()->AdjustSourcePath(fLineComment, relpath);
-      out << fLineComment << endl;
+      if (fLineComment.Length() || !InContext(kDirective))
+         out << fLineComment << endl;
    }
 }
 
@@ -407,7 +410,7 @@ void TDocParser::DecorateKeywords(TString& line)
    currentType.push_back(0);
 
    Ssiz_t i = 0;
-   while (isspace(line[i]))
+   while (isspace((UChar_t)line[i]))
       ++i;
 
    Ssiz_t startOfLine = i;
@@ -430,7 +433,7 @@ void TDocParser::DecorateKeywords(TString& line)
          Ssiz_t start = 0;
          if (!InContext(kComment) || (InContext(kComment) & kCXXComment)) {
             // means we are in a C++ comment
-            while (isspace(fLineRaw[start])) ++start;
+            while (isspace((UChar_t)fLineRaw[start])) ++start;
             if (fLineRaw[start] == '/' && fLineRaw[start + 1] == '/')
                start += 2;
             else start = 0;
@@ -934,7 +937,7 @@ Bool_t TDocParser::HandleDirective(TString& line, Ssiz_t& pos, TString& word,
          Ssiz_t start = 0;
          if (!InContext(kComment) || (InContext(kComment) & kCXXComment)) {
             // means we are in a C++ comment
-            while (isspace(fLineRaw[start])) ++start;
+            while (isspace((UChar_t)fLineRaw[start])) ++start;
             if (fLineRaw[start] == '/' && fLineRaw[start + 1] == '/')
                start += 2;
             else start = 0;
@@ -1113,7 +1116,7 @@ TClass* TDocParser::IsDirective(const TString& line, Ssiz_t pos,
    tag.Prepend("TDoc");
    tag += "Directive";
 
-   TClass* clDirective = gROOT->GetClass(tag);
+   TClass* clDirective = fHtml->GetClass(tag);
 
    if (!clDirective)
       Warning("IsDirective", "Unknown THtml directive %s in line %d!", word.Data(), fLineNo);
@@ -1243,11 +1246,11 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
    if (name.BeginsWith("operator")) {
       // op () (...)
       Ssiz_t checkOpBracketParam = posParam + 1;
-      while (isspace(name[checkOpBracketParam])) 
+      while (isspace((UChar_t)name[checkOpBracketParam])) 
          ++checkOpBracketParam;
       if (name[checkOpBracketParam] == ')') {
          ++checkOpBracketParam;
-         while (isspace(name[checkOpBracketParam]))
+         while (isspace((UChar_t)name[checkOpBracketParam]))
             ++checkOpBracketParam;
          if (name[checkOpBracketParam] == '(')
             posParam = checkOpBracketParam;
@@ -1421,7 +1424,7 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
       return;
    }
 
-   fFoundClassDescription = !lookForClassDescr;
+   fLookForClassDescription = lookForClassDescr;
 
    TString pattern(methodPattern);
 
@@ -1473,11 +1476,6 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
 
          // write previous method
          if (methodName.Length() && !wroteMethodNowWaitingForOpenBlock) {
-            if (!fFoundClassDescription && lookForClassDescr) {
-               // no class description - close it
-               dynamic_cast<TClassDocOutput*>(fDocOutput)->WriteClassDescription(out, TString());
-               lookForClassDescr = kFALSE;
-            }
             WriteMethod(out, methodRet, methodName, methodParam, 
                gSystem->BaseName(srcHtmlOutName), anchor, codeOneLiner);
          } else if (fDocContext == kDocClass) {
@@ -1503,7 +1501,8 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
 
                   wroteMethodNowWaitingForOpenBlock = fLineRaw.Index("{", posPattern) == kNPOS;
                   wroteMethodNowWaitingForOpenBlock &= fLineRaw.Index(";", posPattern) == kNPOS;
-               } else 
+               } else if (fLineRaw.First("{};") != kNPOS)
+                  // these chars reset the preceding comment
                   fComment.Remove(0);
             } // pattern matches - could be a method
             else 
@@ -1557,7 +1556,7 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
    } else if (fDocContext == kDocClass) {
       // write class description
       out << fComment << "</div>" << std::endl;
-   } else if (!fFoundClassDescription && lookForClassDescr)
+   } else if (!fFoundClassDescription && fLookForClassDescription)
       dynamic_cast<TClassDocOutput*>(fDocOutput)->WriteClassDescription(out, TString());
 
    srcHtmlOut << "</pre>" << std::endl;
@@ -1690,10 +1689,11 @@ Bool_t TDocParser::ProcessComment()
    Strip(commentLine);
 
    // look for start tag of class description
-   if (!fFoundClassDescription && !fComment.Length() 
+   if (!fFoundClassDescription && fLookForClassDescription && !fComment.Length() 
       && fDocContext == kIgnore && commentLine.Contains(fClassDescrTag)) {
       fDocContext = kDocClass;
       fFoundClassDescription = kTRUE;
+      fLookForClassDescription = kFALSE;
    }
 
    char start_or_end = 0;
@@ -1725,10 +1725,11 @@ Bool_t TDocParser::ProcessComment()
                commentLine.Remove(0);
 
                // also a class doc signature: line consists of ////
-               if (!fFoundClassDescription && !fComment.Length() 
+               if (!fFoundClassDescription && fLookForClassDescription && !fComment.Length() 
                    && fDocContext == kIgnore && start_or_end=='/') {
                   fDocContext = kDocClass;
                   fFoundClassDescription = kTRUE;
+                  fLookForClassDescription = kFALSE;
                }
             }
          }
@@ -1792,6 +1793,13 @@ void TDocParser::WriteMethod(std::ostream& out, TString& ret,
                         TString& codeOneLiner)
 {
    // Write a method, forwarding to TClassDocOutput
+
+   // if we haven't found the class description until now it's too late.
+   if (!fFoundClassDescription || fLookForClassDescription) {
+      dynamic_cast<TClassDocOutput*>(fDocOutput)->WriteClassDescription(out, TString());
+      fLookForClassDescription = kFALSE;
+      fFoundClassDescription = kTRUE;
+   }
 
    fCurrentMethodTag = name + "_";
    fCurrentMethodTag += fMethodCounts[name.Data()];

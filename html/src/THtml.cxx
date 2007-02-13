@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.128 2007/02/07 20:40:39 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.129 2007/02/08 22:56:06 axel Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -658,7 +658,7 @@ void THtml::CreateListOfClasses(const char* filter)
    if (fClassFilter == filter)
       return;
 
-   Info("CreateListOfClasses", "Initializing list of known classes - this might take a while...");
+   Info("CreateListOfClasses", "Initializing - this might take a while...");
    // get total number of classes
    Int_t totalNumberOfClasses = gClassTable->Classes();
 
@@ -745,9 +745,9 @@ void THtml::CreateListOfClasses(const char* filter)
       }
 
       if (strstr(impname,"prec_stl/")) continue;
-      if (strstr(cname, "ROOT::") && !strstr(cname,"Math::")
-          && !strstr(cname,"Reflex::") && !strstr(cname,"Cintex::"))
-         continue;
+      //if (strstr(cname, "ROOT::") && !strstr(cname,"Math::")
+      //    && !strstr(cname,"Reflex::") && !strstr(cname,"Cintex::"))
+      //   continue;
 
       TString htmlfilename;
       GetHtmlFileName(classPtr, htmlfilename);
@@ -763,6 +763,15 @@ void THtml::CreateListOfClasses(const char* filter)
       TModuleDocInfo* module = (TModuleDocInfo*) fModules.FindObject(modulename);
       if (!module) {
          module = new TModuleDocInfo(modulename);
+         if (modulename == "MATHCORE")
+            module->SetSourceDir("mathcore/src");
+         else if (modulename == "MATHMORE")
+            module->SetSourceDir("mathmore/src");
+         else if (modulename == "REFLEX")
+            module->SetSourceDir("reflex/src");
+         else if (modulename == "TMVA")
+            module->SetSourceDir("tmva/src");
+
          module->SetSelected(kFALSE);
          fModules.Add(module);
       }
@@ -771,8 +780,12 @@ void THtml::CreateListOfClasses(const char* filter)
          cdi->SetModule(module);
          if (cdi->HaveSource() && cdi->IsSelected())
             module->SetSelected();
-         if (cdi->HaveSource() && !module->GetSourceDir().Length())
-            module->SetSourceDir(gSystem->DirName(realFile));
+         if (cdi->HaveSource() && !module->GetSourceDir().Length()) {
+            const char* implFileName = GetImplFileName(classPtr);
+            if (implFileName && !strcmp(implFileName, impname))
+            // don't take mathcore/inc/Math/Whatever.h
+               module->SetSourceDir(gSystem->DirName(realFile));
+         }
       }
       delete[] realFile;
    }
@@ -788,9 +801,9 @@ void THtml::CreateListOfClasses(const char* filter)
       fProductName = "ROOT";
 
    if (fProductName == "(UNKNOWN PRODUCT)")
-      Warning("CreateListOfClasses", "Product not set. You should call gHtml->SetProduct(\"MyPoductName\");");
+      Warning("CreateListOfClasses", "Product not set. You should call gHtml->SetProduct(\"MyProductName\");");
 
-   Info("CreateListOfClasses", "Initializing list of known classes - DONE.");
+   Info("CreateListOfClasses", "Initializing - DONE.");
 }
 
 

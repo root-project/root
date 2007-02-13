@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocParser.h,v 1.1 2007/02/07 20:40:38 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TDocParser.h,v 1.2 2007/02/08 22:56:05 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -104,6 +104,7 @@ protected:
    std::list<UInt_t> fParseContext; // current context of parsed sources
    Bool_t         fCheckForMethod;  // whether to check the current line for a method
    Bool_t         fFoundClassDescription; // whether we found the class description
+   Bool_t         fLookForClassDescription; // whether we are looking for the class description
    Bool_t         fCommentAtBOL;    // at the beginning of the current line, fParseContext contained kComment
    TString        fClassDescrTag;   // tag for finding the class description
    TString        fSourceInfoTags[kNumSourceInfos]; // tags for source info elements (copyright, last changed, author)
