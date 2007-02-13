@@ -1,6 +1,6 @@
 This directory contains all the low level graphics classes.
 BEGIN_HTML
- Several documents describing the I/O classes are listed below:
+ Several documents describing these classes are listed below:
 <ul>
 <li><a href="ftp://root.cern.ch/root/doc/chapter4.pdf">The Chapter about the Graph classes in the Users Guide
     </a></li>
