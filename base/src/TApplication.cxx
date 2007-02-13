@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.77 2006/07/26 13:36:42 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.78 2006/11/16 17:17:37 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -148,6 +148,9 @@ TApplication::TApplication(const char *appClassName,
    fReturnFromRun = kFALSE;
    fAppImp        = 0;
 
+   // Enable autoloading
+   gInterpreter->EnableAutoLoading();
+
    LoadGraphicsLibs();
 
    // Create WM dependent application environment
@@ -212,10 +215,8 @@ TApplication::TApplication(const char *appClassName,
    gInterpreter->SaveContext();
    gInterpreter->SaveGlobalsContext();
 
-   // Enable autoloading
-   gInterpreter->EnableAutoLoading();
-
-   gROOT->SetLineHasBeenProcessed(); // to allow user to interact with TCanvas's under WIN32
+   // to allow user to interact with TCanvas's under WIN32
+   gROOT->SetLineHasBeenProcessed();
 }
 
 //______________________________________________________________________________

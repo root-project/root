@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.12 2006/03/06 14:30:00 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.13 2006/11/16 17:17:37 rdm Exp $
 // Author: Guy Barrand   30/05/2001
 
 /*************************************************************************
@@ -64,6 +64,9 @@ TGApplication::TGApplication(const char *appClassName,
    if (argv && argv[0])
       gSystem->SetProgname(argv[0]);
 
+   // Enable autoloading
+   gInterpreter->EnableAutoLoading();
+
    LoadGraphicsLibs();
 
    if (!fDisplay) gSystem->SetDisplay();
@@ -121,9 +124,6 @@ TGApplication::TGApplication(const char *appClassName,
    // Save current interpreter context
    gInterpreter->SaveContext();
    gInterpreter->SaveGlobalsContext();
-
-   // Enable autoloading
-   gInterpreter->EnableAutoLoading();
 
    // to allow user to interact with TCanvas's under WIN32
    gROOT->SetLineHasBeenProcessed();
