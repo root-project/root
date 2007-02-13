@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.250 2006/11/16 17:17:39 rdm Exp $
+// @(#)root/utils:$Name: v5-14-00 $:$Id: rootcint.cxx,v 1.251 2006/11/30 23:18:32 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -3434,24 +3434,6 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
             }
          } else {
             // we have an object
-
-            //string
-            if (!strcmp(m.Type()->Name(), "string") || !strcmp(m.Type()->Name(), "string*")) {
-               if (m.Property() & G__BIT_ISPOINTER) {
-                  (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"*" << m.Name() << "\", &"
-                      << prefix <<  m.Name()<< ");" << std::endl;
-                  if (clflag && IsStreamable(m) && GetFun(fun))
-                     (*dictSrcOut) << "   R__cl->SetMemberStreamer(\"*" << m.Name() << "\",R__"
-                         << clName << "_" << m.Name() << ");" << std::endl;
-               } else {
-                  (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"" << m.Name() << "\", &"
-                      << prefix << m.Name() << ");" << std::endl;
-                  if (clflag && IsStreamable(m) && GetFun(fun))
-                     (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"" << m.Name() << "\",R__"
-                         << clName << "_" << m.Name() << ");" << std::endl;
-               }
-               continue;
-            }
 
             if (m.Property() & G__BIT_ISARRAY &&
                 m.Property() & G__BIT_ISPOINTER) {
