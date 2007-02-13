@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.47 2007/02/07 21:14:49 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.48 2007/02/08 18:16:01 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -109,7 +109,6 @@
 
 #pragma link C++ nestedtypedef;
 #pragma link C++ namespace ROOT;
-#pragma link C++ typedef ROOT::DelArrFunc_t;
 #pragma link C++ typedef ShowMembersFunc_t;
 #pragma link C++ typedef ROOT::NewFunc_t;
 #pragma link C++ typedef ROOT::NewArrFunc_t;
