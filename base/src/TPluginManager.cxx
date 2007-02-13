@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.33 2007/01/20 19:29:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.34 2007/01/29 15:53:35 brun Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -210,8 +210,11 @@ Int_t TPluginHandler::LoadPlugin()
    if (fIsMacro) {
       if (TClass::GetClass(fClass)) return 0;
       return gROOT->LoadMacro(fPlugin);
-   } else
+   } else {
+      // first call also loads dependent libraries declared via the rootmap file
+      if (gROOT->LoadClass(fClass)) return 0;
       return gROOT->LoadClass(fClass, fPlugin);
+   }
 }
 
 //______________________________________________________________________________
