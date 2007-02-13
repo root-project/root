@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnPrint.h,v 1.3 2007/02/12 12:05:15 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnPrint.h,v 1.4 2007/02/13 12:14:29 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -90,9 +90,9 @@ std::ostream& operator<<(std::ostream&, const ContoursError&);
    MN_OS << "Error: " << str \
        << std::endl;
 # define MN_INFO_VAL(x) \
-   MN_OS << "Info: " << __STRING(x) << " = " << (x) << std::endl; 
+   MN_OS << "Info: " << #x << " = " << (x) << std::endl; 
 # define MN_ERROR_VAL(x) \
-   MN_OS << "Info: " << __STRING(x) << " = " << (x) << std::endl; 
+   MN_OS << "Info: " << #x << " = " << (x) << std::endl; 
 
 
 // same giving a location
@@ -104,9 +104,9 @@ std::ostream& operator<<(std::ostream&, const ContoursError&);
    MN_OS << "Error in " << loc << " : " << str \
        << std::endl;
 # define MN_INFO_VAL2(loc,x) \
-   MN_OS << loc << " : " << __STRING(x) << " = " << (x) << std::endl;
+   MN_OS << loc << " : " << #x << " = " << (x) << std::endl;
 # define MN_ERROR_VAL2(loc,x) \
-   MN_OS << loc << " : " << __STRING(x) << " = " << (x) << std::endl; 
+   MN_OS << loc << " : " << #x << " = " << (x) << std::endl; 
 
 
 
@@ -120,17 +120,17 @@ std::ostream& operator<<(std::ostream&, const ContoursError&);
 #define  MN_ERROR_MSG(str) \
    ::Error("Minuit2",str);
 # define MN_INFO_VAL(x) \
-   {std::string str = std::string(__STRING(x)) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
+   {std::string str = std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
    ::Info("Minuit2",str.c_str() );} 
 # define MN_ERROR_VAL(x) \
-   {std::string str = std::string(__STRING(x)) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
+   {std::string str = std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
    ::Error("Minuit2",str.c_str() );} 
 
 # define MN_INFO_VAL2(loc,x) \
-   {std::string str = std::string(loc) + std::string(" : ") + std::string(__STRING(x)) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
+   {std::string str = std::string(loc) + std::string(" : ") + std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
    ::Info("Minuit2",str.c_str() );} 
 # define MN_ERROR_VAL2(loc,x) \
-   {std::string str = std::string(loc) + std::string(" : ") + std::string(__STRING(x)) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
+   {std::string str = std::string(loc) + std::string(" : ") + std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
    ::Error("Minuit2",str.c_str() );} 
 
 
