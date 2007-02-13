@@ -111,7 +111,7 @@ PCHSUPPORTED := $(ENABLEPCH)
 ifeq ($(PCHSUPPORTED),yes)
   PCHFILE          = include/precompile.pchi
   PCHCXXFLAGS      = -DUSEPCH -include precompile.h $(USE_PCH) $(PCHFILE)
-  PCHEXTRAOBJBUILD = $(CXX) $(OPT) $(CXXFLAGS) -DUSEPCH \
+  PCHEXTRAOBJBUILD = $(LD) $(OPT) $(CXXFLAGS) -DUSEPCH \
                      -include precompile.h $(CREATE_PCH) $(PCHFILE) \
                      -c $(PCHEXTRASRC) -o $(PCHEXTRAOBJ)
 endif
