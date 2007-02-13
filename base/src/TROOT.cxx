@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.203 2007/02/10 13:37:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.204 2007/02/10 15:38:41 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -801,7 +801,7 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
 TClass *TROOT::GetClass(const char *name, Bool_t load) const
 {
    // Return pointer to class with name. Obsolete, use TClass::GetClass directly
-   
+
    return TClass::GetClass(name,load);
 }
 
