@@ -153,6 +153,8 @@ PGSQLLIBDEP         = $(NETLIB)
 PGSQLLIBEXTRA       = lib/libNet.lib
 KRB5AUTHLIBDEP      = $(NETLIB)
 KRB5AUTHLIBEXTRA    = lib/libNet.lib
+MYSQLLIBDEP         = $(NETLIB)
+MYSQLLIBEXTRA       = lib/libNet.lib
 
 else
 
@@ -292,5 +294,7 @@ PGSQLLIBDEP         = $(NETLIB)
 PGSQLLIBEXTRA       = -Llib -lNet
 KRB5AUTHLIBDEP      = $(NETLIB)
 KRB5AUTHLIBEXTRA    = -Llib -lNet
+MYSQLLIBDEP         = $(NETLIB)
+MYSQLLIBEXTRA       = -Llib -lNet
 
 endif
