@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: FumiliBuilder.cxx,v 1.6 2007/02/09 17:24:50 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: FumiliBuilder.cxx,v 1.7 2007/02/12 12:05:15 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -68,7 +68,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
    
    if(edm < 0.) {
 #ifdef WARNINGMSG
-      std::cout<<"FumiliBuilder: initial matrix not pos.def."<<std::endl;
+      MN_INFO_MSG("FumiliBuilder: initial matrix not pos.def.");
 #endif
       return min;
    }
@@ -98,7 +98,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
       if (ipass > 0) { 
          if(!min.IsValid()) {
 #ifdef WARNINGMSG
-            std::cout<<"FumiliBuilder: FunctionMinimum is invalid."<<std::endl;
+            MN_INFO_MSG("FumiliBuilder: FunctionMinimum is invalid.");
 #endif
             return min;
          }
@@ -115,8 +115,8 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
       // call always Hesse (error matrix from Fumili is never accurate since is approximate) 
          
 #ifdef DEBUG
-      std::cout<<"FumiliBuilder will verify convergence and Error matrix. "<< std::endl;
-      std::cout<<"dcov is =  "<<  min.Error().Dcovar() << std::endl;
+      MN_INFO_MSG("FumiliBuilder will verify convergence and Error matrix. "<< std::endl;
+      MN_INFO_MSG("dcov is =  "<<  min.Error().Dcovar() << std::endl;
 #endif
 
 //       // recalculate the gradient using the numerical gradient calculator
@@ -138,7 +138,9 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
       // break the loop if edm is NOT getting smaller 
       if (ipass > 0 && edm >= edmprev) { 
 #ifdef WARNINGMSG
-         std::cout << "FumiliBuilder: Exit iterations, no improvements after Hesse. edm is  " << edm << " previous " << edmprev << std::endl;
+         MN_INFO_MSG("FumiliBuilder: Exit iterations, no improvements after Hesse ");
+         MN_INFO_VAL2("current edm is ", edm); 
+         MN_INFO_VAL2("previous value ",edmprev);
 #endif
          break; 
       } 
@@ -257,15 +259,15 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
       double gdel = inner_product(step, s0.Gradient().Grad());
       if(gdel > 0.) {
 #ifdef WARNINGMSG
-         std::cout<<"FumiliBuilder: matrix not pos.def."<<std::endl;
-         std::cout<<"gdel > 0: "<<gdel<<std::endl;
+         MN_INFO_MSG("FumiliBuilder: matrix not pos.def, gdel > 0");
+         MN_INFO_VAL(gdel);
 #endif
          MnPosDef psdf;
          s0 = psdf(s0, prec);
          step = -1.*s0.Error().InvHessian()*s0.Gradient().Vec();
          gdel = inner_product(step, s0.Gradient().Grad());
 #ifdef WARNINGMSG
-         std::cout<<"After correction : gdel: "<<gdel<<std::endl;
+         MN_INFO_VAL2("After correction ",gdel);
 #endif
          if(gdel > 0.) {
             result.push_back(s0);
@@ -336,8 +338,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
       
       if(edm < 0.) {
 #ifdef WARNINGMSG
-         std::cout<<"FumiliBuilder: matrix not pos.def."<<std::endl;
-         std::cout<<"edm < 0"<<std::endl;
+         MN_INFO_MSG("FumiliBuilder: matrix not pos.def., edm < 0");
 #endif
          MnPosDef psdf;
          s0 = psdf(s0, prec);
@@ -374,7 +375,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
    
    if(fcn.NumOfCalls() >= maxfcn) {
 #ifdef WARNINGMSG
-      std::cout<<"FumiliBuilder: call limit exceeded."<<std::endl;
+      MN_INFO_MSG("FumiliBuilder: call limit exceeded.");
 #endif
       return FunctionMinimum(seed, result, fcn.Up(), FunctionMinimum::MnReachedCallLimit());
    }
@@ -382,15 +383,16 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
    if(edm > edmval) {
       if(edm < fabs(prec.Eps2()*result.back().Fval())) {
 #ifdef WARNINGMSG
-         std::cout<<"FumiliBuilder: machine accuracy limits further improvement."<<std::endl;
+         MN_INFO_MSG("FumiliBuilder: machine accuracy limits further improvement.");
 #endif
          return FunctionMinimum(seed, result, fcn.Up());
       } else if(edm < 10.*edmval) {
          return FunctionMinimum(seed, result, fcn.Up());
       } else {
 #ifdef WARNINGMSG
-         std::cout<<"FumiliBuilder: finishes without convergence."<<std::endl;
-         std::cout<<"FumiliBuilder: edm= "<<edm<<" requested: "<<edmval<<std::endl;
+         MN_INFO_MSG("FumiliBuilder: finishes without convergence.");
+         MN_INFO_VAL2("FumiliBuilder: ",edm);
+         MN_INFO_VAL2("    requested: ",edmval);
 #endif
          return FunctionMinimum(seed, result, fcn.Up(), FunctionMinimum::MnAboveMaxEdm());
       }

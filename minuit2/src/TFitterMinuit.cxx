@@ -159,7 +159,8 @@ FunctionMinimum TFitterMinuit::DoMinimization( int nfcn, double edmval)  {
 
    if (fDebug >=0) { 
       std::cout << "TFitterMinuit - Minimize with max iterations = " << nfcn << " edmval = " << edmval << " errorDef = " << fMinuitFCN->Up() << std::endl;
-   }
+   } 
+
    
    return GetMinimizer()->Minimize(*GetMinuitFCN(), State(), MnStrategy(fStrategy), nfcn, edmval);
 }
@@ -171,8 +172,15 @@ int  TFitterMinuit::Minimize( int nfcn, double edmval)  {
    
    // min tolerance
    edmval = std::max(fMinTolerance, edmval);
+   
+   // switch off debugging if requested 
+   int prevLevel = gErrorIgnoreLevel; 
+   if (fDebug < 0)  // switch off printing of info messages in Minuit2
+      gErrorIgnoreLevel = 1001;
 
    FunctionMinimum min = DoMinimization(nfcn,edmval);
+
+   if (fDebug < 0) gErrorIgnoreLevel = prevLevel; // restore previous debug level 
    fState = min.UserState();
    return ExamineMinimum(min);
 }

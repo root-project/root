@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: SimplexBuilder.cxx,v 1.3 2006/07/05 08:32:39 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: SimplexBuilder.cxx,v 1.4 2007/02/12 12:05:15 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -196,13 +196,13 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn& mfcn, const GradientCalcula
    
    if(mfcn.NumOfCalls() > maxfcn) {
 #ifdef WARNINGMSG
-      std::cout<<"Simplex did not converge, #fcn calls exhausted."<<std::endl;
+      MN_INFO_MSG("Simplex did not converge, #fcn calls exhausted.");
 #endif
       return FunctionMinimum(seed, std::vector<MinimumState>(1, st), mfcn.Up(), FunctionMinimum::MnReachedCallLimit());
    }
    if(simplex.Edm() > minedm) {
 #ifdef WARNINGMSG
-      std::cout<<"Simplex did not converge, edm > minedm."<<std::endl;
+      MN_INFO_MSG("Simplex did not converge, edm > minedm.");
 #endif
       return FunctionMinimum(seed, std::vector<MinimumState>(1, st), mfcn.Up(), FunctionMinimum::MnAboveMaxEdm());
    }

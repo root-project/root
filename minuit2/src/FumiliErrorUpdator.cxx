@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: FumiliErrorUpdator.cxx,v 1.3 2006/07/04 10:36:52 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: FumiliErrorUpdator.cxx,v 1.4 2007/02/12 12:05:15 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -87,7 +87,7 @@ MinimumError FumiliErrorUpdator::Update(const MinimumState& s0,
    int ifail = Invert(h);
    if(ifail != 0) {
 #ifdef WARNINGMSG
-      std::cout<<"FumiliErrorUpdator inversion fails; return diagonal matrix."<<std::endl;
+      MN_INFO_MSG("FumiliErrorUpdator inversion fails; return diagonal matrix.");
 #endif
       for(unsigned int i = 0; i < h.Nrow(); i++) {
          h(i,i) = 1./h(i,i);

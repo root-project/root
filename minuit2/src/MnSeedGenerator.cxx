@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnSeedGenerator.cxx,v 1.2 2006/07/03 22:06:42 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnSeedGenerator.cxx,v 1.3 2007/02/09 17:24:50 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -116,14 +116,17 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const AnalyticalGradie
       for(unsigned int i = 0; i < n; i++) {
          if(fabs(hgrd.first.Grad()(i) - grd.Grad()(i)) > hgrd.second(i)) {
 #ifdef WARNINGMSG
-            std::cout<<"MnSeedGenerator:gradient discrepancy of external Parameter "<<st.Trafo().ExtOfInt(i)<<" (internal Parameter "<<i<<") too large."<<std::endl;
+            MN_INFO_MSG("MnSeedGenerator:gradient discrepancy of external Parameter too large");
+            int externalParameterIndex = st.Trafo().ExtOfInt(i); 
+            MN_INFO_VAL(externalParameterIndex);
+            MN_INFO_VAL2("internal",i);
 #endif
             good = false;
          }
       }
       if(!good) {
 #ifdef WARNINGMSG
-         std::cout<<"Minuit does not accept user specified Gradient. To force acceptance, override 'virtual bool CheckGradient() const' of FCNGradientBase.h in the derived class."<<std::endl;
+         MN_ERROR_MSG("Minuit does not accept user specified Gradient. To force acceptance, override 'virtual bool CheckGradient() const' of FCNGradientBase.h in the derived class.");
 #endif
          assert(good);
       }

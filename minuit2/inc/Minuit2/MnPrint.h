@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnPrint.h,v 1.2 2006/04/12 16:30:30 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnPrint.h,v 1.3 2007/02/12 12:05:15 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -22,6 +22,8 @@
 #define WARNINGMSG
 #endif
 #endif
+
+
 
 
 namespace ROOT {
@@ -69,5 +71,71 @@ std::ostream& operator<<(std::ostream&, const ContoursError&);
   }  // namespace Minuit2
 
 }  // namespace ROOT
+
+
+// macro to report messages
+
+#ifndef USE_ROOT_ERROR
+
+#ifndef MNLOG
+#define MN_OS std::cerr
+#else 
+#define MN_OS MNLOG
+#endif
+
+#define MN_INFO_MSG(str) \
+   MN_OS << "Info: " << str \
+       << std::endl;
+#define MN_ERROR_MSG(str) \
+   MN_OS << "Error: " << str \
+       << std::endl;
+# define MN_INFO_VAL(x) \
+   MN_OS << "Info: " << __STRING(x) << " = " << (x) << std::endl; 
+# define MN_ERROR_VAL(x) \
+   MN_OS << "Info: " << __STRING(x) << " = " << (x) << std::endl; 
+
+
+// same giving a location
+
+#define MN_INFO_MSG2(loc,str) \
+  MN_OS << "Info in " << loc << " : " << str \
+       << std::endl;
+#define MN_ERROR_MSG2(loc,str) \
+   MN_OS << "Error in " << loc << " : " << str \
+       << std::endl;
+# define MN_INFO_VAL2(loc,x) \
+   MN_OS << loc << " : " << __STRING(x) << " = " << (x) << std::endl;
+# define MN_ERROR_VAL2(loc,x) \
+   MN_OS << loc << " : " << __STRING(x) << " = " << (x) << std::endl; 
+
+
+
+#else
+// use ROOT error reporting system 
+#include "TError.h"
+#include "Math/Util.h"
+
+#define  MN_INFO_MSG(str) \
+   ::Info("Minuit2",str);
+#define  MN_ERROR_MSG(str) \
+   ::Error("Minuit2",str);
+# define MN_INFO_VAL(x) \
+   {std::string str = std::string(__STRING(x)) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
+   ::Info("Minuit2",str.c_str() );} 
+# define MN_ERROR_VAL(x) \
+   {std::string str = std::string(__STRING(x)) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
+   ::Error("Minuit2",str.c_str() );} 
+
+# define MN_INFO_VAL2(loc,x) \
+   {std::string str = std::string(loc) + std::string(" : ") + std::string(__STRING(x)) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
+   ::Info("Minuit2",str.c_str() );} 
+# define MN_ERROR_VAL2(loc,x) \
+   {std::string str = std::string(loc) + std::string(" : ") + std::string(__STRING(x)) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
+   ::Error("Minuit2",str.c_str() );} 
+
+
+
+#endif
+
 
 #endif  // ROOT_Minuit2_MnPrint

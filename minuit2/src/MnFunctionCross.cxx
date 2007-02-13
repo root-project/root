@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnFunctionCross.cxx,v 1.2 2006/07/03 22:06:42 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnFunctionCross.cxx,v 1.3 2007/02/12 12:05:15 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -251,7 +251,7 @@ L500:
          
          if(s1*s2 > 0.) 
 #ifdef WARNINGMSG
-            std::cout<<"MnFunctionCross problem 1"<<std::endl;
+            MN_INFO_MSG("MnFunctionCross problem 1");
 #endif
          aopt = x1;
          double slope = s1;

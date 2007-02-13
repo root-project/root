@@ -60,6 +60,7 @@ ALLLIBS      += $(MINUIT2LIB)
 # include all dependency files
 INCLUDEFILES += $(MINUIT2DEP)
 
+
 ##### local rules #####
 include/Minuit2/%.h: $(MINUIT2DIRI)/Minuit2/%.h
 		@(if [ ! -d "include/Minuit2" ]; then     \
@@ -102,3 +103,7 @@ distclean-minuit2: clean-minuit2
 		@rm -rf include/Minuit2
 
 distclean::     distclean-minuit2
+
+##### extra rules ######
+$(MINUIT2O): CXXFLAGS += -DWARNINGMSG -DUSE_ROOT_ERROR
+$(MINUIT2DO): CXXFLAGS += -DWARNINGMSG -DUSE_ROOT_ERROR

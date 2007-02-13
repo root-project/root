@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: VariableMetricBuilder.cxx,v 1.9 2007/02/09 17:24:50 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: VariableMetricBuilder.cxx,v 1.10 2007/02/12 12:05:15 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -25,6 +25,7 @@
 #include "Minuit2/MnHesse.h"
 
 //#define DEBUG 
+
 #if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h" 
 #endif
@@ -61,7 +62,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    
    if(edm < 0.) {
 #ifdef WARNINGMSG
-      std::cout<<"VariableMetricBuilder: initial matrix not pos.def."<<std::endl;
+      MN_INFO_MSG("VariableMetricBuilder: initial matrix not pos.def.");
 #endif
       //assert(!seed.Error().IsPosDef());
       return min;
@@ -79,9 +80,12 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    // try first with a maxfxn = 80% of maxfcn 
    int maxfcn_eff = maxfcn;
    int ipass = 0;
+   bool iterate = false; 
    
    do { 
       
+      iterate = false; 
+
 #ifdef DEBUG
       std::cout << "start iterating... " << std::endl; 
       if (ipass > 0)  std::cout << "continue iterating... " << std::endl; 
@@ -92,7 +96,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       if (ipass > 0) { 
          if(!min.IsValid()) {
 #ifdef WARNINGMSG
-            std::cout<<"FunctionMinimum is invalid."<<std::endl;
+            MN_INFO_MSG("FunctionMinimum is invalid.");
 #endif
             return min;
          }
@@ -119,9 +123,14 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
 #endif
          if (edm > edmval) { 
 #ifdef WARNINGMSG
-            std::cout << "VariableMetricBuilder: Tolerance is not sufficient - edm is " << edm << " requested " << edmval 
-            << " continue the minimization" << std::endl;
+            MN_INFO_MSG("VariableMetricBuilder: Tolerance is not sufficient, continue the minimization");
+            MN_INFO_VAL(edm);
+            MN_INFO_VAL2("required",edmval);
 #endif
+            // be careful with machine precision and avoid too small edm
+            if (edm >= fabs(seed.Precision().Eps2()*result.back().Fval())) 
+               iterate = true; 
+
          }
       }
       
@@ -134,7 +143,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       // increase by 20% maxfcn for doing some more tests
       if (ipass == 0) maxfcn_eff = int(maxfcn*1.3);
       ipass++;
-   }  while (edm > edmval );
+   }  while ( iterate );
    
    
    
@@ -199,8 +208,8 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       double gdel = inner_product(step, s0.Gradient().Grad());
       if(gdel > 0.) {
 #ifdef WARNINGMSG
-         std::cout<<"VariableMetricBuilder: matrix not pos.def."<<std::endl;
-         std::cout<<"gdel > 0: "<<gdel<<std::endl;
+         MN_INFO_MSG("VariableMetricBuilder: matrix not pos.def, gdel > 0");
+         MN_INFO_VAL(gdel);
 #endif
          MnPosDef psdf;
          s0 = psdf(s0, prec);
@@ -210,7 +219,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
          // #endif
          gdel = inner_product(step, s0.Gradient().Grad());
 #ifdef WARNINGMSG
-         std::cout<<"gdel: "<<gdel<<std::endl;
+         MN_INFO_VAL(gdel);
 #endif
          if(gdel > 0.) {
             result.push_back(s0);
@@ -220,7 +229,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       MnParabolaPoint pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
       if(fabs(pp.y() - s0.Fval()) < fabs(s0.Fval())*prec.Eps() ) {
 #ifdef WARNINGMSG
-         std::cout<<"VariableMetricBuilder: warning: no improvement in line search  " << std::endl;
+         MN_INFO_MSG("VariableMetricBuilder: no improvement in line search");
 #endif
          // no improvement exit   (is it really needed LM ? in vers. 1.22 tried alternative )
          // add new state where only fcn changes
@@ -248,14 +257,14 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       
       if(edm < 0.) {
 #ifdef WARNINGMSG
-         std::cout<<"VariableMetricBuilder: matrix not pos.def. : edm is < 0. Make pos def..."<<std::endl;
+         MN_INFO_MSG("VariableMetricBuilder: matrix not pos.def. : edm is < 0. Make pos def...");
 #endif
          MnPosDef psdf;
          s0 = psdf(s0, prec);
          edm = Estimator().Estimate(g, s0.Error());
          if(edm < 0.) {
 #ifdef WARNINGMSG
-            std::cout<<"VariableMetricBuilder: matrix still not pos.def. : exit iterations "<<std::endl;
+            MN_INFO_MSG("VariableMetricBuilder: matrix still not pos.def. : exit iterations ");
 #endif
             result.push_back(s0);
             return FunctionMinimum(seed, result, fcn.Up());
@@ -288,7 +297,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    
    if(fcn.NumOfCalls() >= maxfcn) {
 #ifdef WARNINGMSG
-      std::cout<<"VariableMetricBuilder: call limit exceeded."<<std::endl;
+      MN_INFO_MSG("VariableMetricBuilder: call limit exceeded.");
 #endif
       return FunctionMinimum(seed, result, fcn.Up(), FunctionMinimum::MnReachedCallLimit());
    }
@@ -296,15 +305,16 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    if(edm > edmval) {
       if(edm < fabs(prec.Eps2()*result.back().Fval())) {
 #ifdef WARNINGMSG
-         std::cout<<"VariableMetricBuilder: machine accuracy limits further improvement."<<std::endl;
+         MN_INFO_MSG("VariableMetricBuilder: machine accuracy limits further improvement.");
 #endif
          return FunctionMinimum(seed, result, fcn.Up());
       } else if(edm < 10.*edmval) {
          return FunctionMinimum(seed, result, fcn.Up());
       } else {
 #ifdef WARNINGMSG
-         std::cout<<"VariableMetricBuilder: iterations finish without convergence."<<std::endl;
-         std::cout<<"VariableMetricBuilder: edm= "<<edm<<" requested: "<<edmval<<std::endl;
+         MN_INFO_MSG("VariableMetricBuilder: iterations finish without convergence.");
+         MN_INFO_VAL2("VariableMetricBuilder",edm);
+         MN_INFO_VAL2("            requested",edmval);
 #endif
          return FunctionMinimum(seed, result, fcn.Up(), FunctionMinimum::MnAboveMaxEdm());
       }
