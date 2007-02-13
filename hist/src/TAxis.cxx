@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.81 2007/02/06 15:00:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.82 2007/02/07 20:56:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -12,7 +12,6 @@
 #include "Riostream.h"
 #include "TAxis.h"
 #include "TVirtualPad.h"
-#include "TVirtualX.h"
 #include "TStyle.h"
 #include "TError.h"
 #include "THashList.h"
