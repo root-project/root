@@ -1,4 +1,4 @@
-/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.21 2006/06/27 14:36:27 brun Exp $ */
+/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.22 2007/02/12 13:35:56 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -43,5 +43,6 @@
 #pragma link C++ class TGridCollection+;
 #pragma link C++ class TSecContext;
 #pragma link C++ class TSecContextCleanup;
+#pragma link C++ class TFileStager;
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.15 2007/01/21 22:04:20 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.16 2007/01/23 13:10:41 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TXNetFile.h"
 #include "TXNetSystem.h"
 #include "TROOT.h"
+#include "TObjString.h"
 
 #include "XrdClient/XrdClientAdmin.hh"
 #include "XrdClient/XrdClientConn.hh"
@@ -176,13 +177,6 @@ XrdClientAdmin *TXNetSystem::Connect(const char *url)
 
    return cadm;
 }
-
-//_____________________________________________________________________________
-TXNetSystem::~TXNetSystem()
-{
-   // Destructor
-}
-
 
 //_____________________________________________________________________________
 void TXNetSystem::InitXrdClient()
@@ -434,6 +428,64 @@ int TXNetSystem::Unlink(const char *path)
    return -1;    // not implemented for rootd
 }
 
+//_____________________________________________________________________________
+Bool_t TXNetSystem::IsOnline(const char *path)
+{
+   // Check if the file defined by 'path' is ready to be used
+
+   TXNetSystemConnectGuard cg(this, path);
+   if (cg.IsValid()) {
+      vecBool vb;
+      vecString vs;
+      XrdOucString pathname = TUrl(path).GetFile();
+      vs.Push_back(pathname);
+      if (gDebug > 1 )
+         Info("IsOnline", "Checking %s\n",path);
+      cg.ClientAdmin()->IsFileOnline(vs,vb);
+      if (!cg.ClientAdmin()->LastServerResp()) {
+         return kFALSE;
+      }
+
+      switch (cg.ClientAdmin()->LastServerResp()->status) {
+         case kXR_ok:
+            if (vb[0]) {
+               return kTRUE;
+            } else {
+               return kFALSE;
+         }
+         case kXR_error:
+            Error("IsOnline","Error %x : %s", cg.ClientAdmin()->LastServerError(),
+                             cg.ClientAdmin()->LastServerError()->errmsg);
+            return kFALSE;
+         default:
+            return kTRUE;
+      }
+   }
+   return kFALSE;
+}
+
+//_____________________________________________________________________________
+Bool_t TXNetSystem::Prepare(const char *path, UChar_t option, UChar_t priority)
+{
+   // Issue a prepare request for file defined by 'path'
+
+   TXNetSystemConnectGuard cg(this, path);
+   if (cg.IsValid()) {
+      XrdOucString pathname = TUrl(path).GetFile();
+      vecString vs;
+      vs.Push_back(pathname);
+      cg.ClientAdmin()->Prepare(vs, (kXR_char)option, (kXR_char)priority);
+      if (gDebug >0) 
+         Info("Prepare", "Got Status %d for %s",
+              cg.ClientAdmin()->LastServerResp()->status, pathname.c_str());
+      if (!(cg.ClientAdmin()->LastServerResp()->status)){
+         return kTRUE;
+      }
+   }
+
+   // Done
+   return kFALSE;
+}
 
 //
 // Guard methods

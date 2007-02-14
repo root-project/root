@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.168 2007/02/13 20:29:21 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.169 2007/02/14 15:05:09 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -464,7 +464,7 @@ Plugin.TFile:        ^http:    TWebFile      Net     "TWebFile(const char*)"
 +Plugin.TFile:       .+[.]xml$ TXMLFile      XMLIO   "TXMLFile(const char*,Option_t*,const char*,Int_t)"
 +Plugin.TFile:       ^mysql:   TSQLFile      SQL     "TSQLFile(const char*,Option_t*,const char*,const char*)"
 +Plugin.TFile:       ^oracle:  TSQLFile      SQL     "TSQLFile(const char*,Option_t*,const char*,const char*)"
-@hasxrd@+Plugin.TFile:       ^root:    TXNetFile     Netx    "TXNetFile(const char*,Option_t*,const char*,Int_t,Int_t,Bool_t)"
+@hasxrd@+Plugin.TFile:     ^root:    TXNetFile     Netx    "TXNetFile(const char*,Option_t*,const char*,Int_t,Int_t,Bool_t)"
 @hasnotxrd@+Plugin.TFile:  ^root: TNetFile   Net     "TNetFile(const char*,Option_t*,const char*,Int_t,Int_t)"
 Plugin.TSystem:      ^rfio:    TRFIOSystem   RFIO    "TRFIOSystem()"
 +Plugin.TSystem:     ^castor:  TRFIOSystem   RFIO    "TRFIOSystem()"
@@ -472,7 +472,8 @@ Plugin.TSystem:      ^rfio:    TRFIOSystem   RFIO    "TRFIOSystem()"
 +Plugin.TSystem:     ^dcap:    TDCacheSystem DCache  "TDCacheSystem()"
 +Plugin.TSystem:     ^alien:   TAlienSystem  RAliEn  "TAlienSystem()"
 @hasxrd@+Plugin.TSystem:     ^root:    TXNetSystem   Netx    "TXNetSystem(const char *,Bool_t)"
-@hasnotxrd@+Plugin.TSystem:  ^root:    TNetSystem   Net    "TNetSystem(const char *,Bool_t)"
+@hasnotxrd@+Plugin.TSystem:  ^root:    TNetSystem    Net     "TNetSystem(const char *,Bool_t)"
+@hasxrd@Plugin.TFileStager:  ^root:    TXNetFileStager Netx  "TXNetFileStager(const char *)"
 Plugin.TArchiveFile: .+[.]zip$ TZIPFile      Core    "TZIPFile(const char*,const char*,TFile*)"
 Plugin.TSQLServer:   ^mysql:   TMySQLServer  RMySQL   "TMySQLServer(const char*,const char*,const char*)"
 +Plugin.TSQLServer:  ^pgsql:   TPgSQLServer  PgSQL   "TPgSQLServer(const char*,const char*,const char*)"

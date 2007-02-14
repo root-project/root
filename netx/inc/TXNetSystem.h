@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.h,v 1.4 2006/06/30 14:35:03 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.h,v 1.5 2006/10/07 18:06:11 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -67,7 +67,7 @@ private:
 public:
    TXNetSystem(Bool_t owner = kTRUE);
    TXNetSystem(const char *url, Bool_t owner = kTRUE);
-   virtual ~TXNetSystem();
+   virtual ~TXNetSystem() { }
 
    Bool_t              AccessPathName(const char *path, EAccessMode mode);
    virtual Bool_t      ConsistentWith(const char *path, void *dirptr);
@@ -77,6 +77,9 @@ public:
    virtual Int_t       MakeDirectory(const char* dir);
    virtual void       *OpenDirectory(const char* dir);
    virtual int         Unlink(const char *path);
+
+   Bool_t              IsOnline(const char *path);
+   Bool_t              Prepare(const char *path, UChar_t option = 8, UChar_t priority = 0);
 
    ClassDef(TXNetSystem,0)   // System management class for xrootd servers
 };
