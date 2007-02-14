@@ -562,6 +562,7 @@ int Cint::G__MethodInfo::IsBusy()
 static char G__buf[G__LONGLINE];
 char* Cint::G__MethodInfo::GetPrototype()
 {
+  if (!IsValid()) return 0;
   strcpy(G__buf,Type()->Name());
   strcat(G__buf," ");
   if(belongingclass && belongingclass->IsValid()) {
@@ -589,6 +590,7 @@ char* Cint::G__MethodInfo::GetPrototype()
 ///////////////////////////////////////////////////////////////////////////
 char* Cint::G__MethodInfo::GetMangledName()
 {
+  if (!IsValid()) return 0;
   return(G__map_cpp_name(GetPrototype()));
 }
 ///////////////////////////////////////////////////////////////////////////

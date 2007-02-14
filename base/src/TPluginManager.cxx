@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.34 2007/01/29 15:53:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.35 2007/02/13 14:26:58 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -155,15 +155,9 @@ void TPluginHandler::SetupCallEnv()
 
    if (fIsGlobal) {
       cl = 0;
-      if (fIsMacro)
-         fMethod = gROOT->GetGlobalFunction(method, 0, kTRUE);  // to be fixed
-      else
-         fMethod = gROOT->GetGlobalFunctionWithPrototype(method, proto, kTRUE);
+      fMethod = gROOT->GetGlobalFunctionWithPrototype(method, proto, kTRUE);
    } else {
-      if (fIsMacro)
-         fMethod = cl->GetMethodAny(method);  //to be fixed to use prototype
-      else
-         fMethod = cl->GetMethodWithPrototype(method, proto);
+      fMethod = cl->GetMethodWithPrototype(method, proto);
    }
 
    if (!fMethod) {
