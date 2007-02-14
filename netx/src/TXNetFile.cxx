@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.43 2006/10/05 14:56:25 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.44 2007/01/19 16:48:00 brun Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -398,13 +398,15 @@ Bool_t TXNetFile::Open(Option_t *option, Bool_t doitparallel)
       create = kTRUE;
    } else if (create) {
       openOpt |= kXR_new;
-      Bool_t mkpath = (gEnv->GetValue("XNet.Mkpath", 0) == 1) ? kTRUE : kFALSE;
-      char *p = (char*)strstr(fUrl.GetOptions(), "mkpath=");
-      if (p)
-         mkpath = (*(p + strlen("mkpath=")) == '1') ? kTRUE : kFALSE;
-      if (mkpath)
-         openOpt |= kXR_mkpath;
    }
+
+   Bool_t mkpath = (gEnv->GetValue("XNet.Mkpath", 0) == 1) ? kTRUE : kFALSE;
+   char *p = (char*)strstr(fUrl.GetOptions(), "mkpath=");
+   if (p)
+     mkpath = (*(p + strlen("mkpath=")) == '1') ? kTRUE : kFALSE;
+   if (mkpath)
+     openOpt |= kXR_mkpath;
+
    if (read)
       openOpt |= kXR_open_read;
 
