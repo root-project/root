@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.18 2007/02/01 21:59:28 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.19 2007/02/05 18:11:00 brun Exp $
 // Author: Philippe Canal 08/05/2002
 
 /*************************************************************************
@@ -43,7 +43,8 @@ namespace ROOT {
         fIsA(isa), fShowMembers(showmembers),
         fVersion(1),
         fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fStreamer(0),
-        fCollectionProxy(0), fSizeof(sizof)
+        fCollectionProxy(0), fSizeof(sizof),
+        fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
    {
       // Constructor.
 
