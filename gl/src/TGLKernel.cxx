@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.41 2006/01/26 11:59:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.43 2007/01/15 11:30:47 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -19,7 +19,6 @@
 
 #include "TError.h"
 #include "TGLKernel.h"
-#include "TView.h"
 #include "TGeometry.h"
 #include "TROOT.h"
 #include "TColor.h"
@@ -29,6 +28,7 @@
 #include "TGLOutput.h"
 #include "TGLRenderArea.h"
 #include "TSystem.h"
+#include "TMath.h"
 
 #include <GL/gl.h>
 

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.12 2004/11/12 21:51:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.13 2006/04/19 08:22:22 rdm Exp $
 // Author: Fons Rademakers   13/09/95
 
 /*************************************************************************
@@ -29,7 +29,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TOrdCollection.h"
-#include "TMath.h"
 #include "TError.h"
 
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.66 2006/05/19 07:03:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.71 2007/01/15 22:08:28 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -12,7 +12,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <math.h>
+#include <cmath>
 
 #include "Riostream.h"
 #include "TApplication.h"
@@ -248,7 +248,7 @@ void TStyle::cd()
 void TStyle::Copy(TObject &obj) const
 {
    //copy this style
-   
+
    TAttLine::Copy(((TStyle&)obj));
    TAttFill::Copy(((TStyle&)obj));
    TAttMarker::Copy(((TStyle&)obj));
@@ -758,7 +758,7 @@ Float_t TStyle::GetTitleSize( Option_t *axis) const
 void TStyle::Paint(Option_t *option)
 {
    //show the options from the current style
-   //if (gROOT->GetClass("TStyleManager")) gSystem->Load("libGed");
+   //if (TClass::GetClass("TStyleManager")) gSystem->Load("libGed");
    gROOT->ProcessLine(Form("TStyleManager::PaintStyle((TStyle*)0x%x,\"%s\")",this,option));
 }
 

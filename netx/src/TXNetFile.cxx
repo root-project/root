@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.42 2006/09/29 08:17:21 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.43 2006/10/05 14:56:25 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -41,6 +41,8 @@
 //    methods)                                                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+#include "Bytes.h"
 
 #include "TError.h"
 #include "TEnv.h"

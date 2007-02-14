@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMessage.cxx,v 1.5 2004/05/05 14:43:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMessage.cxx,v 1.6 2004/05/07 09:51:58 brun Exp $
 // Author: Fons Rademakers   19/12/96
 
 /*************************************************************************
@@ -31,7 +31,7 @@ const Int_t kMAXBUF = 0xffffff;
 ClassImp(TMessage)
 
 //______________________________________________________________________________
-TMessage::TMessage(UInt_t what) : TBuffer(kWrite)
+TMessage::TMessage(UInt_t what) : TBufferFile(TBuffer::kWrite)
 {
    // Create a TMessage object for storing objects. The "what" integer
    // describes the type of message. Predifined ROOT system message types
@@ -58,7 +58,7 @@ TMessage::TMessage(UInt_t what) : TBuffer(kWrite)
 }
 
 //______________________________________________________________________________
-TMessage::TMessage(void *buf, Int_t bufsize) : TBuffer(kRead, bufsize, buf)
+TMessage::TMessage(void *buf, Int_t bufsize) : TBufferFile(TBuffer::kRead, bufsize, buf)
 {
    // Create a TMessage object for reading objects. The objects will be
    // read from buf. Use the What() method to get the message type.
@@ -306,4 +306,3 @@ Int_t TMessage::Uncompress()
 
    return 0;
 }
-

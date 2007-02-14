@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.97 2006/11/27 14:14:24 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.101 2007/01/30 16:34:54 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TProof.h"
 #include "TProofSuperMaster.h"
 #include "TSlave.h"
+#include "TClass.h"
 #include "TROOT.h"
 #include "TError.h"
 #include "TException.h"
@@ -91,18 +92,98 @@ public:
 
 };
 
+//
+// Special timer to dispatch pending events while processing
+//______________________________________________________________________________
+class TDispatchTimer : public TTimer {
+private:
+   TProofPlayer    *fPlayer;
+
+public:
+   TDispatchTimer(TProofPlayer *p) : TTimer(1000, kFALSE), fPlayer(p) { }
+
+   Bool_t Notify();
+};
+//______________________________________________________________________________
+Bool_t TDispatchTimer::Notify()
+{
+   // Handle expiration of the timer associated with dispatching pending
+   // events while processing. We must act as fast as possible here, so
+   // we just set a flag submitting a request for dispatching pending events
+
+   if (gDebug > 0)
+      Info ("Notify","called!");
+
+   fPlayer->SetBit(TProofPlayer::kDispatchOneEvent);
+
+   // Needed for the next shot
+   Reset();
+   return kTRUE;
+}
+
+//
+// Special timer to handle stop/abort request via exception raising
+//______________________________________________________________________________
+class TStopTimer : public TTimer {
+private:
+   Bool_t           fAbort;
+   TProofPlayer    *fPlayer;
+
+public:
+   TStopTimer(TProofPlayer *p, Bool_t abort, Int_t to);
+
+   Bool_t Notify();
+};
+
+//______________________________________________________________________________
+TStopTimer::TStopTimer(TProofPlayer *p, Bool_t abort, Int_t to)
+           : TTimer(((to <= 0 || to > 864000) ? 10 : to * 1000), kFALSE)
+{
+   // Constructor for the timer to stop/abort processing.
+   // The 'timeout' is in seconds.
+   // Make sure that 'to' make sense, i.e. not larger than 10 days; 
+   // the minimum value is 10 ms (0 does not seem to start the timer ...).
+
+   if (gDebug > 0)
+      Info ("TStopTimer","enter: %d, timeout: %d", abort, to);
+
+   fPlayer = p;
+   fAbort = abort;
+
+   if (gDebug > 1)
+      Info ("TStopTimer","timeout set to %s ms", fTime.AsString());
+}
+
+//______________________________________________________________________________
+Bool_t TStopTimer::Notify()
+{
+   // Handle the signal coming from the expiration of the timer
+   // associated with an abort or stop request.
+   // We raise an exception which will be processed in the
+   // event loop.
+
+   if (gDebug > 0)
+      Info ("Notify","called!");
+
+   if (fAbort)
+      Throw(kPEX_ABORTED);
+   else
+      Throw(kPEX_STOPPED);
+
+   return kTRUE;
+}
 
 //------------------------------------------------------------------------------
-
 
 ClassImp(TProofPlayer)
 
 //______________________________________________________________________________
 TProofPlayer::TProofPlayer()
    : fAutoBins(0), fOutput(0), fSelector(0), fSelectorClass(0),
-     fFeedbackTimer(0), fEvIter(0), fSelStatus(0), fEventsProcessed(0),
+     fFeedbackTimer(0), fFeedbackPeriod(2000),
+     fEvIter(0), fSelStatus(0), fEventsProcessed(0),
      fTotalEvents(0), fQueryResults(0), fQuery(0), fDrawQueries(0),
-     fMaxDrawQueries(1), fStopTimer(0), fStopTimerMtx(0)
+     fMaxDrawQueries(1), fStopTimer(0), fStopTimerMtx(0), fDispatchTimer(0)
 {
    // Default ctor.
 
@@ -120,6 +201,8 @@ TProofPlayer::~TProofPlayer()
    SafeDelete(fFeedbackTimer);
    SafeDelete(fEvIter);
    SafeDelete(fQueryResults);
+   SafeDelete(fDispatchTimer);
+   SafeDelete(fStopTimer);
 }
 
 //______________________________________________________________________________
@@ -147,6 +230,19 @@ void TProofPlayer::StopProcess(Bool_t abort, Int_t timeout)
 }
 
 //______________________________________________________________________________
+void TProofPlayer::SetDispatchTimer(Bool_t on)
+{
+   // Enable/disable the timer to dispatch pening events while processing.
+
+   SafeDelete(fDispatchTimer);
+   ResetBit(TProofPlayer::kDispatchOneEvent);
+   if (on) {
+      fDispatchTimer = new TDispatchTimer(this);
+      fDispatchTimer->Start();
+   }
+}
+
+//______________________________________________________________________________
 void TProofPlayer::SetStopTimer(Bool_t on, Bool_t abort, Int_t timeout)
 {
    // Enable/disable the timer to stop/abort processing.
@@ -155,75 +251,20 @@ void TProofPlayer::SetStopTimer(Bool_t on, Bool_t abort, Int_t timeout)
    fStopTimerMtx = (fStopTimerMtx) ? fStopTimerMtx : new TMutex(kTRUE);
    R__LOCKGUARD(fStopTimerMtx);
 
+   // Clean-up the timer
+   SafeDelete(fStopTimer);
    if (on) {
-
-      if (gDebug > 0)
-         Info ("SetStopTimer","START: %d, timeout: %d", abort, timeout);
-
-      // Make sure that 'timeout' make sense, i.e. not larger than 10 days
-      if (timeout > 864000) {
-         Warning("SetStopTimer",
-                 "Abnormous timeout value (%d): corruption? setting to 0", timeout);
-         timeout = 0;
-      }
-      // Set a minimum value (0 does not seem to start the timer ...)
-      timeout = (timeout <= 0) ? 1 : timeout;
       // create timer
-      fStopTimer = new TTimer((timeout * 1000), kFALSE);
-      // Connect it to the HandleTermination
-      if (abort)
-         fStopTimer->Connect("Timeout()", "TProofPlayer", this, "HandleAbortTimer()");
-      else
-         fStopTimer->Connect("Timeout()", "TProofPlayer", this, "HandleStopTimer()");
+      fStopTimer = new TStopTimer(this, abort, timeout);
       // Start the countdown
-      fStopTimer->Start(-1, kTRUE);
-   } else {
-
+      fStopTimer->Start();
       if (gDebug > 0)
-         Info ("SetStopTimer",
-               "STOP: %d, timeout: %d, timer: %p", abort, timeout, fStopTimer);
-
-      if (fStopTimer) {
-         // Stop timer
-         fStopTimer->Stop();
-         // Disconnect from HandleTermination
-         if (abort)
-            fStopTimer->Disconnect("Timeout()", this, "HandleAbortTimer()");
-         else
-            fStopTimer->Disconnect("Timeout()", this, "HandleStopTimer()");
-         // Clean-up the timer
-         SafeDelete(fStopTimer);
-      }
+         Info ("SetStopTimer", "%s timer STARTED (timeout: %d)",
+                               (abort ? "ABORT" : "STOP"), timeout);
+   } else {
+      if (gDebug > 0)
+         Info ("SetStopTimer", "timer STOPPED");
    }
-}
-
-//______________________________________________________________________________
-void TProofPlayer::HandleStopTimer()
-{
-   // Handle the signal coming from the expiration of the timer
-   // associated with a stop request; this is set when receiving a STOP
-   // process request to hard stop long time-expensive events.
-   // We raise an exception which will be processed in the
-   // event loop.
-
-   if (gDebug > 0)
-      Info ("HandleAbortTimer","called!");
-
-   Throw(kPEX_STOPPED);
-}
-
-//______________________________________________________________________________
-void TProofPlayer::HandleAbortTimer()
-{
-   // Handle the signal coming from the expiration of the timer
-   // associated with an abort request.
-   // We raise an exception which will be processed in the
-   // event loop.
-
-   if (gDebug > 0)
-      Info ("HandleAbortTimer","called!");
-
-   Throw(kPEX_ABORTED);
 }
 
 //______________________________________________________________________________
@@ -694,6 +735,8 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    if (gMonitoringWriter)
       gMonitoringWriter->SendProcessingProgress(0,0,kTRUE);
 
+   // Start asynchronous timer to dispatch pending events
+   SetDispatchTimer(kTRUE);
 
    // Loop over range
    gAbort = kFALSE;
@@ -737,7 +780,10 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
             gMonitoringWriter->SendProcessingProgress(fEventsProcessed,TFile::GetFileBytesRead()-readbytesatstart, kFALSE);
       }
 
-      gSystem->DispatchOneEvent(kTRUE);
+      if (TestBit(TProofPlayer::kDispatchOneEvent)) {
+         gSystem->DispatchOneEvent(kTRUE);
+         ResetBit(TProofPlayer::kDispatchOneEvent);
+      }
       if (!ok || gROOT->IsInterrupted()) break;
    }
    PDB(kGlobal,2) Info("Process","%lld events processed",fEventsProcessed);
@@ -748,6 +794,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    }
 
    // Stop active timers
+   SetDispatchTimer(kFALSE);
    if (fStopTimer != 0)
       SetStopTimer(kFALSE, gAbort);
    if (fFeedbackTimer != 0)
@@ -942,7 +989,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       TNamed *packetizer;
       if ((packetizer = (TNamed*)fInput->FindObject("PROOF_Packetizer")) != 0) {
          Info("Process","Using Alternate Packetizer: %s", packetizer->GetTitle());
-         TClass *cl = gROOT->GetClass(packetizer->GetTitle());
+         TClass *cl = TClass::GetClass(packetizer->GetTitle());
          if (cl == 0) {
             Error("Process","Class '%s' not found", packetizer->GetTitle());
             fExitStatus = kAborted;
@@ -1859,24 +1906,25 @@ void TProofPlayerRemote::SetupFeedback()
 {
    // Setup reporting of feedback objects.
 
-   if ( IsClient() ) return; // Client does not need timer
+   if (IsClient()) return; // Client does not need timer
 
    fFeedback = (TList*) fInput->FindObject("FeedbackList");
 
    PDB(kFeedback,1) Info("SetupFeedback","\"FeedbackList\" %sfound",
       fFeedback == 0 ? "NOT ":"");
 
-   if (fFeedback == 0) return;
+   if (fFeedback == 0 || fFeedback->GetSize() == 0) return;
 
    // OK, feedback was requested, setup the timer
+   SafeDelete(fFeedbackTimer);
    TParameter<Int_t> *par = 0;
    TObject *obj = fInput->FindObject("PROOF_FeedbackPeriod");
-   Int_t period = 2000;
+   fFeedbackPeriod = 2000;
    if (obj && (par = dynamic_cast<TParameter<Int_t>*>(obj)))
-      period = par->GetVal();
+      fFeedbackPeriod = par->GetVal();
    fFeedbackTimer = new TTimer;
    fFeedbackTimer->SetObject(this);
-   fFeedbackTimer->Start(period, kTRUE);
+   fFeedbackTimer->Start(fFeedbackPeriod, kTRUE);
 }
 
 //______________________________________________________________________________
@@ -1888,7 +1936,7 @@ void TProofPlayerRemote::StopFeedback()
 
    PDB(kFeedback,1) Info("StopFeedback","Stop Timer");
 
-   delete fFeedbackTimer; fFeedbackTimer = 0;
+   SafeDelete(fFeedbackTimer);
 }
 
 //______________________________________________________________________________
@@ -1898,9 +1946,9 @@ Bool_t TProofPlayerRemote::HandleTimer(TTimer *)
 
    PDB(kFeedback,2) Info("HandleTimer","Entry");
 
-   R__ASSERT( !IsClient() );
+   R__ASSERT(!IsClient());
 
-   if ( fFeedbackTimer == 0 ) return kFALSE; // timer already switched off
+   if (fFeedbackTimer == 0) return kFALSE; // timer already switched off
 
 
    // process local feedback objects
@@ -1919,8 +1967,8 @@ Bool_t TProofPlayerRemote::HandleTimer(TTimer *)
    else
       delete fb;
 
-   if ( fFeedbackLists == 0 ) {
-      fFeedbackTimer->Start(500,kTRUE);   // maybe next time
+   if (fFeedbackLists == 0) {
+      fFeedbackTimer->Start(fFeedbackPeriod, kTRUE);   // maybe next time
       return kFALSE;
    }
 
@@ -1936,7 +1984,7 @@ Bool_t TProofPlayerRemote::HandleTimer(TTimer *)
 
    delete fb;
 
-   fFeedbackTimer->Start(500,kTRUE);
+   fFeedbackTimer->Start(fFeedbackPeriod, kTRUE);
 
    return kFALSE; // ignored?
 }
@@ -2024,7 +2072,6 @@ Long64_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
 
 ClassImp(TProofPlayerSlave)
 
-
 //______________________________________________________________________________
 void TProofPlayerSlave::SetupFeedback()
 {
@@ -2035,16 +2082,21 @@ void TProofPlayerSlave::SetupFeedback()
    PDB(kFeedback,1) Info("SetupFeedback","\"FeedbackList\" %sfound",
       fb == 0 ? "NOT ":"");
 
-   if (fb == 0) return;
+   if (fb == 0 || fb->GetSize() == 0) return;
 
    // OK, feedback was requested, setup the timer
 
+   SafeDelete(fFeedbackTimer);
+   TParameter<Int_t> *par = 0;
+   TObject *obj = fInput->FindObject("PROOF_FeedbackPeriod");
+   fFeedbackPeriod = 2000;
+   if (obj && (par = dynamic_cast<TParameter<Int_t>*>(obj)))
+      fFeedbackPeriod = par->GetVal();
    fFeedbackTimer = new TTimer;
    fFeedbackTimer->SetObject(this);
-   fFeedbackTimer->Start(500,kFALSE);
+   fFeedbackTimer->Start(fFeedbackPeriod, kTRUE);
 
    fFeedback = fb;
-
 }
 
 //______________________________________________________________________________
@@ -2056,9 +2108,7 @@ void TProofPlayerSlave::StopFeedback()
 
    PDB(kFeedback,1) Info("StopFeedback","Stop Timer");
 
-   fFeedbackTimer->Stop();
-   delete fFeedbackTimer;
-   fFeedbackTimer = 0;
+   SafeDelete(fFeedbackTimer);
 }
 
 //______________________________________________________________________________
@@ -2076,7 +2126,7 @@ Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
       gProofServ->GetSocket()->Send(m);
    }
 
-   if ( fFeedback == 0 ) return kFALSE;
+   if (fFeedback == 0) return kFALSE;
 
    TList *fb = new TList;
    fb->SetOwner(kFALSE);
@@ -2104,7 +2154,7 @@ Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
 
    delete fb;
 
-   fFeedbackTimer->Start(500,kTRUE);
+   fFeedbackTimer->Start(fFeedbackPeriod, kTRUE);
 
    return kFALSE; // ignored?
 }
@@ -2365,8 +2415,13 @@ void TProofPlayerSuperMaster::SetupFeedback()
    }
 
    // setup the timer for progress message
-
+   SafeDelete(fFeedbackTimer);
+   TParameter<Int_t> *par = 0;
+   TObject *obj = fInput->FindObject("PROOF_FeedbackPeriod");
+   fFeedbackPeriod = 2000;
+   if (obj && (par = dynamic_cast<TParameter<Int_t>*>(obj)))
+      fFeedbackPeriod = par->GetVal();
    fFeedbackTimer = new TTimer;
    fFeedbackTimer->SetObject(this);
-   fFeedbackTimer->Start(500,kFALSE);
+   fFeedbackTimer->Start(fFeedbackPeriod, kTRUE);
 }

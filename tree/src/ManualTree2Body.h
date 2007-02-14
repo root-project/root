@@ -1,5 +1,6 @@
 #include "TEmulatedCollectionProxy.h"
-
+#include "TROOT.h"
+   
 static int G__ManualTree2_169_2_18(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
 {
   // We need to emulate
@@ -7,9 +8,9 @@ static int G__ManualTree2_169_2_18(G__value *result7,G__CONST char *funcname,str
 
    // Here find the class name 
    G__ClassInfo ti( libp->para[2].tagnum );
-   TClass *ptrClass = gROOT->GetClass(ti.Name());
+   TClass *ptrClass = TClass::GetClass(ti.Name());
    const char* classname = (const char*)G__int(libp->para[1]);
-   TClass *claim = gROOT->GetClass(classname);
+   TClass *claim = TClass::GetClass(classname);
    void **addr = (void**)G__int(libp->para[2]);
    
    const char *branchname = (const char*)G__int(libp->para[0]);
@@ -76,7 +77,7 @@ static int G__ManualTree2_169_3_18(G__value *result7,G__CONST char *funcname,str
    // return BranchImp(name,TBuffer::GetClass(typeid(T)),addobj,bufsize,splitlevel);
 
    G__ClassInfo ti( libp->para[1].tagnum );
-   TClass *ptrClass = gROOT->GetClass(ti.Name());
+   TClass *ptrClass = TClass::GetClass(ti.Name());
    TClass *actualClass = 0;
    void **addr = (void**)G__int(libp->para[1]);
    if (ptrClass && addr) actualClass = ptrClass->GetActualClass(*addr);
@@ -142,7 +143,7 @@ static int G__ManualTree2_169_5_18(G__value *result7,G__CONST char *funcname,str
 
    G__TypeInfo ti( libp->para[1] );
    string type( TClassEdit::ShortType(ti.Name(),TClassEdit::kDropTrailStar) );
-   TClass *ptrClass = gROOT->GetClass(type.c_str());
+   TClass *ptrClass = TClass::GetClass(type.c_str());
    TDataType *data = gROOT->GetType(type.c_str());
    EDataType datatype = data ? (EDataType)data->GetType() : kOther_t;
    TBranch **branchPtr = 0;

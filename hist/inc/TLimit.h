@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.h,v 1.9 2006/05/26 15:13:01 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.h,v 1.10 2006/10/15 06:23:48 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 #ifndef ROOT_TLimit
@@ -6,9 +6,6 @@
 
 #ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TMath
-#include "TMath.h"
 #endif
 
 #include "TVectorDfwd.h"
@@ -34,7 +31,7 @@ class TH1;
 class TLimit {
  protected:
    static bool Fluctuate(TLimitDataSource * input, TLimitDataSource * output, bool init,TRandom *, bool stat=false);
-   inline static Double_t LogLikelihood(Double_t s, Double_t b, Double_t b2, Double_t d) { return d*TMath::Log((s+b)/b2); }
+   static Double_t LogLikelihood(Double_t s, Double_t b, Double_t b2, Double_t d);
 
 public:
    TLimit() {}

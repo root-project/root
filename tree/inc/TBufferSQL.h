@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBufferSQL.h,v 1.3 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBufferSQL.h,v 1.4 2005/11/21 18:18:44 rdm Exp $
 // Author: Philippe Canal 2005
 
 /*************************************************************************
@@ -20,8 +20,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TBuffer
-#include "TBuffer.h"
+#ifndef ROOT_TBufferFile
+#include "TBufferFile.h"
 #endif
 #ifndef ROOT_TString
 #include "TString.h"
@@ -31,7 +31,7 @@
 class TSQLResult;
 class TSQLRow;
 
-class TBufferSQL : public TBuffer {
+class TBufferSQL : public TBufferFile {
 
 private:
    std::vector<Int_t>::const_iterator fIter;
@@ -46,43 +46,45 @@ private:
 
 public:
    TBufferSQL();
-   TBufferSQL(EMode mode, std::vector<Int_t> *vc, TString *insert_query, TSQLRow **rowPtr);
-   TBufferSQL(EMode mode, Int_t bufsiz, std::vector<Int_t> *vc, TString *insert_query, TSQLRow **rowPtr);
-   TBufferSQL(EMode mode, Int_t bufsiz, std::vector<Int_t> *vc, TString *insert_query, TSQLRow **rowPtr,void *buf, Bool_t adopt = kTRUE);
+   TBufferSQL(TBuffer::EMode mode, std::vector<Int_t> *vc, TString *insert_query, TSQLRow **rowPtr);
+   TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc, TString *insert_query, TSQLRow **rowPtr);
+   TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc, TString *insert_query, TSQLRow **rowPtr,void *buf, Bool_t adopt = kTRUE);
    ~TBufferSQL();
 
    void ResetOffset();
 
-   virtual TBuffer    &operator>>(Bool_t    &);
-   virtual TBuffer    &operator>>(Char_t    &);
-   virtual TBuffer    &operator>>(UChar_t   &);
-   virtual TBuffer    &operator>>(Short_t   &);
-   virtual TBuffer    &operator>>(UShort_t  &);
-   virtual TBuffer    &operator>>(Int_t     &);
-   virtual TBuffer    &operator>>(UInt_t    &);
-   virtual TBuffer    &operator>>(Float_t   &);
-   virtual TBuffer    &operator>>(Long_t    &);
-   virtual TBuffer    &operator>>(ULong_t   &);
-   virtual TBuffer    &operator>>(Long64_t  &);
-   virtual TBuffer    &operator>>(ULong64_t &);
-   virtual TBuffer    &operator>>(Double_t  &);
-   virtual TBuffer    &operator>>(Char_t    *);
+   virtual   void     ReadBool(Bool_t       &b);
+   virtual   void     ReadChar(Char_t       &c);
+   virtual   void     ReadUChar(UChar_t     &c);
+   virtual   void     ReadShort(Short_t     &s);
+   virtual   void     ReadUShort(UShort_t   &s);
+   virtual   void     ReadInt(Int_t         &i);
+   virtual   void     ReadUInt(UInt_t       &i);
+   virtual   void     ReadLong(Long_t       &l);
+   virtual   void     ReadULong(ULong_t     &l);
+   virtual   void     ReadLong64(Long64_t   &l);
+   virtual   void     ReadULong64(ULong64_t &l);
+   virtual   void     ReadFloat(Float_t     &f);
+   virtual   void     ReadDouble(Double_t   &d);
+   virtual   void     ReadCharP(Char_t      *c);
+   virtual   void     ReadTString(TString   &s);
 
+   virtual   void     WriteBool(Bool_t       b);
+   virtual   void     WriteChar(Char_t       c);
+   virtual   void     WriteUChar(UChar_t     c);
+   virtual   void     WriteShort(Short_t     s);
+   virtual   void     WriteUShort(UShort_t   s);
+   virtual   void     WriteInt(Int_t         i);
+   virtual   void     WriteUInt(UInt_t       i);
+   virtual   void     WriteLong(Long_t       l);
+   virtual   void     WriteULong(ULong_t     l);
+   virtual   void     WriteLong64(Long64_t   l);
+   virtual   void     WriteULong64(ULong64_t l);
+   virtual   void     WriteFloat(Float_t     f);
+   virtual   void     WriteDouble(Double_t   d);
+   virtual   void     WriteCharP(const Char_t *c);
+   virtual   void     WriteTString(const TString  &s);
 
-   virtual   TBuffer  &operator<<(Bool_t    b);
-   virtual   TBuffer  &operator<<(Char_t    c);
-   virtual   TBuffer  &operator<<(UChar_t   c);
-   virtual   TBuffer  &operator<<(Short_t   h);
-   virtual   TBuffer  &operator<<(UShort_t  h);
-   virtual   TBuffer  &operator<<(Int_t     i);
-   virtual   TBuffer  &operator<<(UInt_t    i);
-   virtual   TBuffer  &operator<<(Long_t    l);
-   virtual   TBuffer  &operator<<(ULong_t   l);
-   virtual   TBuffer  &operator<<(Long64_t  l);
-   virtual   TBuffer  &operator<<(ULong64_t l);
-   virtual   TBuffer  &operator<<(Float_t   f);
-   virtual   TBuffer  &operator<<(Double_t  d);
-   virtual   TBuffer  &operator<<(const Char_t *c);
 
    virtual   void     WriteFastArray(const Bool_t    *b, Int_t n);
    virtual   void     WriteFastArray(const Char_t    *c, Int_t n);

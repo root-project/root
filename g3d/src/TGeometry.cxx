@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.11 2006/05/24 15:31:40 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.12 2006/05/26 09:08:09 brun Exp $
 // Author: Rene Brun   22/09/95
 
 /*************************************************************************
@@ -586,7 +586,7 @@ void TGeometry::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TGeometry::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         b.ReadClassBuffer(TGeometry::Class(), this, R__v, R__s, R__c);
       } else {
          //====process old versions before automatic schema evolution
          TNamed::Streamer(b);
@@ -634,7 +634,7 @@ void TGeometry::Streamer(TBuffer &b)
 
       fCurrentNode = (TNode*)GetListOfNodes()->First();
    } else {
-      TGeometry::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TGeometry::Class(),this);
    }
 }
 

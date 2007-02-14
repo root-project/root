@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttFill.h,v 1.4 2003/08/06 20:25:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttFill.h,v 1.5 2006/07/03 16:10:43 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -21,8 +21,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Gtypes
-#include "Gtypes.h"
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+#ifndef ROOT_Riosfwd
+#include "Riosfwd.h"
 #endif
 
 

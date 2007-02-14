@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.1 2006/11/27 14:14:24 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.4 2007/02/09 11:51:09 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 #include "TClassTable.h"
 #include "TCut.h"
 #include "TError.h"
+#include "TEventList.h"
 #include "TFile.h"
 #include "TFileInfo.h"
 #include "TFriendElement.h"
@@ -69,6 +70,24 @@
 
 ClassImp(TDSetElement)
 ClassImp(TDSet)
+
+//______________________________________________________________________________
+TDSetElement::TDSetElement() :
+   fFileName(),
+   fObjName(),
+   fDirectory(),
+   fFirst(0),
+   fNum(0),
+   fMsd(),
+   fTDSetOffset(0),
+   fEventList(NULL),
+   fValid(kFALSE),
+   fEntries(0),
+   fFriends(NULL),
+   fIsTree(kFALSE)
+{
+   // Default constructor
+}
 
 //______________________________________________________________________________
 TDSetElement::TDSetElement(const char *file, const char *objname, const char *dir,
@@ -523,7 +542,7 @@ TDSet::TDSet(const char *name,
    if (name && strlen(name) > 0) {
       // In the old constructor signature it was the 'type'
       if (!type) {
-         if ((c = gROOT->GetClass(name)))
+         if ((c = TClass::GetClass(name)))
             fType = name;
          else
             // Default type is 'TTree'
@@ -533,16 +552,16 @@ TDSet::TDSet(const char *name,
          fName = name;
          // Check type
          if (strlen(type) > 0)
-            if ((c = gROOT->GetClass(type)))
+            if ((c = TClass::GetClass(type)))
                fType = type;
       }
    } else if (type && strlen(type) > 0) {
       // Check the type
-      if ((c = gROOT->GetClass(type)))
+      if ((c = TClass::GetClass(type)))
          fType = type;
    }
    // The correct class type
-   c = gROOT->GetClass(fType);
+   c = TClass::GetClass(fType);
 
    fIsTree = (c->InheritsFrom("TTree")) ? kTRUE : kFALSE;
 

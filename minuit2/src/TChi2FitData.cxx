@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TChi2FitData.cxx,v 1.5 2006/07/04 10:36:52 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TChi2FitData.cxx,v 1.6 2006/07/05 08:32:39 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -19,6 +19,7 @@
 #include <iostream>
 #endif
 
+#include "TList.h"
 #include "TF1.h"
 #include "TH1.h"
 #include "TGraph.h"

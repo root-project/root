@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.62 2006/11/15 18:04:08 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.68 2007/01/29 15:34:45 couet Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -10,8 +10,10 @@
  *************************************************************************/
 
 #include "Riostream.h"
+#include "TROOT.h"
 #include "TClass.h"
 #include "TLatex.h"
+#include "TMath.h"
 #include "TVirtualPad.h"
 #include "TVirtualPS.h"
 
@@ -307,7 +309,7 @@ TLatex::TLatex(const TLatex &text) : TText(text), TAttLine(text)
 }
 
 //______________________________________________________________________________
-TLatex& TLatex::operator=(const TLatex& lt) 
+TLatex& TLatex::operator=(const TLatex& lt)
 {
    //assignment operator
    if(this!=&lt) {
@@ -322,7 +324,7 @@ TLatex& TLatex::operator=(const TLatex& lt)
       fOriginSize=lt.fOriginSize;
       fTabSize=lt.fTabSize;
       fTabSize=lt.fTabSize;
-   } 
+   }
    return *this;
 }
 
@@ -987,7 +989,6 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
       TextSpec_t newSpec = spec;
       newSpec.fFont = 122;
       char letter = 97 + opGreek;
- //        Double_t yoffset = GetHeight()*spec.fSize/20.; // Greek letter too low
       Double_t yoffset = 0.; // Greek letter too low
       if (opGreek>25) letter -= 58;
       if (opGreek == 52) letter = '\241'; //varUpsilon
@@ -1138,7 +1139,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
                   gVirtualPS = saveps;
                   gVirtualPS->SetTextAlign(22);
                   gVirtualPS->Text(xx, yy, "~");
-               } 
+               }
             }
             break;
          case 9: // slash
@@ -1893,7 +1894,13 @@ TLatexFormSize TLatex::FirstParse(Double_t angle, Double_t size, const Char_t *t
 
    TextSpec_t spec;
    spec.fAngle = angle;
-   spec.fSize  = size;
+   if (fTextFont%10 == 3) {
+      Double_t hw = TMath::Max((Double_t)gPad->XtoPixel(gPad->GetX2()),
+                               (Double_t)gPad->YtoPixel(gPad->GetY1()));
+      spec.fSize = size/hw;
+   } else {
+      spec.fSize  = size;
+   }
    spec.fColor = GetTextColor();
    spec.fFont  = GetTextFont();
    Short_t halign = fTextAlign/10;
@@ -1950,7 +1957,7 @@ Double_t TLatex::GetXsize()
 
 
 //______________________________________________________________________________
-void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h)
+void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 {
    // Return text size in pixels
 
@@ -1965,11 +1972,36 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h)
    }
    fError = 0 ;
 
-   const Char_t *text = newText.Data() ;
-   TLatexFormSize fs = FirstParse(GetTextAngle(),GetTextSize(),text);
-   delete[] fTabSize;
-   w = (UInt_t)fs.Width();
-   h = (UInt_t)fs.Height();
+   if (angle) {
+      Int_t cBoxX[4], cBoxY[4];
+      Int_t ptx, pty;
+      if (TestBit(kTextNDC)) {
+         ptx = gPad->UtoPixel(fX);
+         pty = gPad->VtoPixel(fY);
+      } else {
+         ptx = gPad->XtoAbsPixel(gPad->XtoPad(fX));
+         pty = gPad->YtoAbsPixel(gPad->YtoPad(fY));
+      }
+      GetControlBox(ptx, pty, fTextAngle, cBoxX, cBoxY);
+      Int_t x1 = cBoxX[0];
+      Int_t x2 = cBoxX[0];
+      Int_t y1 = cBoxY[0];
+      Int_t y2 = cBoxY[0];
+      for (Int_t i=1; i<4; i++) {
+         if (cBoxX[i] < x1) x1 = cBoxX[i];
+         if (cBoxX[i] > x2) x2 = cBoxX[i];
+         if (cBoxY[i] < y1) y1 = cBoxY[i];
+         if (cBoxY[i] > y2) y2 = cBoxY[i];
+      }
+      w = x2-x1;
+      h = y2-y1;
+   } else {
+      const Char_t *text = newText.Data() ;
+      TLatexFormSize fs = FirstParse(GetTextAngle(),GetTextSize(),text);
+      delete[] fTabSize;
+      w = (UInt_t)fs.Width();
+      h = (UInt_t)fs.Height();
+   }
 }
 
 

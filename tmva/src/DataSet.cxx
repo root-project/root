@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: DataSet.cxx,v 1.82 2006/11/17 14:59:23 stelzer Exp $
+// @(#)root/tmva $Id: DataSet.cxx,v 1.7 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -35,6 +35,7 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TProfile.h"
+#include "TMath.h"
 #include "TMatrixF.h"
 #include "TVectorF.h"
 

@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienCollection.h,v 1.3 2005/12/09 16:24:34 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.h,v 1.4 2006/10/05 14:56:24 rdm Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -51,10 +51,12 @@ private:
    TIter      *fEventListIter;  // event file list iterator
    TMap       *fCurrent;        // current event file map
 
+   TAlienCollection(const TAlienCollection &); // Not implemented
+   TAlienCollection& operator=(const TAlienCollection &); // Not implemented
    virtual void ParseXML();
 
 public:
-   TAlienCollection() : fEventList(0), fEventListIter(0), fCurrent(0) { }
+   TAlienCollection() : fXmlFile(), fEventList(0), fEventListIter(0), fCurrent(0) { }
    TAlienCollection(const char *localCollectionFile);
 
    virtual ~TAlienCollection();

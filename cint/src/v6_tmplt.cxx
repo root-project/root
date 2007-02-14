@@ -2047,45 +2047,54 @@ int G__instantiate_templateclass(char *tagnamein, int noerror)
 
   /* search for template class name */
   deftmpclass = &G__definedtemplateclass;
-  while(deftmpclass->next) { /* BUG FIX */
-    if(hash==deftmpclass->hash && strcmp(atom_name,deftmpclass->name)==0) {
+  while (deftmpclass->next) { /* BUG FIX */
+    if ((hash == deftmpclass->hash) &&
+        (atom_name[0] == deftmpclass->name[0]) &&
+        (strcmp(atom_name, deftmpclass->name) == 0)
+    ) {
       /* look for ordinary scope resolution */
-      if((-1==scope_tagnum&&(-1==deftmpclass->parent_tagnum||
-                             env_tagnum==deftmpclass->parent_tagnum))||
-         scope_tagnum==deftmpclass->parent_tagnum) {
-        goto exit_loop;
-      }
-      else if(-1==scope_tagnum) {
+      if (
+        (
+          (scope_tagnum == -1) && 
+          ((deftmpclass->parent_tagnum == -1) ||
+           (env_tagnum == deftmpclass->parent_tagnum))
+        ) ||
+        (scope_tagnum == deftmpclass->parent_tagnum)
+      ) {
+        break;
+      } else if (scope_tagnum == -1) {
         int env_parent_tagnum = env_tagnum;
-        if(baseclass) {
+        if (baseclass) {
           /* look for using directive scope resolution */
-          for(temp=0;temp<baseclass->basen;temp++) {
-            if(baseclass->basetagnum[temp]==deftmpclass->parent_tagnum) {
+          for (temp = 0; temp < baseclass->basen; temp++) {
+            if (baseclass->basetagnum[temp] == deftmpclass->parent_tagnum) {
               goto exit_loop;
             }
           }
         }
         /* look for enclosing scope resolution */
-        while(-1!=env_parent_tagnum) {
+        while (env_parent_tagnum != -1) {
           env_parent_tagnum = G__struct.parent_tagnum[env_parent_tagnum];
-          if(env_parent_tagnum==deftmpclass->parent_tagnum) goto exit_loop;
-          if(G__struct.baseclass[env_parent_tagnum]) {
-            for(temp=0;temp<G__struct.baseclass[env_parent_tagnum]->basen;temp++) {
-              if(G__struct.baseclass[env_parent_tagnum]->basetagnum[temp]==deftmpclass->parent_tagnum) {
+          if (env_parent_tagnum == deftmpclass->parent_tagnum) {
+            goto exit_loop;
+          }
+          if (G__struct.baseclass[env_parent_tagnum]) {
+            for (temp = 0; temp < G__struct.baseclass[env_parent_tagnum]->basen; temp++) {
+              if (G__struct.baseclass[env_parent_tagnum]->basetagnum[temp] == deftmpclass->parent_tagnum) {
                 goto exit_loop;
               }
             }
           }
         }
-        /* look in global scope (handle for using declaration info */
-        for(temp=0;temp<G__globalusingnamespace.basen;temp++) {
-          if(G__globalusingnamespace.basetagnum[temp]==deftmpclass->parent_tagnum) {
+        /* look in global scope (handle using declaration) */
+        for (temp = 0; temp < G__globalusingnamespace.basen; temp++) {
+          if (G__globalusingnamespace.basetagnum[temp] == deftmpclass->parent_tagnum) {
             goto exit_loop;
           }
         }
       }
     }
-    deftmpclass=deftmpclass->next;
+    deftmpclass = deftmpclass->next;
   }
  exit_loop:
 

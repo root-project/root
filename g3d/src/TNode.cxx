@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.30 2006/05/23 04:47:36 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.31 2006/05/24 15:31:40 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -846,7 +846,7 @@ void TNode::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TNode::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         b.ReadClassBuffer(TNode::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -867,7 +867,7 @@ void TNode::Streamer(TBuffer &b)
       //====end of old versions
 
    } else {
-      TNode::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TNode::Class(),this);
    }
 }
 

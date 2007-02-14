@@ -12,8 +12,14 @@
 #ifndef ROOT_TSpectrum2Painter
 #define ROOT_TSpectrum2Painter
 
+
+#ifndef ROOT_TNamed
+#include "TNamed.h"
+#endif
+
 class TH2;
 class TLine;
+class TColor;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

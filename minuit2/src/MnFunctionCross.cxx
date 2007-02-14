@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnFunctionCross.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnFunctionCross.cxx,v 1.3 2007/02/12 12:05:15 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -16,14 +16,17 @@
 #include "Minuit2/MnParabolaFactory.h"
 #include "Minuit2/MnCross.h"
 #include "Minuit2/MnMachinePrecision.h"
-#include "Minuit2/MnPrint.h"
+
+#if defined(DEBUG) || defined(WARNINGMSG)
+#include "Minuit2/MnPrint.h" 
+#endif
+
 
 namespace ROOT {
 
    namespace Minuit2 {
 
 
-#define DEBUG
 
 MnCross MnFunctionCross::operator()(const std::vector<unsigned int>& par, const std::vector<double>& pmid, 
                                     const std::vector<double>& pdir, double tlr, unsigned int maxcalls) const {
@@ -246,7 +249,10 @@ L500:
          double s1 = coeff2 + 2.*x1*coeff3;
          double s2 = coeff2 + 2.*x2*coeff3;
          
-         if(s1*s2 > 0.) std::cout<<"MnFunctionCross problem 1"<<std::endl;
+         if(s1*s2 > 0.) 
+#ifdef WARNINGMSG
+            MN_INFO_MSG("MnFunctionCross problem 1");
+#endif
          aopt = x1;
          double slope = s1;
          if(s2 > 0.) {

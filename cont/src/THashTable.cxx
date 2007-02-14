@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.13 2006/07/26 13:36:42 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.14 2006/10/27 16:03:37 rdm Exp $
 // Author: Fons Rademakers   27/09/95
 
 /*************************************************************************
@@ -31,7 +31,6 @@
 #include "THashTable.h"
 #include "TObjectTable.h"
 #include "TList.h"
-#include "TMath.h"
 #include "TError.h"
 
 

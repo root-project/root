@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.23 2006/03/28 16:43:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.25 2007/01/12 10:20:08 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
 #include "TError.h"
+#include "TMathBase.h"
 
 
 ClassImp(TColor)

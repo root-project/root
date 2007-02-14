@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.10 2005/06/23 10:47:54 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.11 2006/05/13 11:00:50 brun Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -21,8 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Htypes
-#include "Htypes.h"
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
 #endif
 
 

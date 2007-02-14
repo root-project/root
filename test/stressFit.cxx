@@ -55,6 +55,7 @@
 
 #include "TVirtualFitter.h"
 #include "TSystem.h"
+#include "TROOT.h"
 #include "TBenchmark.h"
 #include "TMath.h"
 #include "TStopwatch.h"

@@ -18,7 +18,7 @@
 #include <TFile.h>
 #include <TF1.h>
 #include <TF3.h>
-#include <TH1.h>
+#include <TH2.h>
 #include <TNtuple.h>
 #include <TProfile.h>
 
@@ -43,6 +43,7 @@
 #include <TMultiGraph.h>
 #include <TGraph2D.h>
 #include <TImage.h>
+#include <TMath.h>
 
 
 void     stressGraphics (Int_t verbose=0);

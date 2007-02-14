@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.38 2006/10/08 15:28:01 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.40 2007/01/02 14:05:48 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -246,7 +246,7 @@ In addition, the paw version of mlpfit had additional limitations on the number 
 #include "TMultiLayerPerceptron.h"
 #include "TSynapse.h"
 #include "TNeuron.h"
-#include "TROOT.h"
+#include "TClass.h"
 #include "TTree.h"
 #include "TEventList.h"
 #include "TRandom3.h"
@@ -274,7 +274,7 @@ ClassImp(TMultiLayerPerceptron)
 TMultiLayerPerceptron::TMultiLayerPerceptron()
 {
    // Default constructor
-   if(!gROOT->GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
+   if(!TClass::GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
    fNetwork.SetOwner(true);
    fFirstLayer.SetOwner(false);
    fLastLayer.SetOwner(false);
@@ -326,7 +326,7 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    // Both the TTree and the TEventLists  can be defined in the constructor,
    // or later with the suited setter method.
 
-   if(!gROOT->GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
+   if(!TClass::GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
    fNetwork.SetOwner(true);
    fFirstLayer.SetOwner(false);
    fLastLayer.SetOwner(false);
@@ -383,7 +383,7 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
    // Both the TTree and the TEventLists  can be defined in the constructor,
    // or later with the suited setter method.
 
-   if(!gROOT->GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
+   if(!TClass::GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
    fNetwork.SetOwner(true);
    fFirstLayer.SetOwner(false);
    fLastLayer.SetOwner(false);
@@ -439,7 +439,7 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    // Both the TTree and the cut can be defined in the constructor,
    // or later with the suited setter method.
 
-   if(!gROOT->GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
+   if(!TClass::GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
    fNetwork.SetOwner(true);
    fFirstLayer.SetOwner(false);
    fLastLayer.SetOwner(false);
@@ -504,7 +504,7 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout,
    // Both the TTree and the cut can be defined in the constructor,
    // or later with the suited setter method.
 
-   if(!gROOT->GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
+   if(!TClass::GetClass("TTreePlayer")) gSystem->Load("libTreePlayer");
    fNetwork.SetOwner(true);
    fFirstLayer.SetOwner(false);
    fLastLayer.SetOwner(false);
@@ -1720,7 +1720,7 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
             switch(neuron->GetType()) {
                case (TNeuron::kSigmoid):
                   {
-                     sourcefile << "   return ((1/(1+exp(-input))) * ";
+                     sourcefile << "   return ((input < -709. ? 0. : (1/(1+exp(-input)))) * ";
                      break;
                   }
                case (TNeuron::kLinear):
@@ -1918,8 +1918,8 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
       TString pyfile = filename;
       pyfile += ".py";
       ofstream pythonfile(pyfile);
-      pythonfile << "from cmath import exp" << endl << endl;
-      pythonfile << "from cmath import tanh" << endl << endl;
+      pythonfile << "from math import exp" << endl << endl;
+      pythonfile << "from math import tanh" << endl << endl;
       pythonfile << "class " << classname << ":" << endl;
       pythonfile << "\tdef value(self,index";
       for (i = 0; i < fFirstLayer.GetEntriesFast(); i++) {
@@ -1955,6 +1955,7 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
             switch(neuron->GetType()) {
                case (TNeuron::kSigmoid):
                   {
+                     pythonfile << "\t\tif input<-709. : return " << neuron->GetNormalisation()[1] << endl;
                      pythonfile << "\t\treturn ((1/(1+exp(-input)))*";
                      break;
                   }

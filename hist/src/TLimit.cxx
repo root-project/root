@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.20 2006/05/26 15:13:02 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.21 2006/10/15 06:23:48 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -412,3 +412,9 @@ TConfidenceLevel *TLimit::ComputeLimit(Double_t s, Double_t b, Int_t d,
    return out;
 }
 
+Double_t TLimit::LogLikelihood(Double_t s, Double_t b, Double_t b2, Double_t d) 
+{ 
+   // Compute LogLikelihood (static function)
+   
+   return d*TMath::Log((s+b)/b2); 
+}

@@ -95,6 +95,10 @@ E: Nenad.Buncic@epfl.ch
 D: HTML documentation generator, 3D shapes and geometry classes,
 D: interface to X3D
 
+N: Toby Burnett
+E: tburnett@u.washington.edu
+D: Support for indirect files in hadd utility
+
 N: Damir Buskulic
 E: buskulic@lapp.in2p3.fr
 D: LinuxPPC support, contribution to the User's Guide

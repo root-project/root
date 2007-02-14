@@ -11,7 +11,13 @@ hpuxacc              for HP-UX 10.20 aCC
 hpuxgcc              for HP-UX 10.20 gcc
 hpuxia64acc          for HP-UX 11i v1.5 (IA-64) aCC
 hurddeb              for Debian GNU/Hurd with gcc and glibc
-linux                for Linux gcc 2.9x, gcc 3.x and glibc
+linux                for i386 Linux gcc 2.9x, gcc 3.x and glibc
+linuxrh42            for i386 Linux gcc 2.7.x.x and libc5
+linuxrh51            for i386 Linux gcc 2.7.x.x and glibc
+linuxsuse6           for i386 Linux (SuSE v6.0) gcc and glibc
+linuxicc             for i386 Linux Intel's icc and glibc
+linuxkcc             for i386 Linux KAI's KCC and glibc
+linuxpgcc            for i386 Linux pgcc and glibc
 linuxalphagcc        for Alpha Linux gcc and glibc
 linuxarm             for ARM Linux gcc and glibc
 linuxdeb             for Debian GNU/Linux v2.1+ gcc and glibc
@@ -19,14 +25,8 @@ linuxdeb2ppc         for PPC Linux based on Debian v2.0
 linuxia64ecc         for Itanium Linux Intel ecc and glibc
 linuxia64gcc         for Itanium Linux gcc 2.9x and glibc
 linuxia64sgi         for Itanium Linux sgiCC and glibc
-linuxicc             for Linux Intel's icc and glibc
-linuxkcc             for Linux KAI's KCC and glibc
-linuxpgcc            for Linux pgcc and glibc
 linuxppcgcc          for PPC Linux gcc and glibc
 linuxppc64gcc        for PPC 64 Linux gcc 3.x and glibc
-linuxrh42            for Linux gcc 2.7.x.x and libc5
-linuxrh51            for Linux gcc 2.7.x.x and glibc
-linuxsuse6           for Linux (SuSE v6.0) gcc and glibc
 linuxx8664gcc        for AMD Opteron and Intel EM64T Linux gcc 3.x and glibc
 linuxx8664icc        for AMD Opteron and Intel EM64T Linux gcc 3.x and glibc
 lynxos               for LynxOS with gcc

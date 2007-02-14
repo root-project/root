@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocketHandler.cxx,v 1.4 2006/04/19 10:57:44 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocketHandler.cxx,v 1.5 2006/06/05 22:51:14 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 #include "TSlave.h"
 #include "TXSocketHandler.h"
 #include "TXHandler.h"
+#include "TList.h"
 
 
 ClassImp(TXSocketHandler)

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.37 2005/04/21 06:24:46 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.38 2005/06/23 18:19:26 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -50,8 +50,8 @@ protected:
 
 public:
 
-   enum ESTLtype { kSTL       = 300 /* TStreamerInfo::kSTL */, 
-                   kSTLstring = 365 /* TStreamerInfo::kSTLstring */,   
+   enum ESTLtype { kSTL       = 300 /* TVirtualStreamerInfo::kSTL */, 
+                   kSTLstring = 365 /* TVirtualStreamerInfo::kSTLstring */,   
                    kSTLvector = 1,
                    kSTLlist   =  2,  kSTLdeque   =  3,   kSTLmap    = 4,
                    kSTLset    =  5,  kSTLmultimap=6,     kSTLmultiset=7};

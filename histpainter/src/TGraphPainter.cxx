@@ -12,6 +12,10 @@
 #include "TROOT.h"
 #include "TGraphPainter.h"
 #include "TMath.h"
+#include "TList.h"
+#include "TGraph.h"
+#include "TGraph2D.h"
+#include "TGraphDelaunay.h"
 #include "TPolyLine.h"
 #include "TPolyMarker.h"
 #include "TVirtualPad.h"
@@ -19,6 +23,7 @@
 #include "THLimitsFinder.h"
 #include "TStyle.h"
 #include "Hoption.h"
+#include "TH1.h"
 
 R__EXTERN TH1  *gCurrentHist;
 R__EXTERN Hoption_t Hoption;

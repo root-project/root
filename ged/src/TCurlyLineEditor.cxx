@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TCurlyLineEditor.cxx,v 1.11 2006/06/23 15:19:22 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TCurlyLineEditor.cxx,v 1.12 2006/09/25 13:35:58 rdm Exp $
 // Author: Ilka Antcheva, Otto Schaile 15/12/04
 
 /*************************************************************************
@@ -25,14 +25,11 @@
 
 #include "TCurlyLineEditor.h"
 #include "TGedEditor.h"
-#include "TGComboBox.h"
 #include "TGLabel.h"
 #include "TGNumberEntry.h"
 #include "TGButton.h"
 #include "TCurlyLine.h"
-#include "TVirtualPad.h"
 #include "iostream"
-#include "TClass.h"
 
 ClassImp(TCurlyLineEditor)
 
@@ -209,7 +206,7 @@ void TCurlyLineEditor::SetModel(TObject* obj)
 //______________________________________________________________________________
 void TCurlyLineEditor::ActivateBaseClassEditors(TClass* cl)
 {
-   // Add editors to fGedFrame and exclude TLineEditor.
+   // Exclude TAttFillEditor.
 
    fGedEditor->ExcludeClassEditor(TAttFill::Class());
    TGedFrame::ActivateBaseClassEditors(cl);

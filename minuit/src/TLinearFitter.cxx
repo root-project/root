@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.33 2006/10/07 05:38:16 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.36 2007/02/03 18:07:29 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -10,13 +10,16 @@
  *************************************************************************/
 
 #include "TLinearFitter.h"
+#include "TMath.h"
 #include "TDecompChol.h"
 #include "TGraph.h"
 #include "TGraph2D.h"
 #include "TMultiGraph.h"
 #include "TRandom.h"
 #include "TObjString.h"
-#include "TF1.h"
+#include "TF2.h"
+#include "TH1.h"
+#include "TList.h"
 
 
 ClassImp(TLinearFitter)

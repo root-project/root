@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.14 2006/05/24 16:44:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.16 2007/01/15 10:26:29 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -19,9 +19,6 @@
 #endif
 #ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TMath
-#include "TMath.h"
 #endif
 
 //////////////////////////////////////////////////////////////////////////
@@ -118,7 +115,7 @@ public:
       Double_t         GetHeight() const;
       Double_t         GetXsize();
       Double_t         GetYsize();
-      void             GetBoundingBox(UInt_t &w, UInt_t &h);
+      void             GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle = kFALSE);
       virtual void     Paint(Option_t *option="");
       virtual void     PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, const char *text);
 

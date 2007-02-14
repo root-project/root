@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.14 2006/05/23 04:47:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.15 2006/10/20 21:07:40 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -12,15 +12,11 @@
 #ifndef ROOT_TSpline
 #define ROOT_TSpline
 
-
-#ifndef ROOT_TH1
-#include "TH1.h"
-#endif
-
 #ifndef ROOT_TGraph
 #include "TGraph.h"
 #endif
 
+class TH1;
 class TF1;
 
 class TSpline : public TNamed, public TAttLine,
@@ -49,7 +45,7 @@ public:
       fDelta(delta), fXmin(xmin),
       fXmax(xmax), fNp(np), fKstep(step),
       fHistogram(0), fGraph(0), fNpx(100) {}
-   virtual ~TSpline() {if(fHistogram) delete fHistogram; if(fGraph) delete fGraph;}
+   virtual ~TSpline();
 
    virtual void     GetKnot(Int_t i, Double_t &x, Double_t &y) const =0;
    virtual void     Draw(Option_t *option="");

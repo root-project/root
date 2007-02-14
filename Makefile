@@ -51,12 +51,12 @@ endif
 
 ##### Modules to build #####
 
-MODULES       = build cint metautils pcre utils base cont meta net auth zip \
-                clib matrix newdelete hist tree freetype graf g3d gpad gui \
+MODULES       = build cint metautils pcre utils base cont meta io net math \
+                zip clib matrix newdelete hist tree freetype graf gpad g3d gui \
                 minuit histpainter treeplayer treeviewer physics postscript \
-                rint html eg geom geompainter vmc fumili mlp ged quadp \
-                guibuilder xml foam splot smatrix sql tmva geombuilder spectrum \
-                spectrumpainter fitpanel
+                rint html eg geom geompainter vmc fumili mlp ged quadp auth \
+                guibuilder xml foam splot smatrix sql tmva geombuilder \
+                spectrum spectrumpainter fitpanel
 
 ifeq ($(ARCH),win32)
 MODULES      += winnt win32gdk
@@ -238,7 +238,8 @@ RPATH        := -L$(LPATH)
 CINTLIBS     := -lCint
 CINT7LIBS    := -lCint7 -lReflex
 NEWLIBS      := -lNew
-ROOTLIBS     := -lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lMatrix
+ROOTLIBS     := -lCore -lCint -lNet -lHist -lGraf -lGraf3d -lGpad \
+                -lTree -lMatrix
 ifneq ($(ROOTDICTTYPE),cint)
 ROOTLIBS     += -lCintex -lReflex
 endif
@@ -248,6 +249,7 @@ CINTLIBS     := $(LPATH)/libCint.lib
 CINT7LIBS    := $(LPATH)/libCint7.lib $(LPATH)/libReflex.lib
 NEWLIBS      := $(LPATH)/libNew.lib
 ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
+                $(LPATH)/libNet.lib \
                 $(LPATH)/libHist.lib $(LPATH)/libGraf.lib \
                 $(LPATH)/libGraf3d.lib $(LPATH)/libGpad.lib \
                 $(LPATH)/libTree.lib $(LPATH)/libMatrix.lib
@@ -258,7 +260,7 @@ RINTLIBS     := $(LPATH)/libRint.lib
 endif
 
 # ROOTLIBSDEP is intended to match the content of ROOTLIBS
-ROOTLIBSDEP   = $(ORDER_) $(CORELIB) $(CINTLIB) $(HISTLIB) \
+ROOTLIBSDEP   = $(ORDER_) $(CORELIB) $(CINTLIB) $(NETLIB) $(HISTLIB) \
                 $(GRAFLIB) $(G3DLIB) $(GPADLIB) $(TREELIB) $(MATRIXLIB)
 ifneq ($(ROOTDICTTYPE),cint)
 ROOTLIBSDEP  += $(CINTEXLIB) $(REFLEXLIB)
@@ -267,27 +269,30 @@ endif
 # Force linking of not referenced libraries
 ifeq ($(FORCELINK),yes)
 ifeq ($(PLATFORM),aix5)
-ROOTULIBS    := -Wl,-u,.G__cpp_setupG__Hist     \
+ROOTULIBS    := -Wl,-u,.G__cpp_setupG__Net      \
+                -Wl,-u,.G__cpp_setupG__Hist     \
                 -Wl,-u,.G__cpp_setupG__Graf1    \
                 -Wl,-u,.G__cpp_setupG__G3D      \
                 -Wl,-u,.G__cpp_setupG__GPad     \
                 -Wl,-u,.G__cpp_setupG__Tree     \
                 -Wl,-u,.G__cpp_setupG__Matrix
 else
-ROOTULIBS    := -Wl,-u,_G__cpp_setupG__Hist    \
-                -Wl,-u,_G__cpp_setupG__Graf1   \
-                -Wl,-u,_G__cpp_setupG__G3D     \
-                -Wl,-u,_G__cpp_setupG__GPad    \
-                -Wl,-u,_G__cpp_setupG__Tree    \
+ROOTULIBS    := -Wl,-u,_G__cpp_setupG__Net      \
+                -Wl,-u,_G__cpp_setupG__Hist     \
+                -Wl,-u,_G__cpp_setupG__Graf1    \
+                -Wl,-u,_G__cpp_setupG__G3D      \
+                -Wl,-u,_G__cpp_setupG__GPad     \
+                -Wl,-u,_G__cpp_setupG__Tree     \
                 -Wl,-u,_G__cpp_setupG__Matrix
 endif
 endif
 ifeq ($(PLATFORM),win32)
-ROOTULIBS    := -include:_G__cpp_setupG__Hist    \
-                -include:_G__cpp_setupG__Graf1   \
-                -include:_G__cpp_setupG__G3D     \
-                -include:_G__cpp_setupG__GPad    \
-                -include:_G__cpp_setupG__Tree    \
+ROOTULIBS    := -include:_G__cpp_setupG__Net    \
+                -include:_G__cpp_setupG__Hist   \
+                -include:_G__cpp_setupG__Graf1  \
+                -include:_G__cpp_setupG__G3D    \
+                -include:_G__cpp_setupG__GPad   \
+                -include:_G__cpp_setupG__Tree   \
                 -include:_G__cpp_setupG__Matrix
 endif
 
@@ -371,12 +376,12 @@ ROOTMAP       = etc/system.rootmap
 
 ##### libCore #####
 
-COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) $(NETL) \
-                $(SYSTEML) $(CLIBL) $(METAUTILSL)
-COREO         = $(BASEO) $(CONTO) $(METAO) $(NETO) $(SYSTEMO) $(ZIPO) $(CLIBO) \
-                $(METAUTILSO)
-COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(NETDO) $(SYSTEMDO) $(CLIBDO) \
-                $(METAUTILSDO)
+COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) \
+                $(SYSTEML) $(CLIBL) $(METAUTILSL) $(IOL) $(MATHL)
+COREO         = $(BASEO) $(CONTO) $(METAO) $(SYSTEMO) $(ZIPO) $(CLIBO) \
+                $(METAUTILSO) $(IOO) $(MATHO)
+COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(SYSTEMDO) $(CLIBDO) \
+                $(METAUTILSDO) $(IODO) $(MATHDO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
 ifneq ($(BUILTINZLIB),yes)
@@ -786,24 +791,17 @@ install: all
 	   $(INSTALL) $(ALLEXECS)               $(DESTDIR)$(BINDIR); \
 	   echo "Installing libraries in $(DESTDIR)$(LIBDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(LIBDIR); \
+	   $(INSTALLDATA) lib/*                 $(DESTDIR)$(LIBDIR); \
 	   if [ x"$(ARCH)" = x"win32gcc" ]; then \
-	      vers=`sed 's|\(.*\)\..*/.*|\1|' < build/version_number` ; \
-	      for lib in $(ALLLIBS) $(CINTLIB); do \
-		 rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib` ; \
-		 rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib`.$$vers ; \
-		 bindll=`echo $$lib | sed 's,lib,bin,'`; \
-		 baselib=`basename $$lib`; \
-		 $(INSTALL) $$bindll $(DESTDIR)$(BINDIR); \
-		 ln -s $(DESTDIR)$(BINDIR)/$$baselib $(DESTDIR)$(LIBDIR)/$$baselib ; \
-		 ln -s $(DESTDIR)$(BINDIR)/$$baselib $(DESTDIR)$(LIBDIR)/$$baselib.$$vers ; \
+	      $(INSTALLDATA) bin/*.dll             $(DESTDIR)$(BINDIR); \
+	      for f in $(DESTDIR)$(LIBDIR)/*.dll; do \
+	         bindll=$$(basename $$f | sed 's,\..*$$,,'); \
+	         bindll=$$(ls $(DESTDIR)$(BINDIR)/$${bindll}.*dll); \
+	         ln -sf $${bindll} $$f; \
 	      done; \
-	   else \
-	      $(INSTALLDATA) lib/*              $(DESTDIR)$(LIBDIR); \
-              if [ x"$(PLATFORM)" = x"win32" ]; then \
-		 $(INSTALLDATA) lib/*.dll       $(DESTDIR)$(BINDIR); \
-		 $(INSTALLDATA) $(GDKDLL)       $(DESTDIR)$(BINDIR); \
-		 $(INSTALLDATA) $(GDKDLLS)      $(DESTDIR)$(BINDIR); \
-	      fi; \
+           elif [ x"$(PLATFORM)" = x"win32" ]; then \
+	      $(INSTALLDATA) $(GDKDLL)             $(DESTDIR)$(BINDIR); \
+	      $(INSTALLDATA) $(GDKDLLS)            $(DESTDIR)$(BINDIR); \
 	   fi; \
 	   echo "Installing headers in $(DESTDIR)$(INCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(INCDIR); \
@@ -820,6 +818,7 @@ install: all
 	   $(INSTALLDIR)                        $(DESTDIR)$(ICONPATH); \
 	   $(INSTALLDATA) icons/*.xpm           $(DESTDIR)$(ICONPATH); \
 	   $(INSTALLDATA) icons/*.png           $(DESTDIR)$(ICONPATH); \
+	   $(INSTALLDATA) icons/*.gif           $(DESTDIR)$(ICONPATH); \
 	   echo "Installing fonts in $(DESTDIR)$(TTFFONTDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(TTFFONTDIR); \
 	   $(INSTALLDATA) fonts/*               $(DESTDIR)$(TTFFONTDIR); \
@@ -1029,4 +1028,3 @@ showbuild:
 	@echo "The list of modules to be built:"
 	@echo "--------------------------------"
 	@echo "$(MODULES)"
-	@$(foreach i, $(ALLHDRS), echo -e "\t$(i)"; )

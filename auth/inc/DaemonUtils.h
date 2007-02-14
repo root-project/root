@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: DaemonUtils.h,v 1.3 2004/10/12 07:08:36 rdm Exp $
+// @(#)root/auth:$Name:  $:$Id: DaemonUtils.h,v 1.1 2005/07/18 16:20:52 rdm Exp $
 // Author: Gerri Ganis  19/1/2004
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 #include "rpddefs.h"
 #endif
 
+
 extern Int_t SrvAuthImpl(TSocket *socket, const char *, const char *,
                          std::string &user, Int_t &meth,
                          Int_t &type, std::string &ctoken, TSeqCollection *);
@@ -55,9 +56,9 @@ extern ErrorHandler_t gErr;
 int  GetErrno();
 void ResetErrno();
 void ErrorInit(const char *ident);
-void ErrorInfo(const char *va_(fmt), ...);
+void ErrorInfo(const char *fmt, ...);
 void Perror(char *buf);
-void Error(ErrorHandler_t ErrHand,int code,const char *va_(fmt), ...);
+void Error(ErrorHandler_t ErrHand,int code,const char *fmt, ...);
 
 void RpdAuthCleanup(const char *sstr, int opt);
 int  RpdCleanupAuthTab(const char *crypttoken);

@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.45 2006/09/26 13:33:04 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.47 2007/01/15 16:10:11 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,9 +14,11 @@
 #include "TF1.h"
 #include "TF2.h"
 #include "TF3.h"
+#include "TList.h"
 #include "TGraph.h"
 #include "TGraph2D.h"
 #include "TMultiGraph.h"
+#include "TMath.h"
 
 extern void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 extern void H1FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);

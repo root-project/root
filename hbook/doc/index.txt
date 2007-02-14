@@ -1,0 +1,20 @@
+This directory contains all the hbook interface classes.
+BEGIN_HTML
+ See:
+<ul>
+<li><a href="http://root.cern.ch/root/HowtoConvert.html">How to convert Hbook/PAW files to ROOT
+      </A></li>
+<li><a href="ftp://root.cern.ch/root/doc/chapter3.pdf">The Chapter about the Histogram classes in the Users Guide
+    </a></li>
+<li><a href="ftp://root.cern.ch/root/doc/chapter5.pdf">The Chapter about Fitting Histogram in the Users Guide
+    </a></li>
+<li><a href="http://root.cern.ch/root/HowtoHistogram.html">How to use the Histogram classes
+    </a></li>
+<li><a href="http://root.cern.ch/root/HowtoMerge.html">How to Merge files with histograms and Trees
+      </A></li>
+<li><a href="http://root.cern.ch/root/HowtoFit.html">How to Fit Histograms
+      </A></li>
+<li><a href="http://root.cern.ch/root/htmldoc/examples/peaks.C.html">How to Fit find peaks in histograms
+      </A></li>
+</ul>
+END_HTML

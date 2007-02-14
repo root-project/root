@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFumiliFCN.cxx,v 1.7 2006/04/26 10:40:09 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFumiliFCN.cxx,v 1.8 2006/07/04 10:36:52 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -314,16 +314,16 @@ void TFumiliBinLikelihoodFCN::Calculate_element(int i, const FumiliFitData & poi
    }
    
    double value =  points.Value(i); 
-   logLike +=  fval - value*logtmp;
+   logLike +=  2.*( fval - value*logtmp );
    
    
    for (unsigned int j = 0; j < npar; ++j) {
       
       double fj; 
       if ( fval < kPrecision &&  fabs(fFunctionGradient[j]) < kPrecision ) 
-         fj = 1.0; 
+         fj = 2.0; 
       else 
-         fj =  fFunctionGradient[j] * ( 1.0 - value*invFval); 
+         fj =  2.* fFunctionGradient[j] * ( 1.0 - value*invFval); 
       
       
       // 	    if ( ( ! (fj <= 0) )  && ( ! ( fj > 0) ) ) { 
@@ -373,9 +373,9 @@ void TFumiliUnbinLikelihoodFCN::Calculate_element(int , const FumiliFitData &, d
       
       double fj; 
       if ( fval < kPrecision &&  fabs(fFunctionGradient[j]) < kPrecision ) 
-         fj = 1.0; 
+         fj = 2.0; 
       else 
-         fj =  invFval * fFunctionGradient[j]; 
+         fj =  2.* invFval * fFunctionGradient[j]; 
     	
       grad[j] -= fj;
       

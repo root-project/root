@@ -70,7 +70,12 @@ RFLX_GRFLXRC_L2 = 'eval "python $(RFLX_LIBDIR)/python/genreflex/genreflex-rootci
 # test suite
 RFLX_CPPUNITI   = $(CPPUNIT)/include
 RFLX_CPPUNITLL  = -L$(CPPUNIT)/lib -lcppunit
-RFLX_REFLEXLL   = -Llib -lReflex -ldl
+RFLX_REFLEXLL   = -Llib -lReflex
+ifneq ($(PLATFORM),fbsd)
+ifneq ($(PLATFORM),obsd)
+RFLX_REFLEXLL   += -ldl
+endif
+endif
 endif
 
 ifeq ($(PLATFORM),solaris)

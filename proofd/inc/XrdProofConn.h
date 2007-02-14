@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.h,v 1.6 2006/06/21 16:18:26 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.h,v 1.7 2006/07/26 14:28:58 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -47,6 +47,7 @@ class XrdClientMessage;
 class XrdClientPhyConnection;
 class XrdOucRecMutex;
 class XrdSecProtocol;
+class XrdOucPlugin;
 
 class XrdProofConn  : public XrdClientAbsUnsolMsgHandler {
 
@@ -93,6 +94,9 @@ private:
 
    static int          fgMaxTry; //max number of connection attempts
    static int          fgTimeWait; //Wait time between an attempt and the other
+
+   static XrdOucPlugin *fgSecPlugin;       // Sec library plugin
+   static void         *fgSecGetProtocol;  // Sec protocol getter
 
    XrdSecProtocol     *Authenticate(char *plist, int lsiz);
    bool                CheckErrorStatus(XrdClientMessage *, int &, const char *);

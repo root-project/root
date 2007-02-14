@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.198 2006/11/24 09:20:34 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.203 2007/02/06 14:35:45 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -195,7 +195,8 @@ TGraph& TGraph::operator=(const TGraph &gr)
       fMaxSize = gr.fMaxSize;
       if (gr.fFunctions) fFunctions = (TList*)gr.fFunctions->Clone();
       else fFunctions = new TList;
-      fHistogram = new TH1F(*fHistogram);
+      if (gr.fHistogram) fHistogram = new TH1F(*(gr.fHistogram));
+      else fHistogram = 0;
       fMinimum = gr.fMinimum;
       fMaximum = gr.fMaximum;
       if (!fMaxSize) {
@@ -1383,7 +1384,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    }
    if (linear){
       //
-      TClass *cl = gROOT->GetClass("TLinearFitter");
+      TClass *cl = TClass::GetClass("TLinearFitter");
       if (isSet && strdiff!=0) {
          delete TVirtualFitter::GetFitter();
          isSet = kFALSE;
@@ -1564,7 +1565,7 @@ void TGraph::FitPanel()
       return;
    }
 
-   if (!gROOT->GetClass("TFitEditor")) gSystem->Load("libFitPanel");
+   if (!TClass::GetClass("TFitEditor")) gSystem->Load("libFitPanel");
    gROOT->ProcessLine(Form("TFitEditor::Open((TVirtualPad*)0x%x,(TObject*)0x%x)",gPad,this));
 }
 
@@ -2339,7 +2340,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
 
       // Create a temporary histogram and fill each channel with the
       // function value.
-      char chopth[8] = "";
+      char chopth[8] = " ";
       if (strstr(chopt,"x+")) strcat(chopth, "x+");
       if (strstr(chopt,"y+")) strcat(chopth, "y+");
       if (!fHistogram) {
@@ -3871,6 +3872,10 @@ void TGraph::SetPoint(Int_t i, Double_t x, Double_t y)
    // Set x and y values for point number i.
 
    if (i < 0) return;
+   if (fHistogram) {
+      delete fHistogram;
+      fHistogram = 0;
+   }
    if (i >= fMaxSize) {
       Double_t **ps = ExpandAndCopy(i+1, fNpoints);
       CopyAndRelease(ps, 0,0,0);
@@ -4464,7 +4469,7 @@ void TGraph::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TGraph::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         b.ReadClassBuffer(TGraph::Class(), this, R__v, R__s, R__c);
          if (fHistogram) fHistogram->SetDirectory(0);
          TIter next(fFunctions);
          TObject *obj;
@@ -4518,7 +4523,7 @@ void TGraph::Streamer(TBuffer &b)
       //====end of old versions
 
    } else {
-      TGraph::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TGraph::Class(),this);
    }
 }
 

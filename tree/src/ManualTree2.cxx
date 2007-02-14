@@ -17,6 +17,7 @@ namespace std {} using namespace std;
 
 #include "TClass.h"
 #include "TBuffer.h"
+#include "TBasket.h"
 #include "TStreamerInfo.h"
 #include "TMemberInspector.h"
 #include "TError.h"
@@ -26,7 +27,6 @@ namespace std {} using namespace std;
 #endif
 
 #include "RtypesImp.h"
-#include "TCollectionProxy.h"
 #include "TIsAProxy.h"
 // START OF SHADOWS
 

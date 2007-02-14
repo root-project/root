@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.25 2006/12/12 20:12:47 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.85 2006/12/29 00:32:55 fine Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -150,11 +150,10 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, Qt::WFlags f,bool embedd
   fSizeHint = QWidget::sizeHint();
   setSizePolicy (QSizePolicy::Expanding ,QSizePolicy::Expanding );
 #ifdef R__QTWIN32
-#if ROOT_VERSION_CODE < ROOT_VERSION(5,13,0)
    // Set the application icon for all ROOT widgets
    static HICON rootIcon = 0;
    if (!rootIcon) {
-      HICON hIcon = ((TWinNTSystem *)gSystem)->GetSmallIcon(kMainROOTIcon);
+      HICON hIcon = ::LoadIcon(::GetModuleHandle(NULL), MAKEINTRESOURCE(101));
       if (!hIcon) hIcon = LoadIcon(NULL, IDI_APPLICATION);
       rootIcon = hIcon;
       SetClassLong(winId(),        // handle to window
@@ -162,7 +161,6 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, Qt::WFlags f,bool embedd
                    LONG(rootIcon)  // new value
       );
     }
-#endif
 #endif
 }
 //______________________________________________________________________________
@@ -621,7 +619,9 @@ bool TQtWidget::Save(const QString &fileName,const char *format,int quality)cons
       c->Print((const char *)fileName,(const char *)saveType);
       Ok = true;
    } else {
-      Ok = GetBuffer().save(fileName,saveType,quality);
+      int plus = fileName.find("+");
+      QString fln = (plus>=0) ? TGQt::GetNewFileName(fileName.left(plus)) : fileName;
+      Ok = GetBuffer().save(fln,saveType,quality);
    }
    emit ((TQtWidget *)this)->Saved(Ok);
    return Ok;

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.47 2006/12/08 07:42:31 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.49 2007/01/09 05:31:11 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -23,6 +23,7 @@
 #include "TClonesArray.h"
 #include "TObject.h"
 #include "TFunction.h"
+#include "TError.h"
 
 #include "TTree.h"
 #include "TBranch.h"
@@ -1025,7 +1026,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       TBranch* branch = tree->GetBranch( name );
       if ( branch ) {
       // found a branched object, wrap its address for the object it represents
-         TClass* klass = gROOT->GetClass( branch->GetClassName() );
+         TClass* klass = TClass::GetClass( branch->GetClassName() );
          if ( klass && branch->GetAddress() )
             return BindRootObjectNoCast( *(char**)branch->GetAddress(), klass );
       }
@@ -1658,7 +1659,11 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    if ( HasAttrDirect( pyclass, "begin" ) && HasAttrDirect( pyclass, "end" ) ) {
    // some classes may not have dicts for their iterators, making begin/end useless
       std::string itername = name + "::iterator";
-      TClass* klass = gROOT->GetClass( itername.c_str() );
+
+      Int_t oldl = gErrorIgnoreLevel; gErrorIgnoreLevel = 3000;
+      TClass* klass = TClass::GetClass( itername.c_str() );
+      gErrorIgnoreLevel = oldl;
+
       if ( klass && klass->GetClassInfo() ) {
          Utility::AddToClass( pyclass, "__iter__", (PyCFunction) StlSequenceIter );
       } else if ( HasAttrDirect( pyclass, "__getitem__" ) && HasAttrDirect( pyclass, "__len__" ) ) {

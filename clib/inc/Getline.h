@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.h,v 1.7 2006/03/28 16:35:00 brun Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.h,v 1.8 2006/09/26 14:05:24 rdm Exp $ */
 /* Author: */
 
 /*************************************************************************
@@ -9,8 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef _GETLINE_
-#define _GETLINE_
+#ifndef ROOT_Getline
+#define ROOT_Getline
+
+#ifndef ROOT_DllImport
+#include "DllImport.h"
+#endif
 
 #ifndef __CINT__
 #ifdef __cplusplus
@@ -42,4 +46,4 @@ R__EXTERN int (*Gl_in_key)(int key);
 #endif
 #endif
 
-#endif   /* _GETLINE_ */
+#endif

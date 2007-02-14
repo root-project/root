@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.26 2006/10/20 09:36:47 rdm Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.27 2006/11/16 17:17:37 rdm Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 
 #include "TROOT.h"
 #include "TEnv.h"
+#include "THashList.h"
 #include "TSystem.h"
 #include "TDatabasePDG.h"
 #include "TDecayChannel.h"

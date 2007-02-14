@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSessionDialogs.h,v 1.12 2006/08/01 11:01:42 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSessionDialogs.h,v 1.2 2007/02/01 14:21:28 brun Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #endif
 
 class TList;
+class TSeqCollection;
 class TChain;
 class TDSet;
 class TGTextEntry;
@@ -78,7 +79,8 @@ public:
 class TNewQueryDlg : public TGTransientFrame {
 
 private:
-   Bool_t             fEditMode;        // kTRUE if used to edit existing query
+   Bool_t             fEditMode;       // kTRUE if used to edit existing query
+   Bool_t             fModified;       // kTRUE if settings have changed
    TGCompositeFrame  *fFrmNewQuery;    // top (main) frame
    TGCompositeFrame  *fFrmMore;        // options frame
    TGTextButton      *fBtnMore;        // "more >>" / "less <<" button
@@ -112,6 +114,7 @@ public:
    void     OnElementSelected(TObject *obj);
    void     CloseWindow();
    void     Popup();
+   void     SettingsChanged();
    void     UpdateFields(TQueryDescription *desc);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 

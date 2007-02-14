@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.21 2006/08/30 12:54:13 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixT.cxx,v 1.23 2007/02/03 06:40:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #include "TDecompLU.h"
 #include "TMatrixDEigen.h"
 #include "TClass.h"
+#include "TMath.h"
 
 #ifndef R__ALPHA
 templateClassImp(TMatrixT)
@@ -3145,7 +3146,7 @@ void TMatrixT<Element>::Streamer(TBuffer &R__b)
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
          Clear();
-         TMatrixT<Element>::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
+         R__b.ReadClassBuffer(TMatrixT<Element>::Class(),this,R__v,R__s,R__c);
       } else if (R__v == 2) { //process old version 2
          Clear();
          TObject::Streamer(R__b);
@@ -3194,7 +3195,7 @@ void TMatrixT<Element>::Streamer(TBuffer &R__b)
       } else if (this->fNelems < 0)
          this->Invalidate();
       } else {
-         TMatrixT<Element>::Class()->WriteBuffer(R__b,this);
+         R__b.WriteClassBuffer(TMatrixT<Element>::Class(),this);
    }
 }
 

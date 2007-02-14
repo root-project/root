@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.102 2006/10/12 16:08:37 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.103 2006/11/16 17:17:37 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -653,10 +653,10 @@ void TRootIconList::Browse(TBrowser *)
       lnk = lnk->Next();
 
       if (obj->IsA() == TKey::Class()) {
-         cl = gROOT->GetClass(((TKey *)obj)->GetClassName());
+         cl = TClass::GetClass(((TKey *)obj)->GetClassName());
          key = (TKey *)obj;
       } else if (obj->IsA() == TKeyMapFile::Class()) {
-         cl = gROOT->GetClass(((TKeyMapFile *)obj)->GetTitle());
+         cl = TClass::GetClass(((TKeyMapFile *)obj)->GetTitle());
       } else {
          cl = obj->IsA();
       }
@@ -1298,9 +1298,9 @@ void TRootBrowser::AddToBox(TObject *obj, const char *name)
       TClass *objClass = 0;
 
       if (obj->IsA() == TKey::Class())
-         objClass = gROOT->GetClass(((TKey *)obj)->GetClassName());
+         objClass = TClass::GetClass(((TKey *)obj)->GetClassName());
       else if (obj->IsA() == TKeyMapFile::Class())
-         objClass = gROOT->GetClass(((TKeyMapFile *)obj)->GetTitle());
+         objClass = TClass::GetClass(((TKeyMapFile *)obj)->GetTitle());
       else
          objClass = obj->IsA();
 
@@ -1940,7 +1940,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         if (obj) {
                            if (obj->IsA() == TKey::Class()) {
                               TKey *key = (TKey*)obj;
-                              TClass *cl = gROOT->GetClass(key->GetClassName());
+                              TClass *cl = TClass::GetClass(key->GetClassName());
                               void *add = gROOT->FindObject((char *) key->GetName());
                               if (cl->IsTObject()) {
                                  obj = (TObject*)add; // cl->DynamicCast(TObject::Class(),startadd);

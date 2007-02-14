@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttPad.h,v 1.5 2002/05/03 10:48:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttPad.h,v 1.6 2005/11/16 20:02:34 pcanal Exp $
 // Author: Rene Brun   04/01/95
 
 /*************************************************************************
@@ -21,12 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Gtypes
-#include "Gtypes.h"
-#endif
-
-#ifndef ROOT_Htypes
-#include "Htypes.h"
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
 #endif
 
 

@@ -24,19 +24,24 @@
 #ifndef ROOT_TNamed 
 #include "TNamed.h"  
 #endif
-#ifndef ROOT_TH2
-#include "TH2.h"
-#endif
-#ifndef ROOT_TF2
-#include "TF2.h"
-#endif
-#ifndef ROOT_TList
-#include "TList.h"
-#endif
 #ifndef ROOT_TVirtualHistPainter
 #include "TVirtualHistPainter.h"
 #endif
+#ifndef ROOT_TAttLine
+#include "TAttLine.h"
+#endif
+#ifndef ROOT_TAttFill
+#include "TAttFill.h"
+#endif
+#ifndef ROOT_TAttMarker
+#include "TAttMarker.h"
+#endif
 
+class TAxis;
+class TList;
+class TF2;
+class TH2;
+class TH2D;
 class TView;
 class TDirectory;
 
@@ -129,6 +134,7 @@ public:
    void             SetMinimum(Double_t minimum=-1111); // *MENU*
    void             SetMaxIter(Int_t n=100000) {fMaxIter = n;} // *MENU*
    virtual void     SetName(const char *name); // *MENU*
+   virtual void     SetNameTitle(const char *name, const char *title);
    void             SetNpx(Int_t npx=40); // *MENU*
    void             SetNpy(Int_t npx=40); // *MENU*
    void             SetPoint(Int_t point, Double_t x, Double_t y, Double_t z); // *MENU*

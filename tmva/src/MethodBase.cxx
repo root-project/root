@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBase.cxx,v 1.92 2006/11/17 14:59:23 stelzer Exp $
+// @(#)root/tmva $Id: MethodBase.cxx,v 1.13 2007/01/23 11:26:36 brun Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
@@ -27,7 +27,7 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  *                                                                                *
  * File and Version Information:                                                  *
- * $Id: MethodBase.cxx,v 1.92 2006/11/17 14:59:23 stelzer Exp $
+ * $Id: MethodBase.cxx,v 1.13 2007/01/23 11:26:36 brun Exp $
  **********************************************************************************/
 
 //_______________________________________________________________________
@@ -70,13 +70,14 @@
 #include <string>
 #include <fstream>
 #include <stdlib.h>
-#include "TROOT.h"
 #include "TSystem.h"
 #include "TObjString.h"
 #include "TQObject.h"
 #include "TSpline.h"
 #include "TMatrix.h"
+#include "TH1.h"
 #include "TMath.h"
+#include "TDirectory.h"
 #include <stdexcept>
 
 #ifndef ROOT_TMVA_MethodBase

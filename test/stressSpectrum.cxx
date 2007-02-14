@@ -54,6 +54,7 @@
 #include "TStyle.h"
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TMath.h"
 
 Int_t npeaks;
 Double_t fpeaks(Double_t *x, Double_t *par) {

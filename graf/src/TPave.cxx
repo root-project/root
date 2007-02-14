@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.21 2006/05/23 10:49:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.22 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -648,7 +648,7 @@ void TPave::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TPave::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TPave::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -667,6 +667,6 @@ void TPave::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TPave::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TPave::Class(),this);
    }
 }

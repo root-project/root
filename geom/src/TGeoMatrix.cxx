@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.57 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.58 2006/10/20 08:38:43 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -172,6 +172,7 @@
 
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
+#include "TMath.h"
 
 TGeoIdentity *gGeoIdentity = 0;
 const Int_t kN3 = 3*sizeof(Double_t);

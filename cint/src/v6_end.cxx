@@ -390,6 +390,9 @@ int G__free_ipath(G__includepath *ipath)
 /* destroy local variable and free memory*/
 void G__destroy(G__var_array *var,int isglobal)
 {
+   G__destroy_upto(var, isglobal, 0, -1);
+
+#ifdef G__WE_WANT_CODE_DUPLICATION
   int itemp=0,itemp1=0;
   
 #ifdef G__OLDIMPLEMENTATION1802
@@ -582,7 +585,7 @@ void G__destroy(G__var_array *var,int isglobal)
   }
   
   var->allvar = remain;
-  
+#endif // G__WE_WANT_CODE_DUPLICATION
 }
 
 

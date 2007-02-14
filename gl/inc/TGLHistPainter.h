@@ -24,6 +24,7 @@
       TGLTF3Painter - TF3.
 */
 
+class TGLParametricEquation;
 class TString;
 class TList;
 class TF3;
@@ -37,15 +38,17 @@ private:
    //This member can have different dynamic types: TGLLegoPainter, etc.
    std::auto_ptr<TGLPlotPainter>      fGLPainter;
 
-   TH1                *fHist;
-   TF3                *fF3;
-   TList              *fStack;
-   EGLPlotType         fPlotType;
-   TGLOrthoCamera      fCamera;
-   TGLPlotCoordinates  fCoord;
+   TGLParametricEquation *fEq;
+   TH1                   *fHist;
+   TF3                   *fF3;
+   TList                 *fStack;
+   EGLPlotType            fPlotType;
+   TGLOrthoCamera         fCamera;
+   TGLPlotCoordinates     fCoord;
 
 public:
    TGLHistPainter(TH1 *hist);
+   TGLHistPainter(TGLParametricEquation *equation);
    
    //TVirtualHistPainter final overriders
    Int_t          DistancetoPrimitive(Int_t px, Int_t py);

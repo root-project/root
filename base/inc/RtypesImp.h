@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.18 2004/02/11 17:00:07 brun Exp $
+// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.19 2006/11/24 14:24:54 rdm Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -38,7 +38,7 @@ namespace ROOT {
          }
       }
 
-      TClass *top = gROOT->GetClass(topClassName);
+      TClass *top = TClass::GetClass(topClassName);
       if (top) {
          ShowMembersFunc_t show = top->GetShowMembersWrapper();
          if (show) show(obj, R__insp, R__parent);

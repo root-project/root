@@ -78,6 +78,8 @@
 #pragma link C++ class TGLPlotBox;
 #pragma link C++ class TGLTH3Slice;
 #pragma link C++ class TGLBoxCut;
+#pragma link C++ class TGLParametricEquation;
+#pragma link C++ class TGLParametricPlot;
 
 #ifndef _WIN32
 #pragma link C++ class TX11GL;

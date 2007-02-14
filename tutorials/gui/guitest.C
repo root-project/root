@@ -4,7 +4,8 @@
 // test program in the interpreter. Do either:
 // .x guitest.C
 // .x guitest.C++
-// Authors: Bertrand Bellenot, Ilka Antcheva, Fons Rademakers
+// Authors: Bertrand Bellenot, Ilka Antcheva, Fons Rademakers,
+//          Valeri Onuchin
 
 #include <stdlib.h>
 
@@ -1025,8 +1026,8 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    fBtn2->Connect("Clicked()", "TestDialog", this, "HandleButtons()");
    fChk1->Connect("Clicked()", "TestDialog", this, "HandleButtons()");
    fChk2->Connect("Clicked()", "TestDialog", this, "HandleButtons()");
-   fRad1->Connect("Pressed()", "TestDialog", this, "HandleButtons()");
-   fRad2->Connect("Pressed()", "TestDialog", this, "HandleButtons()");
+   fRad1->Connect("Clicked()", "TestDialog", this, "HandleButtons()");
+   fRad2->Connect("Clicked()", "TestDialog", this, "HandleButtons()");
 
    //-------------- embedded canvas demo
    fFillHistos = kFALSE;
@@ -1456,7 +1457,7 @@ TestMsgBox::TestMsgBox(const TGWindow *p, const TGWindow *main,
 
    for (i = 0; i < 4; ++i) {
       fG2->AddFrame(fR[i], fL4);
-      fR[i]->Connect("Pressed()", "TestMsgBox", this, "DoRadio()");
+      fR[i]->Connect("Clicked()", "TestMsgBox", this, "DoRadio()");
    }
 
    fC[2]->SetState(kButtonDown);

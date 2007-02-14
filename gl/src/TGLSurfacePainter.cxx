@@ -6,6 +6,7 @@
 #include "KeySymbols.h"
 #include "TVirtualGL.h"
 #include "Buttons.h"
+#include "TROOT.h"
 #include "TString.h"
 #include "TStyle.h"
 #include "TColor.h"
@@ -252,17 +253,6 @@ void TGLSurfacePainter::SetSurfaceColor()const
    const Float_t specColor[] = {1.f, 1.f, 1.f, 1.f};
    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specColor);
    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 70.f);
-}
-
-//______________________________________________________________________________
-void TGLSurfacePainter::ClearBuffers()const
-{
-   //Clears gl buffers (possibly with pad's background color).
-   Float_t rgb[3] = {1.f, 1.f, 1.f};
-   if (GetPadColor())
-      GetPadColor()->GetRGB(rgb[0], rgb[1], rgb[2]);
-   glClearColor(rgb[0], rgb[1], rgb[2], 1.);
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 //______________________________________________________________________________

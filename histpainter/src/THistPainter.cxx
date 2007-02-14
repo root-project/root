@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.277 2006/12/11 09:26:50 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.281 2007/01/30 11:49:14 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -16,12 +16,14 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TClass.h"
 #include "TSystem.h"
 #include "THistPainter.h"
 #include "TH3.h"
 #include "TH2.h"
 #include "TF2.h"
 #include "TF3.h"
+#include "TCutG.h"
 #include "TMatrixDBase.h"
 #include "TMatrixFBase.h"
 #include "TVectorD.h"
@@ -459,7 +461,7 @@ void THistPainter::FitPanel()
       return;
    }
 
-   if (!gROOT->GetClass("TFitEditor")) gSystem->Load("libFitPanel");
+   if (!TClass::GetClass("TFitEditor")) gSystem->Load("libFitPanel");
    gROOT->ProcessLine(Form("TFitEditor::Open((TVirtualPad*)0x%x,(TObject*)0x%x)",gPad,fH));
 }
 
@@ -1498,7 +1500,7 @@ void THistPainter::Paint(Option_t *option)
    // Paint using TSpectrum2Painter
    if (Hoption.Spec) {
       if (!TableInit()) return;
-      if (!gROOT->GetClass("TSpectrum2Painter")) gSystem->Load("libSpectrumPainter");
+      if (!TClass::GetClass("TSpectrum2Painter")) gSystem->Load("libSpectrumPainter");
       gROOT->ProcessLineFast(Form("TSpectrum2Painter::PaintSpectrum((TH2F*)0x%x,\"%s\")",fH,option));
       return;
    }
@@ -1672,6 +1674,7 @@ void THistPainter::PaintArrows(Option_t *)
    fH->SetLineWidth(1);
    fH->TAttLine::Modify();
 
+   Double_t xk, xstep, yk, ystep;
    Double_t dx, dy, si, co, anr, x1, x2, y1, y2, xc, yc, dxn, dyn;
    Int_t   ncx  = Hparam.xlast - Hparam.xfirst + 1;
    Int_t   ncy  = Hparam.ylast - Hparam.yfirst + 1;
@@ -1685,7 +1688,12 @@ void THistPainter::PaintArrows(Option_t *)
 
    for (Int_t id=1;id<=2;id++) {
       for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
+         yk    = fYaxis->GetBinLowEdge(j);
+         ystep = fYaxis->GetBinWidth(j);
          for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
+            xk    = fXaxis->GetBinLowEdge(i);
+            xstep = fXaxis->GetBinWidth(i);
+            if (!IsInside(xk+0.5*xstep,yk+0.5*ystep)) continue;
             if (i == Hparam.xfirst) {
                dx = fH->GetCellContent(i+1, j) - fH->GetCellContent(i, j);
             } else if (i == Hparam.xlast) {
@@ -2109,8 +2117,6 @@ void THistPainter::PaintBarH(Option_t *)
    }
 
    PaintTitle();
-   fXaxis = xaxis;
-   fYaxis = yaxis;
    //    Draw box with histogram statistics and/or fit parameters
    if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
       TIter next(fFunctions);
@@ -2123,6 +2129,8 @@ void THistPainter::PaintBarH(Option_t *)
    }
 
    PaintAxis(kFALSE);
+   fXaxis = xaxis;
+   fYaxis = yaxis;
 }
 
 //______________________________________________________________________________
@@ -3242,6 +3250,7 @@ void THistPainter::Paint2DErrors(Option_t *)
       xyerror = gStyle->GetErrorX();
    }
 
+   Double_t xk, xstep, yk, ystep;
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
       y  = fYaxis->GetBinCenter(j);
       ey = fYaxis->GetBinWidth(j)*xyerror;
@@ -3255,7 +3264,12 @@ void THistPainter::Paint2DErrors(Option_t *)
          if (y2 > 0) y2 = TMath::Log10(y2);
          else        y2 = Hparam.ymin;
       }
+      yk    = fYaxis->GetBinLowEdge(j);
+      ystep = fYaxis->GetBinWidth(j);
       for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
+         xk    = fXaxis->GetBinLowEdge(i);
+         xstep = fXaxis->GetBinWidth(i);
+         if (!IsInside(xk+0.5*xstep,yk+0.5*ystep)) continue;
          Int_t bin = fH->GetBin(i,j);
          x  = fXaxis->GetBinCenter(i);
          ex = fXaxis->GetBinWidth(i)*xyerror;

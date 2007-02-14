@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.cxx,v 1.6 2005/11/16 20:04:12 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.cxx,v 1.7 2006/03/20 21:43:41 pcanal Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -76,7 +76,7 @@ void TVirtualPad::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TVirtualPad::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TVirtualPad::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -87,7 +87,7 @@ void TVirtualPad::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TVirtualPad::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TVirtualPad::Class(),this);
    }
 }
 

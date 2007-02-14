@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TFileMerger.h,v 1.1 2005/05/27 13:47:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TFileMerger.h,v 1.2 2005/05/31 13:58:19 rdm Exp $
 // Author: Andreas Peters + Fons Rademakers   26/5/2005
 
 /*************************************************************************
@@ -43,6 +43,9 @@ class TDirectory;
 
 
 class TFileMerger : public TObject {
+private:
+   TFileMerger(const TFileMerger&); // Not implemented
+   TFileMerger& operator=(const TFileMerger&); // Not implemented
 
 protected:
    TStopwatch     fWatch;           // stop watch to measure file copy speed

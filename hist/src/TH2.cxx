@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.101 2006/10/04 09:23:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.106 2007/02/01 14:58:44 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "TROOT.h"
 #include "TClass.h"
+#include "THashList.h"
 #include "TH2.h"
 #include "TVirtualPad.h"
 #include "TF2.h"
@@ -20,7 +21,9 @@
 #include "TMatrixDBase.h"
 #include "THLimitsFinder.h"
 #include "TError.h"
+#include "TMath.h"
 #include "TObjString.h"
+#include "TVirtualHistPainter.h"
 
 
 ClassImp(TH2)
@@ -2172,7 +2175,7 @@ void TH2::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TH2::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TH2::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -2184,7 +2187,7 @@ void TH2::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TH2::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TH2::Class(),this);
    }
 }
 
@@ -2291,7 +2294,6 @@ void TH2C::Copy(TObject &newth2) const
    // Copy.
 
    TH2::Copy((TH2C&)newth2);
-   TArrayC::Copy((TH2C&)newth2);
 }
 
 //______________________________________________________________________________
@@ -2361,7 +2363,7 @@ void TH2C::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TH2C::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TH2C::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -2382,7 +2384,7 @@ void TH2C::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TH2C::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TH2C::Class(),this);
    }
 }
 
@@ -2554,7 +2556,6 @@ void TH2S::Copy(TObject &newth2) const
    // Copy.
    
    TH2::Copy((TH2S&)newth2);
-   TArrayS::Copy((TH2S&)newth2);
 }
 
 //______________________________________________________________________________
@@ -2624,7 +2625,7 @@ void TH2S::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TH2S::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TH2S::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -2645,7 +2646,7 @@ void TH2S::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TH2S::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TH2S::Class(),this);
    }
 }
 
@@ -2817,7 +2818,6 @@ void TH2I::Copy(TObject &newth2) const
    // Copy.
 
    TH2::Copy((TH2I&)newth2);
-   TArrayI::Copy((TH2I&)newth2);
 }
 
 //______________________________________________________________________________
@@ -3043,7 +3043,6 @@ void TH2F::Copy(TObject &newth2) const
    // Copy.
 
    TH2::Copy((TH2F&)newth2);
-   TArrayF::Copy((TH2F&)newth2);
 }
 
 //______________________________________________________________________________
@@ -3315,7 +3314,6 @@ void TH2D::Copy(TObject &newth2) const
    // Copy.
 
    TH2::Copy((TH2D&)newth2);
-   TArrayD::Copy((TH2D&)newth2);
 }
 
 //______________________________________________________________________________

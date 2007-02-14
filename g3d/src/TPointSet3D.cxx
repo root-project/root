@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPointSet3D.cxx,v 1.5 2006/08/23 14:39:40 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPointSet3D.cxx,v 1.6 2006/09/27 08:49:14 rdm Exp $
 // Author: Matevz Tadel  7/4/2006
 
 /*************************************************************************
@@ -129,7 +129,7 @@ void TPointSet3D::Streamer(TBuffer &R__b)
    // Stream an object of class TPointSet3D.
 
    if (R__b.IsReading()) {
-      TPointSet3D::Class()->ReadBuffer(R__b, this);
+      R__b.ReadClassBuffer(TPointSet3D::Class(), this);
       if (fOwnIds) {
          Int_t n;
          R__b >> n;
@@ -139,7 +139,7 @@ void TPointSet3D::Streamer(TBuffer &R__b)
          }
       }
    } else {
-      TPointSet3D::Class()->WriteBuffer(R__b, this);
+      R__b.WriteClassBuffer(TPointSet3D::Class(), this);
       if (fOwnIds) {
          R__b << fIds.GetEntries();
          TObject* o;

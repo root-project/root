@@ -158,18 +158,10 @@ endif
 ifeq ($(CXXCMD),icc)
 CINT7S2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINT7S2))
 CINT7S2       := $(filter-out $(MODDIRS)/longif.%,$(CINT7S2))
-ifeq ($(ICC_MAJOR),8)
-ifneq ($(ICC_MINOR),0)
+ifneq ($(ICC_GE_9),)
 CINT7S2       += $(MODDIRS)/gcc3strm.cxx
 else
 CINT7S2       += $(MODDIRS)/iccstrm.cxx
-endif
-else
-ifeq ($(ICC_MAJOR),9)
-CINT7S2       += $(MODDIRS)/gcc3strm.cxx
-else
-CINT7S2       += $(MODDIRS)/iccstrm.cxx
-endif
 endif
 CINT7S2       += $(MODDIRS)/longif3.cxx
 endif
@@ -260,7 +252,12 @@ CINT7CFLAGS += -I$(CINT7DIRI) -I$(CINT7DIRS) -I$(CINT7DIR)/reflex/inc -Iinclude
 ifeq ($(PLATFORM),win32)
 REFLEXLL := lib/libReflex.lib
 else
-REFLEXLL := -Llib -lReflex -ldl
+REFLEXLL := -Llib -lReflex
+ifneq ($(PLATFORM),fbsd) 
+ifneq ($(PLATFORM),obsd)
+REFLEXLL   += -ldl 
+endif 
+endif
 endif
 
 ##### local rules #####

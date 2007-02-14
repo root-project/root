@@ -10,7 +10,7 @@
 #include "TMethod.h"
 #include "TFunction.h"
 #include "TMethodArg.h"
-#include "TROOT.h"
+#include "TList.h"
 #include "TError.h"
 
 // CINT
@@ -185,7 +185,12 @@ PyROOT::TReturnTypeAdapter PyROOT::TMemberAdapter::ReturnType() const
 PyROOT::TScopeAdapter PyROOT::TMemberAdapter::DeclaringScope() const
 {
 // get the declaring scope (class) of the wrapped function/method
-   return ((TMethod*)fMember)->GetClass();
+   TMethod* method = (TMethod*)*this;
+   if ( method )
+      return method->GetClass();
+
+// happens for free-standing functions (i.e. global scope)
+   return std::string( "" );
 }
 
 
@@ -207,7 +212,7 @@ PyROOT::TScopeAdapter::TScopeAdapter( TClass* klass ) : fClass( klass )
 
 //____________________________________________________________________________
 PyROOT::TScopeAdapter::TScopeAdapter( const std::string& name ) :
-   fClass( gROOT->GetClass( name.c_str() ) ), fName( name )
+   fClass( TClass::GetClass( name.c_str() ) ), fName( name )
 {
    /* empty */
 }
@@ -222,7 +227,7 @@ PyROOT::TScopeAdapter::TScopeAdapter( const TMemberAdapter& mb ) :
 PyROOT::TScopeAdapter PyROOT::TScopeAdapter::ByName( const std::string & name )
 {
 // lookup a scope (class) by name
-   return gROOT->GetClass( name.c_str() );
+   return TClass::GetClass( name.c_str() );
 }
 
 //____________________________________________________________________________

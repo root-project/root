@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.27 2006/07/05 07:04:16 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.28 2006/08/30 14:44:34 antcheva Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -2346,7 +2346,7 @@ Window_t  TGQt::GetInputFocus()
    QWidget *f = qApp->focusWidget ();
    if (f) {
      focus = dynamic_cast<TQtClientWidget*>(f);
-     assert(focus);
+     if (!focus) return 0;
    }
    return wid(focus);
 }

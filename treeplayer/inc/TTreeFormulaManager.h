@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.h,v 1.7 2003/12/13 09:25:56 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.h,v 1.8 2003/12/16 18:55:49 brun Exp $
 // Author: Philippe Canal   20/03/02
 
 /*************************************************************************
@@ -55,7 +55,7 @@ private:
    TTreeFormulaManager(const TTreeFormulaManager&);
    TTreeFormulaManager& operator=(const TTreeFormulaManager&);
 
-#if !defined(_MSC_VER) || (_MSC_VER < 1300)
+#if !defined(_MSC_VER) || (_MSC_VER < 1300) || defined(__CINT__)
    // Deletion is the sole responsability of the TTreeFormulas
    ~TTreeFormulaManager();
 #endif

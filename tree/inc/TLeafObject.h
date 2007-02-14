@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.11 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.12 2006/06/02 15:33:31 pcanal Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -25,6 +25,9 @@
 #ifndef ROOT_TLeaf
 #include "TLeaf.h"
 #endif
+#ifndef ROOT_TClassRef
+#include "TClassRef.h"
+#endif
 
 class TClass;
 class TMethodCall;
@@ -32,7 +35,7 @@ class TMethodCall;
 class TLeafObject : public TLeaf {
 
 protected:
-   TClass      *fClass;          //! pointer to class
+   TClassRef    fClass;          //! pointer to class
    void       **fObjAddress;     //! Address of Pointer to object
    Bool_t       fVirtual;        // Support for Virtuality
     

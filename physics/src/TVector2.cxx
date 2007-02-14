@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector2.cxx,v 1.7 2006/05/18 13:31:59 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector2.cxx,v 1.10 2007/01/17 08:37:49 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -12,6 +12,7 @@
 #include "TROOT.h"
 #include "TVector2.h"
 #include "TClass.h"
+#include "TMath.h"
 
 Double_t const  kPI        = TMath::Pi();
 Double_t const  kTWOPI     = 2.*kPI;
@@ -47,6 +48,26 @@ TVector2::~TVector2()
 {
 }
 
+//______________________________________________________________________________
+Double_t TVector2::Mod() const
+{
+   // return modulo of this vector
+   return TMath::Sqrt(fX*fX+fY*fY);
+}
+
+//______________________________________________________________________________
+TVector2 TVector2::Unit() const
+{
+   // return module normalized to 1
+   return (Mod2()) ? *this/Mod() : TVector2(); 
+}
+
+//______________________________________________________________________________
+Double_t TVector2::Phi() const
+{
+   // return vector phi
+   return TMath::Pi()+TMath::ATan2(-fY,-fX); 
+} 
 
 //______________________________________________________________________________
 Double_t TVector2::Phi_0_2pi(Double_t x) {
@@ -79,7 +100,14 @@ TVector2 TVector2::Rotate (Double_t phi) const
    return TVector2( fX*TMath::Cos(phi)-fY*TMath::Sin(phi), fX*TMath::Sin(phi)+fY*TMath::Cos(phi) );
 }
 
-
+//______________________________________________________________________________
+void TVector2::SetMagPhi(Double_t mag, Double_t phi) 
+{
+   //set vector using mag and phi
+   Double_t amag = TMath::Abs(mag);
+   fX = amag * TMath::Cos(phi);
+   fY = amag * TMath::Sin(phi);
+}
 //______________________________________________________________________________
 void TVector2::Streamer(TBuffer &R__b)
 {
@@ -89,7 +117,7 @@ void TVector2::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TVector2::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TVector2::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -100,7 +128,7 @@ void TVector2::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TVector2::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TVector2::Class(),this);
    }
 }
 

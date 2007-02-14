@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.36 2006/08/09 16:11:01 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.37 2006/08/28 09:30:47 antcheva Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -375,6 +375,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    TGFileItem *f;
    void *p = 0;
    const char *txt;
+   TString sdir = gSystem->WorkingDirectory();
 
    switch (GET_MSG(msg)) {
       case kC_COMMAND:
@@ -447,7 +448,10 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      }
                      if ( strcmp(answer, "") == 0 )  // Cancel button was pressed
                         break;
-
+                     
+                     if (strcmp(gSystem->WorkingDirectory(),fFc->GetDirectory())) {
+                        gSystem->cd(fFc->GetDirectory());
+                     }
                      if ( gSystem->MakeDirectory(answer) != 0 )
                         new TGMsgBox(gClient->GetRoot(), GetMainFrame(), "Error", 
                                      Form("Directory name \'%s\' already exists!", answer),
@@ -455,6 +459,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      else {
                         fFc->DisplayDirectory();
                      }
+                     gSystem->ChangeDirectory(sdir.Data());
                      break;
 
                   case kIDF_LIST:

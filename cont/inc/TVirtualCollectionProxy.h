@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TVirtualCollectionProxy.h,v 1.9 2005/03/24 14:27:06 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TVirtualCollectionProxy.h,v 1.10 2006/02/09 20:40:19 pcanal Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -22,10 +22,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TClass.h"
 #include "TClassRef.h"
 #include "TDataType.h"
 
+class TClass;
 
 class TVirtualCollectionProxy {
 protected:

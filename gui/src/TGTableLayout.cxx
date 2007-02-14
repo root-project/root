@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.10 2006/04/18 12:31:41 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.11 2006/07/03 16:10:45 brun Exp $
 // Author: Brett Viren   04/15/2001
 
 /*************************************************************************
@@ -45,7 +45,6 @@
 #include "TGTableLayout.h"
 #include "TGFrame.h"
 #include "TList.h"
-#include "TMath.h"
 #include "Rtypes.h"
 #include "Riostream.h"
 

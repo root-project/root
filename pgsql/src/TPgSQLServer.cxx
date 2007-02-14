@@ -1,4 +1,4 @@
-// @(#)root/pgsql:$Name:  $:$Id: TPgSQLServer.cxx,v 1.5 2002/04/02 15:44:15 rdm Exp $
+// @(#)root/pgsql:$Name:$:$Id: TPgSQLServer.cxx,v 1.6 2006/05/31 14:45:41 rdm Exp $
 // Author: g.p.ciceri <gp.ciceri@acm.org> 01/06/2001
 
 /*************************************************************************
@@ -111,18 +111,38 @@ TSQLResult *TPgSQLServer::Query(const char *sql)
 Int_t TPgSQLServer::SelectDataBase(const char *dbname)
 {
    // Select a database. Returns 0 if successful, non-zero otherwise.
-   // For PgSQL: only to be used to check the dbname.
+
+   TString usr;
+   TString pwd;
+   TString port;
+   TString opts;
 
    if (!IsConnected()) {
       Error("SelectDataBase", "not connected");
       return -1;
    }
 
-   if (fDB != dbname) {
-      Error("SelectDataBase", "no such database");
-      return -1;
-   }
+   if (dbname == fDB) {
+      return 0;
+   } else {
+      usr = PQuser(fPgSQL);
+      pwd = PQpass(fPgSQL);
+      port = PQport(fPgSQL);
+      opts = PQoptions(fPgSQL);
 
+      Close();
+      fPgSQL = PQsetdbLogin(fHost.Data(), port.Data(),
+                            opts.Data(), 0, dbname,
+                            usr.Data(), pwd.Data());
+
+      if (PQstatus(fPgSQL) == CONNECTION_OK) {
+         fDB=dbname;
+         fPort=port.Atoi();
+      } else {
+         Error("SelectDataBase", PQerrorMessage(fPgSQL));
+         return -1;
+      }
+   }
    return 0;
 }
 
@@ -192,13 +212,18 @@ TSQLResult *TPgSQLServer::GetColumns(const char *dbname, const char *table,
 
    char *sql;
    if (wild)
-      sql = Form("SELECT RELNAME FROM %s LIKE %s", table, wild);
+      sql = Form("select a.attname,t.typname,a.attnotnull \
+                  from pg_attribute a, pg_class c, pg_type t \
+                  where c.oid=a.attrelid and c.relname='%s' and \
+                  a.atttypid=t.oid and a.attnum>0 \
+                  and a.attname like '%s' order by a.attnum ", table,wild);
    else
-      sql = Form("SELECT RELNAME FROM %s", table);
+      sql = Form("select a.attname,t.typname,a.attnotnull \
+                  from pg_attribute a, pg_class c, pg_type t \
+                  where c.oid=a.attrelid and c.relname='%s' and \
+                  a.atttypid=t.oid and a.attnum>0 order by a.attnum",table);
 
-   //return Query(sql);
-   Error("GetColumns", "not implemented");
-   return 0;
+   return Query(sql);
 }
 
 //______________________________________________________________________________
@@ -269,11 +294,20 @@ const char *TPgSQLServer::ServerInfo()
 {
    // Return server info.
 
+   TString svrinfo = "postgres ";
    if (!IsConnected()) {
       Error("ServerInfo", "not connected");
       return 0;
    }
 
-   Error("ServerInfo", "not implemented");
-   return 0;
+   char *sql = "select setting from pg_settings where name='server_version'";
+   PGresult *res = PQexec(fPgSQL, sql);
+   int stat = PQresultStatus(res);
+   if (stat == PGRES_TUPLES_OK && PQntuples(res)) {
+      char *vers = PQgetvalue(res,0,0);
+      svrinfo += vers;
+   } else
+      svrinfo += "unknown version number";
+
+   return svrinfo;
 }

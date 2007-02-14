@@ -1,4 +1,4 @@
-// @(#)root/ruby:$Name:  $:$Id: drr.cxx,v 1.5 2006/03/20 22:44:19 brun Exp $
+// @(#)root/ruby:$Name:  $:$Id: drr.cxx,v 1.6 2006/08/31 09:32:41 rdm Exp $
 // Author:  Elias Athanasopoulos, May 2004
 
 /*  dynamic ruby-root
@@ -678,18 +678,17 @@ static VALUE drr_const_missing(VALUE self, VALUE klass)
    
     /* Check if there is a ROOT dict. available.  */
     TClass *c = new TClass(name);
-    if (c)
-      {
+    if (c && c->GetClassInfo()) {
         VALUE new_klass = rb_define_class (name, drrAbstractClass);
         delete c;
         return new_klass;
-      }
-    else
+    } else {
         /* FIXME: raise exception here.  */
-        rb_warn ("Constant %s is not defined.", name);
-    
-    delete c;
-    return Qnil;
+        //rb_warn ("Constant %s is not defined.", name);
+        delete c;
+        /* If there is no ROOT dict available, call the original Object::const_missing */
+        return rb_funcall(self,rb_intern("__drr_orig_const_missing"),1,klass);
+    }
 }
 
 static VALUE drr_method_missing(int argc, VALUE argv[], VALUE self)
@@ -921,6 +920,10 @@ void Init_libRuby() {
 
     rb_define_method (cTObject, "to_ary", VALUEFUNC(rr_to_ary), 0);
     rb_define_method (rb_cObject, "via", VALUEFUNC(via), 3);
+ 	
+    /* Save the original Object::const_missing before overriding it
+       Object::__drr_orig_const_missing will be called if Cint is unable to resolve the class name */
+    rb_eval_string("Object.instance_eval { alias __drr_orig_const_missing const_missing }");
     rb_define_singleton_method (rb_cObject, "const_missing", VALUEFUNC(drr_const_missing), 1);
 
     /* usefull globals */

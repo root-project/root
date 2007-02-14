@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.h,v 1.5 2006/10/02 12:55:47 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.h,v 1.6 2006/11/22 16:19:55 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -82,7 +82,6 @@ private:
    //Overriders
    void         InitGL()const;
    void         DrawPlot()const;
-   void         ClearBuffers()const;
 
    void         DrawLegoCartesian()const;
    void         DrawLegoPolar()const;

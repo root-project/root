@@ -1,6 +1,7 @@
 #include "TVirtualGL.h"
 #include "KeySymbols.h"
 #include "Buttons.h"
+#include "TROOT.h"
 #include "TColor.h"
 #include "TH1.h"
 #include "TF3.h"
@@ -144,17 +145,6 @@ void TGLTF3Painter::InitGL()const
    glEnable(GL_DEPTH_TEST);
    glDisable(GL_CULL_FACE);
    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-}
-
-//______________________________________________________________________________
-void TGLTF3Painter::ClearBuffers()const
-{
-   //Clears gl buffers (possibly with pad's background color).
-   Float_t rgb[3] = {1.f, 1.f, 1.f};
-   if (GetPadColor())
-      GetPadColor()->GetRGB(rgb[0], rgb[1], rgb[2]);
-   glClearColor(rgb[0], rgb[1], rgb[2], 1.);
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 namespace {

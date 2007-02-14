@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.93 2006/09/17 14:16:37 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.95 2007/01/15 16:10:09 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include "TROOT.h"
+#include "TClass.h"
 #include "TColor.h"
 #include "TPoint.h"
 #include "TView.h"
@@ -35,6 +36,7 @@
 #include "TGeoCompositeShape.h"
 #include "TGeoShapeAssembly.h"
 #include "TGeoPainter.h"
+#include "TMath.h"
 
 #include "X3DBuffer.h"
 
@@ -567,7 +569,7 @@ void TGeoPainter::CheckEdit()
 {
 // Check if Ged library is loaded and load geometry editor classe.
    if (fIsEditable) return;
-   if (!gROOT->GetClass("TGedEditor")) return;
+   if (!TClass::GetClass("TGedEditor")) return;
    TPluginHandler *h;
    if ((h = gROOT->GetPluginManager()->FindHandler("TGeoManagerEditor"))) {
       if (h->LoadPlugin() == -1) return;

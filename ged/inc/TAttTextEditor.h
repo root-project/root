@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.h,v 1.2 2004/06/25 17:13:23 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttTextEditor.h,v 1.3 2006/09/25 13:35:58 rdm Exp $
 // Author: Ilka  Antcheva 11/05/04
 
 /*************************************************************************
@@ -20,9 +20,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
-#include "TGWidget.h"
-#endif
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
 #endif
@@ -31,7 +28,6 @@ class TGComboBox;
 class TGFontTypeComboBox;
 class TGColorSelect;
 class TAttText;
-class TVirtualPad;
  
 class TAttTextEditor : public TGedFrame {
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGObject.h,v 1.5 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGObject.h,v 1.6 2006/05/26 15:13:01 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -53,6 +53,7 @@ public:
    TGClient *GetClient() const { return fClient; }
    ULong_t   Hash() const { return (ULong_t) fId >> 0; }
    Bool_t    IsEqual(const TObject *obj) const { return fId == ((TGObject *) obj)->fId; }
+   virtual void SaveAs(const char* filename = "", Option_t* option = "") const;
 
    ClassDef(TGObject,0)  //ROOT GUI base class
 };

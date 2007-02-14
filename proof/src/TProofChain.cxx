@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofChain.cxx,v 1.2 2006/11/27 15:57:11 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofChain.cxx,v 1.5 2007/01/30 11:24:32 brun Exp $
 // Author: G. Ganis  Nov 2006
 
 /*************************************************************************
@@ -20,7 +20,9 @@
 
 #include "TProofChain.h"
 #include "TDSet.h"
+#include "TList.h"
 #include "TProof.h"
+#include "TROOT.h"
 
 
 ClassImp(TProofChain)
@@ -57,8 +59,6 @@ TProofChain::~TProofChain()
    // Destructor
 
    if (fChain) {
-      if (fChain)
-         gProof->RemoveChain(fChain);
       SafeDelete(fSet);
    } else {
       // Not owner

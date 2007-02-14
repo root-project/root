@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.h,v 1.6 2006/12/08 15:51:43 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.h,v 1.7 2006/12/10 22:24:00 brun Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 03/10/06
 
 /*************************************************************************
@@ -26,15 +26,13 @@
 #ifndef ROOT_TGFrame
 #include "TGFrame.h"
 #endif
-#ifndef ROOT_TF1
-#include "TF1.h"
-#endif
 
 enum EFPDialogBound {
    kFPDBounded,
    kFPDNoneBounded
 };
 
+class TF1;
 class TGNumberEntry;
 class TGTextEntry;
 class TGCheckButton;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.321 2006/12/11 15:38:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.332 2007/02/06 15:00:56 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -17,6 +17,8 @@
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "TMath.h"
+#include "THashList.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TF2.h"
@@ -33,6 +35,7 @@
 #include "TBrowser.h"
 #include "TObjString.h"
 #include "TError.h"
+#include "TVirtualHistPainter.h"
 #include "TVirtualFFT.h"
 
 //______________________________________________________________________________
@@ -42,22 +45,22 @@
 //     ROOT supports the following histogram types:
 //
 //      1-D histograms:
-//         TH1C : histograms with one byte per channel.   Maximum bin content = 255
-//         TH1S : histograms with one short per channel.  Maximum bin content = 65535
+//         TH1C : histograms with one byte per channel.   Maximum bin content = 127
+//         TH1S : histograms with one short per channel.  Maximum bin content = 32767
 //         TH1I : histograms with one int per channel.    Maximum bin content = 2147483647
 //         TH1F : histograms with one float per channel.  Maximum precision 7 digits
 //         TH1D : histograms with one double per channel. Maximum precision 14 digits
 //
 //      2-D histograms:
-//         TH2C : histograms with one byte per channel.   Maximum bin content = 255
-//         TH2S : histograms with one short per channel.  Maximum bin content = 65535
+//         TH2C : histograms with one byte per channel.   Maximum bin content = 127
+//         TH2S : histograms with one short per channel.  Maximum bin content = 32767
 //         TH2I : histograms with one int per channel.    Maximum bin content = 2147483647
 //         TH2F : histograms with one float per channel.  Maximum precision 7 digits
 //         TH2D : histograms with one double per channel. Maximum precision 14 digits
 //
 //      3-D histograms:
-//         TH3C : histograms with one byte per channel.   Maximum bin content = 255
-//         TH3S : histograms with one short per channel.  Maximum bin content = 65535
+//         TH3C : histograms with one byte per channel.   Maximum bin content = 127
+//         TH3S : histograms with one short per channel.  Maximum bin content = 32767
 //         TH3I : histograms with one int per channel.    Maximum bin content = 2147483647
 //         TH3F : histograms with one float per channel.  Maximum precision 7 digits
 //         TH3D : histograms with one double per channel. Maximum precision 14 digits
@@ -246,7 +249,7 @@
 //
 //     In case of histograms of type TH1C, TH1S, TH2C, TH2S, TH3C, TH3S
 //     a check is made that the bin contents do not exceed the maximum positive
-//     capacity (127 or 65535). Histograms of all types may have positive
+//     capacity (127 or 32767). Histograms of all types may have positive
 //     or/and negative bin contents.
 //
 //     Rebinning
@@ -1828,7 +1831,6 @@ void TH1::Copy(TObject &obj) const
    TNamed::Copy(obj);
    ((TH1&)obj).fDimension = fDimension;
    ((TH1&)obj).fNormFactor= fNormFactor;
-   ((TH1&)obj).fEntries   = fEntries;
    ((TH1&)obj).fNcells    = fNcells;
    ((TH1&)obj).fBarOffset = fBarOffset;
    ((TH1&)obj).fBarWidth  = fBarWidth;
@@ -1841,12 +1843,18 @@ void TH1::Copy(TObject &obj) const
    ((TH1&)obj).fOption    = fOption;
    ((TH1&)obj).fBuffer    = 0;
    ((TH1&)obj).fBufferSize= fBufferSize;
+   Int_t i;
    if (fBuffer) {
       Double_t *buf = new Double_t[fBufferSize];
-      for (Int_t i=0;i<fBufferSize;i++) buf[i] = fBuffer[i];
+      for (i=0;i<fBufferSize;i++) buf[i] = fBuffer[i];
       ((TH1&)obj).fBuffer    = buf;
    }
 
+   TArray* a = dynamic_cast<TArray*>(&obj);
+   if (a) a->Set(fNcells);
+   for (i=0;i<fNcells;i++) ((TH1&)obj).SetBinContent(i,this->GetBinContent(i));
+   ((TH1&)obj).fEntries   = fEntries;
+   
    TAttLine::Copy(((TH1&)obj));
    TAttFill::Copy(((TH1&)obj));
    TAttMarker::Copy(((TH1&)obj));
@@ -3033,7 +3041,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Dou
    }
    if (linear) {
       //
-      TClass *cl = gROOT->GetClass("TLinearFitter");
+      TClass *cl = TClass::GetClass("TLinearFitter");
       if (isSet && strdiff!=0) {
          delete TVirtualFitter::GetFitter();
          isSet=kFALSE;
@@ -5087,7 +5095,7 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       hnew->SetBins(newbins,bins); //this also changes errors array (if any)
       delete [] bins;
    } else if (xbins) {
-      ngroup = 1;
+      ngroup = newbins;
       hnew->SetBins(newbins,xbins);
    } else {
       hnew->SetBins(newbins,xmin,xmax);
@@ -5112,14 +5120,20 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    for (bin = 1;bin<=newbins;bin++) {
       binContent = 0;
       binError   = 0;
+      Int_t imax = ngroup;
+      Double_t xbinmax = hnew->GetXaxis()->GetBinUpEdge(bin);
       for (i=0;i<ngroup;i++) {
-         if (oldbin+i > nbins) break;
+         if( (hnew == this && (oldbin+i > nbins)) || 
+             ( hnew != this && (fXaxis.GetBinCenter(oldbin+i) > xbinmax)) ) {
+            imax = i;
+            break;
+         }
          binContent += oldBins[oldbin+i];
          if (oldErrors) binError += oldErrors[oldbin+i]*oldErrors[oldbin+i];
       }
       hnew->SetBinContent(bin,binContent);
       if (oldErrors) hnew->SetBinError(bin,TMath::Sqrt(binError));
-      oldbin += ngroup;
+      oldbin += imax;
    }
    hnew->SetBinContent(0,oldBins[0]);
    hnew->SetBinContent(newbins+1,oldBins[nbins+1]);
@@ -5574,7 +5588,7 @@ void TH1::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TH1::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         b.ReadClassBuffer(TH1::Class(), this, R__v, R__s, R__c);
 
          fXaxis.SetParent(this);
          fYaxis.SetParent(this);
@@ -5632,7 +5646,7 @@ void TH1::Streamer(TBuffer &b)
       b.CheckByteCount(R__s, R__c, TH1::IsA());
 
    } else {
-      TH1::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TH1::Class(),this);
    }
 }
 
@@ -5909,8 +5923,14 @@ void TH1::SavePrimitiveHelp(ostream &out, Option_t *option /*= ""*/)
    Int_t ncontours = GetContour();
    if (ncontours > 0) {
       out<<"   "<<GetName()<<"->SetContour("<<ncontours<<");"<<endl;
+      Double_t zlevel;
       for (Int_t bin=0;bin<ncontours;bin++) {
-         out<<"   "<<GetName()<<"->SetContourLevel("<<bin<<","<<GetContourLevel(bin)<<");"<<endl;
+         if (gPad->GetLogz()) {
+            zlevel = TMath::Power(10,GetContourLevel(bin));
+         } else {
+            zlevel = GetContourLevel(bin);
+         }
+         out<<"   "<<GetName()<<"->SetContourLevel("<<bin<<","<<zlevel<<");"<<endl;
       }
    }
 
@@ -7518,10 +7538,9 @@ void TH1C::AddBinContent(Int_t bin, Double_t w)
 //______________________________________________________________________________
 void TH1C::Copy(TObject &newth1) const
 {
-   // Copy.
+   // Copy this to newth1
    
    TH1::Copy(newth1);
-   TArrayC::Copy((TH1C&)newth1);
 }
 
 //______________________________________________________________________________
@@ -7752,10 +7771,9 @@ void TH1S::AddBinContent(Int_t bin, Double_t w)
 //______________________________________________________________________________
 void TH1S::Copy(TObject &newth1) const
 {
-   // Copy.
+   // Copy this to newth1
 
    TH1::Copy(newth1);
-   TArrayS::Copy((TH1S&)newth1);
 }
 
 //______________________________________________________________________________
@@ -7984,10 +8002,9 @@ void TH1I::AddBinContent(Int_t bin, Double_t w)
 //______________________________________________________________________________
 void TH1I::Copy(TObject &newth1) const
 {
-   // Copy.
+   // Copy this to newth1
 
    TH1::Copy(newth1);
-   TArrayI::Copy((TH1I&)newth1);
 }
 
 //______________________________________________________________________________
@@ -8199,7 +8216,7 @@ TH1F::TH1F(const TVectorF &v)
 //______________________________________________________________________________
 TH1F::TH1F(const TH1F &h) : TH1(), TArrayF()
 {
-   // Constructor.
+   // Copy Constructor.
 
    ((TH1F&)h).Copy(*this);
 }
@@ -8213,10 +8230,9 @@ TH1F::~TH1F()
 //______________________________________________________________________________
 void TH1F::Copy(TObject &newth1) const
 {
-   // Copy constructor.
+   // Copy this to newth1.
 
    TH1::Copy(newth1);
-   TArrayF::Copy((TH1F&)newth1);
 }
 
 //______________________________________________________________________________
@@ -8443,10 +8459,9 @@ TH1D::TH1D(const TH1D &h1d) : TH1(), TArrayD()
 //______________________________________________________________________________
 void TH1D::Copy(TObject &newth1) const
 {
-   // Copy.
+   // Copy this to newth1
    
    TH1::Copy(newth1);
-   TArrayD::Copy((TH1D&)newth1);
 }
 
 //______________________________________________________________________________

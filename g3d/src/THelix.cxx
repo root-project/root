@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.15 2006/05/24 15:31:40 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.17 2007/01/12 16:03:15 brun Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -67,6 +67,7 @@
 #include "TVirtualPad.h"
 #include "THelix.h"
 #include "TClass.h"
+#include "TMath.h"
 
 Int_t THelix::fgMinNSeg=5;        // at least 5 line segments in TPolyLine3D
 
@@ -619,7 +620,7 @@ void THelix::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
       if (R__v > 1) {
-         THelix::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(THelix::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -638,6 +639,6 @@ void THelix::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      THelix::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(THelix::Class(),this);
    }
 }

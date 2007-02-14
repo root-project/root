@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.32 2006/09/27 08:45:42 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.39 2007/01/30 11:49:13 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -14,10 +14,44 @@
 //                                                                      //
 // TGedEditor                                                           //
 //                                                                      //
-// Editor is a composite frame that contains TGedToolBox and            //
-// TGedAttFrames. It is connected to a Canvas and listens for           //
-// selected objects                                                     //
+// The main class of ROOT graphics editor. It manages the appearance    //
+// of objects editors according to the selected object in the canvas    //
+// (an object became selected after the user click on it using the      //
+// left-mouse button).                                                  //
 //                                                                      //
+// Every object editor provides an object specific GUI and follows a    //
+// simple naming convention: it has as a name the object class name     //
+// concatinated with 'Editor' (e.g. for TGraph objects the object       //
+// editor is TGraphEditor).                                             //
+//                                                                      //
+// The ROOT graphics editor can be activated by selecting 'Editor'      //
+// from the View canvas menu, or SetLine/Fill/Text/MarkerAttributes     //
+// from the context menu. The algorithm in use is simple: according to  //
+// the selected object <obj> in the canvas it looks for a class name    // 
+// <obj>Editor. If a class with this name exists, the editor verifies   //
+// that this class derives from the base editor class TGedFrame.        //
+// It makes an instance of the object editor, scans all object base     //
+// classes searching the corresponding object editors and makes an      //
+// instance of the base class editor too. Once the object editor is in  //
+// place, it sets the user interface elements according to the object   //
+// state and is ready for interactions. When a new object of a          //
+// different class is selected, a new object editor is loaded in the    //
+// editor frame. The old one is cached in memory for potential reuse.   //
+//                                                                      //
+// Any created canvas will be shown with the editor if you have a       //
+// .rootrc file in your working directory containing the the line:      //
+// Canvas.ShowEditor:      true                                         // 
+//                                                                      //
+// An created object can be set as selected in a macro by:              //
+// canvas->Selected(parent_pad_of_object, object, 1);                   //
+// The first parameter can be the canvas itself or the pad containing   //
+// 'object'.                                                            //
+//                                                                      //
+// Begin_Html                                                           //
+/*
+<img src="gif/TGedEditor.gif">
+*/
+//End_Html
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGedEditor.h" 
@@ -26,10 +60,9 @@
 #include "TGTab.h"
 #include "TGedFrame.h"
 #include "TGLabel.h"
-#include "TGFrame.h"
+#include "TROOT.h"
 #include "TClass.h"
 #include "TBaseClass.h"
-#include "TSystem.h"
 
 class TGedTabInfo : public TObject {
    // Helper class for managing visibility and order of created tabs.
@@ -50,6 +83,7 @@ TGedEditor* TGedEditor::fgFrameCreator = 0;
 TGedEditor* TGedEditor::GetFrameCreator()
 {
    // Returns TGedEditor that currently creates TGedFrames.
+   
    return fgFrameCreator;
 }
 
@@ -57,6 +91,7 @@ TGedEditor* TGedEditor::GetFrameCreator()
 void TGedEditor::SetFrameCreator(TGedEditor* e)
 {
    // Set the TGedEditor that currently creates TGedFrames.
+   
    fgFrameCreator = e;
 }
 
@@ -151,6 +186,7 @@ void TGedEditor::Update(TGedFrame* /*frame*/)
 TGCompositeFrame* TGedEditor::GetEditorTab(const Text_t* name)
 {
    // Find or create tab with name.
+   
    return GetEditorTabInfo(name)->fContainer;
 }
 
@@ -202,13 +238,9 @@ void TGedEditor::CloseWindow()
 void TGedEditor::ReinitWorkspace()
 {  
    // Clears windows in editor tab.
-   // Moves all visible GedFrames to the map of available frames and hide them. 
-
-   TIter it(fTabContainer->GetList());
-   it(); // skip name-frame
-
    // Unmap and withdraw currently shown frames and thus prepare for
    // construction of a new class layout or destruction.
+
    TIter next(&fVisibleTabs);
    TGedTabInfo* ti;
    while ((ti = (TGedTabInfo*)next())) {
@@ -218,21 +250,17 @@ void TGedEditor::ReinitWorkspace()
       fTab->RemoveFrame(te);
       fTab->RemoveFrame(tc);
 
-      // printf("ReinitWorkspace remove %d from %s \n", tc->GetList()->GetSize(),tc->GetName());
       TIter frames(tc->GetList());
       frames(); // skip name-frame
       TGFrameElement* fr;
       while ((fr = (TGFrameElement *) frames()) != 0) {
          TGFrame *f = fr->fFrame;
-         {
-            tc->RemoveFrame(f);
-            f->UnmapWindow();
-         }
+         tc->RemoveFrame(f);
+         f->UnmapWindow();
          te->UnmapWindow();
          tc->UnmapWindow();
-
-         fVisibleTabs.Remove(ti);
       }
+      fVisibleTabs.Remove(ti);
    }
 }
 
@@ -261,7 +289,7 @@ void TGedEditor::GlobalClosed()
 }
 
 //______________________________________________________________________________
-void TGedEditor::GlobalSetModel(TVirtualPad *pad, TObject */*obj*/, Int_t ev)
+void TGedEditor::GlobalSetModel(TVirtualPad *pad, TObject * /*obj*/, Int_t ev)
 {
    // Set canvas to global editor.
 
@@ -359,9 +387,10 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
             fTab->AddFrame(ti->fContainer,0);
          }  
       }
+      ConfigureGedFrames(kTRUE);
+   } else {
+      ConfigureGedFrames(kFALSE);
    } // end fModel != obj
-
-   ConfigureGedFrames();
 
    if (mapTabs) { // selected object is different class
       TGedTabInfo* ti;
@@ -472,7 +501,7 @@ void TGedEditor::ActivateEditor(TClass* cl, Bool_t recurse)
    TGedFrame *frame = 0;
 
    if (pair == 0) {
-      edClass = gROOT->GetClass(Form("%sEditor", cl->GetName()));
+      edClass = TClass::GetClass(Form("%sEditor", cl->GetName()));
 
       if (edClass && edClass->InheritsFrom(TGedFrame::Class())) {
          TGWindow *exroot = (TGWindow*) fClient->GetRoot();
@@ -574,7 +603,7 @@ void TGedEditor::InsertGedFrame(TGedFrame* f)
 }
 
 //______________________________________________________________________________
-void TGedEditor::ConfigureGedFrames()
+void TGedEditor::ConfigureGedFrames(Bool_t objChanged)
 {
    // Call SetModel in class editors.
 
@@ -589,21 +618,27 @@ void TGedEditor::ConfigureGedFrames()
       TIter fr(ti->fContainer->GetList());
       el = (TGFrameElement*) fr();
       ((TGedFrame*) el->fFrame)->SetModel(fModel);
-      do {
-         el->fFrame->MapSubwindows();
-         el->fFrame->Layout();
-         el->fFrame->MapWindow();
-      } while((el = (TGFrameElement *) fr()));
+      if(objChanged) {
+         do {
+            el->fFrame->MapSubwindows();
+            el->fFrame->Layout();
+            el->fFrame->MapWindow();
+         } while((el = (TGFrameElement *) fr()));
+      }
       ti->fContainer->Layout();
    }
 
    TIter next(fTabContainer->GetList());
    while ((el = (TGFrameElement *) next())) {
       if ((el->fFrame)->InheritsFrom(TGedFrame::Class())) {
+         if (objChanged) {
          el->fFrame->MapSubwindows();
          ((TGedFrame *)(el->fFrame))->SetModel(fModel);
          el->fFrame->Layout();
          el->fFrame->MapWindow();
+         } else {
+            ((TGedFrame *)(el->fFrame))->SetModel(fModel);
+         }
       }
    }
    fTabContainer->Layout();

@@ -27,13 +27,9 @@
 */
 //End_Html
 
-
 #include "TPaveStatsEditor.h"
-#include "TGClient.h"
 #include "TGButton.h"
-#include "TGButtonGroup.h"
-#include "TVirtualPad.h"
-#include "TClass.h"
+#include "TPaveStats.h"
 
 ClassImp(TPaveStatsEditor)
 

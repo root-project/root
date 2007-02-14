@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.47 2006/07/03 16:10:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.51 2007/02/01 14:21:01 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -13,13 +13,17 @@
 #include "TClass.h"
 #include "THStack.h"
 #include "TVirtualPad.h"
+#include "TVirtualHistPainter.h"
 #include "TFrame.h"
+#include "THashList.h"
 #include "TH2.h"
 #include "TH3.h"
 #include "TList.h"
 #include "TStyle.h"
 #include "Riostream.h"
 #include "TBrowser.h"
+#include "TMath.h"
+#include "TObjString.h"
 
 ClassImp(THStack)
 
@@ -678,6 +682,22 @@ void THStack::Paint(Option_t *option)
          else                           fHistogram->SetMinimum(themin);
       }
    }
+
+   // Copy the axis labels if needed.
+   TH1 *hfirst;
+   TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
+   hfirst = (TH1*)lnk->GetObject();
+   THashList* labels = hfirst->GetXaxis()->GetLabels();
+   if (labels) {
+      TIter iL(labels);
+      TObjString* lb;
+      Int_t ilab = 1;
+      while ((lb=(TObjString*)iL())) {
+         fHistogram->GetXaxis()->SetBinLabel(ilab,lb->String().Data());
+         ilab++;
+      }
+   }
+
    if (!lsame) fHistogram->Paint(loption);
 
    if (fHistogram->GetDimension() > 1) SetDrawOption(loption);

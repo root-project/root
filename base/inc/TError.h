@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TError.h,v 1.8 2006/10/18 09:26:58 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TError.h,v 1.10 2007/02/01 14:20:21 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -29,9 +29,8 @@
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif
-#ifndef ROOT_Varargs
-#include "Varargs.h"
-#endif
+#include <stdarg.h>
+
 
 class TVirtualMutex;
 

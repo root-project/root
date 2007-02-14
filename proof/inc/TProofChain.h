@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofChain.h,v 1.1 2006/11/27 14:14:23 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofChain.h,v 1.3 2007/02/01 14:21:28 brun Exp $
 // Author: G. Ganis Nov 2006
 
 /*************************************************************************
@@ -28,7 +28,7 @@
 
 class TDSet;
 class TDrawFeedback;
-
+class TList;
 
 class TProofChain : public TChain {
 
@@ -60,7 +60,7 @@ public:
    virtual TObjArray   *GetListOfBranches() {return (fTree ? fTree->GetListOfBranches() : (TObjArray *)0); }
    virtual TObjArray   *GetListOfLeaves()   {return (fTree ? fTree->GetListOfLeaves() : (TObjArray *)0);}
    virtual TList       *GetListOfFriends()    const {return 0;}
-   virtual TSeqCollection *GetListOfAliases() const {return 0;}
+   virtual TList       *GetListOfAliases() const {return 0;}
 
     // GetMakeClass is left non-virtual for efficiency reason.
     // Making it virtual affects the performance of the I/O

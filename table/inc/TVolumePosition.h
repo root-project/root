@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolumePosition.h,v 1.8 2006/07/03 16:10:46 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TVolumePosition.h,v 1.9 2006/07/11 09:05:02 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -20,7 +20,6 @@
 #ifndef ROOT_TVolumePosition
 #define ROOT_TVolumePosition
 
-#include "TClass.h"
 #include "TVolume.h"
 
 class TBrowser;
@@ -64,7 +63,7 @@ public:
    virtual TVolume     *GetNode() const {return fNode;}
    virtual Text_t      *GetObjectInfo(Int_t px, Int_t py) const;
    const   Option_t    *GetOption() const { return GetNode()?GetNode()->GetOption():0;}
-   virtual const Char_t *GetName() const { return GetNode() ? GetNode()->GetName():IsA()->GetName();}
+   virtual const Char_t *GetName() const;
    const TRotMatrix    *GetMatrix() const;
    TRotMatrix          *GetMatrix();
 

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.h,v 1.7 2005/09/12 13:04:39 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.h,v 1.8 2005/11/10 10:36:59 couet Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -33,14 +33,13 @@
 #include "TAttFill.h"
 #endif
 
-#include "TF3.h"
-
 const Int_t kCARTESIAN   = 1;
 const Int_t kPOLAR       = 2;
 const Int_t kCYLINDRICAL = 3;
 const Int_t kSPHERICAL   = 4;
 const Int_t kRAPIDITY    = 5;
 
+class TF3;
 
 class TPainter3dAlgorithms : public TObject, public TAttLine, public TAttFill {
 

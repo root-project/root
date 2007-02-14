@@ -28,18 +28,14 @@ void TestSPlot()
 //
 //Authors: Anna Kreshuk, Muriel Pivc
 
-   ifstream toymc;
-   toymc.open("TestSPlot_toyMC.dat");
-   if (!toymc.good()) {
-      printf("Before executing this script you must download the data file from\n");
-      printf("  ftp://root.cern.ch/root/TestSPlot_toyMC.dat\n");
-      return;
-   }
-   toymc.close();
-
+   TString dir = gSystem->UnixPathName(TCint::GetCurrentMacroName());
+   dir.ReplaceAll("TestSPlot.C","");
+   dir.ReplaceAll("/./","/");
+   TString dataFile = Form("%sTestSPlot_toyMC.dat",dir.Data());
+   
    //Read the data and initialize a TSPlot object
    TTree *datatree = new TTree("datatree", "datatree");
-   datatree->ReadFile("TestSPlot_toyMC.dat", "Mes/D:dE/D:F/D:MesSignal/D:MesBackground/D:dESignal/D:dEBackground/D:FSignal/D:FBackground/D");
+   datatree->ReadFile(dataFile, "Mes/D:dE/D:F/D:MesSignal/D:MesBackground/D:dESignal/D:dEBackground/D:FSignal/D:FBackground/D");
 
    TSPlot *splot = new TSPlot(0, 3, 5420, 2, datatree);
 

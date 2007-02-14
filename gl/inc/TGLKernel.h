@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.22 2005/11/24 12:29:12 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.23 2006/01/26 11:59:41 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -23,10 +23,6 @@
 
 #ifndef ROOT_TVirtualGL
 #include "TVirtualGL.h"
-#endif
-
-#ifndef ROOT_TMath
-#include "TMath.h"
 #endif
 
 #ifdef WIN32

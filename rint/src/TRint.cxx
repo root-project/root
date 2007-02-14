@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.64 2006/12/01 11:29:13 pcanal Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.68 2007/02/13 07:59:47 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -36,8 +36,6 @@
 #include "TInterpreter.h"
 #include "TObjArray.h"
 #include "TObjString.h"
-#include "TFile.h"
-#include "TMapFile.h"
 #include "TTabCom.h"
 #include "TError.h"
 #include "G__ci.h"
@@ -45,6 +43,8 @@
 #ifdef R__UNIX
 #include <signal.h>
 #endif
+
+R__EXTERN void *gMmallocDesc; //is used and set in TMapFile and TClass
 
 //______________________________________________________________________________
 static Int_t Key_Pressed(Int_t key)
@@ -143,25 +143,34 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    if (!noLogo && !NoLogoOpt())
       PrintLogo();
 
-   // Everybody expects iostream to be available, so load it...
-   ProcessLine("#include <iostream>", kTRUE);
-   ProcessLine("#include <_string>", kTRUE); // for std::string iostream.
-   ProcessLine("#include <vector>", kTRUE);  // Needed because std::vector and std::pair are
-   ProcessLine("#include <pair>", kTRUE);    //   used within the core ROOT dictionaries
-                                             //   and CINT will not be able to properly unload these files
-
-   // Allow the usage of ClassDef and ClassImp in interpreted macros
-   ProcessLine("#include <RtypesCint.h>", kTRUE);
+   // Load some frequently used includes
+   Int_t includes = gEnv->GetValue("Rint.Includes",1);
+   // When the interactive ROOT starts, it can automatically load some frequently
+   // used includes. However, this introduces several overheads
+   //   -A long list of cint and system files must be kept open during the session
+   //   -The initialisation takes more time (noticeable when using gdb or valgrind)
+   //   -Memory overhead of about 5 Mbytes (1/3 of the ROOT executable) when including <vector>
+   // In $ROOTSYS/etc/system.rootrc, you can set the variable Rint.Includes to 0
+   //  to disable the loading of these includes at startup.
+   // You can set the variable to 1 (default) to load only <iostream>, <string> and <RTypesCint.h>
+   // You can set it to 2 to load in addition <vector> and <pair> 
+   // We strongly recommend setting the variable to 2 if your scripts include <vector>
+   // and you execute your scripts multiple times.
+   if (includes > 0) {
+      ProcessLine("#include <iostream>", kTRUE);
+      ProcessLine("#include <_string>", kTRUE); // for std::string iostream.
+      ProcessLine("#include <RtypesCint.h>", kTRUE);// Allow the usage of ClassDef and ClassImp in interpreted macros
+      if (includes > 1) {
+         ProcessLine("#include <vector>", kTRUE);  // Needed because std::vector and std::pair are
+         ProcessLine("#include <pair>", kTRUE);    // used within the core ROOT dictionaries
+                                                   // and CINT will not be able to properly unload these files
+      }
+   }
 
    // Disallow the interpretation of Rtypes.h, TError.h and TGenericClassInfo.h
    ProcessLine("#define ROOT_Rtypes 0", kTRUE);
    ProcessLine("#define ROOT_TError 0", kTRUE);
    ProcessLine("#define ROOT_TGenericClassInfo 0", kTRUE);
-
-   // The following libs are also useful to have, make sure they are loaded...
-   //gROOT->LoadClass("TMinuit",     "Minuit");
-   //gROOT->LoadClass("TPostScript", "Postscript");
-   //gROOT->LoadClass("THtml",       "Html");
 
    // Load user functions
    const char *logon;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.14 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.15 2006/11/07 15:45:30 antcheva Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -38,6 +38,7 @@
 #include "TGButton.h"
 #include "TGDockableFrame.h"
 #include "TGWindow.h"
+#include "TList.h"
 #include "TVirtualX.h"
 #include "Riostream.h"
 

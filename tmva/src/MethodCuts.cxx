@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCuts.cxx,v 1.73 2006/11/17 14:59:23 stelzer Exp $ 
+// @(#)root/tmva $Id: MethodCuts.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $ 
 // Author: Andreas Hoecker, Matt Jachowski, Peter Speckmayer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -93,6 +93,7 @@
 #include <stdio.h>
 #include "time.h"
 #include "Riostream.h"
+#include "TDirectory.h"
 #include "TH1F.h"
 #include "TObjString.h"
 

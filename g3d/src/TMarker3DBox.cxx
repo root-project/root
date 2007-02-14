@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.19 2006/07/03 16:10:43 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.22 2007/01/23 09:53:36 brun Exp $
 // Author: Rene Brun , Olivier Couet 31/10/97
 
 
@@ -17,12 +17,12 @@
 #include "TVirtualPad.h"
 #include "TH1.h"
 #include "TH3.h"
-#include "TFile.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TVirtualViewer3D.h"
 #include "TGeometry.h"
 #include "TClass.h"
+#include "TMath.h"
 
 #include <assert.h>
 
@@ -463,16 +463,15 @@ void TMarker3DBox::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TMarker3DBox::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TMarker3DBox::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
       TObject::Streamer(R__b);
       TAttLine::Streamer(R__b);
       TAttFill::Streamer(R__b);
-      TFile *file = (TFile*)R__b.GetParent();
-      if (file) {
-         if (file->GetVersion() > 22300) TAtt3D::Streamer(R__b);
+      if (R__b.GetVersionOwner() > 22300) {
+         TAtt3D::Streamer(R__b);
       } else {
          TAtt3D::Streamer(R__b);
       }
@@ -489,6 +488,6 @@ void TMarker3DBox::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TMarker3DBox::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TMarker3DBox::Class(),this);
    }
 }

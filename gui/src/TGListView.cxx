@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.42 2006/08/09 16:11:01 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.44 2007/01/10 14:54:30 antcheva Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -44,7 +44,6 @@
 #include "TGScrollBar.h"
 #include "TGResourcePool.h"
 #include "TList.h"
-#include "TMath.h"
 #include "TSystem.h"
 #include "TGMimeTypes.h"
 #include "TObjString.h"
@@ -1158,6 +1157,15 @@ void TGListView::SetDefaultColumnWidth(TGVFileSplitter* splitter)
          Layout();
       }
    }
+}
+
+//______________________________________________________________________________
+void TGListView::ResizeColumns()
+{
+   // Resize column headers to show whole item names. 
+
+   for (int i = 0; i < fNColumns; ++i) 
+      SetDefaultColumnWidth(fSplitHeader[i]);
 }
 
 //______________________________________________________________________________

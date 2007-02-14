@@ -1,4 +1,4 @@
-// @(#)root/g4root:$Name:  $:$Id: TG4RootDetectorConstruction.cxx,v 1.2 2006/11/22 17:29:54 rdm Exp $
+// @(#)root/g4root:$Name:  $:$Id: TG4RootDetectorConstruction.cxx,v 1.3 2006/12/01 08:51:39 brun Exp $
 // Author: Andrei Gheata   07/08/06
 
 /*************************************************************************
@@ -71,6 +71,7 @@
 #include "G4GeometryManager.hh"
 
 #include "TG4RootNavMgr.h"
+#include "TList.h"
 #include "TG4RootNavigator.h"
 #include "TG4RootSolid.h"
 #include "TG4RootDetectorConstruction.h"

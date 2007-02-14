@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TCurlyArcEditor.cxx,v 1.10 2006/06/23 15:19:22 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TCurlyArcEditor.cxx,v 1.11 2006/09/25 13:35:58 rdm Exp $
 // Author: Ilka Antcheva, Otto Schaile 15/12/04
 
 /*************************************************************************
@@ -24,13 +24,10 @@
 
 
 #include "TCurlyArcEditor.h"
-#include "TGComboBox.h"
 #include "TGLabel.h"
 #include "TGNumberEntry.h"
 #include "TCurlyArc.h"
-#include "TVirtualPad.h"
 #include "iostream"
-#include "TClass.h"
 
 ClassImp(TCurlyArcEditor)
 

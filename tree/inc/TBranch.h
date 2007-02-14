@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.32 2006/05/23 04:47:41 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.33 2006/07/26 13:36:43 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -32,16 +32,8 @@
 #include "TObjArray.h"
 #endif
 
-#ifndef ROOT_TStringLong
-#include "TStringLong.h"
-#endif
-
 #ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
-
-#ifndef ROOT_Htypes
-#include "Htypes.h"
 #endif
 
 class TTree;

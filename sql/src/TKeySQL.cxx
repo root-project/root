@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TKeySQL.cxx,v 1.9 2006/05/22 08:55:58 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TKeySQL.cxx,v 1.10 2006/06/22 08:21:22 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -22,7 +22,6 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TBrowser.h"
-#include "TDirectory.h"
 #include "Riostream.h"
 
 #include "TSQLResult.h"
@@ -210,8 +209,8 @@ TObject* TKeySQL::ReadObj()
    
    if (tobj!=0) {
       if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
-      if (tobj->IsA() == TDirectory::Class()) {
-         TDirectory *dir = (TDirectory*) tobj;
+      if (tobj->IsA() == TDirectoryFile::Class()) {
+         TDirectoryFile *dir = (TDirectoryFile*) tobj;
          dir->SetName(GetName());
          dir->SetTitle(GetTitle());
          dir->SetSeekDir(GetDBKeyId());

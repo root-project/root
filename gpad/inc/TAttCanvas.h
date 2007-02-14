@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TAttCanvas.h,v 1.4 2002/10/30 20:40:42 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TAttCanvas.h,v 1.5 2005/11/21 17:26:31 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -21,14 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Gtypes
-#include "Gtypes.h"
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
 #endif
-
-#ifndef ROOT_Htypes
-#include "Htypes.h"
-#endif
-
 
 class TAttCanvas {
 private:

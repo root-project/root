@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.95 2006/11/02 11:03:37 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.97 2007/02/06 14:35:45 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -753,7 +753,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          tp0->tm_hour  = 0;
          tp0->tm_min   = 0;
          tp0->tm_sec   = 0;
-         tp0->tm_isdst =-1; // see comments above
+         tp0->tm_isdst = 1; // daylight saving time is on.
          rangeBase = (timetp-mktime(tp0)); // years
          rangeOffset = (Double_t) (rangeBase);
       }
@@ -2152,7 +2152,7 @@ void TGaxis::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 3) {
-         TGaxis::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TGaxis::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -2183,6 +2183,6 @@ void TGaxis::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TGaxis::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TGaxis::Class(),this);
    }
 }

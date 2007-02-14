@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.30 2006/10/19 10:58:24 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.32 2007/01/20 19:29:34 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -30,15 +30,13 @@
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif
-#ifndef ROOT_Varargs
-#include "Varargs.h"
-#endif
 #ifndef ROOT_TStorage
 #include "TStorage.h"
 #endif
 #ifndef ROOT_Riosfwd
 #include "Riosfwd.h"
 #endif
+#include <stdarg.h>
 
 #ifdef WIN32
 #undef RemoveDirectory

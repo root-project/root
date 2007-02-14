@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPavesText.cxx,v 1.8 2005/11/21 13:57:42 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPavesText.cxx,v 1.9 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   19/11/95
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include "TROOT.h"
 #include "TPavesText.h"
 #include "TVirtualPad.h"
+#include "TBufferFile.h"
 #include "TError.h"
 
 ClassImp(TPavesText)
@@ -62,7 +63,7 @@ TPavesText::TPavesText(const TPavesText &pavestext) : TPaveText()
 {
    // Pavestext copy constructor.
 
-   TBuffer b(TBuffer::kWrite);
+   TBufferFile b(TBuffer::kWrite);
    TPavesText *p = (TPavesText*)(&pavestext);
    p->Streamer(b);
    b.SetReadMode();

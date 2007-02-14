@@ -20,14 +20,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
-#include "TGWidget.h"
-#endif
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
 #endif 
 
-class TGColorSelect;
 class TGCheckButton;
 class TGRadioButton;
 class TGLineWidthComboBox;

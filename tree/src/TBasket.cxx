@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.42 2006/06/26 06:47:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.45 2007/01/20 19:29:35 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -9,9 +9,11 @@
  *************************************************************************/
 
 #include "TBasket.h"
+#include "TBufferFile.h"
 #include "TTree.h"
 #include "TBranch.h"
 #include "TFile.h"
+#include "TBufferFile.h"
 #include "TMath.h"
 
 R__EXTERN  TBranch *gBranch;
@@ -80,7 +82,7 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch) :
    fEntryOffset = 0;  //Must be set to 0 before calling Sizeof
    fDisplacement= 0;  //Must be set to 0 before calling Sizeof
    fBuffer      = 0;  //Must be set to 0 before calling Sizeof
-   fBufferRef   = new TBuffer(TBuffer::kWrite, fBufferSize);
+   fBufferRef   = new TBufferFile(TBuffer::kWrite, fBufferSize);
    fVersion    += 1000;
    if (branch->GetDirectory()) {
       TFile *file = branch->GetFile();
@@ -193,7 +195,7 @@ Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    // This function is called by TTreeCloner.
    // The function returns 0 in case of success, 1 in case of error.
 
-   fBufferRef = new TBuffer(TBuffer::kRead, len);
+   fBufferRef = new TBufferFile(TBuffer::kRead, len);
    fBufferRef->SetParent(file);
    char *buffer = fBufferRef->Buffer();
    file->Seek(pos);
@@ -265,12 +267,12 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    // The function returns 0 in case of success, 1 in case of error
 
    Int_t badread= 0;
-   TDirectory *cursav = gDirectory;
+   TDirectory::TContext ctxt(0);
    fBranch->GetDirectory()->cd();
 
    if (fBranch->GetTree()->MemoryFull(fBufferSize)) fBranch->DropBaskets();
 
-   fBufferRef = new TBuffer(TBuffer::kRead, len);
+   fBufferRef = new TBufferFile(TBuffer::kRead, len);
    fBufferRef->SetParent(file);
    
    char *buffer = fBufferRef->Buffer();
@@ -286,7 +288,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
         && GetBranch()->GetCompressionLevel()!=0
         && file->GetVersion()<=30401;
    if (fObjlen > fNbytes-fKeylen || oldCase) {
-      if (TestBit(TBuffer::kNotDecompressed) && (fNevBuf==1)) {
+      if (TestBit(TBufferFile::kNotDecompressed) && (fNevBuf==1)) {
          // By-passing buffer unzipping has been requested and is
          // possible (only 1 entry in this basket).
          fBuffer = fBufferRef->Buffer();
@@ -295,7 +297,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
          fBufferRef->SetBufferOffset(fNbytes);
         
          // Indicate that this buffer is weird.
-         fBufferRef->SetBit(TBuffer::kNotDecompressed); 
+         fBufferRef->SetBit(TBufferFile::kNotDecompressed); 
         
          // Usage of this mode assume the existance of only ONE 
          // entry in this basket.
@@ -338,7 +340,6 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       fBuffer = fBufferRef->Buffer();
    }
 AfterBuffer:
-   cursav->cd();
 
    fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
 
@@ -433,7 +434,7 @@ void TBasket::Streamer(TBuffer &b)
          }
       }
       if (flag == 1 || flag > 10) {
-         fBufferRef = new TBuffer(TBuffer::kRead,fBufferSize);
+         fBufferRef = new TBufferFile(TBuffer::kRead,fBufferSize);
          fBufferRef->SetParent(b.GetParent());
          char *buf  = fBufferRef->Buffer();
          if (v > 1) b.ReadFastArray(buf,fLast);
@@ -548,19 +549,18 @@ Int_t TBasket::WriteBuffer()
    //
 
    const Int_t kWrite = 1;
-   TDirectory *cursav = gDirectory;
+   TDirectory::TContext ctxt(0);
    TFile *file = fBranch->GetFile(kWrite);
    if (!file) return 0;
 
    fBranch->GetDirectory()->cd();
    if (!file->IsWritable()) { 
-      cursav->cd(); 
       return -1;
    }
    
    fMotherDir = fBranch->GetDirectory();
    
-   if (fBufferRef->TestBit(TBuffer::kNotDecompressed)) {
+   if (fBufferRef->TestBit(TBufferFile::kNotDecompressed)) {
       // Read the basket information that was saved inside the buffer.
       Bool_t writing = fBufferRef->IsWriting();
       fBufferRef->SetReadMode();
@@ -579,7 +579,6 @@ Int_t TBasket::WriteBuffer()
       Streamer(*fBufferRef);         //write key itself again
       int nBytes = WriteFile(0);
       fHeaderOnly = kFALSE;
-      cursav->cd();
       return nBytes>0 ? fKeylen+nout : -1;
    }
 
@@ -657,7 +656,6 @@ Int_t TBasket::WriteBuffer()
 WriteFile:
    Int_t nBytes = WriteFile(0);
    fHeaderOnly = kFALSE;
-   cursav->cd();
    return nBytes>0 ? fKeylen+nout : -1;
 }
 

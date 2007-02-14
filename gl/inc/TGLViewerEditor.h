@@ -35,6 +35,8 @@ private:
    TGButton         *fLeftLight;
    TGButton         *fFrontLight;
 
+   TGButton         *fSpecularLight;
+
    TGColorSelect    *fClearColor;
    TGCheckButton    *fIgnoreSizesOnUpdate;
    TGCheckButton    *fResetCamerasOnUpdate;

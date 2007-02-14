@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDimension.h,v 1.8 2006/05/14 10:23:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDimension.h,v 1.9 2006/05/15 11:01:14 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -25,10 +25,6 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
-#ifndef ROOT_TMath
-#include "TMath.h"
-#endif
-
 
 class TGDimension {
 public:
@@ -149,11 +145,7 @@ public:
                 { return TGPosition(fX, fY); }
    TGPosition RightBottom() const
                 { return TGPosition(fX + (Int_t) fW - 1, fY + (Int_t) fH - 1); }
-   void Merge(const TGRectangle &r)
-                { Int_t max_x = TMath::Max(fX + (Int_t) fW, r.fX + (Int_t) r.fW); fX = TMath::Min(fX, r.fX);
-                  Int_t max_y = TMath::Max(fY + (Int_t) fH, r.fY + (Int_t) r.fH); fY = TMath::Min(fY, r.fY);
-                  fW = max_x - fX;
-                  fH = max_y - fY; }
+   void Merge(const TGRectangle &r);
    void Empty() { fX = fY = 0; fW = fH = 0; }
    Bool_t IsEmpty() const { return ((fW == 0) && (fH == 0)); }
 

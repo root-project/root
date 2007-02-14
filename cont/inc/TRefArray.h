@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.12 2005/03/26 07:02:14 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.13 2006/10/11 10:26:23 rdm Exp $
 // Author: Rene Brun    02/10/2001
 
 /*************************************************************************
@@ -25,16 +25,11 @@
 #ifndef ROOT_TSeqCollection
 #include "TSeqCollection.h"
 #endif
-#ifndef ROOT_TBits
-#include "TBits.h"
-#endif
 #ifndef ROOT_TProcessID
 #include "TProcessID.h"
 #endif
-#ifndef ROOT_TSystem
-#include "TSystem.h"
-#endif
 
+class TSystem;
 
 class TRefArray : public TSeqCollection {
 

@@ -67,8 +67,11 @@ distclean-treeplayer: clean-treeplayer
 distclean::     distclean-treeplayer
 
 ##### extra rules ######
-ifeq ($(ARCH),macosx)
+ifeq ($(PLATFORM),macosx)
 ifeq ($(GCC_VERS_FULL),gcc-4.0.1)
+$(TREEPLAYERDIRS)/TTreeFormula.o: OPT = $(NOOPT)
+endif
+ifeq ($(ICC_MAJOR),10)
 $(TREEPLAYERDIRS)/TTreeFormula.o: OPT = $(NOOPT)
 endif
 endif

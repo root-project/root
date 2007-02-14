@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.13 2006/09/29 08:17:21 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.15 2007/01/21 22:04:20 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -79,10 +79,8 @@ TXNetSystem::TXNetSystem(const char *url, Bool_t owner) : TNetSystem(owner)
    TNetSystem::InitRemoteEntity(url);
 
    TXNetSystemConnectGuard cguard(this, url);
-   if (!cguard.IsValid()) {
+   if (!cguard.IsValid() && !fIsRootd)
       Error("TXNetSystem","fatal error: connection creation failed.");
-      gSystem->Abort();
-   }
 
    return;
 }
@@ -128,7 +126,7 @@ XrdClientAdmin *TXNetSystem::Connect(const char *url)
             Int_t rproto = TXNetFile::GetRootdProtocol(s);
             if (rproto < 0) {
                Error("TXNetSystem", "getting protocol of the rootd server");
-               delete cadm;
+               SafeDelete(cadm);
                return 0;
             }
             // Finalize TSocket initialization
@@ -160,18 +158,18 @@ XrdClientAdmin *TXNetSystem::Connect(const char *url)
             // Type of server
             fIsRootd = kTRUE;
 
-            delete cadm;
+            SafeDelete(cadm);
 
          } else {
             Error("Connect", "some severe error occurred while opening"
                   " the connection at %s - exit", url);
-            delete cadm;
+            SafeDelete(cadm);
             return cadm;
          }
       } else {
          Error("Connect",
                "while opening the connection at %s - exit", url);
-         delete cadm;
+         SafeDelete(cadm);
          return cadm;
       }
    }

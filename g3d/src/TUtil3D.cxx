@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TUtil3D.cxx,v 1.2 2002/09/15 19:48:47 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TUtil3D.cxx,v 1.3 2005/11/24 17:28:07 couet Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -19,7 +19,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TUtil3D.h"
-#include "TROOT.h"
 #include "TList.h"
 #include "TAxis3D.h"
 #include "TPolyLine3D.h"

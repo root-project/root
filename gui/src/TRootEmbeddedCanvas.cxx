@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.25 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.26 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -22,7 +22,9 @@
 #include "TCanvas.h"
 #include "TROOT.h"
 #include "Riostream.h"
-
+#include "TStyle.h"
+#include "TPluginManager.h"
+#include "TVirtualGL.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -104,7 +106,27 @@ TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
    fAutoFit = kTRUE;
    fEditDisabled = kEditDisableLayout;
 
-   fCWinId = gVirtualX->InitWindow((ULong_t)GetViewPort()->GetId());
+   fCWinId = -1;
+
+   if (gStyle->GetCanvasPreferGL()) {
+      //first, initialize GL (if not yet)
+      if (!gGLManager) {
+         TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TGLManager");
+
+         if (ph && ph->LoadPlugin() != -1) {
+            if (!ph->ExecPlugin(0))
+               Warning("CreateCanvas",
+                       "Cannot load GL, will use default canvas imp instead\n");
+         }
+      }
+      if (gGLManager) {
+         fCWinId = gGLManager->InitGLWindow((ULong_t)GetViewPort()->GetId());
+      }
+   }
+
+   if (fCWinId == -1)
+      fCWinId = gVirtualX->InitWindow((ULong_t)GetViewPort()->GetId());
+
    Window_t win = gVirtualX->GetWindowID(fCWinId);
    fCanvasContainer = new TRootEmbeddedContainer(this, win, GetViewPort());
    SetContainer(fCanvasContainer);

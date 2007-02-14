@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.21 2006/10/09 09:27:17 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: test_Reflex_unit.cxx,v 1.23 2007/01/10 08:51:41 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // CppUnit include file
@@ -20,6 +20,7 @@
 
 #include "Reflex/internal/OwnedPropertyList.h"
 #include "Reflex/internal/OwnedMember.h"
+#include "Reflex/SharedLibrary.h"
 
 // Standard C++ include files
 #include <string>
@@ -61,6 +62,7 @@ class ReflexUnitTest : public CppUnit::TestFixture {
   CPPUNIT_TEST( global_scope );
   CPPUNIT_TEST( setClassAtts );
   CPPUNIT_TEST( object_value );
+  CPPUNIT_TEST( sharedlibrary );
    
   CPPUNIT_TEST( shutdown );
   CPPUNIT_TEST_SUITE_END();
@@ -90,6 +92,7 @@ public:
   void global_scope();
   void setClassAtts();
   void object_value();
+  void sharedlibrary();
 
   void shutdown() { Reflex::Shutdown(); }
   void tearDown() {}
@@ -745,6 +748,25 @@ void ReflexUnitTest::object_value() {
   CPPUNIT_ASSERT( str  == vvi.Value<string>() );
 
 }
+
+
+void ReflexUnitTest::sharedlibrary() {
+
+   SharedLibrary sl("doesntexist.so");
+   CPPUNIT_ASSERT(! sl.Load());
+   std::string errstr = sl.Error();
+   CPPUNIT_ASSERT(! errstr.empty());
+#if defined(_WIN32)
+   CPPUNIT_ASSERT(true); // fixme
+#elif defined(__APPLE__)
+   CPPUNIT_ASSERT( errstr.find("not found") != std::string::npos);
+#elif defined(__linux)
+   CPPUNIT_ASSERT( errstr.find("No such file or directory") != std::string::npos);
+#endif
+
+}
+
+
 // Class registration on cppunit framework
 CPPUNIT_TEST_SUITE_REGISTRATION(ReflexUnitTest);
 

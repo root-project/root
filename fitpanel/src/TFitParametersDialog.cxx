@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.cxx,v 1.7 2006/12/05 15:44:09 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitParametersDialog.cxx,v 1.8 2006/12/08 15:51:43 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 03/10/06
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TFitParametersDialog.h"
+#include "TF1.h"
 #include "TTimer.h"
 #include "TGButton.h"
 #include "TGFrame.h"

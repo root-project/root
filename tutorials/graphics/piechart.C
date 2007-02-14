@@ -31,13 +31,17 @@ void piechart()
    pie2->Draw("r");
 
    cpie->cd(3);
-   pie3->SetEntryVal(0,.8);
+   pie3->SetY(.32);
+   pie3->GetSlice(0)->SetValue(.8);
+   pie3->GetSlice(1)->SetFillStyle(3031);
    pie3->SetLabelsOffset(-.1);
-   pie3->Draw("3d t");
+   pie3->Draw("3d t nol");
+   TLegend *pieleg = pie3->MakeLegend();
+   pieleg->SetY1(.56); pieleg->SetY2(.86);
 
    cpie->cd(4);
    pie4->SetRadius(.2);
    pie4->SetLabelsOffset(.01);
    pie4->SetLabelFormat("#splitline{%val (%perc)}{%txt}");
-   pie4->Draw();
+   pie4->Draw("nol");
 }

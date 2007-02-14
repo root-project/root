@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.37 2006/05/23 04:47:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.38 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -30,10 +30,8 @@
 #ifndef ROOT_TArrayD
 #include "TArrayD.h"
 #endif
-#ifndef ROOT_THashList
-#include "THashList.h"
-#endif
 
+class THashList;
 
 class TAxis : public TNamed, public TAttAxis {
 

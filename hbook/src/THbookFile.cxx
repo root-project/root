@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.24 2006/05/14 07:22:20 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.25 2006/05/31 07:48:56 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 #include "TLeafI.h"
 #include "TBrowser.h"
 #include "TSystem.h"
+#include "TMath.h"
 
 #define PAWC_SIZE 2000000
 

@@ -1,4 +1,4 @@
-/* @(#)root/gpad:$Name:  $:$Id: LinkDef.h,v 1.6 2005/04/11 08:40:59 brun Exp $ */
+/* @(#)root/gpad:$Name:  $:$Id: LinkDef.h,v 1.8 2007/02/04 17:36:35 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,11 +14,6 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-// Gtypes.h enums
-#pragma link C++ enum EColor;
-#pragma link C++ enum ELineStyle;
-#pragma link C++ enum EMarkerStyle;
-
 #pragma link C++ class TAttCanvas+;
 #pragma link C++ class TButton+;
 #pragma link C++ class TCanvas-;
@@ -26,19 +21,13 @@
 #pragma link C++ class TControlBar+;
 #pragma link C++ class TControlBarButton+;
 #pragma link C++ class TDialogCanvas+;
-#pragma link C++ class TAttLineCanvas+;
-#pragma link C++ class TAttFillCanvas+;
-#pragma link C++ class TAttTextCanvas+;
-#pragma link C++ class TAttMarkerCanvas+;
-#pragma link C++ class TDrawPanelHist+;
-#pragma link C++ class TFitPanel+;
-#pragma link C++ class TFitPanelGraph+;
 #pragma link C++ class TGroupButton+;
 #pragma link C++ class TInspectCanvas+;
 #pragma link C++ class TPad-;
 #pragma link C++ class TPaveClass+;
 #pragma link C++ class TSlider+;
 #pragma link C++ class TSliderBox+;
+#pragma link C++ class TView-;
 #pragma link C++ class TViewer3DPad;
 
 #endif

@@ -262,7 +262,7 @@ check_lib64() {
 	ret=$?
     fi
     logmsg "result: $ret"
-    if test $? -eq 0 ; then
+    if test $ret -eq 0 ; then
         is_lib64=1
 	logmsg "is a 64bit library"
     fi
@@ -2752,9 +2752,11 @@ result $xrdcomm
 if test "x$enable_xrootd" = "xyes"; then
     buildxrd="yes"
     hasxrd=""
+    hasnotxrd="#"
 else
     buildxrd="no"
     hasxrd="#"
+    hasnotxrd=""
 fi
 check_explicit "$enable_xrootd" "$enable_xrootd_explicit" \
      "Explicitly required Xrootd dependencies not fulfilled"
@@ -2768,13 +2770,21 @@ check_explicit "$enable_xrootd" "$enable_xrootd_explicit" \
 # If the user has set the flags "--disable-globus", we don't check for
 # Globus at all.
 #
+buildxrdgsi=
 glbextracflags=""
 glbpatchcflags=""
 haveglobus=""
 if test ! "x$enable_globus" = "xno"; then
+   # If XROOTD is enabled ...
+   if test ! "x$enable_xrootd" = "xno"; then
+      # ... enable the GSI module in there
+      message "Checking whether to build the xrootd GSI plug-in"
+      buildxrdgsi="yes"
+      result "yes"
+   fi
    # Check if the GLOBUS_LOCATION variable is set
+   checking_msg "for globusdir"
    if test "x$globusdir" = "x" ; then
-      checking_msg "for globusdir"
       result "no"
       checking_msg "GLOBUS_LOCATION"
       if test "x$GLOBUS_LOCATION" = "x" ; then
@@ -2785,6 +2795,8 @@ if test ! "x$enable_globus" = "xno"; then
           globusdir=$GLOBUS_LOCATION
 	  result "$GLOBUS_LOCATION"
       fi
+   else
+      result "yes"
    fi
 fi
 
@@ -3337,14 +3349,13 @@ if test ! "x$enable_afs" = "xno" ; then
 	afsdir="$afsdir $afsdir/afs"
     fi
 
-    afslibdirs="$AFS/lib /usr/afsws/lib /usr/local/afsws/lib \
-        /opt/afs/lib /usr/local/afs/lib /usr/lib /usr/local/lib \
-        /usr/athena/lib /usr/local/athena/lib"
+    #
+    # Libraries
+    #
+    afslibdirs="$AFS/lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib"
     afslib=""
     afslibdir=""
-    for i in afs/libkauth afs/libprot afs/libauth afs/libsys afs/libcmd \
-             afs/libaudit afs/util libubik librx librxkad \
-             liblwp libafsrpc libdes ; do
+    for i in libafsauthent libafsrpc ; do
 	check_library "$i" "no" "$afsdir" $afslibdirs
 	if test "x$found_lib" = "x" ; then
 	    afslib=""
@@ -3355,6 +3366,34 @@ if test ! "x$enable_afs" = "xno" ; then
 	afslib="$afslib $found_lib"
 	afslibdir="$afslibdir $found_dir"
     done
+    #
+    # header files
+    #
+    if test "x$enable_afs" = "xyes" ; then
+       incafs="stds.h kautils.h"
+       for i in $incafs ; do
+           check_header "afs/$i" "$found_dir" \
+              /usr/include /usr/local/include /opt/include $finkdir/include
+           if test "x$found_hdr" = "x" ; then
+               afsincdir=""
+               enable_afs="no"
+               break
+           fi
+           if test "x$afsincdir" = "x" ; then
+              afsincdir="-I$found_dir"
+           else
+              have_already="no"
+              for k in $afsincdir ; do
+                 if test "x$k" = "x-I$found_dir" ; then
+                    have_already="yes"
+                 fi
+              done
+              if test "x$have_already" = "xno" ; then
+                 afsincdir="-I$found_dir $afsincdir"
+              fi
+           fi
+       done
+    fi
 
     if test "x$afslib" = "x" ; then
         enable_afs="no"
@@ -4119,6 +4158,7 @@ message "Writing $MAKEOUT"
 sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@afslib@|$afslib|"                    \
     -e "s|@afslibdir@|$afslibdir|"              \
+    -e "s|@afsincdir@|$afsincdir|"              \
     -e "s|@alienincdir@|$alienincdir|"          \
     -e "s|@alienlib@|$alienlib|"                \
     -e "s|@alienlibdir@|$alienlibdir|"          \
@@ -4320,6 +4360,7 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@buildsrputil@|$enable_srputil|"      \
     -e "s|@buildkrb5@|$enable_krb5|"            \
     -e "s|@buildglobus@|$enable_globus|"        \
+    -e "s|@buildxrdgsi@|$enable_xrdgsi|"        \
     -e "s|@buildclarens@|$enable_clarens|"      \
     -e "s|@buildpeac@|$buildpeac|"              \
     < Makefile.tmp > $MAKEOUT
@@ -4419,7 +4460,8 @@ sed -e "s|@libdir@|$libdir|"               \
     -e "s|@etcdir@|$etcdir|"               \
     -e "s|@ttffontdir@|$fontdir|"          \
     -e "s|@iconpath@|$iconpath|"           \
-    -e "s|@hasxrd@|$hasxrd|"             \
+    -e "s|@hasxrd@|$hasxrd|"               \
+    -e "s|@hasnotxrd@|$hasnotxrd|"         \
    < rootrc.tmp > $ROOTRCOUT
 rm -f rootrc.tmp
 result "done"

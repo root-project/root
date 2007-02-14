@@ -32,10 +32,10 @@ shift
 ROOTBUILD=$9
 shift
 
-if [ "$INCDIR" = "$ROOTSYS/include" ]; then
+if [ "$(cd $INCDIR && cygpath -u $PWD)" = "$(cd $ROOTSYS/include && cygpath -u $PWD)" ]; then
    INCDIR=%ROOTSYS%/include
 fi
-if [ "$LIBDIR" = "$ROOTSYS/lib" ]; then
+if [ "$(cd $LIBDIR && cygpath -u $PWD)" = "$(cd $ROOTSYS/lib && cygpath -u $PWD)" ]; then
    LIBDIR=%ROOTSYS%/lib
 fi
 

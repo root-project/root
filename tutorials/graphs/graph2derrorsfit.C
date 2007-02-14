@@ -22,10 +22,12 @@ void graph2derrorsfit()
    TGraph2DErrors *dte = new TGraph2DErrors(nd);
 
    // Fill the 2D graph
+   Double_t zmax = 0;
    for (Int_t i=0; i<nd; i++) {
       f2->GetRandom2(x,y);      
       rnd = r.Uniform(-e,e); // Generate a random number in [-e,e]
       z = f2->Eval(x,y)*(1+rnd);
+      if (z>zmax) zmax = z;
       dte->SetPoint(i,x,y,z);
       ex = 0.05*r.Rndm();
       ey = 0.05*r.Rndm();
@@ -37,6 +39,8 @@ void graph2derrorsfit()
    dte->Fit(f2);
    TF2 *fit2 = (TF2*)dte->FindObject("f2");
    fit2->SetTitle("Minuit fit result on the Graph2DErrors points");
+   fit2->SetMaximum(zmax);
+   gStyle->SetHistTopMargin(0); 
    fit2->Draw("surf1");
    dte->Draw("same p0");
 }

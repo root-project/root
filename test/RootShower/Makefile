@@ -39,6 +39,7 @@ $(ROOTSHOWER):  $(ROOTSHOWERO) $(ROOTSHOWERRES)
 		$(LD) $(LDFLAGS) /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup \
 		$^ $(GLIBS) '$(ROOTSYS)\lib\libEG.lib' \
 		   '$(ROOTSYS)\lib\libHtml.lib' '$(ROOTSYS)\lib\libGeom.lib' $(OutPutOpt)$@
+		$(MT_EXE)
 else
 $(ROOTSHOWER):  $(ROOTSHOWERO)
 		$(LD) $(LDFLAGS) $^ $(GLIBS) -lEG -lHtml -lGeom $(OutPutOpt)$@
@@ -61,11 +62,3 @@ distclean:      clean
 
 .$(SrcSuf).$(ObjSuf):
 		$(CXX) $(CXXFLAGS) -c $<
-
-ifeq ($(ICC_MAJOR),8)
-ifeq ($(ICC_MINOR),1)
-NOOPTCXXFLAGS  = $(subst -O,-O0,$(CXXFLAGS))
-MyEvent.o: MyEvent.cxx
-		$(CXX) $(NOOPTCXXFLAGS) -c $<
-endif
-endif

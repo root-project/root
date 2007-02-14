@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFitterFumili.cxx,v 1.5 2006/05/29 10:18:06 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFitterFumili.cxx,v 1.6 2006/07/03 15:48:06 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -9,7 +9,6 @@
 
 #include "TROOT.h"
 #include "TFitterFumili.h"
-#include "TMath.h"
 #include "TF1.h"
 #include "TH1.h"
 #include "TGraph.h"

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.12 2006/04/06 13:35:07 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.15 2007/01/15 11:52:01 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -14,9 +14,9 @@
 #include "TVirtualPad.h"
 #include "TStyle.h"
 #include "TVirtualX.h"
-#include "TMath.h"
 #include "TVirtualPadEditor.h"
 #include "TColor.h"
+#include <cmath>
 
 
 ClassImp(TAttLine)
@@ -67,7 +67,7 @@ TAttLine::TAttLine(Color_t color, Style_t style, Width_t width)
 //*-*                      ===========================
 //*-*  Line attributes are taking from the argument list
 //*-*    color : must be one of the valid color index
-//*-*    style : 1=solid, 2=dash, 3=dash-dot, 4=dot-dot. New styles can be 
+//*-*    style : 1=solid, 2=dash, 3=dash-dot, 4=dot-dot. New styles can be
 //*-*            defined using TStyle::SetLineStyleString.
 //*-*    width : expressed in pixel units
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -146,12 +146,12 @@ Int_t TAttLine::DistancetoLine(Int_t px, Int_t py, Double_t xp1, Double_t yp1, D
    Double_t b     = xx2*xx2   + yy2*yy2;
    Double_t c     = x1x2*x1x2 + y1y2*y1y2;
    if (c <= 0)  return 9999;
-   Double_t v     = TMath::Sqrt(c);
+   Double_t v     = sqrt(c);
    Double_t u     = (a - b + c)/(2*v);
    Double_t d     = TMath::Abs(a - u*u);
    if (d < 0)   return 9999;
 
-   return Int_t(TMath::Sqrt(d) - 0.5*Double_t(fLineWidth));
+   return Int_t(sqrt(d) - 0.5*Double_t(fLineWidth));
 }
 
 //______________________________________________________________________________
@@ -193,7 +193,7 @@ void TAttLine::SaveLineAttributes(ostream &out, const char *name, Int_t coldef, 
       if (fLineColor > 228) {
          TColor::SaveColor(out, fLineColor);
          out<<"   "<<name<<"->SetLineColor(ci);" << endl;
-      } else 
+      } else
          out<<"   "<<name<<"->SetLineColor("<<fLineColor<<");"<<endl;
    }
    if (fLineStyle != stydef) {

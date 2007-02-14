@@ -124,13 +124,12 @@
 
 
 #include "TH1Editor.h"
+#include "TH1.h"
 #include "TGedEditor.h"
-#include "TGedFrame.h"
 #include "TGComboBox.h"
 #include "TGTextEntry.h"
 #include "TGToolTip.h"
 #include "TGLabel.h"
-#include "TGClient.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
 #include "TString.h"
@@ -142,15 +141,11 @@
 #include "TGSlider.h"
 #include "TView.h"
 #include "TCanvas.h"
-#include "TTree.h"
 #include "TTreePlayer.h"
 #include "TSelectorDraw.h"
-#include "TGTab.h"
-#include "TGFrame.h"
 #include "TGMsgBox.h"
-#include "TClass.h"
+#include "TGTab.h"
 
-R__EXTERN TTree *gTree;
 
 ClassImp(TH1Editor)
 
@@ -551,7 +546,7 @@ void TH1Editor::ConnectSignals2Slots()
    fAddSimple->Connect("Toggled(Bool_t)", "TH1Editor", this, "DoAddSimple(Bool_t)");
 
    //change 2D <-> 3D plot
-   fDimGroup->Connect("Released(Int_t)","TH1Editor",this,"DoHistView()");
+   fDimGroup->Connect("Clicked(Int_t)","TH1Editor",this,"DoHistView()");
 
    // change Bar Width/Offset, the second connection is needed to have the ability to confirm the value also with enter
    fBarWidth->Connect("ValueSet(Long_t)", "TH1Editor", this, "DoBarWidth()");
@@ -2371,31 +2366,30 @@ Int_t* TH1Editor::Dividers(Int_t n)
    // Return an array of dividers of n (without the trivial divider n).
    // The number of dividers is saved in the first entry.
    
+   Int_t* div;
    if (n <= 0) {
-      Int_t* div = new Int_t[1];
+      div = new Int_t[1];
       div[0]=0;
-      return 0;
-   }
-   if (n == 1) {
-      Int_t* div = new Int_t[2];
+   } else if (n == 1) {
+      div = new Int_t[2];
       div[0]=div[1]=1;
-      return div;
-   }  
-   Int_t* div = new Int_t[(Int_t) n/2+2];
-   div[0]=0; 
-   div[1]=1;
+   } else {
+      div = new Int_t[(Int_t) n/2+2];
+      div[0]=0; 
+      div[1]=1;
 
-   Int_t num = 1;
-   for (Int_t i=2; i <= n/2; i++) {
-      if (n % i == 0) {
-         num++;
-         div[num] = i;
+      Int_t num = 1;
+      for (Int_t i=2; i <= n/2; i++) {
+         if (n % i == 0) {
+            num++;
+            div[num] = i;
+         }
       }
-   }
-   num++;
-   div[num]=n;
-   div[0] = num;
+      num++;
+      div[num]=n;
+      div[0] = num;
 //   for (Int_t a=0; a <= div[0]; a++) printf("div[%d] = %d\n", a , div[a]);
+   }
    return div;
 }   
    

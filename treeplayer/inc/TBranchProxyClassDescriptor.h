@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.h,v 1.6 2005/11/11 23:21:43 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.h,v 1.7 2006/05/23 08:37:42 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -20,7 +20,7 @@
 #endif
 
 class TTree;
-class TStreamerInfo;
+class TVirtualStreamerInfo;
 
 namespace ROOT {
 
@@ -41,7 +41,7 @@ namespace ROOT {
       TString        fRawSymbol;
       TString        fBranchName;
       TString        fSubBranchPrefix;
-      TStreamerInfo *fInfo;     // TStreamerInfo describing this class
+      TVirtualStreamerInfo *fInfo;     // TVirtualStreamerInfo describing this class
 
       UInt_t  fMaxDatamemberType;
 
@@ -49,11 +49,11 @@ namespace ROOT {
 
    public:
 
-      TBranchProxyClassDescriptor(const char *type, TStreamerInfo *info, const char *branchname,
+      TBranchProxyClassDescriptor(const char *type, TVirtualStreamerInfo *info, const char *branchname,
                                   UInt_t isclones, UInt_t splitlevel);
       TBranchProxyClassDescriptor(const char *branchname);
 
-      TBranchProxyClassDescriptor(const char *type, TStreamerInfo *info, const char *branchname,
+      TBranchProxyClassDescriptor(const char *type, TVirtualStreamerInfo *info, const char *branchname,
                                   const char *branchPrefix, UInt_t isclones,
                                   UInt_t splitlevel);
       TBranchProxyClassDescriptor(const TBranchProxyClassDescriptor &b) :TNamed(b){;}
@@ -64,7 +64,7 @@ namespace ROOT {
 
       const char* GetRawSymbol() const;
       
-      TStreamerInfo *GetInfo() const { return fInfo; }
+      TVirtualStreamerInfo *GetInfo() const { return fInfo; }
 
       UInt_t GetSplitLevel() const;
 

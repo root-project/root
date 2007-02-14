@@ -1,4 +1,4 @@
-# $Id: Module.mk,v 1.18 2006/04/14 16:28:05 rdm Exp $
+# $Id: Module.mk,v 1.20 2007/01/26 07:51:08 brun Exp $
 # Module.mk for qt module
 # Copyright (c) 2001 Valeri Fine
 #
@@ -22,7 +22,8 @@ GQTH1         := $(GQTDIRI)/TGQt.h  $(GQTDIRI)/TQtTimer.h              \
                  $(GQTDIRI)/TQtApplication.h $(GQTDIRI)/TQtBrush.h     \
                  $(GQTDIRI)/TQMimeTypes.h $(GQTDIRI)/TQtClientFilter.h \
                  $(GQTDIRI)/TQtClientWidget.h $(GQTDIRI)/TQtWidget.h   \
-                 $(GQTDIRI)/TQtMarker.h $(GQTDIRI)/TQtTimer.h
+                 $(GQTDIRI)/TQtMarker.h $(GQTDIRI)/TQtTimer.h \
+                 $(GQTDIRI)/TQtRootSlot.h
 
 GQTH          := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GQTS          := $(filter-out $(MODDIRS)/moc_%,\
@@ -31,7 +32,8 @@ GQTO          := $(GQTS:.cxx=.o)
 
 GQTMOCH       := $(MODDIRI)/TQtWidget.h       $(MODDIRI)/TQtEmitter.h \
                  $(MODDIRI)/TQtClientFilter.h $(MODDIRI)/TQtClientGuard.h \
-                 $(MODDIRI)/TQtClientWidget.h  $(MODDIRI)/TQtTimer.h
+                 $(MODDIRI)/TQtClientWidget.h  $(MODDIRI)/TQtTimer.h \
+                 $(MODDIRI)/TQtRootSlot.h
 
 GQTMOC        := $(subst $(MODDIRI)/,$(MODDIRS)/moc_,$(patsubst %.h,%.cxx,$(GQTMOCH))) 
 GQTMOCO       := $(GQTMOC:.cxx=.o)

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.h,v 1.7 2006/11/20 15:56:35 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.h,v 1.8 2006/11/27 14:19:58 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -133,6 +133,7 @@ public:
    inline void         SetSrvType(int id) { XrdOucMutexHelper mhp(fMutex); fSrvType = id; }
    inline void         SetStartMsg(XrdSrvBuffer *sm) { XrdOucMutexHelper mhp(fMutex); fStartMsg = sm; }
    inline void         SetStatus(int st) { XrdOucMutexHelper mhp(fMutex); fStatus = st; }
+   inline void         SetShutdown(bool sd = 1) { XrdOucMutexHelper mhp(fMutex); fIsShutdown = sd; }
    inline void         SetValid(bool valid = 1) { XrdOucMutexHelper mhp(fMutex); fIsValid = valid; }
    inline XrdSrvBuffer *StartMsg() const { XrdOucMutexHelper mhp(fMutex); return fStartMsg; }
    inline int          Status() const { XrdOucMutexHelper mhp(fMutex); return fStatus;}
@@ -176,6 +177,7 @@ public:
    void                SetUserEnvs(const char *t, int l = 0)
                           { XrdOucMutexHelper mhp(fMutex); XrdProofServProxy::SetCharValue(&fUserEnvs, t, l); }
 
+   bool                IsShutdown() const { XrdOucMutexHelper mhp(fMutex); return fIsShutdown; }
    bool                IsValid() const { XrdOucMutexHelper mhp(fMutex); return fIsValid; }
    const char         *StatusAsString() const;
 
@@ -204,6 +206,7 @@ public:
    char                     *fFileout;
 
    bool                      fIsValid;   // Validity flag
+   bool                      fIsShutdown; // Whether asked to shutdown
 
    char                     *fAlias;     // Session alias
    char                     *fClient;    // Client name

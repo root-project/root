@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.30 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.31 2006/10/16 11:42:18 brun Exp $
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -37,6 +37,7 @@
 #include "TMatrixDLazy.h"
 #include "TVectorD.h"
 #include "TArrayD.h"
+#include "TMath.h"
 
 #include "TDecompLU.h"
 #include "TDecompQRH.h"

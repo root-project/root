@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.h,v 1.4 2006/10/19 10:58:25 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.h,v 1.5 2006/10/20 21:07:40 brun Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -21,10 +21,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TClass
-#include "TClass.h"
+#ifndef ROOT_TTnamed
+#include "TNamed.h"
 #endif
 
+class TClass;
 class TObjString;
 
 class TClassTree : public TNamed {

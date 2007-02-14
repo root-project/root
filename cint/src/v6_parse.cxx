@@ -818,7 +818,7 @@ int G__keyword_exec_6(char *statement,int *piout,int *pspaceflag,int mparen)
 /* #ifdef G__ROOT */
   if(strcmp(statement,"extern")==0 || strcmp(statement,"EXTERN")==0) {
 /* #else */
-  /* if(strcmp(statement,"extern")==0) { */
+  /* if(strcmp(statement,"extern")==0) {} */
 /* #endif */
     if(G__externignore(piout,pspaceflag,mparen)) return(1);
     return(0);
@@ -2177,13 +2177,13 @@ void G__store_tempobject(G__value reg)
 }
 
 /***********************************************************************
-* G__pop_tempobject()
+* G__pop_tempobject_imp()
 *
 * Called by
-*    G__getfunction
+*    G__pop_tempobj[_nodel]()
 *
 ***********************************************************************/
-int G__pop_tempobject()
+static int G__pop_tempobject_imp(bool delobj)
 {
   struct G__tempobject_list *store_p_tempbuf;
 
@@ -2201,7 +2201,7 @@ int G__pop_tempobject()
 
   store_p_tempbuf = G__p_tempbuf->prev;
   /* free the object buffer only if interpreted classes are stored */
-  if(-1!=G__p_tempbuf->cpplink && G__p_tempbuf->obj.obj.i) {
+  if(delobj && -1!=G__p_tempbuf->cpplink && G__p_tempbuf->obj.obj.i) {
     free((void *)G__p_tempbuf->obj.obj.i);
   }
   free((void *)G__p_tempbuf);
@@ -2209,6 +2209,30 @@ int G__pop_tempobject()
   return(0);
 }
 
+/***********************************************************************
+* G__pop_tempobject()
+*
+* Called by
+*    G__getfunction
+*
+***********************************************************************/
+int G__pop_tempobject()
+{
+   return G__pop_tempobject_imp(true);
+   
+}
+/***********************************************************************
+* G__pop_tempobject_nodel()
+*
+* Called by
+*    G__getfunction
+*
+***********************************************************************/
+int G__pop_tempobject_nodel()
+{
+   return G__pop_tempobject_imp(false);
+   
+}
 /***********************************************************************
 * G__exec_breakcontinue()
 *
@@ -3998,7 +4022,7 @@ G__value G__exec_statement()
       statement[iout] = '\0' ;
       if((single_quote!=0)||(double_quote!=0)) break;
       
-      /* if((spaceflag==1)&&(G__no_exec==0)) { */
+      /* if((spaceflag==1)&&(G__no_exec==0)) {} */
       if(G__no_exec==0) { 
 
         if( (0==G__def_struct_member||strncmp(statement,"ClassDef",8)!=0) &&
@@ -4225,7 +4249,7 @@ G__value G__exec_statement()
       }
       break;
       
-    case '=' : /* assignement */
+    case '=' : /* assignment */
       if((G__no_exec==0 )&& (iout<8 || 9<iout ||
                              strncmp(statement,"operator",8)!=0) &&
          (single_quote==0 && double_quote==0)) {
@@ -4505,7 +4529,7 @@ G__value G__exec_statement()
       /* G__CHECK(G__SECURE_BUFFER_SIZE,iout==G__LONGLINE,return(G__null)); */
        /* Make sure that the delimiters that have not been treated
         * in the switch statement do drop the discarded_space */
-      /* if (c!='[' && c!=']' && discarded_space && iout) { */
+      /* if (c!='[' && c!=']' && discarded_space && iout) {} */
       if (c!='[' && c!=']' && discarded_space && iout 
           && statement[iout-1]!=':') {
         /* since the character following a discarded space is NOT a

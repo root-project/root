@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.15 2006/01/09 15:47:30 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.17 2007/01/30 11:24:32 brun Exp $
 // Author: Christophe.Delaere@cern.ch   25/04/04
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
+#include "TROOT.h"
 #include "TSynapse.h"
 #include "TNeuron.h"
 #include "TMultiLayerPerceptron.h"
@@ -35,6 +36,7 @@
 #include "TCanvas.h"
 #include "TGaxis.h"
 #include "TRegexp.h"
+#include "TMath.h"
 #include "Riostream.h"
 
 ClassImp(TMLPAnalyzer)

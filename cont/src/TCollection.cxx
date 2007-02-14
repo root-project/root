@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.33 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.36 2007/01/15 10:15:47 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -38,13 +38,13 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TCollection.h"
+#include "Varargs.h"
 #include "TClass.h"
 #include "TROOT.h"
 #include "TBrowser.h"
 #include "TObjectTable.h"
 #include "TRegexp.h"
 #include "TVirtualMutex.h"
-
 
 TVirtualMutex *gCollectionMutex = 0;
 

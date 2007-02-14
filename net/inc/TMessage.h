@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMessage.h,v 1.8 2005/07/18 16:20:52 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMessage.h,v 1.9 2005/12/09 15:12:19 rdm Exp $
 // Author: Fons Rademakers   19/12/96
 
 /*************************************************************************
@@ -22,15 +22,15 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TBuffer
-#include "TBuffer.h"
+#ifndef ROOT_TBufferFile
+#include "TBufferFile.h"
 #endif
 #ifndef ROOT_MessageTypes
 #include "MessageTypes.h"
 #endif
 
 
-class TMessage : public TBuffer {
+class TMessage : public TBufferFile {
 
 friend class TAuthenticate;
 friend class TSocket;

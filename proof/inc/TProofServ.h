@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.45 2006/10/19 12:38:07 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.48 2007/02/04 17:39:44 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -30,11 +30,14 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
-#ifndef ROOT_Htypes
-#include "Htypes.h"
+#ifndef ROOT_TSysEvtHandler
+#include "TSysEvtHandler.h"
 #endif
 #ifndef ROOT_TStopwatch
 #include "TStopwatch.h"
+#endif
+#ifndef ROOT_TTimer
+#include "TTimer.h"
 #endif
 #ifndef ROOT_TProofQueryResult
 #include "TProofQueryResult.h"
@@ -110,6 +113,8 @@ private:
    TList        *fPreviousQueries;  //list of TProofQueryResult objects from previous sections
    TList        *fWaitingQueries;   //list of TProofQueryResult wating to be processed
    Bool_t        fIdle;             //TRUE if idle
+
+   Bool_t        fRealTimeLog;      //TRUE if log messages should be send back in real-time
 
    Bool_t        fShutdownWhenIdle; // If TRUE, start shutdown delay countdown when idle
    TTimer       *fShutdownTimer;    // Timer used for delayed session shutdown
@@ -191,6 +196,7 @@ public:
    virtual void   HandleSocketInput();
    virtual void   HandleUrgentData();
    virtual void   HandleSigPipe();
+   virtual void   HandleTermination() { Terminate(0); }
    void           Interrupt() { fInterrupt = kTRUE; }
    Bool_t         IsEndMaster() const { return fEndMaster; }
    Bool_t         IsMaster() const { return fMasterServ; }
@@ -244,6 +250,57 @@ private:
 public:
    TProofLockPathGuard(TProofLockPath *l) { fLocker = l; if (fLocker) fLocker->Lock(); }
    ~TProofLockPathGuard() { if (fLocker) fLocker->Unlock(); }
+};
+
+//----- Handles output from commands executed externally via a pipe. ---------//
+//----- The output is redirected one level up (i.e., to master or client). ---//
+//______________________________________________________________________________
+class TProofServLogHandler : public TFileHandler {
+private:
+   TSocket     *fSocket; // Socket where to redirect the message
+   FILE        *fFile;   // File connected with the open pipe
+   TString      fPfx;    // Prefix to be prepended to messages
+
+   static TString fgPfx; // Default prefix to be prepended to messages
+public:
+   enum EStatusBits { kFileIsPipe       = BIT(23) };
+   TProofServLogHandler(const char *cmd, TSocket *s, const char *pfx = "");
+   TProofServLogHandler(FILE *f, TSocket *s, const char *pfx = "");
+   virtual ~TProofServLogHandler();
+
+   Bool_t IsValid() { return ((fFile && fSocket) ? kTRUE : kFALSE); }
+
+   Bool_t Notify();
+   Bool_t ReadNotify() { return Notify(); }
+
+   static void SetDefaultPrefix(const char *pfx);
+};
+
+//--- Guard class: close pipe, deactivatethe related descriptor --------------// 
+//______________________________________________________________________________
+class TProofServLogHandlerGuard {
+
+private:
+   TProofServLogHandler   *fExecHandler;
+
+public:
+   TProofServLogHandlerGuard(const char *cmd, TSocket *s,
+                             const char *pfx = "", Bool_t on = kTRUE);
+   TProofServLogHandlerGuard(FILE *f, TSocket *s,
+                             const char *pfx = "", Bool_t on = kTRUE);
+   virtual ~TProofServLogHandlerGuard();
+};
+
+//--- Special timer to constrol delayed shutdowns
+//______________________________________________________________________________
+class TShutdownTimer : public TTimer {
+private:
+   TProofServ    *fProofServ;
+
+public:
+   TShutdownTimer(TProofServ *p, Int_t delay) : TTimer(delay, kFALSE), fProofServ(p) { }
+
+   Bool_t Notify();
 };
 
 #endif

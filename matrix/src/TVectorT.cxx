@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.19 2006/10/06 06:52:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorT.cxx,v 1.24 2007/02/06 15:47:59 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -36,6 +36,9 @@
 
 #include "TVectorT.h"
 #include "TClass.h"
+#include "TMath.h"
+#include "TROOT.h"
+#include "Varargs.h"
 
 #ifndef R__ALPHA
 templateClassImp(TVectorT)
@@ -1830,14 +1833,35 @@ TVectorT<Element> &AddElemDiv(TVectorT<Element> &target,Element scalar,
    const Element * const ftp = tp+target.GetNrows();
 
    if (scalar == 1.0 ) {
-      while ( tp < ftp )
-         *tp++ += *sp1++ / *sp2++;
+      while ( tp < ftp ) {
+         if (*sp2 != 0.0)
+            *tp += *sp1 / *sp2;
+         else {
+            const Int_t irow = (sp2-source2.GetMatrixArray())/source2.GetNrows();
+            Error("AddElemDiv","source2 (%d) is zero",irow);
+         }
+         tp++; sp1++; sp2++;
+      }
    } else if (scalar == -1.0) {
-      while ( tp < ftp )
-         *tp++ -= *sp1++ / *sp2++;
+      while ( tp < ftp ) {
+         if (*sp2 != 0.0)
+            *tp -= *sp1 / *sp2;
+         else {
+            const Int_t irow = (sp2-source2.GetMatrixArray())/source2.GetNrows();
+            Error("AddElemDiv","source2 (%d) is zero",irow);
+         }
+         tp++; sp1++; sp2++;
+      }
    } else {
-      while ( tp < ftp )
-         *tp++ += scalar * *sp1++ / *sp2++;
+      while ( tp < ftp ) {
+         if (*sp2 != 0.0)
+            *tp += scalar * *sp1 / *sp2;
+         else {
+            const Int_t irow = (sp2-source2.GetMatrixArray())/source2.GetNrows();
+            Error("AddElemDiv","source2 (%d) is zero",irow);
+         }
+         tp++; sp1++; sp2++;
+      }
    }
 
    return target;
@@ -1866,17 +1890,38 @@ TVectorT<Element> &AddElemDiv(TVectorT<Element> &target,Element scalar,
 
    if (scalar == 1.0 ) {
       while ( tp < ftp ) {
-         if (*mp) *tp += *sp1 / *sp2;
+         if (*mp) {
+            if (*sp2 != 0.0)
+               *tp += *sp1 / *sp2;
+            else {
+               const Int_t irow = (sp2-source2.GetMatrixArray())/source2.GetNrows();
+               Error("AddElemDiv","source2 (%d) is zero",irow);
+            }
+         }
          mp++; tp++; sp1++; sp2++;
       }
    } else if (scalar == -1.0) {
       while ( tp < ftp ) {
-         if (*mp) *tp -= *sp1 / *sp2;
+         if (*mp) {
+            if (*sp2 != 0.0)
+               *tp -= *sp1 / *sp2;
+            else {
+               const Int_t irow = (sp2-source2.GetMatrixArray())/source2.GetNrows();
+               Error("AddElemDiv","source2 (%d) is zero",irow);
+            }
+         }
          mp++; tp++; sp1++; sp2++;
       }
    } else {
       while ( tp < ftp ) {
-         if (*mp) *tp += scalar * *sp1 / *sp2;
+         if (*mp) {
+            if (*sp2 != 0.0)
+               *tp += scalar * *sp1 / *sp2;
+            else {
+               const Int_t irow = (sp2-source2.GetMatrixArray())/source2.GetNrows();
+               Error("AddElemDiv","source2 (%d) is zero",irow);
+            }
+         }
          mp++; tp++; sp1++; sp2++;
       }
    }
@@ -1941,8 +1986,14 @@ TVectorT<Element> &ElementDiv(TVectorT<Element> &target,const TVectorT<Element> 
    const Element *       sp  = source.GetMatrixArray();
          Element *       tp  = target.GetMatrixArray();
    const Element * const ftp = tp+target.GetNrows();
-   while ( tp < ftp )
-      *tp++ /= *sp++;
+   while ( tp < ftp ) {
+      if (*sp  != 0.0)
+         *tp++ /= *sp++;
+      else {
+         const Int_t irow = (sp-source.GetMatrixArray())/source.GetNrows();
+         Error("ElementDiv","source (%d) is zero",irow);
+      }
+   }
 
    return target;
 }
@@ -1963,7 +2014,14 @@ TVectorT<Element> &ElementDiv(TVectorT<Element> &target,const TVectorT<Element> 
          Element *       tp  = target.GetMatrixArray();
    const Element * const ftp = tp+target.GetNrows();
    while ( tp < ftp ) {
-      if (*mp) *tp /= *sp;
+      if (*mp) {
+         if (*sp != 0.0)
+            *tp /= *sp;
+         else {
+            const Int_t irow = (sp-source.GetMatrixArray())/source.GetNrows();
+            Error("ElementDiv","source (%d) is zero",irow);
+         }
+      }
       mp++; tp++; sp++;
    }
 
@@ -2134,7 +2192,7 @@ void TVectorT<Element>::Streamer(TBuffer &R__b)
       Version_t R__v = R__b.ReadVersion(&R__s,&R__c);
       if (R__v > 1) {
          Clear();
-         TVectorT<Element>::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
+         R__b.ReadClassBuffer(TVectorT<Element>::Class(),this,R__v,R__s,R__c);
       } else { //====process old versions before automatic schema evolution
          TObject::Streamer(R__b);
          R__b >> fRowLwb;
@@ -2151,7 +2209,7 @@ void TVectorT<Element>::Streamer(TBuffer &R__b)
       if (R__v < 3)
          MakeValid();
     } else {
-       TVectorT<Element>::Class()->WriteBuffer(R__b,this);
+       R__b.WriteClassBuffer(TVectorT<Element>::Class(),this);
    }
 }
 

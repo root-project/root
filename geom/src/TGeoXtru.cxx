@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.34 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.38 2007/01/29 10:06:50 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -46,8 +46,6 @@
 // within x3d produces incorrect end-faces
 
 #include "Riostream.h"
-#include "TROOT.h"
-#include "TClass.h"
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
@@ -57,6 +55,8 @@
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "TClass.h"
+#include "TMath.h"
 
 ClassImp(TGeoXtru)
 
@@ -1099,10 +1099,10 @@ void TGeoXtru::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TGeoVolume.
    if (R__b.IsReading()) {
-      TGeoXtru::Class()->ReadBuffer(R__b, this);
+      R__b.ReadClassBuffer(TGeoXtru::Class(), this);
       if (fPoly) fPoly->SetXY(fXc,fYc); // initialize with current coordinates   
    } else {
-      TGeoXtru::Class()->WriteBuffer(R__b, this);
+      R__b.WriteClassBuffer(TGeoXtru::Class(), this);
    }
 }
 

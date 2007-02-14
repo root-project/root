@@ -11,7 +11,7 @@
 #*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 from ROOT import TCanvas, TFile, TProfile, TNtuple, TH1F, TH2F
-from ROOT import gROOT, gBenchmark, gRandom, gSystem
+from ROOT import gROOT, gBenchmark, gRandom, gSystem, Double
 
 
 gROOT.Reset()
@@ -54,7 +54,7 @@ for name in histos:
    exec '%sFill = %s.Fill' % (name,name)
 
 # Fill histograms randomly.
-px, py = 0.1, 0.101
+px, py = Double(), Double()
 kUPDATE = 1000
 for i in xrange( 25000 ):
  # Generate random values.

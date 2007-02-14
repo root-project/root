@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.52 2006/10/07 18:01:59 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.58 2007/01/20 19:29:34 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -28,22 +28,19 @@
 #include <stdio.h>
 #endif
 
-#ifndef ROOT_TMath
-#include "TMath.h"
-#endif
-
 #ifndef ROOT_TRefCnt
 #include "TRefCnt.h"
-#endif
-
-#ifndef ROOT_Varargs
-#include  "Varargs.h"
 #endif
 
 #ifndef ROOT_Riosfwd
 #include "Riosfwd.h"
 #endif
 
+#ifndef ROOT_TMathBase
+#include "TMathBase.h"
+#endif
+
+#include <stdarg.h>
 #include <string>
 
 #ifdef R__GLOBALSTL
@@ -135,7 +132,7 @@ friend Bool_t operator==(const TSubString &s1, const TString &s2);
 friend Bool_t operator==(const TSubString &s1, const char *s2);
 
 private:
-   TString      *fStr;           // Referenced string
+   TString      &fStr;           // Referenced string
    Ssiz_t        fBegin;         // Index of starting character
    Ssiz_t        fExtent;        // Length of TSubString
 
@@ -150,8 +147,9 @@ public:
    TSubString(const TSubString &s)
      : fStr(s.fStr), fBegin(s.fBegin), fExtent(s.fExtent) { }
 
-   TSubString   &operator=(const char *s);       // Assignment to char*
-   TSubString   &operator=(const TString &s);    // Assignment to TString
+   TSubString   &operator=(const char *s);       // Assignment from a char*
+   TSubString   &operator=(const TString &s);    // Assignment from a TString
+   TSubString   &operator=(const TSubString &s); // Assignment from a TSubString
    char         &operator()(Ssiz_t i);           // Index with optional bounds checking
    char         &operator[](Ssiz_t i);           // Index with bounds checking
    char          operator()(Ssiz_t i) const;     // Index with optional bounds checking
@@ -160,6 +158,7 @@ public:
    const char   *Data() const;
    Ssiz_t        Length() const          { return fExtent; }
    Ssiz_t        Start() const           { return fBegin; }
+   TString&      String()                { return fStr; }
    void          ToLower();              // Convert self to lower-case
    void          ToUpper();              // Convert self to upper-case
 
@@ -380,6 +379,7 @@ public:
    Bool_t       Tokenize(TString &tok, Ssiz_t &from, const char *delim = " ") const;
 
    // Static member functions
+   static ULong_t Hash(const void *txt, Int_t ntxt);    // Calculates hash index from any char string.
    static Ssiz_t  InitialCapacity(Ssiz_t ic = 15);      // Initial allocation capacity
    static Ssiz_t  MaxWaste(Ssiz_t mw = 15);             // Max empty space before reclaim
    static Ssiz_t  ResizeIncrement(Ssiz_t ri = 16);      // Resizing increment
@@ -394,8 +394,6 @@ public:
 // Related global functions
 istream  &operator>>(istream &str,       TString &s);
 ostream  &operator<<(ostream &str, const TString &s);
-TBuffer  &operator>>(TBuffer &buf,       TString &s);
-TBuffer  &operator<<(TBuffer &buf, const TString &s);
 #if defined(R__TEMPLATE_OVERLOAD_BUG)
 template <>
 #endif
@@ -583,14 +581,18 @@ inline char TString::operator()(Ssiz_t i) const
 { return fData[i]; }
 
 inline const char *TSubString::Data() const
-{ return fStr->Data() + fBegin; }
+{ return fStr.Data() + fBegin; }
 
 // Access to elements of sub-string with bounds checking
 inline char TSubString::operator[](Ssiz_t i) const
-{ AssertElement(i); return fStr->fData[fBegin+i]; }
+{ AssertElement(i); return fStr.fData[fBegin+i]; }
 
 inline char TSubString::operator()(Ssiz_t i) const
-{ return fStr->fData[fBegin+i]; }
+{ return fStr.fData[fBegin+i]; }
+
+inline TSubString &TSubString::operator=(const TSubString &s)
+{ fStr = s.fStr; fBegin = s.fBegin; fExtent = s.fExtent; return *this; }
+
 
 // String Logical operators
 #if !defined(R__ALPHA)

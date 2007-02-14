@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.12 2006/05/22 08:55:58 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.18 2007/01/30 10:11:47 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -58,7 +58,7 @@ ClassImp(TBufferSQL2);
 
 //______________________________________________________________________________
 TBufferSQL2::TBufferSQL2() :
-   TBuffer(),
+   TBufferFile(),
    fSQL(0),
    fStructure(0),
    fObjMap(0),
@@ -69,7 +69,7 @@ TBufferSQL2::TBufferSQL2() :
 
 //______________________________________________________________________________
 TBufferSQL2::TBufferSQL2(TBuffer::EMode mode) :
-   TBuffer(mode),
+   TBufferFile(mode),
    fSQL(0),
    fStructure(0),
    fStk(0),
@@ -93,7 +93,7 @@ TBufferSQL2::TBufferSQL2(TBuffer::EMode mode) :
 
 //______________________________________________________________________________
 TBufferSQL2::TBufferSQL2(TBuffer::EMode mode, TSQLFile* file) :
-   TBuffer(mode),
+   TBufferFile(mode),
    fSQL(0),
    fStructure(0),
    fStk(0),
@@ -302,7 +302,7 @@ void TBufferSQL2::WriteObject(const TObject *obj)
    // Use SqlWrite() functions to convert your object to sql
    // Redefined here to avoid gcc 3.x warning
 
-   TBuffer::WriteObject(obj);
+   TBufferFile::WriteObject(obj);
 }
 
 //______________________________________________________________________________
@@ -325,7 +325,7 @@ Int_t TBufferSQL2::SqlWriteObject(const void* obj, const TClass* cl, TMemberStre
       objid = 0;
    else 
    if (fObjMap!=0) {
-      ULong_t hash = TMath::Hash(&obj, sizeof(void*));
+      ULong_t hash = TString::Hash(&obj, sizeof(void*));
       Long_t value = fObjMap->GetValue(hash, (Long_t) obj);
       if (value>0)
          objid = fFirstObjId + value - 1;
@@ -344,7 +344,7 @@ Int_t TBufferSQL2::SqlWriteObject(const void* obj, const TClass* cl, TMemberStre
 
    Stack()->SetObjectRef(objid, cl);
    
-   ULong_t hash = TMath::Hash(&obj, sizeof(void*));
+   ULong_t hash = TString::Hash(&obj, sizeof(void*));
    if (fObjMap==0) fObjMap = new TExMap();
    if (fObjMap->GetValue(hash, (Long_t) obj)==0)
       fObjMap->Add(hash, (Long_t) obj, (Long_t) objid - fFirstObjId + 1);
@@ -403,7 +403,7 @@ void* TBufferSQL2::SqlReadObject(void* obj, TClass** cl, TMemberStreamer *stream
             TString clname;
             Version_t version;
             if ((cl!=0) && SqlObjectInfo(objid, clname, version))
-              *cl = gROOT->GetClass(clname);
+              *cl = TClass::GetClass(clname);
          }
       }
 
@@ -447,7 +447,7 @@ void* TBufferSQL2::SqlReadObjectDirect(void* obj, TClass** cl, Long64_t objid, T
 
    TSQLClassInfo* sqlinfo = fSQL->FindSQLClassInfo(clname.Data(), version);
 
-   TClass* objClass = gROOT->GetClass(clname);
+   TClass* objClass = TClass::GetClass(clname);
    if ((objClass==0) || (sqlinfo==0)) {
       Error("SqlReadObjectDirect","Class %s is not known", clname.Data());
       return obj;
@@ -511,7 +511,7 @@ void* TBufferSQL2::SqlReadObjectDirect(void* obj, TClass** cl, Long64_t objid, T
 }
 
 //______________________________________________________________________________
-void  TBufferSQL2::IncrementLevel(TStreamerInfo* info)
+void  TBufferSQL2::IncrementLevel(TVirtualStreamerInfo* info)
 {
    // Function is called from TStreamerInfo WriteBuffer and Readbuffer functions
    // and indent new level in data structure.
@@ -520,7 +520,7 @@ void  TBufferSQL2::IncrementLevel(TStreamerInfo* info)
 
    if (info==0) return;
 
-   PushStack()->SetStreamerInfo(info);
+   PushStack()->SetStreamerInfo((TStreamerInfo*)info);
 
    if (gDebug>2)
       cout << " IncrementLevel " << info->GetName() << endl;
@@ -529,7 +529,7 @@ void  TBufferSQL2::IncrementLevel(TStreamerInfo* info)
 }
 
 //______________________________________________________________________________
-void  TBufferSQL2::DecrementLevel(TStreamerInfo* info)
+void  TBufferSQL2::DecrementLevel(TVirtualStreamerInfo* info)
 {
    // Function is called from TStreamerInfo WriteBuffer and Readbuffer functions
    // and decrease level in sql structure.
@@ -687,7 +687,7 @@ void TBufferSQL2::ClassMember(const char* name, const char* typeName, Int_t arrs
    
    if (typ_id<0) 
       if (strcmp(name, typeName)==0) {
-         TClass* cl = gROOT->GetClass(tname.Data());
+         TClass* cl = TClass::GetClass(tname.Data());
          if (cl!=0) typ_id = TStreamerInfo::kBase;
       }
    
@@ -697,7 +697,7 @@ void TBufferSQL2::ClassMember(const char* name, const char* typeName, Int_t arrs
          tname.Resize(tname.Length()-1);
          isptr = kTRUE;
       }
-      TClass* cl = gROOT->GetClass(tname.Data());
+      TClass* cl = TClass::GetClass(tname.Data());
       if (cl==0) {
          Error("ClassMember","Invalid class specifier %s", typeName);
          fErrorFlag = 1;
@@ -720,7 +720,7 @@ void TBufferSQL2::ClassMember(const char* name, const char* typeName, Int_t arrs
    } else
    
    if (typ_id==TStreamerInfo::kBase) {
-      TClass* cl = gROOT->GetClass(tname.Data());
+      TClass* cl = TClass::GetClass(tname.Data());
       if (cl!=0) {
          TStreamerBase* b = new TStreamerBase(tname.Data(), "title", 0);
          b->SetBaseVersion(cl->GetClassVersion());
@@ -1895,7 +1895,7 @@ void TBufferSQL2::StreamObject(void *obj, const type_info &typeinfo)
 {
    // steram object to/from buffer
 
-   StreamObject(obj, gROOT->GetClass(typeinfo));
+   StreamObject(obj, TClass::GetClass(typeinfo));
 }
 
 //______________________________________________________________________________
@@ -1903,7 +1903,7 @@ void TBufferSQL2::StreamObject(void *obj, const char *className)
 {
    // steram object to/from buffer
 
-   StreamObject(obj, gROOT->GetClass(className));
+   StreamObject(obj, TClass::GetClass(className));
 }
 
 //______________________________________________________________________________
@@ -1948,11 +1948,10 @@ void TBufferSQL2::StreamObject(void *obj, TMemberStreamer *streamer, const TClas
 #define TBufferSQL2_operatorin(vname)           \
    {                                            \
       SqlReadBasic(vname);                      \
-      return *this;                             \
    }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator>>(Bool_t    &b)
+void TBufferSQL2::ReadBool(Bool_t    &b)
 {
    // Reads Bool_t value from buffer
 
@@ -1960,7 +1959,7 @@ TBuffer& TBufferSQL2::operator>>(Bool_t    &b)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator>>(Char_t    &c)
+void TBufferSQL2::ReadChar(Char_t    &c)
 {
    // Reads Char_t value from buffer
 
@@ -1968,7 +1967,7 @@ TBuffer& TBufferSQL2::operator>>(Char_t    &c)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator>>(UChar_t   &c)
+void TBufferSQL2::ReadUChar(UChar_t   &c)
 {
    // Reads UChar_t value from buffer
 
@@ -1976,7 +1975,7 @@ TBuffer& TBufferSQL2::operator>>(UChar_t   &c)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator>>(Short_t   &h)
+void TBufferSQL2::ReadShort(Short_t   &h)
 {
    // Reads Short_t value from buffer
 
@@ -1984,7 +1983,7 @@ TBuffer& TBufferSQL2::operator>>(Short_t   &h)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator>>(UShort_t  &h)
+void TBufferSQL2::ReadUShort(UShort_t  &h)
 {
    // Reads UShort_t value from buffer
 
@@ -1992,7 +1991,7 @@ TBuffer& TBufferSQL2::operator>>(UShort_t  &h)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator>>(Int_t     &i)
+void TBufferSQL2::ReadInt(Int_t     &i)
 {
    // Reads Int_t value from buffer
 
@@ -2000,7 +1999,7 @@ TBuffer& TBufferSQL2::operator>>(Int_t     &i)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator>>(UInt_t    &i)
+void TBufferSQL2::ReadUInt(UInt_t    &i)
 {
    // Reads UInt_t value from buffer
 
@@ -2008,7 +2007,7 @@ TBuffer& TBufferSQL2::operator>>(UInt_t    &i)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator>>(Long_t    &l)
+void TBufferSQL2::ReadLong(Long_t    &l)
 {
    // Reads Long_t value from buffer
 
@@ -2016,7 +2015,7 @@ TBuffer& TBufferSQL2::operator>>(Long_t    &l)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator>>(ULong_t   &l)
+void TBufferSQL2::ReadULong(ULong_t   &l)
 {
    // Reads ULong_t value from buffer
 
@@ -2024,7 +2023,7 @@ TBuffer& TBufferSQL2::operator>>(ULong_t   &l)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator>>(Long64_t  &l)
+void TBufferSQL2::ReadLong64(Long64_t  &l)
 {
    // Reads Long64_t value from buffer
 
@@ -2032,7 +2031,7 @@ TBuffer& TBufferSQL2::operator>>(Long64_t  &l)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator>>(ULong64_t &l)
+void TBufferSQL2::ReadULong64(ULong64_t &l)
 {
    // Reads ULong64_t value from buffer
 
@@ -2040,7 +2039,7 @@ TBuffer& TBufferSQL2::operator>>(ULong64_t &l)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator>>(Float_t   &f)
+void TBufferSQL2::ReadFloat(Float_t   &f)
 {
    // Reads Float_t value from buffer
 
@@ -2048,7 +2047,7 @@ TBuffer& TBufferSQL2::operator>>(Float_t   &f)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator>>(Double_t  &d)
+void TBufferSQL2::ReadDouble(Double_t  &d)
 {
    // Reads Double_t value from buffer
 
@@ -2056,24 +2055,42 @@ TBuffer& TBufferSQL2::operator>>(Double_t  &d)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator>>(Char_t    *c)
+void TBufferSQL2::ReadCharP(Char_t    *c)
 {
    // Reads array of characters from buffer
 
    const char* buf = SqlReadCharStarValue();
    strcpy(c, buf);
-   return *this;
+}
+
+//________________________________________________________________________
+void TBufferSQL2::ReadTString(TString   &)
+{
+   // Operator>>
+
+   //strcpy(str,(*fRowPtr)->GetField(*fIter));
+   //if (fIter != fColumnVec->end()) ++fIter;
+   printf("ERROR NOT IMPLEMENTED\n");
+}
+
+//________________________________________________________________________
+void TBufferSQL2::WriteTString(const TString   &)
+{
+   // Operator>>
+
+   //strcpy(str,(*fRowPtr)->GetField(*fIter));
+   //if (fIter != fColumnVec->end()) ++fIter;
+   printf("ERROR NOT IMPLEMENTED\n");
 }
 
 // macro for right shift operator for basic types
 #define TBufferSQL2_operatorout(vname)          \
    {                                            \
       SqlWriteBasic(vname);                     \
-      return *this;                             \
    }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator<<(Bool_t    b)
+void TBufferSQL2::WriteBool(Bool_t    b)
 {
    // Writes Bool_t value to buffer
 
@@ -2081,7 +2098,7 @@ TBuffer& TBufferSQL2::operator<<(Bool_t    b)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator<<(Char_t    c)
+void TBufferSQL2::WriteChar(Char_t    c)
 {
    // Writes Char_t value to buffer
 
@@ -2089,7 +2106,7 @@ TBuffer& TBufferSQL2::operator<<(Char_t    c)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator<<(UChar_t   c)
+void TBufferSQL2::WriteUChar(UChar_t   c)
 {
    // Writes UChar_t value to buffer
 
@@ -2097,7 +2114,7 @@ TBuffer& TBufferSQL2::operator<<(UChar_t   c)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator<<(Short_t   h)
+void TBufferSQL2::WriteShort(Short_t   h)
 {
    // Writes Short_t value to buffer
 
@@ -2105,7 +2122,7 @@ TBuffer& TBufferSQL2::operator<<(Short_t   h)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator<<(UShort_t  h)
+void TBufferSQL2::WriteUShort(UShort_t  h)
 {
    // Writes UShort_t value to buffer
 
@@ -2113,7 +2130,7 @@ TBuffer& TBufferSQL2::operator<<(UShort_t  h)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator<<(Int_t     i)
+void TBufferSQL2::WriteInt(Int_t     i)
 {
    // Writes Int_t value to buffer
 
@@ -2121,7 +2138,7 @@ TBuffer& TBufferSQL2::operator<<(Int_t     i)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator<<(UInt_t    i)
+void TBufferSQL2::WriteUInt(UInt_t    i)
 {
    // Writes UInt_t value to buffer
 
@@ -2129,7 +2146,7 @@ TBuffer& TBufferSQL2::operator<<(UInt_t    i)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator<<(Long_t    l)
+void TBufferSQL2::WriteLong(Long_t    l)
 {
    // Writes Long_t value to buffer
 
@@ -2137,7 +2154,7 @@ TBuffer& TBufferSQL2::operator<<(Long_t    l)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator<<(ULong_t   l)
+void TBufferSQL2::WriteULong(ULong_t   l)
 {
    // Writes ULong_t value to buffer
 
@@ -2145,7 +2162,7 @@ TBuffer& TBufferSQL2::operator<<(ULong_t   l)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator<<(Long64_t  l)
+void TBufferSQL2::WriteLong64(Long64_t  l)
 {
    // Writes Long64_t value to buffer
 
@@ -2153,7 +2170,7 @@ TBuffer& TBufferSQL2::operator<<(Long64_t  l)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator<<(ULong64_t l)
+void TBufferSQL2::WriteULong64(ULong64_t l)
 {
    // Writes ULong64_t value to buffer
 
@@ -2161,7 +2178,7 @@ TBuffer& TBufferSQL2::operator<<(ULong64_t l)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator<<(Float_t   f)
+void TBufferSQL2::WriteFloat(Float_t   f)
 {
    // Writes Float_t value to buffer
 
@@ -2169,7 +2186,7 @@ TBuffer& TBufferSQL2::operator<<(Float_t   f)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator<<(Double_t  d)
+void TBufferSQL2::WriteDouble(Double_t  d)
 {
    // Writes Double_t value to buffer
 
@@ -2177,12 +2194,11 @@ TBuffer& TBufferSQL2::operator<<(Double_t  d)
 }
 
 //______________________________________________________________________________
-TBuffer& TBufferSQL2::operator<<(const Char_t *c)
+void TBufferSQL2::WriteCharP(const Char_t *c)
 {
    // Writes array of characters to buffer
 
    SqlWriteValue(c, sqlio::CharStar);
-   return *this;
 }
 
 //______________________________________________________________________________

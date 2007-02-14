@@ -4,6 +4,7 @@
 //Author: Rene Brun
    
 #include "TH1.h"
+#include "TMath.h"
 #include "TF1.h"
 #include "TLegend.h"
 #include "TCanvas.h"

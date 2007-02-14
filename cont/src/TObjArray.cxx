@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.28 2006/08/08 17:02:26 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.33 2007/02/10 15:33:52 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -26,10 +26,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TObjArray.h"
-#include "TMath.h"
 #include "TError.h"
 #include "TROOT.h"
-#include "TRandom.h"
 
 ClassImp(TObjArray)
 
@@ -97,6 +95,30 @@ TObjArray& TObjArray::operator=(const TObjArray &a)
       fName = a.fName;
    }
    return *this;
+}
+
+//______________________________________________________________________________
+TObject *&TObjArray::operator[](Int_t i)
+{
+   // Return the object at position i. Returns address at position 0
+   // if i is out of bounds. Result may be used as an lvalue.
+
+   int j = i-fLowerBound;
+   if (j >= 0 && j < fSize) return fCont[j];
+   BoundsOk("operator[]", i);
+   fLast = -2; // invalidate fLast since the result may be used as an lvalue
+   return fCont[0];
+}
+
+//______________________________________________________________________________
+TObject *TObjArray::operator[](Int_t i) const
+{
+   // Return the object at position at. Returns 0 if i is out of bounds.
+
+   int j = i-fLowerBound;
+   if (j >= 0 && j < fSize) return fCont[j];
+   BoundsOk("operator[] const", i);
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -589,10 +611,14 @@ void TObjArray::Randomize(Int_t ntimes)
    //  between 0 and fLast.
    // -the objects at j and k are swapped.
    // -this process is repeated ntimes (ntimes=1 by default)
-   
+
    for (Int_t i=0;i<ntimes;i++) {
       for (Int_t j=0;j<fLast;j++) {
-         Int_t k = (Int_t)gRandom->Uniform(0,fLast);
+#ifdef R__WIN32
+         Int_t k = (Int_t)(fLast*rand()/(RAND_MAX+1.0));
+#else
+         Int_t k = (Int_t)(fLast*random()/(RAND_MAX+1.0));
+#endif
          if (k == j) continue;
          TObject *obj = fCont[j];
          fCont[j] = fCont[k];

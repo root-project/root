@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: MemCheck.cxx,v 1.3 2002/09/10 16:14:58 brun Exp $
+// @(#)root/new:$Name:  $:$Id: MemCheck.cxx,v 1.4 2006/05/13 21:02:48 brun Exp $
 // Author: D.Bertini and M.Ivanov   10/08/2000
 
 /*************************************************************************
@@ -58,7 +58,6 @@
 #include <string.h>
 #include <signal.h>
 #include "MemCheck.h"
-#include "TMath.h"
 #include "TSystem.h"
 #include "TEnv.h"
 #include "TError.h"
@@ -89,7 +88,7 @@ ULong_t TStackInfo::HashStack(unsigned int size, void **ptr)
 
    ULong_t hash = 0;
    for (unsigned int i = 0; i < size; i++)
-      hash ^= TMath::Hash(&ptr[i], sizeof(void*));
+      hash ^= TString::Hash(&ptr[i], sizeof(void*));
    return hash;
 }
 
@@ -281,7 +280,7 @@ void TMemHashTable::RehashLeak(int newSize)
       TMemTable *branch = fgLeak[ib];
       for (int i = 0; i < branch->fTableSize; i++)
          if (branch->fLeaks[i].fAddress != 0) {
-            int hash = int(TMath::Hash(&branch->fLeaks[i].fAddress, sizeof(void*)) % newSize);
+            int hash = int(TString::Hash(&branch->fLeaks[i].fAddress, sizeof(void*)) % newSize);
             TMemTable *newbranch = newLeak[hash];
             if (newbranch->fAllocCount >= newbranch->fTableSize) {
                int newTableSize =
@@ -339,7 +338,7 @@ void *TMemHashTable::AddPointer(size_t size, void *ptr)
    fgAllocCount++;
    if ((fgAllocCount / fgSize) > 128)
       RehashLeak(fgSize * 2);
-   int hash = int(TMath::Hash(&p, sizeof(void*)) % fgSize);
+   int hash = int(TString::Hash(&p, sizeof(void*)) % fgSize);
    TMemTable *branch = fgLeak[hash];
    branch->fAllocCount++;
    branch->fMemSize += size;
@@ -386,7 +385,7 @@ void TMemHashTable::FreePointer(void *p)
 
    if (p == 0)
       return;
-   int hash = int(TMath::Hash(&p, sizeof(void*)) % fgSize);
+   int hash = int(TString::Hash(&p, sizeof(void*)) % fgSize);
    fgAllocCount--;
    TMemTable *branch = fgLeak[hash];
    for (int i = 0; i < branch->fTableSize; i++) {

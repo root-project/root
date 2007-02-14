@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.h,v 1.44 2006/05/05 01:16:54 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.h,v 1.46 2007/01/23 17:47:43 fine Exp $
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * Copyright (C) 2002 by Valeri Fine.                                    *
@@ -55,11 +55,8 @@ class TQtClientWidget: public CLIENT_WIDGET_BASE_CLASS {
 #endif
 
 private:
-         void  operator=(const TQtClientWidget&)  {}
-#if !defined(_MSC_VER)  || _MSC_VER >= 1310
-         void  operator=(const TQtClientWidget&) const {}
-#endif 
-         TQtClientWidget(const TQtClientWidget&) : CLIENT_WIDGET_BASE_CLASS(0) {}
+         void  operator=(const TQtClientWidget&);
+         TQtClientWidget(const TQtClientWidget&);
 protected:
 
        UInt_t fGrabButtonMask;        // modifier button mask for TVirtualX::GrabButton

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSessionDialogs.cxx,v 1.1 2006/11/17 15:50:17 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSessionDialogs.cxx,v 1.5 2007/01/31 16:46:10 rdm Exp $
 // Author: Marek Biskup, Jakub Madejczyk, Bertrand Bellenot 10/08/2005
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 
 #include "TSessionDialogs.h"
 #include "TSessionViewer.h"
+#include "TROOT.h"
 #include "TSystem.h"
 #include "TGButton.h"
 #include "TList.h"
@@ -60,7 +61,7 @@ const char *datasettypes[] = {
 };
 
 const char *filetypes[] = {
-   "C files",       "*.C",
+   "C files",       "*.[C|c]*",
    "ROOT files",    "*.root",
    "All files",     "*",
    0,               0
@@ -122,7 +123,7 @@ TNewChainDlg::TNewChainDlg(const TGWindow *p, const TGWindow *main) :
    gClient->GetColorByName("white",white);
    fContents = new TGFileContainer(lv, kSunkenFrame, white);
    fContents->SetCleanup(kDeepCleanup);
-   fContents->SetFilter("*.C");
+   fContents->SetFilter("*.[C|c]*");
    fContents->SetViewMode(kLVSmallIcons);
    fContents->Associate(this);
    fContents->SetDefaultHeaders();
@@ -215,6 +216,7 @@ void TNewChainDlg::UpdateList()
    // loop on the list of chains/datasets in memory,
    // and fill the associated listview
    while ((obj = (TObject *)next())) {
+      item = 0;
       if (obj->IsA() == TChain::Class()) {
          const char *title = ((TChain *)obj)->GetTitle();
          if (strlen(title) == 0)
@@ -226,8 +228,10 @@ void TNewChainDlg::UpdateList()
          item = new TGLVEntry(fLVContainer, ((TDSet *)obj)->GetObjName(),
                               ((TDSet *)obj)->GetName());
       }
-      item->SetUserData(obj);
-      fLVContainer->AddItem(item);
+      if (item) {
+         item->SetUserData(obj);
+         fLVContainer->AddItem(item);
+      }
    }
    fClient->NeedRedraw(fLVContainer);
    Resize();
@@ -340,6 +344,7 @@ TNewQueryDlg::TNewQueryDlg(TSessionViewer *gui, Int_t Width, Int_t Height,
    Window_t wdummy;
    Int_t  ax, ay;
    fEditMode = editmode;
+   fModified = kFALSE;
    fChain = 0;
    fQuery = query;
    if (fQuery && fQuery->fChain) {
@@ -486,6 +491,21 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
    fNumFirstEntry->Associate(this);
    fTxtEventList->Associate(this);
 
+   fTxtQueryName->Connect("TextChanged(char*)", "TNewQueryDlg", this,
+                        "SettingsChanged()");
+   fTxtChain->Connect("TextChanged(char*)", "TNewQueryDlg", this,
+                        "SettingsChanged()");
+   fTxtSelector->Connect("TextChanged(char*)", "TNewQueryDlg", this,
+                        "SettingsChanged()");
+   fTxtOptions->Connect("TextChanged(char*)", "TNewQueryDlg", this,
+                        "SettingsChanged()");
+   fNumEntries->Connect("ValueChanged(Long_t)", "TNewQueryDlg", this,
+                        "SettingsChanged()");
+   fNumFirstEntry->Connect("ValueChanged(Long_t)", "TNewQueryDlg", this,
+                        "SettingsChanged()");
+   fTxtEventList->Connect("TextChanged(char*)", "TNewQueryDlg", this,
+                        "SettingsChanged()");
+
    TGCompositeFrame *tmp;
    AddFrame(tmp = new TGCompositeFrame(this, 140, 20, kHorizontalFrame),
          new TGLayoutHints(kLHintsLeft | kLHintsExpandX));
@@ -509,6 +529,8 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
    tmp->AddFrame(fBtnClose = new TGTextButton(tmp, "Close"),
          new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 3, 3, 3, 3));
    fBtnClose->Connect("Clicked()", "TNewQueryDlg", this, "OnBtnCloseClicked()");
+   fBtnSave->SetState(kButtonDisabled);
+   fBtnSubmit->SetState(kButtonDisabled);
 }
 
 //______________________________________________________________________________
@@ -567,7 +589,7 @@ void TNewQueryDlg::OnBrowseSelector()
    fi.fFileTypes = filetypes;
    new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
    if (!fi.fFilename) return;
-   fTxtSelector->SetText(gSystem->BaseName(fi.fFilename));
+   fTxtSelector->SetText(gSystem->UnixPathName(fi.fFilename));
 }
 
 //______________________________________________________________________________
@@ -667,6 +689,7 @@ void TNewQueryDlg::OnBtnSaveClicked()
    fTxtQueryName->SelectAll();
    fTxtQueryName->SetFocus();
    fViewer->WriteConfiguration();
+   fModified = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -683,7 +706,18 @@ void TNewQueryDlg::OnBtnCloseClicked()
 {
    // Close dialog.
 
-   DeleteWindow();
+   Int_t result = kMBNo;
+   if (fModified) {
+      new TGMsgBox(fClient->GetRoot(), this, "Modified Settings",
+                   "Do you wish to SAVE changes ?", 0,
+                   kMBYes | kMBNo | kMBCancel, &result);
+      if (result == kMBYes) {
+         OnBtnSaveClicked();
+      }
+   }
+   if (result == kMBNo) {
+      DeleteWindow();
+   }
 }
 
 //______________________________________________________________________________
@@ -693,6 +727,42 @@ void TNewQueryDlg::Popup()
 
    MapWindow();
    fTxtQueryName->SetFocus();
+}
+
+//______________________________________________________________________________
+void TNewQueryDlg::SettingsChanged()
+{
+   // Settings have changed, update GUI accordingly.
+
+   if (fEditMode && fQuery) {
+      if ((strcmp(fQuery->fSelectorString.Data(), fTxtSelector->GetText())) ||
+          (strcmp(fQuery->fQueryName.Data(), fTxtQueryName->GetText())) ||
+          (strcmp(fQuery->fOptions.Data(), fTxtOptions->GetText())) ||
+          (fQuery->fNoEntries  != fNumEntries->GetIntNumber()) ||
+          (fQuery->fFirstEntry != fNumFirstEntry->GetIntNumber()) ||
+          (fQuery->fChain != fChain)) {
+         fModified = kTRUE;
+      }
+      else {
+         fModified = kFALSE;
+      }
+   }
+   else {
+      if ((fTxtQueryName->GetText()) &&
+         ((fTxtQueryName->GetText()) ||
+          (fTxtChain->GetText())))
+         fModified = kTRUE;
+      else
+         fModified = kFALSE;
+   }
+   if (fModified) {
+      fBtnSave->SetState(kButtonUp);
+      fBtnSubmit->SetState(kButtonUp);
+   }
+   else {
+      fBtnSave->SetState(kButtonDisabled);
+      fBtnSubmit->SetState(kButtonDisabled);
+   }
 }
 
 //______________________________________________________________________________

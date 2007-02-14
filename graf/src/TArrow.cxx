@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.20 2005/11/11 17:31:48 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.21 2006/07/03 16:10:44 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TMath.h"
 #include "TArrow.h"
 #include "TVirtualPad.h"
 

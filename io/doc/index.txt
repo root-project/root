@@ -1,0 +1,21 @@
+This directory contains all the basic classes for Input/Output to a file
+or a buffer.
+BEGIN_HTML
+ Several documents describing the I/O classes are listed below:
+<ul>
+<li>The ROOT file format is documented in class TFile.</li>
+<li><a href="ftp://root.cern.ch/root/doc/chapter11.pdf">The Chapter about the IO classes in the Users Guide
+    </a></li>
+<li><a href="ftp://root.cern.ch/root/doc/chapter12.pdf">The Chapter about the Tree classes in the Users Guide
+    </a></li>
+<li><a href="http://root.cern.ch/root/HowtoWrite.html">How to Write Objects to a 
+    File?</a></li>
+<li><a href="http://root.cern.ch/root/HowtoRead.html">How to Read Objects from a 
+      File?</A></li>
+<li><a href="http://root.cern.ch/root/NetFile.html">How 
+      to Access ROOT Files Remotely via the rootd Server?</A></li>
+
+<li><a href="http://root.cern.ch/root/WebFile.html">How to Read a ROOT File via 
+      the Web?</A></li>
+</ul>
+END_HTML

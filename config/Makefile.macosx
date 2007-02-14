@@ -25,16 +25,16 @@ endif
 # LD            = c++
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -pipe -W -Wall -Wno-long-double -Woverloaded-virtual \
+CXXFLAGS      = -pipe -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS)
-CFLAGS        = -pipe -W -Wall -Wno-long-double -fsigned-char -fno-common \
+CFLAGS        = -pipe -W -Wall -fsigned-char -fno-common \
                 $(EXTRA_CFLAGS) $(FINK_CFLAGS)
-CINTCXXFLAGS  = -pipe -W -Wall -Wno-long-double -Woverloaded-virtual \
+CINTCXXFLAGS  = -pipe -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
                 -DG__STD_EXCEPTION
-CINTCFLAGS    = -pipe -W -Wall -Wno-long-double -fsigned-char -fno-common \
+CINTCFLAGS    = -pipe -W -Wall -fsigned-char -fno-common \
                 $(EXTRA_CFLAGS) $(FINK_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
@@ -60,13 +60,23 @@ SOFLAGS       = $(OPT) -dynamiclib -single_module \
                 -undefined dynamic_lookup -install_name $(LIBDIR)/
 FORCELINK     = no
 NEEDFINK      = no
+CXXFLAGS     += -fvisibility-inlines-hidden
+CINTCXXFLAGS += -fvisibility-inlines-hidden
 else
 ifeq ($(MACOSX_MINOR),3)
 SOFLAGS       = $(OPT) -dynamiclib -single_module \
                 -undefined dynamic_lookup -install_name $(LIBDIR)/
+CXXFLAGS     += -Wno-long-double
+CFLAGS       += -Wno-long-double
+CINTCXXFLAGS += -Wno-long-double
+CINTCFLAGS   += -Wno-long-double
 else
 SOFLAGS       = $(OPT) -dynamiclib -single_module \
                 -undefined suppress -install_name $(LIBDIR)/
+CXXFLAGS     += -Wno-long-double
+CFLAGS       += -Wno-long-double
+CINTCXXFLAGS += -Wno-long-double
+CINTCFLAGS   += -Wno-long-double
 endif
 endif
 SOEXT         = dylib

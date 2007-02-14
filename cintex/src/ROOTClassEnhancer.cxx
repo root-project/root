@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.16 2006/12/08 16:36:49 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.21 2007/02/07 13:21:52 brun Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -18,7 +18,7 @@
 #include "TClassEdit.h"
 #include "TClassTable.h"
 #include "TClassStreamer.h"
-#include "TCollectionProxy.h"
+#include "TCollectionProxyInfo.h"
 #include "TVirtualCollectionProxy.h"
 #include "TMemberInspector.h"
 #include "RVersion.h"
@@ -360,7 +360,7 @@ namespace ROOT { namespace Cintex {
 
       const std::type_info& tid = typ.TypeInfo();
       root_class = info->GetClass();
-
+      
       if ( 0 != root_class )   {
          root_class->Size();
          if ( ! typ.IsVirtual() ) root_class->SetGlobalIsA(accessType);
@@ -384,166 +384,142 @@ namespace ROOT { namespace Cintex {
                   return 0;
                }
                std::auto_ptr<CollFuncTable> m((CollFuncTable*)method.Invoke().Address());
-               std::auto_ptr<TCollectionProxy::Proxy_t> proxy(
-#if ROOT_VERSION_CODE >= ROOT_VERSION(5,4,0)
-               TCollectionProxy::GenExplicitProxy(tid,
-#else
-               TCollectionProxy::genExplicitProxy(tid,
-#endif
-   m->iter_size,
-                                                  m->value_diff,
-                                                  m->value_offset,
-                                                  m->size_func,
-                                                  m->resize_func,
-                                                  m->clear_func,
-                                                  m->first_func,
-                                                  m->next_func,
-                                                  m->construct_func,
-                                                  m->destruct_func,
-                                                  m->feed_func,
-                                                  m->collect_func
-                                                  ));
-               std::auto_ptr<TClassStreamer> str(
-#if ROOT_VERSION_CODE >= ROOT_VERSION(5,4,0)
-               TCollectionProxy::GenExplicitClassStreamer(tid,
-#else
-               TCollectionProxy::genExplicitClassStreamer(tid,
-#endif
-   m->iter_size,
-                                                          m->value_diff,
-                                                          m->value_offset,
-                                                          m->size_func,
-                                                          m->resize_func,
-                                                          m->clear_func,
-                                                          m->first_func,
-                                                          m->next_func,
-                                                          m->construct_func,
-                                                          m->destruct_func,
-                                                          m->feed_func,
-                                                          m->collect_func
-                                                          ));
-               root_class->CopyCollectionProxy(*(proxy.get()));
+
+               ::ROOT::TCollectionProxyInfo info(tid,
+                                                 m->iter_size,
+                                                 m->value_diff,
+                                                 m->value_offset,
+                                                 m->size_func,
+                                                 m->resize_func,
+                                                 m->clear_func,
+                                                 m->first_func,
+                                                 m->next_func,
+                                                 m->construct_func,
+                                                 m->destruct_func,
+                                                 m->feed_func,
+                                                 m->collect_func);
+               root_class->SetCollectionProxy(info);
+
                root_class->SetBit(TClass::kIsForeign);
-               if ( str.get() )  {
-                  root_class->AdoptStreamer(str.release());
-               }
-               }
-               break;
-               case TClassEdit::kNotSTL:
-               case TClassEdit::kEnd:
-               default:
-               root_class->SetBit(TClass::kIsForeign);
-               }
             }
-            return root_class;
+            break;
+         case TClassEdit::kNotSTL:
+         case TClassEdit::kEnd:
+         default:
+            root_class->SetBit(TClass::kIsForeign);
          }
+      }
+      return root_class;
+   }
 
-         void ROOTClassEnhancerInfo::Stub_Dictionary(void* ctx )
-         {
-            // Create class info.
-            if( Cintex::GetROOTCreator() ) {
-               (*Cintex::GetROOTCreator())( context(ctx).TypeGet(), context(ctx).Info() );
-            }
-            else {
-               //context(ctx).Info()->GetClass();
-               Default_CreateClass( context(ctx).TypeGet(), context(ctx).Info() );
-            }  
-         }
+   void ROOTClassEnhancerInfo::Stub_Dictionary(void* ctx )
+   {
+      // Create class info.
+      if( Cintex::GetROOTCreator() ) {
+         (*Cintex::GetROOTCreator())( context(ctx).TypeGet(), context(ctx).Info() );
+      }
+      else {
+         //context(ctx).Info()->GetClass();
+         Default_CreateClass( context(ctx).TypeGet(), context(ctx).Info() );
+      }  
+   }
+   
+   
+   void* ROOTClassEnhancerInfo::Stub_Streamer(void* obj, const vector<void*>& args, void* ctx) {
+      //  Create streamer info.
+      TBuffer& b = *(TBuffer*)args[0];
+      TClass* cl = context(ctx).Tclass();
+      TClassStreamer* s = cl->GetStreamer();
+      if ( s )  {
+         (*s)(b, obj);
+      }
+      else if ( b.IsWriting() )  {
+         cl->WriteBuffer(b, obj);
+      }
+      else {
+         UInt_t start, count;
+         Version_t version = b.ReadVersion(&start, &count, cl);
+         cl->ReadBuffer(b, obj, version, start, count);
+      }
+      return 0;
+   }
+   
+   void* ROOTClassEnhancerInfo::Stub_StreamerNVirtual(void* obj, const vector<void*>& args, void* ctx) {
+      // Create streamer info.
+      TBuffer& b = *(TBuffer*)args[0];
+      TClass* cl = context(ctx).Tclass();
+      TClassStreamer* s = cl->GetStreamer();
+      if ( s )  {
+         (*s)(b, obj);
+      }
+      else if ( b.IsWriting() )  {
+         cl->WriteBuffer(b, obj);
+      }
+      else {
+         UInt_t start, count;
+         Version_t version = b.ReadVersion(&start, &count, cl);
+         cl->ReadBuffer(b, obj, version, start, count);
+      }
+      return 0;
+   }
+   
+   void* ROOTClassEnhancerInfo::Stub_ShowMembers(void* obj, const vector<void*>& args, void* ctx) {
+      // Create show members.
+      Type typ = context(ctx).TypeGet();
+      TClass* tcl = context(ctx).Tclass();
+      TMemberInspector& insp = *(TMemberInspector*)args[0];
+      char* par = (char*)args[1];
+      if( tcl ) Stub_ShowMembers( tcl, typ, obj, insp, par);
+      return 0;
+   }
 
-
-         void* ROOTClassEnhancerInfo::Stub_Streamer(void* obj, const vector<void*>& args, void* ctx) {
-            //  Create streamer info.
-            TBuffer& b = *(TBuffer*)args[0];
-            TClass* cl = context(ctx).Tclass();
-            TClassStreamer* s = cl->GetStreamer();
-            if ( s )  {
-               (*s)(b, obj);
+   void ROOTClassEnhancerInfo::Stub_ShowMembers(TClass* tcl, const Type& cl, void* obj, TMemberInspector& insp, char* par) {
+      if ( tcl->GetShowMembersWrapper() )    {
+         tcl->GetShowMembersWrapper()(obj, insp, par);
+         return;
+      }
+      
+      // Create show members.
+      int ncp = ::strlen(par);
+      // Loop over data members
+      if ( IsSTL(cl.Name(SCOPED)) || cl.IsArray() ) return;
+      for ( size_t m = 0; m < cl.DataMemberSize(); m++) {
+         Member mem = cl.DataMemberAt(m);
+         if ( ! mem.IsTransient() ) {
+            Type typ = mem.TypeOf();
+            string nam = mem.Properties().HasProperty("ioname") ? 
+               mem.Properties().PropertyAsString("ioname") : mem.Name();
+            if( typ.IsPointer() ) nam = "*" + nam;
+            if( typ.IsArray() ) {
+               std::stringstream s;
+               s << typ.ArrayLength();
+               nam += "[" + s.str() + "]";
             }
-            else if ( b.IsWriting() )  {
-               cl->WriteBuffer(b, obj);
+            char*  add = (char*)obj + mem.Offset();
+            if ( Cintex::Debug() > 2 )  {
+               cout << "Cintex: Showmembers: ("<< tcl->GetName() << ") " << par << nam.c_str() 
+                    << " = " << (void*)add << " Offset:" << mem.Offset() << endl;
             }
-            else {
-               UInt_t start, count;
-               Version_t version = b.ReadVersion(&start, &count, cl);
-               cl->ReadBuffer(b, obj, version, start, count);
-            }
-            return 0;
-         }
-
-         void* ROOTClassEnhancerInfo::Stub_StreamerNVirtual(void* obj, const vector<void*>& args, void* ctx) {
-            // Create streamer info.
-            TBuffer& b = *(TBuffer*)args[0];
-            TClass* cl = context(ctx).Tclass();
-            TClassStreamer* s = cl->GetStreamer();
-            if ( s )  {
-               (*s)(b, obj);
-            }
-            else if ( b.IsWriting() )  {
-               cl->WriteBuffer(b, obj);
-            }
-            else {
-               UInt_t start, count;
-               Version_t version = b.ReadVersion(&start, &count, cl);
-               cl->ReadBuffer(b, obj, version, start, count);
-            }
-            return 0;
-         }
-
-         void* ROOTClassEnhancerInfo::Stub_ShowMembers(void* obj, const vector<void*>& args, void* ctx) {
-            // Create show members.
-            Type typ = context(ctx).TypeGet();
-            TClass* tcl = context(ctx).Tclass();
-            TMemberInspector& insp = *(TMemberInspector*)args[0];
-            char* par = (char*)args[1];
-            if( tcl ) Stub_ShowMembers( tcl, typ, obj, insp, par);
-            return 0;
-         }
-
-         void ROOTClassEnhancerInfo::Stub_ShowMembers(TClass* tcl, const Type& cl, void* obj, TMemberInspector& insp, char* par) {
-            // Create show members.
-            int ncp = ::strlen(par);
-            // Loop over data members
-            if ( IsSTL(cl.Name(SCOPED)) || cl.IsArray() ) return;
-            for ( size_t m = 0; m < cl.DataMemberSize(); m++) {
-               Member mem = cl.DataMemberAt(m);
-               if ( ! mem.IsTransient() ) {
-                  Type typ = mem.TypeOf();
-                  string nam = mem.Properties().HasProperty("ioname") ? 
-                     mem.Properties().PropertyAsString("ioname") : mem.Name();
-                  if( typ.IsPointer() ) nam = "*" + nam;
-                  if( typ.IsArray() ) {
-                     std::stringstream s;
-                     s << typ.ArrayLength();
-                     nam += "[" + s.str() + "]";
-                  }
-                  char*  add = (char*)obj + mem.Offset();
-                  if ( Cintex::Debug() > 2 )  {
-                     cout << "Cintex: Showmembers: ("<< tcl->GetName() << ") " << par << nam.c_str() 
-                          << " = " << (void*)add << " Offset:" << mem.Offset() << endl;
-                  }
-                  insp.Inspect(tcl, par, nam.c_str(), add);
-                  if ( !typ.IsFundamental() && !typ.IsPointer() ) {
-                     string tnam  = mem.Properties().HasProperty("iotype") ? CintName(mem.Properties().PropertyAsString("iotype")) : CintName(typ);
-                     TClass* tmcl = ROOT::GetROOT()->GetClass(tnam.c_str());
-                     if ( tmcl ) {
-                        ::strcat(par,nam.c_str());
-                        ::strcat(par,".");
-                        ::ROOT::GenericShowMembers(tnam.c_str(), add, insp, par, false); // last arg is transient, this must be false
-                        par[ncp] = 0;
-                     }
-//                      else {
-//                         Stub_ShowMembers(tmcl, typ, add, insp, par);
-//                      }
-                  }
+            insp.Inspect(tcl, par, nam.c_str(), add);
+            if ( !typ.IsFundamental() && !typ.IsPointer() ) {
+               string tnam  = mem.Properties().HasProperty("iotype") ? CintName(mem.Properties().PropertyAsString("iotype")) : CintName(typ);
+               TClass* tmcl = ROOT::GetROOT()->GetClass(tnam.c_str());
+               if ( tmcl ) {
+                  ::strcat(par,nam.c_str());
+                  ::strcat(par,".");
+                  Stub_ShowMembers(tmcl, typ, add, insp, par);
+                  par[ncp] = 0;
                }
             }
-            // Loop over bases
-            for ( size_t b = 0; b < cl.BaseSize(); b++ ) {
-               Base BaseNth = cl.BaseAt(b);
-               string bname = CintName(BaseNth.ToType());
-               char* ptr = (char*)obj + BaseNth.Offset(obj);
-               TClass* bcl = ROOT::GetROOT()->GetClass(bname.c_str());
-               if( bcl ) Stub_ShowMembers( bcl, BaseNth.ToType(), ptr, insp, par);
-            }
          }
-      }}
+      }
+      // Loop over bases
+      for ( size_t b = 0; b < cl.BaseSize(); b++ ) {
+         Base BaseNth = cl.BaseAt(b);
+         string bname = CintName(BaseNth.ToType());
+         char* ptr = (char*)obj + BaseNth.Offset(obj);
+         TClass* bcl = ROOT::GetROOT()->GetClass(bname.c_str());
+         if( bcl ) Stub_ShowMembers( bcl, BaseNth.ToType(), ptr, insp, par);
+      }
+   }
+}}

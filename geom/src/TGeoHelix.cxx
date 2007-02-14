@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoHelix.cxx,v 1.2 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHelix.cxx,v 1.3 2006/04/19 09:11:57 brun Exp $
 // Author: Andrei Gheata   28/04/04
 
 /*************************************************************************
@@ -40,6 +40,7 @@
 //   - computation of the total track length along a helix
 
 #include "TGeoHelix.h"
+#include "TMath.h"
 
 ClassImp(TGeoHelix)
 

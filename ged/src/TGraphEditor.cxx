@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGraphEditor.cxx,v 1.19 2006/06/23 15:19:22 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGraphEditor.cxx,v 1.22 2007/02/03 18:12:31 brun Exp $
 // Author: Carsten Hof   16/08/04
 
 /*************************************************************************
@@ -33,18 +33,13 @@
 //End_Html
 
 #include "TGComboBox.h"
-#include "TGButton.h"
 #include "TGButtonGroup.h"
 #include "TGraphEditor.h"
-#include "TGedFrame.h"
 #include "TGTextEntry.h"
 #include "TGToolTip.h"
 #include "TGLabel.h"
-#include "TGClient.h"
-#include "TColor.h"
+#include "TGraph.h"
 #include "TVirtualPad.h"
-#include "TStyle.h"
-#include "TClass.h"
 
 ClassImp(TGraphEditor)
 
@@ -145,7 +140,7 @@ void TGraphEditor::ConnectSignals2Slots()
    // Connect signals to slots.
 
    fTitle->Connect("TextChanged(const char *)","TGraphEditor",this,"DoTitle(const char *)");
-   fgr->Connect("Released(Int_t)","TGraphEditor",this,"DoShape()");
+   fgr->Connect("Clicked(Int_t)","TGraphEditor",this,"DoShape()");
    fMarkerOnOff->Connect("Toggled(Bool_t)","TGraphEditor",this,"DoMarkerOnOff(Bool_t)");
    fWidthCombo->Connect("Selected(Int_t)", "TGraphEditor", this, "DoGraphLineWidth()");
    fExSide->Connect("Clicked()","TGraphEditor",this,"DoGraphLineWidth()");

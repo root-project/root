@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.193 2006/12/01 11:50:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.204 2007/02/10 15:38:41 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -77,8 +77,6 @@
 #include "TClassEdit.h"
 #include "TClassGenerator.h"
 #include "TDataType.h"
-#include "TFile.h"
-#include "TMapFile.h"
 #include "TDatime.h"
 #include "TStyle.h"
 #include "TObjectTable.h"
@@ -97,7 +95,6 @@
 #include "TApplication.h"
 #include "TCint.h"
 #include "TGuiFactory.h"
-#include "TRandom3.h"
 #include "TMessageHandler.h"
 #include "TFolder.h"
 #include "TQObject.h"
@@ -115,10 +112,7 @@ namespace std {} using namespace std;
 #include "TUnixSystem.h"
 #elif defined(R__WIN32)
 #include "TWinNTSystem.h"
-#elif defined(R__VMS)
-#include "TVmsSystem.h"
 #endif
-
 // Mutex for protection of concurrent gROOT access
 TVirtualMutex* gROOTMutex = 0;
 
@@ -183,65 +177,6 @@ static void CleanUpROOTAtExit()
    }
 }
 
-//______________________________________________________________________________
-namespace ROOT {
-#define R__USE_STD_MAP
-   class TMapTypeToTClass {
-#if defined R__USE_STD_MAP
-     // This wrapper class allow to avoid putting #include <map> in the
-     // TROOT.h header file.
-   public:
-#ifdef R__GLOBALSTL
-      typedef map<string,TClass*>                 IdMap_t;
-#else
-      typedef std::map<std::string,TClass*>       IdMap_t;
-#endif
-      typedef IdMap_t::key_type                   key_type;
-      typedef IdMap_t::const_iterator             const_iterator;
-      typedef IdMap_t::size_type                  size_type;
-#ifdef R__WIN32
-     // Window's std::map does NOT defined mapped_type
-      typedef TClass*                             mapped_type;
-#else
-      typedef IdMap_t::mapped_type                mapped_type;
-#endif
-
-   private:
-      IdMap_t fMap;
-
-   public:
-      void Add(const key_type &key, mapped_type &obj) {
-         fMap[key] = obj;
-      }
-      mapped_type Find(const key_type &key) const {
-         IdMap_t::const_iterator iter = fMap.find(key);
-         mapped_type cl = 0;
-         if (iter != fMap.end()) cl = iter->second;
-         return cl;
-      }
-      void Remove(const key_type &key) { fMap.erase(key); }
-#else
-   private:
-      TMap fMap;
-
-   public:
-      void Add(const char *key, TClass *&obj) {
-         TObjString *realkey = new TObjString(key);
-         fMap.Add(realkey, obj);
-      }
-      TClass* Find(const char *key) const {
-         const TPair *a = (const TPair *)fMap.FindObject(key);
-         if (a) return (TClass*) a->Value();
-         return 0;
-      }
-      void Remove(const char *key) {
-         TObjString realkey(key);
-         TObject *actual = fMap.Remove(&realkey);
-         delete actual;
-      }
-#endif
-   };
-}
 
 
 Int_t         TROOT::fgDirLevel = 0;
@@ -262,7 +197,6 @@ namespace ROOT {
 }
 
 TROOT      *gROOT = ROOT::GetROOT();     // The ROOT of EVERYTHING
-TRandom    *gRandom;                     // Global pointer to random generator
 
 // Global debug flag (set to > 0 to get debug output).
 // Can be set either via the interpreter (gDebug is exported to CINT),
@@ -272,7 +206,7 @@ Int_t       gDebug;
 
 
 
-extern "C" void R__SetZipMode(int mode); //function defined in zip/inc/Bits.h
+//extern "C" void R__SetZipMode(int mode); //function defined in zip/inc/Bits.h
 
 ClassImp(TROOT)
 
@@ -347,7 +281,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fBuiltTime       = ITIMQQ(__TIME__);
 
    fClasses         = new THashTable(800,3);
-   fIdMap           = new IdMap_t;
+   //fIdMap           = new IdMap_t;
    fStreamerInfo    = new TObjArray(100);
    fClassGenerators = new TList;
 
@@ -438,7 +372,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fLineIsProcessing = 1;   // This prevents WIN32 "Windows" thread to pick ROOT objects with mouse
    gDirectory     = this;
    gPad           = 0;
-   gRandom        = new TRandom3;
 
    //set name of graphical cut class for the graphics editor
    //cannot call SetCutClassName at this point because the TClass of TCutG
@@ -560,17 +493,18 @@ void TROOT::AddClass(TClass *cl)
 {
    // Add a class to the list and map of classes.
 
-   if (!cl) return;
-   GetListOfClasses()->Add(cl);
-   if (cl->GetTypeInfo()) {
-      fIdMap->Add(cl->GetTypeInfo()->name(),cl);
-   }
+   //if (!cl) return;
+   //GetListOfClasses()->Add(cl);
+   //if (cl->GetTypeInfo()) {
+   //   fIdMap->Add(cl->GetTypeInfo()->name(),cl);
+   //}
+   TClass::AddClass(cl);
 }
 
 //______________________________________________________________________________
 void TROOT::AddClassGenerator(TClassGenerator *generator)
 {
-   // Add a class generator.  This generator will be called by TROOT::GetClass
+   // Add a class generator.  This generator will be called by TClass::GetClass
    // in case its does not find a loaded rootcint dictionary to request the
    // creation of a TClass object.
 
@@ -761,13 +695,7 @@ TObject *TROOT::FindObjectAny(const char *name) const
 
    TObject *obj = fRootFolder->FindObjectAny(name);
    if (obj) return obj;
-   TFile *f;
-   TIter next(fFiles);
-   while ((f = (TFile*)next())) {
-      obj = f->GetList()->FindObject(name);
-      if (obj) return obj;
-   }
-   return 0;
+   return gDirectory->FindObjectAnyFile(name);
 }
 
 //______________________________________________________________________________
@@ -842,7 +770,7 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
 
       const char *altname = gInterpreter->GetInterpreterTypeName(name);
       if (altname && strcmp(altname,name)!=0) {
-         cl = gROOT->GetClass(altname,load);
+         cl = TClass::GetClass(altname,load);
       }
    }
    if (cl==0) {
@@ -852,17 +780,17 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
    }
    if (cl == 0) {
       TString resolvedName = TClassEdit::ResolveTypedef(name,kFALSE).c_str();
-      if (resolvedName != name) cl = GetClass(resolvedName,load);
+      if (resolvedName != name) cl = TClass::GetClass(resolvedName,load);
    }
    if (cl == 0 && (strncmp(name,"std::",5)==0)) {
       // CINT sometime ignores the std namespace for stl containers,
       // so let's try without it.
-      if (strlen(name+5)) cl = GetClass(name+5,load);
+      if (strlen(name+5)) cl = TClass::GetClass(name+5,load);
    }
 
    if (load && cl==0) {
       // Create an Emulated class for this container.
-      cl = new TClass(name, GetClass("TStreamerInfo")->GetClassVersion(), 0, 0, -1, -1 );
+      cl = new TClass(name, TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion(), 0, 0, -1, -1 );
       cl->SetBit(TClass::kIsEmulation);
    }
 
@@ -872,193 +800,19 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
 //______________________________________________________________________________
 TClass *TROOT::GetClass(const char *name, Bool_t load) const
 {
-   // Return pointer to class with name.
+   // Return pointer to class with name. Obsolete, use TClass::GetClass directly
 
-   if (!name || !strlen(name)) return 0;
-   if (!GetListOfClasses())    return 0;
-
-   TString resolvedName;
-
-   TClass *cl = (TClass*)GetListOfClasses()->FindObject(name);
-
-   if (!cl) {
-      resolvedName = TClassEdit::ResolveTypedef(name,kTRUE).c_str();
-      cl = (TClass*)GetListOfClasses()->FindObject(resolvedName);
-   }
-
-   if (cl) {
-
-      if (cl->IsLoaded()) return cl;
-
-      //we may pass here in case of a dummy class created by TStreamerInfo
-      load = kTRUE;
-
-      if (TClassEdit::IsSTLCont(name)) {
-
-         const char *altname = gInterpreter->GetInterpreterTypeName(name);
-         if (altname && strcmp(altname,name)!=0) {
-
-            // Remove the existing (soon to be invalid) TClass object to
-            // avoid an infinite recursion.
-            GetListOfClasses()->Remove(cl);
-            TClass *newcl = GetClass(altname,load);
-
-            // since the name are different but we got a TClass, we assume
-            // we need to replace and delete this class.
-            assert(newcl!=cl);
-            cl->ReplaceWith(newcl);
-            delete cl;
-            return newcl;
-         }
-      }
-
-   } else {
-
-      if (!TClassEdit::IsSTLCont(name)) {
-
-         // If the name is actually an STL container we prefer the
-         // short name rather than the true name (at least) in
-         // a first try!
-
-         TDataType *objType = GetType(name, load);
-         if (objType) {
-            const char *typdfName = objType->GetTypeName();
-            if (typdfName && strcmp(typdfName, name)) {
-               cl = GetClass(typdfName, load);
-               return cl;
-            }
-         }
-
-      } else {
-
-         cl = FindSTLClass(name,kFALSE);
-
-         if (cl) {
-            if (cl->IsLoaded()) return cl;
-
-            //we may pass here in case of a dummy class created by TStreamerInfo
-            return gROOT->GetClass(cl->GetName(),kTRUE);
-         }
-
-      }
-
-   }
-
-   if (!load) return 0;
-
-   TClass *loadedcl = 0;
-   if (cl) loadedcl = LoadClass(cl->GetName());
-   else    loadedcl = LoadClass(name);
-
-   if (loadedcl) return loadedcl;
-
-   if (cl) return cl;  // If we found the class but we already have a dummy class use it.
-
-   static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
-   if (strcmp(name,full_string_name)==0
-      || ( strncmp(name,"std::",5)==0 && ((strcmp(name+5,"string")==0)||(strcmp(name+5,full_string_name)==0)))) {
-      return gROOT->GetClass("string");
-   }
-   if (TClassEdit::IsSTLCont(name)) {
-
-      return FindSTLClass(name,kTRUE);
-
-   } else if ( strncmp(name,"std::",5)==0 ) {
-
-      return GetClass(name+5,load);
-
-   } else if ( strstr(name,"std::") != 0 ) {
-
-      // Let's try without the std:: in the template parameters.
-      TString rname( TClassEdit::ResolveTypedef(name,kTRUE) );
-      if (rname != name) {
-         return GetClass( rname, load );
-      }
-   }
-
-   if (!strcmp(name, "long long")||!strcmp(name,"unsigned long long"))
-      return 0; // reject long longs
-
-   //last attempt. Look in CINT list of all (compiled+interpreted) classes
-
-   // CheckClassInfo might modify the content of its parameter if it is
-   // a template and has extra or missing space (eg. one<two<tree>> becomes
-   // one<two<three> >
-   char *modifiable_name = new char[strlen(name)*2];
-   strcpy(modifiable_name,name);
-   if (gInterpreter->CheckClassInfo(modifiable_name)) {
-      const char *altname = gInterpreter->GetInterpreterTypeName(modifiable_name,kTRUE);
-      if (strcmp(altname,name)!=0) {
-         // altname now contains the full name of the class including a possible
-         // namespace if there has been a using namespace statement.
-         delete [] modifiable_name;
-         return GetClass(altname,load);
-      }
-      TClass *ncl = new TClass(name, 1, 0, 0, -1, -1);
-      if (!ncl->IsZombie()) {
-         delete [] modifiable_name;
-         return ncl;
-      }
-      delete ncl;
-   }
-   delete [] modifiable_name;
-   return 0;
+   return TClass::GetClass(name,load);
 }
+
 
 //______________________________________________________________________________
 TClass *TROOT::GetClass(const type_info& typeinfo, Bool_t load) const
 {
-   // Return pointer to class with name.
+   // Return pointer to class from its name. Obsolete, use TClass::GetClass directly
+   // See TClass::GetClass
 
-   if (!GetListOfClasses())    return 0;
-
-   TClass* cl = fIdMap->Find(typeinfo.name());
-
-   if (cl) {
-      if (cl->IsLoaded()) return cl;
-      //we may pass here in case of a dummy class created by TStreamerInfo
-      load = kTRUE;
-   } else {
-     // Note we might need support for typedefs and simple types!
-
-     //      TDataType *objType = GetType(name, load);
-     //if (objType) {
-     //    const char *typdfName = objType->GetTypeName();
-     //    if (typdfName && strcmp(typdfName, name)) {
-     //       cl = GetClass(typdfName, load);
-     //       return cl;
-     //    }
-     // }
-   }
-
-   if (!load) return 0;
-
-   VoidFuncPtr_t dict = TClassTable::GetDict(typeinfo);
-   if (dict) {
-      (dict)();
-      TClass *cl = GetClass(typeinfo);
-      if (cl) cl->PostLoadCheck();
-      return cl;
-   }
-   if (cl) return cl;
-
-   TIter next(fClassGenerators);
-   TClassGenerator *gen;
-   while( (gen = (TClassGenerator*) next()) ) {
-      cl = gen->GetClass(typeinfo,load);
-      if (cl) {
-         cl->PostLoadCheck();
-         return cl;
-      }
-   }
-
-   //last attempt. Look in CINT list of all (compiled+interpreted) classes
-   //   if (gInterpreter->CheckClassInfo(name)) {
-   //      TClass *ncl = new TClass(name, 1, 0, 0, 0, -1, -1);
-   //      if (!ncl->IsZombie()) return ncl;
-   //      delete ncl;
-   //   }
-   return 0;
+   return TClass::GetClass(typeinfo,load);
 }
 
 //______________________________________________________________________________
@@ -1358,7 +1112,7 @@ Int_t TROOT::IgnoreInclude(const char *fname, const char * /*expandedfname*/)
    if (where != kNPOS) className.Remove( where );
    className = gSystem->BaseName(className);
 
-   TClass *cla = GetClass(className);
+   TClass *cla = TClass::GetClass(className);
    if ( cla ) {
       if (cla->GetDeclFileLine() < 0) return 0; // to a void an error with VisualC++
       const char *decfile = gSystem->BaseName(cla->GetDeclFileName());
@@ -1378,8 +1132,6 @@ void TROOT::InitSystem()
       gSystem = new TUnixSystem;
 #elif defined(R__WIN32)
       gSystem = new TWinNTSystem;
-#elif defined(R__VMS)
-      gSystem = new TVmsSystem;
 #else
       gSystem = new TSystem;
 #endif
@@ -1395,8 +1147,9 @@ void TROOT::InitSystem()
 
       gDebug = gEnv->GetValue("Root.Debug", 0);
 
-      Int_t zipmode = gEnv->GetValue("Root.ZipMode",1);
-      R__SetZipMode(zipmode);
+      //By default the zipmode is 1 (see Bits.h)
+      //Int_t zipmode = gEnv->GetValue("Root.ZipMode",1);
+      //R__SetZipMode(zipmode);
 
       const char *sdeb;
       if ((sdeb = gSystem->Getenv("ROOTDEBUG")))
@@ -1435,7 +1188,7 @@ void TROOT::InitThreads()
 //______________________________________________________________________________
 TClass *TROOT::LoadClass(const char *classname) const
 {
-   // Helper function used by TROOT::GetClass().
+   // Helper function used by TClass::GetClass().
    // This function attempts to load the dictionary for 'classname'
    // either from the TClassTable or from the list of generator.
 
@@ -1469,7 +1222,7 @@ TClass *TROOT::LoadClass(const char *classname) const
       // The dictionary generation might change/delete classname
       TString clname(classname);
       (dict)();
-      TClass *ncl = GetClass(clname, kFALSE);
+      TClass *ncl = TClass::GetClass(clname, kFALSE);
       if (ncl) ncl->PostLoadCheck();
       return ncl;
    }
@@ -1662,7 +1415,7 @@ void  TROOT::Message(Int_t id, const TObject *obj)
 }
 
 //______________________________________________________________________________
-void TROOT::ProcessLine(const char *line, Int_t *error)
+Long_t TROOT::ProcessLine(const char *line, Int_t *error)
 {
    // Process interpreter command via TApplication::ProcessLine().
    // On Win32 the line will be processed a-synchronously by sending
@@ -1672,6 +1425,7 @@ void TROOT::ProcessLine(const char *line, Int_t *error)
    // The possible error codes are defined by TInterpreter::EErrorCode. In
    // particular, error will equal to TInterpreter::kProcessing until the
    // CINT interpreted thread has finished executing the line.
+   // Returns the result of the command, cast to a Long_t.
 
    if (!fApplication) {
       // circular Form() buffer will be re-used in CreateApplication() (too
@@ -1682,11 +1436,11 @@ void TROOT::ProcessLine(const char *line, Int_t *error)
       delete [] sline;
    }
 
-   fApplication->ProcessLine(line, kFALSE, error);
+   return fApplication->ProcessLine(line, kFALSE, error);
 }
 
 //______________________________________________________________________________
-void TROOT::ProcessLineSync(const char *line, Int_t *error)
+Long_t TROOT::ProcessLineSync(const char *line, Int_t *error)
 {
    // Process interpreter command via TApplication::ProcessLine().
    // On Win32 the line will be processed synchronously (i.e. it will
@@ -1694,6 +1448,7 @@ void TROOT::ProcessLineSync(const char *line, Int_t *error)
    // the line). On non-Win32 platforms there is not difference between
    // ProcessLine() and ProcessLineSync().
    // The possible error codes are defined by TInterpreter::EErrorCode.
+   // Returns the result of the command, cast to a Long_t.
 
    if (!fApplication) {
       // circular Form() buffer will be re-used in CreateApplication() (too
@@ -1704,7 +1459,7 @@ void TROOT::ProcessLineSync(const char *line, Int_t *error)
       delete [] sline;
    }
 
-   fApplication->ProcessLine(line, kTRUE, error);
+   return fApplication->ProcessLine(line, kTRUE, error);
 }
 
 //______________________________________________________________________________
@@ -1754,11 +1509,12 @@ void TROOT::RemoveClass(TClass *oldcl)
 {
    // Remove a class from the list and map of classes
 
-   if (!oldcl) return;
-   GetListOfClasses()->Remove(oldcl);
-   if (oldcl->GetTypeInfo()) {
-      fIdMap->Remove(oldcl->GetTypeInfo()->name());
-   }
+   //if (!oldcl) return;
+   //GetListOfClasses()->Remove(oldcl);
+   //if (oldcl->GetTypeInfo()) {
+   //   fIdMap->Remove(oldcl->GetTypeInfo()->name());
+   //}
+   TClass::RemoveClass(oldcl);
 }
 
 //______________________________________________________________________________
@@ -1808,7 +1564,7 @@ void TROOT::SetCutClassName(const char *name)
       Error("SetCutClassName","Invalid class name");
       return;
    }
-   TClass *cl = GetClass(name);
+   TClass *cl = TClass::GetClass(name);
    if (!cl) {
       Error("SetCutClassName","Unknown class:%s",name);
       return;
@@ -1884,25 +1640,23 @@ const char *TROOT::GetMacroPath()
    if (macroPath.Length() == 0) {
       macroPath = gEnv->GetValue("Root.MacroPath", (char*)0);
 #if defined(R__WIN32)
-      macroPath.ReplaceAll(" ", ";");
+      macroPath.ReplaceAll("; ", ";");
 #else
-      macroPath.ReplaceAll(" ", ":");
+      macroPath.ReplaceAll(": ", ":");
 #endif
       if (macroPath.Length() == 0)
-#if !defined (R__VMS) && !defined(R__WIN32)
+#if !defined(R__WIN32)
    #ifdef ROOTMACRODIR
          macroPath = ".:" ROOTMACRODIR;
    #else
          macroPath = TString(".:") + gRootDir + "/macros";
    #endif
-#elif !defined(__VMS)
+#else
    #ifdef ROOTMACRODIR
          macroPath = ".;" ROOTMACRODIR;
    #else
          macroPath = TString(".;") + gRootDir + "/macros";
    #endif
-#else
-         macroPath = TString(gRootDir) + "MACROS]";
 #endif
    }
 

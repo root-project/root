@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TH2Editor.h,v 1.12 2006/06/23 15:19:21 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TH2Editor.h,v 1.14 2007/01/25 17:35:56 antcheva Exp $
 // Author: Carsten Hof 08/08/04
 
 /*************************************************************************
@@ -19,11 +19,9 @@
 //  Editor changing histogram attributes                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
-#endif
-#ifndef ROOT_TH2
-#include "TH2.h"
 #endif
 
 class TH2;
@@ -35,14 +33,11 @@ class TString;
 class TGDoubleHSlider;
 class TGHSlider;
 class TGNumberEntry;
-class TGButtonGroup;
 class TGHButtonGroup;
 class TGRadioButton;
 class TGNumberEntryField;
 class TGColorSelect;
 class TGedPatternSelect;
-class TAttFill;
-class TGTab;
 class TGTextButton;
 
 class TH2Editor : public TGedFrame {
@@ -114,19 +109,22 @@ protected:
    TGCheckButton       *fDelaydraw;       // Delayed drawing of the new axis range
    TGColorSelect       *fFrameColor;      // Select the Frame Color
    TGedPatternSelect   *fFramePattern;    // Select the Frame Pattern Style
+   TString              fCutString;       // Contais info about graphical cuts (if any)
 
    static  TGComboBox *BuildHistTypeComboBox(TGFrame *parent, Int_t id);
    static  TGComboBox *BuildHistCoordsComboBox(TGFrame *parent, Int_t id);
    static  TGComboBox *BuildHistContComboBox(TGFrame* parent, Int_t id);
 
    virtual void   ConnectSignals2Slots();
-   void           CreateBinTab();       // Creates the Bin Tab (part of the SetGedEditor)
+           void   CreateBinTab();       // Creates the Bin Tab (part of the SetGedEditor)
+
 private:
-   void PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4);
+   void    PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4);
    TString GetHistTypeLabel();
    TString GetHistCoordsLabel();
    TString GetHistContLabel();
    TString GetHistAdditiveLabel();
+   TString GetCutOptionString();
 
    Int_t     fPx1old,
              fPy1old,

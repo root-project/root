@@ -237,17 +237,14 @@ void G__scratch_upto(G__dictposition *dictpos)
 
 
 /***********************************************************************
-* int G__free_ifunc_table_upto()
+* int G__free_ifunc_table_upto_ifunc()
 *
 ***********************************************************************/
-int G__free_ifunc_table_upto(G__ifunc_table *ifunc,G__ifunc_table *dictpos,int ifn)
+static
+int G__free_ifunc_table_upto_ifunc(G__ifunc_table *ifunc,G__ifunc_table *dictpos,int ifn)
 {
   int i,j;
-  if(ifunc->next) {
-    if(G__free_ifunc_table_upto(ifunc->next,dictpos,ifn)) return(1);
-    free((void*)ifunc->next);
-    ifunc->next=(struct G__ifunc_table *)NULL;
-  }
+
   /* Freeing default parameter storage */
   if(ifunc==dictpos && ifn==ifunc->allifunc) {return(1);}
   for(i=ifunc->allifunc-1;i>=0;i--) {
@@ -294,6 +291,33 @@ int G__free_ifunc_table_upto(G__ifunc_table *ifunc,G__ifunc_table *dictpos,int i
   ifunc->page=0;
   return(0);
   /* Do not free 'ifunc' because it can be a global/static object */
+}
+
+/***********************************************************************
+* int G__free_ifunc_table_upto()
+*
+***********************************************************************/
+int G__free_ifunc_table_upto(G__ifunc_table *ifunc,G__ifunc_table *dictpos,int ifn)
+{
+  while (ifunc && ifunc != dictpos)
+     ifunc = ifunc->next;
+  if (ifunc != dictpos) {
+     G__fprinterr(G__serr,"G__free_ifunc_table_upto: dictpos not found in ifunc list!\n");
+     return 1;
+  }
+
+  G__ifunc_table* next = ifunc->next;
+  int ret = G__free_ifunc_table_upto_ifunc(ifunc, dictpos, ifn);
+  ifunc->next=(struct G__ifunc_table *)NULL;
+
+  while (next) {
+     ifunc = next;
+     next = ifunc->next;
+     ret += G__free_ifunc_table_upto_ifunc(ifunc, dictpos, ifn);
+     free((void*)ifunc);
+  }
+
+  return ret;
 }
 
 /***********************************************************************
@@ -478,7 +502,7 @@ void G__scratch_globals_upto(G__dictposition *dictpos)
 *
 ***********************************************************************/
 static int G__destroy_upto_vararray(G__var_array *var,int global
-                    ,G__var_array *dictpos,int ig15)
+                    ,G__var_array* /*dictpos*/,int ig15)
 {
   int itemp=0,itemp1=0;
   
@@ -489,7 +513,12 @@ static int G__destroy_upto_vararray(G__var_array *var,int global
   long store_struct_offset; /* used to be int */
   int store_return;
   int store_prerun;
+
   int remain=ig15;
+  if (remain < 0) 
+     // called via G__destroy
+     remain = 0;
+
   int cpplink;
   int i,size;
   long address;
@@ -503,8 +532,21 @@ static int G__destroy_upto_vararray(G__var_array *var,int global
      * else (auto and static body) free
      * allocated memory area.
      *****************************************/
-    if((var->statictype[itemp]!=G__LOCALSTATIC||global) &&
-       var->statictype[itemp]!=G__COMPILEDGLOBAL) {
+     if (
+#ifdef G__ASM_WHOLEFUNC
+        (ig15 < 0 // G__destroy
+        && ((var->statictype[itemp] != G__LOCALSTATIC
+            || G__GLOBAL_VAR == global) && 
+        var->statictype[itemp] != G__COMPILEDGLOBAL &&
+        G__BYTECODELOCAL_VAR != global)) 
+       /* (G__BYTECODELOCAL_VAR == global &&
+        var->statictype[itemp] == G__LOCALSTATIC)) { */
+        || ig15 >= 0 
+           &&
+#endif
+       (var->statictype[itemp] != G__LOCALSTATIC || global) &&
+        var->statictype[itemp] != G__COMPILEDGLOBAL
+       ) {
       
       cpplink=0;
       /****************************************************
@@ -649,6 +691,25 @@ int G__destroy_upto(G__var_array *var,int global
    G__var_array *tail = var;
    G__var_array *prev = 0;
 
+#ifndef G__OLDIMPLEMENTATION2038
+   if (ig15 == -1) {
+     // called via G__destroy
+     /* This part is not needed in G__destroy_upto.  enclosing_scope and
+      * inner_scope members are assigned only as local variable table for
+      * bytecode function  in which case  G__destroy() is always used to
+      * deallocate the table */
+     var->enclosing_scope = (struct G__var_array*)NULL;
+     if(var->inner_scope) {
+       int i=0;
+       while(var->inner_scope[i]) {
+         G__destroy(var->inner_scope[i],global);
+         free((void*)var->inner_scope[i]);
+         ++i;
+       }
+     }
+   }
+#endif
+  
   /*******************************************
    * If there are any sub var array list,
    * destroy it too.
@@ -670,6 +731,7 @@ int G__destroy_upto(G__var_array *var,int global
    do {
       int remain = 0;
       if (!tail->next) remain = ig15;
+      if (ig15 < 0) remain = ig15; // always pass "called by G__destroy" flag
       ret += G__destroy_upto_vararray(tail, global, dictpos, remain);
       G__var_array *next = tail->next;
       if (next) free(tail);

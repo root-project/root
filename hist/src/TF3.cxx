@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.28 2006/05/17 16:37:25 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.30 2007/02/01 14:21:01 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "Riostream.h"
 #include "TColor.h"
 #include "TVirtualFitter.h"
+#include "TVirtualHistPainter.h"
 #include "TClass.h"
 
 ClassImp(TF3)
@@ -684,7 +685,7 @@ void TF3::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 0) {
-         TF3::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TF3::Class(), this, R__v, R__s, R__c);
          return;
       }
 
@@ -692,7 +693,7 @@ void TF3::Streamer(TBuffer &R__b)
       Int_t saved = 0;
       if (fType > 0 && fNsave <= 0) { saved = 1; Save(fXmin,fXmax,fYmin,fYmax,fZmin,fZmax);}
 
-      TF3::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TF3::Class(),this);
 
       if (saved) {delete [] fSave; fSave = 0; fNsave = 0;}
    }

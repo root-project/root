@@ -106,7 +106,7 @@ $(PROOFXO) $(PROOFXDO): $(XROOTDETAG)
 ifeq ($(PLATFORM),win32)
 $(PROOFXO) $(PROOFXDO): CXXFLAGS += $(PROOFXINCEXTRA)
 else
-ifeq ($(ICC_MAJOR),9)
+ifneq ($(ICC_GE_9),)
 # remove when xrootd has moved from strstream.h -> sstream.
 $(PROOFXO) $(PROOFXDO): CXXFLAGS += -Wno-deprecated $(PROOFXINCEXTRA)
 else

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodLikelihood.cxx,v 1.55 2006/11/17 00:21:35 stelzer Exp $ 
+// @(#)root/tmva $Id: MethodLikelihood.cxx,v 1.15 2007/01/30 10:19:25 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -102,11 +102,14 @@
 //End_Html
 //_______________________________________________________________________
 
+#include <cmath>
 #include "TMatrixD.h"
 #include "TVector.h"
 #include "TObjString.h"
 #include "TFile.h"
 #include "TKey.h"
+#include "TH1.h"
+#include "TClass.h"
 
 #ifndef ROOT_TMVA_MethodLikelihood
 #include "TMVA/MethodLikelihood.h"
@@ -565,7 +568,7 @@ void  TMVA::MethodLikelihood::ReadWeightsFromStream( istream& istr )
    TIter next(fFin->GetListOfKeys());
    TKey *key;
    while ((key = (TKey*)next())) {
-      TClass *cl = gROOT->GetClass(key->GetClassName());
+      TClass *cl = TClass::GetClass(key->GetClassName());
       if (!cl->InheritsFrom("TH1F")) continue;
       TH1F *h = (TH1F*)key->ReadObj();
       TString hname= h->GetName();

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #
-# $Id:$
+# $Id: proofserv.sh,v 1.1 2006/11/20 15:56:35 rdm Exp $
 #
 # The proofserv wrapper script can be used to initialize the
 # environment for proofserv as needed. It could be extended
@@ -14,7 +14,7 @@
 
 
 #
-# If requested, intialize the environment.
+# If requested, initialize the environment.
 #
 
 if [ -n "$PROOF_INITCMD" ]; then
@@ -23,9 +23,9 @@ if [ -n "$PROOF_INITCMD" ]; then
 fi
 
 #
-# Run master, slaves or all with a debug command.
+# Run master, workers or all with a debug command.
 # E.g in the client do:
-#   root [] TVirtualProof::AddEnvVar("PROOF_WRAPPERCMD","valgrind --log-file=/tmp/vg") 
+#   root [] TProof::AddEnvVar("PROOF_WRAPPERCMD","valgrind --log-file=/tmp/vg") 
 #
 if [ -n "$PROOF_WRAPPERCMD" ]; then
    WRAPPER="$PROOF_WRAPPERCMD "

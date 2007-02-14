@@ -1,4 +1,4 @@
-import sys
+import os, sys
 import ROOT
 
 ROOT.SetSignalPolicy( ROOT.kSignalFast )
@@ -12,7 +12,7 @@ macros = [
    'ntuple1.py', 'rootmarks.py' ]
 
 ### note: this function is defined in tutorials/rootlogon.C
-def bexec( macro, bench ):
+def bexec( dir, macro, bench ):
    if ROOT.gROOT.IsBatch():
       print 'Processing benchmark: %s\n' % macro
 
@@ -23,7 +23,7 @@ def bexec( macro, bench ):
    bench.Modified()
    bench.Update()
 
-   execfile( macro, sys.modules[ __name__ ].__dict__ )
+   execfile( os.path.join( macrodir, macro ), sys.modules[ __name__ ].__dict__ )
 
    summary2 = bench.GetPrimitive( 'TPave' )
    tmacro2 = summary2.GetLineWith( macro )
@@ -37,6 +37,8 @@ def bexec( macro, bench ):
 if __name__ == '__main__':
    ROOT.gROOT.Reset()
 
+   macrodir = os.path.dirname( os.path.join( os.getcwd(), __file__ ) )
+
  # window for keeping track of bench marks that are run
    bench = ROOT.TCanvas( 'bench','Benchmarks Summary', -1000, 50, 200, 500 )
    summary = ROOT.TPaveText( 0, 0, 1, 1 )
@@ -49,4 +51,4 @@ if __name__ == '__main__':
 
  # run benchmarks, the last one (rootmarks.py) results in a report
    for m in macros:
-      bexec( m, bench )
+      bexec( macrodir, m, bench )

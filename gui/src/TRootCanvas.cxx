@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.109 2006/10/13 07:52:00 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.111 2007/01/15 11:00:00 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include "TGStatusBar.h"
 #include "TGTextEditDialogs.h"
 #include "TROOT.h"
+#include "TClass.h"
 #include "TSystem.h"
 #include "TCanvas.h"
 #include "TBrowser.h"
@@ -45,6 +46,7 @@
 #include "TFile.h"
 #include "TInterpreter.h"
 #include "TEnv.h"
+#include "TMath.h"
 #include "Riostream.h"
 #include "TGDockableFrame.h"
 
@@ -872,14 +874,14 @@ again:
                      }
                      if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
                         TVirtualPadEditor::Terminate();
-                     if (gROOT->GetClass("TStyleManager"))
+                     if (TClass::GetClass("TStyleManager"))
                         gROOT->ProcessLine("TStyleManager::Terminate()");
                      gApplication->Terminate(0);
                      break;
 
                   // Handle Edit menu items...
                   case kEditStyle:
-                     if (!gROOT->GetClass("TStyleManager"))
+                     if (!TClass::GetClass("TStyleManager"))
                         gSystem->Load("libGed");
                      gROOT->ProcessLine("TStyleManager::Show()");
                      break;

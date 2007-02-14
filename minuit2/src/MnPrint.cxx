@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnPrint.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnPrint.cxx,v 1.2 2006/07/03 22:06:42 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -35,7 +35,7 @@ std::ostream& operator<<(std::ostream& os, const LAVector& vec) {
       os << std::endl;
       int nrow = vec.size();
       for (int i = 0; i < nrow; i++) {
-         os.precision(6); os.width(13); 
+         os.precision(8); os.width(15); 
          os << vec(i) << std::endl;
       }
       os << std::endl;
@@ -51,7 +51,7 @@ std::ostream& operator<<(std::ostream& os, const LASymMatrix& matrix) {
       int n = matrix.Nrow();
       for (int i = 0; i < n; i++) {
          for (int j = 0; j < n; j++) {
-            os.precision(6); os.width(13); os << matrix(i,j);
+            os.precision(8); os.width(15); os << matrix(i,j);
          }
          os << std::endl;
       }
@@ -63,7 +63,7 @@ std::ostream& operator<<(std::ostream& os, const MnUserParameters& par) {
    // print the MnUserParameter object
    os << std::endl;
    
-   os << "# ext. |" << "|   Name    |" << "|   type  |" << "|   Value   |" << "|  Error +/- " << std::endl;
+   os << "# ext. |" << "|   Name    |" << "|   type  |" << "|     Value     |" << "|  Error +/- " << std::endl;
    
    os << std::endl;
    
@@ -73,12 +73,12 @@ std::ostream& operator<<(std::ostream& os, const MnUserParameters& par) {
       os << std::setw(4) << (*ipar).Number() << std::setw(5) << "||"; 
       os << std::setw(10) << (*ipar).Name()   << std::setw(3) << "||";
       if((*ipar).IsConst()) {
-         os << "  const  ||" << std::setprecision(4) << std::setw(10) << (*ipar).Value() << " ||" << std::endl;
+         os << "  const  ||" << std::setprecision(8) << std::setw(14) << (*ipar).Value() << " ||" << std::endl;
       } else if((*ipar).IsFixed()) {
-         os << "  fixed  ||" << std::setprecision(4) << std::setw(10) << (*ipar).Value() << " ||" << std::endl;
+         os << "  fixed  ||" << std::setprecision(8) << std::setw(14) << (*ipar).Value() << " ||" << std::endl;
       } else if((*ipar).HasLimits()) {
          if((*ipar).Error() > 0.) {
-            os << " limited ||" << std::setprecision(4) << std::setw(10) << (*ipar).Value();
+            os << " limited ||" << std::setprecision(8) << std::setw(14) << (*ipar).Value();
             if(fabs((*ipar).Value() - (*ipar).LowerLimit()) < par.Precision().Eps2()) {
                os <<"*";
                atLoLim = true;
@@ -87,14 +87,14 @@ std::ostream& operator<<(std::ostream& os, const MnUserParameters& par) {
                os <<"**";
                atHiLim = true;
             }
-            os << " ||" << std::setw(8) << (*ipar).Error() << std::endl;
+            os << " ||" << std::setw(12) << (*ipar).Error() << std::endl;
          } else
-            os << "  free   ||" << std::setprecision(4) << std::setw(10) << (*ipar).Value() << " ||" << std::setw(8) << "no" << std::endl;
+            os << "  free   ||" << std::setprecision(8) << std::setw(14) << (*ipar).Value() << " ||" << std::setw(12) << "no" << std::endl;
       } else {
          if((*ipar).Error() > 0.)
-            os << "  free   ||" << std::setprecision(4) << std::setw(10) << (*ipar).Value() << " ||" << std::setw(8) << (*ipar).Error() << std::endl;
+            os << "  free   ||" << std::setprecision(8) << std::setw(14) << (*ipar).Value() << " ||" << std::setw(12) << (*ipar).Error() << std::endl;
          else
-            os << "  free   ||" << std::setprecision(4) << std::setw(10) << (*ipar).Value() << " ||" << std::setw(8) << "no" << std::endl;
+            os << "  free   ||" << std::setprecision(8) << std::setw(14) << (*ipar).Value() << " ||" << std::setw(12) << "no" << std::endl;
          
       }
    }
@@ -170,8 +170,8 @@ std::ostream& operator<<(std::ostream& os, const MnUserParameterState& state) {
    }
    
    os <<"# of function calls: "<<state.NFcn()<<std::endl;
-   os <<"function Value: "<<state.Fval()<<std::endl;
-   os <<"expected distance to the Minimum (edm): "<<state.Edm()<<std::endl;
+   os <<"function Value: "<< std::setprecision(12) << state.Fval()<<std::endl;
+   os <<"expected distance to the Minimum (edm): "<< std::setprecision(8) << state.Edm()<<std::endl;
    os <<"external parameters: "<<state.Parameters()<<std::endl;
    if(state.HasCovariance())
       os <<"covariance matrix: "<<state.Covariance()<<std::endl;
@@ -200,8 +200,8 @@ std::ostream& operator<<(std::ostream& os, const FunctionMinimum& min) {
    }
    
    os <<"# of function calls: "<<min.NFcn()<<std::endl;
-   os <<"minimum function Value: "<<min.Fval()<<std::endl;
-   os <<"minimum edm: "<<min.Edm()<<std::endl;
+   os <<"minimum function Value: "<< std::setprecision(12) << min.Fval()<<std::endl;
+   os <<"minimum edm: "<< std::setprecision(8) << min.Edm()<<std::endl;
    os <<"minimum internal state vector: "<<min.Parameters().Vec()<<std::endl;
    if(min.HasValidCovariance()) 
       os <<"minimum internal covariance matrix: "<<min.Error().Matrix()<<std::endl;
@@ -222,8 +222,8 @@ std::ostream& operator<<(std::ostream& os, const MinimumState& min) {
    
    os << std::endl;
    
-   os <<"minimum function Value: "<<min.Fval()<<std::endl;
-   os <<"minimum edm: "<<min.Edm()<<std::endl;
+   os <<"minimum function Value: "<< std::setprecision(12) << min.Fval()<<std::endl;
+   os <<"minimum edm: "<< std::setprecision(8) << min.Edm()<<std::endl;
    os <<"minimum internal state vector: "<<min.Vec()<<std::endl;
    os <<"minimum internal Gradient vector: "<<min.Gradient().Vec()<<std::endl;
    if(min.HasCovariance()) 
@@ -274,10 +274,10 @@ std::ostream& operator<<(std::ostream& os, const MinosError& me) {
       os << me.UpperState() <<std::endl;
    }
    
-   os << "# ext. |" << "|   Name    |" << "| Value@min |" << "|  negative |" << "| positive  " << std::endl;
+   os << "# ext. |" << "|   Name    |" << "|   Value@min   |" << "|    negative   |" << "|   positive  " << std::endl;
    os << std::setw(4) << me.Parameter() << std::setw(5) << "||"; 
    os << std::setw(10) << me.LowerState().Name(me.Parameter()) << std::setw(3) << "||";
-   os << std::setprecision(4) << std::setw(10) << me.Min() << " ||" << std::setprecision(4) << std::setw(10) << me.Lower() << " ||" << std::setw(8) << me.Upper() << std::endl;
+   os << std::setprecision(8) << std::setw(14) << me.Min() << " ||" << std::setprecision(8) << std::setw(14) << me.Lower() << " ||" << std::setw(14) << me.Upper() << std::endl;
    
    os << std::endl;
    

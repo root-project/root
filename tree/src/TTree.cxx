@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.310 2006/11/14 20:06:51 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.321 2007/02/10 10:17:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -32,11 +32,6 @@
 //  Making several branches is particularly interesting in the data analysis
 //  phase, when one wants to histogram some attributes of an object (entry)
 //  without reading all the attributes.
-//Begin_Html
-/*
-<img src="gif/ttree_classtree.gif">
-*/
-//End_Html
 //
 //  ==> TTree *tree = new TTree(name, title)
 //     Creates a Tree with name and title.
@@ -256,6 +251,7 @@
 
 #include "Api.h"
 #include "TArrayC.h"
+#include "TBufferFile.h"
 #include "TBaseClass.h"
 #include "TBasket.h"
 #include "TBranchClones.h"
@@ -271,6 +267,7 @@
 #include "TDataType.h"
 #include "TDirectory.h"
 #include "TError.h"
+#include "TEntryList.h"
 #include "TEventList.h"
 #include "TFile.h"
 #include "TFolder.h"
@@ -415,6 +412,7 @@ TTree::TTree()
 , fLeaves()
 , fAliases(0)
 , fEventList(0)
+, fEntryList(0)
 , fIndexValues()
 , fIndex()
 , fTreeIndex(0)
@@ -473,6 +471,7 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */)
 , fLeaves()
 , fAliases(0)
 , fEventList(0)
+, fEntryList(0)
 , fIndexValues()
 , fIndex()
 , fTreeIndex(0)
@@ -570,7 +569,10 @@ TTree::~TTree()
       // the clones to release their pointers to them.
       for (TObjLink* lnk = fClones->FirstLink(); lnk; lnk = lnk->Next()) {
          TTree* clone = (TTree*) lnk->GetObject();
-         clone->ResetBranchAddresses();
+         // clone->ResetBranchAddresses();
+
+         // Reset only the branch we have set the address of.
+         CopyAddresses(clone,kTRUE);
       }
    }
    // Get rid of our branches, note that this will also release
@@ -600,6 +602,12 @@ TTree::~TTree()
       // Note: fClones does not own its content.
       delete fClones;
       fClones = 0;
+   if (fEntryList){
+      if (fEntryList->TestBit(kCanDelete)){
+         delete fEntryList;
+         fEntryList=0;
+      }
+   }
    }
    delete fTreeIndex;
    fTreeIndex = 0;
@@ -625,6 +633,7 @@ void TTree::AddClone(TTree* clone)
       fClones->Add(clone);
    }
 }
+
 
 //______________________________________________________________________________
 TFriendElement* TTree::AddFriend(const char* treename, const char* filename)
@@ -889,7 +898,7 @@ TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass*
    //
 
    if (!ptrClass) {
-      TClass* claim = gROOT->GetClass(classname);
+      TClass* claim = TClass::GetClass(classname);
       if (claim && claim->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(claim->GetCollectionProxy())) {
          Error("Branch", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
                "Please generate the dictionary for this class (%s)", 
@@ -898,7 +907,7 @@ TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass*
       }
       return Branch(branchname, classname, (void*) addobj, bufsize, splitlevel);
    }
-   TClass* claim = gROOT->GetClass(classname);
+   TClass* claim = TClass::GetClass(classname);
    TClass* actualClass = 0;
    void** addr = (void**) addobj;
    if (addr) {
@@ -1071,7 +1080,7 @@ Int_t TTree::Branch(TCollection* li, Int_t bufsize /* = 32000 */, Int_t splitlev
                branchname.Form("%s", obj->GetName());
             }
          }
-         if (splitlevel > 1) {
+         if (splitlevel > 99) {
             branchname += ".";
          }
          Bronch(branchname, obj->ClassName(), li->GetObjectRef(obj), bufsize, splitlevel - 1);
@@ -1260,7 +1269,7 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
    //    the entries in the Tree randomly and your Tree is in split mode.
 
    gTree = this;
-   TClass* cl = gROOT->GetClass(classname);
+   TClass* cl = TClass::GetClass(classname);
    if (!cl) {
       Error("BranchOld", "Cannot find class: '%s'", classname);
       return 0;
@@ -1312,7 +1321,7 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
          // info to the current directory's file.
          // Oh yes, and we also do this for all of
          // their base classes.
-         TClass* clm = gROOT->GetClass(dm->GetFullTypeName());
+         TClass* clm = TClass::GetClass(dm->GetFullTypeName());
          if (clm) {
             BuildStreamerInfo(clm, (char*) obj + rd->GetThisOffset());
          }
@@ -1354,7 +1363,7 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
          // -- We have a pointer to an object or a pointer to an array of basic types.
          TClass* clobj = 0;
          if (!dm->IsBasic()) {
-            clobj = gROOT->GetClass(dm->GetTypeName());
+            clobj = TClass::GetClass(dm->GetTypeName());
          }
          if (clobj && clobj->InheritsFrom("TClonesArray")) {
             // -- We have a pointer to a clones array.
@@ -1586,7 +1595,7 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* add, Int_t
    //    not issue a warning if the class can not be split.
 
    gTree = this;
-   TClass* cl = gROOT->GetClass(classname);
+   TClass* cl = TClass::GetClass(classname);
    if (!cl) {
       Error("Bronch", "Cannot find class:%s", classname);
       return 0;
@@ -1874,7 +1883,7 @@ TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */)
       return 0;
    }
    cl->BuildRealData(pointer);
-   TStreamerInfo* sinfo = cl->GetStreamerInfo(cl->GetClassVersion());
+   TStreamerInfo* sinfo = (TStreamerInfo*)cl->GetStreamerInfo(cl->GetClassVersion());
    if (fDirectory) {
       sinfo->ForceWriteInfo(fDirectory->GetFile());
    }
@@ -1885,7 +1894,7 @@ TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */)
       if (base->IsSTLContainer()) {
          continue;
       }
-      TClass* clm = gROOT->GetClass(base->GetName());
+      TClass* clm = TClass::GetClass(base->GetName());
       BuildStreamerInfo(clm);
    }
    return sinfo;
@@ -2018,7 +2027,6 @@ TFile* TTree::ChangeFile(TFile* file)
    }
    delete file;
    file = 0;
-   gFile = newfile;
    delete[] fname;
    fname = 0;
    return newfile;
@@ -2339,9 +2347,11 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
 }
 
 //______________________________________________________________________________
-void TTree::CopyAddresses(TTree* tree)
+void TTree::CopyAddresses(TTree* tree, Bool_t undo)
 {
    // -- Set branch addresses of passed tree equal to ours.
+   // -- If undo is true, reset the branch address instead of copying them.
+   //    This insures 'separation' of a cloned tree from its original
 
    // Copy branch addresses starting from branches.
    TObjArray* branches = GetListOfBranches();
@@ -2351,23 +2361,28 @@ void TTree::CopyAddresses(TTree* tree)
       if (branch->TestBit(kDoNotProcess)) {
          continue;
       }
-      char* addr = branch->GetAddress();
-      if (!addr) {
-         // Note: This may cause an object to be allocated.
-         branch->SetAddress(0);
-         addr = branch->GetAddress();
-      }
-      // FIXME: The GetBranch() function is braindead and may
-      //        not find the branch!
-      TBranch* br = tree->GetBranch(branch->GetName());
-      if (br) {
-         br->SetAddress(addr);
-         // The copy does not own any object allocated by SetAddress().
-         if (br->InheritsFrom("TBranchElement")) {
-            ((TBranchElement*) br)->ResetDeleteObject();
-         }
+      if (undo) {
+         TBranch* br = tree->GetBranch(branch->GetName());
+         tree->ResetBranchAddress(br);
       } else {
-         Warning("CopyAddresses", "Could not find branch named '%s' in tree named '%s'", branch->GetName(), tree->GetName());
+         char* addr = branch->GetAddress();
+         if (!addr) {
+            // Note: This may cause an object to be allocated.
+            branch->SetAddress(0);
+            addr = branch->GetAddress();
+         }
+         // FIXME: The GetBranch() function is braindead and may
+         //        not find the branch!
+         TBranch* br = tree->GetBranch(branch->GetName());
+         if (br) {
+            br->SetAddress(addr);
+            // The copy does not own any object allocated by SetAddress().
+            if (br->InheritsFrom("TBranchElement")) {
+               ((TBranchElement*) br)->ResetDeleteObject();
+            }
+         } else {
+            Warning("CopyAddresses", "Could not find branch named '%s' in tree named '%s'", branch->GetName(), tree->GetName());
+         }
       }
    }
 
@@ -2388,31 +2403,42 @@ void TTree::CopyAddresses(TTree* tree)
       if (branch->TestBit(kDoNotProcess)) {
          continue;
       }
-      if (!branch->GetAddress() && !leaf->GetValuePointer()) {
-         // We should attempts to set the address of the branch.
-         // something like:
-         //(TBranchElement*)branch->GetMother()->SetAddress(0)
-         //plus a few more subtilities (see TBranchElement::GetEntry).
-         //but for now we go the simpliest route:
-         //
-         // Note: This may result in the allocation of an object.
-         branch->GetEntry(0);
-      }
-      if (branch->GetAddress()) {
-         tree->SetBranchAddress(branch->GetName(), (void*) branch->GetAddress());
-         TBranch* br = tree->GetBranch(branch->GetName());
-         if (br) {
-            // The copy does not own any object allocated by SetAddress().
-            // FIXME: We do too much here, br may not be a top-level branch.
-            if (br->InheritsFrom("TBranchElement")) {
-               ((TBranchElement*) br)->ResetDeleteObject();
+      if (undo) {
+         // Now we know wether the address has been transfered
+         tree->ResetBranchAddress(tbranch);
+      } else {
+         if (!branch->GetAddress() && !leaf->GetValuePointer()) {
+            // We should attempts to set the address of the branch.
+            // something like:
+            //(TBranchElement*)branch->GetMother()->SetAddress(0)
+            //plus a few more subtilities (see TBranchElement::GetEntry).
+            //but for now we go the simpliest route:
+            //
+            // Note: This may result in the allocation of an object.
+            branch->GetEntry(0);
+         }
+         if (branch->GetAddress()) {
+            tree->SetBranchAddress(branch->GetName(), (void*) branch->GetAddress());
+            TBranch* br = tree->GetBranch(branch->GetName());
+            if (br) {
+               // The copy does not own any object allocated by SetAddress().
+               // FIXME: We do too much here, br may not be a top-level branch.
+               if (br->InheritsFrom("TBranchElement")) {
+                  ((TBranchElement*) br)->ResetDeleteObject();
+               }
+            } else {
+               Warning("CopyAddresses", "Could not find branch named '%s' in tree named '%s'", branch->GetName(), tree->GetName());
             }
          } else {
-            Warning("CopyAddresses", "Could not find branch named '%s' in tree named '%s'", branch->GetName(), tree->GetName());
+            tleaf->SetAddress(leaf->GetValuePointer());
          }
-      } else {
-         tleaf->SetAddress(leaf->GetValuePointer());
       }
+   }
+
+   if (undo && 
+       ( tree->IsA()->InheritsFrom("TNtuple") || tree->IsA()->InheritsFrom("TNtupleD") )
+       ) { 
+      tree->ResetBranchAddresses();
    }
 }
 
@@ -2548,9 +2574,11 @@ void TTree::Delete(Option_t* option /* = "" */)
          for (Int_t i=0;i<nbaskets;i++) {
             Long64_t pos = branch->GetBasketSeek(i);
             if (!pos) continue;
-            gFile->GetRecordHeader(header,pos,16,nbytes,objlen,keylen);
+            TFile *branchFile = branch->GetFile();
+            if (!branchFile) continue;
+            branchFile->GetRecordHeader(header,pos,16,nbytes,objlen,keylen);
             if (nbytes <= 0) continue;
-            gFile->MakeFree(pos,pos+nbytes-1);
+            branchFile->MakeFree(pos,pos+nbytes-1);
             ntot += nbytes;
             nbask++;
          }
@@ -2914,19 +2942,22 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //  The option=prof is automatically selected in case of y:x>>pf
    //  where pf is an existing TProfile histogram.
    //
-   //     Saving the result of Draw to a TEventList
-   //     =========================================
+   //     Saving the result of Draw to a TEventList or a TEntryList
+   //     =========================================================
    //  TTree::Draw can be used to fill a TEventList object (list of entry numbers)
    //  instead of histogramming one variable.
    //  If varexp0 has the form >>elist , a TEventList object named "elist"
    //  is created in the current directory. elist will contain the list
    //  of entry numbers satisfying the current selection.
+   //  If option "entrylist" is used, a TEntryList object is created
    //  Example:
    //    tree.Draw(">>yplus","y>0")
    //    will create a TEventList object named "yplus" in the current directory.
    //    In an interactive session, one can type (after TTree::Draw)
    //       yplus.Print("all")
    //    to print the list of entry numbers in the list.
+   //    tree.Draw(">>yplus", "y>0", "entrylist")
+   //    will create a TEntryList object names "yplus" in the current directory
    //
    //  By default, the specified entry list is reset.
    //  To continue to append data to an existing list, use "+" in front
@@ -2935,14 +2966,24 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //      will not reset yplus, but will enter the selected entries at the end
    //      of the existing list.
    //
-   //      Using a TEventList as Input
+   //      Using a TEventList or a TEntryList as Input
    //      ===========================
-   //  Once a TEventList object has been generated, it can be used as input
-   //  for TTree::Draw. Use TTree::SetEventList to set the current event list
-   //  Example:
+   //  Once a TEventList or a TEntryList object has been generated, it can be used as input
+   //  for TTree::Draw. Use TTree::SetEventList or TTree::SetEntryList to set the 
+   //  current event list
+   //  Example1:
    //     TEventList *elist = (TEventList*)gDirectory->Get("yplus");
    //     tree->SetEventList(elist);
    //     tree->Draw("py");
+   //  Example2:
+   //     TEntryList *elist = (TEntryList*)gDirectory->Get("yplus");
+   //     tree->SetEntryList(elist);
+   //     tree->Draw("py");
+   //  If a TEventList object is used as input, a new TEntryList object is created
+   //  inside the SetEventList function. In case of a TChain, all tree headers are loaded
+   //  for this transformation. This new object is owned by the chain and is deleted
+   //  with it, unless the user extracts it by calling GetEntryList() function.
+   //  See also comments to SetEventList() function of TTree and TChain.
    //
    //  If arrays are used in the selection critera, the entry entered in the
    //  list are all the entries that have at least one element of the array that
@@ -2955,7 +2996,7 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //  a positive fPy.
    //
    //  To select only the elements that did match the original selection
-   //  use TEventList::SetReapplyCut.
+   //  use TEventList::SetReapplyCut or TEntryList::SetReapplyCut.
    //  Example:
    //      tree.Draw(">>pyplus","fTracks.fPy>0");
    //      pyplus->SetReapplyCut(kTRUE);
@@ -3428,6 +3469,8 @@ TBranch* TTree::GetBranch(const char* name)
 {
    // -- Return pointer to the branch with the given name in this tree or its friends.
 
+   if (name == 0 || name[0] == '0') return 0;
+
    // We already have been visited while recursively
    // looking through the friends tree, let's return.
    if (kGetBranch & fFriendLockStatus) {
@@ -3717,18 +3760,38 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    return nbytes;
 }
 
+TEntryList* TTree::GetEntryList()
+{
+//Returns the entry list, set to this tree
+//
+//The returned object is not owned by the tree, even if the entry list was created
+//by the SetEventList() function (see also comments of SetEventList())
+
+   if (!fEntryList) return 0;
+
+   //check, if the entry list is owned by the tree.
+   //This lack of "constness" is caused by the SetEventList() function
+   //creating an entry list.
+   if (fEntryList->TestBit(kCanDelete) == kTRUE){
+      fEntryList->SetBit(kCanDelete, kFALSE);
+   }
+   return fEntryList;
+}
+
+//______________________________________________________________________________
 //______________________________________________________________________________
 Long64_t TTree::GetEntryNumber(Long64_t entry) const
 {
    // -- Return entry number corresponding to entry.
    //
-   // if no selection list returns entry
+   // if no TEntryList set returns entry
    // else returns the entry number corresponding to the list index=entry
 
-   if (!fEventList) {
+   if (!fEntryList) {
       return entry;
    }
-   return fEventList->GetEntry(entry);
+
+   return fEntryList->GetEntry(entry);
 }
 
 //______________________________________________________________________________
@@ -3904,6 +3967,8 @@ TLeaf* TTree::GetLeaf(const char* aname)
    // -- Return pointer to the 1st Leaf named name in any Branch of this Tree or any branch in the list of friend trees.
    //
    //  aname may be of the form branchname/leafname
+
+   if (aname == 0 || aname[0] == '0') return 0;
 
    // We already have been visited while recursively looking
    // through the friends tree, let return
@@ -4621,7 +4686,7 @@ void TTree::Print(Option_t* option) const
    if (fZipBytes > 0) {
       total += fTotBytes;
    }
-   TBuffer b(TBuffer::kWrite, 10000);
+   TBufferFile b(TBuffer::kWrite, 10000);
    TTree::Class()->WriteBuffer(b, (TTree*) this);
    total += b.Length();
    Long64_t file = fZipBytes + s;
@@ -4880,13 +4945,20 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
    //separated by ":"
    void *address = &bd[9000];
    char *bdcur = bd;
+   TString desc="", olddesc="";
    while (bdcur) {
       char *colon = strchr(bdcur,':');
       if (colon) *colon = 0;
       strcpy(bdname,bdcur);
       char *slash = strchr(bdname,'/');
-      if (slash) *slash = 0;
-      branch = new TBranch(bdname,address,bdcur,32000);
+      if (slash) {
+         *slash = 0;
+         desc = bdcur;
+         olddesc = slash+1;
+      } else {
+         desc = Form("%s/%s",bdname,olddesc.Data());
+      }
+      branch = new TBranch(bdname,address,desc.Data(),32000);
       if (branch->IsZombie()) {
          delete branch;
          Warning("ReadFile","Illegal branch definition: %s",bdcur);
@@ -5011,6 +5083,17 @@ void TTree::Reset(Option_t* option)
 
    if (fBranchRef) {
       fBranchRef->Reset();
+   }
+}
+
+//______________________________________________________________________________
+void TTree::ResetBranchAddress(TBranch *br)
+{
+   // -- Tell the branch to drop their current objects and allocate new ones
+   //    or to return to the default address (TNtuple and TNtupleD)
+
+   if (br && br->GetTree()) {
+      br->ResetAddress();
    }
 }
 
@@ -5513,6 +5596,59 @@ Long64_t TTree::SetEntries(Long64_t n)
 }
 
 //_______________________________________________________________________
+void TTree::SetEntryList(TEntryList *enlist)
+{
+   //Set an EntryList
+   
+   if (fEntryList) {
+      //check if the previous entry list is owned by the tree
+      if (fEntryList->TestBit(kCanDelete)){
+         delete fEntryList;
+      }
+   }
+   fEventList = 0;
+   if (!enlist) {
+      fEntryList = 0;
+      return;
+   }
+   fEntryList = enlist;
+   fEntryList->SetTree(this);
+
+}
+
+//_______________________________________________________________________
+void TTree::SetEventList(TEventList *evlist)
+{
+//This function transfroms the given TEventList into a TEntryList
+//The new TEntryList is owned by the TTree and gets deleted when the tree
+//is deleted. This TEntryList can be returned by GetEntryList() function, and after
+//GetEntryList() function is called, the TEntryList is not owned by the tree 
+//any more.
+
+   if (!evlist) {
+      if (fEntryList){
+         if (fEntryList->TestBit(kCanDelete)){
+            delete fEntryList;
+         }
+      }
+      fEntryList = 0;
+      fEventList = 0;
+      return;
+   }
+
+   fEventList = evlist;
+   fEntryList = new TEntryList(evlist->GetName(), evlist->GetTitle());
+   Int_t nsel = evlist->GetN();
+   fEntryList->SetTree(this);
+   Long64_t entry;
+   for (Int_t i=0; i<nsel; i++){
+      entry = evlist->GetEntry(i);
+      fEntryList->Enter(entry);
+   }
+   fEntryList->SetBit(kCanDelete, kTRUE);
+}
+
+//_______________________________________________________________________
 void TTree::SetEstimate(Long64_t n)
 {
    // -- Set number of entries to estimate variable limits.
@@ -5722,7 +5858,7 @@ void TTree::Streamer(TBuffer& b)
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 4) {
          fDirectory = gDirectory;
-         TTree::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         b.ReadClassBuffer(TTree::Class(), this, R__v, R__s, R__c);
          if (fTreeIndex) {
             fTreeIndex->SetTree(this);
          }
@@ -5772,7 +5908,7 @@ void TTree::Streamer(TBuffer& b)
       if (fBranchRef) {
          fBranchRef->Clear();
       }
-      TTree::Class()->WriteBuffer(b, this);
+      b.WriteClassBuffer(TTree::Class(), this);
    }
 }
 

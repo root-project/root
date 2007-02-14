@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFcnAdapter.h,v 1.3 2006/01/25 12:20:49 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFcnAdapter.h,v 1.4 2006/07/05 08:32:39 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -16,22 +16,25 @@ class TFcnAdapter : public ROOT::Minuit2::FCNGradientBase {
 
 public:
 
-   TFcnAdapter(void (*fcn)(int&, double*, double&, double*, int)) : fFCN(fcn) {}
+   TFcnAdapter(void (*fcn)(int&, double*, double&, double*, int)) : fFCN(fcn), fUp(1) {}
 
-   ~TFcnAdapter() {}
+   virtual ~TFcnAdapter() {}
 
    const ROOT::Minuit2::FCNBase& Base() const {return *this;}
   
-   virtual double operator()(const std::vector<double>&) const;
-   virtual double Up() const {return 1;}
+   double operator()(const std::vector<double>&) const;
+   double Up() const {return fUp; }
   
-   virtual std::vector<double> Gradient(const std::vector<double>&) const;
+   void SetErrorDef(double up) { fUp = up; }
+
+   std::vector<double> Gradient(const std::vector<double>&) const;
 
    // forward interface
-   virtual double operator()(int npar, double* params,int iflag = 4) const;
+   double operator()(int npar, double* params,int iflag = 4) const;
 
 private:
 
    void (*fFCN)(int&, double*, double&, double*, int);
+   double fUp; 
 };
 #endif //ROOT_GFcnAdapter_H_

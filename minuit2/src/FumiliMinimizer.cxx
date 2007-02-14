@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: FumiliMinimizer.cxx,v 1.2 2006/04/26 10:40:09 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: FumiliMinimizer.cxx,v 1.3 2006/07/03 15:48:06 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -53,7 +53,7 @@ FunctionMinimum FumiliMinimizer::Minimize(const FCNBase& fcn, const MnUserParame
    
    FumiliFCNBase * fumiliFcn = dynamic_cast< FumiliFCNBase *>( const_cast<FCNBase *>(&fcn) ); 
    if ( !fumiliFcn ) { 
-      std::cout <<"FumiliMinimizer: Error : wrong FCN type. Try to use default minimizer" << std::endl;
+      MN_ERROR_MSG("FumiliMinimizer: Error : wrong FCN type. Try to use default minimizer");
       return  FunctionMinimum(mnseeds, fcn.Up() );
    }
    
@@ -84,7 +84,7 @@ FunctionMinimum FumiliMinimizer::Minimize(const FCNGradientBase& fcn, const MnUs
    
    FumiliFCNBase * fumiliFcn = dynamic_cast< FumiliFCNBase *>( const_cast<FCNGradientBase *>(&fcn) ); 
    if ( !fumiliFcn ) { 
-      std::cout <<"FumiliMinimizer: Error : wrong FCN type. Try to use default minimizer" << std::endl;
+      MN_ERROR_MSG("FumiliMinimizer: Error : wrong FCN type. Try to use default minimizer");
       return  FunctionMinimum(mnseeds, fcn.Up() );
    }
    

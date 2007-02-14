@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBufferSQL.cxx,v 1.2 2005/08/16 13:46:46 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBufferSQL.cxx,v 1.3 2005/11/11 22:16:04 pcanal Exp $
 // Author: Philippe Canal and al. 08/2004
 
 /*************************************************************************
@@ -29,9 +29,9 @@
 ClassImp(TBufferSQL);
 
 //________________________________________________________________________
-TBufferSQL::TBufferSQL(EMode mode, vector<Int_t> *vc, 
+TBufferSQL::TBufferSQL(TBuffer::EMode mode, vector<Int_t> *vc, 
                        TString *insert_query, TSQLRow ** r) : 
-   TBuffer(mode),
+   TBufferFile(mode),
    fColumnVec(vc), fInsertQuery(insert_query), fRowPtr(r) 
 {
    // Constructor.
@@ -40,9 +40,9 @@ TBufferSQL::TBufferSQL(EMode mode, vector<Int_t> *vc,
 }
 
 //________________________________________________________________________
-TBufferSQL::TBufferSQL(EMode mode, Int_t bufsiz, vector<Int_t> *vc, 
+TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, vector<Int_t> *vc, 
                        TString *insert_query, TSQLRow ** r) : 
-   TBuffer(mode,bufsiz), 
+   TBufferFile(mode,bufsiz), 
    fColumnVec(vc), fInsertQuery(insert_query), fRowPtr(r) 
 {
    // Constructor.
@@ -51,10 +51,10 @@ TBufferSQL::TBufferSQL(EMode mode, Int_t bufsiz, vector<Int_t> *vc,
 }
 
 //________________________________________________________________________
-TBufferSQL::TBufferSQL(EMode mode, Int_t bufsiz, vector<Int_t> *vc, 
+TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, vector<Int_t> *vc, 
                        TString *insert_query, TSQLRow ** r,
                        void *buf, Bool_t adopt) : 
-   TBuffer(mode,bufsiz,buf,adopt),
+   TBufferFile(mode,bufsiz,buf,adopt),
    fColumnVec(vc), fInsertQuery(insert_query), fRowPtr(r) 
 {
    // Constructor.
@@ -63,7 +63,7 @@ TBufferSQL::TBufferSQL(EMode mode, Int_t bufsiz, vector<Int_t> *vc,
 }
 
 //________________________________________________________________________
-TBufferSQL::TBufferSQL() : fColumnVec(0),fRowPtr(0)
+TBufferSQL::TBufferSQL() : TBufferFile(), fColumnVec(0),fInsertQuery(0),fRowPtr(0)
 {
    // Constructor.
 
@@ -78,184 +78,168 @@ TBufferSQL::~TBufferSQL()
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator>>(Bool_t &b) 
+void TBufferSQL::ReadBool(Bool_t &b) 
 {
    // Operator>>
 
    b = (Bool_t)atoi((*fRowPtr)->GetField(*fIter));
    
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator>>(Char_t &c)
+void TBufferSQL::ReadChar(Char_t &c)
 {
    // Operator>>
 
    c = (Char_t)atoi((*fRowPtr)->GetField(*fIter));
    
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator>>(Short_t &h)
+void TBufferSQL::ReadShort(Short_t &h)
 {
    // Operator>>
 
    h = (Short_t)atoi((*fRowPtr)->GetField(*fIter));
    
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator>>(Int_t &i)
+void TBufferSQL::ReadInt(Int_t &i)
 {
    // Operator>>
 
    i = atoi((*fRowPtr)->GetField(*fIter));
 
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator>>(Float_t &f)
+void TBufferSQL::ReadFloat(Float_t &f)
 {
    // Operator>>
 
    f = atof((*fRowPtr)->GetField(*fIter));
    
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator>>(Long_t &l)
+void TBufferSQL::ReadLong(Long_t &l)
 {
    // Operator>>
 
    l = atol((*fRowPtr)->GetField(*fIter));
    
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator>>(Double_t &d)
+void TBufferSQL::ReadDouble(Double_t &d)
 {
    // Operator>>
 
    d = atof((*fRowPtr)->GetField(*fIter));
    
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
 }
 
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator<<(Bool_t    b)
+void TBufferSQL::WriteBool(Bool_t    b)
 {
    // Operator<<
 
    (*fInsertQuery) += b;
    (*fInsertQuery) += ",";
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator<<(Char_t    c)
+void TBufferSQL::WriteChar(Char_t    c)
 {
    // Operator<<
 
    (*fInsertQuery) += c;
    (*fInsertQuery) += ",";
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator<<(Short_t   h)
+void TBufferSQL::WriteShort(Short_t   h)
 {
    // Operator<<
 
    (*fInsertQuery) += h;
    (*fInsertQuery) += ",";
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator<<(Int_t     i)
+void TBufferSQL::WriteInt(Int_t     i)
 {
    // Operator<<
 
    (*fInsertQuery) += i;
    (*fInsertQuery) += ",";
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator<<(Long_t    l)
+void TBufferSQL::WriteLong(Long_t    l)
 {
    // Operator<<
 
    (*fInsertQuery) += l;
    (*fInsertQuery) += ",";
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator<<(Float_t   f)
+void TBufferSQL::WriteFloat(Float_t   f)
 {
    // Operator<<
 
    (*fInsertQuery) += f;
    (*fInsertQuery) += ",";
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator<<(Double_t  d)
+void TBufferSQL::WriteDouble(Double_t  d)
 {
    // Operator<<
 
    (*fInsertQuery) += d;
    (*fInsertQuery) += ",";
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
 }
  
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator>>(UChar_t& uc)
+void TBufferSQL::ReadUChar(UChar_t& uc)
 {
    // Operator>>
 
    uc = (UChar_t)atoi((*fRowPtr)->GetField(*fIter));
    
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator>>(UShort_t& us)
+void TBufferSQL::ReadUShort(UShort_t& us)
 {
    // Operator>>
 
    us = (UShort_t)atoi((*fRowPtr)->GetField(*fIter));
    
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator>>(UInt_t& ui)
+void TBufferSQL::ReadUInt(UInt_t& ui)
 {
    // Operator>>
 
@@ -264,11 +248,10 @@ TBuffer& TBufferSQL::operator>>(UInt_t& ui)
    if(code == 0) Error("operator>>(UInt_t&)","Error reading UInt_t");
 
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator>>(ULong_t& ul)
+void TBufferSQL::ReadULong(ULong_t& ul)
 {
    // Operator>>
 
@@ -277,11 +260,10 @@ TBuffer& TBufferSQL::operator>>(ULong_t& ul)
    if(code == 0) Error("operator>>(ULong_t&)","Error reading ULong_t");
 
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator>>(Long64_t &ll)
+void TBufferSQL::ReadLong64(Long64_t &ll)
 {
    // Operator>>
 
@@ -290,11 +272,10 @@ TBuffer& TBufferSQL::operator>>(Long64_t &ll)
    if(code == 0) Error("operator>>(ULong_t&)","Error reading Long64_t");
 
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator>>(ULong64_t &ull)
+void TBufferSQL::ReadULong64(ULong64_t &ull)
 {
    // Operator>>
 
@@ -303,89 +284,101 @@ TBuffer& TBufferSQL::operator>>(ULong64_t &ull)
    if(code == 0) Error("operator>>(ULong_t&)","Error reading ULong64_t");
 
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator>>(Char_t *str)
+void TBufferSQL::ReadCharP(Char_t *str)
 {
    // Operator>>
 
    strcpy(str,(*fRowPtr)->GetField(*fIter));
    if (fIter != fColumnVec->end()) ++fIter;
-   return *this;
+}
+
+//________________________________________________________________________
+void TBufferSQL::ReadTString(TString   &)
+{
+   // Operator>>
+
+   //strcpy(str,(*fRowPtr)->GetField(*fIter));
+   //if (fIter != fColumnVec->end()) ++fIter;
+   printf("ERROR NOT IMPLEMENTED\n");
+}
+
+//________________________________________________________________________
+void TBufferSQL::WriteTString(const TString   &)
+{
+   // Operator>>
+
+   //strcpy(str,(*fRowPtr)->GetField(*fIter));
+   //if (fIter != fColumnVec->end()) ++fIter;
+   printf("ERROR NOT IMPLEMENTED\n");
 }
 
 // Method to send to database.
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator<<(UChar_t uc)
+void TBufferSQL::WriteUChar(UChar_t uc)
 {
    // Operator<<
 
    (*fInsertQuery) += uc;
    (*fInsertQuery) += ",";
    ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator<<(UShort_t us)
+void TBufferSQL::WriteUShort(UShort_t us)
 {
    // Operator<<
 
    (*fInsertQuery) += us;
    (*fInsertQuery) += ",";
    ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator<<(UInt_t ui)
+void TBufferSQL::WriteUInt(UInt_t ui)
 {
    // Operator<<
 
    (*fInsertQuery) += ui;
    (*fInsertQuery) += ",";
    ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator<<(ULong_t ul)
+void TBufferSQL::WriteULong(ULong_t ul)
 {
    // Operator<<
 
    (*fInsertQuery) += ul;
    (*fInsertQuery) += ",";
    ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator<<(Long64_t ll)
+void TBufferSQL::WriteLong64(Long64_t ll)
 {
    // Operator<<
 
    (*fInsertQuery) += ll;
    (*fInsertQuery) += ",";
    ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator<<(ULong64_t ull)
+void TBufferSQL::WriteULong64(ULong64_t ull)
 {
    // Operator<<
 
    (*fInsertQuery) += ull;
    (*fInsertQuery) += ",";
    ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________
-TBuffer& TBufferSQL::operator<<(const Char_t *str)
+void TBufferSQL::WriteCharP(const Char_t *str)
 {
    // Operator<<
 
@@ -393,7 +386,6 @@ TBuffer& TBufferSQL::operator<<(const Char_t *str)
    (*fInsertQuery) += str;
    (*fInsertQuery) += "\",";
     ++fIter;
-   return *this;
 }
 
 //________________________________________________________________________

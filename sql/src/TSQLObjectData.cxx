@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLObjectData.cxx,v 1.7 2006/05/22 08:55:58 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLObjectData.cxx,v 1.8 2006/06/22 08:21:22 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 
 #include "TObjArray.h"
 #include "TNamed.h"
+#include "TList.h"
 #include "TSQLRow.h"
 #include "TSQLResult.h"
 #include "TSQLClassInfo.h"

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.20 2005/06/22 20:18:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.23 2007/01/29 15:10:48 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -24,7 +24,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Varargs.h"
 #include "TQConnection.h"
+#include "TROOT.h"
 #include "TRefCnt.h"
 #include "TClass.h"
 #include "TMethod.h"
@@ -193,7 +195,7 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
       ;                       // function
    else {
       gcl.Init(class_name);   // class
-      cl = gROOT->GetClass(class_name);
+      cl = TClass::GetClass(class_name);
    }
 
    if (params) {

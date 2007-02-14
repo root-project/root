@@ -7,6 +7,7 @@
 #include "TH2.h"
 #include "TF2.h"
 #include "TCanvas.h"
+#include "TMath.h"
 
 #include "TRandom.h"
 #include "TSystem.h"

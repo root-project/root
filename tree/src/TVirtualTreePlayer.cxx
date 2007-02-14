@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.cxx,v 1.8 2006/07/19 18:01:38 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.cxx,v 1.9 2006/08/06 07:15:00 rdm Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -68,6 +68,6 @@ void TVirtualTreePlayer::SetPlayer(const char *player)
 {
    // Static function to set an alternative Tree player.
 
-   fgPlayer = gROOT->GetClass(player);
+   fgPlayer = TClass::GetClass(player);
 }
 

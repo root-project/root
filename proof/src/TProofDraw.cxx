@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.23 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.26 2007/02/06 00:12:31 rdm Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -32,6 +32,7 @@
 #include "THLimitsFinder.h"
 #include "TView.h"
 #include "TStyle.h"
+#include "TDirectory.h"
 
 #include <algorithm>
 using namespace std;
@@ -138,8 +139,8 @@ Bool_t TProofDraw::ProcessSingle(Long64_t entry, Int_t i)
       R__ASSERT(fDimension <= TTreeDrawArgsParser::GetMaxDimension());
       for (int j = 0; j < fDimension; j++)
          v[j] = fVar[j]->EvalInstance(i);
-      if (fDimension >= 1);
-         PDB(kDraw,4) Info("Process","v1[%d] = %f", i, v[0]);
+      if (fDimension >= 1)
+         PDB(kDraw,4) Info("Process","v[0] = %f", v[0]);
       DoFill(entry, w, v);
    }
    return kTRUE;
@@ -1338,7 +1339,6 @@ void TProofDrawGraph::Terminate(void)
       gPad->Update();
 
       fGraph->SetEditable(kFALSE);
-      fGraph->SetBit(kCanDelete);
       // FIXME set color, marker size, etc.
 
       if (fTreeDrawArgsParser.GetShouldDraw()) {

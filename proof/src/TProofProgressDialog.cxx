@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.27 2006/11/22 16:52:54 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.29 2007/01/15 16:10:11 brun Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -34,7 +34,9 @@
 #include "TCanvas.h"
 #include "TColor.h"
 #include "TLine.h"
+#include "TAxis.h"
 #include "TPaveText.h"
+#include "TMath.h"
 
 #ifdef PPD_SRV_NEWER
 #undef PPD_SRV_NEWER

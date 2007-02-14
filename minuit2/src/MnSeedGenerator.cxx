@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnSeedGenerator.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnSeedGenerator.cxx,v 1.3 2007/02/09 17:24:50 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -30,9 +30,17 @@
 #include "Minuit2/AnalyticalGradientCalculator.h"
 #include "Minuit2/Numerical2PGradientCalculator.h"
 #include "Minuit2/HessianGradientCalculator.h"
+
+
+
+#if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h"
+#endif
+
+
 
 #include <math.h>
+
 
 namespace ROOT {
 
@@ -66,6 +74,12 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculat
    
    NegativeG2LineSearch ng2ls;
    if(ng2ls.HasNegativeG2(dgrad, prec)) {
+#ifdef DEBUG
+      std::cout << "MnSeedGenerator: Negative G2 Found: " << std::endl;
+      std::cout << x << std::endl; 
+      std::cout << dgrad.Grad() << std::endl; 
+      std::cout << dgrad.G2() << std::endl; 
+#endif
       state = ng2ls(fcn, state, gc, prec);
    }
    
@@ -101,12 +115,19 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const AnalyticalGradie
       std::pair<FunctionGradient, MnAlgebraicVector> hgrd = hgc.DeltaGradient(pa, dgrad);
       for(unsigned int i = 0; i < n; i++) {
          if(fabs(hgrd.first.Grad()(i) - grd.Grad()(i)) > hgrd.second(i)) {
-            std::cout<<"gradient discrepancy of external Parameter "<<st.Trafo().ExtOfInt(i)<<" (internal Parameter "<<i<<") too large."<<std::endl;
+#ifdef WARNINGMSG
+            MN_INFO_MSG("MnSeedGenerator:gradient discrepancy of external Parameter too large");
+            int externalParameterIndex = st.Trafo().ExtOfInt(i); 
+            MN_INFO_VAL(externalParameterIndex);
+            MN_INFO_VAL2("internal",i);
+#endif
             good = false;
          }
       }
       if(!good) {
-         std::cout<<"Minuit does not accept user specified Gradient. To force acceptance, override 'virtual bool CheckGradient() const' of FCNGradientBase.h in the derived class."<<std::endl;
+#ifdef WARNINGMSG
+         MN_ERROR_MSG("Minuit does not accept user specified Gradient. To force acceptance, override 'virtual bool CheckGradient() const' of FCNGradientBase.h in the derived class.");
+#endif
          assert(good);
       }
    }

@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum3.h,v 1.2 2006/09/28 23:20:53 rdm Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum3.h,v 1.3 2006/10/02 10:58:42 brun Exp $
 // Author: Miroslav Morhac   25/09/2006
 
 /*************************************************************************
@@ -11,9 +11,11 @@
 #ifndef ROOT_TSpectrum3
 #define ROOT_TSpectrum3
 
-#ifndef ROOT_TH1
-#include "TH1.h"
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
+
+class TH1;
 
 class TSpectrum3 : public TNamed {
 protected:

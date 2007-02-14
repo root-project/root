@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.28 2006/11/15 17:45:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.29 2006/11/22 14:16:54 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TVirtualPerfStats.h"
 #include "TEventList.h"
 
+#include "TError.h"
 
 
 ClassImp(TEventIter)
@@ -311,6 +312,8 @@ TEventIterTree::TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long
    fTree = 0;
    if (!fgTreeFileCache)
       fgTreeFileCache = new TTreeFileCache();
+
+   fAcquiredTrees = new TList;
 }
 
 //______________________________________________________________________________
@@ -319,6 +322,7 @@ TEventIterTree::~TEventIterTree()
    // Destructor
 
    ReleaseAllTrees();
+   SafeDelete(fAcquiredTrees);
 }
 
 //______________________________________________________________________________
@@ -326,10 +330,13 @@ void TEventIterTree::ReleaseAllTrees()
 {
    // Release all acquired trees.
 
-   for (std::list<TTree*>::iterator i = fAcquiredTrees.begin(); i != fAcquiredTrees.end(); ++i) {
-      fgTreeFileCache->Release(*i);
-   }
-   fAcquiredTrees.clear();
+   TIter nxt(fAcquiredTrees);
+   TTree *t = 0;
+   while ((t = (TTree *) nxt()))
+      fgTreeFileCache->Release(t);
+
+   fAcquiredTrees->SetOwner(kFALSE);
+   fAcquiredTrees->Clear();
 }
 
 //______________________________________________________________________________
@@ -342,7 +349,7 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
                                           elem->GetDirectory(), elem->GetObjName());
    if (!main)
       return 0;
-   fAcquiredTrees.push_front(main);
+   fAcquiredTrees->AddFirst(main);
 
    TDSetElement::FriendsList_t* friends = elem->GetListOfFriends();
    for (TDSetElement::FriendsList_t::iterator i = friends->begin();
@@ -351,7 +358,7 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
                                                    i->first->GetDirectory(),
                                                    i->first->GetObjName());
       if (friendTree) {
-         fAcquiredTrees.push_front(friendTree);
+         fAcquiredTrees->AddFirst(friendTree);
          main->AddFriend(friendTree, i->second);
       }
       else {

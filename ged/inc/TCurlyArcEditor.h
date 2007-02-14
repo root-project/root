@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TCurlyArcEditor.h,v 1.3 2006/01/30 17:42:05 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TCurlyArcEditor.h,v 1.4 2006/09/25 13:35:58 rdm Exp $
 // Author: Ilka  Antcheva, Otto Schaile 15/12/04
 
 /*************************************************************************
@@ -20,14 +20,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
-#include "TGWidget.h"
-#endif
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
 #endif
 
-class TGComboBox;
 class TGNumberEntry;
 class TCurlyArc;
 
@@ -42,7 +38,6 @@ protected:
    TGNumberEntry        *fCenterYEntry;     // center y entry
 
    virtual void   ConnectSignals2Slots();
-   TGComboBox    *BuildOptionComboBox(TGFrame* parent, Int_t id);
 
 public:
    TCurlyArcEditor(const TGWindow *p = 0,

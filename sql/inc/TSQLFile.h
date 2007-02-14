@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLFile.h,v 1.9 2006/06/22 08:21:22 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLFile.h,v 1.10 2006/06/27 14:36:27 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -26,7 +26,7 @@
 
 class TList;
 class TStreamerElement;
-class TStreamerInfo;
+class TVirtualStreamerInfo;
 
 class TSQLServer;
 class TSQLStatement;
@@ -111,7 +111,7 @@ protected:
    Bool_t            CreateClassTable(TSQLClassInfo* sqlinfo, TObjArray* colinfos);
    Bool_t            CreateRawTable(TSQLClassInfo* sqlinfo);
    
-   Bool_t            ProduceClassSelectQuery(TStreamerInfo* info, TSQLClassInfo* sqlinfo, TString& columns, TString& tables, Int_t& tablecnt);
+   Bool_t            ProduceClassSelectQuery(TVirtualStreamerInfo* info, TSQLClassInfo* sqlinfo, TString& columns, TString& tables, Int_t& tablecnt);
    void              AddIdEntry(Long64_t tableid, Int_t subid, Int_t type,
                                 const char* name, const char* sqlname, const char* info);
    void              ReadSQLClassInfos();

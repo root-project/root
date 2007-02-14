@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TNamed.h,v 1.7 2005/06/10 22:28:51 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TNamed.h,v 1.8 2006/05/23 04:47:35 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -24,9 +24,6 @@
 
 #ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TList
-#include "TList.h"
 #endif
 #ifndef ROOT_TString
 #include "TString.h"

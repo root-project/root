@@ -2685,9 +2685,11 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table *ifunc,
       } else {
          // write return type
          char *typestring = G__type2string(type, ptagnum, typenum, reftype, isconst);
-         if (ifunc->staticalloc[ifn]) {
+         if (ifunc->staticalloc[ifn] || G__struct.type[ifunc->tagnum] == 'n') {
+            // static method or function in namespace
             fprintf(fp, "  %s (*fptr)(", typestring);
          } else {
+            // class method
             fprintf(fp, "  %s (%s::*fptr)(", typestring, cls);
          }
 
@@ -5697,7 +5699,7 @@ void G__cpplink_memfunc(FILE *fp)
 
               fprintf(fp, "%d ", ifunc->para_reftype[j][k] + ifunc->para_isconst[j][k]*10);
               if (ifunc->para_def[j][k])
-                fprintf(fp, "%s ", G__quotedstring(ifunc->para_def[j][k], buf));
+                fprintf(fp, "'%s' ", G__quotedstring(ifunc->para_def[j][k], buf));
               else
                 fprintf(fp, "- ");
               if (ifunc->para_name[j][k])
@@ -6348,7 +6350,7 @@ void G__cpplink_func(FILE *fp)
           fprintf(fp,"%d "
                 ,ifunc->para_reftype[j][k]+ifunc->para_isconst[j][k]*10);
           if(ifunc->para_def[j][k])
-            fprintf(fp,"%s ",G__quotedstring(ifunc->para_def[j][k],buf));
+            fprintf(fp,"'%s' ",G__quotedstring(ifunc->para_def[j][k],buf));
           else fprintf(fp,"- ");
           if(ifunc->para_name[j][k])
             fprintf(fp,"%s",ifunc->para_name[j][k]);
@@ -6943,68 +6945,94 @@ int G__separate_parameter(char *original,int *pos,char *param)
 *
 * Used in G__cpplink.C
 **************************************************************************/
-int G__parse_parameter_link(char *paras)
+int G__parse_parameter_link(char* paras)
 {
 #ifndef G__SMALLOBJECT
-  int ifn,type,tagnum,typenum,reftype_const;
-  G__value *para_default;
-  char c_type[10],tagname[G__MAXNAME*6],type_name[G__MAXNAME*6];
-  char c_reftype_const[10],c_default[G__MAXNAME*2],c_paraname[G__MAXNAME*2];
-  char c;
-  int os=0;
-  int store_var_type;
+  int type;
+  int tagnum;
+  int reftype_const;
+  int typenum;
+  G__value* para_default = 0;
+  char c_type[10];
+  char tagname[G__MAXNAME*6];
+  char type_name[G__MAXNAME*6];
+  char c_reftype_const[10];
+  char c_default[G__MAXNAME*2];
+  char c_paraname[G__MAXNAME*2];
+  int os = 0;
+
   int store_loadingDLL = G__loadingDLL;
-  G__loadingDLL=1;
+  G__loadingDLL = 1;
 
-  store_var_type = G__var_type;
+  int store_var_type = G__var_type;
 
-  ifn = 0;
-
-  do {
-    c = G__separate_parameter(paras,&os,c_type);
-    if(c) {
-      type = c_type[0];
-      c = G__separate_parameter(paras,&os,tagname);
-      if('-'==tagname[0]) tagnum = -1;
-      else {
-         // buffer; G__search_tagname might change it when autoloading
-         G__ifunc_table* current_G__p_ifunc = G__p_ifunc;
-         tagnum = G__search_tagname(tagname,0);
-         G__p_ifunc = current_G__p_ifunc;
-      }
-      c = G__separate_parameter(paras,&os,type_name);
-      if('-'==type_name[0]) typenum = -1;
-      else {
-        if('\''==type_name[0]) {
-          type_name[strlen(type_name)-1]='\0';
-          typenum = G__defined_typename(type_name+1);
-        }
-        else typenum = G__defined_typename(type_name);
-      }
-      c = G__separate_parameter(paras,&os,c_reftype_const);
-      reftype_const = atoi(c_reftype_const);
-#ifndef G__OLDIMPLEMENTATION1861
-      if(-1!=typenum) reftype_const += G__newtype.isconst[typenum]*10;
-#endif
-      c = G__separate_parameter(paras,&os,c_default);
-      if('-'==c_default[0] && '\0'==c_default[1]) {
-        para_default=(G__value*)NULL;
-        c_default[0]='\0';
-      }
-      else {
-        para_default=(G__value*)(-1);
-      }
-      c = G__separate_parameter(paras,&os,c_paraname);
-      if('-'==c_paraname[0]) c_paraname[0]='\0';
-      G__memfunc_para_setup(ifn,type,tagnum,typenum,reftype_const
-                            ,para_default,c_default,c_paraname);
-      ++ifn;
+  char ch = paras[0];
+  for (int ifn = 0; ch != '\0'; ++ifn) {
+    ch = G__separate_parameter(paras, &os, c_type);
+    type = c_type[0];
+    ch = G__separate_parameter(paras, &os, tagname);
+    if (tagname[0] == '-') {
+      tagnum = -1;
     }
-  } while('\0'!=c) ;
-  G__var_type = store_var_type;
-  G__loadingDLL=store_loadingDLL;
+    else {
+      // -- We have a tagname.
+      // save G__p_ifunc, G__search_tagname might change it when autoloading
+      G__ifunc_table* current_G__p_ifunc = G__p_ifunc;
+      // Note: This is the only place we call G__search_tagname
+      //       with a type of 0, this is causing problems with
+      //       the switch to reflex.
+      tagnum = G__search_tagname(tagname, 0);
+      G__p_ifunc = current_G__p_ifunc;
+    }
+    ch = G__separate_parameter(paras, &os, type_name);
+    if (type_name[0] == '-') {
+      typenum = -1;
+    }
+    else {
+      if (type_name[0] == '\'') {
+        type_name[std::strlen(type_name)-1] = '\0';
+        typenum = G__defined_typename(type_name + 1);
+      }
+      else {
+        typenum = G__defined_typename(type_name);
+      }
+    }
+    ch = G__separate_parameter(paras, &os, c_reftype_const);
+    reftype_const = std::atoi(c_reftype_const);
+#ifndef G__OLDIMPLEMENTATION1861
+    if (typenum != -1) {
+      reftype_const += G__newtype.isconst[typenum] * 10;
+    }
 #endif
-  return(0);
+    ch = G__separate_parameter(paras, &os, c_default);
+    if ((c_default[0] == '-') && (c_default[1] == '\0')) {
+      para_default = 0;
+      c_default[0] = '\0';
+    }
+    else {
+      para_default = (G__value*) -1;
+      // The parameter default text will be quoted if it
+      // contains spaces, we must remove the quotes.
+      int len = std::strlen(c_default);
+      //assert(len > 2);
+      if (len > 1) {
+        c_default[len-1] = '\0';
+        // The source and destination overlap, do it carefully.
+        char buf[G__MAXNAME*2];
+        std::strcpy(buf, ((char*) c_default) + 1);
+        std::strcpy(c_default, buf);
+      }
+    }
+    ch = G__separate_parameter(paras, &os, c_paraname);
+    if (c_paraname[0] == '-') {
+      c_paraname[0] = '\0';
+    }
+    G__memfunc_para_setup(ifn, type, tagnum, typenum, reftype_const, para_default, c_default, c_paraname);
+  }
+  G__var_type = store_var_type;
+  G__loadingDLL = store_loadingDLL;
+#endif
+  return 0;
 }
 
 /**************************************************************************

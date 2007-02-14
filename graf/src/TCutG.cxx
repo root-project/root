@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.19 2006/03/20 21:43:42 pcanal Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.21 2007/01/15 16:10:10 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -68,6 +68,7 @@
 #include "TPaveText.h"
 #include "TH2.h"
 #include "TClass.h"
+#include "TMath.h"
 
 ClassImp(TCutG)
 
@@ -350,9 +351,9 @@ void TCutG::Streamer(TBuffer &R__b)
    // Stream an object of class TCutG.
 
    if (R__b.IsReading()) {
-      TCutG::Class()->ReadBuffer(R__b, this);
+      R__b.ReadClassBuffer(TCutG::Class(), this);
       gROOT->GetListOfSpecials()->Add(this);
    } else {
-      TCutG::Class()->WriteBuffer(R__b, this);
+      R__b.WriteClassBuffer(TCutG::Class(), this);
    }
 }

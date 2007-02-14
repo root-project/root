@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TKeyXML.cxx,v 1.7 2006/02/01 18:57:41 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TKeyXML.cxx,v 1.10 2007/01/22 05:58:29 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -252,8 +252,8 @@ TObject* TKeyXML::ReadObj()
    
    if (tobj!=0) {
       if (gROOT->GetForceStyle()) tobj->UseCurrentStyle(); 
-      if (tobj->IsA() == TDirectory::Class()) {
-         TDirectory *dir = (TDirectory*) tobj;
+      if (tobj->IsA() == TDirectoryFile::Class()) {
+         TDirectoryFile *dir = (TDirectoryFile*) tobj;
          dir->SetName(GetName());
          dir->SetTitle(GetTitle());
          dir->SetSeekDir(GetKeyId());

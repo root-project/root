@@ -1,4 +1,4 @@
-/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.cxx,v 1.9 2006/12/08 15:57:19 brun Exp $ */
+/* @(#)root/gdml:$Name:  $:$Id: TGDMLParse.cxx,v 1.10 2006/12/10 22:22:50 brun Exp $ */
 // Author: Ben Lloyd 09/11/06
 
 /*************************************************************************
@@ -125,22 +125,25 @@ TGeoVolume* TGDMLParse::GDMLReadFile(const char* filename)
       delete gdml;
       return 0;  
    }
+   else {
 
-   // take access to main node   
-   XMLNodePointer_t mainnode = gdml->DocGetRootElement(gdmldoc);
+      // take access to main node   
+      XMLNodePointer_t mainnode = gdml->DocGetRootElement(gdmldoc);
    
-   fFileEngine[fFILENO] = gdml;
-   fStartFile = filename;
-   fCurrentFile = filename;
+      fFileEngine[fFILENO] = gdml;
+      fStartFile = filename;
+      fCurrentFile = filename;
 
-   // display recursively all nodes and subnodes
-   ParseGDML(gdml, mainnode);
+      // display recursively all nodes and subnodes
+      ParseGDML(gdml, mainnode);
 
-   // Release memory before exit
-   gdml->FreeDoc(gdmldoc);
-   delete gdml;
+      // Release memory before exit
+      gdml->FreeDoc(gdmldoc);
+      delete gdml;
    
+   }
    return fWorld;
+   
 }
 
 //________________________________________________________________
@@ -158,6 +161,7 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
    const char* posistr = "position";
    const char* setustr = "setup";
    const char* consstr = "constant";
+   const char* varistr = "variable";
    const char* rotastr = "rotation";
    const char* elemstr = "element";
    const char* matestr = "material";
@@ -193,6 +197,8 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
    } else if ((strcmp(name, setustr)) == 0){ 
       node = TopProcess(gdml, node);
    } else if ((strcmp(name, consstr)) == 0){ 
+      node = ConProcess(gdml, node, attr);
+   } else if ((strcmp(name, varistr)) == 0){ 
       node = ConProcess(gdml, node, attr);
    } else if (((strcmp(name, "atom")) == 0) && ((strcmp(parent, elemstr)) == 0)){ 
       node = EleProcess(gdml, node, parentn);
@@ -252,7 +258,6 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
       node = Reflection(gdml, node, attr);
    } else if ((strcmp(name, assestr)) == 0){ 
       node = AssProcess(gdml, node);
-
    //CHECK FOR TAGS NOT SUPPORTED
    } else if (((strcmp(name, "gdml")) != 0) && ((strcmp(name, "define")) != 0) && 
       ((strcmp(name, "element")) != 0) && ((strcmp(name, "materials")) != 0) &&  
@@ -284,7 +289,6 @@ double TGDMLParse::Evaluate(const char* evalline)
    //returns the result of the expression as a double.
 
    TFormula form;
-   
    double result = 0;
    form.Compile(evalline);
    result = form.Eval(0);
@@ -392,6 +396,8 @@ const char* TGDMLParse::FindConst(const char* retval)
    return tempconst;
 }
 
+
+
 //________________________________________________________
 XMLNodePointer_t TGDMLParse::ConProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
@@ -411,7 +417,7 @@ XMLNodePointer_t TGDMLParse::ConProcess(TXMLEngine* gdml, XMLNodePointer_t node,
          name = gdml->GetAttrValue(attr);
       }
       if((strcmp(tempattr, "value")) == 0) { 
-       value = gdml->GetAttrValue(attr);
+         value = gdml->GetAttrValue(attr);
       }      
       attr = gdml->GetNextAttr(attr);   
    }
@@ -421,7 +427,6 @@ XMLNodePointer_t TGDMLParse::ConProcess(TXMLEngine* gdml, XMLNodePointer_t node,
    }
 
    fconmap[name] = value;
-   
    return node;
    
 }
@@ -436,22 +441,28 @@ const char* TGDMLParse::GetScale(const char* unit)
    const char* retunit = "";
    
    if(strcmp(unit, "mm") == 0){
-      retunit = "1.0";
+      retunit = "0.1";
    }
    else if(strcmp(unit, "milimeter") == 0){
+      retunit = "0.1";
+   }
+   else if(strcmp(unit, "cm") == 0){
+      retunit = "1.0";
+   }
+   else if(strcmp(unit, "centimeter") == 0){
       retunit = "1.0";
    }
    else if(strcmp(unit, "m") == 0){
-      retunit = "1000.0";
+      retunit = "100.0";
    }
    else if(strcmp(unit, "meter") == 0){
-      retunit = "1000.0";
+      retunit = "100.0";
    }
    else if(strcmp(unit, "km") == 0){
-      retunit = "1000000.0";
+      retunit = "100000.0";
    }
    else if(strcmp(unit, "kilometer") == 0){
-      retunit = "1000000.0";
+      retunit = "100000.0";
    }
    else if(strcmp(unit, "rad") == 0){
       retunit = Form("%f", TMath::RadToDeg());
@@ -762,10 +773,11 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
                   n = Evaluate(FindConst(gdml->GetAttrValue(attr)));
                }
                else if((strcmp(tempattr, "ref")) == 0) { 
-                  ref = FindConst(gdml->GetAttrValue(attr));
+                  ref = gdml->GetAttrValue(attr);
                   if((strcmp(fCurrentFile,fStartFile)) != 0){
                      ref = Form("%s_%s", ref, fCurrentFile);
                   }
+
                }
           
                attr = gdml->GetNextAttr(attr);
@@ -786,7 +798,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
                   n = Evaluate(FindConst(gdml->GetAttrValue(attr)));
                }
                else if((strcmp(tempattr, "ref")) == 0) { 
-                  ref = FindConst(gdml->GetAttrValue(attr));
+                  ref = gdml->GetAttrValue(attr);
                }
           
                attr = gdml->GetNextAttr(attr);
@@ -1062,7 +1074,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
             const Double_t* b_rot = tempmatr->GetRotationMatrix();
             double c_rot[8]; for (int i = 0; i < 9; i++){c_rot[i] = 0;}
             int a = 0, c = 0;
-       
+ 
             //matrix multiplication
             for(a=0; a<9; a+=3){
                for(c=a; c<(a+3); c++){
@@ -1087,6 +1099,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
             pos->SetDx(tempPos[0]*parentrot[0]);
             pos->SetDy(tempPos[1]*parentrot[4]);
             pos->SetDz(tempPos[2]*parentrot[8]);
+
          }
          
          matr = new TGeoCombiTrans(*pos, *rot);
@@ -1158,9 +1171,9 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          offsetline = Form("%s*%s", offset, retunit);
  
          fVolID = fVolID + 1;
-         
+
          vol->Divide(NameShort(name), axis, (Int_t)Evaluate(numberline), (Double_t)Evaluate(offsetline), (Double_t)Evaluate(widthline));
-         
+
       }//end of Division else if
       
       child = gdml->GetNext(child);
@@ -3381,9 +3394,18 @@ XMLNodePointer_t TGDMLParse::Reflection(TXMLEngine* gdml, XMLNodePointer_t node,
    rot->RotateY(-(Evaluate(ry)));
    rot->RotateX(-(Evaluate(rx)));
 
-   rot->ReflectZ(kTRUE);
+   if(atoi(sx) == -1) {
+      rot->ReflectX(kTRUE);
+   }
+   if(atoi(sy) == -1) {
+      rot->ReflectY(kTRUE);
+   }
+   if(atoi(sz) == -1) {
+      rot->ReflectZ(kTRUE);
+   }
 
    TGeoCombiTrans* relf_matx = new TGeoCombiTrans(Evaluate(dx), Evaluate(dy), Evaluate(dz), rot);
+
    TGDMLRefl* reflsol = new TGDMLRefl(NameShort(name), solid, relf_matx);
    freflsolidmap[name] = reflsol;
    freflectmap[name] = solid;

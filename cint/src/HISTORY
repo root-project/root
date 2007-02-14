@@ -4877,6 +4877,16 @@
 *   compiler macros (e.g. __GNUC__) are hidden
 * - Fix prec_stl for solarisgcc, cygwin (posix)
 *
+* 5.16.18 February 9, 2007
+* 6.1.18 February 9, 2007
+* - Fix a few bugs (fix arithmetics involving long double, "!", 
+*   LL suffix for operators' long long args, quoting of default
+*   params, 
+* - Implement G__pop_tempobject_nodel() to "steal" temp object from CINT
+* - modify algo.h's random_shuffle to use new Cint::G__long_random in new v6_random.cxx
+* - make G__free_ifunc_table non-recursive
+* - for ROOT, use R__HAVE_CONFIG, not HAVE_CONFIG
+*
 **
 * ---------------------------------------------------------------------
 *     , A::operator float() conversion with standard conversion

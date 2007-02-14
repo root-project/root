@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: RuleFitParams.cxx,v 1.7 2006/11/20 15:35:28 brun Exp $
+// @(#)root/tmva $Id: RuleFitParams.cxx,v 1.8 2006/11/23 17:43:39 rdm Exp $
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <numeric>
 
+#include "TMath.h"
 #include "TMVA/Timer.h"
 #include "TMVA/RuleFitParams.h"
 #include "TMVA/RuleFit.h"

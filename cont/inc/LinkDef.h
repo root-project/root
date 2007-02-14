@@ -1,4 +1,4 @@
-/* @(#)root/cont:$Name:  $:$Id: LinkDef.h,v 1.14 2005/10/21 22:01:35 pcanal Exp $ */
+/* @(#)root/cont:$Name:  $:$Id: LinkDef.h,v 1.16 2007/02/07 08:52:23 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -57,16 +57,6 @@
 
 #pragma link C++ nestedclass;
 #pragma link C++ nestedtypedef;
-
-#pragma link C++ class TCollectionProxy-;
-#pragma link C++ class TEmulatedCollectionProxy-;
-#pragma link C++ class TEmulatedMapProxy-;
-#pragma link C++ class TGenCollectionProxy-;
-#pragma link C++ class TGenCollectionProxy::Value-;
-#pragma link C++ class TGenCollectionProxy::Method-;
-#pragma link C++ class TCollectionStreamer-;
-#pragma link C++ class TCollectionClassStreamer-;
-#pragma link C++ class TCollectionMemberStreamer-;
 
 #pragma link C++ class TBits::TReference-;
 #pragma link C++ function operator&(const TBits::TReference&, const TBits::TReference&);

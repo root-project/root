@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.32 2006/11/24 10:45:13 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.37 2007/01/29 10:06:50 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -21,10 +21,10 @@
 #include "TGaxis.h"
 #include "TColor.h"
 #include "TError.h"
-#include "TROOT.h"
-#include "TMath.h"
-#include "TAxis.h"
 #include "TH1.h"
+#include "TMath.h"
+#include "TROOT.h"
+#include "TClass.h"
 
 #include "TGLBoundingBox.h"
 #include "TGLPlotPainter.h"
@@ -791,7 +791,7 @@ void TGLUtil::SetDrawColors(const Float_t rgba[4])
    // Util function to setup GL color for both unlit and lit material
    static Float_t ambient[4] = {0.0, 0.0, 0.0, 1.0};
    static Float_t specular[4] = {0.6, 0.6, 0.6, 1.0};
-   Float_t emission[4] = {rgba[0]/4.0, rgba[1]/4.0, rgba[2]/4.0, rgba[3]};
+   Float_t emission[4] = {rgba[0]/4.f, rgba[1]/4.f, rgba[2]/4.f, rgba[3]};
 
    glColor3d(rgba[0], rgba[1], rgba[2]);
    glMaterialfv(GL_FRONT, GL_DIFFUSE, rgba);
@@ -1858,13 +1858,284 @@ namespace Rgl {
       glNormal3dv(normal.CArr());
       glTexCoord1d(t1);
       glVertex3d(v1.X(), v1.Y(), z);
-//      glNormal3dv(normal.CArr());
       glTexCoord1d(t2);
       glVertex3d(v2.X(), v2.Y(), z);
-//      glNormal3dv(normal.CArr());
       glTexCoord1d(t3);
       glVertex3d(v3.X(), v3.Y(), z);
       glEnd();   
+   }
+
+   //______________________________________________________________________________
+   void GetColor(Float_t v, Float_t vmin, Float_t vmax, Int_t type, Float_t *rgba)
+   {
+      //This function creates color for parametric surface's vertex,
+      //using its 'u' value.
+      //I've found it in one of Apple's Carbon tutorials , and it's based
+      //on Paul Bourke work. Very nice colors!!! :)
+      Float_t dv,vmid;
+      //Float_t c[] = {1.f, 1.f, 1.f};
+      Float_t c1[3] = {}, c2[3] = {}, c3[3] = {};
+      Float_t ratio ;
+      rgba[3] = 1.f;
+
+      if (v < vmin)
+         v = vmin;
+      if (v > vmax)
+         v = vmax;
+      dv = vmax - vmin;
+
+      switch (type) {
+      case 0:
+         rgba[0] = 1.f;
+         rgba[1] = 1.f;
+         rgba[2] = 1.f;
+      break;
+      case 1:
+      if (v < (vmin + 0.25 * dv)) {
+         rgba[0] = 0;
+         rgba[1] = 4 * (v - vmin) / dv;
+         rgba[2] = 1;
+      } else if (v < (vmin + 0.5 * dv)) {
+         rgba[0] = 0;
+         rgba[1] = 1;
+         rgba[2] = 1 + 4 * (vmin + 0.25 * dv - v) / dv;
+      } else if (v < (vmin + 0.75 * dv)) {
+         rgba[0] = 4 * (v - vmin - 0.5 * dv) / dv;
+         rgba[1] = 1;
+         rgba[2] = 0;
+      } else {
+         rgba[0] = 1;
+         rgba[1] = 1 + 4 * (vmin + 0.75 * dv - v) / dv;
+         rgba[2] = 0;
+      }
+      break;
+      case 2:
+         rgba[0] = (v - vmin) / dv;
+         rgba[1] = 0;
+         rgba[2] = (vmax - v) / dv;
+         break;
+      case 3:
+         rgba[0] = (v - vmin) / dv;
+         rgba[1] = rgba[0];
+         rgba[2] = rgba[0];
+         break;
+      case 4:
+         if (v < (vmin + dv / 6.0)) {
+            rgba[0] = 1;
+            rgba[1] = 6 * (v - vmin) / dv;
+            rgba[2] = 0;
+         } else if (v < (vmin + 2.0 * dv / 6.0)) {
+            rgba[0] = 1 + 6 * (vmin + dv / 6.0 - v) / dv;
+            rgba[1] = 1;
+            rgba[2] = 0;
+         } else if (v < (vmin + 3.0 * dv / 6.0)) {
+            rgba[0] = 0;
+            rgba[1] = 1;
+            rgba[2] = 6 * (v - vmin - 2.0 * dv / 6.0) / dv;
+         } else if (v < (vmin + 4.0 * dv / 6.0)) {
+            rgba[0] = 0;
+            rgba[1] = 1 + 6 * (vmin + 3.0 * dv / 6.0 - v) / dv;
+            rgba[2] = 1;
+         } else if (v < (vmin + 5.0 * dv / 6.0)) {
+            rgba[0] = 6 * (v - vmin - 4.0 * dv / 6.0) / dv;
+            rgba[1] = 0;
+            rgba[2] = 1;
+         } else {
+            rgba[0] = 1;
+            rgba[1] = 0;
+            rgba[2] = 1 + 6 * (vmin + 5.0 * dv / 6.0 - v) / dv;
+         }
+         break;
+      case 5:
+         rgba[0] = (v - vmin) / (vmax - vmin);
+         rgba[1] = 1;
+         rgba[2] = 0;
+         break;
+      case 6:
+         rgba[0] = (v - vmin) / (vmax - vmin);
+         rgba[1] = (vmax - v) / (vmax - vmin);
+         rgba[2] = rgba[0];
+         break;
+      case 7:
+         if (v < (vmin + 0.25 * dv)) {
+            rgba[0] = 0;
+            rgba[1] = 4 * (v - vmin) / dv;
+            rgba[2] = 1 - rgba[1];
+         } else if (v < (vmin + 0.5 * dv)) {
+            rgba[0] = 4 * (v - vmin - 0.25 * dv) / dv;
+            rgba[1] = 1 - rgba[0];
+            rgba[2] = 0;
+         } else if (v < (vmin + 0.75 * dv)) {
+            rgba[1] = 4 * (v - vmin - 0.5 * dv) / dv;
+            rgba[0] = 1 - rgba[1];
+            rgba[2] = 0;
+         } else {
+            rgba[0] = 0;
+            rgba[2] = 4 * (v - vmin - 0.75 * dv) / dv;
+            rgba[1] = 1 - rgba[2];
+         }
+         break;
+      case 8:
+         if (v < (vmin + 0.5 * dv)) {
+            rgba[0] = 2 * (v - vmin) / dv;
+            rgba[1] = rgba[0];
+            rgba[2] = rgba[0];
+         } else {
+            rgba[0] = 1 - 2 * (v - vmin - 0.5 * dv) / dv;
+            rgba[1] = rgba[0];
+            rgba[2] = rgba[0];
+         }
+         break;
+      case 9:
+         if (v < (vmin + dv / 3)) {
+            rgba[2] = 3 * (v - vmin) / dv;
+            rgba[1] = 0;
+            rgba[0] = 1 - rgba[2];
+         } else if (v < (vmin + 2 * dv / 3)) {
+            rgba[0] = 0;
+            rgba[1] = 3 * (v - vmin - dv / 3) / dv;
+            rgba[2] = 1;
+         } else {
+            rgba[0] = 3 * (v - vmin - 2 * dv / 3) / dv;
+            rgba[1] = 1 - rgba[0];
+            rgba[2] = 1;
+         }
+         break;
+      case 10:
+         if (v < (vmin + 0.2 * dv)) {
+            rgba[0] = 0;
+            rgba[1] = 5 * (v - vmin) / dv;
+            rgba[2] = 1;
+         } else if (v < (vmin + 0.4 * dv)) {
+            rgba[0] = 0;
+            rgba[1] = 1;
+            rgba[2] = 1 + 5 * (vmin + 0.2 * dv - v) / dv;
+         } else if (v < (vmin + 0.6 * dv)) {
+            rgba[0] = 5 * (v - vmin - 0.4 * dv) / dv;
+            rgba[1] = 1;
+            rgba[2] = 0;
+         } else if (v < (vmin + 0.8 * dv)) {
+            rgba[0] = 1;
+            rgba[1] = 1 - 5 * (v - vmin - 0.6 * dv) / dv;
+            rgba[2] = 0;
+         } else {
+            rgba[0] = 1;
+            rgba[1] = 5 * (v - vmin - 0.8 * dv) / dv;
+            rgba[2] = 5 * (v - vmin - 0.8 * dv) / dv;
+         }
+         break;
+      case 11:
+         c1[0] = 200 / 255.0; c1[1] =  60 / 255.0; c1[2] =   0 / 255.0;
+         c2[0] = 250 / 255.0; c2[1] = 160 / 255.0; c2[2] = 110 / 255.0;
+         rgba[0] = (c2[0] - c1[0]) * (v - vmin) / dv + c1[0];
+         rgba[1] = (c2[1] - c1[1]) * (v - vmin) / dv + c1[1];
+         rgba[2] = (c2[2] - c1[2]) * (v - vmin) / dv + c1[2];
+         break;
+      case 12:
+         c1[0] =  55 / 255.0; c1[1] =  55 / 255.0; c1[2] =  45 / 255.0;
+         c2[0] = 200 / 255.0; c2[1] =  60 / 255.0; c2[2] =   0 / 255.0;
+         c3[0] = 250 / 255.0; c3[1] = 160 / 255.0; c3[2] = 110 / 255.0;
+         ratio = 0.4;
+         vmid = vmin + ratio * dv;
+         if (v < vmid) {
+            rgba[0] = (c2[0] - c1[0]) * (v - vmin) / (ratio*dv) + c1[0];
+            rgba[1] = (c2[1] - c1[1]) * (v - vmin) / (ratio*dv) + c1[1];
+            rgba[2] = (c2[2] - c1[2]) * (v - vmin) / (ratio*dv) + c1[2];
+         } else {
+            rgba[0] = (c3[0] - c2[0]) * (v - vmid) / ((1-ratio)*dv) + c2[0];
+            rgba[1] = (c3[1] - c2[1]) * (v - vmid) / ((1-ratio)*dv) + c2[1];
+            rgba[2] = (c3[2] - c2[2]) * (v - vmid) / ((1-ratio)*dv) + c2[2];
+         }
+         break;
+      case 13:
+         c1[0] =   0 / 255.0; c1[1] = 255 / 255.0; c1[2] =   0 / 255.0;
+         c2[0] = 255 / 255.0; c2[1] = 150 / 255.0; c2[2] =   0 / 255.0;
+         c3[0] = 255 / 255.0; c3[1] = 250 / 255.0; c3[2] = 240 / 255.0;
+         ratio = 0.3;
+         vmid = vmin + ratio * dv;
+         if (v < vmid) {
+            rgba[0] = (c2[0] - c1[0]) * (v - vmin) / (ratio*dv) + c1[0];
+            rgba[1] = (c2[1] - c1[1]) * (v - vmin) / (ratio*dv) + c1[1];
+            rgba[2] = (c2[2] - c1[2]) * (v - vmin) / (ratio*dv) + c1[2];
+         } else {
+            rgba[0] = (c3[0] - c2[0]) * (v - vmid) / ((1-ratio)*dv) + c2[0];
+            rgba[1] = (c3[1] - c2[1]) * (v - vmid) / ((1-ratio)*dv) + c2[1];
+            rgba[2] = (c3[2] - c2[2]) * (v - vmid) / ((1-ratio)*dv) + c2[2];
+         }
+         break;
+      case 14:
+         rgba[0] = 1;
+         rgba[1] = 1 - (v - vmin) / dv;
+         rgba[2] = 0;
+         break;
+      case 15:
+         if (v < (vmin + 0.25 * dv)) {
+            rgba[0] = 0;
+            rgba[1] = 4 * (v - vmin) / dv;
+            rgba[2] = 1;
+         } else if (v < (vmin + 0.5 * dv)) {
+            rgba[0] = 0;
+            rgba[1] = 1;
+            rgba[2] = 1 - 4 * (v - vmin - 0.25 * dv) / dv;
+         } else if (v < (vmin + 0.75 * dv)) {
+            rgba[0] = 4 * (v - vmin - 0.5 * dv) / dv;
+            rgba[1] = 1;
+            rgba[2] = 0;
+         } else {
+            rgba[0] = 1;
+            rgba[1] = 1;
+            rgba[2] = 4 * (v - vmin - 0.75 * dv) / dv;
+         }
+         break;
+      case 16:
+         if (v < (vmin + 0.5 * dv)) {
+            rgba[0] = 0.0;
+            rgba[1] = 2 * (v - vmin) / dv;
+            rgba[2] = 1 - 2 * (v - vmin) / dv;
+         } else {
+            rgba[0] = 2 * (v - vmin - 0.5 * dv) / dv;
+            rgba[1] = 1 - 2 * (v - vmin - 0.5 * dv) / dv;
+            rgba[2] = 0.0;
+         }
+         break;
+      case 17:
+         if (v < (vmin + 0.5 * dv)) {
+            rgba[0] = 1.0;
+            rgba[1] = 1 - 2 * (v - vmin) / dv;
+            rgba[2] = 2 * (v - vmin) / dv;
+         } else {
+            rgba[0] = 1 - 2 * (v - vmin - 0.5 * dv) / dv;
+            rgba[1] = 2 * (v - vmin - 0.5 * dv) / dv;
+            rgba[2] = 1.0;
+         }
+         break;
+      case 18:
+         rgba[0] = 0;
+         rgba[1] = (v - vmin) / (vmax - vmin);
+         rgba[2] = 1;
+         break;
+      case 19:
+         rgba[0] = (v - vmin) / (vmax - vmin);
+         rgba[1] = rgba[0];
+         rgba[2] = 1;
+         break;
+      case 20:
+         c1[0] =   0 / 255.0; c1[1] = 160 / 255.0; c1[2] =   0 / 255.0;
+         c2[0] = 180 / 255.0; c2[1] = 220 / 255.0; c2[2] =   0 / 255.0;
+         c3[0] = 250 / 255.0; c3[1] = 220 / 255.0; c3[2] = 170 / 255.0;
+         ratio = 0.3;
+         vmid = vmin + ratio * dv;
+         if (v < vmid) {
+            rgba[0] = (c2[0] - c1[0]) * (v - vmin) / (ratio*dv) + c1[0];
+            rgba[1] = (c2[1] - c1[1]) * (v - vmin) / (ratio*dv) + c1[1];
+            rgba[2] = (c2[2] - c1[2]) * (v - vmin) / (ratio*dv) + c1[2];
+         } else {
+            rgba[0] = (c3[0] - c2[0]) * (v - vmid) / ((1-ratio)*dv) + c2[0];
+            rgba[1] = (c3[1] - c2[1]) * (v - vmid) / ((1-ratio)*dv) + c2[1];
+            rgba[2] = (c3[2] - c2[2]) * (v - vmid) / ((1-ratio)*dv) + c2[2];
+         }
+         break;
+      }
    }
 
 }

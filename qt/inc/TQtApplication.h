@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtApplication.h,v 1.15 2006/04/25 19:28:38 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtApplication.h,v 1.5 2006/05/03 09:55:48 antcheva Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -35,6 +35,9 @@ private:
   void    CreateGUIThread(int &argc, char **argv);
 
   static void CreateQApplication(int &argc, char ** argv, bool GUIenabled);
+
+  void operator=(const TQtApplication&);
+  TQtApplication(const TQtApplication&);
 
 protected:
    static TQtApplication *fgQtApplication;

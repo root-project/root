@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TMehrotraSolver.cxx,v 1.5 2006/06/23 05:02:55 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TMehrotraSolver.cxx,v 1.6 2006/06/27 04:38:29 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -50,6 +50,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Riostream.h"
+#include "TMath.h"
 #include "TMehrotraSolver.h"
 
 ClassImp(TMehrotraSolver)

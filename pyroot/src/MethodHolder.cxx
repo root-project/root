@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.52 2006/12/08 07:42:31 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.55 2007/01/17 07:32:39 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -31,8 +31,6 @@
 #include <string.h>
 #include <exception>
 #include <string>
-
-#include <typeinfo>
 
 
 //- data and local helpers ---------------------------------------------------
@@ -352,10 +350,10 @@ template< class T, class M >
 PyObject* PyROOT::TMethodHolder< T, M >::GetPrototype()
 {
 // construct python string from the method's prototype
-   return PyString_FromFormat( "%s%s %s%s",
+   return PyString_FromFormat( "%s%s %s::%s%s",
       ( fMethod.IsStatic() ? "static " : "" ),
       fMethod.TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S ).c_str(),
-      fMethod.DeclaringScope().Name().c_str(),
+      fMethod.DeclaringScope().Name().c_str(), fMethod.Name().c_str(),
       GetSignatureString().c_str() );
 }
 
@@ -558,7 +556,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::Execute( void* self )
       result = CallSafe( self );
    }
 
-   if ( result && PyErr_Occurred() ) {
+   if ( result && result != (PyObject*)TPyExceptionMagic && PyErr_Occurred() ) {
    // can happen in the case of a CINT error: trigger exception processing
       Py_DECREF( result );
       result = 0;
@@ -612,7 +610,8 @@ PyObject* PyROOT::TMethodHolder< T, M >::operator()(
 
 // actual call; recycle self instead of new object for same address objects
    ObjectProxy* pyobj = (ObjectProxy*)Execute( object );
-   if ( ObjectProxy_Check( pyobj ) &&
+   if ( pyobj != (ObjectProxy*)TPyExceptionMagic &&
+        ObjectProxy_Check( pyobj ) &&
         pyobj->GetObject() == object &&
         klass && pyobj->ObjectIsA() == klass ) {
       Py_INCREF( (PyObject*)self );

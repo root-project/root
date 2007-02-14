@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.92 2006/05/15 09:45:03 brun Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.93 2006/11/16 17:17:38 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -148,12 +148,7 @@ static std::string gRndmSalt = std::string("ABCDEFGH");
 #endif
 
 #ifdef R__AFS
-//#include <afs/kautils.h>
-#define KA_USERAUTH_VERSION 1
-#define KA_USERAUTH_DOSETPAG 0x10000
-#define NOPAG  0xffffffff
-extern "C" int ka_UserAuthenticateGeneral(int, char *, char *, char *,
-                                          char *, int, int, int, char **);
+#include "AFSAuth.h"
 #endif
 
 #ifdef R__SRP
@@ -3674,15 +3669,10 @@ int RpdPass(const char *pass, int errheq)
    pw = getpwnam(gUser);
 
 #ifdef R__AFS
-   afs_auth = !ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG,
-                                          gUser,        //user name
-                                          (char *) 0,   //instance
-                                          (char *) 0,   //realm
-                                          passwd,       //password
-                                          0,            //default lifetime
-                                          0, 0,         //two spares
-                                          &reason);     //error string
-
+   void *tok = GetAFSToken(gUser, passwd, 0, -1, &reason);
+   afs_auth = (tok) ? 1 : 0;
+   // We do not need the token anymore
+   DeleteAFSToken(tok);
    if (!afs_auth) {
       if (gDebug > 0)
          ErrorInfo("RpdPass: AFS login failed for user %s: %s",

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.18 2006/10/20 09:38:11 rdm Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoElement.cxx,v 1.20 2006/12/20 08:23:03 brun Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TVirtualGeoPainter.h"
 #include "TGeoManager.h"
 #include "TGeoElement.h"
+#include "TMath.h"
 
 // statics and globals
 static const Int_t gMaxElem  = 110;
@@ -705,7 +706,7 @@ void TGeoElementTable::AddElement(const char *name, const char *title, Int_t z, 
 {
 // Add an element to the table.
    if (!fList) fList = new TObjArray(128);
-   fList->AddAt(new TGeoElement(name,title,z,a), fNelements++);
+   fList->AddAtAndExpand(new TGeoElement(name,title,z,a), fNelements++);
 }
 
 //______________________________________________________________________________

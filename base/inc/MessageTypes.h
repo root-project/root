@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.33 2006/07/26 14:28:58 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.34 2006/11/20 15:56:35 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -86,6 +86,7 @@ enum EMessageTypes {
    kPROOF_DATASET_STATUS,                //status of data set preparation before processing
    kPROOF_OUTPUTOBJECT,                  //output object follows
    kPROOF_SETENV,                        //buffer with env vars to set
+   kPROOF_REALTIMELOG,                   //switch on/off real-time retrieval of log messages
 
    //---- ROOTD message opcodes (2000 - 2099)
    kROOTD_USER             = 2000,       //user id follows

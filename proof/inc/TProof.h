@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.101 2006/12/13 11:21:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.106 2007/02/07 09:07:14 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -42,9 +42,6 @@
 #ifndef ROOT_TMD5
 #include "TMD5.h"
 #endif
-#ifndef ROOT_TSocket
-#include "TSocket.h"
-#endif
 #ifndef ROOT_TSysEvtHandler
 #include "TSysEvtHandler.h"
 #endif
@@ -63,29 +60,30 @@ namespace std { using ::map; }
 
 #define CANNOTUSE(x) Info(x,"Not manager: cannot use this method")
 
+class TChain;
+class TCondor;
+class TCondorSlave;
+class TDrawFeedback;
+class TDSet;
+class TEventList;
+class TList;
 class TMessage;
 class TMonitor;
-class TSignalHandler;
 class TPluginHandler;
-class TSlave;
-class TProofServ;
+class TProof;
 class TProofInputHandler;
 class TProofInterruptHandler;
 class TProofLockPath;
 class TProofPlayer;
 class TProofPlayerRemote;
 class TProofProgressDialog;
+class TProofServ;
 class TQueryResult;
-class TChain;
-class TCondor;
-class TEventList;
-class TTree;
-class TDrawFeedback;
-class TDSet;
+class TSignalHandler;
+class TSlave;
 class TSemaphore;
-class TCondorSlave;
-class TList;
-class TProof;
+class TSocket;
+class TTree;
 class TVirtualMutex;
 
 // protocol changes:
@@ -190,8 +188,7 @@ private:
    TSocket *fSocket;
    TProof  *fProof;
 public:
-   TProofInputHandler(TProof *p, TSocket *s)
-      : TFileHandler(s->GetDescriptor(), 1) { fProof = p; fSocket = s; }
+   TProofInputHandler(TProof *p, TSocket *s);
    Bool_t Notify();
    Bool_t ReadNotify() { return Notify(); }
 };
@@ -429,17 +426,20 @@ private:
    void     Interrupt(EUrgent type, ESlaves list = kActive);
    void     AskStatistics();
    void     AskParallel();
-   Int_t    GoParallel(Int_t nodes, Bool_t accept = kFALSE);
-   Int_t    SetParallelSilent(Int_t nodes);
+   Int_t    GoParallel(Int_t nodes, Bool_t accept = kFALSE, Bool_t random = kFALSE);
+   Int_t    SetParallelSilent(Int_t nodes, Bool_t random = kFALSE);
    void     RecvLogFile(TSocket *s, Int_t size);
+   void     NotifyLogMsg(const char *msg, const char *sfx = "\n");
    Int_t    BuildPackage(const char *package, EBuildPackageOpt opt = kBuildAll);
    Int_t    BuildPackageOnClient(const TString &package);
    Int_t    LoadPackage(const char *package, Bool_t notOnClient = kFALSE);
    Int_t    LoadPackageOnClient(const TString &package);
    Int_t    UnloadPackage(const char *package);
+   Int_t    UnloadPackageOnClient(const char *package);
    Int_t    UnloadPackages();
    Int_t    UploadPackageOnClient(const TString &package, EUploadPackageOpt opt, TMD5 *md5);
    Int_t    DisablePackage(const char *package);
+   Int_t    DisablePackageOnClient(const char *package);
    Int_t    DisablePackages();
 
    void     Activate(TList *slaves = 0);
@@ -482,6 +482,8 @@ private:
    void     DeActivateAsyncInput();
    void     HandleAsyncInput(TSocket *s);
    Int_t    GetQueryReference(Int_t qry, TString &ref);
+
+   void     PrintProgress(Long64_t total, Long64_t processed, Float_t procTime = -1.);
 
 protected:
    TProof(); // For derived classes to use
@@ -542,7 +544,7 @@ public:
    void        StopProcess(Bool_t abort, Int_t timeout = -1);
    void        Browse(TBrowser *b);
 
-   Int_t       SetParallel(Int_t nodes = 9999);
+   Int_t       SetParallel(Int_t nodes = 9999, Bool_t random = kFALSE);
    void        SetLogLevel(Int_t level, UInt_t mask = TProofDebug::kAll);
 
    void        Close(Option_t *option="");
@@ -608,10 +610,10 @@ public:
    Int_t       GetSessionID() const { return fSessionID; }
    TList      *GetSlaveInfo();
 
-   EQueryMode  GetQueryMode() const;
-   EQueryMode  GetQueryMode(Option_t *mode) const;
+   EQueryMode  GetQueryMode(Option_t *mode = 0) const;
    void        SetQueryMode(EQueryMode mode);
-   void        SetQueryType(EQueryMode mode) { fQueryMode = mode; }
+
+   void        SetRealTimeLog(Bool_t on = kTRUE);
 
    Long64_t    GetBytesRead() const { return fBytesRead; }
    Float_t     GetRealTime() const { return fRealTime; }

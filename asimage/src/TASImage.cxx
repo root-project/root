@@ -58,6 +58,7 @@
 #include "TASImage.h"
 #include "TASImagePlugin.h"
 #include "TROOT.h"
+#include "TMath.h"
 #include "TSystem.h"
 #include "TVirtualX.h"
 #include "TCanvas.h"
@@ -75,7 +76,6 @@
 #include "Riostream.h"
 #include "THashTable.h"
 #include "TPluginManager.h"
-#include "TFile.h"
 #include "TEnv.h"
 #include "TStyle.h"
 
@@ -571,7 +571,6 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
       s += 4; // skip "gif+"
       int delay = atoi(s);
 
-
       if (delay < 0) {
          delay = 0;
       }
@@ -891,7 +890,6 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
 
       if (itmp && itmp->fImage) {
          fImage = clone_asimage(itmp->fImage, SCL_DO_ALL);
-
          if (itmp->fImage->alt.argb32) {
             UInt_t sz = itmp->fImage->width*itmp->fImage->height;
             fImage->alt.argb32 = new ARGB32[sz];
@@ -914,7 +912,13 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    TCanvas *canvas = pad->GetCanvas();
    Int_t wid = (pad == canvas) ? canvas->GetCanvasID() : pad->GetPixmapID();
    gVirtualX->SelectWindow(wid);
+
+   // syncronization
    gVirtualX->Update(1);
+   gSystem->ProcessEvents();
+   gSystem->Sleep(10);
+   gSystem->ProcessEvents();
+
    Window_t wd = (Window_t)gVirtualX->GetCurrentWindow();
    if (!wd) return;
 
@@ -1004,8 +1008,55 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y)
       return;
    }
 
+///UInt_t hh = im->height;
+///UInt_t ow = im->width%8;
+///UInt_t ww = im->width - ow + (ow ? 8 : 0);
+
+///UInt_t bit = 0;
+///int i = 0;
+///UInt_t yy = 0;
+///UInt_t xx = 0;
+   Pixmap_t mask = kNone;
+/*
+   char *bits = new char[ww*hh]; //an array of bits
+
+   ASImageDecoder *imdec = start_image_decoding(fgVisual, im, SCL_DO_ALPHA,
+                                                0, 0, ww, 0, 0);
+   if(imdec) {
+      for (yy = 0; yy < hh; yy++) {
+         imdec->decode_image_scanline(imdec);
+         CARD32 *a = imdec->buffer.alpha;
+
+         for (xx = 0; xx < ww; xx++) {
+            if (a[xx]) {
+               SETBIT(bits[i], bit);
+            } else {
+               CLRBIT(bits[i], bit);
+            }
+            bit++;
+            if (bit == 8) {
+               bit = 0;
+               i++;
+            }
+         }
+      }
+
+      stop_image_decoding(&imdec);
+
+      mask = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), 
+                                          (const char *)bits, ww, hh);
+      delete [] bits;
+   }
+*/
+   gv.fMask = kGCClipMask | kGCClipXOrigin | kGCClipYOrigin;
+   gv.fClipMask = mask;
+   gv.fClipXOrigin = x;
+   gv.fClipYOrigin = y;
+
    if (!gc) {
       gc = gVirtualX->CreateGC(gVirtualX->GetDefaultRootWindow(), &gv);
+   } else {
+      gVirtualX->ChangeGC(gc, &gv);
    }
 
    static int x11 = -1;
@@ -1033,7 +1084,12 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y)
          destroy_asimage(&img);
       }
    }
+
+   gv.fMask = kGCClipMask;
+   gv.fClipMask = kNone;
+   if (gc) gVirtualX->ChangeGC(gc, &gv);
 }
+
 //______________________________________________________________________________
 void TASImage::PaintImage(Drawable_t wid, Int_t x, Int_t y)
 {
@@ -3238,7 +3294,7 @@ UInt_t *TASImage::GetScanline(UInt_t y)
 
 /////////////////////////////// vector graphics ///////////////////////////////
 // a couple of macros which can be "assembler accelerated"
-#if defined(R__GNU) && defined(__i386__)
+#if defined(R__GNU) && defined(__i386__) && !defined(__sun)
 #define _MEMSET_(dst, lng, val)   __asm__("movl  %0,%%eax \n"\
                                       "movl  %1,%%edi \n"              \
                                       "movl  %2,%%ecx \n"              \
@@ -3600,9 +3656,13 @@ void TASImage::DrawRectangle(UInt_t x, UInt_t y, UInt_t w, UInt_t h,
    }
 
    if (!fImage) {
-      fImage = create_asimage(w ? w : 20, h ? h : 20, 0);
+      w = w ? w : 20;
+      h = h ? h : 20;
       x = 0;
       y = 0;
+      fImage = create_asimage(w, h, 0);
+      FillRectangle(col, 0, 0, w, h);
+      return;
    }
 
    if (!fImage->alt.argb32) {
@@ -3637,7 +3697,11 @@ void TASImage::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, const char *col,
    ARGB32 color;
 
    if (!fImage) {
-      fImage = create_asimage(w ? x+w : x+20, h ? y+h : y+20, 0);
+      w = w ? x+w : x+20;
+      h = h ? y+h : y+20;
+      fImage = create_asimage(w, h, 0);
+      FillRectangle(col, 0, 0, w, h);
+      return;
    }
 
    if (x1 == x2) {
@@ -4998,6 +5062,22 @@ static void fill_hline_notile_argb32(ASDrawContext *ctx, int x_from, int y,
 }
 
 //_____________________________________________________________________________
+static void apply_tool_point_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CARD32)
+{
+   //
+
+	int cw = ctx->canvas_width;
+
+	if (curr_x >= 0 && curr_x < cw && curr_y >= 0 && curr_y < ctx->canvas_height)  {	
+		CARD32 value = ctx->tool->matrix[0]; //color
+		CARD32 *dst = (CARD32 *)(ctx->canvas);
+		dst += curr_y * cw; 
+
+      _alphaBlend(&dst[curr_x], &value);
+	}
+}
+
+//_____________________________________________________________________________
 static void apply_tool_2D_argb32(ASDrawContext *ctx, int curr_x, int curr_y, CARD32)
 {
    //
@@ -5063,8 +5143,12 @@ static ASDrawContext *create_draw_context_argb32(ASImage *im, ASDrawTool *brush)
 
    ctx->tool = brush;
    ctx->fill_hline_func = fill_hline_notile_argb32;
-   ctx->apply_tool_func = apply_tool_2D_argb32;
 
+   if ((ctx->tool->width == 1) && (ctx->tool->height == 1)) {
+      ctx->apply_tool_func = apply_tool_point_argb32;
+   } else {
+      ctx->apply_tool_func = apply_tool_2D_argb32;
+   }
    return ctx;
 }
 
@@ -5121,11 +5205,18 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
 
    Int_t dots = Int_t(source->width * source->rows);
    r = g = b = 0;
+   Int_t bxx, byy;
 
    yy = y0 = by * fImage->width;
    for (y = 0; y < (int) source->rows; y++) {
+      byy = by + y;
+      if ((byy >= (int)fImage->height) || (byy <0)) continue;
+
       for (x = 0; x < (int) source->width; x++) {
-         idx = bx + x + yy;
+         bxx = bx + x;
+         if ((bxx >= (int)fImage->width) || (bxx < 0)) continue;
+
+         idx = bxx + yy;
          r += ((fImage->alt.argb32[idx] & 0xff0000) >> 16);
          g += ((fImage->alt.argb32[idx] & 0x00ff00) >> 8);
          b += (fImage->alt.argb32[idx] & 0x0000ff);
@@ -5155,13 +5246,19 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
 
    yy = y0;
    for (y = 0; y < (int) source->rows; y++) {
+      byy = by + y;
+      if ((byy >= (int)fImage->height) || (byy <0)) continue;
+
       for (x = 0; x < (int) source->width; x++) {
+         bxx = bx + x;
+         //if ((bxx >= (int)fImage->width) || (bxx < 0)) continue;
+
          d = *s++ & 0xff;
          d = ((d + 10) * 5) >> 8;
          if (d > 4) d = 4;
 
-         if (d && x < (int) source->width) {
-            idx = (bx + x) + yy;
+         if (d && (x < (int) source->width) && (bxx < (int)fImage->width) && (bxx >= 0)) {
+            idx = bxx + yy;
             fImage->alt.argb32[idx] = (ARGB32)col[d];
          }
       }
@@ -5403,31 +5500,28 @@ void TASImage::Streamer(TBuffer &b)
       }
 
       if ( version == 1 ) {
-         TObject * parent = b.GetParent();
-         if ( parent->IsA() == TFile::Class() ) {
-            Int_t file_version = ((TFile*)parent)->GetVersion();
-            if ( file_version < 50000 ) {
-               TImage::Streamer(b);
-               b >> fMaxValue;
-               b >> fMinValue;
-               b >> fZoomOffX;
-               b >> fZoomOffY;
-               b >> fZoomWidth;
-               b >> fZoomHeight;
-               if ( file_version < 40200 ) {
-                  Bool_t zoomUpdate;
-                  b >> zoomUpdate;
-                  fZoomUpdate = zoomUpdate;
-               } else {
-                  b >> fZoomUpdate;
-                  b >> fEditable;
-                  Bool_t paintMode;
-                  b >> paintMode;
-                  fPaintMode = paintMode;
-               }
-               b.CheckByteCount(R__s, R__c, TASImage::IsA());
-               return;
+         Int_t fileVersion = b.GetVersionOwner(); 
+         if (fileVersion > 0 && fileVersion < 50000 ) {
+            TImage::Streamer(b);
+            b >> fMaxValue;
+            b >> fMinValue;
+            b >> fZoomOffX;
+            b >> fZoomOffY;
+            b >> fZoomWidth;
+            b >> fZoomHeight;
+            if ( fileVersion < 40200 ) {
+               Bool_t zoomUpdate;
+               b >> zoomUpdate;
+               fZoomUpdate = zoomUpdate;
+            } else {
+               b >> fZoomUpdate;
+               b >> fEditable;
+               Bool_t paintMode;
+               b >> paintMode;
+               fPaintMode = paintMode;
             }
+            b.CheckByteCount(R__s, R__c, TASImage::IsA());
+            return;
          }
       }
 
@@ -5498,7 +5592,7 @@ const char *TASImage::GetTitle() const
 {
    // title is used to keep 32x32 xpm image's thumbnail
 
-   if (!gFile || !gFile->IsOpen() || !gFile->IsWritable()) {
+   if (!gDirectory || !gDirectory->IsWritable()) {
       return 0;
    }
 
@@ -5853,6 +5947,12 @@ void TASImage::FromWindow(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
 
    x = x < 0 ? 0 : x;
    y = y < 0 ? 0 : y;
+
+   // syncronization
+   gVirtualX->Update(1);
+   gSystem->ProcessEvents();
+   gSystem->Sleep(10);
+   gSystem->ProcessEvents();
 
    if (!w || !h) {
       gVirtualX->GetWindowSize(wid, xy, xy, w, h);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.19 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.20 2006/07/26 13:36:42 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -44,6 +44,8 @@ class TSignalHandler;
 
 class TApplication : public TObject, public TQObject {
 
+friend class TLoadGraphicsLibs;
+
 private:
    Int_t              fArgc;           //Number of com   mand line arguments
    char             **fArgv;           //Command line arguments
@@ -53,10 +55,13 @@ private:
    Bool_t             fNoLog;          //Do not process logon and logoff macros
    Bool_t             fNoLogo;         //Do not show splash screen and welcome message
    Bool_t             fQuit;           //Exit after having processed input files
+   Bool_t             fGraphInit;      //True if graphics has been initialized
    TObjArray         *fFiles;          //Array of input files (TObjString's)
    TString            fIdleCommand;    //Command to execute while application is idle
    TTimer            *fIdleTimer;      //Idle timer
    TSignalHandler    *fSigHandler;     //Interrupt handler
+
+   static Bool_t      fgGraphInit;     // True if graphics libs initialized
 
    TApplication(const TApplication&);             // not implemented
    TApplication& operator=(const TApplication&);  // not implemented
@@ -64,11 +69,12 @@ private:
 protected:
    TApplication();
 
+   void InitializeGraphics();
    virtual void Help(const char *line);
    virtual void InitializeColors();
    virtual void LoadGraphicsLibs();
    virtual void MakeBatch();
-   void         SetSignalHandler(TSignalHandler *sh) { fSigHandler = sh; }
+   void SetSignalHandler(TSignalHandler *sh) { fSigHandler = sh; }
 
 public:
    TApplication(const char *appClassName, Int_t *argc, char **argv,

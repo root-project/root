@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Tools.h,v 1.28 2006/11/20 13:20:17 stelzer Exp $   
+// @(#)root/tmva $Id: Tools.h,v 1.9 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -41,7 +41,6 @@
 #include <vector>
 #include <string>
 
-#include "TROOT.h"
 #include "TList.h"
 
 #ifndef ROOT_TMVA_TMatrixDSymEigen

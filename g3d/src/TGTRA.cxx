@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGTRA.cxx,v 1.4 2005/03/09 18:19:26 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGTRA.cxx,v 1.5 2005/08/30 09:11:39 brun Exp $
 // Author: Nenad Buncic   19/09/95
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "TGTRA.h"
 #include "TNode.h"
+#include "TMath.h"
 
 ClassImp(TGTRA)
 

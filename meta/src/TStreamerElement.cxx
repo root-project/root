@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.87 2006/03/06 22:58:18 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.92 2007/02/05 18:11:28 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -17,7 +17,7 @@
 
 #include "TROOT.h"
 #include "TStreamerElement.h"
-#include "TStreamerInfo.h"
+#include "TVirtualStreamerInfo.h"
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TBaseClass.h"
@@ -44,15 +44,15 @@ static TStreamerBasicType *InitCounter(const char *countClass, const char *count
    // Helper function to initialize the 'index/counter' value of
    // the Pointer streamerElements.
 
-   TClass *cl = gROOT->GetClass(countClass);
+   TClass *cl = TClass::GetClass(countClass);
 
    if (cl==0) return 0;
 
-   TStreamerBasicType *counter = TStreamerInfo::GetElementCounter(countName,cl);
+   TStreamerBasicType *counter = TVirtualStreamerInfo::GetElementCounter(countName,cl);
 
    //at this point the counter is may be declared to skip
    if (counter) {
-      if (counter->GetType() < TStreamerInfo::kCounter) counter->SetType(TStreamerInfo::kCounter);
+      if (counter->GetType() < TVirtualStreamerInfo::kCounter) counter->SetType(TVirtualStreamerInfo::kCounter);
    }
    return counter;
 }
@@ -72,6 +72,7 @@ static void GetRange(const char *comments, Double_t &xmin, Double_t &xmax, Doubl
    // Currently the range specifier is used only to stream a Double32_t type
    // see TBuffer::WriteDouble32
 
+   const Double_t kPi =3.14159265358979323846 ;
    factor = xmin = xmax = 0;
    if (!comments) return;
    const char *left = strstr(comments,"[");
@@ -107,12 +108,12 @@ static void GetRange(const char *comments, Double_t &xmin, Double_t &xmax, Doubl
    sxmin.ToLower();
    sxmin.ReplaceAll(" ","");
    if (sxmin.Contains("pi")) {
-      if      (sxmin.Contains("2pi"))   xmin = TMath::TwoPi();
-      else if (sxmin.Contains("2*pi"))  xmin = TMath::TwoPi();
-      else if (sxmin.Contains("twopi")) xmin = TMath::TwoPi();
-      else if (sxmin.Contains("pi/2"))  xmin = TMath::PiOver2();
-      else if (sxmin.Contains("pi/4"))  xmin = TMath::PiOver4();
-      else if (sxmin.Contains("pi"))    xmin = TMath::Pi();
+      if      (sxmin.Contains("2pi"))   xmin = 2*kPi;
+      else if (sxmin.Contains("2*pi"))  xmin = 2*kPi;
+      else if (sxmin.Contains("twopi")) xmin = 2*kPi;
+      else if (sxmin.Contains("pi/2"))  xmin = kPi/2;
+      else if (sxmin.Contains("pi/4"))  xmin = kPi/4;
+      else if (sxmin.Contains("pi"))    xmin = kPi;
       if (sxmin.Contains("-"))          xmin = -xmin;
    } else {
       sscanf(sxmin.Data(),"%lg",&xmin);
@@ -121,12 +122,12 @@ static void GetRange(const char *comments, Double_t &xmin, Double_t &xmax, Doubl
    sxmax.ToLower();
    sxmax.ReplaceAll(" ","");
    if (sxmax.Contains("pi")) {
-      if      (sxmax.Contains("2pi"))   xmax = TMath::TwoPi();
-      else if (sxmax.Contains("2*pi"))  xmax = TMath::TwoPi();
-      else if (sxmax.Contains("twopi")) xmax = TMath::TwoPi();
-      else if (sxmax.Contains("pi/2"))  xmax = TMath::PiOver2();
-      else if (sxmax.Contains("pi/4"))  xmax = TMath::PiOver4();
-      else if (sxmax.Contains("pi"))    xmax = TMath::Pi();
+      if      (sxmax.Contains("2pi"))   xmax = 2*kPi;
+      else if (sxmax.Contains("2*pi"))  xmax = 2*kPi;
+      else if (sxmax.Contains("twopi")) xmax = 2*kPi;
+      else if (sxmax.Contains("pi/2"))  xmax = kPi/2;
+      else if (sxmax.Contains("pi/4"))  xmax = kPi/4;
+      else if (sxmax.Contains("pi"))    xmax = kPi;
       if (sxmax.Contains("-"))          xmax = -xmax;
    } else {
       sscanf(sxmax.Data(),"%lg",&xmax);
@@ -208,11 +209,11 @@ Bool_t TStreamerElement::CannotSplit() const
    if (!cl) return kFALSE;  //basic type
 
    switch(fType) {
-      case TStreamerInfo::kAny    +TStreamerInfo::kOffsetL:
-      case TStreamerInfo::kObject +TStreamerInfo::kOffsetL:
-      case TStreamerInfo::kTObject+TStreamerInfo::kOffsetL:
-      case TStreamerInfo::kTString+TStreamerInfo::kOffsetL:
-      case TStreamerInfo::kTNamed +TStreamerInfo::kOffsetL:
+      case TVirtualStreamerInfo::kAny    +TVirtualStreamerInfo::kOffsetL:
+      case TVirtualStreamerInfo::kObject +TVirtualStreamerInfo::kOffsetL:
+      case TVirtualStreamerInfo::kTObject+TVirtualStreamerInfo::kOffsetL:
+      case TVirtualStreamerInfo::kTString+TVirtualStreamerInfo::kOffsetL:
+      case TVirtualStreamerInfo::kTNamed +TVirtualStreamerInfo::kOffsetL:
          return kTRUE;
    }
 
@@ -229,7 +230,7 @@ TClass *TStreamerElement::GetClassPointer() const
    if (fClassObject!=(TClass*)(-1)) return fClassObject;
    TString className = fTypeName.Strip(TString::kTrailing, '*');
    if (className.Index("const ")==0) className.Remove(0,6);
-   ((TStreamerElement*)this)->fClassObject = gROOT->GetClass(className);
+   ((TStreamerElement*)this)->fClassObject = TClass::GetClass(className);
    return fClassObject;
 }
 
@@ -357,7 +358,7 @@ void TStreamerElement::SetArrayDim(Int_t dim)
    // Set number of array dimensions.
 
    fArrayDim = dim;
-   if (dim) fType += TStreamerInfo::kOffsetL;
+   if (dim) fType += TVirtualStreamerInfo::kOffsetL;
    fNewType = fType;
 }
 
@@ -482,14 +483,14 @@ TStreamerBase::TStreamerBase()
 
 //______________________________________________________________________________
 TStreamerBase::TStreamerBase(const char *name, const char *title, Int_t offset)
-        : TStreamerElement(name,title,offset,TStreamerInfo::kBase,"BASE")
+        : TStreamerElement(name,title,offset,TVirtualStreamerInfo::kBase,"BASE")
 {
    // Create a TStreamerBase object.
 
-   if (strcmp(name,"TObject") == 0) fType = TStreamerInfo::kTObject;
-   if (strcmp(name,"TNamed")  == 0) fType = TStreamerInfo::kTNamed;
+   if (strcmp(name,"TObject") == 0) fType = TVirtualStreamerInfo::kTObject;
+   if (strcmp(name,"TNamed")  == 0) fType = TVirtualStreamerInfo::kTNamed;
    fNewType = fType;
-   fBaseClass = gROOT->GetClass(GetName());
+   fBaseClass = TClass::GetClass(GetName());
    fBaseVersion = fBaseClass->GetClassVersion();
    Init();
 }
@@ -505,7 +506,7 @@ TClass *TStreamerBase::GetClassPointer() const
 {
    // Returns a pointer to the TClass of this element.
    if (fBaseClass!=(TClass*)(-1)) return fBaseClass;
-   ((TStreamerBase*)this)->fBaseClass = gROOT->GetClass(GetName());
+   ((TStreamerBase*)this)->fBaseClass = TClass::GetClass(GetName());
    return fBaseClass;
 }
 
@@ -524,13 +525,13 @@ void TStreamerBase::Init(TObject *)
 {
    // Setup the element.
 
-   if (fType == TStreamerInfo::kTObject || fType == TStreamerInfo::kTNamed) return;
-   fBaseClass = gROOT->GetClass(GetName());
+   if (fType == TVirtualStreamerInfo::kTObject || fType == TVirtualStreamerInfo::kTNamed) return;
+   fBaseClass = TClass::GetClass(GetName());
    if (!fBaseClass) return;
    if (!fBaseClass->GetMethodAny("StreamerNVirtual")) return;
    fMethod = new TMethodCall();
    fMethod->InitWithPrototype(fBaseClass,"StreamerNVirtual","TBuffer &");
-   //fBaseClass = gROOT->GetClass(GetName());
+   //fBaseClass = TClass::GetClass(GetName());
 }
 
 //______________________________________________________________________________
@@ -599,7 +600,7 @@ void TStreamerBase::Streamer(TBuffer &R__b)
          R__b >> fBaseVersion;
       } else {
          // could have been: fBaseVersion = GetClassPointer()->GetClassVersion();
-         fBaseClass = gROOT->GetClass(GetName());         
+         fBaseClass = TClass::GetClass(GetName());         
          fBaseVersion = fBaseClass->GetClassVersion();
       }
       R__b.ClassEnd(TStreamerBase::Class());
@@ -673,7 +674,7 @@ TStreamerBasicPointer::TStreamerBasicPointer(const char *name, const char *title
 {
    // Create a TStreamerBasicPointer object.
 
-   fType += TStreamerInfo::kOffsetP;
+   fType += TVirtualStreamerInfo::kOffsetP;
    fCountName    = countName;
    fCountClass   = countClass;
    fCountVersion = countVersion;  //currently unused
@@ -721,7 +722,7 @@ void TStreamerBasicPointer::SetArrayDim(Int_t dim)
    // Set number of array dimensions.
 
    fArrayDim = dim;
-   //if (dim) fType += TStreamerInfo::kOffsetL;
+   //if (dim) fType += TVirtualStreamerInfo::kOffsetL;
    fNewType = fType;
 }
 
@@ -734,7 +735,7 @@ void TStreamerBasicPointer::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TStreamerBasicPointer::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TStreamerBasicPointer::Class(), this, R__v, R__s, R__c);
          //Init();
          //fCounter = InitCounter( fCountClass, fCountName );
          return;
@@ -746,7 +747,7 @@ void TStreamerBasicPointer::Streamer(TBuffer &R__b)
       fCountClass.Streamer(R__b);
       R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
    } else {
-      TStreamerBasicPointer::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerBasicPointer::Class(),this);
    }
 }
 
@@ -770,7 +771,7 @@ TStreamerLoop::TStreamerLoop() : fCounter(0)
 
 //______________________________________________________________________________
 TStreamerLoop::TStreamerLoop(const char *name, const char *title, Int_t offset, const char *countName, const char *countClass, Int_t countVersion, const char *typeName)
-        : TStreamerElement(name,title,offset,TStreamerInfo::kStreamLoop,typeName)
+        : TStreamerElement(name,title,offset,TVirtualStreamerInfo::kStreamLoop,typeName)
 {
    // Create a TStreamerLoop object.
 
@@ -834,7 +835,7 @@ void TStreamerLoop::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TStreamerLoop::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TStreamerLoop::Class(), this, R__v, R__s, R__c);
          //Init();
          return;
       }
@@ -845,7 +846,7 @@ void TStreamerLoop::Streamer(TBuffer &R__b)
       fCountClass.Streamer(R__b);
       R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
    } else {
-      TStreamerLoop::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerLoop::Class(),this);
    }
 }
 
@@ -885,8 +886,8 @@ ULong_t TStreamerBasicType::GetMethod() const
 {
    // return address of counter
 
-   if (fType ==  TStreamerInfo::kCounter ||
-       fType == (TStreamerInfo::kCounter+TStreamerInfo::kSkip)) return (ULong_t)&fCounter;
+   if (fType ==  TVirtualStreamerInfo::kCounter ||
+       fType == (TVirtualStreamerInfo::kCounter+TVirtualStreamerInfo::kSkip)) return (ULong_t)&fCounter;
    return 0;
 }
 
@@ -907,14 +908,14 @@ void TStreamerBasicType::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TStreamerBasicType::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TStreamerBasicType::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
       TStreamerElement::Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TStreamerBasicType::IsA());
    } else {
-      TStreamerBasicType::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerBasicType::Class(),this);
    }
 }
 
@@ -942,9 +943,9 @@ TStreamerObject::TStreamerObject(const char *name, const char *title, Int_t offs
 {
    // Create a TStreamerObject object.
 
-   fType = TStreamerInfo::kObject;
-   if (strcmp(typeName,"TObject") == 0) fType = TStreamerInfo::kTObject;
-   if (strcmp(typeName,"TNamed")  == 0) fType = TStreamerInfo::kTNamed;
+   fType = TVirtualStreamerInfo::kObject;
+   if (strcmp(typeName,"TObject") == 0) fType = TVirtualStreamerInfo::kTObject;
+   if (strcmp(typeName,"TNamed")  == 0) fType = TVirtualStreamerInfo::kTNamed;
    fNewType = fType;
    Init();
 }
@@ -998,14 +999,14 @@ void TStreamerObject::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TStreamerObject::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TStreamerObject::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
       TStreamerElement::Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TStreamerObject::IsA());
    } else {
-      TStreamerObject::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerObject::Class(),this);
    }
 }
 
@@ -1028,7 +1029,7 @@ TStreamerObjectAny::TStreamerObjectAny()
 
 //______________________________________________________________________________
 TStreamerObjectAny::TStreamerObjectAny(const char *name, const char *title, Int_t offset, const char *typeName)
-        : TStreamerElement(name,title,offset,TStreamerInfo::kAny,typeName)
+        : TStreamerElement(name,title,offset,TVirtualStreamerInfo::kAny,typeName)
 {
    // Create a TStreamerObjectAny object.
    Init();
@@ -1083,14 +1084,14 @@ void TStreamerObjectAny::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TStreamerObjectAny::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TStreamerObjectAny::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
       TStreamerElement::Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TStreamerObjectAny::IsA());
    } else {
-      TStreamerObjectAny::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerObjectAny::Class(),this);
    }
 }
 
@@ -1115,11 +1116,11 @@ TStreamerObjectPointer::TStreamerObjectPointer()
 //______________________________________________________________________________
 TStreamerObjectPointer::TStreamerObjectPointer(const char *name, const char *title,
                                                Int_t offset, const char *typeName)
-   : TStreamerElement(name,title,offset,TStreamerInfo::kObjectP,typeName)
+   : TStreamerElement(name,title,offset,TVirtualStreamerInfo::kObjectP,typeName)
 {
    // Create a TStreamerObjectPointer object.
 
-   if (strncmp(title,"->",2) == 0) fType = TStreamerInfo::kObjectp;
+   if (strncmp(title,"->",2) == 0) fType = TVirtualStreamerInfo::kObjectp;
    fNewType = fType;
    Init();
 }
@@ -1169,7 +1170,7 @@ void TStreamerObjectPointer::SetArrayDim(Int_t dim)
    // Set number of array dimensions.
 
    fArrayDim = dim;
-   //if (dim) fType += TStreamerInfo::kOffsetL;
+   //if (dim) fType += TVirtualStreamerInfo::kOffsetL;
    fNewType = fType;
 }
 
@@ -1182,14 +1183,14 @@ void TStreamerObjectPointer::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TStreamerObjectPointer::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TStreamerObjectPointer::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
       TStreamerElement::Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TStreamerObjectPointer::IsA());
    } else {
-      TStreamerObjectPointer::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerObjectPointer::Class(),this);
    }
 }
 
@@ -1213,11 +1214,11 @@ TStreamerObjectAnyPointer::TStreamerObjectAnyPointer()
 //______________________________________________________________________________
 TStreamerObjectAnyPointer::TStreamerObjectAnyPointer(const char *name, const char *title,
                                                      Int_t offset, const char *typeName)
-   : TStreamerElement(name,title,offset,TStreamerInfo::kAnyP,typeName)
+   : TStreamerElement(name,title,offset,TVirtualStreamerInfo::kAnyP,typeName)
 {
    // Create a TStreamerObjectAnyPointer object.
 
-   if (strncmp(title,"->",2) == 0) fType = TStreamerInfo::kAnyp;
+   if (strncmp(title,"->",2) == 0) fType = TVirtualStreamerInfo::kAnyp;
    fNewType = fType;
    Init();
 }
@@ -1267,7 +1268,7 @@ void TStreamerObjectAnyPointer::SetArrayDim(Int_t dim)
    // Set number of array dimensions.
 
    fArrayDim = dim;
-   //if (dim) fType += TStreamerInfo::kOffsetL;
+   //if (dim) fType += TVirtualStreamerInfo::kOffsetL;
    fNewType = fType;
 }
 
@@ -1277,9 +1278,9 @@ void TStreamerObjectAnyPointer::Streamer(TBuffer &R__b)
    // Stream an object of class TStreamerObjectAnyPointer.
 
    if (R__b.IsReading()) {
-      TStreamerObjectAnyPointer::Class()->ReadBuffer(R__b, this);
+      R__b.ReadClassBuffer(TStreamerObjectAnyPointer::Class(), this);
    } else {
-      TStreamerObjectAnyPointer::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerObjectAnyPointer::Class(),this);
    }
 }
 
@@ -1302,7 +1303,7 @@ TStreamerString::TStreamerString()
 
 //______________________________________________________________________________
 TStreamerString::TStreamerString(const char *name, const char *title, Int_t offset)
-        : TStreamerElement(name,title,offset,TStreamerInfo::kTString,"TString")
+        : TStreamerElement(name,title,offset,TVirtualStreamerInfo::kTString,"TString")
 {
    // Create a TStreamerString object.
 
@@ -1332,14 +1333,14 @@ void TStreamerString::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TStreamerString::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TStreamerString::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
       TStreamerElement::Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TStreamerString::IsA());
    } else {
-      TStreamerString::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerString::Class(),this);
    }
 }
 
@@ -1412,7 +1413,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
    else if (strstr(s,"multimap")) fSTLtype = kSTLmultimap;
    else if (strstr(s,"multiset")) fSTLtype = kSTLmultiset;
    if (fSTLtype == 0) { delete [] s; return;}
-   if (dmPointer) fSTLtype += TStreamerInfo::kOffsetP;
+   if (dmPointer) fSTLtype += TVirtualStreamerInfo::kOffsetP;
 
    // find STL contained type
    while (*sopen==' ') sopen++;
@@ -1433,22 +1434,22 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
    TDataType *dt = (TDataType*)gROOT->GetListOfTypes()->FindObject(sopen);
    if (dt) {
       fCtype = dt->GetType();
-      if (isPointer) fCtype += TStreamerInfo::kOffsetP;
+      if (isPointer) fCtype += TVirtualStreamerInfo::kOffsetP;
    } else {
      // this could also be a nested enums ... which should work ... be let's see.
-      TClass *cl = gROOT->GetClass(sopen);
+      TClass *cl = TClass::GetClass(sopen);
       if (cl) {
-         if (isPointer) fCtype = TStreamerInfo::kObjectp;
-         else           fCtype = TStreamerInfo::kObject;
+         if (isPointer) fCtype = TVirtualStreamerInfo::kObjectp;
+         else           fCtype = TVirtualStreamerInfo::kObject;
       } else {
          G__ClassInfo info(sopen);
          if (info.IsValid() && info.Property()&G__BIT_ISENUM) {
-            if (isPointer) fCtype += TStreamerInfo::kOffsetP;
+            if (isPointer) fCtype += TVirtualStreamerInfo::kOffsetP;
          } else {
             if(strcmp(sopen,"string")) {
                // This case can happens when 'this' is a TStreamerElement for
                // a STL container containing something for which we do not have
-               // a TStreamerInfo (This happens in particular is the collection 
+               // a TVirtualStreamerInfo (This happens in particular is the collection 
                // objects themselves are always empty) and we do not have the
                // dictionary/shared library for the container.
                if (GetClassPointer() && GetClassPointer()->IsLoaded()) {
@@ -1460,7 +1461,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
    }
    delete [] s;
 
-   if (TStreamerSTL::IsaPointer()) fType = TStreamerInfo::kSTLp;
+   if (TStreamerSTL::IsaPointer()) fType = TVirtualStreamerInfo::kSTLp;
 }
 
 //______________________________________________________________________________
@@ -1560,10 +1561,10 @@ void TStreamerSTL::SetStreamer(TMemberStreamer  *streamer)
    //set pointer to Streamer function for this element
    //NOTE: we do not take ownership
 
-   if (fType==TStreamerInfo::kSTLp || 1) return;
+   if (fType==TVirtualStreamerInfo::kSTLp || 1) return;
    fStreamer = streamer;
    if (streamer && !IsaPointer() ) {
-      fType = TStreamerInfo::kStreamer;
+      fType = TVirtualStreamerInfo::kStreamer;
       fNewType = fType;
    }
 }
@@ -1577,7 +1578,7 @@ void TStreamerSTL::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TStreamerSTL::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TStreamerSTL::Class(), this, R__v, R__s, R__c);
       } else {
          //====process old versions before automatic schema evolution
          TStreamerElement::Streamer(R__b);
@@ -1585,14 +1586,14 @@ void TStreamerSTL::Streamer(TBuffer &R__b)
          R__b >> fCtype;
          R__b.CheckByteCount(R__s, R__c, TStreamerSTL::IsA());
       }
-      if (IsaPointer()) fType = TStreamerInfo::kSTLp;
-      else fType = TStreamerInfo::kSTL;
+      if (IsaPointer()) fType = TVirtualStreamerInfo::kSTLp;
+      else fType = TVirtualStreamerInfo::kSTL;
       return;
    } else {
       // To enable forward compatibility we actually save with the old value
       Int_t tmp = fType;
-      fType = TStreamerInfo::kStreamer;
-      TStreamerSTL::Class()->WriteBuffer(R__b,this);
+      fType = TVirtualStreamerInfo::kStreamer;
+      R__b.WriteClassBuffer(TStreamerSTL::Class(),this);
       fType = tmp;
    }
 }
@@ -1624,9 +1625,9 @@ TStreamerSTLstring::TStreamerSTLstring(const char *name, const char *title, Int_
    SetTitle(title);
 
    if (dmPointer) {
-      fType = TStreamerInfo::kSTLp;
+      fType = TVirtualStreamerInfo::kSTLp;
    } else {
-      fType = TStreamerInfo::kSTL;
+      fType = TVirtualStreamerInfo::kSTL;
    }
 
    fNewType = fType;
@@ -1670,13 +1671,13 @@ void TStreamerSTLstring::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TStreamerSTLstring::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TStreamerSTLstring::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
       TStreamerSTL::Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TStreamerSTLstring::IsA());
    } else {
-      TStreamerSTLstring::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerSTLstring::Class(),this);
    }
 }

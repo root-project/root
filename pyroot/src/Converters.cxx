@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.35 2006/12/11 06:01:05 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.38 2007/01/29 15:10:49 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -6,6 +6,7 @@
 #include "Converters.h"
 #include "ObjectProxy.h"
 #include "PyBufferFactory.h"
+#include "TCustomPyTypes.h"
 #include "Utility.h"
 #include "RootWrapper.h"
 
@@ -148,8 +149,11 @@ PYROOT_IMPLEMENT_BASIC_CONVERTER( Long, Long_t, Long_t, PyLong_FromLong, PyLong_
 Bool_t PyROOT::TLongRefConverter::SetArg( PyObject* pyobject, TParameter& para, G__CallFunc* func )
 {
 // convert <pyobject> to C++ long&, set arg for call
-   if ( ! PyInt_CheckExact( pyobject ) )
+   if ( ! TCustomInt_CheckExact( pyobject ) ) {
+      if ( PyInt_Check( pyobject ) )
+         PyErr_SetString( PyExc_TypeError, "use ROOT.Long for pass-by-ref of longs" );
       return kFALSE;
+   }
 
    para.fl = (Long_t)&((PyIntObject*)pyobject)->ob_ival;
    if ( func )
@@ -280,8 +284,11 @@ PYROOT_IMPLEMENT_BASIC_CONVERTER( Float,  Float_t,  Double_t, PyFloat_FromDouble
 Bool_t PyROOT::TDoubleRefConverter::SetArg( PyObject* pyobject, TParameter& para, G__CallFunc* func )
 {
 // convert <pyobject> to C++ double&, set arg for call
-   if ( ! PyFloat_CheckExact( pyobject ) )
+   if ( ! TCustomFloat_CheckExact( pyobject ) ) {
+      if ( PyFloat_Check( pyobject ) )
+         PyErr_SetString( PyExc_TypeError, "use ROOT.Double for pass-by-ref of doubles" );
       return kFALSE;
+   }
 
    para.fl = (Long_t)&((PyFloatObject*)pyobject)->ob_fval;
    if ( func )
@@ -660,7 +667,7 @@ Bool_t PyROOT::TLongLongArrayConverter::SetArg( PyObject* pyobject, TParameter& 
 //- converters for special cases ----------------------------------------------
 #define PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( name, strtype, DF1 )  \
 PyROOT::T##name##Converter::T##name##Converter() :                            \
-      TRootObjectConverter( gROOT->GetClass( #strtype ) ) {}                  \
+      TRootObjectConverter( TClass::GetClass( #strtype ) ) {}                 \
                                                                               \
 Bool_t PyROOT::T##name##Converter::SetArg( PyObject* pyobject, TParameter& para, G__CallFunc* func )\
 {                                                                             \
@@ -956,7 +963,7 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
 
 // converters for known/ROOT classes and default (void*)
    TConverter* result = 0;
-   if ( TClass* klass = gROOT->GetClass( realType.c_str() ) ) {
+   if ( TClass* klass = TClass::GetClass( realType.c_str() ) ) {
       if ( cpd == "**" || cpd == "*&" || cpd == "&*" )
          result = new TRootObjectPtrConverter( klass, control );
       else if ( cpd == "*" )
@@ -1053,17 +1060,19 @@ namespace {
       NFp_t( "unsigned short",     &CreateUShortConverter             ),
       NFp_t( "int",                &CreateIntConverter                ),
       NFp_t( "int&",               &CreateLongRefConverter            ),
+      NFp_t( "const int&",         &CreateIntConverter                ),
       NFp_t( "unsigned int",       &CreateUIntConverter               ),
       NFp_t( "UInt_t", /* enum */  &CreateUIntConverter               ),
       NFp_t( "long",               &CreateLongConverter               ),
       NFp_t( "long&",              &CreateLongRefConverter            ),
+      NFp_t( "const long&",        &CreateLongConverter               ),
       NFp_t( "unsigned long",      &CreateULongConverter              ),
       NFp_t( "long long",          &CreateLongLongConverter           ),
       NFp_t( "unsigned long long", &CreateULongLongConverter          ),
       NFp_t( "float",              &CreateFloatConverter              ),
       NFp_t( "double",             &CreateDoubleConverter             ),
       NFp_t( "double&",            &CreateDoubleRefConverter          ),
-      NFp_t( "const double&",      &CreateConstDoubleRefConverter     ),
+      NFp_t( "const double&",      &CreateDoubleConverter             ),
       NFp_t( "void",               &CreateVoidConverter               ),
       NFp_t( "#define",            &CreateMacroConverter              ),
 

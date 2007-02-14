@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.56 2006/08/08 16:02:44 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.63 2007/01/29 15:10:48 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -55,11 +55,9 @@
 
 #include <stdlib.h>
 #include "TClonesArray.h"
-#include "TMath.h"
 #include "TError.h"
-#include "TClass.h"
 #include "TROOT.h"
-#include "TStreamerInfo.h"
+#include "TClass.h"
 #include "TObjectTable.h"
 
 
@@ -103,7 +101,7 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
    if (!gROOT)
       ::Fatal("TClonesArray::TClonesArray", "ROOT system not initialized");
 
-   fClass = gROOT->GetClass(classname);
+   fClass = TClass::GetClass(classname);
    char *name = new char[strlen(classname)+2];
    sprintf(name, "%ss", classname);
    SetName(name);
@@ -188,7 +186,7 @@ TClonesArray::TClonesArray(const TClonesArray& tc): TObjArray(tc)
    BypassStreamer(kTRUE);
 
    for (Int_t i = 0; i < fSize; i++) {
-      fCont[i] = tc.fCont[i]->Clone();
+      if (tc.fCont[i]) fCont[i] = tc.fCont[i]->Clone();
       fKeep->fCont[i] = fCont[i];
    }
 }
@@ -222,7 +220,7 @@ TClonesArray& TClonesArray::operator=(const TClonesArray& tc)
    BypassStreamer(kTRUE);
 
    for (i = 0; i < tc.fSize; i++) {
-      fKeep->fCont[i] = tc.fCont[i]->Clone();
+      if (tc.fCont[i]) fKeep->fCont[i] = tc.fCont[i]->Clone();
       fCont[i] = fKeep->fCont[i];
    }
 
@@ -603,7 +601,7 @@ void TClonesArray::Streamer(TBuffer &b)
          *semicolon = 0;
          clv = atoi(semicolon+1);
       }
-      TClass *cl = gROOT->GetClass(classv);
+      TClass *cl = TClass::GetClass(classv);
       if (!cl) {
          printf("TClonesArray::Streamer expecting class %s\n", classv);
          b.CheckByteCount(R__s, R__c,TClonesArray::IsA());
@@ -636,7 +634,7 @@ void TClonesArray::Streamer(TBuffer &b)
       Int_t oldLast = fLast;
       fLast = nobjects-1;
 
-      TStreamerInfo *sinfo = fClass->GetStreamerInfo(clv);
+      //TStreamerInfo *sinfo = fClass->GetStreamerInfo(clv);
       if (CanBypassStreamer() && !b.TestBit(TBuffer::kCannotHandleMemberWiseStreaming)) {
          for (Int_t i = 0; i < nobjects; i++) {
             if (!fKeep->fCont[i]) {
@@ -648,7 +646,8 @@ void TClonesArray::Streamer(TBuffer &b)
 
             fCont[i] = fKeep->fCont[i];
          }
-         sinfo->ReadBufferClones(b,this,nobjects,-1,0);
+         //sinfo->ReadBufferClones(b,this,nobjects,-1,0);
+         b.ReadClones(this,nobjects);
 
       } else {
          for (Int_t i = 0; i < nobjects; i++) {
@@ -672,13 +671,14 @@ void TClonesArray::Streamer(TBuffer &b)
       //possible to support schema evolution in read mode.
       //In case the StreamerInfo has already been computed and optimized,
       //one must disable the option BypassStreamer
-      Bool_t optim = TStreamerInfo::CanOptimize();
-      if (optim) TStreamerInfo::Optimize(kFALSE);
-      TStreamerInfo *sinfo = fClass->GetStreamerInfo();
-      sinfo->ForceWriteInfo((TFile *)b.GetParent());
-      if (optim) TStreamerInfo::Optimize(kTRUE);
-      if (sinfo->IsOptimized()) BypassStreamer(kFALSE);
-
+      //Bool_t optim = TStreamerInfo::CanOptimize();
+      //if (optim) TStreamerInfo::Optimize(kFALSE);
+      //TStreamerInfo *sinfo = fClass->GetStreamerInfo();
+      //sinfo->ForceWriteInfo((TFile *)b.GetParent());
+      //if (optim) TStreamerInfo::Optimize(kTRUE);
+      //if (sinfo->IsOptimized()) BypassStreamer(kFALSE);
+      b.ForceWriteInfo(this);
+      
       R__c = b.WriteVersion(TClonesArray::IsA(), kTRUE);
       TObject::Streamer(b);
       fName.Streamer(b);
@@ -689,7 +689,7 @@ void TClonesArray::Streamer(TBuffer &b)
       b << nobjects;
       b << fLowerBound;
       if (CanBypassStreamer() && !b.TestBit(TBuffer::kCannotHandleMemberWiseStreaming)) {
-         sinfo->WriteBufferClones(b,this,nobjects,-1,0);
+         b.WriteClones(this,nobjects);
       } else {
          for (Int_t i = 0; i < nobjects; i++) {
             if (!fCont[i]) {

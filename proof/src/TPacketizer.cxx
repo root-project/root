@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.39 2006/11/15 17:45:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.44 2007/01/31 08:31:31 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "Riostream.h"
 #include "TDSet.h"
 #include "TError.h"
+#include "TEventList.h"
 #include "TMap.h"
 #include "TMessage.h"
 #include "TMonitor.h"
@@ -45,6 +46,7 @@
 #include "TTimer.h"
 #include "TUrl.h"
 #include "TClass.h"
+#include "TMath.h"
 
 //
 // The following three utility classes manage the state of the
@@ -642,10 +644,12 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
    TIter    si(slaves);
    TSlave   *slave;
    while ((slave = (TSlave*)si.Next()) != 0) {
-      PDB(kPacketizer,3) Info("ValidateFiles","socket added to monitor: %p (%s)",
-          slave->GetSocket(), slave->GetName());
+      PDB(kPacketizer,3)
+         Info("ValidateFiles","socket added to monitor: %p (%s)",
+              slave->GetSocket(), slave->GetName());
       mon.Add(slave->GetSocket());
       slaves_by_sock.Add(slave->GetSocket(),slave);
+      Info("ValidateFiles", " mon: %p, wrk: %p, sck: %p", &mon, slave, slave->GetSocket());
    }
 
    mon.DeActivateAll();
@@ -711,13 +715,15 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
       if ( mon.GetActive() == 0 ) break; // nothing to wait for anymore
 
       PDB(kPacketizer,3) {
-         Info("ValidateFiles", "waiting for %d slaves:", mon.GetActive());
+         Info("ValidateFiles", "waiting for %d workers:", mon.GetActive());
          TList *act = mon.GetListOfActives();
          TIter next(act);
-         while (TSocket *s = (TSocket*) next()) {
+         TSocket *s = 0;
+         while ((s = (TSocket*) next())) {
+            Info("ValidateFiles", "found sck: %p", s);
             TSlave *sl = (TSlave *) slaves_by_sock.GetValue(s);
             if (sl)
-               Info("ValidateFiles", "   slave-%s (%s)", sl->GetOrdinal(), sl->GetName());
+               Info("ValidateFiles", "   worker-%s (%s)", sl->GetOrdinal(), sl->GetName());
          }
          delete act;
       }
@@ -741,25 +747,38 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
          }
 
       if ( reply->What() == kPROOF_FATAL ) {
-         Error("ValidateFiles", "kPROOF_FATAL from slave-%s (%s)",
+         Error("ValidateFiles", "kPROOF_FATAL from worker-%s (%s)",
                slave->GetOrdinal(), slave->GetName());
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;
          continue;
       } else if ( reply->What() == kPROOF_LOGFILE ) {
-         PDB(kPacketizer,3) Info("ValidateFiles", "got logfile");
+         PDB(kPacketizer,3) Info("ValidateFiles", "got kPROOF_LOGFILE");
          Int_t size;
          (*reply) >> size;
          ((TProof*)gProof)->RecvLogFile(sock, size);
          mon.Activate(sock);
          continue;
       } else if ( reply->What() == kPROOF_LOGDONE ) {
-         PDB(kPacketizer,3) Info("ValidateFiles", "got logdone");
+         PDB(kPacketizer,3) Info("ValidateFiles", "got kPROOF_LOGDONE");
          mon.Activate(sock);
          continue;
+      } else if ( reply->What() == kPROOF_MESSAGE ) {
+         // Send one level up
+         TString msg;
+         (*reply) >> msg;
+         Bool_t lfeed = kTRUE;
+         if ((reply->BufferSize() > reply->Length()))
+            (*reply) >> lfeed;
+         TMessage m(kPROOF_MESSAGE);
+         m << msg << lfeed;
+         gProofServ->GetSocket()->Send(m);
+         mon.Activate(sock);
+         continue;
+
       } else if ( reply->What() != kPROOF_GETENTRIES ) {
          // Help! unexpected message type
-         Error("ValidateFiles", "unexpected message type (%d) from slave-%s (%s)",
+         Error("ValidateFiles", "unexpected message type (%d) from worker-%s (%s)",
                reply->What(), slave->GetOrdinal(), slave->GetName());
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;

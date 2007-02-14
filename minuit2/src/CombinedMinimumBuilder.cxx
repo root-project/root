@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: CombinedMinimumBuilder.cxx,v 1.1 2005/11/29 14:43:31 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: CombinedMinimumBuilder.cxx,v 1.2 2006/06/26 11:03:55 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -10,7 +10,11 @@
 #include "Minuit2/CombinedMinimumBuilder.h"
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/MnStrategy.h"
-#include "Minuit2/MnPrint.h"
+
+#if defined(DEBUG) || defined(WARNINGMSG)
+#include "Minuit2/MnPrint.h" 
+#endif
+
 
 namespace ROOT {
 
@@ -24,19 +28,25 @@ FunctionMinimum CombinedMinimumBuilder::Minimum(const MnFcn& fcn, const Gradient
    FunctionMinimum min = fVMMinimizer.Minimize(fcn, gc, seed, strategy, maxfcn, edmval);
    
    if(!min.IsValid()) {
-      std::cout<<"CombinedMinimumBuilder: migrad method fails, will try with simplex method first."<<std::endl; 
+#ifdef WARNINGMSG
+      MN_INFO_MSG("CombinedMinimumBuilder: migrad method fails, will try with simplex method first."); 
+#endif
       MnStrategy str(2);
       FunctionMinimum min1 = fSimplexMinimizer.Minimize(fcn, gc, seed, str, maxfcn, edmval);
       if(!min1.IsValid()) {
-         std::cout<<"CombinedMinimumBuilder: both migrad and simplex method fail."<<std::endl;
+#ifdef WARNINGMSG
+         MN_INFO_MSG("CombinedMinimumBuilder: both migrad and simplex method fail.");
+#endif
          return min1;
       }
       MinimumSeed seed1 = fVMMinimizer.SeedGenerator()(fcn, gc, min1.UserState(), str);
       
       FunctionMinimum min2 = fVMMinimizer.Minimize(fcn, gc, seed1, str, maxfcn, edmval);
       if(!min2.IsValid()) {
-         std::cout<<"CombinedMinimumBuilder: both migrad and method fails also at 2nd attempt."<<std::endl;
-         std::cout<<"CombinedMinimumBuilder: return simplex Minimum."<<std::endl;
+#ifdef WARNINGMSG
+         MN_INFO_MSG("CombinedMinimumBuilder: both migrad and method fails also at 2nd attempt.");
+         MN_INFO_MSG("CombinedMinimumBuilder: return simplex Minimum.");
+#endif
          return min1;
       }
       

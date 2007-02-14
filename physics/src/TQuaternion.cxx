@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TQuaternion.cxx,v 1.3 2005/11/24 17:08:35 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TQuaternion.cxx,v 1.4 2006/05/16 08:13:31 brun Exp $
 // Author: Eric Anciant 28/06/2005
 
 
@@ -94,6 +94,7 @@
 // </p>
 // End_html
 
+#include "TMath.h"
 #include "TQuaternion.h"
 
 ClassImp(TQuaternion)

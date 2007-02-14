@@ -35,6 +35,7 @@
 #include "TCreatePrimitives.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TMath.h"
 
 //______________________________________________________________________________
 TCreatePrimitives::TCreatePrimitives()
@@ -405,7 +406,7 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
       dp = TMath::Abs(px-px1old) +TMath::Abs(py-py1old);
       if (npoints && dp < 5) {
          gPad->Modified(kTRUE);
-         if (mode == kCutG) {
+         if (mode == kCutG && gr) {
             gr->Set(gr->GetN() + 1);
             Double_t x0, y0;
             gr->GetPoint(0, x0, y0);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.19 2006/07/09 05:27:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.20 2006/10/20 08:38:43 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include "TGeoArb8.h"
 #include "TGeoNode.h"
 #include "TGeoManager.h"
+#include "TMath.h"
 
 #include "TGeoPatternFinder.h"
 

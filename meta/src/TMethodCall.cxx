@@ -1,4 +1,4 @@
-// @(#)Root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.27 2006/09/13 05:03:43 pcanal Exp $
+// @(#)Root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.28 2006/11/24 14:24:54 rdm Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -155,7 +155,7 @@ static TClass *R__FindScope(const char *function, UInt_t &pos, G__ClassInfo &cin
                      TString scope(function);
                      scope[i-1] = 0;
                      pos = i+1;
-                     TClass *cl = gROOT->GetClass(scope);
+                     TClass *cl = TClass::GetClass(scope);
                      if (!cl) cinfo.Init(scope);
                      return cl;
                   }

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.127 2006/09/15 15:16:57 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.130 2007/01/30 11:49:14 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -390,7 +390,7 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    if (nargs) proto.Remove(proto.Length()-1);
 
 
-   TClass *ns = (spaceName.Length()) ? gROOT->GetClass(spaceName) : 0;
+   TClass *ns = (spaceName.Length()) ? TClass::GetClass(spaceName) : 0;
    TMethodCall *method = new TMethodCall();
    if (ns) {
       method->Init(ns,functionName,proto);
@@ -2278,10 +2278,9 @@ void TFormula::Copy(TObject &obj) const
       if (fPredefined) {
          ((TFormula&)obj).fPredefined      = new TFormulaPrimitive*[fNoper];
       }
-      ((TFormula&)obj).fOperOffset      = new TOperOffset[fNoper];
+      ((TFormula&)obj).fOperOffset         = new TOperOffset[fNoper];
       for (i=0;i<fNoper;i++)  ((TFormula&)obj).fExprOptimized[i]   = fExprOptimized[i];
       for (i=0;i<fNoper;i++)  ((TFormula&)obj).fOperOptimized[i]   = fOperOptimized[i];
-      ((TFormula&)obj).fOperOffset  = new TOperOffset[fNoper];
       for (i=0;i<fNoper;i++) {((TFormula&)obj).fPredefined[i] = fPredefined[i];}
       for (i=0;i<fNoper;i++) {((TFormula&)obj).fOperOffset[i] = fOperOffset[i];}
    }
@@ -3176,7 +3175,7 @@ void TFormula::Streamer(TBuffer &b)
             Error("Streamer","version 6 is not supported");
             return;
          }
-         TFormula::Class()->ReadBuffer(b, this, v, R__s, R__c);
+         b.ReadClassBuffer(TFormula::Class(), this, v, R__s, R__c);
          if (!TestBit(kNotGlobal)) gROOT->GetListOfFunctions()->Add(this);
 
          // We need to reinstate (if possible) the TMethodCall.
@@ -3226,7 +3225,7 @@ void TFormula::Streamer(TBuffer &b)
       //====end of old versions
 
    } else {
-      TFormula::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TFormula::Class(),this);
    }
 }
 

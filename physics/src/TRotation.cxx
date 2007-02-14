@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.11 2006/05/17 06:49:59 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.13 2007/01/03 14:43:10 brun Exp $
 // Author: Peter Malzacher   19/06/99
 
 //______________________________________________________________________________
@@ -179,6 +179,7 @@ a rotation of a <TT>TVector3</TT> analog to the mathematical notation
 //
 
 #include "TRotation.h"
+#include "TMath.h"
 #include "TQuaternion.h"
 #include "TError.h"
 
@@ -662,7 +663,7 @@ TRotation & TRotation::SetYAxis(const TVector3& axis) {
 
 TRotation & TRotation::SetZAxis(const TVector3& axis, 
                                 const TVector3& zxPlane) {
-   //set Y axis
+   //set Z axis
    TVector3 xAxis(zxPlane);
    TVector3 yAxis;
    TVector3 zAxis(axis);
@@ -682,7 +683,7 @@ TRotation & TRotation::SetZAxis(const TVector3& axis) {
 void TRotation::MakeBasis(TVector3& xAxis,
                           TVector3& yAxis,
                           TVector3& zAxis) const {
-   // Make the zAxis into a unit variable. 
+   // Make the Z axis into a unit variable. 
    Double_t zmag = zAxis.Mag();
    if (zmag<TOLERANCE) {
       Warning("MakeBasis(X,Y,Z)","non-zero Z Axis is required");
@@ -695,7 +696,7 @@ void TRotation::MakeBasis(TVector3& xAxis,
       xmag = 1.0;
    }
 
-   // Find the yAxis
+   // Find the Y axis
    yAxis = zAxis.Cross(xAxis)*(1.0/xmag);
    Double_t ymag = yAxis.Mag();
    if (ymag<TOLERANCE*zmag) {

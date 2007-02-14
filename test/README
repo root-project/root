@@ -62,5 +62,5 @@ REMARKS
 =======
 
 Before running ROOT or any ROOT-based utility such as rootcint you
-have to set the ROOTSYS environment variable. See root/AA_README
+have to set the ROOTSYS environment variable. See root/README/README
 on how to set this variable.

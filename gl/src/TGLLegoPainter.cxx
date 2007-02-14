@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.cxx,v 1.7 2006/11/22 16:19:55 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLLegoPainter.cxx,v 1.9 2007/01/26 14:06:54 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -14,6 +14,7 @@
 #include "KeySymbols.h"
 #include "Buttons.h"
 #include "TColor.h"
+#include "TROOT.h"
 #include "TClass.h"
 #include "TStyle.h"
 #include "TAxis.h"
@@ -899,17 +900,6 @@ void TGLLegoPainter::SetLegoColor()const
    const Float_t specColor[] = {1.f, 1.f, 1.f, 1.f};
    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specColor);
    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 70.f);
-}
-
-//______________________________________________________________________________
-void TGLLegoPainter::ClearBuffers()const
-{
-   //Clear buffer with pad's color.
-   Float_t rgb[3] = {1.f, 1.f, 1.f};
-   if (const TColor *color = GetPadColor())
-      color->GetRGB(rgb[0], rgb[1], rgb[2]);
-   glClearColor(rgb[0], rgb[1], rgb[2], 1.);
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 //______________________________________________________________________________

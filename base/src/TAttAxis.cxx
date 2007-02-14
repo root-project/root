@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.12 2006/03/20 21:43:41 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.16 2007/01/23 08:11:15 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -10,13 +10,12 @@
  *************************************************************************/
 
 #include "Riostream.h"
-#include "TFile.h"
-#include "TMath.h"
 #include "TAttAxis.h"
 #include "TStyle.h"
 #include "TVirtualPad.h"
 #include "TColor.h"
 #include "TClass.h"
+#include "TMathBase.h"
 
 ClassImp(TAttAxis)
 
@@ -104,14 +103,14 @@ void TAttAxis::SaveAttributes(ostream &out, const char *name, const char *subnam
       if (fAxisColor > 228) {
          TColor::SaveColor(out, fAxisColor);
          out<<"   "<<name<<subname<<"->SetAxisColor(ci);" << endl;
-      } else 
+      } else
          out<<"   "<<name<<subname<<"->SetAxisColor("<<fAxisColor<<");"<<endl;
    }
    if (fLabelColor != 1) {
       if (fLabelColor > 228) {
          TColor::SaveColor(out, fLabelColor);
          out<<"   "<<name<<subname<<"->SetLabelColor(ci);" << endl;
-      } else 
+      } else
          out<<"   "<<name<<subname<<"->SetLabelColor("<<fLabelColor<<");"<<endl;
    }
    if (fLabelFont != 62) {
@@ -136,7 +135,7 @@ void TAttAxis::SaveAttributes(ostream &out, const char *name, const char *subnam
       if (fTitleColor > 228) {
          TColor::SaveColor(out, fTitleColor);
          out<<"   "<<name<<subname<<"->SetTitleColor(ci);" << endl;
-      } else 
+      } else
          out<<"   "<<name<<subname<<"->SetTitleColor("<<fTitleColor<<");"<<endl;
    }
    if (fTitleFont != 62) {
@@ -211,7 +210,7 @@ void TAttAxis::SetNdivisions(Int_t n, Bool_t optim)
    //
    // Where n1 is the number of primary divisions,
    // n2 is the number of second order divisions and
-   // n3 is the number of third order divisions. 
+   // n3 is the number of third order divisions.
    //
    // e.g. 512 means 12 primary and 5 secondary divisions.
    //
@@ -219,7 +218,7 @@ void TAttAxis::SetNdivisions(Int_t n, Bool_t optim)
    // maximum values.
 
    fNdivisions = n;
-   if (!optim) fNdivisions = -TMath::Abs(n);
+   if (!optim) fNdivisions = -abs(n);
    if (gPad) gPad->Modified();
 }
 
@@ -289,7 +288,7 @@ void TAttAxis::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 3) {
-         TAttAxis::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TAttAxis::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -301,9 +300,8 @@ void TAttAxis::Streamer(TBuffer &R__b)
       R__b >> fLabelSize;
       R__b >> fTickLength;
       R__b >> fTitleOffset;
-      // !file is the case of only TMapFile
-      TFile *file = (TFile*)R__b.GetParent();
-      if (R__v > 1 && (!file || (file && file->GetVersion() > 900)))
+
+      if (R__v > 1 && R__b.GetVersionOwner() > 900)
          R__b >> fTitleSize;
       else
          fTitleSize = fLabelSize;
@@ -314,6 +312,6 @@ void TAttAxis::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TAttAxis::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TAttAxis::Class(),this);
    }
 }

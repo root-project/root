@@ -112,7 +112,8 @@ ifeq ($(BUILDXRD),yes)
 XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
 XPDLIBEXTRA    += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
-                  $(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdSys.a
+                  $(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdSys.a \
+                  $(XROOTDDIRL)/libXrdSut.a
 endif
 
 # used in the main Makefile
@@ -158,7 +159,7 @@ distclean::     distclean-proofd
 $(PROOFDEXEO): CXXFLAGS += $(AUTHFLAGS)
 
 $(XPDO): $(XRDPLUGINS)
-ifeq ($(ICC_MAJOR),9)
+ifneq ($(ICC_GE_9),)
 # remove when xrootd has moved from strstream.h -> sstream.
 $(XPDO): CXXFLAGS += -Wno-deprecated $(XPDINCEXTRA)
 else

@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolumePosition.cxx,v 1.9 2006/07/11 09:05:02 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TVolumePosition.cxx,v 1.12 2007/02/06 15:20:31 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -19,7 +19,6 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TVirtualPad.h"
-#include "TView.h"
 #include "TGeometry.h"
 #include "TRotMatrix.h"
 #include "TBrowser.h"
@@ -212,6 +211,13 @@ void TVolumePosition::ExecuteEvent(Int_t, Int_t, Int_t)
 
 //   if (!gPad->GetListOfPrimitives()->FindObject(this)) gPad->SetCursor(kCross);
    gPad->SetCursor(kHand);
+}
+
+//______________________________________________________________________________
+const Char_t *TVolumePosition::GetName() const
+{
+   //return VolumePosition name
+   return GetNode()?GetNode()->GetName():IsA()->GetName();
 }
 
 //______________________________________________________________________________
@@ -591,11 +597,11 @@ void TVolumePosition::Streamer(TBuffer &R__b)
    TRotMatrix     *save = fMatrix;
    if (R__b.IsReading()) {
       fMatrix = 0;
-      TVolumePosition::Class()->ReadBuffer(R__b, this);
+      R__b.ReadClassBuffer(TVolumePosition::Class(), this);
       if (!fMatrix) fMatrix = save;
    } else {
       if (save == TVolume::GetIdentity() ) fMatrix = 0;
-      TVolumePosition::Class()->WriteBuffer(R__b, this);
+      R__b.WriteClassBuffer(TVolumePosition::Class(), this);
       fMatrix = save;
    }
 }

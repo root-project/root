@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TLineEditor.h,v 1.2 2006/04/25 16:15:07 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TLineEditor.h,v 1.3 2006/09/25 13:35:58 rdm Exp $
 // Author: Ilka  Antcheva 24/04/06
 
 /*************************************************************************
@@ -20,9 +20,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
-#include "TGWidget.h"
-#endif
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
 #endif

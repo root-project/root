@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.14 2006/05/23 04:47:36 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.17 2007/01/23 09:55:51 brun Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -15,11 +15,11 @@
 #include "TVirtualPad.h"
 #include "TGeometry.h"
 #include "TMaterial.h"
-#include "TFile.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TVirtualViewer3D.h"
 #include "TClass.h"
+#include "TMath.h"
 
 #include <assert.h>
 
@@ -171,16 +171,15 @@ void TShape::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TShape::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TShape::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
       TNamed::Streamer(R__b);
       TAttLine::Streamer(R__b);
       TAttFill::Streamer(R__b);
-      TFile *file = (TFile*)R__b.GetParent();
-      if (file) {
-         if (file->GetVersion() > 22300) TAtt3D::Streamer(R__b);
+      if (R__b.GetVersionOwner() > 22300) {
+         TAtt3D::Streamer(R__b);
       } else {
          TAtt3D::Streamer(R__b);
       }
@@ -191,7 +190,7 @@ void TShape::Streamer(TBuffer &R__b)
       //====end of old versions
       
    } else {
-      TShape::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TShape::Class(),this);
    }
 }
 

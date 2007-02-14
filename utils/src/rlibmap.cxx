@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.19 2006/02/16 19:03:54 pcanal Exp $
+// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.20 2006/02/22 06:15:21 rdm Exp $
 // Author: Fons Rademakers   05/12/2003
 
 /*************************************************************************
@@ -209,30 +209,34 @@ int LibMap(const string &solib, const vector<string> &solibdeps,
          while (fgets(pragma, 1024, lfp)) {
             if (!strcmp(strtok(pragma, " "), "#pragma") &&
                 !strcmp(strtok(0,      " "), "link")    &&
-                !strcmp(strtok(0,      " "), "C++")     &&
-                !strcmp(strtok(0,      " "), "class")) {
-               char *cls = strtok(0, "-!+;");
-               // just in case remove trailing space and tab
-               while (*cls == ' ') cls++;
-               int len = strlen(cls) - 1;
-               while (cls[len] == ' ' || cls[len] == '\t')
-                  cls[len--] = '\0';
-               //no space between tmpl arguments allowed
-               cls = Compress(cls);
+                !strcmp(strtok(0,      " "), "C++")) {
+               char *type = strtok(0, " ");
+               if (!strcmp(type, "class") || !strcmp(type, "typedef")) {
+                  char *cls = strtok(0, "-!+;");
+                  // just in case remove trailing space and tab
+                  while (*cls == ' ') cls++;
+                  int len = strlen(cls) - 1;
+                  while (cls[len] == ' ' || cls[len] == '\t')
+                     cls[len--] = '\0';
+                  //no space between tmpl arguments allowed
+                  cls = Compress(cls);
 
-               // don't include "vector<string>" and "std::pair<" classes
-               if (!strncmp(cls, "vector<string>", 14) ||
-                   !strncmp(cls, "std::pair<", 10))
-                  continue;
+                  // don't include "vector<string>" and "std::pair<" classes
+                  if (!strncmp(cls, "vector<string>", 14) ||
+                      !strncmp(cls, "std::pair<", 10))
+                     continue;
 
-               // replace "::" by "@@" since TEnv uses ":" as delimeter
-               char *s = cls;
-               while (*s) {
-                  if (*s == ':') *s = '@';
-                  else if (*s == ' ') *s = '-';
-                  s++;
+                  // replace "::" by "@@" since TEnv uses ":" as delimeter
+                  char *s = cls;
+                  while (*s) {
+                     if (*s == ':')
+                        *s = '@';
+                     else if (*s == ' ')
+                        *s = '-';
+                     s++;
+                  }
+                  classes.push_back(cls);
                }
-               classes.push_back(cls);
             }
          }
          fclose(lfp);

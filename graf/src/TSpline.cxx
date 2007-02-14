@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.17 2006/07/09 05:27:54 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.21 2007/01/24 08:05:48 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -20,10 +20,12 @@
 
 #include "TSpline.h"
 #include "TVirtualPad.h"
+#include "TH1.h"
 #include "TF1.h"
 #include "TSystem.h"
 #include "Riostream.h"
 #include "TClass.h"
+#include "TMath.h"
 
 ClassImp(TSplinePoly)
 ClassImp(TSplinePoly3)
@@ -50,6 +52,15 @@ TSpline::TSpline(const TSpline &sp) :
 { 
    //copy constructor
 }
+
+//____________________________________________________________________________
+TSpline::~TSpline() 
+{
+   //destructor
+   if(fHistogram) delete fHistogram; 
+   if(fGraph) delete fGraph; 
+}
+  
 
 //____________________________________________________________________________
 TSpline& TSpline::operator=(const TSpline &sp)
@@ -204,7 +215,7 @@ void TSpline::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TSpline::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TSpline::Class(), this, R__v, R__s, R__c);
          return;
       } 
       //====process old versions before automatic schema evolution
@@ -228,7 +239,7 @@ void TSpline::Streamer(TBuffer &R__b)
       //====end of old versions
       
    } else {
-      TSpline::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TSpline::Class(),this);
    }
 }
 
@@ -978,7 +989,7 @@ void TSpline3::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TSpline3::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TSpline3::Class(), this, R__v, R__s, R__c);
          return;
       } 
       //====process old versions before automatic schema evolution
@@ -995,7 +1006,7 @@ void TSpline3::Streamer(TBuffer &R__b)
       R__b >> fBegCond;
       R__b >> fEndCond;
    } else {
-      TSpline3::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TSpline3::Class(),this);
    }
 }
 
@@ -2197,7 +2208,7 @@ void TSpline5::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TSpline5::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TSpline5::Class(), this, R__v, R__s, R__c);
          return;
       } 
       //====process old versions before automatic schema evolution
@@ -2210,6 +2221,6 @@ void TSpline5::Streamer(TBuffer &R__b)
       }
       //      R__b >> fPoly;
    } else {
-      TSpline5::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TSpline5::Class(),this);
    }
 }

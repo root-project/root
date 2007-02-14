@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.18 2006/11/27 14:19:58 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.19 2006/12/03 23:34:04 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -58,13 +58,14 @@ class XrdProofUI {
 public:
    XrdOucString fUser;
    XrdOucString fHomeDir;
+   XrdOucString fWorkDir;
    int          fUid;
    int          fGid;
 
    XrdProofUI() { fUid = -1; fGid = -1; }
    ~XrdProofUI() { }
 
-   void Reset() { fUser = ""; fHomeDir = ""; fUid = -1; fGid = -1; }
+   void Reset() { fUser = ""; fHomeDir = ""; fWorkDir = ""; fUid = -1; fGid = -1; }
 };
 
 class XrdBuffer;
@@ -226,6 +227,10 @@ public:
    //
    static int                    fgOperationMode; // Operation mode
    static XrdOucString           fgAllowedUsers; // Users allowed in controlled mode
+   //
+   static XrdOucString           fgProofServEnvs; // Additional envs to be exported before proofserv
+   //
+   static int                    fgNumLocalWrks; // Number of local workers [== n cpus]
 
    //
    // Static area: client section
@@ -241,6 +246,7 @@ public:
    static int    CheckIf(XrdOucStream *s);
    static bool   CheckMaster(const char *m);
    static int    Config(const char *fn);
+   static int    CreateDefaultPROOFcfg();
    static char  *Expand(char *p);
    static char  *FilterSecConfig(const char *cfn, int &nd);
    static int    GetSessionDirs(XrdProofClient *pcl, int opt,
@@ -254,8 +260,12 @@ public:
    static int    ReadPROOFcfg();
    static int    SetProofServEnv(XrdProofdProtocol *p = 0, int psid = -1,
                                  int loglevel = -1, const char *cfg = 0);
+   static int    SaveAFSkey(XrdSecCredentials *c, const char *fn);
    static int    SetSrvProtVers();
+   static int    ResolveKeywords(XrdOucString &s, XrdProofClient *pcl);
    static int    VerifyProcessByID(int pid, const char *pname = 0);
+
+   static int    GetNumCPUs();
 };
 
 

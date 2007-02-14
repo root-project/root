@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.26 2006/03/24 15:11:23 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.27 2006/07/03 16:10:44 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -23,6 +23,7 @@
 #include "TVirtualViewer3D.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "TMath.h"
 
 // statics and globals
 

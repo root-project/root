@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.124 2006/08/15 10:48:17 brun Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.125 2006/11/16 17:17:38 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -914,7 +914,7 @@ void RootdFstat(const char *buf)
    } else {
 
       char *epath = (char *)buf;
-      if (buf[0] == '/')
+      if (buf[0] == '/' && buf[1] == '/')
          epath++;
 #if defined(R__SEEK64)
       rc = lstat64(epath, &statbuf);
@@ -1837,7 +1837,7 @@ void RootdAccess(const char *buf)
    if (nw >= 2) {
 
       char *epath = &path[0];
-      if (path[0] == '/')
+      if (path[0] == '/' && path[1] == '/')
          epath = &path[1];
 
       if (access(epath, mode) == -1) {
@@ -1909,7 +1909,7 @@ void RootdOpenDir(const char *dir)
    char buffer[kMAXPATHLEN];
 
    char *edir = (char *)dir;
-   if (dir[0] == '/')
+   if (dir[0] == '/' && dir[1] == '/')
       edir++;
 
    if ((gRDDirectory = opendir(edir)) == 0) {
@@ -1930,7 +1930,7 @@ void RootdMkdir(const char *fdir)
    char buffer[kMAXPATHLEN];
 
    char *dir = (char *)fdir;
-   if (fdir[0] == '/')
+   if (fdir[0] == '/' && fdir[1] == '/')
       dir++;
 
    if (gAnon) {
@@ -1955,7 +1955,7 @@ void RootdRmdir(const char *fdir)
    char buffer[kMAXPATHLEN];
 
    char *dir = (char *)fdir;
-   if (fdir[0] == '/')
+   if (fdir[0] == '/' && fdir[1] == '/')
       dir++;
 
    if (gAnon) {

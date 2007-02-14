@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.84 2006/08/28 13:34:52 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.90 2007/02/01 14:58:44 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -11,14 +11,16 @@
 
 #include "TROOT.h"
 #include "TClass.h"
+#include "THashList.h"
 #include "TH3.h"
 #include "TH2.h"
 #include "TF1.h"
 #include "TVirtualPad.h"
+#include "TVirtualHistPainter.h"
 #include "THLimitsFinder.h"
 #include "TRandom.h"
-#include "TFile.h"
 #include "TError.h"
+#include "TMath.h"
 #include "TObjString.h"
 
 ClassImp(TH3)
@@ -2381,7 +2383,7 @@ void TH3::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TH3::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TH3::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -2391,7 +2393,7 @@ void TH3::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TH3::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TH3::Class(),this);
    }
 }
 
@@ -2484,7 +2486,6 @@ void TH3C::Copy(TObject &newth3) const
    //*-*          ===========================================
 
    TH3::Copy((TH3C&)newth3);
-   TArrayC::Copy((TH3C&)newth3);
 }
 
 //______________________________________________________________________________
@@ -2581,11 +2582,10 @@ void TH3C::Streamer(TBuffer &R__b)
 
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
-      TFile *file = (TFile*)R__b.GetParent();
-      if (file && file->GetVersion() < 22300) return;
+      if (R__b.GetVersionOwner() < 22300) return;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TH3C::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TH3C::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -2603,7 +2603,7 @@ void TH3C::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TH3C::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TH3C::Class(),this);
    }
 }
 
@@ -2758,7 +2758,6 @@ void TH3S::Copy(TObject &newth3) const
    //*-*          ===========================================
 
    TH3::Copy((TH3S&)newth3);
-   TArrayS::Copy((TH3S&)newth3);
 }
 
 //______________________________________________________________________________
@@ -2827,11 +2826,10 @@ void TH3S::Streamer(TBuffer &R__b)
 
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
-      TFile *file = (TFile*)R__b.GetParent();
-      if (file && file->GetVersion() < 22300) return;
+      if (R__b.GetVersionOwner() < 22300) return;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TH3S::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TH3S::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -2849,7 +2847,7 @@ void TH3S::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TH3S::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TH3S::Class(),this);
    }
 }
 
@@ -3004,7 +3002,6 @@ void TH3I::Copy(TObject &newth3) const
    //*-*          ===========================================
 
    TH3::Copy((TH3I&)newth3);
-   TArrayI::Copy((TH3I&)newth3);
 }
 
 //______________________________________________________________________________
@@ -3196,7 +3193,6 @@ void TH3F::Copy(TObject &newth3) const
    //*-*          ===========================================
 
    TH3::Copy((TH3F&)newth3);
-   TArrayF::Copy((TH3F&)newth3);
 }
 
 //______________________________________________________________________________
@@ -3265,11 +3261,10 @@ void TH3F::Streamer(TBuffer &R__b)
 
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
-      TFile *file = (TFile*)R__b.GetParent();
-      if (file && file->GetVersion() < 22300) return;
+      if (R__b.GetVersionOwner() < 22300) return;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TH3F::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TH3F::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -3287,7 +3282,7 @@ void TH3F::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TH3F::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TH3F::Class(),this);
    }
 }
 
@@ -3421,7 +3416,6 @@ void TH3D::Copy(TObject &newth3) const
    //*-*          ===========================================
 
    TH3::Copy((TH3D&)newth3);
-   TArrayD::Copy((TH3D&)newth3);
 }
 
 //______________________________________________________________________________
@@ -3491,11 +3485,10 @@ void TH3D::Streamer(TBuffer &R__b)
 
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
-      TFile *file = (TFile*)R__b.GetParent();
-      if (file && file->GetVersion() < 22300) return;
+      if (R__b.GetVersionOwner() < 22300) return;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TH3D::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TH3D::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -3513,7 +3506,7 @@ void TH3D::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TH3D::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TH3D::Class(),this);
    }
 }
 

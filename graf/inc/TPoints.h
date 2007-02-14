@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPoints.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPoints.h,v 1.2 2000/06/13 11:22:28 brun Exp $
 // Author: Rene Brun   23/02/95
 
 /*************************************************************************
@@ -21,8 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Gtypes
-#include "Gtypes.h"
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
 #endif
 
 

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TLineEditor.cxx,v 1.3 2006/06/23 15:19:22 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TLineEditor.cxx,v 1.4 2006/09/25 13:35:58 rdm Exp $
 // Author: Ilka  Antcheva 24/04/06
 
 /*************************************************************************
@@ -24,12 +24,10 @@
 
 
 #include "TLineEditor.h"
-#include "TGComboBox.h"
 #include "TGLabel.h"
 #include "TGNumberEntry.h"
 #include "TLine.h"
 #include "TVirtualPad.h"
-#include "TClass.h"
 
 ClassImp(TLineEditor)
 

@@ -209,6 +209,7 @@ BUILDGLOBUS    := @buildglobus@
 GLOBUSLIB      := @globuslib@
 GLOBUSLIBDIR   := @globuslibdir@
 GLOBUSINCDIR   := $(filter-out /usr/include, @globusincdir@)
+BUILDXRDGSI    := @buildxrdgsi@
 
 BUILDMONALISA  := @buildmonalisa@
 MONALISALIBDIR := @monalisalibdir@

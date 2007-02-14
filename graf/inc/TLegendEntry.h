@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegendEntry.h,v 1.4 2005/11/18 16:55:07 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegendEntry.h,v 1.5 2006/07/03 16:10:44 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -36,6 +36,9 @@
 #endif
 #ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
+#endif
+#ifndef ROOT_TString
+#include "TString.h"
 #endif
 
 class TLegendEntry : public TObject, public TAttText, public TAttLine,

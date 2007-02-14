@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# @(#)root/tmva $Id: TMVAnalysis.py,v 1.3 2006/11/15 11:00:51 andreas.hoecker Exp $
+# @(#)root/tmva $Id: TMVAnalysis.py,v 1.3 2006/11/20 15:35:28 brun Exp $
 # ------------------------------------------------------------------------------ #
 # Project      : TMVA - a Root-integrated toolkit for multivariate data analysis #
 # Package      : TMVA                                                            #
@@ -105,7 +105,7 @@ def main():
     from ROOT import gSystem, gROOT, gApplication, TFile, TTree, TCut
     
     # load TMVA library and GUI
-    gSystem.Load( 'libTMVA.1.so' )
+    gSystem.Load( 'libTMVA' )
     gROOT.LoadMacro( '../macros/TMVAGui.C' )
     
     # import TMVA classes from ROOT

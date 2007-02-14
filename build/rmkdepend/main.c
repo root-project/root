@@ -720,7 +720,7 @@ redirect(line, makefile)
 #endif
         }
 	if ((fdout = freopen(makefile, "w", stdout)) == NULL)
-		fatalerr("cannot open \"%s\"\n", backup);
+		fatalerr("cannot open \"%s\"\n", makefile);
         if (!rootBuild) {
 	   len = strlen(line);
 	   while (!found && fgets(buf, BUFSIZ, fdin)) {

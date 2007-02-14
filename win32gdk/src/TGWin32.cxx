@@ -1,5 +1,5 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.114 2006/05/18 10:46:26 brun Exp $
-// Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.115 2006/06/16 10:06:05 rdm Exp $
+// Author: Rene Brun, Olivier Couet, Fons Rademakers, Valeri Onuchin, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
  * Copyright (C) 1995-2001, Rene Brun and Fons Rademakers.               *
@@ -2224,7 +2224,7 @@ Int_t TGWin32::RequestLocator(Int_t mode, Int_t ctyp, Int_t & x, Int_t & y)
    // Event loop
    button_press = 0;
 
-   // Set max response time to 2 minutes to avoid timeout 
+   // Set max response time to 2 minutes to avoid timeout
    // in TGWin32ProxyBase::ForwardCallBack during RequestLocator
    TGWin32VirtualXProxy::fMaxResponseTime = 120000;
    while (button_press == 0) {
@@ -2377,7 +2377,7 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
    pt = nt;
    focuswindow = ::SetFocus((HWND)GDK_DRAWABLE_XID(CurWnd));
 
-   // Set max response time to 2 minutes to avoid timeout 
+   // Set max response time to 2 minutes to avoid timeout
    // in TGWin32ProxyBase::ForwardCallBack during RequestString
    TGWin32VirtualXProxy::fMaxResponseTime = 120000;
    TTF::SetTextFont(gTextFont);
@@ -6563,7 +6563,7 @@ void TGWin32::GetWindowSize(Drawable_t id, Int_t & x, Int_t & y,
       gdk_drawable_get_size((GdkDrawable *)id, (int*)&w, (int*)&h);
    }
    else {
-      gdk_window_get_geometry((GdkDrawable *) id, &x, &y, (int*)&w, 
+      gdk_window_get_geometry((GdkDrawable *) id, &x, &y, (int*)&w,
                               (int*)&h, &ddum);
    }
 }
@@ -6906,7 +6906,7 @@ void TGWin32::DeleteImage(Drawable_t img)
 }
 
 //______________________________________________________________________________
-unsigned char *TGWin32::GetColorBits(Drawable_t wid,  Int_t x, Int_t y, 
+unsigned char *TGWin32::GetColorBits(Drawable_t wid,  Int_t x, Int_t y,
                                      UInt_t width, UInt_t height)
 {
    // Gets DIB bits
@@ -6991,7 +6991,7 @@ Pixmap_t TGWin32::CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t
    ::ReleaseDC(NULL, hdc);
 
    SIZE size;
-   // For an obscure reason, we have to set the size of the 
+   // For an obscure reason, we have to set the size of the
    // bitmap this way before to call gdk_pixmap_foreign_new
    // otherwise, it fails...
    ::SetBitmapDimensionEx(hbitmap,width, height, &size);
@@ -7022,7 +7022,7 @@ Int_t TGWin32::AddPixmap(ULong_t pix, UInt_t w, UInt_t h)
 
       for (Int_t i = fMaxNumberOfWindows; i < newSize; ++i)
          fWindows[i].open = 0;
-   
+
       fMaxNumberOfWindows = newSize;
    }
 

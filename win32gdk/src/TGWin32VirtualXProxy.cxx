@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualXProxy.cxx,v 1.10 2006/02/03 09:04:52 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualXProxy.cxx,v 1.11 2006/05/15 13:31:01 rdm Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 
@@ -22,6 +22,7 @@
 #include "TGWin32ProxyDefs.h"
 #include "TGWin32VirtualXProxy.h"
 #include "TGWin32.h"
+#include "TList.h"
 
 TVirtualX *TGWin32VirtualXProxy::fgRealObject = 0;
 

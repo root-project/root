@@ -33,14 +33,10 @@
 
 #include "TPadEditor.h"
 #include "TGedEditor.h"
-#include "TGClient.h"
-#include "TGButton.h"
 #include "TGComboBox.h"
 #include "TGButtonGroup.h"
 #include "TGLabel.h"
-#include "TColor.h"
 #include "TCanvas.h"
-#include "TClass.h"
 
 ClassImp(TPadEditor)
 
@@ -171,7 +167,7 @@ void TPadEditor::ConnectSignals2Slots()
    fLogX->Connect("Toggled(Bool_t)","TPadEditor",this,"DoLogX(Bool_t)");
    fLogY->Connect("Toggled(Bool_t)","TPadEditor",this,"DoLogY(Bool_t)");
    fLogZ->Connect("Toggled(Bool_t)","TPadEditor",this,"DoLogZ(Bool_t)");
-   fBgroup->Connect("Released(Int_t)","TPadEditor",this,"DoBorderMode()");
+   fBgroup->Connect("Clicked(Int_t)","TPadEditor",this,"DoBorderMode()");
    fBsize->Connect("Selected(Int_t)", "TPadEditor", this, "DoBorderSize(Int_t)");
    fInit = kFALSE;
 }
@@ -250,7 +246,7 @@ void TPadEditor::SetModel(TObject* obj)
 //______________________________________________________________________________
 void TPadEditor::ActivateBaseClassEditors(TClass* cl)
 {
-   // Add editors to fGedFrame and exclude TLineEditor.
+   // Exclude TAttLineEditor from this interface.
 
    fGedEditor->ExcludeClassEditor(TAttLine::Class());
    TGedFrame::ActivateBaseClassEditors(cl);

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.60 2006/07/03 16:10:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.62 2007/01/23 11:12:02 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 #include "TArrow.h"
 #include "TBox.h"
 #include "TVirtualPad.h"
+#include "TH1.h"
 #include "TF1.h"
 #include "TVector.h"
 #include "TVectorD.h"
@@ -840,7 +841,7 @@ void TGraphErrors::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TGraphErrors::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         b.ReadClassBuffer(TGraphErrors::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -866,7 +867,7 @@ void TGraphErrors::Streamer(TBuffer &b)
       //====end of old versions
 
    } else {
-      TGraphErrors::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TGraphErrors::Class(),this);
    }
 }
 

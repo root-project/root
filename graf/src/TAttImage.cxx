@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.9 2005/09/02 10:20:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.11 2007/01/12 16:03:16 brun Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************
@@ -67,6 +67,7 @@
 #include "TPluginManager.h"
 #include "Riostream.h"
 #include "TColor.h"
+#include "TMath.h"
 
 
 ClassImp(TPaletteEditor)
@@ -286,6 +287,111 @@ TImagePalette::TImagePalette(const TImagePalette &palette) : TObject(palette)
    memcpy(fColorGreen, palette.fColorGreen, fNumPoints * sizeof(UShort_t));
    memcpy(fColorBlue,  palette.fColorBlue,  fNumPoints * sizeof(UShort_t));
    memcpy(fColorAlpha, palette.fColorAlpha, fNumPoints * sizeof(UShort_t));
+}
+
+//______________________________________________________________________________
+TImagePalette::TImagePalette(Int_t ncolors, Int_t *colors)
+{
+   // Creates palette in the same way as TStyle::SetPalette
+
+   Int_t i;
+   static Int_t palette[50] = {19,18,17,16,15,14,13,12,11,20,
+                        21,22,23,24,25,26,27,28,29,30, 8,
+                        31,32,33,34,35,36,37,38,39,40, 9,
+                        41,42,43,44,45,47,48,49,46,50, 2,
+                         7, 6, 5, 4, 3, 112,1};
+   TColor *col = 0;
+   Float_t step = 0;
+   // set default palette (pad type)
+   if (ncolors <= 0) {
+      ncolors = 50;
+      fNumPoints  = ncolors;
+      step = 1./fNumPoints;
+      fPoints     = new Double_t[fNumPoints];
+      fColorRed   = new UShort_t[fNumPoints];
+      fColorGreen = new UShort_t[fNumPoints];
+      fColorBlue  = new UShort_t[fNumPoints];
+      fColorAlpha = new UShort_t[fNumPoints];
+      for (i=0;i<ncolors;i++) {
+         col = gROOT->GetColor(palette[i]);
+         fPoints[i] = i*step;
+         fColorRed[i] = UShort_t(col->GetRed()*255)  << 8;
+         fColorGreen[i] = UShort_t(col->GetGreen()*255) << 8;
+         fColorBlue[i] = UShort_t(col->GetBlue()*255) << 8;
+         fColorAlpha[i] = 65280;
+      }
+      return;
+   }
+
+   // set Pretty Palette Spectrum Violet->Red
+   if (ncolors == 1 && colors == 0) {
+      ncolors = 50;
+      fNumPoints  = ncolors;
+      step = 1./fNumPoints;
+      fPoints     = new Double_t[fNumPoints];
+      fColorRed   = new UShort_t[fNumPoints];
+      fColorGreen = new UShort_t[fNumPoints];
+      fColorBlue  = new UShort_t[fNumPoints];
+      fColorAlpha = new UShort_t[fNumPoints];
+      for (i=0;i<ncolors;i++) {
+         col = gROOT->GetColor(51+i);
+         fPoints[i] = i*step;
+         fColorRed[i] = UShort_t(col->GetRed()*255) << 8;
+         fColorGreen[i] = UShort_t(col->GetGreen()*255) << 8;
+         fColorBlue[i] = UShort_t(col->GetBlue()*255) << 8;
+         fColorAlpha[i] = 65280;
+      }
+      return;
+   }
+
+   // set DeepSea palette
+   if (colors == 0 && ncolors > 50) {
+      static const Int_t nRGBs = 5;
+      static Float_t stops[nRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
+      static Float_t red[nRGBs] = { 0.00, 0.09, 0.18, 0.09, 0.00 };
+      static Float_t green[nRGBs] = { 0.01, 0.02, 0.39, 0.68, 0.97 };
+      static Float_t blue[nRGBs] = { 0.17, 0.39, 0.62, 0.79, 0.97 };
+      fNumPoints = nRGBs;
+      fPoints     = new Double_t[fNumPoints];
+      fColorRed   = new UShort_t[fNumPoints];
+      fColorGreen = new UShort_t[fNumPoints];
+      fColorBlue  = new UShort_t[fNumPoints];
+      fColorAlpha = new UShort_t[fNumPoints];
+      for (i=0;i<(int)fNumPoints;i++) {
+         fPoints[i] = stops[i];
+         fColorRed[i] = UShort_t(red[i]*255) << 8;
+         fColorGreen[i] = UShort_t(green[i]*255) << 8;
+         fColorBlue[i] = UShort_t(blue[i]*255) << 8;
+         fColorAlpha[i] = 65280;   
+      }
+      return;
+   }
+
+   // set user defined palette
+   if (colors)  {
+      fNumPoints  = ncolors;
+      step = 1./fNumPoints;
+      fPoints     = new Double_t[fNumPoints];
+      fColorRed   = new UShort_t[fNumPoints];
+      fColorGreen = new UShort_t[fNumPoints];
+      fColorBlue  = new UShort_t[fNumPoints];
+      fColorAlpha = new UShort_t[fNumPoints];
+      for (i=0;i<ncolors;i++) {
+         fPoints[i] = i*step;
+         col = gROOT->GetColor(colors[i]);
+         if (col) {
+            fColorRed[i] = UShort_t(col->GetRed()*255) << 8;
+            fColorGreen[i] = UShort_t(col->GetGreen()*255) << 8;
+            fColorBlue[i] = UShort_t(col->GetBlue()*255) << 8;
+            fColorAlpha[i] = 65280;
+         } else {
+            fColorRed[i] = 0;
+            fColorGreen[i] = 0;
+            fColorBlue[i] = 0;
+            fColorAlpha[i] = 0;
+         }
+      }
+   }
 }
 
 //______________________________________________________________________________

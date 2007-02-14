@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCrown.cxx,v 1.5 2005/11/15 14:04:51 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TCrown.cxx,v 1.6 2006/07/03 16:10:44 brun Exp $
 // Author: Rene Brun   108/08/2002
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TMath.h"
 #include "TCrown.h"
 #include "TVirtualPad.h"
 

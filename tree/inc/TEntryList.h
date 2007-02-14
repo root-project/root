@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.h,v 1.3 2006/11/02 15:12:33 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.h,v 1.6 2007/02/01 16:04:48 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -21,8 +21,14 @@ class TDirectory;
 class TObjArray;
 class TString;
 
+class TList;
+class TCollection;
+
 class TEntryList: public TNamed 
 {
+ private:
+   TEntryList& operator=(const TEntryList&); // Not implemented
+
  protected:
    TList      *fLists;   //a list of underlying entry lists for each tree of a chain
    TEntryList *fCurrent; //! currently filled entry list
@@ -41,6 +47,7 @@ class TEntryList: public TNamed
    Bool_t           fShift;            //! true when some sub-lists don't correspond to trees
                                        //(when the entry list is used as input in TChain)
    TDirectory      *fDirectory;   //! Pointer to directory holding this tree
+   Bool_t           fReapply;     //  If true, TTree::Draw will 'reapply' the original cut
 
  public:
    enum {kBlockSize = 64000}; //number of entries in each block (not the physical size).
@@ -65,7 +72,8 @@ class TEntryList: public TNamed
    virtual Long64_t    GetN() const { return fN; }
    virtual const char  *GetTreeName() { return fTreeName.Data(); }
    virtual const char  *GetFileName() { return fFileName.Data(); }
-   virtual Int_t       GetTreeNumber() {return fTreeNumber; }
+   virtual Int_t       GetTreeNumber() { return fTreeNumber; }
+   virtual Bool_t      GetReapplyCut() const { return fReapply; };
    virtual Int_t       Merge(TCollection *list);
    
    virtual Long64_t    Next();
@@ -82,6 +90,7 @@ class TEntryList: public TNamed
    virtual void        SetTreeName(const char *treename){ fTreeName = treename; };
    virtual void        SetFileName(const char *filename){ fFileName = filename; };
    virtual void        SetTreeNumber(Int_t index) { fTreeNumber=index;  }
+   virtual void        SetReapplyCut(Bool_t apply = kFALSE) {fReapply = apply;}; // *TOGGLE*
    virtual void        Subtract(const TEntryList *elist);
 
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.25 2005/11/21 13:57:42 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.27 2007/01/23 08:20:06 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -19,7 +19,6 @@
 #include "TPaveLabel.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
-#include "TFile.h"
 #include "TClass.h"
 #include "TLatex.h"
 
@@ -381,15 +380,14 @@ void TPaveStats::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TPaveStats::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TPaveStats::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
       TPaveText::Streamer(R__b);
       R__b >> fOptFit;
       R__b >> fOptStat;
-      TFile *file = (TFile*)R__b.GetParent();
-      if (R__v > 1 || (file && file->GetVersion() == 22304)) {
+      if (R__v > 1 || R__b.GetVersionOwner() == 22304) {
          fFitFormat.Streamer(R__b);
          fStatFormat.Streamer(R__b);
       } else {
@@ -400,7 +398,7 @@ void TPaveStats::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TPaveStats::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TPaveStats::Class(),this);
    }
 }
 

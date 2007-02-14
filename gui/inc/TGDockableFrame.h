@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.h,v 1.8 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.h,v 1.10 2007/01/18 10:59:41 brun Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -34,10 +34,6 @@
 
 #ifndef ROOT_TGButton
 #include "TGButton.h"
-#endif
-
-#ifndef ROOT_TMessage
-#include "TMessage.h"
 #endif
 
 #ifndef ROOT_TGWindow
@@ -83,6 +79,11 @@ public:
 
 
 class TGUndockedFrame : public TGTransientFrame {
+
+private:
+   TGUndockedFrame(const TGUndockedFrame&); // Not implemented
+   TGUndockedFrame& operator=(const TGUndockedFrame&); // Not implemented
+
 protected:
    TGDockableFrame    *fDockable;   // orignal dockable frame
 
@@ -99,6 +100,10 @@ public:
 
 class TGDockableFrame : public TGCompositeFrame, public TGWidget {
 friend class TGUndockedFrame;
+
+private:
+   TGDockableFrame(const TGDockableFrame&); // Not implemented
+   TGDockableFrame& operator=(const TGDockableFrame&); // Not implemented
 
 protected:
    Bool_t            fHidden;        // if frame is hidden

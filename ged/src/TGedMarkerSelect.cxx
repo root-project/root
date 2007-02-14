@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.12 2006/03/21 10:41:36 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.13 2006/07/03 16:10:43 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 
 /*************************************************************************
@@ -30,7 +30,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGedMarkerSelect.h"
-#include "TGResourcePool.h"
 #include "TGPicture.h"
 #include "TGToolTip.h"
 #include "TGButton.h"

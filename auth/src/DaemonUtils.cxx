@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: DaemonUtils.cxx,v 1.2 2005/09/06 09:34:33 brun Exp $
+// @(#)root/auth:$Name:  $:$Id: DaemonUtils.cxx,v 1.3 2006/03/22 21:57:17 rdm Exp $
 // Author: Gerri Ganis   19/1/2004
 
 /*************************************************************************
@@ -51,6 +51,7 @@
 #endif
 
 #include "Rtypes.h"
+#include "Varargs.h"
 #include "DaemonUtils.h"
 #include "TAuthenticate.h"
 #include "TSecContext.h"

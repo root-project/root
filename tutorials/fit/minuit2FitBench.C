@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: minuit2FitBench.C,v 1.2 2006/05/29 10:16:54 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: minuit2FitBench.C,v 1.1 2006/12/11 21:56:34 brun Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -16,6 +16,7 @@
 #include "TVirtualFitter.h"
 #include "TPaveLabel.h"
 #include "TStyle.h"
+#include "TMath.h"
 
 
 TF1 *fitFcn;
@@ -51,13 +52,14 @@ void DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
    timer.Start();
    for (Int_t pass=0;pass<npass;pass++) {
       if (pass%100 == 0) printf("pass : %d\n",pass);
+      fitFcn->SetParameters(1,1,1,6,.03,1);
       for (Int_t i=0;i<5000;i++) {
          histo->Fill(fitFcn->GetRandom());
       }
-      histo->Fit("fitFcn","0q");
+      histo->Fit("fitFcn","0Q");
    }
 
-   histo->Fit("fitFcn");
+   histo->Fit("fitFcn","EV");
    timer.Stop();
 
 

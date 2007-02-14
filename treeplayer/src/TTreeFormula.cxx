@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.204 2006/10/19 13:19:43 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.212 2007/02/05 18:11:29 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include "TBranch.h"
 #include "TBranchObject.h"
 #include "TFunction.h"
+#include "TClonesArray.h"
 #include "TLeafC.h"
 #include "TLeafObject.h"
 #include "TDataMember.h"
@@ -33,6 +34,7 @@
 #include "TVirtualCollectionProxy.h"
 #include "TString.h"
 #include "TTimeStamp.h"
+#include "TMath.h"
 
 #include "TVirtualRefProxy.h"
 #include "TTreeFormulaManager.h"
@@ -40,6 +42,8 @@
 #include "TMethod.h"
 #include "TBaseClass.h"
 #include "TFormLeafInfoReference.h"
+
+#include "TEntryList.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -175,6 +179,8 @@ void TTreeFormula::Init(const char*name, const char* expression)
 {
    // Initialiation called from the constructors.
 
+   TDirectory *const savedir=gDirectory;
+
    fNindex       = kMAXFOUND;
    fLookupType   = new Int_t[fNindex];
    fNcodes       = 0;
@@ -200,7 +206,11 @@ void TTreeFormula::Init(const char*name, const char* expression)
 
    fDimensionSetup = new TList;
 
-   if (Compile(expression)) {fTree = 0; fNdim = 0; return; }
+   if (Compile(expression)) {
+      fTree = 0; fNdim = 0; 
+      if(savedir) savedir->cd();
+      return; 
+   }
 
    if (fNcodes >= kMAXFOUND) {
       Warning("TTreeFormula","Too many items in expression:%s",expression);
@@ -257,7 +267,9 @@ void TTreeFormula::Init(const char*name, const char* expression)
             Error("TTreeFormula",
                   "Index %d for dimension #%d in %s is too high (max is %d)",
                   fIndexes[k0][k1],k1+1, expression,fFixedSizes[k0][k1]-1);
-            fTree = 0; fNdim = 0; return;
+            fTree = 0; fNdim = 0; 
+            if(savedir) savedir->cd();
+            return;
          }
       }
    }
@@ -272,6 +284,8 @@ void TTreeFormula::Init(const char*name, const char* expression)
       }
       fBranches.AddAtAndExpand(branch,k);
    }
+
+   if(savedir) savedir->cd();
 }
 
 //______________________________________________________________________________
@@ -293,7 +307,7 @@ TTreeFormula::~TTreeFormula()
    TIter next(&fMethods);
    TObject *obj;
    while ((obj=next())) {
-      if (obj->InheritsFrom("TCutG")) temp.Add(obj);
+      if (obj->InheritsFrom("TCutG") || obj->InheritsFrom("TEntryList")) temp.Add(obj);
    }
    TIter next2(&temp);
    while ((obj=next2())) {
@@ -438,7 +452,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo,
       TStreamerBasicPointer *array = (TStreamerBasicPointer*)elem;
       TClass *cl = leafinfo->fClass;
       Int_t offset;
-      TStreamerElement* counter = cl->GetStreamerInfo()->GetStreamerElement(array->GetCountName(),offset);
+      TStreamerElement* counter = ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(array->GetCountName(),offset);
       if (maininfo==0 || maininfo==leafinfo || 1) {
          leafinfo->fCounter = new TFormLeafInfo(cl,offset,counter);
       } else {
@@ -456,7 +470,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TFormLeafInfo *leafinfo,
 
       TClass * clonesClass = TClonesArray::Class();
       Int_t c_offset;
-      TStreamerElement *counter = clonesClass->GetStreamerInfo()->GetStreamerElement("fLast",c_offset);
+      TStreamerElement *counter = ((TStreamerInfo*)clonesClass->GetStreamerInfo())->GetStreamerElement("fLast",c_offset);
       leafinfo->fCounter = new TFormLeafInfo(clonesClass,c_offset,counter);
 
    } else if (!useCollectionObject && elem->GetClassPointer() && elem->GetClassPointer()->GetCollectionProxy() ) {
@@ -760,7 +774,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
 
    if (leaf->InheritsFrom("TLeafObject") ) {
       TBranchObject *bobj = (TBranchObject*)leaf->GetBranch();
-      cl = gROOT->GetClass(bobj->GetClassName());
+      cl = TClass::GetClass(bobj->GetClassName());
    } else if (leaf->InheritsFrom("TLeafElement")) {
       TBranchElement *branchEl = (TBranchElement *)leaf->GetBranch();
       branchEl->SetupAddresses();
@@ -864,7 +878,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                collectioninfo =
                   new TFormLeafInfoCollection(collectionCl, 0, collectionElement, kTRUE);
             } else {
-               TClass *collectionCl = gROOT->GetClass(count->GetClassName());
+               TClass *collectionCl = TClass::GetClass(count->GetClassName());
                collectioninfo =
                   new TFormLeafInfoCollection(collectionCl, 0, collectionCl, kTRUE);
             }
@@ -1277,7 +1291,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                         TString return_type =
                           gInterpreter->TypeName(method->GetMethod()->GetReturnTypeName());
                         leafinfo = new TFormLeafInfoMethod(cl,method);
-                        cl = (return_type == "void") ? 0 : gROOT->GetClass(return_type.Data());
+                        cl = (return_type == "void") ? 0 : TClass::GetClass(return_type.Data());
                      }
                      break;
                   default:
@@ -1469,7 +1483,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
             if (!cl) {
                Warning("DefinedVariable","Missing class for %s!",name.Data());
             } else {
-               element = cl->GetStreamerInfo()->GetStreamerElement(work,offset);
+               element = ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(work,offset);
             }
 
             if (!element && !prevUseCollectionObject) {
@@ -1480,7 +1494,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                while ((curelem = (TStreamerElement*)next())) {
                   if (curelem->GetClassPointer() ==  TClonesArray::Class()) {
                      Int_t clones_offset;
-                     cl->GetStreamerInfo()->GetStreamerElement(curelem->GetName(),clones_offset);
+                     ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(curelem->GetName(),clones_offset);
                      TFormLeafInfo* clonesinfo =
                         new TFormLeafInfo(cl, clones_offset, curelem);
                      TClonesArray * clones;
@@ -1495,7 +1509,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                      }
 
                      TClass *sub_cl = clones->GetClass();
-                     if (sub_cl) element = sub_cl->GetStreamerInfo()->GetStreamerElement(work,offset);
+                     if (sub_cl) element = ((TStreamerInfo*)sub_cl->GetStreamerInfo())->GetStreamerElement(work,offset);
                      delete clonesinfo;
 
                      if (element) {
@@ -1514,12 +1528,12 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                   } else if (curelem->GetClassPointer() && curelem->GetClassPointer()->GetCollectionProxy()) {
 
                      Int_t coll_offset;
-                     cl->GetStreamerInfo()->GetStreamerElement(curelem->GetName(),coll_offset);
+                     ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(curelem->GetName(),coll_offset);
 
                      TClass *sub_cl =
                         curelem->GetClassPointer()->GetCollectionProxy()->GetValueClass();
                      if (sub_cl) {
-                        element = sub_cl->GetStreamerInfo()->GetStreamerElement(work,offset);
+                        element = ((TStreamerInfo*)sub_cl->GetStreamerInfo())->GetStreamerElement(work,offset);
                      }
                      if (element) {
                         if (numberOfVarDim>1) {
@@ -1765,7 +1779,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                         Error("DefinedVariable","Failed to access class type of reference target (%s)",element->GetName());
                         return -1;
                      }
-                     element = cl->GetStreamerInfo()->GetStreamerElement(work,offset);
+                     element = ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(work,offset);
                   }
                   else  {
                      Error("DefinedVariable","Failed to access class type of reference target (%s)",element->GetName());
@@ -1796,7 +1810,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
       return -1;
    }
 
-   static TClassRef stdStringClass = gROOT->GetClass("string");
+   static TClassRef stdStringClass = TClass::GetClass("string");
    TClass *objClass = EvalClass(code);
    if (IsLeafString(code) || objClass == TString::Class() || objClass == stdStringClass) {
 
@@ -1856,7 +1870,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
 
          TClass *rcl = 0;
          TFunction *f = method->GetMethod();
-         if (f) rcl = gROOT->GetClass(gInterpreter->TypeName(f->GetReturnTypeName()));
+         if (f) rcl = TClass::GetClass(gInterpreter->TypeName(f->GetReturnTypeName()));
          if ((rcl == TString::Class() || rcl == stdStringClass)
              && SwitchToFormLeafInfo(code) ) {
 
@@ -1930,7 +1944,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
          // Let's see if work is a classname.
          *(--current) = 0;
          TString cast_name = gInterpreter->TypeName(work);
-         TClass *cast_cl = gROOT->GetClass(cast_name);
+         TClass *cast_cl = TClass::GetClass(cast_name);
          if (cast_cl) {
             // We must have a cast
             castqueue.AddAtAndExpand(cast_cl,paran_level);
@@ -2630,6 +2644,19 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
       fLookupType[code] = -1;
       return code;
    }
+
+   //may be an entrylist
+   TEntryList *elist = (TEntryList*)gDirectory->Get(name.Data());
+   if (elist) {
+      Int_t code = fNcodes;
+      fCodes[code] = 0;
+      fMethods.AddAtAndExpand(elist, code);
+      fNcodes++;
+      fLookupType[code] = kEntryList;
+      return code;
+
+   }
+
    return -1;
 }
 
@@ -2724,7 +2751,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, const char* ne
          // Now that we have the class, let's check if the topchoice is of its datamember
          // or if the nextchoice is a datamember of one of its datamember.
          Int_t offset;
-         TStreamerInfo* info =  cl->GetStreamerInfo();
+         TStreamerInfo* info =  (TStreamerInfo*)cl->GetStreamerInfo();
          TStreamerElement* element = info?info->GetStreamerElement(topchoice,offset):0;
          if (!element) {
             TIter next( cl->GetStreamerInfo()->GetElements() );
@@ -2752,7 +2779,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, const char* ne
                   }
 
                   Int_t clones_offset;
-                  cl->GetStreamerInfo()->GetStreamerElement(curelem->GetName(),clones_offset);
+                  ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(curelem->GetName(),clones_offset);
                   TFormLeafInfo* sub_clonesinfo = new TFormLeafInfo(cl, clones_offset, curelem);
                   if (leafinfo)
                      if (leafinfo->fNext) leafinfo->fNext->fNext = sub_clonesinfo;
@@ -2772,7 +2799,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, const char* ne
                   TClass *sub_cl = clones->GetClass();
 
                   // Now that we finally have the inside class, let's query it.
-                  element = sub_cl->GetStreamerInfo()->GetStreamerElement(nextchoice,offset);
+                  element = ((TStreamerInfo*)sub_cl->GetStreamerInfo())->GetStreamerElement(nextchoice,offset);
                   if (element) break;
                } // if clones array
                else if (curelem->GetClassPointer() && curelem->GetClassPointer()->GetCollectionProxy()) {
@@ -2783,7 +2810,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, const char* ne
                      sub_cl = sub_cl->GetCollectionProxy()->GetValueClass();
 
                   // Now that we finally have the inside class, let's query it.
-                  if (sub_cl) element = sub_cl->GetStreamerInfo()->GetStreamerElement(nextchoice,offset);
+                  if (sub_cl) element = ((TStreamerInfo*)sub_cl->GetStreamerInfo())->GetStreamerElement(nextchoice,offset);
                   if (element) break;
 
                }
@@ -3161,9 +3188,9 @@ TClass* TTreeFormula::EvalClass(Int_t oper) const
                   // we probably do not have a way to know the class of the object.
                   return 0;
                } else {
-                  return gROOT->GetClass( elem->GetTypeName() );
+                  return TClass::GetClass( elem->GetTypeName() );
                }
-            } else return gROOT->GetClass( branch->GetClassName() );
+            } else return TClass::GetClass( branch->GetClassName() );
          } else {
             return 0;
          }
@@ -3199,6 +3226,7 @@ void* TTreeFormula::EvalObject(int instance)
       case kLength:
       case kLengthFunc:
       case kIteration:
+      case kEntryList:
          return 0;
    }
 
@@ -3367,6 +3395,10 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
          case kLengthFunc:   return ((TTreeFormula*)fAliases.UncheckedAt(0))->GetNdata();
          case kIteration:    return instance;
          case kSum:          return Summing((TTreeFormula*)fAliases.UncheckedAt(0));
+         case kEntryList: {
+            TEntryList *elist = (TEntryList*)fMethods.At(0);
+            return elist->Contains(fTree->GetReadEntry());
+         }
          case -1: break;
       }
       switch (fCodes[0]) {
@@ -3599,6 +3631,9 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                case kMethod:     { TT_EVAL_INIT_LOOP; tab[pos++] = GetValueFromMethod(code,leaf); continue; }
                case kDataMember: { TT_EVAL_INIT_LOOP; tab[pos++] = ((TFormLeafInfo*)fDataMembers.UncheckedAt(code))->
                                           GetValue(leaf,real_instance); continue; }
+               case kEntryList: { TEntryList *elist = (TEntryList*)fMethods.At(code);
+                  tab[pos++] = elist->Contains(fTree->GetReadEntry());
+                  continue;}
                case -1: break;
                default: tab[pos++] = 0; continue;
             }
@@ -3936,6 +3971,7 @@ Bool_t TTreeFormula::IsInteger() const
          case kIteration:
            return kTRUE;
          case kSum:
+         case kEntryList:
          default:
            return kFALSE;
       }
@@ -3963,6 +3999,7 @@ Bool_t TTreeFormula::IsLeafInteger(Int_t code) const
          case kIteration:
            return kTRUE;
          case kSum:
+         case kEntryList:
          default:
            return kFALSE;
       }
@@ -4238,7 +4275,7 @@ void TTreeFormula::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TTreeFormula::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TTreeFormula::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -4258,7 +4295,7 @@ void TTreeFormula::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TTreeFormula::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TTreeFormula::Class(),this);
    }
 }
 
@@ -4877,7 +4914,7 @@ Bool_t TTreeFormula::SwitchToFormLeafInfo(Int_t code)
                collectioninfo =
                   new TFormLeafInfoCollection(collectionCl, 0, collectionElement, kTRUE);
             } else {
-               TClass *collectionCl = gROOT->GetClass(count->GetClassName());
+               TClass *collectionCl = TClass::GetClass(count->GetClassName());
                collectioninfo =
                   new TFormLeafInfoCollection(collectionCl, 0, collectionCl, kTRUE);
             }

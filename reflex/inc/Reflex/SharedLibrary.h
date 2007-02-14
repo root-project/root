@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: $
+// @(#)root/reflex:$Name:  $:$Id: SharedLibrary.h,v 1.1 2006/11/30 08:27:08 roiser Exp $
 // Author: Stefan Roiser 2006
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -86,26 +86,7 @@ inline const std::string ROOT::Reflex::SharedLibrary::Error() {
   // Free the buffer allocated by the system
   ::LocalFree( lpMessageBuffer ); 
 #else
-  unsigned int error =  errno;
-  char *cerrString(0);
-  // Remember: for linux dl* routines must be handled differently!
-  if ( error == 0xAFFEDEAD ) {
-    cerrString = (char*)::dlerror();
-    if ( 0 == cerrString ) {
-      cerrString = ::strerror(error);
-    }
-    if ( 0 == cerrString ) {
-      cerrString = "Unknown error. No information found in strerror()!";
-    }
-    else {
-      errString = std::string(cerrString);
-    }
-    errno = 0;
-  }
-  else    {
-    cerrString = ::strerror(error);
-    errString = std::string(cerrString);
-  }
+  errString = std::string(dlerror());
 #endif
   return errString;
 }

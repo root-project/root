@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stressVector.cxx,v 1.5 2006/02/06 17:22:45 moneta Exp $
+// @(#)root/test:$Name:  $:$Id: stressVector.cxx,v 1.6 2006/08/13 14:21:49 moneta Exp $
 // Author: Lorenzo Moneta   06/2005 
 ///////////////////////////////////////////////////////////////////////////////////
 //
@@ -31,6 +31,7 @@
 
 
 
+#include <vector>
 #include <iostream>
 #include <algorithm>
 
@@ -38,7 +39,6 @@
 #include <map>
 
 #include "TStopwatch.h"
-
 
 #include "TRandom3.h"
 #include "TLorentzVector.h"

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Option.h,v 1.18 2006/11/16 22:51:59 helgevoss Exp $   
+// @(#)root/tmva $Id: Option.h,v 1.6 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -38,6 +38,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <sstream>
+#include <vector>
 
 #ifndef ROOT_TObject
 #include "TObject.h"

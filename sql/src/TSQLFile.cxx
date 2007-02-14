@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.14 2006/06/25 18:43:24 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLFile.cxx,v 1.16 2007/01/22 05:58:29 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -174,7 +174,7 @@
 #include "TObjString.h"
 #include "TList.h"
 #include "TArrayC.h"
-#include "TStreamerInfo.h"
+#include "TVirtualStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TProcessID.h"
 #include "TError.h"
@@ -346,7 +346,7 @@ TSQLFile::TSQLFile(const char* dbname, Option_t* option, const char* user, const
    gDirectory = 0;
    SetName(dbname);
    SetTitle("TFile interface to SQL DB");
-   TDirectory::Build();
+   TDirectoryFile::Build();
    fFile = this;
 
    if (strstr(dbname,"oracle://")!=0) {
@@ -691,7 +691,7 @@ void TSQLFile::Close(Option_t *option)
    }
 
    // Delete all supported directories structures from memory
-   TDirectory::Close();
+   TDirectoryFile::Close();
    cd();      // Close() sets gFile = 0
 
    if (cursav)
@@ -824,7 +824,7 @@ void TSQLFile::WriteHeader()
 //______________________________________________________________________________
 void TSQLFile::WriteStreamerInfo()
 {
-   // Store all TStreamerInfo, used in file, in sql database
+   // Store all TVirtualStreamerInfo, used in file, in sql database
 
    // return;
 
@@ -838,9 +838,9 @@ void TSQLFile::WriteStreamerInfo()
 
    TIter iter(gROOT->GetListOfStreamerInfo());
 
-   TStreamerInfo* info = 0;
+   TVirtualStreamerInfo* info = 0;
 
-   while ((info = (TStreamerInfo*) iter()) !=0 ) {
+   while ((info = (TVirtualStreamerInfo*) iter()) !=0 ) {
       Int_t uid = info->GetNumber();
       if (fClassIndex->fArray[uid]) {
          if (gDebug>1) Info("WriteStreamerInfo","Add %s",info->GetName());
@@ -848,11 +848,11 @@ void TSQLFile::WriteStreamerInfo()
       }
    }
    if (list.GetSize()==0) return;
-   fClassIndex->fArray[0] = 2; //to prevent adding classes in TStreamerInfo::TagFile
+   fClassIndex->fArray[0] = 2; //to prevent adding classes in TVirtualStreamerInfo::TagFile
 
    WriteSpecialObject(sqlio::Ids_StreamerInfos, &list, "StreamerInfo", "StreamerInfos of this file");
 
-   fClassIndex->fArray[0] = 0; //to prevent adding classes in TStreamerInfo::TagFile
+   fClassIndex->fArray[0] = 0; //to prevent adding classes in TVirtualStreamerInfo::TagFile
 }
 
 //______________________________________________________________________________
@@ -860,7 +860,7 @@ Bool_t TSQLFile::WriteSpecialObject(Long64_t keyid, TObject* obj, const char* na
 {
 // write special kind of object like streamer infos or file itself    
 // keys for that objects should exist in tables but not indicated in list of keys,
-// therefore users can not get them with TDirectory::Get() method
+// therefore users can not get them with TDirectoryFile::Get() method
     
    DeleteKeyFromDB(keyid);  
    if (obj==0) return kTRUE;
@@ -1263,14 +1263,14 @@ TString TSQLFile::MakeSelectQuery(TClass* cl)
 }
 
 //______________________________________________________________________________
-Bool_t TSQLFile::ProduceClassSelectQuery(TStreamerInfo* info, 
+Bool_t TSQLFile::ProduceClassSelectQuery(TVirtualStreamerInfo* info, 
                                          TSQLClassInfo* sqlinfo, 
                                          TString& columns, 
                                          TString& tables, 
                                          Int_t& tablecnt)
 {
    // used by MakeClassSelectQuery method to add columns from table of 
-   // class, specified by TStreamerInfo structure
+   // class, specified by TVirtualStreamerInfo structure
     
    if ((info==0) || (sqlinfo==0)) return kFALSE;
    
@@ -2572,7 +2572,7 @@ Long64_t TSQLFile::StoreObjectInTables(Long64_t keyid, const void* obj, const TC
 const char* TSQLFile::SQLCompatibleType(Int_t typ) const
 {
    // returns sql type name which is most closer to ROOT basic type
-   // typ should be from TStreamerInfo:: constansts like TStreamerInfo::kInt
+   // typ should be from TVirtualStreamerInfo:: constansts like TVirtualStreamerInfo::kInt
 
    return (typ<0) || (typ>18) ? 0 : fBasicTypes[typ];
 }
@@ -2582,7 +2582,7 @@ const char* TSQLFile::SQLIntType() const
 {
    // return SQL integer type
 
-   return SQLCompatibleType(TStreamerInfo::kInt);
+   return SQLCompatibleType(TVirtualStreamerInfo::kInt);
 }
 
 //______________________________________________________________________________
@@ -2626,7 +2626,7 @@ void TSQLFile::DirWriteHeader(TDirectory* dir)
 {
    // Update dir header in the file
    
-   TSQLClassInfo* sqlinfo = FindSQLClassInfo("TDirectory",TDirectory::Class()->GetClassVersion());
+   TSQLClassInfo* sqlinfo = FindSQLClassInfo("TDirectory",TDirectoryFile::Class()->GetClassVersion());
    if (sqlinfo==0) return;
    
    // try to identify key with data for our directory
@@ -2636,10 +2636,10 @@ void TSQLFile::DirWriteHeader(TDirectory* dir)
    const char* valuequote = SQLValueQuote();
    const char* quote = SQLIdentifierQuote();
 
-   TString timeC = dir->GetCreationDate().AsSQLString();
+   TString timeC = fDatimeC.AsSQLString();
    TSQLStructure::AddStrBrackets(timeC, valuequote);
    
-   TString timeM = dir->GetModificationDate().AsSQLString();
+   TString timeM = fDatimeM.AsSQLString();
    TSQLStructure::AddStrBrackets(timeM, valuequote);
    
    TString uuid = dir->GetUUID().AsString();

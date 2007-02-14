@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.11 2004/04/15 22:33:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.12 2004/07/22 06:28:09 brun Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -43,9 +43,6 @@ class TDatime;
 
 class TUUID {
 
-friend class TFile;
-friend class TDirectory;
-
 protected:
    UInt_t    fUUIDIndex;             //!index in the list of UUIDs in TProcessUUID
    UInt_t    fTimeLow;               // 60 bit time, lower 32 bits
@@ -68,11 +65,6 @@ protected:
    void  GetRandomInfo(UChar_t seed[16]);
    void  SetFromString(const char *uuid_str);
 
-   void  StreamerV1(TBuffer &b);
-   void  FillBuffer(char *&buffer);
-   void  ReadBuffer(char *&buffer);
-   Int_t Sizeof() const { return 18; }
-
 public:
    TUUID();
    TUUID(const char *uuid_str);
@@ -88,6 +80,11 @@ public:
    void         SetUUID(const char *uuid_str);
    UInt_t       GetUUIDNumber() const { return fUUIDIndex; }
    void         SetUUIDNumber(UInt_t index) { fUUIDIndex = index; }
+
+   void         StreamerV1(TBuffer &b);
+   void         FillBuffer(char *&buffer);
+   void         ReadBuffer(char *&buffer);
+   Int_t        Sizeof() const { return 18; }
 
    ClassDef(TUUID,1)  // Universally Unique IDentifier
 };

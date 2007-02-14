@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQCommand.cxx,v 1.6 2005/11/16 20:04:11 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TQCommand.cxx,v 1.7 2006/03/20 21:43:41 pcanal Exp $
 // Author: Valeriy Onuchin 04/27/2004
 
 /*************************************************************************
@@ -103,6 +103,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Varargs.h"
 #include "TQCommand.h"
 #include "TQConnection.h"
 #include "TDataType.h"

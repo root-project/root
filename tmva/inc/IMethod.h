@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: IMethod.h,v 1.6 2006/11/20 15:35:28 brun Exp $   
+// @(#)root/tmva $Id: IMethod.h,v 1.8 2007/01/16 09:37:03 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -40,9 +40,6 @@
 
 #include <vector>
 #include <iostream>
-#include "TROOT.h"
-#include "TTree.h"
-#include "TDirectory.h"
 
 #ifndef ROOT_TMVA_Ranking
 #include "TMVA/Ranking.h"
@@ -50,6 +47,9 @@
 #ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
 #endif
+
+class TDirectory;
+class TTree;
 
 namespace TMVA {
    

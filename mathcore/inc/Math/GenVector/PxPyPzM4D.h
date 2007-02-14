@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: PxPyPzM4D.h,v 1.1 2005/12/06 17:17:48 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PxPyPzM4D.h,v 1.3 2007/02/05 09:40:19 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by: fischler at Wed Jul 20   2005
 //   (starting from PxPyPzM4D by moneta)
 // 
-// Last update: $Id: PxPyPzM4D.h,v 1.1 2005/12/06 17:17:48 moneta Exp $
+// Last update: $Id: PxPyPzM4D.h,v 1.3 2007/02/05 09:40:19 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_PxPyPzM4D 
 #define ROOT_Math_GenVector_PxPyPzM4D  1
@@ -41,6 +41,8 @@ namespace ROOT {
    (like electrons at LHC) to avoid numerical errors evaluating the mass 
    when E >>> m
    The metric used is (-,-,-,+)
+   Spacelike particles (M2 < 0) are described with negative mass values, 
+   but in this case m2 must alwasy be less than P2 to preserve a positive value of E2
 
    @ingroup GenVector
 */ 
@@ -64,26 +66,29 @@ public :
     Constructor  from x, y , z , m values
    */
   PxPyPzM4D(Scalar x, Scalar y, Scalar z, Scalar m) : 
-      				    fX(x), fY(y), fZ(z), fM(m) { }
+      				    fX(x), fY(y), fZ(z), fM(m) { 
+     
+    if (fM < 0) RestrictNegMass();
+  }
 
   /**
-    construct from any vector or  coordinate system class 
-    implementing x(), y() and z() and t()
+    construct from any 4D  coordinate system class 
+    implementing X(), Y(), X() and M()
    */
   template <class CoordSystem> 
   explicit PxPyPzM4D(const CoordSystem & v) : 
-    fX( v.x() ), fY( v.y() ), fZ( v.z() ), fM(0)  
-  { 
-    fM = std::sqrt( v.t()*v.t() - P2() ); 
-  }
+    fX( v.X() ), fY( v.Y() ), fZ( v.Z() ), fM( v.M() )  
+   { }
 
   // no reason for a custom destructor  ~Cartesian3D() {} and copy constructor
 
   /**
     Set internal data based on an array of 4 Scalar numbers
    */ 
-  void SetCoordinates( const Scalar src[] ) 
-  		{ fX=src[0]; fY=src[1]; fZ=src[2]; fM=src[3]; }
+  void SetCoordinates( const Scalar src[] ) { 
+     fX=src[0]; fY=src[1]; fZ=src[2]; fM=src[3]; 
+     if (fM < 0) RestrictNegMass();
+  }
 
   /**
     get internal data into an array of 4 Scalar numbers
@@ -94,8 +99,10 @@ public :
   /**
     Set internal data based on 4 Scalar numbers
    */ 
-  void SetCoordinates(Scalar  x, Scalar  y, Scalar  z, Scalar m) 
-  		{ fX=x; fY=y; fZ=z; fM=m;}
+  void SetCoordinates(Scalar  x, Scalar  y, Scalar  z, Scalar m) { 
+     fX=x; fY=y; fZ=z; fM=m;
+     if (fM < 0) RestrictNegMass();
+  }
 
   /**
     get internal data into 4 Scalar numbers
@@ -120,7 +127,8 @@ public :
   /**
      Energy 
    */ 				  
-  Scalar E()  const { return std::sqrt( P2() + M2() );}
+   Scalar E()  const { return std::sqrt(E2() ); }
+
   Scalar T() const { return E();}
 
   /**
@@ -136,8 +144,11 @@ public :
 
   /**
     vector magnitude squared (or mass squared)
+    In case of negative mass (spacelike particles return negative values)
    */
-  Scalar M2() const   { return fM*fM;}
+  Scalar M2() const   { 
+     return ( fM  >= 0 ) ?  fM*fM :  -fM*fM; 
+  }
   Scalar Mag2() const { return M2(); } 
 
   Scalar Mag() const    { return M(); }
@@ -145,7 +156,11 @@ public :
   /**
      energy squared
    */
-  Scalar E2() const { return P2() + M2(); }
+  Scalar E2() const { 
+     Scalar e2 =  P2() + M2(); 
+     // protect against numerical errors when M2() is negative
+     return e2 > 0 ? e2 : 0; 
+  }
 
   /** 
     transverse spatial component squared  
@@ -194,7 +209,7 @@ public :
    */
   Scalar Et() const { 
     Scalar etet = Et2();
-    return fM < 0.0 ? -std::sqrt(etet) : std::sqrt(etet);
+    return std::sqrt(etet);
   }
 
   /**
@@ -254,6 +269,7 @@ public :
    */
   void SetM( Scalar  m) { 
     fM = m; 
+    if (fM < 0) RestrictNegMass();
   }
 
 
@@ -336,6 +352,19 @@ public :
 #endif
 
 private:
+
+   // restrict the value of negative mass to avoid unphysical negative E2 values 
+   // M2 must be less than P2 for the tachionic particles - otherwise use positive values
+   inline void RestrictNegMass() {
+    if ( fM >=0 ) return;
+    if ( P2() - fM*fM  < 0 ) { 
+       GenVector_exception e("PxPyPzM4D::unphysical value of mass, set to closest physical value");
+       Throw(e);
+       fM = - P();
+    }
+    return;
+  } 
+
 
   /**
     (contigous) data containing the coordinate values x,y,z,t

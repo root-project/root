@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafB.cxx,v 1.17 2006/07/13 05:31:13 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafB.cxx,v 1.18 2006/08/31 11:05:20 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 
 #include "TLeafB.h"
 #include "TBranch.h"
+#include "TClonesArray.h"
 #include "Riostream.h"
 
 ClassImp(TLeafB)

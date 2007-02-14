@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.21 2006/09/19 14:37:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.23 2007/02/12 10:22:13 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 // TGeoPhysicalNode
 //_________
 
+#include "TClass.h"
 #include "TGeoManager.h"
 #include "TGeoCache.h"
 #include "TGeoMatrix.h"
@@ -329,6 +330,8 @@ ClassImp(TGeoPNEntry)
 TGeoPNEntry::TGeoPNEntry()
 {
 // Default constructor
+   if (TClass::IsCallingNew() == TClass::kDummyNew) SetBit(kPNEntryOwnMatrix,kTRUE);
+   else SetBit(kPNEntryOwnMatrix,kFALSE);
    fNode = 0;
    fMatrix = 0;
 }
@@ -344,10 +347,18 @@ TGeoPNEntry::TGeoPNEntry(const char *name, const char *path)
       throw errmsg;
       return;
    }   
+   SetBit(kPNEntryOwnMatrix,kFALSE);
    fNode = 0;
    fMatrix = 0;
 }
 
+//_____________________________________________________________________________
+TGeoPNEntry::~TGeoPNEntry()
+{
+// Destructor
+   if (fMatrix && TestBit(kPNEntryOwnMatrix)) delete fMatrix;
+}
+   
 //_____________________________________________________________________________
 void TGeoPNEntry::SetPhysicalNode(TGeoPhysicalNode *node)
 {
@@ -360,10 +371,8 @@ void TGeoPNEntry::SetPhysicalNode(TGeoPhysicalNode *node)
 }
    
 //_____________________________________________________________________________
-void TGeoPNEntry::SetMatrix(TGeoHMatrix *mat)
+void TGeoPNEntry::SetMatrix(const TGeoHMatrix *mat)
 {
-// Set the additional matrix for this node entry. The matrix has to be created 
-// with 'new' by user and becomes owned by TGeo.
+// Set the additional matrix for this node entry. The matrix is owned by user.
    fMatrix = mat;
-   if (fMatrix) fMatrix->RegisterYourself();
 }

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TStatus.cxx,v 1.2 2005/01/12 03:02:48 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TStatus.cxx,v 1.3 2005/05/18 12:31:09 brun Exp $
 // Author: Maarten Ballintijn   7/06/2004
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 #include "TStatus.h"
 #include "Riostream.h"
 #include "TClass.h"
+#include "TList.h"
 
 
 ClassImp(TStatus)

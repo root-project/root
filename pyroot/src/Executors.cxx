@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.21 2006/09/28 23:16:16 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Executors.cxx,v 1.24 2007/01/30 10:09:57 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -201,24 +201,19 @@ PyObject* PyROOT::TRootObjectExecutor::Execute( G__CallFunc* func, void* self )
 //____________________________________________________________________________
 PyObject* PyROOT::TRootObjectByValueExecutor::Execute( G__CallFunc* func, void* self )
 {
-// execution will bring a temporary in existence ...
-   void* result1 = (void*)func->ExecInt( self );
-   if ( ! result1 ) {
+// execution will bring a temporary in existence
+   void* result = (void*)func->ExecInt( self );
+   if ( ! result ) {
       if ( ! PyErr_Occurred() )         // callee may have set a python error itself
          PyErr_SetString( PyExc_ValueError, "NULL result where temporary expected" );
       return 0;
    }
 
-// ... which must be copied to retain ownership, then released
-   void* result2 = result1;
-   if ( ! fClass->GetClassInfo() || fClass->GetClassInfo()->Linkage() != -1 ) {
-      result2 = new char[ fClass->Size() ];
-      memcpy( result2, result1, fClass->Size() );
-   }
-   G__pop_tempobject();            // doesn't call dtor
+// stop CINT from tracking the object, so that ownership is ours
+   G__pop_tempobject_nodel();
 
-// the final result can then be bound
-   ObjectProxy* pyobj = (ObjectProxy*)BindRootObjectNoCast( result2, fClass );
+// the result can then now bound
+   ObjectProxy* pyobj = (ObjectProxy*)BindRootObjectNoCast( result, fClass );
    if ( ! pyobj )
       return 0;
 
@@ -275,7 +270,7 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
 
 // ROOT classes and special cases (enum)
    TExecutor* result = 0;
-   if ( TClass* klass = gROOT->GetClass( realType.c_str() ) ) {
+   if ( TClass* klass = TClass::GetClass( realType.c_str() ) ) {
       result = cpd != ""  ? \
          new TRootObjectExecutor( klass ) : new TRootObjectByValueExecutor( klass );
    } else {

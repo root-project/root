@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFriendProxy.cxx,v 1.2 2005/02/07 18:02:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFriendProxy.cxx,v 1.3 2005/11/11 23:21:43 pcanal Exp $
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 
 #include "TFriendProxy.h"
 #include "TTree.h"
+#include "TList.h"
 #include "TFriendElement.h"
 
 namespace ROOT {
