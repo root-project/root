@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.121 2007/01/23 09:24:15 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.122 2007/02/13 21:14:39 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -38,12 +38,12 @@
 // the TCanvas::MakeDefCanvas method is registered with TROOT as soon as
 // the shared library containing TCanvas is loaded.
 
-class TInitMakeDefCanvas {
-public:
-   TInitMakeDefCanvas() { TROOT::SetMakeDefCanvas(&TCanvas::MakeDefCanvas); }
-};
+//class TInitMakeDefCanvas {
+//public:
+//   TInitMakeDefCanvas() { TROOT::SetMakeDefCanvas(&TCanvas::MakeDefCanvas(int)); }
+//};
 
-static TInitMakeDefCanvas gMakedefcanvas_init;
+//static TInitMakeDefCanvas gMakedefcanvas_init;
 
 //*-*x16 macros/layout_canvas
 
@@ -1288,7 +1288,7 @@ void TCanvas::ls(Option_t *option) const
 
 
 //______________________________________________________________________________
-void TCanvas::MakeDefCanvas()
+TCanvas *TCanvas::MakeDefCanvas()
 {
    // Static function to build a default canvas.
 
@@ -1305,10 +1305,11 @@ void TCanvas::MakeDefCanvas()
    } else
       cdef = StrDup(Form("%s",defcanvas));
 
-   new TCanvas(cdef, cdef, 1);
+   TCanvas *c = new TCanvas(cdef, cdef, 1);
 
    Printf("<TCanvas::MakeDefCanvas>: created default TCanvas with name %s",cdef);
    delete [] cdef;
+   return c;
 }
 
 
