@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.4 2007/02/09 13:59:29 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.5 2007/02/13 20:22:06 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -133,21 +133,19 @@ std::set<std::string>  TDocParser::fgKeywords;
 //______________________________________________________________________________
 TDocParser::TDocParser(TClassDocOutput& docOutput, TClass* cl):
    fHtml(docOutput.GetHtml()), fDocOutput(&docOutput), fLineNo(0),
-   fCurrentClass(cl), fDocContext(kIgnore), fCheckForMethod(kFALSE),
-   fFoundClassDescription(kFALSE), fLookForClassDescription(kTRUE),
-   fCommentAtBOL(kFALSE)
+   fCurrentClass(cl), fDirectiveCount(0), fDocContext(kIgnore), 
+   fCheckForMethod(kFALSE), fFoundClassDescription(kFALSE), 
+   fLookForClassDescription(kTRUE), fCommentAtBOL(kFALSE)
 {
    // Constructor called for parsing class sources
 
    InitKeywords();
 
-   // get environment variables
-   fSourceInfoTags[kInfoLastUpdate] = gEnv->GetValue("Root.Html.LastUpdate", "// @(#)");
-   fSourceInfoTags[kInfoAuthor]     = gEnv->GetValue("Root.Html.Author", "// Author:");
-   fSourceInfoTags[kInfoCopyright]  = gEnv->GetValue("Root.Html.Copyright", " * Copyright");
+   fSourceInfoTags[kInfoLastUpdate] = fHtml->GetLastUpdateTag();
+   fSourceInfoTags[kInfoAuthor]     = fHtml->GetAuthorTag();
+   fSourceInfoTags[kInfoCopyright]  = fHtml->GetCopyrightTag();
 
-   fClassDescrTag = 
-       gEnv->GetValue("Root.Html.Description", "//____________________");
+   fClassDescrTag = fHtml->GetClassDocTag();
 
    TMethodWrapperImpl::SetClass(cl);
 
@@ -170,20 +168,18 @@ TDocParser::TDocParser(TClassDocOutput& docOutput, TClass* cl):
 //______________________________________________________________________________
 TDocParser::TDocParser(TDocOutput& docOutput):
    fHtml(docOutput.GetHtml()), fDocOutput(&docOutput), fLineNo(0),
-   fCurrentClass(0), fDocContext(kIgnore), fCheckForMethod(kFALSE), 
-   fFoundClassDescription(kFALSE), fLookForClassDescription(kTRUE),
-   fCommentAtBOL(kFALSE)
+   fCurrentClass(0), fDirectiveCount(0), fDocContext(kIgnore), 
+   fCheckForMethod(kFALSE), fFoundClassDescription(kFALSE), 
+   fLookForClassDescription(kTRUE), fCommentAtBOL(kFALSE)
 {
    // constructor called for parsing text files with Convert()
    InitKeywords();
 
-   // get environment variables
-   fSourceInfoTags[kInfoLastUpdate] = gEnv->GetValue("Root.Html.LastUpdate", "// @(#)");
-   fSourceInfoTags[kInfoAuthor]     = gEnv->GetValue("Root.Html.Author", "// Author:");
-   fSourceInfoTags[kInfoCopyright]  = gEnv->GetValue("Root.Html.Copyright", " * Copyright");
+   fSourceInfoTags[kInfoLastUpdate] = fHtml->GetLastUpdateTag();
+   fSourceInfoTags[kInfoAuthor]     = fHtml->GetAuthorTag();
+   fSourceInfoTags[kInfoCopyright]  = fHtml->GetCopyrightTag();
 
-   fClassDescrTag = 
-       gEnv->GetValue("Root.Html.Description", "//____________________");
+   fClassDescrTag = fHtml->GetClassDocTag();
 
    TMethodWrapperImpl::SetClass(0);
 }
@@ -843,6 +839,9 @@ Bool_t TDocParser::HandleDirective(TString& line, Ssiz_t& pos, TString& word,
          return kFALSE;
 
       directive->SetParser(this);
+      if (fCurrentMethodTag.Length())
+         directive->SetTag(fCurrentMethodTag);
+      directive->SetCounter(fDirectiveCount++);
 
       // parse parameters
       TString params;
@@ -1576,8 +1575,7 @@ void TDocParser::LocateMethodsInSource(std::ostream& out)
    // file in parallel.
 
    // for Doc++ style
-   const char* docxxEnv = gEnv->GetValue("Root.Html.DescriptionStyle", "");
-   Bool_t useDocxxStyle = (strcmp(docxxEnv, "Doc++") == 0);
+   Bool_t useDocxxStyle = (fHtml->GetDocStyle() == "Doc++");
 
    TString pattern(fCurrentClass->GetName());
    // take unscoped version
@@ -1644,7 +1642,11 @@ Bool_t TDocParser::ProcessComment()
       return kFALSE;
    }
 
-   if (InContext(kDirective))
+   //if (InContext(kDirective))
+   //   return kTRUE; - NO! we might have a comment from a previous directive!
+
+   // don't write out empty lines if the current directive is eating the line
+   if (InContext(kDirective) && !fLineComment.Length())
       return kTRUE;
 
    TString commentLine(fLineComment.Strip());
@@ -1801,6 +1803,7 @@ void TDocParser::WriteMethod(std::ostream& out, TString& ret,
       fFoundClassDescription = kTRUE;
    }
 
+   fDirectiveCount = 0;
    fCurrentMethodTag = name + "_";
    fCurrentMethodTag += fMethodCounts[name.Data()];
 

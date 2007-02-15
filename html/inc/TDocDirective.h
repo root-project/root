@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.29 2006/09/25 08:58:56 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TDocDirective.h,v 1.1 2007/02/07 20:40:38 brun Exp $
 // Author: Axel Naumann 2007-01-25
 
 /*************************************************************************
@@ -39,11 +39,12 @@ protected:
    THtml*      fHtml;       // parser's THtml object
    TDocOutput* fDocOutput;  // parser invoking this handler
    TString     fParameters; // parameters to the directive
+   Int_t       fCounter;    // counter to generate unique names, -1 to ignore
 
    virtual void AddParameter(const TString& /*name*/, const char* /*value*/ = 0) {}
 
    TDocDirective() {}
-   TDocDirective(const char* name): TNamed(name, ""), fDocParser(0) {};
+   TDocDirective(const char* name): TNamed(name, ""), fDocParser(0), fCounter(-1) {};
    virtual ~TDocDirective() {}
 
    const char* GetName() const { return TNamed::GetName(); }
@@ -56,6 +57,7 @@ protected:
    void SetParser(TDocParser* parser);
    void SetParameters(const char* params);
    void SetTag(const char* tag) { SetTitle(tag); }
+   void SetCounter(Int_t count) { fCounter = count; }
 
 public:
    // get the tag ending this directive

@@ -31,6 +31,10 @@ void TDocDirective::GetName(TString& name) const
       name += "_";
       name += GetTitle();
    }
+   if (fCounter != -1) {
+      name += "_";
+      name += fCounter;
+   }
 }
 
 //______________________________________________________________________________
@@ -101,6 +105,8 @@ ClassImp(TDocHtmlDirective);
 void TDocHtmlDirective::AddLine(const TSubString& line)
 {
    // Add a line of HTML
+
+   if (line.Start() == -1) return;
 
    TSubString iLine(line);
    Ssiz_t posPre = iLine.String().Index("pre>", line.Start(), TString::kIgnoreCase);
@@ -508,12 +514,12 @@ void TDocLatexDirective::CreateLatex(const char* filename)
             Ssiz_t prevStart = 0;
             for (Ssiz_t pos = 0; pos < str.Length(); ++pos) {
                if (fSeparator.Index(str[pos]) != kNPOS) {
-                  split->Add(new TObjString(TString(str(prevStart, pos - prevStart - 1))));
+                  split->Add(new TObjString(TString(str(prevStart, pos - prevStart))));
                   split->Add(new TObjString(TString(str(pos, 1))));
                   prevStart = pos + 1;
                }
             }
-            split->Add(new TObjString(TString(str(prevStart, str.Length() - prevStart - 1))));
+            split->Add(new TObjString(TString(str(prevStart, str.Length() - prevStart))));
          }
       }
 

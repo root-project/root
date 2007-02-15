@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.29 2006/09/25 08:58:56 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TDocOutput.h,v 1.1 2007/02/07 20:40:38 brun Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -45,6 +45,7 @@ protected:
 
    int            CaseInsensitiveSort(const void *name1, const void *name2);
    void           AddLink(TSubString& str, TString& link, const char* comment);
+   void           ProcessDocInDir(std::ostream& out, const char* indir, const char* outdir, const char* linkdir);
    Bool_t         RunDot(const char* filename, std::ostream* outMap = 0);
    void           WriteHtmlHeader(std::ostream& out, const char *titleNoSpecial, 
                                   const char* dir /*=""*/, TClass *cls /*=0*/,
@@ -52,6 +53,8 @@ protected:
    void           WriteHtmlFooter(std::ostream& out, const char *dir,
                                   const char *lastUpdate, const char *author,
                                   const char *copyright, const char* footer);
+   virtual void   WriteSearch(std::ostream& out);
+   void           WriteModuleLinks(std::ostream& out);
 
 public:
    enum EFileType { kSource, kInclude, kTree };
@@ -64,10 +67,12 @@ public:
                           const char *relpath = "../");
    Bool_t         CopyHtmlFile(const char *sourceName, const char *destName="");
 
-   virtual void   CreateHierarchy();
-   virtual void   CreateIndex();
-   virtual void   CreateIndexByTopic();
+   virtual void   CreateClassIndex();
+   virtual void   CreateModuleIndex();
+   virtual void   CreateProductIndex();
    virtual void   CreateTypeIndex();
+   virtual void   CreateHierarchy();
+
    virtual void   DecorateEntityBegin(TString& str, Ssiz_t& pos, TDocParser::EParseContext type);
    virtual void   DecorateEntityEnd(TString& str, Ssiz_t& pos, TDocParser::EParseContext type);
    virtual void   FixupAuthorSourceInfo(TString& authors);

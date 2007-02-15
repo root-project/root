@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocParser.h,v 1.2 2007/02/08 22:56:05 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocParser.h,v 1.3 2007/02/13 20:22:06 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -98,6 +98,7 @@ protected:
    TString        fComment;         // current comment
    TClass*        fCurrentClass;    // current class context of sources being parsed
    TString        fCurrentMethodTag;// name_idx of the currently parsed method
+   Int_t          fDirectiveCount;  // index of directive for current method
    TString        fCurrentFile;     // current source / header file name
    std::map<std::string /*name*/, Int_t > fMethodCounts;     // current class's method names
    EDocContext    fDocContext;      // current context of parsed sources for documenting

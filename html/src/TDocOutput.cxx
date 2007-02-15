@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.3 2007/02/08 22:56:05 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.4 2007/02/13 20:22:06 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -390,17 +390,7 @@ void TDocOutput::CreateHierarchy()
    WriteHtmlHeader(out, "Class Hierarchy");
    out << "<h1>Class Hierarchy</h1>" << endl;
 
-   // check for a search engine
-   const char *searchEngine =
-       gEnv->GetValue("Root.Html.SearchEngine", "");
-
-   // if exists ...
-   if (*searchEngine) {
-
-      // create link to search engine page
-      out << "<h2><a href=\"" << searchEngine
-          << "\">Search the Class Reference Guide</a></h2>" << endl;
-   }
+   WriteSearch(out);
 
    // loop on all classes
    TClassDocInfo* cdi = 0;
@@ -425,7 +415,7 @@ void TDocOutput::CreateHierarchy()
 }
 
 //______________________________________________________________________________
-void TDocOutput::CreateIndex()
+void TDocOutput::CreateClassIndex()
 {
 // Create index of all classes
 //
@@ -440,7 +430,7 @@ void TDocOutput::CreateIndex()
    std::ofstream indexFile(filename.Data());
 
    if (!indexFile.good()) {
-      Error("MakeIndex", "Can't open file '%s' !", filename.Data());
+      Error("CreateClassIndex", "Can't open file '%s' !", filename.Data());
       return;
    }
 
@@ -451,17 +441,7 @@ void TDocOutput::CreateIndex()
 
    indexFile << "<h1>Index</h1>" << endl;
 
-   if (fHtml->GetListOfModules()->GetSize()) {
-      indexFile << "<div id=\"indxModules\"><h4>Modules</h4>" << endl;
-      // find index chars
-      TIter iModule(fHtml->GetListOfModules());
-      TModuleDocInfo* module = 0;
-      while ((module = (TModuleDocInfo*) iModule()))
-         if (module->IsSelected())
-            indexFile << "<a href=\"" << module->GetName() << "_Index.html\">" 
-                      << module->GetName() << "</a>" << endl;
-      indexFile << "</div><br />" << endl;
-   }
+   WriteModuleLinks(indexFile);
 
    std::vector<std::string> indexChars;
    if (fHtml->GetListOfClasses()->GetSize() > 10) {
@@ -487,35 +467,7 @@ void TDocOutput::CreateIndex()
       }
    }
 
-   // check for a search engine
-   const char *searchEngine =
-       gEnv->GetValue("Root.Html.SearchEngine", "");
-
-   // if exists ...
-   if (*searchEngine) {
-
-      // create link to search engine page
-      indexFile << "<h2><a href=\"" << searchEngine
-          << "\">Search the Class Reference Guide</a></h2>" << endl;
-
-   } else {
-      const char *searchCmd =
-          gEnv->GetValue("Root.Html.Search", "");
-
-      //e.g. searchCmd = "http://www.google.com/search?q=%s+site%3Aroot.cern.ch%2Froot%2Fhtml";
-      // if exists ...
-      if (*searchCmd) {
-         // create link to search engine page
-         indexFile << "<script type=\"text/javascript\">" << endl
-            << "function onSearch() {" << endl
-            << "var s='" << searchCmd <<"';" << endl
-            << "window.location.href=s.replace(/%s/ig,escape(document.searchform.t.value));" << endl
-            << "return false;}" << endl
-            << "</script><form action=\"javascript:onSearch();\" id=\"searchform\" name=\"searchform\" onsubmit=\"return onSearch()\">" << endl
-            << "<input name=\"t\" value=\"Search documentation...\"  onfocus=\"if (document.searchform.t.value=='Search documentation...') document.searchform.t.value='';\"></input>" << endl
-            << "<button type=\"submit\">Search</button></form>" << endl;
-      }
-   }
+   WriteSearch(indexFile);
 
    indexFile << "<ul id=\"indx\">" << endl;
 
@@ -531,7 +483,7 @@ void TDocOutput::CreateIndex()
       // get class
       TClass* currentClass = cdi->GetClass();
       if (!currentClass) {
-         Warning("THtml::CreateIndex", "skipping class %s\n", cdi->GetName());
+         Warning("THtml::CreateClassIndex", "skipping class %s\n", cdi->GetName());
          continue;
       }
 
@@ -567,15 +519,12 @@ void TDocOutput::CreateIndex()
 
 
 //______________________________________________________________________________
-void TDocOutput::CreateIndexByTopic()
+void TDocOutput::CreateModuleIndex()
 {
-// It creates several index files
-//
-//
-// Input: fileNames     - pointer to an array of file names
-//        numberOfNames - number of elements in the fileNames array
-//        maxLen        - maximum length of a single name
-//
+   // Create the class index for each module, picking up documentation from the 
+   // module's TModuleDocInfo::GetSourceDir() plus the (possibly relative) 
+   // THtml::GetModuleDocPath(). Also creates the library dependency plot if dot
+   // exists, see THtml::HaveDot().
 
    const char* title = "LibraryDependencies";
    TString filename(title);
@@ -587,9 +536,11 @@ void TDocOutput::CreateIndexByTopic()
                  << "rankdir=TB;" << endl
                  << "compound=true;" << endl
                  << "constraint=false;" << endl
-                 << "ranksep=1;" << endl
-                 << "nodesep=0.3;" << endl
-                 << "ratio=compress;" << endl;
+                 << "ranksep=0.1;" << endl
+                 << "nodesep=0.1;" << endl
+                 << "ratio=compress;" << endl
+                 << "node [fontsize=10];" << endl
+                 << "size=\"16,20\";" << endl;
 
 
    TModuleDocInfo* module = 0;
@@ -626,87 +577,7 @@ void TDocOutput::CreateIndexByTopic()
          TString moduleDocDir(GetHtml()->GetModuleDocPath());
          if (!gSystem->IsAbsoluteFileName(moduleDocDir))
             gSystem->PrependPathName(module->GetSourceDir(), moduleDocDir);
-
-         void * dirHandle = gSystem->OpenDirectory(moduleDocDir);
-         if (dirHandle) {
-            const char* entry = 0;
-            std::list<std::string> files;
-            while ((entry = gSystem->GetDirEntry(dirHandle))) {
-               FileStat_t stat;
-               TString filename(entry);
-               gSystem->PrependPathName(moduleDocDir, filename);
-               if (gSystem->GetPathInfo(filename, stat)) // funny ret
-                  continue;
-               if (!R_ISREG(stat.fMode)) continue;
-
-               if (TString(entry).BeginsWith("index.", TString::kIgnoreCase)) {
-                  // This is the part we put directly (verbatim) into the module index.
-                  // If it ends on ".txt" we run Convert first.
-                  if (filename.EndsWith(".txt", TString::kIgnoreCase)) {
-                     std::ifstream in(filename);
-                     if (in) {
-                        outputFile << "<pre>"; // this is what e.g. the html directive expects
-                        TDocParser parser(*this);
-                        parser.Convert(outputFile, in, "../");
-                        outputFile << "</pre>";
-                     }
-                  } else if (filename.EndsWith(".html", TString::kIgnoreCase)) {
-                     std::ifstream in(filename);
-                     TString line;
-                     while (in) {
-                        if (!line.ReadLine(in)) break;
-                        outputFile << line;
-                     }
-                  }
-               } else
-                  files.push_back(filename.Data());
-            }
-
-            std::stringstream furtherReading;
-            files.sort();
-            for (std::list<std::string>::const_iterator iFile = files.begin();
-               iFile != files.end(); ++iFile) {
-               TString filename(iFile->c_str());
-               if (!filename.EndsWith(".txt", TString::kIgnoreCase) 
-                  && !filename.EndsWith(".html", TString::kIgnoreCase))
-                  continue;
-
-               // Just copy and link this page.
-               if (gSystem->AccessPathName(outdir))
-                  if (gSystem->mkdir(outdir, kTRUE) == -1)
-                     // bad - but let's still try to create the output
-                     Error("CreateIndexByTopic", "Cannot create output directory %s", outdir.Data());
-
-               TString outfile(gSystem->BaseName(filename));
-               gSystem->PrependPathName(outdir, outfile);
-               if (outfile.EndsWith(".txt", TString::kIgnoreCase)) {
-                  // convert first
-                  outfile.Remove(outfile.Length()-3, 3);
-                  outfile += "html";
-                  std::ifstream in(filename);
-                  std::ofstream out(outfile);
-                  if (in && out) {
-                     outputFile << "<pre>"; // this is what e.g. the html directive expects
-                     TDocParser parser(*this);
-                     parser.Convert(out, in, "../");
-                     outputFile << "</pre>";
-                  }
-               } else {
-                  if (gSystem->CopyFile(filename, outfile, kTRUE) == -1)
-                     continue;
-               }
-               TString showname(gSystem->BaseName(outfile));
-               furtherReading << "<a class=\"linkeddoc\" href=\"" << module->GetName() << "/" << showname << "\">";
-               showname.Remove(showname.Length() - 5, 5); // .html
-               ReplaceSpecialChars(furtherReading, showname);
-               furtherReading << "</a> " << endl;
-            }
-
-            gSystem->FreeDirectory(dirHandle);
-            if (furtherReading.str().length())
-               outputFile << "<h3>Further Reading</h3><div id=\"furtherreading\">" << endl
-                          << furtherReading.str() << "</div><h3>List of Classes</h3>" << endl;
-         }
+         ProcessDocInDir(outputFile, moduleDocDir, outdir, module->GetName());
       }
 
       std::list<std::string> classNames;
@@ -877,7 +748,7 @@ void TDocOutput::CreateIndexByTopic()
 
    std::ofstream out(filename + ".html");
    if (!out.good()) {
-      Error("CreateIndexByTopic", "Can't open file '%s.html' !",
+      Error("CreateModuleIndex", "Can't open file '%s.html' !",
             filename.Data());
       return;
    }
@@ -887,17 +758,7 @@ void TDocOutput::CreateIndexByTopic()
    WriteHtmlHeader(out, "Library Dependencies");
    out << "<h1>Library Dependencies</h1>" << endl;
 
-   // check for a search engine
-   const char *searchEngine =
-       gEnv->GetValue("Root.Html.SearchEngine", "");
-
-   // if exists ...
-   if (*searchEngine) {
-
-      // create link to search engine page
-      out << "<h2><a href=\"" << searchEngine
-          << "\">Search the Class Reference Guide</a></h2>" << endl;
-   }
+   WriteSearch(out);
 
    RunDot(filename, &out);
 
@@ -907,6 +768,45 @@ void TDocOutput::CreateIndexByTopic()
    WriteHtmlFooter(out);
 }
 
+//______________________________________________________________________________
+void TDocOutput::CreateProductIndex()
+{
+   // Fetch documentation from THtml::GetProductDocDir() and put it into the
+   // product index page.
+
+   //TString outFile(GetHtml()->GetProductName());
+   //outFile += ".html";
+   TString outFile("index.html");
+   gSystem->PrependPathName(GetHtml()->GetOutputDir(), outFile);
+   std::ofstream out(outFile);
+
+   if (!out.good()) {
+      Error("CreateProductIndex", "Can't open file '%s' !", outFile.Data());
+      return;
+   }
+
+   Printf(fHtml->GetCounterFormat(), "", "", outFile.Data());
+
+   WriteHtmlHeader(out, GetHtml()->GetProductName() + " Reference Guide");
+   out << "<h1>" << GetHtml()->GetProductName() + " Reference Guide</h1>" << std::endl;
+
+   if (GetHtml()->GetProductDocDir().Length())
+      ProcessDocInDir(out, GetHtml()->GetProductDocDir(), GetHtml()->GetOutputDir(), "./");
+
+   WriteModuleLinks(out);
+
+   out << "<h2>Chapters</h2>" << std::endl
+      << "<h3><a href=\"./ClassIndex.html\">Class Index</a></h3>" << std::endl
+      << "<p>A complete list of all classes defined in " << GetHtml()->GetProductName() << "</p>" << std::endl
+      << "<h3><a href=\"./ClassHierarchy.html\">Class Index</a></h3>" << std::endl
+      << "<p>A hierarchy graph of all classes, showing each class's base and derived classes</p>" << std::endl
+      << "<h3><a href=\"./ListOfTypes.html\">Type Index</a></h3>" << std::endl
+      << "<p>A complete list of all types</p>" << std::endl
+      << "<h3><a href=\"./LibraryDependencies.html\">Library Dependency</a></h3>" << std::endl
+      << "<p>A diagram showing all of " << GetHtml()->GetProductName() << "'s libraries and their dependencies</p>" << std::endl;
+
+   WriteHtmlFooter(out);
+}
 
 //______________________________________________________________________________
 void TDocOutput::CreateTypeIndex()
@@ -919,7 +819,7 @@ void TDocOutput::CreateTypeIndex()
    std::ofstream typesList(outFile);
 
    if (!typesList.good()) {
-      Error("Make", "Can't open file '%s' !", outFile.Data());
+      Error("CreateTypeIndex", "Can't open file '%s' !", outFile.Data());
       return;
    }
 
@@ -1214,6 +1114,99 @@ void TDocOutput::NameSpace2FileName(TString& name)
    for (Ssiz_t i=0; i < name.Length(); ++i)
       if (strchr(replaceWhat, name[i])) 
          name[i] = '_';
+}
+
+//______________________________________________________________________________
+void TDocOutput::ProcessDocInDir(std::ostream& out, const char* indir, 
+                                 const char* outdir, const char* linkdir)
+{
+   // Write links to files indir/*.txt, indir/*.html (non-recursive) to out.
+   // If one of the files is called "index.{html,txt}" it will be
+   // included in out (instead of copying it to outdir and generating a link 
+   // to linkdir). txt files are passed through Convert(). 
+   // The files' links are sorted alphabetically.
+
+   void * dirHandle = gSystem->OpenDirectory(indir);
+   if (!dirHandle) return;
+
+   const char* entry = 0;
+   std::list<std::string> files;
+   while ((entry = gSystem->GetDirEntry(dirHandle))) {
+      FileStat_t stat;
+      TString filename(entry);
+      gSystem->PrependPathName(indir, filename);
+      if (gSystem->GetPathInfo(filename, stat)) // funny ret
+         continue;
+      if (!R_ISREG(stat.fMode)) continue;
+
+      if (TString(entry).BeginsWith("index.", TString::kIgnoreCase)) {
+         // This is the part we put directly (verbatim) into the module index.
+         // If it ends on ".txt" we run Convert first.
+         if (filename.EndsWith(".txt", TString::kIgnoreCase)) {
+            std::ifstream in(filename);
+            if (in) {
+               out << "<pre>"; // this is what e.g. the html directive expects
+               TDocParser parser(*this);
+               parser.Convert(out, in, "../");
+               out << "</pre>";
+            }
+         } else if (filename.EndsWith(".html", TString::kIgnoreCase)) {
+            std::ifstream in(filename);
+            TString line;
+            while (in) {
+               if (!line.ReadLine(in)) break;
+               out << line;
+            }
+         }
+      } else
+         files.push_back(filename.Data());
+   }
+
+   std::stringstream furtherReading;
+   files.sort();
+   for (std::list<std::string>::const_iterator iFile = files.begin();
+      iFile != files.end(); ++iFile) {
+      TString filename(iFile->c_str());
+      if (!filename.EndsWith(".txt", TString::kIgnoreCase) 
+         && !filename.EndsWith(".html", TString::kIgnoreCase))
+         continue;
+
+      // Just copy and link this page.
+      if (gSystem->AccessPathName(outdir))
+         if (gSystem->mkdir(outdir, kTRUE) == -1)
+            // bad - but let's still try to create the output
+            Error("CreateModuleIndex", "Cannot create output directory %s", outdir);
+
+      TString outfile(gSystem->BaseName(filename));
+      gSystem->PrependPathName(outdir, outfile);
+      if (outfile.EndsWith(".txt", TString::kIgnoreCase)) {
+         // convert first
+         outfile.Remove(outfile.Length()-3, 3);
+         outfile += "html";
+         std::ifstream in(filename);
+         std::ofstream out(outfile);
+         if (in && out) {
+            out << "<pre>"; // this is what e.g. the html directive expects
+            TDocParser parser(*this);
+            parser.Convert(out, in, "../");
+            out << "</pre>";
+         }
+      } else {
+         if (gSystem->CopyFile(filename, outfile, kTRUE) == -1)
+            continue;
+      }
+      TString showname(gSystem->BaseName(outfile));
+      furtherReading << "<a class=\"linkeddoc\" href=\"" << linkdir << "/" << showname << "\">";
+      showname.Remove(showname.Length() - 5, 5); // .html
+      showname.ReplaceAll("_", " ");
+      ReplaceSpecialChars(furtherReading, showname);
+      furtherReading << "</a> " << endl;
+   }
+
+   gSystem->FreeDirectory(dirHandle);
+   if (furtherReading.str().length())
+      out << "<h3>Further Reading</h3><div id=\"furtherreading\">" << endl
+          << furtherReading.str() << "</div><h3>List of Classes</h3>" << endl;
 }
 
 //______________________________________________________________________________
@@ -1537,7 +1530,7 @@ void TDocOutput::WriteHtmlHeader(std::ostream& out, const char *titleNoSpecial,
       return;
    }
 
-   const char *charset = gEnv->GetValue("Root.Html.Charset", "ISO-8859-1");
+   const TString& charset = GetHtml()->GetCharset();
    TDatime date;
    TString strDate(date.AsString());
    TString line;
@@ -1603,7 +1596,7 @@ void TDocOutput::WriteHtmlHeader(std::ostream& out, const char *title,
 // i.e. cls==0, lines containing %CLASS%, %INCFILE%, or %SRCFILE% will be
 // skipped.
 
-   TString userHeader = gEnv->GetValue("Root.Html.Header", "");
+   TString userHeader = GetHtml()->GetHeader();
    TString noSpecialCharTitle(title);
    ReplaceSpecialChars(noSpecialCharTitle);
 
@@ -1663,7 +1656,7 @@ void TDocOutput::WriteHtmlFooter(std::ostream& out, const char* /*dir*/,
       for (Int_t siTag = 0; siTag < (Int_t) TDocParser::kNumSourceInfos; ++siTag) {
          Ssiz_t siPos = line.Index(templateSITags[siTag]);
          if (siPos != kNPOS)
-            if (siValues && siValues[0])
+            if (siValues[siTag] && siValues[siTag][0])
                line.Replace(siPos, strlen(templateSITags[siTag]), siValues[siTag]);
             else
                line = ""; // skip e.g. %AUTHOR% lines if no author is set
@@ -1701,7 +1694,7 @@ void TDocOutput::WriteHtmlFooter(std::ostream& out, const char *dir,
 
    out << endl;
 
-   TString userFooter = gEnv->GetValue("Root.Html.Footer", "");
+   TString userFooter = GetHtml()->GetFooter();
 
    if (userFooter.Length() != 0) {
       TString footer(userFooter);
@@ -1717,3 +1710,48 @@ void TDocOutput::WriteHtmlFooter(std::ostream& out, const char *dir,
    }
 }
 
+//______________________________________________________________________________
+void TDocOutput::WriteModuleLinks(std::ostream& out)
+{
+   // Create a dov containing links to all modules
+
+   if (fHtml->GetListOfModules()->GetSize()) {
+      out << "<div id=\"indxModules\"><h4>Modules</h4>" << endl;
+      // find index chars
+      TIter iModule(fHtml->GetListOfModules());
+      TModuleDocInfo* module = 0;
+      while ((module = (TModuleDocInfo*) iModule()))
+         if (module->IsSelected())
+            out << "<a href=\"" << module->GetName() << "_Index.html\">" 
+                      << module->GetName() << "</a>" << endl;
+      out<< "</div><br />" << endl;
+   }
+}
+
+//______________________________________________________________________________
+void TDocOutput::WriteSearch(std::ostream& out)
+{
+   // Write a search link or a search box, based on THtml::GetSearchStemURL()
+   // and THtml::GetSearchEngine(). The first one is preferred.
+
+   // e.g. searchCmd = "http://www.google.com/search?q=%s+site%3Aroot.cern.ch%2Froot%2Fhtml";
+   const TString& searchCmd = GetHtml()->GetSearchStemURL();
+   if (searchCmd.Length()) {
+      // create search input
+      out << "<script type=\"text/javascript\">" << endl
+         << "function onSearch() {" << endl
+         << "var s='" << searchCmd <<"';" << endl
+         << "window.location.href=s.replace(/%s/ig,escape(document.searchform.t.value));" << endl
+         << "return false;}" << endl
+         << "</script><form action=\"javascript:onSearch();\" id=\"searchform\" name=\"searchform\" onsubmit=\"return onSearch()\">" << endl
+         << "<input name=\"t\" value=\"Search documentation...\"  onfocus=\"if (document.searchform.t.value=='Search documentation...') document.searchform.t.value='';\"></input>" << endl
+         << "<button type=\"submit\">Search</button></form>" << endl;
+      return;
+   }
+
+   const TString& searchEngine = GetHtml()->GetSearchEngine();
+   if (searchEngine.Length())
+      // create link to search engine page
+      out << "<h2><a href=\"" << searchEngine
+          << "\">Search the Class Reference Guide</a></h2>" << endl;
+}

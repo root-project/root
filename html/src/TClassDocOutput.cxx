@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TClassDocOutput.cxx,v 1.1 2007/02/07 20:40:38 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TClassDocOutput.cxx,v 1.2 2007/02/08 22:56:05 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -562,13 +562,13 @@ Bool_t TClassDocOutput::CreateDotClassChartInh(const char* filename)
    std::ofstream outdot(filename);
    outdot << "strict digraph G {" << endl
       << "rankdir=RL;" << endl
-      << "compound=true;" << endl
-      << "constraint=false;" << endl
-      << "ranksep=0.1;" << endl
+      << "ranksep=2;" << endl
       << "nodesep=0;" << endl
-      << "size=\"16,20\";" << endl
-      << "ratio=compress;" << endl
-      << "\"" << fCurrentClass->GetName() << "\";" << endl;
+      << "size=\"8,10\";" << endl
+      << "ratio=auto;" << endl
+      << "margin=0;" << endl
+      << "node [shape=plaintext,fontsize=40,width=4,height=0.75];" << endl
+      << "\"" << fCurrentClass->GetName() << "\" [shape=ellipse];" << endl;
 
    std::stringstream ssDep;
    std::list<TClass*> writeBasesFor;
@@ -576,8 +576,7 @@ Bool_t TClassDocOutput::CreateDotClassChartInh(const char* filename)
    Bool_t haveBases = fCurrentClass->GetListOfBases() && 
       fCurrentClass->GetListOfBases()->GetSize();
    if (haveBases) {
-      outdot << "{" << endl
-            << "  node [shape=plaintext,fontsize=10];" << endl;
+      outdot << "{" << endl;
       while (!writeBasesFor.empty()) {
          TClass* cl = writeBasesFor.front();
          writeBasesFor.pop_front();
@@ -602,25 +601,55 @@ Bool_t TClassDocOutput::CreateDotClassChartInh(const char* filename)
       outdot << "}" << endl; // cluster
    }
 
-   std::set<TClass*> derivesFromMe;
+   std::map<TClass*, Int_t> derivesFromMe;
+   std::map<TClass*, unsigned int> entriesPerDerived;
+   std::set<TClass*> wroteNode;
+   wroteNode.insert(fCurrentClass);
+   static const unsigned int maxClassesPerDerived = 20;
    fHtml->GetDerivedClasses(fCurrentClass, derivesFromMe);
-   outdot << "{" << endl
-      << "  node [shape=plaintext,fontsize=10];" << endl;
-   for (std::set<TClass*>::iterator iDerived = derivesFromMe.begin();
-      iDerived != derivesFromMe.end(); ++iDerived) {
-      const char* htmlFileName = fHtml->GetHtmlFileName((*iDerived)->GetName());
-      if (htmlFileName)
-         outdot << "  node [URL=\"" << htmlFileName << "\"];" << endl;
-      outdot << "  \"" << (*iDerived)->GetName() << "\";" << endl;
+   outdot << "{" << endl;
+   for (Int_t level = 1; kTRUE; ++level) {
+      Bool_t levelExists = kFALSE;
+      for (std::map<TClass*, Int_t>::iterator iDerived = derivesFromMe.begin();
+         iDerived != derivesFromMe.end(); ++iDerived) {
+         if (iDerived->second != level) continue;
+         levelExists = kTRUE;
+         TIter iBaseOfDerived(iDerived->first->GetListOfBases());
+         TBaseClass* baseDerived = 0;
+         Bool_t writeNode = kFALSE;
+         TClass* writeAndMoreFor = 0;
+         while ((baseDerived = (TBaseClass*) iBaseOfDerived())) {
+            TClass* clBaseDerived = baseDerived->GetClassPointer();
+            if (clBaseDerived->InheritsFrom(fCurrentClass) 
+               && wroteNode.find(clBaseDerived) != wroteNode.end()) {
+               unsigned int& count = entriesPerDerived[clBaseDerived];
+               if (count < maxClassesPerDerived) {
+                  writeNode = kTRUE;
+                  ssDep << "\"" << iDerived->first->GetName() << "\" -> \""
+                     << clBaseDerived->GetName() << "\";" << endl;
+                  ++count;
+               } else if (count == maxClassesPerDerived) {
+                  writeAndMoreFor = clBaseDerived;
+                  ssDep << "\"...andmore" << clBaseDerived->GetName() << "\"-> \"" 
+                     << clBaseDerived->GetName() << "\";" << endl;
+                  ++count;
+               }
+            }
+         }
 
-      TIter iBaseOfDerived((*iDerived)->GetListOfBases());
-      TBaseClass* baseDerived = 0;
-      while ((baseDerived = (TBaseClass*) iBaseOfDerived())) {
-         TClass* clBaseDerived = baseDerived->GetClassPointer();
-         if (clBaseDerived->InheritsFrom(fCurrentClass))
-            ssDep << "\"" << (*iDerived)->GetName() << "\" -> \""
-               << clBaseDerived->GetName() << "\";" << endl;
+         if (writeNode) {
+            wroteNode.insert(iDerived->first);
+            outdot << "  \"" << iDerived->first->GetName() << "\"";
+            const char* htmlFileName = fHtml->GetHtmlFileName(iDerived->first->GetName());
+            if (htmlFileName)
+               outdot << " [URL=\"" << htmlFileName << "\"]";
+            outdot << ";" << endl;
+         } else if (writeAndMoreFor) {
+               outdot << "  \"...andmore" << writeAndMoreFor->GetName()
+                      << "\" [label=\"...and more\",fontname=\"Times-Italic\",fillcolor=lightgrey,style=filled];" << endl;
+         }
       }
+      if (!levelExists) break;
    }
    outdot << "}" << endl; // cluster
 
@@ -646,7 +675,7 @@ Bool_t TClassDocOutput::CreateDotClassChartInhMem(const char* filename) {
       << "ranksep=0.1;" << endl
       << "nodesep=0;" << endl
       << "margin=0;" << endl;
-   outdot << "  node [style=filled,width=0.7,height=0.15,shape=plaintext,fixedsize=true,fontsize=10];" << endl;
+   outdot << "  node [style=filled,width=0.7,height=0.15,fixedsize=true,shape=plaintext,fontsize=10];" << endl;
 
    std::stringstream ssDep;
    const int numColumns = 3;
@@ -1053,17 +1082,7 @@ Bool_t TClassDocOutput::CreateHierarchyDot()
    WriteHtmlHeader(out, "Class Hierarchy");
    out << "<h1>Class Hierarchy</h1>" << endl;
 
-   // check for a search engine
-   const char *searchEngine =
-       gEnv->GetValue("Root.Html.SearchEngine", "");
-
-   // if exists ...
-   if (*searchEngine) {
-
-      // create link to search engine page
-      out << "<h2><a href=\"" << searchEngine
-          << "\">Search the Class Reference Guide</a></h2>" << endl;
-   }
+   WriteSearch(out);
 
    RunDot(filename, &out);
 
@@ -1393,10 +1412,10 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
       << "<span class=\"descrtitle\">Quick Links:</span>" << endl;
 
    // link to the user home page (if exist)
-   const char *userHomePage = gEnv->GetValue("Root.Html.HomePage", "");
+   const char* userHomePage = GetHtml()->GetHomepage();
    if (productName && !strcmp(productName, "ROOT"))
       userHomePage = "";
-   if (*userHomePage)
+   if (userHomePage && *userHomePage)
       classFile << "<a class=\"descrheadentry\" href=\"" << userHomePage << "\">" << productName << "</a>" << endl;
    classFile << "<a class=\"descrheadentry\" href=\"http://root.cern.ch/root/Welcome.html\">ROOT</a>" << endl
       << "<a class=\"descrheadentry\" href=\"./ClassIndex.html\">Class Index</a>" << endl
@@ -1431,14 +1450,21 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
       classFile << ">inheritance tree (.pdf)</a> ";
    }
 
-   const char* viewCVSLink = gEnv->GetValue("Root.Html.ViewCVS","");
-   if (viewCVSLink && !viewCVSLink[0])
-      viewCVSLink = 0;
-   if (viewCVSLink && (headerFileName || sourceFileName)) {
-      if (headerFileName)
-         classFile << "<a class=\"descrheadentry\" href=\"" << viewCVSLink << headerFileName << "\">viewCVS header</a> ";
-      if (sourceFileName)
-         classFile << "<a class=\"descrheadentry\" href=\"" << viewCVSLink << sourceFileName << "\">viewCVS source</a> ";
+   const TString& viewCVSLink = GetHtml()->GetViewCVS();
+   Bool_t mustReplace = viewCVSLink.Contains("%f");
+   if (viewCVSLink.Length()) {
+      if (headerFileName) {
+         TString link(viewCVSLink);
+         if (mustReplace) link.ReplaceAll("%f", headerFileName);
+         else link += headerFileName;
+         classFile << "<a class=\"descrheadentry\" href=\"" << link << "\">viewCVS header</a> ";
+      }
+      if (sourceFileName) {
+         TString link(viewCVSLink);
+         if (mustReplace) link.ReplaceAll("%f", sourceFileName);
+         else link += sourceFileName;
+         classFile << "<a class=\"descrheadentry\" href=\"" << link << "\">viewCVS source</a> ";
+      }
    }
    classFile << "</div>" << endl;
 
