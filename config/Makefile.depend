@@ -167,12 +167,10 @@ else
 
 NETLIBDEP           = $(IOLIB)
 NETLIBEXTRA         = -Llib -lRIO
-GDMLLIBDEP          = $(GEOMLIB) $(XMLLIB) $(HISTLIB)
-GDMLLIBEXTRA        = -Llib -lGeom -lXMLIO -lHist
 HISTLIBDEP          = $(MATRIXLIB)
 HISTLIBEXTRA        = -Llib -lMatrix
-GRAFLIBDEP          = $(HISTLIB) $(MATRIXLIB)
-GRAFLIBEXTRA        = -Llib -lHist -lMatrix
+GRAFLIBDEP          = $(HISTLIB) $(MATRIXLIB) $(IOLIB)
+GRAFLIBEXTRA        = -Llib -lHist -lMatrix -lRIO
 GPADLIBDEP          = $(GRAFLIB) $(HISTLIB)
 GPADLIBEXTRA        = -Llib -lGraf -lHist
 G3DLIBDEP           = $(GRAFLIB) $(HISTLIB) $(GPADLIB)
@@ -198,14 +196,14 @@ FUMILILIBDEP        = $(GRAFLIB) $(HISTLIB)
 FUMILILIBEXTRA      = -Llib -lGraf -lHist
 TREELIBDEP          = $(NETLIB) $(IOLIB)
 TREELIBEXTRA        = -Llib -lNet -lRIO
-TREEPLAYERLIBDEP    = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB)
-TREEPLAYERLIBEXTRA  = -Llib -lTree -lGraf3d -lGraf -lHist -lGpad
+TREEPLAYERLIBDEP    = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB) $(IOLIB)
+TREEPLAYERLIBEXTRA  = -Llib -lTree -lGraf3d -lGraf -lHist -lGpad -lRIO
 TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
 TREEVIEWERLIBEXTRA  = -Llib -lTree -lGpad -lGraf -lHist -lGui
 PROOFLIBDEP         = $(NETLIB) $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
-                      $(GPADLIB) $(TREEPLAYERLIB) $(THREADLIB)
+                      $(GPADLIB) $(TREEPLAYERLIB) $(THREADLIB) $(IOLIB)
 PROOFLIBEXTRA       = -Llib -lNet -lTree -lGraf3d -lGraf -lGpad -lHist \
-                      -lTreePlayer -lThread
+                      -lTreePlayer -lThread -lRIO
 PROOFXLIBDEP        = $(NETLIB) $(PROOFLIB) $(THREADLIB) $(XPDLIB)
 PROOFXLIBEXTRA      = -Llib -lNet -lProof -lThread -lXrdProofd
 PROOFGUILIBDEP      = $(PROOFLIB) $(GUILIB) $(GPADLIB) $(GRAFLIB) $(TREELIB)
@@ -226,14 +224,18 @@ PYTHIA6LIBDEP       = $(EGLIB) $(GRAFLIB) $(VMCLIB) $(PHYSICSLIB)
 PYTHIA6LIBEXTRA     = -Llib -lEG -lGraf -lVMC -lPhysics $(FPYTHIA6LIBDIR) $(FPYTHIA6LIB)
 X11TTFLIBDEP        = $(X11LIB) $(GRAFLIB)
 X11TTFLIBEXTRA      = -Llib -lGX11 -lGraf
-TABLELIBDEP         = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
-TABLELIBEXTRA       = -Llib -lTree -lGpad -lGraf3d -lGraf -lHist
+TABLELIBDEP         = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(IOLIB)
+TABLELIBEXTRA       = -Llib -lTree -lGpad -lGraf3d -lGraf -lHist -lRIO
 GLLIBDEP            = $(GPADLIB) $(G3DLIB) $(GUILIB) $(GRAFLIB) $(HISTLIB) \
                       $(GEDLIB)
 GLLIBEXTRA          = -Llib -lGpad -lGraf3d -lGui -lGraf -lHist -lGed
 HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
-                      $(TREEPLAYERLIB)
-HBOOKLIBEXTRA       = -Llib -lHist -lMatrix -lTree -lGraf -lTreePlayer
+                      $(TREEPLAYERLIB) $(IOLIB)
+HBOOKLIBEXTRA       = -Llib -lHist -lMatrix -lTree -lGraf -lTreePlayer -lRIO
+
+GEOMLIBDEP          = $(IOLIB) $(TREELIB) $(G3DLIB) $(HISTLIB) $(GPADLIB)
+GEOMLIBEXTRA        = -Llib -lRIO
+
 GEOMPAINTERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB) $(GPADLIB)
 GEOMPAINTERLIBEXTRA = -Llib -lGeom -lTree -lGraf3d -lHist -lGpad
 GEOMBUILDERLIBDEP   = $(GEOMLIB) $(G3DLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) \
@@ -241,8 +243,8 @@ GEOMBUILDERLIBDEP   = $(GEOMLIB) $(G3DLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) \
 GEOMBUILDERLIBEXTRA = -Llib -lGeom -lGraf3d -lGpad -lGraf -lGui -lGed
 ASIMAGELIBDEP       = $(GRAFLIB) $(HISTLIB) $(GPADLIB)
 ASIMAGELIBEXTRA     = -Llib -lGraf -lHist -lGpad
-ASIMAGEGUILIBDEP    = $(GRAFLIB) $(HISTLIB) $(GUILIB) $(ASIMAGELIB)
-ASIMAGEGUILIBEXTRA  = -Llib -lGraf -lHist -lGui -lASImage
+ASIMAGEGUILIBDEP    = $(GRAFLIB) $(HISTLIB) $(GUILIB) $(ASIMAGELIB) $(IOLIB)
+ASIMAGEGUILIBEXTRA  = -Llib -lGraf -lHist -lGui -lASImage -lRIO
 ASIMAGEGSLIBDEP     = $(GRAFLIB) $(ASIMAGELIB)
 ASIMAGEGSLIBEXTRA   = -Llib -lGraf -lASImage
 MLPLIBDEP           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
@@ -251,9 +253,9 @@ MLPLIBEXTRA         = -Llib -lHist -lMatrix -lTree -lGraf -lGpad \
                       -lTreePlayer
 SPECTRUMLIBDEP      = $(HISTLIB) $(MATRIXLIB)
 SPECTRUMLIBEXTRA    = -Llib -lHist -lMatrix
-TMVALIBDEP          = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
+TMVALIBDEP          = $(IOLIB) $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(GPADLIB) $(TREEPLAYERLIB) $(MLPLIB)
-TMVALIBEXTRA        = -Llib -lHist -lMatrix -lTree -lGraf -lGpad -lTreePlayer \
+TMVALIBEXTRA        = -Llib -lRIO -lHist -lMatrix -lTree -lGraf -lGpad -lTreePlayer \
                       -lMLP
 SPLOTLIBDEP         = $(MATRIXLIB) $(HISTLIB) $(TREELIB) $(TREEPLAYERLIB) \
                       $(G3DLIB) $(GRAFLIB)
@@ -268,19 +270,21 @@ RUBYLIBDEP          = $(HISTLIB)
 RUBYLIBEXTRA        = -Llib -lHist
 GUIBLDLIBDEP        = $(GUILIB) $(GRAFLIB)
 GUIBLDLIBEXTRA      = -Llib -lGui -lGraf
+XMLLIBDEP           = $(IOLIB)
+XMLLIBEXTRA         = -Llib -lRIO
 FOAMLIBDEP          = $(HISTLIB)
 FOAMLIBEXTRA        = -Llib -lHist
 ALIENLIBDEP         = $(XMLLIB) $(NETXLIB)
 ALIENLIBEXTRA       = -Llib -lXMLIO -lNetx
 ROOFITLIBDEP        = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB) \
-                      $(MINUITLIB) $(HTMLLIB)
-ROOFITLIBEXTRA      = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lHtml
+                      $(MINUITLIB) $(HTMLLIB) $(IOLIB)
+ROOFITLIBEXTRA      = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lHtml -lRIO
 CINT7LIBDEP         = $(REFLEXLIB)
 CINT7LIBEXTRA       = -Llib -lReflex
 CINTEXLIBDEP        = $(REFLEXLIB)
 CINTEXLIBEXTRA      = -Llib -lReflex
-RAUTHLIBDEP         = $(NETLIB)
-RAUTHLIBEXTRA       = -Llib -lNet
+RAUTHLIBDEP         = $(NETLIB) $(IOLIB)
+RAUTHLIBEXTRA       = -Llib -lNet -lRIO
 KRB5AUTHLIBDEP      = $(RAUTHLIB) $(NETLIB)
 KRB5AUTHLIBEXTRA    = -Llib -lRootAuth -lNet
 SRVAUTHLIBDEP       = $(NETLIB)
@@ -289,19 +293,23 @@ QTGSILIBDEP         = $(GUILIB) $(GPADLIB)
 QTGSILIBEXTRA       = -Llib -lGui -lGpad
 FITPANELLIBDEP      = $(GUILIB) $(GPADLIB) $(HISTLIB) $(GRAFLIB) $(TREELIB)
 FITPANELLIBEXTRA    = -Llib -lGui -lGpad -lHist -lGraf -lTree
-SQLLIBDEP           = $(NETLIB)
-SQLLIBEXTRA         = -Llib -lNet
-ODBCLIBDEP          = $(NETLIB)
-ODBCLIBEXTRA        = -Llib -lNet
-NETXLIBDEP          = $(NETLIB)
-NETXLIBEXTRA        = -Llib -lNet
-ORACLELIBDEP        = $(NETLIB)
-ORACLELIBEXTRA      = -Llib -lNet
-CASTORLIBDEP        = $(NETLIB)
-CASTORLIBEXTRA      = -Llib -lNet
-PGSQLLIBDEP         = $(NETLIB)
-PGSQLLIBEXTRA       = -Llib -lNet
-MYSQLLIBDEP         = $(NETLIB)
-MYSQLLIBEXTRA       = -Llib -lNet
+RFIOLIBDEP          = $(IOLIB)
+RFIOLIBEXTRA        = -Llib -lRIO
+SQLLIBDEP           = $(NETLIB) $(IOLIB)
+SQLLIBEXTRA         = -Llib -lNet -lRIO
+ODBCLIBDEP          = $(NETLIB) $(IOLIB)
+ODBCLIBEXTRA        = -Llib -lNet -lRIO
+NETXLIBDEP          = $(NETLIB) $(IOLIB)
+NETXLIBEXTRA        = -Llib -lNet -lRIO
+ORACLELIBDEP        = $(NETLIB) $(IOLIB)
+ORACLELIBEXTRA      = -Llib -lNet -lRIO
+CASTORLIBDEP        = $(NETLIB) $(IOLIB)
+CASTORLIBEXTRA      = -Llib -lNet -lRIO
+PGSQLLIBDEP         = $(NETLIB) $(IOLIB)
+PGSQLLIBEXTRA       = -Llib -lNet -lRIO
+MYSQLLIBDEP         = $(NETLIB) $(IOLIB)
+MYSQLLIBEXTRA       = -Llib -lNet -lRIO
+GDMLLIBDEP          = $(GEOMLIB) $(XMLLIB) $(HISTLIB) $(IOLIB)
+GDMLLIBEXTRA        = -Llib -lGeom -lXMLIO -lHist -lRIO
 
 endif
