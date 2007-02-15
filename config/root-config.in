@@ -29,7 +29,7 @@ fi
 ### ROOT libraries ###
 
 newlib="-lNew"
-rootlibs="-lCore -lCint -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lRint \
+rootlibs="-lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lRint \
           -lPostscript -lMatrix -lPhysics $zliblib"
 rootglibs="-lGui"
 
@@ -39,6 +39,7 @@ fi
 
 if test "$platform" = "win32"; then
    rootulibs="-include:_G__cpp_setupG__Net        \
+              -include:_G__cpp_setupG__IO         \
               -include:_G__cpp_setupG__Hist       \
               -include:_G__cpp_setupG__Graf1      \
               -include:_G__cpp_setupG__G3D        \
@@ -51,6 +52,7 @@ if test "$platform" = "win32"; then
    rootuglibs="-include:_G__cpp_setupG__Gui1"
 elif test "$platform" = "aix5"; then
    rootulibs="-Wl,-u,.G__cpp_setupG__Net        \
+              -Wl,-u,.G__cpp_setupG__IO         \
               -Wl,-u,.G__cpp_setupG__Hist       \
               -Wl,-u,.G__cpp_setupG__Graf1      \
               -Wl,-u,.G__cpp_setupG__G3D        \
@@ -63,6 +65,7 @@ elif test "$platform" = "aix5"; then
    rootuglibs="-Wl,-u,.G__cpp_setupG__Gui1"
 else
    rootulibs="-Wl,-u,_G__cpp_setupG__Net        \
+              -Wl,-u,_G__cpp_setupG__IO         \
               -Wl,-u,_G__cpp_setupG__Hist       \
               -Wl,-u,_G__cpp_setupG__Graf1      \
               -Wl,-u,_G__cpp_setupG__G3D        \
