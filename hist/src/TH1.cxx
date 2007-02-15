@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.332 2007/02/06 15:00:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.333 2007/02/09 17:12:27 couet Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2218,7 +2218,7 @@ void TH1::Draw(Option_t *option)
    TString opt = option;
    opt.ToLower();
    if (gPad) {
-      if (!gPad->IsEditable()) (gROOT->GetMakeDefCanvas())();
+      if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
       if (opt.Contains("same")) {
          if (opt.Contains("same") && 
              gPad->GetX1() == 0   && gPad->GetX2() == 1 &&

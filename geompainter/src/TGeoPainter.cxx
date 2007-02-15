@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.95 2007/01/15 16:10:09 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.96 2007/01/30 11:49:14 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -661,8 +661,7 @@ void TGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *option)
    Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
    // Clear pad if option "same" not given
    if (!gPad) {
-      if (!gROOT->GetMakeDefCanvas()) return;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    }
    if (!opt.Contains("same")) gPad->Clear();
    // append this volume to pad
@@ -702,8 +701,7 @@ void TGeoPainter::DrawShape(TGeoShape *shape, Option_t *option)
    Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
    // Clear pad if option "same" not given
    if (!gPad) {
-      if (!gROOT->GetMakeDefCanvas()) return;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    }
    if (!opt.Contains("same")) gPad->Clear();
    // append this shape to pad
@@ -743,8 +741,7 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
    Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
    // Clear pad if option "same" not given
    if (!gPad) {
-      if (!gROOT->GetMakeDefCanvas()) return;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    }
    if (!opt.Contains("same")) gPad->Clear();
    // append this volume to pad
@@ -786,8 +783,7 @@ void TGeoPainter::DrawOnly(Option_t *option)
    Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
    // Clear pad if option "same" not given
    if (!gPad) {
-      if (!gROOT->GetMakeDefCanvas()) return;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    }
    if (!opt.Contains("same")) gPad->Clear();
    // append this volume to pad

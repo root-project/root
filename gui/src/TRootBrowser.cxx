@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.103 2006/11/16 17:17:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.104 2007/01/30 11:49:14 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1602,7 +1602,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      new TBrowser("Browser", "ROOT Object Browser");
                      break;
                   case kFileNewCanvas:
-                     gROOT->GetMakeDefCanvas()();
+                     gROOT->MakeDefCanvas();
                      break;
                   case kFileNewBuilder:
                      TGuiBuilder::Instance();

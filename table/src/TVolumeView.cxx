@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolumeView.cxx,v 1.19 2006/10/18 15:38:07 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TVolumeView.cxx,v 1.20 2006/12/13 21:28:14 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -506,8 +506,7 @@ void TVolumeView::Draw(Option_t *option)
    opt.ToLower();
 //*-*- Clear pad if option "same" not given
    if (!gPad) {
-      if (!gROOT->GetMakeDefCanvas()) return;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    }
    if (!opt.Contains("same")) gPad->Clear();
 

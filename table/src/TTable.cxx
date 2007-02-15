@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TTable.cxx,v 1.20 2007/01/23 10:07:43 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TTable.cxx,v 1.21 2007/01/30 10:14:03 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 
 /*************************************************************************
@@ -562,8 +562,7 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
    }
 //*-*- Create a default canvas if none exists
    if (!gPad && !opt.Contains("goff") && dimension > 0) {
-      if (!gROOT->GetMakeDefCanvas()) return 0;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    }
 //*-*- 1-D distribution
    if (dimension == 1) {

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.111 2007/01/15 11:00:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.112 2007/01/30 11:49:14 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -779,7 +779,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   // Handle File menu items...
                   case kFileNewCanvas:
-                     gROOT->GetMakeDefCanvas()();
+                     gROOT->MakeDefCanvas();
                      break;
                   case kFileOpen:
                      {

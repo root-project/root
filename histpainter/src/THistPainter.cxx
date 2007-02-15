@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.281 2007/01/30 11:49:14 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.282 2007/02/04 07:54:52 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -6590,8 +6590,7 @@ void THistPainter::SetShowProjection(const char *option,Int_t nbins)
    if (projection < 4) fShowOption = option+1;
    else                fShowOption = option+2;
    fShowProjection = projection+100*nbins;
-   if (!gROOT->GetMakeDefCanvas()) return;
-   (gROOT->GetMakeDefCanvas())();
+   gROOT->MakeDefCanvas();
    gPad->SetName(Form("%x_c_projection_%d",fH,fShowProjection));
    gPad->SetGrid();
 }

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.55 2006/11/16 17:17:38 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.56 2006/12/01 09:26:31 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -1799,7 +1799,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                }
                switch (parm1) {
                   case kFileCanvas:
-                     gROOT->GetMakeDefCanvas()();
+                     gROOT->MakeDefCanvas();
                      break;
                   case kFileBrowse:
                      if (1) {

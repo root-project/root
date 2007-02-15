@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.253 2007/02/07 20:57:59 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.254 2007/02/13 21:23:10 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1134,8 +1134,7 @@ void TPad::Draw(Option_t *option)
 
    // if no canvas opened yet create a default canvas
    if (!gPad) {
-      if (!gROOT->GetMakeDefCanvas()) return;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    }
 
    // pad cannot be in itself and it can only be in one other pad at a time

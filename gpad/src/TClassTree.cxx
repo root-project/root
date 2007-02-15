@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.18 2007/01/29 10:06:50 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.19 2007/01/30 11:49:14 brun Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -269,8 +269,7 @@ void TClassTree::Draw(const char *classes)
    // see this class header for the syntax and examples
 
    if (!gPad) {
-      if (gROOT->GetMakeDefCanvas())
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    }
    Init();
    if (classes && strlen(classes)) fClasses = classes;

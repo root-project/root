@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.11 2006/12/12 13:39:19 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.12 2007/01/24 17:06:21 couet Exp $
 // Author: Guido Volpi, Olivier Couet 03/11/2006
 
 /*************************************************************************
@@ -298,7 +298,7 @@ void TPie::Draw(Option_t *option)
    if (soption.Length()==0) soption = "l";
 
    if (gPad) {
-      if (!gPad->IsEditable()) (gROOT->GetMakeDefCanvas())();
+      if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
       if (!soption.Contains("same")) {
          gPad->Clear();
          gPad->Range(0.,0.,1.,1.);

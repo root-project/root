@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.cxx,v 1.10 2006/05/15 09:45:03 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.cxx,v 1.11 2006/11/28 12:10:52 rdm Exp $
 // Author: Maarten Ballintijn   28/10/2003
 
 /*************************************************************************
@@ -102,7 +102,7 @@ void TDrawFeedback::Feedback(TList *objs)
          TVirtualPad *p = (TVirtualPad*) canvases->FindObject(name.Data());
 
          if ( p == 0 ) {
-            (gROOT->GetMakeDefCanvas())();
+            gROOT->MakeDefCanvas();
             gPad->SetName(name);
             PDB(kFeedback,2) Info("Feedback","Created canvas %s", name.Data());
          } else {

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.cxx,v 1.9 2007/01/22 05:58:29 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.cxx,v 1.10 2007/01/30 11:24:32 brun Exp $
 // Author: Rene Brun   15/01/2003
 
 /*************************************************************************
@@ -289,8 +289,7 @@ void TFileDrawMap::DrawObject()
    TVirtualPad *padsave = gROOT->GetSelectedPad();
    if (padsave == gPad) {
       //must create a new canvas
-      if (!gROOT->GetMakeDefCanvas()) return;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    } else {
       padsave->cd();
    }

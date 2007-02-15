@@ -471,7 +471,7 @@ void TGraph2D::Draw(Option_t *option)
    TString opt = option;
    opt.ToLower();
    if (gPad) {
-      if (!gPad->IsEditable()) (gROOT->GetMakeDefCanvas())();
+      if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
       if (!opt.Contains("same")) {
          //the following statement is necessary in case one attempts to draw
          //a temporary histogram already in the current pad

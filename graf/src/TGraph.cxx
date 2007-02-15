@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.203 2007/02/06 14:35:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.204 2007/02/09 12:50:40 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -633,7 +633,7 @@ void TGraph::Draw(Option_t *option)
       opt.Replace(pos, 1, "P");
    }
    if (gPad) {
-      if (!gPad->IsEditable()) (gROOT->GetMakeDefCanvas())();
+      if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
    }
    AppendPad(opt);
 }

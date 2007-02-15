@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.89 2007/02/08 09:51:39 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.90 2007/02/12 13:09:33 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -161,8 +161,7 @@ void TObject::AppendPad(Option_t *option)
    // yet, create a default canvas with the name "c1".
 
    if (!gPad) {
-      if (!gROOT->GetMakeDefCanvas()) return;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    }
    if (!gPad->IsEditable()) return;
    SetBit(kMustCleanup);

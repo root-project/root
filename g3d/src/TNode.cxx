@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.31 2006/05/24 15:31:40 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.32 2007/02/06 14:44:54 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -332,8 +332,7 @@ void TNode::Draw(Option_t *option)
 
    // Clear pad if option "same" not given
    if (!gPad) {
-      if (!gROOT->GetMakeDefCanvas()) return;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    }
    if (!opt.Contains("same")) gPad->Clear();
 

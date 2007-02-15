@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.64 2006/11/22 16:52:54 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.65 2007/01/22 07:57:14 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -467,8 +467,8 @@ void TSelectorDraw::Begin(TTree *tree)
    // Create a default canvas if none exists
    fDraw = 0;
    if (!gPad && !opt.Contains("goff") && fDimension > 0) {
-      if (!gROOT->GetMakeDefCanvas())  {SetStatus(-1); return;}
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
+      if (!gPad)   {SetStatus(-1); return;}
    }
 
    // 1-D distribution

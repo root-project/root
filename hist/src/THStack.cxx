@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.51 2007/02/01 14:21:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.52 2007/02/01 14:58:44 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -391,7 +391,7 @@ void THStack::Draw(Option_t *option)
    TString opt = option;
    opt.ToLower();
    if (gPad) {
-      if (!gPad->IsEditable()) (gROOT->GetMakeDefCanvas())();
+      if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
       if (!opt.Contains("same")) {
          //the following statement is necessary in case one attempts to draw
          //a temporary histogram already in the current pad

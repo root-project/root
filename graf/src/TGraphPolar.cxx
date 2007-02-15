@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.8 2007/01/23 10:35:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.9 2007/01/23 11:12:02 brun Exp $
 // Author: Sebastian Boser, Mathieu Demaret 02/02/06
 
 /*************************************************************************
@@ -751,7 +751,7 @@ void TGraphPolargram::PaintPolarDivisions()
 
    Int_t i, j, rnum, rden, x=0, first, last;
    if (!gPad) return ;
-   if (!gPad->IsEditable()) gROOT->GetMakeDefCanvas();
+   if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
 
    gPad->RangeAxis(-1,-1,1,1);
    gPad->Range(-1.25,-1.25,1.25,1.25);
@@ -1030,7 +1030,7 @@ void TGraphPolargram::PaintRadialDivisions()
                                frwrmax, ndivmajor,binWidth,"");
 
    if (!gPad) return ;
-   if (!gPad->IsEditable()) gROOT->GetMakeDefCanvas();
+   if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
    if (!gPad->GetLogx()) {
       gPad->RangeAxis(-1,-1,1,1);
       gPad->Range(-1.25,-1.25,1.25,1.25);

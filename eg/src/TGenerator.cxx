@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.13 2006/08/24 16:31:21 rdm Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.14 2007/02/03 17:56:27 brun Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -340,8 +340,7 @@ void TGenerator::Draw(Option_t *option)
 
    // Create a default canvas if a canvas does not exist
    if (!gPad) {
-      if (!gROOT->GetMakeDefCanvas()) return;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
       gPad->GetVirtCanvas()->SetFillColor(13);
    }
 
