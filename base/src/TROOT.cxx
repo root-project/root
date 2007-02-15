@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.204 2007/02/10 15:38:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.205 2007/02/13 14:27:43 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -182,7 +182,6 @@ static void CleanUpROOTAtExit()
 Int_t         TROOT::fgDirLevel = 0;
 Bool_t        TROOT::fgRootInit = kFALSE;
 Bool_t        TROOT::fgMemCheck = kFALSE;
-VoidFuncPtr_t TROOT::fgMakeDefCanvas = 0;
 
 // This local static object initializes the ROOT system
 namespace ROOT {
@@ -832,11 +831,11 @@ TColor *TROOT::GetColor(Int_t color) const
 }
 
 //______________________________________________________________________________
-VoidFuncPtr_t TROOT::GetMakeDefCanvas() const
+TCanvas *TROOT::MakeDefCanvas() const
 {
-   // Return default canvas function.
+   // Return a default canvas.
 
-   return fgMakeDefCanvas;
+   return (TCanvas*)gROOT->ProcessLine("TCanvas::MakeDefCanvas();");
 }
 
 
@@ -1711,14 +1710,4 @@ void TROOT::SetDirLevel(Int_t level)
 {
    // Return Indentation level for ls().
    fgDirLevel = level;
-}
-
-//______________________________________________________________________________
-void TROOT::SetMakeDefCanvas(VoidFuncPtr_t makecanvas)
-{
-   // Static function used to set the address of the default make canvas method.
-   // This address is by default initialized to 0.
-   // It is set as soon as the library containing the TCanvas class is loaded.
-
-   fgMakeDefCanvas = makecanvas;
 }

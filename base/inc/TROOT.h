@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.58 2007/01/22 05:58:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.59 2007/01/29 15:10:48 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #endif
 
 class TClass;
+class TCanvas;
 class TColor;
 class TDataType;
 class TFile;
@@ -121,8 +122,6 @@ protected:
    TString         fCutClassName;         //Name of default CutG class in graphics editor
    TString         fDefCanvasName;        //Name of default canvas
 
-   static VoidFuncPtr_t fgMakeDefCanvas;  //Pointer to default canvas constructor
-
                   TROOT();                //Only used by Dictionary
    void           InitSystem();           //Operating System interface
    void           InitThreads();          //Initialize threads library
@@ -156,7 +155,6 @@ public:
    Bool_t            GetEditHistograms() const { return fEditHistograms; }
    Int_t             GetEditorMode() const { return fEditorMode; }
    Bool_t            GetForceStyle() const { return fForceStyle; }
-   VoidFuncPtr_t     GetMakeDefCanvas() const;
    Int_t             GetBuiltDate() const { return fBuiltDate; }
    Int_t             GetBuiltTime() const { return fBuiltTime; }
    Int_t             GetVersionDate() const { return fVersionDate; }
@@ -217,6 +215,7 @@ public:
    TClass           *LoadClass(const char *name) const;
    Int_t             LoadMacro(const char *filename, Int_t *error = 0, Bool_t check = kFALSE);
    Long_t            Macro(const char *filename, Int_t *error = 0);
+   TCanvas          *MakeDefCanvas() const;
    void              Message(Int_t id, const TObject *obj);
    Bool_t            MustClean() const { return fMustClean; }
    Long_t            ProcessLine(const char *line, Int_t *error = 0);
@@ -257,7 +256,6 @@ public:
    static Bool_t      Initialized();
    static Bool_t      MemCheck();
    static void        SetDirLevel(Int_t level = 0);
-   static void        SetMakeDefCanvas(VoidFuncPtr_t makecanvas);
 
    ClassDef(TROOT,0)  //Top level (or root) structure for all classes
 };
