@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TStreamerInfo.cxx,v 1.249 2007/02/08 15:09:08 pcanal Exp $
+// @(#)root/io:$Name:  $:$Id: TStreamerInfo.cxx,v 1.250 2007/02/09 10:16:07 rdm Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1295,7 +1295,7 @@ void TStreamerInfo::Compile()
    Int_t keep = -1;
    Int_t i;
 
-   if (!fgOptimize) {
+   if (!CanOptimize()) {
       SetBit(kCannotOptimize);
    }
 
