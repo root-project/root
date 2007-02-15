@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.4 2007/02/13 20:22:06 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.5 2007/02/15 17:32:32 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -325,7 +325,7 @@ Bool_t TDocOutput::CopyHtmlFile(const char *sourceName, const char *destName)
    char *tmp1 = gSystem->Which(fHtml->GetSourceDir(), sourceName, kReadPermission);
    if (!tmp1) {
       Error("Copy", "Can't copy file '%s' to '%s/%s' - can't find source file!", sourceName,
-            fHtml->GetOutputDir(), destName);
+            fHtml->GetOutputDir().Data(), destName);
       return kFALSE;
    }
 
@@ -334,7 +334,7 @@ Bool_t TDocOutput::CopyHtmlFile(const char *sourceName, const char *destName)
 
    if (!sourceFile.Length()) {
       Error("Copy", "Can't copy file '%s' to '%s' directory - source file name invalid!", sourceName,
-            fHtml->GetOutputDir());
+            fHtml->GetOutputDir().Data());
       return kFALSE;
    }
 
