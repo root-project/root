@@ -46,7 +46,6 @@ $(IODS):        $(IOH) $(IOL) $(ROOTCINTTMPEXE)
 		$(ROOTCINTTMP) -f $@ -c $(IOH) $(IOL)
 
 all-io:         $(IOLIB)
-#all-io:         $(IOO) $(IODO)
 
 map-io:         $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(IOLIB) \
@@ -60,7 +59,6 @@ clean-io:
 clean::         clean-io
 
 distclean-io:   clean-io
-		@rm -f $(IODEP) $(IODS) $(IODH)
-#		@rm -f $(IODEP) $(IODS) $(IODH) $(IOLIB)
+		@rm -f $(IODEP) $(IODS) $(IODH) $(IOLIB)
 
 distclean::     distclean-io

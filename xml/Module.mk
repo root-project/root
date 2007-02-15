@@ -36,9 +36,10 @@ INCLUDEFILES += $(XMLDEP)
 include/%.h:    $(XMLDIRI)/%.h
 		cp $< $@
 
-$(XMLLIB):      $(XMLO) $(XMLDO) $(ORDER_) $(MAINLIBS)
+$(XMLLIB):      $(XMLO) $(XMLDO) $(ORDER_) $(MAINLIBS) $(XMLLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libXMLIO.$(SOEXT) $@ "$(XMLO) $(XMLDO)"  "$(XMLLIBEXTRA)"
+		   "$(SOFLAGS)" libXMLIO.$(SOEXT) $@ "$(XMLO) $(XMLDO)" \
+		   "$(XMLLIBEXTRA)"
 
 $(XMLDS):       $(XMLH) $(XMLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."

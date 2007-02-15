@@ -29,8 +29,8 @@ fi
 ### ROOT libraries ###
 
 newlib="-lNew"
-rootlibs="-lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lRint \
-          -lPostscript -lMatrix -lPhysics $zliblib"
+rootlibs="-lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree \
+          -lRint -lPostscript -lMatrix -lPhysics $zliblib"
 rootglibs="-lGui"
 
 if test "$dicttype" = "reflex" || test "$dicttype" = "gccxml"; then

@@ -45,7 +45,8 @@ FUMILILIBDEP        = $(GRAFLIB) $(HISTLIB)
 FUMILILIBEXTRA      = lib/libGraf.lib lib/libHist.lib
 TREELIBDEP          = $(NETLIB) $(IOLIB)
 TREELIBEXTRA        = lib/libNet.lib lib/libRIO.lib
-TREEPLAYERLIBDEP    = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB) $(IOLIB)
+TREEPLAYERLIBDEP    = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB) \
+                      $(IOLIB)
 TREEPLAYERLIBEXTRA  = lib/libTree.lib lib/libGraf3d.lib lib/libGpad.lib \
                       lib/libGraf.lib lib/libHist.lib lib/libRIO.lib
 TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
@@ -73,8 +74,10 @@ VMCLIBEXTRA         = lib/libEG.lib lib/libGeom.lib
 PHYSICSLIBDEP       = $(MATRIXLIB)
 PHYSICSLIBEXTRA     = lib/libMatrix.lib
 PYTHIA6LIBDEP       = $(EGLIB) $(GRAFLIB) $(VMCLIB) $(PHYSICSLIB)
-PYTHIA6LIBEXTRA     = lib/libEG.lib lib/libGraf.lib lib/libVMC.lib lib/libPhysics.lib
-TABLELIBDEP         = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(IOLIB)
+PYTHIA6LIBEXTRA     = lib/libEG.lib lib/libGraf.lib lib/libVMC.lib \
+                      lib/libPhysics.lib
+TABLELIBDEP         = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
+                      $(IOLIB)
 TABLELIBEXTRA       = lib/libTree.lib lib/libGpad.lib lib/libRIO.lib \
                       lib/libGraf3d.lib lib/libGraf.lib lib/libHist.lib
 MLPLIBDEP           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
@@ -85,9 +88,9 @@ SPECTRUMLIBDEP      = $(HISTLIB) $(MATRIXLIB)
 SPECTRUMLIBEXTRA    = lib/libHist.lib lib/libMatrix.lib
 TMVALIBDEP          = $(IOLIB) $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(GPADLIB) $(TREEPLAYERLIB) $(MLPLIB)
-TMVALIBEXTRA        = lib/libRIO.lib lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
-                      lib/libGraf.lib lib/libGpad.lib lib/libTreePlayer.lib \
-                      lib/libMLP.lib
+TMVALIBEXTRA        = lib/libRIO.lib lib/libHist.lib lib/libMatrix.lib \
+                      lib/libTree.lib lib/libGraf.lib lib/libGpad.lib \
+                      lib/libTreePlayer.lib lib/libMLP.lib
 SPLOTLIBDEP         = $(MATRIXLIB) $(HISTLIB) $(TREELIB) $(TREEPLAYERLIB) \
                       $(G3DLIB) $(GRAFLIB)
 SPLOTLIBEXTRA       = lib/libMatrix.lib lib/libHist.lib lib/libTree.lib \
@@ -101,9 +104,8 @@ HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(TREEPLAYERLIB) $(IOLIB)
 HBOOKLIBEXTRA       = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
                       lib/libGraf.lib lib/libTreePlayer.lib lib/libRIO.lib
-GEOMLIBDEP          = $(IOLIB) $(TREELIB) $(G3DLIB) $(HISTLIB) $(GPADLIB)
+GEOMLIBDEP          = $(IOLIB)
 GEOMLIBEXTRA        = lib/libRIO.lib
-
 GEOMPAINTERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB) $(GPADLIB)
 GEOMPAINTERLIBEXTRA = lib/libGeom.lib lib/libTree.lib lib/libGraf3d.lib \
                       lib/libHist.lib lib/libGpad.lib
@@ -128,7 +130,8 @@ ALIENLIBEXTRA       = lib/libXMLIO.lib lib/libNetx.lib
 ROOFITLIBDEP        = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB) \
                       $(MINUITLIB) $(HTMLLIB) $(IOLIB)
 ROOFITLIBEXTRA      = lib/libHist.lib lib/libGraf.lib lib/libMatrix.lib \
-                      lib/libTree.lib lib/libMinuit.lib lib/libHtml.lib lib/libRIO.lib
+                      lib/libTree.lib lib/libMinuit.lib lib/libHtml.lib \
+                      lib/libRIO.lib
 CINT7LIBDEP         = $(REFLEXLIB)
 CINT7LIBEXTRA       = lib/libReflex.lib
 CINTEXLIBDEP        = $(REFLEXLIB)
@@ -161,7 +164,8 @@ PGSQLLIBEXTRA       = lib/libNet.lib lib/libRIO.lib
 MYSQLLIBDEP         = $(NETLIB) $(IOLIB)
 MYSQLLIBEXTRA       = lib/libNet.lib lib/libRIO.lib
 GDMLLIBDEP          = $(GEOMLIB) $(XMLLIB) $(HISTLIB) $(IOLIB)
-GDMLLIBEXTRA        = lib/libGeom.lib lib/libXMLIO.lib lib/libHist.lib lib/libRIO.lib
+GDMLLIBEXTRA        = lib/libGeom.lib lib/libXMLIO.lib lib/libHist.lib \
+                      lib/libRIO.lib
 
 else
 
@@ -196,7 +200,8 @@ FUMILILIBDEP        = $(GRAFLIB) $(HISTLIB)
 FUMILILIBEXTRA      = -Llib -lGraf -lHist
 TREELIBDEP          = $(NETLIB) $(IOLIB)
 TREELIBEXTRA        = -Llib -lNet -lRIO
-TREEPLAYERLIBDEP    = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB) $(IOLIB)
+TREEPLAYERLIBDEP    = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB) \
+                      $(IOLIB)
 TREEPLAYERLIBEXTRA  = -Llib -lTree -lGraf3d -lGraf -lHist -lGpad -lRIO
 TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
 TREEVIEWERLIBEXTRA  = -Llib -lTree -lGpad -lGraf -lHist -lGui
@@ -221,10 +226,12 @@ VMCLIBEXTRA         = -Llib -lEG -lGeom
 PHYSICSLIBDEP       = $(MATRIXLIB)
 PHYSICSLIBEXTRA     = -Llib -lMatrix
 PYTHIA6LIBDEP       = $(EGLIB) $(GRAFLIB) $(VMCLIB) $(PHYSICSLIB)
-PYTHIA6LIBEXTRA     = -Llib -lEG -lGraf -lVMC -lPhysics $(FPYTHIA6LIBDIR) $(FPYTHIA6LIB)
+PYTHIA6LIBEXTRA     = -Llib -lEG -lGraf -lVMC -lPhysics $(FPYTHIA6LIBDIR) \
+                      $(FPYTHIA6LIB)
 X11TTFLIBDEP        = $(X11LIB) $(GRAFLIB)
 X11TTFLIBEXTRA      = -Llib -lGX11 -lGraf
-TABLELIBDEP         = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(IOLIB)
+TABLELIBDEP         = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
+                      $(IOLIB)
 TABLELIBEXTRA       = -Llib -lTree -lGpad -lGraf3d -lGraf -lHist -lRIO
 GLLIBDEP            = $(GPADLIB) $(G3DLIB) $(GUILIB) $(GRAFLIB) $(HISTLIB) \
                       $(GEDLIB)
@@ -232,10 +239,8 @@ GLLIBEXTRA          = -Llib -lGpad -lGraf3d -lGui -lGraf -lHist -lGed
 HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(TREEPLAYERLIB) $(IOLIB)
 HBOOKLIBEXTRA       = -Llib -lHist -lMatrix -lTree -lGraf -lTreePlayer -lRIO
-
-GEOMLIBDEP          = $(IOLIB) $(TREELIB) $(G3DLIB) $(HISTLIB) $(GPADLIB)
+GEOMLIBDEP          = $(IOLIB)
 GEOMLIBEXTRA        = -Llib -lRIO
-
 GEOMPAINTERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB) $(GPADLIB)
 GEOMPAINTERLIBEXTRA = -Llib -lGeom -lTree -lGraf3d -lHist -lGpad
 GEOMBUILDERLIBDEP   = $(GEOMLIB) $(G3DLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) \
@@ -255,8 +260,8 @@ SPECTRUMLIBDEP      = $(HISTLIB) $(MATRIXLIB)
 SPECTRUMLIBEXTRA    = -Llib -lHist -lMatrix
 TMVALIBDEP          = $(IOLIB) $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(GPADLIB) $(TREEPLAYERLIB) $(MLPLIB)
-TMVALIBEXTRA        = -Llib -lRIO -lHist -lMatrix -lTree -lGraf -lGpad -lTreePlayer \
-                      -lMLP
+TMVALIBEXTRA        = -Llib -lRIO -lHist -lMatrix -lTree -lGraf -lGpad \
+                      -lTreePlayer -lMLP
 SPLOTLIBDEP         = $(MATRIXLIB) $(HISTLIB) $(TREELIB) $(TREEPLAYERLIB) \
                       $(G3DLIB) $(GRAFLIB)
 SPLOTLIBEXTRA       = -Llib -lMatrix -lHist -lTree -lTreePlayer -lGraf3d -lGraf

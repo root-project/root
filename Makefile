@@ -244,6 +244,7 @@ BOOTLIBS     := -lCore -lCint
 
 ifneq ($(ROOTDICTTYPE),cint)
 ROOTLIBS     += -lCintex -lReflex
+BOOTLIBS     += -lCintex -lReflex
 endif
 RINTLIBS     := -lRint
 else
@@ -264,7 +265,7 @@ RINTLIBS     := $(LPATH)/libRint.lib
 endif
 
 # ROOTLIBSDEP is intended to match the content of ROOTLIBS
-ROOTLIBSDEP   = $(ORDER_) $(CORELIB) $(CINTLIB) $(NETLIB) $(HISTLIB) \
+ROOTLIBSDEP   = $(ORDER_) $(CORELIB) $(CINTLIB) $(IOLIB) $(NETLIB) $(HISTLIB) \
                 $(GRAFLIB) $(G3DLIB) $(GPADLIB) $(TREELIB) $(MATRIXLIB)
 ifneq ($(ROOTDICTTYPE),cint)
 ROOTLIBSDEP  += $(CINTEXLIB) $(REFLEXLIB)
@@ -293,7 +294,7 @@ ROOTULIBS    := -Wl,-u,_G__cpp_setupG__Net      \
 endif
 endif
 ifeq ($(PLATFORM),win32)
-#on Windows, set BOOTLIBS to ROOTLIBS until we soilve a plugin manager problem
+#on Windows, set BOOTLIBS to ROOTLIBS until we solve a plugin manager problem
 BOOTLIBS     := $(ROOTLIBS)
 ROOTULIBS    := -include:_G__cpp_setupG__Net    \
                 -include:_G__cpp_setupG__IO     \
@@ -498,8 +499,8 @@ include cint/cintdlls.mk
 -include MyRules.mk            # allow local rules
 
 ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist \
-      distsrc version importcint importcint7 install uninstall showbuild changelog html \
-      debian redhat),)
+      distsrc version importcint importcint7 install uninstall showbuild \
+      changelog html debian redhat),)
 ifeq ($(findstring clean-,$(MAKECMDGOALS)),)
 ifeq ($(findstring skip,$(MAKECMDGOALS))$(findstring fast,$(MAKECMDGOALS)),)
 -include $(INCLUDEFILES)
