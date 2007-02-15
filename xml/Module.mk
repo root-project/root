@@ -38,7 +38,7 @@ include/%.h:    $(XMLDIRI)/%.h
 
 $(XMLLIB):      $(XMLO) $(XMLDO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libXMLIO.$(SOEXT) $@ "$(XMLO) $(XMLDO)"
+		   "$(SOFLAGS)" libXMLIO.$(SOEXT) $@ "$(XMLO) $(XMLDO)"  "$(XMLLIBEXTRA)"
 
 $(XMLDS):       $(XMLH) $(XMLL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."

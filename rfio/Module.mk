@@ -39,7 +39,7 @@ include/%.h:    $(RFIODIRI)/%.h
 $(RFIOLIB):     $(RFIOO) $(RFIODO) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRFIO.$(SOEXT) $@ "$(RFIOO) $(RFIODO)" \
-		   "$(SHIFTLIBDIR) $(SHIFTLIB)"
+		   "$(SHIFTLIBDIR) $(SHIFTLIB) $(RFIOLIBEXTRA)"
 
 $(RFIODS):      $(RFIOH) $(RFIOL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
