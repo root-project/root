@@ -446,8 +446,8 @@ pre.funcdoc {
    top: 3em;
    right: 1em;
    z-index: 2;
-   color: InfoText;
-   background-color: InfoBackground;
+   color: Black; /*InfoText;*/
+   background-color: #FFFFE1; /*InfoBackground;*/
    filter: alpha (opacity=20);
    -moz-opacity: .2;
    opacity: .2;
