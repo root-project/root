@@ -240,6 +240,8 @@ CINT7LIBS    := -lCint7 -lReflex
 NEWLIBS      := -lNew
 ROOTLIBS     := -lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad \
                 -lTree -lMatrix
+BOOTLIBS     := -lCore -lCint
+
 ifneq ($(ROOTDICTTYPE),cint)
 ROOTLIBS     += -lCintex -lReflex
 endif
@@ -253,8 +255,10 @@ ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libHist.lib $(LPATH)/libGraf.lib \
                 $(LPATH)/libGraf3d.lib $(LPATH)/libGpad.lib \
                 $(LPATH)/libTree.lib $(LPATH)/libMatrix.lib
+BOOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib
 ifneq ($(ROOTDICTTYPE),cint)
 ROOTLIBS     += $(LPATH)/libCintex.lib $(LPATH)/libReflex.lib
+BOOTLIBS     += $(LPATH)/libCintex.lib $(LPATH)/libReflex.lib
 endif
 RINTLIBS     := $(LPATH)/libRint.lib
 endif
@@ -270,6 +274,7 @@ endif
 ifeq ($(FORCELINK),yes)
 ifeq ($(PLATFORM),aix5)
 ROOTULIBS    := -Wl,-u,.G__cpp_setupG__Net      \
+                -Wl,-u,.G__cpp_setupG__IO       \
                 -Wl,-u,.G__cpp_setupG__Hist     \
                 -Wl,-u,.G__cpp_setupG__Graf1    \
                 -Wl,-u,.G__cpp_setupG__G3D      \
@@ -278,6 +283,7 @@ ROOTULIBS    := -Wl,-u,.G__cpp_setupG__Net      \
                 -Wl,-u,.G__cpp_setupG__Matrix
 else
 ROOTULIBS    := -Wl,-u,_G__cpp_setupG__Net      \
+                -Wl,-u,_G__cpp_setupG__IO       \
                 -Wl,-u,_G__cpp_setupG__Hist     \
                 -Wl,-u,_G__cpp_setupG__Graf1    \
                 -Wl,-u,_G__cpp_setupG__G3D      \
@@ -288,6 +294,7 @@ endif
 endif
 ifeq ($(PLATFORM),win32)
 ROOTULIBS    := -include:_G__cpp_setupG__Net    \
+                -include:_G__cpp_setupG__IO     \
                 -include:_G__cpp_setupG__Hist   \
                 -include:_G__cpp_setupG__Graf1  \
                 -include:_G__cpp_setupG__G3D    \
