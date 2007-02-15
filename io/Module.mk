@@ -27,7 +27,7 @@ IOLIB        := $(LPATH)/libRIO.$(SOEXT)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(IOH))
-#ALLLIBS      += $(IOLIB)
+ALLLIBS      += $(IOLIB)
 
 # include all dependency files
 INCLUDEFILES += $(IODEP)
@@ -45,14 +45,14 @@ $(IODS):        $(IOH) $(IOL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(IOH) $(IOL)
 
-#all-io:         $(IOLIB)
-all-io:         $(IOO) $(IODO)
+all-io:         $(IOLIB)
+#all-io:         $(IOO) $(IODO)
 
-#map-io:         $(RLIBMAP)
-#		$(RLIBMAP) -r $(ROOTMAP) -l $(IOLIB) \
-#		   -d $(IOLIBDEP) -c $(IOL)
+map-io:         $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(IOLIB) \
+		   -d $(IOLIBDEP) -c $(IOL)
 
-#map::           map-io
+map::           map-io
 
 clean-io:
 		@rm -f $(IOO) $(IODO)

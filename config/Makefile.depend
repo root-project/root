@@ -4,8 +4,8 @@
 
 ifeq ($(PLATFORM),win32)
 
-#NETLIBDEP           = $(IOLIB)
-#NETLIBEXTRA         = lib/libRIO.lib
+NETLIBDEP           = $(IOLIB)
+NETLIBEXTRA         = lib/libRIO.lib
 GDMLLIBDEP          = $(GEOMLIB) $(XMLLIB) $(HISTLIB)
 GDMLLIBEXTRA        = lib/libGeom.lib lib/libXMLIO.lib lib/libHist.lib
 HISTLIBDEP          = $(MATRIXLIB)
@@ -31,8 +31,8 @@ GEDLIBEXTRA         = lib/libHist.lib lib/libGpad.lib lib/libGraf.lib \
                       lib/libTree.lib lib/libTreePlayer.lib lib/libGui.lib
 POSTSCRIPTLIBDEP    = $(GRAFLIB)
 POSTSCRIPTLIBEXTRA  = lib/libGraf.lib
-GUILIBDEP           = $(GPADLIB) $(GRAFLIB)
-GUILIBEXTRA         = lib/libGpad.lib lib/libGraf.lib
+GUILIBDEP           = $(GPADLIB) $(GRAFLIB) $(IOLIB)
+GUILIBEXTRA         = lib/libGpad.lib lib/libGraf.lib lib/libRIO.lib
 HISTPAINTERLIBDEP   = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB) $(GPADLIB)
 HISTPAINTERLIBEXTRA = lib/libGraf.lib lib/libHist.lib lib/libMatrix.lib lib/libGpad.lib
 SPECTRUMPAINTERLIBDEP   = $(GRAFLIB) $(HISTLIB)
@@ -45,8 +45,8 @@ MINUIT2LIBDEP       = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
 MINUIT2LIBEXTRA     = lib/libGraf.lib lib/libHist.lib lib/libMatrix.lib
 FUMILILIBDEP        = $(GRAFLIB) $(HISTLIB)
 FUMILILIBEXTRA      = lib/libGraf.lib lib/libHist.lib
-TREELIBDEP          = $(NETLIB)
-TREELIBEXTRA        = lib/libNet.lib
+TREELIBDEP          = $(NETLIB) $(IOLIB)
+TREELIBEXTRA        = lib/libNet.lib lib/libRIO.lib
 TREEPLAYERLIBDEP    = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB)
 TREEPLAYERLIBEXTRA  = lib/libTree.lib lib/libGraf3d.lib lib/libGpad.lib \
                       lib/libGraf.lib lib/libHist.lib
@@ -158,8 +158,8 @@ MYSQLLIBEXTRA       = lib/libNet.lib
 
 else
 
-#NETLIBDEP           = $(IOLIB)
-#NETLIBEXTRA         = -Llib -lRIO
+NETLIBDEP           = $(IOLIB)
+NETLIBEXTRA         = -Llib -lRIO
 GDMLLIBDEP          = $(GEOMLIB) $(XMLLIB) $(HISTLIB)
 GDMLLIBEXTRA        = -Llib -lGeom -lXMLIO -lHist
 HISTLIBDEP          = $(MATRIXLIB)
@@ -175,8 +175,8 @@ GEDLIBDEP           = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) $(TREELIB) \
 GEDLIBEXTRA         = -Llib -lHist -lGpad -lGraf -lGui -lTree -lTreePlayer
 POSTSCRIPTLIBDEP    = $(GRAFLIB)
 POSTSCRIPTLIBEXTRA  = -Llib -lGraf
-GUILIBDEP           = $(GPADLIB) $(GRAFLIB)
-GUILIBEXTRA         = -Llib -lGpad -lGraf
+GUILIBDEP           = $(GPADLIB) $(GRAFLIB) $(IOLIB)
+GUILIBEXTRA         = -Llib -lGpad -lGraf -lRIO
 HISTPAINTERLIBDEP   = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB) $(GPADLIB)
 HISTPAINTERLIBEXTRA = -Llib -lGraf -lHist -lMatrix -lGpad
 SPECTRUMPAINTERLIBDEP   = $(GRAFLIB) $(HISTLIB)
@@ -189,8 +189,8 @@ MINUIT2LIBDEP       = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
 MINUIT2LIBEXTRA     = -Llib -lGraf -lHist -lMatrix
 FUMILILIBDEP        = $(GRAFLIB) $(HISTLIB)
 FUMILILIBEXTRA      = -Llib -lGraf -lHist
-TREELIBDEP          = $(NETLIB)
-TREELIBEXTRA        = -Llib -lNet
+TREELIBDEP          = $(NETLIB) $(IOLIB)
+TREELIBEXTRA        = -Llib -lNet -lRIO
 TREEPLAYERLIBDEP    = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB)
 TREEPLAYERLIBEXTRA  = -Llib -lTree -lGraf3d -lGraf -lHist -lGpad
 TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
