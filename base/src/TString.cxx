@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.64 2007/01/20 09:49:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.65 2007/01/20 19:29:34 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1607,9 +1607,9 @@ Bool_t TString::IsFloat() const
       if (i_e > -1) tmp.Replace(i_e, 1, " ", 1);
    }
    i_plus = tmp.First('+');
-   if (i_plus > -1) tmp.Replace(i_plus, 1, " ", 1);
+   if (i_plus > -1) tmp.ReplaceAll("+", " ");
    i_minus = tmp.First('-');
-   if (i_minus > -1) tmp.Replace(i_minus, 1, " ", 1);
+   if (i_minus > -1) tmp.ReplaceAll("-", " ");
 
    //test if it is now uniquely composed of numbers
    return tmp.IsDigit();
