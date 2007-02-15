@@ -42,7 +42,7 @@ const char* TDocDirective::GetOutputDir() const
 {
    // Get the directory for documentation output.
 
-   return fHtml ? fHtml->GetOutputDir() : 0;
+   return fHtml ? fHtml->GetOutputDir().Data() : 0;
 }
 
 //______________________________________________________________________________
