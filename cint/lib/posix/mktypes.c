@@ -173,6 +173,14 @@ int gen_systypes()
   fprintf(fp,"typedef unsigned short ushort;\n");
   INT_TYPEDEF_PREFER_INT(fp,key_t,"key_t");
 
+  if (sizeof(long int)==64) { 
+     fprintf(fp,"typedef long int int64_t;\n");
+     fprintf(fp,"typedef unsigned long int uint64_t;\n");
+  } else {
+     fprintf(fp,"typedef long long int64_t;\n");
+     fprintf(fp,"typedef unsigned long long uint64_t;\n");
+  }     
+
   fprintf(fp,"#endif\n");
   fclose(fp);
   return(0);
