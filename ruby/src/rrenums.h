@@ -1,4 +1,4 @@
-// @(#)root/ruby:$Name:  $:$Id: rrenums.h,v 1.0 2004/04/27 14:44:02 brun Exp $
+// @(#)root/ruby:$Name:  $:$Id: rrenums.h,v 1.1 2004/05/30 18:17:00 brun Exp $
 // Author:  Elias Athanasopoulos, May 2004
 
 /* 
@@ -132,17 +132,6 @@ rr_kFullDotLarge (void)
   return INT2NUM (kFullDotLarge);
 }
 
-static VALUE
-rr_kOpenTriangleDown (void)
-{
-  return INT2NUM (kOpenTriangleDown);
-}
-
-static VALUE
-rr_kFullCross (void)
-{
-  return INT2NUM (kFullCross);
-}
 
 static VALUE
 rr_kFullCircle (void)
@@ -235,9 +224,6 @@ void init_global_enums (void)
 		    VALUEFUNC (rr_kFullDotMedium), 0);
   rb_define_method (rb_cObject, "kFullDotLarge", VALUEFUNC (rr_kFullDotLarge),
 		    0);
-  rb_define_method (rb_cObject, "kOpenTriangleDown",
-		    VALUEFUNC (rr_kOpenTriangleDown), 0);
-  rb_define_method (rb_cObject, "kFullCross", VALUEFUNC (rr_kFullCross), 0);
   rb_define_method (rb_cObject, "kFullCircle", VALUEFUNC (rr_kFullCircle), 0);
   rb_define_method (rb_cObject, "kFullSquare", VALUEFUNC (rr_kFullSquare), 0);
   rb_define_method (rb_cObject, "kFullTriangleUp",
