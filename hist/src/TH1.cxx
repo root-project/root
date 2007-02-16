@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.333 2007/02/09 17:12:27 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.334 2007/02/15 15:04:40 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -7587,13 +7587,18 @@ void TH1C::SetBinContent(Int_t bin, Double_t content)
    // In case the bin number is greater than the number of bins and
    // the timedisplay option is set or the kCanRebin bit is set,
    // the number of bins is automatically doubled to accomodate the new bin
+
    if (bin < 0) return;
    if (bin >= fNcells-1) {
-      if (!fXaxis.GetTimeDisplay() && !TestBit(kCanRebin)) {
-         if (bin == fNcells-1) fArray[bin] = Char_t (content);
-         return;
+      if (fXaxis.GetTimeDisplay()) {
+         while (bin >  fNcells-1)  LabelsInflate();
+      } else {
+         if (!TestBit(kCanRebin)) {
+            if (bin == fNcells-1) fArray[bin] = Char_t (content);
+            return;
+         }
+         while (bin >= fNcells-1)  LabelsInflate();
       }
-      while (bin >= fNcells-1)  LabelsInflate();
    }
    fArray[bin] = Char_t (content);
    fEntries++;
@@ -7819,13 +7824,18 @@ void TH1S::SetBinContent(Int_t bin, Double_t content)
    // In case the bin number is greater than the number of bins and
    // the timedisplay option is set or the kCanRebin bit is set,
    // the number of bins is automatically doubled to accomodate the new bin
+
    if (bin < 0) return;
    if (bin >= fNcells-1) {
-      if (!fXaxis.GetTimeDisplay() && !TestBit(kCanRebin)) {
-         if (bin == fNcells-1) fArray[bin] = Short_t (content);
-         return;
+      if (fXaxis.GetTimeDisplay()) {
+         while (bin >  fNcells-1)  LabelsInflate();
+      } else {
+         if (!TestBit(kCanRebin)) {
+            if (bin == fNcells-1) fArray[bin] = Short_t (content);
+            return;
+         }
+         while (bin >= fNcells-1)  LabelsInflate();
       }
-      while (bin >= fNcells-1)  LabelsInflate();
    }
    fArray[bin] = Short_t (content);
    fEntries++;
@@ -8050,13 +8060,18 @@ void TH1I::SetBinContent(Int_t bin, Double_t content)
    // In case the bin number is greater than the number of bins and
    // the timedisplay option is set or the kCanRebin bit is set,
    // the number of bins is automatically doubled to accomodate the new bin
+
    if (bin < 0) return;
    if (bin >= fNcells-1) {
-      if (!fXaxis.GetTimeDisplay() && !TestBit(kCanRebin)) {
-         if (bin == fNcells-1) fArray[bin] = Int_t (content);
-         return;
+      if (fXaxis.GetTimeDisplay()) {
+         while (bin >  fNcells-1)  LabelsInflate();
+      } else {
+         if (!TestBit(kCanRebin)) {
+            if (bin == fNcells-1) fArray[bin] = Int_t (content);
+            return;
+         }
+         while (bin >= fNcells-1)  LabelsInflate();
       }
-      while (bin >= fNcells-1)  LabelsInflate();
    }
    fArray[bin] = Int_t (content);
    fEntries++;
@@ -8278,13 +8293,18 @@ void TH1F::SetBinContent(Int_t bin, Double_t content)
    // In case the bin number is greater than the number of bins and
    // the timedisplay option is set or the kCanRebin bit is set,
    // the number of bins is automatically doubled to accomodate the new bin
+
    if (bin < 0) return;
    if (bin >= fNcells-1) {
-      if (!fXaxis.GetTimeDisplay() && !TestBit(kCanRebin)) {
-         if (bin == fNcells-1) fArray[bin] = Float_t (content);
-         return;
+      if (fXaxis.GetTimeDisplay()) {
+         while (bin >  fNcells-1)  LabelsInflate();
+      } else {
+         if (!TestBit(kCanRebin)) {
+            if (bin == fNcells-1) fArray[bin] = Float_t (content);
+            return;
+         }
+         while (bin >= fNcells-1)  LabelsInflate();
       }
-      while (bin >= fNcells-1)  LabelsInflate();
    }
    fArray[bin] = Float_t (content);
    fEntries++;
@@ -8507,13 +8527,18 @@ void TH1D::SetBinContent(Int_t bin, Double_t content)
    // In case the bin number is greater than the number of bins and
    // the timedisplay option is set or the kCanRebin bit is set,
    // the number of bins is automatically doubled to accomodate the new bin
+
    if (bin < 0) return;
    if (bin >= fNcells-1) {
-      if (!fXaxis.GetTimeDisplay() && !TestBit(kCanRebin)) {
-         if (bin == fNcells-1) fArray[bin] = content;
-         return;
+      if (fXaxis.GetTimeDisplay()) {
+         while (bin >  fNcells-1)  LabelsInflate();
+      } else {
+         if (!TestBit(kCanRebin)) {
+            if (bin == fNcells-1) fArray[bin] = content;
+            return;
+         }
+         while (bin >= fNcells-1)  LabelsInflate();
       }
-      while (bin >= fNcells-1)  LabelsInflate();
    }
    fArray[bin] = content;
    fEntries++;
