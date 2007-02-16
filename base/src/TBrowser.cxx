@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.19 2006/05/26 09:01:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.20 2006/06/13 21:12:19 rdm Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
 #include "TClass.h"
+#include "TPluginManager.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -80,6 +81,8 @@ private:
 
 ClassImp(TBrowser)
 
+TPluginHandler *pluginManager=0;
+
 //______________________________________________________________________________
 TBrowser::TBrowser(const char *name, const char *title)
    : TNamed(name, title), fLastSelectedObject(0), fTimer(0),
@@ -93,6 +96,11 @@ TBrowser::TBrowser(const char *name, const char *title)
    if (TClass::IsCallingNew()) {
       fImp = 0;
    } else {
+      //make sure that the Gpad and GUI libs are loaded
+      if (!pluginManager) {
+         pluginManager = gROOT->GetPluginManager()->FindHandler("TVirtualPad");
+         pluginManager->LoadPlugin();
+      }
       Float_t cx = gStyle->GetScreenFactor();
       UInt_t w = UInt_t(cx*800);
       UInt_t h = UInt_t(cx*500);
@@ -110,6 +118,11 @@ TBrowser::TBrowser(const char *name, const char *title,
 {
    // Create a new browser with a name, title, width and height.
 
+   //make sure that the Gpad and GUI libs are loaded
+   if (!pluginManager) {
+      pluginManager = gROOT->GetPluginManager()->FindHandler("TVirtualPad");
+      pluginManager->LoadPlugin();
+   }
    fImp = gGuiFactory->CreateBrowserImp(this, title, width, height);
    Create();
 }
@@ -123,6 +136,11 @@ TBrowser::TBrowser(const char *name, const char *title,
 {
    // Create a new browser with a name, title, position, width and height.
 
+   //make sure that the Gpad and GUI libs are loaded
+   if (!pluginManager) {
+      pluginManager = gROOT->GetPluginManager()->FindHandler("TVirtualPad");
+      pluginManager->LoadPlugin();
+   }
    fImp = gGuiFactory->CreateBrowserImp(this, title, x, y, width, height);
    Create();
 }
