@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttMarker.h,v 1.5 2006/07/03 16:10:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttMarker.h,v 1.6 2007/02/04 17:39:44 brun Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -57,7 +57,6 @@ public:
 
    enum EMarkerStyle {kDot=1, kPlus, kStar, kCircle=4, kMultiply=5,
                       kFullDotSmall=6, kFullDotMedium=7, kFullDotLarge=8,
-                      kOpenTriangleDown = 16, kFullCross= 18,
                       kFullCircle=20, kFullSquare=21, kFullTriangleUp=22,
                       kFullTriangleDown=23, kOpenCircle=24, kOpenSquare=25,
                       kOpenTriangleUp=26, kOpenDiamond=27, kOpenCross=28,
