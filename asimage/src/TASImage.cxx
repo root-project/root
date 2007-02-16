@@ -885,10 +885,13 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
       gVirtualPS = (TVirtualPS*)gROOT->ProcessLineFast("new TImageDump()");
       gVirtualPS->Open(pad->GetName(), 114); // in memory
       gVirtualPS->SetBit(BIT(11)); //kPrintingPS
-      pad->Paint();
+
       TASImage *itmp = (TASImage*)gVirtualPS->GetStream();
 
-      if (itmp && itmp->fImage) {
+      if (itmp) itmp->BeginPaint();
+      pad->Paint();
+
+      if (itmp && itmp->fImage && (itmp != this)) {
          fImage = clone_asimage(itmp->fImage, SCL_DO_ALL);
          if (itmp->fImage->alt.argb32) {
             UInt_t sz = itmp->fImage->width*itmp->fImage->height;

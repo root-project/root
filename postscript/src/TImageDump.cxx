@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.28 2007/02/05 16:24:00 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.29 2007/02/06 09:47:23 couet Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -123,6 +123,8 @@ void TImageDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       return;
    }
 
+   fImage->BeginPaint();
+
    static Double_t x[4], y[4];
    Int_t ix1 = x1 < x2 ? XtoPixel(x1) : XtoPixel(x2);
    Int_t ix2 = x1 < x2 ? XtoPixel(x2) : XtoPixel(x1);
@@ -189,6 +191,9 @@ void TImageDump::DrawFrame(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
    if (!gPad || !fImage) {
       return;
    }
+
+   fImage->BeginPaint();
+
    bordersize = bordersize < 1 ? 1 : bordersize;
 
    TColor *col;
@@ -275,6 +280,9 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    if (!gPad || !fImage) {
       return;
    }
+
+   fImage->BeginPaint();
+
    Int_t ms = TMath::Abs(fMarkerStyle);
    static TPoint pt[20];
 
@@ -424,6 +432,8 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
       return;
    }
 
+   fImage->BeginPaint();
+
    TColor *col = 0;
    Int_t  fais = 0 , fasi = 0;
    Bool_t line = nn > 0;
@@ -551,6 +561,7 @@ void TImageDump::NewPage()
    if (gPad && fImage) {
       UInt_t w = UInt_t(gPad->GetWw()*gPad->GetWNDC());
       UInt_t h = UInt_t(gPad->GetWh()*gPad->GetHNDC());
+      fImage->BeginPaint();
       fImage->DrawRectangle(0, 0, w, h, "#ffffffff");
       fCanvas = (gPad == gPad->GetMother());
    }
@@ -571,6 +582,8 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
    if (!gPad || !fImage || (fTextSize < 0)) {
       return;
    }
+
+   fImage->BeginPaint();
 
    Double_t x = XtoPixel(xx);
    Double_t y = YtoPixel(yy);
@@ -699,6 +712,8 @@ void TImageDump::CellArrayBegin(Int_t w, Int_t h, Double_t x1, Double_t x2,
       delete [] gCellArrayColors;
    }
 
+   fImage->BeginPaint();
+
    gCellArrayN = w * h;
    gCellArrayW = w;
    gCellArrayH = h;
@@ -719,6 +734,8 @@ void TImageDump::CellArrayFill(Int_t r, Int_t g, Int_t b)
 
    if (gCellArrayIdx >= gCellArrayN) return;
 
+   fImage->BeginPaint();
+
    gCellArrayColors[gCellArrayIdx] = ((r & 0xFF) << 16) + ((g & 0xFF) << 8) + (b & 0xFF);
    gCellArrayIdx++;
 }
@@ -731,6 +748,8 @@ void TImageDump::CellArrayEnd()
    if (!fImage || !gCellArrayColors || !gCellArrayW || !gCellArrayH) {
       return;
    }
+
+   fImage->BeginPaint();
 
    fImage->DrawCellArray(gCellArrayX1, gCellArrayX2, gCellArrayY1, gCellArrayY2,
                          gCellArrayW, gCellArrayH, gCellArrayColors);
