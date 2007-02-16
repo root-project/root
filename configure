@@ -75,7 +75,6 @@ options="                    \
    enable_srp                \
    enable_ssl                \
    enable_table              \
-   enable_thread             \
    enable_unuran             \
    enable_winrtdebug         \
    enable_xml                \
@@ -102,6 +101,7 @@ enable_ruby=no
 enable_shadowpw=
 enable_soversion=no
 enable_table=no
+enable_thread=yes        # cannot be disabled (not in above options list)
 enable_unuran=no
 enable_winrtdebug=
 enable_xrootd=           # must be set explicitely via --enable-xrootd
@@ -881,7 +881,6 @@ enable/disable options, prefix with either --enable- or --disable-
   srp                SRP support, requires SRP source tree
   ssl                SSL encryption support, requires openssl
   table              Build libTable contrib library
-  thread             Thread support
   unuran             UNURAN - package for generating non-uniform random numbers
   winrtdebug         Link against the Windows debug runtime library
   xml                XML parser interface
@@ -1622,8 +1621,8 @@ check_explicit "$enable_mysql" "$enable_mysql_explicit" \
 if test ! "x$enable_oracle" = "xno"; then
     # Check for oracle include and library
     check_header "occi.h" "$oracleincdir" \
-        $ORACLE $ORACLE/include $ORACLEINCDIR /usr/local/include \
-        /usr/include /usr/include/oracle/*/client
+        $ORACLE $ORACLE/include $ORACLE/sdk/include $ORACLEINCDIR \
+        /usr/local/include /usr/include /usr/include/oracle/*/client
     oracleinc=$found_hdr
     oracleincdir=$found_dir
 
@@ -2738,7 +2737,7 @@ else
    else
       if test "x$enable_xrootd" = "xyes"; then
          enable_xrootd="no"
-         xrdcomm=", needs thread support (rerun with --enable-thread)"
+         xrdcomm=", needs thread support (make sure pthread lib is found)"
       else
          enable_xrootd="no"
       fi
