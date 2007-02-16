@@ -2,7 +2,6 @@
    // Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine  (fine@bnl.gov). All right reserved",
    // TGenericTable and TIndexTable test macro
     int problemCounter = 0;
-    gSystem->Load("libTable");
     struct hit {
      float  energy;     /* energy */
      int    detectorId; /* geometry id */
