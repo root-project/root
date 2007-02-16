@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.29 2007/02/06 09:47:23 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.30 2007/02/16 14:29:22 couet Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -561,7 +561,6 @@ void TImageDump::NewPage()
    if (gPad && fImage) {
       UInt_t w = UInt_t(gPad->GetWw()*gPad->GetWNDC());
       UInt_t h = UInt_t(gPad->GetWh()*gPad->GetHNDC());
-      fImage->BeginPaint();
       fImage->DrawRectangle(0, 0, w, h, "#ffffffff");
       fCanvas = (gPad == gPad->GetMother());
    }

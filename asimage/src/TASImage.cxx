@@ -888,7 +888,7 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
 
       TASImage *itmp = (TASImage*)gVirtualPS->GetStream();
 
-      if (itmp) itmp->BeginPaint();
+      if (itmp && itmp->fImage) itmp->BeginPaint();
       pad->Paint();
 
       if (itmp && itmp->fImage && (itmp != this)) {
