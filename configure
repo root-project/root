@@ -1952,11 +1952,13 @@ if test ! "x$enable_castor" = "xno" ; then
     if test ! "x$stagerinc" = "x"; then
         castorcflags=-DR__CASTOR2
         # check for Castor >= 2.1
-        message "Checking for Castor version >= 2.1"
-        castor_version=`grep "define BASEVERSION" $castorincdir/patchlevel.h | sed 's/^.*"\([0-9]\.[0-9]\.[0-9]\)"/\1/' | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
-        if test $castor_version -lt 2001; then
+        message "Checking for Castor version being 2.1.0-* or 2.1.1-*"
+        castor_version=`grep "define BASEVERSION" $castorincdir/patchlevel.h | sed 's/^.*"\([0-9]\.[0-9]\.[0-9]\)"/\1/' | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000000 + $2 * 1000 + $3}'`
+        if test $castor_version -lt 2001000 || test $castor_version -ge 2001002; then
+            base_vers=`grep "define BASEVERSION" $castorincdir/patchlevel.h | sed 's/^.*"\([0-9]\.[0-9]\.[0-9]\)"/\1/' | awk '{ printf $1}'`
+            patch_level=`grep "define PATCHLEVEL" $castorincdir/patchlevel.h | awk '{ printf $3}'`
+            result "no, $base_vers-$patch_level"
             castorincdir=""
-            result "no"
         else
             result "ok"
         fi
