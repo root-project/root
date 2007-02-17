@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.60 2006/07/09 05:27:54 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.61 2007/02/06 14:35:45 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -407,6 +407,7 @@ void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t 
       //This is the Bayes calculation...
       Efficiency(p,t,0.683,mode,low,high);
 
+      if (mode <= 0) continue;
       //These are the low and high error bars
       low = mode-low;
       high = high-mode;
@@ -415,6 +416,7 @@ void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t 
       //so that the fitters don't get confused.
       if (low==0.0) low=high/10.;
       if (high==0.0) high=low/10.;
+      if (high+mode > 1) high = 1-mode;
 
       //Set the point center and its errors
       SetPoint(npoint,pass->GetBinCenter(b),mode);
