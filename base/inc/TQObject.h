@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.33 2007/01/30 17:58:38 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.34 2007/02/01 14:20:21 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -54,6 +54,7 @@ protected:
    TList   *fListOfSignals;        //! list of signals from this object
    TList   *fListOfConnections;    //! list of connections to this object
 
+#ifndef __CINT__
    virtual void       *GetSender() { return this; }
    virtual const char *GetSenderClassName() const { return ""; }
 
@@ -72,7 +73,8 @@ protected:
    static Int_t CheckConnectArgs(TQObject *sender,
                                  TClass *sender_class, const char *signal,
                                  TClass *receiver_class, const char *slot);
-
+#endif
+   
 private:
    TQObject(const TQObject& tqo);            // not implemented
    TQObject& operator=(const TQObject& tqo); // not implemented
@@ -81,6 +83,7 @@ public:
    TQObject();
    virtual ~TQObject();
 
+#ifndef __CINT__
    TList   *GetListOfClassSignals() const;
    TList   *GetListOfSignals() const { return fListOfSignals; }
    TList   *GetListOfConnections() const { return fListOfConnections; }
@@ -165,7 +168,7 @@ public:
                              const char *slot = 0);
 
    static void    LoadRQ_OBJECT();
-
+#endif
    ClassDef(TQObject,1) //Base class for object communication mechanism
 };
 

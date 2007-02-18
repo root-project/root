@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.38 2006/05/15 13:31:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.39 2006/05/23 04:47:35 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -80,6 +80,7 @@ public:
    TVirtualX(const char *name, const char *title);
    virtual ~TVirtualX() { }
 
+#ifndef __CINT__
    virtual Bool_t    Init(void *display=0);
    virtual void      ClearWindow();
    virtual void      ClosePixmap();
@@ -310,7 +311,8 @@ public:
 
    virtual Bool_t       IsCmdThread() const { return kTRUE; }
    static TVirtualX    *&Instance();
-
+#endif
+   
    ClassDef(TVirtualX,0)  //ABC defining a generic interface to graphics system
 };
 

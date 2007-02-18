@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.21 2006/10/20 21:07:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.22 2007/02/07 20:56:02 brun Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -69,6 +69,7 @@ public:
                Color_t color=19, Short_t bordersize=4, Short_t bordermode=1);
    virtual ~TVirtualPad();
    virtual void     AbsCoordinates(Bool_t set) = 0;
+#ifndef __CINT__
    virtual Double_t AbsPixeltoX(Int_t px) = 0;
    virtual Double_t AbsPixeltoY(Int_t py) = 0;
    virtual void     AddExec(const char *name, const char *command) = 0;
@@ -246,7 +247,7 @@ public:
 
    virtual Int_t    GetGLDevice() = 0;
    virtual void     SetCopyGLDevice(Bool_t copy) = 0;
-
+#endif
    static TVirtualPad *&Pad();
 
    ClassDef(TVirtualPad,2)  //Abstract base class for Pads and Canvases

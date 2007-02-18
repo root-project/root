@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TVirtualCollectionProxy.h,v 1.10 2006/02/09 20:40:19 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TVirtualCollectionProxy.h,v 1.11 2007/01/29 11:09:54 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -49,7 +49,7 @@ public:
   
    virtual TVirtualCollectionProxy* Generate() const = 0; // Returns an object of the actual CollectionProxy class
    virtual ~TVirtualCollectionProxy() {};
-
+#ifndef __CINT__
    virtual TClass   *GetCollectionClass() { return fClass; } // Return a pointer to the TClass representing the container
 
    virtual void     *New() const {                // Return a new container object
@@ -91,6 +91,7 @@ public:
    virtual void*     Allocate(UInt_t n, Bool_t forceDelete) = 0;
    virtual void      Commit(void*) = 0;
            char     *operator[](UInt_t idx) const { return (char*)(const_cast<TVirtualCollectionProxy*>(this))->At(idx); }
+#endif
 };
 
 #endif

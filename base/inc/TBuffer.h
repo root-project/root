@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.61 2007/02/09 08:37:21 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.62 2007/02/13 20:28:34 rdm Exp $
 // Author: Rene Brun, Philippe Canal, Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -87,7 +87,7 @@ public:
 
    virtual Bool_t     CheckObject(const TObject *obj) = 0;
    virtual Bool_t     CheckObject(const void *obj, const TClass *ptrClass) = 0;
-
+#ifndef __CINT__
    virtual Int_t      ReadBuf(void *buf, Int_t max) = 0;
    virtual void       WriteBuf(const void *buf, Int_t max) = 0;
 
@@ -277,7 +277,7 @@ public:
    virtual   Int_t    ReadClassBuffer(TClass *cl, void *pointer) = 0;
    virtual   Int_t    ReadClassBuffer(TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count) = 0;
    virtual   Int_t    WriteClassBuffer(TClass *cl, void *pointer) = 0;
-
+#endif
    static TClass *GetClass(const type_info &typeinfo);
    static TClass *GetClass(const char *className);
 

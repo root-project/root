@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQCommand.h,v 1.3 2004/10/13 15:46:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQCommand.h,v 1.4 2005/09/18 13:00:04 rdm Exp $
 // Author: Valeriy Onuchin   04/27/2004
 
 /*************************************************************************
@@ -52,7 +52,7 @@ public:
    TQCommand(TObject *obj, const char *redo = 0, const char *undo = 0);
    TQCommand(const TQCommand &com);
    virtual ~TQCommand();
-
+#ifndef __CINT__
    virtual void   Redo(Option_t *option="");  //*SIGNAL*
    virtual void   Undo(Option_t *option="");  //*SIGNAL*
    virtual void   SetArgs(Int_t nargs, ...);
@@ -92,7 +92,7 @@ public:
    virtual const char *GetTitle() const;
 
    static TQCommand *GetCommand();
-
+#endif
    ClassDef(TQCommand,0) // encapsulates the information for undo/redo a single action.
 };
 
@@ -110,7 +110,7 @@ protected:
 public:
    TQUndoManager();
    virtual ~TQUndoManager();
-
+#ifndef __CINT__
    virtual void   Add(TObject *obj, Option_t *opt);
    virtual void   Add(TObject *obj) { Add(obj, 0); }
    virtual void   Redo(Option_t *option="");
@@ -127,7 +127,7 @@ public:
    virtual void   Print(Option_t *option="") const;
    virtual void   Print(Option_t *, Option_t *option) const { Print(option); }
    virtual void   ls(Option_t *option="") const;
-
+#endif
    ClassDef(TQUndoManager,0) // recorder of operations for undo and redo
 };
 
