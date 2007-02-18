@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.22 2007/02/07 20:56:02 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.23 2007/02/18 14:56:42 brun Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -51,7 +51,6 @@ class TCanvas;
 class TH1F;
 class TFrame;
 class TBox;
-class TPadView3D;
 class TVirtualViewer3D;
 
 class TVirtualPad : public TObject, public TAttLine, public TAttFill,
@@ -140,7 +139,7 @@ public:
    virtual const char *GetTitle() const = 0;
    virtual Int_t    GetPadPaint() const = 0;
    virtual Int_t    GetPixmapID() const = 0;
-   virtual TPadView3D *GetView3D() const = 0;
+   virtual TObject *GetView3D() const = 0;
    virtual Bool_t   HasCrosshair() const = 0;
    virtual void     HighLight(Color_t col=kRed, Bool_t set=kTRUE) = 0;
    virtual Bool_t   HasFixedAspectRatio() const = 0;
@@ -184,7 +183,7 @@ public:
    virtual void     RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax) = 0;
    virtual void     RecursiveRemove(TObject *obj) = 0;
    virtual void     RedrawAxis(Option_t *option="") = 0;
-   virtual void     ResetView3D(TPadView3D *view=0) = 0;
+   virtual void     ResetView3D(TObject *view=0) = 0;
    virtual void     ResizePad(Option_t *option="") = 0;
    virtual void     SaveAs(const char *filename="",Option_t *option="") const = 0;
    virtual void     SetBatch(Bool_t batch=kTRUE) = 0;

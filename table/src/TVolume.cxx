@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolume.cxx,v 1.20 2007/02/15 15:04:40 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TVolume.cxx,v 1.21 2007/02/18 14:58:56 brun Exp $
 // Author: Valery Fine   10/12/98
 
 /*************************************************************************
@@ -23,7 +23,7 @@
 #include "TBrowser.h"
 #include "X3DBuffer.h"
 
-#include "TPadView3D.h"
+#include "TTablePadView3D.h"
 #include "TCanvas.h"
 
 #include "TRotMatrix.h"
@@ -601,7 +601,7 @@ void TVolume::PaintNodePosition(Option_t *option,TVolumePosition *pos)
    Int_t iopt = atoi(option);
    if ( (0 < iopt) && (iopt <= level) )  return;
 
-   TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
+   TTablePadView3D *view3D = (TTablePadView3D*)gPad->GetView3D();
    TVirtualViewer3D * viewer3D = gPad->GetViewer3D();
 
    TVolumePosition *position = pos;
@@ -655,7 +655,7 @@ void TVolume::PaintShape(Option_t *option)
          shape->SetLineWidth(GetLineWidth());
          shape->SetFillColor(GetFillColor());
          shape->SetFillStyle(GetFillStyle());
-         TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
+         TTablePadView3D *view3D = (TTablePadView3D*)gPad->GetView3D();
          gPad->GetViewer3D();
          if (view3D)
             view3D->SetLineAttr(GetLineColor(),GetLineWidth(),option);

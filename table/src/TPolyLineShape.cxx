@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TPolyLineShape.cxx,v 1.8 2006/07/11 09:05:02 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TPolyLineShape.cxx,v 1.9 2007/01/12 16:03:17 brun Exp $
 // Author: Valeri Fine 1999
 
 /*************************************************************************
@@ -19,7 +19,7 @@
 #include "TSPHE.h"
 #include "TView.h"
 #include "TVirtualPad.h"
-#include "TPadView3D.h"
+#include "TTablePadView3D.h"
 #include "TPoint.h"
 #include "TVirtualPS.h"
 #include "TMath.h"
@@ -390,8 +390,8 @@ void TPolyLineShape::Paint(Option_t *opt)
    if (!GetPoints()) return;
 
    Bool_t rangeView = opt && opt[0] && strcmp(opt,"range")==0 ? kTRUE : kFALSE;
-   TPadView3D *view3D = 0;
-   if (!rangeView  && (view3D = (TPadView3D*)gPad->GetView3D()) ) {
+   TTablePadView3D *view3D = 0;
+   if (!rangeView  && (view3D = (TTablePadView3D*)gPad->GetView3D()) ) {
       TString mode;
 
       mode="";

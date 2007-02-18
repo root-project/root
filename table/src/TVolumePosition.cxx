@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolumePosition.cxx,v 1.12 2007/02/06 15:20:31 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TVolumePosition.cxx,v 1.13 2007/02/08 08:06:33 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -24,7 +24,7 @@
 #include "TBrowser.h"
 #include "X3DBuffer.h"
 
-#include "TPadView3D.h"
+#include "TTablePadView3D.h"
 
 //R__EXTERN  Size3D gSize3D;
 
@@ -515,7 +515,7 @@ void TVolumePosition::SetMatrix(TRotMatrix *matrix)
 void TVolumePosition::UpdatePosition(Option_t *)
 {
    //to be documented
-   TPadView3D *view3D=(TPadView3D *)gPad->GetView3D();
+   TTablePadView3D *view3D=(TTablePadView3D *)gPad->GetView3D();
 //*-*- Update translation vector and rotation matrix for new level
    if (gGeometry->GeomLevel() && fMatrix) {
       gGeometry->UpdateTempMatrix(fX[0],fX[1],fX[2]

@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolumeView.cxx,v 1.21 2007/02/15 15:04:41 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TVolumeView.cxx,v 1.22 2007/02/18 14:58:56 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -23,7 +23,7 @@
 #include "TVolumePosition.h"
 #include "TROOT.h"
 #include "TView.h"
-#include "TPadView3D.h"
+#include "TTablePadView3D.h"
 #include "TGeometry.h"
 #include "TVirtualPad.h"
 #include "TObjArray.h"
@@ -755,7 +755,7 @@ void TVolumeView::Paint(Option_t *option)
 
    if ( (0 < iLast) && (iLast < level) )  return;
 
-   TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
+   TTablePadView3D *view3D = (TTablePadView3D*)gPad->GetView3D();
 
    TVolume *thisNode  = 0;
    TVolumePosition *position = GetPosition();
@@ -804,7 +804,7 @@ void TVolumeView::PaintShape(Option_t *option)
    while( (shape = (TShape *)nextShape()) ) {
       if (!shape->GetVisibility())   continue;
       if (!rangeView) {
-         TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
+         TTablePadView3D *view3D = (TTablePadView3D*)gPad->GetView3D();
          if (view3D)
             view3D->SetLineAttr(shape->GetLineColor(),shape->GetLineWidth(),option);
       }

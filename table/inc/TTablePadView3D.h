@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPadView3D.h,v 1.2 2005/11/16 20:02:34 pcanal Exp $
+// @(#)root/table:$Name:  $:$Id: TTablePadView3D.h,v 1.3 2007/02/04 17:39:44 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   30/05/97
 
 /*************************************************************************
@@ -9,15 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TPadView3D
-#define ROOT_TPadView3D
+#ifndef ROOT_TTablePadView3D
+#define ROOT_TTablePadView3D
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TPadView3D                                                           //
+// TTablePadView3D                                                      //
 //                                                                      //
-// TPadView3D is a generic 3D viewer.                                   //
+// TTablePadView3D is a generic 3D viewer.                              //
 // For a concrete viewer see TGLViewer.                                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
@@ -35,8 +35,7 @@ class TPoints3DABC;
 class TNode;
 class TRotMatrix;
 
-//class TPadView3D : public TObjectView
-class TPadView3D {
+class TTablePadView3D {
 protected:
    TVirtualPad  *fParent;            // Pointer to the original TPad object
 
@@ -50,9 +49,9 @@ protected:
    Float_t       fScale;             // The scale factor to control the border of the clip box
 
 public:
-   TPadView3D() { fParent = 0;}  //default ctor
-   TPadView3D(TVirtualPad *pad) { SetPad(pad); }
-   virtual ~TPadView3D();
+   TTablePadView3D() { fParent = 0;}  //default ctor
+   TTablePadView3D(TVirtualPad *pad) { SetPad(pad); }
+   virtual ~TTablePadView3D();
    virtual void ExecuteEvent(Int_t event, Int_t px, Int_t py);
    TVirtualPad *GetPad() const { return fParent; }
    virtual void Paint(Option_t *option="");
@@ -90,21 +89,21 @@ public:
    virtual void    SetScale(Float_t scale);
 
 
-//   ClassDef(TPadView3D,0);   //Generic 3D viewer
+//   ClassDef(TTablePadView3D,0);   //Generic 3D viewer
 };
 
-inline void TPadView3D::ExecuteEvent(Int_t, Int_t, Int_t) { }
-inline void TPadView3D::Paint(Option_t *) { }
-inline void TPadView3D::Size(Int_t, Int_t) { }
-inline void TPadView3D::PaintBeginModel(Option_t *) { }
-inline void TPadView3D::PaintEnd(Option_t *) { }
-inline void TPadView3D::PaintScene(Option_t *) { }
-inline void TPadView3D::PaintPolyMarker(TPolyMarker3D *, Option_t *) { }
-inline void TPadView3D::PaintPolyLine(TPolyLine3D *, Option_t *) { }
-inline void TPadView3D::PaintPoints3D(const TPoints3DABC *,Option_t *){ }
-inline void TPadView3D::SetAttNode(TNode *, Option_t *) { }
-inline void TPadView3D::SetLineAttr(Color_t ,Int_t ,Option_t *) { }
-inline void TPadView3D::UpdateNodeMatrix(TNode *, Option_t *) { }
-inline void TPadView3D::UpdatePosition(Double_t ,Double_t ,Double_t ,TRotMatrix *, Option_t *){ }
+inline void TTablePadView3D::ExecuteEvent(Int_t, Int_t, Int_t) { }
+inline void TTablePadView3D::Paint(Option_t *) { }
+inline void TTablePadView3D::Size(Int_t, Int_t) { }
+inline void TTablePadView3D::PaintBeginModel(Option_t *) { }
+inline void TTablePadView3D::PaintEnd(Option_t *) { }
+inline void TTablePadView3D::PaintScene(Option_t *) { }
+inline void TTablePadView3D::PaintPolyMarker(TPolyMarker3D *, Option_t *) { }
+inline void TTablePadView3D::PaintPolyLine(TPolyLine3D *, Option_t *) { }
+inline void TTablePadView3D::PaintPoints3D(const TPoints3DABC *,Option_t *){ }
+inline void TTablePadView3D::SetAttNode(TNode *, Option_t *) { }
+inline void TTablePadView3D::SetLineAttr(Color_t ,Int_t ,Option_t *) { }
+inline void TTablePadView3D::UpdateNodeMatrix(TNode *, Option_t *) { }
+inline void TTablePadView3D::UpdatePosition(Double_t ,Double_t ,Double_t ,TRotMatrix *, Option_t *){ }
 
 #endif
