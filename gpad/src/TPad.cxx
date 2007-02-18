@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.254 2007/02/13 21:23:10 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.255 2007/02/15 15:04:40 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -40,7 +40,6 @@
 #include "TRealData.h"
 #include "TFrame.h"
 #include "TExec.h"
-#include "TPadView3D.h"
 #include "TDatime.h"
 #include "TColor.h"
 #include "TCanvas.h"
