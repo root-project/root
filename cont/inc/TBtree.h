@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TBtree.h,v 1.10 2006/04/19 08:22:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TBtree.h,v 1.11 2006/07/26 13:36:42 rdm Exp $
 // Author: Fons Rademakers   10/10/95
 
 /*************************************************************************
@@ -68,6 +68,7 @@ protected:
 public:
    TBtree(Int_t ordern = 3);  //create a TBtree of order n
    virtual     ~TBtree();
+#ifndef __CINT__
    void        Clear(Option_t *option="");
    void        Delete(Option_t *option="");
    TObject    *FindObject(const char *name) const;
@@ -94,8 +95,8 @@ public:
    Int_t       Order() { return fOrder; }
    TObject    *operator[](Int_t i) const;
    Int_t       Rank(const TObject *obj) const;
-
-   ClassDef(TBtree,1)  //A B-tree
+#endif
+   ClassDef(TBtree,0)  //A B-tree
 };
 
 
@@ -128,6 +129,7 @@ public:
    virtual ~TBtNode();
 
    virtual void Add(const TObject *obj, Int_t index) = 0;
+#ifndef __CINT__
    virtual TBtree *GetParentTree() const {return fTree;}
    virtual void Remove(Int_t index) = 0;
 
@@ -141,7 +143,7 @@ public:
    virtual TBtLeafNode *LastLeafNode() = 0;
 
    virtual void Split() = 0;
-
+#endif
    // virtual void PrintOn(ostream &os) const = 0;
    // friend ostream &operator<<(ostream &os, const TBtNode &node);
 };
@@ -190,6 +192,7 @@ public:
    TBtInnerNode(TBtInnerNode *parent, TBtree *tree, TBtNode *oldroot);
    ~TBtInnerNode();
 
+#ifndef __CINT__
    void      Add(const TObject *obj, Int_t idx);
    void      Add(TBtItem &i, Int_t idx);
    void      Add(Int_t at, TObject *obj, TBtNode *n);
@@ -251,6 +254,7 @@ public:
    Int_t     IsAlmostFull() const { return fLast >= MaxIndex() - 1; }
    Int_t     IsLow() const {  return fLast < fTree->fInnerLowWaterMark; }
    void      IsLow(TBtNode *n);
+#endif
 };
 
 
@@ -273,6 +277,7 @@ public:
    TBtLeafNode(TBtInnerNode *p, const TObject *obj = 0, TBtree *t = 0);
    ~TBtLeafNode();
 
+#ifndef __CINT__
    void       Add(const TObject *obj, Int_t idx);
    void       Remove(Int_t idx);
    void       RemoveItem(Int_t idx) { Remove(idx); }
@@ -313,6 +318,7 @@ public:
    Int_t      IsFull() const { return fLast == MaxIndex(); }
    Int_t      IsAlmostFull() const { return fLast >= MaxIndex() - 1; }
    Int_t      IsLow() const { return fLast < fTree->fLeafLowWaterMark; }
+#endif
 };
 
 
