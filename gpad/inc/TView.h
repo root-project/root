@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TView.h,v 1.1 2007/02/07 21:16:09 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TView.h,v 1.2 2007/02/18 14:58:16 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -42,7 +42,6 @@ public:
    virtual ~TView() {}
 
    virtual void          DefinePerspectiveView() = 0;
-#ifndef __CINT__
    virtual void          AxisVertex(Double_t ang, Double_t *av, Int_t &ix1, Int_t &ix2, Int_t &iy1, Int_t &iy2, Int_t &iz1, Int_t &iz2) = 0;
    virtual void          DefineViewDirection(const Double_t *s, const Double_t *c,
                                     Double_t cosphi, Double_t sinphi,
@@ -134,8 +133,6 @@ public:
    virtual void          ZoomMove() = 0;
    virtual void          Zoom() = 0;
    virtual void          UnZoom() = 0;
-
-#endif
 
    static TView         *CreateView(Int_t system=1, const Double_t *rmin=0, const Double_t *rmax=0);
    
