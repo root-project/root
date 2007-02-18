@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridResult.h,v 1.9 2006/10/05 14:56:24 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGridResult.h,v 1.10 2007/02/12 13:07:02 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -27,8 +27,6 @@
 #include "TList.h"
 #endif
 
-class TEventList;
-
 
 class TGridResult : public TList {
 
@@ -42,7 +40,7 @@ public:
       { MayNotUse("GetFileNamePath"); return 0; }
    virtual const char *GetPath(UInt_t) const
       { MayNotUse("GetPath"); return 0; }
-   virtual const TEventList *GetEventList(UInt_t) const
+   virtual const TObject *GetEventList(UInt_t) const
       { MayNotUse("GetEventList"); return 0; }
    virtual const char *GetKey(UInt_t, const char*) const
       { MayNotUse("GetKey"); return 0; }

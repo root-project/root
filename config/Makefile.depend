@@ -125,8 +125,8 @@ XMLLIBDEP           = $(IOLIB)
 XMLLIBEXTRA         = lib/libRIO.lib
 FOAMLIBDEP          = $(HISTLIB)
 FOAMLIBEXTRA        = lib/libHist.lib
-ALIENLIBDEP         = $(XMLLIB) $(NETXLIB)
-ALIENLIBEXTRA       = lib/libXMLIO.lib lib/libNetx.lib
+ALIENLIBDEP         = $(XMLLIB) $(NETXLIB) $(TREELIB)
+ALIENLIBEXTRA       = lib/libXMLIO.lib lib/libNetx.lib lib/libTree.lib
 ROOFITLIBDEP        = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB) \
                       $(MINUITLIB) $(HTMLLIB) $(IOLIB)
 ROOFITLIBEXTRA      = lib/libHist.lib lib/libGraf.lib lib/libMatrix.lib \
@@ -279,8 +279,8 @@ XMLLIBDEP           = $(IOLIB)
 XMLLIBEXTRA         = -Llib -lRIO
 FOAMLIBDEP          = $(HISTLIB)
 FOAMLIBEXTRA        = -Llib -lHist
-ALIENLIBDEP         = $(XMLLIB) $(NETXLIB)
-ALIENLIBEXTRA       = -Llib -lXMLIO -lNetx
+ALIENLIBDEP         = $(XMLLIB) $(NETXLIB) $(TREELIB)
+ALIENLIBEXTRA       = -Llib -lXMLIO -lNetx -lTree
 ROOFITLIBDEP        = $(HISTLIB) $(GRAFLIB) $(MATRIXLIB) $(TREELIB) \
                       $(MINUITLIB) $(HTMLLIB) $(IOLIB)
 ROOFITLIBEXTRA      = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lHtml -lRIO
