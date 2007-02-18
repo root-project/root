@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.26 2007/02/06 00:12:31 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.27 2007/02/06 15:52:35 rdm Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -1472,7 +1472,7 @@ void TProofDrawPolyMarker3D::Terminate(void)
             hist->Reset();
       }
 
-      Float_t rmin[3], rmax[3];
+      Double_t rmin[3], rmax[3];
 
       // FIXME take rmin and rmax from the old histogram
       if (hist->TestBit(TH1::kCanRebin) && hist->TestBit(kCanDelete)) {
@@ -1482,7 +1482,7 @@ void TProofDrawPolyMarker3D::Terminate(void)
             fPolyMarker3D->GetPoint(0, rmax[0], rmax[1], rmax[2]);
          }
          for (int i = 1; i < fPolyMarker3D->Size(); i++) {
-            Float_t v[3];
+            Double_t v[3];
             fPolyMarker3D->GetPoint(i, v[0], v[1], v[2]);
             for (int i = 0; i < 3; i++) {
                if (v[i] < rmin[i]) rmin[i] = v[i];
@@ -1503,7 +1503,7 @@ void TProofDrawPolyMarker3D::Terminate(void)
       } else {
          gPad->Clear();
          gPad->Range(-1,-1,1,1);
-         new TView(rmin,rmax,1);
+         TView::CreateView(1,rmin,rmax);
       }
       // FIXME set marker style
       if (fTreeDrawArgsParser.GetShouldDraw())

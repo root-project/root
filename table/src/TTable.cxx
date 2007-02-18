@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TTable.cxx,v 1.21 2007/01/30 10:14:03 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TTable.cxx,v 1.22 2007/02/15 15:04:40 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 
 /*************************************************************************
@@ -755,7 +755,7 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
  //  action < 0   Evaluate Limits for case abs(action)
  //
  //  Load file
-   Float_t rmin[3],rmax[3];
+   Double_t rmin[3],rmax[3];
    switch(G__loadfile((Char_t *)exprFileName)) {
       case G__LOADFILE_SUCCESS:
       case G__LOADFILE_DUPLICATE:
@@ -979,7 +979,7 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
             rmax[0] = gVmax[2]; rmax[1] = gVmax[1]; rmax[2] = gVmax[0];
             gPad->Clear();
             gPad->Range(-1,-1,1,1);
-            new TView(rmin,rmax,1);
+            TView::CreateView(1,rmin,rmax);
          case 13: {
             TPolyMarker3D *pm3d = new TPolyMarker3D(lastEntry-firstentry);
             pm3d->SetBit(kCanDelete);

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.65 2007/01/22 07:57:14 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.66 2007/02/15 15:04:41 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -1541,7 +1541,7 @@ void TSelectorDraw::TakeEstimate()
          rmax[0] = fVmax[2]; rmax[1] = fVmax[1]; rmax[2] = fVmax[0];
          gPad->Clear();
          gPad->Range(-1,-1,1,1);
-         new TView(rmin,rmax,1);
+         TView::CreateView(1, rmin,rmax);
       }
       TPolyMarker3D *pm3d = new TPolyMarker3D(fNfill);
       pm3d->SetMarkerStyle(fTree->GetMarkerStyle());

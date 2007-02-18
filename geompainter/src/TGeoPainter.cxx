@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.96 2007/01/30 11:49:14 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.97 2007/02/15 15:04:39 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -670,7 +670,7 @@ void TGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *option)
    // Create a 3-D view
    TView *view = gPad->GetView();
    if (!view) {
-      view = new TView(11);
+      view = TView::CreateView(11,0,0);
       // Set the view to perform a first autorange (frame) draw. 
       // TViewer3DPad will revert view to normal painting after this
       view->SetAutoRange(kTRUE);
@@ -710,7 +710,7 @@ void TGeoPainter::DrawShape(TGeoShape *shape, Option_t *option)
    // Create a 3-D view
    TView *view = gPad->GetView();
    if (!view) {
-      view = new TView(11);
+      view = TView::CreateView(11,0,0);
       // Set the view to perform a first autorange (frame) draw. 
       // TViewer3DPad will revert view to normal painting after this
       view->SetAutoRange(kTRUE);
@@ -752,7 +752,7 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
    gPad->GetViewer3D(option);
    TView *view = gPad->GetView();
    if (!view) {
-      view = new TView(11);
+      view = TView::CreateView(11,0,0);
       // Set the view to perform a first autorange (frame) draw. 
       // TViewer3DPad will revert view to normal painting after this
       view->SetAutoRange(kTRUE);
@@ -793,7 +793,7 @@ void TGeoPainter::DrawOnly(Option_t *option)
    // Create a 3-D view
    TView *view = gPad->GetView();
    if (!view) {
-      view = new TView(11);
+      view = TView::CreateView(11,0,0);
       // Set the view to perform a first autorange (frame) draw. 
       // TViewer3DPad will revert view to normal painting after this
       view->SetAutoRange(kTRUE);

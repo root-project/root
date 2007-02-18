@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolume.cxx,v 1.19 2007/01/17 21:25:15 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TVolume.cxx,v 1.20 2007/02/15 15:04:40 brun Exp $
 // Author: Valery Fine   10/12/98
 
 /*************************************************************************
@@ -461,7 +461,7 @@ void TVolume::Draw(Option_t *option)
    // Create a 3-D view
    TView *view = gPad->GetView();
    if (!view) {
-      view = new TView(11);
+      view = TView::CreateView(11,0,0);
       // Set the view to perform a first autorange (frame) draw.
       // TViewer3DPad will revert view to normal painting after this
       view->SetAutoRange(kTRUE);
@@ -729,13 +729,14 @@ void TVolume::GetLocalRange(Float_t *min, Float_t *max)
    //  Create a dummy TPad;
    TCanvas dummyPad("--Dumm--","dum",1,1);
    // Assing 3D TView
-   TView view(1);
+   TView *view = TView::CreateView(1,0,0);
 
    gGeometry->SetGeomLevel();
    gGeometry->UpdateTempMatrix();
-   view.SetAutoRange(kTRUE);
+   view->SetAutoRange(kTRUE);
    Paint("range");
-   view.GetRange(&min[0],&max[0]);
+   view->GetRange(&min[0],&max[0]);
+   delete view;
    // restore "current pad"
    if (savePad) savePad->cd();
 }

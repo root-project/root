@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.14 2007/02/03 17:56:27 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.15 2007/02/15 15:04:39 brun Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -360,7 +360,7 @@ void TGenerator::Draw(Option_t *option)
       view->GetRange(rmin,rmax);
       rbox = rmax[2];
    } else {
-      view = new TView(1);
+      view = TView::CreateView(1,0,0);
       view->SetRange(-rbox,-rbox,-rbox, rbox,rbox,rbox );
    }
    const Int_t kColorProton    = 4;

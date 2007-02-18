@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.33 2007/01/25 09:45:27 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.34 2007/02/03 18:41:29 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -145,7 +145,7 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
    for (i=0;i<4;i++)  { fYls[i] = 0; }
 
    TView *view = gPad->GetView();
-   if (!view) view = new TView(rmin, rmax, fSystem);
+   if (!view) view = TView::CreateView(fSystem, rmin, rmax);
    view->SetView(gPad->GetPhi(), gPad->GetTheta(), psi, i);
    view->SetRange(rmin,rmax);
 }

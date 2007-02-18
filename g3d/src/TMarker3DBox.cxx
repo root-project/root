@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.22 2007/01/23 09:53:36 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.23 2007/02/06 14:44:54 brun Exp $
 // Author: Rene Brun , Olivier Couet 31/10/97
 
 
@@ -313,7 +313,7 @@ void TMarker3DBox::PaintH3(TH1 *h, Option_t *option)
    TView *view = gPad->GetView();
    if (!view) {
       gPad->Range(-1,-1,1,1);
-      view = new TView(1);
+      view = TView::CreateView(1,0,0);
    }
    view->SetRange(xaxis->GetBinLowEdge(xaxis->GetFirst()),
                   yaxis->GetBinLowEdge(yaxis->GetFirst()),
