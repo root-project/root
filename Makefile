@@ -241,7 +241,6 @@ NEWLIBS      := -lNew
 ROOTLIBS     := -lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad \
                 -lTree -lMatrix
 BOOTLIBS     := -lCore -lCint
-
 ifneq ($(ROOTDICTTYPE),cint)
 ROOTLIBS     += -lCintex -lReflex
 BOOTLIBS     += -lCintex -lReflex
@@ -267,8 +266,10 @@ endif
 # ROOTLIBSDEP is intended to match the content of ROOTLIBS
 ROOTLIBSDEP   = $(ORDER_) $(CORELIB) $(CINTLIB) $(IOLIB) $(NETLIB) $(HISTLIB) \
                 $(GRAFLIB) $(G3DLIB) $(GPADLIB) $(TREELIB) $(MATRIXLIB)
+BOOTLIBSDEP   = $(ORDER_) $(CORELIB) $(CINTLIB)
 ifneq ($(ROOTDICTTYPE),cint)
 ROOTLIBSDEP  += $(CINTEXLIB) $(REFLEXLIB)
+BOOTLIBSDEP  += $(CINTEXLIB) $(REFLEXLIB)
 endif
 
 # Force linking of not referenced libraries
@@ -294,7 +295,7 @@ ROOTULIBS    := -Wl,-u,_G__cpp_setupG__Net      \
 endif
 endif
 ifeq ($(PLATFORM),win32)
-#on Windows, set BOOTLIBS to ROOTLIBS until we solve a plugin manager problem
+#on Windows, set BOOTLIBS to ROOTLIBS until we solve a dependency problem
 BOOTLIBS     := $(ROOTLIBS)
 ROOTULIBS    := -include:_G__cpp_setupG__Net    \
                 -include:_G__cpp_setupG__IO     \
@@ -304,6 +305,7 @@ ROOTULIBS    := -include:_G__cpp_setupG__Net    \
                 -include:_G__cpp_setupG__GPad   \
                 -include:_G__cpp_setupG__Tree   \
                 -include:_G__cpp_setupG__Matrix
+BOOTULIBS    := $(ROOTULIBS)
 endif
 
 ##### Compiler output option #####
