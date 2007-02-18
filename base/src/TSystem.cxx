@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.153 2007/02/05 16:07:00 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.154 2007/02/12 15:37:44 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1438,7 +1438,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    // Load a shared library. Returns 0 on successful loading, 1 in
    // case lib was already loaded and -1 in case lib does not exist
    // or in case of error. When entry is specified the loaded lib is
-   // search for this entry point (return -1 when entry does not exist,
+   // searched for this entry point (return -1 when entry does not exist,
    // 0 otherwise). When the system flag is kTRUE, the library is consisdered
    // a permanent systen library that should not be unloaded during the
    // course of the session.
