@@ -11,7 +11,7 @@
    p1->cd();
 
    // creating a view
-   view = new TView(1);
+   view = TView::CreateView(1);
    view->SetRange(5,5,5,25,25,25);
 
    // create a first PolyLine3D

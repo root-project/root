@@ -15,7 +15,7 @@ void tornado() {
     sky->SetFillColor(14);
 
     // creating view
-    TView *view = new TView(1);
+    TView *view = TView::CreateView(1,0,0);
     float range = numberOfCircles*d;
     view->SetRange( 0, 0, 0, 4.0*range, 2.0*range, range );
 
