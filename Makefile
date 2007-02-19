@@ -56,7 +56,7 @@ MODULES       = build cint metautils pcre utils base cont meta io net math \
                 minuit histpainter treeplayer treeviewer physics postscript \
                 rint html eg geom geompainter vmc fumili mlp ged quadp auth \
                 guibuilder xml foam splot smatrix sql tmva geombuilder \
-                spectrum spectrumpainter fitpanel
+                spectrum spectrumpainter fitpanel thread proof
 
 ifeq ($(ARCH),win32)
 MODULES      += winnt win32gdk
@@ -114,10 +114,6 @@ MODULES      += chirp
 endif
 ifeq ($(BUILDASIMAGE),yes)
 MODULES      += asimage
-endif
-ifeq ($(ENABLETHREAD),yes)
-MODULES      += thread
-MODULES      += proof
 endif
 ifeq ($(BUILDFPYTHIA6),yes)
 MODULES      += pythia6
@@ -217,9 +213,9 @@ endif
 -include MyModules.mk   # allow local modules
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
-MODULES      += unix winnt x11 x11ttf win32gdk gl rfio castor thread \
+MODULES      += unix winnt x11 x11ttf win32gdk gl rfio castor \
                 pythia6 table mysql pgsql sapdb srputils x3d \
-                rootx rootd proofd proof dcache chirp hbook asimage \
+                rootx rootd proofd dcache chirp hbook asimage \
                 ldap mlp krb5auth rpdutils globusauth pyroot ruby gfal \
                 qt qtroot qtgsi xrootd netx proofx alien clarens peac oracle \
                 xmlparser mathcore mathmore reflex cintex roofit minuit2 \
