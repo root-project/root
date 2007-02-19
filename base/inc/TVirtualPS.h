@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPS.h,v 1.10 2006/01/12 16:56:08 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPS.h,v 1.11 2007/02/18 14:56:42 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -52,7 +52,6 @@ public:
    TVirtualPS(const char *filename, Int_t type=-111);
    virtual     ~TVirtualPS();
    virtual void  CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2) = 0;
-#ifndef __CINT__
    virtual void  CellArrayFill(Int_t r, Int_t g, Int_t b) = 0;
    virtual void  CellArrayEnd() = 0;
    virtual void  Close(Option_t *opt="") = 0;
@@ -77,7 +76,7 @@ public:
 
    virtual void  SetType(Int_t /*type*/ = -111) { }
    virtual Int_t GetType() const { return 111; }
-#endif
+
    ClassDef(TVirtualPS,0)  //Abstract interface to a PostScript driver
 };
 

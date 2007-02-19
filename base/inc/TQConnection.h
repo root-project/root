@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.h,v 1.9 2005/03/13 15:05:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.h,v 1.10 2007/02/18 14:56:42 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -54,7 +54,7 @@ public:
                 const char *method_name);
    TQConnection(const TQConnection &con);
    virtual ~TQConnection();
-#ifndef __CINT__
+
    const char *GetName() const;
    void *GetReceiver() const { return fReceiver; }
    const char *GetClassName() const { return fClassName; }
@@ -69,7 +69,7 @@ public:
    void ls(Option_t *option="") const;
    void Print(Option_t *option="") const;
    void Print(Option_t *, Option_t *option) const{ Print(option); }
-#endif
+
    ClassDef(TQConnection,0) // Internal class used in the object communication mechanism
 };
 

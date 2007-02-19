@@ -37,7 +37,6 @@ public:
    virtual ~TVirtualPadEditor();
    virtual Bool_t   IsGlobal() const = 0;
 
-#ifndef __CINT__
    // methods related to the old editor interface
    virtual void     DrawLine(Double_t, Double_t , Double_t , Double_t ) { }
    virtual void     DrawLineNDC(Double_t , Double_t , Double_t , Double_t ) { }
@@ -69,7 +68,7 @@ public:
    static void      UpdateLineAttributes(Int_t col, Int_t sty, Int_t width);
    static void      UpdateMarkerAttributes(Int_t col, Int_t sty, Float_t msiz);
    static void      UpdateTextAttributes(Int_t align,Float_t angle,Int_t col,Int_t font,Float_t tsize);
-#endif
+
    ClassDef(TVirtualPadEditor,0)  //Abstract interface for graphics pad editor
 };
 

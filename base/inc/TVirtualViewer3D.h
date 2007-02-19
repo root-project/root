@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.h,v 1.11 2006/08/23 14:39:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualViewer3D.h,v 1.12 2007/02/18 14:56:42 brun Exp $
 // Author: Olivier Couet 05/10/2004
 
 /*************************************************************************
@@ -51,7 +51,6 @@ public:
    // supply them
    virtual Bool_t PreferLocalFrame() const = 0;
 
-#ifndef __CINT__
    // Addition/removal of objects must occur between Begin/EndUpdate calls
    virtual void   BeginScene() = 0;
    virtual Bool_t BuildingScene() const = 0;
@@ -77,7 +76,7 @@ public:
    virtual void PrintObjects(){}
    virtual void ResetCameras(){}
    virtual void ResetCamerasAfterNextUpdate(){}
-#endif
+
    static  TVirtualViewer3D *Viewer3D(TVirtualPad *pad = 0, Option_t *type = "");
 
    ClassDef(TVirtualViewer3D,0) // Abstract interface to 3D viewers

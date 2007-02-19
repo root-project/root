@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.35 2007/02/04 17:39:44 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.36 2007/02/18 14:56:42 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -86,7 +86,6 @@ public:
 
    // common/kernel GL methods
    virtual void AddRotation(Double_t *rotmatrix, Double_t *extraangles) = 0;
-#ifndef __CINT__
    virtual void BeginGLCmd(EG3D2GLmode mode) = 0;
    virtual void ClearGL(UInt_t bufbits ) = 0;
    virtual void ClearColor(Int_t color) = 0;
@@ -169,7 +168,7 @@ public:
    virtual void CaptureViewer(TGLViewer *viewer, Int_t format, const char * filePath = 0) = 0;
 
    static TVirtualGL *&Instance();
-#endif
+
    ClassDef(TVirtualGL,0);  // Interface for OpenGL 
 };
 
