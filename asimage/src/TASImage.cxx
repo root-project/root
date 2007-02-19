@@ -5210,7 +5210,7 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
    r = g = b = 0;
    Int_t bxx, byy;
 
-   yy = y0 = by * fImage->width;
+   yy = y0 = by > 0 ? by * fImage->width : 0;
    for (y = 0; y < (int) source->rows; y++) {
       byy = by + y;
       if ((byy >= (int)fImage->height) || (byy <0)) continue;

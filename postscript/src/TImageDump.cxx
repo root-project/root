@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.30 2007/02/16 14:29:22 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.31 2007/02/16 15:05:52 couet Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -660,10 +660,16 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
    t.SetTextFont(fTextFont);
    t.GetTextExtent(w, h, chars);
 
-   if (txalh == 2) x -= w/2;
-   if (txalh == 3) x -= w;
+   // horizontal alignment
+   if (txalh == 2) {
+      x -= w/2;
+   }
+   if (txalh == 3) {
+      x -= w;
+   }
 
-   if (txalv == 3) {
+   // vertical alignment
+   if (txalv == 1) {
       y -= h;
    }
    if (txalv == 2) {
@@ -676,7 +682,6 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
       col = gROOT->GetColor(fTextColor);
    }
 
-   y -= h;
    Double_t angle = 0.6*w*TMath::Abs(TMath::Sin(fTextAngle*TMath::Pi()/180.));
    fImage->DrawText((int)x, fTextAngle != 0. ? int(y - angle) : (int)y, 
                      chars, ttfsize, col->AsHexString(),
