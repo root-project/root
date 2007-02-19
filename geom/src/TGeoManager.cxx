@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.171 2007/02/06 14:22:28 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.172 2007/02/08 11:16:07 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -3665,7 +3665,7 @@ TGeoNode *TGeoManager::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skipno
 // The current point must be on the boundary of fCurrentNode.
 
 // Extrapolate current point with shape tolerance.
-   Double_t extra = TGeoShape::Tolerance();
+   Double_t extra = 1000.*TGeoShape::Tolerance();
    fPoint[0] += extra*fDirection[0];
    fPoint[1] += extra*fDirection[1];
    fPoint[2] += extra*fDirection[2];
