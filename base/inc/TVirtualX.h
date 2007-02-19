@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.39 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.40 2007/02/18 14:56:42 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -59,7 +59,7 @@ class TPoint;
 class TString;
 class TGWin32Command;
 
-extern "C" 
+extern "C"
 {
    struct GLUtesselator;
 }
@@ -80,7 +80,6 @@ public:
    TVirtualX(const char *name, const char *title);
    virtual ~TVirtualX() { }
 
-#ifndef __CINT__
    virtual Bool_t    Init(void *display=0);
    virtual void      ClearWindow();
    virtual void      ClosePixmap();
@@ -303,7 +302,7 @@ public:
    virtual Drawable_t   CreateImage(UInt_t width, UInt_t height);
    virtual void         GetImageSize(Drawable_t id, UInt_t &width, UInt_t &height);
    virtual void         PutPixel(Drawable_t id, Int_t x, Int_t y, ULong_t pixel);
-   virtual void         PutImage(Drawable_t id, GContext_t gc, Drawable_t img, Int_t dx, Int_t dy, 
+   virtual void         PutImage(Drawable_t id, GContext_t gc, Drawable_t img, Int_t dx, Int_t dy,
                                  Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual void         DeleteImage(Drawable_t img);
    virtual unsigned char *GetColorBits(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0);
@@ -311,8 +310,7 @@ public:
 
    virtual Bool_t       IsCmdThread() const { return kTRUE; }
    static TVirtualX    *&Instance();
-#endif
-   
+
    ClassDef(TVirtualX,0)  //ABC defining a generic interface to graphics system
 };
 
