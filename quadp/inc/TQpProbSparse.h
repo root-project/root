@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpProbSparse.h,v 1.3 2004/06/09 12:23:16 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpProbSparse.h,v 1.4 2006/06/03 05:42:19 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -73,6 +73,7 @@ public:
 
    virtual ~TQpProbSparse() {}
 
+#ifndef __CINT__
    virtual TQpDataBase      *MakeData      (Double_t *c,
                                             Int_t nnzQ,Int_t *irowQ,Int_t *icolQ,Double_t *Q,
                                             Double_t *xlo,Bool_t *ixlo,
@@ -82,6 +83,7 @@ public:
                                             Int_t nnzC,Int_t *irowC,Int_t *icolC,Double_t *C,
                                             Double_t *clo,Bool_t *iclo,
                                             Double_t *cup,Bool_t *icup);
+#endif
    virtual TQpDataBase      *MakeData     (TVectorD     &c,
                                             TMatrixDBase &Q_in,
                                             TVectorD     &xlo, TVectorD &ixlo,
@@ -99,7 +101,7 @@ public:
            void MakeRandomData(TQpDataSparse *&data,TQpVar *&soln,Int_t nnzQ,Int_t nnzA,Int_t nnzC);
 
    TQpProbSparse &operator=(const TQpProbSparse &source);
-
+   
    ClassDef(TQpProbSparse,1)                   // Qp sparse problem formulation class
 };
 #endif
