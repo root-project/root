@@ -797,7 +797,7 @@ typedef int (*G__IgnoreInclude)();
 #define G__MAXFILENAME 1024  /* Max interpreted source file name length */
 #define G__MAXPARA      100  /* Number of argument for G__main(argc,argv)   */
 #define G__MAXARG       100  /* Number of argument for G__init_cint(char *) */
-#define G__MAXFUNCPARA   40  /* Function argument */
+#define G__MAXFUNCPARA   20  /* Function argument */
 #define G__MAXVARDIM     10  /* Array dimension */
 #define G__LENPOST       10  /* length of file name extention */
 #define G__MAXBASE       50  /* maximum inheritable class */
@@ -805,15 +805,15 @@ typedef int (*G__IgnoreInclude)();
 
 #ifdef G__WIN32
 #if defined(_MSC_VER) && (_MSC_VER>1300)
-#define G__MAXSTRUCT  16000  /* struct table */
-#define G__MAXTYPEDEF 12000  /* typedef table */
+#define G__MAXSTRUCT  24000  /* struct table */
+#define G__MAXTYPEDEF 24000  /* typedef table */
 #else
 #define G__MAXSTRUCT   4000  /* struct table */
 #define G__MAXTYPEDEF  8000  /* typedef table */
 #endif
 #else
-#define G__MAXSTRUCT  12000  /* struct table */
-#define G__MAXTYPEDEF 12000  /* typedef table */
+#define G__MAXSTRUCT  24000  /* struct table */
+#define G__MAXTYPEDEF 24000  /* typedef table */
 #endif
 
 /* G__MAXIFUNC and G__MEMDEPTH are not real limit
