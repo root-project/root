@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.244 2006/11/08 13:16:35 brun Exp $
+// @(#)root/meta:$Name: v5-14-00 $:$Id: TStreamerInfo.cxx,v 1.245 2006/12/08 17:27:38 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -746,6 +746,23 @@ namespace {
          }
       }
       return kFALSE;
+
+   Bool_t CollectionMatchDouble32(const TClass *oldClass, const TClass* newClass)
+   {
+      // Return true if oldClass and newClass points to 2 compatible collection.
+      // i.e. they contains the exact same type.
+
+      TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+      TVirtualCollectionProxy *newProxy = newClass->GetCollectionProxy();
+
+      if (oldProxy->GetValueClass() == 0 && newProxy->GetValueClass() == 00
+          && (oldProxy->GetType() == kDouble_t || oldProxy->GetType() == kDouble32_t) 
+          && (newProxy->GetType() == kDouble_t || newProxy->GetType() == kDouble32_t )) {
+            // We have compatibles collections (they have the same content!
+         return (TClassEdit::IsSTLCont(oldClass->GetName()) == TClassEdit::IsSTLCont(newClass->GetName()));
+      }
+      return kFALSE;
+   }
    }
 }
 
@@ -1021,6 +1038,8 @@ void TStreamerInfo::BuildOld()
                if (gDebug > 0) {
                   Warning("BuildOld","element: %s::%s %s has new type %s", GetName(), element->GetTypeName(), element->GetName(), newClass->GetName());
                }
+            } else if (CollectionMatchDouble32(oldClass,newClass)) {
+               // Actually nothing to do, since both are the same collection of double in memory.
             } else {
                element->SetNewType(-2);
             }
