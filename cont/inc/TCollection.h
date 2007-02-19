@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.26 2006/08/08 17:02:26 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.27 2007/02/18 14:56:42 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -67,7 +67,6 @@ public:
 
    virtual            ~TCollection() { }
    virtual void       Add(TObject *obj) = 0;
-#ifndef __CINT__
    void               AddVector(TObject *obj1, ...);
    virtual void       AddAll(const TCollection *col);
    Bool_t             AssertClass(TClass *cl) const;
@@ -109,7 +108,7 @@ public:
    virtual void       SetOwner(Bool_t enable = kTRUE);
    virtual Int_t      Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
    virtual Int_t      Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const;
-#endif
+
    static TCollection  *GetCurrentCollection();
    static void          StartGarbageCollection();
    static void          GarbageCollect(TObject *obj);
