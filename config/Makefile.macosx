@@ -95,7 +95,8 @@ F77LIBS       = -L`$(F77) -print-search-dirs | awk '/^install:/{print $$2}'` \
                 -lf95
 else
 F77           = gfortran
-F77LIBS       = -L$(FINK_DIR)/lib/gcc4/lib -lgfortran -lgfortranbegin
+F77LIBS      := $(shell $(F77) -print-file-name=libgfortran.$(SOEXT))
+F77LIBS      += $(shell $(F77) -print-file-name=libgfortranbegin.a)
 endif
 else
 F77           = g77
