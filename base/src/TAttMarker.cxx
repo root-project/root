@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttMarker.cxx,v 1.10 2006/07/03 16:10:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttMarker.cxx,v 1.11 2007/02/16 17:23:33 couet Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -32,12 +32,12 @@ attributes.
 <h3>Marker attributes</h3>
 The marker attributes are:
 <ul>
-<li><a href="#M1">Marker color.</a>
-<li><a href="#M2">Marker style.</a>
-<li><a href="#M3">Marker size.</a>
+<li><a href="#M1">Marker color.</a></li>
+<li><a href="#M2">Marker style.</a></li>
+<li><a href="#M3">Marker size.</a></li>
 </ul>
 
-<name="M1"><h3>Marker color</h3></a>
+<a name="M1"></a><h3>Marker color</h3>
 The marker color is a color index (integer) pointing in the ROOT color
 table. The following table shows the first 50 default colors.
 End_Html
@@ -50,7 +50,7 @@ Begin_Macro(source)
 End_Macro
 
 Begin_Html
-<a name="M2"><h3>Marker style</h3></a>
+<a name="M2"></a><h3>Marker style</h3>
 The Marker style defines the markers' shape.
 The following table gives the list of the currently supported markers (screen 
 and PostScript) style. Each marker style is identified by an integer number 
@@ -89,7 +89,7 @@ Begin_Macro(source)
 End_Macro
 
 Begin_Html
-<a name="M3"><h3>Marker size</h3></a>
+<a name="M3"></a><h3>Marker size</h3>
 Various marker sizes are shown in the figure below. The default marker size=1
 is shown in the top left corner. Marker sizes smaller than 1 can be
 specified. The marker size does not refer to any coordinate systems, it is an
