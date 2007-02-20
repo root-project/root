@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name: v5-14-00 $:$Id: TStreamerInfo.cxx,v 1.245 2006/12/08 17:27:38 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.245.2.1 2007/02/19 19:26:18 pcanal Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -746,6 +746,7 @@ namespace {
          }
       }
       return kFALSE;
+   }
 
    Bool_t CollectionMatchDouble32(const TClass *oldClass, const TClass* newClass)
    {
@@ -762,7 +763,6 @@ namespace {
          return (TClassEdit::IsSTLCont(oldClass->GetName()) == TClassEdit::IsSTLCont(newClass->GetName()));
       }
       return kFALSE;
-   }
    }
 }
 
