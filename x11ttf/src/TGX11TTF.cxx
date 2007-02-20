@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.13 2005/05/18 16:58:42 brun Exp $
+// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.14 2007/02/20 11:16:53 rdm Exp $
 // Author: Valeriy Onuchin (Xft support)  02/10/07
 // Author: Olivier Couet     01/10/02
 // Author: Fons Rademakers   21/11/98
@@ -146,9 +146,9 @@ TGX11TTF::TGX11TTF(const TGX11 &org) : TGX11(org)
    }
 
    fHasTTFonts = kTRUE;
-   fXftFontHash = 0;
 
 #ifdef R__HAS_XFT
+   fXftFontHash = 0;
    if (gEnv->GetValue("X11.UseXft", 0)) {
       fXftFontHash = new TXftFontHash();
    }
