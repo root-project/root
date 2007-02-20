@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.8 2006/04/11 15:41:07 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.9 2006/06/30 15:23:33 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
@@ -8,6 +8,9 @@
 #pragma link off all globals;
 #pragma link off all classes;
 #pragma link off all functions;
+
+#pragma link C++ nestedclass;
+#pragma link C++ nestedtypedef;
 
 #pragma link C++ namespace ROOT::Math;
 
