@@ -847,6 +847,7 @@ int G__search_tagname(const char *tagname,int type)
      * Allocate and initialize member function table list
      ***********************************************************/
     G__struct.memfunc[i] = (struct G__ifunc_table *)malloc(sizeof(struct G__ifunc_table));
+    memset(G__struct.memfunc[i],0,sizeof(struct G__ifunc_table));
     G__struct.memfunc[i]->allifunc = 0;
     G__struct.memfunc[i]->next = (struct G__ifunc_table *)NULL;
     G__struct.memfunc[i]->page = 0;
@@ -857,6 +858,7 @@ int G__search_tagname(const char *tagname,int type)
       int ix;
       for(ix=0;ix<G__MAXIFUNC;ix++) {
         G__struct.memfunc[i]->funcname[ix]=(char*)NULL;
+        for (int iy=0;iy<G__MAXFUNCPARA;iy++) G__struct.memfunc[i]->param->fparams[iy]=0;
       }
     }
 #ifndef G__OLDIMPLEMENTATION2027

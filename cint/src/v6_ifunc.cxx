@@ -46,9 +46,9 @@ void G__reftypeparam(G__ifunc_table *p_ifunc,int ifn,G__param *libp)
   for(itemp=0;itemp<p_ifunc->para_nu[ifn]
         && itemp<libp->paran
         ;itemp++) {
-    if(G__PARAREFERENCE==p_ifunc->para_reftype[ifn][itemp] &&
-       p_ifunc->para_type[ifn][itemp]!=libp->para[itemp].type) {
-      switch(p_ifunc->para_type[ifn][itemp]) {
+    if(G__PARAREFERENCE==p_ifunc->param[ifn][itemp]->reftype &&
+       p_ifunc->param[ifn][itemp]->type!=libp->para[itemp].type) {
+      switch(p_ifunc->param[ifn][itemp]->type) {
       case 'c': 
         libp->para[itemp].ref = (long)G__Charref(&libp->para[itemp]);
         break;
@@ -107,11 +107,11 @@ void G__reftypeparam(G__ifunc_table *p_ifunc,int ifn,G__param *libp)
 static void G__warn_refpromotion(G__ifunc_table *p_ifunc,int ifn, int itemp
                                  ,G__param *libp) 
 {
-  if(G__PARAREFERENCE==p_ifunc->para_reftype[ifn][itemp] &&
-     'u'!=p_ifunc->para_type[ifn][itemp] &&
-     p_ifunc->para_type[ifn][itemp]!=libp->para[itemp].type &&
+  if(G__PARAREFERENCE==p_ifunc->param[ifn][itemp]->reftype &&
+     'u'!=p_ifunc->param[ifn][itemp]->type &&
+     p_ifunc->param[ifn][itemp]->type!=libp->para[itemp].type &&
      0!=libp->para[itemp].obj.i &&
-     G__VARIABLE==p_ifunc->para_isconst[ifn][itemp]) {
+     G__VARIABLE==p_ifunc->param[ifn][itemp]->isconst) {
 #ifdef G__OLDIMPLEMENTATION1167
     if(G__dispmsg>=G__DISPWARN) {
       G__fprinterr(G__serr,"Warning: implicit type conversion of non-const reference arg %d",itemp);
@@ -208,8 +208,8 @@ int G__noclassargument(G__ifunc_table *ifunc,int iexist)
 {
   int i;
   for(i=0;i<ifunc->para_nu[iexist];i++) {
-    if('u'==ifunc->para_type[iexist][i] &&
-       G__PARAREFERENCE!=ifunc->para_reftype[iexist][i]) {
+    if('u'==ifunc->param[iexist][i]->type &&
+       G__PARAREFERENCE!=ifunc->param[iexist][i]->reftype) {
       /* return false if class/struct object and non-reference type arg */
       return(0);
     }
@@ -479,7 +479,7 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
   int store_tagnum,store_typenum;
   int isparam;
   int store_access;
-  int paranu;
+  int paranu=0;
   int dobody=0;
 #ifdef G__FRIEND
   struct G__friendtag *friendtag;
@@ -517,7 +517,9 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
   if(G__p_ifunc->allifunc==G__MAXIFUNC) {
     /* This case is used only when complicated template instantiation is done 
      * during reading argument list 'f(vector<int> &x) { }' */
+
     G__p_ifunc->next=(struct G__ifunc_table *)malloc(sizeof(struct G__ifunc_table));
+    memset(G__p_ifunc->next,0,sizeof(struct G__ifunc_table));
     G__p_ifunc->next->allifunc=0;
     G__p_ifunc->next->next=(struct G__ifunc_table *)NULL;
     G__p_ifunc->next->page = G__p_ifunc->page+1;
@@ -713,7 +715,9 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
 
   G__hash(G__p_ifunc->funcname[func_now],G__p_ifunc->hash[func_now],iin2);
 
-  G__p_ifunc->para_name[func_now][0]=(char*)NULL;
+  //G__p_ifunc->param[func_now][0]->fnames->name=(char*)NULL;
+    G__paramfunc *param = ifunc->param[func_now][0];
+    param->name=(char*)NULL;
 
 
 
@@ -1003,8 +1007,8 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
 #endif
        ) {
       G__p_ifunc->para_nu[func_now]=0;
-      G__p_ifunc->para_def[func_now][0]=(char*)NULL;
-      G__p_ifunc->para_default[func_now][0]=(G__value*)NULL;
+      G__p_ifunc->param[func_now][0]->def=(char*)NULL;
+      G__p_ifunc->param[func_now][0]->pdefault=(G__value*)NULL;
     }
     else {
       if(G__dispsource) G__disp_mask=1000;
@@ -1301,14 +1305,14 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
     else if(strcmp(G__struct.name[G__def_tagnum]
                    ,G__p_ifunc->funcname[func_now])==0) {
       if(0==G__p_ifunc->para_nu[func_now] || 
-         G__p_ifunc->para_default[func_now][0]) {
+         G__p_ifunc->param[func_now][0]->pdefault) {
         /* Default constructor */
         G__struct.funcs[G__def_tagnum] |= G__HAS_DEFAULTCONSTRUCTOR;
       }
       else if((1==G__p_ifunc->para_nu[func_now] || 
-               G__p_ifunc->para_default[func_now][1])&&
-              G__def_tagnum==G__p_ifunc->para_p_tagtable[func_now][0]&&
-              G__p_ifunc->para_reftype[func_now][0]) {
+               G__p_ifunc->param[func_now][1]->pdefault)&&
+              G__def_tagnum==G__p_ifunc->param[func_now][0]->p_tagtable&&
+              G__p_ifunc->param[func_now][0]->reftype) {
         /* Copy constructor */
         G__struct.funcs[G__def_tagnum] |= G__HAS_COPYCONSTRUCTOR;
       }
@@ -1371,36 +1375,37 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
         ifunc->reftype[iexist]=G__p_ifunc->reftype[func_now];
         ifunc->isconst[iexist]|=G__p_ifunc->isconst[func_now];
         ifunc->isexplicit[iexist]|=G__p_ifunc->isexplicit[func_now];
+
         for(iin=0;iin<paranu;iin++) {
-          ifunc->para_reftype[iexist][iin]
-            =G__p_ifunc->para_reftype[func_now][iin];
-          ifunc->para_p_typetable[iexist][iin]
-            =G__p_ifunc->para_p_typetable[func_now][iin];
-          if(G__p_ifunc->para_default[func_now][iin]) {
+          ifunc->param[iexist][iin]->reftype
+            =G__p_ifunc->param[func_now][iin]->reftype;
+          ifunc->param[iexist][iin]->p_typetable
+            =G__p_ifunc->param[func_now][iin]->p_typetable;
+          if(G__p_ifunc->param[func_now][iin]->pdefault) {
             G__genericerror("Error: Redefinition of default argument");
-            if(-1!=(long)G__p_ifunc->para_default[func_now][iin])
-              free((void*)G__p_ifunc->para_default[func_now][iin]);
-            free((void*)G__p_ifunc->para_def[func_now][iin]);
+            if(-1!=(long)G__p_ifunc->param[func_now][iin]->pdefault)
+              free((void*)G__p_ifunc->param[func_now][iin]->pdefault);
+            free((void*)G__p_ifunc->param[func_now][iin]->def);
           }
-          G__p_ifunc->para_default[func_now][iin]=(G__value*)NULL;
-          G__p_ifunc->para_def[func_now][iin]=(char*)NULL;
-          if(ifunc->para_name[iexist][iin]) {
-            if(G__p_ifunc->para_name[func_now][iin]) {
-              if(dobody && 0!=strcmp(ifunc->para_name[iexist][iin]
-                                     ,G__p_ifunc->para_name[func_now][iin])) {
-                free((void*)ifunc->para_name[iexist][iin]);
-                ifunc->para_name[iexist][iin]
-                  =G__p_ifunc->para_name[func_now][iin];
+          G__p_ifunc->param[func_now][iin]->pdefault=(G__value*)NULL;
+          G__p_ifunc->param[func_now][iin]->def=(char*)NULL;
+          if(ifunc->param[iexist][iin]->name) {
+            if(G__p_ifunc->param[func_now][iin]->name) {
+              if(dobody && 0!=strcmp(ifunc->param[iexist][iin]->name
+                                     ,G__p_ifunc->param[func_now][iin]->name)) {
+                free((void*)ifunc->param[iexist][iin]->name);
+                ifunc->param[iexist][iin]->name
+                  =G__p_ifunc->param[func_now][iin]->name;
               }
               else {
-                free((void*)G__p_ifunc->para_name[func_now][iin]);
+                free((void*)G__p_ifunc->param[func_now][iin]->name);
               }
-              G__p_ifunc->para_name[func_now][iin]=(char*)NULL;
+              G__p_ifunc->param[func_now][iin]->name=(char*)NULL;
             }
           }
           else {
-            ifunc->para_name[iexist][iin]=G__p_ifunc->para_name[func_now][iin];
-            G__p_ifunc->para_name[func_now][iin]=(char*)NULL;
+            ifunc->param[iexist][iin]->name=G__p_ifunc->param[func_now][iin]->name;
+            G__p_ifunc->param[func_now][iin]->name=(char*)NULL;
           }
         }
         ifunc->entry[iexist]=G__p_ifunc->entry[func_now];
@@ -1427,16 +1432,16 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
         }
         paranu=G__p_ifunc->para_nu[func_now];
         for(iin=0;iin<paranu;iin++) {
-          if(G__p_ifunc->para_name[func_now][iin]) {
-            free((void*)G__p_ifunc->para_name[func_now][iin]);
-            G__p_ifunc->para_name[func_now][iin]=(char*)NULL;
+          if(G__p_ifunc->param[func_now][iin]->name) {
+            free((void*)G__p_ifunc->param[func_now][iin]->name);
+            G__p_ifunc->param[func_now][iin]->name=(char*)NULL;
           }
-          if(G__p_ifunc->para_default[func_now][iin] && 
-             (&G__default_parameter)!=G__p_ifunc->para_default[func_now][iin]) {
-            free((void*)G__p_ifunc->para_default[func_now][iin]);
-            G__p_ifunc->para_default[func_now][iin]=(G__value*)NULL;
-            free((void*)G__p_ifunc->para_def[func_now][iin]);
-            G__p_ifunc->para_def[func_now][iin]=(char*)NULL;
+          if(G__p_ifunc->param[func_now][iin]->pdefault && 
+             (&G__default_parameter)!=G__p_ifunc->param[func_now][iin]->pdefault) {
+            free((void*)G__p_ifunc->param[func_now][iin]->pdefault);
+            G__p_ifunc->param[func_now][iin]->pdefault=(G__value*)NULL;
+            free((void*)G__p_ifunc->param[func_now][iin]->def);
+            G__p_ifunc->param[func_now][iin]->def=(char*)NULL;
           }
         }
         if((ifunc!=G__p_ifunc || iexist!=func_now) && 
@@ -1467,16 +1472,18 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
       
       /* Allocate and initialize function table list if needed */
       if(G__p_ifunc->allifunc==G__MAXIFUNC) {
+
         G__p_ifunc->next=(struct G__ifunc_table *)malloc(sizeof(struct G__ifunc_table));
+        memset(G__p_ifunc->next,0,sizeof(struct G__ifunc_table));
         G__p_ifunc->next->allifunc=0;
         G__p_ifunc->next->next=(struct G__ifunc_table *)NULL;
         G__p_ifunc->next->page = G__p_ifunc->page+1;
         {
-          int i,j;
-          for (i = 0; i < G__MAXIFUNC; i++) {   
-            for (j = 0; j < G__MAXFUNCPARA; j++)
-              G__p_ifunc->next->para_p_tagtable[i][j] = 0;
-          }
+          //int i,j;
+          //for (i = 0; i < G__MAXIFUNC; i++) {   
+            //for (j = 0; j < G__MAXFUNCPARA; j++)
+            //  G__p_ifunc->next->param[i][j]->p_tagtable = 0;
+          //}
         }
 #ifdef G__NEWINHERIT
         G__p_ifunc->next->tagnum = G__p_ifunc->tagnum;
@@ -1628,7 +1635,8 @@ int G__readansiproto(G__ifunc_table *ifunc,int func_now)
     isunsigned=0;
     isdefault=0;
     name[0]='\0';
-    ifunc->para_isconst[func_now][iin]=G__VARIABLE;
+    G__paramfunc *param = ifunc->param[func_now][iin];
+    param->isconst=G__VARIABLE;
 
     /* read typename */
     c=G__fgetname_template(paraname,",)&*[(=");
@@ -1662,7 +1670,7 @@ int G__readansiproto(G__ifunc_table *ifunc,int func_now)
           || (G__iscpp && strcmp(paraname,"typename")==0)
           ) {
       if(strcmp(paraname,"const")==0) 
-        ifunc->para_isconst[func_now][iin]|=G__CONSTVAR;
+        ifunc->param[func_now][iin]->isconst|=G__CONSTVAR;
       c=G__fgetname_template(paraname,",)&*[(=");
     }
     if(strcmp(paraname,"unsigned")==0||strcmp(paraname,"signed")==0) {
@@ -1813,7 +1821,7 @@ int G__readansiproto(G__ifunc_table *ifunc,int func_now)
 #ifndef G__OLDIMPLEMENTATION1329
         pointlevel += G__newtype.nindex[typenum];
 #endif
-        ifunc->para_isconst[func_now][iin]|=G__newtype.isconst[typenum];
+        ifunc->param[func_now][iin]->isconst|=G__newtype.isconst[typenum];
       }
       G__tagdefining = store_tagdefining;
       G__def_tagnum = store_def_tagnum;
@@ -1925,11 +1933,11 @@ int G__readansiproto(G__ifunc_table *ifunc,int func_now)
           name[0] = c;
           c=G__fgetstream(name+1,"[=,)& \t");
           if(strcmp(name,"const")==0) {
-            ifunc->para_isconst[func_now][iin]|=G__PCONSTVAR;
+            ifunc->param[func_now][iin]->isconst|=G__PCONSTVAR;
             name[0]=0;
           }
           if(strcmp(name,"const*")==0) {
-            ifunc->para_isconst[func_now][iin]|=G__CONSTVAR;
+            ifunc->param[func_now][iin]->isconst|=G__CONSTVAR;
             ++pointlevel; 
             name[0]=0;
           }
@@ -1961,17 +1969,17 @@ int G__readansiproto(G__ifunc_table *ifunc,int func_now)
         break;
       }
     }
-    ifunc->para_p_tagtable[func_now][iin] = tagnum;
-    ifunc->para_p_typetable[func_now][iin] = typenum;
+    ifunc->param[func_now][iin]->p_tagtable = tagnum;
+    ifunc->param[func_now][iin]->p_typetable = typenum;
     if(isdefault) {
       int store_def_tagnum = G__def_tagnum;
       int store_tagdefining = G__tagdefining;
       int store_prerun=G__prerun;
       int store_decl=G__decl;
-      ifunc->para_def[func_now][iin] = 
+      ifunc->param[func_now][iin]->def = 
         (char*)malloc(strlen(paraname)+1);
-      strcpy(ifunc->para_def[func_now][iin],paraname);
-      ifunc->para_default[func_now][iin] = (G__value*)malloc(sizeof(G__value));
+      strcpy(ifunc->param[func_now][iin]->def,paraname);
+      ifunc->param[func_now][iin]->pdefault = (G__value*)malloc(sizeof(G__value));
       store_var_type=G__var_type;
       G__var_type='p';
       if(-1!=G__def_tagnum) {
@@ -2003,10 +2011,10 @@ int G__readansiproto(G__ifunc_table *ifunc,int func_now)
         G__p_ifunc = &G__ifunc;
         if((G__CPPLINK==G__globalcomp || R__CPPLINK==G__globalcomp) && G__decl && G__prerun)
           G__noerr_defined = 1;
-        *ifunc->para_default[func_now][iin] = G__getexpr(paraname);
+        *ifunc->param[func_now][iin]->pdefault = G__getexpr(paraname);
         if((G__CPPLINK==G__globalcomp || R__CPPLINK==G__globalcomp) && G__decl && G__prerun)
           G__noerr_defined = 0;
-        tmpx = ifunc->para_default[func_now][iin];
+        tmpx = ifunc->param[func_now][iin]->pdefault;
         if(reftype && (toupper (tmpx->type)!=toupper(type) ||
                        tmpx->tagnum!=tagnum) && 
            0==pointlevel) {
@@ -2030,8 +2038,8 @@ int G__readansiproto(G__ifunc_table *ifunc,int func_now)
       G__var_type=store_var_type;
     }
     else { /* !isdefault */
-      ifunc->para_default[func_now][iin] = (G__value*)NULL;
-      ifunc->para_def[func_now][iin] = (char*)NULL;
+      ifunc->param[func_now][iin]->pdefault = (G__value*)NULL;
+      ifunc->param[func_now][iin]->def = (char*)NULL;
     }
     if(reftype) {
       if(isupper(type)&&pointlevel) pointlevel++;
@@ -2041,16 +2049,16 @@ int G__readansiproto(G__ifunc_table *ifunc,int func_now)
       }
       switch(pointlevel) {
       case 0:
-        ifunc->para_type[func_now][iin] = type ;
-        ifunc->para_reftype[func_now][iin] = G__PARAREFERENCE ;
+        ifunc->param[func_now][iin]->type = type ;
+        ifunc->param[func_now][iin]->reftype = G__PARAREFERENCE ;
         break;
       case 1:
-        ifunc->para_type[func_now][iin] = toupper(type) ;
-        ifunc->para_reftype[func_now][iin] = G__PARAREFERENCE ;
+        ifunc->param[func_now][iin]->type = toupper(type) ;
+        ifunc->param[func_now][iin]->reftype = G__PARAREFERENCE ;
         break;
       default:
-        ifunc->para_type[func_now][iin] = toupper(type) ;
-        ifunc->para_reftype[func_now][iin] = pointlevel-2 + G__PARAREFP2P ;
+        ifunc->param[func_now][iin]->type = toupper(type) ;
+        ifunc->param[func_now][iin]->reftype = pointlevel-2 + G__PARAREFP2P ;
         break;
       }
     }
@@ -2062,26 +2070,26 @@ int G__readansiproto(G__ifunc_table *ifunc,int func_now)
       }
       switch(pointlevel) {
       case 0:
-        ifunc->para_type[func_now][iin] = type ;
-        ifunc->para_reftype[func_now][iin] = G__PARANORMAL ;
+        ifunc->param[func_now][iin]->type = type ;
+        ifunc->param[func_now][iin]->reftype = G__PARANORMAL ;
         break;
       case 1:
-        ifunc->para_type[func_now][iin] = toupper(type) ;
-        ifunc->para_reftype[func_now][iin] = G__PARANORMAL ;
+        ifunc->param[func_now][iin]->type = toupper(type) ;
+        ifunc->param[func_now][iin]->reftype = G__PARANORMAL ;
         break;
       default:
-        ifunc->para_type[func_now][iin] = toupper(type) ;
-        ifunc->para_reftype[func_now][iin] = pointlevel-2 + G__PARAP2P ;
+        ifunc->param[func_now][iin]->type = toupper(type) ;
+        ifunc->param[func_now][iin]->reftype = pointlevel-2 + G__PARAP2P ;
       }
     }
 
     /* paranemter name omitted */
     if(name[0]) {
-      ifunc->para_name[func_now][iin] = (char*)malloc(strlen(name)+1);
-      strcpy(ifunc->para_name[func_now][iin],name);
+      ifunc->param[func_now][iin]->name = (char*)malloc(strlen(name)+1);
+      strcpy(ifunc->param[func_now][iin]->name,name);
     }
     else {
-      ifunc->para_name[func_now][iin] = (char*)NULL;
+      ifunc->param[func_now][iin]->name = (char*)NULL;
     }
     ++iin;
   } /* while(')'!=c) */
@@ -2968,13 +2976,13 @@ void G__rate_parameter_match(G__param *libp,G__ifunc_table *p_ifunc
   funclist->rate = 0;
   for(i=0;i<libp->paran;i++) {
     param_type = libp->para[i].type;
-    formal_type = p_ifunc->para_type[ifn][i];
+    formal_type = p_ifunc->param[ifn][i]->type;
     param_tagnum = libp->para[i].tagnum;
-    formal_tagnum = p_ifunc->para_p_tagtable[ifn][i];
+    formal_tagnum = p_ifunc->param[ifn][i]->p_tagtable;
     param_reftype = libp->para[i].obj.reftype.reftype;
-    formal_reftype = p_ifunc->para_reftype[ifn][i];
+    formal_reftype = p_ifunc->param[ifn][i]->reftype;
     param_isconst = libp->para[i].isconst;
-    formal_isconst = p_ifunc->para_isconst[ifn][i];
+    formal_isconst = p_ifunc->param[ifn][i]->isconst;
     funclist->p_rate[i] = G__NOMATCH;
 
     /* exact match */
@@ -3476,17 +3484,17 @@ int G__convert_param(G__param *libp,G__ifunc_table *p_ifunc
   for(i=0;i<libp->paran;i++) {
     rate = pmatch->p_rate[i];
     param_type = libp->para[i].type;
-    formal_type = p_ifunc->para_type[ifn][i];
+    formal_type = p_ifunc->param[ifn][i]->type;
     param_tagnum = libp->para[i].tagnum;
-    formal_tagnum = p_ifunc->para_p_tagtable[ifn][i];
+    formal_tagnum = p_ifunc->param[ifn][i]->p_tagtable;
     param = &libp->para[i];
-    formal_reftype = p_ifunc->para_reftype[ifn][i];
+    formal_reftype = p_ifunc->param[ifn][i]->reftype;
 #ifndef G__OLDIMPLEMENTATION
     rewind_arg = libp->paran-i-1;
 #else
     rewind_arg = p_ifunc->para_nu[ifn]-i-1;
 #endif
-    formal_isconst = p_ifunc->para_isconst[ifn][i];
+    formal_isconst = p_ifunc->param[ifn][i]->isconst;
 
     if(rate&G__USRCONVMATCH) {
       if(formal_type=='u') {
@@ -4225,11 +4233,11 @@ void G__display_func(FILE *fp,G__ifunc_table *ifunc,int ifn)
     if(-1!=ifunc->tagnum) G__fprinterr(G__serr,"%s::",G__fulltagname(ifunc->tagnum,1));
     G__fprinterr(G__serr,"%s(",ifunc->funcname[ifn]);
     for(i=0;i<ifunc->para_nu[ifn];i++) {
-      G__fprinterr(G__serr,"%s",G__type2string(ifunc->para_type[ifn][i]
-                                     ,ifunc->para_p_tagtable[ifn][i]
-                                     ,ifunc->para_p_typetable[ifn][i]
-                                     ,ifunc->para_reftype[ifn][i]
-                                     ,ifunc->para_isconst[ifn][i]));
+      G__fprinterr(G__serr,"%s",G__type2string(ifunc->param[ifn][i]->type
+                                     ,ifunc->param[ifn][i]->p_tagtable
+                                     ,ifunc->param[ifn][i]->p_typetable
+                                     ,ifunc->param[ifn][i]->reftype
+                                     ,ifunc->param[ifn][i]->isconst));
       if(i!=ifunc->para_nu[ifn]-1) G__fprinterr(G__serr,",");
     }
     G__fprinterr(G__serr,");\n");
@@ -4252,11 +4260,11 @@ void G__display_func(FILE *fp,G__ifunc_table *ifunc,int ifn)
     if(-1!=ifunc->tagnum) fprintf(fp,"%s::",G__fulltagname(ifunc->tagnum,1));
     fprintf(fp,"%s(",ifunc->funcname[ifn]);
     for(i=0;i<ifunc->para_nu[ifn];i++) {
-      fprintf(fp,"%s",G__type2string(ifunc->para_type[ifn][i]
-                                     ,ifunc->para_p_tagtable[ifn][i]
-                                     ,ifunc->para_p_typetable[ifn][i]
-                                     ,ifunc->para_reftype[ifn][i]
-                                     ,ifunc->para_isconst[ifn][i]));
+      fprintf(fp,"%s",G__type2string(ifunc->param[ifn][i]->type
+                                     ,ifunc->param[ifn][i]->p_tagtable
+                                     ,ifunc->param[ifn][i]->p_typetable
+                                     ,ifunc->param[ifn][i]->reftype
+                                     ,ifunc->param[ifn][i]->isconst));
       if(i!=ifunc->para_nu[ifn]-1) fprintf(fp,",");
     }
     fprintf(fp,");\n");
@@ -4463,7 +4471,7 @@ struct G__funclist* G__add_templatefunc(char *funcnamein,G__param* libp
           funclist = G__funclist_add(funclist,ifunc,ifn,0);
           if(ifunc->para_nu[ifn]<libp->paran ||
              (ifunc->para_nu[ifn]>libp->paran&&
-              !ifunc->para_default[ifn][libp->paran])) {
+              !ifunc->param[ifn][libp->paran]->pdefault)) {
             funclist->rate = G__NOMATCH;
           }
           else {
@@ -4530,7 +4538,7 @@ struct G__funclist* G__rate_binary_operator(G__ifunc_table *p_ifunc,
       if(hash==p_ifunc->hash[ifn]&&strcmp(funcname,p_ifunc->funcname[ifn])==0){
         if(p_ifunc->para_nu[ifn]<fpara.paran ||
            (p_ifunc->para_nu[ifn]>fpara.paran&&
-            !p_ifunc->para_default[ifn][fpara.paran])
+            !p_ifunc->param[ifn][fpara.paran]->pdefault)
 #ifdef G__OLDIMPLEMENTATION1260_YET
            || (G__isconst && 0==p_ifunc->isconst[ifn])
 #endif
@@ -4559,16 +4567,16 @@ int G__identical_function(G__funclist *match,G__funclist *func)
   if(!match || !match->ifunc || !func || !func->ifunc) return(0);
   for(ipara=0;ipara<match->ifunc->para_nu[match->ifn];ipara++) {
     if(
-       (match->ifunc->para_type[match->ifn][ipara] !=
-        func->ifunc->para_type[func->ifn][ipara]) ||
-       (match->ifunc->para_p_tagtable[match->ifn][ipara] !=
-        func->ifunc->para_p_tagtable[func->ifn][ipara]) ||
-       (match->ifunc->para_p_typetable[match->ifn][ipara] !=
-        func->ifunc->para_p_typetable[func->ifn][ipara]) ||
-       (match->ifunc->para_isconst[match->ifn][ipara] !=
-        func->ifunc->para_isconst[func->ifn][ipara]) ||
-       (match->ifunc->para_reftype[match->ifn][ipara] !=
-        func->ifunc->para_reftype[func->ifn][ipara])
+       (match->ifunc->param[match->ifn][ipara]->type !=
+        func->ifunc->param[func->ifn][ipara]->type) ||
+       (match->ifunc->param[match->ifn][ipara]->p_tagtable !=
+        func->ifunc->param[func->ifn][ipara]->p_tagtable) ||
+       (match->ifunc->param[match->ifn][ipara]->p_typetable !=
+        func->ifunc->param[func->ifn][ipara]->p_typetable) ||
+       (match->ifunc->param[match->ifn][ipara]->isconst !=
+        func->ifunc->param[func->ifn][ipara]->isconst) ||
+       (match->ifunc->param[match->ifn][ipara]->reftype !=
+        func->ifunc->param[func->ifn][ipara]->reftype)
        ) {
       return(0);
     }
@@ -4625,7 +4633,7 @@ struct G__ifunc_table* G__overload_match(char* funcname
         funclist = G__funclist_add(funclist,p_ifunc,ifn,0);
         if(p_ifunc->para_nu[ifn]<libp->paran ||
            (p_ifunc->para_nu[ifn]>libp->paran&&
-            !p_ifunc->para_default[ifn][libp->paran])
+            !p_ifunc->param[ifn][libp->paran]->pdefault)
 #ifdef G__OLDIMPLEMENTATION1260_YET
            || (G__isconst && 0==p_ifunc->isconst[ifn])
 #endif
@@ -5760,7 +5768,7 @@ asm_ifunc_start:   /* loop compilation execution label */
         G__ansipara=libp->para[ipara];
         /* assigning reference for fundamental type reference argument */
         if(0==G__ansipara.ref) {
-          switch(p_ifunc->para_type[ifn][ipara]) {
+          switch(p_ifunc->param[ifn][ipara]->type) {
           case 'f':
             G__Mfloat(libp->para[ipara]);
             G__ansipara.ref = (long)(&libp->para[ipara].obj.fl);
@@ -5830,16 +5838,16 @@ asm_ifunc_start:   /* loop compilation execution label */
       else {
         if(
            p_ifunc->para_nu[ifn]>ipara && 
-           p_ifunc->para_default[ifn][ipara]) {
-          if(p_ifunc->para_default[ifn][ipara]->type==G__DEFAULT_FUNCCALL) {
-            G__ASSERT(p_ifunc->para_default[ifn][ipara]->ref);
-            *p_ifunc->para_default[ifn][ipara] =
-              G__getexpr((char*)p_ifunc->para_default[ifn][ipara]->ref);
+           p_ifunc->param[ifn][ipara]->pdefault) {
+          if(p_ifunc->param[ifn][ipara]->pdefault->type==G__DEFAULT_FUNCCALL) {
+            G__ASSERT(p_ifunc->param[ifn][ipara]->pdefault->ref);
+            *p_ifunc->param[ifn][ipara]->pdefault =
+              G__getexpr((char*)p_ifunc->param[ifn][ipara]->pdefault->ref);
             G__ansiheader=1;
             G__funcheader=1;
 #define G__OLDIMPLEMENTATION1558 
           }
-          G__ansipara = *p_ifunc->para_default[ifn][ipara];
+          G__ansipara = *p_ifunc->param[ifn][ipara]->pdefault;
         }
         else
           G__ansipara = G__null;
@@ -5847,13 +5855,13 @@ asm_ifunc_start:   /* loop compilation execution label */
       G__refansipara = libp->parameter[ipara];
       
       if(G__ASM_FUNC_COMPILE==G__asm_wholefunction &&
-         p_ifunc->para_default[ifn][ipara]) {
+         p_ifunc->param[ifn][ipara]->pdefault) {
 #ifdef G__ASM_DBG
         if(G__asm_dbg) {
           G__fprinterr(G__serr,"%3x: ISDEFAULTPARA %x\n",G__asm_cp,G__asm_cp+4);
           G__fprinterr(G__serr,"%3x: LD %ld %g\n",G__asm_cp+2
-                  ,p_ifunc->para_default[ifn][ipara]->obj.i
-                  ,p_ifunc->para_default[ifn][ipara]->obj.d
+                  ,p_ifunc->param[ifn][ipara]->pdefault->obj.i
+                  ,p_ifunc->param[ifn][ipara]->pdefault->obj.d
                   );
         }
 #endif
@@ -5864,7 +5872,7 @@ asm_ifunc_start:   /* loop compilation execution label */
         /* set default param in stack */
         G__asm_inst[G__asm_cp]=G__LD;
         G__asm_inst[G__asm_cp+1]=G__asm_dt;
-        G__asm_stack[G__asm_dt] = *p_ifunc->para_default[ifn][ipara];
+        G__asm_stack[G__asm_dt] = *p_ifunc->param[ifn][ipara]->pdefault;
         G__inc_cp_asm(2,1);
 
         G__asm_inst[G__asm_wholefunc_default_cp]=G__asm_cp;
@@ -6542,17 +6550,17 @@ struct G__ifunc_table *G__ifunc_exist(G__ifunc_table *ifunc_now,int allifunc
         paran = 0;
       ref_diff=0;
       for(j=0;j<paran;j++) {
-        if(ifunc_now->para_type[allifunc][j]!=ifunc->para_type[i][j] ||
-           ifunc_now->para_p_tagtable[allifunc][j]!=ifunc->para_p_tagtable[i][j]
-           || (ifunc_now->para_reftype[allifunc][j]!=ifunc->para_reftype[i][j]
+        if(ifunc_now->param[allifunc][j]->type!=ifunc->param[i][j]->type ||
+           ifunc_now->param[allifunc][j]->p_tagtable!=ifunc->param[i][j]->p_tagtable
+           || (ifunc_now->param[allifunc][j]->reftype!=ifunc->param[i][j]->reftype
                && G__PARAREFERENCE !=
-               ifunc_now->para_reftype[allifunc][j]+ifunc->para_reftype[i][j]
+               ifunc_now->param[allifunc][j]->reftype+ifunc->param[i][j]->reftype
                )
-           || ifunc_now->para_isconst[allifunc][j]!=ifunc->para_isconst[i][j]
+           || ifunc_now->param[allifunc][j]->isconst!=ifunc->param[i][j]->isconst
            ) {
           break; /* unmatch */
         }
-        if(ifunc_now->para_reftype[allifunc][j]!=ifunc->para_reftype[i][j]) 
+        if(ifunc_now->param[allifunc][j]->reftype!=ifunc->param[i][j]->reftype) 
           ++ref_diff;
       }
       if(j==paran) { /* all matched */
@@ -6607,27 +6615,27 @@ struct G__ifunc_table *G__ifunc_ambiguous(G__ifunc_table *ifunc_now,int allifunc
         paran = ifunc->para_nu[i];
       if(paran<0) paran=0;
       for(j=0;j<paran;j++) {
-        if(ifunc_now->para_type[allifunc][j]!=ifunc->para_type[i][j]) 
+        if(ifunc_now->param[allifunc][j]->type!=ifunc->param[i][j]->type) 
           break; /* unmatch */
-        if(ifunc_now->para_p_tagtable[allifunc][j]
-           ==ifunc->para_p_tagtable[i][j]) continue; /* match */
+        if(ifunc_now->param[allifunc][j]->p_tagtable
+           ==ifunc->param[i][j]->p_tagtable) continue; /* match */
 #ifdef G__VIRTUALBASE
-        if(-1==G__ispublicbase(ifunc_now->para_p_tagtable[allifunc][j]
+        if(-1==G__ispublicbase(ifunc_now->param[allifunc][j]->p_tagtable
                                ,derivedtagnum,G__STATICRESOLUTION2) ||
-           -1==G__ispublicbase(ifunc->para_p_tagtable[i][j],derivedtagnum
+           -1==G__ispublicbase(ifunc->param[i][j]->p_tagtable,derivedtagnum
                                ,G__STATICRESOLUTION2))
 #else
-        if(-1==G__ispublicbase(ifunc_now->para_p_tagtable[allifunc][j]
+        if(-1==G__ispublicbase(ifunc_now->param[allifunc][j]->p_tagtable
                                ,derivedtagnum) ||
-           -1==G__ispublicbase(ifunc->para_p_tagtable[i][j],derivedtagnum))
+           -1==G__ispublicbase(ifunc->param[i][j]->p_tagtable,derivedtagnum))
 #endif
           break; /* unmatch */
         /* else match */
       }
       if((ifunc_now->para_nu[allifunc] < ifunc->para_nu[i] &&
-          ifunc->para_default[i][paran]) ||
+          ifunc->param[i][paran]->pdefault) ||
          (ifunc_now->para_nu[allifunc] > ifunc->para_nu[i] &&
-          ifunc_now->para_default[allifunc][paran])) {
+          ifunc_now->param[allifunc][paran]->pdefault)) {
         *piexist = i;
         return(ifunc);
       }
@@ -6688,26 +6696,26 @@ struct G__ifunc_table *G__get_ifunchandle(char *funcname,G__param *libp
         else {
           /* scan each parameter */
           while(itemp<p_ifunc->para_nu[ifn]) {
-            if((G__value*)NULL==p_ifunc->para_default[ifn][itemp] && 
+            if((G__value*)NULL==p_ifunc->param[ifn][itemp]->pdefault && 
                itemp>=libp->paran
                ) {
               ipara = 0;
             }
-            else if (p_ifunc->para_default[ifn][itemp] && itemp>=libp->paran) {
+            else if (p_ifunc->param[ifn][itemp]->pdefault && itemp>=libp->paran) {
               ipara = 2; /* I'm not sure what this is, Fons. */
             }
             else {   
-              ipara=G__param_match(p_ifunc->para_type[ifn][itemp]
-                                   ,p_ifunc->para_p_tagtable[ifn][itemp]
-                                   ,p_ifunc->para_default[ifn][itemp]
+              ipara=G__param_match(p_ifunc->param[ifn][itemp]->type
+                                   ,p_ifunc->param[ifn][itemp]->p_tagtable
+                                   ,p_ifunc->param[ifn][itemp]->pdefault
                                    ,libp->para[itemp].type
                                    ,libp->para[itemp].tagnum
                                    ,&(libp->para[itemp])
                                    ,libp->parameter[itemp]
                                    ,funcmatch
                                    ,p_ifunc->para_nu[ifn]-itemp-1
-                                   ,p_ifunc->para_reftype[ifn][itemp]
-                                   ,p_ifunc->para_isconst[ifn][itemp]
+                                   ,p_ifunc->param[ifn][itemp]->reftype
+                                   ,p_ifunc->param[ifn][itemp]->isconst
                                    /* ,p_ifunc->isexplicit[ifn] */
                                    );
             }
@@ -6717,9 +6725,9 @@ struct G__ifunc_table *G__get_ifunchandle(char *funcname,G__param *libp
               if(G__asm_dbg) {
                 G__fprinterr(G__serr," default%d %c tagnum%d %p : %c tagnum%d %d\n"
                         ,itemp
-                        ,p_ifunc->para_type[ifn][itemp]
-                        ,p_ifunc->para_p_tagtable[ifn][itemp]
-                        ,p_ifunc->para_default[ifn][itemp]
+                        ,p_ifunc->param[ifn][itemp]->type
+                        ,p_ifunc->param[ifn][itemp]->p_tagtable
+                        ,p_ifunc->param[ifn][itemp]->pdefault
                         ,libp->para[itemp].type
                         ,libp->para[itemp].tagnum
                         ,funcmatch);
@@ -6732,9 +6740,9 @@ struct G__ifunc_table *G__get_ifunchandle(char *funcname,G__param *libp
               if(G__asm_dbg) {
                 G__fprinterr(G__serr," match%d %c tagnum%d %p : %c tagnum%d %d\n"
                         ,itemp
-                        ,p_ifunc->para_type[ifn][itemp]
-                        ,p_ifunc->para_p_tagtable[ifn][itemp]
-                        ,p_ifunc->para_default[ifn][itemp]
+                        ,p_ifunc->param[ifn][itemp]->type
+                        ,p_ifunc->param[ifn][itemp]->p_tagtable
+                        ,p_ifunc->param[ifn][itemp]->pdefault
                         ,libp->para[itemp].type
                         ,libp->para[itemp].tagnum
                         ,funcmatch);
@@ -6749,9 +6757,9 @@ struct G__ifunc_table *G__get_ifunchandle(char *funcname,G__param *libp
               if(G__asm_dbg) {
                 G__fprinterr(G__serr," unmatch%d %c tagnum%d %p : %c tagnum%d %d\n"
                         ,itemp
-                        ,p_ifunc->para_type[ifn][itemp]
-                        ,p_ifunc->para_p_tagtable[ifn][itemp]
-                        ,p_ifunc->para_default[ifn][itemp]
+                        ,p_ifunc->param[ifn][itemp]->type
+                        ,p_ifunc->param[ifn][itemp]->p_tagtable
+                        ,p_ifunc->param[ifn][itemp]->pdefault
                         ,libp->para[itemp].type
                         ,libp->para[itemp].tagnum
                         ,funcmatch);

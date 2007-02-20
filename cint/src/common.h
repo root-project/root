@@ -932,9 +932,34 @@ struct G__funcentry_VMS {
 
 
 /**************************************************************************
-* structure for ifunc (Interpleted FUNCtion) table
+* structure for ifunc (Interpreted FUNCtion) table
 *
 **************************************************************************/
+struct G__paramfunc {
+  short p_tagtable;
+  short p_typetable;
+  char  reftype;
+  char  type;
+  char  isconst;
+  char *name;
+  char *def;
+  G__value *pdefault;
+};
+struct G__params {
+#ifdef __cplusplus   
+   struct G__paramfunc* operator[](int idx) {
+      if (!fparams[idx]) {
+         fparams[idx] = (struct G__paramfunc*)malloc(sizeof(struct G__paramfunc));
+         fparams[idx]->p_tagtable=0;
+         fparams[idx]->name=0;
+         fparams[idx]->def = 0;
+         fparams[idx]->pdefault=0;
+      }
+      return fparams[idx];
+   }
+#endif
+   struct G__paramfunc *fparams[G__MAXFUNCPARA];
+};
 struct G__ifunc_table {
   /* number of interpreted function */
   int allifunc;
@@ -956,14 +981,7 @@ struct G__ifunc_table {
 
   /* number and type of function parameter */
   /* G__inheritclass() depends on type of following members */
-  char para_reftype[G__MAXIFUNC][G__MAXFUNCPARA];
-  char para_type[G__MAXIFUNC][G__MAXFUNCPARA];
-  char para_isconst[G__MAXIFUNC][G__MAXFUNCPARA];
-  short para_p_tagtable[G__MAXIFUNC][G__MAXFUNCPARA];
-  short para_p_typetable[G__MAXIFUNC][G__MAXFUNCPARA];
-  G__value *para_default[G__MAXIFUNC][G__MAXFUNCPARA];
-  char *para_name[G__MAXIFUNC][G__MAXFUNCPARA];
-  char *para_def[G__MAXIFUNC][G__MAXFUNCPARA];
+  struct G__params param[G__MAXIFUNC];
 
   /* C or C++ */
   char iscpp[G__MAXIFUNC];

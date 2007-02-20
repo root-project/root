@@ -1082,14 +1082,14 @@ long G__get_functioninfo(char *item,long *phandle,long *pindex,int tagnum)
         sprintf(buf+p,",");
         ++p;
       }
-      sprintf(buf+p,"%s",G__type2string(ifunc->para_type[index][i]
-                                        ,ifunc->para_p_tagtable[index][i]
-                                        ,ifunc->para_p_typetable[index][i]
-                                        ,ifunc->para_reftype[index][i],0));
+      sprintf(buf+p,"%s",G__type2string(ifunc->param[index][i]->type
+                                        ,ifunc->param[index][i]->p_tagtable
+                                        ,ifunc->param[index][i]->p_typetable
+                                        ,ifunc->param[index][i]->reftype,0));
       p=strlen(buf);
-      if(ifunc->para_default[index][i]) {
+      if(ifunc->param[index][i]->pdefault) {
         sprintf(buf+p,"=");
-                /* ,G__valuemonitor(*ifunc->para_default[index][i],temp)); */
+                /* ,G__valuemonitor(*ifunc->param[index][i]->pdefault,temp)); */
       }
       p=strlen(buf);
     }
@@ -1343,23 +1343,23 @@ void G__va_arg_copyfunc(FILE *fp,G__ifunc_table *ifunc,int ifn)
       fprintf(fp,",");
     }
 
-    if('u'==ifunc->para_type[ifn][n] &&
-       0==strcmp(G__struct.name[ifunc->para_p_tagtable[ifn][n]],"va_list")) {
+    if('u'==ifunc->param[ifn][n]->type &&
+       0==strcmp(G__struct.name[ifunc->param[ifn][n]->p_tagtable],"va_list")) {
       fprintf(fp,"struct G__param* G__VA_libp,int G__VA_n");
       break;
     }
     /* print out type of return value */
-    fprintf(fp,"%s",G__type2string(ifunc->para_type[ifn][n]
-                                    ,ifunc->para_p_tagtable[ifn][n]
-                                    ,ifunc->para_p_typetable[ifn][n]
-                                    ,ifunc->para_reftype[ifn][n]
-                                    ,ifunc->para_isconst[ifn][n]));
+    fprintf(fp,"%s",G__type2string(ifunc->param[ifn][n]->type
+                                    ,ifunc->param[ifn][n]->p_tagtable
+                                    ,ifunc->param[ifn][n]->p_typetable
+                                    ,ifunc->param[ifn][n]->reftype
+                                    ,ifunc->param[ifn][n]->isconst));
     
-    if(ifunc->para_name[ifn][n]) {
-      fprintf(fp," %s",ifunc->para_name[ifn][n]);
+    if(ifunc->param[ifn][n]->name) {
+      fprintf(fp," %s",ifunc->param[ifn][n]->name);
     }
-    if(ifunc->para_def[ifn][n]) {
-      fprintf(fp,"=%s",ifunc->para_def[ifn][n]);
+    if(ifunc->param[ifn][n]->def) {
+      fprintf(fp,"=%s",ifunc->param[ifn][n]->def);
     }
   }
   fprintf(fp,")");
@@ -1407,11 +1407,11 @@ void G__typeconversion(G__ifunc_table *ifunc,int ifn
   int formal_tagnum,  param_tagnum;
   int i;
   for(i=0;i<libp->paran && i<ifunc->para_nu[ifn];i++) {
-    formal_type = ifunc->para_type[ifn][i];
+    formal_type = ifunc->param[ifn][i]->type;
     param_type = libp->para[i].type;
-    formal_reftype = ifunc->para_reftype[ifn][i];
+    formal_reftype = ifunc->param[ifn][i]->reftype;
     param_reftype = libp->para[i].obj.reftype.reftype;
-    formal_tagnum = ifunc->para_p_tagtable[ifn][i];
+    formal_tagnum = ifunc->param[ifn][i]->p_tagtable;
     param_tagnum = libp->para[i].tagnum;
     switch(formal_type) {
     case 'd':

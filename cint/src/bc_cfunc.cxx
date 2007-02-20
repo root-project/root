@@ -526,12 +526,12 @@ void G__functionscope::Baseclasscopyctor(int c) {
     G__ClassInfo cls(m_ifunc->tagnum);
     struct G__param para;
     for(int i=0;i<m_ifunc->para_nu[m_iexist];++i) {
-      para.para[i].type=m_ifunc->para_type[m_iexist][i];
-      para.para[i].tagnum=m_ifunc->para_p_tagtable[m_iexist][i];
-      para.para[i].typenum=m_ifunc->para_p_typetable[m_iexist][i];
+      para.para[i].type=m_ifunc->param[m_iexist][i]->type;
+      para.para[i].tagnum=m_ifunc->param[m_iexist][i]->p_tagtable;
+      para.para[i].typenum=m_ifunc->param[m_iexist][i]->p_typetable;
       para.para[i].obj.i=1;   // dummy value
       para.para[i].ref=1; // dummy value
-      para.para[i].obj.reftype.reftype=m_ifunc->para_reftype[m_iexist][i];
+      para.para[i].obj.reftype.reftype=m_ifunc->param[m_iexist][i]->reftype;
       para.para[i].isconst = 0;
     }
     para.paran = m_ifunc->para_nu[m_iexist];
@@ -669,12 +669,12 @@ void G__functionscope::Baseclassassign(int c) {
     G__ClassInfo cls(m_ifunc->tagnum);
     struct G__param para;
     for(int i=0;i<m_ifunc->para_nu[m_iexist];++i) {
-      para.para[i].type=m_ifunc->para_type[m_iexist][i];
-      para.para[i].tagnum=m_ifunc->para_p_tagtable[m_iexist][i];
-      para.para[i].typenum=m_ifunc->para_p_typetable[m_iexist][i];
+      para.para[i].type=m_ifunc->param[m_iexist][i]->type;
+      para.para[i].tagnum=m_ifunc->param[m_iexist][i]->p_tagtable;
+      para.para[i].typenum=m_ifunc->param[m_iexist][i]->p_typetable;
       para.para[i].obj.i=1;   // dummy value
       para.para[i].ref=1; // dummy value
-      para.para[i].obj.reftype.reftype=m_ifunc->para_reftype[m_iexist][i];
+      para.para[i].obj.reftype.reftype=m_ifunc->param[m_iexist][i]->reftype;
       para.para[i].isconst = 0;
     }
     para.paran = m_ifunc->para_nu[m_iexist];
@@ -864,19 +864,19 @@ void G__functionscope::ArgumentPassing() {
   char *def;
   G__value *defv;
   for(i=0;i<m_ifunc->para_nu[m_iexist];i++) {
-    dmy.type = m_ifunc->para_type[m_iexist][i];
-    dmy.tagnum = m_ifunc->para_p_tagtable[m_iexist][i];
-    dmy.typenum = m_ifunc->para_p_typetable[m_iexist][i];
-    dmy.obj.reftype.reftype = m_ifunc->para_reftype[m_iexist][i];
-    dmy.isconst = m_ifunc->para_isconst[m_iexist][i];
+    dmy.type = m_ifunc->param[m_iexist][i]->type;
+    dmy.tagnum = m_ifunc->param[m_iexist][i]->p_tagtable;
+    dmy.typenum = m_ifunc->param[m_iexist][i]->p_typetable;
+    dmy.obj.reftype.reftype = m_ifunc->param[m_iexist][i]->reftype;
+    dmy.isconst = m_ifunc->param[m_iexist][i]->isconst;
     type.Init(dmy);
     // duplication, but just in case. G__ClassInfo::Init() may have error
-    type.setreftype(m_ifunc->para_reftype[m_iexist][i]);
-    type.setisconst(m_ifunc->para_isconst[m_iexist][i]);
+    type.setreftype(m_ifunc->param[m_iexist][i]->reftype);
+    type.setisconst(m_ifunc->param[m_iexist][i]->isconst);
 
-    name = m_ifunc->para_name[m_iexist][i];
-    def = m_ifunc->para_def[m_iexist][i];
-    defv = m_ifunc->para_default[m_iexist][i];
+    name = m_ifunc->param[m_iexist][i]->name;
+    def = m_ifunc->param[m_iexist][i]->def;
+    defv = m_ifunc->param[m_iexist][i]->pdefault;
     EachArgumentPassing(type,name,def,defv);
   }
 }

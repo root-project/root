@@ -1308,11 +1308,11 @@ int G__getp2ftype(struct G__ifunc_table *ifunc,int ifn)
   p = temp + strlen(temp);
   for(i=0;i<ifunc->para_nu[ifn];i++) {
     if(i) *p++ = ',';
-    strcpy(temp1,G__type2string(ifunc->para_type[ifn][i]
-                                ,ifunc->para_p_tagtable[ifn][i]
-                                ,ifunc->para_p_typetable[ifn][i]
-                                ,ifunc->para_reftype[ifn][i]
-                                ,ifunc->para_isconst[ifn][i]));
+    strcpy(temp1,G__type2string(ifunc->param[ifn][i]->type
+                                ,ifunc->param[ifn][i]->p_tagtable
+                                ,ifunc->param[ifn][i]->p_typetable
+                                ,ifunc->param[ifn][i]->reftype
+                                ,ifunc->param[ifn][i]->isconst));
     G__removetagid(temp1);
     strcpy(p,temp1);
     p = temp + strlen(temp);
@@ -1887,17 +1887,17 @@ char* G__GccNameMangle(char* buf,struct G__ifunc_table *ifunc,int ifn)
   sprintf(buf,"_Z%lu%s",(unsigned long)strlen(funcname),funcname);
 
   for(i=0;i<ifunc->para_nu[ifn];i++) {
-    if(isupper(ifunc->para_type[ifn][i])) strcat(buf,"P");
-    if(G__PARAREFERENCE==ifunc->para_reftype[ifn][i]) strcat(buf,"R");
-    if(G__CONSTVAR&ifunc->para_isconst[ifn][i]) strcat(buf,"K");
-    switch(tolower(ifunc->para_type[ifn][i])) {
+    if(isupper(ifunc->param[ifn][i]->type)) strcat(buf,"P");
+    if(G__PARAREFERENCE==ifunc->param[ifn][i]->reftype) strcat(buf,"R");
+    if(G__CONSTVAR&ifunc->param[ifn][i]->isconst) strcat(buf,"K");
+    switch(tolower(ifunc->param[ifn][i]->type)) {
     case 'c':
     case 's':
     case 'i':
     case 'l':
     case 'f':
     case 'd':
-      tmp[0] = ifunc->para_type[ifn][i];
+      tmp[0] = ifunc->param[ifn][i]->type;
       break;
     case 'b': tmp[0]='h'; break;
     case 'r': tmp[0]='t'; break;
@@ -1992,10 +1992,10 @@ char* G__Vc6NameMangle(char* buf,struct G__ifunc_table *ifunc,int ifn)
 
   /* arguments */
   for(i=0;i<ifunc->para_nu[ifn];i++) {
-    strcat(buf,G__Vc6TypeMangle(ifunc->para_type[ifn][i]
-                                ,ifunc->para_p_tagtable[ifn][i]
-                                ,ifunc->para_reftype[ifn][i]
-                                ,ifunc->para_isconst[ifn][i]));
+    strcat(buf,G__Vc6TypeMangle(ifunc->param[ifn][i]->type
+                                ,ifunc->param[ifn][i]->p_tagtable
+                                ,ifunc->param[ifn][i]->reftype
+                                ,ifunc->param[ifn][i]->isconst));
   }
   if(0==ifunc->para_nu[ifn]) strcat(buf,"X");
   else strcat(buf,"@");

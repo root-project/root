@@ -229,7 +229,7 @@ int Cint::G__MethodInfo::NDefaultArg()
     if(ifunc->para_nu[index]) {
       int i,defaultnu=0;
       for(i=ifunc->para_nu[index]-1;i>=0;i--) {
-	     if(ifunc->para_default[index][i]) ++defaultnu;
+	     if(ifunc->param[index][i]->pdefault) ++defaultnu;
 	     else return(defaultnu);
       }
       return(defaultnu);

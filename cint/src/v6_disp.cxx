@@ -494,25 +494,25 @@ int G__listfunc_pretty(FILE *fp,int access,char *fname,G__ifunc_table *ifunc, ch
           }
           /* print out type of return value */
 #ifndef G__OLDIMPLEMENATTION401
-          sprintf(msg,"%s",G__type2string(ifunc->para_type[i][n]
-                                         ,ifunc->para_p_tagtable[i][n]
-                                         ,ifunc->para_p_typetable[i][n]
-                                         ,ifunc->para_reftype[i][n]
-                                         ,ifunc->para_isconst[i][n]));
+          sprintf(msg,"%s",G__type2string(ifunc->param[i][n]->type
+                                         ,ifunc->param[i][n]->p_tagtable
+                                         ,ifunc->param[i][n]->p_typetable
+                                         ,ifunc->param[i][n]->reftype
+                                         ,ifunc->param[i][n]->isconst));
 #else
-          sprintf(msg,"%s",G__type2string(ifunc->para_type[i][n]
-                                         ,ifunc->para_p_tagtable[i][n]
-                                         ,ifunc->para_p_typetable[i][n]
-                                         ,ifunc->para_reftype[i][n]));
+          sprintf(msg,"%s",G__type2string(ifunc->param[i][n]->type
+                                         ,ifunc->param[i][n]->p_tagtable
+                                         ,ifunc->param[i][n]->p_typetable
+                                         ,ifunc->param[i][n]->reftype));
 #endif
           if(G__more(fp,msg)) return(1);
 
-          if(ifunc->para_name[i][n]) {
-            sprintf(msg," %s",ifunc->para_name[i][n]);
+          if(ifunc->param[i][n]->name) {
+            sprintf(msg," %s",ifunc->param[i][n]->name);
             if(G__more(fp,msg)) return(1);
           }
-          if(ifunc->para_def[i][n]) {
-            sprintf(msg,"=%s",ifunc->para_def[i][n]);
+          if(ifunc->param[i][n]->def) {
+            sprintf(msg,"=%s",ifunc->param[i][n]->def);
             if(G__more(fp,msg)) return(1);
           }
         }

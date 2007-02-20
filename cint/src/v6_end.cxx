@@ -320,19 +320,19 @@ int G__free_ifunc_table(G__ifunc_table *ifunc)
 #endif
     if(flag) {
       for(j=ifunc->para_nu[i]-1;j>=0;j--) {
-        if(ifunc->para_name[i][j]) {
-          free((void*)ifunc->para_name[i][j]);
-          ifunc->para_name[i][j]=(char*)NULL;
+        if(ifunc->param[i][j]->name) {
+          free((void*)ifunc->param[i][j]->name);
+          ifunc->param[i][j]->name=(char*)NULL;
         }
-        if(ifunc->para_def[i][j]) {
-          free((void*)ifunc->para_def[i][j]);
-          ifunc->para_def[i][j]=(char*)NULL;
+        if(ifunc->param[i][j]->def) {
+          free((void*)ifunc->param[i][j]->def);
+          ifunc->param[i][j]->def=(char*)NULL;
         }
-        if(ifunc->para_default[i][j] &&
-           (&G__default_parameter)!=ifunc->para_default[i][j] &&
-           (G__value*)(-1)!=ifunc->para_default[i][j]) {
-          free((void*)ifunc->para_default[i][j]);
-          ifunc->para_default[i][j]=(G__value*)NULL;
+        if(ifunc->param[i][j]->pdefault &&
+           (&G__default_parameter)!=ifunc->param[i][j]->pdefault &&
+           (G__value*)(-1)!=ifunc->param[i][j]->pdefault) {
+          free((void*)ifunc->param[i][j]->pdefault);
+          ifunc->param[i][j]->pdefault=(G__value*)NULL;
         }
       }
     }

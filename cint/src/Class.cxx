@@ -1129,7 +1129,7 @@ static long G__ClassInfo_MemberFunctionProperty(long& property,int tagnum)
       if(strcmp(G__struct.name[tagnum],ifunc->funcname[ifn])==0) {
 	/* explicit constructor */
 	property |= G__CLS_HASEXPLICITCTOR;
-	if(0==ifunc->para_nu[ifn] || ifunc->para_default[ifn][0]) {
+	if(0==ifunc->para_nu[ifn] || ifunc->param[ifn][0]->pdefault) {
 	  property |= G__CLS_HASDEFAULTCTOR;
 	}
       }
@@ -1236,6 +1236,7 @@ G__MethodInfo Cint::G__ClassInfo::AddMethod(const char* typenam,const char* fnam
   index = ifunc->allifunc;
   if(ifunc->allifunc==G__MAXIFUNC) {
     ifunc->next=(struct G__ifunc_table *)malloc(sizeof(struct G__ifunc_table));
+    memset(ifunc->next,0,sizeof(struct G__ifunc_table));
     ifunc->next->allifunc=0;
     ifunc->next->next=(struct G__ifunc_table *)NULL;
     ifunc->next->page = ifunc->page+1;
@@ -1244,6 +1245,7 @@ G__MethodInfo Cint::G__ClassInfo::AddMethod(const char* typenam,const char* fnam
     for(int ix=0;ix<G__MAXIFUNC;ix++) {
       ifunc->funcname[ix] = (char*)NULL;
       ifunc->userparam[ix] = 0;
+      for (int iy=0;iy<G__MAXFUNCPARA;iy++) ifunc->param->fparams[iy]=0;
     }
     index=0;
   }
@@ -1253,7 +1255,7 @@ G__MethodInfo Cint::G__ClassInfo::AddMethod(const char* typenam,const char* fnam
   G__savestring(&ifunc->funcname[index],(char*)fname);
   int tmp;
   G__hash(ifunc->funcname[index],ifunc->hash[index],tmp);
-  ifunc->para_name[index][0]=(char*)NULL;
+  ifunc->param[index][0]->name=(char*)NULL;
 
   //////////////////////////////////////////////////
   // save type information
@@ -1298,17 +1300,17 @@ G__MethodInfo Cint::G__ClassInfo::AddMethod(const char* typenam,const char* fnam
 
      ifunc->para_nu[index] = para.paran;
      for(int i=0;i<para.paran;i++) {
-        ifunc->para_type[index][i] = para.para[i].type;
+        ifunc->param[index][i]->type = para.para[i].type;
         if(para.para[i].type!='d' && para.para[i].type!='f') 
-           ifunc->para_reftype[index][i] = para.para[i].obj.reftype.reftype;
+           ifunc->param[index][i]->reftype = para.para[i].obj.reftype.reftype;
         else 
-           ifunc->para_reftype[index][i] = G__PARANORMAL;
-        ifunc->para_p_tagtable[index][i] = para.para[i].tagnum;
-        ifunc->para_p_typetable[index][i] = para.para[i].typenum;
-        ifunc->para_name[index][i] = (char*)malloc(10);
-        sprintf(ifunc->para_name[index][i],"G__p%d",i);
-        ifunc->para_default[index][i] = (G__value*)NULL;
-        ifunc->para_def[index][i] = (char*)NULL;
+           ifunc->param[index][i]->reftype = G__PARANORMAL;
+        ifunc->param[index][i]->p_tagtable = para.para[i].tagnum;
+        ifunc->param[index][i]->p_typetable = para.para[i].typenum;
+        ifunc->param[index][i]->name = (char*)malloc(10);
+        sprintf(ifunc->param[index][i]->name,"G__p%d",i);
+        ifunc->param[index][i]->pdefault = (G__value*)NULL;
+        ifunc->param[index][i]->def = (char*)NULL;
      }
   }
 

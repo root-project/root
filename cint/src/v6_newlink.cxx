@@ -1103,11 +1103,11 @@ void G__cpplink_protected_stub_ctor(int tagnum,FILE *hfp)
         for(i=0;i<memfunc->para_nu[ifn];i++) {
           if(i) fprintf(hfp,",");
           fprintf(hfp,"%s a%d"
-                  ,G__type2string(memfunc->para_type[ifn][i]
-                                  ,memfunc->para_p_tagtable[ifn][i]
-                                  ,memfunc->para_p_typetable[ifn][i]
-                                  ,memfunc->para_reftype[ifn][i]
-                                  ,memfunc->para_isconst[ifn][i])
+                  ,G__type2string(memfunc->param[ifn][i]->type
+                                  ,memfunc->param[ifn][i]->p_tagtable
+                                  ,memfunc->param[ifn][i]->p_typetable
+                                  ,memfunc->param[ifn][i]->reftype
+                                  ,memfunc->param[ifn][i]->isconst)
                   ,i);
         }
         fprintf(hfp,")\n");
@@ -1162,11 +1162,11 @@ void G__cpplink_protected_stub(FILE *fp,FILE *hfp)
               for(n=0;n<memfunc->para_nu[ifn];n++) {
                 if(n!=0) fprintf(hfp,",");
                 fprintf(hfp,"%s G__%d"
-                        ,G__type2string(memfunc->para_type[ifn][n]
-                                        ,memfunc->para_p_tagtable[ifn][n]
-                                        ,memfunc->para_p_typetable[ifn][n]
-                                        ,memfunc->para_reftype[ifn][n]
-                                        ,memfunc->para_isconst[ifn][n]),n);
+                        ,G__type2string(memfunc->param[ifn][n]->type
+                                        ,memfunc->param[ifn][n]->p_tagtable
+                                        ,memfunc->param[ifn][n]->p_typetable
+                                        ,memfunc->param[ifn][n]->reftype
+                                        ,memfunc->param[ifn][n]->isconst),n);
               }
             }
             fprintf(hfp,") : %s(",G__fulltagname(i,1));
@@ -1199,11 +1199,11 @@ void G__cpplink_protected_stub(FILE *fp,FILE *hfp)
               for(n=0;n<memfunc->para_nu[ifn];n++) {
                 if(n!=0) fprintf(hfp,",");
                 fprintf(hfp,"%s G__%d"
-                        ,G__type2string(memfunc->para_type[ifn][n]
-                                        ,memfunc->para_p_tagtable[ifn][n]
-                                        ,memfunc->para_p_typetable[ifn][n]
-                                        ,memfunc->para_reftype[ifn][n]
-                                        ,memfunc->para_isconst[ifn][n]),n);
+                        ,G__type2string(memfunc->param[ifn][n]->type
+                                        ,memfunc->param[ifn][n]->p_tagtable
+                                        ,memfunc->param[ifn][n]->p_typetable
+                                        ,memfunc->param[ifn][n]->reftype
+                                        ,memfunc->param[ifn][n]->isconst),n);
               }
             }
             fprintf(hfp,") {\n");
@@ -2300,10 +2300,10 @@ void G__cppif_memfunc(FILE *fp, FILE *hfp)
               }
               ++isconstructor;
               if(ifunc->para_nu[j]>=1&&
-                 'u'==ifunc->para_type[j][0]&&
-                 i==ifunc->para_p_tagtable[j][0]&&
-                 G__PARAREFERENCE==ifunc->para_reftype[j][0]&&
-                 (1==ifunc->para_nu[j]||ifunc->para_default[j][1])) {
+                 'u'==ifunc->param[j][0]->type&&
+                 i==ifunc->param[j][0]->p_tagtable&&
+                 G__PARAREFERENCE==ifunc->param[j][0]->reftype&&
+                 (1==ifunc->para_nu[j]||ifunc->param[j][1]->pdefault)) {
                     ++iscopyconstructor;
               }
             }
@@ -2323,8 +2323,8 @@ void G__cppif_memfunc(FILE *fp, FILE *hfp)
             else {
 #ifdef G__DEFAULTASSIGNOPR
               if(strcmp(ifunc->funcname[j],"operator=")==0
-                 && 'u'==ifunc->para_type[j][0]
-                 && i==ifunc->para_p_tagtable[j][0]
+                 && 'u'==ifunc->param[j][0]->type
+                 && i==ifunc->param[j][0]->p_tagtable
                   ) {
                 ++isassignmentoperator;
               }
@@ -2337,9 +2337,9 @@ void G__cppif_memfunc(FILE *fp, FILE *hfp)
               ++isconstructor;
               if(
                  ifunc->para_nu[j]>0 &&
-                 'u'==ifunc->para_type[j][0]&&i==ifunc->para_p_tagtable[j][0]&&
-                 G__PARAREFERENCE==ifunc->para_reftype[j][0]&&
-                 (1==ifunc->para_nu[j]||ifunc->para_default[j][1])) {
+                 'u'==ifunc->param[j][0]->type&&i==ifunc->param[j][0]->p_tagtable&&
+                 G__PARAREFERENCE==ifunc->param[j][0]->reftype&&
+                 (1==ifunc->para_nu[j]||ifunc->param[j][1]->pdefault)) {
                 ++iscopyconstructor;
               }
             }
@@ -2355,8 +2355,8 @@ void G__cppif_memfunc(FILE *fp, FILE *hfp)
             }
 #ifdef G__DEFAULTASSIGNOPR
             else if(strcmp(ifunc->funcname[j],"operator=")==0
-                    && 'u'==ifunc->para_type[j][0]
-                    && i==ifunc->para_p_tagtable[j][0]
+                    && 'u'==ifunc->param[j][0]->type
+                    && i==ifunc->param[j][0]->p_tagtable
                 ) {
               ++isassignmentoperator;
             }
@@ -2435,10 +2435,10 @@ void G__if_ary_union(FILE *fp, int ifn, G__ifunc_table *ifunc)
   m = ifunc->para_nu[ifn];
 
   for (k = 0; k < m; ++k) {
-    if (ifunc->para_name[ifn][k]) {
-      p = strchr(ifunc->para_name[ifn][k], '[');
+    if (ifunc->param[ifn][k]->name) {
+      p = strchr(ifunc->param[ifn][k]->name, '[');
       if (p) {
-        fprintf(fp, "  struct G__aRyp%d { %s a[1]%s; }* G__Ap%d = (struct G__aRyp%d*) G__int(libp->para[%d]);\n", k, G__type2string(ifunc->para_type[ifn][k], ifunc->para_p_tagtable[ifn][k], ifunc->para_p_typetable[ifn][k], 0 , 0), p + 2, k, k, k);
+        fprintf(fp, "  struct G__aRyp%d { %s a[1]%s; }* G__Ap%d = (struct G__aRyp%d*) G__int(libp->para[%d]);\n", k, G__type2string(ifunc->param[ifn][k]->type, ifunc->param[ifn][k]->p_tagtable, ifunc->param[ifn][k]->p_typetable, 0 , 0), p + 2, k, k, k);
       }
     }
   }
@@ -2457,30 +2457,30 @@ void G__if_ary_union_reset(int ifn, G__ifunc_table *ifunc)
   m = ifunc->para_nu[ifn];
 
   for (k = 0; k < m; ++k) {
-    if (ifunc->para_name[ifn][k]) {
-      p = strchr(ifunc->para_name[ifn][k], '[');
+    if (ifunc->param[ifn][k]->name) {
+      p = strchr(ifunc->param[ifn][k]->name, '[');
       if (p) {
         int pointlevel = 1;
         *p = 0;
         while ((p = strchr(p+1, '['))) ++pointlevel;
-        type = ifunc->para_type[ifn][k];
+        type = ifunc->param[ifn][k]->type;
         if (isupper(type)) {
           switch (pointlevel) {
             case 2:
-              ifunc->para_reftype[ifn][k] = G__PARAP2P2P;
+              ifunc->param[ifn][k]->reftype = G__PARAP2P2P;
               break;
             default:
               G__genericerror("Cint internal error ary parameter dimension");
               break;
           }
         } else {
-          ifunc->para_type[ifn][k] = toupper(type);
+          ifunc->param[ifn][k]->type = toupper(type);
           switch (pointlevel) {
             case 2:
-              ifunc->para_reftype[ifn][k] = G__PARAP2P;
+              ifunc->param[ifn][k]->reftype = G__PARAP2P;
               break;
             case 3:
-              ifunc->para_reftype[ifn][k] = G__PARAP2P2P;
+              ifunc->param[ifn][k]->reftype = G__PARAP2P2P;
               break;
             default:
               G__genericerror("Cint internal error ary parameter dimension");
@@ -2522,15 +2522,15 @@ struct G__ifunc_table *ifunc)
     /*DEBUG*/ printf("%s %d\n",ifunc->funcname[ifn],k);
     if(
 #ifndef G__OLDIMPLEMENTATION2191
-       '1'==ifunc->para_type[ifn][k]
+       '1'==ifunc->param[ifn][k]->type
 #else
-       'Q'==ifunc->para_type[ifn][k]
+       'Q'==ifunc->param[ifn][k]->type
 #endif
        ) {
-      strcpy(buf,G__type2string(ifunc->para_type[ifn][k],
-                                ifunc->para_p_tagtable[ifn][k],
-                                ifunc->para_p_typetable[ifn][k],0,
-                                ifunc->para_isconst[ifn][k]));
+      strcpy(buf,G__type2string(ifunc->param[ifn][k]->type,
+                                ifunc->param[ifn][k]->p_tagtable,
+                                ifunc->param[ifn][k]->p_typetable,0,
+                                ifunc->param[ifn][k]->isconst));
       /*DEBUG*/ printf("buf=%s\n",buf);
       p = strstr(buf,"(*)(");
       if(p) {
@@ -2695,11 +2695,11 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table *ifunc,
 
          // write arguments
          for (int k = 0; k < m; k++) {
-            type    = ifunc->para_type[ifn][k];
-            ptagnum = ifunc->para_p_tagtable[ifn][k];
-            typenum = ifunc->para_p_typetable[ifn][k];
-            reftype = ifunc->para_reftype[ifn][k];
-            isconst = ifunc->para_isconst[ifn][k];
+            type    = ifunc->param[ifn][k]->type;
+            ptagnum = ifunc->param[ifn][k]->p_tagtable;
+            typenum = ifunc->param[ifn][k]->p_typetable;
+            reftype = ifunc->param[ifn][k]->reftype;
+            isconst = ifunc->param[ifn][k]->isconst;
 
             char *typestring = G__type2string(type, ptagnum, typenum, reftype, isconst);
             if (k)
@@ -2950,7 +2950,7 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
 
   m = ifunc->para_nu[ifn] ;
 
-  if ((m > 0) && ifunc->para_default[ifn][m-1]) {
+  if ((m > 0) && ifunc->param[ifn][m-1]->pdefault) {
     // Handle a constructor with arguments where some of them are defaulted.
     fprintf(fp,             "   switch (libp->paran) {\n");
     do {
@@ -3091,7 +3091,7 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
       }
       fprintf(fp,           "     break;\n");
       --m;
-    } while ((m >= 0) && ifunc->para_default[ifn][m]);
+    } while ((m >= 0) && ifunc->param[ifn][m]->pdefault);
     fprintf(fp,             "   }\n");
   } else if (m > 0) {
     // Handle a constructor with arguments where none of them are defaulted.
@@ -3252,24 +3252,24 @@ static int G__isprivateconstructorifunc(int tagnum,int iscopy)
     for(ifn=0;ifn<ifunc->allifunc;ifn++) {
       if(strcmp(G__struct.name[tagnum],ifunc->funcname[ifn])==0) {
         if(iscopy) { /* Check copy constructor */
-          if((1<=ifunc->para_nu[ifn]&&'u'==ifunc->para_type[ifn][0]&&
-              tagnum==ifunc->para_p_tagtable[ifn][0]) &&
-             (1==ifunc->para_nu[ifn]||ifunc->para_default[ifn][1])
+          if((1<=ifunc->para_nu[ifn]&&'u'==ifunc->param[ifn][0]->type&&
+              tagnum==ifunc->param[ifn][0]->p_tagtable) &&
+             (1==ifunc->para_nu[ifn]||ifunc->param[ifn][1]->pdefault)
              && G__PRIVATE==ifunc->access[ifn]
              ) {
             return(1);
           }
         }
         else { /* Check default constructor */
-          if((0==ifunc->para_nu[ifn]||ifunc->para_default[ifn][0])
+          if((0==ifunc->para_nu[ifn]||ifunc->param[ifn][0]->pdefault)
              && G__PRIVATE==ifunc->access[ifn]
              ) {
             return(1);
           }
           /* Following solution may not be perfect */
-          if((1<=ifunc->para_nu[ifn]&&'u'==ifunc->para_type[ifn][0]&&
-              tagnum==ifunc->para_p_tagtable[ifn][0]) &&
-             (1==ifunc->para_nu[ifn]||ifunc->para_default[ifn][1])
+          if((1<=ifunc->para_nu[ifn]&&'u'==ifunc->param[ifn][0]->type&&
+              tagnum==ifunc->param[ifn][0]->p_tagtable) &&
+             (1==ifunc->para_nu[ifn]||ifunc->param[ifn][1]->pdefault)
              &&G__PRIVATE==ifunc->access[ifn]
              ) {
             return(1);
@@ -3496,8 +3496,8 @@ static int G__isprivateassignoprifunc(int tagnum)
     for(ifn=0;ifn<ifunc->allifunc;ifn++) {
       if(strcmp("operator=",ifunc->funcname[ifn])==0) {
         if((G__PRIVATE==ifunc->access[ifn]||G__PROTECTED==ifunc->access[ifn])
-           && 'u'==ifunc->para_type[ifn][0]
-           && tagnum==ifunc->para_p_tagtable[ifn][0]
+           && 'u'==ifunc->param[ifn][0]->type
+           && tagnum==ifunc->param[ifn][0]->p_tagtable
             ) {
           return(1);
         }
@@ -4073,7 +4073,7 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
   * compact G__cpplink.C
   *************************************************************/
   m = ifunc->para_nu[ifn] ;
-  if ((m > 0) && ifunc->para_default[ifn][m-1]) {
+  if ((m > 0) && ifunc->param[ifn][m-1]->pdefault) {
     // Handle a function with parameters, some of which have defaults.
     fprintf(fp, "   switch (libp->paran) {\n");
     do {
@@ -4138,7 +4138,7 @@ void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_
       // End the case for m number of parameters given.
       fprintf(fp, "      break;\n");
       --m;
-    } while ((m >= 0) && ifunc->para_default[ifn][m]);
+    } while ((m >= 0) && ifunc->param[ifn][m]->pdefault);
     //
     // End of switch on number of parameters provided by call.
     fprintf(fp, "   }\n");
@@ -4435,11 +4435,11 @@ void G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table *ifunc, int k)
   int type,tagnum,typenum,reftype;
   int isconst;
 
-  type=ifunc->para_type[ifn][k];
-  tagnum=ifunc->para_p_tagtable[ifn][k];
-  typenum=ifunc->para_p_typetable[ifn][k];
-  reftype=ifunc->para_reftype[ifn][k];
-  isconst=ifunc->para_isconst[ifn][k];
+  type=ifunc->param[ifn][k]->type;
+  tagnum=ifunc->param[ifn][k]->p_tagtable;
+  typenum=ifunc->param[ifn][k]->p_typetable;
+  reftype=ifunc->param[ifn][k]->reftype;
+  isconst=ifunc->param[ifn][k]->isconst;
 
   /* Promote link-off typedef to link-on if used in function */
   if(-1!=typenum && G__NOLINK==G__newtype.globalcomp[typenum] &&
@@ -4449,8 +4449,8 @@ void G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table *ifunc, int k)
   if(k && 0==k%2) fprintf(fp,"\n");
   if(0!=k) fprintf(fp,", ");
 
-  if(ifunc->para_name[ifn][k]) {
-    char *p = strchr(ifunc->para_name[ifn][k],'[');
+  if(ifunc->param[ifn][k]->name) {
+    char *p = strchr(ifunc->param[ifn][k]->name,'[');
     if(p) {
       fprintf(fp,"G__Ap%d->a",k);
       return;
@@ -5598,7 +5598,7 @@ void G__cpplink_memfunc(FILE *fp)
                 continue;
               }
               ++isconstructor;
-              if ((ifunc->para_nu[j] >= 1) && (ifunc->para_type[j][0] == 'u') && (i == ifunc->para_p_tagtable[j][0]) && (ifunc->para_reftype[j][0] == G__PARAREFERENCE) && ((ifunc->para_nu[j] == 1) || ifunc->para_default[j][1])) {
+              if ((ifunc->para_nu[j] >= 1) && (ifunc->param[j][0]->type == 'u') && (i == ifunc->param[j][0]->p_tagtable) && (ifunc->param[j][0]->reftype == G__PARAREFERENCE) && ((ifunc->para_nu[j] == 1) || ifunc->param[j][1]->pdefault)) {
                 ++iscopyconstructor;
               }
             } else if (ifunc->funcname[j][0] == '~') {
@@ -5617,7 +5617,7 @@ void G__cpplink_memfunc(FILE *fp)
             }
 
 #ifdef G__DEFAULTASSIGNOPR
-            else if (!strcmp(ifunc->funcname[j], "operator=") && ('u' == ifunc->para_type[j][0]) && (i == ifunc->para_p_tagtable[j][0])) {
+            else if (!strcmp(ifunc->funcname[j], "operator=") && ('u' == ifunc->param[j][0]->type) && (i == ifunc->param[j][0]->p_tagtable)) {
               // We have an operator=.
               ++isassignmentoperator;
             }
@@ -5677,33 +5677,33 @@ void G__cpplink_memfunc(FILE *fp)
             for (k = 0; k < ifunc->para_nu[j]; k++) {
               /* newline to avoid lines more than 256 char for CMZ */
               if (G__CPPLINK == G__globalcomp && k && 0 == (k%2)) fprintf(fp, "\"\n\"");
-              if (isprint(ifunc->para_type[j][k])) {
-                fprintf(fp, "%c ", ifunc->para_type[j][k]);
+              if (isprint(ifunc->param[j][k]->type)) {
+                fprintf(fp, "%c ", ifunc->param[j][k]->type);
               }
               else {
                 G__fprinterr(G__serr, "Internal error: function parameter type\n");
-                fprintf(fp, "%d ", ifunc->para_type[j][k]);
+                fprintf(fp, "%d ", ifunc->param[j][k]->type);
               }
 
-              if (-1 != ifunc->para_p_tagtable[j][k]) {
-                fprintf(fp, "'%s' ", G__fulltagname(ifunc->para_p_tagtable[j][k], 0));
-                G__mark_linked_tagnum(ifunc->para_p_tagtable[j][k]);
+              if (-1 != ifunc->param[j][k]->p_tagtable) {
+                fprintf(fp, "'%s' ", G__fulltagname(ifunc->param[j][k]->p_tagtable, 0));
+                G__mark_linked_tagnum(ifunc->param[j][k]->p_tagtable);
               }
               else
                 fprintf(fp, "- ");
 
-              if (-1 != ifunc->para_p_typetable[j][k])
-                fprintf(fp, "'%s' ", G__fulltypename(ifunc->para_p_typetable[j][k]));
+              if (-1 != ifunc->param[j][k]->p_typetable)
+                fprintf(fp, "'%s' ", G__fulltypename(ifunc->param[j][k]->p_typetable));
               else
                 fprintf(fp, "- ");
 
-              fprintf(fp, "%d ", ifunc->para_reftype[j][k] + ifunc->para_isconst[j][k]*10);
-              if (ifunc->para_def[j][k])
-                fprintf(fp, "'%s' ", G__quotedstring(ifunc->para_def[j][k], buf));
+              fprintf(fp, "%d ", ifunc->param[j][k]->reftype + ifunc->param[j][k]->isconst*10);
+              if (ifunc->param[j][k]->def)
+                fprintf(fp, "'%s' ", G__quotedstring(ifunc->param[j][k]->def, buf));
               else
                 fprintf(fp, "- ");
-              if (ifunc->para_name[j][k])
-                fprintf(fp, "%s", ifunc->para_name[j][k]);
+              if (ifunc->param[j][k]->name)
+                fprintf(fp, "%s", ifunc->param[j][k]->name);
               else
                 fprintf(fp, "-");
               if (k != ifunc->para_nu[j] - 1) fprintf(fp, " ");
@@ -5738,11 +5738,11 @@ void G__cpplink_memfunc(FILE *fp)
               for (k = 0; k < ifunc->para_nu[j]; k++) {
                 if (k) fprintf(fp, ", ");
                 fprintf(fp, "%s"
-                        ,G__type2string(ifunc->para_type[j][k]
-                                        ,ifunc->para_p_tagtable[j][k]
-                                        ,ifunc->para_p_typetable[j][k]
-                                        ,ifunc->para_reftype[j][k]
-                                        ,ifunc->para_isconst[j][k]));
+                        ,G__type2string(ifunc->param[j][k]->type
+                                        ,ifunc->param[j][k]->p_tagtable
+                                        ,ifunc->param[j][k]->p_typetable
+                                        ,ifunc->param[j][k]->reftype
+                                        ,ifunc->param[j][k]->isconst));
               }
               fprintf(fp, "))(&%s::%s)", G__fulltagname(ifunc->tagnum, 1), ifunc->funcname[j]);
 #else
@@ -5763,7 +5763,7 @@ void G__cpplink_memfunc(FILE *fp)
             // protected, private, pure virtual
             if (!strcmp(ifunc->funcname[j], G__struct.name[i])) {
               ++isconstructor;
-              if ('u' == ifunc->para_type[j][0] && i == ifunc->para_p_tagtable[j][0] && G__PARAREFERENCE == ifunc->para_reftype[j][0] && (1 == ifunc->para_nu[j] || ifunc->para_default[j][1])) {
+              if ('u' == ifunc->param[j][0]->type && i == ifunc->param[j][0]->p_tagtable && G__PARAREFERENCE == ifunc->param[j][0]->reftype && (1 == ifunc->para_nu[j] || ifunc->param[j][1]->pdefault)) {
                 // copy constructor
                 ++iscopyconstructor;
               }
@@ -5778,7 +5778,7 @@ void G__cpplink_memfunc(FILE *fp)
               ++isdestructor;
             }
 #ifdef G__DEFAULTASSIGNOPR
-            else if (!strcmp(ifunc->funcname[j], "operator=") && 'u' == ifunc->para_type[j][0] && i == ifunc->para_p_tagtable[j][0]) {
+            else if (!strcmp(ifunc->funcname[j], "operator=") && 'u' == ifunc->param[j][0]->type && i == ifunc->param[j][0]->p_tagtable) {
               // operator=
               ++isassignmentoperator;
             }
@@ -6127,11 +6127,11 @@ static void G__declaretruep2f(FILE *fp, G__ifunc_table &ifunc, int j)
       for(i=0;i<ifunc->para_nu[j];i++) {
         if(i) fprintf(fp,", ");
         fprintf(fp,"%s"
-                ,G__type2string(ifunc->para_type[j][i]
-                                ,ifunc->para_p_tagtable[j][i]
-                                ,ifunc->para_p_typetable[j][i]
-                                ,ifunc->para_reftype[j][i]
-                                ,ifunc->para_isconst[j][i]));
+                ,G__type2string(ifunc->param[j][i]->type
+                                ,ifunc->param[j][i]->p_tagtable
+                                ,ifunc->param[j][i]->p_typetable
+                                ,ifunc->param[j][i]->reftype
+                                ,ifunc->param[j][i]->isconst));
       }
       fprintf(fp,") = %s;\n",ifunc->funcname[j]);
       fprintf(fp,"#else\n");
@@ -6190,11 +6190,11 @@ static void G__printtruep2f(FILE *fp, G__ifunc_table *ifunc, int j)
       for(i=0;i<ifunc->para_nu[j];i++) {
         if(i) fprintf(fp,", ");
         fprintf(fp,"%s"
-                ,G__type2string(ifunc->para_type[j][i]
-                                ,ifunc->para_p_tagtable[j][i]
-                                ,ifunc->para_p_typetable[j][i]
-                                ,ifunc->para_reftype[j][i]
-                                ,ifunc->para_isconst[j][i]));
+                ,G__type2string(ifunc->param[j][i]->type
+                                ,ifunc->param[j][i]->p_tagtable
+                                ,ifunc->param[j][i]->p_typetable
+                                ,ifunc->param[j][i]->reftype
+                                ,ifunc->param[j][i]->isconst));
       }
       fprintf(fp,"))%s, %d);\n",ifunc->funcname[j]
               ,ifunc->isvirtual[j]+ifunc->ispurevirtual[j]*2);
@@ -6271,7 +6271,7 @@ void G__cpplink_func(FILE *fp)
          ifunc->hash[j]) {   /* not static */
 
         if(strcmp(ifunc->funcname[j],"operator new")==0 &&
-           (ifunc->para_nu[j]==2 || ifunc->para_default[j][2])) {
+           (ifunc->para_nu[j]==2 || ifunc->param[j][2]->pdefault)) {
           G__is_operator_newdelete |= G__IS_OPERATOR_NEW;
         }
         else if(strcmp(ifunc->funcname[j],"operator delete")==0) {
@@ -6325,35 +6325,35 @@ void G__cpplink_func(FILE *fp)
         for(k=0;k<ifunc->para_nu[j];k++) {
           /* newline to avoid lines more than 256 char for CMZ */
           if(G__CPPLINK==G__globalcomp&&k&&0==(k%2)) fprintf(fp,"\"\n\"");
-          if(isprint(ifunc->para_type[j][k])) {
-            fprintf(fp,"%c ",ifunc->para_type[j][k]);
+          if(isprint(ifunc->param[j][k]->type)) {
+            fprintf(fp,"%c ",ifunc->param[j][k]->type);
           }
           else {
             G__fprinterr(G__serr,"Internal error: function parameter type\n");
-            fprintf(fp,"%d ",ifunc->para_type[j][k]);
+            fprintf(fp,"%d ",ifunc->param[j][k]->type);
           }
 
-          if(-1!=ifunc->para_p_tagtable[j][k]) {
+          if(-1!=ifunc->param[j][k]->p_tagtable) {
             fprintf(fp,"'%s' "
-                    ,G__fulltagname(ifunc->para_p_tagtable[j][k],0));
-            G__mark_linked_tagnum(ifunc->para_p_tagtable[j][k]);
+                    ,G__fulltagname(ifunc->param[j][k]->p_tagtable,0));
+            G__mark_linked_tagnum(ifunc->param[j][k]->p_tagtable);
           }
           else
             fprintf(fp,"- ");
 
-          if(-1!=ifunc->para_p_typetable[j][k])
+          if(-1!=ifunc->param[j][k]->p_typetable)
             fprintf(fp,"'%s' "
-                    ,G__newtype.name[ifunc->para_p_typetable[j][k]]);
+                    ,G__newtype.name[ifunc->param[j][k]->p_typetable]);
           else
             fprintf(fp,"- ");
 
           fprintf(fp,"%d "
-                ,ifunc->para_reftype[j][k]+ifunc->para_isconst[j][k]*10);
-          if(ifunc->para_def[j][k])
-            fprintf(fp,"'%s' ",G__quotedstring(ifunc->para_def[j][k],buf));
+                ,ifunc->param[j][k]->reftype+ifunc->param[j][k]->isconst*10);
+          if(ifunc->param[j][k]->def)
+            fprintf(fp,"'%s' ",G__quotedstring(ifunc->param[j][k]->def,buf));
           else fprintf(fp,"- ");
-          if(ifunc->para_name[j][k])
-            fprintf(fp,"%s",ifunc->para_name[j][k]);
+          if(ifunc->param[j][k]->name)
+            fprintf(fp,"%s",ifunc->param[j][k]->name);
           else fprintf(fp,"-");
           if(k!=ifunc->para_nu[j]-1) fprintf(fp," ");
         }
@@ -6717,7 +6717,7 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
   struct G__ifunc_table *store_p_ifunc = 0;
   int dtorflag=0;
 #endif
-
+   
   if (G__p_ifunc->allifunc == G__MAXIFUNC) {
      G__fprinterr(G__serr, "Attempt to add function %s failed - ifunc_table overflow!\n",
          funcname);
@@ -6734,7 +6734,6 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
     dtorflag=1;
   }
 #endif
-
   G__savestring(&G__p_ifunc->funcname[G__func_now],(char*)funcname);
   G__p_ifunc->hash[G__func_now] = hash;
 
@@ -6784,7 +6783,7 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
   G__p_ifunc->ispurevirtual[G__func_now] = 0;
 #endif
 
-  G__p_ifunc->para_name[G__func_now][0]=(char*)NULL;
+  G__p_ifunc->param[G__func_now][0]->name=(char*)NULL;
   /* parse parameter setup information */
   G__parse_parameter_link((char*)paras);
 
@@ -6827,26 +6826,26 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
      ifunc->isconst[iexist]|=G__p_ifunc->isconst[func_now];
      ifunc->isexplicit[iexist]|=G__p_ifunc->isexplicit[func_now];
      for(iin=0;iin<paranu;iin++) {
-       ifunc->para_reftype[iexist][iin]
-         =G__p_ifunc->para_reftype[func_now][iin];
-       ifunc->para_p_typetable[iexist][iin]
-         =G__p_ifunc->para_p_typetable[func_now][iin];
-       if(G__p_ifunc->para_default[func_now][iin]) {
-         if(-1!=(long)G__p_ifunc->para_default[func_now][iin])
-           free((void*)G__p_ifunc->para_default[func_now][iin]);
-         free((void*)G__p_ifunc->para_def[func_now][iin]);
+       ifunc->param[iexist][iin]->reftype
+         =G__p_ifunc->param[func_now][iin]->reftype;
+       ifunc->param[iexist][iin]->p_typetable
+         =G__p_ifunc->param[func_now][iin]->p_typetable;
+       if(G__p_ifunc->param[func_now][iin]->pdefault) {
+         if(-1!=(long)G__p_ifunc->param[func_now][iin]->pdefault)
+           free((void*)G__p_ifunc->param[func_now][iin]->pdefault);
+         free((void*)G__p_ifunc->param[func_now][iin]->def);
        }
-       G__p_ifunc->para_default[func_now][iin]=(G__value*)NULL;
-       G__p_ifunc->para_def[func_now][iin]=(char*)NULL;
-       if(ifunc->para_name[iexist][iin]) {
-         if(G__p_ifunc->para_name[func_now][iin]) {
-           free((void*)G__p_ifunc->para_name[func_now][iin]);
-           G__p_ifunc->para_name[func_now][iin]=(char*)NULL;
+       G__p_ifunc->param[func_now][iin]->pdefault=(G__value*)NULL;
+       G__p_ifunc->param[func_now][iin]->def=(char*)NULL;
+       if(ifunc->param[iexist][iin]->name) {
+         if(G__p_ifunc->param[func_now][iin]->name) {
+           free((void*)G__p_ifunc->param[func_now][iin]->name);
+           G__p_ifunc->param[func_now][iin]->name=(char*)NULL;
          }
        }
        else {
-         ifunc->para_name[iexist][iin]=G__p_ifunc->para_name[func_now][iin];
-         G__p_ifunc->para_name[func_now][iin]=(char*)NULL;
+         ifunc->param[iexist][iin]->name=G__p_ifunc->param[func_now][iin]->name;
+         G__p_ifunc->param[func_now][iin]->name=(char*)NULL;
        }
      }
      ifunc->entry[iexist]=G__p_ifunc->entry[func_now];
@@ -7045,32 +7044,32 @@ int G__memfunc_para_setup(int ifn,int type,int tagnum,int typenum,int reftype_co
                           )
 {
 #ifndef G__SMALLOBJECT
-  G__p_ifunc->para_type[G__func_now][ifn] = type;
-  G__p_ifunc->para_p_tagtable[G__func_now][ifn] = tagnum;
-  G__p_ifunc->para_p_typetable[G__func_now][ifn] = typenum;
+  G__p_ifunc->param[G__func_now][ifn]->type = type;
+  G__p_ifunc->param[G__func_now][ifn]->p_tagtable = tagnum;
+  G__p_ifunc->param[G__func_now][ifn]->p_typetable = typenum;
 #if !defined(G__OLDIMPLEMENTATION1975)
-  G__p_ifunc->para_isconst[G__func_now][ifn] = (reftype_const/10)%10;
-  G__p_ifunc->para_reftype[G__func_now][ifn] = reftype_const-(reftype_const/10%10*10);
+  G__p_ifunc->param[G__func_now][ifn]->isconst = (reftype_const/10)%10;
+  G__p_ifunc->param[G__func_now][ifn]->reftype = reftype_const-(reftype_const/10%10*10);
 #else
-  G__p_ifunc->para_reftype[G__func_now][ifn] = reftype_const%10;
-  G__p_ifunc->para_isconst[G__func_now][ifn] = reftype_const/10;
+  G__p_ifunc->param[G__func_now][ifn]->reftype = reftype_const%10;
+  G__p_ifunc->param[G__func_now][ifn]->isconst = reftype_const/10;
 #endif
-  G__p_ifunc->para_default[G__func_now][ifn] = para_default;
+  G__p_ifunc->param[G__func_now][ifn]->pdefault = para_default;
   if(para_def[0]
      || (G__value*)NULL!=para_default
      ) {
-    G__p_ifunc->para_def[G__func_now][ifn]=(char*)malloc(strlen(para_def)+1);
-    strcpy(G__p_ifunc->para_def[G__func_now][ifn],para_def);
+    G__p_ifunc->param[G__func_now][ifn]->def=(char*)malloc(strlen(para_def)+1);
+    strcpy(G__p_ifunc->param[G__func_now][ifn]->def,para_def);
   }
   else {
-    G__p_ifunc->para_def[G__func_now][ifn]=(char*)NULL;
+    G__p_ifunc->param[G__func_now][ifn]->def=(char*)NULL;
   }
   if(para_name[0]) {
-    G__p_ifunc->para_name[G__func_now][ifn]=(char*)malloc(strlen(para_name)+1);
-    strcpy(G__p_ifunc->para_name[G__func_now][ifn],para_name);
+    G__p_ifunc->param[G__func_now][ifn]->name=(char*)malloc(strlen(para_name)+1);
+    strcpy(G__p_ifunc->param[G__func_now][ifn]->name,para_name);
   }
   else {
-    G__p_ifunc->para_name[G__func_now][ifn]=(char*)NULL;
+    G__p_ifunc->param[G__func_now][ifn]->name=(char*)NULL;
   }
 #endif
   return(0);
@@ -7091,6 +7090,7 @@ int G__memfunc_next()
    ***************************************************************/
   if(G__p_ifunc->allifunc==G__MAXIFUNC) {
     G__p_ifunc->next=(struct G__ifunc_table *)malloc(sizeof(struct G__ifunc_table));
+    memset(G__p_ifunc->next,0,sizeof(struct G__ifunc_table));
     G__p_ifunc->next->allifunc=0;
     G__p_ifunc->next->next=(struct G__ifunc_table *)NULL;
     G__p_ifunc->next->page = G__p_ifunc->page+1;
@@ -7103,6 +7103,7 @@ int G__memfunc_next()
       for(ix=0;ix<G__MAXIFUNC;ix++) {
         G__p_ifunc->funcname[ix] = (char*)NULL;
         G__p_ifunc->userparam[ix] = 0;
+        for (int iy=0;iy<G__MAXFUNCPARA;iy++) G__p_ifunc->param->fparams[iy]=0;
       }
     }
     {
@@ -7715,8 +7716,8 @@ void G__specify_link(int link_stub)
         for(i=0;i<ifunc->allifunc;i++) {
           if(0==regexec(&re,ifunc->funcname[i],(size_t)0,(regmatch_t*)NULL,0)
              && (ifunc->para_nu[i]<2 ||
-                 -1==ifunc->para_p_tagtable[i][1] ||
-                 strncmp(G__struct.name[ifunc->para_p_tagtable[i][1]]
+                 -1==ifunc->param[i][1]->p_tagtable ||
+                 strncmp(G__struct.name[ifunc->param[i][1]->p_tagtable]
                          ,"G__CINT_",8)!=0)
              ){
             ifunc->globalcomp[i] = globalcomp;
@@ -7737,8 +7738,8 @@ void G__specify_link(int link_stub)
         for(i=0;i<ifunc->allifunc;i++) {
            if(0!=regex(re,ifunc->funcname[i])
              && (ifunc->para_nu[i]<2 ||
-                 -1==ifunc->para_p_tagtable[i][1] ||
-                 strncmp(G__struct.name[ifunc->para_p_tagtable[i][1]]
+                 -1==ifunc->param[i][1]->p_tagtable ||
+                 strncmp(G__struct.name[ifunc->param[i][1]->p_tagtable]
                          ,"G__CINT_",8)!=0)
              ){
             ifunc->globalcomp[i] = globalcomp;
@@ -7757,8 +7758,8 @@ void G__specify_link(int link_stub)
            if((strncmp(buf,ifunc->funcname[i],hash)==0
               || ('*'==buf[0]&&strstr(ifunc->funcname[i],buf+1)))
              && (ifunc->para_nu[i]<2 ||
-                 -1==ifunc->para_p_tagtable[i][1] ||
-                 strncmp(G__struct.name[ifunc->para_p_tagtable[i][1]]
+                 -1==ifunc->param[i][1]->p_tagtable ||
+                 strncmp(G__struct.name[ifunc->param[i][1]->p_tagtable]
                          ,"G__CINT_",8)!=0)
              ) {
             ifunc->globalcomp[i] = globalcomp;
@@ -7776,8 +7777,8 @@ void G__specify_link(int link_stub)
         for(i=0;i<ifunc->allifunc;i++) {
           if(strcmp(buf,ifunc->funcname[i])==0
              && (ifunc->para_nu[i]<2 ||
-                 -1==ifunc->para_p_tagtable[i][1] ||
-                 strncmp(G__struct.name[ifunc->para_p_tagtable[i][1]]
+                 -1==ifunc->param[i][1]->p_tagtable ||
+                 strncmp(G__struct.name[ifunc->param[i][1]->p_tagtable]
                          ,"G__CINT_",8)!=0)
              ) {
             ifunc->globalcomp[i] = globalcomp;

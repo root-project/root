@@ -106,10 +106,10 @@ extern "C" int G__function_signature_match(struct G__ifunc_table* ifunc1
 
   int j;
   for(j=0;j<paran;j++) {
-   if(ifunc1->para_type[ifn1][j]!=ifunc2->para_type[ifn2][j] ||
-     ifunc1->para_p_tagtable[ifn1][j]!=ifunc2->para_p_tagtable[ifn2][j]
-     || ifunc1->para_reftype[ifn1][j]!=ifunc2->para_reftype[ifn2][j]
-     || ifunc1->para_isconst[ifn1][j]!=ifunc2->para_isconst[ifn2][j]) {
+   if(ifunc1->param[ifn1][j]->type !=ifunc2->param[ifn2][j]->type ||
+     ifunc1->param[ifn1][j]->p_tagtable !=ifunc2->param[ifn2][j]->p_tagtable
+     || ifunc1->param[ifn1][j]->reftype !=ifunc2->param[ifn2][j]->reftype
+     || ifunc1->param[ifn1][j]->isconst !=ifunc2->param[ifn2][j]->isconst) {
      return(0);
    }
  }
@@ -291,7 +291,7 @@ void G__bc_make_copyctor(int tagnum) {
   G__MethodInfo met = cls.AddMethod(rtntype.c_str(),fname.c_str(),arg.c_str());
   struct G__ifunc_table* ifunc = (struct G__ifunc_table*)met.Handle();
   int ifn = met.Index();
-  ifunc->para_isconst[ifn][0] = G__CONSTVAR; // workaround to set const flag
+  ifunc->param[ifn][0]->isconst = G__CONSTVAR; // workaround to set const flag
   if(cls.Property()&G__BIT_ISABSTRACT) ifunc->access[ifn]=G__PROTECTED;
 
   G__functionscope compiler;
