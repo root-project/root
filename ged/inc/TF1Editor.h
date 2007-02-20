@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TF1Editor.h,v 1.6 2007/02/03 17:35:51 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TF1Editor.h,v 1.7 2007/02/06 15:39:54 antcheva Exp $
 // Author: Ilka Antcheva 21/03/06
 
 /*************************************************************************
@@ -31,10 +31,12 @@ class TGDoubleHSlider;
 class TGNumberEntryField;
 class TGLabel;
 class TGCheckButton;
+class TF1;
 
 class TF1Editor : public TGedFrame {
 
 protected:
+   TF1                 *fF1;              // selected TF1 object
    TGTextEntry         *fTitle;           // function title
    Int_t                fNP;              // number of function parameters
    TGLabel             *fParLabel;        // label for number of parameters
