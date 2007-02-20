@@ -77,6 +77,7 @@ options="                    \
    enable_table              \
    enable_unuran             \
    enable_winrtdebug         \
+   enable_xft                \
    enable_xml                \
    enable_xrootd             \
 "
@@ -885,6 +886,7 @@ enable/disable options, prefix with either --enable- or --disable-
   winrtdebug         Link against the Windows debug runtime library
   xml                XML parser interface
   xrootd             Build xrootd file server and its client (if supported)
+  xft                Xft support (X11 antialiased fonts)
 
 with options, prefix with --with-, enables corresponding support
 
@@ -1281,6 +1283,15 @@ if test ! "$platform" = "win32"; then
         exit 1
     fi
 
+    check_header "X11/Xft/Xft.h" "" \
+	/usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
+	/usr/local/include /usr/local/include/X11 /usr/local/X11R6/include \
+	/usr/X11/include /usr/include/X11R5
+
+    if test "x$found_dir" = "x" ; then
+        enable_xft="no"
+    fi
+
     check_library "libXpm" "$enable_shared" "$xpmlibdir" \
 	$XPM $XPM/lib /usr/local/lib /usr/lib /usr/lib/X11 \
 	/usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
@@ -1292,6 +1303,29 @@ if test ! "$platform" = "win32"; then
 	result "`basename $0`: libXpm MUST be installed"
         exit 1
     fi
+
+    check_library "libXft" "$enable_shared" "" \
+	/usr/local/lib /usr/lib /usr/lib/X11 \
+	/usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
+	/usr/X11/lib
+    xftlib=$found_lib
+
+    if test "x$xftlib" = "x" ; then
+        enable_xft="no"
+    fi
+fi
+
+
+######################################################################
+#
+### echo %%%Xft support (X11 antialiased fonts)
+#
+if test "$platform" = "win32"; then
+   enable_xft="no"
+fi
+hasxft="undef"
+if test "x$enable_xft" = "xyes"; then
+   hasxft="define"
 fi
 
 ######################################################################
@@ -4232,6 +4266,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@g4incdir@|$g4incdir|"                \
     -e "s|@g4libdir@|$g4libdir|"                \
     -e "s|@clhepincdir@|$clhepincdir|"          \
+    -e "s|@enable_xft@|$enable_xft|"            \
         < Makefile.tmp > Makefile.tmpp
 mv Makefile.tmpp Makefile.tmp
 
@@ -4401,6 +4436,7 @@ sed \
     -e "s|@configoptions@|$configoptions|" \
     -e "s|@hasmathmore@|$hasmathmore|"     \
     -e "s|@haspthread@|$haspthread|"       \
+    -e "s|@hasxft@|$hasxft|"               \
     < RConfigure.tmp > $CONFIGUREOUT
 rm -f RConfigure.tmp
 

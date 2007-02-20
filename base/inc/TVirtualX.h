@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.40 2007/02/18 14:56:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.41 2007/02/19 16:16:41 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -184,6 +184,7 @@ public:
    virtual Visual_t     GetVisual() const;
    virtual Int_t        GetScreen() const;
    virtual Int_t        GetDepth() const;
+   virtual UInt_t       ScreenWidthMM() const;
    virtual Colormap_t   GetColormap() const;
    virtual Atom_t       InternAtom(const char *atom_name, Bool_t only_if_exist);
    virtual Window_t     GetDefaultRootWindow() const;

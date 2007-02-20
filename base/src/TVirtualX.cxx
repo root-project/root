@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.16 2006/02/06 16:15:13 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.17 2006/05/15 13:31:01 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -2065,3 +2065,10 @@ void TVirtualX::ShapeCombineMask(Window_t, Int_t, Int_t, Pixmap_t)
 
 }
 
+//______________________________________________________________________________
+UInt_t TVirtualX::ScreenWidthMM() const
+{
+   // Returns the width of the screen in millimeters.
+
+   return 400;
+}

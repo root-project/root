@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.31 2006/02/06 16:48:12 couet Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.32 2006/05/15 13:31:01 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -379,6 +379,7 @@ public:
    Int_t        AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
    void         RemoveWindow(ULong_t qwid);
    void         ShapeCombineMask(Window_t id, Int_t x, Int_t y, Pixmap_t mask);
+   UInt_t       ScreenWidthMM() const;
 
    Bool_t       IsCmdThread() const;
 

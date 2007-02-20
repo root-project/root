@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.115 2006/06/16 10:06:05 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.116 2007/02/06 13:20:37 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Valeri Onuchin, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -7134,3 +7134,10 @@ void TGWin32::ShapeCombineMask(Window_t id, Int_t x, Int_t y, Pixmap_t mask)
    gdk_window_shape_combine_mask((GdkWindow *)id, (GdkBitmap *) mask, x, y);
 }
 
+//______________________________________________________________________________
+UInt_t TGWin32::ScreenWidthMM() const
+{
+   // Returns the width of the screen in millimeters.
+
+   return (UInt_t)gdk_screen_width_mm();
+}
