@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id:$
+// @(#)root/net:$Name:  $:$Id: TXNetFileStager.h,v 1.1 2007/02/14 18:25:22 rdm Exp $
 // Author: A. Peters, G. Ganis   7/2/2007
 
 /*************************************************************************
@@ -44,6 +44,8 @@ public:
 
    Bool_t  IsStaged(const char *path);
    Bool_t  Stage(const char *path, Option_t *opt = 0);
+   Bool_t  Stage(TList *pathlist, Option_t *opt = 0)
+              { return TFileStager::Stage(pathlist, opt); }
 
    Bool_t  IsValid() const { return (fSystem ? kTRUE : kFALSE); }
 
