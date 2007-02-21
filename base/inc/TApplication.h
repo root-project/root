@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.20 2006/07/26 13:36:42 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.21 2007/02/13 21:23:10 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -44,8 +44,6 @@ class TSignalHandler;
 
 class TApplication : public TObject, public TQObject {
 
-friend class TLoadGraphicsLibs;
-
 private:
    Int_t              fArgc;           //Number of com   mand line arguments
    char             **fArgv;           //Command line arguments
@@ -77,6 +75,12 @@ protected:
    void SetSignalHandler(TSignalHandler *sh) { fSigHandler = sh; }
 
 public:
+   // Load and initialize the graphics libraries
+   class TLoadGraphicsLibs {
+      public:
+      TLoadGraphicsLibs();
+   };
+
    TApplication(const char *appClassName, Int_t *argc, char **argv,
                 void *options = 0, Int_t numOptions = 0);
    virtual ~TApplication();
@@ -130,5 +134,8 @@ public:
 };
 
 R__EXTERN TApplication *gApplication;
+
+inline TApplication::TLoadGraphicsLibs::TLoadGraphicsLibs()
+ { if (gApplication) gApplication->InitializeGraphics(); }
 
 #endif

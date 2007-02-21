@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.256 2007/02/18 20:50:42 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.257 2007/02/21 09:52:14 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -55,12 +55,6 @@
 #include "TObjString.h"
 #include "TApplication.h"
 
-
-// Load and initialize the graphics libraries
-class TLoadGraphicsLibs {
-public:
-   TLoadGraphicsLibs() { if (gApplication) gApplication->InitializeGraphics(); }
-};
 
 // Local scratch buffer for screen points, faster than allocating buffer on heap
 const Int_t kPXY       = 1002;
@@ -129,7 +123,9 @@ ClassImpQ(TPad)
 TPad::TPad()
 {
    // Pad default constructor.
-   static TLoadGraphicsLibs loadGraphicsLibs;
+
+   //make sure that the Gpad and GUI libs are loaded
+   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
 
    fModified   = kTRUE;
    fTip        = 0;
@@ -215,7 +211,8 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    //  bordermode = 0  no special effects
    //  bordermode = 1  box looks as it is in front of the screen
 
-   static TLoadGraphicsLibs loadGraphicsLibs;
+   //make sure that the Gpad and GUI libs are loaded
+   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
 
    fModified   = kTRUE;
    fTip        = 0;
