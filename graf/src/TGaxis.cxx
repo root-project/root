@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.97 2007/02/06 14:35:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.98 2007/02/12 09:17:01 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -998,7 +998,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          charheight = charheight/gPad->GetWh();
       }
       Double_t toffset = GetTitleOffset();
-      if (toffset < 0.1) toffset = 1;
+//////if (toffset < 0.1) toffset = 1; // Negative offset should be allowed
       if (x1 == x0) ylabel = xlside*1.6*charheight*toffset;
       else          ylabel = xlside*1.3*charheight*toffset;
       if (y1 == y0) ylabel = xlside*1.6*charheight*toffset;
