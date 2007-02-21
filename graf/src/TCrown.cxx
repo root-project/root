@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCrown.cxx,v 1.6 2006/07/03 16:10:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCrown.cxx,v 1.7 2007/01/12 16:03:16 brun Exp $
 // Author: Rene Brun   108/08/2002
 
 /*************************************************************************
@@ -137,6 +137,7 @@ void TCrown::DrawCrown(Double_t x1, Double_t y1,Double_t radin,Double_t radout,D
    TCrown *newcrown = new TCrown(x1, y1, radin, radout, phimin, phimax);
    TAttLine::Copy(*newcrown);
    TAttFill::Copy(*newcrown);
+   newcrown->SetBit(kCanDelete);
    newcrown->AppendPad(option);
 }
 

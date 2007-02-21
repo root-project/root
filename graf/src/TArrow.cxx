@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.21 2006/07/03 16:10:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.22 2007/01/12 16:03:16 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -132,6 +132,7 @@ void TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    newarrow->SetAngle(fAngle);
    TAttLine::Copy(*newarrow);
    TAttFill::Copy(*newarrow);
+   newarrow->SetBit(kCanDelete);
    newarrow->AppendPad(opt);
 }
 
