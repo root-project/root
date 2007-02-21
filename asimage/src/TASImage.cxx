@@ -3417,6 +3417,8 @@ void TASImage::DrawVLine(UInt_t x, UInt_t y1, UInt_t y2, UInt_t col, UInt_t thic
    ARGB32 color = (ARGB32)col;
    UInt_t half = 0;
 
+   if (!thick)  thick = 1;
+
    if (thick > 1) {
       half = thick >> 1;
       if (x > half) {
@@ -3449,6 +3451,8 @@ void TASImage::DrawHLine(UInt_t y, UInt_t x1, UInt_t x2, UInt_t col, UInt_t thic
 
    ARGB32 color = (ARGB32)col;
    UInt_t half = 0;
+
+   if (!thick)  thick = 1;
 
    if (thick > 1) {
       half = thick >> 1;

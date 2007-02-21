@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.31 2007/02/16 15:05:52 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.32 2007/02/19 18:39:48 brun Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -20,7 +20,7 @@
 //         root [0] .x hsimple.C                                        //
 //         root [1] c1->Print("c1.gif");                                //
 //                                                                      //
-// TImageDump can be used in any mode (batch, interactive) as follows   //                                                                      //
+// TImageDump can be used in any mode (batch, interactive) as follows   //
 //                                                                      //
 //    TCanvas *c1;                                                      //
 //    TImageDump *imgdump = new TImageDump("test.png");                 //
@@ -43,6 +43,9 @@
 #include "TText.h"
 #include "RStipples.h"
 #include "TList.h"
+#include "TStyle.h"
+#include "TObjString.h"
+#include "TObjArray.h"
 
 
 ClassImp(TImageDump)
@@ -436,7 +439,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
 
    TColor *col = 0;
    Int_t  fais = 0 , fasi = 0;
-   Bool_t line = nn > 0;
+   Bool_t line = nn > 1;
    UInt_t n = TMath::Abs(nn);
 
    fais = fFillStyle/1000;
@@ -447,100 +450,127 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
    static TPoint gPointCache[gCachePtSize];
    Bool_t del = kTRUE;
 
-   switch (n) {
-      case 1:
-         col = gROOT->GetColor(fFillColor);
-         if (!col) { // no color, make it black 
-            fFillColor = 1;
-            col = gROOT->GetColor(fFillColor);
-         }
-         px1 = XtoPixel(x[0]);   py1 = YtoPixel(y[0]);
-         fImage->PutPixel(px1, py1, col->AsHexString());
-         break;
 
-      case 2:
-      {
+   // SetLineStyle
+   Int_t ndashes = 0;
+   char *dash = 0;
+   static char dashList[10];
+   Int_t dashLength = 0;
+   Int_t dashSize = 0;
+
+   if (line) {
+      // dash lines
+      if (fLineStyle > 1) {
+         TString st = gStyle->GetLineStyleString(fLineStyle);
+         TObjArray *tokens = st.Tokenize(" ");
+         ndashes = tokens->GetEntries();
+         dash = new char[ndashes];
+
+         for (int j = 0; j < ndashes; j++) {
+            Int_t it;
+            sscanf(((TObjString*)tokens->At(j))->GetName(), "%d", &it);
+            dash[j] = (char)(it/4);
+         }
+
+         dashSize = TMath::Min((int)sizeof(dashList), ndashes);
+         dashLength = 0;
+         for (int i = 0; i < dashSize; i++ ) {
+            dashList[i] = dash[i];
+            dashLength += dashList[i];
+         }
+         delete tokens;
+         delete [] dash;
+      }
+
+      // SetLineColor
+      col = gROOT->GetColor(fLineColor);
+      if (!col) { // no color, make it black
+         fLineColor = 1;
          col = gROOT->GetColor(fLineColor);
-         if (!col) { // no color, make it black
-            fLineColor = 1;
-            col = gROOT->GetColor(fLineColor);
-         }
-         px1 = XtoPixel(x[0]);   py1 = YtoPixel(y[0]);
-         px2 = XtoPixel(x[1]);   py2 = YtoPixel(y[1]);
-
-         switch (fLineStyle) {
-            case 1:
-            {
-               fImage->DrawLine(px1, py1, px2, py2, col->AsHexString(), fLineWidth);
-               break;
-            }
-            case 2:
-               fImage->DrawDashLine(px1, py1, px2, py2, 2, "\x5\x5", col->AsHexString(), fLineWidth);
-               break;
-            case 3:
-               fImage->DrawDashLine(px1, py1, px2, py2, 2, "\x1\x3", col->AsHexString(), fLineWidth);
-               break;
-            case 4:
-               fImage->DrawDashLine(px1, py1, px2, py2, 4,"\x5\x3\x1\x3", col->AsHexString(), fLineWidth);
-               break;
-            default:
-               fImage->DrawLine(px1, py1, px2, py2, col->AsHexString());
-               break;
-         }
-         break;
       }
-      default:
-      {
-         if (!line && ((fais == 3) || (fais == 2)) && (fasi > 100) ) {
-            return;
-         }
-
-         TPoint *pt = 0;
-         if (n+1 < gCachePtSize) {
-            pt = (TPoint*)&gPointCache;
-            del = kFALSE;
-         } else {
-            pt = new TPoint[n+1];
-            del = kTRUE;
-         }
-
-         TColor *fcol = gROOT->GetColor(fFillColor);
-         if (!fcol) { // no color, set it white
-            fFillColor = 10;
-            fcol = gROOT->GetColor(fFillColor);
-         }
-
-         TColor *lcol = gROOT->GetColor(fLineColor);
-         if (!lcol) { // no color, make it black
-            fLineColor = 1;
-            lcol = gROOT->GetColor(fLineColor);
-         }
-
-         for (UInt_t i = 0; i < n; i++) {
-            pt[i].fX = XtoPixel(x[i]);
-            pt[i].fY = YtoPixel(y[i]);
-         }
-         pt[n].fX = pt[0].fX;
-         pt[n].fY = pt[0].fY;
-
-         const char *stipple = (fais == 3) && (fasi > 0) && (fasi < 26) ? gStipples[fasi] : 0;
-
-         if (!line && fFillStyle && (fFillStyle != 4000)) {
-            if (!fcol) return;
-            if (n < 5) {
-               fImage->FillPolygon(n, pt, fcol->AsHexString(), stipple);
-            } else {
-               fImage->DrawFillArea(n, pt, fcol->AsHexString(), stipple);
-            }
-         }
-         if (line || !fFillStyle || (fFillStyle == 4000) || stipple) {
-            if (!lcol) return;
-            fImage->DrawPolyLine(line ? n : n+1, pt, lcol->AsHexString(), fLineWidth);
-         }
-         if (del) delete [] pt;
-      }
-      break;
    }
+
+   if (n == 1) {  // point
+      col = gROOT->GetColor(fFillColor);
+      if (!col) { // no color, make it black
+         fFillColor = 1;
+         col = gROOT->GetColor(fFillColor);
+      }
+      px1 = XtoPixel(x[0]);   py1 = YtoPixel(y[0]);
+      fImage->PutPixel(px1, py1, col->AsHexString());
+      return;
+   }
+
+   if (n == 2) {  // line
+      px1 = XtoPixel(x[0]);   py1 = YtoPixel(y[0]);
+      px2 = XtoPixel(x[1]);   py2 = YtoPixel(y[1]);
+
+      if (fLineStyle < 2) {
+         fImage->DrawLine(px1, py1, px2, py2, col->AsHexString(), fLineWidth);
+      } else {
+         fImage->DrawDashLine(px1, py1, px2, py2, dashSize, (const char*)dashList,
+                                 col->AsHexString(), fLineWidth);
+      }
+      return;
+   }
+
+   if (!line && ((fais == 3) || (fais == 2)) && (fasi > 100) ) {
+      return;
+   }
+
+   TPoint *pt = 0;
+   if (n+1 < gCachePtSize) {
+      pt = (TPoint*)&gPointCache;
+      del = kFALSE;
+   } else {
+      pt = new TPoint[n+1];
+      del = kTRUE;
+   }
+
+   TColor *fcol = gROOT->GetColor(fFillColor);
+   if (!fcol) { // no color, set it white
+      fFillColor = 10;
+      fcol = gROOT->GetColor(fFillColor);
+   }
+
+   TColor *lcol = gROOT->GetColor(fLineColor);
+   if (!lcol) { // no color, make it black
+      fLineColor = 1;
+      lcol = gROOT->GetColor(fLineColor);
+   }
+
+   for (UInt_t i = 0; i < n; i++) {
+      pt[i].fX = XtoPixel(x[i]);
+      pt[i].fY = YtoPixel(y[i]);
+   }
+   pt[n].fX = pt[0].fX;
+   pt[n].fY = pt[0].fY;
+
+   const char *stipple = (fais == 3) && (fasi > 0) && (fasi < 26) ? gStipples[fasi] : 0;
+
+   // filled polygon
+   if (!line && fFillStyle && (fFillStyle != 4000)) {
+      if (!fcol) return;
+
+      if (n < 5) {   // convex
+         fImage->FillPolygon(n, pt, fcol->AsHexString(), stipple);
+      } else {       // non-convex fill area
+         fImage->DrawFillArea(n, pt, fcol->AsHexString(), stipple);
+      }
+   }
+
+   // hollow polygon or polyline is drawn
+   if (line || !fFillStyle || (fFillStyle == 4000) || stipple) {
+      if (!lcol) return;
+
+      if (fLineStyle < 2) { // solid
+         fImage->DrawPolyLine(line ? n : n+1, pt, lcol->AsHexString(), fLineWidth);
+      } else { // dashed
+         DrawDashPolyLine(line ? n : n+1, pt,  dashSize, (const char*)dashList,
+                         lcol->AsHexString(), fLineWidth);
+      }
+   }
+   if (del) delete [] pt;
 }
 
 //______________________________________________________________________________
@@ -550,6 +580,27 @@ void TImageDump::DrawPS(Int_t, Float_t *, Float_t *)
 
    if (!gPad || !fImage) {
       return;
+   }
+}
+//______________________________________________________________________________
+void TImageDump::DrawDashPolyLine(Int_t nn, TPoint *xy, UInt_t nDash,
+                                    const char* pDash, const char* col, UInt_t thick)
+{
+   // draw dashed polyline
+
+   Int_t x0 = xy[0].GetX();
+   Int_t y0 = xy[0].GetY();
+   Int_t x = 0;
+   Int_t y = 0;
+
+   for (Int_t i = 1; i < nn; i++) {
+      x = xy[i].GetX();
+      y = xy[i].GetY();
+
+      fImage->DrawDashLine(x0, y0, x, y, nDash, pDash, col, thick);
+
+      x0 = x;
+      y0 = y;
    }
 }
 
@@ -683,7 +734,7 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
    }
 
    Double_t angle = 0.6*w*TMath::Abs(TMath::Sin(fTextAngle*TMath::Pi()/180.));
-   fImage->DrawText((int)x, fTextAngle != 0. ? int(y - angle) : (int)y, 
+   fImage->DrawText((int)x, fTextAngle != 0. ? int(y - angle) : (int)y,
                      chars, ttfsize, col->AsHexString(),
                      ttfont, TImage::kPlain, 0, fTextAngle);
 
