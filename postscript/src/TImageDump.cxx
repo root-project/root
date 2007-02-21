@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.32 2007/02/19 18:39:48 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.33 2007/02/21 09:20:42 couet Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -627,7 +627,7 @@ void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
    // yy: y position of the text
 
    // To scale fonts to the same size as the old TT version
-   const Float_t kScale = 0.96;
+   const Float_t kScale = 1.04;
 
    if (!gPad || !fImage || (fTextSize < 0)) {
       return;
