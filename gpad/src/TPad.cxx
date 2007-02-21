@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.257 2007/02/21 09:52:14 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.258 2007/02/21 11:50:30 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1458,12 +1458,13 @@ void TPad::DrawColorTable()
 
    TText *text = new TText(0,0,"");
    text->SetTextFont(61);
-   text->SetTextSize(0.05);
+   text->SetTextSize(0.07);
    text->SetTextAlign(22);
 
-   TBox *box;
-   char label[8];
-   //draw colortable boxes
+   TBox *box = new TBox();
+   box->SetFillStyle(1001);
+
+   // Draw color table boxes.
    hs = (y2-y1)/Double_t(5);
    ws = (x2-x1)/Double_t(10);
    for (i=0;i<10;i++) {
@@ -1473,11 +1474,11 @@ void TPad::DrawColorTable()
          ylow = y1 + hs*(Double_t(j)+0.1);
          yup  = y1 + hs*(Double_t(j)+0.9);
          color = 10*j + i + 1;
-         sprintf(label,"%d",color);
-         box = new TBox(xlow, ylow, xup, yup);
          box->SetFillColor(color);
-         box->Draw();
-         text->DrawText(0.5*(xlow+xup), 0.5*(ylow+yup),label);
+         box->DrawBox(xlow, ylow, xup, yup);
+         if (color == 1) text->SetTextColor(0);
+         else            text->SetTextColor(1);
+         text->DrawText(0.5*(xlow+xup), 0.5*(ylow+yup), Form("%d",color));
       }
    }
 }
