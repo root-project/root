@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.116 2007/02/06 13:20:37 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.117 2007/02/20 09:44:44 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Valeri Onuchin, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include <wchar.h>
 #include "gdk/gdkkeysyms.h"
 #include "xatom.h"
+#include <winuser.h>
 
 #include "TROOT.h"
 #include "TApplication.h"
@@ -52,7 +53,6 @@
 #include "TObjString.h"
 #include "TObjArray.h"
 #include "RStipples.h"
-
 
 extern "C" {
 void gdk_win32_draw_rectangle (GdkDrawable    *drawable,
@@ -98,8 +98,32 @@ void gdk_win32_draw_lines     (GdkDrawable    *drawable,
 
 };
 
+//////////// internal classes & structures (very private) ////////////////
+
+struct XWindow_t {
+   Int_t    open;                 // 1 if the window is open, 0 if not
+   Int_t    double_buffer;        // 1 if the double buffer is on, 0 if not
+   Int_t    ispixmap;             // 1 if pixmap, 0 if not
+   GdkDrawable *drawing;          // drawing area, equal to window or buffer
+   GdkDrawable *window;           // win32 window
+   GdkDrawable *buffer;           // pixmap used for double buffer
+   UInt_t   width;                // width of the window
+   UInt_t   height;               // height of the window
+   Int_t    clip;                 // 1 if the clipping is on
+   Int_t    xclip;                // x coordinate of the clipping rectangle
+   Int_t    yclip;                // y coordinate of the clipping rectangle
+   UInt_t   wclip;                // width of the clipping rectangle
+   UInt_t   hclip;                // height of the clipping rectangle
+   ULong_t *new_colors;           // new image colors (after processing)
+   Int_t    ncolors;              // number of different colors
+};
+
+
 /////////////////////////////////// globals //////////////////////////////////
 int gdk_debug_level;
+
+namespace {
+/////////////////////////////////// globals //////////////////////////////////
 
 GdkAtom gClipboardAtom = GDK_NONE;
 static XWindow_t *gCws;         // gCws: pointer to the current window
@@ -313,27 +337,6 @@ static KeySymbolMap_t gKeyMap[] = {
    {GDK_KP_Decimal, kKey_Period},
    {GDK_KP_Divide, kKey_Slash},
    {0, (EKeySym) 0}
-};
-
-
-//////////// internal classes & structures (very private) ////////////////
-
-struct XWindow_t {
-   Int_t    open;                 // 1 if the window is open, 0 if not
-   Int_t    double_buffer;        // 1 if the double buffer is on, 0 if not
-   Int_t    ispixmap;             // 1 if pixmap, 0 if not
-   GdkDrawable *drawing;          // drawing area, equal to window or buffer
-   GdkDrawable *window;           // win32 window
-   GdkDrawable *buffer;           // pixmap used for double buffer
-   UInt_t   width;                // width of the window
-   UInt_t   height;               // height of the window
-   Int_t    clip;                 // 1 if the clipping is on
-   Int_t    xclip;                // x coordinate of the clipping rectangle
-   Int_t    yclip;                // y coordinate of the clipping rectangle
-   UInt_t   wclip;                // width of the clipping rectangle
-   UInt_t   hclip;                // height of the clipping rectangle
-   ULong_t *new_colors;           // new image colors (after processing)
-   Int_t    ncolors;              // number of different colors
 };
 
 
@@ -660,35 +663,6 @@ void TGWin32MainThread::UnlockMSG()
    if (fMessageMutex) ::LeaveCriticalSection(fMessageMutex);
 }
 
-//______________________________________________________________________________
-static Bool_t MessageProcessingFunc(MSG *msg)
-{
-   // windows message processing procedure
-
-   Bool_t ret = kFALSE;
-
-   if (msg->message == TGWin32ProxyBase::fgPostMessageId) {
-      if (msg->wParam) {
-         TGWin32ProxyBase *proxy = (TGWin32ProxyBase*)msg->wParam;
-         proxy->ExecuteCallBack(kTRUE);
-      } else {
-         ret = kTRUE;
-      }
-   } else if (msg->message == TGWin32ProxyBase::fgPingMessageId) {
-      TGWin32ProxyBase::GlobalUnlock();
-   } else {
-      if ( (msg->message >= WM_NCMOUSEMOVE) &&
-           (msg->message <= WM_NCMBUTTONDBLCLK) ) {
-         TGWin32ProxyBase::GlobalLock();
-      }
-      TGWin32MainThread::LockMSG();
-      TranslateMessage(msg);
-      DispatchMessage(msg);
-      TGWin32MainThread::UnlockMSG();
-   }
-   return ret;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 class TGWin32RefreshTimer : public TTimer {
 
@@ -702,12 +676,15 @@ public:
 
       while (::PeekMessage(&msg, NULL, NULL, NULL, PM_NOREMOVE)) {
          ::PeekMessage(&msg, NULL, NULL, NULL, PM_REMOVE);
-         MessageProcessingFunc(&msg);
+         if (!gVirtualX)
+            Sleep(200); // avoid start-up race
+         if (gVirtualX)
+            ((TGWin32*)gVirtualX)->GUIThreadMessageFunc(&msg);
       }
       return kFALSE;
    }
 };
-
+/*
 //______________________________________________________________________________
 static DWORD WINAPI MessageProcessingLoop(void *p)
 {
@@ -749,6 +726,16 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
    }
    return 0;
 }
+*/
+
+Bool_t GUIThreadMessageWrapper(MSG* msg)
+{
+   // Static wrapper for handling GUI messages.
+   // Forwards from TWinNTSystem's GUIThreadMessageProcessingLoop()
+   // to TGWin32::GUIThreadMessageFunc()
+
+   return ((TGWin32*)gVirtualX)->GUIThreadMessageFunc(msg);
+}
 
 //______________________________________________________________________________
 TGWin32MainThread::TGWin32MainThread()
@@ -759,16 +746,19 @@ TGWin32MainThread::TGWin32MainThread()
    ::InitializeCriticalSection(fCritSec);
    fMessageMutex = new CRITICAL_SECTION;
    ::InitializeCriticalSection(fMessageMutex);
-   fHandle = ::CreateThread( NULL, 0, &MessageProcessingLoop, 0, 0, &fId );
+   fHandle = ((TWinNTSystem*)gSystem)->GetGUIThreadHandle();
+   fId = ((TWinNTSystem*)gSystem)->GetGUIThreadId();
+   ((TWinNTSystem*)gSystem)->SetGUIThreadMsgHandler(GUIThreadMessageWrapper);
    SetThreadAffinityMask(fHandle, 1);
 }
 
+} // unnamed namespace
 
 ///////////////////////// TGWin32 implementation ///////////////////////////////
 ClassImp(TGWin32)
 
 //______________________________________________________________________________
-TGWin32::TGWin32()
+TGWin32::TGWin32(): fRefreshTimer(0)
 {
    // Default constructor.
 
@@ -777,7 +767,7 @@ TGWin32::TGWin32()
 }
 
 //______________________________________________________________________________
-TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title)
+TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title), fRefreshTimer(0)
 {
    // Normal Constructor.
 
@@ -824,6 +814,51 @@ TGWin32::~TGWin32()
    // destructor.
 
    CloseDisplay();
+   delete fRefreshTimer;
+}
+
+//______________________________________________________________________________
+Bool_t TGWin32::GUIThreadMessageFunc(MSG* msg)
+{
+   // Message processing function for the GUI thread.
+   // Kicks in once TGWin32 becomes active, and "replaces" the dummy one
+   // in TWinNTSystem; see TWinNTSystem.cxx's GUIThreadMessageProcessingLoop().
+
+   if (!fRefreshTimer)
+      // periodically we refresh windows
+      // Don't create refresh timer if the application has been created inside PVSS
+      if (gApplication) {
+         TString arg = gSystem->BaseName(gApplication->Argv(0));
+         if (!arg.Contains("PVSS"))
+            fRefreshTimer = new TGWin32RefreshTimer();
+         else
+            // dummy object to not continuosly test for PVSS if !fRefreshTimer
+            fRefreshTimer = new TObject();
+      } else
+         fRefreshTimer = new TGWin32RefreshTimer();
+
+   Bool_t ret = kFALSE;
+
+   if (msg->message == TGWin32ProxyBase::fgPostMessageId) {
+      if (msg->wParam) {
+         TGWin32ProxyBase *proxy = (TGWin32ProxyBase*)msg->wParam;
+         proxy->ExecuteCallBack(kTRUE);
+      } else {
+         ret = kTRUE;
+      }
+   } else if (msg->message == TGWin32ProxyBase::fgPingMessageId) {
+      TGWin32ProxyBase::GlobalUnlock();
+   } else {
+      if ( (msg->message >= WM_NCMOUSEMOVE) &&
+           (msg->message <= WM_NCMBUTTONDBLCLK) ) {
+         TGWin32ProxyBase::GlobalLock();
+      }
+      TGWin32MainThread::LockMSG();
+      TranslateMessage(msg);
+      DispatchMessage(msg);
+      TGWin32MainThread::UnlockMSG();
+   }
+   return ret;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.68 2007/02/13 07:59:47 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.69 2007/02/13 08:37:12 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -412,7 +412,7 @@ void TRint::PrintLogo()
       Printf("\nFreeType Engine v%d.%d.%d used to render TrueType fonts.",
              major, minor, patch);
    }
-#ifdef _REENTRANT
+#if defined (_REENTRANT) || defined (WIN32)
    else
       printf("\n");
    Printf("Compiled on %s for %s with thread support.", built_date,

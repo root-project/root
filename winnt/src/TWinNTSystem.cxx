@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.163 2007/02/05 10:38:04 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.164 2007/02/06 17:47:31 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -54,6 +54,7 @@
 #include <Tlhelp32.h>
 #include <sstream>
 #include <iostream>
+#include <list>
 #include <shlobj.h>
 
 extern "C" {
@@ -97,6 +98,7 @@ public:
 namespace {
    const char *kProtocolName   = "tcp";
    typedef void (*SigHandler_t)(ESignals);
+   static TWinNTSystem::ThreadMsgFunc_t gGUIThreadMsgFunc = 0;      // GUI thread message handler func
 
    static HANDLE gConsoleEvent;
    static HANDLE gConsoleThreadHandle;
@@ -442,6 +444,44 @@ namespace {
       return 0;
    }
 
+   //______________________________________________________________________________
+   static DWORD WINAPI GUIThreadMessageProcessingLoop(void *p)
+   {
+      // Message processing loop for the TGWin32 related GUI 
+      // thread for processing windows messages (aka Main/Server thread).
+      // We need to start the thread outside the TGWin32 / GUI related
+      // dll, because starting threads at DLL init time does not work.
+      // Indead, we start an ideling thread at binary startup, and only
+      // call the "real" message provcessing function
+      // TGWin32::GUIThreadMessageFunc() once gVirtualX comes up.
+
+      MSG msg;
+
+      // force to create message queue
+      ::PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
+
+      Int_t erret = 0;
+      Bool_t endLoop = kFALSE;
+      while (!endLoop) {
+         erret = ::GetMessage(&msg, NULL, NULL, NULL);
+         if (erret <= 0) endLoop = kTRUE;
+         if (gGUIThreadMsgFunc)
+            endLoop = (*gGUIThreadMsgFunc)(&msg);
+      }
+
+      gVirtualX->CloseDisplay();
+
+      // exit thread
+      if (erret == -1) {
+         erret = ::GetLastError();
+         Error("MsgLoop", "Error in GetMessage");
+         ::ExitThread(-1);
+      } else {
+         ::ExitThread(0);
+      }
+      return 0;
+   }
+
    //=========================================================================
    // Load IMAGEHLP.DLL and get the address of functions in it that we'll use
    // by Microsoft, from http://www.microsoft.com/msj/0597/hoodtextfigs.htm#fig1
@@ -716,7 +756,8 @@ Bool_t TWinNTSystem::HandleConsoleEvent()
 }
 
 //______________________________________________________________________________
-TWinNTSystem::TWinNTSystem() : TSystem("WinNT", "WinNT System")
+TWinNTSystem::TWinNTSystem() : TSystem("WinNT", "WinNT System"),
+fGUIThreadHandle(0), fGUIThreadId(0)
 {
    // ctor
 
@@ -737,6 +778,8 @@ TWinNTSystem::TWinNTSystem() : TSystem("WinNT", "WinNT System")
       fBeepDuration = gEnv->GetValue("Root.System.BeepDuration", 1);
       fBeepFreq     = gEnv->GetValue("Root.System.BeepFreq", 0);
    }
+
+   ::InitializeCriticalSection(&fCritSectLoad);
 }
 
 //______________________________________________________________________________
@@ -768,6 +811,7 @@ TWinNTSystem::~TWinNTSystem()
    }
    if (gConsoleThreadHandle) ::CloseHandle(gConsoleThreadHandle);
    if (gTimerThreadHandle) ::CloseHandle(gTimerThreadHandle);
+   ::DeleteCriticalSection(&fCritSectLoad);
 }
 
 //______________________________________________________________________________
@@ -844,6 +888,8 @@ Bool_t TWinNTSystem::Init()
 
    gTimerThreadHandle = ::CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)ThreadStub,
                         this, NULL, NULL);
+
+   fGUIThreadHandle = ::CreateThread( NULL, 0, &GUIThreadMessageProcessingLoop, 0, 0, &fGUIThreadId );
 
    fGroupsInitDone = kFALSE;
 
@@ -1001,6 +1047,22 @@ void TWinNTSystem::DoBeep(Int_t freq /*=-1*/, Int_t duration /*=-1*/) const
    if (duration < 0) duration = 100;
    ::Beep(freq, duration);
 }
+
+void TWinNTSystem::SetGUIThreadMsgHandler(ThreadMsgFunc_t func)
+{
+   // Set the (static part of) the event handler func for GUI messages.
+
+   gGUIThreadMsgFunc = func;
+}
+
+void TWinNTSystem::NotifyApplicationCreated()
+{
+   // hook to tell TSystem that the TApplication object has been created
+
+   // send a dummy message to the GUI thread to kick it into life
+   ::PostThreadMessage(fGUIThreadId, 0, NULL, 0L);
+}
+
 
 //---- EventLoop ---------------------------------------------------------------
 
@@ -1295,7 +1357,7 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
    Bool_t pollOnce = pendingOnly;
 
    while (1) {
-      if (gROOT->IsLineProcessing() && !gVirtualX->IsCmdThread()) {
+      if (gROOT->IsLineProcessing() && (!gVirtualX || !gVirtualX->IsCmdThread())) {
          if (!pendingOnly) {
             // yield execution to another thread that is ready to run
             // if no other thread is ready, sleep 1 ms before to return
@@ -3374,6 +3436,57 @@ char *TWinNTSystem::DynamicPathName(const char *lib, Bool_t quiet)
             GetDynamicPath());
    }
    return name;
+}
+
+
+namespace {
+   struct TLibLoadRequest {
+      TLibLoadRequest(const char* m, const char* e, Bool_t s):
+         module(m), entry(e), system(s) {}
+      TString module;
+      TString entry;
+      Bool_t system;
+   };
+}
+
+//______________________________________________________________________________
+int TWinNTSystem::Load(const char *module, const char *entry, Bool_t system)
+{
+   // Load a shared library. Returns 0 on successful loading, 1 in
+   // case lib was already loaded and -1 in case lib does not exist
+   // or in case of error.
+   // Stacks load requests to make it re-entrant; stacked requests will 
+   // always return 0.
+
+   static std::list<TLibLoadRequest> loadRequests;
+   static Bool_t busy = kFALSE;
+
+   TLibLoadRequest request(module, entry, system);
+   if (!busy) {
+      int ret = 0;
+      busy = kTRUE;
+      Bool_t haveLoadRequests = kFALSE;
+      do {
+         ret = TSystem::Load(request.module, request.entry, request.system);
+         ::EnterCriticalSection(&fCritSectLoad);
+         haveLoadRequests = !loadRequests.empty();
+         if (haveLoadRequests) {
+            request.module = loadRequests.begin()->module;
+            request.entry = loadRequests.begin()->entry;
+            request.system = loadRequests.begin()->system;
+            loadRequests.pop_front();
+         }
+         ::LeaveCriticalSection(&fCritSectLoad);
+      } while (haveLoadRequests);
+      busy = kFALSE;
+      return ret;
+   }
+
+   // stack request
+   ::EnterCriticalSection(&fCritSectLoad);
+   loadRequests.push_back(request);
+   ::LeaveCriticalSection(&fCritSectLoad);
+   return 0;
 }
 
 //______________________________________________________________________________

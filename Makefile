@@ -291,8 +291,6 @@ ROOTULIBS    := -Wl,-u,_G__cpp_setupG__Net      \
 endif
 endif
 ifeq ($(PLATFORM),win32)
-#on Windows, set BOOTLIBS to ROOTLIBS until we solve a dependency problem
-BOOTLIBS     := $(ROOTLIBS)
 ROOTULIBS    := -include:_G__cpp_setupG__Net    \
                 -include:_G__cpp_setupG__IO     \
                 -include:_G__cpp_setupG__Hist   \
@@ -301,7 +299,6 @@ ROOTULIBS    := -include:_G__cpp_setupG__Net    \
                 -include:_G__cpp_setupG__GPad   \
                 -include:_G__cpp_setupG__Tree   \
                 -include:_G__cpp_setupG__Matrix
-BOOTULIBS    := $(ROOTULIBS)
 endif
 
 ##### Compiler output option #####
@@ -551,7 +548,7 @@ endif
 $(COMPILEDATA): config/Makefile.$(ARCH) $(MAKECOMPDATA)
 	@$(MAKECOMPDATA) $(COMPILEDATA) "$(CXX)" "$(OPTFLAGS)" "$(DEBUGFLAGS)" \
 	   "$(CXXFLAGS)" "$(SOFLAGS)" "$(LDFLAGS)" "$(SOEXT)" "$(SYSLIBS)" \
-	   "$(LIBDIR)" "$(ROOTLIBS)" "$(RINTLIBS)" "$(INCDIR)" \
+	   "$(LIBDIR)" "$(BOOTLIBS)" "$(RINTLIBS)" "$(INCDIR)" \
 	   "$(MAKESHAREDLIB)" "$(MAKEEXE)" "$(ARCH)" "$(ROOTBUILD)"
 
 build/dummy.d: config Makefile $(ALLHDRS) $(RMKDEP) $(BINDEXP) $(PCHDEP)

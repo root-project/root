@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.32 2006/05/15 13:31:01 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.33 2007/02/20 09:44:44 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -59,6 +59,8 @@ struct GdkImage;
 struct GdkPoint;
 struct GdkRectangle;
 
+struct MSG;
+
 #endif
 
 typedef unsigned long KeySym;
@@ -67,14 +69,13 @@ typedef unsigned long KeySym;
 
 struct XWindow_t;
 
-
 class TGWin32 : public TVirtualX {
 
 private:
    enum EAlign { kNone, kTLeft, kTCenter, kTRight, kMLeft, kMCenter, kMRight,
                  kBLeft, kBCenter, kBRight };
 
-   FT_Vector   fAlign;                 // alignment vector
+   FT_Vector        fAlign;                 // alignment vector
 
    void    Align(void);
    void    DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back, GdkImage *xim,
@@ -131,6 +132,7 @@ protected:
    Int_t       fGreenShift;         // Bits to left shift green
    Int_t       fBlueShift;          // Bits to left shift blue
    Handle_t    fXEvent;             // Current native (GDK) event
+   TObject*    fRefreshTimer;       // TGWin32RefreshTimer for GUI thread message handler
 
    Bool_t      fFillColorModified;  //
    Bool_t      fFillStyleModified;  //
@@ -381,6 +383,7 @@ public:
    void         ShapeCombineMask(Window_t id, Int_t x, Int_t y, Pixmap_t mask);
    UInt_t       ScreenWidthMM() const;
 
+   Bool_t       GUIThreadMessageFunc(MSG* msg);
    Bool_t       IsCmdThread() const;
 
    static void Lock();

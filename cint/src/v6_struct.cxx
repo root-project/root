@@ -455,6 +455,7 @@ int G__class_autoloading(int tagnum)
 *          = 1   if not found try to instantiate template class
 *                no error messages if template is not found
 *          = 2   if not found just return without trying template
+*          = 3   like 2, and no autoloading
 *
 * CAUTION:
 *  If template class with constant argument is given to this function,
@@ -573,7 +574,7 @@ int G__defined_tagname(const char *tagname,int noerror)
      if(len==G__struct.hash[i]&&strcmp(atom_tagname,G__struct.name[i])==0) {
         if ((char*)NULL==p&&-1==G__struct.parent_tagnum[i]||
             env_tagnum==G__struct.parent_tagnum[i]) {
-           G__class_autoloading(i);
+           if (noerror < 3) G__class_autoloading(i);
            return(i);
         }
 
@@ -607,7 +608,7 @@ int G__defined_tagname(const char *tagname,int noerror)
   }
 
   if (candidateTag != -1) {
-     G__class_autoloading(candidateTag);
+     if (noerror < 3) G__class_autoloading(candidateTag);
      return(candidateTag);
   }
 
@@ -680,7 +681,7 @@ int G__defined_tagname(const char *tagname,int noerror)
   if(-1!=i) {
     i=G__newtype.tagnum[i];
     if(-1!=i) {
-      G__class_autoloading(i);
+      if (noerror < 3) G__class_autoloading(i);
       return(i);
     }
   }
@@ -731,7 +732,7 @@ int G__search_tagname(const char *tagname,int type)
   type = tolower(type);
 
   /* Search for old tagname */
-  i = G__defined_tagname(tagname,2);
+  i = G__defined_tagname(tagname,3);
 
 #ifndef G__OLDIMPLEMENTATION1823
   if(strlen(tagname)>G__BUFLEN*2-10) {

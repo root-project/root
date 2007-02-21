@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.79 2007/02/13 14:23:15 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.80 2007/02/13 21:23:10 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -46,6 +46,9 @@
 #include "TPluginManager.h"
 #include "TClassTable.h"
 
+#ifdef R__WIN32
+#include "TWinNTSystem.h"
+#endif
 
 TApplication *gApplication = 0;
 Bool_t TApplication::fgGraphInit = kFALSE;
@@ -144,6 +147,10 @@ TApplication::TApplication(const char *appClassName,
    if (fArgv)
       gSystem->SetProgname(fArgv[0]);
 
+#ifdef R__WIN32
+   ((TWinNTSystem*)gSystem)->NotifyApplicationCreated();
+#endif
+
    fIdleTimer     = 0;
    fSigHandler    = 0;
    fIsRunning     = kFALSE;
@@ -186,6 +193,8 @@ void TApplication::InitializeGraphics()
 {
    // Initialize the graphics environment.
 
+   if (fgGraphInit)
+      return;
    // Load the graphics related libraries
    LoadGraphicsLibs();
 
