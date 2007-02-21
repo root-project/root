@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.cxx,v 1.8 2006/05/28 20:08:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.cxx,v 1.9 2006/12/12 14:18:26 antcheva Exp $
 // Author: Valeriy Onuchin   12/08/04
 
 /*************************************************************************
@@ -89,6 +89,7 @@
 #include "TVirtualDragManager.h"
 #include "TPluginManager.h"
 #include "TROOT.h"
+#include "TApplication.h"
 
 ClassImp(TGuiBuilder)
 ClassImp(TGuiBldAction)
@@ -119,6 +120,8 @@ TGuiBuilder::TGuiBuilder()
 {
    // constructor
 
+   //make sure that the Gpad and GUI libs are loaded
+   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
    // load plugin
    if (!gGuiBuilder) {
       gHandler = gROOT->GetPluginManager()->FindHandler("TGuiBuilder");

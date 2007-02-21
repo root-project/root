@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.12 2006/02/23 16:44:52 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.13 2006/12/09 23:01:54 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include "TGLDrawFlags.h"
 #include "TGLUtil.h"
 #include "TGLIncludes.h"
+#include "TVirtualGL.h"
 
 #include "Riostream.h"
 #include "TError.h"
@@ -67,7 +68,8 @@ TGLDisplayListCache::TGLDisplayListCache(Bool_t enable, UInt_t size) :
 TGLDisplayListCache::~TGLDisplayListCache()
 {
    // Destroy display list cache - deleting internal GL display list block
-   glDeleteLists(fDLBase,fSize);
+   if (gVirtualGL)
+      gVirtualGL->DeleteGLLists(fDLBase,fSize);
 }
 
 //______________________________________________________________________________
@@ -75,7 +77,8 @@ void TGLDisplayListCache::Init()
 {
    // Initialise the cache - create the internal GL display list block of size
    // fSize
-   fDLBase = glGenLists(fSize);
+   if (gVirtualGL)
+      fDLBase = gVirtualGL->CreateGLLists(fSize);
    fDLNextFree = fDLBase;
    TGLUtil::CheckError("TGLDisplayListCache::Init");
    fInit = kTRUE;
@@ -188,7 +191,8 @@ Bool_t TGLDisplayListCache::CloseCapture()
 void TGLDisplayListCache::Purge()
 {
    // Purge all entries for all drawable/LOD pairs from cache
-   glDeleteLists(fDLBase,fSize);
+   if (gVirtualGL)
+      gVirtualGL->DeleteGLLists(fDLBase,fSize);
    fCacheDLMap.erase(fCacheDLMap.begin(), fCacheDLMap.end());
    fInit = kFALSE;
    fCaptureFullReported = kFALSE;

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.58 2007/01/30 11:49:14 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.59 2007/02/07 15:24:16 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -210,6 +210,8 @@ void TGLViewer::BeginScene()
    // Start building of viewer scene
    // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
    // for description of viewer architecture
+
+   TGLStopwatch *stopwatch = 0;
    if (!fScene.TakeLock(TGLScene::kModifyLock)) {
       return;
    }
@@ -217,9 +219,11 @@ void TGLViewer::BeginScene()
    UInt_t destroyedLogicals = 0;
    UInt_t destroyedPhysicals = 0;
 
-   TGLStopwatch stopwatch;
-   if (gDebug>2 || fDebugMode) {
-      stopwatch.Start();
+   if (fGLWindow && gVirtualGL && (fGLDevice != -1)) {
+      stopwatch = new TGLStopwatch();
+   }
+   if (stopwatch && (gDebug>2 || fDebugMode)) {
+      stopwatch->Start();
    }
 
    // External rebuild?
@@ -263,9 +267,9 @@ void TGLViewer::BeginScene()
    fAcceptedPhysicals = 0;
    fRejectedPhysicals = 0;
 
-   if (gDebug>2 || fDebugMode) {
+   if (stopwatch && (gDebug>2 || fDebugMode)) {
       Info("TGLViewer::BeginScene", "destroyed %d physicals %d logicals in %f msec",
-            destroyedPhysicals, destroyedLogicals, stopwatch.End());
+            destroyedPhysicals, destroyedLogicals, stopwatch->End());
       fScene.Dump();
    }
 }
@@ -318,6 +322,8 @@ Bool_t TGLViewer::RebuildScene()
 {
    // If we accepted all offered physicals into the scene no point in
    // rebuilding it.
+
+   TGLStopwatch *timer = 0;
    if (fAcceptedAllPhysicals) {
       // For debug mode always force even if not required
       if (fDebugMode) {
@@ -349,9 +355,11 @@ Bool_t TGLViewer::RebuildScene()
    // Internally triggered scene rebuild
    fInternalRebuild = kTRUE;
 
-   TGLStopwatch timer;
-   if (gDebug>2 || fDebugMode) {
-      timer.Start();
+   if (fGLWindow && gVirtualGL && (fGLDevice != -1)) {
+      timer = new TGLStopwatch();
+   }
+   if (timer && (gDebug>2 || fDebugMode)) {
+      timer->Start();
    }
 
    // Request a scene fill
@@ -359,8 +367,8 @@ Bool_t TGLViewer::RebuildScene()
    //fPad->Modified();
    fPad->Paint();
 
-   if (gDebug>2 || fDebugMode) {
-      Info("TGLViewer::RebuildScene", "rebuild complete in %f", timer.End());
+   if (timer && (gDebug>2 || fDebugMode)) {
+      Info("TGLViewer::RebuildScene", "rebuild complete in %f", timer->End());
    }
 
    // Need to invalidate/redraw via timer as under Win32 we are already inside the
@@ -1043,6 +1051,7 @@ void TGLViewer::DoDraw()
 {
    // Draw out the the current viewer/scene
 
+   TGLStopwatch *timer = 0;
    // Locking mainly for Win32 mutli thread safety - but no harm in all using it
    // During normal draws a draw lock is taken in other thread (Win32) in RequestDraw()
    // to ensure thread safety. For PrintObjects repeated Draw() calls are made.
@@ -1061,9 +1070,11 @@ void TGLViewer::DoDraw()
       SetViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
    }
 
-   TGLStopwatch timer;
-   if (gDebug>2) {
-      timer.Start();
+   if (fGLWindow && gVirtualGL && (fGLDevice != -1)) {
+      timer = new TGLStopwatch();
+   }
+   if (timer && gDebug > 2) {
+      timer->Start();
    }
 
    // GL pre draw setup
@@ -1126,8 +1137,8 @@ void TGLViewer::DoDraw()
 
    PostDraw();
 
-   if (gDebug>2) {
-      Info("TGLViewer::DoDraw()", "Took %f msec", timer.End());
+   if (timer && gDebug > 2) {
+      Info("TGLViewer::DoDraw()", "Took %f msec", timer->End());
       TGLDisplayListCache::Instance().Dump();
    }
 
