@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.39 2007/02/06 14:22:28 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.40 2007/02/19 14:20:08 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -319,13 +319,13 @@ Double_t TGeoXtru::DistToPlane(Double_t *point, Double_t *dir, Int_t iz, Int_t i
    if (fZ[iz]==fZ[iz+1] && !in) {
       TGeoXtru *xtru = (TGeoXtru*)this;
       snext = (fZ[iz]-point[2])/dir[2];
+      if (snext<0) return TGeoShape::Big();
       pt[0] = point[0]+snext*dir[0];
       pt[1] = point[1]+snext*dir[1];
       pt[2] = point[2]+snext*dir[2];
-      xtru->SetCurrentVertices(fX0[iz], fY0[iz], fScale[iz]);
-      if (!xtru->Contains(pt)) return TGeoShape::Big();
-      xtru->SetCurrentVertices(fX0[iz+1], fY0[iz+1], fScale[iz+1]);
-      if (!xtru->Contains(pt)) return TGeoShape::Big();
+      if (dir[2] < 0.) xtru->SetCurrentVertices(fX0[iz], fY0[iz], fScale[iz]);
+      else             xtru->SetCurrentVertices(fX0[iz+1], fY0[iz+1], fScale[iz+1]);
+      if (!fPoly->Contains(pt)) return TGeoShape::Big();
       return snext;
    }      
    GetPlaneVertices(iz, ivert, vert);
