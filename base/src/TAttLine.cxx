@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.16 2007/01/15 22:08:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.17 2007/02/21 09:33:21 couet Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -43,7 +43,7 @@ color table. The following table shows the first 50 default colors.
 End_Html
 Begin_Macro(source)
 {
-   TCanvas *c = new TCanvas("c","Fill Area colors",0,0,500,200);
+   TCanvas *c = new TCanvas("c","Line colors",0,0,500,200);
    c.DrawColorTable();
    return c;
 }
