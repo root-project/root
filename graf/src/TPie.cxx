@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.12 2007/01/24 17:06:21 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.13 2007/02/15 15:04:40 brun Exp $
 // Author: Guido Volpi, Olivier Couet 03/11/2006
 
 /*************************************************************************
@@ -14,7 +14,7 @@
 
 #include <Riostream.h>
 #include <TROOT.h>
-#include <TPad.h>
+#include <TVirtualPad.h>
 #include <TArc.h>
 #include <TLegend.h>
 #include <TMath.h>

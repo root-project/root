@@ -11,7 +11,7 @@
 #include <Riostream.h>
 #include <TError.h>
 #include <TROOT.h>
-#include <TPad.h>
+#include <TVirtualPad.h>
 #include <TArc.h>
 #include <TMath.h>
 #include <TStyle.h>
@@ -92,7 +92,7 @@ Double_t TPieSlice::GetValue()
 
 
 //______________________________________________________________________________
-void TPieSlice::SavePrimitive(ostream &/*out*/, Option_t */*opts*/)
+void TPieSlice::SavePrimitive(ostream &/*out*/, Option_t * /*opts*/)
 {
    // Do nothing.
 }
