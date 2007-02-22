@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.205 2007/02/13 14:27:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.206 2007/02/15 15:04:05 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -887,7 +887,7 @@ TObject *TROOT::GetFunction(const char *name) const
    TObject *f1 = fFunctions->FindObject(name);
    if (f1) return f1;
 
-   gROOT->ProcessLine("TF1::InitStandardFunctions()");
+   gROOT->ProcessLine("TF1::InitStandardFunctions();");
 
    return fFunctions->FindObject(name);
 }
