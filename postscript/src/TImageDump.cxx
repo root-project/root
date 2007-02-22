@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.34 2007/02/21 10:32:18 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.35 2007/02/21 15:40:56 couet Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -619,132 +619,26 @@ void TImageDump::NewPage()
 }
 
 //______________________________________________________________________________
-void TImageDump::Text(Double_t xx, Double_t yy, const char *chars)
+void TImageDump::Text(Double_t x, Double_t y, const char *chars)
 {
    // Draw text
    //
-   // xx: x position of the text
-   // yy: y position of the text
+   // x: x position of the text
+   // y: y position of the text
 
-   // To scale fonts to the same size as the old TT version
-   const Float_t kScale = 1.0;
-
-   if (!gPad || !fImage || (fTextSize < 0)) {
+   if (!gPad || !fImage) {
       return;
    }
 
    fImage->BeginPaint();
 
-   Double_t x = XtoPixel(xx);
-   Double_t y = YtoPixel(yy);
-
-   // Added by cholm for use of DFSG - fonts - based on Kevins fix.
-   // Table of Microsoft and (for non-MSFT operating systems) backup
-   // FreeFont TTF fonts.
-   static const char *fonttable[][2] = {
-      // fontnumber/10  MSFT font   Free font
-      /* 0 */ { "arialbd.ttf",   "FreeSansBold.ttf"        },
-      /* 1 */ { "timesi.ttf",    "FreeSerifItalic.ttf"     },
-      /* 2 */ { "timesbd.ttf",   "FreeSerifBold.ttf"       },
-      /* 3 */ { "timesbi.ttf",   "FreeSerifBoldItalic.ttf" },
-      /* 4 */ { "arial.ttf",     "FreeSans.ttf"            },
-      /* 5 */ { "ariali.ttf",    "FreeSansOblique.ttf"     },
-      /* 6 */ { "arialbd.ttf",   "FreeSansBold.ttf"        },
-      /* 7 */ { "arialbi.ttf",   "FreeSansBoldOblique.ttf" },
-      /* 8 */ { "cour.ttf",      "FreeMono.ttf"            },
-      /* 9 */ { "couri.ttf",     "FreeMonoOblique.ttf"     },
-      /*10 */ { "courbd.ttf",    "FreeMonoBold.ttf"        },
-      /*11 */ { "courbi.ttf",    "FreeMonoBoldOblique.ttf" },
-      /*12 */ { "symbol.ttf",    "symbol.ttf"              },
-      /*13 */ { "times.ttf",     "FreeSerif.ttf"           },
-      /*14 */ { "wingding.ttf",  "opens___.ttf"            }
-   };
-
-   int fontid = fTextFont/10;
-   if (fontid < 0 || fontid > 14) fontid = 0;
-
-    // try to load font (font must be in Root.TTFontPath resource)
-   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-# ifdef TTFFONTDIR
-                                       TTFFONTDIR);
-# else
-                                       "$(ROOTSYS)/fonts");
-# endif
-
-   char *ttfont = gSystem->Which(ttpath, fonttable[fontid][0], kReadPermission);
-
-   if (!ttfont)
-      // try backup free font
-      ttfont = gSystem->Which(ttpath, fonttable[fontid][1], kReadPermission);
-
-   if (!ttfont) {
-      Error("Text", "font file %s not found in path", fonttable[fontid][0]);
-      return;
-   }
-
-   Double_t wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
-
-   Int_t ttfsize;
-
-   if (wh < hh) {
-      ttfsize = (Int_t)(fTextSize*wh*kScale);
-   } else {
-      ttfsize = (Int_t)(fTextSize*hh*kScale);
-   }
-
-   if (ttfsize <= 0) return;
-
-   // Text alignment
-   Int_t txalh = fTextAlign/10;
-   if (txalh < 1) txalh = 1;
-   if (txalh > 3) txalh = 3;
-
-   Int_t txalv = fTextAlign%10;
-   if (txalv < 1) txalv = 1;
-   if (txalv > 3) txalv = 3;
-
-   UInt_t w, h;
-
-   TText t;
+   TText t(x, y, chars);
    t.SetTextSize(fTextSize);
    t.SetTextFont(fTextFont);
-   t.GetTextExtent(w, h, chars);
-
-   // horizontal alignment
-   if (txalh == 2) {
-      x -= w/2;
-   }
-   if (txalh == 3) {
-      x -= w;
-   }
-
-   // dirty hack for vertical alignment
-   // because TImage text drawing doesnt have alignment  
-   int al = ttfsize/4;
-   y -= al;
-   h -= al;
-
-   // vertical alignment
-   if (txalv == 1) {
-      y -= h;
-   }
-   if (txalv == 2) {
-      y -= (h/2);
-   }
-
-   TColor *col = gROOT->GetColor(fTextColor);
-   if (!col) {
-      fTextColor = 1;   //black
-      col = gROOT->GetColor(fTextColor);
-   }
-
-   Double_t angle = 0.6*w*TMath::Abs(TMath::Sin(fTextAngle*TMath::Pi()/180.));
-   fImage->DrawText((int)x, fTextAngle != 0. ? int(y - angle) : (int)y,
-                     chars, ttfsize, col->AsHexString(),
-                     ttfont, TImage::kPlain, 0, fTextAngle);
-
-   delete [] ttfont;
+   t.SetTextAlign(fTextAlign);
+   t.SetTextAngle(fTextAngle);
+   t.SetTextColor(fTextColor);
+   fImage->DrawText(&t, XtoPixel(x), YtoPixel(y));
 }
 
 
