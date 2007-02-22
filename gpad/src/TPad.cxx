@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.258 2007/02/21 11:50:30 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.259 2007/02/21 17:01:19 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1462,7 +1462,6 @@ void TPad::DrawColorTable()
    text->SetTextAlign(22);
 
    TBox *box = new TBox();
-   box->SetFillStyle(1001);
 
    // Draw color table boxes.
    hs = (y2-y1)/Double_t(5);
@@ -1473,8 +1472,12 @@ void TPad::DrawColorTable()
       for (j=0;j<5;j++) {
          ylow = y1 + hs*(Double_t(j)+0.1);
          yup  = y1 + hs*(Double_t(j)+0.9);
-         color = 10*j + i + 1;
+         color = 10*j + i;
+         box->SetFillStyle(1001);
          box->SetFillColor(color);
+         box->DrawBox(xlow, ylow, xup, yup);
+         box->SetFillStyle(0);
+         box->SetLineColor(1);
          box->DrawBox(xlow, ylow, xup, yup);
          if (color == 1) text->SetTextColor(0);
          else            text->SetTextColor(1);
