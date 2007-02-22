@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.56 2006/12/01 09:26:31 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.57 2007/02/15 15:04:41 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -322,7 +322,7 @@ TTreeViewer::TTreeViewer(const char* treeName)
 
 //______________________________________________________________________________
 TTreeViewer::TTreeViewer(const TTree *tree)
-          :TGMainFrame(gClient->GetRoot(),10,10,kVerticalFrame)
+          :TGMainFrame(0, 10, 10, kVerticalFrame)
 {
    // TTreeViewer constructor with a pointer to a Tree
 

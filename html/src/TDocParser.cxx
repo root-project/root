@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.5 2007/02/13 20:22:06 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.6 2007/02/15 17:32:32 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -90,7 +90,7 @@ namespace {
 // Also handles special macros like
 /* Begin_Macro(GUI, source)
 {
-   TGMainFrame* f = new TGMainFrame(gClient->GetRoot(), 100, 100);
+   TGMainFrame* f = new TGMainFrame(0, 100, 100);
    f->SetName("testMainFrame"); // that's part of the name of the image
    TGButton* b = new TGTextButton(f, "Test Button");
    f->AddFrame(b);

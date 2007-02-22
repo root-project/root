@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.cxx,v 1.8 2005/06/26 23:36:52 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.cxx,v 1.9 2007/01/16 17:01:08 brun Exp $
 // Author: Fons Rademakers   15/10/2001
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 #include "TImage.h"
 #include "TROOT.h"
 #include "TPluginManager.h"
+#include "TApplication.h"
 
 ClassImp(TImage)
 
@@ -31,6 +32,8 @@ TImage *TImage::Create()
 {
    // Create an image. Use ReadImage() or SetImage() to initialize the image.
 
+   // make sure that the Gpad and GUI libs are loaded
+   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
    static TPluginHandler *h = 0;
 
    if (!h) {
@@ -51,7 +54,7 @@ TImage *TImage::Create()
 TImage::EImageFileTypes TImage::GetImageFileTypeFromFilename(const char* filename)
 {
    // Return the image type for the extension specified in filename.
-   // Case of the extension is ignored. E.g. for a filename "myimg.GIF", 
+   // Case of the extension is ignored. E.g. for a filename "myimg.GIF",
    // kGif is returned.
    // kAnimGif is returned if the file extension is ".anim.gif".
 

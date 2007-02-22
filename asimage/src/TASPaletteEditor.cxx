@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.14 2007/01/29 10:06:49 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.15 2007/01/29 15:10:48 brun Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -74,7 +74,7 @@ ClassImp(TASPaletteEditor)
 
 //______________________________________________________________________________
 TASPaletteEditor::TASPaletteEditor(TAttImage *attImage, UInt_t w, UInt_t h)
-   : TPaletteEditor(attImage, w, h), TGMainFrame(gClient->GetRoot(), w, h)
+   : TPaletteEditor(attImage, w, h), TGMainFrame(0, w, h)
 {
    // Palette editor constructor.
    // The palette editor aloows the editing of the color palette of the image.

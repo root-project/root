@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.25 2007/01/12 10:20:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.26 2007/01/12 16:03:15 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -589,9 +589,9 @@ const char *TColor::PixelAsHexString(ULong_t pixel)
 void TColor::SaveColor(ostream &out, Int_t ci)
 {
     // Save a color with index > 228 as a C++ statement(s) on output stream out.
-   
+
    char quote = '"';
-   
+
    ULong_t pixel = Number2Pixel(ci);
    const char *cname = TColor::PixelAsHexString(pixel);
 
