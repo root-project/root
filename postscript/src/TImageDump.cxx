@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.35 2007/02/21 15:40:56 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.cxx,v 1.36 2007/02/22 14:09:14 couet Exp $
 // Author: Valeriy Onuchin
 
 /*************************************************************************
@@ -136,7 +136,6 @@ void TImageDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 
    Int_t fillis = fFillStyle/1000;
    Int_t fillsi = fFillStyle%1000;
-   Bool_t hollow = (fFillStyle == 0) || (fFillStyle == 4000);
 
    TColor *col = gROOT->GetColor(fFillColor);
    if (!col) { // no color, set it white
@@ -174,7 +173,7 @@ void TImageDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       fImage->DrawBox(ix1, iy1, ix2, iy2, col->AsHexString(), 1, TVirtualX::kFilled);
    }
 
-   if ((fillis == 0) && !hollow) {
+   if (fillis == 0) {
       fImage->DrawBox(ix1, iy1, ix2, iy2, linecol->AsHexString(), 1, TVirtualX::kHollow);
    }
 }
