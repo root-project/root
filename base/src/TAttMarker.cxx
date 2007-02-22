@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttMarker.cxx,v 1.11 2007/02/16 17:23:33 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TAttMarker.cxx,v 1.12 2007/02/20 12:42:03 couet Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -39,7 +39,11 @@ The marker attributes are:
 
 <a name="M1"></a><h3>Marker color</h3>
 The marker color is a color index (integer) pointing in the ROOT color
-table. The following table shows the first 50 default colors.
+table.
+The marker color of any class inheriting from <tt>TAttMarker</tt> can 
+be changed using the method <tt>SetMarkerColor</tt> and retrieved using the 
+method <tt>GetMarkerColor</tt>.
+The following table shows the first 50 default colors.
 End_Html
 Begin_Macro(source)
 {
@@ -52,32 +56,36 @@ End_Macro
 Begin_Html
 <a name="M2"></a><h3>Marker style</h3>
 The Marker style defines the markers' shape.
-The following table gives the list of the currently supported markers (screen 
+The marker style of any class inheriting from <tt>TAttMarker</tt> can 
+be changed using the method <tt>SetMarkerStyle</tt> and retrieved using the 
+method <tt>GetMarkerStyle</tt>.
+The following list gives the currently supported markers (screen 
 and PostScript) style. Each marker style is identified by an integer number 
 (first column) corresponding to a marker shape (second column) and can be also
 accessed via a global name (third column).
-<center><table>
-<tr><td>  1 </td><td> dot                 </td><td> kDot              </td></tr>
-<tr><td>  2 </td><td> +                   </td><td> kPlus             </td></tr>
-<tr><td>  3 </td><td> *                   </td><td> kStar             </td></tr>
-<tr><td>  4 </td><td> o                   </td><td> kCircle           </td></tr>
-<tr><td>  5 </td><td> x                   </td><td> kMultiply         </td></tr>
-<tr><td>  6 </td><td> small scalable down </td><td> kFullDotSmall     </td></tr>
-<tr><td>  7 </td><td> medium scalable     </td><td> kFullDotMedium    </td></tr>
-<tr><td>  8 </td><td> large scalable down </td><td> kFullDotLarge     </td></tr>
-<tr><td>  9 -->19 </td><td> dot                                       </td></tr>
-<tr><td> 20 </td><td> full circle         </td><td> kFullCircle       </td></tr>
-<tr><td> 21 </td><td> full square         </td><td> kFullSquare       </td></tr>
-<tr><td> 22 </td><td> full triangle up    </td><td> kFullTriangleUp   </td></tr>
-<tr><td> 23 </td><td> full triangle down  </td><td> kFullTriangleDown </td></tr>
-<tr><td> 24 </td><td> open circle         </td><td> kOpenCircle       </td></tr>
-<tr><td> 25 </td><td> open square         </td><td> kOpenSquare       </td></tr>
-<tr><td> 26 </td><td> open triangle up    </td><td> kOpenTriangleUp   </td></tr>
-<tr><td> 27 </td><td> open diamond        </td><td> kOpenDiamond      </td></tr>
-<tr><td> 28 </td><td> open cross          </td><td> kOpenCross        </td></tr>
-<tr><td> 29 </td><td> open star           </td><td> kOpenStar         </td></tr>
-<tr><td> 30 </td><td> full star           </td><td> kFullStar         </td></tr>
-</table></center>
+<pre>
+   Marker number         Marker shape          Marker name
+        1                    dot                  kDot
+        2                    +                    kPlus
+        3                    *                    kStar
+        4                    o                    kCircle
+        5                    x                    kMultiply
+        6                    small scalable dot   kFullDotSmall
+        7                    medium scalable dot  kFullDotMedium
+        8                    large scalable dot   kFullDotLarge
+        9 -->19              dot
+       20                    full circle          kFullCircle
+       21                    full square          kFullSquare
+       22                    full triangle up     kFullTriangleUp
+       23                    full triangle down   kFullTriangleDown
+       24                    open circle          kOpenCircle
+       25                    open square          kOpenSquare
+       26                    open triangle up     kOpenTriangleUp
+       27                    open diamond         kOpenDiamond
+       28                    open cross           kOpenCross
+       29                    open star            kOpenStar
+       30                    full star            kFullStar
+</pre>
 End_Html
 Begin_Macro(source)
 {
@@ -95,6 +103,9 @@ is shown in the top left corner. Marker sizes smaller than 1 can be
 specified. The marker size does not refer to any coordinate systems, it is an
 absolute value. Therefore the marker size is not affected by any change 
 in TPad's scale.
+The marker size of any class inheriting from <tt>TAttMarker</tt> can 
+be changed using the method <tt>SetMarkerSize</tt> and retrieved using the 
+method <tt>GetMarkerSize</tt>.
 End_Html
 Begin_Macro(source)
 {
