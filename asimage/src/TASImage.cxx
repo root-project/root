@@ -78,6 +78,8 @@
 #include "TPluginManager.h"
 #include "TEnv.h"
 #include "TStyle.h"
+#include "TText.h"
+
 
 #ifndef WIN32
 #   include <X11/Xlib.h>
@@ -5273,6 +5275,152 @@ void TASImage::DrawGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by)
    }
 }
 
+//______________________________________________________________________________
+void TASImage::DrawText(TText *text, Int_t x, Int_t y)
+{
+   // Draw text in poosition (x, y), where x,y - in pixels
+
+   if (!text) {
+      return;
+   }
+
+   if (!InitVisual()) {
+      Warning("DrawText", "Visual not initiated");
+      return;
+   }
+
+   if (!fImage) {
+      return;
+   }
+
+   if (!gPad) {
+      return;
+   }
+
+   if (!fImage->alt.argb32) {
+      BeginPaint();
+   }
+
+   if (!TTF::IsInitialized()) TTF::Init();
+
+   // set text font
+   TTF::SetTextFont(text->GetTextFont());
+
+   Int_t wh = gPad->XtoPixel(gPad->GetX2());
+   Int_t hh = gPad->YtoPixel(gPad->GetY1());
+
+   // set text size in pixels
+   Int_t ttfsize;
+
+   if (wh < hh) {
+      ttfsize = (Int_t)(text->GetTextSize()*wh);
+   } else {
+      ttfsize = (Int_t)(text->GetTextSize()*hh);
+   }
+   TTF::SetTextSize(ttfsize);
+
+   // set text angle
+   TTF::SetRotationMatrix(text->GetTextAngle());
+
+   // set text
+   TTF::PrepareString(text->GetTitle());
+   TTF::LayoutGlyphs();
+
+   // color
+   TColor *col = gROOT->GetColor(text->GetTextColor());
+   if (!col) { // no color, make it black
+      col = gROOT->GetColor(1);
+   }
+   ARGB32 color;
+   parse_argb_color(col->AsHexString(), &color);
+
+   // Align()
+   Int_t align;
+   Int_t txalh = text->GetTextAlign()/10;
+   Int_t txalv = text->GetTextAlign()%10;
+
+   switch (txalh) {
+      case 0 :
+      case 1 :
+         switch (txalv) {  //left
+            case 1 :
+               align = 7;   //bottom
+               break;
+            case 2 :
+               align = 4;   //center
+               break;
+            case 3 :
+               align = 1;   //top
+               break;
+         }
+         break;
+      case 2 :
+         switch (txalv) { //center
+            case 1 :
+               align = 8;   //bottom
+               break;
+            case 2 :
+               align = 5;   //center
+               break;
+            case 3 :
+               align = 2;   //top
+               break;
+         }
+         break;
+      case 3 :
+         switch (txalv) {  //right
+            case 1 :
+               align = 9;   //bottom
+               break;
+            case 2 :
+               align = 6;   //center
+               break;
+            case 3 :
+               align = 3;   //top
+               break;
+         }
+         break;
+   }
+
+   FT_Vector ftal;
+
+   // vertical alignment
+   if (align == 1 || align == 2 || align == 3) {
+      ftal.y = TTF::GetAscent();
+   } else if (align == 4 || align == 5 || align == 6) {
+      ftal.y = TTF::GetAscent()/2;
+   } else {
+      ftal.y = 0;
+   }
+
+   // horizontal alignment
+   if (align == 3 || align == 6 || align == 9) {
+      ftal.x = TTF::GetWidth();
+   } else if (align == 2 || align == 5 || align == 8) {
+      ftal.x = TTF::GetWidth()/2;
+   } else {
+      ftal.x = 0;
+   }
+
+   FT_Vector_Transform(&ftal, TTF::GetRotMatrix());
+   ftal.x = (ftal.x >> 6);
+   ftal.y = (ftal.y >> 6);
+
+   TTGlyph *glyph = TTF::GetGlyphs();
+
+   for (int n = 0; n < TTF::GetNumGlyphs(); n++, glyph++) {
+      if (FT_Glyph_To_Bitmap(&glyph->fImage, ft_render_mode_normal, 0, 1 )) continue;
+
+      FT_BitmapGlyph bitmap = (FT_BitmapGlyph)glyph->fImage;
+      FT_Bitmap *source = &bitmap->bitmap;
+
+      Int_t bx = x - ftal.x + bitmap->left;
+      Int_t by = y + ftal.y - bitmap->top;
+
+      DrawGlyph(source, color, bx, by);
+   }
+}
+                           
 //______________________________________________________________________________
 void TASImage::DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size,
                            UInt_t color, const char *font_name, Float_t angle)
