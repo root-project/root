@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTableLayout.h,v 1.5 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTableLayout.h,v 1.6 2007/02/09 11:51:09 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 /*************************************************************************
@@ -85,6 +85,10 @@ public:
 //////////////////////////////////////////////////////////////////////////
 
 class TGTableLayout : public TGLayoutManager {
+
+private:
+   TGTableLayout(const TGTableLayout&); // Not implemented
+   TGTableLayout& operator=(const TGTableLayout&); // Not implemented
 
 protected:
    struct TableData_t {

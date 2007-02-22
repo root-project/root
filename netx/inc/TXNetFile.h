@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.10 2006/06/09 13:38:46 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.h,v 1.11 2006/10/05 14:56:24 rdm Exp $
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -76,6 +76,8 @@ private:
                                  // attempts to Init() for this object only
 
    // Methods
+   TXNetFile(const TXNetFile&);  // Not implemented
+   TXNetFile& operator=(const TXNetFile&);  // Not implemented
    void    CreateXClient(const char *url, Option_t *option, Int_t netopt,
                          Bool_t parallelopen);
    void    Init(Bool_t create);
@@ -91,8 +93,8 @@ private:
    static void SetEnv();
 
 public:
-   TXNetFile() : TNetFile() { fClient = 0; fSize = 0; fIsRootd = 0;
-                              fInitMtx = 0; }
+   TXNetFile() : TNetFile(), fClient(NULL), fSize(0), fIsRootd(0), 
+                              fInitMtx(NULL) {}
    TXNetFile(const char *url, Option_t *option = "", const char* fTitle = "",
              Int_t compress = 1, Int_t netopt = -1, Bool_t parallelopen = kFALSE,
              const char *logicalurl = 0);

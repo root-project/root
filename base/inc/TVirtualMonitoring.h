@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualMonitoring.h,v 1.1 2006/05/26 16:55:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualMonitoring.h,v 1.2 2006/06/26 16:17:05 rdm Exp $
 // Author: Andreas-Joachim Peters   15/05/2006
 
 /*************************************************************************
@@ -37,7 +37,7 @@ private:
    Double_t fValue;  // double monitor value
 
 public:
-   TVirtualMonitoringWriter() : TNamed() { }
+   TVirtualMonitoringWriter() : TNamed(), fValue(0) { }
    TVirtualMonitoringWriter(const char *name, Double_t value)
       : TNamed(name, ""), fValue(value) { }
 

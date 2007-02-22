@@ -1,4 +1,4 @@
-// @(#)root/monalisa:$Name:  $:$Id: TMonaLisaWriter.h,v 1.2 2006/10/05 16:10:22 rdm Exp $
+// @(#)root/monalisa:$Name:  $:$Id: TMonaLisaWriter.h,v 1.3 2007/02/09 11:51:09 rdm Exp $
 // Author: Andreas Peters   5/10/2005
 
 /*************************************************************************
@@ -92,6 +92,9 @@ private:
    time_t     fLastProgressTime; // timestamp of the last send command for player process
    time_t     fReportInterval;   // interval after which to send the latest value
    TStopwatch fStopwatch;        // cpu time measurement
+
+   TMonaLisaWriter(const TMonaLisaWriter&); // Not implemented
+   TMonaLisaWriter& operator=(const TMonaLisaWriter&); // Not implemented
 
 public:
    TMonaLisaWriter(const char *monid = 0, const char *montag = 0,
