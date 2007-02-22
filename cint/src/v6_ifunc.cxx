@@ -1572,8 +1572,8 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
   if(-1!=G__tagdefining && !ifunc) {
     baseclass = G__struct.baseclass[G__tagdefining];
     for(basen=0;basen<baseclass->basen;basen++) {
-      G__incsetup_memfunc(baseclass->basetagnum[basen]);
-      ifunc=G__struct.memfunc[baseclass->basetagnum[basen]];
+      G__incsetup_memfunc(baseclass->herit[basen]->basetagnum);
+      ifunc=G__struct.memfunc[baseclass->herit[basen]->basetagnum];
       ifunc=G__ifunc_exist(G__p_ifunc,func_now ,ifunc,&iexist,G__CONSTFUNC);
       if(ifunc) {
         if(ifunc->ispurevirtual[iexist] &&
@@ -2888,11 +2888,11 @@ unsigned int G__rate_inheritance(int basetagnum,int derivedtagnum)
   n = derived->basen;
 
   for(i=0;i<n;i++) {
-    if(basetagnum == derived->basetagnum[i]) {
-      if(derived->baseaccess[i]==G__PUBLIC ||
+    if(basetagnum == derived->herit[i]->basetagnum) {
+      if(derived->herit[i]->baseaccess==G__PUBLIC ||
          (G__exec_memberfunc && G__tagnum==derivedtagnum &&
-          G__GRANDPRIVATE!=derived->baseaccess[i])) {
-        if(G__ISDIRECTINHERIT&derived->property[i]) {
+          G__GRANDPRIVATE!=derived->herit[i]->baseaccess)) {
+        if(G__ISDIRECTINHERIT&derived->herit[i]->property) {
           return(G__BASECONVMATCH);
         }
         else {
@@ -2900,13 +2900,13 @@ unsigned int G__rate_inheritance(int basetagnum,int derivedtagnum)
           int ii=i; /* i is not 0, because !G__ISDIRECTINHERIT */
           struct G__inheritance *derived2 = derived;
           int derivedtagnum2 = derivedtagnum;
-          while(0==(derived2->property[ii]&G__ISDIRECTINHERIT)) {
+          while(0==(derived2->herit[ii]->property&G__ISDIRECTINHERIT)) {
             ++distance;
-            while(ii && 0==(derived2->property[--ii]&G__ISDIRECTINHERIT));
-            derivedtagnum2 = derived2->basetagnum[ii];
+            while(ii && 0==(derived2->herit[--ii]->property&G__ISDIRECTINHERIT));
+            derivedtagnum2 = derived2->herit[ii]->basetagnum;
             derived2 = G__struct.baseclass[derivedtagnum2];
             for(ii=0;ii<derived2->basen;ii++) {
-              if(derived2->basetagnum[ii]==basetagnum) break;
+              if(derived2->herit[ii]->basetagnum==basetagnum) break;
             }
             if(ii==derived2->basen) return(G__NOMATCH);
           }
@@ -4398,7 +4398,7 @@ struct G__funclist* G__add_templatefunc(char *funcnamein,G__param* libp
         if(baseclass) {
           int temp;
           for(temp=0;temp<baseclass->basen;temp++) {
-            if(baseclass->basetagnum[temp]==deftmpfunc->parent_tagnum) {
+            if(baseclass->herit[temp]->basetagnum==deftmpfunc->parent_tagnum) {
               goto match_found;
             }
           }
@@ -4649,7 +4649,7 @@ struct G__ifunc_table* G__overload_match(char* funcname
     p_ifunc = p_ifunc->next;
     if(!p_ifunc && store_ifunc==G__p_ifunc && 
        ix<G__globalusingnamespace.basen) {
-      p_ifunc=G__struct.memfunc[G__globalusingnamespace.basetagnum[ix]];
+      p_ifunc=G__struct.memfunc[G__globalusingnamespace.herit[ix]->basetagnum];
       ++ix;
     }
   }
@@ -4665,7 +4665,7 @@ struct G__ifunc_table* G__overload_match(char* funcname
   if(!match && (G__TRYUNARYOPR==memfunc_flag||G__TRYBINARYOPR==memfunc_flag)) {
     for(ix=0;ix<G__globalusingnamespace.basen;ix++) {
       funclist=G__rate_binary_operator(
-                      G__struct.memfunc[G__globalusingnamespace.basetagnum[ix]]
+                      G__struct.memfunc[G__globalusingnamespace.herit[ix]->basetagnum]
                                        ,libp,G__tagnum,funcname,hash
                                        ,funclist,isrecursive);
     }
@@ -4937,13 +4937,13 @@ int G__interpret_func(G__value *result7,char* funcname,G__param *libp,
     if(isbase) {
       while(baseclass && basen<baseclass->basen) {
         if(memfunc_or_friend) {
-          if((baseclass->baseaccess[basen]&G__PUBLIC_PROTECTED) ||
-             baseclass->property[basen]&G__ISDIRECTINHERIT) {
+          if((baseclass->herit[basen]->baseaccess&G__PUBLIC_PROTECTED) ||
+             baseclass->herit[basen]->property&G__ISDIRECTINHERIT) {
             access = G__PUBLIC_PROTECTED;
-            G__incsetup_memfunc(baseclass->basetagnum[basen]);
-            p_ifunc = G__struct.memfunc[baseclass->basetagnum[basen]];
+            G__incsetup_memfunc(baseclass->herit[basen]->basetagnum);
+            p_ifunc = G__struct.memfunc[baseclass->herit[basen]->basetagnum];
 #ifdef G__VIRTUALBASE
-            if(baseclass->property[basen]&G__ISVIRTUALBASE) {
+            if(baseclass->herit[basen]->property&G__ISVIRTUALBASE) {
               G__store_struct_offset = store_inherit_offset + 
                 G__getvirtualbaseoffset(store_inherit_offset,G__tagnum
                                         ,baseclass,basen);
@@ -4953,25 +4953,25 @@ int G__interpret_func(G__value *result7,char* funcname,G__param *libp,
             }
             else {
               G__store_struct_offset
-                = store_inherit_offset + baseclass->baseoffset[basen];
+                = store_inherit_offset + baseclass->herit[basen]->baseoffset;
             }
 #else
             G__store_struct_offset
-              = store_inherit_offset + baseclass->baseoffset[basen];
+              = store_inherit_offset + baseclass->herit[basen]->baseoffset;
 #endif
-            G__tagnum = baseclass->basetagnum[basen];
+            G__tagnum = baseclass->herit[basen]->basetagnum;
             ++basen;
             store_p_ifunc=p_ifunc;
             goto next_base; /* I know this is a bad manner */
           }
         }
         else {
-          if(baseclass->baseaccess[basen]&G__PUBLIC) {
+          if(baseclass->herit[basen]->baseaccess&G__PUBLIC) {
             access = G__PUBLIC;
-            G__incsetup_memfunc(baseclass->basetagnum[basen]);
-            p_ifunc = G__struct.memfunc[baseclass->basetagnum[basen]];
+            G__incsetup_memfunc(baseclass->herit[basen]->basetagnum);
+            p_ifunc = G__struct.memfunc[baseclass->herit[basen]->basetagnum];
 #ifdef G__VIRTUALBASE
-            if(baseclass->property[basen]&G__ISVIRTUALBASE) {
+            if(baseclass->herit[basen]->property&G__ISVIRTUALBASE) {
               G__store_struct_offset = store_inherit_offset + 
                 G__getvirtualbaseoffset(store_inherit_offset,G__tagnum
                                         ,baseclass,basen);
@@ -4981,13 +4981,13 @@ int G__interpret_func(G__value *result7,char* funcname,G__param *libp,
             }
             else {
               G__store_struct_offset
-                = store_inherit_offset + baseclass->baseoffset[basen];
+                = store_inherit_offset + baseclass->herit[basen]->baseoffset;
             }
 #else
             G__store_struct_offset
-              = store_inherit_offset + baseclass->baseoffset[basen];
+              = store_inherit_offset + baseclass->herit[basen]->baseoffset;
 #endif
-            G__tagnum = baseclass->basetagnum[basen];
+            G__tagnum = baseclass->herit[basen]->basetagnum;
             ++basen;
             store_p_ifunc=p_ifunc;
             goto next_base; /* I know this is a bad manner */
@@ -5353,8 +5353,8 @@ asm_ifunc_start:   /* loop compilation execution label */
       ifunc=G__ifunc_exist(p_ifunc,ifn,G__struct.memfunc[virtualtag],&iexist
                            ,0xffff);
       for(basen=0;!ifunc&&basen<baseclass->basen;basen++) {
-        virtualtag = baseclass->basetagnum[basen];
-        if(0==(baseclass->property[basen]&G__ISDIRECTINHERIT)) continue;
+        virtualtag = baseclass->herit[basen]->basetagnum;
+        if(0==(baseclass->herit[basen]->property&G__ISDIRECTINHERIT)) continue;
         xbase[nxbase++] = virtualtag;
         G__incsetup_memfunc(virtualtag);
         ifunc
@@ -5367,8 +5367,8 @@ asm_ifunc_start:   /* loop compilation execution label */
         for(xxx=0;!ifunc&&xxx<nxbase;xxx++) {
           baseclass = G__struct.baseclass[xbase[xxx]];
           for(basen=0;!ifunc&&basen<baseclass->basen;basen++) {
-            virtualtag = baseclass->basetagnum[basen];
-            if(0==(baseclass->property[basen]&G__ISDIRECTINHERIT)) continue;
+            virtualtag = baseclass->herit[basen]->basetagnum;
+            if(0==(baseclass->herit[basen]->property&G__ISDIRECTINHERIT)) continue;
             ybase[nybase++] = virtualtag;
             G__incsetup_memfunc(virtualtag);
             ifunc
@@ -6824,13 +6824,13 @@ struct G__ifunc_table *G__get_ifunchandle_base(char *funcname,G__param *libp
   if(-1!=tagnum) {
     baseclass = G__struct.baseclass[tagnum];
     while(basen<baseclass->basen) {
-      if(baseclass->baseaccess[basen]&G__PUBLIC) {
+      if(baseclass->herit[basen]->baseaccess&G__PUBLIC) {
 #ifdef G__VIRTUALBASE
         /* Can not handle virtual base class member function for ERTTI
          * because pointer to the object is not given  */
 #endif
-        *poffset = baseclass->baseoffset[basen];
-        p_ifunc = G__struct.memfunc[baseclass->basetagnum[basen]];
+        *poffset = baseclass->herit[basen]->baseoffset;
+        p_ifunc = G__struct.memfunc[baseclass->herit[basen]->basetagnum];
         ifunc=G__get_ifunchandle(funcname,libp,hash,p_ifunc,pifn
                                  ,access,funcmatch);
         if(ifunc) return(ifunc);
@@ -6918,10 +6918,10 @@ struct G__ifunc_table *G__get_methodhandle(char *funcname,char *argtype
      int basen=0;
      struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
      while(basen<baseclass->basen) {
-       if(baseclass->baseaccess[basen]&G__PUBLIC) {
-         G__incsetup_memfunc(baseclass->basetagnum[basen]);
-         *poffset = baseclass->baseoffset[basen];
-         p_ifunc = G__struct.memfunc[baseclass->basetagnum[basen]];
+       if(baseclass->herit[basen]->baseaccess&G__PUBLIC) {
+         G__incsetup_memfunc(baseclass->herit[basen]->basetagnum);
+         *poffset = baseclass->herit[basen]->baseoffset;
+         p_ifunc = G__struct.memfunc[baseclass->herit[basen]->basetagnum];
          ifunc = G__overload_match(funcname,&para,hash,p_ifunc,G__TRYNORMAL
                                    ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,0,0) ;
          *pifn = ifn;
@@ -7005,10 +7005,10 @@ struct G__ifunc_table *G__get_methodhandle2(char *funcname
      int basen=0;
      struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
      while(basen<baseclass->basen) {
-       if(baseclass->baseaccess[basen]&G__PUBLIC) {
-         G__incsetup_memfunc(baseclass->basetagnum[basen]);
-         *poffset = baseclass->baseoffset[basen];
-         p_ifunc = G__struct.memfunc[baseclass->basetagnum[basen]];
+       if(baseclass->herit[basen]->baseaccess&G__PUBLIC) {
+         G__incsetup_memfunc(baseclass->herit[basen]->basetagnum);
+         *poffset = baseclass->herit[basen]->baseoffset;
+         p_ifunc = G__struct.memfunc[baseclass->herit[basen]->basetagnum];
          ifunc = G__overload_match(funcname,libp,hash,p_ifunc,G__TRYNORMAL
                                    ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,0,0) ;
          *pifn = ifn;

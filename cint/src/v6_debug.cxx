@@ -201,7 +201,7 @@ int G__display_proto_pretty(FILE *fp,char *func, char friendlyStyle)
     int i1;
     struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
     for(i1=0;i1<baseclass->basen;i1++) {
-      ifunc = G__struct.memfunc[baseclass->basetagnum[i1]];
+      ifunc = G__struct.memfunc[baseclass->herit[i1]->basetagnum];
       if(i) {
         if(G__listfunc_pretty(fp,G__PUBLIC_PROTECTED_PRIVATE,funcname,ifunc,friendlyStyle)) 
           return(1);

@@ -3359,7 +3359,7 @@ int G__isprivateconstructor(int tagnum, int iscopy)
 
   /* Check base class private constructor */
   for(basen=0;basen<baseclass->basen;basen++) {
-    basetagnum = baseclass->basetagnum[basen];
+    basetagnum = baseclass->herit[basen]->basetagnum;
     if(G__isprivateconstructorclass(basetagnum,iscopy)) return(1);
   }
 
@@ -3470,7 +3470,7 @@ int G__isprivatedestructor(int tagnum)
 
   /* Check base class private destructor */
   for(basen=0;basen<baseclass->basen;basen++) {
-    basetagnum = baseclass->basetagnum[basen];
+    basetagnum = baseclass->herit[basen]->basetagnum;
     if(G__isprivatedestructorclass(basetagnum)) {
       return(1);
     }
@@ -3580,7 +3580,7 @@ int G__isprivateassignopr(int tagnum)
 
   /* Check base class private assignopr */
   for(basen=0;basen<baseclass->basen;basen++) {
-    basetagnum = baseclass->basetagnum[basen];
+    basetagnum = baseclass->herit[basen]->basetagnum;
     if(G__isprivateassignoprclass(basetagnum)) {
       return(1);
     }
@@ -5010,10 +5010,10 @@ void G__cppif_inheritance(FILE *fp)
       case 's': /* struct */
         if(G__struct.baseclass[i]->basen>0) {
           for(basen=0;basen<G__struct.baseclass[i]->basen;basen++) {
-            if(G__PUBLIC!=G__struct.baseclass[i]->baseaccess[basen] ||
-               0==(G__struct.baseclass[i]->property[basen]&G__ISVIRTUALBASE))
+            if(G__PUBLIC!=G__struct.baseclass[i]->herit[basen]->baseaccess ||
+               0==(G__struct.baseclass[i]->herit[basen]->property&G__ISVIRTUALBASE))
               continue;
-            basetagnum=G__struct.baseclass[i]->basetagnum[basen];
+            basetagnum=G__struct.baseclass[i]->herit[basen]->basetagnum;
             fprintf(fp,"static long %s(long pobject) {\n"
                     ,G__vbo_funcname(i,basetagnum,basen));
             strcpy(temp,G__fulltagname(i,1));
@@ -5071,7 +5071,7 @@ void G__cpplink_inheritance(FILE *fp)
                   ,G__get_link_tagname(i));
           flag=0;
           for(basen=0;basen<G__struct.baseclass[i]->basen;basen++) {
-            if(0==(G__struct.baseclass[i]->property[basen]&G__ISVIRTUALBASE))
+            if(0==(G__struct.baseclass[i]->herit[basen]->property&G__ISVIRTUALBASE))
               ++flag;
           }
           if(flag) {
@@ -5079,30 +5079,30 @@ void G__cpplink_inheritance(FILE *fp)
             fprintf(fp,"     G__Lderived=(%s*)0x1000;\n",G__fulltagname(i,1));
           }
           for(basen=0;basen<G__struct.baseclass[i]->basen;basen++) {
-            basetagnum=G__struct.baseclass[i]->basetagnum[basen];
+            basetagnum=G__struct.baseclass[i]->herit[basen]->basetagnum;
             fprintf(fp,"     {\n");
 #ifdef G__VIRTUALBASE
             strcpy(temp,G__mark_linked_tagnum(basetagnum));
-            if(G__struct.baseclass[i]->property[basen]&G__ISVIRTUALBASE) {
+            if(G__struct.baseclass[i]->herit[basen]->property&G__ISVIRTUALBASE) {
               char temp2[G__LONGLINE*2];
               strcpy(temp2,G__vbo_funcname(i,basetagnum,basen));
               fprintf(fp,"       G__inheritance_setup(G__get_linked_tagnum(&%s),G__get_linked_tagnum(&%s),(long)%s,%d,%ld);\n"
                       ,G__mark_linked_tagnum(i)
                       ,temp
                       ,temp2
-                      ,G__struct.baseclass[i]->baseaccess[basen]
-                      ,(long)G__struct.baseclass[i]->property[basen]
+                      ,G__struct.baseclass[i]->herit[basen]->baseaccess
+                      ,(long)G__struct.baseclass[i]->herit[basen]->property
                       );
             }
             else {
               int basen2,flag2=0;
               for(basen2=0;basen2<G__struct.baseclass[i]->basen;basen2++) {
                 if(basen2!=basen &&
-                   (G__struct.baseclass[i]->basetagnum[basen]
-                    == G__struct.baseclass[i]->basetagnum[basen2]) &&
-                   ((G__struct.baseclass[i]->property[basen]&G__ISVIRTUALBASE)
+                   (G__struct.baseclass[i]->herit[basen]->basetagnum
+                    == G__struct.baseclass[i]->herit[basen2]->basetagnum) &&
+                   ((G__struct.baseclass[i]->herit[basen]->property&G__ISVIRTUALBASE)
                     ==0 ||
-                    (G__struct.baseclass[i]->property[basen2]&G__ISVIRTUALBASE)
+                    (G__struct.baseclass[i]->herit[basen2]->property&G__ISVIRTUALBASE)
                     ==0 )) {
                   flag2=1;
                 }
@@ -5122,13 +5122,13 @@ void G__cpplink_inheritance(FILE *fp)
               fprintf(fp,"       G__inheritance_setup(G__get_linked_tagnum(&%s),G__get_linked_tagnum(&%s),(long)G__Lpbase-(long)G__Lderived,%d,%ld);\n"
                       ,G__mark_linked_tagnum(i)
                       ,temp
-                      ,G__struct.baseclass[i]->baseaccess[basen]
-                      ,(long)G__struct.baseclass[i]->property[basen]
+                      ,G__struct.baseclass[i]->herit[basen]->baseaccess
+                      ,(long)G__struct.baseclass[i]->herit[basen]->property
                       );
             }
 #else
             strcpy(temp,G__fulltagname(basetagnum,1));
-            if(G__struct.baseclass[i]->property[basen]&G__ISVIRTUALBASE) {
+            if(G__struct.baseclass[i]->herit[basen]->property&G__ISVIRTUALBASE) {
               fprintf(fp,"       %s *pbase=(%s*)0x1000;\n"
                       ,temp,G__fulltagname(basetagnum,1));
             }
@@ -5140,8 +5140,8 @@ void G__cpplink_inheritance(FILE *fp)
             fprintf(fp,"       G__inheritance_setup(G__get_linked_tagnum(&%s),G__get_linked_tagnum(&%s),(long)pbase-(long)G__Lderived,%d,%ld);\n"
                     ,G__mark_linked_tagnum(i)
                     ,temp
-                    ,G__struct.baseclass[i]->baseaccess[basen]
-                    ,G__struct.baseclass[i]->property[basen]
+                    ,G__struct.baseclass[i]->herit[basen]->baseaccess
+                    ,G__struct.baseclass[i]->herit[basen]->property
                     );
 #endif
             fprintf(fp,"     }\n");
@@ -5266,9 +5266,9 @@ static int G__hascompiledoriginalbase(int tagnum)
   struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
   int basen,ifn;
   for(basen=0;basen<baseclass->basen;basen++) {
-    if(G__CPPLINK!=G__struct.iscpplink[baseclass->basetagnum[basen]])
+    if(G__CPPLINK!=G__struct.iscpplink[baseclass->herit[basen]->basetagnum])
       continue;
-    memfunc=G__struct.memfunc[baseclass->basetagnum[basen]];
+    memfunc=G__struct.memfunc[baseclass->herit[basen]->basetagnum];
     while(memfunc) {
       for(ifn=0;ifn<memfunc->allifunc;ifn++) {
         if(memfunc->isvirtual[ifn]) return(1);
@@ -6531,10 +6531,13 @@ int G__inheritance_setup(int tagnum,int basetagnum
   int basen;
   G__ASSERT(0<=tagnum && 0<=basetagnum);
   basen=G__struct.baseclass[tagnum]->basen;
-  G__struct.baseclass[tagnum]->basetagnum[basen] = basetagnum;
-  G__struct.baseclass[tagnum]->baseoffset[basen]=baseoffset;
-  G__struct.baseclass[tagnum]->baseaccess[basen]=baseaccess;
-  G__struct.baseclass[tagnum]->property[basen]=property;
+  //G__herit *herit = G__struct.baseclass[tagnum]->herit;
+//printf("G__inheritance_setup, tagnum=%d, basetagnum=%d, basen=%d\n",tagnum,basetagnum,basen);
+//printf("    herit=%x, herit.id=%x\n",herit,herit->id);
+  G__struct.baseclass[tagnum]->herit[basen]->basetagnum = basetagnum;
+  G__struct.baseclass[tagnum]->herit[basen]->baseoffset=baseoffset;
+  G__struct.baseclass[tagnum]->herit[basen]->baseaccess=baseaccess;
+  G__struct.baseclass[tagnum]->herit[basen]->property=property;
   ++G__struct.baseclass[tagnum]->basen;
 #endif
   return(0);

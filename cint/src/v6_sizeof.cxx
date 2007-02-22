@@ -841,13 +841,13 @@ long G__get_classinfo(char *item,int tagnum)
     p=0;
     buf[0]='\0';
     for(i=0;i<baseclass->basen;i++) {
-      if(baseclass->property[i]&G__ISDIRECTINHERIT) {
+      if(baseclass->herit[i]->property&G__ISDIRECTINHERIT) {
         if(p) {
           sprintf(buf+p,",");
           ++p;
         }
-        sprintf(buf+p,"%s%s" ,G__access2string(baseclass->baseaccess[i])
-                ,G__struct.name[baseclass->basetagnum[i]]);
+        sprintf(buf+p,"%s%s" ,G__access2string(baseclass->herit[i]->baseaccess)
+                ,G__struct.name[baseclass->herit[i]->basetagnum]);
         p=strlen(buf);
       }
     }

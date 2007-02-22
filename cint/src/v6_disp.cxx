@@ -703,30 +703,30 @@ static int G__display_classinheritance(FILE *fout,int tagnum,char *space)
   sprintf(addspace,"%s  ",space);
 
   for(i=0;i<baseclass->basen;i++) {
-    if(baseclass->property[i]&G__ISDIRECTINHERIT) {
-      sprintf(msg,"%s0x%-8lx ",space ,baseclass->baseoffset[i]);
+    if(baseclass->herit[i]->property&G__ISDIRECTINHERIT) {
+      sprintf(msg,"%s0x%-8lx ",space ,baseclass->herit[i]->baseoffset);
       if(G__more(fout,msg)) return(1);
-      if(baseclass->property[i]&G__ISVIRTUALBASE) {
+      if(baseclass->herit[i]->property&G__ISVIRTUALBASE) {
         sprintf(msg,"virtual ");
         if(G__more(fout,msg)) return(1);
       }
-      if(baseclass->property[i]&G__ISINDIRECTVIRTUALBASE) {
+      if(baseclass->herit[i]->property&G__ISINDIRECTVIRTUALBASE) {
         sprintf(msg,"(virtual) ");
         if(G__more(fout,msg)) return(1);
       }
       sprintf(msg,"%s %s"
-              ,G__access2string(baseclass->baseaccess[i])
-              ,G__fulltagname(baseclass->basetagnum[i],0));
+              ,G__access2string(baseclass->herit[i]->baseaccess)
+              ,G__fulltagname(baseclass->herit[i]->basetagnum,0));
       if(G__more(fout,msg)) return(1);
       temp[0]='\0';
-      G__getcomment(temp,&G__struct.comment[baseclass->basetagnum[i]]
-                    ,baseclass->basetagnum[i]);
+      G__getcomment(temp,&G__struct.comment[baseclass->herit[i]->basetagnum]
+                    ,baseclass->herit[i]->basetagnum);
       if(temp[0]) {
         sprintf(msg," //%s",temp);
         if(G__more(fout,msg)) return(1);
       }
       if(G__more(fout,"\n")) return(1);
-      if(G__display_classinheritance(fout,baseclass->basetagnum[i],addspace))
+      if(G__display_classinheritance(fout,baseclass->herit[i]->basetagnum,addspace))
         return(1);
     }
   }
@@ -747,8 +747,8 @@ static int G__display_membervariable(FILE *fout,int tagnum,int base)
   if(base) {
     for(i=0;i<baseclass->basen;i++) {
       if(!G__browsing) return(0);
-      if(baseclass->property[i]&G__ISDIRECTINHERIT) {
-        if(G__display_membervariable(fout,baseclass->basetagnum[i],base))
+      if(baseclass->herit[i]->property&G__ISDIRECTINHERIT) {
+        if(G__display_membervariable(fout,baseclass->herit[i]->basetagnum,base))
           return(1);
       }
     }
@@ -781,8 +781,8 @@ static int G__display_memberfunction(FILE *fout,int tagnum,int access,int base)
   if(base) {
     for(i=0;i<baseclass->basen;i++) {
       if(!G__browsing) return(0);
-      if(baseclass->property[i]&G__ISDIRECTINHERIT) {
-        if(G__display_memberfunction(fout,baseclass->basetagnum[i]
+      if(baseclass->herit[i]->property&G__ISDIRECTINHERIT) {
+        if(G__display_memberfunction(fout,baseclass->herit[i]->basetagnum
                                      ,access,base)) return(1);
       }
     }
@@ -898,14 +898,14 @@ int G__display_class(FILE *fout,char *name,int base,int start)
       baseclass = G__struct.baseclass[i];
       if(baseclass) {
         for(j=0;j<baseclass->basen;j++) {
-          if(baseclass->property[j]&G__ISDIRECTINHERIT) {
-            if(baseclass->property[j]&G__ISVIRTUALBASE) {
+          if(baseclass->herit[j]->property&G__ISDIRECTINHERIT) {
+            if(baseclass->herit[j]->property&G__ISVIRTUALBASE) {
               sprintf(msg,"virtual ");
               if(G__more(fout,msg)) return(1);
             }
             sprintf(msg,"%s%s " 
-                    ,G__access2string(baseclass->baseaccess[j])
-                    ,G__fulltagname(baseclass->basetagnum[j],0));
+                    ,G__access2string(baseclass->herit[j]->baseaccess)
+                    ,G__fulltagname(baseclass->herit[j]->basetagnum,0));
             if(G__more(fout,msg)) return(1);
           }
         }
@@ -1647,8 +1647,8 @@ int G__objectmonitor(FILE *fout,long pobject,int tagnum,char *addspace)
 
   baseclass = G__struct.baseclass[tagnum];
   for(i=0;i<baseclass->basen;i++) {
-    if(baseclass->property[i]&G__ISDIRECTINHERIT) {
-      if(baseclass->property[i]&G__ISVIRTUALBASE) {
+    if(baseclass->herit[i]->property&G__ISDIRECTINHERIT) {
+      if(baseclass->herit[i]->property&G__ISVIRTUALBASE) {
         if(0>G__getvirtualbaseoffset(pobject,tagnum,baseclass,i)) {
           sprintf(msg,"%s-0x%-7lx virtual ",space
                   ,-1*G__getvirtualbaseoffset(pobject,tagnum,baseclass,i));
@@ -1659,36 +1659,36 @@ int G__objectmonitor(FILE *fout,long pobject,int tagnum,char *addspace)
         }
         if(G__more(fout,msg)) return(1);
         msg[0] = 0;
-        switch(baseclass->baseaccess[i]) {
+        switch(baseclass->herit[i]->baseaccess) {
         case G__PRIVATE:   sprintf(msg,"private: "); break;
         case G__PROTECTED: sprintf(msg,"protected: "); break;
         case G__PUBLIC:    sprintf(msg,"public: "); break;
         }
         if(G__more(fout,msg)) return(1);
-        sprintf(msg,"%s\n",G__fulltagname(baseclass->basetagnum[i],1));
+        sprintf(msg,"%s\n",G__fulltagname(baseclass->herit[i]->basetagnum,1));
         if(G__more(fout,msg)) return(1);
 #ifdef G__NEVER_BUT_KEEP
         if(G__objectmonitor(fout
-                         ,pobject+(*(long*)(pobject+baseclass->baseoffset[i]))
-                         ,baseclass->basetagnum[i],space))
+                         ,pobject+(*(long*)(pobject+baseclass->herit[i]->baseoffset))
+                         ,baseclass->herit[i]->basetagnum,space))
           return(1);
 #endif
       }
       else {
-        sprintf(msg,"%s0x%-8lx ",space ,baseclass->baseoffset[i]);
+        sprintf(msg,"%s0x%-8lx ",space ,baseclass->herit[i]->baseoffset);
         if(G__more(fout,msg)) return(1);
         msg[0] = 0;
-        switch(baseclass->baseaccess[i]) {
+        switch(baseclass->herit[i]->baseaccess) {
         case G__PRIVATE:   sprintf(msg,"private: "); break;
         case G__PROTECTED: sprintf(msg,"protected: "); break;
         case G__PUBLIC:    sprintf(msg,"public: "); break;
         }
         if(G__more(fout,msg)) return(1);
-        sprintf(msg,"%s\n",G__fulltagname(baseclass->basetagnum[i],1));
+        sprintf(msg,"%s\n",G__fulltagname(baseclass->herit[i]->basetagnum,1));
         if(G__more(fout,msg)) return(1);
         if(G__objectmonitor(fout
-                            ,pobject+baseclass->baseoffset[i]
-                            ,baseclass->basetagnum[i],space))
+                            ,pobject+baseclass->herit[i]->baseoffset
+                            ,baseclass->herit[i]->basetagnum,space))
           return(1);
       }
     }

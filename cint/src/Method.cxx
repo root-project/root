@@ -416,8 +416,8 @@ int Cint::G__MethodInfo::Next()
        usingIndex<G__globalusingnamespace.basen) {
       ++usingIndex;
       index=0;
-      G__incsetup_memfunc(G__globalusingnamespace.basetagnum[usingIndex]);
-      ifunc=G__struct.memfunc[G__globalusingnamespace.basetagnum[usingIndex]];
+      G__incsetup_memfunc(G__globalusingnamespace.herit[usingIndex]->basetagnum);
+      ifunc=G__struct.memfunc[G__globalusingnamespace.herit[usingIndex]->basetagnum];
       handle=(long)ifunc;
     }
 #endif

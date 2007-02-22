@@ -189,16 +189,16 @@ long Cint::G__ClassInfo::IsBase(G__ClassInfo& a)
   if(IsValid()) {
     baseclass = G__struct.baseclass[tagnum];
     for(i=0;i<baseclass->basen;i++) {
-      if(a.Tagnum() == baseclass->basetagnum[i]) {
-	switch(baseclass->baseaccess[i]) {
+      if(a.Tagnum() == baseclass->herit[i]->basetagnum) {
+	switch(baseclass->herit[i]->baseaccess) {
 	case G__PUBLIC: isbase = G__BIT_ISPUBLIC; break;
 	case G__PROTECTED: isbase = G__BIT_ISPROTECTED; break;
 	case G__PRIVATE: isbase = G__BIT_ISPRIVATE; break;
 	default: isbase = 0; break;
 	}
-	if(baseclass->property[i]&G__ISDIRECTINHERIT) 
+	if(baseclass->herit[i]->property&G__ISDIRECTINHERIT) 
 	  isbase |= G__BIT_ISDIRECTINHERIT;
-	if(baseclass->property[i]&G__ISVIRTUALBASE) 
+	if(baseclass->herit[i]->property&G__ISVIRTUALBASE) 
 	  isbase |= G__BIT_ISVIRTUALBASE;
 	return(isbase);
       }

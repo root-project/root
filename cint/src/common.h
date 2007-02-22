@@ -1108,16 +1108,48 @@ struct G__ifunc_table_VMS {
 * structure for class inheritance
 *
 **************************************************************************/
+struct G__herit {
+  short basetagnum;
+#ifdef G__VIRTUALBASE
+  long baseoffset;
+#else
+  int baseoffset;
+#endif
+  G__SIGNEDCHAR_T baseaccess;
+  char property;
+  char  id;
+  struct G__herit *next;
+};
+struct G__herits {
+#ifdef __cplusplus   
+   struct G__herit* operator[](int idx) {
+      if (!fherits) {
+         fherits = (struct G__herit*)malloc(sizeof(struct G__herit));
+         memset(fherits,0,sizeof(struct G__herit));
+         fherits->id = idx;
+         return fherits;
+      }
+      struct G__herit *herits = fherits;
+      while(herits) {
+         if (herits->id == idx) return herits;
+         struct G__herit *nherits  = herits->next;
+         if (!nherits) {
+            nherits = (struct G__herit*)malloc(sizeof(struct G__herit));
+            memset(nherits,0,sizeof(struct G__herit));
+            nherits->id=idx;
+            herits->next = nherits;
+            return nherits;
+         }
+         herits = herits->next;
+      }
+      return 0;
+   }
+#endif
+  struct G__herit *fherits;
+};
 struct G__inheritance {
   int basen;
-  short basetagnum[G__MAXBASE];
-#ifdef G__VIRTUALBASE
-  long baseoffset[G__MAXBASE];
-#else
-  int baseoffset[G__MAXBASE];
-#endif
-  G__SIGNEDCHAR_T baseaccess[G__MAXBASE];
-  char property[G__MAXBASE];
+  struct G__herits herit;
 };
 
 

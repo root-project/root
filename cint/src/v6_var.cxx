@@ -1431,47 +1431,47 @@ struct G__var_array *G__searchvariable(char *varname,int varhash
       if(isbase) {
         while(baseclass && basen<baseclass->basen) {
           if(memfunc_or_friend) {
-            if((baseclass->baseaccess[basen]&G__PUBLIC_PROTECTED) ||
-               baseclass->property[basen]&G__ISDIRECTINHERIT) {
+            if((baseclass->herit[basen]->baseaccess&G__PUBLIC_PROTECTED) ||
+               baseclass->herit[basen]->property&G__ISDIRECTINHERIT) {
               accesslimit = G__PUBLIC_PROTECTED;
-              G__incsetup_memvar(baseclass->basetagnum[basen]);
-              var = G__struct.memvar[baseclass->basetagnum[basen]];
+              G__incsetup_memvar(baseclass->herit[basen]->basetagnum);
+              var = G__struct.memvar[baseclass->herit[basen]->basetagnum];
 #ifdef G__VIRTUALBASE
-              if(baseclass->property[basen]&G__ISVIRTUALBASE) {
+              if(baseclass->herit[basen]->property&G__ISVIRTUALBASE) {
                 *pG__struct_offset = *pstore_struct_offset 
                   + G__getvirtualbaseoffset(*pstore_struct_offset,scope_tagnum
                                             ,baseclass,basen);
               }
               else {
                 *pG__struct_offset
-                  = *pstore_struct_offset + baseclass->baseoffset[basen];
+                  = *pstore_struct_offset + baseclass->herit[basen]->baseoffset;
               }
 #else
               *pG__struct_offset
-                = *pstore_struct_offset + baseclass->baseoffset[basen];
+                = *pstore_struct_offset + baseclass->herit[basen]->baseoffset;
 #endif
               ++basen;
               goto next_base;
             }
           }
           else {
-            if(baseclass->baseaccess[basen]&G__PUBLIC) {
+            if(baseclass->herit[basen]->baseaccess&G__PUBLIC) {
               accesslimit = G__PUBLIC;
-              G__incsetup_memvar(baseclass->basetagnum[basen]);
-              var = G__struct.memvar[baseclass->basetagnum[basen]];
+              G__incsetup_memvar(baseclass->herit[basen]->basetagnum);
+              var = G__struct.memvar[baseclass->herit[basen]->basetagnum];
 #ifdef G__VIRTUALBASE
-              if(baseclass->property[basen]&G__ISVIRTUALBASE) {
+              if(baseclass->herit[basen]->property&G__ISVIRTUALBASE) {
                 *pG__struct_offset = *pstore_struct_offset 
                   + G__getvirtualbaseoffset(*pstore_struct_offset,scope_tagnum
                                             ,baseclass,basen);
               }
               else {
                 *pG__struct_offset
-                  = *pstore_struct_offset + baseclass->baseoffset[basen];
+                  = *pstore_struct_offset + baseclass->herit[basen]->baseoffset;
               }
 #else
               *pG__struct_offset
-                = *pstore_struct_offset + baseclass->baseoffset[basen];
+                = *pstore_struct_offset + baseclass->herit[basen]->baseoffset;
 #endif
               ++basen;
               goto next_base;
@@ -6746,20 +6746,20 @@ struct G__var_array *G__getvarentry(char *varname,int varhash,int *pi,G__var_arr
       if(isbase) {
         while(baseclass && basen<baseclass->basen) {
           if(memfunc_or_friend) {
-            if((baseclass->baseaccess[basen]&G__PUBLIC_PROTECTED) ||
-               baseclass->property[basen]&G__ISDIRECTINHERIT) {
+            if((baseclass->herit[basen]->baseaccess&G__PUBLIC_PROTECTED) ||
+               baseclass->herit[basen]->property&G__ISDIRECTINHERIT) {
               accesslimit = G__PUBLIC_PROTECTED;
-              G__incsetup_memvar(baseclass->basetagnum[basen]);
-              var = G__struct.memvar[baseclass->basetagnum[basen]];
+              G__incsetup_memvar(baseclass->herit[basen]->basetagnum);
+              var = G__struct.memvar[baseclass->herit[basen]->basetagnum];
               ++basen;
               goto next_base;
             }
           }
           else {
-            if(baseclass->baseaccess[basen]&G__PUBLIC) {
+            if(baseclass->herit[basen]->baseaccess&G__PUBLIC) {
               accesslimit = G__PUBLIC;
-              G__incsetup_memvar(baseclass->basetagnum[basen]);
-              var = G__struct.memvar[baseclass->basetagnum[basen]];
+              G__incsetup_memvar(baseclass->herit[basen]->basetagnum);
+              var = G__struct.memvar[baseclass->herit[basen]->basetagnum];
               ++basen;
               goto next_base;
             }

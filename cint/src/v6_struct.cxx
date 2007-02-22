@@ -91,10 +91,10 @@ int G__using_namespace()
         struct G__inheritance *base=G__struct.baseclass[envtagnum];
         pbasen = &base->basen;
         if(*pbasen<G__MAXBASE) {
-          base->basetagnum[*pbasen]=basetagnum;
-          base->baseoffset[*pbasen]=0;
-          base->baseaccess[*pbasen]=G__PUBLIC;
-          base->property[*pbasen]=0;
+          base->herit[*pbasen]->basetagnum=basetagnum;
+          base->herit[*pbasen]->baseoffset=0;
+          base->herit[*pbasen]->baseaccess=G__PUBLIC;
+          base->herit[*pbasen]->property=0;
           ++(*pbasen);
         }
         else {
@@ -114,7 +114,7 @@ int G__using_namespace()
        found = 0;
        for(j=0; j<G__globalusingnamespace.basen; ++j) {
           struct G__inheritance *base = &G__globalusingnamespace;
-          if ( base->basetagnum[j] == basetagnum ) {
+          if ( base->herit[j]->basetagnum == basetagnum ) {
              found = 1;
              break;
           }
@@ -123,9 +123,9 @@ int G__using_namespace()
           if(G__globalusingnamespace.basen<G__MAXBASE) {
              struct G__inheritance *base = &G__globalusingnamespace;
              int* pbasen = &base->basen;
-             base->basetagnum[*pbasen]=basetagnum;
-             base->baseoffset[*pbasen]=0;
-             base->baseaccess[*pbasen]=G__PUBLIC;
+             base->herit[*pbasen]->basetagnum=basetagnum;
+             base->herit[*pbasen]->baseoffset=0;
+             base->herit[*pbasen]->baseaccess=G__PUBLIC;
              ++(*pbasen);
           }
           else {
@@ -1465,19 +1465,19 @@ void G__define_struct(char type)
       pbasen = &baseclass->basen;
 
       // Enter parsed information into base class information table.
-      baseclass->property[*pbasen] = G__ISDIRECTINHERIT + isvirtualbase;
+      baseclass->herit[*pbasen]->property = G__ISDIRECTINHERIT + isvirtualbase;
       // Note: We are requiring the base class to exist here, we get an error message if it does not.
-      baseclass->basetagnum[*pbasen] = G__defined_tagname(basename, 0);
+      baseclass->herit[*pbasen]->basetagnum = G__defined_tagname(basename, 0);
       if (
         (G__struct.size[lstore_tagnum] == 1) &&
         (G__struct.memvar[lstore_tagnum]->allvar == 0) &&
         (G__struct.baseclass[lstore_tagnum]->basen == 0)
       ) {
-        baseclass->baseoffset[*pbasen] = 0;
+        baseclass->herit[*pbasen]->baseoffset = 0;
       } else {
-        baseclass->baseoffset[*pbasen] = G__struct.size[lstore_tagnum];
+        baseclass->herit[*pbasen]->baseoffset = G__struct.size[lstore_tagnum];
       }
-      baseclass->baseaccess[*pbasen] = baseaccess;
+      baseclass->herit[*pbasen]->baseaccess = baseaccess;
       G__tagnum = lstore_tagnum;
       G__def_tagnum = lstore_def_tagnum;
       G__tagdefining = lstore_tagdefining;
@@ -1485,9 +1485,9 @@ void G__define_struct(char type)
       // Virtual base classes for interpretation to be implemented
       // and the two limitation messages above should be deleted.
       if (
-        (G__struct.size[baseclass->basetagnum[*pbasen]] == 1) &&
-        (G__struct.memvar[baseclass->basetagnum[*pbasen]]->allvar == 0) &&
-        (G__struct.baseclass[baseclass->basetagnum[*pbasen]]->basen == 0)
+        (G__struct.size[baseclass->herit[*pbasen]->basetagnum] == 1) &&
+        (G__struct.memvar[baseclass->herit[*pbasen]->basetagnum]->allvar == 0) &&
+        (G__struct.baseclass[baseclass->herit[*pbasen]->basetagnum]->basen == 0)
       ) {
         if (isvirtualbase) {
           G__struct.size[G__tagnum] += G__DOUBLEALLOC;
@@ -1496,14 +1496,14 @@ void G__define_struct(char type)
         }
       } else {
         if (isvirtualbase) {
-          G__struct.size[G__tagnum] += (G__struct.size[baseclass->basetagnum[*pbasen]] + G__DOUBLEALLOC);
+          G__struct.size[G__tagnum] += (G__struct.size[baseclass->herit[*pbasen]->basetagnum] + G__DOUBLEALLOC);
         } else {
-          G__struct.size[G__tagnum] += G__struct.size[baseclass->basetagnum[*pbasen]];
+          G__struct.size[G__tagnum] += G__struct.size[baseclass->herit[*pbasen]->basetagnum];
         }
       }
 
       // Inherit base class info, variable member, function member.
-      G__inheritclass(G__tagnum, baseclass->basetagnum[*pbasen], baseaccess);
+      G__inheritclass(G__tagnum, baseclass->herit[*pbasen]->basetagnum, baseaccess);
 
       // ++(*pbasen);
     }
@@ -1537,16 +1537,16 @@ void G__define_struct(char type)
     for (ivb = 0; ivb < baseclass->basen; ++ivb) {
       struct G__ifunc_table* itab;
 
-      if (baseclass->property[ivb] & G__ISDIRECTINHERIT) {
+      if (baseclass->herit[ivb]->property & G__ISDIRECTINHERIT) {
         lastdirect = ivb;
       }
 
 #ifndef G__OLDIMPLEMENTATION2037
       // Insure the loading of the memfunc.
-      G__incsetup_memfunc(baseclass->basetagnum[ivb]);
+      G__incsetup_memfunc(baseclass->herit[ivb]->basetagnum);
 #endif
 
-      itab = G__struct.memfunc[baseclass->basetagnum[ivb]];
+      itab = G__struct.memfunc[baseclass->herit[ivb]->basetagnum];
       while (itab) {
         int ifunc;
         for (ifunc = 0; ifunc < itab->allifunc; ++ifunc) {
@@ -1560,7 +1560,7 @@ void G__define_struct(char type)
             int b2;
             int found_flag = 0;
 
-            if (baseclass->property[ivb] & G__ISVIRTUALBASE) {
+            if (baseclass->herit[ivb]->property & G__ISVIRTUALBASE) {
               firstb = 0;
               lastb = baseclass->basen;
             } else {
@@ -1575,8 +1575,8 @@ void G__define_struct(char type)
               if (b2 == ivb) {
                 continue;
               }
-              basetag = baseclass->basetagnum[b2];
-              if (G__isanybase(baseclass->basetagnum[ivb], basetag, G__STATICRESOLUTION) < 0) {
+              basetag = baseclass->herit[b2]->basetagnum;
+              if (G__isanybase(baseclass->herit[ivb]->basetagnum, basetag, G__STATICRESOLUTION) < 0) {
                 continue;
               }
               found_tab = G__ifunc_exist(itab, ifunc, G__struct.memfunc[basetag], &found_ndx, 0xffff);

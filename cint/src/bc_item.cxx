@@ -455,7 +455,7 @@ G__value G__blockscope_expr::searchobject(const string& name,G__object_id* id){
     // base class or using namespace
     int ib,btagnum;
     for(ib=0;ib<G__struct.baseclass[tagnum]->basen;ib++) {
-      btagnum = G__struct.baseclass[tagnum]->basetagnum[ib];
+      btagnum = G__struct.baseclass[tagnum]->herit[ib]->basetagnum;
       var = G__struct.memvar[btagnum];
       while(var) {
         for(ig15=0;ig15<var->allvar;ig15++) {

@@ -56,7 +56,7 @@ void G__inheritclass(int to_tagnum,int from_tagnum,char baseaccess)
 
   if(!to_base || !from_base) return;
 
-  offset = to_base->baseoffset[to_base->basen]; /* just to simplify */
+  offset = to_base->herit[to_base->basen]->baseoffset; /* just to simplify */
 
   /****************************************************
   * copy virtual offset 
@@ -66,7 +66,7 @@ void G__inheritclass(int to_tagnum,int from_tagnum,char baseaccess)
   if(-1 != G__struct.virtual_offset[from_tagnum] &&
      -1 == G__struct.virtual_offset[to_tagnum]) {
 #ifdef G__VIRTUALBASE
-    if(to_base->property[to_base->basen]&G__ISVIRTUALBASE) {
+    if(to_base->herit[to_base->basen]->property&G__ISVIRTUALBASE) {
       G__struct.virtual_offset[to_tagnum] 
         =offset+G__struct.virtual_offset[from_tagnum]+G__DOUBLEALLOC;
     }
@@ -86,26 +86,26 @@ void G__inheritclass(int to_tagnum,int from_tagnum,char baseaccess)
   /****************************************************
   *  copy grand base class info 
   ****************************************************/
-  isvirtualbase = (to_base->property[to_base->basen]&G__ISVIRTUALBASE); 
-  if(to_base->property[to_base->basen]&G__ISVIRTUALBASE) {
+  isvirtualbase = (to_base->herit[to_base->basen]->property&G__ISVIRTUALBASE); 
+  if(to_base->herit[to_base->basen]->property&G__ISVIRTUALBASE) {
     isvirtualbase |= G__ISINDIRECTVIRTUALBASE;
   }
   basen=to_base->basen;
   for(i=0;i<from_base->basen;i++) {
     ++basen;
-    to_base->basetagnum[basen] = from_base->basetagnum[i];
-    to_base->baseoffset[basen] = offset+from_base->baseoffset[i];
-    to_base->property[basen] 
-      = ((from_base->property[i]&(G__ISVIRTUALBASE|G__ISINDIRECTVIRTUALBASE)) 
+    to_base->herit[basen]->basetagnum = from_base->herit[i]->basetagnum;
+    to_base->herit[basen]->baseoffset = offset+from_base->herit[i]->baseoffset;
+    to_base->herit[basen]->property 
+      = ((from_base->herit[i]->property&(G__ISVIRTUALBASE|G__ISINDIRECTVIRTUALBASE)) 
           | isvirtualbase);
-    if(from_base->baseaccess[i]>=G__PRIVATE) 
-      to_base->baseaccess[basen]=G__GRANDPRIVATE;
+    if(from_base->herit[i]->baseaccess>=G__PRIVATE) 
+      to_base->herit[basen]->baseaccess=G__GRANDPRIVATE;
     else if(G__PRIVATE==baseaccess)
-      to_base->baseaccess[basen]=G__PRIVATE;
-    else if(G__PROTECTED==baseaccess&&G__PUBLIC==from_base->baseaccess[i])
-      to_base->baseaccess[basen]=G__PROTECTED;
+      to_base->herit[basen]->baseaccess=G__PRIVATE;
+    else if(G__PROTECTED==baseaccess&&G__PUBLIC==from_base->herit[i]->baseaccess)
+      to_base->herit[basen]->baseaccess=G__PROTECTED;
     else
-      to_base->baseaccess[basen]=from_base->baseaccess[i];
+      to_base->herit[basen]->baseaccess=from_base->herit[i]->baseaccess;
   }
   to_base->basen=basen+1;
 
@@ -316,17 +316,17 @@ int G__baseconstructor(int n, G__baseparam *pbaseparamin)
   baseclass=G__struct.baseclass[store_tagnum];
   if(!baseclass) return(0);
   for(i=0;i<baseclass->basen;i++) {
-    if(baseclass->property[i]&G__ISDIRECTINHERIT) {
-      G__tagnum = baseclass->basetagnum[i];
+    if(baseclass->herit[i]->property&G__ISDIRECTINHERIT) {
+      G__tagnum = baseclass->herit[i]->basetagnum;
 #define G__OLDIMPLEMENTATION1606
 #ifdef G__VIRTUALBASE
-      if(baseclass->property[i]&G__ISVIRTUALBASE) {
+      if(baseclass->herit[i]->property&G__ISVIRTUALBASE) {
         long vbaseosaddr;
-        vbaseosaddr = store_struct_offset+baseclass->baseoffset[i];
+        vbaseosaddr = store_struct_offset+baseclass->herit[i]->baseoffset;
         G__setvbaseaddrlist(G__tagnum,store_struct_offset
-                            ,baseclass->baseoffset[i]);
+                            ,baseclass->herit[i]->baseoffset);
         /*
-        if(baseclass->baseoffset[i]+G__DOUBLEALLOC==(*(long*)vbaseosaddr)) {
+        if(baseclass->herit[i]->baseoffset+G__DOUBLEALLOC==(*(long*)vbaseosaddr)) {
           G__store_struct_offset=store_struct_offset+(*(long*)vbaseosaddr);
         }
         */
@@ -343,10 +343,10 @@ int G__baseconstructor(int n, G__baseparam *pbaseparamin)
         }
       }
       else {
-        G__store_struct_offset=store_struct_offset+baseclass->baseoffset[i];
+        G__store_struct_offset=store_struct_offset+baseclass->herit[i]->baseoffset;
       }
 #else
-      G__store_struct_offset=store_struct_offset+baseclass->baseoffset[i];
+      G__store_struct_offset=store_struct_offset+baseclass->herit[i]->baseoffset;
 #endif
 
       /* search for constructor argument */ 
@@ -384,10 +384,10 @@ int G__baseconstructor(int n, G__baseparam *pbaseparamin)
       }
     } /* end of if ISDIRECTINHERIT */
     else { /* !ISDIREDCTINHERIT , bug fix for multiple inheritance */
-      if(0==(baseclass->property[i]&G__ISVIRTUALBASE)) {
-        G__tagnum = baseclass->basetagnum[i];
+      if(0==(baseclass->herit[i]->property&G__ISVIRTUALBASE)) {
+        G__tagnum = baseclass->herit[i]->basetagnum;
         if(-1 != G__struct.virtual_offset[G__tagnum]) {
-          G__store_struct_offset=store_struct_offset+baseclass->baseoffset[i];
+          G__store_struct_offset=store_struct_offset+baseclass->herit[i]->baseoffset;
           *(long*)(G__store_struct_offset+G__struct.virtual_offset[G__tagnum])
             = store_tagnum;
         }
@@ -655,21 +655,21 @@ int G__basedestructor()
    ****************************************************************/
   baseclass=G__struct.baseclass[store_tagnum];
   for(i=baseclass->basen-1;i>=0;i--) {
-    if(baseclass->property[i]&G__ISDIRECTINHERIT) {
-      G__tagnum = baseclass->basetagnum[i];
+    if(baseclass->herit[i]->property&G__ISDIRECTINHERIT) {
+      G__tagnum = baseclass->herit[i]->basetagnum;
 #ifdef G__VIRTUALBASE
-      if(baseclass->property[i]&G__ISVIRTUALBASE) {
+      if(baseclass->herit[i]->property&G__ISVIRTUALBASE) {
         long vbaseosaddr;
-        vbaseosaddr = store_struct_offset+baseclass->baseoffset[i];
+        vbaseosaddr = store_struct_offset+baseclass->herit[i]->baseoffset;
         /*
-        if(baseclass->baseoffset[i]+G__DOUBLEALLOC==(*(long*)vbaseosaddr)) {
+        if(baseclass->herit[i]->baseoffset+G__DOUBLEALLOC==(*(long*)vbaseosaddr)) {
           G__store_struct_offset=store_struct_offset+(*(long*)vbaseosaddr);
         }
         */
         if(G__DOUBLEALLOC==(*(long*)vbaseosaddr)) {
           G__store_struct_offset=vbaseosaddr+(*(long*)vbaseosaddr);
           if(G__asm_noverflow) {
-            store_addstros=baseclass->baseoffset[i]+(*(long*)vbaseosaddr);
+            store_addstros=baseclass->herit[i]->baseoffset+(*(long*)vbaseosaddr);
           }
         }
         else {
@@ -677,13 +677,13 @@ int G__basedestructor()
         }
       }
       else {
-        G__store_struct_offset=store_struct_offset+baseclass->baseoffset[i];
+        G__store_struct_offset=store_struct_offset+baseclass->herit[i]->baseoffset;
         if(G__asm_noverflow) {
-          store_addstros=baseclass->baseoffset[i];
+          store_addstros=baseclass->herit[i]->baseoffset;
         }
       }
 #else
-      G__store_struct_offset=store_struct_offset+baseclass->baseoffset[i];
+      G__store_struct_offset=store_struct_offset+baseclass->herit[i]->baseoffset;
 #endif
       if(G__asm_noverflow) G__gen_addstros(store_addstros);
       /* avoid recursive and infinite virtual destructor call 
@@ -820,19 +820,19 @@ int G__ispublicbase(int basetagnum,int derivedtagnum
   n = derived->basen;
 
   for(i=0;i<n;i++) {
-    if(basetagnum == derived->basetagnum[i]) {
-      if(derived->baseaccess[i]==G__PUBLIC ||
+    if(basetagnum == derived->herit[i]->basetagnum) {
+      if(derived->herit[i]->baseaccess==G__PUBLIC ||
          (G__exec_memberfunc && G__tagnum==derivedtagnum &&
-          G__GRANDPRIVATE!=derived->baseaccess[i])) {
+          G__GRANDPRIVATE!=derived->herit[i]->baseaccess)) {
 #ifdef G__VIRTUALBASE
-        if(derived->property[i]&G__ISVIRTUALBASE) {
+        if(derived->herit[i]->property&G__ISVIRTUALBASE) {
           return(G__getvirtualbaseoffset(pobject,derivedtagnum,derived,i));
         }
         else {
-          return(derived->baseoffset[i]);
+          return(derived->herit[i]->baseoffset);
         }
 #else
-        return(derived->baseoffset[i]);
+        return(derived->herit[i]->baseoffset);
 #endif
       }
     }
@@ -859,7 +859,7 @@ int G__isanybase(int basetagnum,int derivedtagnum
 
   if (0 > derivedtagnum) {
     for (i = 0; i < G__globalusingnamespace.basen; i++) {
-      if (G__globalusingnamespace.basetagnum[i] == basetagnum)
+      if (G__globalusingnamespace.herit[i]->basetagnum == basetagnum)
         return 0;
     }
     return -1;
@@ -869,16 +869,16 @@ int G__isanybase(int basetagnum,int derivedtagnum
   n = derived ? derived->basen : -1;
 
   for(i=0;i<n;i++) {
-    if(basetagnum == derived->basetagnum[i]) {
+    if(basetagnum == derived->herit[i]->basetagnum) {
 #ifdef G__VIRTUALBASE
-      if(derived->property[i]&G__ISVIRTUALBASE) {
+      if(derived->herit[i]->property&G__ISVIRTUALBASE) {
         return(G__getvirtualbaseoffset(pobject,derivedtagnum,derived,i));
       }
       else {
-        return(derived->baseoffset[i]);
+        return(derived->herit[i]->baseoffset);
       }
 #else
-      return(derived->baseoffset[i]);
+      return(derived->herit[i]->baseoffset);
 #endif
     }
   }
@@ -901,12 +901,12 @@ int G__find_virtualoffset(int virtualtag)
   if(0>virtualtag) return(0);
   baseclass = G__struct.baseclass[virtualtag];
   for(i=0;i<baseclass->basen;i++) {
-    if(G__tagnum==baseclass->basetagnum[i]) {
-      if(baseclass->property[i]&G__ISVIRTUALBASE) {
-        return(baseclass->baseoffset[i]+G__DOUBLEALLOC);
+    if(G__tagnum==baseclass->herit[i]->basetagnum) {
+      if(baseclass->herit[i]->property&G__ISVIRTUALBASE) {
+        return(baseclass->herit[i]->baseoffset+G__DOUBLEALLOC);
       }
       else {
-        return(baseclass->baseoffset[i]);
+        return(baseclass->herit[i]->baseoffset);
       }
     }
   }
@@ -929,13 +929,13 @@ long G__getvirtualbaseoffset(long pobject,int tagnum
     return(0);
   }
   if(G__CPPLINK==G__struct.iscpplink[tagnum]) {
-    f = (long (*) G__P((long)))(baseclass->baseoffset[basen]);
+    f = (long (*) G__P((long)))(baseclass->herit[basen]->baseoffset);
     return((*f)(pobject));
   }
   else {
     /* return((*(long*)(pobject+baseclass->baseoffset[basen]))); */
-    return(baseclass->baseoffset[basen]
-           +(*(long*)(pobject+baseclass->baseoffset[basen])));
+    return(baseclass->herit[basen]->baseoffset
+           +(*(long*)(pobject+baseclass->herit[basen]->baseoffset)));
   }
 }
 #endif
