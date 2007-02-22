@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.112 2007/01/30 11:49:14 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.113 2007/02/15 15:04:40 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -40,7 +40,6 @@
 #include "TClassTree.h"
 #include "TMarker.h"
 #include "TStyle.h"
-#include "TStyleManager.h"
 #include "TVirtualX.h"
 #include "TApplication.h"
 #include "TFile.h"

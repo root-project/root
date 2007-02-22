@@ -14,7 +14,6 @@
 #include "TClass.h"
 #include "TGraph2DErrors.h"
 #include "TMath.h"
-#include "TPolyLine.h"
 #include "TPolyMarker.h"
 #include "TVirtualPad.h"
 #include "TVirtualFitter.h"

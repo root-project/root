@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.52 2007/02/01 14:58:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.53 2007/02/15 15:04:40 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -14,7 +14,6 @@
 #include "THStack.h"
 #include "TVirtualPad.h"
 #include "TVirtualHistPainter.h"
-#include "TFrame.h"
 #include "THashList.h"
 #include "TH2.h"
 #include "TH3.h"
@@ -735,8 +734,8 @@ void THStack::Paint(Option_t *option)
             h1->SetFillColor(1000);
             h1->SetFillStyle(1001);
             h1->Paint(loption);
-            h1->SetFillColor(gPad->GetFrame()->GetFillColor());
-            h1->SetFillStyle(gPad->GetFrame()->GetFillStyle());
+            h1->SetFillColor(((TAttFill*)gPad->GetFrame())->GetFillColor());
+            h1->SetFillStyle(((TAttFill*)gPad->GetFrame())->GetFillStyle());
             h1->Paint(loption);
             h1->SetFillColor(h1col);
             h1->SetFillStyle(h1fill);

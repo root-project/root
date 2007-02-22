@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.12 2007/02/03 18:33:15 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.13 2007/02/05 18:11:29 brun Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************
@@ -17,7 +17,7 @@
 #include "TTree.h"
 #include "TLeafObject.h"
 #include "TClonesArray.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
 #include "TClass.h"
 #include "TBaseClass.h"
 #include "TDataMember.h"

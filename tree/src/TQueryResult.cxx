@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.10 2006/11/27 14:14:24 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TQueryResult.cxx,v 1.11 2007/01/12 16:03:17 brun Exp $
 // Author: G Ganis Sep 2005
 
 /*************************************************************************
@@ -19,7 +19,6 @@
 #include <string.h>
 
 #include "TBrowser.h"
-#include "TDSet.h"
 #include "TError.h"
 #include "TEventList.h"
 #include "TQueryResult.h"
