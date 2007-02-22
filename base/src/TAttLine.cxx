@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.17 2007/02/21 09:33:21 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.18 2007/02/21 12:39:00 couet Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -39,7 +39,11 @@ Line attributes are:
 
 <a name="L1"></a><h3>Line Color</h3>
 The line color is a color index (integer) pointing in the ROOT
-color table. The following table shows the first 50 default colors.
+color table.
+The line color of any class inheriting from <tt>TAttLine</tt> can
+be changed using the method <tt>SetLineColor</tt> and retrieved using the
+method <tt>GetLineColor</tt>.
+The following table shows the first 50 default colors.
 End_Html
 Begin_Macro(source)
 {
@@ -52,6 +56,9 @@ End_Macro
 Begin_Html
 <a name="L2"></a><h3>Line Width</h3>
 The line width is expressed in pixel units.
+The line width of any class inheriting from <tt>TAttLine</tt> can
+be changed using the method <tt>SetLineWidth</tt> and retrieved using the
+method <tt>GetLineWidth</tt>.
 The following picture shows the line widths from 1 to 10 pixels.
 End_Html
 Begin_Macro(source)
@@ -74,8 +81,11 @@ End_Macro
 
 Begin_Html
 <a name="L3"></a><h3>Line Style</h3>
-Line styles are identified via integer numbers. The four basic line styles
-are:
+Line styles are identified via integer numbers.
+The line style of any class inheriting from <tt>TAttLine</tt> can
+be changed using the method <tt>SetLineStyle</tt> and retrieved using the
+method <tt>GetLineStyle</tt>.
+The four basic line styles are:
 <pre>
    1 = solid
    2 = dash
