@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.26 2006/05/18 16:32:02 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.27 2007/01/16 07:57:59 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 
 #include "TGWindow.h"
 #include "Riostream.h"
+#include "TApplication.h"
 
 ClassImp(TGWindow)
 ClassImp(TGUnknownWindowHandler)
@@ -45,6 +46,8 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
    // is taken as parent. No arguments specified results in values from
    // parent to be taken (or defaults).
 
+   // make sure that the Gpad and GUI libs are loaded
+   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
    // this can only happen when libGui was loaded at program startup
    // but not initialized because application is in batch mode
    if (!gClient) new TGClient();

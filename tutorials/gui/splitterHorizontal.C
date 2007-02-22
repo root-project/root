@@ -106,5 +106,5 @@ void splitterHorizontal()
 {
    // Popup the GUI...
 
-   new MyMainFrame(gClient->GetRoot(), 300, 250);
+   new MyMainFrame(0, 300, 250);
 }

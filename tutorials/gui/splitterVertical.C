@@ -108,5 +108,5 @@ void MyMainFrame::CloseWindow()
 void splitterVertical()
 {
    // Popup the GUI...
-   new MyMainFrame(gClient->GetRoot(), 350, 200);
+   new MyMainFrame(0, 350, 200);
 }

@@ -84,5 +84,5 @@ void MyMainFrame::DoSetlabel()
 
 void numberEntry()
 {
-	new MyMainFrame(gClient->GetRoot(), 50, 50); 
+	new MyMainFrame(0, 50, 50); 
 }

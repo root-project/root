@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.21 2007/02/13 21:23:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.22 2007/02/21 11:50:29 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -43,6 +43,8 @@ class TSignalHandler;
 
 
 class TApplication : public TObject, public TQObject {
+
+friend class TLoadGraphicsLibs;
 
 private:
    Int_t              fArgc;           //Number of com   mand line arguments

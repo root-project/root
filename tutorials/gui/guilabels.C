@@ -1,4 +1,4 @@
-// 
+//
 // Author: Ilka Antcheva   1/12/2006
 
 // This macro gives an example of how to create different kind of labels
@@ -79,7 +79,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
    fLbl2 = new TGLabel(this, "Has Own Font + FColor", fTextGC->GetGC(), labelfont);
    AddFrame(fLbl2,  new TGLayoutHints(kLHintsCenterX, 5, 5, 3, 4));
    fLbl2->SetTextColor(rcolor);
-   
+
    fLbl3 = new TGLabel(this, "Normal Label");
    AddFrame(fLbl3,  new TGLayoutHints(kLHintsCenterX, 5, 5, 3, 4));
 
@@ -92,7 +92,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
    exit->Connect("Pressed()", "MyMainFrame", this, "DoExit()");
    AddFrame(exit, new TGLayoutHints(kLHintsExpandX, 5, 5, 3, 4));
 
-   // Set a name to the main frame   
+   // Set a name to the main frame
    SetWindowName("Labels");
    MapSubwindows();
 
@@ -112,5 +112,5 @@ MyMainFrame::~MyMainFrame()
 void guilabels()
 {
    // Popup the GUI...
-   new MyMainFrame(gClient->GetRoot(), 200, 200);
+   new MyMainFrame(0, 200, 200);
 }

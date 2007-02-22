@@ -50,7 +50,7 @@ WorldMap::WorldMap(const char* picName)
 {
    //
 
-   fMain = new TGMainFrame(gClient->GetRoot(), 750, 420);
+   fMain = new TGMainFrame(0, 750, 420);
 
    fImageMap = new TGImageMap(fMain, picName);
    fMain->AddFrame(fImageMap);

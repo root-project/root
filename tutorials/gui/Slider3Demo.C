@@ -47,7 +47,7 @@ public:
 };
 
 //______________________________________________________________________________
-TTripleSliderDemo::TTripleSliderDemo() : TGMainFrame(gClient->GetRoot(), 100, 100)
+TTripleSliderDemo::TTripleSliderDemo() : TGMainFrame(0, 100, 100)
 {
 
    char buf[32];
