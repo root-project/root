@@ -6897,6 +6897,7 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
 
 
 #endif
+  if (G__p_ifunc->param[0][para_nu-1]) return (1);
   return(0);
 }
 
@@ -7103,7 +7104,6 @@ int G__memfunc_next()
       for(ix=0;ix<G__MAXIFUNC;ix++) {
         G__p_ifunc->funcname[ix] = (char*)NULL;
         G__p_ifunc->userparam[ix] = 0;
-        for (int iy=0;iy<G__MAXFUNCPARA;iy++) G__p_ifunc->param->fparams[iy]=0;
       }
     }
     {

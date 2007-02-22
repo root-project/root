@@ -1245,7 +1245,6 @@ G__MethodInfo Cint::G__ClassInfo::AddMethod(const char* typenam,const char* fnam
     for(int ix=0;ix<G__MAXIFUNC;ix++) {
       ifunc->funcname[ix] = (char*)NULL;
       ifunc->userparam[ix] = 0;
-      for (int iy=0;iy<G__MAXFUNCPARA;iy++) ifunc->param->fparams[iy]=0;
     }
     index=0;
   }

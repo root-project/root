@@ -943,22 +943,36 @@ struct G__paramfunc {
   char  isconst;
   char *name;
   char *def;
+  char  id;
   G__value *pdefault;
+  struct G__paramfunc *next;
 };
 struct G__params {
 #ifdef __cplusplus   
    struct G__paramfunc* operator[](int idx) {
-      if (!fparams[idx]) {
-         fparams[idx] = (struct G__paramfunc*)malloc(sizeof(struct G__paramfunc));
-         fparams[idx]->p_tagtable=0;
-         fparams[idx]->name=0;
-         fparams[idx]->def = 0;
-         fparams[idx]->pdefault=0;
+      if (!fparams) {
+         fparams = (struct G__paramfunc*)malloc(sizeof(struct G__paramfunc));
+         memset(fparams,0,sizeof(struct G__paramfunc));
+         fparams->id = idx;
+         return fparams;
       }
-      return fparams[idx];
+      struct G__paramfunc *params = fparams;
+      while(params) {
+         if (params->id == idx) return params;
+         struct G__paramfunc *nparams  = params->next;
+         if (!nparams) {
+            nparams = (struct G__paramfunc*)malloc(sizeof(struct G__paramfunc));
+            memset(nparams,0,sizeof(struct G__paramfunc));
+            nparams->id=idx;
+            params->next = nparams;
+            return nparams;
+         }
+         params = params->next;
+      }
+      return 0;
    }
 #endif
-   struct G__paramfunc *fparams[G__MAXFUNCPARA];
+   struct G__paramfunc *fparams;
 };
 struct G__ifunc_table {
   /* number of interpreted function */

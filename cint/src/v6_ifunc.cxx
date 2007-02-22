@@ -1614,7 +1614,6 @@ int G__readansiproto(G__ifunc_table *ifunc,int func_now)
   int store_tagnum_default=0,store_def_struct_member_default=0;
   int store_exec_memberfunc=0;
   int arydim;
-
   ifunc->ansi[func_now] = 1;
   while(')'!=c) {
 #ifndef G__OLDIMPLEMENTATION824

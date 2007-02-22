@@ -859,7 +859,6 @@ int G__search_tagname(const char *tagname,int type)
       int ix;
       for(ix=0;ix<G__MAXIFUNC;ix++) {
         G__struct.memfunc[i]->funcname[ix]=(char*)NULL;
-        for (int iy=0;iy<G__MAXFUNCPARA;iy++) G__struct.memfunc[i]->param->fparams[iy]=0;
       }
     }
 #ifndef G__OLDIMPLEMENTATION2027
