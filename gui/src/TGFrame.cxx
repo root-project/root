@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.143 2006/12/12 14:17:52 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.144 2007/02/22 14:10:00 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -2800,7 +2800,7 @@ void TGMainFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    out << endl << "   // main frame" << endl;
    out << "   TGMainFrame *";
-   out << GetName() << " = new TGMainFrame(gClient->GetRoot(),10,10,"   // layout alg.
+   out << GetName() << " = new TGMainFrame(0,10,10,"   // layout alg.
        << GetOptionString() << ");" <<endl;
 
    // setting layout manager if it differs from the main frame type
@@ -3272,7 +3272,7 @@ void TGTransientFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    out << endl << "   // transient frame" << endl;
    out << "   TGTransientFrame *";
-   out << GetName()<<" = new TGTransientFrame(gClient->GetRoot(),0"
+   out << GetName()<<" = new TGTransientFrame(0,0"
        << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() <<");" << endl;
 
    // setting layout manager if it differs from transient frame type
