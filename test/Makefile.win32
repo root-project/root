@@ -58,7 +58,8 @@ ROOTLIBS      = $(ROOTSYS)/lib/libCore.lib \
                 $(ROOTSYS)/lib/libGraf.lib $(ROOTSYS)/lib/libGraf3d.lib \
                 $(ROOTSYS)/lib/libGpad.lib $(ROOTSYS)/lib/libTree.lib \
                 $(ROOTSYS)/lib/libRint.lib $(ROOTSYS)/lib/libPostscript.lib \
-                $(ROOTSYS)/lib/libMatrix.lib $(ROOTSYS)/lib/libPhysics.lib
+                $(ROOTSYS)/lib/libMatrix.lib $(ROOTSYS)/lib/libPhysics.lib \
+                $(ROOTSYS)/lib/libNet.lib $(ROOTSYS)/lib/libRIO.lib
 LIBS          = $(ROOTLIBS)
 GLIBS         = $(LIBS) $(ROOTSYS)/lib/libGui.lib $(ROOTSYS)/lib/libGraf.lib \
                 $(ROOTSYS)/lib/libGpad.lib
