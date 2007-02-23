@@ -5311,11 +5311,12 @@ void TASImage::DrawText(TText *text, Int_t x, Int_t y)
 
    // set text size in pixels
    Int_t ttfsize;
+   Float_t  scale = 1.044; // 
 
    if (wh < hh) {
-      ttfsize = (Int_t)(text->GetTextSize()*wh);
+      ttfsize = (Int_t)(text->GetTextSize()*wh*scale);
    } else {
-      ttfsize = (Int_t)(text->GetTextSize()*hh);
+      ttfsize = (Int_t)(text->GetTextSize()*hh*scale);
    }
    TTF::SetTextSize(ttfsize);
 
