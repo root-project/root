@@ -5335,7 +5335,7 @@ void TASImage::DrawText(TText *text, Int_t x, Int_t y)
    parse_argb_color(col->AsHexString(), &color);
 
    // Align()
-   Int_t align;
+   Int_t align = 0;
    Int_t txalh = text->GetTextAlign()/10;
    Int_t txalv = text->GetTextAlign()%10;
 
