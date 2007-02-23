@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.19 2006/07/03 16:10:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.20 2006/12/21 14:08:38 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -24,111 +24,167 @@ ClassImp(TAttText)
 
 
 //______________________________________________________________________________
-//                          Text Attributes class
-//                          =====================
-//  Text attributes are:
-//    Text Alignment
-//    Text Color
-//    Text Font
-//    Text Size
-//    Text Angle
-//
-//  This class is used (in general by secondary inheritance)
-//
-//  by many other classes (graphics, histograms).
-//    align : Text alignment = 10*HorizontalAlign + VerticalAlign
-//            For Horizontal alignment the following convention applies:
-//               1=left adjusted, 2=centered, 3=rigth adjusted
-//            For Vertical alignment the following convention applies:
-//               1=bottom adjusted, 2=centered, 3=top adjusted
-//            For example align = 11 = left adjusted and bottom adjusted
-//                        align = 32 = right adjusted and vertically centered
-//    angle : Text angle in degrees
-//    color : Text Color Index
-//    font  : Text font code = 10*fontnumber + precision
-//             Font numbers must be between 1 and 14
-//             precision = 0 fast hardware fonts (steps in the size)
-//             precision = 1 scalable and rotatable hardware fonts (see below)
-//             precision = 2 scalable and rotatable hardware fonts
-//             precision = 3 scalable and rotatable hardware fonts. Text size
-//                           is given in pixels.
-//    size  : Character size expressed in percentage of the current pad height
-//            The textsize in pixels (say charheight) will be:
-//             charheight = textsize*canvas_height if current pad is horizontal.
-//             charheight = textsize*canvas_width  if current pad is vertical.
-//             charheight = number of pixels if font precision is greater than 2
-//
-//  Font quality and speed
-//  ======================
-//  When precision 0 is used, only the original non-scaled system fonts are
-//  used. The fonts have a minimum (4) and maximum (37) size in pixels. These
-//  fonts are fast and are of good quality. Their size varies with large steps
-//  and they cannot be rotated.
-//  Precision 1 and 2 fonts have a different behaviour depending if the
-//  True Type Fonts are used or not. If TTF are used, you always get very good
-//  quality scalable and rotatable fonts. However TTF are slow.
-//
-//  How to use True Type Fonts
-//  ==========================
-//  You can activate the TTF by adding (or activating) the following line
-//  in your .rootrc file:
-//  Unix.*.Root.UseTTFonts:     true
-//  WinNT  for NT
-//  You can check that you indeed use the TTF in your Root session.
-//  When the TTF is active, you get the following message at the start
-//  of a session:
-//    "FreeType Engine vX.X.X used to render TrueType fonts."
-//  You can also check with the command gEnv->Print().
-//
-//  List of the currently supported fonts
-//  =====================================
-//  Font number         X11 Names             Win32/TTF Names
-//      1 :       times-medium-i-normal      "Times New Roman"
-//      2 :       times-bold-r-normal        "Times New Roman"
-//      3 :       times-bold-i-normal        "Times New Roman"
-//      4 :       helvetica-medium-r-normal  "Arial"
-//      5 :       helvetica-medium-o-normal  "Arial"
-//      6 :       helvetica-bold-r-normal    "Arial"
-//      7 :       helvetica-bold-o-normal    "Arial"
-//      8 :       courier-medium-r-normal    "Courier New"
-//      9 :       courier-medium-o-normal    "Courier New"
-//     10 :       courier-bold-r-normal      "Courier New"
-//     11 :       courier-bold-o-normal      "Courier New"
-//     12 :       symbol-medium-r-normal     "Symbol"
-//     13 :       times-medium-r-normal      "Times New Roman"
-//     14 :                                  "Wingdings"
-//
-// The following picture shows how each font looks like. The number on the left
-// is the "Text font code". Precision 2 has been selected to produce this
-// picture.
-//Begin_Html
-/*
-<img src="gif/fonts.gif">
-*/
-//End_Html
-// This picture has been produced by the following macro:
-//
-//   void fonts()
-//   {
-//      TCanvas *t = new TCanvas("Text", "",0,0,550,900);
-//      t->Range(0,0,1,1);
-//      t->SetBorderSize(2);
-//      t->SetFrameFillColor(0);
-//
-//      double y = 0.95;
-//      for (int f = 12; f<=142; f+=10) {
-//         if (f<142) drawtext(0.02,y, f,"ABCDFGF abcdefgh 0123456789 @#$");
-//         else drawtext(0.02,y, f,"ABCD efgh 01234 @#$");
-//         y- = 0.07;
-//      }
-//   }
-//   void drawtext(double x, double y, int f, char *s)
-//   {
-//      TLatex *t = new TLatex(x,y,Form("#font[41]{%d :} %s",f,s));
-//      t->SetTextFont(f);
-//      t->SetTextAlign(12);
-//      t->Draw();
-//   }
+/* Begin_Html
+<center><h2>Text Attributes class</h2></center>
+
+This class is used (in general by secondary inheritance)
+by many other classes (graphics, histograms). It holds all the text attributes.
+
+<h3>Text attributes</h3>
+Text attributes are:
+<ul>
+<li><a href="#T1">Text Alignment.</a></li>
+<li><a href="#T2">Text Angle.</a></li>
+<li><a href="#T3">Text Color.</a></li>
+<li><a href="#T4">Text Size.</a></li>
+<li><a href="#T5">Text Font and Precision.</a></li>
+<ul>
+   <li><a href="#T51">Font quality and speed.</a></li>
+   <li><a href="#T52">How to use True Type Fonts.</a></li>
+   <li><a href="#T53">List of the currently supported fonts.</a></li>
+</ul>
+</ul>
+
+<a name="T1"></a><h3>Text Alignment</h3>
+The text alignment is an integer number (<tt>align</tt>) allowing to control
+the horizontal and vertical position of the text string with respect 
+to the text position.
+The text alignment of any class inheriting from <tt>TAttText</tt> can
+be changed using the method <tt>SetTextAlign</tt> and retrieved using the
+method <tt>GetTextAlign</tt>.
+<pre>
+   align = 10*HorizontalAlign + VerticalAlign
+</pre>
+For Horizontal alignment the following convention applies:
+<pre>
+   1=left adjusted, 2=centered, 3=right adjusted
+</pre>
+For Vertical alignment the following convention applies:
+<pre>
+   1=bottom adjusted, 2=centered, 3=top adjusted
+</pre>
+For example: 
+<pre>
+   align = 11 = left adjusted and bottom adjusted
+   align = 32 = right adjusted and vertically centered
+</pre>
+End_Html
+Begin_Macro(source)
+textalign.C
+End_Macro
+
+Begin_Html
+<a name="T2"></a><h3>Text Angle</h3>
+Text angle in degrees.
+The text angle of any class inheriting from <tt>TAttText</tt> can
+be changed using the method <tt>SetTextAngle</tt> and retrieved using the
+method <tt>GetTextAngle</tt>.
+The following picture shows the text angle:
+End_Html
+Begin_Macro(source)
+textangle.C
+End_Macro
+
+Begin_Html
+<a name="T3"></a><h3>Text Color</h3>
+The text color is a color index (integer) pointing in the ROOT
+color table.
+The text color of any class inheriting from <tt>TAttText</tt> can
+be changed using the method <tt>SetTextColor</tt> and retrieved using the
+method <tt>GetTextColor</tt>.
+The following table shows the first 50 default colors.
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c","Text colors",0,0,500,200);
+   c.DrawColorTable();
+   return c;
+}
+End_Macro
+
+Begin_Html
+<a name="T4"></a><h3>Text Size</h3>
+If the text precision (see next paragraph) is smaller than 3, the text 
+size is expressed in percentage of the current pad height.
+The textsize in pixels (say charheight) will be:
+<pre>
+   charheight = textsize*canvas_height   if current pad is horizontal.
+   charheight = textsize*canvas_width    if current pad is vertical.
+</pre>
+If the text precision is equal to 3, the character size is given in pixel: 
+<pre>
+   charheight = number of pixels
+</pre>
+The text size of any class inheriting from <tt>TAttText</tt> can
+be changed using the method <tt>SetTextSize</tt> and retrieved using the
+method <tt>GetTextSize</tt>.
+
+<a name="T5"></a><h3>Text Font and Precision</h3>
+The text font code is combination of the font number and the precision.
+<pre>
+   Text font code = 10*fontnumber + precision
+</pre>
+Font numbers must be between 1 and 14.
+<p>
+The precision can be:
+
+<br><tt>precision = 0</tt> fast hardware fonts (steps in the size)
+<br><tt>precision = 1</tt> scalable and rotatable hardware fonts (see below)
+<br><tt>precision = 2</tt> scalable and rotatable hardware fonts
+<br><tt>precision = 3</tt> scalable and rotatable hardware fonts. Text size
+                           is given in pixels.
+<p>
+The text font and precision of any class inheriting from <tt>TAttText</tt> can
+be changed using the method <tt>SetTextFont</tt> and retrieved using the
+method <tt>GetTextFont</tt>.
+
+<a name="T51"></a><h4>Font quality and speed</h4>
+When precision 0 is used, only the original non-scaled system fonts are
+used. The fonts have a minimum (4) and maximum (37) size in pixels. These
+fonts are fast and are of good quality. Their size varies with large steps
+and they cannot be rotated.
+Precision 1 and 2 fonts have a different behaviour depending if the
+True Type Fonts are used or not. If TTF are used, you always get very good
+quality scalable and rotatable fonts. However TTF are slow.
+
+<a name="T52"></a><h4>How to use True Type Fonts</h4>
+One can activate the TTF by adding (or activating) the following line
+in the <tt>.rootrc</tt> file:
+<pre>
+   Unix.*.Root.UseTTFonts:     true
+</pre>
+It is possible to check the TTF are in use in a Root session.
+When the TTF is active, the following message is displayed at
+the start of the session:
+<pre>
+   "FreeType Engine vX.X.X used to render TrueType fonts."
+</pre>
+ It is also possible to check it with the command <tt>gEnv->Print()</tt>.
+
+<a name="T53"></a><h4>List of the currently supported fonts</h4>
+<pre>
+   Font number         X11 Names             Win32/TTF Names
+       1 :       times-medium-i-normal      "Times New Roman"
+       2 :       times-bold-r-normal        "Times New Roman"
+       3 :       times-bold-i-normal        "Times New Roman"
+       4 :       helvetica-medium-r-normal  "Arial"
+       5 :       helvetica-medium-o-normal  "Arial"
+       6 :       helvetica-bold-r-normal    "Arial"
+       7 :       helvetica-bold-o-normal    "Arial"
+       8 :       courier-medium-r-normal    "Courier New"
+       9 :       courier-medium-o-normal    "Courier New"
+      10 :       courier-bold-r-normal      "Courier New"
+      11 :       courier-bold-o-normal      "Courier New"
+      12 :       symbol-medium-r-normal     "Symbol"
+      13 :       times-medium-r-normal      "Times New Roman"
+      14 :                                  "Wingdings"
+</pre>
+ The following picture shows how each font looks like. The number on the left
+ is the "Text font code". In this picture precision 2 was selected.
+End_Html
+Begin_Macro(source)
+fonts.C
+End_Macro */
 
 
 //______________________________________________________________________________
