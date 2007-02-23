@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.98 2007/01/29 15:10:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.99 2007/02/06 14:22:28 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -1584,8 +1584,12 @@ void TGeoVolume::MakeCopyNodes(const TGeoVolume *other)
    }
    fNodes = new TObjArray();
 //   printf("other : %s\n nd=%i", other->GetName(), nd);
-   for (Int_t i=0; i<nd; i++) fNodes->Add(other->GetNode(i));
-   TObject::SetBit(kVolumeImportNodes);
+   for (Int_t i=0; i<nd; i++) {
+      TGeoNode *newnode = other->GetNode(i)->MakeCopyNode();
+      newnode->SetMotherVolume(this);
+      fNodes->Add(newnode);
+   }   
+//   TObject::SetBit(kVolumeImportNodes);
 }      
 
 //_____________________________________________________________________________

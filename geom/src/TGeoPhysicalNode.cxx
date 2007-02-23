@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.23 2007/02/12 10:22:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.24 2007/02/12 17:14:47 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -131,7 +131,7 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
          node = GetNode(i+1);
          id = vm->GetIndex(node);
          if (id < 0) {
-            Error("Align","cannot align node %s",GetNode(i+1)->GetName());
+            Error("Align","%s cannot align node %s",GetName(), GetNode(i+1)->GetName());
             return;
          }
          // Clone daughter volume and node
