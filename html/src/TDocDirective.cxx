@@ -1,6 +1,8 @@
 #include "TDocDirective.h"
 
+#include "TApplication.h"
 #include "TClass.h"
+#include "TDocInfo.h"
 #include "TDocOutput.h"
 #include "TDocParser.h"
 #include "THtml.h"
@@ -171,13 +173,20 @@ TDocMacroDirective::~TDocMacroDirective()
 //______________________________________________________________________________
 void TDocMacroDirective::AddLine(const TSubString& line)
 {
-   // Add a macro line
+   // Add a macro line.
+   // Lines ending on "*HIDE*" will be executed as part of the
+   // macro, but not shown in the source tab if the parameter
+   // source is supplied.
 
    if (!fMacro) {
       TString name;
       GetName(name);
       fMacro = new TMacro(name);
    }
+
+   // return if no line - or if there was an intentinal line-break,
+   // i.e. an empty line
+   if (line.Start() == -1 && const_cast<TSubString&>(line).String().Length()) return;
 
    TString sLine(line);
    fMacro->AddLine(sLine);
@@ -190,6 +199,8 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
    // Get the result (i.e. an HTML img tag) for the macro invocation.
    // If fShowSource is set, a second tab will be created which shows
    // the source.
+
+   static TApplication::TLoadGraphicsLibs loadTheGraphicsLibs;
 
    if (!fMacro)
       return kFALSE;
@@ -220,8 +231,13 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
 
       TString pwd;
       if (GetHtml() && GetDocParser() && GetDocParser()->GetCurrentClass()) {
-         pwd = GetHtml()->GetImplFileName(GetDocParser()->GetCurrentClass());
-         pwd = gSystem->DirName(pwd);
+         TString modulename;
+         GetHtml()->GetModuleNameForClass(modulename, GetDocParser()->GetCurrentClass());
+         TModuleDocInfo* module = 0;
+         if (modulename.Length() 
+            && (module = (TModuleDocInfo*)GetHtml()->GetListOfModules()->FindObject(modulename)))
+            pwd = module->GetSourceDir();
+         else pwd = gSystem->pwd();
       } else pwd = gSystem->pwd();
       TString macroPath(GetHtml()->GetMacroPath());
       const char* pathDelimiter = 
@@ -234,9 +250,12 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
       TIter iDir(arrDirs);
       TObjString* osDir = 0;
       macroPath = "";
+      TString filenameDirPart(gSystem->DirName(filename));
+      filenameDirPart.Prepend('/');
       while ((osDir = (TObjString*)iDir())) {
          if (!gSystem->IsAbsoluteFileName(osDir->String()))
             gSystem->PrependPathName(pwd, osDir->String());
+         osDir->String() += filenameDirPart;
          macroPath += osDir->String() + pathDelimiter;
       }
 
@@ -246,7 +265,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
          filename.Remove(filename.Length() - 1);
       }
 
-      TString fileSysName(filename);
+      TString fileSysName(gSystem->BaseName(filename));
       if (!gSystem->FindFile(macroPath, fileSysName)) {
          Error("GetResult", "Cannot find macro '%s' in path '%s'!", filename.Data(), macroPath.Data());
          result = "";
@@ -267,8 +286,12 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
 
       fileSysName.Prepend(".x ");
       fileSysName += plusplus;
+      gInterpreter->SaveContext();
+      gInterpreter->SaveGlobalsContext();
       ret = gROOT->ProcessLine(fileSysName, &error);
    } else {
+      gInterpreter->SaveContext();
+      gInterpreter->SaveGlobalsContext();
       ret = fMacro->Exec(0, &error);
    }
    Int_t sleepCycles = 50; // 50 = 5 seconds
@@ -298,7 +321,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
          }
          filename.ReplaceAll(" ", "_");
 
-         result = "<img class=\"macro\" alt=\"output of ";
+         result = "<span class=\"macro\"><img class=\"macro\" alt=\"output of ";
          result += filename;
 
          GetDocOutput()->NameSpace2FileName(filename);
@@ -308,7 +331,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
 
          result += "\" title=\"MACRO\" src=\"";
          result += basename;
-         result += "\" />";
+         result += "\" /></span>";
 
          gSystem->PrependPathName(GetOutputDir(), filename);
 
@@ -318,7 +341,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
 
          if (fNeedGraphics)
             // to get X11 to sync :-( gVirtualX->Update()/Sync() don't do it
-            gSystem->Sleep(100);
+            gSystem->Sleep(300);
 
          gSystem->ProcessEvents();
          objRet->SaveAs(filename);
@@ -338,7 +361,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
             TIter iLine(fMacro->GetListOfLines());
             TObjString* osLine = 0;
             while ((osLine = (TObjString*) iLine()))
-               if (osLine->String().Strip().Length())
+               if (!TString(osLine->String().Strip()).EndsWith("*HIDE*"))
                   tags += osLine->String() + "\n";
             if (tags.EndsWith("\n"))
                tags.Remove(tags.Length()-1); // trailing line break
@@ -347,6 +370,9 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
          }
       }
    }
+
+   gInterpreter->ResetGlobals();
+   gInterpreter->Reset();
 
    if (!wasBatch)
       gROOT->SetBatch(kFALSE);
@@ -654,11 +680,11 @@ Bool_t TDocLatexDirective::GetResult(TString& result)
    TString altText(firstLine);
    GetDocOutput()->ReplaceSpecialChars(altText);
    altText.ReplaceAll("\"", "&quot;");
-   result = "<img class=\"latex\" alt=\"";
+   result = "<span class=\"latex\"><img class=\"latex\" alt=\"";
    result += altText;
    result += "\" title=\"LATEX\" src=\"";
    result += filename;
-   result += "\" />";
+   result += "\" /></span>";
 
    gSystem->PrependPathName(GetOutputDir(), filename);
 

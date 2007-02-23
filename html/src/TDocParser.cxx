@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.6 2007/02/15 17:32:32 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.7 2007/02/22 16:45:48 brun Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -96,19 +96,15 @@ namespace {
    f->AddFrame(b);
    f->MapSubwindows();
    f->Resize(f->GetDefaultSize());
+
    f->MapWindow();
-   return f;
+   return f; // *HIDE*
 }
 End_Macro */
-// which creates an image like this does:
-/* BEGIN_HTML
-<img alt="an image!" src="THtmlCALL_test.gif"/>
-END_HTML */
-// or
+// or Latex:
 /* Begin_Latex(separator='=',align=rcl) C = d #sqrt{#frac{2}{#lambdaD}} #int^{x}_{0}cos(#frac{#pi}{2}t^{2})dt 
  D(x) = d End_Latex */
-// and two lines:
-// Begin_Latex
+// even with two lines: Begin_Latex
 // x=sin^2(y)
 // y = #sqrt{sin(x)}
 // End_Latex and what about running an external macro in some path?
@@ -118,7 +114,7 @@ END_HTML */
 testmacro.C END_MACRO
 
 
-and some nested stuff: */
+and some nested stuff which doesn't work yet: */
 // BEGIN_HTML
 /* BEGIN_LATEX Wow,^{an}_{image}^{inside}_{a}^{html}_{block}
    END_LATEX
@@ -709,7 +705,7 @@ void TDocParser::DecorateKeywords(TString& line)
    // from fLineSource to fLineComment. So we're done up to "i" in
    // fLineSource; next time we encounter a directive we just need
    // to copy from startOfComment on.
-   if (InContext(kComment) || fCommentAtBOL) {
+   if ((InContext(kComment) || fCommentAtBOL) && copiedToCommentUpTo < line.Length()) {
       if (InContext(kDirective))
          ((TDocDirective*)fDirectiveHandlers.Last())->AddLine(line(copiedToCommentUpTo, line.Length()));
       else
