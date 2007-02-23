@@ -1,4 +1,4 @@
-// @(#)root/g4root:$Name:  $:$Id: TG4RootDetectorConstruction.cxx,v 1.3 2006/12/01 08:51:39 brun Exp $
+// @(#)root/g4root:$Name:  $:$Id: TG4RootDetectorConstruction.cxx,v 1.4 2007/02/01 16:19:01 brun Exp $
 // Author: Andrei Gheata   07/08/06
 
 /*************************************************************************
@@ -186,7 +186,7 @@ G4VPhysicalVolume *TG4RootDetectorConstruction::Construct()
    // Convert reflections via TGeo reflection factory
    fGeometry->ConvertReflections();
    CreateG4Materials();
-   CreateG4LogicalVolumes();
+//   CreateG4LogicalVolumes();
    CreateG4PhysicalVolumes();
    TG4RootNavMgr *navMgr = TG4RootNavMgr::GetInstance(fGeometry);
    TG4RootNavigator *nav = navMgr->GetNavigator();
@@ -215,24 +215,9 @@ void TG4RootDetectorConstruction::CreateG4PhysicalVolumes()
 // Create physical volumes for GEANT4 based on TGeo hierarchy.
    TGeoNode *node = fGeometry->GetTopNode();
    fTopPV = CreateG4PhysicalVolume(node);
-   TGeoVolume *vol;
-   G4LogicalVolume *g4vol;
-   TIter next(fGeometry->GetListOfVolumes());
-   while ((vol=(TGeoVolume*)next())) {
-      g4vol = GetG4Volume(vol);
-      if (!g4vol) {
-         G4cerr << "Missing G4Logical volume for volume " << vol->GetName() << G4endl;
-         G4Exception("Aborting...");
-      }
-      Int_t nd = g4vol->GetNoDaughters();
-      if (nd) continue;   
-      nd = vol->GetNdaughters();
-      for (Int_t i=0; i<nd; i++) {
-         node = vol->GetNode(i);
-         node->cd();
-         CreateG4PhysicalVolume(node);
-      }   
-   }
+   TGeoIterator next(fGeometry->GetTopVolume());
+   while ((node=next())) CreateG4PhysicalVolume(node);
+
    G4cout << "===> GEANT4 physical volumes created and mapped to TGeo hierarchy..." << G4endl;
 }
 
@@ -276,6 +261,9 @@ G4LogicalVolume *TG4RootDetectorConstruction::CreateG4LogicalVolume(TGeoVolume *
 {
 // Create a G4LogicalVolume object based on a TGeo one. If already created 
 // return just a pointer to the existing one.
+   if (!vol) return NULL;
+   G4LogicalVolume *pVolume = GetG4Volume(vol);
+   if (pVolume) return pVolume;
    G4String sname(vol->GetName());
    G4VSolid *pSolid = CreateG4Solid(vol->GetShape());
    if (!pSolid) {
@@ -292,7 +280,7 @@ G4LogicalVolume *TG4RootDetectorConstruction::CreateG4LogicalVolume(TGeoVolume *
       G4cerr << "Cannot make material for volume: " << vol->GetName() << G4endl;
       G4Exception("Aborting in CreateLogicalVolume()");
    }   
-   G4LogicalVolume *pVolume = new G4LogicalVolume(pSolid, pMaterial, sname, 
+   pVolume = new G4LogicalVolume(pSolid, pMaterial, sname, 
                                                   NULL, NULL, NULL, false);
    fG4VolumeMap.insert(G4VolumeVal_t(vol, pVolume));
    fVolumeMap.insert(VolumeVal_t(pVolume, vol));
@@ -303,18 +291,30 @@ G4LogicalVolume *TG4RootDetectorConstruction::CreateG4LogicalVolume(TGeoVolume *
 G4VPhysicalVolume *TG4RootDetectorConstruction::CreateG4PhysicalVolume(TGeoNode *node)
 {
 // Create a G4VPhysicalVolume object based on a TGeo node.
+   if (!node) return NULL;
+   node->cd();
+   G4VPhysicalVolume *pPhysicalVolume = GetG4VPhysicalVolume(node);
+   if (pPhysicalVolume) return pPhysicalVolume;
    TGeoMatrix *mat = node->GetMatrix();
    const Double_t *tr = mat->GetTranslation();
    G4ThreeVector tlate(tr[0]*cm, tr[1]*cm, tr[2]*cm);
    G4RotationMatrix *pRot = CreateG4Rotation(mat);
    G4String pName(node->GetVolume()->GetName());
-   G4LogicalVolume *pCurrentLogical = GetG4Volume(node->GetVolume());
-   G4LogicalVolume *pMotherLogical = GetG4Volume(node->GetMotherVolume());
+   G4LogicalVolume *pCurrentLogical = CreateG4LogicalVolume(node->GetVolume());
+   if (!pCurrentLogical) {
+      G4cerr << "No G4 volume created for TGeo node " << node->GetName() << G4endl;
+      G4Exception("Aborting in CreatePhysicalVolume()");
+   }   
+   G4LogicalVolume *pMotherLogical = CreateG4LogicalVolume(node->GetMotherVolume());
+   if (!pMotherLogical && node!=fGeometry->GetTopNode()) {
+      G4cerr << "No G4 mother volume crated for TGeo node " << node->GetName() << G4endl;
+      G4Exception("Aborting in CreatePhysicalVolume()");
+   }   
    G4bool pMany = false;
    G4int pCopyNo = node->GetNumber();
    
-   G4VPhysicalVolume *pPhysicalVolume = new G4PVPlacement(pRot,tlate,pCurrentLogical,pName,
-                                                          pMotherLogical,pMany,pCopyNo);
+   pPhysicalVolume = new G4PVPlacement(pRot,tlate,pCurrentLogical,pName,
+                                       pMotherLogical,pMany,pCopyNo);
    fG4PVolumeMap.insert(G4PVolumeVal_t(node, pPhysicalVolume));
    fPVolumeMap.insert(PVolumeVal_t(pPhysicalVolume, node));
    return pPhysicalVolume;                                             
