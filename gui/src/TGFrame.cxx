@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.144 2007/02/22 14:10:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.145 2007/02/22 15:24:44 antcheva Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1706,6 +1706,8 @@ TGTransientFrame::TGTransientFrame(const TGWindow *p, const TGWindow *main,
    // dialog boxes.
 
    fMain = main;
+   if (!fMain && gClient) 
+      fMain = gClient->GetRoot();
 
    if (fMain) {
       gVirtualX->SetWMTransientHint(fId, fMain->GetId());

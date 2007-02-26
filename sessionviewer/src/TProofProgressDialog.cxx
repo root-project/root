@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.29 2007/01/15 16:10:11 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.30 2007/01/23 11:12:02 brun Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -76,8 +76,7 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
    if (PPD_SRV_NEWER(11))
       fRatePoints = new TNtuple("RateNtuple","Rate progress info","tm:evr:mbr");
 
-   const TGWindow *main = gClient->GetRoot();
-   fDialog = new TGTransientFrame(main, main, 10, 10);
+   fDialog = new TGTransientFrame(0, 0, 10, 10);
    fDialog->Connect("CloseWindow()", "TProofProgressDialog", this, "DoClose()");
    fDialog->DontCallClose();
 
@@ -238,6 +237,7 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof,
 
    fDialog->Resize(width, height);
 
+   const TGWindow *main = gClient->GetRoot();
    // position relative to the parent window (which is the root window)
    Window_t wdum;
    int      ax, ay;
