@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.205 2007/02/15 15:04:40 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.206 2007/02/26 08:16:38 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -988,14 +988,15 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       dxr  = dx/(1 - gPad->GetLeftMargin() - gPad->GetRightMargin());
       dyr  = dy/(1 - gPad->GetBottomMargin() - gPad->GetTopMargin());
 
-   // Range() could change the size of the pad pixmap and therefore should
-   // be called before the other paint routines
+      if (fHistogram) {
+         // Range() could change the size of the pad pixmap and therefore should
+         // be called before the other paint routines
          gPad->Range(xmin - dxr*gPad->GetLeftMargin(),
                       ymin - dyr*gPad->GetBottomMargin(),
                       xmax + dxr*gPad->GetRightMargin(),
                       ymax + dyr*gPad->GetTopMargin());
          gPad->RangeAxis(xmin, ymin, xmax, ymax);
-
+      }      
       if (middle) {
          for(i=0;i<fNpoints;i++) {
             if (badcase) continue;  //do not update if big zoom and points moved
