@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.204 2007/02/09 12:50:40 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.205 2007/02/15 15:04:40 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -683,6 +683,15 @@ Int_t TGraph::DistancetoPrimitive(Int_t px, Int_t py)
    for (i=0;i<fNpoints-1;i++) {
       d = DistancetoLine(px, py, gPad->XtoPad(fX[i]), gPad->YtoPad(fY[i]), gPad->XtoPad(fX[i+1]), gPad->YtoPad(fY[i+1]));
       if (d < distance) distance = d;
+   }
+   
+   // If graph has been drawn with the fill area option, check if we are inside
+   TString drawOption = GetDrawOption();
+   drawOption.ToLower();
+   if (drawOption.Contains("f")) {
+      Double_t xp = gPad->AbsPixeltoX(px); xp = gPad->PadtoX(xp);
+      Double_t yp = gPad->AbsPixeltoY(py); yp = gPad->PadtoY(yp);
+      if (TMath::IsInside(xp,yp,fNpoints,fX,fY) != 0) distance = 1;
    }
 
    // Loop on the list of associated functions and user objects
