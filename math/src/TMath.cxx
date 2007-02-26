@@ -1,4 +1,4 @@
-// @(#)root/math:$Name:  $:$Id: TMath.cxx,v 1.121 2007/02/08 09:07:50 brun Exp $
+// @(#)root/math:$Name:  $:$Id: TMath.cxx,v 1.122 2007/02/09 10:15:39 rdm Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -2844,11 +2844,14 @@ Bool_t TMath::IsInside(Double_t xp, Double_t yp, Int_t np, Double_t *x, Double_t
    Double_t xint;
    Int_t i;
    Int_t inter = 0;
-   for (i=0;i<np-1;i++) {
-      if (y[i] == y[i+1]) continue;
-      if (yp <= y[i] && yp <= y[i+1]) continue;
-      if (y[i] < yp && y[i+1] < yp) continue;
-      xint = x[i] + (yp-y[i])*(x[i+1]-x[i])/(y[i+1]-y[i]);
+   Double_t xn,yn;
+   for (i=0;i<np;i++) {
+      if (i <np-1) {xn = x[i+1]; yn = y[i+1];}
+      else         {xn = x[0];   yn = y[0];}
+      if (y[i] == yn) continue;
+      if (yp <= y[i] && yp <= yn) continue;
+      if (y[i] < yp && yn < yp) continue;
+      xint = x[i] + (yp-y[i])*(xn-x[i])/(yn-y[i]);
       if (xp < xint) inter++;
    }
    if (inter%2) return kTRUE;
