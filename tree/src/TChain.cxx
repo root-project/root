@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.154 2007/01/31 07:33:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.155 2007/02/06 15:30:25 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -2148,6 +2148,8 @@ void TChain::SetEventList(TEventList *evlist)
       return;
    }
    fEventList = evlist;
+   if(fProofChain)
+       return;
    TEntryList *enlist = new TEntryList(evlist->GetName(), evlist->GetTitle());
    Int_t nsel = evlist->GetN();
    Long64_t globalentry, localentry;

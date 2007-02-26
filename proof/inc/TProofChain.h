@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofChain.h,v 1.3 2007/02/01 14:21:28 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofChain.h,v 1.4 2007/02/12 13:05:32 rdm Exp $
 // Author: G. Ganis Nov 2006
 
 /*************************************************************************
@@ -75,6 +75,7 @@ public:
    virtual Long64_t     Process(TSelector *selector, Option_t *option="",
                                 Long64_t nentries=1000000000, Long64_t firstentry=0);
    virtual void         SetDebug(Int_t level=1, Long64_t min=0, Long64_t max=9999999); // *MENU*
+   virtual void         SetEventList(TEventList *evlist) { fEventList = evlist; }
    virtual void         SetName(const char *name); // *MENU*
    virtual void         ConnectProof();
    virtual void         ReleaseProof();
