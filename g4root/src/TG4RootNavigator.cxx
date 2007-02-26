@@ -1,4 +1,4 @@
-// @(#)root/g4root:$Name:  $:$Id: TG4RootNavigator.cxx,v 1.4 2006/12/01 08:51:39 brun Exp $
+// @(#)root/g4root:$Name:  $:$Id: TG4RootNavigator.cxx,v 1.5 2006/12/21 13:33:28 brun Exp $
 // Author: Andrei Gheata   07/08/06
 
 /*************************************************************************
@@ -129,7 +129,7 @@ G4double TG4RootNavigator::ComputeStep(const G4ThreeVector &pGlobalPoint,
    G4cout << "ComputeStep: point=" << pGlobalPoint << " dir=" << pDirection << G4endl;
    G4cout << "             pstep="<<pCurrentProposedStepLength << " snext=" << step << G4endl;
    G4cout << "             safe ="<<pNewSafety<< "  onBound="<<fGeometry->IsOnBoundary()<<" entering=" <<fStepEntering << " exiting="<<fStepExiting << G4endl;
-   if (fStepEntering || fStepExiting) {
+   if (fStepEntering || fStepExiting && fGeometry->GetNextNode()) {
       G4cout << "             current: " << fGeometry->GetCurrentNode()->GetName() <<
                 "  next: " << fGeometry->GetNextNode()->GetName() << G4endl;
    }         
@@ -283,6 +283,7 @@ TG4RootNavigator::LocateGlobalPointAndSetup(const G4ThreeVector& globalPoint,
    fGeometry->SetCurrentPoint(globalPoint.x()*gCm, globalPoint.y()*gCm, globalPoint.z()*gCm);
    fEnteredDaughter = fExitedMother = kFALSE;
    Bool_t onBoundary = kFALSE;
+   Int_t index = -1;
    if (fStepEntering || fStepExiting) {
       Double_t d2 = (globalPoint.x()-fNextPoint.x())*(globalPoint.x()-fNextPoint.x()) +
                     (globalPoint.y()-fNextPoint.y())*(globalPoint.y()-fNextPoint.y()) +
@@ -311,7 +312,6 @@ TG4RootNavigator::LocateGlobalPointAndSetup(const G4ThreeVector& globalPoint,
             if (fGeometry->IsOutside()) skip = 0;
             TGeoNode *current = fGeometry->GetCurrentNode();
             TGeoNode *next    = fGeometry->GetNextNode();
-            Int_t index;
             if (current && next!=skip) {
                index = current->GetVolume()->GetIndex(next);
                if (index>=0) fGeometry->CdDown(index);
@@ -319,7 +319,12 @@ TG4RootNavigator::LocateGlobalPointAndSetup(const G4ThreeVector& globalPoint,
          }   
       }      
       fGeometry->CrossBoundaryAndLocate(fStepEntering, skip);
+      if (fGeometry->GetCurrentNode()==skip) {
+      // We have problems crossing the boundary. Force the cross.
 //      if (fGeometry->IsSameLocation()) fForceCross = kTRUE;
+         if (index>=0) fGeometry->CdDown(index);
+         else          fGeometry->CdUp();
+      }   
    } else {   
       if (!relativeSearch) fGeometry->CdTop();
       fGeometry->FindNode();
