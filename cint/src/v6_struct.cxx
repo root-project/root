@@ -705,6 +705,8 @@ int G__defined_tagname(const char *tagname,int noerror)
 * Description:
 *   Scan tagname table and return tagnum. If not match, create
 *  new tag type.
+* if type > 0xff, create new G__struct entry if not found;
+* autoload if !isupper(type&0xff)
 *
 ******************************************************************/
 int G__search_tagname(const char *tagname,int type)
@@ -728,11 +730,14 @@ int G__search_tagname(const char *tagname,int type)
   }
   /* int parent_tagnum; */
   int envtagnum= -1;
-  int isstructdecl = isupper(type);
+  int isstructdecl = type > 0xff;
+  type &= 0xff;
+  bool isPointer = isupper(type);
   type = tolower(type);
 
-  /* Search for old tagname */
-  i = G__defined_tagname(tagname,3);
+  // Search for old tagname
+  // Only auto-load struct if not ref / ptr
+  i = G__defined_tagname(tagname, isPointer ? 3 : 2);
 
 #ifndef G__OLDIMPLEMENTATION1823
   if(strlen(tagname)>G__BUFLEN*2-10) {
@@ -1275,7 +1280,7 @@ void G__define_struct(char type)
   case '{':
   case ':':
   case ';':
-    G__tagnum = G__search_tagname(tagname, toupper(type));
+    G__tagnum = G__search_tagname(tagname, type + 0x100); // 0x100: define struct if not found
     break;
   default:
     G__tagnum = G__search_tagname(tagname, type);
