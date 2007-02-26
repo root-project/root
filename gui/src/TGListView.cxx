@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.44 2007/01/10 14:54:30 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.45 2007/01/16 07:57:59 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -1164,8 +1164,15 @@ void TGListView::ResizeColumns()
 {
    // Resize column headers to show whole item names. 
 
-   for (int i = 0; i < fNColumns; ++i) 
+   for (int i = 0; i < fNColumns; ++i) {
+      TGLVContainer *container = (TGLVContainer *) fVport->GetContainer();
+      if (!container) {
+         Error("ResizeColumns", "no listview container set yet");
+         return;
+      }
+      fMaxSize = container->GetMaxItemSize();
       SetDefaultColumnWidth(fSplitHeader[i]);
+   }
 }
 
 //______________________________________________________________________________
