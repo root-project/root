@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.80 2007/02/13 21:23:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.81 2007/02/21 09:52:14 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -315,7 +315,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          Terminate(0);
       } else if (!strcmp(argv[i], "-b")) {
          MakeBatch();
-         argv[i] = 0;
+         argv[i] = "";
 #if 0
       } else if (!strcmp(argv[i], "-x")) {
          // remote ROOT display server not operational yet
@@ -330,22 +330,22 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
             gGuiFactory = gBatchGuiFactory;
             gVirtualX = gGXBatch;
          }
-         argv[i] = 0;
+         argv[i] = "";
 #endif
       } else if (!strcmp(argv[i], "-n")) {
          fNoLog = kTRUE;
-         argv[i] = 0;
+         argv[i] = "";
       } else if (!strcmp(argv[i], "-q")) {
          fQuit = kTRUE;
-         argv[i] = 0;
+         argv[i] = "";
       } else if (!strcmp(argv[i], "-l")) {
          // used by front-end program to not display splash screen
          fNoLogo = kTRUE;
-         argv[i] = 0;
+         argv[i] = "";
       } else if (!strcmp(argv[i], "-splash")) {
          // used when started by front-end program to signal that
          // splash screen can be popped down (TRint::PrintLogo())
-         argv[i] = 0;
+         argv[i] = "";
       } else if (argv[i][0] != '-' && argv[i][0] != '+') {
          Long64_t size;
          Long_t id, flags, modtime;
@@ -374,7 +374,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                if (!fFiles) fFiles = new TObjArray;
                fFiles->Add(new TObjString(argv[i]));
             }
-            argv[i] = 0;
+            argv[i] = "";
          } else {
             char *mac, *s = strtok(dir, "+(");
             if ((mac = gSystem->Which(TROOT::GetMacroPath(), s,
@@ -382,7 +382,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                // if file add to list of files to be processed
                if (!fFiles) fFiles = new TObjArray;
                fFiles->Add(new TObjString(argv[i]));
-               argv[i] = 0;
+               argv[i] = "";
                delete [] mac;
             } else
                // only warn if we're plain root,
