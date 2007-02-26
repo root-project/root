@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.130 2007/01/30 11:49:14 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.131 2007/02/06 15:00:56 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2971,7 +2971,7 @@ Int_t TFormula::GetParNumber(const char *parName) const
       return -1;
 
    for (Int_t i=0; i<fNpar; i++) {
-      if (fNames[i] == parName) return i;
+      if (!strcmp(GetParName(i),parName)) return i;
    }
    return -1;
 }
