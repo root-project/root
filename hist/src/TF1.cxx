@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.133 2007/02/06 15:00:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.134 2007/02/26 16:20:20 couet Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -50,10 +50,10 @@ The following types of functions can be created:
 
 <a name="F1"></a><h3>A - Expression using variable x and no parameters</h3>
 <h4>Case 1: inline expression using standard C++ functions/operators</h4>
-<pre>
+<div class="code"><pre>
    TF1 *fa1 = new TF1("fa1","sin(x)/x",0,10);
    fa1->Draw();
-</pre>
+</pre></div><div class="clear" />
 End_Html
 Begin_Macro
 {
@@ -65,10 +65,10 @@ Begin_Macro
 End_Macro
 Begin_Html
 <h4>Case 2: inline expression using TMath functions without parameters</h4>
-<pre>
+<div class="code"><pre>
    TF1 *fa2 = new TF1("fa2","TMath::DiLog(x)",0,10);
    fa2->Draw();
-</pre>
+</pre></div><div class="clear" />
 End_Html
 Begin_Macro
 {
@@ -80,21 +80,21 @@ Begin_Macro
 End_Macro
 Begin_Html
 <h4>Case 3: inline expression using a CINT function by name</h4>
-<pre>
+<div class="code"><pre>
    Double_t myFunc(x) {
       return x+sin(x);
    }
    TF1 *fa3 = new TF1("fa3","myFunc(x)",-3,5);
    fa3->Draw();
-</pre>
+</pre></div><div class="clear" />
 
 <a name="F2"></a><h3>B - Expression using variable x with parameters</h3>
 <h4>Case 1: inline expression using standard C++ functions/operators</h4>
 <ul>
 <li>Example a:
-<pre>
+<div class="code"><pre>
    TF1 *fa = new TF1("fa","[0]*x*sin([1]*x)",-3,3);
-</pre>
+</pre></div><div class="clear" />
 This creates a function of variable x with 2 parameters.
 The parameters must be initialized via:
 <pre>
@@ -106,20 +106,20 @@ Parameters may be given a name:
    fa->SetParName(0,"Constant");
 </pre> </li>
 <li> Example b:
-<pre>
+<div class="code"><pre>
    TF1 *fb = new TF1("fb","gaus(0)*expo(3)",0,10);
-</pre>
+</pre></div><div class="clear" />
 <tt>gaus(0)</tt> is a substitute for <tt>[0]*exp(-0.5*((x-[1])/[2])**2)</tt>
 and <tt>(0)</tt> means start numbering parameters at <tt>0</tt>.
 <tt>expo(3)</tt> is a substitute for <tt>exp([3]+[4]*x)</tt>.
 </ul>
 
 <h4>Case 2: inline expression using TMath functions with parameters</h4>
-<pre>
+<div class="code"><pre>
    TF1 *fb2 = new TF1("fa3","TMath::Landau(x,[0],[1],0)",-5,10);
    fb2->SetParameters(0.2,1.3);
    fb2->Draw();
-</pre>
+</pre></div><div class="clear" />
 End_Html
 Begin_Macro
 {
@@ -134,7 +134,7 @@ Begin_Html
 
 <a name="F3"></a><h3>C - A general C function with parameters</h3>
 Consider the macro myfunc.C below:
-<pre>
+<div class="code"><pre>
    // Macro myfunc.C
    Double_t myfunction(Double_t *x, Double_t *par)
    {
@@ -157,19 +157,19 @@ Consider the macro myfunc.C below:
       f1->SetParameters(800,1);
       h1.Fit("myfunc");
    }
-</pre>
+</pre></div><div class="clear" />
 In an interactive session you can do:
-<pre>
+<div class="code"><pre>
    Root > .L myfunc.C
    Root > myfunc();
    Root > myfit();
-</pre>
+</pre></div><div class="clear" />
 <tt>TF1</tt> objects can reference other <tt>TF1</tt> objects (thanks John 
 Odonnell) of type A or B defined above. This excludes CINT interpreted functions
 and compiled functions. However, there is a restriction. A function cannot
 reference a basic function if the basic function is a polynomial polN.
 <p>Example:
-<pre>
+<div class="code"><pre>
    {
       TF1 *fcos = new TF1 ("fcos", "[0]*cos(x)", 0., 10.);
       fcos->SetParNames( "cos");
@@ -183,7 +183,7 @@ reference a basic function if the basic function is a polynomial polN.
    
       TF1 *fs2 = new TF1 ("fs2", "fsc+fsc");
    }
-</pre>
+</pre></div><div class="clear" />
 
 <h3>Why TF1 cannot accept a class member function ?</h3>
 This is a frequently asked question. C++ is a strongly typed language. There is
@@ -755,32 +755,36 @@ void TF1::Copy(TObject &obj) const
 //______________________________________________________________________________
 Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
 {
-  // Returns the first derivative of the function at point x, 
-  // computed by Richardson's extrapolation method (use 2 derivative estimates 
-  // to compute a third, more accurate estimation)
-  // first, derivatives with steps h and h/2 are computed by central difference formulas
-  // D(h) = (f(x+h) - f(x-h))/2h
-  // the final estimate D = (4*D(h/2) - D(h))/3
-  //  "Numerical Methods for Scientists and Engineers", H.M.Antia, 2nd edition"
-  //
-  // if the argument params is null, the current function parameters are used,
-  // otherwise the parameters in params are used.
-  //
-  // the argument eps may be specified to control the step size (precision).
-  // the step size is taken as eps*(xmax-xmin).
-  // the default value (0.001) should be good enough for the vast majority
-  // of functions. Give a smaller value if your function has many changes
-  // of the second derivative in the function range.
-  //
-  // Getting the error via TF1::DerivativeError:
-  //   (total error = roundoff error + interpolation error)
-  // the estimate of the roundoff error is taken as follows:
-  //    err = k*Sqrt(f(x)*f(x) + x*x*deriv*deriv)*Sqrt(Sum(ai)*(ai)),
-  // where k is the double precision, ai are coefficients used in
-  // central difference formulas
-  // interpolation error is decreased by making the step size h smaller.
-  //
-  // Author: Anna Kreshuk
+   // Returns the first derivative of the function at point x, 
+   // computed by Richardson's extrapolation method (use 2 derivative estimates 
+   // to compute a third, more accurate estimation)
+   // first, derivatives with steps h and h/2 are computed by central difference formulas
+   //Begin_Latex
+   // D(h) = #frac{f(x+h) - f(x-h)}{2h}
+   //End_Latex
+   // the final estimate Begin_Latex D = #frac{4D(h/2) - D(h)}{3} End_Latex
+   //  "Numerical Methods for Scientists and Engineers", H.M.Antia, 2nd edition"
+   //
+   // if the argument params is null, the current function parameters are used,
+   // otherwise the parameters in params are used.
+   //
+   // the argument eps may be specified to control the step size (precision).
+   // the step size is taken as eps*(xmax-xmin).
+   // the default value (0.001) should be good enough for the vast majority
+   // of functions. Give a smaller value if your function has many changes
+   // of the second derivative in the function range.
+   //
+   // Getting the error via TF1::DerivativeError:
+   //   (total error = roundoff error + interpolation error)
+   // the estimate of the roundoff error is taken as follows:
+   //Begin_Latex
+   //    err = k#sqrt{f(x)^{2} + x^{2}deriv^{2}}#sqrt{#sum ai^{2}},
+   //End_Latex
+   // where k is the double precision, ai are coefficients used in
+   // central difference formulas
+   // interpolation error is decreased by making the step size h smaller.
+   //
+   // Author: Anna Kreshuk
   
    const Double_t kC1 = 1e-15;
 
@@ -819,8 +823,10 @@ Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
    // computed by Richardson's extrapolation method (use 2 derivative estimates 
    // to compute a third, more accurate estimation)
    // first, derivatives with steps h and h/2 are computed by central difference formulas
-   //    D(h) = (f(x+h) - 2*f(x) + f(x-h))/(h*h)
-   // the final estimate D = (4*D(h/2) - D(h))/3
+   //Begin_Latex
+   //    D(h) = #frac{f(x+h) - 2f(x) + f(x-h)}{h^{2}}
+   //End_Latex
+   // the final estimate Begin_Latex D = #frac{4D(h/2) - D(h)}{3} End_Latex
    //  "Numerical Methods for Scientists and Engineers", H.M.Antia, 2nd edition"
    //
    // if the argument params is null, the current function parameters are used,
@@ -835,7 +841,9 @@ Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
    // Getting the error via TF1::DerivativeError:
    //   (total error = roundoff error + interpolation error)
    // the estimate of the roundoff error is taken as follows:
-   //    err = k*Sqrt(f(x)*f(x) + x*x*deriv*deriv)*Sqrt(Sum(ai)*(ai)),
+   //Begin_Latex
+   //    err = k#sqrt{f(x)^{2} + x^{2}deriv^{2}}#sqrt{#sum ai^{2}},
+   //End_Latex
    // where k is the double precision, ai are coefficients used in
    // central difference formulas
    // interpolation error is decreased by making the step size h smaller.
@@ -879,8 +887,10 @@ Double_t TF1::Derivative3(Double_t x, Double_t *params, Double_t eps) const
    // computed by Richardson's extrapolation method (use 2 derivative estimates 
    // to compute a third, more accurate estimation)
    // first, derivatives with steps h and h/2 are computed by central difference formulas
-   //    D(h) = (f(x+2h) - 2*f(x+h) + 2*f(x-h) - f(x-2h))/(2*h*h*h)
-   // the final estimate D = (4*D(h/2) - D(h))/3
+   //Begin_Latex
+   //    D(h) = #frac{f(x+2h) - 2f(x+h) + 2f(x-h) - f(x-2h)}{2h^{3}}
+   //End_Latex
+   // the final estimate Begin_Latex D = #frac{4D(h/2) - D(h)}{3} End_Latex
    //  "Numerical Methods for Scientists and Engineers", H.M.Antia, 2nd edition"
    //
    // if the argument params is null, the current function parameters are used,
@@ -895,7 +905,9 @@ Double_t TF1::Derivative3(Double_t x, Double_t *params, Double_t eps) const
    // Getting the error via TF1::DerivativeError:
    //   (total error = roundoff error + interpolation error)
    // the estimate of the roundoff error is taken as follows:
-   //    err = k*Sqrt(f(x)*f(x) + x*x*deriv*deriv)*Sqrt(Sum(ai)*(ai)),
+   //Begin_Latex
+   //    err = k#sqrt{f(x)^{2} + x^{2}deriv^{2}}#sqrt{#sum ai^{2}},
+   //End_Latex
    // where k is the double precision, ai are coefficients used in
    // central difference formulas
    // interpolation error is decreased by making the step size h smaller.
@@ -1201,10 +1213,10 @@ Double_t TF1::GetMaximum(Double_t xmin, Double_t xmax) const
    // Return the maximum value of the function
    // Method:
    //  First, the grid search is used to bracket the maximum 
-   //  with the step size = (xmax-xmin)/fNpx. This way, the step size
-   //  can be controlled via the SetNpx() function. If the function is
-   //  unimodal or if its extrema are far apart, setting the fNpx to 
-   //  a small value speeds the algorithm up many times.  
+   //  with the step size = (xmax-xmin)/fNpx.
+   //  This way, the step size can be controlled via the SetNpx() function.
+   //  If the function is unimodal or if its extrema are far apart, setting
+   //  the fNpx to a small value speeds the algorithm up many times.  
    //  Then, Brent's method is applied on the bracketed interval
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
@@ -1232,10 +1244,10 @@ Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax) const
    // Return the X value corresponding to the maximum value of the function
    // Method:
    //  First, the grid search is used to bracket the maximum 
-   //  with the step size = (xmax-xmin)/fNpx. This way, the step size
-   //  can be controlled via the SetNpx() function. If the function is
-   //  unimodal or if its extrema are far apart, setting the fNpx to 
-   //  a small value speeds the algorithm up many times.  
+   //  with the step size = (xmax-xmin)/fNpx.
+   //  This way, the step size can be controlled via the SetNpx() function.
+   //  If the function is unimodal or if its extrema are far apart, setting
+   //  the fNpx to a small value speeds the algorithm up many times.  
    //  Then, Brent's method is applied on the bracketed interval
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
@@ -1530,7 +1542,7 @@ Int_t TF1::GetNumberFreeParameters() const
 char *TF1::GetObjectInfo(Int_t px, Int_t /* py */) const
 {
    // Redefines TObject::GetObjectInfo.
-   // Displays the function info (x, function value
+   // Displays the function info (x, function value)
    // corresponding to cursor position px,py
 
    static char info[64];
@@ -1578,14 +1590,14 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 {
    //  Compute Quantiles for density distribution of this function
    //     Quantile x_q of a probability distribution Function F is defined as
-   //
-   //        F(x_q) = Integral_{xmin}^(x_q) f dx = q with 0 <= q <= 1.
-   //
-   //     For instance the median x_0.5 of a distribution is defined as that value
+   //Begin_Latex
+   //        F(x_{q}) = #int_{xmin}^{x_{q}} f dx = q with 0 <= q <= 1.
+   //End_Latex
+   //     For instance the median Begin_Latex x_{#frac{1}{2}} End_Latex of a distribution is defined as that value
    //     of the random variable for which the distribution function equals 0.5:
-   //
-   //        F(x_0.5) = Probability(x < x_0.5) = 0.5
-   //
+   //Begin_Latex
+   //        F(x_{#frac{1}{2}}) = #prod(x < x_{#frac{1}{2}}) = #frac{1}{2}
+   //End_Latex
    //  code from Eddy Offermann, Renaissance
    //
    // input parameters
@@ -2057,144 +2069,116 @@ Double_t TF1::Integral(Double_t a, Double_t b, const Double_t *params, Double_t 
    //   based on original CERNLIB routine DGAUSS by Sigfried Kolbig
    //   converted to C++ by Rene Brun
    //
-/*Begin_Html
-<BR>
-<P>
-This function computes,
-to an attempted specified accuracy, the value of the integral
-End_Html
-Begin_Latex
-I = #int^{B}_{A} f(x)dx
-End_Latex
-Begin_Html
-
-<p><b>Usage:</b><p>
-In any arithmetic expression, this function
-has the approximate value of the integral I.
-<ul>
-<li><tt>A, B</tt>: End-points of integration interval. Note that <TT>B</TT>
-                   may be less than <TT>A</TT>.</li>
-<li><tt>params</tt>: Array of function parameters. If 0, use current
-                     parameters.</li>
-<li><tt>epsilon</tt>: Accuracy parameter (see <b><a href="#ac">Accuracy</a></b>).</li>
-</ul>
-<P>
-<p><b>Method:</b><p>
-For any interval [<I>a</I>,<I>b</I>] we define <i>g8(a,b)</i> and
-<i>g16(a,b)</i> to be the 8-point and 16-point Gaussian quadrature
-approximations to
-End_Html
-Begin_Latex
-I = #int^{b}_{a} f(x)dx
-End_Latex
-Begin_Html
-and define
-End_Html
-Begin_Latex
-r(a,b) = #frac{#||{g_{16}(a,b)-g_{8}(a,b)}}{1+#||{g_{16}(a,b)}}
-End_Latex
-Begin_Html
-Then,
-End_Html
-Begin_Latex
-G = #sum_{i=1}^{k}g_{16}(x_{i-1},x_{i})
-End_Latex
-Begin_Html
-<P>
-where, starting with <i>x0 = A</i>  and finishing with <i>xk = B</i> ,
-the subdivision points <i>xi(i=1,2,...)</i>  are given by
-End_Html
-Begin_Latex
-x_{i} = x_{i-1} + #lambda(B-x_{i-1})
-End_Latex
-Begin_Html
-<i>lambda</i> is equal to the first member of the sequence
-<i>1,1/2,1/4,...</i> for which <i>r(xi-1, xi) < EPS</i>.
-If, at any stage in the process of subdivision, the ratio
-End_Html
-Begin_Latex
-q = #||{#frac{x_{i}-x_{i-1}}{B-A}}
-End_Latex
-Begin_Html
-
-is so small that 1+0.005<I>q</I> is indistinguishable from 1 to
-machine accuracy, an error exit occurs with the function value
-set equal to zero.
-<P>
-<p><b><a name="ac">Accuracy:</a></b><p>
-Unless there is severe cancellation of positive and negative
-values of <I>f</I>(<I>x</I>) over the interval [<I>A</I>,<I>B</I>], the argument <TT>EPS</TT>
-may be considered as specifying a bound on the <I>relative</I> error of
-<I>I</I> in the case  |<I>I</I>|&gt;1, and a bound on the <I>absolute</I> error in
-the case |<I>I</I>|&lt;1. More precisely, if <I>k</I> is the number of sub-intervals
-contributing to the approximation (see Method), and if
-End_Html
-Begin_Latex
-I_{abs} = #int^{B}_{A} #||{f(x)}dx
-End_Latex
-Begin_Html
-then the relation
-End_Html
-Begin_Latex
-#frac{#||{G-I}}{I_{abs}+k} < EPS
-End_Latex
-Begin_Html
-will nearly always be true, provided the routine terminates
-without printing an error message. For functions
-<I>f</I> having no singularities in the closed interval [<I>A</I>,<I>B</I>]
-the accuracy will usually be much higher than this.
-<P>
-<p><b>Error handling:</b><p>
-The requested accuracy cannot be obtained (see <B>Method</B>).
-The function value is set equal to zero.
-<P>
-<p><b>Note1:</b><p>
-Values of the function <I>f</I>(<I>x</I>) at the interval end-points
-<I>A</I> and <I>B</I> are not required. The subprogram may therefore
-be used when these values are undefined.
-<BR>
-<p><b>Note2:</b><p>
-Instead of TF1::Integral, you may want to use the combination of
-<b>TF1::CalcGaussLegendreSamplingPoints</b> and <b>TF1::IntegralFast</b>.
-See an example with the following script:
-<pre>
-void gint() {
-   TF1 *g = new TF1("g","gaus",-5,5);
-   g->SetParameters(1,0,1);
-   //default gaus integration method uses 6 points
-   //not suitable to integrate on a large domain
-   double r1 = g->Integral(0,5);
-   double r2 = g->Integral(0,1000);
-   
-   //try with user directives computing more points
-   Int_t np = 1000;
-   double *x=new double[np];
-   double *w=new double[np];
-   g->CalcGaussLegendreSamplingPoints(np,x,w,1e-15);
-   double r3 = g->IntegralFast(np,x,w,0,5);
-   double r4 = g->IntegralFast(np,x,w,0,1000);
-   double r5 = g->IntegralFast(np,x,w,0,10000);
-   double r6 = g->IntegralFast(np,x,w,0,100000);
-   printf("g->Integral(0,5)               = %g\n",r1);
-   printf("g->Integral(0,1000)            = %g\n",r2);
-   printf("g->IntegralFast(n,x,w,0,5)     = %g\n",r3);
-   printf("g->IntegralFast(n,x,w,0,1000)  = %g\n",r4);
-   printf("g->IntegralFast(n,x,w,0,10000) = %g\n",r5);
-   printf("g->IntegralFast(n,x,w,0,100000)= %g\n",r6);
-   delete [] x;
-   delete [] w;
-}   
-</pre>
-This example produces the following results:
-<pre>
-   g->Integral(0,5)               = 1.25331
-   g->Integral(0,1000)            = 1.25319
-   g->IntegralFast(n,x,w,0,5)     = 1.25331
-   g->IntegralFast(n,x,w,0,1000)  = 1.25331
-   g->IntegralFast(n,x,w,0,10000) = 1.25331
-   g->IntegralFast(n,x,w,0,100000)= 1.253
-</pre>
-End_Html */
+   // This function computes, to an attempted specified accuracy, the value
+   // of the integral.
+   //Begin_Latex
+   //   I = #int^{B}_{A} f(x)dx
+   //End_Latex
+   // Usage:
+   //   In any arithmetic expression, this function has the approximate value
+   //   of the integral I.
+   //   - A, B: End-points of integration interval. Note that B may be less
+   //           than A.
+   //   - params: Array of function parameters. If 0, use current parameters.
+   //   - epsilon: Accuracy parameter (see Accuracy).
+   //
+   //Method:
+   //   For any interval [a,b] we define g8(a,b) and g16(a,b) to be the 8-point
+   //   and 16-point Gaussian quadrature approximations to
+   //Begin_Latex
+   //   I = #int^{b}_{a} f(x)dx
+   //End_Latex
+   //   and define
+   //Begin_Latex
+   //   r(a,b) = #frac{#||{g_{16}(a,b)-g_{8}(a,b)}}{1+#||{g_{16}(a,b)}}
+   //End_Latex
+   //   Then,
+   //Begin_Latex
+   //   G = #sum_{i=1}^{k}g_{16}(x_{i-1},x_{i})
+   //End_Latex
+   //   where, starting with x0 = A and finishing with xk = B,
+   //   the subdivision points xi(i=1,2,...) are given by
+   //Begin_Latex
+   //   x_{i} = x_{i-1} + #lambda(B-x_{i-1})
+   //End_Latex
+   //   Begin_Latex #lambdaEnd_Latex is equal to the first member of the
+   //   sequence 1,1/2,1/4,... for which r(xi-1, xi) < EPS.
+   //   If, at any stage in the process of subdivision, the ratio
+   //Begin_Latex
+   //   q = #||{#frac{x_{i}-x_{i-1}}{B-A}}
+   //End_Latex
+   //   is so small that 1+0.005q is indistinguishable from 1 to
+   //   machine accuracy, an error exit occurs with the function value
+   //   set equal to zero.
+   //
+   // Accuracy:
+   //   Unless there is severe cancellation of positive and negative values of
+   //   f(x) over the interval [A,B], the argument EPS may be considered as
+   //   specifying a bound on the <I>relative</I> error of I in the case
+   //   |I|&gt;1, and a bound on the absolute error in the case |I|&lt;1. More
+   //   precisely, if k is the number of sub-intervals contributing to the
+   //   approximation (see Method), and if
+   //Begin_Latex
+   //   I_{abs} = #int^{B}_{A} #||{f(x)}dx
+   //End_Latex
+   //   then the relation
+   //Begin_Latex
+   //   #frac{#||{G-I}}{I_{abs}+k} < EPS
+   //End_Latex
+   //   will nearly always be true, provided the routine terminates without
+   //   printing an error message. For functions f having no singularities in
+   //   the closed interval [A,B] the accuracy will usually be much higher than
+   //   this.
+   //
+   // Error handling:
+   //   The requested accuracy cannot be obtained (see Method).
+   //   The function value is set equal to zero.
+   //
+   // Note 1:
+   //   Values of the function f(x) at the interval end-points A and B are not
+   //   required. The subprogram may therefore be used when these values are
+   //   undefined.
+   //
+   // Note 2:
+   //   Instead of TF1::Integral, you may want to use the combination of
+   //   TF1::CalcGaussLegendreSamplingPoints and TF1::IntegralFast.
+   //   See an example with the following script:
+   //
+   //   void gint() {
+   //      TF1 *g = new TF1("g","gaus",-5,5);
+   //      g->SetParameters(1,0,1);
+   //      //default gaus integration method uses 6 points
+   //      //not suitable to integrate on a large domain
+   //      double r1 = g->Integral(0,5);
+   //      double r2 = g->Integral(0,1000);
+   //      
+   //      //try with user directives computing more points
+   //      Int_t np = 1000;
+   //      double *x=new double[np];
+   //      double *w=new double[np];
+   //      g->CalcGaussLegendreSamplingPoints(np,x,w,1e-15);
+   //      double r3 = g->IntegralFast(np,x,w,0,5);
+   //      double r4 = g->IntegralFast(np,x,w,0,1000);
+   //      double r5 = g->IntegralFast(np,x,w,0,10000);
+   //      double r6 = g->IntegralFast(np,x,w,0,100000);
+   //      printf("g->Integral(0,5)               = %g\n",r1);
+   //      printf("g->Integral(0,1000)            = %g\n",r2);
+   //      printf("g->IntegralFast(n,x,w,0,5)     = %g\n",r3);
+   //      printf("g->IntegralFast(n,x,w,0,1000)  = %g\n",r4);
+   //      printf("g->IntegralFast(n,x,w,0,10000) = %g\n",r5);
+   //      printf("g->IntegralFast(n,x,w,0,100000)= %g\n",r6);
+   //      delete [] x;
+   //      delete [] w;
+   //   }   
+   //
+   //   This example produces the following results:
+   //
+   //      g->Integral(0,5)               = 1.25331
+   //      g->Integral(0,1000)            = 1.25319
+   //      g->IntegralFast(n,x,w,0,5)     = 1.25331
+   //      g->IntegralFast(n,x,w,0,1000)  = 1.25331
+   //      g->IntegralFast(n,x,w,0,10000) = 1.25331
+   //      g->IntegralFast(n,x,w,0,100000)= 1.253
 
    const Double_t kHF = 0.5;
    const Double_t kCST = 5./1000;
@@ -2996,7 +2980,7 @@ void TF1::SetNpx(Int_t npx)
 //______________________________________________________________________________
 void TF1::SetParError(Int_t ipar, Double_t error)
 {
-   // set error for parameter number ipar
+   // Set error for parameter number ipar
 
    if (ipar < 0 || ipar > fNpar-1) return;
    fParErrors[ipar] = error;
@@ -3006,7 +2990,7 @@ void TF1::SetParError(Int_t ipar, Double_t error)
 //______________________________________________________________________________
 void TF1::SetParErrors(const Double_t *errors)
 {
-   // set errors for all active parameters
+   // Set errors for all active parameters
    // when calling this function, the array errors must have at least fNpar values
 
    if (!errors) return;
@@ -3306,7 +3290,7 @@ Double_t TF1::CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *
 #ifdef INTHEFUTURE
 void TF1::CalcGaussLegendreSamplingPoints(TGraph *g, Double_t eps)
 {
-   //type safe interface (static method)
+   // Type safe interface (static method)
    // The number of sampling points are taken from the TGraph
 
    if (!g) return;
