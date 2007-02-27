@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.38 2007/01/29 15:10:49 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.39 2007/01/30 10:09:57 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -201,7 +201,7 @@ namespace {
       ULong_t ul = PyLong_AsUnsignedLong( pyobject );
       if ( PyErr_Occurred() && PyInt_Check( pyobject ) ) {
          PyErr_Clear();
-         Int_t i = PyInt_AS_LONG( pyobject );
+         Long_t i = PyInt_AS_LONG( pyobject );
          if ( 0 <= i ) {
             ul = (ULong_t)i;
          } else {
@@ -391,7 +391,7 @@ namespace {
       ULong64_t ull = PyLong_AsUnsignedLongLong( pyobject );
       if ( PyErr_Occurred() && PyInt_Check( pyobject ) ) {
          PyErr_Clear();
-         Int_t i = PyInt_AS_LONG( pyobject );
+         Long_t i = PyInt_AS_LONG( pyobject );
          if ( 0 <= i ) {
             ull = (ULong64_t)i;
          } else {
