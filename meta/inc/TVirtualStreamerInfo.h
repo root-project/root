@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TVirtualStreamerInfo.h,v 1.3 2007/02/08 15:09:08 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TVirtualStreamerInfo.h,v 1.4 2007/02/18 14:56:42 brun Exp $
 // Author: Rene Brun   05/02/2007
 
 /*************************************************************************
@@ -95,7 +95,6 @@ public:
    TVirtualStreamerInfo(TClass * /*cl*/);
    virtual            ~TVirtualStreamerInfo();
    virtual void        Build() = 0;
-#ifndef __CINT__
    virtual void        BuildCheck() = 0;
    virtual void        BuildEmulated(TFile *file) = 0;
    virtual void        BuildOld() = 0;
@@ -143,7 +142,6 @@ public:
    virtual TClassStreamer *GenEmulatedClassStreamer(const char* class_name) = 0;
    virtual TVirtualCollectionProxy *GenExplicitProxy( const ::ROOT::TCollectionProxyInfo &info, TClass *cl ) = 0;
    virtual TClassStreamer *GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &info, TClass *cl ) = 0;
-#endif
    static TVirtualStreamerInfo *Factory(TClass *cl);
 
    //WARNING this class version must be the same as TStreamerInfo
