@@ -3152,7 +3152,7 @@ void TASImage::BeginPaint(Bool_t mode)
    }
 
    if (!fImage) {
-      Warning("BeginPaint", "no image");
+      //Warning("BeginPaint", "no image");
       return;
    }
 

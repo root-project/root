@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.cxx,v 1.9 2007/01/16 17:01:08 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.cxx,v 1.10 2007/02/22 16:45:47 brun Exp $
 // Author: Fons Rademakers   15/10/2001
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 #include "TROOT.h"
 #include "TPluginManager.h"
 #include "TApplication.h"
+#include "TSystem.h"
 
 ClassImp(TImage)
 
@@ -109,9 +110,12 @@ TImage *TImage::Open(const char *file, EImageFileTypes type)
    // Open a specified image file.
 
    TImage *img = Create();
+   char *fullname = gSystem->ExpandPathName(file);
 
    if (img)
-      img->ReadImage(file, type);
+      img->ReadImage(fullname, type);
+
+   delete fullname;
 
    return img;
 }
