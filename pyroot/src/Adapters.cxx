@@ -251,9 +251,12 @@ std::string PyROOT::TScopeAdapter::Name( unsigned int mod ) const
       std::string actual = clInfo ? clInfo->Name() : fClass->GetName();
 
    // in case of missing dictionaries, the scope won't have been stripped
-      if ( actual.rfind( "::" ) != std::string::npos ) {
-      // this is somewhat of a gamble, but the alternative is a guaranteed crash
-         actual = actual.substr( actual.rfind( "::" )+2, std::string::npos );
+      if ( ! ( clInfo && clInfo->IsValid() ) ) {
+         std::string::size_type pos = actual.substr( 0, actual.find( '<' ) ).rfind( "::" );
+         if ( pos != std::string::npos ) {
+         // this is somewhat of a gamble, but the alternative is a guaranteed crash
+            actual = actual.substr( pos + 2, std::string::npos );
+         }
       }
 
       return actual;
