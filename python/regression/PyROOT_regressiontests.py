@@ -1,7 +1,7 @@
 # File: roottest/python/regression/PyROOT_regressiontests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/02/07
-# Last: 02/08/07
+# Last: 02/27/07
 
 """Regression tests, lacking a better place, for PyROOT package."""
 
@@ -13,7 +13,8 @@ __all__ = [
    'Regression1TwiceImportStarTestCase',
    'Regression2PyExceptionTestcase',
    'Regression3UserDefinedNewOperatorTestCase',
-   'Regression4ThreadingTestCase'
+   'Regression4ThreadingTestCase',
+   'Regression5LoKiNamespaceTestCase'
 ]
 
 
@@ -131,6 +132,20 @@ class Regression4ThreadingTestCase( unittest.TestCase ):
          stat, out = commands.getstatusoutput(
             cmd % 'from ROOT import gROOT; gROOT.SetBatch( 0 ); from ROOT import *;' )
          self.assertEqual( os.WEXITSTATUS(stat), self.hasThread )
+
+
+### Test the proper resolution of a template with namespaced parameter =======
+class Regression5LoKiNamespaceTestCase( unittest.TestCase ):
+   def test1TemplateWithNamespaceParameter( self ):
+      """Test name resolution of template with namespace parameter"""
+
+      rcp = 'const LHCb::Particle*'
+
+      gROOT.LoadMacro( 'LoKiNamespace.C+' )
+
+      self.assertEqual( LoKi.Constant( rcp ).__name__, 'LoKi::Constant<%s>' % rcp )
+      self.assertEqual(
+         LoKi.BooleanConstant( rcp ).__name__, 'LoKi::BooleanConstant<%s>' % rcp )
 
 
 ## actual test run

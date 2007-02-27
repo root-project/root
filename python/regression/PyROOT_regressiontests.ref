@@ -4,6 +4,7 @@ Test handling of a temporary for user defined operator new ... ok
 Test the special role that gROOT plays vis-a-vis threading ... ok
 Test different import styles vis-a-vis threading ... ok
 Test various ways of preventing GUI thread startup ... ok
+Test name resolution of template with namespace parameter ... ok
 
 ----------------------------------------------------------------------
 
