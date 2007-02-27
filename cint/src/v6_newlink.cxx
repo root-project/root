@@ -6900,7 +6900,7 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
 
 
 #endif
-  if (G__p_ifunc->param[0][para_nu-1]) return (1);
+  //if (G__p_ifunc->param[0][para_nu-1]) return (1);
   return(0);
 }
 
