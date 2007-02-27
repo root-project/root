@@ -14,7 +14,8 @@ __all__ = [
    'Regression2PyExceptionTestcase',
    'Regression3UserDefinedNewOperatorTestCase',
    'Regression4ThreadingTestCase',
-   'Regression5LoKiNamespaceTestCase'
+   'Regression5LoKiNamespaceTestCase',
+   'Regression6Int64ConversionTestCase'
 ]
 
 
@@ -146,6 +147,29 @@ class Regression5LoKiNamespaceTestCase( unittest.TestCase ):
       self.assertEqual( LoKi.Constant( rcp ).__name__, 'LoKi::Constant<%s>' % rcp )
       self.assertEqual(
          LoKi.BooleanConstant( rcp ).__name__, 'LoKi::BooleanConstant<%s>' % rcp )
+
+### Test conversion of int64 objects to ULong64_t and ULong_t ================
+class Regression6Int64ConversionTestCase( unittest.TestCase ):
+   limit1  = 4294967295
+   limit1L = 4294967295L
+
+   def test1IntToULongTestCase( self ):
+      """Test conversion of Int(64) limit values to unsigned long"""
+
+      gROOT.LoadMacro( 'ULongLong.C+' )
+
+      self.assertEqual( self.limit1,  ULongFunc( self.limit1 ) )
+      self.assertEqual( self.limit1L, ULongFunc( self.limit1 ) )
+      self.assertEqual( self.limit1L, ULongFunc( self.limit1L ) )
+      self.assertEqual( sys.maxint + 2, ULongFunc( sys.maxint + 2 ) )
+
+   def test2IntToULongLongTestCase( self ):
+      """Test conversion of Int(64) limit values to unsigned long long"""
+
+      self.assertEqual( self.limit1,  ULong64Func( self.limit1 ) )
+      self.assertEqual( self.limit1L, ULong64Func( self.limit1 ) )
+      self.assertEqual( self.limit1L, ULong64Func( self.limit1L ) )
+      self.assertEqual( sys.maxint + 2, ULong64Func( sys.maxint + 2 ) )
 
 
 ## actual test run

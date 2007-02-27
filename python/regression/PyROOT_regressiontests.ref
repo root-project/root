@@ -5,6 +5,8 @@ Test the special role that gROOT plays vis-a-vis threading ... ok
 Test different import styles vis-a-vis threading ... ok
 Test various ways of preventing GUI thread startup ... ok
 Test name resolution of template with namespace parameter ... ok
+Test conversion of Int(64) limit values to unsigned long ... ok
+Test conversion of Int(64) limit values to unsigned long long ... ok
 
 ----------------------------------------------------------------------
 
