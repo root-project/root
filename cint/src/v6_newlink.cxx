@@ -7018,7 +7018,7 @@ int G__parse_parameter_link(char* paras)
       // contains spaces, we must remove the quotes.
       int len = std::strlen(c_default);
       //assert(len > 2);
-      if (len > 1) {
+      if (len > 1 && (c_default[0] == '\'' || c_default[0] == '\"')) {
         c_default[len-1] = '\0';
         // The source and destination overlap, do it carefully.
         char buf[G__MAXNAME*2];
