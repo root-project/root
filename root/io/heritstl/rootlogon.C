@@ -1,5 +1,5 @@
 {
 #ifdef __APPLE__
-gSystem->Load("libRIO");
+gSystem->Load("libTree");
 #endif
 }
