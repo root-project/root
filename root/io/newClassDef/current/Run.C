@@ -9,7 +9,6 @@ void Run() {
 
   //library = ".L InheritMulti.";
   //gROOT->ProcessLine(library+dllsuf);
-   gSystem->Load("libRIO");
    gSystem->Load("./namespace");
    gSystem->Load("./template");
    gSystem->Load("./InheritMulti");
