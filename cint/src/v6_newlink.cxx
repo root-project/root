@@ -1345,6 +1345,21 @@ int G__get_linked_tagnum(G__linked_taginfo *p)
 }
 
 /**************************************************************************
+* G__get_linked_tagnum_fwd
+*
+*  Setup and return tagnum; no autoloading
+**************************************************************************/
+int G__get_linked_tagnum_fwd(G__linked_taginfo *p)
+{
+  if(!p) return(-1);
+  int type = p->tagtype;
+  p->tagtype = toupper(type);
+  int ret = G__get_linked_tagnum(p);
+  p->tagtype = type;
+  return ret;
+}
+
+/**************************************************************************
 * G__get_linked_tagnum_with_param
 *
 *  Setup and return tagnum; also set user parameter
@@ -4959,7 +4974,7 @@ void G__cpplink_tagtable(FILE *fp, FILE *hfp)
     }
     else if((G__struct.hash[i] || 0==G__struct.name[i][0]) &&
             (G__CPPLINK-2)==G__struct.globalcomp[i]) {
-      fprintf(fp,"   G__get_linked_tagnum(&%s);\n" ,G__mark_linked_tagnum(i));
+      fprintf(fp,"   G__get_linked_tagnum_fwd(&%s);\n" ,G__mark_linked_tagnum(i));
     }
   }
 
@@ -6984,7 +6999,7 @@ int G__parse_parameter_link(char* paras)
       // Note: This is the only place we call G__search_tagname
       //       with a type of 0, this is causing problems with
       //       the switch to reflex.
-      tagnum = G__search_tagname(tagname, 0);
+      tagnum = G__search_tagname(tagname, isupper(type) ? 0xff : 0);
       G__p_ifunc = current_G__p_ifunc;
     }
     ch = G__separate_parameter(paras, &os, type_name);

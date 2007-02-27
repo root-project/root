@@ -1702,6 +1702,7 @@ int G__loadfile(const char *filenamein)
       
 #endif  /*G__VMS*/
 
+#ifndef G__WIN32
       /**********************************************
        * try /usr/include/filename
        **********************************************/
@@ -1715,6 +1716,7 @@ int G__loadfile(const char *filenamein)
         G__globalcomp=G__store_globalcomp;
       }
       if(G__ifile.fp) break;
+#endif
 
 #ifdef __GNUC__
       /**********************************************
@@ -1732,6 +1734,7 @@ int G__loadfile(const char *filenamein)
       if(G__ifile.fp) break;
 #endif /* __GNUC__ */
 
+#ifndef G__WIN32
 /* #ifdef __hpux */
       /**********************************************
        * try /usr/include/CC/filename
@@ -1747,7 +1750,9 @@ int G__loadfile(const char *filenamein)
       }
       if(G__ifile.fp) break;
 /* #endif __hpux */
+#endif
 
+#ifndef G__WIN32
 /* #ifdef __hpux */
       /**********************************************
        * try /usr/include/codelibs/filename
@@ -1764,9 +1769,34 @@ int G__loadfile(const char *filenamein)
       }
       if(G__ifile.fp) break;
 /* #endif __hpux */
+#endif
     }
   }
-    
+
+  /***************************************************
+  * check if alreay loaded
+  ***************************************************/
+  for(int otherfile = 0; otherfile < G__nfile; ++otherfile) {
+     if(G__matchfilename(otherfile,G__ifile.name)
+        &&G__get_envtagnum()==G__srcfile[otherfile].parent_tagnum
+        ){
+       if(G__prerun==0 || G__debugtrace)
+         if(G__dispmsg>=G__DISPNOTE) {
+           G__fprinterr(G__serr,"Note: File \"%s\" already loaded\n",G__ifile.name);
+         }
+       /******************************************************
+        * restore input file information to G__ifile
+        * and reset G__eof to 0.
+        ******************************************************/
+       fclose(G__ifile.fp);
+       G__ifile = store_file ;
+       G__eof = 0;
+       G__step=store_step;
+       G__setdebugcond();
+       G__UnlockCriticalSection();
+       return(G__LOADFILE_DUPLICATE);
+     }
+  }
 
   /**********************************************
   * filenum and line_number.
@@ -1874,6 +1904,7 @@ int G__loadfile(const char *filenamein)
     G__srcfile[fentry].hasonlyfunc = (struct G__dictposition*)NULL;
     G__srcfile[fentry].parent_tagnum = G__get_envtagnum();
     G__srcfile[fentry].slindex = -1;
+    G__srcfile[fentry].breakpoint = 0;
   }
 
   if(G__debugtrace) {

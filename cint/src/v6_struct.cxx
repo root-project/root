@@ -706,7 +706,8 @@ int G__defined_tagname(const char *tagname,int noerror)
 *   Scan tagname table and return tagnum. If not match, create
 *  new tag type.
 * if type > 0xff, create new G__struct entry if not found;
-* autoload if !isupper(type&0xff)
+* autoload if !isupper(type&0xff). type==0xff means ptr but type==0
+* (see v6_newlink.cxx:G__parse_parameter_link)
 *
 ******************************************************************/
 int G__search_tagname(const char *tagname,int type)
@@ -732,7 +733,8 @@ int G__search_tagname(const char *tagname,int type)
   int envtagnum= -1;
   int isstructdecl = type > 0xff;
   type &= 0xff;
-  bool isPointer = isupper(type);
+  bool isPointer = (type == 0xff) || isupper(type);
+  if (type == 0xff) type = 0;
   type = tolower(type);
 
   // Search for old tagname

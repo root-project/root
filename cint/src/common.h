@@ -948,7 +948,7 @@ struct G__paramfunc {
   struct G__paramfunc *next;
 };
 struct G__params {
-#ifdef __cplusplus   
+#ifdef __cplusplus  
    struct G__paramfunc* operator[](int idx) {
       if (!fparams) {
          fparams = (struct G__paramfunc*)malloc(sizeof(struct G__paramfunc));

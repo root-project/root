@@ -1708,6 +1708,7 @@ extern G__EXPORT long G__gettempbufpointer G__P((void));
 extern G__EXPORT void G__setsizep2memfunc G__P((int sizep2memfunc));
 extern G__EXPORT int G__getsizep2memfunc G__P((void));
 extern G__EXPORT int G__get_linked_tagnum G__P((G__linked_taginfo *p));
+extern G__EXPORT int G__get_linked_tagnum_fwd G__P((G__linked_taginfo *p));
 extern G__EXPORT int G__tagtable_setup G__P((int tagnum,int size,int cpplink,int isabstract,G__CONST char *comment,G__incsetup setup_memvar,G__incsetup setup_memfunc));
 extern G__EXPORT int G__search_tagname G__P((G__CONST char *tagname,int type));
 extern G__EXPORT int G__search_typename G__P((G__CONST char *typenamein,int typein,int tagnum,int reftype));
