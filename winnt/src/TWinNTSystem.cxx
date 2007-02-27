@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.164 2007/02/06 17:47:31 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.165 2007/02/21 09:52:14 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -3464,10 +3464,16 @@ int TWinNTSystem::Load(const char *module, const char *entry, Bool_t system)
    TLibLoadRequest request(module, entry, system);
    if (!busy) {
       int ret = 0;
+      int returnvalue = 0;
       busy = kTRUE;
       Bool_t haveLoadRequests = kFALSE;
+      Bool_t firstIter = kTRUE;
       do {
          ret = TSystem::Load(request.module, request.entry, request.system);
+         if (firstIter) {
+            returnvalue = ret;
+            firstIter = kFALSE;
+         }
          ::EnterCriticalSection(&fCritSectLoad);
          haveLoadRequests = !loadRequests.empty();
          if (haveLoadRequests) {
@@ -3479,7 +3485,7 @@ int TWinNTSystem::Load(const char *module, const char *entry, Bool_t system)
          ::LeaveCriticalSection(&fCritSectLoad);
       } while (haveLoadRequests);
       busy = kFALSE;
-      return ret;
+      return returnvalue;
    }
 
    // stack request
