@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.28 2007/02/05 10:40:30 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.29 2007/02/05 14:04:04 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -1078,23 +1078,21 @@ void TXProofServ::Terminate(Int_t status)
          fQueryLock->Unlock();
    }
 
-   // Stop processing events (set a flag to exit the event loop)
-   gSystem->ExitLoop();
-
-   // Shot once a timer to wake up the main thread (this async timer must
-   // be created dynamically, otherwise it gets destructed before it fires;
-   // this represents a small memory leak, but since we are going to exit
-   // anyhow, we do not care too much).
-   TTimer *t = new TTimer(1000, kFALSE);
-   t->Start(-1, kTRUE);
-
-   // Avoid communicating back anything to the coordinator (it is gone)
-   ((TXSocket *)fSocket)->SetSessionID(-1);
-
    // Remove input and signal handlers to avoid spurious "signals"
    // for closing activities executed upon exit()
    gSystem->RemoveFileHandler(fInputHandler);
    gSystem->RemoveSignalHandler(fInterruptHandler);
+
+   // Stop processing events (set a flag to exit the event loop)
+   gSystem->ExitLoop();
+
+   // We post the pipe once to wake up the main thread which is waiting for
+   // activity on this socket; this fake activity will make it return and
+   // eventually exit the loop. 
+   TXSocket::PostPipe((TXSocket *)fSocket);
+
+   // Avoid communicating back anything to the coordinator (it is gone)
+   ((TXSocket *)fSocket)->SetSessionID(-1);
 
    // Notify
    Info("Terminate", "termination operations ended: quitting!");
@@ -1193,7 +1191,7 @@ void TXProofServ::SetShutdownTimer(Bool_t on, Int_t delay)
       }
       // Notify
       Info("SetShutdownTimer",
-              "session will be shutdown in %d seconds", delay);
+              "session will be shutdown in %d seconds (%d millisec)", delay, del);
    } else {
       if (fShutdownTimer) {
          // Stop and Clean-up the timer
