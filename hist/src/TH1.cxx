@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.334 2007/02/15 15:04:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.335 2007/02/16 16:57:09 couet Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1043,327 +1043,293 @@ Int_t TH1::BufferFill(Double_t x, Double_t w)
 //___________________________________________________________________________
 Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
 {
-//Begin_Html <!--
-/* -->
-<html>
-<body>
-
-<h1> <IMG  WIDTH="50" HEIGHT="44" ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2.gif"  ALT="$\chi^2$"> test for comparing weighted and unweighted histograms</h1>
- <p>
-Function:
- Returns p-value. Other return values are specified by the 3rd parameter <br>
- Parameters:
-<ul>
-<li>h2 - the second histogram</li>
-<li>option </li>
-<ul>
-<li>"UU" = experiment experiment comparison (unweighted-unweighted)</li>
-<li>"UW" = experiment MC comparison (unweighted-weighted). Note that the first histogram should be unweighted </li>
-<li>"WW" = MC MC comparison (weighted-weighted)</li>
-<li>"NORM" = to be used when one or both of the histograms is scaled (unweighted-unweighted)</li>
-<li>by default underflows and overlows are not included</li>
-<ul>
-<li>"OF" = overflows included</li>
-<li>"UF" = underflows included</li>
-</ul>
-<li>"P" = print chi2, ndf, p_value, igood</li>
-<li>"CHI2" = returns chi2 instead of p-value</li>
-<li>"CHI2/NDF" = returns chi2/ndf</li>
-</ul>
-<li>res: not empty - computes normalized residuals and returns them in this array</li>
-</ul>
-</p>
-<br>
-   The current implementation is based on the papers "<IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2.gif"  ALT="$\chi^2$"> test for comparison
- of weighted and unweighted histograms" in Proceedings of PHYSTAT05 and
- "Comparison weighted and unweighted histograms", arXiv:physics/0605123  by N.Gagunashvili. This function has been implemented
- by Daniel Haertl in August 2006.
-
-<h2>Introduction</h2>
-
-A frequently used technique in data analysis is the comparison of histograms. 
-First suggested by Pearson [1]  the <IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2.gif"  ALT="$\chi^2$">  test of
- homogeneity   is  used widely  for  comparing usual (unweighted)  histograms.
-This paper describes the implementation  modified <IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2.gif"  ALT="$\chi^2$">   tests
- for comparison of weighted and unweighted  histograms and two weighted
- histograms [2] as well as usual Pearson's <IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2.gif"  ALT="$\chi^2$"> test for
-comparison two usual (unweighted) histograms.  
-
-<h2>Overview</h2>
-
-Comparison of two histograms expect hypotheses that  two histograms
- represent the identical distributions. To make a decision <I>p</I>-value should be calculated. The  hypotheses of identity is rejected  if <I>p</I>-value is lower then
- some significance  level. Traditionally  significance  levels 0.1, 0.05 and 0.01 are  used.
- The  comparison   procedure should  include an  analysis of the residuals
- which is often helpful in identifying the bins of histograms responsible
- for a significant overall <i>X<sup>2</sup></i> value.  Residuals are the difference between
-bin contents and expected bin contents. Most convenient for analysis are the 
- normalized residuals. If hypotheses of  identity are valid then normalized
-residuals  are approximately independent and identically distributed
- random variables  having  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_standard.png"  ALT="normal">  distribution. Analysis of
- residuals expect test of above mentioned properties of residuals.     
-Notice that indirectly the analysis of residuals increase the power of <IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2.gif"  ALT="$\chi^2$"> test.
-
-<h2>Methods of comparison</h2>
-
-<h3><IMG  WIDTH="50" HEIGHT="44" ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2.gif"  ALT="$\chi^2$"> test for comparison two (unweighted) histograms</h3>
- 
- Let us consider two  histograms with the  same
- binning and the  number of bins equal to <I>r</I>.
-Let us denote the number of events in the <I>i</I>th bin in the first histogram as 
-<i>n<sub>i</sub></i> and as  <i>m<sub>i</sub></i> in the second one. The total number of events in the
- first histogram is equal to <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_Nsum.png"  ALT="$N=\sum_{i=1}^{r}{n_i}$">   ,  
-and   <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_Msum.png"  ALT="$M=\sum_{i=1}^{r}{m_i}$">  in the second histogram.
-
-The  hypothesis of identity (homogeneity) [3] is that the
- two histograms represent random  values with  identical distributions.  
-  It is equivalent that there  exist  <I>r</I> constants
- <I>p<sub>1</sub>,...,p<sub>r</sub></I>,
- such that  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_p_i_sum.png"  ALT=" $\sum_{i=1}^{r} p_i=1$"> , 
- and the probability  of  belonging  to the  <i>i</i>th bin for some  measured value
- in both experiments is  equal to <i>p<sub>i</sub></i>.
- The number of events in the <i>i</i>th bin is a random variable
- with a distribution  approximated  by a  Poisson probability distribution
-  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_Npoisson.png"  ALT="$e^{-Np_i}(Np_i)^{n_i}/n_i!$ "> for the first histogram and with 
-distribution <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_Mpoisson.png"  ALT="$e^{-Mp_i}(Mp_i)^{m_i}/m_i!$ "> for the second histogram.
- If the hypothesis of homogeneity is valid, then the  maximum likelihood
-estimator of  <i>p<sub>i</sub>, i=1,...,r</i>,  is
-
-<BR><P></P>
-<DIV ALIGN="CENTER"> 
- <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_ratio.png"  ALT="\hat{p}_i= \frac{n_{i}+m_{i}}{N+M}">
-</DIV>
-and then
-
-<BR><P></P>
-<DIV ALIGN="CENTER"> 
- <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_m1.png"  ALT="X^2=\sum_{i=1}^{r}{\frac{(n_{i}-N\hat{p}_i)^2}{N\hat{p}_i}}
-+\sum_{i=1}^{r}{\frac{(m_{i}-M\hat{p}_i)^2}{M\hat{p}_i}} =\frac{1}{MN} \sum_{i=1}^{r}{\frac{(Mn_i-Nm_i)^2}{n_i+m_i}}"><IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_m12.png"  ALT="X^2=\sum_{i=1}^{r}{\frac{(n_{i}-N\hat{p}_i)^2}{N\hat{p}_i}}
-+\sum_{i=1}^{r}{\frac{(m_{i}-M\hat{p}_i)^2}{M\hat{p}_i}} =\frac{1}{MN} \sum_{i=1}^{r}{\frac{(Mn_i-Nm_i)^2}{n_i+m_i}}">
-</DIV>
-has approximately a <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2r.png"  ALT=" $\chi^2_{(r-1)}$"> distribution [3].
-
-
-The  comparison   procedure  can include an  analysis of the residuals which
- is often helpful in identifying the bins of histograms responsible for a 
-significant overall <i>X<sup>2</sup></i> value. Most convenient for analysis are the 
- adjusted (normalized) residuals [4]
-
-
-<BR><P></P>
-<DIV ALIGN="CENTER">
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_res1.png"  ALT="$r_i=\frac{n_{i}-N\hat{p}_i}{\sqrt{N\hat{p}_i}\sqrt{(1-N/(N+M))(1-(n_i+m_i)/(N+M))}}$".
-</DIV>
- If hypotheses of  homogeneity are valid then 
-residuals <i>r<sub>i</sub></i> are approximately independent and identically distributed
- random variables  having   <IMG ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_standard.png"  ALT="$\mathcal{N}(0,1)$"> distribution. 
-
-The application of the  <IMG  WIDTH="50" HEIGHT="44" ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2.gif"  ALT="$\chi^2$"> test has restrictions related to the
-  value of the expected frequencies <i>Np<sub>i</sub>, Mp<sub>i</sub>, i=1,...,r</i>.   
-A conservative rule formulated in [5]  is that all
- the expectations  must be 1 or greater for both histograms. In  practical cases when  expected frequencies are not known the estimated expected  frequencies
- <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_MpNp.png"  ALT=" $M\hat{p}_i$, $N\hat{p}_i, i=1,...,r$">  can be used.  
-
-
-<h3>Unweighted and weighted histograms comparison</h3>
-
-
-A simple  modification of the  ideas described above can be used for the
- comparison of the usual (unweighted) and 
-weighted histograms. Let us denote the number of events in the <i>i</i>th bin in the unweighted histogram as
-<i>n<sub>i</sub></i> and  the common weight of events in the <i>i</i>th bin of the
-weighted histogram as <i>w<sub>i</sub></i>. The total number of events in the
- unweighted histogram is equal to <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_Nsum.png"  ALT="$N=\sum_{i=1}^{r}{n_i}$"> and  the total
- weight of events in the weighted histogram is equal
- to  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_Wsum.png"  ALT=" $W=\sum_{i=1}^{r}{w_i}$">.
-
- Let us formulate the hypothesis of identity of an unweighted histogram 
-to a weighted histogram so that  there  exist  <i>r</i> constants <i>p<sub>1</sub>,...,p<sub>r</sub></i>,
- such that <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_p_i_sum.png"  ALT="$\sum_{i=1}^{r} p_i=1$>, and the probability  of  belonging  to the  <i>i</i>th bin for some  measured value
-  is  equal to <i>p<sub>i</sub></i> for the  unweighted histogram and expectation value of weight <i>w<sub>i</sub></i> equal to <i>Wp<sub>i</sub></i> for the  weighted histogram.
-The number of events in the <i>i</i>th bin is a random
-variable  with distribution  approximated  by the  Poisson probability distribution
-  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_Npoisson.png"  ALT="$e^{-Np_i}(Np_i)^{n_i}/n_i!$ "> for the  unweighted  histogram.
-The weight <i>w<sub>i</sub></i> is a random variable with a distribution approximated  by 
- the normal probability  distribution  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_standardw.png"  ALT=" $ \mathcal{N}(Wp_i,\sigma_i^2)$ ">, where
-  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_sigma.png"  ALT=" $\sigma_i^2$ ">  is the  variance of the  weight  <i>w<sub>i</sub></i>.  
- If we replace the variance  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_sigma.png"  ALT=" $\sigma_i^2$ "> with estimate <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_s.png"  ALT=" $s_i^2$ "> (sum of squares of weights of events in the <i>i</i>th bin) and 
- the hypothesis of identity is valid, then the   maximum likelihood
-estimator of  <i>p<sub>i</sub>,i=1,...,r</i>,  is
-<BR><P></P>
-<DIV ALIGN="CENTER">
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_ratio2.png"  ALT="\hat{p}_i= \frac{Ww_i-Ns_i^2+\sqrt{(Ww_i-Ns_i^2)^2+4W^2s_i^2n_i}}{2W^2} ">.
-</DIV>
-We may then use the test statistic
-<BR><P></P>
-<DIV ALIGN="CENTER">
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_m2.png"  ALT="X^2=\sum_{i=1}^{r}{\frac{(n_{i}-N\hat{p}_i)^2}{N\hat{p}_i}}
-+\sum_{i=1}^{r}{\frac{(w_{i}-W\hat{p}_i)^2}{s_i^2}}">
-</DIV>
-and it   has approximately a   <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2r.png"  ALT=" $\chi^2_{(r-1)}$">  distribution [2].
-
-
-
-This  test, as well as the  original one [3], has a restriction
- on the expected frequencies. The expected frequencies 
-  recommended for the  weighted histogram  is  more than 25.
-The value of the  minimal expected frequency can be decreased down to 10 for
- the case when the weights of the events are close to constant.
-In the case of a weighted histogram if the number of events is unknown, then we can apply this recommendation for the equivalent number of events as
-
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_neq.png"  ALT="$n_i^{equiv}={w_i^2}/{s_i^2} \, \text{.}$">.
- The minimal   expected frequency for an  unweighted histogram must be 1. 
-Notice that any usual (unweighted)  histogram can be considered as a weighted histogram with events that have constant weights equal to 1.
-
-The  variance <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_z.png"  ALT="$z_i^2$">  of the difference between the weight <i>w<sub>i</sub></i> and the estimated expectation value of the weight is  approximately  equal to:
-<BR><P></P>
-<DIV ALIGN="CENTER">
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_zfor1.png"  ALT="$z_i^2=Var(w_{i}-W\hat{p}_i)=N\hat{p}_i(1-N\hat{p}_i)\biggl(\frac{Ws_i^2}
-{\sqrt{(Ns_i^2-w_iW)^2+4W^2s_i^2n_i}}\biggr)^2\\
-+\frac{s_i^2}{4}\biggl(1+\frac{Ns_i^2-w_iW}
-{\sqrt{(Ns_i^2-w_iW)^2+4W^2s_i^2n_i}}\biggr)^2$"> 
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_zfor2.png"  ALT="$z_i^2=Var(w_{i}-W\hat{p}_i)=N\hat{p}_i(1-N\hat{p}_i)\biggl(\frac{Ws_i^2}
-{\sqrt{(Ns_i^2-w_iW)^2+4W^2s_i^2n_i}}\biggr)^2\\
-+\frac{s_i^2}{4}\biggl(1+\frac{Ns_i^2-w_iW}
-{\sqrt{(Ns_i^2-w_iW)^2+4W^2s_i^2n_i}}\biggr)^2$"> 
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_zfor3.png"  ALT="$z_i^2=Var(w_{i}-W\hat{p}_i)=N\hat{p}_i(1-N\hat{p}_i)\biggl(\frac{Ws_i^2}
-{\sqrt{(Ns_i^2-w_iW)^2+4W^2s_i^2n_i}}\biggr)^2\\
-+\frac{s_i^2}{4}\biggl(1+\frac{Ns_i^2-w_iW}
-{\sqrt{(Ns_i^2-w_iW)^2+4W^2s_i^2n_i}}\biggr)^2$">. 
-</DIV>
-The  residuals
-<BR><P></P>
-<DIV ALIGN="CENTER"> 
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_res2.png"  ALT="r_i=\frac{w_{i}-W\hat{p}_i}{z_i}">
-</DIV>
-have approximately a normal distribution with mean equal to 0 and
- standard deviation  equal to 1.
-
-<h3>Two weighted histograms comparison</h3>
-
-Let us denote the  common  weight of events of the <i>i</i>th bin in the first histogram as
-<i>w<sub>1i</sub></i> and as <i>w<sub>2i</sub></i>  in the second one. The total  weight of events in the
- first histogram is equal to <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_W1sum.png"  ALT="$W_1=\sum_{i=1}^{r}{w_{1i}}$">,
-and <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_W2sum.png"  ALT="$W_2=\sum_{i=1}^{r}{w_{2i}}$">  in the second histogram.
-
- Let us formulate the hypothesis of
- identity of   weighted histograms  so that  there  exist  <i>r</i> constants <i>p<sub>1</sub>,...,p<sub>r</sub></i>,
- such that   <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_p_i_sum.png"  ALT="$\sum_{i=1}^{r} p_i=1$">, and  also  expectation value of weight <i>w<sub>1i</sub></i> equal to <i>W<sub>1</sub>p<sub>i</sub></i> and expectation value of weight <i>w<sub>2i</sub></i> equal to <i>W<sub>2</sub>p<sub>i</sub></i>.
-Weights in both the histograms are random variables with  distributions which
- can be
- approximated by a normal probability distribution <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_standard_w1.png", ALT="$\mathcal{N}(W_1p_i,\sigma_{1i}^2)$">
- for the first histogram and by a distribution 
- <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_standard_w2.png", ALT="$\mathcal{N}(W_2p_i,\sigma_{2i}^2)$">   for the second.  Here  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_sigma1.png", ALT="$\sigma_{1i}^2$ ">  and  
- <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_sigma2.png", ALT="$\sigma_{2i}^2$ ">  are the  variances of  <i>w<sub>1i</sub></i> and <i>w<sub>2i</sub></i> with estimators  <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_s1.png", ALT="$s_{1i}^2$ "> 
- and <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_s2.png", ALT="$s_{2i}^2$ "> respectively. If the hypothesis of identity is valid,
- then  the  maximum likelihood  and Least  Square Method  estimator 
- of  <i>p<sub>i</sub>,i=1,...,r</i>,  is
-<BR><P></P>
-<DIV ALIGN="CENTER">
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_ratio3.png", ALT="\hat{p}_i=\frac{w_{1i}W_1/s_{1i}^2+w_{2i}W_2 /s_{2i}^2}{W_1^2/s_{1i}^2+W_2^2/s_{2i}^2} "> .
-</DIV>
-We may then use the test statistic
-<BR><P></P>
-<DIV ALIGN="CENTER">
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_m3.png", ALT="X^2=\sum_{i=1}^{r}{\frac{(w_{1i}-W_1\hat{p}_i)^2}{s_{1i}^2}}
-+\sum_{i=1}^{r}{\frac{(w_{2i}-W_2\hat{p}_i)^2}{s_{2i}^2}}=\sum _{i=1}^{r}{\frac{(W_1w_{2i}-W_2w_{1i})^2}{W_1^2s_{2i}^2+W_2^2s_{1i}^2}}">
-
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_m32.png", ALT="X^2=\sum_{i=1}^{r}{\frac{(w_{1i}-W_1\hat{p}_i)^2}{s_{1i}^2}}
-+\sum_{i=1}^{r}{\frac{(w_{2i}-W_2\hat{p}_i)^2}{s_{2i}^2}}=\sum _{i=1}^{r}{\frac{(W_1w_{2i}-W_2w_{1i})^2}{W_1^2s_{2i}^2+W_2^2s_{1i}^2}}">
-</DIV>
-and it   has approximately a <IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2r.png"  ALT=" $\chi^2_{(r-1)}$">  distribution [2]. The normalized or studentised residuals [6]
-
-<BR><P></P>
-<DIV ALIGN="CENTER">
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_res3.png", ALT=" r_i=\frac{w_{1i}-W_1\hat{p}_i}{s_{1i}\sqrt{1-1/(1+W_2^2s_{1i}^2/W_1^2s_{2i}^2)}} ">
-</DIV>
-have approximately a normal distribution with mean equal to 0 and
- standard deviation 1. A recommended minimal expected frequency is  equal to 10 for the proposed test.
-
-
-
-<h2>Numerical examples</h2>
-
-
-The method described herein is now  illustrated with an example.
-We take a  distribution
-<BR><P></P>
-<DIV ALIGN="CENTER">
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_example_formula.png", ALT="\phi(x)=\frac{2}{(x-10)^2+1}+\frac{1}{(x-14)^2+1}  "> &nbsp &nbsp &nbsp &nbsp  (1)
-</DIV>
- defined on the interval [4,16].  Events distributed 
-according to the formula (1) are simulated  to create the unweighted
- histogram.
- Uniformly  distributed events are simulated for the  weighted histogram 
- with  weights calculated by  formula (1).
- Each histogram has the same  number of bins: 20.    
- Fig. 1 shows the result of comparison of the  unweighted histogram with
-200 events  (minimal expected frequency equal to one) and the weighted histogram with 500 events (minimal expected frequency equal to 25)
-<BR><P></P>
-<DIV ALIGN="CENTER">
-<IMG  ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_plot1.jpg", ALT="fig1"> 
-</DIV>
-<div>
-<caption align=left> Fig 1. An example of comparison of the unweighted histogram with 200 events
- and the  weighted histogram with 500 events: a) unweighted histogram;
- b) weighted
- histogram; c) normalized residuals plot; d) normal Q-Q plot of residuals.
-</caption>
-</div>
-<BR><P></P>
- The value of the test statistic
-<i>X<sup>2</sup></i> is equal to 21.09 with <i>p</i>-value equal to 0.33, therefore the
- hypothesis
- of  identity of the two histograms  can be accepted for 0.05 significant level.  The behavior of the
- normalized residuals  plot (see Fig. 1c) and the  normal Q-Q plot (see Fig. 1d) of  residuals  are
- regular and we cannot identify the  outliers or bins with a big influence on
- <i>X<sup>2</sup></i>.<br>
-  <br> 
-The second example presented the same two histograms but 17 events was added to
- content of bin number 15 in unweighted histogram.
- Fig. 2 shows the result of comparison of the  unweighted histogram with
-217 events  (minimal expected frequency equal to one) and the weighted histogram with 500 events (minimal expected frequency equal to 25)
-<BR><P></P>
-<DIV ALIGN="CENTER">
-<IMG ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_plot2.jpg", ALT="fig1_bad">
-</DIV>
-<div>
-<caption align=left> Fig 2. An example of comparison of the unweighted histogram with 217 events
- and the  weighted histogram with 500 events: a) unweighted histogram;
- b) weighted
- histogram; c) normalized residuals plot; d) normal Q-Q plot of residuals.
-</caption>
-</div>
-<BR><P></P>
- The value of the test statistic
-<i>X<sup>2</sup></i> is equal to 32.33 with <i>p</i>-value equal to 0.029, therefore the
- hypothesis
- of  identity of the two histograms  is  rejected for 0.05 significant level. The behavior of the
- normalized residuals  plot (see Fig. 2c) and the  normal Q-Q plot (see Fig. 2d) of  residuals  are not
- regular and we can identify the  outlier or bin with a big influence on
- <i>X<sup>2</sup></i>.
-
-<h2>References</h2>
-[1] Pearson, K., 1904. On the Theory of Contingency and Its Relation to Association
- and Normal Correlation. Drapers' Co. Memoirs, Biometric Series No. 1, London.<br> 
-<br>
-[2] Gagunashvili, N., 2006. <IMG  WIDTH="25" HEIGHT="22" ALIGN="MIDDLE" BORDER="0" SRC="gif/chi2_chi2.gif"  ALT="$\chi^2$">  test for comparison of weighted and
- unweighted histograms. 
- Statistical  Problems in Particle Physics, Astrophysics and Cosmology,   Proceedings of PHYSTAT05, Oxford, UK, 12-15 September 2005, Imperial College Press, London, 43-44.<br>
-&nbsp &nbsp Gagunashvili,N., Comparison of weighted and unweighted histograms, arXiv:physics/0605123, 2006.<br> 
- <br>
-[3] Cramer, H., 1946. Mathematical methods of statistics. Princeton University Press, Princeton.<br>
-<br> 
-[4] Haberman, S.J., 1973. The analysis of residuals in cross-classified tables. Biometrics 29, 205-220.<br>
-<br>
-[5] Lewontin, R.C. and  Felsenstein, J., 1965.  The robustness of homogeneity test
-in 2 &times N tables. Biometrics 21, 19-33. <br>
-<br>
-[6] Seber,  G.A.F., Lee,  A.J., 2003,  Linear Regression Analysis. John Wiley & Sons Inc., New York.<br>
-<body>
-</html>
-<!--*/
-// -->End_Html
+   // Begin_Latex #chi^{2} End_Latex test for comparing weighted and unweighted histograms
+   //
+   // Function: Returns p-value. Other return values are specified by the 3rd parameter <br>
+   // 
+   // Parameters:
+   //
+   //    - h2: the second histogram
+   //    - option:
+   //       o "UU" = experiment experiment comparison (unweighted-unweighted)
+   //       o "UW" = experiment MC comparison (unweighted-weighted). Note that
+   //          the first histogram should be unweighted 
+   //       o "WW" = MC MC comparison (weighted-weighted)
+   //       o "NORM" = to be used when one or both of the histograms is scaled
+   //          (unweighted-unweighted)
+   //       o by default underflows and overlows are not included:
+   //          * "OF" = overflows included
+   //          * "UF" = underflows included
+   //       o "P" = print chi2, ndf, p_value, igood
+   //       o "CHI2" = returns chi2 instead of p-value
+   //       o "CHI2/NDF" = returns Begin_Latex #chi^{2}/ndf End_Latex
+   //    - res: not empty - computes normalized residuals and returns them in
+   //      this array
+   //
+   // The current implementation is based on the papers Begin_Latex #chi^{2} End_Latex test for comparison
+   // of weighted and unweighted histograms" in Proceedings of PHYSTAT05 and
+   // "Comparison weighted and unweighted histograms", arXiv:physics/0605123
+   // by N.Gagunashvili. This function has been implemented by Daniel Haertl in August 2006.
+   //
+   // Introduction:
+   //
+   //   A frequently used technique in data analysis is the comparison of
+   //   histograms. First suggested by Pearson [1] the Begin_Latex #chi^{2} End_Latex test of
+   //   homogeneity is used widely for comparing usual (unweighted) histograms.
+   //   This paper describes the implementation modified Begin_Latex #chi^{2} End_Latex tests
+   //   for comparison of weighted and unweighted  histograms and two weighted
+   //   histograms [2] as well as usual Pearson's Begin_Latex #chi^{2} End_Latex test for
+   //   comparison two usual (unweighted) histograms.  
+   //
+   // Overview:
+   // 
+   //   Comparison of two histograms expect hypotheses that two histograms
+   //   represent the identical distributions. To make a decision p-value should
+   //   be calculated. The hypotheses of identity is rejected if p-value is
+   //   lower then some significance level. Traditionally significance levels
+   //   0.1, 0.05 and 0.01 are used. The comparison procedure should include an
+   //   analysis of the residuals which is often helpful in identifying the 
+   //   bins of histograms responsible for a significant overall Begin_Latex #chi^{2} End_Latex value.
+   //   Residuals are the difference between bin contents and expected bin
+   //   contents. Most convenient for analysis are the normalized residuals. If
+   //   hypotheses of identity are valid then normalized residuals are
+   //   approximately independent and identically distributed random variables
+   //   having N(0,1) distribution. Analysis of residuals expect test of above 
+   //   mentioned properties of residuals. Notice that indirectly the analysis
+   //   of residuals increase the power of Begin_Latex #chi^{2} End_Latex test.
+   //
+   // Methods of comparison:
+   //
+   //  Begin_Latex #chi^{2} End_Latex test for comparison two (unweighted) histograms:
+   //   Let us consider two  histograms with the  same binning and the  number
+   //   of bins equal to r. Let us denote the number of events in the ith bin
+   //   in the first histogram as ni and as mi in the second one. The total
+   //   number of events in the first histogram is equal to:
+   //Begin_Latex
+   //   N = #sum_{i=1}^{r} n_{i}
+   //End_Latex
+   //   and
+   //Begin_Latex
+   //   M = #sum_{i=1}^{r} m_{i}
+   //End_Latex
+   //   in the second histogram. The hypothesis of identity (homogeneity) [3]
+   //   is that the two histograms represent random values with identical
+   //   distributions. It is equivalent that there exist r constants p1,...,pr,
+   //   such that  
+   //Begin_Latex
+   //   #sum_{i=1}^{r} p_{i}=1
+   //End_Latex
+   //    and the probability of belonging to the ith bin for some measured value
+   //    in both experiments is  equal to pi. The number of events in the ith
+   //    bin is a random variable with a distribution approximated by a Poisson
+   //    probability distribution
+   //Begin_Latex
+   //   #frac{e^{-Np_{i}}(Np_{i})^{n_{i}}}{n_{i}!}
+   //End_Latex
+   //   for the first histogram and with distribution
+   //Begin_Latex
+   //   #frac{e^{-Mp_{i}}(Mp_{i})^{m_{i}}}{m_{i}!}
+   //End_Latex
+   //   for the second histogram. If the hypothesis of homogeneity is valid,
+   //   then the  maximum likelihood estimator of pi, i=1,...,r, is
+   //Begin_Latex
+   //   #hat{p}_{i}= #frac{n_{i}+m_{i}}{N+M}
+   //End_Latex
+   //   and then
+   //Begin_Latex
+   //   X^{2} = #sum_{i=1}^{r}#frac{(n_{i}-N#hat{p}_{i})^{2}}{N#hat{p}_{i}} + #sum_{i=1}^{r}#frac{(m_{i}-M#hat{p}_{i})^{2}}{M#hat{p}_{i}} = #frac{1}{MN} #sum_{i=1}^{r}#frac{(Mn_{i}-Nm_{i})^{2}}{n_{i}+m_{i}}
+   //End_Latex
+   //   has approximately a Begin_Latex #chi^{2}_{(r-1)} End_Latex distribution [3].
+   //   The comparison procedure can include an analysis of the residuals which
+   //   is often helpful in identifying the bins of histograms responsible for
+   //   a significant overall Begin_Latex #chi^{2} End_Latexvalue. Most convenient for 
+   //   analysis are the adjusted (normalized) residuals [4]
+   //Begin_Latex
+   //   r_{i} = #frac{n_{i}-N#hat{p}_{i}}{#sqrt{N#hat{p}_{i}}#sqrt{(1-N/(N+M))(1-(n_{i}+m_{i})/(N+M))}}
+   //End_Latex
+   //   If hypotheses of  homogeneity are valid then residuals ri are
+   //   approximately independent and identically distributed random variables
+   //   having N(0,1) distribution. The application of the Begin_Latex #chi^{2} End_latex test has 
+   //   restrictions related to the value of the expected frequencies Npi,
+   //   Mpi, i=1,...,r. A conservative rule formulated in [5] is that all the
+   //   expectations must be 1 or greater for both histograms. In practical
+   //   cases when expected frequencies are not known the estimated expected
+   //   frequencies Begin_Latex M#hat{p}_{i}, N#hat{p}_{i}, i=1,...,r End_Latex  can be used.  
+   //
+   //  Unweighted and weighted histograms comparison:
+   //
+   //   A simple  modification of the  ideas described above can be used for the
+   //   comparison of the usual (unweighted) and weighted histograms. Let us
+   //   denote the number of events in the ith bin in the unweighted
+   //   histogram as ni and the common weight of events in the ith bin of the
+   //   weighted histogram as wi. The total number of events in the
+   //   unweighted histogram is equal to 
+   //Begin_Latex
+   //   N = #sum_{i=1}^{r} n_{i}
+   //End_Latex
+   //   and the total weight of events in the weighted histogram is equal to
+   //Begin_Latex
+   //   W = #sum_{i=1}^{r} w_{i}
+   //End_Latex
+   //   Let us formulate the hypothesis of identity of an unweighted histogram 
+   //   to a weighted histogram so that there exist r constants p1,...,pr, such
+   //   that 
+   //Begin_Latex
+   //   #sum_{i=1}^{r} p_{i} = 1
+   //End_Latex
+   //   for the unweighted histogram. The weight wi is a random variable with a
+   //   distribution approximated by the normal probability distribution
+   //   Begin_Latex N(Wp_{i},#sigma_{i}^{2}) End_Latex where Begin_Latex #sigma_{i}^{2} End_Latex is the variance of the weight wi.
+   //   If we replace the variance Begin_Latex #sigma_{i}^{2} End_Latex
+   //   with estimate Begin_Latex s_{i}^{2} End_Latex (sum of squares of weights of
+   //   events in the ith bin) and the hypothesis of identity is valid, then the
+   //   maximum likelihood estimator of  pi,i=1,...,r, is
+   //Begin_Latex
+   //   #hat{p}_{i} = #frac{Ww_{i}-Ns_{i}^{2}+#sqrt{(Ww_{i}-Ns_{i}^{2})^{2}+4W^{2}s_{i}^{2}n_{i}}}{2W^{2}}
+   //End_Latex
+   //   We may then use the test statistic
+   //Begin_Latex
+   //   X^{2} = #sum_{i=1}^{r} #frac{(n_{i}-N#hat{p}_{i})^{2}}{N#hat{p}_{i}} + #sum_{i=1}^{r} #frac{(w_{i}-W#hat{p}_{i})^{2}}{s_{i}^{2}}
+   //End_Latex
+   //   and it has approximately a Begin_Latex #chi^{2}_{(r-1)} End_Latex distribution [2]. This test, as well
+   //   as the original one [3], has a restriction on the expected frequencies. The
+   //   expected frequencies recommended for the weighted histogram is more than 25.
+   //   The value of the minimal expected frequency can be decreased down to 10 for
+   //   the case when the weights of the events are close to constant. In the case
+   //   of a weighted histogram if the number of events is unknown, then we can
+   //   apply this recommendation for the equivalent number of events as
+   //Begin_Latex
+   //   n_{i}^{equiv} = #frac{ w_{i}^{2} }{ s_{i}^{2} }
+   //End_Latex
+   //   The minimal expected frequency for an unweighted histogram must be 1. Notice
+   //   that any usual (unweighted) histogram can be considered as a weighted
+   //   histogram with events that have constant weights equal to 1.
+   //   The variance Begin_Latex z_{i}^{2} End_Latex of the difference between the weight wi
+   //   and the estimated expectation value of the weight is approximately equal to:
+   //Begin_Latex
+   //   z_{i}^{2} = Var(w_{i}-W#hat{p}_{i}) = N#hat{p}_{i}(1-N#hat{p}_{i})#left(#frac{Ws_{i}^{2}}{#sqrt{(Ns_{i}^{2}-w_{i}W)^{2}+4W^{2}s_{i}^{2}n_{i}}}#right)^{2}+#frac{s_{i}^{2}}{4}#left(1+#frac{Ns_{i}^{2}-w_{i}W}{#sqrt{(Ns_{i}^{2}-w_{i}W)^{2}+4W^{2}s_{i}^{2}n_{i}}}#right)^{2}
+   //End_Latex
+   //   The  residuals
+   //Begin_Latex
+   //   r_{i} = #frac{w_{i}-W#hat{p}_{i}}{z_{i}}
+   //End_Latex
+   //   have approximately a normal distribution with mean equal to 0 and standard
+   //   deviation  equal to 1.
+   //
+   //  Two weighted histograms comparison:
+   //
+   //   Let us denote the common  weight of events of the ith bin in the first
+   //   histogram as w1i and as w2i in the second one. The total weight of events
+   //   in the first histogram is equal to 
+   //Begin_Latex
+   //   W_{1} = #sum_{i=1}^{r} w_{1i}
+   //End_Latex
+   //   and
+   //Begin_Latex
+   //   W_{2} = #sum_{i=1}^{r} w_{2i}
+   //End_Latex
+   //   in the second histogram. Let us formulate the hypothesis of identity of
+   //   weighted histograms so that there exist r constants p1,...,pr, such that
+   //Begin_Latex
+   //   #sum_{i=1}^{r} p_{i} = 1
+   //End_Latex
+   //   and also expectation value of weight w1i equal to W1pi and expectation value
+   //   of weight w2i equal to W2pi. Weights in both the histograms are random
+   //   variables with distributions which can be approximated by a normal
+   //   probability distribution Begin_Latex N(W_{1}p_{i},#sigma_{1i}^{2}) End_Latex for the first histogram
+   //   and by a distribution Begin_Latex N(W_{2}p_{i},#sigma_{2i}^{2}) End_Latex for the second.
+   //   Here Begin_Latex #sigma_{1i}^{2} End_Latex and Begin_Latex #sigma_{2i}^{2} End_Latex are the variances
+   //   of w1i and w2i with estimators Begin_Latex s_{1i}^{2} End_Latex and Begin_Latex s_{2i}^{2} End_Latex respectively.
+   //   If the hypothesis of identity is valid, then the maximum likelihood and
+   //   Least Square Method estimator of pi,i=1,...,r, is
+   //Begin_Latex
+   //   #hat{p}_{i} = #frac{w_{1i}W_{1}/s_{1i}^{2}+w_{2i}W_{2} /s_{2i}^{2}}{W_{1}^{2}/s_{1i}^{2}+W_{2}^{2}/s_{2i}^{2}}
+   //End_Latex
+   //   We may then use the test statistic
+   //Begin_Latex
+   //   X^{2} = #sum_{i=1}^{r} #frac{(w_{1i}-W_{1}#hat{p}_{i})^{2}}{s_{1i}^{2}} + #sum_{i=1}^{r} #frac{(w_{2i}-W_{2}#hat{p}_{i})^{2}}{s_{2i}^{2}} = #sum_{i=1}^{r} #frac{(W_{1}w_{2i}-W_{2}w_{1i})^{2}}{W_{1}^{2}s_{2i}^{2}+W_{2}^{2}s_{1i}^{2}}
+   //End_Latex
+   //   and it has approximately a Begin_Latex #chi^{2}_{(r-1)} End_Latex distribution [2].
+   //   The normalized or studentised residuals [6]
+   //Begin_Latex
+   //   r_{i} = #frac{w_{1i}-W_{1}#hat{p}_{i}}{s_{1i}#sqrt{1 - #frac{1}{(1+W_{2}^{2}s_{1i}^{2}/W_{1}^{2}s_{2i}^{2})}}}
+   //End_Latex
+   //   have approximately a normal distribution with mean equal to 0 and standard
+   //   deviation 1. A recommended minimal expected frequency is equal to 10 for
+   //   the proposed test.
+   //
+   // Numerical examples:
+   //
+   //   The method described herein is now illustrated with an example.
+   //   We take a distribution
+   //Begin_Latex
+   //   #phi(x) = #frac{2}{(x-10)^{2}+1} + #frac{1}{(x-14)^{2}+1}       (1)
+   //End_Latex
+   //   defined on the interval [4,16]. Events distributed according to the formula
+   //   (1) are simulated to create the unweighted histogram. Uniformly distributed
+   //   events are simulated for the weighted histogram with weights calculated by
+   //   formula (1). Each histogram has the same number of bins: 20. Fig.1 shows
+   //   the result of comparison of the unweighted histogram with 200 events
+   //   (minimal expected frequency equal to one) and the weighted histogram with
+   //   500 events (minimal expected frequency equal to 25)
+   //Begin_Html
+   //   <img src="gif/chi2_plot1.jpg"> 
+   //End_Html
+   //   Fig 1. An example of comparison of the unweighted histogram with 200 events
+   //   and the weighted histogram with 500 events:
+   //      a) unweighted histogram;
+   //      b) weighted histogram;
+   //      c) normalized residuals plot;
+   //      d) normal Q-Q plot of residuals.
+   //
+   //   The value of the test statistic Begin_Latex #chi^{2} End_Latex is equal to
+   //   21.09 with p-value equal to 0.33, therefore the hypothesis of identity of
+   //   the two histograms can be accepted for 0.05 significant level. The behavior
+   //   of the normalized residuals plot (see Fig. 1c) and the normal Q-Q plot
+   //   (see Fig. 1d) of residuals are regular and we cannot identify the outliers
+   //   or bins with a big influence on Begin_Latex #chi^{2} End_Latex.
+   //
+   //   The second example presented the same two histograms but 17 events was added
+   //   to content of bin number 15 in unweighted histogram. Fig.2 shows the result
+   //   of comparison of the unweighted histogram with 217 events (minimal expected
+   //   frequency equal to one) and the weighted histogram with 500 events (minimal
+   //   expected frequency equal to 25)
+   //Begin_Html
+   //   <img src="gif/chi2_plot2.jpg">
+   //End_Html
+   //   Fig 2. An example of comparison of the unweighted histogram with 217 events
+   //   and the weighted histogram with 500 events:
+   //      a) unweighted histogram;
+   //      b) weighted histogram;
+   //      c) normalized residuals plot;
+   //      d) normal Q-Q plot of residuals.
+   // 
+   //   The value of the test statistic Begin_Latex #chi^{2} End_Latex is equal to
+   //   32.33 with p-value equal to 0.029, therefore the hypothesis of identity of
+   //   the two histograms is rejected for 0.05 significant level. The behavior of
+   //   the normalized residuals plot (see Fig. 2c) and the normal Q-Q plot (see
+   //   Fig. 2d) of residuals are not regular and we can identify the outlier or
+   //   bin with a big influence on Begin_Latex #chi^{2} End_Latex.
+   //
+   // References:
+   //
+   // [1] Pearson, K., 1904. On the Theory of Contingency and Its Relation to
+   //     Association and Normal Correlation. Drapers' Co. Memoirs, Biometric
+   //     Series No. 1, London.
+   // [2] Gagunashvili, N., 2006. Begin_Latex #chi^{2} End_Latex test for comparison
+   //     of weighted and unweighted histograms. Statistical Problems in Particle
+   //     Physics, Astrophysics and Cosmology, Proceedings of PHYSTAT05,
+   //     Oxford, UK, 12-15 September 2005, Imperial College Press, London, 43-44.
+   //     Gagunashvili,N., Comparison of weighted and unweighted histograms,
+   //     arXiv:physics/0605123, 2006.
+   // [3] Cramer, H., 1946. Mathematical methods of statistics.
+   //     Princeton University Press, Princeton.
+   // [4] Haberman, S.J., 1973. The analysis of residuals in cross-classified tables.
+   //     Biometrics 29, 205-220.
+   // [5] Lewontin, R.C. and Felsenstein, J., 1965. The robustness of homogeneity
+   //     test in 2xN tables. Biometrics 21, 19-33. 
+   // [6] Seber, G.A.F., Lee, A.J., 2003, Linear Regression Analysis.
+   //     John Wiley & Sons Inc., New York.
 
    Double_t chi2 = 0;
    Int_t ndf = 0, igood = 0;
