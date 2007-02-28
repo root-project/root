@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.cxx,v 1.10 2007/02/22 16:45:47 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.cxx,v 1.11 2007/02/27 13:08:20 couet Exp $
 // Author: Fons Rademakers   15/10/2001
 
 /*************************************************************************
@@ -115,7 +115,7 @@ TImage *TImage::Open(const char *file, EImageFileTypes type)
    if (img)
       img->ReadImage(fullname, type);
 
-   delete fullname;
+   delete [] fullname;
 
    return img;
 }
