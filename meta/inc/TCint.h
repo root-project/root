@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.31 2006/12/05 10:55:29 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.32 2007/02/09 11:51:09 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -61,6 +61,7 @@ private:
    TString         fIncludePath;    //hold a list of lib include path
    TEnv           *fMapfile;        //map of classes and libraries
    Bool_t          fLockProcessLine;//true if ProcessLine should lock gCINTMutex
+   static void*    fgSetOfSpecials; //set of TObject*s used in CINT variables
 
    TCint() : fMore(-1), fExitCode(0), fDictPos(), fDictPosGlobals(),
      fSharedLibs(), fIncludePath(), fMapfile(0), fLockProcessLine(kFALSE)

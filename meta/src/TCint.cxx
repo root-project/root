@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.133 2006/12/12 21:38:16 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.134 2007/01/29 16:09:47 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -43,6 +43,7 @@
 #include "THashTable.h"
 
 #include <vector>
+#include <set>
 #include <string>
 using namespace std;
 
@@ -82,6 +83,8 @@ extern "C" void *TCint_FindSpecialObject(char *c, G__ClassInfo *ci, void **p1, v
 // It is a "fantom" method to synchronize user keyboard input
 // and ROOT prompt line (for WIN32)
 const char *fantomline = "TRint::EndOfLineAction();";
+
+void* TCint::fgSetOfSpecials = 0;
 
 ClassImp(TCint)
 
@@ -400,8 +403,12 @@ void TCint::RecursiveRemove(TObject *obj)
    // Delete object from CINT symbol table so it can not be used anymore.
    // CINT object are always on the heap.
 
-   if (obj->IsOnHeap()) {
-      DeleteGlobal(obj);
+   if (obj->IsOnHeap() && fgSetOfSpecials) {
+      std::set<TObject*>::iterator iSpecial = ((std::set<TObject*>*)fgSetOfSpecials)->find(obj);
+      if (iSpecial != ((std::set<TObject*>*)fgSetOfSpecials)->end()) {
+         DeleteGlobal(obj);
+         ((std::set<TObject*>*)fgSetOfSpecials)->erase(iSpecial);
+      }
    }
 }
 
@@ -978,7 +985,8 @@ const char *TCint::GetCurrentMacroName()
    // BEGIN_HTML <!--
    /* -->
       <span style="color:#ffffff;background-color:#7777ff;padding-left:0.3em;padding-right:0.3em">inclfile.h</span>
-      <div style="border:solid 1px #ffff77;background-color: #ffffdd;float:left;padding:0.5em;margin-bottom:0.7em;">
+      <!--div style="border:solid 1px #ffff77;background-color: #ffffdd;float:left;padding:0.5em;margin-bottom:0.7em;"-->
+      <div class="code">
       <pre style="margin:0pt">#include &lt;iostream&gt;
 void inclfunc() {
    std::cout &lt;&lt; "In inclfile.h" &lt;&lt std::endl;
@@ -1261,6 +1269,8 @@ void *TCint::FindSpecialObject(const char *item, G__ClassInfo *type,
 
    if (!*prevObj || *assocPtr != gDirectory) {
       *prevObj = gROOT->FindSpecialObject(item, *assocPtr);
+      if (!fgSetOfSpecials) fgSetOfSpecials = new std::set<TObject*>;
+      if (*prevObj) ((std::set<TObject*>*)fgSetOfSpecials)->insert((TObject*)*prevObj);
    }
 
    if (*prevObj) type->Init(((TObject *)*prevObj)->ClassName());

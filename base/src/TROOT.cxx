@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.206 2007/02/15 15:04:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.207 2007/02/22 09:42:03 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -306,23 +306,23 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fGlobals     = 0;
    fGlobalFunctions = 0;
    fList        = new THashList(1000,3);
-   fFiles       = new TList;
-   fMappedFiles = new TList;
-   fSockets     = new TList;
-   fCanvases    = new TList;
-   fStyles      = new TList;
-   fFunctions   = new TList;
-   fTasks       = new TList;
-   fGeometries  = new TList;
-   fBrowsers    = new TList;
-   fSpecials    = new TList;
-   fBrowsables  = new TList;
-   fCleanups    = new THashList;
-   fMessageHandlers = new TList;
-   fSecContexts = new TList;
-   fProofs      = new TList;
-   fClipboard   = new TList;
-   fDataSets    = new TList;
+   fFiles       = new TList; fFiles->SetName("Files");
+   fMappedFiles = new TList; fMappedFiles->SetName("MappedFiles");
+   fSockets     = new TList; fSockets->SetName("Sockets");
+   fCanvases    = new TList; fCanvases->SetName("Canvases");
+   fStyles      = new TList; fStyles->SetName("Styles");
+   fFunctions   = new TList; fFunctions->SetName("Functions");
+   fTasks       = new TList; fTasks->SetName("Tasks");
+   fGeometries  = new TList; fGeometries->SetName("Geometries");
+   fBrowsers    = new TList; fBrowsers->SetName("Browsers");
+   fSpecials    = new TList; fSpecials->SetName("Specials");
+   fBrowsables  = new TList; fBrowsables->SetName("Browsables");
+   fCleanups    = new THashList; fCleanups->SetName("Cleanups");
+   fMessageHandlers = new TList; fMessageHandlers->SetName("MessageHandlers");
+   fSecContexts = new TList; fSecContexts->SetName("SecContexts");
+   fProofs      = new TList; fProofs->SetName("Proofs");
+   fClipboard   = new TList; fClipboard->SetName("Clipboard");
+   fDataSets    = new TList; fDataSets->SetName("DataSets");
 
    TProcessID::AddProcessID();
    fUUIDs = new TProcessUUID();
@@ -354,7 +354,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fCleanups->Add(fBrowsers); fBrowsers->SetBit(kMustCleanup);
    fCleanups->Add(fTasks);    fTasks->SetBit(kMustCleanup);
    fCleanups->Add(fFiles);    fFiles->SetBit(kMustCleanup);
-   //fCleanups->Add(fInterpreter);
+   fCleanups->Add(fInterpreter);
 
    fExecutingMacro= kFALSE;
    fForceStyle    = kFALSE;
