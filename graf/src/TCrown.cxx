@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCrown.cxx,v 1.7 2007/01/12 16:03:16 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCrown.cxx,v 1.8 2007/02/21 13:45:39 brun Exp $
 // Author: Rene Brun   108/08/2002
 
 /*************************************************************************
@@ -18,39 +18,35 @@
 ClassImp(TCrown)
 
 //______________________________________________________________________________
-//
-//  A crown is specified with the position of its centre, its inner/outer radius
-//  a minimum and maximum angle.
-//  The attributes of the outline line are given via TAttLine
-//  The attributes of the fill area are given via TAttFill
-//
-//  Example
-//{
-//   gROOT->Reset();
-//   TCanvas c1("c1","c1",400,400);
-//   TCrown cr1(.5,.5,.3,.4);
-//   cr1->SetLineStyle(2);
-//   cr1->SetLineWidth(4);
-//   cr1.Draw();
-//   TCrown cr2(.5,.5,.2,.3,45,315);
-//   cr2.SetFillColor(38);
-//   cr2.SetFillStyle(3010);
-//   cr2.Draw();
-//   TCrown cr3(.5,.5,.2,.3,-45,45);
-//   cr3.SetFillColor(50);
-//   cr3.SetFillStyle(3025);
-//   cr3.Draw();
-//   TCrown cr4(.5,.5,.0,.2);
-//   cr4.SetFillColor(4);
-//   cr4.SetFillStyle(3008);
-//   cr4.Draw();
-//}
-//Begin_Html
-/*
-<img src="gif/crown.gif">
-*/
-//End_Html
-// 
+/* Begin_Html
+<center><h2>TCrown : to draw crown</h2></center>
+A crown is specified with the position of its centre, its inner/outer radius
+a minimum and maximum angle. The attributes of the outline line are given via
+TAttLineThe attributes of the fill area are given via TAttFill
+<p> Example:
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c1 = new TCanvas("c1","c1",400,400);
+   TCrown cr1(.5,.5,.3,.4);
+   cr1->SetLineStyle(2);
+   cr1->SetLineWidth(4);
+   cr1.Draw();
+   TCrown cr2(.5,.5,.2,.3,45,315);
+   cr2.SetFillColor(38);
+   cr2.SetFillStyle(3010);
+   cr2.Draw();
+   TCrown cr3(.5,.5,.2,.3,-45,45);
+   cr3.SetFillColor(50);
+   cr3.SetFillStyle(3025);
+   cr3.Draw();
+   TCrown cr4(.5,.5,.0,.2);
+   cr4.SetFillColor(4);
+   cr4.SetFillStyle(3008);
+   cr4.Draw();
+   return c1;
+}
+End_Macro */
 
 //______________________________________________________________________________
 TCrown::TCrown(): TEllipse()
@@ -67,8 +63,8 @@ TCrown::TCrown(Double_t x1, Double_t y1,Double_t radin, Double_t radout,Double_t
    //  x1,y1  : coordinates of centre of crown
    //  radin  : inner crown radius
    //  radout : outer crown radius
-   //  phimin : min and max angle in degrees (default is 0-->360)
-   //  phimax :
+   //  phimin : min angle in degrees (default is 0)
+   //  phimax : max angle in degrees (default is 360)
    //
    //  When a crown sector only is drawn, the lines connecting the center
    //  of the crown to the edges are drawn by default. One can specify
