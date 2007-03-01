@@ -19,9 +19,11 @@
 
 TCanvas * chi2test(Float_t w=0)
 {
-  
-  //Define Histograms
+  // Note: The parameter w is used to produce the 2 pictures in
+  // the TH1::Chi2Test method. The 1st picture is produced with 
+  // w=0 and the 2nd with w=17 (see TH1::Chi2Test() help).
 
+  // Define Histograms.
   const Int_t n = 20;
 
   TH1D *h1 = new TH1D("h1", "h1", n, 4, 16);
