@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGResourcePool.cxx,v 1.8 2006/05/10 14:06:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGResourcePool.cxx,v 1.9 2006/11/16 17:17:37 rdm Exp $
 // Author: Fons Rademakers   19/5/2003
 
 /*************************************************************************
@@ -84,13 +84,13 @@ TGResourcePool::TGResourcePool(TGClient *client)
    char framebgpixmap[2048], docbgpixmap[2048];
    char icon_path[2048], mime_file[256], line[2048];
 
-   strcpy(default_font,   gEnv->GetValue("Gui.DefaultFont",  "-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1"));
-   strcpy(menu_font,      gEnv->GetValue("Gui.MenuFont",     "-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1"));
-   strcpy(menu_hi_font,   gEnv->GetValue("Gui.MenuHiFont",   "-adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1"));
-   strcpy(doc_fixed_font, gEnv->GetValue("Gui.DocFixedFont", "-adobe-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1"));
-   strcpy(doc_prop_font,  gEnv->GetValue("Gui.DocPropFont",  "-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1"));
-   strcpy(icon_font,      gEnv->GetValue("Gui.IconFont",     "-adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1"));
-   strcpy(status_font,    gEnv->GetValue("Gui.StatusFont",   "-adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1"));
+   strcpy(default_font,   gEnv->GetValue("Gui.DefaultFont",  "-*-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1"));
+   strcpy(menu_font,      gEnv->GetValue("Gui.MenuFont",     "-*-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1"));
+   strcpy(menu_hi_font,   gEnv->GetValue("Gui.MenuHiFont",   "-*-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1"));
+   strcpy(doc_fixed_font, gEnv->GetValue("Gui.DocFixedFont", "-*-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1"));
+   strcpy(doc_prop_font,  gEnv->GetValue("Gui.DocPropFont",  "-*-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1"));
+   strcpy(icon_font,      gEnv->GetValue("Gui.IconFont",     "-*-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1"));
+   strcpy(status_font,    gEnv->GetValue("Gui.StatusFont",   "-*-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1"));
    strcpy(backcolor,      gEnv->GetValue("Gui.BackgroundColor",         "#c0c0c0"));
    strcpy(forecolor,      gEnv->GetValue("Gui.ForegroundColor",         "black"));
    strcpy(selbackcolor,   gEnv->GetValue("Gui.SelectBackgroundColor",   "#000080"));
