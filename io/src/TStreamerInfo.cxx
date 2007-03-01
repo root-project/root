@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TStreamerInfo.cxx,v 1.250 2007/02/09 10:16:07 rdm Exp $
+// @(#)root/io:$Name:  $:$Id: TStreamerInfo.cxx,v 1.251 2007/02/15 15:29:59 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -2373,7 +2373,18 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       fOldVersion = R__v;
       if (R__v > 1) {
-         TStreamerInfo::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         //R__b.ReadClassBuffer(TStreamerInfo::Class(), this, R__v, R__s, R__c);
+         R__b.ClassBegin(TStreamerInfo::Class(), R__v);
+         R__b.ClassMember("TNamed");
+         TNamed::Streamer(R__b);
+         R__b.ClassMember("fCheckSum","UInt_t");
+         R__b >> fCheckSum;
+         R__b.ClassMember("fClassVersion","Int_t");
+         R__b >> fClassVersion;
+         R__b.ClassMember("fElements","TObjArray*");
+         R__b >> fElements;
+         R__b.ClassEnd(TStreamerInfo::Class());
+         R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
          return;
       }
       //====process old versions before automatic schema evolution
@@ -2383,7 +2394,7 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
       R__b >> fElements;
       R__b.CheckByteCount(R__s, R__c, TStreamerInfo::IsA());
    } else {
-      TStreamerInfo::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerInfo::Class(),this);
    }
 }
 
