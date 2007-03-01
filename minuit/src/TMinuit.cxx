@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.56 2006/12/12 13:56:54 couet Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.57 2007/02/03 08:16:34 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -933,13 +933,15 @@ void TMinuit::SetFCN(void *fcn)
 Int_t TMinuit::SetPrintLevel( Int_t printLevel )
 {
    //set Minuit print level
-   // printlevel = -1  quiet
+   // printlevel = -1  quiet (also suppresse all warnings)
    //            =  0  normal
    //            =  1  verbose
    Int_t    err;
    Double_t tmp = printLevel;
 
    mnexcm( "SET PRINT", &tmp, 1, err );
+   
+   if (printLevel <=-1) mnexcm("SET NOWarnings",&tmp,0,err);
 
    return err;
 }
