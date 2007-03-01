@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.99 2007/02/06 14:22:28 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.100 2007/02/23 11:11:51 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -1786,10 +1786,10 @@ void TGeoVolume::Streamer(TBuffer &R__b)
          if (!fGeoManager->IsStreamingVoxels()) {
             TGeoVoxelFinder *voxels = fVoxels;
             fVoxels = 0;
-            TGeoVolume::Class()->WriteBuffer(R__b, this);
+            R__b.WriteClassBuffer(TGeoVolume::Class(), this);
             fVoxels = voxels;
          } else {
-            TGeoVolume::Class()->WriteBuffer(R__b, this);
+            R__b.WriteClassBuffer(TGeoVolume::Class(), this);
          }
       }
    }

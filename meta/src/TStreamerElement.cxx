@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.92 2007/02/05 18:11:28 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.93 2007/02/06 15:39:37 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -435,7 +435,7 @@ void TStreamerElement::Streamer(TBuffer &R__b)
       R__b.ClassEnd(TStreamerElement::Class());
       R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
    } else {
-      TStreamerElement::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerElement::Class(),this);
    }
 }
 
@@ -606,7 +606,7 @@ void TStreamerBase::Streamer(TBuffer &R__b)
       R__b.ClassEnd(TStreamerBase::Class());
       R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
    } else {
-      TStreamerBase::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TStreamerBase::Class(),this);
    }
 }
 

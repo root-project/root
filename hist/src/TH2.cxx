@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.106 2007/02/01 14:58:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.107 2007/02/06 15:00:56 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3112,7 +3112,7 @@ void TH2F::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TH2F::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TH2F::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -3133,7 +3133,7 @@ void TH2F::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TH2F::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TH2F::Class(),this);
    }
 }
 
@@ -3383,7 +3383,7 @@ void TH2D::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TH2D::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TH2D::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -3404,7 +3404,7 @@ void TH2D::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TH2D::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TH2D::Class(),this);
    }
 }
 
