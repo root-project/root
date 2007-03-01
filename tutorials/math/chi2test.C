@@ -17,7 +17,7 @@
 #include "TMath.h"
 
 
-void chi2test()
+TCanvas * chi2test(Float_t w=0)
 {
   
   //Define Histograms
@@ -44,7 +44,7 @@ void chi2test()
   h1->SetBinContent(12, 20);
   h1->SetBinContent(13, 13);
   h1->SetBinContent(14, 9);
-  h1->SetBinContent(15, 26);
+  h1->SetBinContent(15, 9+w);
   h1->SetBinContent(16, 13);
   h1->SetBinContent(17, 19);
   h1->SetBinContent(18, 11);
@@ -138,7 +138,7 @@ void chi2test()
   qqplot->SetTitle("Q-Q plot of Normalized Residuals");
 
 //create Canvas
-  TCanvas *c1 = new TCanvas("c1","Chistat Plot",10,10,900,800);
+  TCanvas *c1 = new TCanvas("c1","Chistat Plot",10,10,700,600);
   c1->SetFillColor(33);
   c1->Divide(2,2);
 
@@ -166,6 +166,7 @@ void chi2test()
   qqplot->Draw("AP");
 
   c1->cd(0);
-
+  
   c1->Update();
+   return c1;
 }
