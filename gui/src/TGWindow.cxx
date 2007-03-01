@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.27 2007/01/16 07:57:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.28 2007/02/22 14:10:00 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -48,9 +48,6 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
 
    // make sure that the Gpad and GUI libs are loaded
    static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
-   // this can only happen when libGui was loaded at program startup
-   // but not initialized because application is in batch mode
-   if (!gClient) new TGClient();
 
    UInt_t type = wtype;
    fId = 0;
@@ -109,7 +106,7 @@ TGWindow::~TGWindow()
    // Window destructor. Unregisters the window.
 
    if (fClient) {
-      if (fParent == fClient->GetDefaultRoot()) 
+      if (fParent == fClient->GetDefaultRoot())
          DestroyWindow();
       fClient->UnregisterWindow(this);
    }
@@ -192,7 +189,7 @@ Bool_t TGWindow::IsMapped()
 void TGWindow::Print(Option_t *option) const
 {
    // Print window id.
-   // If option is "tree" - print all parent windows tree 
+   // If option is "tree" - print all parent windows tree
 
    TString opt = option;
 
@@ -227,7 +224,7 @@ const char *TGWindow::GetName()const
 
    if (fName.BeginsWith("frame")) {
       TString cname = ClassName();
-      if (cname.BeginsWith("TGed")) 
+      if (cname.BeginsWith("TGed"))
          cname.Replace(0, 1, 'f');
       else if (cname.BeginsWith("TG"))
          cname.Replace(0,2,'f');

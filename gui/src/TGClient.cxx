@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.53 2006/11/16 17:17:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.54 2007/02/27 10:52:09 antcheva Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -57,7 +57,7 @@ class TGClientInit {
 public:
    TGClientInit() { if (gROOT && gROOT->IsBatch()) new TGClient(); }
 };
-static TGClientInit gclient_init;
+static TGClientInit gClientInit;
 
 
 //----- Graphics Input handler -------------------------------------------------
@@ -149,7 +149,7 @@ TGClient::TGClient(const char *dpyName)
    fForceRedraw      = kFALSE;
    fWaitForWindow    = kNone;
 
-   fResourcePool = new TGResourcePool(this);
+   fResourcePool    = new TGResourcePool(this);
 
    fPicturePool     = fResourcePool->GetPicturePool();
    fGCPool          = fResourcePool->GetGCPool();
@@ -170,73 +170,6 @@ TGClient::TGClient(const char *dpyName)
    fSelBackColor = fResourcePool->GetSelectedBgndColor();
 
    gClient = this;
-}
-
-//______________________________________________________________________________
-TGClient::TGClient(const TGClient& gc) :
-  TObject(gc),
-  fBackColor(gc.fBackColor),
-  fForeColor(gc.fForeColor),
-  fHilite(gc.fHilite),
-  fShadow(gc.fShadow),
-  fSelBackColor(gc.fSelBackColor),
-  fSelForeColor(gc.fSelForeColor),
-  fWhite(gc.fWhite),
-  fBlack(gc.fBlack),
-  fDefaultRoot(gc.fDefaultRoot),
-  fRoot(gc.fRoot),
-  fXfd(gc.fXfd),
-  fResourcePool(gc.fResourcePool),
-  fGCPool(gc.fGCPool),
-  fFontPool(gc.fFontPool),
-  fPicturePool(gc.fPicturePool),
-  fMimeTypeList(gc.fMimeTypeList),
-  fDefaultColormap(gc.fDefaultColormap),
-  fGlobalNeedRedraw(gc.fGlobalNeedRedraw),
-  fForceRedraw(gc.fForceRedraw),
-  fWlist(gc.fWlist),
-  fPlist(gc.fPlist),
-  fUWHandlers(gc.fUWHandlers),
-  fIdleHandlers(gc.fIdleHandlers),
-  fWaitForEvent(gc.fWaitForEvent),
-  fWaitForWindow(gc.fWaitForWindow)
-{
-   //copy constructor
-}
-
-//______________________________________________________________________________
-TGClient& TGClient::operator=(const TGClient& gc)
-{
-   //assignment operator
-   if(this!=&gc) {
-      TObject::operator=(gc);
-      fBackColor=gc.fBackColor;
-      fForeColor=gc.fForeColor;
-      fHilite=gc.fHilite;
-      fShadow=gc.fShadow;
-      fSelBackColor=gc.fSelBackColor;
-      fSelForeColor=gc.fSelForeColor;
-      fWhite=gc.fWhite;
-      fBlack=gc.fBlack;
-      fDefaultRoot=gc.fDefaultRoot;
-      fRoot=gc.fRoot;
-      fXfd=gc.fXfd;
-      fResourcePool=gc.fResourcePool;
-      fGCPool=gc.fGCPool;
-      fFontPool=gc.fFontPool;
-      fPicturePool=gc.fPicturePool;
-      fMimeTypeList=gc.fMimeTypeList;
-      fDefaultColormap=gc.fDefaultColormap;
-      fGlobalNeedRedraw=gc.fGlobalNeedRedraw;
-      fForceRedraw=gc.fForceRedraw;
-      fWlist=gc.fWlist;
-      fPlist=gc.fPlist;
-      fUWHandlers=gc.fUWHandlers;
-      fIdleHandlers=gc.fIdleHandlers;
-      fWaitForEvent=gc.fWaitForEvent;
-      fWaitForWindow=gc.fWaitForWindow;
-   }
-   return *this;
 }
 
 //______________________________________________________________________________
