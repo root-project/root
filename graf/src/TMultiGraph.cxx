@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.36 2007/01/15 16:10:10 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.37 2007/01/30 11:49:14 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1205,9 +1205,6 @@ void TMultiGraph::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       while (lnk) {
          g = lnk->GetObject();
          g->SavePrimitive(out,"multigraph");
-
-         out<<"   multigraph->Add(graph,"<<quote<<lnk->GetOption()<<quote<<");"<<endl;
-
          lnk = (TObjOptLink*)lnk->Next();
 
       }
