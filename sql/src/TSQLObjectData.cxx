@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TSQLObjectData.cxx,v 1.8 2006/06/22 08:21:22 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TSQLObjectData.cxx,v 1.9 2007/02/01 16:13:51 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -344,7 +344,7 @@ Bool_t TSQLObjectData::VerifyDataType(const char* tname, Bool_t errormsg)
    if (!IsBlobData()) return kTRUE;
 
    if (gDebug>4) 
-      if (fBlobTypeName==0) {
+      if ((fBlobTypeName==0) && errormsg) {
          Error("VerifyDataType","fBlobTypeName is null");
          return kFALSE;
       }

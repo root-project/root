@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.18 2007/01/30 10:11:47 brun Exp $
+// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.cxx,v 1.19 2007/02/09 08:56:40 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -448,6 +448,8 @@ void* TBufferSQL2::SqlReadObjectDirect(void* obj, TClass** cl, Long64_t objid, T
    TSQLClassInfo* sqlinfo = fSQL->FindSQLClassInfo(clname.Data(), version);
 
    TClass* objClass = TClass::GetClass(clname);
+   if (objClass == TDirectory::Class()) objClass = TDirectoryFile::Class();
+   
    if ((objClass==0) || (sqlinfo==0)) {
       Error("SqlReadObjectDirect","Class %s is not known", clname.Data());
       return obj;

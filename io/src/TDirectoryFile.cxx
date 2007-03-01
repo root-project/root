@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TDirectoryFile.cxx,v 1.9 2007/02/09 18:07:05 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TDirectoryFile.cxx,v 1.10 2007/02/10 09:17:57 brun Exp $
 // Author: Rene Brun   22/01/2007
 
 /*************************************************************************
@@ -1436,7 +1436,10 @@ void TDirectoryFile::Streamer(TBuffer &b)
 
       if (fFile && !fFile->IsBinary()) {
          Version_t R__v = b.ReadVersion(0, 0);
-         b.ClassBegin(TDirectoryFile::Class(), R__v);
+         
+         TClass* dirclass = (R__v < 5) ? TDirectory::Class() : TDirectoryFile::Class();
+         
+         b.ClassBegin(dirclass, R__v);
 
          TString sbuf;
 
@@ -1455,7 +1458,7 @@ void TDirectoryFile::Streamer(TBuffer &b)
          TUUID id(sbuf.Data());
          fUUID = id;
 
-         b.ClassEnd(TDirectoryFile::Class());
+         b.ClassEnd(dirclass);
 
          fSeekKeys = 0; // read keys later in the TKeySQL class
       } else {

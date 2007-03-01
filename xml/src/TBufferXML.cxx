@@ -1,4 +1,4 @@
-// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.19 2007/01/30 11:24:32 brun Exp $
+// @(#)root/:$Name:  $:$Id: TBufferXML.cxx,v 1.20 2007/02/09 08:56:40 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -775,6 +775,7 @@ void* TBufferXML::XmlReadObject(void* obj, TClass** cl)
 
    TString clname = fXML->GetAttr(objnode, xmlio::ObjClass);
    objClass = XmlDefineClass(clname);
+   if (objClass == TDirectory::Class()) objClass = TDirectoryFile::Class();
 
    if (objClass==0) {
       Error("XmlReadObject", "Cannot find class %s", clname.Data());
