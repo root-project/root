@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.134 2007/01/29 16:09:47 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.135 2007/02/28 18:10:40 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -403,7 +403,7 @@ void TCint::RecursiveRemove(TObject *obj)
    // Delete object from CINT symbol table so it can not be used anymore.
    // CINT object are always on the heap.
 
-   if (obj->IsOnHeap() && fgSetOfSpecials) {
+   if (obj->IsOnHeap() && fgSetOfSpecials && ((std::set<TObject*>*)fgSetOfSpecials)->size()) {
       std::set<TObject*>::iterator iSpecial = ((std::set<TObject*>*)fgSetOfSpecials)->find(obj);
       if (iSpecial != ((std::set<TObject*>*)fgSetOfSpecials)->end()) {
          DeleteGlobal(obj);
@@ -1390,7 +1390,7 @@ const char* TCint::GetSharedLibs()
       Bool_t needToSkip = kFALSE;
       if ( len>5 && (strcmp(end-4,".dll") == 0 ) ) {
          // Filter out the cintdlls
-         const char *excludelist [] = {
+         static const char *excludelist [] = {
             "stdfunc.dll","stdcxxfunc.dll","posix.dll","sys/ipc.dll",
             "string.dll","vector.dll","list.dll","deque.dll","map.dll",
             "map2.dll","set.dll","multimap.dll","multimap2.dll","multiset.dll",
