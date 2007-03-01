@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.25 2006/05/23 04:47:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.26 2007/03/01 01:09:02 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -45,16 +45,9 @@ class TGFont;
 class TGMimeTypes;
 class TGUnknownWindowHandler;
 class TGIdleHandler;
-class TRootApplication;
-class TGApplication;
-class TGClientInit;
 
 
 class TGClient : public TObject {
-
-friend class TRootApplication;
-friend class TGApplication;
-friend class TGClientInit;
 
 protected:
    Pixel_t         fBackColor;        // default background color
@@ -83,7 +76,6 @@ protected:
    EGEventType     fWaitForEvent;     // event to wait for
    Window_t        fWaitForWindow;    // window in which to wait for event
 
-   TGClient(const char *dpyName = 0);     // called by TRootApplication/TGApplication/TGClientInit
    TGClient(const TGClient&);             // not implemented
    TGClient& operator=(const TGClient&);  // not implemented
 
@@ -94,6 +86,7 @@ protected:
    Bool_t  DoRedraw();
 
 public:
+   TGClient(const char *dpyName = 0);
    virtual ~TGClient();
 
    const TGWindow *GetRoot() const;
