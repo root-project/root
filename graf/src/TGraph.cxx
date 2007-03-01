@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.207 2007/02/26 08:39:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.208 2007/02/26 17:27:22 couet Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -3802,9 +3802,11 @@ void TGraph::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    TObject *obj;
    while ((obj=next())) {
       obj->SavePrimitive(out,"nodraw");
-      out<<"   graph->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
       if (obj->InheritsFrom("TPaveStats")) {
+         out<<"   graph->GetListOfFunctions()->Add(ptstats);"<<endl;
          out<<"   ptstats->SetParent(graph->GetListOfFunctions());"<<endl;
+      } else {
+         out<<"   graph->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
       }
    }
 

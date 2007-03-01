@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.62 2007/01/23 11:12:02 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.63 2007/02/06 14:35:45 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -777,9 +777,11 @@ void TGraphErrors::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    TObject *obj;
    while ((obj=next())) {
       obj->SavePrimitive(out,"nodraw");
-      out<<"   gre->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
       if (obj->InheritsFrom("TPaveStats")) {
+         out<<"   gre->GetListOfFunctions()->Add(ptstats);"<<endl;
          out<<"   ptstats->SetParent(gre->GetListOfFunctions());"<<endl;
+      } else {
+         out<<"   gre->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
       }
    }
 
