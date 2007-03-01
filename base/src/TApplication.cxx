@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.82 2007/02/26 17:24:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.83 2007/03/01 01:07:14 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -399,7 +399,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    // remove handled arguments from argument array
    j = 0;
    for (i = 0; i < *argc; i++) {
-      if (argv[i]) {
+      if (!strcmp(argv[i],"")) {
          argv[j] = argv[i];
          j++;
       }
