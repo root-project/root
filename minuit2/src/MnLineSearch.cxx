@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnLineSearch.cxx,v 1.5 2006/07/05 08:32:39 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnLineSearch.cxx,v 1.6 2007/02/09 17:24:50 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -111,9 +111,9 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
 
       if (debug) { 
          //         std::cout<<"pb.Min() = "<<pb.Min()<<std::endl;
-          std::cout<<"flast, f0= "<<flast<<", "<<f0<<std::endl;
-          std::cout<<"flast-f0= "<<flast-f0<<std::endl;
-          std::cout<<"slam= "<<slam<<std::endl;
+         std::cout<<"flast, f0= "<<flast<<", "<<f0<<std::endl;
+         std::cout<<"flast-f0= "<<flast-f0<<std::endl;
+         std::cout<<"slam= "<<slam<<std::endl;
       }
       //     double df = flast-f0;
       //     if(fabs(df) < prec.Eps2()) {
@@ -216,9 +216,9 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
    }
    
    if (debug){
-     std::cout<<"after initial 2-point iter: "<<std::endl;
-     std::cout<<"x0, x1, x2= "<<p0.x()<<", "<<p1.x()<<", "<<slam<<std::endl;
-     std::cout<<"f0, f1, f2= "<<p0.y()<<", "<<p1.y()<<", "<<f2<<std::endl;
+      std::cout<<"after initial 2-point iter: "<<std::endl;
+      std::cout<<"x0, x1, x2= "<<p0.x()<<", "<<p1.x()<<", "<<slam<<std::endl;
+      std::cout<<"f0, f1, f2= "<<p0.y()<<", "<<p1.y()<<", "<<f2<<std::endl;
    }
    
    MnParabolaPoint p2(slam, f2);
@@ -229,11 +229,11 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
       MnParabola pb = MnParabolaFactory()(p0, p1, p2);
       if (debug) { 
          std::cout << "\nLS Iteration " << niter << std::endl;  
-          std::cout<<"x0, x1, x2= "<<p0.x()<<", "<<p1.x()<<", "<<p2.x() <<std::endl;
-          std::cout<<"f0, f1, f2= "<<p0.y()<<", "<<p1.y()<<", "<<p2.y() <<std::endl;
+         std::cout<<"x0, x1, x2= "<<p0.x()<<", "<<p1.x()<<", "<<p2.x() <<std::endl;
+         std::cout<<"f0, f1, f2= "<<p0.y()<<", "<<p1.y()<<", "<<p2.y() <<std::endl;
          std::cout << "slamax = " << slamax << std::endl;
-          std::cout<<"p2-p0,p1: "<<p2.y() - p0.y()<<", "<<p2.y() - p1.y()<<std::endl;
-          std::cout<<"a, b, c= "<<pb.a()<<" "<<pb.b()<<" "<<pb.c()<<std::endl;
+         std::cout<<"p2-p0,p1: "<<p2.y() - p0.y()<<", "<<p2.y() - p1.y()<<std::endl;
+         std::cout<<"a, b, c= "<<pb.a()<<" "<<pb.b()<<" "<<pb.c()<<std::endl;
       }
       if(pb.a() < prec.Eps2()) {
          double slopem = 2.*pb.a()*xvmin + pb.b();
@@ -319,9 +319,9 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
    } while(niter < maxiter);
    
    if (debug) { 
-     std::cout<<"f1, f2= "<<p0.y()<<", "<<p1.y()<<std::endl;
-     std::cout<<"x1, x2= "<<p0.x()<<", "<<p1.x()<<std::endl;
-     std::cout<<"x, f= "<<xvmin<<", "<<fvmin<<std::endl;
+      std::cout<<"f1, f2= "<<p0.y()<<", "<<p1.y()<<std::endl;
+      std::cout<<"x1, x2= "<<p0.x()<<", "<<p1.x()<<std::endl;
+      std::cout<<"x, f= "<<xvmin<<", "<<fvmin<<std::endl;
    }
    return MnParabolaPoint(xvmin, fvmin);
 
@@ -338,10 +338,10 @@ MnParabolaPoint MnLineSearch::CubicSearch(const MnFcn& fcn, const MinimumParamet
 
 
   if (debug) {
-      std::cout<<"gdel= "<<gdel<<std::endl;
-      std::cout<<"g2del= "<<g2del<<std::endl;
-      std::cout<<"step= "<<step<<std::endl;
-   }
+     std::cout<<"gdel= "<<gdel<<std::endl;
+     std::cout<<"g2del= "<<g2del<<std::endl;
+     std::cout<<"step= "<<step<<std::endl;
+  }
    
    // change ot large values
    double overal = 100.;
@@ -566,7 +566,7 @@ MnParabolaPoint MnLineSearch::CubicSearch(const MnFcn& fcn, const MinimumParamet
 
 MnParabolaPoint MnLineSearch::BrentSearch(const MnFcn& fcn, const MinimumParameters& st, const MnAlgebraicVector& step, double gdel, double g2del,  const MnMachinePrecision& prec, bool debug) const {
 
-  if (debug) {
+   if (debug) {
       std::cout<<"gdel= "<<gdel<<std::endl;
       std::cout<<"g2del= "<<g2del<<std::endl;
       for (unsigned int i = 0; i < step.size(); ++i) { 
