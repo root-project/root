@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TStreamerInfo.cxx,v 1.251 2007/02/15 15:29:59 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TStreamerInfo.cxx,v 1.252 2007/03/01 10:37:51 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -2394,7 +2394,19 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
       R__b >> fElements;
       R__b.CheckByteCount(R__s, R__c, TStreamerInfo::IsA());
    } else {
-      R__b.WriteClassBuffer(TStreamerInfo::Class(),this);
+//      R__b.WriteClassBuffer(TStreamerInfo::Class(),this);
+      UInt_t R__c = R__b.WriteVersion(TStreamerInfo::IsA(), kTRUE);
+      R__b.ClassBegin(TStreamerInfo::Class());
+      R__b.ClassMember("TNamed");
+      TNamed::Streamer(R__b);
+      R__b.ClassMember("fCheckSum","UInt_t");
+      R__b << fCheckSum;
+      R__b.ClassMember("fClassVersion","Int_t");
+      R__b << fClassVersion;
+      R__b.ClassMember("fElements","TObjArray*");
+      R__b << fElements;
+      R__b.ClassEnd(TStreamerInfo::Class());
+      R__b.SetByteCount(R__c, kTRUE);
    }
 }
 
