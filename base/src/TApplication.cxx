@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.81 2007/02/21 09:52:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.82 2007/02/26 17:24:30 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -195,17 +195,10 @@ void TApplication::InitializeGraphics()
 
    if (fgGraphInit)
       return;
+   fgGraphInit = kTRUE;
+
    // Load the graphics related libraries
    LoadGraphicsLibs();
-
-   // Create WM dependent application environment
-   if (fAppImp)
-      delete fAppImp;
-   fAppImp = gGuiFactory->CreateApplicationImp(gROOT->GetName(), &fArgc, fArgv);
-   if (!fAppImp) {
-      MakeBatch();
-      fAppImp = gGuiFactory->CreateApplicationImp(gROOT->GetName(), &fArgc, fArgv);
-   }
 
    // Try to load TrueType font renderer. Only try to load if not in batch
    // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
@@ -235,6 +228,15 @@ void TApplication::InitializeGraphics()
       delete [] ttfont;
    }
 
+   // Create WM dependent application environment
+   if (fAppImp)
+      delete fAppImp;
+   fAppImp = gGuiFactory->CreateApplicationImp(gROOT->GetName(), &fArgc, fArgv);
+   if (!fAppImp) {
+      MakeBatch();
+      fAppImp = gGuiFactory->CreateApplicationImp(gROOT->GetName(), &fArgc, fArgv);
+   }
+
    // Create the canvas colors early so they are allocated before
    // any color table expensive bitmaps get allocated in GUI routines (like
    // creation of XPM bitmaps).
@@ -252,7 +254,6 @@ void TApplication::InitializeGraphics()
          if (h > 0 && h < 1000) gStyle->SetScreenFactor(0.0011*h);
       }
    }
-   fgGraphInit = kTRUE;
 }
 
 //______________________________________________________________________________
