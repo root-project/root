@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.335 2007/02/16 16:57:09 couet Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.336 2007/02/28 18:04:28 couet Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1272,9 +1272,9 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
    //   the result of comparison of the unweighted histogram with 200 events
    //   (minimal expected frequency equal to one) and the weighted histogram with
    //   500 events (minimal expected frequency equal to 25)
-   //Begin_Html
-   //   <img src="gif/chi2_plot1.jpg"> 
-   //End_Html
+   //Begin_Macro
+   // ../../../tutorials/math/chi2test.C
+   //End_Macro
    //   Fig 1. An example of comparison of the unweighted histogram with 200 events
    //   and the weighted histogram with 500 events:
    //      a) unweighted histogram;
@@ -1289,14 +1289,14 @@ Double_t TH1::Chi2Test(const TH1* h2, Option_t *option, Double_t *res) const
    //   (see Fig. 1d) of residuals are regular and we cannot identify the outliers
    //   or bins with a big influence on Begin_Latex #chi^{2} End_Latex.
    //
-   //   The second example presented the same two histograms but 17 events was added
+   //   The second example presents the same two histograms but 17 events was added
    //   to content of bin number 15 in unweighted histogram. Fig.2 shows the result
    //   of comparison of the unweighted histogram with 217 events (minimal expected
    //   frequency equal to one) and the weighted histogram with 500 events (minimal
    //   expected frequency equal to 25)
-   //Begin_Html
-   //   <img src="gif/chi2_plot2.jpg">
-   //End_Html
+   //Begin_Macro
+   // ../../../tutorials/math/chi2test.C(17)
+   //End_Macro
    //   Fig 2. An example of comparison of the unweighted histogram with 217 events
    //   and the weighted histogram with 500 events:
    //      a) unweighted histogram;
