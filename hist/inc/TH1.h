@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.86 2007/02/01 14:21:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.87 2007/02/01 14:58:44 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -188,6 +188,7 @@ public:
    virtual Style_t  GetLabelFont(Option_t *axis="X") const;
    virtual Float_t  GetLabelOffset(Option_t *axis="X") const;
    virtual Float_t  GetLabelSize(Option_t *axis="X") const;
+   virtual Style_t  GetTitleFont(Option_t *axis="X") const;
    virtual Float_t  GetTitleOffset(Option_t *axis="X") const;
    virtual Float_t  GetTitleSize(Option_t *axis="X") const;
    virtual Float_t  GetTickLength(Option_t *axis="X") const;
@@ -315,6 +316,7 @@ public:
    virtual void     SetStats(Bool_t stats=kTRUE);
    virtual void     SetOption(Option_t *option=" ") {fOption = option;}
    virtual void     SetTickLength(Float_t length=0.02, Option_t *axis="X");
+   virtual void     SetTitleFont(Style_t font=62, Option_t *axis="X");
    virtual void     SetTitleOffset(Float_t offset=1, Option_t *axis="X");
    virtual void     SetTitleSize(Float_t size=0.02, Option_t *axis="X");
    virtual void     SetTitle(const char *title);  // *MENU*

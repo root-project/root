@@ -1,6 +1,5 @@
-// @(#)root/hist:$Name:  $:$Id: Haxis.cxx,v 1.4 2003/08/07 10:13:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: Haxis.cxx,v 1.5 2006/05/17 16:37:25 couet Exp $
 // Author: Rene Brun   18/05/95
-// ---------------------------------- haxis.C
 
 #include <string.h>
 #include <stdio.h>
@@ -21,6 +20,7 @@ Int_t TH1::AxisChoice( Option_t *axis) const
    return 0;
 }
 
+
 //______________________________________________________________________________
 Int_t TH1::GetNdivisions( Option_t *axis) const
 {
@@ -32,6 +32,7 @@ Int_t TH1::GetNdivisions( Option_t *axis) const
    if (ax == 3) return fZaxis.GetNdivisions();
    return 0;
 }
+
 
 //______________________________________________________________________________
 Color_t TH1::GetAxisColor( Option_t *axis) const
@@ -45,6 +46,7 @@ Color_t TH1::GetAxisColor( Option_t *axis) const
    return 0;
 }
 
+
 //______________________________________________________________________________
 Color_t TH1::GetLabelColor( Option_t *axis) const
 {
@@ -56,6 +58,7 @@ Color_t TH1::GetLabelColor( Option_t *axis) const
    if (ax == 3) return fZaxis.GetLabelColor();
    return 0;
 }
+
 
 //______________________________________________________________________________
 Style_t TH1::GetLabelFont( Option_t *axis) const
@@ -69,6 +72,7 @@ Style_t TH1::GetLabelFont( Option_t *axis) const
    return 0;
 }
 
+
 //______________________________________________________________________________
 Float_t TH1::GetLabelOffset( Option_t *axis) const
 {
@@ -80,6 +84,7 @@ Float_t TH1::GetLabelOffset( Option_t *axis) const
    if (ax == 3) return fZaxis.GetLabelOffset();
    return 0;
 }
+
 
 //______________________________________________________________________________
 Float_t TH1::GetLabelSize( Option_t *axis) const
@@ -93,6 +98,7 @@ Float_t TH1::GetLabelSize( Option_t *axis) const
    return 0;
 }
 
+
 //______________________________________________________________________________
 Float_t TH1::GetTickLength( Option_t *axis) const
 {
@@ -104,6 +110,20 @@ Float_t TH1::GetTickLength( Option_t *axis) const
    if (ax == 3) return fZaxis.GetTickLength();
    return 0;
 }
+
+
+//______________________________________________________________________________
+Style_t TH1::GetTitleFont( Option_t *axis) const
+{
+   // Return the "axis" title font.
+
+   Int_t ax = AxisChoice(axis);
+   if (ax == 1) return fXaxis.GetTitleFont();
+   if (ax == 2) return fYaxis.GetTitleFont();
+   if (ax == 3) return fZaxis.GetTitleFont();
+   return 0;
+}
+
 
 //______________________________________________________________________________
 Float_t TH1::GetTitleOffset( Option_t *axis) const
@@ -117,6 +137,7 @@ Float_t TH1::GetTitleOffset( Option_t *axis) const
    return 0;
 }
 
+
 //______________________________________________________________________________
 Float_t TH1::GetTitleSize( Option_t *axis) const
 {
@@ -129,27 +150,48 @@ Float_t TH1::GetTitleSize( Option_t *axis) const
    return 0;
 }
 
+
 //______________________________________________________________________________
 void TH1::SetNdivisions(Int_t n, Option_t *axis)
 {
-   // Set the "axis" number of divisions.
+   // Set the number of divisions to draw an axis.
+   //  ndiv      : Number of divisions.
+   //
+   //       n = N1 + 100*N2 + 10000*N3
+   //       N1=number of primary divisions.
+   //       N2=number of secondary divisions.
+   //       N3=number of 3rd divisions.
+   //           e.g.:
+   //           nndi=0 --> no tick marks.
+   //           nndi=2 --> 2 divisions, one tick mark in the middle
+   //                      of the axis.
+   // axis specifies which axis ("x","y","z"), default = "x"
+   // if axis="xyz" set all 3 axes
 
-   Int_t ax = AxisChoice(axis);
-   if (ax == 1) fXaxis.SetNdivisions(n);
-   if (ax == 2) fYaxis.SetNdivisions(n);
-   if (ax == 3) fZaxis.SetNdivisions(n);
+   TString opt = axis;
+   opt.ToLower();
+
+   if (opt.Contains("x")) fXaxis.SetNdivisions(n);
+   if (opt.Contains("y")) fYaxis.SetNdivisions(n);
+   if (opt.Contains("z")) fZaxis.SetNdivisions(n);
 }
+
 
 //______________________________________________________________________________
 void TH1::SetAxisColor(Color_t color, Option_t *axis)
 {
-   // Set the "axis" color.
+   // Set color to draw the axis line and tick marks.
+   // axis specifies which axis ("x","y","z"), default = "x"
+   // if axis="xyz" set all 3 axes
 
-   Int_t ax = AxisChoice(axis);
-   if (ax == 1) fXaxis.SetAxisColor(color);
-   if (ax == 2) fYaxis.SetAxisColor(color);
-   if (ax == 3) fZaxis.SetAxisColor(color);
+   TString opt = axis;
+   opt.ToLower();
+
+   if (opt.Contains("x")) fXaxis.SetAxisColor(color);
+   if (opt.Contains("y")) fYaxis.SetAxisColor(color);
+   if (opt.Contains("z")) fZaxis.SetAxisColor(color);
 }
+
 
 //______________________________________________________________________________
 void TH1::SetAxisRange(Axis_t xmin, Axis_t xmax, Option_t *axis)
@@ -171,79 +213,149 @@ void TH1::SetAxisRange(Axis_t xmin, Axis_t xmax, Option_t *axis)
    theAxis->SetRange(bin1, bin2);
 }
 
+
 //______________________________________________________________________________
 void TH1::SetLabelColor(Color_t color, Option_t *axis)
 {
-   // Set the "axis" label color.
+   // Set axis labels color.
+   // axis specifies which axis ("x","y","z"), default = "x"
+   // if axis="xyz" set all 3 axes
 
-   Int_t ax = AxisChoice(axis);
-   if (ax == 1) fXaxis.SetLabelColor(color);
-   if (ax == 2) fYaxis.SetLabelColor(color);
-   if (ax == 3) fZaxis.SetLabelColor(color);
+   TString opt = axis;
+   opt.ToLower();
+
+   if (opt.Contains("x")) fXaxis.SetLabelColor(color);
+   if (opt.Contains("y")) fYaxis.SetLabelColor(color);
+   if (opt.Contains("z")) fZaxis.SetLabelColor(color);
 }
+
 
 //______________________________________________________________________________
 void TH1::SetLabelFont(Style_t font, Option_t *axis)
 {
-   // Set the "axis" label font.
+   // Set font number used to draw axis labels.
+   // font  : Text font code = 10*fontnumber + precision
+   //         Font numbers must be between 1 and 14
+   //         precision = 1 fast hardware fonts (steps in the size)
+   //         precision = 2 scalable and rotatable hardware fonts
+   // The default font number is 62.
+   // axis specifies which axis ("x","y","z"), default = "x"
+   // if axis="xyz" set all 3 axes
 
-   Int_t ax = AxisChoice(axis);
-   if (ax == 1) fXaxis.SetLabelFont(font);
-   if (ax == 2) fYaxis.SetLabelFont(font);
-   if (ax == 3) fZaxis.SetLabelFont(font);
+   TString opt = axis;
+   opt.ToLower();
+
+   if (opt.Contains("x")) fXaxis.SetLabelFont(font);
+   if (opt.Contains("y")) fYaxis.SetLabelFont(font);
+   if (opt.Contains("z")) fZaxis.SetLabelFont(font);
 }
+
 
 //______________________________________________________________________________
 void TH1::SetLabelOffset(Float_t offset, Option_t *axis)
 {
-   // Set the "axis" label offset.
+   // Set offset between axis and axis' labels.
+   // The offset is expressed as a percent of the pad height.
+   // axis specifies which axis ("x","y","z"), default = "x"
+   // if axis="xyz" set all 3 axes
 
-   Int_t ax = AxisChoice(axis);
-   if (ax == 1) fXaxis.SetLabelOffset(offset);
-   if (ax == 2) fYaxis.SetLabelOffset(offset);
-   if (ax == 3) fZaxis.SetLabelOffset(offset);
+   TString opt = axis;
+   opt.ToLower();
+
+   if (opt.Contains("x")) fXaxis.SetLabelOffset(offset);
+   if (opt.Contains("y")) fYaxis.SetLabelOffset(offset);
+   if (opt.Contains("z")) fZaxis.SetLabelOffset(offset);
 }
+
 
 //______________________________________________________________________________
 void TH1::SetLabelSize(Float_t size, Option_t *axis)
 {
-   // Set the "axis" label size.
+   // Set size of axis' labels.
+   // The size is expressed as a percent of the pad height.
+   // axis specifies which axis ("x","y","z"), default = "x"
+   // if axis="xyz" set all 3 axes
 
-   Int_t ax = AxisChoice(axis);
-   if (ax == 1) fXaxis.SetLabelSize(size);
-   if (ax == 2) fYaxis.SetLabelSize(size);
-   if (ax == 3) fZaxis.SetLabelSize(size);
+   TString opt = axis;
+   opt.ToLower();
+
+   if (opt.Contains("x")) fXaxis.SetLabelSize(size);
+   if (opt.Contains("y")) fYaxis.SetLabelSize(size);
+   if (opt.Contains("z")) fZaxis.SetLabelSize(size);
 }
+
 
 //______________________________________________________________________________
 void TH1::SetTickLength(Float_t length, Option_t *axis)
 {
-   // Set the "axis" tick length.
+   // Set the axis' tick marks length.
+   // axis specifies which axis ("x","y","z"), default = "x"
+   // if axis="xyz" set all 3 axes
 
-   Int_t ax = AxisChoice(axis);
-   if (ax == 1) fXaxis.SetTickLength(length);
-   if (ax == 2) fYaxis.SetTickLength(length);
-   if (ax == 3) fZaxis.SetTickLength(length);
+   TString opt = axis;
+   opt.ToLower();
+
+   if (opt.Contains("x")) fXaxis.SetTickLength(length);
+   if (opt.Contains("y")) fYaxis.SetTickLength(length);
+   if (opt.Contains("z")) fZaxis.SetTickLength(length);
 }
+
+
+//______________________________________________________________________________
+void TH1::SetTitleFont(Style_t font, Option_t *axis)
+{
+   // The the axis' title font.
+   // if axis =="x"  set the X axis title font
+   // if axis =="y"  set the Y axis title font
+   // if axis =="z"  set the Z axis title font
+   // any other value of axis will set the pad title font
+   //
+   // if axis="xyz" set all 3 axes
+
+   TString opt = axis;
+   opt.ToLower();
+
+   if (opt.Contains("x")) fXaxis.SetTitleFont(font);
+   if (opt.Contains("y")) fYaxis.SetTitleFont(font);
+   if (opt.Contains("z")) fZaxis.SetTitleFont(font);
+}
+
 
 //______________________________________________________________________________
 void TH1::SetTitleOffset(Float_t offset, Option_t *axis)
 {
-   // Set the "axis" title offset.
+   // Specify a parameter offset to control the distance between the axis
+   // and the axis' title.
+   // offset = 1 means : use the default distance
+   // offset = 1.2 means: the distance will be 1.2*(default distance)
+   // offset = 0.8 means: the distance will be 0.8*(default distance)
+   //
+   // axis specifies which axis ("x","y","z"), default = "x"
+   // if axis="xyz" set all 3 axes
 
-   Int_t ax = AxisChoice(axis);
-   if (ax == 1) fXaxis.SetTitleOffset(offset);
-   if (ax == 2) fYaxis.SetTitleOffset(offset);
-   if (ax == 3) fZaxis.SetTitleOffset(offset);
+   TString opt = axis;
+   opt.ToLower();
+
+   if (opt.Contains("x")) fXaxis.SetTitleOffset(offset);
+   if (opt.Contains("y")) fYaxis.SetTitleOffset(offset);
+   if (opt.Contains("z")) fZaxis.SetTitleOffset(offset);
 }
+
 
 //______________________________________________________________________________
 void TH1::SetTitleSize(Float_t size, Option_t *axis)
 {
-   // Set the "axis" title size.
+   // The the axis' title size.
+   // if axis = "x" set the X axis title size
+   // if axis = "y" set the Y axis title size
+   // if axis = "z" set the Z axis title size
+   //
+   // if axis ="xyz" set all 3 axes
 
-   Int_t ax = AxisChoice(axis);
-   if (ax == 1) fXaxis.SetTitleSize(size);
-   if (ax == 2) fYaxis.SetTitleSize(size);
-   if (ax == 3) fZaxis.SetTitleSize(size);
+   TString opt = axis;
+   opt.ToLower();
+
+   if (opt.Contains("x")) fXaxis.SetTitleSize(size);
+   if (opt.Contains("y")) fYaxis.SetTitleSize(size);
+   if (opt.Contains("z")) fZaxis.SetTitleSize(size);
 }
