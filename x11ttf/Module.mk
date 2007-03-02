@@ -71,7 +71,8 @@ distclean::     distclean-x11ttf
 
 ##### extra rules ######
 $(X11TTFO) $(X11TTFDO): $(FREETYPEDEP)
-$(X11TTFO) $(X11TTFDO): CXXFLAGS += $(FREETYPEINC)
 ifeq ($(PLATFORM),macosx)
-$(X11TTFO) $(X11TTFDO): CXXFLAGS += -I/usr/X11R6/include
+$(X11TTFO) $(X11TTFDO): CXXFLAGS += -I/usr/X11R6/include $(FREETYPEINC)
+else
+$(X11TTFO) $(X11TTFDO): CXXFLAGS += $(FREETYPEINC)
 endif
