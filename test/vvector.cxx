@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.21 2005/12/22 09:54:37 brun Exp $
+// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.22 2007/02/03 08:44:41 brun Exp $
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -47,7 +47,7 @@ int main(int argc,char **argv)
           verbose = 1;
           break;
         default:
-          Fatal("Unknown flag -%s",&c);
+          Error("vvector", "unknown flag -%c",c);
           break;
       }
     }

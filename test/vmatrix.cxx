@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.31 2006/10/16 11:42:18 brun Exp $
+// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.32 2007/02/03 08:44:41 brun Exp $
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -73,7 +73,7 @@ int main(int argc,char **argv)
           verbose = 1;
           break;
         default:
-          Fatal("Unknown flag -%s",&c);
+          Error("vmatrix", "unknown flag -%c",c);
           break;
       }
     }
