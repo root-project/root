@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.h,v 1.4 2003/01/22 11:23:05 rdm Exp $
+// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.h,v 1.5 2007/02/20 09:44:44 rdm Exp $
 // Author: Olivier Couet     01/10/02
 // Author: Fons Rademakers   21/11/98
 
@@ -65,6 +65,7 @@ public:
    TGX11TTF(const TGX11 &org);
    virtual ~TGX11TTF();
 
+   Bool_t Init(void *display);
    void   DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                    const char *text, ETextMode mode);
    void   SetTextFont(Font_t fontnumber);

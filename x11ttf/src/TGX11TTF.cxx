@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.15 2007/02/20 13:25:21 brun Exp $
+// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.16 2007/03/01 01:09:34 rdm Exp $
 // Author: Valeriy Onuchin (Xft support)  02/10/07
 // Author: Olivier Couet     01/10/02
 // Author: Fons Rademakers   21/11/98
@@ -41,8 +41,8 @@ public:
    XftFont       *fXftFont;      // xft font
 
    TXftFontData(FontStruct_t font, XftFont *xftfont, const char *name) :
-      TNamed(name, ""), TRefCnt(), fXftFont(xftfont) 
-   {  
+      TNamed(name, ""), TRefCnt(), fXftFont(xftfont)
+   {
       SetRefCount(1);
       fFontStruct = (XFontStruct*)font;
    }
@@ -100,7 +100,7 @@ public:
 
    void FreeFont(TXftFontData *data)
    {
-      if (data->RemoveReference() > 0)  return;  
+      if (data->RemoveReference() > 0)  return;
       fList->Remove(data);
       delete data;
    }
@@ -145,12 +145,6 @@ TGX11TTF::TGX11TTF(const TGX11 &org) : TGX11(org)
 
    if (!TTF::fgInit) TTF::Init();
 
-   if (fDepth > 8) {
-      TTF::SetSmoothing(kTRUE);
-   } else {
-      TTF::SetSmoothing(kFALSE);
-   }
-
    fHasTTFonts = kTRUE;
 
 #ifdef R__HAS_XFT
@@ -164,6 +158,22 @@ TGX11TTF::TGX11TTF(const TGX11 &org) : TGX11(org)
 //______________________________________________________________________________
 TGX11TTF::~TGX11TTF()
 {
+}
+
+//______________________________________________________________________________
+Bool_t TGX11TTF::Init(void *display)
+{
+   // Initialize X11 system. Returns kFALSE in case of failure.
+
+   Bool_t r = TGX11::Init(display);
+
+   if (fDepth > 8) {
+      TTF::SetSmoothing(kTRUE);
+   } else {
+      TTF::SetSmoothing(kFALSE);
+   }
+
+   return r;
 }
 
 //______________________________________________________________________________
