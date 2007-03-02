@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnLineSearch.cxx,v 1.6 2007/02/09 17:24:50 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnLineSearch.cxx,v 1.7 2007/03/01 08:12:57 brun Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -337,11 +337,11 @@ MnParabolaPoint MnLineSearch::CubicSearch(const MnFcn& fcn, const MinimumParamet
 
 
 
-  if (debug) {
-     std::cout<<"gdel= "<<gdel<<std::endl;
-     std::cout<<"g2del= "<<g2del<<std::endl;
-     std::cout<<"step= "<<step<<std::endl;
-  }
+   if (debug) {
+      std::cout<<"gdel= "<<gdel<<std::endl;
+      std::cout<<"g2del= "<<g2del<<std::endl;
+      std::cout<<"step= "<<step<<std::endl;
+   }
    
    // change ot large values
    double overal = 100.;
