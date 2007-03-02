@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.154 2007/02/12 15:37:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.155 2007/02/18 17:03:24 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1509,6 +1509,10 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
          Info("Load", "loaded library %s, status %d", path, i);
       delete [] path;
    }
+
+   if ((strstr(module, "Gui")) ||
+       (strstr(module, "Gpad")))
+      gApplication->InitializeGraphics();
 
    if (!entry || !entry[0]) return i;
 

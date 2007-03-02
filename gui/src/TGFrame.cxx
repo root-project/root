@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.145 2007/02/22 15:24:44 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.146 2007/02/26 14:39:47 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -599,8 +599,6 @@ ULong_t TGFrame::GetDefaultFrameBackground()
 {
    // Get default frame background.
 
-   // make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
    static Bool_t init = kFALSE;
    if (!init && gClient) {
       fgDefaultFrameBackground = gClient->GetResourcePool()->GetFrameBgndColor();
@@ -614,8 +612,6 @@ ULong_t TGFrame::GetDefaultSelectedBackground()
 {
    // Get default selected frame background.
 
-   // make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
    static Bool_t init = kFALSE;
    if (!init && gClient) {
       fgDefaultSelectedBackground = gClient->GetResourcePool()->GetSelectedBgndColor();
@@ -629,8 +625,6 @@ ULong_t TGFrame::GetWhitePixel()
 {
    // Get white pixel value.
 
-   // make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
    static Bool_t init = kFALSE;
    if (!init && gClient) {
       fgWhitePixel = gClient->GetResourcePool()->GetWhiteColor();
@@ -644,8 +638,6 @@ ULong_t TGFrame::GetBlackPixel()
 {
    // Get black pixel value.
 
-   // make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
    static Bool_t init = kFALSE;
    if (!init && gClient) {
       fgBlackPixel = gClient->GetResourcePool()->GetBlackColor();
@@ -659,8 +651,6 @@ const TGGC &TGFrame::GetBlackGC()
 {
    // Get black graphics context.
 
-   // make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
    if (!fgBlackGC && gClient)
       fgBlackGC = gClient->GetResourcePool()->GetBlackGC();
    return *fgBlackGC;
@@ -671,8 +661,6 @@ const TGGC &TGFrame::GetWhiteGC()
 {
    // Get white graphics context.
 
-   // make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
    if (!fgWhiteGC && gClient)
       fgWhiteGC = gClient->GetResourcePool()->GetWhiteGC();
    return *fgWhiteGC;
@@ -683,8 +671,6 @@ const TGGC &TGFrame::GetHilightGC()
 {
    // Get highlight color graphics context.
 
-   // make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
    if (!fgHilightGC && gClient)
       fgHilightGC = gClient->GetResourcePool()->GetFrameHiliteGC();
    return *fgHilightGC;
@@ -695,8 +681,6 @@ const TGGC &TGFrame::GetShadowGC()
 {
    // Get shadow color graphics context.
 
-   // make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
    if (!fgShadowGC && gClient)
       fgShadowGC = gClient->GetResourcePool()->GetFrameShadowGC();
    return *fgShadowGC;
@@ -707,8 +691,6 @@ const TGGC &TGFrame::GetBckgndGC()
 {
    // Get background color graphics context.
 
-   // make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
    if (!fgBckgndGC && gClient)
       fgBckgndGC = gClient->GetResourcePool()->GetFrameBckgndGC();
    return *fgBckgndGC;

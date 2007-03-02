@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.165 2007/02/21 09:52:14 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.166 2007/02/27 21:37:07 pcanal Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -3438,61 +3438,13 @@ char *TWinNTSystem::DynamicPathName(const char *lib, Bool_t quiet)
    return name;
 }
 
-
-namespace {
-   struct TLibLoadRequest {
-      TLibLoadRequest(const char* m, const char* e, Bool_t s):
-         module(m), entry(e), system(s) {}
-      TString module;
-      TString entry;
-      Bool_t system;
-   };
-}
-
 //______________________________________________________________________________
 int TWinNTSystem::Load(const char *module, const char *entry, Bool_t system)
 {
    // Load a shared library. Returns 0 on successful loading, 1 in
    // case lib was already loaded and -1 in case lib does not exist
    // or in case of error.
-   // Stacks load requests to make it re-entrant; stacked requests will 
-   // always return 0.
-
-   static std::list<TLibLoadRequest> loadRequests;
-   static Bool_t busy = kFALSE;
-
-   TLibLoadRequest request(module, entry, system);
-   if (!busy) {
-      int ret = 0;
-      int returnvalue = 0;
-      busy = kTRUE;
-      Bool_t haveLoadRequests = kFALSE;
-      Bool_t firstIter = kTRUE;
-      do {
-         ret = TSystem::Load(request.module, request.entry, request.system);
-         if (firstIter) {
-            returnvalue = ret;
-            firstIter = kFALSE;
-         }
-         ::EnterCriticalSection(&fCritSectLoad);
-         haveLoadRequests = !loadRequests.empty();
-         if (haveLoadRequests) {
-            request.module = loadRequests.begin()->module;
-            request.entry = loadRequests.begin()->entry;
-            request.system = loadRequests.begin()->system;
-            loadRequests.pop_front();
-         }
-         ::LeaveCriticalSection(&fCritSectLoad);
-      } while (haveLoadRequests);
-      busy = kFALSE;
-      return returnvalue;
-   }
-
-   // stack request
-   ::EnterCriticalSection(&fCritSectLoad);
-   loadRequests.push_back(request);
-   ::LeaveCriticalSection(&fCritSectLoad);
-   return 0;
+   return TSystem::Load(module, entry, system);
 }
 
 //______________________________________________________________________________

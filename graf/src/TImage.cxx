@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.cxx,v 1.11 2007/02/27 13:08:20 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.cxx,v 1.12 2007/02/28 10:35:11 brun Exp $
 // Author: Fons Rademakers   15/10/2001
 
 /*************************************************************************
@@ -33,8 +33,6 @@ TImage *TImage::Create()
 {
    // Create an image. Use ReadImage() or SetImage() to initialize the image.
 
-   // make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
    static TPluginHandler *h = 0;
 
    if (!h) {

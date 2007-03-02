@@ -200,7 +200,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
    // If fShowSource is set, a second tab will be created which shows
    // the source.
 
-   static TApplication::TLoadGraphicsLibs loadTheGraphicsLibs;
+//   static TApplication::TLoadGraphicsLibs loadTheGraphicsLibs;
 
    if (!fMacro)
       return kFALSE;

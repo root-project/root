@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.28 2007/02/22 14:10:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.29 2007/03/01 01:09:02 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -45,9 +45,6 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
    // Create a new window. Parent p must exist otherwise the root window
    // is taken as parent. No arguments specified results in values from
    // parent to be taken (or defaults).
-
-   // make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
 
    UInt_t type = wtype;
    fId = 0;

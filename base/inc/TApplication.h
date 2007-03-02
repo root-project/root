@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.23 2007/02/22 14:10:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.24 2007/02/22 20:58:16 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -74,12 +74,6 @@ protected:
    void SetSignalHandler(TSignalHandler *sh) { fSigHandler = sh; }
 
 public:
-   // Load and initialize the graphics libraries
-   class TLoadGraphicsLibs {
-      public:
-      TLoadGraphicsLibs();
-   };
-
    TApplication(const char *appClassName, Int_t *argc, char **argv,
                 void *options = 0, Int_t numOptions = 0);
    virtual ~TApplication();
@@ -134,8 +128,5 @@ public:
 };
 
 R__EXTERN TApplication *gApplication;
-
-inline TApplication::TLoadGraphicsLibs::TLoadGraphicsLibs()
- { if (gApplication) gApplication->InitializeGraphics(); }
 
 #endif

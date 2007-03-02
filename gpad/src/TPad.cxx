@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.259 2007/02/21 17:01:19 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.260 2007/02/22 16:38:56 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -124,9 +124,6 @@ TPad::TPad()
 {
    // Pad default constructor.
 
-   //make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
-
    fModified   = kTRUE;
    fTip        = 0;
    fPadPointer = 0;
@@ -210,9 +207,6 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    //  bordermode = -1 box looks as it is behind the screen
    //  bordermode = 0  no special effects
    //  bordermode = 1  box looks as it is in front of the screen
-
-   //make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
 
    fModified   = kTRUE;
    fTip        = 0;

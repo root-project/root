@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.21 2007/02/16 14:44:03 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.22 2007/02/21 11:50:30 brun Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -91,8 +91,8 @@ TBrowser::TBrowser(const char *name, const char *title)
    // (depending on Rint.Canvas.UseScreenFactor to be true or false, default
    // is true).
 
-   //make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
+   // make sure that the Gpad and GUI libs are loaded
+   gApplication->InitializeGraphics();
    if (TClass::IsCallingNew()) {
       fImp = 0;
    } else {
@@ -113,8 +113,8 @@ TBrowser::TBrowser(const char *name, const char *title,
 {
    // Create a new browser with a name, title, width and height.
 
-   //make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
+   // make sure that the Gpad and GUI libs are loaded
+   gApplication->InitializeGraphics();
    fImp = gGuiFactory->CreateBrowserImp(this, title, width, height);
    Create();
 }
@@ -128,8 +128,8 @@ TBrowser::TBrowser(const char *name, const char *title,
 {
    // Create a new browser with a name, title, position, width and height.
 
-   //make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
+   // make sure that the Gpad and GUI libs are loaded
+   gApplication->InitializeGraphics();
    fImp = gGuiFactory->CreateBrowserImp(this, title, x, y, width, height);
    Create();
 }
@@ -141,8 +141,8 @@ TBrowser::TBrowser(const char *name, TObject *obj, const char *title)
 {
    // Create a new browser with a name, title, width and height for TObject *obj.
 
-   //make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
+   // make sure that the Gpad and GUI libs are loaded
+   gApplication->InitializeGraphics();
    Float_t cx = gStyle->GetScreenFactor();
    UInt_t w = UInt_t(cx*800);
    UInt_t h = UInt_t(cx*500);
@@ -159,8 +159,8 @@ TBrowser::TBrowser(const char *name, TObject *obj, const char *title,
 {
    // Create a new browser with a name, title, width and height for TObject *obj.
 
-   //make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
+   // make sure that the Gpad and GUI libs are loaded
+   gApplication->InitializeGraphics();
    fImp = gGuiFactory->CreateBrowserImp(this, title, width, height);
    Create(obj);
 }
@@ -174,8 +174,8 @@ TBrowser::TBrowser(const char *name, TObject *obj, const char *title,
 {
    // Create a new browser with a name, title, width and height for TObject *obj.
 
-   //make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
+   // make sure that the Gpad and GUI libs are loaded
+   gApplication->InitializeGraphics();
    fImp = gGuiFactory->CreateBrowserImp(this, title, x, y, width, height);
    Create(obj);
 }
@@ -188,8 +188,8 @@ TBrowser::TBrowser(const char *name, void *obj, TClass *cl,
 {
    // Create a new browser with a name, title, width and height for TObject *obj.
 
-   //make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
+   // make sure that the Gpad and GUI libs are loaded
+   gApplication->InitializeGraphics();
    Float_t cx = gStyle->GetScreenFactor();
    UInt_t w = UInt_t(cx*800);
    UInt_t h = UInt_t(cx*500);
@@ -208,8 +208,8 @@ TBrowser::TBrowser(const char *name, void *obj, TClass *cl,
 {
    // Create a new browser with a name, title, width and height for TObject *obj.
 
-   //make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
+   // make sure that the Gpad and GUI libs are loaded
+   gApplication->InitializeGraphics();
    fImp = gGuiFactory->CreateBrowserImp(this, title, width, height);
    Create(new TBrowserObject(obj,cl,objname));
 }
@@ -224,8 +224,8 @@ TBrowser::TBrowser(const char *name,void *obj,  TClass *cl,
 {
    // Create a new browser with a name, title, width and height for TObject *obj.
 
-   //make sure that the Gpad and GUI libs are loaded
-   static TApplication::TLoadGraphicsLibs loadGraphicsLibs;
+   // make sure that the Gpad and GUI libs are loaded
+   gApplication->InitializeGraphics();
    fImp = gGuiFactory->CreateBrowserImp(this, title, x, y, width, height);
    Create(new TBrowserObject(obj,cl,objname));
 }
