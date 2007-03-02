@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.84 2007/03/01 08:21:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.85 2007/03/01 08:57:19 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -161,7 +161,7 @@ TApplication::TApplication(const char *appClassName,
    gInterpreter->EnableAutoLoading();
 
    // Initialize the graphics environment
-   if (gClassTable->GetDict("TPad") && !fgGraphInit)
+   if (gClassTable->GetDict("TPad"))
       InitializeGraphics();
 
    // Make sure all registered dictionaries have been initialized
