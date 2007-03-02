@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.26 2007/01/12 16:03:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.27 2007/02/22 16:45:47 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -17,11 +17,13 @@
 #include "TVirtualX.h"
 #include "TError.h"
 #include "TMathBase.h"
+#include "TApplication.h"
 
 
 ClassImp(TColor)
 
 Bool_t TColor::fgGrayscaleMode = kFALSE;
+Bool_t TColor::fgInitDone = kFALSE;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -71,6 +73,7 @@ TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name,
    // Normal color constructor. Initialize a color structure.
    // Compute the RGB and HLS parameters
 
+   TColor::InitializeColors();
    // do not enter if color number already exist
    TColor *col = gROOT->GetColor(color);
    if (col) {
@@ -129,6 +132,122 @@ TColor::TColor(const TColor &color) : TNamed(color)
 }
 
 //______________________________________________________________________________
+void TColor::InitializeColors()
+{
+   // Initialize colors used by the TCanvas based graphics (via TColor objects).
+   // This method should be called before the ApplicationImp is created (which
+   // initializes the GUI colors).
+
+   if (fgInitDone)
+      return;
+   fgInitDone = kTRUE;
+   if (gROOT->GetListOfColors()->First() == 0) {
+      TColor *s0;
+      Float_t r, g, b, h, l, s;
+      Int_t   i;
+
+      new TColor(kWhite,1,1,1,"background");
+      new TColor(kBlack,0,0,0,"black");
+      new TColor(kRed,1,0,0,"red");
+      new TColor(kGreen,0,1,0,"green");
+      new TColor(kBlue,0,0,1,"blue");
+      new TColor(kYellow,1,1,0,"yellow");
+      new TColor(kMagenta,1,0,1,"magenta");
+      new TColor(kCyan,0,1,1,"cyan");
+      new TColor(10,0.999,0.999,0.999,"white");
+      new TColor(11,0.754,0.715,0.676,"editcol");
+
+      // The color white above is defined as being nearly white.
+      // Sets the associated dark color also to white.
+      TColor *c110 = gROOT->GetColor(110);
+      c110->SetRGB(0.999,0.999,.999);
+
+      // Initialize Custom colors
+      new TColor(20,0.8,0.78,0.67);
+      new TColor(31,0.54,0.66,0.63);
+      new TColor(41,0.83,0.81,0.53);
+      new TColor(30,0.52,0.76,0.64);
+      new TColor(32,0.51,0.62,0.55);
+      new TColor(24,0.70,0.65,0.59);
+      new TColor(21,0.8,0.78,0.67);
+      new TColor(47,0.67,0.56,0.58);
+      new TColor(35,0.46,0.54,0.57);
+      new TColor(33,0.68,0.74,0.78);
+      new TColor(39,0.5,0.5,0.61);
+      new TColor(37,0.43,0.48,0.52);
+      new TColor(38,0.49,0.6,0.82);
+      new TColor(36,0.41,0.51,0.59);
+      new TColor(49,0.58,0.41,0.44);
+      new TColor(43,0.74,0.62,0.51);
+      new TColor(22,0.76,0.75,0.66);
+      new TColor(45,0.75,0.51,0.47);
+      new TColor(44,0.78,0.6,0.49);
+      new TColor(26,0.68,0.6,0.55);
+      new TColor(28,0.53,0.4,0.34);
+      new TColor(25,0.72,0.64,0.61);
+      new TColor(27,0.61,0.56,0.51);
+      new TColor(23,0.73,0.71,0.64);
+      new TColor(42,0.87,0.73,0.53);
+      new TColor(46,0.81,0.37,0.38);
+      new TColor(48,0.65,0.47,0.48);
+      new TColor(34,0.48,0.56,0.6);
+      new TColor(40,0.67,0.65,0.75);
+      new TColor(29,0.69,0.81,0.78);
+
+      // Initialize some additional greyish non saturated colors
+      new TColor(8, 0.35,0.83,0.33);
+      new TColor(9, 0.35,0.33,0.85);
+      new TColor(12,.3,.3,.3,"grey12");
+      new TColor(13,.4,.4,.4,"grey13");
+      new TColor(14,.5,.5,.5,"grey14");
+      new TColor(15,.6,.6,.6,"grey15");
+      new TColor(16,.7,.7,.7,"grey16");
+      new TColor(17,.8,.8,.8,"grey17");
+      new TColor(18,.9,.9,.9,"grey18");
+      new TColor(19,.95,.95,.95,"grey19");
+      new TColor(50, 0.83,0.35,0.33);
+
+      // Initialize the Pretty Palette Spectrum Violet->Red
+      //   The color model used here is based on the HLS model which
+      //   is much more suitable for creating palettes than RGB.
+      //   Fixing the saturation and lightness we can scan through the
+      //   spectrum of visible light by using "hue" alone.
+      //   In Root hue takes values from 0 to 360.
+      Float_t  saturation = 1;
+      Float_t  lightness = 0.5;
+      Float_t  maxHue = 280;
+      Float_t  minHue = 0;
+      Int_t    maxPretty = 50;
+      Float_t  hue;
+
+      for (i=0 ; i<maxPretty ; i++) {
+         hue = maxHue-(i+1)*((maxHue-minHue)/maxPretty);
+         TColor::HLStoRGB(hue, lightness, saturation, r, g, b);
+         new TColor(i+51, r, g, b);
+      }
+
+      // Initialize special colors for x3d
+      for (i = 1; i < 8; i++) {
+         s0 = gROOT->GetColor(i);
+         s0->GetRGB(r,g,b);
+         if (i == 1) { r = 0.6; g = 0.6; b = 0.6; }
+         if (r == 1) r = 0.9; if (r == 0) r = 0.1;
+         if (g == 1) g = 0.9; if (g == 0) g = 0.1;
+         if (b == 1) b = 0.9; if (b == 0) b = 0.1;
+         TColor::RGBtoHLS(r,g,b,h,l,s);
+         TColor::HLStoRGB(h,0.6*l,s,r,g,b);
+         new TColor(200+4*i-3,r,g,b);
+         TColor::HLStoRGB(h,0.8*l,s,r,g,b);
+         new TColor(200+4*i-2,r,g,b);
+         TColor::HLStoRGB(h,1.2*l,s,r,g,b);
+         new TColor(200+4*i-1,r,g,b);
+         TColor::HLStoRGB(h,1.4*l,s,r,g,b);
+         new TColor(200+4*i  ,r,g,b);
+      }
+   }
+}
+
+//______________________________________________________________________________
 const char *TColor::AsHexString() const
 {
    // Return color as hexidecimal string. This string can be directly passed
@@ -167,8 +286,11 @@ ULong_t TColor::GetPixel() const
    // be used in the GUI classes. This call does not work in batch mode since
    // it needs to communicate with the graphics system.
 
-   if (gVirtualX && !gROOT->IsBatch())
+   if (gVirtualX && !gROOT->IsBatch()) {
+      if (gApplication)
+         gApplication->InitializeGraphics();
       return gVirtualX->GetPixel(fNumber);
+   }
 
    return 0;
 }
@@ -321,6 +443,7 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
 {
    // Initialize this color and its associated colors.
 
+   TColor::InitializeColors();
    fRed   = r;
    fGreen = g;
    fBlue  = b;
@@ -428,6 +551,7 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
    // with as name "#rrggbb" with rr, gg and bb in hex between
    // [0,FF].
 
+   TColor::InitializeColors();
    if (r < 0) r = 0;
    if (g < 0) g = 0;
    if (b < 0) b = 0;
@@ -488,6 +612,8 @@ ULong_t TColor::Number2Pixel(Int_t ci)
    // does not work in batch mode since it needs to communicate with the
    // graphics system.
 
+
+   TColor::InitializeColors();
    TColor *color = gROOT->GetColor(ci);
    if (color)
       return color->GetPixel();
@@ -622,6 +748,7 @@ void TColor::SetGrayscale(Bool_t set /*= kTRUE*/)
 
    if (!gVirtualX || gROOT->IsBatch()) return;
 
+   TColor::InitializeColors();
    TIter iColor(gROOT->GetListOfColors());
    TColor* color = 0;
    while ((color = (TColor*) iColor()))

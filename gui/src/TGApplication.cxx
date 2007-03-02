@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.13 2006/11/16 17:17:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.14 2007/02/13 14:23:15 rdm Exp $
 // Author: Guy Barrand   30/05/2001
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include "TVirtualX.h"
 #include "TStyle.h"
 #include "TInterpreter.h"
+#include "TColor.h"
 
 ClassImp(TGApplication)
 
@@ -104,7 +105,7 @@ TGApplication::TGApplication(const char *appClassName,
    // Create the canvas colors early so they are allocated before
    // any color table expensive bitmaps get allocated in GUI routines (like
    // creation of XPM bitmaps).
-   InitializeColors();
+   TColor::InitializeColors();
 
    // Set default screen factor (if not disabled in rc file)
    if (gEnv->GetValue("Canvas.UseScreenFactor", 1)) {

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.24 2007/02/22 20:58:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.25 2007/03/02 10:24:14 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -68,7 +68,6 @@ protected:
    TApplication();
 
    virtual void Help(const char *line);
-   virtual void InitializeColors();
    virtual void LoadGraphicsLibs();
    virtual void MakeBatch();
    void SetSignalHandler(TSignalHandler *sh) { fSigHandler = sh; }

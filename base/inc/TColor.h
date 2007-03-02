@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.12 2006/03/28 16:43:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.13 2006/07/03 16:10:43 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -53,6 +53,7 @@ private:
    Float_t       fSaturation;    //Saturation
    Float_t       fAlpha;         //Alpha (transparency)
    static Bool_t fgGrayscaleMode;//if set, GetColor will return grayscale
+   static Bool_t fgInitDone;     //kTRUE once ROOT colors have been initialized
 
    void           Allocate();
    static Float_t HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei);
@@ -82,6 +83,7 @@ public:
    virtual void  Print(Option_t *option="") const;
    virtual void  SetRGB(Float_t r, Float_t g, Float_t b);
 
+   static void    InitializeColors();
    static void    HLS2RGB(Float_t h, Float_t l, Float_t s, Float_t &r, Float_t &g, Float_t &b);
    static void    HLS2RGB(Int_t h, Int_t l, Int_t s, Int_t &r, Int_t &g, Int_t &b);
    static void    HLStoRGB(Float_t h, Float_t l, Float_t s, Float_t &r, Float_t &g, Float_t &b)
