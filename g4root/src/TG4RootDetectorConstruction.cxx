@@ -1,4 +1,4 @@
-// @(#)root/g4root:$Name:  $:$Id: TG4RootDetectorConstruction.cxx,v 1.4 2007/02/01 16:19:01 brun Exp $
+// @(#)root/g4root:$Name:  $:$Id: TG4RootDetectorConstruction.cxx,v 1.5 2007/02/23 11:12:38 brun Exp $
 // Author: Andrei Gheata   07/08/06
 
 /*************************************************************************
@@ -216,8 +216,14 @@ void TG4RootDetectorConstruction::CreateG4PhysicalVolumes()
    TGeoNode *node = fGeometry->GetTopNode();
    fTopPV = CreateG4PhysicalVolume(node);
    TGeoIterator next(fGeometry->GetTopVolume());
-   while ((node=next())) CreateG4PhysicalVolume(node);
-
+   TGeoNode *mother;
+   while ((node=next())) {
+      mother = next.GetNode(next.GetLevel()-1);
+      if (mother && node->GetMotherVolume() != mother->GetVolume())
+         node->SetMotherVolume(mother->GetVolume());
+      CreateG4PhysicalVolume(node);
+   }
+   
    G4cout << "===> GEANT4 physical volumes created and mapped to TGeo hierarchy..." << G4endl;
 }
 

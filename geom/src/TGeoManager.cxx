@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.173 2007/02/19 14:20:08 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.174 2007/02/26 16:10:37 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -483,6 +483,7 @@ TGeoManager::TGeoManager()
       fNNodes = 0;
       fLevel = 0;
       fNmany = 0;
+      fNextDaughterIndex = -2;
       fMaxVisNodes = 10000;
    
       memset(fLastPoint, 0, kN3);
@@ -602,6 +603,7 @@ void TGeoManager::Init()
    fNNodes = 0;
    fLevel = 0;
    fNmany = 0;
+   fNextDaughterIndex = -2;
    fMaxVisNodes = 10000;
    
    memset(fLastPoint, 0, kN3);
@@ -751,6 +753,7 @@ TGeoManager::TGeoManager(const TGeoManager& gm) :
   fOverlapClusters(gm.fOverlapClusters),
   fNLevel(gm.fNLevel),
   fNmany(gm.fNmany),
+  fNextDaughterIndex(gm.fNextDaughterIndex),
   fDblBuffer(gm.fDblBuffer),
   fPaintVolume(gm.fPaintVolume),
   fHashVolumes(gm.fHashVolumes),
@@ -859,6 +862,7 @@ TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
       fOverlapClusters=gm.fOverlapClusters;
       fNLevel=gm.fNLevel;
       fNmany=gm.fNmany;
+      fNextDaughterIndex=gm.fNextDaughterIndex;
       fDblBuffer=gm.fDblBuffer;
       fPaintVolume=gm.fPaintVolume;
       fHashVolumes=gm.fHashVolumes;
@@ -2025,6 +2029,39 @@ void TGeoManager::CdDown(Int_t index)
    if (fCurrentOverlapping) fNmany++;
    fLevel++;
 }
+
+//_____________________________________________________________________________
+void TGeoManager::CdNext()
+{
+// Do a cd to the node found next by FindNextBoundary
+   if (fNextDaughterIndex == -2) return;
+   if (fNextDaughterIndex <  -2) {
+      // Next node is a many - search it
+      while (fLevel && (fCurrentNode != fNextNode)) {
+         CdUp();
+         Int_t i = fCurrentNode->GetVolume()->GetIndex(fNextNode);
+         if (i>=0) CdDown(i);
+      }   
+      fNextDaughterIndex = -2;
+      return;
+   }   
+   if (fNextDaughterIndex == -1) {
+      CdUp();
+      while (fCurrentVolume->IsAssembly()) CdUp();
+      fNextDaughterIndex--;
+      return;
+   }
+   if (fCurrentNode && fNextDaughterIndex<fCurrentNode->GetNdaughters()) {
+      CdDown(fNextDaughterIndex);
+      Int_t nextindex = fCurrentNode->GetVolume()->GetNextNodeIndex();
+      while (nextindex>=0) {
+         CdDown(nextindex);
+         nextindex = fCurrentNode->GetVolume()->GetNextNodeIndex();
+      }   
+   }
+   fNextDaughterIndex = -2;
+}   
+   
 //_____________________________________________________________________________
 Bool_t TGeoManager::cd(const char *path)
 {
@@ -3197,6 +3234,7 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
 {
 // Returns the deepest node containing fPoint, which must be set a priori.
    Double_t point[3];
+   fNextDaughterIndex = -2;
    TGeoVolume *vol = 0;
    Bool_t inside_current = (fCurrentNode==skipnode)?kTRUE:kFALSE;
    if (!downwards) {
@@ -3717,6 +3755,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
 
    // convert current point and direction to local reference
    Int_t iact = 3;
+   fNextDaughterIndex = -2;
    fStep = TGeoShape::Big();
    fIsStepEntering = kFALSE;
    fIsStepExiting = kFALSE;
@@ -3773,7 +3812,8 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
       if (snext < fStep) {
          fIsStepEntering = kTRUE;
          fStep = snext;
-         Int_t indnext = fNextNode->GetVolume()->GetNextNodeIndex();;
+         Int_t indnext = fNextNode->GetVolume()->GetNextNodeIndex();
+         fNextDaughterIndex = indnext;
          while (indnext>=0) {
             fNextNode = fNextNode->GetDaughter(indnext);
             if (computeGlobal) fCurrentMatrix->Multiply(fNextNode->GetMatrix());
@@ -3790,6 +3830,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
    snext = vol->GetShape()->DistFromInside(&point[0], &dir[0], iact, fStep, &safe);
    if (snext < fStep) {
       fNextNode = fCurrentNode;
+      fNextDaughterIndex = -1;
       fIsStepExiting  = kTRUE;
       fStep = snext;
       fIsStepEntering = kFALSE;
@@ -3799,7 +3840,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
    // Find next daughter boundary for the current volume
    Int_t idaughter = -1;
    FindNextDaughterBoundary(point,dir,idaughter,computeGlobal);
-   
+   if (idaughter>=0) fNextDaughterIndex = idaughter;
    TGeoNode *current = 0;
    TGeoNode *dnode = 0;
    TGeoVolume *mother = 0;
@@ -3827,6 +3868,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
             fStep = snext;
             if (computeGlobal) *fCurrentMatrix = GetCurrentMatrix();
             fNextNode = fCurrentNode;
+            fNextDaughterIndex = -3;
          }
          // check overlapping nodes
          for (Int_t i=0; i<novlps; i++) {
@@ -3845,6 +3887,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
                   fIsStepEntering = kFALSE;
                   fStep = snext;
                   fNextNode = current;
+                  fNextDaughterIndex = -3;
                }
             } else {
                // another many - check if point is in or out
@@ -3860,8 +3903,9 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
                      if (dnode && computeGlobal) {
                         *fCurrentMatrix = GetCurrentMatrix();
                         fCurrentMatrix->Multiply(dnode->GetMatrix());
+                        fNextNode = dnode;
+                        fNextDaughterIndex = -3;
                      }
-                     fNextNode = dnode;
                      CdUp();
                   }   
                } else {
@@ -3875,6 +3919,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
                      fIsStepEntering = kFALSE;
                      fStep = snext;
                      fNextNode = current;
+                     fNextDaughterIndex = -3;
                   }               
                }  
             }
@@ -3920,6 +3965,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
                   fIsStepExiting  = kTRUE;
                   fStep = snext;
                   fNextNode = mother;
+                  fNextDaughterIndex = -3;
                   if (computeGlobal) *fCurrentMatrix = matrix;
                   while (up--) CdUp();
                   up = 1;
@@ -5011,14 +5057,29 @@ TGeoPhysicalNode *TGeoManager::MakePhysicalNode(const char *path)
 // makes physical node matching current modeller state.
    TGeoPhysicalNode *node;
    if (path) {
+      if (!CheckPath(path)) {
+         Error("MakePhysicalNode", "path: %s not valid", path);
+         return NULL;
+      }   
       node = new TGeoPhysicalNode(path);
    } else {
-      node = new TGeoPhysicalNode();
-      node->SetBranchAsState();
+      node = new TGeoPhysicalNode(GetPath());
    }
    fPhysicalNodes->Add(node);
    return node;
 }
+
+//_____________________________________________________________________________
+void TGeoManager::RefreshPhysicalNodes(Bool_t lock)
+{
+// Refresh physical nodes to reflect the actual geometry paths after alignment
+// was applied. Optionally locks physical nodes (default).
+
+   TIter next(gGeoManager->GetListOfPhysicalNodes());
+   TGeoPhysicalNode *pn;
+   while ((pn=(TGeoPhysicalNode*)next())) pn->Refresh();
+   if (lock) LockGeometry();
+}   
 
 //_____________________________________________________________________________
 void TGeoManager::ClearPhysicalNodes(Bool_t mustdelete)

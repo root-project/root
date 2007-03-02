@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.h,v 1.10 2007/02/12 10:22:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.h,v 1.11 2007/02/12 17:14:47 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -24,10 +24,6 @@
 #include "TAttLine.h"
 #endif
 
-#ifndef ROOT_TObject
-#include "TGeoNode.h"
-#endif
-
 // forward declarations
 class TGeoHMatrix;
 class TGeoMatrix;
@@ -41,8 +37,8 @@ class TGeoShape;
  *
  *************************************************************************/
 
-class TGeoPhysicalNode : public TObject,
-                 public TAttLine
+class TGeoPhysicalNode : public TNamed,
+                         public TAttLine
 {
 protected:
    Int_t             fLevel;          // depth in the geometry tree
@@ -54,6 +50,8 @@ protected:
    TGeoPhysicalNode& operator=(const TGeoPhysicalNode&);
 
    void              SetAligned(Bool_t flag=kTRUE) {TObject::SetBit(kGeoPNodeAligned,flag);}
+   Bool_t            SetPath(const char *path);
+   void              SetBranchAsState();
 
 public:
    enum {
@@ -76,7 +74,6 @@ public:
    TGeoHMatrix      *GetMatrix(Int_t level=-1) const;
    TGeoHMatrix      *GetOriginalMatrix() const {return fMatrixOrig;}
    TGeoNode         *GetMother(Int_t levup=1) const;
-   const char       *GetName() const;
    TGeoNode         *GetNode(Int_t level=-1) const;
    TGeoShape        *GetShape(Int_t level=-1) const;
    TGeoVolume       *GetVolume(Int_t level=-1) const;
@@ -87,8 +84,8 @@ public:
    Bool_t            IsVisible() const {return TObject::TestBit(kGeoPNodeVisible);}
    Bool_t            IsVisibleFull() const {return TObject::TestBit(kGeoPNodeFull);}
 
-   Bool_t            SetPath(const char *path);
-   void              SetBranchAsState();
+   virtual void      Print(Option_t *option="") const;
+   void              Refresh();
 
    void              SetIsVolAtt(Bool_t flag=kTRUE) {TObject::SetBit(kGeoPNodeVolAtt,flag);}
    void              SetVisibility(Bool_t flag=kTRUE)  {TObject::SetBit(kGeoPNodeVisible,flag);}

@@ -1,4 +1,4 @@
-// @(#)root/g4root:$Name:  $:$Id: TG4RootNavigator.cxx,v 1.5 2006/12/21 13:33:28 brun Exp $
+// @(#)root/g4root:$Name:  $:$Id: TG4RootNavigator.cxx,v 1.6 2007/02/26 16:10:37 brun Exp $
 // Author: Andrei Gheata   07/08/06
 
 /*************************************************************************
@@ -260,7 +260,7 @@ G4VPhysicalVolume *TG4RootNavigator::SynchronizeHistory()
 G4VPhysicalVolume* 
 TG4RootNavigator::LocateGlobalPointAndSetup(const G4ThreeVector& globalPoint,
                                             const G4ThreeVector* pGlobalDirection,
-                                            const G4bool relativeSearch,
+                                            const G4bool /*relativeSearch*/,
                                             const G4bool ignoreDirection)
 {
 // Locate the point in the hierarchy return 0 if outside
@@ -283,12 +283,11 @@ TG4RootNavigator::LocateGlobalPointAndSetup(const G4ThreeVector& globalPoint,
    fGeometry->SetCurrentPoint(globalPoint.x()*gCm, globalPoint.y()*gCm, globalPoint.z()*gCm);
    fEnteredDaughter = fExitedMother = kFALSE;
    Bool_t onBoundary = kFALSE;
-   Int_t index = -1;
    if (fStepEntering || fStepExiting) {
       Double_t d2 = (globalPoint.x()-fNextPoint.x())*(globalPoint.x()-fNextPoint.x()) +
                     (globalPoint.y()-fNextPoint.y())*(globalPoint.y()-fNextPoint.y()) +
                     (globalPoint.z()-fNextPoint.z())*(globalPoint.z()-fNextPoint.z());
-      if (d2 < 1.e-20) onBoundary = kTRUE;
+      if (d2 < 1.e-10) onBoundary = kTRUE;
 //      G4cout << G4endl << "    ON BOUNDARY" << "entering/exiting="<< fStepEntering << "/" << fStepExiting << G4endl;
    }
    if ((!ignoreDirection || onBoundary )&& pGlobalDirection) {
@@ -301,36 +300,19 @@ TG4RootNavigator::LocateGlobalPointAndSetup(const G4ThreeVector& globalPoint,
       fEnteredDaughter = fStepEntering;
       fExitedMother    = fStepExiting;
       TGeoNode *skip = fGeometry->GetCurrentNode();
-      if (fStepExiting) {
-         if (!fGeometry->GetLevel()) {
-            fGeometry->SetOutside();
-            return NULL;
-         }   
-         fGeometry->CdUp();
-      } else {
-         if (fStepEntering) {
-            if (fGeometry->IsOutside()) skip = 0;
-            TGeoNode *current = fGeometry->GetCurrentNode();
-            TGeoNode *next    = fGeometry->GetNextNode();
-            if (current && next!=skip) {
-               index = current->GetVolume()->GetIndex(next);
-               if (index>=0) fGeometry->CdDown(index);
-            }   
-         }   
-      }      
-      fGeometry->CrossBoundaryAndLocate(fStepEntering, skip);
-      if (fGeometry->GetCurrentNode()==skip) {
-      // We have problems crossing the boundary. Force the cross.
-//      if (fGeometry->IsSameLocation()) fForceCross = kTRUE;
-         if (index>=0) fGeometry->CdDown(index);
-         else          fGeometry->CdUp();
+      if (fGeometry->IsOutside()) skip = NULL;
+      if (fStepExiting && !fGeometry->GetLevel()) {
+         fGeometry->SetOutside();
+         return NULL;
       }   
+      fGeometry->CdNext();
+      fGeometry->CrossBoundaryAndLocate(fStepEntering, skip);
    } else {   
-      if (!relativeSearch) fGeometry->CdTop();
+//      if (!relativeSearch) fGeometry->CdTop();
       fGeometry->FindNode();
    }   
    G4VPhysicalVolume *target = SynchronizeHistory();
-//   G4cout << "    location = " << fGeometry->GetPath() << G4endl;
+//   G4cout << "    location = " << fGeometry->GetPath() << "on boundary = "<<onBoundary << G4endl;
    return target;
 }
    

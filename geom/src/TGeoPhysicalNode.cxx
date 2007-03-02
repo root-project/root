@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.24 2007/02/12 17:14:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPhysicalNode.cxx,v 1.25 2007/02/23 11:11:51 brun Exp $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -28,7 +28,7 @@
 ClassImp(TGeoPhysicalNode)
 
 //_____________________________________________________________________________
-TGeoPhysicalNode::TGeoPhysicalNode()
+TGeoPhysicalNode::TGeoPhysicalNode() : TNamed()
 {
 // Default constructor
    fLevel        = 0;
@@ -42,7 +42,7 @@ TGeoPhysicalNode::TGeoPhysicalNode()
 }
 
 //_____________________________________________________________________________
-TGeoPhysicalNode::TGeoPhysicalNode(const char *path)
+TGeoPhysicalNode::TGeoPhysicalNode(const char *path) : TNamed(path,"")
 {
 // Constructor
    if (!strlen(path)) {
@@ -62,7 +62,7 @@ TGeoPhysicalNode::TGeoPhysicalNode(const char *path)
 
 //_____________________________________________________________________________
 TGeoPhysicalNode::TGeoPhysicalNode(const TGeoPhysicalNode& gpn) :
-  TObject(gpn),
+  TNamed(gpn),
   TAttLine(gpn),
   fLevel(gpn.fLevel),
   fMatrices(gpn.fMatrices),
@@ -77,7 +77,7 @@ TGeoPhysicalNode& TGeoPhysicalNode::operator=(const TGeoPhysicalNode& gpn)
 {
    //assignment operator
    if(this!=&gpn) {
-      TObject::operator=(gpn);
+      TNamed::operator=(gpn);
       TAttLine::operator=(gpn);
       fLevel=gpn.fLevel;
       fMatrices=gpn.fMatrices;
@@ -115,7 +115,7 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
    if (TGeoManager::IsLocked()) {
       Error("Align", "Not performed. Geometry in LOCKED mode !");
       return;
-   }   
+   }
    TGeoNode *node = GetNode();
    if (node->IsOffset()) {
       Error("Align", "Cannot align division nodes: %s\n",node->GetName());
@@ -124,16 +124,23 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
    TGeoNode *nnode = 0;
    TGeoVolume *vm = GetVolume(0);
    TGeoVolume *vd = 0;   
-   Int_t i,id;
+   Int_t i;
    if (!IsAligned()) {
+      Int_t *id = new Int_t[fLevel];
+      for (i=0; i<fLevel; i++) {
+         // Store daughter indexes
+         vd = GetVolume(i);
+         node = GetNode(i+1);
+         id[i] = vd->GetIndex(node);
+         if (id[i]<0) {
+            Error("Align","%s cannot align node %s",GetName(), node->GetName());
+            delete [] id;
+            return;
+         }
+      }            
       for (i=0; i<fLevel; i++) {
          // Get daughter node and its id inside vm
          node = GetNode(i+1);
-         id = vm->GetIndex(node);
-         if (id < 0) {
-            Error("Align","%s cannot align node %s",GetName(), GetNode(i+1)->GetName());
-            return;
-         }
          // Clone daughter volume and node
          vd = node->GetVolume()->CloneVolume();
          nnode = node->MakeCopyNode();
@@ -141,13 +148,14 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
          nnode->SetVolume(vd);
          nnode->SetMotherVolume(vm);
          // Decouple old node from mother volume and connect new one
-         vm->GetNodes()->RemoveAt(id);
-         vm->GetNodes()->AddAt(nnode,id);
+         vm->GetNodes()->RemoveAt(id[i]);
+         vm->GetNodes()->AddAt(nnode,id[i]);
          fNodes->RemoveAt(i+1);
          fNodes->AddAt(nnode,i+1);
          // Consider new cloned volume as mother and continue
          vm = vd;
       }
+      delete [] id;
    } else {
       nnode = GetNode();
    }         
@@ -181,7 +189,7 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
    if (voxels) voxels->SetNeedRebuild();
    // Eventually check for overlaps
    if (check) vm->CheckOverlaps();
-   // clean current matrices from cache
+   // Clean current matrices from cache
    gGeoManager->CdTop();
    SetAligned(kTRUE);
 }   
@@ -189,7 +197,7 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
 //_____________________________________________________________________________
 void TGeoPhysicalNode::cd() const
 {
-
+   gGeoManager->cd(fName.Data());
 }
 
 //_____________________________________________________________________________
@@ -214,38 +222,6 @@ TGeoHMatrix *TGeoPhysicalNode::GetMatrix(Int_t level) const
    if (level<0) return (TGeoHMatrix*)fMatrices->UncheckedAt(fLevel);
    if (level>fLevel) return 0;
    return (TGeoHMatrix*)fMatrices->UncheckedAt(level);
-}
-
-//_____________________________________________________________________________
-const char *TGeoPhysicalNode::GetName() const
-{
-   // Retrieve the name of this physical node
-   // WARNING: the physical node name is stored into a local static array
-   // It is the user's responsability to copy the returned name in case
-   // the information must be kept.
-   
-   static char *pNodeName=0;
-   static Int_t maxNodes = 0;
-   if (!maxNodes) {
-      maxNodes= 500;
-      pNodeName = new char[maxNodes];
-   }
-   pNodeName[0] = 0;
-   Int_t n = 0;
-   
-   for (Int_t level=0;level<=fLevel; level++) {
-      const char *name = GetNode(level)->GetName();
-      Int_t nch = strlen(name);
-      if (n+nch+2 > maxNodes) {
-         maxNodes = 2*(n+nch+2);
-         delete [] pNodeName;
-         pNodeName = new char[maxNodes];
-         return GetName();
-      }
-      sprintf(pNodeName+n,"/%s",name);
-      n += nch+1;
-   }    
-   return pNodeName;
 }
 
 //_____________________________________________________________________________
@@ -285,6 +261,34 @@ void TGeoPhysicalNode::Paint(Option_t * /*option*/)
 }
 
 //_____________________________________________________________________________
+void TGeoPhysicalNode::Print(Option_t * /*option*/) const
+{
+// Print info about this node.
+   printf("TGeoPhysicalNode: %s level=%d aligned=%d\n", fName.Data(), fLevel, IsAligned());
+   for (Int_t i=0; i<=fLevel; i++) {
+      printf(" level %d: node %s\n", i, GetNode(i)->GetName());
+      printf(" local matrix:\n");
+      if (GetNode(i)->GetMatrix()->IsIdentity()) printf("   IDENTITY\n");
+      else GetNode(i)->GetMatrix()->Print();
+      printf(" global matrix:\n");
+      if (GetMatrix(i)->IsIdentity()) printf("   IDENTITY\n");
+      else GetMatrix(i)->Print();
+   }   
+   if (IsAligned() && fMatrixOrig) {
+      printf(" original local matrix:\n");
+      fMatrixOrig->Print();
+   }
+}      
+
+//_____________________________________________________________________________
+void TGeoPhysicalNode::Refresh()
+{
+// Refresh this physical node. Called for all registered physical nodes
+// after an Align() call.
+   SetPath(fName.Data());
+}   
+
+//_____________________________________________________________________________
 void TGeoPhysicalNode::SetBranchAsState()
 {
 // Set node branch according to current state
@@ -296,16 +300,26 @@ void TGeoPhysicalNode::SetBranchAsState()
    if (!cache->IsDummy()) {
       Error("SetBranchAsState", "not implemented for full cache");
       return;
-   }   
-   
+   }      
    if (!fNodes)    fNodes = new TObjArray(30);
    if (!fMatrices) fMatrices = new TObjArray(30);
-   fLevel = gGeoManager->GetLevel();   
    TGeoHMatrix **matrices = (TGeoHMatrix **) cache->GetMatrices();
    TGeoNode **branch = (TGeoNode **) cache->GetBranch();
+
+   Bool_t refresh = (fLevel>0)?kTRUE:kFALSE;
+   if (refresh) {
+      TGeoHMatrix *current;
+      for (Int_t i=0; i<=fLevel; i++) {
+         fNodes->AddAtAndExpand(branch[i],i);
+         current = (TGeoHMatrix*)fMatrices->UncheckedAt(i);
+         *current = *matrices[i];
+      }
+      return;
+   }
+   fLevel = gGeoManager->GetLevel();   
    for (Int_t i=0; i<=fLevel; i++) {
-      fNodes->AddAt(branch[i],i);
-      fMatrices->AddAt(new TGeoHMatrix(*matrices[i]),i);
+      fNodes->AddAtAndExpand(branch[i],i);
+      fMatrices->AddAtAndExpand(new TGeoHMatrix(*matrices[i]),i);
    }   
    TGeoNode *node = (TGeoNode*)fNodes->UncheckedAt(fLevel);
    if (!fMatrixOrig) fMatrixOrig = new TGeoHMatrix();
