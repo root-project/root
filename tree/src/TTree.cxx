@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.321 2007/02/10 10:17:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.322 2007/02/11 09:38:57 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2652,6 +2652,15 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //  Note that the variables e1, e2 or e3 may contain a selection.
    //  example, if e1= x*(y<0), the value histogrammed will be x if y<0
    //  and will be 0 otherwise.
+   //
+   //  The expressions can use all the operations and build-in functions
+   //  supported by TFormula (See TFormula::Analyze), including free 
+   //  standing function taking numerical arguments (TMath::Bessel).
+   //  In addition, you can call member functions taking numerical 
+   //  arguments. For example:
+   //      - "TMath::BreitWigner(fPx,3,2)"
+   //      - "event.GetHistogram().GetXaxis().GetXmax()"
+   //      - "event.GetTrack(fMax).GetPx()
    //
    //  selection is an expression with a combination of the columns.
    //  In a selection all the C++ operators are authorized.

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.237 2007/02/10 07:36:56 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.238 2007/02/10 07:53:09 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -533,6 +533,15 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //  Note that the variables e1, e2 or e3 may contain a selection.
 //  example, if e1= x*(y<0), the value histogrammed will be x if y<0
 //  and will be 0 otherwise.
+//
+//  The expressions can use all the operations and build-in functions
+//  supported by TFormula (See TFormula::Analyze), including free 
+//  standing function taking numerical arguments (TMath::Bessel).
+//  In addition, you can call member functions taking numerical 
+//  arguments. For example:
+//      - "TMath::BreitWigner(fPx,3,2)"
+//      - "event.GetHistogram().GetXaxis().GetXmax()"
+//      - "event.GetTrack(fMax).GetPx()
 //
 //  The selection is an expression with a combination of the columns.
 //  In a selection all the C++ operators are authorized.
