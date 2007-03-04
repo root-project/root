@@ -287,16 +287,17 @@ $(TESTBITS):    $(TESTBITSO)
 		@echo "$@ done"
 
 $(THREADS):     $(THREADSO)
-ifeq ($(HASTHREAD),yes)
 ifeq ($(PLATFORM),win32)
 		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libThread.lib $(OutPutOpt)$@
 		$(MT_EXE)
+		@echo "$@ done"
 else
+ifeq ($(HASTHREAD),yes)
 		$(LD) $(LDFLAGS) $^ $(LIBS) -lThread $(OutPutOpt)$@
-endif
 		@echo "$@ done"
 else
 		@echo "This version of ROOT has no thread support, $@ not built"
+endif
 endif
 
 $(QPRANDOM):    $(QPRANDOMO)
