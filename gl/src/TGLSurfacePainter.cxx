@@ -801,12 +801,13 @@ void TGLSurfacePainter::DrawSectionXOZ()const
    }
 
    if (binY >= 0) {
-      glColor3d(1., 0., 0.);
-      glLineWidth(3.f);
       //Draw 2d curve on the profile's plane.
       const TGLPlane profilePlane(0., 1., 0., -fXOZSectionPos);
 
       if (!fSectionPass) {
+         glColor3d(1., 0., 0.);
+         glLineWidth(3.f);
+
          for (Int_t i = 0, e = fCoord->GetNXBins() - 1; i < e; ++i) {
             glBegin(GL_LINE_STRIP);
             glVertex3dv(Intersection(profilePlane, TGLLine3(fMesh[i + 1][binY], fMesh[i + 1][binY + 1]), kFALSE).second.CArr());
@@ -898,11 +899,13 @@ void TGLSurfacePainter::DrawSectionXOY()const
    const TGLPlane profilePlane(0., 0., 1., -fXOYSectionPos);
    TGLVertex3 intersection[2];
 
-   glColor3d(1., 0., 0.);
-   glLineWidth(3.f);
 
    if (fSectionPass)
       fProj.fVertices.clear();
+   else {
+      glColor3d(1., 0., 0.);
+      glLineWidth(3.f);
+   }
 
    for (Int_t i = 0; i < nX - 1; ++i) {
       for (Int_t j = 0; j < nY - 1; ++j) {
@@ -983,7 +986,8 @@ void TGLSurfacePainter::DrawSectionXOY()const
       fXOYProj.back().Swap(fProj);
    }
 
-   glLineWidth(1.f);
+   if (!fSectionPass)
+      glLineWidth(1.f);
 }
 
 //______________________________________________________________________________
