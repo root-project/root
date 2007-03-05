@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.119 2007/03/05 09:10:03 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.120 2007/03/05 11:49:23 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Valeri Onuchin, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -754,7 +754,6 @@ TGWin32MainThread::TGWin32MainThread()
    fHandle = ((TWinNTSystem*)gSystem)->GetGUIThreadHandle();
    fId = ((TWinNTSystem*)gSystem)->GetGUIThreadId();
    ((TWinNTSystem*)gSystem)->SetGUIThreadMsgHandler(GUIThreadMessageWrapper);
-   SetThreadAffinityMask(fHandle, 1);
 }
 
 } // unnamed namespace

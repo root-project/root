@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.45 2006/12/01 15:05:58 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.46 2007/02/21 09:52:14 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -32,7 +32,6 @@
 #else
  typedef void* HANDLE;
  struct WIN32_FIND_DATA;
- struct CRITICAL_SECTION;
  typedef void* HIMAGELIST;
  typedef void* HICON;
  typedef UChar_t BOOL;
@@ -85,7 +84,6 @@ private:
    ULong_t           fGUIThreadId;      // id of GUI server (aka command) thread
    char             *fDirNameBuffer;    // The string buffer to hold path name
    WIN32_FIND_DATA   fFindFileData;     // Structure to look for files (aka OpenDir under UNIX)
-   CRITICAL_SECTION  fCritSectLoad;     // critical section for Load()
 
    Bool_t            DispatchTimers(Bool_t mode);
    Bool_t            CheckDescriptors();

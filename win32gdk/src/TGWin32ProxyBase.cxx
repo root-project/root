@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.19 2005/10/27 06:55:09 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.20 2006/05/18 10:46:26 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -143,7 +143,6 @@ TGWin32ProxyBase::TGWin32ProxyBase()
    fBatchLimit = 100;
    fId = ::GetCurrentThreadId();
    fPimpl = new TGWin32ProxyBasePrivate();
-   SetThreadAffinityMask(GetCurrentThread(), 1);
 
    if (!fgPostMessageId) fgPostMessageId = ::RegisterWindowMessage("TGWin32ProxyBase::Post");
    if (!fgPingMessageId) fgPingMessageId = ::RegisterWindowMessage("TGWin32ProxyBase::Ping");

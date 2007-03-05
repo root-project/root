@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.166 2007/02/27 21:37:07 pcanal Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.167 2007/03/02 10:24:14 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -100,6 +100,7 @@ namespace {
    typedef void (*SigHandler_t)(ESignals);
    static TWinNTSystem::ThreadMsgFunc_t gGUIThreadMsgFunc = 0;      // GUI thread message handler func
 
+   static HANDLE gGlobalEvent;
    static HANDLE gConsoleEvent;
    static HANDLE gConsoleThreadHandle;
    static HANDLE gTimerThreadHandle;
@@ -277,8 +278,10 @@ namespace {
             }
             // yield execution to another thread that is ready to run
             // if no other thread is ready, sleep 1 ms before to return
-            if (!SwitchToThread())
-               SleepEx(1, TRUE);
+            if (gGlobalEvent) {
+               ::WaitForSingleObject(gGlobalEvent, 1);
+               ::ResetEvent(gGlobalEvent);
+            }
             return 0;
          }
 
@@ -463,6 +466,7 @@ namespace {
       Int_t erret = 0;
       Bool_t endLoop = kFALSE;
       while (!endLoop) {
+         if (gGlobalEvent) ::SetEvent(gGlobalEvent);
          erret = ::GetMessage(&msg, NULL, NULL, NULL);
          if (erret <= 0) endLoop = kTRUE;
          if (gGUIThreadMsgFunc)
@@ -778,8 +782,6 @@ fGUIThreadHandle(0), fGUIThreadId(0)
       fBeepDuration = gEnv->GetValue("Root.System.BeepDuration", 1);
       fBeepFreq     = gEnv->GetValue("Root.System.BeepFreq", 0);
    }
-
-   ::InitializeCriticalSection(&fCritSectLoad);
 }
 
 //______________________________________________________________________________
@@ -809,9 +811,13 @@ TWinNTSystem::~TWinNTSystem()
       ::CloseHandle(gConsoleEvent);
       gConsoleEvent = 0;
    }
+   if (gGlobalEvent) {
+      ::ResetEvent(gGlobalEvent);
+      ::CloseHandle(gGlobalEvent);
+      gGlobalEvent = 0;
+   }
    if (gConsoleThreadHandle) ::CloseHandle(gConsoleThreadHandle);
    if (gTimerThreadHandle) ::CloseHandle(gTimerThreadHandle);
-   ::DeleteCriticalSection(&fCritSectLoad);
 }
 
 //______________________________________________________________________________
@@ -869,8 +875,6 @@ Bool_t TWinNTSystem::Init()
    gRootDir= ROOTPREFIX;
 #endif
 
-   SetThreadAffinityMask(GetCurrentThread(), 1);
-
    // Increase the accuracy of Sleep() without needing to link to winmm.lib
    typedef UINT (WINAPI* LPTIMEBEGINPERIOD)( UINT uPeriod );
    HINSTANCE hInstWinMM = LoadLibrary( "winmm.dll" );
@@ -889,6 +893,7 @@ Bool_t TWinNTSystem::Init()
    gTimerThreadHandle = ::CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)ThreadStub,
                         this, NULL, NULL);
 
+   gGlobalEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
    fGUIThreadHandle = ::CreateThread( NULL, 0, &GUIThreadMessageProcessingLoop, 0, 0, &fGUIThreadId );
 
    fGroupsInitDone = kFALSE;
@@ -1353,6 +1358,7 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
    // Dispatch a single event in TApplication::Run() loop
 
    if (gConsoleEvent) ::SetEvent(gConsoleEvent);
+   if (pendingOnly && gGlobalEvent) ::SetEvent(gGlobalEvent);
 
    Bool_t pollOnce = pendingOnly;
 
@@ -1361,8 +1367,10 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
          if (!pendingOnly) {
             // yield execution to another thread that is ready to run
             // if no other thread is ready, sleep 1 ms before to return
-            if (!SwitchToThread())
-               SleepEx(1, TRUE);
+            if (gGlobalEvent) {
+               if (::WaitForSingleObject(gGlobalEvent, 1) == WAIT_OBJECT_0)
+                  ::ResetEvent(gGlobalEvent);
+            }
             return;
          }
       }
@@ -1426,8 +1434,10 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
           fWritemask && !fWritemask->GetBits()) {
          // yield execution to another thread that is ready to run
          // if no other thread is ready, sleep 1 ms before to return
-         if (!SwitchToThread())
-            SleepEx(1, TRUE);
+         if (!pendingOnly && gGlobalEvent) {
+            ::WaitForSingleObject(gGlobalEvent, 1);
+            ::ResetEvent(gGlobalEvent);
+         }
          return;
       }
 
