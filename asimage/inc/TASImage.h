@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.24 2006/10/13 08:18:39 rdm Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.25 2007/02/22 14:11:35 couet Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -78,8 +78,6 @@ protected:
    Int_t     fZoomUpdate;   //! kZoom - new zooming required, kZoomOps - other ops in action, kNoZoom - no zooming or ops
    Bool_t    fEditable;     //! kTRUE image can be resized, moved by resizing/moving gPad
    Int_t     fPaintMode;    //! 1 - fast mode, 0 - low memory slow mode
-   Pixmap_t  fPic;          //! pixmap
-   Pixmap_t  fMask;         //! mask
    ASImage  *fGrayImage;    //! gray image
    Bool_t    fIsGray;       //! kTRUE if image is gray
    static THashTable *fgPlugList;   //! hash table containing loaded plugins

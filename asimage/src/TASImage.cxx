@@ -161,8 +161,6 @@ void TASImage::DestroyImage()
    fIsGray     = kFALSE;
    fGrayImage  = 0;
    fImage      = 0;
-   fPic        = 0;
-   fMask       = 0;
 }
 
 //______________________________________________________________________________
@@ -179,8 +177,7 @@ void TASImage::SetDefaults()
    fZoomWidth     = 0;
    fZoomHeight    = 0;
    fZoomUpdate    = kZoomOps;
-   fPic           = 0;
-   fMask          = 0;
+
    fGrayImage     = 0;
    fIsGray        = kFALSE;
    fPaletteEnabled = kFALSE;
@@ -1006,53 +1003,59 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y)
 {
    // draw asimage on drawable
 
-   static GCValues_t gv;
-   static GContext_t gc = 0;
-
    if (!im) {
       return;
    }
 
-///UInt_t hh = im->height;
-///UInt_t ow = im->width%8;
-///UInt_t ww = im->width - ow + (ow ? 8 : 0);
+   static int x11 = -1;
+   if (x11 < 0) x11 = gVirtualX->InheritsFrom("TGX11");
 
-///UInt_t bit = 0;
-///int i = 0;
-///UInt_t yy = 0;
-///UInt_t xx = 0;
    Pixmap_t mask = kNone;
-/*
-   char *bits = new char[ww*hh]; //an array of bits
 
-   ASImageDecoder *imdec = start_image_decoding(fgVisual, im, SCL_DO_ALPHA,
+	if (x11) {
+   	UInt_t hh = im->height;
+   	UInt_t ow = im->width%8;
+   	UInt_t ww = im->width - ow + (ow ? 8 : 0);
+
+   	UInt_t bit = 0;
+   	int i = 0;
+   	UInt_t yy = 0;
+   	UInt_t xx = 0;
+
+   	char *bits = new char[ww*hh]; //an array of bits
+
+   	ASImageDecoder *imdec = start_image_decoding(fgVisual, im, SCL_DO_ALPHA,
                                                 0, 0, ww, 0, 0);
-   if(imdec) {
-      for (yy = 0; yy < hh; yy++) {
-         imdec->decode_image_scanline(imdec);
-         CARD32 *a = imdec->buffer.alpha;
+   	if(imdec) {
+      	for (yy = 0; yy < hh; yy++) {
+         	imdec->decode_image_scanline(imdec);
+         	CARD32 *a = imdec->buffer.alpha;
 
-         for (xx = 0; xx < ww; xx++) {
-            if (a[xx]) {
-               SETBIT(bits[i], bit);
-            } else {
-               CLRBIT(bits[i], bit);
-            }
-            bit++;
-            if (bit == 8) {
-               bit = 0;
-               i++;
-            }
-         }
-      }
+         	for (xx = 0; xx < ww; xx++) {
+            	if (a[xx]) {
+               	SETBIT(bits[i], bit);
+            	} else {
+               	CLRBIT(bits[i], bit);
+            	}
+            	bit++;
+            	if (bit == 8) {
+               	bit = 0;
+               	i++;
+            	}
+         	}
+      	}
+		}
+     
+		stop_image_decoding(&imdec);
 
-      stop_image_decoding(&imdec);
-
-      mask = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), 
+    	mask = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), 
                                           (const char *)bits, ww, hh);
-      delete [] bits;
-   }
-*/
+     	delete [] bits;
+	}
+
+   GCValues_t gv;
+   static GContext_t gc = 0;
+
    gv.fMask = kGCClipMask | kGCClipXOrigin | kGCClipYOrigin;
    gv.fClipMask = mask;
    gv.fClipXOrigin = x;
@@ -1063,9 +1066,6 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y)
    } else {
       gVirtualX->ChangeGC(gc, &gv);
    }
-
-   static int x11 = -1;
-   if (x11 < 0) x11 = gVirtualX->InheritsFrom("TGX11");
 
    if (x11) { //use built-in optimized version
       asimage2drawable(fgVisual, wid, im, (GC)gc, 0, 0, x, y, im->width, im->height, 1);
@@ -1090,6 +1090,9 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y)
       }
    }
 
+   // free mask pixmap
+   if (gv.fClipMask != kNone) gVirtualX->DeletePixmap(gv.fClipMask);
+
    gv.fMask = kGCClipMask;
    gv.fClipMask = kNone;
    if (gc) gVirtualX->ChangeGC(gc, &gv);
@@ -1100,7 +1103,7 @@ void TASImage::PaintImage(Drawable_t wid, Int_t x, Int_t y)
 {
    // draw image on drawable wid (pixmap, window ) at x,y position
 
-   Image2Drawable(fImage, wid, x, y);
+	Image2Drawable(fScaledImage ? fScaledImage->fImage : fImage, wid, x, y);
 }
 
 //______________________________________________________________________________
@@ -1939,14 +1942,14 @@ void TASImage::StartPaletteEditor()
 //______________________________________________________________________________
 Pixmap_t TASImage::GetPixmap()
 {
-   // returns image pixmap
-
-   if (fPic) return fPic;
+   // Returns image pixmap. The pixmap must deleted by user.
 
    if (!InitVisual()) {
       Warning("GetPixmap", "Visual not initiated");
       return 0;
    }
+
+	Pixmap_t ret;
 
    ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
 
@@ -1954,24 +1957,23 @@ Pixmap_t TASImage::GetPixmap()
    if (x11 < 0) x11 = gVirtualX->InheritsFrom("TGX11");
 
    if (x11) {   // use builtin version
-      fPic = (Pixmap_t)asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(),
+      ret = (Pixmap_t)asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(),
                                        img, 0, kTRUE);
    } else {
       if (!fImage->alt.argb32) {
          BeginPaint();
       }
-      fPic = gVirtualX->CreatePixmapFromData((unsigned char*)fImage->alt.argb32, fImage->width, fImage->height);
+      ret = gVirtualX->CreatePixmapFromData((unsigned char*)fImage->alt.argb32,
+                                             fImage->width, fImage->height);
    }
 
-   return fPic;
+   return ret;
 }
 
 //______________________________________________________________________________
 Pixmap_t TASImage::GetMask()
 {
-   // returns image mask pixmap (alpha channel)
-
-   if (fMask) return fMask;
+   // Returns image mask pixmap (alpha channel). The pixmap must deleted by user.
 
    Pixmap_t pxmap = 0;
 
@@ -2022,11 +2024,11 @@ Pixmap_t TASImage::GetMask()
       }
    }
 
-   stop_image_decoding( &imdec );
-   fMask = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), (const char *)bits,
+   stop_image_decoding(&imdec);
+   pxmap = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), (const char *)bits,
                                    ww, hh);
    delete [] bits;
-   return fMask;
+   return pxmap;
 }
 
 //______________________________________________________________________________
@@ -2220,10 +2222,6 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
    ASImage *text_im = 0;
    Bool_t ttfont = kFALSE;
 
-   if (!InitVisual()) {
-      Warning("DrawText", "Visual not initiated");
-      return;
-   }
    if (!InitVisual()) {
       Warning("DrawText", "Visual not initiated");
       return;
@@ -3152,7 +3150,6 @@ void TASImage::BeginPaint(Bool_t mode)
    }
 
    if (!fImage) {
-      //Warning("BeginPaint", "no image");
       return;
    }
 
