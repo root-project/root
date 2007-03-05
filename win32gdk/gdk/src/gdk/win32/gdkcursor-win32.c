@@ -137,6 +137,26 @@ GdkCursor *gdk_cursor_new(GdkCursorType cursor_type)
    return cursor;
 }
 
+GdkCursor *gdk_syscursor_new(unsigned long syscur)
+{
+   GdkCursorPrivate *private;
+   GdkCursor *cursor;
+   HCURSOR xcursor;
+   xcursor = LoadCursor(NULL, (LPCTSTR)syscur);
+   if (xcursor == NULL)
+      WIN32_API_FAILED("LoadCursor");
+   GDK_NOTE(MISC, g_print("gdk_syscursor_new: %#x %ld\n",
+                          xcursor, syscur));
+
+   private = g_new(GdkCursorPrivate, 1);
+   private->xcursor = xcursor;
+   cursor = (GdkCursor *) private;
+   cursor->type = LOWORD(syscur);
+   cursor->ref_count = 1;
+
+   return cursor;
+}
+
 static gboolean color_is_white(GdkColor * color)
 {
    return (color->red == 0xFFFF

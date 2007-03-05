@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.33 2007/02/20 09:44:44 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.34 2007/02/21 09:52:14 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -118,6 +118,7 @@ protected:
    GdkColormap *fColormap;          // Default colormap, 0 if b/w
    Int_t       fScreenNumber;       // Screen number
    Bool_t      fHasTTFonts;         // True when TrueType fonts are used
+   Bool_t      fUseSysPointers;     // True when using system mouse pointers
    Int_t       fTextAlignH;         // Text Alignment Horizontal
    Int_t       fTextAlignV;         // Text Alignment Vertical
    Int_t       fTextAlign;          // Text alignment (set in SetTextAlign)

@@ -45,6 +45,7 @@ EXPORTS
 	gdk_colors_store
 	gdk_cursor_new
 	gdk_cursor_new_from_pixmap
+	gdk_syscursor_new
 	gdk_cursor_ref
 	gdk_cursor_unref
 	gdk_dnd_init

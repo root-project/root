@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.117 2007/02/20 09:44:44 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.118 2007/02/21 09:52:14 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Valeri Onuchin, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -52,7 +52,12 @@
 #include "TString.h"
 #include "TObjString.h"
 #include "TObjArray.h"
+#include "TEnv.h"
 #include "RStipples.h"
+
+#ifndef IDC_HAND
+#define IDC_HAND  MAKEINTRESOURCE(32649)
+#endif
 
 extern "C" {
 void gdk_win32_draw_rectangle (GdkDrawable    *drawable,
@@ -773,6 +778,7 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title), f
 
    fScreenNumber = 0;
    fHasTTFonts = kFALSE;
+   fUseSysPointers = kFALSE;
    fTextAlignH = 1;
    fTextAlignV = 1;
    fTextAlign = 7;
@@ -1041,24 +1047,46 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
    gNullCursor = gdk_cursor_new_from_pixmap((GdkDrawable *)pixmp1, (GdkDrawable *)pixmp2,
                                              &fore, &back, 0, 0);
    // Create cursors
-   fCursors[kBottomLeft] = gdk_cursor_new(GDK_BOTTOM_LEFT_CORNER);
-   fCursors[kBottomRight] = gdk_cursor_new(GDK_BOTTOM_RIGHT_CORNER);
-   fCursors[kTopLeft] = gdk_cursor_new(GDK_TOP_LEFT_CORNER);
-   fCursors[kTopRight] = gdk_cursor_new(GDK_TOP_RIGHT_CORNER);
-   fCursors[kBottomSide] =  gdk_cursor_new(GDK_BOTTOM_SIDE);
-   fCursors[kLeftSide] = gdk_cursor_new(GDK_LEFT_SIDE);
-   fCursors[kTopSide] = gdk_cursor_new(GDK_TOP_SIDE);
-   fCursors[kRightSide] = gdk_cursor_new(GDK_RIGHT_SIDE);
-   fCursors[kMove] = gdk_cursor_new(GDK_FLEUR);
-   fCursors[kCross] =gdk_cursor_new(GDK_CROSSHAIR);
-   fCursors[kArrowHor] = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
-   fCursors[kArrowVer] = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
-   fCursors[kHand] = gdk_cursor_new(GDK_HAND2);
+   if (gEnv->GetValue("Win32.UseSysPointers", 0)) {
+      fUseSysPointers = kTRUE;
+      fCursors[kBottomLeft] = gdk_syscursor_new((ULong_t)IDC_SIZENESW);
+      fCursors[kBottomRight] = gdk_syscursor_new((ULong_t)IDC_SIZENWSE);
+      fCursors[kTopLeft] = gdk_syscursor_new((ULong_t)IDC_SIZENWSE);
+      fCursors[kTopRight] = gdk_syscursor_new((ULong_t)IDC_SIZENESW);
+      fCursors[kBottomSide] =  gdk_syscursor_new((ULong_t)IDC_SIZENS);
+      fCursors[kLeftSide] = gdk_syscursor_new((ULong_t)IDC_SIZEWE);
+      fCursors[kTopSide] = gdk_syscursor_new((ULong_t)IDC_SIZENS);
+      fCursors[kRightSide] = gdk_syscursor_new((ULong_t)IDC_SIZEWE);
+      fCursors[kMove] = gdk_syscursor_new((ULong_t)IDC_SIZEALL);
+      fCursors[kCross] =gdk_syscursor_new((ULong_t)IDC_CROSS);
+      fCursors[kArrowHor] = gdk_syscursor_new((ULong_t)IDC_SIZEWE);
+      fCursors[kArrowVer] = gdk_syscursor_new((ULong_t)IDC_SIZENS);
+      fCursors[kHand] = gdk_syscursor_new((ULong_t)IDC_HAND);
+      fCursors[kPointer] = gdk_syscursor_new((ULong_t)IDC_ARROW);
+      fCursors[kCaret] =  gdk_syscursor_new((ULong_t)IDC_IBEAM);
+      fCursors[kWatch] = gdk_syscursor_new((ULong_t)IDC_WAIT);
+   }
+   else {
+      fUseSysPointers = kFALSE;
+      fCursors[kBottomLeft] = gdk_cursor_new(GDK_BOTTOM_LEFT_CORNER);
+      fCursors[kBottomRight] = gdk_cursor_new(GDK_BOTTOM_RIGHT_CORNER);
+      fCursors[kTopLeft] = gdk_cursor_new(GDK_TOP_LEFT_CORNER);
+      fCursors[kTopRight] = gdk_cursor_new(GDK_TOP_RIGHT_CORNER);
+      fCursors[kBottomSide] =  gdk_cursor_new(GDK_BOTTOM_SIDE);
+      fCursors[kLeftSide] = gdk_cursor_new(GDK_LEFT_SIDE);
+      fCursors[kTopSide] = gdk_cursor_new(GDK_TOP_SIDE);
+      fCursors[kRightSide] = gdk_cursor_new(GDK_RIGHT_SIDE);
+      fCursors[kMove] = gdk_cursor_new(GDK_FLEUR);
+      fCursors[kCross] =gdk_cursor_new(GDK_CROSSHAIR);
+      fCursors[kArrowHor] = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
+      fCursors[kArrowVer] = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
+      fCursors[kHand] = gdk_cursor_new(GDK_HAND2);
+      fCursors[kPointer] = gdk_cursor_new( GDK_LEFT_PTR);
+      fCursors[kCaret] =  gdk_cursor_new(GDK_XTERM);
+      fCursors[kWatch] = gdk_cursor_new(GDK_WATCH);
+   }
    fCursors[kRotate] = gdk_cursor_new(GDK_EXCHANGE);
-   fCursors[kPointer] = gdk_cursor_new( GDK_LEFT_PTR);
    fCursors[kArrowRight] = gdk_cursor_new(GDK_ARROW);
-   fCursors[kCaret] =  gdk_cursor_new(GDK_XTERM);
-   fCursors[kWatch] = gdk_cursor_new(GDK_WATCH);
 
    // Setup color information
    fRedDiv = fGreenDiv = fBlueDiv = fRedShift = fGreenShift = fBlueShift = -1;
@@ -2251,7 +2279,10 @@ Int_t TGWin32::RequestLocator(Int_t mode, Int_t ctyp, Int_t & x, Int_t & y)
          gdk_window_set_cursor((GdkWindow *)gCws->window, (GdkCursor *)gNullCursor);
          gdk_gc_set_foreground((GdkGC *) gGCecho, &gColors[0].color);
       } else {
-         cursor = gdk_cursor_new((GdkCursorType)GDK_CROSSHAIR);
+         if (fUseSysPointers)
+            cursor = gdk_syscursor_new((ULong_t)IDC_CROSS);
+         else
+            cursor = gdk_cursor_new((GdkCursorType)GDK_CROSSHAIR);
          gdk_window_set_cursor((GdkWindow *)gCws->window, (GdkCursor *)cursor);
       }
    }
@@ -2402,7 +2433,10 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
    CurWnd = (GdkWindow *)gCws->window;
    // change the cursor shape
    if (cursor == NULL) {
-      cursor = gdk_cursor_new((GdkCursorType)GDK_QUESTION_ARROW);
+      if (fUseSysPointers)
+         cursor = gdk_syscursor_new((ULong_t)IDC_HELP);
+      else
+         cursor = gdk_cursor_new((GdkCursorType)GDK_QUESTION_ARROW);
    }
    if (cursor != 0) {
       gdk_window_set_cursor(CurWnd, cursor);
