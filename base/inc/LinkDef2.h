@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.42 2007/02/12 13:44:23 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.43 2007/02/12 14:55:15 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -67,6 +67,7 @@
 #pragma link C++ function R_ISLNK(Int_t);
 #pragma link C++ function R_ISFIFO(Int_t);
 #pragma link C++ function R_ISSOCK(Int_t);
+#pragma link C++ function R_ISOFF(Int_t);
 
 #pragma link C++ struct FileStat_t;
 #pragma link C++ struct UserGroup_t;
