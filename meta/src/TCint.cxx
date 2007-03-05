@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.132 2006/12/10 22:21:18 brun Exp $
+// @(#)root/meta:$Name: v5-14-00-patches $:$Id: TCint.cxx,v 1.133 2006/12/12 21:38:16 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1073,34 +1073,41 @@ Int_t TCint::LoadLibraryMap()
 #else
       TObjArray *paths = ldpath.Tokenize(":");
 #endif
-      paths->Sort();
 
       TString d;
-      for (Int_t i = 0; i < paths->GetEntries(); i++) {
-         if (d == ((TObjString*)paths->At(i))->GetString())
-            continue;  // skip already seen directories
+      for (Int_t i = 0; i < paths->GetEntriesFast(); i++) {
          d = ((TObjString*)paths->At(i))->GetString();
-
-         void *dirp = gSystem->OpenDirectory(d);
-         if (dirp) {
-            const char *f;
-            Bool_t gotrm = kFALSE;
-            while ((f = gSystem->GetDirEntry(dirp))) {
-               if (!strncasecmp(f, "rootmap", 7)) {
-                  TString p;
-                  p = d + "/" + f;
-                  if (!gSystem->AccessPathName(p, kReadPermission)) {
-                     if (gDebug > 1)
-                        Info("LoadLibraryMap", "additional rootmap file: %s", p.Data());
-                     fMapfile->ReadFile(p, kEnvGlobal);
-                  }
-                  gotrm = kTRUE;
-               } else if (gotrm) {
-                  break;  // no need to continue after last rootmap file
-               }
+         // check if directory already scanned
+         Int_t skip = 0;
+         for (Int_t j = 0; j < i; j++) {
+            TString pd = ((TObjString*)paths->At(j))->GetString();
+            if (pd == d) {
+               skip++;
+               break;
             }
          }
-         gSystem->FreeDirectory(dirp);
+         if (!skip) {
+            void *dirp = gSystem->OpenDirectory(d);
+            if (dirp) {
+               const char *f;
+               Bool_t gotrm = kFALSE;
+               while ((f = gSystem->GetDirEntry(dirp))) {
+                  if (!strncasecmp(f, "rootmap", 7)) {
+                     TString p;
+                     p = d + "/" + f;
+                     if (!gSystem->AccessPathName(p, kReadPermission)) {
+                        if (gDebug > 1)
+                           Info("LoadLibraryMap", "additional rootmap file: %s", p.Data());
+                        fMapfile->ReadFile(p, kEnvGlobal);
+                     }
+                     gotrm = kTRUE;
+                  } else if (gotrm) {
+                     break;  // no need to continue after last rootmap file
+                  }
+               }
+            }
+            gSystem->FreeDirectory(dirp);
+         }
       }
 
       delete paths;
@@ -1184,7 +1191,7 @@ Int_t TCint::AutoLoad(const char *cls)
    if (!deplibs.IsNull()) {
       TString delim(" ");
       TObjArray *tokens = deplibs.Tokenize(delim);
-      for (Int_t i = tokens->GetEntries()-1; i > 0; i--) {
+      for (Int_t i = tokens->GetEntriesFast()-1; i > 0; i--) {
          const char *deplib = ((TObjString*)tokens->At(i))->GetName();
          gROOT->LoadClass(cls, deplib);
          if (gDebug > 0)
@@ -1228,7 +1235,7 @@ Int_t TCint::AutoLoadCallback(const char *cls, const char *lib)
    if (!deplibs.IsNull()) {
       TString delim(" ");
       TObjArray *tokens = deplibs.Tokenize(delim);
-      for (Int_t i = tokens->GetEntries()-1; i > 0; i--) {
+      for (Int_t i = tokens->GetEntriesFast()-1; i > 0; i--) {
          const char *deplib = ((TObjString*)tokens->At(i))->GetName();
          gROOT->LoadClass(cls, deplib);
          if (gDebug > 0)
