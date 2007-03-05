@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUrl.cxx,v 1.33 2007/01/24 00:54:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUrl.cxx,v 1.34 2007/02/12 14:56:12 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -101,7 +101,7 @@ tryfile:
    u = u0;
 
    // Handle special protocol cases: "file:", "rfio:", etc.
-   for (int i = 0; i < GetSpecialProtocols()->GetEntries(); i++) {
+   for (int i = 0; i < GetSpecialProtocols()->GetEntriesFast(); i++) {
       TObjString *os = (TObjString*) GetSpecialProtocols()->UncheckedAt(i);
       TString s1 = os->GetString();
       int l = s1.Length();
@@ -345,7 +345,7 @@ const char *TUrl::GetUrl(Bool_t withDeflt)
 
    if (IsValid() && fUrl == "") {
       // Handle special protocol cases: file:, rfio:, etc.
-      for (int i = 0; i < GetSpecialProtocols()->GetEntries(); i++) {
+      for (int i = 0; i < GetSpecialProtocols()->GetEntriesFast(); i++) {
          TObjString *os = (TObjString*) GetSpecialProtocols()->UncheckedAt(i);
          TString &s = os->String();
          int l = s.Length();
@@ -508,12 +508,12 @@ TObjArray *TUrl::GetSpecialProtocols()
       fgSpecialProtocols = new TObjArray;
 
    if (!gEnv) {
-      if (fgSpecialProtocols->GetEntries() == 0)
+      if (fgSpecialProtocols->GetEntriesFast() == 0)
          fgSpecialProtocols->Add(new TObjString("file:"));
       return fgSpecialProtocols;
    }
 
-   if (fgSpecialProtocols->GetEntries() > 0 && usedEnv)
+   if (fgSpecialProtocols->GetEntriesFast() > 0 && usedEnv)
       return fgSpecialProtocols;
 
    fgSpecialProtocols->Delete();
