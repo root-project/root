@@ -1,4 +1,4 @@
-// @(#)root/castor:$Name:  $:$Id: TCastorFile.cxx,v 1.1 2006/09/19 16:15:47 rdm Exp $
+// @(#)root/castor:$Name:  $:$Id: TCastorFile.cxx,v 1.2 2007/03/05 09:01:08 rdm Exp $
 // Author: Fons Rademakers + Jean-Damien Durand 17/09/2003 + Ben Couturier 31/05/2005
 // + Giulia Taurelli 26/04/2006
 
@@ -66,24 +66,51 @@ extern "C" { int rfio_HsmIf_reqtoput (char *); }
 extern "C" { int DLL_DECL rfio_parse(char *, char **, char **); }
 extern "C" { int rfio_HsmIf_IsHsmFile (const char *); }
 extern "C" { char *getconfent(char *, char *, int); }
-extern "C" { int DLL_DECL use_castor2_api(); }
 
 #ifdef R__CASTOR2
 extern int tStageHostKey;
 extern int tStagePortKey;
 extern int tSvcClassKey;
 extern int tCastorVersionKey;
-#endif
-
+extern "C" { int DLL_DECL use_castor2_api(); }
 
 //______________________________________________________________________________
 static int UseCastor2API()
 {
    // Function that checks whether we should use the old or new stager API.
-   
+
   int version=use_castor2_api();
   return version;
 }
+
+#else
+
+//______________________________________________________________________________
+static int UseCastor2API()
+{
+   // Function that checks whether we should use the old or new stager API.
+
+   char *p;
+
+   if (((p = getenv(RFIO_USE_CASTOR_V2)) == 0) &&
+       ((p = getconfent("RFIO","USE_CASTOR_V2",0)) == 0)) {
+      // Variable not set: compat mode
+      return 0;
+   }
+   if ((strcmp(p,"YES") == 0) || (strcmp(p,"yes") == 0) || (atoi(p) == 1)) {
+      // Variable set to yes or 1 but old CASTOR 1: compat mode + warning
+      static int once = 0;
+      if (!once) {
+         ::Warning("UseCastor2API", "asked to use CASTOR 2, but linked with CASTOR 1");
+         once = 1;
+      }
+      return 0;
+   }
+   // Variable set but not to 1 : compat mode
+   return 0;
+}
+
+#endif
 
 
 ClassImp(TCastorFile)
