@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.155 2007/02/18 17:03:24 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.156 2007/03/02 10:24:14 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -850,11 +850,19 @@ Bool_t TSystem::IsFileInIncludePath(const char *name, char **fullpath)
 const char *TSystem::DirName(const char *pathname)
 {
    // Return the directory name in pathname. DirName of /user/root is /user.
+   // In case no dirname is specified "." is returned.
 
    if (pathname && strchr(pathname, '/')) {
       R__LOCKGUARD2(gSystemMutex);
 
-      static char buf[1000];
+      static int len = 0;
+      static char *buf = 0;
+      int l = strlen(pathname);
+      if (l > len) {
+         delete [] buf;
+         len = l;
+         buf = new char [len+1];
+      }
       strcpy(buf, pathname);
       char *r = strrchr(buf, '/');
       if (r != buf)
@@ -863,7 +871,7 @@ const char *TSystem::DirName(const char *pathname)
          *(r+1) = '\0';
       return buf;
    }
-   return WorkingDirectory();
+   return ".";
 }
 
 //______________________________________________________________________________
@@ -1510,9 +1518,8 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       delete [] path;
    }
 
-   if ((strstr(module, "Gui")) ||
-       (strstr(module, "Gpad")))
-      gApplication->InitializeGraphics();
+   if ((strstr(module, "Gui")) || (strstr(module, "Gpad")))
+      if (gApplication) gApplication->InitializeGraphics();
 
    if (!entry || !entry[0]) return i;
 
