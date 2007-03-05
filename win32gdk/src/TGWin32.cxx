@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.118 2007/02/21 09:52:14 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.119 2007/03/05 09:10:03 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Valeri Onuchin, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -2198,6 +2198,11 @@ Int_t TGWin32::InitWindow(ULong_t win)
    ::ShowWindow(window, SW_RESTORE);
    ::BringWindowToTop(window);
 
+   if (!fUseSysPointers) {
+      ::SetClassLong(window, GCL_HCURSOR,
+                    (LONG)GDK_CURSOR_XID(fCursors[kPointer]));
+   }
+   
    // Initialise the window structure
 
    gCws->drawing = gCws->window;
@@ -4568,6 +4573,10 @@ Window_t TGWin32::CreateWindow(Window_t parent, Int_t x, Int_t y,
          background_color.blue = GetBValue(attr->fBackgroundPixel);
          gdk_window_set_background(newWin, &background_color);
       }
+   }
+   if (!fUseSysPointers) {
+      ::SetClassLong((HWND)GDK_DRAWABLE_XID(newWin), GCL_HCURSOR, 
+                     (LONG)GDK_CURSOR_XID(fCursors[kPointer]));
    }
    return (Window_t) newWin;
 }

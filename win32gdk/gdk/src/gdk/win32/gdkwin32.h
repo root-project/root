@@ -43,6 +43,7 @@ extern "C" {
 #define GDK_IMAGE_XIMAGE(image)       (((GdkImagePrivate *) image)->ximage)
 #define GDK_COLORMAP_XDISPLAY(cmap)   NULL
 #define GDK_COLORMAP_WIN32COLORMAP(cmap)(((GdkColormapPrivateWin32 *) cmap)->xcolormap)
+#define GDK_CURSOR_XID(cursor)        (((GdkCursorPrivate*) cursor)->xcursor)
 #define GDK_VISUAL_XVISUAL(vis)       (((GdkVisualPrivate *) vis)->xvisual)
 
 #define GDK_WINDOW_XDISPLAY	      GDK_DRAWABLE_XDISPLAY

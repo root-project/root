@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.175 2007/03/01 09:12:01 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.176 2007/03/05 09:10:02 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -55,7 +55,7 @@ X11.FindBestVisual:      yes
 X11.UseXft:              yes
 
 # Settings for Win32 behavior.
-Win32.UseSysPointers:    yes
+Win32.UseSysPointers:    no
 
 # Default editor.
 Unix.*.Editor:           vi
