@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.167 2007/03/02 10:24:14 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.168 2007/03/05 14:26:12 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1368,8 +1368,8 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
             // yield execution to another thread that is ready to run
             // if no other thread is ready, sleep 1 ms before to return
             if (gGlobalEvent) {
-               if (::WaitForSingleObject(gGlobalEvent, 1) == WAIT_OBJECT_0)
-                  ::ResetEvent(gGlobalEvent);
+               ::WaitForSingleObject(gGlobalEvent, 1);
+               ::ResetEvent(gGlobalEvent);
             }
             return;
          }
