@@ -1,4 +1,4 @@
-// @(#)root/castor:$Name:  $:$Id: TCastorFile.cxx,v 1.14 2006/07/24 16:26:28 rdm Exp $
+// @(#)root/castor:$Name:  $:$Id: TCastorFile.cxx,v 1.1 2006/09/19 16:15:47 rdm Exp $
 // Author: Fons Rademakers + Jean-Damien Durand 17/09/2003 + Ben Couturier 31/05/2005
 // + Giulia Taurelli 26/04/2006
 
@@ -50,7 +50,6 @@
 
 #ifdef R__CASTOR2
 #include <stager_api.h>       // For the new CASTOR 2 Stager
-#include <RfioTURL.h>         // For the new url parsing
 #endif
 #define RFIO_KERNEL           // Get access to extra symbols in the headers
 #include <stage_api.h>        // Dial with CASTOR stager
@@ -67,290 +66,24 @@ extern "C" { int rfio_HsmIf_reqtoput (char *); }
 extern "C" { int DLL_DECL rfio_parse(char *, char **, char **); }
 extern "C" { int rfio_HsmIf_IsHsmFile (const char *); }
 extern "C" { char *getconfent(char *, char *, int); }
+extern "C" { int DLL_DECL use_castor2_api(); }
 
 #ifdef R__CASTOR2
 extern int tStageHostKey;
 extern int tStagePortKey;
 extern int tSvcClassKey;
 extern int tCastorVersionKey;
-
-//______________________________________________________________________________
-int TCastorFile::ParseAndSetGlobal()
-{
-   // This function does the parsing to deal with the new Turl
-   // and set the global variables needed by castor.
-
-   char **globalHost,  **globalSvc;
-   int  *globalVersion, *globalPort;
-
-   char *myHost,  *mySvcClass;
-   int  myVersion, myPort;
-
-   int ret;
-   char *options, *myCastorVersion, *path2, *path1, *q1, *q;
-   int versionNum;
-   char *myTurl;
-   int newTurl=0;
-
-   globalHost = globalSvc = 0;
-   myHost = mySvcClass = 0;
-   versionNum = 0;
-   globalVersion = globalPort = 0;
-   myVersion = myPort = 0;
-
-   myTurl = strdup(fUrl.GetFile()); // parsing of host and port not done by TUrl class.
-   options = strdup(fUrl.GetOptions());
-
-   // I parse the host and port and I save it into myHost and myPort
-
-   // check to see if it is the new Turl or not
-
-   path2 = strstr(options,"path=");
-   if (path2) {
-      newTurl = 1;
-      path2 += 5; // to remove "path="
-   }
-
-   if (newTurl) {
-
-      q = strstr(myTurl,":");
-      q1 = strstr(myTurl,"/");
-
-      if (myTurl!=q && myTurl!=q1) {
-         if (q && q1) {
-            *q='\0';
-            q+=1;
-            fUrl.SetHost(myTurl);
-            *q1='\0';
-            q1+=1;
-            fUrl.SetPort(atoi(q));
-         }
-         if (!q && q1) {
-            *q1='\0';
-            q1+=1;
-            fUrl.SetHost(myTurl);
-         }
-      } else {
-         if(q1) q1+=1;
-      }
-      if (q1) {
-         fUrl.SetFile(q1);
-      } else {
-         fUrl.SetFile("");
-      }
-   }
-
-   free(myTurl);
-
-
-   // Stage host
-   ret=Cglobals_get(&tStageHostKey,(void **)&globalHost,sizeof(void*));
-   if (ret<0) return -1;
-
-   if (*globalHost) {
-      free(*globalHost);
-      *globalHost=0;
-   }
-
-   if (strcmp(fUrl.GetHost(),"")) {
-      *globalHost=strdup(fUrl.GetHost());
-   }
-
-   // stage port
-   ret=Cglobals_get(&tStagePortKey,(void **)&globalPort,sizeof(int));
-
-   if (ret<0) {
-      if (*globalHost) {
-         free(*globalHost);
-         *globalHost=0;
-      }
-      return -1;
-   }
-   *globalPort=0;
-   if (fUrl.GetPort()>0) {
-      *globalPort=fUrl.GetPort();
-   }
-
-   // From here I consider the Option given after ? (updating the right file path)
-   // parsing of options given
-
-
-   mySvcClass=strstr(options,"svcClass=");
-   if (mySvcClass) {
-      mySvcClass+=9; // to remove "svcClass="
-   }
-
-   myCastorVersion=strstr(options,"castorVersion=");
-   if (myCastorVersion) {
-      myCastorVersion+=14; // to remove "castorVersion="
-   }
-
-   if (mySvcClass) {
-      q1=strstr(mySvcClass,"&");
-      if (q1) {
-         *q1='\0';
-      }
-   }
-   if (myCastorVersion) {
-      q1=strstr(myCastorVersion,"&");
-      if (q1){
-         *q1='\0';
-      }
-   }
-   if (path2) {
-      q1=strstr(path2,"&");
-      if(q1) {
-         *q1='\0';
-      }
-   }
-
-   path1 = (char*)fUrl.GetFile();
-
-   if (strcmp(path1,"") && path2) {
-      // not possible to have the path twice
-      if (*globalHost) {
-         free(*globalHost);
-         *globalHost=0;
-      }
-      free(options);
-      return -1;
-   }
-
-   // ... only path as option could be specified for the new Turl
-   // ... and path1 is used for the old one
-
-   if (!strcmp(path1,"") && !path2) {
-      // at least the path should be specified
-      if (*globalHost) {
-         free(*globalHost);
-         *globalHost=0;
-      }
-      free(options);
-      return(-1);
-   }
-
-   if (path2) {
-      fUrl.SetFile(path2);
-   }
-
-   // Svc class set
-   ret=Cglobals_get(&tSvcClassKey,(void **)&globalSvc,sizeof(void*));
-
-   if (ret<0) {
-      if(*globalHost){
-         free(*globalHost);
-         *globalHost=0;
-      }
-      free(options);
-      return -1;
-   }
-
-   if (*globalSvc) {
-      free(*globalSvc);
-      *globalSvc=0;
-   }
-
-   if (mySvcClass && strcmp(mySvcClass,"")) {
-      *globalSvc=strdup(mySvcClass);
-   }
-
-   // castor version
-   ret=Cglobals_get(&tCastorVersionKey,(void **)&globalVersion,sizeof(int));
-
-   if (ret<0) {
-      serrno = EINVAL;
-      if (*globalHost) {
-         free(*globalHost);
-         *globalHost=0;
-      }
-      if (*globalSvc) {
-         free(*globalSvc);
-         *globalSvc=0;
-      }
-      free(options);
-      return -1;
-
-   }
-   *globalVersion=0;
-
-   if (myCastorVersion) {
-      if (!strcmp(myCastorVersion,"2")) {
-         versionNum=2;
-      }
-      if (!strcmp(myCastorVersion,"1")) {
-         versionNum=1;
-      }
-
-   }
-
-   if (versionNum) {
-      *globalVersion=versionNum;
-   }
-
-   ret=getDefaultForGlobal(globalHost,globalPort,globalSvc,globalVersion);
-   if (ret<0) {
-      if (*globalHost) {
-         free(*globalHost);
-         *globalHost=0;
-      }
-      if (*globalSvc) {
-         free(*globalSvc);
-         *globalSvc=0;
-      }
-      free(options);
-      return -1;
-
-   }
-   free(options);
-   path1=strdup(fUrl.GetFile());
-   if (strstr(path1,"/castor")== path1) {
-      fUrl.SetHost("");
-      fUrl.SetPort(0);
-   }
-   free(path1);
-   return 0;
-}
-
-//______________________________________________________________________________
-static int UseCastor2API()
-{
-   // Function that checks whether we should use the old or new stager API.
-
-   int *auxVal=0;
-   int ret=Cglobals_get(& tCastorVersionKey, (void**) &auxVal,sizeof(int));
-   if (ret==0) {
-      return *auxVal==2?1:0;
-   }
-   return 0;
-}
-
-#else
-
-//______________________________________________________________________________
-static int UseCastor2API()
-{
-   // Function that checks whether we should use the old or new stager API.
-
-   char *p;
-
-   if (((p = getenv(RFIO_USE_CASTOR_V2)) == 0) &&
-       ((p = getconfent("RFIO","USE_CASTOR_V2",0)) == 0)) {
-      // Variable not set: compat mode
-      return 0;
-   }
-   if ((strcmp(p,"YES") == 0) || (strcmp(p,"yes") == 0) || (atoi(p) == 1)) {
-      // Variable set to yes or 1 but old CASTOR 1: compat mode + warning
-      static int once = 0;
-      if (!once) {
-         ::Warning("UseCastor2API", "asked to use CASTOR 2, but linked with CASTOR 1");
-         once = 1;
-      }
-      return 0;
-   }
-   // Variable set but not to 1 : compat mode
-   return 0;
-}
 #endif
+
+
+//______________________________________________________________________________
+static int UseCastor2API()
+{
+   // Function that checks whether we should use the old or new stager API.
+   
+  int version=use_castor2_api();
+  return version;
+}
 
 
 ClassImp(TCastorFile)
@@ -385,19 +118,41 @@ void TCastorFile::FindServerAndPath()
 {
    // Find the CASTOR disk server and internal file path.
 
-#ifdef R__CASTOR2
-   int ret=ParseAndSetGlobal();
+   // it is just called the rfio_parse and no extra parsing is added here to that
 
-   if (ret<0) {
-      Error("FindServerAndPath", "can't parse the turl given");
+
+   TString castorturl;
+   char *fname=0;
+   char *host=0;
+   char *name=0;
+   
+  // to be able to use the turl starting with  castor:
+
+   if (!strcmp(fUrl.GetProtocol(),"castor"))
+      castorturl=Form("%s://%s","rfio",fUrl.GetFileAndOptions());
+   else
+      castorturl=Form("%s://%s",fUrl.GetProtocol(),fUrl.GetFileAndOptions());  
+   
+   // the complete turl in fname
+ 
+   fname=strdup((char*)castorturl.Data()); // for compatibility with rfio_parse interface
+   if (::rfio_parse(fname, &host, &name)>=0) {
+      castorturl = Form("%s",(!name || !strstr(name,"/castor"))?fname:name);
+      delete[] fname;
+      fname=strdup((char*)castorturl.Data());
+     
+   } else {
+      delete[] fname;
+      Error("FindServerAndPath", "error parsing %s", fUrl.GetUrl());
       return;
    }
-#endif
+   
 
    if (!UseCastor2API()) {
+ 
+      delete[] fname; //in castor 1 is not used the new turl 
 
       struct stgcat_entry *stcp_output = 0;
-
       if (rfio_HsmIf_IsHsmFile(fUrl.GetFile()) == RFIO_HSM_CNS) {
          // This is a CASTOR file
          int flags = O_RDONLY;
@@ -495,6 +250,7 @@ void TCastorFile::FindServerAndPath()
          // Parse orig string to get disk server host
          char *filename;
          char *realhost = 0;
+         
          rfio_parse(stcp_output->ipath, &realhost, &filename);
          if (realhost == 0) {
             serrno = SEINTERNAL;
@@ -544,17 +300,20 @@ void TCastorFile::FindServerAndPath()
       TUrl rurl(r);
       fUrl = rurl;
 
-      Info("FindServerAndPath"," fDiskServer: %s, r: %s", fDiskServer.Data(), r.Data());
+      Info("FindServerAndPath G"," fDiskServer: %s, r: %s", fDiskServer.Data(), r.Data());
 
       // Now ipath is not null and contains the real internal path on the disk
       // server 'host', e.g. it is fDiskServer:fInternalPath
-      fInternalPath = stcp_output->ipath;
-      free(stcp_output);
-
+      fInternalPath = stcp_output==0?0:stcp_output->ipath;
+      if(stcp_output)
+         free(stcp_output);
    } else {
 
 #ifdef R__CASTOR2
+
       // We use the new stager API
+      // I use fname which has the Turl already parsed correctly
+
       int flags = O_RDONLY;
       int rc;
       struct stage_io_fileresp *response = 0;
@@ -577,7 +336,7 @@ void TCastorFile::FindServerAndPath()
       opts.service_class=0;
       opts.stage_version=0;
 
-      ret=Cglobals_get(& tStageHostKey, (void**) &auxPoint,sizeof(void*));
+      int ret=Cglobals_get(& tStageHostKey, (void**) &auxPoint,sizeof(void*));
       if(ret==0){
          opts.stage_host=*auxPoint;
       }
@@ -591,9 +350,12 @@ void TCastorFile::FindServerAndPath()
          opts.service_class=*auxPoint;
       }
 
+      // in the stage_open I use the fname which is the result of the rfio_parsing
+
+
       rc = stage_open(0,
                       MOVER_PROTOCOL_ROOT,
-                      (fUrl.GetFile()),
+                      fname,
                       flags,
                       (mode_t) 0666,
                       0,
@@ -604,26 +366,29 @@ void TCastorFile::FindServerAndPath()
       if (rc != 0) {
          Error("FindServerAndPath", "stage_open failed: %s (%s)",
                sstrerror(serrno), stageerrbuf);
+         delete[] fname;
          if (response) free(response);
          if (requestId) free(requestId);
          return;
       }
 
       if (response == 0) {
-         Error("FindServerAndPath", "response was null for %s (Request %s) %d/%s",
-               fUrl.GetFile(), requestId,
+         Error("FindServerAndPath", "response was null for %s (Request %s) %d/%s",fname, 
+               requestId,
                serrno, sstrerror(serrno));
          if (requestId) free(requestId);
+         delete[] fname;
          return;
       }
 
       if (response->errorCode != 0) {
          serrno = response->errorCode;
          Error("FindServerAndPath", "error getting file %s (Request %s) %d/%s",
-               fUrl.GetFile(), requestId,
+               fname, requestId,
                serrno, sstrerror(serrno));
          free(response);
          if (requestId) free(requestId);
+         delete[] fname;
          return;
       }
 
@@ -631,12 +396,15 @@ void TCastorFile::FindServerAndPath()
 
       if (url == 0) {
          Error("FindServerAndPath", "error getting file %s (Request %s) %d/%s",
-               fUrl.GetFile(), requestId,
+               fname, requestId,
                serrno, sstrerror(serrno));
          free(response);
          if (requestId) free(requestId);
+         delete[] fname;
          return;
       }
+      
+      delete[] fname; //not used anymore because now it is possible to use directly the rurl
 
       TUrl rurl(url);
       // Set the protocol prefix for TNetFile.

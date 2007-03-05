@@ -1,4 +1,4 @@
-// @(#)root/castor:$Name:  $:$Id: TCastorFile.h,v 1.4 2006/07/24 16:26:28 rdm Exp $
+// @(#)root/castor:$Name:  $:$Id: TCastorFile.h,v 1.1 2006/09/19 16:15:47 rdm Exp $
 // Author: Fons Rademakers  17/09/2003 + Giulia Taurelli  29/06/2006
 
 /*************************************************************************
@@ -56,7 +56,6 @@ private:
                       Int_t tcpwindowsize, Bool_t forceOpen,
                       Bool_t forceRead);
    Int_t SysClose(Int_t fd);
-   int   ParseAndSetGlobal();
 
 public:
    TCastorFile(const char *url, Option_t *option = "", const char *ftitle = "",
