@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.69 2006/12/18 16:05:51 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.70 2006/12/21 10:57:55 couet Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -2444,8 +2444,7 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    t.SetTextFont(fTextFont);
    t.GetTextExtent(w, h, chars);
    Double_t charsLength = gPad->AbsPixeltoX(w)-gPad->AbsPixeltoX(0);
-   if(txalh == 2) x = x - charsLength/2;
-   if(txalh == 3) x = x - charsLength;
+   Int_t PScharsLength = XtoPS(charsLength)-XtoPS(0);
 
    // Text angle.
    Int_t psangle = Int_t(0.5 + fTextAngle);
@@ -2469,6 +2468,8 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    WriteInteger(XtoPS(x));
    WriteInteger(YtoPS(y));
    PrintStr(Form(" t %d r ", psangle));
+   if(txalh == 2) PrintStr(Form(" %d 0 t ", -PScharsLength/2));
+   if(txalh == 3) PrintStr(Form(" %d 0 t ", -PScharsLength));
    PrintStr(psfont[font-1]);
    PrintStr(Form(" findfont %g sf 0 0 m (",fontsize));
 
