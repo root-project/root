@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.15 2006/10/20 21:07:40 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.16 2007/01/23 11:27:13 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -49,7 +49,11 @@ public:
 
    virtual void     GetKnot(Int_t i, Double_t &x, Double_t &y) const =0;
    virtual void     Draw(Option_t *option="");
-   virtual Int_t    GetNpx() const {return fNpx;}
+   virtual Double_t GetDelta() const {return fDelta;}
+   virtual Int_t    GetNp()    const {return fNp;}
+   virtual Int_t    GetNpx()   const {return fNpx;}
+   virtual Double_t GetXmin()  const {return fXmin;}
+   virtual Double_t GetXmax()  const {return fXmax;}
    virtual void     Paint(Option_t *option="");
    virtual Double_t Eval(Double_t x) const=0;
    virtual void     SaveAs(const char * /*filename*/,Option_t * /*option*/) const {;}
