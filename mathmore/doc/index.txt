@@ -1,9 +1,0 @@
-This directory contains mathematical functions and classes for numerical algorithms implemented using the Gnu Scientific Library (GSL)   
-BEGIN_HTML
- See:
-<ul>
-<li><a href="http://seal.web.cern.ch/seal/MathLibs/MathMore/html/index.html">Online doc for MathMore</a></li>
-<li><a href="ftp://root.cern.ch/root/doc/chapter13.pdf">The Math Chapter in the Users Guide
-    </a></li>
-</ul>
-END_HTML

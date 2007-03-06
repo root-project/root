@@ -1,6 +1,0 @@
-for i in *.c
-do
-  cint $i
-done
-sleep 3
-rm G__*
