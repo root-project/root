@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.136 2007/03/01 09:42:17 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.137 2007/03/05 15:34:21 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -989,27 +989,27 @@ const char *TCint::GetCurrentMacroName()
       <div class="code">
       <pre style="margin:0pt">#include &lt;iostream&gt;
 void inclfunc() {
-   std::cout &lt;&lt; "In inclfile.h" &lt;&lt std::endl;
-   std::cout &lt;&lt "  TCint::GetCurrentMacroName() returns  " &lt;&lt
-      TCint::GetCurrentMacroName() &lt;&lt std::endl;
-   std::cout &lt;&lt "  TCint::GetTopLevelMacroName() returns " &lt;&lt
-      TCint::GetTopLevelMacroName() &lt;&lt std::endl;
+   std::cout &lt;&lt; "In inclfile.h" &lt;&lt; std::endl;
+   std::cout &lt;&lt; "  TCint::GetCurrentMacroName() returns  " &lt;&lt;
+      TCint::GetCurrentMacroName() &lt;&lt; std::endl;
+   std::cout &lt;&lt; "  TCint::GetTopLevelMacroName() returns " &lt;&lt;
+      TCint::GetTopLevelMacroName() &lt;&lt; std::endl;
 }</pre></div>
-      <div style="clear:both"</div>
+      <div style="clear:both"></div>
       <span style="color:#ffffff;background-color:#7777ff;padding-left:0.3em;padding-right:0.3em">mymacro.C</span>
       <div style="border:solid 1px #ffff77;background-color: #ffffdd;float:left;padding:0.5em;margin-bottom:0.7em;">
       <pre style="margin:0pt">#include &lt;iostream&gt;
 #include "inclfile.h"
 void mymacro() {
-   std::cout &lt;&lt "In mymacro.C" &lt;&lt std::endl;
-   std::cout &lt;&lt "  TCint::GetCurrentMacroName() returns  " &lt;&lt
-      TCint::GetCurrentMacroName() &lt;&lt std::endl;
-   std::cout &lt;&lt "  TCint::GetTopLevelMacroName() returns " &lt;&lt
-      TCint::GetTopLevelMacroName() &lt;&lt std::endl;
-   std::cout &lt;&lt "  Now calling inclfunc..." &lt;&lt std::endl;
+   std::cout &lt;&lt; "In mymacro.C" &lt;&lt; std::endl;
+   std::cout &lt;&lt; "  TCint::GetCurrentMacroName() returns  " &lt;&lt;
+      TCint::GetCurrentMacroName() &lt;&lt; std::endl;
+   std::cout &lt;&lt; "  TCint::GetTopLevelMacroName() returns " &lt;&lt;
+      TCint::GetTopLevelMacroName() &lt;&lt; std::endl;
+   std::cout &lt;&lt; "  Now calling inclfunc..." &lt;&lt; std::endl;
    inclfunc();
 }</pre></div>
-<div style="clear:both"</div>
+<div style="clear:both"></div>
 <!-- */
 // --> END_HTML
    // Running mymacro.C will print:

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.23 2007/01/29 15:10:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.24 2007/01/29 15:53:35 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -54,6 +54,7 @@ class TQSlot : public TObject, public TRefCnt {
 
 protected:
    G__CallFunc   *fFunc;      // CINT method invocation environment
+   G__ClassInfo  *fClass;     // CINT class for fFunc
    TFunction     *fMethod;    // slot method or global function
    Long_t         fOffset;    // offset added to object pointer
    TString        fName;      // full name of method
@@ -93,6 +94,7 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
    // To execute the method call TQSlot::ExecuteMethod(object,...).
 
    fFunc      = 0;
+   fClass     = 0;
    fOffset    = 0;
    fMethod    = 0;
    fName      = "";
@@ -136,12 +138,12 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
          fMethod = cl->GetMethodWithPrototype(method, proto);
       }
    } else {
-      G__ClassInfo gcl;
+      fClass = new G__ClassInfo();
       if (params) {
-         fFunc->SetFunc(&gcl, (char*)funcname, params, &fOffset);
+         fFunc->SetFunc(fClass, (char*)funcname, params, &fOffset);
          fMethod = gROOT->GetGlobalFunction(funcname, params, kTRUE);
       } else {
-         fFunc->SetFuncProto(&gcl, (char*)funcname, proto, &fOffset);
+         fFunc->SetFuncProto(fClass, (char*)funcname, proto, &fOffset);
          fMethod = gROOT->GetGlobalFunctionWithPrototype(funcname, proto, kTRUE);
       }
    }
@@ -165,6 +167,7 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
    // To execute the method call TQSlot::ExecuteMethod(object,...).
 
    fFunc      = 0;
+   fClass     = 0;
    fOffset    = 0;
    fMethod    = 0;
    fName      = funcname;
@@ -188,24 +191,24 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
    R__LOCKGUARD2(gCINTMutex);
    fFunc = new G__CallFunc;
 
-   G__ClassInfo gcl;
+   fClass = new G__ClassInfo();
    TClass *cl = 0;
 
    if (!class_name)
       ;                       // function
    else {
-      gcl.Init(class_name);   // class
+      fClass->Init(class_name);   // class
       cl = TClass::GetClass(class_name);
    }
 
    if (params) {
-      fFunc->SetFunc(&gcl, method, params, &fOffset);
+      fFunc->SetFunc(fClass, method, params, &fOffset);
       if (cl)
          fMethod = cl->GetMethod(method, params);
       else
          fMethod = gROOT->GetGlobalFunction(method, params, kTRUE);
    } else {
-      fFunc->SetFuncProto(&gcl, method, proto , &fOffset);
+      fFunc->SetFuncProto(fClass, method, proto , &fOffset);
       if (cl)
          fMethod = cl->GetMethodWithPrototype(method, proto);
       else
@@ -213,7 +216,6 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
    }
 
    delete [] method;
-   return;
 }
 
 //______________________________________________________________________________
@@ -222,8 +224,10 @@ TQSlot::~TQSlot()
    // TQSlot dtor.
 
    // don't delete executing environment of a slot that is being executed
-   if (!fExecuting)
+   if (!fExecuting) {
       delete fFunc;
+      delete fClass;
+   }
 }
 
 //______________________________________________________________________________
