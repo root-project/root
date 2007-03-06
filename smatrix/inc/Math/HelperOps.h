@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: HelperOps.h,v 1.11 2006/06/30 14:45:46 moneta Exp $
+// @(#)root/smatrix:$Name: v5-14-00-patches $:$Id: HelperOps.h,v 1.12 2006/07/03 14:30:44 moneta Exp $
 // Authors: J. Palacios    2006  
 
 #ifndef ROOT_Math_HelperOps
@@ -209,8 +209,46 @@ namespace Math {
          }
       }
    };
-   //   Need to have a specialization for sym += sym ?
-    
+
+   /** 
+       Specialization for symmetric matrices
+       Evaluate the expression performing a += operation for symmetric matrices
+       Need to have a separate functions to avoid to modify two times the off-diagonal 
+       elements (i.e applying two times the expression)
+       Need to check whether creating a temporary object with the expression result
+       (like in op:  A += A * B )
+   */
+   template <class T, 
+             unsigned int D1, unsigned int D2, 
+             class A>
+   struct PlusEquals<T, D1, D2, A, MatRepSym<T,D1>, MatRepSym<T,D1> > 
+   {
+      static void Evaluate(SMatrix<T,D1,D2,MatRepSym<T,D1> >& lhs,  const Expr<A,T,D1,D2, MatRepSym<T,D1> >& rhs) 
+      {
+         if (! rhs.IsInUse(lhs.begin() )  ) { 
+            unsigned int l = 0;  // l span storage of sym matrices
+            for(unsigned int i=0; i<D1; ++i) 
+               for(unsigned int j=0; j<=i; ++j) { 
+                  lhs.fRep.Array()[l] += rhs(i,j);
+                  l++;
+               }
+         }
+         else { 
+            T tmp[MatRepSym<T,D1>::kSize]; 
+            unsigned int l = 0; 
+            for(unsigned int i=0; i<D1; ++i) 
+               for(unsigned int j=0; j<=i; ++j) { 
+                  tmp[l] = rhs(i,j);
+                  l++;
+               }
+            // += now using the temp object 
+            for(unsigned int i=0; i<MatRepSym<T,D1>::kSize; ++i) lhs.fRep.Array()[i] += tmp[i];
+         }
+      }
+   };
+   /**
+      Specialization for symmetrix += general : NOT Allowed operation 
+    */    
    template <class T, unsigned int D1, unsigned int D2, class A>
    struct PlusEquals<T, D1, D2, A, MatRepSym<T,D1>, MatRepStd<T,D1,D2> > 
    {
@@ -255,7 +293,46 @@ namespace Math {
          }
       }
    };
-    
+   /** 
+       Specialization for symmetric matrices.
+       Evaluate the expression performing a -= operation for symmetric matrices
+       Need to have a separate functions to avoid to modify two times the off-diagonal 
+       elements (i.e applying two times the expression)
+       Need to check whether creating a temporary object with the expression result
+       (like in op:  A -= A + B )
+   */
+   template <class T, 
+             unsigned int D1, unsigned int D2, 
+             class A>
+   struct MinusEquals<T, D1, D2, A, MatRepSym<T,D1>, MatRepSym<T,D1> > 
+   {
+      static void Evaluate(SMatrix<T,D1,D2,MatRepSym<T,D1> >& lhs,  const Expr<A,T,D1,D2, MatRepSym<T,D1> >& rhs) 
+      {
+         if (! rhs.IsInUse(lhs.begin() )  ) { 
+            unsigned int l = 0;  // l span storage of sym matrices
+            for(unsigned int i=0; i<D1; ++i) 
+               for(unsigned int j=0; j<=i; ++j) { 
+                  lhs.fRep.Array()[l] -= rhs(i,j);
+                  l++;
+               }
+         }
+         else { 
+            T tmp[MatRepSym<T,D1>::kSize]; 
+            unsigned int l = 0; 
+            for(unsigned int i=0; i<D1; ++i) 
+               for(unsigned int j=0; j<=i; ++j) { 
+                  tmp[l] = rhs(i,j);
+                  l++;
+               }
+            // -= now using the temp object 
+            for(unsigned int i=0; i<MatRepSym<T,D1>::kSize; ++i) lhs.fRep.Array()[i] -= tmp[i];
+         }
+      }
+   };
+
+   /**
+      Specialization for symmetrix -= general : NOT Allowed operation 
+    */
    template <class T, unsigned int D1, unsigned int D2, class A>
    struct MinusEquals<T, D1, D2, A, MatRepSym<T,D1>, MatRepStd<T,D1,D2> > 
    {

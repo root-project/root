@@ -6,8 +6,8 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-include ../../test/Makefile.arch
-include ../../config/Makefile.config
+include $(ROOTSYS)/test/Makefile.arch
+include $(ROOTSYS)/config/Makefile.config
 
 #------------------------------------------------------------------------------
 
@@ -148,7 +148,10 @@ $(STRESSOPERATIONS):  $(STRESSOPERATIONSOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-
+check: 	all
+	for prog in $(PROGRAMS); do \
+	   ./$$prog > $$prog.out; \
+	done; 
 
 clean:
 		@rm -f $(OBJS) $(PROGRAMS) core 

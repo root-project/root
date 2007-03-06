@@ -107,3 +107,6 @@ distclean::     distclean-smatrix
 
 test-smatrix: 	all-smatrix
 		@cd $(SMATRIXDIR)/test && $(MAKE)
+
+check-smatrix: 	test-smatrix
+		@cd $(SMATRIXDIR)/test && $(MAKE)

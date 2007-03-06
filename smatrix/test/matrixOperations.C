@@ -1,7 +1,25 @@
+#include "TGraphErrors.h"
+#include "TMultiGraph.h"
+#include "TCanvas.h"
+#include "TLegend.h"
+#include "TPaveText.h"
+#include "TFile.h"
+#include "TProfile.h"
+#include "TStyle.h"
+#include "TMath.h"
+#include "TFrame.h"
+
+#include <string>
+#include <iostream>
+
 int fillCol=20;
 std::string systemName; 
+bool drawSingleGraph = true; 
+
 int topX=10;
 int topY=50;
+
+#define N 10
 
 
 void matrixOperations_do(std::string type = "", bool clhep=false, bool drawSingleGraph = false ); 
@@ -102,39 +120,41 @@ TGraphErrors * hd = h1;
     if (h6 != 0) tleg->AddEntry(h6, "HepMatrix_sym", "p");
     tleg->Draw();
 
+    { 
+       TPaveText *pt1 = new TPaveText(0.78,0.15,0.97,0.2,"brNDC");
+       pt1->AddText(systemName.c_str());
+       pt1->SetBorderSize(1);
+       pt1->Draw();
+       pt1->SetFillColor(0);
+    }
 
-    TPaveText *pt1 = new TPaveText(0.78,0.15,0.97,0.2,"brNDC");
-    pt1->AddText(systemName.c_str());
-    pt1->SetBorderSize(1);
-    pt1->Draw();
-    pt1->SetFillColor(0);
-
-
-    TPaveText *pt1 = new TPaveText(0.3,0.91,0.7,0.98,"brNDC");
-    pt1->AddText(title);
-    pt1->SetBorderSize(1);
-    pt1->Draw();
-    pt1->SetFillColor(0);
-
+    { 
+       TPaveText *pt1 = new TPaveText(0.3,0.91,0.7,0.98,"brNDC");
+       pt1->AddText(title);
+       pt1->SetBorderSize(1);
+       pt1->Draw();
+       pt1->SetFillColor(0);
+    }
     
 }
 
 void GetData(std::string s,double * x, double * y, double * ey) {
-  if (systemName != "") 
-    std::string fileName="testOperations_" + systemName + ".root";
-  else 
-    std::string fileName="testOperations.root";
+   std::string fileName;
+   if (systemName != "") 
+      fileName="testOperations_" + systemName + ".root";
+   else 
+      fileName="testOperations.root";
 
-  TFile * f = new TFile(fileName.c_str());
-  TProfile * h1 = (TProfile * ) f->Get(s.c_str() );
-  if (h1 ==0) { 
-    std::cout << "Profile " << s << " not found !!! " << std::endl;
-    return;
-  } 
-  for (int i = 0; i < N; ++i) { 
-    y[i] = h1->GetBinContent(int(x[i] + 0.1) ); 
-    ey[i] = h1->GetBinError(int(x[i] + 0.1) ); 
-  }
+   TFile * f = new TFile(fileName.c_str());
+   TProfile * h1 = (TProfile * ) f->Get(s.c_str() );
+   if (h1 ==0) { 
+      std::cout << "Profile " << s << " not found !!! " << std::endl;
+      return;
+   } 
+   for (int i = 0; i < N; ++i) { 
+      y[i] = h1->GetBinContent(int(x[i] + 0.1) ); 
+      ey[i] = h1->GetBinError(int(x[i] + 0.1) ); 
+   }
 }
 
 
@@ -146,15 +166,13 @@ void matrixOperations_do(std::string type, bool clhep, bool drawSingleGraph) {
    std::string cName = "c1_" + type; 
    std::string cTitle = "Matrix operations " + type;
 
-   TCanvas * c1 = new TCanvas(cName.c_str(),cTitle.c_str(),topX,topY,800*TMath::Sqrt(2),800);
+   TCanvas * c1 = new TCanvas(cName.c_str(),cTitle.c_str(),topX,topY,800*sqrt(2),800);
    topX+=20;
    topY+=20;
 
    c1->Divide(3,2);
 
-   const Int_t n = 4;
-#define N 10;
-   int nb = N;
+   const int nb = N;
    //double x[N] = { 2.,3.,4.,5.,7.,10,15,20,50,75,100};
    double x[N] = { 2.,3.,4.,5.,6,7.,10,15,20,30};
    //  timings
@@ -219,7 +237,7 @@ void matrixOperations_do(std::string type, bool clhep, bool drawSingleGraph) {
    TGraphErrors * g62 = 0; 
    if (clhep)     g52 = new TGraphErrors(nb,x, cmat,0, ec);
    if (clhep)     g62 = new TGraphErrors(nb,x, zmat,0, ez);
-   DrawData("v^{T} * M * v",g11,g21,g31,g41,g52,g62);
+   DrawData("v^{T} * M * v",g12,g22,g32,g42,g52,g62);
 
 
    c1->cd(4);
@@ -289,7 +307,7 @@ void matrixOperations_do(std::string type, bool clhep, bool drawSingleGraph) {
 
    if (drawSingleGraph) { 
      std::string c2Name = "c2_" + type; 
-     c2 = new TCanvas(c2Name.c_str(),"Matrix Operations",200,10,700,600);
+     TCanvas * c2 = new TCanvas(c2Name.c_str(),"Matrix Operations",200,10,700,600);
      DrawData("A * M * A^{T}",g15,g25,g35,g45,g55,g65);
      c2->SetRightMargin(0.028);
      c2->Update();

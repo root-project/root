@@ -1,0 +1,9 @@
+This directory contains  C++ classes for high performance vector and matrix computations. 
+BEGIN_HTML
+ See:
+<ul>
+<li><a href="http://www.cern.ch/mathlibs/sw/SMatrix/html/index.html">Online doc for SMatrix</a></li>
+<li><a href="ftp://root.cern.ch/root/doc/chapter13.pdf">The Math Chapter in the Users Guide
+    </a>describing the functionality of SMatrix</li>
+</ul>
+END_HTML
