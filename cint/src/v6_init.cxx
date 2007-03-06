@@ -1628,6 +1628,7 @@ int G__init_globals()
   G__iscpp = 1;
   G__cpplock=0;
   G__clock=0;
+  G__isconst = 0;
   G__constvar = 0;
   G__isexplicit = 0;
   G__unsigned = 0;
