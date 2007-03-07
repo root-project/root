@@ -1,3 +1,4 @@
 root_version
 *.log
 .root_hist
+rootmap_*
