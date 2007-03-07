@@ -1891,6 +1891,7 @@ extern G__EXPORT char *G__fulltagname(int tagnum,int mask_dollar);
 extern G__EXPORT void G__loadlonglong(int* ptag,int* ptype,int which);
 extern G__EXPORT int G__isanybase(int basetagnum,int derivedtagnum,long pobject);
 extern G__EXPORT int G__pop_tempobject(void);
+extern G__EXPORT int G__pop_tempobject_nodel(void);
 extern G__EXPORT char* G__stripfilename(char* filename);
 
 extern G__EXPORT int G__sizeof (G__value *object);
