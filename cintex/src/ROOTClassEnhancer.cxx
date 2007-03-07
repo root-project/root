@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name: v5-14-00 $:$Id: ROOTClassEnhancer.cxx,v 1.17 2006/12/14 18:05:18 brun Exp $
+// @(#)root/cintex:$Name: v5-14-00-patches $:$Id: ROOTClassEnhancer.cxx,v 1.17.2.1 2006/12/20 20:09:31 pcanal Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -321,8 +321,10 @@ namespace ROOT { namespace Cintex {
          }
          // Last resort: lookup root class
          else   {
+            std::string nam;
             Type t = Type::ByTypeInfo(typ);
-            std::string nam = CintName(t);
+            if (t) nam = CintName(t);
+            else   nam = CintName(Tools::Demangle(typ));
             fLastClass = ROOT::GetROOT()->GetClass(nam.c_str());
             fSub_types[fLastType=&typ] = fLastClass;
          }

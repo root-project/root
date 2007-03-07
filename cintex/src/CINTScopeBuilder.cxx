@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTScopeBuilder.cxx,v 1.7 2006/06/13 08:19:01 brun Exp $
+// @(#)root/cintex:$Name: v5-14-00-patches $:$Id: CINTScopeBuilder.cxx,v 1.8 2006/07/03 09:22:46 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -41,7 +41,12 @@ namespace ROOT { namespace Cintex {
       taginfo.tagnum  = -1;   // >> need to be pre-initialized to be understood by CINT
       if (scope.IsNamespace() )  taginfo.tagtype = 'n';
       else if (scope.IsClass() ) taginfo.tagtype = 'c';
-      else                       taginfo.tagtype = 'n'; // Undefined. Assume namespace
+      else  {
+         if ( sname.find('<') != string::npos )
+            taginfo.tagtype = 'c'; // Is a templated class
+         else
+            taginfo.tagtype = 'n'; // Undefined. Assume namespace
+      }
       taginfo.tagname = sname.c_str();
       int tagnum = G__defined_tagname(taginfo.tagname, 2);
       G__ClassInfo info(tagnum);
