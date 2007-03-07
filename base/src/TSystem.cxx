@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.156 2007/03/02 10:24:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.157 2007/03/05 14:21:36 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1518,7 +1518,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       delete [] path;
    }
 
-   if ((strstr(module, "Gui")) || (strstr(module, "Gpad")))
+   if ((strstr(module, "libGui")) || (strstr(module, "libGpad")))
       if (gApplication) gApplication->InitializeGraphics();
 
    if (!entry || !entry[0]) return i;
