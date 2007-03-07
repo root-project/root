@@ -1518,7 +1518,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       delete [] path;
    }
 
-   if ((strstr(module, "libGui")) || (strstr(module, "libGpad")))
+   if ((strstr(module, "Gui")) || (strstr(module, "Gpad")))
       if (gApplication) gApplication->InitializeGraphics();
 
    if (!entry || !entry[0]) return i;
@@ -2538,6 +2538,15 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    TString mapfilein = mapfile + ".in";
    TString mapfileout = mapfile + ".out";
 
+   TString libmapfilename;
+   AssignAndDelete( libmapfilename, ConcatFileName( build_loc, "rootmap_" ) );
+   libmapfilename += libname;
+#if defined(R__MACOSX)
+   Bool_t produceRootmap = kTRUE;
+#else
+   Bool_t produceRootmap = kFALSE;
+#endif
+
    ofstream mapfileStream( mapfilein, ios::out );
    {
       TString name = ".rootmap";
@@ -2599,11 +2608,24 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    if (result) {
       ifstream liblist(mapfileout);
       string libtoload;
+
+      ofstream libmapfile;
+      if (produceRootmap) {
+         libmapfile.open(libmapfilename.Data());
+         libmapfile << "Library." << libname.Data() << ": ";
+      }
+
       while ( liblist >> libtoload ) {
          // Load the needed library except for the library we are currently building!
          if (libtoload != library.Data() && libtoload != libname.Data() && libtoload != libname_ext.Data()) {
             gROOT->LoadClass("",libtoload.c_str());
+            if (produceRootmap) libmapfile << " " << libtoload;
          }
+      }
+
+      if (produceRootmap) {
+         libmapfile << endl;
+         libmapfile.close();
       }
    }
 
