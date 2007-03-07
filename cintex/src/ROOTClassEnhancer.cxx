@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.21 2007/02/07 13:21:52 brun Exp $
+// @(#)root/cintex:$Name:  $:$Id: ROOTClassEnhancer.cxx,v 1.22 2007/02/08 14:42:03 pcanal Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -69,11 +69,11 @@ namespace ROOT { namespace Cintex {
 
       virtual void Setup(void);
       virtual void CreateInfo(void);
-      TClass* Tclass() {  
+      TClass* Tclass() {
          if ( fTclass == 0 ) {
             fTclass = ROOT::GetROOT()->GetClass( Name().c_str() /*, kFALSE */);
          }
-         return fTclass; 
+         return fTclass;
       }
       const Type&   TypeGet() const { return fType; }
       const string& Name() const { return fName; }
@@ -106,7 +106,7 @@ namespace ROOT { namespace Cintex {
 #endif
 
    class ROOTEnhancerCont : public std::vector<ROOTClassEnhancerInfo*>  {
-   public: 
+   public:
       ROOTEnhancerCont() {}
       ~ROOTEnhancerCont()  {
          for(std::vector<ROOTClassEnhancerInfo*>::iterator j=begin(); j!= end(); ++j)
@@ -151,7 +151,7 @@ namespace ROOT { namespace Cintex {
       return (TClass*)cl;
    }
 
-   ROOTClassEnhancerInfo::ROOTClassEnhancerInfo(Type& t) : 
+   ROOTClassEnhancerInfo::ROOTClassEnhancerInfo(Type& t) :
       fTclass(0), fLastClass(0), fLastType(0)
    {
       // Constructor.
@@ -199,7 +199,7 @@ namespace ROOT { namespace Cintex {
          signature = FunctionTypeBuilder( PointerBuilder(TypeBuilder("TClass")));
          AddFunction("IsA", signature, Stub_IsA, ctxt, 0);
          //--- adding void Data_ShowMembers(void *, TMemberInspector&, char*)
-         signature = FunctionTypeBuilder( void_t, 
+         signature = FunctionTypeBuilder( void_t,
                                           ReferenceBuilder(TypeBuilder("TMemberInspector")),
                                           PointerBuilder(char_t));
          AddFunction("ShowMembers", signature, Stub_ShowMembers, ctxt, VIRTUAL);
@@ -224,14 +224,14 @@ namespace ROOT { namespace Cintex {
 #endif
       fDictionary_func = Allocate_void_function(context, Stub_Dictionary);
 
-      ::ROOT::TGenericClassInfo* info = new ::ROOT::TGenericClassInfo( 
-                                                                      Name().c_str(),                     // Class Name 
-                                                                      "",                              // declaration file Name 
+      ::ROOT::TGenericClassInfo* info = new ::ROOT::TGenericClassInfo(
+                                                                      Name().c_str(),                     // Class Name
+                                                                      "",                              // declaration file Name
                                                                       1,                                  // declaration line number
-                                                                      TypeGet().TypeInfo(),                  // typeid 
+                                                                      TypeGet().TypeInfo(),                  // typeid
                                                                       ROOT::DefineBehavior(0,0),          // default behavior
-                                                                      0,                                  // show members function 
-                                                                      fDictionary_func,                  // dictionary function 
+                                                                      0,                                  // show members function
+                                                                      fDictionary_func,                  // dictionary function
                                                                       fIsa_func,                         // IsA function
                                                                       0,                                  // pragma bits
                                                                       TypeGet().SizeOf()                     // sizeof
@@ -266,9 +266,9 @@ namespace ROOT { namespace Cintex {
                         1 );                  // implementation line number
    }
 
-   void ROOTClassEnhancerInfo::AddFunction( const std::string& Name, 
+   void ROOTClassEnhancerInfo::AddFunction( const std::string& Name,
                                             const Type & sig,
-                                            StubFunction stubFP, 
+                                            StubFunction stubFP,
                                             void*  stubCtx,
                                             int mods)
    {
@@ -302,13 +302,13 @@ namespace ROOT { namespace Cintex {
       }
       else  {
          // Avoid the case that the first word is a virtual_base_offset_table instead of
-         // a virtual_function_table  
+         // a virtual_function_table
          long Offset = **(long**)obj;
          if ( Offset == 0 ) return Tclass();
-      
+
          DynamicStruct_t* p = (DynamicStruct_t*)obj;
          const std::type_info& typ = typeid(*p);
-      
+
          if ( &typ == fMyType )  {
             return Tclass();
          }
@@ -321,8 +321,10 @@ namespace ROOT { namespace Cintex {
          }
          // Last resort: lookup root class
          else   {
+            std::string nam;
             Type t = Type::ByTypeInfo(typ);
-            std::string nam = CintName(t);
+            if (t) nam = CintName(t);
+            else   nam = CintName(Tools::Demangle(typ));
             fLastClass = ROOT::GetROOT()->GetClass(nam.c_str());
             fSub_types[fLastType=&typ] = fLastClass;
          }
@@ -330,7 +332,7 @@ namespace ROOT { namespace Cintex {
       //std::cout << "Cintex: IsA:" << TypeNth.Name(SCOPED) << " dynamic:" << dtype.Name(SCOPED) << std::endl;
       return fLastClass;
    }
-  
+
    TClass* ROOTClassEnhancerInfo::Default_CreateClass( Type typ, ROOT::TGenericClassInfo* info)  {
       // Create root class.
       TClass* root_class = 0;
@@ -360,7 +362,7 @@ namespace ROOT { namespace Cintex {
 
       const std::type_info& tid = typ.TypeInfo();
       root_class = info->GetClass();
-      
+
       if ( 0 != root_class )   {
          root_class->Size();
          if ( ! typ.IsVirtual() ) root_class->SetGlobalIsA(accessType);
@@ -421,10 +423,10 @@ namespace ROOT { namespace Cintex {
       else {
          //context(ctx).Info()->GetClass();
          Default_CreateClass( context(ctx).TypeGet(), context(ctx).Info() );
-      }  
+      }
    }
-   
-   
+
+
    void* ROOTClassEnhancerInfo::Stub_Streamer(void* obj, const vector<void*>& args, void* ctx) {
       //  Create streamer info.
       TBuffer& b = *(TBuffer*)args[0];
@@ -443,7 +445,7 @@ namespace ROOT { namespace Cintex {
       }
       return 0;
    }
-   
+
    void* ROOTClassEnhancerInfo::Stub_StreamerNVirtual(void* obj, const vector<void*>& args, void* ctx) {
       // Create streamer info.
       TBuffer& b = *(TBuffer*)args[0];
@@ -462,7 +464,7 @@ namespace ROOT { namespace Cintex {
       }
       return 0;
    }
-   
+
    void* ROOTClassEnhancerInfo::Stub_ShowMembers(void* obj, const vector<void*>& args, void* ctx) {
       // Create show members.
       Type typ = context(ctx).TypeGet();
@@ -478,7 +480,7 @@ namespace ROOT { namespace Cintex {
          tcl->GetShowMembersWrapper()(obj, insp, par);
          return;
       }
-      
+
       // Create show members.
       int ncp = ::strlen(par);
       // Loop over data members
@@ -487,7 +489,7 @@ namespace ROOT { namespace Cintex {
          Member mem = cl.DataMemberAt(m);
          if ( ! mem.IsTransient() ) {
             Type typ = mem.TypeOf();
-            string nam = mem.Properties().HasProperty("ioname") ? 
+            string nam = mem.Properties().HasProperty("ioname") ?
                mem.Properties().PropertyAsString("ioname") : mem.Name();
             if( typ.IsPointer() ) nam = "*" + nam;
             if( typ.IsArray() ) {
@@ -497,7 +499,7 @@ namespace ROOT { namespace Cintex {
             }
             char*  add = (char*)obj + mem.Offset();
             if ( Cintex::Debug() > 2 )  {
-               cout << "Cintex: Showmembers: ("<< tcl->GetName() << ") " << par << nam.c_str() 
+               cout << "Cintex: Showmembers: ("<< tcl->GetName() << ") " << par << nam.c_str()
                     << " = " << (void*)add << " Offset:" << mem.Offset() << endl;
             }
             insp.Inspect(tcl, par, nam.c_str(), add);
