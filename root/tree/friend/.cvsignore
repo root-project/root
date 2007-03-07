@@ -4,3 +4,4 @@
 [a-d][0-4].root*.manifest
 *.manifest
 .root_hist
+rootmap_*

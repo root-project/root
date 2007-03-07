@@ -14,3 +14,4 @@ slaveDict.h
 *.d
 *.manifest
 .root_hist
+rootmap_*

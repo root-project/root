@@ -1,3 +1,4 @@
  *.log *.so *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk  *.clog
 *.ps *.root
 .root_hist
+rootmap_*

@@ -9,3 +9,4 @@ dict*
 .def
 *.manifest
 .root_hist
+rootmap_*

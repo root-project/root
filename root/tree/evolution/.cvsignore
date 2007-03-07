@@ -3,3 +3,4 @@
 MyClassClones_cxx.dll.manifest MyClassList_cxx.dll.manifest MyClassVector_cxx.dll.manifest SimpleOne_C.dll.manifest SimpleTwo_C.dll.manifest
 *.manifest
 .root_hist
+rootmap_*

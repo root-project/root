@@ -4,3 +4,4 @@ constMemberDict_o_cxx.build.log templateKeyword.log templateKeyword_C.build.log 
 *Cint*
 *.manifest
 .root_hist
+rootmap_*

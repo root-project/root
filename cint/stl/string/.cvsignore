@@ -3,3 +3,4 @@
 *.dll
 *.manifest
 .root_hist
+rootmap_*

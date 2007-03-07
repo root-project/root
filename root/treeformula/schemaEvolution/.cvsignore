@@ -5,3 +5,4 @@ EventDict*.*
 *.manifest
 schemaRun.ref
 .root_hist
+rootmap_*

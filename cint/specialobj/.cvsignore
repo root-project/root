@@ -2,3 +2,4 @@
 tmp.root
 *.manifest
 .root_hist
+rootmap_*

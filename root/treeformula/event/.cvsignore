@@ -2,3 +2,4 @@
  Event.root EventDict* Event *.dylib 
 *.manifest
 .root_hist
+rootmap_*

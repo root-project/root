@@ -2,3 +2,4 @@
 test.root
 *.manifest
 .root_hist
+rootmap_*

@@ -7,3 +7,4 @@ barDict.h
  Event.root 
 *.manifest
 .root_hist
+rootmap_*

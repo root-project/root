@@ -3,3 +3,4 @@
  t01.out 
 *.manifest
 .root_hist
+rootmap_*

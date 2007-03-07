@@ -7,3 +7,4 @@ set_problem_cxx.d
 *.manifest
 *.manifest
 .root_hist
+rootmap_*

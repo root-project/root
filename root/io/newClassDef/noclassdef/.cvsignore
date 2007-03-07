@@ -2,3 +2,4 @@
  pass.mode mytest.root mydict* *.dylib driver* 
 *.manifest
 .root_hist
+rootmap_*

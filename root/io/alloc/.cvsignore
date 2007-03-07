@@ -2,3 +2,4 @@
 customConstructorDict*
 *.manifest
 .root_hist
+rootmap_*

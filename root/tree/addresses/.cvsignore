@@ -11,3 +11,4 @@
 *.clog
 *.manifest 
 .root_hist
+rootmap_*

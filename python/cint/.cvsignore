@@ -1,2 +1,3 @@
  *.log *.so *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk  *.clog *.pyc *.pyo
 .root_hist
+rootmap_*

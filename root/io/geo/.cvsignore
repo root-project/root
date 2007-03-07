@@ -15,3 +15,4 @@ unpack.last
 babar_all.C babar_emca.C babar_ssvd.C lhcb_mag.C
 *.manifest
 .root_hist
+rootmap_*
