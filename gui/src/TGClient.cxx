@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.54 2007/02/27 10:52:09 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.55 2007/03/01 01:09:02 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -362,7 +362,7 @@ FontStruct_t TGClient::GetFontByName(const char *name, Bool_t fixedDefault) cons
    // as fallback when the asked for font does not exist.
 
    if (gROOT->IsBatch())
-      return (FontStruct_t) 0;
+      return (FontStruct_t) -1;
 
    FontStruct_t font = gVirtualX->LoadQueryFont(name);
 
