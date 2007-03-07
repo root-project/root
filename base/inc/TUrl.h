@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUrl.h,v 1.18 2006/06/21 13:09:26 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUrl.h,v 1.19 2007/02/12 14:56:11 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -76,9 +76,9 @@ public:
    void        SetUser(const char *user) { fUser = user; fUrl = ""; }
    void        SetPasswd(const char *pw) { fPasswd = pw; fUrl = ""; }
    void        SetHost(const char *host) { fHost = host; fUrl = ""; }
-   void        SetFile(const char *file) { fFile = file; fUrl = ""; }
-   void        SetAnchor(const char *anchor) { fAnchor = anchor; fUrl = ""; }
-   void        SetOptions(const char *opt) { fOptions = opt; fUrl = ""; }
+   void        SetFile(const char *file) { fFile = file; fUrl = ""; fFileOA = "";}
+   void        SetAnchor(const char *anchor) { fAnchor = anchor; fUrl = ""; fFileOA = ""; }
+   void        SetOptions(const char *opt) { fOptions = opt; fUrl = ""; fFileOA = ""; }
    void        SetPort(Int_t port) { fPort = port; fUrl = ""; }
    void        SetUrl(const char *url, Bool_t defaultIsFile = kFALSE);
 
