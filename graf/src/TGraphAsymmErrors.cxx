@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.62 2007/02/17 08:23:40 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.63 2007/03/01 07:55:19 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -873,6 +873,7 @@ void TGraphAsymmErrors::Paint(Option_t *option)
    box.SetLineWidth(GetLineWidth());
    box.SetLineColor(GetLineColor());
    box.SetFillColor(GetFillColor());
+   box.SetFillStyle(GetFillStyle());
 
    symbolsize  = GetMarkerSize();
    sbase       = symbolsize*kBASEMARKER;
