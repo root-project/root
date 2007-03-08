@@ -1,4 +1,4 @@
-// @(#)root/castor:$Name:  $:$Id: TCastorFile.h,v 1.1 2006/09/19 16:15:47 rdm Exp $
+// @(#)root/castor:$Name:  $:$Id: TCastorFile.h,v 1.2 2007/03/05 09:01:08 rdm Exp $
 // Author: Fons Rademakers  17/09/2003 + Giulia Taurelli  29/06/2006
 
 /*************************************************************************
@@ -50,6 +50,8 @@ private:
    TString   fInternalPath;  // CASTOR internal path
    Bool_t    fIsCastor;      // true if internal path is valid
    Bool_t    fWrittenTo;     // true if data has been written to file
+
+   TString   fAuthProto;     // Used to specific the auth protocol
 
    void FindServerAndPath();
    void ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
