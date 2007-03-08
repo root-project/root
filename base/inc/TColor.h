@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.13 2006/07/03 16:10:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.14 2007/03/02 14:05:46 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -39,21 +39,25 @@
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
+#ifndef ROOT_TArrayI
+#include "TArrayI.h"
+#endif
 
 
 class TColor : public TNamed {
 
 private:
-   Int_t         fNumber;        //Color number identifier
-   Float_t       fRed;           //Fraction of Red
-   Float_t       fGreen;         //Fraction of Green
-   Float_t       fBlue;          //Fraction of Blue
-   Float_t       fHue;           //Hue
-   Float_t       fLight;         //Light
-   Float_t       fSaturation;    //Saturation
-   Float_t       fAlpha;         //Alpha (transparency)
-   static Bool_t fgGrayscaleMode;//if set, GetColor will return grayscale
-   static Bool_t fgInitDone;     //kTRUE once ROOT colors have been initialized
+   Int_t          fNumber;        //Color number identifier
+   Float_t        fRed;           //Fraction of Red
+   Float_t        fGreen;         //Fraction of Green
+   Float_t        fBlue;          //Fraction of Blue
+   Float_t        fHue;           //Hue
+   Float_t        fLight;         //Light
+   Float_t        fSaturation;    //Saturation
+   Float_t        fAlpha;         //Alpha (transparency)
+   static Bool_t  fgGrayscaleMode;//if set, GetColor will return grayscale
+   static Bool_t  fgInitDone;     //kTRUE once ROOT colors have been initialized
+   static TArrayI fgPalette;      //Color palette
 
    void           Allocate();
    static Float_t HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei);
@@ -65,6 +69,14 @@ public:
    virtual ~TColor();
    const char   *AsHexString() const;
    void          Copy(TObject &color) const;
+   static void   CreateColorWheel();
+   static void   CreateColorsGray();
+   static void   CreateColorsCircle(Int_t offset, const char *name, UChar_t *rgb);
+   static void   CreateColorsRectangle(Int_t offset, const char *name, UChar_t *rgb); 
+   static Int_t  CreateGradientColorTable(UInt_t Number, Double_t* Length,
+                    Double_t* Red, Double_t* Green, Double_t* Blue, UInt_t NColors);
+   static Int_t  GetColorPalette(Int_t i);
+   static Int_t  GetNumberOfColors();
    virtual void  GetRGB(Float_t &r, Float_t &g, Float_t &b) const 
                     { r=GetRed(); g=GetGreen(); b=GetBlue(); }
    virtual void  GetHLS(Float_t &h, Float_t &l, Float_t &s) const
@@ -105,6 +117,7 @@ public:
    static void    SaveColor(ostream &out, Int_t ci);
    static Bool_t  IsGrayscale();
    static void    SetGrayscale(Bool_t set = kTRUE);
+   static void    SetPalette(Int_t ncolors, Int_t *colors);
 
    ClassDef(TColor,2)  //Color defined by RGB or HLS
 };
