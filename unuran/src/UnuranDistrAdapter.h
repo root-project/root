@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: UnuranDistrAdapter.h,v 1.1 2006/11/15 17:40:36 brun Exp $
+// @(#)root/unuran:$Name:  $:$Id: UnuranDistrAdapter.h,v 1.2 2007/03/08 09:31:54 moneta Exp $
 // Author: L. Moneta Wed Sep 27 11:22:07 2006
 
 /**********************************************************************
@@ -59,7 +59,6 @@ struct MultiDist {
    /// evaluate the probality density function
    static double Pdf(const double * x, UNUR_DISTR * dist) {  
       const Distribution * func = reinterpret_cast<const Distribution *> (  unur_distr_get_extobj(dist) ); 
-      assert( dist != 0); 
       return func->Pdf(x);      
    }   
 

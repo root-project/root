@@ -19,6 +19,7 @@
 
 #include "Math/DistFunc.h"
 #include <cmath>
+#include <cassert>
 
 #include <iostream> 
 
