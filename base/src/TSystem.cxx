@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.159 2007/03/07 23:17:28 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.160 2007/03/08 11:36:55 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2539,8 +2539,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    TString mapfileout = mapfile + ".out";
 
    TString libmapfilename;
-   AssignAndDelete( libmapfilename, ConcatFileName( build_loc, "rootmap_" ) );
-   libmapfilename += libname;
+   AssignAndDelete( libmapfilename, ConcatFileName( build_loc, libname ) );
+   libmapfilename += ".rootmap";
 #if defined(R__MACOSX)
    Bool_t produceRootmap = kTRUE;
 #else
@@ -2577,6 +2577,9 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       AssignAndDelete(file, ConcatFileName(gSystem->HomeDirectory(), name) );
       mapfileStream << file << endl;
       mapfileStream << name << endl;
+      for (int i = 0; i < gInterpreter->GetRootMapFiles()->GetEntriesFast(); i++) {
+         mapfileStream << ((TObjString*)gInterpreter->GetRootMapFiles()->At(i))->GetString() << endl;
+      }
    }
    mapfileStream.close();
 
