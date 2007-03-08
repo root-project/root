@@ -7,7 +7,6 @@
 
 #include "TRandom.h"
 #include "TSystem.h"
-#include "TRoot.h"
 //#include "TApplication.h"
 //#include "TRint.h"
 #include "TVirtualFitter.h"
@@ -62,7 +61,7 @@ void unuranSimple() {
    TFitter * fitter = new TFitter(); 
    TVirtualFitter::SetFitter(fitter);
    h1->Fit("pol0","Q");
-   TF1 * f = (TF1*)gROOT->GetFunction("pol0");
+   TF1 * f = h1->GetFunction("pol0");
    std::cout << "Fit chi2 = " << f->GetChisquare() << " ndf = " << f->GetNDF() << std::endl;
    std::cout << "Fit Prob = " << f->GetProb() << std::endl;
 

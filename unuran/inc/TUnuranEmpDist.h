@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: TUnuranEmpDist.h,v 1.1 2007/03/08 09:31:54 moneta Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuranEmpDist.h,v 1.2 2007/03/08 09:48:02 moneta Exp $
 // Authors: L. Moneta, J. Leydold Wed Feb 28 2007
 
 /**********************************************************************
@@ -54,9 +54,11 @@ public:
       x0,y0,...x1,y1,..x2,y2,...
    */ 
    template<class Iterator>
-   TUnuranEmpDist (Iterator begin, Iterator end, unsigned int dim ) : 
+   TUnuranEmpDist (Iterator begin, Iterator end, unsigned int dim = 1) : 
       fData(std::vector<double>(begin,end) ), 
-      fDim(dim) {}
+      fDim(dim), 
+      fMin(0), fMax(0),
+      fBinned(0)  {}
 
    /** 
       Destructor (no operations)
