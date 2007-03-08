@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefTable.h,v 1.7 2006/03/30 13:09:40 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefTable.h,v 1.8 2007/01/25 11:51:13 brun Exp $
 // Author: Rene Brun   17/08/2004
 
 /*************************************************************************
@@ -84,7 +84,7 @@ public:
    virtual Bool_t     Notify();
    virtual void       ReadBuffer(TBuffer &b);
    virtual void       Reset(Option_t * /* option */ ="");
-   virtual Int_t      SetParent(const TObject *parent);
+   virtual Int_t      SetParent(const TObject* parent, const Int_t branchID);
    static  void       SetRefTable(TRefTable *table);
    virtual void       SetUID(UInt_t uid, TProcessID* context = 0) {fUID=uid; fUIDContext = context;}
 

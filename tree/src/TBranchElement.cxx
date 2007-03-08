@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.218 2007/02/09 13:20:53 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.219 2007/02/09 13:47:09 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -100,8 +100,9 @@ TBranchElement::TBranchElement()
 , fParentClass()
 , fBranchClass()
 , fBranchOffset(0)
+, fBranchID(-1)
 {
-   // -- Default constructor.
+   // -- Default and I/O constructor.
    fNleaves = 1;
 }
 
@@ -131,6 +132,7 @@ TBranchElement::TBranchElement(const char* bname, TStreamerInfo* sinfo, Int_t id
 , fParentClass()
 , fBranchClass(sinfo->GetClass())
 , fBranchOffset(0)
+, fBranchID(-1)
 {
    // -- Constructor when the branch object is not a TClonesArray nor an STL container.
    //
@@ -477,6 +479,7 @@ TBranchElement::TBranchElement(const char* bname, TClonesArray* clones, Int_t ba
 , fCurrentClass()
 , fParentClass()
 , fBranchClass(TClonesArray::Class())
+, fBranchID(-1)
 {
    // -- Constructor when the branch object is a TClonesArray.
    //
@@ -578,6 +581,7 @@ TBranchElement::TBranchElement(const char* bname, TVirtualCollectionProxy* cont,
 , fCurrentClass()
 , fParentClass()
 , fBranchClass(cont->GetCollectionClass())
+, fBranchID(-1)
 {
    // -- Constructor when the branch object is an STL collection.
    //
@@ -931,7 +935,7 @@ Int_t TBranchElement::Fill()
    if ((fType >= 0) && (fType < 10)) {
       TBranchRef* bref = fTree->GetBranchRef();
       if (bref) {
-         bref->SetParent(this);
+         fBranchID = bref->SetParent(this, fBranchID);
       }
    }
 
@@ -1413,7 +1417,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
    // proper branch.
    TBranchRef* bref = fTree->GetBranchRef();
    if (bref) {
-      bref->SetParent(this);
+      fBranchID = bref->SetParent(this, fBranchID);
       bref->SetReadEntry(entry);
    }
 

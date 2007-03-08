@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.54 2006/12/12 04:53:11 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.55 2006/12/12 21:28:26 pcanal Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -69,6 +69,7 @@ protected:
    TClassRef                fParentClass;   //! Reference to class definition in fParentName
    TClassRef                fBranchClass;   //! Reference to class definition in fClassName
    Int_t                   *fBranchOffset;  //! Sub-Branch offsets with respect to current transient class
+   Int_t                    fBranchID;      //! ID number assigned by a TRefTable.
 
 // Not implemented
 private:

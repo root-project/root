@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.13 2007/01/25 11:51:13 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.14 2007/01/28 18:30:18 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -364,21 +364,30 @@ void TRefTable::Reset(Option_t * /*option*/ )
 }
 
 //______________________________________________________________________________
-Int_t TRefTable::SetParent(const TObject *parent)
+Int_t TRefTable::SetParent(const TObject* parent, const Int_t branchID)
 {
-   // Set Current parent object.
-   // The parent object is typically a branch of a Tree.
-   // This function is called by TBranchElement::Fill.
-
-   if (!fParents)
-      return 0;
+   // -- Set current parent object, typically a branch of a tree.
+   //
+   // This function is called by TBranchElement::Fill() and by
+   // TBranchElement::GetEntry().
+   //
+   if (!fParents) {
+      return -1;
+   }
    Int_t nparents = fParents->GetEntriesFast();
-   Int_t ind = fParents->IndexOf(parent);
-   if (ind >= 0) {
-      fParentID = ind;
-   } else {
-      fParents->AddAtAndExpand((TObject*) parent, nparents);
-      fParentID = nparents;
+   if (branchID != -1) {
+      // -- The branch already has an id cached, just use it.
+      fParentID = branchID;
+   }
+   else {
+      // -- The branch does *not* have an id cached, find it or generate one.
+      // Lookup the branch.
+      fParentID = fParents->IndexOf(parent);
+      if (fParentID < 0) {
+         // -- The branch is not known, generate an id number.
+         fParents->AddAtAndExpand(const_cast<TObject*>(parent), nparents);
+         fParentID = nparents;
+      }
    }
    return fParentID;
 }

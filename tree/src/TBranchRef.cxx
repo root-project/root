@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchRef.cxx,v 1.8 2006/02/17 05:16:38 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchRef.cxx,v 1.9 2006/03/22 06:36:20 pcanal Exp $
 // Author: Rene Brun   19/08/2004
 
 /*************************************************************************
@@ -189,12 +189,18 @@ void TBranchRef::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TBranchRef::SetParent(const TObject *object)
+Int_t TBranchRef::SetParent(const TObject* object, const Int_t branchID)
 {
-   // this function is called by TBranchElement::Fill when filling
+   // -- Set the current parent branch.
+   //
+   // This function is called by TBranchElement::GetEntry()
+   // and TBranchElement::Fill() when reading or writing
    // branches that may contain referenced objects.
-
-   if (!fRefTable) fRefTable = new TRefTable(this,100);
+   //
+   if (!fRefTable) {
+      fRefTable = new TRefTable(this, 100);
+   }
    TRefTable::SetRefTable(fRefTable);
-   fRefTable->SetParent(object);
+   return fRefTable->SetParent(object, branchID);
 }
+
