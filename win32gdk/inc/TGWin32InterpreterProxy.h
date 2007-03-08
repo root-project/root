@@ -1,4 +1,4 @@
-// $Id: TGWin32InterpreterProxy.h,v 1.13 2006/11/27 15:42:38 rdm Exp $
+// $Id: TGWin32InterpreterProxy.h,v 1.14 2006/12/01 15:05:58 rdm Exp $
 // Author: Valeriy Onuchin  15/11/03
 
 /*************************************************************************
@@ -78,7 +78,7 @@ public:
    Bool_t   SetErrorMessages(Bool_t enable = kTRUE);
    Bool_t   IsProcessLineLocked() const { return RealObject()->IsProcessLineLocked(); }
    void     SetProcessLineLock(Bool_t lock = kTRUE);
-   Int_t    GetExitCode() const { return RealObject()->GetExitCode();  }
+   Int_t    GetExitCode() const { return RealObject()->GetExitCode(); }
    Int_t    GetMore() const {  return RealObject()->GetMore(); }
    Bool_t   IsLoaded(const char *filename) const {  return RealObject()->IsLoaded(filename); }
    char    *GetPrompt();
@@ -92,6 +92,7 @@ public:
    const char *GetClassSharedLibs(const char *cls);
    const char *GetSharedLibDeps(const char *lib);
    const char *GetIncludePath();
+   TObjArray  *GetRootMapFiles() const { return RealObject()->GetRootMapFiles(); }
    const char *TypeName(const char *s);
 
    static TInterpreter *RealObject();

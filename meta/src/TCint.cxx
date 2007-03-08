@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.137 2007/03/05 15:34:21 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.138 2007/03/06 14:53:54 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -117,42 +117,6 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
 }
 
 //______________________________________________________________________________
-TCint::TCint(const TCint& ci) :
-  TInterpreter(ci),
-  fMore(ci.fMore),
-  fExitCode(ci.fExitCode),
-  fDictPos(ci.fDictPos),
-  fDictPosGlobals(ci.fDictPosGlobals),
-  fSharedLibs(ci.fSharedLibs),
-  fIncludePath(ci.fIncludePath),
-  fMapfile(ci.fMapfile),
-  fLockProcessLine(ci.fLockProcessLine)
-{
-   //copy constructor
-   strncpy(fPrompt,ci.fPrompt,64);
-}
-
-
-//______________________________________________________________________________
-TCint& TCint::operator=(const TCint& ci)
-{
-   //assignement operator
-   if(this!=&ci) {
-      TInterpreter::operator=(ci);
-      fMore=ci.fMore;
-      fExitCode=ci.fExitCode;
-      strncpy(fPrompt,ci.fPrompt,64);
-      fDictPos=ci.fDictPos;
-      fDictPosGlobals=ci.fDictPosGlobals;
-      fSharedLibs=ci.fSharedLibs;
-      fIncludePath=ci.fIncludePath;
-      fMapfile=ci.fMapfile;
-      fLockProcessLine=ci.fLockProcessLine;
-   }
-   return *this;
-}
-
-//______________________________________________________________________________
 TCint::~TCint()
 {
    // Destroy the CINT interpreter interface.
@@ -166,6 +130,7 @@ TCint::~TCint()
    free(fDictPos.ptype);
    free(fDictPosGlobals.ptype);
    delete fMapfile;
+   delete fRootMapFiles;
 }
 
 //______________________________________________________________________________
@@ -1072,6 +1037,9 @@ Int_t TCint::LoadLibraryMap()
          Error("LoadLibraryMap", "library map empty, no system.rootmap file\n"
                "found. ROOT not properly installed (run \"make install\").");
 
+      fRootMapFiles = new TObjArray;
+      fRootMapFiles->SetOwner();
+
       // Load all rootmap files in the dynamic load path (LD_LIBRARY_PATH, etc.).
       // A rootmap file must start with the string "rootmap" and may be followed
       // by any extension, like rootmap_ModuleX, rootmap-Module-Y.
@@ -1097,20 +1065,18 @@ Int_t TCint::LoadLibraryMap()
          if (!skip) {
             void *dirp = gSystem->OpenDirectory(d);
             if (dirp) {
-               const char *f;
-               Bool_t gotrm = kFALSE;
-               while ((f = gSystem->GetDirEntry(dirp))) {
-                  if (!strncasecmp(f, "rootmap", 7)) {
+               const char *f1;
+               while ((f1 = gSystem->GetDirEntry(dirp))) {
+                  TString f = f1;
+                  if (f.BeginsWith("rootmap") || f.EndsWith(".rootmap")) {
                      TString p;
                      p = d + "/" + f;
                      if (!gSystem->AccessPathName(p, kReadPermission)) {
                         if (gDebug > 1)
                            Info("LoadLibraryMap", "additional rootmap file: %s", p.Data());
                         fMapfile->ReadFile(p, kEnvGlobal);
+                        fRootMapFiles->Add(new TObjString(p));
                      }
-                     gotrm = kTRUE;
-                  } else if (gotrm) {
-                     break;  // no need to continue after last rootmap file
                   }
                }
             }
