@@ -1,5 +1,5 @@
-// @(#)root/unuran:$Name:  $:$Id: src/TUnuran.cxx,v 1.0 2006/01/01 12:00:00 moneta Exp $
-// Author: L. Moneta Tue Sep 26 16:25:09 2006
+// @(#)root/unuran:$Name:  $:$Id: TUnuran.cxx,v 1.1 2006/11/15 17:40:36 brun Exp $
+// Authors: L. Moneta, J. Leydold Tue Sep 26 16:25:09 2006
 
 /**********************************************************************
  *                                                                    *
@@ -11,11 +11,19 @@
 // Implementation file for class TUnuran
 
 #include "TUnuran.h"
+
+#include "TUnuranContDist.h"
+#include "TUnuranMultiContDist.h"
+#include "TUnuranDiscrDist.h"
+#include "TUnuranEmpDist.h"
+
 #include "UnuranRng.h"
 #include "UnuranDistrAdapter.h"
 
 #include "TRandom.h"
 #include "TSystem.h"
+
+#include "TH1.h"
 
 #include <cassert>
 
@@ -23,16 +31,7 @@
 
 #include <unuran.h>
 
-#include "TUnuranDistr.h"
-#include "TUnuranDistrMulti.h"
-
-
-// TUnuran::TUnuran() 
-// {
-//    // Default constructor implementation.
-//    fGen = 0; 
-// }
-
+#include "TError.h"
 
 
 TUnuran::TUnuran(TRandom * r, unsigned int debugLevel) : 
@@ -59,7 +58,7 @@ TUnuran::~TUnuran()
 {
    // Destructor implementation
    if (fGen != 0) unur_free(fGen); 
-  // we can delete now the distribution object (it is copied in Unuran)
+  // we can delete now the distribution object
    if (fUdistr != 0) unur_distr_free(fUdistr);
 }
 
@@ -76,35 +75,6 @@ TUnuran & TUnuran::operator = (const TUnuran &rhs)
    return *this;
 }
 
-
-    
-bool TUnuran::Init(const TUnuranDistr & distr, const std::string  & method)  
-{ 
-   //   initialization with a distribution and and generator
-   // copy the distribution by value (maybe can done by pointer)
-   fDistr = distr;
-   fMethod = method; 
-   if (! SetDistribution() ) return false;
-   if (! SetMethod(method) ) return false;
-   if (! SetRandomGenerator() ) return false; 
-   return true;
-}
-
-    
-bool TUnuran::Init(const TUnuranDistrMulti & distr, const std::string  & method, bool useLogpdf)  
-{ 
-   //  initialization with a distribution and method
-   //   I copy the distribution object  (uset it by value)
-   fDistrMulti= distr; 
-   fUseLogpdf = useLogpdf; 
-   fMethod = method;
-
-   if (! SetDistributionMulti() ) return false;
-   if (! SetMethod(method) ) return false;
-   if (! SetRandomGenerator() ) return false; 
-   return true; 
-}
-
 bool  TUnuran::Init(const std::string & dist, const std::string & method) 
 {
    // initialize with a string
@@ -114,9 +84,71 @@ bool  TUnuran::Init(const std::string & dist, const std::string & method)
       std::cerr << "ERROR: cannot create generator object" << std::endl; 
       return false; 
    } 
+   SetRandomGenerator();
+
    return true; 
 }
 
+bool TUnuran::Init(const TUnuranContDist & distr, const std::string  & method)  
+{ 
+   //   initialization with a distribution and and generator
+   // the distribution object is copied in and managed by this class
+   // use auto_ptr to manage previously existing distribution objects
+   TUnuranContDist * distNew = distr.Clone(); 
+   fDist = std::auto_ptr< TUnuranBaseDist>(distNew);
+
+   fMethod = method; 
+   if (! SetContDistribution(*distNew) ) return false;
+   if (! SetMethodAndInit() ) return false;
+   if (! SetRandomGenerator() ) return false; 
+   return true;
+}
+
+    
+bool TUnuran::Init(const TUnuranMultiContDist & distr, const std::string  & method)  
+{ 
+   //  initialization with a distribution and method
+   // the distribution object is copied in and managed by this class
+   // use auto_ptr to manage previously existing distribution objects
+   TUnuranMultiContDist * distNew = distr.Clone(); 
+   fDist = std::auto_ptr< TUnuranBaseDist>(distNew);
+
+   fMethod = method;
+   if (! SetMultiDistribution(*distNew) ) return false;
+   if (! SetMethodAndInit() ) return false;
+   if (! SetRandomGenerator() ) return false; 
+   return true; 
+}
+
+
+bool TUnuran::Init(const TUnuranDiscrDist & distr, const std::string & method ) {
+   //   initialization with a distribution and and generator
+   // the distribution object is copied in and managed by this class
+   // use auto_ptr to manage previously existing distribution objects
+   TUnuranDiscrDist * distNew = distr.Clone(); 
+   fDist = std::auto_ptr< TUnuranBaseDist>(distNew);
+
+   fMethod = method; 
+   if (! SetDiscreteDistribution(*distNew) ) return false;
+   if (! SetMethodAndInit() ) return false;
+   if (! SetRandomGenerator() ) return false; 
+   return true;
+}
+
+bool TUnuran::Init(const TUnuranEmpDist & distr, const std::string & method ) {
+   //   initialization with a distribution and and generator
+   // the distribution object is copied in and managed by this class
+   // use auto_ptr to manage previously existing distribution objects
+   TUnuranEmpDist * distNew = distr.Clone(); 
+   fDist = std::auto_ptr< TUnuranBaseDist>(distNew);
+   
+   fMethod = method; 
+   if (distr.IsBinned()) fMethod = "method=hist";
+   if (! SetEmpiricalDistribution(*distNew) ) return false;
+   if (! SetMethodAndInit() ) return false;
+   if (! SetRandomGenerator() ) return false; 
+   return true;
+}
 
 
 bool  TUnuran::SetRandomGenerator()
@@ -137,65 +169,211 @@ bool  TUnuran::SetRandomGenerator()
    
 }
 
-bool  TUnuran::SetDistribution()
-{ 
+bool  TUnuran::SetContDistribution(const TUnuranContDist & dist )
+{
+   // internal method to set in unuran the function pointer for a continous univariate distribution 
+   if (fUdistr != 0)  unur_distr_free(fUdistr);
    fUdistr = unur_distr_cont_new(); 
    if (fUdistr == 0) return false; 
    unsigned int ret = 0; 
-   ret |= unur_distr_set_extobj(fUdistr, &fDistr);  
-   ret |= unur_distr_cont_set_pdf(fUdistr, &UnuranDistr<TUnuranDistr>::Pdf);  
-   ret |= unur_distr_cont_set_dpdf(fUdistr, &UnuranDistr<TUnuranDistr>::Dpdf);  
-   ret |= unur_distr_cont_set_cdf(fUdistr, &UnuranDistr<TUnuranDistr>::Cdf);  
-   ret |= unur_distr_cont_set_mode(fUdistr, fDistr.Mode());  
-   double xmin, xmax = 0; 
-   if (fDistr.GetDomain(xmin,xmax) ) { 
-      ret |= unur_distr_cont_set_domain(fUdistr,xmin,xmax);  
-   }
-   return (ret ==0) ? true : false; 
-}
-
-
-bool  TUnuran::SetDistributionMulti()
-{
-   fUdistr = unur_distr_cvec_new(fDistrMulti.NDim() ); 
-   if (fUdistr == 0) return false; 
-   unsigned int ret = 0; 
-   ret |= unur_distr_set_extobj(fUdistr, &fDistrMulti);  
-   if (!fUseLogpdf) { 
-      ret |= unur_distr_cvec_set_pdf(fUdistr, &UnuranDistrMulti<TUnuranDistrMulti>::Pdf);  
-      ret |= unur_distr_cvec_set_dpdf(fUdistr, &UnuranDistrMulti<TUnuranDistrMulti>::Dpdf);  
-      ret |= unur_distr_cvec_set_pdpdf(fUdistr, &UnuranDistrMulti<TUnuranDistrMulti>::Pdpdf);  
+   ret = unur_distr_set_extobj(fUdistr, &dist);  
+   if ( ! dist.IsLogPdf() ) { 
+      ret |= unur_distr_cont_set_pdf(fUdistr, &ContDist::Pdf);  
+      ret |= unur_distr_cont_set_dpdf(fUdistr, &ContDist::Dpdf);  
+      if (dist.HasCdf() ) ret |= unur_distr_cont_set_cdf(fUdistr, &ContDist::Cdf);  
    }
    else { 
-      ret |= unur_distr_cvec_set_logpdf(fUdistr, &UnuranDistrMulti<TUnuranDistrMulti>::Logpdf);  
-      ret |= unur_distr_cvec_set_dlogpdf(fUdistr, &UnuranDistrMulti<TUnuranDistrMulti>::Dlogpdf);  
-      ret |= unur_distr_cvec_set_pdlogpdf(fUdistr, &UnuranDistrMulti<TUnuranDistrMulti>::Pdlogpdf);  
+      // case user provides log of pdf 
+      ret |= unur_distr_cont_set_logpdf(fUdistr, &ContDist::Pdf);  
+      ret |= unur_distr_cont_set_dlogpdf(fUdistr, &ContDist::Dpdf);  
    }
-   //unur_distr_cvec_set_mode(fUdistr, fDistr.Mode());  
-//    double xmin, xmax = 0; 
-//    if (fDistr.GetDomain(xmin,xmax) ) 
-//       unur_distr_cont_set_domain(fUdistr,xmin,xmax);  
+
+   double xmin, xmax = 0; 
+   if (dist.GetDomain(xmin,xmax) ) { 
+      ret = unur_distr_cont_set_domain(fUdistr,xmin,xmax);  
+      if (ret != 0)  { 
+         Error("SetContDistribution","invalid domain xmin = %g xmax = %g ",xmin,xmax);
+         return false; 
+      }
+   }
+   if (dist.HasMode() ) { 
+      ret = unur_distr_cont_set_mode(fUdistr, dist.Mode());  
+      if (ret != 0)  { 
+         Error("SetContDistribution","invalid mode given,  mode = %g ",dist.Mode());
+         return false; 
+      }
+   }
+   if (dist.HasPdfArea() ) { 
+      ret = unur_distr_cont_set_pdfarea(fUdistr, dist.PdfArea());  
+      if (ret != 0)  { 
+         Error("SetContDistribution","invalid area given,  area = %g ",dist.PdfArea());
+         return false; 
+      }
+   }
+
    return (ret ==0) ? true : false; 
 }
 
 
-bool TUnuran::SetMethod(const std::string & s) { 
-   // set a method from a distribution
+bool  TUnuran::SetMultiDistribution(const TUnuranMultiContDist & dist )
+{
+   // internal method to set in unuran the function pointer for a multivariate distribution 
+   if (fUdistr != 0)  unur_distr_free(fUdistr);
+   fUdistr = unur_distr_cvec_new(dist.NDim() ); 
+   if (fUdistr == 0) return false; 
+   unsigned int ret = 0; 
+   ret |= unur_distr_set_extobj(fUdistr, &dist );  
+   if ( ! dist.IsLogPdf() ) { 
+      ret |= unur_distr_cvec_set_pdf(fUdistr, &MultiDist::Pdf);  
+      ret |= unur_distr_cvec_set_dpdf(fUdistr, &MultiDist::Dpdf);  
+      ret |= unur_distr_cvec_set_pdpdf(fUdistr, &MultiDist::Pdpdf);  
+   }
+   else { 
+      ret |= unur_distr_cvec_set_logpdf(fUdistr, &MultiDist::Pdf);  
+      ret |= unur_distr_cvec_set_dlogpdf(fUdistr, &MultiDist::Dpdf);  
+      ret |= unur_distr_cvec_set_pdlogpdf(fUdistr, &MultiDist::Pdpdf);  
+   }
+
+   const double * xmin = dist.GetLowerDomain();
+   const double * xmax = dist.GetUpperDomain();
+   if ( xmin != 0 || xmax != 0 ) {
+#ifdef LATER // not yet implemented in Unuran 0.8.1 (only from 1.0.0)
+      ret = unur_distr_cvec_set_domain_rect(fUdistr,xmin,xmax);  
+      if (ret != 0)  { 
+         Error("SetMultiDistribution","invalid domain");
+         return false; 
+      }
+#else
+      Error("SetMultiDistribution","domain setting not available in UNURAN 0.8.1");
+#endif
+
+   }
+
+   const double * xmode = dist.GetMode(); 
+   if (xmode != 0) { 
+      ret = unur_distr_cvec_set_mode(fUdistr, xmode);  
+      if (ret != 0)  { 
+         Error("SetMultiDistribution","invalid mode");
+         return false; 
+      }
+   }
+   return (ret ==0) ? true : false; 
+}
+
+bool TUnuran::SetEmpiricalDistribution(const TUnuranEmpDist & dist) { 
+
+   // internal method to set in unuran the function pointer for am empiral distribution (from histogram)
+   if (fUdistr != 0)  unur_distr_free(fUdistr);
+   fUdistr = unur_distr_cemp_new(); 
+   if (fUdistr == 0) return false; 
+   unsigned int ret = 0; 
+
+
+   // get info from histogram 
+   if (dist.IsBinned() ) { 
+#ifdef LATER
+      int nbins = dist.Data().size(); 
+      double min = dist.LowerBin();
+      double max = dist.UpperBin();
+      const double * pv = &(dist.Data().front());
+      ret |= unur_distr_cemp_set_hist(fUdistr, pv, nbins, min, max); 
+#else 
+      Error("SetEmpiricalDistribution","hist method not available in UNURAN 0.8.1");
+#endif
+   } 
+   else { 
+      const double * pv = &dist.Data().front();
+      int n = dist.Data().size();
+      ret |= unur_distr_cemp_set_data(fUdistr, pv, n); 
+   }
+   if (ret != 0) return false; 
+   return true; 
+}
+
+
+bool  TUnuran::SetDiscreteDistribution(const TUnuranDiscrDist & dist)
+{
+   // internal method to set in unuran the function pointer for a discrete univariate distribution 
+   if (fUdistr != 0)  unur_distr_free(fUdistr);
+   fUdistr = unur_distr_discr_new(); 
+   if (fUdistr == 0) return false; 
+   unsigned int ret = 0; 
+   // if a probability mesh function is provided 
+   if (dist.ProbVec().size() == 0) { 
+      ret = unur_distr_set_extobj(fUdistr, &dist );  
+      ret |= unur_distr_discr_set_pmf(fUdistr, &DiscrDist::Pmf);  
+      if (dist.HasCdf() ) ret |= unur_distr_discr_set_cdf(fUdistr, &DiscrDist::Cdf);  
+ 
+   }
+   else { 
+      // case user provides vector of probabilities 
+      ret |= unur_distr_discr_set_pv(fUdistr, &dist.ProbVec().front(), dist.ProbVec().size() );
+   }
+
+   int xmin, xmax = 0; 
+   if (dist.GetDomain(xmin,xmax) ) { 
+      ret = unur_distr_discr_set_domain(fUdistr,xmin,xmax);  
+      if (ret != 0)  { 
+         Error("SetDiscrDistribution","invalid domain xmin = %g xmax = %g ",xmin,xmax);
+         return false; 
+      }
+   }
+   if (dist.HasMode() ) { 
+      ret = unur_distr_discr_set_mode(fUdistr, dist.Mode());  
+      if (ret != 0)  { 
+         Error("SetContDistribution","invalid mode given,  mode = %g ",dist.Mode());
+         return false; 
+      }
+   }
+   if (dist.HasProbSum() ) { 
+      ret = unur_distr_discr_set_pmfsum(fUdistr, dist.ProbSum());  
+      if (ret != 0)  { 
+         Error("SetContDistribution","invalid sum given,  mode = %g ",dist.ProbSum());
+         return false; 
+      }
+   }
+
+   return (ret ==0) ? true : false; 
+}
+
+
+//bool TUnuran::SetMethodAndInit(const std::string & s) { 
+bool TUnuran::SetMethodAndInit() { 
+
+   // internal function to set a method from a distribution and 
+   // initialize unuran with the given distribution.
    if (fUdistr == 0) return false; 
 
    struct unur_slist *mlist = NULL;
-   UNUR_PAR * par = _unur_str2par(fUdistr, s.c_str(), &mlist);
-   if (par == 0) return false;
+   
+   UNUR_PAR * par = _unur_str2par(fUdistr, fMethod.c_str(), &mlist);
+   if (par == 0) {
+      Error("SetMethod","missing distribution information or syntax error");
+      return false;
+   }
+
+
+   // set unuran to not use a private copy of the distribution object
+   unur_set_use_distr_privatecopy (par, false);
+
+   // need to free fGen if already existing ? 
+   if (fGen != 0 )  unur_free(fGen);
    fGen = unur_init(par); 
    _unur_slist_free(mlist);
-   if (fGen == 0) return false; 
-  // we can delete now the distribution object (it is copied in Unuran)
-   // otherwise we need to add bookeeping
-   unur_distr_free(fUdistr);
-   fUdistr = 0;
-   fMethod = s; 
+   if (fGen == 0) { 
+      Error("SetMethod","initializing Unuran: condition for method violated");
+      return false; 
+   }
    return true;
  }
+
+
+int TUnuran::SampleDiscr()
+{
+   // sample one-dimensional distribution
+   assert(fGen != 0); 
+   return unur_sample_discr(fGen);
+}
 
 double TUnuran::Sample()
 {
@@ -212,26 +390,9 @@ bool TUnuran::SampleMulti(double * x)
    return true; 
 }
 
-bool TUnuran::Rinit()  
-{ 
-   //   re-initialize the distribution 
-   // (in case the dist has changed somehow externally)
-   bool ret = 0; 
-   ret &= SetDistribution();
-   ret &= SetMethod(fMethod);
-   if (fGen == 0) return false; 
-   return true; 
+void TUnuran::SetSeed(unsigned int seed) { 
+   return fRng->SetSeed(seed); 
 }
-
-
-// bool TUnuran::Rinit (const std::string & s) 
-// { 
-//    //   re-initialize with a new  method
-//    SetDistribution();
-//    SetMethod(s);
-//    if (fGen == 0) return false; 
-//    return true; 
-// }
 
 bool  TUnuran::SetLogLevel(unsigned int debugLevel) 
 {
@@ -246,4 +407,16 @@ bool  TUnuran::SetLogLevel(unsigned int debugLevel)
 
    return (ret ==0) ? true : false; 
 
+}
+
+bool TUnuran::InitPoisson(double mu, std::string method) { 
+
+   double p[1];
+   p[0] = mu; 
+   fUdistr = unur_distr_poisson(p,1);
+   fMethod = method;
+   if (fUdistr == 0) return false; 
+   if (! SetMethodAndInit() ) return false;
+   if (! SetRandomGenerator() ) return false; 
+   return true; 
 }

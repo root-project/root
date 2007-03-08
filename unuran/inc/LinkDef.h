@@ -1,4 +1,4 @@
-/* @(#)root/minuit:$Name:  $:$Id: LinkDef.h,v 1.3 2005/03/04 09:06:37 brun Exp $ */
+/* @(#)root/minuit:$Name:  $:$Id: LinkDef.h,v 1.1 2006/11/15 17:40:36 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -16,7 +16,9 @@
 
 
 #pragma link C++ class TUnuran+;
-#pragma link C++ class TUnuranDistr+;
-#pragma link C++ class TUnuranDistrMulti+;
+#pragma link C++ class TUnuranContDist+;
+#pragma link C++ class TUnuranMultiContDist+;
+#pragma link C++ class TUnuranDiscrDist+;
+#pragma link C++ class TUnuranEmpDist+;
 
 #endif
