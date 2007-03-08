@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.71 2007/01/15 22:08:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.72 2007/01/30 11:55:33 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -351,11 +351,6 @@ void TStyle::Copy(TObject &obj) const
    for (i=0;i<30;i++) {
       ((TStyle&)obj).fLineStyle[i]     = fLineStyle[i];
    }
-   Int_t ncolors = fPalette.fN;
-   ((TStyle&)obj).fPalette.Set(ncolors);
-   for (i=0;i<ncolors;i++) {
-      ((TStyle&)obj).fPalette.fArray[i] = fPalette.fArray[i];
-   }
    ((TStyle&)obj).fHeaderPS       = fHeaderPS;
    ((TStyle&)obj).fTitlePS        = fTitlePS;
    ((TStyle&)obj).fLineScalePS    = fLineScalePS;
@@ -628,11 +623,8 @@ Color_t TStyle::GetAxisColor( Option_t *axis) const
 Int_t TStyle::GetColorPalette(Int_t i) const
 {
    // Return color number i in current palette.
-   Int_t ncolors = GetNumberOfColors();
-   if (ncolors == 0) return 0;
-   Int_t icol    = i%ncolors;
-   if (icol < 0) icol = 0;
-   return fPalette.fArray[icol];
+   
+   return TColor::GetColorPalette(i);
 }
 
 //______________________________________________________________________________
@@ -689,6 +681,14 @@ const char *TStyle::GetLineStyleString(Int_t i) const
    if (i < 1 || i > 29) return fLineStyle[0].Data();
    return fLineStyle[i].Data();
 }
+
+//______________________________________________________________________________
+Int_t TStyle::GetNumberOfColors() const
+{
+   // Return number of colors in the color palette
+   
+   return TColor::GetNumberOfColors();
+} 
 
 //______________________________________________________________________________
 void TStyle::GetPaperSize(Float_t &xsize, Float_t &ysize)
@@ -1307,182 +1307,11 @@ void TStyle::SetTitleSize(Float_t size, Option_t *axis)
 }
 
 //______________________________________________________________________________
-Int_t TStyle::CreateGradientColorTable(UInt_t Number, Double_t* Length,
-                              Double_t* Red, Double_t* Green,
-                              Double_t* Blue, UInt_t NColors)
-{
-  // STATIC function.
-  // Linear gradient color table:
-  // Red, Green and Blue are several RGB colors with values from 0.0 .. 1.0.
-  // Their number is "Intervals".
-  // Length is the length of the color interval between the RGB-colors:
-  // Imaging the whole gradient goes from 0.0 for the first RGB color to 1.0
-  // for the last RGB color, then each "Length"-entry in between stands for
-  // the length of the intervall between the according RGB colors.
-  //
-  // This definition is similar to the povray-definition of gradient
-  // color tables.
-  //
-  // In order to create a color table do the following:
-  // Define the RGB Colors:
-  // > UInt_t Number = 5;
-  // > Double_t Red[5]   = { 0.00, 0.09, 0.18, 0.09, 0.00 };
-  // > Double_t Green[5] = { 0.01, 0.02, 0.39, 0.68, 0.97 };
-  // > Double_t Blue[5]  = { 0.17, 0.39, 0.62, 0.79, 0.97 };
-  // Define the length of the (color)-interval between this points
-  // > Double_t Stops[5] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
-  // i.e. the color interval between Color 2 and Color 3 is
-  // 0.79 - 0.62 => 17 % of the total palette area between these colors
-  //
-  //  Original code by Andreas Zoglauer <zog@mpe.mpg.de>
-
-   UInt_t g, c;
-   UInt_t nPalette = 0;
-   Int_t *palette = new Int_t[NColors+1];
-   UInt_t nColorsGradient;
-   TColor *color;
-   Int_t highestIndex = 0;
-
-   // Check if all RGB values are between 0.0 and 1.0 and
-   // Length goes from 0.0 to 1.0 in increasing order.
-   for (c = 0; c < Number; c++) {
-      if (Red[c] < 0 || Red[c] > 1.0 ||
-          Green[c] < 0 || Green[c] > 1.0 ||
-          Blue[c] < 0 || Blue[c] > 1.0 ||
-          Length[c] < 0 || Length[c] > 1.0) {
-         //Error("CreateGradientColorTable",
-         //      "All RGB colors and interval lengths have to be between 0.0 and 1.0");
-         delete [] palette;
-         return -1;
-      }
-      if (c >= 1) {
-         if (Length[c-1] > Length[c]) {
-            //Error("CreateGradientColorTable",
-            //      "The interval lengths have to be in increasing order");
-            delete [] palette;
-            return -1;
-         }
-      }
-   }
-
-   // Search for the highest color index not used in ROOT:
-   // We do not want to overwrite some colors...
-   TSeqCollection *colorTable = gROOT->GetListOfColors();
-   if ((color = (TColor *) colorTable->Last()) != 0) {
-      if (color->GetNumber() > highestIndex) {
-         highestIndex = color->GetNumber();
-      }
-      while ((color = (TColor *) (colorTable->Before(color))) != 0) {
-         if (color->GetNumber() > highestIndex) {
-            highestIndex = color->GetNumber();
-         }
-      }
-   }
-   highestIndex++;
-
-   // Now create the colors and add them to the default palette:
-
-   // For each defined gradient...
-   for (g = 1; g < Number; g++) {
-      // create the colors...
-      nColorsGradient = (Int_t) (floor(NColors*Length[g]) - floor(NColors*Length[g-1]));
-      for (c = 0; c < nColorsGradient; c++) {
-         color = new TColor(highestIndex,
-                            Red[g-1] + c * (Red[g] - Red[g-1])/ nColorsGradient,
-                            Green[g-1] + c * (Green[g] - Green[g-1])/ nColorsGradient,
-                            Blue[g-1] + c * (Blue[g] - Blue[g-1])/ nColorsGradient,
-                            "  ");
-         palette[nPalette] = highestIndex;
-         nPalette++;
-         highestIndex++;
-      }
-   }
-
-   gStyle->SetPalette(nPalette, palette);
-   delete [] palette;
-
-   return highestIndex - NColors;
-}
-
-//______________________________________________________________________________
 void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
 {
-// The color palette is used by the histogram classes
-//  (see TH1::Draw options).
-// For example TH1::Draw("col") draws a 2-D histogram with cells
-// represented by a box filled with a color CI function of the cell content.
-// if the cell content is N, the color CI used will be the color number
-// in colors[N],etc. If the maximum cell content is > ncolors, all
-// cell contents are scaled to ncolors.
-//
-// if ncolors <= 0 a default palette (see below) of 50 colors is defined.
-//     the colors defined in this palette are OK for coloring pads, labels
-//
-// if ncolors == 1 && colors == 0, then
-//     a Pretty Palette with a Spectrum Violet->Red is created.
-//   It is recommended to use this Pretty palette when drawing legos,
-//   surfaces or contours.
-//
-// if ncolors > 50 and colors=0, the DeepSea palette is used.
-//     (see TStyle::CreateGradientColorTable for more details)
-//
-// if ncolors > 0 and colors = 0, the default palette is used
-// with a maximum of ncolors.
-//
-// The default palette defines:
-//   index 0->9   : grey colors from light to dark grey
-//   index 10->19 : "brown" colors
-//   index 20->29 : "blueish" colors
-//   index 30->39 : "redish" colors
-//   index 40->49 : basic colors
-//
-//  The color numbers specified in the palette can be viewed by selecting
-//  the item "colors" in the "VIEW" menu of the canvas toolbar.
-//  The color parameters can be changed via TColor::SetRGB.
+   // see TColor::SetPalette
 
-   Int_t i;
-   static Int_t paletteType = 0;
-   Int_t palette[50] = {19,18,17,16,15,14,13,12,11,20,
-                        21,22,23,24,25,26,27,28,29,30, 8,
-                        31,32,33,34,35,36,37,38,39,40, 9,
-                        41,42,43,44,45,47,48,49,46,50, 2,
-                         7, 6, 5, 4, 3, 112,1};
-   // set default palette (pad type)
-   if (ncolors <= 0) {
-      ncolors = 50;
-      fPalette.Set(ncolors);
-      for (i=0;i<ncolors;i++) fPalette.fArray[i] = palette[i];
-      paletteType = 1;
-      return;
-   }
-
-   // set Pretty Palette Spectrum Violet->Red
-   if (ncolors == 1 && colors == 0) {
-      ncolors = 50;
-      fPalette.Set(ncolors);
-      for (i=0;i<ncolors;i++) fPalette.fArray[i] = 51+i;
-      paletteType = 2;
-      return;
-   }
-
-   // set DeepSea palette
-   if (colors == 0 && ncolors > 50) {
-      if (ncolors == fPalette.fN && paletteType == 3) return;
-      const Int_t nRGBs = 5;
-      Double_t stops[nRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
-      Double_t red[nRGBs] = { 0.00, 0.09, 0.18, 0.09, 0.00 };
-      Double_t green[nRGBs] = { 0.01, 0.02, 0.39, 0.68, 0.97 };
-      Double_t blue[nRGBs] = { 0.17, 0.39, 0.62, 0.79, 0.97 };
-      CreateGradientColorTable(nRGBs, stops, red, green, blue, ncolors);
-      paletteType = 3;
-      return;
-   }
-
-   // set user defined palette
-   fPalette.Set(ncolors);
-   if (colors)  for (i=0;i<ncolors;i++) fPalette.fArray[i] = colors[i];
-   else         for (i=0;i<ncolors;i++) fPalette.fArray[i] = palette[i];
-   paletteType = 4;
+   TColor::SetPalette(ncolors,colors);
 }
 
 //______________________________________________________________________________
