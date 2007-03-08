@@ -1,4 +1,4 @@
-// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.17 2006/12/01 07:47:13 brun Exp $
+// @(#)root/auth:$Name:  $:$Id: TAuthenticate.cxx,v 1.18 2006/12/01 15:19:29 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -148,24 +148,6 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    fHostAuth = 0;
    fVersion  = 5;                // The latest, by default
    fSecContext = 0;
-
-   // Get the plugin for the passwd dialog box, if needed
-   if (gEnv->GetValue("Auth.UsePasswdDialogBox", 1) == 1) {
-      if (fgPasswdDialog == (TPluginHandler *)(-1)) {
-         if (!gROOT->IsBatch()) {
-            if ((fgPasswdDialog =
-                 gROOT->GetPluginManager()->FindHandler("TGPasswdDialog")))
-               if (fgPasswdDialog->LoadPlugin() == -1) {
-                  fgPasswdDialog = 0;
-                  Warning("TAuthenticate",
-                          "could not load plugin for the password dialog box");
-               }
-         } else
-            fgPasswdDialog = 0;
-      }
-   } else {
-      fgPasswdDialog = 0;
-   }
 
    if (gDebug > 2)
       Info("TAuthenticate", "Enter: local host: %s, user is: %s (proto: %s)",
@@ -1436,7 +1418,19 @@ char *TAuthenticate::PromptPasswd(const char *prompt)
 
    char buf[128];
    char *pw = buf;
-   if (fgPasswdDialog) {
+   // Get the plugin for the passwd dialog box, if needed
+   if (!gROOT->IsBatch() && (fgPasswdDialog == (TPluginHandler *)(-1)) &&
+       gEnv->GetValue("Auth.UsePasswdDialogBox", 1) == 1) {
+      if ((fgPasswdDialog =
+           gROOT->GetPluginManager()->FindHandler("TGPasswdDialog"))) {
+         if (fgPasswdDialog->LoadPlugin() == -1) {
+            fgPasswdDialog = 0;
+            ::Warning("TAuthenticate",
+                      "could not load plugin for the password dialog box");
+         }
+      }
+   }
+   if (fgPasswdDialog && (fgPasswdDialog != (TPluginHandler *)(-1))) {
 
       // Use graphic dialog
       fgPasswdDialog->ExecPlugin(3, prompt, buf, 128);
