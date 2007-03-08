@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.155 2007/02/06 15:30:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.156 2007/02/26 15:01:24 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -53,6 +53,7 @@
 #include "TVirtualIndex.h"
 #include "TEventList.h"
 #include "TEntryList.h"
+#include "TFileStager.h"
 
 ClassImp(TChain)
 
@@ -1392,35 +1393,47 @@ void TChain::Lookup()
    printf("\n");
    printf("TChain::Lookup - Looking up %d files .... \n", nelements);
    Int_t nlook = 0;
+   TFileStager *stg = 0;
    while ((element = (TChainElement*) next())) {
       nlook++;
       // Get the Url
-      TUrl cachefileurl(element->GetTitle());
+      TUrl elemurl(element->GetTitle());
       // Save current options and anchor
-      TString anchor = cachefileurl.GetAnchor();
-      TString options = cachefileurl.GetOptions();
-      // Add the 'raw' specification for fast opening
-      cachefileurl.SetOptions(Form("%s&filetype=raw", options.Data()));
-      // Open the file
-      TFile* cachefile = TFile::Open(cachefileurl.GetUrl());
-      if ((!cachefile) || cachefile->IsZombie()) {
-         fFiles->Remove(element);
-         Error("Lookup", "Couldn't open %s\n", cachefileurl.GetUrl());
-      } else {
-         printf("Lookup | %03.02f %% finished\r", 100.0 * nlook / nelements);
-         fflush(stdout);
+      TString anchor = elemurl.GetAnchor();
+      TString options = elemurl.GetOptions();
+      // Reset options and anchor
+      elemurl.SetOptions("");
+      elemurl.SetAnchor("");
+      // Locate the file
+      TString eurl(elemurl.GetUrl());
+      if (!stg || !stg->Matches(eurl)) {
+         SafeDelete(stg);
+         stg = TFileStager::Open(eurl);
+      }
+      Int_t n2 = (nelements > 50) ? (Int_t) nelements / 50 : 1;
+      if (stg->Locate(eurl.Data(), eurl) == 0) {
+         if (nlook > 0 && !(nlook % n2)) {
+            printf("Lookup | %3d %% finished\r", 100 * nlook / nelements);
+            fflush(stdout);
+         }
          // Get the effective end-point Url
-         TUrl endurl = ((TUrl*) cachefile->GetEndpointUrl())->GetUrl();
+         elemurl.SetUrl(eurl);
          // Restore original options and anchor, if any
-         endurl.SetOptions(options);
-         endurl.SetAnchor(anchor);
+         elemurl.SetOptions(options);
+         elemurl.SetAnchor(anchor);
          // Save it into the element
-         element->SetTitle(endurl.GetUrl());
-         delete cachefile;
-         cachefile = 0;
+         element->SetTitle(elemurl.GetUrl());
+      } else {
+         // Failure: remove
+         fFiles->Remove(element);
+         if (gSystem->AccessPathName(eurl))
+            Error("Lookup", "file %s does not exist\n", eurl.Data());
+         else
+            Error("Lookup", "file %s cannot be read\n", eurl.Data());
       }
    }
    printf("\n");
+   SafeDelete(stg);
 }
 
 //______________________________________________________________________________

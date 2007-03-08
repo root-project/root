@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.16 2007/01/23 13:10:41 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.cxx,v 1.17 2007/02/14 18:25:22 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -310,7 +310,6 @@ Int_t TXNetSystem::GetPathInfo(const char* path, FileStat_t &buf)
    // NOTICE: Not all information is available with an xrootd server.
 
    if (fIsXRootd) {
-
       TXNetSystemConnectGuard cg(this, path);
       if (cg.IsValid()) {
 
@@ -424,7 +423,7 @@ int TXNetSystem::Unlink(const char *path)
    }
 
    if (gDebug > 1)
-      Info("AccessPathName", "calling TNetSystem::AccessPathName");
+      Info("Unlink", "calling TNetSystem::Unlink");
    return -1;    // not implemented for rootd
 }
 
@@ -485,6 +484,37 @@ Bool_t TXNetSystem::Prepare(const char *path, UChar_t option, UChar_t priority)
 
    // Done
    return kFALSE;
+}
+
+//_____________________________________________________________________________
+Int_t TXNetSystem::Locate(const char *path, TString &eurl)
+{
+   // Get end-point url of a file. Info is returned in eurl.
+   // The function returns 0 in case of success and 1 if the file could
+   // not be stat'ed.
+
+   if (fIsXRootd) {
+      TXNetSystemConnectGuard cg(this, path);
+      if (cg.IsValid()) {
+
+         // Extract the directory name
+         XrdClientUrlInfo ui;
+         TString edir = TUrl(path).GetFile();
+
+         if (cg.ClientAdmin()->Locate((kXR_char *)edir.Data(), ui)) {
+            TUrl u(path);
+            u.SetHost(ui.Host.c_str());
+            u.SetPort(ui.Port);
+            eurl = u.GetUrl();
+            return 0;
+         }
+      }
+      return 1;
+   }
+
+   // Not implemented
+   Warning("Locate", "method not implemented!");
+   return -1;
 }
 
 //

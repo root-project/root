@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id:$
+// @(#)root/net:$Name:  $:$Id: TXNetFileStager.cxx,v 1.1 2007/02/14 18:25:22 rdm Exp $
 // Author: A. Peters, G. Ganis   7/2/2007
 
 /*************************************************************************
@@ -28,8 +28,7 @@ TXNetFileStager::TXNetFileStager(const char *url) : TFileStager("xrd")
 
    fSystem = 0;
    if (url && strlen(url) > 0) {
-      fPrefix = url;
-      SetPrefix(fPrefix);
+      GetPrefix(url, fPrefix);
       fSystem = new TXNetSystem(fPrefix);
    }
 }
@@ -51,7 +50,7 @@ Bool_t TXNetFileStager::IsStaged(const char *path)
    // Check if the file defined by 'path' is ready to be used
 
    if (!IsValid()) {
-      SetPrefix(path);
+      GetPrefix(path, fPrefix);
       fSystem = new TXNetSystem(path);
    }
 
@@ -75,7 +74,7 @@ Bool_t TXNetFileStager::Stage(const char *path, Option_t *opt)
    //                opt = "option=o priority=p".
 
    if (!IsValid()) {
-      SetPrefix(path);
+      GetPrefix(path, fPrefix);
       fSystem = new TXNetSystem(path);
    }
 
@@ -116,24 +115,24 @@ Bool_t TXNetFileStager::Stage(const char *path, Option_t *opt)
 }
 
 //_____________________________________________________________________________
-void TXNetFileStager::SetPrefix(const char *url)
+void TXNetFileStager::GetPrefix(const char *url, TString &pfx)
 {
    // Isolate prefix in url
 
    if (gDebug > 1)
-      Info("SetPrefix", "enter: %s", url);
+      ::Info("TXNetFileStager::GetPrefix", "enter: %s", url);
 
    TUrl u(url);
-   fPrefix = Form("%s://", u.GetProtocol());
+   pfx = Form("%s://", u.GetProtocol());
    if (strlen(u.GetUser()) > 0)
-      fPrefix += Form("%s@", u.GetUser());
-   fPrefix += u.GetHost();
+      pfx += Form("%s@", u.GetUser());
+   pfx += u.GetHost();
    if (u.GetPort() != TUrl("root://host").GetPort())
-      fPrefix += Form(":%d", u.GetPort());
-   fPrefix += "/";
+      pfx += Form(":%d", u.GetPort());
+   pfx += "/";
 
    if (gDebug > 1)
-      Info("SetPrefix", "prefix set to: %s", fPrefix.Data());
+      ::Info("TXNetFileStager::GetPrefix", "found prefix: %s", pfx.Data());
 }
 
 //_____________________________________________________________________________
@@ -144,3 +143,36 @@ void TXNetFileStager::Print(Option_t *) const
    Printf("+++ stager: %s  %s", GetName(), fPrefix.Data());
 }
 
+//______________________________________________________________________________
+Int_t TXNetFileStager::Locate(const char *path, TString &eurl)
+{
+   // Get actual end-point url for a path
+   // Returns 0 in case of success and 1 if any error occured
+
+   if (!IsValid()) {
+      GetPrefix(path, fPrefix);
+      fSystem = new TXNetSystem(path);
+   }
+
+   if (IsValid())
+      return fSystem->Locate(path, eurl);
+
+   // Unable to initialize TXNetSystem
+   return -1;
+}
+
+//______________________________________________________________________________
+Bool_t TXNetFileStager::Matches(const char *s)
+{
+   // Returns kTRUE if stager 's' is compatible with current stager.
+   // Avoids multiple instantiations of the potentially the same TXNetSystem.
+
+   if (IsValid()) {
+      TString pfx;
+      GetPrefix(s, pfx);
+      return ((fPrefix == pfx) ? kTRUE : kFALSE);
+   }
+
+   // Not valid
+   return kFALSE;
+}

@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetSystem.h,v 1.5 2006/10/07 18:06:11 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetSystem.h,v 1.6 2007/02/14 18:25:22 rdm Exp $
 // Author: Frank Winklmeier, Fabrizio Furano
 
 /*************************************************************************
@@ -33,6 +33,10 @@
 #include "Rtypes.h"
 #endif
 
+#ifndef ROOT_TString
+#include "TString.h"
+#endif
+
 #include "XrdOuc/XrdOucString.hh"
 #include "XrdClient/XrdClientVector.hh"
 
@@ -62,7 +66,7 @@ private:
    XrdClientAdmin *Connect(const char *url); // Connect to server
    void           *GetDirPtr() const { return fDirp; }
    void            InitXrdClient();
-   void            SaveEndPointUrl();
+//   void            SaveEndPointUrl();
 
 public:
    TXNetSystem(Bool_t owner = kTRUE);
@@ -74,6 +78,7 @@ public:
    virtual void        FreeDirectory(void *dirp);
    virtual const char *GetDirEntry(void *dirp);
    virtual Int_t       GetPathInfo(const char* path, FileStat_t &buf);
+   virtual Int_t       Locate(const char* path, TString &endurl);
    virtual Int_t       MakeDirectory(const char* dir);
    virtual void       *OpenDirectory(const char* dir);
    virtual int         Unlink(const char *path);

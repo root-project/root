@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.4 2007/02/09 11:51:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.cxx,v 1.5 2007/02/12 13:05:32 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -48,6 +48,7 @@
 #include "TEventList.h"
 #include "TFile.h"
 #include "TFileInfo.h"
+#include "TFileStager.h"
 #include "TFriendElement.h"
 #include "TKey.h"
 #include "TList.h"
@@ -423,6 +424,7 @@ void TDSetElement::Lookup(Bool_t force)
    // Resolve end-point URL for this element
    static Int_t xNetPluginOK = -1;
    static TString xNotRedir;
+   static TFileStager *xStager = 0;
 
    // Check if required
    if (!force && HasBeenLookedUp())
@@ -433,9 +435,8 @@ void TDSetElement::Lookup(Bool_t force)
    // Save current options and anchor
    TString anch = url.GetAnchor();
    TString opts = url.GetOptions();
-   // Add the 'raw' specification for fast opening
-   url.SetOptions(Form("%s&filetype=rawremote=1", opts.Data()));
-   const char *name = url.GetUrl();
+   // The full path
+   TString name(url.GetUrl());
 
    // Depending on the type of backend, it might not make any sense to lookup
    Bool_t doit = kFALSE;
@@ -466,26 +467,21 @@ void TDSetElement::Lookup(Bool_t force)
    // AccessPathName the path, but the TXNetSystem implementation is very
    // slow. To be fixed.
    if (doit) {
-      // Open the file
-      TFile *f = TFile::Open(name);
-      if (!f || f->IsZombie()) {
-         Error("Lookup", "Couldn't open %s\n", name);
+      if (!xStager || !xStager->Matches(name)) {
+         SafeDelete(xStager);
+         xStager = TFileStager::Open(name);
+      }
+      if (xStager->Locate(name.Data(), name) == 0) {
+         // Get the effective end-point Url
+         url.SetUrl(name);
+         // Restore original options and anchor, if any
+         url.SetOptions(opts);
+         url.SetAnchor(anch);
+         // Save it into the element
+         fFileName = url.GetUrl();
       } else {
-         TUrl *u = (TUrl *) f->GetEndpointUrl();
-         // If not redirected, save the server coordinates to avoid
-         // redoing it next time
-         if (!(f->TestBit(TFile::kRedirected))) {
-            xNotRedir += Form("|%s:%d|", u->GetHostFQDN(), u->GetPort());
-         } else {
-            // Get the effective end-point url
-            TUrl eu(u->GetUrl());
-            // Restore original options and anchor, if any
-            eu.SetOptions(opts);
-            eu.SetAnchor(anch);
-            // Save it into the element
-            fFileName = eu.GetUrl();
-         }
-         delete f;
+         // Failure
+         Error("Lookup", "couldn't lookup %s\n", name.Data());
       }
    }
 
@@ -1148,6 +1144,7 @@ void TDSet::Lookup()
    TString msg("Looking up for exact location of files");
    UInt_t n = 0;
    UInt_t tot = GetListOfElements()->GetSize();
+   UInt_t n2 = (tot > 50) ? (UInt_t) tot / 50 : 1;
    Bool_t st = kTRUE;
    TIter nextElem(GetListOfElements());
    while (TDSetElement *elem = dynamic_cast<TDSetElement*>(nextElem())) {
@@ -1155,7 +1152,7 @@ void TDSet::Lookup()
          elem->Lookup();
       n++;
       // Notify the client
-      if (gProof)
+      if (gProof && (n > 0 && !(n % n2)))
          gProof->SendDataSetStatus(msg, n, tot, st);
    }
 }
