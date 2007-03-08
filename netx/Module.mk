@@ -90,3 +90,6 @@ distclean::     distclean-netx
 ##### extra rules ######
 $(NETXO) $(NETXDO): $(XROOTDETAG)
 $(NETXO) $(NETXDO): CXXFLAGS += $(NETXINCEXTRA)
+ifeq ($(PLATFORM),win32)
+$(NETXO) $(NETXDO): CXXFLAGS += -DNOGDI
+endif
