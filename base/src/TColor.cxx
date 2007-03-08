@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.29 2007/03/08 12:17:28 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.30 2007/03/08 12:21:43 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -97,19 +97,10 @@ TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name,
       sprintf(aname, "Color%d", color);
       SetName(aname);
    }
-   const char *cname = GetName();
 
    // enter in the list of colors
    TObjArray *lcolors = (TObjArray*)gROOT->GetListOfColors();
    lcolors->AddAtAndExpand(this, color);
-
-   if (color > 0 && color < 51) {
-      // now create associated colors for WBOX shading
-      sprintf(aname,"%s%s",cname,"_dark");
-      new TColor(100+color, -1, -1, -1, aname);
-      sprintf(aname,"%s%s",cname,"_bright");
-      new TColor(150+color, -1, -1, -1, aname);
-   }
 
    // fill color structure
    SetRGB(r, g, b);
@@ -160,6 +151,8 @@ void TColor::InitializeColors()
 
       // The color white above is defined as being nearly white.
       // Sets the associated dark color also to white.
+      //TColor *c110 = gROOT->GetColor(110);
+      TColor::GetColorDark(10);
       TColor *c110 = gROOT->GetColor(110);
       c110->SetRGB(0.999,0.999,.999);
 
@@ -768,6 +761,71 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
 
    return color->GetNumber();
 }
+
+//______________________________________________________________________________
+Int_t TColor::GetColorBright(Int_t n)
+{
+   // Static function: Returns the bright color number corresponding to n
+   // If the TColor object does not exist, it is created.
+   // The convention is that the bright color nb = n+150
+
+   if (n < 0) return -1;
+   
+   // Get list of all defined colors
+   TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
+   Int_t ncolors = colors->GetSize();
+   // Get existing color at index n
+   TColor *color = 0;
+   if (n < ncolors) color = (TColor*)colors->At(n);
+   if (!color) return -1;
+   
+   //Get the rgb of the the new bright color corresponding to color n
+   Float_t r,g,b;
+   HLStoRGB(color->GetHue(), 1.2*color->GetLight(), color->GetSaturation(), r, g, b);
+   
+   //Build the bright color (unless the slot nb is already used)
+   Int_t nb = n+150;
+   TColor *colorb = 0;
+   if (nb < ncolors) colorb = (TColor*)colors->At(nb);
+   if (colorb) return nb;
+   colorb = new TColor(nb,r,g,b);
+   colorb->SetName(Form("%s_bright",color->GetName()));
+   colors->AddAtAndExpand(colorb,nb);
+   return nb;
+}
+
+//______________________________________________________________________________
+Int_t TColor::GetColorDark(Int_t n)
+{
+   // Static function: Returns the dark color number corresponding to n
+   // If the TColor object does not exist, it is created.
+   // The convention is that the dark color nd = n+100
+
+   if (n < 0) return -1;
+   
+   // Get list of all defined colors
+   TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
+   Int_t ncolors = colors->GetSize();
+   // Get existing color at index n
+   TColor *color = 0;
+   if (n < ncolors) color = (TColor*)colors->At(n);
+   if (!color) return -1;
+   
+   //Get the rgb of the the new dark color corresponding to color n
+   Float_t r,g,b;
+   HLStoRGB(color->GetHue(), 0.7*color->GetLight(), color->GetSaturation(), r, g, b);
+   
+   //Build the dark color (unless the slot nd is already used)
+   Int_t nd = n+100;
+   TColor *colord = 0;
+   if (nd < ncolors) colord = (TColor*)colors->At(nd);
+   if (colord) return nd;
+   colord = new TColor(nd,r,g,b);
+   colord->SetName(Form("%s_dark",color->GetName()));
+   colors->AddAtAndExpand(colord,nd);
+   return nd;
+}
+   
 
 //______________________________________________________________________________
 ULong_t TColor::Number2Pixel(Int_t ci)

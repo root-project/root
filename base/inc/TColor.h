@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.14 2007/03/02 14:05:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.15 2007/03/08 12:17:28 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -108,6 +108,8 @@ public:
    static Int_t   GetColor(Float_t r, Float_t g, Float_t b);
    static Int_t   GetColor(Int_t r, Int_t g, Int_t b);
    static Int_t   GetColor(ULong_t pixel);
+   static Int_t   GetColorBright(Int_t color);
+   static Int_t   GetColorDark(Int_t color);
    static ULong_t Number2Pixel(Int_t ci);
    static ULong_t RGB2Pixel(Int_t r, Int_t g, Int_t b);
    static ULong_t RGB2Pixel(Float_t r, Float_t g, Float_t b);
