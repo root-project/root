@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.157 2007/03/05 14:21:36 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.159 2007/03/07 23:17:28 pcanal Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1496,7 +1496,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    if (!deplibs.IsNull()) {
       TString delim(" ");
       TObjArray *tokens = deplibs.Tokenize(delim);
-      for (Int_t i = tokens->GetEntries()-1; i > 0; i--) {
+      for (Int_t i = tokens->GetEntriesFast()-1; i > 0; i--) {
          const char *deplib = ((TObjString*)tokens->At(i))->GetName();
          if (gDebug > 0)
             Info("Load", "loading dependent library %s for library %s",
@@ -1518,7 +1518,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       delete [] path;
    }
 
-   if ((strstr(module, "Gui")) || (strstr(module, "Gpad")))
+   if ((strstr(module, "libGui")) || (strstr(module, "libGpad")))
       if (gApplication) gApplication->InitializeGraphics();
 
    if (!entry || !entry[0]) return i;
