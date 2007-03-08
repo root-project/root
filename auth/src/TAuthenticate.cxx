@@ -408,10 +408,9 @@ Bool_t TAuthenticate::Authenticate()
 negotia:
    st = -1;
    tMth[meth] = 1;
-   if (gDebug > 2) {
-      ntry++;
+   ntry++;
+   if (gDebug > 2)
       Info("Authenticate", "try #: %d", ntry);
-   }
 
    user = "";
    passwd = "";
@@ -619,7 +618,10 @@ negotia:
    // 3 = print failure and return
    Int_t action = 0;
    Int_t nmet = fHostAuth->NumMethods();
-   Int_t remloc = nmet - meth - 1;
+   Int_t remloc = nmet - ntry;
+   if (gDebug > 0)
+      Info("Authenticate","remloc: %d, ntry: %d, meth: %d, fSecurity: %d",
+                           remloc, ntry, meth, fSecurity);
    Int_t kind, stat;
    switch (st) {
 
