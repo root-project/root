@@ -1,0 +1,52 @@
+This directory contains classes for using the UNU.RAN package in ROOT
+BEGIN_HTML
+<p> UNU.RAN, (Universal Non Uniform Random number generator for generating non uniform pseudo-random numbers) is an ANSI C library licensed under GPL.<br>
+  It contains universal (also called automatic or black-box) algorithms that can generate random numbers from large classes of continuous or discrete distributions, and also from practically all standard distributions. An extensive online documentation are available at the <a href="http://statistik.wu-wien.ac.at/unuran/">UNU.RAN Web Site</a>. </p>
+<p>The classes TUnuran, TUnuranDistr and TUnuranDistrMultiu have been introduced to use the UNU.RAN C library from ROOT and C++ from ROOT and using C++ objects. UNU.RAN can be used in two distinct ways:</p>
+<ul>
+  <li>using the UNU.RAN native string API for pre-defined distributions (see<a href="http://statistik.wu-wien.ac.at/unuran/doc/unuran.html#StringAPI"> UNU.RAN documentation</a> for the string API):
+
+          <pre>
+          TUnuran unr;
+          //initialize unuran to generate normal random numbers using a "arou" method
+          unr.Init("normal()","method=arou");
+          //......
+          // sample distributions
+          double x = unr.Sample();
+
+           </pre>
+   
+  </li>
+  <li>
+  Using a distribution object</li>
+      <ul>
+      <li>For 1D distribution the class <strong>TUnuranDistr</strong> can be used. A<strong> TUnuranDistr</strong> object can be created from two functions:
+       one providing the pdf (probability density function) and one the cdf (cumulative distribution function).
+        <pre>
+ //1D case: create a distribution from two TF1 object pointers pdfFunc, cdfFunc
+ TUnuranDistr  distr( pdfFunc, cdfFunc);
+ //initialize unuran passing the distribution and a string defining the method
+ unr.Init(distr, "method=hinv");
+ </pre>
+      <li> For multi-dimensional distribution the class <strong>TUnuranDistrMulti</strong> must be used. In this case only the multi-dimensional pdf is
+       required
+      </li>
+      </ul>
+    <blockquote>
+      <pre>
+ //Multi-Dim case from a TF1 (or TF2 or TF3) object describing a multi-dimensional function
+ TUnuranDistrMulti  distrMulti( pdfFuncMulti);
+ // the recommended method for multi-dimensional function is "hitro"
+ unr.Init(distr, "method=hitro");
+  </pre>
+  </blockquote>
+  </li>
+</ul>
+<p>Functionality is also provided via the C++ classes for: </p>
+<ul>
+  <li>  using a different random number generator by passing a TRandom pointer when constructing the TUnuran class (by default the ROOT gRandom is passed to UNURAN).</li>
+  <li> setting the domain of the distribution using <strong>TUnuranDistr::SetDomain</strong> </li>
+</ul>
+<p>The <a href="http://statistik.wu-wien.ac.at/unuran/doc/unuran.html#Top">UNU.RAN documentation</a> provides a detailed description of all the available methods and the possible options which one can pass to UNU.RAN for both 1D and multi-dimensional distributions. </p>
+<h3>&nbsp;</h3>
+END_HTML
