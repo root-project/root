@@ -7,3 +7,4 @@ Event
 *.manifest
 .root_hist
 rootmap_*
+*.rootmap

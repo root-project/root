@@ -9,3 +9,4 @@ CandClusterSRCint.*
 *.manifest
 .root_hist
 rootmap_*
+*.rootmap

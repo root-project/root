@@ -8,3 +8,4 @@ barDict.h
 *.manifest
 .root_hist
 rootmap_*
+*.rootmap

@@ -6,3 +6,4 @@ EventDict*.*
 schemaRun.ref
 .root_hist
 rootmap_*
+*.rootmap

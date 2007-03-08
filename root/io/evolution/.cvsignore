@@ -3,3 +3,4 @@
 .root_hist
 *.clog
 rootmap_*
+*.rootmap

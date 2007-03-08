@@ -6,3 +6,4 @@ Event.h
 Event.cxx EventDict.cxx EventDict.h EventLinkDef.h
 .root_hist
 rootmap_*
+*.rootmap

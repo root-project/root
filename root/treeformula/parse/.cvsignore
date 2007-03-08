@@ -2,3 +2,4 @@
 cmakeclass.C cmakeclass.h cmakeproxy.h generatedSel.h
 .root_hist
 rootmap_*
+*.rootmap

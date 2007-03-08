@@ -3,3 +3,4 @@
 Event.h copiedEvent*
 .root_hist
 rootmap_*
+*.rootmap

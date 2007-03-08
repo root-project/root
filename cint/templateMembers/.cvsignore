@@ -9,3 +9,4 @@ templateMembersNoMem.ref
 *.manifest
 .root_hist
 rootmap_*
+*.rootmap

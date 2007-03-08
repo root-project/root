@@ -4,3 +4,4 @@ MyClassClones_cxx.dll.manifest MyClassList_cxx.dll.manifest MyClassVector_cxx.dl
 *.manifest
 .root_hist
 rootmap_*
+*.rootmap

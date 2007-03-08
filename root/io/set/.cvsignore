@@ -8,3 +8,4 @@ set_problem_cxx.d
 *.manifest
 .root_hist
 rootmap_*
+*.rootmap

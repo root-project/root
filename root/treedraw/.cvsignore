@@ -2,3 +2,4 @@
 *.ps *.root
 .root_hist
 rootmap_*
+*.rootmap

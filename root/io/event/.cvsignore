@@ -3,3 +3,4 @@ Event Event.exe EventDict*
 *.manifest
 .root_hist
 rootmap_*
+*.rootmap

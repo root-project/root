@@ -6,3 +6,4 @@ reader writer file.root FooDict*
 *.manifest
 .root_hist
 rootmap_*
+*.rootmap
