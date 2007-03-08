@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.57 2006/02/09 20:37:48 pcanal Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.58 2007/02/04 17:39:44 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -95,7 +95,9 @@ typedef double         Coord_t;     //Pad world coordinates (double)
 typedef float          Angle_t;     //Graphics angle (float)
 typedef float          Size_t;      //Attribute size (float)
 
-enum EColor { kWhite, kBlack, kRed, kGreen, kBlue, kYellow, kMagenta, kCyan };
+enum EColor { kWhite =0,   kBlack =1,   kGray=920
+             ,kRed   =632, kGreen =416, kBlue=600, kYellow=400, kMagenta=616, kCyan=432
+             ,kOrange=800, kSpring=820, kTeal=840, kAzure =860, kViolet =880, kPink=900};
 
 // There is several streamer concepts.
 class TClassStreamer;   // Streamer functor for a class
