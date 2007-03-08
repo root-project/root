@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.260 2007/02/22 16:38:56 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.261 2007/03/02 10:24:14 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2732,8 +2732,9 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
    Color_t oldcolor = GetFillColor();
    SetFillColor(color);
    TAttFill::Modify();
-   Color_t light;
-   Color_t dark;
+   Color_t light = TColor::GetColorBright(color);
+   Color_t dark  = TColor::GetColorDark(color);
+/*
    if (color == 0) {
       light = 0;
       dark  = 0;
@@ -2751,7 +2752,8 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
       TColor::HLStoRGB(h, 1.2*l, s, r, g, b);
       light = TColor::GetColor(r, g, b);
    }
-
+*/
+   
    // Compute real left bottom & top right of the box in pixels
    px1 = XtoPixel(fX1);   py1 = YtoPixel(fY1);
    px2 = XtoPixel(fX2);   py2 = YtoPixel(fY2);

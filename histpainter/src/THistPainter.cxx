@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.282 2007/02/04 07:54:52 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.283 2007/02/15 15:04:40 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2030,11 +2030,12 @@ void THistPainter::PaintBar(Option_t *)
       } else {
          umin = xmin + bar*(xmax-xmin)/10.;
          umax = xmax - bar*(xmax-xmin)/10.;
-         box.SetFillColor(hcolor+150); //bright
+         //box.SetFillColor(hcolor+150); //bright
+         box.SetFillColor(TColor::GetColorBright(hcolor)); //bright
          box.PaintBox(xmin,ymin,umin,ymax);
          box.SetFillColor(hcolor);
          box.PaintBox(umin,ymin,umax,ymax);
-         box.SetFillColor(hcolor+100); //dark
+         box.SetFillColor(TColor::GetColorDark(hcolor)); //dark
          box.PaintBox(umax,ymin,xmax,ymax);
       }
    }
@@ -2107,11 +2108,11 @@ void THistPainter::PaintBarH(Option_t *)
       } else {
          umin = ymin + bar*(ymax-ymin)/10.;
          umax = ymax - bar*(ymax-ymin)/10.;
-         box.SetFillColor(hcolor+100); //dark
+         box.SetFillColor(TColor::GetColorDark(hcolor)); //dark
          box.PaintBox(xmin,ymin,xmax,umin);
          box.SetFillColor(hcolor);
          box.PaintBox(xmin,umin,xmax,umax);
-         box.SetFillColor(hcolor+150); //bright
+         box.SetFillColor(TColor::GetColorBright(hcolor)); //bright
          box.PaintBox(xmin,umax,xmax,ymax);
       }
    }
@@ -2213,6 +2214,9 @@ void THistPainter::PaintBoxes(Option_t *)
    Color_t color = fH->GetFillColor();
    Color_t light=0, dark=0;
    if (Hoption.Box == 11) {
+      light = TColor::GetColorBright(color);
+      dark  = TColor::GetColorDark(color);
+/*
       if (color == 0) {
          light = 0;
          dark  = 0;
@@ -2230,6 +2234,7 @@ void THistPainter::PaintBoxes(Option_t *)
          TColor::HLStoRGB(h, 1.2*l, s, r, g, b);
          light = TColor::GetColor(r, g, b);
       }
+*/
    }
 
    // Loop over all the bins and draw the boxes
@@ -4259,7 +4264,7 @@ void THistPainter::PaintLego(Option_t *)
          if (id > 0 && fStack) hid = (TH1*)fStack->At(id-1);
          Color_t colormain = hid->GetFillColor();
          if (colormain == 1) colormain = 17; //avoid drawing with black
-         Color_t colordark = colormain + 100;
+         Color_t colordark = TColor::GetColorDark(colormain);
          fLego->SetColorMain(colormain,id);
          fLego->SetColorDark(colordark,id);
          if (id == 0)    fLego->SetColorMain(colormain,-1);  // Set Bottom color
