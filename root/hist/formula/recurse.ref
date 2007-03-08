@@ -1,0 +1,21 @@
+
+Processing runrecurse.C...
+                   f2 : [0]+f1 Ndim= 1, Npar= 2, Noper= 3
+ fExpr[0] = [0]  action = 140 action param = 0 
+ fExpr[1] = [1]  action = 140 action param = 1 
+ fExpr[2] = +  action = 1 action param = 0 
+Optimized expression
+ fExpr[0] = [0],[1],+		  action = 148 action param = 0 
+ Par  0                    p0 = 2
+ Par  1                    p1 = 1
+                   f3 : [0]+f2 Ndim= 1, Npar= 3, Noper= 5
+ fExpr[0] = [0]  action = 140 action param = 0 
+ fExpr[1] = [1]  action = 140 action param = 1 
+ fExpr[2] = [2]  action = 140 action param = 2 
+ fExpr[3] = +  action = 1 action param = 0 
+ fExpr[4] = +  action = 1 action param = 0 
+Optimized expression
+ fExpr[0] = [0],[1],[2],+,+		  action = 149 action param = 0 
+ Par  0                    p0 = 3
+ Par  1                    p1 = 2
+ Par  2                    p2 = 1
