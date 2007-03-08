@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.28 2007/03/02 14:05:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.29 2007/03/08 12:17:28 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 #include "TError.h"
 #include "TMathBase.h"
 #include "TApplication.h"
+#include <cmath>
 
 ClassImp(TColor)
 
