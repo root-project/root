@@ -11,6 +11,7 @@
 #include "TStopwatch.h"
 #include <iterator> 
 
+#include <iostream>
 
 
 int unuranHist() {

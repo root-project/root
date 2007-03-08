@@ -11,6 +11,8 @@
 
 #include "Math/DistFunc.h"
 
+#include <iostream>
+
 //#define DEBUG
 #ifdef DEBUG
 int n = 100;
