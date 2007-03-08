@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: TUnuranBaseDist.h,v 1.3 2007/02/05 10:24:44 moneta Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuranBaseDist.h,v 1.1 2007/03/08 09:31:54 moneta Exp $
 // Authors: L. Moneta, J. Leydold Wed Feb 28 2007
 
 /**********************************************************************
@@ -19,6 +19,11 @@
 
 #ifndef ROOT_Math_TUnuranBaseDist
 #define ROOT_Math_TUnuranBaseDist
+
+//needed by the ClassDef
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
 
 
 //////////////////////////////////////////////////////////////////////
