@@ -201,7 +201,6 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t width,
    fDimGroup->ChangeOptions(kFitWidth|kChildFrame|kHorizontalFrame);
    f2->AddFrame(fDimGroup, new TGLayoutHints(kLHintsTop, 4, 1, 0, 0));
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 2, 5));
-//here
 
    // 2D Plot drawoptions
    f6 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TH1Editor.h,v 1.17 2007/02/07 09:00:41 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TH1Editor.h,v 1.18 2007/03/09 15:09:12 antcheva Exp $
 // Author: Carsten Hof 16/08/04
 
 /*************************************************************************
@@ -55,7 +55,6 @@ protected:
    TGComboBox	         *fTypeCombo;       // histogram type combo box
    TGComboBox 	        *fCoordsCombo;     // Coordinate System combo box
    TGComboBox 	        *fErrorCombo;      // Error combo box
-   TGComboBox 	        *fErrorCombo1;     // Error combo box
    TGCheckButton       *fHistOnOff;       // Draw a simple histogram with default options
    TGCheckButton       *fAddMarker;       // Draw a Marker on top of each bin
    TGCheckButton       *fAddB;            // Draw a Bar Chart
