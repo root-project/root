@@ -27,14 +27,14 @@
 
   // Create 3rd level function.
 
-  TF1 f3("f3", "[0]+f2");
+  TF1 f3("f3", "[0]+[1]+f2");
 
   // Set 3rd level parameter.
 
   f3.SetParameter(0, 3);
 
-  // Inspect 3rd level function. 1st level parameter has offset 2 in
-  // parameter array, but offset 1 in expression array.
+  // Inspect 3rd level function. 1st level parameter has offset 3 in
+  // parameter array, but offset 2 in expression array.
 
   f3.Print();
 
