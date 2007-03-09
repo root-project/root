@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.256 2007/02/05 22:15:14 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.257 2007/02/14 05:27:44 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -318,6 +318,7 @@ const char *help =
 #include <sstream>
 #include <map>
 #include <fstream>
+#include <sys/stat.h>
 
 namespace std {}
 using namespace std;
@@ -571,6 +572,22 @@ void LoadLibraryMap() {
    static unsigned int sbuffer = 0;
 
    while ( filelist >> filename ) {
+#ifdef WIN32
+      struct _stati64 finfo;
+
+      if (_stati64(filename.c_str(), &finfo) < 0 || 
+          finfo.st_mode & S_IFDIR) {
+         continue;
+      }
+#else
+      struct stat finfo;
+      if (stat(filename.c_str(), &finfo) < 0 || 
+          S_ISDIR(finfo.st_mode)) {
+         continue;
+      }
+
+#endif
+
       ifstream file(filename.c_str());
 
       string line;
@@ -587,6 +604,7 @@ void LoadLibraryMap() {
             while ( (pos=classname.find("@@",pos)) >= 0 ) {
                classname.replace(pos,2,"::");
             }
+            pos = 0;
             while ( (pos=classname.find("-",pos)) >= 0 ) {
                classname.replace(pos,1," ");
             }
@@ -643,6 +661,7 @@ void LoadLibraryMap() {
             G__set_class_autoloading_table(buffer,(char*)line.c_str());
          }
       }
+      file.close();
    }
 }
 
