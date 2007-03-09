@@ -18,7 +18,7 @@ sky = TCanvas( 'sky', 'Tornado', 300, 10, 700, 500 )
 sky.SetFillColor( 14 )
 
 # creating view
-view = TView( 1 )
+view = TView.CreateView()
 rng = numberOfCircles * d
 view.SetRange( 0, 0, 0, 4.0*rng, 2.0*rng, rng )
 
