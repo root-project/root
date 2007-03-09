@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.87 2006/11/20 15:56:36 rdm Exp $
+// @(#)root/proofd:$Name: v5-14-00-patches $:$Id: proofd.cxx,v 1.88 2006/11/20 16:17:06 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -1047,7 +1047,7 @@ int main(int argc, char **argv)
       options &= ~kDMN_SYSLOG;
    RpdInit(gService, proofdparentid, gProtocol, options,
            reuseallow, sshdport,
-           gTmpDir.c_str(),altSRPpass.c_str());
+           gTmpDir.c_str(),altSRPpass.c_str(),2);
 
    // Generate Local RSA keys for the session
    if (RpdGenRSAKeys(0)) {

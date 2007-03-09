@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.28 2005/08/31 11:11:46 rdm Exp $
+// @(#)root/rpdutils:$Name: v5-14-00-patches $:$Id: rpdp.h,v 1.29 2006/11/20 15:56:36 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -106,7 +106,7 @@ int  RpdInitSession(int, std::string &, int &, int &, std::string &);
 int  RpdInitSession(int, std::string &, int &, int &, int &, std::string &);
 void RpdInit(EService serv, int pid, int sproto,
              unsigned int opts, int rumsk, int sshp,
-             const char *tmpd, const char *asrpp);
+             const char *tmpd, const char *asrpp, int login = 0);
 void RpdSetErrorHandler(ErrorHandler_t Err, ErrorHandler_t Sys,
                         ErrorHandler_t Fatal);
 #ifdef R__KRB5
@@ -228,9 +228,9 @@ extern "C" {
 namespace ROOT {
 
 void  GlbsToolError(char *, int, int, int);
-int   GlbsToolCheckCert(char *, char **);
+int   GlbsToolCheckCert(char **);
 int   GlbsToolCheckContext(int);
-int   GlbsToolCheckProxy(char *, char **);
+int   GlbsToolCheckProxy(char **);
 int   GlbsToolStoreContext(gss_ctx_id_t, char *);
 int   GlbsToolStoreToShm(gss_buffer_t, int *);
 char *GlbsToolExpand(char *);

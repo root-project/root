@@ -912,6 +912,8 @@ with options, prefix with --with-, enables corresponding support
   gsl-libdir         GSL support, location of libgsl
   gccxml             Gccxml support, directory of the gccxml installation
   globus             Globus support, path to what should be GLOBUS_LOCATION
+  globus-incdir      Globus support, location of globus header files
+  globus-libdir      Globus support, location of globus libraries
   krb5               Kerberos5 support, location of Kerberos distribution
   krb5-incdir        Kerberos5 support, location of krb5.h
   krb5-libdir        Kerberos5 support, location of libkrb5
@@ -1100,6 +1102,8 @@ if test $# -gt 0 ; then
       --with-gsl-incdir=*)     gslincdir=$optarg     ; enable_gsl="yes"     ;;
       --with-gsl-libdir=*)     gsllibdir=$optarg     ; enable_gsl="yes"     ;;
       --with-globus=*)         globusdir=$optarg     ; enable_globus="yes"  ;;
+      --with-globus-incdir=*)  globusincdir=$optarg  ; enable_globus="yes"    ;;
+      --with-globus-libdir=*)  globuslibdir=$optarg  ; enable_globus="yes"    ;;
       --with-gccxml=*)         gccxml=$optarg        ;;
       --with-krb5=*)           krb5dir=$optarg       ; enable_krb5="yes"    ;;
       --with-krb5-incdir=*)    krb5incdir=$optarg    ; enable_krb5="yes"    ;;
@@ -2773,18 +2777,18 @@ glbpatchcflags=""
 haveglobus=""
 if test ! "x$enable_globus" = "xno"; then
    # Check if the GLOBUS_LOCATION variable is set
+   checking_msg "for globusdir"
    if test "x$globusdir" = "x" ; then
-      checking_msg "for globusdir"
       result "no"
       checking_msg "GLOBUS_LOCATION"
-      if test "x$GLOBUS_LOCATION" = "x" ; then
-          globusdir=""
-          enable_globus="no"
-	  result "no"
+      if test ! "x$GLOBUS_LOCATION" = "x" ; then
+         globusdir=$GLOBUS_LOCATION
+         result "$GLOBUS_LOCATION"
       else
-          globusdir=$GLOBUS_LOCATION
-	  result "$GLOBUS_LOCATION"
+         result "no"
       fi
+   else
+      result "$globusdir"
    fi
 fi
 
@@ -2793,71 +2797,53 @@ if test "x$enable_globus" = "xyes"; then
     pthr="pthr"
     #determine flavour tag of the building
     flavour=""
-    if test -d $globusdir/include/gcc32; then
-        flavour="gcc32"
-    else
-        flavour="gcc32dbg"
+    if test "x$globusincdir" = "x" ; then
+       globusincdir=$globusdir/include
     fi
-    globusincdir=""
-    globuslibdir=""
-    searchincdir=$globusdir/include
+    searchincdir="$globusincdir/gcc32 $globusincdir/gcc32dbg \
+                  $globusincdir/gcc32pthr $globusincdir/gcc32dbgpthr"
 
-    inclist="openssl/x509.h openssl/pem.h globus_gss_assist.h globus_common.h"
+    # Found the reference dir first
+    check_header "openssl/x509.h" "" "$searchincdir"
+    if test "x$found_hdr" = "x" ; then
+       globusinc=""
+       globusincdir=""
+       enable_globus="no"
+       break
+    fi
+    globusinc="$globusinc $found_hdr"
+    globusincdir=$found_dir
+    flavour=`basename $globusincdir`
 
+    # The other headers now
+    inclist="openssl/pem.h globus_gss_assist.h globus_common.h"
     for i in $inclist ; do
-        check_header $i "" "$searchincdir/$flavour"
-        if test "x$found_hdr" = "x" ; then
-            globusinc=""
-            globusincdir=""
-            enable_globus="no"
-            break
-        fi
-        globusinc="$globusinc $found_hdr"
-        if test "x$globusincdir" = "x" ; then
-            globusincdir=$found_dir
-        else
-            for k in $globusincdir ; do
-                if test "x$k" != "x$found_dir" ; then
-		    globusincdir="$found_dir $globusincdir"
-                 fi
-            done
-        fi
+       check_header $i "" "$globusincdir"
+       if test "x$found_hdr" = "x" ; then
+          globusinc=""
+          globusincdir=""
+          enable_globus="no"
+          break
+       fi
+       globusinc="$globusinc $found_hdr"
     done
 fi
 
 if test "x$enable_globus" = "xyes"; then
 
    # With more recent versions we need an additional header
-   check_header globus_gsi_credential.h "" "$searchincdir/$flavour"
+   check_header globus_gsi_credential.h "" "$globusincdir"
    gsiversion="no"
    if test ! "x$found_hdr" = "x" ; then
        gsiversion="yes"
        globusinc="$globusinc $found_hdr"
-       if test "x$globusincdir" = "x" ; then
-           globusincdir=$found_dir
-       else
-           for k in $globusincdir ; do
-               if test "x$k" != "x$found_dir" ; then
-		   globusincdir="$found_dir $globusincdir"
-                fi
-           done
-       fi
        gsicredentialh=$found_dir/globus_gsi_credential.h
        echo "Checking for gsi version ... yes"
    else
        echo "Checking for gsi version ... no"
-       check_header sslutils.h "" "$searchincdir/$flavour"
+       check_header sslutils.h "" "$globusincdir"
        if test ! "x$found_hdr" = "x" ; then
           globusinc="$globusinc $found_hdr"
-          if test "x$globusincdir" = "x" ; then
-             globusincdir=$found_dir
-          else
-             for k in $globusincdir ; do
-                 if test "x$k" != "x$found_dir" ; then
-		     globusincdir="$found_dir $globusincdir"
-                 fi
-             done
-          fi
        else
          globusinc=""
          globusincdir=""
@@ -2869,30 +2855,30 @@ fi
 if test "x$enable_globus" = "xyes"; then
 
    globuslib=""
-   if test ! "x$globusdir" = "x" ; then
-       searchlibdir=$globusdir/lib
+   if test "x$globuslibdir" = "x" ; then
+       globuslibdir=$globusdir/lib
    fi
+   if test "x$globusdir" = "x" ; then
+       globusdir=`dirname $globuslibdir`
+       echo "Globus main path set to $globusdir"
+   fi
+   searchlibdir=$globuslibdir
+   globuslibdir=""
 
    for i in libglobus_gss_assist_$flavour libglobus_gssapi_gsi_$flavour \
-     libssl_$flavour libcrypto_$flavour ; do
-     check_library $i "$enable_shared" "$searchlibdir" /opt/globus /usr/lib \
-        /usr/local/lib
-        if test "x$found_lib" = "x" ; then
-            globuslib=""
-            globuslibdir=""
-            enable_globus="no"
-            break
-        fi
-        globuslib="$globuslib $found_lib"
-        if test "x$globuslibdir" = "x" ; then
-            globuslibdir=$found_dir
-        else
-            for k in $globuslibdir ; do
-                if test "x$k" != "x$found_dir" ; then
-                    globuslibdir="$found_dir $globuslibdir"
-                fi
-            done
-        fi
+      libssl_$flavour libcrypto_$flavour ; do
+      check_library $i "$enable_shared" "$searchlibdir" /opt/globus /usr/lib \
+      /usr/local/lib
+      if test "x$found_lib" = "x" ; then
+         globuslib=""
+         globuslibdir=""
+         enable_globus="no"
+         break
+      fi
+      globuslib="$globuslib $found_lib"
+      if test "x$globuslibdir" = "x" && test ! "x$found_dir" = "x" ; then
+         globuslibdir="$found_dir"
+      fi
    done
 fi
 
@@ -2901,17 +2887,11 @@ if test "x$enable_globus" = "xyes"; then
    # In more recent versions some functions are found in a separated library
    # so, if it exists, add it to the list
    check_library libglobus_gsi_credential_$flavour "$enable_shared" \
-          "$searchlibdir" /usr/lib /usr/local/lib
+          "$globuslibdir" /usr/lib /usr/local/lib
    if test ! "x$found_lib" = "x" ; then
       globuslib="$globuslib $found_lib"
-      if test "x$globuslibdir" = "x" ; then
-         globuslibdir=$found_dir
-      else
-         for k in $globuslibdir ; do
-             if test "x$k" != "x$found_dir" ; then
-                globuslibdir="$found_dir $globuslibdir"
-             fi
-         done
+      if test "x$globuslibdir" = "x" && test ! "x$found_dir" = "x" ; then
+         globuslibdir="$found_dir"
       fi
    fi
    case $platform in

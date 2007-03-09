@@ -1,4 +1,4 @@
-// @(#)root/castor:$Name:  $:$Id: TCastorFile.cxx,v 1.14 2006/07/24 16:26:28 rdm Exp $
+// @(#)root/castor:$Name: v5-14-00-patches $:$Id: TCastorFile.cxx,v 1.1 2006/09/19 16:15:47 rdm Exp $
 // Author: Fons Rademakers + Jean-Damien Durand 17/09/2003 + Ben Couturier 31/05/2005
 // + Giulia Taurelli 26/04/2006
 
@@ -34,6 +34,16 @@
 //                                                                      //
 // path is mandatory as parameter but all the other ones are optional.  //
 //                                                                      //
+// Use "&rootAuth=<auth_prot_code>" in the option field to force the    //
+// specified authentication protocol when contacting the server, e.g.   //
+//                                                                      //
+//  castor:///?path=/castor/cern.ch/user/r/rdm/bla.root                 //
+//    &svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION&rootAuth=3      //
+//                                                                      //
+// will try first the globus/GSI protocol; available protocols are      //
+//  0: passwd, 1: srp, 2: krb5, 3: globus, 4: ssh, 5 uidgid             //
+// The defaul is taken from the env ROOTCASTORAUTH.                     //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include "NetErrors.h"
@@ -50,7 +60,6 @@
 
 #ifdef R__CASTOR2
 #include <stager_api.h>       // For the new CASTOR 2 Stager
-#include <RfioTURL.h>         // For the new url parsing
 #endif
 #define RFIO_KERNEL           // Get access to extra symbols in the headers
 #include <stage_api.h>        // Dial with CASTOR stager
@@ -73,255 +82,15 @@ extern int tStageHostKey;
 extern int tStagePortKey;
 extern int tSvcClassKey;
 extern int tCastorVersionKey;
-
-//______________________________________________________________________________
-int TCastorFile::ParseAndSetGlobal()
-{
-   // This function does the parsing to deal with the new Turl
-   // and set the global variables needed by castor.
-
-   char **globalHost,  **globalSvc;
-   int  *globalVersion, *globalPort;
-
-   char *myHost,  *mySvcClass;
-   int  myVersion, myPort;
-
-   int ret;
-   char *options, *myCastorVersion, *path2, *path1, *q1, *q;
-   int versionNum;
-   char *myTurl;
-   int newTurl=0;
-
-   globalHost = globalSvc = 0;
-   myHost = mySvcClass = 0;
-   versionNum = 0;
-   globalVersion = globalPort = 0;
-   myVersion = myPort = 0;
-
-   myTurl = strdup(fUrl.GetFile()); // parsing of host and port not done by TUrl class.
-   options = strdup(fUrl.GetOptions());
-
-   // I parse the host and port and I save it into myHost and myPort
-
-   // check to see if it is the new Turl or not
-
-   path2 = strstr(options,"path=");
-   if (path2) {
-      newTurl = 1;
-      path2 += 5; // to remove "path="
-   }
-
-   if (newTurl) {
-
-      q = strstr(myTurl,":");
-      q1 = strstr(myTurl,"/");
-
-      if (myTurl!=q && myTurl!=q1) {
-         if (q && q1) {
-            *q='\0';
-            q+=1;
-            fUrl.SetHost(myTurl);
-            *q1='\0';
-            q1+=1;
-            fUrl.SetPort(atoi(q));
-         }
-         if (!q && q1) {
-            *q1='\0';
-            q1+=1;
-            fUrl.SetHost(myTurl);
-         }
-      } else {
-         if(q1) q1+=1;
-      }
-      if (q1) {
-         fUrl.SetFile(q1);
-      } else {
-         fUrl.SetFile("");
-      }
-   }
-
-   free(myTurl);
-
-
-   // Stage host
-   ret=Cglobals_get(&tStageHostKey,(void **)&globalHost,sizeof(void*));
-   if (ret<0) return -1;
-
-   if (*globalHost) {
-      free(*globalHost);
-      *globalHost=0;
-   }
-
-   if (strcmp(fUrl.GetHost(),"")) {
-      *globalHost=strdup(fUrl.GetHost());
-   }
-
-   // stage port
-   ret=Cglobals_get(&tStagePortKey,(void **)&globalPort,sizeof(int));
-
-   if (ret<0) {
-      if (*globalHost) {
-         free(*globalHost);
-         *globalHost=0;
-      }
-      return -1;
-   }
-   *globalPort=0;
-   if (fUrl.GetPort()>0) {
-      *globalPort=fUrl.GetPort();
-   }
-
-   // From here I consider the Option given after ? (updating the right file path)
-   // parsing of options given
-
-
-   mySvcClass=strstr(options,"svcClass=");
-   if (mySvcClass) {
-      mySvcClass+=9; // to remove "svcClass="
-   }
-
-   myCastorVersion=strstr(options,"castorVersion=");
-   if (myCastorVersion) {
-      myCastorVersion+=14; // to remove "castorVersion="
-   }
-
-   if (mySvcClass) {
-      q1=strstr(mySvcClass,"&");
-      if (q1) {
-         *q1='\0';
-      }
-   }
-   if (myCastorVersion) {
-      q1=strstr(myCastorVersion,"&");
-      if (q1){
-         *q1='\0';
-      }
-   }
-   if (path2) {
-      q1=strstr(path2,"&");
-      if(q1) {
-         *q1='\0';
-      }
-   }
-
-   path1 = (char*)fUrl.GetFile();
-
-   if (strcmp(path1,"") && path2) {
-      // not possible to have the path twice
-      if (*globalHost) {
-         free(*globalHost);
-         *globalHost=0;
-      }
-      free(options);
-      return -1;
-   }
-
-   // ... only path as option could be specified for the new Turl
-   // ... and path1 is used for the old one
-
-   if (!strcmp(path1,"") && !path2) {
-      // at least the path should be specified
-      if (*globalHost) {
-         free(*globalHost);
-         *globalHost=0;
-      }
-      free(options);
-      return(-1);
-   }
-
-   if (path2) {
-      fUrl.SetFile(path2);
-   }
-
-   // Svc class set
-   ret=Cglobals_get(&tSvcClassKey,(void **)&globalSvc,sizeof(void*));
-
-   if (ret<0) {
-      if(*globalHost){
-         free(*globalHost);
-         *globalHost=0;
-      }
-      free(options);
-      return -1;
-   }
-
-   if (*globalSvc) {
-      free(*globalSvc);
-      *globalSvc=0;
-   }
-
-   if (mySvcClass && strcmp(mySvcClass,"")) {
-      *globalSvc=strdup(mySvcClass);
-   }
-
-   // castor version
-   ret=Cglobals_get(&tCastorVersionKey,(void **)&globalVersion,sizeof(int));
-
-   if (ret<0) {
-      serrno = EINVAL;
-      if (*globalHost) {
-         free(*globalHost);
-         *globalHost=0;
-      }
-      if (*globalSvc) {
-         free(*globalSvc);
-         *globalSvc=0;
-      }
-      free(options);
-      return -1;
-
-   }
-   *globalVersion=0;
-
-   if (myCastorVersion) {
-      if (!strcmp(myCastorVersion,"2")) {
-         versionNum=2;
-      }
-      if (!strcmp(myCastorVersion,"1")) {
-         versionNum=1;
-      }
-
-   }
-
-   if (versionNum) {
-      *globalVersion=versionNum;
-   }
-
-   ret=getDefaultForGlobal(globalHost,globalPort,globalSvc,globalVersion);
-   if (ret<0) {
-      if (*globalHost) {
-         free(*globalHost);
-         *globalHost=0;
-      }
-      if (*globalSvc) {
-         free(*globalSvc);
-         *globalSvc=0;
-      }
-      free(options);
-      return -1;
-
-   }
-   free(options);
-   path1=strdup(fUrl.GetFile());
-   if (strstr(path1,"/castor")== path1) {
-      fUrl.SetHost("");
-      fUrl.SetPort(0);
-   }
-   free(path1);
-   return 0;
-}
+extern "C" { int DLL_DECL use_castor2_api(); }
 
 //______________________________________________________________________________
 static int UseCastor2API()
 {
    // Function that checks whether we should use the old or new stager API.
 
-   int *auxVal=0;
-   int ret=Cglobals_get(& tCastorVersionKey, (void**) &auxVal,sizeof(int));
-   if (ret==0) {
-      return *auxVal==2?1:0;
-   }
-   return 0;
+  int version=use_castor2_api();
+  return version;
 }
 
 #else
@@ -350,8 +119,42 @@ static int UseCastor2API()
    // Variable set but not to 1 : compat mode
    return 0;
 }
+
 #endif
 
+//______________________________________________________________________________
+static const char *GetAuthProto(TString &url)
+{
+   // Determine the authentication protocol to be tried first from the url
+   // string or from defaults. The auth option, if any, is removed from 'url'.
+
+   const Int_t rootNumSec = 6;
+   const char *protoSec[rootNumSec] = {"rootup", "roots", "rootk",
+                                       "rootg", "rooth", "rootug" };
+   TString p = url;
+   Int_t ii = p.Index("&rootAuth=");
+   if (ii != kNPOS) {
+      Int_t jj = p.Index("&", ii+1);
+      if (jj != kNPOS)
+         p.Remove(jj);
+      p.Remove(0,ii);
+      url.ReplaceAll(p, "");
+      p.ReplaceAll("&rootAuth=", "");
+   }
+   if (p.Length() <= 0)
+      // Use defaults
+      p = getenv("ROOTCASTORAUTH");
+
+   Int_t sec = -1;
+   if (p.Length() > 0 && p.IsDigit()) {
+      sec = p.Atoi();
+      if (sec < 0 || sec > (rootNumSec - 1))
+         sec = -1;
+   }
+
+   // Done
+   return ((sec > -1 && sec < rootNumSec) ? protoSec[sec] : "root");
+}
 
 ClassImp(TCastorFile)
 
@@ -370,6 +173,15 @@ TCastorFile::TCastorFile(const char *url, Option_t *option, const char *ftitle,
    fIsCastor  = kFALSE;
    fWrittenTo = kFALSE;
 
+   // Extract the authentication info, if any; removing it from the options
+   TString u(url);
+   fAuthProto = GetAuthProto(u);
+   fUrl.SetUrl(u);
+
+#if 1
+   Info("TCastorFile","fAuthProto = %s, u: %s", fAuthProto.Data(), u.Data());
+#endif
+
    // file is always created by stage_out_hsm() and therefore
    // exists when opened by rootd
    TString opt = option;
@@ -385,19 +197,36 @@ void TCastorFile::FindServerAndPath()
 {
    // Find the CASTOR disk server and internal file path.
 
-#ifdef R__CASTOR2
-   int ret=ParseAndSetGlobal();
+   // it is just called the rfio_parse and no extra parsing is added here to that
 
-   if (ret<0) {
-      Error("FindServerAndPath", "can't parse the turl given");
+
+   TString castorturl;
+   char *host=0;
+   char *name=0;
+   
+  // to be able to use the turl starting with  castor:
+
+   if (!strcmp(fUrl.GetProtocol(),"castor"))
+      castorturl=Form("%s://%s","rfio",fUrl.GetFileAndOptions());
+   else
+      castorturl=Form("%s://%s",fUrl.GetProtocol(),fUrl.GetFileAndOptions());  
+   
+   // the complete turl in fname
+ 
+   TString fname = castorturl; // for compatibility with rfio_parse interface
+   if (::rfio_parse((char *)fname.Data(), &host, &name)>=0) {
+      castorturl = Form("%s",(!name || !strstr(name,"/castor"))?fname.Data():name);
+      fname = castorturl.Data();
+     
+   } else {
+      Error("FindServerAndPath", "error parsing %s", fUrl.GetUrl());
       return;
    }
-#endif
+   
 
    if (!UseCastor2API()) {
 
       struct stgcat_entry *stcp_output = 0;
-
       if (rfio_HsmIf_IsHsmFile(fUrl.GetFile()) == RFIO_HSM_CNS) {
          // This is a CASTOR file
          int flags = O_RDONLY;
@@ -495,6 +324,7 @@ void TCastorFile::FindServerAndPath()
          // Parse orig string to get disk server host
          char *filename;
          char *realhost = 0;
+         
          rfio_parse(stcp_output->ipath, &realhost, &filename);
          if (realhost == 0) {
             serrno = SEINTERNAL;
@@ -521,22 +351,27 @@ void TCastorFile::FindServerAndPath()
 
       // Set the protocol prefix for TNetFile.
       // For the cern.ch domain we set the default authentication
-      // method to UidGid, i.e. as for rfiod; for this we need
+      // method to UidGid, i.e. as for rfiod, unless there is a specific
+      // request (from options or envs); for this we need
       // the full FQDN or address in "nnn.mmm.iii.jjj" form
-      // (it can be changed by a proper directive in $HOME/.rootauthrc)
-      TString r;
-      TString fqdn;
-      TInetAddress addr = gSystem->GetHostByName(fDiskServer);
-      if (addr.IsValid()) {
-         fqdn = addr.GetHostName();
-         if (fqdn == "UnNamedHost")
-            fqdn = addr.GetHostAddress();
-         if (fqdn.EndsWith(".cern.ch") || fqdn.BeginsWith("137.138."))
-            r = "rootug://";
-         else
+      TString r = fAuthProto;
+      if (fAuthProto == "root") {
+         TString fqdn;
+         TInetAddress addr = gSystem->GetHostByName(fDiskServer);
+         if (addr.IsValid()) {
+            fqdn = addr.GetHostName();
+            if (fqdn == "UnNamedHost")
+               fqdn = addr.GetHostAddress();
+            if (fqdn.EndsWith(".cern.ch") || fqdn.BeginsWith("137.138."))
+               r = "rootug://";
+            else
+               r = "root://";
+         } else
             r = "root://";
-      } else
-         r = "root://";
+      } else {
+         // Fix the format
+         r += "://";
+      }
 
       // Update fUrl with new path
       r += fDiskServer + "/";
@@ -548,13 +383,16 @@ void TCastorFile::FindServerAndPath()
 
       // Now ipath is not null and contains the real internal path on the disk
       // server 'host', e.g. it is fDiskServer:fInternalPath
-      fInternalPath = stcp_output->ipath;
-      free(stcp_output);
-
+      fInternalPath = stcp_output==0?0:stcp_output->ipath;
+      if(stcp_output)
+         free(stcp_output);
    } else {
 
 #ifdef R__CASTOR2
+
       // We use the new stager API
+      // I use fname which has the Turl already parsed correctly
+
       int flags = O_RDONLY;
       int rc;
       struct stage_io_fileresp *response = 0;
@@ -577,7 +415,7 @@ void TCastorFile::FindServerAndPath()
       opts.service_class=0;
       opts.stage_version=0;
 
-      ret=Cglobals_get(& tStageHostKey, (void**) &auxPoint,sizeof(void*));
+      int ret=Cglobals_get(& tStageHostKey, (void**) &auxPoint,sizeof(void*));
       if(ret==0){
          opts.stage_host=*auxPoint;
       }
@@ -591,9 +429,12 @@ void TCastorFile::FindServerAndPath()
          opts.service_class=*auxPoint;
       }
 
+      // in the stage_open I use the fname which is the result of the rfio_parsing
+
+
       rc = stage_open(0,
                       MOVER_PROTOCOL_ROOT,
-                      (fUrl.GetFile()),
+                      (char *)fname.Data(),
                       flags,
                       (mode_t) 0666,
                       0,
@@ -611,7 +452,7 @@ void TCastorFile::FindServerAndPath()
 
       if (response == 0) {
          Error("FindServerAndPath", "response was null for %s (Request %s) %d/%s",
-               fUrl.GetFile(), requestId,
+               fname.Data(), requestId,
                serrno, sstrerror(serrno));
          if (requestId) free(requestId);
          return;
@@ -620,7 +461,7 @@ void TCastorFile::FindServerAndPath()
       if (response->errorCode != 0) {
          serrno = response->errorCode;
          Error("FindServerAndPath", "error getting file %s (Request %s) %d/%s",
-               fUrl.GetFile(), requestId,
+               fname.Data(), requestId,
                serrno, sstrerror(serrno));
          free(response);
          if (requestId) free(requestId);
@@ -631,7 +472,7 @@ void TCastorFile::FindServerAndPath()
 
       if (url == 0) {
          Error("FindServerAndPath", "error getting file %s (Request %s) %d/%s",
-               fUrl.GetFile(), requestId,
+               fname.Data(), requestId,
                serrno, sstrerror(serrno));
          free(response);
          if (requestId) free(requestId);
@@ -641,18 +482,18 @@ void TCastorFile::FindServerAndPath()
       TUrl rurl(url);
       // Set the protocol prefix for TNetFile.
       // For the cern.ch domain we set the default authentication
-      // method to UidGid, i.e. as for rfiod; for this we need
+      // method to UidGid, i.e. as for rfiod, unless there is a specific
+      // request (from options or envs); for this we need
       // the full FQDN or address in "nnn.mmm.iii.jjj" form
-      // (it can be changed by a proper directive in $HOME/.rootauthrc)
-      TString p;
-      TString fqdn = rurl.GetHostFQDN();
-      if (fqdn.EndsWith(".cern.ch") || fqdn.BeginsWith("137.138."))
-         p = "rootug";
-      else
-         p = "root";
+      TString p = fAuthProto;
+      if (fAuthProto == "root") {
+         TString fqdn = rurl.GetHostFQDN();
+         if (fqdn.EndsWith(".cern.ch") || fqdn.BeginsWith("137.138."))
+            fAuthProto = "rootug";
+      }
 
       // Update protocol and fUrl
-      rurl.SetProtocol(p);
+      rurl.SetProtocol(fAuthProto);
       fUrl = rurl;
 
       if (response) free(response);

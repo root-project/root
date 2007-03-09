@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.39 2006/05/16 06:28:23 brun Exp $
+// @(#)root/net:$Name: v5-14-00-patches $:$Id: TSocket.cxx,v 1.40 2006/11/20 15:56:35 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -54,8 +54,9 @@ ULong64_t TSocket::fgBytesRecv = 0;
 // 14: support for SSH authentication via SSH tunnel
 // 15: cope with fixes in TUrl::GetFile
 // 16: add env setup message exchange
+// 17: optmized Globus/GSI protocol exchange
 //
-Int_t TSocket::fgClientProtocol = 16;  // increase when client protocol changes
+Int_t TSocket::fgClientProtocol = 17;  // increase when client protocol changes
 
 TVirtualMutex *gSocketAuthMutex = 0;
 

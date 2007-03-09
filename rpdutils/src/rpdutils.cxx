@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.92 2006/05/15 09:45:03 brun Exp $
+// @(#)root/rpdutils:$Name: v5-14-00-patches $:$Id: rpdutils.cxx,v 1.93 2006/11/16 17:17:38 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -308,6 +308,7 @@ static int gRemPid = -1;
 static bool gRequireAuth = 1;
 static int gReUseAllow = 0x1F;  // define methods for which tokens can be asked
 static int gReUseRequired = -1;
+static int gDoLogin = 0;  // perform login
 static std::string gRpdAuthTab = std::string(gTmpDir).append(gAuthTab);
 static std::string gRpdKeyRoot = std::string(gTmpDir).append(gKeyRoot);
 static rsa_NUMBER gRSA_d;
@@ -345,6 +346,11 @@ static std::string gKeytabFile = "";   // via RpdSetKeytabFile
 // Globus stuff
 #ifdef R__GLBS
 static int gShmIdCred = -1;
+static gss_cred_id_t gGlbCredHandle = GSS_C_NO_CREDENTIAL;
+static bool gHaveGlobus = 1;
+static std::string gGlobusSubjName;
+#else
+static bool gHaveGlobus = 0;
 #endif
 
 //______________________________________________________________________________
@@ -1212,14 +1218,14 @@ int RpdCleanupAuthTab(const char *Host, int RemId, int OffSet)
 }
 
 //______________________________________________________________________________
-int RpdChecgAuthTab(int Sec, const char *User, const char *Host, int RemId,
+int RpdCheckAuthTab(int Sec, const char *User, const char *Host, int RemId,
                     int *OffSet)
 {
    // Check authentication entry in tab file.
 
    int retval = 0;
    if (gDebug > 2)
-      ErrorInfo("RpdChecgAuthTab: analyzing: %d %s %s %d %d", Sec, User,
+      ErrorInfo("RpdCheckAuthTab: analyzing: %d %s %s %d %d", Sec, User,
                 Host, RemId, *OffSet);
 
    // Check OffSet first
@@ -1228,7 +1234,7 @@ int RpdChecgAuthTab(int Sec, const char *User, const char *Host, int RemId,
    bool goodOfs = RpdCheckOffSet(Sec,User,Host,RemId,
                                  OffSet,&tkn,&shmid,&user);
    if (gDebug > 2)
-      ErrorInfo("RpdChecgAuthTab: goodOfs: %d", goodOfs);
+      ErrorInfo("RpdCheckAuthTab: goodOfs: %d", goodOfs);
 
    // Notify the result of the check
    int tag = 0;
@@ -1260,7 +1266,7 @@ int RpdChecgAuthTab(int Sec, const char *User, const char *Host, int RemId,
    char *token = 0;
    if (gRSAKey > 0) {
       if (RpdSecureRecv(&token) == -1) {
-         ErrorInfo("RpdChecgAuthTab: problems secure-"
+         ErrorInfo("RpdCheckAuthTab: problems secure-"
                    "receiving token %s",
                    "- may result in authentication failure ");
       }
@@ -1272,7 +1278,7 @@ int RpdChecgAuthTab(int Sec, const char *User, const char *Host, int RemId,
       NetRecv(token, lenToken, kind);
       if (kind != kMESS_STRING)
          ErrorInfo
-             ("RpdChecgAuthTab: got msg kind: %d instead of %d (kMESS_STRING)",
+             ("RpdCheckAuthTab: got msg kind: %d instead of %d (kMESS_STRING)",
               kind, kMESS_STRING);
       // Invert Token
       for (int i = 0; i < (int) strlen(token); i++) {
@@ -1281,7 +1287,7 @@ int RpdChecgAuthTab(int Sec, const char *User, const char *Host, int RemId,
    }
    if (gDebug > 2)
       ErrorInfo
-          ("RpdChecgAuthTab: received from client: token: '%s' ",
+          ("RpdCheckAuthTab: received from client: token: '%s' ",
            token);
 
    // Check tag, if there
@@ -1290,7 +1296,7 @@ int RpdChecgAuthTab(int Sec, const char *User, const char *Host, int RemId,
       char tagref[9] = {0};
       sprintf(tagref,"%08x",tag);
       if (strncmp(token+8,tagref,8)) {
-         ErrorInfo("RpdChecgAuthTab: token tag does not match - failure");
+         ErrorInfo("RpdCheckAuthTab: token tag does not match - failure");
          goodOfs = 0;
       } else
          // Drop tag
@@ -1312,7 +1318,7 @@ int RpdChecgAuthTab(int Sec, const char *User, const char *Host, int RemId,
          }
 #else
          ErrorInfo
-                ("RpdChecgAuthTab: compiled without Globus support:%s",
+                ("RpdCheckAuthTab: compiled without Globus support:%s",
                  " you shouldn't have got here!");
 #endif
       } else {
@@ -1601,7 +1607,7 @@ int RpdReUseAuth(const char *sstr, int kind)
          gOffSet = offset;
          if (gRemPid > 0 && gOffSet > -1) {
             auth =
-                RpdChecgAuthTab(gSec, user, gOpenHost.c_str(), gRemPid, &gOffSet);
+                RpdCheckAuthTab(gSec, user, gOpenHost.c_str(), gRemPid, &gOffSet);
          }
          if ((auth == 1) && (offset != gOffSet))
             auth = 2;
@@ -1621,7 +1627,7 @@ int RpdReUseAuth(const char *sstr, int kind)
          gOffSet = offset;
          if (gRemPid > 0 && gOffSet > -1) {
             auth =
-                RpdChecgAuthTab(gSec, user, gOpenHost.c_str(), gRemPid, &gOffSet);
+                RpdCheckAuthTab(gSec, user, gOpenHost.c_str(), gRemPid, &gOffSet);
          }
          if ((auth == 1) && (offset != gOffSet))
             auth = 2;
@@ -1641,7 +1647,7 @@ int RpdReUseAuth(const char *sstr, int kind)
          gOffSet = offset;
          if (gRemPid > 0 && gOffSet > -1) {
             auth =
-                RpdChecgAuthTab(gSec, user, gOpenHost.c_str(), gRemPid, &gOffSet);
+                RpdCheckAuthTab(gSec, user, gOpenHost.c_str(), gRemPid, &gOffSet);
          }
          if ((auth == 1) && (offset != gOffSet))
             auth = 2;
@@ -1662,7 +1668,7 @@ int RpdReUseAuth(const char *sstr, int kind)
          gOffSet = offset;
          if (gRemPid > 0 && gOffSet > -1) {
             auth =
-                RpdChecgAuthTab(gSec, user, gOpenHost.c_str(), gRemPid, &gOffSet);
+                RpdCheckAuthTab(gSec, user, gOpenHost.c_str(), gRemPid, &gOffSet);
          }
          if ((auth == 1) && (offset != gOffSet))
             auth = 2;
@@ -1682,7 +1688,7 @@ int RpdReUseAuth(const char *sstr, int kind)
          gOffSet = offset;
          if (gRemPid > 0 && gOffSet > -1) {
             auth =
-                RpdChecgAuthTab(gSec, user, gOpenHost.c_str(), gRemPid, &gOffSet);
+                RpdCheckAuthTab(gSec, user, gOpenHost.c_str(), gRemPid, &gOffSet);
          }
          if ((auth == 1) && (offset != gOffSet))
             auth = 2;
@@ -1716,13 +1722,21 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
 
    int retval = 1, found = 0;
 
+#ifdef R__GBLS
+   if (Sec == 3 && !gHaveGlobus) {
+      ErrorInfo("RpdCheckAuthAllow: meth: 3:"
+                " server does not have globus/GSI credentials");
+      return 1;
+   }
+#endif
+
    std::string theDaemonRc;
 
    // Check if a non-standard file has been requested
    if (getenv("ROOTDAEMONRC"))
       theDaemonRc = getenv("ROOTDAEMONRC");
 
-   if (theDaemonRc.length() || access(theDaemonRc.c_str(), R_OK)) {
+   if (theDaemonRc.length() <= 0 || access(theDaemonRc.c_str(), R_OK)) {
       if (getuid()) {
          // Check if user has a private daemon access file ...
          struct passwd *pw = getpwuid(getuid());
@@ -3800,6 +3814,58 @@ int RpdPass(const char *pass, int errheq)
 }
 
 //______________________________________________________________________________
+int RpdGlobusInit()
+{
+   // Prepare for globus authentication: check hostcer.conf and get
+   // the credential handle. This is run once at daemon start-up
+
+#ifdef R__GLBS
+   // Now we open the certificates and we check if we are able to
+   // autheticate the client. In the affirmative case we initialize
+   // our credentials and we send our subject name to the client ...
+   // NB: we look first for a specific certificate for ROOT (default
+   // location under /etc/grid-security/root); if this is does not
+   // work we try to open the host certificate, which however may
+   // require super-user privileges; finally we check if valid proxies
+   // (for the user who started the server) are available.
+   char *subject_name = 0;
+   int certRc = GlbsToolCheckCert(&subject_name);
+   if (certRc)
+      certRc = GlbsToolCheckProxy(&subject_name);
+   if (certRc) {
+      ErrorInfo("RpdGlobusInit: no valid server credentials found: globus disabled");
+      gHaveGlobus = 0;
+      return 1;
+   } else {
+
+      // Save the subject name
+      gGlobusSubjName = subject_name;
+      delete [] subject_name;
+
+      // Inquire Globus credentials:
+      // This is looking to file X509_USER_CERT for valid a X509 cert (default
+      // /etc/grid-security/hostcert.pem) and to dir X509_CERT_DIR for trusted CAs
+      // (default /etc/grid-security/certificates).
+      OM_uint32 majStat = 0;
+      OM_uint32 minStat = 0;
+      if ((majStat =
+           globus_gss_assist_acquire_cred(&minStat, GSS_C_ACCEPT,
+                                          &gGlbCredHandle)) !=
+          GSS_S_COMPLETE) {
+         GlbsToolError("RpdGlobusInit: gss_assist_acquire_cred", majStat,
+                       minStat, 0);
+         if (getuid() > 0)
+            ErrorInfo("RpdGlobusInit: non-root: make sure you have"
+                      " initialized (manually) your proxies");
+         return 1;
+      }
+   }
+#endif
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
 int RpdGlobusAuth(const char *sstr)
 {
    // Authenticate via Globus.
@@ -3814,11 +3880,16 @@ int RpdGlobusAuth(const char *sstr)
 
 #else
 
+   if (!gHaveGlobus) {
+      // No valid credentials
+      if (sstr) { }  // use sstr
+      return auth;
+   }
+
    OM_uint32 MajStat = 0;
    OM_uint32 MinStat = 0;
    OM_uint32 GssRetFlags = 0;
    gss_ctx_id_t GlbContextHandle = GSS_C_NO_CONTEXT;
-   gss_cred_id_t GlbCredHandle = GSS_C_NO_CREDENTIAL;
    gss_cred_id_t GlbDelCredHandle = GSS_C_NO_CREDENTIAL;
    int GlbTokenStatus = 0;
    char *GlbClientName;
@@ -3857,85 +3928,43 @@ int RpdGlobusAuth(const char *sstr)
                 Subj, lSubj, strlen(Subj));
    if (Subj) delete[] Subj;
 
-   // GlbClientName will be determined from the security context ...
-   // Now wait for client to communicate the issuer name of the certificate ...
-   char *answer = new char[20];
-   NetRecv(answer, (int) sizeof(answer), kind);
-   if (kind != kMESS_STRING) {
-      Error(gErr, kErrAuthNotOK,
-            "RpdGlobusAuth: client_issuer_name:received unexpected"
-            " type of message (%d)",kind);
-      if (answer) delete[] answer;
-      return auth;
-   }
-   int client_issuer_name_len = atoi(answer);
-   if (answer) delete[] answer;
-   char *client_issuer_name = new char[client_issuer_name_len + 1];
-   NetRecv(client_issuer_name, client_issuer_name_len, kind);
-   if (kind != kMESS_STRING) {
-      Error(gErr, kErrAuthNotOK,
-            "RpdGlobusAuth: client_issuer_name:received unexpected"
-            " type of message (%d)",kind);
-      if (client_issuer_name) delete[] client_issuer_name;
-      return auth;
-   }
-   if (gDebug > 2)
-      ErrorInfo("RpdGlobusAuth: client issuer name is: %s",
-                client_issuer_name);
-
-   // Now we open the certificates and we check if we are able to
-   // autheticate the client. In the affirmative case we initialize
-   // our credentials and we send our subject name to the client ...
-   // NB: we look first for a specific certificate for ROOT (default
-   // location under /etc/grid-security/root); if this is does not
-   // work we try to open the host certificate, which however may
-   // require super-user privileges; finally we check if valid proxies
-   // (for the user who started the server) are available.
-   char *subject_name;
-   int CertRc = 0;
-   CertRc = GlbsToolCheckCert(client_issuer_name, &subject_name);
-   if (CertRc)
-      CertRc = GlbsToolCheckProxy(client_issuer_name, &subject_name);
-   if (CertRc) {
-      ErrorInfo("RpdGlobusAuth: %s (%s)",
-                "host does not seem to have certificate for the requested CA",
-                 client_issuer_name);
-      NetSend(0, kROOTD_GLOBUS);   // Notify that we did not find it
-      if (client_issuer_name) delete[] client_issuer_name;
-      return auth;
-   } else {
-
-      // Inquire Globus credentials:
-      // This is looking to file X509_USER_CERT for valid a X509 cert (default
-      // /etc/grid-security/hostcert.pem) and to dir X509_CERT_DIR for trusted CAs
-      // (default /etc/grid-security/certificates).
-      if ((MajStat =
-           globus_gss_assist_acquire_cred(&MinStat, GSS_C_ACCEPT,
-                                          &GlbCredHandle)) !=
-          GSS_S_COMPLETE) {
-         GlbsToolError("RpdGlobusAuth: gss_assist_acquire_cred", MajStat,
-                       MinStat, 0);
-         if (getuid() > 0)
-            ErrorInfo("RpdGlobusAuth: non-root: make sure you have"
-                      " initialized (manually) your proxies");
+   if (gClientProtocol < 17) { 
+      // GlbClientName will be determined from the security context ...
+      // Now wait for client to communicate the issuer name of the certificate ...
+      char *answer = new char[20];
+      NetRecv(answer, (int) sizeof(answer), kind);
+      if (kind != kMESS_STRING) {
+         Error(gErr, kErrAuthNotOK,
+                "RpdGlobusAuth: client_issuer_name:received unexpected"
+                " type of message (%d)",kind);
+         if (answer) delete[] answer;
          return auth;
       }
-
-      int sjlen = strlen(subject_name) + 1;
-
-      int bsnd = NetSend(sjlen, kROOTD_GLOBUS);
+      int client_issuer_name_len = atoi(answer);
+      if (answer) delete[] answer;
+      char *client_issuer_name = new char[client_issuer_name_len + 1];
+      NetRecv(client_issuer_name, client_issuer_name_len, kind);
+      if (kind != kMESS_STRING) {
+         Error(gErr, kErrAuthNotOK,
+               "RpdGlobusAuth: client_issuer_name:received unexpected"
+               " type of message (%d)",kind);
+         if (client_issuer_name) delete[] client_issuer_name;
+         return auth;
+      }
       if (gDebug > 2)
-         ErrorInfo("RpdGlobusAuth: sent: %d (due >=%d))", bsnd,
-                   2 * sizeof(sjlen));
-
-      bsnd = NetSend(subject_name, sjlen, kMESS_STRING);
-      if (gDebug > 2)
-         ErrorInfo("RpdGlobusAuth: sent: %d (due >=%d))", bsnd, sjlen);
-
-      free(subject_name);
+         ErrorInfo("RpdGlobusAuth: client issuer name is: %s",
+                   client_issuer_name);
    }
-   // not needed anymore ...
-   if (client_issuer_name) delete[] client_issuer_name;
+
+   // Send our subject to the clients: it is needed to start
+   // the handshake
+   int sjlen = gGlobusSubjName.length() + 1;
+   int bsnd = NetSend(sjlen, kROOTD_GLOBUS);
+   if (gDebug > 2)
+      ErrorInfo("RpdGlobusAuth: sent: %d (due >=%d))", bsnd, 2 * sizeof(sjlen));
+   bsnd = NetSend(gGlobusSubjName.c_str(), sjlen, kMESS_STRING);
+   if (gDebug > 2)
+      ErrorInfo("RpdGlobusAuth: sent: %d (due >=%d))", bsnd, sjlen);
 
    // We need to associate a FILE* stream with the socket
    // It will automatically closed when the socket will be closed ...
@@ -3944,7 +3973,7 @@ int RpdGlobusAuth(const char *sstr)
    // Now we are ready to start negotiating with the Client
    if ((MajStat =
         globus_gss_assist_accept_sec_context(&MinStat, &GlbContextHandle,
-                                             GlbCredHandle, &GlbClientName,
+                                             gGlbCredHandle, &GlbClientName,
                                              &GssRetFlags, 0,
                                              &GlbTokenStatus,
                                              &GlbDelCredHandle,
@@ -4031,12 +4060,15 @@ int RpdGlobusAuth(const char *sstr)
               AnonUser);
       user = strdup(AnonUser);
       if (gDebug > 2)
-         ErrorInfo("RpdGlobusAuth: user ", user);
+         ErrorInfo("RpdGlobusAuth: user: %s", user);
    }
    if (!strcmp(user, "anonymous"))
       user = strdup(AnonUser);
    if (!strcmp(user, AnonUser))
       gAnon = 1;
+
+   // No reuse for anonymous users
+   gReUseRequired = (gAnon == 1) ? 0 : gReUseRequired;
 
    // Fill gUser and free allocated memory
    ulen = strlen(user);
@@ -4096,7 +4128,7 @@ int RpdGlobusAuth(const char *sstr)
    free(GlbClientName);
 
    if (gDebug > 0)
-      ErrorInfo("RpdGlobusAuth: logging as %s ", gUser);
+      ErrorInfo("RpdGlobusAuth: client mapped to local user %s ", gUser);
 
    return auth;
 
@@ -5985,12 +6017,12 @@ int RpdLogin(int ServType, int auth)
 {
    // Authentication was successful, set user environment.
 
-   if (gDebug > 2)
-      ErrorInfo("RpdLogin: enter ... Server: %d ... gUser: %s",
-                ServType, gUser);
+//   if (gDebug > 2)
+      ErrorInfo("RpdLogin: enter: Server: %d, gUser: %s, auth: %d",
+                ServType, gUser, auth);
 
-   // Login only if in rootd/proofd environment
-   if (ServType != kROOTD && ServType != kPROOFD)
+   // Login only if requested
+   if (gDoLogin == 0)
       return -2;
 
    struct passwd *pw = getpwnam(gUser);
@@ -5998,9 +6030,11 @@ int RpdLogin(int ServType, int auth)
    if (!pw) {
       ErrorInfo("RpdLogin: user %s does not exist locally\n", gUser);
       return -1;
-   } else if (chdir(pw->pw_dir) == -1) {
-      ErrorInfo("RpdLogin: can't change directory to %s", pw->pw_dir);
-      return -1;
+   } else if (gDoLogin == 2) {
+      if (chdir(pw->pw_dir) == -1) {
+         ErrorInfo("RpdLogin: can't change directory to %s", pw->pw_dir);
+         return -1;
+      }
    }
 
    if (getuid() == 0) {
@@ -6173,9 +6207,11 @@ int RpdInitSession(int servtype, std::string &user,
    }
 
    // Login the user (if in rootd/proofd environment)
-   if (servtype == kROOTD || servtype == kPROOFD) {
+   if (gDoLogin > 0) {
       if (RpdLogin(servtype,auth) != 0) {
          ErrorInfo("RpdInitSession: unsuccessful login attempt");
+         // Notify failure to client ...
+         NetSend(0, kROOTD_AUTH);
          return -1;
       }
    } else {
@@ -6339,7 +6375,7 @@ int RpdSetUid(int uid)
 
 //_____________________________________________________________________________
 void RpdInit(EService serv, int pid, int sproto, unsigned int options,
-             int rumsk, int sshp, const char *tmpd, const char *asrpp)
+             int rumsk, int sshp, const char *tmpd, const char *asrpp, int login)
 {
    // Change defaults job control options.
 
@@ -6348,6 +6384,7 @@ void RpdInit(EService serv, int pid, int sproto, unsigned int options,
    gServerProtocol = sproto;
    gReUseAllow     = rumsk;
    gSshdPort       = sshp;
+   gDoLogin        = login;
 
    // Parse options
    gCheckHostsEquiv= (bool)((options & kDMN_HOSTEQ) != 0);
@@ -6368,6 +6405,12 @@ void RpdInit(EService serv, int pid, int sproto, unsigned int options,
    if (asrpp && strlen(asrpp))
       gAltSRPPass  = asrpp;
 
+#ifdef R__GLBS
+   // Init globus
+   if (RpdGlobusInit() != 0)
+      ErrorInfo("RpdInit: failure initializing globus authentication");
+#endif
+
    if (gDebug > 0) {
       ErrorInfo("RpdInit: gService= %s, gSysLog= %d, gSshdPort= %d",
                  gServName[gService].c_str(), gSysLog, gSshdPort);
@@ -6376,10 +6419,14 @@ void RpdInit(EService serv, int pid, int sproto, unsigned int options,
                  gRequireAuth, gCheckHostsEquiv);
       ErrorInfo("RpdInit: gReUseAllow= 0x%x", gReUseAllow);
       ErrorInfo("RpdInit: gServerProtocol= %d", gServerProtocol);
+      ErrorInfo("RpdInit: gDoLogin= %d", gDoLogin);
       if (tmpd)
          ErrorInfo("RpdInit: gTmpDir= %s", gTmpDir.c_str());
       if (asrpp)
          ErrorInfo("RpdInit: gAltSRPPass= %s", gAltSRPPass.c_str());
+#ifdef R__GLBS
+      ErrorInfo("RpdInit: gHaveGlobus: %d", (int) gHaveGlobus);
+#endif
    }
 }
 
