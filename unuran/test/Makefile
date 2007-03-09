@@ -11,12 +11,12 @@ include $(ROOTSYS)/config/Makefile.config
 include $(ROOTSYS)/test/Makefile.arch
 
 #------------------------------------------------------------------------------
-CXXFLAGS += -g -Weffc++
 
 
 ifeq ($(PLATFORM),win32)
 EXTRALIBS        = "$(ROOTSYS)/lib/libMathMore.lib" "$(ROOTSYS)/lib/libMathCore.lib" "$(ROOTSYS)/lib/libUnuran.lib" "$(ROOTSYS)/lib/libMinuit.lib"
 else
+CXXFLAGS += -g 
 EXTRALIBS        =  -lUnuran -lMathCore -lMinuit
 endif
 
