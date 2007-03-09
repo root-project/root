@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.138 2007/03/06 14:53:54 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.139 2007/03/08 15:52:17 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -368,7 +368,7 @@ void TCint::RecursiveRemove(TObject *obj)
    // Delete object from CINT symbol table so it can not be used anymore.
    // CINT object are always on the heap.
 
-   if (obj->IsOnHeap() && fgSetOfSpecials && ((std::set<TObject*>*)fgSetOfSpecials)->size()) {
+   if (obj->IsOnHeap() && fgSetOfSpecials && !((std::set<TObject*>*)fgSetOfSpecials)->empty()) {
       std::set<TObject*>::iterator iSpecial = ((std::set<TObject*>*)fgSetOfSpecials)->find(obj);
       if (iSpecial != ((std::set<TObject*>*)fgSetOfSpecials)->end()) {
          DeleteGlobal(obj);
