@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.12 2006/08/14 00:21:56 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.13 2006/10/17 06:09:15 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -98,7 +98,7 @@ namespace {
       }                                                                      \
                                                                              \
       type value = F2( val );                                                \
-      if ( PyErr_Occurred() )                                                \
+      if ( value == (type)-1 && PyErr_Occurred() )                           \
          return -1;                                                          \
                                                                              \
       *((type*)buf+idx) = (type)value;                                       \

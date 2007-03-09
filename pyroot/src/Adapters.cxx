@@ -212,13 +212,14 @@ PyROOT::TScopeAdapter::TScopeAdapter( TClass* klass ) : fClass( klass )
 
 //____________________________________________________________________________
 PyROOT::TScopeAdapter::TScopeAdapter( const std::string& name ) :
-   fClass( TClass::GetClass( name.c_str() ) ), fName( name )
+   fClass( name.c_str() ), fName( name )
 {
    /* empty */
 }
 
 PyROOT::TScopeAdapter::TScopeAdapter( const TMemberAdapter& mb ) :
-      fClass( (TClass*)0 ), fName( mb.Name( ROOT::Reflex::QUALIFIED ) )
+      fClass( mb.Name( ROOT::Reflex::SCOPED ).c_str() ),
+      fName( mb.Name( ROOT::Reflex::Q | ROOT::Reflex::S ) )
 {
    /* empty */
 }
@@ -344,8 +345,11 @@ Bool_t PyROOT::TScopeAdapter::IsComplete() const
 Bool_t PyROOT::TScopeAdapter::IsClass() const
 {
 // test if this scope represents a class
-   if ( fClass.GetClass() )
-      return fClass->Property() & kIsClass;
+   if ( fClass.GetClass() ) {
+   // some inverted logic: we don't have a TClass, but a builtin will be recognized, so
+   // if it is NOT a builtin, it is a class or struct (but may be missing dictionary)
+      return (fClass->Property() & kIsClass) || ! (fClass->Property() & kIsFundamental);
+   }
 
    return kFALSE;
 }
@@ -354,8 +358,10 @@ Bool_t PyROOT::TScopeAdapter::IsClass() const
 Bool_t PyROOT::TScopeAdapter::IsStruct() const
 {
 // test if this scope represents a struct
-   if ( fClass.GetClass() )
-      return fClass->Property() & kIsStruct;
+   if ( fClass.GetClass() ) {
+   // same logic as for IsClass() above ...
+      return (fClass->Property() & kIsStruct) || ! (fClass->Property() & kIsFundamental);
+   }
 
    return kFALSE;
 }

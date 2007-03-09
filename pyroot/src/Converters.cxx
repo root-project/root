@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.39 2007/01/30 10:09:57 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.40 2007/02/27 21:13:36 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -54,7 +54,7 @@ PyObject* PyROOT::T##name##Converter::FromMemory( void* address )             \
 Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
 {                                                                             \
    type s = (type)F2( value );                                                \
-   if ( PyErr_Occurred() )                                                    \
+   if ( s == (type)-1 && PyErr_Occurred() )                                   \
       return kFALSE;                                                          \
    *((type*)address) = (type)s;                                               \
    return kTRUE;                                                              \
@@ -89,7 +89,7 @@ Bool_t PyROOT::T##name##Converter::SetArg( PyObject* pyobject, TParameter& para,
       }                                                                       \
    } else {                                                                   \
       para.fl = PyLong_AsLong( pyobject );                                    \
-      if ( PyErr_Occurred() ) {                                               \
+      if ( para.fl == -1 && PyErr_Occurred() ) {                              \
          return kFALSE;                                                       \
       } else if ( ! ( low <= para.fl && para.fl <= high ) ) {                 \
          PyErr_SetString( PyExc_ValueError, "integer to character: value out of range" );\
@@ -119,7 +119,7 @@ Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
       *((type*)address) = (type)buf[0];                                       \
    } else {                                                                   \
       Long_t l = PyLong_AsLong( value );                                      \
-      if ( PyErr_Occurred() )                                                 \
+      if ( l == -1 && PyErr_Occurred() )                                      \
          return kFALSE;                                                       \
       if ( ! ( low <= l && l <= high ) ) {                                    \
          PyErr_SetString( PyExc_ValueError, "integer to character: value out of range" );\
@@ -136,7 +136,7 @@ Bool_t PyROOT::TLongConverter::SetArg( PyObject* pyobject, TParameter& para, G__
 {
 // convert <pyobject> to C++ long, set arg for call
    para.fl = PyLong_AsLong( pyobject );
-   if ( PyErr_Occurred() )
+   if ( para.fl == -1 && PyErr_Occurred() )
       return kFALSE;
    else if ( func )
       func->SetArg( para.fl );
@@ -168,9 +168,6 @@ Bool_t PyROOT::TBoolConverter::SetArg( PyObject* pyobject, TParameter& para, G__
 {
 // convert <pyobject> to C++ bool, allow int/long -> bool, set arg for call
    para.fl = PyLong_AsLong( pyobject );
-   if ( PyErr_Occurred() )
-      return kFALSE;
-
    if ( ! ( para.fl == 0 || para.fl == 1 ) ) {
       PyErr_SetString( PyExc_TypeError, "boolean value should be bool, or integer 1 or 0" );
       return kFALSE;
@@ -270,7 +267,7 @@ Bool_t PyROOT::TDoubleConverter::SetArg( PyObject* pyobject, TParameter& para, G
 {
 // convert <pyobject> to C++ double, set arg for call
    para.fd = PyFloat_AsDouble( pyobject );
-   if ( PyErr_Occurred() )
+   if ( para.fd == -1.0 && PyErr_Occurred() )
       return kFALSE;
    else if ( func )
       func->SetArg( para.fd );
@@ -303,7 +300,7 @@ Bool_t PyROOT::TConstDoubleRefConverter::SetArg( PyObject* pyobject, TParameter&
 {
 // convert <pyobject> to C++ const double&, set arg for call using buffer
    para.fd = fBuffer = PyFloat_AsDouble( pyobject );
-   if ( PyErr_Occurred() )
+   if ( para.fd == -1.0 && PyErr_Occurred() )
       return kFALSE;
    else if ( func )
       func->SetArgRef( fBuffer );
@@ -359,7 +356,7 @@ Bool_t PyROOT::TLongLongConverter::SetArg( PyObject* pyobject, TParameter& para,
 {
 // convert <pyobject> to C++ long long, set arg for call
    para.fll = PyLong_AsLongLong( pyobject );
-   if ( PyErr_Occurred() )
+   if ( para.fll == -1 && PyErr_Occurred() )
       return kFALSE;
    else if ( func )
       func->SetArg( para.fll );
@@ -376,7 +373,7 @@ Bool_t PyROOT::TLongLongConverter::ToMemory( PyObject* value, void* address )
 {
 // convert <value> to C++ long long, write it at <address>
    Long64_t ll = PyLong_AsLongLong( value );
-   if ( PyErr_Occurred() )
+   if ( ll == -1 && PyErr_Occurred() )
       return kFALSE;
    *((Long64_t*)address) = ll;
    return kTRUE;

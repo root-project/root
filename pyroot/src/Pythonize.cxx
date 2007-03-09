@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.49 2007/01/09 05:31:11 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.50 2007/01/30 10:09:57 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -129,7 +129,7 @@ namespace {
    {
    // TODO: verify and perhaps fix this to use PyInt_AsSsize_t
       Py_ssize_t idx = (Py_ssize_t)PyInt_AsLong( index );
-      if ( PyErr_Occurred() )
+      if ( idx == (Py_ssize_t)-1 && PyErr_Occurred() )
          return 0;
 
       PyObject* pyindex = 0;
@@ -313,7 +313,7 @@ namespace {
 
    // supposed to be an int or long ...
       long address = PyLong_AsLong( ptr );
-      if ( PyErr_Occurred() ) {
+      if ( address == -1 && PyErr_Occurred() ) {
          PyErr_Clear();
          return ptr;
       }
