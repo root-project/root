@@ -166,6 +166,9 @@ MYSQLLIBEXTRA       = lib/libNet.lib lib/libRIO.lib
 GDMLLIBDEP          = $(GEOMLIB) $(XMLLIB) $(HISTLIB) $(IOLIB)
 GDMLLIBEXTRA        = lib/libGeom.lib lib/libXMLIO.lib lib/libHist.lib \
                       lib/libRIO.lib
+UNURANLIBDEP        = $(HISTLIB)
+UNURANLIBEXTRA      = lib/libHist.lib
+
 
 else
 
@@ -316,5 +319,7 @@ MYSQLLIBDEP         = $(NETLIB) $(IOLIB)
 MYSQLLIBEXTRA       = -Llib -lNet -lRIO
 GDMLLIBDEP          = $(GEOMLIB) $(XMLLIB) $(HISTLIB) $(IOLIB)
 GDMLLIBEXTRA        = -Llib -lGeom -lXMLIO -lHist -lRIO
+UNURANLIBDEP        = $(HISTLIB)
+UNURANLIBEXTRA      = -Llib -lHist
 
 endif
