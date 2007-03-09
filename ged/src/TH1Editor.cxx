@@ -216,44 +216,59 @@ TH1Editor::TH1Editor(const TGWindow *p,  Int_t width,
 
    // Set the type of histogram (Lego0..2, Surf0..5) for 3D plot 
    f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   TGLabel *fType = new TGLabel(f3, "Add: "); 
-   f3->AddFrame(fType, new TGLayoutHints(kLHintsLeft, 6, 1, 4, 1));
-   fTypeCombo = BuildHistTypeComboBox(f3, kHIST_TYPE);
-   f3->AddFrame(fTypeCombo, new TGLayoutHints(kLHintsLeft, 15, 1, 2, 1));
-   fTypeCombo->Resize(86, 20);
-   fTypeCombo->Associate(this);
    AddFrame(f3, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
+   TGCompositeFrame *f3a = new TGCompositeFrame(f3, 40, 20);
+   f3->AddFrame(f3a, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   TGLabel *fType = new TGLabel(f3a, "Add: "); 
+   f3a->AddFrame(fType, new TGLayoutHints(kLHintsLeft, 6, 1, 4, 4));
+   TGLabel *fCoords = new TGLabel(f3a, "Coords:"); 
+   f3a->AddFrame(fCoords, new TGLayoutHints(kLHintsLeft, 6, 1, 4, 1));
+
+   TGCompositeFrame *f3b = new TGCompositeFrame(f3, 40, 20);
+   f3->AddFrame(f3b, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   fTypeCombo = BuildHistTypeComboBox(f3b, kHIST_TYPE);
+   f3b->AddFrame(fTypeCombo, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 1));
+   fTypeCombo->Resize(80, 20);
+   fTypeCombo->Associate(this);
    //Set the coordinate system (Cartesian, Spheric, ...)      
-   f4 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   TGLabel *fCoords = new TGLabel(f4, "Coords:"); 
-   f4->AddFrame(fCoords, new TGLayoutHints(kLHintsLeft, 6, 1, 4, 1));
-   fCoordsCombo = BuildHistCoordsComboBox(f4, kCOORD_TYPE);
-   f4->AddFrame(fCoordsCombo, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 1));
-   fCoordsCombo->Resize(86, 20);
+   fCoordsCombo = BuildHistCoordsComboBox(f3b, kCOORD_TYPE);
+   f3b->AddFrame(fCoordsCombo, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 1));
+   fCoordsCombo->Resize(80, 20);
    fCoordsCombo->Associate(this);
-   AddFrame(f4, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
    
    // Set the Error (No error, error1..5)
    TGCompositeFrame *f5 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   TGLabel *fError = new TGLabel(f5, "Error:"); 
-   f5->AddFrame(fError, new TGLayoutHints(kLHintsLeft, 6, 1, 4, 1));
-   fErrorCombo = BuildHistErrorComboBox(f5, kERROR_TYPE);
-   f5->AddFrame(fErrorCombo, new TGLayoutHints(kLHintsLeft, 16, 1, 2, 1));
-   fErrorCombo->Resize(86, 20);
-   fErrorCombo->Associate(this);
    AddFrame(f5, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+
+   TGCompositeFrame *f5a = new TGCompositeFrame(f5, 40, 20);
+   f5->AddFrame(f5a, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   TGLabel *fError = new TGLabel(f5a, "Error:"); 
+   f5a->AddFrame(fError, new TGLayoutHints(kLHintsLeft, 6, 2, 4, 1));
+
+   TGCompositeFrame *f5b = new TGCompositeFrame(f5, 40, 20);
+   f5->AddFrame(f5b, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   fErrorCombo = BuildHistErrorComboBox(f5b, kERROR_TYPE);
+   f5b->AddFrame(fErrorCombo, new TGLayoutHints(kLHintsLeft, 15, 1, 2, 1));
+   fErrorCombo->Resize(80, 20);
+   fErrorCombo->Associate(this);
 
    // Further draw options: Smooth/Simple Line, Fill Area for 2D plot
    f6 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   TGLabel *fAddLabel = new TGLabel(f6, "Style:"); 
-   f6->AddFrame(fAddLabel, new TGLayoutHints(kLHintsLeft, 6, 1, 4, 1));
-   fAddCombo = BuildHistAddComboBox(f6, kADD_TYPE);
-   f6->AddFrame(fAddCombo, new TGLayoutHints(kLHintsLeft, 15, 1, 2, 1));
-   fAddCombo->Resize(86, 20);
-   fAddCombo->Associate(this);
    AddFrame(f6, new TGLayoutHints(kLHintsTop, 1, 1, 0, 3));
-   
+
+   TGCompositeFrame *f6a = new TGCompositeFrame(f6, 40, 20);
+   f6->AddFrame(f6a, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   TGLabel *fAddLabel = new TGLabel(f6a, "Style:"); 
+   f6a->AddFrame(fAddLabel, new TGLayoutHints(kLHintsLeft, 6, 2, 4, 1));
+ 
+   TGCompositeFrame *f6b = new TGCompositeFrame(f6, 40, 20);
+   f6->AddFrame(f6b, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   fAddCombo = BuildHistAddComboBox(f6b, kADD_TYPE);
+   f6b->AddFrame(fAddCombo, new TGLayoutHints(kLHintsLeft, 15, 1, 2, 1));
+   fAddCombo->Resize(80, 20);
+   fAddCombo->Associate(this);
+
    // option related to HIST: some changes needed here! 
    // because of inconsistencies   
    f15 = new TGCompositeFrame(this, 80, 20, kVerticalFrame); 
@@ -634,7 +649,6 @@ void TH1Editor::SetModel(TObject* obj)
       fDimGroup->SetButton(kDIM_SIMPLE, kTRUE);
       fDimGroup->SetButton(kDIM_COMPLEX, kFALSE);      
       HideFrame(f3);  // Hiding the histogram type combo box
-      HideFrame(f4);  // Hiding the histogram coord type combo box
       ShowFrame(f6);
       ShowFrame(f7);
       ShowFrame(f8);
@@ -656,7 +670,6 @@ void TH1Editor::SetModel(TObject* obj)
       fDimGroup->SetButton(kDIM_SIMPLE,kTRUE);
       fDimGroup->SetButton(kDIM_COMPLEX,kFALSE);      
       HideFrame(f3);  // Hiding the histogram type combo box
-      HideFrame(f4);  // Hiding the histogram coord type combo box
       ShowFrame(f7);
       ShowFrame(f8);
       ShowFrame(f9);
@@ -1130,7 +1143,6 @@ void TH1Editor::DoHistSimple()
       fMake=kFALSE;
       TGListBox* lb;
       HideFrame(f3);
-      HideFrame(f4);
       ShowFrame(f6);
       ShowFrame(f9);
       ShowFrame(f15);
@@ -1220,7 +1232,6 @@ void TH1Editor::DoHistComplex()
       TString str ="";
       fMake=kFALSE;
       ShowFrame(f3);
-      ShowFrame(f4);
       HideFrame(f6);
       HideFrame(f7);
       HideFrame(f8);

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TArrowEditor.cxx,v 1.12 2006/09/25 13:35:58 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TArrowEditor.cxx,v 1.13 2007/02/06 15:39:54 antcheva Exp $
 // Author: Ilka Antcheva   20/10/04
 
 /*************************************************************************
@@ -52,39 +52,40 @@ TArrowEditor::TArrowEditor(const TGWindow *p, Int_t width,
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
-   TGLabel *fShapeLabel = new TGLabel(f2, "Shape:");
-   f2->AddFrame(fShapeLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
-   fOptionCombo = BuildOptionComboBox(f2, kARROW_OPT);
+   TGCompositeFrame *f2a = new TGCompositeFrame(f2, 80, 20);
+   f2->AddFrame(f2a, new TGLayoutHints(kLHintsTop, 10, 0, 0, 0));
+
+   TGLabel *fShapeLabel = new TGLabel(f2a, "Shape:");
+   f2a->AddFrame(fShapeLabel, new TGLayoutHints(kLHintsNormal, 0, 0, 1, 5));
+
+   TGLabel *fAngleLabel = new TGLabel(f2a, "Angle:");
+   f2a->AddFrame(fAngleLabel, new TGLayoutHints(kLHintsNormal, 0, 0, 5, 5));
+
+   TGLabel *fSizeLabel = new TGLabel(f2a, "Size: ");
+   f2a->AddFrame(fSizeLabel, new TGLayoutHints(kLHintsNormal, 0, 0, 5, 1));
+
+   TGCompositeFrame *f2b = new TGCompositeFrame(f2, 80, 20, kFixedWidth);
+   f2->AddFrame(f2b, new TGLayoutHints(kLHintsTop, 10, 0, 0, 0));
+
+   fOptionCombo = BuildOptionComboBox(f2b, kARROW_OPT);
    fOptionCombo->Resize(80, 20);
-   f2->AddFrame(fOptionCombo, new TGLayoutHints(kLHintsLeft, 13, 1, 1, 1));
+   f2b->AddFrame(fOptionCombo, new TGLayoutHints(kLHintsExpandX, 1, 1, 1, 1));
    fOptionCombo->Associate(this);
 
-   TGCompositeFrame *f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   AddFrame(f3, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
-
-   TGLabel *fAngleLabel = new TGLabel(f3, "Angle:");
-   f3->AddFrame(fAngleLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
-   fAngleEntry = new TGNumberEntry(f3, 30, 8, kARROW_ANG,
+   fAngleEntry = new TGNumberEntry(f2b, 30, 8, kARROW_ANG,
                              TGNumberFormat::kNESInteger,
                              TGNumberFormat::kNEANonNegative,
                              TGNumberFormat::kNELLimitMinMax,0, 180);
    fAngleEntry->GetNumberEntry()->SetToolTipText("Set the arrow opening angle in degrees.");
-   f3->AddFrame(fAngleEntry, new TGLayoutHints(kLHintsLeft, 16, 1, 1, 1));
+   f2b->AddFrame(fAngleEntry, new TGLayoutHints(kLHintsExpandX, 1, 1, 3, 1));
 
-   TGCompositeFrame *f4 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   AddFrame(f4, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
-
-   TGLabel *fSizeLabel = new TGLabel(f4, "Size: ");
-   f4->AddFrame(fSizeLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
-   fSizeEntry = new TGNumberEntry(f4, 0.03, 8, kARROW_SIZ,
+   fSizeEntry = new TGNumberEntry(f2b, 0.03, 8, kARROW_SIZ,
                                   TGNumberFormat::kNESRealTwo,
                                   TGNumberFormat::kNEANonNegative,
                                   TGNumberFormat::kNELLimitMinMax, 0.01, 0.30);
    fSizeEntry->GetNumberEntry()->SetToolTipText("Set the size of arrow.");
-   f4->AddFrame(fSizeEntry, new TGLayoutHints(kLHintsLeft, 21, 1, 1, 1));
+   f2b->AddFrame(fSizeEntry, new TGLayoutHints(kLHintsExpandX, 1, 1, 3, 1));
 
-   TGCompositeFrame *f5 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   AddFrame(f5, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
 }
 
 //______________________________________________________________________________

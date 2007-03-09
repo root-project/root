@@ -201,110 +201,112 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t width,
    fDimGroup->ChangeOptions(kFitWidth|kChildFrame|kHorizontalFrame);
    f2->AddFrame(fDimGroup, new TGLayoutHints(kLHintsTop, 4, 1, 0, 0));
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 2, 5));
-
-   // Type of histogram, Coordinate system
-   f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   TGLabel *fType = new TGLabel(f3, "Type:"); 
-   f3->AddFrame(fType, new TGLayoutHints(kLHintsLeft, 6, 1, 4, 1));
-   fTypeCombo = BuildHistTypeComboBox(f3, kHIST_TYPE);
-   f3->AddFrame(fTypeCombo, new TGLayoutHints(kLHintsLeft, 15, 1, 2, 1));
-   fTypeCombo->Resize(86, 20);
-   fTypeCombo->Associate(this);
-   AddFrame(f3, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-   
-   f4 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   TGLabel *fCoords = new TGLabel(f4, "Coords:"); 
-   f4->AddFrame(fCoords, new TGLayoutHints(kLHintsLeft, 6, 1, 4, 1));
-   fCoordsCombo = BuildHistCoordsComboBox(f4, kCOORD_TYPE);
-   f4->AddFrame(fCoordsCombo, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 1));
-   fCoordsCombo->Resize(86, 20);
-   fCoordsCombo->Associate(this);
-   AddFrame(f4, new TGLayoutHints(kLHintsTop, 1, 1, 0, 3));
-
-   // Add contour, number of Contours?
-   f5 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   TGLabel *fAddLabel = new TGLabel(f5, "Contour:"); 
-   f5->AddFrame(fAddLabel, new TGLayoutHints(kLHintsLeft, 8, 4, 4, 1));
-   fContCombo = BuildHistContComboBox(f5, kCONT_TYPE);
-   f5->AddFrame(fContCombo, new TGLayoutHints(kLHintsLeft, 18, 1, 2, 1));
-   fContCombo->Resize(61, 20);
-   fContCombo->Associate(this);
-   AddFrame(f5, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-
-   f16 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   fColContLbl = new TGLabel(f16, "Cont #:");  
-   f16->AddFrame(fColContLbl, new TGLayoutHints( kLHintsLeft, 8, 4, 4, 1));                            
-   fContLevels = new TGNumberEntry(f16, 20, 0, kCONT_LEVELS, 
-                                   TGNumberFormat::kNESInteger,
-                                   TGNumberFormat::kNEANonNegative, 
-                                   TGNumberFormat::kNELLimitMinMax, 1, 99);
-   fContLevels->GetNumberEntry()->SetToolTipText("Set number of contours (1..99)");
-   fContLevels->Resize(60,20);
-   f16->AddFrame(fContLevels, new TGLayoutHints(kLHintsLeft, 25, 1, 2, 1));
-   AddFrame(f16, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+//here
 
    // 2D Plot drawoptions
    f6 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   TGCompositeFrame *f7 = new TGCompositeFrame(f6, 40, 20, kVerticalFrame);
+   AddFrame(f6, new TGLayoutHints(kLHintsTop, 3, 1, 4, 2));
+
+   TGCompositeFrame *f7 = new TGCompositeFrame(f6, 40, 20);
+   f6->AddFrame(f7, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+
+   TGLabel *fAddLabel = new TGLabel(f7, "Contour:"); 
+   f7->AddFrame(fAddLabel, new TGLayoutHints(kLHintsLeft, 6, 4, 4, 4));
+
+   fColContLbl = new TGLabel(f7, "Cont #:");  
+   f7->AddFrame(fColContLbl, new TGLayoutHints( kLHintsLeft, 6, 4, 4, 4));                            
+
    fAddArr = new TGCheckButton(f7, "Arrow", kARROW_ONOFF);
    fAddArr ->SetToolTipText("Shows gradient between adjacent cells");
-   f7->AddFrame(fAddArr, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 0));
+   f7->AddFrame(fAddArr, new TGLayoutHints(kLHintsLeft, 6, 1, 2, 0));
+
    fAddCol = new TGCheckButton(f7, "Col", kCOL_ONOFF);
    fAddCol ->SetToolTipText("A box is drawn for each cell with a color scale varying with contents");
    f7->AddFrame(fAddCol, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 0));
+
    fAddText = new TGCheckButton(f7, "Text", kTEXT_ONOFF);
    fAddText ->SetToolTipText("Draw bin contents as text");
    f7->AddFrame(fAddText, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 3));
 
    TGCompositeFrame *f8 = new TGCompositeFrame(f6, 40, 20, kVerticalFrame);
+   f6->AddFrame(f8, new TGLayoutHints(kLHintsLeft, 5, 1, 0, 0));   
+
+   fContCombo = BuildHistContComboBox(f8, kCONT_TYPE);
+   f8->AddFrame(fContCombo, new TGLayoutHints(kLHintsLeft, 6, 1, 2, 1));
+   fContCombo->Resize(61, 20);
+   fContCombo->Associate(this);
+
+   fContLevels = new TGNumberEntry(f8, 20, 0, kCONT_LEVELS, 
+                                   TGNumberFormat::kNESInteger,
+                                   TGNumberFormat::kNEANonNegative, 
+                                   TGNumberFormat::kNELLimitMinMax, 1, 99);
+   f8->AddFrame(fContLevels, new TGLayoutHints(kLHintsLeft, 6, 1, 3, 1));
+   fContLevels->GetNumberEntry()->SetToolTipText("Set number of contours (1..99)");
+   fContLevels->Resize(60,20);
+
    fAddBox = new TGCheckButton(f8, "Box", kBOX_ONOFF);
    fAddBox ->SetToolTipText("A box is drawn for each cell with surface proportional to contents");
-   f8->AddFrame(fAddBox, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 0));
+   f8->AddFrame(fAddBox, new TGLayoutHints(kLHintsLeft, 6, 1, 3, 0));
+
    fAddScat = new TGCheckButton(f8, "Scat", kSCAT_ONOFF);
    fAddScat ->SetToolTipText("Draw a scatter-plot");
    f8->AddFrame(fAddScat, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 0));
+
    fAddPalette = new TGCheckButton(f8, "Palette", kPALETTE_ONOFF);
    fAddPalette ->SetToolTipText("Add color palette beside the histogram");
    f8->AddFrame(fAddPalette, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 0));
    
-   f6->AddFrame(f7, new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
-   f6->AddFrame(f8, new TGLayoutHints(kLHintsLeft, 5, 1, 0, 0));   
-   AddFrame(f6, new TGLayoutHints(kLHintsTop, 3, 1, 4, 2));
+   f9 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame); 
+   AddFrame(f9, new TGLayoutHints(kLHintsTop, 3, 1, 2, 0));
 
-   // 3D plot drawoptions
-   f19 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   fColContLbl1 = new TGLabel(f19, "Cont #:");  
-   f19->AddFrame(fColContLbl1, new TGLayoutHints( kLHintsLeft, 6, 1, 2, 1));                            
-   fContLevels1 = new TGNumberEntry(f19, 20, 0, kCONT_LEVELS1, 
+   TGCompositeFrame *f10 = new TGCompositeFrame(f9, 40, 20);
+   f9->AddFrame(f10, new TGLayoutHints(kLHintsLeft, 0, 0, 3, 0));
+
+   TGLabel *fType = new TGLabel(f10, "Type:"); 
+   f10->AddFrame(fType, new TGLayoutHints(kLHintsNormal, 1, 1, 1, 1));
+
+   TGLabel *fCoords = new TGLabel(f10, "Coords:"); 
+   f10->AddFrame(fCoords, new TGLayoutHints(kLHintsLeft, 1, 1, 5, 1));
+
+   fColContLbl1 = new TGLabel(f10, "Cont #:");  
+   f10->AddFrame(fColContLbl1, new TGLayoutHints( kLHintsLeft, 1, 1, 5, 3));                            
+
+   fAddFB = new TGCheckButton(f10, "Front", kFRONTBOX_ONOFF);
+   fAddFB ->SetToolTipText("Supress the drawing of the front box");
+   f10->AddFrame(fAddFB, new TGLayoutHints(kLHintsLeft, 0, 1, 6, 0));
+   fAddBB = new TGCheckButton(f10, "Back", kBACKBOX_ONOFF);
+   fAddBB ->SetToolTipText("Supress the drawing of the back box");
+   f10->AddFrame(fAddBB, new TGLayoutHints(kLHintsLeft, 0, 1, 3, 0));
+
+   TGCompositeFrame *f11 = new TGCompositeFrame(f9, 40, 20);
+   f9->AddFrame(f11, new TGLayoutHints(kLHintsLeft, 5, 1, 0, 0));   
+
+   fTypeCombo = BuildHistTypeComboBox(f11, kHIST_TYPE);
+   f11->AddFrame(fTypeCombo, new TGLayoutHints(kLHintsLeft, 0, 1, 2, 1));
+   fTypeCombo->Resize(80, 20);
+   fTypeCombo->Associate(this);
+   
+   fCoordsCombo = BuildHistCoordsComboBox(f11, kCOORD_TYPE);
+   f11->AddFrame(fCoordsCombo, new TGLayoutHints(kLHintsLeft, 0, 1, 2, 1));
+   fCoordsCombo->Resize(80, 20);
+   fCoordsCombo->Associate(this);
+
+   fContLevels1 = new TGNumberEntry(f11, 20, 0, kCONT_LEVELS1, 
                                     TGNumberFormat::kNESInteger,
                                     TGNumberFormat::kNEANonNegative, 
                                     TGNumberFormat::kNELLimitMinMax, 1, 99);
    fContLevels1->GetNumberEntry()->SetToolTipText("Set number of contours (1..99)");
-   fContLevels1->Resize(85,20);
-   f19->AddFrame(fContLevels1, new TGLayoutHints(kLHintsLeft, 6, 1, 0, 1));
-   AddFrame(f19, new TGLayoutHints(kLHintsTop, 1, 1, -1, 0));
+   fContLevels1->Resize(78,20);
+   f11->AddFrame(fContLevels1, new TGLayoutHints(kLHintsLeft, 0, 1, 2, 1));
 
-   f9 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame); 
-   TGCompositeFrame *f10 = new TGCompositeFrame(f9, 40, 20, kVerticalFrame);
-   fAddError = new TGCheckButton(f10, "Errors", kERROR_ONOFF);
+   fAddError = new TGCheckButton(f11, "Errors", kERROR_ONOFF);
    fAddError ->SetToolTipText("Add color palette beside the histogram");
-   f10->AddFrame(fAddError, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 0));
-   fAddPalette1 = new TGCheckButton(f10, "Palette", kPALETTE_ONOFF1);
+   f11->AddFrame(fAddError, new TGLayoutHints(kLHintsLeft, 0, 1, 4, 0));
+   fAddPalette1 = new TGCheckButton(f11, "Palette", kPALETTE_ONOFF1);
    fAddPalette1 ->SetToolTipText("Add color palette beside the histogram");
-   f10->AddFrame(fAddPalette1, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 0));
+   f11->AddFrame(fAddPalette1, new TGLayoutHints(kLHintsLeft, 0, 1, 3, 0));
 
-   TGCompositeFrame *f11 = new TGCompositeFrame(f9, 40, 20, kVerticalFrame);
-   fAddFB = new TGCheckButton(f11, "Front", kFRONTBOX_ONOFF);
-   fAddFB ->SetToolTipText("Supress the drawing of the front box");
-   f11->AddFrame(fAddFB, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 0));
-   fAddBB = new TGCheckButton(f11, "Back", kBACKBOX_ONOFF);
-   fAddBB ->SetToolTipText("Supress the drawing of the back box");
-   f11->AddFrame(fAddBB, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 0));
    
-   f9->AddFrame(f10, new TGLayoutHints(kLHintsLeft, -1, 3, 0, 0));
-   f9->AddFrame(f11, new TGLayoutHints(kLHintsLeft, 5, 1, 0, 0));   
-   AddFrame(f9, new TGLayoutHints(kLHintsTop, 3, 1, 4, 0));
-
    // Bin bar settings
    f12 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | 
                                              kLHintsExpandX   | 
@@ -802,15 +804,10 @@ void TH2Editor::SetModel(TObject* obj)
    
    if (str == "") {
       // default options = Scatter-Plot
-      HideFrame(f3);
-      HideFrame(f4);
-      ShowFrame(f5);
       ShowFrame(f6);
       HideFrame(f9);
       HideFrame(f12);
       HideFrame(f13);          
-      ShowFrame(f16);
-      HideFrame(f19);
       HideFrame(f38);
       fDimGroup->SetButton(kDIM_SIMPLE, kTRUE);  
       fDimGroup->SetButton(kDIM_COMPLEX, kFALSE);        
@@ -829,15 +826,10 @@ void TH2Editor::SetModel(TObject* obj)
       fAddFB->SetState(kButtonDown);      
       fAddBB->SetState(kButtonDown);      
    } else if (!str.Contains("LEGO") && !str.Contains("SURF")) {
-      HideFrame(f3);
-      HideFrame(f4);
-      ShowFrame(f5);
       ShowFrame(f6);
       HideFrame(f9);
       HideFrame(f12);
       HideFrame(f13);
-      ShowFrame(f16);
-      HideFrame(f19);
       HideFrame(f38);
       fDimGroup->SetButton(kDIM_SIMPLE, kTRUE);  
       fDimGroup->SetButton(kDIM_COMPLEX, kFALSE);        
@@ -876,15 +868,10 @@ void TH2Editor::SetModel(TObject* obj)
       fAddBB->SetState(kButtonDown);      
 
    } else if (str.Contains("LEGO") || str.Contains("SURF")) {
-      ShowFrame(f3);
-      ShowFrame(f4);
-      HideFrame(f5);
       HideFrame(f6);
       ShowFrame(f9);
       ShowFrame(f12);
       ShowFrame(f13);
-      HideFrame(f16);
-      ShowFrame(f19);
       ShowFrame(f38);
       fDimGroup->SetButton(kDIM_COMPLEX, kTRUE);  
       fDimGroup->SetButton(kDIM_SIMPLE, kFALSE);        
@@ -1074,15 +1061,10 @@ void TH2Editor::DoHistSimple()
    
    if (fAvoidSignal) return;
    TString str = "";
-   HideFrame(f3);
-   HideFrame(f4);
-   ShowFrame(f5);
    ShowFrame(f6);
    HideFrame(f9);
    HideFrame(f12);
    HideFrame(f13);   
-   ShowFrame(f16);
-   HideFrame(f19);
    HideFrame(f38);
    if (fContCombo->GetSelected()==-1) 
       fContCombo->Select(kCONT_NONE);
@@ -1117,13 +1099,8 @@ void TH2Editor::DoHistComplex()
    
    if (fAvoidSignal) return;
    TString str = "";
-   ShowFrame(f3);
-   ShowFrame(f4);
-   HideFrame(f5);   
    HideFrame(f6);   
    ShowFrame(f9);
-   HideFrame(f16);   
-   ShowFrame(f19);
    ShowFrame(f38);
    if (GetHistTypeLabel().Contains("LEGO")) {
       ShowFrame(f12);   

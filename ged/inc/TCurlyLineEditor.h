@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TCurlyLineEditor.h,v 1.3 2006/09/25 13:35:58 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TCurlyLineEditor.h,v 1.4 2007/02/06 15:39:54 antcheva Exp $
 // Author: Ilka  Antcheva, Otto Schaile 15/12/04
 
 /*************************************************************************
@@ -40,9 +40,6 @@ protected:
    TGNumberEntry        *fWaveLengthEntry;      // wavelength entry
    TGCheckButton        *fIsWavy;               // toggle wavy / curly
    TGCompositeFrame     *fStartXFrame;
-   TGCompositeFrame     *fStartYFrame;
-   TGCompositeFrame     *fEndXFrame;
-   TGCompositeFrame     *fEndYFrame;
 
    virtual void   ConnectSignals2Slots();
 

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TCurlyArcEditor.cxx,v 1.11 2006/09/25 13:35:58 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TCurlyArcEditor.cxx,v 1.12 2007/02/06 15:39:54 antcheva Exp $
 // Author: Ilka Antcheva, Otto Schaile 15/12/04
 
 /*************************************************************************
@@ -51,64 +51,63 @@ TCurlyArcEditor::TCurlyArcEditor(const TGWindow *p, Int_t width,
    MakeTitle("Curly Arc");
 
    TGCompositeFrame *f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   AddFrame(f3, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
+   AddFrame(f3, new TGLayoutHints(kLHintsTop, 1, 1, 2, 0));
 
-   TGLabel *fRadiusLabel = new TGLabel(f3, "Radius:");
-   f3->AddFrame(fRadiusLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
-   fRadiusEntry = new TGNumberEntry(f3, 0.02, 7, kCRLA_RAD,
+   TGCompositeFrame *f3a = new TGCompositeFrame(f3, 80, 20);
+   f3->AddFrame(f3a, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+
+   TGLabel *fRadiusLabel = new TGLabel(f3a, "Radius:");
+   f3a->AddFrame(fRadiusLabel, new TGLayoutHints(kLHintsNormal, 8, 0, 5, 5));
+
+   TGLabel *fPhiminLabel = new TGLabel(f3a, "Phimin:");
+   f3a->AddFrame(fPhiminLabel, new TGLayoutHints(kLHintsNormal, 8, 0, 5, 5));
+
+   TGLabel *fPhimaxLabel = new TGLabel(f3a, "Phimax:");
+   f3a->AddFrame(fPhimaxLabel, new TGLayoutHints(kLHintsNormal, 8, 0, 5, 5));
+
+   TGLabel *fCenterXLabel = new TGLabel(f3a, "Center X:");
+   f3a->AddFrame(fCenterXLabel, new TGLayoutHints(kLHintsNormal, 8, 0, 6, 5));
+
+   TGLabel *fCenterYLabel = new TGLabel(f3a, "Y:");
+   f3a->AddFrame(fCenterYLabel, new TGLayoutHints(kLHintsNormal, 49, 0, 6, 0));
+
+   TGCompositeFrame *f3b = new TGCompositeFrame(f3, 80, 20);
+   f3->AddFrame(f3b, new TGLayoutHints(kLHintsNormal, 0, 0, 0, 0));
+
+   fRadiusEntry = new TGNumberEntry(f3b, 0.02, 7, kCRLA_RAD,
                                     TGNumberFormat::kNESRealThree,
                                     TGNumberFormat::kNEANonNegative,
                                     TGNumberFormat::kNELNoLimits);
    fRadiusEntry->GetNumberEntry()->SetToolTipText("Set radius of arc.");
-   f3->AddFrame(fRadiusEntry, new TGLayoutHints(kLHintsLeft, 18, 1, 1, 1));
+   f3b->AddFrame(fRadiusEntry, new TGLayoutHints(kLHintsLeft, 6, 1, 3, 1));
 
-   TGCompositeFrame *f4 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   AddFrame(f4, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
-
-   TGLabel *fPhiminLabel = new TGLabel(f4, "Phimin:");
-   f4->AddFrame(fPhiminLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
-   fPhiminEntry = new TGNumberEntry(f4, 0, 7, kCRLA_FMIN,
+   fPhiminEntry = new TGNumberEntry(f3b, 0, 7, kCRLA_FMIN,
                                     TGNumberFormat::kNESInteger,
                                     TGNumberFormat::kNEANonNegative,
                                     TGNumberFormat::kNELLimitMinMax, 0, 360);
    fPhiminEntry->GetNumberEntry()->SetToolTipText("Set Phimin in degrees.");
-   f4->AddFrame(fPhiminEntry, new TGLayoutHints(kLHintsLeft, 19, 1, 1, 1));
+   f3b->AddFrame(fPhiminEntry, new TGLayoutHints(kLHintsLeft, 6, 1, 3, 1));
 
-   TGCompositeFrame *f5 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   AddFrame(f5, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
-
-   TGLabel *fPhimaxLabel = new TGLabel(f5, "Phimax:");
-   f5->AddFrame(fPhimaxLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
-   fPhimaxEntry = new TGNumberEntry(f5, 0, 7, kCRLA_FMAX,
+   fPhimaxEntry = new TGNumberEntry(f3b, 0, 7, kCRLA_FMAX,
                                     TGNumberFormat::kNESInteger,
                                     TGNumberFormat::kNEANonNegative,
                                     TGNumberFormat::kNELLimitMinMax, 0, 360);
    fPhimaxEntry->GetNumberEntry()->SetToolTipText("Set Phimax in degrees.");
-   f5->AddFrame(fPhimaxEntry, new TGLayoutHints(kLHintsLeft, 16, 1, 1, 1));
+   f3b->AddFrame(fPhimaxEntry, new TGLayoutHints(kLHintsLeft, 6, 1, 3, 1));
 
-   TGCompositeFrame *f6 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   AddFrame(f6, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
-
-   TGLabel *fCenterXLabel = new TGLabel(f6, "Center X:");
-   f6->AddFrame(fCenterXLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
-   fCenterXEntry = new TGNumberEntry(f6, 0.0, 7, kCRLA_CX,
+   fCenterXEntry = new TGNumberEntry(f3b, 0.0, 7, kCRLA_CX,
                                      TGNumberFormat::kNESRealThree,
                                      TGNumberFormat::kNEANonNegative,
                                      TGNumberFormat::kNELNoLimits);
    fCenterXEntry->GetNumberEntry()->SetToolTipText("Set center X coordinate.");
-   f6->AddFrame(fCenterXEntry, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 1));
-//
-   TGCompositeFrame *f7 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   AddFrame(f7, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
+   f3b->AddFrame(fCenterXEntry, new TGLayoutHints(kLHintsLeft, 6, 1, 3, 1));
 
-   TGLabel *fCenterYLabel = new TGLabel(f7, "Y:");
-   f7->AddFrame(fCenterYLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 48, 0, 1, 1));
-   fCenterYEntry = new TGNumberEntry(f7, 0.0, 7, kCRLA_CY,
+   fCenterYEntry = new TGNumberEntry(f3b, 0.0, 7, kCRLA_CY,
                                      TGNumberFormat::kNESRealThree,
                                      TGNumberFormat::kNEANonNegative,
                                      TGNumberFormat::kNELNoLimits);
    fCenterYEntry->GetNumberEntry()->SetToolTipText("Set center Y coordinate.");
-   f7->AddFrame(fCenterYEntry, new TGLayoutHints(kLHintsLeft, 7, 1, 1, 1));
+   f3b->AddFrame(fCenterYEntry, new TGLayoutHints(kLHintsLeft, 6, 1, 3, 1));
 
 }
 
