@@ -138,7 +138,7 @@ class DataTypes1InstanceDataTestCase( unittest.TestCase ):
          for i in range(N):
             exec 'self.assertEqual( c.f%sArray2[i], b[i] )' % names[j]
 
-   def testRangeAccess( self ):
+   def test3RangeAccess( self ):
       """Test the ranges of integer types"""
 
       def call( c, name, value ):
@@ -149,6 +149,18 @@ class DataTypes1InstanceDataTestCase( unittest.TestCase ):
 
       self.assertRaises( OverflowError, call, c, 'fUInt',  -1  )
       self.assertRaises( OverflowError, call, c, 'fULong', -1  )
+
+   def test4TypeConversions( self ):
+      """Test conversions between builtin types"""
+
+      c = ClassWithData()
+
+      c.fDouble = -1
+      self.assertEqual( c.fDouble, -1.0 )
+
+      self.assertRaises( TypeError, c.fDouble,  'c'  )
+      self.assertRaises( TypeError, c.fInt,     -1.  )
+      self.assertRaises( TypeError, c.fInt,      1.  )
 
 
 ### access to class data members =============================================

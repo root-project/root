@@ -18,10 +18,10 @@ class Cpp1LanguageFeatureTestCase( unittest.TestCase ):
    def test1ClassEnum( self ):
       """Test class enum access and values"""
 
-      self.assertEqual( TObject.kBitMask,    0xffffff )
-      self.assertEqual( TObject.kIsOnHeap,   0x1000000 )
-      self.assertEqual( TObject.kNotDeleted, 0x2000000 )
-      self.assertEqual( TObject.kZombie,     0x4000000 )
+      self.assertEqual( TObject.kBitMask,    gROOT.ProcessLine( "return TObject::kBitMask;" ) )
+      self.assertEqual( TObject.kIsOnHeap,   gROOT.ProcessLine( "return TObject::kIsOnHeap;" ) )
+      self.assertEqual( TObject.kNotDeleted, gROOT.ProcessLine( "return TObject::kNotDeleted;" ) )
+      self.assertEqual( TObject.kZombie,     gROOT.ProcessLine( "return TObject::kZombie;" ) )
 
       t = TObject()
 
@@ -33,9 +33,9 @@ class Cpp1LanguageFeatureTestCase( unittest.TestCase ):
    def test2Globalenum( self ):
       """Test global enums access and values"""
 
-      self.assertEqual( kRed,   0x2 )
-      self.assertEqual( kGreen, 0x3 )
-      self.assertEqual( kBlue,  0x4 )
+      self.assertEqual( kRed,   gROOT.ProcessLine( "return kRed;" ) )
+      self.assertEqual( kGreen, gROOT.ProcessLine( "return kGreen;" ) )
+      self.assertEqual( kBlue,  gROOT.ProcessLine( "return kBlue;" ) )
 
    def test3CopyContructor( self ):
       """Test copy constructor"""
