@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.18 2006/12/05 15:43:26 antcheva Exp $
+// @(#)root/fitpanel:$Name: v5-14-00-patches $:$Id: TFitEditor.cxx,v 1.19 2006/12/08 15:52:20 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -1037,6 +1037,8 @@ void TFitEditor::DoNoSelection()
 void TFitEditor::RecursiveRemove(TObject* obj)
 {
    // When obj is deleted, clear fFitObject if fFitObject = obj.
+
+   fParentPad->Disconnect("RangeAxisChanged()");
 
    if (obj == fFitObject) {
 
