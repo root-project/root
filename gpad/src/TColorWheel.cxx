@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TColorWheel.cxx,v 1.1 2007/03/10 22:58:01 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TColorWheel.cxx,v 1.2 2007/03/10 23:03:15 brun Exp $
 // Author: Rene Brun   10/03/2007
 
 /*************************************************************************
@@ -34,6 +34,7 @@ Begin_Macro(source)
 {
    TColorWheel *w = new TColorWheel();
    w->Draw();
+   return w->GetCanvas();
 }
 End_Macro */
 
