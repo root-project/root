@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name: v5-14-00-patches $:$Id: Converters.cxx,v 1.36 2006/12/11 07:49:08 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.36.2.1 2007/03/09 09:49:45 rdm Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -835,7 +835,7 @@ Bool_t PyROOT::TVoidPtrRefConverter::SetArg( PyObject* pyobject, TParameter& par
    if ( ObjectProxy_Check( pyobject ) ) {
       para.fv = ((ObjectProxy*)pyobject)->fObject;
       if ( func )
-         func->SetArgRef( reinterpret_cast< Long_t& >( para.fl ) );
+         func->SetArgRef( reinterpret_cast< Long_t& >( ((ObjectProxy*)pyobject)->fObject ) );
       return kTRUE;
    }
 
