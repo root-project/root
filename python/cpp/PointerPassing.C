@@ -8,8 +8,18 @@ public:
       return reinterpret_cast< long >( obj );
    }
 
+   static long SetAddressPtrRef( void*& obj ) {
+      obj = (void*)0x1234;
+      return 21;
+   }
+
    static long GimeAddressPtrPtr( void** obj ) {
       return reinterpret_cast< long >( obj );
+   }
+
+   static long SetAddressPtrPtr( void** obj ) {
+      (*(long**)obj) = (long*)0x4321;
+      return 42;
    }
 
    static long GimeAddressObject( TObject* obj ) {

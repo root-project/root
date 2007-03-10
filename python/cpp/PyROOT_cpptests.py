@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_cpptests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/03/05
-# Last: 03/22/06
+# Last: 03/09/07
 
 """C++ language interface unit tests for PyROOT package."""
 
@@ -126,6 +126,13 @@ class Cpp1LanguageFeatureTestCase( unittest.TestCase ):
       self.assertEqual( 0, Z.GimeAddressPtr( None ) );
       self.assertEqual( 0, Z.GimeAddressObject( 0 ) );
       self.assertEqual( 0, Z.GimeAddressObject( None ) );
+
+      ptr = MakeNullPointer( TObject )
+      self.assertRaises( ValueError, AddressOf, ptr )
+      Z.SetAddressPtrRef( ptr )
+      self.assertEqual( AddressOf( ptr )[0], 0x1234 )
+      Z.SetAddressPtrPtr( ptr )
+      self.assertEqual( AddressOf( ptr )[0], 0x4321 )
 
    def test9Macro( self ):
       """Test access to cpp macro's"""
