@@ -1,4 +1,4 @@
-/* @(#)root/gpad:$Name:  $:$Id: LinkDef.h,v 1.9 2007/02/07 21:16:09 brun Exp $ */
+/* @(#)root/gpad:$Name:  $:$Id: LinkDef.h,v 1.10 2007/02/18 14:58:16 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -18,6 +18,7 @@
 #pragma link C++ class TButton+;
 #pragma link C++ class TCanvas-;
 #pragma link C++ class TClassTree-;
+#pragma link C++ class TColorWheel+;
 #pragma link C++ class TControlBar+;
 #pragma link C++ class TControlBarButton+;
 #pragma link C++ class TDialogCanvas+;
