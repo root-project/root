@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TColorWheel.cxx,v 1.6 2006/07/03 16:10:44 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TColorWheel.cxx,v 1.1 2007/03/10 22:58:01 brun Exp $
 // Author: Rene Brun   10/03/2007
 
 /*************************************************************************
@@ -141,9 +141,9 @@ char  *TColorWheel::GetObjectInfo(Int_t px, Int_t py) const
    TColor *color = gROOT->GetColor(n);
    if (!color) return "";
    static char info[50];
-   Int_t r = (Int_t)255.01*color->GetRed();
-   Int_t g = (Int_t)255.01*color->GetGreen();
-   Int_t b = (Int_t)255.01*color->GetBlue();
+   Int_t r = (Int_t)(255.01*color->GetRed());
+   Int_t g = (Int_t)(255.01*color->GetGreen());
+   Int_t b = (Int_t)(255.01*color->GetBlue());
    sprintf(info,"col %d, %s, r=%3d, g=%3d, b=%3d",n,color->GetName(),r,g,b);
    return info;
 }
