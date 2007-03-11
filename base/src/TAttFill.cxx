@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.13 2006/07/03 16:10:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttFill.cxx,v 1.14 2007/02/23 09:17:22 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -51,6 +51,35 @@ Begin_Macro(source)
 }
 End_Macro
 
+Begin_Html
+<h4>The ROOT Color Wheel.</h4>
+The wheel contains the recommended 216 colors to be used in web applications.
+The colors in the Color Wheel are created by TColor::CreateColorWheel.
+<p>Using this color set for your text, background or graphics will give your
+application a consistent appearance across different platforms and browsers.
+<p>Colors are grouped by hue, the aspect most important in human perception 
+Touching color chips have the same hue, but with different brightness and vividness.
+<p>Colors of slightly different hues <b>clash</b>. If you intend to display
+colors of the same hue together, you should pick them from the same group.
+<p>Each color chip is identified by a mnemonic (eg kYellow) and a number.
+The keywords, kRed, kBlue, kYellow, kPink, etc are defined in the header file <b>Rtypes.h</b>
+that is included in all ROOT other header files. We strongly recommend to use these keywords
+in your code instead of hardcoded color numbers, eg:
+<pre>
+   myObject.SetFillColor(kRed);
+   myObject.SetFillColor(kYellow-10);
+   myLine.SetLineColor(kMagenta+2);
+</pre>
+
+End_Html
+Begin_Macro(source)
+{
+   TColorWheel *w = new TColorWheel();
+   w->Draw();
+   return w->GetCanvas();
+}
+End_Macro
+      
 Begin_Html
 <a name="F2"></a><h3>Fill Area style</h3>
 The fill area style defines the pattern used to fill a polygon.
