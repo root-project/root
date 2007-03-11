@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TColorWheel.cxx,v 1.2 2007/03/10 23:03:15 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TColorWheel.cxx,v 1.3 2007/03/10 23:13:29 brun Exp $
 // Author: Rene Brun   10/03/2007
 
 /*************************************************************************
@@ -8,8 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
-//______________________________________________________________________________
 
 #include "Riostream.h"
 #include "TROOT.h"
@@ -29,6 +27,22 @@ ClassImp(TColorWheel)
 <center><h2>TColorWheel : Draw the ROOT Color Wheel.</h2></center>
 The wheel contains the recommended 216 colors to be used in web applications.
 The colors in the Color Wheel are created by TColor::CreateColorWheel.
+<p>Using this color set for your text, background or graphics will give your
+application a consistent appearance across different platforms and browsers.
+<p>Colors are grouped by hue, the aspect most important in human perception 
+Touching color chips have the same hue, but with different brightness and vividness.
+<p>Colors of slightly different hues <b>clash</b>. If you intend to display
+colors of the same hue together, you should pick them from the same group.
+<p>Each color chip is identified by a mnemonic (eg kYellow) and a number.
+The keywords, kRed, kBlue, kYellow, kPink, etc are defined in the header file <b>Rtypes.h</b>
+that is included in all ROOT other header files. We strongly recommend to use these keywords
+in your code instead of hardcoded color numbers, eg:
+<pre>
+   myObject.SetFillColor(kRed);
+   myOjject.SetFillColor(kYellow-10);
+   myLine.SetLineColor(kMagenta+2);
+</pre>
+
 End_Html
 Begin_Macro(source)
 {
