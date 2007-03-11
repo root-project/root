@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TColorWheel.cxx,v 1.3 2007/03/10 23:13:29 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TColorWheel.cxx,v 1.4 2007/03/11 07:17:22 brun Exp $
 // Author: Rene Brun   10/03/2007
 
 /*************************************************************************
@@ -39,7 +39,7 @@ that is included in all ROOT other header files. We strongly recommend to use th
 in your code instead of hardcoded color numbers, eg:
 <pre>
    myObject.SetFillColor(kRed);
-   myOjject.SetFillColor(kYellow-10);
+   myObject.SetFillColor(kYellow-10);
    myLine.SetLineColor(kMagenta+2);
 </pre>
 
