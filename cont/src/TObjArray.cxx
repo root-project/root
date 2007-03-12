@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.28 2006/08/08 17:02:26 rdm Exp $
+// @(#)root/cont:$Name: v5-14-00-patches $:$Id: TObjArray.cxx,v 1.29 2006/11/11 15:21:30 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -97,6 +97,30 @@ TObjArray& TObjArray::operator=(const TObjArray &a)
       fName = a.fName;
    }
    return *this;
+}
+
+//______________________________________________________________________________
+TObject *&TObjArray::operator[](Int_t i)
+{
+   // Return the object at position i. Returns address at position 0
+   // if i is out of bounds. Result may be used as an lvalue.
+
+   int j = i-fLowerBound;
+   if (j >= 0 && j < fSize) return fCont[j];
+   BoundsOk("operator[]", i);
+   fLast = -2; // invalidate fLast since the result may be used as an lvalue
+   return fCont[0];
+}
+
+//______________________________________________________________________________
+TObject *TObjArray::operator[](Int_t i) const
+{
+   // Return the object at position at. Returns 0 if i is out of bounds.
+
+   int j = i-fLowerBound;
+   if (j >= 0 && j < fSize) return fCont[j];
+   BoundsOk("operator[] const", i);
+   return 0;
 }
 
 //______________________________________________________________________________
