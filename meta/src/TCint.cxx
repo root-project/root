@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.139 2007/03/08 15:52:17 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.140 2007/03/09 16:33:00 pcanal Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -96,6 +96,7 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
    fMore      = 0;
    fPrompt[0] = 0;
    fMapfile   = 0;
+   fRootMapFiles = 0;
    fLockProcessLine = kTRUE;
 
    G__RegisterScriptCompiler(&ScriptCompiler);
