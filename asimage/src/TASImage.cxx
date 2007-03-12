@@ -394,7 +394,7 @@ void TASImage::ReadImage(const char *filename, EImageFileTypes /*type*/)
       init_icon_paths();
    }
 
-   ASImageImportParams iparams;
+   static ASImageImportParams iparams;
    iparams.flags = 0;
    iparams.width = 0;
    iparams.height = 0;
@@ -526,9 +526,12 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
    UInt_t aquality;
    EImageQuality quality = GetImageQuality();
    MapQuality(quality, aquality);
-   TString fname = file;
 
-   ASImageExportParams parms;
+   static TString fname;
+   fname = file;
+   static ASImageExportParams parms;
+   ASImage *im = fScaledImage ? fScaledImage->fImage : fImage;
+
    switch (type) {
    case kXpm:
       parms.xpm.type = atype;
@@ -538,10 +541,10 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
       parms.xpm.max_colors = 512;
       break;
    case kBmp:
-      ASImage2bmp(fScaledImage ? fScaledImage->fImage : fImage, file, 0);
+      ASImage2bmp(im, fname.Data(), 0);
       return;
    case kXcf:
-      ASImage2xcf(fScaledImage ? fScaledImage->fImage : fImage, file, 0);
+      ASImage2xcf(im, fname.Data(), 0);
       return;
    case kPng:
       parms.png.type = atype;
@@ -601,8 +604,9 @@ void TASImage::WriteImage(const char *file, EImageFileTypes type)
       return;
    }
 
-   if (!ASImage2file(fScaledImage ? fScaledImage->fImage : fImage, 0, fname.Data(), atype, &parms))
+   if (!ASImage2file(im, 0, fname.Data(), atype, &parms)) {
       Error("WriteImage", "error writing file %s", file);
+   }
 }
 
 //______________________________________________________________________________
@@ -1894,10 +1898,12 @@ Bool_t TASImage::InitVisual()
 {
    // Static function to initialize the ASVisual.
 
-   if (fgVisual) return kTRUE;
+   if (fgVisual && fgVisual->dpy) {
+      return kTRUE;
+   }
 
    // batch or win32 mode
-   if (gROOT->IsBatch() || gVirtualX->InheritsFrom("TGWin32")) {
+   if (!fgVisual && (gROOT->IsBatch() || gVirtualX->InheritsFrom("TGWin32"))) {
       dpy = 0;
       fgVisual = create_asvisual(0, 0, 0, 0);
       return kTRUE;
@@ -1909,11 +1915,12 @@ Bool_t TASImage::InitVisual()
    Visual *vis   = (Visual*) gVirtualX->GetVisual();
    Colormap cmap = (Colormap) gVirtualX->GetColormap();
 #ifndef WIN32
-   if (vis == 0 || cmap == 0)
+   if (vis == 0 || cmap == 0) {
       fgVisual = create_asvisual(0, 0, 0, 0);
-   else
+   } else {
       fgVisual = create_asvisual_for_id(dpy, screen, depth,
                                         XVisualIDFromVisual(vis), cmap, 0);
+   }
 #else
    fgVisual = create_asvisual(0, 0, 0, 0);
 #endif
@@ -5140,7 +5147,7 @@ static ASDrawContext *create_draw_context_argb32(ASImage *im, ASDrawTool *brush)
 {
    // Create draw context
 
-   static ASDrawContext *ctx = new ASDrawContext;
+   ASDrawContext *ctx = new ASDrawContext;
 
    ctx->canvas_width = im->width;
    ctx->canvas_height = im->height;
@@ -5157,6 +5164,19 @@ static ASDrawContext *create_draw_context_argb32(ASImage *im, ASDrawTool *brush)
    }
    return ctx;
 }
+
+//_____________________________________________________________________________
+static void destroy_asdraw_context32( ASDrawContext *ctx )
+{
+   //
+
+   if(ctx) {
+		if(ctx->scratch_canvas) {
+			free(ctx->scratch_canvas);
+      }	 
+		delete ctx;
+	}	 
+}	   
 
 static const UInt_t kBrushCacheSize = 20;
 static CARD32 gBrushCache[kBrushCacheSize*kBrushCacheSize];
@@ -5181,19 +5201,20 @@ void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
       matrix[i] = (CARD32)color;
    };
 
-   static ASDrawTool *brush = new ASDrawTool;
-   brush->matrix = matrix;
-   brush->width = thick;
-   brush->height = thick;
-   brush->center_y = brush->center_x = thick/2;
+   ASDrawTool brush;
+   brush.matrix = matrix;
+   brush.width = thick;
+   brush.height = thick;
+   brush.center_y = brush.center_x = thick/2;
 
-   ASDrawContext *ctx = create_draw_context_argb32(fImage, brush);
+   ASDrawContext *ctx = create_draw_context_argb32(fImage, &brush);
    asim_move_to(ctx, x1, y1);
    asim_line_to(ctx, x2, y2);
 
    if (!use_cache) {
       delete [] matrix;
    }
+   destroy_asdraw_context32(ctx);
 }
 
 //______________________________________________________________________________
@@ -5462,7 +5483,7 @@ void TASImage::GetImageBuffer(char **buffer, int *size, EImageFileTypes type)
 
    if (!fImage) return;
 
-   ASImageExportParams params;
+   static ASImageExportParams params;
    Bool_t ret = kFALSE;
    int   isize = 0;
    char *ibuff = 0;
@@ -5512,7 +5533,7 @@ Bool_t TASImage::SetImageBuffer(char **buffer, EImageFileTypes type)
 
    DestroyImage();
 
-   ASImageImportParams params;
+   static ASImageImportParams params;
    params.flags = 0;
    params.width = 0;
    params.height = 0 ;
@@ -5802,20 +5823,21 @@ void TASImage::DrawCubeBezier(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
       matrix[i] = (CARD32)color;
    };
 
-   static ASDrawTool *brush = new ASDrawTool;
-   brush->matrix = matrix;
-   brush->width = thick;
-   brush->height = thick;
-   brush->center_y = brush->center_x = thick/2;
+   ASDrawTool brush;
+   brush.matrix = matrix;
+   brush.width = thick;
+   brush.height = thick;
+   brush.center_y = brush.center_x = thick/2;
 
    ASDrawContext *ctx = 0;
 
-   ctx = create_draw_context_argb32(fImage, brush);
+   ctx = create_draw_context_argb32(fImage, &brush);
    asim_cube_bezier(ctx, x1, y1, x2, y2, x3, y3);
 
    if (!use_cache) {
       delete [] matrix;
    }
+   destroy_asdraw_context32(ctx);
 }
 
 //_______________________________________________________________________
@@ -5842,18 +5864,19 @@ void TASImage::DrawStraightEllips(Int_t x, Int_t y, Int_t rx, Int_t ry,
       matrix[i] = (CARD32)color;
    };
 
-   static ASDrawTool *brush = new ASDrawTool;
-   brush->matrix = matrix;
-   brush->width = thick > 0 ? thick : 1;
-   brush->height = thick > 0 ? thick : 1;
-   brush->center_y = brush->center_x = thick > 0 ? thick/2 : 0;
+   ASDrawTool brush;
+   brush.matrix = matrix;
+   brush.width = thick > 0 ? thick : 1;
+   brush.height = thick > 0 ? thick : 1;
+   brush.center_y = brush.center_x = thick > 0 ? thick/2 : 0;
 
-   ASDrawContext *ctx = create_draw_context_argb32(fImage, brush);
+   ASDrawContext *ctx = create_draw_context_argb32(fImage, &brush);
    asim_straight_ellips(ctx, x, y, rx, ry, thick < 0);
 
    if (!use_cache) {
       delete [] matrix;
    }
+   destroy_asdraw_context32(ctx);
 }
 
 //_______________________________________________________________________
@@ -5879,18 +5902,19 @@ void TASImage::DrawCircle(Int_t x, Int_t y, Int_t r, const char *col, Int_t thic
       matrix[i] = (CARD32)color;
    }
 
-   static ASDrawTool *brush = new ASDrawTool;
-   brush->matrix = matrix;
-   brush->width = thick > 0 ? thick : 1;
-   brush->height = thick > 0 ? thick : 1;
-   brush->center_y = brush->center_x = thick > 0 ? thick/2 : 0;
+   ASDrawTool brush;
+   brush.matrix = matrix;
+   brush.width = thick > 0 ? thick : 1;
+   brush.height = thick > 0 ? thick : 1;
+   brush.center_y = brush.center_x = thick > 0 ? thick/2 : 0;
 
-   ASDrawContext *ctx = create_draw_context_argb32(fImage, brush);
+   ASDrawContext *ctx = create_draw_context_argb32(fImage, &brush);
    asim_circle(ctx, x,  y, r, thick < 0);
 
    if (!use_cache) {
       delete [] matrix;
    }
+   destroy_asdraw_context32(ctx);
 }
 
 //_______________________________________________________________________
@@ -5917,18 +5941,19 @@ void TASImage::DrawEllips(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
       matrix[i] = (CARD32)color;
    };
 
-   static ASDrawTool *brush = new ASDrawTool;
-   brush->matrix = matrix;
-   brush->width = thick > 0 ? thick : 1;
-   brush->height = thick > 0 ? thick : 1;
-   brush->center_y = brush->center_x = thick > 0 ? thick/2 : 0;
+   ASDrawTool brush;
+   brush.matrix = matrix;
+   brush.width = thick > 0 ? thick : 1;
+   brush.height = thick > 0 ? thick : 1;
+   brush.center_y = brush.center_x = thick > 0 ? thick/2 : 0;
 
-   ASDrawContext *ctx = create_draw_context_argb32(fImage, brush);
+   ASDrawContext *ctx = create_draw_context_argb32(fImage, &brush);
    asim_ellips(ctx, x, y, rx, ry, angle, thick < 0);
 
    if (!use_cache) {
       delete [] matrix;
    }
+   destroy_asdraw_context32(ctx);
 }
 
 //_______________________________________________________________________
@@ -5955,18 +5980,19 @@ void TASImage::DrawEllips2(Int_t x, Int_t y, Int_t rx, Int_t ry, Int_t angle,
       matrix[i] = (CARD32)color;
    };
 
-   static ASDrawTool *brush = new ASDrawTool;
-   brush->matrix = matrix;
-   brush->width = thick > 0 ? thick : 1;
-   brush->height = thick > 0 ? thick : 1;
-   brush->center_y = brush->center_x = thick > 0 ? thick/2 : 0;
+   ASDrawTool brush;
+   brush.matrix = matrix;
+   brush.width = thick > 0 ? thick : 1;
+   brush.height = thick > 0 ? thick : 1;
+   brush.center_y = brush.center_x = thick > 0 ? thick/2 : 0;
 
-   ASDrawContext *ctx = create_draw_context_argb32(fImage, brush);
+   ASDrawContext *ctx = create_draw_context_argb32(fImage, &brush);
    asim_ellips2(ctx, x, y, rx, ry, angle, thick < 0);
 
    if (!use_cache) {
       delete [] matrix;
    }
+   destroy_asdraw_context32(ctx);
 }
 
 //_______________________________________________________________________
