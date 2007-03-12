@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.113 2007/02/15 15:04:40 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.114 2007/02/22 15:40:02 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -40,6 +40,7 @@
 #include "TClassTree.h"
 #include "TMarker.h"
 #include "TStyle.h"
+#include "TColorWheel.h"
 #include "TVirtualX.h"
 #include "TApplication.h"
 #include "TFile.h"
@@ -923,9 +924,12 @@ again:
                   case kViewColors:
                      {
                         TVirtualPad *padsav = gPad->GetCanvas();
-                        TCanvas *m = new TCanvas("colors","Color Table");
-                        TPad::DrawColorTable();
-                        m->Update();
+                        //This was the code with the old color table
+                        //   TCanvas *m = new TCanvas("colors","Color Table");
+                        //   TPad::DrawColorTable();
+                        //   m->Update();
+                        TColorWheel *wheel = new TColorWheel();
+                        wheel->Draw();
                         padsav->cd();
                      }
                      break;
