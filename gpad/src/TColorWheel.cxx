@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TColorWheel.cxx,v 1.4 2007/03/11 07:17:22 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TColorWheel.cxx,v 1.5 2007/03/11 07:28:57 brun Exp $
 // Author: Rene Brun   10/03/2007
 
 /*************************************************************************
@@ -82,6 +82,8 @@ TColorWheel::TColorWheel() :TNamed("wheel","ROOT Color Wheel")
    fX[12]  = fR0+4.6*fDr; fY[12] =  0;
    fX[13]  = fR0+4.6*fDr; fY[13] = -1.4*fDr;
    fX[14]  = fR0+4.6*fDr; fY[14] = -2.8*fDr;
+   
+   SetBit(kCanDelete);
 }
 
 //______________________________________________________________________________
@@ -89,7 +91,7 @@ TColorWheel::~TColorWheel()
 {
    // destructor
    
-   delete fCanvas;
+   //delete fCanvas;  please don't do that
    delete fArc;
    delete fLine;
    delete fText;
@@ -112,11 +114,10 @@ void TColorWheel::Draw(Option_t *option)
    // Paint the color wheel
    
    if (!fCanvas) {
-      fCanvas = new TCanvas("wheel","ROOT Color Wheel",600,600);
+      fCanvas = new TCanvas("wheel","ROOT Color Wheel",10,10,400,400);
       fCanvas->Range(-10.5,-10.5,10.5,10.5);
       fCanvas->SetFillColor(TColor::GetColor(243,241,174));
       fCanvas->ToggleEventStatus();
-      //fCanvas->SetEditable(kFALSE);
       AppendPad(option);
    }
 }
