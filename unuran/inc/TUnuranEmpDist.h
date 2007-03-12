@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: TUnuranEmpDist.h,v 1.2 2007/03/08 09:48:02 moneta Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuranEmpDist.h,v 1.3 2007/03/08 16:05:52 moneta Exp $
 // Authors: L. Moneta, J. Leydold Wed Feb 28 2007
 
 /**********************************************************************
@@ -119,7 +119,7 @@ private:
    double fMax;                       // max values (used in the binned case)
    bool   fBinned;                    // flag for binned/unbinned data 
 
-   ClassDef(TUnuranEmpDist,1)         //Wrapper class for empirical distribution (One of multi-dim.)
+   ClassDef(TUnuranEmpDist,1)         //Wrapper class for empirical distribution 
 
 
 }; 

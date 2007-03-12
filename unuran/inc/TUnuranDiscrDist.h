@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: TUnuranDiscrDist.h,v 1.3 2007/02/05 10:24:44 moneta Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuranDiscrDist.h,v 1.1 2007/03/08 09:31:54 moneta Exp $
 // Authors: L. Moneta, J. Leydold Wed Feb 28 2007
 
 /**********************************************************************
@@ -179,7 +179,7 @@ private:
    bool  fHasMode;               //flag to control if distribution has a pre-computed mode
    bool  fHasSum;                //flag to control if distribution has a pre-computed sum of the probabilities
 
-   //ClassDef(TUnuranDiscrDist,1)  //Wrapper class for one dimensional continous distribution
+   ClassDef(TUnuranDiscrDist,1)  //Wrapper class for one dimensional discrete distribution
 
 
 }; 

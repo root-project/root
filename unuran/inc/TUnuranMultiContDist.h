@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: TUnuranMultiContDist.h,v 1.3 2007/02/05 10:24:44 moneta Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuranMultiContDist.h,v 1.1 2007/03/08 09:31:54 moneta Exp $
 // Authors: L. Moneta, J. Leydold Wed Feb 28 2007
 
 /**********************************************************************
@@ -26,7 +26,8 @@ class TF1;
 /////////////////////////////////////////////////////////////
 /** 
    TUnuranMultiContDist class 
-   Wrapper class for multi dimensional continous distributions
+   Wrapper class for multi dimensional continuous distributions. 
+   The class can be constructed from a multi-dimensional function. 
 */ 
 /////////////////////////////////////////////////////////////
 class TUnuranMultiContDist : public TUnuranBaseDist {
@@ -36,7 +37,8 @@ public:
 
    /** 
       Constructor from a TF1 object representing the Probability density funciton. 
-      The derivatives of the Pdf are estimated using numerical derivation
+      The derivatives of the Pdf are estimated, when required by the UNURAN algorithm, 
+      using numerical derivation
    */ 
    TUnuranMultiContDist (TF1 * func = 0, bool isLogPdf = false);  
 
@@ -149,7 +151,7 @@ private:
 
    bool fIsLogPdf;                 //flag to control if function pointer represent log of pdf
 
-   ClassDef(TUnuranMultiContDist,1)  //Wrapper class for multi dimensional continous distribution
+   ClassDef(TUnuranMultiContDist,1)  //Wrapper class for multi dimensional continuous distribution
 
 
 }; 
