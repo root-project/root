@@ -75,7 +75,7 @@ LD            = icpc
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
 FORCELINK     = no
 MACOSXTARGET := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR)
-ifeq ($(MACOSX_MINOR),5) 
+ifeq ($(MACOSX_MINOR),5)
 MACOSX_MINOR  = 4
 endif
 ifeq ($(MACOSX_MINOR),4)
@@ -93,18 +93,13 @@ CILIBS        = -lm $(EXTRA_LDFLAGS) -ldl
 # Fortran:
 F77           = ifort
 F77FLAGS      =
-ifneq ($(shell find $(FINK_DIR)/bin -name g77),)
-# check for libg2c and libfrtbegin
-ifneq ($(shell g77 -print-file-name=libg2c.so),libg2c.so)
-LIBG2C       := $(shell g77 -print-file-name=libg2c.so)
-else
-LIBG2C       := $(shell g77 -print-file-name=libg2c.a)
+F77LIBS       =
+ifneq ($(shell find $(FINK_DIR)/bin -name gfortran),)
+F77LIBS      := $(shell gfortran -print-file-name=libgfortran.$(SOEXT))
+F77LIBS      += $(shell gfortran -print-file-name=libgfortranbegin.a)
 endif
-LIBFRTBEGIN  := $(shell g77 -print-file-name=libfrtbegin.a)
-endif
-F77LIBS       = $(LIBFRTBEGIN) $(LIBG2C) \
-                -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
-                -lifcore -lirc -limf -lifport
+F77LIBS      += -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
+                -lifcore
 
 # Precompiled headers:
 PCHSUPPORTED := $(ENABLEPCH)

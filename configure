@@ -2285,7 +2285,7 @@ if test ! "x$enable_pythia6" = "xno" ; then
 	    if test "x$platform" = "xmacosx" ; then
 		check_symbol intel_cpu_indicator "$found_lib" "$found_dir"
 		if test $found_symbol -eq 1 ; then
-		    pythia6lib="$pythia6lib -L`$cwhich ifort | sed -e 's|bin/ifort|lib|'` -lifcore -lirc -limf -lifport"
+		    pythia6lib="$pythia6lib -L`$cwhich ifort | sed -e 's|bin/ifort|lib|'` -lifcore  -lirc -limf"
 		fi
             fi
 	fi
