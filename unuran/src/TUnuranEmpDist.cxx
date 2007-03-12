@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: TUnuranEmpDist.cxx,v 1.2 2007/02/05 10:24:44 moneta Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuranEmpDist.cxx,v 1.1 2007/03/08 09:31:54 moneta Exp $
 // Authors: L. Moneta, J. Leydold Wed Feb 28 2007 
 
 /**********************************************************************
@@ -21,13 +21,15 @@ TUnuranEmpDist::TUnuranEmpDist (const TH1 * h1, bool useBuffer) :
    fMin(0),
    fMax(0)
 {
+   //Constructor from a TH1 objects. 
+   //The buffer of the histo, if available, can be used for 
+   // the estimation of the parent distribution using smoothing
+
    fDim = h1->GetDimension();
 
    bool unbin = useBuffer &&  h1->GetBufferLength() > 0 ;
    fBinned = !unbin;
 
-   //Constructor from a TH1 objects 
-   // in the binned case only 1D supported so far
    if (fBinned ) { 
       int nbins = h1->GetNbinsX(); 
       fData.reserve(nbins);
