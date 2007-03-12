@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.30 2007/03/08 12:21:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.31 2007/03/08 17:10:34 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -27,35 +27,93 @@ Bool_t  TColor::fgInitDone = kFALSE;
 TArrayI TColor::fgPalette(0);
 
 //////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TColor                                                               //
-//                                                                      //
-// Color defined by RGB or HLS.                                         //
-// At initialization time, a table of colors is generated. This linked  //
-// list can be accessed from the ROOT object                            //
-// (see TROOT::GetListOfColors()). When a color is defined in the range //
-// of [1,50], two "companion" colors are also defined:                  //
-//    - the dark version (color_index + 100)                            //
-//    - the bright version (color_index + 150)                          //
-// The dark and bright color are used to give 3-D effects when drawing  //
-// various boxes (see TWbox, TPave, TPaveText, TPaveLabel,etc).         //
-//                                                                      //
-// This is the list of currently supported basic colors (here dark and  //
-// bright colors are not shown).                                        //
-//Begin_Html
-/*
-<img src="gif/colors.gif">
-*/
-//End_Html
-//
-// One can toggle between a grayscale preview and the regular           //
-// colored mode using SetGrayscale(). Note that in grayscale mode,      //
-// access via RGB will return grayscale values according to ITU         //
-// standards (and close to b&w printer grayscales), while access via    //
-// HLS returns de-saturated grayscales.                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/* Begin_Html
+<center><h2>TColor: Color Creation and Management</h2></center>
+ Color defined by RGB or HLS.                                         
+ At initialization time, a table of colors is generated. This linked  
+ list can be accessed from the TROOT object via the color index, eg
+ <pre>
+ TColor *color = gROOT->GetColor(kOrange); 
+ </pre>                         
+<p> Two sets of colors are initialized;
+ <ul>
+    <li>Colors with index 0 to 50 (old style palette)
+    <li>The Color Wheel (recommended) with color indices from 300 to 1000.
+ </ul>  
+<h4>Old Style Palette</h4>
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c","Fill Area colors",0,0,500,200);
+   c.DrawColorTable();
+   return c;
+}
+End_Macro
+Begin_Html
+   
+<h4>The ROOT Color Wheel</h4>
+The wheel contains the recommended 216 colors to be used in web applications.
+The colors in the Color Wheel are created by TColor::CreateColorWheel.
+<p>Using this color set for your text, background or graphics will give your
+application a consistent appearance across different platforms and browsers.
+<p>Colors are grouped by hue, the aspect most important in human perception 
+Touching color chips have the same hue, but with different brightness and vividness.
+<p>Colors of slightly different hues <b>clash</b>. If you intend to display
+colors of the same hue together, you should pick them from the same group.
+<p>Each color chip is identified by a mnemonic (eg kYellow) and a number.
+The keywords, kRed, kBlue, kYellow, kPink, etc are defined in the header file <b>Rtypes.h</b>
+that is included in all ROOT other header files. We strongly recommend to use these keywords
+in your code instead of hardcoded color numbers, eg:
+<pre>
+   myObject.SetFillColor(kRed);
+   myObject.SetFillColor(kYellow-10);
+   myLine.SetLineColor(kMagenta+2);
+</pre>
 
+End_Html
+Begin_Macro(source)
+{
+   TColorWheel *w = new TColorWheel();
+   w->Draw();
+   return w->GetCanvas();
+}
+End_Macro
+Begin_Html
+
+<h4>Bright and Dark colors</h4>
+ The dark and bright color are used to give 3-D effects when drawing  
+ various boxes (see TWbox, TPave, TPaveText, TPaveLabel,etc).         
+<ul>
+   <li>The Dark colors have an index = color_index+100
+   <li>The Bright colors have an index = color_index+150
+   <li>Pointers to the dark and bright colors can be retrieved via the TColor static functions:
+   <pre>
+      TColor *dark   = TColor::GetColorDark(color_index);
+      TColor *bright = TColor::GetColorBright(color_index);
+   </pre>
+</ul>
+
+ <h4> Gray scale view of of canvas with colors</h4>
+ One can toggle between a grayscale preview and the regular           
+ colored mode using TCanvas::SetGrayscale(). Note that in grayscale mode,      
+ access via RGB will return grayscale values according to ITU         
+ standards (and close to b&w printer grayscales), while access via    
+ HLS returns de-saturated grayscales. The table below show the ROOT Color Wheel
+in grayscale mode.                                
+End_Html
+Begin_Macro(source)
+{
+   TColorWheel *w = new TColorWheel();
+   w->Draw();
+   w->GetCanvas()->SetGrayscale();
+   w->GetCanvas()->Modified();
+   w->GetCanvas()->Update();
+   return w->GetCanvas();
+}
+End_Macro */
+
+   
+   
 //______________________________________________________________________________
 TColor::TColor(): TNamed()
 {
@@ -391,12 +449,12 @@ void TColor::CreateColorWheel()
                       , 51,255,153,    0,204,102,    0,102, 51,    0,153, 51,   51,204,102
                       ,102,255,153,    0,255,153,   51,255,102,    0,204, 51,    0,255, 51};
 
-  UChar_t azure[60]  ={153,204,255,  102,153,204,   51,102,153,    0, 51,153,   51,102,204
+   UChar_t azure[60] ={153,204,255,  102,153,204,   51,102,153,    0, 51,153,   51,102,204
                       ,102,153,255,    0,102,255,   51,102,255,    0, 51,204,    0, 51,255
                       , 51,153,255,    0,102,204,    0, 51,102,    0,102,153,   51,153,204
                       ,102,204,255,    0,153,255,   51,204,255,    0,153,204,    0,204,255};
       
-  UChar_t violet[60] ={204,153,255,  153,102,204,  102, 51,153,  102,  0,153,  153, 51,204
+   UChar_t violet[60]={204,153,255,  153,102,204,  102, 51,153,  102,  0,153,  153, 51,204
                       ,204,102,255,  153,  0,255,  204, 51,255,  153,  0,204,  204,  0,255
                       ,153, 51,255,  102,  0,204,   51,  0,102,   51,  0,153,  102, 51,204
                       ,153,102,255,  102,  0,255,  102, 51,255,   51,  0,204,   51,  0,255};
