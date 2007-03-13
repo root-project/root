@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.125 2006/11/16 17:17:38 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.126 2007/02/12 23:41:22 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -204,6 +204,7 @@
 // 14 -> 15: support for SSH authentication via SSH tunnel
 // 15 -> 16: cope with the bug fix in TUrl::GetFile
 // 16 -> 17: Addition of "Gets" (multiple buffers in a single request)
+// 17 -> 18: fix problems with '//' in admin paths; partial logging in castor mode
 
 #ifdef R__HAVE_CONFIG
 #include "RConfigure.h"
@@ -345,7 +346,7 @@ enum EFileMode{ kBinary, kAscii };
 static std::string gRootdTab;     // keeps track of open files
 static std::string gRpdAuthTab;   // keeps track of authentication info
 static EService gService         = kROOTD;
-static int gProtocol             = 17;      // increase when protocol changes
+static int gProtocol             = 18;      // increase when protocol changes
 static int gClientProtocol       = -1;      // Determined by RpdInitSession
 static int gAnon                 = 0;       // anonymous user flag
 static double gBytesRead         = 0;
@@ -2272,6 +2273,7 @@ int main(int argc, char **argv)
    int port1          = 0;
    int port2          = 0;
    int reuseallow     = 0x1F;
+   int login          = 2; // form rootd we fully login users, by default
    int foregroundflag = 0;
    std::string tmpdir = "";
    std::string confdir = "";
@@ -2392,6 +2394,8 @@ int main(int argc, char **argv)
             case 'F':
                gCastorFlag = 1;
                gInetdFlag  = 1;
+               reuseallow = 0x0; // No auth reuse for castor
+               login = 1; // No full logins for castor (user $HOMEs may not exist on servers)
                if (--argc <= 0) {
                   if (!gInetdFlag)
                      fprintf(stderr,"-F requires a file path name for the"
@@ -2605,7 +2609,7 @@ int main(int argc, char **argv)
       options &= ~kDMN_SYSLOG;
    RpdInit(gService, rootdparentid, gProtocol, options,
            reuseallow, sshdport,
-           tmpdir.c_str(),altSRPpass.c_str());
+           tmpdir.c_str(),altSRPpass.c_str(),login);
 
    // Generate Local RSA keys for the session
    if (RpdGenRSAKeys(0)) {
