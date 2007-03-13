@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.207 2007/02/22 09:42:03 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.208 2007/02/28 18:10:40 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1426,16 +1426,13 @@ Long_t TROOT::ProcessLine(const char *line, Int_t *error)
    // CINT interpreted thread has finished executing the line.
    // Returns the result of the command, cast to a Long_t.
 
-   if (!fApplication) {
-      // circular Form() buffer will be re-used in CreateApplication() (too
-      // many calls to Form()), so we need to save "line"
-      char *sline = StrDup(line);
-      TApplication::CreateApplication();
-      line = Form("%s", sline);
-      delete [] sline;
-   }
+   TString sline = line;
+   sline = sline.Strip(TString::kBoth);
 
-   return fApplication->ProcessLine(line, kFALSE, error);
+   if (!fApplication)
+      TApplication::CreateApplication();
+
+   return fApplication->ProcessLine(sline, kFALSE, error);
 }
 
 //______________________________________________________________________________
@@ -1449,16 +1446,13 @@ Long_t TROOT::ProcessLineSync(const char *line, Int_t *error)
    // The possible error codes are defined by TInterpreter::EErrorCode.
    // Returns the result of the command, cast to a Long_t.
 
-   if (!fApplication) {
-      // circular Form() buffer will be re-used in CreateApplication() (too
-      // many calls to Form()), so we need to save "line"
-      char *sline = StrDup(line);
-      TApplication::CreateApplication();
-      line = Form("%s", sline);
-      delete [] sline;
-   }
+   TString sline = line;
+   sline = sline.Strip(TString::kBoth);
 
-   return fApplication->ProcessLine(line, kTRUE, error);
+   if (!fApplication)
+      TApplication::CreateApplication();
+
+   return fApplication->ProcessLine(sline, kTRUE, error);
 }
 
 //______________________________________________________________________________
@@ -1469,19 +1463,16 @@ Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
    // In all other cases use TROOT::ProcessLine().
    // The possible error codes are defined by TInterpreter::EErrorCode.
 
-   if (!fApplication) {
-      // circular Form() buffer will be re-used in CreateApplication() (too
-      // many calls to Form()), so we need to save "line"
-      char *sline = StrDup(line);
+   TString sline = line;
+   sline = sline.Strip(TString::kBoth);
+
+   if (!fApplication)
       TApplication::CreateApplication();
-      line = Form("%s", sline);
-      delete [] sline;
-   }
 
    Long_t result = 0;
 
    if (fInterpreter) {
-      TInterpreter::EErrorCode *code = ( TInterpreter::EErrorCode*)error;
+      TInterpreter::EErrorCode *code = (TInterpreter::EErrorCode*)error;
       result = gInterpreter->Calc(line, code);
    }
 
