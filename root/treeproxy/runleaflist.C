@@ -17,8 +17,8 @@ void runleaflist(int kase = 0) {
       gSystem->Unload("generatedSel_h");
       gSystem->Unlink("generatedSel_h.so");
       gSystem->Unlink("generatedSel_h.dll");
-      TTree *ntuple = new TNtuple("ntuple","Demo ntuple","px:py:pz:random:i");
-      ntuple->Fill();
+      TNtuple *ntuple = new TNtuple("ntuple","Demo ntuple","px:py:pz:random:i");
+      ntuple->Fill(42);
       ntuple->Draw("hsimpleProxy.C+");
    }
 }
