@@ -83,8 +83,10 @@ void myexec()
   int py = gPad->GetEventY();
 
   // some magic to get the coordinates...
-  float x = gPad->PadtoX(gPad->AbsPixeltoX(px));
-  float y = gPad->PadtoY(gPad->AbsPixeltoY(py));
+  double xd = gPad->AbsPixeltoX(px);
+  double yd = gPad->AbsPixeltoY(py);
+  float x = gPad->PadtoX(xd);
+  float y = gPad->PadtoY(yd);
 
   static float last_x;
   static float last_y;
