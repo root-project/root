@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.140 2007/03/09 16:33:00 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.141 2007/03/12 10:24:57 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -1100,6 +1100,7 @@ Int_t TCint::LoadLibraryMap()
 
          // get the first lib from the list of lib and dependent libs
          TString libs = rec->GetValue();
+         if (libs == "") continue;
          TString delim(" ");
          TObjArray *tokens = libs.Tokenize(delim);
          char *lib = (char *)((TObjString*)tokens->At(0))->GetName();
