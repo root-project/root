@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.262 2007/03/08 17:12:05 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.263 2007/03/13 16:06:11 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3355,6 +3355,10 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
    // Values needed to compute the hatches in TRUE normalized space (NDC)
    Int_t iw = gPad->GetWw();
    Int_t ih = gPad->GetWh();
+   Double_t x1p,y1p,x2p,y2p;
+   gPad->GetPadPar(x1p,y1p,x2p,y2p);
+   iw  = (Int_t)(iw*x2p)-(Int_t)(iw*x1p);
+   ih  = (Int_t)(ih*y2p)-(Int_t)(ih*y1p);
    Double_t wndc  = TMath::Min(1.,(Double_t)iw/(Double_t)ih);
    Double_t hndc  = TMath::Min(1.,(Double_t)ih/(Double_t)iw);
 
