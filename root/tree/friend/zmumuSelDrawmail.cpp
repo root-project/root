@@ -47,13 +47,13 @@ void zmumuSelDraw(TTree* t0){
    TBranch *b_nneu=zChain->GetBranch("nneu");
    TBranch *b_neumomcm=zChain->GetBranch("neumomcm");
    
-   Int_t nentries = Int_t(zChain->GetEntriesFast());
+   Long64_t nentries = zChain->GetEntriesFast();
    
-   for (Int_t jentry=0; jentry<nentries;jentry++) {
+   for (Long64_t jentry=0; jentry<nentries;jentry++) {
 
       if(!zChain) break; 
 
-      Int_t centry = zChain->LoadTree(jentry);
+      Long64_t centry = zChain->LoadTree(jentry);
 
       if(centry<0 || (zChain->IsA() != TChain::Class())) break;
 
