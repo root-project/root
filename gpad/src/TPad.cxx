@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.261 2007/03/02 10:24:14 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.262 2007/03/08 17:12:05 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2753,7 +2753,7 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
       light = TColor::GetColor(r, g, b);
    }
 */
-   
+
    // Compute real left bottom & top right of the box in pixels
    px1 = XtoPixel(fX1);   py1 = YtoPixel(fY1);
    px2 = XtoPixel(fX2);   py2 = YtoPixel(fY2);
@@ -3331,7 +3331,7 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
    // coordinates in the surface defined by n,xx,yy.
 
    Int_t i, i1, i2, nbi, m, inv;
-   Double_t ratio1, ratio2, ymin, ymax, yrot, ycur;
+   Double_t ratiox, ratioy, ymin, ymax, yrot, ycur;
    const Double_t angr  = TMath::Pi()*(180-angle)/180.;
    const Double_t epsil = 0.0001;
    const Int_t maxnbi = 100;
@@ -3342,8 +3342,8 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
    Double_t rwxmax = gPad->GetX2();
    Double_t rwymin = gPad->GetY1();
    Double_t rwymax = gPad->GetY2();
-   ratio1 = 1/(rwxmax-rwxmin);
-   ratio2 = 1/(rwymax-rwymin);
+   ratiox = 1/(rwxmax-rwxmin);
+   ratioy = 1/(rwymax-rwymin);
 
    Double_t sina = TMath::Sin(angr), sinb;
    Double_t cosa = TMath::Cos(angr), cosb;
@@ -3352,12 +3352,18 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
    sinb = -sina;
    cosb = cosa;
 
+   // Values needed to compute the hatches in TRUE normalized space (NDC)
+   Int_t iw = gPad->GetWw();
+   Int_t ih = gPad->GetWh();
+   Double_t wndc  = TMath::Min(1.,(Double_t)iw/(Double_t)ih);
+   Double_t hndc  = TMath::Min(1.,(Double_t)ih/(Double_t)iw);
+
    // Search ymin and ymax
    ymin = 1.;
    ymax = 0.;
    for (i=1; i<=nn; i++) {
-      x    = ratio1*(xx[i-1]-rwxmin);
-      y    = ratio2*(yy[i-1]-rwymin);
+      x    = wndc*ratiox*(xx[i-1]-rwxmin);
+      y    = hndc*ratioy*(yy[i-1]-rwymin);
       yrot = sina*x+cosa*y;
       if (yrot > ymax) ymax = yrot;
       if (yrot < ymin) ymin = yrot;
@@ -3370,10 +3376,10 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
          i2 = i;
          i1 = i-1;
          if (i == nn+1) i2=1;
-         x1  = ratio1*(xx[i1-1]-rwxmin);
-         y1  = ratio2*(yy[i1-1]-rwymin);
-         x2  = ratio1*(xx[i2-1]-rwxmin);
-         y2  = ratio2*(yy[i2-1]-rwymin);
+         x1  = wndc*ratiox*(xx[i1-1]-rwxmin);
+         y1  = hndc*ratioy*(yy[i1-1]-rwymin);
+         x2  = wndc*ratiox*(xx[i2-1]-rwxmin);
+         y2  = hndc*ratioy*(yy[i2-1]-rwymin);
          xt1 = cosa*x1-sina*y1;
          yt1 = sina*x1+cosa*y1;
          xt2 = cosa*x2-sina*y2;
@@ -3451,11 +3457,17 @@ L50:
       if (nbi%2 != 0) continue;
 
       for (i=1; i<=nbi; i=i+2) {
+         // Rotate back the hatches
          xlh[0] = cosb*xli[i-1]-sinb*ycur;
          ylh[0] = sinb*xli[i-1]+cosb*ycur;
-         xlh[1] = cosb*xli[i]-sinb*ycur;
-         ylh[1] = sinb*xli[i]+cosb*ycur;
-         gPad->PaintLineNDC(xlh[0], ylh[0], xlh[1], ylh[1]);
+         xlh[1] = cosb*xli[i]  -sinb*ycur;
+         ylh[1] = sinb*xli[i]  +cosb*ycur;
+         // Convert hatches' positions from true NDC to WC
+         xlh[0] = (xlh[0]/wndc)*(rwxmax-rwxmin)+rwxmin;
+         ylh[0] = (ylh[0]/hndc)*(rwymax-rwymin)+rwymin;
+         xlh[1] = (xlh[1]/wndc)*(rwxmax-rwxmin)+rwxmin;
+         ylh[1] = (ylh[1]/hndc)*(rwymax-rwymin)+rwymin;
+         gPad->PaintLine(xlh[0], ylh[0], xlh[1], ylh[1]);
       }
    }
 }
