@@ -120,11 +120,11 @@ ifneq ($(subst build/unix/makelib.sh,,$(MAKELIB)),$(MAKELIB))
   $(CINTDLLS): MAKELIB := $(subst -x,,$(MAKELIB))
 endif
 
-$(CINTDIRSTL)/%.dll: $(CINTDIRDLLSTL)/G__cpp_%.o
+$(CINTDIRSTL)/%.dll: $(CINTDIRDLLSTL)/G__cpp_%.o $(ORDER_) $(MAINLIBS)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $^
 	$(CINTDLLSOEXTCMD)
 
-$(CINTDIRDLLS)/%.dll: $(CINTDIRL)/G__c_%.o
+$(CINTDIRDLLS)/%.dll: $(CINTDIRL)/G__c_%.o $(ORDER_) $(MAINLIBS)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $^
 	$(CINTDLLSOEXTCMD)
 
