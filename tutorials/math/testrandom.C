@@ -31,7 +31,7 @@
 //
 //Authors: Rene Brun, Lorenzo Moneta
 
-#ifndef __CINT__
+
 #include <TRandom1.h>
 #include <TRandom2.h>
 #include <TRandom3.h>
@@ -40,10 +40,6 @@
 #include <TUnuran.h>
 #include <TUnuranContDist.h>
 #include <TFile.h>
-
-   void testAll();
-   int  testRandom3();
-#endif
 
 void testrandom()
 {

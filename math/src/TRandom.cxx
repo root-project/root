@@ -1,4 +1,4 @@
-// @(#)root/math:$Name:  $:$Id: TRandom.cxx,v 1.38 2007/01/29 10:06:49 brun Exp $
+// @(#)root/math:$Name:  $:$Id: TRandom.cxx,v 1.39 2007/02/09 10:15:39 rdm Exp $
 // Author: Rene Brun, Lorenzo Moneta   15/12/95
 
 /*************************************************************************
@@ -50,35 +50,51 @@
 // =====================================================================
 // contained in TF1, TF2 or TF3 objects.
 // For example, to get a random number distributed following abs(sin(x)/x)*sqrt(x)
-// you can do:
+// you can do :
 //   TF1 *f1 = new TF1("f1","abs(sin(x)/x)*sqrt(x)",0,10);
 //   double r = f1->GetRandom();
-// The technique of using a TF1,2 or 3 function is very powerful.
-// It is also more precise than using the basic functions (except Rndm).
-// With a TF1 function, for example, the real integral of the function
-// is correctly calculated in the specified range of the function.
-// Getting a number from a TF1 function is also very fast.
-// The following table shows some timings (in microsecons/call)
-// for basic functions and TF1 functions.
-// The left column is with the compiler, the right column with CINT.
-// Numbers have been obtained on a Pentium 233Mhz running Linux.
+// or you can use the UNURAN package. You need in this case to initialize UNURAN 
+// to the function you would like to generate. 
+//   TUnuran u; 
+//   u.Init(TUnuranDistrCont(f1)); 
+//   double r = u.Sample();
 //
-//                          g++        CINT
-//   Rndm..............    0.330       4.15
-//   Gaus..............    2.220       6.77
-//   Landau............   21.590      46.82
-//   Binomial(5,0.5)...    0.890       5.34
-//   Binomial(15,0.5)..    0.920       5.36
-//   Poisson(3)........    2.170       5.93
-//   Poisson(10).......    4.160       7.95
-//   Poisson(70).......   21.510      25.27
-//   Poisson(100)......    2.910       6.72
-//   GausTF1...........    2.070       4.73
-//   LandauTF1.........    2.100       4.73
+// The techniques of using directly a TF1,2 or 3 function is powerful and 
+// can be used to generate numbers in the defined range of the function. 
+// Getting a number from a TF1,2,3 function is also quite fast.
+// UNURAN is a  powerful and flexible tool which containes various methods for 
+// generate random numbers for continuous distributions of one and multi-dimension. 
+// It requires some set-up (initialization) phase and can be very fast when the distribution 
+// parameters are not changed for every call.   
 //
-//  Note that the time to generate a number from an arbitrary TF1 function
-//  is independent of the complexity of the function.
-//  For Landau distribution, it is recommended to use the TF1 technique.
+// The following table shows some timings (in nanosecond/call)
+// for basic functions,  TF1 functions and using UNURAN obtained running 
+// the tutorial math/testrandom.C
+// Numbers have been obtained on a Intel 2GHz Dual Core running MacOSX and compiled with gcc 4.0.1
+//
+//  Distribution            nanoseconds/call
+//
+//                      TRandom  TRandom1 TRandom2 TRandom3
+//
+//  Rndm..............   24.000  137.000   29.000   30.000
+//  RndmArray.........   17.000  128.000   22.000   22.000
+//  Gaus..............   86.000  242.000   92.000   96.000
+//  Rannor............  141.000  258.000  148.000  147.000
+//  Landau............   68.000  173.000   73.000   74.000
+//  Binomial(5,0.5)...  152.000  695.000  171.000  179.000
+//  Binomial(15,0.5)..  414.000 2060.000  480.000  497.000
+//  Poisson(3)........  212.000  653.000  231.000  234.000
+//  Poisson(10).......  402.000 1618.000  456.000  460.000
+//  Poisson(70)....... 1225.000 1651.000 1253.000 1250.000
+//  Poisson(100)...... 1233.000 1664.000 1260.000 1262.000
+//  GausTF1...........  210.000  326.000  218.000  216.000
+//  LandauTF1.........  209.000  325.000  217.000  213.000
+//  GausUNURAN........   90.000  202.000   97.000   96.000
+//  PoissonUNURAN(10).  160.000  361.000  170.000  170.000
+//  PoissonUNURAN(100)  139.000  347.000  148.000  149.000
+//
+//  Note that the time to generate a number from an arbitrary TF1 function 
+//  using TF1::GetRandom or using TUnuran is  independent of the complexity of the function.
 //
 //  TH1::FillRandom(TH1 *) or TH1::FillRandom(const char *tf1name)
 //  ==============================================================
@@ -104,90 +120,6 @@
 //    -as part of another object
 //    -or with its own key (example gRandom->Write("Random");
 //
-//  The small program below has been used to get the values in the table above.
-//   #ifndef __CINT__
-//      #include "TROOT.h"
-//   #include "TF1.h"
-//   #include "TRandom.h"
-//   #include "TStopwatch.h"
-//   void rand();
-//
-//   //______________________________________________________________________________
-//   int main()
-//   {
-//     TROOT simple("simple","Test of random numbers");
-//
-//     rand();
-//   }
-//   #endif
-//   void rand() {
-//     int i, N = 1000000;
-//     double cpn = 1000000./N;
-//     double x;
-//     TStopwatch sw;
-//     sw.Start();
-//     for (i=0;i<N;i++) {
-//        x = gRandom->Rndm(i);
-//     }
-//     printf("Rndm.............. %8.3f microseconds/call\n",sw.CpuTime()*cpn);
-//     sw.Start();
-//     for (i=0;i<N;i++) {
-//        x = gRandom->Gaus(0,1);
-//     }
-//     printf("Gaus.............. %8.3f\n",sw.CpuTime()*cpn);
-//     sw.Start();
-//     for (i=0;i<N;i++) {
-//        x = gRandom->Landau(0,1);
-//     }
-//     printf("Landau............ %8.3f\n",sw.CpuTime()*cpn);
-//     sw.Start();
-//     for (i=0;i<N;i++) {
-//        x = gRandom->Binomial(5,0.5);
-//     }
-//     printf("Binomial(5,0.5)... %8.3f\n",sw.CpuTime()*cpn);
-//     sw.Start();
-//     for (i=0;i<N;i++) {
-//        x = gRandom->Binomial(15,0.5);
-//     }
-//     printf("Binomial(15,0.5).. %8.3f\n",sw.CpuTime()*cpn);
-//     sw.Start();
-//     for (i=0;i<N;i++) {
-//        x = gRandom->Poisson(3);
-//     }
-//     printf("Poisson(3)........ %8.3f\n",sw.CpuTime()*cpn);
-//     sw.Start();
-//     for (i=0;i<N;i++) {
-//        x = gRandom->Poisson(10);
-//     }
-//     printf("Poisson(10)....... %8.3f\n",sw.CpuTime()*cpn);
-//     sw.Start();
-//     for (i=0;i<N;i++) {
-//        x = gRandom->Poisson(70);
-//     }
-//     printf("Poisson(70)....... %8.3f\n",sw.CpuTime()*cpn);
-//     sw.Start();
-//     for (i=0;i<N;i++) {
-//        x = gRandom->Poisson(100);
-//     }
-//     printf("Poisson(100)...... %8.3f\n",sw.CpuTime()*cpn);
-//
-//     TF1 *f1 = new TF1("f1","gaus",-4,4);
-//     f1->SetParameters(1,0,1);
-//     sw.Start();
-//     for (i=0;i<N;i++) {
-//        x = f1->GetRandom();
-//     }
-//     printf("GausTF1........... %8.3f\n",sw.CpuTime()*cpn);
-//
-//     TF1 *f2 = new TF1("f2","landau",-5,15);
-//     f2->SetParameters(1,0,1);
-//     sw.Start();
-//     for (i=0;i<N;i++) {
-//        x = f2->GetRandom();
-//     }
-//     printf("LandauTF1......... %8.3f\n",sw.CpuTime()*cpn);
-//
-//   }
 //////////////////////////////////////////////////////////////////////////
 
 #include "TMath.h"
@@ -280,16 +212,110 @@ Double_t TRandom::Exp(Double_t tau)
 //______________________________________________________________________________
 Double_t TRandom::Gaus(Double_t mean, Double_t sigma)
 {
-//      Return a number distributed following a gaussian with mean and sigma
+//               
+//  samples a random number from the standard Normal (Gaussian) Distribution 
+//  with the given mean and sigma.                                                 
+//  Uses the Acceptance-complement ratio from W. Hoermann and G. Derflinger 
+//  This is one of the fastest existing method for generating normal random variables. 
+//  It is a factor 2/3 faster than the polar (Box-Muller) method used in the previous 
+//  version of TRandom::Gaus. The speed is comparable to the Ziggurat method (from Marsaglia)
+//  implemented for example in GSL and available in the MathMore library. 
+//                                                                           
+//                                                                             
+//  REFERENCE:  - W. Hoermann and G. Derflinger (1990):                       
+//               The ACR Method for generating normal random variables,       
+//               OR Spektrum 12 (1990), 181-185.                             
+//                                                                           
+//  Implementation taken from 
+//   UNURAN (c) 2000  W. Hoermann & J. Leydold, Institut f. Statistik, WU Wien 
+///////////////////////////////////////////////////////////////////////////////
 
-   Double_t x, y, z, result;
 
-   y = Rndm();
-   z = Rndm();
-   x = z * 6.28318530717958623;
-   result = mean + sigma*TMath::Sin(x)*TMath::Sqrt(-2*TMath::Log(y));
-   return result;
-}
+
+   const Double_t kC1 = 1.448242853;
+   const Double_t kC2 = 3.307147487;
+   const Double_t kC3 = 1.46754004;
+   const Double_t kD1 = 1.036467755;
+   const Double_t kD2 = 5.295844968;
+   const Double_t kD3 = 3.631288474;
+   const Double_t kHm = 0.483941449;
+   const Double_t kZm = 0.107981933;
+   const Double_t kHp = 4.132731354;
+   const Double_t kZp = 18.52161694;
+   const Double_t kPhln = 0.4515827053;
+   const Double_t kHm1 = 0.516058551;
+   const Double_t kHp1 = 3.132731354;
+   const Double_t kHzm = 0.375959516;
+   const Double_t kHzmp = 0.591923442;
+   /*zhm 0.967882898*/
+
+   const Double_t kAs = 0.8853395638;
+   const Double_t kBs = 0.2452635696;
+   const Double_t kCs = 0.2770276848;
+   const Double_t kB  = 0.5029324303;
+   const Double_t kX0 = 0.4571828819;
+   const Double_t kYm = 0.187308492 ;
+   const Double_t kS  = 0.7270572718 ;
+   const Double_t kT  = 0.03895759111;
+
+   Double_t result;
+   Double_t rn,x,y,z;
+
+
+   do {
+      y = Rndm();
+
+      if (y>kHm1) {
+         result = kHp*y-kHp1; break; }
+  
+      else if (y<kZm) {  
+         rn = kZp*y-1;
+         result = (rn>0) ? (1+rn) : (-1+rn);
+         break;
+      } 
+
+      else if (y<kHm) {  
+         rn = Rndm();
+         rn = rn-1+rn;
+         z = (rn>0) ? 2-rn : -2-rn;
+         if ((kC1-y)*(kC3+TMath::Abs(z))<kC2) {
+            result = z; break; }
+         else {  
+            x = rn*rn;
+            if ((y+kD1)*(kD3+x)<kD2) {
+               result = rn; break; }
+            else if (kHzmp-y<exp(-(z*z+kPhln)/2)) {
+               result = z; break; }
+            else if (y+kHzm<exp(-(x+kPhln)/2)) {
+               result = rn; break; }
+         }
+      }
+
+      while (1) {
+         x = Rndm();
+         y = kYm * Rndm();
+         z = kX0 - kS*x - y;
+         if (z>0) 
+            rn = 2+y/x;
+         else {
+            x = 1-x;
+            y = kYm-y;
+            rn = -(2+y/x);
+         }
+         if ((y-kAs+x)*(kCs+x)+kBs<0) {
+            result = rn; break; }
+         else if (y<x+kT)
+            if (rn*rn<4*(kB-log(x))) {
+               result = rn; break; }
+      }
+   } while(0);
+
+
+   return mean + sigma * result;
+
+} 
+
+
 
 //______________________________________________________________________________
 UInt_t TRandom::Integer(UInt_t imax)
