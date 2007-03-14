@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.158 2007/03/14 07:24:11 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.159 2007/03/14 08:30:04 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -54,6 +54,8 @@
 #include "TEventList.h"
 #include "TEntryList.h"
 #include "TFileStager.h"
+
+const Long64_t theBigNumber = Long64_t(1234567890)<<28;
 
 ClassImp(TChain)
 
@@ -186,8 +188,8 @@ Int_t TChain::Add(TChain* chain)
    TChainElement* element = 0;
    while ((element = (TChainElement*) next())) {
       Long64_t nentries = element->GetEntries();
-      if (fTreeOffset[fNtrees] == kBigNumber) {
-         fTreeOffset[fNtrees+1] = kBigNumber;
+      if (fTreeOffset[fNtrees] == theBigNumber) {
+         fTreeOffset[fNtrees+1] = theBigNumber;
       } else {
          fTreeOffset[fNtrees+1] = fTreeOffset[fNtrees] + nentries;
       }
@@ -401,11 +403,11 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
    }
 
    if (nentries > 0) {
-      if (nentries < kBigNumber) {
+      if (nentries != kBigNumber) {
          fTreeOffset[fNtrees+1] = fTreeOffset[fNtrees] + nentries;
          fEntries += nentries;
       } else {
-         fTreeOffset[fNtrees+1] = kBigNumber;
+         fTreeOffset[fNtrees+1] = theBigNumber;
          fEntries = nentries;
       }
       fNtrees++;
@@ -778,7 +780,7 @@ Long64_t TChain::GetEntries() const
                                     " run TChain::SetProof(kTRUE, kTRUE) first");
       return fProofChain->GetEntries();
    }
-   if (fEntries >= kBigNumber) {
+   if (fEntries >= theBigNumber) {
       const_cast<TChain*>(this)->LoadTree(fEntries-1);
    }
    return fEntries;
@@ -821,9 +823,9 @@ Long64_t TChain::GetEntryNumber(Long64_t entry) const
       //same const_cast as in the GetEntries() function
       if (localentry<0) return -1;
       if (treenum != fTreeNumber){
-         if (fTreeOffset[treenum]==kBigNumber){
+         if (fTreeOffset[treenum]==theBigNumber){
             for (Int_t i=0; i<=treenum; i++){
-               if (fTreeOffset[i]==kBigNumber)
+               if (fTreeOffset[i]==theBigNumber)
                   (const_cast<TChain*>(this))->LoadTree(fTreeOffset[i-1]);
             }
          }
