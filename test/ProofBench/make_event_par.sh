@@ -21,21 +21,30 @@ mkdir $EDIR
 
 
 SRC=$ROOTSYS/test
-cp $SRC/Event.cxx $SRC/Event.h $SRC/EventLinkDef.h $SRC/Makefile \
+cp $SRC/Event.cxx $SRC/Event.h $SRC/EventLinkDef.h \
    $SRC/Makefile.arch $EDIR
+cp Makefile_event $EDIR/Makefile
 mkdir $EDIR/PROOF-INF
 cd $EDIR/PROOF-INF
 
 cat > BUILD.sh <<EOF
 #! /bin/sh
+# Build libEvent library.
 
-make libEvent.so
+if [ "$1" = "clean" ]; then
+   make distclean
+   exit 0
+fi
+
+make
 EOF
 
 cat > SETUP.C <<EOF
-void SETUP()
+int SETUP()
 {
-   gSystem->Load("libEvent");
+   if (gSystem->Load("libEvent") == -1)
+      return -1;
+   return 0;
 }
 EOF
 
