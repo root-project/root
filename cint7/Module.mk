@@ -307,8 +307,7 @@ clean-cint7 :
 clean :: clean-cint7
 
 distclean-cint7 : clean-cint7
-	@rm -rf $(CINT7ALLDEP) $(CINT7LIB) $(IOSENUM7) $(IOSENUM7A) \
-	  $(CINT7EXEDEP) \
+	@rm -rf $(CINT7ALLDEP) $(CINT7LIB) $(IOSENUM7) $(CINT7EXEDEP) \
           $(CINT7) $(CINT7TMP) $(MAKECINT7) $(CINT7DIRM)/*.exp \
           $(CINT7DIRM)/*.lib $(CINT7DIRS)/v6_loadfile_tmp.cxx \
 	  $(CINT7DIRS)/v6_pragma_tmp.cxx
