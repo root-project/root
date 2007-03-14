@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.156 2007/02/26 15:01:24 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.157 2007/03/08 12:09:09 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -56,6 +56,8 @@
 #include "TFileStager.h"
 
 ClassImp(TChain)
+
+Long64_t TChain::kBigNumber = (((Long64_t)1)<<63)-1;
 
 //______________________________________________________________________________
 TChain::TChain()
