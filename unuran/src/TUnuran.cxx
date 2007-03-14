@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: TUnuran.cxx,v 1.1 2006/11/15 17:40:36 brun Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuran.cxx,v 1.2 2007/03/08 09:31:54 moneta Exp $
 // Authors: L. Moneta, J. Leydold Tue Sep 26 16:25:09 2006
 
 /**********************************************************************
@@ -143,7 +143,8 @@ bool TUnuran::Init(const TUnuranEmpDist & distr, const std::string & method ) {
    fDist = std::auto_ptr< TUnuranBaseDist>(distNew);
    
    fMethod = method; 
-   if (distr.IsBinned()) fMethod = "method=hist";
+   if (distr.IsBinned()) fMethod = "hist";
+   else if (distr.NDim() > 1) fMethod = "vempk";
    if (! SetEmpiricalDistribution(*distNew) ) return false;
    if (! SetMethodAndInit() ) return false;
    if (! SetRandomGenerator() ) return false; 
@@ -264,7 +265,11 @@ bool TUnuran::SetEmpiricalDistribution(const TUnuranEmpDist & dist) {
 
    // internal method to set in unuran the function pointer for am empiral distribution (from histogram)
    if (fUdistr != 0)  unur_distr_free(fUdistr);
-   fUdistr = unur_distr_cemp_new(); 
+   if (dist.NDim() == 1) 
+      fUdistr = unur_distr_cemp_new(); 
+   else 
+      fUdistr = unur_distr_cvemp_new(dist.NDim() ); 
+
    if (fUdistr == 0) return false; 
    unsigned int ret = 0; 
 
@@ -284,9 +289,15 @@ bool TUnuran::SetEmpiricalDistribution(const TUnuranEmpDist & dist) {
    else { 
       const double * pv = &dist.Data().front();
       int n = dist.Data().size();
-      ret |= unur_distr_cemp_set_data(fUdistr, pv, n); 
+      if (dist.NDim() == 1)   
+         ret |= unur_distr_cemp_set_data(fUdistr, pv, n); 
+      else  
+         ret |= unur_distr_cvemp_set_data(fUdistr, pv, n); 
    }
-   if (ret != 0) return false; 
+   if (ret != 0) { 
+      Error("SetEmpiricalDistribution","invalid distribution object");
+      return false; 
+   }
    return true; 
 }
 
@@ -414,6 +425,19 @@ bool TUnuran::InitPoisson(double mu, std::string method) {
    double p[1];
    p[0] = mu; 
    fUdistr = unur_distr_poisson(p,1);
+   fMethod = method;
+   if (fUdistr == 0) return false; 
+   if (! SetMethodAndInit() ) return false;
+   if (! SetRandomGenerator() ) return false; 
+   return true; 
+}
+
+bool TUnuran::InitBinomial(unsigned int ntot, double prob, std::string method) { 
+
+   double par[2];
+   par[0] = ntot; 
+   par[1] = prob; 
+   fUdistr = unur_distr_binomial(par,2);
    fMethod = method;
    if (fUdistr == 0) return false; 
    if (! SetMethodAndInit() ) return false;

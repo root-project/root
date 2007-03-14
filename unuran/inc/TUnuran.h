@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: TUnuran.h,v 1.1 2006/11/15 17:40:36 brun Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuran.h,v 1.2 2007/03/08 09:31:54 moneta Exp $
 // Author: L. Moneta Tue Sep 26 16:25:09 2006
 
 /**********************************************************************
@@ -93,7 +93,7 @@ public:
       <A href="http://statmath.wu-wien.ac.at/unuran/doc/unuran.html#Methods_005ffor_005fCONT">UnuRan doc</A>. 
       A re-initialization is needed whenever distribution parameters have been changed.      
    */ 
-   bool Init(const TUnuranContDist & distr, const std::string & method = "method=auto"); 
+   bool Init(const TUnuranContDist & distr, const std::string & method = "auto"); 
 
    /** 
       Initialize method for continuous multi-dimensional distribution. 
@@ -103,7 +103,7 @@ public:
       A re-initialization is needed whenever distribution parameters have been changed.      
       
    */ 
-   bool Init(const TUnuranMultiContDist & distr, const std::string & method = "method=hitro");
+   bool Init(const TUnuranMultiContDist & distr, const std::string & method = "hitro");
 
 
    /** 
@@ -114,7 +114,7 @@ public:
       A re-initialization is needed whenever distribution parameters have been changed.      
       
    */ 
-   bool Init(const TUnuranDiscrDist & distr, const std::string & method = "method=auto"); 
+   bool Init(const TUnuranDiscrDist & distr, const std::string & method = "auto"); 
 
 
    /** 
@@ -126,10 +126,22 @@ public:
       A re-initialization is needed whenever distribution parameters have been changed.      
       
    */ 
-   bool Init(const TUnuranEmpDist & distr, const std::string & method = "method=empk"); 
+   bool Init(const TUnuranEmpDist & distr, const std::string & method = "empk"); 
 
 
+   /** 
+      Initialize method for the Poisson distribution 
+      Used to generate poisson numbers for a constant parameter mu of the Poisson distribution. 
+      Use after the method TUnuran::SampleDiscr to generate the numbers.        
+   */ 
    bool InitPoisson(double mu, std::string method = "dstd");
+
+   /** 
+      Initialize method for the Binomial distribution 
+      Used to generate poisson numbers for a constant parameters (n,p) of the Binomial distribution. 
+      Use after the method TUnuran::SampleDiscr to generate the numbers.        
+   */ 
+   bool InitBinomial(unsigned int ntot, double prob, std::string method = "dstd");
 
 
    /**

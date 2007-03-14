@@ -1,6 +1,6 @@
 This directory contains classes for using the UNU.RAN package in ROOT
 BEGIN_HTML 
-<p> UNU.RAN, (Universal Non Uniform Random number generator for generating non uniform pseudo-random numbers) 
+UNU.RAN, (Universal Non Uniform Random number generator for generating non uniform pseudo-random numbers) 
 is an ANSI C library licensed under GPL.<br>
 It contains universal (also called automatic or black-box) algorithms that can generate random numbers from 
 large classes of continuous or discrete distributions, and also from practically all standard distributions. 
@@ -97,6 +97,7 @@ One can create the distribution class directly from a vector of data or from the
 TRandom pointer when constructing the TUnuran class (by default the ROOT gRandom is passed to UNURAN).
 </p>
 <p>The <a href="http://statistik.wu-wien.ac.at/unuran/doc/unuran.html#Top">UNU.RAN documentation</a> provides a detailed 
-description of all the available methods and the possible options which one can pass to UNU.RAN for the various distributions. </p>
+description of all the available methods and the possible options which one can pass to UNU.RAN for the various distributions. 
+</p>
 END_HTML
 
