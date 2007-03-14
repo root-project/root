@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.61 2007/01/25 22:53:05 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.62 2007/03/14 07:24:11 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -58,9 +58,9 @@ public:
    enum {
       kGlobalWeight   = BIT(15),
       kAutoDelete     = BIT(16),
-      kProofUptodate  = BIT(17)
+      kProofUptodate  = BIT(17),
+      kBigNumber      = 1234567890
    };
-   static Long64_t kBigNumber;
 
 public:
    TChain();
