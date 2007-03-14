@@ -270,7 +270,9 @@ extern int G__globalcomp;       /* make compiled func's global table */
 extern int G__store_globalcomp;
 extern long G__globalvarpointer; /* make compiled func's global table */
 
+#ifdef __cplusplus
 extern struct G__filetable G__srcfile[G__MAXFILE];
+#endif
 extern int G__nfile;
 
 extern int G__nobreak;
