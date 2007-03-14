@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.159 2007/03/14 08:30:04 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.160 2007/03/14 09:17:19 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -780,8 +780,8 @@ Long64_t TChain::GetEntries() const
                                     " run TChain::SetProof(kTRUE, kTRUE) first");
       return fProofChain->GetEntries();
    }
-   if (fEntries >= theBigNumber) {
-      const_cast<TChain*>(this)->LoadTree(fEntries-1);
+   if (fEntries >= theBigNumber || fEntries==kBigNumber) {
+      const_cast<TChain*>(this)->LoadTree(theBigNumber-1);
    }
    return fEntries;
 }
@@ -1070,14 +1070,14 @@ Long64_t TChain::LoadTree(Long64_t entry)
       return 1;
    }
 
-   if ((entry < 0) || ((entry > 0) && (entry >= fEntries))) {
+   if ((entry < 0) || ((entry > 0) && (entry >= fEntries && entry!=(theBigNumber-1) ))) {
       // -- Invalid entry number.
       return -2;
    }
 
    // Find out which tree in the chain contains the passed entry.
    Int_t treenum = fTreeNumber;
-   if ((fTreeNumber == -1) || (entry < fTreeOffset[fTreeNumber]) || (entry >= fTreeOffset[fTreeNumber+1])) {
+   if ((fTreeNumber == -1) || (entry < fTreeOffset[fTreeNumber]) || (entry >= fTreeOffset[fTreeNumber+1]) || (entry==theBigNumber-1)) {
       // -- Entry is *not* in the chain's current tree.
       // Do a linear search of the tree offset array.
       // FIXME: We could be smarter by starting at the
