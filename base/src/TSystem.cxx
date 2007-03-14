@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.161 2007/03/08 15:53:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.162 2007/03/13 17:49:45 pcanal Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2695,9 +2695,9 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       if (compilationResult) {
          if (compilationResult==139) ::Error("ACLiC","Compilation failed with a core dump!");
          else ::Error("ACLiC","Compilation failed!");
-	 if (produceRootmap) {
-	    gSystem->Unlink(libmapfilename);
-	 }
+         if (produceRootmap) {
+            gSystem->Unlink(libmapfilename);
+         }
       }
       result = !compilationResult;
    } else {

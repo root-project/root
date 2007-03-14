@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTTypedefBuilder.cxx,v 1.14 2006/12/08 09:36:06 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTTypedefBuilder.cxx,v 1.15 2007/01/13 19:53:41 brun Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -70,6 +70,7 @@ namespace ROOT {
       }
 
       void CINTTypedefBuilder::Set(const char* name, const char* value) {
+         // As the function name indicates
          G__linked_taginfo taginfo;
          taginfo.tagnum  = -1;   // >> need to be pre-initialized to be understood by CINT
          taginfo.tagtype = 'c';
