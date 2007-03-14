@@ -1,6 +1,5 @@
 void Run() {
 
-   gSystem->Load("libRIO");
    gSystem->Load("./namespace");
    gSystem->Load("./template");
    gSystem->Load("./nstemplate");
