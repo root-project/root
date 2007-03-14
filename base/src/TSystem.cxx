@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.162 2007/03/13 17:49:45 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.163 2007/03/14 13:28:22 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -437,11 +437,11 @@ Long_t TSystem::NextTimeOut(Bool_t mode)
 
    if (!fTimers) return -1;
 
-   TIter next(fTimers);
+   TOrdCollectionIter it((TOrdCollection*)fTimers);
    TTimer *t, *to = 0;
    Long_t  tt, timeout = -1, tnow = Now();
 
-   while ((t = (TTimer *)next())) {
+   while ((t = (TTimer *) it.Next())) {
       if (t->IsSync() == mode) {
          tt = (long)t->GetAbsTime() - tnow;
          if (tt < 0) tt = 0;
