@@ -697,6 +697,7 @@ guess_architecture () {
         linux:x86_64:*)        arch=linuxx8664gcc   ;;
         linux:alpha:*)         arch=linuxalphagcc   ;;
         linux:arm*:*)          arch=linuxarm        ;;
+        linux:sparc*:*)        arch=linux           ;;
         linux:ppc64*:*)        arch=linuxppc64gcc   ;;
         linux:ppc*:*)          arch=linuxppcgcc     ;;
         linux:i*86:*)          arch=linux           ;;
