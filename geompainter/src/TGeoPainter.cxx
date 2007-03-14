@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.97 2007/02/15 15:04:39 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.98 2007/02/18 14:58:56 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -209,8 +209,9 @@ void TGeoPainter::ClearVisibleVolumes()
 void TGeoPainter::DefineColors() const
 {
 // Define 100 colors with increasing light intensities for each basic color (1-7)
-// Register these colors at indexes starting with 300.
-   TColor *color = gROOT->GetColor(300);
+// Register these colors at indexes starting with 1000.
+   TColor::InitializeColors();
+   TColor *color = gROOT->GetColor(1000);
    if (color) return;
    Int_t i,j;
    Float_t r,g,b,h,l,s;
@@ -225,7 +226,7 @@ void TGeoPainter::DefineColors() const
       for (j=0; j<100; j++) {
          l = 0.25+0.5*j/99.;
          TColor::HLS2RGB(h,l,s,r,g,b);
-         new TColor(300+(i-1)*100+j, r,g,b);
+         new TColor(1000+(i-1)*100+j, r,g,b);
       }
    }           
 }
@@ -234,16 +235,23 @@ void TGeoPainter::DefineColors() const
 Int_t TGeoPainter::GetColor(Int_t base, Float_t light) const
 {
 // Get index of a base color with given light intensity (0,1)
+   const Int_t kBCols[7] = {1,2,3,5,4,6,7};
+   TColor *tcolor = gROOT->GetColor(base);
+   Float_t r,g,b;
+   tcolor->GetRGB(r,g,b);
+   Int_t code = 0;
+   if (r>0.5) code += 1;
+   if (g>0.5) code += 2;
+   if (b>0.5) code += 4;
    Int_t color, j;
-   Int_t c = base%8;
-   if (c==0) return c;
+   
    if (light<0.25) {
       j=0;
    } else {
       if (light>0.8) j=99;
       else j = Int_t(99*(light-0.25)/0.5);
    }   
-   color = 300 + (c-1)*100+j;
+   color = 1000 + (kBCols[code]-1)*100+j;
    return color;
 }
 

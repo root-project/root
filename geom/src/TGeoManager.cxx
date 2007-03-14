@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.174 2007/02/26 16:10:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.175 2007/03/02 08:52:02 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2047,7 +2047,7 @@ void TGeoManager::CdNext()
    }   
    if (fNextDaughterIndex == -1) {
       CdUp();
-      while (fCurrentVolume->IsAssembly()) CdUp();
+      while (fCurrentNode->GetVolume()->IsAssembly()) CdUp();
       fNextDaughterIndex--;
       return;
    }
