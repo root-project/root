@@ -5,7 +5,7 @@
  * For the licensing terms see the file COPYING
  *
  ************************************************************************/
-//$Id: rflx_gensrc.cxx,v 1.1.1.1 2006/11/24 10:57:06 rdm Exp $
+//$Id: rflx_gensrc.cxx,v 1.13 2006/11/24 13:14:37 rdm Exp $
 
 #include "rflx_gensrc.h"
 #include "rflx_tools.h"
@@ -641,7 +641,7 @@ void rflx_gensrc::gen_functionmemberdefs(G__ClassInfo & ci)
       if (fmname.length()) {
          std::string fm_modifiers = "";
 
-         G__ifunc_table *ift = (G__ifunc_table *) fm.Handle();
+         G__ifunc_table_internal *ift = G__get_ifunc_internal((G__ifunc_table *) fm.Handle());
          int index = fm.Index();
 
          switch (ift->access[index]) {
@@ -754,7 +754,7 @@ int rflx_gensrc::gen_stubfuncdecl_header(std::ostringstream & s,
    std::string fmname = fm.Name();
    std::string retname = rflx_tools::rm_end_ref(fm.Type()->Name());
    int index = fm.Index();
-   G__ifunc_table *var = (G__ifunc_table *) fm.Handle();
+   G__ifunc_table_internal *var = G__get_ifunc_internal((G__ifunc_table *) fm.Handle());
    G__SIGNEDCHAR_T retT = var->type[index];
    // pointer
    if (isupper(retT)) {
@@ -860,7 +860,7 @@ void rflx_gensrc::gen_stubfuncdecl_trailer(std::ostringstream & s,
    if (argNum < 0)
       argNum = 0;
    int index = fm.Index();
-   G__ifunc_table *var = (G__ifunc_table *) fm.Handle();
+   G__ifunc_table_internal *var = G__get_ifunc_internal((G__ifunc_table *) fm.Handle());
    G__SIGNEDCHAR_T retT = var->type[index];
    // reference 
    if (fm.Type()->Reftype()) {
@@ -1132,7 +1132,7 @@ void rflx_gensrc::gen_freefundicts()
    while (mi.Next()) {
 
       std::string fmname = mi.Name();
-      G__ifunc_table *ifunc = (G__ifunc_table *) mi.Handle();
+      G__ifunc_table_internal *ifunc = G__get_ifunc_internal((G__ifunc_table *) mi.Handle());
 
       if ((fmname.length()) 
          && ifunc->globalcomp[mi.Index()] == G__CPPLINK) {

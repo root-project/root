@@ -23,7 +23,7 @@
 /***********************************************************************
 * G__bc_compile_function()
 ***********************************************************************/
-extern "C" int G__bc_compile_function(struct G__ifunc_table *ifunc,int iexist){
+extern "C" int G__bc_compile_function(struct G__ifunc_table_internal *ifunc,int iexist){
   G__functionscope compiler;
   int store_dispsource = G__dispsource;
   if(G__step||G__stepover) G__dispsource=0;
@@ -213,11 +213,12 @@ void G__functionscope::Storefpos() {
 }
 //////////////////////////////////////////////////////////////////////////
 void G__functionscope::Setfpos() {
-  G__ifile.fp = (FILE*)m_ifunc->pentry[m_iexist]->p ;
-  G__ifile.line_number = m_ifunc->pentry[m_iexist]->line_number;
-  G__ifile.filenum=m_ifunc->pentry[m_iexist]->filenum;
-  strcpy(G__ifile.name,G__srcfile[m_ifunc->pentry[m_iexist]->filenum].filename);
-  fsetpos(G__ifile.fp,&m_ifunc->pentry[m_iexist]->pos);
+  G__ifunc_table_internal* ifunc = G__get_ifunc_internal(m_ifunc);
+  G__ifile.fp = (FILE*)ifunc->pentry[m_iexist]->p ;
+  G__ifile.line_number = ifunc->pentry[m_iexist]->line_number;
+  G__ifile.filenum=ifunc->pentry[m_iexist]->filenum;
+  strcpy(G__ifile.name,G__srcfile[ifunc->pentry[m_iexist]->filenum].filename);
+  fsetpos(G__ifile.fp,&ifunc->pentry[m_iexist]->pos);
 
   // m_reader also has m_fpos. This implementation is not so clean.
   m_preader = new G__srcreader<G__fstream>;
@@ -268,10 +269,11 @@ void G__functionscope::Baseclassctor(int c) {
   //   type(args)  : mem(expr), base(expr) {
   // void f(args)  {
   //                ^
-  if(-1!=m_ifunc->tagnum && 
-     strcmp(m_ifunc->funcname[m_iexist],G__struct.name[m_ifunc->tagnum])==0) {
+  G__ifunc_table_internal* ifunc = G__get_ifunc_internal(m_ifunc);
+  if(-1!=ifunc->tagnum && 
+     strcmp(ifunc->funcname[m_iexist],G__struct.name[ifunc->tagnum])==0) {
 
-    G__ClassInfo cls(m_ifunc->tagnum);
+    G__ClassInfo cls(ifunc->tagnum);
 
     if(cls.Property()&G__BIT_ISCOMPILED) {
       // error if compiled class;,  should never happen
@@ -520,21 +522,22 @@ void G__functionscope::Baseclasscopyctor(int c) {
     G__genericerror("Error: Syntax error");
   }
 
-  if(-1!=m_ifunc->tagnum && 
-     strcmp(m_ifunc->funcname[m_iexist],G__struct.name[m_ifunc->tagnum])==0) {
+  G__ifunc_table_internal* ifunc = G__get_ifunc_internal(m_ifunc);
+  if(-1!=ifunc->tagnum && 
+     strcmp(ifunc->funcname[m_iexist],G__struct.name[ifunc->tagnum])==0) {
 
-    G__ClassInfo cls(m_ifunc->tagnum);
+    G__ClassInfo cls(ifunc->tagnum);
     struct G__param para;
-    for(int i=0;i<m_ifunc->para_nu[m_iexist];++i) {
-      para.para[i].type=m_ifunc->param[m_iexist][i]->type;
-      para.para[i].tagnum=m_ifunc->param[m_iexist][i]->p_tagtable;
-      para.para[i].typenum=m_ifunc->param[m_iexist][i]->p_typetable;
+    for(int i=0;i<ifunc->para_nu[m_iexist];++i) {
+      para.para[i].type=ifunc->param[m_iexist][i]->type;
+      para.para[i].tagnum=ifunc->param[m_iexist][i]->p_tagtable;
+      para.para[i].typenum=ifunc->param[m_iexist][i]->p_typetable;
       para.para[i].obj.i=1;   // dummy value
       para.para[i].ref=1; // dummy value
-      para.para[i].obj.reftype.reftype=m_ifunc->param[m_iexist][i]->reftype;
+      para.para[i].obj.reftype.reftype=ifunc->param[m_iexist][i]->reftype;
       para.para[i].isconst = 0;
     }
-    para.paran = m_ifunc->para_nu[m_iexist];
+    para.paran = ifunc->para_nu[m_iexist];
 
     if(cls.Property()&G__BIT_ISCOMPILED) {
       // error if compiled class;,  should never happen
@@ -664,20 +667,21 @@ void G__functionscope::Baseclassassign(int c) {
     G__genericerror("Error: Syntax error");
   }
 
-  if(-1!=m_ifunc->tagnum&&strcmp(m_ifunc->funcname[m_iexist],"operator=")==0){
+  G__ifunc_table_internal* ifunc = G__get_ifunc_internal(m_ifunc);
+  if(-1!=ifunc->tagnum&&strcmp(ifunc->funcname[m_iexist],"operator=")==0){
 
-    G__ClassInfo cls(m_ifunc->tagnum);
+    G__ClassInfo cls(ifunc->tagnum);
     struct G__param para;
-    for(int i=0;i<m_ifunc->para_nu[m_iexist];++i) {
-      para.para[i].type=m_ifunc->param[m_iexist][i]->type;
-      para.para[i].tagnum=m_ifunc->param[m_iexist][i]->p_tagtable;
-      para.para[i].typenum=m_ifunc->param[m_iexist][i]->p_typetable;
+    for(int i=0;i<ifunc->para_nu[m_iexist];++i) {
+      para.para[i].type=ifunc->param[m_iexist][i]->type;
+      para.para[i].tagnum=ifunc->param[m_iexist][i]->p_tagtable;
+      para.para[i].typenum=ifunc->param[m_iexist][i]->p_typetable;
       para.para[i].obj.i=1;   // dummy value
       para.para[i].ref=1; // dummy value
-      para.para[i].obj.reftype.reftype=m_ifunc->param[m_iexist][i]->reftype;
+      para.para[i].obj.reftype.reftype=ifunc->param[m_iexist][i]->reftype;
       para.para[i].isconst = 0;
     }
-    para.paran = m_ifunc->para_nu[m_iexist];
+    para.paran = ifunc->para_nu[m_iexist];
 
     if(cls.Property()&G__BIT_ISCOMPILED) {
       // error if compiled class;,  should never happen
@@ -786,10 +790,11 @@ void G__functionscope::Baseclassdtor() {
   //   type(args)  : mem(expr), base(expr) {
   // void f(args)  {
   //                ^
-  if(-1!=m_ifunc->tagnum && 
-     m_ifunc->funcname[m_iexist][0]=='~' &&
-     strcmp(m_ifunc->funcname[m_iexist]+1,G__struct.name[m_ifunc->tagnum])==0){
-    G__ClassInfo cls(m_ifunc->tagnum);
+  G__ifunc_table_internal* ifunc = G__get_ifunc_internal(m_ifunc);
+  if(-1!=ifunc->tagnum && 
+     ifunc->funcname[m_iexist][0]=='~' &&
+     strcmp(ifunc->funcname[m_iexist]+1,G__struct.name[ifunc->tagnum])==0){
+    G__ClassInfo cls(ifunc->tagnum);
 
     // iterate on members
     Baseclassdtor_member(cls);
@@ -863,20 +868,21 @@ void G__functionscope::ArgumentPassing() {
   char *name;
   char *def;
   G__value *defv;
-  for(i=0;i<m_ifunc->para_nu[m_iexist];i++) {
-    dmy.type = m_ifunc->param[m_iexist][i]->type;
-    dmy.tagnum = m_ifunc->param[m_iexist][i]->p_tagtable;
-    dmy.typenum = m_ifunc->param[m_iexist][i]->p_typetable;
-    dmy.obj.reftype.reftype = m_ifunc->param[m_iexist][i]->reftype;
-    dmy.isconst = m_ifunc->param[m_iexist][i]->isconst;
+  G__ifunc_table_internal* ifunc = G__get_ifunc_internal(m_ifunc);
+  for(i=0;i<ifunc->para_nu[m_iexist];i++) {
+    dmy.type = ifunc->param[m_iexist][i]->type;
+    dmy.tagnum = ifunc->param[m_iexist][i]->p_tagtable;
+    dmy.typenum = ifunc->param[m_iexist][i]->p_typetable;
+    dmy.obj.reftype.reftype = ifunc->param[m_iexist][i]->reftype;
+    dmy.isconst = ifunc->param[m_iexist][i]->isconst;
     type.Init(dmy);
     // duplication, but just in case. G__ClassInfo::Init() may have error
-    type.setreftype(m_ifunc->param[m_iexist][i]->reftype);
-    type.setisconst(m_ifunc->param[m_iexist][i]->isconst);
+    type.setreftype(ifunc->param[m_iexist][i]->reftype);
+    type.setisconst(ifunc->param[m_iexist][i]->isconst);
 
-    name = m_ifunc->param[m_iexist][i]->name;
-    def = m_ifunc->param[m_iexist][i]->def;
-    defv = m_ifunc->param[m_iexist][i]->pdefault;
+    name = ifunc->param[m_iexist][i]->name;
+    def = ifunc->param[m_iexist][i]->def;
+    defv = ifunc->param[m_iexist][i]->pdefault;
     EachArgumentPassing(type,name,def,defv);
   }
 }
@@ -923,7 +929,7 @@ void G__functionscope::ReturnFromFunction() {
 //////////////////////////////////////////////////////////////////////////
 void G__functionscope::Storebytecode() {
   // use legacy code in src/ifunc.c
-  G__asm_storebytecodefunc(m_ifunc,m_iexist,m_var
+  G__asm_storebytecodefunc(G__get_ifunc_internal(m_ifunc),m_iexist,m_var
 		          ,G__asm_stack,G__asm_dt
 			  ,G__asm_inst,G__asm_cp); 
   asm_name = (char*)NULL; //avoid deleting already stored bytecode information
@@ -931,20 +937,21 @@ void G__functionscope::Storebytecode() {
 
 //////////////////////////////////////////////////////////////////////////
 void G__functionscope::Setstatus() {
-  if(m_ifunc->pentry[m_iexist]->bytecode) {
+  G__ifunc_table_internal* ifunc = G__get_ifunc_internal(m_ifunc);
+  if(ifunc->pentry[m_iexist]->bytecode) {
     if(0==G__xrefflag) 
-      m_ifunc->pentry[m_iexist]->bytecodestatus = G__BYTECODE_SUCCESS;
+      ifunc->pentry[m_iexist]->bytecodestatus = G__BYTECODE_SUCCESS;
     else
-      m_ifunc->pentry[m_iexist]->bytecodestatus = G__BYTECODE_ANALYSIS;
+      ifunc->pentry[m_iexist]->bytecodestatus = G__BYTECODE_ANALYSIS;
   }
   else if(0==G__def_struct_member)
-    m_ifunc->pentry[m_iexist]->bytecodestatus = G__BYTECODE_FAILURE;
+    ifunc->pentry[m_iexist]->bytecodestatus = G__BYTECODE_FAILURE;
 }
 
 //////////////////////////////////////////////////////////////////////////
 // bytecode compiler entry function
 //////////////////////////////////////////////////////////////////////////
-int G__functionscope::compile_normalfunction(struct G__ifunc_table *ifunc
+int G__functionscope::compile_normalfunction(struct G__ifunc_table_internal *ifunc
 					,int iexist) {
   int store_cintv6 = G__cintv6;
   G__cintv6 |= G__BC_COMPILEERROR;
@@ -970,10 +977,10 @@ int G__functionscope::compile_normalfunction(struct G__ifunc_table *ifunc
 //////////////////////////////////////////////////////////////////////////
 // bytecode compiler entry function
 //////////////////////////////////////////////////////////////////////////
-int G__functionscope::compile_function(struct G__ifunc_table *ifunc
+int G__functionscope::compile_function(struct G__ifunc_table_internal *ifunc
 					,int iexist) {
 
-  m_ifunc = ifunc;
+  m_ifunc = G__get_ifunc_ref(ifunc);
   m_iexist = iexist;
 
   // store environment
@@ -987,13 +994,13 @@ int G__functionscope::compile_function(struct G__ifunc_table *ifunc
   //        ^ ----> ^
   Setfpos();
   if(G__dispsource) {
-    if(-1!=m_ifunc->tagnum) {
+    if(-1!=ifunc->tagnum) {
       G__fprinterr(G__serr,"\n%-5d%s::%s(" ,G__ifile.line_number
-		,G__struct.name[m_ifunc->tagnum] ,m_ifunc->funcname[m_iexist]);
+		,G__struct.name[ifunc->tagnum] ,ifunc->funcname[m_iexist]);
     }
     else {
       G__fprinterr(G__serr,"\n%-5d%s(" ,G__ifile.line_number
-		,m_ifunc->funcname[m_iexist]);
+		,ifunc->funcname[m_iexist]);
     }
   }
   int c = FposGetReady();
@@ -1047,9 +1054,9 @@ int G__functionscope::compile_function(struct G__ifunc_table *ifunc
 //////////////////////////////////////////////////////////////////////////
 // bytecode compiler entry function
 //////////////////////////////////////////////////////////////////////////
-int G__functionscope::compile_implicitdefaultctor(struct G__ifunc_table *ifunc
+int G__functionscope::compile_implicitdefaultctor(struct G__ifunc_table_internal *ifunc
 					          ,int iexist) {
-  m_ifunc = ifunc;
+  m_ifunc = G__get_ifunc_ref(ifunc);
   m_iexist = iexist;
 
   // store environment
@@ -1090,9 +1097,9 @@ int G__functionscope::compile_implicitdefaultctor(struct G__ifunc_table *ifunc
 //////////////////////////////////////////////////////////////////////////
 // bytecode compiler entry function
 //////////////////////////////////////////////////////////////////////////
-int G__functionscope::compile_implicitcopyctor(struct G__ifunc_table *ifunc
+int G__functionscope::compile_implicitcopyctor(struct G__ifunc_table_internal *ifunc
 					          ,int iexist) {
-  m_ifunc = ifunc;
+  m_ifunc = G__get_ifunc_ref(ifunc);
   m_iexist = iexist;
 
   // store environment
@@ -1137,9 +1144,9 @@ int G__functionscope::compile_implicitcopyctor(struct G__ifunc_table *ifunc
 //////////////////////////////////////////////////////////////////////////
 // bytecode compiler entry function
 //////////////////////////////////////////////////////////////////////////
-int G__functionscope::compile_implicitassign(struct G__ifunc_table *ifunc
+int G__functionscope::compile_implicitassign(struct G__ifunc_table_internal *ifunc
 					    ,int iexist) {
-  m_ifunc = ifunc;
+  m_ifunc = G__get_ifunc_ref(ifunc);
   m_iexist = iexist;
 
   // store environment
@@ -1182,9 +1189,9 @@ int G__functionscope::compile_implicitassign(struct G__ifunc_table *ifunc
 //////////////////////////////////////////////////////////////////////////
 // bytecode compiler entry function
 //////////////////////////////////////////////////////////////////////////
-int G__functionscope::compile_implicitdtor(struct G__ifunc_table *ifunc
+int G__functionscope::compile_implicitdtor(struct G__ifunc_table_internal *ifunc
 					   ,int iexist) {
-  m_ifunc = ifunc;
+  m_ifunc = G__get_ifunc_ref(ifunc);
   m_iexist = iexist;
 
   // store environment

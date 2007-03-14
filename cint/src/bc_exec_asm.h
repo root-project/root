@@ -63,7 +63,7 @@ long localmem;
   void (*p2fop1) G__P((G__value*));
 #ifdef G__ASM_WHOLEFUNC
   long store_struct_offset_localmem;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
 #endif
   int store_cpp_aryindex[10];
   int store_cpp_aryindexp=0;
@@ -1378,7 +1378,7 @@ long localmem;
 			     ,(char *)G__asm_inst[pc+1],G__asm_inst[pc+3]);
 #endif
       G__asm_index = G__asm_inst[pc+7];
-      ifunc = (struct G__ifunc_table*)G__asm_inst[pc+4];
+      ifunc = (struct G__ifunc_table_internal*)G__asm_inst[pc+4];
       if(G__cintv6 && G__LD_IFUNC_optimize(ifunc,G__asm_index,G__asm_inst,pc)) goto ld_func;
 #ifdef G__ASM_WHOLEFUNC
       if(ifunc->pentry[G__asm_index]->bytecode&&G__asm_inst[pc]==G__LD_IFUNC

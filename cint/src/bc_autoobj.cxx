@@ -91,10 +91,11 @@ extern "C" void G__delete_autoobjectstack(int scopelevel) {
  * G__allocheapobjectstack
  *  This function is called by G__exec_bytecode for returning class object
  *************************************************************************/
-extern "C" void* G__allocheapobjectstack(struct G__ifunc_table *ifunc,int ifn,int scopelevel)
+extern "C" void* G__allocheapobjectstack(struct G__ifunc_table *ifuncref,int ifn,int scopelevel)
 {
   // CAUTION: This operation is inefficient. Doing type checking at run-time.
 
+  G__ifunc_table_internal *ifunc = G__get_ifunc_internal(ifuncref);
   int tagnum = ifunc->p_tagtable[ifn];
   void *p;
   // get function return value
@@ -141,7 +142,7 @@ extern "C" void G__copyheapobjectstack(void* p,G__value *result
 
   // CAUTION: This operation is inefficient. Doing type checking at run-time.
 
-  int tagnum = ifunc->p_tagtable[ifn];
+  int tagnum = G__get_ifunc_internal(ifunc)->p_tagtable[ifn];
   G__ClassInfo cls(tagnum);
   G__MethodInfo m;
   int funcmatch;

@@ -15,6 +15,8 @@
 
 
 #include "common.h"
+#include <map>
+#include <set>
 
 extern "C" void G__exec_alloc_lock();
 extern "C" void G__exec_alloc_unlock();
@@ -40,7 +42,7 @@ char *G__savestring(char **pbuf,char *name)
 /***********************************************************************
  * G__reftypeparam()
 ***********************************************************************/
-void G__reftypeparam(G__ifunc_table *p_ifunc,int ifn,G__param *libp)
+void G__reftypeparam(G__ifunc_table_internal *p_ifunc,int ifn,G__param *libp)
 {
   int itemp;
   for(itemp=0;itemp<p_ifunc->para_nu[ifn]
@@ -104,7 +106,7 @@ void G__reftypeparam(G__ifunc_table *p_ifunc,int ifn,G__param *libp)
 /***********************************************************************
  * G__warn_refpromotion
 ***********************************************************************/
-static void G__warn_refpromotion(G__ifunc_table *p_ifunc,int ifn, int itemp
+static void G__warn_refpromotion(G__ifunc_table_internal *p_ifunc,int ifn, int itemp
                                  ,G__param *libp) 
 {
   if(G__PARAREFERENCE==p_ifunc->param[ifn][itemp]->reftype &&
@@ -143,7 +145,7 @@ void G__free_bytecode(G__bytecodefunc *bytecode)
 /***********************************************************************
 * G__asm_storebytecodefunc()
 ***********************************************************************/
-void G__asm_storebytecodefunc(G__ifunc_table *ifunc,int ifn,
+void G__asm_storebytecodefunc(G__ifunc_table_internal *ifunc,int ifn,
                               G__var_array *var,G__value *pstack,
                               int sp,long *pinst,int instsize)
 {
@@ -204,7 +206,7 @@ void G__copyheapobjectstack G__P((void* p,G__value* result,struct G__ifunc_table
 * G__noclassargument()
 *  stops bytecode compilation if class object is passed as argument
 ***********************************************************************/
-int G__noclassargument(G__ifunc_table *ifunc,int iexist)
+int G__noclassargument(G__ifunc_table_internal *ifunc,int iexist)
 {
   int i;
   for(i=0;i<ifunc->para_nu[iexist];i++) {
@@ -221,7 +223,7 @@ int G__noclassargument(G__ifunc_table *ifunc,int iexist)
 * G__compile_bytecode()
 *
 ***********************************************************************/
-int G__compile_bytecode(G__ifunc_table *ifunc,int iexist)
+int G__compile_bytecode(G__ifunc_table *iref,int iexist)
 {
   G__value buf;
   struct G__param para; /* This one is only dummy */
@@ -238,6 +240,7 @@ int G__compile_bytecode(G__ifunc_table *ifunc,int iexist)
   int store_dispsource = G__dispsource;
   if(G__step||G__stepover) G__dispsource=0;
 
+  G__ifunc_table_internal* ifunc = G__get_ifunc_internal(iref);
   if(
      G__xrefflag ||
      (
@@ -474,7 +477,7 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
   char paraname[G__LONGLINE];
   int func_now;
   int iexist;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   char store_type;
   int store_tagnum,store_typenum;
   int isparam;
@@ -497,8 +500,8 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
   fpos_t temppos;
   int store_line_number;  /* bug fix 3 mar 1993 */
   int store_def_struct_member;
-  struct G__ifunc_table *store_ifunc;
-  struct G__ifunc_table *store_ifunc_tmp;
+  struct G__ifunc_table_internal *store_ifunc;
+  struct G__ifunc_table_internal *store_ifunc_tmp;
 
   /* system check */
   G__ASSERT(G__prerun);
@@ -518,10 +521,10 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
     /* This case is used only when complicated template instantiation is done 
      * during reading argument list 'f(vector<int> &x) { }' */
 
-    G__p_ifunc->next=(struct G__ifunc_table *)malloc(sizeof(struct G__ifunc_table));
-    memset(G__p_ifunc->next,0,sizeof(struct G__ifunc_table));
+    G__p_ifunc->next=(struct G__ifunc_table_internal *)malloc(sizeof(struct G__ifunc_table_internal));
+    memset(G__p_ifunc->next,0,sizeof(struct G__ifunc_table_internal));
     G__p_ifunc->next->allifunc=0;
-    G__p_ifunc->next->next=(struct G__ifunc_table *)NULL;
+    G__p_ifunc->next->next=(struct G__ifunc_table_internal *)NULL;
     G__p_ifunc->next->page = G__p_ifunc->page+1;
     G__p_ifunc->next->tagnum = G__p_ifunc->tagnum;
     G__p_ifunc = G__p_ifunc->next;
@@ -1473,10 +1476,10 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
       /* Allocate and initialize function table list if needed */
       if(G__p_ifunc->allifunc==G__MAXIFUNC) {
 
-        G__p_ifunc->next=(struct G__ifunc_table *)malloc(sizeof(struct G__ifunc_table));
-        memset(G__p_ifunc->next,0,sizeof(struct G__ifunc_table));
+        G__p_ifunc->next=(struct G__ifunc_table_internal *)malloc(sizeof(struct G__ifunc_table_internal));
+        memset(G__p_ifunc->next,0,sizeof(struct G__ifunc_table_internal));
         G__p_ifunc->next->allifunc=0;
-        G__p_ifunc->next->next=(struct G__ifunc_table *)NULL;
+        G__p_ifunc->next->next=(struct G__ifunc_table_internal *)NULL;
         G__p_ifunc->next->page = G__p_ifunc->page+1;
         {
           //int i,j;
@@ -1529,8 +1532,8 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
     ***************************************************************/
     if(G__asm_loopcompile>=10 
        ) {
-      if(ifunc) G__compile_bytecode(ifunc,iexist);
-      else G__compile_bytecode(G__p_ifunc,func_now);
+      if(ifunc) G__compile_bytecode(G__get_ifunc_ref(ifunc),iexist);
+      else G__compile_bytecode(G__get_ifunc_ref(G__p_ifunc),func_now);
     }
 #endif
   }
@@ -1602,7 +1605,7 @@ void G__make_ifunctable(char *funcheader) /* funcheader = 'funcname(' */
 *       ^
 *
 ***********************************************************************/
-int G__readansiproto(G__ifunc_table *ifunc,int func_now)
+int G__readansiproto(G__ifunc_table_internal *ifunc,int func_now)
 {
   char paraname[G__LONGLINE];
   char name[G__LONGLINE];
@@ -1614,6 +1617,7 @@ int G__readansiproto(G__ifunc_table *ifunc,int func_now)
   int store_tagnum_default=0,store_def_struct_member_default=0;
   int store_exec_memberfunc=0;
   int arydim;
+
   ifunc->ansi[func_now] = 1;
   while(')'!=c) {
 #ifndef G__OLDIMPLEMENTATION824
@@ -2006,7 +2010,7 @@ int G__readansiproto(G__ifunc_table *ifunc,int func_now)
       }
       {
         G__value *tmpx;
-        struct G__ifunc_table *store_pifunc = G__p_ifunc;
+        struct G__ifunc_table_internal *store_pifunc = G__p_ifunc;
         G__p_ifunc = &G__ifunc;
         if((G__CPPLINK==G__globalcomp || R__CPPLINK==G__globalcomp) && G__decl && G__prerun)
           G__noerr_defined = 1;
@@ -2854,7 +2858,7 @@ int G__param_match(char formal_type,int formal_tagnum
  * G__funclist is defined in common.h
  **********************************************************************/
 struct G__funclist* G__funclist_add(G__funclist *last
-                                    ,G__ifunc_table *ifunc
+                                    ,G__ifunc_table_internal *ifunc
                                     ,int ifn,int rate)
 {
   struct G__funclist *latest = 
@@ -2950,13 +2954,13 @@ static int G__igrd(int formal_type)
 #endif
 
 #ifndef __CINT__
-struct G__ifunc_table* G__overload_match G__P((char* funcname,struct G__param *libp,int hash,struct G__ifunc_table *p_ifunc,int memfunc_flag,int access,int *pifn,int recursive,int doconvert)) ;
+struct G__ifunc_table_internal* G__overload_match G__P((char* funcname,struct G__param *libp,int hash,struct G__ifunc_table_internal *p_ifunc,int memfunc_flag,int access,int *pifn,int recursive,int doconvert)) ;
 #endif
 
 /***********************************************************************
 * int G__rate_parameter_match(libp,ifunc,ifn,i)
 **********************************************************************/
-void G__rate_parameter_match(G__param *libp,G__ifunc_table *p_ifunc
+void G__rate_parameter_match(G__param *libp,G__ifunc_table_internal *p_ifunc
                              ,int ifn,G__funclist *funclist,int recursive)
 {
 #ifdef G__DEBUG
@@ -3373,7 +3377,7 @@ void G__rate_parameter_match(G__param *libp,G__ifunc_table *p_ifunc
     /* user defined conversion */
     if(0==recursive && G__NOMATCH==funclist->p_rate[i]) {
       if(formal_type=='u') {
-        struct G__ifunc_table *ifunc2;
+        struct G__ifunc_table_internal *ifunc2;
         int ifn2;
         int hash2;
         char funcname2[G__ONELINE];
@@ -3395,7 +3399,7 @@ void G__rate_parameter_match(G__param *libp,G__ifunc_table *p_ifunc
 
     if(0==recursive && G__NOMATCH==funclist->p_rate[i]) {
       if(param_type=='u' && -1!=param_tagnum) {
-        struct G__ifunc_table *ifunc2;
+        struct G__ifunc_table_internal *ifunc2;
         int ifn2 = -1;
         int hash2;
         char funcname2[G__ONELINE];
@@ -3454,7 +3458,7 @@ void G__rate_parameter_match(G__param *libp,G__ifunc_table *p_ifunc
 /***********************************************************************
 * int G__convert_param(libp,p_ifunc,ifn,i)
 **********************************************************************/
-int G__convert_param(G__param *libp,G__ifunc_table *p_ifunc
+int G__convert_param(G__param *libp,G__ifunc_table_internal *p_ifunc
                      ,int ifn,G__funclist *pmatch)
 {
   int i;
@@ -4206,7 +4210,7 @@ void G__display_param(FILE* fp,int scopetagnum
 /***********************************************************************
 * G__display_func(G__serr,ifunc,ifn);
 **********************************************************************/
-void G__display_func(FILE *fp,G__ifunc_table *ifunc,int ifn)
+void G__display_func(FILE *fp,G__ifunc_table_internal *ifunc,int ifn)
 {
   int i;
   int store_iscpp = G__iscpp;
@@ -4285,7 +4289,7 @@ void G__display_ambiguous(int scopetagnum,char *funcname
   G__display_param(G__serr,scopetagnum,funcname,libp);
   G__fprinterr(G__serr,"Match rank: file     line  signature\n");
   while(funclist) {
-    struct G__ifunc_table *ifunc = funclist->ifunc; 
+    struct G__ifunc_table_internal *ifunc = funclist->ifunc;
     int ifn = funclist->ifn;
     if(bestmatch==funclist->rate) G__fprinterr(G__serr,"* %8x ",funclist->rate);
     else                          G__fprinterr(G__serr,"  %8x ",funclist->rate);
@@ -4302,7 +4306,7 @@ void G__display_ambiguous(int scopetagnum,char *funcname
 ***********************************************************************/
 struct G__funclist* G__add_templatefunc(char *funcnamein,G__param* libp
                                         ,int hash,G__funclist *funclist
-                                        ,G__ifunc_table *p_ifunc,int isrecursive)
+                                        ,G__ifunc_table_internal *p_ifunc,int isrecursive)
 {
   struct G__Definetemplatefunc *deftmpfunc;
   struct G__Charlist call_para;
@@ -4310,7 +4314,7 @@ struct G__funclist* G__add_templatefunc(char *funcnamein,G__param* libp
   int env_tagnum = p_ifunc->tagnum;
   struct G__inheritance *baseclass;
   int store_friendtagnum = G__friendtagnum;
-  struct G__ifunc_table *ifunc; 
+  struct G__ifunc_table_internal *ifunc; 
   int ifn;
   char *funcname;
 #ifndef G__OLDIMPLEMENTATION1560
@@ -4494,7 +4498,7 @@ struct G__funclist* G__add_templatefunc(char *funcnamein,G__param* libp
 /***********************************************************************
 * G__rate_binary_operator()
 **********************************************************************/
-struct G__funclist* G__rate_binary_operator(G__ifunc_table *p_ifunc,
+struct G__funclist* G__rate_binary_operator(G__ifunc_table_internal *p_ifunc,
    G__param *libp,
    int tagnum,
    char* funcname,
@@ -4588,10 +4592,10 @@ int G__identical_function(G__funclist *match,G__funclist *func)
 /***********************************************************************
 * G__overload_match(funcname,libp,hash,p_ifunc,memfunc_flag,access,pifn)
 **********************************************************************/
-struct G__ifunc_table* G__overload_match(char* funcname
+struct G__ifunc_table_internal* G__overload_match(char* funcname
                                          ,G__param *libp
                                          ,int hash
-                                         ,G__ifunc_table *p_ifunc
+                                         ,G__ifunc_table_internal *p_ifunc
                                          ,int memfunc_flag
                                          ,int access
                                          ,int *pifn
@@ -4604,7 +4608,7 @@ struct G__ifunc_table* G__overload_match(char* funcname
   struct G__funclist *func;
   int ambiguous = 0;
   int scopetagnum = p_ifunc->tagnum;
-  struct G__ifunc_table *store_ifunc = p_ifunc; 
+  struct G__ifunc_table_internal *store_ifunc = p_ifunc; 
   int ix=0;
 
 
@@ -4674,7 +4678,7 @@ struct G__ifunc_table* G__overload_match(char* funcname
   }
 
   /* if there is no name match, return null */
-  if((struct G__funclist*)NULL==funclist) return((struct G__ifunc_table*)NULL);
+  if((struct G__funclist*)NULL==funclist) return((struct G__ifunc_table_internal*)NULL);
   /* else  there is function name match */
 
 
@@ -4699,7 +4703,7 @@ struct G__ifunc_table* G__overload_match(char* funcname
   if((G__TRYUNARYOPR==memfunc_flag||G__TRYBINARYOPR==memfunc_flag) && 
      match && 0==match->ifunc) {
     G__funclist_delete(funclist);
-    return((struct G__ifunc_table*)NULL);
+    return((struct G__ifunc_table_internal*)NULL);
   }
 
 #ifdef G__ASM_DBG
@@ -4716,7 +4720,7 @@ struct G__ifunc_table* G__overload_match(char* funcname
     *pifn = -1;
 #endif
     G__funclist_delete(funclist);
-    return((struct G__ifunc_table*)NULL);
+    return((struct G__ifunc_table_internal*)NULL);
   }
 
   if(ambiguous && G__EXACTMATCH!=bestmatch 
@@ -4731,7 +4735,7 @@ struct G__ifunc_table* G__overload_match(char* funcname
     }
     *pifn = -1;
     G__funclist_delete(funclist);
-    return((struct G__ifunc_table*)NULL);
+    return((struct G__ifunc_table_internal*)NULL);
   }
 
   /* best match function found */
@@ -4753,14 +4757,14 @@ struct G__ifunc_table* G__overload_match(char* funcname
     G__display_ambiguous(scopetagnum,funcname,libp,funclist,bestmatch);
     *pifn = -1;
     G__funclist_delete(funclist);
-    return((struct G__ifunc_table*)NULL);
+    return((struct G__ifunc_table_internal*)NULL);
   }
 
   /* convert parameter */
   if(
      doconvert && 
      G__convert_param(libp,p_ifunc,*pifn,match))
-    return((struct G__ifunc_table*)NULL);
+    return((struct G__ifunc_table_internal*)NULL);
 
   G__funclist_delete(funclist);
   return(p_ifunc);
@@ -4777,7 +4781,7 @@ struct G__ifunc_table* G__overload_match(char* funcname
 *
 ***********************************************************************/
 int G__interpret_func(G__value *result7,char* funcname,G__param *libp,
-                      int hash,G__ifunc_table *p_ifunc /*local variable overrides global variable*/
+                      int hash,G__ifunc_table_internal *p_ifunc /*local variable overrides global variable*/
                       ,int funcmatch
                       ,int memfunc_flag)
 /*  return 1 if function is executed */
@@ -4804,7 +4808,7 @@ int G__interpret_func(G__value *result7,char* funcname,G__param *libp,
   long store_struct_offset; /* used to be int */
   int store_inherit_tagnum;
   long store_inherit_offset;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int iexist,virtualtag;
   int store_def_struct_member;
   int store_var_typeB;
@@ -4845,7 +4849,7 @@ int G__interpret_func(G__value *result7,char* funcname,G__param *libp,
 #endif
 /* #define G__OLDIMPLEMENTATION590 */
   int local_tagnum=0;
-  struct G__ifunc_table *store_p_ifunc=p_ifunc;
+  struct G__ifunc_table_internal *store_p_ifunc=p_ifunc;
   int specialflag=0;
   G__value *store_p_tempobject=0;
   int store_memberfunc_struct_offset;
@@ -5426,7 +5430,7 @@ asm_ifunc_start:   /* loop compilation execution label */
      0==G__step && (G__asm_noverflow||G__asm_exec
                     ||G__asm_loopcompile>4
                     )) {
-    G__compile_bytecode(p_ifunc,ifn);
+    G__compile_bytecode(G__get_ifunc_ref(p_ifunc),ifn);
   }
   /******************************************************************
    * if already compiled as bytecode run bytecode
@@ -5509,7 +5513,7 @@ asm_ifunc_start:   /* loop compilation execution label */
 #endif
 
     localvar->prev_local = G__p_local;
-    localvar->ifunc = p_ifunc;
+    localvar->ifunc = G__get_ifunc_ref(p_ifunc);
     localvar->ifn = ifn;
 #ifdef G__VAARG
     localvar->libp = libp;
@@ -5597,7 +5601,7 @@ asm_ifunc_start:   /* loop compilation execution label */
   memset(&G_local,0,sizeof(struct G__var_array));    
 #endif
   G_local.prev_local = G__p_local;
-  G_local.ifunc = p_ifunc;
+  G_local.ifunc = G__get_ifunc_ref(p_ifunc);
   G_local.ifn = ifn;
 #ifdef G__VAARG
   G_local.libp = libp;
@@ -6508,8 +6512,8 @@ asm_ifunc_start:   /* loop compilation execution label */
 *           para_default[]
 *
 **************************************************************************/
-struct G__ifunc_table *G__ifunc_exist(G__ifunc_table *ifunc_now,int allifunc
-                                      ,G__ifunc_table *ifunc,int *piexist
+struct G__ifunc_table_internal *G__ifunc_exist(G__ifunc_table_internal *ifunc_now,int allifunc
+                                      ,G__ifunc_table_internal *ifunc,int *piexist
                                       ,int mask)
 {
   int i,j,paran;
@@ -6525,7 +6529,7 @@ struct G__ifunc_table *G__ifunc_exist(G__ifunc_table *ifunc_now,int allifunc
           return(ifunc);
         }
         else {
-          return((struct G__ifunc_table*)NULL);
+          return((struct G__ifunc_table_internal*)NULL);
         }
 #else
         *piexist = i;
@@ -6575,7 +6579,7 @@ struct G__ifunc_table *G__ifunc_exist(G__ifunc_table *ifunc_now,int allifunc
           return(ifunc);
         }
         else {
-          return((struct G__ifunc_table*)NULL);
+          return((struct G__ifunc_table_internal*)NULL);
         }
 #else
         *piexist = i;
@@ -6593,8 +6597,8 @@ struct G__ifunc_table *G__ifunc_exist(G__ifunc_table *ifunc_now,int allifunc
 *
 *
 **************************************************************************/
-struct G__ifunc_table *G__ifunc_ambiguous(G__ifunc_table *ifunc_now,int allifunc
-                                          ,G__ifunc_table *ifunc,int *piexist
+struct G__ifunc_table_internal *G__ifunc_ambiguous(G__ifunc_table_internal *ifunc_now,int allifunc
+                                          ,G__ifunc_table_internal *ifunc,int *piexist
                                           ,int derivedtagnum)
 {
   int i,j,paran;
@@ -6653,8 +6657,8 @@ struct G__ifunc_table *G__ifunc_ambiguous(G__ifunc_table *ifunc_now,int allifunc
 *
 *
 **************************************************************************/
-struct G__ifunc_table *G__get_ifunchandle(char *funcname,G__param *libp
-                                          ,int hash,G__ifunc_table *p_ifunc
+struct G__ifunc_table_internal *G__get_ifunchandle(char *funcname,G__param *libp
+                                          ,int hash,G__ifunc_table_internal *p_ifunc
                                           ,long *pifn
                                           ,int access,int funcmatch)
 {
@@ -6801,8 +6805,8 @@ struct G__ifunc_table *G__get_ifunchandle(char *funcname,G__param *libp
 *
 *
 **************************************************************************/
-struct G__ifunc_table *G__get_ifunchandle_base(char *funcname,G__param *libp
-                                               ,int hash,G__ifunc_table *p_ifunc
+struct G__ifunc_table_internal *G__get_ifunchandle_base(char *funcname,G__param *libp
+                                               ,int hash,G__ifunc_table_internal *p_ifunc
                                                ,long *pifn
                                                ,long *poffset
                                                ,int access,int funcmatch
@@ -6810,7 +6814,7 @@ struct G__ifunc_table *G__get_ifunchandle_base(char *funcname,G__param *libp
                                                )
 {
   int tagnum;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int basen=0;
   struct G__inheritance *baseclass;
 
@@ -6879,13 +6883,14 @@ void G__argtype2param(char *argtype,G__param *libp)
 *
 **************************************************************************/
 struct G__ifunc_table *G__get_methodhandle(char *funcname,char *argtype
-                                           ,G__ifunc_table *p_ifunc
+                                           ,G__ifunc_table *p_iref
                                            ,long *pifn,long *poffset
                                            ,int withConversion
                                            ,int withInheritance
                                            )
 {
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
+  struct G__ifunc_table_internal *p_ifunc = G__get_ifunc_internal(p_iref);
   struct G__param para;
   int hash;
   int temp;
@@ -6913,7 +6918,7 @@ struct G__ifunc_table *G__get_methodhandle(char *funcname,char *argtype
                              ,(withConversion&0x2)?1:0) ;
    *poffset = 0;
    *pifn = ifn;
-   if(ifunc || !withInheritance) return(ifunc);
+   if(ifunc || !withInheritance) return G__get_ifunc_ref(ifunc);
    if(-1!=tagnum) {
      int basen=0;
      struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
@@ -6925,7 +6930,7 @@ struct G__ifunc_table *G__get_methodhandle(char *funcname,char *argtype
          ifunc = G__overload_match(funcname,&para,hash,p_ifunc,G__TRYNORMAL
                                    ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,0,0) ;
          *pifn = ifn;
-         if(ifunc) return(ifunc);
+         if(ifunc) return G__get_ifunc_ref(ifunc);
        }
        ++basen;
      }
@@ -6937,7 +6942,7 @@ struct G__ifunc_table *G__get_methodhandle(char *funcname,char *argtype
                                  ,G__PUBLIC_PROTECTED_PRIVATE,G__EXACT
                                  ,withInheritance
                                  );
-   if(ifunc) return(ifunc);
+   if(ifunc) return G__get_ifunc_ref(ifunc);
    
    /* if no exact match, try to instantiate template function */
    funclist = G__add_templatefunc(funcname,&para,hash,funclist,p_ifunc,0);
@@ -6945,7 +6950,7 @@ struct G__ifunc_table *G__get_methodhandle(char *funcname,char *argtype
      ifunc = funclist->ifunc;
      *pifn = funclist->ifn;
      G__funclist_delete(funclist);
-     return(ifunc);
+     return G__get_ifunc_ref(ifunc);
    }
    G__funclist_delete(funclist);
    
@@ -6955,11 +6960,11 @@ struct G__ifunc_table *G__get_methodhandle(char *funcname,char *argtype
                                    ,match
                                    ,withInheritance
                                    );
-     if(ifunc) return(ifunc);
+     if(ifunc) return G__get_ifunc_ref(ifunc);
    }
  }
  
-  return(ifunc);
+  return G__get_ifunc_ref(ifunc);
 }
 
 
@@ -6969,13 +6974,14 @@ struct G__ifunc_table *G__get_methodhandle(char *funcname,char *argtype
 *
 **************************************************************************/
 struct G__ifunc_table *G__get_methodhandle2(char *funcname
-                                           ,G__param *libp,G__ifunc_table *p_ifunc
+                                           ,G__param *libp,G__ifunc_table *p_iref
                                            ,long *pifn,long *poffset
                                            ,int withConversion
                                            ,int withInheritance
                                            )
 {
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
+  struct G__ifunc_table_internal *p_ifunc = G__get_ifunc_internal(p_iref);
   int hash;
   int temp;
   struct G__funclist *funclist = (struct G__funclist*)NULL;
@@ -7000,7 +7006,7 @@ struct G__ifunc_table *G__get_methodhandle2(char *funcname
                              ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,0,0) ;
    *poffset = 0;
    *pifn = ifn;
-   if(ifunc || !withInheritance) return(ifunc);
+   if(ifunc || !withInheritance) return G__get_ifunc_ref(ifunc);
    if(-1!=tagnum) {
      int basen=0;
      struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
@@ -7012,7 +7018,7 @@ struct G__ifunc_table *G__get_methodhandle2(char *funcname
          ifunc = G__overload_match(funcname,libp,hash,p_ifunc,G__TRYNORMAL
                                    ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,0,0) ;
          *pifn = ifn;
-         if(ifunc) return(ifunc);
+         if(ifunc) return G__get_ifunc_ref(ifunc);
        }
        ++basen;
      }
@@ -7024,7 +7030,7 @@ struct G__ifunc_table *G__get_methodhandle2(char *funcname
                                  ,G__PUBLIC_PROTECTED_PRIVATE,G__EXACT
                                  ,withInheritance
                                  );
-   if(ifunc) return(ifunc);
+   if(ifunc) return G__get_ifunc_ref(ifunc);
    
    /* if no exact match, try to instantiate template function */
    funclist = G__add_templatefunc(funcname,libp,hash,funclist,p_ifunc,0);
@@ -7032,7 +7038,7 @@ struct G__ifunc_table *G__get_methodhandle2(char *funcname
      ifunc = funclist->ifunc;
      *pifn = funclist->ifn;
      G__funclist_delete(funclist);
-     return(ifunc);
+     return G__get_ifunc_ref(ifunc);
    }
    G__funclist_delete(funclist);
    
@@ -7042,11 +7048,89 @@ struct G__ifunc_table *G__get_methodhandle2(char *funcname
                                    ,match
                                    ,withInheritance
                                    );
-     if(ifunc) return(ifunc);
+     if(ifunc) return G__get_ifunc_ref(ifunc);
    }
  }
  
-  return(ifunc);
+  return G__get_ifunc_ref(ifunc);
+}
+
+namespace {
+   static std::map<int /*tagnum*/, std::set<G__ifunc_table> >& G__ifunc_refs() 
+   {
+      static std::map<int /*tagnum*/, std::set<G__ifunc_table> > ifunc_refs;
+      return ifunc_refs;
+   }
+}
+
+/**************************************************************************
+* G__get_ifunc_ref()
+* returns the G__ifunc_table reference object for an internal
+* G__ifunc_table_internal and creates it if it doesn't exist.
+**************************************************************************/
+struct G__ifunc_table* G__get_ifunc_ref(struct G__ifunc_table_internal* ifunc) {
+   if (!ifunc) return 0;
+   G__ifunc_table iref;
+   iref.tagnum = ifunc->tagnum;
+   iref.page = ifunc->page;
+   std::set<G__ifunc_table>::const_iterator irefIter = G__ifunc_refs()[iref.tagnum].insert(iref).first;
+   G__ifunc_table& irefInSet = const_cast<G__ifunc_table&>(*irefIter);
+   irefInSet.ifunc_cached = ifunc;
+   return &irefInSet;
+}
+
+/**************************************************************************
+* G__reset_ifunc_refs_for_tagnum()
+* resets cache for the G__ifunc_table reference set for a tagnum
+**************************************************************************/
+void G__reset_ifunc_refs_for_tagnum(int tagnum) {
+   std::map<int /*tagnum*/, std::set<G__ifunc_table> >::const_iterator iRefSet
+      = G__ifunc_refs().find(tagnum);
+   if (iRefSet == G__ifunc_refs().end()) return;
+   for (std::set<G__ifunc_table>::const_iterator iRef = iRefSet->second.begin();
+        iRef != iRefSet->second.end(); ++iRef)
+      const_cast<G__ifunc_table&>(*iRef).ifunc_cached = 0;
+}
+
+/**************************************************************************
+* G__reset_ifunc_refs()
+* resets cache for a (global) function's G__ifunc_table reference
+**************************************************************************/
+void G__reset_ifunc_refs(G__ifunc_table_internal* ifunc) {
+   if (!ifunc) return;
+   std::map<int /*tagnum*/, std::set<G__ifunc_table> >::const_iterator iRefSet
+      = G__ifunc_refs().find(ifunc->tagnum);
+   if (iRefSet == G__ifunc_refs().end()) return;
+   G__ifunc_table iref;
+   iref.tagnum = ifunc->tagnum;
+   iref.page = ifunc->page;
+   std::set<G__ifunc_table>::const_iterator iRef = iRefSet->second.find(iref);
+   if (iRef != iRefSet->second.end())
+      const_cast<G__ifunc_table&>(*iRef).ifunc_cached = 0;
+}
+
+/**************************************************************************
+* G__get_ifunc_internal()
+* returns the G__ifunc_table_internal object for a reference object.
+**************************************************************************/
+struct G__ifunc_table_internal* G__get_ifunc_internal(struct G__ifunc_table* iref) {
+   if (!iref) return 0;
+   if (iref->ifunc_cached) return iref->ifunc_cached;
+
+   int tagnum = iref->tagnum;
+   if (tagnum != -1) {
+      if (tagnum >= G__struct.alltag) return 0;
+      G__incsetup_memfunc(tagnum); // make sure funcs are setup
+      G__ifunc_table_internal* ifunc = G__struct.memfunc[tagnum];
+      for (int page = 0; page < iref->page && ifunc; ++page)
+         ifunc = ifunc->next;
+      return ifunc;
+   }
+
+   // We cannot re-initialize global ifuncs when they are re-loaded.
+   // We only have their position (page), and that might well change.
+
+   return 0;
 }
 
 } /* extern "C" */

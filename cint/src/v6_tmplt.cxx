@@ -992,7 +992,7 @@ struct G__Definetemplatefunc *G__defined_templatememfunc(char *name)
       G__def_tagnum = store_def_tagnum;
       G__tagdefining = store_tagdefining;
       if(!result) {
-        struct G__ifunc_table *ifunc=G__struct.memfunc[tagnum];
+        struct G__ifunc_table_internal *ifunc=G__struct.memfunc[tagnum];
         int ifn;
         int len=strlen(p);
         p[len++]='<';
@@ -2312,7 +2312,7 @@ void G__replacetemplate(char *templatename,char *tagname,G__Charlist *callpara
   int store_asm_wholefunction;
   int store_reftype;
   int isnew=0;
-  struct G__ifunc_table *store_ifunc;
+  struct G__ifunc_table_internal *store_ifunc;
   int slash=0;
   fpos_t out_pos,in_pos;
   fpos_t const_pos;
@@ -3096,7 +3096,7 @@ int G__templatefunc(G__value *result,char *funcname,G__param *libp
   struct G__Definetemplatefunc *deftmpfunc;
   struct G__Charlist call_para;
   int store_exec_memberfunc;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   char *pexplicitarg;
   int env_tagnum=G__get_envtagnum();
   struct G__inheritance *baseclass;

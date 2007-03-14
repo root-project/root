@@ -49,9 +49,10 @@ void G__store_dictposition(G__dictposition *dictpos)
   dictpos->typenum = G__newtype.alltype;
 
   /* global function position */
-  dictpos->ifunc = &G__ifunc;
-  while(dictpos->ifunc->next) dictpos->ifunc=dictpos->ifunc->next;
-  dictpos->ifn = dictpos->ifunc->allifunc;
+  G__ifunc_table_internal* lastifunc = &G__ifunc;
+  while(lastifunc->next) lastifunc=lastifunc->next;
+  dictpos->ifunc = G__get_ifunc_ref(lastifunc);
+  dictpos->ifn = lastifunc->allifunc;
   
   /* include path */
   dictpos->ipath = &G__ipathentry;
@@ -156,7 +157,7 @@ void G__scratch_upto(G__dictposition *dictpos)
 #ifdef G__MEMTEST
   fprintf(G__memhist,"Freeing interpret function table\n");
 #endif
-  G__free_ifunc_table_upto(&G__ifunc,dictpos->ifunc,dictpos->ifn);
+  G__free_ifunc_table_upto(&G__ifunc,G__get_ifunc_internal(dictpos->ifunc),dictpos->ifn);
 
 
   /********************************************
@@ -228,7 +229,7 @@ void G__scratch_upto(G__dictposition *dictpos)
 #ifdef G__MEMTEST
   fprintf(G__memhist,"Closing input files\n");
 #endif
-  G__close_inputfiles_upto(dictpos->nfile);
+  G__close_inputfiles_upto(dictpos);
 
   G__tagdefining = -1;
 
@@ -241,7 +242,7 @@ void G__scratch_upto(G__dictposition *dictpos)
 *
 ***********************************************************************/
 static
-int G__free_ifunc_table_upto_ifunc(G__ifunc_table *ifunc,G__ifunc_table *dictpos,int ifn)
+int G__free_ifunc_table_upto_ifunc(G__ifunc_table_internal *ifunc,G__ifunc_table_internal *dictpos,int ifn)
 {
   int i,j;
 
@@ -297,7 +298,7 @@ int G__free_ifunc_table_upto_ifunc(G__ifunc_table *ifunc,G__ifunc_table *dictpos
 * int G__free_ifunc_table_upto()
 *
 ***********************************************************************/
-int G__free_ifunc_table_upto(G__ifunc_table *ifunc,G__ifunc_table *dictpos,int ifn)
+int G__free_ifunc_table_upto(G__ifunc_table_internal *ifunc,G__ifunc_table_internal *dictpos,int ifn)
 {
   while (ifunc && ifunc != dictpos)
      ifunc = ifunc->next;
@@ -306,9 +307,9 @@ int G__free_ifunc_table_upto(G__ifunc_table *ifunc,G__ifunc_table *dictpos,int i
      return 1;
   }
 
-  G__ifunc_table* next = ifunc->next;
+  G__ifunc_table_internal* next = ifunc->next;
   int ret = G__free_ifunc_table_upto_ifunc(ifunc, dictpos, ifn);
-  ifunc->next=(struct G__ifunc_table *)NULL;
+  ifunc->next=(struct G__ifunc_table_internal *)NULL;
 
   while (next) {
      ifunc = next;
@@ -450,6 +451,9 @@ int G__free_struct_upto(int tagnum)
 #ifdef G__MEMTEST
     fprintf(G__memhist,"struct %s\n",G__struct.name[G__struct.alltag]);
 #endif
+
+    G__reset_ifunc_refs_for_tagnum(G__struct.alltag);
+
     G__bc_delete_vtbl(G__struct.alltag);    
     if(G__struct.rootspecial[G__struct.alltag]) {
       free((void*)G__struct.rootspecial[G__struct.alltag]);
@@ -464,7 +468,7 @@ int G__free_struct_upto(int tagnum)
     /* freeing member function table */
     G__free_ifunc_table(G__struct.memfunc[G__struct.alltag]);
     free((void*)G__struct.memfunc[G__struct.alltag]);
-    G__struct.memfunc[G__struct.alltag]=(struct G__ifunc_table *)NULL;
+    G__struct.memfunc[G__struct.alltag]=(struct G__ifunc_table_internal *)NULL;
 
 
     /* freeing member variable table */
@@ -749,7 +753,7 @@ int G__destroy_upto(G__var_array *var,int global
 * Can not replace G__close_inputfiles()
 *
 ***********************************************************************/
-void G__close_inputfiles_upto(int nfile)
+void G__close_inputfiles_upto(G__dictposition* pos)
 {
 #ifdef G__SHAREDLIB
   struct G__filetable permanentsl[G__MAX_SL];
@@ -759,6 +763,7 @@ void G__close_inputfiles_upto(int nfile)
 #ifdef G__DUMPFILE
   if(G__dumpfile) G__dump_tracecoverage(G__dumpfile);
 #endif
+  int nfile = pos->nfile;
   while(G__nfile>nfile) {
     --G__nfile;
     if(G__srcfile[G__nfile].dictpos) {
@@ -772,9 +777,85 @@ void G__close_inputfiles_upto(int nfile)
 #ifdef G__SHAREDLIB
     if(G__srcfile[G__nfile].ispermanentsl) {
       permanentsl[nperm++] = G__srcfile[G__nfile];
+      G__srcfile[G__nfile].initsl=0;
+
+      // reset autoload struct entries
+      for (int itag = 0; itag < pos->tagnum; ++itag)
+         if (G__struct.filenum[itag] == G__nfile) {
+
+            // keep name, libname; reset everything else
+            char* name = G__struct.name[itag];
+            int hash = G__struct.hash[itag];
+            char* libname = G__struct.libname[itag];
+            G__struct.name[itag] = 0; // tree_struct must not delete it
+            G__struct.libname[itag] = 0; // tree_struct must not delete it
+            int alltag = G__struct.alltag;
+            G__struct.alltag = itag + 1; // to only free itag
+            G__free_struct_upto(itag);
+            G__struct.alltag = alltag;
+            G__struct.name[itag] = name;
+            G__struct.libname[itag] = libname;
+            G__struct.type[itag] = 'a';
+            G__struct.hash[itag] = hash;
+            G__struct.size[itag] = 0;
+
+            G__struct.memvar[itag] = (struct G__var_array *)malloc(sizeof(struct G__var_array));
+            memset(G__struct.memvar[itag],0,sizeof(struct G__var_array));
+            G__struct.memvar[itag]->tagnum = itag;
+            G__struct.memfunc[itag] = (struct G__ifunc_table_internal *)malloc(sizeof(struct G__ifunc_table_internal));
+            memset(G__struct.memfunc[itag],0,sizeof(struct G__ifunc_table_internal));
+            G__struct.memfunc[itag]->tagnum = itag;
+            G__struct.memfunc[itag]->funcname[0]=(char*)malloc(2);
+            G__struct.memfunc[itag]->funcname[0][0]=0;
+            G__struct.memfunc[itag]->pentry[0] = &G__struct.memfunc[itag]->entry[0];
+            G__struct.memfunc[itag]->pentry[0]->bytecodestatus = G__BYTECODE_NOTYET;
+            G__struct.memfunc[itag]->access[0] = G__PUBLIC;
+            G__struct.memfunc[itag]->ansi[0] = 1;
+            G__struct.memfunc[itag]->p_tagtable[0] = -1;
+            G__struct.memfunc[itag]->p_typetable[0] = -1;
+            G__struct.memfunc[itag]->comment[0].filenum = -1;
+            {
+               struct G__ifunc_table_internal *store_ifunc;
+               store_ifunc = G__p_ifunc;
+               G__p_ifunc = G__struct.memfunc[itag];
+               G__memfunc_next();
+               G__p_ifunc = store_ifunc;
+            }
+
+            G__struct.baseclass[itag] = (struct G__inheritance *)malloc(sizeof(struct G__inheritance));
+            memset(G__struct.baseclass[itag],0,sizeof(struct G__inheritance));
+
+            G__struct.virtual_offset[itag] = -1;
+            G__struct.globalcomp[itag] = 0;
+            G__struct.iscpplink[itag] = G__default_link?G__globalcomp:G__NOLINK;
+            G__struct.isabstract[itag] = 0;
+            G__struct.protectedaccess[itag] = 0; 
+            G__struct.line_number[itag] = -1;
+            G__struct.filenum[itag] = -1;
+            G__struct.parent_tagnum[itag] = -1;
+            G__struct.funcs[itag] = 0;
+            G__struct.istypedefed[itag] = 0;
+            G__struct.istrace[itag] = 0;
+            G__struct.isbreak[itag] = 0;
+            G__struct.comment[itag].p.com = NULL;
+            G__struct.comment[itag].filenum = -1;
+            G__struct.friendtag[itag] = 0;
+            G__struct.incsetup_memvar[itag] = 0;
+            G__struct.incsetup_memfunc[itag] = 0;
+            G__struct.rootflag[itag] = 0;
+            G__struct.rootspecial[itag] = 0;
+            G__struct.isctor[itag] = 0;
+            G__struct.defaulttypenum[itag] = 0;
+            G__struct.vtable[itag] = 0;
+        }
       continue;
     }
 #endif
+    if(G__srcfile[G__nfile].initsl) {
+      delete(G__srcfile[G__nfile].initsl);
+      G__srcfile[G__nfile].initsl=0;
+    }
+
     if(G__srcfile[G__nfile].fp) { 
       fclose(G__srcfile[G__nfile].fp);
       if(G__srcfile[G__nfile].prepname) {
@@ -817,7 +898,23 @@ void G__close_inputfiles_upto(int nfile)
   while(nperm) {
     --nperm;
     G__srcfile[G__nfile++] = permanentsl[nperm];
-    if(permanentsl[nperm].initsl) (*permanentsl[nperm].initsl)();
+
+    if (permanentsl[nperm].initsl) {
+       G__input_file store_ifile = G__ifile;
+       G__ifile.filenum = G__nfile - 1;
+       G__ifile.line_number = -1;
+       G__ifile.str = 0;
+       G__ifile.pos = 0;
+       G__ifile.vindex = 0;
+       G__ifile.fp = G__srcfile[G__nfile - 1].fp;
+       strcpy(G__ifile.name,G__srcfile[G__nfile - 1].filename);
+
+       for (std::list<G__DLLINIT>::const_iterator iInitsl = permanentsl[nperm].initsl->begin();
+            iInitsl != permanentsl[nperm].initsl->end(); ++iInitsl)
+          (*(*iInitsl))();
+
+       G__ifile = store_ifile;
+    }
   }
 #endif
 

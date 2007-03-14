@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.50 2007/01/30 10:09:57 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Pythonize.cxx,v 1.51 2007/03/09 06:06:56 brun Exp $
 // Author: Wim Lavrijsen, Jul 2004
 
 // Bindings
@@ -1410,7 +1410,7 @@ namespace {
             fgCount += 1;
 
          // setup association for CINT
-            G__ifunc_table* ifunc = m.ifunc();
+            G__ifunc_table_internal* ifunc = G__get_ifunc_internal(m.ifunc());
             int index = m.Index();
             ifunc->pentry[index]->tp2f = (void*)((Long_t)this + fgCount);
 

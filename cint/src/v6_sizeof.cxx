@@ -995,7 +995,7 @@ long G__get_functioninfo(char *item,long *phandle,long *pindex,int tagnum)
   char *buf;
   int tag_string_buf;
   /* char temp[G__MAXNAME]; */
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int index;
   int i;
   int p;
@@ -1018,10 +1018,10 @@ long G__get_functioninfo(char *item,long *phandle,long *pindex,int tagnum)
     return(0);
   }
 
-  ifunc = (struct G__ifunc_table *)(*phandle);
+  ifunc = (struct G__ifunc_table_internal *)(*phandle);
   index = (*pindex);
 
-  if((struct G__ifunc_table*)NULL==ifunc || ifunc->allifunc<=index) {
+  if((struct G__ifunc_table_internal*)NULL==ifunc || ifunc->allifunc<=index) {
     *phandle = 0;
     *pindex = 0;
     return(0);
@@ -1037,7 +1037,7 @@ long G__get_functioninfo(char *item,long *phandle,long *pindex,int tagnum)
       (*phandle) = (long)(ifunc->next);
       *pindex = 0;
     }
-    ifunc = (struct G__ifunc_table *)(*phandle);
+    ifunc = (struct G__ifunc_table_internal *)(*phandle);
     index = (*pindex);
     if( ifunc && index<ifunc->allifunc) return(1);
     else {
@@ -1310,7 +1310,7 @@ void G__va_arg_put(G__va_arg_buf *pbuf,G__param *libp,int n)
 /**************************************************************************
  * G__va_arg_copyfunc() , Never used so far
  **************************************************************************/
-void G__va_arg_copyfunc(FILE *fp,G__ifunc_table *ifunc,int ifn)
+void G__va_arg_copyfunc(FILE *fp,G__ifunc_table_internal *ifunc,int ifn)
 {
   FILE *xfp;
   int n;
@@ -1399,7 +1399,7 @@ void G__va_arg_copyfunc(FILE *fp,G__ifunc_table *ifunc,int ifn)
 /**************************************************************************
  * G__typeconversion
  **************************************************************************/
-void G__typeconversion(G__ifunc_table *ifunc,int ifn
+void G__typeconversion(G__ifunc_table_internal *ifunc,int ifn
                        ,G__param *libp) 
 {
   int formal_type,    param_type;
@@ -1459,7 +1459,7 @@ int G__DLL_direct_globalfunc(G__value *result7
                              ,G__CONST char *funcname /* ifunc */
                              ,struct G__param *libp
                              ,int hash)   /* ifn */  {
-  struct G__ifunc_table *ifunc = (struct G__ifunc_table*)funcname;
+  struct G__ifunc_table_internal *ifunc = (struct G__ifunc_table_internal*)funcname;
   int ifn=hash;
 
   int (*itp2f)(G__va_arg_buf);

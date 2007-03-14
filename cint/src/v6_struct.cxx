@@ -651,7 +651,7 @@ int G__defined_tagname(const char *tagname,int noerror)
       int store_tagnum=G__tagnum;
       int store_cpp=G__cpp;
       int store_globalcomp = G__globalcomp;
-      struct G__ifunc_table *store_ifunc = G__p_ifunc;
+      struct G__ifunc_table_internal *store_ifunc = G__p_ifunc;
       G__cpp=0;
       G__globalvarpointer=G__PVOID;
       G__tagdefining = -1;
@@ -854,10 +854,10 @@ int G__search_tagname(const char *tagname,int type)
     /***********************************************************
      * Allocate and initialize member function table list
      ***********************************************************/
-    G__struct.memfunc[i] = (struct G__ifunc_table *)malloc(sizeof(struct G__ifunc_table));
-    memset(G__struct.memfunc[i],0,sizeof(struct G__ifunc_table));
+    G__struct.memfunc[i] = (struct G__ifunc_table_internal *)malloc(sizeof(struct G__ifunc_table_internal));
+    memset(G__struct.memfunc[i],0,sizeof(struct G__ifunc_table_internal));
     G__struct.memfunc[i]->allifunc = 0;
-    G__struct.memfunc[i]->next = (struct G__ifunc_table *)NULL;
+    G__struct.memfunc[i]->next = (struct G__ifunc_table_internal *)NULL;
     G__struct.memfunc[i]->page = 0;
 #ifdef G__NEWINHERIT
     G__struct.memfunc[i]->tagnum = i;
@@ -899,7 +899,7 @@ int G__search_tagname(const char *tagname,int type)
     G__struct.memfunc[i]->comment[0].filenum = -1;
 
     {
-       struct G__ifunc_table *store_ifunc;
+       struct G__ifunc_table_internal *store_ifunc;
        store_ifunc = G__p_ifunc;
        G__p_ifunc = G__struct.memfunc[i];
        G__memfunc_next();
@@ -1542,7 +1542,7 @@ void G__define_struct(char type)
     int lastdirect = 0;
     int ivb;
     for (ivb = 0; ivb < baseclass->basen; ++ivb) {
-      struct G__ifunc_table* itab;
+      struct G__ifunc_table_internal* itab;
 
       if (baseclass->herit[ivb]->property & G__ISDIRECTINHERIT) {
         lastdirect = ivb;
@@ -1576,7 +1576,7 @@ void G__define_struct(char type)
             }
 
             for (b2 = firstb; b2 < lastb; ++b2) {
-              struct G__ifunc_table* found_tab;
+              struct G__ifunc_table_internal* found_tab;
               int found_ndx;
               int basetag;
               if (b2 == ivb) {
@@ -1844,12 +1844,13 @@ void G__define_struct(char type)
 /******************************************************************
  * G__callfunc0()
  ******************************************************************/
-int G__callfunc0(G__value *result, G__ifunc_table *ifunc, int ifn
+int G__callfunc0(G__value *result, G__ifunc_table *iref, int ifn
                  ,G__param *libp,void *p,int funcmatch)
 {
   int stat=0;
   long store_struct_offset;
   int store_asm_exec;
+  G__ifunc_table_internal* ifunc = G__get_ifunc_internal(iref);
 
   if(!ifunc->hash[ifn] || !ifunc->pentry[ifn]) {
     /* The function is not defined or masked */
@@ -1911,7 +1912,7 @@ int G__calldtor(void *p,int tagnum,int isheap)
 {
   int stat;
   G__value result;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   struct G__param para;
   int ifn=0;
   long store_gvp;
@@ -1936,7 +1937,7 @@ int G__calldtor(void *p,int tagnum,int isheap)
   para.paran=0;
   para.parameter[0][0]=0;
   para.para[0] = G__null;
-  stat = G__callfunc0(&result,ifunc,ifn,&para,p,G__TRYDESTRUCTOR);
+  stat = G__callfunc0(&result,G__get_ifunc_ref(ifunc),ifn,&para,p,G__TRYDESTRUCTOR);
 
   G__setgvp(store_gvp);
 

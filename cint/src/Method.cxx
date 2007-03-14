@@ -27,7 +27,7 @@ extern "C" int G__xrefflag;
 ///////////////////////////////////////////////////////////////////////////
 void Cint::G__MethodInfo::Init()
 {
-  handle = (long)(&G__ifunc);
+  handle = (long)(G__get_ifunc_ref(&G__ifunc));
   index = -1;
 #ifndef G__OLDIMPLEMENTATION2194
   usingIndex = -1;
@@ -38,7 +38,7 @@ void Cint::G__MethodInfo::Init()
 void Cint::G__MethodInfo::Init(G__ClassInfo &a)
 {
   if(a.IsValid()) {
-    handle=(long)G__struct.memfunc[a.Tagnum()];
+    handle=(long)G__get_ifunc_ref(G__struct.memfunc[a.Tagnum()]);
     index = -1;
 #ifndef G__OLDIMPLEMENTATION2194
     usingIndex = -1;
@@ -72,8 +72,8 @@ void Cint::G__MethodInfo::Init(long handlein,long indexin
     }
 
     /* Set return type */
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
     type.type=ifunc->type[index];
     type.tagnum=ifunc->p_tagtable[index];
     type.typenum=ifunc->p_typetable[index];
@@ -91,7 +91,7 @@ void Cint::G__MethodInfo::Init(long handlein,long indexin
 void Cint::G__MethodInfo::Init(G__ClassInfo *belongingclassin
 	,long funcpage,long indexin)
 {
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int i=0;
 
   if(belongingclassin->IsValid()) {
@@ -110,7 +110,7 @@ void Cint::G__MethodInfo::Init(G__ClassInfo *belongingclassin
   G__ASSERT(ifunc->page == funcpage);
 
   if(ifunc) {
-    handle = (long)ifunc;
+    handle = (long)G__get_ifunc_ref(ifunc);
     index = indexin;
     // Set return type
     type.type=ifunc->type[index];
@@ -130,8 +130,8 @@ void Cint::G__MethodInfo::Init(G__ClassInfo *belongingclassin
 const char* Cint::G__MethodInfo::Name()
 {
   if(IsValid()) {
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
     return(ifunc->funcname[index]);
   }
   else {
@@ -142,8 +142,8 @@ const char* Cint::G__MethodInfo::Name()
 int Cint::G__MethodInfo::Hash()
 {
   if(IsValid()) {
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
     return(ifunc->hash[index]);
   }
   else {
@@ -154,9 +154,7 @@ int Cint::G__MethodInfo::Hash()
 struct G__ifunc_table* Cint::G__MethodInfo::ifunc()
 {
   if(IsValid()) {
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
-    return(ifunc);
+    return (struct G__ifunc_table*)handle;
   }
   else {
     return((struct G__ifunc_table*)NULL);
@@ -168,8 +166,8 @@ const char* Cint::G__MethodInfo::Title()
   static char buf[G__INFO_TITLELEN];
   buf[0]='\0';
   if(IsValid()) {
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
     G__getcomment(buf,&ifunc->comment[index],ifunc->tagnum);
     return(buf);
   }
@@ -182,8 +180,8 @@ long Cint::G__MethodInfo::Property()
 {
   if(IsValid()) {
     long property=0;
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
 #ifndef G__OLDIMPLEMENTATION2039
     if (ifunc->hash[index]==0) return property;
 #endif
@@ -212,8 +210,8 @@ long Cint::G__MethodInfo::Property()
 int Cint::G__MethodInfo::NArg()
 {
   if(IsValid()) {
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
     return(ifunc->para_nu[index]);
   }
   else {
@@ -224,8 +222,8 @@ int Cint::G__MethodInfo::NArg()
 int Cint::G__MethodInfo::NDefaultArg()
 {
   if(IsValid()) {
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
     if(ifunc->para_nu[index]) {
       int i,defaultnu=0;
       for(i=ifunc->para_nu[index]-1;i>=0;i--) {
@@ -244,8 +242,8 @@ int Cint::G__MethodInfo::NDefaultArg()
 int Cint::G__MethodInfo::HasVarArgs()
 {
   if(IsValid()) {
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
     return(2==ifunc->ansi[index]?1:0);
   }
   else {
@@ -257,8 +255,8 @@ G__InterfaceMethod Cint::G__MethodInfo::InterfaceMethod()
 {
   G__LockCriticalSection();
   if(IsValid()) {
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
     if(
        -1==ifunc->pentry[index]->size /* this means compiled class */
        ) {
@@ -280,8 +278,8 @@ G__InterfaceMethod Cint::G__MethodInfo::InterfaceMethod()
 struct G__bytecodefunc *Cint::G__MethodInfo::GetBytecode()
 {
   if(IsValid()) {
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
     int store_asm_loopcompile = G__asm_loopcompile;
     G__asm_loopcompile = 4;
     if(!ifunc->pentry[index]->bytecode &&
@@ -289,7 +287,7 @@ struct G__bytecodefunc *Cint::G__MethodInfo::GetBytecode()
        G__BYTECODE_NOTYET==ifunc->pentry[index]->bytecodestatus
        && G__asm_loopcompile>=4
        ) {
-      G__compile_bytecode(ifunc,(int)index);
+      G__compile_bytecode((struct G__ifunc_table*)handle,(int)index);
     }
     G__asm_loopcompile = store_asm_loopcompile;
     return(ifunc->pentry[index]->bytecode);
@@ -334,14 +332,14 @@ G__DataMemberInfo Cint::G__MethodInfo::GetLocalVariable()
 void* Cint::G__MethodInfo::PointerToFunc()
 {
   if(IsValid()) {
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
     if(
        -1!=ifunc->pentry[index]->size && 
        G__BYTECODE_NOTYET==ifunc->pentry[index]->bytecodestatus
        && G__asm_loopcompile>=4
        ) {
-      G__compile_bytecode(ifunc,(int)index);
+      G__compile_bytecode((struct G__ifunc_table*)handle,(int)index);
     }
     if(G__BYTECODE_SUCCESS==ifunc->pentry[index]->bytecodestatus) 
       return((void*)ifunc->pentry[index]->bytecode);
@@ -357,8 +355,8 @@ void* Cint::G__MethodInfo::PointerToFunc()
 void Cint::G__MethodInfo::SetGlobalcomp(int globalcomp)
 {
   if(IsValid()) {
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
     ifunc->globalcomp[index]=globalcomp;
     if(G__NOLINK==globalcomp) ifunc->access[index]=G__PRIVATE;
     else                      ifunc->access[index]=G__PUBLIC;
@@ -368,9 +366,9 @@ void Cint::G__MethodInfo::SetGlobalcomp(int globalcomp)
 int Cint::G__MethodInfo::IsValid()
 {
   if(handle) {
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
-    if(0<=index&&index<ifunc->allifunc) {
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
+    if(ifunc && 0<=index&&index<ifunc->allifunc) {
       return(1);
     }
     else {
@@ -395,15 +393,15 @@ int Cint::G__MethodInfo::SetFilePos(const char* fname)
 int Cint::G__MethodInfo::Next()
 {
   if(handle) {
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
     ++index;
     if(ifunc->allifunc<=index) {
       int t = ifunc->tagnum;
       ifunc=ifunc->next;
       if(ifunc) {
 	ifunc->tagnum=t;
-	handle=(long)ifunc;
+	handle=(long)G__get_ifunc_ref(ifunc);
 	index = 0;
       }
       else {
@@ -418,7 +416,7 @@ int Cint::G__MethodInfo::Next()
       index=0;
       G__incsetup_memfunc(G__globalusingnamespace.herit[usingIndex]->basetagnum);
       ifunc=G__struct.memfunc[G__globalusingnamespace.herit[usingIndex]->basetagnum];
-      handle=(long)ifunc;
+      handle=(long)G__get_ifunc_ref(ifunc);
     }
 #endif
     if(IsValid()) {
@@ -442,8 +440,8 @@ int Cint::G__MethodInfo::Next()
 const char* Cint::G__MethodInfo::FileName()
 {
   if(IsValid()) {
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
     if(ifunc->pentry[index]->filenum>=0) { /* 2012, keep this */
       return(G__srcfile[ifunc->pentry[index]->filenum].filename);
     }
@@ -459,8 +457,8 @@ const char* Cint::G__MethodInfo::FileName()
 FILE* Cint::G__MethodInfo::FilePointer()
 {
   if(IsValid()) {
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
     if(
        ifunc->pentry[index]->filenum>=0 && ifunc->pentry[index]->size>=0
        ) {
@@ -478,8 +476,8 @@ FILE* Cint::G__MethodInfo::FilePointer()
 int Cint::G__MethodInfo::LineNumber()
 {
   if(IsValid()) {
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
     if(
        ifunc->pentry[index]->filenum>=0 && ifunc->pentry[index]->size>=0
        ) {
@@ -501,12 +499,14 @@ long Cint::G__MethodInfo::FilePosition()
   long invalid=0L;
   if(IsValid()) {
 #ifdef G__VMS
+     G__fprinterr(G__err, 
+                  "Error: VMS support now broken; please complain to cint@pcroot.cern.ch if this matters to you!\n");
     //Changed so that pos can be a long.
     struct G__ifunc_table_VMS *ifunc;
     ifunc = (struct G__ifunc_table_VMS*)handle;
 #else
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
 #endif
     if(
        ifunc->pentry[index]->filenum>=0 && ifunc->pentry[index]->size>=0
@@ -531,8 +531,8 @@ long Cint::G__MethodInfo::FilePosition()
 int Cint::G__MethodInfo::Size()
 {
   if(IsValid()) {
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
     if(
        ifunc->pentry[index]->size>=0
        ) {
@@ -550,8 +550,8 @@ int Cint::G__MethodInfo::Size()
 int Cint::G__MethodInfo::IsBusy()
 {
   if(IsValid()) {
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)handle;
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
     return(ifunc->busy[index]);
   }
   else {
@@ -601,8 +601,8 @@ extern "C" void* G__FindSym(const char* filename,const char* funcname);
 int Cint::G__MethodInfo::LoadDLLDirect(const char* filename,const char* funcname) 
 {
   void* p2f;
-  struct G__ifunc_table *ifunc;
-  ifunc = (struct G__ifunc_table*)handle;
+  struct G__ifunc_table_internal *ifunc;
+  ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
   p2f = G__FindSym(filename,funcname);
   if(p2f) {
     ifunc->pentry[index]->tp2f = p2f;
@@ -722,7 +722,7 @@ int Cint::G__ForceBytecodecompilation(char *funcname,char *param)
 ///////////////////////////////////////////////////////////////////////////
 void Cint::G__MethodInfo::SetVtblIndex(int vtblindex) {
   if(!IsValid()) return;
-  struct G__ifunc_table* ifunc = (struct G__ifunc_table*)handle;
+  struct G__ifunc_table_internal* ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
   ifunc->vtblindex[index] = (short)vtblindex;
 }
 
@@ -731,7 +731,7 @@ void Cint::G__MethodInfo::SetVtblIndex(int vtblindex) {
 ///////////////////////////////////////////////////////////////////////////
 void Cint::G__MethodInfo::SetIsVirtual(int isvirtual) {
   if(!IsValid()) return;
-  struct G__ifunc_table* ifunc = (struct G__ifunc_table*)handle;
+  struct G__ifunc_table_internal* ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
   ifunc->isvirtual[index] = isvirtual;
 }
 
@@ -740,7 +740,7 @@ void Cint::G__MethodInfo::SetIsVirtual(int isvirtual) {
 ///////////////////////////////////////////////////////////////////////////
 void Cint::G__MethodInfo::SetVtblBasetagnum(int basetagnum) {
   if(!IsValid()) return;
-  struct G__ifunc_table* ifunc = (struct G__ifunc_table*)handle;
+  struct G__ifunc_table_internal* ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
   ifunc->vtblbasetagnum[index] = (short)basetagnum;
 }
 
@@ -749,7 +749,7 @@ void Cint::G__MethodInfo::SetVtblBasetagnum(int basetagnum) {
 ///////////////////////////////////////////////////////////////////////////
 G__friendtag*  Cint::G__MethodInfo::GetFriendInfo() { 
    if(IsValid()) {
-      struct G__ifunc_table *ifunc=(struct G__ifunc_table*)handle;
+      struct G__ifunc_table_internal* ifunc = G__get_ifunc_internal((struct G__ifunc_table*)handle);
       return(ifunc->friendtag[index]);
    }
    else return 0;
@@ -770,7 +770,8 @@ int Cint::G__MethodInfo::GetDefiningScopeTagnum()
 void Cint::G__MethodInfo::SetUserParam(void *user) 
 {
    if (IsValid()) {
-      ifunc()->userparam[index] = user;
+      struct G__ifunc_table_internal* ifunc_internal = G__get_ifunc_internal((struct G__ifunc_table*)ifunc());
+      ifunc_internal->userparam[index] = user;
    }
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -779,7 +780,8 @@ void Cint::G__MethodInfo::SetUserParam(void *user)
 void *Cint::G__MethodInfo::GetUserParam()
 {
    if (IsValid()) {
-      return ifunc()->userparam[index];
+      struct G__ifunc_table_internal* ifunc_internal = G__get_ifunc_internal((struct G__ifunc_table*)ifunc());
+      return ifunc_internal->userparam[index];
    }
    else return 0;
 }

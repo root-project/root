@@ -6907,7 +6907,7 @@ int G__isfriend(int tagnum)
     }
   }
   if(-1!=G__func_now && G__p_local && G__p_local->ifunc) {
-    friendtag = G__p_local->ifunc->friendtag[G__p_local->ifn];
+    friendtag = G__get_ifunc_internal(G__p_local->ifunc)->friendtag[G__p_local->ifn];
     while(friendtag) {
       if(friendtag->tagnum==tagnum) return(1);
       friendtag=friendtag->next;

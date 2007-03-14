@@ -300,7 +300,7 @@ int G__is_valid_dictpos(G__dictposition *dict)
 {
   int flag=0;
   struct G__var_array *var = &G__global; 
-  struct G__ifunc_table *ifunc = &G__ifunc;
+  struct G__ifunc_table_internal *ifunc = &G__ifunc;
 
   while(var) {
     if(var==dict->var && var->allvar>=dict->var->allvar) {
@@ -313,7 +313,8 @@ int G__is_valid_dictpos(G__dictposition *dict)
 
   flag=0;
   while(ifunc) {
-    if(ifunc==dict->ifunc && ifunc->allifunc>=dict->ifunc->allifunc) {
+    G__ifunc_table_internal* dict_ifunc = G__get_ifunc_internal(dict->ifunc);
+    if(ifunc==dict_ifunc && ifunc->allifunc>=dict_ifunc->allifunc) {
       flag=1;
       break;
     }
@@ -398,7 +399,7 @@ void G__show_undo_position(int index)
   int nfile=undodictpos[index].nfile;
   int tagnum=undodictpos[index].tagnum;
   int typenum=undodictpos[index].typenum;
-  struct G__ifunc_table *ifunc=undodictpos[index].ifunc;
+  struct G__ifunc_table_internal *ifunc=G__get_ifunc_internal(undodictpos[index].ifunc);
   int ifn=undodictpos[index].ifn;
   struct G__var_array *var=undodictpos[index].var;
   int ig15=undodictpos[index].ig15;
@@ -491,7 +492,7 @@ void G__clear_errordictpos()
 ******************************************************************/
 int G__clearfilebusy(int ifn)
 {
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int flag=0;
   int i1;
   int i2;

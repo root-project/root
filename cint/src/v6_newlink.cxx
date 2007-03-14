@@ -134,7 +134,7 @@ static int G__privateaccess = 0;
 * Following static variables must be protected by semaphoe for
 * multi-threading.
 **************************************************************************/
-static struct G__ifunc_table *G__incset_p_ifunc;
+static struct G__ifunc_table_internal *G__incset_p_ifunc;
 static int G__incset_tagnum;
 static int G__incset_func_now;
 static int G__incset_func_page;
@@ -338,7 +338,7 @@ char* G__fulltypename(int typenum)
 *
 *  Show compiled function call parameters
 **************************************************************************/
-int G__debug_compiledfunc_arg(FILE *fout,G__ifunc_table *ifunc,int ifn,G__param *libp)
+int G__debug_compiledfunc_arg(FILE *fout,G__ifunc_table_internal *ifunc,int ifn,G__param *libp)
 {
   char temp[G__ONELINE];
   int i;
@@ -369,7 +369,7 @@ int G__debug_compiledfunc_arg(FILE *fout,G__ifunc_table *ifunc,int ifn,G__param 
 /**************************************************************************
 * G__call_cppfunc()
 **************************************************************************/
-int G__call_cppfunc(G__value *result7,G__param *libp,G__ifunc_table *ifunc,int ifn)
+int G__call_cppfunc(G__value *result7,G__param *libp,G__ifunc_table_internal *ifunc,int ifn)
 {
   G__InterfaceMethod cppfunc;
   int result;
@@ -487,7 +487,7 @@ static void G__ctordtor_initialize()
   for(i=0;i<G__struct.alltag+1;i++) {
     /* If link for this class is turned off but one or more member functions
      * are explicitly turned on, set G__ONLYMETHODLINK flag for the class */
-    struct G__ifunc_table *ifunc=G__struct.memfunc[i];
+    struct G__ifunc_table_internal *ifunc=G__struct.memfunc[i];
     int ifn;
     if(G__NOLINK==G__struct.globalcomp[i]) {
       while(ifunc) {
@@ -1092,7 +1092,7 @@ char *G__map_cpp_funcname(int tagnum,char * /* funcname */,int ifn,int page)
 **************************************************************************/
 void G__cpplink_protected_stub_ctor(int tagnum,FILE *hfp)
 {
-  struct G__ifunc_table *memfunc = G__struct.memfunc[tagnum];
+  struct G__ifunc_table_internal *memfunc = G__struct.memfunc[tagnum];
   int ifn;
 
   while(memfunc) {
@@ -1137,7 +1137,7 @@ void G__cpplink_protected_stub(FILE *fp,FILE *hfp)
        G__struct.protectedaccess[i] ) {
       int ig15,ifn,n;
       struct G__var_array *memvar = G__struct.memvar[i];
-      struct G__ifunc_table *memfunc = G__struct.memfunc[i];
+      struct G__ifunc_table_internal *memfunc = G__struct.memfunc[i];
       fprintf(hfp,"class %s_PR : public %s {\n"
               ,G__get_link_tagname(i),G__fulltagname(i,1));
       fprintf(hfp," public:\n");
@@ -2237,7 +2237,7 @@ int G__isnonpublicnew(int tagnum)
   int i;
   int hash;
   char *namenew = "operator new";
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
 
   G__hash(namenew,hash,i);
   ifunc = G__struct.memfunc[tagnum];
@@ -2262,7 +2262,7 @@ void G__cppif_memfunc(FILE *fp, FILE *hfp)
 {
 #ifndef G__SMALLOBJECT
   int i,j;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int isconstructor,iscopyconstructor,isdestructor,isassignmentoperator;
   int isnonpublicnew;
 
@@ -2405,7 +2405,7 @@ void G__cppif_memfunc(FILE *fp, FILE *hfp)
 void G__cppif_func(FILE *fp, FILE *hfp)
 {
   int j;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
 
   fprintf(fp,"\n/* Setting up global function */\n");
   ifunc = &G__ifunc;
@@ -2442,7 +2442,7 @@ void G__cppif_dummyfuncname(FILE *fp)
 *  G__if_ary_union()
 *
 **************************************************************************/
-void G__if_ary_union(FILE *fp, int ifn, G__ifunc_table *ifunc)
+void G__if_ary_union(FILE *fp, int ifn, G__ifunc_table_internal *ifunc)
 {
   int k, m;
   char* p;
@@ -2463,7 +2463,7 @@ void G__if_ary_union(FILE *fp, int ifn, G__ifunc_table *ifunc)
 *  G__if_ary_union_reset()
 *
 **************************************************************************/
-void G__if_ary_union_reset(int ifn, G__ifunc_table *ifunc)
+void G__if_ary_union_reset(int ifn, G__ifunc_table_internal *ifunc)
 {
   int k, m;
   int type;
@@ -2527,7 +2527,7 @@ int k)
 void G__p2f_typedef(fp,ifn,ifunc)
 FILE *fp;
 int ifn;
-struct G__ifunc_table *ifunc)
+struct G__ifunc_table_internal *ifunc)
 {
   char buf[G__LONGLINE];
   char *p;
@@ -2567,7 +2567,7 @@ struct G__ifunc_table *ifunc)
 static int G__isprotecteddestructoronelevel(int tagnum)
 {
   char *dtorname;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int ifn;
   ifunc=G__struct.memfunc[tagnum];
   dtorname = (char*)malloc(strlen(G__struct.name[tagnum])+2);
@@ -2602,7 +2602,7 @@ static int G__isprotecteddestructoronelevel(int tagnum)
 * calling the vararg function.
 *
 **************************************************************************/
-static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table *ifunc,
+static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table_internal *ifunc,
                             const char *fn, int tagnum, const char *cls)
 {
    const int umax = 20;   // maximum number of extra vararg stack arguments
@@ -2792,7 +2792,7 @@ static void G__x8664_vararg(FILE *fp, int ifn, G__ifunc_table *ifunc,
    fprintf(fp, "  __asm__ __volatile__(\"addq %%0, %%%%rsp\" :: \"i\" ((umax+2)*8));\n");
 }
 
-static void G__x8664_vararg_epilog(FILE *fp, int ifn, G__ifunc_table *ifunc)
+static void G__x8664_vararg_epilog(FILE *fp, int ifn, G__ifunc_table_internal *ifunc)
 {
    char *typestring;
 
@@ -2881,7 +2881,7 @@ static void G__x8664_vararg_epilog(FILE *fp, int ifn, G__ifunc_table *ifunc)
 * eventually call the real constructor with the appropriate arguments.
 *
 **************************************************************************/
-void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_table *ifunc)
+void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_table_internal *ifunc)
 {
 #ifndef G__SMALLOBJECT
   int k, m;
@@ -2946,13 +2946,16 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
   bool has_own_new2arg = false;
 
   {
-    struct G__ifunc_table* ifunc;
+    struct G__ifunc_table* iref = G__get_ifunc_ref(G__struct.memfunc[tagnum]);
+    struct G__ifunc_table* ireffound = 0;
     long index;
     long offset;
-    ifunc = G__get_methodhandle("operator new", "size_t", G__struct.memfunc[tagnum], &index, &offset, 0, 0);
-    has_own_new1arg = (ifunc != 0);
-    ifunc = G__get_methodhandle("operator new", "size_t, void*", G__struct.memfunc[tagnum], &index, &offset, 0, 0);
-    has_own_new2arg = (ifunc != 0);
+    ireffound = G__get_methodhandle("operator new", "size_t", iref,
+                                &index, &offset, 0, 0);
+    has_own_new1arg = (ireffound != 0);
+    ireffound = G__get_methodhandle("operator new", "size_t, void*", iref, 
+                                &index, &offset, 0, 0);
+    has_own_new2arg = (ireffound != 0);
   }
 
   //FIXME: debugging code
@@ -3260,7 +3263,7 @@ void G__cppif_genconstructor(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G_
 **************************************************************************/
 static int G__isprivateconstructorifunc(int tagnum,int iscopy)
 {
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int ifn;
   ifunc=G__struct.memfunc[tagnum];
   do {
@@ -3392,7 +3395,7 @@ int G__isprivateconstructor(int tagnum, int iscopy)
 static int G__isprivatedestructorifunc(int tagnum)
 {
   char *dtorname;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int ifn;
   ifunc=G__struct.memfunc[tagnum];
   dtorname = (char*)malloc(strlen(G__struct.name[tagnum])+2);
@@ -3504,7 +3507,7 @@ int G__isprivatedestructor(int tagnum)
 **************************************************************************/
 static int G__isprivateassignoprifunc(int tagnum)
 {
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int ifn;
   ifunc=G__struct.memfunc[tagnum];
   do {
@@ -3623,7 +3626,7 @@ int G__isprivateassignopr(int tagnum)
 *
 **************************************************************************/
 void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
-                         int ifn, G__ifunc_table* ifunc,
+                         int ifn, G__ifunc_table_internal* ifunc,
                          int isconstructor, int iscopyconstructor,
                          int isdestructor,
                          int isassignmentoperator, int isnonpublicnew)
@@ -3706,13 +3709,14 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
     bool has_own_new2arg = false;
 
     {
-      struct G__ifunc_table* ifunc;
+      struct G__ifunc_table* iref = G__get_ifunc_ref(G__struct.memfunc[tagnum]);
+      struct G__ifunc_table* ireffound = 0;
       long index;
       long offset;
-      ifunc = G__get_methodhandle("operator new", "size_t", G__struct.memfunc[tagnum], &index, &offset, 0, 0);
-      has_own_new1arg = (ifunc != 0);
-      ifunc = G__get_methodhandle("operator new", "size_t, void*", G__struct.memfunc[tagnum], &index, &offset, 0, 0);
-      has_own_new2arg = (ifunc != 0);
+      ireffound = G__get_methodhandle("operator new", "size_t", iref, &index, &offset, 0, 0);
+      has_own_new1arg = (ireffound != 0);
+      ireffound = G__get_methodhandle("operator new", "size_t, void*", iref, &index, &offset, 0, 0);
+      has_own_new2arg = (ireffound != 0);
     }
 
     //FIXME: debugging code
@@ -3855,13 +3859,14 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
     bool has_own_delete2arg = false;
 
     {
-      struct G__ifunc_table* ifunc;
+      struct G__ifunc_table* iref = G__get_ifunc_ref(G__struct.memfunc[tagnum]);
+      struct G__ifunc_table* ireffound = 0;
       long index;
       long offset;
-      ifunc = G__get_methodhandle("operator delete", "void*", G__struct.memfunc[tagnum], &index, &offset, 0, 0);
-      has_own_delete1arg = (ifunc != 0);
-      ifunc = G__get_methodhandle("operator delete", "void*, size_t", G__struct.memfunc[tagnum], &index, &offset, 0, 0);
-      has_own_delete2arg = (ifunc != 0);
+      ireffound = G__get_methodhandle("operator delete", "void*", iref, &index, &offset, 0, 0);
+      has_own_delete1arg = (ireffound != 0);
+      ireffound = G__get_methodhandle("operator delete", "void*, size_t", iref, &index, &offset, 0, 0);
+      has_own_delete2arg = (ireffound != 0);
     }
 
     sprintf(funcname, "~%s", G__struct.name[tagnum]);
@@ -3988,7 +3993,7 @@ void G__cppif_gendefault(FILE *fp, FILE* /*hfp*/, int tagnum,
 * G__cppif_genfunc()
 *
 **************************************************************************/
-void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_table *ifunc)
+void G__cppif_genfunc(FILE *fp, FILE * /* hfp */, int tagnum, int ifn, G__ifunc_table_internal *ifunc)
 {
 #ifndef G__SMALLOBJECT
   int k, m;
@@ -4249,7 +4254,7 @@ int G__class_autoloading(int tagnum);
 * G__cppif_returntype()
 *
 **************************************************************************/
-int G__cppif_returntype(FILE *fp, int ifn, G__ifunc_table *ifunc, char *endoffunc)
+int G__cppif_returntype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, char *endoffunc)
 {
 #ifndef G__SMALLOBJECT
   int type, tagnum, typenum, reftype, isconst;
@@ -4444,7 +4449,7 @@ int G__cppif_returntype(FILE *fp, int ifn, G__ifunc_table *ifunc, char *endoffun
 * G__cppif_paratype()
 *
 **************************************************************************/
-void G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table *ifunc, int k)
+void G__cppif_paratype(FILE *fp, int ifn, G__ifunc_table_internal *ifunc, int k)
 {
 #ifndef G__SMALLOBJECT
   int type,tagnum,typenum,reftype;
@@ -5277,7 +5282,7 @@ void G__cpplink_typetable(FILE *fp, FILE *hfp)
 **************************************************************************/
 static int G__hascompiledoriginalbase(int tagnum)
 {
-  struct G__ifunc_table *memfunc;
+  struct G__ifunc_table_internal *memfunc;
   struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
   int basen,ifn;
   for(basen=0;basen<baseclass->basen;basen++) {
@@ -5498,7 +5503,7 @@ void G__cpplink_memvar(FILE *fp)
 * G__isprivatectordtorassgn()
 *
 **************************************************************************/
-int G__isprivatectordtorassgn(int tagnum, G__ifunc_table *ifunc, int ifn)
+int G__isprivatectordtorassgn(int tagnum, G__ifunc_table_internal *ifunc, int ifn)
 {
   /* if(G__PRIVATE!=ifunc->access[ifn]) return(0); */
   if(G__PUBLIC==ifunc->access[ifn]) return(0);
@@ -5518,7 +5523,7 @@ void G__cpplink_memfunc(FILE *fp)
 #ifndef G__SMALLOBJECT
   int i,j,k;
   int hash,page;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   char funcname[G__MAXNAME*6];
   int isconstructor,iscopyconstructor,isdestructor,isassignmentoperator;
   /* int isvirtualdestructor; */
@@ -6116,7 +6121,7 @@ void G__cpplink_global(FILE *fp)
 * G__declaretruep2f()
 *
 **************************************************************************/
-static void G__declaretruep2f(FILE *fp, G__ifunc_table &ifunc, int j)
+static void G__declaretruep2f(FILE *fp, G__ifunc_table_internal &ifunc, int j)
 {
 #ifdef G__P2FDECL
   int i;
@@ -6169,7 +6174,7 @@ static void G__declaretruep2f(FILE *fp, G__ifunc_table &ifunc, int j)
 * G__printtruep2f()
 *
 **************************************************************************/
-static void G__printtruep2f(FILE *fp, G__ifunc_table *ifunc, int j)
+static void G__printtruep2f(FILE *fp, G__ifunc_table_internal *ifunc, int j)
 {
 #if defined(G__P2FCAST)
   int i;
@@ -6249,7 +6254,7 @@ static void G__printtruep2f(FILE *fp, G__ifunc_table *ifunc, int j)
 void G__cpplink_func(FILE *fp)
 {
   int j,k;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   char buf[G__ONELINE];
   int divn=0;
   int maxfnc=100;
@@ -6269,7 +6274,7 @@ void G__cpplink_func(FILE *fp)
 
   fprintf(fp,"   G__lastifuncposition();\n\n");
 
-  while((struct G__ifunc_table*)NULL!=ifunc) {
+  while((struct G__ifunc_table_internal*)NULL!=ifunc) {
     for(j=0;j<ifunc->allifunc;j++) {
       if(fnc++>maxfnc) {
         fnc=0;
@@ -6732,7 +6737,7 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
 #ifndef G__SMALLOBJECT
 #ifndef G__OLDIMPLEMENTATION2027
   int store_func_now = -1;
-  struct G__ifunc_table *store_p_ifunc = 0;
+  struct G__ifunc_table_internal *store_p_ifunc = 0;
   int dtorflag=0;
 #endif
    
@@ -6817,7 +6822,7 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
 
 #ifndef G__OLDIMPLEMENTATION1702
  {
-   struct G__ifunc_table *ifunc;
+   struct G__ifunc_table_internal *ifunc;
    int iexist;
    if(-1==G__p_ifunc->tagnum)
      ifunc = G__ifunc_exist(G__p_ifunc,G__func_now
@@ -6995,7 +7000,7 @@ int G__parse_parameter_link(char* paras)
     else {
       // -- We have a tagname.
       // save G__p_ifunc, G__search_tagname might change it when autoloading
-      G__ifunc_table* current_G__p_ifunc = G__p_ifunc;
+      G__ifunc_table_internal* current_G__p_ifunc = G__p_ifunc;
       // Note: This is the only place we call G__search_tagname
       //       with a type of 0, this is causing problems with
       //       the switch to reflex.
@@ -7108,10 +7113,10 @@ int G__memfunc_next()
    * Allocate and initialize function table list
    ***************************************************************/
   if(G__p_ifunc->allifunc==G__MAXIFUNC) {
-    G__p_ifunc->next=(struct G__ifunc_table *)malloc(sizeof(struct G__ifunc_table));
-    memset(G__p_ifunc->next,0,sizeof(struct G__ifunc_table));
+    G__p_ifunc->next=(struct G__ifunc_table_internal *)malloc(sizeof(struct G__ifunc_table_internal));
+    memset(G__p_ifunc->next,0,sizeof(struct G__ifunc_table_internal));
     G__p_ifunc->next->allifunc=0;
-    G__p_ifunc->next->next=(struct G__ifunc_table *)NULL;
+    G__p_ifunc->next->next=(struct G__ifunc_table_internal *)NULL;
     G__p_ifunc->next->page = G__p_ifunc->page+1;
     G__p_ifunc->next->tagnum = G__p_ifunc->tagnum;
 
@@ -7334,7 +7339,7 @@ void G__specify_link(int link_stub)
   /* int store_globalcomp; */
   int i;
   int hash;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   struct G__var_array *var;
 #ifdef G__REGEXP
   regex_t re;
@@ -7635,7 +7640,7 @@ void G__specify_link(int link_stub)
   * #pragma link [spec] function [name];
   *************************************************************************/
   else if(strncmp(buf,"function",3)==0) {
-    struct G__ifunc_table *x_ifunc = &G__ifunc;
+    struct G__ifunc_table_internal *x_ifunc = &G__ifunc;
 #ifndef G__OLDIMPLEMENTATION828
     fpos_t pos;
     int store_line = G__ifile.line_number;
@@ -7961,7 +7966,7 @@ void G__specify_link(int link_stub)
     if(';'!=c) c = G__fgetstream_template(buf,";\n\r");
     if(G__CPPLINK==globalcomp) globalcomp=G__METHODLINK;
     if(buf[0]) {
-      struct G__ifunc_table *ifunc;
+      struct G__ifunc_table_internal *ifunc;
       int ifn;
       if(strcmp(buf,"::")==0) {
         ifunc = &G__ifunc;
@@ -8376,6 +8381,20 @@ void G__incsetup_memvar(int tagnum)
     store_asm_exec = G__asm_exec;
     G__asm_exec=0;
     store_var_type = G__var_type;
+
+    G__input_file store_ifile = G__ifile;
+    int fileno = G__struct.filenum[tagnum];
+    G__ifile.filenum = fileno;
+    G__ifile.line_number = -1;
+    G__ifile.str = 0;
+    G__ifile.pos = 0;
+    G__ifile.vindex = 0;
+
+    if (fileno != -1) {
+       G__ifile.fp = G__srcfile[fileno].fp;
+       strcpy(G__ifile.name,G__srcfile[fileno].filename);
+    }
+
 #ifdef G__OLDIMPLEMENTATION1125_YET
     if(0==G__struct.memvar[tagnum]->allvar
        || 'n'==G__struct.type[tagnum])
@@ -8392,6 +8411,7 @@ void G__incsetup_memvar(int tagnum)
     G__var_type = store_var_type;
     G__asm_exec = store_asm_exec;
     G__constvar = store_constvar;
+    G__ifile = store_ifile;
     G__static_alloc = store_static_alloc;
   }
 }
@@ -8408,6 +8428,19 @@ void G__incsetup_memfunc(int tagnum)
     store_asm_exec = G__asm_exec;
     G__asm_exec=0;
     store_var_type = G__var_type;
+    G__input_file store_ifile = G__ifile;
+    int fileno = G__struct.filenum[tagnum];
+    G__ifile.filenum = fileno;
+    G__ifile.line_number = -1;
+    G__ifile.str = 0;
+    G__ifile.pos = 0;
+    G__ifile.vindex = 0;
+
+    if (fileno != -1) {
+       G__ifile.fp = G__srcfile[fileno].fp;
+       strcpy(G__ifile.name,G__srcfile[fileno].filename);
+    }
+
 #ifdef G__OLDIMPLEMENTATION1125_YET /* G__PHILIPPE26 */
     if(0==G__struct.memfunc[tagnum]->allifunc
        || 'n'==G__struct.type[tagnum]
@@ -8421,6 +8454,7 @@ void G__incsetup_memfunc(int tagnum)
     G__struct.incsetup_memfunc[tagnum] = (G__incsetup)NULL;
     G__var_type = store_var_type;
     G__asm_exec = store_asm_exec;
+    G__ifile = store_ifile;
   }
 }
 

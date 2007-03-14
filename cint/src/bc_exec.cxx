@@ -49,7 +49,7 @@ extern "C" int G__bc_exec_virtualbase_bytecode(G__value *result7
   G__Vtabledata *vtbldata = vtbl->resolve(vtblindex,vbasetagnum);
   int offset = vtbldata->GetOffset();
 
-  struct G__ifunc_table *ifunc = vtbldata->GetIfunc();
+  struct G__ifunc_table_internal *ifunc = G__get_ifunc_internal(vtbldata->GetIfunc());
   int ifn = vtbldata->GetIfn();
 
   if(G__BYTECODE_NOTYET==ifunc->pentry[ifn]->bytecodestatus) {
@@ -114,7 +114,7 @@ extern "C" int G__bc_exec_virtual_bytecode(G__value *result7
   G__Vtabledata *vtbldata = vtbl->resolve(vtblindex,vbasetagnum);
   int offset = vtbldata->GetOffset();
 
-  struct G__ifunc_table *ifunc = vtbldata->GetIfunc();
+  struct G__ifunc_table_internal *ifunc = G__get_ifunc_internal(vtbldata->GetIfunc());
   int ifn = vtbldata->GetIfn();
 
   if(G__BYTECODE_NOTYET==ifunc->pentry[ifn]->bytecodestatus) {
@@ -139,7 +139,7 @@ extern "C" int G__bc_exec_normal_bytecode(G__value *result7
 			,struct G__param *libp
 			,int hash              // ifn
 			) {
-  struct G__ifunc_table* ifunc = (struct G__ifunc_table*)funcname;
+  struct G__ifunc_table_internal* ifunc = (struct G__ifunc_table_internal*)funcname;
   int ifn = hash;
 
   if(G__BYTECODE_NOTYET==ifunc->pentry[ifn]->bytecodestatus) {
@@ -158,7 +158,7 @@ extern "C" int G__bc_exec_ctor_bytecode(G__value *result7
 			,struct G__param *libp
 			,int hash              // ifn
 			) {
-  struct G__ifunc_table* ifunc = (struct G__ifunc_table*)funcname;
+  struct G__ifunc_table_internal* ifunc = (struct G__ifunc_table_internal*)funcname;
   int ifn = hash;
 
   if(G__BYTECODE_NOTYET==ifunc->pentry[ifn]->bytecodestatus) {
@@ -187,7 +187,7 @@ extern "C" int G__bc_exec_ctorary_bytecode(G__value *result7
 			,struct G__param *libp 
 			,int hash              // ifn
 			) {
-  struct G__ifunc_table* ifunc = (struct G__ifunc_table*)funcname;
+  struct G__ifunc_table_internal* ifunc = (struct G__ifunc_table_internal*)funcname;
   int ifn = hash; 
   int tagnum = ifunc->tagnum;
   int size = G__struct.size[tagnum];
@@ -232,7 +232,7 @@ extern "C" int G__bc_exec_dtorary_bytecode(G__value *result7
 			,struct G__param *libp
 			,int hash              // ifn
 			) {
-  struct G__ifunc_table* ifunc = (struct G__ifunc_table*)funcname;
+  struct G__ifunc_table_internal* ifunc = (struct G__ifunc_table_internal*)funcname;
   int ifn = hash; 
   int tagnum = ifunc->tagnum;
   int size = G__struct.size[tagnum];
@@ -387,7 +387,7 @@ extern "C" int G__exec_bytecode(G__value *result7,G__CONST char *funcname,struct
   bytecode = (struct G__bytecodefunc*)funcname;
   var = bytecode->var;
 
-  ptmpbuf=G__allocheapobjectstack(bytecode->ifunc,bytecode->ifn
+  ptmpbuf=G__allocheapobjectstack(G__get_ifunc_ref(bytecode->ifunc),bytecode->ifn
 				  ,++G__scopelevel);
 #ifdef G__ASM_DBG
   if(G__asm_dbg) {
@@ -605,7 +605,7 @@ extern "C" int G__exec_bytecode(G__value *result7,G__CONST char *funcname,struct
   G__memberfunc_struct_offset=store_memberfunc_struct_offset;
   G__memberfunc_tagnum=store_memberfunc_tagnum;
 
-  if(ptmpbuf) G__copyheapobjectstack(ptmpbuf,result7,bytecode->ifunc,bytecode->ifn);
+  if(ptmpbuf) G__copyheapobjectstack(ptmpbuf,result7,G__get_ifunc_ref(bytecode->ifunc),bytecode->ifn);
 
   return(0);
 }

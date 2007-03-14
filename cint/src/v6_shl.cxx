@@ -98,6 +98,8 @@ typedef void* G__SHLHANDLE;
 
 #endif /* G__SHAREDLIB */
 
+std::list<G__DLLINIT>* G__initpermanentsl = 0;
+
 extern "C" {
 
 G__SHLHANDLE G__sl_handle[G__MAX_SL];
@@ -160,7 +162,6 @@ static int G__RTLD_flag = G__RTLD_LAZY;
 
 
 int G__ispermanentsl = 0;
-G__DLLINIT G__initpermanentsl ;
 
 /**************************************************************************
 * G__loadsystemfile
@@ -805,7 +806,8 @@ int G__shl_load(char *shlfile)
 
 #ifdef G__ROOT
   /* this pointer must be set before calling dlopen! */
-  G__initpermanentsl = (void (*)())NULL;
+  if (!G__initpermanentsl) G__initpermanentsl = new std::list<G__DLLINIT>;
+  else G__initpermanentsl->clear();
 #endif
 
   G__sl_handle[allsl] = G__dlopen(shlfile);
@@ -995,19 +997,21 @@ int G__shl_load(char *shlfile)
   G__globalcomp=store_globalcomp;
 
   if(G__ispermanentsl) {
-    if(!G__initpermanentsl)
-      G__initpermanentsl = 
+    G__DLLINIT initsl = 0;
+    //if(!G__initpermanentsl)
+      initsl = 
         (void (*)())G__shl_findsym(&G__sl_handle[allsl],"G__cpp_setup"
                                    ,TYPE_PROCEDURE); 
-    if(!G__initpermanentsl) {
+    if(!initsl) {
       sprintf(dllid,"G__cpp_setup%s",dllidheader);
-      G__initpermanentsl =
+      initsl =
         (void (*)())G__shl_findsym(&G__sl_handle[allsl],dllid,TYPE_PROCEDURE); 
     }
+    if (initsl) G__initpermanentsl->push_back(initsl);
     --G__allsl;
   }
   else {
-    G__initpermanentsl = (void (*)())NULL;
+     G__initpermanentsl->clear();
   }
 
 
@@ -1034,30 +1038,36 @@ void G__listshl(FILE * /* G__temp */)
 
 #ifdef G__TRUEP2F
 /******************************************************************
-* G__p2f2funchandle()
+* G__p2f2funchandle_internal()
 ******************************************************************/
-struct G__ifunc_table* G__p2f2funchandle(void *p2f,struct G__ifunc_table* p_ifunc,int* pindex)
+struct G__ifunc_table_internal* G__p2f2funchandle_internal(void *p2f,struct G__ifunc_table_internal* ifunc,int* pindex)
 {
-  struct G__ifunc_table *ifunc;
   int ig15;
-  ifunc=p_ifunc;
   do {
     for(ig15=0;ig15<ifunc->allifunc;ig15++) {
       if(
          ifunc->pentry[ig15] && 
          ifunc->pentry[ig15]->tp2f==p2f) {
         *pindex = ig15;
-        return(ifunc);
+        return ifunc;
       }
       if(ifunc->pentry[ig15] && 
          ifunc->pentry[ig15]->bytecode==p2f) {
         *pindex = ig15;
-        return(ifunc);
+        return ifunc;
       }
     }
   } while((ifunc=ifunc->next)) ;
   *pindex = -1;
-  return(ifunc);
+  return ifunc;
+}
+
+/******************************************************************
+* G__p2f2funchandle()
+******************************************************************/
+struct G__ifunc_table* G__p2f2funchandle(void *p2f,struct G__ifunc_table* p_ifunc,int* pindex)
+{
+   return G__get_ifunc_ref(G__p2f2funchandle_internal(p2f, G__get_ifunc_internal(p_ifunc), pindex));
 }
 
 /******************************************************************
@@ -1066,13 +1076,13 @@ struct G__ifunc_table* G__p2f2funchandle(void *p2f,struct G__ifunc_table* p_ifun
 char* G__p2f2funcname(void *p2f)
 {
   int tagnum;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int ig15;
-  ifunc=G__p2f2funchandle(p2f,G__p_ifunc,&ig15);
+  ifunc=G__p2f2funchandle_internal(p2f,G__p_ifunc,&ig15);
   if(ifunc) return(ifunc->funcname[ig15]);
 
   for(tagnum=0;tagnum<G__struct.alltag;tagnum++) {
-    ifunc=G__p2f2funchandle(p2f,G__struct.memfunc[tagnum],&ig15);
+    ifunc=G__p2f2funchandle_internal(p2f,G__struct.memfunc[tagnum],&ig15);
     if(ifunc) {
       static char buf[G__LONGLINE];
       sprintf(buf,"%s::%s",G__fulltagname(tagnum,1),ifunc->funcname[ig15]);
@@ -1087,9 +1097,9 @@ char* G__p2f2funcname(void *p2f)
 ******************************************************************/
 int G__isinterpretedp2f(void *p2f)
 {
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int ig15;
-  ifunc=G__p2f2funchandle(p2f,G__p_ifunc,&ig15);
+  ifunc=G__p2f2funchandle_internal(p2f,G__p_ifunc,&ig15);
   if(ifunc) {
     if(
        -1 != ifunc->pentry[ig15]->size
@@ -1128,7 +1138,7 @@ G__value G__pointer2func(G__value *obj_p2f,char *parameter0 ,char *parameter1,in
   G__value result3;
   char result7[G__ONELINE];
   int ig15,ig35;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
 #ifdef G__SHAREDLIB
   /* G__COMPLETIONLIST *completionlist; */
 #endif
@@ -1197,13 +1207,13 @@ G__value G__pointer2func(G__value *obj_p2f,char *parameter0 ,char *parameter1,in
   /* search for interpreted and use precompiled function */
   result7[0]='\0';
 #ifdef G__TRUEP2F
-  ifunc=G__p2f2funchandle((void*)result3.obj.i,G__p_ifunc,&ig15);
+  ifunc=G__p2f2funchandle_internal((void*)result3.obj.i,G__p_ifunc,&ig15);
   if(ifunc) sprintf(result7,"%s%s",ifunc->funcname[ig15],parameter1);
 #ifdef G__PTR2MEMFUNC
   else {
     int itag;
     for(itag=0;itag<G__struct.alltag;itag++) {
-      ifunc=G__p2f2funchandle((void*)result3.obj.i,G__struct.memfunc[itag],&ig15);
+      ifunc=G__p2f2funchandle_internal((void*)result3.obj.i,G__struct.memfunc[itag],&ig15);
       if(ifunc && ifunc->staticalloc[ig15]) {
         sprintf(result7,"%s::%s%s",G__fulltagname(itag,1),ifunc->funcname[ig15],parameter1);
         break;
@@ -1291,7 +1301,7 @@ void G__removetagid(char *buf)
 /******************************************************************
 * G__getp2ftype()
 ******************************************************************/
-int G__getp2ftype(struct G__ifunc_table *ifunc,int ifn)
+int G__getp2ftype(struct G__ifunc_table_internal *ifunc,int ifn)
 {
   char temp[G__MAXNAME*2],temp1[G__MAXNAME];
   char *p;
@@ -1336,7 +1346,7 @@ int G__getp2ftype(struct G__ifunc_table *ifunc,int ifn)
 char *G__search_func(char *funcname,G__value *buf)
 {
   int i=0;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
 #ifdef G__SHAREDLIB
   /* G__COMPLETIONLIST *completionlist; */
   /* int isl; */
@@ -1432,7 +1442,7 @@ char *G__search_next_member(char *text,int state)
   static int isstruct;
   static G__value buf;
   char *dot,*point,*scope=NULL;
-  static struct G__ifunc_table *ifunc;
+  static struct G__ifunc_table_internal *ifunc;
 
 #ifdef G__NEVER /* G__SHAREDLIB */
   static G__COMPLETIONLIST *completionlist;
@@ -1568,7 +1578,7 @@ char *G__search_next_member(char *text,int state)
           else {
             index_item++;
             list_index=0;
-            ifunc=(struct G__ifunc_table *)NULL;
+            ifunc=(struct G__ifunc_table_internal *)NULL;
             /* do not break */
           }
         }
@@ -1690,7 +1700,7 @@ char *G__search_next_member(char *text,int state)
             if(0==ifunc->allifunc) {
               index_item++;
               list_index=0;
-              ifunc=(struct G__ifunc_table *)NULL;
+              ifunc=(struct G__ifunc_table_internal *)NULL;
               /* do not break */
             }
             else {
@@ -1702,7 +1712,7 @@ char *G__search_next_member(char *text,int state)
           else {
             index_item++;
             list_index=0;
-            ifunc=(struct G__ifunc_table *)NULL;
+            ifunc=(struct G__ifunc_table_internal *)NULL;
             /* do not break */
           }
         }
@@ -1878,7 +1888,7 @@ void* G__SetShlHandle(char *filename)
 /**************************************************************************
  * G__GccNameMangle
  **************************************************************************/
-char* G__GccNameMangle(char* buf,struct G__ifunc_table *ifunc,int ifn)
+char* G__GccNameMangle(char* buf,struct G__ifunc_table_internal *ifunc,int ifn)
 {
   char *funcname = ifunc->funcname[ifn];
   char tmp[4];
@@ -1972,7 +1982,7 @@ char* G__Vc6TypeMangle(int type,int tagnum,int reftype,int isconst)
  * ?[fname]@[tagname]@YA[ret][a1][a2]...@Z
  * ?[fname]@[tagname]@YA[ret]XZ
  **************************************************************************/
-char* G__Vc6NameMangle(char* buf,struct G__ifunc_table *ifunc,int ifn)
+char* G__Vc6NameMangle(char* buf,struct G__ifunc_table_internal *ifunc,int ifn)
 {
   char *funcname = ifunc->funcname[ifn];
   int i;
@@ -2009,7 +2019,7 @@ char* G__Vc6NameMangle(char* buf,struct G__ifunc_table *ifunc,int ifn)
 /**************************************************************************
  * G__FindSymbol
  **************************************************************************/
-void* G__FindSymbol(struct G__ifunc_table *ifunc,int ifn)
+void* G__FindSymbol(struct G__ifunc_table_internal *ifunc,int ifn)
 {
 #ifdef G__SHAREDLIB
   char *funcname=ifunc->funcname[ifn];

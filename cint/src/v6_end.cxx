@@ -286,14 +286,14 @@ void G__free_friendtag(G__friendtag *friendtag)
 *   G__scratch_all()
 *
 ***********************************************************************/
-int G__free_ifunc_table(G__ifunc_table *ifunc)
+int G__free_ifunc_table(G__ifunc_table_internal *ifunc)
 {
   int i,j;
   int flag;
   if(ifunc->next) {
     G__free_ifunc_table(ifunc->next);
     free((void*)ifunc->next);
-    ifunc->next=(struct G__ifunc_table *)NULL;
+    ifunc->next=(struct G__ifunc_table_internal *)NULL;
   }
   /* Freeing default parameter storage */
   for(i=ifunc->allifunc-1;i>=0;i--) {

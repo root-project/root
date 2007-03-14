@@ -964,7 +964,7 @@ int G__setline(char *statement,int c,int *piout)
             }
             G__srcfile[null_entry].included_from=G__ifile.filenum;
             G__srcfile[null_entry].ispermanentsl = 0;
-            G__srcfile[null_entry].initsl = (G__DLLINIT)NULL;
+            G__srcfile[null_entry].initsl = 0;
             G__srcfile[null_entry].hasonlyfunc = (struct G__dictposition*)NULL;
             G__ifile.filenum = null_entry;
           }
@@ -1000,7 +1000,7 @@ int G__setline(char *statement,int c,int *piout)
               /* Initilialize more of the data member see loadfile.c:1529 */
               G__srcfile[G__nfile].included_from=G__ifile.filenum;
               G__srcfile[G__nfile].ispermanentsl = 0;
-              G__srcfile[G__nfile].initsl = (G__DLLINIT)NULL;
+              G__srcfile[G__nfile].initsl = 0;
               G__srcfile[G__nfile].hasonlyfunc = (struct G__dictposition*)NULL;
               G__ifile.filenum = G__nfile;
               ++G__nfile;

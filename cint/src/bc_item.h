@@ -30,13 +30,13 @@
 #ifndef BC_ITEM_H
 #define BC_ITEM_H
 
-extern "C" {
+//extern "C" {
 #ifdef __CINT__
 #include "../G__ci.h"
 #else
 #include "common.h"
 #endif
-}
+//}
 
 #include "bc_parse.h"
 

@@ -37,9 +37,9 @@ void Cint::G__MethodArgInfo::Init(class G__MethodInfo &a)
 const char* Cint::G__MethodArgInfo::Name()
 {
   if(IsValid()) {
-    struct G__ifunc_table *ifunc;
+    struct G__ifunc_table_internal *ifunc;
     /* long property=0; */
-    ifunc = (struct G__ifunc_table*)belongingmethod->handle;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)belongingmethod->handle);
     return(ifunc->param[belongingmethod->index][argn]->name); 
   }
   else {
@@ -50,9 +50,9 @@ const char* Cint::G__MethodArgInfo::Name()
 long Cint::G__MethodArgInfo::Property()
 {
   if(IsValid()) {
-    struct G__ifunc_table *ifunc;
+    struct G__ifunc_table_internal *ifunc;
     long property=0;
-    ifunc = (struct G__ifunc_table*)belongingmethod->handle;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)belongingmethod->handle);
     if(isupper(ifunc->param[belongingmethod->index][argn]->type)) 
       property|=G__BIT_ISPOINTER;
     if(ifunc->param[belongingmethod->index][argn]->pdefault) 
@@ -73,9 +73,9 @@ long Cint::G__MethodArgInfo::Property()
 char* Cint::G__MethodArgInfo::DefaultValue()
 {
   if(IsValid()) {
-    struct G__ifunc_table *ifunc;
+    struct G__ifunc_table_internal *ifunc;
     /* long property=0; */
-    ifunc = (struct G__ifunc_table*)belongingmethod->handle;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)belongingmethod->handle);
     return(ifunc->param[belongingmethod->index][argn]->def); 
   }
   else {
@@ -102,8 +102,8 @@ int Cint::G__MethodArgInfo::Next()
 {
   ++argn;
   if(IsValid()) {
-    struct G__ifunc_table *ifunc;
-    ifunc = (struct G__ifunc_table*)belongingmethod->handle;
+    struct G__ifunc_table_internal *ifunc;
+    ifunc = G__get_ifunc_internal((struct G__ifunc_table*)belongingmethod->handle);
     type.type = ifunc->param[belongingmethod->index][argn]->type;
     type.tagnum=ifunc->param[belongingmethod->index][argn]->p_tagtable;
     type.typenum =ifunc->param[belongingmethod->index][argn]->p_typetable;

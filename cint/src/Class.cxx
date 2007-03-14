@@ -159,7 +159,7 @@ int Cint::G__ClassInfo::NDataMembers()
 ///////////////////////////////////////////////////////////////////////////
 int Cint::G__ClassInfo::NMethods()
 {
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int nmethod=0;
   if(IsValid()) {
     G__incsetup_memfunc((int)tagnum);
@@ -578,7 +578,7 @@ G__InterfaceMethod Cint::G__ClassInfo::GetInterfaceMethod(const char* fname
                                                     ,InheritanceMode imode
 						)
 {
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   char *funcname;
   char *param;
   long index;
@@ -588,10 +588,10 @@ G__InterfaceMethod Cint::G__ClassInfo::GetInterfaceMethod(const char* fname
   else           ifunc = G__struct.memfunc[tagnum];
   funcname = (char*)fname;
   param = (char*)arg;
-  ifunc = G__get_methodhandle(funcname,param,ifunc,&index,poffset
+  ifunc = G__get_ifunc_internal(G__get_methodhandle(funcname,param,G__get_ifunc_ref(ifunc),&index,poffset
 			      ,(mode==ConversionMatch)?1:0
                               ,imode
-			      );
+			      ));
 
   if(
      ifunc && -1==ifunc->pentry[index]->size
@@ -609,7 +609,7 @@ G__MethodInfo Cint::G__ClassInfo::GetMethod(const char* fname,const char* arg
 				      ,InheritanceMode imode
 				      )
 {
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   char *funcname;
   char *param;
   long index;
@@ -626,14 +626,14 @@ G__MethodInfo Cint::G__ClassInfo::GetMethod(const char* fname,const char* arg
   case ConversionMatchBytecode: convmode=2; break;
   default:                      convmode=0; break;
   }
-  ifunc = G__get_methodhandle(funcname,param,ifunc,&index,poffset
+  G__ifunc_table* iref = G__get_methodhandle(funcname,param,G__get_ifunc_ref(ifunc),&index,poffset
 			      ,convmode
 			      ,(imode==WithInheritance)?1:0
 			      );
 
   /* Initialize method object */
   G__MethodInfo method;
-  method.Init((long)ifunc,index,this);
+  method.Init((long)iref,index,this);
   return(method);
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -643,7 +643,7 @@ G__MethodInfo Cint::G__ClassInfo::GetMethod(const char* fname,struct G__param* l
 				      ,InheritanceMode imode
                                       )
 {
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   char *funcname = (char*)fname;
   long index;
 
@@ -651,14 +651,14 @@ G__MethodInfo Cint::G__ClassInfo::GetMethod(const char* fname,struct G__param* l
   if(-1==tagnum) ifunc = &G__ifunc;
   else           ifunc = G__struct.memfunc[tagnum];
 
-  ifunc = G__get_methodhandle2(funcname,libp,ifunc,&index,poffset
+  G__ifunc_table* iref = G__get_methodhandle2(funcname,libp,G__get_ifunc_ref(ifunc),&index,poffset
 			       ,(mode==ConversionMatch)?1:0
 			       ,(imode==WithInheritance)?1:0
                                );
 
   /* Initialize method object */
   G__MethodInfo method;
-  method.Init((long)ifunc,index,this);
+  method.Init((long)iref,index,this);
   return(method);
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -748,7 +748,7 @@ int Cint::G__ClassInfo::HasDefaultConstructor()
 ///////////////////////////////////////////////////////////////////////////
 int Cint::G__ClassInfo::HasMethod(const char *fname)
 {
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int ifn;
   int hash;
   if(IsValid()) {
@@ -1121,7 +1121,7 @@ void Cint::G__ClassInfo::CheckValidRootInfo()
 ///////////////////////////////////////////////////////////////////////////
 static long G__ClassInfo_MemberFunctionProperty(long& property,int tagnum)
 {
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int ifn;
   ifunc = G__struct.memfunc[tagnum];
   while(ifunc) {
@@ -1224,7 +1224,7 @@ G__MethodInfo Cint::G__ClassInfo::AddMethod(const char* typenam,const char* fnam
                                             ,const char *arg
                                             ,int isstatic,int isvirtual,
                                             void *methodAddress) {
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   long index;
 
   if(-1==tagnum) ifunc = &G__ifunc;
@@ -1235,10 +1235,10 @@ G__MethodInfo Cint::G__ClassInfo::AddMethod(const char* typenam,const char* fnam
   while(ifunc->next) ifunc=ifunc->next;
   index = ifunc->allifunc;
   if(ifunc->allifunc==G__MAXIFUNC) {
-    ifunc->next=(struct G__ifunc_table *)malloc(sizeof(struct G__ifunc_table));
-    memset(ifunc->next,0,sizeof(struct G__ifunc_table));
+    ifunc->next=(struct G__ifunc_table_internal *)malloc(sizeof(struct G__ifunc_table_internal));
+    memset(ifunc->next,0,sizeof(struct G__ifunc_table_internal));
     ifunc->next->allifunc=0;
-    ifunc->next->next=(struct G__ifunc_table *)NULL;
+    ifunc->next->next=(struct G__ifunc_table_internal *)NULL;
     ifunc->next->page = ifunc->page+1;
     ifunc->next->tagnum = ifunc->tagnum;
     ifunc = ifunc->next;
@@ -1339,7 +1339,7 @@ G__MethodInfo Cint::G__ClassInfo::AddMethod(const char* typenam,const char* fnam
 
   /* Initialize method object */
   G__MethodInfo method;
-  method.Init((long)ifunc,index,this);
+  method.Init((long)G__get_ifunc_ref(ifunc),index,this);
   return(method);
 }
 

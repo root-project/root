@@ -215,8 +215,8 @@ struct G__input_file  G__ifile;
 /**************************************************************************
 * structure for ifunc (Interpreted FUNCtion) table
 **************************************************************************/
-struct G__ifunc_table G__ifunc ;
-struct G__ifunc_table *G__p_ifunc;
+struct G__ifunc_table_internal G__ifunc ;
+struct G__ifunc_table_internal *G__p_ifunc;
 
 
 /**************************************************************************

@@ -334,7 +334,7 @@ int G__listfunc(FILE *fp,int access,char *fname,G__ifunc_table *ifunc)
 /***********************************************************************
 * void G__listfunc_pretty
 ***********************************************************************/
-int G__listfunc_pretty(FILE *fp,int access,char *fname,G__ifunc_table *ifunc, char friendlyStyle)
+int G__listfunc_pretty(FILE *fp,int access,char *fname,G__ifunc_table *iref, char friendlyStyle)
 {
   int i,n;
   char temp[G__ONELINE];
@@ -342,6 +342,7 @@ int G__listfunc_pretty(FILE *fp,int access,char *fname,G__ifunc_table *ifunc, ch
 
   G__browsing=1;
   
+  G__ifunc_table_internal* ifunc = iref ? G__get_ifunc_internal(iref) : 0;
   if(!ifunc) ifunc = G__p_ifunc;
   
   bool showHeader = !friendlyStyle;
@@ -577,7 +578,7 @@ int G__showstack(FILE *fout)
       sprintf(msg,"%s::",G__struct.name[local->tagnum]);
       if(G__more(fout,msg)) return(1);
     }
-    sprintf(msg,"%s(",local->ifunc->funcname[local->ifn]);
+    sprintf(msg,"%s(",G__get_ifunc_internal(local->ifunc)->funcname[local->ifn]);
     if(G__more(fout,msg)) return(1);
     for(temp1=0;temp1<local->libp->paran;temp1++) {
       if(temp1) {
@@ -771,7 +772,7 @@ static int G__display_membervariable(FILE *fout,int tagnum,int base)
 ****************************************************************/
 static int G__display_memberfunction(FILE *fout,int tagnum,int access,int base)
 {
-  struct G__ifunc_table *store_ifunc;
+  struct G__ifunc_table_internal *store_ifunc;
   int store_exec_memberfunc;
   struct G__inheritance *baseclass;
   int i;

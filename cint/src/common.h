@@ -60,6 +60,10 @@
 #include "memtest.h"
 #endif
 
+#ifdef __cplusplus
+#include <list>
+#endif
+
 /**************************************************************************
 * On line file loading
 *
@@ -709,10 +713,10 @@ typedef unsigned long G__UINT32 ;
 #endif
 
 typedef void (*G__DLLINIT)();
-
 #define G__NONCINTHDR   0x01
 #define G__CINTHDR      0x10
 
+#ifdef __cplusplus
 struct G__filetable {
   FILE *fp;
   int hash;
@@ -724,7 +728,7 @@ struct G__filetable {
   G__UINT32 security;
   int included_from; /* filenum of the file which first include this one */
   int ispermanentsl;
-  G__DLLINIT initsl;
+  std::list<G__DLLINIT>* initsl;
   struct G__dictposition *hasonlyfunc;
   char hdrprop;
 #ifndef G__OLDIMPLEMENTATION1649
@@ -734,6 +738,7 @@ struct G__filetable {
   int parent_tagnum;
   int slindex;
 };
+#endif
 
 /**************************************************************************
 * user specified pragma statement
@@ -810,7 +815,7 @@ struct G__AppPragma {
 * for function overloading
 **********************************************************************/
 struct G__funclist {
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int ifn;
   unsigned int rate;
   unsigned int p_rate[G__MAXFUNCPARA];
@@ -865,7 +870,7 @@ struct G__view {
 *
 **************************************************************************/
 struct G__bytecodefunc {
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int ifn;
   struct G__var_array *var;
   int varsize;
@@ -949,6 +954,7 @@ struct G__paramfunc {
 };
 struct G__params {
 #ifdef __cplusplus  
+   ~G__params() { delete fparams; }
    struct G__paramfunc* operator[](int idx) {
       if (!fparams) {
          fparams = (struct G__paramfunc*)malloc(sizeof(struct G__paramfunc));
@@ -974,7 +980,20 @@ struct G__params {
 #endif
    struct G__paramfunc *fparams;
 };
+
 struct G__ifunc_table {
+   int tagnum;
+   int page; /* G__struct.ifunc->next->next->... */
+   struct G__ifunc_table_internal* ifunc_cached;
+#ifdef __cplusplus
+   bool operator < (const struct G__ifunc_table& right) const {
+      return tagnum < right.tagnum 
+         || tagnum == right.tagnum && page < right.page;
+   }
+#endif
+};
+
+struct G__ifunc_table_internal {
   /* number of interpreted function */
   int allifunc;
 
@@ -1008,7 +1027,7 @@ struct G__ifunc_table {
    **************************************************/
   short busy[G__MAXIFUNC];
 
-  struct G__ifunc_table *next;
+  struct G__ifunc_table_internal *next;
   short page;
 
   G__SIGNEDCHAR_T access[G__MAXIFUNC];  /* private, protected, public */
@@ -1121,7 +1140,8 @@ struct G__herit {
   struct G__herit *next;
 };
 struct G__herits {
-#ifdef __cplusplus   
+#ifdef __cplusplus
+   ~G__herits() { delete fherits; }
    struct G__herit* operator[](int idx) {
       if (!fherits) {
          fherits = (struct G__herit*)malloc(sizeof(struct G__herit));
@@ -1229,7 +1249,7 @@ struct G__tagtable {
   int  size[G__MAXSTRUCT];
   /* member information */
   struct G__var_array *memvar[G__MAXSTRUCT];
-  struct G__ifunc_table *memfunc[G__MAXSTRUCT];
+  struct G__ifunc_table_internal *memfunc[G__MAXSTRUCT];
   struct G__inheritance *baseclass[G__MAXSTRUCT];
   int virtual_offset[G__MAXSTRUCT];
   G__SIGNEDCHAR_T globalcomp[G__MAXSTRUCT];

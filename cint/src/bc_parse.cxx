@@ -3115,7 +3115,8 @@ int G__blockscope::isfriend(int tagnum) const {
     }
   }
   if(-1!=m_iexist && m_ifunc) {
-    friendtag = m_ifunc->friendtag[m_iexist];
+    G__ifunc_table_internal* ifunc = G__get_ifunc_internal(m_ifunc);
+    friendtag = ifunc->friendtag[m_iexist];
     while(friendtag) {
       if(friendtag->tagnum==tagnum) return(1);
       friendtag=friendtag->next;

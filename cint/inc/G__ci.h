@@ -1899,6 +1899,7 @@ extern G__EXPORT int G__sizeof (G__value *object);
 #ifdef _WIN32
 extern G__EXPORT FILE *FOpenAndSleep(const char *filename, const char *mode);
 #endif
+extern G__EXPORT struct G__ifunc_table_internal *G__get_ifunc_internal(struct G__ifunc_table* iref);
 
 #else /* G__MULTITHREADLIBCINT */
 

@@ -3322,12 +3322,12 @@ typedef struct {
  void G__va_start(G__value ap)
 {
   struct G__var_array *local;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   G__va_list *va;
 
   local = G__p_local;
   if(!local) return;
-  ifunc = local->ifunc;
+  ifunc = G__get_ifunc_internal(local->ifunc);
   if(!ifunc) return;
   va = (G__va_list*)ap.ref;
   if(!va) return;

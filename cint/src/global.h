@@ -220,8 +220,8 @@ extern const char *G__psep;
 /**************************************************************************
 * structure for ifunc (Interpreted FUNCtion) table
 **************************************************************************/
-extern struct G__ifunc_table G__ifunc ;
-extern struct G__ifunc_table *G__p_ifunc;
+extern struct G__ifunc_table_internal G__ifunc ;
+extern struct G__ifunc_table_internal *G__p_ifunc;
 
 
 /**************************************************************************

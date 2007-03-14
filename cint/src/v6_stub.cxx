@@ -94,7 +94,7 @@ void G__setint(G__value *pbuf,long l,void *pl
 *
 **************************************************************************/
 static void G__cppstub_setparam(char *pformat,char *pbody
-                                ,int /* tagnum */,int ifn,G__ifunc_table *ifunc,int k)
+                                ,int /* tagnum */,int ifn,G__ifunc_table_internal *ifunc,int k)
 {
   char paraname[G__MAXNAME];
   char temp[G__ONELINE];
@@ -157,7 +157,7 @@ static void G__cppstub_setparam(char *pformat,char *pbody
 *
 **************************************************************************/
 static void G__cppstub_genconstructor(FILE * /* fp */,int tagnum
-                                      ,int /* ifn */,G__ifunc_table * /* ifunc */)
+                                      ,int /* ifn */,G__ifunc_table_internal * /* ifunc */)
 {
   G__fprinterr(G__serr,"Limitation: Can not make STUB constructor, class %s\n"
           ,G__fulltagname(tagnum,1));
@@ -168,7 +168,7 @@ static void G__cppstub_genconstructor(FILE * /* fp */,int tagnum
 *
 **************************************************************************/
 static void G__cppstub_gendestructor(FILE * /* fp */,int tagnum
-                                     ,int /* ifn */,G__ifunc_table * /* ifunc */)
+                                     ,int /* ifn */,G__ifunc_table_internal * /* ifunc */)
 {
   G__fprinterr(G__serr,"Limitation: Can not make STUB destructor, class %s\n"
           ,G__fulltagname(tagnum,1));
@@ -178,7 +178,7 @@ static void G__cppstub_gendestructor(FILE * /* fp */,int tagnum
 * G__cppstub_genfunc()
 *
 **************************************************************************/
-static void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,G__ifunc_table *ifunc)
+static void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,G__ifunc_table_internal *ifunc)
 {
   int k;
   char pformat[G__ONELINE];
@@ -326,7 +326,7 @@ static void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,G__ifunc_table *ifunc
 void G__cppstub_memfunc(FILE *fp)
 {
   int i,j;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int isconstructor,iscopyconstructor,isdestructor,isassignmentoperator;
 
   fprintf(fp,"\n/*********************************************************\n");
@@ -387,7 +387,7 @@ void G__cppstub_memfunc(FILE *fp)
 void G__cppstub_func(FILE *fp)
 {
   int j;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
 
   fprintf(fp,"\n/*********************************************************\n");
   fprintf(fp,"* Global function Stub\n");
@@ -436,7 +436,7 @@ void G__set_stubflags(G__dictposition *dictpos)
   }
 
   for(tagnum=dictpos->tagnum;tagnum<G__struct.alltag;tagnum++) {
-    struct G__ifunc_table *ifunc;
+    struct G__ifunc_table_internal *ifunc;
     ifunc=G__struct.memfunc[tagnum];
     while(ifunc) {
       for(ifn=0;ifn<ifunc->allifunc;ifn++) {
@@ -454,9 +454,10 @@ void G__set_stubflags(G__dictposition *dictpos)
   }
 
   if(dictpos->ifunc) {
-    struct G__ifunc_table *ifunc = dictpos->ifunc;
+    struct G__ifunc_table_internal *dictpos_ifunc = G__get_ifunc_internal(dictpos->ifunc);
+    struct G__ifunc_table_internal *ifunc = dictpos_ifunc;
     while(ifunc) {
-      if(ifunc==dictpos->ifunc) ifn = dictpos->ifn;
+      if(ifunc==dictpos_ifunc) ifn = dictpos->ifn;
       else ifn = 0;
       while(ifn<ifunc->allifunc) {
         switch(ifunc->globalcomp[ifn]) {
