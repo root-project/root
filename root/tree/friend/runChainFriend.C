@@ -49,6 +49,7 @@ bool testTreeByPointer() {
   if (!l) return TestError(tname,"retreving local leaf \"T2.event\" ");
 
   delete file;
+  delete file2;
   return true;
 }
 
