@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.10 2007/01/29 10:06:49 brun Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.h,v 1.11 2007/02/07 17:08:20 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -67,6 +67,7 @@ protected:
    TGLabel             *fObjLabel;         // contains fitted object name
    TGLabel             *fSelLabel;         // contains selected fit function
    TGComboBox          *fFuncList;         // contains function list
+   Int_t                fLastEntryId;      // last user function id
    TGTextEntry         *fEnteredFunc;      // contains user function file name
    TGTextButton        *fUserButton;       // opens a dialog for user-defined fit method
    TGRadioButton       *fNone;             // set no operation mode
@@ -123,6 +124,7 @@ protected:
    TString              fFitOption;        // fitting options
    TString              fDrawOption;       // graphics option for drawing
    TF1                 *fFitFunc;          // function used for fitting
+   TList               *fFitFuncList;      // list of 
    Int_t                fPx1old,
                         fPy1old,
                         fPx2old,
@@ -148,6 +150,9 @@ protected:
    void        CreateGeneralTab();
    void        CreateMinimizationTab();
    void        MakeTitle(TGCompositeFrame *parent, const char *title);
+   Bool_t      HasFitFunction(TObject *obj);
+   void        GetFunctionsFromList(TList *list);
+   void        CheckRange(TF1 *f1);
 
 private:
    TFitEditor(const TFitEditor&);              // not implemented
