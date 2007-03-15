@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.98 2007/02/01 15:26:18 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.99 2007/02/09 08:37:21 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -367,7 +367,7 @@ public:
    virtual void            SetEstimate(Long64_t nentries = 10000);
    virtual void            SetFileNumber(Int_t number = 0);
    virtual void            SetEventList(TEventList* list);
-   virtual void            SetEntryList(TEntryList* list);
+   virtual void            SetEntryList(TEntryList* list, Option_t *opt="");
    virtual void            SetMakeClass(Int_t make) { fMakeClass = make; }
    virtual void            SetMaxEntryLoop(Long64_t maxev = 1000000000) { fMaxEntryLoop = maxev; } // *MENU*
    static  void            SetMaxTreeSize(Long64_t maxsize = 1900000000);

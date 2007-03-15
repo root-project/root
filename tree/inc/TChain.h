@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.62 2007/03/14 07:24:11 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.63 2007/03/14 08:30:04 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -130,7 +130,8 @@ public:
 
    virtual void      SetBranchStatus(const char *bname, Bool_t status=1, UInt_t *found=0);
    virtual void      SetDirectory(TDirectory *dir);
-   virtual void      SetEntryList(TEntryList *elist);
+   virtual void      SetEntryList(TEntryList *elist, Option_t *opt="");
+   virtual void      SetEntryList(const char *filename="", Option_t *opt="");
    virtual void      SetEventList(TEventList *evlist);
    virtual void      SetMakeClass(Int_t make) { TTree::SetMakeClass(make); if (fTree) fTree->SetMakeClass(make);}
    virtual void      SetPacketSize(Int_t size = 100);

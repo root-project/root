@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.322 2007/02/11 09:38:57 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.323 2007/03/03 15:07:32 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -5605,7 +5605,7 @@ Long64_t TTree::SetEntries(Long64_t n)
 }
 
 //_______________________________________________________________________
-void TTree::SetEntryList(TEntryList *enlist)
+void TTree::SetEntryList(TEntryList *enlist, Option_t */*opt*/)
 {
    //Set an EntryList
    

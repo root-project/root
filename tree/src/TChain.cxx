@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.160 2007/03/14 09:17:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.161 2007/03/14 19:00:14 pcanal Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -53,6 +53,7 @@
 #include "TVirtualIndex.h"
 #include "TEventList.h"
 #include "TEntryList.h"
+#include "TEntryListFromFile.h"
 #include "TFileStager.h"
 
 const Long64_t theBigNumber = Long64_t(1234567890)<<28;
@@ -2003,12 +2004,16 @@ void TChain::SetDirectory(TDirectory* dir)
 }
 
 //_______________________________________________________________________
-void TChain::SetEntryList(TEntryList *elist)
+void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
 {
    //Set the input entry list (processing the entries of the chain will then be
    //limited to the entries in the list)
    //This function finds correspondance between the sub-lists of the TEntryList
    //and the trees of the TChain
+   //By default (opt=""), both the file names of the chain elements and 
+   //the file names of the TEntryList sublists are expanded to full path name.  
+   //If opt = "ne", the file names are taken as they are and not expanded 
+   //(this is useful in case of TUrls)
 
    if (fEntryList){
       //check, if the chain is the owner of the previous entry list 
@@ -2032,6 +2037,10 @@ void TChain::SetEntryList(TEntryList *elist)
       fEntryList = elist;
       return;
    }
+
+   TString option = opt;
+   option.ToUpper();
+   Bool_t nexp = option.Contains("NE");
    Int_t ne = fFiles->GetEntries();
    Int_t listfound=0;
    ULong_t *hashtable = new ULong_t[ne];
@@ -2042,10 +2051,12 @@ void TChain::SetEntryList(TEntryList *elist)
       (*nametitle)="";
       nametitle->Append(((TChainElement*)fFiles->UncheckedAt(ie))->GetName());
       filename = ((TChainElement*)fFiles->UncheckedAt(ie))->GetTitle();
-      gSystem->ExpandPathName(filename);
-      if (!gSystem->IsAbsoluteFileName(filename))
-          gSystem->PrependPathName(gSystem->pwd(), filename);
-      filename = gSystem->UnixPathName(filename);
+      if (!nexp){
+         gSystem->ExpandPathName(filename);
+         if (!gSystem->IsAbsoluteFileName(filename))
+            gSystem->PrependPathName(gSystem->pwd(), filename);
+         filename = gSystem->UnixPathName(filename);
+      }
       nametitle->Append(filename);
       hashtable[ie]=nametitle->Hash();
    }
@@ -2065,10 +2076,12 @@ void TChain::SetEntryList(TEntryList *elist)
          if (temphash == hashtable[i]){
             //found, check if it's the right one
             filename = ((TChainElement*)fFiles->UncheckedAt(i))->GetTitle();
-            gSystem->ExpandPathName(filename);
-            if (!gSystem->IsAbsoluteFileName(filename))
-               gSystem->PrependPathName(gSystem->pwd(), filename);
-            filename = gSystem->UnixPathName(filename);
+            if (!nexp){
+               gSystem->ExpandPathName(filename);
+               if (!gSystem->IsAbsoluteFileName(filename))
+                  gSystem->PrependPathName(gSystem->pwd(), filename);
+               filename = gSystem->UnixPathName(filename);
+            }
             if (!(strcmp(elist->GetTreeName(),((TChainElement*)fFiles->UncheckedAt(i))->GetName())) && 
                 !(strcmp(elist->GetFileName(),filename.Data()))) {
                break;
@@ -2099,10 +2112,12 @@ void TChain::SetEntryList(TEntryList *elist)
          if (temphash == hashtable[i]){
             //found, check if it's the right one
             filename = ((TChainElement*)fFiles->UncheckedAt(i))->GetTitle();
-            gSystem->ExpandPathName(filename);
-            if (!gSystem->IsAbsoluteFileName(filename))
-               gSystem->PrependPathName(gSystem->pwd(), filename);
-            filename = gSystem->UnixPathName(filename);
+            if (!nexp){
+               gSystem->ExpandPathName(filename);
+               if (!gSystem->IsAbsoluteFileName(filename))
+                  gSystem->PrependPathName(gSystem->pwd(), filename);
+               filename = gSystem->UnixPathName(filename);
+            }
             if (!(strcmp(templist->GetTreeName(),((TChainElement*)fFiles->UncheckedAt(i))->GetName())) && 
                 !(strcmp(templist->GetFileName(),filename.Data()))) {
                break;
@@ -2136,6 +2151,57 @@ void TChain::SetEntryList(TEntryList *elist)
    fEntryList->SetShift(shift);
 
 }
+
+//_______________________________________________________________________
+void TChain::SetEntryList(const char *filename, Option_t */*opt*/)
+{
+// Set the input entry list (processing the entries of the chain will then be
+// limited to the entries in the list). This function creates a special kind
+// of entry list (TEntryListFromFile object) that loads lists, corresponding
+// to the chain elements, one by one, so that only one list is in memory at a time.
+//
+// If there is an error opening one of the files, this file is skipped and the
+// next file is loaded
+//
+// File naming convention:
+// - by default, filename_elist.root is used, where filename is the
+//   name of the chain element
+// - xxx$xxx.root - $ sign is replaced by the name of the chain element
+// If the list name is not specified (by passing filename_elist.root/listname to
+// the TChain::SetEntryList() function, the first object of class TEntryList
+// in the file is taken.
+//
+// It is assumed, that there are as many list files, as there are elements in 
+// the chain and they are in the same order
+
+
+   if (fEntryList){
+      //check, if the chain is the owner of the previous entry list 
+      //(it happens, if the previous entry list was created from a user-defined
+      //TEventList in SetEventList() function)
+      if (fEntryList->TestBit(kCanDelete)){
+         delete fEntryList;
+      }
+      fEntryList = 0;
+   }
+
+   fEventList = 0;
+
+   TString basename(filename);
+
+   Int_t dotslashpos = basename.Index(".root/");
+   TString behind_dot_root = "";
+   if (dotslashpos>=0) {
+      // Copy the list name specification
+      behind_dot_root = basename(dotslashpos+6,basename.Length()-dotslashpos+6);
+      // and remove it from basename
+      basename.Remove(dotslashpos+5);
+   }
+   fEntryList = new TEntryListFromFile(basename.Data(), behind_dot_root.Data(), fNtrees);
+   fEntryList->SetBit(kCanDelete, kTRUE);
+   ((TEntryListFromFile*)fEntryList)->SetFileNames(fFiles);
+}
+
 
 //_______________________________________________________________________
 void TChain::SetEventList(TEventList *evlist)

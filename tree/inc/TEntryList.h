@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.h,v 1.6 2007/02/01 16:04:48 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.h,v 1.7 2007/02/09 11:51:09 rdm Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -63,16 +63,16 @@ class TEntryList: public TNamed
    virtual void        Add(const TEntryList *elist);
    virtual Int_t       Contains(Long64_t entry, TTree *tree = 0);
    virtual Bool_t      Enter(Long64_t entry, TTree *tree = 0);
-   virtual TEntryList  *GetCurrentList(){ return fCurrent; };
-   virtual TEntryList  *GetEntryList(const char *treename, const char *filename);
+   virtual TEntryList *GetCurrentList() const { return fCurrent; };
+   virtual TEntryList *GetEntryList(const char *treename, const char *filename);
    virtual Long64_t    GetEntry(Int_t index);
    virtual Long64_t    GetEntryAndTree(Int_t index, Int_t &treenum);
-   virtual TList       *GetLists() const { return fLists; }
-   virtual TDirectory  *GetDirectory() const { return fDirectory; }
+   virtual TList      *GetLists() const { return fLists; }
+   virtual TDirectory *GetDirectory() const { return fDirectory; }
    virtual Long64_t    GetN() const { return fN; }
-   virtual const char  *GetTreeName() { return fTreeName.Data(); }
-   virtual const char  *GetFileName() { return fFileName.Data(); }
-   virtual Int_t       GetTreeNumber() { return fTreeNumber; }
+   virtual const char *GetTreeName() const { return fTreeName.Data(); }
+   virtual const char *GetFileName() const { return fFileName.Data(); }
+   virtual Int_t       GetTreeNumber() const { return fTreeNumber; }
    virtual Bool_t      GetReapplyCut() const { return fReapply; };
    virtual Int_t       Merge(TCollection *list);
    
