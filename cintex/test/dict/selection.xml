@@ -30,7 +30,11 @@
   <class name="Pbase"/>
   <class name="PPbase"/>
   <class name="std::vector<const Pbase*>"/>
+  <class name="std::vector<char>"/>
+  <class name="std::vector<short>"/>
   <class name="std::vector<int>"/>
+  <class name="std::vector<long>" />
+  <class name="std::vector<float>" />
   <class name="std::vector<double>" />
   <class name="std::vector<std::string>" />
   <class name="std::vector<unsigned long>" />

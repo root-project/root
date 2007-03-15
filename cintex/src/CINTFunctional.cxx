@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.20 2006/11/29 16:13:44 roiser Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTFunctional.cxx,v 1.21 2006/12/07 14:54:59 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -125,6 +125,11 @@ namespace ROOT { namespace Cintex {
       // Process ctx result.
       char t = fRet_desc.first;
       result->type = t;
+      if ( fRet_byref ) { 
+         result->ref = (long)obj;
+      } else {
+         result->ref = 0;
+      }
       switch( t ) {
       case 'y': G__setnull(result); break;
       case 'Y': Converter<long>::toCint          (result, obj); break;
@@ -161,14 +166,8 @@ namespace ROOT { namespace Cintex {
          result->tagnum = fRet_tag;
          break;
       case 'U': 
-         if ( fRet_byref) {
-            Converter<long>::toCint(result, *(void**)obj);
-            result->ref = (long)obj;
-         }
-         else {
-            Converter<long>::toCint(result, obj);
-            result->ref = 0;
-         }
+         if ( fRet_byref ) Converter<long>::toCint(result, *(void**)obj);
+         else              Converter<long>::toCint(result, obj);
          result->tagnum = fRet_tag;
          break;
       }

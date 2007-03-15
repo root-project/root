@@ -440,6 +440,15 @@ class BasicsTestCase(unittest.TestCase):
     self.failUnlessEqual(calling.vectorargument(self.std.vector('unsigned long')(4)), 4)
     self.failUnlessEqual(calling.vectorargument(self.std.vector('string')(2)), 2)
     #self.gbl.gEnv.SetValue("Root.ErrorIgnoreLevel", "Warning")
+   
+  def test31VectorPrimitiveElementAsignments(self) :
+    # Not working for 'char', 'short', 'unsigned long',...
+    for p in (('int',0, 66) , ('long',0, 77),  
+             ('float', 0., 22.0), ('double', 0., 33.3) ) :
+      v = self.std.vector(p[0])(3)
+      self.failUnlessEqual(v[2], p[1])
+      v[2] = p[2]
+      self.failUnlessEqual(v[2], p[2])
 
 suite = unittest.makeSuite(BasicsTestCase,'test')
 if __name__ == '__main__':
