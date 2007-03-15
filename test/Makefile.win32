@@ -51,7 +51,11 @@ EXTRAFLAGS    = -G5
 !endif
 
 
-LDFLAGS       = $(LDOPT) $(conlflags) -nologo
+LDFLAGS       = $(LDOPT) $(conlflags) -nologo -include:_G__cpp_setupG__Hist \
+                -include:_G__cpp_setupG__Graf1 -include:_G__cpp_setupG__G3D \
+                -include:_G__cpp_setupG__GPad -include:_G__cpp_setupG__Tree \
+                -include:_G__cpp_setupG__Rint -include:_G__cpp_setupG__PostScript \
+                -include:_G__cpp_setupG__Matrix -include:_G__cpp_setupG__Physics
 SOFLAGS       = $(dlllflags:-pdb:none=)
 ROOTLIBS      = $(ROOTSYS)/lib/libCore.lib \
                 $(ROOTSYS)/lib/libCint.lib $(ROOTSYS)/lib/libHist.lib \
