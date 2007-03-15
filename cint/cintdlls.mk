@@ -121,11 +121,11 @@ ifneq ($(subst build/unix/makelib.sh,,$(MAKELIB)),$(MAKELIB))
 endif
 
 $(CINTDIRSTL)/%.dll: $(CINTDIRDLLSTL)/G__cpp_%.o $(ORDER_) $(MAINLIBS)
-	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $^
+	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $<
 	$(CINTDLLSOEXTCMD)
 
 $(CINTDIRDLLS)/%.dll: $(CINTDIRL)/G__c_%.o $(ORDER_) $(MAINLIBS)
-	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $^
+	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $<
 	$(CINTDLLSOEXTCMD)
 
 metautils/src/stlLoader_%.cc: metautils/src/stlLoader.cc
