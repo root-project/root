@@ -121,11 +121,11 @@ ifneq ($(subst build/unix/makelib.sh,,$(MAKELIB)),$(MAKELIB))
 endif
 
 $(CINTDIRSTL)/%.dll: $(CINTDIRDLLSTL)/G__cpp_%.o $(ORDER_) $(MAINLIBS)
-	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $^
+	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $<
 	$(CINTDLLSOEXTCMD)
 
 $(CINTDIRDLLS)/%.dll: $(CINTDIRL)/G__c_%.o $(ORDER_) $(MAINLIBS)
-	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $^
+	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $(@:.dll=.$(SOEXT))) $(@:.dll=.$(SOEXT)) $<
 	$(CINTDLLSOEXTCMD)
 
 metautils/src/stlLoader_%.cc: metautils/src/stlLoader.cc
@@ -188,7 +188,7 @@ $(CINTDIRDLLSTL)/rootcint_%.cxx: $(ROOTCINTTMPEXE)
 $(patsubst lib/lib%Dict.$(SOEXT),$(CINTDIRDLLSTL)/rootcint_%.o,$(CINTDICTDLLS)): CINTCXXFLAGS += -I.
 
 $(CINTDICTDLLS): lib/lib%Dict.$(SOEXT): $(CINTDIRDLLSTL)/rootcint_%.o $(ORDER_) $(MAINLIBS)
-	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ $^
+	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ $<
 ifeq ($(PLATFORM),maxosx)
 ifeq ($(subst $(MACOSX_MINOR),,456789),456789)
 	rm -f $@
