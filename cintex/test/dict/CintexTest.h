@@ -396,6 +396,8 @@ public:
 struct _Instantiations {
   std::vector<float> Vf;
   std::vector<int> Vi;
+  std::vector<char> Vc;
+  std::vector<short> Vs;
   std::vector<unsigned int> Vui;
   std::vector<unsigned long> Vul;
   std::vector<long> Vl;
