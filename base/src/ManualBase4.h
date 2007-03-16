@@ -34,6 +34,7 @@ extern void G__set_cpp_environmentManualBase4();
 #ifndef G__MEMFUNCBODY
 #endif
 
+extern G__linked_taginfo G__ManualBase4LN_TBuffer;
 extern G__linked_taginfo G__ManualBase4LN_TDirectory;
 
 /* STUB derived class for protected member access */
