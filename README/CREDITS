@@ -608,6 +608,10 @@ N: Brett Viren
 E: bv@bnl.gov
 D: contributed the GUI TGTableLayout manager and the Viewer example program
 
+N: Guido Volpi
+E: guido.volpi@pi.infn.it
+D: class TPie
+
 N: Helge Voss
 E: Helge.Voss@cern.ch
 D: contribution to the TMVA package
