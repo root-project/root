@@ -330,7 +330,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
 
       fMacro->GetListOfLines()->Delete();
       TString line;
-      while (ssConverted) {
+      while (!ssConverted.fail()) {
          if (!line.ReadLine(ssConverted, kFALSE) || ssConverted.eof())
             break;
          fMacro->AddLine(line);
