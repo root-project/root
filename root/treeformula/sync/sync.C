@@ -47,7 +47,7 @@ Int_t sync(bool skipKnownFail) {
   TH1F * h5 = (TH1F*)gROOT->FindObject("h5");
   TH1F * h7 = (TH1F*)gROOT->FindObject("h7");
 
-  TH1F * h2 = new TH1F("h2","h2",9,-2,+7);
+  TH1F * h2 = new TH1F("h2","h2",9,-3,+7);
   //h2->Reset();
   //h2->SetBit(TH1::kCanRebin);
   TH1F * h4 = new TH1F("h4","h4",h3->GetNbinsX(),
@@ -90,7 +90,9 @@ Int_t sync(bool skipKnownFail) {
       }
       
       for (int k=0; k<3; k++) {
-        if (t->GetVertex(k) >=2) h2->Fill(e->GetMatrix(j,k));
+         if (t->GetVertex(k) >=2) {
+            h2->Fill(e->GetMatrix(j,k));
+         }
       }
     }
   }
