@@ -17,6 +17,8 @@
 #include "bc_inst.h"
 #include "bc_reader.h"
 
+#include <deque>
+
 /***********************************************************************
  * static object
  ***********************************************************************/
@@ -1567,8 +1569,8 @@ int G__blockscope::init_w_defaultctor(G__TypeReader& type
   para.paran = 0;
   para.para[0] = G__null;
 
-  int num = var->varlabel[ig15][1]+1; // get array index
-  if(num>0) {
+  int num = var->varlabel[ig15][1]; // get array size
+  if (num > 0) {
     m_bc_inst.LD(num);
     m_bc_inst.SETARYINDEX(1);
     call_ctor(type,&para,var,ig15,num);
@@ -1747,399 +1749,369 @@ int G__blockscope::initscalar(G__TypeReader& type
 /***********************************************************************
  * G__blockscope::initstruct, struct and array of struct without ctor
  ***********************************************************************/
-int G__blockscope::initstruct(G__TypeReader& type
-			     ,struct G__var_array* var,int ig15
-			     ,string& /*token*/,int c) {
-  // A x   = { "abc" , 123, 3.45 };
-  // A x[] = { {"abc",123,3.45},{"def",456,6.78} };
+int G__blockscope::initstruct(G__TypeReader& type, struct G__var_array* var, int varid, string& /*token*/, int c)
+{
+  // MyClass x   = { "abc", 123, 3.45 };
+  // MyClass x[] = { {"abc", 123, 3.45}, {"def", 456, 6.78} };
   //          ^
-  char expr[G__ONELINE];
+  // FIXME: We do not handle brace nesting properly,
+  //        we need to default initialize members
+  //        whose initializers were omitted.
+  // We must be an aggregate type, enforce that.
+  if (G__struct.baseclass[var->p_tagtable[varid]]->basen) {
+    // -- We have base classes, i.e., we are not an aggregate.
+    // FIXME: This test should be stronger, the accessibility
+    //        of the data members should be tested for example.
+    G__fprinterr(G__serr, "Error: %s must be initialized by constructor", type.Name());
+    G__genericerror(0);
+    int c = G__fignorestream("}");
+    //  type var1[N] = { 0, 1, 2.. }  , ... ;
+    // came to                      ^
+    c = G__fignorestream(",;");
+    //  type var1[N] = { 0, 1, 2.. } , ... ;
+    // came to                        ^  or ^
+    return c;
+  }
+  int number_of_dimensions = var->paran[varid];
+  int& num_of_elements = var->varlabel[varid][1];
+  const int& stride = var->varlabel[varid][0];
+  // Check for an unspecified length array.
+  int isauto = 0;
+  if (num_of_elements == INT_MAX /* unspecified length flag */) {
+    // -- We are an unspecified length array.
+    // a[] or  a[][B][C]
+    // Set isauto flag and reset number of elements.
+    isauto = 1;
+    num_of_elements = 0;
+  }
+  // Load first address of array as pointer.
+  for (int i = 0; i < number_of_dimensions; ++i) {
+    m_bc_inst.LD(0);
+  }
+  m_bc_inst.LD_LVAR(var, varid, number_of_dimensions, 'P');
+  // Initialize buf.
   G__value buf;
-  int pinc,pindex,pi,inc;
-  int mparen;
-  G__value reg;
-  /* int ispointer=0; */
-  int isauto=0;
-  int size;
-  int prev;
-
-  struct G__var_array *memvar;
-  int memindex;
-  /* int offset; */
-
-  if(G__struct.baseclass[var->p_tagtable[ig15]]->basen) {
-    G__fprinterr(G__serr,"Error: %s must be initialized by constructor"
-		,type.Name());
-    G__genericerror((char*)NULL);
-  }
-  
-  /*******************************************************
-   * multidimensional array number of dimension
-   *******************************************************/
-  pindex=var->paran[ig15];
-  
-  /*******************************************************
-   * check if  a[], a[][B][C] isauto sized array 
-   *******************************************************/
-  if(INT_MAX==var->varlabel[ig15][1]) {
-    /* set isauto flag and reset varlabel[ig15][1] */
-    isauto=1;
-    var->varlabel[ig15][1] = -1;
-  }
-  
-  // load 1st address of array as pointer
-  for(int i=0;i<pindex;i++) m_bc_inst.LD(0);
-  m_bc_inst.LD_LVAR(var,ig15,pindex,'P');
-  /* initialize buf */
-  buf.type=toupper(var->type[ig15]);
-  buf.tagnum=var->p_tagtable[ig15];
-  buf.typenum=var->p_typetable[ig15];
-  buf.ref=0;
-  buf.obj.reftype.reftype=var->reftype[ig15];
-  
-  /* getting size */
-  if(islower(var->type[ig15])) {
-    size=G__sizeof(&buf);
+  buf.type = toupper(var->type[varid]);
+  buf.tagnum = var->p_tagtable[varid];
+  buf.typenum = var->p_typetable[varid];
+  buf.ref = 0;
+  buf.obj.reftype.reftype = var->reftype[varid];
+  // Get size.
+  int size = 0;
+  if (islower(var->type[varid])) {
+    // -- We are *not* a pointer.
+    size = G__sizeof(&buf);
   }
   else {
-    buf.type='L'; /* pointer assignement handled as long */
-    size=G__LONGALLOC;
+    // -- We are a pointer, handle as a long.
+    buf.type = 'L';
+    size = G__LONGALLOC;
   }
-  G__ASSERT(0<var->varlabel[ig15][0]&&0<size);
-  
-  /* initialize data member pointer */
-  memvar=G__initmemvar(var->p_tagtable[ig15],&memindex,&buf);
-  /*******************************************************
-   * read initialization list 
-   *******************************************************/
-  mparen=1;
-  inc=0;
-  pi=pindex;
-  pinc=0;
-  buf.obj.i = var->p[ig15]+size*pinc+memvar->p[memindex];
-  while(mparen) {
-    c=G__fgetstream(expr,",{}"); // legacy
-    //c=m_preader->fgetstream_(expr,",{}"); 
-    if(expr[0]) {
-      /********************************************
-       * increment the pointer
-       ********************************************/
-      prev=pinc;
-      if(inc) pinc = pinc - pinc%inc + inc;
-      if(pinc>var->varlabel[ig15][1]) {
-	if(isauto) {
-	  var->varlabel[ig15][1] += var->varlabel[ig15][0];
+  G__ASSERT((stride > 0) && (size > 0));
+  // Get a pointer to the first data member.
+  int memindex = 0;
+  struct G__var_array* memvar = G__initmemvar(var->p_tagtable[varid], &memindex, &buf);
+  //
+  // Read and process the initializer specification.
+  //
+  int mparen = 1;
+  int linear_index = -1;
+  buf.obj.i = var->p[varid] + memvar->p[memindex];
+  char expr[G__ONELINE];
+  while (mparen) {
+    // -- Read the next initializer value.
+    int c = G__fgetstream(expr, ",{}");
+    if (expr[0]) {
+      // -- We have an initializer expression.
+      // FIXME: Do we handle a string literal correctly here?  See similar code in G__initary().
+      ++linear_index;
+      // If we are an array, make sure we have not gone beyond the end.
+      if ((num_of_elements || isauto) && (linear_index >= num_of_elements)) {
+        // -- We have gone past the end of the array.
+	if (isauto) {
+          // -- Unspecified length array, make it bigger to fit.
+          // Allocate another stride worth of elements.
+          num_of_elements += stride;
 	}
 	else {
-	  /*************************************
-	   * error , array index out of range
-	   ************************************/
-	  G__fprinterr(G__serr,
-		 "Error: Array initialization out of range *(%s+%d), upto %d "
-		    ,type.Name(),pinc ,var->varlabel[ig15][1]);
-	  G__genericerror((char*)NULL);
+          // -- Fixed-size array, error, array index out of range.
+	  G__fprinterr(G__serr, "Error: %s: %d: Array initialization out of range *(%s+%d), upto %d ", __FILE__, __LINE__, type.Name(), linear_index, num_of_elements);
+	  G__genericerror(0);
+          while (mparen-- && (c != ';')) {
+            c = G__fignorestream("};");
+          }
+          if (c != ';') {
+            c = G__fignorestream(";");
+          }
+          return c;
 	}
       }
-      /*******************************************
-       * initiazlize this element
-       *******************************************/
-      G__TypeReader type;
+      // Loop over the data members and initialize them.
+      G__TypeReader type_tmp;
       do {
-        int offset = var->p[ig15]+size*pinc+memvar->p[memindex] - buf.obj.i;
+        // FIXME: Do we have possible overflow problems here?
+        int offset = ((var->p[varid] + (linear_index * size)) + memvar->p[memindex]) - buf.obj.i;
         buf.obj.i += offset;
         m_bc_inst.LD(offset);
         m_bc_inst.OP2(G__OPR_ADDVOIDPTR);
-        type.Init(memvar,memindex);
-        type.incplevel();
-        m_bc_inst.CAST(type);
-        reg=G__getexpr(expr);
+        type_tmp.Init(memvar, memindex);
+        type_tmp.incplevel();
+        m_bc_inst.CAST(type_tmp);
+        G__value reg = G__getexpr(expr);
         m_bc_inst.LETNEWVAL();
-
-	memvar=G__incmemvar(memvar,&memindex,&buf);
-        if('}'==c||!memvar) break;
-        c=G__fgetstream(expr,",{}"); // legacy
-	//c=m_preader->fgetstream_(expr,",{}"); 
-      } while(memvar);
-      memvar=G__initmemvar(var->p_tagtable[ig15],&memindex,&buf);
+        // Move to next data member.
+	memvar = G__incmemvar(memvar, &memindex, &buf);
+        if ((c == '}') || !memvar) {
+          // -- All done if no more data members, or end of list.
+          // FIXME: We are not handling nesting of braces properly.
+          //        We need to default initialize the rest of the members.
+          break;
+        }
+        // Get next initializer expression.
+        c = G__fgetstream(expr, ",{}");
+      } while (memvar);
+      // Reset back to the beginning of the data member list.
+      memvar = G__initmemvar(var->p_tagtable[varid], &memindex, &buf);
     }
-    switch(c) {
-    case '{':
-      ++mparen;
-      /* inc *= var->varlabel[ig15][pi--]; */
-      break;
-    case '}':
-      ++pi;
-      --mparen;
-      break;
-    case ',':
-      inc=1;
-      pi=pindex;
-      break;
+    // Change parser state for next initializer expression.
+    switch (c) {
+      case '{':
+        // -- Increment nesting level.
+        ++mparen;
+        break;
+      case '}':
+        // -- Decrement nesting level and move to next dimension.
+        --mparen;
+        break;
+      case ',':
+        // -- Normal end of an initializer expression.
+        break;
     }
   }
-
-  if(isauto) {
-    // in order to increment memory pointer
-    G__malloc(var->varlabel[ig15][1]+1,size,var->varnamebuf[ig15]);
+  if (isauto) {
+    // -- An unspecified length array.
+    G__malloc(num_of_elements, size, var->varnamebuf[varid]);
   }
-  
-  /**********************************************************
-   * read upto next , or ;
-   **********************************************************/
-  c=G__fignorestream(",;");
-
-  /*  type var1[N] = { 0, 1, 2.. } , ... ;
-   * came to                        ^  or ^   */
-
-  return(c); // c== ';' ','
+  // Read and discard up to next comma or semicolon.
+  c = G__fignorestream(",;");
+  // MyClass var1[N] = { 0, 1, 2.. } , ... ;
+  // came to                        ^  or ^   */
+  //
+  // Note: The return value c is either a comma or a semicolon.
+  return c;
 }
 
 /***********************************************************************
  * G__blockscope::initscalarary, fundamental type or pointer array only
  ***********************************************************************/
-int G__blockscope::initscalarary(G__TypeReader& /*type*/
-			         ,struct G__var_array* var,int ig15
-			         ,string& /*token*/,int c) {
-  // char* ary[] =  { "a", "b" }; 
-  // char* ary[n]=  { "a", "b" }; 
-  // char  ary[] =  "abc"; 
-  // char  ary[4]=  "abc"; 
-  // char  ary[3]=  "abc"; // ary[4]=0; +1 element is allocated in allocvar
-  // type ary[]  =  { 1,2,3 };
-  // type ary[n] =  { 1,2,3 };
+int G__blockscope::initscalarary(G__TypeReader& /*type*/, struct G__var_array* var, int ig15, string& /*token*/, int c)
+{
+  // char* ary[]  = { "a", "b" }; 
+  // char* ary[n] = { "a", "b" }; 
+  // char  ary[]  = "abc"; 
+  // char  ary[4] = "abc"; 
+  // char  ary[3] = "abc"; // ary[4]=0; +1 element is allocated in allocvar
+  // int   ary[]  = { 1,2,3 };
+  // int   ary[n] = { 1,2,3 };
   //               ^
-  //string expr;
   char expr[G__ONELINE];
-  G__value buf;
-  G__value reg;
-  int i;
-  int pinc,pindex,pi,inc;
-  int mparen;
-  int isauto=0;
-  int size;
-  int prev;
-  int stringflag=0;
-  int typedary=0; 
-  
-  /*******************************************************
-   * multidimensional array number of dimension
-   *******************************************************/
-  pindex=var->paran[ig15];
-  
-  /*******************************************************
-   * check if  a[], a[][B][C] isauto sized array 
-   *******************************************************/
-  if(INT_MAX==var->varlabel[ig15][1]) {
-    /* set isauto flag and reset varlabel[ig15][1] */
-    isauto=1;
-    var->varlabel[ig15][1] = -1;
+  int& num_of_elements = var->varlabel[ig15][1];
+  const int& stride = var->varlabel[ig15][0];
+  // Check for an unspecified length array declaration.
+  int isauto = 0;
+  if (num_of_elements == INT_MAX /* unspecified length flag */) {
+    // Set isauto flag and reset num_of_elements.
+    isauto = 1;
+    num_of_elements = 0;
   }
-
-  // load 1st address of array as pointer
-  for(int j=0;j<pindex;j++) m_bc_inst.LD(0);
-  m_bc_inst.LD_LVAR(var,ig15,pindex,'P');
-  /* initialize buf */
-  buf.type=toupper(var->type[ig15]);
-  buf.tagnum=var->p_tagtable[ig15];
-  buf.typenum=var->p_typetable[ig15];
-  buf.ref=0;
-  buf.obj.reftype.reftype=var->reftype[ig15];
-  
-  // use as is or probably size is not needed. increment is done in ++operator
-  /* getting size */ 
-  if(islower(var->type[ig15])) {
-    if(-1!=buf.typenum && G__newtype.nindex[buf.typenum]) {
+  // Load the address of the first element of the array as a pointer.
+  int num_of_dimensions = var->paran[ig15];
+  for (int j = 0; j < num_of_dimensions; ++j) {
+    m_bc_inst.LD(0);
+  }
+  m_bc_inst.LD_LVAR(var, ig15, num_of_dimensions, 'P');
+  // initialize buf
+  G__value buf;
+  buf.type = toupper(var->type[ig15]);
+  buf.tagnum = var->p_tagtable[ig15];
+  buf.typenum = var->p_typetable[ig15];
+  buf.ref = 0;
+  buf.obj.reftype.reftype = var->reftype[ig15];
+  // Get the size of an element of the array.
+  int size = 0;
+  int typedefary = 0; 
+  if (islower(var->type[ig15])) {
+    if ((buf.typenum != -1) && G__newtype.nindex[buf.typenum]) {
       char store_var_type = G__var_type;
-      size=G__Lsizeof(G__newtype.name[buf.typenum]);
+      size = G__Lsizeof(G__newtype.name[buf.typenum]);
       G__var_type = store_var_type;
-      typedary=1; 
+      typedefary = 1; 
     }
     else {
-      size=G__sizeof(&buf);
+      size = G__sizeof(&buf);
     }
   }
   else {
-    buf.type='L'; /* pointer assignement handled as long */
-    size=G__LONGALLOC;
+    // pointer assignment handled as long
+    buf.type = 'L';
+    size = G__LONGALLOC;
   }
-  
-  if(0>=var->varlabel[ig15][0]||0>=size) {
+  if ((stride < 0) || (size <= 0)) {
     G__genericerror("Error: cint internal error");
   }
-  
-  
-  /*******************************************************
-   * read initialization list 
-   *******************************************************/
-  c=G__fgetstream(expr,"{;},"); // legacy
-  //c=m_preader->fgetstream_(expr,"{;},"); 
-  if(c==';') {
+  //
+  // Read initialization list.
+  //
+  c = G__fgetstream(expr, ",;{}");
+  if (c == ';') {
+    // -- Should be a one-dimensional character array.
     // char  ary[] =  "abc";  
-    //                      ^
-    if('c'!=var->type[ig15] || 1!=var->paran[ig15]) {
-      G__fprinterr(G__serr,"Error: illegal initialization of '%s'"
-		   ,var->varnamebuf[ig15]);
-      G__genericerror((char*)NULL);
+    //                     ^
+    if ((var->type[ig15] != 'c') || (var->paran[ig15] != 1)) {
+      G__fprinterr(G__serr, "Error: %s: %d: illegal initialization of '%s'", __FILE__, __LINE__, var->varnamebuf[ig15]);
+      G__genericerror(0);
     }
     m_bc_inst.LD(0);
-    m_bc_inst.LD_LVAR(var,ig15,1,'p');
-    reg=G__getexpr(expr); // legacy
-    // add G__Isvalidassignment() ??
-    conversion(reg,var,ig15,'p',0); // embed into G__Isvalidassignment ?
+    m_bc_inst.LD_LVAR(var, ig15, 1, 'p');
+    G__value reg = G__getexpr(expr);
+    conversion(reg, var, ig15, 'p', 0);
     m_bc_inst.LETNEWVAL();
-    if(var->varlabel[ig15][1]==INT_MAX) {
-      var->varlabel[ig15][1]=strlen((char*)reg.obj.i)+1;
+    if (num_of_elements == INT_MAX /* unspecified length flag */) {
+      num_of_elements = strlen((char*) reg.obj.i) + 1;
     }
-    return(c);
+    return c;
   }
-  if(c!='{') {
+  if (c != '{') {
     G__genericerror("Error: syntax error, array initialization");
   }
-  mparen=1;
-  inc=0;
-  pi=pindex;
-  pinc=0;
-  while(mparen) {
-    c=G__fgetstream(expr,",{}"); // legacy
-    //c=m_preader->fgetstream_(expr,",{}");
-    if(expr[0]) {
-      /********************************************
-       * increment the pointer
-       ********************************************/
-      if('c'==var->type[ig15] && '"'==expr[0]) {
-	if(0==typedary) size = var->varlabel[ig15][var->paran[ig15]];
-	stringflag=1;
-	if(0>size && -1==var->varlabel[ig15][1]) {
-	  isauto=0;
+  int mparen = 1;
+  int inc = 0;
+  int pi = num_of_dimensions;
+  int linear_index = 0;
+  int prev = 0;
+  int stringflag = 0;
+  while (mparen) {
+    // -- Get next initializer expression.
+    c = G__fgetstream(expr, ",{}");
+    if (expr[0]) {
+      // -- We got an initializer expression.
+      if ((var->type[ig15] == 'c') && (expr[0] == '"')) {
+        // -- Character array initialized by a string literal.
+	if (!typedefary) {
+          size = var->varlabel[ig15][var->paran[ig15]];
+        }
+	stringflag = 1;
+	if ((size < 0) && !num_of_elements) {
+	  isauto = 0;
 	  size = 1;
-	  stringflag=2;
+	  stringflag = 2;
 	}
       }
-      prev=pinc;
-      if(inc) pinc = pinc - pinc%inc + inc;
-      if(pinc>var->varlabel[ig15][1]) {
-	if(isauto) {
-	  var->varlabel[ig15][1] += var->varlabel[ig15][0];
+      prev = linear_index;
+      if (inc) {
+        linear_index = (linear_index - (linear_index % inc)) + inc;
+      }
+      if ((num_of_elements || isauto) && (linear_index >= num_of_elements)) {
+	if (isauto) {
+          num_of_elements += stride;
 	}
-	else if(2==stringflag) {
+	else if (stringflag == 2) {
 	}
 	else {
-	  /*************************************
-	   * error , array index out of range
-	   ************************************/
-	  G__fprinterr(G__serr,"Error: Array initialization over-run '%s'"
-		       ,var->varnamebuf[ig15]);
-	  G__genericerror((char*)NULL); // throw exception here, 
-	  //while(mparen--&&';'!=c) c=G__fignorestream("};"); 
-	  //if(';'!=c) c=G__fignorestream(";");
-	  return(c);
+	  // Error, array index out of range.
+	  G__fprinterr(G__serr, "Error: %s: %d: Array initialization over-run '%s'", __FILE__, __LINE__, var->varnamebuf[ig15]);
+	  G__genericerror(0);
+	  return c;
 	}
       }
-      /*******************************************
-       * initialized omitted objects to 0
-       *******************************************/
-      for(i=prev+1;i<pinc;i++) {
+      // Default initialize omitted elements.
+      for (int i = prev + 1; i < linear_index; ++i) {
         m_bc_inst.LD(&G__null);
         m_bc_inst.LETNEWVAL();
         m_bc_inst.OP1(G__OPR_PREFIXINC);
-	//buf.obj.i=var->p[ig15]+size*i;
-	//G__letvalue(&buf,G__null);
       }
-      /*******************************************
-       * initiazlize this element
-       *******************************************/
-      //buf.obj.i=var->p[ig15]+size*pinc;
+      // Initialize this element.
+      G__value reg;
       {
-        int store_prerun=G__prerun;
-        G__prerun=0;
-        // todo, only if  !stringflag 
-        reg=G__getexpr(expr); // legacy
-        //reg = compile_expression(expr);
-        G__prerun=store_prerun;
-	// add G__Isvalidassignment() ??
-	conversion(reg,var,ig15,'p',0); // embed into G__Isvalidassignment ?
+        int store_prerun = G__prerun;
+        G__prerun = 0;
+        // todo, only if !stringflag 
+        reg = G__getexpr(expr);
+        G__prerun = store_prerun;
+	conversion(reg, var, ig15, 'p', 0);
       }
-      if(1== stringflag) {
-        // G__saveconststring()
-        // generate an instruction to copy 
+      if (stringflag == 1) {
       }
-      else if(2==stringflag /* && 0==var->p[ig15] */  /*??*/ && isauto) {
-	var->varlabel[ig15][1]=strlen((char*)reg.obj.i)+1;
-        // G__saveconststring()
-        // generate bytecode instruction to copy 
+      else if ((stringflag == 2) && isauto) {
+	num_of_elements = std::strlen((char*) reg.obj.i) + 1;
       }
       else {
         m_bc_inst.LETNEWVAL();
         m_bc_inst.OP1(G__OPR_PREFIXINC);
-	//G__letvalue(&buf,reg);
       }
     }
-    switch(c) {
-    case '{':
-      ++mparen;
-      if(stringflag && var->paran[ig15]>2) {
-	inc *= var->varlabel[ig15][--pi]; /* not 100% sure,but.. */
-      }
-      else {
-	inc *= var->varlabel[ig15][pi--];
-      }
-      break;
-    case '}':
-      ++pi;
-      --mparen;
-      break;
-    case ',':
-      inc=1;
-      pi=pindex;
-      break;
+    // Change parser state for the next initializer expression.
+    switch (c) {
+      case '{':
+        // -- Increment nesting level.
+        ++mparen;
+        if (stringflag && (var->paran[ig15] > 2)) {
+          inc *= var->varlabel[ig15][--pi];
+        }
+        else {
+          inc *= var->varlabel[ig15][pi--];
+        }
+        break;
+      case '}':
+        // -- Decrement nesting level.
+        --mparen;
+        ++pi;
+        break;
+      case ',':
+        // -- Normal end of an initializer expression.
+        // Flag that we move to next linear element.
+        inc = 1;
+        pi = num_of_dimensions;
+        break;
     }
   }
-  
-  /**********************************************************
-   * initialize remaining object to 0
-   **********************************************************/
-  if(0==stringflag) {
-    int initnum = var->varlabel[ig15][1];
-    if(-1!=buf.typenum && G__newtype.nindex[buf.typenum]) {
+  // Default initialize the remaining elements.
+  if (!stringflag) {
+    int initnum = num_of_elements;
+    if ((buf.typenum != -1) && G__newtype.nindex[buf.typenum]) {
+      // -- We are a typedef.
       initnum /= size;
     }
-    for(i=pinc+1;i<=initnum;i++) {
+    for (int i = linear_index + 1; i < initnum; ++i) {
       m_bc_inst.LD(&G__null);
       m_bc_inst.LETNEWVAL();
       m_bc_inst.OP1(G__OPR_PREFIXINC);
-      //buf.obj.i=var->p[ig15]+size*i;
-      //G__letvalue(&buf,G__null);
     }
   }
-
-  if(isauto) {
-    // in order to increment memory pointer
-    G__malloc(var->varlabel[ig15][1]+1,size,var->varnamebuf[ig15]);
+  if (isauto) {
+    // -- Unspecified length array.
+    // Allocate in order to increment memory pointer
+    // now that we know the final size.
+    G__malloc(num_of_elements, size, var->varnamebuf[ig15]);
   }
-
-  /**********************************************************
-   * read upto next , or ;
-   **********************************************************/
-  //c = m_preader->fignorestream(",;");
-  c=G__fignorestream(",;");
-
+  // Read and discard up to the next comma or semicolon.
+  c = G__fignorestream(",;");
   //  type var1[N] = { 0, 1, 2.. } , ... ;
   // came to                        ^  or ^ 
-
-  return(c); // c== ';' ','
+  return c;
 }
 
 /***********************************************************************
  * G__blockscope::initstructary, array of struct with ctor 
  ***********************************************************************/
-int G__blockscope::initstructary(G__TypeReader& type
-			     ,struct G__var_array* /*var*/,int /*ig15*/
-			     ,string& /*token*/,int c) {
+int G__blockscope::initstructary(G__TypeReader& type, struct G__var_array* /*var*/, int /*ig15*/, string& /*token*/, int c)
+{
   // string a[] = { "abc" , "def" , "hij" };
   //               ^
-  G__fprinterr(G__serr,"Error: Initialization by aggregate is not allowed with a class with explicitly defined constructor '%s'",type.Name());
-  G__genericerror((char*)NULL);
-  return(c); // c== ';' ','
+  G__fprinterr(G__serr, "Error: Initialization by aggregate is not allowed with a class with explicitly defined constructor '%s'", type.Name());
+  G__genericerror(0);
+  c = G__fignorestream(";");
+  return c;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -2249,14 +2221,17 @@ struct G__var_array* G__blockscope::allocatevariable(G__TypeReader& type
     // this part corresponds to G__compiler::Init(),
     // the bytecode compiler uses legacy G__malloc() and it uses the last
     // entry of class/struct table as size/offset calculation buffer.
-    int num;
-    switch(var->varlabel[ig15][1]) {
-    case 1:        num=1; break;
-    case INT_MAX:  num=0; break;
-    default: 
-      if(type.Type()=='c') num=var->varlabel[ig15][1]+2; // allow ary[3]="abc";
-      else                 num=var->varlabel[ig15][1]+1; 
-      break; 
+    int num = var->varlabel[ig15][1];
+    if (num == INT_MAX) {
+      num = 0;
+    } else if (!num) {
+      num = 1;
+    }
+    else {
+      if (type.Type() == 'c') {
+        // allow: ary[3] = "abc";
+        num += 1;
+      }
     }
 
     char *buf = (char*)malloc(name.size()+1);
@@ -2376,7 +2351,7 @@ int G__blockscope::readtypesize(string& token
 /************************************************************
  * type array[A][B][C][D]
  *   var->varlabel[var_identity][0]=B*C*D; or 1;
- *   var->varlabel[var_identity][1]=A*B*C*D-1;
+ *   var->varlabel[var_identity][1]=A*B*C*D;
  *   var->varlabel[var_identity][2]=B;
  *   var->varlabel[var_identity][3]=C;
  *   var->varlabel[var_identity][4]=D;
@@ -2389,94 +2364,112 @@ int G__blockscope::readtypesize(string& token
  *   var->varlabel[var_identity][10]=1;
  *   var->varlabel[var_identity][11]=0;
  ***********************************************************/
-template<class T,class E> void G__appendx(T& a,E& b) {
-  deque<int>::iterator first=a.begin();
-  deque<int>::iterator last =a.end();
-  while(first!=last) b.push_back(*first++);
+template<class T, class E>
+void G__appendx(T& a, E& b)
+{
+  std::deque<int>::iterator first = a.begin();
+  std::deque<int>::iterator last = a.end();
+  for (; first != last; ++first) {
+    b.push_back(*first);
+  }
 }
 
-void G__blockscope::setarraysize(G__TypeReader& type
-			        ,struct G__var_array* var,int ig15
-			        ,deque<int>& arysize
-				,deque<int>& typesize
-			        ,int isextrapointer) {
+void G__blockscope::setarraysize(G__TypeReader& type, struct G__var_array* var, int ig15, std::deque<int>& arysize, std::deque<int>& typesize, int isextrapointer)
+{
 
   // todo, This check criteria is not quite right. Need to review
-  if( (typesize.size()==0 && arysize.size()>=G__MAXVARDIM-1)
-    ||(arysize.size()==0 && typesize.size() >= G__MAXVARDIM-2)
-    ||(typesize.size()&&arysize.size()&&
-            (arysize.size()+typesize.size()>G__MAXVARDIM-3))) {
-    G__fprinterr(G__serr
-                ,"Limitation: Cint can handle only upto %d dimention array"
-                ,G__MAXVARDIM-1);
-    G__genericerror((char*)NULL);
+  if (
+    (
+      !typesize.size() &&
+      (arysize.size() >= (G__MAXVARDIM - 1))
+    ) ||
+    (
+      !arysize.size() &&
+      (typesize.size() >= (G__MAXVARDIM - 2))
+    ) ||
+    (
+      typesize.size() &&
+      arysize.size() &&
+      ((arysize.size() + typesize.size()) > (G__MAXVARDIM - 3))
+    )
+  ) {
+    G__fprinterr(G__serr, "Limitation: Cint can handle only up to %d dimension array", G__MAXVARDIM - 1);
+    G__genericerror(0);
   }
 
   // todo, copy algorithm does not work. Maybe g++ bug -> implement alternative
 
-  int flag=0;
-  deque<int> asize;
+  int flag = 0;
+  std::deque<int> asize;
 
   // type (*ary)[x][y][z];
   // type (*ary[A][B][C]);
   // type (*ary[A][B][C])[x][y][z];
-  if(isextrapointer) type.incplevel();
+  if (isextrapointer) {
+    type.incplevel();
+  }
 
-  if(!isextrapointer || arysize.size()==0||typesize.size()==0) {
+  if (!isextrapointer || !arysize.size() || !typesize.size()) {
     // type (ary[A][B][C])[x][y][z]; -> type ary[A][B][C][x][y][z];
     // type (*ary)[x][y][z];         -> type *ary[x][y][z];
     // type (*ary[A][B][C]);         -> type *ary[A][B][C];
     // type *ary[A][B][C];           -> type *ary[A][B][C];
     // type ary[A][B][C];            -> type ary[A][B][C];
-    if(arysize.size()==0) 
-      G__appendx(typesize,asize);
+    if (!arysize.size()) {
+      G__appendx(typesize, asize);
       //copy(typesize.begin(),typesize.end(),back_inserter(asize));
-    else 
-      G__appendx(arysize,asize);
+    }
+    else {
+      G__appendx(arysize, asize);
       //copy(arysize.begin(),typesize.end(),back_inserter(asize));
+    }
     //merge(typesize.begin(),typesize.end(),arysize.begin(),arysize.end()
     //      ,back_inserter(asize)); // VC++7.2 can not find merge algorithm
   }
   else {
     // type (*ary[A][B][C])[x][y][z];
-    G__appendx(typesize,asize);
+    G__appendx(typesize, asize);
     //copy(typesize.begin(),typesize.end() ,back_inserter(asize));
-    flag=1;
+    flag = 1;
   }
 
   var->paran[ig15] = arysize.size();
  
-  if(asize.size()==0) {
+  if (!asize.size()) {
     // type a;
-    var->varlabel[ig15][0]=1;
-    var->varlabel[ig15][1]=0;
+    var->varlabel[ig15][0] = 1;
+    var->varlabel[ig15][1] = 0;
   }
   else {
     // type array[A][B][C][D]
     //  var->varlabel[var_identity][0]=B*C*D; or 1;
-    //  var->varlabel[var_identity][1]=A*B*C*D-1;
+    //  var->varlabel[var_identity][1]=A*B*C*D;
     //  var->varlabel[var_identity][2]=B;
     //  var->varlabel[var_identity][3]=C;
     //  var->varlabel[var_identity][4]=D;
     //  var->varlabel[var_identity][5]=1;
-    int a=1;
-    int b=1;
+    int stride = 1;
+    int num_of_elements = 1;
     unsigned int i;
-    for(i=0;i<asize.size();++i) {
-      b *= asize[i];
-      if(i) {
-        a *= asize[i];
+    for (i = 0; i < asize.size(); ++i) {
+      num_of_elements *= asize[i];
+      if (i) {
+        stride *= asize[i];
         var->varlabel[ig15][i+1] = asize[i];
       }
     }
-    var->varlabel[ig15][0] = a;
+    var->varlabel[ig15][0] = stride;
     var->varlabel[ig15][i+1] = 1;
     // need more consideration for a[][2][3]
-    if(asize[0]==INT_MAX) var->varlabel[ig15][1] = INT_MAX;
-    else                  var->varlabel[ig15][1] = b-1;
+    if (asize[0] == INT_MAX) {
+      var->varlabel[ig15][1] /* num of elements */ = INT_MAX /* unspecified length flag */;
+    }
+    else {
+      var->varlabel[ig15][1] /* num of elements */ = num_of_elements;
+    }
   }
 
-  if(flag) {
+  if (flag) {
     // if type (*pary[A][B][C][D])[x][y][z]  A,B,C,D->typesize, x,y,z->arysize
     //  var->varlabel[var_identity][6]=x*y*z or 1;
     //  var->varlabel[var_identity][7]=x;
@@ -2484,10 +2477,10 @@ void G__blockscope::setarraysize(G__TypeReader& type
     //  var->varlabel[var_identity][9]=z;
     //  var->varlabel[var_identity][10]=1;
     //  var->varlabel[var_identity][11]=0;
-    int a6 = asize.size()+2;
-    int a=1;
+    int a6 = asize.size() + 2;
+    int a = 1;
     unsigned int i;
-    for(i=0;i<arysize.size();++i) {
+    for (i = 0; i <arysize.size(); ++i) {
       a *= arysize[i];
       var->varlabel[ig15][a6+1+i] = arysize[i];
     }

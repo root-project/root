@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.257 2007/02/14 05:27:44 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.258 2007/03/09 11:17:10 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -163,7 +163,7 @@
 #include "RConfigure.h"
 #endif
 #include "RConfig.h"
-#include "Api.h"
+#include "Shadow.h"
 #include <iostream>
 
 #ifdef fgets // in G__ci.h
@@ -314,6 +314,7 @@ const char *help =
 
 #include <time.h>
 #include <string>
+#include <list>
 #include <vector>
 #include <sstream>
 #include <map>
@@ -480,6 +481,17 @@ void Fatal(const char *location, const char *va_(fmt), ...)
    va_end(ap);
 }
 
+namespace {
+   class R__tmpnamElement {
+   public:
+      R__tmpnamElement() {}
+      R__tmpnamElement(const std::string& tmpnam): fTmpnam(tmpnam) {}
+      ~R__tmpnamElement() { unlink(fTmpnam.c_str()); }
+   private:
+      string fTmpnam;
+   };
+}
+
 //______________________________________________________________________________
 string R__tmpnam()
 {
@@ -487,6 +499,7 @@ string R__tmpnam()
 
    static char filename[L_tmpnam+2];
    static string tmpdir;
+   static list<R__tmpnamElement> tmpnamList;
 
    if (tmpdir.length() == 0 && strlen(P_tmpdir) <= 2) {
       // P_tmpdir will be prepended to the result of tmpnam
@@ -526,7 +539,7 @@ string R__tmpnam()
    string result(tmpdir);
    result += filename;
    result += "_rootcint";
-
+   tmpnamList.push_back(R__tmpnamElement(result));
    return result;
 #endif
 }

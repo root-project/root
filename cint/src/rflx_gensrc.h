@@ -11,6 +11,7 @@
 #define RFLX_GENSRC_H 1
 
 #include "Api.h"
+#include "Shadow.h"
 #include <sstream>
 #include <string>
 #include <vector>

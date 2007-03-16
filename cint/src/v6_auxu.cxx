@@ -336,14 +336,14 @@ int G__storeobject(G__value *buf1,G__value *buf2)
 #ifdef G__BOOL4BYTE
           memcpy((void *)(buf1->obj.i+var1->p[i])
                  ,(void *)(buf2->obj.i+var2->p[i])
-                 ,G__INTALLOC*(var1->varlabel[i][1]+1));
+                 ,G__INTALLOC*(var1->varlabel[i][1]));
           break;
 #endif
         case 'b':
         case 'c':
           memcpy((void *)(buf1->obj.i+var1->p[i])
                  ,(void *)(buf2->obj.i+var2->p[i])
-                 ,G__CHARALLOC*(var1->varlabel[i][1]+1));
+                 ,G__CHARALLOC*(var1->varlabel[i][1]));
           break;
           
         case 'r':
@@ -351,7 +351,7 @@ int G__storeobject(G__value *buf1,G__value *buf2)
           memcpy(
                  (void *)(buf1->obj.i+var1->p[i])
                  ,(void *)(buf2->obj.i+var2->p[i])
-                 ,G__SHORTALLOC*(var1->varlabel[i][1]+1)
+                 ,G__SHORTALLOC*(var1->varlabel[i][1])
                  );
           break;
           
@@ -360,7 +360,7 @@ int G__storeobject(G__value *buf1,G__value *buf2)
           memcpy(
                  (void *)(buf1->obj.i+var1->p[i])
                  ,(void *)(buf2->obj.i+var2->p[i])
-                 ,G__INTALLOC*(var1->varlabel[i][1]+1)
+                 ,G__INTALLOC*(var1->varlabel[i][1])
                  );
           break;
           
@@ -369,7 +369,7 @@ int G__storeobject(G__value *buf1,G__value *buf2)
           memcpy(
                  (void *)(buf1->obj.i+var1->p[i])
                  ,(void *)(buf2->obj.i+var2->p[i])
-                 ,G__LONGALLOC*(var1->varlabel[i][1]+1)
+                 ,G__LONGALLOC*(var1->varlabel[i][1])
                  );
           break;
           
@@ -377,7 +377,7 @@ int G__storeobject(G__value *buf1,G__value *buf2)
           memcpy(
                  (void *)(buf1->obj.i+var1->p[i])
                  ,(void *)(buf2->obj.i+var2->p[i])
-                 ,G__FLOATALLOC*(var1->varlabel[i][1]+1)
+                 ,G__FLOATALLOC*(var1->varlabel[i][1])
                  );
           break;
           
@@ -386,7 +386,7 @@ int G__storeobject(G__value *buf1,G__value *buf2)
           memcpy(
                  (void *)(buf1->obj.i+var1->p[i])
                  ,(void *)(buf2->obj.i+var2->p[i])
-                 ,G__DOUBLEALLOC*(var1->varlabel[i][1]+1)
+                 ,G__DOUBLEALLOC*(var1->varlabel[i][1])
                  );
           break;
         }

@@ -1538,6 +1538,26 @@ void G__debugvariable(FILE *fp,G__var_array *var,char *name)
     var=var->next;
   }
 }
+#ifdef G__WIN32
+const char* G__tmpfilenam();
+#endif
+
+static void G__create_input_tmpfile(G__input_file& ftemp) {
+#ifdef G__WIN32
+   strcpy(ftemp.name, G__tmpfilenam());
+   ftemp.fp = fopen(ftemp.name, "w+bTD"); // write and read (but write first), binary, temp, and delete when closed
+#else
+   ftemp.fp = tmpfile();
+   strcmp(ftemp.name, "(tmpfile)");
+#endif
+}
+
+static void G__remove_input_tmpfile(G__input_file& ftemp) {
+#ifdef G__WIN32
+   unlink(ftemp.name);
+#endif
+}
+
 
 /******************************************************************
 * intG__process_cmd()
@@ -3270,7 +3290,7 @@ int G__process_cmd(char *line,char *prompt,int *more,int *err
     multi_line_command:
 #endif
       if (*more == 0) {
-        ftemp.fp = tmpfile();
+        G__create_input_tmpfile(ftemp);
         if(!ftemp.fp) {
           do {
             G__tmpnam(tname); /* not used anymore */
@@ -3356,6 +3376,7 @@ int G__process_cmd(char *line,char *prompt,int *more,int *err
           prompt[0] = '\0';
         }
         if(istmpnam) fclose(ftemp.fp);
+        else G__remove_input_tmpfile(ftemp);
 
         /*******************************************************
          * Execute temp file

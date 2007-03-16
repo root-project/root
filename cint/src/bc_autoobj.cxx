@@ -182,7 +182,7 @@ extern "C" void G__copyheapobjectstack(void* p,G__value *result
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
       G__fprinterr(G__serr,"temp object copy ctor %lx <= %lx %s for %s\n"
-		   ,p,result->obj.i,cls.Name(),ifunc->funcname[ifn]);
+		   ,p,result->obj.i,cls.Name(),G__get_ifunc_internal(ifunc)->funcname[ifn]);
     }
 #endif
     G__callfunc0(&dmyresult,ifunc,ifn,&para,p,funcmatch);
@@ -195,7 +195,7 @@ extern "C" void G__copyheapobjectstack(void* p,G__value *result
 #ifdef G__ASM_DBG
     if(G__asm_dbg) { 
       G__fprinterr(G__serr,"temp object memcpy %lx <= %lx %s for %s\n"
-		   ,p,result->obj.i,cls.Name(),ifunc->funcname[ifn]);
+		   ,p,result->obj.i,cls.Name(),G__get_ifunc_internal(ifunc)->funcname[ifn]);
     }
 #endif
     memcpy(p,(void*)result->obj.i,G__struct.size[tagnum]);

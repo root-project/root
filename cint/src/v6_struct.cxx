@@ -1737,16 +1737,23 @@ void G__define_struct(char type)
           /* this is still questionable, inherit0.c */
           struct G__var_array *v=G__struct.memvar[G__tagnum];
           if('c'==v->type[0]) {
-            if(isupper(v->type[0])) {
-              G__struct.size[G__tagnum] = G__LONGALLOC*(v->varlabel[0][1]+1);
+            if (isupper(v->type[0])) {
+              int num_of_elements = v->varlabel[0][1] /* num of elements */;
+              if (!num_of_elements) {
+                num_of_elements = 1;
+              }
+              G__struct.size[G__tagnum] = num_of_elements * G__LONGALLOC;
             }
             else {
               G__value buf;
               buf.type = v->type[0];
               buf.tagnum = v->p_tagtable[0];
               buf.typenum = v->p_typetable[0];
-              G__struct.size[G__tagnum]
-                =G__sizeof(&buf)*(v->varlabel[0][1]+1);
+              int num_of_elements = v->varlabel[0][1] /* num of elements */;
+              if (!num_of_elements) {
+                num_of_elements = 1;
+              }
+              G__struct.size[G__tagnum] = num_of_elements * G__sizeof(&buf);
             }
           }
         } else

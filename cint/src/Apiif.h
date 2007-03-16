@@ -30,6 +30,7 @@ extern G__DLLEXPORT void G__cpp_setupG__API();
 
 
 #include "Api.h"
+#include "Shadow.h"
 
 #ifndef G__MEMFUNCBODY
 #endif

@@ -4888,6 +4888,25 @@
 * - for ROOT, use R__HAVE_CONFIG, not HAVE_CONFIG
 *
 **
+* 5.16.19 March 16, 2007
+* 6.1.19 March 16, 2007
+* - handle 1dim arrays properly (!= scalar)
+* - more memory effient G__param and G__inherit
+* - implement forward decl in dictionaries (e.g. if dict for "A* f()" is 
+*   setup, lib containing A will not be loaded)
+* - add a reference layer between API ifunc* and internal ifunc*, so 
+*   reloading (scrupto of scripts) doesn't invalidate the external 
+*   ptrs for dependent libs
+* - update tagnums below scrupto limit if they are autoload entries
+* - allow multiple shared lib init routines
+* - bug fixes: fix decl locations in .so-s, distinguish "class*", 
+*   "decl if unknown" in G__search_tagname
+* - split Shadow.h off Api.h
+* - remove temporary files on windows once they are unused (fixes problem 
+*   with tmp file flooding)
+*
+
+
 * ---------------------------------------------------------------------
 *     , A::operator float() conversion with standard conversion
 *
