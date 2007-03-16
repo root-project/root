@@ -11,7 +11,7 @@ include $(ROOTSYS)/test/Makefile.arch
 #------------------------------------------------------------------------------
 
 ifeq ($(PLATFORM),win32)
-EXTRALIBS        = -include:_G__cpp_setupG__MathCore -include:_G__cpp_setupG__MathCore32 ../../lib/libMathCore.lib
+EXTRALIBS        = -include:_G__cpp_setupG__MathCore -include:_G__cpp_setupG__MathCore32 "$(ROOTSYS)/lib/libMathCore.lib"
 else
 EXTRALIBS        = -lMathCore
 endif
@@ -23,7 +23,11 @@ CXXFLAGS += -g
 ifneq ($(useReflex),)
 GCCXML=yes
 CXXFLAGS += -DUSE_REFLEX
+ifeq ($(PLATFORM),win32)
+EXTRAIOLIBS = "$(ROOTSYS)/lib/libReflex.lib"  "$(ROOTSYS)/lib/libCintex.lib"  
+else
 EXTRAIOLIBS = -lReflex -lCintex
+endif
 endif
 
 
@@ -106,7 +110,7 @@ $(ITERATOR):           $(ITERATOROBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-ifneq ($(GCCXML),)
+ifneq ($(useReflex),)
 TrackDict.$(SrcSuf): 	Track.h TrackDict.xml
 			@echo "Generating dictionary $@ using gccxml ..."
 			genreflex Track.h --selection_file=TrackDict.xml -o TrackDict.cxx -I$(ROOTSYS)/include
