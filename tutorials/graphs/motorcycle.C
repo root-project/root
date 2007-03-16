@@ -1,5 +1,31 @@
+#include "TString.h"
+#include "TCint.h"
+#include <fstream>
+#include "TH1.h"
+#include "TGraphSmooth.h"
+#include "TCanvas.h"
+#include "TSystem.h"
+
+
 TCanvas *vC1;
 TGraph *grin, *grout;
+
+void DrawSmooth(Int_t pad, const char *title, const char *xt, const char *yt)
+{
+   vC1->cd(pad);
+   TH1F *vFrame = vC1->DrawFrame(0,-130,60,70);
+   vFrame->SetTitle(title);
+   vFrame->SetTitleSize(0.2);
+   vFrame->SetXTitle(xt);
+   vFrame->SetYTitle(yt);
+   grin->Draw("P");
+//   grout->SetMarkerColor(kRed);
+//   grout->SetMarkerStyle(21);
+//   grout->SetMarkerSize(0.5);
+//   grout->DrawClone("P");
+   grout->DrawClone("LPX");
+}
+
 
 void motorcycle()
 {
@@ -76,21 +102,5 @@ void motorcycle()
    delete [] x;
    delete [] y;
    delete gs;
-}
-
-void DrawSmooth(Int_t pad, const char *title, const char *xt, const char *yt)
-{
-   vC1->cd(pad);
-   TH1F *vFrame = vC1->DrawFrame(0,-130,60,70);
-   vFrame->SetTitle(title);
-   vFrame->SetTitleSize(0.2);
-   vFrame->SetXTitle(xt);
-   vFrame->SetYTitle(yt);
-   grin->Draw("P");
-//   grout->SetMarkerColor(kRed);
-//   grout->SetMarkerStyle(21);
-//   grout->SetMarkerSize(0.5);
-//   grout->DrawClone("P");
-   grout->DrawClone("LPX");
 }
 
