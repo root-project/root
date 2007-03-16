@@ -2859,7 +2859,9 @@ if test "x$enable_globus" = "xyes"; then
     fi
     globusinc="$globusinc $found_hdr"
     globusincdir=$found_dir
-    flavour=`basename $globusincdir`
+    if test ! "x$globusincdir" = "x" ; then
+       flavour=`basename $globusincdir`
+    fi
 
     # The other headers now
     inclist="openssl/pem.h globus_gss_assist.h globus_common.h"
