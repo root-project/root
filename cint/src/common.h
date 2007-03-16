@@ -954,7 +954,7 @@ struct G__paramfunc {
 };
 struct G__params {
 #ifdef __cplusplus  
-   ~G__params() { delete fparams; }
+   ~G__params() { free((void*)fparams); }
    struct G__paramfunc* operator[](int idx) {
       if (!fparams) {
          fparams = (struct G__paramfunc*)malloc(sizeof(struct G__paramfunc));
@@ -1141,7 +1141,7 @@ struct G__herit {
 };
 struct G__herits {
 #ifdef __cplusplus
-   ~G__herits() { delete fherits; }
+   ~G__herits() { free((void*)fherits); }
    struct G__herit* operator[](int idx) {
       if (!fherits) {
          fherits = (struct G__herit*)malloc(sizeof(struct G__herit));
