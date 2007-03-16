@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: IFunction.h,v 1.2 2006/11/20 11:05:56 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: IFunction.h,v 1.3 2006/12/01 13:42:33 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
@@ -103,7 +103,7 @@ namespace Math {
        @ingroup  CppFunctions
    */
    template <>
-   class IBaseFunction<OneDim> { 
+   class IBaseFunction<ROOT::Math::OneDim> { 
 
    public: 
 
@@ -156,7 +156,7 @@ namespace Math {
 
       @ingroup  CppFunctions
     */
-   template <class DimensionType = MultiDim> 
+   template <class DimensionType = ROOT::Math::MultiDim> 
    class IGradient { 
 
       public: 
@@ -204,7 +204,7 @@ namespace Math {
       @ingroup  CppFunctions
     */
    template <> 
-   class IGradient<OneDim> { 
+   class IGradient<ROOT::Math::OneDim> { 
 
    public: 
 
@@ -250,7 +250,7 @@ namespace Math {
    while the former can be overloaded if for the particular function can be implemented more efficiently.  
    @ingroup  CppFunctions
 */ 
-   template<class DimensionType = MultiDim> 
+   template<class DimensionType = ROOT::Math::MultiDim> 
    class IGradientFunction : 
       virtual public IBaseFunction<DimensionType> , 
       public IGradient<DimensionType> { 
@@ -320,8 +320,8 @@ namespace Math {
    @ingroup  CppFunctions
 */ 
    template <>
-   class IGradientFunction<OneDim> : 
-      virtual public IBaseFunction<OneDim> , 
+   class IGradientFunction<ROOT::Math::OneDim> : 
+      virtual public IBaseFunction<ROOT::Math::OneDim> , 
       public IGradient<OneDim> { 
      
 
