@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.161 2007/03/14 19:00:14 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.162 2007/03/15 11:33:00 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -2153,7 +2153,7 @@ void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
 }
 
 //_______________________________________________________________________
-void TChain::SetEntryList(const char *filename, Option_t */*opt*/)
+void TChain::SetEntryListFile(const char *filename, Option_t */*opt*/)
 {
 // Set the input entry list (processing the entries of the chain will then be
 // limited to the entries in the list). This function creates a special kind
