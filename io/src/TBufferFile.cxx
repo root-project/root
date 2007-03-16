@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TBufferFile.cxx,v 1.9 2007/02/09 10:16:07 rdm Exp $
+// @(#)root/io:$Name:  $:$Id: TBufferFile.cxx,v 1.10 2007/02/10 04:10:11 pcanal Exp $
 // Author: Rene Brun 17/01/2007
 
 /*************************************************************************
@@ -1896,13 +1896,19 @@ void TBufferFile::WriteObject(const void *actualObjectStart, const TClass *actua
          fBufCur += sizeof(UInt_t);
 
          // write class of object first
+         Int_t mapsize = fMap->Capacity(); // The slot depends on the capacity and WriteClass might induce an increase.
          WriteClass(actualClass);
 
          // add to map before writing rest of object (to handle self reference)
          // (+kMapOffset so it's != kNullTag)
          //MapObject(actualObjectStart, actualClass, cntpos+kMapOffset);
          UInt_t offset = cntpos+kMapOffset;
-         fMap->AddAt(slot, hash, (Long_t)actualObjectStart, offset);
+         if (mapsize == fMap->Capacity()) {
+            fMap->AddAt(slot, hash, (Long_t)actualObjectStart, offset);
+         } else {
+            // The slot depends on the capacity and WriteClass has induced an increase.
+            fMap->Add(hash, (Long_t)actualObjectStart, offset);
+         }
          // No need to keep track of the class in write mode
          // fClassMap->Add(hash, (Long_t)obj, (Long_t)((TObject*)obj)->IsA());
          fMapCount++;
