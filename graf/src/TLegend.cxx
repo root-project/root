@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.31 2006/07/09 05:27:54 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.32 2007/01/15 16:13:44 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -30,6 +30,8 @@ ClassImp(TLegend)
 
 //____________________________________________________________________________
 // TLegend   Matthew.Adam.Dobbs@Cern.CH, September 1999
+// Implementation of the multiple column logic by Jason Detwiler (jasondet@gmail.com)
+//
 // Legend of markers/lines/boxes to represent objects with marker/line/fill
 //   attributes
 //   (the methods employed are very similar to those in TPaveText class)
@@ -123,6 +125,7 @@ TLegend& TLegend::operator=(const TLegend &lg)
       fPrimitives=lg.fPrimitives;
       fEntrySeparation=lg.fEntrySeparation;
       fMargin=lg.fMargin;
+      fNColumns=lg.fNColumns;
    } 
    return *this;
 }
@@ -198,6 +201,7 @@ void TLegend::Copy( TObject &obj ) const
    TAttText::Copy((TLegend&)obj);
    ((TLegend&)obj).fEntrySeparation = fEntrySeparation;
    ((TLegend&)obj).fMargin = fMargin;
+   ((TLegend&)obj).fNColumns = fNColumns;
 }
 
 
@@ -277,12 +281,11 @@ TLegendEntry *TLegend::GetEntry() const
    // Get entry pointed to by the mouse
    // This method is mostly a tool for other methods inside this class
 
-   Int_t nEntries = 0;
-   if ( fPrimitives ) nEntries = fPrimitives->GetSize();
-   if ( nEntries == 0 ) return 0;
+   Int_t nRows = GetNRows();
+   if ( nRows == 0 ) return 0;
  
    Double_t ymouse = gPad->AbsPixeltoY(gPad->GetEventY());
-   Double_t yspace = (fY2 - fY1)/nEntries;
+   Double_t yspace = (fY2 - fY1)/nRows;
 
    Double_t ybottomOfEntry = fY2;  // y-location of bottom of 0th entry
    TIter next(fPrimitives);
@@ -344,6 +347,35 @@ void TLegend::Paint( Option_t* option )
    PaintPrimitives();
 }
 
+Int_t TLegend::GetNRows() const
+{
+   Int_t nEntries = 0;
+   if ( fPrimitives ) nEntries = fPrimitives->GetSize();
+   if ( nEntries == 0 ) return 0;
+
+   Int_t nRows = (Int_t) TMath::Ceil(nEntries/fNColumns);
+   if(GetHeader() != NULL) nRows = 1 + (Int_t) TMath::Ceil((nEntries-1)/fNColumns);
+
+   return nRows;
+}
+
+
+//____________________________________________________________________________
+void TLegend::SetNColumns(Int_t nColumns)
+{ 
+  // Set the number of columns for the legend. The header, if set, is given
+  // its own row. After that, every nColumns entries are inserted into the
+  // same row. For example, if one calls legend.SetNColumns(2), and there
+  // is no header, then the first two TObjects added to the legend will be
+  // in the first row, the next two will appear in the second row, and so
+  // on.
+
+  if(nColumns < 1) {
+    Warning("TLegend::SetNColumns", "illegal value nColumns = %d; keeping fNColumns = %d", nColumns, fNColumns);
+    return;
+  }
+  fNColumns = nColumns; 
+} 
 
 //____________________________________________________________________________
 void TLegend::PaintPrimitives()
@@ -353,9 +385,8 @@ void TLegend::PaintPrimitives()
    // NOTE: if we want an     Int_t mode
    //       it can be added later... but I understand whyaas
  
-   Int_t nEntries = 0;
-   if ( fPrimitives ) nEntries = fPrimitives->GetSize();
-   if ( nEntries == 0 ) return;
+   Int_t nRows = GetNRows();
+   if ( nRows == 0 ) return;
  
    // Evaluate text size as a function of the number of entries
    //  taking into account their real size after drawing latex
@@ -366,22 +397,23 @@ void TLegend::PaintPrimitives()
    Double_t y1 = fY1NDC;
    Double_t x2 = fX2NDC;
    Double_t y2 = fY2NDC;
-   Double_t margin = fMargin*( x2-x1 );
+   Double_t margin = fMargin*( x2-x1 )/fNColumns;
    Double_t boxwidth = margin;
    Double_t boxw = boxwidth*0.35;
-   Double_t yspace = (y2-y1)/nEntries;
+   Double_t yspace = (y2-y1)/nRows;
    Double_t textsize = GetTextSize();
    Double_t save_textsize = textsize;
+   Double_t* columnWidths = new Double_t[fNColumns];
+   memset(columnWidths, 0, fNColumns*sizeof(Double_t));
 
    if ( textsize == 0 ) {
       textsize = ( 1. - fEntrySeparation ) * yspace;
-      //textsize = ( 1. - fEntrySeparation ) * yspace;
-      //textsize /= gPad->GetY2() - gPad->GetY1();
 
       // find the max width and height (in pad coords) of one latex entry label
       Double_t maxentrywidth = 0, maxentryheight = 0;
       TIter nextsize(fPrimitives);
       TLegendEntry *entrysize;
+      Int_t iColumn = 0;
       while (( entrysize = (TLegendEntry *)nextsize() )) {
          TLatex entrytex( 0, 0, entrysize->GetLabel() );
          entrytex.SetNDC();
@@ -389,15 +421,61 @@ void TLegend::PaintPrimitives()
          if ( entrytex.GetYsize() > maxentryheight ) {
             maxentryheight = entrytex.GetYsize();
          }
-         if ( entrytex.GetXsize() > maxentrywidth ) {
-            maxentrywidth = entrytex.GetXsize();
-         }
+         TString opt = entrysize->GetOption();
+         opt.ToLower();
+         if ( opt.Contains("h") ) {
+           if ( entrytex.GetXsize() > maxentrywidth ) {
+              maxentrywidth = entrytex.GetXsize();
+           }
+	 } else {
+           if ( entrytex.GetXsize() > columnWidths[iColumn] ) {
+              columnWidths[iColumn] = entrytex.GetXsize();
+           }
+	   iColumn++;
+	   iColumn %= fNColumns;
+	 }
+	 Double_t tmpMaxWidth = 0.0;
+	 for(int i=0; i<fNColumns; i++) tmpMaxWidth += columnWidths[i];
+	 if ( tmpMaxWidth > maxentrywidth) maxentrywidth = tmpMaxWidth;
       }
       // make sure all labels fit in the allotted space
       Double_t tmpsize_h = maxentryheight /(gPad->GetY2() - gPad->GetY1());
-      Double_t tmpsize_w = textsize*(fX2-fX1)*(1-fMargin)/maxentrywidth;
-      textsize = TMath::Min( textsize, TMath::Min(tmpsize_h,tmpsize_w) );
+      textsize = TMath::Min( textsize, tmpsize_h );
+      Double_t tmpsize_w = textsize*(fX2-fX1)*(1.0-fMargin)/maxentrywidth;
+      if(fNColumns > 1) tmpsize_w = textsize*(fX2-fX1)*(1.0-fMargin-fColumnSeparation)/maxentrywidth;
+      textsize = TMath::Min( textsize, tmpsize_w );
       SetTextSize( textsize );
+   }
+
+   // Update column widths, put into NDC units
+   // block off this section of code to make sure all variables are local: 
+   // don't want to ruin initialization of these variables later on
+   { 
+     TIter next(fPrimitives);
+     TLegendEntry *entry;
+     Int_t iColumn = 0;
+     memset(columnWidths, 0, fNColumns*sizeof(Double_t));
+     while (( entry = (TLegendEntry *)next() )) {
+       TLatex entrytex( 0, 0, entry->GetLabel() );
+       entrytex.SetNDC();
+       if(entry->GetTextSize() == 0) entrytex.SetTextSize(textsize);
+       TString opt = entry->GetOption();
+       opt.ToLower();
+       if (!opt.Contains("h")) {
+         if ( entrytex.GetXsize() > columnWidths[iColumn] ) {
+            columnWidths[iColumn] = entrytex.GetXsize();
+         }
+         iColumn++;
+         iColumn %= fNColumns;
+       }
+     }
+     double totalWidth = 0.0;
+     for(int i=0; i<fNColumns; i++) totalWidth += columnWidths[i];
+     if(fNColumns > 1) totalWidth /= (1.0-fMargin-fColumnSeparation);
+     else totalWidth /= (1.0 - fMargin);
+     for(int i=0; i<fNColumns; i++) {
+       columnWidths[i] = columnWidths[i]/totalWidth*(x2-x1) + margin;
+     }
    }
 
    Double_t ytext = y2 + 0.5*yspace;  // y-location of 0th entry
@@ -405,8 +483,9 @@ void TLegend::PaintPrimitives()
    // iterate over and paint all the TLegendEntries
    TIter next(fPrimitives);
    TLegendEntry *entry;
+   Int_t iColumn = 0;
    while (( entry = (TLegendEntry *)next() )) {
-      ytext -= yspace;
+      if(iColumn == 0) ytext -= yspace;
 
       // Draw Label in Latexmargin
 
@@ -428,7 +507,15 @@ void TLegend::PaintPrimitives()
       // for the header the margin is near zero
       TString opt = entry->GetOption();
       opt.ToLower();
+      x1 = fX1NDC;
+      x2 = fX2NDC;
       if ( opt.Contains("h") ) entrymargin = margin/10.;
+      else if (fNColumns > 1) {
+        for(int i=0; i<iColumn; i++) x1 += columnWidths[i] + fColumnSeparation*(fX2NDC-fX1NDC)/(fNColumns-1);
+	x2 = x1 + columnWidths[iColumn];
+	iColumn++;
+	iColumn %= fNColumns;
+      }
       if (halign == 1) x = x1 + entrymargin;
       if (halign == 2) x = 0.5*( (x1+entrymargin) + x2 );
       if (halign == 3) x = x2 - entrymargin/10.;
@@ -493,7 +580,7 @@ void TLegend::PaintPrimitives()
          // if the entry is filled, then surround the box with the line instead
          if ( opt.Contains("f") && !opt.Contains("l")) {
             // box total height is yspace*0.7
-            Double_t boxwidth = yspace*
+            boxwidth = yspace*
                (gPad->GetX2()-gPad->GetX1())/(gPad->GetY2()-gPad->GetY1());
             if ( boxwidth > margin ) boxwidth = margin;
 
