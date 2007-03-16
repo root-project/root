@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.8 2007/01/22 07:57:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.9 2007/01/24 17:44:45 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -940,7 +940,7 @@ void TEntryList::SetTree(const char *treename, const char *filename)
       if (elist->GetDirectory()) {
          //sub lists are not added to the current directory
          elist->GetDirectory()->GetList()->Remove(elist);
-         //elist->SetDirectory(0);
+         elist->SetDirectory(0);
       }
       fLists->Add(elist);
       fCurrent = elist;
@@ -976,7 +976,7 @@ void TEntryList::SetTree(const char *treename, const char *filename)
             if (elist->GetDirectory()) {
                //sub lists are not added to the current directory
                elist->GetDirectory()->GetList()->Remove(elist);
-               //elist->SetDirectory(0);
+               elist->SetDirectory(0);
             }
             fLists->Add(elist);
             fCurrent = elist;
