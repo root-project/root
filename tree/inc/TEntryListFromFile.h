@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryListFromFile.h,v 1.7 2007/02/09 11:51:09 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryListFromFile.h,v 1.1 2007/03/15 11:33:00 brun Exp $
 // Author: Anna Kreshuk 17/03/2007
 
 /*************************************************************************
@@ -57,11 +57,11 @@ class TEntryListFromFile: public TEntryList
    TEntryListFromFile();
    TEntryListFromFile(const char *filename, const char *listname, Int_t nfiles);
    virtual ~TEntryListFromFile();
-   virtual void        Add(const TEntryList */*elist*/){};
-   virtual Int_t       Contains(Long64_t /*entry*/, TTree */*tree = 0*/)  {return 0;};
-   virtual Bool_t      Enter(Long64_t /*entry*/, TTree */*tree = 0*/){return 0;};
+   virtual void        Add(const TEntryList * /*elist*/){};
+   virtual Int_t       Contains(Long64_t /*entry*/, TTree * /*tree = 0*/)  {return 0;};
+   virtual Bool_t      Enter(Long64_t /*entry*/, TTree * /*tree = 0*/){return 0;};
    virtual TEntryList *GetCurrentList() const { return fCurrent; };
-   virtual TEntryList *GetEntryList(const char */*treename*/, const char */*filename*/) {return 0;};
+   virtual TEntryList *GetEntryList(const char * /*treename*/, const char * /*filename*/) {return 0;};
    
    virtual Long64_t    GetEntry(Int_t index);
    virtual Long64_t    GetEntryAndTree(Int_t index, Int_t &treenum);
@@ -75,20 +75,20 @@ class TEntryListFromFile: public TEntryList
    
    virtual Int_t       LoadList(Int_t listnumber);
    
-   virtual Int_t       Merge(TCollection */*list*/){ return 0; };
+   virtual Int_t       Merge(TCollection * /*list*/){ return 0; };
    
    virtual Long64_t    Next();
    virtual void        OptimizeStorage() {};
-   virtual Bool_t      Remove(Long64_t /*entry*/, TTree */*tree = 0*/){ return 0; };
+   virtual Bool_t      Remove(Long64_t /*entry*/, TTree * /*tree = 0*/){ return 0; };
    
    virtual void        Print(const Option_t* option = "") const;
 
-   virtual void        SetTree(const TTree */*tree*/){};
-   virtual void        SetTree(const char */*treename*/, const char */*filename*/){};
+   virtual void        SetTree(const TTree * /*tree*/){};
+   virtual void        SetTree(const char * /*treename*/, const char * /*filename*/){};
    virtual void        SetFileNames(TObjArray *names) { fFileNames = names; }
    virtual void        SetTreeNumber(Int_t index) { fTreeNumber=index;  }
    virtual void        SetNFiles(Int_t nfiles) { fNFiles = nfiles; }
-   virtual void        Subtract(const TEntryList */*elist*/) {};
+   virtual void        Subtract(const TEntryList * /*elist*/) {};
    
    ClassDef(TEntryListFromFile, 1); //Manager for entry lists from different files
 };
