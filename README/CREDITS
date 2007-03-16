@@ -145,6 +145,10 @@ N: Matthieu Demaret
 E: Matthieu.Demaret@cern.ch
 D: class TGraphPolar
 
+N: Jason Detwiler
+E: jasondet@gmail.com
+D: Implementation of multiple columns in TLegend class
+
 N: Mat Dobbs
 E: Matthew.Adam.Dobbs@cern.ch
 D: TLegend class
