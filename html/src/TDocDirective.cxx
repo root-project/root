@@ -16,6 +16,7 @@
 #include "TSystem.h"
 #include "TVirtualPad.h"
 #include <fstream>
+#include <sstream>
 
 ClassImp(TDocDirective);
 
@@ -110,37 +111,42 @@ void TDocHtmlDirective::AddLine(const TSubString& line)
 
    if (line.Start() == -1) return;
 
+   TPRegexp pretag("</?[pP][rR][eE][ >]");
    TSubString iLine(line);
-   Ssiz_t posPre = iLine.String().Index("pre>", line.Start(), TString::kIgnoreCase);
+   Ssiz_t posPre = iLine.String().Index(pretag, iLine.Start());
    if (posPre == kNPOS)
       fText += line;
    else {
       // remove <pre> in fVerbatim environments, and 
       // </pre> in !fVerbatim environments.
       while (posPre != kNPOS && posPre > 0) {
-         Bool_t isOpen = line[posPre - 1 - line.Start()] == '<';
+         Bool_t isOpen = line[posPre + 1 - line.Start()] != '/';
+         Ssiz_t posClose = iLine.String().Index(">", posPre);
+         if (posClose ==kNPOS) break; // aka oops.
+         Ssiz_t len = posClose - posPre;
+
          if (fVerbatim) {
             if (isOpen) {
                // skip
-               fText += iLine.String()(iLine.Start(), posPre - 2 - iLine.Start());
+               fText += iLine.String()(iLine.Start(), posPre - iLine.Start());
             } else {
                // write it out
-               fText += iLine.String()(iLine.Start(), posPre + 4 - iLine.Start());
+               fText += iLine.String()(iLine.Start(), posPre + len - iLine.Start());
                fVerbatim = kFALSE;
             }
          } else {
             if (!isOpen) {
                // skip
-               fText += iLine.String()(iLine.Start(), posPre - 1 - iLine.Start());
+               fText += iLine.String()(iLine.Start(), posPre - iLine.Start());
             } else {
                // write it out
-               fText += iLine.String()(iLine.Start(), posPre + 4 - iLine.Start());
+               fText += iLine.String()(iLine.Start(), posPre + len - iLine.Start());
                fVerbatim = kTRUE;
             }
          }
 
-         iLine = iLine.String()(posPre + 4, iLine.Length());
-         posPre = iLine.String().Index("pre>", posPre + 4, TString::kIgnoreCase);
+         iLine = iLine.String()(posPre + len, iLine.Length());
+         posPre = iLine.String().Index(pretag, iLine.Start());
       }
 
       fText += iLine;
@@ -200,7 +206,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
    // If fShowSource is set, a second tab will be created which shows
    // the source.
 
-//   static TApplication::TLoadGraphicsLibs loadTheGraphicsLibs;
+   gApplication->InitializeGraphics();
 
    if (!fMacro)
       return kFALSE;
@@ -227,7 +233,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
       TString filename;
       TIter iLine(fMacro->GetListOfLines());
       while (filename.Length() == 0)
-         filename = ((TObjString*)iLine())->String().Strip();
+         filename = ((TObjString*)iLine())->String().Strip(TString::kBoth);
 
       TString pwd;
       if (GetHtml() && GetDocParser() && GetDocParser()->GetCurrentClass()) {
@@ -251,7 +257,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
       TObjString* osDir = 0;
       macroPath = "";
       TString filenameDirPart(gSystem->DirName(filename));
-      filenameDirPart.Prepend('/');
+      filenameDirPart.Prepend('/'); // as dir delimiter, not as root dir
       while ((osDir = (TObjString*)iDir())) {
          if (!gSystem->IsAbsoluteFileName(osDir->String()))
             gSystem->PrependPathName(pwd, osDir->String());
@@ -265,9 +271,19 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
          filename.Remove(filename.Length() - 1);
       }
 
+      TString params;
+      if (filename.EndsWith(")")) {
+         Ssiz_t posOpen = filename.Last('(');
+         if (posOpen != kNPOS) {
+            params = filename(posOpen, filename.Length());
+            filename.Remove(posOpen, filename.Length());
+         }
+      }
+
       TString fileSysName(gSystem->BaseName(filename));
       if (!gSystem->FindFile(macroPath, fileSysName)) {
-         Error("GetResult", "Cannot find macro '%s' in path '%s'!", filename.Data(), macroPath.Data());
+         Error("GetResult", "Cannot find macro '%s' in path '%s'!", 
+               gSystem->BaseName(filename), macroPath.Data());
          result = "";
          return kFALSE;
       }
@@ -276,8 +292,8 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
          // copy macro into fMacro - before running it, in case the macro blocks its file
          std::ifstream ifMacro(fileSysName);
          fMacro->GetListOfLines()->Delete();
+         TString line;
          while (ifMacro) {
-            TString line;
             if (!line.ReadLine(ifMacro, kFALSE) || ifMacro.eof())
                break;
             fMacro->AddLine(line);
@@ -285,6 +301,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
       }
 
       fileSysName.Prepend(".x ");
+      fileSysName += params;
       fileSysName += plusplus;
       gInterpreter->SaveContext();
       gInterpreter->SaveGlobalsContext();
@@ -294,6 +311,32 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
       gInterpreter->SaveGlobalsContext();
       ret = fMacro->Exec(0, &error);
    }
+
+   if (fShowSource) {
+      // convert the macro source
+      TIter iLine(fMacro->GetListOfLines());
+      TObjString* osLine = 0;
+      std::stringstream ssRaw;
+      while ((osLine = (TObjString*)iLine()))
+         ssRaw << osLine->String() << std::endl;
+
+      TDocParser *dparser = 0;
+      if (GetDocParser()->GetCurrentClass())
+         dparser = new TDocParser(*(TClassDocOutput*)GetDocOutput(), GetDocParser()->GetCurrentClass());
+      else dparser = new TDocParser(*GetDocOutput());
+      std::stringstream ssConverted;
+      dparser->Convert(ssConverted, ssRaw, "./");
+      delete dparser;
+
+      fMacro->GetListOfLines()->Delete();
+      TString line;
+      while (ssConverted) {
+         if (!line.ReadLine(ssConverted, kFALSE) || ssConverted.eof())
+            break;
+         fMacro->AddLine(line);
+      }
+   }
+         
    Int_t sleepCycles = 50; // 50 = 5 seconds
    while (error == TInterpreter::kProcessing && --sleepCycles > 0)
       gSystem->Sleep(100);

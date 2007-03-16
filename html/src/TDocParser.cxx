@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.7 2007/02/22 16:45:48 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TDocParser.cxx,v 1.8 2007/02/23 17:42:32 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -101,13 +101,13 @@ namespace {
    return f; // *HIDE*
 }
 End_Macro */
-// or Latex:
+// or multiline Latex aligned at =:
 /* Begin_Latex(separator='=',align=rcl) C = d #sqrt{#frac{2}{#lambdaD}} #int^{x}_{0}cos(#frac{#pi}{2}t^{2})dt 
  D(x) = d End_Latex */
-// even with two lines: Begin_Latex
+// even without alignment: Begin_Latex
 // x=sin^2(y)
 // y = #sqrt{sin(x)}
-// End_Latex and what about running an external macro in some path?
+// End_Latex and what about running an external macro?
 /* BEGIN_MACRO(source)
 
 
@@ -1355,8 +1355,15 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
    }
    // update posMethodName to point behind the method
    posMethodName = posParam + posParamEnd;
-   if (fCurrentClass) 
-      return fCurrentClass->GetMethodAny(name);
+   if (fCurrentClass) {
+      TMethod* meth = fCurrentClass->GetMethodAny(name);
+      if (meth) {
+         fDirectiveCount = 0;
+         fCurrentMethodTag = name + "_";
+         fCurrentMethodTag += fMethodCounts[name.Data()];
+         return meth;
+      }
+   }
 
    return 0;
 }
@@ -1605,7 +1612,7 @@ void TDocParser::LocateMethodsInHeaderInline(std::ostream& out)
    
    const char* declFileName = fHtml->GetDeclFileName(fCurrentClass);
    if (declFileName && declFileName[0])
-      LocateMethods(out, declFileName, kFALSE, useDocxxStyle, kFALSE, 
+      LocateMethods(out, declFileName, kFALSE, useDocxxStyle, fLookForClassDescription, 
          kFALSE, pattern, 0);
 }
 
@@ -1744,6 +1751,10 @@ Bool_t TDocParser::ProcessComment()
              && commentLine[0] == commentLine[commentLine.Length() - 1])
          commentLine = commentLine.Strip(TString::kBoth, commentLine[0]);
    
+   // remove leading '/' if we had // or '*' if we had / *
+   while (start_or_end && commentLine[0] == start_or_end)
+      commentLine.Remove(0, 1);
+
    fComment += commentLine + "\n";
 
    return kTRUE;
@@ -1798,10 +1809,6 @@ void TDocParser::WriteMethod(std::ostream& out, TString& ret,
       fLookForClassDescription = kFALSE;
       fFoundClassDescription = kTRUE;
    }
-
-   fDirectiveCount = 0;
-   fCurrentMethodTag = name + "_";
-   fCurrentMethodTag += fMethodCounts[name.Data()];
 
    dynamic_cast<TClassDocOutput*>(fDocOutput)->WriteMethod(out, ret, name, params, filename, anchor,
                            fComment, codeOneLiner);

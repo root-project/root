@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TClassDocOutput.cxx,v 1.2 2007/02/08 22:56:05 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TClassDocOutput.cxx,v 1.3 2007/02/15 17:32:32 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -1513,7 +1513,7 @@ void TClassDocOutput::WriteMethod(std::ostream& out, TString& ret,
    out << "</a>" << params << "</span><br />" << std::endl;
 
    if (comment.Length())
-      out << "<pre class=\"funcdoc\">" << comment << "</pre>" << std::endl;
+      out << "<div class=\"funccomm\"><pre>" << comment << "</pre></div>" << std::endl;
 
    if (codeOneLiner.Length()) {
       out << std::endl << "<div class=\"code\"><code class=\"inlinecode\">" 

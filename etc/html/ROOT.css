@@ -381,6 +381,7 @@ td.funcret, td.datatype {
 }
 a.funcname {
    font-weight: bolder;
+   margin-right: 0.4em;
 }
 td.funcname {
    white-space: normal;
@@ -430,12 +431,13 @@ div.funcdoc {
    color: inherit;
    background-color: #eeeeff;
 }
-pre.funcdoc {
+div.funccomm {
    border: solid 1px #cccccc;
    padding-top: 0.5em;
    padding-bottom: 0.5em;
+   padding-left: 0.5em;
    background-color: White;
-   margin: 0.3em 0px 0.3em 0px;
+   margin: 0.3em 0px 0.3em 0.5em;
 }
 
 /* toolbox */

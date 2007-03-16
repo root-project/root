@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocInfo.h,v 1.1 2007/02/07 20:40:38 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TDocInfo.h,v 1.2 2007/02/08 22:56:05 axel Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -90,7 +90,7 @@ public:
    TList*      GetClasses() { return &fClasses; }
 
    const TString& GetSourceDir() const { return fSourceDir; }
-   void        SetSourceDir(const char* dir) { fSourceDir = dir; }
+   void        SetSourceDir(const char* dir);
 
 private:
    TList       fClasses;

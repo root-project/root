@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.125 2006/12/05 17:17:37 brun Exp $
+// @(#)root/html:$Name:  $:$Id: TDocInfo.cxx,v 1.1 2007/02/07 20:40:38 brun Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -10,7 +10,9 @@
  *************************************************************************/
 
 #include "TDocInfo.h"
+
 #include "TClass.h"
+#include "TSystem.h"
 
 ClassImp(TClassDocInfo);
 
@@ -35,3 +37,8 @@ Int_t TClassDocInfo::Compare(const TObject* obj) const
 
 
 ClassImp(TModuleDocInfo);
+
+void TModuleDocInfo::SetSourceDir(const char* dir) {
+   fSourceDir = dir;
+   gSystem->ExpandPathName(fSourceDir);
+}
