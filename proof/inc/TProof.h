@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.106 2007/02/07 09:07:14 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.107 2007/02/12 13:05:31 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -74,6 +74,7 @@ class TProof;
 class TProofInputHandler;
 class TProofInterruptHandler;
 class TProofLockPath;
+class TVirtualProofPlayer;
 class TProofPlayer;
 class TProofPlayerRemote;
 class TProofProgressDialog;
@@ -345,7 +346,7 @@ private:
    TSignalHandler *fIntHandler;      //interrupt signal handler (ctrl-c)
    TPluginHandler *fProgressDialog;  //progress dialog plugin
    Bool_t          fProgressDialogStarted; //indicates if the progress dialog is up
-   TProofPlayer   *fPlayer;          //current player
+   TVirtualProofPlayer *fPlayer;     //current player
    TList          *fFeedback;        //list of names to be returned as feedback
    TList          *fChains;          //chains with this proof set
    struct MD5Mod_t {
@@ -492,9 +493,9 @@ protected:
                         const char *alias = 0);
    virtual Bool_t  StartSlaves(Bool_t parallel, Bool_t attach = kFALSE);
 
-   void                  SetPlayer(TProofPlayer *player) { fPlayer = player; };
-   TProofPlayer         *GetPlayer() const { return fPlayer; };
-   virtual TProofPlayer *MakePlayer();
+   void                         SetPlayer(TVirtualProofPlayer *player);
+   TVirtualProofPlayer         *GetPlayer() const { return fPlayer; }
+   virtual TVirtualProofPlayer *MakePlayer(const char *player = 0, TSocket *s = 0);
 
    TList  *GetListOfActiveSlaves() const { return fActiveSlaves; }
    TSlave *CreateSlave(const char *url, const char *ord,
@@ -510,7 +511,7 @@ protected:
    void         SetDSet(TDSet *dset) { fDSet = dset; }
    virtual void ValidateDSet(TDSet *dset);
 
-   TPluginHandler *GetProgressDialog() const { return fProgressDialog; };
+   TPluginHandler *GetProgressDialog() const { return fProgressDialog; }
 
    static void *SlaveStartupThread(void *arg);
 

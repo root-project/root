@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.15 2006/08/06 07:15:00 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.cxx,v 1.16 2007/01/17 17:20:42 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -34,7 +34,7 @@
 #include "TSemaphore.h"
 #include "TDSet.h"
 #include "TPluginManager.h"
-#include "TProofPlayer.h"
+#include "TVirtualProofPlayer.h"
 #include "TMessage.h"
 #include "TUrl.h"
 #include "TProofResourcesStatic.h"
@@ -414,11 +414,16 @@ void TProofSuperMaster::ValidateDSet(TDSet *dset)
 }
 
 //______________________________________________________________________________
-TProofPlayer *TProofSuperMaster::MakePlayer()
+TVirtualProofPlayer *TProofSuperMaster::MakePlayer(const char *player, TSocket *s)
 {
-   // Construct a TProofPlayer object.
+   // Construct a TProofPlayer object. The player string specifies which
+   // player should be created: remote, slave, sm (supermaster) or base.
+   // Default is sm. Socket is needed in case a slave player is created.
 
-   SetPlayer(new TProofPlayerSuperMaster(this));
+   if (!player)
+      player = "sm";
+
+   SetPlayer(TVirtualProofPlayer::Create(player, this, s));
    return GetPlayer();
 }
 

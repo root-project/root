@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.48 2007/02/04 17:39:44 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.49 2007/02/05 10:40:30 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -45,7 +45,7 @@
 
 class TDSet;
 class TProof;
-class TProofPlayer;
+class TVirtualProofPlayer;
 class TProofLockPath;
 class TSocket;
 class TList;
@@ -88,7 +88,7 @@ private:
    TString       fArchivePath;      //default archive path
    TSocket      *fSocket;           //socket connection to client
    TProof       *fProof;            //PROOF talking to slave servers
-   TProofPlayer *fPlayer;           //actual player
+   TVirtualProofPlayer *fPlayer;    //actual player
    FILE         *fLogFile;          //log file
    Int_t         fLogFileDes;       //log file descriptor
    TList        *fEnabledPackages;  //list of enabled packages
@@ -131,7 +131,7 @@ private:
    // Query handlers
    void          AddLogFile(TProofQueryResult *pq);
    Int_t         CleanupQueriesDir();
-   void          FinalizeQuery(TProofPlayer *p, TProofQueryResult *pq);
+   void          FinalizeQuery(TVirtualProofPlayer *p, TProofQueryResult *pq);
    TList        *GetDataSet(const char *name);
 
    TProofQueryResult *MakeQueryResult(Long64_t nentries, const char *opt,
@@ -263,7 +263,7 @@ private:
 
    static TString fgPfx; // Default prefix to be prepended to messages
 public:
-   enum EStatusBits { kFileIsPipe       = BIT(23) };
+   enum EStatusBits { kFileIsPipe = BIT(23) };
    TProofServLogHandler(const char *cmd, TSocket *s, const char *pfx = "");
    TProofServLogHandler(FILE *f, TSocket *s, const char *pfx = "");
    virtual ~TProofServLogHandler();
@@ -276,7 +276,7 @@ public:
    static void SetDefaultPrefix(const char *pfx);
 };
 
-//--- Guard class: close pipe, deactivatethe related descriptor --------------// 
+//--- Guard class: close pipe, deactivatethe related descriptor --------------//
 //______________________________________________________________________________
 class TProofServLogHandlerGuard {
 

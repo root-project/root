@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.101 2007/01/30 16:34:54 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.102 2007/02/06 00:07:48 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -141,7 +141,7 @@ TStopTimer::TStopTimer(TProofPlayer *p, Bool_t abort, Int_t to)
 {
    // Constructor for the timer to stop/abort processing.
    // The 'timeout' is in seconds.
-   // Make sure that 'to' make sense, i.e. not larger than 10 days; 
+   // Make sure that 'to' make sense, i.e. not larger than 10 days;
    // the minimum value is 10 ms (0 does not seem to start the timer ...).
 
    if (gDebug > 0)
@@ -178,7 +178,7 @@ Bool_t TStopTimer::Notify()
 ClassImp(TProofPlayer)
 
 //______________________________________________________________________________
-TProofPlayer::TProofPlayer()
+TProofPlayer::TProofPlayer(TProof *)
    : fAutoBins(0), fOutput(0), fSelector(0), fSelectorClass(0),
      fFeedbackTimer(0), fFeedbackPeriod(2000),
      fEvIter(0), fSelStatus(0), fEventsProcessed(0),

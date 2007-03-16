@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.6 2003/05/06 08:23:43 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.7 2006/05/15 09:45:03 brun Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
@@ -37,7 +37,7 @@ ClassImp(TVirtualPacketizer)
 //______________________________________________________________________________
 TVirtualPacketizer::TVirtualPacketizer()
 {
-   // Constructor
+   // Constructor.
 
    fValid = kTRUE;
    fStop = kFALSE;
@@ -46,7 +46,7 @@ TVirtualPacketizer::TVirtualPacketizer()
 //______________________________________________________________________________
 Long64_t TVirtualPacketizer::GetEntries(Bool_t tree, TDSetElement *e)
 {
-   // Get entries
+   // Get entries.
 
    Long64_t entries;
    TFile *file = TFile::Open(e->GetFileName());
@@ -93,38 +93,37 @@ Long64_t TVirtualPacketizer::GetEntries(Bool_t tree, TDSetElement *e)
    return entries;
 }
 
-
 //______________________________________________________________________________
 Long64_t TVirtualPacketizer::GetEntriesProcessed() const
 {
-   // Get entries to be processed
+   // Get entries to be processed.
+
    AbstractMethod("GetEntriesProcessed");
    return 0;
 }
 
-
 //______________________________________________________________________________
 Long64_t TVirtualPacketizer::GetEntriesProcessed(TSlave *) const
 {
-   // Get entries to be processed
+   // Get entries to be processed.
+
    AbstractMethod("GetEntriesProcessed(TSlave *sl)");
    return 0;
 }
 
-
 //______________________________________________________________________________
 TDSetElement *TVirtualPacketizer::GetNextPacket(TSlave *, TMessage *)
 {
-   // Get netx packet
+   // Get next packet.
+
    AbstractMethod("GetNextPacket");
    return 0;
 }
 
-
 //______________________________________________________________________________
 void TVirtualPacketizer::StopProcess(Bool_t /*abort*/)
 {
-   // Stop process
+   // Stop process.
 
    fStop = kTRUE;
 }

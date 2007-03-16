@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.h,v 1.4 2005/12/10 16:51:57 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofSuperMaster.h,v 1.5 2006/08/06 07:15:00 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -31,7 +31,7 @@
 #include "TString.h"
 #endif
 
-class TProofPlayer;
+class TVirtualProofPlayer;
 class TDSet;
 
 class TProofSuperMaster : public TProof {
@@ -44,7 +44,7 @@ protected:
                      Option_t *option = "", Long64_t nentries = -1,
                      Long64_t firstentry = 0, TEventList *evl = 0);
    void      ValidateDSet(TDSet *dset);
-   virtual   TProofPlayer *MakePlayer();
+   virtual   TVirtualProofPlayer *MakePlayer(const char *player = 0, TSocket *s = 0);
 
 public:
    TProofSuperMaster(const char *masterurl, const char *conffile = kPROOF_ConfFile,

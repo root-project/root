@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.176 2007/03/05 09:10:02 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.177 2007/03/05 11:49:22 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -526,6 +526,11 @@ Plugin.TProof:  ^condor:       TProofCondor Proof         "TProofCondor(const ch
 +Plugin.TProof: ^sm:           TProofSuperMaster Proof    "TProofSuperMaster(const char*,const char*,const char*,Int_t)"
 +Plugin.TProof: ^peac:         TProofPEAC    Peac         "TProofPEAC(const char*,const char*,const char*,Int_t)"
 +Plugin.TProof: *              TProof        Proof        "TProof(const char*,const char*,const char*,Int_t,const char *)"
+Plugin.TVirtualProofPlayer:   base    TProofPlayer       Proof  "TProofPlayer(TProof*)"
++Plugin.TVirtualProofPlayer:  remote  TProofPlayerRemote Proof  "TProofPlayerRemote(TProof*)"
++Plugin.TVirtualProofPlayer:  local   TProofPlayerLocal  Proof  "TProofPlayerLocal(TProof*)"
++Plugin.TVirtualProofPlayer:  slave   TProofPlayerSlave  Proof  "TProofPlayerSlave(TSocket*)"
++Plugin.TVirtualProofPlayer:  sm TProofPlayerSuperMaster Proof  "TProofPlayerSuperMaster(TProof*)"
 Plugin.TProofProgressDialog: * TProofProgressDialog ProofGui  "TProofProgressDialog(TProof*,const char*,Int_t,Long64_t,Long64_t)"
 Plugin.TDataProgressDialog:  * TDataProgressDialog  peacGui   "TDataProgressDialog(TProof*,const char*,Int_t,Long64_t)"
 Plugin.TProofServ:    ^xpd     TXProofServ   Proofx       "TXProofServ(Int_t *,char **)"

@@ -1,0 +1,107 @@
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.41 2007/01/30 16:34:54 rdm Exp $
+// Author: Fons Rademakers   15/03/07
+
+/*************************************************************************
+ * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef ROOT_TVirtualProofPlayer
+#define ROOT_TVirtualProofPlayer
+
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TVirtualProofPlayer                                                  //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+#ifndef ROOT_TObject
+#include "TObject.h"
+#endif
+#ifndef ROOT_TQObject
+#include "TQObject.h"
+#endif
+
+class TDSet;
+class TDSetElement;
+class TEventList;
+class TQueryResult;
+class TList;
+class TSlave;
+class TMessage;
+class TProof;
+class TSocket;
+
+
+class TVirtualProofPlayer : public TObject, public TQObject {
+
+public:
+   enum EExitStatus { kFinished, kStopped, kAborted };
+
+   TVirtualProofPlayer() { }
+   virtual ~TVirtualProofPlayer() { }
+
+   virtual Long64_t  Process(TDSet *set,
+                             const char *selector, Option_t *option = "",
+                             Long64_t nentries = -1, Long64_t firstentry = 0,
+                             TEventList *evl = 0) = 0;
+   virtual Long64_t  Finalize(Bool_t force = kFALSE, Bool_t sync = kFALSE) = 0;
+   virtual Long64_t  Finalize(TQueryResult *qr) = 0;
+   virtual Long64_t  DrawSelect(TDSet *set, const char *varexp,
+                                const char *selection, Option_t *option = "",
+                                Long64_t nentries = -1, Long64_t firstentry = 0) = 0;
+
+   virtual void      StopProcess(Bool_t abort, Int_t timeout = -1) = 0;
+   virtual void      AddInput(TObject *inp) = 0;
+   virtual void      ClearInput() = 0;
+   virtual TObject  *GetOutput(const char *name) const = 0;
+   virtual TList    *GetOutputList() const = 0;
+   virtual TList    *GetInputList() const = 0;
+   virtual TList    *GetListOfResults() const = 0;
+   virtual void      AddQueryResult(TQueryResult *q) = 0;
+   virtual TQueryResult *GetCurrentQuery() const = 0;
+   virtual TQueryResult *GetQueryResult(const char *ref) = 0;
+   virtual void      RemoveQueryResult(const char *ref) = 0;
+   virtual void      SetCurrentQuery(TQueryResult *q) = 0;
+   virtual void      SetMaxDrawQueries(Int_t max) = 0;
+   virtual void      RestorePreviousQuery() =0 ;
+   virtual Int_t     AddOutputObject(TObject *obj) = 0;
+   virtual void      AddOutput(TList *out) = 0;   // Incorporate a list
+   virtual void      StoreOutput(TList *out) = 0;   // Adopts the list
+   virtual void      StoreFeedback(TObject *slave, TList *out) = 0; // Adopts the list
+   virtual void      Progress(Long64_t total, Long64_t processed) = 0; // *SIGNAL*
+   virtual void      Progress(TSlave *, Long64_t total, Long64_t processed) = 0;
+   virtual void      Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
+                              Float_t initTime, Float_t procTime,
+                              Float_t evtrti, Float_t mbrti) = 0; // *SIGNAL*
+   virtual void      Feedback(TList *objs) = 0; // *SIGNAL*
+
+   virtual TDSetElement *GetNextPacket(TSlave *slave, TMessage *r) = 0;
+
+   virtual Int_t     ReinitSelector(TQueryResult *qr) = 0;
+
+   virtual void      UpdateAutoBin(const char *name,
+                                   Double_t& xmin, Double_t& xmax,
+                                   Double_t& ymin, Double_t& ymax,
+                                   Double_t& zmin, Double_t& zmax) = 0;
+
+   virtual Bool_t    IsClient() const = 0;
+
+   virtual EExitStatus GetExitStatus() const = 0;
+   virtual Long64_t    GetEventsProcessed() const = 0;
+   virtual void        AddEventsProcessed(Long64_t ev) = 0;
+
+   virtual void      SetDispatchTimer(Bool_t on = kTRUE) = 0;
+   virtual void      SetStopTimer(Bool_t on = kTRUE,
+                                  Bool_t abort = kFALSE, Int_t timeout = 0) = 0;
+
+   static TVirtualProofPlayer *Create(const char *player, TProof *p, TSocket *s = 0);
+
+   ClassDef(TVirtualProofPlayer,0)  // Abstract PROOF player
+};
+
+#endif

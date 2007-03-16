@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.40 2006/11/22 14:16:54 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.h,v 1.41 2007/01/30 16:34:54 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -19,17 +19,14 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TVirtualProofPlayer
+#include "TVirtualProofPlayer.h"
+#endif
 #ifndef ROOT_TArrayL64
 #include "TArrayL64.h"
 #endif
 #ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TObject
-#include "TObject.h"
-#endif
-#ifndef ROOT_TQObject
-#include "TQObject.h"
 #endif
 #ifndef ROOT_TSystem
 #include "TSystem.h"
@@ -39,14 +36,9 @@
 #endif
 
 class TSelector;
-class TDSet;
-class TDSetElement;
-class TSlave;
-class TEventList;
 class TProof;
 class TSocket;
 class TVirtualPacketizer;
-class TMessage;
 class TSlave;
 class TEventIter;
 class TProofStats;
@@ -57,10 +49,7 @@ class TTimer;
 
 //------------------------------------------------------------------------
 
-class TProofPlayer : public TObject, public TQObject {
-
-public:
-   enum EExitStatus { kFinished, kStopped, kAborted };
+class TProofPlayer : public TVirtualProofPlayer {
 
 private:
    TList        *fAutoBins;  // Map of min/max values by name for slaves
@@ -108,7 +97,7 @@ protected:
 public:
    enum EStatusBits { kDispatchOneEvent = BIT(15) };
 
-   TProofPlayer();
+   TProofPlayer(TProof *proof = 0);
    virtual ~TProofPlayer();
 
    virtual Long64_t  Process(TDSet *set,
@@ -166,7 +155,7 @@ public:
    virtual void      SetStopTimer(Bool_t on = kTRUE,
                                   Bool_t abort = kFALSE, Int_t timeout = 0);
 
-   ClassDef(TProofPlayer,0)  // Abstract PROOF player
+   ClassDef(TProofPlayer,0)  // Basic PROOF player
 };
 
 
@@ -175,7 +164,7 @@ public:
 class TProofPlayerLocal : public TProofPlayer {
 
 public:
-   TProofPlayerLocal() { }
+   TProofPlayerLocal(TProof *) { }
 
    ClassDef(TProofPlayerLocal,0)  // PROOF player running on client
 };

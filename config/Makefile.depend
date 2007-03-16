@@ -57,6 +57,13 @@ PROOFLIBDEP         = $(NETLIB) $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
 PROOFLIBEXTRA       = lib/libNet.lib lib/libTree.lib lib/libGraf3d.lib \
                       lib/libGraf.lib lib/libGpad.lib lib/libRIO.lib \
                       lib/libHist.lib lib/libTreePlayer.lib lib/libThread.lib
+PROOFPLAYERLIBDEP   = $(PROOFLIB) $(NETLIB) $(TREELIB) $(G3DLIB) $(GRAFLIB) \
+                      $(HISTLIB) $(GPADLIB) $(TREEPLAYERLIB) $(THREADLIB) \
+                      $(IOLIB)
+PROOFPLAYERLIBEXTRA = lib/libProof.lib lib/libNet.lib lib/libTree.lib \
+                      lib/libGraf3d.lib lib/libGraf.lib lib/libGpad.lib \
+                      lib/libRIO.lib lib/libHist.lib lib/libTreePlayer.lib \
+                      lib/libThread.lib
 PROOFXLIBDEP        = $(NETLIB) $(PROOFLIB) $(THREADLIB) $(XPDLIB)
 PROOFXLIBEXTRA      = lib/libNet.lib lib/libProof.lib lib/libThread.lib \
                       lib/libXrdProofd.lib
@@ -212,6 +219,11 @@ PROOFLIBDEP         = $(NETLIB) $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
                       $(GPADLIB) $(TREEPLAYERLIB) $(THREADLIB) $(IOLIB)
 PROOFLIBEXTRA       = -Llib -lNet -lTree -lGraf3d -lGraf -lGpad -lHist \
                       -lTreePlayer -lThread -lRIO
+PROOFPLAYERLIBDEP   = $(PROOFLIB) $(NETLIB) $(TREELIB) $(G3DLIB) $(GRAFLIB) \
+                      $(HISTLIB) $(GPADLIB) $(TREEPLAYERLIB) $(THREADLIB) \
+                      $(IOLIB)
+PROOFPLAYERLIBEXTRA = -Llib -lProof -lNet -lTree -lGraf3d -lGraf -lGpad \
+                      -lHist -lTreePlayer -lThread -lRIO
 PROOFXLIBDEP        = $(NETLIB) $(PROOFLIB) $(THREADLIB) $(XPDLIB)
 PROOFXLIBEXTRA      = -Llib -lNet -lProof -lThread -lXrdProofd
 PROOFGUILIBDEP      = $(PROOFLIB) $(GUILIB) $(GPADLIB) $(GRAFLIB) $(TREELIB)

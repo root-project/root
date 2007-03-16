@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.187 2007/02/12 13:15:29 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.188 2007/02/12 13:26:04 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -60,7 +60,7 @@
 #include "TParameter.h"
 #include "TProof.h"
 #include "TProofNodeInfo.h"
-#include "TProofPlayer.h"
+#include "TVirtualProofPlayer.h"
 #include "TProofServ.h"
 #include "TPluginManager.h"
 #include "TQueryResult.h"
@@ -76,13 +76,6 @@
 #include "TTree.h"
 #include "TUrl.h"
 
-
-// to ne moved to RConfig.h once it works every where
-#if defined(__GNUC__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3))
-#    define R__HIDDEN __attribute__((__visibility__("hidden")))
-#else
-#    define R__HIDDEN
-#endif
 
 TProof *gProof = 0;
 TVirtualMutex *gProofMutex = 0;
@@ -508,7 +501,10 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    // Part of active query
    fWaitingSlaves = 0;
 
-   fPlayer   = MakePlayer();
+   // Make remote PROOF player
+   fPlayer = 0;
+   MakePlayer();
+
    fFeedback = new TList;
    fFeedback->SetOwner();
    fFeedback->SetName("FeedbackList");
@@ -1759,7 +1755,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout)
          // (player exits status is finished in such a case); otherwise,
          // we still need to collect the partial output info
          if (!s)
-            if (fPlayer && (fPlayer->GetExitStatus() == TProofPlayer::kFinished))
+            if (fPlayer && (fPlayer->GetExitStatus() == TVirtualProofPlayer::kFinished))
                mon->DeActivateAll();
          // Decrease the timeout counter if requested
          if (s == (TSocket *)(-1) && nto > 0)
@@ -2034,7 +2030,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
             if (!IsMaster()) {
 
                // Handle abort ...
-               if (fPlayer->GetExitStatus() == TProofPlayer::kAborted) {
+               if (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) {
                   if (fSync)
                      Info("CollectInputFrom",
                           "processing was aborted - %lld events processed",
@@ -2050,7 +2046,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                }
 
                // Handle stop ...
-               if (fPlayer->GetExitStatus() == TProofPlayer::kStopped) {
+               if (fPlayer->GetExitStatus() == TVirtualProofPlayer::kStopped) {
                   if (fSync)
                      Info("CollectInputFrom",
                           "processing was stopped - %lld events processed",
@@ -4268,7 +4264,7 @@ R__HIDDEN Int_t TProof::UnloadPackageOnClient(const char *package)
          delete fEnabledPackagesOnClient->Remove(pack);
       }
 
-      // Cleanup the link, if there
+      // cleanup the link
       if (!gSystem->AccessPathName(package))
          if (gSystem->Unlink(package) != 0)
             Warning("UnloadPackageOnClient", "unable to remove symlink to %s", package);
@@ -5357,11 +5353,26 @@ void TProof::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
-TProofPlayer *TProof::MakePlayer()
+void TProof::SetPlayer(TVirtualProofPlayer *player)
 {
-   // Construct a TProofPlayer object.
+   // Set a new PROOF player.
 
-   SetPlayer(new TProofPlayerRemote(this));
+   if (fPlayer)
+      delete fPlayer;
+   fPlayer = player;
+};
+
+//______________________________________________________________________________
+TVirtualProofPlayer *TProof::MakePlayer(const char *player, TSocket *s)
+{
+   // Construct a TProofPlayer object. The player string specifies which
+   // player should be created: remote, slave, sm (supermaster) or base.
+   // Default is remote. Socket is needed in case a slave player is created.
+
+   if (!player)
+      player = "remote";
+
+   SetPlayer(TVirtualProofPlayer::Create(player, this, s));
    return GetPlayer();
 }
 

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.92 2006/08/09 01:30:27 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.93 2006/11/24 14:24:53 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -344,6 +344,14 @@
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   endif
+#endif
+
+/* allows symbols to be hidden from the shared library export symbol table */
+/* use typically on file statics and private methods */
+#if defined(__GNUC__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3))
+#    define R__HIDDEN __attribute__((__visibility__("hidden")))
+#else
+#    define R__HIDDEN
 #endif
 
 #ifdef __KCC

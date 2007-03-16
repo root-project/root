@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.163 2007/02/06 00:08:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.164 2007/02/12 13:05:32 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -65,7 +65,7 @@
 #include "TProofDebug.h"
 #include "TProof.h"
 #include "TProofLimitsFinder.h"
-#include "TProofPlayer.h"
+#include "TVirtualProofPlayer.h"
 #include "TProofQueryResult.h"
 #include "TRegexp.h"
 #include "TROOT.h"
@@ -861,7 +861,7 @@ void TProofServ::HandleSocketInput()
 
       case kMESS_CINT:
          mess->ReadString(str, sizeof(str));
-         if (IsMaster() && IsParallel()) {
+         if (IsParallel()) {
             fProof->SendCommand(str);
          } else {
             PDB(kGlobal, 1)
@@ -1325,8 +1325,8 @@ void TProofServ::HandleSocketInputDuringProcess()
    switch (what) {
 
       case kPROOF_PROCESS:
-
-         {  TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
+         {
+            TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
 
             HandleProcess(mess);
 
@@ -1385,7 +1385,8 @@ void TProofServ::HandleSocketInputDuringProcess()
          break;
 
       case kPROOF_STOPPROCESS:
-         {  Long_t timeout = -1;
+         {
+            Long_t timeout = -1;
             (*mess) >> aborted;
             if (fProtocol > 9)
                (*mess) >> timeout;
@@ -1620,7 +1621,7 @@ Bool_t TProofServ::IsParallel() const
    if (IsMaster())
       return fProof->IsParallel();
 
-   //kFALSE is returned if we are a slave
+   // false in case we are a slave
    return kFALSE;
 }
 
@@ -2402,7 +2403,7 @@ void TProofServ::AddLogFile(TProofQueryResult *pq)
 }
 
 //______________________________________________________________________________
-void TProofServ::FinalizeQuery(TProofPlayer *p, TProofQueryResult *pq)
+void TProofServ::FinalizeQuery(TVirtualProofPlayer *p, TProofQueryResult *pq)
 {
    // Final steps after Process() to complete the TQueryResult instance.
 
@@ -2414,7 +2415,7 @@ void TProofServ::FinalizeQuery(TProofPlayer *p, TProofQueryResult *pq)
 
    Int_t qn = pq->GetSeqNum();
    Long64_t np = p->GetEventsProcessed();
-   TProofPlayer::EExitStatus est = p->GetExitStatus();
+   TVirtualProofPlayer::EExitStatus est = p->GetExitStatus();
    TList *out = p->GetOutputList();
 
    fProof->AskStatistics();
@@ -2432,19 +2433,19 @@ void TProofServ::FinalizeQuery(TProofPlayer *p, TProofQueryResult *pq)
    // Some notification (useful in large logs)
    Bool_t save = kTRUE;
    switch (est) {
-   case TProofPlayer::kAborted:
+   case TVirtualProofPlayer::kAborted:
       PDB(kGlobal, 1)
          Info("FinalizeQuery", "query %d has been ABORTED <====", qn);
       out = 0;
       save = kFALSE;
       break;
-   case TProofPlayer::kStopped:
+   case TVirtualProofPlayer::kStopped:
       PDB(kGlobal, 1)
          Info("FinalizeQuery",
               "query %d has been STOPPED: %d events processed", qn, np);
       st = TQueryResult::kStopped;
       break;
-   case TProofPlayer::kFinished:
+   case TVirtualProofPlayer::kFinished:
       PDB(kGlobal, 1)
          Info("FinalizeQuery",
               "query %d has been completed: %d events processed", qn, np);
@@ -3012,7 +3013,7 @@ void TProofServ::HandleProcess(TMessage *mess)
    if (evl)
       dset->SetEventList(evl);
 
-   TProofPlayer *p = 0;
+   TVirtualProofPlayer *p = 0;
 
    if (IsTopMaster()) {
 
@@ -3110,11 +3111,11 @@ void TProofServ::HandleProcess(TMessage *mess)
 
          // Create player
          if (IsParallel()) {
+            // remote mode
             p = fProof->MakePlayer();
          } else {
             // sequential mode
-            p = new TProofPlayerSlave(fSocket);
-            fProof->SetPlayer(p);
+            p = fProof->MakePlayer("slave", fSocket);
          }
 
          // Add query results to the player lists
@@ -3142,13 +3143,13 @@ void TProofServ::HandleProcess(TMessage *mess)
          p->AddInput(new TNamed("PROOF_QueryTag",Form("%s:%s",pq->GetTitle(),pq->GetName())));
 
          // Process
-         PDB(kGlobal, 1) Info("HandleProcess", "calling TProofPlayerRemote::Process()");
+         PDB(kGlobal, 1) Info("HandleProcess", "calling %s::Process()", p->IsA()->GetName());
          p->Process(dset, filename, opt, nentries, first);
 
          // Return number of events processed
-         if (p->GetExitStatus() != TProofPlayer::kFinished) {
+         if (p->GetExitStatus() != TVirtualProofPlayer::kFinished) {
             Bool_t abort =
-              (p->GetExitStatus() == TProofPlayer::kAborted) ? kTRUE : kFALSE;
+              (p->GetExitStatus() == TVirtualProofPlayer::kAborted) ? kTRUE : kFALSE;
             TMessage m(kPROOF_STOPPROCESS);
             if (fProtocol > 8) {
                m << p->GetEventsProcessed() << abort;
@@ -3163,7 +3164,7 @@ void TProofServ::HandleProcess(TMessage *mess)
 
          // Send back the results
          TQueryResult *pqr = pq->CloneInfo();
-         if (p->GetExitStatus() != TProofPlayer::kAborted && p->GetOutputList()) {
+         if (p->GetExitStatus() != TVirtualProofPlayer::kAborted && p->GetOutputList()) {
 
             PDB(kGlobal, 2) Info("HandleProcess","Sending results");
             if (fProtocol > 10) {
@@ -3228,13 +3229,13 @@ void TProofServ::HandleProcess(TMessage *mess)
                fSocket->SendObject(p->GetOutputList(), kPROOF_OUTPUTLIST);
             }
          } else {
-            if (p->GetExitStatus() != TProofPlayer::kAborted)
+            if (p->GetExitStatus() != TVirtualProofPlayer::kAborted)
                Warning("HandleProcess","The output list is empty!");
             fSocket->SendObject(0, kPROOF_OUTPUTLIST);
          }
 
          // Remove aborted queries from the list
-         if (p->GetExitStatus() == TProofPlayer::kAborted) {
+         if (p->GetExitStatus() == TVirtualProofPlayer::kAborted) {
             RemoveQuery(pq);
          } else {
             // Keep in memory only light infor about a query
@@ -3249,7 +3250,6 @@ void TProofServ::HandleProcess(TMessage *mess)
 
          // Player cleanup
          fProof->SetPlayer(0);
-         SafeDelete(p);
 
       } // Loop on submitted queries
 
@@ -3262,12 +3262,12 @@ void TProofServ::HandleProcess(TMessage *mess)
       fIdle = kFALSE;
 
       // Create player
-      if (IsMaster() && IsParallel()) {
-         // NOTE: fProof->SetPlayer(0) should be called after Process()
+      if (IsParallel()) {
+         // remote mode
          p = fProof->MakePlayer();
       } else {
          // slave or sequential mode
-         p = new TProofPlayerSlave(fSocket);
+         p = TVirtualProofPlayer::Create("slave", 0, fSocket);
          if (IsMaster())
             fProof->SetPlayer(p);
       }
@@ -3287,7 +3287,7 @@ void TProofServ::HandleProcess(TMessage *mess)
       }
 
       // Process
-      PDB(kGlobal, 1) Info("HandleProcess", "calling TProofPlayer::Process()");
+      PDB(kGlobal, 1) Info("HandleProcess", "calling %s::Process()", p->IsA()->GetName());
       p->Process(dset, filename, opt, nentries, first);
 
       // Return number of events processed
@@ -3296,7 +3296,7 @@ void TProofServ::HandleProcess(TMessage *mess)
       fSocket->Send(m);
 
       // Send back the results
-      if (p->GetExitStatus() != TProofPlayer::kAborted && p->GetOutputList()) {
+      if (p->GetExitStatus() != TVirtualProofPlayer::kAborted && p->GetOutputList()) {
          if (fProtocol > 10) {
             // Send objects one-by-one to optimize transfer and merging
             // Messages for objects
@@ -3328,7 +3328,8 @@ void TProofServ::HandleProcess(TMessage *mess)
       // Player cleanup
       if (IsMaster())
          fProof->SetPlayer(0);
-      SafeDelete(p);
+      else
+         delete p;
    }
 
    fPlayer = 0;
@@ -3341,7 +3342,6 @@ void TProofServ::HandleProcess(TMessage *mess)
    // Done
    return;
 }
-
 
 //______________________________________________________________________________
 void TProofServ::HandleQueryList(TMessage *mess)
