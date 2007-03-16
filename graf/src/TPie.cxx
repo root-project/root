@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.14 2007/02/21 21:54:21 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.15 2007/03/16 14:58:17 couet Exp $
 // Author: Guido Volpi, Olivier Couet 03/11/2006
 
 /*************************************************************************
@@ -225,22 +225,10 @@ Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
       cphi   = fSlices[2*i+1]*TMath::Pi()/180.;
       phimax = fSlices[2*i+2]*TMath::Pi()/180.;
 
-      // Recalculate slice's vertex' coordinates.
-      Double_t x, y, rad, radOffset;
-      if (gIsUptSlice) {
-         x         = gX;
-         y         = gY;
-         rad       = gRadius,
-         radOffset = gRadiusOffset;
-      } else {
-         x         = fX;
-         y         = fY;
-         rad       = fRadius;
-         radOffset = fPieSlices[i]->GetRadiusOffset();
-      }
+      Double_t radOffset = fPieSlices[i]->GetRadiusOffset();
 
-      Double_t dx  = (xx-x-radOffset*TMath::Cos(cphi))/radX;
-      Double_t dy  = (yy-y-radOffset*TMath::Sin(cphi)*radXY)/radY;
+      Double_t dx  = (xx-fX-radOffset*TMath::Cos(cphi))/radX;
+      Double_t dy  = (yy-fY-radOffset*TMath::Sin(cphi)*radXY)/radY;
 
       Double_t ang = TMath::ATan2(dy,dx);
       if (ang<0) ang += TMath::TwoPi();
@@ -256,7 +244,7 @@ Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
          gCurrent_ang  = ang;
          gCurrent_phi1 = phimin;
          gCurrent_phi2 = phimax;
-         gCurrent_rad  = dist*rad;
+         gCurrent_rad  = dist*fRadius;
 
          if (dist<.95 && dist>.65) {
             Double_t range = phimax-phimin;
@@ -561,14 +549,16 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          } else if (isRotating) {
             if (!gPad->OpaqueMoving()) DrawGhost();
 
-            if (py>=gPad->YtoAbsPixel(fY)) {
-               if (px<oldpx) gAngularOffset--;
-               else          gAngularOffset++;
-            } else {
-               if (px<oldpx) gAngularOffset++;
-               else          gAngularOffset--;
-            }
-            if (gAngularOffset>=360) gAngularOffset = 0;
+            Double_t xx = gPad->AbsPixeltoX(px);
+            Double_t yy = gPad->AbsPixeltoY(py);
+
+            Double_t dx  = xx-gX;
+            Double_t dy  = yy-gY;
+
+            Double_t ang = TMath::ATan2(dy,dx);
+            if (ang<0) ang += TMath::TwoPi();
+
+            gAngularOffset = (ang-gCurrent_ang)*180/TMath::Pi();
 
             if (!gPad->OpaqueMoving()) DrawGhost();
          }
@@ -607,7 +597,11 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (isMovingPie)   isMovingPie   = kFALSE;
          if (isMovingSlice) isMovingSlice = kFALSE;
          if (isResizing)    isResizing    = kFALSE;
-         if (isRotating)    isRotating    = kFALSE;
+         if (isRotating)    {
+            isRotating = kFALSE;
+            // this is important mainly when OpaqueMoving==kTRUE
+            gCurrent_ang += gAngularOffset/180.*TMath::Pi();
+         }
 
          gPad->Modified(kTRUE);
 
@@ -903,7 +897,7 @@ void TPie::Paint(Option_t *option)
          // set the color of the next slice
          if (pi>0) {
             arc->SetFillStyle(0);
-            arc->SetLineColor(TColor::GetColorBright((fPieSlices[i]->GetFillColor())));
+            arc->SetLineColor(TColor::GetColorDark((fPieSlices[i]->GetFillColor())));
          } else {
             arc->SetFillStyle(0);
             if (optionLine==kTRUE) {
@@ -912,7 +906,7 @@ void TPie::Paint(Option_t *option)
                arc->SetLineWidth(fPieSlices[i]->GetLineWidth());
             } else {
                arc->SetLineWidth(0);
-               arc->SetLineColor(TColor::GetColorBright((fPieSlices[i]->GetFillColor())));
+               arc->SetLineColor(TColor::GetColorDark((fPieSlices[i]->GetFillColor())));
             }
          }
          // Paint the slice
