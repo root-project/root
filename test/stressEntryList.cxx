@@ -1,4 +1,40 @@
 
+// Author: Anna Kreshuk, March 2007
+
+/////////////////////////////////////////////////////////////////
+//
+//___A stress test for the TEntryList class and operations with it___
+//   
+//   The functions below test different properties of TEntryList
+//   - Test1() - assembling entry lists for smaller chains from the lists
+//               for bigger chains and vice versa + using them in TTree::Draw
+//   - Test2() - adding and subtracting entry lists in different order
+//               and using ">>+elist" in TTree::Draw
+//   - Test3() - transforming TEventList objects into TEntryList objects for a TChain
+//   - Test4() - same as Test3() but for a TTree 
+//
+//   To run in batch mode, do
+//     stressEntryList
+//     stressEntryList 1000
+//     stressEntryList 1000 10
+//   Here the 1st parameter is the number of entries in each TTree, 
+//            2nd parameter is the number of created files
+//   Default values are 10000 10
+//
+//   An example of output when all tests pass:
+// **********************************************************************
+// ***************Starting TEntryList stress test************************
+// **********************************************************************
+// **********Generating 10 data files, 2 trees of 10000 in each**********
+// **********************************************************************
+// Test1: Applying different entry lists to different chains --------- OK
+// Test2: Adding and subtracting entry lists-------------------------- OK
+// Test3: TEntryList and TEventList for TChain------------------------ OK
+// Test4: TEntryList and TEventList for TTree------------------------- OK
+// **********************************************************************
+// *******************Deleting the data files****************************
+// **********************************************************************
+
 #include "TApplication.h"
 #include "TEntryList.h"
 #include "TEventList.h"
@@ -10,8 +46,7 @@
 #include "TFile.h"
 #include "TSystem.h"
 
-
-Int_t stressEntryList(Int_t nentries=100000);
+Int_t stressEntryList(Int_t nentries = 10000, Int_t nfiles = 10);
 void MakeTrees(Int_t nentries, Int_t nfiles);
 
 Bool_t Test1()
@@ -20,7 +55,6 @@ Bool_t Test1()
    //making new entry lists out of parts of other entry lists
    //applying same entry lists to different chains, etc
 
-   Int_t nentries=0;
    Int_t wrongentries1, wrongentries2, wrongentries3, wrongentries4, wrongentries5;
    TChain *bigchain = new TChain("bigchain", "bigchain");
    bigchain->Add("stressEntryListTrees*.root/tree1");
@@ -35,7 +69,7 @@ Bool_t Test1()
    TEntryList *elist_small = (TEntryList*)gDirectory->Get("elist_small");
 
    //check if the entry list contains correct entries
-   Int_t range = nentries/100;
+   Int_t range = 100;
    TH1F *hx = new TH1F("hx", "hx", range, -range, range);
    smallchain->Draw("x >> hx", cut, "goff");
    TH1F *hcheck = new TH1F("hcheck", "hcheck", range, -range, range);
@@ -53,7 +87,7 @@ Bool_t Test1()
 
    //set this small entry list to the big chain and check the results
    bigchain->SetEntryList(elist_small);
-   bigchain->Draw("x >> hcheck", "", "goff");
+   bigchain->Draw("x >> hcheck_", "", "goff");
    wrongentries2 = 0;
    for (Int_t i=1; i<=range; i++){
       if (hx->GetBinContent(i) != hcheck->GetBinContent(i)){
@@ -103,6 +137,7 @@ Bool_t Test1()
    wrongentries4 = 0;
    for (Int_t i=1; i<=range; i++){
       if (hx->GetBinContent(i) != hcheck->GetBinContent(i)){
+         //printf("%d hx: %f hcheck %f\n", i, hx->GetBinContent(i), hcheck->GetBinContent(i));
          wrongentries4++;
       }
    }
@@ -409,12 +444,17 @@ void CleanUp(Int_t nfiles)
    }
 }
 
-Int_t stressEntryList(Int_t nentries)
+Int_t stressEntryList(Int_t nentries, Int_t nfiles)
 {
-   Int_t nfiles = 10;
+   //Int_t nentries = 1000;
+   //Int_t nfiles = 10;
    MakeTrees(nentries, nfiles);
    printf("**********************************************************************\n");
-   printf("***************Data files generated***********************************\n");
+   printf("***************Starting TEntryList stress test************************\n");
+   printf("**********************************************************************\n");
+   printf("**********Generating %d data files, 2 trees of %d in each**********\n", nfiles, nentries);
+   printf("**********************************************************************\n");
+
    Bool_t ok1=kTRUE;
    Bool_t ok2=kTRUE;
    Bool_t ok3=kTRUE;
@@ -448,16 +488,25 @@ Int_t stressEntryList(Int_t nentries)
       printf("Test4: TEntryList and TEventList for TTree------------------------- FAILED\n");
    }
 
+   printf("**********************************************************************\n");
+   printf("*******************Deleting the data files****************************\n");
+   printf("**********************************************************************\n");
    CleanUp(nfiles);
    return 0;
 }
-
+//_____________________________batch only_____________________
 #ifndef __CINT__
-int main(int argc, char **argv)
+
+int main(int argc, char *argv[]) 
 {
    TApplication theApp("App", &argc, argv);
-   stressEntryList();
+   Int_t nentries = 10000;
+   Int_t nfiles = 10;
+   if (argc > 1) nentries = atoi(argv[1]);
+   if (argc > 2) nfiles = atoi(argv[2]);
+   stressEntryList(nentries, nfiles);
    return 0;
 }
 
 #endif
+
