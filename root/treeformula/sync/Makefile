@@ -1,4 +1,4 @@
-CLEAN_TARGETS += *.log main *Dict* Event.root *~ Event$(ExeSuf) \
+CLEAN_TARGETS += *.log main *Dict* Event.root *~ copiedEvent$(ExeSuf) \
 	createfile.out readfile.out libEvent.$(DllSuf)\
 	Event.cxx Event.h EventLinkDef.h $(ALL_LIBRARIES) *.manifest
 TEST_TARGETS += load Simple
