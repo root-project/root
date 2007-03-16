@@ -432,6 +432,10 @@ N: Andreas Morsch
 E: Andreas.Morsch@cern.ch
 D: many contributions to the Virtual Monte Carlo
 
+N: Alja Mrak-Tadel
+E: Alja.Mrak.Tadel@cern.ch
+D: Several contributions to GUI and GL
+
 N: Johannes Muelmenstaedt
 E: jmuelmen@socrates.Berkeley.EDU
 D: kerberos5 authentication module
