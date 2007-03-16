@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.323 2007/03/03 15:07:32 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.324 2007/03/15 11:33:00 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -4918,6 +4918,12 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
    //    is given in the first line of the file with a syntax like
    //     A/D:Table[2]/F:Ntracks/I:astring/C
    //  otherwise branchDescriptor must be specified with the above syntax.
+   //  -If the type of the first variable is not specified, it is assumed to be "/F"
+   //  -if the type of any other variable is not specified, the type of the previous
+   //    variable is assumed. eg
+   //      x:y:z      (all variables are assumed of type "F"
+   //      x/D:y:z    (all variables are of type "D"
+   //      x:y/D:z    (x is type "F", y and z of type "D"
    //
    // Lines in the input file starting with "#" are ignored.
    //
@@ -4954,7 +4960,7 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
    //separated by ":"
    void *address = &bd[9000];
    char *bdcur = bd;
-   TString desc="", olddesc="";
+   TString desc="", olddesc="F";
    while (bdcur) {
       char *colon = strchr(bdcur,':');
       if (colon) *colon = 0;
