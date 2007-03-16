@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.13 2006/12/09 23:01:54 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.14 2007/02/21 17:13:05 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -70,6 +70,8 @@ TGLDisplayListCache::~TGLDisplayListCache()
    // Destroy display list cache - deleting internal GL display list block
    if (gVirtualGL)
       gVirtualGL->DeleteGLLists(fDLBase,fSize);
+   else
+      glDeleteLists(fDLBase, fSize);
 }
 
 //______________________________________________________________________________
@@ -79,18 +81,23 @@ void TGLDisplayListCache::Init()
    // fSize
    if (gVirtualGL)
       fDLBase = gVirtualGL->CreateGLLists(fSize);
+   else
+      fDLBase = glGenLists(fSize);
    fDLNextFree = fDLBase;
    TGLUtil::CheckError("TGLDisplayListCache::Init");
    fInit = kTRUE;
 }
 
 //______________________________________________________________________________
-Bool_t TGLDisplayListCache::Draw(const TGLDrawable & drawable, const TGLDrawFlags & flags) const
+Bool_t TGLDisplayListCache::Draw(const TGLDrawable & drawable, const TGLDrawFlags & flags)
 {
    // Draw (call) the GL dislay list entry associated with the drawable / LOD
    // flag pair, and return kTRUE. If no list item associated, return KFALSE.
    if (!fEnabled) {
       return kFALSE;
+   }
+   if (!fInit) {
+      Init();
    }
 
    // TODO: Cache the lookup here ? As may have many calls of same draw/qual in a row

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.h,v 1.8 2006/02/08 10:49:26 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.h,v 1.9 2006/12/09 23:01:54 rdm Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -84,7 +84,7 @@ public:
    void   Dump() const;
 
    // Cache entities (TLGDrawable) manipulators
-   Bool_t Draw(const TGLDrawable & drawable, const TGLDrawFlags & flags) const;
+   Bool_t Draw(const TGLDrawable & drawable, const TGLDrawFlags & flags);
    Bool_t OpenCapture(const TGLDrawable & drawable, const TGLDrawFlags & flags);
    Bool_t CloseCapture();
    Bool_t CaptureIsOpen() { return fCaptureOpen; }
