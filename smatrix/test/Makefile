@@ -29,12 +29,11 @@ ifneq ($(PLATFORM),win32)
 LIBM = -lm
 endif
 
-
-ifneq ($(GCCXML),)
+ifneq ($(useReflex),)
+GCCXML=yes
 CXXFLAGS+=-DUSE_REFLEX -g
 EXTRALIBS+= -lReflex -lCintex
 endif
-
 
 TESTSMATRIXOBJ     = testSMatrix.$(ObjSuf)
 TESTSMATRIXSRC     = testSMatrix.$(SrcSuf)
@@ -97,7 +96,7 @@ $(TESTIO):        $(TESTIOOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-ifneq ($(GCCXML),)
+ifneq ($(useReflex),)
 TrackDict.$(SrcSuf): 	Track.h TrackDict.xml
 			@echo "Generating dictionary $@ using gccxml ..."
 			#rootcint -gccxml -f $@ -c $^	
