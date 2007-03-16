@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.13 2007/02/15 15:04:40 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.14 2007/02/21 21:54:21 brun Exp $
 // Author: Guido Volpi, Olivier Couet 03/11/2006
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 #include <TLatex.h>
 #include <TPaveText.h>
 #include <TH1.h>
+#include <TColor.h>
 
 ClassImp(TPie)
 
@@ -231,8 +232,7 @@ Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
          y         = gY;
          rad       = gRadius,
          radOffset = gRadiusOffset;
-      }
-      else {
+      } else {
          x         = fX;
          y         = fY;
          rad       = fRadius;
@@ -272,8 +272,7 @@ Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
                result = -1;
             }
             else result  = i;
-         }
-         else {
+         } else {
             result = i;
          }
 
@@ -904,18 +903,16 @@ void TPie::Paint(Option_t *option)
          // set the color of the next slice
          if (pi>0) {
             arc->SetFillStyle(0);
-            arc->SetLineColor(fPieSlices[i]->GetFillColor()+100);
-         }
-         else {
+            arc->SetLineColor(TColor::GetColorBright((fPieSlices[i]->GetFillColor())));
+         } else {
             arc->SetFillStyle(0);
             if (optionLine==kTRUE) {
                arc->SetLineColor(fPieSlices[i]->GetLineColor());
                arc->SetLineStyle(fPieSlices[i]->GetLineStyle());
                arc->SetLineWidth(fPieSlices[i]->GetLineWidth());
-            }
-            else {
+            } else {
                arc->SetLineWidth(0);
-               arc->SetLineColor(fPieSlices[i]->GetFillColor()+100);
+               arc->SetLineColor(TColor::GetColorBright((fPieSlices[i]->GetFillColor())));
             }
          }
          // Paint the slice
@@ -953,8 +950,7 @@ void TPie::Paint(Option_t *option)
          arc->SetLineColor(fPieSlices[i]->GetLineColor());
          arc->SetLineStyle(fPieSlices[i]->GetLineStyle());
          arc->SetLineWidth(fPieSlices[i]->GetLineWidth());
-      }
-      else {
+      } else {
          arc->SetLineWidth(0);
          arc->SetLineColor(fPieSlices[i]->GetFillColor());
       }
