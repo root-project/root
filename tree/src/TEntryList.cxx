@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.9 2007/01/24 17:44:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.10 2007/03/16 10:37:01 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -9,86 +9,98 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-// TEntryList
-//
-// Stores entry numbers. 
-//
-// There are two types of entry lists:
-// - for a TTree (fBlocks data member is non-zero)
-//   Entry numbers are stored in TEntryListBlocks, which, in their turn, are stored
-//   in the TObjArray fBlocks. The range of the entry numbers is cut into intervals
-//   of kBlockSize entries (currently 64000), so that the first block contains
-//   information which entries out of the first 64000 pass the selection, the second
-//   block - which entries out of the 64000-127999 interval pass the selection, etc.
-//   Some blocks, obviously, might be empty. The internal representation of entry
-//   numbers in the blocks is described in the TEntryListBlock class description, and
-//   this representation might be changed by calling OptimizeStorage() function
-//   (when the list is filled via the Enter() function, this is done automatically).
-//   Individual entry lists can be merged (functions Merge() and Add())
-//   to make an entry list for a TChain of corresponding TTrees.
-//  
-// - for a TChain (fLists data member is non-zero)
-//   It contains a TList of sub-lists (TEntryList objects, corresponding to each TTree)
-//   Trees and lists are matched by the TTree name and its file name (full path). 
-//   All sub-lists are returned by the GetLists() function and individual lists are
-//   returned by GetEntryList() function. Such lists are no different from the lists for
-//   TTrees, described above.
-//
-//              Operations on entry lists (see also function comments):
-//              ------------------------------------------------------
-// - Add() - if the lists are for the same tree, adds all the entries of the second list
-//           to the first list. If the lists are for different trees, creates a TEntryList
-//           with 2 sublists for each TTree. If the lists are for TChains, merges the ones
-//           for the same trees and adds new sublists for the TTrees that were not included
-//           in the first TEntryList
-// - Subtract() - if the lists are for the same TTree, removes the entries of the second
-//                list from the first list. If the lists are for TChains, loops over all
-//                sub-lists
-// - GetEntry(n) - returns the n-th entry number 
-// - Next()      - returns next entry number. Note, that this function is 
-//                 much faster than GetEntry, and it's called when GetEntry() is called
-//                 for 2 or more indices in a row.
-//
-//
-//                      TTree::Draw() and TChain::Draw():
-//                      --------------------------------
-//   Use option "entrylist" to write the results of TTree::Draw and TChain::Draw into 
-//   an entry list
-//   Example:
-//      tree->Draw(">>elist", "x<0 && y>0", "entrylist");
-//      TEntryList *elist = (TEntryList*)gDirectory->Get("elist");
-//
-//                                  TSelectors:
-//                                  -----------
-//   To fill an TEntryList from a TSelector correctly, one must add the TEntryList object
-//   to the output list of the selector (TSelector::fOutput). This is the only way to 
-//   make the sub-lists of the TEntryList switch when the current tree of the TChain is
-//   changed. 
-//
-//     Using a TEntryList as input (TTree::SetEntryList() and TChain::SetEntryList())
-//     ------------------------------------------------------------------------------
-//   while the TTree::SetEntryList() function is only setting the TTree::fEntryList
-//   data member, the same function in TChain also finds correspondance between
-//   the TTrees of this TChain and the sub-lists of this TEntryList.
-//
-//                        TEntryList and the current directory:
-//                        ------------------------------------
-//   TEntryList objects are automatically added to the current directory (like TTrees).
-//   However, in case of a TEntryList for a chain, only the top-level entry list is added,
-//   not the sub-lists for specific trees. Placing entry lists in the current directory
-//   allows calling them as a part of a TTreeFormula expression, so if the user wants 
-//   to extract a sublist from a TChain entry list via the GetEntryList() or some other
-//   function, he has to add it to the current directory to be able to use it in 
-//   TTreeFormula expressions.
-//
-//                       TEntryList and TEventList
-//                       -------------------------
-//   TTree::SetEventList() and TChain::SetEventList() transform a TEventList into a TEntryList
-//   See comments to those functions for more details
-//   
-// 
-//////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
+/* Begin_Html
+<center><h2>TEntryList: a List of entry numbers in a TTree or TChain</h2></center>
+
+There are two types of entry lists:
+<ol>
+<li> for a TTree (fBlocks data member is non-zero)
+  Entry numbers are stored in TEntryListBlocks, which, in their turn, are stored
+  in the TObjArray fBlocks. The range of the entry numbers is cut into intervals
+  of kBlockSize entries (currently 64000), so that the first block contains
+  information which entries out of the first 64000 pass the selection, the second
+  block - which entries out of the 64000-127999 interval pass the selection, etc.
+  Some blocks, obviously, might be empty. The internal representation of entry
+  numbers in the blocks is described in the TEntryListBlock class description, and
+  this representation might be changed by calling OptimizeStorage() function
+  (when the list is filled via the Enter() function, this is done automatically).
+  Individual entry lists can be merged (functions Merge() and Add())
+  to make an entry list for a TChain of corresponding TTrees.
+End_Html
+Begin_Macro(source)
+entrylist_figure1.C
+End_Macro
+
+Begin_Html
+ 
+<li> for a TChain (fLists data member is non-zero)
+  It contains a TList of sub-lists (TEntryList objects, corresponding to each TTree)
+  Trees and lists are matched by the TTree name and its file name (full path). 
+  All sub-lists are returned by the GetLists() function and individual lists are
+  returned by GetEntryList() function. Such lists are no different from the lists for
+  TTrees, described above.
+End_Html
+Begin_Macro(source)
+entrylist_figure2.C
+End_Macro
+
+Begin_Html
+</ol>
+             <h4>Operations on entry lists</h4>
+
+<ul>
+<li> <b>Add</b>() - if the lists are for the same tree, adds all the entries of the second list
+          to the first list. If the lists are for different trees, creates a TEntryList
+          with 2 sublists for each TTree. If the lists are for TChains, merges the ones
+          for the same trees and adds new sublists for the TTrees that were not included
+          in the first TEntryList
+<li> <b>Subtract</b>() - if the lists are for the same TTree, removes the entries of the second
+               list from the first list. If the lists are for TChains, loops over all
+               sub-lists
+<li> <b>GetEntry(n)</b> - returns the n-th entry number 
+<li> <b>Next</b>()      - returns next entry number. Note, that this function is 
+                much faster than GetEntry, and it's called when GetEntry() is called
+                for 2 or more indices in a row.
+</ul>
+
+                     <h4>TTree::Draw() and TChain::Draw()</h4>
+
+  Use option <b>entrylist</b> to write the results of TTree::Draw and TChain::Draw into 
+  an entry list. Example:
+<pre>
+     tree->Draw(">>elist", "x<0 && y>0", "entrylist");
+     TEntryList *elist = (TEntryList*)gDirectory->Get("elist");
+</pre>
+
+                                <h4> TSelectors</h4>
+
+  To fill an TEntryList from a TSelector correctly, one must add the TEntryList object
+  to the output list of the selector (TSelector::fOutput). This is the only way to 
+  make the sub-lists of the TEntryList switch when the current tree of the TChain is
+  changed. 
+
+   <h4> Using a TEntryList as input (TTree::SetEntryList() and TChain::SetEntryList())</h4>
+
+  while the TTree::SetEntryList() function is only setting the TTree::fEntryList
+  data member, the same function in TChain also finds correspondance between
+  the TTrees of this TChain and the sub-lists of this TEntryList.
+
+                       <h4>TEntryList and the current directory</h4>
+
+  TEntryList objects are automatically added to the current directory (like TTrees).
+  However, in case of a TEntryList for a chain, only the top-level entry list is added,
+  not the sub-lists for specific trees. Placing entry lists in the current directory
+  allows calling them as a part of a TTreeFormula expression, so if the user wants 
+  to extract a sublist from a TChain entry list via the GetEntryList() or some other
+  function, he has to add it to the current directory to be able to use it in 
+  TTreeFormula expressions.
+
+                      <h4>TEntryList and TEventList</h4>
+
+  TTree::SetEventList() and TChain::SetEventList() transform a TEventList into a TEntryList
+  See comments to those functions for more details
+End_Html */
 
 
 #include "TEntryList.h"

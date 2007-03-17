@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.cxx,v 1.5 2006/12/19 14:02:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.cxx,v 1.6 2007/01/22 07:57:13 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -9,31 +9,37 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-// TEntryListBlock
-//
-// Used internally in TEntryList to store the entry numbers. 
-//
-// There are 2 ways to represent entry numbers in a TEntryListBlock:
-// 1) as bits, where passing entry numbers are assigned 1, not passing - 0
-// 2) as a simple array of entry numbers
-// In both cases, a UShort_t* is used. The second option is better in case
-// less than 1/16 of entries passes the selection, and the representation can be
-// changed by calling OptimizeStorage() function. 
-// When the block is being filled, it's always stored as bits, and the OptimizeStorage()
-// function is called by TEntryList when it starts filling the next block. If
-// Enter() or Remove() is called after OptimizeStorage(), representation is 
-// again changed to 1).
-//
-// Operations on blocks (see also function comments):
-// - Merge() - adds all entries from one block to the other. If the first block 
-//             uses array representation, it's changed to bits representation only
-//             if the total number of passing entries is still less than kBlockSize
-// - GetEntry(n) - returns n-th non-zero entry.
-// - Next()      - return next non-zero entry. In case of representation 1), Next()
-//                 is faster than GetEntry()
-//
-//////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
+/* Begin_Html
+<center><h2>TEntryListBlock: Used by TEntryList to store the entry numbers</h2></center>
+ There are 2 ways to represent entry numbers in a TEntryListBlock:
+<ol>
+ <li> as bits, where passing entry numbers are assigned 1, not passing - 0
+ <li> as a simple array of entry numbers
+ </ol>
+ In both cases, a UShort_t* is used. The second option is better in case
+ less than 1/16 of entries passes the selection, and the representation can be
+ changed by calling OptimizeStorage() function. 
+ When the block is being filled, it's always stored as bits, and the OptimizeStorage()
+ function is called by TEntryList when it starts filling the next block. If
+ Enter() or Remove() is called after OptimizeStorage(), representation is 
+ again changed to 1). 
+End_Html
+Begin_Macro(source)
+entrylistblock_figure1.C
+End_Macro
+
+Begin_Html
+ <h4>Operations on blocks (see also function comments)</h4>
+<ul>
+ <li> <b>Merge</b>() - adds all entries from one block to the other. If the first block 
+             uses array representation, it's changed to bits representation only
+             if the total number of passing entries is still less than kBlockSize
+ <li> <b>GetEntry(n)</b> - returns n-th non-zero entry.
+ <li> <b>Next</b>()      - return next non-zero entry. In case of representation 1), Next()
+                 is faster than GetEntry()
+</ul>
+End_Html */
 
 
 #include "TEntryListBlock.h"
