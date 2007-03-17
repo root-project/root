@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.49 2007/02/05 10:40:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.50 2007/03/16 17:06:19 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -122,7 +122,7 @@ private:
 
    static Int_t  fgMaxQueries;      //Max number of queries fully kept
 
-   virtual void  RedirectOutput();
+   void          RedirectOutput();
    Int_t         CatMotd();
    Int_t         UnloadPackage(const char *package);
    Int_t         UnloadPackages();
@@ -131,7 +131,7 @@ private:
    // Query handlers
    void          AddLogFile(TProofQueryResult *pq);
    Int_t         CleanupQueriesDir();
-   void          FinalizeQuery(TVirtualProofPlayer *p, TProofQueryResult *pq);
+   void          FinalizeQuery(TProofQueryResult *pq);
    TList        *GetDataSet(const char *name);
 
    TProofQueryResult *MakeQueryResult(Long64_t nentries, const char *opt,
@@ -143,7 +143,7 @@ private:
    void          SaveQuery(TQueryResult *qr, const char *fout = 0);
    void          SetQueryRunning(TProofQueryResult *pq);
 
-   virtual Int_t LockSession(const char *sessiontag, TProofLockPath **lck);
+   Int_t         LockSession(const char *sessiontag, TProofLockPath **lck);
    Int_t         CleanupSession(const char *sessiontag);
    void          ScanPreviousQueries(const char *dir);
 
@@ -161,6 +161,9 @@ protected:
 
    virtual void  HandleSocketInputDuringProcess();
    virtual Int_t Setup();
+
+   virtual void  MakePlayer();
+   virtual void  DeletePlayer();
 
    virtual void  SetShutdownTimer(Bool_t, Int_t) { }
 

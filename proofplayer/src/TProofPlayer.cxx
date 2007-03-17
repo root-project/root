@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.102 2007/02/06 00:07:48 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.103 2007/03/16 17:06:19 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -47,6 +47,8 @@
 #include "TEventList.h"
 #include "TProofLimitsFinder.h"
 #include "TSortedList.h"
+#include "TTree.h"
+#include "TDSet.h"
 #include "TTreeDrawArgsParser.h"
 #include "TCanvas.h"
 #include "TNamed.h"
@@ -911,9 +913,16 @@ Long64_t TProofPlayer::DrawSelect(TDSet * /*set*/, const char * /*varexp*/,
    // Draw (may not be used in this class).
 
    MayNotUse("DrawSelect");
-   return 0;
+   return -1;
 }
 
+//______________________________________________________________________________
+void TProofPlayer::HandleGetTreeHeader(TMessage *)
+{
+   // Handle tree header request.
+
+   MayNotUse("HandleGetTreeHeader|");
+}
 
 
 //------------------------------------------------------------------------------
@@ -2159,17 +2168,59 @@ Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
    return kFALSE; // ignored?
 }
 
-
 //______________________________________________________________________________
-Long64_t TProofPlayerSlave::DrawSelect(TDSet * /*set*/, const char * /*varexp*/,
-                                       const char * /*selection*/, Option_t * /*option*/,
-                                       Long64_t /*nentries*/, Long64_t /*firstentry*/)
+void TProofPlayerSlave::HandleGetTreeHeader(TMessage *mess)
 {
-   // Draw (may not be used in this class).
+   // Handle tree header request.
 
-   MayNotUse("DrawSelect");
-   return -1;
+   TMessage answ(kMESS_OBJECT);
+
+   TDSet *dset;
+   (*mess) >> dset;
+   dset->Reset();
+   TDSetElement *e = dset->Next();
+   Long64_t entries = 0;
+   TFile *f = 0;
+   TTree *t = 0;
+   if (!e) {
+      PDB(kGlobal, 1) Info("HandleGetTreeHeader", "empty TDSet");
+   } else {
+      f = TFile::Open(e->GetFileName());
+      t = 0;
+      if (f) {
+         t = (TTree*) f->Get(e->GetObjName());
+         if (t) {
+            t->SetMaxVirtualSize(0);
+            t->DropBaskets();
+            entries = t->GetEntries();
+
+            // compute #entries in all the files
+            while ((e = dset->Next()) != 0) {
+               TFile *f1 = TFile::Open(e->GetFileName());
+               if (f1) {
+                  TTree *t1 = (TTree*) f1->Get(e->GetObjName());
+                  if (t1) {
+                     entries += t1->GetEntries();
+                     delete t1;
+                  }
+                  delete f1;
+               }
+            }
+            t->SetMaxEntryLoop(entries);   // this field will hold the total number of entries ;)
+         }
+      }
+   }
+   if (t)
+      answ << TString("Success") << t;
+   else
+      answ << TString("Failed") << t;
+
+   fSocket->Send(answ);
+
+   SafeDelete(t);
+   SafeDelete(f);
 }
+
 
 //------------------------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.41 2007/01/30 16:34:54 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TVirtualProofPlayer.h,v 1.1 2007/03/16 17:06:19 rdm Exp $
 // Author: Fons Rademakers   15/03/07
 
 /*************************************************************************
@@ -54,6 +54,7 @@ public:
    virtual Long64_t  DrawSelect(TDSet *set, const char *varexp,
                                 const char *selection, Option_t *option = "",
                                 Long64_t nentries = -1, Long64_t firstentry = 0) = 0;
+   virtual void      HandleGetTreeHeader(TMessage *mess) = 0;
 
    virtual void      StopProcess(Bool_t abort, Int_t timeout = -1) = 0;
    virtual void      AddInput(TObject *inp) = 0;

@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.38 2007/01/29 15:11:10 rdm Exp $ */
+/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.39 2007/03/16 17:06:19 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -50,15 +50,6 @@
 #pragma link C++ class TAdaptivePacketizer+;
 #pragma link C++ class TCondor+;
 #pragma link C++ class TCondorSlave+;
-#pragma link C++ class TProofDraw+;
-#pragma link C++ class TProofDrawEventList+;
-#pragma link C++ class TProofDrawHist+;
-#pragma link C++ class TProofDrawProfile+;
-#pragma link C++ class TProofDrawProfile2D+;
-#pragma link C++ class TProofDrawGraph+;
-#pragma link C++ class TProofDrawPolyMarker3D+;
-#pragma link C++ class TProofDrawListOfGraphs+;
-#pragma link C++ class TProofDrawListOfPolyMarkers3D+;
 #pragma link C++ class TProofNodeInfo;
 #pragma link C++ class TProofResources;
 #pragma link C++ class TProofResourcesStatic;
@@ -67,12 +58,6 @@
 #pragma link C++ class TPerfEvent+;
 #pragma link C++ class TStatus+;
 #pragma link C++ class TFileMerger+;
-#pragma link C++ class TProofDrawListOfGraphs::Point3D_t+;
-#pragma link C++ class TProofDrawListOfPolyMarkers3D::Point4D_t+;
-#pragma link C++ class std::vector<TProofDrawListOfGraphs::Point3D_t>+;
-#pragma link C++ class std::vector<TProofDrawListOfPolyMarkers3D::Point4D_t>+;
-#pragma link C++ class TProofVectorContainer<TProofDrawListOfGraphs::Point3D_t>+;
-#pragma link C++ class TProofVectorContainer<TProofDrawListOfPolyMarkers3D::Point4D_t>+;
 #pragma link C++ class std::pair<TDSet*, TString>;
 #pragma link C++ class std::pair<TDSetElement*, TString>;
 

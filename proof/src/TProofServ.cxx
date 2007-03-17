@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.164 2007/02/12 13:05:32 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.165 2007/03/16 17:06:19 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -75,7 +75,6 @@
 #include "TSystem.h"
 #include "TTimeStamp.h"
 #include "TUrl.h"
-#include "TTree.h"
 #include "TPluginManager.h"
 #include "TObjString.h"
 #include "compiledata.h"
@@ -83,6 +82,7 @@
 #include "TProofNodeInfo.h"
 #include "TFileInfo.h"
 #include "TMutex.h"
+#include "TClass.h"
 
 // global proofserv handle
 TProofServ *gProofServ = 0;
@@ -1137,53 +1137,10 @@ void TProofServ::HandleSocketInput()
       case kPROOF_GETTREEHEADER:
          {
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETTREEHEADER", "Enter");
-            TMessage answ(kMESS_OBJECT);
 
-            TDSet* dset;
-            (*mess) >> dset;
-            dset->Reset();
-            TDSetElement *e = dset->Next();
-            Long64_t entries = 0;
-            TFile *f = 0;
-            TTree *t = 0;
-            if (!e) {
-               PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETTREEHEADER",
-                                    "empty TDSet");
-            } else {
-               f = TFile::Open(e->GetFileName());
-               t = 0;
-               if (f) {
-                  t = (TTree*) f->Get(e->GetObjName());
-                  if (t) {
-                     t->SetMaxVirtualSize(0);
-                     t->DropBaskets();
-                     entries = t->GetEntries();
-
-                     // compute #entries in all the files
-                     while ((e = dset->Next()) != 0) {
-                        TFile *f1 = TFile::Open(e->GetFileName());
-                        if (f1) {
-                           TTree* t1 = (TTree*) f1->Get(e->GetObjName());
-                           if (t1) {
-                              entries += t1->GetEntries();
-                              delete t1;
-                           }
-                           delete f1;
-                        }
-                     }
-                     t->SetMaxEntryLoop(entries);   // this field will hold the total number of entries ;)
-                  }
-               }
-            }
-            if (t)
-               answ << TString("Success") << t;
-            else
-               answ << TString("Failed") << t;
-
-            fSocket->Send(answ);
-
-            SafeDelete(t);
-            SafeDelete(f);
+            TVirtualProofPlayer *p = TVirtualProofPlayer::Create("slave", 0, fSocket);
+            p->HandleGetTreeHeader(mess);
+            delete p;
 
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETTREEHEADER", "Done");
          }
@@ -1637,7 +1594,7 @@ void TProofServ::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TProofServ::RedirectOutput()
+R__HIDDEN void TProofServ::RedirectOutput()
 {
    // Redirect stdout to a log file. This log file will be flushed to the
    // client or master after each command.
@@ -1855,8 +1812,10 @@ void TProofServ::SendStatistics()
    // Send statistics of slave server to master or client.
 
    Long64_t bytesread = 0;
-   if (IsMaster()) bytesread = fProof->GetBytesRead();
-   else bytesread = TFile::GetFileBytesRead();
+   if (IsMaster())
+      bytesread = fProof->GetBytesRead();
+   else
+      bytesread = TFile::GetFileBytesRead();
 
    TMessage mess(kPROOF_GETSTATS);
    TString workdir = gSystem->WorkingDirectory();  // expect TString on other side
@@ -1882,7 +1841,7 @@ void TProofServ::SendParallel()
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::UnloadPackage(const char *package)
+R__HIDDEN Int_t TProofServ::UnloadPackage(const char *package)
 {
    // Removes link to package in working directory,
    // removes entry from include path,
@@ -1921,7 +1880,7 @@ Int_t TProofServ::UnloadPackage(const char *package)
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::UnloadPackages()
+R__HIDDEN Int_t TProofServ::UnloadPackages()
 {
    // Unloads all enabled packages. Returns -1 in case of error, 0 otherwise.
 
@@ -2268,7 +2227,7 @@ TProofServ *TProofServ::This()
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::OldAuthSetup(TString &conf)
+R__HIDDEN Int_t TProofServ::OldAuthSetup(TString &conf)
 {
    // Setup authentication related stuff for old versions.
    // Provided for backward compatibility.
@@ -2317,10 +2276,11 @@ Int_t TProofServ::OldAuthSetup(TString &conf)
 }
 
 //______________________________________________________________________________
-TProofQueryResult *TProofServ::MakeQueryResult(Long64_t nent, const char *opt,
-                                               TList *inlist, Long64_t fst,
-                                               TDSet *dset, const char *selec,
-                                               TEventList *evl)
+R__HIDDEN TProofQueryResult *TProofServ::MakeQueryResult(Long64_t nent,
+                                                         const char *opt,
+                                                         TList *inlist, Long64_t fst,
+                                                         TDSet *dset, const char *selec,
+                                                         TEventList *evl)
 {
    // Create a TProofQueryResult instance for this query.
 
@@ -2338,7 +2298,7 @@ TProofQueryResult *TProofServ::MakeQueryResult(Long64_t nent, const char *opt,
 }
 
 //______________________________________________________________________________
-void TProofServ::SetQueryRunning(TProofQueryResult *pq)
+R__HIDDEN void TProofServ::SetQueryRunning(TProofQueryResult *pq)
 {
    // Set query in running state.
 
@@ -2370,7 +2330,7 @@ void TProofServ::SetQueryRunning(TProofQueryResult *pq)
 }
 
 //______________________________________________________________________________
-void TProofServ::AddLogFile(TProofQueryResult *pq)
+R__HIDDEN void TProofServ::AddLogFile(TProofQueryResult *pq)
 {
    // Add part of log file concerning TQueryResult pq to its macro
    // container.
@@ -2403,20 +2363,20 @@ void TProofServ::AddLogFile(TProofQueryResult *pq)
 }
 
 //______________________________________________________________________________
-void TProofServ::FinalizeQuery(TVirtualProofPlayer *p, TProofQueryResult *pq)
+R__HIDDEN void TProofServ::FinalizeQuery(TProofQueryResult *pq)
 {
    // Final steps after Process() to complete the TQueryResult instance.
 
-   if (!pq || !p) {
+   if (!pq || !fPlayer) {
       Warning("FinalizeQuery",
-              "bad inputs: query = %p, player = %p ", pq ? pq : 0, p ? p : 0);
+              "bad inputs: query = %p, player = %p ", pq ? pq : 0, fPlayer ? fPlayer : 0);
       return;
    }
 
    Int_t qn = pq->GetSeqNum();
-   Long64_t np = p->GetEventsProcessed();
-   TVirtualProofPlayer::EExitStatus est = p->GetExitStatus();
-   TList *out = p->GetOutputList();
+   Long64_t np = fPlayer->GetEventsProcessed();
+   TVirtualProofPlayer::EExitStatus est = fPlayer->GetExitStatus();
+   TList *out = fPlayer->GetOutputList();
 
    fProof->AskStatistics();
 
@@ -2453,7 +2413,7 @@ void TProofServ::FinalizeQuery(TVirtualProofPlayer *p, TProofQueryResult *pq)
       break;
    default:
       Warning("FinalizeQuery",
-              "query %d: unknown exit status (%d)", qn, p->GetExitStatus());
+              "query %d: unknown exit status (%d)", qn, fPlayer->GetExitStatus());
    }
 
    // Fill some variables
@@ -2506,7 +2466,7 @@ void TProofServ::FinalizeQuery(TVirtualProofPlayer *p, TProofQueryResult *pq)
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::CleanupQueriesDir()
+R__HIDDEN Int_t TProofServ::CleanupQueriesDir()
 {
    // Remove all queries results referring to previous sessions
 
@@ -2546,7 +2506,7 @@ Int_t TProofServ::CleanupQueriesDir()
 }
 
 //______________________________________________________________________________
-void TProofServ::ScanPreviousQueries(const char *dir)
+R__HIDDEN void TProofServ::ScanPreviousQueries(const char *dir)
 {
    // Scan the queries directory for the results of previous queries.
    // The headers of the query results found are loaded in fPreviousQueries.
@@ -2620,7 +2580,7 @@ void TProofServ::ScanPreviousQueries(const char *dir)
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::LockSession(const char *sessiontag, TProofLockPath **lck)
+R__HIDDEN Int_t TProofServ::LockSession(const char *sessiontag, TProofLockPath **lck)
 {
    // Try locking query area of session tagged sessiontag.
    // The id of the locking file is returned in fid and must be
@@ -2678,7 +2638,7 @@ Int_t TProofServ::LockSession(const char *sessiontag, TProofLockPath **lck)
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::CleanupSession(const char *sessiontag)
+R__HIDDEN Int_t TProofServ::CleanupSession(const char *sessiontag)
 {
    // Cleanup query dir qdir.
 
@@ -2720,7 +2680,7 @@ Int_t TProofServ::CleanupSession(const char *sessiontag)
 }
 
 //______________________________________________________________________________
-void TProofServ::SaveQuery(TQueryResult *qr, const char *fout)
+R__HIDDEN void TProofServ::SaveQuery(TQueryResult *qr, const char *fout)
 {
    // Save current status of query 'qr' to file name fout.
    // If fout == 0 (default) use the default name.
@@ -2749,7 +2709,7 @@ void TProofServ::SaveQuery(TQueryResult *qr, const char *fout)
 }
 
 //______________________________________________________________________________
-void TProofServ::RemoveQuery(const char *queryref)
+R__HIDDEN void TProofServ::RemoveQuery(const char *queryref)
 {
    // Remove everything about query queryref.
 
@@ -2780,7 +2740,7 @@ void TProofServ::RemoveQuery(const char *queryref)
 }
 
 //______________________________________________________________________________
-void TProofServ::RemoveQuery(TQueryResult *qr, Bool_t soft)
+R__HIDDEN void TProofServ::RemoveQuery(TQueryResult *qr, Bool_t soft)
 {
    // Remove everything about query qr. If soft = TRUE leave a track
    // in memory with the relevant info
@@ -2816,8 +2776,8 @@ void TProofServ::RemoveQuery(TQueryResult *qr, Bool_t soft)
 }
 
 //______________________________________________________________________________
-TProofQueryResult *TProofServ::LocateQuery(TString queryref,
-                                           Int_t &qry, TString &qdir)
+R__HIDDEN TProofQueryResult *TProofServ::LocateQuery(TString queryref,
+                                                     Int_t &qry, TString &qdir)
 {
    // Locate query referenced by queryref. Return pointer to instance
    // in memory, if any, or 0. Fills qdir with the query specific directory
@@ -3013,8 +2973,6 @@ void TProofServ::HandleProcess(TMessage *mess)
    if (evl)
       dset->SetEventList(evl);
 
-   TVirtualProofPlayer *p = 0;
-
    if (IsTopMaster()) {
 
       TProofQueryResult *pq = 0;
@@ -3110,22 +3068,13 @@ void TProofServ::HandleProcess(TMessage *mess)
          fSocket->Send(m);
 
          // Create player
-         if (IsParallel()) {
-            // remote mode
-            p = fProof->MakePlayer();
-         } else {
-            // sequential mode
-            p = fProof->MakePlayer("slave", fSocket);
-         }
+         MakePlayer();
 
          // Add query results to the player lists
-         p->AddQueryResult(pq);
+         fPlayer->AddQueryResult(pq);
 
          // Set query currently processed
-         p->SetCurrentQuery(pq);
-
-         // Set player
-         fPlayer = p;
+         fPlayer->SetCurrentQuery(pq);
 
          // Setup data set
          if (dset->IsA() == TDSetProxy::Class())
@@ -3135,36 +3084,36 @@ void TProofServ::HandleProcess(TMessage *mess)
          TIter next(input);
          for (TObject *o; (o = next()); ) {
             PDB(kGlobal, 2) Info("HandleProcess", "adding: %s", o->GetName());
-            p->AddInput(o);
+            fPlayer->AddInput(o);
          }
 
          // Add the unique query tag as TNamed object to the input list
          // so that it is available in TSelectors for monitoring
-         p->AddInput(new TNamed("PROOF_QueryTag",Form("%s:%s",pq->GetTitle(),pq->GetName())));
+         fPlayer->AddInput(new TNamed("PROOF_QueryTag",Form("%s:%s",pq->GetTitle(),pq->GetName())));
 
          // Process
-         PDB(kGlobal, 1) Info("HandleProcess", "calling %s::Process()", p->IsA()->GetName());
-         p->Process(dset, filename, opt, nentries, first);
+         PDB(kGlobal, 1) Info("HandleProcess", "calling %s::Process()", fPlayer->IsA()->GetName());
+         fPlayer->Process(dset, filename, opt, nentries, first);
 
          // Return number of events processed
-         if (p->GetExitStatus() != TVirtualProofPlayer::kFinished) {
+         if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kFinished) {
             Bool_t abort =
-              (p->GetExitStatus() == TVirtualProofPlayer::kAborted) ? kTRUE : kFALSE;
+              (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) ? kTRUE : kFALSE;
             TMessage m(kPROOF_STOPPROCESS);
             if (fProtocol > 8) {
-               m << p->GetEventsProcessed() << abort;
+               m << fPlayer->GetEventsProcessed() << abort;
             } else {
-               m << p->GetEventsProcessed();
+               m << fPlayer->GetEventsProcessed();
             }
             fSocket->Send(m);
          }
 
          // Complete filling of the TQueryResult instance
-         FinalizeQuery(p, pq);
+         FinalizeQuery(pq);
 
          // Send back the results
          TQueryResult *pqr = pq->CloneInfo();
-         if (p->GetExitStatus() != TVirtualProofPlayer::kAborted && p->GetOutputList()) {
+         if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted && fPlayer->GetOutputList()) {
 
             PDB(kGlobal, 2) Info("HandleProcess","Sending results");
             if (fProtocol > 10) {
@@ -3172,10 +3121,10 @@ void TProofServ::HandleProcess(TMessage *mess)
                TMessage m(kPROOF_MESSAGE);
                TMessage mbuf(kPROOF_OUTPUTOBJECT);
                // Objects in the output list
-               Int_t olsz = p->GetOutputList()->GetSize();
+               Int_t olsz = fPlayer->GetOutputList()->GetSize();
                // Message for the client
                m << TString(Form("master-%s: sending output: %d objs",
-                                   fOrdinal.Data(), olsz));
+                                 fOrdinal.Data(), olsz));
                m << (Bool_t) kFALSE;
                fSocket->Send(m);
                // Send light query info
@@ -3185,7 +3134,7 @@ void TProofServ::HandleProcess(TMessage *mess)
 
                Int_t ns = 0;
                Int_t totsz = 0;
-               TIter nxo(p->GetOutputList());
+               TIter nxo(fPlayer->GetOutputList());
                TObject *o = 0;
                while ((o = nxo())) {
                   ns++;
@@ -3204,7 +3153,7 @@ void TProofServ::HandleProcess(TMessage *mess)
                // Total size
                m.Reset();
                m << TString(Form("master-%s: grand total: sent %d objects, size: %d bytes",
-                                      fOrdinal.Data(), olsz, totsz));
+                                 fOrdinal.Data(), olsz, totsz));
                m << (Bool_t) kTRUE;
                fSocket->Send(m);
             } else if (fProtocol > 6) {
@@ -3214,7 +3163,7 @@ void TProofServ::HandleProcess(TMessage *mess)
                mbuf.WriteObject(pq);
                // Sizes
                Int_t blen = mbuf.Length();
-               Int_t olsz = p->GetOutputList()->GetSize();
+               Int_t olsz = fPlayer->GetOutputList()->GetSize();
                // Message for the client
                TString cmsg = Form("master-%s: sending output: %d objs, %d bytes",
                                    fOrdinal.Data(), olsz, blen);
@@ -3226,16 +3175,16 @@ void TProofServ::HandleProcess(TMessage *mess)
             } else {
                // TQueryResult unknow to client: send the output list only
                PDB(kGlobal, 2) Info("HandleProcess","Sending output list");
-               fSocket->SendObject(p->GetOutputList(), kPROOF_OUTPUTLIST);
+               fSocket->SendObject(fPlayer->GetOutputList(), kPROOF_OUTPUTLIST);
             }
          } else {
-            if (p->GetExitStatus() != TVirtualProofPlayer::kAborted)
+            if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted)
                Warning("HandleProcess","The output list is empty!");
             fSocket->SendObject(0, kPROOF_OUTPUTLIST);
          }
 
          // Remove aborted queries from the list
-         if (p->GetExitStatus() == TVirtualProofPlayer::kAborted) {
+         if (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) {
             RemoveQuery(pq);
          } else {
             // Keep in memory only light infor about a query
@@ -3248,8 +3197,7 @@ void TProofServ::HandleProcess(TMessage *mess)
             }
          }
 
-         // Player cleanup
-         fProof->SetPlayer(0);
+         DeletePlayer();
 
       } // Loop on submitted queries
 
@@ -3261,19 +3209,7 @@ void TProofServ::HandleProcess(TMessage *mess)
       // Set not idle
       fIdle = kFALSE;
 
-      // Create player
-      if (IsParallel()) {
-         // remote mode
-         p = fProof->MakePlayer();
-      } else {
-         // slave or sequential mode
-         p = TVirtualProofPlayer::Create("slave", 0, fSocket);
-         if (IsMaster())
-            fProof->SetPlayer(p);
-      }
-
-      // Set player
-      fPlayer = p;
+      MakePlayer();
 
       // Setup data set
       if (dset->IsA() == TDSetProxy::Class())
@@ -3283,28 +3219,28 @@ void TProofServ::HandleProcess(TMessage *mess)
       TIter next(input);
       for (TObject *o; (o = next()); ) {
          PDB(kGlobal, 2) Info("HandleProcess", "adding: %s", o->GetName());
-         p->AddInput(o);
+         fPlayer->AddInput(o);
       }
 
       // Process
-      PDB(kGlobal, 1) Info("HandleProcess", "calling %s::Process()", p->IsA()->GetName());
-      p->Process(dset, filename, opt, nentries, first);
+      PDB(kGlobal, 1) Info("HandleProcess", "calling %s::Process()", fPlayer->IsA()->GetName());
+      fPlayer->Process(dset, filename, opt, nentries, first);
 
       // Return number of events processed
       TMessage m(kPROOF_STOPPROCESS);
-      m << p->GetEventsProcessed();
+      m << fPlayer->GetEventsProcessed();
       fSocket->Send(m);
 
       // Send back the results
-      if (p->GetExitStatus() != TVirtualProofPlayer::kAborted && p->GetOutputList()) {
+      if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted && fPlayer->GetOutputList()) {
          if (fProtocol > 10) {
             // Send objects one-by-one to optimize transfer and merging
             // Messages for objects
             TMessage mbuf(kPROOF_OUTPUTOBJECT);
             // Objects in the output list
             Int_t ns = 0;
-            Int_t olsz = p->GetOutputList()->GetSize();
-            TIter nxo(p->GetOutputList());
+            Int_t olsz = fPlayer->GetOutputList()->GetSize();
+            TIter nxo(fPlayer->GetOutputList());
             TObject *o = 0;
             while ((o = nxo())) {
                ns++;
@@ -3315,24 +3251,18 @@ void TProofServ::HandleProcess(TMessage *mess)
             }
          } else {
             PDB(kGlobal, 2) Info("HandleProcess","Sending output list");
-            fSocket->SendObject(p->GetOutputList(), kPROOF_OUTPUTLIST);
+            fSocket->SendObject(fPlayer->GetOutputList(), kPROOF_OUTPUTLIST);
          }
       } else {
-         fSocket->SendObject(0,kPROOF_OUTPUTLIST);
+         fSocket->SendObject(0, kPROOF_OUTPUTLIST);
       }
 
       // Cleanup
       SafeDelete(dset);
-      p->GetInputList()->SetOwner();  // Make sure the input list objects are deleted
+      fPlayer->GetInputList()->SetOwner();  // Make sure the input list objects are deleted
 
-      // Player cleanup
-      if (IsMaster())
-         fProof->SetPlayer(0);
-      else
-         delete p;
+      DeletePlayer();
    }
-
-   fPlayer = 0;
 
    // Set idle
    fIdle = kTRUE;
@@ -4461,7 +4391,7 @@ TProofServ::EQueryAction TProofServ::GetWorkers(TList *workers,
 }
 
 //______________________________________________________________________________
-TList *TProofServ::GetDataSet(const char *name)
+R__HIDDEN TList *TProofServ::GetDataSet(const char *name)
 {
    // Utility function used in various methods for user dataset upload.
 
@@ -4607,6 +4537,39 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
       gSystem->StackTrace();
       gSystem->Abort();
    }
+}
+
+//______________________________________________________________________________
+void TProofServ::MakePlayer()
+{
+   // Make player instance.
+
+   TVirtualProofPlayer *p = 0;
+
+   if (IsParallel()) {
+      // remote mode
+      p = fProof->MakePlayer();
+   } else {
+      // slave or sequential mode
+      p = TVirtualProofPlayer::Create("slave", 0, fSocket);
+      if (IsMaster())
+         fProof->SetPlayer(p);
+   }
+
+   // set player
+   fPlayer = p;
+}
+
+//______________________________________________________________________________
+void TProofServ::DeletePlayer()
+{
+   // Delete player instance.
+
+   if (IsMaster())
+      if (fProof) fProof->SetPlayer(0);
+   else
+      delete fPlayer;
+   fPlayer = 0;
 }
 
 //______________________________________________________________________________

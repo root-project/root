@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.h,v 1.41 2007/01/30 16:34:54 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.h,v 1.42 2007/03/16 17:06:19 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -100,60 +100,61 @@ public:
    TProofPlayer(TProof *proof = 0);
    virtual ~TProofPlayer();
 
-   virtual Long64_t  Process(TDSet *set,
-                             const char *selector, Option_t *option = "",
-                             Long64_t nentries = -1, Long64_t firstentry = 0,
-                             TEventList *evl = 0);
-   virtual Long64_t  Finalize(Bool_t force = kFALSE, Bool_t sync = kFALSE);
-   virtual Long64_t  Finalize(TQueryResult *qr);
-   virtual Long64_t  DrawSelect(TDSet *set, const char *varexp,
-                                const char *selection, Option_t *option = "",
-                                Long64_t nentries = -1, Long64_t firstentry = 0);
+   Long64_t  Process(TDSet *set,
+                     const char *selector, Option_t *option = "",
+                     Long64_t nentries = -1, Long64_t firstentry = 0,
+                     TEventList *evl = 0);
+   Long64_t  Finalize(Bool_t force = kFALSE, Bool_t sync = kFALSE);
+   Long64_t  Finalize(TQueryResult *qr);
+   Long64_t  DrawSelect(TDSet *set, const char *varexp,
+                        const char *selection, Option_t *option = "",
+                        Long64_t nentries = -1, Long64_t firstentry = 0);
+   void      HandleGetTreeHeader(TMessage *mess);
 
-   virtual void      StopProcess(Bool_t abort, Int_t timeout = -1);
-   virtual void      AddInput(TObject *inp);
-   virtual void      ClearInput();
-   virtual TObject  *GetOutput(const char *name) const;
-   virtual TList    *GetOutputList() const;
-   virtual TList    *GetInputList() const { return fInput; }
-   virtual TList    *GetListOfResults() const { return fQueryResults; }
-   virtual void      AddQueryResult(TQueryResult *q);
-   virtual TQueryResult *GetCurrentQuery() const { return fQuery; }
-   virtual TQueryResult *GetQueryResult(const char *ref);
-   virtual void      RemoveQueryResult(const char *ref);
-   virtual void      SetCurrentQuery(TQueryResult *q);
-   virtual void      SetMaxDrawQueries(Int_t max) { fMaxDrawQueries = max; }
-   virtual void      RestorePreviousQuery() { fQuery = fPreviousQuery; }
-   virtual Int_t     AddOutputObject(TObject *obj);
-   virtual void      AddOutput(TList *out);   // Incorporate a list
-   virtual void      StoreOutput(TList *out);   // Adopts the list
-   virtual void      StoreFeedback(TObject *slave, TList *out); // Adopts the list
-   virtual void      Progress(Long64_t total, Long64_t processed); // *SIGNAL*
-   virtual void      Progress(TSlave *, Long64_t total, Long64_t processed)
-                        { Progress(total, processed); }
-   virtual void      Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
-                              Float_t initTime, Float_t procTime,
-                              Float_t evtrti, Float_t mbrti); // *SIGNAL*
-   virtual void      Feedback(TList *objs); // *SIGNAL*
+   void      StopProcess(Bool_t abort, Int_t timeout = -1);
+   void      AddInput(TObject *inp);
+   void      ClearInput();
+   TObject  *GetOutput(const char *name) const;
+   TList    *GetOutputList() const;
+   TList    *GetInputList() const { return fInput; }
+   TList    *GetListOfResults() const { return fQueryResults; }
+   void      AddQueryResult(TQueryResult *q);
+   TQueryResult *GetCurrentQuery() const { return fQuery; }
+   TQueryResult *GetQueryResult(const char *ref);
+   void      RemoveQueryResult(const char *ref);
+   void      SetCurrentQuery(TQueryResult *q);
+   void      SetMaxDrawQueries(Int_t max) { fMaxDrawQueries = max; }
+   void      RestorePreviousQuery() { fQuery = fPreviousQuery; }
+   Int_t     AddOutputObject(TObject *obj);
+   void      AddOutput(TList *out);   // Incorporate a list
+   void      StoreOutput(TList *out);   // Adopts the list
+   void      StoreFeedback(TObject *slave, TList *out); // Adopts the list
+   void      Progress(Long64_t total, Long64_t processed); // *SIGNAL*
+   void      Progress(TSlave *, Long64_t total, Long64_t processed)
+                { Progress(total, processed); }
+   void      Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
+                      Float_t initTime, Float_t procTime,
+                      Float_t evtrti, Float_t mbrti); // *SIGNAL*
+   void      Feedback(TList *objs); // *SIGNAL*
 
-   virtual TDSetElement *GetNextPacket(TSlave *slave, TMessage *r);
+   TDSetElement *GetNextPacket(TSlave *slave, TMessage *r);
 
-   virtual Int_t     ReinitSelector(TQueryResult *qr);
+   Int_t     ReinitSelector(TQueryResult *qr);
 
-   void              UpdateAutoBin(const char *name,
-                                   Double_t& xmin, Double_t& xmax,
-                                   Double_t& ymin, Double_t& ymax,
-                                   Double_t& zmin, Double_t& zmax);
+   void      UpdateAutoBin(const char *name,
+                           Double_t& xmin, Double_t& xmax,
+                           Double_t& ymin, Double_t& ymax,
+                           Double_t& zmin, Double_t& zmax);
 
-   virtual Bool_t    IsClient() const { return kFALSE; }
+   Bool_t    IsClient() const { return kFALSE; }
 
-   virtual EExitStatus GetExitStatus() const { return fExitStatus; }
-   virtual Long64_t    GetEventsProcessed() const { return fEventsProcessed; }
-   virtual void        AddEventsProcessed(Long64_t ev) { fEventsProcessed += ev; }
+   EExitStatus GetExitStatus() const { return fExitStatus; }
+   Long64_t    GetEventsProcessed() const { return fEventsProcessed; }
+   void        AddEventsProcessed(Long64_t ev) { fEventsProcessed += ev; }
 
-   virtual void      SetDispatchTimer(Bool_t on = kTRUE);
-   virtual void      SetStopTimer(Bool_t on = kTRUE,
-                                  Bool_t abort = kFALSE, Int_t timeout = 0);
+   void      SetDispatchTimer(Bool_t on = kTRUE);
+   void      SetStopTimer(Bool_t on = kTRUE,
+                          Bool_t abort = kFALSE, Int_t timeout = 0);
 
    ClassDef(TProofPlayer,0)  // Basic PROOF player
 };
@@ -186,10 +187,10 @@ private:
 
 protected:
    virtual Bool_t  HandleTimer(TTimer *timer);
-   TProof         *GetProof() const { return fProof; }
    virtual Bool_t  SendSelector(const char *selector_file); //send selector to slaves
-   virtual void    SetupFeedback();  // specialized setup
-   virtual void    StopFeedback();   // specialized teardown
+   TProof         *GetProof() const { return fProof; }
+   void            SetupFeedback();  // specialized setup
+   void            StopFeedback();   // specialized teardown
 
 public:
    TProofPlayerRemote(TProof *proof = 0) : fProof(proof), fOutputLists(0), fFeedback(0),
@@ -235,7 +236,7 @@ private:
    TSocket *fSocket;
    TList   *fFeedback;  // List of objects to send updates of
 
-   virtual Bool_t HandleTimer(TTimer *timer);
+   Bool_t HandleTimer(TTimer *timer);
 
 protected:
    void SetupFeedback();
@@ -244,9 +245,7 @@ protected:
 public:
    TProofPlayerSlave(TSocket *socket = 0) : fSocket(socket), fFeedback(0) { }
 
-   Long64_t DrawSelect(TDSet *set, const char *varexp,
-                       const char *selection, Option_t *option = "",
-                       Long64_t nentries = -1, Long64_t firstentry = 0);
+   void  HandleGetTreeHeader(TMessage *mess);
 
    ClassDef(TProofPlayerSlave,0)  // PROOF player running on slave server
 };
@@ -263,25 +262,25 @@ private:
    Bool_t    fReturnFeedback;
 
 protected:
-   virtual Bool_t HandleTimer(TTimer *timer);
-   virtual void   SetupFeedback();
+   Bool_t HandleTimer(TTimer *timer);
+   void   SetupFeedback();
 
 public:
    TProofPlayerSuperMaster(TProof *proof = 0) :
       TProofPlayerRemote(proof), fReturnFeedback(kFALSE) { }
    virtual ~TProofPlayerSuperMaster() { }
 
-   virtual Long64_t Process(TDSet *set, const char *selector,
-                            Option_t *option = "", Long64_t nentries = -1,
-                            Long64_t firstentry = 0, TEventList *evl = 0);
-   virtual void  Progress(Long64_t total, Long64_t processed)
+   Long64_t Process(TDSet *set, const char *selector,
+                    Option_t *option = "", Long64_t nentries = -1,
+                    Long64_t firstentry = 0, TEventList *evl = 0);
+   void  Progress(Long64_t total, Long64_t processed)
                     { TProofPlayerRemote::Progress(total, processed); }
-   virtual void  Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
-                          Float_t initTime, Float_t procTime,
-                          Float_t evtrti, Float_t mbrti)
+   void  Progress(Long64_t total, Long64_t processed, Long64_t bytesread,
+                  Float_t initTime, Float_t procTime,
+                  Float_t evtrti, Float_t mbrti)
                     { TProofPlayerRemote::Progress(total, processed, bytesread,
                                                    initTime, procTime, evtrti, mbrti); }
-   virtual void  Progress(TSlave *sl, Long64_t total, Long64_t processed);
+   void  Progress(TSlave *sl, Long64_t total, Long64_t processed);
 
    ClassDef(TProofPlayerSuperMaster,0)  // PROOF player running on super master
 };

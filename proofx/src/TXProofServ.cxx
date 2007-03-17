@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.29 2007/02/05 14:04:04 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.30 2007/02/28 16:50:55 brun Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -1002,7 +1002,7 @@ Bool_t TXProofServ::HandleInput(const void *in)
             if (fProof)
                fProof->StopProcess(abort, timeout);
             else
-               if(fPlayer)
+               if (fPlayer)
                   fPlayer->StopProcess(abort, timeout);
          }
          break;
@@ -1088,7 +1088,7 @@ void TXProofServ::Terminate(Int_t status)
 
    // We post the pipe once to wake up the main thread which is waiting for
    // activity on this socket; this fake activity will make it return and
-   // eventually exit the loop. 
+   // eventually exit the loop.
    TXSocket::PostPipe((TXSocket *)fSocket);
 
    // Avoid communicating back anything to the coordinator (it is gone)
