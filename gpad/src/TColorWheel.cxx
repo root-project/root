@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TColorWheel.cxx,v 1.5 2007/03/11 07:28:57 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TColorWheel.cxx,v 1.6 2007/03/12 13:38:27 brun Exp $
 // Author: Rene Brun   10/03/2007
 
 /*************************************************************************
@@ -66,7 +66,7 @@ TColorWheel::TColorWheel() :TNamed("wheel","ROOT Color Wheel")
    fRmax   = 9.5;
    fR0     = 4;
    fDr     = 1;
-   fRgray  = 1.7;
+   fRgray  = 1.8;
    fX[ 0]  = fR0-0.2*fDr; fY[ 0] =  0;
    fX[ 1]  = fR0+fDr;     fY[ 1] =  0.75*fDr;
    fX[ 2]  = fR0+fDr;     fY[ 2] = -0.75*fDr;
@@ -115,11 +115,12 @@ void TColorWheel::Draw(Option_t *option)
    
    if (!fCanvas) {
       fCanvas = new TCanvas("wheel","ROOT Color Wheel",10,10,400,400);
-      fCanvas->Range(-10.5,-10.5,10.5,10.5);
-      fCanvas->SetFillColor(TColor::GetColor(243,241,174));
       fCanvas->ToggleEventStatus();
-      AppendPad(option);
    }
+   fCanvas->Range(-10.5,-10.5,10.5,10.5);
+   fCanvas->SetBorderMode(0);
+   fCanvas->SetFillColor(TColor::GetColor(243,241,174));
+   AppendPad(option);
 }
 
 //______________________________________________________________________________
@@ -258,7 +259,7 @@ void TColorWheel::PaintCircle(Int_t coffset,Int_t n, Double_t x, Double_t y, Dou
    fArc->SetLineColor(14);
    Double_t r = 0.7*fDr;
    fArc->PaintEllipse(u,v,r,r,0,360,0);
-   fText->SetTextSize(0.02);
+   fText->SetTextSize(0.03);
    fText->SetTextAlign(22);
    if (255*color->GetLight() <150 && n != 0) fText->SetTextColor(0);
    if (n>0) fText->PaintText(u,v,Form("+%d",n));
@@ -333,7 +334,7 @@ void TColorWheel::PaintRectangles(Int_t coffset, Double_t angle) const
          fGraph->SetFillColor(colorn);
          fGraph->PaintGraph(4,x,y,"f");
          Rotate(rmin+i*dr+0.5*dr,0.5*dy,x[0],y[0],ang);
-         fText->SetTextSize(0.02);
+         fText->SetTextSize(0.03);
          fText->SetTextAlign(22);
          if (255*color->GetLight() <110) fText->SetTextColor(0);
          Double_t tang = angle-90;
@@ -351,9 +352,9 @@ void TColorWheel::PaintRectangles(Int_t coffset, Double_t angle) const
    Rotate(rmin, dy,x[3],y[3],ang);
    Rotate(rmin,-dy,x[4],y[4],ang);
    fGraph->SetLineColor(1);
-   fGraph->SetLineWidth(2);
+   fGraph->SetLineWidth(1);
    fGraph->PaintGraph(5,x,y,"l");
-   fLine->SetLineWidth(2);
+   fLine->SetLineWidth(1);
    Rotate(rmin+3*dr,-dy,x[0],y[0],ang);
    Rotate(rmin+3*dr, dy,x[1],y[1],ang);
    fLine->PaintLine(x[0],y[0],x[1],y[1]);
@@ -391,18 +392,22 @@ void TColorWheel::PaintGray() const
    fArc->PaintEllipse(0,0,r,r,300,360,0);
    
    fText->SetTextAlign(22);
-   fText->SetTextFont(72);
+   fText->SetTextFont(62);
    fText->SetTextColor(1);
-   fText->SetTextSize(0.018);
+   fText->SetTextSize(0.02);
    fText->SetTextAngle(40);
    fText->PaintText(0.5*r,0.3*r,"kWhite");
    fText->SetTextAngle(0);
    fText->PaintText(0,0.8*r,"kGray");
    fText->SetTextColor(10);
+   fText->SetTextFont(72);
+   fText->SetTextSize(0.03);
    fText->PaintText(-0.6*r, 0.3*r,"+1");
    fText->PaintText(-0.6*r,-0.3*r,"+2");
-   fText->PaintText(0,-0.5*r,"+3");
+   fText->PaintText(0,-0.6*r,"+3");
    fText->SetTextAngle(-40);
+   fText->SetTextSize(0.02);
+   fText->SetTextFont(62);
    fText->PaintText(0.5*r,-0.35*r,"kBlack");
 }
 

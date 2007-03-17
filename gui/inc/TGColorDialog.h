@@ -1,5 +1,6 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.h,v 1.6 2005/11/21 00:25:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.h,v 1.7 2006/05/28 20:07:59 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
+// Author: Ilka Antcheva (color wheel support)   16/03/07
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -44,7 +45,11 @@
 
 class TGTextEntry;
 class TGTextBuffer;
-
+class TGTab;
+class TRootEmbeddedCanvas;
+class TColorWheel;
+class TGLabel;
+class TGTextButton;
 
 //----------------------------------------------------------------------
 
@@ -159,10 +164,17 @@ protected:
    TGColorPalette *fCpalette;       // color palette
    TGColorPick    *fColors;         // color pick widget
    TGFrame        *fSample;         // color sample frame
+   TGFrame        *fSampleOld;      // color sample frame
    TGTextEntry    *fRte, *fGte, *fBte, *fHte, *fLte, *fSte; // RGB/HLS text entries
    TGTextBuffer   *fRtb, *fGtb, *fBtb, *fHtb, *fLtb, *fStb; // RGB/HLS associated buffers
-   Bool_t          fWaitFor;        // call WaitFor method in constructor
-
+   Bool_t          fWaitFor;         // call WaitFor method in constructor
+   
+   TGTab               *fTab;        //tab widget holding the color selectors
+   TRootEmbeddedCanvas *fEcanvas;    //embedded canvas holding the color wheel
+   TColorWheel         *fColorWheel; //color wheel
+   TGLabel             *fColorInfo;  //color info
+   TGTextButton        *fPreview;    //preview button;
+   
    void           UpdateRGBentries(Pixel_t *c);
    void           UpdateHLSentries(Pixel_t *c);
    virtual void   CloseWindow();
@@ -177,7 +189,9 @@ public:
    TGColorPalette *GetCustomPalette() const { return fCpalette; }
 
    virtual void ColorSelected(Pixel_t); //*SIGNAL*
+           void DoPreview();
    virtual void SetCurrentColor(Pixel_t col);
+           void SetColorInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
 
    ClassDef(TGColorDialog,0)  // Color selection dialog
 };

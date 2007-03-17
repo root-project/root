@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TColorWheel.h,v 1.1 2007/03/10 22:58:01 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TColorWheel.h,v 1.2 2007/03/10 23:13:29 brun Exp $
 // Author: Rene Brun   10/03/2007
 
 /*************************************************************************
@@ -69,6 +69,7 @@ public:
    virtual  Int_t GetColor(Int_t px, Int_t py) const;
    virtual  char *GetObjectInfo(Int_t px, Int_t py) const;
    virtual  void  Paint(Option_t *option="");
+   virtual  void  SetCanvas(TCanvas *can) {fCanvas = can;}
 
    ClassDef(TColorWheel,1)  //The ROOT Color Wheel
 };
