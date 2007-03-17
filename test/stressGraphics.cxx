@@ -1447,7 +1447,7 @@ void earth()
    TH2F *h3 = new TH2F("h3","Sinusoidal",50, -180, 180, 50, -90.5, 90.5);
    TH2F *h4 = new TH2F("h4","Parabolic", 50, -180, 180, 50, -90.5, 90.5);
    ifstream in;
-   in.open("../tutorials/image/earth.dat");
+   in.open("../tutorials/graphics/earth.dat");
    Float_t x,y;
    while (1) {
      in >> x >> y;
