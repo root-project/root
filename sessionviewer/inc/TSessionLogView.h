@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSessionLogView.h,v 1.4 2006/01/30 17:42:06 rdm Exp $
+// @(#)root/sessionviewer:$Name:  $:$Id: TSessionLogView.h,v 1.1 2006/11/17 15:50:17 rdm Exp $
 // Author: Bertrand Bellenot, Gerri Ganis 15/09/2005
 
 /*************************************************************************

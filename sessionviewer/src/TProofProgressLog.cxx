@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressLog.cxx,v 1.1 2005/08/30 10:25:29 rdm Exp $
+// @(#)root/sessionviewer:$Name:  $:$Id: TProofProgressLog.cxx,v 1.2 2006/06/13 20:48:54 rdm Exp $
 // Author: G Ganis, Jul 2005
 
 /*************************************************************************

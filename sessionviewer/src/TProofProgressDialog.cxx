@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.30 2007/01/23 11:12:02 brun Exp $
+// @(#)root/sessionviewer:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.31 2007/02/26 14:39:47 brun Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
