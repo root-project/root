@@ -405,8 +405,8 @@ void MakeTrees(Int_t nentries, Int_t nfiles)
    Int_t range = nentries/100;
 
    char buffer[50];
-   for (Int_t i=0; i<nfiles; i++){
-      sprintf(buffer, "stressEntryListTrees_%d.root", i);
+   for (Int_t ifile=0; ifile<nfiles; ifile++){
+      sprintf(buffer, "stressEntryListTrees_%d.root", ifile);
       f1 = new TFile(buffer, "UPDATE");
       tree1 = new TTree("tree1", "tree1");
       tree1->Branch("x", &x, "x/D");
