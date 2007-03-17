@@ -53,11 +53,11 @@ TREEPLAYERLIBEXTRA  = lib/libTree.lib lib/libGraf3d.lib lib/libGpad.lib \
 TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
 TREEVIEWERLIBEXTRA  = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib \
                       lib/libHist.lib lib/libGui.lib
-PROOFLIBDEP         = $(NETLIB) $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
-                      $(GPADLIB) $(TREEPLAYERLIB) $(THREADLIB) $(IOLIB)
-PROOFLIBEXTRA       = lib/libNet.lib lib/libTree.lib lib/libGraf3d.lib \
-                      lib/libGraf.lib lib/libGpad.lib lib/libRIO.lib \
-                      lib/libHist.lib lib/libTreePlayer.lib lib/libThread.lib
+PROOFLIBDEP         = $(NETLIB) $(TREELIB) $(HISTLIB) \
+                      $(TREEPLAYERLIB) $(THREADLIB) $(IOLIB)
+PROOFLIBEXTRA       = lib/libNet.lib lib/libTree.lib \
+                      lib/libRIO.lib lib/libHist.lib \
+                      lib/libTreePlayer.lib lib/libThread.lib
 PROOFPLAYERLIBDEP   = $(PROOFLIB) $(NETLIB) $(TREELIB) $(G3DLIB) $(GRAFLIB) \
                       $(HISTLIB) $(GPADLIB) $(TREEPLAYERLIB) $(THREADLIB) \
                       $(IOLIB)
@@ -216,9 +216,9 @@ TREEPLAYERLIBDEP    = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB) \
 TREEPLAYERLIBEXTRA  = -Llib -lTree -lGraf3d -lGraf -lHist -lGpad -lRIO
 TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
 TREEVIEWERLIBEXTRA  = -Llib -lTree -lGpad -lGraf -lHist -lGui
-PROOFLIBDEP         = $(NETLIB) $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
-                      $(GPADLIB) $(TREEPLAYERLIB) $(THREADLIB) $(IOLIB)
-PROOFLIBEXTRA       = -Llib -lNet -lTree -lGraf3d -lGraf -lGpad -lHist \
+PROOFLIBDEP         = $(NETLIB) $(TREELIB) $(HISTLIB) \
+                      $(TREEPLAYERLIB) $(THREADLIB) $(IOLIB)
+PROOFLIBEXTRA       = -Llib -lNet -lTree -lHist \
                       -lTreePlayer -lThread -lRIO
 PROOFPLAYERLIBDEP   = $(PROOFLIB) $(NETLIB) $(TREELIB) $(G3DLIB) $(GRAFLIB) \
                       $(HISTLIB) $(GPADLIB) $(TREEPLAYERLIB) $(THREADLIB) \
