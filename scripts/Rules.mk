@@ -1,5 +1,5 @@
 #
-# $Id: Rules.mk,v 1.67 2006/12/06 21:39:06 pcanal Exp $
+# $Id: Rules.mk,v 1.68 2006/12/07 17:35:54 pcanal Exp $
 #
 
 all: tests
@@ -140,6 +140,14 @@ ifeq ($(HAS_PYTHON),yes)
        else
          export PYTHONPATH := $(ROOTSYS)/lib:$(PYTHONPATH)
        endif
+   endif
+   ifeq ($(ARCH),macosx)
+      PYTHONLIB:=$(shell grep ^PYTHONLIB $(ROOTSYS)/config/Makefile.config | sed 's,^.*\:=,,')
+      PYTHONFWK:=$(dir $(PYTHONLIB))
+      ifneq ($(PYTHONFWK),)
+         export PATH:=$(PYTHONFWK)/bin:$(PATH)
+         export DYLD_LIBRARY_PATH:=$(PYTHONFWK):$(DYLD_LIBRARY_PATH)
+      endif
    endif
 endif
 
