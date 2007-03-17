@@ -32,7 +32,8 @@ POSTSCRIPTLIBEXTRA  = lib/libGraf.lib
 GUILIBDEP           = $(GPADLIB) $(GRAFLIB) $(IOLIB)
 GUILIBEXTRA         = lib/libGpad.lib lib/libGraf.lib lib/libRIO.lib
 HISTPAINTERLIBDEP   = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB) $(GPADLIB)
-HISTPAINTERLIBEXTRA = lib/libGraf.lib lib/libHist.lib lib/libMatrix.lib lib/libGpad.lib
+HISTPAINTERLIBEXTRA = lib/libGraf.lib lib/libHist.lib lib/libMatrix.lib \
+                      lib/libGpad.lib
 SPECTRUMPAINTERLIBDEP   = $(GRAFLIB) $(HISTLIB)
 SPECTRUMPAINTERLIBEXTRA = lib/libGraf.lib lib/libHist.lib
 HTMLLIBDEP          = $(GRAFLIB)
@@ -67,9 +68,9 @@ PROOFPLAYERLIBEXTRA = lib/libProof.lib lib/libNet.lib lib/libTree.lib \
 PROOFXLIBDEP        = $(NETLIB) $(PROOFLIB) $(THREADLIB) $(XPDLIB)
 PROOFXLIBEXTRA      = lib/libNet.lib lib/libProof.lib lib/libThread.lib \
                       lib/libXrdProofd.lib
-PROOFGUILIBDEP      = $(PROOFLIB) $(GUILIB) $(GPADLIB) $(GRAFLIB) $(TREELIB)
-PROOFGUILIBEXTRA    = lib/libProof.lib lib/libGui.lib lib/libGpad.lib \
-                      lib/libGraf.lib lib/libTree.lib
+SESSIONVIEWERLIBDEP   = $(PROOFLIB) $(GUILIB) $(GPADLIB) $(GRAFLIB) $(TREELIB)
+SESSIONVIEWERLIBEXTRA = lib/libProof.lib lib/libGui.lib lib/libGpad.lib \
+                        lib/libGraf.lib lib/libTree.lib
 PEACLIBDEP          = $(PROOFLIB) $(CLARENSLIB)
 PEACLIBEXTRA        = lib/libProof.lib lib/libClarens.lib
 PEACGUILIBDEP       = $(GUILIB)
@@ -226,8 +227,8 @@ PROOFPLAYERLIBEXTRA = -Llib -lProof -lNet -lTree -lGraf3d -lGraf -lGpad \
                       -lHist -lTreePlayer -lThread -lRIO
 PROOFXLIBDEP        = $(NETLIB) $(PROOFLIB) $(THREADLIB) $(XPDLIB)
 PROOFXLIBEXTRA      = -Llib -lNet -lProof -lThread -lXrdProofd
-PROOFGUILIBDEP      = $(PROOFLIB) $(GUILIB) $(GPADLIB) $(GRAFLIB) $(TREELIB)
-PROOFGUILIBEXTRA    = -Llib -lProof -lGui -lGpad -lGraf -lTree
+SESSIONVIEWERLIBDEP   = $(PROOFLIB) $(GUILIB) $(GPADLIB) $(GRAFLIB) $(TREELIB)
+SESSIONVIEWERLIBEXTRA = -Llib -lProof -lGui -lGpad -lGraf -lTree
 PEACLIBDEP          = $(PROOFLIB) $(CLARENSLIB)
 PEACLIBEXTRA        = -Llib -lProof -lClarens
 PEACGUILIBDEP       = $(GUILIB)

@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.177 2007/03/05 11:49:22 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.178 2007/03/16 17:06:19 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -531,7 +531,7 @@ Plugin.TVirtualProofPlayer:   base    TProofPlayer       Proof  "TProofPlayer(TP
 +Plugin.TVirtualProofPlayer:  local   TProofPlayerLocal  Proof  "TProofPlayerLocal(TProof*)"
 +Plugin.TVirtualProofPlayer:  slave   TProofPlayerSlave  Proof  "TProofPlayerSlave(TSocket*)"
 +Plugin.TVirtualProofPlayer:  sm TProofPlayerSuperMaster Proof  "TProofPlayerSuperMaster(TProof*)"
-Plugin.TProofProgressDialog: * TProofProgressDialog ProofGui  "TProofProgressDialog(TProof*,const char*,Int_t,Long64_t,Long64_t)"
+Plugin.TProofProgressDialog: * TProofProgressDialog SessionViewer "TProofProgressDialog(TProof*,const char*,Int_t,Long64_t,Long64_t)"
 Plugin.TDataProgressDialog:  * TDataProgressDialog  peacGui   "TDataProgressDialog(TProof*,const char*,Int_t,Long64_t)"
 Plugin.TProofServ:    ^xpd     TXProofServ   Proofx       "TXProofServ(Int_t *,char **)"
 Plugin.TSlave: ^xpd  TXSlave Proofx  "TXSlave(const char *,const char *,Int_t,const char *, TProof *,Int_t,const char *,const char *)"
