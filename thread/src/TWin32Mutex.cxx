@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TWin32Mutex.cxx,v 1.3 2004/12/15 10:09:04 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TWin32Mutex.cxx,v 1.4 2005/03/29 10:21:23 rdm Exp $
 // Author: Bertrand Bellenot   23/10/04
 
 /*************************************************************************
@@ -27,9 +27,7 @@ TWin32Mutex::TWin32Mutex()
 {
    // Create a Win32 mutex lock.
 
-   fHMutex = ::CreateMutex(0, 0, 0);
-   if (!fHMutex)
-      SysError("TMutex", "CreateMutex error");
+   ::InitializeCriticalSection(&fCritSect);
 }
 
 //______________________________________________________________________________
@@ -37,7 +35,7 @@ TWin32Mutex::~TWin32Mutex()
 {
    // TMutex dtor.
 
-  ::CloseHandle(fHMutex);
+   ::DeleteCriticalSection(&fCritSect);
 }
 
 //______________________________________________________________________________
@@ -45,8 +43,7 @@ Int_t TWin32Mutex::Lock()
 {
    // Lock the mutex.
 
-   if (::WaitForSingleObject(fHMutex, INFINITE) != WAIT_OBJECT_0)
-      return -1;
+   ::EnterCriticalSection(&fCritSect);
    return 0;
 }
 
@@ -55,7 +52,7 @@ Int_t TWin32Mutex::TryLock()
 {
    // Try locking the mutex. Returns 0 if mutex can be locked.
 
-   if (::WaitForSingleObject(fHMutex, 0) == WAIT_OBJECT_0)
+   if (::TryEnterCriticalSection(&fCritSect))
       return 0;
    return 1;
 }
@@ -65,7 +62,6 @@ Int_t TWin32Mutex::UnLock(void)
 {
    // Unlock the mutex.
 
-   if (::ReleaseMutex(fHMutex) == 0)
-      return -1;
+   ::LeaveCriticalSection(&fCritSect);
    return 0;
 }

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.34 2007/02/21 09:52:14 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.35 2007/03/05 09:10:03 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -33,7 +33,7 @@
 
 #if !defined(__CINT__)
 
-#include "Windows4root.h"
+#include "Windows4Root.h"
 #include "gdk/gdk.h"
 #include "gdk/win32/gdkwin32.h"
 

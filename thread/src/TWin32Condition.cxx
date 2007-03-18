@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TWin32Condition.cxx,v 1.3 2004/12/15 10:09:04 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TWin32Condition.cxx,v 1.4 2004/12/16 11:15:01 rdm Exp $
 // Author: Bertrand Bellenot  20/10/2004
 
 /*************************************************************************
@@ -73,7 +73,9 @@ Int_t TWin32Condition::Wait()
    // This call atomically releases the mutex and waits on the
    // semaphore until <pthread_cond_signal> or <pthread_cond_broadcast>
    // are called by another thread.
-   SignalObjectAndWait(fMutex->fHMutex, fCond.sema_, INFINITE, FALSE);
+   // SignalObjectAndWait(fMutex->fHMutex, fCond.sema_, INFINITE, FALSE);
+   ::LeaveCriticalSection(&fMutex->fCritSect);
+   WaitForSingleObject(fCond.sema_, INFINITE);
 
    // Reacquire lock to avoid race conditions.
    EnterCriticalSection(&fCond.waiters_count_lock_);
@@ -88,14 +90,18 @@ Int_t TWin32Condition::Wait()
 
    // If we're the last waiter thread during this particular broadcast
    // then let all the other threads proceed.
-   if (last_waiter)
+   if (last_waiter) {
       // This call atomically signals the <waiters_done_> event and waits until
       // it can acquire the <fMutex->fHMutex>.  This is required to ensure fairness.
-      SignalObjectAndWait(fCond.waiters_done_, fMutex->fHMutex, INFINITE, FALSE);
+      // SignalObjectAndWait(fCond.waiters_done_, fMutex->fHMutex, INFINITE, FALSE);
+      SetEvent(fCond.waiters_done_);
+      ::EnterCriticalSection(&fMutex->fCritSect);
+   }
    else
       // Always regain the external mutex since that's the guarantee we
       // give to our callers.
-      WaitForSingleObject(fMutex->fHMutex, INFINITE);
+      // WaitForSingleObject(fMutex->fHMutex, INFINITE);
+      ::EnterCriticalSection(&fMutex->fCritSect);
 
    return 0;
 }
@@ -125,7 +131,9 @@ Int_t TWin32Condition::TimedWait(ULong_t secs, ULong_t nanoSecs)
    // This call atomically releases the mutex and waits on the
    // semaphore until <pthread_cond_signal> or <pthread_cond_broadcast>
    // are called by another thread.
-   ret = SignalObjectAndWait(fMutex->fHMutex, fCond.sema_, dwTimeWait, FALSE);
+   // ret = SignalObjectAndWait(fMutex->fHMutex, fCond.sema_, dwTimeWait, FALSE);
+   ::LeaveCriticalSection(&fMutex->fCritSect);
+   ret = WaitForSingleObject(fCond.sema_, dwTimeWait);
 
    // Reacquire lock to avoid race conditions.
    EnterCriticalSection(&fCond.waiters_count_lock_);
@@ -140,16 +148,20 @@ Int_t TWin32Condition::TimedWait(ULong_t secs, ULong_t nanoSecs)
 
    // If we're the last waiter thread during this particular broadcast
    // then let all the other threads proceed.
-   if (last_waiter)
+   if (last_waiter) {
       // This call atomically signals the <waiters_done_> event and waits until
       // it can acquire the <fMutex->fHMutex>.  This is required to ensure fairness.
-      SignalObjectAndWait(fCond.waiters_done_, fMutex->fHMutex, dwTimeWait, FALSE);
+      // SignalObjectAndWait(fCond.waiters_done_, fMutex->fHMutex, dwTimeWait, FALSE);
+      SetEvent(fCond.waiters_done_);
+      ::EnterCriticalSection(&fMutex->fCritSect);
+   }
    else
       // Always regain the external mutex since that's the guarantee we
       // give to our callers.
-      WaitForSingleObject(fMutex->fHMutex, INFINITE);
+      // WaitForSingleObject(fMutex->fHMutex, INFINITE);
+      ::EnterCriticalSection(&fMutex->fCritSect);
    
-   if(ret == WAIT_TIMEOUT)
+   if (ret == WAIT_TIMEOUT)
       return 1;
    return 0;
 }

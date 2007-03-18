@@ -43,7 +43,7 @@ void *handle(void *ptr)
             TThread::UnLock();
          }
          c[nr]->Modified();
-         //gSystem->Sleep(10);
+         gSystem->Sleep(10);
       }
    }
    return 0;

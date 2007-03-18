@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.122 2007/02/13 21:14:39 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.123 2007/02/15 15:04:20 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -601,7 +601,7 @@ void TCanvas::Clear(Option_t *option)
 
    if (fCanvasID == -1) return;
 
-   if (!gVirtualX->IsCmdThread()) {
+   if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
       gInterpreter->Execute(this, IsA(), "Clear", option);
       return;
    }
@@ -662,7 +662,7 @@ void TCanvas::Close(Option_t *option)
 
    if (fCanvasID == -1) goto deletepad;
 
-   if (!gVirtualX->IsCmdThread()) {
+   if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
       gInterpreter->Execute(this, IsA(), "Close", option);
       return;
    }
@@ -699,7 +699,7 @@ void TCanvas::CopyPixmaps()
 {
    // Copy the canvas pixmap of the pad to the canvas.
 
-   if (!gVirtualX->IsCmdThread()) {
+   if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
       gInterpreter->Execute(this, IsA(), "CopyPixmaps", "");
       return;
    }
@@ -982,7 +982,7 @@ void TCanvas::UseCurrentStyle()
 {
    // Force a copy of current style for all objects in canvas.
 
-   if (!gVirtualX->IsCmdThread()) {
+   if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
       gInterpreter->Execute(this, IsA(), "UseCurrentStyle", "");
       return;
    }
@@ -1431,7 +1431,7 @@ void TCanvas::Resize(Option_t *)
 
    if (fCanvasID == -1) return;
 
-   if (!gVirtualX->IsCmdThread()) {
+   if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
       gInterpreter->Execute(this, IsA(), "Resize", "");
       return;
    }
@@ -1993,7 +1993,7 @@ void TCanvas::Update()
       if ((*gThreadXAR)("CUPD", 2, arr, 0)) return;
    }
 
-   if (!gVirtualX->IsCmdThread()) {
+   if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
       gInterpreter->Execute(this, IsA(), "Update", "");
       return;
    }

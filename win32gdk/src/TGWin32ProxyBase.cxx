@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.20 2006/05/18 10:46:26 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.21 2007/03/05 14:26:12 rdm Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -87,7 +87,7 @@
 #include "TRefCnt.h"
 #include "TList.h"
 #include "TGWin32.h"
-#include "TRoot.h"
+#include "TROOT.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 class TGWin32CallBackObject : public TObject {

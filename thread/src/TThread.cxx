@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.50 2007/01/30 16:35:37 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.51 2007/02/06 15:51:34 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -1045,6 +1045,7 @@ Bool_t TThreadTimer::Notify()
 {
    // Periodically execute the TThread::XAxtion() method in the main thread.
 
+   R__LOCKGUARD2(gROOTMutex);
    if (TThread::fgXAct) { TThread::XAction(); }
    Reset();
 

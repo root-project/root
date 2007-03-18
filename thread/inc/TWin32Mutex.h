@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TWin32Mutex.h,v 1.2 2004/12/10 12:13:33 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TWin32Mutex.h,v 1.3 2004/12/15 10:09:04 rdm Exp $
 // Author: Bertrand Bellenot  20/10/2004
 
 /*************************************************************************
@@ -27,12 +27,16 @@
 
 #include "Windows4Root.h"
 
+#ifdef __CINT__
+struct CRITICAL_SECTION;
+#endif
+
 class TWin32Mutex : public TMutexImp {
 
 friend class TWin32Condition;
 
 private:
-   HANDLE fHMutex;
+   CRITICAL_SECTION fCritSect;
 
 public:
    TWin32Mutex();
