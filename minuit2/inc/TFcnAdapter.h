@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFcnAdapter.h,v 1.5 2007/02/09 17:24:50 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFcnAdapter.h,v 1.6 2007/03/19 11:06:04 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -10,7 +10,13 @@
 #ifndef ROOT_TFcnAdapter_H_
 #define ROOT_TFcnAdapter_H_
 
+#ifndef ROOT_Minuit2_FCNGradientBase
 #include "Minuit2/FCNGradientBase.h"
+#endif
+
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
 
 //___________________________________________________________
 //
