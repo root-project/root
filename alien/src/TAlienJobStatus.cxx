@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienJobStatus.cxx,v 1.2 2005/08/12 15:46:40 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienJobStatus.cxx,v 1.3 2006/05/19 07:30:04 brun Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   06/10/2004
 
 /*************************************************************************
@@ -31,9 +31,16 @@ TAlienJobStatus::TAlienJobStatus(TMap *status)
 {
    // Creates a TAlienJobStatus object.
    // If a status map is provided it is copied to the status information.
+  TObjString* key;
+  TObjString* val;
 
-   if (status)
-      status->Copy(fStatus);
+  if (status) {
+    TMapIter next(status);
+    while ( (key = (TObjString*)next())) {
+      val = (TObjString*)status->GetValue(key->GetName());
+      fStatus.Add(key->Clone(), val->Clone());
+    }  
+  }
 }
 
 //______________________________________________________________________________
@@ -194,7 +201,7 @@ void TAlienJobStatus::PrintJob(Bool_t full) const
       return;
 
    printf("==================================================\n");
-   printf("Other available status information:\n");
+   printf("Detail Information:\n");
 
    TIterator* iter = fStatus.MakeIterator();
 

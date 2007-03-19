@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.12 2006/02/03 14:50:25 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.13 2006/05/26 16:55:04 rdm Exp $
 // Author: Andreas Peters   5/5/2005
 
 /*************************************************************************
@@ -30,16 +30,20 @@
 #include "TList.h"
 #endif
 
-#ifndef ROOT_TGridResult
-#include "TGridResult.h"
-#endif
-
 #ifndef ROOT_TDSet
 #include "TDSet.h"
 #endif
 
 #ifndef ROOT_TMap
 #include "TMap.h"
+#endif
+
+#ifndef ROOT_TGridJobStatusList
+#include "TGridJobStatusList.h"
+#endif
+
+#ifndef ROOT_TGridCollection
+#include "TGridCollection.h"
 #endif
 
 class GapiUI;
@@ -59,6 +63,7 @@ private:
    GapiUI    *fGc;    // the GapiUI object implementing the communication layer
    TString    fPwd;   // working directory
    TString    fHome;  // home directory with alien:// prefix
+
    TGridResult         *Command(const char *command, bool interactive = kFALSE,
                                 UInt_t stream = kOUTPUT);
    virtual TGridResult *Query(const char *path, const char *pattern,
@@ -86,8 +91,13 @@ public:
    TString Escape(const char *input);
    virtual TGridJob *Submit(const char *jdl); // submit a grid job
    virtual TGridJDL *GetJDLGenerator();       // get a AliEn grid JDL object
+   virtual TGridCollection* OpenCollection(const char* collectionfile, UInt_t maxentries = kTRUE);
+   virtual TGridCollection* OpenCollectionQuery(TGridResult * queryresult, Bool_t nogrouping = kFALSE);
+   virtual TGridJobStatusList* Ps(const char* options, Bool_t verbose = kTRUE);
+   virtual Bool_t Kill(UInt_t jobid);
+   virtual UInt_t Resubmit(UInt_t jobid);
 
-   //--- catalogue Interface
+   //--- Catalogue Interface
    virtual TGridResult *Ls(const char *ldn="", Option_t *options="", Bool_t verbose=kFALSE);
    virtual const char  *Pwd(Bool_t verbose=kFALSE);
    virtual const char  *GetHomeDirectory() { return fHome.Data(); }
@@ -97,6 +107,7 @@ public:
    virtual Bool_t Register(const char *lfn, const char *turl, Long_t size=-1,
                            const char *se=0, const char *guid=0, Bool_t verbose=kFALSE);
    virtual Bool_t Rm(const char *lfn, Option_t *option="", Bool_t verbose=kFALSE);
+
 
    ClassDef(TAlien,0)  // Interface to Alien GRID services
 };

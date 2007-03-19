@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridJDL.h,v 1.1 2005/05/12 13:19:39 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGridJDL.h,v 1.2 2006/05/16 06:28:23 brun Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   28/9/2004
 
 /*************************************************************************
@@ -49,19 +49,27 @@ public:
    virtual TString  Generate();
    virtual void     Clear(const Option_t* = 0);
 
-   virtual void SetExecutable(const char *value) = 0;
-   virtual void SetArguments(const char *value) = 0;
-   virtual void SetRequirements(const char *value) = 0;
-   virtual void SetEMail(const char *value) = 0;
+   virtual void SetExecutable(const char* value=0) = 0;
+   virtual void SetArguments(const char* value=0) = 0;
+   virtual void SetEMail(const char* value=0) = 0;
+   virtual void SetOutputDirectory(const char* value=0) = 0;
+   virtual void SetPrice(UInt_t price=1) = 0;
+   virtual void SetTTL(UInt_t ttl=72000) = 0;
+   virtual void SetJobTag(const char* jobtag=0) = 0;
+   virtual void SetInputDataListFormat(const char* format="xml-single") = 0;
+   virtual void SetInputDataList(const char* list="collection.xml") = 0;
 
-   virtual void AddToInputSandbox(const char *value) = 0;
-   virtual void AddToOutputSandbox(const char *value) = 0;
-   virtual void AddToInputData(const char *value) = 0;
-   virtual void AddToInputDataCollection(const char *value) = 0;
+   virtual void SetSplitMode(const char* value, UInt_t maxnumberofinputfiles=0, UInt_t maxinputfilesize=0) = 0;
+   virtual void SetSplitArguments(const char* splitarguments=0) = 0;
+   virtual void SetValidationCommand(const char* value) = 0;
 
-   virtual void SetSplitMode(const char *value) = 0;
-   virtual void SetValidationCommand(const char *value) = 0;
-
+   virtual void AddToInputSandbox(const char* value=0) = 0;
+   virtual void AddToOutputSandbox(const char* value=0) = 0;
+   virtual void AddToInputData(const char* value=0) = 0;
+   virtual void AddToInputDataCollection(const char* value=0) = 0;
+   virtual void AddToRequirements(const char* value=0) = 0;
+   virtual void AddToPackages(const char* name="AliRoot", const char* version="default",const char* type="VO_ALICE") = 0;
+   virtual void AddToOutputArchive(const char* value=0) = 0;
    ClassDef(TGridJDL,1)  // ABC defining interface JDL generator
 };
 

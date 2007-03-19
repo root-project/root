@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.17 2006/10/05 14:56:24 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.18 2007/02/22 11:51:50 brun Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -60,6 +60,7 @@ public:
    static TAlienFile *Open(const char *lfn, const Option_t *option = "",
                            const char *title = "", Int_t compress = 1,
                            Bool_t parallelopen = kFALSE);
+   static TString     SUrl(const char *lfn);
 
    ClassDef(TAlienFile, 3)  //A ROOT file that reads/writes via AliEn services and TXNetFile protocol
 };
