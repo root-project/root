@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.23 2006/07/11 09:05:01 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.24 2007/03/17 12:03:00 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 // Author: Ilka Antcheva (color wheel support)   16/03/07
 
@@ -1588,6 +1588,8 @@ void TGColorDialog::SetColorInfo(Int_t event, Int_t px, Int_t py, TObject *objec
 //________________________________________________________________________________
 void TGColorDialog::DoPreview()
 {
+   // Slot method called when Preview button is clicked.
+
    TGColorPopup *p = (TGColorPopup *)GetMain();
    p->PreviewColor(fSample->GetBackground());
 }
