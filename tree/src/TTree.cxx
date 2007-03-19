@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.324 2007/03/15 11:33:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.325 2007/03/16 10:54:07 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -4924,8 +4924,13 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
    //      x:y:z      (all variables are assumed of type "F"
    //      x/D:y:z    (all variables are of type "D"
    //      x:y/D:z    (x is type "F", y and z of type "D"
+   //  -If the type is a string of characters. This will read
+   //  subsequent characters until a whitespace is found (whitespace
+   //  characters are considered to be blank, newline and tab).
    //
    // Lines in the input file starting with "#" are ignored.
+   // This function will read and ignore any whitespace characters 
+   // (this includes blank spaces and the newline and tab characters).
    //
    // A TBranch object is created for each variable in the expression.
    // The total number of rows read from the file is returned.
