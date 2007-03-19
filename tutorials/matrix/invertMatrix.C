@@ -57,7 +57,7 @@ void invertMatrix(Int_t msize=6)
   // Get the maximum off-diagonal matrix value . One way to do this is to set the
   // diagonal to zero .
 
-  TMatrixD U1(H1,TMatrixD::kMult,H_square);
+  TMatrixD U1(H1,TMatrixT::kMult,H_square);
   TMatrixDDiag diag1(U1); diag1 = 0.0;
   const Double_t U1_max_offdiag = (U1.Abs()).Max();
   cout << "  Maximum off-diagonal = " << U1_max_offdiag << endl;

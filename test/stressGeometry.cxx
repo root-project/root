@@ -1,7 +1,6 @@
 // Program to check a TGeo geometry
 // The first time you run this program, the geometry files will be taken
-// from http://root.cern.ch/files (or if option "http is given as a command
-// line argument (stressGeometry http*).
+// from http://root.cern.ch/files
 //   
 //    How the program works
 // If the file <geom_name>_ref.root does not exist, it is generated. The file
@@ -27,8 +26,7 @@
 // To run this script, do
 //   stressGeometry
 // or  stressGeometry *
-// or  stressGeometry http*
-// or  stressGeometry AlephAlice
+// or  stressGeometry alice
 // or from the ROOT command line
 // root > .L stressGeometry.cxx  or .L stressGeometry.cxx+
 // root > stressGeometry(exp_name); // where exp_name is the geometry file name without .root
@@ -138,8 +136,6 @@ void stressGeometry(const char *exp="*") {
       if (opt.Contains(exps[i])) iexp[i] = 1;
       else                       iexp[i] = 0;
    }       
-   Bool_t http = kFALSE;
-   if (opt.Contains("http")) http = kTRUE;
    char fname[24];
    for (i=0; i<10; i++) {
       if (!iexp[i]) continue;
@@ -148,16 +144,8 @@ void stressGeometry(const char *exp="*") {
          delete gGeoManager;
          gGeoManager = 0;
       }   
-      if (!http && !gSystem->AccessPathName(fname)) {
-         TGeoManager::Import(fname);
-      } else {
-         //printf(" Accessing %s from http://root.cern.ch/files\n",fname);
-         TGeoManager::Import(Form("http://root.cern.ch/files/%s",fname));
-         if (!http && gGeoManager) {
-            printf("Creating a local copy: %s\n",fname);
-            gGeoManager->Export(fname);
-         }
-      }
+      TGeoManager::Import(Form("http://root.cern.ch/files/%s",fname));
+         
       sprintf(fname, "%s_ref.root", exps[i]);
       if (gSystem->AccessPathName(fname)) {
          printf("File: %s does not exist, generating it\n", fname);
