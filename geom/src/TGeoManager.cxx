@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.175 2007/03/02 08:52:02 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.176 2007/03/14 11:31:36 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -5578,7 +5578,12 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    } else {   
       // import from a root file
       TFile *old = gFile;
-      TFile *f = TFile::Open(filename);
+      // in case a web file is specified, use the cacheread option to cache
+      // this file in the local directory
+      TFile::SetCacheFileDir(".");
+      TFile *f = 0;
+      if (strstr(filename,"http://")) f = TFile::Open(filename,"CACHEREAD");
+      else                            f = TFile::Open(filename);
       if (!f || f->IsZombie()) {
          if (old) old->cd();
          printf("Error in <TGeoManager::Import>: Cannot open file\n");
