@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TFile.h,v 1.61 2007/01/28 18:28:33 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TFile.h,v 1.62 2007/02/09 10:16:07 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -35,6 +35,8 @@ class TFileOpenHandle;
 class TFileCacheRead;
 class TFileCacheWrite;
 class TProcessID;
+class TStopwatch;
+
 
 class TFile : public TDirectoryFile {
   friend class TDirectoryFile;
@@ -83,8 +85,10 @@ protected:
 
    TList           *fInfoCache;      //!Cached list of the streamer infos in this file
 
-   static TList    *fgAsyncOpenRequests; //!List of handles for pending open requests
+   static TList    *fgAsyncOpenRequests; //List of handles for pending open requests
 
+   static TString   fgCacheFileDir;          //Directory where to locally stage files
+   static Bool_t    fgCacheFileDisconnected; //Indicates, if we trust in the files in the cache dir without stat on the cached file or not
    static Long64_t  fgBytesWrite;  //Number of bytes written by all TFile objects
    static Long64_t  fgBytesRead;   //Number of bytes read by all TFile objects
    static Long64_t  fgFileCounter; //Counter for all opened files
@@ -116,6 +120,8 @@ protected:
 private:
    TFile(const TFile &);            //Files cannot be copied
    void operator=(const TFile &);
+
+   static void CpProgress(Long64_t bytesread, Long64_t size, TStopwatch &watch);
 
 public:
    // TFile status bits
@@ -238,6 +244,12 @@ public:
 
    static Long64_t     GetFileCounter();
    static void         IncrementFileCounter();
+
+   static Bool_t       SetCacheFileDir(const char *cachedir, Bool_t operatedisconnected = kTRUE);
+   static const char  *GetCacheFileDir();
+   static Bool_t       ShrinkCacheFileDir(Long64_t shrinksize, Long_t cleanupinteval = 0);
+   static Bool_t       Cp(const char *src, const char *dst, Bool_t progressbar = kTRUE,
+                          UInt_t buffersize = 1000000);
 
    ClassDef(TFile,7)  //ROOT file
 };

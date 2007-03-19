@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TFile.cxx,v 1.206 2007/02/09 18:07:05 brun Exp $
+// @(#)root/io:$Name:  $:$Id: TFile.cxx,v 1.207 2007/02/12 15:37:00 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -97,6 +97,8 @@
 #include "TVirtualMonitoring.h"
 #include "TVirtualMutex.h"
 #include "TMathBase.h"
+#include "TObjString.h"
+#include "TStopwatch.h"
 #include <cmath>
 
 TFile *gFile;                 //Pointer to current file
@@ -108,6 +110,8 @@ Long64_t TFile::fgFileCounter = 0;
 Int_t    TFile::fgReadCalls = 0;
 Bool_t   TFile::fgReadInfo = kTRUE;
 TList   *TFile::fgAsyncOpenRequests = 0;
+TString  TFile::fgCacheFileDir;
+Bool_t   TFile::fgCacheFileDisconnected = kTRUE;
 
 const Int_t kBEGIN = 100;
 
@@ -234,6 +238,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
    if (!gROOT)
       ::Fatal("TFile::TFile", "ROOT system not initialized");
+
 
    // store name without the options as name and title
    TString sfname1 = fname1;
@@ -2217,7 +2222,6 @@ void TFile::ShowStreamerInfo()
    delete list;
 }
 
-
 //______________________________________________________________________________
 UShort_t TFile::WriteProcessID(TProcessID *pidd)
 {
@@ -2322,9 +2326,163 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
    // The netopt argument is only used by TNetFile. For the meaning of the
    // options and other arguments see the constructors of the individual
    // file classes. In case of error returns 0.
+   //
+   // For remote files there is the option:
+   //  CACHEREAD     opens an existing file for reading through the file cache.
+   //                The file will be downloaded to the cache and opened from there.
+   //                If the download fails, it will be opened remotely.
+   //                The file will be downloaded to the directory specified by
+   //                SetCacheFileDir().
 
    TPluginHandler *h;
    TFile *f = 0;
+
+   // check if we read through a file cache
+   const char *defaultreadoption = "READ";
+   if (!strcmp(option, "CACHEREAD")) {
+      if (fgCacheFileDir == "") {
+         ::Warning("TFile::Open", "you want to read through a cache, but you have no valid cache directory set - reading remotely");
+         ::Info("TFile::Open", "set cache directory using TFile::SetCacheFileDir()");
+         option = defaultreadoption;
+      } else {
+         TUrl fileurl(name);
+         TUrl tagurl;
+
+         if ((!strcmp(fileurl.GetProtocol(), "file"))) {
+            // it makes no sense to read local files through a file cache
+            ::Warning("TFile::Open", "you want to read through a cache, but you are reading local files - CACHEREAD disabled");
+            option = defaultreadoption;
+         } else {
+            // this is a remote file and worthwhile to be put into the local cache
+            // now create cachepath to put it
+            TString cachefilepath;
+            TString cachefilepathbasedir;
+            cachefilepath = fgCacheFileDir;
+            cachefilepath += fileurl.GetFile();
+            cachefilepathbasedir = gSystem->DirName(cachefilepath);
+            if ((gSystem->mkdir(cachefilepathbasedir, kTRUE) < 0) &&
+                (gSystem->AccessPathName(cachefilepathbasedir, kFileExists))) {
+               ::Warning("TFile::Open","you want to read through a cache, but I cannot create the directory %s - CACHEREAD disabled", cachefilepathbasedir.Data());
+               option = defaultreadoption;
+            } else {
+               // check if this should be a zip file
+               if (strlen(fileurl.GetAnchor())) {
+                  // remove the anchor and change the target name
+                  cachefilepath += "__";
+                  cachefilepath += fileurl.GetAnchor();
+                  fileurl.SetAnchor("");
+               }
+               if (strstr(name,"zip=")) {
+                  // filter out this option and change the target cache name
+                  TString urloptions = fileurl.GetOptions();
+                  TString newoptions;
+                  TObjArray *objOptions = urloptions.Tokenize("&");
+                  Int_t optioncount = 0;
+                  TString zipname;
+                  for (Int_t n = 0; n < objOptions->GetEntries(); n++) {
+                     TString loption = ((TObjString*)objOptions->At(n))->GetName();
+                     TObjArray *objTags = loption.Tokenize("=");
+                     if (objTags->GetEntries() == 2) {
+                        TString key   = ((TObjString*)objTags->At(0))->GetName();
+                        TString value = ((TObjString*)objTags->At(1))->GetName();
+                        if (key.CompareTo("zip", TString::kIgnoreCase)) {
+                           if (optioncount!=0) {
+                              newoptions += "&";
+                              newoptions += key;
+                              newoptions += "=";
+                              newoptions += value;
+                              optioncount++;
+                           }
+                        } else {
+                           zipname = value;
+                        }
+                     }
+                     delete objTags;
+                  }
+                  delete objOptions;
+                  fileurl.SetOptions(newoptions.Data());
+                  cachefilepath += "__";
+                  cachefilepath += zipname;
+                  fileurl.SetAnchor("");
+               }
+
+               Bool_t need2copy = kFALSE;
+
+               // check if file is in the cache
+               Long_t id;
+               Long64_t size;
+               Long_t flags;
+               Long_t modtime;
+               if (!gSystem->GetPathInfo(cachefilepath, &id, &size, &flags, &modtime)) {
+                  // file is in the cache
+                  if (!fgCacheFileDisconnected) {
+                     char cacheblock[256];
+                     char remotblock[256];
+                     // check the remote file for it's size and compare some magic bytes
+                     TString cfurl;
+                     cfurl = cachefilepath;
+                     cfurl += "?filetype=raw";
+                     TUrl rurl(name);
+                     TString ropt = rurl.GetOptions();
+                     ropt += "&filetype=raw";
+                     rurl.SetOptions(ropt);
+
+                     TFile *cachefile = TFile::Open(cfurl, "READ");
+                     TFile *remotfile = TFile::Open(rurl.GetUrl(), "READ");
+
+                     cachefile->Seek(0);
+                     remotfile->Seek(0);
+
+                     if (!cachefile) {
+                        need2copy = kTRUE;
+                        ::Error("TFile::Open", "cannot open the cache file to check cache consistency");
+                     }
+
+                     if (!remotfile) {
+                        ::Error("TFile::Open", "cannot open the remote file to check cache consistency");
+                        return 0;
+                     }
+
+                     if ((!cachefile->ReadBuffer(cacheblock,256)) && (!remotfile->ReadBuffer(remotblock,256))) {
+                        if (memcmp(cacheblock, remotblock, 256)) {
+                           ::Warning("TFile::Open", "the header of the cache file differs from the remote file - forcing an update");
+                           need2copy = kTRUE;
+                        }
+                     } else {
+                        ::Warning("TFile::Open", "the header of the cache and/or remote file are not readable - forcing an update");
+                        need2copy = kTRUE;
+                     }
+
+                     delete remotfile;
+                     delete cachefile;
+                  }
+               } else {
+                  need2copy = kTRUE;
+               }
+
+               // try to fetch the file
+               if ((need2copy) && (!TFile::Cp(name, cachefilepath))) {
+                  ::Warning("TFile::Open", "you want to read through a cache, but I cannot make a cache copy of %s - CACHEREAD disabled", cachefilepathbasedir.Data());
+                  option = defaultreadoption;
+               } else {
+                  ::Info("TFile::Open", "using local cache copy of %s [%s]", name, cachefilepath.Data());
+                  // finally we have the file and can open it locally
+                  fileurl.SetProtocol("file");
+                  fileurl.SetFile(cachefilepath);
+
+                  tagurl = fileurl;
+                  TString tagfile;
+                  tagfile = cachefilepath;
+                  tagfile += ".ROOT.cachefile";
+                  tagurl.SetFile(tagfile);
+                  // we symlink this file as a ROOT cached file
+                  gSystem->Symlink(cachefilepath, tagfile);
+                  return TFile::Open(fileurl.GetUrl(), "READ", ftitle, compress, netopt);
+               }
+            }
+         }
+      }
+   }
 
    IncrementFileCounter();
 
@@ -2654,6 +2812,100 @@ Long64_t TFile::GetFileCounter() { return fgFileCounter; }
 void TFile::IncrementFileCounter() { fgFileCounter++; }
 
 //______________________________________________________________________________
+Bool_t TFile::SetCacheFileDir(const char *cachedir, Bool_t operatedisconnected)
+{
+   // Sets the directory where to locally stage/cache remote files.
+   // If the directory is not writable by us return kFALSE.
+
+   TString cached = cachedir;
+   if (!cached.EndsWith("/"))
+      cached += "/";
+
+   if ((gSystem->Chmod(cached, 0700)) < 0) {
+      // try to create it
+      gSystem->mkdir(cached, kTRUE);
+      if (gSystem->AccessPathName(cached, kFileExists)) {
+         ::Error("TFile::SetCacheFileDir", "no suffcient permissions on cache directory %s or cannot create it", cachedir);
+         fgCacheFileDir = "";
+         return kFALSE;
+      }
+      gSystem->Chmod(cached, 0700);
+   }
+   fgCacheFileDir = cached;
+   fgCacheFileDisconnected = operatedisconnected;
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+const char *TFile::GetCacheFileDir()
+{
+   // Get the directory where to locally stage/cache remote files.
+
+   return fgCacheFileDir;
+}
+
+//______________________________________________________________________________
+Bool_t TFile::ShrinkCacheFileDir(Long64_t shrinksize, Long_t cleanupinterval)
+{
+   // We try to shrink the cache to the desired size.
+   // With the clenupinterval you can specify the minimum amount of time after
+   // the previous cleanup before the cleanup operation is repeated in
+   // the cache directory
+
+   char cmd[4096];
+   if (fgCacheFileDir == "") {
+      return kFALSE;
+   }
+
+   // check the last clean-up in the cache
+   Long_t id;
+   Long64_t size;
+   Long_t flags;
+   Long_t modtime;
+
+   TString cachetagfile = fgCacheFileDir;
+   cachetagfile += ".tag.ROOT.cache";
+   if (!gSystem->GetPathInfo(cachetagfile, &id, &size, &flags, &modtime)) {
+      // check the time passed since last cache cleanup
+      Long_t lastcleanuptime = ((Long_t)time(0) - modtime);
+      if (lastcleanuptime < cleanupinterval) {
+         ::Info("TFile::ShrinkCacheFileDir", "clean-up is skipped - last cleanup %lu seconds ago - you requested %lu", lastcleanuptime, cleanupinterval);
+         return kTRUE;
+      }
+   }
+
+   // (re-)create the cache tag file
+   cachetagfile += "?filetype=raw";
+   TFile *tagfile = 0;
+
+   if (!(tagfile = TFile::Open(cachetagfile, "RECREATE"))) {
+      ::Error("TFile::ShrinkCacheFileDir", "cannot create the cache tag file %s", cachetagfile.Data());
+      return kFALSE;
+   }
+
+   // the shortest garbage collector in the world - one long line of PERL - unlinks files only,
+   // if there is a symbolic link with '.ROOT.cachefile' for safety ;-)
+
+#if defined(R__WIN32)
+   sprintf(cmd, "echo <TFile::ShrinkCacheFileDir>: cleanup to be implemented");
+#elif defined(R__MACOSX)
+   sprintf(cmd, "perl -e 'my $cachepath = \"%s\"; my $cachesize = %lld;my $findcommand=\"find $cachepath -type f -exec stat -f \\\"\\%%a::\\%%N::\\%%z\\\" \\{\\} \\\\\\;\";my $totalsize=0;open FIND, \"$findcommand | sort -k 1 |\";while (<FIND>) { my ($accesstime, $filename, $filesize) = split \"::\",$_; $totalsize += $filesize;if ($totalsize > $cachesize) {if ( ( -e \"${filename}.ROOT.cachefile\" ) && ( -e \"${filename}\" ) ) {unlink \"$filename.ROOT.cachefile\";unlink \"$filename\";}}}close FIND;' ", fgCacheFileDir.Data(),shrinksize);
+#else
+   sprintf(cmd, "perl -e 'my $cachepath = \"%s\"; my $cachesize = %lld;my $findcommand=\"find $cachepath -type f -exec stat -c \\\"\\%%x::\\%%n::\\%%s\\\" \\{\\} \\\\\\;\";my $totalsize=0;open FIND, \"$findcommand | sort -k 1 |\";while (<FIND>) { my ($accesstime, $filename, $filesize) = split \"::\",$_; $totalsize += $filesize;if ($totalsize > $cachesize) {if ( ( -e \"${filename}.ROOT.cachefile\" ) && ( -e \"${filename}\" ) ) {unlink \"$filename.ROOT.cachefile\";unlink \"$filename\";}}}close FIND;' ", fgCacheFileDir.Data(),shrinksize);
+#endif
+
+   tagfile->WriteBuffer(cmd, 4096);
+   delete tagfile;
+
+   if ((gSystem->Exec(cmd)) != 0) {
+      ::Error("TFile::ShrinkCacheFileDir", "error executing clean-up script");
+      return kFALSE;
+   }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 Bool_t TFile::Matches(const char *url)
 {
    // Return kTRUE if 'url' matches the coordinates of this file.
@@ -2855,4 +3107,166 @@ const TUrl *TFile::GetEndpointUrl(const char* name)
 
    // Information not yet available
    return (const TUrl *)0;
+}
+
+//______________________________________________________________________________
+void TFile::CpProgress(Long64_t bytesread, Long64_t size, TStopwatch &watch)
+{
+   // Print file copy progress.
+
+   fprintf(stderr, "[TFile::Cp] Total %.02f MB\t|", (Double_t)size/1048576);
+
+   for (int l = 0; l < 20; l++) {
+      if (size > 0) {
+         if (l < 20*bytesread/size)
+            fprintf(stderr, "=");
+         else if (l == 20*bytesread/size)
+            fprintf(stderr, ">");
+         else if (l > 20*bytesread/size)
+            fprintf(stderr, ".");
+      } else
+         fprintf(stderr, "=");
+   }
+   // Allow to update the GUI while uploading files
+   gSystem->ProcessEvents();
+   watch.Stop();
+   Double_t lCopy_time = watch.RealTime();
+   fprintf(stderr, "| %.02f %% [%.01f MB/s]\r",
+           100.0*(size?(bytesread/size):1), bytesread/lCopy_time/1048576.);
+   watch.Continue();
+}
+
+//______________________________________________________________________________
+Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
+                 UInt_t buffersize)
+{
+   // Allows to copy file from src to dst URL. Returns kTRUE in case of success,
+   // kFALSE otherwise.
+
+   TStopwatch watch;
+   Bool_t success = kFALSE;
+
+   TUrl sURL(src, kTRUE);
+   TUrl dURL(dst, kTRUE);
+
+   TString oopt = "RECREATE";
+   TString ourl = dURL.GetUrl();
+
+   TString raw = "filetype=raw";
+
+   TString opt = sURL.GetOptions();
+   if (opt == "")
+      opt = raw;
+   else
+      opt += "&&" + raw;
+   sURL.SetOptions(opt);
+
+   opt = dURL.GetOptions();
+   if (opt == "")
+      opt = raw;
+   else
+      opt += "&&" + raw;
+   dURL.SetOptions(opt);
+
+   char *copybuffer = 0;
+
+   TFile *sfile = 0;
+   TFile *dfile = 0;
+
+   sfile = TFile::Open(sURL.GetUrl(), "READ");
+
+   if (!sfile) {
+      ::Error("TFile::Cp", "cannot open source file %s", src);
+      goto copyout;
+   }
+   // "RECREATE" does not work always well with XROOTD
+   // namely when some pieces of the path are missing;
+   // we force "NEW" in such a case
+   if (TFile::GetType(ourl, "") == TFile::kNet)
+      if (gSystem->AccessPathName(ourl)) {
+         oopt = "NEW";
+         // Force creation of the missing parts of the path
+         opt += "&mkpath=1";
+         dURL.SetOptions(opt);
+      }
+
+   dfile = TFile::Open(dURL.GetUrl(), oopt);
+
+   if (!dfile) {
+      ::Error("TFile::Cp", "cannot open destination file %s", dst);
+      goto copyout;
+   }
+
+   sfile->Seek(0);
+   dfile->Seek(0);
+
+   copybuffer = new char[buffersize];
+   if (!copybuffer) {
+      ::Error("TFile::Cp", "cannot allocate the copy buffer");
+      goto copyout;
+   }
+
+   Bool_t   readop;
+   Bool_t   writeop;
+   Long64_t read;
+   Long64_t written;
+   Long64_t totalread;
+   Long64_t filesize;
+   Long64_t b00;
+   filesize  = sfile->GetSize();
+   totalread = 0;
+   watch.Start();
+
+   b00 = sfile->GetBytesRead();
+
+   do {
+      if (progressbar) CpProgress(totalread, filesize,watch);
+
+      Long64_t b1 = sfile->GetBytesRead() - b00;
+
+      Long64_t readsize;
+      if (filesize - b1 > (Long64_t)buffersize) {
+         readsize = buffersize;
+      } else {
+         readsize = filesize - b1;
+      }
+
+      Long64_t b0 = sfile->GetBytesRead();
+      sfile->Seek(totalread,TFile::kBeg);
+      readop = sfile->ReadBuffer(copybuffer, (Int_t)readsize);
+      read   = sfile->GetBytesRead() - b0;
+      if (read < 0) {
+         ::Error("TFile::Cp", "cannot read from source file %s", src);
+         goto copyout;
+      }
+
+      Long64_t w0 = dfile->GetBytesWritten();
+      writeop = dfile->WriteBuffer(copybuffer, (Int_t)read);
+      written = dfile->GetBytesWritten() - w0;
+      if (written != read) {
+         ::Error("TFile::Cp", "cannot write %d bytes to destination file %s", read, dst);
+         goto copyout;
+      }
+      totalread += read;
+   } while (read == (Long64_t)buffersize);
+
+   if (progressbar) {
+      CpProgress(totalread, filesize,watch);
+      fprintf(stderr, "\n");
+   }
+
+   success = kTRUE;
+
+copyout:
+   if (sfile) sfile->Close();
+   if (dfile) dfile->Close();
+
+   if (sfile) delete sfile;
+   if (dfile) delete dfile;
+   if (copybuffer) delete[] copybuffer;
+
+   watch.Stop();
+   watch.Reset();
+
+   return success;
 }
