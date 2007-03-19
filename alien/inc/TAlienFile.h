@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.18 2007/02/22 11:51:50 brun Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.19 2007/03/19 16:14:14 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -33,9 +33,6 @@
 
 #ifndef ROOT_TXNetFile
 #include "TXNetFile.h"
-#endif
-#ifndef ROOT_TSystem
-#include "TSystem.h"
 #endif
 
 

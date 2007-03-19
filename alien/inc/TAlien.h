@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.13 2006/05/26 16:55:04 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.14 2007/03/19 16:14:14 rdm Exp $
 // Author: Andreas Peters   5/5/2005
 
 /*************************************************************************
@@ -30,24 +30,10 @@
 #include "TList.h"
 #endif
 
-#ifndef ROOT_TDSet
-#include "TDSet.h"
-#endif
-
-#ifndef ROOT_TMap
-#include "TMap.h"
-#endif
-
-#ifndef ROOT_TGridJobStatusList
-#include "TGridJobStatusList.h"
-#endif
-
-#ifndef ROOT_TGridCollection
-#include "TGridCollection.h"
-#endif
-
 class GapiUI;
 class TGridJob;
+class TGridJobStatusList;
+class TMap;
 
 
 class TAlien : public TGrid {

@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name: v5-13-04 $:$Id: TAlienCollection.h,v 1.4 2006/10/05 14:56:24 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.h,v 1.6 2007/03/19 16:14:14 rdm Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -30,56 +30,52 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
-#ifndef ROOT_TDSet
-#include "TDSet.h"
-#endif
-#ifndef ROOT_TGridResult
-#include "TGridResult.h"
+#ifndef ROOT_TList
+#include "TList.h"
 #endif
 #ifndef ROOT_TFileStager
 #include "TFileStager.h"
 #endif
 
 class TMap;
-class TList;
 class TIter;
 class TFile;
+class TDSet;
 
 
 class TAlienCollection:public TGridCollection {
 
- private:
-   TString fXmlFile;            // collection XML file
-   TList *fFileGroupList;           // list with event file maps
-   TIter *fFileGroupListIter;       // event file list iterator
-   TMap *fCurrent;              // current event file map
-   UInt_t fNofGroups;           // number of file groups
-   UInt_t fNofGroupfiles;       // number of files per group
-   Bool_t fHasSUrls;            // defines if SURLs are present in the collection
-   Bool_t fHasSelection;        // defines if the user made some selection on the files to be exported for processing
-   Bool_t fHasOnline;           // defines if the collection was checked for the online status
-   TString fLastOutFileName;    // keeps the latest outputfilename produced with GetOutputFileName
+private:
+   TString  fXmlFile;            // collection XML file
+   TList   *fFileGroupList;      // list with event file maps
+   TIter   *fFileGroupListIter;  // event file list iterator
+   TMap    *fCurrent;            // current event file map
+   UInt_t   fNofGroups;          // number of file groups
+   UInt_t   fNofGroupfiles;      // number of files per group
+   Bool_t   fHasSUrls;           // defines if SURLs are present in the collection
+   Bool_t   fHasSelection;       // defines if the user made some selection on the files to be exported for processing
+   Bool_t   fHasOnline;          // defines if the collection was checked for the online status
+   TString  fLastOutFileName;    // keeps the latest outputfilename produced with GetOutputFileName
+   TFileStager *fFileStager;     // pointer to the file stager object
+   TString      fExportUrl;      // defines the url where to store back this collection
+   TString      fInfoComment;    // comment in the info section of the XML file
+   TString      fCollectionName; // name of the collection in the collection section of the XML file
+   TList       *fTagFilterList;  // List of TObjStrings with tags to filter out in export operations
 
    virtual void ParseXML(UInt_t maxentries);
    Bool_t ExportXML(TFile * file, Bool_t selected, Bool_t online,
                     const char *name, const char *comment);
 
-   TFileStager *fFileStager;    // pointer to the file stager object
-   TString fExportUrl;          // defines the url where to store back this collection
-   TString fInfoComment;        // comment in the info section of the XML file
-   TString fCollectionName;     // name of the collection in the collection section of the XML file
-   TList *fTagFilterList;       // List of TObjStrings with tags to filter out in export operations
-
- public:
-    TAlienCollection():fFileGroupList(0), fFileGroupListIter(0), fCurrent(0),
+public:
+   TAlienCollection() : fFileGroupList(0), fFileGroupListIter(0), fCurrent(0),
        fNofGroups(0), fNofGroupfiles(0), fHasSUrls(0), fHasSelection(0),
-       fFileStager(0), fExportUrl(""), fInfoComment(""), fCollectionName("unnamed"), fTagFilterList(0) {
-   }
-   TAlienCollection(TList * eventlist, UInt_t ngroups =
-                    0, UInt_t ngroupfiles = 0);
+       fFileStager(0), fExportUrl(""), fInfoComment(""), fCollectionName("unnamed"), fTagFilterList(0)
+      { }
+   TAlienCollection(TList *eventlist, UInt_t ngroups = 0,
+                    UInt_t ngroupfiles = 0);
    TAlienCollection(const char *localCollectionFile, UInt_t maxentries);
 
-   virtual ~ TAlienCollection();
+   virtual ~TAlienCollection();
 
    void        Reset();
    TMap       *Next();
@@ -98,59 +94,50 @@ class TAlienCollection:public TGridCollection {
    Bool_t      ExportXML(const char *exporturl, Bool_t selected, Bool_t online,
 			 const char *name, const char *comment);
    const char *GetExportUrl() {
-     if (fExportUrl.Length())return fExportUrl; else return 0;
+     if (fExportUrl.Length()) return fExportUrl; else return 0;
    } // return's (if defined) the export url protected:
 
    Bool_t      SetExportUrl(const char *exporturl = 0);
 
    void        Print(Option_t * opt) ;
    TFile      *OpenFile(const char *filename) ;
-   TList      *GetFileGroupList() {
-      return fFileGroupList;
-   } 
-   
-   TEventList *GetEvList(const char *name) ;
-   UInt_t      GetNofGroups() {
-      return fNofGroups;
-   } 
+   TList      *GetFileGroupList() const { return fFileGroupList; }
 
-   UInt_t      GetNofGroupfiles() {
-      return fNofGroupfiles;
-   } 
+   TEventList *GetEvList(const char *name);
+   UInt_t      GetNofGroups() const { return fNofGroups; }
 
-   Bool_t      OverlapCollection(TGridCollection * comparator);
-   void        Add(TGridCollection * addcollection);
+   UInt_t      GetNofGroupfiles() const { return fNofGroupfiles; }
+
+   Bool_t      OverlapCollection(TGridCollection *comparator);
+   void        Add(TGridCollection *addcollection);
    Bool_t      Stage(Bool_t bulk = kFALSE);
    Bool_t      CheckIfOnline(Bool_t bulk = kFALSE);
-   TDSet      *GetDataset(const char *type, const char *objname =
-			  "*", const char *dir = "/");
+   TDSet      *GetDataset(const char *type, const char *objname = "*",
+			  const char *dir = "/");
 
-   TGridResult *GetGridResult(const char *filename =
-                              "", Bool_t onlyonline =
-                              kTRUE, Bool_t publicaccess = kFALSE);
+   TGridResult *GetGridResult(const char *filename = "",
+                              Bool_t onlyonline = kTRUE,
+                              Bool_t publicaccess = kFALSE);
 
    Bool_t      LookupSUrls(Bool_t verbose = kTRUE);
 
-   TList      *GetTagFilterList() {
-     return fTagFilterList;
-   } 
+   TList      *GetTagFilterList() const { return fTagFilterList; }
 
    void        SetTagFilterList(TList * filterlist) { if (fTagFilterList)
      delete fTagFilterList; fTagFilterList = filterlist;
    }
 
-   const char* GetCollectionName() { return fCollectionName.Data(); }
-   const char* GetInfoComment() { return fInfoComment.Data(); }
+   const char* GetCollectionName() const { return fCollectionName.Data(); }
+   const char* GetInfoComment() const { return fInfoComment.Data(); }
 
    static TGridCollection *Open(const char *collectionurl,
-                                 UInt_t maxentries = 1000000);
+                                UInt_t maxentries = 1000000);
    static TGridCollection *OpenQuery(TGridResult * queryresult,
-                                      Bool_t nogrouping = kFALSE);
-   
-   const char *GetOutputFileName(const char *infile, Bool_t rename =
-                                 kTRUE);
+                                     Bool_t nogrouping = kFALSE);
 
-   ClassDef(TAlienCollection, 1)        // Manages collection of files on AliEn
+   const char *GetOutputFileName(const char *infile, Bool_t rename = kTRUE);
+
+   ClassDef(TAlienCollection, 1) // Manages collection of files on AliEn
 };
 
 #endif

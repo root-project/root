@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.23 2006/10/10 06:47:17 brun Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.24 2007/03/19 16:14:14 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -372,7 +372,7 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t * option,
          TString lUrloption;
          lUrloption = "zip=";
          lUrloption += purl.GetAnchor();
-	 lUrloption += "&mkpath=1";
+         lUrloption += "&mkpath=1";
          lUrl.SetFile(lUrlfile);
          lUrl.SetOptions(lUrloption);
       } else {
@@ -383,20 +383,20 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t * option,
             TString lUrloption;
             lUrloption = "zip=";
             lUrloption += anchor;
-	    lUrloption += "&mkpath=1";
+            lUrloption += "&mkpath=1";
             lUrl.SetFile(lUrlfile);
             //      lUrl.SetAnchor(anchor);
             lUrl.SetOptions(lUrloption);
          } else {
-	   TString loption;
-	   loption = lUrl.GetOption();
-	   if (loption.Length()) {
-	     loption += "&mkpath=1";
-	     lUrl.SetOptions(loption.Data());
-	   } else {
-	     lUrl.SetOptions("mkpath=1");
-	   }
-	 }
+           TString loption;
+           loption = lUrl.GetOption();
+           if (loption.Length()) {
+              loption += "&mkpath=1";
+              lUrl.SetOptions(loption.Data());
+            } else {
+              lUrl.SetOptions("mkpath=1");
+            }
+         }
       }
 
       fAUrl = TUrl(newurl);
@@ -418,9 +418,9 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t * option,
 
       // add the original options from the alien URL
       if (oldopt.Length()) {
-	nUrl.SetOptions(newopt + TString("&") + oldopt);
+         nUrl.SetOptions(newopt + TString("&") + oldopt);
       } else {
-	nUrl.SetOptions(newopt);
+         nUrl.SetOptions(newopt);
       }
 
       fAUrl = nUrl;
@@ -523,13 +523,13 @@ TString TAlienFile::SUrl(const char* lfn)
   if (!lfn) {
     return surl;
   }
-  
+
   TUrl lurl(lfn);
   command = "access -p read ";
   command += lurl.GetFile();
 
   TGridResult* result;
-  
+
   if (!gGrid) {
     ::Error("SUrl","No grid connection");
     return surl;
@@ -540,7 +540,7 @@ TString TAlienFile::SUrl(const char* lfn)
     ::Error("SUrl","Couldn't get access URL for alien file %s",lfn);
     return surl;
   }
-  
+
   TIterator* iter = result->MakeIterator();
   TObject *object=0;
   TObjString *urlStr=0;

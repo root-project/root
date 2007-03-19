@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name: v5-13-04 $:$Id: TAlienCollection.cxx,v 1.10 2006/10/10 06:47:17 brun Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.11 2007/03/19 16:14:14 rdm Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -24,7 +24,7 @@
 #include "TAlienCollection.h"
 #include "TAlienResult.h"
 #include "TAlienFile.h"
-#include "TList.h"
+#include "TDSet.h"
 #include "TMap.h"
 #include "TFile.h"
 #include "TXMLEngine.h"
@@ -33,12 +33,12 @@
 #include "TObjArray.h"
 #include "TFileMerger.h"
 #include "TROOT.h"
-#include "TFileStager.h"
 
 ClassImp(TAlienCollection)
+
 //______________________________________________________________________________
-    TAlienCollection::TAlienCollection(const char *localcollectionfile,
-                                       UInt_t maxentries)
+TAlienCollection::TAlienCollection(const char *localcollectionfile,
+                                   UInt_t maxentries)
 {
    // Create Alien event collection by reading collection from the specified XML file.
    // You can restrict the number of importet entries using the maxentries value
@@ -63,7 +63,7 @@ ClassImp(TAlienCollection)
 }
 
 //______________________________________________________________________________
-TAlienCollection::TAlienCollection(TList * eventlist, UInt_t nofgroups,
+TAlienCollection::TAlienCollection(TList *eventlist, UInt_t nofgroups,
                                    UInt_t nofgroupfiles)
 {
    fFileGroupList = eventlist;
@@ -132,7 +132,7 @@ TGridCollection *TAlienCollection::Open(const char *collectionurl,
 }
 
 //______________________________________________________________________________
-TFile *TAlienCollection::OpenFile(const char *filename) 
+TFile *TAlienCollection::OpenFile(const char *filename)
 {
    // Open the file specified by <filename> from the currently active file group in the collection via its TURL.
 
@@ -271,7 +271,7 @@ void TAlienCollection::ParseXML(UInt_t maxentries)
    } else {
      fCollectionName = ("unnamed");
    }
-   
+
    XMLNodePointer_t xevent = xml.GetChild(xcollection);;
    if (!xevent) {
       Error("ParseXML", "cannot find the <event> tag in %s",
@@ -380,22 +380,22 @@ void TAlienCollection::ParseXML(UInt_t maxentries)
       }
 
       if (TString(xml.GetNodeName(xevent)) == "info") {
-	if (xml.GetAttr(xevent,"comment")) {
-	  fInfoComment = TString(xml.GetAttr(xevent,"comment"));
-	} else {
-	  fInfoComment = "";
-	}
+         if (xml.GetAttr(xevent,"comment")) {
+            fInfoComment = TString(xml.GetAttr(xevent,"comment"));
+         } else {
+            fInfoComment = "";
+         }
       }
 
       if (TString(xml.GetNodeName(xevent)) == "export") {
-	if (xml.GetAttr(xevent,"url")) {
-	  SetExportUrl(xml.GetAttr(xevent,"url"));
-	} else {
-	  fExportUrl = "";
-	}
+         if (xml.GetAttr(xevent,"url")) {
+            SetExportUrl(xml.GetAttr(xevent,"url"));
+         } else {
+            fExportUrl = "";
+         }
       }
       if (parsedentries >= maxentries)
-	return;
+         return;
    } while ((xevent = xml.GetNext(xevent)));
 }
 
@@ -500,6 +500,7 @@ void TAlienCollection::Status()
 
 }
 
+//______________________________________________________________________________
 void TAlienCollection::SetTag(const char *tag, const char *value,
                               TMap * tagmap)
 {
@@ -523,7 +524,7 @@ Bool_t TAlienCollection::SelectFile(const char *filename, Int_t nstart, Int_t ns
    // Selects all files with name <filename> in the collection
    // All files can be selected using "*" as filename
    Int_t cnt=0;
-   fHasSelection = kTRUE; 
+   fHasSelection = kTRUE;
    Reset();
    TMap *nextgroup;
    while ((nextgroup = (TMap *) Next())) {
@@ -532,19 +533,18 @@ Bool_t TAlienCollection::SelectFile(const char *filename, Int_t nstart, Int_t ns
       TIterator *nextfile = nextgroup->MakeIterator();
       nextfile->Reset();
       if ( ((nstart == -1 ) && (nstop == -1)) ||
-	   ((nstart != -1 ) && (cnt >= nstart) && (nstop == -1)) ||
-	   ((nstart != -1 ) && (cnt >= nstart) && (nstop != -1) && (cnt <= nstop)) ||
-	   ((nstop  != -1 ) && (cnt <= nstop)  && (nstart == -1))) {
-	while ((attributes = (TMap *) nextfile->Next())) {
-	  if (TString(attributes->GetName()) != "") {
-            if ((TString(attributes->GetName()) == TString(filename))
-                || (TString(filename) == TString("*"))) {
-	      SetTag("select", "1",
-		     ((TMap *) nextgroup->
-		      GetValue(attributes->GetName())));
+           ((nstart != -1 ) && (cnt >= nstart) && (nstop == -1)) ||
+           ((nstart != -1 ) && (cnt >= nstart) && (nstop != -1) && (cnt <= nstop)) ||
+           ((nstop  != -1 ) && (cnt <= nstop)  && (nstart == -1))) {
+         while ((attributes = (TMap *) nextfile->Next())) {
+            if (TString(attributes->GetName()) != "") {
+               if ((TString(attributes->GetName()) == TString(filename)) ||
+                   (TString(filename) == TString("*"))) {
+                  SetTag("select", "1",
+                  ((TMap *) nextgroup->GetValue(attributes->GetName())));
+               }
             }
-	  }
-	}
+         }
       }
    }
    return kTRUE;
@@ -564,22 +564,21 @@ Bool_t TAlienCollection::DeselectFile(const char *filename, Int_t nstart, Int_t 
       TIterator *nextfile = nextgroup->MakeIterator();
       nextfile->Reset();
       if ( ((nstart == -1 ) && (nstop == -1)) ||
-	   ((nstart != -1 ) && (cnt >= nstart) && (nstop == -1)) ||
-	   ((nstart != -1 ) && (cnt >= nstart) && (nstop != -1) && (cnt <= nstop)) ||
-	   ((nstop  != -1 ) && (cnt <= nstop)  && (nstart == -1))) {
-	while ((attributes = (TMap *) nextfile->Next())) {
-	  if (TString(attributes->GetName()) != "") {
-            if ((TString(attributes->GetName()) == TString(filename))
-                || (TString(filename) == TString("*"))) {
-	      SetTag("select", "0",
-		     ((TMap *) nextgroup->
-		      GetValue(attributes->GetName())));
+           ((nstart != -1 ) && (cnt >= nstart) && (nstop == -1)) ||
+           ((nstart != -1 ) && (cnt >= nstart) && (nstop != -1) && (cnt <= nstop)) ||
+           ((nstop  != -1 ) && (cnt <= nstop)  && (nstart == -1))) {
+         while ((attributes = (TMap *) nextfile->Next())) {
+            if (TString(attributes->GetName()) != "") {
+               if ((TString(attributes->GetName()) == TString(filename)) ||
+                   (TString(filename) == TString("*"))) {
+                  SetTag("select", "0",
+                  ((TMap *) nextgroup->GetValue(attributes->GetName())));
+               }
             }
-	  }
-	}
+         }
       }
    }
-	   
+
    return kTRUE;
 }
 
@@ -597,13 +596,12 @@ Bool_t TAlienCollection::DownscaleSelection(UInt_t scaler)
       TIterator *nextfile = nextgroup->MakeIterator();
       nextfile->Reset();
       if (cnt%scaler) {
-	while ((attributes = (TMap *) nextfile->Next())) {
-	  if (TString(attributes->GetName()) != "") {
-	      SetTag("select", "0",
-		     ((TMap *) nextgroup->
-		      GetValue(attributes->GetName())));
-	  }
-	}
+         while ((attributes = (TMap *) nextfile->Next())) {
+            if (TString(attributes->GetName()) != "") {
+               SetTag("select", "0",
+                  ((TMap *) nextgroup->GetValue(attributes->GetName())));
+            }
+         }
       }
    }
    return kTRUE;
@@ -622,7 +620,7 @@ Bool_t TAlienCollection::Remove(TMap * map)
 }
 
 //______________________________________________________________________________
-const char *TAlienCollection::GetTURL(const char *filename) 
+const char *TAlienCollection::GetTURL(const char *filename)
 {
    // Get a file's transport URL (TURL). Returns 0 in case of error.
 
@@ -639,7 +637,7 @@ const char *TAlienCollection::GetTURL(const char *filename)
 }
 
 //______________________________________________________________________________
-const char *TAlienCollection::GetSURL(const char *filename) 
+const char *TAlienCollection::GetSURL(const char *filename)
 {
    // Get a file's storage URL (SURL). Returns 0 in case of error.
 
@@ -656,7 +654,7 @@ const char *TAlienCollection::GetSURL(const char *filename)
 }
 
 //______________________________________________________________________________
-Bool_t TAlienCollection::IsOnline(const char *filename) 
+Bool_t TAlienCollection::IsOnline(const char *filename)
 {
    // Get a file's online tag. Returns false if not online or CheckIfOnline was never executed, true if online
 
@@ -679,7 +677,7 @@ Bool_t TAlienCollection::IsOnline(const char *filename)
 }
 
 //______________________________________________________________________________
-Bool_t TAlienCollection::IsSelected(const char *filename) 
+Bool_t TAlienCollection::IsSelected(const char *filename)
 {
    // Get a file's online tag. Returns false if not online or CheckIfOnline was never executed, true if online
 
@@ -702,7 +700,7 @@ Bool_t TAlienCollection::IsSelected(const char *filename)
 }
 
 //______________________________________________________________________________
-TEventList *TAlienCollection::GetEvList(const char *filename) 
+TEventList *TAlienCollection::GetEvList(const char *filename)
 {
    // Get a file's event list. Returns 0 in case of error.
 
@@ -719,7 +717,7 @@ TEventList *TAlienCollection::GetEvList(const char *filename)
 }
 
 //______________________________________________________________________________
-const char *TAlienCollection::GetLFN(const char *filename) 
+const char *TAlienCollection::GetLFN(const char *filename)
 {
    // Get a file's LFN. Returns 0 in case of error.
 
@@ -736,7 +734,7 @@ const char *TAlienCollection::GetLFN(const char *filename)
 }
 
 //______________________________________________________________________________
-Long64_t TAlienCollection::GetSize(const char *filename) 
+Long64_t TAlienCollection::GetSize(const char *filename)
 {
    // Get a file's LFN. Returns 0 in case of error.
 
@@ -755,7 +753,7 @@ Long64_t TAlienCollection::GetSize(const char *filename)
 }
 
 //______________________________________________________________________________
-void TAlienCollection::Print(Option_t *) 
+void TAlienCollection::Print(Option_t *)
 {
    // Print event file collection.
 
@@ -800,7 +798,7 @@ TGridResult *TAlienCollection::GetGridResult(const char *filename,
    // Return a TGridResult.
    // If files have been selected in this collection, only the selected files
    // are returned. If <onlyonline> is set to kTRUE, only files which are
-   // 'online' (staged) are included. If no online check was done, TGridResult 
+   // 'online' (staged) are included. If no online check was done, TGridResult
    // will be empty. <publicaccess> adds the publicaccess option to the TGridResult entries
 
    Reset();
@@ -899,7 +897,7 @@ void TAlienCollection::Add(TGridCollection * addcollection)
 Bool_t TAlienCollection::LookupSUrls(Bool_t verbose)
 {
    // retrieves all the SURLS for the LFNS
-  
+
    Bool_t ok = kTRUE;
    UInt_t lc = 0;
    Reset();
@@ -991,32 +989,31 @@ Bool_t TAlienCollection::Stage(Bool_t bulk)
       }
    } else {
       // bulk request
-       TList* stagelist = new TList();
-       stagelist->SetOwner(kTRUE);
-       Bool_t stageresult;
-       Reset();
-       UInt_t fc=0;
-       while ((filemap = Next())) {
-	   TIterator *nextfile = filemap->MakeIterator();
-	   TMap *attributes;
-	   while ((attributes = (TMap *) nextfile->Next())) {
-	      if (TString(attributes->GetName()) != "") {
-		 fc++;
-	         stagelist->Add( new TUrl((GetSURL(attributes->GetName()))));
-	      }
-	   }
-       }
+      TList* stagelist = new TList();
+      stagelist->SetOwner(kTRUE);
+      Bool_t stageresult;
+      Reset();
+      UInt_t fc=0;
+      while ((filemap = Next())) {
+         TIterator *nextfile = filemap->MakeIterator();
+         TMap *attributes;
+         while ((attributes = (TMap *) nextfile->Next())) {
+            if (TString(attributes->GetName()) != "") {
+               fc++;
+               stagelist->Add( new TUrl((GetSURL(attributes->GetName()))));
+            }
+         }
+      }
 
-       if (fc) {
-	 if (!fFileStager) {
-	    fFileStager =
-	       TFileStager::Open(stagelist->First()->GetName());
-	 }
-	 
-	stageresult = (fFileStager)->Stage(stagelist,"");
-       }
-       delete stagelist;
-       return stageresult;
+      if (fc) {
+         if (!fFileStager) {
+            fFileStager = TFileStager::Open(stagelist->First()->GetName());
+         }
+
+         stageresult = (fFileStager)->Stage(stagelist,"");
+      }
+      delete stagelist;
+      return stageresult;
    }
    return kTRUE;
 }
@@ -1116,7 +1113,7 @@ Bool_t TAlienCollection::CheckIfOnline(Bool_t bulk)
             return kFALSE;
 
          Reset();
-	 fc=0;
+         fc=0;
          while ((filemap = Next())) {
             // loop over all files in this map
             TIterator *nextfile = filemap->MakeIterator();
@@ -1146,22 +1143,22 @@ Bool_t TAlienCollection::CheckIfOnline(Bool_t bulk)
                      // delete the online tag entry, if it exists already
                      TObject *delobject =
                          ((TMap *) filemap->
-                          GetValue(attributes->GetName()))->
+                         GetValue(attributes->GetName()))->
                          FindObject("online");
                      if (delobject) {
                         TObject *keyobject = ((TPair *) delobject)->Key();
                         ((TMap *) filemap->
                          GetValue(attributes->GetName()))->
-          Remove(keyobject);;
+                         Remove(keyobject);
                      }
                      if (online)
                         ((TMap *) filemap->
                          GetValue(attributes->GetName()))->
-          Add(new TObjString("online"), new TObjString("1"));
+                         Add(new TObjString("online"), new TObjString("1"));
                      else
                         ((TMap *) filemap->
                          GetValue(attributes->GetName()))->
-          Add(new TObjString("online"), new TObjString("0"));
+                         Add(new TObjString("online"), new TObjString("0"));
                   }
                }
             }
@@ -1181,7 +1178,7 @@ Bool_t TAlienCollection::CheckIfOnline(Bool_t bulk)
 
 //_____________________________________________________________________________
 Bool_t TAlienCollection::ExportXML(const char *exporturl, Bool_t selected, Bool_t online,
-				   const char *name , const char *comment) 
+                                   const char *name , const char *comment)
 {
    // Exports the contens of the TAlienCollection into an XML formatted file.
    // By default exports only selected files. By default exports only accessible (online) files.
@@ -1363,7 +1360,7 @@ Bool_t TAlienCollection::ExportXML(TFile * exportfile, Bool_t selected,
             }
          }
 
-         // close event 
+         // close event
          sprintf(outline, "    </event>\n");
          if ((exportfile->WriteBuffer(outline, strlen(outline)))) {
             Error("ExportXML", "Error writing XML to export file");
@@ -1403,6 +1400,7 @@ Bool_t TAlienCollection::ExportXML(TFile * exportfile, Bool_t selected,
 Bool_t TAlienCollection::SetExportUrl(const char *exporturl)
 {
    // Set the 'default' export URL for an XML collection. A collection can be restored to the export URL using ExportXML("");
+
    if (exporturl)
       fExportUrl = exporturl;
 
@@ -1423,7 +1421,7 @@ const char *TAlienCollection::GetOutputFileName(const char *infile,
    //                                                  ...
    //                                                   110/1/AliESD.root
    // "./histo.root" will be converted to "./histo.100_1-110_1.230.root
-   // 
+   //
    // The name syntax is <oldname>.<first run>_<first event>-<last run>.<last event>.<nevents>.root
    //
    // By default the found files are renamed on the local disk
