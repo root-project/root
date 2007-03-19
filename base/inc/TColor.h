@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.15 2007/03/08 12:17:28 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.16 2007/03/08 17:10:34 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -90,7 +90,7 @@ public:
    Float_t       GetLight() const { return fLight; }
    Float_t       GetSaturation() const { return IsGrayscale() ? 0 : fSaturation; }
    Float_t       GetAlpha() const { return fAlpha; }
-   virtual Float_t GetGrayscale() const { /*ITU*/ return 0.299*fRed + 0.587*fGreen + 0.114*fBlue; }
+   virtual Float_t GetGrayscale() const { /*ITU*/ return 0.299f*fRed + 0.587f*fGreen + 0.114f*fBlue; }
    virtual void  ls(Option_t *option="") const;
    virtual void  Print(Option_t *option="") const;
    virtual void  SetRGB(Float_t r, Float_t g, Float_t b);
