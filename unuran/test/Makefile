@@ -17,12 +17,17 @@ ifeq ($(PLATFORM),win32)
 EXTRALIBS        = "$(ROOTSYS)/lib/libMathMore.lib" "$(ROOTSYS)/lib/libMathCore.lib" "$(ROOTSYS)/lib/libUnuran.lib" "$(ROOTSYS)/lib/libMinuit.lib"
 else
 CXXFLAGS += -g 
-EXTRALIBS        =  -lUnuran -lMathCore -lMinuit
+EXTRALIBS        =  -lUnuran -lMathCore -lMathMore  -lMinuit
 endif
 
 #UNURANBASE=/Users/moneta/mathlibs/Unuran
 #CXXFLAGS+=  -I$(UNURANBASE)/include 
 #EXTRALIBS+=  $(UNURANBASE)/lib/libunuran.a 
+
+ifneq ($(CLHEPBASE),)
+CXXFLAGS+=  -I$(CLHEPBASE)/include -DHAVE_CLHEP
+EXTRALIBS+=  $(CLHEPBASE)/lib/libCLHEP.a
+endif
 
 
 #endif
