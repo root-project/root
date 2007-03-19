@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.165 2007/03/16 17:06:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.166 2007/03/17 18:04:02 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -61,10 +61,9 @@
 #include "TInterpreter.h"
 #include "TKey.h"
 #include "TMessage.h"
-#include "TPerfStats.h"
+#include "TVirtualPerfStats.h"
 #include "TProofDebug.h"
 #include "TProof.h"
-#include "TProofLimitsFinder.h"
 #include "TVirtualProofPlayer.h"
 #include "TProofQueryResult.h"
 #include "TRegexp.h"
@@ -495,8 +494,6 @@ Int_t TProofServ::CreateServer()
          Terminate(0);
          return -1;
       }
-   } else {
-      THLimitsFinder::SetLimitsFinder(new TProofLimitsFinder);
    }
 
    // Everybody expects iostream to be available, so load it...

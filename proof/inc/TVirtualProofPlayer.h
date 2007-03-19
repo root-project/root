@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TVirtualProofPlayer.h,v 1.1 2007/03/16 17:06:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TVirtualProofPlayer.h,v 1.2 2007/03/17 18:04:02 rdm Exp $
 // Author: Fons Rademakers   15/03/07
 
 /*************************************************************************
@@ -30,6 +30,7 @@ class TDSet;
 class TDSetElement;
 class TEventList;
 class TQueryResult;
+class TDrawFeedback;
 class TList;
 class TSlave;
 class TMessage;
@@ -55,6 +56,7 @@ public:
                                 const char *selection, Option_t *option = "",
                                 Long64_t nentries = -1, Long64_t firstentry = 0) = 0;
    virtual void      HandleGetTreeHeader(TMessage *mess) = 0;
+   virtual void      HandleRecvHisto(TMessage *mess) = 0;
 
    virtual void      StopProcess(Bool_t abort, Int_t timeout = -1) = 0;
    virtual void      AddInput(TObject *inp) = 0;
@@ -80,6 +82,10 @@ public:
                               Float_t initTime, Float_t procTime,
                               Float_t evtrti, Float_t mbrti) = 0; // *SIGNAL*
    virtual void      Feedback(TList *objs) = 0; // *SIGNAL*
+
+   virtual TDrawFeedback *CreateDrawFeedback(TProof *p) = 0;
+   virtual void           SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt) = 0;
+   virtual void           DeleteDrawFeedback(TDrawFeedback *f) = 0;
 
    virtual TDSetElement *GetNextPacket(TSlave *slave, TMessage *r) = 0;
 

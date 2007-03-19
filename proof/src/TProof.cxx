@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.188 2007/02/12 13:26:04 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.189 2007/03/16 17:06:19 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -41,7 +41,6 @@
 #include "TChain.h"
 #include "TCondor.h"
 #include "TDSet.h"
-#include "TDrawFeedback.h"
 #include "TError.h"
 #include "TEnv.h"
 #include "TEventList.h"
@@ -49,7 +48,6 @@
 #include "TFileInfo.h"
 #include "TFileMerger.h"
 #include "TFTP.h"
-#include "TH1.h"
 #include "TInterpreter.h"
 #include "TMap.h"
 #include "TMessage.h"
@@ -1833,16 +1831,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
    switch (what) {
 
       case kMESS_OBJECT:
-         obj = mess->ReadObject(mess->GetClass());
-         if (obj->InheritsFrom(TH1::Class())) {
-            TH1 *h = (TH1*)obj;
-            h->SetDirectory(0);
-            TH1 *horg = (TH1*)gDirectory->GetList()->FindObject(h->GetName());
-            if (horg)
-               horg->Add(h);
-            else
-               h->SetDirectory(gDirectory);
-         }
+         fPlayer->HandleRecvHisto(mess);
          break;
 
       case kPROOF_FATAL:
@@ -1850,6 +1839,7 @@ Int_t TProof::CollectInputFrom(TSocket *s)
          break;
 
       case kPROOF_GETOBJECT:
+         // send slave object it asks for
          mess->ReadString(str, sizeof(str));
          obj = gDirectory->Get(str);
          if (obj)
@@ -2254,6 +2244,8 @@ Int_t TProof::CollectInputFrom(TSocket *s)
 
       case kPROOF_AUTOBIN:
          {
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_AUTOBIN: enter");
+
             TString name;
             Double_t xmin, xmax, ymin, ymax, zmin, zmax;
 
@@ -2297,6 +2289,8 @@ Int_t TProof::CollectInputFrom(TSocket *s)
       case kPROOF_STOPPROCESS:
          {
             // answer contains number of processed events;
+            PDB(kGlobal,2) Info("CollectInputFrom","kPROOF_STOPPROCESS: enter");
+
             Long64_t events;
             Bool_t abort = kFALSE;
 
@@ -5250,9 +5244,9 @@ TTree *TProof::GetTreeHeader(TDSet *dset)
 TDrawFeedback *TProof::CreateDrawFeedback()
 {
    // Draw feedback creation proxy. When accessed via TProof avoids
-   // link dependency on libProof.
+   // link dependency on libProofPlayer.
 
-   return new TDrawFeedback(this);
+   return fPlayer->CreateDrawFeedback(this);
 }
 
 //______________________________________________________________________________
@@ -5260,8 +5254,7 @@ void TProof::SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt)
 {
    // Set draw feedback option.
 
-   if (f)
-      f->SetOption(opt);
+   fPlayer->SetDrawFeedbackOption(f, opt);
 }
 
 //______________________________________________________________________________
@@ -5269,8 +5262,7 @@ void TProof::DeleteDrawFeedback(TDrawFeedback *f)
 {
    // Delete draw feedback object.
 
-   if (f)
-      delete f;
+   fPlayer->DeleteDrawFeedback(f);
 }
 
 //______________________________________________________________________________

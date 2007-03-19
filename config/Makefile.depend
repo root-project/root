@@ -53,9 +53,9 @@ TREEPLAYERLIBEXTRA  = lib/libTree.lib lib/libGraf3d.lib lib/libGpad.lib \
 TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
 TREEVIEWERLIBEXTRA  = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib \
                       lib/libHist.lib lib/libGui.lib
-PROOFLIBDEP         = $(NETLIB) $(TREELIB) $(HISTLIB) $(THREADLIB) $(IOLIB)
+PROOFLIBDEP         = $(NETLIB) $(TREELIB) $(THREADLIB) $(IOLIB)
 PROOFLIBEXTRA       = lib/libNet.lib lib/libTree.lib lib/libRIO.lib \
-                      lib/libHist.lib lib/libThread.lib
+                      lib/libThread.lib
 PROOFPLAYERLIBDEP   = $(PROOFLIB) $(NETLIB) $(TREELIB) $(G3DLIB) $(GRAFLIB) \
                       $(HISTLIB) $(GPADLIB) $(TREEPLAYERLIB) $(THREADLIB) \
                       $(IOLIB)
@@ -214,8 +214,8 @@ TREEPLAYERLIBDEP    = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB) \
 TREEPLAYERLIBEXTRA  = -Llib -lTree -lGraf3d -lGraf -lHist -lGpad -lRIO
 TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
 TREEVIEWERLIBEXTRA  = -Llib -lTree -lGpad -lGraf -lHist -lGui
-PROOFLIBDEP         = $(NETLIB) $(TREELIB) $(HISTLIB) $(THREADLIB) $(IOLIB)
-PROOFLIBEXTRA       = -Llib -lNet -lTree -lHist -lThread -lRIO
+PROOFLIBDEP         = $(NETLIB) $(TREELIB) $(THREADLIB) $(IOLIB)
+PROOFLIBEXTRA       = -Llib -lNet -lTree -lThread -lRIO
 PROOFPLAYERLIBDEP   = $(PROOFLIB) $(NETLIB) $(TREELIB) $(G3DLIB) $(GRAFLIB) \
                       $(HISTLIB) $(GPADLIB) $(TREEPLAYERLIB) $(THREADLIB) \
                       $(IOLIB)

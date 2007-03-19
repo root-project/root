@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.107 2007/02/12 13:05:31 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.108 2007/03/16 17:06:19 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -693,8 +693,8 @@ public:
    void        RemoveChain(TChain *chain);
 
    TDrawFeedback *CreateDrawFeedback();
-   void        SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt);
-   void        DeleteDrawFeedback(TDrawFeedback *f);
+   void           SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt);
+   void           DeleteDrawFeedback(TDrawFeedback *f);
 
    void        Detach(Option_t *opt = "");
 

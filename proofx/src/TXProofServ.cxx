@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.30 2007/02/28 16:50:55 brun Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.31 2007/03/17 18:04:02 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -38,10 +38,8 @@
 #include "TError.h"
 #include "TException.h"
 #include "TInterpreter.h"
-#include "TPerfStats.h"
 #include "TProofDebug.h"
 #include "TProof.h"
-#include "TProofLimitsFinder.h"
 #include "TProofPlayer.h"
 #include "TProofQueryResult.h"
 #include "TRegexp.h"
@@ -323,8 +321,6 @@ Int_t TXProofServ::CreateServer()
          SendLogFile(-99);
          return -1;
       }
-   } else {
-      THLimitsFinder::SetLimitsFinder(new TProofLimitsFinder);
    }
 
    // Everybody expects iostream to be available, so load it...

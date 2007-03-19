@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.h,v 1.42 2007/03/16 17:06:19 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.h,v 1.43 2007/03/17 18:04:02 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -110,6 +110,7 @@ public:
                         const char *selection, Option_t *option = "",
                         Long64_t nentries = -1, Long64_t firstentry = 0);
    void      HandleGetTreeHeader(TMessage *mess);
+   void      HandleRecvHisto(TMessage *mess);
 
    void      StopProcess(Bool_t abort, Int_t timeout = -1);
    void      AddInput(TObject *inp);
@@ -136,6 +137,10 @@ public:
                       Float_t initTime, Float_t procTime,
                       Float_t evtrti, Float_t mbrti); // *SIGNAL*
    void      Feedback(TList *objs); // *SIGNAL*
+
+   TDrawFeedback *CreateDrawFeedback(TProof *p);
+   void           SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt);
+   void           DeleteDrawFeedback(TDrawFeedback *f);
 
    TDSetElement *GetNextPacket(TSlave *slave, TMessage *r);
 

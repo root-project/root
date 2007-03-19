@@ -1,4 +1,4 @@
-// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.103 2007/03/16 17:06:19 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofPlayer.cxx,v 1.104 2007/03/17 18:04:02 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -50,6 +50,7 @@
 #include "TTree.h"
 #include "TDSet.h"
 #include "TTreeDrawArgsParser.h"
+#include "TDrawFeedback.h"
 #include "TCanvas.h"
 #include "TNamed.h"
 #include "TObjString.h"
@@ -191,6 +192,12 @@ TProofPlayer::TProofPlayer(TProof *)
 
    fInput         = new TList;
    fExitStatus    = kFinished;
+
+   static Bool_t initLimitsFinder = kFALSE;
+   if (!initLimitsFinder && gProofServ && !gProofServ->IsMaster()) {
+      THLimitsFinder::SetLimitsFinder(new TProofLimitsFinder);
+      initLimitsFinder = kTRUE;
+   }
 }
 
 //______________________________________________________________________________
@@ -650,6 +657,32 @@ void TProofPlayer::Feedback(TList *)
 }
 
 //______________________________________________________________________________
+TDrawFeedback *TProofPlayer::CreateDrawFeedback(TProof *p)
+{
+   // Draw feedback creation proxy. When accessed via TProof avoids
+   // link dependency on libProofPlayer.
+
+   return new TDrawFeedback(p);
+}
+
+//______________________________________________________________________________
+void TProofPlayer::SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt)
+{
+   // Set draw feedback option.
+
+   if (f)
+      f->SetOption(opt);
+}
+
+//______________________________________________________________________________
+void TProofPlayer::DeleteDrawFeedback(TDrawFeedback *f)
+{
+   // Delete draw feedback object.
+
+   delete f;
+}
+
+//______________________________________________________________________________
 Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                                Option_t *option, Long64_t nentries,
                                Long64_t first, TEventList * /*evl*/)
@@ -924,6 +957,22 @@ void TProofPlayer::HandleGetTreeHeader(TMessage *)
    MayNotUse("HandleGetTreeHeader|");
 }
 
+//______________________________________________________________________________
+void TProofPlayer::HandleRecvHisto(TMessage *mess)
+{
+   // Receive histo from slave.
+
+   TObject *obj = mess->ReadObject(mess->GetClass());
+   if (obj->InheritsFrom(TH1::Class())) {
+      TH1 *h = (TH1*)obj;
+      h->SetDirectory(0);
+      TH1 *horg = (TH1*)gDirectory->GetList()->FindObject(h->GetName());
+      if (horg)
+         horg->Add(h);
+      else
+         h->SetDirectory(gDirectory);
+   }
+}
 
 //------------------------------------------------------------------------------
 

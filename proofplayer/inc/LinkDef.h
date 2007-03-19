@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.1 2007/03/16 17:06:19 rdm Exp $ */
+/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.2 2007/03/17 18:04:02 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -23,6 +23,15 @@
 #pragma link C++ class TProofPlayerSlave+;
 #pragma link C++ class TProofPlayerSuperMaster+;
 
+#pragma link C++ class TVirtualPacketizer+;
+#pragma link C++ class TPacketizer+;
+#pragma link C++ class TPacketizerDev+;
+#pragma link C++ class TPacketizerProgressive+;
+#pragma link C++ class TAdaptivePacketizer+;
+
+#pragma link C++ class TPerfStats;
+#pragma link C++ class TPerfEvent+;
+
 #pragma link C++ class TProofDraw+;
 #pragma link C++ class TProofDrawEventList+;
 #pragma link C++ class TProofDrawHist+;
@@ -38,4 +47,9 @@
 #pragma link C++ class std::vector<TProofDrawListOfPolyMarkers3D::Point4D_t>+;
 #pragma link C++ class TProofVectorContainer<TProofDrawListOfGraphs::Point3D_t>+;
 #pragma link C++ class TProofVectorContainer<TProofDrawListOfPolyMarkers3D::Point4D_t>+;
+
+#pragma link C++ class TProofLimitsFinder;
+#pragma link C++ class TDrawFeedback+;
+#pragma link C++ class TFileMerger+;
+
 #endif
