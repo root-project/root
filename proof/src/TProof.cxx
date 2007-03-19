@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.189 2007/03/16 17:06:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.190 2007/03/19 01:36:56 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -46,7 +46,6 @@
 #include "TEventList.h"
 #include "TFile.h"
 #include "TFileInfo.h"
-#include "TFileMerger.h"
 #include "TFTP.h"
 #include "TInterpreter.h"
 #include "TMap.h"
@@ -5878,7 +5877,7 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
 
       // Now we will actually copy files and create the TList object
       TList *fileList = new TList();
-      TFileMerger fileCopier;
+//rdm fix     TFileMerger fileCopier;
       TIter next(files);
       while (TFileInfo *fileInfo = ((TFileInfo*)next())) {
          TUrl *fileUrl = fileInfo->GetFirstUrl();
@@ -5913,11 +5912,13 @@ Int_t TProof::UploadDataSet(const char *dataSetName,
                //must be == 1 as -1 was meant for bad name!
                Printf("Uploading %s to %s/%s",
                       fileUrl->GetUrl(), dest.Data(), ent);
-               if (fileCopier.Cp(fileUrl->GetUrl(),
+#if 0
+//rdm fix      if (fileCopier.Cp(fileUrl->GetUrl(),
                                  Form("%s/%s", dest.Data(), ent))) {
                   fileList->Add(new TFileInfo(Form("%s/%s", dest.Data(), ent)));
                } else
                   Error("UploadDataSet", "file %s was not copied", fileUrl->GetUrl());
+#endif
             } else {  // don't overwrite, but file exist and must be included
                fileList->Add(new TFileInfo(Form("%s/%s", dest.Data(), ent)));
                if (skippedFiles && &skippedFiles) {
