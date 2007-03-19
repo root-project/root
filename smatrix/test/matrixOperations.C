@@ -19,7 +19,7 @@ bool drawSingleGraph = true;
 int topX=10;
 int topY=50;
 
-#define N 10
+const Int_t N=10;
 
 
 void matrixOperations_do(std::string type = "", bool clhep=false, bool drawSingleGraph = false ); 
