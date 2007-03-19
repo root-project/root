@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TArrowEditor.cxx,v 1.13 2007/02/06 15:39:54 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TArrowEditor.cxx,v 1.14 2007/03/09 15:09:12 antcheva Exp $
 // Author: Ilka Antcheva   20/10/04
 
 /*************************************************************************
@@ -8,20 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TArrowEditor                                                        //
-//                                                                      //
-//  Implements GUI for editing arrow attributes: shape, size, angle.    //                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/TArrowEditor.gif">
-*/
-//End_Html
-
 
 #include "TArrowEditor.h"
 #include "TGComboBox.h"
@@ -36,6 +22,24 @@ enum EArrowWid {
    kARROW_OPT,
    kARROW_SIZ
 };
+
+//______________________________________________________________________________
+/* Begin_Html
+<center><h2>Implements user interface for editing of arrow attributes: 
+shape, size, angle.</h2></center>
+The picture below shows this interface.
+End_Html 
+Begin_Macro(GUI)
+{
+   gROOT->ProcessLine(".x $ROOTSYS/tutorials/graphics/arrow.C");
+   c1->SetBorderMode(0);
+   c1->ToggleEditor();
+   c1->Selected(c1,TArrow,1);
+   TRootCanvas *r = (TRootCanvas*)c1->GetCanvasImp();
+   r->SetWindowSize(700,500);
+   return r->GetMainFrame();
+}
+End_Macro */
 
 
 //______________________________________________________________________________
