@@ -1,4 +1,4 @@
-// @(#)root/sessionviewer:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.31 2007/02/26 14:39:47 brun Exp $
+// @(#)root/sessionviewer:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.32 2007/03/17 18:02:24 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -292,6 +292,9 @@ void TProofProgressDialog::ResetProgressDialog(const char *selec,
    // Update selector name
    sprintf(buf,"Selector: %s", selec);
    fSelector->SetText(buf);
+
+   // Reset 'processed' text
+   fProcessed->SetText("Estimated time left:");
 
    // Update numbers
    sprintf(buf, "%d files, number of events %lld, starting event %lld",

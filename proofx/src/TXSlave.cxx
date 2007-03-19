@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.18 2007/01/20 19:29:34 brun Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSlave.cxx,v 1.19 2007/01/29 15:11:11 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -192,6 +192,11 @@ void TXSlave::Init(const char *host, Int_t stype)
    // Add conf file, if required
    if (fProof->fConfFile.Length() > 0)
       alias += Form("|cf:%s",fProof->fConfFile.Data());
+
+   // If a request for a specific ROOT version has been transmitted by the
+   // master, add it to the buffer
+   if (gSystem->Getenv("ROOTVERSIONTAG"))
+      alias += Form("|rtag:%s",gSystem->Getenv("ROOTVERSIONTAG"));
 
    // Send over env variables (may not be supported remotely)
    TString envlist;

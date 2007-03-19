@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.15 2006/10/19 12:38:07 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.16 2007/01/22 11:36:41 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -1017,6 +1017,9 @@ bool XrdProofConn::Login()
          // We failed but we are done with this attempt
          resp = 0;
          notdone = 0;
+         // Print error msg, if any
+         if (GetLastErr())
+            XPDPRT(fHost << ": "<< GetLastErr());
       }
 
       // Cleanup
@@ -1190,8 +1193,11 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
          } else if (status == kXR_ok) {
             // Success
             resp = TRUE;
+         } else {
+            // Print error msg, if any
+            if (GetLastErr())
+               XPDPRT(fHost << ": "<< GetLastErr());
          }
-
          // Cleanup message
          SafeDelete(xrsp);
       }

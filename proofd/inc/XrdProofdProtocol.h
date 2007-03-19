@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.19 2006/12/03 23:34:04 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.20 2007/01/22 11:36:41 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -68,6 +68,37 @@ public:
    void Reset() { fUser = ""; fHomeDir = ""; fWorkDir = ""; fUid = -1; fGid = -1; }
 };
 
+// Class describing a ROOT version
+class XrdROOT {
+private:
+   int          fStatus;
+   XrdOucString fDir;
+   XrdOucString fTag;
+   XrdOucString fExport;
+   XrdOucString fPrgmSrv;
+   kXR_int16    fSrvProtVers;
+
+   int          GetROOTVersion(const char *dir, XrdOucString &version);
+   int          ValidatePrgmSrv();
+
+public:
+   XrdROOT(const char *dir, const char *tag);
+   ~XrdROOT() { }
+
+   const char *Dir() const { return fDir.c_str(); }
+   const char *Export() const { return fExport.c_str(); }
+   bool        IsValid() const { return ((fStatus == 1) ? 1: 0); }
+   bool        IsInvalid() const { return ((fStatus == -1) ? 1: 0); }
+   bool        Match(const char *dir, const char *tag)
+                          { return ((fTag == tag && fDir == dir) ? 1 : 0); }
+   bool        MatchTag(const char *tag) { return ((fTag == tag) ? 1 : 0); }
+   const char *PrgmSrv() const { return fPrgmSrv.c_str(); }
+   void        SetValid() { fStatus = 1; }
+   kXR_int16   SrvProtVers() const { return fSrvProtVers; }
+   const char *Tag() const { return fTag.c_str(); }
+   bool        Validate();
+};
+
 class XrdBuffer;
 class XrdClientMessage;
 class XrdLink;
@@ -83,6 +114,7 @@ class XrdSrvBuffer;
 class XrdProofdProtocol : XrdProtocol {
 
 friend class XrdProofClient;
+friend class XrdROOT;
 
 public:
    XrdProofdProtocol();
@@ -97,6 +129,7 @@ public:
 
    const char   *GetID() const { return (const char *)fClientID; }
 
+   static int    Reconfig();
    static int    TrimTerminatedProcesses();
 
  private:
@@ -166,9 +199,9 @@ public:
    int                           fhcNow;
    int                           fhalfBSize;
    //
-   XPClientRequest               fRequest; // handle client requests
+   XPClientRequest               fRequest;  // handle client requests
    XrdProofdResponse             fResponse; // Response to incoming request
-   XrdOucRecMutex                fMutex; // Local mutex
+   XrdOucRecMutex                fMutex;    // Local mutex
 
    //
    // Static area: general protocol managing section
@@ -185,9 +218,11 @@ public:
    //
    // Static area: protocol configuration section
    //
+   static char                  *fgCfgFile;    // Main config file 
+   static time_t                 fgCfgLastMod; // Time of last modification of the config file 
    static bool                   fgConfigDone; // Whether configure has been run
    static kXR_int32              fgSrvType;    // Master, Submaster, Worker or any
-   static char                  *fgROOTsys;  // ROOTSYS
+   static std::list<XrdROOT *>   fgROOT;     // ROOT versions; the first is the default
    static char                  *fgTMPdir;   // directory for temporary files
    static char                  *fgImage;    // image name for these servers
    static char                  *fgWorkDir;  // working dir for these servers
@@ -199,8 +234,6 @@ public:
    static char                  *fgPoolURL;    // Local pool URL
    static char                  *fgNamespace;  // Local pool namespace
    //
-   static char                  *fgPrgmSrv;  // PROOF server application
-   static kXR_int16              fgSrvProtVers;  // Protocol version run by PROOF server
    static XrdOucSemWait          fgForkSem;   // To serialize fork requests
    //
    static EResourceType          fgResourceType; // resource type
@@ -249,6 +282,7 @@ public:
    static int    CreateDefaultPROOFcfg();
    static char  *Expand(char *p);
    static char  *FilterSecConfig(const char *cfn, int &nd);
+   static int    GetNumCPUs();
    static int    GetSessionDirs(XrdProofClient *pcl, int opt,
                                 std::list<XrdOucString *> *sdirs,
                                 XrdOucString *tag = 0);
@@ -258,14 +292,12 @@ public:
    static int    MvOldSession(XrdProofClient *client,
                               const char *tag, int maxold = 10);
    static int    ReadPROOFcfg();
+   static int    ResolveKeywords(XrdOucString &s, XrdProofClient *pcl);
+   static int    SetProofServEnv(XrdROOT *r);
    static int    SetProofServEnv(XrdProofdProtocol *p = 0, int psid = -1,
                                  int loglevel = -1, const char *cfg = 0);
    static int    SaveAFSkey(XrdSecCredentials *c, const char *fn);
-   static int    SetSrvProtVers();
-   static int    ResolveKeywords(XrdOucString &s, XrdProofClient *pcl);
    static int    VerifyProcessByID(int pid, const char *pname = 0);
-
-   static int    GetNumCPUs();
 };
 
 
@@ -290,12 +322,17 @@ class XrdProofClient {
 
    virtual ~XrdProofClient();
 
+   inline int              WorkerProofServ() const { return fWorkerProofServ; }
+   void                    CountWorker(int n = 1) { fWorkerProofServ += n; }
+   inline int              MasterProofServ() const { return fMasterProofServ; }
+   void                    CountMaster(int n = 1) { fMasterProofServ += n; }
    inline const char      *ID() const
                               { return (const char *)fClientID; }
    bool                    Match(const char *id)
                               { return (id ? !strcmp(id, fClientID) : 0); }
    inline XrdOucRecMutex  *Mutex() const { return (XrdOucRecMutex *)&fMutex; }
    inline unsigned short   RefSid() const { return fRefSid; }
+   inline XrdROOT         *ROOT() const { return fROOT; }
    inline short            Version() const { return fClientVers; }
    inline const char      *Workdir() const
                               { return (const char *)fWorkdir; }
@@ -308,6 +345,8 @@ class XrdProofClient {
    void                    EraseServer(int psid);
    int                     GetClientID(XrdProofdProtocol *p);
    int                     GetFreeServID();
+
+   void                    SetROOT(XrdROOT *r) { fROOT = r; }
 
    void                    SetRefSid(unsigned short sid) { fRefSid = sid; }
    void                    SetWorkdir(const char *wrk)
@@ -333,8 +372,13 @@ class XrdProofClient {
    char                   *fUNIXSockPath; // UNIX server socket path
    bool                    fUNIXSockSaved; // TRUE if the socket path has been saved
 
+   XrdROOT                *fROOT;        // ROOT vers instance to be used for proofserv
+
    std::vector<XrdProofServProxy *> fProofServs; // Allocated ProofServ sessions
    std::vector<XrdProofdProtocol *> fClients;    // Attached Client sessions
+
+   int                     fWorkerProofServ; // Number of active (non idle) ProofServ worker sessions
+   int                     fMasterProofServ; // Number of active (non idle) ProofServ master sessions
 };
 
 //////////////////////////////////////////////////////////////////////////

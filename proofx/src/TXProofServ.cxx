@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.31 2007/03/17 18:04:02 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofServ.cxx,v 1.32 2007/03/19 01:36:56 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -1091,7 +1091,7 @@ void TXProofServ::Terminate(Int_t status)
    ((TXSocket *)fSocket)->SetSessionID(-1);
 
    // Notify
-   Info("Terminate", "termination operations ended: quitting!");
+   Printf("Terminate: termination operations ended: quitting!");
 }
 
 //______________________________________________________________________________

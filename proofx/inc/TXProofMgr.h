@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.h,v 1.7 2006/11/28 12:10:52 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.h,v 1.8 2006/12/03 23:34:04 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -62,9 +62,11 @@ public:
    void        DetachSession(Int_t, Option_t * = "");
    TProofLog  *GetSessionLogs(Int_t ridx = 0, const char *stag = 0);
    Bool_t      MatchUrl(const char *url);
+   void        ShowROOTVersions();
    TList      *QuerySessions(Option_t *opt = "S");
    TObjString *ReadBuffer(const char *file, Long64_t ofs, Int_t len);
    Int_t       Reset(const char *usr = 0);
+   void        SetROOTVersion(const char *tag);
    void        ShowWorkers();
 
    ClassDef(TXProofMgr,0)  // XrdProofd PROOF manager interface

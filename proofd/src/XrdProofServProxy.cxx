@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.14 2006/12/12 14:32:06 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.15 2007/02/05 10:44:33 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -58,6 +58,7 @@ XrdProofServProxy::XrdProofServProxy()
    fOrdinal = 0;
    fUserEnvs = 0;
    fClients.reserve(10);
+   fROOT = 0;
 }
 
 //__________________________________________________________________________
@@ -127,6 +128,7 @@ void XrdProofServProxy::Reset()
    SafeDelArray(fOrdinal);
    SafeDelArray(fUserEnvs);
    fClients.clear();
+   fROOT = 0;
    // Cleanup worker info
    ClearWorkers();
 }
@@ -251,4 +253,3 @@ void XrdProofServProxy::SetCharValue(char **carr, const char *v, int l)
       }
    }
 }
-

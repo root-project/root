@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.h,v 1.8 2006/11/27 14:19:58 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.h,v 1.9 2007/02/05 10:44:33 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -61,6 +61,7 @@ private:
 
 
 class XrdProofdProtocol;
+class XrdROOT;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -122,6 +123,7 @@ public:
    inline XrdOucSemWait *PingSem() const { XrdOucMutexHelper mhp(fMutex); return fPingSem; }
    inline const char  *Ordinal() const { XrdOucMutexHelper mhp(fMutex); return (const char *)fOrdinal; }
    inline XrdSrvBuffer *QueryNum() const { XrdOucMutexHelper mhp(fMutex); return fQueryNum; }
+   inline XrdROOT     *ROOT() const { XrdOucMutexHelper mhp(fMutex); return fROOT; }
    inline int          SrvID() const { XrdOucMutexHelper mhp(fMutex); return fSrvID; }
    inline int          SrvType() const { XrdOucMutexHelper mhp(fMutex); return fSrvType; }
    inline void         SetLink(XrdLink *lnk) { XrdOucMutexHelper mhp(fMutex); fLink = lnk;}
@@ -129,6 +131,7 @@ public:
    inline void         SetParent(XrdClientID *cid) { XrdOucMutexHelper mhp(fMutex); fParent = cid; }
    inline void         SetProtVer(int pv) { XrdOucMutexHelper mhp(fMutex); fProtVer = pv; }
    inline void         SetQueryNum(XrdSrvBuffer *qn) { XrdOucMutexHelper mhp(fMutex); fQueryNum = qn; }
+   inline void         SetROOT(XrdROOT *r) { XrdOucMutexHelper mhp(fMutex); fROOT = r; }
    inline void         SetSrv(int id) { XrdOucMutexHelper mhp(fMutex); fSrvID = id; }
    inline void         SetSrvType(int id) { XrdOucMutexHelper mhp(fMutex); fSrvType = id; }
    inline void         SetStartMsg(XrdSrvBuffer *sm) { XrdOucMutexHelper mhp(fMutex); fStartMsg = sm; }
@@ -213,6 +216,8 @@ public:
    char                     *fTag;       // Session unique tag
    char                     *fOrdinal;   // Session ordinal number
    char                     *fUserEnvs;  // List of envs received from the user
+
+   XrdROOT                  *fROOT;      // ROOT version run by this session
 
    void                      ClearWorkers();
 

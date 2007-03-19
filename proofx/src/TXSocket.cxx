@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.24 2006/11/22 00:24:29 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXSocket.cxx,v 1.25 2006/12/03 23:34:04 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -275,6 +275,10 @@ void TXSocket::DisconnectSession(Int_t id, Option_t *opt)
       // Send request
       XrdClientMessage *xrsp =
          fConn->SendReq(&Request, (const void *)0, 0, "DisconnectSession");
+
+      // Print error msg, if any
+      if (!xrsp && fConn->GetLastErr())
+         Printf("%s: %s", fHost.Data(), fConn->GetLastErr());
 
       // Cleanup
       SafeDelete(xrsp);
@@ -916,7 +920,10 @@ Bool_t TXSocket::Create()
 
       // Notify
       return kTRUE;
-
+   } else {
+      // Print error mag, if any
+      if (fConn->GetLastErr())
+         Printf("%s: %s", fHost.Data(), fConn->GetLastErr());
    }
 
    // Notify failure
@@ -972,6 +979,10 @@ Int_t TXSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
       SafeDelete(xrsp);
       // ok
       return nsent;
+   } else {
+      // Print error mag, if any
+      if (fConn->GetLastErr())
+         Printf("%s: %s", fHost.Data(), fConn->GetLastErr());
    }
 
    // Failure notification (avoid using the handler: we may be exiting)
@@ -1019,6 +1030,10 @@ Bool_t TXSocket::Ping(Bool_t)
    if (xrsp && xrsp->HeaderStatus() == kXR_ok) {
       *pres = net2host(*pres);
       res = (*pres == 1);
+   } else {
+      // Print error mag, if any
+      if (fConn->GetLastErr())
+         Printf("%s: %s", fHost.Data(), fConn->GetLastErr());
    }
 
    // Cleanup
@@ -1258,6 +1273,10 @@ Int_t TXSocket::SendInterrupt(Int_t type)
       SafeDelete(xrsp);
       // ok
       return 0;
+   } else {
+      // Print error mag, if any
+      if (fConn->GetLastErr())
+         Printf("%s: %s", fHost.Data(), fConn->GetLastErr());
    }
 
    // Failure notification (avoid using the handler: we may be exiting)
@@ -1399,6 +1418,7 @@ TObjString *TXSocket::SendCoordinator(Int_t kind,
    reqhdr.proof.int1 = kind;
    reqhdr.proof.int2 = int2;
    switch (kind) {
+      case kQueryROOTVersions:
       case kQuerySessions:
       case kQueryWorkers:
          reqhdr.proof.sid = 0;
@@ -1416,6 +1436,10 @@ TObjString *TXSocket::SendCoordinator(Int_t kind,
       case kSessionTag:
       case kSessionAlias:
          reqhdr.proof.sid = fSessionID;
+         reqhdr.header.dlen = (msg) ? strlen(msg) : 0;
+         buf = (msg) ? (const void *)msg : buf;
+         break;
+      case kROOTVersion:
          reqhdr.header.dlen = (msg) ? strlen(msg) : 0;
          buf = (msg) ? (const void *)msg : buf;
          break;
@@ -1451,12 +1475,14 @@ TObjString *TXSocket::SendCoordinator(Int_t kind,
       // Check if we need to create an output string
       if (bout && (xrsp->DataLen() > 0))
          sout = new TObjString(TString(bout,xrsp->DataLen()));
-
       if (bout)
          free(bout);
       SafeDelete(xrsp);
+   } else {
+      // Print error msg, if any
+      if (fConn->GetLastErr())
+         Printf("%s: %s", fHost.Data(), fConn->GetLastErr());
    }
-
 
    // Failure notification (avoid using the handler: we may be exiting)
    return sout;
@@ -1491,9 +1517,14 @@ void TXSocket::SendUrgent(Int_t type, Int_t int1, Int_t int2)
    // Send request
    XrdClientMessage *xrsp =
       fConn->SendReq(&Request, (const void *)0, 0, "SendUrgent");
-   if (xrsp)
+   if (xrsp) {
       // Cleanup
       SafeDelete(xrsp);
+   } else {
+      // Print error msg, if any
+      if (fConn->GetLastErr())
+         Printf("%s: %s", fHost.Data(), fConn->GetLastErr());
+   }
 
    // Done
    return;

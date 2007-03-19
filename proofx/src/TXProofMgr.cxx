@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.16 2006/12/03 23:34:04 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.17 2007/02/06 00:09:29 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -509,4 +509,48 @@ TObjString *TXProofMgr::ReadBuffer(const char *fin, Long64_t ofs, Int_t len)
 
    // Send the request
    return fSocket->SendCoordinator(TXSocket::kReadBuffer, fin, len, ofs);
+}
+
+//______________________________________________________________________________
+void TXProofMgr::ShowROOTVersions()
+{
+   // Display what ROOT versions are available on the cluster
+
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Warning("ShowROOTVersions","invalid TXProofMgr - do nothing");
+      return;
+   }
+
+   // Send the request
+   TObjString *os = fSocket->SendCoordinator(TXSocket::kQueryROOTVersions);
+   if (os) {
+      // Display it
+      Printf("----------------------------------------------------------\n");
+      Printf("Available versions (tag ROOT-vers remote-path PROOF-version):\n");
+      Printf("%s", os->GetName());
+      Printf("----------------------------------------------------------");
+      SafeDelete(os);
+   }
+
+   // We are done
+   return;
+}
+
+//______________________________________________________________________________
+void TXProofMgr::SetROOTVersion(const char *tag)
+{
+   // Set the default ROOT version to be used
+
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Warning("SetROOTVersion","invalid TXProofMgr - do nothing");
+      return;
+   }
+
+   // Send the request
+   fSocket->SendCoordinator(TXSocket::kROOTVersion, tag);
+
+   // We are done
+   return;
 }
