@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.5 2007/02/15 17:32:32 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TDocOutput.cxx,v 1.6 2007/02/15 18:20:37 brun Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -798,7 +798,7 @@ void TDocOutput::CreateProductIndex()
    out << "<h2>Chapters</h2>" << std::endl
       << "<h3><a href=\"./ClassIndex.html\">Class Index</a></h3>" << std::endl
       << "<p>A complete list of all classes defined in " << GetHtml()->GetProductName() << "</p>" << std::endl
-      << "<h3><a href=\"./ClassHierarchy.html\">Class Index</a></h3>" << std::endl
+      << "<h3><a href=\"./ClassHierarchy.html\">Class Hierarchy</a></h3>" << std::endl
       << "<p>A hierarchy graph of all classes, showing each class's base and derived classes</p>" << std::endl
       << "<h3><a href=\"./ListOfTypes.html\">Type Index</a></h3>" << std::endl
       << "<p>A complete list of all types</p>" << std::endl

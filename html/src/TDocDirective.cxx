@@ -384,7 +384,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
 
          if (fNeedGraphics)
             // to get X11 to sync :-( gVirtualX->Update()/Sync() don't do it
-            gSystem->Sleep(300);
+            gSystem->Sleep(1000);
 
          gSystem->ProcessEvents();
          objRet->SaveAs(filename);

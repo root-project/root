@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.32 2007/02/08 22:56:05 axel Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.33 2007/02/15 17:32:32 axel Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -109,7 +109,7 @@ public:
    void          SetSourceDir(const char *dir);
    void          SetSourcePrefix(const char *prefix);
    void          SetEtcDir(const char* dir) { fEtcDir = dir; }
-   void          SetMdouleDocPath(const char* path) { fModuleDocPath = path; }
+   void          SetModuleDocPath(const char* path) { fModuleDocPath = path; }
    void          SetProductDocDir(const char* dir) { fProductDocDir = dir; }
    void          SetDotDir(const char* dir) { fDotDir = dir; fFoundDot = -1; }
    void          SetRootURL(const char* url) { fROOTURL = url; }
