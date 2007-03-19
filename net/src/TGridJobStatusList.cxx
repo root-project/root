@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridJobStatusList.cxx,v 1.12 2005/05/27 13:47:37 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGridJobStatusList.cxx,v 1.1 2007/03/19 16:14:15 rdm Exp $
 // Author: Andreas-Joachim Peters  10/12/2006
 
 /*************************************************************************
