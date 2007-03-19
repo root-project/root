@@ -27,17 +27,20 @@ endif
 
 ifneq ($(PLATFORM),win32) 
 LIBM = -lm
+CXXFLAGS += -g
 endif
 
 ifneq ($(useReflex),)
 GCCXML=yes
-CXXFLAGS+=-DUSE_REFLEX -g
+CXXFLAGS+=-DUSE_REFLEX
 ifeq ($(PLATFORM),win32)
-EXTRAIOLIBS = "$(ROOTSYS)/lib/libReflex.lib"  "$(ROOTSYS)/lib/libCintex.lib"  
+EXTRALIBS += "$(ROOTSYS)/lib/libReflex.lib"  "$(ROOTSYS)/lib/libCintex.lib"  
 else
-EXTRAIOLIBS = -lReflex -lCintex
+EXTRALIBS += -lReflex -lCintex
 endif
 endif
+
+
 
 TESTSMATRIXOBJ     = testSMatrix.$(ObjSuf)
 TESTSMATRIXSRC     = testSMatrix.$(SrcSuf)
@@ -97,7 +100,7 @@ $(TESTKALMAN):    $(TESTKALMANOBJ)
 		    @echo "$@ done"
 
 $(TESTIO):        $(TESTIOOBJ) 
-		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(EXTRAIOLIBS) $(OutPutOpt)$@
+		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
 ifneq ($(useReflex),)
