@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.93 2007/02/06 15:39:37 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.94 2007/03/01 10:32:31 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1396,7 +1396,8 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
    }
    char *sclose = current; *sclose = 0; sclose--;
    char *sconst = strstr(sopen,"const ");
-   if (sconst) {
+   char *sbracket = strstr(sopen,"<");
+   if (sconst && (sbracket==0 || sconst < sbracket)) {
       // the string "const" may be part of the classname!
       char *pconst = sconst-1;
       if (*pconst == ' ' || *pconst == '<' || *pconst == '*' || *pconst == '\0') sopen = sconst + 5;
