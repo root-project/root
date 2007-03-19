@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.66 2007/02/15 15:04:41 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.67 2007/02/18 14:58:56 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -117,7 +117,7 @@ void TSelectorDraw::Begin(TTree *tree)
    fOldHistogram = 0;
    TEntryList *enlist = 0;
    TEventList *evlist = 0;
-   char htitle[2560]; htitle[0] = '\0';
+   TString htitle;
    Bool_t profile = kFALSE;
    Bool_t optSame = kFALSE;
    Bool_t optEnlist = kFALSE;
@@ -437,9 +437,9 @@ void TSelectorDraw::Begin(TTree *tree)
    // In case fOldHistogram exists, check dimensionality
    Int_t nsel = strlen(selection);
    if (nsel > 1) {
-      sprintf(htitle,"%s {%s}",varexp,selection);
+      htitle.Form("%s {%s}",varexp,selection);
    } else {
-      sprintf(htitle,"%s",varexp);
+      htitle = varexp;
    }
    if (fOldHistogram) {
       Int_t olddim = fOldHistogram->GetDimension();
@@ -503,7 +503,7 @@ void TSelectorDraw::Begin(TTree *tree)
          hist    = fOldHistogram;
          fNbins[0] = hist->GetXaxis()->GetNbins();
       } else {
-         hist = new TH1F(hname,htitle,fNbins[0],fVmin[0],fVmax[0]);
+         hist = new TH1F(hname,htitle.Data(),fNbins[0],fVmin[0],fVmax[0]);
          hist->SetLineColor(fTree->GetLineColor());
          hist->SetLineWidth(fTree->GetLineWidth());
          hist->SetLineStyle(fTree->GetLineStyle());
@@ -579,13 +579,13 @@ void TSelectorDraw::Begin(TTree *tree)
                }
             }
             if (opt.Contains("profs")) {
-               hp = new TProfile(hname,htitle,fNbins[1],fVmin[1], fVmax[1],"s");
+               hp = new TProfile(hname,htitle.Data(),fNbins[1],fVmin[1], fVmax[1],"s");
             } else if (opt.Contains("profi")) {
-               hp = new TProfile(hname,htitle,fNbins[1],fVmin[1], fVmax[1],"i");
+               hp = new TProfile(hname,htitle.Data(),fNbins[1],fVmin[1], fVmax[1],"i");
             } else if (opt.Contains("profg")) {
-               hp = new TProfile(hname,htitle,fNbins[1],fVmin[1], fVmax[1],"g");
+               hp = new TProfile(hname,htitle.Data(),fNbins[1],fVmin[1], fVmax[1],"g");
             } else {
-               hp = new TProfile(hname,htitle,fNbins[1],fVmin[1], fVmax[1],"");
+               hp = new TProfile(hname,htitle.Data(),fNbins[1],fVmin[1], fVmax[1],"");
             }
             if (!hkeep) {
                hp->SetBit(kCanDelete);
@@ -609,7 +609,7 @@ void TSelectorDraw::Begin(TTree *tree)
          if (fOldHistogram) {
             h2 = (TH2F*)fOldHistogram;
          } else {
-            h2 = new TH2F(hname,htitle,fNbins[1],fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
+            h2 = new TH2F(hname,htitle.Data(),fNbins[1],fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
             h2->SetLineColor(fTree->GetLineColor());
             h2->SetFillColor(fTree->GetFillColor());
             h2->SetFillStyle(fTree->GetFillStyle());
@@ -705,13 +705,13 @@ void TSelectorDraw::Begin(TTree *tree)
                if (xmin < xmax && ymin < ymax) canRebin = kFALSE;
             }
             if (opt.Contains("profs")) {
-               hp = new TProfile2D(hname,htitle,fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1],"s");
+               hp = new TProfile2D(hname,htitle.Data(),fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1],"s");
             } else if (opt.Contains("profi")) {
-               hp = new TProfile2D(hname,htitle,fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1],"i");
+               hp = new TProfile2D(hname,htitle.Data(),fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1],"i");
             } else if (opt.Contains("profg")) {
-               hp = new TProfile2D(hname,htitle,fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1],"g");
+               hp = new TProfile2D(hname,htitle.Data(),fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1],"g");
             } else {
-               hp = new TProfile2D(hname,htitle,fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1],"");
+               hp = new TProfile2D(hname,htitle.Data(),fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1],"");
             }
             if (!hkeep) {
                hp->SetBit(kCanDelete);
@@ -735,7 +735,7 @@ void TSelectorDraw::Begin(TTree *tree)
          if (fOldHistogram) {
             h2 = (TH2F*)fOldHistogram;
          } else {
-            h2 = new TH2F(hname,htitle,fNbins[1],fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
+            h2 = new TH2F(hname,htitle.Data(),fNbins[1],fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
             h2->SetLineColor(fTree->GetLineColor());
             h2->SetFillColor(fTree->GetFillColor());
             h2->SetFillStyle(fTree->GetFillStyle());
@@ -760,7 +760,7 @@ void TSelectorDraw::Begin(TTree *tree)
          if (fOldHistogram) {
             h3 = (TH3F*)fOldHistogram;
          } else {
-            h3 = new TH3F(hname,htitle,fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
+            h3 = new TH3F(hname,htitle.Data(),fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
             h3->SetLineColor(fTree->GetLineColor());
             h3->SetFillColor(fTree->GetFillColor());
             h3->SetFillStyle(fTree->GetFillStyle());
