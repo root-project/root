@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.26 2007/03/06 15:53:00 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.27 2007/03/15 15:08:50 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -2547,7 +2547,7 @@ void TFitEditor::GetFunctionsFromList(TList *list)
 //______________________________________________________________________________
 void TFitEditor::CheckRange(TF1 *f1)
 {
-   // Check the fir function range (if the object has been fitted).
+   // Check the fit function range (if the object has been fitted).
    
    Double_t fxmin, fxmax, xmin, xmax;
 
