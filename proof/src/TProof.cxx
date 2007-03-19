@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.192 2007/03/19 10:34:00 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.193 2007/03/19 14:25:11 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2297,7 +2297,11 @@ Int_t TProof::CollectInputFrom(TSocket *s)
                (*mess) >> events >> abort;
             else
                (*mess) >> events;
-            fPlayer->AddEventsProcessed(events);
+            if (!abort) {
+               fPlayer->AddEventsProcessed(events);
+            } else if (IsMaster()) {
+               fPlayer->StopProcess(kTRUE);
+            }
             if (!IsMaster())
                Emit("StopProcess(Bool_t)", abort);
             break;
@@ -4549,6 +4553,95 @@ Int_t TProof::UploadPackageOnClient(const TString &par, EUploadPackageOpt opt, T
       delete md5local;
    }
    return status;
+}
+
+//______________________________________________________________________________
+Int_t TProof::Load(const char *macro, Bool_t notOnClient)
+{
+   // Load the specified macro on master, workers and, if notOnClient is
+   // kFALSE, on the client. The macro file is uploaded if new or updated; if
+   // existing, the corresponding header basename(macro).h or .hh, is also
+   // uploaded.
+   // The default is to load the macro also on the client.
+   // Returns 0 in case of success and -1 in case of error.
+
+   if (!IsValid()) return -1;
+
+   if (!macro || !strlen(macro)) {
+      Error("Load", "need to specify a macro name");
+      return -1;
+   }
+
+   if (!IsMaster()) {
+
+      // Extract the file implementation name first
+      TString implname = macro;
+      TString acmode, args, io;
+      implname = gSystem->SplitAclicMode(implname, acmode, args, io);
+
+      // Macro names must have a standard format
+      Int_t dot = implname.Last('.');
+      if (dot == kNPOS) {
+         Info("Load", "macro '%s' does not contain a '.': do nothing", macro);
+         return -1;
+      }
+
+      // Is there any associated header file
+      Bool_t hasHeader = kTRUE;
+      TString headname = implname;
+      headname.Remove(dot);
+      headname += ".h";
+      if (gSystem->AccessPathName(headname, kReadPermission)) {
+         TString h = headname;
+         headname.Remove(dot);
+         headname += ".hh";
+         if (gSystem->AccessPathName(headname, kReadPermission)) {
+            hasHeader = kFALSE;
+            if (gDebug > 0)
+               Info("Load", "no associated header file found: tried: %s %s",
+                            h.Data(), headname.Data());
+         }
+      }
+
+      // Send files now; the md5 check is run here; see SendFile for more
+      // details.
+      if (SendFile(implname) == -1) {
+         Info("Load", "problems sending implementation file %s", implname.Data());
+         return -1;
+      }
+      if (hasHeader)
+         if (SendFile(headname) == -1) {
+            Info("Load", "problems sending header file %s", headname.Data());
+            return -1;
+         }
+
+      // The files are now on the workers: now we send the loading request
+      TMessage mess(kPROOF_CACHE);
+      mess << Int_t(kLoadMacro) << TString(macro);;
+      Broadcast(mess, kUnique);
+
+      // Load locally, if required
+      if (!notOnClient)
+         // by first forwarding the load command to the master and workers
+         // and only then loading locally we load/build in parallel
+         gROOT->ProcessLine(Form(".L %s", macro));
+
+      // Wait for master and workers to be done
+      Collect(kAllUnique);
+
+   } else {
+      // On master
+
+      // The files are now on the workers: now we send the loading request
+      // On the master we do not wait here for the results, but after the local
+      // load
+      TMessage mess(kPROOF_CACHE);
+      mess << Int_t(kLoadMacro) << TString(macro);
+      Broadcast(mess, kUnique);
+   }
+
+   // Done
+   return 0;
 }
 
 //______________________________________________________________________________

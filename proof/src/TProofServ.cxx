@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.166 2007/03/17 18:04:02 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.167 2007/03/19 01:36:56 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -51,7 +51,6 @@
 #endif
 
 #include "TProofServ.h"
-#include "TAuthenticate.h"
 #include "TDSetProxy.h"
 #include "TEnv.h"
 #include "TError.h"
@@ -68,7 +67,6 @@
 #include "TProofQueryResult.h"
 #include "TRegexp.h"
 #include "TROOT.h"
-#include "TSelector.h"
 #include "TSocket.h"
 #include "TStopwatch.h"
 #include "TSystem.h"
@@ -1053,13 +1051,8 @@ void TProofServ::HandleSocketInput()
                sscanf(str, "%s %d %ld", name, &bin, &size);
             ReceiveFile(name, bin ? kTRUE : kFALSE, size);
             // copy file to cache if not a PAR file
-            if (size > 0) {
-               if (strncmp(fPackageDir, name, fPackageDir.Length())) {
-                  fCacheLock->Lock();
-                  gSystem->Exec(Form("%s %s %s", kCP, name, fCacheDir.Data()));
-                  fCacheLock->Unlock();
-               }
-            }
+            if (size > 0 && strncmp(fPackageDir, name, fPackageDir.Length()))
+               CopyToCache(name, 0);
             if (IsMaster() && fw == 1)
                fProof->SendFile(name, bin);
          }
@@ -1381,11 +1374,8 @@ void TProofServ::HandleSocketInputDuringProcess()
                sscanf(str, "%s %d %ld", name, &bin, &size);
             ReceiveFile(name, bin ? kTRUE : kFALSE, size);
             // copy file to cache
-            if (size > 0) {
-               fCacheLock->Lock();
-               gSystem->Exec(Form("%s %s %s", kCP, name, fCacheDir.Data()));
-               fCacheLock->Unlock();
-            }
+            if (size > 0)
+               CopyToCache(name, 0);
             if (IsMaster() && fw == 1)
                fProof->SendFile(name, bin);
          }
@@ -3225,7 +3215,8 @@ void TProofServ::HandleProcess(TMessage *mess)
 
       // Return number of events processed
       TMessage m(kPROOF_STOPPROCESS);
-      m << fPlayer->GetEventsProcessed();
+      Bool_t abort = (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted) ? kFALSE : kTRUE;
+      m << fPlayer->GetEventsProcessed() << abort;
       fSocket->Send(m);
 
       // Send back the results
@@ -3719,7 +3710,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
       TMD5 *md5local = TMD5::FileChecksum(cachef);
       if (md5local && md5 == (*md5local)) {
          // copy file from cache to working directory
-         gSystem->Exec(Form("%s %s .", kCP, cachef.Data()));
+         CopyFromCache(filenam);
          fSocket->Send(kPROOF_CHECKFILE);
          PDB(kPackage, 1)
             Info("HandleCheckFile", "file %s already on node", filenam.Data());
@@ -3864,7 +3855,9 @@ Int_t TProofServ::HandleCache(TMessage *mess)
                // (impatient) client. Note that this operation will block, so
                // the messages from builds on the workers will reach the client
                // shortly after the master ones.
-               { TProofServLogHandlerGuard hg("PROOF-INF/BUILD.sh", fSocket);
+               TString cmd = Form("export ROOTINCLUDEPATH=%s ; PROOF-INF/BUILD.sh",
+                                  gSystem->GetIncludePath());
+               { TProofServLogHandlerGuard hg(cmd, fSocket);
                }
 
                // write version file
@@ -4052,6 +4045,33 @@ Int_t TProofServ::HandleCache(TMessage *mess)
             msg << type << pack;
             fSocket->Send(msg);
          }
+         break;
+      case TProof::kLoadMacro:
+
+         (*mess) >> package;
+
+         // By first forwarding the load command to the master and workers
+         // and only then loading locally we load/build in parallel
+         if (IsMaster())
+            fProof->Load(package);
+
+         // Load locally; the implementation and header files (and perhaps
+         // the binaries) are already in the cache
+         CopyFromCache(package);
+
+         {  TProofServLogHandlerGuard hg(fLogFile, fSocket);
+            PDB(kGlobal, 1) Info("HandleCache:kLoadMacro", "enter");
+            // Load the macro
+            gROOT->ProcessLine(Form(".L %s", package.Data()));
+         }
+
+         // Cache binaries, if any new
+         CopyToCache(package, 1);
+
+         // Wait forworkers to be done
+         if (IsMaster())
+            fProof->Collect(TProof::kAllUnique);
+
          break;
       default:
          Error("HandleCache", "unknown type %d", type);
@@ -4534,6 +4554,158 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
       gSystem->StackTrace();
       gSystem->Abort();
    }
+}
+
+//______________________________________________________________________________
+Int_t TProofServ::CopyFromCache(const char *macro)
+{
+   // Retrieve any files (source and binaries) related to 'macro' from the cache
+   // directory.
+   // Returns 0 on success, -1 otherwise
+
+   if (!macro || strlen(macro) <= 0)
+      // Invalid inputs
+      return -1;
+
+   // Split out the aclic mode, if any
+   TString name = macro;
+   TString acmode, args, io;
+   name = gSystem->SplitAclicMode(name, acmode, args, io);
+
+   PDB(kGlobal,1)
+      Info("CopyFromCache","enter: names: %s, %s", macro, name.Data());
+
+   // Atomic action
+   fCacheLock->Lock();
+
+   // Get source from the cache
+   PDB(kGlobal,2)
+      Info("CopyFromCache",
+           "retrieving %s/%s from cache", fCacheDir.Data(), name.Data());
+   gSystem->Exec(Form("%s %s/%s .", kCP, fCacheDir.Data(), name.Data()));
+
+   // Create binary name template
+   TString binname = name;
+   Int_t dot = binname.Last('.');
+   if (dot != kNPOS) {
+      binname.Replace(dot,1,"_");
+      binname += ".";
+      void *dirp = gSystem->OpenDirectory(fCacheDir);
+      if (dirp) {
+         const char *e = 0;
+         while ((e = gSystem->GetDirEntry(dirp))) {
+            if (!strncmp(e, binname.Data(), binname.Length())) {
+               Bool_t docp = kTRUE;
+               FileStat_t stlocal, stcache;
+               TString fncache = Form("%s/%s", fCacheDir.Data(), e);
+               if (!gSystem->GetPathInfo(fncache, stcache)) {
+                  Int_t rc = gSystem->GetPathInfo(e, stlocal);
+                  if (rc == 0 && (stlocal.fMtime >= stcache.fMtime))
+                     docp = kFALSE;
+                  // Copy the file, if needed
+                  if (docp) {
+                     gSystem->Exec(Form("%s %s", kRM, e));
+                     PDB(kGlobal,2)
+                        Info("CopyFromCache",
+                             "retrieving %s from cache", fncache.Data());
+                    gSystem->Exec(Form("%s %s %s", kCP, fncache.Data(), e));
+                  }
+               }
+            }
+         }
+         gSystem->FreeDirectory(dirp);
+      }
+   }
+
+   // End of atomicity
+   fCacheLock->Unlock();
+
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TProofServ::CopyToCache(const char *macro, Int_t opt)
+{
+   // Copy files related to 'macro' to the cache directory.
+   // Action depends on 'opt':
+   //
+   //    opt = 0         copy 'macro' to cache and delete from cache any binary
+   //                    related to name; e.g. if macro = bla.C, the binaries are
+   //                    bla_C.so, bla_C.rootmap, ...
+   //    opt = 1         copy the binaries related to macro to the cache
+   //
+   // Returns 0 on success, -1 otherwise
+
+   if (!macro || strlen(macro) <= 0 || opt < 0 || opt > 1)
+      // Invalid inputs
+      return -1;
+
+   // Split out the aclic mode, if any
+   TString name = macro;
+   TString acmode, args, io;
+   name = gSystem->SplitAclicMode(name, acmode, args, io);
+
+   PDB(kGlobal,1)
+      Info("CopyToCache","enter: opt: %d, names: %s, %s", opt, macro, name.Data());
+
+   // Create binary name template
+   TString binname = name;
+   Int_t dot = binname.Last('.');
+   if (dot != kNPOS)
+      binname.Replace(dot,1,"_");
+
+   // Atomic action
+   fCacheLock->Lock();
+
+   // Action depends on 'opt'
+   if (opt == 0) {
+      // Save name to cache
+      PDB(kGlobal,2)
+         Info("CopyFromCache",
+              "caching %s/%s ...", fCacheDir.Data(), name.Data());
+      gSystem->Exec(Form("%s %s %s", kCP, name.Data(), fCacheDir.Data()));
+      // If needed, remove from the cache any existing binary related to 'name'
+      if (dot != kNPOS) {
+         binname += ".*";
+         gSystem->Exec(Form("%s %s/%s", kRM, fCacheDir.Data(), binname.Data()));
+      }
+   } else if (opt == 1) {
+      // If needed, copy to the cache any existing binary related to 'name'.
+      if (dot != kNPOS) {
+         binname += ".";
+         void *dirp = gSystem->OpenDirectory(".");
+         if (dirp) {
+            const char *e = 0;
+            while ((e = gSystem->GetDirEntry(dirp))) {
+               if (!strncmp(e, binname.Data(), binname.Length())) {
+                  Bool_t docp = kTRUE;
+                  FileStat_t stlocal, stcache;
+                  if (!gSystem->GetPathInfo(e, stlocal)) {
+                     TString fncache = Form("%s/%s", fCacheDir.Data(), e);
+                     Int_t rc = gSystem->GetPathInfo(fncache, stcache);
+                     if (rc == 0 && (stlocal.fMtime <= stcache.fMtime))
+                        docp = kFALSE;
+                     // Copy the file, if needed
+                     if (docp) {
+                        gSystem->Exec(Form("%s %s", kRM, fncache.Data()));
+                        PDB(kGlobal,2)
+                           Info("CopyFromCache","caching %s ...", e);
+                        gSystem->Exec(Form("%s %s %s", kCP, e, fncache.Data()));
+                     }
+                  }
+               }
+            }
+            gSystem->FreeDirectory(dirp);
+         }
+      }
+   }
+
+   // End of atomicity
+   fCacheLock->Unlock();
+
+   // Done
+   return 0;
 }
 
 //______________________________________________________________________________

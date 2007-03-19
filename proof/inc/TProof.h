@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.108 2007/03/16 17:06:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.109 2007/03/19 01:36:56 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -116,7 +116,7 @@ const char* const kPROOF_QueryLockFile   = "/tmp/proof-query-lock-";   // query 
 const char* const kPROOF_DataSetLockFile = "/tmp/proof-dataset-lock-"; // dataset lock file
 
 #ifndef R__WIN32
-const char* const kCP     = "/bin/cp -f";
+const char* const kCP     = "/bin/cp -fp";
 const char* const kRM     = "/bin/rm -rf";
 const char* const kLS     = "/bin/ls -l";
 const char* const kUNTAR  = "%s -c %s/%s | (cd %s; tar xf -)";
@@ -294,7 +294,8 @@ private:
       kUnloadPackages      = 17,
       kDisablePackages     = 18,
       kListPackages        = 19,
-      kListEnabledPackages = 20
+      kListEnabledPackages = 20,
+      kLoadMacro           = 21
    };
    enum EProofDataSetCommands {
       kUploadDataSet       = 1,  //Upload a dataset
@@ -562,6 +563,7 @@ public:
    Int_t       ClearPackage(const char *package);
    Int_t       EnablePackage(const char *package, Bool_t notOnClient = kFALSE);
    Int_t       UploadPackage(const char *par, EUploadPackageOpt opt = kUntar);
+   Int_t       Load(const char *macro, Bool_t notOnClient = kFALSE);
 
    Int_t       AddDynamicPath(const char *libpath);
    Int_t       AddIncludePath(const char *incpath);

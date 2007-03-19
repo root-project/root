@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.50 2007/03/16 17:06:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.51 2007/03/17 18:04:02 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -193,6 +193,9 @@ public:
    Float_t        GetRealTime()   const { return fRealTime; }
    Float_t        GetCpuTime()    const { return fCpuTime; }
    void           GetOptions(Int_t *argc, char **argv);
+
+   Int_t          CopyFromCache(const char *name);
+   Int_t          CopyToCache(const char *name, Int_t opt = 0);
 
    virtual EQueryAction GetWorkers(TList *workers, Int_t &prioritychange);
 
