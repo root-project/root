@@ -131,7 +131,7 @@ void TFitterMinuit::Clear(Option_t*) {
    fGradient = false; 
    State() = MnUserParameterState();
    fMinosErrors.clear();
-   fDebug = 1;  
+   //fDebug = 1;  
    fStrategy = 1;  
    fMinTolerance = 0;
    
@@ -172,15 +172,16 @@ int  TFitterMinuit::Minimize( int nfcn, double edmval)  {
    
    // min tolerance
    edmval = std::max(fMinTolerance, edmval);
-   
+
    // switch off debugging if requested 
    int prevLevel = gErrorIgnoreLevel; 
    if (fDebug < 0)  // switch off printing of info messages in Minuit2
       gErrorIgnoreLevel = 1001;
-
+   
    FunctionMinimum min = DoMinimization(nfcn,edmval);
 
    if (fDebug < 0) gErrorIgnoreLevel = prevLevel; // restore previous debug level 
+
    fState = min.UserState();
    return ExamineMinimum(min);
 }
@@ -191,6 +192,7 @@ Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t n
 #ifdef DEBUG
    std::cout<<"Execute command= "<<command<<std::endl;
 #endif
+
    
    // MIGRAD 
    if (strncmp(command,"MIG",3) == 0 || strncmp(command,"mig",3)  == 0) {
@@ -252,6 +254,11 @@ Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t n
    }
    // MINOS 
    else if (strncmp(command,"MINO",4) == 0 || strncmp(command,"mino",4)  == 0) {
+
+      // switch off debugging if requested 
+      int prevLevel = gErrorIgnoreLevel; 
+      if (fDebug < 0)  // switch off printing of info messages in Minuit2
+         gErrorIgnoreLevel = 1001;
       
       // recall minimize using default nfcn and edmval
       // should use maybe FunctionMinimum from previous call to migrad
@@ -259,6 +266,7 @@ Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t n
       FunctionMinimum min = DoMinimization();
       if (!min.IsValid() ) { 
          std::cout << "TFitterMinuit::MINOS failed due to invalid function minimum" << std::endl;
+         if (fDebug < 0) gErrorIgnoreLevel = prevLevel; // restore previous debug level 
          return -10;
       }
       MnMinos minos( *fMinuitFCN, min);
@@ -299,15 +307,27 @@ Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t n
              ime != fMinosErrors.end(); ime++) 
             std::cout<<*ime<<std::endl;
       }
+
+      if (fDebug < 0) gErrorIgnoreLevel = prevLevel; // restore previous debug level 
+
       return 0;
    } 
    //HESSE
    else if (strncmp(command,"HES",3) == 0 || strncmp(command,"hes",3)  == 0) {
+
+      // switch off debugging if requested 
+      int prevLevel = gErrorIgnoreLevel; 
+      if (fDebug < 0)  // switch off printing of info messages in Minuit2
+         gErrorIgnoreLevel = 1001;
+
       MnHesse hesse( GetStrategy() ); 
       // update the state
       const FCNBase * fcn = GetMinuitFCN();
       assert(fcn != 0);
       fState = hesse(*fcn, State(),100000 );
+
+      if (fDebug < 0) gErrorIgnoreLevel = prevLevel; // restore previous debug level 
+
       if (!fState.IsValid() ) {
          std::cout << "TFitterMinuit::Hesse calculation failed " << std::endl;
          return -10;

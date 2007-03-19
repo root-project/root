@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnMinos.cxx,v 1.5 2007/02/12 12:05:15 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnMinos.cxx,v 1.6 2007/02/13 12:14:29 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -161,13 +161,13 @@ MnCross MnMinos::Loval(unsigned int par, unsigned int maxcalls) const {
    
 #ifdef WARNINGMSG
    if(aopt.AtLimit()) 
-      std::cout<<"MnMinos Parameter "<<par<<" is at Lower limit."<<std::endl;
+      MN_INFO_VAL2("MnMinos Parameter is at Lower limit.",par);
    if(aopt.AtMaxFcn())
-      std::cout<<"MnMinos maximum number of function calls exceeded for Parameter "<<par<<std::endl;   
+      MN_INFO_VAL2("MnMinos maximum number of function calls exceeded for Parameter ",par);
    if(aopt.NewMinimum())
-      std::cout<<"MnMinos new Minimum found while looking for Parameter "<<par<<std::endl;     
+      MN_INFO_VAL2("MnMinos new Minimum found while looking for Parameter ",par);
    if(!aopt.IsValid()) 
-      std::cout<<"MnMinos could not find Lower Value for Parameter "<<par<<"."<<std::endl;
+      MN_INFO_VAL2("MnMinos could not find Lower Value for Parameter ",par);
 #endif
    
    return aopt;
