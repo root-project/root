@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFcnAdapter.h,v 1.6 2007/03/19 11:06:04 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFcnAdapter.h,v 1.7 2007/03/19 11:11:03 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -51,6 +51,6 @@ private:
    double fUp; 
    mutable std::vector<double> fGradCache; 
 
-   ClassDef(TFcnAdapter,1)  // wrapper class implementing the Minuit2 interface for TMinuit2-like objective functions
+   ClassDef(TFcnAdapter,0)  // wrapper class implementing the Minuit2 interface for TMinuit2-like objective functions
 };
 #endif //ROOT_GFcnAdapter_H_
