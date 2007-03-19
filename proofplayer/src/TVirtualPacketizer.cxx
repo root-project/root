@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.7 2006/05/15 09:45:03 brun Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.8 2007/03/16 17:06:19 rdm Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************

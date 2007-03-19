@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TFileMerger.cxx,v 1.12 2006/09/07 09:27:25 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TFileMerger.cxx,v 1.13 2006/11/22 14:16:54 rdm Exp $
 // Author: Andreas Peters + Fons Rademakers   26/5/2005
 
 /*************************************************************************

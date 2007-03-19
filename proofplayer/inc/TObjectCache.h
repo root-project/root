@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TObjectCache.h,v 1.2 2006/04/11 17:51:08 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TObjectCache.h,v 1.3 2006/07/01 11:39:37 rdm Exp $
 // Author: M. Biskup 2/4/06
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofLimitsFinder.h,v 1.2 2003/03/04 17:29:29 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofLimitsFinder.h,v 1.3 2005/02/07 18:02:37 rdm Exp $
 // Author: Maarten Ballintijn   19/04/2002
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.27 2007/02/06 15:52:35 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofDraw.cxx,v 1.28 2007/02/18 14:58:56 brun Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////

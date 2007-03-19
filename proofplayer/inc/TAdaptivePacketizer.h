@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TAdaptivePacketizer.h,v 1.1 2006/12/12 11:20:49 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TAdaptivePacketizer.h,v 1.2 2007/01/29 15:17:56 rdm Exp $
 // Author: Jan Iwaszkiewicz   11/12/06
 
 /*************************************************************************

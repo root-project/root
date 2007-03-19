@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.18 2006/10/08 11:37:16 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPacketizer.h,v 1.19 2006/11/15 17:45:54 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************

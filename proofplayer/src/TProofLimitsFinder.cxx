@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofLimitsFinder.cxx,v 1.4 2006/05/15 09:45:03 brun Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TProofLimitsFinder.cxx,v 1.5 2006/06/06 09:50:53 rdm Exp $
 // Author: Maarten Ballintijn   19/04/2002
 
 /*************************************************************************

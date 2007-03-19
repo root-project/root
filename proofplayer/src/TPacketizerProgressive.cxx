@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.7 2006/08/10 23:31:08 rdm Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TPacketizerProgressive.cxx,v 1.8 2007/02/12 13:05:32 rdm Exp $
 // Author: Zev Benjamin  13/09/2005
 
 /*************************************************************************
@@ -283,7 +283,7 @@ void TPacketizerProgressive::Init()
    // objects which also include appropriate TFileNode objects.
    // TFileNode objects are also stored in host_map.
    while ((slave = (TSlave*) i.Next())) {
-      PDB(kPacketizer, 3) 
+      PDB(kPacketizer, 3)
          Info("Init", "adding info for slave %s", slave->GetName());
       TSlaveStat* ss = new TSlaveStat(slave);
       fSlaveStats->Add(slave, ss);
@@ -304,7 +304,7 @@ void TPacketizerProgressive::Init()
    fDset->Lookup();
 
    // put TDSetElements in the appropriate TFileStat object
-   THashTable slaves_added; // map of slaves that have already 
+   THashTable slaves_added; // map of slaves that have already
                             // been added to the available list
    TMap nonslaves_added; //map of added non-slave nodes that host needed files
    fDset->Reset();
@@ -631,7 +631,7 @@ TDSetElement *TPacketizerProgressive::GetNextPacket(TSlave *s, TMessage *r)
    if (stat->GetCurrentFile() && ! stat->GetCurrentFile()->IsDone()) {
       if (stat->GetCurrentElement()->GetNum() == -1) {
          // we grabbed an element that hasn't been fully opened yet
-         PDB(kPacketizer, 3) Info("GetNextPacket", 
+         PDB(kPacketizer, 3) Info("GetNextPacket",
             "working on a packet that isn't fully opened, waiting");
          return (TDSetElement*) -1;
       }
@@ -642,7 +642,7 @@ TDSetElement *TPacketizerProgressive::GetNextPacket(TSlave *s, TMessage *r)
 
    Int_t foundUnallocatedFile = -1; // important for the packet size
    stat->GetFileNode()->DecSlaveCnt(s->GetName());
-   TFileStat* fs = 0; 
+   TFileStat* fs = 0;
    // try to find an unallocated file first
    if ((fs = GetNextUnAlloc(stat))) {
       PDB(kPacketizer, 3) Info("AssignElement", "giving slave %s unallocated file",
@@ -685,8 +685,8 @@ TDSetElement *TPacketizerProgressive::GetNextPacket(TSlave *s, TMessage *r)
       }
       if (foundUnallocatedFile == 1)
          return BuildPacket(stat, 1);
-      else 
-         return BuildPacket(stat, fPacketSize); 
+      else
+         return BuildPacket(stat, fPacketSize);
    }
 }
 

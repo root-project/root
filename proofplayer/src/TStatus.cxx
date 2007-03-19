@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TStatus.cxx,v 1.3 2005/05/18 12:31:09 brun Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TStatus.cxx,v 1.4 2007/02/01 16:20:34 brun Exp $
 // Author: Maarten Ballintijn   7/06/2004
 
 /*************************************************************************

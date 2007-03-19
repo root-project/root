@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.h,v 1.6 2006/03/20 21:43:43 pcanal Exp $
+// @(#)root/proofplayer:$Name:  $:$Id: TDrawFeedback.h,v 1.7 2006/11/28 12:10:52 rdm Exp $
 // Author: Maarten Ballintijn   28/10/2003
 
 /*************************************************************************
