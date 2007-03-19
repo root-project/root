@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.11 2007/03/19 16:14:14 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.12 2007/03/19 16:55:55 rdm Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -753,7 +753,7 @@ Long64_t TAlienCollection::GetSize(const char *filename)
 }
 
 //______________________________________________________________________________
-void TAlienCollection::Print(Option_t *)
+void TAlienCollection::Print(Option_t *) const
 {
    // Print event file collection.
 

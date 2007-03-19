@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienCollection.h,v 1.6 2007/03/19 16:14:14 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.h,v 1.7 2007/03/19 16:55:55 rdm Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -99,7 +99,7 @@ public:
 
    Bool_t      SetExportUrl(const char *exporturl = 0);
 
-   void        Print(Option_t * opt) ;
+   void        Print(Option_t * opt) const;
    TFile      *OpenFile(const char *filename) ;
    TList      *GetFileGroupList() const { return fFileGroupList; }
 
@@ -113,7 +113,7 @@ public:
    Bool_t      Stage(Bool_t bulk = kFALSE);
    Bool_t      CheckIfOnline(Bool_t bulk = kFALSE);
    TDSet      *GetDataset(const char *type, const char *objname = "*",
-			  const char *dir = "/");
+			                 const char *dir = "/");
 
    TGridResult *GetGridResult(const char *filename = "",
                               Bool_t onlyonline = kTRUE,

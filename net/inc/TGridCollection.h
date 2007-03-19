@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridCollection.h,v 1.2 2005/05/20 09:59:35 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGridCollection.h,v 1.3 2007/03/19 16:14:15 rdm Exp $
 // Author: Andreas-Joachim Peters 2005-05-09
 
 /*************************************************************************
@@ -71,17 +71,17 @@ public:
       { MayNotUse("GetExportUrl"); return 0;}
    virtual Bool_t      SetExportUrl(const char * /*exporturl*/ = 0)
       { MayNotUse("SetExportUrl"); return kFALSE;}
-   virtual void         Print(Option_t *)
+   virtual void         Print(Option_t *) const
       { MayNotUse("Print"); }
    virtual TFile       *OpenFile(const char *)
       { MayNotUse("OpenFile"); return 0;}
-   virtual TList       *GetFileGroupList()
+   virtual TList       *GetFileGroupList() const
       { MayNotUse("GetFileGroupList"); return 0;}
    virtual TEventList  *GetEvList(const char *)
       { MayNotUse("GetEvList"); return 0;}
-   virtual UInt_t       GetNofGroups()
+   virtual UInt_t       GetNofGroups() const
       { MayNotUse("GetNofGroups"); return 0;}
-   virtual UInt_t       GetNofGroupfiles()
+   virtual UInt_t       GetNofGroupfiles() const
       { MayNotUse("GetNofGroupfiles"); return 0;}
    virtual Bool_t       OverlapCollection(TGridCollection *)
       { MayNotUse("OverlapCollection"); return 0;}
@@ -97,13 +97,13 @@ public:
       { MayNotUse("GetGridResult"); return 0;}
    virtual Bool_t       LookupSUrls(Bool_t /*verbose*/ = kTRUE)
       { MayNotUse("LookupSUrls"); return kFALSE;}
-   virtual TList       *GetTagFilterList()
+   virtual TList       *GetTagFilterList() const
       { MayNotUse("GetTagFilterList"); return 0;}
    virtual void         SetTagFilterList(TList *)
       { MayNotUse("SetTagFilterList");}
-   virtual const char* GetCollectionName()
+   virtual const char* GetCollectionName() const
       { MayNotUse("GetCollectionName"); return 0;}
-   virtual const char* GetInfoComment()
+   virtual const char* GetInfoComment() const
       { MayNotUse("GetInfoComment"); return 0;}
 
    ClassDef(TGridCollection,1)  // ABC managing collection of files on the Grid

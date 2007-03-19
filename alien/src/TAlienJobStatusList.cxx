@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienJobStatus.cxx,v 1.3 2006/05/19 07:30:04 brun Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienJobStatusList.cxx,v 1.1 2007/03/19 16:14:14 rdm Exp $
 // Author: Andreas-Joachim Peters  10/12/2006
 
 /*************************************************************************
@@ -23,7 +23,7 @@
 ClassImp(TAlienJobStatusList)
 
 //______________________________________________________________________________
-void TAlienJobStatusList::Print(const Option_t* options) const
+void TAlienJobStatusList::Print(Option_t *) const
 {
   // Extract the master jobs.
 

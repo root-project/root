@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienJobStatusList.h,v 1.2 2005/05/20 09:59:35 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienJobStatusList.h,v 1.1 2007/03/19 16:14:14 rdm Exp $
 // Author: Andreas-Joachim Peters  10/12/2006
 
 /*************************************************************************
@@ -34,7 +34,8 @@ protected:
 public:
    TAlienJobStatusList() { gGridJobStatusList = this; }
    virtual ~TAlienJobStatusList() { if (gGridJobStatusList == this); gGridJobStatusList=0;}
-   virtual void Print(const Option_t* options) const;
+   virtual void Print(Option_t *options) const;
+   virtual void Print(Option_t *wildcard, Option_t *option) const { TCollection::Print(wildcard, option); }
 
    ClassDef(TAlienJobStatusList,1)  // ABC defining interface to a list of AliEn GRID jobs
 };
