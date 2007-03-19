@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.32 2007/01/15 16:13:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.33 2007/03/16 07:48:29 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -347,8 +347,12 @@ void TLegend::Paint( Option_t* option )
    PaintPrimitives();
 }
 
+
+//____________________________________________________________________________
 Int_t TLegend::GetNRows() const
 {
+   // Get the number of rows.
+
    Int_t nEntries = 0;
    if ( fPrimitives ) nEntries = fPrimitives->GetSize();
    if ( nEntries == 0 ) return 0;
@@ -363,18 +367,18 @@ Int_t TLegend::GetNRows() const
 //____________________________________________________________________________
 void TLegend::SetNColumns(Int_t nColumns)
 { 
-  // Set the number of columns for the legend. The header, if set, is given
-  // its own row. After that, every nColumns entries are inserted into the
-  // same row. For example, if one calls legend.SetNColumns(2), and there
-  // is no header, then the first two TObjects added to the legend will be
-  // in the first row, the next two will appear in the second row, and so
-  // on.
+   // Set the number of columns for the legend. The header, if set, is given
+   // its own row. After that, every nColumns entries are inserted into the
+   // same row. For example, if one calls legend.SetNColumns(2), and there
+   // is no header, then the first two TObjects added to the legend will be
+   // in the first row, the next two will appear in the second row, and so
+   // on.
 
-  if(nColumns < 1) {
-    Warning("TLegend::SetNColumns", "illegal value nColumns = %d; keeping fNColumns = %d", nColumns, fNColumns);
-    return;
-  }
-  fNColumns = nColumns; 
+   if(nColumns < 1) {
+      Warning("TLegend::SetNColumns", "illegal value nColumns = %d; keeping fNColumns = %d", nColumns, fNColumns);
+      return;
+   }
+   fNColumns = nColumns; 
 } 
 
 //____________________________________________________________________________
@@ -424,19 +428,19 @@ void TLegend::PaintPrimitives()
          TString opt = entrysize->GetOption();
          opt.ToLower();
          if ( opt.Contains("h") ) {
-           if ( entrytex.GetXsize() > maxentrywidth ) {
-              maxentrywidth = entrytex.GetXsize();
-           }
-	 } else {
-           if ( entrytex.GetXsize() > columnWidths[iColumn] ) {
-              columnWidths[iColumn] = entrytex.GetXsize();
-           }
-	   iColumn++;
-	   iColumn %= fNColumns;
-	 }
-	 Double_t tmpMaxWidth = 0.0;
-	 for(int i=0; i<fNColumns; i++) tmpMaxWidth += columnWidths[i];
-	 if ( tmpMaxWidth > maxentrywidth) maxentrywidth = tmpMaxWidth;
+            if ( entrytex.GetXsize() > maxentrywidth ) {
+               maxentrywidth = entrytex.GetXsize();
+            }
+         } else {
+            if ( entrytex.GetXsize() > columnWidths[iColumn] ) {
+               columnWidths[iColumn] = entrytex.GetXsize();
+            }
+            iColumn++;
+            iColumn %= fNColumns;
+         }
+         Double_t tmpMaxWidth = 0.0;
+         for(int i=0; i<fNColumns; i++) tmpMaxWidth += columnWidths[i];
+         if ( tmpMaxWidth > maxentrywidth) maxentrywidth = tmpMaxWidth;
       }
       // make sure all labels fit in the allotted space
       Double_t tmpsize_h = maxentryheight /(gPad->GetY2() - gPad->GetY1());
@@ -451,31 +455,31 @@ void TLegend::PaintPrimitives()
    // block off this section of code to make sure all variables are local: 
    // don't want to ruin initialization of these variables later on
    { 
-     TIter next(fPrimitives);
-     TLegendEntry *entry;
-     Int_t iColumn = 0;
-     memset(columnWidths, 0, fNColumns*sizeof(Double_t));
-     while (( entry = (TLegendEntry *)next() )) {
-       TLatex entrytex( 0, 0, entry->GetLabel() );
-       entrytex.SetNDC();
-       if(entry->GetTextSize() == 0) entrytex.SetTextSize(textsize);
-       TString opt = entry->GetOption();
-       opt.ToLower();
-       if (!opt.Contains("h")) {
-         if ( entrytex.GetXsize() > columnWidths[iColumn] ) {
-            columnWidths[iColumn] = entrytex.GetXsize();
+      TIter next(fPrimitives);
+      TLegendEntry *entry;
+      Int_t iColumn = 0;
+      memset(columnWidths, 0, fNColumns*sizeof(Double_t));
+      while (( entry = (TLegendEntry *)next() )) {
+         TLatex entrytex( 0, 0, entry->GetLabel() );
+         entrytex.SetNDC();
+         if(entry->GetTextSize() == 0) entrytex.SetTextSize(textsize);
+         TString opt = entry->GetOption();
+         opt.ToLower();
+         if (!opt.Contains("h")) {
+            if ( entrytex.GetXsize() > columnWidths[iColumn] ) {
+               columnWidths[iColumn] = entrytex.GetXsize();
+            }
+            iColumn++;
+            iColumn %= fNColumns;
          }
-         iColumn++;
-         iColumn %= fNColumns;
-       }
-     }
-     double totalWidth = 0.0;
-     for(int i=0; i<fNColumns; i++) totalWidth += columnWidths[i];
-     if(fNColumns > 1) totalWidth /= (1.0-fMargin-fColumnSeparation);
-     else totalWidth /= (1.0 - fMargin);
-     for(int i=0; i<fNColumns; i++) {
-       columnWidths[i] = columnWidths[i]/totalWidth*(x2-x1) + margin;
-     }
+      }
+      double totalWidth = 0.0;
+      for(int i=0; i<fNColumns; i++) totalWidth += columnWidths[i];
+      if(fNColumns > 1) totalWidth /= (1.0-fMargin-fColumnSeparation);
+      else totalWidth /= (1.0 - fMargin);
+      for(int i=0; i<fNColumns; i++) {
+         columnWidths[i] = columnWidths[i]/totalWidth*(x2-x1) + margin;
+      }
    }
 
    Double_t ytext = y2 + 0.5*yspace;  // y-location of 0th entry
@@ -511,10 +515,10 @@ void TLegend::PaintPrimitives()
       x2 = fX2NDC;
       if ( opt.Contains("h") ) entrymargin = margin/10.;
       else if (fNColumns > 1) {
-        for(int i=0; i<iColumn; i++) x1 += columnWidths[i] + fColumnSeparation*(fX2NDC-fX1NDC)/(fNColumns-1);
-	x2 = x1 + columnWidths[iColumn];
-	iColumn++;
-	iColumn %= fNColumns;
+         for(int i=0; i<iColumn; i++) x1 += columnWidths[i] + fColumnSeparation*(fX2NDC-fX1NDC)/(fNColumns-1);
+         x2 = x1 + columnWidths[iColumn];
+         iColumn++;
+         iColumn %= fNColumns;
       }
       if (halign == 1) x = x1 + entrymargin;
       if (halign == 2) x = 0.5*( (x1+entrymargin) + x2 );
