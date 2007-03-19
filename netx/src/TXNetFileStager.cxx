@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TXNetFileStager.cxx,v 1.1 2007/02/14 18:25:22 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TXNetFileStager.cxx,v 1.2 2007/03/08 12:09:09 rdm Exp $
 // Author: A. Peters, G. Ganis   7/2/2007
 
 /*************************************************************************
@@ -56,7 +56,7 @@ Bool_t TXNetFileStager::IsStaged(const char *path)
 
    if (IsValid()) {
       TString p(path);
-      if (!p.BeginsWith(fPrefix))
+      if (!p.BeginsWith("root:"))
          p.Insert(0, fPrefix);
       return fSystem->IsOnline(p);
    }
@@ -104,7 +104,7 @@ Bool_t TXNetFileStager::Stage(const char *path, Option_t *opt)
       }
       // Make user the full path is used
       TString pp(path);
-      if (!pp.BeginsWith(fPrefix))
+      if (!pp.BeginsWith("root:"))
          pp.Insert(0, fPrefix);
       return fSystem->Prepare(pp, o, p);
    }
