@@ -40,6 +40,29 @@ extern void Graph2DFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_
 extern void MultiGraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 #endif
 
+//______________________________________________________________________________
+/**
+Interface to the new C++ Minuit package (MINUIT2) for ROOT. 
+It implements the TVirtualFitter interface using Minuit2
+For more information on the new C++ Minuit, see 
+BEGIN_HTML
+ See:
+<ul>
+<li><a href="http://www.cern.ch/mathlibs/sw/Minuit2/html/index.html">Online doc for Minuit2 classes</a></li>
+<li><a href="http://seal.web.cern.ch/seal/documents/minuit/mnusersguide.pdf">C++ Minuit Users Guide
+    </a></li>
+<li><a href="http://seal.cern.ch/documents/minuit/mntutorial.pdf">Minuit Tutorial on Function Minimization</a>, describing the Minuit algorithm</li>
+<li><a href="http://seal.cern.ch/documents/minuit/mnerror.pdf">The Interpretation of Errors in Minuit</a></li>
+</ul>
+<p>
+Minuit2 can be set as the default fitter to be used in method lik TH1::Fit, by doing 
+<pre>
+TVirtualFitter::SetDefaultFitter("Minuit2");
+</pre>
+This class can be used also directly by providing for the objective function either a global C function, like in TMinuit, or by passing a function class implementing the ROOT::Minuit2::FCNBase interface and used via the SetMinuitFCN method 
+END_HTML
+*/
+
 
 
 ClassImp(TFitterMinuit);
@@ -134,6 +157,7 @@ void TFitterMinuit::Clear(Option_t*) {
    //fDebug = 1;  
    fStrategy = 1;  
    fMinTolerance = 0;
+   fCovar.clear();
    
 //    if (fMinuitFCN) { 
 //       delete fMinuitFCN;
@@ -469,13 +493,24 @@ void TFitterMinuit::FixParameter(Int_t ipar) {
 }
 
 Double_t* TFitterMinuit::GetCovarianceMatrix() const {
-   // get the error matrix
-   return (Double_t*)(&(State().Covariance().Data().front()));
+   // get the error matrix in a pointer to a NxN array.  
+   // Since Minuit2 stores only the independent element need to copy in a 
+   // cached vector
+   unsigned int npar =  State().Covariance().Nrow();
+   assert (int(npar) == GetNumberFreeParameters() );
+   if (fCovar.size() !=  npar ) {
+      fCovar.resize(npar);
+      for (unsigned int i = 0; i < npar; ++i) { 
+         for (unsigned int j = 0; j < npar; ++j) {
+            fCovar[j + npar*i] = State().Covariance()(i,j);
+         }
+      }
+   } 
+   return &(fCovar.front());
 }
 
 Double_t TFitterMinuit::GetCovarianceMatrixElement(Int_t i, Int_t j) const {
    // get error matrix element
-   std::cout<<"GetCovarianceMatrix not implemented"<<std::endl;
    return State().Covariance()(i,j);
 }
 

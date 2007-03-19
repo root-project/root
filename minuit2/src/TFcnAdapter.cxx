@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFcnAdapter.cxx,v 1.4 2006/01/25 12:20:49 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFcnAdapter.cxx,v 1.5 2006/07/04 10:36:52 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -38,13 +38,15 @@ std::vector<double> TFcnAdapter::Gradient(const std::vector<double>& par) const 
    assert(fFCN != 0);
    double fs = 0.;
    int npar = par.size();
-   double* theCache = new double[par.size()];
-   double* theGradCache = new double[par.size()];
+
+   double* theCache = (double*)(&(par.front()));
+   if (fGradCache.size() != par.size() ) 
+      fGradCache = std::vector<double>(par.size() );
+
    for(int i = 0; i < npar; i++) theCache[i] = par[i];
    //   (*theFcn)(npar, theGradCache, fs, theCache, 2);
-   (*fFCN)(npar, theGradCache, fs, theCache, 4);
-   std::vector<double> grad(theGradCache, theGradCache+npar);
-   return std::vector<double>(theGradCache, theGradCache+npar);
+   (*fFCN)(npar, &fGradCache[0], fs, theCache, 4);
+   return fGradCache;
 }
 
 

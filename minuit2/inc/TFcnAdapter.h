@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFcnAdapter.h,v 1.4 2006/07/05 08:32:39 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFcnAdapter.h,v 1.5 2007/02/09 17:24:50 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -11,6 +11,13 @@
 #define ROOT_TFcnAdapter_H_
 
 #include "Minuit2/FCNGradientBase.h"
+
+//___________________________________________________________
+//
+// Adapt the interface used in TMinuit (and the TVirtualFitter) for 
+// passing the objective function in a Minuit2 interface 
+// (ROOT::Minuit2::FCNGradientBase or ROOT::Minuit2::FCNBase)
+//
 
 class TFcnAdapter : public ROOT::Minuit2::FCNGradientBase {
 
@@ -36,5 +43,8 @@ private:
 
    void (*fFCN)(int&, double*, double&, double*, int);
    double fUp; 
+   mutable std::vector<double> fGradCache; 
+
+   ClassDef(TFcnAdapter,1)  // wrapper class implementing the Minuit2 interface for TMinuit2-like objective functions
 };
 #endif //ROOT_GFcnAdapter_H_

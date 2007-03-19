@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFitterFumili.cxx,v 1.6 2006/07/03 15:48:06 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFitterFumili.cxx,v 1.7 2007/01/16 08:13:30 brun Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -18,6 +18,25 @@
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnPrint.h"
+
+//______________________________________________________________________________
+/**
+Implementation of the  TVirtualFitter interface using the FUMILI algorithm present in Minuit2. 
+The FUMILI algorithm is a specialized minimization algorithm in the case of a least square or likelihood 
+functions. With this technique the Hessian matrix of the objective function is approximated using only first 
+derivatives.     
+BEGIN_HTML
+For more information on this method see page 31 of the <a href="http://seal.cern.ch/documents/minuit/mntutorial.pdf">Tutorial on Function Minimization</a>. 
+<p>
+The new Fumili (Fumili2) can be set as the default fitter to be used in method like TH1::Fit, by doing 
+<pre>
+TVirtualFitter::SetDefaultFitter("Fumili2");
+</pre>
+To be used directly, Fumili2 requires that the user implements the ROOT::Minuit2::FumiliFCNBase interface and passes its pointer via the SetMinuitFCN method.
+END_HTML
+*/
+
+
 
 using namespace ROOT::Minuit2;
 
