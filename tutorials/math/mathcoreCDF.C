@@ -5,6 +5,9 @@
 //   root [0] .x mathcoreCDF.C 
 //Author: Lorenzo Moneta
 
+#include "TSystem.h"
+#include "TF2.h"
+#include "TCanvas.h"
 
 
 
