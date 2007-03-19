@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.2 2007/03/17 18:04:02 rdm Exp $ */
+/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.3 2007/03/19 01:36:56 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -29,6 +29,10 @@
 #pragma link C++ class TPacketizerProgressive+;
 #pragma link C++ class TAdaptivePacketizer+;
 
+#pragma link C++ class TEventIter+;
+#pragma link C++ class TEventIterObj+;
+#pragma link C++ class TEventIterTree+;
+
 #pragma link C++ class TPerfStats;
 #pragma link C++ class TPerfEvent+;
 
@@ -50,6 +54,7 @@
 
 #pragma link C++ class TProofLimitsFinder;
 #pragma link C++ class TDrawFeedback+;
+#pragma link C++ class TStatus+;
 #pragma link C++ class TFileMerger+;
 
 #endif

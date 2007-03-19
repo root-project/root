@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.190 2007/03/19 01:36:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.191 2007/03/19 01:46:24 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -288,7 +288,7 @@ TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
 
    Init(masterurl, conffile, confdir, loglevel, alias);
 
-   // If called by a manager, make sure it stays in lasto position
+   // If called by a manager, make sure it stays in last position
    // for cleaning
    if (mgr) {
       R__LOCKGUARD2(gROOTMutex);
