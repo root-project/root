@@ -94,6 +94,9 @@ class STL3MapTestCase( unittest.TestCase ):
 
       self.assertEqual( len(a), self.N )
 
+      for key, value in a:
+         self.assertEqual( key, value )
+
    def test2KeyedMapType( self ):
       """Test access to a map<std::string,int> (part of cintdlls)"""
 
@@ -103,7 +106,6 @@ class STL3MapTestCase( unittest.TestCase ):
          self.assertEqual( a[str(i)], i )
 
       self.assertEqual( len(a), self.N )
-
 
 
 ### Protocol mapping for an STL like class ===================================
