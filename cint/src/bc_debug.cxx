@@ -29,7 +29,7 @@ struct G__input_file G__bc_funccall::getifile() const {
     ifile=G__ifile;
   }
   else {
-    struct G__ifunc_table *ifunc = m_bytecode->ifunc;
+    struct G__ifunc_table_internal *ifunc = m_bytecode->ifunc;
     int ifn = m_bytecode->ifn;
     ifile.filenum = ifunc->pentry[ifn]->filenum;
     ifile.fp = G__srcfile[ifile.filenum].fp;
@@ -54,7 +54,7 @@ int G__bc_funccall::setstackenv(struct G__view* pview) const {
     return(0);
   }
   else {
-    struct G__ifunc_table *ifunc = m_bytecode->ifunc;
+    struct G__ifunc_table_internal *ifunc = m_bytecode->ifunc;
     //int ifn = m_bytecode->ifn;
     pview->var_local = m_bytecode->var;
     pview->struct_offset = m_struct_offset;
@@ -70,7 +70,7 @@ int G__bc_funccall::disp(FILE* fout) const {
   // todo, need some review
   if(!m_bytecode)  return(0);
   char msg[G__LONGLINE];
-  struct G__ifunc_table *ifunc = m_bytecode->ifunc;
+  struct G__ifunc_table_internal *ifunc = m_bytecode->ifunc;
   int ifn = m_bytecode->ifn;
   int tagnum=ifunc->tagnum;
   int filenum = ifunc->pentry[ifn]->filenum;

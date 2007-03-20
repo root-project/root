@@ -95,6 +95,10 @@ E: Nenad.Buncic@epfl.ch
 D: HTML documentation generator, 3D shapes and geometry classes,
 D: interface to X3D
 
+N: Toby Burnett
+E: tburnett@u.washington.edu
+D: Support for indirect files in hadd utility
+
 N: Damir Buskulic
 E: buskulic@lapp.in2p3.fr
 D: LinuxPPC support, contribution to the User's Guide
@@ -140,6 +144,10 @@ D: TLimit TLimitDataSource TConfidenceLevel and TMultiLayerPerceptron classes
 N: Matthieu Demaret
 E: Matthieu.Demaret@cern.ch
 D: class TGraphPolar
+
+N: Jason Detwiler
+E: jasondet@gmail.com
+D: Implementation of multiple columns in TLegend class
 
 N: Mat Dobbs
 E: Matthew.Adam.Dobbs@cern.ch
@@ -357,6 +365,10 @@ N: Wim Lavrijsen
 E: WLavrijsen@lbl.gov
 D: PyRoot package
 
+N: Josef Leydold
+E: leydold@statmath.wu-wien.ac.at
+D: UNURAN package and interfaces
+
 N: Sergey Linev
 E: S.Linev@gsi.de
 D: XML interface package
@@ -423,6 +435,10 @@ D: library load path fixes, some Makefile updates
 N: Andreas Morsch
 E: Andreas.Morsch@cern.ch
 D: many contributions to the Virtual Monte Carlo
+
+N: Alja Mrak-Tadel
+E: Alja.Mrak.Tadel@cern.ch
+D: Several contributions to GUI and GL
 
 N: Johannes Muelmenstaedt
 E: jmuelmen@socrates.Berkeley.EDU
@@ -599,6 +615,10 @@ D: Author of the RooFit package
 N: Brett Viren
 E: bv@bnl.gov
 D: contributed the GUI TGTableLayout manager and the Viewer example program
+
+N: Guido Volpi
+E: guido.volpi@pi.infn.it
+D: class TPie
 
 N: Helge Voss
 E: Helge.Voss@cern.ch

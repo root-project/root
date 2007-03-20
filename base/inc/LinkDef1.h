@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.40 2006/11/24 16:08:33 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.50 2007/02/18 14:58:16 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -41,6 +41,9 @@
 
 #pragma link C++ enum EObjBits;
 #pragma link C++ enum EEnvLevel;
+#pragma link C++ enum EColor;
+#pragma link C++ enum ELineStyle;
+#pragma link C++ enum EMarkerStyle;
 
 #pragma link C++ global gROOT;
 #pragma link C++ global gEnv;
@@ -48,8 +51,6 @@
 #pragma link C++ global gApplication;
 #pragma link C++ global gBenchmark;
 #pragma link C++ global gDirectory;
-#pragma link C++ global gFile;
-#pragma link C++ global gRandom;
 #pragma link C++ global gDebug;
 #pragma link C++ global gErrorIgnoreLevel;
 #pragma link C++ global gErrorAbortLevel;
@@ -94,8 +95,8 @@
 #pragma link C++ function operator!=(const char*,const TString&);
 #pragma link C++ function operator>>(istream&,TString&);
 #pragma link C++ function operator<<(ostream&,const TString&);
-#pragma link C++ function operator>>(TBuffer&,TString&);
-#pragma link C++ function operator<<(TBuffer&,const TString&);
+//#pragma link C++ function operator>>(TBuffer&,TString&);
+//#pragma link C++ function operator<<(TBuffer&,const TString&);
 //#pragma link C++ function operator>>(TBuffer&,const TObject*&);
 //#pragma link C++ function operator<<(TBuffer&,const TObject*);
 
@@ -108,7 +109,6 @@
 
 #pragma link C++ nestedtypedef;
 #pragma link C++ namespace ROOT;
-#pragma link C++ typedef ROOT::DelArrFunc_t;
 #pragma link C++ typedef ShowMembersFunc_t;
 #pragma link C++ typedef ROOT::NewFunc_t;
 #pragma link C++ typedef ROOT::NewArrFunc_t;
@@ -138,30 +138,24 @@
 #pragma link C++ class TControlBarImp+;
 #pragma link C++ class TInspectorImp+;
 #pragma link C++ class TDatime-;
-#pragma link C++ class TDirectory-;
+#pragma link C++ class TDirectory;
 #pragma link C++ class TEnv+;
 #pragma link C++ class TEnvRec+;
-#pragma link C++ class TFile-;
-#pragma link C++ class TFileCacheRead+;
-#pragma link C++ class TFileCacheWrite+;
 #pragma link C++ class TFileHandler+;
 #pragma link C++ class TGuiFactory;
 #pragma link C++ class TStyle+;
-#pragma link C++ class TView-;
 #pragma link C++ class TVirtualX+;
 #pragma link C++ class TVirtualFitter+;
 #pragma link C++ class TVirtualPad-;
 // Those are NOT going to be saved ... so no need for a +
 #pragma link C++ class TVirtualViewer3D;
 #pragma link C++ class TBuffer3D;
-#pragma link C++ class TPadView3D;
 #pragma link C++ class TVirtualGL;
 #pragma link C++ class TVirtualGLImp;
 #pragma link C++ class TGLManager;
 #pragma link C++ class TVirtualGLPainter;
 #pragma link C++ class TVirtualGLManip;
 #pragma link C++ class TVirtualPS;
-#pragma link C++ class TVirtualUtil3D;
 
 #pragma link C++ class TVirtualPadEditor;
 

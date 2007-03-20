@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: FCNBase.h,v 1.7.2.4 2005/11/29 11:08:34 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: FCNBase.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -72,7 +72,6 @@ public:
 
   virtual double operator()(const std::vector<double>& x) const = 0;
 
-  
 
   /**
 
@@ -103,8 +102,11 @@ public:
 
   virtual double Up() const = 0;
 
-
-
+   /** 
+       add interface to set dynamically a new error definition 
+       Re-implement this funciton if needed. 
+   */ 
+   virtual void SetErrorDef(double ) {}; 
 
 };
 

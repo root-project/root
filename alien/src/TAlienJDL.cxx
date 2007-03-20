@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienJDL.cxx,v 1.1 2005/05/20 11:13:30 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienJDL.cxx,v 1.4 2007/03/19 16:55:55 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   28/9/2004
 
 /*************************************************************************
@@ -29,7 +29,8 @@ void TAlienJDL::SetExecutable(const char* value)
 {
    // Sets the executable.
 
-   SetValue("Executable", AddQuotes(value));
+   if (value)
+      SetValue("Executable", AddQuotes(value));
 }
 
 //______________________________________________________________________________
@@ -37,7 +38,8 @@ void TAlienJDL::SetArguments(const char* value)
 {
    // Sets the arguments.
 
-   SetValue("Arguments", AddQuotes(value));
+   if (value)
+      SetValue("Arguments", AddQuotes(value));
 }
 
 //______________________________________________________________________________
@@ -45,15 +47,94 @@ void TAlienJDL::SetEMail(const char* value)
 {
    // Sets eMail address.
 
-   SetValue("EMail", AddQuotes(value));
+   if (value)
+      SetValue("EMail", AddQuotes(value));
 }
 
 //______________________________________________________________________________
-void TAlienJDL::SetSplitMode(const char* value)
+void TAlienJDL::SetOutputDirectory(const char* value)
+{
+   // Sets OutputDirectory
+
+   if (value)
+      SetValue("OutputDirectory", AddQuotes(value));
+}
+
+//______________________________________________________________________________
+void TAlienJDL:: SetPrice(UInt_t price)
+{
+   // Sets OutputDirectory.
+
+   TString pricestring= (Int_t)price;
+
+   SetValue("Price", pricestring.Data());
+}
+
+//______________________________________________________________________________
+void TAlienJDL:: SetTTL(UInt_t ttl)
+{
+   // Sets OutputDirectory.
+
+   TString ttlstring= (Int_t)ttl;
+
+   SetValue("TTL", ttlstring.Data());
+}
+
+//______________________________________________________________________________
+void TAlienJDL::SetJobTag(const char* value)
+{
+   // Sets Job Tag
+
+   if (value)
+      SetValue("JobTag", AddQuotes(value));
+}
+
+//______________________________________________________________________________
+void TAlienJDL::SetInputDataListFormat(const char* value)
+{
+   // Sets InputDataListFormat - can be "xml-single" or "xml-multi"
+
+   if (value)
+      SetValue("InputDataListFormat", AddQuotes(value));
+}
+
+//______________________________________________________________________________
+void TAlienJDL::SetInputDataList(const char* value)
+{
+   // Sets InputDataList name
+
+   if (value)
+      SetValue("InputDataList", AddQuotes(value));
+}
+
+//______________________________________________________________________________
+void TAlienJDL::SetSplitMode(const char* value, UInt_t maxnumberofinputfiles, UInt_t maxinputfilesize)
 {
    // Sets the split mode.
 
-   SetValue("Split", AddQuotes(value));
+   if ( (TString(value) == "se" ) || (TString(value) == "SE") || (TString(value == "Se"))) {
+      SetValue("Split", AddQuotes(value));
+      if (maxnumberofinputfiles) {
+         TString val = (Int_t)maxnumberofinputfiles;
+         SetValue("SplitMaxInputFileNumber", AddQuotes(val.Data()));
+      }
+      if (maxinputfilesize) {
+         TString val = (Int_t)maxinputfilesize;
+         SetValue("SplitMaxInputFileSize", AddQuotes(val.Data()));
+      }
+   } else {
+      if (value)
+         SetValue("Split",AddQuotes(value));
+   }
+}
+
+//______________________________________________________________________________
+void TAlienJDL::SetSplitArguments(const char* splitarguments)
+{
+   // Sets the split.
+
+   if (splitarguments)
+      SetValue("SplitArguments", AddQuotes(splitarguments));
 }
 
 //______________________________________________________________________________
@@ -65,11 +146,12 @@ void TAlienJDL::SetValidationCommand(const char* value)
 }
 
 //______________________________________________________________________________
-void TAlienJDL::SetRequirements(const char* value)
+void TAlienJDL::AddToRequirements(const char* value)
 {
-   // Sets the requirements.
+   // Adds a requirement.
 
-   SetValue("Requirements", value);
+   if (value)
+      AddToSet("Requirements", value);
 }
 
 //______________________________________________________________________________
@@ -77,7 +159,8 @@ void TAlienJDL::AddToInputSandbox(const char* value)
 {
    // Adds a file to the input sandbox.
 
-   AddToSet("InputFile", value);
+   if (value)
+      AddToSet("InputFile", value);
 }
 
 //______________________________________________________________________________
@@ -85,7 +168,8 @@ void TAlienJDL::AddToOutputSandbox(const char* value)
 {
    // Adds a file to the output sandbox.
 
-   AddToSet("OutputFile", value);
+   if (value)
+      AddToSet("OutputFile", value);
 }
 
 //______________________________________________________________________________
@@ -93,7 +177,8 @@ void TAlienJDL::AddToInputData(const char* value)
 {
    // Adds a file to the input data.
 
-   AddToSet("InputData", value);
+   if (value)
+      AddToSet("InputData", value);
 }
 
 //______________________________________________________________________________
@@ -101,7 +186,33 @@ void TAlienJDL::AddToInputDataCollection(const char* value)
 {
    // Adds a file to the input data collection.
 
-   AddToSet("InputDataCollection", value);
+   if (value)
+      AddToSet("InputDataCollection", value);
+}
+
+//______________________________________________________________________________
+void TAlienJDL::AddToPackages(const char* name,const char* version, const char* type)
+{
+   // Adds a package name to the package section
+
+   if (name) {
+      TString packagename = type;
+      packagename += "@";
+      packagename += name;
+      packagename += "::";
+      packagename += version;
+
+      AddToSet("Packages", packagename.Data());
+   }
+}
+
+//______________________________________________________________________________
+void TAlienJDL::AddToOutputArchive(const char* value)
+{
+   // Adds an output archive definition
+
+   if (value)
+      AddToSet("OutputArchive", value);
 }
 
 //______________________________________________________________________________

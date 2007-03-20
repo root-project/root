@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.34 2006/09/15 15:16:57 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.37 2007/01/30 11:49:14 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 #include "Riostream.h"
 #include "TVirtualFitter.h"
 #include "TClass.h"
+#include "TMath.h"
 
 #include <ctype.h>
 
@@ -510,7 +511,7 @@ Int_t TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis
       strdiff = strcmp(TVirtualFitter::GetFitter()->IsA()->GetName(), l);
    }
    if (linear){
-      TClass *cl = gROOT->GetClass("TLinearFitter");
+      TClass *cl = TClass::GetClass("TLinearFitter");
       if (isSet && strdiff!=0) {
          delete TVirtualFitter::GetFitter();
          isSet=kFALSE;
@@ -1204,9 +1205,6 @@ void TMultiGraph::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       while (lnk) {
          g = lnk->GetObject();
          g->SavePrimitive(out,"multigraph");
-
-         out<<"   multigraph->Add(graph,"<<quote<<lnk->GetOption()<<quote<<");"<<endl;
-
          lnk = (TObjOptLink*)lnk->Next();
 
       }

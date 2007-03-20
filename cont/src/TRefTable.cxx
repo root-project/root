@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.11 2006/04/25 16:36:00 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.14 2007/01/28 18:30:18 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -40,8 +40,6 @@
 
 #include "TRefTable.h"
 #include "TObjArray.h"
-#include "TStreamerInfo.h"
-#include "TFile.h"
 #include "TProcessID.h"
 #include <algorithm>
 
@@ -335,19 +333,7 @@ void TRefTable::ReadBuffer(TBuffer &b)
       // old format, only one PID
       numIids = 1;
 
-      TFile *file = dynamic_cast<TFile*>(b.GetParent());
-      // warn if the file contains > 1 PID (i.e. if we might have ambiguity)
-      if (file && !TestBit(kHaveWarnedReadingOld) && file->GetNProcessIDs()>1) {
-         Warning("ReadBuffer", "The file was written during several processes with an "
-            "older ROOT version; the TRefTable entries might be inconsistent.");
-         SetBit(kHaveWarnedReadingOld);
-      }
-
-      // the file's last PID is the relevant one, all others might have their tables overwritten
-      TProcessID *fileProcessID = TProcessID::GetProcessID(0);
-      if (file && file->GetNProcessIDs() > 0)
-         // take the last loaded PID
-         fileProcessID = (TProcessID *) file->GetListOfProcessIDs()->Last();
+      TProcessID *fileProcessID = b.GetLastProcessID(this);
 
       startIid = GetInternalIdxForPID(fileProcessID);
       if (startIid == -1) {
@@ -378,21 +364,30 @@ void TRefTable::Reset(Option_t * /*option*/ )
 }
 
 //______________________________________________________________________________
-Int_t TRefTable::SetParent(const TObject *parent)
+Int_t TRefTable::SetParent(const TObject* parent, const Int_t branchID)
 {
-   // Set Current parent object.
-   // The parent object is typically a branch of a Tree.
-   // This function is called by TBranchElement::Fill.
-
-   if (!fParents)
-      return 0;
+   // -- Set current parent object, typically a branch of a tree.
+   //
+   // This function is called by TBranchElement::Fill() and by
+   // TBranchElement::GetEntry().
+   //
+   if (!fParents) {
+      return -1;
+   }
    Int_t nparents = fParents->GetEntriesFast();
-   Int_t ind = fParents->IndexOf(parent);
-   if (ind >= 0) {
-      fParentID = ind;
-   } else {
-      fParents->AddAtAndExpand((TObject*) parent, nparents);
-      fParentID = nparents;
+   if (branchID != -1) {
+      // -- The branch already has an id cached, just use it.
+      fParentID = branchID;
+   }
+   else {
+      // -- The branch does *not* have an id cached, find it or generate one.
+      // Lookup the branch.
+      fParentID = fParents->IndexOf(parent);
+      if (fParentID < 0) {
+         // -- The branch is not known, generate an id number.
+         fParents->AddAtAndExpand(const_cast<TObject*>(parent), nparents);
+         fParentID = nparents;
+      }
    }
    return fParentID;
 }

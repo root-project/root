@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtupleD.cxx,v 1.6 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtupleD.cxx,v 1.8 2007/01/25 22:53:05 pcanal Exp $
 // Author: Rene Brun   12/08/2001
 
 /*************************************************************************
@@ -100,6 +100,20 @@ TNtupleD::~TNtupleD()
 
    delete [] fArgs;
    fArgs = 0;
+}
+
+//______________________________________________________________________________
+void TNtupleD::ResetBranchAddress(TBranch *branch)
+{
+   // Reset the branch addresses to the internal fArgs array. Use this
+   // method when the addresses were changed via calls to SetBranchAddress().
+
+   if (branch) {
+      UInt_t index = fBranches.IndexOf(branch);
+      if (index>0) {
+         branch->SetAddress(&fArgs[index]);
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -209,7 +223,7 @@ void TNtupleD::Streamer(TBuffer &b)
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
-      TNtupleD::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+      b.ReadClassBuffer(TNtupleD::Class(), this, R__v, R__s, R__c);
       if (fNvar <= 0) return;
       fArgs = new Double_t[fNvar];
       for (Int_t i=0;i<fNvar;i++) {
@@ -217,6 +231,6 @@ void TNtupleD::Streamer(TBuffer &b)
          if (branch) branch->SetAddress(&fArgs[i]);
       }      
    } else {
-      TNtupleD::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TNtupleD::Class(),this);
    }
 }

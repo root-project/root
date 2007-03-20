@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.11 2006/03/24 06:04:09 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.12 2006/06/13 06:39:05 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -101,8 +101,14 @@ namespace {
       Int_t nMethods = methods.size();
 
    // simple case
-      if ( nMethods == 1 )
-         return (*methods[0])( meth->fSelf, args, kwds );
+      if ( nMethods == 1 ) {
+         PyObject* result = (*methods[0])( meth->fSelf, args, kwds );
+
+         if ( result == (PyObject*)TPyExceptionMagic )
+            return 0;              // exception info was already set
+
+         return result;
+      }
 
    // handle overloading
       Long_t sighash = HashSignature( args );

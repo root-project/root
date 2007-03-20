@@ -14,6 +14,9 @@
  ************************************************************************/
 
 #include "common.h"
+#include <list>
+
+extern std::list<G__DLLINIT>* G__initpermanentsl;
 
 extern "C" {
 
@@ -23,7 +26,6 @@ void G__setcopyflag G__P((int flag));
 #endif
 
 extern int G__ispermanentsl;
-extern G__DLLINIT G__initpermanentsl;
 
 #ifndef G__OLDIMPLEMENTATION1817
 #if defined(G__ROOT) && !defined(G__NATIVELONGLONG)
@@ -127,12 +129,13 @@ int G__call_setup_funcs()
 {
   int i, k = 0;
   G__LockCriticalSection();
+  if (!G__initpermanentsl) G__initpermanentsl = new std::list<G__DLLINIT>;
 
   for (i = 0; i < G__nlibs; i++)
     if (G__setup_func_list[i] && !G__setup_func_list[i]->inited) {
       (G__setup_func_list[i]->func)();
       G__setup_func_list[i]->inited = 1;
-      G__initpermanentsl = G__setup_func_list[i]->func;
+      G__initpermanentsl->push_back(G__setup_func_list[i]->func);
       k++;
 #ifdef G__DEBUG
       fprintf(G__sout,"Dictionary for %s initialized\n", G__setup_func_list[i]->libname); /* only for debug */
@@ -588,7 +591,7 @@ int G__main(int argc,char **argv)
 
   G__free_ifunc_table(&G__ifunc);
   G__ifunc.allifunc = 0;
-  G__ifunc.next = (struct G__ifunc_table *)NULL;
+  G__ifunc.next = (struct G__ifunc_table_internal *)NULL;
 #ifdef G__NEWINHERIT
   G__ifunc.tagnum = -1;
 #endif
@@ -1628,6 +1631,7 @@ int G__init_globals()
   G__iscpp = 1;
   G__cpplock=0;
   G__clock=0;
+  G__isconst = 0;
   G__constvar = 0;
   G__isexplicit = 0;
   G__unsigned = 0;

@@ -178,6 +178,11 @@ public:
   int overloaded( int, float ) { return 3; }
   int overloaded( float, int ) { return 4; }
   int call( FuncPtr f, int v) { return f(v); }
+  
+  int vectorargument( const std::vector<double>& v) { return v.size(); } 
+  int vectorargument( const std::vector<unsigned long>& v) { return v.size(); }
+  int vectorargument( std::vector<std::string>& v ) { return v.size(); }
+   
 private:
   MyClass m_object;
   MyClass* m_ptr;
@@ -391,7 +396,10 @@ public:
 struct _Instantiations {
   std::vector<float> Vf;
   std::vector<int> Vi;
+  std::vector<char> Vc;
+  std::vector<short> Vs;
   std::vector<unsigned int> Vui;
+  std::vector<unsigned long> Vul;
   std::vector<long> Vl;
   std::vector<double> Vd;
   std::list<int> Li;
@@ -753,3 +761,21 @@ inline MyInteger theFunction() {
   return 1;
 }
 
+namespace MarcoCl {
+class MyClass 
+{
+public: 
+  MyClass() {}
+  ~MyClass() {}
+
+  int echo(const std::string &s)
+  {
+    std::string tmp = s; // just to fail before printing anything
+    return 1;
+  }
+  int echo(unsigned int i)
+  {
+    return 2;
+  }
+};
+}

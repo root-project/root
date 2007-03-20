@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.11 2006/09/26 06:42:42 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.h,v 1.14 2007/02/01 14:58:43 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   02/12/2003
 
 /*************************************************************************
@@ -29,8 +29,12 @@
 #ifndef ROOT_TVirtualPadEditor
 #include "TVirtualPadEditor.h"
 #endif
-
+#ifndef ROOT_TList
+#include "TList.h"
+#endif
+#ifndef ROOT_TMap
 #include "TMap.h"
+#endif
 
 class TCanvas;
 class TGCanvas;
@@ -66,7 +70,7 @@ protected:
    TClass           *fClass;            //class of the selected object
    Bool_t            fGlobal;           //true if editor is global
 
-   void              ConfigureGedFrames();
+   void              ConfigureGedFrames(Bool_t objChaged);
 
    static TGedEditor *fgFrameCreator; 
 

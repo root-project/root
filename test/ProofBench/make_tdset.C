@@ -1,4 +1,4 @@
-// $Id: make_tdset.C,v 1.6 2005/02/12 02:14:54 rdm Exp $
+// $Id: make_tdset.C,v 1.7 2006/08/01 01:10:21 rdm Exp $
 //
 //
 
@@ -11,7 +11,7 @@
 #include "TProof.h"
 
 
-TDSet *make_tdset(const Char_t* basedir, Int_t files_per_slave, Int_t max_per_node = 0)
+TDSet *make_tdset(const char *basedir, Int_t files_per_slave, Int_t max_per_node = 0)
 {
    // This script creates a TDSet object that can be used to process
    // the files generated with the make_event_trees.C script.

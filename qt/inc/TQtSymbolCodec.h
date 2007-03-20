@@ -1,5 +1,5 @@
 /****************************************************************************
-** $Id: TQtSymbolCodec.h,v 1.2 2005/12/15 21:36:29 fine Exp $
+** $Id: TQtSymbolCodec.h,v 1.3 2006/12/29 00:32:55 fine Exp $
 **
 ** Implementation of QTextCodec class
 **
@@ -41,6 +41,7 @@ public:
 #endif
 #if QT_VERSION < 0x40000
     QCString fromUnicode(const QString& uc, int& lenInOut) const;
+    QCString fromUnicode( const QString & uc ) const { return QTextCodec::fromUnicode(uc); }
 #else
     Q3CString fromUnicode(const QString& uc, int& lenInOut) const;
     virtual QByteArray convertFromUnicode( const QChar * input, int number, ConverterState *state ) const;

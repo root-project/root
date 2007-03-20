@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofMgr.cxx,v 1.9 2006/11/28 12:10:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofMgr.cxx,v 1.10 2006/12/03 23:34:03 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -319,7 +319,8 @@ TList *TProofMgr::GetListOfManagers()
             fgListOfManagers.Remove(o);
          } else {
             TProofMgr *p = (TProofMgr *)o;
-            Printf("// #%d: \"%s\" (%s)", ++nm, p->GetName(), p->GetTitle());
+            if (gDebug > 0)
+               Printf("// #%d: \"%s\" (%s)", ++nm, p->GetName(), p->GetTitle());
          }
       }
    } else {

@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.250 2006/11/16 17:17:39 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.258 2007/03/09 11:17:10 pcanal Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -163,7 +163,7 @@
 #include "RConfigure.h"
 #endif
 #include "RConfig.h"
-#include "Api.h"
+#include "Shadow.h"
 #include <iostream>
 
 #ifdef fgets // in G__ci.h
@@ -314,10 +314,12 @@ const char *help =
 
 #include <time.h>
 #include <string>
+#include <list>
 #include <vector>
 #include <sstream>
 #include <map>
 #include <fstream>
+#include <sys/stat.h>
 
 namespace std {}
 using namespace std;
@@ -336,6 +338,8 @@ char autold[64];
 
 std::ostream* dictSrcOut=&std::cout;
 G__ShadowMaker *shadowMaker=0;
+
+bool gNeedCollectionProxy = false;
 
 enum EDictType {
    kDictTypeCint,
@@ -477,6 +481,17 @@ void Fatal(const char *location, const char *va_(fmt), ...)
    va_end(ap);
 }
 
+namespace {
+   class R__tmpnamElement {
+   public:
+      R__tmpnamElement() {}
+      R__tmpnamElement(const std::string& tmpnam): fTmpnam(tmpnam) {}
+      ~R__tmpnamElement() { unlink(fTmpnam.c_str()); }
+   private:
+      string fTmpnam;
+   };
+}
+
 //______________________________________________________________________________
 string R__tmpnam()
 {
@@ -484,6 +499,7 @@ string R__tmpnam()
 
    static char filename[L_tmpnam+2];
    static string tmpdir;
+   static list<R__tmpnamElement> tmpnamList;
 
    if (tmpdir.length() == 0 && strlen(P_tmpdir) <= 2) {
       // P_tmpdir will be prepended to the result of tmpnam
@@ -523,7 +539,7 @@ string R__tmpnam()
    string result(tmpdir);
    result += filename;
    result += "_rootcint";
-
+   tmpnamList.push_back(R__tmpnamElement(result));
    return result;
 #endif
 }
@@ -569,6 +585,22 @@ void LoadLibraryMap() {
    static unsigned int sbuffer = 0;
 
    while ( filelist >> filename ) {
+#ifdef WIN32
+      struct _stati64 finfo;
+
+      if (_stati64(filename.c_str(), &finfo) < 0 || 
+          finfo.st_mode & S_IFDIR) {
+         continue;
+      }
+#else
+      struct stat finfo;
+      if (stat(filename.c_str(), &finfo) < 0 || 
+          S_ISDIR(finfo.st_mode)) {
+         continue;
+      }
+
+#endif
+
       ifstream file(filename.c_str());
 
       string line;
@@ -585,6 +617,7 @@ void LoadLibraryMap() {
             while ( (pos=classname.find("@@",pos)) >= 0 ) {
                classname.replace(pos,2,"::");
             }
+            pos = 0;
             while ( (pos=classname.find("-",pos)) >= 0 ) {
                classname.replace(pos,1," ");
             }
@@ -641,6 +674,7 @@ void LoadLibraryMap() {
             G__set_class_autoloading_table(buffer,(char*)line.c_str());
          }
       }
+      file.close();
    }
 }
 
@@ -1488,7 +1522,8 @@ void WriteAuxFunctions(G__ClassInfo &cl)
       (*dictSrcOut) << "new " << classname.c_str() << args << ";" << std::endl
           << "   }" << std::endl;
 
-      if (args.size()==0) {
+      if (args.size()==0 && NeedDestructor(cl)) {
+         // Can not can newArray if the destructor is not public.
          (*dictSrcOut) << "   static void *newArray_" << mappedname.c_str() << "(Long_t nElements, void *p) {" << std::endl;
          (*dictSrcOut) << "      return p ? ";
          if (HasCustomOperatorNewArrayPlacement(cl)) {
@@ -2332,7 +2367,7 @@ void WriteClassInit(G__ClassInfo &cl)
 
    if (HasDefaultConstructor(cl,&args)) {
       (*dictSrcOut) << "   static void *new_" << mappedname.c_str() << "(void *p = 0);" << std::endl;
-      if (args.size()==0)
+      if (args.size()==0 && NeedDestructor(cl))
          (*dictSrcOut) << "   static void *newArray_" << mappedname.c_str()
                        << "(Long_t size, void *p);" << std::endl;
    }
@@ -2391,7 +2426,7 @@ void WriteClassInit(G__ClassInfo &cl)
    if (cl.HasMethod("Class_Version")) {
       (*dictSrcOut) << csymbol.c_str() << "::Class_Version(), ";
    } else if (stl) {
-      (*dictSrcOut) << "::TStreamerInfo::Class_Version(), ";
+      (*dictSrcOut) << "-2, "; // "::TStreamerInfo::Class_Version(), ";
    } else { // if (cl.RootFlag() & G__USEBYTECOUNT ) {
 
       // Need to find out if the operator>> is actually defined for this class.
@@ -2448,7 +2483,7 @@ void WriteClassInit(G__ClassInfo &cl)
        << "                  sizeof(" << csymbol.c_str() << ") );" << std::endl;
    if (HasDefaultConstructor(cl,&args)) {
       (*dictSrcOut) << "      instance.SetNew(&new_" << mappedname.c_str() << ");" << std::endl;
-      if (args.size()==0)
+      if (args.size()==0 && NeedDestructor(cl))
          (*dictSrcOut) << "      instance.SetNewArray(&newArray_" << mappedname.c_str() << ");" << std::endl;
    }
    if (NeedDestructor(cl)) {
@@ -2475,10 +2510,10 @@ void WriteClassInit(G__ClassInfo &cl)
             methodTCP="Insert";
             break;
       }
-      (*dictSrcOut) << "      instance.AdoptStreamer(TCollectionProxy::GenClassStreamer(TCollectionProxy::"
-          << methodTCP << "< " << classname.c_str() << " >()));" << std::endl
-          << "      instance.AdoptCollectionProxy(TCollectionProxy::GenProxy(TCollectionProxy::"
-          << methodTCP << "< " << classname.c_str() << " >()));" << std::endl;
+      (*dictSrcOut) << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::"
+                    << methodTCP << "< " << classname.c_str() << " >()));" << std::endl;
+
+      gNeedCollectionProxy = true;
    }
    (*dictSrcOut) << "      return &instance;"  << std::endl
                  << "   }" << std::endl;
@@ -3095,9 +3130,9 @@ void WriteAutoStreamer(G__ClassInfo &cl)
        << "{" << std::endl
        << "   // Stream an object of class " << cl.Fullname() << "." << std::endl << std::endl
        << "   if (R__b.IsReading()) {" << std::endl
-       << "      " << cl.Fullname() << "::Class()->ReadBuffer(R__b, this);" << std::endl
+       << "      R__b.ReadClassBuffer(" <<cl.Fullname() << "::Class(),this);" << std::endl
        << "   } else {" << std::endl
-       << "      " << cl.Fullname() << "::Class()->WriteBuffer(R__b, this);" << std::endl
+       << "      R__b.WriteClassBuffer(" <<cl.Fullname() << "::Class(),this);" << std::endl
        << "   }" << std::endl
        << "}" << std::endl << std::endl;
 
@@ -3434,24 +3469,6 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
             }
          } else {
             // we have an object
-
-            //string
-            if (!strcmp(m.Type()->Name(), "string") || !strcmp(m.Type()->Name(), "string*")) {
-               if (m.Property() & G__BIT_ISPOINTER) {
-                  (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"*" << m.Name() << "\", &"
-                      << prefix <<  m.Name()<< ");" << std::endl;
-                  if (clflag && IsStreamable(m) && GetFun(fun))
-                     (*dictSrcOut) << "   R__cl->SetMemberStreamer(\"*" << m.Name() << "\",R__"
-                         << clName << "_" << m.Name() << ");" << std::endl;
-               } else {
-                  (*dictSrcOut) << "      R__insp.Inspect(R__cl, R__parent, \"" << m.Name() << "\", &"
-                      << prefix << m.Name() << ");" << std::endl;
-                  if (clflag && IsStreamable(m) && GetFun(fun))
-                     (*dictSrcOut) << "      R__cl->SetMemberStreamer(\"" << m.Name() << "\",R__"
-                         << clName << "_" << m.Name() << ");" << std::endl;
-               }
-               continue;
-            }
 
             if (m.Property() & G__BIT_ISARRAY &&
                 m.Property() & G__BIT_ISPOINTER) {
@@ -4375,10 +4392,10 @@ int main(int argc, char **argv)
          argvv[argcc++] = "+V";        // turn on class comment mode
          if (!use_preprocessor) {
 #ifdef ROOTBUILD
-            argvv[argcc++] = "base/inc/TROOT.h";
+            argvv[argcc++] = "base/inc/TObject.h";
             argvv[argcc++] = "base/inc/TMemberInspector.h";
 #else
-            argvv[argcc++] = "TROOT.h";
+            argvv[argcc++] = "TObject.h";
             argvv[argcc++] = "TMemberInspector.h";
 #endif
          }
@@ -4403,7 +4420,7 @@ int main(int argc, char **argv)
                  argv[0], bundlename.c_str());
          use_preprocessor = 0;
       } else {
-         fprintf(bundle,"#include \"TROOT.h\"\n");
+         fprintf(bundle,"#include \"TObject.h\"\n");
          fprintf(bundle,"#include \"TMemberInspector.h\"\n");
       }
    }
@@ -4517,10 +4534,11 @@ int main(int argc, char **argv)
             gccxml_rootcint_call+=" -Dexternalref=extern";
             gccxml_rootcint_call+=" -DSYSV";
 #ifdef ROOTBUILD
-            gccxml_rootcint_call+=" base/inc/TROOT.h";
+            //gccxml_rootcint_call+=" base/inc/TROOT.h";
+            gccxml_rootcint_call+=" base/inc/TObject.h";
             gccxml_rootcint_call+=" base/inc/TMemberInspector.h";
 #else
-            gccxml_rootcint_call+=" TROOT.h";
+            gccxml_rootcint_call+=" TObject.h";
             gccxml_rootcint_call+=" TMemberInspector.h";
 #endif
          }
@@ -4563,7 +4581,8 @@ int main(int argc, char **argv)
        << "//Break the privacy of classes -- Disabled for the moment" << std::endl
        << "#define private public" << std::endl
        << "#define protected public" << std::endl
-       << "#endif" << std::endl << std::endl;
+       << "#endif" << std::endl 
+       << std::endl;
 #ifndef R__SOLARIS
    (*dictSrcOut) << "// Since CINT ignores the std namespace, we need to do so in this file." << std::endl
        << "namespace std {} using namespace std;" << std::endl << std::endl;
@@ -4574,15 +4593,14 @@ int main(int argc, char **argv)
 
    (*dictSrcOut) << "#include \"TClass.h\"" << std::endl
        << "#include \"TBuffer.h\"" << std::endl
-       << "#include \"TStreamerInfo.h\"" << std::endl
        << "#include \"TMemberInspector.h\"" << std::endl
        << "#include \"TError.h\"" << std::endl << std::endl
        << "#ifndef G__ROOT" << std::endl
        << "#define G__ROOT" << std::endl
        << "#endif" << std::endl << std::endl
        << "#include \"RtypesImp.h\"" << std::endl
-       << "#include \"TCollectionProxy.h\"" << std::endl
        << "#include \"TIsAProxy.h\"" << std::endl;
+   (*dictSrcOut) << std::endl;
 #ifdef R__SOLARIS
    (*dictSrcOut) << "// Since CINT ignores the std namespace, we need to do so in this file." << std::endl
        << "namespace std {} using namespace std;" << std::endl << std::endl;
@@ -4962,6 +4980,9 @@ int main(int argc, char **argv)
                   fprintf(fpd, "#include \"%s/%s\"\n", dictpathname.c_str(), inclf);
                } else {
                   fprintf(fpd, "#include \"%s\"\n", inclf);
+               }
+               if (gNeedCollectionProxy) {
+                  fprintf(fpd, "\n#include \"TCollectionProxyInfo.h\"");
                }
             }
          }

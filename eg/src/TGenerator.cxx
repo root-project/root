@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.12 2006/05/26 09:07:18 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.15 2007/02/15 15:04:39 brun Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -340,8 +340,7 @@ void TGenerator::Draw(Option_t *option)
 
    // Create a default canvas if a canvas does not exist
    if (!gPad) {
-      if (!gROOT->GetMakeDefCanvas()) return;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
       gPad->GetVirtCanvas()->SetFillColor(13);
    }
 
@@ -361,7 +360,7 @@ void TGenerator::Draw(Option_t *option)
       view->GetRange(rmin,rmax);
       rbox = rmax[2];
    } else {
-      view = new TView(1);
+      view = TView::CreateView(1,0,0);
       view->SetRange(-rbox,-rbox,-rbox, rbox,rbox,rbox );
    }
    const Int_t kColorProton    = 4;
@@ -483,9 +482,16 @@ void TGenerator::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
+Int_t TGenerator::GetNumberOfParticles() const
+{
+   // Return the number of particles in the stack
+   
+   return fParticles->GetLast()+1;
+}
+
+//______________________________________________________________________________
 TParticle *TGenerator::GetParticle(Int_t i) const
 {
-//
 //  Returns pointer to primary number i;
 //
 

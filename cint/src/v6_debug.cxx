@@ -93,7 +93,7 @@ int G__findfuncposition(char *func,int *pline,int *pfnum)
   char *pc;
   int temp1;
   int tagnum;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
 
   strcpy(funcname,func);
 
@@ -160,7 +160,7 @@ int G__display_proto_pretty(FILE *fp,char *func, char friendlyStyle)
   char *pc;
   /* int temp1; */
   int tagnum;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int i=0;
 
   while(isspace(func[i])) ++i;
@@ -192,22 +192,22 @@ int G__display_proto_pretty(FILE *fp,char *func, char friendlyStyle)
   i=strlen(funcname);
   while(i&&(isspace(funcname[i-1])||'('==funcname[i-1])) funcname[--i]='\0';
   if(i) {
-    if(G__listfunc_pretty(fp,G__PUBLIC_PROTECTED_PRIVATE,funcname,ifunc,friendlyStyle)) return(1);
+    if(G__listfunc_pretty(fp,G__PUBLIC_PROTECTED_PRIVATE,funcname,G__get_ifunc_ref(ifunc),friendlyStyle)) return(1);
   }
   else  {
-    if(G__listfunc_pretty(fp,G__PUBLIC_PROTECTED_PRIVATE,(char*)NULL,ifunc,friendlyStyle))return(1);
+    if(G__listfunc_pretty(fp,G__PUBLIC_PROTECTED_PRIVATE,(char*)NULL,G__get_ifunc_ref(ifunc),friendlyStyle))return(1);
   }
   if(-1!=tagnum) {
     int i1;
     struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
     for(i1=0;i1<baseclass->basen;i1++) {
-      ifunc = G__struct.memfunc[baseclass->basetagnum[i1]];
+      ifunc = G__struct.memfunc[baseclass->herit[i1]->basetagnum];
       if(i) {
-        if(G__listfunc_pretty(fp,G__PUBLIC_PROTECTED_PRIVATE,funcname,ifunc,friendlyStyle)) 
+        if(G__listfunc_pretty(fp,G__PUBLIC_PROTECTED_PRIVATE,funcname,G__get_ifunc_ref(ifunc),friendlyStyle)) 
           return(1);
       }
       else  {
-        if(G__listfunc_pretty(fp,G__PUBLIC_PROTECTED_PRIVATE,(char*)NULL,ifunc,friendlyStyle))
+        if(G__listfunc_pretty(fp,G__PUBLIC_PROTECTED_PRIVATE,(char*)NULL,G__get_ifunc_ref(ifunc),friendlyStyle))
           return(1);
       }
     }

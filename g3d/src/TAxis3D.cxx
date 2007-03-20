@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.19 2006/07/03 16:10:43 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.cxx,v 1.22 2007/01/16 09:36:47 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 
 /*************************************************************************
@@ -13,7 +13,8 @@
 #include <assert.h>
 
 #include "Riostream.h"
-#include "TROOT.h"
+#include "TMath.h"
+#include "TList.h"
 #include "TClass.h"
 #include "TAxis3D.h"
 #include "TCanvas.h"

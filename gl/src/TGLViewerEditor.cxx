@@ -35,6 +35,7 @@ TGLViewerEditor::TGLViewerEditor(const TGWindow *p,  Int_t width, Int_t height, 
    fBottomLight(0),
    fLeftLight(0),
    fFrontLight(0),
+   fSpecularLight(0),
    fClearColor(0),
    fIgnoreSizesOnUpdate(0),
    fResetCamerasOnUpdate(0),
@@ -90,6 +91,8 @@ void TGLViewerEditor::ConnectSignals2Slots()
    fLeftLight->Connect("Clicked()", "TGLViewerEditor", this, "DoButton()");
    fFrontLight->Connect("Clicked()", "TGLViewerEditor", this, "DoButton()");
 
+   fSpecularLight->Connect("Clicked()", "TGLViewerEditor", this, "DoButton()");
+
    fClearColor->Connect("ColorSelected(Pixel_t)", "TGLViewerEditor", this, "DoClearColor(Pixel_t)");
    fIgnoreSizesOnUpdate->Connect("Toggled(Bool_t)", "TGLViewerEditor", this, "DoIgnoreSizesOnUpdate()");
    fResetCamerasOnUpdate->Connect("Toggled(Bool_t)", "TGLViewerEditor", this, "DoResetCamerasOnUpdate()");
@@ -97,7 +100,7 @@ void TGLViewerEditor::ConnectSignals2Slots()
    fUpdateScene->Connect("Pressed()", "TGLViewerEditor", this, "DoUpdateScene()");
    fCameraHome->Connect("Pressed()", "TGLViewerEditor", this, "DoCameraHome()");
 
-   fAxesContainer->Connect("Pressed(Int_t)", "TGLViewerEditor", this, "UpdateViewerGuides()");
+   fAxesContainer->Connect("Clicked(Int_t)", "TGLViewerEditor", this, "UpdateViewerGuides()");
    fReferenceOn->Connect("Clicked()", "TGLViewerEditor", this, "UpdateViewerGuides()");
    fReferencePosX->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateViewerGuides()");
    fReferencePosY->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateViewerGuides()");
@@ -106,7 +109,7 @@ void TGLViewerEditor::ConnectSignals2Slots()
    fCamMode->Connect("Selected(Int_t)", "TGLViewerEditor", this, "DoCameraMarkup()");
    fCamMarkupOn->Connect("Clicked()", "TGLViewerEditor", this, "DoCameraMarkup()");
 
-   fTypeButtons->Connect("Pressed(Int_t)", "TGLViewerEditor", this, "ClipTypeChanged(Int_t)");
+   fTypeButtons->Connect("Clicked(Int_t)", "TGLViewerEditor", this, "ClipTypeChanged(Int_t)");
    fEdit->Connect("Clicked()", "TGLViewerEditor", this, "UpdateViewerClip()");
 
    for (Int_t i = 0; i < 4; ++i)
@@ -279,6 +282,11 @@ void TGLViewerEditor::CreateLightsTab()
 
    {
       TGHorizontalFrame* hf = new TGHorizontalFrame(this);
+      fSpecularLight = new TGCheckButton(hf, "Specular light", TGLViewer::kLightSpecular);
+      fSpecularLight->SetState(kButtonDown);
+      hf->AddFrame(fSpecularLight, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 1, 1, 1));
+      AddFrame(hf, new TGLayoutHints(kLHintsLeft, 2, 1, 1, 1));
+      hf = new TGHorizontalFrame(this);
       TGLabel* lab = new TGLabel(hf, "Clear color");
       hf->AddFrame(lab, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 12, 1, 3));
       fClearColor = new TGColorSelect(hf, 0, -1);

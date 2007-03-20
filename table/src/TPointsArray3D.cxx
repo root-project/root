@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TPointsArray3D.cxx,v 1.6 2006/05/20 14:06:09 brun Exp $
+// @(#)root/table:$Name:  $:$Id: TPointsArray3D.cxx,v 1.7 2006/07/11 09:05:02 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   24/04/99
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TView.h"
 #include "TClass.h"
 #include "TROOT.h"
+#include "TMath.h"
 
 ClassImp(TPointsArray3D)
 

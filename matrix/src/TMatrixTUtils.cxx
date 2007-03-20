@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.cxx,v 1.6 2006/08/30 12:54:13 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTUtils.cxx,v 1.8 2007/01/15 10:16:15 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 #include "TMatrixT.h"
 #include "TMatrixTSym.h"
 #include "TMatrixTSparse.h"
+#include "TMath.h"
 #include "TVectorT.h"
 
 //______________________________________________________________________________
@@ -1331,6 +1332,23 @@ TMatrixTSparseRow_const<Element>::TMatrixTSparseRow_const(const TMatrixTSparse<E
 
 //______________________________________________________________________________
 template<class Element>
+Element TMatrixTSparseRow_const<Element>::operator()(Int_t i) const
+{
+  R__ASSERT(fMatrix->IsValid());
+  const Int_t acoln = i-fMatrix->GetColLwb();
+  if (acoln < fMatrix->GetNcols() && acoln >= 0) {
+     const Int_t index = TMath::BinarySearch(fNindex,fColPtr,acoln);
+     if (index >= 0 && fColPtr[index] == acoln) return fDataPtr[index];
+     else                                       return 0.0;
+  } else {
+     Error("operator()","Request col(%d) outside matrix range of %d - %d",
+                        i,fMatrix->GetColLwb(),fMatrix->GetColLwb()+fMatrix->GetNcols());
+     return 0.0;
+  }
+ }
+
+//______________________________________________________________________________
+template<class Element>
 TMatrixTSparseRow<Element>::TMatrixTSparseRow(TMatrixTSparse<Element> &matrix,Int_t row)
                                     : TMatrixTSparseRow_const<Element>(matrix,row)
 {
@@ -1345,6 +1363,23 @@ TMatrixTSparseRow<Element>::TMatrixTSparseRow(const TMatrixTSparseRow<Element> &
 // Copy constructor
 
    *this = mr;
+}
+
+//______________________________________________________________________________
+template<class Element>
+Element TMatrixTSparseRow<Element>::operator()(Int_t i) const
+{
+  R__ASSERT(this->fMatrix->IsValid());
+  const Int_t acoln = i-this->fMatrix->GetColLwb();
+  if (acoln < this->fMatrix->GetNcols() && acoln >= 0) {
+     const Int_t index = TMath::BinarySearch(this->fNindex,this->fColPtr,acoln);
+     if (index >= 0 && this->fColPtr[index] == acoln) return this->fDataPtr[index];
+     else                                             return 0.0;
+  } else {
+     Error("operator()","Request col(%d) outside matrix range of %d - %d",
+                        i,this->fMatrix->GetColLwb(),this->fMatrix->GetColLwb()+this->fMatrix->GetNcols());
+     return 0.0;
+  }
 }
 
 //______________________________________________________________________________
@@ -1565,6 +1600,27 @@ TMatrixTSparseDiag_const<Element>::TMatrixTSparseDiag_const(const TMatrixTSparse
 
 //______________________________________________________________________________
 template<class Element>
+Element TMatrixTSparseDiag_const<Element>::operator()(Int_t i) const
+{
+  R__ASSERT(fMatrix->IsValid());
+  if (i < fNdiag && i >= 0) {
+     const Int_t   * const pR = fMatrix->GetRowIndexArray();
+     const Int_t   * const pC = fMatrix->GetColIndexArray();
+     const Element * const pD = fMatrix->GetMatrixArray();
+     const Int_t sIndex = pR[i];
+     const Int_t eIndex = pR[i+1];
+     const Int_t index = TMath::BinarySearch(eIndex-sIndex,pC+sIndex,i)+sIndex;
+     if (index >= sIndex && pC[index] == i) return pD[index];
+     else                                   return 0.0;
+  } else {
+     Error("operator()","Request diagonal(%d) outside matrix range of 0 - %d",i,fNdiag);
+     return 0.0;
+  }
+  return 0.0;
+}
+
+//______________________________________________________________________________
+template<class Element>
 TMatrixTSparseDiag<Element>::TMatrixTSparseDiag(TMatrixTSparse<Element> &matrix)
                    :TMatrixTSparseDiag_const<Element>(matrix)
 {
@@ -1580,6 +1636,27 @@ TMatrixTSparseDiag<Element>::TMatrixTSparseDiag(const TMatrixTSparseDiag<Element
 
    *this = md;
 }
+
+//______________________________________________________________________________
+template<class Element>
+Element TMatrixTSparseDiag<Element>::operator()(Int_t i) const
+{
+    R__ASSERT(this->fMatrix->IsValid());
+    if (i < this->fNdiag && i >= 0) {
+       const Int_t   * const pR = this->fMatrix->GetRowIndexArray();
+       const Int_t   * const pC = this->fMatrix->GetColIndexArray();
+       const Element * const pD = this->fMatrix->GetMatrixArray();
+       const Int_t sIndex = pR[i];
+       const Int_t eIndex = pR[i+1];
+       const Int_t index = TMath::BinarySearch(eIndex-sIndex,pC+sIndex,i)+sIndex;
+       if (index >= sIndex && pC[index] == i) return pD[index];
+       else                                   return 0.0;
+    } else {
+       Error("operator()","Request diagonal(%d) outside matrix range of 0 - %d",i,this->fNdiag);
+       return 0.0;
+    }
+    return 0.0;
+ }
 
 //______________________________________________________________________________
 template<class Element>

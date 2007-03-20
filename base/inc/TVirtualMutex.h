@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualMutex.h,v 1.14 2006/06/13 21:12:19 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualMutex.h,v 1.15 2006/11/20 08:08:06 rdm Exp $
 // Author: Fons Rademakers   14/07/2002
 
 /*************************************************************************
@@ -83,7 +83,7 @@ public:
 };
 
 // Zero overhead macros in case not compiled with thread support
-#ifdef _REENTRANT
+#if defined (_REENTRANT) || defined (WIN32)
 #define R__LOCKGUARD(mutex) TLockGuard R__guard(mutex)
 #define R__LOCKGUARD2(mutex)                             \
    if (gGlobalMutex && !mutex) {                         \

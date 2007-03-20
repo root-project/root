@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnMinos.cxx,v 1.3 2006/07/03 22:06:42 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnMinos.cxx,v 1.6 2007/02/13 12:14:29 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -13,7 +13,11 @@
 #include "Minuit2/MnFunctionCross.h"
 #include "Minuit2/MnCross.h"
 #include "Minuit2/MinosError.h"
-#include "Minuit2/MnPrint.h"
+
+#if defined(DEBUG) || defined(WARNINGMSG)
+#include "Minuit2/MnPrint.h" 
+#endif
+
 
 namespace ROOT {
 
@@ -104,13 +108,13 @@ MnCross MnMinos::Upval(unsigned int par, unsigned int maxcalls) const {
    
 #ifdef WARNINGMSG
    if(aopt.AtLimit()) 
-      std::cout<<"MnMinos Parameter "<<par<<" is at Upper limit."<<std::endl;
+      MN_INFO_VAL2("MnMinos Parameter is at Upper limit.",par);
    if(aopt.AtMaxFcn())
-      std::cout<<"MnMinos maximum number of function calls exceeded for Parameter "<<par<<std::endl;   
+      MN_INFO_VAL2("MnMinos maximum number of function calls exceeded for Parameter ",par);
    if(aopt.NewMinimum())
-      std::cout<<"MnMinos new Minimum found while looking for Parameter "<<par<<std::endl;     
+      MN_INFO_VAL2("MnMinos new Minimum found while looking for Parameter ",par);
    if(!aopt.IsValid()) 
-      std::cout<<"MnMinos could not find Upper Value for Parameter "<<par<<"."<<std::endl;
+      MN_INFO_VAL2("MnMinos could not find Upper Value for Parameter ",par);
 #endif
    
    return aopt;
@@ -157,13 +161,13 @@ MnCross MnMinos::Loval(unsigned int par, unsigned int maxcalls) const {
    
 #ifdef WARNINGMSG
    if(aopt.AtLimit()) 
-      std::cout<<"MnMinos Parameter "<<par<<" is at Lower limit."<<std::endl;
+      MN_INFO_VAL2("MnMinos Parameter is at Lower limit.",par);
    if(aopt.AtMaxFcn())
-      std::cout<<"MnMinos maximum number of function calls exceeded for Parameter "<<par<<std::endl;   
+      MN_INFO_VAL2("MnMinos maximum number of function calls exceeded for Parameter ",par);
    if(aopt.NewMinimum())
-      std::cout<<"MnMinos new Minimum found while looking for Parameter "<<par<<std::endl;     
+      MN_INFO_VAL2("MnMinos new Minimum found while looking for Parameter ",par);
    if(!aopt.IsValid()) 
-      std::cout<<"MnMinos could not find Lower Value for Parameter "<<par<<"."<<std::endl;
+      MN_INFO_VAL2("MnMinos could not find Lower Value for Parameter ",par);
 #endif
    
    return aopt;

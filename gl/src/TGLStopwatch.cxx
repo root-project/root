@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLStopwatch.cxx,v 1.6 2005/11/22 18:05:46 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLStopwatch.cxx,v 1.7 2006/02/09 09:56:20 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -113,7 +113,7 @@ Double_t TGLStopwatch::GetClock(void) const
 void TGLStopwatch::FinishDrawing(void) const
 {
    // Force completion of GL drawing
-   glFinish();
+//   glFinish();
 }
 
 //______________________________________________________________________________

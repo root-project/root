@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFumiliFCN.h,v 1.2 2005/11/29 14:44:59 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFumiliFCN.h,v 1.3 2006/04/26 10:40:09 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -146,7 +146,7 @@ class TFumiliBinLikelihoodFCN : public TFumiliFCN {
      strategy = 2   5 point formula
    */
   TFumiliBinLikelihoodFCN( const TVirtualFitter & fitter, int strategy = 1)  : 
-    TFumiliFCN(fitter, 0.5, strategy, false) {}
+    TFumiliFCN(fitter, 1.0, strategy, false) {}
 
 
   virtual ~TFumiliBinLikelihoodFCN() {}

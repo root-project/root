@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.172 2006/12/01 16:48:19 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.180 2007/02/05 10:38:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -24,7 +24,6 @@
 #include "TUnixSystem.h"
 #include "TROOT.h"
 #include "TError.h"
-#include "TMath.h"
 #include "TOrdCollection.h"
 #include "TRegexp.h"
 #include "TPRegexp.h"
@@ -530,8 +529,8 @@ TFileHandler *TUnixSystem::RemoveFileHandler(TFileHandler *h)
    if (oh) {       // found
       TFileHandler *th;
       TIter next(fFileHandler);
-      fMaxrfd = 0;
-      fMaxwfd = 0;
+      fMaxrfd = -1;
+      fMaxwfd = -1;
       fReadmask->Zero();
       fWritemask->Zero();
       while ((th = (TFileHandler *) next())) {
@@ -757,6 +756,9 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
       fReadready->Zero();
       fWriteready->Zero();
 
+      if (pendingOnly && !pollOnce)
+         return;
+
       // check synchronous signals
       if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
          if (CheckSignals(kTRUE))
@@ -765,29 +767,35 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
       fSignals->Zero();
 
       // check synchronous timers
+      Long_t nextto;
       if (fTimers && fTimers->GetSize() > 0)
          if (DispatchTimers(kTRUE)) {
             // prevent timers from blocking file descriptor monitoring
-            Long_t to = NextTimeOut(kTRUE);
-            if (to > kItimerResolution || to == -1)
+            nextto = NextTimeOut(kTRUE);
+            if (nextto > kItimerResolution || nextto == -1)
                return;
          }
 
       // if in pendingOnly mode poll once file descriptor activity
-      Long_t nextto = NextTimeOut(kTRUE);
+      nextto = NextTimeOut(kTRUE);
       if (pendingOnly) {
-         if (pollOnce && fFileHandler && fFileHandler->GetSize() > 0) {
-            nextto = 0;
-            pollOnce = kFALSE;
-         } else
+         if (fFileHandler && fFileHandler->GetSize() == 0)
             return;
+         nextto = 0;
+         pollOnce = kFALSE;
       }
 
       // nothing ready, so setup select call
       *fReadready  = *fReadmask;
       *fWriteready = *fWritemask;
 
-      int mxfd = TMath::Max(fMaxrfd, fMaxwfd) + 1;
+      int mxfd = TMath::Max(fMaxrfd, fMaxwfd);
+      if (mxfd > -1) mxfd++;
+
+      // if nothing to select (socket or timer) return
+      if (mxfd == -1 && nextto == -1)
+         return;
+
       fNfd = UnixSelect(mxfd, fReadready, fWriteready, nextto);
       if (fNfd < 0 && fNfd != -2) {
          int fd, rc;
@@ -1348,8 +1356,13 @@ int TUnixSystem::Unlink(const char *name)
    if (helper)
       return helper->Unlink(name);
 
+#if defined(R__SEEK64)
+   struct stat64 finfo;
+   if (lstat64(name, &finfo) < 0)
+#else
    struct stat finfo;
    if (lstat(name, &finfo) < 0)
+#endif
       return -1;
 
    if (S_ISDIR(finfo.st_mode))
@@ -1566,9 +1579,15 @@ const char *TUnixSystem::FindFile(const char *search, TString& wfil, EAccessMode
    gSystem->ExpandPathName(wfil);
 
    if (wfil[0] == '/') {
+#if defined(R__SEEK64)
+      struct stat64 finfo;
+      if (access(wfil.Data(), mode) == 0 &&
+          stat64(wfil.Data(), &finfo) == 0 && S_ISREG(finfo.st_mode)) {
+#else
       struct stat finfo;
       if (access(wfil.Data(), mode) == 0 &&
           stat(wfil.Data(), &finfo) == 0 && S_ISREG(finfo.st_mode)) {
+#endif
          if (show != "")
             Printf("%s %s", show.Data(), wfil.Data());
          return wfil.Data();
@@ -1602,9 +1621,15 @@ const char *TUnixSystem::FindFile(const char *search, TString& wfil, EAccessMode
       name += wfil;
 
       gSystem->ExpandPathName(name);
+#if defined(R__SEEK64)
+      struct stat64 finfo;
+      if (access(name.Data(), mode) == 0 &&
+          stat64(name.Data(), &finfo) == 0 && S_ISREG(finfo.st_mode)) {
+#else
       struct stat finfo;
       if (access(name.Data(), mode) == 0 &&
           stat(name.Data(), &finfo) == 0 && S_ISREG(finfo.st_mode)) {
+#endif
          if (show != "")
             Printf("%s %s", show.Data(), name.Data());
          wfil = name;
@@ -2498,7 +2523,8 @@ Bool_t TUnixSystem::DispatchTimers(Bool_t mode)
    Bool_t  timedout = kFALSE;
 
    while ((t = (TTimer *) it.Next())) {
-      Long_t now = UnixNow()+kItimerResolution;
+      // NB: the timer resolution is added in TTimer::CheckTimer()
+      Long_t now = UnixNow();
       if (mode && t->IsSync()) {
          if (t->CheckTimer(now))
             timedout = kTRUE;
@@ -3907,7 +3933,7 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
    } else if (reset || !initialized) {
       initialized = kTRUE;
       TString rdynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
-      rdynpath.ReplaceAll(" ", ":");  // in case DynamicPath was extended
+      rdynpath.ReplaceAll(": ", ":");  // in case DynamicPath was extended
       if (rdynpath.IsNull()) {
 #ifdef ROOTLIBDIR
          rdynpath = ".:"; rdynpath += ROOTLIBDIR;

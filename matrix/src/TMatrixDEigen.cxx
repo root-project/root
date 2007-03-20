@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.14 2006/05/24 20:07:45 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.15 2006/06/02 05:11:20 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -42,6 +42,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TMatrixDEigen.h"
+#include "TMath.h"
 
 ClassImp(TMatrixDEigen)
 

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.30 2006/12/01 15:05:58 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.33 2007/02/28 18:10:40 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -60,17 +60,19 @@ private:
    TString         fSharedLibs;     //hold a list of lib loaded by G__loadfile
    TString         fIncludePath;    //hold a list of lib include path
    TEnv           *fMapfile;        //map of classes and libraries
+   TObjArray      *fRootMapFiles;   //list of non-default rootmap files loaded
    Bool_t          fLockProcessLine;//true if ProcessLine should lock gCINTMutex
+   static void    *fgSetOfSpecials; //set of TObject*s used in CINT variables
 
    TCint() : fMore(-1), fExitCode(0), fDictPos(), fDictPosGlobals(),
-     fSharedLibs(), fIncludePath(), fMapfile(0) { }  //for Dictionary() only
-   virtual void Execute(TMethod *, TObjArray *, int * /*error*/ = 0) { }
+     fSharedLibs(), fIncludePath(), fMapfile(0), fRootMapFiles(0),
+     fLockProcessLine(kFALSE) { }  //for Dictionary() only
+   TCint(const TCint&);             // not implemented
+   TCint &operator=(const TCint&);  // not implemented
+   void Execute(TMethod *, TObjArray *, int * /*error*/ = 0) { }
 
 protected:
-   TCint(const TCint&);
-   TCint& operator=(const TCint&);
-
-   virtual Int_t LoadLibraryMap();
+   Int_t LoadLibraryMap();
 
 public:
    TCint(const char *name, const char *title);
@@ -89,6 +91,7 @@ public:
    const char *GetClassSharedLibs(const char *cls);
    const char *GetSharedLibDeps(const char *lib);
    const char *GetIncludePath();
+   TObjArray  *GetRootMapFiles() const { return fRootMapFiles; }
    Int_t   InitializeDictionaries();
    Bool_t  IsLoaded(const char *filename) const;
    Int_t   Load(const char *filenam, Bool_t system = kFALSE);
@@ -123,8 +126,6 @@ public:
    void    Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error = 0);
    void    Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error = 0);
    Long_t  ExecuteMacro(const char *filename, EErrorCode *error = 0);
-   static const char *GetTopLevelMacroName();
-   static const char *GetCurrentMacroName();
    void    RecursiveRemove(TObject *obj);
    Bool_t  IsErrorMessagesEnabled() const;
    Bool_t  SetErrorMessages(Bool_t enable = kTRUE);
@@ -136,6 +137,8 @@ public:
    static int   AutoLoadCallback(const char *cls, const char *lib);
    static void  UpdateClassInfo(char *name, Long_t tagnum);
    static void  UpdateAllCanvases();
+   static const char *GetTopLevelMacroName();
+   static const char *GetCurrentMacroName();
 
    ClassDef(TCint,0)  //Interface to CINT C/C++ interpreter
 };

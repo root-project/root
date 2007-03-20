@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.40 2006/07/06 06:30:13 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.41 2006/12/12 14:28:20 antcheva Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -671,7 +671,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    cont->SetBackgroundColor(TColor::Number2Pixel(18));
 
    TGuiBldAction *act = new TGuiBldAction("TGMainFrame", "Main Frame", kGuiBldProj);
-   act->fAct = "new TGMainFrame(gClient->GetRoot(), 300, 300)";
+   act->fAct = "new TGMainFrame(0, 300, 300)";
    act->fPic = "bld_mainframe.xpm";
    AddAction(act, "Projects");
 

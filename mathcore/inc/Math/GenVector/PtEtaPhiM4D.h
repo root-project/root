@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: PtEtaPhiM4D.h,v 1.5 2006/02/06 17:22:03 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: PtEtaPhiM4D.h,v 1.6 2006/11/25 09:30:08 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by: fischler at Wed Jul 21 2005
 //   Similar to PtEtaPhiMSystem by moneta
 // 
-// Last update: $Id: PtEtaPhiM4D.h,v 1.5 2006/02/06 17:22:03 moneta Exp $
+// Last update: $Id: PtEtaPhiM4D.h,v 1.6 2006/11/25 09:30:08 moneta Exp $
 // 
 #ifndef ROOT_Math_GenVector_PtEtaPhiM4D 
 #define ROOT_Math_GenVector_PtEtaPhiM4D  1
@@ -36,6 +36,8 @@ namespace Math {
    Class describing a 4D cylindrical coordinate system
    using Pt , Phi, Eta and M (mass)  
    The metric used is (-,-,-,+). 
+   Spacelike particles (M2 < 0) are described with negative mass values, 
+   but in this case m2 must alwasy be less than P2 to preserve a positive value of E2
 
    @ingroup GenVector
 */ 
@@ -58,7 +60,10 @@ public :
     Constructor  from pt, eta, phi, mass values
    */
   PtEtaPhiM4D(Scalar pt, Scalar eta, Scalar phi, Scalar mass) : 
-      			fPt(pt), fEta(eta), fPhi(phi), fM(mass) { Restrict(); }
+      			fPt(pt), fEta(eta), fPhi(phi), fM(mass) { 
+     RestrictPhi(); 
+     if (fM < 0) RestrictNegMass();
+  }
 
   /**
     Generic constructor from any 4D coordinate system implementing 
@@ -66,15 +71,18 @@ public :
    */ 
   template <class CoordSystem > 
     explicit PtEtaPhiM4D(const CoordSystem & c) : 
-    fPt(c.Pt()), fEta(c.Eta()), fPhi(c.Phi()), fM(c.M())  { Restrict(); }
+    fPt(c.Pt()), fEta(c.Eta()), fPhi(c.Phi()), fM(c.M())  { RestrictPhi(); } 
 
   // no need for customized copy constructor and destructor 
 
   /**
     Set internal data based on an array of 4 Scalar numbers
    */ 
-  void SetCoordinates( const Scalar src[] ) 
-    { fPt=src[0]; fEta=src[1]; fPhi=src[2]; fM=src[3]; Restrict(); }
+  void SetCoordinates( const Scalar src[] ) { 
+     fPt=src[0]; fEta=src[1]; fPhi=src[2]; fM=src[3]; 
+     RestrictPhi(); 
+     if (fM <0) RestrictNegMass(); 
+  }
 
   /**
     get internal data into an array of 4 Scalar numbers
@@ -85,8 +93,11 @@ public :
   /**
     Set internal data based on 4 Scalar numbers
    */ 
-  void SetCoordinates(Scalar pt, Scalar eta, Scalar phi, Scalar mass) 
-    { fPt=pt; fEta = eta; fPhi = phi; fM = mass; Restrict(); }
+  void SetCoordinates(Scalar pt, Scalar eta, Scalar phi, Scalar mass) { 
+     fPt=pt; fEta = eta; fPhi = phi; fM = mass; 
+     RestrictPhi(); 
+     if (fM <0) RestrictNegMass(); 
+  }
 
   /**
     get internal data into 4 Scalar numbers
@@ -143,19 +154,28 @@ public :
   Scalar P2() const { Scalar p = P(); return p*p; }
 
   /** 
-     Energy (timelike component of momentum-energy 4-vector)
-     Will be negative if mass is set to a negative quantity.
+    energy squared  
    */
-  Scalar E()   const { 
-    Scalar e = std::sqrt(fM*fM + P()*P()); 
-    return fM>=0? e : -e;
+  Scalar E2() const { 
+     Scalar e2 =  P2() + M2(); 
+     // avoid rounding error which can make E2 negative when M2 is negative 
+     return e2 > 0 ? e2 : 0; 
   }
+
+  /** 
+     Energy (timelike component of momentum-energy 4-vector)
+   */
+  Scalar E()   const { return std::sqrt(E2() ); }
+  
   Scalar T()   const { return E();  }
 
   /**
     vector magnitude squared (or mass squared)
+    In case of negative mass (spacelike particles return negative values)
    */
-  Scalar M2()   const { return fM*fM; }
+  Scalar M2() const   { 
+     return ( fM  >= 0 ) ?  fM*fM :  -fM*fM; 
+  }
   Scalar Mag2() const { return M2();  } 
 
   /** 
@@ -167,21 +187,30 @@ public :
   /** 
     transverse mass squared
     */
-  Scalar Mt2() const { return fM*fM  + fPt*fPt; } 
+  Scalar Mt2() const { return M2()  + fPt*fPt; } 
 
   /**
-    transverse mass - will be negative if mass is negative
+    transverse mass - will be negative if Mt2() is negative
    */
   Scalar Mt() const { 
-    Scalar mt2 = Mt2();
-    return fM >= 0 ? std::sqrt(mt2) : -std::sqrt(mt2);
+    Scalar mm = Mt2();
+    if (mm >= 0) {
+      return std::sqrt(mm);
+    } else {
+      GenVector_exception e ("PtEtaPhiM4D::Mt() - Tachyonic:\n"
+      		"    Pz^2 > E^2 so the transverse mass would be imaginary");
+      Throw(e);  
+      return -std::sqrt(-mm);
+    }
   } 
 
   /** 
     transverse energy squared
     */
-  Scalar Et2() const { return fM*fM/std::cosh(fEta) + fPt*fPt; }
-  					// a bit faster than Et()*Et()
+  Scalar Et2() const { 
+     // a bit faster than et * et
+     return 2. * E2()/ ( std::cosh(2 * fEta) + 1 );   
+  }
 
   /**
     transverse energy
@@ -192,11 +221,23 @@ public :
 
 private:
   inline static double pi() { return 3.14159265358979323; } 
-  inline void Restrict() {
+  inline void RestrictPhi() {
     if ( fPhi <= -pi() || fPhi > pi() ) 
       fPhi = fPhi - std::floor( fPhi/(2*pi()) +.5 ) * 2*pi();
   return;
   } 
+   // restrict the value of negative mass to avoid unphysical negative E2 values 
+   // M2 must be less than P2 for the tachionic particles - otherwise use positive values
+   inline void RestrictNegMass() {
+    if ( fM >=0 ) return;
+    if ( P2() - fM*fM  < 0 ) { 
+       GenVector_exception e("PxPyPzM4D::unphysical value of mass, set to closest physical value");
+       Throw(e);
+       fM = - P();
+    }
+    return;
+  } 
+
 public:
 
   /**
@@ -227,13 +268,14 @@ public:
    */
   void SetPhi( Scalar  phi) { 
     fPhi = phi; 
-    Restrict();
+    RestrictPhi();
   }
   /**
     set M value 
    */
   void SetM( Scalar  mass) { 
     fM = mass; 
+    if (fM <0) RestrictNegMass(); 
   }
 
   // ------ Manipulations -------------

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.15 2006/04/13 15:32:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.18 2007/02/05 11:55:38 antcheva Exp $
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************
@@ -300,7 +300,7 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
          if (datatype) {
             strcpy(basictype, datatype->GetTypeName());
          } else {
-            TClass *cl = gROOT->GetClass(type);
+            TClass *cl = TClass::GetClass(type);
             if (strncmp(type, "enum", 4) && (cl && !(cl->Property() & kIsEnum)))
                Warning("Dialog", "data type is not basic type, assuming (int)");
             strcpy(basictype, "int");
@@ -308,9 +308,10 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
 
          if (strchr(argname, '*')) {
             strcat(basictype, "*");
-            type = charstar;
+            if (!strncmp(type, "char", 4)) 
+               type = charstar;
          }
-
+         
          TDataMember *m = argument->GetDataMember();
          if (m && m->GetterMethod(object->IsA())) {
 

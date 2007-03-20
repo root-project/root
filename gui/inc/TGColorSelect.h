@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.12 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.13 2006/07/26 13:36:42 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -120,6 +120,7 @@ public:
 
    void    PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h);
    void    EndPopup();
+   void    PreviewColor(Pixel_t color);
 
    ClassDef(TGColorPopup,0)  // Color selector popup
 };

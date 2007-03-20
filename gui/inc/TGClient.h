@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.24 2006/05/14 10:23:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.26 2007/03/01 01:09:02 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -76,8 +76,8 @@ protected:
    EGEventType     fWaitForEvent;     // event to wait for
    Window_t        fWaitForWindow;    // window in which to wait for event
 
-   TGClient(const TGClient&);
-   TGClient& operator=(const TGClient&);
+   TGClient(const TGClient&);             // not implemented
+   TGClient& operator=(const TGClient&);  // not implemented
 
    Bool_t  ProcessOneEvent();
    Bool_t  ProcessIdleEvent();

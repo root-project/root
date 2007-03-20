@@ -60,6 +60,10 @@
 #include "memtest.h"
 #endif
 
+#ifdef __cplusplus
+#include <list>
+#endif
+
 /**************************************************************************
 * On line file loading
 *
@@ -709,10 +713,10 @@ typedef unsigned long G__UINT32 ;
 #endif
 
 typedef void (*G__DLLINIT)();
-
 #define G__NONCINTHDR   0x01
 #define G__CINTHDR      0x10
 
+#ifdef __cplusplus
 struct G__filetable {
   FILE *fp;
   int hash;
@@ -724,7 +728,7 @@ struct G__filetable {
   G__UINT32 security;
   int included_from; /* filenum of the file which first include this one */
   int ispermanentsl;
-  G__DLLINIT initsl;
+  std::list<G__DLLINIT>* initsl;
   struct G__dictposition *hasonlyfunc;
   char hdrprop;
 #ifndef G__OLDIMPLEMENTATION1649
@@ -734,6 +738,7 @@ struct G__filetable {
   int parent_tagnum;
   int slindex;
 };
+#endif
 
 /**************************************************************************
 * user specified pragma statement
@@ -810,7 +815,7 @@ struct G__AppPragma {
 * for function overloading
 **********************************************************************/
 struct G__funclist {
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int ifn;
   unsigned int rate;
   unsigned int p_rate[G__MAXFUNCPARA];
@@ -865,7 +870,7 @@ struct G__view {
 *
 **************************************************************************/
 struct G__bytecodefunc {
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int ifn;
   struct G__var_array *var;
   int varsize;
@@ -932,10 +937,63 @@ struct G__funcentry_VMS {
 
 
 /**************************************************************************
-* structure for ifunc (Interpleted FUNCtion) table
+* structure for ifunc (Interpreted FUNCtion) table
 *
 **************************************************************************/
+struct G__paramfunc {
+  short p_tagtable;
+  short p_typetable;
+  char  reftype;
+  char  type;
+  char  isconst;
+  char *name;
+  char *def;
+  char  id;
+  G__value *pdefault;
+  struct G__paramfunc *next;
+};
+struct G__params {
+#ifdef __cplusplus  
+   ~G__params() { free((void*)fparams); }
+   struct G__paramfunc* operator[](int idx) {
+      if (!fparams) {
+         fparams = (struct G__paramfunc*)malloc(sizeof(struct G__paramfunc));
+         memset(fparams,0,sizeof(struct G__paramfunc));
+         fparams->id = idx;
+         return fparams;
+      }
+      struct G__paramfunc *params = fparams;
+      while(params) {
+         if (params->id == idx) return params;
+         struct G__paramfunc *nparams  = params->next;
+         if (!nparams) {
+            nparams = (struct G__paramfunc*)malloc(sizeof(struct G__paramfunc));
+            memset(nparams,0,sizeof(struct G__paramfunc));
+            nparams->id=idx;
+            params->next = nparams;
+            return nparams;
+         }
+         params = params->next;
+      }
+      return 0;
+   }
+#endif
+   struct G__paramfunc *fparams;
+};
+
 struct G__ifunc_table {
+   int tagnum;
+   int page; /* G__struct.ifunc->next->next->... */
+   struct G__ifunc_table_internal* ifunc_cached;
+#ifdef __cplusplus
+   bool operator < (const struct G__ifunc_table& right) const {
+      return tagnum < right.tagnum 
+         || tagnum == right.tagnum && page < right.page;
+   }
+#endif
+};
+
+struct G__ifunc_table_internal {
   /* number of interpreted function */
   int allifunc;
 
@@ -956,14 +1014,7 @@ struct G__ifunc_table {
 
   /* number and type of function parameter */
   /* G__inheritclass() depends on type of following members */
-  char para_reftype[G__MAXIFUNC][G__MAXFUNCPARA];
-  char para_type[G__MAXIFUNC][G__MAXFUNCPARA];
-  char para_isconst[G__MAXIFUNC][G__MAXFUNCPARA];
-  short para_p_tagtable[G__MAXIFUNC][G__MAXFUNCPARA];
-  short para_p_typetable[G__MAXIFUNC][G__MAXFUNCPARA];
-  G__value *para_default[G__MAXIFUNC][G__MAXFUNCPARA];
-  char *para_name[G__MAXIFUNC][G__MAXFUNCPARA];
-  char *para_def[G__MAXIFUNC][G__MAXFUNCPARA];
+  struct G__params param[G__MAXIFUNC];
 
   /* C or C++ */
   char iscpp[G__MAXIFUNC];
@@ -976,7 +1027,7 @@ struct G__ifunc_table {
    **************************************************/
   short busy[G__MAXIFUNC];
 
-  struct G__ifunc_table *next;
+  struct G__ifunc_table_internal *next;
   short page;
 
   G__SIGNEDCHAR_T access[G__MAXIFUNC];  /* private, protected, public */
@@ -1076,16 +1127,49 @@ struct G__ifunc_table_VMS {
 * structure for class inheritance
 *
 **************************************************************************/
+struct G__herit {
+  short basetagnum;
+#ifdef G__VIRTUALBASE
+  long baseoffset;
+#else
+  int baseoffset;
+#endif
+  G__SIGNEDCHAR_T baseaccess;
+  char property;
+  char  id;
+  struct G__herit *next;
+};
+struct G__herits {
+#ifdef __cplusplus
+   ~G__herits() { free((void*)fherits); }
+   struct G__herit* operator[](int idx) {
+      if (!fherits) {
+         fherits = (struct G__herit*)malloc(sizeof(struct G__herit));
+         memset(fherits,0,sizeof(struct G__herit));
+         fherits->id = idx;
+         return fherits;
+      }
+      struct G__herit *herits = fherits;
+      while(herits) {
+         if (herits->id == idx) return herits;
+         struct G__herit *nherits  = herits->next;
+         if (!nherits) {
+            nherits = (struct G__herit*)malloc(sizeof(struct G__herit));
+            memset(nherits,0,sizeof(struct G__herit));
+            nherits->id=idx;
+            herits->next = nherits;
+            return nherits;
+         }
+         herits = herits->next;
+      }
+      return 0;
+   }
+#endif
+  struct G__herit *fherits;
+};
 struct G__inheritance {
   int basen;
-  short basetagnum[G__MAXBASE];
-#ifdef G__VIRTUALBASE
-  long baseoffset[G__MAXBASE];
-#else
-  int baseoffset[G__MAXBASE];
-#endif
-  G__SIGNEDCHAR_T baseaccess[G__MAXBASE];
-  char property[G__MAXBASE];
+  struct G__herits herit;
 };
 
 
@@ -1165,7 +1249,7 @@ struct G__tagtable {
   int  size[G__MAXSTRUCT];
   /* member information */
   struct G__var_array *memvar[G__MAXSTRUCT];
-  struct G__ifunc_table *memfunc[G__MAXSTRUCT];
+  struct G__ifunc_table_internal *memfunc[G__MAXSTRUCT];
   struct G__inheritance *baseclass[G__MAXSTRUCT];
   int virtual_offset[G__MAXSTRUCT];
   G__SIGNEDCHAR_T globalcomp[G__MAXSTRUCT];

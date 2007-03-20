@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:$:$Id:$
+// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.h,v 1.1 2002/08/09 14:12:22 rdm Exp $
 // Author: Reiner Rohlfs 24/03/2002
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #endif
 
 
+class TVirtualPad;
 class TH1D;
 class TRootEmbeddedCanvas;
 class TGTextButton;

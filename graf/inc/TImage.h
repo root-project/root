@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.16 2006/10/02 16:12:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TImage.h,v 1.18 2007/01/16 17:01:08 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   15/10/2001
 
 /*************************************************************************
@@ -43,6 +43,7 @@ class TArrayD;
 class TArrayL;
 class TH2D;
 class TPoint;
+class TText;
 
 class TImage : public TNamed, public TAttImage {
 
@@ -167,6 +168,7 @@ public:
    virtual void DrawText(Int_t /*x*/ = 0, Int_t /*y*/ = 0, const char * /*text*/ = "", Int_t /*size*/ = 12, 
                          const char * /*color*/ = 0, const char * /*font*/ = "fixed",
                          EText3DType /*type*/ = TImage::kPlain, const char * /*fore_file*/ = 0, Float_t /*angle*/ = 0) { }
+   virtual void DrawText(TText * /*text*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0) { }
 
    // vector graphics
    virtual void BeginPaint(Bool_t /*fast*/ = kTRUE) {}
@@ -228,6 +230,7 @@ public:
    virtual Bool_t    SetImageBuffer(char ** /*buffer*/, EImageFileTypes /*type*/ = TImage::kPng) { return kFALSE; }
    virtual void      PaintImage(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*y*/) { }
    virtual void      FromWindow(Drawable_t /*wid*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) {}
+   static EImageFileTypes GetImageFileTypeFromFilename(const char* opt);
 
    static TImage *Create();
    static TImage *Open(const char *file, EImageFileTypes type = kUnknown);

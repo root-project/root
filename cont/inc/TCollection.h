@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.25 2006/08/08 16:02:44 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.27 2007/02/18 14:56:42 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************

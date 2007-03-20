@@ -2,10 +2,10 @@
 
 #include "KeySymbols.h"
 #include "Buttons.h"
+#include "TROOT.h"
+#include "TClass.h"
 #include "TColor.h"
 #include "TStyle.h"
-#include "TMath.h"
-#include "TH1.h"
 #include "TH3.h"
 
 #include "TGLOrthoCamera.h"
@@ -304,20 +304,6 @@ void TGLBoxPainter::DrawPlot()const
       glPolygonMode(GL_FRONT, GL_FILL);//3]
    }
 }
-
-
-//______________________________________________________________________________
-void TGLBoxPainter::ClearBuffers()const
-{
-   // Clear buffer.
-
-   Float_t rgb[3] = {1.f, 1.f, 1.f};
-   if (const TColor *color = GetPadColor())
-      color->GetRGB(rgb[0], rgb[1], rgb[2]);
-   glClearColor(rgb[0], rgb[1], rgb[2], 1.);
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-
 
 //______________________________________________________________________________
 void TGLBoxPainter::SetPlotColor()const

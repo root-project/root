@@ -17,13 +17,13 @@
 #define BC_CFUNC_H
 
 #if !defined(__sun) && (!defined(_MSC_VER) || _MSC_VER > 1200) && !(defined(__xlC__) || defined(__xlc__))
-extern "C" {
+//extern "C" {
 #ifdef __CINT__
 #include "../G__ci.h"
 #else
 #include "common.h"
 #endif
-}
+//}
 #else
 #include "G__ci.h"
 #include "common.h"
@@ -32,7 +32,7 @@ extern "C" {
 #include "bc_parse.h"
 
 /////////////////////////////////////////////////////////////////////////
-extern "C" int G__bc_compile_function(struct G__ifunc_table *ifunc,int iexist);
+extern "C" int G__bc_compile_function(struct G__ifunc_table_internal *ifunc,int iexist);
 
 /***********************************************************************
 * G__functionscope
@@ -120,11 +120,11 @@ class G__functionscope : public G__blockscope {
   G__functionscope() { m_preader=0; }
   ~G__functionscope();
 
-  int compile_normalfunction(struct G__ifunc_table *ifunc,int iexist);
-  int compile_implicitdefaultctor(struct G__ifunc_table *ifunc,int iexist);
-  int compile_implicitcopyctor(struct G__ifunc_table *ifunc,int iexist);
-  int compile_implicitassign(struct G__ifunc_table *ifunc,int iexist);
-  int compile_implicitdtor(struct G__ifunc_table *ifunc,int iexist);
+  int compile_normalfunction(struct G__ifunc_table_internal *ifunc,int iexist);
+  int compile_implicitdefaultctor(struct G__ifunc_table_internal *ifunc,int iexist);
+  int compile_implicitcopyctor(struct G__ifunc_table_internal *ifunc,int iexist);
+  int compile_implicitassign(struct G__ifunc_table_internal *ifunc,int iexist);
+  int compile_implicitdtor(struct G__ifunc_table_internal *ifunc,int iexist);
 
  private:
   void Store() ;
@@ -138,7 +138,7 @@ class G__functionscope : public G__blockscope {
   void EachArgumentPassing(G__TypeReader& type
 			   ,const char* name,const char* def,G__value* val);
   // compile();
-  int compile_function(struct G__ifunc_table *ifunc,int iexist);
+  int compile_function(struct G__ifunc_table_internal *ifunc,int iexist);
   void ReturnFromFunction();
 
   void Storefpos();

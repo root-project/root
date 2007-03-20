@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.45 2006/10/19 12:38:07 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.51 2007/03/17 18:04:02 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -30,11 +30,14 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
-#ifndef ROOT_Htypes
-#include "Htypes.h"
+#ifndef ROOT_TSysEvtHandler
+#include "TSysEvtHandler.h"
 #endif
 #ifndef ROOT_TStopwatch
 #include "TStopwatch.h"
+#endif
+#ifndef ROOT_TTimer
+#include "TTimer.h"
 #endif
 #ifndef ROOT_TProofQueryResult
 #include "TProofQueryResult.h"
@@ -42,7 +45,7 @@
 
 class TDSet;
 class TProof;
-class TProofPlayer;
+class TVirtualProofPlayer;
 class TProofLockPath;
 class TSocket;
 class TList;
@@ -85,7 +88,7 @@ private:
    TString       fArchivePath;      //default archive path
    TSocket      *fSocket;           //socket connection to client
    TProof       *fProof;            //PROOF talking to slave servers
-   TProofPlayer *fPlayer;           //actual player
+   TVirtualProofPlayer *fPlayer;    //actual player
    FILE         *fLogFile;          //log file
    Int_t         fLogFileDes;       //log file descriptor
    TList        *fEnabledPackages;  //list of enabled packages
@@ -111,13 +114,15 @@ private:
    TList        *fWaitingQueries;   //list of TProofQueryResult wating to be processed
    Bool_t        fIdle;             //TRUE if idle
 
+   Bool_t        fRealTimeLog;      //TRUE if log messages should be send back in real-time
+
    Bool_t        fShutdownWhenIdle; // If TRUE, start shutdown delay countdown when idle
    TTimer       *fShutdownTimer;    // Timer used for delayed session shutdown
    TMutex       *fShutdownTimerMtx; // Actions on the timer must be atomic
 
    static Int_t  fgMaxQueries;      //Max number of queries fully kept
 
-   virtual void  RedirectOutput();
+   void          RedirectOutput();
    Int_t         CatMotd();
    Int_t         UnloadPackage(const char *package);
    Int_t         UnloadPackages();
@@ -126,7 +131,7 @@ private:
    // Query handlers
    void          AddLogFile(TProofQueryResult *pq);
    Int_t         CleanupQueriesDir();
-   void          FinalizeQuery(TProofPlayer *p, TProofQueryResult *pq);
+   void          FinalizeQuery(TProofQueryResult *pq);
    TList        *GetDataSet(const char *name);
 
    TProofQueryResult *MakeQueryResult(Long64_t nentries, const char *opt,
@@ -138,7 +143,7 @@ private:
    void          SaveQuery(TQueryResult *qr, const char *fout = 0);
    void          SetQueryRunning(TProofQueryResult *pq);
 
-   virtual Int_t LockSession(const char *sessiontag, TProofLockPath **lck);
+   Int_t         LockSession(const char *sessiontag, TProofLockPath **lck);
    Int_t         CleanupSession(const char *sessiontag);
    void          ScanPreviousQueries(const char *dir);
 
@@ -156,6 +161,9 @@ protected:
 
    virtual void  HandleSocketInputDuringProcess();
    virtual Int_t Setup();
+
+   virtual void  MakePlayer();
+   virtual void  DeletePlayer();
 
    virtual void  SetShutdownTimer(Bool_t, Int_t) { }
 
@@ -186,11 +194,15 @@ public:
    Float_t        GetCpuTime()    const { return fCpuTime; }
    void           GetOptions(Int_t *argc, char **argv);
 
+   Int_t          CopyFromCache(const char *name);
+   Int_t          CopyToCache(const char *name, Int_t opt = 0);
+
    virtual EQueryAction GetWorkers(TList *workers, Int_t &prioritychange);
 
    virtual void   HandleSocketInput();
    virtual void   HandleUrgentData();
    virtual void   HandleSigPipe();
+   virtual void   HandleTermination() { Terminate(0); }
    void           Interrupt() { fInterrupt = kTRUE; }
    Bool_t         IsEndMaster() const { return fEndMaster; }
    Bool_t         IsMaster() const { return fMasterServ; }
@@ -244,6 +256,57 @@ private:
 public:
    TProofLockPathGuard(TProofLockPath *l) { fLocker = l; if (fLocker) fLocker->Lock(); }
    ~TProofLockPathGuard() { if (fLocker) fLocker->Unlock(); }
+};
+
+//----- Handles output from commands executed externally via a pipe. ---------//
+//----- The output is redirected one level up (i.e., to master or client). ---//
+//______________________________________________________________________________
+class TProofServLogHandler : public TFileHandler {
+private:
+   TSocket     *fSocket; // Socket where to redirect the message
+   FILE        *fFile;   // File connected with the open pipe
+   TString      fPfx;    // Prefix to be prepended to messages
+
+   static TString fgPfx; // Default prefix to be prepended to messages
+public:
+   enum EStatusBits { kFileIsPipe = BIT(23) };
+   TProofServLogHandler(const char *cmd, TSocket *s, const char *pfx = "");
+   TProofServLogHandler(FILE *f, TSocket *s, const char *pfx = "");
+   virtual ~TProofServLogHandler();
+
+   Bool_t IsValid() { return ((fFile && fSocket) ? kTRUE : kFALSE); }
+
+   Bool_t Notify();
+   Bool_t ReadNotify() { return Notify(); }
+
+   static void SetDefaultPrefix(const char *pfx);
+};
+
+//--- Guard class: close pipe, deactivatethe related descriptor --------------//
+//______________________________________________________________________________
+class TProofServLogHandlerGuard {
+
+private:
+   TProofServLogHandler   *fExecHandler;
+
+public:
+   TProofServLogHandlerGuard(const char *cmd, TSocket *s,
+                             const char *pfx = "", Bool_t on = kTRUE);
+   TProofServLogHandlerGuard(FILE *f, TSocket *s,
+                             const char *pfx = "", Bool_t on = kTRUE);
+   virtual ~TProofServLogHandlerGuard();
+};
+
+//--- Special timer to constrol delayed shutdowns
+//______________________________________________________________________________
+class TShutdownTimer : public TTimer {
+private:
+   TProofServ    *fProofServ;
+
+public:
+   TShutdownTimer(TProofServ *p, Int_t delay) : TTimer(delay, kFALSE), fProofServ(p) { }
+
+   Bool_t Notify();
 };
 
 #endif

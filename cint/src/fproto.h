@@ -105,17 +105,17 @@ int G__popdumpinput(void);
 int G__dumpinput(char *line);
 char *G__xdumpinput(char *prompt);
   /* void G__scratch_all(void); */
-int G__free_ifunc_table(struct G__ifunc_table *ifunc);
+int G__free_ifunc_table(struct G__ifunc_table_internal *ifunc);
 int G__free_member_table(struct G__var_array *mem);
 int G__free_ipath(struct G__includepath *ipath);
 int G__isfilebusy(int ifn);
 void G__free_preprocessfilekey(struct G__Preprocessfilekey *pkey);
-int G__free_ifunc_table_upto(struct G__ifunc_table *ifunc,struct G__ifunc_table *dictpos,int ifn);
+int G__free_ifunc_table_upto(struct G__ifunc_table_internal *ifunc,struct G__ifunc_table_internal *dictpos,int ifn);
 int G__free_string_upto(struct G__ConstStringList *conststringpos);
 int G__free_typedef_upto(int typenum);
 int G__free_struct_upto(int tagnum);
 int G__destroy_upto(struct G__var_array *var,int global,struct G__var_array *dictpos,int ig15);
-void G__close_inputfiles_upto(int nfile);
+void G__close_inputfiles_upto(struct G__dictposition* dictpos);
 void G__destroy(struct G__var_array *var,int global);
 int G__call_atexit(void);
 int G__close_inputfiles(void);
@@ -184,11 +184,13 @@ int G__library_func(G__value *result7,char *funcname,struct G__param *libp,int h
 char *G__charformatter(int ifmt,struct G__param *libp,char *result);
 int G__istypename(char *temp);
 char* G__savestring(char** pbuf,char* name);
+struct G__ifunc_table* G__get_ifunc_ref(struct G__ifunc_table_internal*);
+void G__reset_ifunc_refs_for_tagnum(int tagnum);
 void G__make_ifunctable(char *funcheader);
-int G__readansiproto(struct G__ifunc_table *ifunc,int func_now);
-int G__interpret_func(G__value *result7,char *funcname,struct G__param *libp,int hash,struct G__ifunc_table *p_ifunc,int funcmatch,int memfunc_flag);
-struct G__ifunc_table *G__ifunc_exist(struct G__ifunc_table *ifunc_now,int allifunc,struct G__ifunc_table *ifunc,int *piexist,int mask);
-struct G__ifunc_table *G__ifunc_ambiguous(struct G__ifunc_table *ifunc_now,int allifunc,struct G__ifunc_table *ifunc,int *piexist,int derivedtagnum);
+int G__readansiproto(struct G__ifunc_table_internal *ifunc,int func_now);
+int G__interpret_func(G__value *result7,char *funcname,struct G__param *libp,int hash,struct G__ifunc_table_internal *p_ifunc,int funcmatch,int memfunc_flag);
+struct G__ifunc_table_internal *G__ifunc_exist(struct G__ifunc_table_internal *ifunc_now,int allifunc,struct G__ifunc_table_internal *ifunc,int *piexist,int mask);
+struct G__ifunc_table_internal *G__ifunc_ambiguous(struct G__ifunc_table_internal *ifunc_now,int allifunc,struct G__ifunc_table_internal *ifunc,int *piexist,int derivedtagnum);
 void G__inheritclass(int to_tagnum,int from_tagnum,char baseaccess);
 int G__baseconstructorwp(void);
 int G__baseconstructor(int n,struct G__baseparam *pbaseparam);
@@ -296,7 +298,7 @@ void G__delete_operator(char *expression,int isarray);
 int G__alloc_newarraylist(long point,int pinc);
 int G__free_newarraylist(long point);
 int G__handle_delete(int *piout,char *statement);
-int G__call_cppfunc(G__value *result7,struct G__param *libp,struct G__ifunc_table *ifunc,int ifn);
+int G__call_cppfunc(G__value *result7,struct G__param *libp,struct G__ifunc_table_internal *ifunc,int ifn);
 void G__gen_cppheader(char *headerfile);
 void G__gen_clink(void);
 void G__gen_cpplink(void);
@@ -307,16 +309,16 @@ char *G__get_link_tagname(int tagnum);
 /* char *G__map_cpp_name(char *in); */
 char *G__map_cpp_funcname(int tagnum,char *funcname,int ifn,int page);
 void G__set_globalcomp(char *mode,char *linkfilename,char* dllid);
-int G__ishidingfunc(struct G__ifunc_table *fentry,struct G__ifunc_table *fthis,int ifn);
+int G__ishidingfunc(struct G__ifunc_table_internal *fentry,struct G__ifunc_table_internal *fthis,int ifn);
 void G__cppif_memfunc(FILE *fp,FILE *hfp);
 void G__cppif_func(FILE *fp,FILE *hfp);
 void G__cppif_dummyfuncname(FILE *fp);
-void G__cppif_genconstructor(FILE *fp,FILE *hfp,int tagnum,int ifn,struct G__ifunc_table *ifunc);
+void G__cppif_genconstructor(FILE *fp,FILE *hfp,int tagnum,int ifn,struct G__ifunc_table_internal *ifunc);
 int G__isprivateconstructor(int tagnum,int iscopy);
-void G__cppif_gendefault(FILE *fp,FILE *hfp,int tagnum,int ifn,struct G__ifunc_table *ifunc,int isconstructor,int iscopyconstructor,int isdestructor,int isassignmentoperator,int isnonpublicnew);
-void G__cppif_genfunc(FILE *fp,FILE *hfp,int tagnum,int ifn,struct G__ifunc_table *ifunc);
-int G__cppif_returntype(FILE *fp,int ifn,struct G__ifunc_table *ifunc,char *endoffunc);
-void G__cppif_paratype(FILE *fp,int ifn,struct G__ifunc_table *ifunc,int k);
+void G__cppif_gendefault(FILE *fp,FILE *hfp,int tagnum,int ifn,struct G__ifunc_table_internal *ifunc,int isconstructor,int iscopyconstructor,int isdestructor,int isassignmentoperator,int isnonpublicnew);
+void G__cppif_genfunc(FILE *fp,FILE *hfp,int tagnum,int ifn,struct G__ifunc_table_internal *ifunc);
+int G__cppif_returntype(FILE *fp,int ifn,struct G__ifunc_table_internal *ifunc,char *endoffunc);
+void G__cppif_paratype(FILE *fp,int ifn,struct G__ifunc_table_internal *ifunc,int k);
 void G__cpplink_tagtable(FILE *pfp,FILE *hfp);
 #ifdef G__VIRTUALBASE
 int G__iosrdstate(G__value *pios);
@@ -482,8 +484,8 @@ void G__freetemplatememfunc(struct G__Definedtemplatememfunc *memfunctmplt);
 char *G__gettemplatearg(int n,struct G__Templatearg *def_para);
 void G__freetemplatearg(struct G__Templatearg *def_para);
 void G__freetemplatefunc(struct G__Definetemplatefunc *deftmpfunc);
-struct G__funclist* G__add_templatefunc(char *funcnamein,struct G__param *libp,int hash,struct G__funclist *funclist,struct G__ifunc_table *p_ifunc,int isrecursive);
-struct G__funclist* G__funclist_add(struct G__funclist *last,struct G__ifunc_table *ifunc,int ifn,int rate);
+struct G__funclist* G__add_templatefunc(char *funcnamein,struct G__param *libp,int hash,struct G__funclist *funclist,struct G__ifunc_table_internal *p_ifunc,int isrecursive);
+struct G__funclist* G__funclist_add(struct G__funclist *last,struct G__ifunc_table_internal *ifunc,int ifn,int rate);
 void G__funclist_delete(struct G__funclist *body);
 int G__templatefunc(G__value *result,char *funcname,struct G__param *libp,int hash,int funcmatch);
 int G__matchtemplatefunc(struct G__Definetemplatefunc *deftmpfunc,struct G__param *libp,struct G__Charlist *pcall_para,int funcmatch);
@@ -643,7 +645,7 @@ int G__DLL_direct_globalfunc(G__value *result7
 				   ,struct G__param *libp,int hash);
 void* G__SetShlHandle(char* filename);
 void G__ResetShlHandle();
-void* G__FindSymbol(struct G__ifunc_table *ifunc,int ifn);
+void* G__FindSymbol(struct G__ifunc_table_internal *ifunc,int ifn);
 void* G__GetShlHandle();
 int G__GetShlFilenum();
 
@@ -659,15 +661,15 @@ void G__add_replacesymbol(const char* s1,const char* s2);
 const char* G__replacesymbol(const char* s);
 int G__display_replacesymbol(FILE *fout,const char* name);
 
-void G__asm_storebytecodefunc(struct G__ifunc_table *ifunc,int ifn,struct G__var_array *var,G__value *pstack,int sp,long *pinst,int instsize);
+void G__asm_storebytecodefunc(struct G__ifunc_table_internal *ifunc,int ifn,struct G__var_array *var,G__value *pstack,int sp,long *pinst,int instsize);
 
 void G__push_autoobjectstack(void *p,int tagnum,int num
 			           ,int scopelevel,int isheap);
 void G__delete_autoobjectstack(int scopelevel);
 
-int G__LD_IFUNC_optimize(struct G__ifunc_table* ifunc,int ifn ,long *inst,int pc);
+int G__LD_IFUNC_optimize(struct G__ifunc_table_internal* ifunc,int ifn ,long *inst,int pc);
 
-int G__bc_compile_function(struct G__ifunc_table *ifunc,int iexist);
+int G__bc_compile_function(struct G__ifunc_table_internal *ifunc,int iexist);
 int G__bc_throw_compile_error();
 int G__bc_throw_runtime_error();
 int G__bc_objassignment(G__value *plresult ,G__value *prresult);

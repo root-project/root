@@ -29,6 +29,10 @@ X11TTFLIB    := $(LPATH)/libGX11TTF.$(SOEXT)
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(X11TTFH))
 ALLLIBS     += $(X11TTFLIB)
 
+#ifeq ($(XFTLIB),yes)
+XLIBS       += $(X11LIBDIR) -lXft
+#endif
+
 # include all dependency files
 INCLUDEFILES += $(X11TTFDEP)
 
@@ -66,8 +70,9 @@ distclean-x11ttf: clean-x11ttf
 distclean::     distclean-x11ttf
 
 ##### extra rules ######
-$(X11TTFO):     $(FREETYPEDEP)
-$(X11TTFO):     CXXFLAGS += $(FREETYPEINC)
-$(X11TTFDO):    $(FREETYPEDEP)
-$(X11TTFDO):    CXXFLAGS += $(FREETYPEINC)
-
+$(X11TTFO) $(X11TTFDO): $(FREETYPEDEP)
+ifeq ($(PLATFORM),macosx)
+$(X11TTFO) $(X11TTFDO): CXXFLAGS += -I/usr/X11R6/include $(FREETYPEINC)
+else
+$(X11TTFO) $(X11TTFDO): CXXFLAGS += $(FREETYPEINC)
+endif

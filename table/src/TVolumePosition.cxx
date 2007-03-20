@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolumePosition.cxx,v 1.9 2006/07/11 09:05:02 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TVolumePosition.cxx,v 1.13 2007/02/08 08:06:33 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -19,13 +19,12 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TVirtualPad.h"
-#include "TView.h"
 #include "TGeometry.h"
 #include "TRotMatrix.h"
 #include "TBrowser.h"
 #include "X3DBuffer.h"
 
-#include "TPadView3D.h"
+#include "TTablePadView3D.h"
 
 //R__EXTERN  Size3D gSize3D;
 
@@ -212,6 +211,13 @@ void TVolumePosition::ExecuteEvent(Int_t, Int_t, Int_t)
 
 //   if (!gPad->GetListOfPrimitives()->FindObject(this)) gPad->SetCursor(kCross);
    gPad->SetCursor(kHand);
+}
+
+//______________________________________________________________________________
+const Char_t *TVolumePosition::GetName() const
+{
+   //return VolumePosition name
+   return GetNode()?GetNode()->GetName():IsA()->GetName();
 }
 
 //______________________________________________________________________________
@@ -509,7 +515,7 @@ void TVolumePosition::SetMatrix(TRotMatrix *matrix)
 void TVolumePosition::UpdatePosition(Option_t *)
 {
    //to be documented
-   TPadView3D *view3D=(TPadView3D *)gPad->GetView3D();
+   TTablePadView3D *view3D=(TTablePadView3D *)gPad->GetView3D();
 //*-*- Update translation vector and rotation matrix for new level
    if (gGeometry->GeomLevel() && fMatrix) {
       gGeometry->UpdateTempMatrix(fX[0],fX[1],fX[2]
@@ -591,11 +597,11 @@ void TVolumePosition::Streamer(TBuffer &R__b)
    TRotMatrix     *save = fMatrix;
    if (R__b.IsReading()) {
       fMatrix = 0;
-      TVolumePosition::Class()->ReadBuffer(R__b, this);
+      R__b.ReadClassBuffer(TVolumePosition::Class(), this);
       if (!fMatrix) fMatrix = save;
    } else {
       if (save == TVolume::GetIdentity() ) fMatrix = 0;
-      TVolumePosition::Class()->WriteBuffer(R__b, this);
+      R__b.WriteClassBuffer(TVolumePosition::Class(), this);
       fMatrix = save;
    }
 }

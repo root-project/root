@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TTable.cxx,v 1.17 2006/07/11 09:05:02 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TTable.cxx,v 1.22 2007/02/15 15:04:40 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 
 /*************************************************************************
@@ -150,7 +150,6 @@
 #include "TTable.h"
 #include "TTableDescriptor.h"
 #include "TColumnView.h"
-#include "TFile.h"
 
 #include "TGaxis.h"
 #include "TH1.h"
@@ -563,8 +562,7 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
    }
 //*-*- Create a default canvas if none exists
    if (!gPad && !opt.Contains("goff") && dimension > 0) {
-      if (!gROOT->GetMakeDefCanvas()) return 0;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    }
 //*-*- 1-D distribution
    if (dimension == 1) {
@@ -757,7 +755,7 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
  //  action < 0   Evaluate Limits for case abs(action)
  //
  //  Load file
-   Float_t rmin[3],rmax[3];
+   Double_t rmin[3],rmax[3];
    switch(G__loadfile((Char_t *)exprFileName)) {
       case G__LOADFILE_SUCCESS:
       case G__LOADFILE_DUPLICATE:
@@ -981,7 +979,7 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
             rmax[0] = gVmax[2]; rmax[1] = gVmax[1]; rmax[2] = gVmax[0];
             gPad->Clear();
             gPad->Range(-1,-1,1,1);
-            new TView(rmin,rmax,1);
+            TView::CreateView(1,rmin,rmax);
          case 13: {
             TPolyMarker3D *pm3d = new TPolyMarker3D(lastEntry-firstentry);
             pm3d->SetBit(kCanDelete);
@@ -1047,6 +1045,7 @@ TTable::TTable(const TTable &table):TDataSet(table)
    fTable    = 0;
    SetUsedRows(table.GetNRows());
    fSize     = table.GetRowSize();
+   SetfN(table.fN);
    Set(table.fN, table.fTable);
 }
 
@@ -1492,7 +1491,7 @@ TTable *TTable::New(const Char_t *name, const Char_t *type, void *array, UInt_t 
       Char_t *classname = new Char_t[strlen(t.Data())+extralen];
       strcpy(classname,classprefix);
       strcat(classname,t.Data());
-      TClass *cl = gROOT->GetClass(classname);
+      TClass *cl = TClass::GetClass(classname);
       if (cl) {
          table = (TTable *)cl->New();
          if (table) {
@@ -1820,7 +1819,7 @@ void TTable::SavePrimitive(ostream &out, Option_t * /*= ""*/)
        << dscT->GetName()<<"["<<rowNumber-1 <<"]"            << endl;
    out << "// ====================================================================" << endl;
    out << "// ------  Test whether this table share library was loaded ------"      << endl;
-   out << "  if (!gROOT->GetClass(\"" << className << "\")) return 0;"    << endl;
+   out << "  if (!TClass::GetClass(\"" << className << "\")) return 0;"    << endl;
    out <<    dscT->GetName() << " " << rowId << ";" << endl
        <<  className << " *" << tableId << " = new "
        <<  className
@@ -2369,7 +2368,7 @@ const char *TTable::TableDictionary(const char *className,const char *structName
    // Query the TClass instance for the C-stucture dicitonary
    // This method is to be used  with TableImp CPP macro (see $ROOTSYS/table/inc/Ttypes.h
    if (className){/*NotUsed*/};
-   TClass *r = gROOT->GetClass(structName,1);
+   TClass *r = TClass::GetClass(structName,1);
    ColDescriptors = new TTableDescriptor(r);
    return structName;
 }

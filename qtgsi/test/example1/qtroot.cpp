@@ -68,6 +68,7 @@ using namespace std;
 #include "TRandom.h"
 #include "TFrame.h"
 #include "TGraph.h"
+#include "TMath.h"
 
 // global menus
 
@@ -244,7 +245,7 @@ ApplicationWindow::ApplicationWindow()
       Double_t x[n], y[n];
       for (Int_t i=0;i<n;i++) {
          x[i] = i*0.1;
-         y[i] = 10*sin(x[i]+0.2);
+         y[i] = 10*TMath::Sin(x[i]+0.2);
          //  printf(" i %i %f %f \n",i,x[i],y[i]);
       }
       TGraph* gr = new TGraph(n,x,y);

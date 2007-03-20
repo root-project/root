@@ -36,6 +36,9 @@ else
 ASTEPLIBA    := $(ASTEPDIRS)/libAfterImage.a
 ASTEPLIB     := $(LPATH)/libAfterImage.a
 endif
+ifeq ($(MACOSX_MINOR),3)
+ASEXTRALIB   += -lz
+endif
 ASTEPDEP     := $(ASTEPLIB)
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 ASTEPDBG      = "--enable-gdb"

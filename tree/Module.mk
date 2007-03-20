@@ -43,7 +43,7 @@ INCLUDEFILES += $(TREEDEP)
 include/%.h:    $(TREEDIRI)/%.h
 		cp $< $@
 
-$(TREELIB):     $(TREEO) $(TREEDO) $(ORDER_) $(MAINLIBS)
+$(TREELIB):     $(TREEO) $(TREEDO) $(ORDER_) $(MAINLIBS) $(TREELIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libTree.$(SOEXT) $@ "$(TREEO) $(TREEDO)" \
 		   "$(TREELIBEXTRA)"

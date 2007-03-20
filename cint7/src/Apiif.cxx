@@ -61,6 +61,7 @@ static int G__G__API_123_0_5(G__value* result7, G__CONST char* funcname, struct 
    return(1 || funcname || hash || result7 || libp) ;
 }
 
+#ifdef G__EXCEPTIONWRAPPER
 static int G__G__API_123_0_6(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
 {
       G__letint(result7, 105, (long) Cint::G__ExceptionWrapper((G__InterfaceMethod) G__int(libp->para[0]), (G__value*) G__int(libp->para[1])
@@ -68,7 +69,7 @@ static int G__G__API_123_0_6(G__value* result7, G__CONST char* funcname, struct 
 , (int) G__int(libp->para[4])));
    return(1 || funcname || hash || result7 || libp) ;
 }
-
+#endif
 
 /* Cint::G__MethodInfo */
 static int G__G__API_124_0_1(G__value* result7, G__CONST char* funcname, struct G__param* libp, int hash)
@@ -3566,10 +3567,12 @@ static void G__setup_memfuncCint(void) {
    G__memfunc_setup("G__ForceBytecodecompilation",2754,G__G__API_123_0_4, 105, -1, -1, 0, 2, 1, 1, 0, 
 "C - - 0 - funcname C - - 0 - param", (char*)NULL, (void*) (int (*)(char*, char*))(&Cint::G__ForceBytecodecompilation), 0);
    G__memfunc_setup("G__InitUpdateClassInfo",2174,G__G__API_123_0_5, 121, -1, -1, 0, 1, 1, 1, 0, "Y - 'Cint::G__pMethodUpdateClassInfo' 0 - pmethod", (char*)NULL, (void*) (void (*)(Cint::G__pMethodUpdateClassInfo))(&Cint::G__InitUpdateClassInfo), 0);
+#ifdef G__EXCEPTIONWRAPPER
    G__memfunc_setup("G__ExceptionWrapper",1941,G__G__API_123_0_6, 105, -1, -1, 0, 5, 1, 1, 0, 
 "Y - 'G__InterfaceMethod' 0 - funcp U 'G__value' 'G__value' 0 - result7 "
 "C - - 0 - funcname U 'G__param' - 0 - libp "
 "i - - 0 - hash", (char*)NULL, (void*) (int (*)(G__InterfaceMethod, G__value*, char*, G__param*, int))(&Cint::G__ExceptionWrapper), 0);
+#endif
    G__tag_memfunc_reset();
 }
 

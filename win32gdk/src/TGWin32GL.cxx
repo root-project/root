@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.15 2006/08/31 13:42:14 couet Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.17 2007/01/16 08:16:01 brun Exp $
 // Author: Valeriy Onuchin(TGWin32GL)/ Timur Pocheptsov (TGWin32GLManager)
 
 /*************************************************************************
@@ -24,9 +24,8 @@
 #include "TVirtualX.h"
 #include "TError.h"
 #include "TROOT.h"
-#include "TMath.h"
 
-#include "Windows4root.h"
+#include "Windows4Root.h"
 #include "gdk/gdk.h"
 #include "gdk/win32/gdkwin32.h"
 

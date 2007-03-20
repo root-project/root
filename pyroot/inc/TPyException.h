@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyException.h,v 1.3 2005/05/06 10:08:53 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyException.h,v 1.4 2006/03/09 09:07:02 brun Exp $
 // Author: Scott Snyder, Apr 2004
 
 #ifndef ROOT_TPyException
@@ -18,7 +18,7 @@
 //   - What to do then if the python callback throws an exception?          //
 //                                                                          //
 // We need to get the control flow back to where PyROOT makes the ROOT call.//
-// To do that we throw a PyException.                                       //
+// To do that we throw a TPyException.                                      //
 // We can then catch this exception when we do the ROOT call.               //
 //                                                                          //
 // Note that we don't need to save any state in the exception -- it's       //

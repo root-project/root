@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArc.cxx,v 1.9 2005/11/11 17:31:48 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TArc.cxx,v 1.10 2006/07/03 16:10:44 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -82,6 +82,7 @@ void TArc::DrawArc(Double_t x1, Double_t y1,Double_t r1,Double_t phimin,Double_t
    TArc *newarc = new TArc(x1, y1, r1, phimin, phimax);
    TAttLine::Copy(*newarc);
    TAttFill::Copy(*newarc);
+   newarc->SetBit(kCanDelete);
    newarc->AppendPad(option);
 }
 

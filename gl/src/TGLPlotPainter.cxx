@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.10 2006/11/24 10:45:13 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPlotPainter.cxx,v 1.11 2006/11/24 15:57:45 couet Exp $
 // Author:  Timur Pocheptsov  14/06/2006
                                                                                 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include "TVirtualPS.h"
 #include "TStyle.h"
 #include "TError.h"
+#include "TColor.h"
 #include "TAxis.h"
 #include "TMath.h"
 #include "TH1.h"
@@ -43,6 +44,32 @@ TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordin
                     fYOZSectionPos(0.),
                     fXOYSectionPos(0.),
                     fBackBox(xoy, xoz, yoz),
+                    fBoxCut(&fBackBox),
+                    fHighColor(kFALSE),
+                    fSelectionBase(kTrueColorSelectionBase)
+{
+   //TGLPlotPainter's ctor.
+   if (MakeGLContextCurrent())
+      fCamera->SetViewport(GetGLContext());
+}
+
+//______________________________________________________________________________
+TGLPlotPainter::TGLPlotPainter(TGLOrthoCamera *camera, Int_t context)
+                  : fGLContext(context),
+                    fPadColor(0),
+                    fHist(0),
+                    fXAxis(0),
+                    fYAxis(0),
+                    fZAxis(0),
+                    fCoord(0),
+                    fCamera(camera),
+                    fUpdateSelection(kTRUE),
+                    fSelectionPass(kFALSE),
+                    fSelectedPart(0),
+                    fXOZSectionPos(0.),
+                    fYOZSectionPos(0.),
+                    fXOYSectionPos(0.),
+                    fBackBox(kFALSE, kFALSE, kFALSE),
                     fBoxCut(&fBackBox),
                     fHighColor(kFALSE),
                     fSelectionBase(kTrueColorSelectionBase)
@@ -89,7 +116,7 @@ void TGLPlotPainter::Paint()
    //Here changes are possible in future, if we have real 3d axis painter.
    gGLManager->ReadGLBuffer(GetGLContext());
    //Select pixmap/DIB
-   if (fCoord->GetCoordType() == kGLCartesian) {
+   if (fCoord && fCoord->GetCoordType() == kGLCartesian) {
       gGLManager->SelectOffScreenDevice(GetGLContext());
       //Draw axes into pixmap/DIB
       Int_t viewport[] = {fCamera->GetX(), fCamera->GetY(), fCamera->GetWidth(), fCamera->GetHeight()};
@@ -407,6 +434,17 @@ void TGLPlotPainter::DrawSections()const
          glDepthMask(GL_TRUE);
       }
    }
+}
+
+//______________________________________________________________________________
+void TGLPlotPainter::ClearBuffers()const
+{
+   // Clear buffer.
+   Float_t rgb[3] = {1.f, 1.f, 1.f};
+   if (const TColor *color = GetPadColor())
+      color->GetRGB(rgb[0], rgb[1], rgb[2]);
+   glClearColor(rgb[0], rgb[1], rgb[2], 1.);
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 ClassImp(TGLPlotCoordinates)

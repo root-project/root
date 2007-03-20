@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.16 2006/09/27 08:45:42 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.20 2007/01/29 17:14:34 antcheva Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -19,8 +19,8 @@
 
 #include "TGedFrame.h"
 #include "TGedEditor.h"
-#include "TGClient.h"
 #include "TG3DLine.h"
+#include "TClass.h"
 #include "TCanvas.h"
 #include "TGLabel.h"
 #include "TGToolTip.h"
@@ -111,7 +111,7 @@ void TGedFrame::MakeTitle(const char *title)
    // Create attribute frame title.
 
    TGCompositeFrame *f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame |
-                                                              kLHintsExpandX |
+                                                              kFitWidth |
                                                               kFixedWidth |
                                                               kOwnBackground);
    f1->AddFrame(new TGLabel(f1, title),
@@ -245,7 +245,7 @@ Bool_t TGedNameFrame::HandleCrossing(Event_t *event)
 }
 
 //______________________________________________________________________________
-Bool_t TGedNameFrame::HandleButton(Event_t */*event*/)
+Bool_t TGedNameFrame::HandleButton(Event_t * /*event*/)
 {
    // Handle mouse button event.
 

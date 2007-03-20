@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.30 2006/07/03 16:10:43 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.32 2007/01/15 16:10:09 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "TVirtualViewer3D.h"
 #include "TGeometry.h"
 #include "TROOT.h"
+#include "TMath.h"
 
 #include <assert.h>
 
@@ -428,7 +429,7 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
    TView *view = gPad->GetView();
    if (!view) {
       gPad->Range(-1,-1,1,1);
-      view = new TView(1);
+      view = TView::CreateView(1,0,0);
    }
    view->SetRange(xaxis->GetBinLowEdge(xaxis->GetFirst()),
                   yaxis->GetBinLowEdge(yaxis->GetFirst()),
@@ -665,6 +666,19 @@ void TPolyMarker3D::GetPoint(Int_t n, Float_t &x, Float_t &y, Float_t &z) const
    x = fP[kDimension*n  ];
    y = fP[kDimension*n+1];
    z = fP[kDimension*n+2];
+}
+
+//_______________________________________________________________________
+void TPolyMarker3D::GetPoint(Int_t n, Double_t &x, Double_t &y, Double_t &z) const
+{
+   // Fills the parameters x, y, z with the coordinate of the n-th point
+   // n must be between 0 and Size() - 1.
+
+   if (n < 0 || n >= Size()) return;
+   if (!fP) return;
+   x = (Double_t)fP[kDimension*n  ];
+   y = (Double_t)fP[kDimension*n+1];
+   z = (Double_t)fP[kDimension*n+2];
 }
 
 

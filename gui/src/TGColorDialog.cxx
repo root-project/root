@@ -1,5 +1,6 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.22 2006/05/28 20:07:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.24 2007/03/17 12:03:00 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
+// Author: Ilka Antcheva (color wheel support)   16/03/07
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -54,6 +55,13 @@
 #include "TGButton.h"
 #include "TGResourcePool.h"
 #include "TColor.h"
+#include "TColorWheel.h"
+#include "TGColorSelect.h"
+#include "TGTab.h"
+#include "TRootEmbeddedCanvas.h"
+#include "TCanvas.h"
+#include "TROOT.h"
+
 
 ClassImp(TGColorPalette)
 ClassImp(TGColorPick)
@@ -70,6 +78,7 @@ ClassImp(TGColorDialog)
 enum EColorDialog {
    kCDLG_OK       = 100,
    kCDLG_CANCEL,
+   kCDLG_PREVIEW,
    kCDLG_ADD,
 
    kCDLG_SPALETTE = 200,
@@ -1066,7 +1075,7 @@ void TGColorPick::DrawLcursor(Int_t onoff)
 //________________________________________________________________________________
 TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
                              Int_t *retc, ULong_t *color, Bool_t wait) :
-   TGTransientFrame(p, m, 200, 150, kHorizontalFrame)
+   TGTransientFrame(p, m, 200, 150)
 {
    // Color selection dialog constructor.
    // The TGColorDialog presents a full featured color selection dialog.
@@ -1084,23 +1093,108 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
 
    if (fRetc) *fRetc = kMBCancel;
 
-   TGVerticalFrame *vf1 = new TGVerticalFrame(this, 20, 20);
+   TGHorizontalFrame *hftop = new TGHorizontalFrame(this, 10, 10);
+   hftop->SetCleanup();
+   AddFrame(hftop, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 10, 5));
+
+   fTab = new TGTab(hftop, 300, 300);
+   hftop->AddFrame(fTab);
+
+   TGCompositeFrame *cf = new TGCompositeFrame(hftop, 10, 10);
+   cf->SetCleanup();
+   hftop->AddFrame(cf, new TGLayoutHints(kLHintsLeft | kLHintsTop, 5, 0, 30, 0));
+
+   TGCompositeFrame *cf1 = new TGCompositeFrame(cf, 10, 10);
+   cf1->SetCleanup();
+   cf->AddFrame(cf1, new TGLayoutHints(kLHintsLeft | kLHintsTop, 5, 0, 30, 0));
+   cf1->SetLayoutManager(new TGMatrixLayout(cf1, 0, 2, 4));
+
+   cf1->AddFrame(new TGLabel(cf1, new TGHotString("Red:")));
+   cf1->AddFrame(fRte = new TGTextEntry(cf1, fRtb = new TGTextBuffer(5), kCDLG_RTE),0);
+   fRte->Resize(40, fRte->GetDefaultHeight());
+   cf1->AddFrame(new TGLabel(cf1, new TGHotString("Green:")),0);
+   cf1->AddFrame(fGte = new TGTextEntry(cf1, fGtb = new TGTextBuffer(5), kCDLG_GTE),0);
+   fGte->Resize(40, fGte->GetDefaultHeight());
+   cf1->AddFrame(new TGLabel(cf1, new TGHotString("Blue:")));
+   cf1->AddFrame(fBte = new TGTextEntry(cf1, fBtb = new TGTextBuffer(5), kCDLG_BTE),0);
+   fBte->Resize(40, fBte->GetDefaultHeight());
+
+   TGCompositeFrame *cf2 = new TGCompositeFrame(cf, 10, 10);
+   cf2->SetCleanup();
+   cf->AddFrame(cf2, new TGLayoutHints(kLHintsLeft | kLHintsTop, 5, 0, 30, 0));
+   cf2->SetLayoutManager(new TGMatrixLayout(cf2, 0, 2, 4));
+   cf2->AddFrame(new TGLabel(cf2, new TGHotString("Hue:")),0);
+   cf2->AddFrame(fHte = new TGTextEntry(cf2, fHtb = new TGTextBuffer(5), kCDLG_HTE),0);
+   fHte->Resize(40, fHte->GetDefaultHeight());
+   cf2->AddFrame(new TGLabel(cf2, new TGHotString("Sat:")),0);
+   cf2->AddFrame(fSte = new TGTextEntry(cf2, fStb = new TGTextBuffer(5), kCDLG_STE),0);
+   fSte->Resize(40, fSte->GetDefaultHeight());
+   cf2->AddFrame(new TGLabel(cf2, new TGHotString("Lum:")),0);
+   cf2->AddFrame(fLte = new TGTextEntry(cf2, fLtb = new TGTextBuffer(5), kCDLG_LTE),0);
+   fLte->Resize(40, fLte->GetDefaultHeight());
+
+   fHte->Associate(this);
+   fLte->Associate(this);
+   fSte->Associate(this);
+   fRte->Associate(this);
+   fGte->Associate(this);
+   fBte->Associate(this);
+
+   if (color) {
+      UpdateRGBentries(color);
+      UpdateHLSentries(color);
+      fCurrentColor = *color;
+   } else {
+      gClient->GetColorByName("red", fCurrentColor);
+   }
+   
+   // color sample
+   TGCompositeFrame *cf3 = new TGCompositeFrame(cf, 10, 10);
+   cf3->SetCleanup();
+   cf3->SetLayoutManager(new TGMatrixLayout(cf3, 0, 1, 0));
+   cf3->AddFrame(fColorInfo = new TGLabel(cf3, new TGString("New: not set         ")),0);
+   fColorInfo->SetTextJustify(kTextLeft);
+   cf3->AddFrame(fSample = new TGFrame(cf3, 50, 25, kOwnBackground),0);
+   cf3->AddFrame(fSampleOld = new TGFrame(cf3, 50, 25, kOwnBackground),0);
+   cf3->AddFrame(new TGLabel(cf3, new TGString("Current")),0);
+   cf->AddFrame(cf3, new TGLayoutHints(kLHintsLeft | kLHintsTop, 5, 5, 20, 0));
+   fSample->SetBackgroundColor(fCurrentColor);
+   fSampleOld->SetBackgroundColor(fCurrentColor);
+
+   TGCompositeFrame *tf = fTab->AddTab("Color Wheel");
+   TGCompositeFrame *tf1 = new TGCompositeFrame(tf, 60, 20, kHorizontalFrame);
+   tf->AddFrame(tf1);
+   fEcanvas = new TRootEmbeddedCanvas(0, tf1, 360, 360);
+   tf1->AddFrame(fEcanvas);
+   Int_t wid = fEcanvas->GetCanvasWindowId();
+   TCanvas *wcan = new TCanvas("wheel", 10, 10, wid);
+   fEcanvas->AdoptCanvas(wcan);
+   fEcanvas->GetCanvas()->SetBit(kNoContextMenu);
+   fColorWheel = new TColorWheel();
+   fColorWheel->SetCanvas(wcan);
+   fColorWheel->Draw();
+   fEcanvas->GetCanvas()->Update();
+   wcan->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)","TGColorDialog",this, 
+                 "SetColorInfo(Int_t,Int_t,Int_t,TObject*)");
+
+   tf = fTab->AddTab("Basic Colors");
+   TGCompositeFrame *tf2 = new TGCompositeFrame(tf, 60, 20, kHorizontalFrame);
+   tf->AddFrame(tf2);
+
+   TGVerticalFrame *vf1 = new TGVerticalFrame(tf2, 20, 20);
    vf1->SetCleanup();
-   TGVerticalFrame *vf2 = new TGVerticalFrame(this, 20, 20);
+   TGVerticalFrame *vf2 = new TGVerticalFrame(tf2, 20, 20);
    vf2->SetCleanup();
 
-   AddFrame(vf1, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
-   AddFrame(vf2, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
+   tf2->AddFrame(vf1, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
+   tf2->AddFrame(vf2, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
 
    //----------------------------------------- Left panel
 
    // basic colors
 
-   vf1->AddFrame(new TGLabel(vf1, new TGHotString("&Basic colors:")),
-                 new TGLayoutHints(kLHintsNormal, 5, 0, 7, 2));
-
-   fPalette = new TGColorPalette(vf1, 8, 6, kCDLG_SPALETTE);
-   vf1->AddFrame(fPalette, new TGLayoutHints(kLHintsNormal, 5, 5, 0, 0));
+   fPalette = new TGColorPalette(vf1, 6, 8, kCDLG_SPALETTE);
+   vf1->AddFrame(fPalette, new TGLayoutHints(kLHintsNormal, 5, 5, 15, 0));
    fPalette->Associate(this);
 
    for (i = 0; i < 48; ++i)
@@ -1147,11 +1241,11 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
 
    // custom colors
 
-   vf1->AddFrame(new TGLabel(vf1, new TGHotString("&Custom colors:")),
+   vf1->AddFrame(new TGLabel(vf1, new TGHotString("&Custom Colors:")),
                  new TGLayoutHints(kLHintsNormal, 5, 0, 15, 2));
 
-   fCpalette = new TGColorPalette(vf1, 8, 3, kCDLG_CPALETTE);
-   vf1->AddFrame(fCpalette, new TGLayoutHints(kLHintsNormal, 5, 5, 0, 0));
+   fCpalette = new TGColorPalette(vf1, 6, 4, kCDLG_CPALETTE);
+   vf1->AddFrame(fCpalette, new TGLayoutHints(kLHintsNormal, 5, 5, 5, 0));
    fCpalette->Associate(this);
 
    if (gUcolor[0] == 0xff000000) {
@@ -1160,21 +1254,23 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    }
    fCpalette->SetColors(gUcolor);
 
-   // button frame
-
-   TGHorizontalFrame *hf = new TGHorizontalFrame(vf1, 10, 10, kFixedWidth);
+   // button frame - OK, Cancel
+   TGHorizontalFrame *hf = new TGHorizontalFrame(this, 10, 10, kFixedWidth);
    hf->SetCleanup();
-   vf1->AddFrame(hf, new TGLayoutHints(kLHintsBottom | kLHintsLeft, 5, 5, 10, 5));
+   AddFrame(hf, new TGLayoutHints(kLHintsBottom | kLHintsRight, 5, 5, 10, 5));
 
    TGTextButton *ok = new TGTextButton(hf, new TGHotString("OK"), kCDLG_OK);
    TGTextButton *cancel = new TGTextButton(hf, new TGHotString("Cancel"), kCDLG_CANCEL);
-
-   hf->AddFrame(ok, new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 0, 5, 0, 0));
-   hf->AddFrame(cancel, new TGLayoutHints(kLHintsBottom | kLHintsExpandX));
+   TGTextButton *fPreview = new TGTextButton(hf, new TGHotString("&Preview"), kCDLG_PREVIEW);
+   fPreview->Connect("Clicked()", "TGColorDialog", this, "DoPreview()");
+   
+   hf->AddFrame(ok, new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 0, 3, 0, 0));
+   hf->AddFrame(cancel, new TGLayoutHints(kLHintsBottom | kLHintsExpandX,3, 0, 0, 0));
+   hf->AddFrame(fPreview, new TGLayoutHints(kLHintsBottom | kLHintsExpandX,3, 0, 0, 0));
 
    UInt_t w = ok->GetDefaultWidth();
    w = TMath::Max(w, cancel->GetDefaultWidth());
-   hf->Resize(2 * (w + 20), hf->GetDefaultHeight());
+   hf->Resize(3 * (w + 30), hf->GetDefaultHeight());
 
    ok->Associate(this);
    cancel->Associate(this);
@@ -1183,82 +1279,19 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
 
    // fColormap frame
 
-   fColors = new TGColorPick(vf2, kC_X + 33, kC_Y, kCDLG_COLORPICK);
-   vf2->AddFrame(fColors, new TGLayoutHints(kLHintsLeft | kLHintsTop, 5, 5, 15, 5));
+   fColors = new TGColorPick(vf2, kC_X + 23, kC_Y, kCDLG_COLORPICK);
+   vf2->AddFrame(fColors, new TGLayoutHints(kLHintsLeft | kLHintsTop, 5, 0, 15, 5));
    fColors->Associate(this);
 
    if (color)
       fColors->SetColor(*color);
 
-   // color sample frame
 
-   TGHorizontalFrame *hf3 = new TGHorizontalFrame(vf2, 10, 10);
-   hf3->SetCleanup();
-   vf2->AddFrame(hf3, new TGLayoutHints(kLHintsLeft | kLHintsTop, 5, 5, 2, 5));
-
-   TGVerticalFrame *vf3 = new TGVerticalFrame(hf3, 10, 10);
-   vf3->SetCleanup();
-   hf3->AddFrame(vf3, new TGLayoutHints(kLHintsLeft | kLHintsTop));
-
-   fSample = new TGFrame(vf3, 60, 42, kSunkenFrame | kOwnBackground);
-   vf3->AddFrame(fSample, new TGLayoutHints(kLHintsLeft | kLHintsTop));
-
-   vf3->AddFrame(new TGLabel(vf3, new TGString("Color")),
-                 new TGLayoutHints(kLHintsCenterX | kLHintsTop, 0, 0, 2, 0));
-
-   if (color)
-      fCurrentColor = *color;
-   else
-      gClient->GetColorByName("red", fCurrentColor);
-
-   fSample->SetBackgroundColor(fCurrentColor);
-
-   TGCompositeFrame *cf = new TGCompositeFrame(hf3, 10, 10);
-   cf->SetCleanup();
-   hf3->AddFrame(cf, new TGLayoutHints(kLHintsLeft | kLHintsTop, 10, 0, 0, 0));
-   cf->SetLayoutManager(new TGMatrixLayout(cf, 0, 2, 4));
-
-   cf->AddFrame(new TGLabel(cf, new TGHotString("Hu&e:")), 0);
-   cf->AddFrame(fHte = new TGTextEntry(cf, fHtb = new TGTextBuffer(5), kCDLG_HTE), 0);
-   fHte->Resize(35, fHte->GetDefaultHeight());
-   cf->AddFrame(new TGLabel(cf, new TGHotString("&Sat:")), 0);
-   cf->AddFrame(fSte = new TGTextEntry(cf, fStb = new TGTextBuffer(5), kCDLG_STE), 0);
-   fSte->Resize(35, fSte->GetDefaultHeight());
-   cf->AddFrame(new TGLabel(cf, new TGHotString("&Lum:")), 0);
-   cf->AddFrame(fLte = new TGTextEntry(cf, fLtb = new TGTextBuffer(5), kCDLG_LTE), 0);
-   fLte->Resize(35, fLte->GetDefaultHeight());
-
-   cf = new TGCompositeFrame(hf3, 10, 10);
-   cf->SetCleanup();
-   hf3->AddFrame(cf, new TGLayoutHints(kLHintsLeft | kLHintsTop, 5, 0, 0, 0));
-   cf->SetLayoutManager(new TGMatrixLayout(cf, 0, 2, 4));
-
-   cf->AddFrame(new TGLabel(cf, new TGHotString("&Red:")), 0);
-   cf->AddFrame(fRte = new TGTextEntry(cf, fRtb = new TGTextBuffer(5), kCDLG_RTE), 0);
-   fRte->Resize(35, fRte->GetDefaultHeight());
-   cf->AddFrame(new TGLabel(cf, new TGHotString("&Green:")), 0);
-   cf->AddFrame(fGte = new TGTextEntry(cf, fGtb = new TGTextBuffer(5), kCDLG_GTE), 0);
-   fGte->Resize(35, fGte->GetDefaultHeight());
-   cf->AddFrame(new TGLabel(cf, new TGHotString("Bl&ue:")), 0);
-   cf->AddFrame(fBte = new TGTextEntry(cf, fBtb = new TGTextBuffer(5), kCDLG_BTE), 0);
-   fBte->Resize(35, fBte->GetDefaultHeight());
-
-   fHte->Associate(this);
-   fLte->Associate(this);
-   fSte->Associate(this);
-   fRte->Associate(this);
-   fGte->Associate(this);
-   fBte->Associate(this);
-
-   if (color) {
-      UpdateRGBentries(color);
-      UpdateHLSentries(color);
-   }
 
    TGTextButton *add = new TGTextButton(vf2, new TGHotString("&Add to Custom Colors"),
                                         kCDLG_ADD);
    vf2->AddFrame(add, new TGLayoutHints(kLHintsBottom | kLHintsExpandX,
-                                        5, 5, 0, 5));
+                                        5, 10, 0, 5));
    add->Associate(this);
 
    MapSubwindows();
@@ -1303,7 +1336,9 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
 TGColorDialog::~TGColorDialog()
 {
    // TGColorDialog destructor.
-
+   
+   fEcanvas->GetCanvas()->Disconnect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)");
+   delete fEcanvas; 
    Cleanup();
 }
 
@@ -1429,6 +1464,8 @@ Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
                      CloseWindow();
                      break;
                   case kCDLG_CANCEL:
+                     TGColorPopup *p = (TGColorPopup *)GetMain();
+                     p->PreviewColor(fSampleOld->GetBackground());
                      CloseWindow();
                      break;
                }
@@ -1519,4 +1556,40 @@ Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
    }
 
    return kTRUE;
+}
+
+//________________________________________________________________________________
+void TGColorDialog::SetColorInfo(Int_t event, Int_t px, Int_t py, TObject *object)
+{
+   //  Set the color info in RGB and HLS parts
+  
+   if (object->InheritsFrom(TColorWheel::Class())) {
+      
+      Int_t n = fColorWheel->GetColor(px,py);
+      if (n < 0) return;
+      TColor *color = gROOT->GetColor(n);
+      if (!color) return;
+      ULong_t pcolor = color->GetPixel();
+      if (event == kButton1Down) {
+         UpdateRGBentries(&pcolor);
+         UpdateHLSentries(&pcolor);
+         fSample->SetBackgroundColor(pcolor);
+         fColorInfo->SetText(Form("New: %s",color->GetName()));
+         gClient->NeedRedraw(fSample);
+         gClient->NeedRedraw(fColorInfo);
+         fCurrentColor = pcolor;
+         fColors->SetColor(pcolor);
+         ColorSelected(pcolor);
+      //printf("event %d colorInfo: %s\n",event, object->GetObjectInfo(px,py));
+      }
+   }
+}
+
+//________________________________________________________________________________
+void TGColorDialog::DoPreview()
+{
+   // Slot method called when Preview button is clicked.
+
+   TGColorPopup *p = (TGColorPopup *)GetMain();
+   p->PreviewColor(fSample->GetBackground());
 }

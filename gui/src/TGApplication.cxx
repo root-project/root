@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.12 2006/03/06 14:30:00 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.14 2007/02/13 14:23:15 rdm Exp $
 // Author: Guy Barrand   30/05/2001
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include "TVirtualX.h"
 #include "TStyle.h"
 #include "TInterpreter.h"
+#include "TColor.h"
 
 ClassImp(TGApplication)
 
@@ -63,6 +64,9 @@ TGApplication::TGApplication(const char *appClassName,
    GetOptions(argc, argv);
    if (argv && argv[0])
       gSystem->SetProgname(argv[0]);
+
+   // Enable autoloading
+   gInterpreter->EnableAutoLoading();
 
    LoadGraphicsLibs();
 
@@ -101,7 +105,7 @@ TGApplication::TGApplication(const char *appClassName,
    // Create the canvas colors early so they are allocated before
    // any color table expensive bitmaps get allocated in GUI routines (like
    // creation of XPM bitmaps).
-   InitializeColors();
+   TColor::InitializeColors();
 
    // Set default screen factor (if not disabled in rc file)
    if (gEnv->GetValue("Canvas.UseScreenFactor", 1)) {
@@ -121,9 +125,6 @@ TGApplication::TGApplication(const char *appClassName,
    // Save current interpreter context
    gInterpreter->SaveContext();
    gInterpreter->SaveGlobalsContext();
-
-   // Enable autoloading
-   gInterpreter->EnableAutoLoading();
 
    // to allow user to interact with TCanvas's under WIN32
    gROOT->SetLineHasBeenProcessed();

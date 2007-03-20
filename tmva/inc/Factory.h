@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: Factory.h,v 1.27 2006/11/17 14:59:23 stelzer Exp $   
+// @(#)root/tmva $Id: Factory.h,v 1.9 2006/11/20 15:35:28 brun Exp $   
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -48,14 +48,9 @@
 #include <vector>
 #include <map>
 #include "TCut.h"
-#include "TDirectory.h"
-#include "TTreeFormula.h"
 
 #ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
-#ifndef ROOT_TMatrixD
-#include "TMatrixD.h"
 #endif
 #ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
@@ -64,6 +59,8 @@
 #include "TMVA/MsgLogger.h"
 #endif
 
+class TTreeFormula;
+class TDirectory;
 class TFile;
 class TTree;
 class TNtuple;

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLCylinder.cxx,v 1.1 2006/02/20 11:10:06 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLCylinder.cxx,v 1.2 2006/05/31 07:48:56 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history
@@ -16,6 +16,7 @@
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "TMath.h"
 
 // For debug tracing
 #include "TClass.h" 

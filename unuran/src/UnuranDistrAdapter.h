@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: inc/Math/UnuranDistr.h,v 1.0 2006/01/01 12:00:00 moneta Exp $
+// @(#)root/unuran:$Name:  $:$Id: UnuranDistrAdapter.h,v 1.2 2007/03/08 09:31:54 moneta Exp $
 // Author: L. Moneta Wed Sep 27 11:22:07 2006
 
 /**********************************************************************
@@ -19,79 +19,83 @@
 #include <cmath>
 
 /** 
-   UnuranDistr 
-   Provides free function based on TF1 to be called by unuran 
+   Free functions adapter needed by UNURAN for onedimensional continous distributions
 */ 
 
+#include "TUnuranContDist.h"
+#include "TUnuranMultiContDist.h"
+#include "TUnuranDiscrDist.h"
 
-template<class Function> 
-struct UnuranDistr {
+struct ContDist {
 
-   /// evaluate the probal
+   typedef TUnuranContDist Distribution; 
+
+   /// evaluate the probality density function
    static double Pdf(double x, const UNUR_DISTR * dist) {  
-      const Function * func = reinterpret_cast<const Function *> (  unur_distr_get_extobj(dist) ); 
-      return func->operator()(x);      
+      const Distribution * func = reinterpret_cast<const Distribution *> (  unur_distr_get_extobj(dist) ); 
+      return func->Pdf(x);      
    }   
-
+   /// evaluate the derivative of the pdf
    static double Dpdf(double x,  const UNUR_DISTR * dist) { 
-      const Function * func = reinterpret_cast<const Function *> (  unur_distr_get_extobj(dist) ); 
-      return func->Derivative(x);            
+      const Distribution * func = reinterpret_cast<const Distribution *> (  unur_distr_get_extobj(dist) ); 
+      return func->DPdf(x);            
    }
 
+   /// evaluate the Cumulative distribution function, integral of the pdf
    static double Cdf(double x,  const UNUR_DISTR * dist) { 
-      const Function * func = reinterpret_cast<const Function *> (  unur_distr_get_extobj(dist) ); 
+      const Distribution * func = reinterpret_cast<const Distribution *> (  unur_distr_get_extobj(dist) ); 
       return func->Cdf(x);            
    }
 
 }; 
 
 /**
-   free functions for multidimensional functions
-   needed bby UNURAN
+   Free functions adapter needed by UNURAN for multidimensional cont distribution
 */
-template<class Function> 
-struct UnuranDistrMulti {
+struct MultiDist {
+
+   typedef TUnuranMultiContDist Distribution; 
 
    /// evaluate the probality density function
    static double Pdf(const double * x, UNUR_DISTR * dist) {  
-      const Function * func = reinterpret_cast<const Function *> (  unur_distr_get_extobj(dist) ); 
-      assert( func != 0); 
-      return func->operator()(x);      
+      const Distribution * func = reinterpret_cast<const Distribution *> (  unur_distr_get_extobj(dist) ); 
+      return func->Pdf(x);      
    }   
 
-
+   // evaluate the gradient vector of the pdf
    static int Dpdf(double * grad, const double * x,  UNUR_DISTR * dist) { 
-      const Function * func = reinterpret_cast<const Function *> (  unur_distr_get_extobj(dist) ); 
+      const Distribution * func = reinterpret_cast<const Distribution *> (  unur_distr_get_extobj(dist) ); 
       func->Gradient(x,grad);
       return 0; 
    }
    
-   // provides the gradient componets separatly
+   // provides the gradient components separatly (partial derivatives)
    static double Pdpdf(const double * x, int coord, UNUR_DISTR * dist) { 
-      const Function * func = reinterpret_cast<const Function *> (  unur_distr_get_extobj(dist) ); 
+      const Distribution * func = reinterpret_cast<const Distribution *> (  unur_distr_get_extobj(dist) ); 
       return func->Derivative(x,coord);
    }
 
-   static double Logpdf(const double * x, UNUR_DISTR * dist) {  
-//       const Function * func = reinterpret_cast<const Function *> (  unur_distr_get_extobj(dist) ); 
-//       assert( func != 0); 
-//       double y  =  func->operator()(x);      
-// //       if ( y < std::numeric_limits<double>::min() ) 
-      return  std::log( Pdf(x,dist) ); 
+}; 
+
+
+/**
+   Free functions adapter needed by UNURAN for one-dimensional discrete distribution
+*/
+struct DiscrDist {
+
+   typedef TUnuranDiscrDist Distribution; 
+
+
+   /// evaluate the probality mesh function
+   static double Pmf(int x, const UNUR_DISTR * dist) {  
+      const Distribution * func = reinterpret_cast<const Distribution *> (  unur_distr_get_extobj(dist) ); 
+      return func->Pmf(x);      
    }   
 
-   static int Dlogpdf(double * grad, const double * x,  UNUR_DISTR * dist) {    
-      int dim = unur_distr_get_dim(dist);
-      double pdf = Pdf(x,dist); 
-      int ret = Dpdf(grad,x,dist); 
-      for (int i = 0; i < dim; ++i) { 
-         grad[i] /= pdf; 
-      }
-      return ret; 
-   }
-
-   static double Pdlogpdf(const double * x, int coord, UNUR_DISTR * dist) { 
-      return  Pdpdf(x,coord,dist)/ Pdf(x,dist);
+   /// evaluate the cumulative function
+   static double Cdf(int x,  const UNUR_DISTR * dist) { 
+      const Distribution * func = reinterpret_cast<const Distribution *> (  unur_distr_get_extobj(dist) ); 
+      return func->Cdf(x);            
    }
 
 }; 

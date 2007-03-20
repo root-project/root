@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.16 2006/05/24 14:40:29 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.17 2006/08/24 16:31:21 rdm Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 /*************************************************************************
@@ -324,7 +324,7 @@ void TParticle::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TParticle::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TParticle::Class(), this, R__v, R__s, R__c);
          fParticlePDG = TDatabasePDG::Instance()->GetParticle(fPdgCode);
          return;
       }
@@ -352,6 +352,6 @@ void TParticle::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TParticle::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TParticle::Class(),this);
    }
 }

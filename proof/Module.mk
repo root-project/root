@@ -25,37 +25,12 @@ PROOFDEP     := $(PROOFO:.o=.d) $(PROOFDO:.o=.d)
 
 PROOFLIB     := $(LPATH)/libProof.$(SOEXT)
 
-##### libProofGui #####
-PROOFGUIL    := $(MODDIRI)/LinkDefGui.h
-PROOFGUIDS   := $(MODDIRS)/G__ProofGui.cxx
-PROOFGUIDO   := $(PROOFGUIDS:.cxx=.o)
-PROOFGUIDH   := $(PROOFGUIDS:.cxx=.h)
-
-PROOFGUIH    := $(wildcard $(MODDIRI)/TProofProgress*.h)
-PROOFGUIH    += $(MODDIRI)/TSessionViewer.h $(MODDIRI)/TSessionLogView.h
-PROOFGUIH    += $(MODDIRI)/TSessionDialogs.h
-PROOFGUIS    := $(wildcard $(MODDIRS)/TProofProgress*.cxx)
-PROOFGUIS    += $(MODDIRS)/TSessionViewer.cxx $(MODDIRS)/TSessionLogView.cxx 
-PROOFGUIS    += $(MODDIRS)/TSessionDialogs.cxx
-PROOFGUIO    := $(PROOFGUIS:.cxx=.o)
-
-PROOFGUIDEP  := $(PROOFGUIO:.o=.d) $(PROOFGUIDO:.o=.d)
-
-PROOFGUILIB  := $(LPATH)/libProofGui.$(SOEXT)
-
-# remove GUI files from PROOF files
-PROOFH       := $(filter-out $(PROOFGUIH),$(PROOFH))
-PROOFS       := $(filter-out $(PROOFGUIS),$(PROOFS))
-PROOFO       := $(filter-out $(PROOFGUIO),$(PROOFO))
-PROOFDEP     := $(filter-out $(PROOFGUIDEP),$(PROOFDEP))
-
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFH))
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFGUIH))
-ALLLIBS     += $(PROOFLIB) $(PROOFGUILIB)
+ALLLIBS     += $(PROOFLIB)
 
 # include all dependency files
-INCLUDEFILES += $(PROOFDEP) $(PROOFGUIDEP)
+INCLUDEFILES += $(PROOFDEP)
 
 ##### local rules #####
 include/%.h:    $(PROOFDIRI)/%.h
@@ -70,36 +45,20 @@ $(PROOFDS):     $(PROOFH) $(PROOFL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(PROOFH) $(PROOFL)
 
-$(PROOFGUILIB): $(PROOFGUIO) $(PROOFGUIDO) $(ORDER_) $(MAINLIBS) $(PROOFGUILIBDEP)
-		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libProofGui.$(SOEXT) $@ \
-		   "$(PROOFGUIO) $(PROOFGUIDO)" \
-		   "$(PROOFGUILIBEXTRA)"
-
-$(PROOFGUIDS):  $(PROOFGUIH) $(PROOFGUIL) $(ROOTCINTTMPEXE)
-		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(PROOFGUIH) $(PROOFGUIL)
-
-all-proof:      $(PROOFLIB) $(PROOFGUILIB)
+all-proof:      $(PROOFLIB)
 
 map-proof:      $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(PROOFLIB) \
 		   -d $(PROOFLIBDEP) -c $(PROOFL)
 
-map-proofgui:   $(RLIBMAP)
-		$(RLIBMAP) -r $(ROOTMAP) -l $(PROOFGUILIB) \
-		   -d $(PROOFGUILIBDEP) -c $(PROOFGUIL)
-
-map::           map-proof map-proofgui
+map::           map-proof
 
 clean-proof:
-		@rm -f $(PROOFO) $(PROOFDO) $(PROOFGUIO) $(PROOFGUIDO)
+		@rm -f $(PROOFO) $(PROOFDO)
 
 clean::         clean-proof
 
 distclean-proof: clean-proof
-		@rm -f $(PROOFDEP) $(PROOFDS) $(PROOFDH) $(PROOFLIB) \
-		   $(PROOFGUIDEP) $(PROOFGUIDS) $(PROOFGUIDH) \
-		   $(PROOFGUILIB)
+		@rm -f $(PROOFDEP) $(PROOFDS) $(PROOFDH) $(PROOFLIB)
 
 distclean::     distclean-proof

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRotateManip.cxx,v 1.6 2006/01/30 17:42:06 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRotateManip.cxx,v 1.7 2006/02/23 16:44:52 brun Exp $
 // Author:  Richard Maunder  04/10/2005
 
 /*************************************************************************
@@ -28,6 +28,29 @@
 //////////////////////////////////////////////////////////////////////////
 
 ClassImp(TGLRotateManip)
+
+
+//______________________________________________________________________________
+Double_t Angle(const TGLVector3 & v1, const TGLVector3 & v2)
+{
+   // Calculate unsigned angle between vectors v1 and v2
+   return TMath::ACos(Dot(v1, v2) / (v1.Mag() * v2.Mag()));
+}
+
+//______________________________________________________________________________
+Double_t Angle(const TGLVector3 & v1, const TGLVector3 & v2, const TGLVector3 & ref)
+{
+   // Calculate signed angle between vectors v1 and v2, using ref to define right handed coord system
+   // If v1.v2 parallel to ref vector: +ive for clockwise, -ive for anticlockwise
+   // If v1.v2 antiparallel to ref vector: -ive for clockwise, +ive for anticlockwise
+   TGLVector3 cross = Cross(v1, v2);
+   if (Dot(cross,ref) > 0.0) {
+      return Angle(v1, v2);
+   } else {
+      return -Angle(v1, v2);
+   }
+}
+
 
 //______________________________________________________________________________
 TGLRotateManip::TGLRotateManip() :

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.27 2006/05/24 15:31:40 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.28 2006/07/03 16:10:43 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TGeometry.h"
+#include "TMath.h"
 
 #include <assert.h>
 

@@ -37,6 +37,7 @@
 #include "TGResourcePool.h"
 #include "TImage.h"
 #include "TEnv.h"
+#include "TMath.h"
 
 #include "TGSpeedo.h"
 

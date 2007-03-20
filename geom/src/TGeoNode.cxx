@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.39 2006/10/20 08:38:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.40 2006/12/06 15:09:11 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -77,6 +77,7 @@
 #include "TGeoVolume.h"
 #include "TVirtualGeoPainter.h"
 #include "TGeoNode.h"
+#include "TMath.h"
 
 // statics and globals
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.29 2006/04/06 13:47:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.31 2007/01/16 14:41:22 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -269,8 +269,9 @@ void TEnvRec::ChangeValue(const char *v, const char *, EEnvLevel l,
    if (l != kEnvChange && fLevel == l && !append) {
       // use global Warning() since interpreter might not yet be initialized
       // at this stage (called from TROOT ctor)
-      ::Warning("TEnvRec::ChangeValue",
-        "duplicate entry <%s=%s> for level %d; ignored", fName.Data(), v, l);
+      if (fValue != v)
+         ::Warning("TEnvRec::ChangeValue",
+           "duplicate entry <%s=%s> for level %d; ignored", fName.Data(), v, l);
       return;
    }
    if (!append) {
@@ -406,7 +407,8 @@ TEnv::TEnv(const char *name)
       s = gSystem->ConcatFileName(gSystem->HomeDirectory(), name);
       ReadFile(s, kEnvUser);
       delete [] s;
-      ReadFile(name, kEnvLocal);
+      if (gSystem && strcmp(gSystem->HomeDirectory(), gSystem->WorkingDirectory()))
+         ReadFile(name, kEnvLocal);
    }
 }
 

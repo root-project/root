@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.42 2006/09/29 08:17:21 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetFile.cxx,v 1.45 2007/02/14 18:10:17 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -41,6 +41,8 @@
 //    methods)                                                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+#include "Bytes.h"
 
 #include "TError.h"
 #include "TEnv.h"
@@ -394,15 +396,17 @@ Bool_t TXNetFile::Open(Option_t *option, Bool_t doitparallel)
    if (recreate) {
       openOpt |= kXR_delete;
       create = kTRUE;
-   } else if (create) {
-      openOpt |= kXR_new;
-      Bool_t mkpath = (gEnv->GetValue("XNet.Mkpath", 0) == 1) ? kTRUE : kFALSE;
-      char *p = (char*)strstr(fUrl.GetOptions(), "mkpath=");
-      if (p)
-         mkpath = (*(p + strlen("mkpath=")) == '1') ? kTRUE : kFALSE;
-      if (mkpath)
-         openOpt |= kXR_mkpath;
    }
+   if (create)
+      openOpt |= kXR_new;
+
+   Bool_t mkpath = (gEnv->GetValue("XNet.Mkpath", 0) == 1) ? kTRUE : kFALSE;
+   char *p = (char*)strstr(fUrl.GetOptions(), "mkpath=");
+   if (p)
+     mkpath = (*(p + strlen("mkpath=")) == '1') ? kTRUE : kFALSE;
+   if (mkpath)
+     openOpt |= kXR_mkpath;
+
    if (read)
       openOpt |= kXR_open_read;
 

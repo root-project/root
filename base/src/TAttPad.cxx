@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttPad.cxx,v 1.6 2004/12/21 17:52:20 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttPad.cxx,v 1.7 2006/05/18 07:34:25 brun Exp $
 // Author: Rene Brun   04/01/95
 
 /*************************************************************************
@@ -136,7 +136,7 @@ void TAttPad::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TAttPad::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TAttPad::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -162,6 +162,6 @@ void TAttPad::Streamer(TBuffer &R__b)
       //====end of old versions
       
    } else {
-      TAttPad::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TAttPad::Class(),this);
    }
 }

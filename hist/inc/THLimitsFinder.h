@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.h,v 1.4 2005/12/04 10:51:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.h,v 1.5 2006/05/16 16:50:02 couet Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -23,10 +23,6 @@
 
 #ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-
-#ifndef ROOT_Htypes
-#include "Htypes.h"
 #endif
 
 class TH1;

@@ -26,6 +26,9 @@
 // Pysica Slovaca Vol. 54/ 4 (2004), pp. 385-400.
 
 
+#include "TROOT.h"
+#include "TClass.h"
+#include "TClass.h"
 #include "TColor.h"
 #include "TMath.h"
 #include "TLine.h"
@@ -185,7 +188,7 @@ void TSpectrum2Painter::Transform(Int_t it,Int_t jt,Int_t zmt)
    //    -zmt - control variable
 
    Int_t lxt,lyt,ix,iy;
-   Float_t zf = 0;
+   Double_t zf = 0;
    Double_t p1,p2;
    p1        = fXmin+fKx*(Double_t)it;
    p2        = fYmin+fKy*(Double_t)jt;
@@ -466,7 +469,7 @@ void TSpectrum2Painter::ColorModel(unsigned ui, unsigned ui1, unsigned ui2,
    unsigned uinc1=0,uinc2=0,uinc3=0,upom,i;
    Double_t a,b,c,d,h,v,s,f;
    Int_t j,iv=ui;
-   Float_t red=0,green=0,blue=0;
+   Double_t red=0,green=0,blue=0;
    if (iv<0)        iv = 0;
    else if (iv>255) iv = 255;
    if (gROOT->GetColor(250+iv)) {
@@ -785,7 +788,7 @@ void TSpectrum2Painter::Envelope(Int_t x1,Int_t y1,Int_t x2,Int_t y2)
    // Ensures hidden surface removal.
 
    Int_t x,y,krok,xold=0,yold=0,prvy,yprv=0;
-   Float_t fx,fy,fx1,fy1;
+   Double_t fx,fy,fx1,fy1;
    if (y1<fBy1) y1 = fBy1;
    if (y2<fBy1) y2 = fBy1;
    if (x1==x2) {
@@ -898,7 +901,7 @@ void TSpectrum2Painter::EnvelopeBars(Int_t x1,Int_t y1,Int_t x2,Int_t y2)
    // display modes.
 
    Int_t x,y,krok,xold=0,yold=0,prvy,xprv,yprv=0;
-   Float_t fx,fy,fx1,fy1;
+   Double_t fx,fy,fx1,fy1;
    if (x1==x2) {
       if ((y1>=fEnvelope[x1]) && (y2>=fEnvelope[x1])) {
          fLine = 0;
@@ -1071,7 +1074,7 @@ void TSpectrum2Painter::Slice(Double_t xr, Double_t yr, Double_t xs,
    // xr, yr, xs, ys. Finally it draws the line.
 
    Int_t krok,xi,yi,xj,yj,a,b,as,bs,pr,ae,be;
-   Float_t fx,fy,fx1,fy1;
+   Double_t fx,fy,fx1,fy1;
    xi = (Int_t)(fTxx*(xr-fXmin)/fKx+fTxy*(yr-fYmin)/fKy+fVx);
    xj = (Int_t)(fTxx*(xs-fXmin)/fKx+fTxy*(ys-fYmin)/fKy+fVx);
    yi = (Int_t)(fTyx*(xr-fXmin)/fKx+fTyy*(yr-fYmin)/fKy+fTyz*fZ+fVy);
@@ -1331,7 +1334,7 @@ set as follows: alpha=30, beta=30, view=90.
 <p><center><img src="gif/spectrumpainter026.jpg"></center>
 <p>Height modes group, display mode = surface, 64 x 64 channels, log scale.
 <h2><i>Function:</i></h2>
-<h2>TSpectrum2Painter::SetColorIncrements(Float_t r,Float_t g,Float_t b);</h2>
+<h2>TSpectrum2Painter::SetColorIncrements(Double_t r,Double_t g,Double_t b);</h2>
 <p> For sophisticated shading (in <b>kModeGroupLight, kModeGroupHeight</b>
 and <b>kModeGroupLightHeight</b> display modes groups) the color palette starts
 from the basic pen color (see SetPenAttr function). There is a predefined number
@@ -1450,7 +1453,7 @@ Default value: <b>width=50.</b>
 <p>Simple modes group, display mode = contours, 64 x 64 channels. Width between
 slices was set to 30.
 <h2><i>Function:</i></h2>
-<h2>TSpectrum2Painter::SetLightHeightWeight(Float_t weight)</h2>
+<h2>TSpectrum2Painter::SetLightHeightWeight(Double_t weight)</h2>
 <p>For <b>kModeGroupLightHeight</b> display modes group one can change the
 weight between both shading algorithm. The function does not apply for other
 display modes groups. Default value is: <b>weight=0.5.</b>
@@ -1540,15 +1543,13 @@ void VisA() {
    Double_t xmin,xmax,ymin,ymax,zmin,zmax,mx,my,mz;
    Double_t mxx,mxy,myx,myy,myz,px,py,kx,ky;
    Double_t bxl,bxh,byl,byh,xd,yd,a,b,rotx,roty;
-   Float_t flr,flg,flb;
    TLine  *line = new TLine();
    TBox   *box  = new TBox();
    TColor *pen_col;
    pen_col = (TColor*)(gROOT->GetListOfColors()->At(fPenColor));
-   pen_col->GetRGB(flr,flg,flb);
-   ui1 = (Int_t)(flr*256);
-   ui2 = (Int_t)(flg*256);
-   ui3 = (Int_t)(flb*256);
+   ui1 = (Int_t)(256*pen_col->GetRed());
+   ui2 = (Int_t)(256*pen_col->GetGreen());
+   ui3 = (Int_t)(256*pen_col->GetBlue());
    for (i=fBx1;i<fBx2;i++) {
       fEnvelope[i]        = fBy2;
       fEnvelopeContour[i] = fBy2;
@@ -7082,7 +7083,7 @@ void TSpectrum2Painter::SetColorAlgorithm(Int_t colorAlgorithm)
 
 
 //______________________________________________________________________________
-void TSpectrum2Painter::SetColorIncrements(Float_t r,Float_t g,Float_t b)
+void TSpectrum2Painter::SetColorIncrements(Double_t r,Double_t g,Double_t b)
 {
    // Sets color increments between two color levels for r, g, b components:
    //    -r, g, b - color increments between two color levels
@@ -7148,7 +7149,7 @@ void TSpectrum2Painter::SetContourWidth(Int_t width)
 
 
 //______________________________________________________________________________
-void TSpectrum2Painter::SetLightHeightWeight(Float_t weight)
+void TSpectrum2Painter::SetLightHeightWeight(Double_t weight)
 {
    // Sets weight between shading according to fictive light source and according to channels counts:
    //    -weight - weight between shading according to fictive light source and according to channels counts, applies only for kPicture2ModeGroupLightHeight modes group
@@ -7277,7 +7278,7 @@ void TSpectrum2Painter::GetColorAlgorithm(Int_t &colorAlgorithm)
 
 
 //______________________________________________________________________________
-void TSpectrum2Painter::GetColorIncrements(Float_t &r,Float_t &g,Float_t &b)
+void TSpectrum2Painter::GetColorIncrements(Double_t &r,Double_t &g,Double_t &b)
 {
    // Gets color increments between two color levels for r, g, b components:
    //    -r, g, b - color increments between two color levels
@@ -7333,7 +7334,7 @@ void TSpectrum2Painter::GetContourWidth(Int_t &width)
 
 
 //______________________________________________________________________________
-void TSpectrum2Painter::GetLightHeightWeight(Float_t &weight)
+void TSpectrum2Painter::GetLightHeightWeight(Double_t &weight)
 {
    // Gets weight between shading according to fictive light source and according to channels counts:
    //    -weight - weight between shading according to fictive light source and according to channels counts, applies only for kPicture2ModeGroupLightHeight modes group
@@ -7644,7 +7645,7 @@ void TSpectrum2Painter::PaintSpectrum(TH2* h2, Option_t *option)
 
    TString token;
    Int_t i1, i2, i3, i4, i5;
-   Float_t f1, f2, f3;
+   Double_t f1, f2, f3;
    Ssiz_t from = 4;
 
    // Decode the paint options.

@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TVolumeView.cxx,v 1.19 2006/10/18 15:38:07 rdm Exp $
+// @(#)root/table:$Name:  $:$Id: TVolumeView.cxx,v 1.22 2007/02/18 14:58:56 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -23,7 +23,7 @@
 #include "TVolumePosition.h"
 #include "TROOT.h"
 #include "TView.h"
-#include "TPadView3D.h"
+#include "TTablePadView3D.h"
 #include "TGeometry.h"
 #include "TVirtualPad.h"
 #include "TObjArray.h"
@@ -506,8 +506,7 @@ void TVolumeView::Draw(Option_t *option)
    opt.ToLower();
 //*-*- Clear pad if option "same" not given
    if (!gPad) {
-      if (!gROOT->GetMakeDefCanvas()) return;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    }
    if (!opt.Contains("same")) gPad->Clear();
 
@@ -536,7 +535,7 @@ void TVolumeView::Draw(Option_t *option)
    // Create a 3-D view
    TView *view = gPad->GetView();
    if (!view) {
-      view = new TView(11);
+      view = TView::CreateView(11,0,0);
       // Set the view to perform a first autorange (frame) draw.
       // TViewer3DPad will revert view to normal painting after this
       view->SetAutoRange(kTRUE);
@@ -606,13 +605,14 @@ void TVolumeView::GetLocalRange(Float_t *min, Float_t *max)
    //  Create a dummy TPad;
    TCanvas dummyPad("--Dumm--","dum",1,1);
    // Assing 3D TView
-   TView view(1);
+   TView *view = TView::CreateView(1,0,0);
 
    gGeometry->SetGeomLevel();
    gGeometry->UpdateTempMatrix();
-   view.SetAutoRange(kTRUE);
+   view->SetAutoRange(kTRUE);
    Paint("range");
-   view.GetRange(&min[0],&max[0]);
+   view->GetRange(&min[0],&max[0]);
+   delete view;
    // restore "current pad"
    if (savePad) savePad->cd();
 }
@@ -755,7 +755,7 @@ void TVolumeView::Paint(Option_t *option)
 
    if ( (0 < iLast) && (iLast < level) )  return;
 
-   TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
+   TTablePadView3D *view3D = (TTablePadView3D*)gPad->GetView3D();
 
    TVolume *thisNode  = 0;
    TVolumePosition *position = GetPosition();
@@ -804,7 +804,7 @@ void TVolumeView::PaintShape(Option_t *option)
    while( (shape = (TShape *)nextShape()) ) {
       if (!shape->GetVisibility())   continue;
       if (!rangeView) {
-         TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
+         TTablePadView3D *view3D = (TTablePadView3D*)gPad->GetView3D();
          if (view3D)
             view3D->SetLineAttr(shape->GetLineColor(),shape->GetLineWidth(),option);
       }

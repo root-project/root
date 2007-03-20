@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TConfidenceLevel.h,v 1.1 2002/09/06 19:57:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TConfidenceLevel.h,v 1.2 2003/06/23 06:11:01 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 #ifndef ROOT_TConfidenceLevel
@@ -6,10 +6,6 @@
 
 #ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-
-#ifndef ROOT_TMath
-#include "TMath.h"
 #endif
 
 //____________________________________________________________________
@@ -29,8 +25,8 @@ class TConfidenceLevel : public TObject {
    TConfidenceLevel(Int_t mc, bool onesided = kTRUE);
    virtual ~TConfidenceLevel();
    inline void SetTSD(Double_t in) { fTSD = in; } 
-   inline void SetTSB(Double_t * in) { fTSB = in; TMath::Sort(fNNMC, fTSB, fISB, 0); }
-   inline void SetTSS(Double_t * in) { fTSS = in; TMath::Sort(fNNMC, fTSS, fISS, 0); }
+   void SetTSB(Double_t * in);
+   void SetTSS(Double_t * in);
    inline void SetLRS(Double_t * in) { fLRS = in; }
    inline void SetLRB(Double_t * in) { fLRB = in; }
    inline void SetBtot(Double_t in) { fBtot = in; }

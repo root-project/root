@@ -334,7 +334,7 @@ int G__listfunc(FILE *fp,int access,char *fname,G__ifunc_table *ifunc)
 /***********************************************************************
 * void G__listfunc_pretty
 ***********************************************************************/
-int G__listfunc_pretty(FILE *fp,int access,char *fname,G__ifunc_table *ifunc, char friendlyStyle)
+int G__listfunc_pretty(FILE *fp,int access,char *fname,G__ifunc_table *iref, char friendlyStyle)
 {
   int i,n;
   char temp[G__ONELINE];
@@ -342,6 +342,7 @@ int G__listfunc_pretty(FILE *fp,int access,char *fname,G__ifunc_table *ifunc, ch
 
   G__browsing=1;
   
+  G__ifunc_table_internal* ifunc = iref ? G__get_ifunc_internal(iref) : 0;
   if(!ifunc) ifunc = G__p_ifunc;
   
   bool showHeader = !friendlyStyle;
@@ -494,25 +495,25 @@ int G__listfunc_pretty(FILE *fp,int access,char *fname,G__ifunc_table *ifunc, ch
           }
           /* print out type of return value */
 #ifndef G__OLDIMPLEMENATTION401
-          sprintf(msg,"%s",G__type2string(ifunc->para_type[i][n]
-                                         ,ifunc->para_p_tagtable[i][n]
-                                         ,ifunc->para_p_typetable[i][n]
-                                         ,ifunc->para_reftype[i][n]
-                                         ,ifunc->para_isconst[i][n]));
+          sprintf(msg,"%s",G__type2string(ifunc->param[i][n]->type
+                                         ,ifunc->param[i][n]->p_tagtable
+                                         ,ifunc->param[i][n]->p_typetable
+                                         ,ifunc->param[i][n]->reftype
+                                         ,ifunc->param[i][n]->isconst));
 #else
-          sprintf(msg,"%s",G__type2string(ifunc->para_type[i][n]
-                                         ,ifunc->para_p_tagtable[i][n]
-                                         ,ifunc->para_p_typetable[i][n]
-                                         ,ifunc->para_reftype[i][n]));
+          sprintf(msg,"%s",G__type2string(ifunc->param[i][n]->type
+                                         ,ifunc->param[i][n]->p_tagtable
+                                         ,ifunc->param[i][n]->p_typetable
+                                         ,ifunc->param[i][n]->reftype));
 #endif
           if(G__more(fp,msg)) return(1);
 
-          if(ifunc->para_name[i][n]) {
-            sprintf(msg," %s",ifunc->para_name[i][n]);
+          if(ifunc->param[i][n]->name) {
+            sprintf(msg," %s",ifunc->param[i][n]->name);
             if(G__more(fp,msg)) return(1);
           }
-          if(ifunc->para_def[i][n]) {
-            sprintf(msg,"=%s",ifunc->para_def[i][n]);
+          if(ifunc->param[i][n]->def) {
+            sprintf(msg,"=%s",ifunc->param[i][n]->def);
             if(G__more(fp,msg)) return(1);
           }
         }
@@ -577,7 +578,7 @@ int G__showstack(FILE *fout)
       sprintf(msg,"%s::",G__struct.name[local->tagnum]);
       if(G__more(fout,msg)) return(1);
     }
-    sprintf(msg,"%s(",local->ifunc->funcname[local->ifn]);
+    sprintf(msg,"%s(",G__get_ifunc_internal(local->ifunc)->funcname[local->ifn]);
     if(G__more(fout,msg)) return(1);
     for(temp1=0;temp1<local->libp->paran;temp1++) {
       if(temp1) {
@@ -703,30 +704,30 @@ static int G__display_classinheritance(FILE *fout,int tagnum,char *space)
   sprintf(addspace,"%s  ",space);
 
   for(i=0;i<baseclass->basen;i++) {
-    if(baseclass->property[i]&G__ISDIRECTINHERIT) {
-      sprintf(msg,"%s0x%-8lx ",space ,baseclass->baseoffset[i]);
+    if(baseclass->herit[i]->property&G__ISDIRECTINHERIT) {
+      sprintf(msg,"%s0x%-8lx ",space ,baseclass->herit[i]->baseoffset);
       if(G__more(fout,msg)) return(1);
-      if(baseclass->property[i]&G__ISVIRTUALBASE) {
+      if(baseclass->herit[i]->property&G__ISVIRTUALBASE) {
         sprintf(msg,"virtual ");
         if(G__more(fout,msg)) return(1);
       }
-      if(baseclass->property[i]&G__ISINDIRECTVIRTUALBASE) {
+      if(baseclass->herit[i]->property&G__ISINDIRECTVIRTUALBASE) {
         sprintf(msg,"(virtual) ");
         if(G__more(fout,msg)) return(1);
       }
       sprintf(msg,"%s %s"
-              ,G__access2string(baseclass->baseaccess[i])
-              ,G__fulltagname(baseclass->basetagnum[i],0));
+              ,G__access2string(baseclass->herit[i]->baseaccess)
+              ,G__fulltagname(baseclass->herit[i]->basetagnum,0));
       if(G__more(fout,msg)) return(1);
       temp[0]='\0';
-      G__getcomment(temp,&G__struct.comment[baseclass->basetagnum[i]]
-                    ,baseclass->basetagnum[i]);
+      G__getcomment(temp,&G__struct.comment[baseclass->herit[i]->basetagnum]
+                    ,baseclass->herit[i]->basetagnum);
       if(temp[0]) {
         sprintf(msg," //%s",temp);
         if(G__more(fout,msg)) return(1);
       }
       if(G__more(fout,"\n")) return(1);
-      if(G__display_classinheritance(fout,baseclass->basetagnum[i],addspace))
+      if(G__display_classinheritance(fout,baseclass->herit[i]->basetagnum,addspace))
         return(1);
     }
   }
@@ -747,8 +748,8 @@ static int G__display_membervariable(FILE *fout,int tagnum,int base)
   if(base) {
     for(i=0;i<baseclass->basen;i++) {
       if(!G__browsing) return(0);
-      if(baseclass->property[i]&G__ISDIRECTINHERIT) {
-        if(G__display_membervariable(fout,baseclass->basetagnum[i],base))
+      if(baseclass->herit[i]->property&G__ISDIRECTINHERIT) {
+        if(G__display_membervariable(fout,baseclass->herit[i]->basetagnum,base))
           return(1);
       }
     }
@@ -771,7 +772,7 @@ static int G__display_membervariable(FILE *fout,int tagnum,int base)
 ****************************************************************/
 static int G__display_memberfunction(FILE *fout,int tagnum,int access,int base)
 {
-  struct G__ifunc_table *store_ifunc;
+  struct G__ifunc_table_internal *store_ifunc;
   int store_exec_memberfunc;
   struct G__inheritance *baseclass;
   int i;
@@ -781,8 +782,8 @@ static int G__display_memberfunction(FILE *fout,int tagnum,int access,int base)
   if(base) {
     for(i=0;i<baseclass->basen;i++) {
       if(!G__browsing) return(0);
-      if(baseclass->property[i]&G__ISDIRECTINHERIT) {
-        if(G__display_memberfunction(fout,baseclass->basetagnum[i]
+      if(baseclass->herit[i]->property&G__ISDIRECTINHERIT) {
+        if(G__display_memberfunction(fout,baseclass->herit[i]->basetagnum
                                      ,access,base)) return(1);
       }
     }
@@ -898,14 +899,14 @@ int G__display_class(FILE *fout,char *name,int base,int start)
       baseclass = G__struct.baseclass[i];
       if(baseclass) {
         for(j=0;j<baseclass->basen;j++) {
-          if(baseclass->property[j]&G__ISDIRECTINHERIT) {
-            if(baseclass->property[j]&G__ISVIRTUALBASE) {
+          if(baseclass->herit[j]->property&G__ISDIRECTINHERIT) {
+            if(baseclass->herit[j]->property&G__ISVIRTUALBASE) {
               sprintf(msg,"virtual ");
               if(G__more(fout,msg)) return(1);
             }
             sprintf(msg,"%s%s " 
-                    ,G__access2string(baseclass->baseaccess[j])
-                    ,G__fulltagname(baseclass->basetagnum[j],0));
+                    ,G__access2string(baseclass->herit[j]->baseaccess)
+                    ,G__fulltagname(baseclass->herit[j]->basetagnum,0));
             if(G__more(fout,msg)) return(1);
           }
         }
@@ -975,12 +976,17 @@ int G__display_class(FILE *fout,char *name,int base,int start)
             ,G__struct.line_number[tagnum]);
   }
   if(G__more(fout,msg)) return(1);
-  sprintf(msg
-          ," (tagnum=%d,voffset=%d,isabstract=%d,parent=%d,gcomp=%d:%d,d21=~cd=%x)" 
-          ,tagnum ,G__struct.virtual_offset[tagnum]
-          ,G__struct.isabstract[tagnum] ,G__struct.parent_tagnum[tagnum]
-          ,G__struct.globalcomp[tagnum],G__struct.iscpplink[tagnum]
-          ,G__struct.funcs[tagnum]);
+  sprintf(
+    msg,
+    " (tagnum=%d,voffset=%d,isabstract=%d,parent=%d,gcomp=%d:%d,funcs(dn21=~xcpd)=%x)",
+    tagnum,
+    G__struct.virtual_offset[tagnum],
+    G__struct.isabstract[tagnum],
+    G__struct.parent_tagnum[tagnum],
+    G__struct.globalcomp[tagnum],
+    G__struct.iscpplink[tagnum],
+    G__struct.funcs[tagnum]
+  );
   if(G__more(fout,msg)) return(1);
   if('$'==G__struct.name[tagnum][0]) {
     sprintf(msg," (typedef %s)",G__struct.name[tagnum]+1);
@@ -1647,8 +1653,8 @@ int G__objectmonitor(FILE *fout,long pobject,int tagnum,char *addspace)
 
   baseclass = G__struct.baseclass[tagnum];
   for(i=0;i<baseclass->basen;i++) {
-    if(baseclass->property[i]&G__ISDIRECTINHERIT) {
-      if(baseclass->property[i]&G__ISVIRTUALBASE) {
+    if(baseclass->herit[i]->property&G__ISDIRECTINHERIT) {
+      if(baseclass->herit[i]->property&G__ISVIRTUALBASE) {
         if(0>G__getvirtualbaseoffset(pobject,tagnum,baseclass,i)) {
           sprintf(msg,"%s-0x%-7lx virtual ",space
                   ,-1*G__getvirtualbaseoffset(pobject,tagnum,baseclass,i));
@@ -1659,36 +1665,36 @@ int G__objectmonitor(FILE *fout,long pobject,int tagnum,char *addspace)
         }
         if(G__more(fout,msg)) return(1);
         msg[0] = 0;
-        switch(baseclass->baseaccess[i]) {
+        switch(baseclass->herit[i]->baseaccess) {
         case G__PRIVATE:   sprintf(msg,"private: "); break;
         case G__PROTECTED: sprintf(msg,"protected: "); break;
         case G__PUBLIC:    sprintf(msg,"public: "); break;
         }
         if(G__more(fout,msg)) return(1);
-        sprintf(msg,"%s\n",G__fulltagname(baseclass->basetagnum[i],1));
+        sprintf(msg,"%s\n",G__fulltagname(baseclass->herit[i]->basetagnum,1));
         if(G__more(fout,msg)) return(1);
 #ifdef G__NEVER_BUT_KEEP
         if(G__objectmonitor(fout
-                         ,pobject+(*(long*)(pobject+baseclass->baseoffset[i]))
-                         ,baseclass->basetagnum[i],space))
+                         ,pobject+(*(long*)(pobject+baseclass->herit[i]->baseoffset))
+                         ,baseclass->herit[i]->basetagnum,space))
           return(1);
 #endif
       }
       else {
-        sprintf(msg,"%s0x%-8lx ",space ,baseclass->baseoffset[i]);
+        sprintf(msg,"%s0x%-8lx ",space ,baseclass->herit[i]->baseoffset);
         if(G__more(fout,msg)) return(1);
         msg[0] = 0;
-        switch(baseclass->baseaccess[i]) {
+        switch(baseclass->herit[i]->baseaccess) {
         case G__PRIVATE:   sprintf(msg,"private: "); break;
         case G__PROTECTED: sprintf(msg,"protected: "); break;
         case G__PUBLIC:    sprintf(msg,"public: "); break;
         }
         if(G__more(fout,msg)) return(1);
-        sprintf(msg,"%s\n",G__fulltagname(baseclass->basetagnum[i],1));
+        sprintf(msg,"%s\n",G__fulltagname(baseclass->herit[i]->basetagnum,1));
         if(G__more(fout,msg)) return(1);
         if(G__objectmonitor(fout
-                            ,pobject+baseclass->baseoffset[i]
-                            ,baseclass->basetagnum[i],space))
+                            ,pobject+baseclass->herit[i]->baseoffset
+                            ,baseclass->herit[i]->basetagnum,space))
           return(1);
       }
     }
@@ -1835,38 +1841,42 @@ int G__varmonitor(FILE *fout,G__var_array *var,char *index,char *addspace,long o
     if(G__more(fout,msg)) return(1);
     sprintf(msg,"%s",var->varnamebuf[imon1]);
     if(G__more(fout,msg)) return(1);
-    if(var->varlabel[imon1][1] 
-       || var->paran[imon1]
-       ) {
-      int ixxx;
-      for(ixxx=0;ixxx<var->paran[imon1];ixxx++) {
-        if(ixxx) {
-          sprintf(msg,"[%d]",var->varlabel[imon1][ixxx+1]);
-          if(G__more(fout,msg)) return(1);
+    if (var->varlabel[imon1][1] /* num of elements */ || var->paran[imon1]) {
+      for (int ixxx = 0; ixxx < var->paran[imon1]; ++ixxx) {
+        if (ixxx) {
+          // -- Not a special case dimension, just print it.
+          sprintf(msg, "[%d]", var->varlabel[imon1][ixxx+1]);
+          if (G__more(fout, msg)) {
+            return 1;
+          }
         }
-        else if(var->varlabel[imon1][1]==INT_MAX) {
-          strcpy(msg,"[]");
-          if(G__more(fout,msg)) return(1);
+        else if (var->varlabel[imon1][1] /* num of elements */ == INT_MAX /* unspecified length flag */) {
+          // -- Special case dimension, unspecified length.
+          strcpy(msg, "[]");
+          if (G__more(fout, msg)) {
+            return 1;
+          }
         }
         else {
-          sprintf(msg,"[%d]"
-                  ,(var->varlabel[imon1][1]+1)/var->varlabel[imon1][0]);
-          if(G__more(fout,msg)) return(1);
+          // -- Special case dimension, first dimension must be calculated.
+          sprintf(msg, "[%d]", var->varlabel[imon1][1] /* num of elements */ / var->varlabel[imon1][0] /* stride */);
+          if (G__more(fout, msg)) {
+            return 1;
+          }
         }
       }
     }
 
-    if(var->bitfield[imon1]) {
-      sprintf(msg," : %d (%d)",var->bitfield[imon1]
-              ,var->varlabel[imon1][G__MAXVARDIM-1]);
-      if(G__more(fout,msg)) return(1);
+    if (var->bitfield[imon1]) {
+      sprintf(msg, " : %d (%d)", var->bitfield[imon1], var->varlabel[imon1][G__MAXVARDIM-1]);
+      if (G__more(fout, msg)) {
+        return 1;
+      }
     }
 
-    if(-1!=offset && 0==precompiled_private && addr) {
-      if(0==var->varlabel[imon1][1]
-         && 0==var->paran[imon1]
-         ) {
-        switch(var->type[imon1]) {
+    if ((offset != -1) && !precompiled_private && addr) {
+      if (!var->varlabel[imon1][1] && !var->paran[imon1]) {
+        switch (var->type[imon1]) {
         case 'T': 
           sprintf(msg,"=\"%s\"",*(char**)addr); 
           if(G__more(fout,msg)) return(1);
@@ -2388,12 +2398,15 @@ int G__system(char *com)
 /**************************************************************************
 * G__tmpfile()
 **************************************************************************/
-FILE *G__tmpfile() {
+const char* G__tmpfilenam() {
    char dirname[MAX_PATH];
    char filename[MAX_PATH];
    if (!::GetTempPath(MAX_PATH, dirname)) return 0;
    if (!::GetTempFileName(dirname, "cint_", 0, filename)) return 0;
-   return fopen(filename, "w+bTD"); // write and read (but write first), binary, temp, and delete when closed
+   return filename;
+}
+FILE* G__tmpfile() {
+   return fopen(G__tmpfilenam(), "w+bTD"); // write and read (but write first), binary, temp, and delete when closed
 }
 
 

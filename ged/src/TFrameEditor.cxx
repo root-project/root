@@ -27,14 +27,12 @@
 //End_Html
 
 #include "TFrameEditor.h"
-#include "TGClient.h"
-#include "TGButton.h"
+#include "TGedEditor.h"
 #include "TGComboBox.h"
 #include "TGButtonGroup.h"
 #include "TGLabel.h"
 #include "TFrame.h"
 #include "TVirtualPad.h"
-#include "TClass.h"
 
 ClassImp(TFrameEditor)
 
@@ -50,8 +48,6 @@ TFrameEditor::TFrameEditor(const TGWindow *p, Int_t width,
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor of TFrame editor GUI.
-
-   fFrame = 0;   
 
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    TGButtonGroup *bgr = new TGButtonGroup(f2,3,1,3,0, "Frame Border Mode");
@@ -70,7 +66,7 @@ TFrameEditor::TFrameEditor(const TGWindow *p, Int_t width,
    f2->AddFrame(bgr, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 4, 1, 0, 0));
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
    
-   f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   TGCompositeFrame *f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    TGLabel *fSizeLbl = new TGLabel(f3, "Size:");                              
    f3->AddFrame(fSizeLbl, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 6, 1, 0, 0));
    fBsize = new TGLineWidthComboBox(f3, kFR_BSIZE);
@@ -112,21 +108,18 @@ void TFrameEditor::SetModel(TObject* obj)
 
    fFrame = (TFrame *)obj;
    
-   fAvoidSignal = kTRUE;
    Int_t par;
 
    par = fFrame->GetBorderMode();
-   if (par == -1) fBmode->SetState(kButtonDown);
-   else if (par == 1) fBmode1->SetState(kButtonDown);
-   else fBmode0->SetState(kButtonDown);
+   if (par == -1) fBmode->SetState(kButtonDown, kTRUE);
+   else if (par == 1) fBmode1->SetState(kButtonDown, kTRUE);
+   else fBmode0->SetState(kButtonDown, kTRUE);
 
    par = fFrame->GetBorderSize();
    if (par < 1) par = 1;
    if (par > 16) par = 16;
    fBsize->Select(par, kFALSE);
 
-   fAvoidSignal = kFALSE;
-   
    if (fInit) ConnectSignals2Slots();
 }
 
@@ -140,10 +133,11 @@ void TFrameEditor::DoBorderMode()
    else if (fBmode0->GetState() == kButtonDown) mode = 0;
    else mode = 1;
 
-   if (!mode) HideFrame(f3);
-   else ShowFrame(f3);
-   Layout();
-   
+   if (!mode) {
+      fBsize->SetEnabled(kFALSE);
+   } else {
+      fBsize->SetEnabled(kTRUE);
+   }
    fFrame->SetBorderMode(mode);
    Update();
    gPad->Modified();

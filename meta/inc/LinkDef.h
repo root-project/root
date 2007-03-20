@@ -1,4 +1,4 @@
-/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.16 2005/05/27 03:00:05 pcanal Exp $ */
+/* @(#)root/meta:$Name:  $:$Id: LinkDef.h,v 1.19 2007/02/08 18:16:01 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -35,8 +35,9 @@
 #pragma link C++ class TInterpreter;
 #pragma link C++ class TClassMenuItem;
 #pragma link C++ class TVirtualIsAProxy;
+#pragma link C++ class TVirtualStreamerInfo-;
 #pragma link C++ class TIsAProxy;
-
+#pragma link C++ class TRealData+;
 #pragma link C++ class TStreamerBase-;
 #pragma link C++ class TStreamerBasicPointer-;
 #pragma link C++ class TStreamerLoop-;
@@ -49,7 +50,6 @@
 #pragma link C++ class TStreamerSTL-;
 #pragma link C++ class TStreamerSTLstring-;
 #pragma link C++ class TStreamerElement-;
-#pragma link C++ class TStreamerInfo-;
 #pragma link C++ class TToggle;
 #pragma link C++ class TToggleGroup;
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.83 2006/10/20 08:38:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.84 2006/11/03 21:22:31 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -134,6 +134,7 @@ private :
    Int_t                *fOverlapClusters;  //! internal array for overlaps
    Int_t                 fNLevel;           // maximum accepted level in geometry
    Int_t                 fNmany;            //! number of overlapping nodes on current branch
+   Int_t                 fNextDaughterIndex; //! next daughter index after FindNextBoundary
    Double_t             *fDblBuffer;        //! transient dbl buffer
    Double_t              fLastPoint[3];     //! last point for which safety was computed
    TGeoVolume           *fPaintVolume;      //! volume currently painted
@@ -179,6 +180,7 @@ public:
    void                   CdDown(Int_t index);
    void                   CdUp();
    void                   CdTop();
+   void                   CdNext();
    void                   GetBranchNames(Int_t *names) const;
    void                   GetBranchNumbers(Int_t *copyNumbers, Int_t *volumeNumbers) const;
    void                   GetBranchOnlys(Int_t *isonly) const;
@@ -342,6 +344,7 @@ public:
    TGeoPhysicalNode      *MakeAlignablePN(TGeoPNEntry *entry);
    TGeoPhysicalNode      *MakePhysicalNode(const char *path=0);
    void                   ClearPhysicalNodes(Bool_t mustdelete=kFALSE);
+   void                   RefreshPhysicalNodes(Bool_t lock=kTRUE);
    TVirtualGeoTrack      *MakeTrack(Int_t id, Int_t pdgcode, TObject *particle);
    TGeoVolumeAssembly    *MakeVolumeAssembly(const char *name);
    TGeoVolumeMulti       *MakeVolumeMulti(const char *name, const TGeoMedium *medium);

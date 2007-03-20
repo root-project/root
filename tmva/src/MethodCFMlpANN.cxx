@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodCFMlpANN.cxx,v 1.35 2006/11/17 00:21:35 stelzer Exp $    
+// @(#)root/tmva $Id: MethodCFMlpANN.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -63,6 +63,7 @@
 // End_Html
 //_______________________________________________________________________
 
+#include <cmath>
 #include "TMatrix.h"
 #include "TObjString.h"
 #include "Riostream.h"

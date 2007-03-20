@@ -438,7 +438,7 @@ int Cint::G__CallFunc::ExecInterpretedFunc(G__value* presult)
     G__asm_index = method.Index();
     G__asm_noverflow = 0;
     ret = G__interpret_func(presult,(char*)method.Name()
-		            ,&para,method.Hash(),method.ifunc()
+		            ,&para,method.Hash(),G__get_ifunc_internal(method.ifunc())
 			    ,G__EXACT,G__TRYNORMAL);
     G__asm_exec = store_asm_exec;
     G__asm_index= store_asm_index;
@@ -449,7 +449,7 @@ int Cint::G__CallFunc::ExecInterpretedFunc(G__value* presult)
 ///////////////////////////////////////////////////////////////////////////
 void Cint::G__CallFunc::SetFuncType() {
   if(method.IsValid()) {
-    struct G__ifunc_table *ifunc = method.ifunc();
+    struct G__ifunc_table_internal *ifunc = G__get_ifunc_internal(method.ifunc());
     int ifn = method.Index();
     result.type = ifunc->type[ifn];
     result.tagnum = ifunc->p_tagtable[ifn];

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodANNBase.cxx,v 1.49 2006/11/17 14:59:23 stelzer Exp $
+// @(#)root/tmva $Id: MethodANNBase.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $
 // Author: Andreas Hoecker, Matt Jachowski
 
 /**********************************************************************************
@@ -29,6 +29,7 @@
 //                                                                      
 //_______________________________________________________________________
 
+#include "TDirectory.h"
 #include "TString.h"
 #include <vector>
 #include "TTree.h"

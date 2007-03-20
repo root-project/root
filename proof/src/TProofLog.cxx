@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.97 2006/11/28 12:10:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofLog.cxx,v 1.1 2006/12/03 23:34:03 rdm Exp $
 // Author: G. Ganis   31/08/06
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 #include "TMacro.h"
 #include "TProofLog.h"
 #include "TProofMgr.h"
+#include "TObjString.h"
 #include "TUrl.h"
 
 

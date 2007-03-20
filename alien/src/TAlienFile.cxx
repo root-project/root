@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.22 2006/10/05 14:56:24 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.25 2007/03/19 16:55:55 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -372,6 +372,7 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t * option,
          TString lUrloption;
          lUrloption = "zip=";
          lUrloption += purl.GetAnchor();
+         lUrloption += "&mkpath=1";
          lUrl.SetFile(lUrlfile);
          lUrl.SetOptions(lUrloption);
       } else {
@@ -382,9 +383,19 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t * option,
             TString lUrloption;
             lUrloption = "zip=";
             lUrloption += anchor;
+            lUrloption += "&mkpath=1";
             lUrl.SetFile(lUrlfile);
             //      lUrl.SetAnchor(anchor);
             lUrl.SetOptions(lUrloption);
+         } else {
+            TString loption;
+            loption = lUrl.GetOption();
+            if (loption.Length()) {
+               loption += "&mkpath=1";
+               lUrl.SetOptions(loption.Data());
+            } else {
+               lUrl.SetOptions("mkpath=1");
+            }
          }
       }
 
@@ -406,7 +417,11 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t * option,
       newopt = nUrl.GetOptions();
 
       // add the original options from the alien URL
-      nUrl.SetOptions(newopt + TString("&") + oldopt + TString("&"));
+      if (oldopt.Length()) {
+         nUrl.SetOptions(newopt + TString("&") + oldopt);
+      } else {
+         nUrl.SetOptions(newopt);
+      }
 
       fAUrl = nUrl;
       delete result;
@@ -499,3 +514,52 @@ void TAlienFile::Close(Option_t * option)
    gSystem->Unsetenv("GCLIENT_EXTRA_ARG");
    TXNetFile::Close(option);
 }
+
+//______________________________________________________________________________
+TString TAlienFile::SUrl(const char* lfn)
+{
+   //what is this function doing ? !!
+   TString command="";
+   TString surl="";
+   if (!lfn) {
+      return surl;
+   }
+
+   TUrl lurl(lfn);
+   command = "access -p read ";
+   command += lurl.GetFile();
+
+   TGridResult* result;
+
+   if (!gGrid) {
+      ::Error("SUrl","No grid connection");
+      return surl;
+   }
+
+   result = gGrid->Command(command.Data(),kFALSE,TAlien::kOUTPUT);
+   if (!result) {
+      ::Error("SUrl","Couldn't get access URL for alien file %s",lfn);
+      return surl;
+   }
+
+   TIterator* iter = result->MakeIterator();
+   TObject *object=0;
+   TObjString *urlStr=0;
+
+   object = iter->Next();
+   if (object) {
+      TMap *map = dynamic_cast < TMap * >(object);
+      TObject *urlObject = map->GetValue("url");
+      urlStr = dynamic_cast < TObjString * >(urlObject);
+
+      if (urlStr) {
+         surl = urlStr->GetName();
+         delete object;
+         return surl;
+      }
+   }
+
+   ::Error("TAlienFIle","Couldn't get surl for alien file %s",lfn);
+   return surl;
+}
+

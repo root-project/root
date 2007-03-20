@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TMutex.cxx,v 1.8 2006/05/24 15:10:46 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TMutex.cxx,v 1.9 2006/11/20 08:08:06 rdm Exp $
 // Author: Fons Rademakers   26/06/97
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TCint.h"
 #include "TMutex.h"
 #include "TThreadFactory.h"
 #include <errno.h>
@@ -47,7 +48,11 @@ Int_t TMutex::Lock()
    // locked by this thread and this mutex is not reentrant.
 
    Long_t id = TThread::SelfId();
+#ifdef WIN32
+   if ((this == gCINTMutex) || (id == fId)) {
+#else
    if (id == fId) {
+#endif
       // we hold the mutex
       if (fRef < 0) {
          Error("Lock", "mutex is already locked by this thread %ld", fId);
@@ -71,7 +76,11 @@ Int_t TMutex::TryLock()
    // already locked by this thread and this mutex is not reentrant.
 
    Long_t id = TThread::SelfId();
+#ifdef WIN32
+   if ((this == gCINTMutex) || (id == fId)) {
+#else
    if (id == fId) {
+#endif
       // we hold the mutex
       if (fRef < 0) {
          Error("TryLock", "mutex is already locked by this thread %ld", fId);
@@ -97,7 +106,11 @@ Int_t TMutex::UnLock()
    Long_t id = fId;
    Long_t myid = TThread::SelfId();
 
+#ifdef WIN32
+   if ((this != gCINTMutex) && (id != myid)) {
+#else
    if (id != myid) {
+#endif
       // we do not own the mutex, figure out what happened
       if (id == -1) {
          Error("UnLock", "thread %ld tries to unlock unlocked mutex", myid);

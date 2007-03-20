@@ -23,8 +23,8 @@ done
 #
 g++ $args \
   && ( if [ "$isdll" != "0" ]; then \
+          ln -sf $dllbase $dllname.a; \
           ln -sf ../bin/$dllbase $dllname; \
-          ln -sf ../bin/$dllbase $dllname.a; \
        fi )
 
 exit $?

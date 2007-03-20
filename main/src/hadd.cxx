@@ -32,6 +32,16 @@
   the Trees with
        hadd -T targetfile source1 source2 ...
   
+  Wildcarding and indirect files are also supported
+    hadd result.root  myfil*.root
+   will merge all files in myfil*.root
+    hadd result.root file1.root @list.txt file2. root myfil*.root
+    will merge file1. root, file2. root, all files in myfil*.root
+    and all files in the indirect text file list.txt ("@" as the first
+    character of the file indicates an indirect file. An indirect file
+    is a text file containing a list of other files, including other
+    indirect files, one line per file).
+    
   If the sources and and target compression levels are identical (default),
   the program uses the TChain::Merge function with option "fast", ie
   the merge will be done without  unzipping or unstreaming the baskets 
@@ -41,12 +51,14 @@
   Authors: Rene Brun, Dirk Geppert, Sven A. Schmidt, sven.schmidt@cern.ch
          : rewritten from scratch by Rene Brun (30 November 2005)
             to support files with nested directories.
+           Toby Burnett implemented the possibility to use indirect files.
  */
 
 #include "RConfig.h"
 #include <string>
 #include "TChain.h"
 #include "TFile.h"
+#include "THashList.h"
 #include "TH1.h"
 #include "TKey.h"
 #include "TObjString.h"
@@ -58,9 +70,12 @@ TFile *Target, *Source;
 Bool_t noTrees;
 Bool_t fastMethod;
 
+int AddFile(TList* sourcelist, std::string entry, int newcomp) ;
 void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir );
 
-int main( int argc, char **argv ) {
+//___________________________________________________________________________
+int main( int argc, char **argv ) 
+{
 
    if ( argc < 4 || "-h" == string(argv[1]) || "--help" == string(argv[1]) ) {
       cout << "Usage: " << argv[0] << " [-f] [-T] targetfile source1 source2 [source3 ...]" << endl;
@@ -83,11 +98,11 @@ int main( int argc, char **argv ) {
    noTrees = (!strcmp(argv[1],"-T") || !strcmp(argv[2],"-T"));
    Int_t newcomp = 1;
    char ft[4];
-   for (int j=0;j<9;j++) {
+   for (int j=0;j<=9;j++) {
       sprintf(ft,"-f%d",j);
       if (!strcmp(argv[1],ft) || !strcmp(argv[2],ft)) {
          force = kTRUE;
-          newcomp = j;
+         newcomp = j;
          break;
       }
    }
@@ -97,6 +112,7 @@ int main( int argc, char **argv ) {
    if (noTrees) ffirst++;
 
    cout << "Target file: " << argv[ffirst-1] << endl;
+   
    Target = TFile::Open( argv[ffirst-1], (force?"RECREATE":"CREATE") );
    if (!Target || Target->IsZombie()) {
       cerr << "Error opening target file (does " << argv[ffirst-1] << " exist?)." << endl;
@@ -112,10 +128,7 @@ int main( int argc, char **argv ) {
   
    fastMethod = kTRUE;
    for ( int i = ffirst; i < argc; i++ ) {
-      cout << "Source file " << i-ffirst+1 << ": " << argv[i] << endl;
-      Source = TFile::Open( argv[i] );
-      FileList->Add(Source);
-      if (newcomp != Source->GetCompressionLevel())  fastMethod = kFALSE;
+      if( AddFile(FileList, argv[i], newcomp) !=0 ) return 1;
    }
    if (!fastMethod) {
       cout <<"Sources and Target have different compression levels"<<endl;
@@ -130,8 +143,44 @@ int main( int argc, char **argv ) {
    return 0;
 }
 
-void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir ) {
+//___________________________________________________________________________
+int AddFile(TList* sourcelist, std::string entry, int newcomp) 
+{
+   // add a new file to the list of files
+   static int count(0);
+   if( entry.empty() ) return 0;
+   size_t j =entry.find_first_not_of(' ');
+   if( j==std::string::npos ) return 0;
+   entry = entry.substr(j);
+   if( entry.substr(0,1)=="@"){
+      std::ifstream indirect_file(entry.substr(1).c_str() );
+      if( ! indirect_file.is_open() ) {
+         std::cerr<< "Could not open indirect file " << entry.substr(1) << std::endl;
+         return 1;
+      }
+      while( indirect_file ){
+         std::string line;
+         std::getline(indirect_file, line);
+         if( AddFile(sourcelist, line, newcomp)!=0 )return 1;;
+      }
+      return 0;
+   }
+   cout << "Source file " << (++count) << ": " << entry << endl;
 
+   TFile* source = TFile::Open( entry.c_str());
+   if( source==0 ){
+      return 1;
+   }
+   sourcelist->Add(source);
+   if (newcomp != source->GetCompressionLevel())  fastMethod = kFALSE;
+   return 0;
+}
+
+
+//___________________________________________________________________________
+void MergeRootfile( TDirectory *target, TList *sourcelist, Int_t isdir ) 
+{
+   // Merge all objects in a directory
    cout << "Target path: " << target->GetPath() << endl;
    TString path( (char*)strstr( target->GetPath(), ":" ) );
    path.Remove( 0, 2 );

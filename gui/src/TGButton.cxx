@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.73 2006/08/10 15:38:39 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.74 2006/11/22 13:50:40 antcheva Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -30,8 +30,28 @@
 // TGButton is a button abstract base class. It defines general button  //
 // behaviour.                                                           //
 //                                                                      //
+// TGTextButton and TGPictureButton yield an action as soon as they are //
+// clicked. These buttons usually provide fast access to frequently     //
+// used or critical commands. They may appear alone or placed in a      //
+// group.                                                               //
+//                                                                      //
+// The action they perform can be inscribed with a meaningful tooltip   //
+// set by SetToolTipText(const char* text, Long_t delayms=400).         //
+//                                                                      //
+// The text button has a label indicating the action to be taken when   //
+// the button is pressed. The text can be a hot string ("&Exit") that   //
+// defines the label "Exit" and keyboard mnemonics Alt+E for button     //
+// selection. A button label can be changed by SetText(new_label).      //
+//                                                                      //
 // Selecting a text or picture button will generate the event:          //
 // kC_COMMAND, kCM_BUTTON, button id, user data.                        //
+//                                                                      //
+// The purpose of TGCheckButton and TGRadioButton is for selecting      //
+// different options. Like text buttons, they have text or hot string   //
+// as a label.                                                          //
+//                                                                      //
+// Radio buttons are grouped usually in logical sets of two or more     //
+// buttons to present mutually exclusive choices.                       //
 //                                                                      //
 // Selecting a check button will generate the event:                    //
 // kC_COMMAND, kCM_CHECKBUTTON, button id, user data.                   //
@@ -108,8 +128,8 @@ TGButton::TGButton(const TGWindow *p, Int_t id, GContext_t norm, UInt_t options)
    }
 
    gVirtualX->GrabButton(fId, kButton1, kAnyModifier,
-                    kButtonPressMask | kButtonReleaseMask,
-                    kNone, kNone);
+                         kButtonPressMask | kButtonReleaseMask,
+                         kNone, kNone);
 
    AddInput(kEnterWindowMask | kLeaveWindowMask);
    SetWindowName();
@@ -926,7 +946,7 @@ void TGCheckButton::PSetState(EButtonState state, Bool_t emit)
    if (state != fState) {
       fState = state;
 
-      if (emit || fGroup) {
+      if (emit) {
          // button signals
          EmitSignals();
       }
@@ -952,18 +972,23 @@ Bool_t TGCheckButton::HandleButton(Event_t *event)
    // only allow button1 events
    if (event->fType == kButtonPress) {
       fgReleaseBtn = 0;
-      if (in) fOptions |= kSunkenFrame;
+      if (in) {
+         fOptions |= kSunkenFrame;
+         Pressed();
+      }
    } else { // ButtonRelease
       if (in) {
          PSetState((fPrevState == kButtonUp) ? kButtonDown : kButtonUp, kFALSE);
          click = (fState != fPrevState);
          fPrevState = fState;
+         Released();
       }
       fgReleaseBtn = fId;
       fOptions &= ~kSunkenFrame;
    }
    if (click) {
-      EmitSignals();
+      Clicked();
+      Toggled(fState == kButtonDown);
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_CHECKBUTTON),
                   fWidgetId, (Long_t) fUserData);
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_CHECKBUTTON),
@@ -1222,7 +1247,7 @@ void TGRadioButton::PSetState(EButtonState state, Bool_t emit)
    if (state != fState) {
       fPrevState = fState = state;
 
-      if (emit || fGroup) {
+      if (emit) {
          // button signals
          EmitSignals();
       }
@@ -1245,24 +1270,27 @@ Bool_t TGRadioButton::HandleButton(Event_t *event)
 
    if (event->fType == kButtonRelease) {
       if (in) {
-         PSetState(kButtonDown, kFALSE);
-
-         fPrevState = fState;
-
-         EmitSignals();
+         fState = kButtonDown;
+         Released();
          SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_RADIOBUTTON),
                      fWidgetId, (Long_t) fUserData);
          fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_RADIOBUTTON),
                               fWidgetId, (Long_t) fUserData);
+         if (fState != fPrevState) {
+            Clicked();
+            Toggled(fState == kButtonDown);
+            fPrevState = fState;
+         }
       }
       fOptions &= ~kSunkenFrame;
       fgReleaseBtn = fId;
-   } else { //
+   } else if (event->fType == kButtonPress) { // button pressed
       fgReleaseBtn = 0;
-
-      if (in) fOptions |= kSunkenFrame;
+      if (in) {
+         fOptions |= kSunkenFrame;
+         Pressed();
+      }
    }
-
    DoRedraw();
    return kTRUE;
 }

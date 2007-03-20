@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.13 2005/12/08 17:37:48 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.14 2006/10/18 09:26:58 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 
 #include <stdio.h>
 #include "snprintf.h"
+#include "Varargs.h"
 #include "Riostream.h"
 #include "TError.h"
 #include "TSystem.h"

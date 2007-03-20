@@ -1,5 +1,5 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.114 2006/05/18 10:46:26 brun Exp $
-// Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.121 2007/03/05 14:26:12 rdm Exp $
+// Author: Rene Brun, Olivier Couet, Fons Rademakers, Valeri Onuchin, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
  * Copyright (C) 1995-2001, Rene Brun and Fons Rademakers.               *
@@ -30,6 +30,7 @@
 #include <wchar.h>
 #include "gdk/gdkkeysyms.h"
 #include "xatom.h"
+#include <winuser.h>
 
 #include "TROOT.h"
 #include "TApplication.h"
@@ -51,8 +52,12 @@
 #include "TString.h"
 #include "TObjString.h"
 #include "TObjArray.h"
+#include "TEnv.h"
 #include "RStipples.h"
 
+#ifndef IDC_HAND
+#define IDC_HAND  MAKEINTRESOURCE(32649)
+#endif
 
 extern "C" {
 void gdk_win32_draw_rectangle (GdkDrawable    *drawable,
@@ -98,8 +103,32 @@ void gdk_win32_draw_lines     (GdkDrawable    *drawable,
 
 };
 
+//////////// internal classes & structures (very private) ////////////////
+
+struct XWindow_t {
+   Int_t    open;                 // 1 if the window is open, 0 if not
+   Int_t    double_buffer;        // 1 if the double buffer is on, 0 if not
+   Int_t    ispixmap;             // 1 if pixmap, 0 if not
+   GdkDrawable *drawing;          // drawing area, equal to window or buffer
+   GdkDrawable *window;           // win32 window
+   GdkDrawable *buffer;           // pixmap used for double buffer
+   UInt_t   width;                // width of the window
+   UInt_t   height;               // height of the window
+   Int_t    clip;                 // 1 if the clipping is on
+   Int_t    xclip;                // x coordinate of the clipping rectangle
+   Int_t    yclip;                // y coordinate of the clipping rectangle
+   UInt_t   wclip;                // width of the clipping rectangle
+   UInt_t   hclip;                // height of the clipping rectangle
+   ULong_t *new_colors;           // new image colors (after processing)
+   Int_t    ncolors;              // number of different colors
+};
+
+
 /////////////////////////////////// globals //////////////////////////////////
 int gdk_debug_level;
+
+namespace {
+/////////////////////////////////// globals //////////////////////////////////
 
 GdkAtom gClipboardAtom = GDK_NONE;
 static XWindow_t *gCws;         // gCws: pointer to the current window
@@ -313,27 +342,6 @@ static KeySymbolMap_t gKeyMap[] = {
    {GDK_KP_Decimal, kKey_Period},
    {GDK_KP_Divide, kKey_Slash},
    {0, (EKeySym) 0}
-};
-
-
-//////////// internal classes & structures (very private) ////////////////
-
-struct XWindow_t {
-   Int_t    open;                 // 1 if the window is open, 0 if not
-   Int_t    double_buffer;        // 1 if the double buffer is on, 0 if not
-   Int_t    ispixmap;             // 1 if pixmap, 0 if not
-   GdkDrawable *drawing;          // drawing area, equal to window or buffer
-   GdkDrawable *window;           // win32 window
-   GdkDrawable *buffer;           // pixmap used for double buffer
-   UInt_t   width;                // width of the window
-   UInt_t   height;               // height of the window
-   Int_t    clip;                 // 1 if the clipping is on
-   Int_t    xclip;                // x coordinate of the clipping rectangle
-   Int_t    yclip;                // y coordinate of the clipping rectangle
-   UInt_t   wclip;                // width of the clipping rectangle
-   UInt_t   hclip;                // height of the clipping rectangle
-   ULong_t *new_colors;           // new image colors (after processing)
-   Int_t    ncolors;              // number of different colors
 };
 
 
@@ -660,35 +668,6 @@ void TGWin32MainThread::UnlockMSG()
    if (fMessageMutex) ::LeaveCriticalSection(fMessageMutex);
 }
 
-//______________________________________________________________________________
-static Bool_t MessageProcessingFunc(MSG *msg)
-{
-   // windows message processing procedure
-
-   Bool_t ret = kFALSE;
-
-   if (msg->message == TGWin32ProxyBase::fgPostMessageId) {
-      if (msg->wParam) {
-         TGWin32ProxyBase *proxy = (TGWin32ProxyBase*)msg->wParam;
-         proxy->ExecuteCallBack(kTRUE);
-      } else {
-         ret = kTRUE;
-      }
-   } else if (msg->message == TGWin32ProxyBase::fgPingMessageId) {
-      TGWin32ProxyBase::GlobalUnlock();
-   } else {
-      if ( (msg->message >= WM_NCMOUSEMOVE) &&
-           (msg->message <= WM_NCMBUTTONDBLCLK) ) {
-         TGWin32ProxyBase::GlobalLock();
-      }
-      TGWin32MainThread::LockMSG();
-      TranslateMessage(msg);
-      DispatchMessage(msg);
-      TGWin32MainThread::UnlockMSG();
-   }
-   return ret;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 class TGWin32RefreshTimer : public TTimer {
 
@@ -702,12 +681,15 @@ public:
 
       while (::PeekMessage(&msg, NULL, NULL, NULL, PM_NOREMOVE)) {
          ::PeekMessage(&msg, NULL, NULL, NULL, PM_REMOVE);
-         MessageProcessingFunc(&msg);
+         if (!gVirtualX)
+            Sleep(200); // avoid start-up race
+         if (gVirtualX)
+            ((TGWin32*)gVirtualX)->GUIThreadMessageFunc(&msg);
       }
       return kFALSE;
    }
 };
-
+/*
 //______________________________________________________________________________
 static DWORD WINAPI MessageProcessingLoop(void *p)
 {
@@ -749,6 +731,16 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
    }
    return 0;
 }
+*/
+
+Bool_t GUIThreadMessageWrapper(MSG* msg)
+{
+   // Static wrapper for handling GUI messages.
+   // Forwards from TWinNTSystem's GUIThreadMessageProcessingLoop()
+   // to TGWin32::GUIThreadMessageFunc()
+
+   return ((TGWin32*)gVirtualX)->GUIThreadMessageFunc(msg);
+}
 
 //______________________________________________________________________________
 TGWin32MainThread::TGWin32MainThread()
@@ -759,16 +751,18 @@ TGWin32MainThread::TGWin32MainThread()
    ::InitializeCriticalSection(fCritSec);
    fMessageMutex = new CRITICAL_SECTION;
    ::InitializeCriticalSection(fMessageMutex);
-   fHandle = ::CreateThread( NULL, 0, &MessageProcessingLoop, 0, 0, &fId );
-   SetThreadAffinityMask(fHandle, 1);
+   fHandle = ((TWinNTSystem*)gSystem)->GetGUIThreadHandle();
+   fId = ((TWinNTSystem*)gSystem)->GetGUIThreadId();
+   ((TWinNTSystem*)gSystem)->SetGUIThreadMsgHandler(GUIThreadMessageWrapper);
 }
 
+} // unnamed namespace
 
 ///////////////////////// TGWin32 implementation ///////////////////////////////
 ClassImp(TGWin32)
 
 //______________________________________________________________________________
-TGWin32::TGWin32()
+TGWin32::TGWin32(): fRefreshTimer(0)
 {
    // Default constructor.
 
@@ -777,12 +771,13 @@ TGWin32::TGWin32()
 }
 
 //______________________________________________________________________________
-TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title)
+TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title), fRefreshTimer(0)
 {
    // Normal Constructor.
 
    fScreenNumber = 0;
    fHasTTFonts = kFALSE;
+   fUseSysPointers = kFALSE;
    fTextAlignH = 1;
    fTextAlignV = 1;
    fTextAlign = 7;
@@ -824,6 +819,51 @@ TGWin32::~TGWin32()
    // destructor.
 
    CloseDisplay();
+   delete fRefreshTimer;
+}
+
+//______________________________________________________________________________
+Bool_t TGWin32::GUIThreadMessageFunc(MSG* msg)
+{
+   // Message processing function for the GUI thread.
+   // Kicks in once TGWin32 becomes active, and "replaces" the dummy one
+   // in TWinNTSystem; see TWinNTSystem.cxx's GUIThreadMessageProcessingLoop().
+
+   if (!fRefreshTimer)
+      // periodically we refresh windows
+      // Don't create refresh timer if the application has been created inside PVSS
+      if (gApplication) {
+         TString arg = gSystem->BaseName(gApplication->Argv(0));
+         if (!arg.Contains("PVSS"))
+            fRefreshTimer = new TGWin32RefreshTimer();
+         else
+            // dummy object to not continuosly test for PVSS if !fRefreshTimer
+            fRefreshTimer = new TObject();
+      } else
+         fRefreshTimer = new TGWin32RefreshTimer();
+
+   Bool_t ret = kFALSE;
+
+   if (msg->message == TGWin32ProxyBase::fgPostMessageId) {
+      if (msg->wParam) {
+         TGWin32ProxyBase *proxy = (TGWin32ProxyBase*)msg->wParam;
+         proxy->ExecuteCallBack(kTRUE);
+      } else {
+         ret = kTRUE;
+      }
+   } else if (msg->message == TGWin32ProxyBase::fgPingMessageId) {
+      TGWin32ProxyBase::GlobalUnlock();
+   } else {
+      if ( (msg->message >= WM_NCMOUSEMOVE) &&
+           (msg->message <= WM_NCMBUTTONDBLCLK) ) {
+         TGWin32ProxyBase::GlobalLock();
+      }
+      TGWin32MainThread::LockMSG();
+      TranslateMessage(msg);
+      DispatchMessage(msg);
+      TGWin32MainThread::UnlockMSG();
+   }
+   return ret;
 }
 
 //______________________________________________________________________________
@@ -1006,24 +1046,46 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
    gNullCursor = gdk_cursor_new_from_pixmap((GdkDrawable *)pixmp1, (GdkDrawable *)pixmp2,
                                              &fore, &back, 0, 0);
    // Create cursors
-   fCursors[kBottomLeft] = gdk_cursor_new(GDK_BOTTOM_LEFT_CORNER);
-   fCursors[kBottomRight] = gdk_cursor_new(GDK_BOTTOM_RIGHT_CORNER);
-   fCursors[kTopLeft] = gdk_cursor_new(GDK_TOP_LEFT_CORNER);
-   fCursors[kTopRight] = gdk_cursor_new(GDK_TOP_RIGHT_CORNER);
-   fCursors[kBottomSide] =  gdk_cursor_new(GDK_BOTTOM_SIDE);
-   fCursors[kLeftSide] = gdk_cursor_new(GDK_LEFT_SIDE);
-   fCursors[kTopSide] = gdk_cursor_new(GDK_TOP_SIDE);
-   fCursors[kRightSide] = gdk_cursor_new(GDK_RIGHT_SIDE);
-   fCursors[kMove] = gdk_cursor_new(GDK_FLEUR);
-   fCursors[kCross] =gdk_cursor_new(GDK_CROSSHAIR);
-   fCursors[kArrowHor] = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
-   fCursors[kArrowVer] = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
-   fCursors[kHand] = gdk_cursor_new(GDK_HAND2);
+   if (gEnv->GetValue("Win32.UseSysPointers", 0)) {
+      fUseSysPointers = kTRUE;
+      fCursors[kBottomLeft] = gdk_syscursor_new((ULong_t)IDC_SIZENESW);
+      fCursors[kBottomRight] = gdk_syscursor_new((ULong_t)IDC_SIZENWSE);
+      fCursors[kTopLeft] = gdk_syscursor_new((ULong_t)IDC_SIZENWSE);
+      fCursors[kTopRight] = gdk_syscursor_new((ULong_t)IDC_SIZENESW);
+      fCursors[kBottomSide] =  gdk_syscursor_new((ULong_t)IDC_SIZENS);
+      fCursors[kLeftSide] = gdk_syscursor_new((ULong_t)IDC_SIZEWE);
+      fCursors[kTopSide] = gdk_syscursor_new((ULong_t)IDC_SIZENS);
+      fCursors[kRightSide] = gdk_syscursor_new((ULong_t)IDC_SIZEWE);
+      fCursors[kMove] = gdk_syscursor_new((ULong_t)IDC_SIZEALL);
+      fCursors[kCross] =gdk_syscursor_new((ULong_t)IDC_CROSS);
+      fCursors[kArrowHor] = gdk_syscursor_new((ULong_t)IDC_SIZEWE);
+      fCursors[kArrowVer] = gdk_syscursor_new((ULong_t)IDC_SIZENS);
+      fCursors[kHand] = gdk_syscursor_new((ULong_t)IDC_HAND);
+      fCursors[kPointer] = gdk_syscursor_new((ULong_t)IDC_ARROW);
+      fCursors[kCaret] =  gdk_syscursor_new((ULong_t)IDC_IBEAM);
+      fCursors[kWatch] = gdk_syscursor_new((ULong_t)IDC_WAIT);
+   }
+   else {
+      fUseSysPointers = kFALSE;
+      fCursors[kBottomLeft] = gdk_cursor_new(GDK_BOTTOM_LEFT_CORNER);
+      fCursors[kBottomRight] = gdk_cursor_new(GDK_BOTTOM_RIGHT_CORNER);
+      fCursors[kTopLeft] = gdk_cursor_new(GDK_TOP_LEFT_CORNER);
+      fCursors[kTopRight] = gdk_cursor_new(GDK_TOP_RIGHT_CORNER);
+      fCursors[kBottomSide] =  gdk_cursor_new(GDK_BOTTOM_SIDE);
+      fCursors[kLeftSide] = gdk_cursor_new(GDK_LEFT_SIDE);
+      fCursors[kTopSide] = gdk_cursor_new(GDK_TOP_SIDE);
+      fCursors[kRightSide] = gdk_cursor_new(GDK_RIGHT_SIDE);
+      fCursors[kMove] = gdk_cursor_new(GDK_FLEUR);
+      fCursors[kCross] =gdk_cursor_new(GDK_CROSSHAIR);
+      fCursors[kArrowHor] = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
+      fCursors[kArrowVer] = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
+      fCursors[kHand] = gdk_cursor_new(GDK_HAND2);
+      fCursors[kPointer] = gdk_cursor_new( GDK_LEFT_PTR);
+      fCursors[kCaret] =  gdk_cursor_new(GDK_XTERM);
+      fCursors[kWatch] = gdk_cursor_new(GDK_WATCH);
+   }
    fCursors[kRotate] = gdk_cursor_new(GDK_EXCHANGE);
-   fCursors[kPointer] = gdk_cursor_new( GDK_LEFT_PTR);
    fCursors[kArrowRight] = gdk_cursor_new(GDK_ARROW);
-   fCursors[kCaret] =  gdk_cursor_new(GDK_XTERM);
-   fCursors[kWatch] = gdk_cursor_new(GDK_WATCH);
 
    // Setup color information
    fRedDiv = fGreenDiv = fBlueDiv = fRedShift = fGreenShift = fBlueShift = -1;
@@ -1856,7 +1918,7 @@ Window_t TGWin32::GetCurrentWindow() const
 {
    // Return current window pointer. Protected method used by TGWin32TTF.
 
-   return (Window_t)gCws->drawing;
+   return (Window_t)(gCws ? gCws->drawing : 0);
 }
 
 //______________________________________________________________________________
@@ -2135,6 +2197,11 @@ Int_t TGWin32::InitWindow(ULong_t win)
    ::ShowWindow(window, SW_RESTORE);
    ::BringWindowToTop(window);
 
+   if (!fUseSysPointers) {
+      ::SetClassLong(window, GCL_HCURSOR,
+                    (LONG)GDK_CURSOR_XID(fCursors[kPointer]));
+   }
+   
    // Initialise the window structure
 
    gCws->drawing = gCws->window;
@@ -2216,7 +2283,10 @@ Int_t TGWin32::RequestLocator(Int_t mode, Int_t ctyp, Int_t & x, Int_t & y)
          gdk_window_set_cursor((GdkWindow *)gCws->window, (GdkCursor *)gNullCursor);
          gdk_gc_set_foreground((GdkGC *) gGCecho, &gColors[0].color);
       } else {
-         cursor = gdk_cursor_new((GdkCursorType)GDK_CROSSHAIR);
+         if (fUseSysPointers)
+            cursor = gdk_syscursor_new((ULong_t)IDC_CROSS);
+         else
+            cursor = gdk_cursor_new((GdkCursorType)GDK_CROSSHAIR);
          gdk_window_set_cursor((GdkWindow *)gCws->window, (GdkCursor *)cursor);
       }
    }
@@ -2224,7 +2294,7 @@ Int_t TGWin32::RequestLocator(Int_t mode, Int_t ctyp, Int_t & x, Int_t & y)
    // Event loop
    button_press = 0;
 
-   // Set max response time to 2 minutes to avoid timeout 
+   // Set max response time to 2 minutes to avoid timeout
    // in TGWin32ProxyBase::ForwardCallBack during RequestLocator
    TGWin32VirtualXProxy::fMaxResponseTime = 120000;
    while (button_press == 0) {
@@ -2367,7 +2437,10 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
    CurWnd = (GdkWindow *)gCws->window;
    // change the cursor shape
    if (cursor == NULL) {
-      cursor = gdk_cursor_new((GdkCursorType)GDK_QUESTION_ARROW);
+      if (fUseSysPointers)
+         cursor = gdk_syscursor_new((ULong_t)IDC_HELP);
+      else
+         cursor = gdk_cursor_new((GdkCursorType)GDK_QUESTION_ARROW);
    }
    if (cursor != 0) {
       gdk_window_set_cursor(CurWnd, cursor);
@@ -2377,7 +2450,7 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
    pt = nt;
    focuswindow = ::SetFocus((HWND)GDK_DRAWABLE_XID(CurWnd));
 
-   // Set max response time to 2 minutes to avoid timeout 
+   // Set max response time to 2 minutes to avoid timeout
    // in TGWin32ProxyBase::ForwardCallBack during RequestString
    TGWin32VirtualXProxy::fMaxResponseTime = 120000;
    TTF::SetTextFont(gTextFont);
@@ -4500,6 +4573,10 @@ Window_t TGWin32::CreateWindow(Window_t parent, Int_t x, Int_t y,
          gdk_window_set_background(newWin, &background_color);
       }
    }
+   if (!fUseSysPointers) {
+      ::SetClassLong((HWND)GDK_DRAWABLE_XID(newWin), GCL_HCURSOR, 
+                     (LONG)GDK_CURSOR_XID(fCursors[kPointer]));
+   }
    return (Window_t) newWin;
 }
 
@@ -6563,7 +6640,7 @@ void TGWin32::GetWindowSize(Drawable_t id, Int_t & x, Int_t & y,
       gdk_drawable_get_size((GdkDrawable *)id, (int*)&w, (int*)&h);
    }
    else {
-      gdk_window_get_geometry((GdkDrawable *) id, &x, &y, (int*)&w, 
+      gdk_window_get_geometry((GdkDrawable *) id, &x, &y, (int*)&w,
                               (int*)&h, &ddum);
    }
 }
@@ -6906,7 +6983,7 @@ void TGWin32::DeleteImage(Drawable_t img)
 }
 
 //______________________________________________________________________________
-unsigned char *TGWin32::GetColorBits(Drawable_t wid,  Int_t x, Int_t y, 
+unsigned char *TGWin32::GetColorBits(Drawable_t wid,  Int_t x, Int_t y,
                                      UInt_t width, UInt_t height)
 {
    // Gets DIB bits
@@ -6991,7 +7068,7 @@ Pixmap_t TGWin32::CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t
    ::ReleaseDC(NULL, hdc);
 
    SIZE size;
-   // For an obscure reason, we have to set the size of the 
+   // For an obscure reason, we have to set the size of the
    // bitmap this way before to call gdk_pixmap_foreign_new
    // otherwise, it fails...
    ::SetBitmapDimensionEx(hbitmap,width, height, &size);
@@ -7022,7 +7099,7 @@ Int_t TGWin32::AddPixmap(ULong_t pix, UInt_t w, UInt_t h)
 
       for (Int_t i = fMaxNumberOfWindows; i < newSize; ++i)
          fWindows[i].open = 0;
-   
+
       fMaxNumberOfWindows = newSize;
    }
 
@@ -7134,3 +7211,10 @@ void TGWin32::ShapeCombineMask(Window_t id, Int_t x, Int_t y, Pixmap_t mask)
    gdk_window_shape_combine_mask((GdkWindow *)id, (GdkBitmap *) mask, x, y);
 }
 
+//______________________________________________________________________________
+UInt_t TGWin32::ScreenWidthMM() const
+{
+   // Returns the width of the screen in millimeters.
+
+   return (UInt_t)gdk_screen_width_mm();
+}

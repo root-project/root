@@ -11,6 +11,7 @@ UNURANDIR    := $(MODDIR)
 UNURANDIRS   := $(UNURANDIR)/src
 UNURANDIRI   := $(UNURANDIR)/inc
 
+#UNRVERS      := unuran-1.0.devel-root
 UNRVERS      := unuran-0.8.1-root
 UNRSRCS      := $(MODDIRS)/$(UNRVERS).tar.gz
 UNRDIRS      := $(MODDIRS)/$(UNRVERS)
@@ -40,7 +41,8 @@ UNURANL      := $(MODDIRI)/LinkDef.h
 UNURANDS     := $(MODDIRS)/G__Unuran.cxx
 UNURANDO     := $(UNURANDS:.cxx=.o)
 UNURANDH     := $(UNURANDS:.cxx=.h)
-UNURANDH1    := $(MODDIRI)/TUnuran.h
+UNURANDH1    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+                
 
 UNURANH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 UNURANS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
@@ -60,7 +62,6 @@ INCLUDEFILES += $(UNURANDEP)
 
 ##### local rules #####
 include/%.h: 	$(UNURANDIRI)/%.h $(UNURANETAG)
-		echo "copy includes"
 		cp $< $@
 
 # force untar in first pass, so that in second pass UNRS is correctly set
@@ -149,4 +150,7 @@ ifeq ($(PLATFORM),win32)
 $(UNRO): CFLAGS := $(filter-out -FIsehmap.h,$(filter-out -Iinclude,$(CFLAGS) -I$(UNRDIRS) -I$(UNRDIRS)/src/ -I$(UNRDIRS)/src/utils -DHAVE_CONFIG_H))
 else
 $(UNRO): CFLAGS := $(filter-out -Iinclude,$(CFLAGS) -I$(UNRDIRS) -I$(UNRDIRS)/src/ -I$(UNRDIRS)/src/utils -DHAVE_CONFIG_H)
+endif
+ifeq ($(CC),icc)
+$(UNRO): CFLAGS += -mp
 endif

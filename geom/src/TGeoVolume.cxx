@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.95 2006/11/14 09:19:28 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.101 2007/03/01 10:32:31 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -338,6 +338,7 @@
 #include "TStyle.h"
 #include "TH2F.h"
 #include "TPad.h"
+#include "TROOT.h"
 #include "TClass.h"
 #include "TEnv.h"
 #include "TMap.h"
@@ -1577,12 +1578,8 @@ void TGeoVolume::MakeCopyNodes(const TGeoVolume *other)
 // make a new list of nodes and copy all nodes of other volume inside
    Int_t nd = other->GetNdaughters();
    if (!nd) return;
-   if (fNodes) {
-//      printf("Warning : volume %s had already nodes -> replace them\n", GetName());
-      delete fNodes;
-   }
+   if (fNodes) delete fNodes;   
    fNodes = new TObjArray();
-//   printf("other : %s\n nd=%i", other->GetName(), nd);
    for (Int_t i=0; i<nd; i++) fNodes->Add(other->GetNode(i));
    TObject::SetBit(kVolumeImportNodes);
 }      
@@ -1773,18 +1770,18 @@ void TGeoVolume::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TGeoVolume.
    if (R__b.IsReading()) {
-      TGeoVolume::Class()->ReadBuffer(R__b, this);
+      R__b.ReadClassBuffer(TGeoVolume::Class(), this);
    } else {
       if (!fVoxels) {
-         TGeoVolume::Class()->WriteBuffer(R__b, this);
+         R__b.WriteClassBuffer(TGeoVolume::Class(), this);
       } else {
          if (!fGeoManager->IsStreamingVoxels()) {
             TGeoVoxelFinder *voxels = fVoxels;
             fVoxels = 0;
-            TGeoVolume::Class()->WriteBuffer(R__b, this);
+            R__b.WriteClassBuffer(TGeoVolume::Class(), this);
             fVoxels = voxels;
          } else {
-            TGeoVolume::Class()->WriteBuffer(R__b, this);
+            R__b.WriteClassBuffer(TGeoVolume::Class(), this);
          }
       }
    }
@@ -2231,8 +2228,16 @@ void TGeoVolumeMulti::AddVolume(TGeoVolume *vol)
          fDivision->AddVolume(cell);
       }
    }      
-   if (fNodes)
-      vol->MakeCopyNodes(this);
+   if (fNodes) {
+      Int_t nd = fNodes->GetEntriesFast();
+      for (Int_t id=0; id<nd; id++) {
+         TGeoNode *node = (TGeoNode*)fNodes->At(id);
+         Bool_t many = node->IsOverlapping();
+         if (many) vol->AddNodeOverlap(node->GetVolume(), node->GetNumber(), node->GetMatrix());
+         else      vol->AddNode(node->GetVolume(), node->GetNumber(), node->GetMatrix());
+      }
+   }      
+//      vol->MakeCopyNodes(this);
 }
    
 

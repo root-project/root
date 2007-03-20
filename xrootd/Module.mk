@@ -40,7 +40,10 @@ endif
 
 ##### Xrootd executables #####
 ifneq ($(PLATFORM),win32)
-XRDEXEC     = xrootd olbd xrdcp xrd xrdpwdadmin xrdgsiproxy
+XRDEXEC     = xrootd olbd xrdcp xrd xrdpwdadmin
+ifneq ($(BUILDXRDGSI),)
+XRDEXEC    += xrdgsiproxy
+endif
 else
 XRDEXEC     = xrdcp.exe
 endif
@@ -123,7 +126,9 @@ ifneq ($(PLATFORM),win32)
 $(XRDPLUGINSA): $(XROOTDETAG)
 		@(cd $(XROOTDDIRS); \
 		RELE=`uname -r`; \
-		case "$(ARCH):$$RELE" in \
+		CHIP=`uname -m | tr '[A-Z]' '[a-z]'`; \
+		PROC=`uname -p`; \
+		case "$(ARCH):$$RELE:$$CHIP:$$PROC" in \
 		freebsd*:*)      xopt="--ccflavour=gcc";; \
 		linuxicc:*)      xopt="--ccflavour=icc --use-xrd-strlcpy";; \
 		linuxia64ecc:*)  xopt="--ccflavour=icc --use-xrd-strlcpy";; \
@@ -132,6 +137,8 @@ $(XRDPLUGINSA): $(XROOTDETAG)
 		linuxppc64gcc:*) xopt="--ccflavour=gccppc64 --use-xrd-strlcpy";; \
 		linux*:*)        xopt="--ccflavour=gcc --use-xrd-strlcpy";; \
 		macos*:*)        xopt="--ccflavour=macos";; \
+		solaris*:*:i86pc:x86*) xopt="--ccflavour=sunCCamd --use-xrd-strlcpy";; \
+		solaris*:*:i86pc:*) xopt="--ccflavour=sunCCi86pc --use-xrd-strlcpy";; \
 		solarisgcc:5.8)  xopt="--ccflavour=gcc";; \
 		solaris*:5.8)    xopt="--ccflavour=sunCC";; \
 		solarisgcc:5.9)  xopt="--ccflavour=gcc";; \
@@ -144,15 +151,30 @@ $(XRDPLUGINSA): $(XROOTDETAG)
 		if [ "x$(KRB5LIB)" = "x" ] ; then \
 		   xopt="$$xopt --disable-krb5"; \
 		fi; \
+		if [ "x$(BUILDXRDGSI)" = "x" ] ; then \
+		   xopt="$$xopt --disable-gsi"; \
+		fi; \
 		if [ ! "x$(SSLLIBDIR)" = "x" ] ; then \
 		   xlib=`echo $(SSLLIBDIR) | cut -c3-`; \
 		   xopt="$$xopt --with-ssl-libdir=$$xlib"; \
 		fi; \
 		if [ ! "x$(SSLINCDIR)" = "x" ] ; then \
-		   xopt="$$xopt --with-ssl-incdir=$(SSLINCDIR)"; \
+		   xinc=`echo $(SSLINCDIR) | cut -c3-`; \
+		   xopt="$$xopt --with-ssl-incdir=$$xinc"; \
 		fi; \
 		if [ ! "x$(SHADOWFLAGS)" = "x" ] ; then \
 		   xopt="$$xopt --enable-shadowpw"; \
+		fi; \
+		if [ ! "x$(AFSLIB)" = "x" ] ; then \
+		   xopt="$$xopt --enable-afs"; \
+		fi; \
+		if [ ! "x$(AFSLIBDIR)" = "x" ] ; then \
+		   xlib=`echo $(AFSLIBDIR) | cut -c3-`; \
+		   xopt="$$xopt --with-afs-libdir=$$xlib"; \
+		fi; \
+		if [ ! "x$(AFSINCDIR)" = "x" ] ; then \
+		   xinc=`echo $(AFSINCDIR) | cut -c3-`; \
+		   xopt="$$xopt --with-afs-incdir=$$xinc"; \
 		fi; \
 		xopt="$$xopt --disable-krb4 --enable-echo --no-arch-subdirs --disable-mon"; \
 		cd xrootd; \
@@ -186,6 +208,7 @@ else
 		@(if [ -d $(XROOTDDIRD) ]; then \
 		   rm -rf $(XROOTDDIRD); \
 		fi;)
+		@rm -f $(XROOTDETAG)
 endif
 
 clean::         clean-xrootd

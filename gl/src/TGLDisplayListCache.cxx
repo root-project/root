@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.12 2006/02/23 16:44:52 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLDisplayListCache.cxx,v 1.14 2007/02/21 17:13:05 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include "TGLDrawFlags.h"
 #include "TGLUtil.h"
 #include "TGLIncludes.h"
+#include "TVirtualGL.h"
 
 #include "Riostream.h"
 #include "TError.h"
@@ -67,7 +68,10 @@ TGLDisplayListCache::TGLDisplayListCache(Bool_t enable, UInt_t size) :
 TGLDisplayListCache::~TGLDisplayListCache()
 {
    // Destroy display list cache - deleting internal GL display list block
-   glDeleteLists(fDLBase,fSize);
+   if (gVirtualGL)
+      gVirtualGL->DeleteGLLists(fDLBase,fSize);
+   else
+      glDeleteLists(fDLBase, fSize);
 }
 
 //______________________________________________________________________________
@@ -75,19 +79,25 @@ void TGLDisplayListCache::Init()
 {
    // Initialise the cache - create the internal GL display list block of size
    // fSize
-   fDLBase = glGenLists(fSize);
+   if (gVirtualGL)
+      fDLBase = gVirtualGL->CreateGLLists(fSize);
+   else
+      fDLBase = glGenLists(fSize);
    fDLNextFree = fDLBase;
    TGLUtil::CheckError("TGLDisplayListCache::Init");
    fInit = kTRUE;
 }
 
 //______________________________________________________________________________
-Bool_t TGLDisplayListCache::Draw(const TGLDrawable & drawable, const TGLDrawFlags & flags) const
+Bool_t TGLDisplayListCache::Draw(const TGLDrawable & drawable, const TGLDrawFlags & flags)
 {
    // Draw (call) the GL dislay list entry associated with the drawable / LOD
    // flag pair, and return kTRUE. If no list item associated, return KFALSE.
    if (!fEnabled) {
       return kFALSE;
+   }
+   if (!fInit) {
+      Init();
    }
 
    // TODO: Cache the lookup here ? As may have many calls of same draw/qual in a row
@@ -188,7 +198,8 @@ Bool_t TGLDisplayListCache::CloseCapture()
 void TGLDisplayListCache::Purge()
 {
    // Purge all entries for all drawable/LOD pairs from cache
-   glDeleteLists(fDLBase,fSize);
+   if (gVirtualGL)
+      gVirtualGL->DeleteGLLists(fDLBase,fSize);
    fCacheDLMap.erase(fCacheDLMap.begin(), fCacheDLMap.end());
    fInit = kFALSE;
    fCaptureFullReported = kFALSE;

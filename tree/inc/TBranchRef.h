@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchRef.h,v 1.2 2004/08/24 10:41:58 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchRef.h,v 1.3 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   19/08/2004
 
 /*************************************************************************
@@ -47,7 +47,7 @@ public:
    virtual void    Print(Option_t *option="") const;
    virtual void    ReadLeaves(TBuffer &b);
    virtual void    Reset(Option_t *option="");
-   virtual void    SetParent(const TObject *obj);
+   virtual Int_t   SetParent(const TObject* obj, const Int_t branchID);
    virtual void    SetReadEntry(Long64_t entry) {fReadEntry = entry;}
    
    ClassDef(TBranchRef,1);  //to support referenced objects on other branches

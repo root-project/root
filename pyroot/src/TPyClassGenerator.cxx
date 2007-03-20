@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPyClassGenerator.cxx,v 1.10 2006/11/24 14:24:54 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPyClassGenerator.cxx,v 1.12 2007/01/29 15:10:49 brun Exp $
 // Author: Wim Lavrijsen, May 2004
 
 // Bindings
@@ -163,8 +163,8 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
    clName = clName.substr( pos+1, std::string::npos );
 
 // ROOT doesn't know about python modules; the class may exist (TODO: add scopes)
-   if ( gROOT->GetClass( clName.c_str() ) )
-      return gROOT->GetClass( clName.c_str() );
+   if ( TClass::GetClass( clName.c_str() ) )
+      return TClass::GetClass( clName.c_str() );
 
 // locate and get class
    PyObject* mod = PyImport_AddModule( const_cast< char* >( mdName.c_str() ) );
@@ -238,7 +238,7 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
    Py_DECREF( pyclass );
 
    TClass* klass = new TClass( clName.c_str() );
-   gROOT->AddClass( klass );
+   TClass::AddClass( klass );
 
    return klass;
 }

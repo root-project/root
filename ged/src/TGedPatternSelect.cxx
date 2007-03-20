@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.13 2006/06/14 13:57:28 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.14 2006/07/03 16:10:43 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 
 /*************************************************************************
@@ -38,9 +38,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TGClient.h"
-#include "TGedPatternSelect.h"
 #include "TGResourcePool.h"
+#include "TGedPatternSelect.h"
 #include "TGToolTip.h"
 #include "TGButton.h"
 #include "Riostream.h"

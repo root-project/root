@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TPrimary.cxx,v 1.2 2000/12/13 15:13:46 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TPrimary.cxx,v 1.3 2006/05/15 07:27:03 brun Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include "TAttParticle.h"
 #include "TPrimary.h"
 #include "TView.h"
+#include "TMath.h"
 #include "TVirtualPad.h"
 #include "TPolyLine3D.h"
 

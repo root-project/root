@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.h,v 1.10 2006/05/23 04:47:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.h,v 1.11 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -27,6 +27,9 @@
 #endif
 #ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
+#endif
+#ifndef ROOT_TString
+#include "TString.h"
 #endif
 
 class TCollection;

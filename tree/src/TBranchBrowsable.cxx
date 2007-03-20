@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.9 2006/10/20 16:16:08 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.cxx,v 1.13 2007/02/05 18:11:29 brun Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************
@@ -16,7 +16,8 @@
 #include "TBrowser.h"
 #include "TTree.h"
 #include "TLeafObject.h"
-#include "TPad.h"
+#include "TClonesArray.h"
+#include "TVirtualPad.h"
 #include "TClass.h"
 #include "TBaseClass.h"
 #include "TDataMember.h"
@@ -159,7 +160,7 @@ TClass* TVirtualBranchBrowsable::GetCollectionContainedType(const TBranch* branc
          // this is the contained type - if !=0
          const char* clonesname=be->GetClonesName();
          if (clonesname && strlen(clonesname))
-            contained=gROOT->GetClass(clonesname);
+            contained=TClass::GetClass(clonesname);
 
          // check if we're in a sub-branch of this class
          // we can only find out asking the streamer given our ID
@@ -178,17 +179,17 @@ TClass* TVirtualBranchBrowsable::GetCollectionContainedType(const TBranch* branc
                type=element->GetClassPointer();
          } else if (clonesname && strlen(clonesname)) {
             // we have a clones name, and the TCA is not split:
-            contained=gROOT->GetClass(clonesname);
-            return gROOT->GetClass(be->GetClassName());
+            contained=TClass::GetClass(clonesname);
+            return TClass::GetClass(be->GetClassName());
          } else 
-            type=gROOT->GetClass(be->GetClassName());
+            type=TClass::GetClass(be->GetClassName());
       } else if (branch->IsA()==TBranchObject::Class()) {
          // could be an unsplit TClonesArray
          TBranchObject* bo=(TBranchObject*)branch;
          const char* clonesname=bo->GetClassName();
          contained=0;
          if (!clonesname || !strlen(clonesname)) return 0;
-         type=gROOT->GetClass(clonesname);
+         type=TClass::GetClass(clonesname);
       }
    } else {
       if (gTree) gTree->Warning("GetCollectionContainedType", "Neither branch nor parent given!");
@@ -398,7 +399,7 @@ TMethodBrowsable::TMethodBrowsable(const TBranch* branch, TMethod* m,
          plainReturnType.Strip();
       }   
    }
-   SetType(gROOT->GetClass(plainReturnType));
+   SetType(TClass::GetClass(plainReturnType));
 }
 
 //______________________________________________________________________________
@@ -594,7 +595,7 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& li, const TBranch* branch,
 
    TClass* clContained=0;
    GetCollectionContainedType(branch, parent, clContained);
-   TStreamerInfo* streamerInfo=clContained?clContained->GetStreamerInfo():0;
+   TVirtualStreamerInfo* streamerInfo= clContained?clContained->GetStreamerInfo():0;
    if (!streamerInfo 
       || !streamerInfo->GetElements() 
       || !streamerInfo->GetElements()->GetSize())  return 0;
@@ -637,7 +638,7 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& li, const TBranch* branch,
          if (!clElements) continue;
 
          // now loop over the class's streamer elements
-         TStreamerInfo* streamerInfo=clElements->GetStreamerInfo();
+         TVirtualStreamerInfo* streamerInfo= clElements->GetStreamerInfo();
          TIter iElem(streamerInfo->GetElements());
          TStreamerElement* elem=0;
          while ((elem=(TStreamerElement*)iElem())) {

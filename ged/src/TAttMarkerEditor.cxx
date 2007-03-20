@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.10 2006/06/23 15:19:22 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.11 2006/09/25 13:35:58 rdm Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -27,13 +27,9 @@
 #include "TAttMarkerEditor.h"
 #include "TGedMarkerSelect.h"
 #include "TGColorSelect.h"
-#include "TGColorDialog.h"
 #include "TGNumberEntry.h"
-#include "TGClient.h"
 #include "TColor.h"
-#include "TVirtualPad.h"
 #include "snprintf.h"
-#include "TClass.h"
 
 ClassImp(TAttMarkerEditor)
 

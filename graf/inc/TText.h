@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.h,v 1.6 2005/01/13 10:24:10 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.h,v 1.7 2006/07/03 16:10:44 brun Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -54,7 +54,7 @@ public:
    virtual void     GetControlBox(Int_t x, Int_t y, Double_t theta,
                                   Int_t cBoxX[4], Int_t cBoxY[4]);
    Double_t         GetX() const  { return fX; }
-   virtual void     GetBoundingBox(UInt_t &w, UInt_t &h);
+   virtual void     GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle = kFALSE);
    virtual void     GetTextAscentDescent(UInt_t &a, UInt_t &d, const char *text) const;
    virtual void     GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const;
    Double_t         GetY() const  { return fY; }

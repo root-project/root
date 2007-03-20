@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.h,v 1.5 2006/04/19 06:20:22 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.h,v 1.6 2006/12/08 07:42:31 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 #ifndef PYROOT_PROPERTYPROXY_H
@@ -9,6 +9,7 @@
 
 // ROOT
 #include "DllImport.h"
+#include "TClassRef.h"
 class TDataMember;
 class TGlobal;
 
@@ -39,17 +40,19 @@ namespace PyROOT {
       void Set( TDataMember* );
       void Set( TGlobal* );
 #ifdef PYROOT_USE_REFLEX
-      void Set( const ROOT::Reflex::Member& ) {}
+      void Set( const ROOT::Reflex::Member& );
 #endif
 
-      std::string GetName() { return fDMInfo.Name(); }
+      std::string GetName() { return fName; }
       Long_t GetAddress( ObjectProxy* pyobj /* owner */ );
 
    public:               // public, as the python C-API works with C structs
       PyObject_HEAD
-      G__DataMemberInfo fDMInfo;
-      Long_t            fProperty;
-      TConverter*       fConverter;
+      Long_t       fOffset;
+      Long_t       fProperty;
+      TConverter*  fConverter;
+      Int_t        fOwnerTagnum;   // TODO: wrap up ...
+      std::string  fName;
 
    private:              // private, as the python C-API will handle creation
       PropertyProxy() {}

@@ -9,6 +9,8 @@
 //#ifndef NLOOP
 //#define NLOOP 1000000
 //#endif
+#include <vector>
+
 using namespace ROOT::Math;
 
 std::vector<float> gV; 

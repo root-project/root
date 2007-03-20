@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.38 2006/05/15 13:31:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.41 2007/02/19 16:16:41 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -59,7 +59,7 @@ class TPoint;
 class TString;
 class TGWin32Command;
 
-extern "C" 
+extern "C"
 {
    struct GLUtesselator;
 }
@@ -184,6 +184,7 @@ public:
    virtual Visual_t     GetVisual() const;
    virtual Int_t        GetScreen() const;
    virtual Int_t        GetDepth() const;
+   virtual UInt_t       ScreenWidthMM() const;
    virtual Colormap_t   GetColormap() const;
    virtual Atom_t       InternAtom(const char *atom_name, Bool_t only_if_exist);
    virtual Window_t     GetDefaultRootWindow() const;
@@ -302,7 +303,7 @@ public:
    virtual Drawable_t   CreateImage(UInt_t width, UInt_t height);
    virtual void         GetImageSize(Drawable_t id, UInt_t &width, UInt_t &height);
    virtual void         PutPixel(Drawable_t id, Int_t x, Int_t y, ULong_t pixel);
-   virtual void         PutImage(Drawable_t id, GContext_t gc, Drawable_t img, Int_t dx, Int_t dy, 
+   virtual void         PutImage(Drawable_t id, GContext_t gc, Drawable_t img, Int_t dx, Int_t dy,
                                  Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual void         DeleteImage(Drawable_t img);
    virtual unsigned char *GetColorBits(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0);

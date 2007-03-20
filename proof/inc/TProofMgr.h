@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofMgr.h,v 1.3 2006/11/28 12:10:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofMgr.h,v 1.4 2006/12/03 23:34:03 rdm Exp $
 // Author: G. Ganis, Nov 2005
 
 /*************************************************************************
@@ -77,12 +77,14 @@ public:
                                                       { return (TProofLog *)0; }
    virtual const char *GetUrl() { return fUrl.GetUrl(); }
    virtual Bool_t      MatchUrl(const char *url);
+   virtual void        ShowROOTVersions() { }
    virtual TList      *QuerySessions(Option_t *opt = "S");
    virtual TObjString *ReadBuffer(const char * = 0, Long64_t = 0,
                              Int_t = 0) { return (TObjString *)0; }
    virtual Int_t       Reset(const char *usr = 0);
    virtual void        ShowWorkers();
    virtual void        SetAlias(const char *alias="") { TNamed::SetTitle(alias); }
+   virtual void        SetROOTVersion(const char *) { }
    virtual void        ShutdownSession(Int_t id) { DetachSession(id,"S"); }
    virtual void        ShutdownSession(TProof *p);
 

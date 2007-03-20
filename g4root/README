@@ -2,7 +2,7 @@ Installation notes
 ====================
 
 To be able to compile and use g4root module one needs first to install GEANT4
-version > 4.8.1 and CLHEP as required by GEANT4 installation (see 
+version > 4.8.2 and CLHEP as required by GEANT4 installation (see 
 http://geant4.web.cern.ch/geant4/support/download.shtml and the Release Notes
 on that page). Follow the GEANT4 installation procedure as described by G4
 installation guide. Do 'gmake includes' at the end.

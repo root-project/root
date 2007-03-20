@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.28 2006/08/22 14:07:21 rdm Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.33 2007/02/15 17:32:32 axel Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -17,186 +17,174 @@
 //                                                                        //
 // THtml                                                                  //
 //                                                                        //
-// Html makes a documentation for all ROOT classes                        //
-// using Hypertext Markup Language 2.0                                    //
+// Html generates documentation for all ROOT classes                      //
+// using XHTML 1.0 transitional                                           //
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "TCint.h"
-#include "Api.h"
-#endif
-
-#ifndef ROOT_TROOT
-#include "TROOT.h"
-#endif
-#ifndef ROOT_TClass
-#include "TClass.h"
-#endif
-#ifndef ROOT_TMap
-#include "TMap.h"
-#endif
 #ifndef ROOT_THashList
 #include "THashList.h"
 #endif
-#include <list>
+
 #include <map>
 #include <set>
-#include <vector>
 
 class TClass;
-class TVirtualPad;
-class TPaveText;
 
 class THtml : public TObject {
 protected:
    enum ETraverse {
       kUp, kDown, kBoth        // direction to traverse class tree in ClassHtmlTree()
    };
-   enum EParseContext {
-      kCode,
-      kCComment,
-      kBeginEndHtml,
-      kBeginEndHtmlInCComment,
-      kString,
-      kNumParseContexts
-   };
-   enum EDocContext {
-      kIgnore,
-      kDocFunc,
-      kDocClass,
-      kNumDocContexts
-   };
-   enum ESourceInfo {
-      kInfoLastUpdate,
-      kInfoAuthor,
-      kInfoCopyright,
-      kNumSourceInfos
-   };
 
+public:
+
+   //__________________________________________________________________________
+   // map of lib name to map of module names contained in lib,
+   // and their library dependencies. Wraps a long STL name.
+   class TMapModuleDepMap: public std::map<std::string, std::set<std::string> > {
+   public:
+      TMapModuleDepMap() {}
+   };
+   typedef std::map<std::string, TMapModuleDepMap > LibDep_t;
+
+protected:
    TString        fXwho;            // URL for name lookup
+   TString        fROOTURL;         // Root URL for ROOT's reference guide for libs that are not in fLibURLs
+   std::map<std::string, TString> fLibURLs; // URL for documentation of external libraries
+   TString        fClassDocTag;     // tag for class documentation
+   TString        fAuthorTag;       // tag for author
+   TString        fLastUpdateTag;   // tag for last update
+   TString        fCopyrightTag;    // tag for copyright
+   TString        fHeader;          // header file name
+   TString        fFooter;          // footerer file name
+   TString        fHomepage;        // URL of homepage
+   TString        fSearchStemURL;   // URL stem used to build search URL
+   TString        fSearchEngine;    // Link to search engine
+   TString        fViewCVS;         // Link to ViewCVS
+   TString        fCharset;         // Charset for doc pages
+   TString        fDocStyle;        // doc style (only "Doc++" has special treatment)
+   
    TString        fSourcePrefix;    // prefix to relative source path
    TString        fSourceDir;       // source path
    TString        fOutputDir;       // output directory
    TString        fDotDir;          // directory of GraphViz's dot binary
+   TString        fEtcDir;          // directory containing auxiliary files
    Int_t          fFoundDot;        // whether dot is accessible (-1 dunno, 1 yes, 0 no)
-   TString        fLine;            // current line
-   UInt_t         fLineNo;          // current line number
-   TString        fLineExpanded;    // current line with links
-   TString        fLineStripped;    // current line without surrounding spaces
-   TClass        *fCurrentClass;    // current class context of sources being parsed
-   TString        fCurrentFile;     // current source / header file name
-   std::map<std::string /*method name*/, Int_t > fMethodNames;     // current class's method names
-   EDocContext    fDocContext;      // current context of parsed sources for documenting
-   std::list<EParseContext> fParseContext; // current context of parsed sources
-   std::set<UInt_t> fExtraLinesWithAnchor; // lines that need an additional anchor
-   TString        fSourceInfo[kNumSourceInfos];// author, last changed, ...
    TString        fCounter;         // counter string
-   Bool_t         fEscFlag;         // state flag to mark the next character must be written "as is"
-   char           fEsc;             // char to mark the next character must be written "as is"
-   Int_t          fHierarchyLines;  // counter for no. lines in hierarchy
+   TString        fCounterFormat;   // counter printf-like format
    TString        fClassFilter;     // filter used for buidling known classes
+   TString        fProductName;     // name of the product to document
+   TString        fProductDocDir;   // directory containing documentation for the product
+   TString        fMacroPath;       // path for macros run via the Begin/End Macro directive
+   TString        fModuleDocPath;   // path to check for module documentation
    THashList      fClasses;         // known classes
    THashList      fModules;         // known modules
    std::map<TClass*,std::string> fGuessedDeclFileNames; // names of additional decl file names
    std::map<TClass*,std::string> fGuessedImplFileNames; // names of additional impl file names
-   static std::set<std::string>  fgKeywords; // C++ keywords
+   LibDep_t       fSetLibDeps;      // Library dependencies
 
-   void    AddClassMethodsRecursive(TBaseClass* bc, TList methodNames[3]);
-   void    AddClassDataMembersRecursive(TBaseClass* bc, TList datamembers[6]);
-   void    AnchorFromLine(TString& anchor);
-   virtual void BeautifyLine(std::ostream &srcOut, const char* relpath = "../");
-   void    Class2Html(Bool_t force=kFALSE);
-   void    ClassDescription(ofstream &out);
-   Bool_t  ClassDotCharts(ofstream & out);
-   void    ClassHtmlTree(ofstream &out, TClass *classPtr, ETraverse dir=kBoth, int depth=1);
-   void    ClassTree(TVirtualPad *canvas, TClass *classPtr, Bool_t force=kFALSE);
-   Bool_t  CopyHtmlFile(const char *sourceName, const char *destName="");
-   Bool_t  CreateDotClassChartInh(const char* filename);
-   Bool_t  CreateDotClassChartInhMem(const char* filename);
-   Bool_t  CreateDotClassChartIncl(const char* filename);
-   Bool_t  CreateDotClassChartLib(const char* filename);
-   void    CreateIndex();
-   void    CreateIndexByTopic();
-   void    CreateHierarchy();
-   Bool_t  CreateHierarchyDot();
-   void    CreateListOfTypes();
-   void    CreateListOfClasses(const char* filter);
-   void    CreateSourceOutputStream(std::ofstream& out, const char* extension, TString& filename);
-   void    DescendHierarchy(ofstream &out, TClass* basePtr, Int_t maxLines=0, Int_t depth=1);
-   void    ExpandKeywords(ostream& out, const char* line);
-   void    ExpandKeywords(TString& text);
-   void    ExpandPpLine(ostream &out);
-   Bool_t  ExtractComments(const TString &lineExpandedStripped, 
-                           Bool_t &foundClassDescription,
-                           const char* classDescrTag, TString& comment);
-   TClass *GetClass(const char *name);
-   const char   *GetFileName(const char *filename);
-   void    GetSourceFileName(TString& filename);
-   void    GetHtmlFileName(TClass *classPtr, TString& filename);
-   virtual void GetModuleName(TString& module, const char* filename) const;
-   Bool_t  HaveDot();
-   Bool_t  IsModified(TClass *classPtr, const Int_t type);
-   static Bool_t  IsName(UChar_t c);
-   static Bool_t  IsWord(UChar_t c);
-   TMethod* LocateMethodInCurrentLine(Ssiz_t& posMethodName, TString& ret, 
-      TString& name, TString& params, std::ostream &srcOut, TString &anchor, 
-      std::ifstream& sourcefile, Bool_t allowPureVirtual);
-   void    LocateMethods(std::ofstream & out, const char* filename,
-                          Bool_t lookForSourceInfo = kTRUE, 
-                          Bool_t useDocxxStyle = kFALSE, 
-                          Bool_t lookForClassDescr = kTRUE,
-                          Bool_t allowPureVirtual = kFALSE,
-                          const char* methodPattern = 0, 
-                          const char* sourceExt = 0);
-   void    LocateMethodsInSource(ofstream & out);
-   void    LocateMethodsInHeaderInline(ofstream & out);
-   void    LocateMethodsInHeaderClassDecl(ofstream & out);
-
-   void    MakeClass(void* cdi, Bool_t force=kFALSE);
-   void    NameSpace2FileName(TString &name);
-   void    ReplaceSpecialChars(ostream &out, const char c);
-   void    ReplaceSpecialChars(ostream &out, const char *string);
-   void    ReplaceSpecialChars(TString& text, Ssiz_t &pos);
-   Bool_t  RunDot(const char* filename, std::ostream* outMap = 0);
-   void    SortNames(const char **strings, Int_t num, Bool_t type=0);
-   char   *StrDup(const char *s1, Int_t n = 1);
-   static Bool_t Strip(TString& s);
-   virtual void WriteMethod(std::ostream & out, TString& ret, 
-                            TString& name, TString& params,
-                            const char* file, TString& anchor,
-                            TString& comment, TString& codeOneLiner);
-
-   friend Int_t CaseSensitiveSort(const void *name1, const void *name2);
-   friend Int_t CaseInsensitiveSort(const void *name1, const void *name2);
+   virtual void    CreateJavascript() const;
+   virtual void    CreateStyleSheet() const;
+   void            CreateListOfTypes();
+   void            CreateListOfClasses(const char* filter);
+   void            MakeClass(void* cdi, Bool_t force=kFALSE);
 
 public:
    THtml();
    virtual      ~THtml();
+
+   // Functions to generate documentation
    void          Convert(const char *filename, const char *title, 
                          const char *dirname = "", const char *relpath="../");
-   void          CreateJavascript();
-   void          CreateStyleSheet();
-   const char   *GetDeclFileName(TClass* cl) const;
-   const char   *GetImplFileName(TClass* cl) const;
-   const char   *GetSourceDir()  { return fSourceDir; }
-   const char   *GetOutputDir()  { return fOutputDir; }
-   const char   *GetXwho() const { return fXwho.Data(); }
+   void          CreateHierarchy();
    void          MakeAll(Bool_t force=kFALSE, const char *filter="*");
    void          MakeClass(const char *className, Bool_t force=kFALSE);
    void          MakeIndex(const char *filter="*");
    void          MakeTree(const char *className, Bool_t force=kFALSE);
-   void          SetDeclFileName(TClass* cl, const char* filename);
-   void          SetEscape(char esc='\\') { fEsc = esc; }
-   void          SetImplFileName(TClass* cl, const char* filename);
-   void          SetSourcePrefix(const char *prefix) { fSourcePrefix = prefix; }
-   void          SetSourceDir(const char *dir) { fSourceDir = dir; }
+
+   // Configuration setters
+   void          SetProductName(const char* product) { fProductName = product; }
    void          SetOutputDir(const char *dir) { fOutputDir = dir; }
+   void          SetSourceDir(const char *dir);
+   void          SetSourcePrefix(const char *prefix);
+   void          SetEtcDir(const char* dir) { fEtcDir = dir; }
+   void          SetModuleDocPath(const char* path) { fModuleDocPath = path; }
+   void          SetProductDocDir(const char* dir) { fProductDocDir = dir; }
    void          SetDotDir(const char* dir) { fDotDir = dir; fFoundDot = -1; }
+   void          SetRootURL(const char* url) { fROOTURL = url; }
+   void          SetLibURL(const char* lib, const char* url) { fLibURLs[lib] = url; }
    void          SetXwho(const char *xwho) { fXwho = xwho; }
-   virtual void  WriteHtmlHeader(ofstream &out, const char *title, const char* dir="", TClass *cls=0);
-   virtual void  WriteHtmlFooter(ofstream &out, const char *dir="", const char *lastUpdate="",
-                                 const char *author="", const char *copyright="");
+   void          SetMacroPath(const char* path) {fMacroPath = path;}
+   void          AddMacroPath(const char* path);
+   void          SetCounterFormat(const char* format) { fCounterFormat = format; }
+   void          SetClassDocTag(const char* tag) { fClassDocTag = tag; }
+   void          SetAuthorTag(const char* tag) { fAuthorTag = tag; }
+   void          SetLastUpdateTag(const char* tag) { fLastUpdateTag = tag; }
+   void          SetCopyrightTag(const char* tag) { fCopyrightTag = tag; }
+   void          SetHeader(const char* file) { fHeader = file; }
+   void          SetFooter(const char* file) { fFooter = file; }
+   void          SetHomepage(const char* url) { fHomepage = url; }
+   void          SetSearchStemURL(const char* url) { fSearchStemURL = url; }
+   void          SetSearchEngine(const char* url) { fSearchEngine = url; }
+   void          SetViewCVS(const char* url) { fViewCVS = url; }
+   void          SetCharset(const char* charset) { fCharset = charset; }
+   void          SetDocStyle(const char* style) { fDocStyle = style; }
+
+   // Configuration getters
+   const TString&      GetProductName() const { return fProductName; }
+   const TString&      GetOutputDir() const { return fOutputDir; }
+   const TString&      GetSourceDir() const { return fSourceDir; }
+   const TString&      GetSourcePrefix() const { return fSourcePrefix; }
+   virtual const char* GetEtcDir();
+   const TString&      GetModuleDocPath() const { return fModuleDocPath; }
+   const TString&      GetProductDocDir() const { return fProductDocDir; }
+   const TString&      GetDotDir() const { return fDotDir; }
+   const char*         GetURL(const char* lib = 0) const;
+   const TString&      GetXwho() const { return fXwho; }
+   const TString&      GetMacroPath() const { return fMacroPath; }
+   const char*         GetCounterFormat() const { return fCounterFormat; }
+   const TString&      GetClassDocTag() const { return fClassDocTag; }
+   const TString&      GetAuthorTag() const { return fAuthorTag; }
+   const TString&      GetLastUpdateTag() const { return fLastUpdateTag; }
+   const TString&      GetCopyrightTag() const { return fCopyrightTag; }
+   const TString&      GetHeader() const { return fHeader; }
+   const TString&      GetFooter() const { return fFooter; }
+   const TString&      GetHomepage() const { return fHomepage; }
+   const TString&      GetSearchStemURL() const { return fSearchStemURL; }
+   const TString&      GetSearchEngine() const { return fSearchEngine; }
+   const TString&      GetViewCVS() const { return fViewCVS; }
+   const TString&      GetCharset() const { return fCharset; }
+   const TString&      GetDocStyle() const { return fDocStyle; }
+
+   // Functions that should only be used by TDocOutput etc.
+   Bool_t              CopyFileFromEtcDir(const char* filename) const;
+   virtual void        CreateAuxiliaryFiles() const;
+   virtual TClass*     GetClass(const char *name);
+   const char*         GetCounter() const { return fCounter; }
+   virtual const char* GetDeclFileName(TClass* cl) const;
+   void                GetDerivedClasses(TClass* cl, std::map<TClass*, Int_t>& derived) const;
+   virtual const char* GetImplFileName(TClass* cl) const;
+   virtual const char* GetFileName(const char *filename);
+   virtual void        GetSourceFileName(TString& filename);
+   virtual void        GetHtmlFileName(TClass *classPtr, TString& filename);
+   virtual const char* GetHtmlFileName(const char* classname);
+   LibDep_t&           GetLibraryDependencies() { return fSetLibDeps; }
+   const TList*        GetListOfModules() const { return &fModules; }
+   const TList*        GetListOfClasses() const { return &fClasses; }
+   virtual void        GetModuleName(TString& module, const char* filename) const;
+   virtual void        GetModuleNameForClass(TString& module, TClass* cl) const;
+   Bool_t              HaveDot();
+   static Bool_t       IsNamespace(const TClass*cl);
+   void                SetDeclFileName(TClass* cl, const char* filename);
+   void                SetFoundDot(Bool_t found = kTRUE) { fFoundDot = found; }
+   void                SetImplFileName(TClass* cl, const char* filename);
+
+   // unused
+   void                ReplaceSpecialChars(std::ostream&, const char*) {
+      Error("ReplaceSpecialChars",
+            "Removed, call TDocOutput::ReplaceSpecialChars() instead!"); }
+   void                SetEscape(char /*esc*/ ='\\') {} // for backward comp
 
    ClassDef(THtml,0)  //Convert class(es) into HTML file(s)
 };

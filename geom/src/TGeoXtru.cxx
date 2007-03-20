@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.34 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.40 2007/02/19 14:20:08 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -46,8 +46,6 @@
 // within x3d produces incorrect end-faces
 
 #include "Riostream.h"
-#include "TROOT.h"
-#include "TClass.h"
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
@@ -57,6 +55,8 @@
 #include "TVirtualPad.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "TClass.h"
+#include "TMath.h"
 
 ClassImp(TGeoXtru)
 
@@ -319,13 +319,13 @@ Double_t TGeoXtru::DistToPlane(Double_t *point, Double_t *dir, Int_t iz, Int_t i
    if (fZ[iz]==fZ[iz+1] && !in) {
       TGeoXtru *xtru = (TGeoXtru*)this;
       snext = (fZ[iz]-point[2])/dir[2];
+      if (snext<0) return TGeoShape::Big();
       pt[0] = point[0]+snext*dir[0];
       pt[1] = point[1]+snext*dir[1];
       pt[2] = point[2]+snext*dir[2];
-      xtru->SetCurrentVertices(fX0[iz], fY0[iz], fScale[iz]);
-      if (!xtru->Contains(pt)) return TGeoShape::Big();
-      xtru->SetCurrentVertices(fX0[iz+1], fY0[iz+1], fScale[iz+1]);
-      if (!xtru->Contains(pt)) return TGeoShape::Big();
+      if (dir[2] < 0.) xtru->SetCurrentVertices(fX0[iz], fY0[iz], fScale[iz]);
+      else             xtru->SetCurrentVertices(fX0[iz+1], fY0[iz+1], fScale[iz+1]);
+      if (!fPoly->Contains(pt)) return TGeoShape::Big();
       return snext;
    }      
    GetPlaneVertices(iz, ivert, vert);
@@ -387,6 +387,7 @@ Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    }   
    Bool_t convex = fPoly->IsConvex();
    Double_t stepmax = step;
+   if (stepmax>TGeoShape::Big()) stepmax = TGeoShape::Big();
    Double_t snext = TGeoShape::Big();
    Double_t dist, sz;
    Double_t pt[3];
@@ -477,6 +478,7 @@ Double_t TGeoXtru::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }   
    Double_t stepmax = step;
+   if (stepmax>TGeoShape::Big()) stepmax = TGeoShape::Big();
    Double_t snext = 0.;
    Double_t dist = TGeoShape::Big();
    Int_t i, iv;
@@ -870,7 +872,7 @@ Double_t TGeoXtru::SafetyToSector(Double_t *point, Int_t iz, Double_t safmin)
       saf1 = point[2]-fZ[iz+1];
       if (saf1>safmin) return TGeoShape::Big(); 
       if (saf1<0) {
-         safz = 0.; // we are in between the 2 Z segments - we ignore safz
+         safz = TMath::Max(safz, saf1); // we are in between the 2 Z segments - we ignore safz
       } else {
          safz = saf1;
       }
@@ -882,7 +884,9 @@ Double_t TGeoXtru::SafetyToSector(Double_t *point, Int_t iz, Double_t safmin)
    GetPlaneVertices(iz,iseg,vert);
    GetPlaneNormal(vert, norm);
    saf1 = saf1*TMath::Sqrt(1.-norm[2]*norm[2]);
+   if (fPoly->Contains(point)) saf1 = -saf1;
    safe = TMath::Max(safz, saf1);
+   safe = TMath::Abs(safe);
    if (safe>safmin) return TGeoShape::Big();
    return safe;
 }
@@ -895,7 +899,7 @@ Double_t TGeoXtru::Safety(Double_t *point, Bool_t in) const
    //---> localize the Z segment
    Double_t safmin = TGeoShape::Big();
    Double_t safe;
-   Double_t safz = 0.;
+   Double_t safz = TGeoShape::Big();
    TGeoXtru *xtru = (TGeoXtru*)this;
    Int_t iz;
    if (in) {
@@ -927,7 +931,7 @@ Double_t TGeoXtru::Safety(Double_t *point, Bool_t in) const
       safe = xtru->SafetyToSector(point,i,safmin);
       if (safe<safmin) safmin=safe;
    }
-   safe = TMath::Max(safmin, safz);
+   safe = TMath::Min(safmin, safz);
    return safe;
 }
 
@@ -1099,10 +1103,10 @@ void TGeoXtru::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TGeoVolume.
    if (R__b.IsReading()) {
-      TGeoXtru::Class()->ReadBuffer(R__b, this);
+      R__b.ReadClassBuffer(TGeoXtru::Class(), this);
       if (fPoly) fPoly->SetXY(fXc,fYc); // initialize with current coordinates   
    } else {
-      TGeoXtru::Class()->WriteBuffer(R__b, this);
+      R__b.WriteClassBuffer(TGeoXtru::Class(), this);
    }
 }
 

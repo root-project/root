@@ -1165,6 +1165,13 @@ int test20() {
   m1/= 2; 
   iret |= compare(m1==m3,true); 
 
+  // test mixed with a scalar 
+  double a = 2; 
+  m3 = m2 + a*m1; 
+  m2 += a*m1; 
+  iret |= compare(m2==m3,true); 
+
+
   // more complex op (passing expressions)
 
   m3 = m1 + (m1 * m2);
@@ -1216,6 +1223,36 @@ int test20() {
   v1 /= 2;
   iret |= compare(v1==v3,true); 
 
+  // test with symmetric matrices 
+
+  //double d1[6]={1,2,3,4,5,6};
+  SMatrix<double,3,3,MatRepSym<double,3> >   ms1(d1,d1+6);
+  SMatrix<double,3,3,MatRepSym<double,3> >   ms2(d1,d1+6,true, false);
+  SMatrix<double,3,3,MatRepSym<double,3> >   ms3; 
+  SMatrix<double,3,3,MatRepSym<double,3> >   ms4; 
+
+  // using complex expressions
+  ms3 = ms1 + (ms1 + ms2);
+  ms1 += ms1 + ms2;
+  iret |= compare(ms1==ms3,true); 
+
+  ms3 = ms1 - (ms1 + ms2);
+  ms1 -= ms1 + ms2;
+  iret |= compare(ms1==ms3,true); 
+
+
+  a = 2; 
+  ms3 = ms1 + a*ms2; 
+
+  ms4 = ms1; 
+  ms4 += a*ms2; 
+
+  iret |= compare(ms3==ms4,true); 
+
+  ms3 = ms1 - a*ms2; 
+  ms4 = ms1; 
+  ms4 -= a*ms2; 
+  iret |= compare(ms3==ms4,true); 
 
   return iret; 
 }

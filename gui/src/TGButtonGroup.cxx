@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.26 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.27 2006/11/10 10:47:38 antcheva Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -211,7 +211,7 @@ void TGButtonGroup::SetButton(Int_t id, Bool_t down)
    TGButton *b = Find(id);
 
    if (b && (b->IsDown() != down)) {
-      b->SetDown(down, kTRUE);
+      b->SetState(kButtonDown, kTRUE);
    }
 }
 
@@ -246,7 +246,8 @@ Int_t TGButtonGroup::Insert(TGButton *button, Int_t id)
    }
 
    button->fGroup = this;
-
+   button->Associate(this);
+   
    static Int_t seq_no = -2;
    Long_t bid;
 
@@ -259,7 +260,7 @@ Int_t TGButtonGroup::Insert(TGButton *button, Int_t id)
 
    SetRadioButtonExclusive(button->IsA()->InheritsFrom(TGRadioButton::Class()));
 
-   Connect(button, "Pressed()" , "TGButtonGroup", this, "ReleaseButtons()");
+   Connect(button, "Clicked()" , "TGButtonGroup", this, "ReleaseButtons()");
    Connect(button, "Pressed()" , "TGButtonGroup", this, "ButtonPressed()");
    Connect(button, "Released()", "TGButtonGroup", this, "ButtonReleased()");
    Connect(button, "Clicked()" , "TGButtonGroup", this, "ButtonClicked()");

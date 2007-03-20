@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyROOT.h,v 1.7 2006/08/14 00:21:56 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyROOT.h,v 1.8 2006/09/28 19:59:12 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_PYROOT_H
@@ -12,7 +12,10 @@
 // Disable warning C4800: 'int' : forcing value to bool
 #pragma warning ( disable : 4800 )
 // Clear the _DEBUG that forces to use different library entry points
+#ifdef _DEBUG
+#define _WASDEBUG
 #undef _DEBUG
+#endif
 // Avoid that pyconfig.h decides using a #pragma what library python library to use
 //#define MS_NO_COREDLL 1
 #endif
@@ -34,6 +37,13 @@
 
 #include "Python.h"
 #include "Rtypes.h"
+
+#ifdef _WIN32
+#ifdef _WASDEBUG
+#define _DEBUG
+#undef _WASDEBUG
+#endif
+#endif
 
 // backwards compatibility, pre python 2.5
 #if PY_VERSION_HEX < 0x02050000

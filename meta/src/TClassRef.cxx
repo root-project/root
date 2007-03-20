@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClassRef.cxx,v 1.6 2005/06/08 21:13:48 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClassRef.cxx,v 1.8 2007/01/29 15:10:49 brun Exp $
 // Author: Philippe Canal 15/03/2005
 
 /*************************************************************************
@@ -94,7 +94,7 @@ TClass *TClassRef::InternalGetClass() const
    if (fClassPtr) return fClassPtr;
    if (fClassName.size()==0) return 0;
 
-   (const_cast<TClassRef*>(this))->fClassPtr = gROOT->GetClass(fClassName.c_str());
+   (const_cast<TClassRef*>(this))->fClassPtr = TClass::GetClass(fClassName.c_str());
    if (fClassPtr) fClassPtr->AddRef(const_cast<TClassRef*>(this));
 
    return fClassPtr;

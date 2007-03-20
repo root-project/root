@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.12 2005/11/21 11:17:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.15 2007/01/12 10:28:53 brun Exp $
 // Author: Fons Rademakers   11/10/95
 
 /*************************************************************************
@@ -26,10 +26,6 @@
 #  include <sys/times.h>
 #  include <unistd.h>
 static Double_t gTicks = 0;
-#elif defined(R__VMS)
-#  include <time.h>
-#  include <unistd.h>
-static Double_t gTicks = 1000;
 #elif defined(WIN32)
 #  include "TError.h"
 const Double_t gTicks = 1.0e-7;
@@ -143,8 +139,6 @@ Double_t TStopwatch::GetRealTime()
 
 #if defined(R__UNIX)
    return TTimeStamp();
-#elif defined(R__VMS)
-   return (Double_t)clock() / gTicks;
 #elif defined(WIN32)
    union {
       FILETIME ftFileTime;
@@ -166,8 +160,6 @@ Double_t TStopwatch::GetCPUTime()
    struct tms cpt;
    times(&cpt);
    return (Double_t)(cpt.tms_utime+cpt.tms_stime) / gTicks;
-#elif defined(R__VMS)
-   return (Double_t)clock() / gTicks;
 #elif defined(WIN32)
 
    OSVERSIONINFO OsVersionInfo;
@@ -234,8 +226,8 @@ void TStopwatch::Print(Option_t *opt) const
    realt -= min * 60;
    Int_t  sec   = Int_t(realt);
 
-   realt = TMath::Max(realt, 0.);
-   cput  = TMath::Max(cput, 0.);
+   if (realt < 0) realt = 0;
+   if (cput  < 0) cput  = 0;
 
    if (opt && *opt == 'm') {
       if (Counter() > 1) {

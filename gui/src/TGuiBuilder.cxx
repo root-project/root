@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.cxx,v 1.8 2006/05/28 20:08:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.cxx,v 1.10 2007/02/21 17:13:05 brun Exp $
 // Author: Valeriy Onuchin   12/08/04
 
 /*************************************************************************
@@ -89,6 +89,7 @@
 #include "TVirtualDragManager.h"
 #include "TPluginManager.h"
 #include "TROOT.h"
+#include "TApplication.h"
 
 ClassImp(TGuiBuilder)
 ClassImp(TGuiBldAction)

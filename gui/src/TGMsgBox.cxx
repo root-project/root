@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.15 2006/07/09 05:27:54 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.16 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -32,7 +32,6 @@
 #include "TGButton.h"
 #include "TGIcon.h"
 #include "TGLabel.h"
-#include "TMath.h"
 #include "TList.h"
 
 

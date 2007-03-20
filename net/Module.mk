@@ -11,7 +11,7 @@ NETDIR       := $(MODDIR)
 NETDIRS      := $(NETDIR)/src
 NETDIRI      := $(NETDIR)/inc
 
-##### libNet (part of libCore) #####
+##### libNet #####
 NETL         := $(MODDIRI)/LinkDef.h
 NETDS        := $(MODDIRS)/G__Net.cxx
 NETDO        := $(NETDS:.cxx=.o)
@@ -19,15 +19,17 @@ NETDH        := $(NETDS:.cxx=.h)
 
 NETH         := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 NETS         := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-
-#### Remaining stuff in libCore ####
 NETO         := $(NETS:.cxx=.o)
+
 NETDEP       := $(NETO:.o=.d) $(NETDO:.o=.d)
+
+NETLIB       := $(LPATH)/libNet.$(SOEXT)
 
 EXTRANETFLAGS =
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(NETH))
+ALLLIBS      += $(NETLIB)
 
 # include all dependency files
 INCLUDEFILES += $(NETDEP)
@@ -36,13 +38,22 @@ INCLUDEFILES += $(NETDEP)
 include/%.h:    $(NETDIRI)/%.h
 		cp $< $@
 
+$(NETLIB):      $(NETO) $(NETDO) $(ORDER_) $(MAINLIBS) $(NETLIBDEP)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+		   "$(SOFLAGS)" libNet.$(SOEXT) $@ "$(NETO) $(NETDO)" \
+		   "$(NETLIBEXTRA)"
+
 $(NETDS):       $(NETH) $(NETL) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(NETH) $(NETL)
 
-$(NETO):        CXXFLAGS += -I.
+all-net:        $(NETLIB)
 
-all-net:        $(NETO) $(NETDO)
+map-net:        $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(NETLIB) \
+		   -d $(NETLIBDEP) -c $(NETL)
+
+map::           map-net
 
 clean-net:
 		@rm -f $(NETO) $(NETDO)
@@ -50,6 +61,6 @@ clean-net:
 clean::         clean-net
 
 distclean-net:  clean-net
-		@rm -f $(NETDEP) $(NETDS) $(NETDH)
+		@rm -f $(NETDEP) $(NETDS) $(NETDH) $(NETLIB)
 
 distclean::     distclean-net

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.cxx,v 1.3 2002/07/16 17:20:17 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.cxx,v 1.4 2006/03/20 21:43:43 pcanal Exp $
 // Author: Rene Brun   30/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -47,5 +47,5 @@ void TVirtualHistPainter::SetPainter(const char *painter)
 {
    // Static function to set an alternative histogram painter.
 
-   fgPainter = gROOT->GetClass(painter);
+   fgPainter = TClass::GetClass(painter);
 }

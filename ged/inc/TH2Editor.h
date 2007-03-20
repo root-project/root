@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TH2Editor.h,v 1.12 2006/06/23 15:19:21 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TH2Editor.h,v 1.15 2007/02/07 09:00:41 antcheva Exp $
 // Author: Carsten Hof 08/08/04
 
 /*************************************************************************
@@ -19,11 +19,9 @@
 //  Editor changing histogram attributes                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
-#endif
-#ifndef ROOT_TH2
-#include "TH2.h"
 #endif
 
 class TH2;
@@ -35,14 +33,11 @@ class TString;
 class TGDoubleHSlider;
 class TGHSlider;
 class TGNumberEntry;
-class TGButtonGroup;
 class TGHButtonGroup;
 class TGRadioButton;
 class TGNumberEntryField;
 class TGColorSelect;
 class TGedPatternSelect;
-class TAttFill;
-class TGTab;
 class TGTextButton;
 
 class TH2Editor : public TGedFrame {
@@ -63,15 +58,10 @@ protected:
    TGRadioButton       *fDim0;            // 3D-Plot RadioButton
    TGLayoutHints       *fDimlh;           // layout hints for 2D-Plot RadioButton
    TGLayoutHints       *fDim0lh;          // layout hints for 3D-Plot RadioButton
-   TGCompositeFrame    *f3;               // Frame that contains Histogram Type-ComboBox
-   TGCompositeFrame    *f4;               // Frame that contains Histogram Coord-ComboBox
-   TGCompositeFrame    *f5;               // Frame that contains Histogram Contour-ComboBox
    TGCompositeFrame    *f6;               // Frame that contains the 2D CheckBox DrawOptions
    TGCompositeFrame    *f9;               // Frame that contains the 3D CheckBox DrawOptions
    TGCompositeFrame    *f12;              // Frame that contains the Bar-Title
    TGCompositeFrame    *f13;              // Frame that contains the Bar Width/Offset NumberEntries
-   TGCompositeFrame    *f16;              // Frame that contains the ColorLevel NumberEnrtry
-   TGCompositeFrame    *f19;              // Frame that contains the ColorLevel NumberEnrtry
    TGCompositeFrame    *f38;              // Frame that contains the Frame Fill widgets
    TGCheckButton       *fAddError;        // CheckBox connected to error bars
    TGCheckButton       *fAddPalette;      // CheckBox connected to Z option (2D)
@@ -114,19 +104,22 @@ protected:
    TGCheckButton       *fDelaydraw;       // Delayed drawing of the new axis range
    TGColorSelect       *fFrameColor;      // Select the Frame Color
    TGedPatternSelect   *fFramePattern;    // Select the Frame Pattern Style
+   TString              fCutString;       // Contais info about graphical cuts (if any)
 
    static  TGComboBox *BuildHistTypeComboBox(TGFrame *parent, Int_t id);
    static  TGComboBox *BuildHistCoordsComboBox(TGFrame *parent, Int_t id);
    static  TGComboBox *BuildHistContComboBox(TGFrame* parent, Int_t id);
 
    virtual void   ConnectSignals2Slots();
-   void           CreateBinTab();       // Creates the Bin Tab (part of the SetGedEditor)
+           void   CreateBinTab();       // Creates the Bin Tab (part of the SetGedEditor)
+
 private:
-   void PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4);
+   void    PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4);
    TString GetHistTypeLabel();
    TString GetHistCoordsLabel();
    TString GetHistContLabel();
    TString GetHistAdditiveLabel();
+   TString GetCutOptionString();
 
    Int_t     fPx1old,
              fPy1old,

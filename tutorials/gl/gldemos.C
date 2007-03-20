@@ -3,10 +3,10 @@ void gldemos()
 {
    TControlBar *bar = new TControlBar("vertical", "GL painter demo",20,20);
    bar->AddButton("Help on demos", "help()", "Description");
-   bar->AddButton("glsurfaces", ".x glsurfaces.C", "Surface painter example");
-   bar->AddButton("glrose", ".x glrose.C", "Surface in polar system");
-   bar->AddButton("gltf3", ".x gltf3.C", "TF3 painter");
-   bar->AddButton("glbox", ".x glbox.C", "BOX painter");
+   bar->AddButton("glsurfaces", ".x $ROOTSYS/tutorials/gl/glsurfaces.C", "Surface painter example");
+   bar->AddButton("glrose", ".x $ROOTSYS/tutorials/gl/glrose.C", "Surface in polar system");
+   bar->AddButton("gltf3", ".x $ROOTSYS/tutorials/gl/gltf3.C", "TF3 painter");
+   bar->AddButton("glbox", ".x $ROOTSYS/tutorials/gl/glbox.C", "BOX painter");
    bar->Show();
 }
 

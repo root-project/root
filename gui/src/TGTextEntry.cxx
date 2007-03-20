@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.48 2006/10/18 15:20:56 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.49 2006/10/25 08:03:31 antcheva Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -205,7 +205,6 @@ All other keys with valid ASCII codes insert themselves into the line.
 #include "TGResourcePool.h"
 #include "TGToolTip.h"
 #include "TSystem.h"
-#include "TMath.h"
 #include "TTimer.h"
 #include "TColor.h"
 #include "KeySymbols.h"

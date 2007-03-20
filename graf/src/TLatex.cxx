@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.62 2006/11/15 18:04:08 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.69 2007/01/30 08:50:56 couet Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -10,8 +10,10 @@
  *************************************************************************/
 
 #include "Riostream.h"
+#include "TROOT.h"
 #include "TClass.h"
 #include "TLatex.h"
+#include "TMath.h"
 #include "TVirtualPad.h"
 #include "TVirtualPS.h"
 
@@ -27,233 +29,221 @@ ClassImp(TLatex)
 
 
 //______________________________________________________________________________
-//
-//   TLatex : to draw Mathematical Formula
-//
-//   This class has been implemented by begin_html <a href="http://pcbrun.cern.ch/nicolas/index.html">Nicolas Brun</a> end_html.
-//   ========================================================
-//
-//   TLatex's purpose is to write mathematical equations
-//   The syntax is very similar to the Latex one :
-//
-//   ** Subscripts and Superscripts
-//   ------------------------------
-//   Subscripts and superscripts are made with the _ and ^ commands.  These commands
-//   can be combined to make complicated subscript and superscript expressions.
-//   You may choose how to display subscripts and superscripts using the 2 functions
-//   SetindiceSize(Double_t) and SetLimitindiceSize(Int_t).
-//Begin_Html
-/*p
-<img src="gif/latex_subscripts.gif">
+/* Begin_Html
+<center><h2>TLatex : to draw Mathematical Formula</h2></center>
+
+TLatex's purpose is to write mathematical equations
+The syntax is very similar to the Latex one. 
+It provides several functionalities:
+<ul>
+<li><a href="#L1">  Subscripts and Superscripts</a></li>
+<li><a href="#L2">  Fractions</a></li>
+<li><a href="#L3">  Splitting Lines</a></li>
+<li><a href="#L4">  Roots</a></li>
+<li><a href="#L5">  Mathematical Symbols</a></li>
+<li><a href="#L6">  Delimiters</a></li>
+<li><a href="#L7">  Greek Letters</a></li>
+<li><a href="#L8">  Accents</a></li>
+<li><a href="#L9">  Changing Style</a></li>
+<li><a href="#L10"> Alignment Rules</a></li>
+<li><a href="#L11"> Examples</a></li>
+</ul>
+
+<a name="L1"></a><h3>Subscripts and Superscripts</h3>
+Subscripts and superscripts are made with the <tt>_</tt> and <tt>^</tt> 
+commands. These commands can be combined to make complicated subscript and
+superscript expressions. You may choose how to display subscripts and
+superscripts using the 2 functions <tt>SetIndiceSize(Double_t)</tt> and
+<tt>SetLimitindiceSize(Int_t)</tt>.
+<p>Examples:
+End_Html
+   x^{2y} :    Begin_Latex x^{2y}    End_Latex x_{2y} :    Begin_Latex x^{2y}    End_Latex
+   x^{y^{2}} : Begin_Latex x^{y^{2}} End_Latex x^{y_{1}} : Begin_Latex x^{y_{1}} End_Latex
+   x^{y}_{1} : Begin_Latex x^{y}_{1} End_Latex x_{1}^{y} : Begin_Latex x_{1}^{y} End_Latex
+
+Begin_Html
+<a name="L2"></a><h3>Fractions</h3>
+Fractions denoted by the <tt>/</tt> symbol are made in the obvious way.
+The <tt>#frac</tt> command is used for large fractions in displayed formula; 
+it has two arguments: the numerator and the denominator.
+<p>Examples:
+End_Html
+   x = #frac{y+z/2}{y^{2}+1} : Begin_Latex x = #frac{y+z/2}{y^{2}+1} End_Latex
+
+Begin_Html
+<a name="L3"></a><h3>Splitting Lines</h3>
+A text can be split in two lines via the command <tt>#splitline</tt>.
+<p>Examples:
+End_Html
+   #splitline{21 April 2003}{14:02:30} : Begin_Latex #splitline{21 April 2003}{14:02:30} End_Latex
+
+Begin_Html
+<a name="L4"></a><h3>Roots</h3>
+The <tt>#sqrt</tt> command produces the square root of its argument; it has 
+an optional first argument for other roots.
+<p>Examples:
+End_Html
+   #sqrt{10} : Begin_Latex #sqrt{10} End_Latex #sqrt[3]{10} : Begin_Latex #sqrt[3]{10} End_Latex
+
+Begin_Html
+<a name="L5"></a><h3>Mathematical Symbols</h3>
+TLatex can display dozens of special mathematical symbols. A few of them, such
+as <tt>+</tt> and <tt>></tt> , are produced by typing the corresponding 
+keyboard character. Others are obtained with the commands in the following
+table:
+End_Html
+Begin_Macro(source)
+mathsymbols.C
+End_Macro
+
+Begin_Html
+<a name="L6"></a><h3>Delimiters</h3>
+TLatex provides 4 kinds of proportional delimiters:
+<pre>
+   #[]{....} or "a la" Latex #left[.....#right] : big square brackets
+   #{}{....} or              #left{.....#right} : big curly brackets
+   #||{....} or              #left|.....#right| : big absolute value symbol
+   #(){....} or              #left(.....#right) : big parenthesis
+</pre>
+
+<a name="L7"></a><h3>Greek Letters</h3>
+The command to produce a lowercase Greek letter is obtained by adding a 
+<tt>#</tt> to the name of the letter. For an uppercase Greek letter, just
+capitalize the first letter of the command name. Some letter have two
+representations. The name of the second one (the "variation") starts with "var".
+The following table gives the complete list:
+End_Html
+Begin_Macro(source)
+greekletters.C
+End_Macro
+
+Begin_Html
+<a name="L8"></a><h3>Accents</h3>
+Several kind of accents are available:
+End_Html
+   #hat    = Begin_Latex #hat{a} End_Latex
+   #check  = Begin_Latex #check{a} End_Latex
+   #acute  = Begin_Latex #acute{a} End_Latex
+   #grave  = Begin_Latex #grave{a} End_Latex
+   #dot    = Begin_Latex #dot{a} End_Latex
+   #ddot   = Begin_Latex #ddot{a} End_Latex
+   #tilde  = Begin_Latex #tilde{a} End_Latex
+
+Begin_Html
+The special sign: <tt>#slash</tt> draws a slash on top of the text between brackets:
+End_Html
+   #slash{E}_{T} : Begin_Latex #slash{E}_{T} End_Latex
+
+Begin_Html
+Bar and vectors sign are done the following way:
+End_Html
+   #bar{a}: Begin_Latex #bar{a} End_Latex
+   #vec{a}: Begin_Latex #vec{a} End_Latex
+
+Begin_Html
+<a name="L9"></a><h3>Changing Style</h3>
+One can change the font and the text color at any time using :
+<tt>#font[font-number]{...}</tt> and <tt>#color[color-number]{...}</tt>
+<p>Examples:
+End_Html
+   #font[12]{Times Italic} and #font[22]{Times bold} : Begin_Latex #font[12]{Times Italic} and #font[22]{Times bold} End_Latex
+   #color[2]{Red} and #color[4]{Blue} : Begin_Latex #color[2]{Red} and #color[4]{Blue} End_Latex
+
+Begin_Html
+<a name="L10"></a><h3>Alignment Rules</h3>
+The <tt>TText</tt> alignment rules apply to the <tt>TLatex</tt> objects with one exception
+concerning the vertical alignment:
+<ul>
+<li> if the vertical alignment = 1 , subscripts are not taken into account </li>
+<li> if the vertical alignment = 0 , the text is aligned to the box surrounding
+                                     the full text with sub and superscripts</li>
+</ul>
+This is illustrated by the following example:
+End_Html
+Begin_Macro(source)
+{
+   TCanvas Tlva("Tlva","Tlva",500,500);
+   Tlva.SetGrid();
+   Tlva.DrawFrame(0,0,1,1);
+   const char *longstring = "K_{S}... K^{*0}... #frac{2s}{#pi#alpha^{2}}
+   #frac{d#sigma}{dcos#theta} (e^{+}e^{-} #rightarrow f#bar{f} ) =
+   #left| #frac{1}{1 - #Delta#alpha} #right|^{2} (1+cos^{2}#theta)";
+
+   TLatex latex;
+   latex.SetTextSize(0.025);
+   latex.SetTextAlign(13);  //align at top
+   latex.DrawLatex(.2,.9,"K_{S}");
+   latex.DrawLatex(.3,.9,"K^{*0}");
+   latex.DrawLatex(.2,.8,longstring);
+
+   latex.SetTextAlign(12);  //centered
+   latex.DrawLatex(.2,.6,"K_{S}");
+   latex.DrawLatex(.3,.6,"K^{*0}");
+   latex.DrawLatex(.2,.5,longstring);
+
+   latex.SetTextAlign(11);  //default bottom alignment
+   latex.DrawLatex(.2,.4,"K_{S}");
+   latex.DrawLatex(.3,.4,"K^{*0}");
+   latex.DrawLatex(.2,.3,longstring);
+
+   latex.SetTextAlign(10);  //special bottom alignment
+   latex.DrawLatex(.2,.2,"K_{S}");
+   latex.DrawLatex(.3,.2,"K^{*0}");
+   latex.DrawLatex(.2,.1,longstring);
+
+   latex.SetTextAlign(12);
+   latex->SetTextFont(72);
+   latex->DrawLatex(.1,.80,"13");
+   latex->DrawLatex(.1,.55,"12");
+   latex->DrawLatex(.1,.35,"11");
+   latex->DrawLatex(.1,.18,"10");
+   return Tlva;
+}
+End_Macro
+
+Begin_Html
+<a name="L11"></a><h3>Examples</h3>
+End_Html
+Begin_Macro(source)
+{
+   TCanvas ex1("ex1","Latex",500,600);
+   TLatex Tl;
+   Tl.SetTextAlign(12);
+   Tl.SetTextSize(0.04);
+   Tl.DrawLatex(0.1,0.8,"1)   C(x) = d #sqrt{#frac{2}{#lambdaD}}  #int^{x}_{0}cos(#frac{#pi}{2}t^{2})dt");
+   Tl.DrawLatex(0.1,0.6,"2)   C(x) = d #sqrt{#frac{2}{#lambdaD}}  #int^{x}cos(#frac{#pi}{2}t^{2})dt");
+   Tl.DrawLatex(0.1,0.4,"3)   R = |A|^{2} = #frac{1}{2}(#[]{#frac{1}{2}+C(V)}^{2}+#[]{#frac{1}{2}+S(V)}^{2})");
+   Tl.DrawLatex(0.1,0.2,"4)   F(t) = #sum_{i=-#infty}^{#infty}A(i)cos#[]{#frac{i}{t+i}}");
+   return ex1;
+}
+End_Macro
+Begin_Macro(source)
+{
+   TCanvas ex2("ex2","Latex",500,300);
+   TLatex Tl;
+   Tl.SetTextAlign(23);
+   Tl.SetTextSize(0.08);
+   Tl.DrawLatex(0.5,0.95,"e^{+}e^{-}#rightarrowZ^{0}#rightarrowI#bar{I}, q#bar{q}");
+   Tl.DrawLatex(0.5,0.75,"|#vec{a}#bullet#vec{b}|=#Sigmaa^{i}_{jk}+b^{bj}_{i}");
+   Tl.DrawLatex(0.5,0.5,"i(#partial_{#mu}#bar{#psi}#gamma^{#mu}+m#bar{#psi}=0#Leftrightarrow(#Box+m^{2})#psi=0");
+   Tl.DrawLatex(0.5,0.3,"L_{em}=eJ^{#mu}_{em}A_{#mu} , J^{#mu}_{em}=#bar{I}#gamma_{#mu}I , M^{j}_{i}=#SigmaA_{#alpha}#tau^{#alphaj}_{i}");
+   return ex2;
+}
+End_Macro
+Begin_Macro(source)
+{
+   TCanvas ex3("ex3","Latex",500,300);
+   TPaveText pt(.1,.1,.9,.9);
+   pt.AddText("#frac{2s}{#pi#alpha^{2}}  #frac{d#sigma}{dcos#theta} (e^{+}e^{-} #rightarrow f#bar{f} ) = ");
+   pt.AddText("#left| #frac{1}{1 - #Delta#alpha} #right|^{2} (1+cos^{2}#theta");
+   pt.AddText("+ 4 Re #left{ #frac{2}{1 - #Delta#alpha} #chi(s) #[]{#hat{g}_{#nu}^{e}#hat{g}_{#nu}^{f}
+   (1 + cos^{2}#theta) + 2 #hat{g}_{a}^{e}#hat{g}_{a}^{f} cos#theta) } #right}");
+   pt.SetLabel("Born equation");
+   pt.Draw();
+   return ex3;
+}
+End_Macro
 */
-//End_Html
-//
-//   ** Fractions
-//   ------------
-//   Fractions denoted by the / symbol are made in the obvious way.
-//   The #frac command is used for large fractions in displayed formula; it has
-//   two arguments: the numerator and the denominator.
-//Begin_Html
-/*
-<img src="gif/latex_frac.gif">
-*/
-//End_Html
-//
-//   ** splitting a line in two lines
-//   --------------------------------
-//   A text can be split in two lines via the command #splitline
-//   For example #splitline{"21 April 2003}{14:02:30}
-//
-//   ** Roots
-//   --------
-//   The #sqrt command produces the square root of its argument; it has an optional
-//   first argument for other roots.
-//   ex: #sqrt{10}  #sqrt[3]{10}
-//
-//   ** Mathematical Symbols
-//   -----------------------
-//   TLatex can make dozens of special mathematical symbols. A few of them, such as
-//   + and > , are produced by typing the corresponding keyboard character.  Others
-//   are obtained with the commands in the following table :
-//Begin_Html
-/*
-<img src="gif/latex_symbols.gif">
-*/
-//End_Html
-//    #Box       draw a square
-//    #perp      draw the perpendicular symbol
-//    #odot      draw odot
-//    #hbar      draw h-bar (Planck constant divided by 2*Pi)
-//    #parallel  draw the parallel symbol
-//
-//   ** Delimiters
-//   -------------
-//   You can produce 4 kinds of proportional delimiters.
-//   #[]{....} or "a la" Latex #left[.....#right] : big square brackets
-//   #{}{....} or              #left{.....#right} : big curly brackets
-//   #||{....} or              #left|.....#right| : big absolute value symbol
-//   #(){....} or              #left(.....#right) : big parenthesis
-//
-//   ** Greek Letters
-//   ----------------
-//   The command to produce a lowercase Greek letter is obtained by adding a # to
-//   the name of the letter. For an uppercase Greek letter, just capitalize the first
-//   letter of the command name. Some letter have two representations. The name of the
-//   second one (the "variation") starts with "var".
-//   #alpha #beta #chi #delta #varepsilon #phi #gamma #eta #iota #varphi #kappa #lambda
-//   #mu #nu #omicron #pi #theta #rho #sigma #tau #upsilon #varomega #omega #xi #psi #zeta
-//   #Alpha #Beta #Chi #Delta #Epsilon #Phi #Gamma #Eta #Iota #vartheta
-//   #Kappa #Lambda #Mu #Nu #Omicron #Pi #Theta #Rho #Sigma #Tau
-//   #Upsilon #varsigma #Omega #Xi #Psi #Zeta #varUpsilon #epsilon
-//Begin_Html
-/*
-<img src="gif/latex_greek.gif">
-*/
-//End_Html
-//
-//   ** Putting One Thing Above Another
-//   ----------------------------------
-//   Symbols in a formula are sometimes placed on above another. TLatex provides
-//   special commands for doing this.
-//
-//   ** Accents
-//   ----------
-//    #hat{a} = hat
-//    #check  = inversed hat
-//    #acute  = acute
-//    #grave  = agrave
-//    #dot    = derivative
-//    #ddot   = double derivative
-//    #tilde  = tilde
-//
-//    #slash special sign. Draw a slash on top of the text between brackets
-//   for example #slash{E}_{T}  generates "Missing ET"
-//
-//Begin_Html
-/*
-<img src="gif/latex_above.gif">
-*/
-//End_Html
-//   #dot  #ddot  #hat  #check  #acute  #grave  #tilde
-//
-//   ** Changing Style in Math Mode
-//   ------------------------------
-//   You can change the font and the text color at any moment using :
-//   #font[font-number]{...} and #color[color-number]{...}
-//
-//   ** Example1
-//   -----------
-//     The following macro (tutorials/graphics/latex.C) produces the following picture:
-//  {
-//     gROOT->Reset();
-//     TCanvas c1("c1","Latex",600,700);
-//     TLatex l;
-//     l.SetTextAlign(12);
-//     l.SetTextSize(0.04);
-//     l.DrawLatex(0.1,0.8,"1)   C(x) = d #sqrt{#frac{2}{#lambdaD}}  #int^{x}_{0}cos(#frac{#pi}{2}t^{2})dt");
-//     l.DrawLatex(0.1,0.6,"2)   C(x) = d #sqrt{#frac{2}{#lambdaD}}  #int^{x}cos(#frac{#pi}{2}t^{2})dt");
-//     l.DrawLatex(0.1,0.4,"3)   R = |A|^{2} = #frac{1}{2}(#[]{#frac{1}{2}+C(V)}^{2}+#[]{#frac{1}{2}+S(V)}^{2})");
-//     l.DrawLatex(0.1,0.2,"4)   F(t) = #sum_{i=-#infty}^{#infty}A(i)cos#[]{#frac{i}{t+i}}");
-//  }
-//Begin_Html
-/*
-<img src="gif/latex_example.gif">
-*/
-//End_Html
-//
-//   ** Example2
-//   -----------
-//     The following macro (tutorials/graphics/latex2.C) produces the following picture:
-//  {
-//     gROOT->Reset();
-//     TCanvas c1("c1","Latex",600,700);
-//     TLatex l;
-//     l.SetTextAlign(23);
-//     l.SetTextSize(0.1);
-//     l.DrawLatex(0.5,0.95,"e^{+}e^{-}#rightarrowZ^{0}#rightarrowI#bar{I}, q#bar{q}");
-//     l.DrawLatex(0.5,0.75,"|#vec{a}#bullet#vec{b}|=#Sigmaa^{i}_{jk}+b^{bj}_{i}");
-//     l.DrawLatex(0.5,0.5,"i(#partial_{#mu}#bar{#psi}#gamma^{#mu}+m#bar{#psi}=0#Leftrightarrow(#Box+m^{2})#psi=0");
-//     l.DrawLatex(0.5,0.3,"L_{em}=eJ^{#mu}_{em}A_{#mu} , J^{#mu}_{em}=#bar{I}#gamma_{#mu}I , M^{j}_{i}=#SigmaA_{#alpha}#tau^{#alphaj}_{i}");
-//  }
-//Begin_Html
-/*
-<img src="gif/latex_example2.gif">
-*/
-//End_Html
-//
-//   ** Example3
-//   -----------
-//     The following macro (tutorials/graphics/latex3.C) produces the following picture:
-//  {
-//     gROOT->Reset();
-//   TCanvas c1("c1");
-//   TPaveText pt(.1,.5,.9,.9);
-//   pt.AddText("#frac{2s}{#pi#alpha^{2}}  #frac{d#sigma}{dcos#theta} (e^{+}e^{-} #rightarrow f#bar{f} ) = ");
-//   pt.AddText("#left| #frac{1}{1 - #Delta#alpha} #right|^{2} (1+cos^{2}#theta");
-//   pt.AddText("+ 4 Re #left{ #frac{2}{1 - #Delta#alpha} #chi(s) #[]{#hat{g}_{#nu}^{e}#hat{g}_{#nu}^{f}
-//    (1 + cos^{2}#theta) + 2 #hat{g}_{a}^{e}#hat{g}_{a}^{f} cos#theta) } #right}");
-//   pt.SetLabel("Born equation");
-//   pt.Draw();
-//  }
-//Begin_Html
-/*
-<img src="gif/latex_example3.gif">
-*/
-//End_Html
-//
-//   ** Alignment rules
-//   ------------------
-//  The TText alignment rules apply to the TLatex objects with one exception
-//  concerning the vertical alignment:
-//  If the vertical alignment = 1 , subscripts are not taken into account
-//  if the vertical alignment = 0 , the text is aligned to the box surrounding
-//                                  the full text with sub and superscripts
-//  This is illustrated in the following example:
-//
-//{
-//  gROOT->Reset();
-//  TCanvas c1("c1","c1",600,500);
-//  c1.SetGrid();
-//  c1.DrawFrame(0,0,1,1);
-//  const char *longstring = "K_{S}... K^{*0}... #frac{2s}{#pi#alpha^{2}}
-// #frac{d#sigma}{dcos#theta} (e^{+}e^{-} #rightarrow f#bar{f} ) =
-// #left| #frac{1}{1 - #Delta#alpha} #right|^{2} (1+cos^{2}#theta)";
-//
-//  TLatex latex;
-//  latex.SetTextSize(0.033);
-//  latex.SetTextAlign(13);  //align at top
-//  latex.DrawLatex(.2,.9,"K_{S}");
-//  latex.DrawLatex(.3,.9,"K^{*0}");
-//  latex.DrawLatex(.2,.8,longstring);
-//
-//  latex.SetTextAlign(12);  //centered
-//  latex.DrawLatex(.2,.6,"K_{S}");
-//  latex.DrawLatex(.3,.6,"K^{*0}");
-//  latex.DrawLatex(.2,.5,longstring);
-//
-//  latex.SetTextAlign(11);  //default bottom alignment
-//  latex.DrawLatex(.2,.4,"K_{S}");
-//  latex.DrawLatex(.3,.4,"K^{*0}");
-//  latex.DrawLatex(.2,.3,longstring);
-//
-//  latex.SetTextAlign(10);  //special bottom alignment
-//  latex.DrawLatex(.2,.2,"K_{S}");
-//  latex.DrawLatex(.3,.2,"K^{*0}");
-//  latex.DrawLatex(.2,.1,longstring);
-//
-//  latex.SetTextAlign(12);
-//  latex->SetTextFont(72);
-//  latex->DrawLatex(.1,.80,"13");
-//  latex->DrawLatex(.1,.55,"12");
-//  latex->DrawLatex(.1,.35,"11");
-//  latex->DrawLatex(.1,.18,"10");
-//}
-//Begin_Html
-/*
-<img src="gif/latex_alignment.gif">
-*/
-//End_Html
-//______________________________________________________________________________
 
 
 //______________________________________________________________________________
@@ -307,7 +297,7 @@ TLatex::TLatex(const TLatex &text) : TText(text), TAttLine(text)
 }
 
 //______________________________________________________________________________
-TLatex& TLatex::operator=(const TLatex& lt) 
+TLatex& TLatex::operator=(const TLatex& lt)
 {
    //assignment operator
    if(this!=&lt) {
@@ -322,7 +312,7 @@ TLatex& TLatex::operator=(const TLatex& lt)
       fOriginSize=lt.fOriginSize;
       fTabSize=lt.fTabSize;
       fTabSize=lt.fTabSize;
-   } 
+   }
    return *this;
 }
 
@@ -987,7 +977,6 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
       TextSpec_t newSpec = spec;
       newSpec.fFont = 122;
       char letter = 97 + opGreek;
- //        Double_t yoffset = GetHeight()*spec.fSize/20.; // Greek letter too low
       Double_t yoffset = 0.; // Greek letter too low
       if (opGreek>25) letter -= 58;
       if (opGreek == 52) letter = '\241'; //varUpsilon
@@ -1138,7 +1127,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
                   gVirtualPS = saveps;
                   gVirtualPS->SetTextAlign(22);
                   gVirtualPS->Text(xx, yy, "~");
-               } 
+               }
             }
             break;
          case 9: // slash
@@ -1893,7 +1882,13 @@ TLatexFormSize TLatex::FirstParse(Double_t angle, Double_t size, const Char_t *t
 
    TextSpec_t spec;
    spec.fAngle = angle;
-   spec.fSize  = size;
+   if (fTextFont%10 == 3) {
+      Double_t hw = TMath::Max((Double_t)gPad->XtoPixel(gPad->GetX2()),
+                               (Double_t)gPad->YtoPixel(gPad->GetY1()));
+      spec.fSize = size/hw;
+   } else {
+      spec.fSize  = size;
+   }
    spec.fColor = GetTextColor();
    spec.fFont  = GetTextFont();
    Short_t halign = fTextAlign/10;
@@ -1950,7 +1945,7 @@ Double_t TLatex::GetXsize()
 
 
 //______________________________________________________________________________
-void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h)
+void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 {
    // Return text size in pixels
 
@@ -1965,11 +1960,36 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h)
    }
    fError = 0 ;
 
-   const Char_t *text = newText.Data() ;
-   TLatexFormSize fs = FirstParse(GetTextAngle(),GetTextSize(),text);
-   delete[] fTabSize;
-   w = (UInt_t)fs.Width();
-   h = (UInt_t)fs.Height();
+   if (angle) {
+      Int_t cBoxX[4], cBoxY[4];
+      Int_t ptx, pty;
+      if (TestBit(kTextNDC)) {
+         ptx = gPad->UtoPixel(fX);
+         pty = gPad->VtoPixel(fY);
+      } else {
+         ptx = gPad->XtoAbsPixel(gPad->XtoPad(fX));
+         pty = gPad->YtoAbsPixel(gPad->YtoPad(fY));
+      }
+      GetControlBox(ptx, pty, fTextAngle, cBoxX, cBoxY);
+      Int_t x1 = cBoxX[0];
+      Int_t x2 = cBoxX[0];
+      Int_t y1 = cBoxY[0];
+      Int_t y2 = cBoxY[0];
+      for (Int_t i=1; i<4; i++) {
+         if (cBoxX[i] < x1) x1 = cBoxX[i];
+         if (cBoxX[i] > x2) x2 = cBoxX[i];
+         if (cBoxY[i] < y1) y1 = cBoxY[i];
+         if (cBoxY[i] > y2) y2 = cBoxY[i];
+      }
+      w = x2-x1;
+      h = y2-y1;
+   } else {
+      const Char_t *text = newText.Data() ;
+      TLatexFormSize fs = FirstParse(GetTextAngle(),GetTextSize(),text);
+      delete[] fTabSize;
+      w = (UInt_t)fs.Width();
+      h = (UInt_t)fs.Height();
+   }
 }
 
 

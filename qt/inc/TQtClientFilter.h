@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.h,v 1.7 2006/03/24 15:31:10 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.h,v 1.32 2007/01/23 17:47:43 fine Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -58,11 +58,8 @@ class TQtClientFilter : public QObject {
    friend class TGQt;
    friend class TQtClientWidget;
 private:
-         void operator=(const TQtClientFilter &){}
-#if !defined(_MSC_VER)  || _MSC_VER >= 1310
-         void operator=(const TQtClientFilter &) const {}
-#endif
-			TQtClientFilter(const TQtClientFilter &) : QObject() {}
+         void operator=(const TQtClientFilter &);
+			TQtClientFilter(const TQtClientFilter &);
 protected:
    TQtEventQueue             *fRootEventQueue;
    TQtNextEventMessage       *fNotifyClient;

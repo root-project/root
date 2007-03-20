@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TLineEditor.cxx,v 1.3 2006/06/23 15:19:22 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TLineEditor.cxx,v 1.5 2007/02/06 15:39:54 antcheva Exp $
 // Author: Ilka  Antcheva 24/04/06
 
 /*************************************************************************
@@ -24,12 +24,10 @@
 
 
 #include "TLineEditor.h"
-#include "TGComboBox.h"
 #include "TGLabel.h"
 #include "TGNumberEntry.h"
 #include "TLine.h"
 #include "TVirtualPad.h"
-#include "TClass.h"
 
 ClassImp(TLineEditor)
 
@@ -57,61 +55,59 @@ TLineEditor::TLineEditor(const TGWindow *p, Int_t width,
    TGCompositeFrame *f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    AddFrame(f3, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
 
-   TGLabel *fStartPointXLabel = new TGLabel(f3, "Start X:");
-   f3->AddFrame(fStartPointXLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 8, 0, 1, 1));
-   fStartPointX = new TGNumberEntry(f3, 0.0, 8, kLine_STAX,
+   TGCompositeFrame *f3a = new TGCompositeFrame(f3, 80, 20);
+   f3->AddFrame(f3a, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+
+   TGLabel *fStartPointXLabel = new TGLabel(f3a, "Start X:");
+   f3a->AddFrame(fStartPointXLabel, new TGLayoutHints(kLHintsNormal, 8, 0, 5, 5));
+
+   TGLabel *fStartPointYLabel = new TGLabel(f3a, "Y:");
+   f3a->AddFrame(fStartPointYLabel, new TGLayoutHints(kLHintsNormal, 37, 0, 5, 5));
+
+   TGLabel *fEndPointXLabel = new TGLabel(f3a, "End X:");
+   f3a->AddFrame(fEndPointXLabel, new TGLayoutHints(kLHintsNormal, 10, 0, 5, 5));
+
+   TGLabel *fEndPointYLabel = new TGLabel(f3a, "Y:");
+   f3a->AddFrame(fEndPointYLabel, new TGLayoutHints(kLHintsNormal, 37, 0, 5, 5));
+
+   TGCompositeFrame *f3b = new TGCompositeFrame(f3, 80, 20, kFixedWidth);
+   f3->AddFrame(f3b, new TGLayoutHints(kLHintsNormal, 8, 0, 0, 0));
+
+   fStartPointX = new TGNumberEntry(f3b, 0.0, 8, kLine_STAX,
                                       TGNumberFormat::kNESRealThree,
                                       TGNumberFormat::kNEAAnyNumber,
                                       TGNumberFormat::kNELNoLimits);
    fStartPointX->GetNumberEntry()->SetToolTipText("Set start point X coordinate of Line.");
-   f3->AddFrame(fStartPointX, new TGLayoutHints(kLHintsLeft, 11, 1, 1, 1));
+   f3b->AddFrame(fStartPointX, new TGLayoutHints(kLHintsExpandX, 1, 1, 1, 1));
 
-   TGCompositeFrame *f4 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   AddFrame(f4, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
-
-   TGLabel *fStartPointYLabel = new TGLabel(f4, "Y:");
-   f4->AddFrame(fStartPointYLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 37, 0, 1, 1));
-   fStartPointY = new TGNumberEntry(f4, 0.0, 8, kLine_STAY,
+   fStartPointY = new TGNumberEntry(f3b, 0.0, 8, kLine_STAY,
                                       TGNumberFormat::kNESRealThree,
                                       TGNumberFormat::kNEAAnyNumber,
                                       TGNumberFormat::kNELNoLimits);
    fStartPointY->GetNumberEntry()->SetToolTipText("Set start point Y coordinate of Line.");
-   f4->AddFrame(fStartPointY, new TGLayoutHints(kLHintsLeft, 10, 1, 1, 1));
+   f3b->AddFrame(fStartPointY, new TGLayoutHints(kLHintsExpandX, 1, 1, 3, 1));
 
-   TGCompositeFrame *f5 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   AddFrame(f5, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
-
-   TGLabel *fEndPointXLabel = new TGLabel(f5, "End  X:");
-   f5->AddFrame(fEndPointXLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 7, 0, 1, 1));
-   fEndPointX = new TGNumberEntry(f5, 0.0, 8, kLine_ENDX,
+   fEndPointX = new TGNumberEntry(f3b, 0.0, 8, kLine_ENDX,
                                     TGNumberFormat::kNESRealThree,
                                     TGNumberFormat::kNEAAnyNumber,
                                     TGNumberFormat::kNELNoLimits);
    fEndPointX->GetNumberEntry()->SetToolTipText("Set end point X xoordinate of Line.");
-   f5->AddFrame(fEndPointX, new TGLayoutHints(kLHintsLeft, 11, 1, 1, 1));
+   f3b->AddFrame(fEndPointX, new TGLayoutHints(kLHintsExpandX, 1, 1, 3, 1));
 
-   TGCompositeFrame *f6 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   AddFrame(f6, new TGLayoutHints(kLHintsTop, 1, 1, 3, 0));
-
-   TGLabel *fEndPointYLabel = new TGLabel(f6, "Y:");
-   f6->AddFrame(fEndPointYLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 37, 0, 1, 1));
-   fEndPointY = new TGNumberEntry(f6, 0.0, 8, kLine_ENDY,
+   fEndPointY = new TGNumberEntry(f3b, 0.0, 8, kLine_ENDY,
                                     TGNumberFormat::kNESRealThree,
                                     TGNumberFormat::kNEAAnyNumber,
                                     TGNumberFormat::kNELNoLimits);
    fEndPointY->GetNumberEntry()->SetToolTipText("Set end point Y coordinate of Line.");
-   f6->AddFrame(fEndPointY, new TGLayoutHints(kLHintsLeft, 11, 1, 1, 1));
+   f3b->AddFrame(fEndPointY, new TGLayoutHints(kLHintsExpandX, 1, 1, 3, 1));
 
-   TGCompositeFrame *f7 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   AddFrame(f7, new TGLayoutHints(kLHintsTop, 1, 1, 5, 0));
-
-   fVertical = new TGCheckButton(f7,"Vertical",kLine_VERTICAL);
+   fVertical = new TGCheckButton(this,"Vertical",kLine_VERTICAL);
    fVertical->SetToolTipText("Set vertical");
-   f7->AddFrame(fVertical, new TGLayoutHints(kLHintsTop, 5, 1, 0, 0));
+   AddFrame(fVertical, new TGLayoutHints(kLHintsTop, 8, 1, 5, 0));
 
-   fHorizontal = new TGCheckButton(f7,"Horizontal",kLine_HORIZONTAL);
+   fHorizontal = new TGCheckButton(this,"Horizontal",kLine_HORIZONTAL);
    fHorizontal->SetToolTipText("Set horizontal");
-   f7->AddFrame(fHorizontal, new TGLayoutHints(kLHintsTop, 5, 1, 0, 0));
+   AddFrame(fHorizontal, new TGLayoutHints(kLHintsTop, 8, 1, 3, 0));
 }
 
 //______________________________________________________________________________

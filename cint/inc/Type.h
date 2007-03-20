@@ -13,10 +13,8 @@
  *
  ************************************************************************/
 
-
 #ifndef G__TYPEINFOX_H
 #define G__TYPEINFOX_H 
-
 
 #include "Api.h"
 
@@ -30,30 +28,31 @@ class
 #ifndef __CINT__
 G__EXPORT
 #endif
-G__TypeInfo : public G__ClassInfo  {
+// FIXME: Warning, G__TypeReader in src/bc_type.h inherits from G__TypeInfo, we may need a virtual destructor.
+G__TypeInfo : public G__ClassInfo {
   friend class G__DataMemberInfo;
   friend class G__MethodInfo;
   friend class G__MethodArgInfo;
  public:
   ~G__TypeInfo();
-  G__TypeInfo(const char *typenamein);
+  G__TypeInfo(const char* typenamein);
   G__TypeInfo();
-  void Init(const char *typenamein);
+  void Init(const char* typenamein);
 #ifndef __MAKECINT__
-  G__TypeInfo(G__value buf);
-  void Init(G__value& buf);
-  void Init(struct G__var_array *var,int ig15);
+  G__TypeInfo(G__value);
+  void Init(G__value&);
+  void Init(struct G__var_array*, int);
   G__TypeInfo(const G__TypeInfo&);
   G__TypeInfo& operator=(const G__TypeInfo&);
 #endif
-  int operator==(const G__TypeInfo& a);
-  int operator!=(const G__TypeInfo& a);
-  const char *Name() ;
-  const char *TrueName() ;
+  int operator==(const G__TypeInfo&);
+  int operator!=(const G__TypeInfo&);
+  const char* Name();
+  const char* TrueName();
   int Size() const; 
   long Property();
   int IsValid();
-  void *New();
+  void* New();
 
   int Typenum() const;
   int Type() const;
@@ -68,7 +67,7 @@ G__TypeInfo : public G__ClassInfo  {
   long isconst;
 
  private:
-  int Next() { return(0); } // prohibit use of next
+  int Next(); // prohibit use of next
 };
 
 } // namespace Cint

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.25 2006/07/03 16:10:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.26 2006/10/01 16:53:42 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -635,7 +635,7 @@ void TBox::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TBox::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TBox::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -651,6 +651,6 @@ void TBox::Streamer(TBuffer &R__b)
       //====end of old versions
 
    } else {
-      TBox::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TBox::Class(),this);
    }
 }

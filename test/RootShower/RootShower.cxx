@@ -48,6 +48,7 @@
 #include <TView.h>
 #include <TGToolBar.h>
 #include <TGSplitter.h>
+#include <TColor.h>
 
 #include <THtml.h>
 
@@ -1395,7 +1396,7 @@ int main(int argc, char **argv)
     Double_t Red[NRGBs] = { 1.00, 1.00, 1.00, 1.00, 1.00 };
     Double_t Green[NRGBs] = { 1.00, 0.75, 0.50, 0.25, 0.00 };
     Double_t Blue[NRGBs] = { 0.00, 0.00, 0.00, 0.00, 0.00 };
-    gColIndex = gStyle->CreateGradientColorTable(NRGBs, Stops, Red, Green, Blue, 17);
+    gColIndex = TColor::CreateGradientColorTable(NRGBs, Stops, Red, Green, Blue, 17);
 
     // Create RootShower
     RootShower theShower(gClient->GetRoot(), 400, 200);

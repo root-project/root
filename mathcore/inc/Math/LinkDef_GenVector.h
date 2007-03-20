@@ -1,15 +1,9 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.8 2006/04/11 15:41:07 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_GenVector.h,v 1.10 2007/02/20 15:53:13 moneta Exp $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 
 
 #ifdef __CINT__
-
-#pragma link off all globals;
-#pragma link off all classes;
-#pragma link off all functions;
-
-#pragma link C++ namespace ROOT::Math;
 
 
 #pragma link C++ class ROOT::Math::Cartesian3D<double>+;
@@ -135,7 +129,7 @@
 #pragma link C++ class vector<ROOT::Math::XYZPoint >+;
 #endif
 
-// exclude this (they make loibrary  too big and are not used in tests in CVS)
+// exclude this (they make the library  too big and are not used in tests in CVS)
 
 #pragma link C++ class vector<ROOT::Math::Polar3DVector >+;
 #pragma link C++ class vector<ROOT::Math::Polar3DPoint >+;

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.20 2005/11/11 17:31:48 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.23 2007/02/21 13:45:39 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TMath.h"
 #include "TArrow.h"
 #include "TVirtualPad.h"
 
@@ -21,17 +22,20 @@ TString TArrow::fgDefaultOption     = ">";
 ClassImp(TArrow)
 
 //______________________________________________________________________________
-//  Different arrow formats as explained in TArrow::TArrow or in
-//  the picture below are provided.
-//  Once an arrow is drawn on the screen:
-//    - One can click on one of the edges and move this edge.
-//    - One can click on any other arrow part to move the entire arrow.
-//Begin_Html
-/*
-<img src="gif/arrow.gif">
-*/
-//End_Html
-//
+/* Begin_Html
+<center><h2>TArrow : to draw all kinds of arrows</h2></center>
+The different arrow's formats are explained in TArrow::TArrow.
+The picture below gives some examples.
+<P>
+Once an arrow is drawn on the screen:
+<ul>
+<li> One can click on one of the edges and move this edge.</li>
+<li> One can click on any other arrow part to move the entire arrow.</li>
+</ul>
+End_Html
+Begin_Macro(source)
+../../../tutorials/graphics/arrow.C
+End_Macro */
 
 //______________________________________________________________________________
 TArrow::TArrow(): TLine(),TAttFill()
@@ -131,6 +135,7 @@ void TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    newarrow->SetAngle(fAngle);
    TAttLine::Copy(*newarrow);
    TAttFill::Copy(*newarrow);
+   newarrow->SetBit(kCanDelete);
    newarrow->AppendPad(opt);
 }
 

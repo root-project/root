@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.12 2006/04/06 13:35:07 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.18 2007/02/21 12:39:00 couet Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -14,45 +14,118 @@
 #include "TVirtualPad.h"
 #include "TStyle.h"
 #include "TVirtualX.h"
-#include "TMath.h"
 #include "TVirtualPadEditor.h"
 #include "TColor.h"
+#include <cmath>
 
 
 ClassImp(TAttLine)
 
+
 //______________________________________________________________________________
-//*-*-*-*-*-*-*-*-*-*-*-*-*Line Attributes class*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =====================
-//*-*  Line attributes are:
-//*-*    Line Color (see TAttFill for the list of colors)
-//*-*    Line Width expressed in pixel units
-//*-*    Line Style 1=solid, 2=dash, 3=dot-dot, 4=dash-dot. Additional line
-//*-*               styles can be defined using TStyle::SetLineStyleString.
-//*-*               Example:
-//*-*               gStyle->SetLineStyleString(5,"20 12 4 12");
-//*-*               gStyle->SetLineStyleString(6,"20 12 4 12 4 12 4 12");
-//*-*               gStyle->SetLineStyleString(7,"20 20");
-//*-*               gStyle->SetLineStyleString(8,"20 12 4 12 4 12");
-//*-*               gStyle->SetLineStyleString(9,"80 20");
-//*-*
-//Begin_Html
-/*
-<img src="gif/userlinestyle.gif">
-*/
-//End_Html
-//*-*
-//*-*  This class is used (in general by secondary inheritance)
-//*-*  by many other classes (graphics, histograms).
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/* Begin_Html
+<center><h2>Line Attributes class</h2></center>
+
+This class is used (in general by secondary inheritance)
+by many other classes (graphics, histograms). It holds all the line attributes.
+
+<h3>Line attributes</h3>
+Line attributes are:
+<ul>
+<li><a href="#L1">Line Color.</a></li>
+<li><a href="#L2">Line Width.</a></li>
+<li><a href="#L3">Line Style.</a></li>
+</ul>
+
+<a name="L1"></a><h3>Line Color</h3>
+The line color is a color index (integer) pointing in the ROOT
+color table.
+The line color of any class inheriting from <tt>TAttLine</tt> can
+be changed using the method <tt>SetLineColor</tt> and retrieved using the
+method <tt>GetLineColor</tt>.
+The following table shows the first 50 default colors.
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c","Line colors",0,0,500,200);
+   c.DrawColorTable();
+   return c;
+}
+End_Macro
+
+Begin_Html
+<a name="L2"></a><h3>Line Width</h3>
+The line width is expressed in pixel units.
+The line width of any class inheriting from <tt>TAttLine</tt> can
+be changed using the method <tt>SetLineWidth</tt> and retrieved using the
+method <tt>GetLineWidth</tt>.
+The following picture shows the line widths from 1 to 10 pixels.
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *Lw = new TCanvas("Lw","test",500,200);
+   TText  t;
+   t.SetTextAlign(32);
+   t.SetTextSize(0.08);
+   Int_t i=1;
+   gStyle->SetLineStyleString(9,"400 20");
+   for (float s=0.1; s<1.0 ; s+=0.092) {
+      TLine *lh = new TLine(0.15,s,.85,s);
+      lh->SetLineWidth(i);
+      t.DrawText(0.1,s,Form("%d",i++));
+      lh->Draw();
+   }
+   return Lw;
+}
+End_Macro
+
+Begin_Html
+<a name="L3"></a><h3>Line Style</h3>
+Line styles are identified via integer numbers.
+The line style of any class inheriting from <tt>TAttLine</tt> can
+be changed using the method <tt>SetLineStyle</tt> and retrieved using the
+method <tt>GetLineStyle</tt>.
+The four basic line styles are:
+<pre>
+   1 = solid
+   2 = dash
+   3 = dot-dot
+   4 = dash-dot
+</pre>
+Additional line styles can be defined using <tt>TStyle::SetLineStyleString</tt>.
+<br>Example:
+<pre>
+   gStyle->SetLineStyleString(5,"20 12 4 12");
+   gStyle->SetLineStyleString(6,"20 12 4 12 4 12 4 12");
+   gStyle->SetLineStyleString(7,"20 20");
+   gStyle->SetLineStyleString(8,"20 12 4 12 4 12");
+   gStyle->SetLineStyleString(9,"80 20");
+</pre>
+The following picture shows the first 10 line styles.
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *Ls = new TCanvas("Ls","test",500,200);
+   TText  t;
+   t.SetTextAlign(32);
+   t.SetTextSize(0.08);
+   Int_t i=1;
+   gStyle->SetLineStyleString(9,"400 20");
+   for (float s=0.1; s<1.0 ; s+=0.092) {
+      TLine *lh = new TLine(0.15,s,.85,s);
+      lh->SetLineStyle(i);
+      t.DrawText(0.1,s,Form("%d",i++));
+      lh->Draw();
+   }
+   return Ls;
+}
+End_Macro */
+
 
 //______________________________________________________________________________
 TAttLine::TAttLine()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*AttLine default constructor*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ===========================
-//*-*  Default line attributes are taking from the current style
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // AttLine default constructor.
 
    if (!gStyle) return;
    fLineColor = gStyle->GetLineColor();
@@ -60,69 +133,69 @@ TAttLine::TAttLine()
    fLineStyle = gStyle->GetLineStyle();
 }
 
+
 //______________________________________________________________________________
 TAttLine::TAttLine(Color_t color, Style_t style, Width_t width)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*AttLine normal constructor*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ===========================
-//*-*  Line attributes are taking from the argument list
-//*-*    color : must be one of the valid color index
-//*-*    style : 1=solid, 2=dash, 3=dash-dot, 4=dot-dot. New styles can be 
-//*-*            defined using TStyle::SetLineStyleString.
-//*-*    width : expressed in pixel units
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // AttLine normal constructor.
+   // Line attributes are taking from the argument list
+   //   color : must be one of the valid color index
+   //   style : 1=solid, 2=dash, 3=dash-dot, 4=dot-dot. New styles can be
+   //           defined using TStyle::SetLineStyleString.
+   //   width : expressed in pixel units
+
    fLineColor = color;
    fLineWidth = width;
    fLineStyle = style;
 }
 
+
 //______________________________________________________________________________
 TAttLine::~TAttLine()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*AttLine destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =================
+   // AttLine destructor.
 }
+
 
 //______________________________________________________________________________
 void TAttLine::Copy(TAttLine &attline) const
 {
-//*-*-*-*-*-*-*-*-*Copy this line attributes to a new attline*-*-*-*-*-*-*-*-*
-//*-*              ==========================================
+   // Copy this line attributes to a new TAttLine.
+
    attline.fLineColor  = fLineColor;
    attline.fLineStyle  = fLineStyle;
    attline.fLineWidth  = fLineWidth;
 }
 
+
 //______________________________________________________________________________
 Int_t TAttLine::DistancetoLine(Int_t px, Int_t py, Double_t xp1, Double_t yp1, Double_t xp2, Double_t yp2 )
 {
-//*-*-*-*-*-*-*-*-*-*-*Compute distance from point px,py to a line*-*-*-*-*-*
-//*-*                  ===========================================
-//*-*  Compute the closest distance of approach from point px,py to this line.
-//*-*  The distance is computed in pixels units.
-//*-*
-//*-*  Algorithm:
-//*-*
-//*-*    A(x1,y1)         P                             B(x2,y2)
-//*-*    ------------------------------------------------
-//*-*                     I
-//*-*                     I
-//*-*                     I
-//*-*                     I
-//*-*                    M(x,y)
-//*-*
-//*-*  Let us call  a = distance AM     A=a**2
-//*-*               b = distance BM     B=b**2
-//*-*               c = distance AB     C=c**2
-//*-*               d = distance PM     D=d**2
-//*-*               u = distance AP     U=u**2
-//*-*               v = distance BP     V=v**2     c = u + v
-//*-*
-//*-*  D = A - U
-//*-*  D = B - V  = B -(c-u)**2
-//*-*     ==> u = (A -B +C)/2c
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Compute distance from point px,py to a line.
+   // Compute the closest distance of approach from point px,py to this line.
+   // The distance is computed in pixels units.
+   //
+   // Algorithm:
+   //
+   //   A(x1,y1)         P                             B(x2,y2)
+   //   -----------------+------------------------------
+   //                    |
+   //                    |
+   //                    |
+   //                    |
+   //                   M(x,y)
+   //
+   // Let us call  a = distance AM     A=a**2
+   //              b = distance BM     B=b**2
+   //              c = distance AB     C=c**2
+   //              d = distance PM     D=d**2
+   //              u = distance AP     U=u**2
+   //              v = distance BP     V=v**2     c = u + v
+   //
+   // D = A - U
+   // D = B - V  = B -(c-u)**2
+   //    ==> u = (A -B +C)/2c
+
    Double_t xl, xt, yl, yt;
    Double_t x     = px;
    Double_t y     = py;
@@ -146,19 +219,19 @@ Int_t TAttLine::DistancetoLine(Int_t px, Int_t py, Double_t xp1, Double_t yp1, D
    Double_t b     = xx2*xx2   + yy2*yy2;
    Double_t c     = x1x2*x1x2 + y1y2*y1y2;
    if (c <= 0)  return 9999;
-   Double_t v     = TMath::Sqrt(c);
+   Double_t v     = sqrt(c);
    Double_t u     = (a - b + c)/(2*v);
    Double_t d     = TMath::Abs(a - u*u);
    if (d < 0)   return 9999;
 
-   return Int_t(TMath::Sqrt(d) - 0.5*Double_t(fLineWidth));
+   return Int_t(sqrt(d) - 0.5*Double_t(fLineWidth));
 }
+
 
 //______________________________________________________________________________
 void TAttLine::Modify()
 {
-//*-*-*-*-*-*-*-*-*-*Change current line attributes if necessary*-*-*-*-*-*-*
-//*-*                ===========================================
+   // Change current line attributes if necessary.
 
    if (!gPad) return;
    Int_t lineWidth = TMath::Abs(fLineWidth%100);
@@ -173,27 +246,28 @@ void TAttLine::Modify()
    else                                   gPad->SetAttLinePS(fLineColor,1,lineWidth);
 }
 
+
 //______________________________________________________________________________
 void TAttLine::ResetAttLine(Option_t *)
 {
-//*-*-*-*-*-*-*-*-*Reset this line attributes to default values*-*-*-*-*-*-*
-//*-*              ============================================
+   // Reset this line attributes to default values.
 
    fLineColor  = 1;
    fLineStyle  = 1;
    fLineWidth  = 1;
 }
 
+
 //______________________________________________________________________________
 void TAttLine::SaveLineAttributes(ostream &out, const char *name, Int_t coldef, Int_t stydef, Int_t widdef)
 {
-    // Save line attributes as C++ statement(s) on output stream out
+   // Save line attributes as C++ statement(s) on output stream out.
 
    if (fLineColor != coldef) {
       if (fLineColor > 228) {
          TColor::SaveColor(out, fLineColor);
          out<<"   "<<name<<"->SetLineColor(ci);" << endl;
-      } else 
+      } else
          out<<"   "<<name<<"->SetLineColor("<<fLineColor<<");"<<endl;
    }
    if (fLineStyle != stydef) {
@@ -204,13 +278,11 @@ void TAttLine::SaveLineAttributes(ostream &out, const char *name, Int_t coldef, 
    }
 }
 
+
 //______________________________________________________________________________
 void TAttLine::SetLineAttributes()
 {
-//*-*-*-*-*-*-*-*-*Invoke the DialogCanvas Line attributes*-*-*-*-*-*-*
-//*-*              =======================================
-
-   //if (gPad) gPad->UpdateLineAttributes(fLineColor,fLineStyle,fLineWidth);
+   // Invoke the DialogCanvas Line attributes.
 
    TVirtualPadEditor::UpdateLineAttributes(fLineColor,fLineStyle,fLineWidth);
 }

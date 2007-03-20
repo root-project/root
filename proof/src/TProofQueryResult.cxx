@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofQueryResult.cxx,v 1.1 2005/09/16 08:48:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofQueryResult.cxx,v 1.2 2006/11/27 14:14:24 rdm Exp $
 // Author: G Ganis Sep 2005
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "TDSet.h"
 #include "TError.h"
 #include "TEventList.h"
+#include "TList.h"
 #include "TProofQueryResult.h"
 #include "TSystem.h"
 

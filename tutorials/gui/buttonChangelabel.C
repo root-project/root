@@ -102,5 +102,5 @@ MyMainFrame::~MyMainFrame()
 void buttonChangelabel()
 {
    // Popup the GUI...
-   new MyMainFrame(gClient->GetRoot(), 350, 80);
+   new MyMainFrame(0, 350, 80);
 }

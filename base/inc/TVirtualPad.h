@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.20 2006/10/19 10:58:24 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.24 2007/02/18 16:50:27 brun Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -43,6 +43,7 @@
 #endif
 
 // forward declarations
+class TAxis;
 class TObject;
 class TObjLink;
 class TView;
@@ -50,7 +51,6 @@ class TCanvas;
 class TH1F;
 class TFrame;
 class TBox;
-class TPadView3D;
 class TVirtualViewer3D;
 
 class TVirtualPad : public TObject, public TAttLine, public TAttFill,
@@ -81,6 +81,7 @@ public:
    virtual void     Draw(Option_t *option="") = 0;
    virtual void     DrawClassObject(const TObject *obj, Option_t *option="") = 0;
    virtual TH1F    *DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title="") = 0;
+   virtual void     ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis) = 0;
    virtual Short_t  GetBorderMode() const = 0;
    virtual Short_t  GetBorderSize() const = 0;
    virtual Int_t    GetCanvasID() const = 0;
@@ -137,7 +138,7 @@ public:
    virtual const char *GetTitle() const = 0;
    virtual Int_t    GetPadPaint() const = 0;
    virtual Int_t    GetPixmapID() const = 0;
-   virtual TPadView3D *GetView3D() const = 0;
+   virtual TObject *GetView3D() const = 0;
    virtual Bool_t   HasCrosshair() const = 0;
    virtual void     HighLight(Color_t col=kRed, Bool_t set=kTRUE) = 0;
    virtual Bool_t   HasFixedAspectRatio() const = 0;
@@ -181,7 +182,7 @@ public:
    virtual void     RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax) = 0;
    virtual void     RecursiveRemove(TObject *obj) = 0;
    virtual void     RedrawAxis(Option_t *option="") = 0;
-   virtual void     ResetView3D(TPadView3D *view=0) = 0;
+   virtual void     ResetView3D(TObject *view=0) = 0;
    virtual void     ResizePad(Option_t *option="") = 0;
    virtual void     SaveAs(const char *filename="",Option_t *option="") const = 0;
    virtual void     SetBatch(Bool_t batch=kTRUE) = 0;
@@ -219,7 +220,7 @@ public:
    virtual void     SetPhi(Double_t phi=30) = 0;
    virtual void     SetToolTipText(const char *text, Long_t delayms = 1000) = 0;
    virtual void     SetVertical(Bool_t vert=kTRUE) = 0;
-   virtual void     SetView(TView *view) = 0;
+   virtual void     SetView(TView *view=0) = 0;
    virtual void     SetViewer3D(TVirtualViewer3D * /*viewer3d*/) {}
    virtual TObject *WaitPrimitive(const char *pname="", const char *emode="") = 0;
    virtual void     Update() = 0;

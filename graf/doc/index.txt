@@ -1,0 +1,20 @@
+This directory contains all the low level graphics classes.
+BEGIN_HTML
+ Several documents describing these classes are listed below:
+<ul>
+<li><a href="ftp://root.cern.ch/root/doc/chapter4.pdf">The Chapter about the Graph classes in the Users Guide
+    </a></li>
+<li><a href="ftp://root.cern.ch/root/doc/chapter9.pdf">The Chapter about Graphics and GUI in the Users Guide
+    </a></li>
+<li><a href="http://root.cern.ch/root/HowtoDraw.html">How to Draw objects
+    </a></li>
+<li><a href="http://root.cern.ch/root/HowtoPick.html">How to Pick objects
+      </A></li>
+<li><a href="http://root.cern.ch/root/HowtoTimeAxis.html">How to create an axis with Time units
+      </A></li>
+<li><a href="http://root.cern.ch/root/HowtoStyle.html">How to Create or Modify a style
+      </A></li>
+<li><a href="http://root.cern.ch/root/HowtoPS.html">How to use the Postscript interface
+      </A></li>
+</ul>
+END_HTML

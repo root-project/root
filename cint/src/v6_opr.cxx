@@ -352,11 +352,132 @@ void G__bstore(int operatortag,G__value expressionin,G__value *defined)
   }
   
   /****************************************************************
+   * long double operator long double
+   * 
+   ****************************************************************/
+  if('q'==defined->type || 'q'==expressionin.type) { 
+    long double lddefined = G__Longdouble(*defined);
+    long double ldexpression = G__Longdouble(expressionin);
+    switch(operatortag) {
+    case '\0':
+      defined->ref=expressionin.ref;
+      G__letLongdouble(defined,'q',lddefined+ldexpression);
+      break;
+    case '+': /* add */
+      G__letLongdouble(defined,'q',lddefined+ldexpression);
+      defined->ref=0;
+      break;
+    case '-': /* subtract */
+      G__letLongdouble(defined,'q',lddefined-ldexpression);
+      defined->ref=0;
+      break;
+    case '*': /* multiply */
+      if(defined->type==G__null.type) lddefined=1;
+      G__letLongdouble(defined,'q',lddefined*ldexpression);
+      defined->ref=0;
+      break;
+    case '/': /* divide */
+      if(defined->type==G__null.type) lddefined=1;
+      if(ldexpression==0) {
+        if(G__no_exec_compile) G__letdouble(defined,'i',0);
+        else G__genericerror("Error: operator '/' divided by zero");
+        return;
+      }
+      G__letLongdouble(defined,'q',lddefined/ldexpression);
+      defined->ref=0;
+      break;
+
+    case '>':
+      if(defined->type==G__null.type) {
+        G__letLongdouble(defined,'i',0>ldexpression);
+      }
+      else
+        G__letint(defined,'i',lddefined>ldexpression);
+      defined->ref=0;
+      break;
+    case '<':
+      if(defined->type==G__null.type) {
+        G__letdouble(defined,'i',0<ldexpression);
+      }
+      else
+        G__letint(defined,'i',lddefined<ldexpression);
+      defined->ref=0;
+      break;
+    case '!': 
+      if(ldexpression==0) G__letint(defined,'i',1);
+      else                G__letint(defined,'i',0);
+      defined->ref=0;
+      break;
+    case 'E': /* == */
+      if(defined->type==G__null.type) 
+        G__letLongdouble(defined,'q',0); /* Expression should be false wben the var is not defined */
+      else
+        G__letint(defined,'i',lddefined==ldexpression);
+      defined->ref=0;
+      break;
+    case 'N': /* != */
+      if(defined->type==G__null.type) 
+        G__letLongdouble(defined,'q',1); /* Expression should be true wben the var is not defined */
+      else
+        G__letint(defined,'i',lddefined!=ldexpression);
+      defined->ref=0;
+      break;
+    case 'G': /* >= */
+      if(defined->type==G__null.type) 
+        G__letLongdouble(defined,'q',0); /* Expression should be false wben the var is not defined */
+      else
+        G__letint(defined,'i',lddefined>=ldexpression);
+      defined->ref=0;
+      break;
+    case 'l': /* <= */
+      if(defined->type==G__null.type) 
+        G__letLongdouble(defined,'q',0); /* Expression should be false wben the var is not defined */
+      else
+        G__letint(defined,'i',lddefined<=ldexpression);
+      defined->ref=0;
+      break;
+
+    case G__OPR_ADDASSIGN:
+      if(!G__no_exec_compile&&defined->ref) 
+        G__doubleassignbyref(defined,lddefined+ldexpression);
+      break;
+    case G__OPR_SUBASSIGN:
+      if(!G__no_exec_compile&&defined->ref) 
+        G__doubleassignbyref(defined,lddefined-ldexpression);
+      break;
+    case G__OPR_MODASSIGN:
+      if(!G__no_exec_compile&&defined->ref) 
+        G__doubleassignbyref(defined
+                             ,(double)((long)lddefined%(long)ldexpression));
+      break;
+    case G__OPR_MULASSIGN:
+      if(!G__no_exec_compile&&defined->ref) 
+        G__doubleassignbyref(defined,lddefined*ldexpression);
+      break;
+    case G__OPR_DIVASSIGN:
+      if(!G__no_exec_compile&&defined->ref) 
+        G__doubleassignbyref(defined,lddefined/ldexpression);
+      break;
+    case G__OPR_ANDASSIGN:
+      if(!G__no_exec_compile&&defined->ref) 
+        G__doubleassignbyref(defined
+                             ,(double)((long)lddefined&&(long)ldexpression));
+      break;
+    case G__OPR_ORASSIGN:
+      if(!G__no_exec_compile&&defined->ref) 
+        G__doubleassignbyref(defined
+                             ,(double)((long)lddefined||(long)ldexpression));
+      break;
+    }
+
+  }
+
+  /****************************************************************
    * double operator double
    * double operator int
    * int    operator double
    ****************************************************************/
-  if((G__isdouble(expressionin))||(G__isdouble(*defined))) {
+  else if((G__isdouble(expressionin))||(G__isdouble(*defined))) {
     fexpression=G__double(expressionin);
     fdefined=G__double(*defined);
     defined->typenum = -1;
@@ -827,126 +948,6 @@ void G__bstore(int operatortag,G__value expressionin,G__value *defined)
     }
   }
   
-  /****************************************************************
-   * long double operator long double
-   * 
-   ****************************************************************/
-  else if('q'==defined->type || 'q'==expressionin.type) { 
-    long double lddefined = G__Longdouble(*defined);
-    long double ldexpression = G__Longdouble(expressionin);
-    switch(operatortag) {
-    case '\0':
-      defined->ref=expressionin.ref;
-      G__letLongdouble(defined,'q',lddefined+ldexpression);
-      break;
-    case '+': /* add */
-      G__letLongdouble(defined,'q',lddefined+ldexpression);
-      defined->ref=0;
-      break;
-    case '-': /* subtract */
-      G__letLongdouble(defined,'q',lddefined-ldexpression);
-      defined->ref=0;
-      break;
-    case '*': /* multiply */
-      if(defined->type==G__null.type) lddefined=1;
-      G__letLongdouble(defined,'q',lddefined*ldexpression);
-      defined->ref=0;
-      break;
-    case '/': /* divide */
-      if(defined->type==G__null.type) lddefined=1;
-      if(ldexpression==0) {
-        if(G__no_exec_compile) G__letdouble(defined,'i',0);
-        else G__genericerror("Error: operator '/' divided by zero");
-        return;
-      }
-      G__letLongdouble(defined,'q',lddefined/ldexpression);
-      defined->ref=0;
-      break;
-
-    case '>':
-      if(defined->type==G__null.type) {
-        G__letLongdouble(defined,'i',0>ldexpression);
-      }
-      else
-        G__letint(defined,'i',lddefined>ldexpression);
-      defined->ref=0;
-      break;
-    case '<':
-      if(defined->type==G__null.type) {
-        G__letdouble(defined,'i',0<ldexpression);
-      }
-      else
-        G__letint(defined,'i',lddefined<ldexpression);
-      defined->ref=0;
-      break;
-    case '!': 
-      if(ldexpression==0) G__letint(defined,'i',1);
-      else                G__letint(defined,'i',0);
-      defined->ref=0;
-      break;
-    case 'E': /* == */
-      if(defined->type==G__null.type) 
-        G__letLongdouble(defined,'q',0); /* Expression should be false wben the var is not defined */
-      else
-        G__letint(defined,'i',lddefined==ldexpression);
-      defined->ref=0;
-      break;
-    case 'N': /* != */
-      if(defined->type==G__null.type) 
-        G__letLongdouble(defined,'q',1); /* Expression should be true wben the var is not defined */
-      else
-        G__letint(defined,'i',lddefined!=ldexpression);
-      defined->ref=0;
-      break;
-    case 'G': /* >= */
-      if(defined->type==G__null.type) 
-        G__letLongdouble(defined,'q',0); /* Expression should be false wben the var is not defined */
-      else
-        G__letint(defined,'i',lddefined>=ldexpression);
-      defined->ref=0;
-      break;
-    case 'l': /* <= */
-      if(defined->type==G__null.type) 
-        G__letLongdouble(defined,'q',0); /* Expression should be false wben the var is not defined */
-      else
-        G__letint(defined,'i',lddefined<=ldexpression);
-      defined->ref=0;
-      break;
-
-    case G__OPR_ADDASSIGN:
-      if(!G__no_exec_compile&&defined->ref) 
-        G__doubleassignbyref(defined,lddefined+ldexpression);
-      break;
-    case G__OPR_SUBASSIGN:
-      if(!G__no_exec_compile&&defined->ref) 
-        G__doubleassignbyref(defined,lddefined-ldexpression);
-      break;
-    case G__OPR_MODASSIGN:
-      if(!G__no_exec_compile&&defined->ref) 
-        G__doubleassignbyref(defined
-                             ,(double)((long)lddefined%(long)ldexpression));
-      break;
-    case G__OPR_MULASSIGN:
-      if(!G__no_exec_compile&&defined->ref) 
-        G__doubleassignbyref(defined,lddefined*ldexpression);
-      break;
-    case G__OPR_DIVASSIGN:
-      if(!G__no_exec_compile&&defined->ref) 
-        G__doubleassignbyref(defined,lddefined/ldexpression);
-      break;
-    case G__OPR_ANDASSIGN:
-      if(!G__no_exec_compile&&defined->ref) 
-        G__doubleassignbyref(defined
-                             ,(double)((long)lddefined&&(long)ldexpression));
-      break;
-    case G__OPR_ORASSIGN:
-      if(!G__no_exec_compile&&defined->ref) 
-        G__doubleassignbyref(defined
-                             ,(double)((long)lddefined||(long)ldexpression));
-      break;
-    }
-
-  }
   /****************************************************************
    * long operator long
    * 
@@ -2653,6 +2654,11 @@ int G__overloadopr(int operatortag,G__value expressionin,G__value *defined)
         else
           sprintf(expr,"*%s*)%ld",arg2,expressionin.ref);  
         strcpy(arg2,expr);
+      }
+      if(expressionin.type == 'm') {
+         strcat(arg2,"ULL");
+      } else if (expressionin.type == 'n') {
+         strcat(arg2,"LL");
       }
     }
 

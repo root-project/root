@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.cxx,v 1.7 2006/03/20 13:34:03 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiMenu.cxx,v 1.8 2006/07/03 16:10:45 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -40,6 +40,7 @@
 
 #include "TGMdi.h"
 #include "TGMdiMenu.h"
+#include "TList.h"
 #include "Riostream.h"
 
 

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.54 2006/10/05 18:19:09 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLViewer.cxx,v 1.59 2007/02/07 15:24:16 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 
 #include "TColor.h"
 #include "TError.h"
+#include "TClass.h"
 #include "TROOT.h"
 
 // For event type translation ExecuteEvent
@@ -109,6 +110,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fAcceptedPhysicals(0),
    fRejectedPhysicals(0),
    fIsPrinting(kFALSE),
+   fUseSpecular(kTRUE),
    fGLWindow(0),
    fGLDevice(-1),
    fPadEditor(0),
@@ -158,6 +160,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fAcceptedPhysicals(0),
    fRejectedPhysicals(0),
    fIsPrinting(kFALSE),
+   fUseSpecular(kTRUE),
    fGLWindow(0),
    fGLDevice(fPad->GetGLDevice()),
    fPadEditor(0),
@@ -207,6 +210,8 @@ void TGLViewer::BeginScene()
    // Start building of viewer scene
    // TVirtualViewer3D interface overload - see base/src/TVirtualViewer3D.cxx
    // for description of viewer architecture
+
+   TGLStopwatch *stopwatch = 0;
    if (!fScene.TakeLock(TGLScene::kModifyLock)) {
       return;
    }
@@ -214,9 +219,11 @@ void TGLViewer::BeginScene()
    UInt_t destroyedLogicals = 0;
    UInt_t destroyedPhysicals = 0;
 
-   TGLStopwatch stopwatch;
-   if (gDebug>2 || fDebugMode) {
-      stopwatch.Start();
+   if (fGLWindow && gVirtualGL && (fGLDevice != -1)) {
+      stopwatch = new TGLStopwatch();
+   }
+   if (stopwatch && (gDebug>2 || fDebugMode)) {
+      stopwatch->Start();
    }
 
    // External rebuild?
@@ -260,9 +267,9 @@ void TGLViewer::BeginScene()
    fAcceptedPhysicals = 0;
    fRejectedPhysicals = 0;
 
-   if (gDebug>2 || fDebugMode) {
+   if (stopwatch && (gDebug>2 || fDebugMode)) {
       Info("TGLViewer::BeginScene", "destroyed %d physicals %d logicals in %f msec",
-            destroyedPhysicals, destroyedLogicals, stopwatch.End());
+            destroyedPhysicals, destroyedLogicals, stopwatch->End());
       fScene.Dump();
    }
 }
@@ -315,6 +322,8 @@ Bool_t TGLViewer::RebuildScene()
 {
    // If we accepted all offered physicals into the scene no point in
    // rebuilding it.
+
+   TGLStopwatch *timer = 0;
    if (fAcceptedAllPhysicals) {
       // For debug mode always force even if not required
       if (fDebugMode) {
@@ -346,9 +355,11 @@ Bool_t TGLViewer::RebuildScene()
    // Internally triggered scene rebuild
    fInternalRebuild = kTRUE;
 
-   TGLStopwatch timer;
-   if (gDebug>2 || fDebugMode) {
-      timer.Start();
+   if (fGLWindow && gVirtualGL && (fGLDevice != -1)) {
+      timer = new TGLStopwatch();
+   }
+   if (timer && (gDebug>2 || fDebugMode)) {
+      timer->Start();
    }
 
    // Request a scene fill
@@ -356,8 +367,8 @@ Bool_t TGLViewer::RebuildScene()
    //fPad->Modified();
    fPad->Paint();
 
-   if (gDebug>2 || fDebugMode) {
-      Info("TGLViewer::RebuildScene", "rebuild complete in %f", timer.End());
+   if (timer && (gDebug>2 || fDebugMode)) {
+      Info("TGLViewer::RebuildScene", "rebuild complete in %f", timer->End());
    }
 
    // Need to invalidate/redraw via timer as under Win32 we are already inside the
@@ -959,6 +970,13 @@ void TGLViewer::SetupLights()
       Float_t sideLightColor[] = {0.7, 0.7, 0.7, 1.0};
       glLightfv(GL_LIGHT0, GL_POSITION, pos0);
       glLightfv(GL_LIGHT0, GL_DIFFUSE, frontLightColor);
+      if (fUseSpecular) {
+         const Float_t whiteSpec[] = {1.f, 1.f, 1.f, 1.f};
+         glLightfv(GL_LIGHT0, GL_SPECULAR, whiteSpec);
+      } else {
+         const Float_t nullSpec[] = {0.f, 0.f, 0.f, 1.f};
+         glLightfv(GL_LIGHT0, GL_SPECULAR, nullSpec);
+      }
       glLightfv(GL_LIGHT1, GL_POSITION, pos1);
       glLightfv(GL_LIGHT1, GL_DIFFUSE, sideLightColor);
       glLightfv(GL_LIGHT2, GL_POSITION, pos2);
@@ -1033,6 +1051,7 @@ void TGLViewer::DoDraw()
 {
    // Draw out the the current viewer/scene
 
+   TGLStopwatch *timer = 0;
    // Locking mainly for Win32 mutli thread safety - but no harm in all using it
    // During normal draws a draw lock is taken in other thread (Win32) in RequestDraw()
    // to ensure thread safety. For PrintObjects repeated Draw() calls are made.
@@ -1051,9 +1070,11 @@ void TGLViewer::DoDraw()
       SetViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
    }
 
-   TGLStopwatch timer;
-   if (gDebug>2) {
-      timer.Start();
+   if (fGLWindow && gVirtualGL && (fGLDevice != -1)) {
+      timer = new TGLStopwatch();
+   }
+   if (timer && gDebug > 2) {
+      timer->Start();
    }
 
    // GL pre draw setup
@@ -1116,8 +1137,8 @@ void TGLViewer::DoDraw()
 
    PostDraw();
 
-   if (gDebug>2) {
-      Info("TGLViewer::DoDraw()", "Took %f msec", timer.End());
+   if (timer && gDebug > 2) {
+      Info("TGLViewer::DoDraw()", "Took %f msec", timer->End());
       TGLDisplayListCache::Instance().Dump();
    }
 
@@ -1464,14 +1485,16 @@ void TGLViewer::ToggleLight(ELight light)
 
    // N.B. We can't directly call glEnable here as may not be in correct gl context
    // adjust mask and set when drawing
-   if (light >= kLightMask) {
+   if (light == kLightSpecular) {
+      fUseSpecular = !fUseSpecular;
+   } else if (light >= kLightMask) {
       Error("TGLViewer::ToggleLight", "invalid light type");
       return;
+   } else {
+      fLightState ^= light;
+      if (fGLDevice != -1)
+         gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
    }
-
-   fLightState ^= light;
-   if (fGLDevice != -1)
-      gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
 
    RequestDraw();
 }
@@ -1690,7 +1713,7 @@ void TGLViewer::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          HandleKey(&eventSt);
       }
       break;
-      case 5://trick :)
+      case 6://trick :)
          //
          if (CurrentCamera().Zoom(+50, kFALSE, kFALSE)) { //TODO : val static const somewhere
             if (fGLDevice != -1) {
@@ -1700,7 +1723,7 @@ void TGLViewer::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             RequestDraw();
          }
          break;
-      case 6://trick :)
+      case 5://trick :)
          if (CurrentCamera().Zoom(-50, kFALSE, kFALSE)) { //TODO : val static const somewhere
             if (fGLDevice != -1) {
                gGLManager->MarkForDirectCopy(fGLDevice, kTRUE);
@@ -1837,14 +1860,14 @@ Bool_t TGLViewer::HandleButton(Event_t * event)
          // Buttons 4/5 are mouse wheel
          // Note: Modifiers (ctrl/shift) disabled as fState doesn't seem to
          // have correct modifier flags with mouse wheel under Windows..
-         case(kButton4): {
+         case(kButton5): {
                // Zoom out (adjust camera FOV)
             if (CurrentCamera().Zoom(+50, kFALSE, kFALSE)) { //TODO : val static const somewhere
                RequestDraw();
             }
             break;
          }
-         case(kButton5): {
+         case(kButton4): {
             // Zoom in (adjust camera FOV)
             if (CurrentCamera().Zoom(-50, kFALSE, kFALSE)) { //TODO : val static const somewhere
                RequestDraw();
@@ -2090,7 +2113,7 @@ TClass* TGLViewer::FindDirectRendererClass(TClass* cls)
 {
    TString rnr( cls->GetName() );
    rnr += "GL";
-   TClass* c = gROOT->GetClass(rnr);
+   TClass* c = TClass::GetClass(rnr);
    if (c != 0)
       return c;
 

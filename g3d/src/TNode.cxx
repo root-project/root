@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.30 2006/05/23 04:47:36 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.33 2007/02/15 15:04:39 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -332,8 +332,7 @@ void TNode::Draw(Option_t *option)
 
    // Clear pad if option "same" not given
    if (!gPad) {
-      if (!gROOT->GetMakeDefCanvas()) return;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    }
    if (!opt.Contains("same")) gPad->Clear();
 
@@ -347,7 +346,7 @@ void TNode::Draw(Option_t *option)
    // Create a 3-D view
    TView *view = gPad->GetView();
    if (!view) {
-      view = new TView(11);
+      view = TView::CreateView(11,0,0);
       // Set the view to perform a first autorange (frame) draw. 
       // TViewer3DPad will revert view to normal painting after this
       view->SetAutoRange(kTRUE);
@@ -846,7 +845,7 @@ void TNode::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TNode::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         b.ReadClassBuffer(TNode::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -867,7 +866,7 @@ void TNode::Streamer(TBuffer &b)
       //====end of old versions
 
    } else {
-      TNode::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TNode::Class(),this);
    }
 }
 

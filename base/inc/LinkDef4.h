@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef4.h,v 1.1 2004/06/03 21:05:24 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef4.h,v 1.2 2004/07/01 04:55:05 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun, Fons Rademakers and al.           *
@@ -25,5 +25,8 @@
 
 #pragma link C++ function TDirectory::WriteObject(void*,const char*,Option_t*);
 #pragma link C++ function TDirectory::GetObject(const char*,void*&);
+
+#pragma link C++ function operator>>(TBuffer&,void*&);
+#pragma link C++ function operator<<(TBuffer&,const void*);
 
 #endif

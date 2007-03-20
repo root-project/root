@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.h,v 1.6 2005/11/10 10:36:59 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.h,v 1.7 2006/07/03 16:10:46 brun Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
@@ -27,9 +27,8 @@
 #ifndef ROOT_TGaxis
 #include "TGaxis.h"
 #endif
-#ifndef ROOT_TH1
-#include "TH1.h"
-#endif
+
+class TH1;
 
 class TPaletteAxis : public TPave {
 

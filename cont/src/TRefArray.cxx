@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.25 2006/10/11 10:26:23 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.28 2007/01/28 18:38:02 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -45,7 +45,7 @@
 #include "TRefArray.h"
 #include "TRefTable.h"
 #include "TError.h"
-#include "TFile.h"
+#include "TBits.h"
 #include "TSystem.h"
 
 ClassImp(TRefArray)
@@ -369,7 +369,6 @@ void TRefArray::Streamer(TBuffer &R__b)
    UInt_t R__s, R__c;
    Int_t nobjects;
    UShort_t pidf;
-   TFile *file = (TFile*)R__b.GetParent();
    if (R__b.IsReading()) {
       R__b.ReadVersion(&R__s, &R__c);
       TObject::Streamer(R__b);
@@ -380,7 +379,7 @@ void TRefArray::Streamer(TBuffer &R__b)
       fLast = -1;
       R__b >> pidf;
       pidf += R__b.GetPidOffset();
-      fPID = TProcessID::ReadProcessID(pidf,file);
+      fPID = R__b.ReadProcessID(pidf);
       if (gDebug > 1) printf("Reading TRefArray, pidf=%d, fPID=%lx, nobjects=%d\n",pidf,(Long_t)fPID,nobjects);
       for (Int_t i = 0; i < nobjects; i++) {
          R__b >> fUIDs[i];
@@ -399,7 +398,7 @@ void TRefArray::Streamer(TBuffer &R__b)
       nobjects = GetLast()+1;
       R__b << nobjects;
       R__b << fLowerBound;
-      pidf = TProcessID::WriteProcessID(fPID,file);
+      pidf = R__b.WriteProcessID(fPID);
       R__b << pidf;
       if (gDebug > 1) printf("Writing TRefArray, pidf=%d, fPID=%lx, nobjects=%d\n",pidf,(Long_t)fPID,nobjects);
 

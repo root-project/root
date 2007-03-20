@@ -63,7 +63,7 @@ long localmem;
   void (*p2fop1) G__P((G__value*));
 #ifdef G__ASM_WHOLEFUNC
   long store_struct_offset_localmem;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
 #endif
   int store_cpp_aryindex[10];
   int store_cpp_aryindexp=0;
@@ -1378,7 +1378,7 @@ long localmem;
 			     ,(char *)G__asm_inst[pc+1],G__asm_inst[pc+3]);
 #endif
       G__asm_index = G__asm_inst[pc+7];
-      ifunc = (struct G__ifunc_table*)G__asm_inst[pc+4];
+      ifunc = (struct G__ifunc_table_internal*)G__asm_inst[pc+4];
       if(G__cintv6 && G__LD_IFUNC_optimize(ifunc,G__asm_index,G__asm_inst,pc)) goto ld_func;
 #ifdef G__ASM_WHOLEFUNC
       if(ifunc->pentry[G__asm_index]->bytecode&&G__asm_inst[pc]==G__LD_IFUNC
@@ -1521,7 +1521,7 @@ long localmem;
 #if  defined(G__ROOT)
 	G__delete_interpreted_object((void*)G__store_struct_offset);
 #else
-	free((void*)G__store_struct_offset);
+	delete[] ((char*) G__store_struct_offset);
 #endif
       }
       pc+=2;
@@ -2323,7 +2323,7 @@ long localmem;
       var=(struct G__var_array*)G__asm_inst[pc+1];
       i=(int)G__asm_inst[pc+2];
       G__push_autoobjectstack((void*)(localmem+var->p[i])
-			      ,var->p_tagtable[i],var->varlabel[i][1]+1
+			      ,var->p_tagtable[i],var->varlabel[i][1]
                               ,G__scopelevel,0);
       pc+=3;
 #ifdef G__ASM_DBG

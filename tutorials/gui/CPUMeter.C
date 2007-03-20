@@ -97,7 +97,7 @@ void CPUMeter()
    Float_t act_load, prev_load = 0.0;
    Int_t i, memUsage, old_memUsage = 0;
 
-   TGShapedMain *mainWindow = new TGShapedMain(gClient->GetRoot(), 500, 200);
+   TGShapedMain *mainWindow = new TGShapedMain(0, 500, 200);
    TGSpeedo *speedo = mainWindow->GetSpeedo();
 
    // set threshold values

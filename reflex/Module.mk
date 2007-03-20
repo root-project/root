@@ -63,14 +63,19 @@ RFLX_REFLEXLL   = lib/libReflex.lib
 else
 RFLX_GENREFLEX = bin/genreflex
 RFLX_GNRFLX_L1 = "\#!/bin/sh"
-RFLX_GNRFLX_L2 = 'eval "python $(RFLX_LIBDIR)/python/genreflex/genreflex.py $$*"'
+RFLX_GNRFLX_L2 = 'python $(RFLX_LIBDIR)/python/genreflex/genreflex.py "$$@"'
 RFLX_GENRFLXRC = bin/genreflex-rootcint
 RFLX_GRFLXRC_L1 = "\#!/bin/sh"
-RFLX_GRFLXRC_L2 = 'eval "python $(RFLX_LIBDIR)/python/genreflex/genreflex-rootcint.py $$*"'
+RFLX_GRFLXRC_L2 = 'python $(RFLX_LIBDIR)/python/genreflex/genreflex-rootcint.py "$$@"'
 # test suite
 RFLX_CPPUNITI   = $(CPPUNIT)/include
 RFLX_CPPUNITLL  = -L$(CPPUNIT)/lib -lcppunit
-RFLX_REFLEXLL   = -Llib -lReflex -ldl
+RFLX_REFLEXLL   = -Llib -lReflex
+ifneq ($(PLATFORM),fbsd)
+ifneq ($(PLATFORM),obsd)
+RFLX_REFLEXLL   += -ldl
+endif
+endif
 endif
 
 ifeq ($(PLATFORM),solaris)

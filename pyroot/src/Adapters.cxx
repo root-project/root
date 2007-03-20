@@ -10,7 +10,7 @@
 #include "TMethod.h"
 #include "TFunction.h"
 #include "TMethodArg.h"
-#include "TROOT.h"
+#include "TList.h"
 #include "TError.h"
 
 // CINT
@@ -185,7 +185,12 @@ PyROOT::TReturnTypeAdapter PyROOT::TMemberAdapter::ReturnType() const
 PyROOT::TScopeAdapter PyROOT::TMemberAdapter::DeclaringScope() const
 {
 // get the declaring scope (class) of the wrapped function/method
-   return ((TMethod*)fMember)->GetClass();
+   TMethod* method = (TMethod*)*this;
+   if ( method )
+      return method->GetClass();
+
+// happens for free-standing functions (i.e. global scope)
+   return std::string( "" );
 }
 
 
@@ -207,13 +212,14 @@ PyROOT::TScopeAdapter::TScopeAdapter( TClass* klass ) : fClass( klass )
 
 //____________________________________________________________________________
 PyROOT::TScopeAdapter::TScopeAdapter( const std::string& name ) :
-   fClass( gROOT->GetClass( name.c_str() ) ), fName( name )
+   fClass( name.c_str() ), fName( name )
 {
    /* empty */
 }
 
 PyROOT::TScopeAdapter::TScopeAdapter( const TMemberAdapter& mb ) :
-      fClass( (TClass*)0 ), fName( mb.Name( ROOT::Reflex::QUALIFIED ) )
+      fClass( mb.Name( ROOT::Reflex::SCOPED ).c_str() ),
+      fName( mb.Name( ROOT::Reflex::Q | ROOT::Reflex::S ) )
 {
    /* empty */
 }
@@ -222,7 +228,7 @@ PyROOT::TScopeAdapter::TScopeAdapter( const TMemberAdapter& mb ) :
 PyROOT::TScopeAdapter PyROOT::TScopeAdapter::ByName( const std::string & name )
 {
 // lookup a scope (class) by name
-   return gROOT->GetClass( name.c_str() );
+   return TClass::GetClass( name.c_str() );
 }
 
 //____________________________________________________________________________
@@ -246,9 +252,12 @@ std::string PyROOT::TScopeAdapter::Name( unsigned int mod ) const
       std::string actual = clInfo ? clInfo->Name() : fClass->GetName();
 
    // in case of missing dictionaries, the scope won't have been stripped
-      if ( actual.rfind( "::" ) != std::string::npos ) {
-      // this is somewhat of a gamble, but the alternative is a guaranteed crash
-         actual = actual.substr( actual.rfind( "::" )+2, std::string::npos );
+      if ( ! ( clInfo && clInfo->IsValid() ) ) {
+         std::string::size_type pos = actual.substr( 0, actual.find( '<' ) ).rfind( "::" );
+         if ( pos != std::string::npos ) {
+         // this is somewhat of a gamble, but the alternative is a guaranteed crash
+            actual = actual.substr( pos + 2, std::string::npos );
+         }
       }
 
       return actual;
@@ -336,8 +345,11 @@ Bool_t PyROOT::TScopeAdapter::IsComplete() const
 Bool_t PyROOT::TScopeAdapter::IsClass() const
 {
 // test if this scope represents a class
-   if ( fClass.GetClass() )
-      return fClass->Property() & kIsClass;
+   if ( fClass.GetClass() ) {
+   // some inverted logic: we don't have a TClass, but a builtin will be recognized, so
+   // if it is NOT a builtin, it is a class or struct (but may be missing dictionary)
+      return (fClass->Property() & kIsClass) || ! (fClass->Property() & kIsFundamental);
+   }
 
    return kFALSE;
 }
@@ -346,8 +358,10 @@ Bool_t PyROOT::TScopeAdapter::IsClass() const
 Bool_t PyROOT::TScopeAdapter::IsStruct() const
 {
 // test if this scope represents a struct
-   if ( fClass.GetClass() )
-      return fClass->Property() & kIsStruct;
+   if ( fClass.GetClass() ) {
+   // same logic as for IsClass() above ...
+      return (fClass->Property() & kIsStruct) || ! (fClass->Property() & kIsFundamental);
+   }
 
    return kFALSE;
 }

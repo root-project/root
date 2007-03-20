@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.156 2006/12/06 10:20:08 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.168 2007/03/05 14:26:12 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -44,6 +44,7 @@
 #include <io.h>
 #include <direct.h>
 #include <ctype.h>
+#include <float.h>
 #include <sys/stat.h>
 #include <signal.h>
 #include <stdio.h>
@@ -53,6 +54,7 @@
 #include <Tlhelp32.h>
 #include <sstream>
 #include <iostream>
+#include <list>
 #include <shlobj.h>
 
 extern "C" {
@@ -96,7 +98,9 @@ public:
 namespace {
    const char *kProtocolName   = "tcp";
    typedef void (*SigHandler_t)(ESignals);
+   static TWinNTSystem::ThreadMsgFunc_t gGUIThreadMsgFunc = 0;      // GUI thread message handler func
 
+   static HANDLE gGlobalEvent;
    static HANDLE gConsoleEvent;
    static HANDLE gConsoleThreadHandle;
    static HANDLE gTimerThreadHandle;
@@ -274,8 +278,10 @@ namespace {
             }
             // yield execution to another thread that is ready to run
             // if no other thread is ready, sleep 1 ms before to return
-            if (!SwitchToThread())
-               SleepEx(1, TRUE);
+            if (gGlobalEvent) {
+               ::WaitForSingleObject(gGlobalEvent, 1);
+               ::ResetEvent(gGlobalEvent);
+            }
             return 0;
          }
 
@@ -307,7 +313,7 @@ namespace {
 
       } else if (dynpath == "") {
          dynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
-         dynpath.ReplaceAll(" ", ";");  // in case DynamicPath was extended
+         dynpath.ReplaceAll("; ", ";");  // in case DynamicPath was extended
          if (dynpath == "") {
             dynpath.Form("%s;%s/bin;%s,", gProgPath, gRootDir, gSystem->Getenv("PATH"));
          }
@@ -438,6 +444,45 @@ namespace {
       ::CloseHandle(gConsoleThreadHandle);
       gConsoleThreadHandle = 0;
       _endthreadex( 0 );
+      return 0;
+   }
+
+   //______________________________________________________________________________
+   static DWORD WINAPI GUIThreadMessageProcessingLoop(void *p)
+   {
+      // Message processing loop for the TGWin32 related GUI 
+      // thread for processing windows messages (aka Main/Server thread).
+      // We need to start the thread outside the TGWin32 / GUI related
+      // dll, because starting threads at DLL init time does not work.
+      // Indead, we start an ideling thread at binary startup, and only
+      // call the "real" message provcessing function
+      // TGWin32::GUIThreadMessageFunc() once gVirtualX comes up.
+
+      MSG msg;
+
+      // force to create message queue
+      ::PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
+
+      Int_t erret = 0;
+      Bool_t endLoop = kFALSE;
+      while (!endLoop) {
+         if (gGlobalEvent) ::SetEvent(gGlobalEvent);
+         erret = ::GetMessage(&msg, NULL, NULL, NULL);
+         if (erret <= 0) endLoop = kTRUE;
+         if (gGUIThreadMsgFunc)
+            endLoop = (*gGUIThreadMsgFunc)(&msg);
+      }
+
+      gVirtualX->CloseDisplay();
+
+      // exit thread
+      if (erret == -1) {
+         erret = ::GetLastError();
+         Error("MsgLoop", "Error in GetMessage");
+         ::ExitThread(-1);
+      } else {
+         ::ExitThread(0);
+      }
       return 0;
    }
 
@@ -715,7 +760,8 @@ Bool_t TWinNTSystem::HandleConsoleEvent()
 }
 
 //______________________________________________________________________________
-TWinNTSystem::TWinNTSystem() : TSystem("WinNT", "WinNT System")
+TWinNTSystem::TWinNTSystem() : TSystem("WinNT", "WinNT System"),
+fGUIThreadHandle(0), fGUIThreadId(0)
 {
    // ctor
 
@@ -764,6 +810,11 @@ TWinNTSystem::~TWinNTSystem()
       ::ResetEvent(gConsoleEvent);
       ::CloseHandle(gConsoleEvent);
       gConsoleEvent = 0;
+   }
+   if (gGlobalEvent) {
+      ::ResetEvent(gGlobalEvent);
+      ::CloseHandle(gGlobalEvent);
+      gGlobalEvent = 0;
    }
    if (gConsoleThreadHandle) ::CloseHandle(gConsoleThreadHandle);
    if (gTimerThreadHandle) ::CloseHandle(gTimerThreadHandle);
@@ -824,8 +875,6 @@ Bool_t TWinNTSystem::Init()
    gRootDir= ROOTPREFIX;
 #endif
 
-   SetThreadAffinityMask(GetCurrentThread(), 1);
-
    // Increase the accuracy of Sleep() without needing to link to winmm.lib
    typedef UINT (WINAPI* LPTIMEBEGINPERIOD)( UINT uPeriod );
    HINSTANCE hInstWinMM = LoadLibrary( "winmm.dll" );
@@ -843,6 +892,9 @@ Bool_t TWinNTSystem::Init()
 
    gTimerThreadHandle = ::CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)ThreadStub,
                         this, NULL, NULL);
+
+   gGlobalEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
+   fGUIThreadHandle = ::CreateThread( NULL, 0, &GUIThreadMessageProcessingLoop, 0, 0, &fGUIThreadId );
 
    fGroupsInitDone = kFALSE;
 
@@ -1000,6 +1052,22 @@ void TWinNTSystem::DoBeep(Int_t freq /*=-1*/, Int_t duration /*=-1*/) const
    if (duration < 0) duration = 100;
    ::Beep(freq, duration);
 }
+
+void TWinNTSystem::SetGUIThreadMsgHandler(ThreadMsgFunc_t func)
+{
+   // Set the (static part of) the event handler func for GUI messages.
+
+   gGUIThreadMsgFunc = func;
+}
+
+void TWinNTSystem::NotifyApplicationCreated()
+{
+   // hook to tell TSystem that the TApplication object has been created
+
+   // send a dummy message to the GUI thread to kick it into life
+   ::PostThreadMessage(fGUIThreadId, 0, NULL, 0L);
+}
+
 
 //---- EventLoop ---------------------------------------------------------------
 
@@ -1290,16 +1358,19 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
    // Dispatch a single event in TApplication::Run() loop
 
    if (gConsoleEvent) ::SetEvent(gConsoleEvent);
+   if (pendingOnly && gGlobalEvent) ::SetEvent(gGlobalEvent);
 
    Bool_t pollOnce = pendingOnly;
 
    while (1) {
-      if (gROOT->IsLineProcessing() && !gVirtualX->IsCmdThread()) {
+      if (gROOT->IsLineProcessing() && (!gVirtualX || !gVirtualX->IsCmdThread())) {
          if (!pendingOnly) {
             // yield execution to another thread that is ready to run
             // if no other thread is ready, sleep 1 ms before to return
-            if (!SwitchToThread())
-               SleepEx(1, TRUE);
+            if (gGlobalEvent) {
+               ::WaitForSingleObject(gGlobalEvent, 1);
+               ::ResetEvent(gGlobalEvent);
+            }
             return;
          }
       }
@@ -1324,6 +1395,9 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
       fReadready->Zero();
       fWriteready->Zero();
 
+      if (pendingOnly && !pollOnce)
+         return;
+
       // check synchronous signals
       if (fSigcnt > 0 && fSignalHandler->GetSize() > 0) {
          if (CheckSignals(kTRUE)) {
@@ -1336,32 +1410,34 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
       fSignals->Zero();
 
       // handle past due timers
+      Long_t nextto;
       if (fTimers && fTimers->GetSize() > 0) {
          if (DispatchTimers(kTRUE)) {
             // prevent timers from blocking the rest types of events
-            Long_t to = NextTimeOut(kTRUE);
-            if (to > kItimerResolution || to == -1) {
+            nextto = NextTimeOut(kTRUE);
+            if (nextto > kItimerResolution || nextto == -1) {
                return;
             }
          }
       }
 
       // if in pendingOnly mode poll once file descriptor activity
-      Long_t nextto = NextTimeOut(kTRUE);
+      nextto = NextTimeOut(kTRUE);
       if (pendingOnly) {
-         if (pollOnce && fFileHandler && fFileHandler->GetSize() > 0) {
-            nextto = 0;
-            pollOnce = kFALSE;
-         } else
+         if (fFileHandler && fFileHandler->GetSize() == 0)
             return;
+         nextto = 0;
+         pollOnce = kFALSE;
       }
 
       if (fReadmask && !fReadmask->GetBits() &&
           fWritemask && !fWritemask->GetBits()) {
          // yield execution to another thread that is ready to run
          // if no other thread is ready, sleep 1 ms before to return
-         if (!SwitchToThread())
-            SleepEx(1, TRUE);
+         if (!pendingOnly && gGlobalEvent) {
+            ::WaitForSingleObject(gGlobalEvent, 1);
+            ::ResetEvent(gGlobalEvent);
+         }
          return;
       }
 
@@ -1372,7 +1448,7 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
 
       // serious error has happened -> reset all file descrptors
       if ((fNfd < 0) && (fNfd != -2)) {
-         int fd, rc, i;
+         int rc, i;
 
          for (i = 0; i < fReadmask->GetCount(); i++) {
             TFdSet t;
@@ -2144,7 +2220,6 @@ int TWinNTSystem::Link(const char *from, const char *to)
    // Create a link from file1 to file2.
 
    struct   _stati64 finfo;
-   char     winPath[256];
    char     winDrive[256];
    char     winDir[256];
    char     winName[256];
@@ -2314,10 +2389,9 @@ Bool_t TWinNTSystem::ExpandPathName(TString &patbuf0)
    // Expand a pathname getting rid of special shell characaters like ~.$, etc.
 
    const char *patbuf = (const char *)patbuf0;
-   const char *hd, *p;
+   const char *p;
    char   *cmd = 0;
    char  *q;
-   int    ch, i;
 
    // skip leading blanks
    while (*patbuf == ' ') {
@@ -2668,8 +2742,6 @@ Long_t TWinNTSystem::LookupSID (const char *lpszAccountName, int what,
    PUCHAR puchar_SubAuthCount = NULL;
    SID_IDENTIFIER_AUTHORITY sid_identifier_authority;
    PSID_IDENTIFIER_AUTHORITY psid_identifier_authority = NULL;
-   char szIdentAuthValue[80];
-   int i;
    unsigned char j = 0;
    DWORD dwLastError = 0;
 
@@ -2712,7 +2784,6 @@ Long_t TWinNTSystem::LookupSID (const char *lpszAccountName, int what,
    // Now obtain all the sub-authority values from the current SID.
    DWORD dwSubAuth = 0;
    PDWORD pdwSubAuth = NULL;
-   char szSubAuthValue[80];
    // Obtain the current sub-authority DWORD (referenced by a pointer)
    pdwSubAuth = (PDWORD)GetSidSubAuthority (
                 (PSID)pSid,  // address of security identifier to query
@@ -3378,11 +3449,19 @@ char *TWinNTSystem::DynamicPathName(const char *lib, Bool_t quiet)
 }
 
 //______________________________________________________________________________
+int TWinNTSystem::Load(const char *module, const char *entry, Bool_t system)
+{
+   // Load a shared library. Returns 0 on successful loading, 1 in
+   // case lib was already loaded and -1 in case lib does not exist
+   // or in case of error.
+   return TSystem::Load(module, entry, system);
+}
+
+//______________________________________________________________________________
 const char *TWinNTSystem::GetLinkedLibraries()
 {
    // Get list of shared libraries loaded at the start of the executable.
    // Returns 0 in case list cannot be obtained or in case of error.
-   char winPath[256];
    char winDrive[256];
    char winDir[256];
    char winName[256];
@@ -3622,8 +3701,8 @@ Bool_t TWinNTSystem::DispatchTimers(Bool_t mode)
    Bool_t  timedout = kFALSE;
 
    while ((t = (TTimer *) it.Next())) {
+      // NB: the timer resolution is added in TTimer::CheckTimer()
       TTime now = Now();
-      now += TTime(kItimerResolution);
       if (mode && t->IsSync()) {
          if (t->CheckTimer(now)) {
             timedout = kTRUE;
@@ -3827,7 +3906,6 @@ TInetAddress TWinNTSystem::GetHostByName(const char *hostname)
    // Get Internet Protocol (IP) address of host.
 
    struct hostent *host_ptr;
-   struct in_addr  ad;
    const char     *host;
    int             type;
    UInt_t          addr;    // good for 4 byte addresses
@@ -4167,8 +4245,8 @@ int  TWinNTSystem::SetSockOpt(int socket, int opt, int value)
       }
       break;
 #endif
-   kAtMark:       // read-only option (see GetSockOpt)
-   kBytesToRead:  // read-only option
+   case kAtMark:       // read-only option (see GetSockOpt)
+   case kBytesToRead:  // read-only option
    default:
       Error("SetSockOpt", "illegal option (%d)", opt);
       return -1;
@@ -4799,7 +4877,6 @@ static void GetWinNTSysInfo(SysInfo_t *sysinfo)
    DWORD dwBufLen;
    LONG  status;
    PROCNTQSI  NtQuerySystemInformation;
-   int i;
 
    NtQuerySystemInformation = (PROCNTQSI)GetProcAddress(
          GetModuleHandle("ntdll"), "NtQuerySystemInformation");

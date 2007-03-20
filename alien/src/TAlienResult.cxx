@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.12 2006/05/19 07:30:04 brun Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.14 2007/02/18 15:35:39 rdm Exp $
 // Author: Fons Rademakers   23/5/2002
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #include "TSystem.h"
 #include "TUrl.h"
 #include "TFileInfo.h"
+#include "TEntryList.h"
 
 
 ClassImp(TAlienResult)
@@ -86,13 +87,13 @@ const char *TAlienResult::GetFileName(UInt_t i) const
 }
 
 //______________________________________________________________________________
-const TEventList *TAlienResult::GetEventList(UInt_t i) const
+const TEntryList *TAlienResult::GetEntryList(UInt_t i) const
 {
-   // Return the event list, if evtlist was defined as a tag.
+   // Return the entry list, if evtlist was defined as a tag.
 
    if (At(i)) {
-      TEventList *entry;
-      if ((entry = (TEventList *) ((TMap *) At(i))->GetValue("evlist"))) {
+      TEntryList *entry;
+      if ((entry = (TEntryList *) ((TMap *) At(i))->GetValue("evlist"))) {
          return entry;
       }
    }
@@ -159,8 +160,7 @@ Bool_t TAlienResult::SetKey(UInt_t i, const char *key, const char *value)
             delete val;
          }
       }
-      ((TMap *) At(i))->Add((TObject *) (new TObjString(key)),
-                            (TObject *) (new TObjString(value)));
+      ((TMap *) At(i))->Add(new TObjString(key), new TObjString(value));
       return kTRUE;
    }
    return kFALSE;

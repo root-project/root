@@ -12,8 +12,14 @@
 #ifndef ROOT_TSpectrum2Painter
 #define ROOT_TSpectrum2Painter
 
+
+#ifndef ROOT_TNamed
+#include "TNamed.h"
+#endif
+
 class TH2;
 class TLine;
+class TColor;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -34,10 +40,10 @@ public:
    void GetChanGrid(Int_t &enable,Int_t &color);
    void GetChanMarks(Int_t &enable,Int_t &color,Int_t &width,Int_t &height,Int_t &style);
    void GetColorAlgorithm(Int_t &colorAlgorithm);
-   void GetColorIncrements(Float_t &r,Float_t &g,Float_t &b);
+   void GetColorIncrements(Double_t &r,Double_t &g,Double_t &b);
    void GetContourWidth(Int_t &width);
    void GetDisplayMode(Int_t &modeGroup,Int_t &displayMode);
-   void GetLightHeightWeight(Float_t &weight);
+   void GetLightHeightWeight(Double_t &weight);
    void GetLightPosition(Int_t &x,Int_t &y,Int_t &z);
    void GetNodes(Int_t &nodesx,Int_t &nodesy);
    void GetPenAttr(Int_t &color, Int_t &style, Int_t &width);
@@ -49,10 +55,10 @@ public:
    void SetChanGrid(Int_t enable,Int_t color);  
    void SetChanMarks(Int_t enable,Int_t color,Int_t width,Int_t height,Int_t style);
    void SetColorAlgorithm(Int_t colorAlgorithm);
-   void SetColorIncrements(Float_t r,Float_t g,Float_t b);  
+   void SetColorIncrements(Double_t r,Double_t g,Double_t b);  
    void SetContourWidth(Int_t width);
    void SetDisplayMode(Int_t modeGroup,Int_t displayMode);
-   void SetLightHeightWeight(Float_t weight);   
+   void SetLightHeightWeight(Double_t weight);   
    void SetLightPosition(Int_t x,Int_t y,Int_t z); 
    void SetNodes(Int_t nodesx,Int_t nodesy);
    void SetPenAttr(Int_t color,Int_t style,Int_t width);
@@ -139,11 +145,11 @@ protected:
    Int_t     fBeta;          //angle between base line of Canvas and left lower edge of picture base plane
    Int_t     fViewAngle;     //rotation angle of the view, it can be 0, 90, 180, 270 degrees
    Int_t     fLevels;        //# of color levels for rainbowed display modes, it does not apply for simple display modes algorithm group
-   Float_t   fRainbow1Step;  //determines the first component  step for neighbouring color levels, applies only for rainbowed display modes, it does not apply for simple display modes algorithm group
-   Float_t   fRainbow2Step;  //determines the second component  step for neighbouring color levels, applies only for rainbowed display modes, it does not apply for simple display modes algorithm group
-   Float_t   fRainbow3Step;  //determines the third component  step for neighbouring color levels, applies only for rainbowed display modes, it does not apply for simple display modes algorithm group
+   Double_t  fRainbow1Step;  //determines the first component  step for neighbouring color levels, applies only for rainbowed display modes, it does not apply for simple display modes algorithm group
+   Double_t  fRainbow2Step;  //determines the second component  step for neighbouring color levels, applies only for rainbowed display modes, it does not apply for simple display modes algorithm group
+   Double_t  fRainbow3Step;  //determines the third component  step for neighbouring color levels, applies only for rainbowed display modes, it does not apply for simple display modes algorithm group
    Int_t     fColorAlg;      //applies only for rainbowed display modes (rgb smooth alorithm, rgb modulo color component, cmy smooth alorithm, cmy modulo color component, cie smooth alorithm, cie modulo color component, yiq smooth alorithm, yiq modulo color component, hsv smooth alorithm, hsv modulo color component, it does not apply for simple display modes algorithm group
-   Float_t   fLHweight;      //weight between shading according to fictive light source and according to channels counts, applies only for kModeGroupLightHeight modes group
+   Double_t  fLHweight;      //weight between shading according to fictive light source and according to channels counts, applies only for kModeGroupLightHeight modes group
    Int_t     fXlight;        //x position of fictive light source, applies only for rainbowed display modes with shading according to light
    Int_t     fYlight;        //y position of fictive light source, applies only for rainbowed display modes with shading according to light
    Int_t     fZlight;        //z position of fictive light source, applies only for rainbowed display modes with shading according to light

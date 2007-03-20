@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.153 2006/12/11 13:24:49 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.169 2007/03/20 07:51:58 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -51,43 +51,38 @@
 #endif
 
 #include "TProofServ.h"
-#include "TAuthenticate.h"
 #include "TDSetProxy.h"
 #include "TEnv.h"
 #include "TError.h"
+#include "TEventList.h"
 #include "TException.h"
 #include "TFile.h"
 #include "TInterpreter.h"
 #include "TKey.h"
 #include "TMessage.h"
-#include "TPerfStats.h"
+#include "TVirtualPerfStats.h"
 #include "TProofDebug.h"
 #include "TProof.h"
-#include "TProofLimitsFinder.h"
-#include "TProofPlayer.h"
+#include "TVirtualProofPlayer.h"
 #include "TProofQueryResult.h"
 #include "TRegexp.h"
 #include "TROOT.h"
-#include "TSelector.h"
 #include "TSocket.h"
 #include "TStopwatch.h"
-#include "TSysEvtHandler.h"
 #include "TSystem.h"
 #include "TTimeStamp.h"
 #include "TUrl.h"
-#include "TTree.h"
 #include "TPluginManager.h"
 #include "TObjString.h"
 #include "compiledata.h"
 #include "TProofResourcesStatic.h"
 #include "TProofNodeInfo.h"
 #include "TFileInfo.h"
-#include "TTimer.h"
 #include "TMutex.h"
-
+#include "TClass.h"
 
 // global proofserv handle
-TProofServ *gProofServ;
+TProofServ *gProofServ = 0;
 
 // debug hook
 static volatile Int_t gProofServDebug = 1;
@@ -154,6 +149,164 @@ Bool_t TProofServInputHandler::Notify()
    // Handle this input
 
    fServ->HandleSocketInput();
+   return kTRUE;
+}
+
+TString TProofServLogHandler::fgPfx = ""; // Default prefix to be prepended to messages
+//______________________________________________________________________________
+TProofServLogHandler::TProofServLogHandler(const char *cmd,
+                                             TSocket *s, const char *pfx)
+                     : TFileHandler(-1, 1), fSocket(s), fPfx(pfx)
+{
+   // Execute 'cmd' in a pipe and handle output messages from the related file
+
+   ResetBit(kFileIsPipe);
+   fFile = 0;
+   if (s && cmd) {
+      fFile = gSystem->OpenPipe(cmd, "r");
+      if (fFile) {
+         SetFd(fileno(fFile));
+         // Notify what already in the file
+         Notify();
+         // Used in the destructor
+         SetBit(kFileIsPipe);
+      } else {
+         fSocket = 0;
+         Error("TProofServLogHandler", "executing command in pipe");
+      }
+   } else {
+      Error("TProofServLogHandler",
+            "undefined command (%p) or socket (%p)", (int *)cmd, s);
+   }
+}
+//______________________________________________________________________________
+TProofServLogHandler::TProofServLogHandler(FILE *f, TSocket *s, const char *pfx)
+                     : TFileHandler(-1, 1), fSocket(s), fPfx(pfx)
+{
+   // Handle available message from the open file 'f'
+
+   ResetBit(kFileIsPipe);
+   fFile = 0;
+   if (s && f) {
+      fFile = f;
+      SetFd(fileno(fFile));
+      // Notify what already in the file
+      Notify();
+   } else {
+      Error("TProofServLogHandler", "undefined file (%p) or socket (%p)", f, s);
+   }
+}
+//______________________________________________________________________________
+TProofServLogHandler::~TProofServLogHandler()
+{
+   // Handle available message in the open file
+
+   if (TestBit(kFileIsPipe) && fFile)
+      gSystem->ClosePipe(fFile);
+   fFile = 0;
+   fSocket = 0;
+   ResetBit(kFileIsPipe);
+}
+//______________________________________________________________________________
+Bool_t TProofServLogHandler::Notify()
+{
+   // Handle available message in the open file
+
+   if (IsValid()) {
+      TMessage m(kPROOF_MESSAGE);
+      // Read buffer
+      char line[4096];
+      char *plf = 0;
+      while (fgets(line, sizeof(line), fFile)) {
+         if ((plf = strchr(line, '\n')))
+            *plf = 0;
+         // Send the message one level up
+         m.Reset(kPROOF_MESSAGE);
+         if (fPfx.Length() > 0) {
+            // Prepend prefix specific to this instance
+            m << TString(Form("%s: %s", fPfx.Data(), line));
+         } else if (fgPfx.Length() > 0) {
+            // Prepend default prefix
+            m << TString(Form("%s: %s", fgPfx.Data(), line));
+         } else {
+            // Nothing to prepend
+            m << TString(line);
+         }
+         fSocket->Send(m);
+      }
+   }
+   return kTRUE;
+}
+//______________________________________________________________________________
+void TProofServLogHandler::SetDefaultPrefix(const char *pfx)
+{
+   // Static method to set the default prefix
+
+   fgPfx = pfx;
+}
+
+//______________________________________________________________________________
+TProofServLogHandlerGuard::TProofServLogHandlerGuard(const char *cmd, TSocket *s,
+                                                     const char *pfx, Bool_t on)
+{
+   // Init a guard for executing a command in a pipe
+
+   fExecHandler = 0;
+   if (cmd && on) {
+      fExecHandler = new TProofServLogHandler(cmd, s, pfx);
+      if (fExecHandler->IsValid()) {
+         gSystem->AddFileHandler(fExecHandler);
+      } else {
+         Error("TProofServLogHandlerGuard","invalid handler");
+      }
+   } else {
+      if (on)
+         Error("TProofServLogHandlerGuard","undefined command");
+   }
+}
+
+//______________________________________________________________________________
+TProofServLogHandlerGuard::TProofServLogHandlerGuard(FILE *f, TSocket *s,
+                                                     const char *pfx, Bool_t on)
+{
+   // Init a guard for executing a command in a pipe
+
+   fExecHandler = 0;
+   if (f && on) {
+      fExecHandler = new TProofServLogHandler(f, s, pfx);
+      if (fExecHandler->IsValid()) {
+         gSystem->AddFileHandler(fExecHandler);
+      } else {
+         Error("TProofServLogHandlerGuard","invalid handler");
+      }
+   } else {
+      if (on)
+         Error("TProofServLogHandlerGuard","undefined file");
+   }
+}
+
+//______________________________________________________________________________
+TProofServLogHandlerGuard::~TProofServLogHandlerGuard()
+{
+   // Close a guard for executing a command in a pipe
+
+   if (fExecHandler && fExecHandler->IsValid()) {
+      gSystem->RemoveFileHandler(fExecHandler);
+      SafeDelete(fExecHandler);
+   }
+}
+
+//--- Special timer to constrol delayed shutdowns ----------------------------//
+//______________________________________________________________________________
+Bool_t TShutdownTimer::Notify()
+{
+   // Handle expiration of the shutdown timer. The Terminate() method is called
+   // which will exit the main loop.
+
+   if (gDebug > 0)
+      Info ("Notify","called!");
+
+   fProofServ->HandleTermination();
    return kTRUE;
 }
 
@@ -233,6 +386,8 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fPreviousQueries = 0;
    fIdle            = kTRUE;
 
+   fRealTimeLog     = kFALSE;
+
    fShutdownWhenIdle = kTRUE;
    fShutdownTimer   = 0;
    fShutdownTimerMtx = 0;
@@ -245,10 +400,16 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
 
    gProofDebugMask = (TProofDebug::EProofDebugMask) gEnv->GetValue("Proof.DebugMask",~0);
    if (gProofDebugLevel > 0)
-      Info("TProofServ", "DebugLevel %d Mask %u", gProofDebugLevel, gProofDebugMask);
+      Info("TProofServ", "DebugLevel %d Mask 0x%x", gProofDebugLevel, gProofDebugMask);
 
    // Parse options
    GetOptions(argc, argv);
+
+   // Default prefix in the form '<role>-<ordinal>'
+   TString pfx = (IsMaster() ? "master-" : "worker-");
+   if (fOrdinal != "-1")
+      pfx += fOrdinal;
+   TProofServLogHandler::SetDefaultPrefix(pfx);
 
    // Set global to this instance
    gProofServ = this;
@@ -298,6 +459,14 @@ Int_t TProofServ::CreateServer()
       Terminate(0);
       return -1;
    }
+
+   // Set the default prefix in the form '<role>-<ordinal>' (it was already done
+   // in the constructor, but for standard PROOF the ordinal number is only set in
+   // Setup(), so we need to do it again here)
+   TString pfx = (IsMaster() ? "master-" : "worker-");
+   pfx += GetOrdinal();
+   TProofServLogHandler::SetDefaultPrefix(pfx);
+
    if (!fLogFile) {
       RedirectOutput();
       // If for some reason we failed setting a redirection fole for the logs
@@ -323,8 +492,6 @@ Int_t TProofServ::CreateServer()
          Terminate(0);
          return -1;
       }
-   } else {
-      THLimitsFinder::SetLimitsFinder(new TProofLimitsFinder);
    }
 
    // Everybody expects iostream to be available, so load it...
@@ -450,16 +617,25 @@ TProofServ::~TProofServ()
 //______________________________________________________________________________
 Int_t TProofServ::CatMotd()
 {
-   // Print message of the day (in fConfDir/etc/proof/motd). The motd
-   // is not shown more than once a day. If the file fConfDir/etc/proof/noproof
-   // exists, show its contents and close the connection.
+   // Print message of the day (in the file pointed by the env PROOFMOTD
+   // or from fConfDir/etc/proof/motd). The motd is not shown more than
+   // once a day. If the file pointed by env PROOFNOPROOF exists (or the
+   // file fConfDir/etc/proof/noproof exists), show its contents and close
+   // the connection.
 
    TString lastname;
    FILE   *motd;
    Bool_t  show = kFALSE;
 
+   // If we are disabled just print the message and close the connection
    TString motdname(GetConfDir());
-   motdname += "/etc/proof/noproof";
+   // The env variable PROOFNOPROOF allows to put the file in an alternative
+   // location not overwritten by a new installation
+   if (gSystem->Getenv("PROOFNOPROOF")) {
+      motdname = gSystem->Getenv("PROOFNOPROOF");
+   } else {
+      motdname += "/etc/proof/noproof";
+   }
    if ((motd = fopen(motdname, "r"))) {
       Int_t c;
       printf("\n");
@@ -483,8 +659,14 @@ Int_t TProofServ::CatMotd()
    if (time(0) - lasttime > (time_t)86400)
       show = kTRUE;
 
-   motdname = GetConfDir();
-   motdname += "/etc/proof/motd";
+   // The env variable PROOFMOTD allows to put the file in an alternative
+   // location not overwritten by a new installation
+   if (gSystem->Getenv("PROOFMOTD")) {
+      motdname = gSystem->Getenv("PROOFMOTD");
+   } else {
+      motdname = GetConfDir();
+      motdname += "/etc/proof/motd";
+   }
    if (gSystem->GetPathInfo(motdname, &id, &size, &flags, &modtime) == 0) {
       if (modtime > lasttime || show) {
          if ((motd = fopen(motdname, "r"))) {
@@ -674,10 +856,11 @@ void TProofServ::HandleSocketInput()
 
       case kMESS_CINT:
          mess->ReadString(str, sizeof(str));
-         if (IsMaster() && IsParallel()) {
+         if (IsParallel()) {
             fProof->SendCommand(str);
          } else {
-            PDB(kGlobal, 1) Info("HandleSocketInput:kMESS_CINT", "processing: %s...", str);
+            PDB(kGlobal, 1)
+               Info("HandleSocketInput:kMESS_CINT", "processing: %s...", str);
             ProcessLine(str);
          }
          SendLogFile();
@@ -751,9 +934,11 @@ void TProofServ::HandleSocketInput()
          break;
 
       case kPROOF_PROCESS:
+         {  TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
 
-         HandleProcess(mess);
-
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_PROCESS","enter");
+            HandleProcess(mess);
+         }
          // Notify
          SendLogFile();
          break;
@@ -866,13 +1051,8 @@ void TProofServ::HandleSocketInput()
                sscanf(str, "%s %d %ld", name, &bin, &size);
             ReceiveFile(name, bin ? kTRUE : kFALSE, size);
             // copy file to cache if not a PAR file
-            if (size > 0) {
-               if (strncmp(fPackageDir, name, fPackageDir.Length())) {
-                  fCacheLock->Lock();
-                  gSystem->Exec(Form("%s %s %s", kCP, name, fCacheDir.Data()));
-                  fCacheLock->Unlock();
-               }
-            }
+            if (size > 0 && strncmp(fPackageDir, name, fPackageDir.Length()))
+               CopyToCache(name, 0);
             if (IsMaster() && fw == 1)
                fProof->SendFile(name, bin);
          }
@@ -893,14 +1073,19 @@ void TProofServ::HandleSocketInput()
       case kPROOF_PARALLEL:
          if (IsMaster()) {
             Int_t nodes;
+            Bool_t random = kFALSE;
             (*mess) >> nodes;
-            fProof->SetParallel(nodes);
+            if ((mess->BufferSize() > mess->Length()))
+               (*mess) >> random;
+            fProof->SetParallel(nodes, random);
             SendLogFile();
          }
          break;
 
       case kPROOF_CACHE:
-         {
+         {  TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_CACHE","enter");
+
             Int_t status = HandleCache(mess);
 
             // Notify
@@ -942,53 +1127,10 @@ void TProofServ::HandleSocketInput()
       case kPROOF_GETTREEHEADER:
          {
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETTREEHEADER", "Enter");
-            TMessage answ(kMESS_OBJECT);
 
-            TDSet* dset;
-            (*mess) >> dset;
-            dset->Reset();
-            TDSetElement *e = dset->Next();
-            Long64_t entries = 0;
-            TFile *f = 0;
-            TTree *t = 0;
-            if (!e) {
-               PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETTREEHEADER",
-                                    "empty TDSet");
-            } else {
-               f = TFile::Open(e->GetFileName());
-               t = 0;
-               if (f) {
-                  t = (TTree*) f->Get(e->GetObjName());
-                  if (t) {
-                     t->SetMaxVirtualSize(0);
-                     t->DropBaskets();
-                     entries = t->GetEntries();
-
-                     // compute #entries in all the files
-                     while ((e = dset->Next()) != 0) {
-                        TFile *f1 = TFile::Open(e->GetFileName());
-                        if (f1) {
-                           TTree* t1 = (TTree*) f1->Get(e->GetObjName());
-                           if (t1) {
-                              entries += t1->GetEntries();
-                              delete t1;
-                           }
-                           delete f1;
-                        }
-                     }
-                     t->SetMaxEntryLoop(entries);   // this field will hold the total number of entries ;)
-                  }
-               }
-            }
-            if (t)
-               answ << TString("Success") << t;
-            else
-               answ << TString("Failed") << t;
-
-            fSocket->Send(answ);
-
-            SafeDelete(t);
-            SafeDelete(f);
+            TVirtualProofPlayer *p = TVirtualProofPlayer::Create("slave", 0, fSocket);
+            p->HandleGetTreeHeader(mess);
+            delete p;
 
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETTREEHEADER", "Done");
          }
@@ -1072,6 +1214,20 @@ void TProofServ::HandleSocketInput()
          SendLogFile();
          break;
 
+      case kPROOF_REALTIMELOG:
+         {
+            Bool_t on;
+            (*mess) >> on;
+            PDB(kGlobal, 1)
+               Info("HandleSocketInput:kPROOF_REALTIMELOG",
+                    "setting real-time logging %s", (on ? "ON" : "OFF"));
+            fRealTimeLog = on;
+            // Forward the request to lower levels
+            if (IsMaster())
+               fProof->SetRealTimeLog(on);
+         }
+         break;
+
       default:
          Error("HandleSocketInput", "unknown command %d", what);
          break;
@@ -1116,11 +1272,14 @@ void TProofServ::HandleSocketInputDuringProcess()
    switch (what) {
 
       case kPROOF_PROCESS:
+         {
+            TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
 
-         HandleProcess(mess);
+            HandleProcess(mess);
 
-         // Notify
-         SendLogFile();
+            // Notify
+            SendLogFile();
+         }
          break;
 
       case kPROOF_GETSTATS:
@@ -1173,7 +1332,8 @@ void TProofServ::HandleSocketInputDuringProcess()
          break;
 
       case kPROOF_STOPPROCESS:
-         {  Long_t timeout = -1;
+         {
+            Long_t timeout = -1;
             (*mess) >> aborted;
             if (fProtocol > 9)
                (*mess) >> timeout;
@@ -1189,7 +1349,7 @@ void TProofServ::HandleSocketInputDuringProcess()
          break;
 
       case kPROOF_CACHE:
-         {
+         {  TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
             Int_t status = HandleCache(mess);
             // Notify
             SendLogFile(status);
@@ -1214,11 +1374,8 @@ void TProofServ::HandleSocketInputDuringProcess()
                sscanf(str, "%s %d %ld", name, &bin, &size);
             ReceiveFile(name, bin ? kTRUE : kFALSE, size);
             // copy file to cache
-            if (size > 0) {
-               fCacheLock->Lock();
-               gSystem->Exec(Form("%s %s %s", kCP, name, fCacheDir.Data()));
-               fCacheLock->Unlock();
-            }
+            if (size > 0)
+               CopyToCache(name, 0);
             if (IsMaster() && fw == 1)
                fProof->SendFile(name, bin);
          }
@@ -1249,6 +1406,9 @@ void TProofServ::HandleUrgentData()
 
    const Int_t kBufSize = 1024;
    char waste[kBufSize];
+
+   // Real-time notification of messages
+   TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
 
    PDB(kGlobal, 5)
       Info("HandleUrgentData", "handling oob...");
@@ -1376,6 +1536,9 @@ void TProofServ::HandleSigPipe()
    // Called when the client is not alive anymore (i.e. when kKeepAlive
    // has failed).
 
+   // Real-time notification of messages
+   TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
+
    if (IsMaster()) {
       // Check if we are here because client is closed. Try to ping client,
       // if that works it we are here because some slave died
@@ -1402,7 +1565,7 @@ Bool_t TProofServ::IsParallel() const
    if (IsMaster())
       return fProof->IsParallel();
 
-   //kFALSE is returned if we are a slave
+   // false in case we are a slave
    return kFALSE;
 }
 
@@ -1418,7 +1581,7 @@ void TProofServ::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TProofServ::RedirectOutput()
+R__HIDDEN void TProofServ::RedirectOutput()
 {
    // Redirect stdout to a log file. This log file will be flushed to the
    // client or master after each command.
@@ -1636,8 +1799,10 @@ void TProofServ::SendStatistics()
    // Send statistics of slave server to master or client.
 
    Long64_t bytesread = 0;
-   if (IsMaster()) bytesread = fProof->GetBytesRead();
-   else bytesread = TFile::GetFileBytesRead();
+   if (IsMaster())
+      bytesread = fProof->GetBytesRead();
+   else
+      bytesread = TFile::GetFileBytesRead();
 
    TMessage mess(kPROOF_GETSTATS);
    TString workdir = gSystem->WorkingDirectory();  // expect TString on other side
@@ -1663,12 +1828,13 @@ void TProofServ::SendParallel()
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::UnloadPackage(const char *package)
+R__HIDDEN Int_t TProofServ::UnloadPackage(const char *package)
 {
    // Removes link to package in working directory,
    // removes entry from include path,
    // removes entry from enabled package list,
    // does not currently remove entry from interpreter include path.
+   // Returns -1 in case of error, 0 otherwise.
 
    TObjString *pack = (TObjString *) fEnabledPackages->FindObject(package);
    if (pack) {
@@ -1689,7 +1855,6 @@ Int_t TProofServ::UnloadPackage(const char *package)
       PDB(kPackage, 1)
          Info("UnloadPackage",
               "package %s successfully unloaded", package);
-
    }
 
    // Cleanup the link, if there
@@ -1702,9 +1867,9 @@ Int_t TProofServ::UnloadPackage(const char *package)
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::UnloadPackages()
+R__HIDDEN Int_t TProofServ::UnloadPackages()
 {
-   // Unloads all enabled packages.
+   // Unloads all enabled packages. Returns -1 in case of error, 0 otherwise.
 
    // Iterate over packages and remove each package
    TIter nextpackage(fEnabledPackages);
@@ -1808,9 +1973,8 @@ Int_t TProofServ::Setup()
                fWorkDir = tmpWorkDir;
          }
       } else {
-         Error("Setup", "reading config file %s",
+         Info("Setup", "invalid config file %s (missing or unreadable",
                         resources.GetFileName().Data());
-         return -1;
       }
    }
 
@@ -2050,7 +2214,7 @@ TProofServ *TProofServ::This()
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::OldAuthSetup(TString &conf)
+R__HIDDEN Int_t TProofServ::OldAuthSetup(TString &conf)
 {
    // Setup authentication related stuff for old versions.
    // Provided for backward compatibility.
@@ -2099,10 +2263,11 @@ Int_t TProofServ::OldAuthSetup(TString &conf)
 }
 
 //______________________________________________________________________________
-TProofQueryResult *TProofServ::MakeQueryResult(Long64_t nent, const char *opt,
-                                               TList *inlist, Long64_t fst,
-                                               TDSet *dset, const char *selec,
-                                               TEventList *evl)
+R__HIDDEN TProofQueryResult *TProofServ::MakeQueryResult(Long64_t nent,
+                                                         const char *opt,
+                                                         TList *inlist, Long64_t fst,
+                                                         TDSet *dset, const char *selec,
+                                                         TEventList *evl)
 {
    // Create a TProofQueryResult instance for this query.
 
@@ -2120,7 +2285,7 @@ TProofQueryResult *TProofServ::MakeQueryResult(Long64_t nent, const char *opt,
 }
 
 //______________________________________________________________________________
-void TProofServ::SetQueryRunning(TProofQueryResult *pq)
+R__HIDDEN void TProofServ::SetQueryRunning(TProofQueryResult *pq)
 {
    // Set query in running state.
 
@@ -2152,7 +2317,7 @@ void TProofServ::SetQueryRunning(TProofQueryResult *pq)
 }
 
 //______________________________________________________________________________
-void TProofServ::AddLogFile(TProofQueryResult *pq)
+R__HIDDEN void TProofServ::AddLogFile(TProofQueryResult *pq)
 {
    // Add part of log file concerning TQueryResult pq to its macro
    // container.
@@ -2185,20 +2350,20 @@ void TProofServ::AddLogFile(TProofQueryResult *pq)
 }
 
 //______________________________________________________________________________
-void TProofServ::FinalizeQuery(TProofPlayer *p, TProofQueryResult *pq)
+R__HIDDEN void TProofServ::FinalizeQuery(TProofQueryResult *pq)
 {
    // Final steps after Process() to complete the TQueryResult instance.
 
-   if (!pq || !p) {
+   if (!pq || !fPlayer) {
       Warning("FinalizeQuery",
-              "bad inputs: query = %p, player = %p ", pq ? pq : 0, p ? p : 0);
+              "bad inputs: query = %p, player = %p ", pq ? pq : 0, fPlayer ? fPlayer : 0);
       return;
    }
 
    Int_t qn = pq->GetSeqNum();
-   Long64_t np = p->GetEventsProcessed();
-   TProofPlayer::EExitStatus est = p->GetExitStatus();
-   TList *out = p->GetOutputList();
+   Long64_t np = fPlayer->GetEventsProcessed();
+   TVirtualProofPlayer::EExitStatus est = fPlayer->GetExitStatus();
+   TList *out = fPlayer->GetOutputList();
 
    fProof->AskStatistics();
 
@@ -2215,19 +2380,19 @@ void TProofServ::FinalizeQuery(TProofPlayer *p, TProofQueryResult *pq)
    // Some notification (useful in large logs)
    Bool_t save = kTRUE;
    switch (est) {
-   case TProofPlayer::kAborted:
+   case TVirtualProofPlayer::kAborted:
       PDB(kGlobal, 1)
          Info("FinalizeQuery", "query %d has been ABORTED <====", qn);
       out = 0;
       save = kFALSE;
       break;
-   case TProofPlayer::kStopped:
+   case TVirtualProofPlayer::kStopped:
       PDB(kGlobal, 1)
          Info("FinalizeQuery",
               "query %d has been STOPPED: %d events processed", qn, np);
       st = TQueryResult::kStopped;
       break;
-   case TProofPlayer::kFinished:
+   case TVirtualProofPlayer::kFinished:
       PDB(kGlobal, 1)
          Info("FinalizeQuery",
               "query %d has been completed: %d events processed", qn, np);
@@ -2235,7 +2400,7 @@ void TProofServ::FinalizeQuery(TProofPlayer *p, TProofQueryResult *pq)
       break;
    default:
       Warning("FinalizeQuery",
-              "query %d: unknown exit status (%d)", qn, p->GetExitStatus());
+              "query %d: unknown exit status (%d)", qn, fPlayer->GetExitStatus());
    }
 
    // Fill some variables
@@ -2288,7 +2453,7 @@ void TProofServ::FinalizeQuery(TProofPlayer *p, TProofQueryResult *pq)
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::CleanupQueriesDir()
+R__HIDDEN Int_t TProofServ::CleanupQueriesDir()
 {
    // Remove all queries results referring to previous sessions
 
@@ -2328,7 +2493,7 @@ Int_t TProofServ::CleanupQueriesDir()
 }
 
 //______________________________________________________________________________
-void TProofServ::ScanPreviousQueries(const char *dir)
+R__HIDDEN void TProofServ::ScanPreviousQueries(const char *dir)
 {
    // Scan the queries directory for the results of previous queries.
    // The headers of the query results found are loaded in fPreviousQueries.
@@ -2402,7 +2567,7 @@ void TProofServ::ScanPreviousQueries(const char *dir)
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::LockSession(const char *sessiontag, TProofLockPath **lck)
+R__HIDDEN Int_t TProofServ::LockSession(const char *sessiontag, TProofLockPath **lck)
 {
    // Try locking query area of session tagged sessiontag.
    // The id of the locking file is returned in fid and must be
@@ -2460,7 +2625,7 @@ Int_t TProofServ::LockSession(const char *sessiontag, TProofLockPath **lck)
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::CleanupSession(const char *sessiontag)
+R__HIDDEN Int_t TProofServ::CleanupSession(const char *sessiontag)
 {
    // Cleanup query dir qdir.
 
@@ -2502,7 +2667,7 @@ Int_t TProofServ::CleanupSession(const char *sessiontag)
 }
 
 //______________________________________________________________________________
-void TProofServ::SaveQuery(TQueryResult *qr, const char *fout)
+R__HIDDEN void TProofServ::SaveQuery(TQueryResult *qr, const char *fout)
 {
    // Save current status of query 'qr' to file name fout.
    // If fout == 0 (default) use the default name.
@@ -2531,7 +2696,7 @@ void TProofServ::SaveQuery(TQueryResult *qr, const char *fout)
 }
 
 //______________________________________________________________________________
-void TProofServ::RemoveQuery(const char *queryref)
+R__HIDDEN void TProofServ::RemoveQuery(const char *queryref)
 {
    // Remove everything about query queryref.
 
@@ -2562,7 +2727,7 @@ void TProofServ::RemoveQuery(const char *queryref)
 }
 
 //______________________________________________________________________________
-void TProofServ::RemoveQuery(TQueryResult *qr, Bool_t soft)
+R__HIDDEN void TProofServ::RemoveQuery(TQueryResult *qr, Bool_t soft)
 {
    // Remove everything about query qr. If soft = TRUE leave a track
    // in memory with the relevant info
@@ -2598,8 +2763,8 @@ void TProofServ::RemoveQuery(TQueryResult *qr, Bool_t soft)
 }
 
 //______________________________________________________________________________
-TProofQueryResult *TProofServ::LocateQuery(TString queryref,
-                                           Int_t &qry, TString &qdir)
+R__HIDDEN TProofQueryResult *TProofServ::LocateQuery(TString queryref,
+                                                     Int_t &qry, TString &qdir)
 {
    // Locate query referenced by queryref. Return pointer to instance
    // in memory, if any, or 0. Fills qdir with the query specific directory
@@ -2795,8 +2960,6 @@ void TProofServ::HandleProcess(TMessage *mess)
    if (evl)
       dset->SetEventList(evl);
 
-   TProofPlayer *p = 0;
-
    if (IsTopMaster()) {
 
       TProofQueryResult *pq = 0;
@@ -2892,22 +3055,13 @@ void TProofServ::HandleProcess(TMessage *mess)
          fSocket->Send(m);
 
          // Create player
-         if (IsParallel()) {
-            p = fProof->MakePlayer();
-         } else {
-            // sequential mode
-            p = new TProofPlayerSlave(fSocket);
-            fProof->SetPlayer(p);
-         }
+         MakePlayer();
 
          // Add query results to the player lists
-         p->AddQueryResult(pq);
+         fPlayer->AddQueryResult(pq);
 
          // Set query currently processed
-         p->SetCurrentQuery(pq);
-
-         // Set player
-         fPlayer = p;
+         fPlayer->SetCurrentQuery(pq);
 
          // Setup data set
          if (dset->IsA() == TDSetProxy::Class())
@@ -2917,35 +3071,36 @@ void TProofServ::HandleProcess(TMessage *mess)
          TIter next(input);
          for (TObject *o; (o = next()); ) {
             PDB(kGlobal, 2) Info("HandleProcess", "adding: %s", o->GetName());
-            p->AddInput(o);
+            fPlayer->AddInput(o);
          }
 
          // Add the unique query tag as TNamed object to the input list
          // so that it is available in TSelectors for monitoring
-         p->AddInput(new TNamed("PROOF_QueryTag",Form("%s:%s",pq->GetTitle(),pq->GetName())));
+         fPlayer->AddInput(new TNamed("PROOF_QueryTag",Form("%s:%s",pq->GetTitle(),pq->GetName())));
 
          // Process
-         p->Process(dset, filename, opt, nentries, first);
+         PDB(kGlobal, 1) Info("HandleProcess", "calling %s::Process()", fPlayer->IsA()->GetName());
+         fPlayer->Process(dset, filename, opt, nentries, first);
 
          // Return number of events processed
-         if (p->GetExitStatus() != TProofPlayer::kFinished) {
+         if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kFinished) {
             Bool_t abort =
-              (p->GetExitStatus() == TProofPlayer::kAborted) ? kTRUE : kFALSE;
+              (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) ? kTRUE : kFALSE;
             TMessage m(kPROOF_STOPPROCESS);
             if (fProtocol > 8) {
-               m << p->GetEventsProcessed() << abort;
+               m << fPlayer->GetEventsProcessed() << abort;
             } else {
-               m << p->GetEventsProcessed();
+               m << fPlayer->GetEventsProcessed();
             }
             fSocket->Send(m);
          }
 
          // Complete filling of the TQueryResult instance
-         FinalizeQuery(p, pq);
+         FinalizeQuery(pq);
 
          // Send back the results
          TQueryResult *pqr = pq->CloneInfo();
-         if (p->GetExitStatus() != TProofPlayer::kAborted && p->GetOutputList()) {
+         if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted && fPlayer->GetOutputList()) {
 
             PDB(kGlobal, 2) Info("HandleProcess","Sending results");
             if (fProtocol > 10) {
@@ -2953,10 +3108,10 @@ void TProofServ::HandleProcess(TMessage *mess)
                TMessage m(kPROOF_MESSAGE);
                TMessage mbuf(kPROOF_OUTPUTOBJECT);
                // Objects in the output list
-               Int_t olsz = p->GetOutputList()->GetSize();
+               Int_t olsz = fPlayer->GetOutputList()->GetSize();
                // Message for the client
-               m << TString(Form("Master-%s: sending output: %d objs",
-                                   fOrdinal.Data(), olsz));
+               m << TString(Form("master-%s: sending output: %d objs",
+                                 fOrdinal.Data(), olsz));
                m << (Bool_t) kFALSE;
                fSocket->Send(m);
                // Send light query info
@@ -2966,7 +3121,7 @@ void TProofServ::HandleProcess(TMessage *mess)
 
                Int_t ns = 0;
                Int_t totsz = 0;
-               TIter nxo(p->GetOutputList());
+               TIter nxo(fPlayer->GetOutputList());
                TObject *o = 0;
                while ((o = nxo())) {
                   ns++;
@@ -2976,7 +3131,7 @@ void TProofServ::HandleProcess(TMessage *mess)
                   mbuf.WriteObject(o);
                   totsz += mbuf.Length();
                   m.Reset();
-                  m << TString(Form("Master-%s: sending obj %d/%d (%d bytes)",
+                  m << TString(Form("master-%s: sending obj %d/%d (%d bytes)",
                                     fOrdinal.Data(), ns, olsz, mbuf.Length()));
                   m << (Bool_t) kFALSE;
                   fSocket->Send(m);
@@ -2984,8 +3139,8 @@ void TProofServ::HandleProcess(TMessage *mess)
                }
                // Total size
                m.Reset();
-               m << TString(Form("Master-%s: grand total: sent %d objects, size: %d bytes",
-                                      fOrdinal.Data(), olsz, totsz));
+               m << TString(Form("master-%s: grand total: sent %d objects, size: %d bytes",
+                                 fOrdinal.Data(), olsz, totsz));
                m << (Bool_t) kTRUE;
                fSocket->Send(m);
             } else if (fProtocol > 6) {
@@ -2995,9 +3150,9 @@ void TProofServ::HandleProcess(TMessage *mess)
                mbuf.WriteObject(pq);
                // Sizes
                Int_t blen = mbuf.Length();
-               Int_t olsz = p->GetOutputList()->GetSize();
+               Int_t olsz = fPlayer->GetOutputList()->GetSize();
                // Message for the client
-               TString cmsg = Form("Master-%s: sending output: %d objs, %d bytes",
+               TString cmsg = Form("master-%s: sending output: %d objs, %d bytes",
                                    fOrdinal.Data(), olsz, blen);
                TMessage m(kPROOF_MESSAGE);
                m << cmsg;
@@ -3007,16 +3162,16 @@ void TProofServ::HandleProcess(TMessage *mess)
             } else {
                // TQueryResult unknow to client: send the output list only
                PDB(kGlobal, 2) Info("HandleProcess","Sending output list");
-               fSocket->SendObject(p->GetOutputList(), kPROOF_OUTPUTLIST);
+               fSocket->SendObject(fPlayer->GetOutputList(), kPROOF_OUTPUTLIST);
             }
          } else {
-            if (p->GetExitStatus() != TProofPlayer::kAborted)
+            if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted)
                Warning("HandleProcess","The output list is empty!");
             fSocket->SendObject(0, kPROOF_OUTPUTLIST);
          }
 
          // Remove aborted queries from the list
-         if (p->GetExitStatus() == TProofPlayer::kAborted) {
+         if (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) {
             RemoveQuery(pq);
          } else {
             // Keep in memory only light infor about a query
@@ -3029,9 +3184,7 @@ void TProofServ::HandleProcess(TMessage *mess)
             }
          }
 
-         // Player cleanup
-         fProof->SetPlayer(0);
-         SafeDelete(p);
+         DeletePlayer();
 
       } // Loop on submitted queries
 
@@ -3043,19 +3196,7 @@ void TProofServ::HandleProcess(TMessage *mess)
       // Set not idle
       fIdle = kFALSE;
 
-      // Create player
-      if (IsMaster() && IsParallel()) {
-         // NOTE: fProof->SetPlayer(0) should be called after Process()
-         p = fProof->MakePlayer();
-      } else {
-         // slave or sequential mode
-         p = new TProofPlayerSlave(fSocket);
-         if (IsMaster())
-            fProof->SetPlayer(p);
-      }
-
-      // Set player
-      fPlayer = p;
+      MakePlayer();
 
       // Setup data set
       if (dset->IsA() == TDSetProxy::Class())
@@ -3065,27 +3206,29 @@ void TProofServ::HandleProcess(TMessage *mess)
       TIter next(input);
       for (TObject *o; (o = next()); ) {
          PDB(kGlobal, 2) Info("HandleProcess", "adding: %s", o->GetName());
-         p->AddInput(o);
+         fPlayer->AddInput(o);
       }
 
       // Process
-      p->Process(dset, filename, opt, nentries, first);
+      PDB(kGlobal, 1) Info("HandleProcess", "calling %s::Process()", fPlayer->IsA()->GetName());
+      fPlayer->Process(dset, filename, opt, nentries, first);
 
       // Return number of events processed
       TMessage m(kPROOF_STOPPROCESS);
-      m << p->GetEventsProcessed();
+      Bool_t abort = (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted) ? kFALSE : kTRUE;
+      m << fPlayer->GetEventsProcessed() << abort;
       fSocket->Send(m);
 
       // Send back the results
-      if (p->GetExitStatus() != TProofPlayer::kAborted && p->GetOutputList()) {
+      if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted && fPlayer->GetOutputList()) {
          if (fProtocol > 10) {
             // Send objects one-by-one to optimize transfer and merging
             // Messages for objects
             TMessage mbuf(kPROOF_OUTPUTOBJECT);
             // Objects in the output list
             Int_t ns = 0;
-            Int_t olsz = p->GetOutputList()->GetSize();
-            TIter nxo(p->GetOutputList());
+            Int_t olsz = fPlayer->GetOutputList()->GetSize();
+            TIter nxo(fPlayer->GetOutputList());
             TObject *o = 0;
             while ((o = nxo())) {
                ns++;
@@ -3096,23 +3239,18 @@ void TProofServ::HandleProcess(TMessage *mess)
             }
          } else {
             PDB(kGlobal, 2) Info("HandleProcess","Sending output list");
-            fSocket->SendObject(p->GetOutputList(), kPROOF_OUTPUTLIST);
+            fSocket->SendObject(fPlayer->GetOutputList(), kPROOF_OUTPUTLIST);
          }
       } else {
-         fSocket->SendObject(0,kPROOF_OUTPUTLIST);
+         fSocket->SendObject(0, kPROOF_OUTPUTLIST);
       }
 
       // Cleanup
       SafeDelete(dset);
-      p->GetInputList()->SetOwner();  // Make sure the input list objects are deleted
+      fPlayer->GetInputList()->SetOwner();  // Make sure the input list objects are deleted
 
-      // Player cleanup
-      if (IsMaster())
-         fProof->SetPlayer(0);
-      SafeDelete(p);
+      DeletePlayer();
    }
-
-   fPlayer = 0;
 
    // Set idle
    fIdle = kTRUE;
@@ -3122,7 +3260,6 @@ void TProofServ::HandleProcess(TMessage *mess)
    // Done
    return;
 }
-
 
 //______________________________________________________________________________
 void TProofServ::HandleQueryList(TMessage *mess)
@@ -3276,7 +3413,7 @@ void TProofServ::HandleRetrieve(TMessage *mess)
                   qsz /= 1000.;
                   ilb++;
                }
-               m << TString(Form("Master-%s: sending result of %s:%s (%'.1f %s)",
+               m << TString(Form("master-%s: sending result of %s:%s (%'.1f %s)",
                                   fOrdinal.Data(), pqr->GetTitle(), pqr->GetName(),
                                   qsz, clb[ilb]));
                m << (Bool_t) kTRUE;
@@ -3573,7 +3710,7 @@ void TProofServ::HandleCheckFile(TMessage *mess)
       TMD5 *md5local = TMD5::FileChecksum(cachef);
       if (md5local && md5 == (*md5local)) {
          // copy file from cache to working directory
-         gSystem->Exec(Form("%s %s .", kCP, cachef.Data()));
+         CopyFromCache(filenam);
          fSocket->Send(kPROOF_CHECKFILE);
          PDB(kPackage, 1)
             Info("HandleCheckFile", "file %s already on node", filenam.Data());
@@ -3602,7 +3739,7 @@ Int_t TProofServ::HandleCache(TMessage *mess)
 
    // Notification message
    TMessage notm(kPROOF_MESSAGE);
-   TString noth = Form("worker-%s-%s", fOrdinal.Data(), fSessionTag.Data());
+   TString noth = Form("worker-%s", fOrdinal.Data());
    if (IsMaster())
       noth.ReplaceAll("worker", "master");
    Bool_t notln = kTRUE;
@@ -3689,16 +3826,16 @@ Int_t TProofServ::HandleCache(TMessage *mess)
             ocwd = gSystem->WorkingDirectory();
             gSystem->ChangeDirectory(pdir);
 
+            // forward build command to slaves, but don't wait for results
+            if (IsMaster())
+               fProof->BuildPackage(package, TProof::kBuildOnSlavesNoWait);
+
             // check for BUILD.sh and execute
             if (!gSystem->AccessPathName("PROOF-INF/BUILD.sh")) {
                // Notify the upper level
                notm.Reset();
                notm << TString(Form("%s: building %s ...", noth.Data(), package.Data())) << notln;
                fSocket->Send(notm);
-
-               // forward build command to slaves, but don't wait for results
-               if (IsMaster())
-                  fProof->BuildPackage(package, TProof::kBuildOnSlavesNoWait);
 
                // read version from file proofvers.txt, and if current version is
                // not the same do a "BUILD.sh clean"
@@ -3713,9 +3850,16 @@ Int_t TProofServ::HandleCache(TMessage *mess)
                   }
                }
 
-               // build the package
-               if (gSystem->Exec("PROOF-INF/BUILD.sh"))
-                  status = -1;
+               // To build the package we execute PROOF-INF/BUILD.sh via a pipe
+               // so that we can send back the log in (almost) real-time to the
+               // (impatient) client. Note that this operation will block, so
+               // the messages from builds on the workers will reach the client
+               // shortly after the master ones.
+               TString cmd = Form("export ROOTINCLUDEPATH=%s ; PROOF-INF/BUILD.sh",
+                                  gSystem->GetIncludePath());
+               {
+                  TProofServLogHandlerGuard hg(cmd, fSocket);
+               }
 
                // write version file
                f = fopen("PROOF-INF/proofvers.txt", "w");
@@ -3902,6 +4046,33 @@ Int_t TProofServ::HandleCache(TMessage *mess)
             msg << type << pack;
             fSocket->Send(msg);
          }
+         break;
+      case TProof::kLoadMacro:
+
+         (*mess) >> package;
+
+         // By first forwarding the load command to the master and workers
+         // and only then loading locally we load/build in parallel
+         if (IsMaster())
+            fProof->Load(package);
+
+         // Load locally; the implementation and header files (and perhaps
+         // the binaries) are already in the cache
+         CopyFromCache(package);
+
+         {  TProofServLogHandlerGuard hg(fLogFile, fSocket);
+            PDB(kGlobal, 1) Info("HandleCache:kLoadMacro", "enter");
+            // Load the macro
+            gROOT->ProcessLine(Form(".L %s", package.Data()));
+         }
+
+         // Cache binaries, if any new
+         CopyToCache(package, 1);
+
+         // Wait forworkers to be done
+         if (IsMaster())
+            fProof->Collect(TProof::kAllUnique);
+
          break;
       default:
          Error("HandleCache", "unknown type %d", type);
@@ -4219,8 +4390,9 @@ TProofServ::EQueryAction TProofServ::GetWorkers(TList *workers,
    if (master)
       fImage = master->GetImage();
    if (!master || (fImage.Length() == 0)) {
-      Error("GetWorkers",
-            "no appropriate master line found in %s", fConfFile.Data());
+      PDB(kAll,1)
+         Info("GetWorkers",
+              "no appropriate master line found in %s", fConfFile.Data());
       return kQueryStop;
    }
 
@@ -4237,7 +4409,7 @@ TProofServ::EQueryAction TProofServ::GetWorkers(TList *workers,
 }
 
 //______________________________________________________________________________
-TList *TProofServ::GetDataSet(const char *name)
+R__HIDDEN TList *TProofServ::GetDataSet(const char *name)
 {
    // Utility function used in various methods for user dataset upload.
 
@@ -4383,6 +4555,191 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
       gSystem->StackTrace();
       gSystem->Abort();
    }
+}
+
+//______________________________________________________________________________
+Int_t TProofServ::CopyFromCache(const char *macro)
+{
+   // Retrieve any files (source and binaries) related to 'macro' from the cache
+   // directory.
+   // Returns 0 on success, -1 otherwise
+
+   if (!macro || strlen(macro) <= 0)
+      // Invalid inputs
+      return -1;
+
+   // Split out the aclic mode, if any
+   TString name = macro;
+   TString acmode, args, io;
+   name = gSystem->SplitAclicMode(name, acmode, args, io);
+
+   PDB(kGlobal,1)
+      Info("CopyFromCache","enter: names: %s, %s", macro, name.Data());
+
+   // Atomic action
+   fCacheLock->Lock();
+
+   // Get source from the cache
+   PDB(kGlobal,2)
+      Info("CopyFromCache",
+           "retrieving %s/%s from cache", fCacheDir.Data(), name.Data());
+   gSystem->Exec(Form("%s %s/%s .", kCP, fCacheDir.Data(), name.Data()));
+
+   // Create binary name template
+   TString binname = name;
+   Int_t dot = binname.Last('.');
+   if (dot != kNPOS) {
+      binname.Replace(dot,1,"_");
+      binname += ".";
+      void *dirp = gSystem->OpenDirectory(fCacheDir);
+      if (dirp) {
+         const char *e = 0;
+         while ((e = gSystem->GetDirEntry(dirp))) {
+            if (!strncmp(e, binname.Data(), binname.Length())) {
+               Bool_t docp = kTRUE;
+               FileStat_t stlocal, stcache;
+               TString fncache = Form("%s/%s", fCacheDir.Data(), e);
+               if (!gSystem->GetPathInfo(fncache, stcache)) {
+                  Int_t rc = gSystem->GetPathInfo(e, stlocal);
+                  if (rc == 0 && (stlocal.fMtime >= stcache.fMtime))
+                     docp = kFALSE;
+                  // Copy the file, if needed
+                  if (docp) {
+                     gSystem->Exec(Form("%s %s", kRM, e));
+                     PDB(kGlobal,2)
+                        Info("CopyFromCache",
+                             "retrieving %s from cache", fncache.Data());
+                     gSystem->Exec(Form("%s %s %s", kCP, fncache.Data(), e));
+                  }
+               }
+            }
+         }
+         gSystem->FreeDirectory(dirp);
+      }
+   }
+
+   // End of atomicity
+   fCacheLock->Unlock();
+
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TProofServ::CopyToCache(const char *macro, Int_t opt)
+{
+   // Copy files related to 'macro' to the cache directory.
+   // Action depends on 'opt':
+   //
+   //    opt = 0         copy 'macro' to cache and delete from cache any binary
+   //                    related to name; e.g. if macro = bla.C, the binaries are
+   //                    bla_C.so, bla_C.rootmap, ...
+   //    opt = 1         copy the binaries related to macro to the cache
+   //
+   // Returns 0 on success, -1 otherwise
+
+   if (!macro || strlen(macro) <= 0 || opt < 0 || opt > 1)
+      // Invalid inputs
+      return -1;
+
+   // Split out the aclic mode, if any
+   TString name = macro;
+   TString acmode, args, io;
+   name = gSystem->SplitAclicMode(name, acmode, args, io);
+
+   PDB(kGlobal,1)
+      Info("CopyToCache","enter: opt: %d, names: %s, %s", opt, macro, name.Data());
+
+   // Create binary name template
+   TString binname = name;
+   Int_t dot = binname.Last('.');
+   if (dot != kNPOS)
+      binname.Replace(dot,1,"_");
+
+   // Atomic action
+   fCacheLock->Lock();
+
+   // Action depends on 'opt'
+   if (opt == 0) {
+      // Save name to cache
+      PDB(kGlobal,2)
+         Info("CopyFromCache",
+              "caching %s/%s ...", fCacheDir.Data(), name.Data());
+      gSystem->Exec(Form("%s %s %s", kCP, name.Data(), fCacheDir.Data()));
+      // If needed, remove from the cache any existing binary related to 'name'
+      if (dot != kNPOS) {
+         binname += ".*";
+         gSystem->Exec(Form("%s %s/%s", kRM, fCacheDir.Data(), binname.Data()));
+      }
+   } else if (opt == 1) {
+      // If needed, copy to the cache any existing binary related to 'name'.
+      if (dot != kNPOS) {
+         binname += ".";
+         void *dirp = gSystem->OpenDirectory(".");
+         if (dirp) {
+            const char *e = 0;
+            while ((e = gSystem->GetDirEntry(dirp))) {
+               if (!strncmp(e, binname.Data(), binname.Length())) {
+                  Bool_t docp = kTRUE;
+                  FileStat_t stlocal, stcache;
+                  if (!gSystem->GetPathInfo(e, stlocal)) {
+                     TString fncache = Form("%s/%s", fCacheDir.Data(), e);
+                     Int_t rc = gSystem->GetPathInfo(fncache, stcache);
+                     if (rc == 0 && (stlocal.fMtime <= stcache.fMtime))
+                        docp = kFALSE;
+                     // Copy the file, if needed
+                     if (docp) {
+                        gSystem->Exec(Form("%s %s", kRM, fncache.Data()));
+                        PDB(kGlobal,2)
+                           Info("CopyFromCache","caching %s ...", e);
+                        gSystem->Exec(Form("%s %s %s", kCP, e, fncache.Data()));
+                     }
+                  }
+               }
+            }
+            gSystem->FreeDirectory(dirp);
+         }
+      }
+   }
+
+   // End of atomicity
+   fCacheLock->Unlock();
+
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
+void TProofServ::MakePlayer()
+{
+   // Make player instance.
+
+   TVirtualProofPlayer *p = 0;
+
+   if (IsParallel()) {
+      // remote mode
+      p = fProof->MakePlayer();
+   } else {
+      // slave or sequential mode
+      p = TVirtualProofPlayer::Create("slave", 0, fSocket);
+      if (IsMaster())
+         fProof->SetPlayer(p);
+   }
+
+   // set player
+   fPlayer = p;
+}
+
+//______________________________________________________________________________
+void TProofServ::DeletePlayer()
+{
+   // Delete player instance.
+
+   if (IsMaster())
+      if (fProof) fProof->SetPlayer(0);
+   else
+      delete fPlayer;
+   fPlayer = 0;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArray.h,v 1.8 2006/05/11 10:35:08 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArray.h,v 1.9 2006/05/23 04:47:36 brun Exp $
 // Author: Fons Rademakers   21/10/97
 
 /*************************************************************************
@@ -23,13 +23,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Htypes
-#include "Htypes.h"
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
 #endif
 #include <string.h>
 
 class TBuffer;
-
 
 class TArray {
 

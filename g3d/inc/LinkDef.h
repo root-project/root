@@ -1,4 +1,4 @@
-/* @(#)root/g3d:$Name:  $:$Id: LinkDef.h,v 1.8 2006/04/07 08:43:59 brun Exp $ */
+/* @(#)root/g3d:$Name:  $:$Id: LinkDef.h,v 1.9 2006/09/27 08:49:14 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -49,6 +49,6 @@
 #pragma link C++ class TMarker3DBox-;
 #pragma link C++ class TPoints3DABC;
 #pragma link C++ class TXTRU+;
-#pragma link C++ class TUtil3D;
+#pragma link C++ class TView3D-;
 
 #endif

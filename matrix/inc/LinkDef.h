@@ -1,4 +1,4 @@
-/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.27 2006/06/02 05:11:19 brun Exp $ */
+/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.28 2006/07/28 10:50:13 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -71,6 +71,7 @@
 
 #pragma link C++ typedef TVector;
 #pragma link C++ typedef TVectorF;
+#pragma link C++ typedef TMatrix;
 #pragma link C++ typedef TMatrixF;
 #pragma link C++ typedef TMatrixFSym;
 #pragma link C++ typedef TMatrixFSparse;

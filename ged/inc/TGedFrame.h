@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.11 2006/09/27 08:45:42 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.12 2006/10/11 10:26:23 rdm Exp $
 // Author: Ilka  Antcheva 10/05/04
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 //  Base editor's attribute frame - a service class.                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
 #ifndef ROOT_TGFrame
 #include "TGFrame.h"
 #endif
@@ -101,7 +102,7 @@ private:
 protected:
    TGLabel          *fLabel;      //label of attribute frame
    TGCompositeFrame *f1, *f2;     //container frames
-   TGToolTip        *fTip; 	  //tool tip associated with button
+   TGToolTip        *fTip; 	      //tool tip associated with button
 
 public:
    TGedNameFrame(const TGWindow *p =0 ,

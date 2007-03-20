@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.12 2006/02/17 05:16:38 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.13 2006/10/11 10:26:22 rdm Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -30,7 +30,6 @@
 #endif
 
 class TExMap;
-class TFile;
 
 class TProcessID : public TNamed {
 
@@ -48,6 +47,7 @@ public:
    TProcessID(const TProcessID &ref);
    TProcessID& operator=(const TProcessID &ref);
    virtual ~TProcessID();
+   void             CheckInit() {if (!fObjects) fObjects = new TObjArray(100);}
    virtual void     Clear(Option_t *option="");
    Int_t            DecrementCount();
    Int_t            IncrementCount();
@@ -60,9 +60,9 @@ public:
    static TProcessID  *AddProcessID();
    static UInt_t       AssignID(TObject *obj);
    static void         Cleanup();
-   static TProcessID  *ReadProcessID(UShort_t pidf , TFile *file);
-   static UShort_t     WriteProcessID(TProcessID *pid , TFile *file);
    static UInt_t       GetNProcessIDs() {return fgPIDs ? fgPIDs->GetLast()+1 : 0;}
+   static TProcessID  *GetPID();
+   static TObjArray   *GetPIDs();
    static TProcessID  *GetProcessID(UShort_t pid);
    static TProcessID  *GetProcessWithUID(UInt_t uid,void *obj);
    static TProcessID  *GetSessionProcessID();

@@ -1,11 +1,11 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.34 2006/10/30 17:15:22 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.35 2006/12/12 20:12:47 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * Copyright (C) 2002 by Valeri Fine.                                    *
  * All rights reserved.                                                  *
- *                                                                       *
+ *                                                                      *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
@@ -62,6 +62,7 @@
 #include <qlineedit.h>
 #include <qfileinfo.h>
 #include <qtextcodec.h>
+#include <qdir.h>
 
 #include "TROOT.h"
 #include "TMath.h"
@@ -91,11 +92,37 @@
 #include "TSysEvtHandler.h"
 #include "TQtMarker.h"
 
+#include "TImage.h"
 #include "TError.h"
 
 TGQt *gQt=0;
 TVirtualX *TGQt::fgTQt = 0; // to remember the poiner fulishing ROOT PluginManager later.
 // static const int kDefault=2;
+
+//__________________________________________________________________
+QString TGQt::SetFileName(const QString &fileName)
+{
+   // Set the file pattern
+   QFileInfo  fi(fileName);
+   QString saveFileMoviePattern = 
+            fi.dirPath()+"/" + fi.baseName(TRUE)+ "_%04d" + "." + fi.extension(FALSE);
+   return saveFileMoviePattern;
+}
+//__________________________________________________________________
+QString TGQt::GetNewFileName(const QString &fileNamePrototype)
+{
+   // Find the filename for the given "fileNamePrototype"
+   TString flN = (const char *)fileNamePrototype;
+   gSystem->ExpandPathName(flN);
+   QString fileName = (const char *)flN;
+
+   Int_t counter = 0;
+   QString formatPattern = SetFileName(fileName);
+   while (gSystem->AccessPathName((const char *)fileName)==0) {
+      fileName = QString().sprintf(formatPattern,counter++);
+   }
+   return  fileName;     
+}
 
 //----- Terminal Input file handler --------------------------------------------
 //______________________________________________________________________________
@@ -527,10 +554,14 @@ QString TGQt::RootFileFormat(const QString &selector)
    // that matches the ROOT inmage formats
    // those Qt library can not provide
    QString saveType;
-   QString defExtension[] = {"cpp","cxx","eps","svg","root","pdf","ps","xml","C"};
+   QString defExtension[] = {"cpp","cxx","eps","svg","root","pdf","ps","xml"
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,13,0)   
+                             ,"gif"
+#endif
+                             ,"C"};
    UInt_t nExt = sizeof(defExtension)/sizeof(const char *);
-
-   for (UInt_t i = 0; i < nExt; i++) {
+    UInt_t i = 0;
+   for (i=0; i < nExt; i++) {
       if (selector.contains(defExtension[i],FALSE)) {
          saveType = defExtension[i];
          break;
@@ -581,7 +612,7 @@ QString TGQt::QtFileFormat(const QString &selector)
       // a special treatment of the "gif" format.
       // If "gif" is not provided with the local Qt installation
       // replace "gif" format with "png" one
-      if (saveType.isEmpty() && selector.contains("gif",FALSE)) saveType="PNG";
+      // -- if (saveType.isEmpty() && selector.contains("gif",FALSE)) saveType="PNG";
    }
    return saveType;
 }
@@ -670,7 +701,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.140 2006/12/12 03:03:42 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.147 2007/01/18 01:20:02 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -787,22 +818,52 @@ Bool_t TGQt::Init(void* /*display*/)
    fWidgetArray =  new TQWidgetCollection();
    fDisplayOpened = kTRUE;
    TQtEventInputHandler::Instance();
-   // Add $QTDIR include  path to the  the list of includes for ACliC
-   gSystem->AddIncludePath("-I$QTDIR/include");
-#ifndef R__WIN32
+   // Add $QTDIR include  path to the  list of includes for ACliC
+   // make sure Qt SDK does exist.
+   if (gSystem->Getenv("QTDIR")) {
+      TString qtdir = "$(QTDIR)/include";
+      gSystem->ExpandPathName(qtdir);
+      TString testQtHeader = qtdir + "/qglobal.h";
+      if (!gSystem->AccessPathName((const char *)testQtHeader) ) {
+         // Expand the QTDIR first to avoid the cross-platform issue
+         TString incpath= "-I"; incpath+=qtdir;
+         gSystem->AddIncludePath((const char*)incpath);
+#ifdef R__WIN32
+         QString libPath = gSystem->GetLinkedLibs();
+         // detect the exact name of the Qt library
+         TString qtlibdir= "$(QTDIR)"; 
+         qtlibdir += QDir::separator(); 
+         qtlibdir += "lib";
+
+         gSystem->ExpandPathName(qtlibdir);
+         QDir qtdir((const char*)qtlibdir);
+         if (qtdir.isReadable ()) {
+            QStringList qtLibFile =  qtdir.entryList("qt-mt*.lib");
+            if (qtLibFile.count() ) {
+               libPath += " -LIBPATH:\"";libPath += qtlibdir;  libPath += "\" "; libPath += qtLibFile.first();
+               gSystem->SetLinkedLibs((const char*)libPath);
+            }
+         } else {
+            qWarning(" Can not open the QTDIR %s",(const char*)qtlibdir);
+         }
+#endif 
+      }
+   }
    TString newPath = 
-# ifdef ROOTLIBDIR
-      ROOTLIBDIR
+# ifdef CINTINCDIR
+      CINTINCDIR
 # else 
-   "$(ROOTSYS)/cint/include"
+   "$(ROOTSYS)/cint/"
 # endif
-     ;
+     ; newPath += "include";
+#ifndef R__WIN32
    newPath += ":";
-   newPath += gSystem->GetDynamicPath();
-   // SetDynamicPath causes the SegFault on Win32 platform
-   gSystem->SetDynamicPath(newPath.Data());
+#else
+   newPath += ";";
 #endif
-  return fDisplayOpened;
+   newPath += gSystem->GetDynamicPath();
+   gSystem->SetDynamicPath(newPath.Data());
+   return fDisplayOpened;
 }
 
 //______________________________________________________________________________
@@ -2673,6 +2734,9 @@ void  TGQt::WritePixmap(int wid, UInt_t w, UInt_t h, char *pxname)
    //               like "png","jpg","bmp"  . . .
    //               If no or some unknown extension is provided then
    //               the "png" format is used by default
+   // -- 
+   // Take in account the special ROOT filename syntax 26.12.2006 vf
+   //               "gif+NN" - an animated GIF file is produced, where NN is delay in 10ms units
 
    if (!wid || (wid == -1) ) return;
 
@@ -2720,10 +2784,38 @@ void  TGQt::WritePixmap(int wid, UInt_t w, UInt_t h, char *pxname)
          pnt.drawPixmap(outMap.rect(),*pix);
          finalPixmap = &outMap;
       }
+      // Detect the special case "gif+"
+      QString fname = pxname;
+      int plus = fname.find("+");
+      if (plus>=0) fname = fname.left(plus);
+      
       //  define the file extension
-      QString saveType = QtFileFormat(QFileInfo(pxname).extension(FALSE));
+      QString saveType = QtFileFormat(QFileInfo(fname).extension(FALSE));
+      //Info("WritePixmap"," type %s name = %s plus =  %d\n", (const char *)saveType,
+      //   (const char*) fname, plus);
       if (saveType.isEmpty()) saveType="PNG";
-      finalPixmap->save(pxname,saveType);
+
+      else if (QFileInfo(fname).extension(FALSE) == "gif") {
+         // TrollTech doesn't allow the  GIF writting due
+         // the patent problem.
+         Int_t saver = gErrorIgnoreLevel;
+         gErrorIgnoreLevel = kFatal;
+         TImage *img = TImage::Create();
+         if (img) {
+            img->SetImage(Pixmap_t(rootwid(finalPixmap)),0);
+            img->WriteImage(pxname, 
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,13,0)            
+                  plus>=0 ? TImage::kAnimGif: TImage::kGif);
+#else            
+                  TImage::kGif);
+#endif                  
+            delete img;
+         }
+         gErrorIgnoreLevel = saver;
+      } else {
+         if (plus>=0) fname = GetNewFileName(fname);
+         finalPixmap->save(fname,saveType);
+      }
    }
 }
 

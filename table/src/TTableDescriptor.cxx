@@ -1,4 +1,4 @@
-// @(#)root/table:$Name:  $:$Id: TTableDescriptor.cxx,v 1.15 2006/07/19 17:23:41 pcanal Exp $
+// @(#)root/table:$Name:  $:$Id: TTableDescriptor.cxx,v 1.16 2006/12/13 21:28:14 brun Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************
@@ -11,7 +11,6 @@
 
 #include <stdlib.h>
 
-#include "TROOT.h"
 #include "TTableDescriptor.h"
 #include "TTable.h"
 #include "TClass.h"
@@ -283,7 +282,7 @@ TTableDescriptor *TTableDescriptor::MakeDescriptor(const char *structName)
    //
    ///////////////////////////////////////////////////////////
    TTableDescriptor *dsc = 0;
-   TClass *cl = gROOT->GetClass(structName, kTRUE);
+   TClass *cl = TClass::GetClass(structName, kTRUE);
 //    TClass *cl = new TClass(structName,1,0,0);
    assert(cl!=0);
    dsc = new TTableDescriptor(cl);

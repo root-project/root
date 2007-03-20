@@ -18,7 +18,13 @@
 // (Draft) Technical Report on Standard Library Extensions,
 // N1687=04-0127, September 10, 2004</A>
 //
-//Author: Andras Zsenei
+//  Author: Andras Zsenei
+
+
+#include "TF1.h"
+#include "TSystem.h"
+#include "TCanvas.h"
+
 
 void mathcoreSpecFunc() {
 

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TChainIndex.h,v 1.1 2005/06/24 20:25:11 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TChainIndex.h,v 1.2 2005/09/03 02:21:32 pcanal Exp $
 // Author: Marek Biskup  07/06/2005
 
 /*************************************************************************
@@ -31,15 +31,10 @@
 #ifndef ROOT_TVirtualIndex
 #include "TVirtualIndex.h"
 #endif
-#ifndef ROOT_TTreeIndex
-#include "TTreeIndex.h"
-#endif
-#ifndef ROOT_TTreeFormula
-#include "TTreeFormula.h"
-#endif
 
 #include <vector>
 
+class TTreeFormula;
 class TChain;
 
 class TChainIndex : public TVirtualIndex {

@@ -1,3 +1,15 @@
+#include <TFile.h>
+#include <TNtuple.h>
+#include <TH2.h>
+#include <TProfile.h>
+#include <TCanvas.h>
+#include <TFrame.h>
+#include <TROOT.h>
+#include <TSystem.h>
+#include <TRandom.h>
+#include <TBenchmark.h>
+#include <TCint.h>
+
 TFile *hsimple(Int_t get=0)
 {
 //  This program creates :
@@ -41,21 +53,20 @@ TFile *hsimple(Int_t get=0)
       return 0;
    }
    (TFile*)gROOT->FindObject(filename); if (hfile) hfile->Close();
-   TFile *hfile = (TFile*)gROOT->FindObject(filename); if (hfile) hfile->Close();
+   hfile = (TFile*)gROOT->FindObject(filename); if (hfile) hfile->Close();
    hfile = new TFile(filename,"RECREATE","Demo ROOT file with histograms");
 
    // Create some histograms, a profile histogram and an ntuple
-   hpx    = new TH1F("hpx","This is the px distribution",100,-4,4);
+   TH1F *hpx = new TH1F("hpx","This is the px distribution",100,-4,4);
    hpx->SetFillColor(48);
-   hpxpy  = new TH2F("hpxpy","py vs px",40,-4,4,40,-4,4);
-   hprof  = new TProfile("hprof","Profile of pz versus px",100,-4,4,0,20);
-   ntuple = new TNtuple("ntuple","Demo ntuple","px:py:pz:random:i");
-
+   TH2F *hpxpy = new TH2F("hpxpy","py vs px",40,-4,4,40,-4,4);
+   TProfile *hprof = new TProfile("hprof","Profile of pz versus px",100,-4,4,0,20);
+   TNtuple *ntuple = new TNtuple("ntuple","Demo ntuple","px:py:pz:random:i");
 
    gBenchmark->Start("hsimple");
   
    // Create a new canvas.
-   c1 = new TCanvas("c1","Dynamic Filling Example",200,10,700,500);
+   TCanvas *c1 = new TCanvas("c1","Dynamic Filling Example",200,10,700,500);
    c1->SetFillColor(42);
    c1->GetFrame()->SetFillColor(21);
    c1->GetFrame()->SetBorderSize(6);

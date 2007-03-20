@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: testGraph.cxx,v 1.2 2005/10/27 17:22:16 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: testGraph.cxx,v 1.4 2007/02/09 17:24:50 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -16,8 +16,11 @@
 #include "TPaveLabel.h"
 #include "TStopwatch.h"
 #include "TVirtualFitter.h"
+#include "TMath.h"
+#include "TStyle.h"
 
 #include <vector>
+#include <iterator>
 
 double fitFunc( double *x , double * p) { 
 
@@ -72,53 +75,81 @@ void doFit(int n,const char * fitter)
    printf("fitting with %s",fitter);
    TVirtualFitter::SetDefaultFitter(fitter);
 
+
    int npass = 100; 
    TStopwatch timer;
    timer.Start();
    for (int i = 0; i < npass; ++i) { 
      f->SetParameters(initPar);
-     
+     f->FixParameter(1,2.);
      gre3->Fit(f,"q");
    }
    timer.Stop();
    printf("%s,: RT=%7.3f s, Cpu=%7.3f s\n",fitter,timer.RealTime(),timer.CpuTime());
 
-   TPaveLabel *pl = new TPaveLabel(0.5,0.7,0.85,0.8,Form("%s CPU= %g s",fitter,timer.CpuTime()),"brNDC");
-   pl->Draw();
-   //Access the fit resuts
+   // get covariance matrix
+   TVirtualFitter * theFitter = TVirtualFitter::GetFitter();
+   int np = theFitter->GetNumberFreeParameters();
+   std::cout << "Number of free parameters " << np << "\nCovariance Matrix :\n";
+   double * cv = theFitter->GetCovarianceMatrix();
+   assert(cv != 0);
+   for (int i = 0; i < np ; ++i) {
+      for (int j = 0; j < np ; ++j) 
+         std::cout << cv[j + i*np] << "\t";
+      std::cout << std::endl;
+   }
+
+
+   
+   //Access the fit results
    TF1 *f3 = gre3->GetFunction("f2");
+   //std::cout << "draw function" << f3 << std::endl;
    if (f3) { 
      f3->SetLineWidth(1);
      f3->SetLineColor(kRed);
+     f3->Draw("same");
    }
+
 
    TLegend *leg = new TLegend(0.1, 0.8, 0.35, 0.9);
    leg->AddEntry(gre3, "sin(x) + sin(2*x)", "p");
    leg->Draw();
    leg->SetFillColor(42);
 
+   TPaveLabel *pl = new TPaveLabel(0.5,0.7,0.85,0.8,Form("%s CPU= %g s",fitter,timer.CpuTime()),"brNDC");
+   pl->Draw();
+
+
 }
 
-void fitGraph(int n = 500) { 
-//   TCanvas *myc = new TCanvas("myc", "Fitting 3 TGraphErrors with linear functions");
-//   myc->Divide(1,2);
-//   myc->SetFillColor(42);
-//   myc->SetGrid();
+void testGraph(int n = 500) { 
+  TCanvas *myc = new TCanvas("myc", "Fitting 3 TGraphErrors with linear functions");
+  myc->Divide(1,2);
+  myc->SetFillColor(42);
+  myc->SetGrid();
+  gStyle->SetOptFit();
 
-//   myc->cd(1); 
-//  doFit(n,"Minuit");
+  myc->cd(1); 
+ doFit(n,"Minuit");
+ myc->Update();
 
-//  myc->cd(2); 
+  myc->cd(2); 
   doFit(n,"Minuit2");
+ myc->Update();
 
 }
 
 #ifndef __CINT__
 int main(int argc, char **argv)
 {
-   TApplication theApp("App", &argc, argv);
-   fitGraph(500);
-   theApp.Run();
+   if (argc > 1) { 
+      TApplication theApp("App", &argc, argv);
+      testGraph(500);
+      theApp.Run();
+   } 
+   else 
+      testGraph(500);
+
    return 0;
 }
 #endif

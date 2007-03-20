@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.13 2006/07/03 16:10:44 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.14 2006/12/12 14:03:04 couet Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -92,8 +92,10 @@ TButton::TButton(): TPad()
 {
    // Button default constructor.
 
-   fFraming=0;
-   fMethod = "";
+   fFraming = 0;
+   fMethod  = "";
+   fLogx    = kFALSE;
+   fLogy    = kFALSE;
    SetEditable(kFALSE);
 }
 
@@ -114,6 +116,8 @@ TButton::TButton(const char *title, const char *method, Double_t x1, Double_t y1
       TLatex *text = new TLatex(0.5*(fX1+fX2),0.5*(fY1+fY2),title);
       fPrimitives->Add(text);
    }
+   fLogx    = kFALSE;
+   fLogy    = kFALSE;
    SetEditable(kFALSE);
 }
 

@@ -1,7 +1,6 @@
 //Draw arrows
 //Author: Rene Brun
 {
-   gROOT->Reset();
    c1 = new TCanvas("c1");
    c1->Range(0,0,1,1);
    TPaveLabel par(0.1,0.8,0.9,0.95,"Examples of various arrow formats");
@@ -29,4 +28,5 @@
    ar5.SetFillStyle(3008);
    ar5.SetFillColor(2);
    ar5.Draw();
+   return c1;
 }

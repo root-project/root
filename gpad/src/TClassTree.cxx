@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.12 2006/10/20 21:07:40 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.19 2007/01/30 11:49:14 brun Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TROOT.h"
 #include "TClassTree.h"
 #include "TClassTable.h"
+#include "TClass.h"
 #include "TBaseClass.h"
 #include "TDataMember.h"
 #include "TDataType.h"
@@ -28,7 +29,6 @@
 #include "TText.h"
 #include "TSystem.h"
 #include "TObjString.h"
-#include "TFile.h"
 #include "Riostream.h"
 
 const Int_t kIsClassTree = BIT(7);
@@ -269,8 +269,7 @@ void TClassTree::Draw(const char *classes)
    // see this class header for the syntax and examples
 
    if (!gPad) {
-      if (gROOT->GetMakeDefCanvas())
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    }
    Init();
    if (classes && strlen(classes)) fClasses = classes;
@@ -392,7 +391,7 @@ void TClassTree::Init()
    Int_t i,j;
    for (i=0;i<fNclasses;i++) {
       fCnames[i]   = new TString(gClassTable->Next());
-      fCpointer[i] = gROOT->GetClass(fCnames[i]->Data());
+      fCpointer[i] = TClass::GetClass(fCnames[i]->Data());
       fCtitles[i]  = new TString(fCpointer[i]->GetTitle());
       fCstatus[i]  = 0;
       fOptions[i]  = new TString("ID");
@@ -607,8 +606,8 @@ void TClassTree::Paint(Option_t *)
    Int_t dxpixels = gPad->XtoAbsPixel(gLabdx) - gPad->XtoAbsPixel(0);
    Int_t dypixels = gPad->YtoAbsPixel(0)     - gPad->YtoAbsPixel(gLabdy);
    gCsize  = dxpixels/(10.*dypixels);
-   gCsize = TMath::Max(gCsize,Float_t(0.75));
-   gCsize = TMath::Min(gCsize,Float_t(1.1));
+   gCsize = std::max(gCsize,Float_t(0.75));
+   gCsize = std::min(gCsize,Float_t(1.1));
    // draw classes level 0
    for (i=0;i<fNclasses;i++) {
       if (fCstatus[i] == 0) continue;
@@ -692,27 +691,16 @@ void TClassTree::PaintClass(Int_t iclass, Float_t xleft, Float_t y)
 
 
 //______________________________________________________________________________
-void TClassTree::SaveAs(const char *filename, Option_t *) const
+void TClassTree::SaveAs(const char *filename, Option_t *option) const
 {
    // save current configuration in a Root file
    // if filename is blank, the name of the file will be the current objectname.root
    // all the current settings are preserved
    // the Root file produced can be looked at by a another Root session
    // with no access to the original classes.
+   // By default a message is printed. Specify option "Q" to remove the message
 
-   if (!filename || strlen(filename) == 0) {
-      char fname[100];
-      sprintf(fname,"%s.root",GetName());
-      TFile local(fname,"recreate");
-      if (local.IsZombie()) return;
-      ((TClassTree*)this)->Write();
-      printf("TClassTree::SaveAs, file: %s has been written\n",fname);
-   } else {
-      TFile local(filename,"recreate");
-      if (local.IsZombie()) return;
-      ((TClassTree*)this)->Write();
-      printf("TClassTree::SaveAs, file: %s has been written\n",filename);
-   }
+   if (gDirectory) gDirectory->SaveObjectAs(this,filename,option);
 }
 
 

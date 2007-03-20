@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGenericClassInfo.h,v 1.9 2006/05/23 04:47:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGenericClassInfo.h,v 1.10 2006/08/04 20:58:52 pcanal Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -16,6 +16,8 @@
 class TVirtualIsAProxy;
 
 namespace ROOT {
+   
+   class TCollectionProxyInfo;
 
    class TGenericClassInfo {
       // This class in not inlined because it is used is non time critical
@@ -42,6 +44,8 @@ namespace ROOT {
       TClassStreamer          *fStreamer;
       TVirtualCollectionProxy *fCollectionProxy;
       Int_t                    fSizeof;
+      TCollectionProxyInfo    *fCollectionProxyInfo;
+      TCollectionProxyInfo    *fCollectionStreamerInfo;
       
    public:
       TGenericClassInfo(const char *fullClassname,
@@ -70,37 +74,41 @@ namespace ROOT {
       void Init(Int_t pragmabits);
       ~TGenericClassInfo();
 
-      const TInitBehavior &GetAction() const;
-      TClass              *GetClass();
-      const char          *GetClassName() const;
-      const char          *GetDeclFileName() const;
-      Int_t                GetDeclFileLine() const;
-      DelFunc_t            GetDelete() const;
-      DelArrFunc_t         GetDeleteArray() const;
-      DesFunc_t            GetDestructor() const;
-      const char          *GetImplFileName();
-      Int_t                GetImplFileLine();
-      const type_info     &GetInfo() const;
-      TVirtualIsAProxy    *GetIsA() const;
-      NewFunc_t            GetNew() const;
-      NewArrFunc_t         GetNewArray() const;
-      void                *GetShowMembers() const;
-      Int_t                GetVersion() const;
+      const TInitBehavior  &GetAction() const;
+      TClass               *GetClass();
+      const char           *GetClassName() const;
+      TCollectionProxyInfo *GetCollectionProxyInfo() const;
+      TCollectionProxyInfo *GetCollectionStreamerInfo() const;
+      const char           *GetDeclFileName() const;
+      Int_t                 GetDeclFileLine() const;
+      DelFunc_t             GetDelete() const;
+      DelArrFunc_t          GetDeleteArray() const;
+      DesFunc_t             GetDestructor() const;
+      const char           *GetImplFileName();
+      Int_t                 GetImplFileLine();
+      const type_info      &GetInfo() const;
+      TVirtualIsAProxy     *GetIsA() const;
+      NewFunc_t             GetNew() const;
+      NewArrFunc_t          GetNewArray() const;
+      void                 *GetShowMembers() const;
+      Int_t                 GetVersion() const;
 
-      TClass              *IsA(const void *obj);
+      TClass               *IsA(const void *obj);
 
-      Short_t              AdoptStreamer(TClassStreamer*);
-      Short_t              AdoptCollectionProxy(TVirtualCollectionProxy*);
-      Int_t                SetDeclFile(const char *file, Int_t line);
-      void                 SetDelete(DelFunc_t deleteFunc);
-      void                 SetDeleteArray(DelArrFunc_t deleteArrayFunc);
-      void                 SetDestructor(DesFunc_t destructorFunc);
-      void                 SetFromTemplate();
-      Int_t                SetImplFile(const char *file, Int_t line);
-      void                 SetNew(NewFunc_t newFunc);
-      void                 SetNewArray(NewArrFunc_t newArrayFunc);
-      Short_t              SetStreamer(ClassStreamerFunc_t);
-      Short_t              SetVersion(Short_t version);
+      Short_t               AdoptStreamer(TClassStreamer*);
+      Short_t               AdoptCollectionProxy(TVirtualCollectionProxy*);
+      void                  AdoptCollectionProxyInfo(TCollectionProxyInfo*);
+      void                  AdoptCollectionStreamerInfo(TCollectionProxyInfo*);
+      Int_t                 SetDeclFile(const char *file, Int_t line);
+      void                  SetDelete(DelFunc_t deleteFunc);
+      void                  SetDeleteArray(DelArrFunc_t deleteArrayFunc);
+      void                  SetDestructor(DesFunc_t destructorFunc);
+      void                  SetFromTemplate();
+      Int_t                 SetImplFile(const char *file, Int_t line);
+      void                  SetNew(NewFunc_t newFunc);
+      void                  SetNewArray(NewArrFunc_t newArrayFunc);
+      Short_t               SetStreamer(ClassStreamerFunc_t);
+      Short_t               SetVersion(Short_t version);
 
       //   protected:
    private:

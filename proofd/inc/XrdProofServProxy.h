@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.h,v 1.7 2006/11/20 15:56:35 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.h,v 1.9 2007/02/05 10:44:33 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -61,6 +61,7 @@ private:
 
 
 class XrdProofdProtocol;
+class XrdROOT;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -122,6 +123,7 @@ public:
    inline XrdOucSemWait *PingSem() const { XrdOucMutexHelper mhp(fMutex); return fPingSem; }
    inline const char  *Ordinal() const { XrdOucMutexHelper mhp(fMutex); return (const char *)fOrdinal; }
    inline XrdSrvBuffer *QueryNum() const { XrdOucMutexHelper mhp(fMutex); return fQueryNum; }
+   inline XrdROOT     *ROOT() const { XrdOucMutexHelper mhp(fMutex); return fROOT; }
    inline int          SrvID() const { XrdOucMutexHelper mhp(fMutex); return fSrvID; }
    inline int          SrvType() const { XrdOucMutexHelper mhp(fMutex); return fSrvType; }
    inline void         SetLink(XrdLink *lnk) { XrdOucMutexHelper mhp(fMutex); fLink = lnk;}
@@ -129,10 +131,12 @@ public:
    inline void         SetParent(XrdClientID *cid) { XrdOucMutexHelper mhp(fMutex); fParent = cid; }
    inline void         SetProtVer(int pv) { XrdOucMutexHelper mhp(fMutex); fProtVer = pv; }
    inline void         SetQueryNum(XrdSrvBuffer *qn) { XrdOucMutexHelper mhp(fMutex); fQueryNum = qn; }
+   inline void         SetROOT(XrdROOT *r) { XrdOucMutexHelper mhp(fMutex); fROOT = r; }
    inline void         SetSrv(int id) { XrdOucMutexHelper mhp(fMutex); fSrvID = id; }
    inline void         SetSrvType(int id) { XrdOucMutexHelper mhp(fMutex); fSrvType = id; }
    inline void         SetStartMsg(XrdSrvBuffer *sm) { XrdOucMutexHelper mhp(fMutex); fStartMsg = sm; }
    inline void         SetStatus(int st) { XrdOucMutexHelper mhp(fMutex); fStatus = st; }
+   inline void         SetShutdown(bool sd = 1) { XrdOucMutexHelper mhp(fMutex); fIsShutdown = sd; }
    inline void         SetValid(bool valid = 1) { XrdOucMutexHelper mhp(fMutex); fIsValid = valid; }
    inline XrdSrvBuffer *StartMsg() const { XrdOucMutexHelper mhp(fMutex); return fStartMsg; }
    inline int          Status() const { XrdOucMutexHelper mhp(fMutex); return fStatus;}
@@ -176,6 +180,7 @@ public:
    void                SetUserEnvs(const char *t, int l = 0)
                           { XrdOucMutexHelper mhp(fMutex); XrdProofServProxy::SetCharValue(&fUserEnvs, t, l); }
 
+   bool                IsShutdown() const { XrdOucMutexHelper mhp(fMutex); return fIsShutdown; }
    bool                IsValid() const { XrdOucMutexHelper mhp(fMutex); return fIsValid; }
    const char         *StatusAsString() const;
 
@@ -204,12 +209,15 @@ public:
    char                     *fFileout;
 
    bool                      fIsValid;   // Validity flag
+   bool                      fIsShutdown; // Whether asked to shutdown
 
    char                     *fAlias;     // Session alias
    char                     *fClient;    // Client name
    char                     *fTag;       // Session unique tag
    char                     *fOrdinal;   // Session ordinal number
    char                     *fUserEnvs;  // List of envs received from the user
+
+   XrdROOT                  *fROOT;      // ROOT version run by this session
 
    void                      ClearWorkers();
 

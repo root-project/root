@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienJobStatus.cxx,v 1.2 2005/08/12 15:46:40 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienJobStatus.cxx,v 1.4 2007/03/19 16:14:14 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   06/10/2004
 
 /*************************************************************************
@@ -32,8 +32,16 @@ TAlienJobStatus::TAlienJobStatus(TMap *status)
    // Creates a TAlienJobStatus object.
    // If a status map is provided it is copied to the status information.
 
-   if (status)
-      status->Copy(fStatus);
+   TObjString* key;
+   TObjString* val;
+
+   if (status) {
+      TMapIter next(status);
+      while ( (key = (TObjString*)next())) {
+         val = (TObjString*)status->GetValue(key->GetName());
+         fStatus.Add(key->Clone(), val->Clone());
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -85,11 +93,11 @@ void TAlienJobStatus::Browse(TBrowser* b)
    }
 }
 
-
 //______________________________________________________________________________
 const char *TAlienJobStatus::GetJdlKey(const char* key)
 {
-   //return the JDL key
+   // Return the JDL key.
+
    const char *jdl = GetKey("jdl");
    if (!jdl)
       return 0;
@@ -117,7 +125,8 @@ const char *TAlienJobStatus::GetJdlKey(const char* key)
 //______________________________________________________________________________
 const char *TAlienJobStatus::GetKey(const char* key)
 {
-   //return a key
+   // Return a key.
+
    TObject* obj = fStatus.FindObject(key);
    TPair* pair = dynamic_cast<TPair*>(obj);
    if (pair) {
@@ -130,7 +139,8 @@ const char *TAlienJobStatus::GetKey(const char* key)
 //______________________________________________________________________________
 TGridJobStatus::EGridJobStatus TAlienJobStatus::GetStatus() const
 {
-   // Gets the status of the job reduced to the subset defined in TGridJobStatus.
+   // Gets the status of the job reduced to the subset defined
+   // in TGridJobStatus.
 
    TObject* obj = fStatus.FindObject("status");
    TPair* pair = dynamic_cast<TPair*>(obj);
@@ -194,7 +204,7 @@ void TAlienJobStatus::PrintJob(Bool_t full) const
       return;
 
    printf("==================================================\n");
-   printf("Other available status information:\n");
+   printf("Detail Information:\n");
 
    TIterator* iter = fStatus.MakeIterator();
 

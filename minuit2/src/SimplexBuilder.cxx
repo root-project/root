@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: SimplexBuilder.cxx,v 1.2 2006/07/04 10:36:52 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: SimplexBuilder.cxx,v 1.4 2007/02/12 12:05:15 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -13,7 +13,11 @@
 #include "Minuit2/MinimumSeed.h"
 #include "Minuit2/SimplexParameters.h"
 #include "Minuit2/MinimumState.h"
-#include "Minuit2/MnPrint.h"
+
+#if defined(DEBUG) || defined(WARNINGMSG)
+#include "Minuit2/MnPrint.h" 
+#endif
+
 
 namespace ROOT {
 
@@ -191,11 +195,15 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn& mfcn, const GradientCalcula
    MinimumState st(MinimumParameters(pbar, dirin, ybar), simplex.Edm(), mfcn.NumOfCalls());
    
    if(mfcn.NumOfCalls() > maxfcn) {
-      std::cout<<"Simplex did not converge, #fcn calls exhausted."<<std::endl;
+#ifdef WARNINGMSG
+      MN_INFO_MSG("Simplex did not converge, #fcn calls exhausted.");
+#endif
       return FunctionMinimum(seed, std::vector<MinimumState>(1, st), mfcn.Up(), FunctionMinimum::MnReachedCallLimit());
    }
    if(simplex.Edm() > minedm) {
-      std::cout<<"Simplex did not converge, edm > minedm."<<std::endl;
+#ifdef WARNINGMSG
+      MN_INFO_MSG("Simplex did not converge, edm > minedm.");
+#endif
       return FunctionMinimum(seed, std::vector<MinimumState>(1, st), mfcn.Up(), FunctionMinimum::MnAboveMaxEdm());
    }
    

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.277 2006/12/11 09:26:50 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.283 2007/02/15 15:04:40 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -16,12 +16,14 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TClass.h"
 #include "TSystem.h"
 #include "THistPainter.h"
 #include "TH3.h"
 #include "TH2.h"
 #include "TF2.h"
 #include "TF3.h"
+#include "TCutG.h"
 #include "TMatrixDBase.h"
 #include "TMatrixFBase.h"
 #include "TVectorD.h"
@@ -459,7 +461,7 @@ void THistPainter::FitPanel()
       return;
    }
 
-   if (!gROOT->GetClass("TFitEditor")) gSystem->Load("libFitPanel");
+   if (!TClass::GetClass("TFitEditor")) gSystem->Load("libFitPanel");
    gROOT->ProcessLine(Form("TFitEditor::Open((TVirtualPad*)0x%x,(TObject*)0x%x)",gPad,fH));
 }
 
@@ -1498,7 +1500,7 @@ void THistPainter::Paint(Option_t *option)
    // Paint using TSpectrum2Painter
    if (Hoption.Spec) {
       if (!TableInit()) return;
-      if (!gROOT->GetClass("TSpectrum2Painter")) gSystem->Load("libSpectrumPainter");
+      if (!TClass::GetClass("TSpectrum2Painter")) gSystem->Load("libSpectrumPainter");
       gROOT->ProcessLineFast(Form("TSpectrum2Painter::PaintSpectrum((TH2F*)0x%x,\"%s\")",fH,option));
       return;
    }
@@ -1672,6 +1674,7 @@ void THistPainter::PaintArrows(Option_t *)
    fH->SetLineWidth(1);
    fH->TAttLine::Modify();
 
+   Double_t xk, xstep, yk, ystep;
    Double_t dx, dy, si, co, anr, x1, x2, y1, y2, xc, yc, dxn, dyn;
    Int_t   ncx  = Hparam.xlast - Hparam.xfirst + 1;
    Int_t   ncy  = Hparam.ylast - Hparam.yfirst + 1;
@@ -1685,7 +1688,12 @@ void THistPainter::PaintArrows(Option_t *)
 
    for (Int_t id=1;id<=2;id++) {
       for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
+         yk    = fYaxis->GetBinLowEdge(j);
+         ystep = fYaxis->GetBinWidth(j);
          for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
+            xk    = fXaxis->GetBinLowEdge(i);
+            xstep = fXaxis->GetBinWidth(i);
+            if (!IsInside(xk+0.5*xstep,yk+0.5*ystep)) continue;
             if (i == Hparam.xfirst) {
                dx = fH->GetCellContent(i+1, j) - fH->GetCellContent(i, j);
             } else if (i == Hparam.xlast) {
@@ -2022,11 +2030,12 @@ void THistPainter::PaintBar(Option_t *)
       } else {
          umin = xmin + bar*(xmax-xmin)/10.;
          umax = xmax - bar*(xmax-xmin)/10.;
-         box.SetFillColor(hcolor+150); //bright
+         //box.SetFillColor(hcolor+150); //bright
+         box.SetFillColor(TColor::GetColorBright(hcolor)); //bright
          box.PaintBox(xmin,ymin,umin,ymax);
          box.SetFillColor(hcolor);
          box.PaintBox(umin,ymin,umax,ymax);
-         box.SetFillColor(hcolor+100); //dark
+         box.SetFillColor(TColor::GetColorDark(hcolor)); //dark
          box.PaintBox(umax,ymin,xmax,ymax);
       }
    }
@@ -2099,18 +2108,16 @@ void THistPainter::PaintBarH(Option_t *)
       } else {
          umin = ymin + bar*(ymax-ymin)/10.;
          umax = ymax - bar*(ymax-ymin)/10.;
-         box.SetFillColor(hcolor+100); //dark
+         box.SetFillColor(TColor::GetColorDark(hcolor)); //dark
          box.PaintBox(xmin,ymin,xmax,umin);
          box.SetFillColor(hcolor);
          box.PaintBox(xmin,umin,xmax,umax);
-         box.SetFillColor(hcolor+150); //bright
+         box.SetFillColor(TColor::GetColorBright(hcolor)); //bright
          box.PaintBox(xmin,umax,xmax,ymax);
       }
    }
 
    PaintTitle();
-   fXaxis = xaxis;
-   fYaxis = yaxis;
    //    Draw box with histogram statistics and/or fit parameters
    if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
       TIter next(fFunctions);
@@ -2123,6 +2130,8 @@ void THistPainter::PaintBarH(Option_t *)
    }
 
    PaintAxis(kFALSE);
+   fXaxis = xaxis;
+   fYaxis = yaxis;
 }
 
 //______________________________________________________________________________
@@ -2205,6 +2214,9 @@ void THistPainter::PaintBoxes(Option_t *)
    Color_t color = fH->GetFillColor();
    Color_t light=0, dark=0;
    if (Hoption.Box == 11) {
+      light = TColor::GetColorBright(color);
+      dark  = TColor::GetColorDark(color);
+/*
       if (color == 0) {
          light = 0;
          dark  = 0;
@@ -2222,6 +2234,7 @@ void THistPainter::PaintBoxes(Option_t *)
          TColor::HLStoRGB(h, 1.2*l, s, r, g, b);
          light = TColor::GetColor(r, g, b);
       }
+*/
    }
 
    // Loop over all the bins and draw the boxes
@@ -3242,6 +3255,7 @@ void THistPainter::Paint2DErrors(Option_t *)
       xyerror = gStyle->GetErrorX();
    }
 
+   Double_t xk, xstep, yk, ystep;
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
       y  = fYaxis->GetBinCenter(j);
       ey = fYaxis->GetBinWidth(j)*xyerror;
@@ -3255,7 +3269,12 @@ void THistPainter::Paint2DErrors(Option_t *)
          if (y2 > 0) y2 = TMath::Log10(y2);
          else        y2 = Hparam.ymin;
       }
+      yk    = fYaxis->GetBinLowEdge(j);
+      ystep = fYaxis->GetBinWidth(j);
       for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
+         xk    = fXaxis->GetBinLowEdge(i);
+         xstep = fXaxis->GetBinWidth(i);
+         if (!IsInside(xk+0.5*xstep,yk+0.5*ystep)) continue;
          Int_t bin = fH->GetBin(i,j);
          x  = fXaxis->GetBinCenter(i);
          ex = fXaxis->GetBinWidth(i)*xyerror;
@@ -4245,7 +4264,7 @@ void THistPainter::PaintLego(Option_t *)
          if (id > 0 && fStack) hid = (TH1*)fStack->At(id-1);
          Color_t colormain = hid->GetFillColor();
          if (colormain == 1) colormain = 17; //avoid drawing with black
-         Color_t colordark = colormain + 100;
+         Color_t colordark = TColor::GetColorDark(colormain);
          fLego->SetColorMain(colormain,id);
          fLego->SetColorDark(colordark,id);
          if (id == 0)    fLego->SetColorMain(colormain,-1);  // Set Bottom color
@@ -6576,8 +6595,7 @@ void THistPainter::SetShowProjection(const char *option,Int_t nbins)
    if (projection < 4) fShowOption = option+1;
    else                fShowOption = option+2;
    fShowProjection = projection+100*nbins;
-   if (!gROOT->GetMakeDefCanvas()) return;
-   (gROOT->GetMakeDefCanvas())();
+   gROOT->MakeDefCanvas();
    gPad->SetName(Form("%x_c_projection_%d",fH,fShowProjection));
    gPad->SetGrid();
 }

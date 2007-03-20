@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.155 2006/11/27 14:14:24 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.178 2007/03/16 17:06:19 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -7,10 +7,10 @@
 # Path used by dynamic loader to find shared libraries and macros.
 # Paths are different for Unix and Windows. The example shows the defaults
 # for all ROOT applications for either Unix or Windows.
-Unix.*.Root.DynamicPath:    .:@libdir@
-Unix.*.Root.MacroPath:      .:@macrodir@
-WinNT.*.Root.DynamicPath:   .;@bindir@;$(PATH)
-WinNT.*.Root.MacroPath:     .;@macrodir@
+Unix.*.Root.DynamicPath:    .:@libdir@:
+Unix.*.Root.MacroPath:      .:@macrodir@:
+WinNT.*.Root.DynamicPath:   .;@bindir@;$(PATH);
+WinNT.*.Root.MacroPath:     .;@macrodir@;
 
 # Path where to look for TrueType fonts.
 Unix.*.Root.UseTTFonts:     true
@@ -52,6 +52,10 @@ Root.ErrorIgnoreLevel:   Print
 # Settings for X11 behaviour.
 X11.Sync:                no
 X11.FindBestVisual:      yes
+X11.UseXft:              yes
+
+# Settings for Win32 behavior.
+Win32.UseSysPointers:    no
 
 # Default editor.
 Unix.*.Editor:           vi
@@ -140,13 +144,13 @@ Root.Html.Root:              http://root.cern.ch/root/html
 # GUI specific settings.
 Gui.Backend:                native
 Gui.Factory:                native
-Gui.DefaultFont:            -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
-Gui.MenuFont:               -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
-Gui.MenuHiFont:             -adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1
-Gui.DocFixedFont:           -adobe-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1
-Gui.DocPropFont:            -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
-Gui.IconFont:               -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
-Gui.StatusFont:             -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
+Gui.DefaultFont:            -*-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Gui.MenuFont:               -*-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Gui.MenuHiFont:             -*-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1
+Gui.DocFixedFont:           -*-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Gui.DocPropFont:            -*-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Gui.IconFont:               -*-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
+Gui.StatusFont:             -*-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
 Gui.BackgroundColor:         #c0c0c0
 Gui.ForegroundColor:         black
 Gui.SelectBackgroundColor:   #000080
@@ -180,6 +184,20 @@ Rint.History:            $(HOME)/.root_hist
 # Rint.HistSize:         500
 # Set to -1 for sensible default (80% of HistSize), set to 0 to disable history.
 # Rint.HistSave:         400
+
+# When the interactive ROOT starts, it can automatically load some frequently
+# used includes. However, this introduces several overheads
+#  - A long list of CINT and system files will be kept open during the session
+#  - The initialisation takes more time (noticeable when using gdb or valgrind)
+#  - Memory overhead of about 5 Mbytes (1/3 of the base ROOT executable) when
+#    including <vector>
+# You can set the variable below to 0 to disable the loading of these
+# includes at startup. You can set the variable to 1 (default) to load
+# only <iostream> , <string> and <RTypesCint.h>. You can set it to 2 to
+# load in addition <vector> and <pair>.  We strongly recommend setting
+# the variable to 2 if your scripts include <vector> and you execute
+# your scripts multiple times.
+Rint.Includes:      1
 
 # ACLiC customization.
 # ACLiC.Linkdef specifies the suffix that will be added to the script name to
@@ -439,7 +457,8 @@ XProof.Debug:  0
 #                         version at run time [0]
 
 # Plugin library handlers.
-Plugin.TFile:        ^rfio:    TRFIOFile     RFIO    "TRFIOFile(const char*,Option_t*,const char*,Int_t)"
+Plugin.TFile:        ^http:    TWebFile      Net     "TWebFile(const char*)"
++Plugin.TFile:       ^rfio:    TRFIOFile     RFIO    "TRFIOFile(const char*,Option_t*,const char*,Int_t)"
 +Plugin.TFile:       ^castor:  TCastorFile   RCastor "TCastorFile(const char*,Option_t*,const char*,Int_t,Int_t)"
 +Plugin.TFile:       ^dcache:  TDCacheFile   DCache  "TDCacheFile(const char*,Option_t*,const char*,Int_t)"
 +Plugin.TFile:       ^dcap:    TDCacheFile   DCache  "TDCacheFile(const char*,Option_t*,const char*,Int_t)"
@@ -449,13 +468,16 @@ Plugin.TFile:        ^rfio:    TRFIOFile     RFIO    "TRFIOFile(const char*,Opti
 +Plugin.TFile:       .+[.]xml$ TXMLFile      XMLIO   "TXMLFile(const char*,Option_t*,const char*,Int_t)"
 +Plugin.TFile:       ^mysql:   TSQLFile      SQL     "TSQLFile(const char*,Option_t*,const char*,const char*)"
 +Plugin.TFile:       ^oracle:  TSQLFile      SQL     "TSQLFile(const char*,Option_t*,const char*,const char*)"
-@hasxrd@+Plugin.TFile:       ^root:    TXNetFile     Netx    "TXNetFile(const char*,Option_t*,const char*,Int_t,Int_t,Bool_t)"
+@hasxrd@+Plugin.TFile:     ^root:    TXNetFile     Netx    "TXNetFile(const char*,Option_t*,const char*,Int_t,Int_t,Bool_t)"
+@hasnotxrd@+Plugin.TFile:  ^root: TNetFile   Net     "TNetFile(const char*,Option_t*,const char*,Int_t,Int_t)"
 Plugin.TSystem:      ^rfio:    TRFIOSystem   RFIO    "TRFIOSystem()"
 +Plugin.TSystem:     ^castor:  TRFIOSystem   RFIO    "TRFIOSystem()"
 +Plugin.TSystem:     ^dcache:  TDCacheSystem DCache  "TDCacheSystem()"
 +Plugin.TSystem:     ^dcap:    TDCacheSystem DCache  "TDCacheSystem()"
 +Plugin.TSystem:     ^alien:   TAlienSystem  RAliEn  "TAlienSystem()"
 @hasxrd@+Plugin.TSystem:     ^root:    TXNetSystem   Netx    "TXNetSystem(const char *,Bool_t)"
+@hasnotxrd@+Plugin.TSystem:  ^root:    TNetSystem    Net     "TNetSystem(const char *,Bool_t)"
+@hasxrd@Plugin.TFileStager:  ^root:    TXNetFileStager Netx  "TXNetFileStager(const char *)"
 Plugin.TArchiveFile: .+[.]zip$ TZIPFile      Core    "TZIPFile(const char*,const char*,TFile*)"
 Plugin.TSQLServer:   ^mysql:   TMySQLServer  RMySQL   "TMySQLServer(const char*,const char*,const char*)"
 +Plugin.TSQLServer:  ^pgsql:   TPgSQLServer  PgSQL   "TPgSQLServer(const char*,const char*,const char*)"
@@ -473,7 +495,7 @@ Plugin.TVirtualTreeViewer:  *  TTreeViewer   TreeViewer   "TTreeViewer(const TTr
 Plugin.TSessionViewer:      *  TSessionViewer TreeViewer  "TSessionViewer()"
 Plugin.TVirtualGeoPainter:  *  TGeoPainter   GeomPainter  "TGeoPainter(TGeoManager*)"
 Plugin.TGeoManagerEditor:   *  TGeoManagerEditor  GeomBuilder  "LoadLib()"
-Plugin.TVirtualUtil3D:      *  TUtil3D       Graf3d       "TUtil3D()"
+Plugin.TView:      *           TView3D       Graf3d       "TView3D(Int_t, const Double_t*, const Double_t*)"
 Plugin.TVirtualFitter:  Minuit  TFitter        Minuit     "TFitter(Int_t)"
 +Plugin.TVirtualFitter: Fumili  TFumili        Fumili     "TFumili(Int_t)"
 +Plugin.TVirtualFitter: Minuit2 TFitterMinuit  Minuit2    "TFitterMinuit(Int_t)"
@@ -496,15 +518,20 @@ Plugin.TVirtualX:    x11       TGX11         GX11         "TGX11(const char*,con
 +Plugin.TVirtualX:   win32     TGWin32       Win32        "TGWin32(const char*,const char*)"
 +Plugin.TVirtualX:   win32gdk  TGWin32       Win32gdk     "TGWin32(const char*,const char*)"
 +Plugin.TVirtualX:   qt        TGQt          GQt          "TGQt(const char*,const char*)"
+Plugin.TVirtualStreamerInfo: * TStreamerInfo "RIO"        "TStreamerInfo()"
 Plugin.TGuiFactory:  root      TRootGuiFactory Gui        "TRootGuiFactory()"
-+Plugin.TGuiFactory: win32     TWin32GuiFactory Win32     "TWin32GuiFactory()"
 +Plugin.TGuiFactory: qt        TQtRootGuiFactory QtRoot   "TQtRootGuiFactory()"
 Plugin.TGPasswdDialog: *       TGPasswdDialog Gui         "TGPasswdDialog(const char*,char*,Int_t,UInt_t,UInt_t)"
 Plugin.TProof:  ^condor:       TProofCondor Proof         "TProofCondor(const char*,const char*,const char*,Int_t)"
 +Plugin.TProof: ^sm:           TProofSuperMaster Proof    "TProofSuperMaster(const char*,const char*,const char*,Int_t)"
 +Plugin.TProof: ^peac:         TProofPEAC    Peac         "TProofPEAC(const char*,const char*,const char*,Int_t)"
 +Plugin.TProof: *              TProof        Proof        "TProof(const char*,const char*,const char*,Int_t,const char *)"
-Plugin.TProofProgressDialog: * TProofProgressDialog ProofGui  "TProofProgressDialog(TProof*,const char*,Int_t,Long64_t,Long64_t)"
+Plugin.TVirtualProofPlayer:   base    TProofPlayer       Proof  "TProofPlayer(TProof*)"
++Plugin.TVirtualProofPlayer:  remote  TProofPlayerRemote Proof  "TProofPlayerRemote(TProof*)"
++Plugin.TVirtualProofPlayer:  local   TProofPlayerLocal  Proof  "TProofPlayerLocal(TProof*)"
++Plugin.TVirtualProofPlayer:  slave   TProofPlayerSlave  Proof  "TProofPlayerSlave(TSocket*)"
++Plugin.TVirtualProofPlayer:  sm TProofPlayerSuperMaster Proof  "TProofPlayerSuperMaster(TProof*)"
+Plugin.TProofProgressDialog: * TProofProgressDialog SessionViewer "TProofProgressDialog(TProof*,const char*,Int_t,Long64_t,Long64_t)"
 Plugin.TDataProgressDialog:  * TDataProgressDialog  peacGui   "TDataProgressDialog(TProof*,const char*,Int_t,Long64_t)"
 Plugin.TProofServ:    ^xpd     TXProofServ   Proofx       "TXProofServ(Int_t *,char **)"
 Plugin.TSlave: ^xpd  TXSlave Proofx  "TXSlave(const char *,const char *,Int_t,const char *, TProof *,Int_t,const char *,const char *)"
@@ -526,6 +553,7 @@ Plugin.TVirtualFFT:     fftwc2c TFFTComplex     FFTW      "TFFTComplex(Int_t, In
 +Plugin.TVirtualFFT:    fftwr2c TFFTRealComplex FFTW      "TFFTRealComplex(Int_t,Int_t *, Bool_t)"
 +Plugin.TVirtualFFT:    fftwr2r TFFTReal        FFTW      "TFFTReal(Int_t, Int_t *,Bool_t)"
 Plugin.TFitEditor         *     TFitEditor      FitPanel  "TFitEditor(const TVirtualPad*, const TObject*)"
+Plugin.TAFS:              *     TAFS            AFSAuth   "TAFS(const char*,const char*,Int_t)"
 
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.

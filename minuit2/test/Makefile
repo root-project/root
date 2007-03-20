@@ -14,6 +14,7 @@ ifeq ($(PLATFORM),win32)
 EXTRALIBS        = "$(ROOTSYS)/lib/libMinuit2.lib"
 else
 EXTRALIBS        = -lMinuit2 
+CXXFLAGS += -g      
 endif
 
 USERFUNCOBJ      = testUserFunc.$(ObjSuf)

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.cxx,v 1.3 2006/10/31 15:18:34 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryListBlock.cxx,v 1.6 2007/01/22 07:57:13 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -9,31 +9,37 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-// TEntryListBlock
-//
-// Used internally in TEntryList to store the entry numbers. 
-//
-// There are 2 ways to represent entry numbers in a TEntryListBlock:
-// 1) as bits, where passing entry numbers are assigned 1, not passing - 0
-// 2) as a simple array of entry numbers
-// In both cases, a UShort_t* is used. The second option is better in case
-// less than 1/16 of entries passes the selection, and the representation can be
-// changed by calling OptimizeStorage() function. 
-// When the block is being filled, it's always stored as bits, and the OptimizeStorage()
-// function is called by TEntryList when it starts filling the next block. If
-// Enter() or Remove() is called after OptimizeStorage(), representation is 
-// again changed to 1).
-//
-// Operations on blocks (see also function comments):
-// - Merge() - adds all entries from one block to the other. If the first block 
-//             uses array representation, it's changed to bits representation only
-//             if the total number of passing entries is still less than kBlockSize
-// - GetEntry(n) - returns n-th non-zero entry.
-// - Next()      - return next non-zero entry. In case of representation 1), Next()
-//                 is faster than GetEntry()
-//
-//////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
+/* Begin_Html
+<center><h2>TEntryListBlock: Used by TEntryList to store the entry numbers</h2></center>
+ There are 2 ways to represent entry numbers in a TEntryListBlock:
+<ol>
+ <li> as bits, where passing entry numbers are assigned 1, not passing - 0
+ <li> as a simple array of entry numbers
+ </ol>
+ In both cases, a UShort_t* is used. The second option is better in case
+ less than 1/16 of entries passes the selection, and the representation can be
+ changed by calling OptimizeStorage() function. 
+ When the block is being filled, it's always stored as bits, and the OptimizeStorage()
+ function is called by TEntryList when it starts filling the next block. If
+ Enter() or Remove() is called after OptimizeStorage(), representation is 
+ again changed to 1). 
+End_Html
+Begin_Macro(source)
+entrylistblock_figure1.C
+End_Macro
+
+Begin_Html
+ <h4>Operations on blocks (see also function comments)</h4>
+<ul>
+ <li> <b>Merge</b>() - adds all entries from one block to the other. If the first block 
+             uses array representation, it's changed to bits representation only
+             if the total number of passing entries is still less than kBlockSize
+ <li> <b>GetEntry(n)</b> - returns n-th non-zero entry.
+ <li> <b>Next</b>()      - return next non-zero entry. In case of representation 1), Next()
+                 is faster than GetEntry()
+</ul>
+End_Html */
 
 
 #include "TEntryListBlock.h"
@@ -62,12 +68,12 @@ TEntryListBlock::TEntryListBlock(const TEntryListBlock &eblock) : TObject(eblock
    //copy c-tor
 
    Int_t i;
+   fN = eblock.fN;
    if (eblock.fIndices){
-      fIndices = new UShort_t[eblock.fN];
-      for (i=0; i<eblock.fN; i++)
+      fIndices = new UShort_t[fN];
+      for (i=0; i<fN; i++)
          fIndices[i] = eblock.fIndices[i];
    }
-   fN = eblock.fN;
    fNPassed = eblock.fNPassed;
    fType = eblock.fType;
    fPassing = eblock.fPassing;
@@ -141,7 +147,6 @@ Bool_t TEntryListBlock::Remove(Int_t entry)
          fNPassed--;
          return 1;
       } else { 
-         printf("not entered\n");
          return 0;
       }
    }
@@ -186,8 +191,23 @@ Int_t TEntryListBlock::Contains(Int_t entry)
 Int_t TEntryListBlock::Merge(TEntryListBlock *block)
 {
    //Merge with the other block
+   //Returns the resulting number of entries in the block
 
    Int_t i;
+   if (block->fNPassed == 0) return fNPassed;
+   if (fNPassed == 0){
+      fN = block->fN;
+      fIndices = new UShort_t[fN];
+      for (Int_t i=0; i<fN; i++)
+         fIndices[i] = block->fIndices[i];
+      fNPassed = block->fNPassed;
+      fType = block->fType;
+      fPassing = block->fPassing;
+      fCurrent = block->fCurrent;
+      fLastIndexReturned = -1;
+      fLastIndexQueried = -1;
+      return fNPassed;
+   }
    if (fType==0){
       //stored as bits
       if (block->fType == 0){
@@ -429,7 +449,7 @@ void TEntryListBlock::Transform(Bool_t dir, UShort_t *indexnew)
    Int_t ilist = 0;
    Int_t ibite, ibit;
    if (!dir) {
-      for (i=0; i<kBlockSize; i++){
+      for (i=0; i<kBlockSize*16; i++){
          ibite = i >> 4;
          ibit = i & 15;
          Bool_t result = (fIndices[ibite] & (1<<ibit))!=0;
@@ -438,7 +458,8 @@ void TEntryListBlock::Transform(Bool_t dir, UShort_t *indexnew)
             ilist++;
          }
       }
-      delete [] fIndices;
+      if (fIndices)
+         delete [] fIndices;
       fIndices = indexnew;
       fType = 1;
       fN = fNPassed;
@@ -452,7 +473,8 @@ void TEntryListBlock::Transform(Bool_t dir, UShort_t *indexnew)
       ibit = fIndices[i] & 15;
       indexnew[ibite] |= 1<<ibit;
    }
-   delete [] fIndices;
+   if (fIndices)
+      delete [] fIndices;
    fIndices = indexnew;
    fType = 0;
    fN = kBlockSize;

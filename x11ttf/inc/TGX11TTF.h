@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.h,v 1.3 2003/01/20 08:44:47 brun Exp $
+// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.h,v 1.5 2007/02/20 09:44:44 rdm Exp $
 // Author: Olivier Couet     01/10/02
 // Author: Fons Rademakers   21/11/98
 
@@ -34,6 +34,14 @@
 #include "TTF.h"
 #endif
 
+#ifndef ROOT_RConfigure
+#include "RConfigure.h"
+#endif
+
+#ifdef R__HAS_XFT
+class TXftFontHash;
+#endif
+
 
 class TGX11TTF : public TGX11 {
 
@@ -42,6 +50,9 @@ private:
                         kBLeft, kBCenter, kBRight };
 
    FT_Vector   fAlign;                 // alignment vector
+#ifdef R__HAS_XFT
+   TXftFontHash  *fXftFontHash;        // hash table for Xft fonts
+#endif
 
    void    Align(void);
    void    DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back, XImage *xim,
@@ -54,11 +65,22 @@ public:
    TGX11TTF(const TGX11 &org);
    virtual ~TGX11TTF();
 
+   Bool_t Init(void *display);
    void   DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                    const char *text, ETextMode mode);
    void   SetTextFont(Font_t fontnumber);
    Int_t  SetTextFont(char *fontname, ETextSetMode mode);
    void   SetTextSize(Float_t textsize);
+
+#ifdef R__HAS_XFT
+   //---- Methods used text/fonts handling via Xft -----
+   //void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
+   FontStruct_t LoadQueryFont(const char *font_name);
+   void         DeleteFont(FontStruct_t fs);
+   void         DrawString(Drawable_t id, GContext_t gc, Int_t x, Int_t y, const char *s, Int_t len);
+   Int_t        TextWidth(FontStruct_t font, const char *s, Int_t len);
+   void         GetFontProperties(FontStruct_t font, Int_t &max_ascent, Int_t &max_descent);
+#endif
 
    ClassDef(TGX11TTF,0)  //Interface to X11 + TTF font handling
 };

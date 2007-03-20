@@ -1,6 +1,5 @@
 #include "TROOT.h"
 #include "TFitterMinuit.h"
-#include "TMath.h"
 #include "TF1.h"
 #include "TH1.h"
 #include "TGraph.h"
@@ -21,6 +20,8 @@
 #include "Minuit2/CombinedMinimizer.h"
 #include "Minuit2/ScanMinimizer.h"
 
+#include <iomanip>
+
 using namespace ROOT::Minuit2;
 
 #ifndef ROOT_TMethodCall
@@ -39,20 +40,43 @@ extern void Graph2DFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_
 extern void MultiGraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 #endif
 
+//______________________________________________________________________________
+/**
+Interface to the new C++ Minuit package (MINUIT2) for ROOT. 
+It implements the TVirtualFitter interface using Minuit2
+For more information on the new C++ Minuit, see 
+BEGIN_HTML
+ See:
+<ul>
+<li><a href="http://www.cern.ch/mathlibs/sw/Minuit2/html/index.html">Online doc for Minuit2 classes</a></li>
+<li><a href="http://seal.web.cern.ch/seal/documents/minuit/mnusersguide.pdf">C++ Minuit Users Guide
+    </a></li>
+<li><a href="http://seal.cern.ch/documents/minuit/mntutorial.pdf">Minuit Tutorial on Function Minimization</a>, describing the Minuit algorithm</li>
+<li><a href="http://seal.cern.ch/documents/minuit/mnerror.pdf">The Interpretation of Errors in Minuit</a></li>
+</ul>
+<p>
+Minuit2 can be set as the default fitter to be used in method lik TH1::Fit, by doing 
+<pre>
+TVirtualFitter::SetDefaultFitter("Minuit2");
+</pre>
+This class can be used also directly by providing for the objective function either a global C function, like in TMinuit, or by passing a function class implementing the ROOT::Minuit2::FCNBase interface and used via the SetMinuitFCN method 
+END_HTML
+*/
+
 
 
 ClassImp(TFitterMinuit);
 
 TFitterMinuit* gMinuit2 = 0;
 
-TFitterMinuit::TFitterMinuit() : fErrorDef(0.) , fEDMVal(0.), fGradient(false),
+TFitterMinuit::TFitterMinuit() : fErrorDef(1.) , fEDMVal(0.), fGradient(false),
 fState(MnUserParameterState()), fMinosErrors(std::vector<MinosError>()), fMinimizer(0), fMinuitFCN(0), fDebug(1), fStrategy(1), fMinTolerance(0) {
    // Default constructor . Srategy and tolerance set to default values.
    Initialize();
 }
 
 
-TFitterMinuit::TFitterMinuit(Int_t /* maxpar */) : fErrorDef(0.) , fEDMVal(0.), fGradient(false), fState(MnUserParameterState()), fMinosErrors(std::vector<MinosError>()), fMinimizer(0), fMinuitFCN(0), fDebug(1), fStrategy(1), fMinTolerance(0) { 
+TFitterMinuit::TFitterMinuit(Int_t /* maxpar */) : fErrorDef(1.) , fEDMVal(0.), fGradient(false), fState(MnUserParameterState()), fMinosErrors(std::vector<MinosError>()), fMinimizer(0), fMinuitFCN(0), fDebug(1), fStrategy(1), fMinTolerance(0) { 
    // Constructur needed by TVirtualFitter interface. Same behavior as default constructor.
    Initialize();
 }
@@ -102,7 +126,9 @@ TFitterMinuit::~TFitterMinuit() {
 // destructor - deletes the minimizer and minuit fcn
 // if using TVirtualFitter one should use Clear() and not delete() 
 
-   //std::cout << "delete minimizer and FCN" << std::endl;
+#ifdef DEBUG
+   std::cout << "delete minimizer and FCN" << std::endl;
+#endif
    if (fMinuitFCN) delete fMinuitFCN; 
    if (fMinimizer) delete fMinimizer; 
    
@@ -123,19 +149,20 @@ void TFitterMinuit::Clear(Option_t*) {
    
    //std::cout<<"clear "<<std::endl;
    
-   fErrorDef = 0; 
+   fErrorDef = 1.; 
    fEDMVal = 0; 
    fGradient = false; 
    State() = MnUserParameterState();
    fMinosErrors.clear();
-   fDebug = 1;  
+   //fDebug = 1;  
    fStrategy = 1;  
    fMinTolerance = 0;
+   fCovar.clear();
    
-   if (fMinuitFCN) { 
-      delete fMinuitFCN;
-      fMinuitFCN = 0; 
-   }
+//    if (fMinuitFCN) { 
+//       delete fMinuitFCN;
+//       fMinuitFCN = 0; 
+//    }
    if (fMinimizer) { 
       delete fMinimizer; 
       fMinimizer = 0; 
@@ -148,9 +175,16 @@ void TFitterMinuit::Clear(Option_t*) {
 FunctionMinimum TFitterMinuit::DoMinimization( int nfcn, double edmval)  {
    // perform minimization using Minuit2 function
    // use always strategy 1 (2 is not yet fully tested)
-   
+
    assert(GetMinuitFCN() != 0 );
    assert(GetMinimizer() != 0 );
+
+   fMinuitFCN->SetErrorDef(fErrorDef); // set the error def
+
+   if (fDebug >=0) { 
+      std::cout << "TFitterMinuit - Minimize with max iterations = " << nfcn << " edmval = " << edmval << " errorDef = " << fMinuitFCN->Up() << std::endl;
+   } 
+
    
    return GetMinimizer()->Minimize(*GetMinuitFCN(), State(), MnStrategy(fStrategy), nfcn, edmval);
 }
@@ -162,10 +196,16 @@ int  TFitterMinuit::Minimize( int nfcn, double edmval)  {
    
    // min tolerance
    edmval = std::max(fMinTolerance, edmval);
-   if (fDebug >=0) { 
-      std::cout << "TFitterMinuit - Minimize with max iterations " << nfcn << " edmval " << edmval << std::endl;
-   }
+
+   // switch off debugging if requested 
+   int prevLevel = gErrorIgnoreLevel; 
+   if (fDebug < 0)  // switch off printing of info messages in Minuit2
+      gErrorIgnoreLevel = 1001;
+   
    FunctionMinimum min = DoMinimization(nfcn,edmval);
+
+   if (fDebug < 0) gErrorIgnoreLevel = prevLevel; // restore previous debug level 
+
    fState = min.UserState();
    return ExamineMinimum(min);
 }
@@ -176,6 +216,7 @@ Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t n
 #ifdef DEBUG
    std::cout<<"Execute command= "<<command<<std::endl;
 #endif
+
    
    // MIGRAD 
    if (strncmp(command,"MIG",3) == 0 || strncmp(command,"mig",3)  == 0) {
@@ -237,6 +278,11 @@ Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t n
    }
    // MINOS 
    else if (strncmp(command,"MINO",4) == 0 || strncmp(command,"mino",4)  == 0) {
+
+      // switch off debugging if requested 
+      int prevLevel = gErrorIgnoreLevel; 
+      if (fDebug < 0)  // switch off printing of info messages in Minuit2
+         gErrorIgnoreLevel = 1001;
       
       // recall minimize using default nfcn and edmval
       // should use maybe FunctionMinimum from previous call to migrad
@@ -244,6 +290,7 @@ Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t n
       FunctionMinimum min = DoMinimization();
       if (!min.IsValid() ) { 
          std::cout << "TFitterMinuit::MINOS failed due to invalid function minimum" << std::endl;
+         if (fDebug < 0) gErrorIgnoreLevel = prevLevel; // restore previous debug level 
          return -10;
       }
       MnMinos minos( *fMinuitFCN, min);
@@ -251,8 +298,8 @@ Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t n
       for(unsigned int i = 0; i < State().VariableParameters(); i++) {
          MinosError me = minos.Minos(State().ExtOfInt(i));
          // print error message in Minos
-         if (fDebug == 0) {
-            if (me.IsValid() )  
+         if (fDebug >= 0) {
+            if ( !me.IsValid() )  
                std::cout << "Error running Minos for parameter " << i << std::endl; 
          }
          if (fDebug >= 1) {
@@ -284,15 +331,27 @@ Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t n
              ime != fMinosErrors.end(); ime++) 
             std::cout<<*ime<<std::endl;
       }
+
+      if (fDebug < 0) gErrorIgnoreLevel = prevLevel; // restore previous debug level 
+
       return 0;
    } 
    //HESSE
    else if (strncmp(command,"HES",3) == 0 || strncmp(command,"hes",3)  == 0) {
+
+      // switch off debugging if requested 
+      int prevLevel = gErrorIgnoreLevel; 
+      if (fDebug < 0)  // switch off printing of info messages in Minuit2
+         gErrorIgnoreLevel = 1001;
+
       MnHesse hesse( GetStrategy() ); 
       // update the state
       const FCNBase * fcn = GetMinuitFCN();
       assert(fcn != 0);
       fState = hesse(*fcn, State(),100000 );
+
+      if (fDebug < 0) gErrorIgnoreLevel = prevLevel; // restore previous debug level 
+
       if (!fState.IsValid() ) {
          std::cout << "TFitterMinuit::Hesse calculation failed " << std::endl;
          return -10;
@@ -319,9 +378,15 @@ Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t n
    // SET PRINT
    else if (strncmp(command,"SET PRINT",9) == 0 || strncmp(command,"set print",9)  == 0) {
       fDebug = int(args[0]);
+      // if (fDebug >= 0) fDebug = 3;  // use print level of 3 (by default) - turn off with setprint(-1)
 #ifdef DEBUG
       fDebug = 3;
 #endif
+      return 0; 
+   } 
+   // SET ERR
+   else if (strncmp(command,"SET Err",7) == 0 || strncmp(command,"set err",7)  == 0) {
+      fErrorDef = args[0];
       return 0; 
    } 
    // SET STRATEGY
@@ -368,7 +433,9 @@ int  TFitterMinuit::ExamineMinimum(const FunctionMinimum & min) {
          //std::cout << iterationStates[i] << std::endl;                                                                       
          const MinimumState & st =  iterationStates[i];
          std::cout << "----------> Iteration " << i << std::endl;
+         int pr = std::cout.precision(18);
          std::cout << "            FVAL = " << st.Fval() << " Edm = " << st.Edm() << " Nfcn = " << st.NFcn() << std::endl;
+         std::cout.precision(pr);
          std::cout << "            Error matrix change = " << st.Error().Dcovar() << std::endl;
          std::cout << "            Internal parameters : ";
          for (int j = 0; j < st.size() ; ++j) std::cout << " p" << j << " = " << st.Vec()(j);
@@ -379,8 +446,10 @@ int  TFitterMinuit::ExamineMinimum(const FunctionMinimum & min) {
    if (min.IsValid() ) {
       if (fDebug >=1 ) { 
          std::cout << "Minimum Found" << std::endl; 
+         int pr = std::cout.precision(18);
          std::cout << "FVAL  = " << State().Fval() << std::endl;
          std::cout << "Edm   = " << State().Edm() << std::endl;
+         std::cout.precision(pr);
          std::cout << "Nfcn  = " << State().NFcn() << std::endl;
          std::vector<double> par = State().Params();
          std::vector<double> err = State().Errors();
@@ -424,13 +493,24 @@ void TFitterMinuit::FixParameter(Int_t ipar) {
 }
 
 Double_t* TFitterMinuit::GetCovarianceMatrix() const {
-   // get the error matrix
-   return (Double_t*)(&(State().Covariance().Data().front()));
+   // get the error matrix in a pointer to a NxN array.  
+   // Since Minuit2 stores only the independent element need to copy in a 
+   // cached vector
+   unsigned int npar =  State().Covariance().Nrow();
+   assert (int(npar) == GetNumberFreeParameters() );
+   if (fCovar.size() !=  npar ) {
+      fCovar.resize(npar);
+      for (unsigned int i = 0; i < npar; ++i) { 
+         for (unsigned int j = 0; j < npar; ++j) {
+            fCovar[j + npar*i] = State().Covariance()(i,j);
+         }
+      }
+   } 
+   return &(fCovar.front());
 }
 
 Double_t TFitterMinuit::GetCovarianceMatrixElement(Int_t i, Int_t j) const {
    // get error matrix element
-   std::cout<<"GetCovarianceMatrix not implemented"<<std::endl;
    return State().Covariance()(i,j);
 }
 
@@ -523,7 +603,24 @@ void TFitterMinuit::PrintResults(Int_t level, Double_t) const {
    
    //   std::cout<<"PrintResults"<<std::endl;
    //   std::cout<<State().parameters()<<std::endl;
-   std::cout<<State()<<std::endl;
+   if (fDebug >= 0 || level > 3) { 
+      std::cout<<State()<<std::endl;
+   }
+   else { 
+      // do no print covariance matrix
+      if(!State().IsValid()) {
+         std::cout <<  std::endl;
+         std::cout << "WARNING: Minimum  is not valid."<<std::endl;
+         std::cout <<  std::endl;
+      }
+   
+      std::cout << "# of function calls: "<<State().NFcn()<<std::endl;
+      std::cout << "function Value: "<< std::setprecision(12) << State().Fval()<<std::endl;
+      std::cout << "expected distance to the Minimum (edm): "<< std::setprecision(8) << State().Edm()<<std::endl;
+      std::cout << "fitted parameters: "<<State().Parameters()<<std::endl;
+   }
+
+   // print errors 
    if (level > 3) { 
       for(std::vector<MinosError>::const_iterator ime = fMinosErrors.begin();
           ime != fMinosErrors.end(); ime++) {
@@ -549,7 +646,6 @@ void TFitterMinuit::SetFitMethod(const char *name) {
    std::cout<<"SetFitMethod to "<< name << std::endl;
 #endif
    if (!strcmp(name,"H1FitChisquare")) {
-      fErrorDef = 1.;
       // old way of passing
 #ifdef OLDFCN_INTERFACE 
       SetFCN(H1FitChisquare);
@@ -560,7 +656,6 @@ void TFitterMinuit::SetFitMethod(const char *name) {
       return;
    }
    if (!strcmp(name,"GraphFitChisquare")) {
-      fErrorDef = 1.;
 #ifdef OLDFCN_INTERFACE 
       SetFCN(GraphFitChisquare);
 #else 
@@ -573,7 +668,6 @@ void TFitterMinuit::SetFitMethod(const char *name) {
       return;
    }
    if (!strcmp(name, "Graph2DFitChisquare")) {
-      fErrorDef = 1.;
 #ifdef OLDFCN_INTERFACE 
       SetFCN(Graph2DFitChisquare);
 #else 
@@ -597,10 +691,8 @@ void TFitterMinuit::SetFitMethod(const char *name) {
    if (!strcmp(name, "H1FitLikelihood")) {
       // old way of passing
 #ifdef OLDFCN_INTERFACE 
-      fErrorDef = 1.;
       SetFCN(H1FitLikelihood);
 #else 
-      fErrorDef = 0.5;
       CreateBinLikelihoodFCN();    
 #endif  
       return;

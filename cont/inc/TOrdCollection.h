@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TOrdCollection.h,v 1.5 2002/07/29 09:22:28 rdm Exp $
+// @(#)root/cont:$Name: v4-01-04a $:$Id: TOrdCollection.h,v 1.6 2004/11/12 21:51:18 brun Exp $
 // Author: Fons Rademakers   13/09/95
 
 /*************************************************************************
@@ -45,6 +45,9 @@ private:
    void       Init(Int_t capacity);
    Bool_t     LowWaterMark() const;
    void       SetCapacity(Int_t newCapacity);
+
+   TOrdCollection(const TOrdCollection&); // Not implemented
+   TOrdCollection& operator=(const TOrdCollection&); // Not implemented
 
 public:
    enum { kDefaultCapacity = 1, kMinExpand = 8, kShrinkFactor = 2 };
@@ -94,7 +97,7 @@ private:
    Int_t                  fCursor;    //current position in collection
    Bool_t                 fDirection; //iteration direction
 
-   TOrdCollectionIter() : fCol(0) { }
+   TOrdCollectionIter() : fCol(0), fCursor(0), fDirection(kFALSE) { }
 
 public:
    TOrdCollectionIter(const TOrdCollection *col, Bool_t dir = kIterForward);

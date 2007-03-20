@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.56 2006/05/30 11:29:42 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.57 2006/07/03 16:10:45 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -43,7 +43,6 @@
 #include "TGListBox.h"
 #include "TGScrollBar.h"
 #include "TGResourcePool.h"
-#include "TMath.h"
 #include "TSystem.h"
 #include "Riostream.h"
 

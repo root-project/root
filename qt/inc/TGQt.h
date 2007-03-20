@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.18 2006/10/04 16:08:47 antcheva Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.19 2006/12/12 20:12:47 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -227,7 +227,10 @@ public:
    static Window_t       wid(TQtClientWidget *widget);
    static Window_t       rootwid(QPaintDevice *dev);
    static void           PrintEvent(Event_t &);
-   
+   static QString        SetFileName(const QString &fileName);
+   static QString        GetNewFileName(const QString &fileNamePrototype);
+
+
    void SetQClientFilter(TQtClientFilter *filter) {fQClientFilter = filter;}
    TQtClientFilter  *QClientFilter() const {return fQClientFilter;}
    QColor &QtColor(ULong_t pixel);

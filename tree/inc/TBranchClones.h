@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.h,v 1.7 2005/11/16 20:17:59 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.h,v 1.8 2006/01/09 18:28:22 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -25,10 +25,7 @@
 #include "TBranch.h"
 #endif
 
-#ifndef ROOT_TClonesArray
-#include "TClonesArray.h"
-#endif
-
+class TClonesArray;
 class TTreeCloner;
 
 class TBranchClones : public TBranch {

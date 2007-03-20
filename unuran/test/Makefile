@@ -11,18 +11,23 @@ include $(ROOTSYS)/config/Makefile.config
 include $(ROOTSYS)/test/Makefile.arch
 
 #------------------------------------------------------------------------------
-CXXFLAGS += -g
 
 
 ifeq ($(PLATFORM),win32)
 EXTRALIBS        = "$(ROOTSYS)/lib/libMathMore.lib" "$(ROOTSYS)/lib/libMathCore.lib" "$(ROOTSYS)/lib/libUnuran.lib" "$(ROOTSYS)/lib/libMinuit.lib"
 else
-EXTRALIBS        =  -lUnuran -lMathCore -lMinuit
+CXXFLAGS += -g 
+EXTRALIBS        =  -lUnuran -lMathCore -lMathMore  -lMinuit
 endif
 
 #UNURANBASE=/Users/moneta/mathlibs/Unuran
 #CXXFLAGS+=  -I$(UNURANBASE)/include 
 #EXTRALIBS+=  $(UNURANBASE)/lib/libunuran.a 
+
+ifneq ($(CLHEPBASE),)
+CXXFLAGS+=  -I$(CLHEPBASE)/include -DHAVE_CLHEP
+EXTRALIBS+=  $(CLHEPBASE)/lib/libCLHEP.a
+endif
 
 
 #endif
@@ -51,13 +56,21 @@ UNURANMULTI3DOBJ      = unuranMulti3D.$(ObjSuf)
 UNURANMULTI3DSRC      = unuranMulti3D.$(SrcSuf)
 UNURANMULTI3D         = unuranMulti3D$(ExeSuf)
 
+UNURANDISCROBJ      = unuranDiscrete.$(ObjSuf)
+UNURANDISCRSRC      = unuranDiscrete.$(SrcSuf)
+UNURANDISCR         = unuranDiscrete$(ExeSuf)
+
+UNURANHISTOBJ      = unuranHist.$(ObjSuf)
+UNURANHISTSRC      = unuranHist.$(SrcSuf)
+UNURANHIST         = unuranHist$(ExeSuf)
 
 
 
-OBJS          = $(UNURANDISTROBJ)  $(UNURANSIMPLEOBJ) $(UNURANMULTI2DOBJ) $(UNURANMULTI3DOBJ)
+
+OBJS          = $(UNURANDISTROBJ)  $(UNURANSIMPLEOBJ) $(UNURANMULTI2DOBJ) $(UNURANMULTI3DOBJ) $(UNURANDISCROBJ) $(UNURANHISTOBJ)
 
 
-PROGRAMS      =  $(UNURANDISTR)  $(UNURANSIMPLE) $(UNURANMULTI2D) $(UNURANMULTI3D)
+PROGRAMS      =  $(UNURANDISTR)  $(UNURANSIMPLE) $(UNURANMULTI2D) $(UNURANMULTI3D) $(UNURANDISCR) $(UNURANHIST)
 
 		  
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
@@ -86,6 +99,14 @@ $(UNURANMULTI3D): $(UNURANMULTI3DOBJ)
 
 
 $(UNURANSIMPLE): $(UNURANSIMPLEOBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(UNURANDISCR): $(UNURANDISCROBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(UNURANHIST): $(UNURANHISTOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 

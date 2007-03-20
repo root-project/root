@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.109 2006/10/13 07:52:00 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.114 2007/02/22 15:40:02 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -33,18 +33,20 @@
 #include "TGStatusBar.h"
 #include "TGTextEditDialogs.h"
 #include "TROOT.h"
+#include "TClass.h"
 #include "TSystem.h"
 #include "TCanvas.h"
 #include "TBrowser.h"
 #include "TClassTree.h"
 #include "TMarker.h"
 #include "TStyle.h"
-#include "TStyleManager.h"
+#include "TColorWheel.h"
 #include "TVirtualX.h"
 #include "TApplication.h"
 #include "TFile.h"
 #include "TInterpreter.h"
 #include "TEnv.h"
+#include "TMath.h"
 #include "Riostream.h"
 #include "TGDockableFrame.h"
 
@@ -777,7 +779,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   // Handle File menu items...
                   case kFileNewCanvas:
-                     gROOT->GetMakeDefCanvas()();
+                     gROOT->MakeDefCanvas();
                      break;
                   case kFileOpen:
                      {
@@ -872,14 +874,14 @@ again:
                      }
                      if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
                         TVirtualPadEditor::Terminate();
-                     if (gROOT->GetClass("TStyleManager"))
+                     if (TClass::GetClass("TStyleManager"))
                         gROOT->ProcessLine("TStyleManager::Terminate()");
                      gApplication->Terminate(0);
                      break;
 
                   // Handle Edit menu items...
                   case kEditStyle:
-                     if (!gROOT->GetClass("TStyleManager"))
+                     if (!TClass::GetClass("TStyleManager"))
                         gSystem->Load("libGed");
                      gROOT->ProcessLine("TStyleManager::Show()");
                      break;
@@ -922,9 +924,12 @@ again:
                   case kViewColors:
                      {
                         TVirtualPad *padsav = gPad->GetCanvas();
-                        TCanvas *m = new TCanvas("colors","Color Table");
-                        TPad::DrawColorTable();
-                        m->Update();
+                        //This was the code with the old color table
+                        //   TCanvas *m = new TCanvas("colors","Color Table");
+                        //   TPad::DrawColorTable();
+                        //   m->Update();
+                        TColorWheel *wheel = new TColorWheel();
+                        wheel->Draw();
                         padsav->cd();
                      }
                      break;

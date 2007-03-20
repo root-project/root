@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.68 2006/10/05 17:10:09 pcanal Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.76 2007/02/02 17:03:43 pcanal Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -27,19 +27,9 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
-#ifndef ROOT_TROOT
-#include "TROOT.h"
-#endif
 #ifndef ROOT_TObjArray
 #include "TObjArray.h"
 #endif
-#ifndef ROOT_TStreamerInfo
-// This include is no longer necessary but is kept to be 
-// backward compatible with user code.
-#include "TStreamerInfo.h"
-#endif
-
-#include <map>
 
 class TBaseClass;
 class TBrowser;
@@ -53,13 +43,18 @@ namespace Cint {
 class G__ClassInfo;
 }
 using namespace Cint;
-class TStreamerInfo;
+class TVirtualStreamerInfo;
 class TVirtualCollectionProxy;
 class TMethodCall;
 class TVirtualIsAProxy;
 class TVirtualRefProxy;
 
-namespace ROOT { class TGenericClassInfo; }
+namespace ROOT { class TGenericClassInfo; class TCollectionProxyInfo; }
+
+namespace ROOT {
+   class TMapTypeToTClass;
+}
+typedef ROOT::TMapTypeToTClass IdMap_t;
 
 class TClass : public TDictionary {
 
@@ -78,7 +73,8 @@ public:
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
 
 private:
-   TObjArray         *fStreamerInfo;    //Array of TStreamerInfo
+
+   TObjArray         *fStreamerInfo;    //Array of TVirtualStreamerInfo
    TList             *fRealData;        //linked list for persistent members including base classes
    TList             *fBase;            //linked list for base classes
    TList             *fData;            //linked list for data members
@@ -119,16 +115,12 @@ private:
    void              *fInterStreamer;   //!saved info to call Streamer
    Long_t             fOffsetStreamer;  //!saved info to call Streamer
    Int_t              fStreamerType;    //!cached of the streaming method to use
-   TStreamerInfo     *fCurrentInfo;     //!cached current streamer info.
+   TVirtualStreamerInfo     *fCurrentInfo;     //!cached current streamer info.
    TClassRef         *fRefStart;        //!List of references to this object
    TVirtualRefProxy  *fRefProxy;        //!Pointer to reference proxy if this class represents a reference
    TMethod           *GetClassMethod(Long_t faddr);
    TMethod           *GetClassMethod(const char *name, const char *signature);
    Int_t              GetBaseClassOffsetRecurse(const TClass *base);
-   TStreamerInfo     *GetCurrentStreamerInfo() {
-      if (fCurrentInfo) return fCurrentInfo;
-      else return (fCurrentInfo=(TStreamerInfo*)(fStreamerInfo->At(fClassVersion)));
-   }
    void Init(const char *name, Version_t cversion, const type_info *info,
              TVirtualIsAProxy *isa, ShowMembersFunc_t showmember,
              const char *dfil, const char *ifil,
@@ -137,16 +129,10 @@ private:
    void               SetClassVersion(Version_t version) { fClassVersion = version; fCurrentInfo = 0; }
    void               SetClassSize(Int_t sizof) { fSizeof = sizof; }
 
+   static IdMap_t    *fgIdMap;          //Map from typeid to TClass pointer
    static ENewType    fgCallingNew;     //Intent of why/how TClass::New() is called
    static Int_t       fgClassCount;     //provides unique id for a each class
                                         //stored in TObject::fUniqueID
-#if 0
-   // FIXME: Turn off for now, trouble when ptr is reallocated to
-   //        some different type and we don't know.
-#endif
-   static std::multimap<void*, Version_t> fgObjectVersionRepository; // Record what version of a class was used to construct an object
-//#endif
-
    // Internal status bits
    enum { kLoading = BIT(14) };
    // Internal streamer type.
@@ -174,7 +160,7 @@ public:
    void               AddRef(TClassRef *ref); 
    virtual void       Browse(TBrowser *b);
    void               BuildRealData(void *pointer=0);
-   void               BuildEmulatedRealData(const char *name, Int_t offset, TClass *cl);
+   void               BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl);
    Bool_t             CanSplit() const;
    Bool_t             CanIgnoreTObjectStreamer() { return TestBit(kIgnoreTObjectStreamer);}
    void               CopyCollectionProxy(const TVirtualCollectionProxy&);
@@ -182,14 +168,14 @@ public:
    void               Dump() const { TDictionary::Dump(); }
    void               Dump(void *obj) const;
    char              *EscapeChars(const char *text) const;
-   TStreamerInfo     *FindStreamerInfo(UInt_t checksum) const;
+   TVirtualStreamerInfo     *FindStreamerInfo(UInt_t checksum) const;
    Bool_t             HasDefaultConstructor() const;
    UInt_t             GetCheckSum(UInt_t code=0) const;
    TVirtualCollectionProxy *GetCollectionProxy() const;
    TVirtualIsAProxy  *GetIsAProxy() const;
    Version_t          GetClassVersion() const { ((TClass*)this)->fVersionUsed = kTRUE; return (fClassVersion>=0) ? fClassVersion : (-fClassVersion); }
    TDataMember       *GetDataMember(const char *datamember) const;
-   Int_t              GetDataMemberOffset(const char *membername) const;
+   Long_t              GetDataMemberOffset(const char *membername) const;
    const char        *GetDeclFileName() const { return fDeclFileName; }
    Short_t            GetDeclFileLine() const { return fDeclFileLine; }
    ROOT::DelFunc_t    GetDelete() const;
@@ -197,6 +183,10 @@ public:
    ROOT::DelArrFunc_t GetDeleteArray() const;
    G__ClassInfo      *GetClassInfo() const { return fClassInfo; }
    const char        *GetContextMenuTitle() const { return fContextMenuTitle; }
+   TVirtualStreamerInfo     *GetCurrentStreamerInfo() {
+      if (fCurrentInfo) return fCurrentInfo;
+      else return (fCurrentInfo=(TVirtualStreamerInfo*)(fStreamerInfo->At(fClassVersion)));
+   }
    TList             *GetListOfDataMembers();
    TList             *GetListOfBases();
    TList             *GetListOfMethods();
@@ -228,7 +218,7 @@ public:
    ShowMembersFunc_t  GetShowMembersWrapper() const { return fShowMembers; }
    TClassStreamer    *GetStreamer() const; 
    TObjArray         *GetStreamerInfos() const { return fStreamerInfo; }
-   TStreamerInfo     *GetStreamerInfo(Int_t version=0);
+   TVirtualStreamerInfo     *GetStreamerInfo(Int_t version=0);
    const type_info   *GetTypeInfo() const { return fTypeInfo; };
    void               IgnoreTObjectStreamer(Bool_t ignore=kTRUE);
    Bool_t             InheritsFrom(const char *cl) const;
@@ -239,6 +229,7 @@ public:
    Bool_t             IsStartingWithTObject() const;
    Bool_t             IsTObject() const;
    void               MakeCustomMenuList();
+   void               Move(void *arenaFrom, void *arenaTo) const;
    void              *New(ENewType defConstructor = kClassNew);
    void              *New(void *arena, ENewType defConstructor = kClassNew);
    void              *NewArray(Long_t nElements, ENewType defConstructor = kClassNew);
@@ -253,7 +244,9 @@ public:
    void               ResetInstanceCount() { fInstanceCount = fOnHeap = 0; }
    void               ResetMenuList();
    Int_t              Size() const;
+   void               SetCollectionProxy(const ROOT::TCollectionProxyInfo&);
    void               SetContextMenuTitle(const char *title);
+   void               SetCurrentStreamerInfo(TVirtualStreamerInfo *info);
    void               SetGlobalIsA(IsAGlobalFunc_t);
    void               SetDeclFile(const char *name, int line) { fDeclFileName = name; fDeclFileLine = line; }
    void               SetDelete(ROOT::DelFunc_t deleteFunc);
@@ -262,7 +255,7 @@ public:
    void               SetImplFileName(const char *implFileName) { fImplFileName = implFileName; }
    void               SetNew(ROOT::NewFunc_t newFunc);
    void               SetNewArray(ROOT::NewArrFunc_t newArrayFunc);
-   TStreamerInfo     *SetStreamerInfo(Int_t version, const char *info="");
+   TVirtualStreamerInfo     *SetStreamerInfo(Int_t version, const char *info="");
    void               SetUnloaded();
    Int_t              WriteBuffer(TBuffer &b, void *pointer, const char *info="");
 
@@ -271,14 +264,9 @@ public:
    void               AdoptMemberStreamer(const char *name, TMemberStreamer *strm);
    void               SetMemberStreamer(const char *name, MemberStreamerFunc_t strm);
 
-#if 0
-   // FIXME: Turn off for now, trouble when ptr is reallocated to
-   //        some different type and we don't know.
-#endif
-   static std::multimap<void*, Version_t>& GetObjectVersionRepository() { return fgObjectVersionRepository; }
-//#endif
-
    // Function to retrieve the TClass object and dictionary function
+   static void           AddClass(TClass *cl);
+   static void           RemoveClass(TClass *cl);
    static TClass        *GetClass(const char *name, Bool_t load = kTRUE);
    static TClass        *GetClass(const type_info &typeinfo, Bool_t load = kTRUE);
    static VoidFuncPtr_t  GetDict (const char *cname);
@@ -312,8 +300,8 @@ namespace ROOT {
       template <typename T> Bool_t IsPointer(const T** /* dummy */) { return true; };
    #endif
 
-   template <typename T> TClass* GetClass(      T* /* dummy */)        { return GetROOT()->GetClass(typeid(T)); }
-   template <typename T> TClass* GetClass(const T* /* dummy */)        { return GetROOT()->GetClass(typeid(T)); }
+   template <typename T> TClass* GetClass(      T* /* dummy */)        { return TClass::GetClass(typeid(T)); }
+   template <typename T> TClass* GetClass(const T* /* dummy */)        { return TClass::GetClass(typeid(T)); }
 
    #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
       // This can only be used when the template overload resolution can distringuish between

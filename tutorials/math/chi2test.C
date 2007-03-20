@@ -17,11 +17,13 @@
 #include "TMath.h"
 
 
-void chi2test()
+TCanvas * chi2test(Float_t w=0)
 {
-  
-  //Define Histograms
+  // Note: The parameter w is used to produce the 2 pictures in
+  // the TH1::Chi2Test method. The 1st picture is produced with 
+  // w=0 and the 2nd with w=17 (see TH1::Chi2Test() help).
 
+  // Define Histograms.
   const Int_t n = 20;
 
   TH1D *h1 = new TH1D("h1", "h1", n, 4, 16);
@@ -44,7 +46,7 @@ void chi2test()
   h1->SetBinContent(12, 20);
   h1->SetBinContent(13, 13);
   h1->SetBinContent(14, 9);
-  h1->SetBinContent(15, 26);
+  h1->SetBinContent(15, 9+w);
   h1->SetBinContent(16, 13);
   h1->SetBinContent(17, 19);
   h1->SetBinContent(18, 11);
@@ -138,7 +140,7 @@ void chi2test()
   qqplot->SetTitle("Q-Q plot of Normalized Residuals");
 
 //create Canvas
-  TCanvas *c1 = new TCanvas("c1","Chistat Plot",10,10,900,800);
+  TCanvas *c1 = new TCanvas("c1","Chistat Plot",10,10,700,600);
   c1->SetFillColor(33);
   c1->Divide(2,2);
 
@@ -166,6 +168,7 @@ void chi2test()
   qqplot->Draw("AP");
 
   c1->cd(0);
-
+  
   c1->Update();
+   return c1;
 }

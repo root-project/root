@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.5 2006/11/15 17:54:16 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphPolar.cxx,v 1.11 2007/02/21 21:54:21 brun Exp $
 // Author: Sebastian Boser, Mathieu Demaret 02/02/06
 
 /*************************************************************************
@@ -10,37 +10,35 @@
  *************************************************************************/
 
 //______________________________________________________________________________
-//
-//  TGraphPolar creates a polar graph (including error bars). A TGraphPolar is
-//  a TGraphErrors represented in polar coordinates.
-//  It uses the class TGraphPolargram to draw the polar axis.
-//  "r" is used as radial parameter, and "theta" as polar paramater
-//
-// Example:
-//
-// {
-//    TCanvas * CPol = new TCanvas("CPol","TGraphPolar Examples",600,600);
-//
-//    Double_t rmin=0;
-//    Double_t rmax=TMath::Pi()*2;
-//    Double_t r[1000];
-//    Double_t theta[1000];
-//
-//    TF1 * fp1 = new TF1("fplot","cos(x)",rmin,rmax);
-//    for (Int_t ipt = 0; ipt < 1000; ipt++) {
-//       r[ipt] = ipt*(rmax-rmin)/1000+rmin;
-//       theta[ipt] = fp1->Eval(r[ipt]);
-//    }
-//    TGraphPolar * grP1 = new TGraphPolar(1000,r,theta);
-//    grP1->SetLineColor(2);
-//    grP1->Draw("AOL");
-// }
-//Begin_Html
-/*
-<img src="gif/graphpol.gif">
-*/
-//End_Html
-//
+/* Begin_Html
+<center><h2>TGraphPolar : to draw a polar graph</h2></center>
+TGraphPolar creates a polar graph (including error bars). A TGraphPolar is
+a TGraphErrors represented in polar coordinates.
+It uses the class TGraphPolargram to draw the polar axis.
+<p>
+Example:
+End_Html
+Begin_Macro(source)
+{
+   TCanvas * CPol = new TCanvas("CPol","TGraphPolar Examples",500,500);
+
+   Double_t rmin=0;
+   Double_t rmax=TMath::Pi()*2;
+   Double_t r[1000];
+   Double_t theta[1000];
+
+   TF1 * fp1 = new TF1("fplot","cos(x)",rmin,rmax);
+   for (Int_t ipt = 0; ipt < 1000; ipt++) {
+      r[ipt] = ipt*(rmax-rmin)/1000+rmin;
+      theta[ipt] = fp1->Eval(r[ipt]);
+   }
+   TGraphPolar * grP1 = new TGraphPolar(1000,r,theta);
+   grP1->SetLineColor(2);
+   grP1->Draw("AOL");
+
+   return CPol;
+}
+End_Macro */
 
 
 #include "TGaxis.h"
@@ -48,7 +46,12 @@
 #include "THLimitsFinder.h"
 #include "TPaveText.h"
 #include "TStyle.h"
-#include "TString.h"
+#include "TVirtualPad.h"
+#include "TROOT.h"
+#include "TLatex.h"
+#include "TEllipse.h"
+#include "TH1.h"
+#include "TMath.h"
 
 
 ClassImp(TGraphPolar);
@@ -746,7 +749,7 @@ void TGraphPolargram::PaintPolarDivisions()
 
    Int_t i, j, rnum, rden, x=0, first, last;
    if (!gPad) return ;
-   if (!gPad->IsEditable()) gROOT->GetMakeDefCanvas();
+   if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
 
    gPad->RangeAxis(-1,-1,1,1);
    gPad->Range(-1.25,-1.25,1.25,1.25);
@@ -1025,7 +1028,7 @@ void TGraphPolargram::PaintRadialDivisions()
                                frwrmax, ndivmajor,binWidth,"");
 
    if (!gPad) return ;
-   if (!gPad->IsEditable()) gROOT->GetMakeDefCanvas();
+   if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
    if (!gPad->GetLogx()) {
       gPad->RangeAxis(-1,-1,1,1);
       gPad->Range(-1.25,-1.25,1.25,1.25);
@@ -1334,4 +1337,12 @@ void TGraphPolargram::SetToRadian()
    fGrad   = kFALSE;
    fDegree = kFALSE;
    ChangeRangePolar(0,2*TMath::Pi());
+}
+
+
+//______________________________________________________________________________
+void TGraphPolargram::SetTwoPi()
+{
+   //set range from 0 to 2*pi
+   SetRangePolar(0,2*TMath::Pi());
 }

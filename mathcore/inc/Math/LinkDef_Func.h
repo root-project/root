@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Func.h,v 1.3 2006/12/06 15:08:52 moneta Exp $
+// @(#)root/mathcore:$Name:  $:$Id: LinkDef_Func.h,v 1.4 2006/12/06 17:51:13 moneta Exp $
 // Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
 
 /**********************************************************************
@@ -9,22 +9,27 @@
  **********************************************************************/
 #ifdef __CINT__
 
-#pragma link C++ nestedclasses;
-#pragma link C++ nestedtypedef;
 
-#pragma link C++ namespace ROOT;
-#pragma link C++ namespace ROOT::Math;
+#pragma link C++ typedef ROOT::Math::IGenFunction;
+#pragma link C++ typedef ROOT::Math::IMultiGenFunction;
+#pragma link C++ typedef ROOT::Math::IGradFunction;
+#pragma link C++ typedef ROOT::Math::IMultiGradFunction;
 
 
-#pragma link C++ class ROOT::Math::IBaseFunction<ROOT::Math::OneDim>+;
-#pragma link C++ class ROOT::Math::IGradientFunction<ROOT::Math::OneDimt>+;
 #pragma link C++ class ROOT::Math::IBaseFunction<ROOT::Math::MultiDim>+;
 #pragma link C++ class ROOT::Math::IGradientFunction<ROOT::Math::MultiDim>+;
 
 #pragma link C++ class ROOT::Math::IParametricFunction<ROOT::Math::OneDim>+;
-#pragma link C++ class ROOT::Math::IParametricGradFunction<ROOT::Math::OneDim>+;
 #pragma link C++ class ROOT::Math::IParametricFunction<ROOT::Math::MultiDim>+;
 #pragma link C++ class ROOT::Math::IParametricGradFunction<ROOT::Math::MultiDim>+;
+
+// some problem in CINT with template specialized class 
+#ifdef LATER
+#pragma link C++ class ROOT::Math::IBaseFunction<ROOT::Math::OneDim>+;
+#pragma link C++ class ROOT::Math::IGradientFunction<ROOT::Math::OneDim>+;
+#pragma link C++ class ROOT::Math::IParametricGradFunction<ROOT::Math::OneDim>+;
+#endif
+
 
 
 #pragma link C++ function ROOT::Math::erf( double );

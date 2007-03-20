@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.cxx,v 1.7 2006/02/03 21:55:39 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.cxx,v 1.10 2007/01/30 11:24:32 brun Exp $
 // Author: Rene Brun   15/01/2003
 
 /*************************************************************************
@@ -289,8 +289,7 @@ void TFileDrawMap::DrawObject()
    TVirtualPad *padsave = gROOT->GetSelectedPad();
    if (padsave == gPad) {
       //must create a new canvas
-      if (!gROOT->GetMakeDefCanvas()) return;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    } else {
       padsave->cd();
    }
@@ -395,9 +394,9 @@ Bool_t TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, char 
    TKey *key;
    while ((key = (TKey*)next())) {
       TDirectory *curdir = gDirectory;
-      TClass *cl = gROOT->GetClass(key->GetClassName());
+      TClass *cl = TClass::GetClass(key->GetClassName());
       // a TDirectory ?
-      if (cl && cl == TDirectory::Class()) {
+      if (cl && cl == TDirectoryFile::Class()) {
          curdir->cd(key->GetName());
          TDirectory *subdir = gDirectory;
          Bool_t gotInfo = GetObjectInfoDir(subdir, px, py, info);
@@ -548,7 +547,7 @@ void TFileDrawMap::PaintDir(TDirectory *dir, const char *keys)
    while ((key = (TKey*)next())) {
       Int_t nbytes = key->GetNbytes();
       Long64_t bseek = key->GetSeekKey();
-      TClass *cl = gROOT->GetClass(key->GetClassName());
+      TClass *cl = TClass::GetClass(key->GetClassName());
       if (cl) {
          color = (Int_t)(cl->GetUniqueID()%20);
       } else {
@@ -559,7 +558,7 @@ void TFileDrawMap::PaintDir(TDirectory *dir, const char *keys)
       TString s = key->GetName();
       if (strcmp(fKeys.Data(),key->GetName()) && s.Index(re) == kNPOS) continue;
       // a TDirectory ?
-      if (cl && cl == TDirectory::Class()) {
+      if (cl && cl == TDirectoryFile::Class()) {
          TDirectory *curdir = gDirectory;
          gDirectory->cd(key->GetName());
          TDirectory *subdir = gDirectory;

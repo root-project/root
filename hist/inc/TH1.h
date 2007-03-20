@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.83 2006/10/04 09:23:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.87 2007/02/01 14:58:44 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -20,10 +20,6 @@
 // 1-Dim histogram base class.                                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TVirtualHistPainter
-#include "TVirtualHistPainter.h"
-#endif
 
 #ifndef ROOT_TAxis
 #include "TAxis.h"
@@ -56,9 +52,6 @@
 #ifndef ROOT_TArrayD
 #include "TArrayD.h"
 #endif
-#ifndef ROOT_TMath
-#include "TMath.h"
-#endif
 #include "Foption.h"
 
 #ifndef ROOT_TVectorFfwd
@@ -68,11 +61,16 @@
 #include "TVectorDfwd.h"
 #endif
 
+#include <float.h>
+
 class TF1;
 class TH1D;
 class TBrowser;
 class TDirectory;
+class TList;
+class TCollection;
 class TVirtualFFT;
+class TVirtualHistPainter;
 
 class TH1 : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -190,6 +188,7 @@ public:
    virtual Style_t  GetLabelFont(Option_t *axis="X") const;
    virtual Float_t  GetLabelOffset(Option_t *axis="X") const;
    virtual Float_t  GetLabelSize(Option_t *axis="X") const;
+   virtual Style_t  GetTitleFont(Option_t *axis="X") const;
    virtual Float_t  GetTitleOffset(Option_t *axis="X") const;
    virtual Float_t  GetTitleSize(Option_t *axis="X") const;
    virtual Float_t  GetTickLength(Option_t *axis="X") const;
@@ -317,6 +316,7 @@ public:
    virtual void     SetStats(Bool_t stats=kTRUE);
    virtual void     SetOption(Option_t *option=" ") {fOption = option;}
    virtual void     SetTickLength(Float_t length=0.02, Option_t *axis="X");
+   virtual void     SetTitleFont(Style_t font=62, Option_t *axis="X");
    virtual void     SetTitleOffset(Float_t offset=1, Option_t *axis="X");
    virtual void     SetTitleSize(Float_t size=0.02, Option_t *axis="X");
    virtual void     SetTitle(const char *title);  // *MENU*

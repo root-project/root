@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttLine.h,v 1.6 2005/11/16 20:02:34 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TAttLine.h,v 1.8 2007/02/04 17:39:44 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -21,8 +21,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Gtypes
-#include "Gtypes.h"
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+#ifndef ROOT_Riosfwd
+#include "Riosfwd.h"
 #endif
 
 
@@ -34,6 +37,7 @@ protected:
    Width_t    fLineWidth;           //line width
    
 public:
+
    TAttLine();
    TAttLine(Color_t lcolor,Style_t lstyle, Width_t lwidth);
    virtual ~TAttLine();
@@ -53,6 +57,8 @@ public:
 
    ClassDef(TAttLine,1);  //Line attributes
 };
+
+   enum ELineStyle { kSolid = 1, kDashed, kDotted, kDashDotted };
 
 #endif
 

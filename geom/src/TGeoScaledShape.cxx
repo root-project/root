@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoScaledShape.cxx,v 1.4 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoScaledShape.cxx,v 1.6 2007/01/12 16:03:16 brun Exp $
 // Author: Andrei Gheata   26/09/05
 
 /*************************************************************************
@@ -11,7 +11,6 @@
 
 
 #include "Riostream.h"
-#include "TROOT.h"
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
@@ -19,6 +18,7 @@
 #include "TGeoScaledShape.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "TMath.h"
 
 //_____________________________________________________________________________
 // TGeoScaledShape - A shape scaled by a TGeoScale transformation

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.23 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.24 2006/11/10 10:47:10 antcheva Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -53,7 +53,6 @@
 #include "TGLayout.h"
 #include "TGFrame.h"
 #include "TList.h"
-#include "TMath.h"
 #include "Riostream.h"
 
 

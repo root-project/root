@@ -1,0 +1,9 @@
+This directory contains the basic mathematical function and classes.   
+BEGIN_HTML
+ See:
+<ul>
+<li><a href="http://seal.web.cern.ch/seal/MathLibs/MathCore/html/index.html">Online doc for MathCore</a></li>
+<li><a href="ftp://root.cern.ch/root/doc/chapter13.pdf">The Math Chapter in the Users Guide
+    </a>describing in detail the MathCore functions and classes</li>
+</ul>
+END_HTML

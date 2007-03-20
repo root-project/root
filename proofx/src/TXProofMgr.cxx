@@ -1,4 +1,4 @@
-// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.15 2006/11/28 12:10:52 rdm Exp $
+// @(#)root/proofx:$Name:  $:$Id: TXProofMgr.cxx,v 1.17 2007/02/06 00:09:29 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -421,8 +421,9 @@ TProofLog *TXProofMgr::GetSessionLogs(Int_t isess, const char *stag)
    // Get logs or log tails from last session associated with this manager
    // instance.
    // The arguments allow to specify a session different from the last one:
-   //      isess   specifies a position relative to the last one, i.e. -1
-   //              for the next to last session
+   //      isess   specifies a position relative to the last one, i.e. 1
+   //              for the next to last session; the absolute value is taken
+   //              so -1 and 1 are equivalent.
    //      stag    specifies the unique tag of the wanted session
    // If 'stag' is specified 'isess' is ignored.
    // Returns a TProofLog object (to be deleted by the caller) on success,
@@ -435,6 +436,9 @@ TProofLog *TXProofMgr::GetSessionLogs(Int_t isess, const char *stag)
    }
 
    TProofLog *pl = 0;
+
+   // The absolute value of isess counts
+   isess = (isess > 0) ? -isess : isess;
 
    // Get the list of paths
    TObjString *os = fSocket->SendCoordinator(TXSocket::kQueryLogPaths, stag, isess);
@@ -505,4 +509,48 @@ TObjString *TXProofMgr::ReadBuffer(const char *fin, Long64_t ofs, Int_t len)
 
    // Send the request
    return fSocket->SendCoordinator(TXSocket::kReadBuffer, fin, len, ofs);
+}
+
+//______________________________________________________________________________
+void TXProofMgr::ShowROOTVersions()
+{
+   // Display what ROOT versions are available on the cluster
+
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Warning("ShowROOTVersions","invalid TXProofMgr - do nothing");
+      return;
+   }
+
+   // Send the request
+   TObjString *os = fSocket->SendCoordinator(TXSocket::kQueryROOTVersions);
+   if (os) {
+      // Display it
+      Printf("----------------------------------------------------------\n");
+      Printf("Available versions (tag ROOT-vers remote-path PROOF-version):\n");
+      Printf("%s", os->GetName());
+      Printf("----------------------------------------------------------");
+      SafeDelete(os);
+   }
+
+   // We are done
+   return;
+}
+
+//______________________________________________________________________________
+void TXProofMgr::SetROOTVersion(const char *tag)
+{
+   // Set the default ROOT version to be used
+
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Warning("SetROOTVersion","invalid TXProofMgr - do nothing");
+      return;
+   }
+
+   // Send the request
+   fSocket->SendCoordinator(TXSocket::kROOTVersion, tag);
+
+   // We are done
+   return;
 }

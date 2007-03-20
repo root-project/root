@@ -94,35 +94,35 @@ void G__setint(G__value *pbuf,long l,void *pl
 *
 **************************************************************************/
 static void G__cppstub_setparam(char *pformat,char *pbody
-                                ,int /* tagnum */,int ifn,G__ifunc_table *ifunc,int k)
+                                ,int /* tagnum */,int ifn,G__ifunc_table_internal *ifunc,int k)
 {
   char paraname[G__MAXNAME];
   char temp[G__ONELINE];
 
-  if(ifunc->para_name[ifn][k]) strcpy(paraname,ifunc->para_name[ifn][k]);
+  if(ifunc->param[ifn][k]->name) strcpy(paraname,ifunc->param[ifn][k]->name);
   else sprintf(paraname,"a%d",k);
 
   if(k) strcat(pformat,",");
   strcat(pbody,",");
 
-  if(ifunc->para_reftype[ifn][k]) {
+  if(ifunc->param[ifn][k]->reftype) {
     sprintf(temp,"*(%s*)(%%ld)"
-            ,G__type2string(ifunc->para_type[ifn][k]
-                            ,ifunc->para_p_tagtable[ifn][k]
-                            ,ifunc->para_p_typetable[ifn][k] ,0
-                            ,ifunc->para_isconst[ifn][k]));
+            ,G__type2string(ifunc->param[ifn][k]->type
+                            ,ifunc->param[ifn][k]->p_tagtable
+                            ,ifunc->param[ifn][k]->p_typetable ,0
+                            ,ifunc->param[ifn][k]->isconst));
     strcat(pformat,temp);
     sprintf(temp,"(long)(&%s)",paraname);
     strcat(pbody,temp);
   }
   else {
-    switch(ifunc->para_type[ifn][k]) {
+    switch(ifunc->param[ifn][k]->type) {
     case 'u':
       sprintf(temp,"(%s)(%%ld)"
-              ,G__type2string(ifunc->para_type[ifn][k]
-                              ,ifunc->para_p_tagtable[ifn][k]
-                              ,ifunc->para_p_typetable[ifn][k] ,0
-                              ,ifunc->para_isconst[ifn][k]));
+              ,G__type2string(ifunc->param[ifn][k]->type
+                              ,ifunc->param[ifn][k]->p_tagtable
+                              ,ifunc->param[ifn][k]->p_typetable ,0
+                              ,ifunc->param[ifn][k]->isconst));
       strcat(pformat,temp);
       sprintf(temp,"&%s",paraname);
       strcat(pbody,temp);
@@ -130,20 +130,20 @@ static void G__cppstub_setparam(char *pformat,char *pbody
     case 'd':
     case 'f':
       sprintf(temp,"(%s)%%g"
-              ,G__type2string(ifunc->para_type[ifn][k]
-                              ,ifunc->para_p_tagtable[ifn][k]
-                              ,ifunc->para_p_typetable[ifn][k] ,0
-                              ,ifunc->para_isconst[ifn][k]));
+              ,G__type2string(ifunc->param[ifn][k]->type
+                              ,ifunc->param[ifn][k]->p_tagtable
+                              ,ifunc->param[ifn][k]->p_typetable ,0
+                              ,ifunc->param[ifn][k]->isconst));
       strcat(pformat,temp);
       sprintf(temp,"%s",paraname);
       strcat(pbody,temp);
       break;
     default:
       sprintf(temp,"(%s)(%%ld)"
-              ,G__type2string(ifunc->para_type[ifn][k]
-                              ,ifunc->para_p_tagtable[ifn][k]
-                              ,ifunc->para_p_typetable[ifn][k] ,0
-                              ,ifunc->para_isconst[ifn][k]));
+              ,G__type2string(ifunc->param[ifn][k]->type
+                              ,ifunc->param[ifn][k]->p_tagtable
+                              ,ifunc->param[ifn][k]->p_typetable ,0
+                              ,ifunc->param[ifn][k]->isconst));
       strcat(pformat,temp);
       sprintf(temp,"(long)%s",paraname);
       strcat(pbody,temp);
@@ -157,7 +157,7 @@ static void G__cppstub_setparam(char *pformat,char *pbody
 *
 **************************************************************************/
 static void G__cppstub_genconstructor(FILE * /* fp */,int tagnum
-                                      ,int /* ifn */,G__ifunc_table * /* ifunc */)
+                                      ,int /* ifn */,G__ifunc_table_internal * /* ifunc */)
 {
   G__fprinterr(G__serr,"Limitation: Can not make STUB constructor, class %s\n"
           ,G__fulltagname(tagnum,1));
@@ -168,7 +168,7 @@ static void G__cppstub_genconstructor(FILE * /* fp */,int tagnum
 *
 **************************************************************************/
 static void G__cppstub_gendestructor(FILE * /* fp */,int tagnum
-                                     ,int /* ifn */,G__ifunc_table * /* ifunc */)
+                                     ,int /* ifn */,G__ifunc_table_internal * /* ifunc */)
 {
   G__fprinterr(G__serr,"Limitation: Can not make STUB destructor, class %s\n"
           ,G__fulltagname(tagnum,1));
@@ -178,7 +178,7 @@ static void G__cppstub_gendestructor(FILE * /* fp */,int tagnum
 * G__cppstub_genfunc()
 *
 **************************************************************************/
-static void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,G__ifunc_table *ifunc)
+static void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,G__ifunc_table_internal *ifunc)
 {
   int k;
   char pformat[G__ONELINE];
@@ -207,8 +207,8 @@ static void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,G__ifunc_table *ifunc
   if(G__clock) {
     for(k=0;k<ifunc->para_nu[ifn];k++) {
       if(k) fprintf(fp,",");
-      if(ifunc->para_name[ifn][k]) {
-        fprintf(fp,"%s",ifunc->para_name[ifn][k]);
+      if(ifunc->param[ifn][k]->name) {
+        fprintf(fp,"%s",ifunc->param[ifn][k]->name);
       }
       else {
         fprintf(fp,"a%d",k);
@@ -216,13 +216,13 @@ static void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,G__ifunc_table *ifunc
     }
     fprintf(fp,")\n");
     for(k=0;k<ifunc->para_nu[ifn];k++) {
-      fprintf(fp,"%s" ,G__type2string(ifunc->para_type[ifn][k]
-                                      ,ifunc->para_p_tagtable[ifn][k]
-                                      ,ifunc->para_p_typetable[ifn][k]
-                                      ,ifunc->para_reftype[ifn][k]
-                                      ,ifunc->para_isconst[ifn][k]));
-      if(ifunc->para_name[ifn][k]) {
-        fprintf(fp," %s;\n",ifunc->para_name[ifn][k]);
+      fprintf(fp,"%s" ,G__type2string(ifunc->param[ifn][k]->type
+                                      ,ifunc->param[ifn][k]->p_tagtable
+                                      ,ifunc->param[ifn][k]->p_typetable
+                                      ,ifunc->param[ifn][k]->reftype
+                                      ,ifunc->param[ifn][k]->isconst));
+      if(ifunc->param[ifn][k]->name) {
+        fprintf(fp," %s;\n",ifunc->param[ifn][k]->name);
       }
       else {
         fprintf(fp," a%d;\n",k);
@@ -233,13 +233,13 @@ static void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,G__ifunc_table *ifunc
   else {
     for(k=0;k<ifunc->para_nu[ifn];k++) {
       if(k) fprintf(fp,",\n");
-      fprintf(fp,"%s" ,G__type2string(ifunc->para_type[ifn][k]
-                                      ,ifunc->para_p_tagtable[ifn][k]
-                                      ,ifunc->para_p_typetable[ifn][k]
-                                      ,ifunc->para_reftype[ifn][k]
-                                      ,ifunc->para_isconst[ifn][k]));
-      if(ifunc->para_name[ifn][k]) {
-        fprintf(fp," %s",ifunc->para_name[ifn][k]);
+      fprintf(fp,"%s" ,G__type2string(ifunc->param[ifn][k]->type
+                                      ,ifunc->param[ifn][k]->p_tagtable
+                                      ,ifunc->param[ifn][k]->p_typetable
+                                      ,ifunc->param[ifn][k]->reftype
+                                      ,ifunc->param[ifn][k]->isconst));
+      if(ifunc->param[ifn][k]->name) {
+        fprintf(fp," %s",ifunc->param[ifn][k]->name);
       }
       else {
         fprintf(fp," a%d",k);
@@ -326,7 +326,7 @@ static void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,G__ifunc_table *ifunc
 void G__cppstub_memfunc(FILE *fp)
 {
   int i,j;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int isconstructor,iscopyconstructor,isdestructor,isassignmentoperator;
 
   fprintf(fp,"\n/*********************************************************\n");
@@ -387,7 +387,7 @@ void G__cppstub_memfunc(FILE *fp)
 void G__cppstub_func(FILE *fp)
 {
   int j;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
 
   fprintf(fp,"\n/*********************************************************\n");
   fprintf(fp,"* Global function Stub\n");
@@ -436,7 +436,7 @@ void G__set_stubflags(G__dictposition *dictpos)
   }
 
   for(tagnum=dictpos->tagnum;tagnum<G__struct.alltag;tagnum++) {
-    struct G__ifunc_table *ifunc;
+    struct G__ifunc_table_internal *ifunc;
     ifunc=G__struct.memfunc[tagnum];
     while(ifunc) {
       for(ifn=0;ifn<ifunc->allifunc;ifn++) {
@@ -454,9 +454,10 @@ void G__set_stubflags(G__dictposition *dictpos)
   }
 
   if(dictpos->ifunc) {
-    struct G__ifunc_table *ifunc = dictpos->ifunc;
+    struct G__ifunc_table_internal *dictpos_ifunc = G__get_ifunc_internal(dictpos->ifunc);
+    struct G__ifunc_table_internal *ifunc = dictpos_ifunc;
     while(ifunc) {
-      if(ifunc==dictpos->ifunc) ifn = dictpos->ifn;
+      if(ifunc==dictpos_ifunc) ifn = dictpos->ifn;
       else ifn = 0;
       while(ifn<ifunc->allifunc) {
         switch(ifunc->globalcomp[ifn]) {

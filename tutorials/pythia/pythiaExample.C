@@ -46,7 +46,7 @@
 //
 // NOTE 2: The example can also be run with ACLIC:
 //  root > gSystem->Load("libEG");
-//  root > gSystem->Load("$HOME/pythia6/libPythia6"); //change to your setup
+//  root > gSystem->Load("$ROOTSYS/../pythia6/libPythia6"); //change to your setup
 //  root > gSystem->Load("libEGPythia6");
 //  root > .x pythiaExample.C+
 //
@@ -90,7 +90,7 @@ void loadLibraries()
   // Load the Event Generator abstraction library, Pythia 6
   // library, and the Pythia 6 interface library.
   gSystem->Load("libEG");
-  gSystem->Load("$HOME/pythia6/libPythia6"); //change to your setup
+  gSystem->Load("$ROOTSYS/../pythia6/libPythia6"); //change to your setup
   gSystem->Load("libEGPythia6");
 #endif
 }

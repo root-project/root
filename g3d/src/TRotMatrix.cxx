@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TRotMatrix.cxx,v 1.3 2000/11/21 20:18:03 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TRotMatrix.cxx,v 1.6 2007/01/16 09:36:48 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TROOT.h"
 #include "TGeometry.h"
 #include "TRotMatrix.h"
 #include "TClass.h"
+#include "TMath.h"
 
 ClassImp(TRotMatrix)
 
@@ -238,7 +238,7 @@ void TRotMatrix::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TRotMatrix::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TRotMatrix::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -253,6 +253,6 @@ void TRotMatrix::Streamer(TBuffer &R__b)
       //====end of old versions
       
    } else {
-      TRotMatrix::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TRotMatrix::Class(),this);
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFFT.h,v 1.2 2006/04/11 16:17:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFFT.h,v 1.4 2007/02/18 14:56:42 brun Exp $
 // Author: Anna Kreshuk  10/04/2006
 
 #ifndef ROOT_TVirtualFFT
@@ -101,6 +101,7 @@ class TVirtualFFT: public TObject {
    virtual ~TVirtualFFT();
 
    virtual Int_t     *GetN()    const = 0;
+
    virtual Int_t      GetNdim() const = 0;
    virtual Option_t  *GetType() const = 0;
    virtual Int_t      GetSign() const = 0;
@@ -123,7 +124,6 @@ class TVirtualFFT: public TObject {
    virtual void       SetPointComplex(Int_t ipoint, TComplex &c) = 0;
    virtual void       SetPointsComplex(const Double_t *re, const Double_t *im) =0;
    virtual void       Transform() = 0;
-
 
    static TVirtualFFT* FFT(Int_t ndim, Int_t *n, Option_t *option);
    static TVirtualFFT* SineCosine(Int_t ndim, Int_t *n, Int_t *r2rkind, Option_t *option);

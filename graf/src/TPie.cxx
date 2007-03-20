@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.10 2006/12/11 11:00:27 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TPie.cxx,v 1.15 2007/03/16 14:58:17 couet Exp $
 // Author: Guido Volpi, Olivier Couet 03/11/2006
 
 /*************************************************************************
@@ -10,18 +10,22 @@
  *************************************************************************/
 
 #include "TPie.h"
+#include "TPieSlice.h"
 
 #include <Riostream.h>
 #include <TROOT.h>
-#include <TPad.h>
+#include <TVirtualPad.h>
 #include <TArc.h>
+#include <TLegend.h>
 #include <TMath.h>
 #include <TStyle.h>
 #include <TLatex.h>
 #include <TPaveText.h>
 #include <TH1.h>
+#include <TColor.h>
 
 ClassImp(TPie)
+
 
 //______________________________________________________________________________
 //
@@ -64,7 +68,7 @@ TPie::TPie() : TNamed()
 
 //______________________________________________________________________________
 TPie::TPie(const char *name, const char *title, Int_t npoints) :
-   TNamed(name,title)
+           TNamed(name,title)
 {
    // This constructor creates a pie chart when only the number of
    // the slices is known. The number of slices is fixed.
@@ -74,10 +78,9 @@ TPie::TPie(const char *name, const char *title, Int_t npoints) :
 
 
 //______________________________________________________________________________
-TPie::TPie(const char *name,
-               const char *title,
-               Int_t npoints, Double_t *vals,
-               Int_t *colors, const char *lbls[]) : TNamed(name,title)
+TPie::TPie(const char *name, const char *title,
+           Int_t npoints, Double_t *vals,
+           Int_t *colors, const char *lbls[]) : TNamed(name,title)
 {
    // Normal constructor. The 1st and 2nd parameters are the name of the object
    // and its title.
@@ -92,7 +95,7 @@ TPie::TPie(const char *name,
    // using a color sequence in the standard palette.
 
    Init(npoints, 0, 0.5, 0.5, 0.4);
-   for (Int_t i=0; i<fNvals; ++i) fVals[i] = vals[i];
+   for (Int_t i=0; i<fNvals; ++i) fPieSlices[i]->SetValue(vals[i]);
 
    SetFillColors(colors);
    SetLabels(lbls);
@@ -101,14 +104,14 @@ TPie::TPie(const char *name,
 
 //______________________________________________________________________________
 TPie::TPie(const char *name,
-               const char *title,
-               Int_t npoints, Float_t *vals,
-               Int_t *colors, const char *lbls[]) : TNamed(name,title)
+           const char *title,
+           Int_t npoints, Float_t *vals,
+           Int_t *colors, const char *lbls[]) : TNamed(name,title)
 {
    // Normal constructor (Float_t).
 
    Init(npoints, 0, 0.5, 0.5, 0.4);
-   for (Int_t i=0; i<fNvals; ++i) fVals[i] = vals[i];
+   for (Int_t i=0; i<fNvals; ++i) fPieSlices[i]->SetValue(vals[i]);
 
    SetFillColors(colors);
    SetLabels(lbls);
@@ -127,9 +130,10 @@ TPie::TPie(const TH1 *h) : TNamed(h->GetName(),h->GetTitle())
    Int_t last  = axis->GetLast();
    Int_t np    = last-first+1;
    Init(np, 0, 0.5, 0.5, 0.4);
-   for (i=first; i<=last; ++i) fVals[i-first] = h->GetBinContent(i);
+
+   for (i=first; i<=last; ++i) fPieSlices[i-first]->SetValue(h->GetBinContent(i));
    if (axis->GetLabels()) {
-      for (i=first; i<=last; ++i) fLabels[i-first] = axis->GetBinLabel(i);
+      for (i=first; i<=last; ++i) fPieSlices[i-first]->SetTitle(axis->GetBinLabel(i));
    } else {
       SetLabelFormat("%val");
    }
@@ -147,15 +151,10 @@ TPie::TPie(const TPie &cpy) : TNamed(cpy), TAttText(cpy)
    Init(cpy.fNvals, cpy.fAngularOffset, cpy.fX, cpy.fY, cpy.fRadius);
 
    for (Int_t i=0;i<fNvals;++i) {
-      fVals[i]          = cpy.fVals[i];
-      fLineColors[i]    = cpy.fLineColors[i];
-      fLineStyles[i]    = cpy.fLineStyles[i];
-      fLineWidths[i]    = cpy.fLineWidths[i];
-      fFillColors[i]    = cpy.fFillColors[i];
-      fFillStyles[i]    = cpy.fFillStyles[i];
-      fRadiusOffsets[i] = cpy.fRadiusOffsets[i];
+      fPieSlices[i] = cpy.fPieSlices[i];
    }
 }
+
 
 //______________________________________________________________________________
 TPie::~TPie()
@@ -163,17 +162,11 @@ TPie::~TPie()
    // Destructor.
 
    if (fNvals>0) {
-      delete [] fVals;
-      delete [] fLabels;
-      delete [] fLineColors;
-      delete [] fLineStyles;
-      delete [] fLineWidths;
-      delete [] fFillColors;
-      delete [] fFillStyles;
-      delete [] fRadiusOffsets;
+      delete [] fPieSlices;
    }
 
    if (fSlices) delete [] fSlices;
+   if (fLegend) delete fLegend;
 }
 
 
@@ -214,7 +207,7 @@ Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
    Double_t radX  = fRadius;
    Double_t radY  = fRadius;
    Double_t radXY = 1.;
-   if (fIs3D) {
+   if (fIs3D==kTRUE) {
       radY  = .5*radX;
       radXY = .5;
    }
@@ -223,6 +216,8 @@ Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
    Double_t cphi;
    Double_t phimax;
    for (Int_t i=0;i<fNvals;++i) {
+      fPieSlices[i]->SetIsActive(kFALSE);
+
       if (gIsUptSlice && gCurrent_slice!=i) continue;
 
       // Angles' values for this slice
@@ -230,23 +225,11 @@ Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
       cphi   = fSlices[2*i+1]*TMath::Pi()/180.;
       phimax = fSlices[2*i+2]*TMath::Pi()/180.;
 
-      // Recalculate slice's vertex' coordinates.
-      Double_t x, y, rad, radOffset;
-      if (gIsUptSlice) {
-         x         = gX;
-         y         = gY;
-         rad       = gRadius,
-         radOffset = gRadiusOffset;
-      }
-      else {
-         x         = fX;
-         y         = fY;
-         rad       = fRadius;
-         radOffset = fRadiusOffsets[i];
-      }
+      Double_t radOffset = fPieSlices[i]->GetRadiusOffset();
 
-      Double_t dx  = (xx-x-radOffset*TMath::Cos(cphi))/radX;
-      Double_t dy  = (yy-y-radOffset*TMath::Sin(cphi)*radXY)/radY;
+      Double_t dx  = (xx-fX-radOffset*TMath::Cos(cphi))/radX;
+      Double_t dy  = (yy-fY-radOffset*TMath::Sin(cphi)*radXY)/radY;
+
       Double_t ang = TMath::ATan2(dy,dx);
       if (ang<0) ang += TMath::TwoPi();
 
@@ -255,16 +238,36 @@ Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
       if ( ((ang>=phimin && ang <= phimax) || (phimax>TMath::TwoPi() &&
              ang+TMath::TwoPi()>=phimin && ang+TMath::TwoPi()<phimax)) &&
              dist<=1.) { // if true the pointer is in the slice region
+
          gCurrent_x    = dx;
          gCurrent_y    = dy;
          gCurrent_ang  = ang;
          gCurrent_phi1 = phimin;
          gCurrent_phi2 = phimax;
-         gCurrent_rad  = dist*rad;
-         result        = i;
+         gCurrent_rad  = dist*fRadius;
+
+         if (dist<.95 && dist>.65) {
+            Double_t range = phimax-phimin;
+            Double_t lang = ang-phimin;
+            Double_t rang = phimax-ang;
+            if (lang<0) lang += TMath::TwoPi();
+            else if (lang>=TMath::TwoPi()) lang -= TMath::TwoPi();
+            if (rang<0) rang += TMath::TwoPi();
+            else if (rang>=TMath::TwoPi()) rang -= TMath::TwoPi();
+
+            if (lang/range<.25 || rang/range<.25) {
+               fPieSlices[i]->SetIsActive(kTRUE);
+               result = -1;
+            }
+            else result  = i;
+         } else {
+            result = i;
+         }
+
          break;
       }
    }
+
    return result;
 }
 
@@ -282,14 +285,15 @@ void TPie::Draw(Option_t *option)
    if (soption.Length()==0) soption = "l";
 
    if (gPad) {
-      if (!gPad->IsEditable()) (gROOT->GetMakeDefCanvas())();
+      if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
       if (!soption.Contains("same")) {
          gPad->Clear();
          gPad->Range(0.,0.,1.,1.);
       }
    }
 
-   AppendPad(option);
+   for (Int_t i=0;i<fNvals;++i) fPieSlices[i]->AppendPad();
+   AppendPad(soption.Data());
 }
 
 
@@ -315,7 +319,7 @@ void TPie::DrawGhost()
       Float_t avgphi = (fSlices[i*2+1]+gAngularOffset)*TMath::Pi()/180.;
       Float_t maxphi = (fSlices[i*2+2]+gAngularOffset-.5)*TMath::Pi()/180.;
 
-      Double_t radOffset = (i == gCurrent_slice ? gRadiusOffset : fRadiusOffsets[i]);
+      Double_t radOffset = (i == gCurrent_slice ? gRadiusOffset : fPieSlices[i]->GetRadiusOffset());
       Double_t x0 = gX+radOffset*TMath::Cos(avgphi);
       Double_t y0 = gY+radOffset*TMath::Sin(avgphi)*radXY-fHeight;
 
@@ -363,13 +367,14 @@ void TPie::DrawGhost()
       Float_t avgphi = (fSlices[i*2+1]+gAngularOffset)*TMath::Pi()/180.;
       Float_t maxphi = (fSlices[i*2+2]+gAngularOffset-.5)*TMath::Pi()/180.;
 
-      Double_t radOffset = (i == gCurrent_slice ? gRadiusOffset : fRadiusOffsets[i]);
+      Double_t radOffset = (i == gCurrent_slice ? gRadiusOffset : fPieSlices[i]->GetRadiusOffset());
       Double_t x0 = gX+radOffset*TMath::Cos(avgphi);
       Double_t y0 = gY+radOffset*TMath::Sin(avgphi)*radXY;
 
       gVirtualX->DrawLine( gPad->XtoAbsPixel(x0), gPad->YtoAbsPixel(y0),
                            gPad->XtoAbsPixel(x0+gRadius*TMath::Cos(minphi)),
                            gPad->YtoAbsPixel(y0+gRadius*TMath::Sin(minphi)*radXY) );
+
 
       Int_t ndiv = 10;
       Double_t dphi = (maxphi-minphi)/ndiv;
@@ -430,7 +435,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Double_t radX  = fRadius;
    Double_t radY  = fRadius;
    Double_t radXY = 1.;
-   if (fIs3D) {
+   if (fIs3D==kTRUE) {
       radY  = .5*radX;
       radXY = .5;
    }
@@ -448,7 +453,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          gX             = fX;
          gY             = fY;
          gRadius        = fRadius;
-         gRadiusOffset  = fRadiusOffsets[gCurrent_slice];
+         gRadiusOffset  = fPieSlices[gCurrent_slice]->GetRadiusOffset();
          gAngularOffset = 0;
          gIsUptSlice    = kTRUE;
 
@@ -544,22 +549,28 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          } else if (isRotating) {
             if (!gPad->OpaqueMoving()) DrawGhost();
 
-            if (py>=gPad->YtoAbsPixel(fY)) {
-               if (px<oldpx) gAngularOffset--;
-               else          gAngularOffset++;
-            } else {
-               if (px<oldpx) gAngularOffset++;
-               else          gAngularOffset--;
-            }
-            if (gAngularOffset>=360) gAngularOffset = 0;
+            Double_t xx = gPad->AbsPixeltoX(px);
+            Double_t yy = gPad->AbsPixeltoY(py);
+
+            Double_t dx  = xx-gX;
+            Double_t dy  = yy-gY;
+
+            Double_t ang = TMath::ATan2(dy,dx);
+            if (ang<0) ang += TMath::TwoPi();
+
+            gAngularOffset = (ang-gCurrent_ang)*180/TMath::Pi();
 
             if (!gPad->OpaqueMoving()) DrawGhost();
          }
 
          oldpx = px;
          oldpy = py;
-         if ( ((isMovingPie || isMovingSlice || isRotating ) && gPad->OpaqueMoving()) ||
-               (isResizing && gPad->OpaqueResizing()) ) isRedrawing = kTRUE;
+
+         if ( ((isMovingPie || isMovingSlice || isRotating) && gPad->OpaqueMoving()) ||
+               (isResizing && gPad->OpaqueResizing()) ) {
+            isRedrawing = kTRUE;
+            event = kButton1Up;
+         }
          else break;
 
       case kButton1Up:
@@ -578,17 +589,19 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          fX      = gX;
          fY      = gY;
          fRadius = gRadius;
-         fRadiusOffsets[gCurrent_slice] = gRadiusOffset;
+         fPieSlices[gCurrent_slice]->SetRadiusOffset(gRadiusOffset);
          SetAngularOffset(fAngularOffset+gAngularOffset);
-
-         gPad->Modified(kTRUE);
 
          if (isRedrawing && (isMovingPie || isMovingSlice)) gPad->SetCursor(kMove);
 
          if (isMovingPie)   isMovingPie   = kFALSE;
          if (isMovingSlice) isMovingSlice = kFALSE;
          if (isResizing)    isResizing    = kFALSE;
-         if (isRotating)    isRotating    = kFALSE;
+         if (isRotating)    {
+            isRotating = kFALSE;
+            // this is important mainly when OpaqueMoving==kTRUE
+            gCurrent_ang += gAngularOffset/180.*TMath::Pi();
+         }
 
          gPad->Modified(kTRUE);
 
@@ -599,9 +612,9 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          gVirtualX->SetLineColor(-1);
          gVirtualX->SetLineWidth(-1);
 
-         gIsUptSlice = kFALSE;
          break;
       case kButton1Locate:
+
          ExecuteEvent(kButton1Down, px, py);
 
          while (1) {
@@ -632,7 +645,7 @@ const char* TPie::GetEntryLabel(Int_t i)
 {
    // Returns the label of the entry number "i".
 
-   return fLabels[i].Data();
+   return GetSlice(i)->GetTitle();
 }
 
 
@@ -641,7 +654,7 @@ Int_t TPie::GetEntryFillColor(Int_t i)
 {
    // Return the color of the slice number "i".
 
-   return fFillColors[i];
+   return GetSlice(i)->GetFillColor();
 }
 
 
@@ -650,7 +663,34 @@ Int_t TPie::GetEntryFillStyle(Int_t i)
 {
    // Return the style use to fill the slice number "i".
 
-   return fFillStyles[i];
+   return GetSlice(i)->GetFillStyle();
+}
+
+
+//______________________________________________________________________________
+Int_t TPie::GetEntryLineColor(Int_t i)
+{
+   // Return the line color used to outline thi "i" slice
+
+   return GetSlice(i)->GetLineColor();
+}
+
+
+//______________________________________________________________________________
+Int_t TPie::GetEntryLineStyle(Int_t i)
+{
+   // Return the style used to outline thi "i" slice
+
+   return GetSlice(i)->GetLineStyle();
+}
+
+
+//______________________________________________________________________________
+Int_t TPie::GetEntryLineWidth(Int_t i)
+{
+   // Return the line width used to outline thi "i" slice
+
+   return GetSlice(i)->GetLineWidth();
 }
 
 
@@ -659,7 +699,7 @@ Double_t TPie::GetEntryRadiusOffset(Int_t i)
 {
    // Return the radial offset's value for the slice number "i".
 
-   return fRadiusOffsets[i];
+   return GetSlice(i)->GetRadiusOffset();
 }
 
 
@@ -668,7 +708,27 @@ Double_t TPie::GetEntryVal(Int_t i)
 {
    // Return the value associated with the slice number "i".
 
-   return fVals[i];
+   return GetSlice(i)->GetRadiusOffset();
+}
+
+
+//______________________________________________________________________________
+TLegend* TPie::GetLegend()
+{
+   // If created before by Paint option or by MakeLegend method return
+   // the pointer to the legend, otherwise return 0;
+
+   return fLegend;
+}
+
+
+//______________________________________________________________________________
+TPieSlice* TPie::GetSlice(Int_t id)
+{
+   // Return the reference to the slice of index 'id'. There are no controls
+   // of memory corruption, be carefull.
+
+   return fPieSlices[id];
 }
 
 
@@ -687,37 +747,53 @@ void TPie::Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r)
    fNvals         = np;
    fSum           = 0.;
    fSlices        = 0;
+   fLegend        = 0;
    fHeight        = 0.08;
 
    fLabelsOffset = gStyle->GetLabelOffset();
 
-   fLineColors = new Int_t[fNvals];
-   fLineStyles = new Int_t[fNvals];
-   fLineWidths = new Int_t[fNvals];
-
-   fFillColors = new Int_t[fNvals];
-   fFillStyles = new Int_t[fNvals];
-
-   fLabels        = new TString[fNvals];
-   fRadiusOffsets = new Double_t[fNvals];
-   fVals          = new Double_t[fNvals];
+   fPieSlices = new TPieSlice*[fNvals];
 
    for (Int_t i=0;i<fNvals;++i) {
-      fVals[i]          = 0.;
-      fLabels[i]        = "Slice";
-      fLabels[i]       += i;
-      fLineColors[i]    = 1;
-      fLineStyles[i]    = 1;
-      fLineWidths[i]    = 1;
-      fFillColors[i]    = gStyle->GetColorPalette(i);
-      fFillStyles[i]    = 1001;
-      fRadiusOffsets[i] = 0.;
+      TString tmplbl = "Slice";
+      tmplbl += i;
+      fPieSlices[i] = new TPieSlice(tmplbl.Data(), tmplbl.Data(), this);
+      fPieSlices[i]->SetRadiusOffset(0.);
+      fPieSlices[i]->SetLineColor(1);
+      fPieSlices[i]->SetLineStyle(1);
+      fPieSlices[i]->SetLineWidth(1);
+      fPieSlices[i]->SetFillColor(gStyle->GetColorPalette(i));
+      fPieSlices[i]->SetFillStyle(1001);
    }
 
    fLabelFormat    = "%txt";
    fFractionFormat = "%3.2f";
-   fValueFormat      = "%4.2f";
+   fValueFormat    = "%4.2f";
    fPercentFormat  = "%3.1f";
+}
+
+
+//______________________________________________________________________________
+TLegend* TPie::MakeLegend()
+{
+   // This method create a legend that explains the contents
+   // of the slice for this pie-chart.
+   //
+   // The parameter passed reppresents the option passed to shown the slices,
+   // see TLegend::AddEntry() for futher details.
+   //
+   // The pointer of the TLegend is returned.
+
+   if (!fLegend) fLegend = new TLegend(.65,.65,.95,.95,GetName());
+   else fLegend->Clear();
+
+   for (Int_t i=0;i<fNvals;++i) {
+      fLegend->AddEntry(*(fPieSlices+i),fPieSlices[i]->GetTitle(),"f");
+   }
+
+   if (gPad) fLegend->Draw();
+
+   return fLegend;
 }
 
 
@@ -790,7 +866,7 @@ void TPie::Paint(Option_t *option)
       return;
    }
 
-   if (!fVals) {
+   if (!fPieSlices) {
       Warning("Paint","No valid arrays of values");
       return;
    }
@@ -821,33 +897,31 @@ void TPie::Paint(Option_t *option)
          // set the color of the next slice
          if (pi>0) {
             arc->SetFillStyle(0);
-            arc->SetLineColor(fFillColors[i]+100);
-         }
-         else {
+            arc->SetLineColor(TColor::GetColorDark((fPieSlices[i]->GetFillColor())));
+         } else {
             arc->SetFillStyle(0);
             if (optionLine==kTRUE) {
-               arc->SetLineColor(fLineColors[i]);
-               arc->SetLineStyle(fLineStyles[i]);
-               arc->SetLineWidth(fLineWidths[i]);
-            }
-            else {
+               arc->SetLineColor(fPieSlices[i]->GetLineColor());
+               arc->SetLineStyle(fPieSlices[i]->GetLineStyle());
+               arc->SetLineWidth(fPieSlices[i]->GetLineWidth());
+            } else {
                arc->SetLineWidth(0);
-               arc->SetLineColor(fFillColors[i]+100);
+               arc->SetLineColor(TColor::GetColorDark((fPieSlices[i]->GetFillColor())));
             }
          }
          // Paint the slice
          Float_t aphi = fSlices[2*i+1]*TMath::Pi()/180.;
 
-         Double_t ax = fX+TMath::Cos(aphi)*fRadiusOffsets[i];
-         Double_t ay = fY+TMath::Sin(aphi)*fRadiusOffsets[i]*radXY+gPad->PixeltoY(pixelHeight-pi);
+         Double_t ax = fX+TMath::Cos(aphi)*fPieSlices[i]->GetRadiusOffset();
+         Double_t ay = fY+TMath::Sin(aphi)*fPieSlices[i]->GetRadiusOffset()*radXY+gPad->PixeltoY(pixelHeight-pi);
 
          arc->PaintEllipse(ax, ay, radX, radY, fSlices[2*i],
                                                fSlices[2*i+2], 0.);
 
          if (optionLine==kTRUE) {
-            line->SetLineColor(fLineColors[i]);
-            line->SetLineStyle(fLineStyles[i]);
-            line->SetLineWidth(fLineWidths[i]);
+            line->SetLineColor(fPieSlices[i]->GetLineColor());
+            line->SetLineStyle(fPieSlices[i]->GetLineStyle());
+            line->SetLineWidth(fPieSlices[i]->GetLineWidth());
             line->PaintLine(ax,ay,ax,ay);
 
             Double_t x0, y0;
@@ -864,30 +938,54 @@ void TPie::Paint(Option_t *option)
 
    for (Int_t i=0;i<fNvals;++i) { // loop for the piechart
       // Set the color of the next slice
-      arc->SetFillColor(fFillColors[i]);
-      arc->SetFillStyle(fFillStyles[i]);
+      arc->SetFillColor(fPieSlices[i]->GetFillColor());
+      arc->SetFillStyle(fPieSlices[i]->GetFillStyle());
       if (optionLine==kTRUE) {
-         arc->SetLineColor(fLineColors[i]);
-         arc->SetLineStyle(fLineStyles[i]);
-         arc->SetLineWidth(fLineWidths[i]);
-      }
-      else {
+         arc->SetLineColor(fPieSlices[i]->GetLineColor());
+         arc->SetLineStyle(fPieSlices[i]->GetLineStyle());
+         arc->SetLineWidth(fPieSlices[i]->GetLineWidth());
+      } else {
          arc->SetLineWidth(0);
-         arc->SetLineColor(fFillColors[i]);
+         arc->SetLineColor(fPieSlices[i]->GetFillColor());
       }
 
       // Paint the slice
       Float_t aphi = fSlices[2*i+1]*TMath::Pi()/180.;
 
-      Double_t ax = fX+TMath::Cos(aphi)*fRadiusOffsets[i];
-      Double_t ay = fY+TMath::Sin(aphi)*fRadiusOffsets[i]*radXY;
+      Double_t ax = fX+TMath::Cos(aphi)*fPieSlices[i]->GetRadiusOffset();
+      Double_t ay = fY+TMath::Sin(aphi)*fPieSlices[i]->GetRadiusOffset()*radXY;
       arc->PaintEllipse(ax, ay, radX, radY, fSlices[2*i],
                                             fSlices[2*i+2], 0.);
+
+      // eval the 6 points to delimit the slice
+      Int_t x[3], y[3];
+      x[0] = gPad->XtoAbsPixel(ax);
+      y[0] = gPad->XtoAbsPixel(ay);
+      x[1] = gPad->XtoAbsPixel(ax+radX*TMath::Cos(fSlices[2*i]/180.*TMath::Pi()));
+      y[1] = gPad->XtoAbsPixel(ay+radX*TMath::Sin(fSlices[2*i]/180.*TMath::Pi()));
+      x[2] = gPad->XtoAbsPixel(ax+radX*TMath::Cos(fSlices[2*i+2]/180.*TMath::Pi()));
+      y[2] = gPad->XtoAbsPixel(ay+radX*TMath::Sin(fSlices[2*i+2]/180.*TMath::Pi()));
+
+      fPieSlices[i]->fX[0] = (x[0]+x[1])/2;
+      fPieSlices[i]->fY[0] = (y[0]+y[1])/2;
+      fPieSlices[i]->fX[1] = x[1];
+      fPieSlices[i]->fY[1] = y[1];
+      fPieSlices[i]->fY[2] = (x[1]+x[2])/2;
+      fPieSlices[i]->fY[2] = (y[1]+y[2])/2;
+      fPieSlices[i]->fX[3] = (x[0]+x[2])/2;
+      fPieSlices[i]->fY[3] = (y[0]+y[2])/2;
+      fPieSlices[i]->fX[5] = x[2];
+      fPieSlices[i]->fY[5] = y[2];
+      fPieSlices[i]->fY[4] = (x[1]+x[2])/2;
+      fPieSlices[i]->fY[4] = (y[1]+y[2])/2;
+
    } // end loop to draw the slices
 
    // Loop to place the labels.
    for (Int_t i=0;i<fNvals;++i) {
       Float_t aphi = fSlices[2*i+1]*TMath::Pi()/180.;
+      //aphi = TMath::ATan2(TMath::Sin(aphi)*radXY,TMath::Cos(aphi));
+
       Float_t label_off = fLabelsOffset;
 
       // Set the font
@@ -898,40 +996,45 @@ void TPie::Paint(Option_t *option)
       // Paint the text in the pad
       TString tmptxt  = fLabelFormat;
 
-      tmptxt.ReplaceAll("%txt",fLabels[i]);
-      tmptxt.ReplaceAll("%val",Form(fValueFormat.Data(),fVals[i]));
-      tmptxt.ReplaceAll("%frac",Form(fFractionFormat.Data(),fVals[i]/fSum));
-      tmptxt.ReplaceAll("%perc",Form("%3.1f %s",(fVals[i]/fSum)*100,"%"));
+      tmptxt.ReplaceAll("%txt",fPieSlices[i]->GetTitle());
+      tmptxt.ReplaceAll("%val",Form(fValueFormat.Data(),fPieSlices[i]->GetValue()));
+      tmptxt.ReplaceAll("%frac",Form(fFractionFormat.Data(),fPieSlices[i]->GetValue()/fSum));
+      tmptxt.ReplaceAll("%perc",Form("%3.1f %s",(fPieSlices[i]->GetValue()/fSum)*100,"%"));
 
       textlabel->SetTitle(tmptxt.Data());
       Double_t h = textlabel->GetYsize();
       Double_t w = textlabel->GetXsize();
 
-      Float_t lx = fX+(fRadius+fRadiusOffsets[i]+label_off)*TMath::Cos(aphi);
-      Float_t ly = fY+(fRadius+fRadiusOffsets[i]+label_off)*TMath::Sin(aphi)*radXY;
+      Float_t lx = fX+(fRadius+fPieSlices[i]->GetRadiusOffset()+label_off)*TMath::Cos(aphi);
+      Float_t ly = fY+(fRadius+fPieSlices[i]->GetRadiusOffset()+label_off)*TMath::Sin(aphi)*radXY;
 
       Double_t lblang = 0;
 
       if (lblor==1) { // radial direction for the label
+         aphi = TMath::ATan2(TMath::Sin(aphi)*radXY,TMath::Cos(aphi));
          lblang += aphi;
+         if (lblang<=0) lblang += TMath::TwoPi();
+         if (lblang>TMath::TwoPi()) lblang-= TMath::TwoPi();
 
          lx += h/2.*TMath::Sin(lblang);
          ly -= h/2.*TMath::Cos(lblang);
 
          // This control prevent text up-side
-         if (aphi>TMath::PiOver2() && aphi<=3.*TMath::PiOver2()) {
+         if (lblang>TMath::PiOver2() && lblang<=3.*TMath::PiOver2()) {
             lx     += w*TMath::Cos(lblang)-h*TMath::Sin(lblang);
             ly     += w*TMath::Sin(lblang)+h*TMath::Cos(lblang);
             lblang -= TMath::Pi();
          }
       } else if (lblor==2) { // tangential direction of the labels
-         lblang += aphi-TMath::PiOver2();
+         aphi -=TMath::PiOver2();
+         aphi = TMath::ATan2(TMath::Sin(aphi)*radXY,TMath::Cos(aphi));
+         lblang += aphi;//-TMath::PiOver2();
          if (lblang<0) lblang+=TMath::TwoPi();
 
          lx -= w/2.*TMath::Cos(lblang);
          ly -= w/2.*TMath::Sin(lblang);
 
-         if (aphi>TMath::Pi() && aphi<TMath::TwoPi()) {
+         if (lblang>TMath::PiOver2() && lblang<3.*TMath::PiOver2()) {
             lx     += w*TMath::Cos(lblang)-h*TMath::Sin(lblang);
             ly     += w*TMath::Sin(lblang)+h*TMath::Cos(lblang);
             lblang -= TMath::Pi();
@@ -1036,46 +1139,57 @@ void TPie::SavePrimitive(ostream &out, Option_t *option)
        << "\", " << fNvals << ");" << endl;
    out << "   " << GetName() << "->SetCircle(" << fX << ", " << fY << ", "
        << fRadius << ");" << endl;
+   out << "   " << GetName() << "->SetValueFormat(\"" << GetValueFormat()
+       << "\");" << endl;
    out << "   " << GetName() << "->SetLabelFormat(\"" << GetLabelFormat()
+       << "\");" << endl;
+   out << "   " << GetName() << "->SetPercentFormat(\"" << GetPercentFormat()
        << "\");" << endl;
    out << "   " << GetName() << "->SetLabelsOffset(" << GetLabelsOffset()
        << ");" << endl;
    out << "   " << GetName() << "->SetAngularOffset(" << GetAngularOffset()
        << ");" << endl;
-   out << "   " << GetName() << "->SetTextAngle(" << GetTextAngle()
-       << ");" << endl;
-   out << "   " << GetName() << "->SetTextColor(" << GetTextColor()
-       << ");" << endl;
-   out << "   " << GetName() << "->SetTextFont(" << GetTextFont()
-       << ");" << endl;
-   out << "   " << GetName() << "->SetTextSize(" << GetTextSize()
-       << ");" << endl;
+   out << "   " << GetName() << "->SetTextAngle(" << GetTextAngle() << ");" << endl;
+   out << "   " << GetName() << "->SetTextColor(" << GetTextColor() << ");" << endl;
+   out << "   " << GetName() << "->SetTextFont(" << GetTextFont() << ");" << endl;
+   out << "   " << GetName() << "->SetTextSize(" << GetTextSize() << ");" << endl;
 
-   SaveTextAttributes(out,GetName(),
-                      GetTextAlign(), GetTextAngle(), GetTextColor(),
-                      GetTextFont(), GetTextSize());
 
    // Save the values for the slices
    for (Int_t i=0;i<fNvals;++i) {
-      out << "   " << GetName() << "->SetEntryLabel( " << i << ", \""
-          << fLabels[i] << "\");" << endl;
-      out << "   " << GetName() << "->SetEntryFillColor( " << i << ", " <<
-          fFillColors[i] << ");" << endl;
-      out << "   " << GetName() << "->SetEntryFillStyle( " << i << ", " <<
-          fFillStyles[i] << ");" << endl;
-      out << "   " << GetName() << "->SetEntryLineColor( " << i << ", " <<
-          fLineColors[i] << ");" << endl;
-      out << "   " << GetName() << "->SetEntryLineStyle( " << i << ", " <<
-          fLineStyles[i] << ");" << endl;
-      out << "   " << GetName() << "->SetEntryLineWidth( " << i << ", " <<
-          fLineWidths[i] << ");" << endl;
-      out << "   " << GetName() << "->SetEntryRadiusOffset( " << i << ", " <<
-          fRadiusOffsets[i] << ");" << endl;
-      out << "   " << GetName() << "->SetEntryVal( " << i << ", " << fVals[i]
-          << ");" << endl;
+      out << "   " << GetName() << "->GetSlice(" << i << ")->SetTitle(\""
+          << fPieSlices[i]->GetTitle() << "\");" << endl;
+      out << "   " << GetName() << "->GetSlice(" << i << ")->SetValue("
+          << fPieSlices[i]->GetValue() << ");" << endl;
+      out << "   " << GetName() << "->GetSlice(" << i << ")->SetRadiusOffset("
+          << fPieSlices[i]->GetRadiusOffset() << ");" << endl;
+      out << "   " << GetName() << "->GetSlice(" << i << ")->SetFillColor("
+          << fPieSlices[i]->GetFillColor() << ");" << endl;
+      out << "   " << GetName() << "->GetSlice(" << i << ")->SetFillStyle("
+          << fPieSlices[i]->GetFillStyle() << ");" << endl;
+      out << "   " << GetName() << "->GetSlice(" << i << ")->SetLineColor("
+          << fPieSlices[i]->GetLineColor() << ");" << endl;
+      out << "   " << GetName() << "->GetSlice(" << i << ")->SetLineStyle("
+          << fPieSlices[i]->GetLineStyle() << ");" << endl;
+      out << "   " << GetName() << "->GetSlice(" << i << ")->SetLineWidth("
+          << fPieSlices[i]->GetLineWidth() << ");" << endl;
    }
 
    out << "   " << GetName() << "->Draw(\"" << option << "\");" << endl;
+}
+
+
+//______________________________________________________________________________
+void TPie::SetAngularOffset(Double_t offset)
+{
+   // Set the global angular offset for slices in degree [0,360]
+
+   fAngularOffset = offset;
+
+   while (fAngularOffset>=360.) fAngularOffset -= 360.;
+   while (fAngularOffset<0.)    fAngularOffset += 360.;
+
+   MakeSlices(kTRUE);
 }
 
 
@@ -1101,7 +1215,7 @@ void TPie::SetEntryLabel(Int_t i, const char *text)
    // the other is the label text.
 
    // Set the Label of a single slice
-   if (i>=0 && i<fNvals) fLabels[i] = text;
+   if (i>=0 && i<fNvals) fPieSlices[i]->SetTitle(text);
 }
 
 
@@ -1110,7 +1224,7 @@ void TPie::SetEntryLineColor(Int_t i, Int_t color)
 {
    // Set the color for the slice's outline. "i" is the slice number.
 
-   fLineColors[i] = color;
+   fPieSlices[i]->SetLineColor(color);
 }
 
 
@@ -1119,7 +1233,7 @@ void TPie::SetEntryLineStyle(Int_t i, Int_t style)
 {
    // Set the style for the slice's outline. "i" is the slice number.
 
-   fLineStyles[i] = style;
+   fPieSlices[i]->SetLineStyle(style);
 }
 
 
@@ -1128,7 +1242,7 @@ void TPie::SetEntryLineWidth(Int_t i, Int_t width)
 {
    // Set the width of the slice's outline. "i" is the slice number.
 
-   fLineWidths[i] = width;
+   fPieSlices[i]->SetLineWidth(width);
 }
 
 
@@ -1137,7 +1251,7 @@ void TPie::SetEntryFillColor(Int_t i, Int_t color)
 {
    // Set the color for the slice "i".
 
-   fFillColors[i] = color;
+   fPieSlices[i]->SetFillColor(color);
 }
 
 
@@ -1146,7 +1260,7 @@ void TPie::SetEntryFillStyle(Int_t i, Int_t style)
 {
    // Set the fill style for the "i" slice
 
-   fFillStyles[i] = style;
+   fPieSlices[i]->SetFillStyle(style);
 }
 
 
@@ -1155,7 +1269,7 @@ void TPie::SetEntryRadiusOffset(Int_t i, Double_t shift)
 {
    // Set the distance, in the direction of the radius of the slice.
 
-   fRadiusOffsets[i] = shift;
+   fPieSlices[i]->SetRadiusOffset(shift);
 }
 
 
@@ -1164,7 +1278,7 @@ void TPie::SetEntryVal(Int_t i, Double_t val)
 {
    // Set the value of a slice
 
-   if (i>=0 && i<fNvals) fVals[i] = val;
+   if (i>=0 && i<fNvals) fPieSlices[i]->SetValue(val);
 
    MakeSlices(kTRUE);
 }
@@ -1176,30 +1290,19 @@ void TPie::SetFillColors(Int_t *colors)
    // Set the fill colors for all the TPie's slices.
 
    if (!colors) return;
-   for (Int_t i=0;i<fNvals;++i) fFillColors[i] = colors[i];
+   for (Int_t i=0;i<fNvals;++i) fPieSlices[i]->SetFillColor(colors[i]);
 }
 
 
 //______________________________________________________________________________
-void TPie::SetHeight(Double_t val)
+void TPie::SetHeight(Double_t val/*=20*/)
 {
-   // Set the height of the piechart if plotted in pseudo-3d mode.
-
-   if (val<0) Warning("SetHeight","Negative value");
+   // Set the height, in pixel, for the piechart if is drawn using
+   // the pseudo-3d mode.
+   //
+   // The default value is 20 pixel.
 
    fHeight = val;
-}
-
-
-//______________________________________________________________________________
-void TPie::SetLabel(const char *txt)
-{
-   // Set the label for the slice under the mouse pointer,
-   // this method is useful only when used in the GUI, not
-   // in macros.
-
-   if (gCurrent_slice>=0 && gCurrent_slice<fNvals)
-      fLabels[gCurrent_slice] = txt;
 }
 
 
@@ -1244,7 +1347,7 @@ void TPie::SetLabels(const char *lbls[])
    // Set the labels for all the slices.
 
    if (!lbls) return;
-   for (Int_t i=0;i<fNvals;++i) fLabels[i] = lbls[i];
+   for (Int_t i=0;i<fNvals;++i) fPieSlices[i]->SetTitle(lbls[i]);
 }
 
 
@@ -1254,20 +1357,6 @@ void TPie::SetLabelsOffset(Float_t labelsoffset)
    // Set the distance between the label end the external line of the TPie.
 
    fLabelsOffset = labelsoffset;
-}
-
-
-//______________________________________________________________________________
-void TPie::SetAngularOffset(Double_t offset)
-{
-   // Set the global angular offset for slices in degree [0,360]
-
-   fAngularOffset = offset;
-
-   while (fAngularOffset>=360.) fAngularOffset -= 360.;
-   while (fAngularOffset<0.)    fAngularOffset += 360.;
-
-   MakeSlices(kTRUE);
 }
 
 
@@ -1333,12 +1422,12 @@ void TPie::MakeSlices(Bool_t force)
    fSum = .0;
 
    for (Int_t i=0;i<fNvals;++i) {
-      if (fVals[i]<0) {
+      if (fPieSlices[i]->GetValue()<0) {
          Warning("MakeSlices",
                  "Negative values in TPie, absolute value will be used");
-         fVals[i] *= -1;
+         fPieSlices[i]->SetValue(-1.*fPieSlices[i]->GetValue());
       }
-      fSum += fVals[i];
+      fSum += fPieSlices[i]->GetValue();
    }
 
    if (fSum<=.0) return;
@@ -1348,7 +1437,7 @@ void TPie::MakeSlices(Bool_t force)
    // Compute the slices size and position (2 angles for each slice)
    fSlices[0] = fAngularOffset;
    for (Int_t i=0;i<fNvals;++i) {
-      Float_t dphi   = fVals[i]/fSum*360.;
+      Float_t dphi   = fPieSlices[i]->GetValue()/fSum*360.;
       fSlices[2*i+1] = fSlices[2*i]+dphi/2.;
       fSlices[2*i+2] = fSlices[2*i]+dphi;
    }

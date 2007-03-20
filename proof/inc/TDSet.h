@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.1 2006/11/27 14:14:23 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDSet.h,v 1.4 2007/02/09 11:51:09 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -46,23 +46,19 @@
 #include "TNamed.h"
 #endif
 
-#ifndef ROOT_TEventList
-#include "TEventList.h"
-#endif
-
 #include <set>
 #include <list>
 
-class TList;
+class TChain;
+class TCut;
 class TDSet;
 class TEventList;
 class TFileInfo;
-class TCut;
-class TTree;
-class TChain;
+class TIter;
+class TList;
 class TProof;
-class TEventList;
 class TProofChain;
+class TTree;
 
 class TDSetElement : public TObject {
 public:
@@ -89,8 +85,10 @@ private:
 
    Bool_t           HasBeenLookedUp() const { return TestBit(kHasBeenLookedUp); }
 
+   TDSetElement& operator=(const TDSetElement &); // Not implemented
+
 public:
-   TDSetElement() { fValid = kFALSE; fEventList = 0; fEntries = -1; fFriends = 0; }
+   TDSetElement();
    TDSetElement(const char *file, const char *objname = 0,
                 const char *dir = 0, Long64_t first = 0, Long64_t num = -1,
                 const char *msd = 0);

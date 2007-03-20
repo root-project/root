@@ -6,13 +6,7 @@
 // Author: Rene Brun
       
 void geomAlice_itsv() {
-   const char *fname = "alice.root";
-   if (!gSystem->AccessPathName(fname)) {
-      TGeoManager::Import(fname);
-   } else {
-      printf("accessing %s file from http://root.cern.ch/files\n",fname);
-      TGeoManager::Import(Form("http://root.cern.ch/files/%s",fname));
-   }
+   TGeoManager::Import("http://root.cern.ch/files/alice.root");
    //gGeoManager->DefaultColors();
    gGeoManager->GetVolume("IT56")->InvisibleAll();
    gGeoManager->GetVolume("I018")->InvisibleAll();

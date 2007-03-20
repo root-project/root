@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: BinaryTree.h,v 1.25 2006/11/16 22:51:58 helgevoss Exp $    
+// @(#)root/tmva $Id: BinaryTree.h,v 1.11 2006/11/20 15:35:28 brun Exp $    
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -42,7 +42,6 @@
 #include <fstream>
 #include <vector>
 #include "Riostream.h"
-#include "TROOT.h"
 
 #ifndef ROOT_TMVA_Node
 #include "TMVA/Node.h"

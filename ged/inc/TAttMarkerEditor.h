@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.h,v 1.3 2005/10/17 10:20:00 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.h,v 1.4 2006/09/25 13:35:58 rdm Exp $
 // Author: Ilka  Antcheva 11/05/04
 
 /*************************************************************************
@@ -20,9 +20,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
-#include "TGWidget.h"
-#endif
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
 #endif
@@ -30,7 +27,6 @@
 class TGNumberEntry;
 class TGColorSelect;
 class TGedMarkerSelect;
-class TGFontTypeComboBox;
 class TAttMarker;
 
 class TAttMarkerEditor : public TGedFrame {

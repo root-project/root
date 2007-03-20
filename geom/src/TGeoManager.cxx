@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.167 2006/11/22 16:02:10 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.176 2007/03/14 11:31:36 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -441,6 +441,7 @@
 #include "TPluginManager.h"
 #include "TVirtualGeoTrack.h"
 #include "TQObject.h"
+#include "TMath.h"
 
 // statics and globals
 
@@ -482,6 +483,7 @@ TGeoManager::TGeoManager()
       fNNodes = 0;
       fLevel = 0;
       fNmany = 0;
+      fNextDaughterIndex = -2;
       fMaxVisNodes = 10000;
    
       memset(fLastPoint, 0, kN3);
@@ -601,6 +603,7 @@ void TGeoManager::Init()
    fNNodes = 0;
    fLevel = 0;
    fNmany = 0;
+   fNextDaughterIndex = -2;
    fMaxVisNodes = 10000;
    
    memset(fLastPoint, 0, kN3);
@@ -750,6 +753,7 @@ TGeoManager::TGeoManager(const TGeoManager& gm) :
   fOverlapClusters(gm.fOverlapClusters),
   fNLevel(gm.fNLevel),
   fNmany(gm.fNmany),
+  fNextDaughterIndex(gm.fNextDaughterIndex),
   fDblBuffer(gm.fDblBuffer),
   fPaintVolume(gm.fPaintVolume),
   fHashVolumes(gm.fHashVolumes),
@@ -858,6 +862,7 @@ TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
       fOverlapClusters=gm.fOverlapClusters;
       fNLevel=gm.fNLevel;
       fNmany=gm.fNmany;
+      fNextDaughterIndex=gm.fNextDaughterIndex;
       fDblBuffer=gm.fDblBuffer;
       fPaintVolume=gm.fPaintVolume;
       fHashVolumes=gm.fHashVolumes;
@@ -2024,6 +2029,39 @@ void TGeoManager::CdDown(Int_t index)
    if (fCurrentOverlapping) fNmany++;
    fLevel++;
 }
+
+//_____________________________________________________________________________
+void TGeoManager::CdNext()
+{
+// Do a cd to the node found next by FindNextBoundary
+   if (fNextDaughterIndex == -2) return;
+   if (fNextDaughterIndex <  -2) {
+      // Next node is a many - search it
+      while (fLevel && (fCurrentNode != fNextNode)) {
+         CdUp();
+         Int_t i = fCurrentNode->GetVolume()->GetIndex(fNextNode);
+         if (i>=0) CdDown(i);
+      }   
+      fNextDaughterIndex = -2;
+      return;
+   }   
+   if (fNextDaughterIndex == -1) {
+      CdUp();
+      while (fCurrentNode->GetVolume()->IsAssembly()) CdUp();
+      fNextDaughterIndex--;
+      return;
+   }
+   if (fCurrentNode && fNextDaughterIndex<fCurrentNode->GetNdaughters()) {
+      CdDown(fNextDaughterIndex);
+      Int_t nextindex = fCurrentNode->GetVolume()->GetNextNodeIndex();
+      while (nextindex>=0) {
+         CdDown(nextindex);
+         nextindex = fCurrentNode->GetVolume()->GetNextNodeIndex();
+      }   
+   }
+   fNextDaughterIndex = -2;
+}   
+   
 //_____________________________________________________________________________
 Bool_t TGeoManager::cd(const char *path)
 {
@@ -3196,6 +3234,7 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
 {
 // Returns the deepest node containing fPoint, which must be set a priori.
    Double_t point[3];
+   fNextDaughterIndex = -2;
    TGeoVolume *vol = 0;
    Bool_t inside_current = (fCurrentNode==skipnode)?kTRUE:kFALSE;
    if (!downwards) {
@@ -3272,7 +3311,7 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    // first check if inside a division
    if (finder) {
       node=finder->FindNode(&point[0]);
-      if (node) {
+      if (node && node!=skipnode) {
          // go inside the division cell and search downwards
          fIsSameLocation = kFALSE;
          CdDown(node->GetIndex());
@@ -3664,7 +3703,7 @@ TGeoNode *TGeoManager::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skipno
 // The current point must be on the boundary of fCurrentNode.
 
 // Extrapolate current point with shape tolerance.
-   Double_t extra = TGeoShape::Tolerance();
+   Double_t extra = 1000.*TGeoShape::Tolerance();
    fPoint[0] += extra*fDirection[0];
    fPoint[1] += extra*fDirection[1];
    fPoint[2] += extra*fDirection[2];
@@ -3716,6 +3755,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
 
    // convert current point and direction to local reference
    Int_t iact = 3;
+   fNextDaughterIndex = -2;
    fStep = TGeoShape::Big();
    fIsStepEntering = kFALSE;
    fIsStepExiting = kFALSE;
@@ -3772,7 +3812,8 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
       if (snext < fStep) {
          fIsStepEntering = kTRUE;
          fStep = snext;
-         Int_t indnext = fNextNode->GetVolume()->GetNextNodeIndex();;
+         Int_t indnext = fNextNode->GetVolume()->GetNextNodeIndex();
+         fNextDaughterIndex = indnext;
          while (indnext>=0) {
             fNextNode = fNextNode->GetDaughter(indnext);
             if (computeGlobal) fCurrentMatrix->Multiply(fNextNode->GetMatrix());
@@ -3789,6 +3830,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
    snext = vol->GetShape()->DistFromInside(&point[0], &dir[0], iact, fStep, &safe);
    if (snext < fStep) {
       fNextNode = fCurrentNode;
+      fNextDaughterIndex = -1;
       fIsStepExiting  = kTRUE;
       fStep = snext;
       fIsStepEntering = kFALSE;
@@ -3798,7 +3840,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
    // Find next daughter boundary for the current volume
    Int_t idaughter = -1;
    FindNextDaughterBoundary(point,dir,idaughter,computeGlobal);
-   
+   if (idaughter>=0) fNextDaughterIndex = idaughter;
    TGeoNode *current = 0;
    TGeoNode *dnode = 0;
    TGeoVolume *mother = 0;
@@ -3820,12 +3862,13 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
          // check distance to out
          snext = TGeoShape::Big();
          if (!mother->IsAssembly()) snext = mother->GetShape()->DistFromInside(&mothpt[0], &vecpt[0], iact, fStep, &safe);
-            fIsStepExiting  = kTRUE;
          if (snext<fStep) {
+            fIsStepExiting  = kTRUE;
             fIsStepEntering = kFALSE;
             fStep = snext;
             if (computeGlobal) *fCurrentMatrix = GetCurrentMatrix();
             fNextNode = fCurrentNode;
+            fNextDaughterIndex = -3;
          }
          // check overlapping nodes
          for (Int_t i=0; i<novlps; i++) {
@@ -3839,11 +3882,12 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
                   if (computeGlobal) {
                      *fCurrentMatrix = GetCurrentMatrix();
                      fCurrentMatrix->Multiply(current->GetMatrix());
-                  fIsStepExiting  = kTRUE;
                   }
+                  fIsStepExiting  = kTRUE;
                   fIsStepEntering = kFALSE;
                   fStep = snext;
                   fNextNode = current;
+                  fNextDaughterIndex = -3;
                }
             } else {
                // another many - check if point is in or out
@@ -3853,14 +3897,15 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
                if (current->GetVolume()->Contains(dpt)) {
                   if (current->GetVolume()->GetNdaughters()) {
                      CdDown(ovlps[i]);
-                        fIsStepEntering  = kFALSE;
-                        fIsStepExiting  = kTRUE;
+                     fIsStepEntering  = kFALSE;
+                     fIsStepExiting  = kTRUE;
                      dnode = FindNextDaughterBoundary(dpt,dvec,idovlp,computeGlobal);
                      if (dnode && computeGlobal) {
                         *fCurrentMatrix = GetCurrentMatrix();
                         fCurrentMatrix->Multiply(dnode->GetMatrix());
+                        fNextNode = dnode;
+                        fNextDaughterIndex = -3;
                      }
-                     fNextNode = dnode;
                      CdUp();
                   }   
                } else {
@@ -3869,11 +3914,12 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
                      if (computeGlobal) {
                         *fCurrentMatrix = GetCurrentMatrix();
                         fCurrentMatrix->Multiply(current->GetMatrix());
-                     fIsStepExiting  = kTRUE;
                      }
+                     fIsStepExiting  = kTRUE;
                      fIsStepEntering = kFALSE;
                      fStep = snext;
                      fNextNode = current;
+                     fNextDaughterIndex = -3;
                   }               
                }  
             }
@@ -3919,6 +3965,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
                   fIsStepExiting  = kTRUE;
                   fStep = snext;
                   fNextNode = mother;
+                  fNextDaughterIndex = -3;
                   if (computeGlobal) *fCurrentMatrix = matrix;
                   while (up--) CdUp();
                   up = 1;
@@ -3970,8 +4017,8 @@ TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, 
          if (compmatrix) {
             *fCurrentMatrix = GetCurrentMatrix();
             fCurrentMatrix->Multiply(current->GetMatrix());
-         fIsStepExiting  = kFALSE;
          }
+         fIsStepExiting  = kFALSE;
          fIsStepEntering = kTRUE;
          fStep=snext;
          fNextNode = current;
@@ -3989,8 +4036,8 @@ TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, 
          if (compmatrix) {
             *fCurrentMatrix = GetCurrentMatrix();
             fCurrentMatrix->Multiply(current->GetMatrix());
-         fIsStepExiting  = kFALSE;
          }
+         fIsStepExiting  = kFALSE;
          fIsStepEntering = kTRUE;
          fStep=snext;
          fNextNode = current;
@@ -4017,8 +4064,8 @@ TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, 
             if (compmatrix) {
                *fCurrentMatrix = GetCurrentMatrix();
                fCurrentMatrix->Multiply(current->GetMatrix());
-            fIsStepExiting  = kFALSE;
             }    
+            fIsStepExiting  = kFALSE;
             fIsStepEntering = kTRUE;
             fStep=snext;
             fNextNode = current;
@@ -4053,8 +4100,8 @@ TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, 
             if (compmatrix) {
                *fCurrentMatrix = GetCurrentMatrix();
                fCurrentMatrix->Multiply(current->GetMatrix());
-            fIsStepExiting  = kFALSE;
             }
+            fIsStepExiting  = kFALSE;
             fIsStepEntering = kTRUE;
             fStep=snext;
             fNextNode = current;
@@ -4072,6 +4119,8 @@ TGeoNode *TGeoManager::FindNextDaughterBoundary(Double_t *point, Double_t *dir, 
    }
    return nodefound;
 }
+
+//_____________________________________________________________________________
 void TGeoManager::ResetState()
 {
 // Reset current state flags.
@@ -4081,8 +4130,6 @@ void TGeoManager::ResetState()
    fIsOnBoundary = kFALSE;
    fIsStepEntering = fIsStepExiting = kFALSE;
 }
-
-//_____________________________________________________________________________
 
 //_____________________________________________________________________________
 TGeoNode *TGeoManager::FindNode(Bool_t safe_start)
@@ -5010,14 +5057,29 @@ TGeoPhysicalNode *TGeoManager::MakePhysicalNode(const char *path)
 // makes physical node matching current modeller state.
    TGeoPhysicalNode *node;
    if (path) {
+      if (!CheckPath(path)) {
+         Error("MakePhysicalNode", "path: %s not valid", path);
+         return NULL;
+      }   
       node = new TGeoPhysicalNode(path);
    } else {
-      node = new TGeoPhysicalNode();
-      node->SetBranchAsState();
+      node = new TGeoPhysicalNode(GetPath());
    }
    fPhysicalNodes->Add(node);
    return node;
 }
+
+//_____________________________________________________________________________
+void TGeoManager::RefreshPhysicalNodes(Bool_t lock)
+{
+// Refresh physical nodes to reflect the actual geometry paths after alignment
+// was applied. Optionally locks physical nodes (default).
+
+   TIter next(gGeoManager->GetListOfPhysicalNodes());
+   TGeoPhysicalNode *pn;
+   while ((pn=(TGeoPhysicalNode*)next())) pn->Refresh();
+   if (lock) LockGeometry();
+}   
 
 //_____________________________________________________________________________
 void TGeoManager::ClearPhysicalNodes(Bool_t mustdelete)
@@ -5344,13 +5406,13 @@ void TGeoManager::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TGeoManager.
    if (R__b.IsReading()) {
-      TGeoManager::Class()->ReadBuffer(R__b, this);
+      R__b.ReadClassBuffer(TGeoManager::Class(), this);
       fIsGeomReading = kTRUE;
       CloseGeometry();
       fStreamVoxels = kFALSE;
       fIsGeomReading = kFALSE;
    } else {
-      TGeoManager::Class()->WriteBuffer(R__b, this);
+      R__b.WriteClassBuffer(TGeoManager::Class(), this);
    }
 }
 
@@ -5393,7 +5455,6 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
       //Save geometry as a gdml file
       Info("Export","Exporting %s %s as gdml code", GetName(), GetTitle());
       gROOT->ProcessLine("TPython::Exec(\"from math import *\")");
-      gROOT->ProcessLine("TPython::Exec(\"from units import *\")");
 
       gROOT->ProcessLine("TPython::Exec(\"import writer\")");
       gROOT->ProcessLine("TPython::Exec(\"import ROOTwriter\")");
@@ -5416,12 +5477,13 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
       gROOT->ProcessLine("TPython::Exec(\"binding.dumpSolids(shapelist)\")");
 
       // dump geo tree
-      gROOT->ProcessLine("TPython::Exec(\"print 'Traversing geometry tree'\")");
+      gROOT->ProcessLine("TPython::Exec(\"print 'Info in <TPython::Exec>: Traversing geometry tree'\")");
       gROOT->ProcessLine("TPython::Exec(\"gdmlwriter.addSetup('default', '1.0', topV.GetName())\")");
       gROOT->ProcessLine("TPython::Exec(\"binding.examineVol(topV)\")");
 
       // write file
       gROOT->ProcessLine("TPython::Exec(\"gdmlwriter.writeFile()\")");
+      printf("Info in <TPython::Exec>: GDML Export complete - %s is ready\n", filename);
       return 1;
    }
    if (sfile.Contains(".root") || sfile.Contains(".xml")) {  
@@ -5504,16 +5566,27 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
       // import from a gdml file
       const char* cmd = Form("TGDMLParse::StartGDML(\"%s\")", filename);
       TGeoVolume* world = (TGeoVolume*)gROOT->ProcessLineFast(cmd);
-      gGeoManager->SetTopVolume(world);
-      gGeoManager->CloseGeometry();
-      gGeoManager->DefaultColors();
+
+      if(world == 0) {
+         printf("Error in <TGeoManager::Import>: Cannot open file\n");
+      }
+      else {
+         gGeoManager->SetTopVolume(world);
+         gGeoManager->CloseGeometry();
+         gGeoManager->DefaultColors();
+      }
    } else {   
       // import from a root file
       TFile *old = gFile;
-      TFile *f = TFile::Open(filename);
+      // in case a web file is specified, use the cacheread option to cache
+      // this file in the local directory
+      TFile::SetCacheFileDir(".");
+      TFile *f = 0;
+      if (strstr(filename,"http://")) f = TFile::Open(filename,"CACHEREAD");
+      else                            f = TFile::Open(filename);
       if (!f || f->IsZombie()) {
          if (old) old->cd();
-         printf("Error: TGeoManager::Import : Cannot open file\n");
+         printf("Error in <TGeoManager::Import>: Cannot open file\n");
          return 0;
       }
       if (name && strlen(name) > 0) {

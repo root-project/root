@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.38 2006/05/24 17:11:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.39 2006/07/09 05:27:54 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #include "TGeoBBox.h"
 #include "TGeoNode.h"
 #include "TGeoManager.h"
+#include "TMath.h"
 
 #include "TGeoVoxelFinder.h"
 

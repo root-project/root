@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.25 2006/11/27 13:04:42 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.26 2006/12/01 15:05:58 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -63,6 +63,7 @@ public:
    virtual const char *GetClassSharedLibs(const char *cls) = 0;
    virtual const char *GetSharedLibDeps(const char *lib) = 0;
    virtual const char *GetIncludePath() = 0;
+   virtual TObjArray  *GetRootMapFiles() const = 0;
    virtual Int_t    InitializeDictionaries() = 0;
    virtual Bool_t   IsLoaded(const char *filename) const = 0;
    virtual Int_t    Load(const char *filenam, Bool_t system = kFALSE) = 0;

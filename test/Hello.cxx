@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Hello.cxx,v 1.6 2004/08/04 04:34:08 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Hello.cxx,v 1.7 2005/08/09 16:50:41 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -25,7 +25,7 @@
 #include <TROOT.h>
 #include <TSystem.h>
 #include "Hello.h"
-
+#include "TList.h"
 
 ClassImp(Hello)
 
@@ -140,6 +140,16 @@ void Hello::Paint(Option_t *)
       xnext = xnext + ch->GetWidth();         // x position of next character
       ch->Paint("");                          // paint character
    }
+}
+
+void Hello::Print(Option_t * opt) const 
+{
+   fList->Print(opt);
+}
+
+void Hello::ls(Option_t *opt) const 
+{
+   fList->ls(opt);
 }
 
 Bool_t Hello::Notify()

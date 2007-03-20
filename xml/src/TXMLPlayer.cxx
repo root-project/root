@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.cxx,v 1.10 2005/11/22 20:42:37 pcanal Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.cxx,v 1.13 2007/01/30 11:24:32 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -32,8 +32,8 @@
 //      gSystem->Load("libuser.so");   // load user ROOT library
 //
 //      TList lst;
-//      lst.Add(gROOT->GetClass("TUserClass1"));
-//      lst.Add(gROOT->GetClass("TUserClass2"));
+//      lst.Add(TClass::GetClass("TUserClass1"));
+//      lst.Add(TClass::GetClass("TUserClass2"));
 //      ...
 //      TXMLPlayer player;
 //      player.ProduceCode(&lst, "streamers");    // create xml streamers
@@ -104,8 +104,9 @@
 #include "TXMLPlayer.h"
 
 #include "Riostream.h"
+#include "TROOT.h"
 #include "TClass.h"
-#include "TStreamerInfo.h"
+#include "TVirtualStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TObjArray.h"
 #include "TObjString.h"
@@ -248,27 +249,27 @@ TString TXMLPlayer::GetBasicTypeName(TStreamerElement* el)
 {
    // return simple data types for given TStreamerElement object
 
-   if (el->GetType() == TStreamerInfo::kCounter) return "int";
+   if (el->GetType() == TVirtualStreamerInfo::kCounter) return "int";
 
    switch (el->GetType() % 20) {
-      case TStreamerInfo::kChar:     return "char";
-      case TStreamerInfo::kShort:    return "short";
-      case TStreamerInfo::kInt:      return "int";
-      case TStreamerInfo::kLong:     return "long";
-      case TStreamerInfo::kLong64:   return "long long";
-      case TStreamerInfo::kFloat:    return "float";
-      case TStreamerInfo::kDouble32:
-      case TStreamerInfo::kDouble:   return "double";
-      case TStreamerInfo::kUChar: {
+      case TVirtualStreamerInfo::kChar:     return "char";
+      case TVirtualStreamerInfo::kShort:    return "short";
+      case TVirtualStreamerInfo::kInt:      return "int";
+      case TVirtualStreamerInfo::kLong:     return "long";
+      case TVirtualStreamerInfo::kLong64:   return "long long";
+      case TVirtualStreamerInfo::kFloat:    return "float";
+      case TVirtualStreamerInfo::kDouble32:
+      case TVirtualStreamerInfo::kDouble:   return "double";
+      case TVirtualStreamerInfo::kUChar: {
          char first = el->GetTypeNameBasic()[0];
          if ((first=='B') || (first=='b')) return "bool";
          return "unsigned char";
       }
-      case TStreamerInfo::kBool:     return "bool";
-      case TStreamerInfo::kUShort:   return "unsigned short";
-      case TStreamerInfo::kUInt:     return "unsigned int";
-      case TStreamerInfo::kULong:    return "unsigned long";
-      case TStreamerInfo::kULong64:  return "unsigned long long";
+      case TVirtualStreamerInfo::kBool:     return "bool";
+      case TVirtualStreamerInfo::kUShort:   return "unsigned short";
+      case TVirtualStreamerInfo::kUInt:     return "unsigned int";
+      case TVirtualStreamerInfo::kULong:    return "unsigned long";
+      case TVirtualStreamerInfo::kULong64:  return "unsigned long long";
    }
    return "int";
 }
@@ -278,29 +279,29 @@ TString TXMLPlayer::GetBasicTypeReaderMethodName(Int_t type, const char* realnam
 {
    // return functions name to read simple data type from xml file
 
-   if (type == TStreamerInfo::kCounter) return "ReadInt";
+   if (type == TVirtualStreamerInfo::kCounter) return "ReadInt";
 
    switch (type % 20) {
-      case TStreamerInfo::kChar:     return "ReadChar";
-      case TStreamerInfo::kShort:    return "ReadShort";
-      case TStreamerInfo::kInt:      return "ReadInt";
-      case TStreamerInfo::kLong:     return "ReadLong";
-      case TStreamerInfo::kLong64:   return "ReadLong64";
-      case TStreamerInfo::kFloat:    return "ReadFloat";
-      case TStreamerInfo::kDouble32:
-      case TStreamerInfo::kDouble:   return "ReadDouble";
-      case TStreamerInfo::kUChar: {
+      case TVirtualStreamerInfo::kChar:     return "ReadChar";
+      case TVirtualStreamerInfo::kShort:    return "ReadShort";
+      case TVirtualStreamerInfo::kInt:      return "ReadInt";
+      case TVirtualStreamerInfo::kLong:     return "ReadLong";
+      case TVirtualStreamerInfo::kLong64:   return "ReadLong64";
+      case TVirtualStreamerInfo::kFloat:    return "ReadFloat";
+      case TVirtualStreamerInfo::kDouble32:
+      case TVirtualStreamerInfo::kDouble:   return "ReadDouble";
+      case TVirtualStreamerInfo::kUChar: {
          Bool_t isbool = false;
          if (realname!=0)
             isbool = (TString(realname).Index("bool",0, TString::kIgnoreCase)>=0);
          if (isbool) return "ReadBool";
          return "ReadUChar";
       }
-      case TStreamerInfo::kBool:     return "ReadBool";
-      case TStreamerInfo::kUShort:   return "ReadUShort";
-      case TStreamerInfo::kUInt:     return "ReadUInt";
-      case TStreamerInfo::kULong:    return "ReadULong";
-      case TStreamerInfo::kULong64:  return "ReadULong64";
+      case TVirtualStreamerInfo::kBool:     return "ReadBool";
+      case TVirtualStreamerInfo::kUShort:   return "ReadUShort";
+      case TVirtualStreamerInfo::kUInt:     return "ReadUInt";
+      case TVirtualStreamerInfo::kULong:    return "ReadULong";
+      case TVirtualStreamerInfo::kULong64:  return "ReadULong64";
    }
    return "ReadValue";
 }
@@ -406,7 +407,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
    // Produce source code of streamer function for specified class
 
    if (cl==0) return;
-   TStreamerInfo* info = cl->GetStreamerInfo();
+   TVirtualStreamerInfo* info = cl->GetStreamerInfo();
    TObjArray* elements = info->GetElements();
    if (elements==0) return;
 
@@ -453,21 +454,21 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
 
       switch (typ) {
          // basic types
-         case TStreamerInfo::kBool:
-         case TStreamerInfo::kChar:
-         case TStreamerInfo::kShort:
-         case TStreamerInfo::kInt:
-         case TStreamerInfo::kLong:
-         case TStreamerInfo::kLong64:
-         case TStreamerInfo::kFloat:
-         case TStreamerInfo::kDouble:
-         case TStreamerInfo::kUChar:
-         case TStreamerInfo::kUShort:
-         case TStreamerInfo::kUInt:
-         case TStreamerInfo::kULong:
-         case TStreamerInfo::kULong64:
-         case TStreamerInfo::kDouble32:
-         case TStreamerInfo::kCounter: {
+         case TVirtualStreamerInfo::kBool:
+         case TVirtualStreamerInfo::kChar:
+         case TVirtualStreamerInfo::kShort:
+         case TVirtualStreamerInfo::kInt:
+         case TVirtualStreamerInfo::kLong:
+         case TVirtualStreamerInfo::kLong64:
+         case TVirtualStreamerInfo::kFloat:
+         case TVirtualStreamerInfo::kDouble:
+         case TVirtualStreamerInfo::kUChar:
+         case TVirtualStreamerInfo::kUShort:
+         case TVirtualStreamerInfo::kUInt:
+         case TVirtualStreamerInfo::kULong:
+         case TVirtualStreamerInfo::kULong64:
+         case TVirtualStreamerInfo::kDouble32:
+         case TVirtualStreamerInfo::kCounter: {
             char endch[5];
             fs << tab2 << ElementSetter(cl, el->GetName(), endch);
             fs << "buf." << GetBasicTypeReaderMethodName(el->GetType(), 0)
@@ -476,20 +477,20 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          }
 
          // array of basic types like bool[10]
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kBool:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kChar:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kShort:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kInt:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kLong:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kLong64:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kFloat:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kUChar:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kUShort:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kUInt:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kULong:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kULong64:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble32: {
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kBool:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kChar:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kShort:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kInt:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kLong:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kLong64:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kFloat:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kDouble:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kUChar:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kUShort:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kUInt:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kULong:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kULong64:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kDouble32: {
             fs << tab2 << "buf.ReadArray("
                        << ElementGetter(cl, el->GetName(), (el->GetArrayDim()>1) ? 1 : 0);
             fs         << ", " << el->GetArrayLength()
@@ -498,20 +499,20 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          }
 
          // array of basic types like bool[n]
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kBool:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kChar:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kShort:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kInt:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kLong:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kLong64:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kFloat:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kUChar:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kUShort:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kUInt:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kULong:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kULong64:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble32: {
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kBool:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kChar:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kShort:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kInt:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kLong:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kLong64:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kFloat:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kDouble:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kUChar:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kUShort:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kUInt:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kULong:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kULong64:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kDouble32: {
             TStreamerBasicPointer* elp = dynamic_cast<TStreamerBasicPointer*> (el);
             if (elp==0) {
                cout << "fatal error with TStreamerBasicPointer" << endl;
@@ -526,7 +527,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
             continue;
          }
 
-         case TStreamerInfo::kCharStar: {
+         case TVirtualStreamerInfo::kCharStar: {
             char endch[5];
             fs << tab2 << ElementSetter(cl, el->GetName(), endch);
             fs         << "buf.ReadCharStar(" << ElementGetter(cl, el->GetName());
@@ -534,7 +535,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
             continue;
          }
 
-         case TStreamerInfo::kBase: {
+         case TVirtualStreamerInfo::kBase: {
             fs << tab2 << GetStreamerName(el->GetClassPointer())
                << "(buf, dynamic_cast<" << el->GetClassPointer()->GetName()
                << "*>(obj), false);" << endl;
@@ -542,8 +543,8 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          }
 
          // Class*   Class not derived from TObject and with comment field //->
-         case TStreamerInfo::kAnyp:
-         case TStreamerInfo::kAnyp    + TStreamerInfo::kOffsetL: {
+         case TVirtualStreamerInfo::kAnyp:
+         case TVirtualStreamerInfo::kAnyp    + TVirtualStreamerInfo::kOffsetL: {
             if (el->GetArrayLength()>0) {
                fs << tab2 << "buf.ReadObjectArr(" << ElementGetter(cl, el->GetName());
                fs         << ", " << el->GetArrayLength() << ", -1"
@@ -558,8 +559,8 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          }
 
          // Class*   Class not derived from TObject and no comment
-         case TStreamerInfo::kAnyP:
-         case TStreamerInfo::kAnyP + TStreamerInfo::kOffsetL: {
+         case TVirtualStreamerInfo::kAnyP:
+         case TVirtualStreamerInfo::kAnyP + TVirtualStreamerInfo::kOffsetL: {
             if (el->GetArrayLength()>0) {
                fs << tab2 << "for (int n=0;n<" << el->GetArrayLength() << ";n++) "
                           << "delete (" << ElementGetter(cl, el->GetName()) << ")[n];" << endl;
@@ -581,7 +582,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          }
 
          // Class  NOT derived from TObject
-         case TStreamerInfo::kAny: {
+         case TVirtualStreamerInfo::kAny: {
             fs << tab2 << "buf.ReadObject(" << ElementGetter(cl, el->GetName(), 2);
             fs         << ", \"" << el->GetName() << "\", "
                        << GetStreamerName(el->GetClassPointer()) << ");" << endl;
@@ -589,7 +590,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          }
 
          // Class  NOT derived from TObject, array
-         case TStreamerInfo::kAny + TStreamerInfo::kOffsetL: {
+         case TVirtualStreamerInfo::kAny + TVirtualStreamerInfo::kOffsetL: {
             fs << tab2 << "buf.ReadObjectArr(" << ElementGetter(cl, el->GetName());
             fs         << ", " << el->GetArrayLength()
                        << ", sizeof(" << el->GetClassPointer()->GetName()
@@ -599,10 +600,10 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          }
 
          // container with no virtual table (stl) and no comment
-         case TStreamerInfo::kSTLp:
-         case TStreamerInfo::kSTL:
-         case TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL:
-         case TStreamerInfo::kSTL + TStreamerInfo::kOffsetL: {
+         case TVirtualStreamerInfo::kSTLp:
+         case TVirtualStreamerInfo::kSTL:
+         case TVirtualStreamerInfo::kSTLp + TVirtualStreamerInfo::kOffsetL:
+         case TVirtualStreamerInfo::kSTL + TVirtualStreamerInfo::kOffsetL: {
             TStreamerSTL* elstl = dynamic_cast<TStreamerSTL*> (el);
             if (elstl==0) break; // to make skip
 
@@ -652,23 +653,23 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
 
       switch (typ) {
          // write basic types
-         case TStreamerInfo::kBool:
-         case TStreamerInfo::kChar:
-         case TStreamerInfo::kShort:
-         case TStreamerInfo::kInt:
-         case TStreamerInfo::kLong:
-         case TStreamerInfo::kLong64:
-         case TStreamerInfo::kFloat:
-         case TStreamerInfo::kDouble:
-         case TStreamerInfo::kUChar:
-         case TStreamerInfo::kUShort:
-         case TStreamerInfo::kUInt:
-         case TStreamerInfo::kULong:
-         case TStreamerInfo::kULong64:
-         case TStreamerInfo::kDouble32:
-         case TStreamerInfo::kCounter: {
+         case TVirtualStreamerInfo::kBool:
+         case TVirtualStreamerInfo::kChar:
+         case TVirtualStreamerInfo::kShort:
+         case TVirtualStreamerInfo::kInt:
+         case TVirtualStreamerInfo::kLong:
+         case TVirtualStreamerInfo::kLong64:
+         case TVirtualStreamerInfo::kFloat:
+         case TVirtualStreamerInfo::kDouble:
+         case TVirtualStreamerInfo::kUChar:
+         case TVirtualStreamerInfo::kUShort:
+         case TVirtualStreamerInfo::kUInt:
+         case TVirtualStreamerInfo::kULong:
+         case TVirtualStreamerInfo::kULong64:
+         case TVirtualStreamerInfo::kDouble32:
+         case TVirtualStreamerInfo::kCounter: {
             fs << tab2 << "buf.WriteValue(";
-            if (typ==TStreamerInfo::kUChar)
+            if (typ==TVirtualStreamerInfo::kUChar)
                fs <<"(unsigned char) " << ElementGetter(cl, el->GetName());
             else
                fs << ElementGetter(cl, el->GetName());
@@ -677,20 +678,20 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          }
 
          // array of basic types
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kBool:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kChar:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kShort:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kInt:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kLong:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kLong64:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kFloat:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kUChar:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kUShort:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kUInt:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kULong:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kULong64:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble32: {
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kBool:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kChar:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kShort:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kInt:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kLong:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kLong64:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kFloat:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kDouble:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kUChar:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kUShort:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kUInt:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kULong:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kULong64:
+         case TVirtualStreamerInfo::kOffsetL + TVirtualStreamerInfo::kDouble32: {
             fs << tab2 << "buf.WriteArray("
                        << ElementGetter(cl, el->GetName(), (el->GetArrayDim()>1) ? 1 : 0);
             fs         << ", " << el->GetArrayLength()
@@ -698,20 +699,20 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
             continue;
          }
 
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kBool:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kChar:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kShort:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kInt:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kLong:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kLong64:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kFloat:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kUChar:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kUShort:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kUInt:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kULong:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kULong64:
-         case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble32: {
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kBool:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kChar:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kShort:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kInt:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kLong:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kLong64:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kFloat:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kDouble:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kUChar:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kUShort:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kUInt:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kULong:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kULong64:
+         case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kDouble32: {
             TStreamerBasicPointer* elp = dynamic_cast<TStreamerBasicPointer*> (el);
             if (elp==0) {
                cout << "fatal error with TStreamerBasicPointer" << endl;
@@ -723,13 +724,13 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
             continue;
          }
 
-         case TStreamerInfo::kCharStar: {
+         case TVirtualStreamerInfo::kCharStar: {
             fs << tab2 << "buf.WriteCharStar(" << ElementGetter(cl, el->GetName())
                        << ", \"" << el->GetName() << "\");" << endl;
             continue;
          }
 
-         case TStreamerInfo::kBase: {
+         case TVirtualStreamerInfo::kBase: {
             fs << tab2 << GetStreamerName(el->GetClassPointer())
                << "(buf, dynamic_cast<" << el->GetClassPointer()->GetName()
                << "*>(obj), false);" << endl;
@@ -737,8 +738,8 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          }
 
          // Class*   Class not derived from TObject and with comment field //->
-         case TStreamerInfo::kAnyp:
-         case TStreamerInfo::kAnyp    + TStreamerInfo::kOffsetL: {
+         case TVirtualStreamerInfo::kAnyp:
+         case TVirtualStreamerInfo::kAnyp    + TVirtualStreamerInfo::kOffsetL: {
             if (el->GetArrayLength()>0) {
                fs << tab2 << "buf.WriteObjectArr(" << ElementGetter(cl, el->GetName());
                fs         << ", " << el->GetArrayLength() << ", -1"
@@ -753,8 +754,8 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          }
 
          // Class*   Class not derived from TObject and no comment
-         case TStreamerInfo::kAnyP:
-         case TStreamerInfo::kAnyP + TStreamerInfo::kOffsetL: {
+         case TVirtualStreamerInfo::kAnyP:
+         case TVirtualStreamerInfo::kAnyP + TVirtualStreamerInfo::kOffsetL: {
             if (el->GetArrayLength()>0) {
                fs << tab2 << "buf.WriteObjectPtrArr((void**) " << ElementGetter(cl, el->GetName(), 3);
                fs         << ", " << el->GetArrayLength()
@@ -768,14 +769,14 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
             continue;
          }
 
-         case TStreamerInfo::kAny: {    // Class  NOT derived from TObject
+         case TVirtualStreamerInfo::kAny: {    // Class  NOT derived from TObject
             fs << tab2 << "buf.WriteObject(" << ElementGetter(cl, el->GetName(), 2);
             fs         << ", \"" << el->GetName() << "\", "
                        << GetStreamerName(el->GetClassPointer()) << ");" << endl;
             continue;
          }
 
-         case TStreamerInfo::kAny    + TStreamerInfo::kOffsetL: {
+         case TVirtualStreamerInfo::kAny    + TVirtualStreamerInfo::kOffsetL: {
             fs << tab2 << "buf.WriteObjectArr(" << ElementGetter(cl, el->GetName());
             fs         << ", " << el->GetArrayLength()
                        << ", sizeof(" << el->GetClassPointer()->GetName()
@@ -785,10 +786,10 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          }
 
          // container with no virtual table (stl) and no comment
-         case TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL:
-         case TStreamerInfo::kSTL + TStreamerInfo::kOffsetL:
-         case TStreamerInfo::kSTLp:
-         case TStreamerInfo::kSTL: {
+         case TVirtualStreamerInfo::kSTLp + TVirtualStreamerInfo::kOffsetL:
+         case TVirtualStreamerInfo::kSTL + TVirtualStreamerInfo::kOffsetL:
+         case TVirtualStreamerInfo::kSTLp:
+         case TVirtualStreamerInfo::kSTL: {
             TStreamerSTL* elstl = dynamic_cast<TStreamerSTL*> (el);
             if (elstl==0) break; // to make skip
 
@@ -823,27 +824,27 @@ void TXMLPlayer::ReadSTLarg(ostream& fs,
    // Produce code to read argument of stl container from xml file
 
    switch(argtyp) {
-      case TStreamerInfo::kBool:
-      case TStreamerInfo::kChar:
-      case TStreamerInfo::kShort:
-      case TStreamerInfo::kInt:
-      case TStreamerInfo::kLong:
-      case TStreamerInfo::kLong64:
-      case TStreamerInfo::kFloat:
-      case TStreamerInfo::kDouble:
-      case TStreamerInfo::kUChar:
-      case TStreamerInfo::kUShort:
-      case TStreamerInfo::kUInt:
-      case TStreamerInfo::kULong:
-      case TStreamerInfo::kULong64:
-      case TStreamerInfo::kDouble32:
-      case TStreamerInfo::kCounter: {
+      case TVirtualStreamerInfo::kBool:
+      case TVirtualStreamerInfo::kChar:
+      case TVirtualStreamerInfo::kShort:
+      case TVirtualStreamerInfo::kInt:
+      case TVirtualStreamerInfo::kLong:
+      case TVirtualStreamerInfo::kLong64:
+      case TVirtualStreamerInfo::kFloat:
+      case TVirtualStreamerInfo::kDouble:
+      case TVirtualStreamerInfo::kUChar:
+      case TVirtualStreamerInfo::kUShort:
+      case TVirtualStreamerInfo::kUInt:
+      case TVirtualStreamerInfo::kULong:
+      case TVirtualStreamerInfo::kULong64:
+      case TVirtualStreamerInfo::kDouble32:
+      case TVirtualStreamerInfo::kCounter: {
          fs << tname << " " << argname << " = buf."
             << GetBasicTypeReaderMethodName(argtyp, tname.Data()) << "(0);" << endl;
          break;
       }
 
-      case TStreamerInfo::kObject: {
+      case TVirtualStreamerInfo::kObject: {
          fs << tname << (isargptr ? " ": " *") << argname << " = "
             << "(" << argcl->GetName() << "*)"
             << "buf.ReadObjectPtr(0, "
@@ -858,7 +859,7 @@ void TXMLPlayer::ReadSTLarg(ostream& fs,
          break;
       }
 
-      case TStreamerInfo::kSTLstring: {
+      case TVirtualStreamerInfo::kSTLstring: {
          fs << "string *" << argname << " = "
             << "buf.ReadSTLstring();" << endl;
          if (!isargptr) {
@@ -882,26 +883,26 @@ void TXMLPlayer::WriteSTLarg(ostream& fs, const char* accname, int argtyp, Bool_
    // Produce code to write argument of stl container to xml file
 
    switch(argtyp) {
-      case TStreamerInfo::kBool:
-      case TStreamerInfo::kChar:
-      case TStreamerInfo::kShort:
-      case TStreamerInfo::kInt:
-      case TStreamerInfo::kLong:
-      case TStreamerInfo::kLong64:
-      case TStreamerInfo::kFloat:
-      case TStreamerInfo::kDouble:
-      case TStreamerInfo::kUChar:
-      case TStreamerInfo::kUShort:
-      case TStreamerInfo::kUInt:
-      case TStreamerInfo::kULong:
-      case TStreamerInfo::kULong64:
-      case TStreamerInfo::kDouble32:
-      case TStreamerInfo::kCounter: {
+      case TVirtualStreamerInfo::kBool:
+      case TVirtualStreamerInfo::kChar:
+      case TVirtualStreamerInfo::kShort:
+      case TVirtualStreamerInfo::kInt:
+      case TVirtualStreamerInfo::kLong:
+      case TVirtualStreamerInfo::kLong64:
+      case TVirtualStreamerInfo::kFloat:
+      case TVirtualStreamerInfo::kDouble:
+      case TVirtualStreamerInfo::kUChar:
+      case TVirtualStreamerInfo::kUShort:
+      case TVirtualStreamerInfo::kUInt:
+      case TVirtualStreamerInfo::kULong:
+      case TVirtualStreamerInfo::kULong64:
+      case TVirtualStreamerInfo::kDouble32:
+      case TVirtualStreamerInfo::kCounter: {
          fs << "buf.WriteValue(" << accname << ", 0);" << endl;
          break;
       }
 
-      case TStreamerInfo::kObject: {
+      case TVirtualStreamerInfo::kObject: {
          fs << "buf.WriteObjectPtr(";
          if (isargptr)
             fs << accname;
@@ -911,7 +912,7 @@ void TXMLPlayer::WriteSTLarg(ostream& fs, const char* accname, int argtyp, Bool_
          break;
       }
 
-      case TStreamerInfo::kSTLstring: {
+      case TVirtualStreamerInfo::kSTLstring: {
          fs << "buf.WriteSTLstring(";
          if (isargptr)
             fs << accname;
@@ -1000,10 +1001,10 @@ Bool_t TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el,
             TDataType *dt = (TDataType*)gROOT->GetListOfTypes()->FindObject(buf);
             if (dt) argtype[n] = dt->GetType(); else
             if (buf=="string")
-               argtype[n] = TStreamerInfo::kSTLstring;
+               argtype[n] = TVirtualStreamerInfo::kSTLstring;
             else {
-               argcl[n] = gROOT->GetClass(buf);
-               if (argcl[n]!=0) argtype[n]=TStreamerInfo::kObject;
+               argcl[n] = TClass::GetClass(buf);
+               if (argcl[n]!=0) argtype[n]=TVirtualStreamerInfo::kObject;
             }
             if (argtype[n]<0) stltyp = -1;
          } // for narg

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTUBS.cxx,v 1.8 2005/08/30 09:11:39 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTUBS.cxx,v 1.9 2005/11/24 17:28:07 couet Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -15,6 +15,7 @@
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TGeometry.h"
+#include "TMath.h"
 
 ClassImp(TTUBS)
 

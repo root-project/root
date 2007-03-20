@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.49 2006/10/20 21:07:40 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.51 2007/02/07 20:56:24 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -113,7 +113,7 @@ protected:
    TFrame       *fFrame;           //! Pointer to 2-D frame (if one exists)
    TView        *fView;            //! Pointer to 3-D view (if one exists)
    TObject      *fPadPointer;      //! free pointer
-   TPadView3D   *fPadView3D;       //! 3D View of this TPad
+   TObject      *fPadView3D;       //! 3D View of this TPad
    static Int_t  fgMaxPickDistance;//  Maximum Pick Distance
 
    // 3D Viewer support
@@ -181,6 +181,7 @@ public:
 ///   void              DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2);
 ///   void              DrawText(Double_t x, Double_t y, const char *text);
 ///   void              DrawTextNDC(Double_t u, Double_t v, const char *text);
+   virtual void      ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis);
    virtual TObject  *FindObject(const char *name) const;
    virtual TObject  *FindObject(const TObject *obj) const;
    virtual void      UseCurrentStyle();  // *MENU*
@@ -233,7 +234,7 @@ public:
    TVirtualPad      *GetSelectedPad() const;
    Int_t             GetGLDevice();
    TView            *GetView() const {return fView;}
-   TPadView3D       *GetView3D() const {return fPadView3D;}// Return 3D View of this TPad
+   TObject          *GetView3D() const {return fPadView3D;}// Return 3D View of this TPad
    Int_t             GetLogx() const {return fLogx;}
    Int_t             GetLogy() const {return fLogy;}
    Int_t             GetLogz() const {return fLogz;}
@@ -293,7 +294,7 @@ public:
    virtual void      RangeAxisChanged() { Emit("RangeAxisChanged()"); } // *SIGNAL*
    virtual void      RecursiveRemove(TObject *obj);
    virtual void      RedrawAxis(Option_t *option="");
-   virtual void      ResetView3D(TPadView3D *view=0){fPadView3D=view;}
+   virtual void      ResetView3D(TObject *view=0){fPadView3D=view;}
    virtual void      ResizePad(Option_t *option="");
    virtual void      SaveAs(const char *filename="",Option_t *option="") const; // *MENU*
    virtual void      SetBorderMode(Short_t bordermode) {fBorderMode = bordermode; Modified();} // *MENU*
@@ -334,7 +335,7 @@ public:
    virtual void      SetPhi(Double_t phi=30) {fPhi = phi; Modified();}
    virtual void      SetToolTipText(const char *text, Long_t delayms = 1000);
    virtual void      SetVertical(Bool_t vert=kTRUE);
-   virtual void      SetView(TView *view) {fView = view;}
+   virtual void      SetView(TView *view = 0);
    virtual void      SetViewer3D(TVirtualViewer3D *viewer3d) {fViewer3D = viewer3d;}
 
    virtual void      SetCopyGLDevice(Bool_t copy) {fCopyGLDevice = copy;}

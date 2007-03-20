@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.59 2006/07/03 16:10:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.63 2007/03/01 07:55:19 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -407,6 +407,7 @@ void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t 
       //This is the Bayes calculation...
       Efficiency(p,t,0.683,mode,low,high);
 
+      if (mode <= 0) continue;
       //These are the low and high error bars
       low = mode-low;
       high = high-mode;
@@ -415,6 +416,7 @@ void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t 
       //so that the fitters don't get confused.
       if (low==0.0) low=high/10.;
       if (high==0.0) high=low/10.;
+      if (high+mode > 1) high = 1-mode;
 
       //Set the point center and its errors
       SetPoint(npoint,pass->GetBinCenter(b),mode);
@@ -871,6 +873,7 @@ void TGraphAsymmErrors::Paint(Option_t *option)
    box.SetLineWidth(GetLineWidth());
    box.SetLineColor(GetLineColor());
    box.SetFillColor(GetFillColor());
+   box.SetFillStyle(GetFillStyle());
 
    symbolsize  = GetMarkerSize();
    sbase       = symbolsize*kBASEMARKER;
@@ -1035,9 +1038,11 @@ void TGraphAsymmErrors::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    TObject *obj;
    while ((obj=next())) {
       obj->SavePrimitive(out,"nodraw");
-      out<<"   grae->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
       if (obj->InheritsFrom("TPaveStats")) {
+         out<<"   grae->GetListOfFunctions()->Add(ptstats);"<<endl;
          out<<"   ptstats->SetParent(grae->GetListOfFunctions());"<<endl;
+      } else {
+         out<<"   grae->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
       }
    }
 
@@ -1214,7 +1219,7 @@ void TGraphAsymmErrors::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
-         TGraphAsymmErrors::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         b.ReadClassBuffer(TGraphAsymmErrors::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -1252,7 +1257,7 @@ void TGraphAsymmErrors::Streamer(TBuffer &b)
       //====end of old versions
 
    } else {
-      TGraphAsymmErrors::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TGraphAsymmErrors::Class(),this);
    }
 }
 

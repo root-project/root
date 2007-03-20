@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.12 2006/11/25 09:05:47 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixTBase.cxx,v 1.16 2007/02/03 06:40:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -204,7 +204,9 @@
 
 #include "TMatrixTBase.h"
 #include "TVectorT.h"
+#include "TROOT.h"
 #include "TClass.h"
+#include "TMath.h"
 
 Int_t gMatrixCheck = 1;
 
@@ -461,7 +463,7 @@ TMatrixTBase<Element> &TMatrixTBase<Element>::InsertRow(Int_t rown,Int_t coln,co
          return *this;
       }
 
-      if (acoln+nr >= fNcols || nr < 0) {
+      if (acoln+nr > fNcols || nr < 0) {
          Error("InsertRow","row length %d out of range",nr);
          return *this;
       }
@@ -1235,14 +1237,14 @@ void TMatrixTBase<Element>::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TMatrixTBase<Element>::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
+         R__b.ReadClassBuffer(TMatrixTBase<Element>::Class(),this,R__v,R__s,R__c);
       } else {
          Error("TMatrixTBase<Element>::Streamer","Unknown version number: %d",R__v);
          R__ASSERT(0);
       }
       if (R__v < 4) MakeValid();
    } else {
-      TMatrixTBase<Element>::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TMatrixTBase<Element>::Class(),this);
    }
 }
 

@@ -4,8 +4,11 @@
 //
 //   root [0] .x mathcoreStatFunc.C 
 //
-//Author: Andras Zsenei
+//  Author: Andras Zsenei
 
+#include "TF2.h"
+#include "TSystem.h"
+#include "TCanvas.h"
 
 
 void mathcoreStatFunc() {

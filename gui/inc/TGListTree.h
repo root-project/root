@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.29 2006/07/03 16:10:45 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.30 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -143,6 +143,7 @@ protected:
    TGToolTip       *fTip;            // tooltip shown when moving over list items
    TGListTreeItem  *fTipItem;        // item for which tooltip is set
    Bool_t           fAutoTips;       // assume item->fUserData is TObject and use GetTitle() for tip text
+   Bool_t           fAutoCheckBoxPic;// change check box picture if parent and children have diffrent state
    Bool_t           fDisableOpen;    // disable branch opening on double-clicks
 
    EColorMarkupMode fColorMode;      // if/how to render item's main color
@@ -170,7 +171,7 @@ protected:
                   UInt_t *retwidth, UInt_t *retheight);
    void  DrawItemName(TGListTreeItem *item);
    void  DrawNode(TGListTreeItem *item, Int_t x, Int_t y);
-   void  UpdateChecked(TGListTreeItem *item, Bool_t redraw = kFALSE);
+   virtual void UpdateChecked(TGListTreeItem *item, Bool_t redraw = kFALSE);
 
    void  SaveChildren(ostream &out, TGListTreeItem *item, Int_t &n);
    void  RemoveReference(TGListTreeItem *item);
@@ -244,6 +245,7 @@ public:
    Int_t ReparentChildren(TGListTreeItem *item, TGListTreeItem *newparent);
    void  SetToolTipItem(TGListTreeItem *item, const char *string);
    void  SetAutoTips(Bool_t on = kTRUE) { fAutoTips = on; }
+   void  SetAutoCheckBoxPic(Bool_t on) { fAutoCheckBoxPic = on; }
    void  SetSelected(TGListTreeItem *item) { fSelected = item; }
    void  AdjustPosition(TGListTreeItem *item);
    void  AdjustPosition() { TGContainer::AdjustPosition(); }

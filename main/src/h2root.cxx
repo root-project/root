@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.26 2006/05/13 18:02:56 brun Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.28 2007/02/09 08:27:44 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -25,7 +25,7 @@
 
 #include "Riostream.h"
 #include "TFile.h"
-#include "TDirectory.h"
+#include "TDirectoryFile.h"
 #include "TTree.h"
 #include "TLeafI.h"
 #include "TH1.h"
@@ -64,6 +64,7 @@ extern "C" int hcbook[51];
 extern "C" int rzcl[11];
 #endif
 
+char *bigbuf = 0; //this variable must be global for amd64
 int *iq, *lq;
 float *q;
 char idname[128];
@@ -201,13 +202,23 @@ extern "C" void  type_of_call hdcofl();
 extern "C" void  type_of_call hmaxim(const int&,const float&);
 extern "C" void  type_of_call hminim(const int&,const float&);
 extern "C" void  type_of_call hdelet(const int&);
+extern "C" void  type_of_call hix(const int&,const int&,const float&);
+extern "C" void  type_of_call hijxy(const int&,const int&,const int&,const float&,const float&);
+
+#ifndef R__B64
 extern "C" float type_of_call hi(const int&,const int&);
 extern "C" float type_of_call hie(const int&,const int&);
 extern "C" float type_of_call hif(const int&,const int&);
 extern "C" float type_of_call hij(const int&,const int&,const int&);
-extern "C" void  type_of_call hix(const int&,const int&,const float&);
-extern "C" void  type_of_call hijxy(const int&,const int&,const int&,const float&,const float&);
 extern "C" float type_of_call hije(const int&,const int&,const int&);
+#else
+extern "C" double type_of_call hi(const int&,const int&);
+extern "C" double type_of_call hie(const int&,const int&);
+extern "C" double type_of_call hif(const int&,const int&);
+extern "C" double type_of_call hij(const int&,const int&,const int&);
+extern "C" double type_of_call hije(const int&,const int&,const int&);
+#endif
+
 #ifndef WIN32
 extern "C" void  type_of_call hcdir(DEFCHAR,DEFCHAR ,const int,const int);
 #else
@@ -410,7 +421,7 @@ void convert_directory(const char *dir)
 #else
       hcdir(PASSCHAR(hbookdir),PASSCHAR(" "));
 #endif
-      TDirectory *newdir = new TDirectory(chdir,chdir);
+      TDirectoryFile *newdir = new TDirectoryFile(chdir,chdir);
       newdir->cd();
       convert_directory(chdir);
 #ifndef WIN32
@@ -657,7 +668,7 @@ void convert_cwn(Int_t id)
    Int_t *lenbool  = new Int_t[nvar];
    UChar_t *boolarr = new UChar_t[10000];
    x = new float[nvar];
-   char *bigbuf = new char[2500000];
+   bigbuf = new char[2500000];
 
    chtag_out[nvar*kNchar]=0;
    for (i=0;i<80;i++)chtitl[i]=0;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.25 2006/11/30 23:19:47 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.26 2006/12/01 07:49:09 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -36,7 +36,6 @@
 #include "TROOT.h"
 #include "TObjectTable.h"
 #include "TError.h"
-#include "TMath.h"
 #include "TString.h"
 #include "TVirtualMutex.h"
 

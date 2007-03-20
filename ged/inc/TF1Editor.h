@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TF1Editor.h,v 1.4 2006/07/10 13:18:57 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TF1Editor.h,v 1.7 2007/02/06 15:39:54 antcheva Exp $
 // Author: Ilka Antcheva 21/03/06
 
 /*************************************************************************
@@ -20,16 +20,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
-#include "TGWidget.h"
-#endif
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
 #endif
-#ifndef ROOT_TF1
-#include "TF1.h"
-#endif
-
 
 class TGNumberEntry;
 class TGTextEntry;
@@ -38,10 +31,12 @@ class TGDoubleHSlider;
 class TGNumberEntryField;
 class TGLabel;
 class TGCheckButton;
+class TF1;
 
 class TF1Editor : public TGedFrame {
 
 protected:
+   TF1                 *fF1;              // selected TF1 object
    TGTextEntry         *fTitle;           // function title
    Int_t                fNP;              // number of function parameters
    TGLabel             *fParLabel;        // label for number of parameters
@@ -58,7 +53,10 @@ public:
    TF1Editor(const TGWindow *p = 0,  Int_t width = 140, Int_t height = 30,
              UInt_t options = kChildFrame, Pixel_t back = GetDefaultFrameBackground());
    virtual ~TF1Editor();
+
    virtual void   SetModel(TObject* obj);
+   virtual void   ActivateBaseClassEditors(TClass* cl);
+
    virtual void   DoParameterSettings();
    virtual void   DoXPoints();
    virtual void   DoSliderXMoved();
@@ -66,7 +64,7 @@ public:
    virtual void   DoSliderXReleased();
    virtual void   DoXRange();
 
-   ClassDef(TF1Editor,0)  // TF1 editor
+   ClassDef(TF1Editor,0)  // user interface for TF1 objects
 };
 
 #endif

@@ -11,6 +11,7 @@
 
 #include "TFile.h"
 #include "TSystem.h"
+#include "TROOT.h"
 
 #include "TRandom3.h"
 #include "TStopwatch.h"

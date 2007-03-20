@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.30 2006/08/23 16:50:32 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.31 2006/08/28 17:00:56 antcheva Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -82,6 +82,7 @@
 #include "TTimer.h"
 #include "TSystem.h"
 #include "TGToolTip.h"
+#include "TMath.h"
 #include "Riostream.h"
 #include <ctype.h>
 

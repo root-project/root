@@ -6,15 +6,15 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-include ../../test/Makefile.arch
-include ../../config/Makefile.config
+include $(ROOTSYS)/test/Makefile.arch
+include $(ROOTSYS)/config/Makefile.config
 
 #------------------------------------------------------------------------------
 
-ifeq ($(PLATFORM),macosx) 
-#unroll loop better on gcc > 4
-CXXFLAGS+= -O3 -g  -funroll-loops 
-endif
+# ifeq ($(PLATFORM),macosx) 
+# #unroll loop better on gcc > 4
+# CXXFLAGS+= -O3 -g  -funroll-loops 
+# endif
 
 
 
@@ -22,18 +22,29 @@ endif
 #CLHEPBASE=/Users/moneta/mathlibs/CLHEP-1.9.2.2
 ifneq ($(CLHEPBASE),)
 CXXFLAGS+=  -I$(CLHEPBASE)/include -DHAVE_CLHEP
-EXTRALIBS+=  $(CLHEPBASE)/lib/libCLHEP.a
+ifeq ($(PLATFORM),win32)
+EXTRALIBS += "$(CLHEPBASE)/lib/CLHEP.lib"
+else
+#EXTRALIBS+=  $(CLHEPBASE)/lib/libCLHEP.a
+EXTRALIBS+=  -L$(CLHEPBASE)/lib -lCLHEP
+endif
 endif
 
 ifneq ($(PLATFORM),win32) 
 LIBM = -lm
+CXXFLAGS += -g
 endif
 
-
-ifneq ($(GCCXML),)
-CXXFLAGS+=-DUSE_REFLEX -g
-EXTRALIBS+= -lReflex -lCintex
+ifneq ($(useReflex),)
+GCCXML=yes
+CXXFLAGS+=-DUSE_REFLEX
+ifeq ($(PLATFORM),win32)
+EXTRALIBS += "$(ROOTSYS)/lib/libReflex.lib"  "$(ROOTSYS)/lib/libCintex.lib"  
+else
+EXTRALIBS += -lReflex -lCintex
 endif
+endif
+
 
 
 TESTSMATRIXOBJ     = testSMatrix.$(ObjSuf)
@@ -97,7 +108,7 @@ $(TESTIO):        $(TESTIOOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-ifneq ($(GCCXML),)
+ifneq ($(useReflex),)
 TrackDict.$(SrcSuf): 	Track.h TrackDict.xml
 			@echo "Generating dictionary $@ using gccxml ..."
 			#rootcint -gccxml -f $@ -c $^	
@@ -148,7 +159,10 @@ $(STRESSOPERATIONS):  $(STRESSOPERATIONSOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		    @echo "$@ done"
 
-
+check: 	all
+	for prog in $(PROGRAMS); do \
+	   ./$$prog > $$prog.out; \
+	done; 
 
 clean:
 		@rm -f $(OBJS) $(PROGRAMS) core 

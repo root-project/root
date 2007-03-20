@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TCurlyLineEditor.h,v 1.2 2006/01/30 17:42:05 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TCurlyLineEditor.h,v 1.4 2007/02/06 15:39:54 antcheva Exp $
 // Author: Ilka  Antcheva, Otto Schaile 15/12/04
 
 /*************************************************************************
@@ -20,14 +20,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
-#include "TGWidget.h"
-#endif
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
 #endif
 
-class TGComboBox;
 class TGNumberEntry;
 class TGCheckButton;
 class TCurlyLine;
@@ -44,9 +40,7 @@ protected:
    TGNumberEntry        *fWaveLengthEntry;      // wavelength entry
    TGCheckButton        *fIsWavy;               // toggle wavy / curly
    TGCompositeFrame     *fStartXFrame;
-   TGCompositeFrame     *fStartYFrame;
-   TGCompositeFrame     *fEndXFrame;
-   TGCompositeFrame     *fEndYFrame;
+
    virtual void   ConnectSignals2Slots();
 
 public:

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLPolyMarker.cxx,v 1.3 2006/08/25 10:15:56 couet Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLPolyMarker.cxx,v 1.4 2006/12/09 23:02:27 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 // NOTE: This code moved from obsoleted TGLSceneObject.h / .cxx - see these
 // attic files for previous CVS history
@@ -16,6 +16,7 @@
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "TMath.h"
 
 #include "TAttMarker.h"
 

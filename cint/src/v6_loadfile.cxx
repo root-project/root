@@ -43,6 +43,8 @@
 
 #define G__OLDIMPLEMENTATION1849
   
+extern std::list<G__DLLINIT>* G__initpermanentsl;
+
 extern "C" {
 
 /******************************************************************
@@ -54,7 +56,6 @@ extern "C" {
 
 
 extern int G__ispermanentsl;
-extern G__DLLINIT G__initpermanentsl;
 
 static G__IgnoreInclude G__ignoreinclude = (G__IgnoreInclude)NULL;
 
@@ -502,7 +503,7 @@ int G__getcintsysdir()
 ******************************************************************/
 int G__isfilebusy(int ifn)
 {
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   int flag=0;
   int i1;
   int i2;
@@ -654,7 +655,7 @@ void G__smart_unload(int ifn)
 {
   struct G__dictposition *dictpos= G__srcfile[ifn].dictpos;
   struct G__dictposition *hasonlyfunc = G__srcfile[ifn].hasonlyfunc;
-  struct G__ifunc_table *ifunc;
+  struct G__ifunc_table_internal *ifunc;
   struct G__var_array *var;
   int nfile;
   int allsl;
@@ -669,9 +670,9 @@ void G__smart_unload(int ifn)
   }
 
   /* disable functions */
-  ifunc = dictpos->ifunc;
+  ifunc = G__get_ifunc_internal(dictpos->ifunc);
   ifn = dictpos->ifn;
-  while(ifunc && (ifunc!=hasonlyfunc->ifunc || ifn!=hasonlyfunc->ifn)) {
+  while(ifunc && (ifunc!=G__get_ifunc_internal(hasonlyfunc->ifunc) || ifn!=hasonlyfunc->ifn)) {
     ifunc->hash[ifn] = 0;
     if(++ifn>=G__MAXIFUNC) {
       ifunc = ifunc->next;
@@ -1048,7 +1049,7 @@ int G__loadfile_tmpfile(FILE *fp)
   G__srcfile[fentry].included_from = store_file.filenum;
 
   G__srcfile[fentry].ispermanentsl = G__ispermanentsl;
-  G__srcfile[fentry].initsl = (G__DLLINIT)NULL;
+  G__srcfile[fentry].initsl = 0;
   G__srcfile[fentry].hasonlyfunc = (struct G__dictposition*)NULL;
   G__srcfile[fentry].parent_tagnum = G__get_envtagnum();
   G__srcfile[fentry].slindex = -1;
@@ -1702,6 +1703,7 @@ int G__loadfile(const char *filenamein)
       
 #endif  /*G__VMS*/
 
+#ifndef G__WIN32
       /**********************************************
        * try /usr/include/filename
        **********************************************/
@@ -1715,6 +1717,7 @@ int G__loadfile(const char *filenamein)
         G__globalcomp=G__store_globalcomp;
       }
       if(G__ifile.fp) break;
+#endif
 
 #ifdef __GNUC__
       /**********************************************
@@ -1732,6 +1735,7 @@ int G__loadfile(const char *filenamein)
       if(G__ifile.fp) break;
 #endif /* __GNUC__ */
 
+#ifndef G__WIN32
 /* #ifdef __hpux */
       /**********************************************
        * try /usr/include/CC/filename
@@ -1747,7 +1751,9 @@ int G__loadfile(const char *filenamein)
       }
       if(G__ifile.fp) break;
 /* #endif __hpux */
+#endif
 
+#ifndef G__WIN32
 /* #ifdef __hpux */
       /**********************************************
        * try /usr/include/codelibs/filename
@@ -1764,9 +1770,34 @@ int G__loadfile(const char *filenamein)
       }
       if(G__ifile.fp) break;
 /* #endif __hpux */
+#endif
     }
   }
-    
+
+  /***************************************************
+  * check if alreay loaded
+  ***************************************************/
+  for(int otherfile = 0; otherfile < G__nfile; ++otherfile) {
+     if(G__matchfilename(otherfile,G__ifile.name)
+        &&G__get_envtagnum()==G__srcfile[otherfile].parent_tagnum
+        ){
+       if(G__prerun==0 || G__debugtrace)
+         if(G__dispmsg>=G__DISPNOTE) {
+           G__fprinterr(G__serr,"Note: File \"%s\" already loaded\n",G__ifile.name);
+         }
+       /******************************************************
+        * restore input file information to G__ifile
+        * and reset G__eof to 0.
+        ******************************************************/
+       fclose(G__ifile.fp);
+       G__ifile = store_file ;
+       G__eof = 0;
+       G__step=store_step;
+       G__setdebugcond();
+       G__UnlockCriticalSection();
+       return(G__LOADFILE_DUPLICATE);
+     }
+  }
 
   /**********************************************
   * filenum and line_number.
@@ -1870,10 +1901,11 @@ int G__loadfile(const char *filenamein)
     G__srcfile[fentry].fp=G__ifile.fp;
     G__srcfile[fentry].included_from = store_file.filenum;
     G__srcfile[fentry].ispermanentsl = G__ispermanentsl;
-    G__srcfile[fentry].initsl = (G__DLLINIT)NULL;
+    G__srcfile[fentry].initsl = 0;
     G__srcfile[fentry].hasonlyfunc = (struct G__dictposition*)NULL;
     G__srcfile[fentry].parent_tagnum = G__get_envtagnum();
     G__srcfile[fentry].slindex = -1;
+    G__srcfile[fentry].breakpoint = 0;
   }
 
   if(G__debugtrace) {
@@ -1950,8 +1982,15 @@ int G__loadfile(const char *filenamein)
         G__srcfile[fentry].slindex = allsl;
       }
     }
-    if(G__ispermanentsl) {
-      G__srcfile[fentry].initsl = G__initpermanentsl;
+    if (G__initpermanentsl) {
+       if(G__ispermanentsl) {
+          if (!G__srcfile[fentry].initsl)
+             G__srcfile[fentry].initsl = new std::list<G__DLLINIT>;
+          G__srcfile[fentry].initsl->insert(G__srcfile[fentry].initsl->end(),
+                                           G__initpermanentsl->begin(),
+                                           G__initpermanentsl->end());
+       }
+       G__initpermanentsl->clear();
     }
   }
   else {

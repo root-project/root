@@ -1,6 +1,6 @@
 # -*- mode: makefile -*-
 #
-# Makefile of ROOT for MacOS X, using g++
+# Makefile of ROOT for MacOS X, using g++ 64-bit mode
 
 PLATFORM      = macosx
 
@@ -20,16 +20,16 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -m64 -pipe -W -Wall -Wno-long-double -Woverloaded-virtual \
+CXXFLAGS      = -m64 -pipe -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS)
-CFLAGS        = -m64 -pipe -W -Wall -Wno-long-double -fsigned-char -fno-common \
+CFLAGS        = -m64 -pipe -W -Wall -fsigned-char -fno-common \
                 $(EXTRA_CFLAGS) $(FINK_CFLAGS)
-CINTCXXFLAGS  = -m64 -pipe -W -Wall -Wno-long-double -Woverloaded-virtual \
+CINTCXXFLAGS  = -m64 -pipe -W -Wall -Woverloaded-virtual \
                 -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
                 -DG__STD_EXCEPTION
-CINTCFLAGS    = -m64 -pipe -W -Wall -Wno-long-double -fsigned-char -fno-common \
+CINTCFLAGS    = -m64 -pipe -W -Wall -fsigned-char -fno-common \
                 $(EXTRA_CFLAGS) $(FINK_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
@@ -91,7 +91,7 @@ F77FLAGS      = -m64
 # We add libg2c only in case of ppc because then we probably have cernlib
 # compiled with g77. In case of Intel Mac it should be compiled with the
 # same fortran we use.
-ifeq ($(MACOSX_CPU),powerpc) 
+ifeq ($(MACOSX_CPU),powerpc)
 F77LIBS += -L$(FINK_DIR)/lib -lg2c
 endif
 

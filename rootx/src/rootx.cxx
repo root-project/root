@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.21 2006/04/12 14:30:56 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.22 2006/11/16 17:17:38 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -49,7 +49,6 @@
 #   endif
 #endif
 
-#ifndef __VMS
 # ifdef HAVE_UTMPX_H
 # include <utmpx.h>
 # define STRUCT_UTMP struct utmpx
@@ -60,7 +59,6 @@
 # include <utmp.h>
 # define STRUCT_UTMP struct utmp
 # endif
-#endif
 
 #if !defined(UTMP_FILE) && defined(_PATH_UTMP)      // 4.4BSD
 #define UTMP_FILE _PATH_UTMP

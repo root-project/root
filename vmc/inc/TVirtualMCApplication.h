@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCApplication.h,v 1.5 2006/06/26 15:35:38 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCApplication.h,v 1.6 2006/08/24 16:31:21 rdm Exp $
 // Author: Ivana Hrivnacova, 23/03/2002
 
 /*************************************************************************
@@ -18,7 +18,12 @@
 // Interface to a user Monte Carlo application.
 //
 
+#ifndef ROOT_TNamed
 #include "TNamed.h"
+#endif
+#ifndef ROOT_TMath
+#include "TMath.h"
+#endif
 
 class TVirtualMCApplication : public TNamed {
 

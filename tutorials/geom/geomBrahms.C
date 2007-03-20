@@ -6,13 +6,7 @@
 // Author: Rene Brun
    
 void geomBrahms() {
-   const char *fname = "brahms.root";
-   if (!gSystem->AccessPathName(fname)) {
-      TGeoManager::Import(fname);
-   } else {
-      printf("accessing %s file from http://root.cern.ch/files\n",fname);
-      TGeoManager::Import(Form("http://root.cern.ch/files/%s",fname));
-   }
+   TGeoManager::Import("http://root.cern.ch/files/brahms.root");
    gGeoManager->GetVolume("CAVE")->Draw("ogl");
    new TBrowser;  
 }

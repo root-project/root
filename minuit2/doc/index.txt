@@ -1,0 +1,11 @@
+This directory contains classes for the new C++ implementation of the MINUIT minimization package and classes like TFitterMinuit and TFitterFumili to interface it with the ROOT framework.   
+BEGIN_HTML
+ See:
+<ul>
+<li><a href="http://seal.web.cern.ch/seal/MathLibs/Minuit2/html/index.html">Online doc for Minuit2 classes</a></li>
+<li><a href="http://seal.web.cern.ch/seal/documents/minuit/mnusersguide.pdf">C++ Minuit Users Guide
+    </a></li>
+<li><a href="http://seal.cern.ch/documents/minuit/mntutorial.pdf">Minuit Tutorial on Function Minimization</a>, describing the Minuit algorithm</li>
+<li><a href="http://seal.cern.ch/documents/minuit/mnerror.pdf">The Interpretation of Errors in Minuit</a></li>
+</ul>
+END_HTML

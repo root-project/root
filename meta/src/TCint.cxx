@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.132 2006/12/10 22:21:18 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.141 2007/03/12 10:24:57 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -43,6 +43,7 @@
 #include "THashTable.h"
 
 #include <vector>
+#include <set>
 #include <string>
 using namespace std;
 
@@ -83,6 +84,8 @@ extern "C" void *TCint_FindSpecialObject(char *c, G__ClassInfo *ci, void **p1, v
 // and ROOT prompt line (for WIN32)
 const char *fantomline = "TRint::EndOfLineAction();";
 
+void* TCint::fgSetOfSpecials = 0;
+
 ClassImp(TCint)
 
 //______________________________________________________________________________
@@ -93,6 +96,7 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
    fMore      = 0;
    fPrompt[0] = 0;
    fMapfile   = 0;
+   fRootMapFiles = 0;
    fLockProcessLine = kTRUE;
 
    G__RegisterScriptCompiler(&ScriptCompiler);
@@ -114,42 +118,6 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
 }
 
 //______________________________________________________________________________
-TCint::TCint(const TCint& ci) :
-  TInterpreter(ci),
-  fMore(ci.fMore),
-  fExitCode(ci.fExitCode),
-  fDictPos(ci.fDictPos),
-  fDictPosGlobals(ci.fDictPosGlobals),
-  fSharedLibs(ci.fSharedLibs),
-  fIncludePath(ci.fIncludePath),
-  fMapfile(ci.fMapfile),
-  fLockProcessLine(ci.fLockProcessLine)
-{
-   //copy constructor
-   strncpy(fPrompt,ci.fPrompt,64);
-}
-
-
-//______________________________________________________________________________
-TCint& TCint::operator=(const TCint& ci)
-{
-   //assignement operator
-   if(this!=&ci) {
-      TInterpreter::operator=(ci);
-      fMore=ci.fMore;
-      fExitCode=ci.fExitCode;
-      strncpy(fPrompt,ci.fPrompt,64);
-      fDictPos=ci.fDictPos;
-      fDictPosGlobals=ci.fDictPosGlobals;
-      fSharedLibs=ci.fSharedLibs;
-      fIncludePath=ci.fIncludePath;
-      fMapfile=ci.fMapfile;
-      fLockProcessLine=ci.fLockProcessLine;
-   }
-   return *this;
-}
-
-//______________________________________________________________________________
 TCint::~TCint()
 {
    // Destroy the CINT interpreter interface.
@@ -163,6 +131,7 @@ TCint::~TCint()
    free(fDictPos.ptype);
    free(fDictPosGlobals.ptype);
    delete fMapfile;
+   delete fRootMapFiles;
 }
 
 //______________________________________________________________________________
@@ -400,8 +369,12 @@ void TCint::RecursiveRemove(TObject *obj)
    // Delete object from CINT symbol table so it can not be used anymore.
    // CINT object are always on the heap.
 
-   if (obj->IsOnHeap()) {
-      DeleteGlobal(obj);
+   if (obj->IsOnHeap() && fgSetOfSpecials && !((std::set<TObject*>*)fgSetOfSpecials)->empty()) {
+      std::set<TObject*>::iterator iSpecial = ((std::set<TObject*>*)fgSetOfSpecials)->find(obj);
+      if (iSpecial != ((std::set<TObject*>*)fgSetOfSpecials)->end()) {
+         DeleteGlobal(obj);
+         ((std::set<TObject*>*)fgSetOfSpecials)->erase(iSpecial);
+      }
    }
 }
 
@@ -978,30 +951,31 @@ const char *TCint::GetCurrentMacroName()
    // BEGIN_HTML <!--
    /* -->
       <span style="color:#ffffff;background-color:#7777ff;padding-left:0.3em;padding-right:0.3em">inclfile.h</span>
-      <div style="border:solid 1px #ffff77;background-color: #ffffdd;float:left;padding:0.5em;margin-bottom:0.7em;">
+      <!--div style="border:solid 1px #ffff77;background-color: #ffffdd;float:left;padding:0.5em;margin-bottom:0.7em;"-->
+      <div class="code">
       <pre style="margin:0pt">#include &lt;iostream&gt;
 void inclfunc() {
-   std::cout &lt;&lt; "In inclfile.h" &lt;&lt std::endl;
-   std::cout &lt;&lt "  TCint::GetCurrentMacroName() returns  " &lt;&lt
-      TCint::GetCurrentMacroName() &lt;&lt std::endl;
-   std::cout &lt;&lt "  TCint::GetTopLevelMacroName() returns " &lt;&lt
-      TCint::GetTopLevelMacroName() &lt;&lt std::endl;
+   std::cout &lt;&lt; "In inclfile.h" &lt;&lt; std::endl;
+   std::cout &lt;&lt; "  TCint::GetCurrentMacroName() returns  " &lt;&lt;
+      TCint::GetCurrentMacroName() &lt;&lt; std::endl;
+   std::cout &lt;&lt; "  TCint::GetTopLevelMacroName() returns " &lt;&lt;
+      TCint::GetTopLevelMacroName() &lt;&lt; std::endl;
 }</pre></div>
-      <div style="clear:both"</div>
+      <div style="clear:both"></div>
       <span style="color:#ffffff;background-color:#7777ff;padding-left:0.3em;padding-right:0.3em">mymacro.C</span>
       <div style="border:solid 1px #ffff77;background-color: #ffffdd;float:left;padding:0.5em;margin-bottom:0.7em;">
       <pre style="margin:0pt">#include &lt;iostream&gt;
 #include "inclfile.h"
 void mymacro() {
-   std::cout &lt;&lt "In mymacro.C" &lt;&lt std::endl;
-   std::cout &lt;&lt "  TCint::GetCurrentMacroName() returns  " &lt;&lt
-      TCint::GetCurrentMacroName() &lt;&lt std::endl;
-   std::cout &lt;&lt "  TCint::GetTopLevelMacroName() returns " &lt;&lt
-      TCint::GetTopLevelMacroName() &lt;&lt std::endl;
-   std::cout &lt;&lt "  Now calling inclfunc..." &lt;&lt std::endl;
+   std::cout &lt;&lt; "In mymacro.C" &lt;&lt; std::endl;
+   std::cout &lt;&lt; "  TCint::GetCurrentMacroName() returns  " &lt;&lt;
+      TCint::GetCurrentMacroName() &lt;&lt; std::endl;
+   std::cout &lt;&lt; "  TCint::GetTopLevelMacroName() returns " &lt;&lt;
+      TCint::GetTopLevelMacroName() &lt;&lt; std::endl;
+   std::cout &lt;&lt; "  Now calling inclfunc..." &lt;&lt; std::endl;
    inclfunc();
 }</pre></div>
-<div style="clear:both"</div>
+<div style="clear:both"></div>
 <!-- */
 // --> END_HTML
    // Running mymacro.C will print:
@@ -1064,6 +1038,9 @@ Int_t TCint::LoadLibraryMap()
          Error("LoadLibraryMap", "library map empty, no system.rootmap file\n"
                "found. ROOT not properly installed (run \"make install\").");
 
+      fRootMapFiles = new TObjArray;
+      fRootMapFiles->SetOwner();
+
       // Load all rootmap files in the dynamic load path (LD_LIBRARY_PATH, etc.).
       // A rootmap file must start with the string "rootmap" and may be followed
       // by any extension, like rootmap_ModuleX, rootmap-Module-Y.
@@ -1073,34 +1050,39 @@ Int_t TCint::LoadLibraryMap()
 #else
       TObjArray *paths = ldpath.Tokenize(":");
 #endif
-      paths->Sort();
 
       TString d;
-      for (Int_t i = 0; i < paths->GetEntries(); i++) {
-         if (d == ((TObjString*)paths->At(i))->GetString())
-            continue;  // skip already seen directories
+      for (Int_t i = 0; i < paths->GetEntriesFast(); i++) {
          d = ((TObjString*)paths->At(i))->GetString();
-
-         void *dirp = gSystem->OpenDirectory(d);
-         if (dirp) {
-            const char *f;
-            Bool_t gotrm = kFALSE;
-            while ((f = gSystem->GetDirEntry(dirp))) {
-               if (!strncasecmp(f, "rootmap", 7)) {
-                  TString p;
-                  p = d + "/" + f;
-                  if (!gSystem->AccessPathName(p, kReadPermission)) {
-                     if (gDebug > 1)
-                        Info("LoadLibraryMap", "additional rootmap file: %s", p.Data());
-                     fMapfile->ReadFile(p, kEnvGlobal);
-                  }
-                  gotrm = kTRUE;
-               } else if (gotrm) {
-                  break;  // no need to continue after last rootmap file
-               }
+         // check if directory already scanned
+         Int_t skip = 0;
+         for (Int_t j = 0; j < i; j++) {
+            TString pd = ((TObjString*)paths->At(j))->GetString();
+            if (pd == d) {
+               skip++;
+               break;
             }
          }
-         gSystem->FreeDirectory(dirp);
+         if (!skip) {
+            void *dirp = gSystem->OpenDirectory(d);
+            if (dirp) {
+               const char *f1;
+               while ((f1 = gSystem->GetDirEntry(dirp))) {
+                  TString f = f1;
+                  if (f.BeginsWith("rootmap") || f.EndsWith(".rootmap")) {
+                     TString p;
+                     p = d + "/" + f;
+                     if (!gSystem->AccessPathName(p, kReadPermission)) {
+                        if (gDebug > 1)
+                           Info("LoadLibraryMap", "additional rootmap file: %s", p.Data());
+                        fMapfile->ReadFile(p, kEnvGlobal);
+                        fRootMapFiles->Add(new TObjString(p));
+                     }
+                  }
+               }
+            }
+            gSystem->FreeDirectory(dirp);
+         }
       }
 
       delete paths;
@@ -1118,6 +1100,7 @@ Int_t TCint::LoadLibraryMap()
 
          // get the first lib from the list of lib and dependent libs
          TString libs = rec->GetValue();
+         if (libs == "") continue;
          TString delim(" ");
          TObjArray *tokens = libs.Tokenize(delim);
          char *lib = (char *)((TObjString*)tokens->At(0))->GetName();
@@ -1184,7 +1167,7 @@ Int_t TCint::AutoLoad(const char *cls)
    if (!deplibs.IsNull()) {
       TString delim(" ");
       TObjArray *tokens = deplibs.Tokenize(delim);
-      for (Int_t i = tokens->GetEntries()-1; i > 0; i--) {
+      for (Int_t i = tokens->GetEntriesFast()-1; i > 0; i--) {
          const char *deplib = ((TObjString*)tokens->At(i))->GetName();
          gROOT->LoadClass(cls, deplib);
          if (gDebug > 0)
@@ -1228,7 +1211,7 @@ Int_t TCint::AutoLoadCallback(const char *cls, const char *lib)
    if (!deplibs.IsNull()) {
       TString delim(" ");
       TObjArray *tokens = deplibs.Tokenize(delim);
-      for (Int_t i = tokens->GetEntries()-1; i > 0; i--) {
+      for (Int_t i = tokens->GetEntriesFast()-1; i > 0; i--) {
          const char *deplib = ((TObjString*)tokens->At(i))->GetName();
          gROOT->LoadClass(cls, deplib);
          if (gDebug > 0)
@@ -1261,6 +1244,8 @@ void *TCint::FindSpecialObject(const char *item, G__ClassInfo *type,
 
    if (!*prevObj || *assocPtr != gDirectory) {
       *prevObj = gROOT->FindSpecialObject(item, *assocPtr);
+      if (!fgSetOfSpecials) fgSetOfSpecials = new std::set<TObject*>;
+      if (*prevObj) ((std::set<TObject*>*)fgSetOfSpecials)->insert((TObject*)*prevObj);
    }
 
    if (*prevObj) type->Init(((TObject *)*prevObj)->ClassName());
@@ -1305,7 +1290,7 @@ namespace {
             }
          }
 
-         TClass *cl = gROOT->GetClass(item, load);
+         TClass *cl = TClass::GetClass(item, load);
          if (cl) cl->ResetClassInfo(tagnum);
       }
    };
@@ -1380,7 +1365,7 @@ const char* TCint::GetSharedLibs()
       Bool_t needToSkip = kFALSE;
       if ( len>5 && (strcmp(end-4,".dll") == 0 ) ) {
          // Filter out the cintdlls
-         const char *excludelist [] = {
+         static const char *excludelist [] = {
             "stdfunc.dll","stdcxxfunc.dll","posix.dll","sys/ipc.dll",
             "string.dll","vector.dll","list.dll","deque.dll","map.dll",
             "map2.dll","set.dll","multimap.dll","multimap2.dll","multiset.dll",

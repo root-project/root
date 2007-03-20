@@ -36,7 +36,7 @@ INCLUDEFILES += $(ODBCDEP)
 include/%.h:    $(ODBCDIRI)/%.h
 		cp $< $@
 
-$(ODBCLIB):     $(ODBCO) $(ODBCDO) $(ORDER_) $(MAINLIBS)
+$(ODBCLIB):     $(ODBCO) $(ODBCDO) $(ORDER_) $(MAINLIBS) $(ODBCLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRODBC.$(SOEXT) $@ "$(ODBCO) $(ODBCDO)" \
 		   "$(ODBCLIBEXTRA) $(ODBCLIBDIR) $(ODBCCLILIB)"

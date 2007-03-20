@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: TFitterMinuit.h,v 1.6 2006/07/03 15:48:06 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: TFitterMinuit.h,v 1.7 2006/07/05 08:32:39 moneta Exp $
 // Author: L. Moneta    10/2005  
 
 /**********************************************************************
@@ -160,10 +160,12 @@ private:
    int fDebug;
    int fStrategy;
    double fMinTolerance;
+   mutable std::vector<double> fCovar; // cached covariance matrix (NxN)
 
 
    ClassDef(TFitterMinuit,1)  // The ROOT fitter based on new Minuit (Minuit2)
-      };
+
+};
 
 R__EXTERN TFitterMinuit* gMinuit2;
 

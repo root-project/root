@@ -32,7 +32,6 @@ endif
 
 # use AFS for authentication
 ifneq ($(AFSLIB),)
-AFSFLAGS     := -DR__AFS
 AFSLIBS      := $(AFSLIBDIR) $(AFSLIB)
 endif
 
@@ -64,7 +63,8 @@ endif
 # Combined...
 AUTHFLAGS     := $(EXTRA_AUTHFLAGS) $(SHADOWFLAGS) $(AFSFLAGS) $(SRPFLAGS) \
                  $(KRB5FLAGS) $(GLBSFLAGS)
-AUTHLIBS      := $(SHADOWLIBS) $(AFSLIBS) $(SRPLIBS) $(KRB5LIBS) $(GLBSLIBS) \
+AUTHLIBS      := $(SHADOWLIBS) $(AFSLIBS) \
+                 $(SRPLIBS) $(KRB5LIBS) $(GLBSLIBS) \
                  $(COMERRLIBDIR) $(COMERRLIB) $(RESOLVLIB) \
                  $(CRYPTOLIBDIR) $(CRYPTOLIB)
 
@@ -82,7 +82,7 @@ include/%.h:    $(RPDUTILDIRI)/%.h
 $(SRVAUTHLIB):  $(SRVAUTHO) $(RSAO) $(DAEMONUTILSO) $(ORDER_) $(MAINLIBS) $(SRVAUTHLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libSrvAuth.$(SOEXT) $@ "$(SRVAUTHO) $(RSAO)" \
-		   "$(DAEMONUTILSO) $(CRYPTLIBS) $(AUTHLIBS)"
+		   "$(SRVAUTHLIBEXTRA) $(DAEMONUTILSO) $(CRYPTLIBS) $(AUTHLIBS)"
 
 all-rpdutils:   $(RPDUTILO) $(SRVAUTHLIB)
 

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.35 2006/12/11 06:01:05 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Converters.cxx,v 1.41 2007/03/09 06:06:56 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -6,6 +6,7 @@
 #include "Converters.h"
 #include "ObjectProxy.h"
 #include "PyBufferFactory.h"
+#include "TCustomPyTypes.h"
 #include "Utility.h"
 #include "RootWrapper.h"
 
@@ -53,7 +54,7 @@ PyObject* PyROOT::T##name##Converter::FromMemory( void* address )             \
 Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
 {                                                                             \
    type s = (type)F2( value );                                                \
-   if ( PyErr_Occurred() )                                                    \
+   if ( s == (type)-1 && PyErr_Occurred() )                                   \
       return kFALSE;                                                          \
    *((type*)address) = (type)s;                                               \
    return kTRUE;                                                              \
@@ -88,7 +89,7 @@ Bool_t PyROOT::T##name##Converter::SetArg( PyObject* pyobject, TParameter& para,
       }                                                                       \
    } else {                                                                   \
       para.fl = PyLong_AsLong( pyobject );                                    \
-      if ( PyErr_Occurred() ) {                                               \
+      if ( para.fl == -1 && PyErr_Occurred() ) {                              \
          return kFALSE;                                                       \
       } else if ( ! ( low <= para.fl && para.fl <= high ) ) {                 \
          PyErr_SetString( PyExc_ValueError, "integer to character: value out of range" );\
@@ -118,7 +119,7 @@ Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
       *((type*)address) = (type)buf[0];                                       \
    } else {                                                                   \
       Long_t l = PyLong_AsLong( value );                                      \
-      if ( PyErr_Occurred() )                                                 \
+      if ( l == -1 && PyErr_Occurred() )                                      \
          return kFALSE;                                                       \
       if ( ! ( low <= l && l <= high ) ) {                                    \
          PyErr_SetString( PyExc_ValueError, "integer to character: value out of range" );\
@@ -135,7 +136,7 @@ Bool_t PyROOT::TLongConverter::SetArg( PyObject* pyobject, TParameter& para, G__
 {
 // convert <pyobject> to C++ long, set arg for call
    para.fl = PyLong_AsLong( pyobject );
-   if ( PyErr_Occurred() )
+   if ( para.fl == -1 && PyErr_Occurred() )
       return kFALSE;
    else if ( func )
       func->SetArg( para.fl );
@@ -148,8 +149,11 @@ PYROOT_IMPLEMENT_BASIC_CONVERTER( Long, Long_t, Long_t, PyLong_FromLong, PyLong_
 Bool_t PyROOT::TLongRefConverter::SetArg( PyObject* pyobject, TParameter& para, G__CallFunc* func )
 {
 // convert <pyobject> to C++ long&, set arg for call
-   if ( ! PyInt_CheckExact( pyobject ) )
+   if ( ! TCustomInt_CheckExact( pyobject ) ) {
+      if ( PyInt_Check( pyobject ) )
+         PyErr_SetString( PyExc_TypeError, "use ROOT.Long for pass-by-ref of longs" );
       return kFALSE;
+   }
 
    para.fl = (Long_t)&((PyIntObject*)pyobject)->ob_ival;
    if ( func )
@@ -164,9 +168,6 @@ Bool_t PyROOT::TBoolConverter::SetArg( PyObject* pyobject, TParameter& para, G__
 {
 // convert <pyobject> to C++ bool, allow int/long -> bool, set arg for call
    para.fl = PyLong_AsLong( pyobject );
-   if ( PyErr_Occurred() )
-      return kFALSE;
-
    if ( ! ( para.fl == 0 || para.fl == 1 ) ) {
       PyErr_SetString( PyExc_TypeError, "boolean value should be bool, or integer 1 or 0" );
       return kFALSE;
@@ -197,7 +198,7 @@ namespace {
       ULong_t ul = PyLong_AsUnsignedLong( pyobject );
       if ( PyErr_Occurred() && PyInt_Check( pyobject ) ) {
          PyErr_Clear();
-         Int_t i = PyInt_AS_LONG( pyobject );
+         Long_t i = PyInt_AS_LONG( pyobject );
          if ( 0 <= i ) {
             ul = (ULong_t)i;
          } else {
@@ -266,7 +267,7 @@ Bool_t PyROOT::TDoubleConverter::SetArg( PyObject* pyobject, TParameter& para, G
 {
 // convert <pyobject> to C++ double, set arg for call
    para.fd = PyFloat_AsDouble( pyobject );
-   if ( PyErr_Occurred() )
+   if ( para.fd == -1.0 && PyErr_Occurred() )
       return kFALSE;
    else if ( func )
       func->SetArg( para.fd );
@@ -280,8 +281,11 @@ PYROOT_IMPLEMENT_BASIC_CONVERTER( Float,  Float_t,  Double_t, PyFloat_FromDouble
 Bool_t PyROOT::TDoubleRefConverter::SetArg( PyObject* pyobject, TParameter& para, G__CallFunc* func )
 {
 // convert <pyobject> to C++ double&, set arg for call
-   if ( ! PyFloat_CheckExact( pyobject ) )
+   if ( ! TCustomFloat_CheckExact( pyobject ) ) {
+      if ( PyFloat_Check( pyobject ) )
+         PyErr_SetString( PyExc_TypeError, "use ROOT.Double for pass-by-ref of doubles" );
       return kFALSE;
+   }
 
    para.fl = (Long_t)&((PyFloatObject*)pyobject)->ob_fval;
    if ( func )
@@ -296,7 +300,7 @@ Bool_t PyROOT::TConstDoubleRefConverter::SetArg( PyObject* pyobject, TParameter&
 {
 // convert <pyobject> to C++ const double&, set arg for call using buffer
    para.fd = fBuffer = PyFloat_AsDouble( pyobject );
-   if ( PyErr_Occurred() )
+   if ( para.fd == -1.0 && PyErr_Occurred() )
       return kFALSE;
    else if ( func )
       func->SetArgRef( fBuffer );
@@ -352,7 +356,7 @@ Bool_t PyROOT::TLongLongConverter::SetArg( PyObject* pyobject, TParameter& para,
 {
 // convert <pyobject> to C++ long long, set arg for call
    para.fll = PyLong_AsLongLong( pyobject );
-   if ( PyErr_Occurred() )
+   if ( para.fll == -1 && PyErr_Occurred() )
       return kFALSE;
    else if ( func )
       func->SetArg( para.fll );
@@ -369,7 +373,7 @@ Bool_t PyROOT::TLongLongConverter::ToMemory( PyObject* value, void* address )
 {
 // convert <value> to C++ long long, write it at <address>
    Long64_t ll = PyLong_AsLongLong( value );
-   if ( PyErr_Occurred() )
+   if ( ll == -1 && PyErr_Occurred() )
       return kFALSE;
    *((Long64_t*)address) = ll;
    return kTRUE;
@@ -384,7 +388,7 @@ namespace {
       ULong64_t ull = PyLong_AsUnsignedLongLong( pyobject );
       if ( PyErr_Occurred() && PyInt_Check( pyobject ) ) {
          PyErr_Clear();
-         Int_t i = PyInt_AS_LONG( pyobject );
+         Long_t i = PyInt_AS_LONG( pyobject );
          if ( 0 <= i ) {
             ull = (ULong64_t)i;
          } else {
@@ -660,7 +664,7 @@ Bool_t PyROOT::TLongLongArrayConverter::SetArg( PyObject* pyobject, TParameter& 
 //- converters for special cases ----------------------------------------------
 #define PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( name, strtype, DF1 )  \
 PyROOT::T##name##Converter::T##name##Converter() :                            \
-      TRootObjectConverter( gROOT->GetClass( #strtype ) ) {}                  \
+      TRootObjectConverter( TClass::GetClass( #strtype ) ) {}                 \
                                                                               \
 Bool_t PyROOT::T##name##Converter::SetArg( PyObject* pyobject, TParameter& para, G__CallFunc* func )\
 {                                                                             \
@@ -835,7 +839,7 @@ Bool_t PyROOT::TVoidPtrRefConverter::SetArg( PyObject* pyobject, TParameter& par
    if ( ObjectProxy_Check( pyobject ) ) {
       para.fv = ((ObjectProxy*)pyobject)->fObject;
       if ( func )
-         func->SetArgRef( reinterpret_cast< Long_t& >( para.fl ) );
+         func->SetArgRef( reinterpret_cast< Long_t& >( ((ObjectProxy*)pyobject)->fObject ) );
       return kTRUE;
    }
 
@@ -956,7 +960,7 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
 
 // converters for known/ROOT classes and default (void*)
    TConverter* result = 0;
-   if ( TClass* klass = gROOT->GetClass( realType.c_str() ) ) {
+   if ( TClass* klass = TClass::GetClass( realType.c_str() ) ) {
       if ( cpd == "**" || cpd == "*&" || cpd == "&*" )
          result = new TRootObjectPtrConverter( klass, control );
       else if ( cpd == "*" )
@@ -1053,17 +1057,19 @@ namespace {
       NFp_t( "unsigned short",     &CreateUShortConverter             ),
       NFp_t( "int",                &CreateIntConverter                ),
       NFp_t( "int&",               &CreateLongRefConverter            ),
+      NFp_t( "const int&",         &CreateIntConverter                ),
       NFp_t( "unsigned int",       &CreateUIntConverter               ),
       NFp_t( "UInt_t", /* enum */  &CreateUIntConverter               ),
       NFp_t( "long",               &CreateLongConverter               ),
       NFp_t( "long&",              &CreateLongRefConverter            ),
+      NFp_t( "const long&",        &CreateLongConverter               ),
       NFp_t( "unsigned long",      &CreateULongConverter              ),
       NFp_t( "long long",          &CreateLongLongConverter           ),
       NFp_t( "unsigned long long", &CreateULongLongConverter          ),
       NFp_t( "float",              &CreateFloatConverter              ),
       NFp_t( "double",             &CreateDoubleConverter             ),
       NFp_t( "double&",            &CreateDoubleRefConverter          ),
-      NFp_t( "const double&",      &CreateConstDoubleRefConverter     ),
+      NFp_t( "const double&",      &CreateDoubleConverter             ),
       NFp_t( "void",               &CreateVoidConverter               ),
       NFp_t( "#define",            &CreateMacroConverter              ),
 

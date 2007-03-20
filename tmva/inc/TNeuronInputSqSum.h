@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TNeuronInputSqSum.h,v 1.8 2006/11/14 14:19:17 andreas.hoecker Exp $
+// @(#)root/tmva $Id: TNeuronInputSqSum.h,v 1.6 2006/11/20 15:35:28 brun Exp $
 // Author: Matt Jachowski 
 
 /**********************************************************************************
@@ -37,7 +37,6 @@
 
 #include "TObject.h"
 #include "TString.h"
-#include "TMath.h"
 
 #ifndef ROOT_TMVA_TNeuronInput
 #include "TMVA/TNeuronInput.h"

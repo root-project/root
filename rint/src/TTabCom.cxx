@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.43 2006/11/16 17:17:38 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.44 2006/11/24 14:24:54 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -2503,7 +2503,7 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
       return 0;                 //* RETURN *//
    }
 
-   Bool_t fVarIsPointer = className[className.Length() - 1] == '*';
+   fVarIsPointer = className[className.Length() - 1] == '*';
 
    // frodo: I shouldn't have to do this, but for some reason now I have to
    //        otherwise the varptr->[TAB] won't work    :(

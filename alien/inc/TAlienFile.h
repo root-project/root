@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.16 2006/09/05 16:57:17 brun Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.19 2007/03/19 16:14:14 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -34,9 +34,6 @@
 #ifndef ROOT_TXNetFile
 #include "TXNetFile.h"
 #endif
-#ifndef ROOT_TSystem
-#include "TSystem.h"
-#endif
 
 
 class TUrl;
@@ -48,7 +45,7 @@ private:
    TString fAuthz;     // authorization envelope
 
 public:
-   TAlienFile() : TXNetFile() { }
+   TAlienFile() : TXNetFile(), fLfn(), fAuthz() { }
    TAlienFile(const char *purl, Option_t *option = "",
               const char *ftitle = "", Int_t compress = 1,
               Bool_t parallelopen = kFALSE, const char *lurl = 0,
@@ -60,6 +57,7 @@ public:
    static TAlienFile *Open(const char *lfn, const Option_t *option = "",
                            const char *title = "", Int_t compress = 1,
                            Bool_t parallelopen = kFALSE);
+   static TString     SUrl(const char *lfn);
 
    ClassDef(TAlienFile, 3)  //A ROOT file that reads/writes via AliEn services and TXNetFile protocol
 };

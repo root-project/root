@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.18 2006/11/06 15:33:14 brun Exp $
+// @(#)root/cintex:$Name:  $:$Id: CINTClassBuilder.cxx,v 1.19 2006/12/08 09:36:06 roiser Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -247,7 +247,7 @@ namespace ROOT { namespace Cintex {
                if ( ctor )  {
                   Object obj = fClass.Construct();
                   Setup_inheritance(obj);
-                  if ( dtor ) fClass.Destruct(obj.Address());
+                  /*if ( dtor )*/ fClass.Destruct(obj.Address());
                }
                // There is no default constructor. So, it is not a I/O class
                else {  

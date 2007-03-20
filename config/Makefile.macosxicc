@@ -34,11 +34,35 @@ ICC_MAJOR    := $(shell $(CXX) -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
 ICC_MINOR    := $(shell $(CXX) -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
                 cut -d'.' -f2)
 
+ifeq ($(ICC_MAJOR),8)
+ifneq ($(ICC_MINOR),0)
+CXXFLAGS     += -wd1572
+CFLAGS       += -wd1572
+CINTCXXFLAGS += -wd1572
+CINTCFLAGS   += -wd1572
+USE_PCH       = -use_pch
+CREATE_PCH    = -create_pch
+endif
+endif
+
 ifeq ($(ICC_MAJOR),9)
 CXXFLAGS     += -wd1572 -wd873 -wd672
 CFLAGS       += -wd1572
 CINTCXXFLAGS += -wd1572 -wd873
 CINTCFLAGS   += -wd1572
+USE_PCH       = -use_pch
+CREATE_PCH    = -create_pch
+ICC_GE_9      = 9
+endif
+
+ifeq ($(ICC_MAJOR),10)
+CXXFLAGS     += -wd1572 -wd873 -wd672
+CFLAGS       += -wd1572
+CINTCXXFLAGS += -wd1572 -wd873
+CINTCFLAGS   += -wd1572
+USE_PCH       = -pch-use
+CREATE_PCH    = -pch-create
+ICC_GE_9      = 10
 endif
 
 # OS version
@@ -51,7 +75,7 @@ LD            = icpc
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
 FORCELINK     = no
 MACOSXTARGET := MACOSX_DEPLOYMENT_TARGET=10.$(MACOSX_MINOR)
-ifeq ($(MACOSX_MINOR),5) 
+ifeq ($(MACOSX_MINOR),5)
 MACOSX_MINOR  = 4
 endif
 ifeq ($(MACOSX_MINOR),4)
@@ -69,26 +93,21 @@ CILIBS        = -lm $(EXTRA_LDFLAGS) -ldl
 # Fortran:
 F77           = ifort
 F77FLAGS      =
-ifneq ($(shell find $(FINK_DIR)/bin -name g77),)
-# check for libg2c and libfrtbegin
-ifneq ($(shell g77 -print-file-name=libg2c.so),libg2c.so)
-LIBG2C       := $(shell g77 -print-file-name=libg2c.so)
-else
-LIBG2C       := $(shell g77 -print-file-name=libg2c.a)
+F77LIBS       =
+ifneq ($(shell find $(FINK_DIR)/bin -name gfortran),)
+F77LIBS      := $(shell gfortran -print-file-name=libgfortran.$(SOEXT))
+F77LIBS      += $(shell gfortran -print-file-name=libgfortranbegin.a)
 endif
-LIBFRTBEGIN  := $(shell g77 -print-file-name=libfrtbegin.a)
-endif
-F77LIBS       = $(LIBFRTBEGIN) $(LIBG2C) \
-                -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
-                -lifcore -lirc -limf -lifport
+F77LIBS      += -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
+                -lifcore
 
 # Precompiled headers:
 PCHSUPPORTED := $(ENABLEPCH)
 ifeq ($(PCHSUPPORTED),yes)
   PCHFILE          = include/precompile.pchi
-  PCHCXXFLAGS      = -DUSEPCH -include precompile.h -use_pch $(PCHFILE)
-  PCHEXTRAOBJBUILD = $(CXX) $(OPT) $(CXXFLAGS) -DUSEPCH \
-                     -include precompile.h -create_pch $(PCHFILE) \
+  PCHCXXFLAGS      = -DUSEPCH -include precompile.h $(USE_PCH) $(PCHFILE)
+  PCHEXTRAOBJBUILD = $(LD) $(OPT) $(CXXFLAGS) -DUSEPCH \
+                     -include precompile.h $(CREATE_PCH) $(PCHFILE) \
                      -c $(PCHEXTRASRC) -o $(PCHEXTRAOBJ)
 endif
 

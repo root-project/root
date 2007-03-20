@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.17 2006/05/23 04:47:40 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.19 2007/03/19 16:14:15 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
+
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
@@ -39,6 +40,8 @@
 class TGridResult;
 class TGridJDL;
 class TGridJob;
+class TGridCollection;
+class TGridJobStatusList;
 
 
 class TGrid : public TObject {
@@ -103,6 +106,16 @@ public:
       { MayNotUse("Submit"); return 0; }
    virtual TGridJDL *GetJDLGenerator()
       { MayNotUse("GetJDLGenerator"); return 0; }
+   virtual TGridCollection *OpenCollection(const char *, UInt_t /*maxentries*/ = 1000000)
+      { MayNotUse("OpenCollection"); return 0; }
+   virtual TGridCollection *OpenCollectionQuery(TGridResult * /*queryresult*/,Bool_t /*nogrouping*/ = kFALSE)
+      { MayNotUse("OpenCollection"); return 0; }
+   virtual TGridJobStatusList* Ps(const char* /*options*/, Bool_t /*verbose*/ = kTRUE)
+      { MayNotUse("Ps"); return 0; }
+   virtual Bool_t Kill(UInt_t /*jobid*/)
+      { MayNotUse("Kill"); return kFALSE; }
+   virtual UInt_t Resubmit(UInt_t /*jobid*/)
+      { MayNotUse("Resubmit"); return 0; }
 
    //--- Load desired plugin and setup conection to GRID
    static TGrid *Connect(const char *grid, const char *uid = 0,

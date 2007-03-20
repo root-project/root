@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.15 2005/04/28 13:49:22 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.17 2007/01/15 12:46:55 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 
 /*************************************************************************
@@ -11,7 +11,6 @@
 #ifndef ROOT_TVector3
 #define ROOT_TVector3
 
-#include "TMath.h"
 #include "TError.h"
 #include "TVector2.h"
 #include "TMatrix.h"
@@ -68,10 +67,10 @@ public:
    // Get the components into an array
    // not checked!
 
-   inline Double_t Phi() const;
+   Double_t Phi() const;
    // The azimuth angle. returns phi from -pi to pi 
 
-   inline Double_t Theta() const;
+   Double_t Theta() const;
    // The polar angle.
 
    inline Double_t CosTheta() const;
@@ -80,13 +79,13 @@ public:
    inline Double_t Mag2() const;
    // The magnitude squared (rho^2 in spherical coordinate system).
 
-   inline Double_t Mag() const;
+   Double_t Mag() const;
    // The magnitude (rho in spherical coordinate system).
 
-   inline void SetPhi(Double_t);
+   void SetPhi(Double_t);
    // Set phi keeping mag and theta constant (BaBar).
 
-   inline void SetTheta(Double_t);
+   void SetTheta(Double_t);
    // Set theta keeping mag and phi constant (BaBar).
 
    inline void SetMag(Double_t);
@@ -96,7 +95,7 @@ public:
    // The transverse component squared (R^2 in cylindrical coordinate system).
 
    inline Double_t Pt() const;
-   inline Double_t Perp() const;
+   Double_t Perp() const;
    // The transverse component (R in cylindrical coordinate system).
 
    inline void SetPerp(Double_t);
@@ -106,14 +105,14 @@ public:
    // The transverse component w.r.t. given axis squared.
 
    inline Double_t Pt(const TVector3 &) const;
-   inline Double_t Perp(const TVector3 &) const;
+   Double_t Perp(const TVector3 &) const;
    // The transverse component w.r.t. given axis.
 
    inline Double_t DeltaPhi(const TVector3 &) const;
-   inline Double_t DeltaR(const TVector3 &) const;
+   Double_t DeltaR(const TVector3 &) const;
    inline Double_t DrEtaPhi(const TVector3 &) const;
    inline TVector2 EtaPhiVector() const;
-   inline void SetMagThetaPhi(Double_t mag, Double_t theta, Double_t phi);
+   void SetMagThetaPhi(Double_t mag, Double_t theta, Double_t phi);
 
    inline TVector3 & operator = (const TVector3 &);
    // Assignment.
@@ -134,7 +133,7 @@ public:
    inline TVector3 & operator *= (Double_t);
    // Scaling with real numbers.
 
-   inline TVector3 Unit() const;
+   TVector3 Unit() const;
    // Unit vector parallel to this.
 
    inline TVector3 Orthogonal() const;
@@ -146,7 +145,7 @@ public:
    inline TVector3 Cross(const TVector3 &) const;
    // Cross product.
 
-   inline Double_t Angle(const TVector3 &) const;
+   Double_t Angle(const TVector3 &) const;
    // The angle w.r.t. another 3-vector.
 
    Double_t PseudoRapidity() const;
@@ -289,13 +288,6 @@ inline TVector3 TVector3::Cross(const TVector3 & p) const {
 
 inline Double_t TVector3::Mag2() const { return fX*fX + fY*fY + fZ*fZ; }
 
-inline Double_t TVector3::Mag() const { return TMath::Sqrt(Mag2()); }
-
-inline TVector3 TVector3::Unit() const {
-   Double_t  tot = Mag2();
-   TVector3 p(fX,fY,fZ);
-   return tot > 0.0 ? p *= (1.0/TMath::Sqrt(tot)) : p;
-}
 
 inline TVector3 TVector3::Orthogonal() const {
    Double_t x = fX < 0.0 ? -fX : fX;
@@ -310,7 +302,6 @@ inline TVector3 TVector3::Orthogonal() const {
 
 inline Double_t TVector3::Perp2() const { return fX*fX + fY*fY; }
 
-inline Double_t TVector3::Perp() const { return TMath::Sqrt(Perp2()); }
 
 inline Double_t TVector3::Pt() const { return Perp(); }
 
@@ -323,39 +314,13 @@ inline Double_t TVector3::Perp2(const TVector3 & p)  const {
    return per;
 }
 
-
-inline Double_t TVector3::Perp(const TVector3 & p) const {
-   return TMath::Sqrt(Perp2(p));
-}
-
 inline Double_t TVector3::Pt(const TVector3 & p) const {
    return Perp(p);
-}
-
-
-inline Double_t TVector3::Phi() const {
-   return fX == 0.0 && fY == 0.0 ? 0.0 : TMath::ATan2(fY,fX);
-}
-
-inline Double_t TVector3::Theta() const {
-   return fX == 0.0 && fY == 0.0 && fZ == 0.0 ? 0.0 : TMath::ATan2(Perp(),fZ);
 }
 
 inline Double_t TVector3::CosTheta() const {
    Double_t ptot = Mag();
    return ptot == 0.0 ? 1.0 : fZ/ptot;
-}
-
-inline Double_t TVector3::Angle(const TVector3 & q) const {
-   Double_t ptot2 = Mag2()*q.Mag2();
-   if(ptot2 <= 0) {
-      return 0.0;
-   } else {
-      Double_t arg = Dot(q)/TMath::Sqrt(ptot2);
-      if(arg >  1.0) arg =  1.0;
-      if(arg < -1.0) arg = -1.0;
-      return TMath::ACos(arg);
-   }
 }
 
 inline void TVector3::SetMag(Double_t ma) {
@@ -368,20 +333,6 @@ inline void TVector3::SetMag(Double_t ma) {
       SetY(fY*factor);
       SetZ(fZ*factor);
    }
-}
-
-inline void TVector3::SetTheta(Double_t th) {
-   Double_t ma   = Mag();
-   Double_t ph   = Phi();
-   SetX(ma*TMath::Sin(th)*TMath::Cos(ph));
-   SetY(ma*TMath::Sin(th)*TMath::Sin(ph));
-   SetZ(ma*TMath::Cos(th));
-}
-
-inline void TVector3::SetPhi(Double_t ph) {
-   Double_t xy   = Perp();
-   SetX(xy*TMath::Cos(ph));
-   SetY(xy*TMath::Sin(ph));
 }
 
 inline void TVector3::SetPerp(Double_t r) {
@@ -402,19 +353,6 @@ inline Double_t TVector3::Eta() const {
 
 inline Double_t TVector3::DrEtaPhi(const TVector3 & v) const{
    return DeltaR(v);
-}
-
-inline Double_t TVector3::DeltaR(const TVector3 & v) const {
-   Double_t deta = Eta()-v.Eta();
-   Double_t dphi = TVector2::Phi_mpi_pi(Phi()-v.Phi());
-   return TMath::Sqrt( deta*deta+dphi*dphi );
-}
-
-inline void TVector3::SetMagThetaPhi(Double_t mag, Double_t theta, Double_t phi) {
-   Double_t amag = TMath::Abs(mag);
-   fX = amag * TMath::Sin(theta) * TMath::Cos(phi);
-   fY = amag * TMath::Sin(theta) * TMath::Sin(phi);
-   fZ = amag * TMath::Cos(theta);
 }
 
 

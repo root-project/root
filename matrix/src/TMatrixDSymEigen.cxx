@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.cxx,v 1.11 2006/05/19 04:44:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSymEigen.cxx,v 1.12 2006/06/02 05:11:20 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TMatrixDSymEigen.h"
+#include "TMath.h"
 
 ClassImp(TMatrixDSymEigen)
 

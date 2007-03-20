@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.17 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.19 2007/02/18 14:56:42 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -63,6 +63,7 @@ public:
    TVirtualFitter();
    virtual ~TVirtualFitter();
    virtual Double_t  Chisquare(Int_t npar, Double_t *params) const  = 0;
+
    virtual void      Clear(Option_t *option="") = 0;
    virtual Int_t     ExecuteCommand(const char *command, Double_t *args, Int_t nargs) = 0;
    virtual void      FixParameter(Int_t ipar) = 0;
@@ -106,7 +107,7 @@ public:
    virtual void      SetYlast (Int_t last)  {fYlast  = last;}
    virtual void      SetZfirst(Int_t first) {fZfirst = first;}
    virtual void      SetZlast (Int_t last)  {fZlast  = last;}
-   
+
    static  TVirtualFitter *GetFitter();
    static  TVirtualFitter *Fitter(TObject *obj, Int_t maxpar = 25);
    static const char *GetDefaultFitter();

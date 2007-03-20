@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.40 2006/10/20 08:38:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.41 2006/11/30 23:19:47 pcanal Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -152,6 +152,7 @@
 #include "TVirtualGeoPainter.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#include "TMath.h"
 
 ClassImp(TGeoShape)
 

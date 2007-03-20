@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TH1Editor.h,v 1.14 2006/06/23 15:19:21 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TH1Editor.h,v 1.18 2007/03/09 15:09:12 antcheva Exp $
 // Author: Carsten Hof 16/08/04
 
 /*************************************************************************
@@ -19,14 +19,13 @@
 //  Editor changing histogram attributes (Type, Coords, Error, Style)   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
 #endif
-#ifndef ROOT_TH1
-#include "TH1.h"
-#endif
 
 
+class TH1;
 class TGComboBox;
 class TGNumberEntry;
 class TGCheckButton;
@@ -38,9 +37,6 @@ class TGDoubleHSlider;
 class TGHSlider;
 class TGTextEntry;
 class TGNumberEntryField;
-class TGTab;
-class TPad;
-class TGMainFrame;
 class TGTextButton;
 
 class TH1Editor : public TGedFrame {
@@ -56,9 +52,9 @@ protected:
    TGRadioButton       *fDim0;            // 3D-Plot RadioButton
    TGLayoutHints       *fDimlh;           // layout hints for 2D-Plot RadioButton
    TGLayoutHints       *fDim0lh;          // layout hints for 3D-Plot RadioButton
-   TGComboBox	       *fTypeCombo;       // histogram type combo box
-   TGComboBox 	       *fCoordsCombo;     // Coordinate System combo box
-   TGComboBox 	       *fErrorCombo;      // Error combo box
+   TGComboBox	         *fTypeCombo;       // histogram type combo box
+   TGComboBox 	        *fCoordsCombo;     // Coordinate System combo box
+   TGComboBox 	        *fErrorCombo;      // Error combo box
    TGCheckButton       *fHistOnOff;       // Draw a simple histogram with default options
    TGCheckButton       *fAddMarker;       // Draw a Marker on top of each bin
    TGCheckButton       *fAddB;            // Draw a Bar Chart
@@ -71,7 +67,6 @@ protected:
    TGComboBox          *fAddCombo;        // Add Lines, Bars, Fill
    TGComboBox          *fPercentCombo;    // Percentage of the Bar which is drawn in a different color
    TGCompositeFrame    *f3;               // Contains Histogram Type
-   TGCompositeFrame    *f4;               // Contains Histogram Coordinate Type
    TGCompositeFrame    *f6;               // Contains the Add-ComboBox (Style)
    TGCompositeFrame    *f7;               // Contains the Marker OnOff CheckBox
    TGCompositeFrame    *f8;               // Contains the Bar Chart CheckBox
@@ -127,7 +122,6 @@ private:
    TH1                 *fBinHist;         // Cloned histogram for rebin
    Double_t             fOldOffset;       // save the old offset of the histogram
 
-// private methods:
    TString              GetHistTypeLabel();       // Get the Histogram Type = String which contains the Histogram Draw Option
    TString              GetHistCoordsLabel();     // Get the histogram coordinate system (CYL, SPH, PSR, ..)
    TString              GetHistErrorLabel();      // Get the histogram Error type (E1, .., E4)

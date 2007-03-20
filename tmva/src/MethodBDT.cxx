@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodBDT.cxx,v 1.64 2006/11/17 00:21:35 stelzer Exp $ 
+// @(#)root/tmva $Id: MethodBDT.cxx,v 1.12 2007/01/30 11:24:16 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 
 /**********************************************************************************
@@ -91,10 +91,12 @@
 //
 //_______________________________________________________________________
 
+#include <cmath>
 #include "TMVA/MethodBDT.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Timer.h"
 #include "Riostream.h"
+#include "TDirectory.h"
 #include "TRandom.h"
 #include <algorithm>
 #include "TObjString.h"

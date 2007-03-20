@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Htypes.h,v 1.2 2000/06/13 12:25:52 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Htypes.h,v 1.3 2001/10/24 13:47:57 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -18,15 +18,10 @@
 //                                                                      //
 // Types used by the histogramming classes.                             //
 //                                                                      //
+// Obsolete: typedefs included in Rtypes.h                              //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-
-#ifndef ROOT_Rtypes
-#include "Rtypes.h"
-#endif
-
-typedef double         Axis_t;      //Axis values type (double)
-typedef double         Stat_t;      //Statistics type (double)
 
 #endif
 

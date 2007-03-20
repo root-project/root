@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.40 2006/12/01 08:15:40 brun Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.42 2007/03/05 09:01:08 rdm Exp $
 // Author: Fons Rademakers   20/01/99 + Giulia Taurelli 29/06/2006
 
 /*************************************************************************
@@ -164,68 +164,62 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
    }
 
    TString stmp;
-   char *fname = 0;
    char *host;
    char *name;
-   // To be consinstent with new and old turl
-   if (strstr(fUrl.GetOptions(),"path=")) {
-      if (!strcmp(fUrl.GetProtocol(),"castor"))
-         fUrl.SetProtocol("rfio");
-      stmp=Form("%s://%s",fUrl.GetProtocol(),fUrl.GetFileAndOptions());
-      char* url2=strdup((char*)stmp.Data());
-      if (::rfio_parse(url2, &host, &name)>=0) {
-         // if (::rfio_parse((char*)stmp.Data(), &host, &name)){
-         stmp = Form("%s",(!name || !strstr(name,"/castor"))?(char*)stmp.Data():name);
-      } else {
-         Error("TRFIOFile", "error parsing %s", fUrl.GetUrl());
-         goto zombie;
-      }
-   } else {
-      fname = gSystem->ExpandPathName(fUrl.GetFile());
-      if (fname) {
-         if (!strstr(fname, ":/")) {
-            if (::rfio_parse(fname, &host, &name))
-               stmp = Form("%s:%s", host, name);
-            else
-            stmp = fname;
-         } else
-            stmp = fname;
-      } else {
-         Error("TRFIOFile", "error expanding path %s", fUrl.GetFile());
-         goto zombie;
-      }
-   }
-   delete [] fname;
-   fname = (char *)stmp.Data();
+   
+   // it is just called the rfio_parse and no extra parsing is added here to that
+   
+   // to be able to use the turl starting with  castor:
 
+   if (!strcmp(fUrl.GetProtocol(),"castor"))
+      fUrl.SetProtocol("rfio");
+   
+   stmp=Form("%s://%s",fUrl.GetProtocol(),fUrl.GetFileAndOptions());
+   
+   // the complete turl in fname
+ 
+   TString fname = stmp;
+   
+     
+   if (::rfio_parse((char *)fname.Data(), &host, &name)>=0) {
+      stmp = Form("%s",(!name || !strstr(name,"/castor"))?fname.Data():name);
+   } else {
+      Error("TRFIOFile", "error parsing %s", fUrl.GetUrl());
+      goto zombie;
+   }
+   
+ 
+   fname = stmp;
+   
+    
    if (recreate) {
-      if (::rfio_access(fname, kFileExists) == 0)
-         ::rfio_unlink(fname);
+      if (::rfio_access(fname.Data(), kFileExists) == 0)
+         ::rfio_unlink(fname.Data());
       recreate = kFALSE;
       create   = kTRUE;
       fOption  = "CREATE";
    }
-   if (create && ::rfio_access(fname, kFileExists) == 0) {
-      Error("TRFIOFile", "file %s already exists", fname);
+   if (create && ::rfio_access(fname.Data(), kFileExists) == 0) {
+      Error("TRFIOFile", "file %s already exists", fname.Data());
       goto zombie;
    }
    if (update) {
-      if (::rfio_access(fname, kFileExists) != 0) {
+      if (::rfio_access(fname.Data(), kFileExists) != 0) {
          update = kFALSE;
          create = kTRUE;
       }
-      if (update && ::rfio_access(fname, kWritePermission) != 0) {
-         Error("TRFIOFile", "no write permission, could not open file %s", fname);
+      if (update && ::rfio_access(fname.Data(), kWritePermission) != 0) {
+         Error("TRFIOFile", "no write permission, could not open file %s", fname.Data());
          goto zombie;
       }
    }
    if (read) {
-      if (::rfio_access(fname, kFileExists) != 0) {
-         Error("TRFIOFile", "file %s does not exist", fname);
+      if (::rfio_access(fname.Data(), kFileExists) != 0) {
+         Error("TRFIOFile", "file %s does not exist", fname.Data());
          goto zombie;
       }
-      if (::rfio_access(fname, kReadPermission) != 0) {
-         Error("TRFIOFile", "no read permission, could not open file %s", fname);
+      if (::rfio_access(fname.Data(), kReadPermission) != 0) {
+         Error("TRFIOFile", "no read permission, could not open file %s", fname.Data());
          goto zombie;
       }
    }
@@ -235,23 +229,23 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
 
    if (create || update) {
 #ifndef WIN32
-      fD = SysOpen(fname, O_RDWR | O_CREAT, 0644);
+      fD = SysOpen(fname.Data(), O_RDWR | O_CREAT, 0644);
 #else
-      fD = SysOpen(fname, O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
+      fD = SysOpen(fname.Data(), O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
 #endif
       if (fD == -1) {
-         SysError("TRFIOFile", "file %s can not be opened", fname);
+         SysError("TRFIOFile", "file %s can not be opened", fname.Data());
          goto zombie;
       }
       fWritable = kTRUE;
    } else {
 #ifndef WIN32
-      fD = SysOpen(fname, O_RDONLY, 0644);
+      fD = SysOpen(fname.Data(), O_RDONLY, 0644);
 #else
-      fD = SysOpen(fname, O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
+      fD = SysOpen(fname.Data(), O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
 #endif
       if (fD == -1) {
-         SysError("TRFIOFile", "file %s can not be opened for reading", fname);
+         SysError("TRFIOFile", "file %s can not be opened for reading", fname.Data());
          goto zombie;
       }
       fWritable = kFALSE;

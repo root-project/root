@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.h,v 1.3 2005/11/11 22:16:04 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchBrowsable.h,v 1.4 2006/05/09 10:24:27 brun Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************
@@ -14,6 +14,10 @@
 
 #ifndef ROOT_TNamed
 #include "TNamed.h"
+#endif
+
+#ifndef ROOT_TList
+#include "TList.h"
 #endif
 
 #include <list>

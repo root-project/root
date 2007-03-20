@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.19 2004/03/22 16:13:24 brun Exp $
+// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.22 2007/02/03 08:44:41 brun Exp $
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -26,6 +26,7 @@
 #include "TFile.h"
 #include "Riostream.h"
 #include "TVectorD.h"
+#include "TMath.h"
 
 void stress_vector       (Int_t verbose);
 void stress_allocation   ();
@@ -46,7 +47,7 @@ int main(int argc,char **argv)
           verbose = 1;
           break;
         default:
-          Fatal("Unknown flag -%s",&c);
+          Error("vvector", "unknown flag -%c",c);
           break;
       }
     }

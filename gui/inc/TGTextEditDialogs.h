@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.h,v 1.6 2005/09/05 07:33:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.h,v 1.7 2005/09/05 14:26:43 rdm Exp $
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
@@ -135,7 +135,7 @@ public:
    virtual void   CloseWindow();
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
-   ClassDef(TGGotoDialog,0)  // Goto line dialig used by TGTextEdit widget
+   ClassDef(TGGotoDialog,0)  // Goto line dialog used by TGTextEdit widget
 };
 
 #endif

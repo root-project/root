@@ -7,11 +7,10 @@
 
 #include "TCanvas.h"
 #include "TFrame.h"
-#include "TPad.h"
 #include "TH1F.h"
 #include "TRandom.h"
 #include "TThread.h"
-#include <Riostream.h>
+
 
 TCanvas *c[4];
 TH1F    *hpx[4];
@@ -70,7 +69,7 @@ void threadsh1()
 #endif
 
    finished = kFALSE;
-   gDebug = 1;
+   //gDebug = 1;
 
    c[0] = new TCanvas("c0","Dynamic Filling Example",100,20,400,300);
    c[0]->SetFillColor(42);
@@ -114,10 +113,11 @@ void threadsh1()
    while (!finished) {
       for (int i = 0; i < 4; i++) {
          if (c[i]->IsModified()) {
-            printf("Update canvas %d\n", i);
+            //printf("Update canvas %d\n", i);
             c[i]->Update();
          }
       }
+      gSystem->Sleep(100);
       gSystem->ProcessEvents();
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TException.h,v 1.3 2005/09/03 04:16:27 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TException.h,v 1.4 2005/09/03 14:38:35 pcanal Exp $
 // Author: Fons Rademakers   21/09/95
 
 /*************************************************************************
@@ -29,8 +29,12 @@ struct sigjmp_buf;
 struct jmp_buf;
 #endif
 
+#ifndef ROOT_RConfig
 #include "RConfig.h"
+#endif
+#ifndef ROOT_DllImport
 #include "DllImport.h"
+#endif
 
 struct ExceptionContext_t {
 #ifdef NEED_SIGJMP

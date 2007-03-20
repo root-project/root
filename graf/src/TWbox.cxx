@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TWbox.cxx,v 1.8 2005/11/21 13:57:42 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TWbox.cxx,v 1.9 2006/07/03 16:10:45 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include "TROOT.h"
 #include "Strlen.h"
 #include "TWbox.h"
+#include "TColor.h"
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
 #include "TPoint.h"
@@ -193,8 +194,8 @@ void TWbox::PaintFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
       frame[5].fX = pxt;                 frame[5].fY = pyl;
       frame[6].fX = pxl;                 frame[6].fY = pyl;
 
-      if (bordermode == -1) gVirtualX->SetFillColor(GetLightColor());
-      else                  gVirtualX->SetFillColor(GetDarkColor());
+      if (bordermode == -1) gVirtualX->SetFillColor(TColor::GetColorBright(GetFillColor()));
+      else                  gVirtualX->SetFillColor(TColor::GetColorDark(GetFillColor()));
       gVirtualX->DrawFillArea(7, frame);
 
       gVirtualX->SetFillColor(-1);

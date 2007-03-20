@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.22 2006/07/11 09:05:01 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.23 2006/07/26 13:36:43 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -281,7 +281,7 @@ void TGColorPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
    if (fLaunchDialog) {
       Int_t retc;
       ULong_t color = fCurrentColor;
-
+      
       new TGColorDialog(gClient->GetDefaultRoot(), this, &retc, &color);
 
       if (retc == kMBOk) {
@@ -343,6 +343,16 @@ Bool_t TGColorPopup::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          break;
    }
    return kTRUE;
+}
+
+//________________________________________________________________________________
+void TGColorPopup::PreviewColor(Pixel_t color)
+{
+   // Emit a signal to see preview.
+   
+   fCurrentColor = color;
+   SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED), -1, color);     
+
 }
 
 //________________________________________________________________________________
@@ -603,3 +613,4 @@ void TGColorSelect::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    }
    out << endl;
 }
+

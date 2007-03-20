@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.58 2006/07/20 12:03:48 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.59 2006/07/26 13:36:43 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -231,6 +231,7 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
    fTip         = 0;
    fTipItem     = 0;
    fAutoTips    = kFALSE;
+   fAutoCheckBoxPic = kTRUE;
    fDisableOpen = kFALSE;
 
    fGrayPixel   = GetGrayPixel();
@@ -272,6 +273,7 @@ TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
    fTip         = 0;
    fTipItem     = 0;
    fAutoTips    = kFALSE;
+   fAutoCheckBoxPic = kTRUE;
    fDisableOpen = kFALSE;
 
    fGrayPixel   = GetGrayPixel();
@@ -2216,6 +2218,8 @@ void TGListTree::ToggleItem(TGListTreeItem *item)
 void TGListTree::UpdateChecked(TGListTreeItem *item, Bool_t redraw)
 {
    // Update the state of the node 'item' according to the children states.
+   
+   if (fAutoCheckBoxPic == kFALSE) return;
 
    Bool_t diff = kFALSE;
    TGListTreeItem *current = item;

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorEntries.cxx,v 1.2 2006/09/18 15:13:51 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorEntries.cxx,v 1.3 2006/09/29 15:40:08 brun Exp $
 // Author: Philippe Canal 09/06/2006
 
 /*************************************************************************
@@ -40,6 +40,7 @@
 //
 
 #include "TSelectorEntries.h"
+#include "TTree.h"
 #include "TTreeFormula.h"
 #include "TSelectorScalar.h"
 
@@ -104,6 +105,13 @@ void TSelectorEntries::SlaveBegin(TTree *tree)
    if (fSelect && fSelect->GetMultiplicity()) fSelectMultiple = kTRUE;
 
    fChain->ResetBit(TTree::kForceRead);
+}
+
+//______________________________________________________________________________
+Int_t TSelectorEntries::GetEntry(Long64_t entry, Int_t getall)
+{
+   //read entry
+   return fChain ? fChain->GetTree()->GetEntry(entry, getall) : 0; 
 }
 
 //______________________________________________________________________________

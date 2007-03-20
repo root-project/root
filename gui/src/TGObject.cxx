@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGObject.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -31,6 +31,27 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGObject.h"
+#include "TVirtualX.h"
+#include "TImage.h"
 
 ClassImp(TGObject)
 
+void TGObject::SaveAs(const char* filename /*= ""*/, Option_t* option /*= ""*/) const
+{
+   // Write this TGObject to a file using TImage, if filename's extension signals 
+   // a valid TImage::EImageFileType, as defined by TImage::GetImageFileTypeFromFilename().
+   // Otherwise forward to TObject::SaveAs().
+
+   TImage::EImageFileTypes type = TImage::GetImageFileTypeFromFilename(filename);
+   if (type != TImage::kUnknown) {
+      WindowAttributes_t wattr;
+      gVirtualX->GetWindowAttributes(GetId(), wattr);
+      TImage* img = TImage::Create();
+      img->FromWindow(GetId(), 0, 0, wattr.fWidth, wattr.fHeight);
+      img->WriteImage(filename, type);
+      delete img;
+      return;
+   }
+
+   TObject::SaveAs(filename, option);
+}

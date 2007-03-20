@@ -1,8 +1,10 @@
 #include "TGraph.h"
+#include "TAxis.h"
 #include "TCanvas.h"
 #include "Math/Interpolator.h"
 #include <iostream>
 
+#include <cmath>
 
 
 void interpolate( const  ROOT::Math::Interpolator & itp ) { 
@@ -39,8 +41,8 @@ void testInterpolation() {
   std::vector<double> x(n); 
   std::vector<double> y(n); 
   for (int i = 0; i < n; ++i) {  
-    x[i] = i + 0.5 * sin(i+0.0); 
-    y[i] = i + cos(i * i+0.0); 
+    x[i] = i + 0.5 * std::sin(i+0.0); 
+    y[i] = i + std::cos(i * i+0.0); 
     xorig[i] = x[i];
     yorig[i] = y[i];
   } 

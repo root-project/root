@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.22 2006/10/13 07:52:00 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.23 2006/10/30 17:34:03 antcheva Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -45,7 +45,6 @@
 #include "TImage.h"
 #include "TSystem.h"
 #include "TTimer.h"
-#include "TMath.h"
 #include "TEnv.h"
 #include "Riostream.h"
 

@@ -17,13 +17,13 @@
 #define BC_INST_H
 
 #if !defined(__sun) && (!defined(_MSC_VER) || _MSC_VER > 1200) && !(defined(__xlC__) || defined(__xlc__))
-extern "C" {
+//extern "C" {
 #ifdef __CINT__
 #include "../G__ci.h"
 #else
 #include "common.h"
 #endif
-}
+//}
 #else
 #include "G__ci.h"
 #include "common.h"
@@ -36,7 +36,7 @@ using namespace std;
 /***********************************************************************
  * C wrapper to optimize G__LD_IFUNC
  ***********************************************************************/
-extern "C" int G__LD_IFUNC_optimize(struct G__ifunc_table* ifunc,int ifn
+extern "C" int G__LD_IFUNC_optimize(struct G__ifunc_table_internal* ifunc,int ifn
 				   ,long *inst,int pc);
 
 /***********************************************************************

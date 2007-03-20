@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: LinkDefD32.h,v 1.1 2006/06/27 14:02:26 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: LinkDefD32.h,v 1.2 2006/06/30 14:45:46 moneta Exp $
 // Authors: L. Moneta    2005  
 
 
@@ -9,6 +9,8 @@
 #pragma link off all globals;
 #pragma link off all classes;
 #pragma link off all functions;
+
+#pragma link C++ nestedclass;
 
 //#pragma link C++ namespace tvmet;
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMacro.h,v 1.5 2006/06/26 09:29:12 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMacro.h,v 1.7 2007/01/17 11:55:01 brun Exp $
 // Author: Rene Brun   16/08/2005
 
 /*************************************************************************
@@ -24,13 +24,9 @@
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
-#ifndef ROOT_TList
-#include "TList.h"
-#endif
-#ifndef ROOT_TObjString
-#include "TObjString.h"
-#endif
 
+class TList;
+class TObjString;
 class TMD5;
 
 
@@ -50,7 +46,7 @@ public:
    virtual void         Browse(TBrowser *b);
    virtual TMD5        *Checksum();
    virtual TObjString  *GetLineWith(const char *text) const;
-   virtual void         Exec(const char *params=0);  //*MENU*
+   virtual Long_t       Exec(const char *params = 0, Int_t* error = 0); //*MENU*
    TList               *GetListOfLines() const {return fLines;}
    virtual void         Paint(Option_t *option="");
    virtual void         Print(Option_t *option="") const;  //*MENU*

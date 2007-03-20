@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.18 2006/12/05 15:43:26 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.28 2007/03/19 09:57:11 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -16,46 +16,58 @@
 //                                                                      //
 // Allows to perform, explore and compare various fits.                 //
 //                                                                      //
-// To display the new Fit panel interface right click on a hostogram    //
+// To display the new Fit panel interface right click on a histogram    //
 // or a graph to pop up the context menu and then select the menu       //
-// entry 'Fit Panel'. The first set of GUI elements is related to       //
-// the function choice and settings.                                    //
+// entry 'Fit Panel'.                                                   //
 //                                                                      //
-// 'Predefined' combo box - contains a list of predefined functions     //
+// "General" Tab                                                        //
+//                                                                      //
+// The first set of GUI elements is related to the function choice      //
+// and settings. The status bar on the bottom provides information      //
+// about the current minimization settings using the following          //
+// abbreviations:                                                       //
+// LIB - shows the current choice between Minuit/Minuit2/Fumili         //
+// MIGRAD or FUMILI points to the current minimization method in use.   //
+// Itr: - shows the maximum number of iterations nnnn set for the fit.  //
+// Prn: - can be DEF/VER/QT and shows the current print option in use.  //
+//                                                                      //
+// "Predefined" combo box - contains a list of predefined functions     //
 // in ROOT. The default one is Gaussian.                                //
 //                                                                      //
-// 'Operation' radio button group defines selected operational mode     //
+// "Operation" radio button group defines selected operational mode     //
 // between functions: NOP - no operation (default); ADD - addition      //
 // CONV - convolution (will be implemented in the future).              //
 //                                                                      //
 // Users can enter the function expression in a text entry field.       //
 // The entered string is checked after Enter key was pressed. An        //
-// error message shows up if the string is not accepted. This first     //
+// error message shows up if the string is not accepted. The current    //
 // prototype is limited and users have no freedom to enter file/user    //
 // function names in this field.                                        //
 //                                                                      //
-// 'Set Parameters' button opens a dialog for parameters settings       //
-// (still under development).                                           //
+// "Set Parameters" button opens a dialog for parameters settings.      //
 //                                                                      //
-// 'Fit Settings' provides user interface elements related to the       //
-// fitter. Currently there are two model choices: Chi-square and        //
+// "Fit Settings" provides user interface elements related to the       //
+// fitter. Currently there are two method choices: Chi-square and       //
 // Binned Likelihood.                                                   //
 //                                                                      //
-// Fit options:                                                         //
-// Linear Fit' check button sets the use of Linear fitter is it is      //
+// "Linear Fit" check button sets the use of Linear fitter is it is     //
 // selected. Otherwise the option 'F' is applied if polN is selected.   //
-// 'Robust' number entry sets the robust value when fitting graphs.     //
-// 'No Chi-square' check button iswitch ON/OFF option 'C' - do not      //
+// "Robust" number entry sets the robust value when fitting graphs.     //
+// "No Chi-square" check button sets ON/OFF option 'C' - do not         //
 // calculate Chi-square (for Linear fitter).                            //
-// 'Integral' check button switch ON/OFF option 'I' - use integral      //
+//                                                                      //
+// Fit options:                                                         //
+// "Integral" check button switch ON/OFF option 'I' - use integral      //
 // of function instead of value in bin center.                          //
-// 'Best Errors' sets ON/OFF option 'E' - better errors estimation      //
+// "Best Errors" sets ON/OFF option 'E' - better errors estimation      //
 // using Minos technique.                                               //
+// "All weights = 1" sets ON/OFF option 'W' - all weights set to 1,     //
+// excluding empty bins and ignoring error bars.                        //
+// "Empty bins, weights=1" sets ON/OFF option 'WW' -  all weights       //
+// equal to 1, including  empty bins, error bars ignored.               //
 // "Use range" sets ON/OFF option 'R' - fit only data within the        //
 // specified function range with the slider.                            //
-// "All weights = 1" sets ON/OFF option 'W'- all weights set to 1,      //
-// error bars are ignored.                                              //
-// "Improve fit results" sets ON/OFF option 'M'- after minimum is       //
+// "Improve fit results" sets ON/OFF option 'M' - after minimum is      //
 // found, search for a new one.                                         //
 // "Add to list" sets On/Off option '+'- add function to the list       //
 // without deleting the previous.                                       //
@@ -66,19 +78,37 @@
 // "Do not store/draw" sets On/Off option 'N'- do not store the         //
 // function, do not draw it.                                            //
 //                                                                      //
-// Print options:                                                       //
-// "Default" - between Verbose and Quiet.                               //
-// "Verbose" - prints results after each iteration.                     //
-// "Quiet" - no fit information is printed.                             //
-//                                                                      //
 // Sliders settings are used if option 'R' - use range is active.       //
 // Users can change min/max values by pressing the left mouse button    //
 // near to the left/right slider edges. It is possible o change both    //
 // values simultaneously by pressing the left mouse button near to its  //
 // center and moving it to a new desire position.                       //
 //                                                                      //
+// "Minimization" Tab                                                   //
+//                                                                      //
+// "Library" group allows you to use Minuit, Minuit2 or Fumili          //
+// minimization packages for your fit.                                  //
+//  "Minuit" - the popular Minuit minimization package.                 //
+//  "Minuit2" - a new object-oriented implementation of Minuit in C++.  //
+//  "Fumili" - the popular Fumili minimization package.                 //
+//                                                                      //
+// "Method" group has currently restricted functionality.               //
+//  "MIGRAD" method is available for Minuit and Minuit2                 //
+//  "FUMILI" method is available for Fumili and Minuit2                 //
+//  "SIMPLEX" method is disabled (will come with the new fitter design) //
+//                                                                      //
+// "Minimization Settings' group allows users to set values for:        //
+//  "Error definition" - between 0.0 and 100.0  (default is 1.0).       //
+//  "Maximum tolerance" - the fit relative precision in use.            //
+//  "Maximum number of iterations" - default is 5000.                   //
+//                                                                      //
+// Print options:                                                       //
+//  "Default" - between Verbose and Quiet.                              //
+//  "Verbose" - prints results after each iteration.                    //
+//  "Quiet" - no fit information is printed.                            //
+//                                                                      //
 // Fit button - performs a fit.                                         //
-// Reset - resets the GUI elements and related fit settings to the      //
+// Reset - resets all GUI elements and related fit settings to the      //
 // default ones.                                                        //
 // Close - closes this window.                                          //
 //                                                                      //
@@ -90,6 +120,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TFitEditor.h"
+#include "TROOT.h"
+#include "TClass.h"
 #include "TCanvas.h"
 #include "TGTab.h"
 #include "TGLabel.h"
@@ -101,15 +133,17 @@
 #include "TGButtonGroup.h"
 #include "TGNumberEntry.h"
 #include "TGDoubleSlider.h"
+#include "TGStatusBar.h"
 #include "TFitParametersDialog.h"
 #include "TGMsgBox.h"
 #include "TAxis.h"
 #include "TGraph.h"
+#include "TGraph2D.h"
 #include "TH1.h"
 #include "TF1.h"
 #include "TTimer.h"
 #include "THStack.h"
-
+#include "TVirtualFitter.h"
 
 enum EFitPanel {
    kFP_FLIST, kFP_GAUS,  kFP_GAUSN, kFP_EXPO,  kFP_LAND,  kFP_LANDN,
@@ -120,6 +154,10 @@ enum EFitPanel {
    kFP_MLIST, kFP_MCHIS, kFP_MBINL, kFP_MUBIN, kFP_MUSER, kFP_MLINF, kFP_MUSR,
    kFP_DSAME, kFP_DNONE, kFP_DADVB, kFP_DNOST, kFP_PDEF,  kFP_PVER,  kFP_PQET,
    kFP_XMIN,  kFP_XMAX,  kFP_YMIN,  kFP_YMAX,  kFP_ZMIN,  kFP_ZMAX,
+   
+   kFP_LMIN,  kFP_LMIN2, kFP_LFUM,  kFP_MIGRAD,kFP_SIMPLX,kFP_FUMILI,
+   kFP_MERR,  kFP_MTOL,  kFP_MITR,
+   
    kFP_FIT,   kFP_RESET, kFP_CLOSE
 };
 
@@ -157,7 +195,7 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    fZmax        (0),
    fPlus        ('+'),
    fFunction    (""),
-   fFitOption   ("R"),
+   fFitOption   (""),
    fDrawOption  (""),
    fFitFunc     (0)
 
@@ -165,6 +203,8 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    // Constructor of fit editor.
 
    SetCleanup(kDeepCleanup);
+   
+   fFitFuncList = new TList();
 
    TString name = obj->GetName();
    name.Append("::");
@@ -181,11 +221,112 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    fObjLabel->SetTextColor(color, kFALSE);
    fObjLabel->SetTextJustify(kTextLeft);
 
-   // 'General' tab
    fTab = new TGTab(this, 10, 10);
    AddFrame(fTab, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
    fTab->SetCleanup(kDeepCleanup);
    fTab->Associate(this);
+   
+   TGHorizontalFrame *cf1 = new TGHorizontalFrame(this, 250, 20, kFixedWidth);
+   cf1->SetCleanup(kDeepCleanup);
+   fFitButton = new TGTextButton(cf1, "&Fit", kFP_FIT);
+   fFitButton->Associate(this);
+   cf1->AddFrame(fFitButton, new TGLayoutHints(kLHintsTop |
+                                               kLHintsExpandX, 2, 2, 2, 2));
+
+   fResetButton = new TGTextButton(cf1, "&Reset", kFP_RESET);
+   fResetButton->Associate(this);
+   cf1->AddFrame(fResetButton, new TGLayoutHints(kLHintsTop |
+                                                 kLHintsExpandX, 3, 2, 2, 2));
+
+   fCloseButton = new TGTextButton(cf1, "&Close", kFP_CLOSE);
+   fCloseButton->Associate(this);
+   cf1->AddFrame(fCloseButton, new TGLayoutHints(kLHintsTop |
+                                                 kLHintsExpandX, 3, 2, 2, 2));
+   AddFrame(cf1, new TGLayoutHints(kLHintsNormal |
+                                   kLHintsRight, 0, 5, 5, 5));
+
+   // Create status bar
+   int parts[] = { 20, 20, 20, 20, 20 };
+   fStatusBar = new TGStatusBar(this, 10, 10);
+   fStatusBar->SetParts(parts, 5);
+   AddFrame(fStatusBar, new TGLayoutHints(kLHintsBottom | 
+                                          kLHintsLeft   | 
+                                          kLHintsExpandX));
+
+   CreateGeneralTab();
+   CreateMinimizationTab();
+
+   gROOT->GetListOfCleanups()->Add(this);
+
+   MapSubwindows();
+   // not ready yet for 2 & 3 dim
+   fGeneral->HideFrame(fSliderYParent);
+   fGeneral->HideFrame(fSliderZParent);
+
+   // do not allow resizing
+   TGDimension size = GetDefaultSize();
+   SetWMSize(size.fWidth, size.fHeight);
+   SetWMSizeHints(size.fWidth, size.fHeight, size.fWidth, size.fHeight, 0, 0);
+   SetWindowName("New Fit Panel");
+   SetIconName("New Fit Panel");
+   SetClassHints("New Fit Panel", "New Fit Panel");
+
+   SetMWMHints(kMWMDecorAll | kMWMDecorResizeH  | kMWMDecorMaximize |
+                              kMWMDecorMinimize | kMWMDecorMenu,
+               kMWMFuncAll  | kMWMFuncResize    | kMWMFuncMaximize |
+                              kMWMFuncMinimize,
+               kMWMInputModeless);
+   if (pad && obj) {
+      fParentPad = (TPad *)pad;
+      fFitObject = (TObject *)obj;
+      fDrawOption = GetDrawOption();
+      SetCanvas(pad->GetCanvas());
+      pad->GetCanvas()->Selected(pad, obj, kButton1Down);
+   } else {
+      Error("FitPanel", "need to have an object drawn first");
+      return;
+   }
+   UInt_t dw = fClient->GetDisplayWidth();
+   UInt_t cw = pad->GetCanvas()->GetWindowWidth();
+   UInt_t cx = (UInt_t)pad->GetCanvas()->GetWindowTopX();
+   UInt_t cy = (UInt_t)pad->GetCanvas()->GetWindowTopY();
+
+   if (cw + size.fWidth < dw) {
+      Int_t gedx = 0, gedy = 0;
+      gedx = cx+cw+4;
+      gedy = cy-20;
+      MoveResize(gedx, gedy,size.fWidth, size.fHeight);
+      SetWMPosition(gedx, gedy);
+   } 
+   
+   Resize(size);
+   MapWindow();
+   gVirtualX->RaiseWindow(GetId());
+}
+
+//______________________________________________________________________________
+TFitEditor::~TFitEditor()
+{
+   // Fit editor destructor.
+
+   DisconnectSlots();
+   fCloseButton->Disconnect("Clicked()");
+   TQObject::Disconnect("TCanvas", "Selected(TVirtualPad *, TObject *, Int_t)");
+   gROOT->GetListOfCleanups()->Remove(this);
+
+   if (fFitFunc) delete fFitFunc;
+   Cleanup();
+   delete fLayoutNone;
+   delete fLayoutAdd;
+   delete fLayoutConv;
+   fgFitDialog = 0;
+}
+
+//______________________________________________________________________________
+void TFitEditor::CreateGeneralTab()
+{
+   // Create 'General' tab.
+   
    fTabContainer = fTab->AddTab("General");
    fGeneral = new TGCompositeFrame(fTabContainer, 10, 10, kVerticalFrame);
    fTabContainer->AddFrame(fGeneral, new TGLayoutHints(kLHintsTop |
@@ -260,7 +401,7 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    fSelLabel = new TGLabel(tf4, Form("%s", txt->GetTitle()));
    tf4->AddFrame(fSelLabel, new TGLayoutHints(kLHintsNormal |
                                               kLHintsCenterY, 0, 6, 2, 0));
-
+   Pixel_t color;
    gClient->GetColorByName("#336666", color);
    fSelLabel->SetTextColor(color, kFALSE);
    TGCompositeFrame *tf5 = new TGCompositeFrame(tf4, 120, 20,
@@ -377,8 +518,6 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    fUseRange->Associate(this);
    fUseRange->SetToolTipText("'R'- fit only data within the specified function range");
    v4->AddFrame(fUseRange, new TGLayoutHints(kLHintsNormal, 0, 0, 2, 2));
-   if (fFitOption.Contains('R'))
-      fUseRange->SetState(kButtonDown);
 
    fImproveResults = new TGCheckButton(v4, "Improve fit results", kFP_IFITR);
    fImproveResults->Associate(this);
@@ -438,34 +577,6 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    h6->AddFrame(v6, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
    gf->AddFrame(h6, new TGLayoutHints(kLHintsExpandX, 20, 0, 2, 0));
 
-   // 'print option' sub-group
-   TGHorizontalFrame *h7 = new TGHorizontalFrame(gf);
-   TGLabel *label7 = new TGLabel(h7, "Print Options");
-   h7->AddFrame(label7, new TGLayoutHints(kLHintsNormal |
-                                          kLHintsCenterY, 2, 2, 2, 2));
-   TGHorizontal3DLine *hline4 = new TGHorizontal3DLine(h7);
-   h7->AddFrame(hline4, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX));
-   gf->AddFrame(h7, new TGLayoutHints(kLHintsExpandX));
-
-   TGHorizontalFrame *h8 = new TGHorizontalFrame(gf);
-   fOptDefault = new TGRadioButton(h8, "Default", kFP_PDEF);
-   fOptDefault->Associate(this);
-   fOptDefault->SetToolTipText("Default is between Verbose and Quiet");
-   h8->AddFrame(fOptDefault, new TGLayoutHints(kLHintsNormal, 0, 0, 0, 1));
-   fOptDefault->SetState(kButtonDown);
-
-   fOptVerbose = new TGRadioButton(h8, "Verbose", kFP_PVER);
-   fOptVerbose->Associate(this);
-   fOptVerbose->SetToolTipText("'V'- print results after each iteration");
-   h8->AddFrame(fOptVerbose, new TGLayoutHints(kLHintsNormal, 30, 0, 0, 1));
-
-   fOptQuiet = new TGRadioButton(h8, "Quiet", kFP_PQET);
-   fOptQuiet->Associate(this);
-   fOptQuiet->SetToolTipText("'Q'- no print");
-   h8->AddFrame(fOptQuiet, new TGLayoutHints(kLHintsNormal, 30, 0, 0, 1));
-
-   gf->AddFrame(h8, new TGLayoutHints(kLHintsExpandX, 20, 0, 1, 1));
-
    fGeneral->AddFrame(gf, new TGLayoutHints(kLHintsExpandX |
                                             kLHintsExpandY, 5, 5, 0, 0));
    // sliderX
@@ -500,98 +611,132 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    fSliderZParent->AddFrame(fSliderZ, new TGLayoutHints(kLHintsExpandX | 
                                                         kLHintsCenterY));
    fGeneral->AddFrame(fSliderZParent, new TGLayoutHints(kLHintsExpandX, 5, 5, 0, 0));
+}
 
-   // 'Minimization' tab
+
+//______________________________________________________________________________
+void TFitEditor::CreateMinimizationTab()
+{
+   // Create 'Minimization' tab.
+   
    fTabContainer = fTab->AddTab("Minimization");
    fMinimization = new TGCompositeFrame(fTabContainer, 10, 10, kVerticalFrame);
    fTabContainer->AddFrame(fMinimization, new TGLayoutHints(kLHintsTop |
                                                             kLHintsExpandX,
                                                             5, 5, 2, 2));
-   fTab->SetEnabled(1, kFALSE);
+   MakeTitle(fMinimization, "Library");
 
-   TGHorizontalFrame *cf1 = new TGHorizontalFrame(this, 250, 20, kFixedWidth);
-   cf1->SetCleanup(kDeepCleanup);
-   fFitButton = new TGTextButton(cf1, "&Fit", kFP_FIT);
-   fFitButton->Associate(this);
-   cf1->AddFrame(fFitButton, new TGLayoutHints(kLHintsTop |
-                                               kLHintsExpandX, 2, 2, 2, 2));
+   TGHorizontalFrame *hl = new TGHorizontalFrame(fMinimization);
+   fLibMinuit = new TGRadioButton(hl, "Minuit", kFP_LMIN);
+   fLibMinuit->Associate(this);
+   fLibMinuit->SetToolTipText("Use minimization from libMinuit (default)");
+   hl->AddFrame(fLibMinuit, new TGLayoutHints(kLHintsNormal, 40, 0, 0, 1));
+   fLibMinuit->SetState(kButtonDown);
+   fStatusBar->SetText("LIB Minuit",0);
 
-   fResetButton = new TGTextButton(cf1, "&Reset", kFP_RESET);
-   fResetButton->Associate(this);
-   cf1->AddFrame(fResetButton, new TGLayoutHints(kLHintsTop |
-                                                 kLHintsExpandX, 3, 2, 2, 2));
+   fLibMinuit2 = new TGRadioButton(hl, "Minuit2", kFP_LMIN2);
+   fLibMinuit2->Associate(this);
+   fLibMinuit2->SetToolTipText("New C++ version of Minuit");
+   hl->AddFrame(fLibMinuit2, new TGLayoutHints(kLHintsNormal, 35, 0, 0, 1));
 
-   fCloseButton = new TGTextButton(cf1, "&Close", kFP_CLOSE);
-   fCloseButton->Associate(this);
-   cf1->AddFrame(fCloseButton, new TGLayoutHints(kLHintsTop |
-                                                 kLHintsExpandX, 3, 2, 2, 2));
-   AddFrame(cf1, new TGLayoutHints(kLHintsBottom |
-                                   kLHintsRight, 0, 5, 5, 5));
+   fLibFumili = new TGRadioButton(hl, "Fumili", kFP_LFUM);
+   fLibFumili->Associate(this);
+   fLibFumili->SetToolTipText("Use minimization from libFumili");
+   hl->AddFrame(fLibFumili, new TGLayoutHints(kLHintsNormal, 30, 0, 0, 1));
+   fMinimization->AddFrame(hl, new TGLayoutHints(kLHintsExpandX, 20, 0, 5, 1));
 
-   gROOT->GetListOfCleanups()->Add(this);
+   MakeTitle(fMinimization, "Method");
 
-   MapSubwindows();
-   // not ready yet for 2 & 3 dim
-   fGeneral->HideFrame(fSliderYParent);
-   fGeneral->HideFrame(fSliderZParent);
+   TGHorizontalFrame *hm = new TGHorizontalFrame(fMinimization);
+   fMigrad = new TGRadioButton(hm, "MIGRAD", kFP_MIGRAD);
+   fMigrad->Associate(this);
+   fMigrad->SetToolTipText("Use MIGRAD as minimization method");
+   hm->AddFrame(fMigrad, new TGLayoutHints(kLHintsNormal, 40, 0, 0, 1));
+   fMigrad->SetState(kButtonDown);
+   fStatusBar->SetText("MIGRAD",1);
 
-   // do not allow resizing
-   TGDimension size = GetDefaultSize();
-   SetWMSize(size.fWidth, size.fHeight);
-   SetWMSizeHints(size.fWidth, size.fHeight, size.fWidth, size.fHeight, 0, 0);
-   SetWindowName("New Fit Panel");
-   SetIconName("New Fit Panel");
-   SetClassHints("New Fit Panel", "New Fit Panel");
+   fSimplex = new TGRadioButton(hm, "SIMPLEX", kFP_SIMPLX);
+   fSimplex->Associate(this);
+   fSimplex->SetToolTipText("Use SIMPLEX as minimization method");
+   // Simplex functionality will come with the new fitter design    
+   fSimplex->SetState(kButtonDisabled);
+   hm->AddFrame(fSimplex, new TGLayoutHints(kLHintsNormal, 20, 0, 0, 1));
 
-   SetMWMHints(kMWMDecorAll | kMWMDecorResizeH  | kMWMDecorMaximize |
-                              kMWMDecorMinimize | kMWMDecorMenu,
-               kMWMFuncAll  | kMWMFuncResize    | kMWMFuncMaximize |
-                              kMWMFuncMinimize,
-               kMWMInputModeless);
-   if (pad && obj) {
-      fParentPad = (TPad *)pad;
-      fFitObject = (TObject *)obj;
-      fDrawOption = GetDrawOption();
-      SetCanvas(pad->GetCanvas());
-      pad->GetCanvas()->Selected(pad, obj, kButton1Down);
-   } else {
-      Error("FitPanel", "need to have an object drawn first");
-      return;
-   }
-   UInt_t dw = fClient->GetDisplayWidth();
-   UInt_t cw = pad->GetCanvas()->GetWindowWidth();
-   UInt_t cx = (UInt_t)pad->GetCanvas()->GetWindowTopX();
-   UInt_t cy = (UInt_t)pad->GetCanvas()->GetWindowTopY();
+   fFumili = new TGRadioButton(hm, "FUMILI", kFP_FUMILI);
+   fFumili->Associate(this);
+   fFumili->SetToolTipText("Use FUMILI as minimization method");
+   fFumili->SetState(kButtonDisabled);
+   hm->AddFrame(fFumili, new TGLayoutHints(kLHintsNormal, 18, 0, 0, 1));
+   fMinimization->AddFrame(hm, new TGLayoutHints(kLHintsExpandX, 20, 0, 5, 1));
 
-   if (cw + size.fWidth < dw) {
-      Int_t gedx = 0, gedy = 0;
-      gedx = cx+cw+4;
-      gedy = cy-20;
-      MoveResize(gedx, gedy,size.fWidth, size.fHeight);
-      SetWMPosition(gedx, gedy);
-   } 
+   MakeTitle(fMinimization, "Settings");
+   TGLabel *hslabel1 = new TGLabel(fMinimization,"Use ENTER key to validate a new value or click");
+   fMinimization->AddFrame(hslabel1, new TGLayoutHints(kLHintsNormal, 61, 0, 5, 1));
+   TGLabel *hslabel2 = new TGLabel(fMinimization,"on Reset button to set the defaults.");
+   fMinimization->AddFrame(hslabel2, new TGLayoutHints(kLHintsNormal, 61, 0, 1, 10));
+
+   TGHorizontalFrame *hs = new TGHorizontalFrame(fMinimization);
    
-   Resize(size);
-   MapWindow();
-   gVirtualX->RaiseWindow(GetId());
-}
+   TGVerticalFrame *hsv1 = new TGVerticalFrame(hs, 180, 10, kFixedWidth);
+   TGLabel *errlabel = new TGLabel(hsv1,"Error definition (default = 1): ");
+   hsv1->AddFrame(errlabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 
+                                              1, 1, 5, 7));
+   TGLabel *tollabel = new TGLabel(hsv1,"Max tolerance (precision): ");
+   hsv1->AddFrame(tollabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 
+                                              1, 1, 5, 7));
+   TGLabel *itrlabel = new TGLabel(hsv1,"Max number of iterations: ");
+   hsv1->AddFrame(itrlabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 
+                                              1, 1, 5, 5));
+   hs->AddFrame(hsv1, new TGLayoutHints(kLHintsNormal, 60, 0, 0, 0));
+   
+   TGVerticalFrame *hsv2 = new TGVerticalFrame(hs, 90,10, kFixedWidth);
+   fErrorScale = new TGNumberEntryField(hsv2, kFP_MERR, 1.0,
+                                        TGNumberFormat::kNESRealTwo,
+                                        TGNumberFormat::kNEAPositive,
+                                        TGNumberFormat::kNELLimitMinMax,0.,100.);
+   hsv2->AddFrame(fErrorScale, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 
+                                                 1, 1, 0, 3));
+   fTolerance = new TGNumberEntryField(hsv2, kFP_MTOL, 1.0E-9, 
+                                       TGNumberFormat::kNESReal,
+                                       TGNumberFormat::kNEAPositive,
+                                       TGNumberFormat::kNELLimitMinMax, 0., 1.);
+   fTolerance->SetNumber(TVirtualFitter::GetPrecision());
+   hsv2->AddFrame(fTolerance, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 
+                                                1, 1, 3, 3));
+   fIterations = new TGNumberEntryField(hsv2, kFP_MITR, 5000, 
+                                   TGNumberFormat::kNESInteger,
+                                   TGNumberFormat::kNEAPositive,
+                                   TGNumberFormat::kNELNoLimits);
+   fIterations->SetNumber(TVirtualFitter::GetMaxIterations());
+   hsv2->AddFrame(fIterations, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 
+                                                 1, 1, 3, 3));
+   hs->AddFrame(hsv2, new TGLayoutHints(kLHintsNormal, 0, 0, 0, 0));
+   fMinimization->AddFrame(hs, new TGLayoutHints(kLHintsExpandX, 0, 0, 1, 1));
+   fStatusBar->SetText("Itr: 5000",2);
 
-//______________________________________________________________________________
-TFitEditor::~TFitEditor()
-{
-   // Fit editor destructor.
 
-   DisconnectSlots();
-   fCloseButton->Disconnect("Clicked()");
-   TQObject::Disconnect("TCanvas", "Selected(TVirtualPad *, TObject *, Int_t)");
-   gROOT->GetListOfCleanups()->Remove(this);
+   MakeTitle(fMinimization, "Print Options");
 
-   if (fFitFunc) delete fFitFunc;
-   Cleanup();
-   delete fLayoutNone;
-   delete fLayoutAdd;
-   delete fLayoutConv;
-   fgFitDialog = 0;
+   TGHorizontalFrame *h8 = new TGHorizontalFrame(fMinimization);
+   fOptDefault = new TGRadioButton(h8, "Default", kFP_PDEF);
+   fOptDefault->Associate(this);
+   fOptDefault->SetToolTipText("Default is between Verbose and Quiet");
+   h8->AddFrame(fOptDefault, new TGLayoutHints(kLHintsNormal, 40, 0, 0, 1));
+   fOptDefault->SetState(kButtonDown);
+   fStatusBar->SetText("Prn: DEF",3);
+
+   fOptVerbose = new TGRadioButton(h8, "Verbose", kFP_PVER);
+   fOptVerbose->Associate(this);
+   fOptVerbose->SetToolTipText("'V'- print results after each iteration");
+   h8->AddFrame(fOptVerbose, new TGLayoutHints(kLHintsNormal, 30, 0, 0, 1));
+
+   fOptQuiet = new TGRadioButton(h8, "Quiet", kFP_PQET);
+   fOptQuiet->Associate(this);
+   fOptQuiet->SetToolTipText("'Q'- no print");
+   h8->AddFrame(fOptQuiet, new TGLayoutHints(kLHintsNormal, 25, 0, 0, 1));
+
+   fMinimization->AddFrame(h8, new TGLayoutHints(kLHintsExpandX, 20, 0, 5, 1));
+
 }
 
 //______________________________________________________________________________
@@ -629,12 +774,6 @@ void TFitEditor::ConnectSlots()
    fNoStoreDrawing->Connect("Toggled(Bool_t)","TFitEditor",this,"DoNoStoreDrawing()");
    fNoDrawing->Connect("Toggled(Bool_t)","TFitEditor",this,"DoNoDrawing()");
    fDrawSame->Connect("Toggled(Bool_t)","TFitEditor",this,"DoDrawSame()");
-
-   // print options
-   fOptDefault->Connect("Toggled(Bool_t)","TFitEditor",this,"DoPrintOpt(Bool_t)");
-   fOptVerbose->Connect("Toggled(Bool_t)","TFitEditor",this,"DoPrintOpt(Bool_t)");
-   fOptQuiet->Connect("Toggled(Bool_t)","TFitEditor",this,"DoPrintOpt(Bool_t)");
-
    // fit method
    fMethodList->Connect("Selected(Int_t)", "TFitEditor", this, "DoMethod(Int_t)");
 
@@ -664,6 +803,29 @@ void TFitEditor::ConnectSlots()
       fSliderZ->Connect("Released()","TFitEditor",this, "DoSliderZReleased()");
    }
    fParentPad->Connect("RangeAxisChanged()", "TFitEditor", this, "UpdateGUI()");
+   
+   // 'Minimization' tab
+   // library
+   fLibMinuit->Connect("Toggled(Bool_t)","TFitEditor",this,"DoLibrary(Bool_t)");
+   fLibMinuit2->Connect("Toggled(Bool_t)","TFitEditor",this,"DoLibrary(Bool_t)");
+   fLibFumili->Connect("Toggled(Bool_t)","TFitEditor",this,"DoLibrary(Bool_t)");
+
+   // minimization method
+   fMigrad->Connect("Toggled(Bool_t)","TFitEditor",this,"DoMinMethod(Bool_t)");
+   // Simplex functionality will come with the new fitter design
+   //fSimplex->Connect("Toggled(Bool_t)","TFitEditor",this,"DoMinMethod(Bool_t)");
+   fFumili->Connect("Toggled(Bool_t)","TFitEditor",this,"DoMinMethod(Bool_t)");
+
+   // fitter settings
+   fErrorScale->Connect("ReturnPressed()", "TFitEditor", this, "DoErrorsDef()");
+   fTolerance->Connect("ReturnPressed()", "TFitEditor", this, "DoMaxTolerance()");
+   fIterations->Connect("ReturnPressed()", "TFitEditor", this, "DoMaxIterations()");
+   
+   // print options
+   fOptDefault->Connect("Toggled(Bool_t)","TFitEditor",this,"DoPrintOpt(Bool_t)");
+   fOptVerbose->Connect("Toggled(Bool_t)","TFitEditor",this,"DoPrintOpt(Bool_t)");
+   fOptQuiet->Connect("Toggled(Bool_t)","TFitEditor",this,"DoPrintOpt(Bool_t)");
+
 }
 
 //______________________________________________________________________________
@@ -699,11 +861,6 @@ void TFitEditor::DisconnectSlots()
    fNoDrawing->Disconnect("Toggled(Bool_t)");
    fDrawSame->Disconnect("Toggled(Bool_t)");
 
-   // print options
-   fOptDefault->Disconnect("Toggled(Bool_t)");
-   fOptVerbose->Disconnect("Toggled(Bool_t)");
-   fOptQuiet->Disconnect("Toggled(Bool_t)");
-
    // fit method
    fMethodList->Disconnect("Selected(Int_t)");
 
@@ -730,6 +887,28 @@ void TFitEditor::DisconnectSlots()
       fSliderZ->Disconnect("Pressed()");
       fSliderZ->Disconnect("Released()");
    }
+   
+   // slots related to 'Minimization' tab
+   fLibMinuit->Disconnect("Toggled(Bool_t)");
+   fLibMinuit2->Disconnect("Toggled(Bool_t)");
+   fLibFumili->Disconnect("Toggled(Bool_t)");
+
+   // minimization method
+   fMigrad->Disconnect("Toggled(Bool_t)");
+   // Simplex functionality will come with the new fitter design
+   //fSimplex->Disconnect("Toggled(Bool_t)");
+   fFumili->Disconnect("Toggled(Bool_t)");
+
+   // fitter settings
+   fErrorScale->Disconnect("ReturnPressed()");
+   fTolerance->Disconnect("ReturnPressed()");
+   fIterations->Disconnect("ReturnPressed()");
+
+   // print options
+   fOptDefault->Disconnect("Toggled(Bool_t)");
+   fOptVerbose->Disconnect("Toggled(Bool_t)");
+   fOptQuiet->Disconnect("Toggled(Bool_t)");
+
 }
 
 //______________________________________________________________________________
@@ -808,6 +987,8 @@ void TFitEditor::UpdateGUI()
 {
    //  Set the fit panel GUI according to the selected object. 
 
+   if (!fFitObject) return;
+   
    // sliders
    if (fDim > 0) {
       fSliderX->Disconnect("PositionChanged()");
@@ -856,13 +1037,11 @@ void TFitEditor::UpdateGUI()
             break;
          }
       }
-      if (fXmin > 1 || fXmax < fXrange) {
-         fSliderX->SetRange(fXmin,fXmax);
-         fSliderX->SetPosition(fXmin, fXmax);
-      } else {
-         fSliderX->SetRange(1,fXrange);
+      fSliderX->SetRange(1,fXrange);
+      if (!fXmin && !fXmax)
+         fSliderX->SetPosition(1,fXrange);
+      else 
          fSliderX->SetPosition(fXmin,fXmax);
-      }
       fSliderX->SetScale(5);
       fSliderX->Connect("PositionChanged()","TFitEditor",this, "DoSliderXMoved()");
       fSliderX->Connect("Pressed()","TFitEditor",this, "DoSliderXPressed()");
@@ -979,7 +1158,7 @@ void TFitEditor::SetFitObject(TVirtualPad *pad, TObject *obj, Int_t event)
    
    // is obj suitable for fitting?
    if (!SetObjectType(obj)) return;
-   
+
    fParentPad = pad;
    fFitObject = obj;
    fDrawOption = GetDrawOption();
@@ -988,19 +1167,25 @@ void TFitEditor::SetFitObject(TVirtualPad *pad, TObject *obj, Int_t event)
 
    ConnectSlots();  //TBS do we need it every time?
 
-   TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
-   if (fNone->GetState() == kButtonDown)
-      fFunction = te->GetTitle();
-   else if (fAdd->GetState() == kButtonDown) {
-      fFunction += '+';
-      fFunction +=te->GetTitle();
+   Bool_t hasf = HasFitFunction(obj);
+   if (hasf) {
+      fFunction = fFitFunc->GetTitle(); 
+      fEnteredFunc->SetText(fFunction.Data()); 
+   } else {
+      TGTextLBEntry *te = (TGTextLBEntry *)fFuncList->GetSelectedEntry();
+      if (fNone->GetState() == kButtonDown)
+         fFunction = te->GetTitle();
+      else if (fAdd->GetState() == kButtonDown) {
+         fFunction += '+';
+         fFunction +=te->GetTitle();
+      }
+      fEnteredFunc->SetText(fFunction.Data());
+      fEnteredFunc->SelectAll();
+      if (!fFitFunc) {
+         fFitFunc = new TF1("fitFunc",fFunction.Data(),fXmin,fXmax);
+      }
    }
-   fEnteredFunc->SetText(fFunction.Data());
-   fEnteredFunc->SelectAll();
-   if (!fFitFunc) {
-      fFitFunc = new TF1("fitFunc",fFunction.Data(),fXmin,fXmax);
-   }
-   
+
    // Update the information about the selected object.
    if (fSetParam->GetState() == kButtonDisabled)
       fSetParam->SetEnabled(kTRUE);
@@ -1039,7 +1224,6 @@ void TFitEditor::RecursiveRemove(TObject* obj)
    // When obj is deleted, clear fFitObject if fFitObject = obj.
 
    if (obj == fFitObject) {
-
       fFitObject = 0;
       DisconnectSlots();
       fObjLabel->SetText("No object selected");
@@ -1049,6 +1233,7 @@ void TFitEditor::RecursiveRemove(TObject* obj)
       fFitButton->SetEnabled(kFALSE);
       fResetButton->SetEnabled(kFALSE);
       fSetParam->SetEnabled(kFALSE);
+      
       TQObject::Connect("TCanvas", "Selected(TVirtualPad *, TObject *, Int_t)", 
                         "TFitEditor",this, 
                         "SetFitObject(TVirtualPad *, TObject *, Int_t)");
@@ -1057,7 +1242,6 @@ void TFitEditor::RecursiveRemove(TObject* obj)
       return;
    }
    if (obj == fParentPad) {
-
       fFitObject = 0;
       fParentPad = 0;
       DisconnectSlots();
@@ -1094,6 +1278,7 @@ TGComboBox* TFitEditor::BuildFunctionList(TGFrame* parent, Int_t id)
    c->AddEntry("pol8",   kFP_POL8);
    c->AddEntry("pol9",   kFP_POL9);
    c->AddEntry("user",   kFP_USER);
+   fLastEntryId = kFP_USER;
 
    if (!gROOT->GetFunction("gaus")) {
       Float_t xmin = 1.;
@@ -1111,7 +1296,7 @@ TGComboBox* TFitEditor::BuildFunctionList(TGFrame* parent, Int_t id)
 //______________________________________________________________________________
 TGComboBox* TFitEditor::BuildMethodList(TGFrame* parent, Int_t id)
 {
-   // Create method list combo box.
+   // Create method list in a combo box.
 
    TGComboBox *c = new TGComboBox(parent, id);
    c->AddEntry("Chi-square", kFP_MCHIS);
@@ -1217,6 +1402,10 @@ void TFitEditor::DoFit()
       return;
    }
 
+   fFitButton->SetState(kButtonEngaged);
+   if (gPad) gPad->GetVirtCanvas()->SetCursor(kWatch);
+   gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kWatch));
+
    fParentPad->Disconnect("RangeAxisChanged()");
    TVirtualPad *save = 0;
    save = gPad;
@@ -1290,6 +1479,10 @@ void TFitEditor::DoFit()
    if (fSetParam->GetState() == kButtonDisabled && 
        fLinearFit->GetState() == kButtonUp)
       fSetParam->SetState(kButtonUp);
+
+   if (gPad) gPad->GetVirtCanvas()->SetCursor(kPointer);
+   gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kPointer));
+   fFitButton->SetState(kButtonUp);
 }
 
 //______________________________________________________________________________
@@ -1342,7 +1535,7 @@ void TFitEditor::DoNoOperation(Bool_t on)
 }
 
 //______________________________________________________________________________
-void TFitEditor::DoFunction(Int_t /*sel*/)
+void TFitEditor::DoFunction(Int_t)
 {
    // Slot connected to predefined fit function settings.
 
@@ -1359,11 +1552,10 @@ void TFitEditor::DoFunction(Int_t /*sel*/)
    fFunction = fEnteredFunc->GetText();
 
    // create TF1 with the passed string. Delete previous one if existing
-   if (fFunction.Contains("gaus") || fFunction.Contains("expo") ||
-       fFunction.Contains("landau") || fFunction.Contains("user")) {
-      fLinearFit->SetState(kButtonUp, kTRUE);
-   } else {
+   if (fFunction.Contains("pol") || fFunction.Contains("++")) {
       fLinearFit->SetState(kButtonDown, kTRUE);
+   } else {
+      fLinearFit->SetState(kButtonUp, kTRUE);
    }
 /*   if (fFunction.Contains("user")) {
       fFitOption += 'U';
@@ -1536,6 +1728,7 @@ void TFitEditor::DoPrintOpt(Bool_t on)
                fFitOption.ReplaceAll('V', "");
             }
          }
+         fStatusBar->SetText("Prn: DEF",3);
          break;
       case kFP_PVER:
          if (on) {
@@ -1547,6 +1740,7 @@ void TFitEditor::DoPrintOpt(Bool_t on)
             }
             fFitOption += 'V';
          }
+         fStatusBar->SetText("Prn: VER",3);
          break;
       case kFP_PQET:
          if (on) {
@@ -1558,6 +1752,7 @@ void TFitEditor::DoPrintOpt(Bool_t on)
             }
             fFitOption += 'Q';
          }
+         fStatusBar->SetText("Prn: QT",3);
       default:
          break;
    }
@@ -1589,8 +1784,8 @@ void TFitEditor::DoReset()
       fLinearFit->SetState(kButtonUp, kTRUE);
    if (fBestErrors->GetState() == kButtonDown)
       fBestErrors->SetState(kButtonUp, kFALSE);
-   if (fUseRange->GetState() == kButtonUp)
-      fUseRange->SetState(kButtonDown, kFALSE);
+   if (fUseRange->GetState() == kButtonDown)
+      fUseRange->SetState(kButtonUp, kFALSE);
    if (fAllWeights1->GetState() == kButtonDown)
       fAllWeights1->SetState(kButtonUp, kFALSE);
    if (fEmptyBinsWghts1->GetState() == kButtonDown)
@@ -1607,9 +1802,22 @@ void TFitEditor::DoReset()
       fNoDrawing->SetState(kButtonUp, kFALSE);
    if (fNoStoreDrawing->GetState() == kButtonDown)
       fNoStoreDrawing->SetState(kButtonUp, kFALSE);
-   fOptDefault->SetState(kButtonDown);
    fNone->SetState(kButtonDown);
    fFuncList->Select(1, kTRUE);
+
+   // minimization tab
+   if (fLibMinuit->GetState() != kButtonDown)
+      fLibMinuit->SetState(kButtonDown, kTRUE);
+   if (fMigrad->GetState() != kButtonDown)
+      fMigrad->SetState(kButtonDown, kTRUE);
+   if (fOptDefault->GetState() != kButtonDown)
+      fOptDefault->SetState(kButtonDown, kTRUE);
+   fErrorScale->SetNumber(1.0);
+   fErrorScale->ReturnPressed();
+   fTolerance->SetNumber(1e-6);
+   fTolerance->ReturnPressed();
+   fIterations->SetIntNumber(5000);
+   fIterations->ReturnPressed();
 }
 
 //______________________________________________________________________________
@@ -1974,11 +2182,6 @@ Bool_t TFitEditor::SetObjectType(TObject* obj)
 
    if (obj->InheritsFrom("TGraph")) {
       fType = kObjectGraph;
-      TF1 *f1 =((TGraph *)obj)->GetFunction("fitFunc");
-      if (f1) {
-         fFitFunc = new TF1();
-         f1->Copy(*fFitFunc);
-      }
       set = kTRUE;
       fDim = 1;
       if (fMethodList->FindEntry("Binned Likelihood"))
@@ -2014,11 +2217,6 @@ Bool_t TFitEditor::SetObjectType(TObject* obj)
       fMethodList->SetEnabled(kFALSE);
    } else if (obj->InheritsFrom("TH1")){
       fType = kObjectHisto;
-      TF1 *f1 =((TH1 *)obj)->GetFunction("fitFunc");
-      if (f1) {
-         fFitFunc = new TF1();
-         f1->Copy(*fFitFunc);
-      }
       set = kTRUE;
       fDim = ((TH1*)obj)->GetDimension();
       if (!fMethodList->FindEntry("Binned Likelihood"))
@@ -2062,5 +2260,308 @@ Option_t *TFitEditor::GetDrawOption() const
       if (obj == fFitObject) return next.GetOption();
    }
    return "";
+}
+
+//______________________________________________________________________________
+void TFitEditor::DoLibrary(Bool_t on)
+{
+   // Set selected minimization library in use.
+
+   TGButton *bt = (TGButton *)gTQSender;
+   Int_t id = bt->WidgetId(); 
+
+   switch (id) {
+
+      case kFP_LMIN:
+         {
+            if (on) {
+               fLibMinuit->SetState(kButtonDown);
+               fLibMinuit2->SetState(kButtonUp);
+               fLibFumili->SetState(kButtonUp);
+               if (fFumili->GetState() != kButtonDisabled) {
+                  fFumili->SetState(kButtonDisabled);
+               }
+               fMigrad->SetState(kButtonDown);
+               fStatusBar->SetText("MIGRAD", 1);
+               // Simplex functionality will come with the new fitter design    
+               //if (fSimplex->GetState() == kButtonDisabled)
+               //   fSimplex->SetState(kButtonUp);
+               TVirtualFitter::SetDefaultFitter("Minuit");
+               fStatusBar->SetText("LIB Minuit", 0);
+            }
+            
+         }
+         break;
+      
+      case kFP_LMIN2:
+         {
+            if (on) {
+               fLibMinuit->SetState(kButtonUp);
+               fLibMinuit2->SetState(kButtonDown);
+               fLibFumili->SetState(kButtonUp);
+               // Simplex functionality will come with the new fitter design    
+               //if (fSimplex->GetState() == kButtonDisabled)
+               //   fSimplex->SetState(kButtonUp);
+               if (fMigrad->GetState() == kButtonDisabled)
+                  fMigrad->SetState(kButtonUp);
+               if (fFumili->GetState() == kButtonDisabled)
+                  fFumili->SetState(kButtonUp);
+               if (fMigrad->GetState() == kButtonDown)
+                  TVirtualFitter::SetDefaultFitter("Minuit2");
+               else if (fFumili->GetState() == kButtonDown)
+                  TVirtualFitter::SetDefaultFitter("Fumili2");
+               fStatusBar->SetText("LIB Minuit2", 0);
+            }
+         }
+         break;
+      
+      case kFP_LFUM:
+         {
+            if (on) {
+               if (fFumili->GetState() != kButtonDown) {
+                  fFumili->SetState(kButtonDown);
+                  fStatusBar->SetText("FUMILI", 1);
+               }
+               fLibMinuit->SetState(kButtonUp);
+               fLibMinuit2->SetState(kButtonUp);
+               fLibFumili->SetState(kButtonDown);
+               TVirtualFitter::SetDefaultFitter("Fumili");
+               fMigrad->SetState(kButtonDisabled);
+               // Simplex functionality will come with the new fitter design    
+               //fSimplex->SetState(kButtonDisabled);
+               fStatusBar->SetText("LIB Fumili", 0);
+            }
+         }
+      default:
+         break;
+   }
+   
+}
+
+//______________________________________________________________________________
+void TFitEditor::DoMinMethod(Bool_t on)
+{
+   // Set selected minimization method in use.
+
+   TGButton *bt = (TGButton *)gTQSender;
+   Int_t id = bt->WidgetId(); 
+
+   switch (id) {
+
+      case kFP_MIGRAD:
+         {
+            if (on) {
+               // Simplex functionality will come with the new fitter design    
+               //fSimplex->SetState(kButtonUp);
+               if (fLibMinuit->GetState() == kButtonDown)
+                  fFumili->SetState(kButtonDisabled);
+               else
+                  fFumili->SetState(kButtonUp);
+               fMigrad->SetState(kButtonDown);
+               fStatusBar->SetText("MIGRAD",1);
+               if (fLibMinuit2->GetState() == kButtonDown)
+                  if (strncmp(TVirtualFitter::GetDefaultFitter(),"Minuit2",7) != 0) 
+                     TVirtualFitter::SetDefaultFitter("Minuit2");
+            }
+         }
+         break;
+      
+      case kFP_SIMPLX:
+         {
+            if (on) {
+               // Simplex functionality will come with the new fitter design    
+               //fMigrad->SetState(kButtonUp);
+               //if (fLibMinuit->GetState() == kButtonDown)
+               //   fFumili->SetState(kButtonDisabled);
+               //else
+               //   fFumili->SetState(kButtonUp);
+               //fSimplex->SetState(kButtonDown);
+               //fStatusBar->SetText("SIMPLEX",1);
+            }
+         }
+         break;
+      
+      case kFP_FUMILI:
+         {
+            if (on) {
+               fMigrad->SetState(kButtonUp);
+               // Simplex functionality will come with the new fitter design    
+               //fSimplex->SetState(kButtonUp);
+               fFumili->SetState(kButtonDown);
+               fStatusBar->SetText("FUMILI",1);
+               if (fLibMinuit2->GetState() == kButtonDown)
+                  TVirtualFitter::SetDefaultFitter("Fumili2");
+               else
+                  TVirtualFitter::SetDefaultFitter("Fumili");
+            }
+         }
+         break;
+      
+   }
+}
+
+//______________________________________________________________________________
+void TFitEditor::DoErrorsDef()
+{
+   // Set the error definition for default fitter.
+   
+   Double_t err = fErrorScale->GetNumber();
+   TVirtualFitter::SetErrorDef(err);
+}
+
+//______________________________________________________________________________
+void TFitEditor::DoMaxTolerance()
+{
+   // Set the fit relative precision.
+   
+   Double_t tol = fTolerance->GetNumber();
+   TVirtualFitter::SetPrecision(tol);
+}
+
+//______________________________________________________________________________
+void TFitEditor::DoMaxIterations()
+{
+   // Set the maximum number of iterations.
+
+   Long_t itr = fIterations->GetIntNumber();
+   TVirtualFitter::SetMaxIterations(itr);
+   fStatusBar->SetText(Form("Itr: %ld",itr),2);
+}
+
+//______________________________________________________________________________
+void TFitEditor::MakeTitle(TGCompositeFrame *parent, const char *title)
+{
+   // Create section title in the GUI.
+
+   TGCompositeFrame *ht = new TGCompositeFrame(parent, 350, 10, 
+                                               kFixedWidth | kHorizontalFrame);
+   ht->AddFrame(new TGLabel(ht, title),
+                new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   ht->AddFrame(new TGHorizontal3DLine(ht),
+                new TGLayoutHints(kLHintsExpandX | kLHintsCenterY, 5, 5, 2, 2));
+   parent->AddFrame(ht, new TGLayoutHints(kLHintsTop, 5, 0, 5, 0));
+}
+
+//______________________________________________________________________________
+Bool_t TFitEditor::HasFitFunction(TObject *obj)
+{
+   // Look in the list of function for TF1 and set fFitFunc. If a TF1 is
+   // found in the list of functions, returns kTRUE; if not returns kFALSE.
+   
+   TF1 *func = 0;
+   TList *lf = 0;
+
+   switch (fType) {
+      case kObjectHisto: {
+         func =((TH1 *)obj)->GetFunction("fitFunc");
+         lf = ((TH1 *)obj)->GetListOfFunctions();
+         break;
+      }
+      case kObjectGraph: {
+         func =((TGraph *)obj)->GetFunction("fitFunc");
+         lf = ((TGraph *)obj)->GetListOfFunctions();
+         break;
+      }
+      case kObjectGraph2D: {
+         func =(TF1 *)((TGraph2D *)obj)->GetListOfFunctions()->FindObject("fitFunc");
+         lf = ((TGraph2D *)obj)->GetListOfFunctions();
+         break;
+      }
+      case kObjectHStack: {
+         // N/A
+         break;
+      }
+      case kObjectTree:  {
+         // N/A
+         break;
+      }
+   }
+   if (func) {
+      if (lf) GetFunctionsFromList(lf);
+      fFitFunc = new TF1();
+      func->Copy(*fFitFunc);
+      CheckRange(func);
+      
+      TGLBEntry *le = fFuncList->FindEntry(Form("%s",func->GetName()));
+      if (le) {
+         fFuncList->Select(le->EntryId(), kFALSE);
+         fSelLabel->SetText(le->GetTitle());
+      }
+      return kTRUE;
+   } 
+   if (lf) {
+      GetFunctionsFromList(lf);
+      TObject *obj;
+      TIter next(lf, kIterBackward);
+      while ((obj = next())) {
+         if (obj->InheritsFrom(TF1::Class())) {
+            func = (TF1 *)obj;
+            fFitFunc = new TF1();
+            func->Copy(*fFitFunc);
+            CheckRange(func);
+            TGLBEntry *le = fFuncList->FindEntry(Form("%s",func->GetName()));
+            if (le) {
+               fFuncList->Select(le->EntryId(), kTRUE);
+               
+            }
+            return kTRUE;
+         }
+      }
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+void TFitEditor::GetFunctionsFromList(TList *list)
+{
+   // Scan the list of functions of the selected object and include them 
+   // by name in the combobox holding the predefined functions.
+   
+   TF1 *f1 = 0;
+   TObject *obj;
+   Int_t newid = kFP_USER*30;
+   if (fLastEntryId != kFP_USER) {
+      fFuncList->RemoveEntries(newid, fLastEntryId);
+      TIter next(fFitFuncList);
+      while ((obj = next())) {
+         fFitFuncList->Remove(obj);
+         delete obj;
+      }
+   }
+   TIter next(list, kIterBackward);
+   while ((obj = next())) {
+      if (obj->InheritsFrom(TF1::Class())) {
+         fFuncList->AddEntry(obj->GetName(), newid);
+         newid++;
+         f1 = new TF1();
+         TF1 *f2 = (TF1 *)obj;
+         f2->Copy(*f1);
+         f1->SetParent(fFitObject);
+         fFitFuncList->Add(f1);
+      }
+   } 
+   fLastEntryId = newid - 1;
+}
+
+//______________________________________________________________________________
+void TFitEditor::CheckRange(TF1 *f1)
+{
+   // Check the fit function range (if the object has been fitted).
+   
+   Double_t fxmin, fxmax, xmin, xmax;
+
+   f1->GetRange(fxmin, fxmax);
+   xmin = fXaxis->GetXmin();
+   xmax = fXaxis->GetXmax();
+   fXrange = fXaxis->GetNbins();
+   if ((fxmin > xmin) || (fxmax < xmax)) {
+      fXmin = fXaxis->FindBin(fxmin);
+      fXmax = fXaxis->FindBin(fxmax);
+      fUseRange->SetState(kButtonDown);
+   } else {
+      fXmin = fXaxis->FindBin(xmin);
+      fXmax = fXaxis->FindBin(xmax);
+      fUseRange->SetState(kButtonUp);
+   }
 }
 

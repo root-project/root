@@ -24,10 +24,10 @@ int G__bc_compile_function(struct G__ifunc_table *ifunc,int iexist);
 // LD_IFUNC optimization
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
-extern "C" int G__LD_IFUNC_optimize(struct G__ifunc_table* ifunc,int ifn
+extern "C" int G__LD_IFUNC_optimize(struct G__ifunc_table_internal* ifunc,int ifn
 				   ,long * /*inst*/,int pc) {
   G__MethodInfo m;
-  m.Init((long)ifunc,ifn,(G__ClassInfo*)NULL);
+  m.Init((long)G__get_ifunc_ref(ifunc),ifn,(G__ClassInfo*)NULL);
 
   if((m.Property()&(G__BIT_ISCOMPILED|G__BIT_ISBYTECODE))==0) {
     // if this is bare interpreted function, compile as bytecode
@@ -296,7 +296,7 @@ void G__bc_inst::LD_FUNC_BC(struct G__ifunc_table* ifunc,int ifn,int paran,void*
 #ifdef G__ASM_DBG
   if(G__asm_dbg) G__fprinterr(G__serr,
 			      "%3x: LD_FUNC bytecode %s paran=%d\n"
-			      ,G__asm_cp,ifunc->funcname[ifn],paran);
+			      ,G__asm_cp,G__get_ifunc_internal(ifunc)->funcname[ifn],paran);
 #endif
   G__asm_inst[G__asm_cp]=G__LD_FUNC;
   G__asm_inst[G__asm_cp+1]=(long)ifunc;
@@ -309,7 +309,8 @@ void G__bc_inst::LD_FUNC_BC(struct G__ifunc_table* ifunc,int ifn,int paran,void*
 /**************************************************************************
 * LD_FUNC_VIRTUAL
 **************************************************************************/
-void G__bc_inst::LD_FUNC_VIRTUAL(struct G__ifunc_table* ifunc,int ifn,int paran,void* pfunc) {
+void G__bc_inst::LD_FUNC_VIRTUAL(struct G__ifunc_table* iref,int ifn,int paran,void* pfunc) {
+  G__ifunc_table_internal* ifunc = G__get_ifunc_internal(iref);
 #ifdef G__ASM_DBG
   if(G__asm_dbg) G__fprinterr(G__serr,
 			      "%3x: LD_FUNC virtual %s paran=%d\n"
@@ -695,8 +696,9 @@ int G__bc_inst::CND1JMP(int addr) {
 /**************************************************************************
 * LD_IFUNC
 **************************************************************************/
-void G__bc_inst::LD_IFUNC(struct G__ifunc_table *p_ifunc,int ifn,int hash
+void G__bc_inst::LD_IFUNC(struct G__ifunc_table *iref,int ifn,int hash
 		   ,int paran,int funcmatch,int memfunc_flag) {
+  G__ifunc_table_internal* p_ifunc = G__get_ifunc_internal(iref);
 #ifdef G__ASM_DBG
   if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD_IFUNC %s paran=%d\n"
 			      ,G__asm_cp,p_ifunc->funcname[ifn],paran);

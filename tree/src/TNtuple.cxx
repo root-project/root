@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.14 2006/05/24 15:10:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.17 2007/01/30 11:24:32 brun Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -100,6 +100,20 @@ TNtuple::~TNtuple()
 
    delete [] fArgs;
    fArgs = 0;
+}
+
+//______________________________________________________________________________
+void TNtuple::ResetBranchAddress(TBranch *branch)
+{
+   // Reset the branch addresses to the internal fArgs array. Use this
+   // method when the addresses were changed via calls to SetBranchAddress().
+
+   if (branch) {
+      Int_t index = fBranches.IndexOf(branch);
+      if (index>=0) {
+         branch->SetAddress(&fArgs[index]);
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -209,7 +223,7 @@ void TNtuple::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TNtuple::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         b.ReadClassBuffer(TNtuple::Class(), this, R__v, R__s, R__c);
       } else {
          //====process old versions before automatic schema evolution
          TTree::Streamer(b);
@@ -224,6 +238,6 @@ void TNtuple::Streamer(TBuffer &b)
          if (branch) branch->SetAddress(&fArgs[i]);
       }
    } else {
-      TNtuple::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TNtuple::Class(),this);
    }
 }

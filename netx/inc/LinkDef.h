@@ -1,4 +1,4 @@
-/* @(#)root/netx:$Name:  $:$Id: LinkDef.h,v 1.4 2005/07/20 15:13:51 rdm Exp $ */
+/* @(#)root/netx:$Name:  $:$Id: LinkDef.h,v 1.5 2005/10/27 16:36:38 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -15,6 +15,7 @@
 #pragma link off all functions;
 
 #pragma link C++ class TXNetFile;
+#pragma link C++ class TXNetFileStager;
 #pragma link C++ class TXNetSystem;
 
 #endif

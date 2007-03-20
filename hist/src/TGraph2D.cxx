@@ -12,6 +12,9 @@
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TMath.h"
+#include "TH2.h"
+#include "TF2.h"
+#include "TList.h"
 #include "TGraph2D.h"
 #include "TGraphDelaunay.h"
 #include "TVirtualPad.h"
@@ -442,28 +445,33 @@ Int_t TGraph2D::DistancetoPrimitive(Int_t px, Int_t py)
 //______________________________________________________________________________
 void TGraph2D::Draw(Option_t *option)
 {
-// Specific drawing options can be used to paint a TGraph2D:
-//   "TRI"  : The Delaunay triangles are drawn using filled area.
-//            An hidden surface drawing technique is used. The surface is
-//            painted with the current fill area color. The edges of each
-//            triangles are painted with the current line color.
-//   "TRIW" : The Delaunay triangles are drawn as wire frame
-//   "TRI1" : The Delaunay triangles are painted with color levels. The edges
-//            of each triangles are painted with the current line color.
-//   "TRI2" : the Delaunay triangles are painted with color levels.
-//   "P"    : Draw a marker at each vertex
-//   "P0"   : Draw a circle at each vertex. Each circle background is white.
-//
-// A TGraph2D can be also drawn with ANY options valid to draw a 2D histogram.
-//
-// When a TGraph2D is drawn with one of the 2D histogram drawing option,
-// a intermediate 2D histogram is filled using the Delaunay triangles
-// technique to interpolate the data set.
+   // Specific drawing options can be used to paint a TGraph2D:
+   //
+   //   "TRI"  : The Delaunay triangles are drawn using filled area.
+   //            An hidden surface drawing technique is used. The surface is
+   //            painted with the current fill area color. The edges of each
+   //            triangles are painted with the current line color.
+   //   "TRIW" : The Delaunay triangles are drawn as wire frame
+   //   "TRI1" : The Delaunay triangles are painted with color levels. The edges
+   //            of each triangles are painted with the current line color.
+   //   "TRI2" : the Delaunay triangles are painted with color levels.
+   //   "P"    : Draw a marker at each vertex
+   //   "P0"   : Draw a circle at each vertex. Each circle background is white.
+   //   "PCOL" : Draw a marker at each vertex. The color of each marker is
+   //            defined according to its Z position.
+   //   "CONT" : Draw contours
+   //   "LINE" : Draw a 3D polyline
+   //
+   // A TGraph2D can be also drawn with ANY options valid to draw a 2D histogram.
+   //
+   // When a TGraph2D is drawn with one of the 2D histogram drawing option,
+   // a intermediate 2D histogram is filled using the Delaunay triangles
+   // technique to interpolate the data set.
 
    TString opt = option;
    opt.ToLower();
    if (gPad) {
-      if (!gPad->IsEditable()) (gROOT->GetMakeDefCanvas())();
+      if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
       if (!opt.Contains("same")) {
          //the following statement is necessary in case one attempts to draw
          //a temporary histogram already in the current pad
@@ -551,7 +559,7 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    //            = "C" In case of linear fitting, not calculate the chisquare
    //                  (saves time)
    //            = "ROB" In case of linear fitting, compute the LTS regression
-   //                     coefficients (robust(resistant) regression), using 
+   //                     coefficients (robust(resistant) regression), using
    //                     the default fraction of good points
    //              "ROB=0.x" - compute the LTS regression coefficients, using
    //                           0.x as a fraction of good points
@@ -697,7 +705,7 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    if (opt.Contains("+")) fitOption.Plus    = 1;
    if (opt.Contains("B")) fitOption.Bound   = 1;
    if (opt.Contains("C")) fitOption.Nochisq = 1;
-   if (opt.Contains("H")) fitOption.Robust  = 1; 
+   if (opt.Contains("H")) fitOption.Robust  = 1;
 
  ///xmin    = fX[0];
 ///xmax    = fX[fNpoints-1];
@@ -735,7 +743,7 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    }
    if (linear){
       //
-      TClass *cl = gROOT->GetClass("TLinearFitter");
+      TClass *cl = TClass::GetClass("TLinearFitter");
       if (isSet && strdiff!=0) {
          delete TVirtualFitter::GetFitter();
          isSet=kFALSE;
@@ -1397,7 +1405,7 @@ void TGraph2D::SetDirectory(TDirectory *dir)
 void TGraph2D::SetHistogram(TH2 *h)
 {
    // Sets the histogram to be filled
-                                                                                           
+
    fUserHisto = kTRUE;
    fHistogram = (TH2D*)h;
    fNpx       = h->GetNbinsX();
@@ -1463,6 +1471,19 @@ void TGraph2D::SetName(const char *name)
    if (fDirectory) fDirectory->GetList()->Add(this);
 }
 
+//______________________________________________________________________________
+void TGraph2D::SetNameTitle(const char *name, const char *title)
+{
+   // Change the name and title of this 2D graph
+   //
+
+   //  2D graphs are named objects in a THashList.
+   //  We must update the hashlist if we change the name
+   if (fDirectory) fDirectory->GetList()->Remove(this);
+   fName  = name;
+   SetTitle(title);
+   if (fDirectory) fDirectory->GetList()->Add(this);
+}
 
 //______________________________________________________________________________
 void TGraph2D::SetNpx(Int_t npx)
@@ -1560,7 +1581,7 @@ void TGraph2D::Streamer(TBuffer &b)
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
-      TGraph2D::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+      b.ReadClassBuffer(TGraph2D::Class(), this, R__v, R__s, R__c);
 
       if (!gROOT->ReadingObject()) {
          fDirectory = gDirectory;
@@ -1568,6 +1589,6 @@ void TGraph2D::Streamer(TBuffer &b)
       }
       ResetBit(kCanDelete);
    } else {
-      TGraph2D::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TGraph2D::Class(),this);
    }
 }

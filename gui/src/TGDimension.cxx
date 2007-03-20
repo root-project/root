@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDimension.cxx,v 1.2 2000/06/27 15:12:23 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDimension.cxx,v 1.3 2004/09/01 14:34:58 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -31,9 +31,21 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGDimension.h"
+#include "TMathBase.h"
 
 ClassImp(TGDimension)
 ClassImp(TGPosition)
 ClassImp(TGLongPosition)
 ClassImp(TGInsets)
 ClassImp(TGRectangle)
+
+void TGRectangle::Merge(const TGRectangle &r)
+{ 
+   // Merge parameters
+   Int_t max_x = TMath::Max(fX + (Int_t) fW, r.fX + (Int_t) r.fW); 
+   fX = TMath::Min(fX, r.fX);
+   Int_t max_y = TMath::Max(fY + (Int_t) fH, r.fY + (Int_t) r.fH); 
+   fY = TMath::Min(fY, r.fY);
+   fW = max_x - fX;
+   fH = max_y - fY; 
+}

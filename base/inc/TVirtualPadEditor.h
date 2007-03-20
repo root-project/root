@@ -35,6 +35,7 @@ protected:
 public:
    TVirtualPadEditor();
    virtual ~TVirtualPadEditor();
+   virtual Bool_t   IsGlobal() const = 0;
 
    // methods related to the old editor interface
    virtual void     DrawLine(Double_t, Double_t , Double_t , Double_t ) { }
@@ -50,7 +51,6 @@ public:
    virtual void     Show() { }
    virtual void     Hide() { }
    virtual void     DeleteEditors() { }
-   virtual Bool_t   IsGlobal() const = 0;
    virtual void     SetGlobal(Bool_t) { }
    virtual TCanvas* GetCanvas() const = 0;
 

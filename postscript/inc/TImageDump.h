@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TImageDump.h,v 1.7 2005/05/30 22:38:39 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TImageDump.h,v 1.9 2007/02/06 09:47:23 couet Exp $
 // Author: Valeriy Onuchin   29/04/2005
 
 /*************************************************************************
@@ -28,10 +28,18 @@
 
 class TImage;
 class TColor;
+class TPoint;
+
 class TImageDump : public TVirtualPS {
 protected:
    TImage           *fImage;     // image
    Int_t             fType;      // PostScript workstation type
+   Bool_t            fCanvas;    // kTRUE - if canvas is saved,  kFALSE - for TPad 
+
+   Int_t  XtoPixel(Double_t x);
+   Int_t  YtoPixel(Double_t y);
+   void   DrawDashPolyLine(Int_t npoints, TPoint *pt, UInt_t nDash, 
+                           const char* pDash, const char* col, UInt_t thick);
 
 public:
    TImageDump();

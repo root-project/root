@@ -17,13 +17,13 @@
 #define BC_EH_H
 
 #if !defined(__sun) && (!defined(_MSC_VER) || _MSC_VER > 1200) && !(defined(__xlC__) || defined(__xlc__))
-extern "C" {
+//extern "C" {
 #ifdef __CINT__
 #include "../G__ci.h"
 #else
 #include "common.h"
 #endif
-}
+//}
 #else
 #include "G__ci.h"
 #include "common.h"

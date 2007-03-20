@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.41 2006/09/25 13:28:21 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.42 2006/10/12 15:20:26 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -228,7 +228,7 @@ public:
    Bool_t            UseGL() const { return fUseGL; }
    void              SetSupportGL(Bool_t support) {fUseGL = support;}
 
-   static void       MakeDefCanvas();
+   static TCanvas   *MakeDefCanvas();
 
    ClassDef(TCanvas,6)  //Graphics canvas
 };

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.92 2006/09/17 19:08:13 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.99 2007/02/09 08:37:21 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -26,16 +26,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
-#include "TNamed.h"
+#ifndef ROOT_TBranch
+#include "TBranch.h"
 #endif
 
 #ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
-
-#ifndef ROOT_TClonesArray
-#include "TClonesArray.h"
 #endif
 
 #ifndef ROOT_TAttLine
@@ -50,10 +46,6 @@
 #include "TAttMarker.h"
 #endif
 
-#ifndef ROOT_TBranch
-#include "TBranch.h"
-#endif
-
 #ifndef ROOT_TArrayD
 #include "TArrayD.h"
 #endif
@@ -62,18 +54,20 @@
 #include "TArrayI.h"
 #endif
 
-#ifndef ROOT_TVirtualTreePlayer
-#include "TVirtualTreePlayer.h"
-#endif
-
 #ifndef ROOT_TDataType
 #include "TDataType.h"
 #endif
 
-#ifndef ROOT_TROOT
-#include "TROOT.h"
+#ifndef ROOT_TClass
+#include "TClass.h"
 #endif
 
+#ifndef ROOT_TVirtualTreePlayer
+#include "TVirtualTreePlayer.h"
+#endif
+
+class TBranch;
+class TVirtualTreePlayer;
 class TBrowser;
 class TFile;
 class TDirectory;
@@ -82,6 +76,8 @@ class TH1;
 class TTreeFormula;
 class TPolyMarker;
 class TEventList;
+class TEntryList;
+class TList;
 class TSQLResult;
 class TSelector;
 class TPrincipal;
@@ -89,6 +85,8 @@ class TFriendElement;
 class TCut;
 class TVirtualIndex;
 class TBranchRef;
+class TBasket;
+class TStreamerInfo;
 
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -123,6 +121,7 @@ protected:
    TObjArray      fLeaves;            //  Direct pointers to individual branch leaves
    TList         *fAliases;           //  List of aliases for expressions based on the tree branches.
    TEventList    *fEventList;         //! Pointer to event selection list (if one)
+   TEntryList    *fEntryList;         //! Pointer to event selection list (if one)
    TArrayD        fIndexValues;       //  Sorted index values
    TArrayI        fIndex;             //  Index of sorted values
    TVirtualIndex *fTreeIndex;         //  Pointer to the tree Index (if any)
@@ -224,7 +223,7 @@ public:
    virtual Int_t           BuildIndex(const char* majorname, const char* minorname = "0");
    TStreamerInfo          *BuildStreamerInfo(TClass* cl, void* pointer = 0);
    virtual TTree          *CloneTree(Long64_t nentries = -1, Option_t* option = "");
-   virtual void            CopyAddresses(TTree*);
+   virtual void            CopyAddresses(TTree*,Bool_t undo = kFALSE);
    virtual Long64_t        CopyEntries(TTree* tree, Long64_t nentries = -1);
    virtual TTree          *CopyTree(const char* selection, Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
    virtual TBasket        *CreateBasket(TBranch*);
@@ -262,6 +261,7 @@ public:
    virtual Long64_t        GetEntryNumberWithBestIndex(Int_t major, Int_t minor = 0) const;
    virtual Long64_t        GetEntryNumberWithIndex(Int_t major, Int_t minor = 0) const;
    TEventList             *GetEventList() const { return fEventList; }
+   virtual TEntryList     *GetEntryList();
    virtual Long64_t        GetEntryNumber(Long64_t entry) const;
    virtual Int_t           GetFileNumber() const { return fFileNumber; }
    virtual const char     *GetFriendAlias(TTree*) const;
@@ -274,7 +274,7 @@ public:
    virtual TObjArray      *GetListOfBranches() { return &fBranches; }
    virtual TObjArray      *GetListOfLeaves() { return &fLeaves; }
    virtual TList          *GetListOfFriends() const { return fFriends; }
-   virtual TSeqCollection *GetListOfAliases() const { return fAliases; }
+   virtual TList          *GetListOfAliases() const { return fAliases; }
 
    // GetMakeClass is left non-virtual for efficiency reason.
    // Making it virtual affects the performance of the I/O
@@ -335,6 +335,7 @@ public:
    virtual void            Refresh();
    virtual void            RemoveFriend(TTree*);
    virtual void            Reset(Option_t* option = "");
+   virtual void            ResetBranchAddress(TBranch *);
    virtual void            ResetBranchAddresses();
    virtual Long64_t        Scan(const char* varexp = "", const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0); // *MENU*
    virtual Bool_t          SetAlias(const char* aliasName, const char* aliasFormula);
@@ -346,13 +347,13 @@ public:
    virtual void         SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t isptr);
    virtual void         SetBranchAddress(const char *bname,void *add, TBranch **ptr, TClass *realClass, EDataType datatype, Bool_t isptr);
    template <class T> void SetBranchAddress(const char *bname, T **add, TBranch **ptr = 0) {
-      SetBranchAddress(bname,add,ptr,gROOT->GetClass(typeid(T)),TDataType::GetType(typeid(T)),true);
+      SetBranchAddress(bname,add,ptr,TClass::GetClass(typeid(T)),TDataType::GetType(typeid(T)),true);
    }
 #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
    // This can only be used when the template overload resolution can distringuish between
    // T* and T**
    template <class T> void SetBranchAddress(const char *bname, T *add, TBranch **ptr = 0) {
-      SetBranchAddress(bname,add,ptr,gROOT->GetClass(typeid(T)),TDataType::GetType(typeid(T)),false);
+      SetBranchAddress(bname,add,ptr,TClass::GetClass(typeid(T)),TDataType::GetType(typeid(T)),false);
    }
 #endif
    virtual void            SetBranchStatus(const char* bname, Bool_t status = 1, UInt_t* found = 0);
@@ -365,7 +366,8 @@ public:
    virtual Long64_t        SetEntries(Long64_t n = -1);
    virtual void            SetEstimate(Long64_t nentries = 10000);
    virtual void            SetFileNumber(Int_t number = 0);
-   virtual void            SetEventList(TEventList* list) { fEventList = list; }
+   virtual void            SetEventList(TEventList* list);
+   virtual void            SetEntryList(TEntryList* list, Option_t *opt="");
    virtual void            SetMakeClass(Int_t make) { fMakeClass = make; }
    virtual void            SetMaxEntryLoop(Long64_t maxev = 1000000000) { fMaxEntryLoop = maxev; } // *MENU*
    static  void            SetMaxTreeSize(Long64_t maxsize = 1900000000);

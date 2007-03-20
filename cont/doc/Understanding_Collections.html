@@ -1,0 +1,112 @@
+<html>
+<head>
+<title>Understanding Collections</title>
+
+<link rev=made href="mailto:rootdev@root.cern.ch">
+<meta name="rating" content="General">
+<meta name="objecttype" content="Manual">
+<meta name="keywords" content="software development, oo, object oriented, unix, x11, motif, windows nt, c++, html, rene brun, nenad buncic, fons rademakers">
+<meta name="description" content="ROOT - An Object Oriented Framework For Large Scale Data Analysis.">
+
+</head>
+ 
+
+<body BGCOLOR="#ffffff" LINK="#0000ff" VLINK="#551a8b" ALINK="#ff0000" TEXT="#000000">
+
+
+<center><h1>Understanding Collections</h1></center>
+<p><hr><p>
+A collection is a group of related objects. You will find it easier to
+manage a large number of items as a collection. For example, collections of
+points and lines might be managed by a graphics pad. A vertex will have a
+collection of tracks. A detector geometry contains collections of shapes,
+materials, rotation matrices and sub-detectors.
+Collections act as flexible alternatives to traditional data structures
+of computer science such as arrays, lists, and trees.
+<p>
+Collections can be thought of as polymorphic containers that can contain
+different types of elements. For this release of the ROOT system, elements
+to be placed in collections must be instances of classes.
+These may be classes defined by you or provided by ROOT. Collection elements
+must be instances of classes descending from <a href=html/TObject.html>
+TObject</a>. The dependence of collections on TObject may disappear
+in the future when all C++ compilers used with the ROOT system fully
+support templates. In the mean time, knowing the
+role TObject plays in collections can be helpful.
+<p>
+In general you don't need to worry about TObject. Many ROOT
+classes have TObject as an ancestor. In fact, collections themselves
+are descendants of TObject. This makes it possible for collections to
+contain other collections (subcollections) in a tree structure. Such trees
+are used in the ROOT system to implement components of the graphics system
+(graphics pads containing pads), geometries (detectors in detectors), etc.
+<p>
+The basic protocol TObject defines for collection elements is shown below:
+<p><pre>
+        IsEqual()
+        Compare()
+        IsSortable()
+        Hash()
+</pre><p>
+How to use and override these member functions is shown in the
+<a href=html/examples/tcollex.C.html>example program</a>.
+
+<h2>Types of Collections</h2>
+
+The ROOT system implements the following type of collections:
+arrays, lists, sorted lists, B-trees, hashtables and maps.
+The figure below shows the inheritance hierarchy for the primary
+collection classes.
+<p>
+<img src=html/gif/tree_rootcont.gif>
+
+<h3>Ordered Collections (Sequences)</h3>
+
+Sequences are collections that are externally ordered because they
+maintain internal elements according to the order in which they
+were added. The following sequence collections are available:
+<p>
+<ul>
+<li><a href=html/TList.html#TList:description>TList</a>
+<li><a href=html/THashList.html#THashList:description>THashList</a>
+<li><a href=html/TOrdCollection.html#TOrdCollection:description>TOrdCollection</a>
+<li><a href=html/TObjArray.html#TObjArray:description>TObjArray</a>
+<li><a href=html/TClonesArray.html#TClonesArray:description>TClonesArray</a>
+</ul>
+<p>
+Both a <tt>TObjArray</tt> as well as a <tt>TOrdCollection</tt> can be sorted
+using their <tt>Sort()</tt> member function (assuming the stored items are
+sortable).
+
+<h3>Sorted Collections</h3>
+
+Sorted collections are ordered by an internal (automatic) sorting mechanism.
+The following sorted collections are available:
+<p>
+<ul>
+<li><a href=html/TSortedList.html#TSortedList:description>TSortedList</a>
+<li><a href=html/TBtree.html#TBtree:description>TBtree</a>
+</ul>
+
+<h3>Unordered Collections</h3>
+
+Unordered collections don't maintain the order in which the elements were added.
+I.e. when you iterate over an unordered collection, you are not likely to
+retrieve elements in the same order they were added to the collection.
+The following unordered collections are available:
+<p><ul>
+<li><a href=html/THashTable.html#THashTable:description>THashTable</a>
+<li><a href=html/TMap.html#TMap:description>TMap</a>
+</ul><p>
+
+<h3><a href=html/examples/tcollex.C.html>Using Collections</a></h3>
+
+<p><hr>
+<address>
+<a href="http://consult.cern.ch/xwho/people/00526">Rene Brun</a>,
+<a href="http://root.cern.ch/~rdm">Fons Rademakers</a>
+<br>
+Last update 24/11/95 by FR
+</address>
+</body>
+</html>

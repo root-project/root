@@ -18,7 +18,7 @@
 #include <TFile.h>
 #include <TF1.h>
 #include <TF3.h>
-#include <TH1.h>
+#include <TH2.h>
 #include <TNtuple.h>
 #include <TProfile.h>
 
@@ -43,6 +43,7 @@
 #include <TMultiGraph.h>
 #include <TGraph2D.h>
 #include <TImage.h>
+#include <TMath.h>
 
 
 void     stressGraphics (Int_t verbose=0);
@@ -1446,7 +1447,7 @@ void earth()
    TH2F *h3 = new TH2F("h3","Sinusoidal",50, -180, 180, 50, -90.5, 90.5);
    TH2F *h4 = new TH2F("h4","Parabolic", 50, -180, 180, 50, -90.5, 90.5);
    ifstream in;
-   in.open("../tutorials/image/earth.dat");
+   in.open("../tutorials/graphics/earth.dat");
    Float_t x,y;
    while (1) {
      in >> x >> y;

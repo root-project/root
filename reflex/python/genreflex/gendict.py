@@ -9,6 +9,7 @@
 import xml.parsers.expat
 import os, sys, string, time
 import gccdemangler
+
 class genDictionary(object) :
 #----------------------------------------------------------------------------------
   def __init__(self, hfile, opts):
@@ -408,7 +409,26 @@ class genDictionary(object) :
             if b[:8]  == 'private:'   : b = b[8:]
             self.getdependent(b, types)
 #----------------------------------------------------------------------------------
+  def sortselclasses(self, l):
+    nolit = [' ', ':', '<', '>']
+    l2 = []
+    for x in l:
+      ap = 1
+      for i in range(len(l2)):
+        l2ifn = l2[i]['fullname']
+        xfn = x['fullname']
+        bpos = l2ifn.find(xfn)
+        epos = bpos + len(xfn)
+        if bpos != -1 and ( bpos == 0 or l2ifn[bpos-1] in nolit  ) and ( epos == len(l2ifn) or l2ifn[epos] in nolit ) :
+          l2.insert(i,x)
+          ap = 0
+          break
+      if ap : l2.append(x)
+    return l2
+#----------------------------------------------------------------------------------
   def generate(self, file, selclasses, selfunctions, selenums, selvariables, cppinfo) :
+    for c in selclasses :  c['fullname'] = self.genTypeName(c['id'])
+    selclasses = self.sortselclasses(selclasses)
     names = []
     f = open(file,'w') 
     f.write(self.genHeaders(cppinfo))
@@ -417,9 +437,8 @@ class genDictionary(object) :
     f_shadow += 'namespace __shadow__ {\n'
     for c in selclasses :
       if 'incomplete' not in c :
-        cname = self.genTypeName(c['id'])
-        if not self.quiet : print  'class '+ cname
-        names.append(cname)
+        if not self.quiet : print  'class '+ c['fullname']
+        names.append(c['fullname'])
         self.completeClass( c )
         self.enhanceClass( c )
         scons, stubs   = self.genClassDict( c )
@@ -602,7 +621,7 @@ class genDictionary(object) :
     c = 'namespace {\n  struct Dictionaries {\n    Dictionaries() {\n'
     for attrs in selclasses :
       if 'incomplete' not in attrs : 
-        clf = self.genTypeName(attrs['id'], colon=True)
+        clf = '::'+ attrs['fullname']
         clt = string.translate(str(clf), self.transtable)
         c += '      %s_dict(); \n' % (clt)
     c += self.genFunctions(selfunctions)
@@ -611,17 +630,22 @@ class genDictionary(object) :
     c += '    }\n    ~Dictionaries() {\n'
     for attrs in selclasses :
       if 'incomplete' not in attrs : 
-        cls = self.genTypeName(attrs['id'])
-        c += '      %s.Unload(); // class %s \n' % (self.genTypeID(attrs['id']), cls)
+        c += '      %s.Unload(); // class %s \n' % (self.genTypeID(attrs['id']), attrs['fullname'])
     c += '    }\n  };\n'
     c += '  static Dictionaries instance;\n}\n'
     return c
 #---------------------------------------------------------------------------------
+
+  def translate_typedef (self, id):
+    while self.xref[id]['elem'] in ['CvQualifiedType', 'Typedef']:
+      id = self.xref[id]['attrs']['type']
+    return self.genTypeName(id,enum=True, const=True)
+
   def genClassDict(self, attrs):
     members, bases = [], []
     cl  = attrs['name']
-    clf = self.genTypeName(attrs['id'],colon=True)
-    cls = self.genTypeName(attrs['id'])
+    clf = '::' + attrs['fullname']
+    cls = attrs['fullname']
     clt = string.translate(str(clf), self.transtable)
     bases = self.getBases( attrs['id'] )
     if 'members' in attrs : members = string.split(attrs['members'])
@@ -981,7 +1005,9 @@ class genDictionary(object) :
       narg  = len(args)
       if ndarg : iden = '  '
       else     : iden = ''
-      if returns != 'void' and returns in self.basictypes :
+      if returns != 'void' and (returns in self.basictypes or
+                                self.translate_typedef (f['returns']) in
+                                self.basictypes):
         s += '  static %s ret;\n' % returns
       for n in range(narg-ndarg, narg+1) :
         if ndarg :
@@ -998,7 +1024,8 @@ class genDictionary(object) :
           elif returns[-1] == '&' :
             first = iden + '  return (void*)&%s(' % ( name, )
             s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
-          elif returns in self.basictypes :
+          elif (returns in self.basictypes or
+                self.translate_typedef (f['returns']) in self.basictypes):
             first = iden + '  ret = %s(' % ( name, )
             s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
             s += iden + '  return &ret;\n'        
@@ -1200,7 +1227,9 @@ class genDictionary(object) :
     if ndarg : iden = '  '
     else     : iden = ''
     if returns != 'void' :
-      if returns in self.basictypes or name == 'operator %s'%tdfname:
+      if (returns in self.basictypes or
+          self.translate_typedef (attrs['returns']) in self.basictypes or
+          name == 'operator %s'%tdfname):
         s += '  static %s ret;\n' % returns
       elif returns.find('::*)') != -1 :
         s += '  static %s;\n' % returns.replace('::*','::* ret')
@@ -1222,7 +1251,10 @@ class genDictionary(object) :
         elif returns[-1] == '&' :
           first = iden + '  return (void*)&((%s*)o)->%s(' % ( cl, name )
           s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
-        elif returns in self.basictypes or returns.find('::*') != -1 or name == 'operator '+tdfname:
+        elif (returns in self.basictypes or
+              self.translate_typedef (attrs['returns']) in self.basictypes or
+              returns.find('::*') != -1 or
+              name == 'operator '+tdfname):
           first = iden + '  ret = ((%s*)o)->%s(' % ( cl, name )
           s += first + self.genMCOArgs(args, n, len(first)) + ');\n'
           s += iden + '  return &ret;\n'        

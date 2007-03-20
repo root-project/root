@@ -1,4 +1,4 @@
-/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.20 2006/06/02 14:02:03 brun Exp $ */
+/* @(#)root/net:$Name:  $:$Id: LinkDef.h,v 1.24 2007/03/19 16:14:15 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -15,18 +15,17 @@
 #pragma link C++ enum ESendRecvOptions;
 
 #pragma link C++ global gGrid;
+#pragma link C++ global gGridJobStatusList;
 
 #pragma link C++ global kSrvAuth;
 #pragma link C++ global kSrvNoAuth;
 
-#pragma link C++ class TInetAddress-;
 #pragma link C++ class TServerSocket;
 #pragma link C++ class TSocket;
 #pragma link C++ class TPServerSocket;
 #pragma link C++ class TPSocket;
 #pragma link C++ class TMessage;
 #pragma link C++ class TMonitor;
-#pragma link C++ class TUrl;
 #pragma link C++ class TNetFile;
 #pragma link C++ class TNetSystem;
 #pragma link C++ class TWebFile;
@@ -42,8 +41,10 @@
 #pragma link C++ class TGridJDL+;
 #pragma link C++ class TGridJob+;
 #pragma link C++ class TGridJobStatus+;
+#pragma link C++ class TGridJobStatusList+;
 #pragma link C++ class TGridCollection+;
 #pragma link C++ class TSecContext;
 #pragma link C++ class TSecContextCleanup;
+#pragma link C++ class TFileStager;
 
 #endif

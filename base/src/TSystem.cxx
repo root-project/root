@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.151 2006/11/28 14:03:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.164 2007/03/14 18:28:17 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -42,7 +42,6 @@
 #include "TObjString.h"
 #include "TError.h"
 #include "TPluginManager.h"
-#include "TNetFile.h"
 #include "TUrl.h"
 #include "TVirtualMutex.h"
 #include "compiledata.h"
@@ -155,8 +154,8 @@ Bool_t TSystem::Init()
    // Initialize the OS interface.
 
    fNfd    = 0;
-   fMaxrfd = 0;
-   fMaxwfd = 0;
+   fMaxrfd = -1;
+   fMaxwfd = -1;
 
    fSigcnt = 0;
    fLevel  = 0;
@@ -438,11 +437,11 @@ Long_t TSystem::NextTimeOut(Bool_t mode)
 
    if (!fTimers) return -1;
 
-   TIter next(fTimers);
+   TOrdCollectionIter it((TOrdCollection*)fTimers);
    TTimer *t, *to = 0;
    Long_t  tt, timeout = -1, tnow = Now();
 
-   while ((t = (TTimer *)next())) {
+   while ((t = (TTimer *) it.Next())) {
       if (t->IsSync() == mode) {
          tt = (long)t->GetAbsTime() - tnow;
          if (tt < 0) tt = 0;
@@ -647,20 +646,12 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
    TRegexp re("^root.*:");  // also roots, rootk, etc
    TString pname = path;
    if (pname.Index(re) != kNPOS) {
-      // rootd daemon ...
-      if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path)) &&
-          h->LoadPlugin() == 0)
+      // (x)rootd daemon ...
+      if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path))) {
+         if (h->LoadPlugin() == -1)
+            return 0;
          helper = (TSystem*) h->ExecPlugin(2, path, kFALSE);
-      else
-         helper = new TNetSystem(path, kFALSE);
-   } else if (!strcmp(url.GetProtocol(), "http") &&
-              pname.BeginsWith("http")) {
-      // http ...
-      if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path)) &&
-          h->LoadPlugin() == 0)
-         helper = (TSystem*) h->ExecPlugin(0);
-      else
-         ; // no default helper yet
+      }
    } else if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path))) {
       if (h->LoadPlugin() == -1)
          return 0;
@@ -859,11 +850,19 @@ Bool_t TSystem::IsFileInIncludePath(const char *name, char **fullpath)
 const char *TSystem::DirName(const char *pathname)
 {
    // Return the directory name in pathname. DirName of /user/root is /user.
+   // In case no dirname is specified "." is returned.
 
    if (pathname && strchr(pathname, '/')) {
       R__LOCKGUARD2(gSystemMutex);
 
-      static char buf[1000];
+      static int len = 0;
+      static char *buf = 0;
+      int l = strlen(pathname);
+      if (l > len) {
+         delete [] buf;
+         len = l;
+         buf = new char [len+1];
+      }
       strcpy(buf, pathname);
       char *r = strrchr(buf, '/');
       if (r != buf)
@@ -872,7 +871,7 @@ const char *TSystem::DirName(const char *pathname)
          *(r+1) = '\0';
       return buf;
    }
-   return WorkingDirectory();
+   return ".";
 }
 
 //______________________________________________________________________________
@@ -1447,7 +1446,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    // Load a shared library. Returns 0 on successful loading, 1 in
    // case lib was already loaded and -1 in case lib does not exist
    // or in case of error. When entry is specified the loaded lib is
-   // search for this entry point (return -1 when entry does not exist,
+   // searched for this entry point (return -1 when entry does not exist,
    // 0 otherwise). When the system flag is kTRUE, the library is consisdered
    // a permanent systen library that should not be unloaded during the
    // course of the session.
@@ -1497,7 +1496,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    if (!deplibs.IsNull()) {
       TString delim(" ");
       TObjArray *tokens = deplibs.Tokenize(delim);
-      for (Int_t i = tokens->GetEntries()-1; i > 0; i--) {
+      for (Int_t i = tokens->GetEntriesFast()-1; i > 0; i--) {
          const char *deplib = ((TObjString*)tokens->At(i))->GetName();
          if (gDebug > 0)
             Info("Load", "loading dependent library %s for library %s",
@@ -1518,6 +1517,9 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
          Info("Load", "loaded library %s, status %d", path, i);
       delete [] path;
    }
+
+   if ((strstr(module, "libGui")) || (strstr(module, "libGpad")))
+      if (gApplication) gApplication->InitializeGraphics();
 
    if (!entry || !entry[0]) return i;
 
@@ -2536,6 +2538,15 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    TString mapfilein = mapfile + ".in";
    TString mapfileout = mapfile + ".out";
 
+   TString libmapfilename;
+   AssignAndDelete( libmapfilename, ConcatFileName( build_loc, libname ) );
+   libmapfilename += ".rootmap";
+#if defined(R__MACOSX)
+   Bool_t produceRootmap = kTRUE;
+#else
+   Bool_t produceRootmap = kFALSE;
+#endif
+
    ofstream mapfileStream( mapfilein, ios::out );
    {
       TString name = ".rootmap";
@@ -2566,6 +2577,9 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       AssignAndDelete(file, ConcatFileName(gSystem->HomeDirectory(), name) );
       mapfileStream << file << endl;
       mapfileStream << name << endl;
+      for (int i = 0; i < gInterpreter->GetRootMapFiles()->GetEntriesFast(); i++) {
+         mapfileStream << ((TObjString*)gInterpreter->GetRootMapFiles()->At(i))->GetString() << endl;
+      }
    }
    mapfileStream.close();
 
@@ -2597,11 +2611,24 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    if (result) {
       ifstream liblist(mapfileout);
       string libtoload;
+
+      ofstream libmapfile;
+      if (produceRootmap) {
+         libmapfile.open(libmapfilename.Data());
+         libmapfile << "Library." << libname.Data() << ": ";
+      }
+
       while ( liblist >> libtoload ) {
          // Load the needed library except for the library we are currently building!
          if (libtoload != library.Data() && libtoload != libname.Data() && libtoload != libname_ext.Data()) {
             gROOT->LoadClass("",libtoload.c_str());
+            if (produceRootmap) libmapfile << " " << libtoload;
          }
+      }
+
+      if (produceRootmap) {
+         libmapfile << endl;
+         libmapfile.close();
       }
    }
 
@@ -2668,6 +2695,9 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       if (compilationResult) {
          if (compilationResult==139) ::Error("ACLiC","Compilation failed with a core dump!");
          else ::Error("ACLiC","Compilation failed!");
+         if (produceRootmap) {
+            gSystem->Unlink(libmapfilename);
+         }
       }
       result = !compilationResult;
    } else {
@@ -3168,8 +3198,8 @@ TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode,
       if (mode)
          len--;
    }
-   Bool_t compile = !strncmp(fname+len-1, "+", 1);
-   Bool_t remove  = !strncmp(fname+len-2, "++", 2);
+   Bool_t compile = len && fname[len - 1] == '+';
+   Bool_t remove  = compile && len > 1 && fname[len - 2] == '+';
    if (compile) {
       if (mode) {
          fname[len] = 0;

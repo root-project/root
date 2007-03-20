@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.23 2006/07/27 12:18:17 rdm Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.h,v 1.25 2007/02/22 14:11:35 couet Exp $
 // Author: Fons Rademakers, Reiner Rohlfs 28/11/2001
 
 /*************************************************************************
@@ -78,8 +78,6 @@ protected:
    Int_t     fZoomUpdate;   //! kZoom - new zooming required, kZoomOps - other ops in action, kNoZoom - no zooming or ops
    Bool_t    fEditable;     //! kTRUE image can be resized, moved by resizing/moving gPad
    Int_t     fPaintMode;    //! 1 - fast mode, 0 - low memory slow mode
-   Pixmap_t  fPic;          //! pixmap
-   Pixmap_t  fMask;         //! mask
    ASImage  *fGrayImage;    //! gray image
    Bool_t    fIsGray;       //! kTRUE if image is gray
    static THashTable *fgPlugList;   //! hash table containing loaded plugins
@@ -150,6 +148,7 @@ public:
    void  DrawText(Int_t  x = 0, Int_t y = 0, const char *text = "", Int_t size = 12,
                   const char *color = 0, const char *font = "fixed", EText3DType type = TImage::kPlain,
                   const char *fore_file = 0, Float_t angle = 0);
+ void DrawText(TText *text, Int_t x = 0, Int_t y = 0);
 
    // Vector graphics
    void  BeginPaint(Bool_t fast = kTRUE);

@@ -5,9 +5,9 @@
  * For the licensing terms see the file COPYING
  *
  ************************************************************************/
-//$Id: Shadow.cxx,v 1.1.1.1 2006/11/24 10:57:06 rdm Exp $
+//$Id: Shadow.cxx,v 1.8 2006/11/24 13:14:37 rdm Exp $
 
-#include "Api.h"
+#include "Shadow.h"
 #include <ostream>
 #include <string>
 #include <list>

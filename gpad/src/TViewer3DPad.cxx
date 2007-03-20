@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TViewer3DPad.cxx,v 1.9 2005/04/21 08:13:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TViewer3DPad.cxx,v 1.10 2005/05/25 14:25:17 brun Exp $
 // Author: Richard Maunder  10/3/2005
 
 /*************************************************************************
@@ -46,7 +46,7 @@ void TViewer3DPad::BeginScene()
    // Create a 3D view if none exists
    TView *view = fPad.GetView();
    if (!view) {
-      view = new TView(1); // Cartesian view by default
+      view = TView::CreateView(1,0,0); // Cartesian view by default
       if (!view) {
          assert(kFALSE);
          return;

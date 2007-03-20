@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.30 2006/04/19 08:22:25 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.32 2007/02/03 08:44:41 brun Exp $
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -37,6 +37,7 @@
 #include "TMatrixDLazy.h"
 #include "TVectorD.h"
 #include "TArrayD.h"
+#include "TMath.h"
 
 #include "TDecompLU.h"
 #include "TDecompQRH.h"
@@ -72,7 +73,7 @@ int main(int argc,char **argv)
           verbose = 1;
           break;
         default:
-          Fatal("Unknown flag -%s",&c);
+          Error("vmatrix", "unknown flag -%c",c);
           break;
       }
     }

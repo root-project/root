@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.47 2006/11/16 17:17:38 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.51 2007/02/06 15:51:34 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -35,14 +35,15 @@
 #include "TError.h"
 #include "snprintf.h"
 #include "Api.h"
+#include "Varargs.h"
 
 TThreadImp     *TThread::fgThreadImp = 0;
 Long_t          TThread::fgMainId = 0;
 TThread        *TThread::fgMain = 0;
 TMutex         *TThread::fgMainMutex;
 char  *volatile TThread::fgXAct = 0;
-TMutex         *TThread::fgXActMutex;
-TCondition     *TThread::fgXActCondi;
+TMutex         *TThread::fgXActMutex = 0;
+TCondition     *TThread::fgXActCondi = 0;
 void **volatile TThread::fgXArr = 0;
 volatile Int_t  TThread::fgXAnb = 0;
 volatile Int_t  TThread::fgXArt = 0;
@@ -240,9 +241,6 @@ void TThread::Init()
    fgThreadImp = gThreadFactory->CreateThreadImp();
    fgMainId    = fgThreadImp->SelfId();
    fgMainMutex = new TMutex(kTRUE);
-   fgXActMutex = new TMutex(kTRUE);
-   new TThreadTimer;
-   fgXActCondi = new TCondition;
    gThreadTsd  = TThread::Tsd;
    gThreadXAR  = TThread::XARequest;
 
@@ -321,7 +319,7 @@ Int_t TThread::Delete(TThread *th)
       return -1;
    }
 
-   th->CleanUp();
+   CleanUp();
    return 0;
 }
 
@@ -584,7 +582,8 @@ Int_t TThread::CleanUp()
 
    fgThreadImp->CleanUp(&(th->fClean));
    fgMainMutex->CleanUp();
-   fgXActMutex->CleanUp();
+   if (fgXActMutex)
+      fgXActMutex->CleanUp();
 
    if (th->fHolder)
       delete th;
@@ -876,6 +875,13 @@ Int_t TThread::XARequest(const char *xact, Int_t nb, void **ar, Int_t *iret)
 
    if (!gApplication || !gApplication->IsRunning()) return 0;
 
+   // The first time, create the related static vars
+   if (!fgXActMutex) {
+      fgXActMutex = new TMutex(kTRUE);
+      new TThreadTimer;
+      fgXActCondi = new TCondition;
+   }
+
    TThread *th = Self();
    if (th && th->fId != fgMainId) {   // we are in the thread
 
@@ -1039,6 +1045,7 @@ Bool_t TThreadTimer::Notify()
 {
    // Periodically execute the TThread::XAxtion() method in the main thread.
 
+   R__LOCKGUARD2(gROOTMutex);
    if (TThread::fgXAct) { TThread::XAction(); }
    Reset();
 

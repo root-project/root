@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.13 2006/06/23 15:19:22 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.15 2007/02/03 19:36:16 brun Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -36,20 +36,17 @@
 
 
 #include "TAxisEditor.h"
-#include "TGedFrame.h"
+#include "TAxis.h"
 #include "TGedEditor.h"
 #include "TGColorSelect.h"
-#include "TGColorDialog.h"
 #include "TGComboBox.h"
 #include "TGNumberEntry.h"
 #include "TGTextEntry.h"
 #include "TGToolTip.h"
 #include "TGLabel.h"
-#include "TGClient.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
-#include "TClass.h"
 
 ClassImp(TAxisEditor)
 

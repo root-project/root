@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.19 2006/05/23 04:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.25 2007/03/02 10:24:14 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -53,10 +53,13 @@ private:
    Bool_t             fNoLog;          //Do not process logon and logoff macros
    Bool_t             fNoLogo;         //Do not show splash screen and welcome message
    Bool_t             fQuit;           //Exit after having processed input files
+   Bool_t             fGraphInit;      //True if graphics has been initialized
    TObjArray         *fFiles;          //Array of input files (TObjString's)
    TString            fIdleCommand;    //Command to execute while application is idle
    TTimer            *fIdleTimer;      //Idle timer
    TSignalHandler    *fSigHandler;     //Interrupt handler
+
+   static Bool_t      fgGraphInit;     // True if graphics libs initialized
 
    TApplication(const TApplication&);             // not implemented
    TApplication& operator=(const TApplication&);  // not implemented
@@ -65,16 +68,16 @@ protected:
    TApplication();
 
    virtual void Help(const char *line);
-   virtual void InitializeColors();
    virtual void LoadGraphicsLibs();
    virtual void MakeBatch();
-   void         SetSignalHandler(TSignalHandler *sh) { fSigHandler = sh; }
+   void SetSignalHandler(TSignalHandler *sh) { fSigHandler = sh; }
 
 public:
    TApplication(const char *appClassName, Int_t *argc, char **argv,
                 void *options = 0, Int_t numOptions = 0);
    virtual ~TApplication();
 
+   void            InitializeGraphics();
    virtual void    GetOptions(Int_t *argc, char **argv);
    TSignalHandler *GetSignalHandler() const { return fSigHandler; }
    virtual void    SetEchoMode(Bool_t mode);

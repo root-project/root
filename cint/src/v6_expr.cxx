@@ -1595,7 +1595,7 @@ int G__getpointer2memberfunc(char *item,G__value *presult)
   long scope_struct_offset=0;
   int scope_tagnum = -1;
   int ifn;
-  struct G__ifunc_table *memfunc;
+  struct G__ifunc_table_internal *memfunc;
   char *p = strstr(item,"::");
 
   if(!p) return(0);

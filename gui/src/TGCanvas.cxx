@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.48 2006/07/24 16:11:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.50 2007/01/16 07:57:59 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -55,12 +55,12 @@
 #include "TGListView.h"
 #include "TGScrollBar.h"
 #include "TTimer.h"
-#include "TMath.h"
 #include "KeySymbols.h"
 #include "TSystem.h"
 #include "TGTextEditDialogs.h"
 #include "TGMsgBox.h"
 #include "TGResourcePool.h"
+#include "TList.h"
 #include "Riostream.h"
 
 

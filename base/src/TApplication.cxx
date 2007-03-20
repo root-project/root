@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.77 2006/07/26 13:36:42 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.86 2007/03/02 13:34:50 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -44,9 +44,14 @@
 #include "TClassTable.h"
 #include "TSystemDirectory.h"
 #include "TPluginManager.h"
+#include "TClassTable.h"
 
+#ifdef R__WIN32
+#include "TWinNTSystem.h"
+#endif
 
 TApplication *gApplication = 0;
+Bool_t TApplication::fgGraphInit = kFALSE;
 
 //______________________________________________________________________________
 class TIdleTimer : public TTimer {
@@ -142,25 +147,63 @@ TApplication::TApplication(const char *appClassName,
    if (fArgv)
       gSystem->SetProgname(fArgv[0]);
 
+#ifdef R__WIN32
+   ((TWinNTSystem*)gSystem)->NotifyApplicationCreated();
+#endif
+
    fIdleTimer     = 0;
    fSigHandler    = 0;
    fIsRunning     = kFALSE;
    fReturnFromRun = kFALSE;
-   fAppImp        = 0;
+   fAppImp        = gGuiFactory->CreateApplicationImp(appClassName, argc, argv);
 
+   // Enable autoloading
+   gInterpreter->EnableAutoLoading();
+
+   // Initialize the graphics environment
+   if (gClassTable->GetDict("TPad"))
+      InitializeGraphics();
+
+   // Make sure all registered dictionaries have been initialized
+   // and that all types have been loaded
+   gInterpreter->InitializeDictionaries();
+   gInterpreter->UpdateListOfTypes();
+
+   // Save current interpreter context
+   gInterpreter->SaveContext();
+   gInterpreter->SaveGlobalsContext();
+
+   // to allow user to interact with TCanvas's under WIN32
+   gROOT->SetLineHasBeenProcessed();
+}
+
+//______________________________________________________________________________
+TApplication::~TApplication()
+{
+   // TApplication dtor.
+
+   for (int i = 0; i < fArgc; i++)
+      if (fArgv[i]) delete [] fArgv[i];
+   delete [] fArgv;
+   SafeDelete(fAppImp);
+}
+
+//______________________________________________________________________________
+void TApplication::InitializeGraphics()
+{
+   // Initialize the graphics environment.
+
+   if (fgGraphInit)
+      return;
+   fgGraphInit = kTRUE;
+
+   // Load the graphics related libraries
    LoadGraphicsLibs();
-
-   // Create WM dependent application environment
-   fAppImp = gGuiFactory->CreateApplicationImp(appClassName, argc, argv);
-   if (!fAppImp) {
-      MakeBatch();
-      fAppImp = gGuiFactory->CreateApplicationImp(appClassName, argc, argv);
-   }
 
    // Try to load TrueType font renderer. Only try to load if not in batch
    // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
    // if libttf or libGX11TTF are not found in $ROOTSYS/lib or $ROOTSYS/ttf/lib.
-   if (strcmp(appClassName, "proofserv")) {
+   if (strcmp(gROOT->GetName(), "proofserv")) {
       const char *ttpath = gEnv->GetValue("Root.TTFontPath",
 #ifdef TTFFONTDIR
                                           TTFFONTDIR);
@@ -185,10 +228,19 @@ TApplication::TApplication(const char *appClassName,
       delete [] ttfont;
    }
 
+   // Create WM dependent application environment
+   if (fAppImp)
+      delete fAppImp;
+   fAppImp = gGuiFactory->CreateApplicationImp(gROOT->GetName(), &fArgc, fArgv);
+   if (!fAppImp) {
+      MakeBatch();
+      fAppImp = gGuiFactory->CreateApplicationImp(gROOT->GetName(), &fArgc, fArgv);
+   }
+
    // Create the canvas colors early so they are allocated before
    // any color table expensive bitmaps get allocated in GUI routines (like
    // creation of XPM bitmaps).
-   InitializeColors();
+   TColor::InitializeColors();
 
    // Hook for further initializing the WM dependent application environment
    Init();
@@ -202,31 +254,6 @@ TApplication::TApplication(const char *appClassName,
          if (h > 0 && h < 1000) gStyle->SetScreenFactor(0.0011*h);
       }
    }
-
-   // Make sure all registered dictionaries have been initialized
-   // and that all types have been loaded
-   gInterpreter->InitializeDictionaries();
-   gInterpreter->UpdateListOfTypes();
-
-   // Save current interpreter context
-   gInterpreter->SaveContext();
-   gInterpreter->SaveGlobalsContext();
-
-   // Enable autoloading
-   gInterpreter->EnableAutoLoading();
-
-   gROOT->SetLineHasBeenProcessed(); // to allow user to interact with TCanvas's under WIN32
-}
-
-//______________________________________________________________________________
-TApplication::~TApplication()
-{
-   // TApplication dtor.
-
-   for (int i = 0; i < fArgc; i++)
-      if (fArgv[i]) delete [] fArgv[i];
-   delete [] fArgv;
-   SafeDelete(fAppImp);
 }
 
 //______________________________________________________________________________
@@ -257,7 +284,6 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    //    -h      : print usage
    //    --help  : print usage
    //    -config : print ./configure options
-
 
    fNoLog = kFALSE;
    fQuit  = kFALSE;
@@ -290,7 +316,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          Terminate(0);
       } else if (!strcmp(argv[i], "-b")) {
          MakeBatch();
-         argv[i] = 0;
+         argv[i] = "";
 #if 0
       } else if (!strcmp(argv[i], "-x")) {
          // remote ROOT display server not operational yet
@@ -305,22 +331,22 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
             gGuiFactory = gBatchGuiFactory;
             gVirtualX = gGXBatch;
          }
-         argv[i] = 0;
+         argv[i] = "";
 #endif
       } else if (!strcmp(argv[i], "-n")) {
          fNoLog = kTRUE;
-         argv[i] = 0;
+         argv[i] = "";
       } else if (!strcmp(argv[i], "-q")) {
          fQuit = kTRUE;
-         argv[i] = 0;
+         argv[i] = "";
       } else if (!strcmp(argv[i], "-l")) {
          // used by front-end program to not display splash screen
          fNoLogo = kTRUE;
-         argv[i] = 0;
+         argv[i] = "";
       } else if (!strcmp(argv[i], "-splash")) {
          // used when started by front-end program to signal that
          // splash screen can be popped down (TRint::PrintLogo())
-         argv[i] = 0;
+         argv[i] = "";
       } else if (argv[i][0] != '-' && argv[i][0] != '+') {
          Long64_t size;
          Long_t id, flags, modtime;
@@ -349,7 +375,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                if (!fFiles) fFiles = new TObjArray;
                fFiles->Add(new TObjString(argv[i]));
             }
-            argv[i] = 0;
+            argv[i] = "";
          } else {
             char *mac, *s = strtok(dir, "+(");
             if ((mac = gSystem->Which(TROOT::GetMacroPath(), s,
@@ -357,7 +383,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                // if file add to list of files to be processed
                if (!fFiles) fFiles = new TObjArray;
                fFiles->Add(new TObjString(argv[i]));
-               argv[i] = 0;
+               argv[i] = "";
                delete [] mac;
             } else
                // only warn if we're plain root,
@@ -373,7 +399,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    // remove handled arguments from argument array
    j = 0;
    for (i = 0; i < *argc; i++) {
-      if (argv[i]) {
+      if (strcmp(argv[i],"")) {
          argv[j] = argv[i];
          j++;
       }
@@ -406,119 +432,6 @@ void TApplication::Help(const char *line)
    Printf("             pwd          : show current directory, pad and style");
    Printf("             ls           : list contents of current directory");
    Printf("             which [file] : shows path of macro file");
-}
-
-//______________________________________________________________________________
-void TApplication::InitializeColors()
-{
-   // Initialize colors used by the TCanvas based graphics (via TColor objects).
-   // This method should be called before the ApplicationImp is created (which
-   // initializes the GUI colors).
-
-   if (gROOT->GetListOfColors()->First() == 0) {
-      TColor *s0;
-      Float_t r, g, b, h, l, s;
-      Int_t   i;
-
-      new TColor(kWhite,1,1,1,"background");
-      new TColor(kBlack,0,0,0,"black");
-      new TColor(kRed,1,0,0,"red");
-      new TColor(kGreen,0,1,0,"green");
-      new TColor(kBlue,0,0,1,"blue");
-      new TColor(kYellow,1,1,0,"yellow");
-      new TColor(kMagenta,1,0,1,"magenta");
-      new TColor(kCyan,0,1,1,"cyan");
-      new TColor(10,0.999,0.999,0.999,"white");
-      new TColor(11,0.754,0.715,0.676,"editcol");
-
-      // The color white above is defined as being nearly white.
-      // Sets the associated dark color also to white.
-      TColor *c110 = gROOT->GetColor(110);
-      c110->SetRGB(0.999,0.999,.999);
-
-      // Initialize Custom colors
-      new TColor(20,0.8,0.78,0.67);
-      new TColor(31,0.54,0.66,0.63);
-      new TColor(41,0.83,0.81,0.53);
-      new TColor(30,0.52,0.76,0.64);
-      new TColor(32,0.51,0.62,0.55);
-      new TColor(24,0.70,0.65,0.59);
-      new TColor(21,0.8,0.78,0.67);
-      new TColor(47,0.67,0.56,0.58);
-      new TColor(35,0.46,0.54,0.57);
-      new TColor(33,0.68,0.74,0.78);
-      new TColor(39,0.5,0.5,0.61);
-      new TColor(37,0.43,0.48,0.52);
-      new TColor(38,0.49,0.6,0.82);
-      new TColor(36,0.41,0.51,0.59);
-      new TColor(49,0.58,0.41,0.44);
-      new TColor(43,0.74,0.62,0.51);
-      new TColor(22,0.76,0.75,0.66);
-      new TColor(45,0.75,0.51,0.47);
-      new TColor(44,0.78,0.6,0.49);
-      new TColor(26,0.68,0.6,0.55);
-      new TColor(28,0.53,0.4,0.34);
-      new TColor(25,0.72,0.64,0.61);
-      new TColor(27,0.61,0.56,0.51);
-      new TColor(23,0.73,0.71,0.64);
-      new TColor(42,0.87,0.73,0.53);
-      new TColor(46,0.81,0.37,0.38);
-      new TColor(48,0.65,0.47,0.48);
-      new TColor(34,0.48,0.56,0.6);
-      new TColor(40,0.67,0.65,0.75);
-      new TColor(29,0.69,0.81,0.78);
-
-      // Initialize some additional greyish non saturated colors
-      new TColor(8, 0.35,0.83,0.33);
-      new TColor(9, 0.35,0.33,0.85);
-      new TColor(12,.3,.3,.3,"grey12");
-      new TColor(13,.4,.4,.4,"grey13");
-      new TColor(14,.5,.5,.5,"grey14");
-      new TColor(15,.6,.6,.6,"grey15");
-      new TColor(16,.7,.7,.7,"grey16");
-      new TColor(17,.8,.8,.8,"grey17");
-      new TColor(18,.9,.9,.9,"grey18");
-      new TColor(19,.95,.95,.95,"grey19");
-      new TColor(50, 0.83,0.35,0.33);
-
-      // Initialize the Pretty Palette Spectrum Violet->Red
-      //   The color model used here is based on the HLS model which
-      //   is much more suitable for creating palettes than RGB.
-      //   Fixing the saturation and lightness we can scan through the
-      //   spectrum of visible light by using "hue" alone.
-      //   In Root hue takes values from 0 to 360.
-      Float_t  saturation = 1;
-      Float_t  lightness = 0.5;
-      Float_t  maxHue = 280;
-      Float_t  minHue = 0;
-      Int_t    maxPretty = 50;
-      Float_t  hue;
-
-      for (i=0 ; i<maxPretty ; i++) {
-         hue = maxHue-(i+1)*((maxHue-minHue)/maxPretty);
-         TColor::HLStoRGB(hue, lightness, saturation, r, g, b);
-         new TColor(i+51, r, g, b);
-      }
-
-      // Initialize special colors for x3d
-      for (i = 1; i < 8; i++) {
-         s0 = gROOT->GetColor(i);
-         s0->GetRGB(r,g,b);
-         if (i == 1) { r = 0.6; g = 0.6; b = 0.6; }
-         if (r == 1) r = 0.9; if (r == 0) r = 0.1;
-         if (g == 1) g = 0.9; if (g == 0) g = 0.1;
-         if (b == 1) b = 0.9; if (b == 0) b = 0.1;
-         TColor::RGBtoHLS(r,g,b,h,l,s);
-         TColor::HLStoRGB(h,0.6*l,s,r,g,b);
-         new TColor(200+4*i-3,r,g,b);
-         TColor::HLStoRGB(h,0.8*l,s,r,g,b);
-         new TColor(200+4*i-2,r,g,b);
-         TColor::HLStoRGB(h,1.2*l,s,r,g,b);
-         new TColor(200+4*i-1,r,g,b);
-         TColor::HLStoRGB(h,1.4*l,s,r,g,b);
-         new TColor(200+4*i  ,r,g,b);
-      }
-   }
 }
 
 //______________________________________________________________________________

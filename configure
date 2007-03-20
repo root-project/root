@@ -75,9 +75,9 @@ options="                    \
    enable_srp                \
    enable_ssl                \
    enable_table              \
-   enable_thread             \
    enable_unuran             \
    enable_winrtdebug         \
+   enable_xft                \
    enable_xml                \
    enable_xrootd             \
 "
@@ -102,6 +102,7 @@ enable_ruby=no
 enable_shadowpw=
 enable_soversion=no
 enable_table=no
+enable_thread=yes        # cannot be disabled (not in above options list)
 enable_unuran=no
 enable_winrtdebug=
 enable_xrootd=           # must be set explicitely via --enable-xrootd
@@ -262,7 +263,7 @@ check_lib64() {
 	ret=$?
     fi
     logmsg "result: $ret"
-    if test $? -eq 0 ; then
+    if test $ret -eq 0 ; then
         is_lib64=1
 	logmsg "is a 64bit library"
     fi
@@ -696,6 +697,7 @@ guess_architecture () {
         linux:x86_64:*)        arch=linuxx8664gcc   ;;
         linux:alpha:*)         arch=linuxalphagcc   ;;
         linux:arm*:*)          arch=linuxarm        ;;
+        linux:sparc*:*)        arch=linux           ;;
         linux:ppc64*:*)        arch=linuxppc64gcc   ;;
         linux:ppc*:*)          arch=linuxppcgcc     ;;
         linux:i*86:*)          arch=linux           ;;
@@ -881,11 +883,11 @@ enable/disable options, prefix with either --enable- or --disable-
   srp                SRP support, requires SRP source tree
   ssl                SSL encryption support, requires openssl
   table              Build libTable contrib library
-  thread             Thread support
   unuran             UNURAN - package for generating non-uniform random numbers
   winrtdebug         Link against the Windows debug runtime library
   xml                XML parser interface
   xrootd             Build xrootd file server and its client (if supported)
+  xft                Xft support (X11 antialiased fonts)
 
 with options, prefix with --with-, enables corresponding support
 
@@ -912,6 +914,8 @@ with options, prefix with --with-, enables corresponding support
   gsl-libdir         GSL support, location of libgsl
   gccxml             Gccxml support, directory of the gccxml installation
   globus             Globus support, path to what should be GLOBUS_LOCATION
+  globus-incdir      Globus support, location of globus header files
+  globus-libdir      Globus support, location of globus libraries
   krb5               Kerberos5 support, location of Kerberos distribution
   krb5-incdir        Kerberos5 support, location of krb5.h
   krb5-libdir        Kerberos5 support, location of libkrb5
@@ -1100,6 +1104,8 @@ if test $# -gt 0 ; then
       --with-gsl-incdir=*)     gslincdir=$optarg     ; enable_gsl="yes"     ;;
       --with-gsl-libdir=*)     gsllibdir=$optarg     ; enable_gsl="yes"     ;;
       --with-globus=*)         globusdir=$optarg     ; enable_globus="yes"  ;;
+      --with-globus-incdir=*)  globusincdir=$optarg  ; enable_globus="yes"    ;;
+      --with-globus-libdir=*)  globuslibdir=$optarg  ; enable_globus="yes"    ;;
       --with-gccxml=*)         gccxml=$optarg        ;;
       --with-krb5=*)           krb5dir=$optarg       ; enable_krb5="yes"    ;;
       --with-krb5-incdir=*)    krb5incdir=$optarg    ; enable_krb5="yes"    ;;
@@ -1282,6 +1288,15 @@ if test ! "$platform" = "win32"; then
         exit 1
     fi
 
+    check_header "X11/Xft/Xft.h" "" \
+	/usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
+	/usr/local/include /usr/local/include/X11 /usr/local/X11R6/include \
+	/usr/X11/include /usr/include/X11R5
+
+    if test "x$found_dir" = "x" ; then
+        enable_xft="no"
+    fi
+
     check_library "libXpm" "$enable_shared" "$xpmlibdir" \
 	$XPM $XPM/lib /usr/local/lib /usr/lib /usr/lib/X11 \
 	/usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
@@ -1293,6 +1308,29 @@ if test ! "$platform" = "win32"; then
 	result "`basename $0`: libXpm MUST be installed"
         exit 1
     fi
+
+    check_library "libXft" "$enable_shared" "" \
+	/usr/local/lib /usr/lib /usr/lib/X11 \
+	/usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
+	/usr/X11/lib
+    xftlib=$found_lib
+
+    if test "x$xftlib" = "x" ; then
+        enable_xft="no"
+    fi
+fi
+
+
+######################################################################
+#
+### echo %%%Xft support (X11 antialiased fonts)
+#
+if test "$platform" = "win32"; then
+   enable_xft="no"
+fi
+hasxft="undef"
+if test "x$enable_xft" = "xyes"; then
+   hasxft="define"
 fi
 
 ######################################################################
@@ -1622,8 +1660,8 @@ check_explicit "$enable_mysql" "$enable_mysql_explicit" \
 if test ! "x$enable_oracle" = "xno"; then
     # Check for oracle include and library
     check_header "occi.h" "$oracleincdir" \
-        $ORACLE $ORACLE/include $ORACLEINCDIR /usr/local/include \
-        /usr/include /usr/include/oracle/*/client
+        $ORACLE $ORACLE/include $ORACLE/sdk/include $ORACLEINCDIR \
+        /usr/local/include /usr/include /usr/include/oracle/*/client
     oracleinc=$found_hdr
     oracleincdir=$found_dir
 
@@ -1953,11 +1991,13 @@ if test ! "x$enable_castor" = "xno" ; then
     if test ! "x$stagerinc" = "x"; then
         castorcflags=-DR__CASTOR2
         # check for Castor >= 2.1
-        message "Checking for Castor version >= 2.1"
-        castor_version=`grep "define BASEVERSION" $castorincdir/patchlevel.h | sed 's/^.*"\([0-9]\.[0-9]\.[0-9]\)"/\1/' | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
-        if test $castor_version -lt 2001; then
+        message "Checking for Castor version being 2.1.0-* or 2.1.1-*"
+        castor_version=`grep "define BASEVERSION" $castorincdir/patchlevel.h | sed 's/^.*"\([0-9]\.[0-9]\.[0-9]\)"/\1/' | awk 'BEGIN { FS="." } { printf "%d", $1 * 1000000 + $2 * 1000 + $3}'`
+        if test $castor_version -lt 2001000; then
+            base_vers=`grep "define BASEVERSION" $castorincdir/patchlevel.h | sed 's/^.*"\([0-9]\.[0-9]\.[0-9]\)"/\1/' | awk '{ printf $1}'`
+            patch_level=`grep "define PATCHLEVEL" $castorincdir/patchlevel.h | awk '{ printf $3}'`
+            result "no, $base_vers-$patch_level"
             castorincdir=""
-            result "no"
         else
             result "ok"
         fi
@@ -2159,7 +2199,7 @@ if test ! "x$enable_cern" = "xno"; then
 	/cern/pro/lib /cern/new/lib /cern/old/lib /opt/cern/pro/lib \
 	/opt/cern/new/lib /opt/cern/old/lib /usr/local/cern/pro/lib \
 	/usr/local/cern/new/lib /usr/local/cern/old/lib /usr/lib \
-	/usr/lib/cern /usr/local/lib /usr/local/lib/cern"
+	/usr/lib/cern /usr/local/lib /usr/local/lib/cern $finkdir/lib"
     check_library "libpacklib_noshift libpacklib packmd packlib" \
 	"$enable_shared" "${cernlibdir}" $cernlibdirs
     packlib=$found_lib
@@ -2250,7 +2290,7 @@ if test ! "x$enable_pythia6" = "xno" ; then
 	    if test "x$platform" = "xmacosx" ; then
 		check_symbol intel_cpu_indicator "$found_lib" "$found_dir"
 		if test $found_symbol -eq 1 ; then
-		    pythia6lib="$pythia6lib -L`$cwhich ifort | sed -e 's|bin/ifort|lib|'` -lifcore -lirc -limf -lifport"
+		    pythia6lib="$pythia6lib -L`$cwhich ifort | sed -e 's|bin/ifort|lib|'` -lifcore  -lirc -limf"
 		fi
             fi
 	fi
@@ -2738,7 +2778,7 @@ else
    else
       if test "x$enable_xrootd" = "xyes"; then
          enable_xrootd="no"
-         xrdcomm=", needs thread support (rerun with --enable-thread)"
+         xrdcomm=", needs thread support (make sure pthread lib is found)"
       else
          enable_xrootd="no"
       fi
@@ -2752,9 +2792,11 @@ result $xrdcomm
 if test "x$enable_xrootd" = "xyes"; then
     buildxrd="yes"
     hasxrd=""
+    hasnotxrd="#"
 else
     buildxrd="no"
     hasxrd="#"
+    hasnotxrd=""
 fi
 check_explicit "$enable_xrootd" "$enable_xrootd_explicit" \
      "Explicitly required Xrootd dependencies not fulfilled"
@@ -2768,23 +2810,31 @@ check_explicit "$enable_xrootd" "$enable_xrootd_explicit" \
 # If the user has set the flags "--disable-globus", we don't check for
 # Globus at all.
 #
+buildxrdgsi=
 glbextracflags=""
 glbpatchcflags=""
 haveglobus=""
 if test ! "x$enable_globus" = "xno"; then
+   # If XROOTD is enabled ...
+   if test ! "x$enable_xrootd" = "xno"; then
+      # ... enable the GSI module in there
+      message "Checking whether to build the xrootd GSI plug-in"
+      buildxrdgsi="yes"
+      result "yes"
+   fi
    # Check if the GLOBUS_LOCATION variable is set
+   checking_msg "for globusdir"
    if test "x$globusdir" = "x" ; then
-      checking_msg "for globusdir"
       result "no"
       checking_msg "GLOBUS_LOCATION"
-      if test "x$GLOBUS_LOCATION" = "x" ; then
-          globusdir=""
-          enable_globus="no"
-	  result "no"
+      if test ! "x$GLOBUS_LOCATION" = "x" ; then
+         globusdir=$GLOBUS_LOCATION
+         result "$GLOBUS_LOCATION"
       else
-          globusdir=$GLOBUS_LOCATION
-	  result "$GLOBUS_LOCATION"
+         result "no"
       fi
+   else
+      result "$globusdir"
    fi
 fi
 
@@ -2793,71 +2843,55 @@ if test "x$enable_globus" = "xyes"; then
     pthr="pthr"
     #determine flavour tag of the building
     flavour=""
-    if test -d $globusdir/include/gcc32; then
-        flavour="gcc32"
-    else
-        flavour="gcc32dbg"
+    if test "x$globusincdir" = "x" ; then
+       globusincdir=$globusdir/include
     fi
-    globusincdir=""
-    globuslibdir=""
-    searchincdir=$globusdir/include
+    searchincdir="$globusincdir/gcc32 $globusincdir/gcc32dbg \
+                  $globusincdir/gcc32pthr $globusincdir/gcc32dbgpthr"
 
-    inclist="openssl/x509.h openssl/pem.h globus_gss_assist.h globus_common.h"
+    # Found the reference dir first
+    check_header "openssl/x509.h" "" "$searchincdir"
+    if test "x$found_hdr" = "x" ; then
+       globusinc=""
+       globusincdir=""
+       enable_globus="no"
+       break
+    fi
+    globusinc="$globusinc $found_hdr"
+    globusincdir=$found_dir
+    if test ! "x$globusincdir" = "x" ; then
+       flavour=`basename $globusincdir`
+    fi
 
+    # The other headers now
+    inclist="openssl/pem.h globus_gss_assist.h globus_common.h"
     for i in $inclist ; do
-        check_header $i "" "$searchincdir/$flavour"
-        if test "x$found_hdr" = "x" ; then
-            globusinc=""
-            globusincdir=""
-            enable_globus="no"
-            break
-        fi
-        globusinc="$globusinc $found_hdr"
-        if test "x$globusincdir" = "x" ; then
-            globusincdir=$found_dir
-        else
-            for k in $globusincdir ; do
-                if test "x$k" != "x$found_dir" ; then
-		    globusincdir="$found_dir $globusincdir"
-                 fi
-            done
-        fi
+       check_header $i "" "$globusincdir"
+       if test "x$found_hdr" = "x" ; then
+          globusinc=""
+          globusincdir=""
+          enable_globus="no"
+          break
+       fi
+       globusinc="$globusinc $found_hdr"
     done
 fi
 
 if test "x$enable_globus" = "xyes"; then
 
    # With more recent versions we need an additional header
-   check_header globus_gsi_credential.h "" "$searchincdir/$flavour"
+   check_header globus_gsi_credential.h "" "$globusincdir"
    gsiversion="no"
    if test ! "x$found_hdr" = "x" ; then
        gsiversion="yes"
        globusinc="$globusinc $found_hdr"
-       if test "x$globusincdir" = "x" ; then
-           globusincdir=$found_dir
-       else
-           for k in $globusincdir ; do
-               if test "x$k" != "x$found_dir" ; then
-		   globusincdir="$found_dir $globusincdir"
-                fi
-           done
-       fi
        gsicredentialh=$found_dir/globus_gsi_credential.h
        echo "Checking for gsi version ... yes"
    else
        echo "Checking for gsi version ... no"
-       check_header sslutils.h "" "$searchincdir/$flavour"
+       check_header sslutils.h "" "$globusincdir"
        if test ! "x$found_hdr" = "x" ; then
           globusinc="$globusinc $found_hdr"
-          if test "x$globusincdir" = "x" ; then
-             globusincdir=$found_dir
-          else
-             for k in $globusincdir ; do
-                 if test "x$k" != "x$found_dir" ; then
-		     globusincdir="$found_dir $globusincdir"
-                 fi
-             done
-          fi
        else
          globusinc=""
          globusincdir=""
@@ -2869,30 +2903,30 @@ fi
 if test "x$enable_globus" = "xyes"; then
 
    globuslib=""
-   if test ! "x$globusdir" = "x" ; then
-       searchlibdir=$globusdir/lib
+   if test "x$globuslibdir" = "x" ; then
+       globuslibdir=$globusdir/lib
    fi
+   if test "x$globusdir" = "x" ; then
+       globusdir=`dirname $globuslibdir`
+       echo "Globus main path set to $globusdir"
+   fi
+   searchlibdir=$globuslibdir
+   globuslibdir=""
 
    for i in libglobus_gss_assist_$flavour libglobus_gssapi_gsi_$flavour \
-     libssl_$flavour libcrypto_$flavour ; do
-     check_library $i "$enable_shared" "$searchlibdir" /opt/globus /usr/lib \
-        /usr/local/lib
-        if test "x$found_lib" = "x" ; then
-            globuslib=""
-            globuslibdir=""
-            enable_globus="no"
-            break
-        fi
-        globuslib="$globuslib $found_lib"
-        if test "x$globuslibdir" = "x" ; then
-            globuslibdir=$found_dir
-        else
-            for k in $globuslibdir ; do
-                if test "x$k" != "x$found_dir" ; then
-                    globuslibdir="$found_dir $globuslibdir"
-                fi
-            done
-        fi
+      libssl_$flavour libcrypto_$flavour ; do
+      check_library $i "$enable_shared" "$searchlibdir" /opt/globus /usr/lib \
+      /usr/local/lib
+      if test "x$found_lib" = "x" ; then
+         globuslib=""
+         globuslibdir=""
+         enable_globus="no"
+         break
+      fi
+      globuslib="$globuslib $found_lib"
+      if test "x$globuslibdir" = "x" && test ! "x$found_dir" = "x" ; then
+         globuslibdir="$found_dir"
+      fi
    done
 fi
 
@@ -2901,17 +2935,11 @@ if test "x$enable_globus" = "xyes"; then
    # In more recent versions some functions are found in a separated library
    # so, if it exists, add it to the list
    check_library libglobus_gsi_credential_$flavour "$enable_shared" \
-          "$searchlibdir" /usr/lib /usr/local/lib
+          "$globuslibdir" /usr/lib /usr/local/lib
    if test ! "x$found_lib" = "x" ; then
       globuslib="$globuslib $found_lib"
-      if test "x$globuslibdir" = "x" ; then
-         globuslibdir=$found_dir
-      else
-         for k in $globuslibdir ; do
-             if test "x$k" != "x$found_dir" ; then
-                globuslibdir="$found_dir $globuslibdir"
-             fi
-         done
+      if test "x$globuslibdir" = "x" && test ! "x$found_dir" = "x" ; then
+         globuslibdir="$found_dir"
       fi
    fi
    case $platform in
@@ -3337,14 +3365,13 @@ if test ! "x$enable_afs" = "xno" ; then
 	afsdir="$afsdir $afsdir/afs"
     fi
 
-    afslibdirs="$AFS/lib /usr/afsws/lib /usr/local/afsws/lib \
-        /opt/afs/lib /usr/local/afs/lib /usr/lib /usr/local/lib \
-        /usr/athena/lib /usr/local/athena/lib"
+    #
+    # Libraries
+    #
+    afslibdirs="$AFS/lib /usr/lib /usr/local/lib /opt/lib $finkdir/lib"
     afslib=""
     afslibdir=""
-    for i in afs/libkauth afs/libprot afs/libauth afs/libsys afs/libcmd \
-             afs/libaudit afs/util libubik librx librxkad \
-             liblwp libafsrpc libdes ; do
+    for i in libafsauthent libafsrpc ; do
 	check_library "$i" "no" "$afsdir" $afslibdirs
 	if test "x$found_lib" = "x" ; then
 	    afslib=""
@@ -3355,6 +3382,34 @@ if test ! "x$enable_afs" = "xno" ; then
 	afslib="$afslib $found_lib"
 	afslibdir="$afslibdir $found_dir"
     done
+    #
+    # header files
+    #
+    if test "x$enable_afs" = "xyes" ; then
+       incafs="stds.h kautils.h"
+       for i in $incafs ; do
+           check_header "afs/$i" "$found_dir" \
+              /usr/include /usr/local/include /opt/include $finkdir/include
+           if test "x$found_hdr" = "x" ; then
+               afsincdir=""
+               enable_afs="no"
+               break
+           fi
+           if test "x$afsincdir" = "x" ; then
+              afsincdir="-I$found_dir"
+           else
+              have_already="no"
+              for k in $afsincdir ; do
+                 if test "x$k" = "x-I$found_dir" ; then
+                    have_already="yes"
+                 fi
+              done
+              if test "x$have_already" = "xno" ; then
+                 afsincdir="-I$found_dir $afsincdir"
+              fi
+           fi
+       done
+    fi
 
     if test "x$afslib" = "x" ; then
         enable_afs="no"
@@ -4119,6 +4174,7 @@ message "Writing $MAKEOUT"
 sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@afslib@|$afslib|"                    \
     -e "s|@afslibdir@|$afslibdir|"              \
+    -e "s|@afsincdir@|$afsincdir|"              \
     -e "s|@alienincdir@|$alienincdir|"          \
     -e "s|@alienlib@|$alienlib|"                \
     -e "s|@alienlibdir@|$alienlibdir|"          \
@@ -4191,6 +4247,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@g4incdir@|$g4incdir|"                \
     -e "s|@g4libdir@|$g4libdir|"                \
     -e "s|@clhepincdir@|$clhepincdir|"          \
+    -e "s|@enable_xft@|$enable_xft|"            \
         < Makefile.tmp > Makefile.tmpp
 mv Makefile.tmpp Makefile.tmp
 
@@ -4320,6 +4377,7 @@ sed -e "s|@srcdir@|$srcdir|"                    \
     -e "s|@buildsrputil@|$enable_srputil|"      \
     -e "s|@buildkrb5@|$enable_krb5|"            \
     -e "s|@buildglobus@|$enable_globus|"        \
+    -e "s|@buildxrdgsi@|$enable_xrdgsi|"        \
     -e "s|@buildclarens@|$enable_clarens|"      \
     -e "s|@buildpeac@|$buildpeac|"              \
     < Makefile.tmp > $MAKEOUT
@@ -4359,6 +4417,7 @@ sed \
     -e "s|@configoptions@|$configoptions|" \
     -e "s|@hasmathmore@|$hasmathmore|"     \
     -e "s|@haspthread@|$haspthread|"       \
+    -e "s|@hasxft@|$hasxft|"               \
     < RConfigure.tmp > $CONFIGUREOUT
 rm -f RConfigure.tmp
 
@@ -4419,7 +4478,8 @@ sed -e "s|@libdir@|$libdir|"               \
     -e "s|@etcdir@|$etcdir|"               \
     -e "s|@ttffontdir@|$fontdir|"          \
     -e "s|@iconpath@|$iconpath|"           \
-    -e "s|@hasxrd@|$hasxrd|"             \
+    -e "s|@hasxrd@|$hasxrd|"               \
+    -e "s|@hasnotxrd@|$hasnotxrd|"         \
    < rootrc.tmp > $ROOTRCOUT
 rm -f rootrc.tmp
 result "done"

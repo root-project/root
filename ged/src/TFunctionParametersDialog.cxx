@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:$:$Id:$
+// @(#)root/ged:$Name:  $:$Id: TFunctionParametersDialog.cxx,v 1.5 2007/02/01 14:58:44 brun Exp $
 // Author: Ilka Antcheva   08/05/06
 
 /*************************************************************************
@@ -19,6 +19,8 @@
 
 #include "TFunctionParametersDialog.h"
 #include "TTimer.h"
+#include "TList.h"
+#include "TF1.h"
 #include "TGButton.h"
 #include "TGFrame.h"
 #include "TGLabel.h"

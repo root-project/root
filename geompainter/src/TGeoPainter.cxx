@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.93 2006/09/17 14:16:37 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.98 2007/02/18 14:58:56 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include "TROOT.h"
+#include "TClass.h"
 #include "TColor.h"
 #include "TPoint.h"
 #include "TView.h"
@@ -35,6 +36,7 @@
 #include "TGeoCompositeShape.h"
 #include "TGeoShapeAssembly.h"
 #include "TGeoPainter.h"
+#include "TMath.h"
 
 #include "X3DBuffer.h"
 
@@ -207,8 +209,9 @@ void TGeoPainter::ClearVisibleVolumes()
 void TGeoPainter::DefineColors() const
 {
 // Define 100 colors with increasing light intensities for each basic color (1-7)
-// Register these colors at indexes starting with 300.
-   TColor *color = gROOT->GetColor(300);
+// Register these colors at indexes starting with 1000.
+   TColor::InitializeColors();
+   TColor *color = gROOT->GetColor(1000);
    if (color) return;
    Int_t i,j;
    Float_t r,g,b,h,l,s;
@@ -223,7 +226,7 @@ void TGeoPainter::DefineColors() const
       for (j=0; j<100; j++) {
          l = 0.25+0.5*j/99.;
          TColor::HLS2RGB(h,l,s,r,g,b);
-         new TColor(300+(i-1)*100+j, r,g,b);
+         new TColor(1000+(i-1)*100+j, r,g,b);
       }
    }           
 }
@@ -232,16 +235,23 @@ void TGeoPainter::DefineColors() const
 Int_t TGeoPainter::GetColor(Int_t base, Float_t light) const
 {
 // Get index of a base color with given light intensity (0,1)
+   const Int_t kBCols[7] = {1,2,3,5,4,6,7};
+   TColor *tcolor = gROOT->GetColor(base);
+   Float_t r,g,b;
+   tcolor->GetRGB(r,g,b);
+   Int_t code = 0;
+   if (r>0.5) code += 1;
+   if (g>0.5) code += 2;
+   if (b>0.5) code += 4;
    Int_t color, j;
-   Int_t c = base%8;
-   if (c==0) return c;
+   
    if (light<0.25) {
       j=0;
    } else {
       if (light>0.8) j=99;
       else j = Int_t(99*(light-0.25)/0.5);
    }   
-   color = 300 + (c-1)*100+j;
+   color = 1000 + (kBCols[code]-1)*100+j;
    return color;
 }
 
@@ -567,7 +577,7 @@ void TGeoPainter::CheckEdit()
 {
 // Check if Ged library is loaded and load geometry editor classe.
    if (fIsEditable) return;
-   if (!gROOT->GetClass("TGedEditor")) return;
+   if (!TClass::GetClass("TGedEditor")) return;
    TPluginHandler *h;
    if ((h = gROOT->GetPluginManager()->FindHandler("TGeoManagerEditor"))) {
       if (h->LoadPlugin() == -1) return;
@@ -659,8 +669,7 @@ void TGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *option)
    Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
    // Clear pad if option "same" not given
    if (!gPad) {
-      if (!gROOT->GetMakeDefCanvas()) return;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    }
    if (!opt.Contains("same")) gPad->Clear();
    // append this volume to pad
@@ -669,7 +678,7 @@ void TGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *option)
    // Create a 3-D view
    TView *view = gPad->GetView();
    if (!view) {
-      view = new TView(11);
+      view = TView::CreateView(11,0,0);
       // Set the view to perform a first autorange (frame) draw. 
       // TViewer3DPad will revert view to normal painting after this
       view->SetAutoRange(kTRUE);
@@ -700,8 +709,7 @@ void TGeoPainter::DrawShape(TGeoShape *shape, Option_t *option)
    Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
    // Clear pad if option "same" not given
    if (!gPad) {
-      if (!gROOT->GetMakeDefCanvas()) return;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    }
    if (!opt.Contains("same")) gPad->Clear();
    // append this shape to pad
@@ -710,7 +718,7 @@ void TGeoPainter::DrawShape(TGeoShape *shape, Option_t *option)
    // Create a 3-D view
    TView *view = gPad->GetView();
    if (!view) {
-      view = new TView(11);
+      view = TView::CreateView(11,0,0);
       // Set the view to perform a first autorange (frame) draw. 
       // TViewer3DPad will revert view to normal painting after this
       view->SetAutoRange(kTRUE);
@@ -741,8 +749,7 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
    Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
    // Clear pad if option "same" not given
    if (!gPad) {
-      if (!gROOT->GetMakeDefCanvas()) return;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    }
    if (!opt.Contains("same")) gPad->Clear();
    // append this volume to pad
@@ -753,7 +760,7 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
    gPad->GetViewer3D(option);
    TView *view = gPad->GetView();
    if (!view) {
-      view = new TView(11);
+      view = TView::CreateView(11,0,0);
       // Set the view to perform a first autorange (frame) draw. 
       // TViewer3DPad will revert view to normal painting after this
       view->SetAutoRange(kTRUE);
@@ -784,8 +791,7 @@ void TGeoPainter::DrawOnly(Option_t *option)
    Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
    // Clear pad if option "same" not given
    if (!gPad) {
-      if (!gROOT->GetMakeDefCanvas()) return;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    }
    if (!opt.Contains("same")) gPad->Clear();
    // append this volume to pad
@@ -795,7 +801,7 @@ void TGeoPainter::DrawOnly(Option_t *option)
    // Create a 3-D view
    TView *view = gPad->GetView();
    if (!view) {
-      view = new TView(11);
+      view = TView::CreateView(11,0,0);
       // Set the view to perform a first autorange (frame) draw. 
       // TViewer3DPad will revert view to normal painting after this
       view->SetAutoRange(kTRUE);

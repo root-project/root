@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.14 2006/09/29 08:17:21 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.17 2007/03/19 15:14:10 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -31,6 +31,9 @@
 #include "XrdClient/XrdClientMessage.hh"
 #include "XrdClient/XrdClientUrlInfo.hh"
 #include "XrdNet/XrdNetDNS.hh"
+#include "XrdOuc/XrdOucErrInfo.hh"
+#include "XrdOuc/XrdOucError.hh"
+#include "XrdOuc/XrdOucPlugin.hh"
 #include "XrdOuc/XrdOucPthread.hh"
 #include "XrdOuc/XrdOucString.hh"
 #include "XrdSec/XrdSecInterface.hh"
@@ -55,7 +58,6 @@
 
 // Tracing utils
 #include "XrdProofdTrace.h"
-extern XrdOucTrace *XrdProofdTrace;
 static const char *TraceID = " ";
 #define TRACEID TraceID
 
@@ -77,6 +79,9 @@ XrdClientConnectionMgr *XrdProofConn::fgConnMgr = 0;
 // Retry controllers
 int XrdProofConn::fgMaxTry = 5;
 int XrdProofConn::fgTimeWait = 2;  // seconds
+
+XrdOucPlugin *XrdProofConn::fgSecPlugin = 0;       // Sec library plugin
+void         *XrdProofConn::fgSecGetProtocol = 0;  // Sec protocol getter
 
 #ifndef SafeDelete
 #define SafeDelete(x) { if (x) { delete x; x = 0; } }
@@ -494,6 +499,9 @@ XrdClientMessage *XrdProofConn::SendReq(XPClientRequest *req, const void *reqDat
 
       abortcmd = 0;
 
+      // Make sure we have the unmarshalled request
+      memcpy(req, &reqsave, sizeof(XPClientRequest));
+
       // Send the cmd, dealing automatically with redirections and
       // redirections on error
       TRACE(REQ,"XrdProofConn::SendReq: calling SendRecv");
@@ -863,7 +871,7 @@ bool XrdProofConn::Login()
    // This method perform the loggin-in into the server just after the
    // hand-shake. It also calls the Authenticate() method
 
-   XPClientRequest reqhdr;
+   XPClientRequest reqhdr, reqsave;
 
    // We fill the header struct containing the request for login
    memset( &reqhdr, 0, sizeof(reqhdr));
@@ -871,10 +879,17 @@ bool XrdProofConn::Login()
    reqhdr.login.pid = getpid();
 
    // Fill login username
-   if (fUser.length() >= 0)
+   if (fUser.length() > 8) {
+      // The name must go in the attached buffer because the login structure
+      // can accomodate at most 8 chars
+      strcpy( (char *)reqhdr.login.username, "?>buf" );
+      fLoginBuffer += "|usr:";
+      fLoginBuffer += fUser;
+   } else if (fUser.length() >= 0) {
       strcpy( (char *)reqhdr.login.username, (char *)(fUser.c_str()) );
-   else
+   } else {
       strcpy( (char *)reqhdr.login.username, "????" );
+   }
 
    // This is the place to send a token for fast authentication
    // or id to the server (or any other information)
@@ -898,11 +913,18 @@ bool XrdProofConn::Login()
    TRACE(REQ,"XrdProofConn::Login: logging into server "<<URLTAG<<
          "; pid="<<reqhdr.login.pid<<"; uid=" << reqhdr.login.username);
 
+   // Finish to fill up and ...
+   SetSID(reqhdr.header.streamid);
+   reqhdr.header.requestid = kXP_login;
+   // ... saved it unmarshalled for retrials, if any
+   memcpy(&reqsave, &reqhdr, sizeof(XPClientRequest));
+
    // Reset logged state
    fPhyConn->SetLogged(kNo);
 
    bool notdone = 1;
    bool resp = 1;
+
 
    // If positive answer
    XrdSecProtocol *secp = 0;
@@ -910,8 +932,10 @@ bool XrdProofConn::Login()
 
       // server response header
       char *pltmp = 0;
-      SetSID(reqhdr.header.streamid);
-      reqhdr.header.requestid = kXP_login;
+
+      // Make sure we have the unmarshalled version
+      memcpy(&reqhdr, &reqsave, sizeof(XPClientRequest));
+
       XrdClientMessage *xrsp = SendReq(&reqhdr, buf,
                                        (void **)&pltmp, "XrdProofConn::Login");
 
@@ -975,6 +999,10 @@ bool XrdProofConn::Login()
             secp = Authenticate(plist, (int)(len+1));
             resp = (secp != 0);
 
+            if (!resp)
+               // We failed the aythentication attempt: cannot continue
+               notdone = 0;
+
             if (plist)
                delete[] plist;
          } else {
@@ -988,6 +1016,9 @@ bool XrdProofConn::Login()
          // We failed but we are done with this attempt
          resp = 0;
          notdone = 0;
+         // Print error msg, if any
+         if (GetLastErr())
+            XPDPRT(fHost << ": "<< GetLastErr());
       }
 
       // Cleanup
@@ -1013,7 +1044,6 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
    // all available protocols proposed by the server (in plist),
    // starting from the first.
 
-   static XrdSecGetProt_t getp = 0;
    XrdSecProtocol *protocol = (XrdSecProtocol *)0;
 
    if (!plist || plsiz <= 0)
@@ -1064,23 +1094,21 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
       XrdSecParameters Parms(bpar,lpar+1);
 
       // We need to load the protocol getter the first time we are here
-      if (!getp) {
-         // Open the security library
-         void *lh = 0;
-         if (!(lh = dlopen("libXrdSec.so", RTLD_NOW))) {
-            TRACE(REQ,"XrdProofConn::Authenticate: unable to load libXrdSec.so");
-            return protocol;
-         }
+      if (!fgSecGetProtocol) {
+         static XrdOucError err(0, "XrdProofConn_");
+         // Initialize the security library plugin, if needed
+         if (!fgSecPlugin)
+            fgSecPlugin = new XrdOucPlugin(&err, "libXrdSec.so");
 
          // Get the client protocol getter
-         if (!(getp = (XrdSecGetProt_t) dlsym(lh, "XrdSecGetProtocol"))) {
+         if (!(fgSecGetProtocol = fgSecPlugin->getPlugin("XrdSecGetProtocol"))) {
             TRACE(REQ,"XrdProofConn::Authenticate: unable to load XrdSecGetProtocol()");
             return protocol;
          }
       }
       //
       // Retrieve the security protocol context from the xrootd server
-      if (!(protocol = (*getp)((char *)fUrl.Host.c_str(),
+      if (!(protocol = (*((XrdSecGetProt_t)fgSecGetProtocol))((char *)fUrl.Host.c_str(),
                                (const struct sockaddr &)netaddr, Parms, 0))) {
          TRACE(REQ,"XrdProofConn::Authenticate: unable to get protocol object.");
          // Set error, in case of need
@@ -1095,15 +1123,18 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
       XrdOucString protname = protocol->Entity.prot;
       //
       // Once we have the protocol, get the credentials
-      credentials = protocol->getCredentials(&Parms);
+      XrdOucErrInfo ei;
+      credentials = protocol->getCredentials(&Parms, &ei);
       if (!credentials) {
          TRACE(REQ,"XrdProofConn::Authenticate:"
                    " cannot obtain credentials (protocol: "<<protname<<")");
          // Set error, in case of need
          fLastErr = kXR_NotAuthorized;
          fLastErrMsg = "cannot obtain credentials for protocol: ";
-         fLastErrMsg += protname;
+         fLastErrMsg += ei.getErrText();
          pp = pn;
+         protocol->Delete();
+         protocol = 0;
          continue;
       } else {
          TRACE(REQ,"XrdProofConn::Authenticate:"
@@ -1142,14 +1173,17 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
             secToken = new XrdSecParameters(srvans, dlen);
             //
             // then get next part of the credentials
-            credentials = protocol->getCredentials(secToken);
+            credentials = protocol->getCredentials(secToken, &ei);
             SafeDelete(secToken); // nb: srvans is released here
             srvans = 0;
             if (!credentials) {
                TRACE(REQ,"XrdProofConn::Authenticate: cannot obtain credentials");
                // Set error, in case of need
                fLastErr = kXR_NotAuthorized;
-               fLastErrMsg = "cannot obtain credentials";
+               fLastErrMsg = "cannot obtain credentials: ";
+               fLastErrMsg += ei.getErrText();
+               protocol->Delete();
+               protocol = 0;
                break;
             } else {
                TRACE(REQ,"XrdProofConn::Authenticate:"
@@ -1158,8 +1192,11 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
          } else if (status == kXR_ok) {
             // Success
             resp = TRUE;
+         } else {
+            // Print error msg, if any
+            if (GetLastErr())
+               XPDPRT(fHost << ": "<< GetLastErr());
          }
-
          // Cleanup message
          SafeDelete(xrsp);
       }

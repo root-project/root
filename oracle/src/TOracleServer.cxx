@@ -1,4 +1,4 @@
-// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.16 2006/09/29 13:58:34 brun Exp $
+// @(#)root/oracle:$Name:  $:$Id: TOracleServer.cxx,v 1.17 2006/12/12 11:29:45 rdm Exp $
 // Author: Yan Liu and Shaowen Wang   23/11/04
 
 /*************************************************************************
@@ -8,6 +8,47 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TOracleServer                                                        //
+//                                                                      //
+// This class implements an OCCI interface to Oracle data bases.        //
+// It uses the instantclient10 software available from Oracle.          //
+// To install this client software do:                                  //
+// 1) Download Instant Client Packages (4 files) from:                  //
+//     http://www.oracle.com/technology/software/tech/oci/instantclient/index.html
+// 2) Unzip the files into instantclient10_1 (Mac OS X example here):   //
+//     unzip instantclient-basic-macosx-10.1.0.3.zip                    //
+//     unzip instantclient-sqlplus-macosx-10.1.0.3.zip                  //
+//     unzip instantclient-sdk-macosx-10.1.0.3.zip                      //
+//     unzip instantclient-jdbc-macosx-10.1.0.3.zip                     //
+// 3) Create two symbolic links for the files that have the version     //
+//    appended:                                                         //
+//      ln -s libclntsh.dylib.10.1 libclntsh.dylib                      //
+//      ln -s libocci.dylib.10.1 libocci.dylib                          //
+// 4) Add instantclient10_1 directory to your (DY)LD_LIBRARY_PATH       //
+//    in your .profile:                                                 //
+//      export DYLD_LIBRARY_PATH="<pathto>/instantclient10_1"           //
+//    Use DY only on Mac OS X.                                          //
+// 5) If you also want to use the sqlplus command line app add also     //
+//      export SQLPATH="<pathto>/instantclient10_1"                     //
+// 6) If you want to connect to a remote db server you will also need   //
+//    to create a tnsname.ora file which describes the local_name for   //
+//    the remote db servers (at CERN most public machines have this     //
+//    file in /etc). If it is not in /etc create TNS_ADMIN:             //
+//      export TNS_ADMIN="<path-to-dir-containing-tnsname.ora>"         //
+// 7) Test it our with the sqlplus command line app:                    //
+//      sqlplus [username][/password]@<local_name>                      //
+//    or                                                                //
+//      sqlplus [username][/password]@//[hostname][:port][/database]    //
+//                                                                      //
+// ATTENTION: This plugin will not work on Mac OS X / Intel as Oracle   //
+// has no intention to release a universal binary of the instantclient  //
+// libraries.                                                           //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 
 #include "TOracleServer.h"
 #include "TOracleResult.h"
@@ -26,19 +67,19 @@ ClassImp(TOracleServer)
       if (!IsConnected()) {                             \
          SetError(-1,"Oracle database is not connected",method); \
          return res;                                    \
-      }                                                 
+      }
 
 // catch Oracle exception after try block
 #define CatchError(method)                           \
    catch (SQLException &oraex) {                     \
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), method); \
-   }                                                 
+   }
 
 //______________________________________________________________________________
 TOracleServer::TOracleServer(const char *db, const char *uid, const char *pw)
 {
    // Open a connection to a Oracle DB server. The db arguments should be
-   // of the form "oracle://connection_identifier][/<database>]", e.g.:
+   // of the form "oracle://connection_identifier[/<database>]", e.g.:
    // "oracle://cmscald.fnal.gov/test". The uid is the username and pw
    // the password that should be used for the connection.
 
@@ -75,7 +116,7 @@ TOracleServer::TOracleServer(const char *db, const char *uid, const char *pw)
       fPort = url.GetPort();
       fPort = (fPort>0) ? fPort : 1521;
       return;
-      
+
    } CatchError("TOracleServer")
 
    MakeZombie();
@@ -107,7 +148,7 @@ void TOracleServer::Close(Option_t *)
 
    fPort = -1;
 }
-  
+
 //______________________________________________________________________________
 TSQLStatement *TOracleServer::Statement(const char *sql, Int_t niter)
 {
@@ -120,9 +161,9 @@ TSQLStatement *TOracleServer::Statement(const char *sql, Int_t niter)
 
    try {
       oracle::occi::Statement *stmt = fConn->createStatement(sql);
-      
+
       Blob parblob(fConn);
-      
+
       return new TOracleStatement(fEnv, fConn, stmt, niter, fErrorOut);
 
    } CatchError("Statement")
@@ -146,12 +187,12 @@ TSQLResult *TOracleServer::Query(const char *sql)
    try {
       oracle::occi::Statement *stmt = fConn->createStatement();
 
-      // NOTE: before special COUNT query was executed to define number of 
+      // NOTE: before special COUNT query was executed to define number of
       // rows in result set. Now it is not requried, while TOracleResult class
-      // will automatically fetch all rows from resultset when 
-      // GetRowCount() will be called first time. 
+      // will automatically fetch all rows from resultset when
+      // GetRowCount() will be called first time.
       // It is better do not use GetRowCount() to avoid unnecessary memory usage.
-      
+
       stmt->setSQL(sql);
       stmt->setPrefetchRowCount(1000);
       stmt->setPrefetchMemorySize(1000000);
@@ -171,14 +212,14 @@ Bool_t TOracleServer::Exec(const char* sql)
    // Return kTRUE if succesfull
 
    CheckConnect("Exec", kFALSE);
-   
+
    if (!sql || !*sql) {
       SetError(-1, "no query string specified","Exec");
       return kFALSE;
    }
 
    oracle::occi::Statement *stmt = 0;
-   
+
    Bool_t res = kFALSE;
 
    try {
@@ -186,11 +227,11 @@ Bool_t TOracleServer::Exec(const char* sql)
       stmt->execute();
       res = kTRUE;
    } CatchError("Exec")
- 
+
    try {
       fConn->terminateStatement(stmt);
    } CatchError("Exec")
-  
+
    return res;
 }
 
@@ -222,31 +263,31 @@ TSQLResult *TOracleServer::GetTables(const char *dbname, const char * /*wild*/)
 TList* TOracleServer::GetTablesList(const char* wild)
 {
    CheckConnect("GetTablesList",0);
-   
+
    TString cmd("SELECT table_name FROM user_tables");
-   if ((wild!=0) && (*wild!=0)) 
+   if ((wild!=0) && (*wild!=0))
       cmd+=Form(" WHERE table_name LIKE '%s'", wild);
 
    TSQLStatement* stmt = Statement(cmd);
    if (stmt==0) return 0;
-   
+
    TList* lst = 0;
-   
+
    if (stmt->Process()) {
       stmt->StoreResult();
       while (stmt->NextResultRow()) {
-         const char* tablename = stmt->GetString(0); 
+         const char* tablename = stmt->GetString(0);
          if (tablename==0) continue;
          if (lst==0) {
             lst = new TList;
-            lst->SetOwner(kTRUE);   
+            lst->SetOwner(kTRUE);
          }
          lst->Add(new TObjString(tablename));
       }
    }
-   
+
    delete stmt;
-   
+
    return lst;
 }
 
@@ -262,10 +303,10 @@ TSQLTableInfo *TOracleServer::GetTableInfo(const char* tablename)
 
    TString sql;
    sql.Form("SELECT COLUMN_NAME, DATA_TYPE, DATA_LENGTH, DATA_PRECISION, DATA_SCALE, NULLABLE, CHAR_COL_DECL_LENGTH FROM user_tab_columns WHERE table_name = '%s' ORDER BY COLUMN_ID", tablename);
-   
+
    TSQLStatement* stmt = Statement(sql.Data(), 10);
    if (stmt==0) return 0;
-   
+
    if (!stmt->Process()) {
       delete stmt;
       return 0;
@@ -273,20 +314,20 @@ TSQLTableInfo *TOracleServer::GetTableInfo(const char* tablename)
 
    TList* lst = 0;
 
-   stmt->StoreResult();  
-   
+   stmt->StoreResult();
+
    while (stmt->NextResultRow()) {
       const char* columnname = stmt->GetString(0);
       TString data_type = stmt->GetString(1);
       Int_t data_length = stmt->GetInt(2);      // this is size in bytes
-      Int_t data_precision = stmt->GetInt(3);    
+      Int_t data_precision = stmt->GetInt(3);
       Int_t data_scale = stmt->GetInt(4);
       const char* nstr = stmt->GetString(5);
       Int_t char_col_decl_length = stmt->GetInt(6);
       Int_t data_sign = -1; // no info about sign
-      
+
       Int_t sqltype = kSQL_NONE;
-      
+
       if (data_type=="NUMBER") {
          sqltype = kSQL_NUMERIC;
          if (data_precision<=0) {
@@ -296,40 +337,40 @@ TSQLTableInfo *TOracleServer::GetTableInfo(const char* tablename)
          if (data_scale<=0)
             data_scale = -1;
          data_sign = 1;
-      } else 
-      
+      } else
+
       if (data_type=="CHAR") {
          sqltype = kSQL_CHAR;
          data_precision = char_col_decl_length;
          data_scale = -1;
-      } else 
-      
+      } else
+
       if ((data_type=="VARCHAR") || (data_type=="VARCHAR2")) {
          sqltype = kSQL_VARCHAR;
          data_precision = char_col_decl_length;
          data_scale = -1;
       } else
-      
+
       if (data_type=="FLOAT") {
          sqltype = kSQL_FLOAT;
          data_scale = -1;
          if (data_precision==126) data_precision = -1;
          data_sign = 1;
-      } else 
+      } else
 
       if (data_type=="BINARY_FLOAT") {
          sqltype = kSQL_FLOAT;
          data_scale = -1;
          data_precision = -1;
          data_sign = 1;
-      } else 
+      } else
 
       if (data_type=="BINARY_DOUBLE") {
          sqltype = kSQL_DOUBLE;
          data_scale = -1;
          data_precision = -1;
          data_sign = 1;
-      } else 
+      } else
 
       if (data_type=="LONG") {
          sqltype = kSQL_VARCHAR;
@@ -337,32 +378,32 @@ TSQLTableInfo *TOracleServer::GetTableInfo(const char* tablename)
          data_precision = -1;
          data_scale = -1;
       } else
-      
+
       if (data_type.Contains("TIMESTAMP")) {
          sqltype = kSQL_TIMESTAMP;
          data_precision = -1;
       }
-      
+
       Bool_t IsNullable = kFALSE;
       if (nstr!=0)
          IsNullable = (*nstr=='Y') || (*nstr=='y');
-      
-      TSQLColumnInfo* info = 
-         new TSQLColumnInfo(columnname, 
-                            data_type, 
+
+      TSQLColumnInfo* info =
+         new TSQLColumnInfo(columnname,
+                            data_type,
                             IsNullable,
                             sqltype,
                             data_length,
                             data_precision,
                             data_scale,
                             data_sign);
-                            
+
       if (lst==0) lst = new TList;
       lst->Add(info);
    }
-   
+
    delete stmt;
-   
+
    return new TSQLTableInfo(tablename, lst);
 }
 
@@ -376,7 +417,7 @@ TSQLResult *TOracleServer::GetColumns(const char * /*dbname*/, const char *table
    // The result object must be deleted by the user.
 
    CheckConnect("GetColumns",0);
-   
+
 //  make no sense, while method is not implemented
 //   if (SelectDataBase(dbname) != 0) {
 //      SetError(-1, "Database is not connected","GetColumns");
@@ -393,7 +434,7 @@ Int_t TOracleServer::SelectDataBase(const char * /*dbname*/)
    // NOT IMPLEMENTED.
 
    CheckConnect("SelectDataBase", -1);
-   
+
    // do nothing and return success code
    return 0;
 }
@@ -408,7 +449,7 @@ TSQLResult *TOracleServer::GetDataBases(const char * /*wild*/)
    // NOT IMPLEMENTED.
 
    CheckConnect("GetDataBases",0);
-   
+
    return 0;
 }
 
@@ -419,7 +460,7 @@ Int_t TOracleServer::CreateDataBase(const char * /*dbname*/)
    // NOT IMPLEMENTED.
 
    CheckConnect("CreateDataBase",-1);
-      
+
    return -1;
 }
 
@@ -463,15 +504,15 @@ Int_t TOracleServer::Shutdown()
 const char *TOracleServer::ServerInfo()
 {
    // Return Oracle server version info.
-   
+
    CheckConnect("ServerInfo", 0);
 
    fInfo = "Oracle";
    TSQLStatement* stmt = Statement("select * from v$version");
    if (stmt!=0) {
-       stmt->EnableErrorOutput(kFALSE); 
+       stmt->EnableErrorOutput(kFALSE);
        if (stmt->Process()) {
-          fInfo = ""; 
+          fInfo = "";
           stmt->StoreResult();
           while (stmt->NextResultRow()) {
              if (fInfo.Length()>0) fInfo += "\n";
@@ -489,7 +530,7 @@ Bool_t TOracleServer::StartTransaction()
 {
    // Call Commit() to submit all chanes, done before.
    // Commit() ot Rollback() must be used to complete submitted actions or cancel them
-   
+
    return Commit();
 }
 
@@ -498,7 +539,7 @@ Bool_t TOracleServer::Commit()
 {
    // Commits all changes made since the previous Commit() or Rollback()
    // Return kTRUE if OK
-   
+
    CheckConnect("Commit", kFALSE);
 
    try {
@@ -521,6 +562,6 @@ Bool_t TOracleServer::Rollback()
       fConn->rollback();
       return kTRUE;
    } CatchError("Rollback")
-   
+
    return kFALSE;
 }

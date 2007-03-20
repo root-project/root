@@ -1,4 +1,4 @@
-// @(#)root/reflex:$Name:  $:$Id: Base.h,v 1.13 2006/09/05 17:13:14 roiser Exp $
+// @(#)root/reflex:$Name:  $:$Id: Base.h,v 1.14 2006/10/30 12:51:33 roiser Exp $
 // Author: Stefan Roiser 2004
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.
@@ -228,7 +228,9 @@ inline ROOT::Reflex::Type ROOT::Reflex::Base::ToType() const {
 //-------------------------------------------------------------------------------
 inline ROOT::Reflex::Scope ROOT::Reflex::Base::ToScope() const {
 //-------------------------------------------------------------------------------
-   return (const Scope &)fBaseType;
+   // We are invoking "Type::operator Scope() const" here,
+   // be very careful with the cast (do not cast to a reference).
+   return static_cast<const Scope>(fBaseType);
 }
 
 #endif // ROOT_Reflex_Base

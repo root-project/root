@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.243 2006/12/06 17:08:05 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.263 2007/03/13 16:06:11 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -15,10 +15,9 @@
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TError.h"
+#include "TMath.h"
 #include "TSystem.h"
-#include "TFile.h"
 #include "TStyle.h"
-#include "TDirectory.h"
 #include "TH1.h"
 #include "TClass.h"
 #include "TBaseClass.h"
@@ -41,13 +40,9 @@
 #include "TRealData.h"
 #include "TFrame.h"
 #include "TExec.h"
-#include "TPadView3D.h"
 #include "TDatime.h"
 #include "TColor.h"
-#include "TAttFillCanvas.h"
-#include "TAttLineCanvas.h"
-#include "TAttMarkerCanvas.h"
-#include "TAttTextCanvas.h"
+#include "TCanvas.h"
 #include "TPluginManager.h"
 #include "TEnv.h"
 #include "TImage.h"
@@ -58,6 +53,9 @@
 #include "TLegend.h"
 #include "TAtt3D.h"
 #include "TObjString.h"
+#include "TApplication.h"
+
+
 // Local scratch buffer for screen points, faster than allocating buffer on heap
 const Int_t kPXY       = 1002;
 
@@ -470,7 +468,7 @@ void TPad::Clear(Option_t *option)
       if (fPrimitives) fPrimitives->Clear(option);
       delete fFrame; fFrame = 0;
    }
-   fCanvas->Cleared(this);
+   if (fCanvas) fCanvas->Cleared(this);
 
    cd();
 
@@ -1125,8 +1123,7 @@ void TPad::Draw(Option_t *option)
 
    // if no canvas opened yet create a default canvas
    if (!gPad) {
-      if (!gROOT->GetMakeDefCanvas()) return;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    }
 
    // pad cannot be in itself and it can only be in one other pad at a time
@@ -1455,12 +1452,12 @@ void TPad::DrawColorTable()
 
    TText *text = new TText(0,0,"");
    text->SetTextFont(61);
-   text->SetTextSize(0.05);
+   text->SetTextSize(0.07);
    text->SetTextAlign(22);
 
-   TBox *box;
-   char label[8];
-   //draw colortable boxes
+   TBox *box = new TBox();
+
+   // Draw color table boxes.
    hs = (y2-y1)/Double_t(5);
    ws = (x2-x1)/Double_t(10);
    for (i=0;i<10;i++) {
@@ -1469,12 +1466,16 @@ void TPad::DrawColorTable()
       for (j=0;j<5;j++) {
          ylow = y1 + hs*(Double_t(j)+0.1);
          yup  = y1 + hs*(Double_t(j)+0.9);
-         color = 10*j + i + 1;
-         sprintf(label,"%d",color);
-         box = new TBox(xlow, ylow, xup, yup);
+         color = 10*j + i;
+         box->SetFillStyle(1001);
          box->SetFillColor(color);
-         box->Draw();
-         text->DrawText(0.5*(xlow+xup), 0.5*(ylow+yup),label);
+         box->DrawBox(xlow, ylow, xup, yup);
+         box->SetFillStyle(0);
+         box->SetLineColor(1);
+         box->DrawBox(xlow, ylow, xup, yup);
+         if (color == 1) text->SetTextColor(0);
+         else            text->SetTextColor(1);
+         text->DrawText(0.5*(xlow+xup), 0.5*(ylow+yup), Form("%d",color));
       }
    }
 }
@@ -2020,6 +2021,194 @@ again:
 
 
 //______________________________________________________________________________
+void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
+{
+   // Execute action corresponding to one event for a TAxis object
+   // (called by TAxis::ExecuteEvent.)
+   //  This member function is called when an axis is clicked with the locator
+   //
+   //  The axis range is set between the position where the mouse is pressed
+   //  and the position where it is released.
+   //  If the mouse position is outside the current axis range when it is released
+   //  the axis is unzoomed with the corresponding proportions.
+   //  Note that the mouse does not need to be in the pad or even canvas
+   //  when it is released.
+
+   if (!IsEditable()) return;
+
+   SetCursor(kHand);
+
+   TView *view = GetView();
+   static Int_t axisNumber;
+   static Double_t ratio1, ratio2;
+   static Int_t px1old, py1old, px2old, py2old;
+   Int_t bin1, bin2, first, last;
+   Double_t temp, xmin,xmax;
+
+   switch (event) {
+
+   case kButton1Down:
+      axisNumber = 1;
+      if (!strcmp(axis->GetName(),"xaxis")) {
+         axisNumber = 1;
+         if (!IsVertical()) axisNumber = 2;
+      }
+      if (!strcmp(axis->GetName(),"yaxis")) {
+         axisNumber = 2;
+         if (!IsVertical()) axisNumber = 1;
+      }
+      if (!strcmp(axis->GetName(),"zaxis")) {
+         axisNumber = 3;
+      }
+      if (view) {
+         view->GetDistancetoAxis(axisNumber, px, py, ratio1);
+      } else {
+         if (axisNumber == 1) {
+            ratio1 = (AbsPixeltoX(px) - GetUxmin())/(GetUxmax() - GetUxmin());
+            px1old = XtoAbsPixel(GetUxmin()+ratio1*(GetUxmax() - GetUxmin()));
+            py1old = YtoAbsPixel(GetUymin());
+            px2old = px1old;
+            py2old = YtoAbsPixel(GetUymax());
+         } else if (axisNumber == 2) {
+            ratio1 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
+            py1old = YtoAbsPixel(GetUymin()+ratio1*(GetUymax() - GetUymin()));
+            px1old = XtoAbsPixel(GetUxmin());
+            px2old = XtoAbsPixel(GetUxmax());
+            py2old = py1old;
+         } else {
+            ratio1 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
+            py1old = YtoAbsPixel(GetUymin()+ratio1*(GetUymax() - GetUymin()));
+            px1old = XtoAbsPixel(GetUxmax());
+            px2old = XtoAbsPixel(GetX2());
+            py2old = py1old;
+         }
+         gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
+      }
+      gVirtualX->SetLineColor(-1);
+      // No break !!!
+
+   case kButton1Motion:
+      if (view) {
+         view->GetDistancetoAxis(axisNumber, px, py, ratio2);
+      } else {
+         gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
+         if (axisNumber == 1) {
+            ratio2 = (AbsPixeltoX(px) - GetUxmin())/(GetUxmax() - GetUxmin());
+            px2old = XtoAbsPixel(GetUxmin()+ratio2*(GetUxmax() - GetUxmin()));
+         } else {
+            ratio2 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
+            py2old = YtoAbsPixel(GetUymin()+ratio2*(GetUymax() - GetUymin()));
+         }
+         gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
+      }
+   break;
+
+   case kButton1Up:
+      if (gROOT->IsEscaped()) {
+         gROOT->SetEscape(kFALSE);
+         break;
+      }
+
+      if (view) {
+         view->GetDistancetoAxis(axisNumber, px, py, ratio2);
+         if (ratio1 > ratio2) {
+            temp   = ratio1;
+            ratio1 = ratio2;
+            ratio2 = temp;
+         }
+         if (ratio2 - ratio1 > 0.05) {
+            TH1 *hobj = (TH1*)axis->GetParent();
+            if (axisNumber == 3 && hobj && hobj->GetDimension() != 3) {
+               Float_t zmin = hobj->GetMinimum();
+               Float_t zmax = hobj->GetMaximum();
+               if(GetLogz()){
+                  if (zmin <= 0 && zmax > 0) zmin = TMath::Min((Double_t)1,
+                                                               (Double_t)0.001*zmax);
+                  zmin = TMath::Log10(zmin);
+                  zmax = TMath::Log10(zmax);
+               }
+               Float_t newmin = zmin + (zmax-zmin)*ratio1;
+               Float_t newmax = zmin + (zmax-zmin)*ratio2;
+               if(newmin < zmin)newmin = hobj->GetBinContent(hobj->GetMinimumBin());
+               if(newmax > zmax)newmax = hobj->GetBinContent(hobj->GetMaximumBin());
+               if(GetLogz()){
+                  newmin = TMath::Exp(2.302585092994*newmin);
+                  newmax = TMath::Exp(2.302585092994*newmax);
+               }
+               hobj->SetMinimum(newmin);
+               hobj->SetMaximum(newmax);
+               hobj->SetBit(TH1::kIsZoomed);
+            } else {
+               first = axis->GetFirst();
+               last  = axis->GetLast();
+               bin1 = first + Int_t((last-first+1)*ratio1);
+               bin2 = first + Int_t((last-first+1)*ratio2);
+               axis->SetRange(bin1, bin2);
+            }
+            delete view;
+            SetView(0);
+            Modified(kTRUE);
+         }
+      } else {
+         if (axisNumber == 1) {
+            ratio2 = (AbsPixeltoX(px) - GetUxmin())/(GetUxmax() - GetUxmin());
+            xmin = GetUxmin() +ratio1*(GetUxmax() - GetUxmin());
+            xmax = GetUxmin() +ratio2*(GetUxmax() - GetUxmin());
+            if (GetLogx()) {
+               xmin = PadtoX(xmin);
+               xmax = PadtoX(xmax);
+            }
+         } else if (axisNumber == 2) {
+            ratio2 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
+            xmin = GetUymin() +ratio1*(GetUymax() - GetUymin());
+            xmax = GetUymin() +ratio2*(GetUymax() - GetUymin());
+            if (GetLogy()) {
+               xmin = PadtoY(xmin);
+               xmax = PadtoY(xmax);
+            }
+         } else {
+            ratio2 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
+            xmin = ratio1;
+            xmax = ratio2;
+         }
+         if (xmin > xmax) {
+            temp   = xmin;
+            xmin   = xmax;
+            xmax   = temp;
+            temp   = ratio1;
+            ratio1 = ratio2;
+            ratio2 = temp;
+         }
+         if (!strcmp(axis->GetName(),"xaxis")) axisNumber = 1;
+         if (!strcmp(axis->GetName(),"yaxis")) axisNumber = 2;
+         if (ratio2 - ratio1 > 0.05) {
+            TH1 *hobj = (TH1*)axis->GetParent();
+            bin1 = axis->FindFixBin(xmin);
+            bin2 = axis->FindFixBin(xmax);
+            if (axisNumber == 1) axis->SetRange(bin1,bin2);
+            if (axisNumber == 2 && hobj) {
+               if (hobj->GetDimension() == 1) {
+                  if (hobj->GetNormFactor() != 0) {
+                     Double_t norm = hobj->GetSumOfWeights()/hobj->GetNormFactor();
+                     xmin *= norm;
+                     xmax *= norm;
+                  }
+                  hobj->SetMinimum(xmin);
+                  hobj->SetMaximum(xmax);
+                  hobj->SetBit(TH1::kIsZoomed);
+               } else {
+                  axis->SetRange(bin1,bin2);
+               }
+            }
+            Modified(kTRUE);
+         }
+      }
+      gVirtualX->SetLineColor(-1);
+      break;
+   }
+}
+
+//______________________________________________________________________________
 TObject *TPad::FindObject(const char *name) const
 {
   // Search if object named name is inside this pad.
@@ -2543,8 +2732,9 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
    Color_t oldcolor = GetFillColor();
    SetFillColor(color);
    TAttFill::Modify();
-   Color_t light;
-   Color_t dark;
+   Color_t light = TColor::GetColorBright(color);
+   Color_t dark  = TColor::GetColorDark(color);
+/*
    if (color == 0) {
       light = 0;
       dark  = 0;
@@ -2562,6 +2752,7 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
       TColor::HLStoRGB(h, 1.2*l, s, r, g, b);
       light = TColor::GetColor(r, g, b);
    }
+*/
 
    // Compute real left bottom & top right of the box in pixels
    px1 = XtoPixel(fX1);   py1 = YtoPixel(fY1);
@@ -3140,7 +3331,7 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
    // coordinates in the surface defined by n,xx,yy.
 
    Int_t i, i1, i2, nbi, m, inv;
-   Double_t ratio1, ratio2, ymin, ymax, yrot, ycur;
+   Double_t ratiox, ratioy, ymin, ymax, yrot, ycur;
    const Double_t angr  = TMath::Pi()*(180-angle)/180.;
    const Double_t epsil = 0.0001;
    const Int_t maxnbi = 100;
@@ -3151,8 +3342,8 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
    Double_t rwxmax = gPad->GetX2();
    Double_t rwymin = gPad->GetY1();
    Double_t rwymax = gPad->GetY2();
-   ratio1 = 1/(rwxmax-rwxmin);
-   ratio2 = 1/(rwymax-rwymin);
+   ratiox = 1/(rwxmax-rwxmin);
+   ratioy = 1/(rwymax-rwymin);
 
    Double_t sina = TMath::Sin(angr), sinb;
    Double_t cosa = TMath::Cos(angr), cosb;
@@ -3161,12 +3352,22 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
    sinb = -sina;
    cosb = cosa;
 
+   // Values needed to compute the hatches in TRUE normalized space (NDC)
+   Int_t iw = gPad->GetWw();
+   Int_t ih = gPad->GetWh();
+   Double_t x1p,y1p,x2p,y2p;
+   gPad->GetPadPar(x1p,y1p,x2p,y2p);
+   iw  = (Int_t)(iw*x2p)-(Int_t)(iw*x1p);
+   ih  = (Int_t)(ih*y2p)-(Int_t)(ih*y1p);
+   Double_t wndc  = TMath::Min(1.,(Double_t)iw/(Double_t)ih);
+   Double_t hndc  = TMath::Min(1.,(Double_t)ih/(Double_t)iw);
+
    // Search ymin and ymax
    ymin = 1.;
    ymax = 0.;
    for (i=1; i<=nn; i++) {
-      x    = ratio1*(xx[i-1]-rwxmin);
-      y    = ratio2*(yy[i-1]-rwymin);
+      x    = wndc*ratiox*(xx[i-1]-rwxmin);
+      y    = hndc*ratioy*(yy[i-1]-rwymin);
       yrot = sina*x+cosa*y;
       if (yrot > ymax) ymax = yrot;
       if (yrot < ymin) ymin = yrot;
@@ -3179,10 +3380,10 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
          i2 = i;
          i1 = i-1;
          if (i == nn+1) i2=1;
-         x1  = ratio1*(xx[i1-1]-rwxmin);
-         y1  = ratio2*(yy[i1-1]-rwymin);
-         x2  = ratio1*(xx[i2-1]-rwxmin);
-         y2  = ratio2*(yy[i2-1]-rwymin);
+         x1  = wndc*ratiox*(xx[i1-1]-rwxmin);
+         y1  = hndc*ratioy*(yy[i1-1]-rwymin);
+         x2  = wndc*ratiox*(xx[i2-1]-rwxmin);
+         y2  = hndc*ratioy*(yy[i2-1]-rwymin);
          xt1 = cosa*x1-sina*y1;
          yt1 = sina*x1+cosa*y1;
          xt2 = cosa*x2-sina*y2;
@@ -3260,11 +3461,17 @@ L50:
       if (nbi%2 != 0) continue;
 
       for (i=1; i<=nbi; i=i+2) {
+         // Rotate back the hatches
          xlh[0] = cosb*xli[i-1]-sinb*ycur;
          ylh[0] = sinb*xli[i-1]+cosb*ycur;
-         xlh[1] = cosb*xli[i]-sinb*ycur;
-         ylh[1] = sinb*xli[i]+cosb*ycur;
-         gPad->PaintLineNDC(xlh[0], ylh[0], xlh[1], ylh[1]);
+         xlh[1] = cosb*xli[i]  -sinb*ycur;
+         ylh[1] = sinb*xli[i]  +cosb*ycur;
+         // Convert hatches' positions from true NDC to WC
+         xlh[0] = (xlh[0]/wndc)*(rwxmax-rwxmin)+rwxmin;
+         ylh[0] = (ylh[0]/hndc)*(rwymax-rwymin)+rwymin;
+         xlh[1] = (xlh[1]/wndc)*(rwxmax-rwxmin)+rwxmin;
+         ylh[1] = (ylh[1]/hndc)*(rwymax-rwymin)+rwymin;
+         gPad->PaintLine(xlh[0], ylh[0], xlh[1], ylh[1]);
       }
    }
 }
@@ -3940,8 +4147,25 @@ void TPad::Print(const char *filenam, Option_t *option)
    //      c1.Print("file.gif+5");  // print canvas to GIF file with 50ms delays
    //    }// end loop
 
-   TString psname;
-   char *filename = gSystem->ExpandPathName(filenam);
+   TString psname, fs1, fs2;
+   char *filename;
+
+   // "[" and "]" are special characters for ExpandPathName. When they are at the end
+   // of the file name (see help) they must be removed before doing ExpandPathName.
+   fs1 = filenam;
+   if (fs1.EndsWith("[")) {
+      fs1.Replace((fs1.Length()-1),1," ");
+      fs2 = gSystem->ExpandPathName(fs1.Data());
+      fs2.Replace((fs2.Length()-1),1,"[");
+   } else if (fs1.EndsWith("]")) {
+      fs1.Replace((fs1.Length()-1),1," ");
+      fs2 = gSystem->ExpandPathName(fs1.Data());
+      fs2.Replace((fs2.Length()-1),1,"]");
+   } else {
+      fs2 = gSystem->ExpandPathName(fs1.Data());
+   }
+   filename = (char*)fs2.Data();
+
    Int_t lenfil =  filename ? strlen(filename) : 0;
    const char *opt = option;
    Bool_t image = kFALSE;
@@ -3964,8 +4188,6 @@ void TPad::Print(const char *filenam, Option_t *option)
       psname.Prepend("/");
       psname.Prepend(gEnv->GetValue("Canvas.PrintDirectory","."));
    }
-
-   delete [] filename;
 
    // Save pad/canvas in alternative formats
    TImage::EImageFileTypes gtype = TImage::kUnknown;
@@ -4045,27 +4267,14 @@ void TPad::Print(const char *filenam, Option_t *option)
 
    //==============Save pad/canvas as a root file===============================
    if (strstr(opt,"root")) {
-      TDirectory *dirsav = gDirectory;
-      TFile *fsave = new TFile(psname, "RECREATE");
-      Write();
-      fsave->Close();
-      delete fsave;
-      if (dirsav) dirsav->cd();
-      if (!gSystem->AccessPathName(psname)) Info("Print", "ROOT file %s has been created", psname.Data());
+      if (gDirectory) gDirectory->SaveObjectAs(this,psname.Data(),"");
       return;
    }
 
    //==============Save pad/canvas as a XML file================================
    if (strstr(opt,"xml")) {
       // Plugin XML driver
-      TDirectory *dirsav = gDirectory;
-      TFile *file = TFile::Open(psname,"recreate");
-      if (file) {
-         Write();
-         delete file;
-      }
-      if (dirsav) dirsav->cd();
-      if (!gSystem->AccessPathName(psname)) Info("Print", "XML file %s has been created", psname.Data());
+      if (gDirectory) gDirectory->SaveObjectAs(this,psname.Data(),"");
       return;
    }
 
@@ -4934,6 +5143,14 @@ void TPad::SetPad(const char *name, const char *title,
    SetPad(xlow, ylow, xup, yup);
 }
 
+//______________________________________________________________________________
+void TPad::SetView(TView *view)
+{
+   // Set the current TView. Delete previous view if view=0
+
+   if (!view) delete fView;
+   fView = view;
+}
 
 //______________________________________________________________________________
 void TPad::SetAttFillPS(Color_t color, Style_t style)
@@ -5097,7 +5314,7 @@ void TPad::Streamer(TBuffer &b)
          gReadLevel++;
          gROOT->SetReadingObject(kTRUE);
 
-         TPad::Class()->ReadBuffer(b, this, v, R__s, R__c);
+         b.ReadClassBuffer(TPad::Class(), this, v, R__s, R__c);
 
          fModified = kTRUE;
          fPadPointer = 0;
@@ -5273,7 +5490,7 @@ void TPad::Streamer(TBuffer &b)
       //====end of old versions
 
    } else {
-      TPad::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TPad::Class(),this);
    }
 }
 

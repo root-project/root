@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: FumiliErrorUpdator.cxx,v 1.2 2006/07/03 15:48:06 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: FumiliErrorUpdator.cxx,v 1.4 2007/02/12 12:05:15 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -18,9 +18,12 @@
 #include "Minuit2/MinimumError.h"
 #include "Minuit2/MinimumState.h"
 #include "Minuit2/LaSum.h"
-#include "Minuit2/MnPrint.h"
-
 #include <limits>
+
+#if defined(DEBUG) || defined(WARNINGMSG)
+#include "Minuit2/MnPrint.h" 
+#endif
+
 
 namespace ROOT {
 
@@ -83,7 +86,9 @@ MinimumError FumiliErrorUpdator::Update(const MinimumState& s0,
    
    int ifail = Invert(h);
    if(ifail != 0) {
-      std::cout<<"FumiliErrorUpdator inversion fails; return diagonal matrix."<<std::endl;
+#ifdef WARNINGMSG
+      MN_INFO_MSG("FumiliErrorUpdator inversion fails; return diagonal matrix.");
+#endif
       for(unsigned int i = 0; i < h.Nrow(); i++) {
          h(i,i) = 1./h(i,i);
       }

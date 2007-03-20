@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: MethodTMlpANN.cxx,v 1.10 2006/11/20 15:35:28 brun Exp $ 
+// @(#)root/tmva $Id: MethodTMlpANN.cxx,v 1.11 2006/11/27 17:10:33 brun Exp $ 
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -51,6 +51,7 @@
 #include "TMVA/MethodTMlpANN.h"
 #include <stdlib.h>
 #include "Riostream.h"
+#include "TROOT.h"
 #include "TMultiLayerPerceptron.h"
 #include "TLeaf.h"
 #include "TEventList.h"

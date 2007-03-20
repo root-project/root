@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.31 2006/01/31 10:22:26 couet Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.32 2006/07/03 16:10:43 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -143,7 +143,6 @@ private:
    Float_t       fTitleW;            //width of title box
    Float_t       fTitleH;            //height of title box
    Float_t       fLegoInnerR;        //Inner radius for cylindrical legos
-   TArrayI       fPalette;           //Color palette
    TString       fLineStyle[30];     //String describing line style i (for postScript)
    TString       fHeaderPS;          //User defined additional Postscript header
    TString       fTitlePS;           //User defined Postscript file title
@@ -165,8 +164,6 @@ public:
    virtual void     Copy(TObject &style) const;
    virtual void     cd();
 
-   static Int_t     CreateGradientColorTable(UInt_t Number, Double_t* Length,
-                         Double_t* Red, Double_t* Green, Double_t* Blue, UInt_t NColors);
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
    Int_t            GetNdivisions(Option_t *axis="X") const;
    TAttText        *GetAttDate() {return &fAttDate;}
@@ -202,7 +199,7 @@ public:
    Int_t            GetHatchesLineWidth() const {return fHatchesLineWidth;}
    Double_t         GetHatchesSpacing() const  {return fHatchesSpacing;}
    Width_t          GetLegendBorderSize() const   {return fLegendBorderSize;}
-   Int_t            GetNumberOfColors() const  {return fPalette.fN;}
+   Int_t            GetNumberOfColors() const;
    Color_t          GetPadColor() const        {return fPadColor;}
    Width_t          GetPadBorderSize() const   {return fPadBorderSize;}
    Int_t            GetPadBorderMode() const   {return fPadBorderMode;}

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorEntries.h,v 1.1 2006/09/17 19:06:35 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorEntries.h,v 1.2 2006/09/29 15:40:08 brun Exp $
 // Author: Philippe Canal 09/06/2006
 
 /*************************************************************************
@@ -26,11 +26,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <TROOT.h>
-#include <TChain.h>
-#include <TFile.h>
 #include <TSelector.h>
 
+class TTree;
 class TTreeFormula;
 
 class TSelectorEntries : public TSelector {
@@ -49,7 +47,7 @@ public :
    virtual void     Init(TTree *tree);
    virtual Bool_t   Notify();
    virtual Bool_t   Process(Long64_t entry);
-   virtual Int_t    GetEntry(Long64_t entry, Int_t getall = 0) { return fChain ? fChain->GetTree()->GetEntry(entry, getall) : 0; }
+   virtual Int_t    GetEntry(Long64_t entry, Int_t getall = 0);
    virtual Long64_t GetSelectedRows() const { return fSelectedRows; }
    virtual void     SetOption(const char *option) { fOption = option; }
    virtual void     SetObject(TObject *obj) { fObject = obj; }

@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.47 2006/05/28 20:08:00 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.48 2006/05/29 14:51:15 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -2641,4 +2641,12 @@ void TGX11::ShapeCombineMask(Window_t id, Int_t x, Int_t y, Pixmap_t mask)
 
    XShapeCombineMask(fDisplay, (Window) id, ShapeBounding, x, y,
                      (Pixmap) mask, ShapeSet);
+}
+
+//______________________________________________________________________________
+UInt_t TGX11::ScreenWidthMM() const
+{
+   // Returns the width of the screen in millimeters.
+
+   return (UInt_t)WidthMMOfScreen(DefaultScreenOfDisplay(fDisplay));
 }

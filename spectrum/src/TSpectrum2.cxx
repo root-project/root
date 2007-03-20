@@ -1,4 +1,4 @@
-// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2.cxx,v 1.5 2006/10/10 09:38:13 brun Exp $
+// @(#)root/spectrum:$Name:  $:$Id: TSpectrum2.cxx,v 1.7 2007/01/23 11:09:42 brun Exp $
 // Author: Miroslav Morhac   17/01/2006
 
 /////////////////////////////////////////////////////////////////////////////
@@ -80,6 +80,8 @@ style='font-size:16.0pt'><a href="http://www.fu.sav.sk/nph/projects/ProcFunc/">h
     
 #include "TSpectrum2.h"
 #include "TPolyMarker.h"
+#include "TList.h"
+#include "TH1.h"
 #include "TMath.h"
 #define PEAK_WINDOW 1024
 

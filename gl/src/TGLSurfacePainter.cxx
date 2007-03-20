@@ -6,6 +6,7 @@
 #include "KeySymbols.h"
 #include "TVirtualGL.h"
 #include "Buttons.h"
+#include "TROOT.h"
 #include "TString.h"
 #include "TStyle.h"
 #include "TColor.h"
@@ -252,17 +253,6 @@ void TGLSurfacePainter::SetSurfaceColor()const
    const Float_t specColor[] = {1.f, 1.f, 1.f, 1.f};
    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specColor);
    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 70.f);
-}
-
-//______________________________________________________________________________
-void TGLSurfacePainter::ClearBuffers()const
-{
-   //Clears gl buffers (possibly with pad's background color).
-   Float_t rgb[3] = {1.f, 1.f, 1.f};
-   if (GetPadColor())
-      GetPadColor()->GetRGB(rgb[0], rgb[1], rgb[2]);
-   glClearColor(rgb[0], rgb[1], rgb[2], 1.);
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 //______________________________________________________________________________
@@ -811,12 +801,13 @@ void TGLSurfacePainter::DrawSectionXOZ()const
    }
 
    if (binY >= 0) {
-      glColor3d(1., 0., 0.);
-      glLineWidth(3.f);
       //Draw 2d curve on the profile's plane.
       const TGLPlane profilePlane(0., 1., 0., -fXOZSectionPos);
 
       if (!fSectionPass) {
+         glColor3d(1., 0., 0.);
+         glLineWidth(3.f);
+
          for (Int_t i = 0, e = fCoord->GetNXBins() - 1; i < e; ++i) {
             glBegin(GL_LINE_STRIP);
             glVertex3dv(Intersection(profilePlane, TGLLine3(fMesh[i + 1][binY], fMesh[i + 1][binY + 1]), kFALSE).second.CArr());
@@ -908,11 +899,13 @@ void TGLSurfacePainter::DrawSectionXOY()const
    const TGLPlane profilePlane(0., 0., 1., -fXOYSectionPos);
    TGLVertex3 intersection[2];
 
-   glColor3d(1., 0., 0.);
-   glLineWidth(3.f);
 
    if (fSectionPass)
       fProj.fVertices.clear();
+   else {
+      glColor3d(1., 0., 0.);
+      glLineWidth(3.f);
+   }
 
    for (Int_t i = 0; i < nX - 1; ++i) {
       for (Int_t j = 0; j < nY - 1; ++j) {
@@ -993,7 +986,8 @@ void TGLSurfacePainter::DrawSectionXOY()const
       fXOYProj.back().Swap(fProj);
    }
 
-   glLineWidth(1.f);
+   if (!fSectionPass)
+      glLineWidth(1.f);
 }
 
 //______________________________________________________________________________

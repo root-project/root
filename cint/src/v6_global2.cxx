@@ -48,7 +48,9 @@ int G__globalcomp;       /* make compiled func's global table */
 int G__store_globalcomp;
 long G__globalvarpointer = G__PVOID; /* make compiled func's global table */
 
+#ifdef __cplusplus
 struct G__filetable G__srcfile[G__MAXFILE];
+#endif
 int G__nfile;
 
 int G__nobreak;
@@ -159,8 +161,10 @@ int G__fixedscope;
 int G__isfuncreturnp2f;
 
 int G__virtual;
-struct G__ifunc_table *G__ifunc_exist(G__ifunc_table *ifunc_now,int allifunc,G__ifunc_table *ifunc,int *piexist,int mask);
+/* why here?! they are in fproto.h
+struct G__ifunc_table_internal *G__ifunc_exist(G__ifunc_table_internal *ifunc_now,int allifunc,G__ifunc_table_internal *ifunc,int *piexist,int mask);
 struct G__ifunc_table *G__ifunc_ambiguous(G__ifunc_table *ifunc_now,int allifunc,G__ifunc_table *ifunc,int *piexist,int derivedtagnum);
+*/
 
 /* #define G__OLDIMPLEMENTATION78 */
 

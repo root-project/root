@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.119 2006/10/06 12:12:34 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.123 2007/02/15 15:04:20 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -16,7 +16,6 @@
 #include "TROOT.h"
 #include "TCanvas.h"
 #include "TClass.h"
-#include "TDirectory.h"
 #include "TStyle.h"
 #include "TText.h"
 #include "TBox.h"
@@ -39,12 +38,12 @@
 // the TCanvas::MakeDefCanvas method is registered with TROOT as soon as
 // the shared library containing TCanvas is loaded.
 
-class TInitMakeDefCanvas {
-public:
-   TInitMakeDefCanvas() { TROOT::SetMakeDefCanvas(&TCanvas::MakeDefCanvas); }
-};
+//class TInitMakeDefCanvas {
+//public:
+//   TInitMakeDefCanvas() { TROOT::SetMakeDefCanvas(&TCanvas::MakeDefCanvas(int)); }
+//};
 
-static TInitMakeDefCanvas gMakedefcanvas_init;
+//static TInitMakeDefCanvas gMakedefcanvas_init;
 
 //*-*x16 macros/layout_canvas
 
@@ -602,7 +601,7 @@ void TCanvas::Clear(Option_t *option)
 
    if (fCanvasID == -1) return;
 
-   if (!gVirtualX->IsCmdThread()) {
+   if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
       gInterpreter->Execute(this, IsA(), "Clear", option);
       return;
    }
@@ -663,7 +662,7 @@ void TCanvas::Close(Option_t *option)
 
    if (fCanvasID == -1) goto deletepad;
 
-   if (!gVirtualX->IsCmdThread()) {
+   if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
       gInterpreter->Execute(this, IsA(), "Close", option);
       return;
    }
@@ -700,7 +699,7 @@ void TCanvas::CopyPixmaps()
 {
    // Copy the canvas pixmap of the pad to the canvas.
 
-   if (!gVirtualX->IsCmdThread()) {
+   if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
       gInterpreter->Execute(this, IsA(), "CopyPixmaps", "");
       return;
    }
@@ -810,7 +809,7 @@ TObject *TCanvas::DrawClonePad()
    while ((obj=next())) {
       pad->cd();
       clone = obj->Clone();
-      pad->GetListOfPrimitives()->Add(clone,obj->GetDrawOption());
+      pad->GetListOfPrimitives()->Add(clone,next.GetOption());
    }
    pad->ResizePad();
    pad->Modified();
@@ -983,7 +982,7 @@ void TCanvas::UseCurrentStyle()
 {
    // Force a copy of current style for all objects in canvas.
 
-   if (!gVirtualX->IsCmdThread()) {
+   if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
       gInterpreter->Execute(this, IsA(), "UseCurrentStyle", "");
       return;
    }
@@ -1289,7 +1288,7 @@ void TCanvas::ls(Option_t *option) const
 
 
 //______________________________________________________________________________
-void TCanvas::MakeDefCanvas()
+TCanvas *TCanvas::MakeDefCanvas()
 {
    // Static function to build a default canvas.
 
@@ -1306,10 +1305,11 @@ void TCanvas::MakeDefCanvas()
    } else
       cdef = StrDup(Form("%s",defcanvas));
 
-   new TCanvas(cdef, cdef, 1);
+   TCanvas *c = new TCanvas(cdef, cdef, 1);
 
    Printf("<TCanvas::MakeDefCanvas>: created default TCanvas with name %s",cdef);
    delete [] cdef;
+   return c;
 }
 
 
@@ -1431,7 +1431,7 @@ void TCanvas::Resize(Option_t *)
 
    if (fCanvasID == -1) return;
 
-   if (!gVirtualX->IsCmdThread()) {
+   if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
       gInterpreter->Execute(this, IsA(), "Resize", "");
       return;
    }
@@ -1993,7 +1993,7 @@ void TCanvas::Update()
       if ((*gThreadXAR)("CUPD", 2, arr, 0)) return;
    }
 
-   if (!gVirtualX->IsCmdThread()) {
+   if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
       gInterpreter->Execute(this, IsA(), "Update", "");
       return;
    }

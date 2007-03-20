@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.28 2006/07/03 16:10:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.30 2007/01/12 16:03:16 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TMath.h"
 #include "TVirtualPad.h"
 #include "TPolyLine.h"
 #include "TClass.h"
@@ -691,7 +692,7 @@ void TPolyLine::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TPolyLine::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         b.ReadClassBuffer(TPolyLine::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -714,6 +715,6 @@ void TPolyLine::Streamer(TBuffer &b)
       //====end of old versions
 
    } else {
-      TPolyLine::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TPolyLine::Class(),this);
    }
 }

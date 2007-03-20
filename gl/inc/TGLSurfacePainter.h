@@ -67,7 +67,6 @@ public:
 
 private:
    void   InitGL()const;
-   void   ClearBuffers()const;
    void   DrawPlot()const;
 
    void   SetNormals();

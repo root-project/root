@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjectTable.cxx,v 1.9 2006/05/24 14:34:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjectTable.cxx,v 1.11 2007/01/12 16:03:15 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -81,7 +81,6 @@
 #include "TObjectTable.h"
 #include "TROOT.h"
 #include "TClass.h"
-#include "TMath.h"
 #include "TError.h"
 
 
@@ -280,7 +279,7 @@ Int_t TObjectTable::FindElement(TObject *op)
       return 0;
 
    //slot = Int_t(((ULong_t) op >> 2) % fSize);
-   slot = Int_t(TMath::Hash(&op, sizeof(TObject*)) % fSize);
+   slot = Int_t(TString::Hash(&op, sizeof(TObject*)) % fSize);
    for (n = 0; n < fSize; n++) {
       if ((slotOp = fTable[slot]) == 0)
          break;

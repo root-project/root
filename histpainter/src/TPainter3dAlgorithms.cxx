@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.31 2006/03/01 14:19:00 couet Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.34 2007/02/03 18:41:29 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "TVirtualPad.h"
 #include "THistPainter.h"
 #include "TH1.h"
+#include "TF3.h"
 #include "TView.h"
 #include "TVirtualX.h"
 #include "Hoption.h"
@@ -144,7 +145,7 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
    for (i=0;i<4;i++)  { fYls[i] = 0; }
 
    TView *view = gPad->GetView();
-   if (!view) view = new TView(rmin, rmax, fSystem);
+   if (!view) view = TView::CreateView(fSystem, rmin, rmax);
    view->SetView(gPad->GetPhi(), gPad->GetTheta(), psi, i);
    view->SetRange(rmin,rmax);
 }
@@ -2253,7 +2254,7 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
    vv[2] = Hparam.factor*gCurrentHist->GetCellContent(ixt, iyt);
 
 // In linear scale, 3D boxes all start from 0. 
-   if (Hparam.zmin<0 && !Hoption.Logz) {
+   if (Hparam.zmin<0 && !Hoption.Logz && gStyle->GetHistMinimumZero()) {
       if (vv[2]<0) {
          vv[1] = vv[2];
          vv[2] = 0;

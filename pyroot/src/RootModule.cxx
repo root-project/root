@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.28 2006/09/28 19:59:12 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.30 2007/01/09 05:31:11 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -8,6 +8,7 @@
 #include "MethodProxy.h"
 #include "PropertyProxy.h"
 #include "PyBufferFactory.h"
+#include "TCustomPyTypes.h"
 #include "RootWrapper.h"
 #include "Utility.h"
 #include "Adapters.h"
@@ -270,7 +271,7 @@ namespace {
          Py_INCREF( pyname );
       }
 
-      TClass* klass = gROOT->GetClass( PyString_AS_STRING( pyname ) );
+      TClass* klass = TClass::GetClass( PyString_AS_STRING( pyname ) );
       Py_DECREF( pyname );
 
       if ( ! klass ) {
@@ -395,6 +396,13 @@ extern "C" void initlibPyROOT()
 
 // inject property proxy type
    if ( ! Utility::InitProxy( gRootModule, &PropertyProxy_Type, "PropertyProxy" ) )
+      return;
+
+// inject custom data types
+   if ( ! Utility::InitProxy( gRootModule, &TCustomFloat_Type, "Double" ) )
+      return;
+
+   if ( ! Utility::InitProxy( gRootModule, &TCustomInt_Type, "Long" ) )
       return;
 
 // policy labels

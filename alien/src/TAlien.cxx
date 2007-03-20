@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.17 2006/05/26 16:55:04 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.19 2007/03/19 16:14:14 rdm Exp $
 // Author: Andreas Peters   5/5/2005
 
 /*************************************************************************
@@ -71,8 +71,12 @@
 #include "TAlienJDL.h"
 #include "TAlienResult.h"
 #include "TAlienJob.h"
-
+#include "TAlienCollection.h"
+#include "TAlienMasterJobStatus.h"
+#include "TAlienJobStatusList.h"
+#include "TAlienJobStatus.h"
 #include "gapiUI.h"
+#include "gapi_job_operations.h"
 
 using namespace std;
 
@@ -87,7 +91,6 @@ TAlien::TAlien(const char *gridurl, const char *uid, const char * passwd,
    gSystem->Unsetenv("GCLIENT_EXTRA_ARG");
 
    // Connect to the AliEn grid.
-
    TUrl *gurl = new TUrl(gridurl);
 
    fGridUrl = gridurl;
@@ -266,7 +269,65 @@ TGridJob *TAlien::Submit(const char *jdl)
 //______________________________________________________________________________
 TGridJDL *TAlien::GetJDLGenerator()
 {
+   // Create a Alien JDL.
+
    return new TAlienJDL();
+}
+
+//______________________________________________________________________________
+TGridJobStatusList *TAlien::Ps(const char* /*options*/, Bool_t verbose)
+{
+   // Get job status list.
+
+   GAPI_JOBARRAY* gjobarray = gapi_queryjobs("-", gGrid->GetUser(), "-", "-", "-",
+					    "-", "-", "-", "-");
+   if (!gjobarray)
+      return 0;
+
+   if (gjobarray->size() == 0) {
+      delete gjobarray;
+      return 0;
+   }
+
+   TGridJobStatusList* joblist = new TAlienJobStatusList();
+
+   for (UInt_t i = 0; i < gjobarray->size(); i++ ) {
+      TMap* statusmap = new TMap();
+      GAPI_JOB gjob = gjobarray->at(i);
+      std::map<std::string, std::string>::const_iterator iter = gjob.gapi_jobmap.begin();
+      for (; iter != gjob.gapi_jobmap.end(); ++iter) {
+         //      printf("Adding %s = %s\n", iter->first.c_str(),iter->second.c_str());
+         statusmap->Add(new TObjString(iter->first.c_str()), new TObjString(iter->second.c_str()));
+      }
+      TGridJobStatus *status = (TGridJobStatus*)new TAlienJobStatus(statusmap);
+      joblist->Add((TGridJobStatus*)status);
+      if (verbose) {
+      }
+   }
+   delete gjobarray;
+   return joblist;
+}
+
+//______________________________________________________________________________
+Bool_t TAlien::Kill(UInt_t jobid)
+{
+   // Kill a specific job.
+
+   if (gapi_kill(jobid))
+      return kFALSE;
+   else
+      return kTRUE;
+}
+
+//______________________________________________________________________________
+UInt_t TAlien::Resubmit(UInt_t jobid)
+{
+   // Resubmit a specific job.
+
+   if (gapi_resubmit(jobid))
+      return kFALSE;
+   else
+      return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -298,7 +359,6 @@ TGridResult *TAlien::Command(const char *command, bool interactive, UInt_t strea
    }
    return 0;
 }
-
 
 //______________________________________________________________________________
 TGridResult *TAlien::LocateSites()
@@ -366,7 +426,7 @@ UInt_t TAlien::GetNColumns(UInt_t stream)
    return fGc->GetStreamColumns(stream);
 }
 
-//--- catalogue Interface
+//--- Catalogue Interface
 
 //______________________________________________________________________________
 TGridResult *TAlien::Ls(const char* ldn, Option_t* options, Bool_t verbose)
@@ -552,4 +612,22 @@ Bool_t TAlien::Rm(const char* lfn, Option_t* options, Bool_t verbose)
 
    Error("Rm","Cannot remove %s\n",lfn);
    return kFALSE;
+}
+
+//______________________________________________________________________________
+TGridCollection *TAlien::OpenCollection(const char *collectionfile,
+                                        UInt_t maxentries)
+{
+   // Factory function for a TAlienCollection based on an XML file.
+
+   return (TGridCollection*)TAlienCollection::Open(collectionfile, maxentries);
+}
+
+//______________________________________________________________________________
+TGridCollection *TAlien::OpenCollectionQuery(TGridResult *queryresult,
+                                             Bool_t nogrouping)
+{
+   // Factory function fo a TAlienCollection based on a gGrid Query.
+
+   return (TGridCollection*)TAlienCollection::OpenQuery(queryresult, nogrouping);
 }

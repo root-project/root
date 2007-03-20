@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.40 2006/08/21 13:25:32 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.41 2006/11/10 17:00:23 antcheva Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -39,7 +39,6 @@
 #include "TGTab.h"
 #include "TGResourcePool.h"
 #include "TList.h"
-#include "TMath.h"
 #include "Riostream.h"
 #include "TClass.h"
 

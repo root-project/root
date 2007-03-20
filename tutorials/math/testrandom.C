@@ -4,22 +4,26 @@
 //
 // E.g. on an MacOSX with 2 GHz Intel Dual Core and compiled with gcc 4.0.1
 //
-// Distribution            nanoseconds/call
+//  Distribution            nanoseconds/call
 //
-//                     TRandom  TRandom1 TRandom2 TRandom3
+//                      TRandom  TRandom1 TRandom2 TRandom3
 //
-// Rndm..............   24.000  137.000   29.000   30.000
-// RndmArray.........   16.000  127.000   21.000   21.000
-// Gaus..............  245.000  474.000  250.000  257.000
-// Landau............   68.000  176.000   73.000   76.000
-// Binomial(5,0.5)...  148.000  700.000  170.000  175.000
-// Binomial(15,0.5)..  413.000 2073.000  478.000  504.000
-// Poisson(3)........  210.000  644.000  232.000  233.000
-// Poisson(10).......  394.000 1613.000  443.000  467.000
-// Poisson(70)....... 1260.000 1684.000 1282.000 1273.000
-// Poisson(100)...... 1269.000 1701.000 1294.000 1287.000
-// GausTF1...........  211.000  326.000  217.000  215.000
-// LandauTF1.........  209.000  326.000  213.000  216.000
+//  Rndm..............   24.000  137.000   29.000   30.000
+//  RndmArray.........   17.000  128.000   22.000   22.000
+//  Gaus..............   86.000  242.000   92.000   96.000
+//  Rannor............  141.000  258.000  148.000  147.000
+//  Landau............   68.000  173.000   73.000   74.000
+//  Binomial(5,0.5)...  152.000  695.000  171.000  179.000
+//  Binomial(15,0.5)..  414.000 2060.000  480.000  497.000
+//  Poisson(3)........  212.000  653.000  231.000  234.000
+//  Poisson(10).......  402.000 1618.000  456.000  460.000
+//  Poisson(70)....... 1225.000 1651.000 1253.000 1250.000
+//  Poisson(100)...... 1233.000 1664.000 1260.000 1262.000
+//  GausTF1...........  210.000  326.000  218.000  216.000
+//  LandauTF1.........  209.000  325.000  217.000  213.000
+//  GausUNURAN........   90.000  202.000   97.000   96.000
+//  PoissonUNURAN(10).  160.000  361.000  170.000  170.000
+//  PoissonUNURAN(100)  139.000  347.000  148.000  149.000
 //
 // Note that this tutorial can be executed in interpreted or compiled mode
 //  Root > .x testrandom.C
@@ -27,16 +31,15 @@
 //
 //Authors: Rene Brun, Lorenzo Moneta
 
-#ifndef __CINT__
+
 #include <TRandom1.h>
 #include <TRandom2.h>
 #include <TRandom3.h>
 #include <TStopwatch.h>
 #include <TF1.h>
+#include <TUnuran.h>
+#include <TUnuranContDist.h>
 #include <TFile.h>
-   void testAll();
-   int  testRandom3();
-#endif
 
 void testrandom()
 {
@@ -47,7 +50,7 @@ void testrandom()
 void testAll() {
   int i, N = 10000000;
   float cpn = 1000000000./N;
-  float x;
+  double x,y;
 
   TRandom *r0 = new TRandom();
   TRandom *r1 = new TRandom1();
@@ -120,6 +123,27 @@ void testAll() {
   sw.Start();
   for (i=0;i<N;i++) {
      x = r3->Gaus(0,1);
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
+  
+  sw.Start();
+  for (i=0;i<N;i+=2) {
+     r0->Rannor(x,y);
+  }
+  printf("Rannor............ %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i+=2) {
+     r1->Rannor(x,y);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i+=2) {
+     r2->Rannor(x,y);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i+=2) {
+     r3->Rannor(x,y);
   }
   printf(" %8.3f\n",sw.CpuTime()*cpn);
 
@@ -325,9 +349,129 @@ void testAll() {
   }
   printf(" %8.3f\n",sw.CpuTime()*cpn);
 
+  // test using Unuran
+  TUnuran unr0(r0);
+  TUnuran unr1(r1);
+  TUnuran unr2(r2);
+  TUnuran unr3(r3);
+
+  // continuous distribution (ex. Gaus)
+  TUnuranContDist dist(f1);
+  // use arou method (is probably the fastest) 
+  unr0.Init(dist,"arou");
+  unr1.Init(dist,"arou");
+  unr2.Init(dist,"arou");
+  unr3.Init(dist,"arou");
+
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = unr0.Sample();
+  }
+  printf("GausUNURAN........ %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = unr1.Sample();
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = unr2.Sample();
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = unr3.Sample();
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
+
+  // Poisson (nned to initialize before with Poisson mu value)
+
+  unr0.InitPoisson(10);
+  unr1.InitPoisson(10);
+  unr2.InitPoisson(10);
+  unr3.InitPoisson(10);
+
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = unr0.SampleDiscr();
+  }
+  printf("PoissonUNURAN(10). %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = unr1.SampleDiscr();
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = unr2.SampleDiscr();
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = unr3.SampleDiscr();
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
+
+  unr0.InitPoisson(100);
+  unr1.InitPoisson(100);
+  unr2.InitPoisson(100);
+  unr3.InitPoisson(100);
+
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = unr0.SampleDiscr();
+  }
+  printf("PoissonUNURAN(100) %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = unr1.SampleDiscr();
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = unr2.SampleDiscr();
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = unr3.SampleDiscr();
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
+
+
+  delete r0;
   delete r1;
   delete r2;
   delete r3;
+
+#ifdef LATER  
+  // Binomial
+  unr0.InitBinomial(15,0.5);
+  unr1.InitBinomial(15,0.5);
+  unr2.InitBinomial(15,0.5);
+  unr3.InitBinomial(15,0.5);
+
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = unr0.SampleDiscr();
+  }
+  printf("BinomialUN(15,0.5) %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = unr1.SampleDiscr();
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = unr2.SampleDiscr();
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = unr3.SampleDiscr();
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
+#endif
 
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnGlobalCorrelationCoeff.cxx,v 1.2 2006/04/13 08:39:23 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnGlobalCorrelationCoeff.cxx,v 1.4 2007/02/12 12:05:15 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -8,8 +8,12 @@
  **********************************************************************/
 
 #include "Minuit2/MnGlobalCorrelationCoeff.h"
-#include "Minuit2/MnPrint.h"
 #include <cmath>
+
+#if defined(DEBUG) || defined(WARNINGMSG)
+#include "Minuit2/MnPrint.h" 
+#endif
+
 
 namespace ROOT {
 
@@ -23,7 +27,7 @@ MnGlobalCorrelationCoeff::MnGlobalCorrelationCoeff(const MnAlgebraicSymMatrix& c
    int ifail = Invert(inv);
    if(ifail != 0) {
 #ifdef WARNINGMSG
-      std::cout<<"MnGlobalCorrelationCoeff: inversion of matrix fails."<<std::endl;
+      MN_INFO_MSG("MnGlobalCorrelationCoeff: inversion of matrix fails.");
 #endif
       fValid = false;
    } else {

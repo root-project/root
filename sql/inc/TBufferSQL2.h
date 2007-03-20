@@ -1,4 +1,4 @@
-// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.h,v 1.7 2006/01/25 16:00:11 pcanal Exp $
+// @(#)root/sql:$Name:  $:$Id: TBufferSQL2.h,v 1.11 2007/01/20 09:34:58 brun Exp $
 // Author: Sergey Linev  20/11/2005
 
 
@@ -14,8 +14,8 @@
 /////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TBuffer
-#include "TBuffer.h"
+#ifndef ROOT_TBufferFile
+#include "TBufferFile.h"
 #endif
 
 #ifndef ROOT_TString
@@ -28,7 +28,7 @@
 
 class TMap;
 class TExMap;
-class TStreamerInfo;
+class TVirtualStreamerInfo;
 class TStreamerElement;
 class TObjArray;
 class TMemberStreamer;
@@ -42,7 +42,7 @@ class TSQLStructure;
 class TSQLObjectData;
 class TSQLClassInfo;
 
-class TBufferSQL2 : public TBuffer {
+class TBufferSQL2 : public TBufferFile {
 
 friend class TSQLStructure;    
     
@@ -158,9 +158,9 @@ public:
    virtual void*    ReadObjectAny(const TClass* clCast);
    virtual void     SkipObjectAny();
 
-   virtual void     IncrementLevel(TStreamerInfo*);
+   virtual void     IncrementLevel(TVirtualStreamerInfo*);
    virtual void     SetStreamerElementNumber(Int_t);
-   virtual void     DecrementLevel(TStreamerInfo*);
+   virtual void     DecrementLevel(TVirtualStreamerInfo*);
    
    virtual void     ClassBegin(const TClass*, Version_t = -1);
    virtual void     ClassEnd(const TClass*);
@@ -256,35 +256,38 @@ public:
    virtual void     StreamObject(TObject *obj);
    virtual void     StreamObject(void *obj, TMemberStreamer *streamer, const TClass *cl, Int_t n = 0);
 
-   virtual TBuffer  &operator>>(Bool_t    &b);
-   virtual TBuffer  &operator>>(Char_t    &c);
-   virtual TBuffer  &operator>>(UChar_t   &c);
-   virtual TBuffer  &operator>>(Short_t   &h);
-   virtual TBuffer  &operator>>(UShort_t  &h);
-   virtual TBuffer  &operator>>(Int_t     &i);
-   virtual TBuffer  &operator>>(UInt_t    &i);
-   virtual TBuffer  &operator>>(Long_t    &l);
-   virtual TBuffer  &operator>>(ULong_t   &l);
-   virtual TBuffer  &operator>>(Long64_t  &l);
-   virtual TBuffer  &operator>>(ULong64_t &l);
-   virtual TBuffer  &operator>>(Float_t   &f);
-   virtual TBuffer  &operator>>(Double_t  &d);
-   virtual TBuffer  &operator>>(Char_t    *c);
+   virtual   void     ReadBool(Bool_t       &b);
+   virtual   void     ReadChar(Char_t       &c);
+   virtual   void     ReadUChar(UChar_t     &c);
+   virtual   void     ReadShort(Short_t     &s);
+   virtual   void     ReadUShort(UShort_t   &s);
+   virtual   void     ReadInt(Int_t         &i);
+   virtual   void     ReadUInt(UInt_t       &i);
+   virtual   void     ReadLong(Long_t       &l);
+   virtual   void     ReadULong(ULong_t     &l);
+   virtual   void     ReadLong64(Long64_t   &l);
+   virtual   void     ReadULong64(ULong64_t &l);
+   virtual   void     ReadFloat(Float_t     &f);
+   virtual   void     ReadDouble(Double_t   &d);
+   virtual   void     ReadCharP(Char_t      *c);
+   virtual   void     ReadTString(TString   &s) ;
 
-   virtual TBuffer  &operator<<(Bool_t    b);
-   virtual TBuffer  &operator<<(Char_t    c);
-   virtual TBuffer  &operator<<(UChar_t   c);
-   virtual TBuffer  &operator<<(Short_t   h);
-   virtual TBuffer  &operator<<(UShort_t  h);
-   virtual TBuffer  &operator<<(Int_t     i);
-   virtual TBuffer  &operator<<(UInt_t    i);
-   virtual TBuffer  &operator<<(Long_t    l);
-   virtual TBuffer  &operator<<(ULong_t   l);
-   virtual TBuffer  &operator<<(Long64_t  l);
-   virtual TBuffer  &operator<<(ULong64_t l);
-   virtual TBuffer  &operator<<(Float_t   f);
-   virtual TBuffer  &operator<<(Double_t  d);
-   virtual TBuffer  &operator<<(const Char_t *c);
+   virtual   void     WriteBool(Bool_t       b);
+   virtual   void     WriteChar(Char_t       c);
+   virtual   void     WriteUChar(UChar_t     c);
+   virtual   void     WriteShort(Short_t     s);
+   virtual   void     WriteUShort(UShort_t   s);
+   virtual   void     WriteInt(Int_t         i);
+   virtual   void     WriteUInt(UInt_t       i);
+   virtual   void     WriteLong(Long_t       l);
+   virtual   void     WriteULong(ULong_t     l);
+   virtual   void     WriteLong64(Long64_t   l);
+   virtual   void     WriteULong64(ULong64_t l);
+   virtual   void     WriteFloat(Float_t     f);
+   virtual   void     WriteDouble(Double_t   d);
+   virtual   void     WriteCharP(const Char_t *c);
+   virtual   void     WriteTString(const TString  &s);
+
 
    // end of redefined virtual functions
 

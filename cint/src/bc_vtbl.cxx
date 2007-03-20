@@ -24,9 +24,10 @@ using namespace std;
 ***********************************************************************/
 ////////////////////////////////////////////////////////////////////
 void G__Vtabledata::disp(FILE *fp) {
+  G__ifunc_table_internal* ifunc = G__get_ifunc_internal(m_ifunc);
   fprintf(fp,"%s::%s offset=%d "
-	  ,G__struct.name[m_ifunc->tagnum]
-	  ,m_ifunc->funcname[m_ifn]
+	  ,G__struct.name[ifunc->tagnum]
+	  ,ifunc->funcname[m_ifn]
 	  ,m_offset);
 }
 ////////////////////////////////////////////////////////////////////
@@ -85,12 +86,14 @@ void G__Vtable::disp(FILE *fp) {
 /***********************************************************************
 * G__function_signature_match()
 ***********************************************************************/
-extern "C" int G__function_signature_match(struct G__ifunc_table* ifunc1
+extern "C" int G__function_signature_match(struct G__ifunc_table* iref1
 					,int ifn1
-					,struct G__ifunc_table* ifunc2
+					,struct G__ifunc_table* iref2
 					,int ifn2
 					,int mask
 					,int /*matchmode*/) {
+  G__ifunc_table_internal* ifunc1 = G__get_ifunc_internal(iref1);
+  G__ifunc_table_internal* ifunc2 = G__get_ifunc_internal(iref2);
   if(ifunc1->hash[ifn1]!=ifunc2->hash[ifn2] ||
       strcmp(ifunc1->funcname[ifn1],ifunc2->funcname[ifn2]) != 0 ||
       (ifunc1->para_nu[ifn1]!=ifunc2->para_nu[ifn2] && 
@@ -106,10 +109,10 @@ extern "C" int G__function_signature_match(struct G__ifunc_table* ifunc1
 
   int j;
   for(j=0;j<paran;j++) {
-   if(ifunc1->para_type[ifn1][j]!=ifunc2->para_type[ifn2][j] ||
-     ifunc1->para_p_tagtable[ifn1][j]!=ifunc2->para_p_tagtable[ifn2][j]
-     || ifunc1->para_reftype[ifn1][j]!=ifunc2->para_reftype[ifn2][j]
-     || ifunc1->para_isconst[ifn1][j]!=ifunc2->para_isconst[ifn2][j]) {
+   if(ifunc1->param[ifn1][j]->type !=ifunc2->param[ifn2][j]->type ||
+     ifunc1->param[ifn1][j]->p_tagtable !=ifunc2->param[ifn2][j]->p_tagtable
+     || ifunc1->param[ifn1][j]->reftype !=ifunc2->param[ifn2][j]->reftype
+     || ifunc1->param[ifn1][j]->isconst !=ifunc2->param[ifn2][j]->isconst) {
      return(0);
    }
  }
@@ -165,12 +168,9 @@ void G__bc_make_vtbl(int tagnum) {
 					,pvtbl->m_vtbl[i].GetIfn()
 					,0xffff
 					,G__EXACT)) {
-          met.SetVtblIndex(pvtbl->m_vtbl[i].GetIfunc()->vtblindex[
-                                                      pvtbl->m_vtbl[i].GetIfn()
-                                                                    ]);
-          met.SetVtblBasetagnum(pvtbl->m_vtbl[i].GetIfunc()->vtblbasetagnum[
-                                                      pvtbl->m_vtbl[i].GetIfn()
-                                                                    ]);
+          G__ifunc_table_internal* ifunc = G__get_ifunc_internal(pvtbl->m_vtbl[i].GetIfunc());
+          met.SetVtblIndex(ifunc->vtblindex[pvtbl->m_vtbl[i].GetIfn()]);
+          met.SetVtblBasetagnum(ifunc->vtblbasetagnum[pvtbl->m_vtbl[i].GetIfn()]);
           met.SetIsVirtual(1);
           // override function
           //            A
@@ -245,7 +245,7 @@ void G__bc_make_defaultctor(int tagnum) {
   string fname(G__struct.name[tagnum]);
   string arg = ""; 
   G__MethodInfo met = cls.AddMethod(rtntype.c_str(),fname.c_str(),"");
-  struct G__ifunc_table* ifunc = (struct G__ifunc_table*)met.Handle();
+  struct G__ifunc_table_internal* ifunc = G__get_ifunc_internal((struct G__ifunc_table*)met.Handle());
   int ifn = met.Index();
   if(cls.Property()&G__BIT_ISABSTRACT) ifunc->access[ifn]=G__PROTECTED;
 
@@ -289,9 +289,9 @@ void G__bc_make_copyctor(int tagnum) {
   string fname(G__struct.name[tagnum]);
   string arg = "const "; arg.append(G__struct.name[tagnum]); arg.append("&");
   G__MethodInfo met = cls.AddMethod(rtntype.c_str(),fname.c_str(),arg.c_str());
-  struct G__ifunc_table* ifunc = (struct G__ifunc_table*)met.Handle();
+  struct G__ifunc_table_internal* ifunc = G__get_ifunc_internal((struct G__ifunc_table*)met.Handle());
   int ifn = met.Index();
-  ifunc->para_isconst[ifn][0] = G__CONSTVAR; // workaround to set const flag
+  ifunc->param[ifn][0]->isconst = G__CONSTVAR; // workaround to set const flag
   if(cls.Property()&G__BIT_ISABSTRACT) ifunc->access[ifn]=G__PROTECTED;
 
   G__functionscope compiler;
@@ -335,7 +335,7 @@ void G__bc_make_assignopr(int tagnum) {
   int ifn = met.Index();
 
   G__functionscope compiler;
-  compiler.compile_implicitassign(ifunc,ifn);
+  compiler.compile_implicitassign(G__get_ifunc_internal(ifunc),ifn);
 }
 /***********************************************************************
 * G__bc_make_dtor() 
@@ -377,7 +377,7 @@ void G__bc_make_dtor(int tagnum) {
 #endif
 
   // the first entry is reserved for dtor
-  struct G__ifunc_table* ifunc = G__struct.memfunc[tagnum];
+  struct G__ifunc_table_internal* ifunc = G__struct.memfunc[tagnum];
   int ifn = 0;
 
   // set function name and hash

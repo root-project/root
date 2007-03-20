@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.31 2006/02/06 16:48:12 couet Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.35 2007/03/05 09:10:03 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -33,7 +33,7 @@
 
 #if !defined(__CINT__)
 
-#include "Windows4root.h"
+#include "Windows4Root.h"
 #include "gdk/gdk.h"
 #include "gdk/win32/gdkwin32.h"
 
@@ -59,6 +59,8 @@ struct GdkImage;
 struct GdkPoint;
 struct GdkRectangle;
 
+struct MSG;
+
 #endif
 
 typedef unsigned long KeySym;
@@ -67,14 +69,13 @@ typedef unsigned long KeySym;
 
 struct XWindow_t;
 
-
 class TGWin32 : public TVirtualX {
 
 private:
    enum EAlign { kNone, kTLeft, kTCenter, kTRight, kMLeft, kMCenter, kMRight,
                  kBLeft, kBCenter, kBRight };
 
-   FT_Vector   fAlign;                 // alignment vector
+   FT_Vector        fAlign;                 // alignment vector
 
    void    Align(void);
    void    DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back, GdkImage *xim,
@@ -117,6 +118,7 @@ protected:
    GdkColormap *fColormap;          // Default colormap, 0 if b/w
    Int_t       fScreenNumber;       // Screen number
    Bool_t      fHasTTFonts;         // True when TrueType fonts are used
+   Bool_t      fUseSysPointers;     // True when using system mouse pointers
    Int_t       fTextAlignH;         // Text Alignment Horizontal
    Int_t       fTextAlignV;         // Text Alignment Vertical
    Int_t       fTextAlign;          // Text alignment (set in SetTextAlign)
@@ -131,6 +133,7 @@ protected:
    Int_t       fGreenShift;         // Bits to left shift green
    Int_t       fBlueShift;          // Bits to left shift blue
    Handle_t    fXEvent;             // Current native (GDK) event
+   TObject*    fRefreshTimer;       // TGWin32RefreshTimer for GUI thread message handler
 
    Bool_t      fFillColorModified;  //
    Bool_t      fFillStyleModified;  //
@@ -379,7 +382,9 @@ public:
    Int_t        AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
    void         RemoveWindow(ULong_t qwid);
    void         ShapeCombineMask(Window_t id, Int_t x, Int_t y, Pixmap_t mask);
+   UInt_t       ScreenWidthMM() const;
 
+   Bool_t       GUIThreadMessageFunc(MSG* msg);
    Bool_t       IsCmdThread() const;
 
    static void Lock();

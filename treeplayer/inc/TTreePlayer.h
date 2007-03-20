@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.37 2006/09/17 19:08:13 pcanal Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.39 2007/01/22 07:57:14 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 #include "TVirtualTreePlayer.h"
 #endif
 
+
 class TVirtualIndex;
 
 class TTreePlayer : public TVirtualTreePlayer {
@@ -57,6 +58,7 @@ protected:
    TClass        *fSelectorClass;   //! Pointer to the actual class of the TSelectorFromFile
    TList         *fInput;           //! input list to the selector
    TList         *fFormulaList;     //! Pointer to a list of coordinated list TTreeFormula (used by Scan and Query)
+   TSelector     *fSelectorUpdate;  //! Set to the selector address when it's entry list needs to be updated by the UpdateFormulaLeaves function
 
 protected:
    const   char  *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex);
@@ -66,8 +68,7 @@ protected:
    
 public:
    TTreePlayer();
-   virtual ~TTreePlayer();
-   
+   virtual ~TTreePlayer();   
    virtual TVirtualIndex *BuildIndex(const TTree *T, const char *majorname, const char *minorname);
    virtual TTree    *CopyTree(const char *selection, Option_t *option
                               ,Long64_t nentries, Long64_t firstentry);

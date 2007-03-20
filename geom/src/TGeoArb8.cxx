@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.52 2006/07/09 05:27:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.55 2007/01/12 16:03:15 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -10,11 +10,11 @@
  *************************************************************************/
 
 #include "Riostream.h"
-#include "TROOT.h"
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
 #include "TGeoArb8.h"
+#include "TMath.h"
 
 ClassImp(TGeoArb8)
     
@@ -1332,6 +1332,8 @@ Double_t TGeoTrap::Safety(Double_t *point, Bool_t in) const
    Double_t fn;
    //---> compute safety for lateral planes
    for (i=0; i<4; i++) {
+      if (in) saf[i] = TGeoShape::Big();
+      else    saf[i] = 0.;
       x0 = fXY[i][0];
       y0 = fXY[i][1];
       x1 = fXY[i+4][0];

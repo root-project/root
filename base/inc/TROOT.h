@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.55 2006/08/06 02:04:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.59 2007/01/29 15:10:48 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #endif
 
 class TClass;
+class TCanvas;
 class TColor;
 class TDataType;
 class TFile;
@@ -49,10 +50,6 @@ class TProcessUUID;
 class TClassGenerator;
 class TVirtualMutex;
 
-
-namespace ROOT {
-   class TMapTypeToTClass;
-}
 
 
 R__EXTERN TVirtualMutex *gROOTMutex;
@@ -72,7 +69,6 @@ private:
    TROOT& operator=(const TROOT&);  //not implemented
 
 protected:
-   typedef ROOT::TMapTypeToTClass IdMap_t;
 
    TString         fConfigOptions;        //ROOT ./configure build options
    TString         fVersion;              //ROOT version (from CMZ VERSQQ) ex 0.05/01
@@ -97,7 +93,6 @@ protected:
    TObject         *fPrimitive;           //Currently selected primitive
    TVirtualPad     *fSelectPad;           //Currently selected pad
    TCollection     *fClasses;             //List of classes definition
-   IdMap_t         *fIdMap;               //Map from typeid to TClass pointer
    TCollection     *fTypes;               //List of data types definition
    TCollection     *fGlobals;             //List of global variables
    TCollection     *fGlobalFunctions;     //List of global functions
@@ -127,13 +122,9 @@ protected:
    TString         fCutClassName;         //Name of default CutG class in graphics editor
    TString         fDefCanvasName;        //Name of default canvas
 
-   static VoidFuncPtr_t fgMakeDefCanvas;  //Pointer to default canvas constructor
-
                   TROOT();                //Only used by Dictionary
    void           InitSystem();           //Operating System interface
    void           InitThreads();          //Initialize threads library
-   TClass        *FindSTLClass(const char *name, Bool_t load) const;
-   TClass        *LoadClass(const char *name) const;
    void          *operator new(size_t l) { return TObject::operator new(l); }
 
 public:
@@ -149,6 +140,7 @@ public:
    TObject          *FindSpecialObject(const char *name, void *&where);
    const char       *FindObjectClassName(const char *name) const;
    const char       *FindObjectPathName(const TObject *obj) const;
+   TClass           *FindSTLClass(const char *name, Bool_t load) const;
    void              ForceStyle(Bool_t force = kTRUE) { fForceStyle = force; }
    Bool_t            FromPopUp() const { return fFromPopUp; }
    TPluginManager   *GetPluginManager() const { return fPluginManager; }
@@ -163,7 +155,6 @@ public:
    Bool_t            GetEditHistograms() const { return fEditHistograms; }
    Int_t             GetEditorMode() const { return fEditorMode; }
    Bool_t            GetForceStyle() const { return fForceStyle; }
-   VoidFuncPtr_t     GetMakeDefCanvas() const;
    Int_t             GetBuiltDate() const { return fBuiltDate; }
    Int_t             GetBuiltTime() const { return fBuiltTime; }
    Int_t             GetVersionDate() const { return fVersionDate; }
@@ -195,7 +186,7 @@ public:
    TSeqCollection   *GetListOfDataSets() const { return fDataSets; }
    TList            *GetListOfBrowsables() const { return fBrowsables; }
    TDataType        *GetType(const char *name, Bool_t load = kFALSE) const;
-   TFile            *GetFile() const { return fFile; }
+   TFile            *GetFile() const { if (gDirectory != this) return gDirectory->GetFile(); else return 0;}
    TFile            *GetFile(const char *name) const;
    TStyle           *GetStyle(const char *name) const;
    TObject          *GetFunction(const char *name) const;
@@ -221,12 +212,14 @@ public:
    Bool_t            IsProofServ() const { return fName == "proofserv" ? kTRUE : kFALSE; }
    void              ls(Option_t *option = "") const;
    Int_t             LoadClass(const char *classname, const char *libname, Bool_t check = kFALSE);
+   TClass           *LoadClass(const char *name) const;
    Int_t             LoadMacro(const char *filename, Int_t *error = 0, Bool_t check = kFALSE);
    Long_t            Macro(const char *filename, Int_t *error = 0);
+   TCanvas          *MakeDefCanvas() const;
    void              Message(Int_t id, const TObject *obj);
    Bool_t            MustClean() const { return fMustClean; }
-   void              ProcessLine(const char *line, Int_t *error = 0);
-   void              ProcessLineSync(const char *line, Int_t *error = 0);
+   Long_t            ProcessLine(const char *line, Int_t *error = 0);
+   Long_t            ProcessLineSync(const char *line, Int_t *error = 0);
    Long_t            ProcessLineFast(const char *line, Int_t *error = 0);
    Bool_t            ReadingObject() const { return fReadingObject; }
    void              RefreshBrowsers();
@@ -263,7 +256,6 @@ public:
    static Bool_t      Initialized();
    static Bool_t      MemCheck();
    static void        SetDirLevel(Int_t level = 0);
-   static void        SetMakeDefCanvas(VoidFuncPtr_t makecanvas);
 
    ClassDef(TROOT,0)  //Top level (or root) structure for all classes
 };

@@ -53,7 +53,7 @@ ifeq ($(PLATFORM),win32)
 NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
 else
 NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
-		$(XROOTDDIRL)/libXrdNet.a
+		$(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdSys.a
 endif
 
 ##### local rules #####
@@ -90,3 +90,6 @@ distclean::     distclean-netx
 ##### extra rules ######
 $(NETXO) $(NETXDO): $(XROOTDETAG)
 $(NETXO) $(NETXDO): CXXFLAGS += $(NETXINCEXTRA)
+ifeq ($(PLATFORM),win32)
+$(NETXO) $(NETXDO): CXXFLAGS += -DNOGDI
+endif

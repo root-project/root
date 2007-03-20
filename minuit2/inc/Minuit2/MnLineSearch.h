@@ -1,4 +1,4 @@
-// @(#)root/minuit2:$Name:  $:$Id: MnLineSearch.h,v 1.9.4.4 2005/11/29 11:08:34 moneta Exp $
+// @(#)root/minuit2:$Name:  $:$Id: MnLineSearch.h,v 1.1 2005/11/29 14:42:18 moneta Exp $
 // Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
 
 /**********************************************************************
@@ -52,7 +52,13 @@ public:
 
   ~MnLineSearch() {}
 
-  MnParabolaPoint operator()(const MnFcn&, const MinimumParameters&, const MnAlgebraicVector&, double, const MnMachinePrecision&) const;
+  MnParabolaPoint operator()(const MnFcn&, const MinimumParameters&, const MnAlgebraicVector&, double, const MnMachinePrecision&, bool debug = false) const;
+
+#ifdef USE_OTHER_LS
+  MnParabolaPoint CubicSearch(const MnFcn&, const MinimumParameters&, const MnAlgebraicVector&, double, double, const MnMachinePrecision&, bool debug = false) const;
+
+  MnParabolaPoint BrentSearch(const MnFcn&, const MinimumParameters&, const MnAlgebraicVector&, double, double, const MnMachinePrecision&, bool debug = false) const;
+#endif
 
 private:
 

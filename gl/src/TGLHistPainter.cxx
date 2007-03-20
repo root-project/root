@@ -1,5 +1,7 @@
 #include <cstring>
 
+#include "TROOT.h"
+#include "TClass.h"
 #include "TVirtualPad.h"
 #include "TVirtualGL.h"
 #include "KeySymbols.h"
@@ -10,6 +12,7 @@
 #include "TGLLegoPainter.h"
 #include "TGLBoxPainter.h"
 #include "TGLTF3Painter.h"
+#include "TGLParametric.h"
 
 ClassImp(TGLHistPainter)
 
@@ -25,7 +28,7 @@ ClassImp(TGLHistPainter)
 //______________________________________________________________________________
 TGLHistPainter::TGLHistPainter(TH1 *hist)
                    : fDefaultPainter(TVirtualHistPainter::HistPainter(hist)),
-                     fGLPainter(0),
+                     fEq(0),
                      fHist(hist),
                      fF3(0),
                      fStack(0),
@@ -33,6 +36,18 @@ TGLHistPainter::TGLHistPainter(TH1 *hist)
 {
    //ROOT does not use exceptions, so, if default painter's creation failed,
    //fDefaultPainter is 0. In each function, which use it, I have to check the pointer first.
+}
+
+//______________________________________________________________________________
+TGLHistPainter::TGLHistPainter(TGLParametricEquation *equation)
+                   : fEq(equation),
+                     fHist(0),
+                     fF3(0),
+                     fStack(0),
+                     fPlotType(kGLParametricPlot)//THistPainter
+{
+   //This ctor creates gl-parametric plot's painter.
+   fGLPainter.reset(new TGLParametricPlot(equation, &fCamera));
 }
 
 //______________________________________________________________________________
@@ -166,17 +181,18 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          //'s'/'S' - specific events processed by TGLTF3Painter,
          //'c'/'C' - turn on/off box cut.
          gGLManager->MarkForDirectCopy(glContext, kTRUE);
-         if (event == 5 || py == kKey_J || py == kKey_j) {
+         if (event == 6 || py == kKey_J || py == kKey_j) {
             fCamera.ZoomIn();
             fGLPainter->InvalidateSelection();
             gGLManager->PaintSingleObject(fGLPainter.get());
-         } else if (event == 6 || py == kKey_K || py == kKey_k) {
+         } else if (event == 5 || py == kKey_K || py == kKey_k) {
             fCamera.ZoomOut();
             fGLPainter->InvalidateSelection();
             gGLManager->PaintSingleObject(fGLPainter.get());
          } else if (py == kKey_p || py == kKey_P || py == kKey_S || py == kKey_s
                     || py == kKey_c || py == kKey_C || py == kKey_x || py == kKey_X
-                    || py == kKey_y || py == kKey_Y || py == kKey_z || py == kKey_Z) 
+                    || py == kKey_y || py == kKey_Y || py == kKey_z || py == kKey_Z
+                    || py == kKey_w || py == kKey_W || py == kKey_l || py == kKey_L) 
          {
             fGLPainter->ProcessEvent(event, px, py);
             gGLManager->PaintSingleObject(fGLPainter.get());
@@ -323,14 +339,15 @@ void TGLHistPainter::Paint(Option_t *o)
    const Ssiz_t glPos = option.Index("gl");
    if (glPos != kNPOS)
       option.Remove(glPos, 2);
-   else {
+   else if (fPlotType != kGLParametricPlot){
       gPad->SetCopyGLDevice(kFALSE);
       if (fDefaultPainter.get())
          fDefaultPainter->Paint(o);//option.Data());
       return;
    }
 
-   CreatePainter(ParsePaintOption(option), option);
+   if (fPlotType != kGLParametricPlot)
+      CreatePainter(ParsePaintOption(option), option);
 
    if (fPlotType == kGLDefaultPlot) {
       //In case of default plot pad 
@@ -347,6 +364,9 @@ void TGLHistPainter::Paint(Option_t *o)
          //gl-buffer into the final pad/canvas pixmap/DIB.
          gPad->SetCopyGLDevice(kTRUE);
          fGLPainter->SetGLContext(glContext);
+         if (gPad->GetFrameFillColor() != kWhite)
+            fGLPainter->SetFrameColor(gROOT->GetColor(gPad->GetFrameFillColor()));  
+         fGLPainter->SetPadColor(gROOT->GetColor(gPad->GetFillColor()));
          if (fGLPainter->InitGeometry())
             gGLManager->PaintSingleObject(fGLPainter.get());
       }
@@ -408,11 +428,6 @@ void TGLHistPainter::CreatePainter(const PlotOption_t &option, const TString &ad
       fCoord.SetYLog(gPad->GetLogy());
       fCoord.SetZLog(gPad->GetLogz());
       fCoord.SetCoordType(option.fCoordType);
-
-      if (gPad->GetFrameFillColor() != kWhite)
-         fGLPainter->SetFrameColor(gROOT->GetColor(gPad->GetFrameFillColor()));
-
-      fGLPainter->SetPadColor(gROOT->GetColor(gPad->GetFillColor()));
       fGLPainter->AddOption(addOption);
    } else
       fPlotType = kGLDefaultPlot;

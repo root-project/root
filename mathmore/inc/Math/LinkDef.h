@@ -1,14 +1,7 @@
-// @(#)root/mathmore:$Name:  $:$Id: LinkDef.h,v 1.7 2006/11/17 18:26:50 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: LinkDef.h,v 1.8 2006/11/20 11:07:54 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
 
-
-#include "LinkDef_SpecFunc.h" 
-#include "LinkDef_StatFunc.h" 
-#include "LinkDef_Func.h" 
-
-
-#include "LinkDef_RootFinding.h"
 
 #ifdef __CINT__
 
@@ -21,6 +14,14 @@
 
 #pragma link C++ namespace ROOT;
 #pragma link C++ namespace ROOT::Math;
+
+
+#include "LinkDef_SpecFunc.h" 
+#include "LinkDef_StatFunc.h" 
+#include "LinkDef_Func.h" 
+
+
+#include "LinkDef_RootFinding.h"
 
 
 #ifndef _WIN32  

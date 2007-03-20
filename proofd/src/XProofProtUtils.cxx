@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XProofProtUtils.cxx,v 1.9 2006/12/04 07:51:38 brun Exp $
+// @(#)root/proofd:$Name:  $:$Id: XProofProtUtils.cxx,v 1.10 2006/12/12 21:44:58 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -22,6 +22,11 @@
 #ifdef __APPLE__
 #   ifndef __macos__
 #      define __macos__
+#   endif
+#endif
+#ifdef __sun
+#   ifndef __solaris__
+#      define __solaris__
 #   endif
 #endif
 #ifndef WIN32

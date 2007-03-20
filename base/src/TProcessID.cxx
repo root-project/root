@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.29 2006/04/20 18:49:43 pcanal Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.31 2007/01/12 16:03:15 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -48,7 +48,6 @@
 
 #include "TProcessID.h"
 #include "TROOT.h"
-#include "TFile.h"
 #include "TObjArray.h"
 #include "TExMap.h"
 #include "TVirtualMutex.h"
@@ -64,7 +63,7 @@ static inline ULong_t Void_Hash(const void *ptr)
 {
    // Return hash value for this object.
 
-   return TMath::Hash(&ptr, sizeof(void*));
+   return TString::Hash(&ptr, sizeof(void*));
 }
 
 //______________________________________________________________________________
@@ -252,6 +251,23 @@ TObject *TProcessID::GetObjectWithID(UInt_t uidd)
 }
 
 //______________________________________________________________________________
+TProcessID *TProcessID::GetPID()
+{
+   //static: returns pointer to current TProcessID
+   
+   return fgPID;
+}
+
+//______________________________________________________________________________
+TObjArray *TProcessID::GetPIDs()
+{
+   //static: returns array of TProcessIDs
+   
+   return fgPIDs;
+}
+
+
+//______________________________________________________________________________
 Bool_t TProcessID::IsValid(TProcessID *pid)
 {
    // static function. return kTRUE if pid is a valid TProcessID
@@ -291,58 +307,6 @@ void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid)
 }
 
 //______________________________________________________________________________
-TProcessID  *TProcessID::ReadProcessID(UShort_t pidf, TFile *file)
-{
-   //The TProcessID with number pidf is read from file. (static function)
-   //If the object is not already entered in the gROOT list, it is added.
-
-   if (!file) {
-      if (!pidf) return fgPID; //may happen when cloning an object
-      return 0;
-   }
-   TObjArray *pids = file->GetListOfProcessIDs();
-   TProcessID *pid = 0;
-   if (pidf < pids->GetSize()) pid = (TProcessID *)pids->UncheckedAt(pidf);
-   if (pid) {
-      if (!pid->fObjects) pid->fObjects = new TObjArray(100);
-      return pid;
-   }
-
-   //check if fProcessIDs[uid] is set in file
-   //if not set, read the process uid from file
-   char pidname[32];
-   sprintf(pidname,"ProcessID%d",pidf);
-   TDirectory *dirsav = gDirectory;
-   file->cd();
-   pid = (TProcessID *)file->Get(pidname);
-   if (dirsav) dirsav->cd();
-   if (gDebug > 0) {
-      printf("ReadProcessID, name=%s, file=%s, pid=%lx\n",pidname,file->GetName(),(Long_t)pid);
-   }
-   if (!pid) {
-      //file->Error("ReadProcessID","Cannot find %s in file %s",pidname,file->GetName());
-      return 0;
-   }
-      //check that a similar pid is not already registered in fgPIDs
-   TIter next(fgPIDs);
-   TProcessID *p;
-   while ((p = (TProcessID*)next())) {
-      if (!strcmp(p->GetTitle(),pid->GetTitle())) {
-         delete pid;
-         pids->AddAtAndExpand(p,pidf);
-         p->IncrementCount();
-         return p;
-      }
-   }
-   pids->AddAtAndExpand(pid,pidf);
-   pid->IncrementCount();
-   fgPIDs->Add(pid);
-   Int_t ind = fgPIDs->IndexOf(pid);
-   pid->SetUniqueID((UInt_t)ind);
-   return pid;
-}
-
-//______________________________________________________________________________
 void TProcessID::RecursiveRemove(TObject *obj)
 {
    // called by the object destructor
@@ -362,36 +326,4 @@ void TProcessID::SetObjectCount(UInt_t number)
    // fgNumber is incremented everytime a new object is referenced
 
    fgNumber = number;
-}
-
-//______________________________________________________________________________
-UShort_t TProcessID::WriteProcessID(TProcessID *pidd, TFile *file)
-{
-   // static function
-   // Check if the ProcessID pid is already in the file.
-   // if not, add it and return the index  number in the local file list
-
-   if (!file) return 0;
-   TProcessID *pid = pidd;
-   if (!pid) pid = fgPID;
-   TObjArray *pids = file->GetListOfProcessIDs();
-   Int_t npids = file->GetNProcessIDs();
-   for (Int_t i=0;i<npids;i++) {
-      if (pids->At(i) == pid) return (UShort_t)i;
-   }
-
-   TDirectory *dirsav = gDirectory;
-   file->cd();
-   file->SetBit(TFile::kHasReferences);
-   pids->AddAtAndExpand(pid,npids);
-   pid->IncrementCount();
-   char name[32];
-   sprintf(name,"ProcessID%d",npids);
-   pid->Write(name);
-   file->IncrementProcessIDs();
-   if (gDebug > 0) {
-      printf("WriteProcessID, name=%s, file=%s\n",name,file->GetName());
-   }
-   if (dirsav) dirsav->cd();
-   return (UShort_t)npids;
 }

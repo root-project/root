@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.130 2006/11/24 10:19:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.134 2007/02/26 16:20:20 couet Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 #include "TBrowser.h"
 #include "TColor.h"
 #include "TClass.h"
+#include "TMethodCall.h"
 
 Bool_t TF1::fgAbsValue    = kFALSE;
 Bool_t TF1::fgRejectPoint = kFALSE;
@@ -30,148 +31,173 @@ static Double_t gErrorTF1 = 0;
 
 ClassImp(TF1)
 
+
 //______________________________________________________________________________
-//
-// a TF1 object is a 1-Dim function defined between a lower and upper limit.
-// The function may be a simple function (see TFormula) or a precompiled
-// user function.
-// The function may have associated parameters.
-// TF1 graphics function is via the TH1/TGraph drawing functions.
-//
-//  The following types of functions can be created:
-//    A- Expression using variable x and no parameters
-//    B- Expression using variable x with parameters
-//    C- A general C function with parameters
-//
-//         +++++++++++++++++++++++++++++++++++
-// ===>    + Example of a function of type A +
-//         +++++++++++++++++++++++++++++++++++
-//
-//  Case A1 (inline expression using standard C++ functions/operators)
-//  ------------------------------------------------------------------
-//   TF1 *fa1 = new TF1("fa1","sin(x)/x",0,10);
-//   fa1->Draw();
-//Begin_Html
-/*
-<img src="gif/function1.gif">
-*/
-//End_Html
-//
-//  Case A2 (inline expression using TMath functions without parameters)
-//  --------------------------------------------------------------------
-//   TF1 *fa2 = new TF1("fa2","TMath::DiLog(x)",0,10);
-//   fa2->Draw();
-//
-//  Case A3 (inline expression using a CINT function by name
-//  --------------------------------------------------------
-//   Double_t myFunc(x) {
-//      return x+sin(x);
-//   }
-//   TF1 *fa3 = new TF1("fa4","myFunc(x)",-3,5);
-//   fa3->Draw();
-//
-//
-//         +++++++++++++++++++++++++++++++++++
-// ===>    + Example of a function of type B+
-//         +++++++++++++++++++++++++++++++++++
-//
-//  Case B1 (inline expression using standard C++ functions/operators)
-//  ------------------------------------------------------------------
-//  Example B1a
-//  -----------
-//   TF1 *fa = new TF1("fa","[0]*x*sin([1]*x)",-3,3);
-//    This creates a function of variable x with 2 parameters.
-//    The parameters must be initialized via:
-//      fa->SetParameter(0,value_first_parameter);
-//      fa->SetParameter(1,value_second_parameter);
-//    Parameters may be given a name:
-//      fa->SetParName(0,"Constant");
-//
-//  Example B1b
-//  -----------
-//   TF1 *fb = new TF1("fb","gaus(0)*expo(3)",0,10);
-//     gaus(0) is a substitute for [0]*exp(-0.5*((x-[1])/[2])**2)
-//        and (0) means start numbering parameters at 0
-//     expo(3) is a substitute for exp([3]+[4]*x)
-//
-//  Case B2 (inline expression using TMath functions with parameters)
-//  --------------------------------------------------------------------
-//   TF1 *fb2 = new TF1("fa3","TMath::Landau(x,[0],[1],0)",-5,10);
-//   fb2->SetParameters(0.2,1.3);
-//   fb2->Draw();
-//
-//
-//         +++++++++++++++++++++++++++++++++++
-// ===>    + Example of a function of type C+
-//         +++++++++++++++++++++++++++++++++++
-//
-//   Consider the macro myfunc.C below
-//-------------macro myfunc.C-----------------------------
-//Double_t myfunction(Double_t *x, Double_t *par)
-//{
-//   Float_t xx =x[0];
-//   Double_t f = TMath::Abs(par[0]*sin(par[1]*xx)/xx);
-//   return f;
-//}
-//void myfunc()
-//{
-//   TF1 *f1 = new TF1("myfunc",myfunction,0,10,2);
-//   f1->SetParameters(2,1);
-//   f1->SetParNames("constant","coefficient");
-//   f1->Draw();
-//}
-//void myfit()
-//{
-//   TH1F *h1=new TH1F("h1","test",100,0,10);
-//   h1->FillRandom("myfunc",20000);
-//   TF1 *f1=gROOT->GetFunction("myfunc");
-//   f1->SetParameters(800,1);
-//   h1.Fit("myfunc");
-//}
-//--------end of macro myfunc.C---------------------------------
-//
-// In an interactive session you can do:
-//   Root > .L myfunc.C
-//   Root > myfunc();
-//   Root > myfit();
-//
-//
-//  TF1 objects can reference other TF1 objects (thanks John Odonnell)
-//  of type A or B defined above.This excludes CINT interpreted functions
-//  and compiled functions.
-//  However, there is a restriction. A function cannot reference a basic
-//  function if the basic function is a polynomial polN.
-//  Example:
-//{
-//  TF1 *fcos = new TF1 ("fcos", "[0]*cos(x)", 0., 10.);
-//  fcos->SetParNames( "cos");
-//  fcos->SetParameter( 0, 1.1);
-//
-//  TF1 *fsin = new TF1 ("fsin", "[0]*sin(x)", 0., 10.);
-//  fsin->SetParNames( "sin");
-//  fsin->SetParameter( 0, 2.1);
-//
-//  TF1 *fsincos = new TF1 ("fsc", "fcos+fsin");
-//
-//  TF1 *fs2 = new TF1 ("fs2", "fsc+fsc");
-//}
-//
-//     WHY TF1 CANNOT ACCEPT A CLASS MEMBER FUNCTION ?
-//     ===============================================
-// This is a frequently asked question.
-// C++ is a strongly typed language. There is no way for TF1 (without
-// recompiling this class) to know about all possible user defined data types.
-// This also apply to the case of a static class function.
-//
-//------------------------------------------------------------------------
+/* Begin_Html
+<center><h2>TF1: 1-Dim function class</h2></center>
+A TF1 object is a 1-Dim function defined between a lower and upper limit.
+<br>The function may be a simple function (see <tt>TFormula</tt>) or a
+precompiled user function.
+<br>The function may have associated parameters.
+<br>TF1 graphics function is via the <tt>TH1/TGraph</tt> drawing functions.
+<p>
+The following types of functions can be created:
+<ul>
+<li><a href="#F1">A - Expression using variable x and no parameters</a></li>
+<li><a href="#F2">B - Expression using variable x with parameters</a></li>
+<li><a href="#F3">C - A general C function with parameters</a></li>
+</ul>
+
+<a name="F1"></a><h3>A - Expression using variable x and no parameters</h3>
+<h4>Case 1: inline expression using standard C++ functions/operators</h4>
+<div class="code"><pre>
+   TF1 *fa1 = new TF1("fa1","sin(x)/x",0,10);
+   fa1->Draw();
+</pre></div><div class="clear" />
+End_Html
+Begin_Macro
+{
+   TCanvas *c = new TCanvas("c","c",0,0,500,300);
+   TF1 *fa1 = new TF1("fa1","sin(x)/x",0,10);
+   fa1->Draw();
+   return c;
+}
+End_Macro
+Begin_Html
+<h4>Case 2: inline expression using TMath functions without parameters</h4>
+<div class="code"><pre>
+   TF1 *fa2 = new TF1("fa2","TMath::DiLog(x)",0,10);
+   fa2->Draw();
+</pre></div><div class="clear" />
+End_Html
+Begin_Macro
+{
+   TCanvas *c = new TCanvas("c","c",0,0,500,300);
+   TF1 *fa2 = new TF1("fa2","TMath::DiLog(x)",0,10);
+   fa2->Draw();
+   return c;
+}
+End_Macro
+Begin_Html
+<h4>Case 3: inline expression using a CINT function by name</h4>
+<div class="code"><pre>
+   Double_t myFunc(x) {
+      return x+sin(x);
+   }
+   TF1 *fa3 = new TF1("fa3","myFunc(x)",-3,5);
+   fa3->Draw();
+</pre></div><div class="clear" />
+
+<a name="F2"></a><h3>B - Expression using variable x with parameters</h3>
+<h4>Case 1: inline expression using standard C++ functions/operators</h4>
+<ul>
+<li>Example a:
+<div class="code"><pre>
+   TF1 *fa = new TF1("fa","[0]*x*sin([1]*x)",-3,3);
+</pre></div><div class="clear" />
+This creates a function of variable x with 2 parameters.
+The parameters must be initialized via:
+<pre>
+   fa->SetParameter(0,value_first_parameter);
+   fa->SetParameter(1,value_second_parameter);
+</pre>
+Parameters may be given a name:
+<pre>
+   fa->SetParName(0,"Constant");
+</pre> </li>
+<li> Example b:
+<div class="code"><pre>
+   TF1 *fb = new TF1("fb","gaus(0)*expo(3)",0,10);
+</pre></div><div class="clear" />
+<tt>gaus(0)</tt> is a substitute for <tt>[0]*exp(-0.5*((x-[1])/[2])**2)</tt>
+and <tt>(0)</tt> means start numbering parameters at <tt>0</tt>.
+<tt>expo(3)</tt> is a substitute for <tt>exp([3]+[4]*x)</tt>.
+</ul>
+
+<h4>Case 2: inline expression using TMath functions with parameters</h4>
+<div class="code"><pre>
+   TF1 *fb2 = new TF1("fa3","TMath::Landau(x,[0],[1],0)",-5,10);
+   fb2->SetParameters(0.2,1.3);
+   fb2->Draw();
+</pre></div><div class="clear" />
+End_Html
+Begin_Macro
+{
+   TCanvas *c = new TCanvas("c","c",0,0,500,300);
+   TF1 *fb2 = new TF1("fa3","TMath::Landau(x,[0],[1],0)",-5,10);
+   fb2->SetParameters(0.2,1.3);
+   fb2->Draw();
+   return c;
+}
+End_Macro
+Begin_Html
+
+<a name="F3"></a><h3>C - A general C function with parameters</h3>
+Consider the macro myfunc.C below:
+<div class="code"><pre>
+   // Macro myfunc.C
+   Double_t myfunction(Double_t *x, Double_t *par)
+   {
+      Float_t xx =x[0];
+      Double_t f = TMath::Abs(par[0]*sin(par[1]*xx)/xx);
+      return f;
+   }
+   void myfunc()
+   {
+      TF1 *f1 = new TF1("myfunc",myfunction,0,10,2);
+      f1->SetParameters(2,1);
+      f1->SetParNames("constant","coefficient");
+      f1->Draw();
+   }
+   void myfit()
+   {
+      TH1F *h1=new TH1F("h1","test",100,0,10);
+      h1->FillRandom("myfunc",20000);
+      TF1 *f1=gROOT->GetFunction("myfunc");
+      f1->SetParameters(800,1);
+      h1.Fit("myfunc");
+   }
+</pre></div><div class="clear" />
+In an interactive session you can do:
+<div class="code"><pre>
+   Root > .L myfunc.C
+   Root > myfunc();
+   Root > myfit();
+</pre></div><div class="clear" />
+<tt>TF1</tt> objects can reference other <tt>TF1</tt> objects (thanks John 
+Odonnell) of type A or B defined above. This excludes CINT interpreted functions
+and compiled functions. However, there is a restriction. A function cannot
+reference a basic function if the basic function is a polynomial polN.
+<p>Example:
+<div class="code"><pre>
+   {
+      TF1 *fcos = new TF1 ("fcos", "[0]*cos(x)", 0., 10.);
+      fcos->SetParNames( "cos");
+      fcos->SetParameter( 0, 1.1);
+   
+      TF1 *fsin = new TF1 ("fsin", "[0]*sin(x)", 0., 10.);
+      fsin->SetParNames( "sin");
+      fsin->SetParameter( 0, 2.1);
+   
+      TF1 *fsincos = new TF1 ("fsc", "fcos+fsin");
+   
+      TF1 *fs2 = new TF1 ("fs2", "fsc+fsc");
+   }
+</pre></div><div class="clear" />
+
+<h3>Why TF1 cannot accept a class member function ?</h3>
+This is a frequently asked question. C++ is a strongly typed language. There is
+no way for TF1 (without recompiling this class) to know about all possible user
+defined data types.  This also apply to the case of a static class function.
+End_Html */
 
 TF1 *TF1::fgCurrent = 0;
+
 
 //______________________________________________________________________________
 TF1::TF1(): TFormula(), TAttLine(), TAttFill(), TAttMarker()
 {
-//*-*-*-*-*-*-*-*-*-*-*F1 default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ======================
+   // F1 default constructor.
 
    fXmin      = 0;
    fXmax      = 0;
@@ -203,18 +229,18 @@ TF1::TF1(): TFormula(), TAttLine(), TAttFill(), TAttMarker()
 TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax)
       :TFormula(name,formula), TAttLine(), TAttFill(), TAttMarker()
 {
-// F1 constructor using a formula definition
-//
-//  See TFormula constructor for explanation of the formula syntax.
-//
-//  See tutorials: fillrandom, first, fit1, formula1, multifit
-//  for real examples.
-//
-//  Creates a function of type A or B between xmin and xmax
-//
-//  if formula has the form "fffffff;xxxx;yyyy", it is assumed that
-//  the formula string is "fffffff" and "xxxx" and "yyyy" are the
-//  titles for the X and Y axis respectively.
+   // F1 constructor using a formula definition
+   //
+   //  See TFormula constructor for explanation of the formula syntax.
+   //
+   //  See tutorials: fillrandom, first, fit1, formula1, multifit
+   //  for real examples.
+   //
+   //  Creates a function of type A or B between xmin and xmax
+   //
+   //  if formula has the form "fffffff;xxxx;yyyy", it is assumed that
+   //  the formula string is "fffffff" and "xxxx" and "yyyy" are the
+   //  titles for the X and Y axis respectively.
 
    if (xmin < xmax ) {
       fXmin      = xmin;
@@ -272,18 +298,15 @@ TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax)
 TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
       :TFormula(), TAttLine(), TAttFill(), TAttMarker()
 {
-//*-*-*-*-*-*-*F1 constructor using name of an interpreted function*-*-*-*
-//*-*          =======================================================
-//*-*
-//*-*  Creates a function of type C between xmin and xmax.
-//*-*  name is the name of an interpreted CINT cunction.
-//*-*  The function is defined with npar parameters
-//*-*  fcn must be a function of type:
-//*-*     Double_t fcn(Double_t *x, Double_t *params)
-//*-*
-//*-*  This constructor is called for functions of type C by CINT.
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // F1 constructor using name of an interpreted function.
+   //
+   //  Creates a function of type C between xmin and xmax.
+   //  name is the name of an interpreted CINT cunction.
+   //  The function is defined with npar parameters
+   //  fcn must be a function of type:
+   //     Double_t fcn(Double_t *x, Double_t *params)
+   //
+   //  This constructor is called for functions of type C by CINT.
 
    fXmin       = xmin;
    fXmax       = xmax;
@@ -350,27 +373,25 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
    }
 }
 
+
 //______________________________________________________________________________
 TF1::TF1(const char *name,void *fcn, Double_t xmin, Double_t xmax, Int_t npar)
       :TFormula(), TAttLine(), TAttFill(), TAttMarker()
 {
-//*-*-*-*-*-*-*F1 constructor using pointer to an interpreted function*-*-*-*
-//*-*          =======================================================
-//*-*
-//*-*  See TFormula constructor for explanation of the formula syntax.
-//*-*
-//*-*  Creates a function of type C between xmin and xmax.
-//*-*  The function is defined with npar parameters
-//*-*  fcn must be a function of type:
-//*-*     Double_t fcn(Double_t *x, Double_t *params)
-//*-*
-//*-*  see tutorial; myfit for an example of use
-//*-*  also test/stress.cxx (see function stress1)
-//*-*
-//*-*
-//*-*  This constructor is called for functions of type C by CINT.
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // F1 constructor using pointer to an interpreted function.
+   //
+   //  See TFormula constructor for explanation of the formula syntax.
+   //
+   //  Creates a function of type C between xmin and xmax.
+   //  The function is defined with npar parameters
+   //  fcn must be a function of type:
+   //     Double_t fcn(Double_t *x, Double_t *params)
+   //
+   //  see tutorial; myfit for an example of use
+   //  also test/stress.cxx (see function stress1)
+   //
+   //
+   //  This constructor is called for functions of type C by CINT.
 
    fXmin       = xmin;
    fXmax       = xmax;
@@ -438,23 +459,20 @@ TF1::TF1(const char *name,void *fcn, Double_t xmin, Double_t xmax, Int_t npar)
    }
 }
 
+
 //______________________________________________________________________________
 TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Int_t npar)
       :TFormula(), TAttLine(), TAttFill(), TAttMarker()
 {
-//*-*-*-*-*-*-*F1 constructor using a pointer to real function*-*-*-*-*-*-*-*
-//*-*          ===============================================
-//*-*
-//*-*   npar is the number of free parameters used by the function
-//*-*
-//*-*   This constructor creates a function of type C when invoked
-//*-*   with the normal C++ compiler.
-//*-*
-//*-*   see test program test/stress.cxx (function stress1) for an example.
-//*-*   note the interface with an intermediate pointer.
-//*-*
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // F1 constructor using a pointer to real function.
+   //
+   //   npar is the number of free parameters used by the function
+   //
+   //   This constructor creates a function of type C when invoked
+   //   with the normal C++ compiler.
+   //
+   //   see test program test/stress.cxx (function stress1) for an example.
+   //   note the interface with an intermediate pointer.
 
    fXmin       = xmin;
    fXmax       = xmax;
@@ -496,8 +514,8 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
    fMinimum    = -1111;
    fMaximum    = -1111;
    fNdim       = 1;
-//*-*- Store formula in linked list of formula in ROOT
 
+   // Store formula in linked list of formula in ROOT
    TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
    if (f1old) delete f1old;
    SetName(name);
@@ -511,23 +529,20 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
 
 }
 
+
 //______________________________________________________________________________
 TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Int_t npar)
       :TFormula(), TAttLine(), TAttFill(), TAttMarker()
 {
-//*-*-*-*-*-*-*F1 constructor using a pointer to real function*-*-*-*-*-*-*-*
-//*-*          ===============================================
-//*-*
-//*-*   npar is the number of free parameters used by the function
-//*-*
-//*-*   This constructor creates a function of type C when invoked
-//*-*   with the normal C++ compiler.
-//*-*
-//*-*   see test program test/stress.cxx (function stress1) for an example.
-//*-*   note the interface with an intermediate pointer.
-//*-*
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // F1 constructor using a pointer to real function.
+   //
+   //   npar is the number of free parameters used by the function
+   //
+   //   This constructor creates a function of type C when invoked
+   //   with the normal C++ compiler.
+   //
+   //   see test program test/stress.cxx (function stress1) for an example.
+   //   note the interface with an intermediate pointer.
 
    fXmin       = xmin;
    fXmax       = xmax;
@@ -570,8 +585,8 @@ TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
    fMinimum    = -1111;
    fMaximum    = -1111;
    fNdim       = 1;
-//*-*- Store formula in linked list of formula in ROOT
 
+   // Store formula in linked list of formula in ROOT
    TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
    if (f1old) delete f1old;
    SetName(name);
@@ -585,6 +600,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
 
 }
 
+
 //______________________________________________________________________________
 TF1& TF1::operator=(const TF1 &rhs) 
 {
@@ -596,11 +612,11 @@ TF1& TF1::operator=(const TF1 &rhs)
    return *this;
 }
 
+
 //______________________________________________________________________________
 TF1::~TF1()
 {
-//*-*-*-*-*-*-*-*-*-*-*F1 default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =====================
+   // TF1 default destructor.
 
    if (fParMin)    delete [] fParMin;
    if (fParMax)    delete [] fParMax;
@@ -615,6 +631,7 @@ TF1::~TF1()
 
    if (fParent) fParent->RecursiveRemove(this);
 }
+
 
 //______________________________________________________________________________
 TF1::TF1(const TF1 &f1) : TFormula(), TAttLine(f1), TAttFill(f1), TAttMarker(f1)
@@ -648,16 +665,18 @@ TF1::TF1(const TF1 &f1) : TFormula(), TAttLine(f1), TAttFill(f1), TAttMarker(f1)
    ((TF1&)f1).Copy(*this);
 }
 
+
 //______________________________________________________________________________
 void TF1::AbsValue(Bool_t flag)
 {
-   // static function: set the fgAbsValue flag.
+   // Static function: set the fgAbsValue flag.
    // By default TF1::Integral uses the original function value to compute the integral
    // However, TF1::Moment, CentralMoment require to compute the integral
    // using the absolute value of the function.
    
    fgAbsValue = flag;
 }
+
 
 //______________________________________________________________________________
 void TF1::Browse(TBrowser *b)
@@ -672,8 +691,7 @@ void TF1::Browse(TBrowser *b)
 //______________________________________________________________________________
 void TF1::Copy(TObject &obj) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Copy this F1 to a new F1*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ========================
+   // Copy this F1 to a new F1.
 
    if (((TF1&)obj).fParMin)    delete [] ((TF1&)obj).fParMin;
    if (((TF1&)obj).fParMax)    delete [] ((TF1&)obj).fParMax;
@@ -733,36 +751,40 @@ void TF1::Copy(TObject &obj) const
    }
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
 {
-  // returns the first derivative of the function at point x, 
-  // computed by Richardson's extrapolation method (use 2 derivative estimates 
-  // to compute a third, more accurate estimation)
-  // first, derivatives with steps h and h/2 are computed by central difference formulas
-  // D(h) = (f(x+h) - f(x-h))/2h
-  // the final estimate D = (4*D(h/2) - D(h))/3
-  //  "Numerical Methods for Scientists and Engineers", H.M.Antia, 2nd edition"
-  //
-  // if the argument params is null, the current function parameters are used,
-  // otherwise the parameters in params are used.
-  //
-  // the argument eps may be specified to control the step size (precision).
-  // the step size is taken as eps*(xmax-xmin).
-  // the default value (0.001) should be good enough for the vast majority
-  // of functions. Give a smaller value if your function has many changes
-  // of the second derivative in the function range.
-  //
-  // Getting the error via TF1::DerivativeError
-  // -----------------
-  //   (total error = roundoff error + interpolation error)
-  // the estimate of the roundoff error is taken as follows:
-  //    err = k*Sqrt(f(x)*f(x) + x*x*deriv*deriv)*Sqrt(Sum(ai)*(ai)),
-  // where k is the double precision, ai are coefficients used in
-  // central difference formulas
-  // interpolation error is decreased by making the step size h smaller.
-  //
-  // Author: Anna Kreshuk
+   // Returns the first derivative of the function at point x, 
+   // computed by Richardson's extrapolation method (use 2 derivative estimates 
+   // to compute a third, more accurate estimation)
+   // first, derivatives with steps h and h/2 are computed by central difference formulas
+   //Begin_Latex
+   // D(h) = #frac{f(x+h) - f(x-h)}{2h}
+   //End_Latex
+   // the final estimate Begin_Latex D = #frac{4D(h/2) - D(h)}{3} End_Latex
+   //  "Numerical Methods for Scientists and Engineers", H.M.Antia, 2nd edition"
+   //
+   // if the argument params is null, the current function parameters are used,
+   // otherwise the parameters in params are used.
+   //
+   // the argument eps may be specified to control the step size (precision).
+   // the step size is taken as eps*(xmax-xmin).
+   // the default value (0.001) should be good enough for the vast majority
+   // of functions. Give a smaller value if your function has many changes
+   // of the second derivative in the function range.
+   //
+   // Getting the error via TF1::DerivativeError:
+   //   (total error = roundoff error + interpolation error)
+   // the estimate of the roundoff error is taken as follows:
+   //Begin_Latex
+   //    err = k#sqrt{f(x)^{2} + x^{2}deriv^{2}}#sqrt{#sum ai^{2}},
+   //End_Latex
+   // where k is the double precision, ai are coefficients used in
+   // central difference formulas
+   // interpolation error is decreased by making the step size h smaller.
+   //
+   // Author: Anna Kreshuk
   
    const Double_t kC1 = 1e-15;
 
@@ -797,12 +819,14 @@ Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
 //______________________________________________________________________________
 Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
 {
-   // returns the second derivative of the function at point x, 
+   // Returns the second derivative of the function at point x, 
    // computed by Richardson's extrapolation method (use 2 derivative estimates 
    // to compute a third, more accurate estimation)
    // first, derivatives with steps h and h/2 are computed by central difference formulas
-   //    D(h) = (f(x+h) - 2*f(x) + f(x-h))/(h*h)
-   // the final estimate D = (4*D(h/2) - D(h))/3
+   //Begin_Latex
+   //    D(h) = #frac{f(x+h) - 2f(x) + f(x-h)}{h^{2}}
+   //End_Latex
+   // the final estimate Begin_Latex D = #frac{4D(h/2) - D(h)}{3} End_Latex
    //  "Numerical Methods for Scientists and Engineers", H.M.Antia, 2nd edition"
    //
    // if the argument params is null, the current function parameters are used,
@@ -814,11 +838,12 @@ Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
    // of functions. Give a smaller value if your function has many changes
    // of the second derivative in the function range.
    //
-   // Getting the error via TF1::DerivativeError
-   // -----------------
+   // Getting the error via TF1::DerivativeError:
    //   (total error = roundoff error + interpolation error)
    // the estimate of the roundoff error is taken as follows:
-   //    err = k*Sqrt(f(x)*f(x) + x*x*deriv*deriv)*Sqrt(Sum(ai)*(ai)),
+   //Begin_Latex
+   //    err = k#sqrt{f(x)^{2} + x^{2}deriv^{2}}#sqrt{#sum ai^{2}},
+   //End_Latex
    // where k is the double precision, ai are coefficients used in
    // central difference formulas
    // interpolation error is decreased by making the step size h smaller.
@@ -858,12 +883,14 @@ Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
 //______________________________________________________________________________
 Double_t TF1::Derivative3(Double_t x, Double_t *params, Double_t eps) const
 {
-   // returns the third derivative of the function at point x, 
+   // Returns the third derivative of the function at point x, 
    // computed by Richardson's extrapolation method (use 2 derivative estimates 
    // to compute a third, more accurate estimation)
    // first, derivatives with steps h and h/2 are computed by central difference formulas
-   //    D(h) = (f(x+2h) - 2*f(x+h) + 2*f(x-h) - f(x-2h))/(2*h*h*h)
-   // the final estimate D = (4*D(h/2) - D(h))/3
+   //Begin_Latex
+   //    D(h) = #frac{f(x+2h) - 2f(x+h) + 2f(x-h) - f(x-2h)}{2h^{3}}
+   //End_Latex
+   // the final estimate Begin_Latex D = #frac{4D(h/2) - D(h)}{3} End_Latex
    //  "Numerical Methods for Scientists and Engineers", H.M.Antia, 2nd edition"
    //
    // if the argument params is null, the current function parameters are used,
@@ -875,11 +902,12 @@ Double_t TF1::Derivative3(Double_t x, Double_t *params, Double_t eps) const
    // of functions. Give a smaller value if your function has many changes
    // of the second derivative in the function range.
    //
-   // Getting the error via TF1::DerivativeError
-   // -----------------
+   // Getting the error via TF1::DerivativeError:
    //   (total error = roundoff error + interpolation error)
    // the estimate of the roundoff error is taken as follows:
-   //    err = k*Sqrt(f(x)*f(x) + x*x*deriv*deriv)*Sqrt(Sum(ai)*(ai)),
+   //Begin_Latex
+   //    err = k#sqrt{f(x)^{2} + x^{2}deriv^{2}}#sqrt{#sum ai^{2}},
+   //End_Latex
    // where k is the double precision, ai are coefficients used in
    // central difference formulas
    // interpolation error is decreased by making the step size h smaller.
@@ -917,28 +945,28 @@ Double_t TF1::Derivative3(Double_t x, Double_t *params, Double_t eps) const
    return deriv;
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::DerivativeError()
 {
-   //static function returning the error of the last call to the Derivative functions
+   // Static function returning the error of the last call to the Derivative
+   // functions
    
    return gErrorTF1;
 }
 
+
 //______________________________________________________________________________
 Int_t TF1::DistancetoPrimitive(Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Compute distance from point px,py to a function*-*-*-*-*
-//*-*                  ===============================================
-//*-*  Compute the closest distance of approach from point px,py to this function.
-//*-*  The distance is computed in pixels units.
-//*-*
-//*-*  Note that px is called with a negative value when the TF1 is in
-//*-*  TGraph or TH1 list of functions. In this case there is no point
-//*-*  looking at the histogram axis.
-//*-*
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Compute distance from point px,py to a function.
+   //
+   //  Compute the closest distance of approach from point px,py to this
+   //  function. The distance is computed in pixels units.
+   //
+   //  Note that px is called with a negative value when the TF1 is in
+   //  TGraph or TH1 list of functions. In this case there is no point
+   //  looking at the histogram axis.
 
    if (!fHistogram) return 9999;
    Int_t distance = 9999;
@@ -959,24 +987,23 @@ Int_t TF1::DistancetoPrimitive(Int_t px, Int_t py)
    return TMath::Abs(py - pybin);
 }
 
+
 //______________________________________________________________________________
 void TF1::Draw(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this function with its current attributes*-*-*-*-*
-//*-*                  ==============================================
-//*-*
-//*-* Possible option values are:
-//*-*   "SAME"  superimpose on top of existing picture
-//*-*   "L"     connect all computed points with a straight line
-//*-*   "C"     connect all computed points with a smooth curve.
-//*-*   "FC"    draw a fill area below a smooth curve
-//*-*
-//*-* Note that the default value is "L". Therefore to draw on top
-//*-* of an existing picture, specify option "LSAME"
-//*-*
-//*-* NB. You must use DrawCopy if you want to draw several times the same
-//*-*     function in the current canvas.
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Draw this function with its current attributes.
+   //
+   // Possible option values are:
+   //   "SAME"  superimpose on top of existing picture
+   //   "L"     connect all computed points with a straight line
+   //   "C"     connect all computed points with a smooth curve.
+   //   "FC"    draw a fill area below a smooth curve
+   //
+   // Note that the default value is "L". Therefore to draw on top
+   // of an existing picture, specify option "LSAME"
+   //
+   // NB. You must use DrawCopy if you want to draw several times the same
+   //     function in the current canvas.
 
    TString opt = option;
    opt.ToLower();
@@ -985,25 +1012,23 @@ void TF1::Draw(Option_t *option)
    AppendPad(option);
 }
 
+
 //______________________________________________________________________________
 TF1 *TF1::DrawCopy(Option_t *option) const
 {
-//*-*-*-*-*-*-*-*Draw a copy of this function with its current attributes*-*-*
-//*-*            ========================================================
-//*-*
-//*-*  This function MUST be used instead of Draw when you want to draw
-//*-*  the same function with different parameters settings in the same canvas.
-//*-*
-//*-* Possible option values are:
-//*-*   "SAME"  superimpose on top of existing picture
-//*-*   "L"     connect all computed points with a straight line
-//*-*   "C"     connect all computed points with a smooth curve.
-//*-*   "FC"    draw a fill area below a smooth curve
-//*-*
-//*-* Note that the default value is "L". Therefore to draw on top
-//*-* of an existing picture, specify option "LSAME"
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Draw a copy of this function with its current attributes.
+   //
+   //  This function MUST be used instead of Draw when you want to draw
+   //  the same function with different parameters settings in the same canvas.
+   //
+   // Possible option values are:
+   //   "SAME"  superimpose on top of existing picture
+   //   "L"     connect all computed points with a straight line
+   //   "C"     connect all computed points with a smooth curve.
+   //   "FC"    draw a fill area below a smooth curve
+   //
+   // Note that the default value is "L". Therefore to draw on top
+   // of an existing picture, specify option "LSAME"
 
    TF1 *newf1 = new TF1();
    Copy(*newf1);
@@ -1012,16 +1037,17 @@ TF1 *TF1::DrawCopy(Option_t *option) const
    return newf1;
 }
 
+
 //______________________________________________________________________________
 void TF1::DrawDerivative(Option_t *option)
 {
-// Draw derivative of this function
-//
-// An intermediate TGraph object is built and drawn with option.
-//
-// The resulting graph will be drawn into the current pad.
-// If this function is used via the context menu, it recommended
-// to create a new canvas/pad before invoking this function.
+   // Draw derivative of this function
+   //
+   // An intermediate TGraph object is built and drawn with option.
+   //
+   // The resulting graph will be drawn into the current pad.
+   // If this function is used via the context menu, it recommended
+   // to create a new canvas/pad before invoking this function.
    
    TVirtualPad *pad = gROOT->GetSelectedPad();
    TVirtualPad *padsav = gPad;
@@ -1033,16 +1059,17 @@ void TF1::DrawDerivative(Option_t *option)
    if (padsav) padsav->cd();
 }
 
+
 //______________________________________________________________________________
 void TF1::DrawIntegral(Option_t *option)
 {
-// Draw integral of this function
-//
-// An intermediate TGraph object is built and drawn with option.
-//
-// The resulting graph will be drawn into the current pad.
-// If this function is used via the context menu, it recommended
-// to create a new canvas/pad before invoking this function.
+   // Draw integral of this function
+   //
+   // An intermediate TGraph object is built and drawn with option.
+   //
+   // The resulting graph will be drawn into the current pad.
+   // If this function is used via the context menu, it recommended
+   // to create a new canvas/pad before invoking this function.
 
    TVirtualPad *pad = gROOT->GetSelectedPad();
    TVirtualPad *padsav = gPad;
@@ -1054,12 +1081,11 @@ void TF1::DrawIntegral(Option_t *option)
    if (padsav) padsav->cd();
 }
 
+
 //______________________________________________________________________________
 void TF1::DrawF1(const char *formula, Double_t xmin, Double_t xmax, Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*Draw formula between xmin and xmax*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                ==================================
-//*-*
+   // Draw formula between xmin and xmax.
 
    if (Compile(formula)) return;
 
@@ -1068,20 +1094,18 @@ void TF1::DrawF1(const char *formula, Double_t xmin, Double_t xmax, Option_t *op
    Draw(option);
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Evaluate this formula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =====================
-//*-*
-//*-*   Computes the value of this function (general case for a 3-d function)
-//*-*   at point x,y,z.
-//*-*   For a 1-d function give y=0 and z=0
-//*-*   The current value of variables x,y,z is passed through x, y and z.
-//*-*   The parameters used will be the ones in the array params if params is given
-//*-*    otherwise parameters will be taken from the stored data members fParams
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Evaluate this formula.
+   //
+   //   Computes the value of this function (general case for a 3-d function)
+   //   at point x,y,z.
+   //   For a 1-d function give y=0 and z=0
+   //   The current value of variables x,y,z is passed through x, y and z.
+   //   The parameters used will be the ones in the array params if params is given
+   //    otherwise parameters will be taken from the stored data members fParams
 
    Double_t xx[4];
    xx[0] = x;
@@ -1094,27 +1118,26 @@ Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
    return ((TF1*)this)->EvalPar(xx,fParams);
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
 {
-//*-*-*-*-*-*Evaluate function with given coordinates and parameters*-*-*-*-*-*
-//*-*        =======================================================
-//*-*
-//      Compute the value of this function at point defined by array x
-//      and current values of parameters in array params.
-//      If argument params is omitted or equal 0, the internal values
-//      of parameters (array fParams) will be used instead.
-//      For a 1-D function only x[0] must be given.
-//      In case of a multi-dimemsional function, the arrays x must be
-//      filled with the corresponding number of dimensions.
-//
-//   WARNING. In case of an interpreted function (fType=2), it is the
-//   user's responsability to initialize the parameters via InitArgs
-//   before calling this function.
-//   InitArgs should be called at least once to specify the addresses
-//   of the arguments x and params.
-//   InitArgs should be called everytime these addresses change.
-//
+   // Evaluate function with given coordinates and parameters.
+   //
+   // Compute the value of this function at point defined by array x
+   // and current values of parameters in array params.
+   // If argument params is omitted or equal 0, the internal values
+   // of parameters (array fParams) will be used instead.
+   // For a 1-D function only x[0] must be given.
+   // In case of a multi-dimemsional function, the arrays x must be
+   // filled with the corresponding number of dimensions.
+   //
+   // WARNING. In case of an interpreted function (fType=2), it is the
+   // user's responsability to initialize the parameters via InitArgs
+   // before calling this function.
+   // InitArgs should be called at least once to specify the addresses
+   // of the arguments x and params.
+   // InitArgs should be called everytime these addresses change.
 
    fgCurrent = this;
    
@@ -1133,14 +1156,13 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
    return result;
 }
 
+
 //______________________________________________________________________________
 void TF1::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-//*-*                  =========================================
-//*-*  This member function is called when a F1 is clicked with the locator
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Execute action corresponding to one event.
+   //
+   //  This member function is called when a F1 is clicked with the locator
 
    fHistogram->ExecuteEvent(event,px,py);
 
@@ -1149,11 +1171,12 @@ void TF1::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
+
 //______________________________________________________________________________
 void TF1::FixParameter(Int_t ipar, Double_t value)
 {
-// Fix the value of a parameter
-//     The specified value will be used in a fit operation
+   // Fix the value of a parameter
+   // The specified value will be used in a fit operation
 
    if (ipar < 0 || ipar > fNpar-1) return;
    SetParameter(ipar,value);
@@ -1165,7 +1188,8 @@ void TF1::FixParameter(Int_t ipar, Double_t value)
 //______________________________________________________________________________
 TF1 *TF1::GetCurrent()
 {
-// static function returning the current function being processed
+   // Static function returning the current function being processed
+
    return fgCurrent;
 }
 
@@ -1173,28 +1197,27 @@ TF1 *TF1::GetCurrent()
 //______________________________________________________________________________
 TH1 *TF1::GetHistogram() const
 {
-// return a pointer to the histogram used to vusualize the function
+   // Return a pointer to the histogram used to vusualize the function
 
    if (fHistogram) return fHistogram;
 
-   // may be function has not yet be painted. force a pad update
-   //gPad->Modified();
-   //gPad->Update();
+   // May be function has not yet be painted. force a pad update
    ((TF1*)this)->Paint();
    return fHistogram;
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::GetMaximum(Double_t xmin, Double_t xmax) const
 {
-// return the maximum value of the function
-// Method:
-//  First, the grid search is used to bracket the maximum 
-//  with the step size = (xmax-xmin)/fNpx. This way, the step size
-//  can be controlled via the SetNpx() function. If the function is
-//  unimodal or if its extrema are far apart, setting the fNpx to 
-//  a small value speeds the algorithm up many times.  
-//  Then, Brent's method is applied on the bracketed interval
+   // Return the maximum value of the function
+   // Method:
+   //  First, the grid search is used to bracket the maximum 
+   //  with the step size = (xmax-xmin)/fNpx.
+   //  This way, the step size can be controlled via the SetNpx() function.
+   //  If the function is unimodal or if its extrema are far apart, setting
+   //  the fNpx to a small value speeds the algorithm up many times.  
+   //  Then, Brent's method is applied on the bracketed interval
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
    Double_t x;
@@ -1214,17 +1237,18 @@ Double_t TF1::GetMaximum(Double_t xmin, Double_t xmax) const
    return x;
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax) const
 {
-// return the X value corresponding to the maximum value of the function
-// Method:
-//  First, the grid search is used to bracket the maximum 
-//  with the step size = (xmax-xmin)/fNpx. This way, the step size
-//  can be controlled via the SetNpx() function. If the function is
-//  unimodal or if its extrema are far apart, setting the fNpx to 
-//  a small value speeds the algorithm up many times.  
-//  Then, Brent's method is applied on the bracketed interval
+   // Return the X value corresponding to the maximum value of the function
+   // Method:
+   //  First, the grid search is used to bracket the maximum 
+   //  with the step size = (xmax-xmin)/fNpx.
+   //  This way, the step size can be controlled via the SetNpx() function.
+   //  If the function is unimodal or if its extrema are far apart, setting
+   //  the fNpx to a small value speeds the algorithm up many times.  
+   //  Then, Brent's method is applied on the bracketed interval
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
    Double_t x;
@@ -1244,17 +1268,18 @@ Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax) const
    return x;
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax) const
 {
-// Returns the minimum value of the function on the (xmin, xmax) interval
-// Method:
-//  First, the grid search is used to bracket the maximum 
-//  with the step size = (xmax-xmin)/fNpx. This way, the step size
-//  can be controlled via the SetNpx() function. If the function is
-//  unimodal or if its extrema are far apart, setting the fNpx to 
-//  a small value speeds the algorithm up many times.  
-//  Then, Brent's method is applied on the bracketed interval
+   // Returns the minimum value of the function on the (xmin, xmax) interval
+   // Method:
+   //  First, the grid search is used to bracket the maximum 
+   //  with the step size = (xmax-xmin)/fNpx. This way, the step size
+   //  can be controlled via the SetNpx() function. If the function is
+   //  unimodal or if its extrema are far apart, setting the fNpx to 
+   //  a small value speeds the algorithm up many times.  
+   //  Then, Brent's method is applied on the bracketed interval
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
    Double_t x;
@@ -1274,18 +1299,19 @@ Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax) const
    return x;
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::GetMinimumX(Double_t xmin, Double_t xmax) const
 {
-// Returns the X value corresponding to the minimum value of the function on the
-// (xmin, xmax) interval
-// Method:
-//  First, the grid search is used to bracket the maximum 
-//  with the step size = (xmax-xmin)/fNpx. This way, the step size
-//  can be controlled via the SetNpx() function. If the function is
-//  unimodal or if its extrema are far apart, setting the fNpx to 
-//  a small value speeds the algorithm up many times.  
-//  Then, Brent's method is applied on the bracketed interval
+   // Returns the X value corresponding to the minimum value of the function
+   // on the (xmin, xmax) interval
+   // Method:
+   //  First, the grid search is used to bracket the maximum 
+   //  with the step size = (xmax-xmin)/fNpx. This way, the step size
+   //  can be controlled via the SetNpx() function. If the function is
+   //  unimodal or if its extrema are far apart, setting the fNpx to 
+   //  a small value speeds the algorithm up many times.  
+   //  Then, Brent's method is applied on the bracketed interval
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
    Int_t niter=0;
@@ -1306,17 +1332,18 @@ Double_t TF1::GetMinimumX(Double_t xmin, Double_t xmax) const
    return x;
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax) const
 {
-// Returns the X value corresponding to the function value fy for (xmin<x<xmax).
-// Method:
-//  First, the grid search is used to bracket the maximum 
-//  with the step size = (xmax-xmin)/fNpx. This way, the step size
-//  can be controlled via the SetNpx() function. If the function is
-//  unimodal or if its extrema are far apart, setting the fNpx to 
-//  a small value speeds the algorithm up many times.  
-//  Then, Brent's method is applied on the bracketed interval
+   // Returns the X value corresponding to the function value fy for (xmin<x<xmax).
+   // Method:
+   //  First, the grid search is used to bracket the maximum 
+   //  with the step size = (xmax-xmin)/fNpx. This way, the step size
+   //  can be controlled via the SetNpx() function. If the function is
+   //  unimodal or if its extrema are far apart, setting the fNpx to 
+   //  a small value speeds the algorithm up many times.  
+   //  Then, Brent's method is applied on the bracketed interval
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
    Int_t niter=0;
@@ -1336,17 +1363,18 @@ Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax) const
    return x;
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::MinimStep(Int_t type, Double_t &xmin, Double_t &xmax, Double_t fy) const
 {
-//   Grid search implementation, used to bracket the minimum and later
-//   use Brent's method with the bracketed interval
-//   The step of the search is set to (xmax-xmin)/fNpx
-//   type: 0-returns MinimumX
-//         1-returns Minimum
-//         2-returns MaximumX
-//         3-returns Maximum
-//         4-returns X corresponding to fy
+   //   Grid search implementation, used to bracket the minimum and later
+   //   use Brent's method with the bracketed interval
+   //   The step of the search is set to (xmax-xmin)/fNpx
+   //   type: 0-returns MinimumX
+   //         1-returns Minimum
+   //         2-returns MaximumX
+   //         3-returns Maximum
+   //         4-returns X corresponding to fy
 
    Double_t x,y, dx;
    dx = (xmax-xmin)/(fNpx-1);
@@ -1481,22 +1509,24 @@ Double_t TF1::MinimBrent(Int_t type, Double_t &xmin, Double_t &xmax, Double_t xm
    return x;
 }
 
+
 //______________________________________________________________________________
 Int_t TF1::GetNDF() const
 {
-// return the number of degrees of freedom in the fit
-// the fNDF parameter has been previously computed during a fit.
-// The number of degrees of freedom corresponds to the number of points
-// used in the fit minus the number of free parameters.
+   // Return the number of degrees of freedom in the fit
+   // the fNDF parameter has been previously computed during a fit.
+   // The number of degrees of freedom corresponds to the number of points
+   // used in the fit minus the number of free parameters.
 
    if (fNDF == 0) return fNpfits-fNpar;
    return fNDF;
 }
 
+
 //______________________________________________________________________________
 Int_t TF1::GetNumberFreeParameters() const
 {
-// return the number of free parameters
+   // Return the number of free parameters
    
    Int_t nfree = fNpar;
    Double_t al,bl;
@@ -1507,33 +1537,35 @@ Int_t TF1::GetNumberFreeParameters() const
    return nfree;
 }
 
+
 //______________________________________________________________________________
 char *TF1::GetObjectInfo(Int_t px, Int_t /* py */) const
 {
-//   Redefines TObject::GetObjectInfo.
-//   Displays the function info (x, function value
-//   corresponding to cursor position px,py
-//
+   // Redefines TObject::GetObjectInfo.
+   // Displays the function info (x, function value)
+   // corresponding to cursor position px,py
+
    static char info[64];
    Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
    sprintf(info,"(x=%g, f=%g)",x,((TF1*)this)->Eval(x));
    return info;
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::GetParError(Int_t ipar) const
 {
-   //return value of parameter number ipar
+   // Return value of parameter number ipar
 
    if (ipar < 0 || ipar > fNpar-1) return 0;
    return fParErrors[ipar];
 }
 
+
 //______________________________________________________________________________
 void TF1::GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax) const
 {
-//*-*-*-*-*-*Return limits for parameter ipar*-*-*-*
-//*-*        ================================
+   // Return limits for parameter ipar.
 
    parmin = 0;
    parmax = 0;
@@ -1542,46 +1574,48 @@ void TF1::GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax) const
    if (fParMax) parmax = fParMax[ipar];
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::GetProb() const
 {
-// return the fit probability
+   // Return the fit probability
    
    if (fNDF <= 0) return 0;
    return TMath::Prob(fChisquare,fNDF);
 }
    
+
 //______________________________________________________________________________
 Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 {
-//  Compute Quantiles for density distribution of this function
-//     Quantile x_q of a probability distribution Function F is defined as
-//
-//        F(x_q) = Integral_{xmin}^(x_q) f dx = q with 0 <= q <= 1.
-//
-//     For instance the median x_0.5 of a distribution is defined as that value
-//     of the random variable for which the distribution function equals 0.5:
-//
-//        F(x_0.5) = Probability(x < x_0.5) = 0.5
-//
-//  code from Eddy Offermann, Renaissance
-//
-// input parameters
-//   - this TF1 function
-//   - nprobSum maximum size of array q and size of array probSum
-//   - probSum array of positions where quantiles will be computed.
-//     It is assumed to contain at least nprobSum values.
-//  output
-//   - return value nq (<=nprobSum) with the number of quantiles computed
-//   - array q filled with nq quantiles
-//
-//  Getting quantiles from two histograms and storing results in a TGraph,
-//   a so-called QQ-plot
-//
-//     TGraph *gr = new TGraph(nprob);
-//     f1->GetQuantiles(nprob,gr->GetX());
-//     f2->GetQuantiles(nprob,gr->GetY());
-//     gr->Draw("alp");
+   //  Compute Quantiles for density distribution of this function
+   //     Quantile x_q of a probability distribution Function F is defined as
+   //Begin_Latex
+   //        F(x_{q}) = #int_{xmin}^{x_{q}} f dx = q with 0 <= q <= 1.
+   //End_Latex
+   //     For instance the median Begin_Latex x_{#frac{1}{2}} End_Latex of a distribution is defined as that value
+   //     of the random variable for which the distribution function equals 0.5:
+   //Begin_Latex
+   //        F(x_{#frac{1}{2}}) = #prod(x < x_{#frac{1}{2}}) = #frac{1}{2}
+   //End_Latex
+   //  code from Eddy Offermann, Renaissance
+   //
+   // input parameters
+   //   - this TF1 function
+   //   - nprobSum maximum size of array q and size of array probSum
+   //   - probSum array of positions where quantiles will be computed.
+   //     It is assumed to contain at least nprobSum values.
+   //  output
+   //   - return value nq (<=nprobSum) with the number of quantiles computed
+   //   - array q filled with nq quantiles
+   //
+   //  Getting quantiles from two histograms and storing results in a TGraph,
+   //   a so-called QQ-plot
+   //
+   //     TGraph *gr = new TGraph(nprob);
+   //     f1->GetQuantiles(nprob,gr->GetX());
+   //     f2->GetQuantiles(nprob,gr->GetY());
+   //     gr->Draw("alp");
 
    const Int_t npx     = TMath::Min(250,TMath::Max(50,2*nprobSum));
    const Double_t xMin = GetXmin();
@@ -1654,26 +1688,26 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
    return nprobSum;
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::GetRandom()
 {
-// Return a random number following this function shape
-//*-*
-//*-*   The distribution contained in the function fname (TF1) is integrated
-//*-*   over the channel contents.
-//*-*   It is normalized to 1.
-//*-*   For each bin the integral is approximated by a parabola.
-//*-*   The parabola coefficients are stored as non persistent data members
-//*-*   Getting one random number implies:
-//*-*     - Generating a random number between 0 and 1 (say r1)
-//*-*     - Look in which bin in the normalized integral r1 corresponds to
-//*-*     - Evaluate the parabolic curve in the selected bin to find
-//*-*       the corresponding X value.
-//*-*   The parabolic approximation is very good as soon as the number
-//*-*   of bins is greater than 50.
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**-*-*-*-*-*-*-*
+   // Return a random number following this function shape
+   //
+   //   The distribution contained in the function fname (TF1) is integrated
+   //   over the channel contents.
+   //   It is normalized to 1.
+   //   For each bin the integral is approximated by a parabola.
+   //   The parabola coefficients are stored as non persistent data members
+   //   Getting one random number implies:
+   //     - Generating a random number between 0 and 1 (say r1)
+   //     - Look in which bin in the normalized integral r1 corresponds to
+   //     - Evaluate the parabolic curve in the selected bin to find
+   //       the corresponding X value.
+   //   The parabolic approximation is very good as soon as the number
+   //   of bins is greater than 50.
 
-//  Check if integral array must be build
+   //  Check if integral array must be build
    if (fIntegral == 0) {
       Double_t dx = (fXmax-fXmin)/fNpx;
       fIntegral = new Double_t[fNpx+1];
@@ -1717,8 +1751,7 @@ Double_t TF1::GetRandom()
       }
    }
 
-
-// return random number
+   // return random number
    Double_t r  = gRandom->Rndm();
    Int_t bin  = TMath::BinarySearch(fNpx,fIntegral,r);
    Double_t rr = r - fIntegral[bin];
@@ -1732,31 +1765,31 @@ Double_t TF1::GetRandom()
    return x;
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
 {
-// Return a random number following this function shape in [xmin,xmax]
-//*-*
-//*-*   The distribution contained in the function fname (TF1) is integrated
-//*-*   over the channel contents.
-//*-*   It is normalized to 1.
-//*-*   For each bin the integral is approximated by a parabola.
-//*-*   The parabola coefficients are stored as non persistent data members
-//*-*   Getting one random number implies:
-//*-*     - Generating a random number between 0 and 1 (say r1)
-//*-*     - Look in which bin in the normalized integral r1 corresponds to
-//*-*     - Evaluate the parabolic curve in the selected bin to find
-//*-*       the corresponding X value.
-//*-*   The parabolic approximation is very good as soon as the number
-//*-*   of bins is greater than 50.
-//*-*
-//*-*  IMPORTANT NOTE
-//*-*  The integral of the function is computed at fNpx points. If the function
-//*-*  has sharp peaks, you should increase the number of points (SetNpx)
-//*-*  such that the peak is correctly tabulated at several points.
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**-*-*-*-*-*-*-*
+   // Return a random number following this function shape in [xmin,xmax]
+   //
+   //   The distribution contained in the function fname (TF1) is integrated
+   //   over the channel contents.
+   //   It is normalized to 1.
+   //   For each bin the integral is approximated by a parabola.
+   //   The parabola coefficients are stored as non persistent data members
+   //   Getting one random number implies:
+   //     - Generating a random number between 0 and 1 (say r1)
+   //     - Look in which bin in the normalized integral r1 corresponds to
+   //     - Evaluate the parabolic curve in the selected bin to find
+   //       the corresponding X value.
+   //   The parabolic approximation is very good as soon as the number
+   //   of bins is greater than 50.
+   //
+   //  IMPORTANT NOTE
+   //  The integral of the function is computed at fNpx points. If the function
+   //  has sharp peaks, you should increase the number of points (SetNpx)
+   //  such that the peak is correctly tabulated at several points.
 
-//  Check if integral array must be build
+   //  Check if integral array must be build
    if (fIntegral == 0) {
       Double_t dx = (fXmax-fXmin)/fNpx;
       fIntegral = new Double_t[fNpx+1];
@@ -1800,8 +1833,7 @@ Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
       }
    }
 
-
-// return random number
+   // return random number
    Double_t dx   = (fXmax-fXmin)/fNpx;
    Int_t nbinmin = (Int_t)((xmin-fXmin)/dx);
    Int_t nbinmax = (Int_t)((xmax-fXmin)/dx)+2;
@@ -1826,21 +1858,21 @@ Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
    return x;
 }
 
+
 //______________________________________________________________________________
 void TF1::GetRange(Double_t &xmin, Double_t &xmax) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Return range of a 1-D function*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==============================
+   // Return range of a 1-D function.
 
    xmin = fXmin;
    xmax = fXmax;
 }
 
+
 //______________________________________________________________________________
 void TF1::GetRange(Double_t &xmin, Double_t &ymin,  Double_t &xmax, Double_t &ymax) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Return range of a 2-D function*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==============================
+   // Return range of a 2-D function.
 
    xmin = fXmin;
    xmax = fXmax;
@@ -1848,11 +1880,11 @@ void TF1::GetRange(Double_t &xmin, Double_t &ymin,  Double_t &xmax, Double_t &ym
    ymax = 0;
 }
 
+
 //______________________________________________________________________________
 void TF1::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Return range of function*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ========================
+   // Return range of function.
 
    xmin = fXmin;
    xmax = fXmax;
@@ -1887,53 +1919,54 @@ Double_t TF1::GetSave(const Double_t *xx)
    return y;
 }
 
+
 //______________________________________________________________________________
 TAxis *TF1::GetXaxis() const
 {
    // Get x axis of the function.
 
-   //if (!gPad) return 0;
    TH1 *h = GetHistogram();
    if (!h) return 0;
    return h->GetXaxis();
 }
+
 
 //______________________________________________________________________________
 TAxis *TF1::GetYaxis() const
 {
    // Get y axis of the function.
 
-   //if (!gPad) return 0;
    TH1 *h = GetHistogram();
    if (!h) return 0;
    return h->GetYaxis();
 }
+
 
 //______________________________________________________________________________
 TAxis *TF1::GetZaxis() const
 {
    // Get z axis of the function. (In case this object is a TF2 or TF3)
 
-   //if (!gPad) return 0;
    TH1 *h = GetHistogram();
    if (!h) return 0;
    return h->GetZaxis();
 }
 
+
 //______________________________________________________________________________
 void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps)
 {
-   //Compute the gradient wrt parameters
-   //Parameters:
-   //x - point, were the gradient is computed
-   //grad - used to return the computed gradient, assumed to be of at least fNpar size
-   //eps - if the errors of parameters have been computed, the step used in
-   //numerical differentiation is eps*parameter_error.
-   //if the errors have not been computed, step=eps is used
-   //default value of eps = 0.01
-   //Method is the same as in Derivative() function
+   // Compute the gradient wrt parameters
+   // Parameters:
+   // x - point, were the gradient is computed
+   // grad - used to return the computed gradient, assumed to be of at least fNpar size
+   // eps - if the errors of parameters have been computed, the step used in
+   // numerical differentiation is eps*parameter_error.
+   // if the errors have not been computed, step=eps is used
+   // default value of eps = 0.01
+   // Method is the same as in Derivative() function
    //
-   //If a paramter is fixed, the gradient on this parameter = 0
+   // If a paramter is fixed, the gradient on this parameter = 0
 
    if(eps< 1e-10 || eps > 1) {
       Warning("Derivative","parameter esp=%g out of allowed range[1e-10,1], reset to 0.01",eps);
@@ -1992,11 +2025,11 @@ void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps)
       delete [] params;
 }
 
+
 //______________________________________________________________________________
 void TF1::InitArgs(const Double_t *x, const Double_t *params)
 {
-//*-*-*-*-*-*-*-*-*-*-*Initialize parameters addresses*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ===============================
+   // Initialize parameters addresses.
 
    if (fMethodCall) {
       Long_t args[2];
@@ -2007,10 +2040,11 @@ void TF1::InitArgs(const Double_t *x, const Double_t *params)
    }
 }
 
+
 //______________________________________________________________________________
 void TF1::InitStandardFunctions()
 {
-//     Create the basic function objects
+   // Create the basic function objects
 
    TF1 *f1;
    if (!gROOT->GetListOfFunctions()->FindObject("gaus")) {
@@ -2026,127 +2060,125 @@ void TF1::InitStandardFunctions()
    }
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::Integral(Double_t a, Double_t b, const Double_t *params, Double_t epsilon)
 {
-//*-*-*-*-*-*-*-*-*Return Integral of function between a and b*-*-*-*-*-*-*-*
-//
-//   based on original CERNLIB routine DGAUSS by Sigfried Kolbig
-//   converted to C++ by Rene Brun
-//
-//Begin_Html
-/*
-<BR>
-<P>
-This function computes,
-to an attempted specified accuracy, the value of the integral
- <P> <IMG WIDTH=140 HEIGHT=45 ALIGN=BOTTOM ALT="displaymath120" SRC="gif/gaus_img1.gif"  > <P>
-
-<p><b>Usage:</b><p>
-In any arithmetic expression, this function
-has the approximate value of the integral I.
-<DL COMPACT>
-<DT>a,b
-<DD>End-points of integration interval. Note that <TT>B</TT>
-may be less than <TT>A</TT>.
-<DT>params
-<DD>Array of function parameters. If 0, use current parameters.
-<DT>epsilon
-<DD>Accuracy parameter (see <B>Accuracy</B>).
-</DL>
-<P>
-<p><b>Method:</b><p>
-For any interval [<I>a</I>,<I>b</I>] we define  <IMG WIDTH=49 HEIGHT=26 ALIGN=MIDDLE ALT="tex2html_wrap_inline128" SRC="gif/gaus_img3.gif"  >  and  <IMG WIDTH=55 HEIGHT=26 ALIGN=MIDDLE ALT="tex2html_wrap_inline130" SRC="gif/gaus_img4.gif"  >  to be the
-8-point and 16-point Gaussian quadrature approximations to
-     <P> <IMG WIDTH=120 HEIGHT=40 ALIGN=BOTTOM ALT="displaymath132" SRC="gif/gaus_img5.gif"  > <P>
-and define
-<P> <IMG WIDTH=220 HEIGHT=57 ALIGN=BOTTOM ALT="displaymath134" SRC="gif/gaus_img6.gif"  > <P>
-Then,
-<P> <IMG WIDTH=180 HEIGHT=57 ALIGN=BOTTOM ALT="displaymath138" SRC="gif/gaus_img7.gif"  > <P>
-<P>
-where, starting with  <IMG WIDTH=48 HEIGHT=22 ALIGN=MIDDLE ALT="tex2html_wrap_inline140" SRC="gif/gaus_img8.gif"  >  and finishing with  <IMG WIDTH=49 HEIGHT=22 ALIGN=MIDDLE ALT="tex2html_wrap_inline142" SRC="gif/gaus_img9.gif"  > ,
-the subdivision points  <IMG WIDTH=107 HEIGHT=26 ALIGN=MIDDLE ALT="tex2html_wrap_inline144" SRC="gif/gaus_img10.gif"  >  are given by
-<P> <IMG WIDTH=180 HEIGHT=40 ALIGN=BOTTOM ALT="displaymath146" SRC="gif/gaus_img11.gif"  > <P>
-with  <IMG WIDTH=8 HEIGHT=11 ALIGN=BOTTOM ALT="tex2html_wrap_inline148" SRC="gif/gaus_img12.gif"  >  equal to the first member of the sequence
- <IMG WIDTH=66 HEIGHT=26 ALIGN=MIDDLE ALT="tex2html_wrap_inline150" SRC="gif/gaus_img13.gif"  >  for which
- <IMG WIDTH=117 HEIGHT=26 ALIGN=MIDDLE ALT="tex2html_wrap_inline152" SRC="gif/gaus_img14.gif"  > .
-If, at any stage in the process of subdivision, the ratio
-  <P> <IMG WIDTH=180 HEIGHT=42 ALIGN=BOTTOM ALT="displaymath154" SRC="gif/gaus_img15.gif"  > <P>
-is so small that 1+0.005<I>q</I> is indistinguishable from 1 to
-machine accuracy, an error exit occurs with the function value
-set equal to zero.
-<P>
-<p><b>Accuracy:</b><p>
-Unless there is severe cancellation of positive and negative
-values of <I>f</I>(<I>x</I>) over the interval [<I>A</I>,<I>B</I>], the argument <TT>EPS</TT>
-may be considered as specifying a bound on the <I>relative</I> error of
-<I>I</I> in the case  |<I>I</I>|&gt;1, and a bound on the <I>absolute</I> error in
-the case |<I>I</I>|&lt;1. More precisely, if <I>k</I> is the number of sub-intervals
-contributing to the approximation (see Method), and if
-<P> <IMG WIDTH=180 HEIGHT=50 ALIGN=BOTTOM ALT="displaymath170" SRC="gif/gaus_img16.gif"  > <P>
-then the relation
-<P> <IMG WIDTH=140 HEIGHT=50 ALIGN=BOTTOM ALT="displaymath172" SRC="gif/gaus_img17.gif"  > <P>
-will nearly always be true, provided the routine terminates
-without printing an error message. For functions
-<I>f</I> having no singularities in the closed interval [<I>A</I>,<I>B</I>]
-the accuracy will usually be much higher than this.
-<P>
-<p><b>Error handling:</b><p>
-The requested accuracy cannot be
-obtained (see <B>Method</B>).
-The function value is set equal to zero.
-<P>
-<p><b>Note1:</b><p>
-Values of the function <I>f</I>(<I>x</I>) at the interval end-points
-<I>A</I> and <I>B</I> are not required. The subprogram may therefore
-be used when these values are undefined.
-<BR><HR>
-<p><b>Note2:</b><p>
-Instead of TF1::Integral, you may want to use the combination of
-<b>TF1::CalcGaussLegendreSamplingPoints</b> and <b>TF1::IntegralFast</b>.
-See an example with the following script:
-<pre>
-void gint() {
-   TF1 *g = new TF1("g","gaus",-5,5);
-   g->SetParameters(1,0,1);
-   //default gaus integration method uses 6 points
-   //not suitable to integrate on a large domain
-   double r1 = g->Integral(0,5);
-   double r2 = g->Integral(0,1000);
-   
-   //try with user directives computing more points
-   Int_t np = 1000;
-   double *x=new double[np];
-   double *w=new double[np];
-   g->CalcGaussLegendreSamplingPoints(np,x,w,1e-15);
-   double r3 = g->IntegralFast(np,x,w,0,5);
-   double r4 = g->IntegralFast(np,x,w,0,1000);
-   double r5 = g->IntegralFast(np,x,w,0,10000);
-   double r6 = g->IntegralFast(np,x,w,0,100000);
-   printf("g->Integral(0,5)               = %g\n",r1);
-   printf("g->Integral(0,1000)            = %g\n",r2);
-   printf("g->IntegralFast(n,x,w,0,5)     = %g\n",r3);
-   printf("g->IntegralFast(n,x,w,0,1000)  = %g\n",r4);
-   printf("g->IntegralFast(n,x,w,0,10000) = %g\n",r5);
-   printf("g->IntegralFast(n,x,w,0,100000)= %g\n",r6);
-   delete [] x;
-   delete [] w;
-}   
-</pre>
-   <p>This example produces the following results:
-<pre>
-   g->Integral(0,5)               = 1.25331
-   g->Integral(0,1000)            = 1.25319
-   g->IntegralFast(n,x,w,0,5)     = 1.25331
-   g->IntegralFast(n,x,w,0,1000)  = 1.25331
-   g->IntegralFast(n,x,w,0,10000) = 1.25331
-   g->IntegralFast(n,x,w,0,100000)= 1.253
-</pre>
-   <BR><HR>
-
-*/
-//End_Html
-//---------------------------------------------------------------
+   // Return Integral of function between a and b.
+   //
+   //   based on original CERNLIB routine DGAUSS by Sigfried Kolbig
+   //   converted to C++ by Rene Brun
+   //
+   // This function computes, to an attempted specified accuracy, the value
+   // of the integral.
+   //Begin_Latex
+   //   I = #int^{B}_{A} f(x)dx
+   //End_Latex
+   // Usage:
+   //   In any arithmetic expression, this function has the approximate value
+   //   of the integral I.
+   //   - A, B: End-points of integration interval. Note that B may be less
+   //           than A.
+   //   - params: Array of function parameters. If 0, use current parameters.
+   //   - epsilon: Accuracy parameter (see Accuracy).
+   //
+   //Method:
+   //   For any interval [a,b] we define g8(a,b) and g16(a,b) to be the 8-point
+   //   and 16-point Gaussian quadrature approximations to
+   //Begin_Latex
+   //   I = #int^{b}_{a} f(x)dx
+   //End_Latex
+   //   and define
+   //Begin_Latex
+   //   r(a,b) = #frac{#||{g_{16}(a,b)-g_{8}(a,b)}}{1+#||{g_{16}(a,b)}}
+   //End_Latex
+   //   Then,
+   //Begin_Latex
+   //   G = #sum_{i=1}^{k}g_{16}(x_{i-1},x_{i})
+   //End_Latex
+   //   where, starting with x0 = A and finishing with xk = B,
+   //   the subdivision points xi(i=1,2,...) are given by
+   //Begin_Latex
+   //   x_{i} = x_{i-1} + #lambda(B-x_{i-1})
+   //End_Latex
+   //   Begin_Latex #lambdaEnd_Latex is equal to the first member of the
+   //   sequence 1,1/2,1/4,... for which r(xi-1, xi) < EPS.
+   //   If, at any stage in the process of subdivision, the ratio
+   //Begin_Latex
+   //   q = #||{#frac{x_{i}-x_{i-1}}{B-A}}
+   //End_Latex
+   //   is so small that 1+0.005q is indistinguishable from 1 to
+   //   machine accuracy, an error exit occurs with the function value
+   //   set equal to zero.
+   //
+   // Accuracy:
+   //   Unless there is severe cancellation of positive and negative values of
+   //   f(x) over the interval [A,B], the argument EPS may be considered as
+   //   specifying a bound on the <I>relative</I> error of I in the case
+   //   |I|&gt;1, and a bound on the absolute error in the case |I|&lt;1. More
+   //   precisely, if k is the number of sub-intervals contributing to the
+   //   approximation (see Method), and if
+   //Begin_Latex
+   //   I_{abs} = #int^{B}_{A} #||{f(x)}dx
+   //End_Latex
+   //   then the relation
+   //Begin_Latex
+   //   #frac{#||{G-I}}{I_{abs}+k} < EPS
+   //End_Latex
+   //   will nearly always be true, provided the routine terminates without
+   //   printing an error message. For functions f having no singularities in
+   //   the closed interval [A,B] the accuracy will usually be much higher than
+   //   this.
+   //
+   // Error handling:
+   //   The requested accuracy cannot be obtained (see Method).
+   //   The function value is set equal to zero.
+   //
+   // Note 1:
+   //   Values of the function f(x) at the interval end-points A and B are not
+   //   required. The subprogram may therefore be used when these values are
+   //   undefined.
+   //
+   // Note 2:
+   //   Instead of TF1::Integral, you may want to use the combination of
+   //   TF1::CalcGaussLegendreSamplingPoints and TF1::IntegralFast.
+   //   See an example with the following script:
+   //
+   //   void gint() {
+   //      TF1 *g = new TF1("g","gaus",-5,5);
+   //      g->SetParameters(1,0,1);
+   //      //default gaus integration method uses 6 points
+   //      //not suitable to integrate on a large domain
+   //      double r1 = g->Integral(0,5);
+   //      double r2 = g->Integral(0,1000);
+   //      
+   //      //try with user directives computing more points
+   //      Int_t np = 1000;
+   //      double *x=new double[np];
+   //      double *w=new double[np];
+   //      g->CalcGaussLegendreSamplingPoints(np,x,w,1e-15);
+   //      double r3 = g->IntegralFast(np,x,w,0,5);
+   //      double r4 = g->IntegralFast(np,x,w,0,1000);
+   //      double r5 = g->IntegralFast(np,x,w,0,10000);
+   //      double r6 = g->IntegralFast(np,x,w,0,100000);
+   //      printf("g->Integral(0,5)               = %g\n",r1);
+   //      printf("g->Integral(0,1000)            = %g\n",r2);
+   //      printf("g->IntegralFast(n,x,w,0,5)     = %g\n",r3);
+   //      printf("g->IntegralFast(n,x,w,0,1000)  = %g\n",r4);
+   //      printf("g->IntegralFast(n,x,w,0,10000) = %g\n",r5);
+   //      printf("g->IntegralFast(n,x,w,0,100000)= %g\n",r6);
+   //      delete [] x;
+   //      delete [] w;
+   //   }   
+   //
+   //   This example produces the following results:
+   //
+   //      g->Integral(0,5)               = 1.25331
+   //      g->Integral(0,1000)            = 1.25319
+   //      g->IntegralFast(n,x,w,0,5)     = 1.25331
+   //      g->IntegralFast(n,x,w,0,1000)  = 1.25331
+   //      g->IntegralFast(n,x,w,0,10000) = 1.25331
+   //      g->IntegralFast(n,x,w,0,100000)= 1.253
 
    const Double_t kHF = 0.5;
    const Double_t kCST = 5./1000;
@@ -2215,38 +2247,44 @@ CASE2:
    return h;
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t)
 {
    // Return Integral of a 2d function in range [ax,bx],[ay,by]
-   //
+
    Error("Integral","Must be called with a TF2 only");
    return 0;
 }
+
 
 //______________________________________________________________________________
 Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t, Double_t, Double_t)
 {
    // Return Integral of a 3d function in range [ax,bx],[ay,by],[az,bz]
-   //
+
    Error("Integral","Must be called with a TF3 only");
    return 0;
 }
+
 
 #ifdef INTHEFUTURE
 //______________________________________________________________________________
 Double_t TF1::IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *params)
 {
    // Gauss-Legendre integral, see CalcGaussLegendreSamplingPoints
+
    if (!g) return 0;
    return IntegralFast(g->GetN(), g->GetX(), g->GetY(), a, b, params);
 }
 #endif
 
+
 //______________________________________________________________________________
 Double_t TF1::IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Double_t b, Double_t *params)
 {
    // Gauss-Legendre integral, see CalcGaussLegendreSamplingPoints
+
    if (num<=0 || x == 0 || w == 0)
       return 0;
 
@@ -2266,11 +2304,12 @@ Double_t TF1::IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Doub
    return result*b0;
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t eps, Double_t &relerr)
 {
-//  See more general prototype below.
-//  This interface kept for back compatibility
+   //  See more general prototype below.
+   //  This interface kept for back compatibility
    
    Int_t nfnevl,ifail;
    Int_t minpts = 2+2*n*(n+1)+1; //ie 7 for n=1   
@@ -2282,76 +2321,73 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Do
    return result;
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t minpts, Int_t maxpts, Double_t eps, Double_t &relerr,Int_t &nfnevl, Int_t &ifail)
 {
-//  Adaptive Quadrature for Multiple Integrals over N-Dimensional
-//  Rectangular Regions
-//
-//Begin_Html
-/*
-<img src="gif/integralmultiple.gif">
-*/
-//End_Html
-//
-// Author(s): A.C. Genz, A.A. Malik
-// converted/adapted by R.Brun to C++ from Fortran CERNLIB routine RADMUL (D120)
-// The new code features many changes compared to the Fortran version.
-// Note that this function is currently called only by TF2::Integral (n=2)
-// and TF3::Integral (n=3).
-//
-// This function computes, to an attempted specified accuracy, the value of
-// the integral over an n-dimensional rectangular region.
-//
-// input parameters
-// ================
-// n     : Number of dimensions [2,15]
-// a,b   : One-dimensional arrays of length >= N . On entry A[i],  and  B[i],
-//         contain the lower and upper limits of integration, respectively.
-// minpts: Minimum number of function evaluations requested. Must not exceed maxpts. 
-//         if minpts < 1 minpts is set to 2^n +2*n*(n+1) +1
-// maxpts: Maximum number of function evaluations to be allowed.
-//         maxpts >= 2^n +2*n*(n+1) +1
-//         if maxpts<minpts, maxpts is set to 10*minpts
-// eps   : Specified relative accuracy.
-//
-// output parameter
-// ================
-// relerr : Contains, on exit, an estimation of the relative accuracy of the result.
-// nfnevl : number of function evaluations performed.
-// ifail  :
-//     0 Normal exit.  . At least minpts and at most maxpts calls to the function were performed.
-//     1 maxpts is too small for the specified accuracy eps. 
-//       The result and relerr contain the values obtainable for the 
-//       specified value of maxpts.
-//     3 n<2 or n>15
-//
-// Method:
-// =======
-//
-// An integration rule of degree seven is used together with a certain
-// strategy of subdivision.
-// For a more detailed description of the method see References.
-//
-// Notes:
-//
-//   1.Multi-dimensional integration is time-consuming. For each rectangular
-//     subregion, the routine requires function evaluations.
-//     Careful programming of the integrand might result in substantial saving
-//     of time.
-//   2.Numerical integration usually works best for smooth functions.
-//     Some analysis or suitable transformations of the integral prior to
-//     numerical work may contribute to numerical efficiency.
-//
-// References:
-//
-//   1.A.C. Genz and A.A. Malik, Remarks on algorithm 006:
-//     An adaptive algorithm for numerical integration over
-//     an N-dimensional rectangular region, J. Comput. Appl. Math. 6 (1980) 295-302.
-//   2.A. van Doren and L. de Ridder, An adaptive algorithm for numerical
-//     integration over an n-dimensional cube, J.Comput. Appl. Math. 2 (1976) 207-217.
-//
-//=========================================================================
+   //  Adaptive Quadrature for Multiple Integrals over N-Dimensional
+   //  Rectangular Regions
+   //
+   //Begin_Latex
+   // I_{n} = #int_{a_{n}}^{b_{n}} #int_{a_{n-1}}^{b_{n-1}} ... #int_{a_{1}}^{b_{1}} f(x_{1}, x_{2},...,x_{n}) dx_{1}dx_{2}...dx_{n}
+   //End_Latex
+   //
+   // Author(s): A.C. Genz, A.A. Malik
+   // converted/adapted by R.Brun to C++ from Fortran CERNLIB routine RADMUL (D120)
+   // The new code features many changes compared to the Fortran version.
+   // Note that this function is currently called only by TF2::Integral (n=2)
+   // and TF3::Integral (n=3).
+   //
+   // This function computes, to an attempted specified accuracy, the value of
+   // the integral over an n-dimensional rectangular region.
+   //
+   // Input parameters:
+   //
+   //    n     : Number of dimensions [2,15]
+   //    a,b   : One-dimensional arrays of length >= N . On entry A[i],  and  B[i],
+   //            contain the lower and upper limits of integration, respectively.
+   //    minpts: Minimum number of function evaluations requested. Must not exceed maxpts. 
+   //            if minpts < 1 minpts is set to 2^n +2*n*(n+1) +1
+   //    maxpts: Maximum number of function evaluations to be allowed.
+   //            maxpts >= 2^n +2*n*(n+1) +1
+   //            if maxpts<minpts, maxpts is set to 10*minpts
+   //    eps   : Specified relative accuracy.
+   //
+   // Output parameters:
+   //
+   //    relerr : Contains, on exit, an estimation of the relative accuracy of the result.
+   //    nfnevl : number of function evaluations performed.
+   //    ifail  :
+   //        0 Normal exit.  . At least minpts and at most maxpts calls to the function were performed.
+   //        1 maxpts is too small for the specified accuracy eps. 
+   //          The result and relerr contain the values obtainable for the 
+   //          specified value of maxpts.
+   //        3 n<2 or n>15
+   //
+   // Method:
+   //
+   //    An integration rule of degree seven is used together with a certain
+   //    strategy of subdivision.
+   //    For a more detailed description of the method see References.
+   //
+   // Notes:
+   //
+   //   1.Multi-dimensional integration is time-consuming. For each rectangular
+   //     subregion, the routine requires function evaluations.
+   //     Careful programming of the integrand might result in substantial saving
+   //     of time.
+   //   2.Numerical integration usually works best for smooth functions.
+   //     Some analysis or suitable transformations of the integral prior to
+   //     numerical work may contribute to numerical efficiency.
+   //
+   // References:
+   //
+   //   1.A.C. Genz and A.A. Malik, Remarks on algorithm 006:
+   //     An adaptive algorithm for numerical integration over
+   //     an N-dimensional rectangular region, J. Comput. Appl. Math. 6 (1980) 295-302.
+   //   2.A. van Doren and L. de Ridder, An adaptive algorithm for numerical
+   //     integration over an n-dimensional cube, J.Comput. Appl. Math. 2 (1976) 207-217.
+
    Double_t ctr[15], wth[15], wthl[15], z[15];
 
    const Double_t xl2 = 0.358568582800318073;
@@ -2410,9 +2446,9 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, In
    if (minpts < 1)      minpts = irlcls;
    if (maxpts < minpts) maxpts = 10*minpts;
 
-// The original agorithm expected a working space array WK of length IWK
-// with IWK Length ( >= (2N + 3) * (1 + MAXPTS/(2**N + 2N(N + 1) + 1))/2).
-// Here, this array is allocated dynamically
+   // The original agorithm expected a working space array WK of length IWK
+   // with IWK Length ( >= (2N + 3) * (1 + MAXPTS/(2**N + 2N(N + 1) + 1))/2).
+   // Here, this array is allocated dynamically
 
    Int_t iwk = irgnst*(1 +maxpts/irlcls)/2;
    Double_t *wk = new Double_t[iwk+10];
@@ -2585,6 +2621,7 @@ L160:
    return result;         //an approximate value of the integral
 }
 
+
 //______________________________________________________________________________
 Bool_t TF1::IsInside(const Double_t *x) const
 {
@@ -2594,11 +2631,11 @@ Bool_t TF1::IsInside(const Double_t *x) const
    return kTRUE;
 }
 
+
 //______________________________________________________________________________
 void TF1::Paint(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*Paint this function with its current attributes*-*-*-*-*
-//*-*                  ===============================================
+   // Paint this function with its current attributes.
 
    Int_t i;
    Double_t xv[1];
@@ -2619,8 +2656,8 @@ void TF1::Paint(Option_t *option)
       if (xmax > pmax) xmax = pmax;
    }
 
-//  Create a temporary histogram and fill each channel with the function value
-//  Preserve axis titles
+   //  Create a temporary histogram and fill each channel with the function value
+   //  Preserve axis titles
    TString xtitle = "";
    TString ytitle = "";
    char *semicol = (char*)strstr(GetTitle(),";");
@@ -2646,8 +2683,8 @@ void TF1::Paint(Option_t *option)
    if (fHistogram) {
       fHistogram->GetXaxis()->SetLimits(xmin,xmax);
    } else {
-//      if logx, we must bin in logx and not in x !!!
-//      otherwise if several decades, one gets crazy results
+   //      if logx, we must bin in logx and not in x !!!
+   //      otherwise if several decades, one gets crazy results
       if (xmin > 0 && gPad && gPad->GetLogx()) {
          Double_t *xbins    = new Double_t[fNpx+1];
          Double_t xlogmin = TMath::Log10(xmin);
@@ -2677,7 +2714,7 @@ void TF1::Paint(Option_t *option)
       fHistogram->SetBinContent(i,EvalPar(xv,fParams));
    }
 
-//*-*- Copy Function attributes to histogram attributes
+   // Copy Function attributes to histogram attributes
    Double_t minimum   = fHistogram->GetMinimumStored();
    Double_t maximum   = fHistogram->GetMaximumStored();
    if (minimum <= 0 && gPad && gPad->GetLogy()) minimum = -1111; //this can happen when switching from lin to log scale
@@ -2717,7 +2754,7 @@ void TF1::Paint(Option_t *option)
    fHistogram->SetMarkerStyle(GetMarkerStyle());
    fHistogram->SetMarkerSize(GetMarkerSize());
 
-//*-*-  Draw the histogram
+   // Draw the histogram
    if (!gPad) return;
    if (opt.Length() == 0)  fHistogram->Paint("lf");
    else if (opt == "same") fHistogram->Paint("lfsame");
@@ -2725,29 +2762,32 @@ void TF1::Paint(Option_t *option)
 
 }
 
+
 //______________________________________________________________________________
 void TF1::Print(Option_t *option) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Dump this function with its attributes*-*-*-*-*-*-*-*-*-*
-//*-*                  ==================================
+   // Dump this function with its attributes.
+
    TFormula::Print(option);
    if (fHistogram) fHistogram->Print(option);
 }
 
+
 //______________________________________________________________________________
 void TF1::ReleaseParameter(Int_t ipar)
 {
-// Release parameter number ipar If used in a fit, the parameter
-// can vary freely. The parameter limits are reset to 0,0.
+   // Release parameter number ipar If used in a fit, the parameter
+   // can vary freely. The parameter limits are reset to 0,0.
 
    if (ipar < 0 || ipar > fNpar-1) return;
    SetParLimits(ipar,0,0);
 }
 
+
 //______________________________________________________________________________
 void TF1::Save(Double_t xmin, Double_t xmax, Double_t, Double_t, Double_t, Double_t)
 {
-    // Save values of function in array fSave
+   // Save values of function in array fSave
 
    if (fSave != 0) {delete [] fSave; fSave = 0;}
    fNsave = fNpx+3;
@@ -2771,10 +2811,11 @@ void TF1::Save(Double_t xmin, Double_t xmax, Double_t, Double_t, Double_t, Doubl
    fSave[fNpx+2] = xmax;
 }
 
+
 //______________________________________________________________________________
 void TF1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
-    // Save primitive as a C++ statement(s) on output stream out
+   // Save primitive as a C++ statement(s) on output stream out
 
    Int_t i;
    char quote = '"';
@@ -2865,58 +2906,63 @@ void TF1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    }
 }
 
+
 //______________________________________________________________________________
 void TF1::SetCurrent(TF1 *f1) 
 {
-   // static function setting the current function.
+   // Static function setting the current function.
    // the current function may be accessed in static C-like functions
    // when fitting or painting a function.
    
    fgCurrent = f1;
 }
 
+
 //______________________________________________________________________________
 void TF1::SetMaximum(Double_t maximum)
 {
-// Set the maximum value along Y for this function
-// In case the function is already drawn, set also the maximum in the
-// helper histogram
+   // Set the maximum value along Y for this function
+   // In case the function is already drawn, set also the maximum in the
+   // helper histogram
 
    fMaximum = maximum;
    if (fHistogram) fHistogram->SetMaximum(maximum);
    if (gPad) gPad->Modified();
 }
 
+
 //______________________________________________________________________________
 void TF1::SetMinimum(Double_t minimum)
 {
-// Set the minimum value along Y for this function
-// In case the function is already drawn, set also the minimum in the
-// helper histogram
+   // Set the minimum value along Y for this function
+   // In case the function is already drawn, set also the minimum in the
+   // helper histogram
 
    fMinimum = minimum;
    if (fHistogram) fHistogram->SetMinimum(minimum);
    if (gPad) gPad->Modified();
 }
 
+
 //______________________________________________________________________________
 void TF1::SetNDF(Int_t ndf)
 {
-// Set the number of degrees of freedom
-// ndf should be the number of points used in a fit - the number of free parameters
+   // Set the number of degrees of freedom
+   // ndf should be the number of points used in a fit - the number of free parameters
 
    fNDF = ndf;
 }
 
+
 //______________________________________________________________________________
 void TF1::SetNpx(Int_t npx)
 {
-// Set the number of points used to draw the function
-//
-// The default number of points along x is 100 for 1-d functions and 30 for 2-d/3-d functions
-// You can increase this value to get a better resolution when drawing
-// pictures with sharp peaks or to get a better result when using TF1::GetRandom   
-// the minimum number of points is 4, the maximum is 100000 for 1-d and 10000 for 2-d/3-d functions
+   // Set the number of points used to draw the function
+   //
+   // The default number of points along x is 100 for 1-d functions and 30 for 2-d/3-d functions
+   // You can increase this value to get a better resolution when drawing
+   // pictures with sharp peaks or to get a better result when using TF1::GetRandom   
+   // the minimum number of points is 4, the maximum is 100000 for 1-d and 10000 for 2-d/3-d functions
 
    if (npx < 4) {
       Warning("SetNpx","Number of points must be >4 && < 100000, fNpx set to 4");
@@ -2930,33 +2976,36 @@ void TF1::SetNpx(Int_t npx)
    Update();
 }
 
+
 //______________________________________________________________________________
 void TF1::SetParError(Int_t ipar, Double_t error)
 {
-// set error for parameter number ipar
+   // Set error for parameter number ipar
 
    if (ipar < 0 || ipar > fNpar-1) return;
    fParErrors[ipar] = error;
 }
 
+
 //______________________________________________________________________________
 void TF1::SetParErrors(const Double_t *errors)
 {
-// set errors for all active parameters
-// when calling this function, the array errors must have at least fNpar values
+   // Set errors for all active parameters
+   // when calling this function, the array errors must have at least fNpar values
 
    if (!errors) return;
    for (Int_t i=0;i<fNpar;i++) fParErrors[i] = errors[i];
 }
 
+
 //______________________________________________________________________________
 void TF1::SetParLimits(Int_t ipar, Double_t parmin, Double_t parmax)
 {
-//*-*-*-*-*-*Set limits for parameter ipar*-*-*-*
-//*-*        =============================
-//     The specified limits will be used in a fit operation
-//     when the option "B" is specified (Bounds).
-//  To fix a parameter, use TF1::FixParameter
+   // Set limits for parameter ipar.
+   //
+   // The specified limits will be used in a fit operation
+   // when the option "B" is specified (Bounds).
+   // To fix a parameter, use TF1::FixParameter
 
    if (ipar < 0 || ipar > fNpar-1) return;
    Int_t i;
@@ -2966,23 +3015,25 @@ void TF1::SetParLimits(Int_t ipar, Double_t parmin, Double_t parmax)
    fParMax[ipar] = parmax;
 }
 
+
 //______________________________________________________________________________
 void TF1::SetRange(Double_t xmin, Double_t xmax)
 {
-//*-*-*-*-*-*Initialize the upper and lower bounds to draw the function*-*-*-*
-//*-*        ==========================================================
-//     The function range is also used in an histogram fit operation
-//     when the option "R" is specified.
+   // Initialize the upper and lower bounds to draw the function.
+   //
+   // The function range is also used in an histogram fit operation
+   // when the option "R" is specified.
 
    fXmin = xmin;
    fXmax = xmax;
    Update();
 }
 
+
 //______________________________________________________________________________
 void TF1::SetSavedPoint(Int_t point, Double_t value)
 {
-    // Restore value of function saved at point
+   // Restore value of function saved at point
 
    if (!fSave) {
       fNsave = fNpx+3;
@@ -2992,13 +3043,14 @@ void TF1::SetSavedPoint(Int_t point, Double_t value)
    fSave[point] = value;
 }
 
+
 //______________________________________________________________________________
 void TF1::SetTitle(const char *title)
 {
-// Set function title
-//  if title has the form "fffffff;xxxx;yyyy", it is assumed that
-//  the function title is "fffffff" and "xxxx" and "yyyy" are the
-//  titles for the X and Y axis respectively.
+   // Set function title
+   //  if title has the form "fffffff;xxxx;yyyy", it is assumed that
+   //  the function title is "fffffff" and "xxxx" and "yyyy" are the
+   //  titles for the X and Y axis respectively.
 
    if (!title) return;
    fTitle = title;
@@ -3019,16 +3071,17 @@ void TF1::SetTitle(const char *title)
    if (gPad) gPad->Modified();
 }
 
-//_______________________________________________________________________
+
+//______________________________________________________________________________
 void TF1::Streamer(TBuffer &b)
 {
-//*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              =========================================
+   // Stream a class object.
+
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 4) {
-         TF1::Class()->ReadBuffer(b, this, v, R__s, R__c);
+         b.ReadClassBuffer(TF1::Class(), this, v, R__s, R__c);
          if (v == 5 && fNsave > 0) {
             //correct badly saved fSave in 3.00/06
             Int_t np = fNsave - 3;
@@ -3096,17 +3149,18 @@ void TF1::Streamer(TBuffer &b)
       Int_t saved = 0;
       if (fType > 0 && fNsave <= 0) { saved = 1; Save(fXmin,fXmax,0,0,0,0);}
 
-      TF1::Class()->WriteBuffer(b,this);
+      b.WriteClassBuffer(TF1::Class(),this);
 
       if (saved) {delete [] fSave; fSave = 0; fNsave = 0;}
    }
 }
 
-//_______________________________________________________________________
+
+//______________________________________________________________________________
 void TF1::Update()
 {
-// called by functions such as SetRange, SetNpx, SetParameters
-// to force the deletion of the associated histogram or Integral
+   // Called by functions such as SetRange, SetNpx, SetParameters
+   // to force the deletion of the associated histogram or Integral
 
    delete fHistogram;
    fHistogram = 0;
@@ -3118,29 +3172,34 @@ void TF1::Update()
    }
 }
 
-//_______________________________________________________________________
+
+//______________________________________________________________________________
 void TF1::RejectPoint(Bool_t reject)
 {
-// static function to set the global flag to reject points
-// the fgRejectPoint global flag is tested by all fit functions
-// if TRUE the point is not included in the fit.
-// This flag can be set by a user in a fitting function.
-// The fgRejectPoint flag is reset by the TH1 and TGraph fitting functions.
+   // Static function to set the global flag to reject points
+   // the fgRejectPoint global flag is tested by all fit functions
+   // if TRUE the point is not included in the fit.
+   // This flag can be set by a user in a fitting function.
+   // The fgRejectPoint flag is reset by the TH1 and TGraph fitting functions.
 
    fgRejectPoint = reject;
 }
 
-//_______________________________________________________________________
+
+//______________________________________________________________________________
 Bool_t TF1::RejectedPoint()
 {
-// see TF1::RejectPoint above
+   // See TF1::RejectPoint above
+
    return fgRejectPoint;
 }
+
 
 //______________________________________________________________________________
 Double_t TF1_ExpValHelperx(Double_t *x, Double_t *par) {
    return x[0]*gHelper->EvalPar(x,par);
 }
+
 
 //______________________________________________________________________________
 Double_t TF1_ExpValHelper(Double_t *x, Double_t *par) {
@@ -3154,11 +3213,11 @@ Double_t TF1_ExpValHelper(Double_t *x, Double_t *par) {
 //______________________________________________________________________________
 Double_t TF1::Moment(Double_t n, Double_t a, Double_t b, const Double_t *params, Double_t epsilon)
 {
-// Return nth moment of function between a and b
-//
-// See TF1::Integral() for parameter definitions
-//   Author: Gene Van Buren <gene@bnl.gov>
-
+   // Return nth moment of function between a and b
+   //
+   // See TF1::Integral() for parameter definitions
+   //   Author: Gene Van Buren <gene@bnl.gov>
+   
    fgAbsValue = kTRUE;
    Double_t norm = Integral(a,b,params,epsilon);
    if (norm == 0) {
@@ -3182,13 +3241,14 @@ Double_t TF1::Moment(Double_t n, Double_t a, Double_t b, const Double_t *params,
    return res;
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *params, Double_t epsilon)
 {
-// Return nth central moment of function between a and b
-//
-// See TF1::Integral() for parameter definitions
-//   Author: Gene Van Buren <gene@bnl.gov>
+   // Return nth central moment of function between a and b
+   //
+   // See TF1::Integral() for parameter definitions
+   //   Author: Gene Van Buren <gene@bnl.gov>
 
    fgAbsValue = kTRUE;
    Double_t norm = Integral(a,b,params,epsilon);
@@ -3223,23 +3283,25 @@ Double_t TF1::CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *
    return res;
 }
 
-//--------------------------------------------------------------------
+
+//______________________________________________________________________________
 // some useful static utility functions to compute sampling points for IntegralFast
-//--------------------------------------------------------------------
 //______________________________________________________________________________
 #ifdef INTHEFUTURE
 void TF1::CalcGaussLegendreSamplingPoints(TGraph *g, Double_t eps)
 {
-   //type safe interface (static method)
+   // Type safe interface (static method)
    // The number of sampling points are taken from the TGraph
+
    if (!g) return;
    CalcGaussLegendreSamplingPoints(g->GetN(), g->GetX(), g->GetY(), eps);
 }
 
+
 //______________________________________________________________________________
 TGraph *TF1::CalcGaussLegendreSamplingPoints(Int_t num, Double_t eps)
 {
-   //type safe interface (static method)
+   // Type safe interface (static method)
    // A TGraph is created with new with num points and the pointer to the
    // graph is returned by the function. It is the responsibility of the
    // user to delete the object.
@@ -3253,6 +3315,7 @@ TGraph *TF1::CalcGaussLegendreSamplingPoints(Int_t num, Double_t eps)
    return g;
 }
 #endif
+
 
 //______________________________________________________________________________
 void TF1::CalcGaussLegendreSamplingPoints(Int_t num, Double_t *x, Double_t *w, Double_t eps)
@@ -3273,7 +3336,7 @@ void TF1::CalcGaussLegendreSamplingPoints(Int_t num, Double_t *x, Double_t *w, D
    // If num<=0 or eps<=0 no action is done.
    //
    // Reference: Numerical Recipes in C, Second Edition
-   //
+
    if (num<=0 || eps<=0)
       return;
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TTF.h,v 1.5 2003/04/03 14:51:47 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TTF.h,v 1.6 2005/05/02 21:30:27 brun Exp $
 // Author: Olivier Couet     01/10/02
 // Author: Fons Rademakers   21/11/98
 
@@ -24,9 +24,6 @@
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOT_Gtypes
-#include "Gtypes.h"
 #endif
 
 #ifndef __CINT__

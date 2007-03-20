@@ -98,6 +98,7 @@ extern "C" void G__ClassInfo2G__value(G__ClassInfo* type
   pvalue->type = 'U';
   pvalue->ref=0;
   pvalue->obj.i = l;
+  pvalue->isconst = 0; // better than unitialized - we just don't know here.
 }
 
 //

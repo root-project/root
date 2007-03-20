@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.25 2006/03/23 15:56:03 antcheva Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.29 2007/03/01 01:09:02 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -29,8 +29,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGWindow.h"
-#include "TMath.h"
 #include "Riostream.h"
+#include "TApplication.h"
 
 ClassImp(TGWindow)
 ClassImp(TGUnknownWindowHandler)
@@ -45,10 +45,6 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
    // Create a new window. Parent p must exist otherwise the root window
    // is taken as parent. No arguments specified results in values from
    // parent to be taken (or defaults).
-
-   // this can only happen when libGui was loaded at program startup
-   // but not initialized because application is in batch mode
-   if (!gClient) new TGClient();
 
    UInt_t type = wtype;
    fId = 0;
@@ -107,7 +103,7 @@ TGWindow::~TGWindow()
    // Window destructor. Unregisters the window.
 
    if (fClient) {
-      if (fParent == fClient->GetDefaultRoot()) 
+      if (fParent == fClient->GetDefaultRoot())
          DestroyWindow();
       fClient->UnregisterWindow(this);
    }
@@ -190,7 +186,7 @@ Bool_t TGWindow::IsMapped()
 void TGWindow::Print(Option_t *option) const
 {
    // Print window id.
-   // If option is "tree" - print all parent windows tree 
+   // If option is "tree" - print all parent windows tree
 
    TString opt = option;
 
@@ -225,7 +221,7 @@ const char *TGWindow::GetName()const
 
    if (fName.BeginsWith("frame")) {
       TString cname = ClassName();
-      if (cname.BeginsWith("TGed")) 
+      if (cname.BeginsWith("TGed"))
          cname.Replace(0, 1, 'f');
       else if (cname.BeginsWith("TG"))
          cname.Replace(0,2,'f');

@@ -128,5 +128,5 @@ void MyMainFrame::PrintSelected()
 void listBox()
 {
    // Popup the GUI...
-   new MyMainFrame(gClient->GetRoot(), 200, 200);
+   new MyMainFrame(0, 200, 200);
 }

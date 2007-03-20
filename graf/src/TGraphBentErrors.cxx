@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.18 2005/11/17 09:38:55 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.19 2006/07/03 16:10:45 brun Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 #include "TArrow.h"
 #include "TBox.h"
 #include "TVirtualPad.h"
+#include "TH1.h"
 #include "TF1.h"
 
 ClassImp(TGraphBentErrors)

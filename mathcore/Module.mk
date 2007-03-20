@@ -45,9 +45,10 @@ MATHCOREDH1  :=  $(MODDIRI)/Math/Vector3D.h \
                  $(MODDIRI)/Math/Plane3D.h \
                  $(MODDIRI)/Math/SpecFuncMathCore.h \
                  $(MODDIRI)/Math/DistFuncMathCore.h \
-                 $(MODDIRI)/Math/VectorUtil_Cint.h \
                  $(MODDIRI)/Math/IParamFunction.h \
-                 $(MODDIRI)/Math/IFunction.h 
+                 $(MODDIRI)/Math/IFunction.h \
+                 $(MODDIRI)/Math/VectorUtil_Cint.h 
+
 
 MATHCOREDH132:=  $(MODDIRI)/Math/Vector3D.h \
                  $(MODDIRI)/Math/Point3D.h \
@@ -89,6 +90,7 @@ $(MATHCOREDS):  $(MATHCOREDH1) $(MATHCOREL) $(MATHCORELINC) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."
 		@echo "for files $(MATHCOREDH1)"
 		$(ROOTCINTTMP) -f $@ -c $(MATHCOREDH1) $(MATHCOREL)
+#		genreflex $(MATHCOREDIRS)/MathCoreDict.h  --selection_file=$(MATHCOREDIRS)/selection_MathCore.xml -o $(MATHCOREDIRS)/G__MathCore.cxx -I$(MATHCOREDIRI)
 
 $(MATHCOREDS32):$(MATHCOREDH132) $(MATHCOREL) $(MATHCORELINC) $(ROOTCINTTMPEXE)
 		@echo "Generating dictionary $@..."

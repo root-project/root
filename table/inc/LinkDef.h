@@ -1,4 +1,4 @@
-/* @(#)root/table:$Name:  $:$Id: LinkDef.h,v 1.4 2003/06/06 05:44:11 brun Exp $ */
+/* @(#)root/table:$Name:  $:$Id: LinkDef.h,v 1.5 2006/07/11 09:05:02 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -35,6 +35,7 @@
 #pragma link C++ class tableDescriptor_st+;
 #pragma link C++ class TColumnView;
 #pragma link C++ class TTableMap-;
+#pragma link C++ class TTablePadView3D;
 
 
 #pragma link C++ class TResponseTable-;

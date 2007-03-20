@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TCTUB.cxx,v 1.4 2005/03/09 18:19:26 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TCTUB.cxx,v 1.6 2007/01/12 16:03:15 brun Exp $
 // Author: Rene Brun   26/06/97
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "TCTUB.h"
 #include "TClass.h"
+#include "TMath.h"
 
 ClassImp(TCTUB)
 
@@ -150,7 +151,7 @@ void TCTUB::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         TCTUB::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TCTUB::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -161,6 +162,6 @@ void TCTUB::Streamer(TBuffer &R__b)
       //====end of old versions
       
    } else {
-      TCTUB::Class()->WriteBuffer(R__b,this);
+      R__b.WriteClassBuffer(TCTUB::Class(),this);
    }
 }

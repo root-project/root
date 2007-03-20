@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.9 2005/08/29 10:45:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.10 2005/12/04 10:51:27 brun Exp $
 // Author: Rene Brun   14/01/2002
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -22,6 +22,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TH1.h"
+#include "TMath.h"
 #include "THLimitsFinder.h"
 
 THLimitsFinder *THLimitsFinder::fgLimitsFinder = 0;

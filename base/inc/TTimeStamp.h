@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.20 2006/09/06 06:25:28 pcanal Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.21 2006/09/06 09:30:50 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -154,6 +154,10 @@ public:
 
    // compatability with time() and DOS date
    void Set(UInt_t tloc, Bool_t isUTC, Int_t secOffset, Bool_t dosDate);
+
+   // direct setters
+   void SetSec(Int_t sec) { fSec = sec; }
+   void SetNanoSec(Int_t nsec) { fNanoSec = nsec; }
 
    timespec_t   GetTimeSpec() const
       { timespec_t value = {fSec,fNanoSec}; return value; }

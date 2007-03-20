@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.cxx,v 1.6 2005/11/18 16:07:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPolygon.cxx,v 1.7 2006/04/03 16:19:31 brun Exp $
 // Author: Mihaela Gheata   5/01/04
 
 /*************************************************************************
@@ -43,6 +43,7 @@
 
 #include "TObjArray.h"
 #include "TGeoPolygon.h"
+#include "TMath.h"
 
 ClassImp(TGeoPolygon)
 

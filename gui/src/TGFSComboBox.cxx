@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.21 2006/08/29 15:55:01 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.22 2006/11/16 17:17:37 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -36,7 +36,6 @@
 #include "TGFSComboBox.h"
 #include "TGResourcePool.h"
 #include "TGPicture.h"
-#include "TMath.h"
 #include "TSystem.h"
 #include "Riostream.h"
 

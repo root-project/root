@@ -21,6 +21,7 @@
 #@setresuid@ R__HAS_SETRESUID   /**/
 #@hasmathmore@ R__HAS_MATHMORE   /**/
 #@haspthread@ R__HAS_PTHREAD    /**/
+#@hasxft@ R__HAS_XFT    /**/
 
 #ifndef __CINT__
 #define R__CONFIGUREOPTIONS   "@configoptions@"

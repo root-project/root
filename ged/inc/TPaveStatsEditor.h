@@ -20,19 +20,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
-#include "TGWidget.h"
-#endif
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
-#endif
-#ifndef ROOT_TPaveStats
-#include "TPaveStats.h"
 #endif
 
 class TGCheckButton;
 class TPaveStats;
-
 
 class TPaveStatsEditor : public TGedFrame {
 

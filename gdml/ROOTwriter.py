@@ -1,8 +1,7 @@
-# @(#)root/gdml:$Name:  $:$Id: ROOTwriter.py,v 1.6 2006/08/07 15:31:36 brun Exp $
+# @(#)root/gdml:$Name:  $:$Id: ROOTwriter.py,v 1.7 2006/11/17 17:40:02 brun Exp $
 # Author: Witold Pokorski   05/06/2006
 
 from math import *
-from units import *
 
 import libPyROOT
 import ROOT
@@ -84,7 +83,10 @@ class ROOTwriter(object):
         return name
 
 
-    def rotXYZ(self, r):            
+    def rotXYZ(self, r):
+
+        rad = 180/acos(-1)
+        
         cosb = math.sqrt( r[0]*r[0] + r[1]*r[1] )
         if cosb > 0.00001 : #I didn't find a proper constant to use here, so I just put a value that works with all the examples on a linux machine (P4)
             a = atan2( r[5], r[8] ) * rad
@@ -275,7 +277,7 @@ class ROOTwriter(object):
         eval('self.'+solid.GetBoolNode().__class__.__name__)(solid)
 
     def dumpMaterials(self, matlist):
-        print 'Found ', matlist.GetSize(),' materials'
+        print 'Info in <TPython::Exec>: Found ', matlist.GetSize(),' materials'
         for mat in matlist:
             if not mat.IsMixture():
                 self.writer.addMaterial(self.genName(mat.GetName()), mat.GetA(), mat.GetZ(), mat.GetDensity())
@@ -291,15 +293,16 @@ class ROOTwriter(object):
                 self.writer.addMixture(self.genName(mat.GetName()), mat.GetDensity(), elems)
 
     def dumpSolids(self, shapelist):
-        print 'Found ', shapelist.GetEntries(), ' shapes'
+        print 'Info in <TPython::Exec>: Found ', shapelist.GetEntries(), ' shapes'
         for shape in shapelist:
 	    self.solList.append([shape, 0])
 	for sol in self.solList:
 	    if sol[1] == 0:
 	        sol[1] = 1
+                #print eval('self.'+sol[0].__class__.__name__)(sol[0])
                 eval('self.'+sol[0].__class__.__name__)(sol[0])
 	        self.shapesCount = self.shapesCount + 1
-	print 'Dumped ', self.shapesCount, ' shapes'
+	print 'Info in <TPython::Exec>: Dumped ', self.shapesCount, ' shapes'
 	    
     
     def orderVolumes(self, volume):
@@ -384,7 +387,24 @@ class ROOTwriter(object):
                 if r[0]!=0.0 or r[1]!=0.0 or r[2]!=0.0:
                     self.writer.addRotation(name+'rot', r[0], r[1], r[2])
                     rotname = name+'rot'
-                daughters.append( (node.GetVolume().GetName()+'_'+str(libPyROOT.AddressOf(node.GetVolume())[0]), name+'pos', rotname) )
+
+                reflection = node.GetMatrix().IsReflection()#check if this daughter has a reflection matrix
+                
+                if reflection:
+                    rotmat =  node.GetMatrix().GetRotationMatrix()
+
+                    #add new 'reflectedSolid' shape to solids
+                    self.writer.addReflSolid('refl_'+node.GetVolume().GetShape().GetName()+'_'+str(libPyROOT.AddressOf(node.GetVolume().GetShape())[0]), node.GetVolume().GetShape().GetName()+'_'+str(libPyROOT.AddressOf(node.GetVolume().GetShape())[0]), 0, 0, 0, rotmat[0], rotmat[4], rotmat[8], 0, 0, 0)
+
+                    #add new volume with correct solidref to the new reflectedSolid
+                    emptyd = []
+                    self.writer.addVolume('refl_'+node.GetVolume().GetName()+'_'+str(libPyROOT.AddressOf(node.GetVolume())[0]), 'refl_'+node.GetVolume().GetShape().GetName()+'_'+str(libPyROOT.AddressOf(node.GetVolume().GetShape())[0]), self.genName(node.GetVolume().GetMaterial().GetName()), emptyd)
+                    
+                    #add new volume as volumeref to this physvol
+                    daughters.append( ('refl_'+node.GetVolume().GetName()+'_'+str(libPyROOT.AddressOf(node.GetVolume())[0]), name+'pos', rotname) )
+                    
+                else:
+                    daughters.append( (node.GetVolume().GetName()+'_'+str(libPyROOT.AddressOf(node.GetVolume())[0]), name+'pos', rotname) )
 
         if volume.IsTopVolume():
 	   if not volume.IsAssembly():

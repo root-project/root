@@ -22,6 +22,7 @@
 #include "TTree.h"
 #include "TH1D.h"
 #include "TCanvas.h"
+#include "TMath.h"
 
 #include <iostream>
 
@@ -30,7 +31,6 @@
 #include "Math/Vector4D.h"
 
 using namespace ROOT::Math;
-
 
 
 
@@ -164,13 +164,19 @@ double read() {
 int mathcoreVectorCollection() { 
 
 
-#ifdef __CINT__
+#if defined(__CINT__) && !defined(__MAKECINT__) 
 
   gSystem->Load("libMathCore");  
   gSystem->Load("libPhysics");  
   // in CINT need to do that after having loading the library
   using namespace ROOT::Math;
-#endif
+
+  cout << "This tutorial can run only using ACliC, compiling it by doing: " << endl;
+  cout << "\t  .x tutorials/math/mathcoreVectorCollection.C+" << endl; 
+  //gROOT->ProcessLine(".x tutorials/math/mathcoreVectorCollection.C+"); 
+  return 0;
+
+#else
 
   
   int nEvents = 10000;
@@ -184,6 +190,8 @@ int mathcoreVectorCollection() {
     return -1;
   }
   return 0;
+
+#endif
 }
 
 

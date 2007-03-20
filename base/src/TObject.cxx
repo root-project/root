@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.80 2006/10/20 07:31:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.90 2007/02/12 13:09:33 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -30,30 +30,21 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "Varargs.h"
 #include "Riostream.h"
 #include "TObject.h"
-#include "TFile.h"
-#include "TDirectory.h"
 #include "TClass.h"
 #include "TGuiFactory.h"
-#include "TKey.h"
-#include "TDataMember.h"
 #include "TMethod.h"
-#include "TDataType.h"
-#include "TRealData.h"
 #include "TROOT.h"
 #include "TError.h"
 #include "TObjectTable.h"
 #include "TVirtualPad.h"
 #include "TInterpreter.h"
 #include "TMemberInspector.h"
-#include "TObjArray.h"
 #include "TObjString.h"
-#include "TDatime.h"
-#include "TProcessID.h"
-#include "TMath.h"
-#include "TSystem.h"
 #include "TRefTable.h"
+#include "TProcessID.h"
 
 class TDumpMembers : public TMemberInspector {
    // Implemented in TClass.cxx
@@ -170,8 +161,7 @@ void TObject::AppendPad(Option_t *option)
    // yet, create a default canvas with the name "c1".
 
    if (!gPad) {
-      if (!gROOT->GetMakeDefCanvas()) return;
-      (gROOT->GetMakeDefCanvas())();
+      gROOT->MakeDefCanvas();
    }
    if (!gPad->IsEditable()) return;
    SetBit(kMustCleanup);
@@ -204,30 +194,8 @@ TObject *TObject::Clone(const char *) const
    // by TNamed::Clone. TNamed::Clone uses the optional argument to set
    // a new name to the newly created object.
 
-   // if no default ctor return immediately (error issued by New())
-   TObject *newobj = (TObject *)IsA()->New();
-   if (!newobj) return 0;
-
-   //create a buffer where the object will be streamed
-   TFile *filsav = gFile;
-   gFile = 0;
-   const Int_t bufsize = 10000;
-   TBuffer *buffer = new TBuffer(TBuffer::kWrite,bufsize);
-   buffer->MapObject(this);  //register obj in map to handle self reference
-   ((TObject*)this)->Streamer(*buffer);
-
-   // read new object from buffer
-   buffer->SetReadMode();
-   buffer->ResetMap();
-   buffer->SetBufferOffset(0);
-   buffer->MapObject(newobj);  //register obj in map to handle self reference
-   newobj->Streamer(*buffer);
-   newobj->ResetBit(kIsReferenced);
-   newobj->ResetBit(kCanDelete);
-   gFile = filsav;
-
-   delete buffer;
-   return newobj;
+   if (gDirectory) return gDirectory->CloneObject(this);
+   else            return 0;
 }
 
 //______________________________________________________________________________
@@ -500,7 +468,7 @@ ULong_t TObject::Hash() const
 
    //return (ULong_t) this >> 2;
    const void *ptr = this;
-   return TMath::Hash(&ptr, sizeof(void*));
+   return TString::Hash(&ptr, sizeof(void*));
 }
 
 //______________________________________________________________________________
@@ -627,10 +595,8 @@ Int_t TObject::Read(const char *name)
    // The object must have been created before via the default constructor.
    // See TObject::Write().
 
-   if (!gFile) { Error("Read","No file open"); return 0; }
-   TKey *key = (TKey*)gDirectory->GetListOfKeys()->FindObject(name);
-   if (!key)   { Error("Read","Key not found"); return 0; }
-   return key->Read(this);
+   if (gDirectory) return gDirectory->ReadTObject(this,name);
+   else            return 0;
 }
 
 //______________________________________________________________________________
@@ -778,19 +744,13 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize) const
    //  The function returns the total number of bytes written to the file.
    //  It returns 0 if the object cannot be written.
 
-   if (!gFile) {
-      Error("Write","No file open");
-      return 0;
-   }
-   if (bufsize) gFile->SetBufferSize(bufsize);
    TString opt = "";
    if (option & kSingleKey)   opt += "SingleKey";
    if (option & kOverwrite)   opt += "OverWrite";
    if (option & kWriteDelete) opt += "WriteDelete";
 
-   Int_t nbytes = gDirectory->WriteTObject(this,name,opt.Data());
-   if (bufsize) gFile->SetBufferSize(0);
-   return nbytes;
+   if (gDirectory) return gDirectory->WriteTObject(this,name,opt.Data(),bufsize);
+   else            return 0;
 }
 
 //______________________________________________________________________________
@@ -809,26 +769,26 @@ void TObject::Streamer(TBuffer &R__b)
 
    if (IsA()->CanIgnoreTObjectStreamer()) return;
    UShort_t pidf;
-   TFile *file = (TFile*)R__b.GetParent();
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(); if (R__v) { }
       R__b >> fUniqueID;
       R__b >> fBits;
       fBits |= kIsOnHeap;  // by definition de-serialized object is on heap
-      //if the object is referenced, we must read its old address
-      //and store it in the ProcessID map in gROOT
-      if (!TestBit(kIsReferenced)) return;
-      R__b >> pidf;
-      pidf += R__b.GetPidOffset();
-      TProcessID *pid = TProcessID::ReadProcessID(pidf,file);
-      if (pid) {
-         UInt_t gpid = pid->GetUniqueID();
-         if (gpid>=0xff) {
-            fUniqueID = fUniqueID | 0xff000000;
-         } else {
-            fUniqueID = ( fUniqueID & 0xffffff) + (gpid<<24);
+      if (TestBit(kIsReferenced)) {
+         //if the object is referenced, we must read its old address
+         //and store it in the ProcessID map in gROOT
+         R__b >> pidf;
+         pidf += R__b.GetPidOffset();
+         TProcessID *pid = R__b.ReadProcessID(pidf);
+         if (pid) {
+            UInt_t gpid = pid->GetUniqueID();
+            if (gpid>=0xff) {
+               fUniqueID = fUniqueID | 0xff000000;
+            } else {
+               fUniqueID = ( fUniqueID & 0xffffff) + (gpid<<24);
+            }
+            pid->PutObjectWithID(this);
          }
-         pid->PutObjectWithID(this);
       }
    } else {
       R__b.WriteVersion(TObject::IsA());
@@ -840,13 +800,11 @@ void TObject::Streamer(TBuffer &R__b)
          UInt_t uid = fUniqueID & 0xffffff;
          R__b << uid;
          R__b << fBits;
-         TProcessID *pid;
-         pid = TProcessID::GetProcessWithUID(fUniqueID,this);
+         TProcessID *pid = TProcessID::GetProcessWithUID(fUniqueID,this);
          //add uid to the TRefTable if there is one
          TRefTable *table = TRefTable::GetRefTable();
          if(table) table->Add(uid, pid);
-
-         pidf = TProcessID::WriteProcessID(pid,file);
+         pidf = R__b.WriteProcessID(pid);
          R__b << pidf;
       }
    }

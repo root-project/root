@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.31 2006/10/17 12:28:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.35 2007/02/13 14:26:58 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -59,6 +59,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TPluginManager.h"
+#include "Varargs.h"
 #include "TEnv.h"
 #include "TRegexp.h"
 #include "TROOT.h"
@@ -141,7 +142,7 @@ void TPluginHandler::SetupCallEnv()
    fCanCall = -1;
 
    // check if class exists
-   TClass *cl = gROOT->GetClass(fClass);
+   TClass *cl = TClass::GetClass(fClass);
    if (!cl && !fIsGlobal) {
       Error("SetupCallEnv", "class %s not found in plugin %s", fClass.Data(),
             fPlugin.Data());
@@ -154,15 +155,9 @@ void TPluginHandler::SetupCallEnv()
 
    if (fIsGlobal) {
       cl = 0;
-      if (fIsMacro)
-         fMethod = gROOT->GetGlobalFunction(method, 0, kTRUE);  // to be fixed
-      else
-         fMethod = gROOT->GetGlobalFunctionWithPrototype(method, proto, kTRUE);
+      fMethod = gROOT->GetGlobalFunctionWithPrototype(method, proto, kTRUE);
    } else {
-      if (fIsMacro)
-         fMethod = cl->GetMethodAny(method);  //to be fixed to use prototype
-      else
-         fMethod = cl->GetMethodWithPrototype(method, proto);
+      fMethod = cl->GetMethodWithPrototype(method, proto);
    }
 
    if (!fMethod) {
@@ -194,7 +189,7 @@ Int_t TPluginHandler::CheckPlugin()
    // when it exists and -1 in case the plugin does not exist.
 
    if (fIsMacro) {
-      if (gROOT->GetClass(fClass)) return 0;
+      if (TClass::GetClass(fClass)) return 0;
       return gROOT->LoadMacro(fPlugin, 0, kTRUE);
    } else
       return gROOT->LoadClass(fClass, fPlugin, kTRUE);
@@ -207,10 +202,13 @@ Int_t TPluginHandler::LoadPlugin()
    // and -1 in case the library does not exist or in case of error.
 
    if (fIsMacro) {
-      if (gROOT->GetClass(fClass)) return 0;
+      if (TClass::GetClass(fClass)) return 0;
       return gROOT->LoadMacro(fPlugin);
-   } else
+   } else {
+      // first call also loads dependent libraries declared via the rootmap file
+      if (gROOT->LoadClass(fClass)) return 0;
       return gROOT->LoadClass(fClass, fPlugin);
+   }
 }
 
 //______________________________________________________________________________

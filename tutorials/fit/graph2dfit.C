@@ -28,11 +28,13 @@ void graph2dfit()
    TGraph2D *dt = new TGraph2D();
 
    // Fill the 2D graph
+   Double_t zmax = 0;
    for (Int_t N=0; N<nd; N++) {
       f2->GetRandom2(x,y);
       // Generate a random number in [-e,e]
       rnd = 2*r.Rndm()*e-e; 
       z = f2->Eval(x,y)*(1+rnd);
+      if (z>zmax) zmax = z;
       dt->SetPoint(N,x,y,z);
    }
 
@@ -62,6 +64,8 @@ void graph2dfit()
    gStyle->SetPalette(1);
    c->cd(1);
    f2->SetTitle("Original function with Graph2D points on top");
+   f2->SetMaximum(zmax);
+   gStyle->SetHistTopMargin(0); 
    f2->Draw("surf1");
    dt->Draw("same p0");
 

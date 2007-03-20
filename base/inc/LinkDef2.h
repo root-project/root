@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.35 2006/05/18 21:24:10 pcanal Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.43 2007/02/12 14:55:15 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -10,18 +10,19 @@
 
 #ifdef __CINT__
 
-#ifndef G__KCC
-#include "cint/lib/dll_stl/str.h"
-#endif
+#ifndef G__KCC 	 
+#include "cint/lib/dll_stl/str.h" 	 
+#endif 	 
 
 #pragma extra_include "vector";
 #pragma extra_include "string";
 #pragma extra_include "iostream";
-#include <vector>
 
 #pragma link C++ class vector<string>;
 #pragma link C++ class vector<TString>;
 #pragma create TClass string;
+
+#include <vector>
 
 #pragma link C++ global gTQSender;
 #pragma link C++ global gTQSlotParams;
@@ -57,13 +58,6 @@
 #pragma link C++ function operator==(const TRef&,const TRef&);
 #pragma link C++ function operator!=(const TRef&,const TRef&);
 
-#pragma link C++ function operator*(Double_t, const TComplex&);
-#pragma link C++ function operator+(Double_t, const TComplex&);
-#pragma link C++ function operator/(Double_t, const TComplex&);
-#pragma link C++ function operator-(Double_t, const TComplex&);
-#pragma link C++ function operator>>(istream&,TComplex&);
-#pragma link C++ function operator<<(ostream&,const TComplex&);
-
 #pragma link C++ function ConnectCINT(TQObject*,char*,char*);
 
 #pragma link C++ function R_ISDIR(Int_t);
@@ -73,6 +67,7 @@
 #pragma link C++ function R_ISLNK(Int_t);
 #pragma link C++ function R_ISFIFO(Int_t);
 #pragma link C++ function R_ISSOCK(Int_t);
+#pragma link C++ function R_ISOFF(Int_t);
 
 #pragma link C++ struct FileStat_t;
 #pragma link C++ struct UserGroup_t;
@@ -81,16 +76,9 @@
 #pragma link C++ struct MemInfo_t;
 #pragma link C++ struct ProcInfo_t;
 
-#pragma link C++ namespace TMath;
-#pragma link C++ class TComplex+;
 #pragma link C++ class TExec+;
 #pragma link C++ class TFolder+;
-#pragma link C++ class TFree;
-#pragma link C++ class TKey-;
-#pragma link C++ class TKeyMapFile;
 #pragma link C++ class TMacro+;
-#pragma link C++ class TMapFile;
-#pragma link C++ class TMapRec;
 #pragma link C++ class TMD5+;
 #pragma link C++ class TMemberInspector;
 #pragma link C++ class TMessageHandler+;
@@ -101,13 +89,8 @@
 #pragma link C++ class TProcessID+;
 #pragma link C++ class TProcessUUID+;
 #pragma link C++ class TProcessEventTimer;
-#pragma link C++ class TRandom+;
-#pragma link C++ class TRandom1+;
-#pragma link C++ class TRandom2+;
-#pragma link C++ class TRandom3-;
 #pragma link C++ class TRef-;
 #pragma link C++ class TROOT;
-#pragma link C++ class TRealData+;
 #pragma link C++ class TRegexp;
 #pragma link C++ class TPRegexp;
 #pragma link C++ class TRefCnt;

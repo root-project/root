@@ -1,4 +1,4 @@
-// @(#)root/castor:$Name:  $:$Id: TCastorFile.h,v 1.4 2006/07/24 16:26:28 rdm Exp $
+// @(#)root/castor:$Name:  $:$Id: TCastorFile.h,v 1.2 2007/03/05 09:01:08 rdm Exp $
 // Author: Fons Rademakers  17/09/2003 + Giulia Taurelli  29/06/2006
 
 /*************************************************************************
@@ -51,12 +51,13 @@ private:
    Bool_t    fIsCastor;      // true if internal path is valid
    Bool_t    fWrittenTo;     // true if data has been written to file
 
+   TString   fAuthProto;     // Used to specific the auth protocol
+
    void FindServerAndPath();
    void ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
                       Int_t tcpwindowsize, Bool_t forceOpen,
                       Bool_t forceRead);
    Int_t SysClose(Int_t fd);
-   int   ParseAndSetGlobal();
 
 public:
    TCastorFile(const char *url, Option_t *option = "", const char *ftitle = "",

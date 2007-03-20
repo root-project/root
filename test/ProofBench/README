@@ -12,10 +12,6 @@ Create the PAR file
 
 % ./make_event_par.sh
 
-Create a link to Event.h
-
-% ln -s ../Event.h
-
 Start root
 
 % root
@@ -30,7 +26,7 @@ second argument is the number of events in each file.
 The last argument is the number of files on each node.
 (not the number of files per slave!)
 
-root [] .X make_event_trees.C("/data1/tmp", 100000, 4)
+root [] .x make_event_trees.C("/data1/tmp", 100000, 4)
 
 Create the TDSet for these files. In this example we have two
 slaves on one node, we ask for one file per slave:

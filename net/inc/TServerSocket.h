@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TServerSocket.h,v 1.9 2006/05/23 04:47:40 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TServerSocket.h,v 1.10 2006/05/26 15:13:02 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -29,6 +29,8 @@
 #include "TSocket.h"
 #endif
 #include <string>
+
+class TSeqCollection;
 
 typedef Int_t (*SrvAuth_t)(TSocket *sock, const char *, const char *,
                            std::string&, Int_t &, Int_t &, std::string &,

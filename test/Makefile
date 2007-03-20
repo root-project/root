@@ -113,6 +113,10 @@ STRESSFITO    = stressFit.$(ObjSuf)
 STRESSFITS    = stressFit.$(SrcSuf)
 STRESSFIT     = stressFit$(ExeSuf)
 
+STRESSENTRYLISTO = stressEntryList.$(ObjSuf)
+STRESSENTRYLISTS = stressEntryList.$(SrcSuf)
+STRESSENTRYLIST  = stressEntryList$(ExeSuf)
+
 STRESSHEPIXO  = stressHepix.$(ObjSuf)
 STRESSHEPIXS  = stressHepix.$(SrcSuf)
 STRESSHEPIX   = stressHepix$(ExeSuf)
@@ -147,14 +151,14 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(STRESSSHAPESO) $(TCOLLBMO) $(STRESSGEOMETRYO) $(STRESSLO) \
                 $(STRESSGO) $(STRESSSPO) $(TESTBITSO) \
                 $(CTORTUREO) $(QPRANDOMO) $(THREADO) $(STRESSVECO) \
-                $(STRESSFITO) $(STRESSHEPIXO)
+                $(STRESSFITO) $(STRESSHEPIXO) $(STRESSENTRYLISTO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
                 $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
                 $(STRESSSHAPES) $(STRESSGEOMETRY) $(STRESSL) $(STRESSG) \
                 $(TESTBITS) $(CTORTURE) $(QPRANDOM) $(THREADS) $(STRESSSP) \
-                $(STRESSVEC) $(STRESSFIT) $(STRESSHEPIX)
+                $(STRESSVEC) $(STRESSFIT) $(STRESSHEPIX) $(STRESSENTRYLIST)
 
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
 PROGRAMS     += $(GUITEST) $(GUIVIEWER) $(TETRISSO)
@@ -189,6 +193,7 @@ ifeq ($(PLATFORM),win32)
 		   $(OutPutOpt)$(EVENTLIB)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
 		   $(OutPutOpt)$@
+		$(MT_DLL)
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
 endif
@@ -198,61 +203,74 @@ endif
 		@echo "$@ done"
 
 $(EVENT):       $(EVENTSO) $(MAINEVENTO)
-		$(LD) $(LDFLAGS) $(MAINEVENTO) $(EVENTLIB) $(LIBS) \
-		   $(OutPutOpt)$(EVENT)
+		$(LD) $(LDFLAGS) $(MAINEVENTO) $(EVENTLIB) $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
 		@echo "$@ done"
 
 $(HWORLD):      $(HWORLDO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
 		@echo "$@ done"
 
 $(CTORTURE):    $(CTORTUREO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
 		@echo "$@ done"
 
 $(HSIMPLE):     $(HSIMPLEO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
 		@echo "$@ done"
 
 $(MINEXAM):     $(MINEXAMO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
 		@echo "$@ done"
 
 $(TSTRING):     $(TSTRINGO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
 		@echo "$@ done"
 
 $(TCOLLEX):     $(TCOLLEXO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
 		@echo "$@ done"
 
 $(TCOLLBM):     $(TCOLLBMO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
 		@echo "$@ done"
 
 $(VVECTOR):     $(VVECTORO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
 		@echo "$@ done"
 
 $(VMATRIX):     $(VMATRIXO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
 		@echo "$@ done"
 
 $(VLAZY):       $(VLAZYO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
 		@echo "$@ done"
 
 $(STRESSL):     $(STRESSLO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
 		@echo "$@ done"
 
 $(STRESSG):     $(STRESSGO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
 		@echo "$@ done"
 
 $(STRESSSP):    $(STRESSSPO)
 ifeq ($(PLATFORM),win32)
 		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libSpectrum.lib $(OutPutOpt)$@
+		$(MT_EXE)
 else
 		$(LD) $(LDFLAGS) $^ $(LIBS) -lSpectrum $(OutPutOpt)$@
 endif
@@ -261,6 +279,7 @@ endif
 $(STRESSVEC):   $(STRESSVECO)
 ifeq ($(PLATFORM),win32)
 		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libMathCore.lib $(OutPutOpt)$@
+		$(MT_EXE)
 else
 		$(LD) $(LDFLAGS) $^ $(LIBS) -lMathCore $(OutPutOpt)$@
 endif
@@ -268,23 +287,27 @@ endif
 
 $(TESTBITS):    $(TESTBITSO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
 		@echo "$@ done"
 
 $(THREADS):     $(THREADSO)
-ifeq ($(HASTHREAD),yes)
 ifeq ($(PLATFORM),win32)
 		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libThread.lib $(OutPutOpt)$@
+		$(MT_EXE)
+		@echo "$@ done"
 else
+ifeq ($(HASTHREAD),yes)
 		$(LD) $(LDFLAGS) $^ $(LIBS) -lThread $(OutPutOpt)$@
-endif
 		@echo "$@ done"
 else
 		@echo "This version of ROOT has no thread support, $@ not built"
+endif
 endif
 
 $(QPRANDOM):    $(QPRANDOMO)
 ifeq ($(PLATFORM),win32)
 		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libQuadp.lib $(OutPutOpt)$@
+		$(MT_EXE)
 else
 		$(LD) $(LDFLAGS) $^ $(LIBS) -lQuadp $(OutPutOpt)$@
 endif
@@ -292,19 +315,23 @@ endif
 
 $(GUITEST):     $(GUITESTO)
 		$(LD) $(LDFLAGS) $^ $(GLIBS) $(OutPutOpt)$@
+		$(MT_EXE)
 		@echo "$@ done"
 
 $(GUIVIEWER):   $(GUIVIEWERO)
 		$(LD) $(LDFLAGS) $^ $(GLIBS) $(OutPutOpt)$@
+		$(MT_EXE)
 		@echo "$@ done"
 
 $(STRESS):      $(STRESSO) $(EVENT)
 		$(LD) $(LDFLAGS) $(STRESSO) $(EVENTLIB) $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
 		@echo "$@ done"
 
 $(STRESSGEOMETRY):  $(STRESSGEOMETRYO)
 ifeq ($(PLATFORM),win32)
 		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libGeom.lib $(OutPutOpt)$@
+		$(MT_EXE)
 else
 		$(LD) $(LDFLAGS) $^ $(LIBS) -lGeom $(OutPutOpt)$@
 endif
@@ -313,6 +340,7 @@ endif
 $(STRESSSHAPES):  $(STRESSSHAPESO)
 ifeq ($(PLATFORM),win32)
 		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libGeom.lib $(OutPutOpt)$@
+		$(MT_EXE)
 else
 		$(LD) $(LDFLAGS) $^ $(LIBS) -lGeom $(OutPutOpt)$@
 endif
@@ -320,15 +348,22 @@ endif
 
 $(STRESSFIT):   $(STRESSFITO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
+		@echo "$@ done"
+
+$(STRESSENTRYLIST):	$(STRESSENTRYLISTO)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
 $(STRESSHEPIX): $(STRESSHEPIXO) $(STRESSGEOMETRY) $(STRESSFIT) $(STRESSL) \
                 $(STRESSSP) $(STRESS)
 		$(LD) $(LDFLAGS) $(STRESSHEPIXO) $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
 		@echo "$@ done"
 
 $(BENCH):       $(BENCHO) $(TBENCHSO)
 		$(LD) $(LDFLAGS) $(BENCHO) $(TBENCHO) $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
 		@echo "$@ done"
 
 Hello:          $(HELLOSO)
@@ -350,6 +385,7 @@ else
 endif
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
+		$(MT_DLL)
 endif
 endif
 endif
@@ -373,6 +409,7 @@ else
 endif
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
+		$(MT_DLL)
 endif
 endif
 endif
@@ -396,6 +433,7 @@ else
 endif
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
+		$(MT_DLL)
 endif
 endif
 endif
@@ -418,6 +456,7 @@ else
 endif
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(EXPLLINKLIBS) $(OutPutOpt)$@
+		$(MT_DLL)
 endif
 endif
 endif

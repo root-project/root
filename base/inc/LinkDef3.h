@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.26 2006/08/18 17:34:46 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.29 2007/02/10 11:09:33 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -156,10 +156,6 @@
 #pragma link C++ function operator> (const TTimeStamp&, const TTimeStamp&);
 #pragma link C++ function operator>=(const TTimeStamp&, const TTimeStamp&);
 
-#pragma link C++ class TArchiveFile+;
-#pragma link C++ class TArchiveMember+;
-#pragma link C++ class TZIPFile+;
-#pragma link C++ class TZIPMember+;
 #pragma link C++ class TTimeStamp+;
 #pragma link C++ class TFileInfo+;
 #pragma link C++ class TVirtualAuth;
@@ -172,6 +168,8 @@
 #pragma link C++ class TVirtualMonitoringReader;
 #pragma link C++ class TObjectSpy;
 #pragma link C++ class TObjectRefSpy;
+#pragma link C++ class TUrl;
+#pragma link C++ class TInetAddress-;
 
 // Insure the creation of the TClass object for pairs that might be
 // inside the cintdlls.
@@ -253,6 +251,7 @@
 #pragma link C++ class std::pair<const double,char*>+;
 
 #pragma extra_include "Rtypes.h";
+#pragma link C++ class TParameter<Float_t>+;
 #pragma link C++ class TParameter<Double_t>+;
 #pragma link C++ class TParameter<Int_t>+;
 #pragma link C++ class TParameter<Long_t>+;

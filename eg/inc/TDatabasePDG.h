@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.h,v 1.12 2006/05/23 04:47:36 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.h,v 1.13 2006/08/24 16:31:21 rdm Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -15,12 +15,11 @@
 #ifndef ROOT_TParticlePDG
 #include "TParticlePDG.h"
 #endif
-#ifndef ROOT_THashList
-#include "THashList.h"
-#endif
 #ifndef ROOT_TParticleClassPDG
 #include "TParticleClassPDG.h"
 #endif
+
+class THashList;
 
 class TDatabasePDG: public TNamed {
 

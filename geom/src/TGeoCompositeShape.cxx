@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.36 2006/07/03 16:10:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.37 2006/11/03 21:22:32 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -350,14 +350,16 @@ Bool_t TGeoCompositeShape::PaintComposite(Option_t *option) const
    if (fNode) {
       // Fill out the buffer for the composite shape - nothing extra
       // over TGeoBBox
+      Bool_t preferLocal = viewer->PreferLocalFrame();
+      if (TBuffer3D::GetCSLevel()) preferLocal = kFALSE;
       static TBuffer3D buffer(TBuffer3DTypes::kComposite);
       FillBuffer3D(buffer, TBuffer3D::kCore|TBuffer3D::kBoundingBox,
-                   viewer->PreferLocalFrame());
+                   preferLocal);
 
       Bool_t paintComponents = kTRUE;
       
       // Start a composite shape, identified by this buffer
-      if (!TBuffer3D::GetCSLevel())
+      if (!TBuffer3D::GetCSLevel()) 
          paintComponents = viewer->OpenComposite(buffer, &addChildren);
 
       TBuffer3D::IncCSLevel();
@@ -365,9 +367,9 @@ Bool_t TGeoCompositeShape::PaintComposite(Option_t *option) const
       // Paint the boolean node - will add more buffers to viewer
       TGeoHMatrix *matrix = (TGeoHMatrix*)TGeoShape::GetTransform();
       TGeoHMatrix backup(*matrix); 
-      if (viewer->PreferLocalFrame()) matrix->Clear();
+      if (preferLocal) matrix->Clear();
       if (paintComponents) fNode->Paint(option);
-      if (viewer->PreferLocalFrame()) *matrix = backup;
+      if (preferLocal) *matrix = backup;
       // Close the composite shape
       if (!TBuffer3D::DecCSLevel())
          viewer->CloseComposite();

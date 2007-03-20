@@ -1,4 +1,4 @@
-# @(#)root/gdml:$Name:  $:$Id: writer.py,v 1.3 2006/06/13 20:46:53 rdm Exp $
+# @(#)root/gdml:$Name:  $:$Id: writer.py,v 1.4 2006/07/10 16:06:09 brun Exp $
 # Author: Witold Pokorski   05/06/2006
 # This is the application-independent part of the GDML 'writer' implementation.
 # It contains the 'writeFile' method (at the end of the file) which does the actual
@@ -28,7 +28,7 @@ class writer(object):
                          [self.define, self.materials, self.solids, self.structure]]
 
     def addPosition(self, name, x, y, z):
-        self.define[2].append(['position',{'name':name, 'x':x, 'y':y, 'z':z},[]])
+        self.define[2].append(['position',{'name':name, 'x':x, 'y':y, 'z':z, 'unit':'cm'},[]])
 
     def addRotation(self, name, x, y, z):
         self.define[2].append(['rotation',{'name':name, 'x':x, 'y':y, 'z':z, 'unit':'deg'},[]])
@@ -49,63 +49,66 @@ class writer(object):
         self.materials[2].append(['element', {'name':name, 'formula':symb, 'Z':z},
                                   [['atom', {'value':a},[]] ]])
 
+    def addReflSolid(self, name, solid, dx, dy, dz, sx, sy, sz, rx, ry, rz):
+        self.solids[2].append(['reflectedSolid',{'name':name, 'solid':solid, 'dx':dx, 'dy':dy, 'dz':dz, 'sx':sx, 'sy':sy, 'sz':sz, 'rx':rx, 'ry':ry, 'rz':rz},[]])
+
     def addBox(self, name, dx, dy, dz):
-        self.solids[2].append(['box',{'name':name, 'x':dx, 'y':dy, 'z':dz},[]])
+        self.solids[2].append(['box',{'name':name, 'x':dx, 'y':dy, 'z':dz, 'lunit':'cm'},[]])
 	
     def addParaboloid(self, name, rlo, rhi, dz):
-        self.solids[2].append(['paraboloid',{'name':name, 'rlo':rlo, 'rhi':rhi, 'dz':dz},[]])
+        self.solids[2].append(['paraboloid',{'name':name, 'rlo':rlo, 'rhi':rhi, 'dz':dz, 'lunit':'cm'},[]])
 	
     def addArb8(self, name, v1x, v1y, v2x, v2y, v3x, v3y, v4x, v4y, v5x, v5y, v6x, v6y, v7x, v7y, v8x, v8y, dz):
-        self.solids[2].append(['arb8',{'name':name, 'v1x':v1x, 'v1y':v1y, 'v2x':v2x, 'v2y':v2y, 'v3x':v3x, 'v3y':v3y, 'v4x':v4x, 'v4y':v4y, 'v5x':v5x, 'v5y':v5y, 'v6x':v6x, 'v6y':v6y, 'v7x':v7x, 'v7y':v7y, 'v8x':v8x, 'v8y':v8y, 'dz':dz},[]])
+        self.solids[2].append(['arb8',{'name':name, 'v1x':v1x, 'v1y':v1y, 'v2x':v2x, 'v2y':v2y, 'v3x':v3x, 'v3y':v3y, 'v4x':v4x, 'v4y':v4y, 'v5x':v5x, 'v5y':v5y, 'v6x':v6x, 'v6y':v6y, 'v7x':v7x, 'v7y':v7y, 'v8x':v8x, 'v8y':v8y, 'dz':dz, 'lunit':'cm'},[]])
 
     def addSphere(self, name, rmin, rmax, startphi, deltaphi, starttheta, deltatheta):
         self.solids[2].append(['sphere',{'name':name, 'rmin':rmin, 'rmax':rmax,
                                          'startphi':startphi, 'deltaphi':deltaphi,
                                          'starttheta':starttheta, 'deltatheta':deltatheta,
-                                         'aunit':'deg', 'lunit':'mm'},[]])
+                                         'aunit':'deg', 'lunit':'cm'},[]])
 
     def addCone(self, name, z, rmin1, rmin2, rmax1, rmax2, sphi, dphi):
         self.solids[2].append(['cone',{'name':name, 'z':z, 'rmin1':rmin1, 'rmin2':rmin2,
                                        'rmax1':rmax1, 'rmax2':rmax2,
-                                       'startphi':sphi, 'deltaphi':dphi}, []] )
+                                       'startphi':sphi, 'deltaphi':dphi, 'lunit':'cm', 'aunit':'deg'}, []] )
 
     def addPara(self, name, x, y, z, alpha, theta, phi):
         self.solids[2].append(['para',{'name':name, 'x':x, 'y':y, 'z':z,
-                                       'alpha':alpha, 'theta':theta, 'phi':phi}, []] )
+                                       'alpha':alpha, 'theta':theta, 'phi':phi, 'lunit':'cm', 'aunit':'deg'}, []] )
 
     def addTrap(self, name, z, theta, phi, y1, x1, x2, alpha1, y2, x3, x4, alpha2):
         self.solids[2].append(['trap', {'name':name, 'z':z, 'theta':theta, 'phi':phi,
                                         'x1':x1, 'x2':x2, 'x3':x3, 'x4':x4,
-                                        'y1':y1, 'y2':y2, 'alpha1':alpha1, 'alpha2':alpha2}, []])
+                                        'y1':y1, 'y2':y2, 'alpha1':alpha1, 'alpha2':alpha2, 'lunit':'cm', 'aunit':'deg'}, []])
 					
     def addTwistedTrap(self, name, z, theta, phi, y1, x1, x2, alpha1, y2, x3, x4, alpha2, twist):
         self.solids[2].append(['twistTrap', {'name':name, 'z':z, 'theta':theta, 'phi':phi,
                                              'x1':x1, 'x2':x2, 'x3':x3, 'x4':x4,
-                                             'y1':y1, 'y2':y2, 'alpha1':alpha1, 'alpha2':alpha2, 'twist':twist, 'aunit':'deg', 'lunit':'mm'}, []])
+                                             'y1':y1, 'y2':y2, 'alpha1':alpha1, 'alpha2':alpha2, 'twist':twist, 'aunit':'deg', 'lunit':'cm'}, []])
 
     def addTrd(self, name, x1, x2, y1, y2, z):
         self.solids[2].append(['trd',{'name':name, 'x1':x1, 'x2':x2,
-                                      'y1':y1, 'y2':y2, 'z':z}, []])
+                                      'y1':y1, 'y2':y2, 'z':z, 'lunit':'cm'}, []])
 
     def addTube(self, name, rmin, rmax, z, startphi, deltaphi):
         self.solids[2].append(['tube',{'name':name, 'rmin':rmin, 'rmax':rmax,
-                                       'z':z, 'startphi':startphi, 'deltaphi':deltaphi},[]])
+                                       'z':z, 'startphi':startphi, 'deltaphi':deltaphi, 'lunit':'cm', 'aunit':'deg'},[]])
 				       
     def addCutTube(self, name, rmin, rmax, z, startphi, deltaphi, lowX, lowY, lowZ, highX, highY, highZ):
         self.solids[2].append(['cutTube',{'name':name, 'rmin':rmin, 'rmax':rmax,
                                           'z':z, 'startphi':startphi, 'deltaphi':deltaphi,
-					  'lowX':lowX, 'lowY':lowY, 'lowZ':lowZ, 'highX':highX, 'highY':highY, 'highZ':highZ},[]])
+					  'lowX':lowX, 'lowY':lowY, 'lowZ':lowZ, 'highX':highX, 'highY':highY, 'highZ':highZ, 'lunit':'cm', 'aunit':'deg'},[]])
 
     def addPolycone(self, name, startphi, deltaphi, zplanes):
         zpls = []
         for zplane in zplanes:
             zpls.append( ['zplane',{'z':zplane[0], 'rmin':zplane[1], 'rmax':zplane[2]},[]] )
         self.solids[2].append(['polycone',{'name':name,
-                                           'startphi':startphi, 'deltaphi':deltaphi}, zpls])
+                                           'startphi':startphi, 'deltaphi':deltaphi, 'lunit':'cm', 'aunit':'deg'}, zpls])
 
     def addTorus(self, name, r, rmin, rmax, startphi, deltaphi):
         self.solids[2].append( ['torus',{'name':name, 'rtor':r, 'rmin':rmin, 'rmax':rmax,
-                                         'startphi':startphi, 'deltaphi':deltaphi},[]] )
+                                         'startphi':startphi, 'deltaphi':deltaphi, 'lunit':'cm', 'aunit':'deg'},[]] )
 
     def addPolyhedra(self, name, startphi, deltaphi, numsides, zplanes):
         zpls = []
@@ -113,7 +116,7 @@ class writer(object):
             zpls.append( ['zplane',{'z':zplane[0], 'rmin':zplane[1], 'rmax':zplane[2]},[]] )
         self.solids[2].append(['polyhedra',{'name':name,
                                             'startphi':startphi, 'deltaphi':deltaphi,
-                                            'numsides':numsides}, zpls])
+                                            'numsides':numsides, 'lunit':'cm', 'aunit':'deg'}, zpls])
 					    
     def addXtrusion(self, name, vertices, sections):
         elems = []
@@ -121,18 +124,18 @@ class writer(object):
 	    elems.append( ['twoDimVertex',{'x':vertex[0], 'y':vertex[1]},[]] )
 	for section in sections:
 	    elems.append( ['section',{'zOrder':section[0], 'zPosition':section[1], 'xOffset':section[2], 'yOffset':section[3], 'scalingFactor':section[4]},[]] )
-	self.solids[2].append(['xtru',{'name':name}, elems])
+	self.solids[2].append(['xtru',{'name':name, 'lunit':'cm'}, elems])
 
     def addEltube(self, name, x, y, z):
-        self.solids[2].append( ['eltube', {'name':name, 'x':x, 'y':y, 'z':z},[]] )
+        self.solids[2].append( ['eltube', {'name':name, 'x':x, 'y':y, 'z':z, 'lunit':'cm'},[]] )
 
     def addHype(self, name, rmin, rmax, inst, outst, z):
         self.solids[2].append( ['hype', {'name':name, 'rmin':rmin, 'rmax':rmax,
-                                         'inst':inst, 'outst':outst, 'z':z},[]] )
+                                         'inst':inst, 'outst':outst, 'z':z, 'lunit':'cm', 'aunit':'deg'},[]] )
 
     def addPos(self, subels, type, name, v):
         if v[0]!=0.0 or v[1]!=0.0 or v[2]!=0.0:
-            subels.append( [type,{'name':name, 'x':v[0], 'y':v[1], 'z':v[2]},[]] )
+            subels.append( [type,{'name':name, 'x':v[0], 'y':v[1], 'z':v[2], 'unit':'cm'},[]] )
 
     def addRot(self, subels, type, name, v):
         if v[0]!=0.0 or v[1]!=0.0 or v[2]!=0.0:
@@ -176,7 +179,8 @@ class writer(object):
 
             subels.append( ['physvol',{}, subsubels])
 
-        self.structure[2].append(['volume',{'name':volume}, subels])
+        used = 0
+        self.structure[2].append(['volume',{'name':volume}, subels, used])
 
     def addAssembly(self, volume, daughters):
         subels = []

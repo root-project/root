@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.27 2006/07/19 18:01:38 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.28 2006/09/17 19:08:13 pcanal Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -20,10 +20,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TClass
-#include "TClass.h"
+#ifndef ROOT_TObject
+#include "TObject.h"
 #endif
 
+class TClass;
 class TTree;
 class TH1;
 class TTreeFormula;
