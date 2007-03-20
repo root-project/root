@@ -11,10 +11,10 @@ include $(ROOTSYS)/config/Makefile.config
 
 #------------------------------------------------------------------------------
 
-ifeq ($(PLATFORM),macosx) 
-#unroll loop better on gcc > 4
-CXXFLAGS+= -O3 -g  -funroll-loops 
-endif
+# ifeq ($(PLATFORM),macosx) 
+# #unroll loop better on gcc > 4
+# CXXFLAGS+= -O3 -g  -funroll-loops 
+# endif
 
 
 
@@ -22,7 +22,12 @@ endif
 #CLHEPBASE=/Users/moneta/mathlibs/CLHEP-1.9.2.2
 ifneq ($(CLHEPBASE),)
 CXXFLAGS+=  -I$(CLHEPBASE)/include -DHAVE_CLHEP
-EXTRALIBS+=  $(CLHEPBASE)/lib/libCLHEP.a
+ifeq ($(PLATFORM),win32)
+EXTRALIBS += "$(CLHEPBASE)/lib/CLHEP.lib"
+else
+#EXTRALIBS+=  $(CLHEPBASE)/lib/libCLHEP.a
+EXTRALIBS+=  -L$(CLHEPBASE)/lib -lCLHEP
+endif
 endif
 
 ifneq ($(PLATFORM),win32) 
