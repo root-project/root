@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.120 2007/03/05 11:49:23 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.121 2007/03/05 14:26:12 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Valeri Onuchin, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -1918,7 +1918,7 @@ Window_t TGWin32::GetCurrentWindow() const
 {
    // Return current window pointer. Protected method used by TGWin32TTF.
 
-   return (Window_t)gCws->drawing;
+   return (Window_t)(gCws ? gCws->drawing : 0);
 }
 
 //______________________________________________________________________________

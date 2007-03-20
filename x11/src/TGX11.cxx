@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.54 2006/01/26 16:21:25 couet Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.55 2006/02/06 16:34:43 couet Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -855,7 +855,7 @@ Window_t TGX11::GetCurrentWindow() const
 {
    // Return current window pointer. Protected method used by TGX11TTF.
 
-   return (Window_t)gCws->fDrawing;
+   return (Window_t)(gCws ? gCws->fDrawing : 0);
 }
 
 //______________________________________________________________________________

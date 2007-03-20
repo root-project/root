@@ -914,16 +914,15 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    if (h == 0) {
       h = pad->VtoPixel(0.);
    }
-
-   TCanvas *canvas = pad->GetCanvas();
-   Int_t wid = (pad == canvas) ? canvas->GetCanvasID() : pad->GetPixmapID();
-   gVirtualX->SelectWindow(wid);
-
    // syncronization
    gVirtualX->Update(1);
    gSystem->ProcessEvents();
    gSystem->Sleep(10);
    gSystem->ProcessEvents();
+
+   TCanvas *canvas = pad->GetCanvas();
+   Int_t wid = (pad == canvas) ? canvas->GetCanvasID() : pad->GetPixmapID();
+   gVirtualX->SelectWindow(wid);
 
    Window_t wd = (Window_t)gVirtualX->GetCurrentWindow();
    if (!wd) return;
