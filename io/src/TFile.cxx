@@ -1,4 +1,4 @@
-// @(#)root/io:$Name:  $:$Id: TFile.cxx,v 1.207 2007/02/12 15:37:00 rdm Exp $
+// @(#)root/io:$Name:  $:$Id: TFile.cxx,v 1.208 2007/03/19 14:24:30 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -2339,7 +2339,7 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
 
    // check if we read through a file cache
    const char *defaultreadoption = "READ";
-   if (!strcmp(option, "CACHEREAD")) {
+   if (!strcasecmp(option, "CACHEREAD")) {
       if (fgCacheFileDir == "") {
          ::Warning("TFile::Open", "you want to read through a cache, but you have no valid cache directory set - reading remotely");
          ::Info("TFile::Open", "set cache directory using TFile::SetCacheFileDir()");
