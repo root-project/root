@@ -78,7 +78,7 @@ Bool_t Test1()
    smallchain->Draw("x >> hcheck", "", "goff");
    wrongentries1 = 0;
    for (Int_t i=1; i<=range; i++){
-      if (hx->GetBinContent(i) != hcheck->GetBinContent(i)){
+      if (TMath::Abs(hx->GetBinContent(i)-hcheck->GetBinContent(i)) > 0.1){
          wrongentries1++;
       }
    }
@@ -90,7 +90,7 @@ Bool_t Test1()
    bigchain->Draw("x >> hcheck_", "", "goff");
    wrongentries2 = 0;
    for (Int_t i=1; i<=range; i++){
-      if (hx->GetBinContent(i) != hcheck->GetBinContent(i)){
+      if (TMath::Abs(hx->GetBinContent(i)-hcheck->GetBinContent(i)) > 0.1){
          wrongentries2++;
       }
    }
@@ -121,13 +121,13 @@ Bool_t Test1()
    for (Int_t i=0; i<n; i++){
       entry1 = list_extracted->GetEntry(i);
       entry2 = elist_small->GetEntry(i);
-      if (TMath::Abs(entry1 - entry2)>0.01){
-         //printf("wrong entry: %d list2=%lld elist_small=%lld\n", i, entry1, entry2);
+      if (entry1 != entry2){
+         if (wrongentries3<10) printf("wrong entry: %d list2=%lld elist_small=%lld\n", i, entry1, entry2);
          wrongentries3++;
       }
    }
    if (wrongentries3 >0)
-      printf("\nsmall list and extracted list: number of wrong entries = %d\n", wrongentries3);
+      printf("\nsmall list and extracted list: number of wrong entries = %d, n=%d\n", wrongentries3,n);
 
    //add another entry list to the extracted list
    elist_temp = (TEntryList*)lists->Last();
@@ -136,7 +136,7 @@ Bool_t Test1()
    smallchain->Draw("x>>hcheck", "", "goff");
    wrongentries4 = 0;
    for (Int_t i=1; i<=range; i++){
-      if (hx->GetBinContent(i) != hcheck->GetBinContent(i)){
+      if (TMath::Abs(hx->GetBinContent(i)-hcheck->GetBinContent(i)) > 0.1){
          //printf("%d hx: %f hcheck %f\n", i, hx->GetBinContent(i), hcheck->GetBinContent(i));
          wrongentries4++;
       }
@@ -150,7 +150,7 @@ Bool_t Test1()
    smallchain->Draw("x >> hcheck", "", "goff");
    wrongentries5 = 0;
    for (Int_t i=1; i<=range; i++){
-      if (hx->GetBinContent(i) != hcheck->GetBinContent(i)){
+      if (TMath::Abs(hx->GetBinContent(i)-hcheck->GetBinContent(i)) > 0.1){
          //printf("i=%d hx(i)=%f, hcheck(i)=%f\n", i, hx->GetBinContent(i), hcheck->GetBinContent(i)); 
          wrongentries5++;
       }
@@ -325,7 +325,7 @@ Bool_t Test3()
       bin1 = h1->GetBinContent(i);
       bin2 = h2->GetBinContent(i);
       bin3 = h3->GetBinContent(i);
-      if (bin1 != bin2 || bin1!=bin3 || bin2!=bin3){
+      if (TMath::Abs(bin1-bin2) > 0.1 || TMath::Abs(bin1-bin3) || TMath::Abs(bin2-bin3) > 0.1) {
          //printf("bin1=%f, bin2=%f, bin3=%f\n", bin1, bin2, bin3);
          wrongbins++;
       }
@@ -373,7 +373,7 @@ Bool_t Test4()
       bin1 = h1->GetBinContent(i);
       bin2 = h2->GetBinContent(i);
       bin3 = h3->GetBinContent(i);
-      if (bin1 != bin2 || bin1!=bin3 || bin2!=bin3){
+      if (TMath::Abs(bin1-bin2) > 0.1 || TMath::Abs(bin1-bin3) || TMath::Abs(bin2-bin3) > 0.1) {
          //printf("bin1=%f, bin2=%f, bin3=%f\n", bin1, bin2, bin3);
          wrongbins++;
       }
