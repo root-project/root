@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.163 2007/03/14 13:28:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.164 2007/03/14 18:28:17 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -3198,8 +3198,8 @@ TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode,
       if (mode)
          len--;
    }
-   Bool_t compile = !strncmp(fname+len-1, "+", 1);
-   Bool_t remove  = !strncmp(fname+len-2, "++", 2);
+   Bool_t compile = len && fname[len - 1] == '+';
+   Bool_t remove  = compile && len > 1 && fname[len - 2] == '+';
    if (compile) {
       if (mode) {
          fname[len] = 0;

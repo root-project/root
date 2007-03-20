@@ -47,7 +47,7 @@
  *
  */
 
-/* @(#) $Id$ */
+/* @(#) $Id: deflate.c,v 1.1 2004/03/17 17:34:01 brun Exp $ */
 
 #include "deflate.h"
 
@@ -271,6 +271,7 @@ int ZEXPORT deflateInit2_(strm, level, method, windowBits, memLevel, strategy,
     s = (deflate_state *) ZALLOC(strm, 1, sizeof(deflate_state));
     if (s == Z_NULL) return Z_MEM_ERROR;
     strm->state = (struct internal_state FAR *)s;
+    memset(s, 0, sizeof(deflate_state));
     s->strm = strm;
 
     s->wrap = wrap;
@@ -284,6 +285,8 @@ int ZEXPORT deflateInit2_(strm, level, method, windowBits, memLevel, strategy,
     s->hash_shift =  ((s->hash_bits+MIN_MATCH-1)/MIN_MATCH);
 
     s->window = (Bytef *) ZALLOC(strm, s->w_size, 2*sizeof(Byte));
+    /* init buffer for data_type check in trees.c:934*/
+    memset(s->window, 0, s->w_size * 2*sizeof(Byte));
     s->prev   = (Posf *)  ZALLOC(strm, s->w_size, sizeof(Pos));
     s->head   = (Posf *)  ZALLOC(strm, s->hash_size, sizeof(Pos));
 
