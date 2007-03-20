@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGridCollection.h,v 1.3 2007/03/19 16:14:15 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGridCollection.h,v 1.4 2007/03/19 17:41:37 rdm Exp $
 // Author: Andreas-Joachim Peters 2005-05-09
 
 /*************************************************************************
@@ -26,10 +26,11 @@
 
 class TMap;
 class TFile;
-class TEventList;
+class TEntryList;
 class TList;
 class TDSet;
 class TGridResult;
+
 
 class TGridCollection : public TObject {
 public:
@@ -65,7 +66,7 @@ public:
    virtual Bool_t      DownscaleSelection(UInt_t /* scaler */ = 2)
       { MayNotUse("DownscaleSelection"); return kFALSE;}
    virtual Bool_t      ExportXML(const char *, Bool_t /*selected*/ = kTRUE, Bool_t /*online*/ = kTRUE,
-				 const char * /*name*/ = "ROOT xml", const char * /*comment*/ = "Exported XML")
+                                 const char * /*name*/ = "ROOT xml", const char * /*comment*/ = "Exported XML")
       { MayNotUse("ExportXML"); return kFALSE;}
    virtual const char* GetExportUrl()
       { MayNotUse("GetExportUrl"); return 0;}
@@ -77,8 +78,8 @@ public:
       { MayNotUse("OpenFile"); return 0;}
    virtual TList       *GetFileGroupList() const
       { MayNotUse("GetFileGroupList"); return 0;}
-   virtual TEventList  *GetEvList(const char *)
-      { MayNotUse("GetEvList"); return 0;}
+   virtual TEntryList  *GetEntryList(const char *)
+      { MayNotUse("GetEntryList"); return 0;}
    virtual UInt_t       GetNofGroups() const
       { MayNotUse("GetNofGroups"); return 0;}
    virtual UInt_t       GetNofGroupfiles() const

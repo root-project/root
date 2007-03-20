@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.13 2006/10/05 14:56:24 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienResult.cxx,v 1.14 2007/02/18 15:35:39 rdm Exp $
 // Author: Fons Rademakers   23/5/2002
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 #include "TSystem.h"
 #include "TUrl.h"
 #include "TFileInfo.h"
-#include "TEventList.h"
+#include "TEntryList.h"
 
 
 ClassImp(TAlienResult)
@@ -87,14 +87,13 @@ const char *TAlienResult::GetFileName(UInt_t i) const
 }
 
 //______________________________________________________________________________
-const TObject *TAlienResult::GetEventList(UInt_t i) const
+const TEntryList *TAlienResult::GetEntryList(UInt_t i) const
 {
-   // Return the event list, if evtlist was defined as a tag.
-   // You have to dynamic cast the returned object to a TEventList.
+   // Return the entry list, if evtlist was defined as a tag.
 
    if (At(i)) {
-      TEventList *entry;
-      if ((entry = (TEventList *) ((TMap *) At(i))->GetValue("evlist"))) {
+      TEntryList *entry;
+      if ((entry = (TEntryList *) ((TMap *) At(i))->GetValue("evlist"))) {
          return entry;
       }
    }

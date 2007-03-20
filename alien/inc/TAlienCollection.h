@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienCollection.h,v 1.8 2007/03/19 17:41:37 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.h,v 1.9 2007/03/20 08:02:11 brun Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -37,30 +37,26 @@
 #include "TFileStager.h"
 #endif
 
-class TMap;
-class TIter;
-class TFile;
-class TDSet;
 
 
-class TAlienCollection:public TGridCollection {
+class TAlienCollection : public TGridCollection {
 
 private:
-   TString  fXmlFile;            // collection XML file
-   TList   *fFileGroupList;      // list with event file maps
-   TIter   *fFileGroupListIter;  // event file list iterator
-   TMap    *fCurrent;            // current event file map
-   UInt_t   fNofGroups;          // number of file groups
-   UInt_t   fNofGroupfiles;      // number of files per group
-   Bool_t   fHasSUrls;           // defines if SURLs are present in the collection
-   Bool_t   fHasSelection;       // defines if the user made some selection on the files to be exported for processing
-   Bool_t   fHasOnline;          // defines if the collection was checked for the online status
-   TString  fLastOutFileName;    // keeps the latest outputfilename produced with GetOutputFileName
-   TFileStager *fFileStager;     // pointer to the file stager object
-   TString      fExportUrl;      // defines the url where to store back this collection
-   TString      fInfoComment;    // comment in the info section of the XML file
-   TString      fCollectionName; // name of the collection in the collection section of the XML file
-   TList       *fTagFilterList;  // List of TObjStrings with tags to filter out in export operations
+   TString      fXmlFile;            // collection XML file
+   TList       *fFileGroupList;      // list with event file maps
+   TIter       *fFileGroupListIter;  // event file list iterator
+   TMap        *fCurrent;            // current event file map
+   UInt_t       fNofGroups;          // number of file groups
+   UInt_t       fNofGroupfiles;      // number of files per group
+   Bool_t       fHasSUrls;           // defines if SURLs are present in the collection
+   Bool_t       fHasSelection;       // defines if the user made some selection on the files to be exported for processing
+   Bool_t       fHasOnline;          // defines if the collection was checked for the online status
+   TString      fLastOutFileName;    // keeps the latest outputfilename produced with GetOutputFileName
+   TFileStager *fFileStager;         // pointer to the file stager object
+   TString      fExportUrl;          // defines the url where to store back this collection
+   TString      fInfoComment;        // comment in the info section of the XML file
+   TString      fCollectionName;     // name of the collection in the collection section of the XML file
+   TList       *fTagFilterList;      // list of TObjStrings with tags to filter out in export operations
 
    virtual void ParseXML(UInt_t maxentries);
    Bool_t ExportXML(TFile * file, Bool_t selected, Bool_t online,
@@ -101,9 +97,11 @@ public:
 
    void        Print(Option_t * opt) const;
    TFile      *OpenFile(const char *filename) ;
+
+   TEntryList *GetEntryList(const char *name) ;
+
    TList      *GetFileGroupList() const { return fFileGroupList; }
 
-   TEventList *GetEvList(const char *name);
    UInt_t      GetNofGroups() const { return fNofGroups; }
 
    UInt_t      GetNofGroupfiles() const { return fNofGroupfiles; }

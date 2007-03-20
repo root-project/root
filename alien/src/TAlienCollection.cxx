@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.13 2007/03/19 17:41:37 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.14 2007/03/20 08:02:11 brun Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -29,7 +29,7 @@
 #include "TFile.h"
 #include "TXMLEngine.h"
 #include "TObjString.h"
-#include "TEventList.h"
+#include "TEntryList.h"
 #include "TObjArray.h"
 #include "TFileMerger.h"
 #include "TROOT.h"
@@ -41,7 +41,7 @@ TAlienCollection::TAlienCollection(const char *localcollectionfile,
                                    UInt_t maxentries)
 {
    // Create Alien event collection by reading collection from the specified XML file.
-   // You can restrict the number of importet entries using the maxentries value
+   // You can restrict the number of importet entries using the maxentries value.
 
    fXmlFile = localcollectionfile;
    fFileGroupList = new TList();
@@ -66,7 +66,8 @@ TAlienCollection::TAlienCollection(const char *localcollectionfile,
 TAlienCollection::TAlienCollection(TList *eventlist, UInt_t nofgroups,
                                    UInt_t nofgroupfiles)
 {
-   // Create Alien event collection using an event list
+   // Create Alien event collection using an event list.
+
    fFileGroupList = eventlist;
    fFileGroupList->SetOwner(kTRUE);
    fFileGroupListIter = new TIter(fFileGroupList);
@@ -99,7 +100,7 @@ TAlienCollection::~TAlienCollection()
 
 //______________________________________________________________________________
 TGridCollection *TAlienCollection::Open(const char *collectionurl,
-                                         UInt_t maxentries)
+                                        UInt_t maxentries)
 {
    // Static method used to create an Alien event collection, by reading
    // an XML collection from the specified url. All ROOT URLs are supported.
@@ -146,7 +147,7 @@ TFile *TAlienCollection::OpenFile(const char *filename)
 
 //______________________________________________________________________________
 TGridCollection *TAlienCollection::OpenQuery(TGridResult * queryresult,
-                                              Bool_t nogrouping)
+                                             Bool_t nogrouping)
 {
    // Static method used to create an Alien event collection, by creating
    // collection from a TGridResult Query result (TAlien::Query)
@@ -327,18 +328,18 @@ void TAlienCollection::ParseXML(UInt_t maxentries)
                 new TObjString(xml.GetAttr(xfile, "seStringlist"));
             TObjString *oevlist =
                 new TObjString(xml.GetAttr(xfile, "evlist"));
-            // if oevlist is defined, we parse it and fill a TEventList
+            // if oevlist is defined, we parse it and fill a TEntyList
             if (oevlist && strlen(oevlist->GetName())) {
-               TEventList *xmlevlist =
-                   new TEventList(oturl->GetName(), oguid->GetName());
+               TEntryList *xmlentrylist =
+                   new TEntryList(oturl->GetName(), oguid->GetName());
                TString stringevlist = oevlist->GetName();
                TObjArray *evlist = stringevlist.Tokenize(",");
                for (Int_t n = 0; n < evlist->GetEntries(); n++) {
-                  xmlevlist->
+                  xmlentrylist->
                       Enter(atol
                             (((TObjString *) evlist->At(n))->GetName()));
                }
-               attributes->Add(new TObjString("evlist"), xmlevlist);
+               attributes->Add(new TObjString("evlist"), xmlentrylist);
             }
             attributes->Add(new TObjString("name"), oname);
             attributes->Add(new TObjString("turl"), oturl);
@@ -701,7 +702,7 @@ Bool_t TAlienCollection::IsSelected(const char *filename)
 }
 
 //______________________________________________________________________________
-TEventList *TAlienCollection::GetEvList(const char *filename)
+TEntryList *TAlienCollection::GetEntryList(const char *filename)
 {
    // Get a file's event list. Returns 0 in case of error.
 
@@ -709,11 +710,11 @@ TEventList *TAlienCollection::GetEvList(const char *filename)
       TMap *obj = (TMap *) fCurrent->GetValue(filename);
       if (obj) {
          if (obj->GetValue("evlist")) {
-            return ((TEventList *) obj->GetValue("evlist"));
+            return ((TEntryList *) obj->GetValue("evlist"));
          }
       }
    }
-   Error("GetEvList", "cannot get evelist of file %s", filename);
+   Error("GetEntryList", "cannot get evelist of file %s", filename);
    return 0;
 }
 
@@ -1323,15 +1324,15 @@ Bool_t TAlienCollection::ExportXML(TFile * exportfile, Bool_t selected,
                                       tagval->GetName());
                            } else {
                               // the eventlist has to be converted from TEventList to a string list with komma separation
-                              TEventList *xmlevlist =
-                                  (TEventList *) tagval;
-                              if (!xmlevlist)
+                              TEntryList *xmlentrylist =
+                                  (TEntryList *) tagval;
+                              if (!xmlentrylist)
                                  continue;
                               TString slist = "";
-                              for (Int_t i = 0; i < xmlevlist->GetN(); i++) {
+                              for (Int_t i = 0; i < xmlentrylist->GetN(); i++) {
                                  if (i > 0)
                                     slist += ",";
-                                 slist += xmlevlist->GetEntry(i);
+                                 slist += xmlentrylist->GetEntry(i);
                               }
                               sprintf(outline, "%s=\"%s\" ",
                                       tagname->GetName(), slist.Data());
