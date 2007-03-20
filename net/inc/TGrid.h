@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.18 2006/05/26 16:55:04 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.19 2007/03/19 16:14:15 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -108,8 +108,7 @@ public:
       { MayNotUse("GetJDLGenerator"); return 0; }
    virtual TGridCollection *OpenCollection(const char *, UInt_t /*maxentries*/ = 1000000)
       { MayNotUse("OpenCollection"); return 0; }
-   virtual TGridCollection *OpenCollectionQuery(TGridResult * /*queryresult*/,
-						Bool_t /*nogrouping*/ = kFALSE)
+   virtual TGridCollection *OpenCollectionQuery(TGridResult * /*queryresult*/,Bool_t /*nogrouping*/ = kFALSE)
       { MayNotUse("OpenCollection"); return 0; }
    virtual TGridJobStatusList* Ps(const char* /*options*/, Bool_t /*verbose*/ = kTRUE)
       { MayNotUse("Ps"); return 0; }

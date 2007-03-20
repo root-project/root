@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.167 2007/03/19 01:36:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.168 2007/03/19 14:43:26 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -4608,7 +4608,7 @@ Int_t TProofServ::CopyFromCache(const char *macro)
                      PDB(kGlobal,2)
                         Info("CopyFromCache",
                              "retrieving %s from cache", fncache.Data());
-                    gSystem->Exec(Form("%s %s %s", kCP, fncache.Data(), e));
+                     gSystem->Exec(Form("%s %s %s", kCP, fncache.Data(), e));
                   }
                }
             }
