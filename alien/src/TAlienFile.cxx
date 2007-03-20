@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.24 2007/03/19 16:14:14 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.25 2007/03/19 16:55:55 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -388,13 +388,13 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t * option,
             //      lUrl.SetAnchor(anchor);
             lUrl.SetOptions(lUrloption);
          } else {
-           TString loption;
-           loption = lUrl.GetOption();
-           if (loption.Length()) {
-              loption += "&mkpath=1";
-              lUrl.SetOptions(loption.Data());
+            TString loption;
+            loption = lUrl.GetOption();
+            if (loption.Length()) {
+               loption += "&mkpath=1";
+               lUrl.SetOptions(loption.Data());
             } else {
-              lUrl.SetOptions("mkpath=1");
+               lUrl.SetOptions("mkpath=1");
             }
          }
       }
@@ -518,47 +518,48 @@ void TAlienFile::Close(Option_t * option)
 //______________________________________________________________________________
 TString TAlienFile::SUrl(const char* lfn)
 {
-  TString command="";
-  TString surl="";
-  if (!lfn) {
-    return surl;
-  }
-
-  TUrl lurl(lfn);
-  command = "access -p read ";
-  command += lurl.GetFile();
-
-  TGridResult* result;
-
-  if (!gGrid) {
-    ::Error("SUrl","No grid connection");
-    return surl;
-  }
-
-  result = gGrid->Command(command.Data(),kFALSE,TAlien::kOUTPUT);
-  if (!result) {
-    ::Error("SUrl","Couldn't get access URL for alien file %s",lfn);
-    return surl;
-  }
-
-  TIterator* iter = result->MakeIterator();
-  TObject *object=0;
-  TObjString *urlStr=0;
-
-  object = iter->Next();
-  if (object) {
-    TMap *map = dynamic_cast < TMap * >(object);
-    TObject *urlObject = map->GetValue("url");
-    urlStr = dynamic_cast < TObjString * >(urlObject);
-
-    if (urlStr) {
-      surl = urlStr->GetName();
-      delete object;
+   //what is this function doing ? !!
+   TString command="";
+   TString surl="";
+   if (!lfn) {
       return surl;
-    }
-  }
+   }
 
-  ::Error("TAlienFIle","Couldn't get surl for alien file %s",lfn);
-  return surl;
+   TUrl lurl(lfn);
+   command = "access -p read ";
+   command += lurl.GetFile();
+
+   TGridResult* result;
+
+   if (!gGrid) {
+      ::Error("SUrl","No grid connection");
+      return surl;
+   }
+
+   result = gGrid->Command(command.Data(),kFALSE,TAlien::kOUTPUT);
+   if (!result) {
+      ::Error("SUrl","Couldn't get access URL for alien file %s",lfn);
+      return surl;
+   }
+
+   TIterator* iter = result->MakeIterator();
+   TObject *object=0;
+   TObjString *urlStr=0;
+
+   object = iter->Next();
+   if (object) {
+      TMap *map = dynamic_cast < TMap * >(object);
+      TObject *urlObject = map->GetValue("url");
+      urlStr = dynamic_cast < TObjString * >(urlObject);
+
+      if (urlStr) {
+         surl = urlStr->GetName();
+         delete object;
+         return surl;
+      }
+   }
+
+   ::Error("TAlienFIle","Couldn't get surl for alien file %s",lfn);
+   return surl;
 }
 

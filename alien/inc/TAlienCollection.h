@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienCollection.h,v 1.7 2007/03/19 16:55:55 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.h,v 1.8 2007/03/19 17:41:37 rdm Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -92,7 +92,7 @@ public:
    Bool_t      DeselectFile(const char *name, Int_t /*start*/ = -1, Int_t /*stop*/ = -1);
    Bool_t      DownscaleSelection(UInt_t scaler = 2);
    Bool_t      ExportXML(const char *exporturl, Bool_t selected, Bool_t online,
-			 const char *name, const char *comment);
+                         const char *name, const char *comment);
    const char *GetExportUrl() {
      if (fExportUrl.Length()) return fExportUrl; else return 0;
    } // return's (if defined) the export url protected:
@@ -112,8 +112,7 @@ public:
    void        Add(TGridCollection *addcollection);
    Bool_t      Stage(Bool_t bulk = kFALSE);
    Bool_t      CheckIfOnline(Bool_t bulk = kFALSE);
-   TDSet      *GetDataset(const char *type, const char *objname = "*",
-			                 const char *dir = "/");
+   TDSet      *GetDataset(const char *type, const char *objname = "*", const char *dir = "/");
 
    TGridResult *GetGridResult(const char *filename = "",
                               Bool_t onlyonline = kTRUE,

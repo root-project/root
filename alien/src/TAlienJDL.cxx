@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienJDL.cxx,v 1.3 2007/03/19 16:14:14 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienJDL.cxx,v 1.4 2007/03/19 16:55:55 rdm Exp $
 // Author: Jan Fiete Grosse-Oetringhaus   28/9/2004
 
 /*************************************************************************
@@ -29,8 +29,8 @@ void TAlienJDL::SetExecutable(const char* value)
 {
    // Sets the executable.
 
-  if (value)
-     SetValue("Executable", AddQuotes(value));
+   if (value)
+      SetValue("Executable", AddQuotes(value));
 }
 
 //______________________________________________________________________________
@@ -38,8 +38,8 @@ void TAlienJDL::SetArguments(const char* value)
 {
    // Sets the arguments.
 
-  if (value)
-     SetValue("Arguments", AddQuotes(value));
+   if (value)
+      SetValue("Arguments", AddQuotes(value));
 }
 
 //______________________________________________________________________________
@@ -47,8 +47,8 @@ void TAlienJDL::SetEMail(const char* value)
 {
    // Sets eMail address.
 
-  if (value)
-     SetValue("EMail", AddQuotes(value));
+   if (value)
+      SetValue("EMail", AddQuotes(value));
 }
 
 //______________________________________________________________________________

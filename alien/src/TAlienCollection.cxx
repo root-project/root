@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.12 2007/03/19 16:55:55 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienCollection.cxx,v 1.13 2007/03/19 17:41:37 rdm Exp $
 // Author: Andreas-Joachim Peters 9/5/2005
 
 /*************************************************************************
@@ -66,6 +66,7 @@ TAlienCollection::TAlienCollection(const char *localcollectionfile,
 TAlienCollection::TAlienCollection(TList *eventlist, UInt_t nofgroups,
                                    UInt_t nofgroupfiles)
 {
+   // Create Alien event collection using an event list
    fFileGroupList = eventlist;
    fFileGroupList->SetOwner(kTRUE);
    fFileGroupListIter = new TIter(fFileGroupList);
@@ -267,9 +268,9 @@ void TAlienCollection::ParseXML(UInt_t maxentries)
    }
 
    if (xml.GetAttr(xcollection,"name")) {
-     fCollectionName = TString(xml.GetAttr(xcollection,"name"));
+      fCollectionName = TString(xml.GetAttr(xcollection,"name"));
    } else {
-     fCollectionName = ("unnamed");
+      fCollectionName = ("unnamed");
    }
 
    XMLNodePointer_t xevent = xml.GetChild(xcollection);;
@@ -832,7 +833,7 @@ Bool_t TAlienCollection::OverlapCollection(TGridCollection * comparator)
       return kFALSE;
    }
 
- loopagain:
+loopagain:
    // loop over col1 and try to find it in col2
    this->Reset();
    // loop over all elements in reference (=this)
@@ -888,7 +889,7 @@ void TAlienCollection::Add(TGridCollection * addcollection)
       printf("Running add %s\n", addmap->GetName());
       clonemap = (TMap *) addmap->Clone();
       fFileGroupList->Add(clonemap);
-    leaveloop:
+leaveloop:
       ;
    }
 }
@@ -1374,12 +1375,12 @@ Bool_t TAlienCollection::ExportXML(TFile * exportfile, Bool_t selected,
 
    // write export url if present
    if (GetExportUrl()) {
-     sprintf(outline, "    <export url=\"%s\">\n",GetExportUrl());
-     if ((exportfile->WriteBuffer(outline, strlen(outline)))) {
-       Error("ExportXML", "Error writing XML to export file");
-       exportfile->Close();
-       return kFALSE;
-     }
+      sprintf(outline, "    <export url=\"%s\">\n",GetExportUrl());
+      if ((exportfile->WriteBuffer(outline, strlen(outline)))) {
+         Error("ExportXML", "Error writing XML to export file");
+         exportfile->Close();
+         return kFALSE;
+      }
    }
 
 
