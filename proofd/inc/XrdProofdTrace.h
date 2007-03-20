@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdTrace.h,v 1.7 2006/12/03 23:34:04 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdTrace.h,v 1.8 2006/12/12 14:32:06 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -39,7 +39,12 @@
 #ifndef ROOT_Riosfwd
 #include "Riosfwd.h"
 #endif
+#ifndef ROOT_DllImport
+#include "DllImport.h"
+#endif
 #include "XrdOuc/XrdOucTrace.hh"
+
+R__EXTERN XrdOucTrace *XrdProofdTrace;
 
 // Auxilliary macro
 #define TRACING(x) (XrdProofdTrace->What & TRACE_ ## x)

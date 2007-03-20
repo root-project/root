@@ -63,9 +63,8 @@ PROOFPLAYERLIBEXTRA = lib/libProof.lib lib/libNet.lib lib/libTree.lib \
                       lib/libGraf3d.lib lib/libGraf.lib lib/libGpad.lib \
                       lib/libRIO.lib lib/libHist.lib lib/libTreePlayer.lib \
                       lib/libThread.lib
-PROOFXLIBDEP        = $(NETLIB) $(PROOFLIB) $(THREADLIB) $(XPDLIB)
-PROOFXLIBEXTRA      = lib/libNet.lib lib/libProof.lib lib/libThread.lib \
-                      lib/libXrdProofd.lib
+PROOFXLIBDEP        = $(NETLIB) $(PROOFLIB) $(THREADLIB)
+PROOFXLIBEXTRA      = lib/libNet.lib lib/libProof.lib lib/libThread.lib
 SESSIONVIEWERLIBDEP   = $(PROOFLIB) $(GUILIB) $(GPADLIB) $(GRAFLIB) $(TREELIB)
 SESSIONVIEWERLIBEXTRA = lib/libProof.lib lib/libGui.lib lib/libGpad.lib \
                         lib/libGraf.lib lib/libTree.lib
@@ -222,8 +221,8 @@ PROOFPLAYERLIBDEP   = $(PROOFLIB) $(NETLIB) $(TREELIB) $(G3DLIB) $(GRAFLIB) \
                       $(IOLIB)
 PROOFPLAYERLIBEXTRA = -Llib -lProof -lNet -lTree -lGraf3d -lGraf -lGpad \
                       -lHist -lTreePlayer -lThread -lRIO
-PROOFXLIBDEP        = $(NETLIB) $(PROOFLIB) $(THREADLIB) $(XPDLIB)
-PROOFXLIBEXTRA      = -Llib -lNet -lProof -lThread -lXrdProofd
+PROOFXLIBDEP        = $(NETLIB) $(PROOFLIB) $(THREADLIB)
+PROOFXLIBEXTRA      = -Llib -lNet -lProof -lThread
 SESSIONVIEWERLIBDEP   = $(PROOFLIB) $(GUILIB) $(GPADLIB) $(GRAFLIB) $(TREELIB)
 SESSIONVIEWERLIBEXTRA = -Llib -lProof -lGui -lGpad -lGraf -lTree
 PEACLIBDEP          = $(PROOFLIB) $(CLARENSLIB)

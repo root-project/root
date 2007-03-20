@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.15 2007/02/05 10:44:33 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofServProxy.cxx,v 1.16 2007/03/19 15:14:10 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -23,7 +23,6 @@
 
 // Tracing utils
 #include "XrdProofdTrace.h"
-extern XrdOucTrace *XrdProofdTrace;
 static const char *TraceID = " ";
 #define TRACEID TraceID
 #ifndef SafeDelete
@@ -93,7 +92,7 @@ void XrdProofServProxy::ClearWorkers()
 {
    // Decrease worker counters and clean-up the list
 
-   XrdOucMutexHelper mhp(fMutex); 
+   XrdOucMutexHelper mhp(fMutex);
 
    // Decrease worker counters
    std::list<XrdProofWorker *>::iterator i;
@@ -139,7 +138,7 @@ XrdClientID *XrdProofServProxy::GetClientID(int cid)
    // Get instance corresponding to cid
    //
 
-   XrdOucMutexHelper mhp(fMutex); 
+   XrdOucMutexHelper mhp(fMutex);
 
    XrdClientID *csid = 0;
    TRACE(ACT,"XrdProofServProxy::GetClientID: cid: "<<cid<<
@@ -180,7 +179,7 @@ int XrdProofServProxy::GetFreeID()
    // Get next free client ID. If none is found, increase the vector size
    // and get the first new one
 
-   XrdOucMutexHelper mhp(fMutex); 
+   XrdOucMutexHelper mhp(fMutex);
 
    int ic = 0;
    // Search for free places in the existing vector
@@ -205,7 +204,7 @@ int XrdProofServProxy::GetNClients()
 {
    // Get number of attached clients.
 
-   XrdOucMutexHelper mhp(fMutex); 
+   XrdOucMutexHelper mhp(fMutex);
 
    int nc = 0;
    // Search for free places in the existing vector
@@ -225,7 +224,7 @@ const char *XrdProofServProxy::StatusAsString() const
 
    const char *sst[] = { "idle", "running", "shutting-down", "unknown" };
 
-   XrdOucMutexHelper mhp(fMutex); 
+   XrdOucMutexHelper mhp(fMutex);
 
    // Check status range
    int ist = fStatus;

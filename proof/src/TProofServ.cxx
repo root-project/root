@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.168 2007/03/19 14:43:26 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.169 2007/03/20 07:51:58 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -3857,7 +3857,8 @@ Int_t TProofServ::HandleCache(TMessage *mess)
                // shortly after the master ones.
                TString cmd = Form("export ROOTINCLUDEPATH=%s ; PROOF-INF/BUILD.sh",
                                   gSystem->GetIncludePath());
-               { TProofServLogHandlerGuard hg(cmd, fSocket);
+               {
+                  TProofServLogHandlerGuard hg(cmd, fSocket);
                }
 
                // write version file

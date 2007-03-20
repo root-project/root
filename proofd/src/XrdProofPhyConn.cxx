@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.10 2006/09/29 08:17:21 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofPhyConn.cxx,v 1.11 2006/10/19 12:38:07 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -39,7 +39,6 @@
 
 // Tracing utils
 #include "XrdProofdTrace.h"
-extern XrdOucTrace *XrdProofdTrace;
 static const char *gTraceID = " ";
 #define TRACEID gTraceID
 
