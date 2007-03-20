@@ -1,4 +1,4 @@
-// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.27 2007/03/15 15:08:50 antcheva Exp $
+// @(#)root/fitpanel:$Name:  $:$Id: TFitEditor.cxx,v 1.28 2007/03/19 09:57:11 antcheva Exp $
 // Author: Ilka Antcheva, Lorenzo Moneta 10/08/2006
 
 /*************************************************************************
@@ -2541,7 +2541,6 @@ void TFitEditor::GetFunctionsFromList(TList *list)
       }
    } 
    fLastEntryId = newid - 1;
-   fFitFuncList->ls();
 }
 
 //______________________________________________________________________________
