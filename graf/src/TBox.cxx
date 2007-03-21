@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.26 2006/10/01 16:53:42 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.27 2007/02/06 14:35:44 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -169,7 +169,7 @@ void TBox::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TBox::DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
+TBox *TBox::DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
 {
    // Draw this box with new coordinates.
 
@@ -178,6 +178,7 @@ void TBox::DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
    TAttFill::Copy(*newbox);
    newbox->SetBit(kCanDelete);
    newbox->AppendPad();
+   return newbox;
 }
 
 //______________________________________________________________________________

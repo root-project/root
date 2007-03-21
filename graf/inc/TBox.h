@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.h,v 1.8 2006/05/23 04:47:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.h,v 1.9 2006/07/03 16:10:44 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -57,7 +57,7 @@ public:
    void Copy(TObject &box) const;
    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
    virtual void  Draw(Option_t *option="");
-   virtual void  DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2);
+   virtual TBox *DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2);
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
    Bool_t        IsBeingResized() const { return fResizing; }
    Double_t      GetX1() const { return fX1; }
