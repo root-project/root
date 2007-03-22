@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.36 2007/01/15 10:15:47 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.37 2007/01/20 19:29:34 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -71,7 +71,8 @@ void TCollection::AddAll(const TCollection *col)
 //______________________________________________________________________________
 void TCollection::AddVector(TObject *va_(obj1), ...)
 {
-   // Add all arguments to this collection.
+   // Add all arguments to the collection. The list of objects must be
+   // temrinated by 0, e.g.: l.AddVector(o1, o2, o3, o4, 0);
 
    va_list ap;
    va_start(ap, va_(obj1));
