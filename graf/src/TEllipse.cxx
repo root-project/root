@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.27 2006/07/03 16:10:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.28 2007/02/06 14:35:45 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -24,27 +24,25 @@ ClassImp(TEllipse)
 
 
 //______________________________________________________________________________
-//  Ellipse class.
-//
-//  Ellipse is a general ellipse that can be truncated and rotated.
-//  An Ellipse is defined by its center (x1,y1) and two radius r1 and r2.
-//  A minimum and maximum angle may be specified (phimin, phimax).
-//  The Ellipse may be rotated with an angle theta.
-//  The attributes of the outline line are given via TAttLine.
-//  The attributes of the fill area are given via TAttFill.
-//  The picture below illustrates different types of ellipses.
-//
-//  When an ellipse sector only is drawn, the lines connecting the center
-//  of the ellipse to the edges are drawn by default. One can specify
-//  the drawing option "only" to not draw these lines or alternatively
-//  call the function SetNoEdges().
-//
-//Begin_Html
-/*
-<img src="gif/ellipse.gif">
-*/
-//End_Html
-//
+/* Begin_Html
+<center><h2>TEllipse : to draw ellipses</h2></center>
+The ellipse can be truncated and rotated.
+It is defined by its center <tt>(x1,y1)</tt> and two radius 
+<tt>r1</tt> and <tt>r2</tt>.
+A minimum and maximum angle may be specified <tt>(phimin, phimax)</tt>.
+The ellipse may be rotated with an angle <tt>theta</tt>.
+The attributes of the outline line are given via <tt>TAttLine</tt>.
+The attributes of the fill area are given via <tt>TAttFill</tt>.
+The picture below illustrates different types of ellipses.
+<p>
+When an ellipse sector only is drawn, the lines connecting the center
+of the ellipse to the edges are drawn by default. One can specify
+the drawing option "only" to not draw these lines or alternatively
+call the function <tt>SetNoEdges()</tt>.
+End_Html
+Begin_Macro(source)
+../../../tutorials/graphics/ellipse.C
+End_Macro */
 
 
 //______________________________________________________________________________
@@ -470,17 +468,20 @@ void TEllipse::PaintEllipse(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
    TAttLine::Modify();  //Change line attributes only if necessary
    TAttFill::Modify();  //Change fill attributes only if necessary
 
+   Double_t phi1 = TMath::Min(phimin,phimax);
+   Double_t phi2 = TMath::Max(phimin,phimax);
+
    //set number of points approximatively proportional to the ellipse circumference
-   Double_t circ = kPI*(r1+r2)*(phimax-phimin)/360;
+   Double_t circ = kPI*(r1+r2)*(phi2-phi1)/360;
    Int_t n = (Int_t)(np*circ/((gPad->GetX2()-gPad->GetX1())+(gPad->GetY2()-gPad->GetY1())));
    if (n < 8) n= 8;
    if (n > np) n = np;
    Double_t angle,dx,dy;
-   Double_t dphi = (phimax-phimin)*kPI/(180*n);
+   Double_t dphi = (phi2-phi1)*kPI/(180*n);
    Double_t ct   = TMath::Cos(kPI*theta/180);
    Double_t st   = TMath::Sin(kPI*theta/180);
    for (Int_t i=0;i<=n;i++) {
-      angle = phimin*kPI/180 + Double_t(i)*dphi;
+      angle = phi1*kPI/180 + Double_t(i)*dphi;
       dx    = r1*TMath::Cos(angle);
       dy    = r2*TMath::Sin(angle);
       x[i]  = gPad->XtoPad(x1 + dx*ct - dy*st);
@@ -488,7 +489,7 @@ void TEllipse::PaintEllipse(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
    }
    TString opt = option;
    opt.ToLower();
-   if (phimax-phimin >= 360 ) {
+   if (phi2-phi1 >= 360 ) {
       if (GetFillColor()) gPad->PaintFillArea(n,x,y);
       if (GetLineStyle()) gPad->PaintPolyLine(n+1,x,y);
    } else {
