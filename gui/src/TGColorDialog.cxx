@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.24 2007/03/17 12:03:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.25 2007/03/19 09:56:02 antcheva Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 // Author: Ilka Antcheva (color wheel support)   16/03/07
 
@@ -1164,16 +1164,14 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    TGCompositeFrame *tf = fTab->AddTab("Color Wheel");
    TGCompositeFrame *tf1 = new TGCompositeFrame(tf, 60, 20, kHorizontalFrame);
    tf->AddFrame(tf1);
-   fEcanvas = new TRootEmbeddedCanvas(0, tf1, 360, 360);
+   fEcanvas = new TRootEmbeddedCanvas("wheel", tf1, 360, 360);
    tf1->AddFrame(fEcanvas);
-   Int_t wid = fEcanvas->GetCanvasWindowId();
-   TCanvas *wcan = new TCanvas("wheel", 10, 10, wid);
-   fEcanvas->AdoptCanvas(wcan);
-   fEcanvas->GetCanvas()->SetBit(kNoContextMenu);
+   TCanvas *wcan = fEcanvas->GetCanvas();
+   wcan->SetBit(kNoContextMenu);
    fColorWheel = new TColorWheel();
    fColorWheel->SetCanvas(wcan);
    fColorWheel->Draw();
-   fEcanvas->GetCanvas()->Update();
+   wcan->Update();
    wcan->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)","TGColorDialog",this, 
                  "SetColorInfo(Int_t,Int_t,Int_t,TObject*)");
 
