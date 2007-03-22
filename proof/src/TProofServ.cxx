@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.169 2007/03/20 07:51:58 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.170 2007/03/20 16:16:04 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -3855,8 +3855,8 @@ Int_t TProofServ::HandleCache(TMessage *mess)
                // (impatient) client. Note that this operation will block, so
                // the messages from builds on the workers will reach the client
                // shortly after the master ones.
-               TString cmd = Form("export ROOTINCLUDEPATH=%s ; PROOF-INF/BUILD.sh",
-                                  gSystem->GetIncludePath());
+               TString cmd = Form("export ROOTINCLUDEPATH=\"%s\" ; PROOF-INF/BUILD.sh",
+                                    gSystem->GetIncludePath());
                {
                   TProofServLogHandlerGuard hg(cmd, fSocket);
                }
