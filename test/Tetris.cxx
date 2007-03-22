@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.21 2003/11/11 11:04:25 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.22 2004/08/27 11:21:23 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -7,8 +7,9 @@
 //
 //  To run this game do the following:
 //  $ root
-//  root [0] gSystem.Load("Tetris")
-//  root [1] Tetris t
+//  root [0] gSystem.Load("libGpad")
+//  root [1] gSystem.Load("Tetris")
+//  root [2] Tetris t
 //  <play game>
 //  root [2] .q
 //
