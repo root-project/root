@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.193 2007/03/19 14:25:11 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.194 2007/03/19 14:43:26 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -4616,8 +4616,9 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient)
          }
 
       // The files are now on the workers: now we send the loading request
+      TString basemacro = gSystem->BaseName(macro);
       TMessage mess(kPROOF_CACHE);
-      mess << Int_t(kLoadMacro) << TString(macro);;
+      mess << Int_t(kLoadMacro) << basemacro;
       Broadcast(mess, kUnique);
 
       // Load locally, if required
@@ -4635,8 +4636,9 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient)
       // The files are now on the workers: now we send the loading request
       // On the master we do not wait here for the results, but after the local
       // load
+      TString basemacro = gSystem->BaseName(macro);
       TMessage mess(kPROOF_CACHE);
-      mess << Int_t(kLoadMacro) << TString(macro);
+      mess << Int_t(kLoadMacro) << basemacro;
       Broadcast(mess, kUnique);
    }
 
