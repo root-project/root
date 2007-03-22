@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Aclock.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: Aclock.cxx,v 1.3 2004/02/19 07:24:38 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -6,7 +6,8 @@
 //
 //  To run this example do the following:
 //  $ root
-//  root [0] gSystem.Load("Aclock")
+//  root [0] gSystem.Load("libGpad")
+//  root [1] gSystem.Load("Aclock")
 //  root [1] Aclock a
 //  <enjoy>
 //  root [2] .q
