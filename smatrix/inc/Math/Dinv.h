@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: Dinv.h,v 1.6 2006/06/02 15:04:54 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: Dinv.h,v 1.7 2006/06/08 15:23:34 moneta Exp $
 // Authors: T. Glebe, L. Moneta    2005  
 
 #ifndef  ROOT_Math_Dinv
@@ -296,20 +296,6 @@ public:
 
 };
 
-/** 
-    6x6 matrix inversion using Cramers rule.
-*/
-template <>
-class Inverter<6> {
-public:
-  ///
-  template <class MatrixRep>
-  static bool Dinv(MatrixRep& rhs); 
-
-  template <class T>
-  static bool Dinv(MatRepSym<T,6> & rhs);
-
-};
 
 
   }  // namespace Math

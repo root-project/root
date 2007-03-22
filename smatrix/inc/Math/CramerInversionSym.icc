@@ -1,4 +1,4 @@
-// @(#)root/smatrix:$Name:  $:$Id: CramerInversionSym.icc,v 1.2 2006/02/17 16:11:02 moneta Exp $
+// @(#)root/smatrix:$Name:  $:$Id: CramerInversionSym.icc,v 1.3 2006/06/08 15:23:34 moneta Exp $
 // Authors: L. Moneta    2005  
 
 
@@ -9,9 +9,12 @@
  *                                                                    *
  **********************************************************************/
 //
-// Cramer optmized inversion for symmetric matrices up to size 6x6. 
+// Cramer optmized inversion for symmetric matrices up to size 5x5. 
 // Code from ROOT TMatrixDCramerInv which originates from CLHEP 
 // (original author Mark Fischler)
+//
+// Modified by L. Moneta 22/03/07: specialize only until 5x5 (before was up to 6x6) 
+//  tests show that on 64 machines (like on slc4) it is faster the general method
 //
 
 #ifndef ROOT_Math_CramerInversionSym_icc
@@ -371,376 +374,6 @@ bool Inverter<5>::Dinv(MatRepSym<T,5> & rhs) {
 }
 
 
-//==============================================================================
-// Inversion for 6x6 matrices
-//==============================================================================
-// Aij are indices for a 6x6 symmetric matrix.
-
-#define SA00 0
-#define SA01 1
-#define SA02 2
-#define SA03 3
-#define SA04 4
-#define SA05 5
-
-#define SA10 1
-#define SA11 7
-#define SA12 8
-#define SA13 9
-#define SA14 10
-#define SA15 11
-
-#define SA20 2
-#define SA21 8
-#define SA22 14
-#define SA23 15
-#define SA24 16
-#define SA25 17
-
-#define SA30 3
-#define SA31 9
-#define SA32 15
-#define SA33 21
-#define SA34 22
-#define SA35 23
-
-#define SA40 4
-#define SA41 10
-#define SA42 16
-#define SA43 22
-#define SA44 28
-#define SA45 29
-
-#define SA50 5
-#define SA51 11
-#define SA52 17
-#define SA53 23
-#define SA54 29
-#define SA55 35
-
-/**
-   Inversion for a 6x6 symmetric matrix
- */
-template <class T> 
-bool Inverter<6>::Dinv(MatRepSym<T,6> & rhs) { 
-
-  typedef T  Scalar; 
-
-  // Find all NECESSSARY 2x2 dets:  (39 of them)
-
-  const Scalar mDet2_34_01 = rhs[SA30]*rhs[SA41] - rhs[SA31]*rhs[SA40];
-  const Scalar mDet2_34_02 = rhs[SA30]*rhs[SA42] - rhs[SA32]*rhs[SA40];
-  const Scalar mDet2_34_03 = rhs[SA30]*rhs[SA43] - rhs[SA33]*rhs[SA40];
-  const Scalar mDet2_34_04 = rhs[SA30]*rhs[SA44] - rhs[SA34]*rhs[SA40];
-  const Scalar mDet2_34_12 = rhs[SA31]*rhs[SA42] - rhs[SA32]*rhs[SA41];
-  const Scalar mDet2_34_13 = rhs[SA31]*rhs[SA43] - rhs[SA33]*rhs[SA41];
-  const Scalar mDet2_34_14 = rhs[SA31]*rhs[SA44] - rhs[SA34]*rhs[SA41];
-  const Scalar mDet2_34_23 = rhs[SA32]*rhs[SA43] - rhs[SA33]*rhs[SA42];
-  const Scalar mDet2_34_24 = rhs[SA32]*rhs[SA44] - rhs[SA34]*rhs[SA42];
-  const Scalar mDet2_34_34 = rhs[SA33]*rhs[SA44] - rhs[SA34]*rhs[SA43];
-  const Scalar mDet2_35_01 = rhs[SA30]*rhs[SA51] - rhs[SA31]*rhs[SA50];
-  const Scalar mDet2_35_02 = rhs[SA30]*rhs[SA52] - rhs[SA32]*rhs[SA50];
-  const Scalar mDet2_35_03 = rhs[SA30]*rhs[SA53] - rhs[SA33]*rhs[SA50];
-  const Scalar mDet2_35_04 = rhs[SA30]*rhs[SA54] - rhs[SA34]*rhs[SA50];
-  const Scalar mDet2_35_05 = rhs[SA30]*rhs[SA55] - rhs[SA35]*rhs[SA50];
-  const Scalar mDet2_35_12 = rhs[SA31]*rhs[SA52] - rhs[SA32]*rhs[SA51];
-  const Scalar mDet2_35_13 = rhs[SA31]*rhs[SA53] - rhs[SA33]*rhs[SA51];
-  const Scalar mDet2_35_14 = rhs[SA31]*rhs[SA54] - rhs[SA34]*rhs[SA51];
-  const Scalar mDet2_35_15 = rhs[SA31]*rhs[SA55] - rhs[SA35]*rhs[SA51];
-  const Scalar mDet2_35_23 = rhs[SA32]*rhs[SA53] - rhs[SA33]*rhs[SA52];
-  const Scalar mDet2_35_24 = rhs[SA32]*rhs[SA54] - rhs[SA34]*rhs[SA52];
-  const Scalar mDet2_35_25 = rhs[SA32]*rhs[SA55] - rhs[SA35]*rhs[SA52];
-  const Scalar mDet2_35_34 = rhs[SA33]*rhs[SA54] - rhs[SA34]*rhs[SA53];
-  const Scalar mDet2_35_35 = rhs[SA33]*rhs[SA55] - rhs[SA35]*rhs[SA53];
-  const Scalar mDet2_45_01 = rhs[SA40]*rhs[SA51] - rhs[SA41]*rhs[SA50];
-  const Scalar mDet2_45_02 = rhs[SA40]*rhs[SA52] - rhs[SA42]*rhs[SA50];
-  const Scalar mDet2_45_03 = rhs[SA40]*rhs[SA53] - rhs[SA43]*rhs[SA50];
-  const Scalar mDet2_45_04 = rhs[SA40]*rhs[SA54] - rhs[SA44]*rhs[SA50];
-  const Scalar mDet2_45_05 = rhs[SA40]*rhs[SA55] - rhs[SA45]*rhs[SA50];
-  const Scalar mDet2_45_12 = rhs[SA41]*rhs[SA52] - rhs[SA42]*rhs[SA51];
-  const Scalar mDet2_45_13 = rhs[SA41]*rhs[SA53] - rhs[SA43]*rhs[SA51];
-  const Scalar mDet2_45_14 = rhs[SA41]*rhs[SA54] - rhs[SA44]*rhs[SA51];
-  const Scalar mDet2_45_15 = rhs[SA41]*rhs[SA55] - rhs[SA45]*rhs[SA51];
-  const Scalar mDet2_45_23 = rhs[SA42]*rhs[SA53] - rhs[SA43]*rhs[SA52];
-  const Scalar mDet2_45_24 = rhs[SA42]*rhs[SA54] - rhs[SA44]*rhs[SA52];
-  const Scalar mDet2_45_25 = rhs[SA42]*rhs[SA55] - rhs[SA45]*rhs[SA52];
-  const Scalar mDet2_45_34 = rhs[SA43]*rhs[SA54] - rhs[SA44]*rhs[SA53];
-  const Scalar mDet2_45_35 = rhs[SA43]*rhs[SA55] - rhs[SA45]*rhs[SA53];
-  const Scalar mDet2_45_45 = rhs[SA44]*rhs[SA55] - rhs[SA45]*rhs[SA54];
-
-  // Find all NECESSSARY 3x3 dets:  (65 of them)
-
-  const Scalar mDet3_234_012 = rhs[SA20]*mDet2_34_12 - rhs[SA21]*mDet2_34_02 + rhs[SA22]*mDet2_34_01;
-  const Scalar mDet3_234_013 = rhs[SA20]*mDet2_34_13 - rhs[SA21]*mDet2_34_03 + rhs[SA23]*mDet2_34_01;
-  const Scalar mDet3_234_014 = rhs[SA20]*mDet2_34_14 - rhs[SA21]*mDet2_34_04 + rhs[SA24]*mDet2_34_01;
-  const Scalar mDet3_234_023 = rhs[SA20]*mDet2_34_23 - rhs[SA22]*mDet2_34_03 + rhs[SA23]*mDet2_34_02;
-  const Scalar mDet3_234_024 = rhs[SA20]*mDet2_34_24 - rhs[SA22]*mDet2_34_04 + rhs[SA24]*mDet2_34_02;
-  const Scalar mDet3_234_034 = rhs[SA20]*mDet2_34_34 - rhs[SA23]*mDet2_34_04 + rhs[SA24]*mDet2_34_03;
-  const Scalar mDet3_234_123 = rhs[SA21]*mDet2_34_23 - rhs[SA22]*mDet2_34_13 + rhs[SA23]*mDet2_34_12;
-  const Scalar mDet3_234_124 = rhs[SA21]*mDet2_34_24 - rhs[SA22]*mDet2_34_14 + rhs[SA24]*mDet2_34_12;
-  const Scalar mDet3_234_134 = rhs[SA21]*mDet2_34_34 - rhs[SA23]*mDet2_34_14 + rhs[SA24]*mDet2_34_13;
-  const Scalar mDet3_234_234 = rhs[SA22]*mDet2_34_34 - rhs[SA23]*mDet2_34_24 + rhs[SA24]*mDet2_34_23;
-  const Scalar mDet3_235_012 = rhs[SA20]*mDet2_35_12 - rhs[SA21]*mDet2_35_02 + rhs[SA22]*mDet2_35_01;
-  const Scalar mDet3_235_013 = rhs[SA20]*mDet2_35_13 - rhs[SA21]*mDet2_35_03 + rhs[SA23]*mDet2_35_01;
-  const Scalar mDet3_235_014 = rhs[SA20]*mDet2_35_14 - rhs[SA21]*mDet2_35_04 + rhs[SA24]*mDet2_35_01;
-  const Scalar mDet3_235_015 = rhs[SA20]*mDet2_35_15 - rhs[SA21]*mDet2_35_05 + rhs[SA25]*mDet2_35_01;
-  const Scalar mDet3_235_023 = rhs[SA20]*mDet2_35_23 - rhs[SA22]*mDet2_35_03 + rhs[SA23]*mDet2_35_02;
-  const Scalar mDet3_235_024 = rhs[SA20]*mDet2_35_24 - rhs[SA22]*mDet2_35_04 + rhs[SA24]*mDet2_35_02;
-  const Scalar mDet3_235_025 = rhs[SA20]*mDet2_35_25 - rhs[SA22]*mDet2_35_05 + rhs[SA25]*mDet2_35_02;
-  const Scalar mDet3_235_034 = rhs[SA20]*mDet2_35_34 - rhs[SA23]*mDet2_35_04 + rhs[SA24]*mDet2_35_03;
-  const Scalar mDet3_235_035 = rhs[SA20]*mDet2_35_35 - rhs[SA23]*mDet2_35_05 + rhs[SA25]*mDet2_35_03;
-  const Scalar mDet3_235_123 = rhs[SA21]*mDet2_35_23 - rhs[SA22]*mDet2_35_13 + rhs[SA23]*mDet2_35_12;
-  const Scalar mDet3_235_124 = rhs[SA21]*mDet2_35_24 - rhs[SA22]*mDet2_35_14 + rhs[SA24]*mDet2_35_12;
-  const Scalar mDet3_235_125 = rhs[SA21]*mDet2_35_25 - rhs[SA22]*mDet2_35_15 + rhs[SA25]*mDet2_35_12;
-  const Scalar mDet3_235_134 = rhs[SA21]*mDet2_35_34 - rhs[SA23]*mDet2_35_14 + rhs[SA24]*mDet2_35_13;
-  const Scalar mDet3_235_135 = rhs[SA21]*mDet2_35_35 - rhs[SA23]*mDet2_35_15 + rhs[SA25]*mDet2_35_13;
-  const Scalar mDet3_235_234 = rhs[SA22]*mDet2_35_34 - rhs[SA23]*mDet2_35_24 + rhs[SA24]*mDet2_35_23;
-  const Scalar mDet3_235_235 = rhs[SA22]*mDet2_35_35 - rhs[SA23]*mDet2_35_25 + rhs[SA25]*mDet2_35_23;
-  const Scalar mDet3_245_012 = rhs[SA20]*mDet2_45_12 - rhs[SA21]*mDet2_45_02 + rhs[SA22]*mDet2_45_01;
-  const Scalar mDet3_245_013 = rhs[SA20]*mDet2_45_13 - rhs[SA21]*mDet2_45_03 + rhs[SA23]*mDet2_45_01;
-  const Scalar mDet3_245_014 = rhs[SA20]*mDet2_45_14 - rhs[SA21]*mDet2_45_04 + rhs[SA24]*mDet2_45_01;
-  const Scalar mDet3_245_015 = rhs[SA20]*mDet2_45_15 - rhs[SA21]*mDet2_45_05 + rhs[SA25]*mDet2_45_01;
-  const Scalar mDet3_245_023 = rhs[SA20]*mDet2_45_23 - rhs[SA22]*mDet2_45_03 + rhs[SA23]*mDet2_45_02;
-  const Scalar mDet3_245_024 = rhs[SA20]*mDet2_45_24 - rhs[SA22]*mDet2_45_04 + rhs[SA24]*mDet2_45_02;
-  const Scalar mDet3_245_025 = rhs[SA20]*mDet2_45_25 - rhs[SA22]*mDet2_45_05 + rhs[SA25]*mDet2_45_02;
-  const Scalar mDet3_245_034 = rhs[SA20]*mDet2_45_34 - rhs[SA23]*mDet2_45_04 + rhs[SA24]*mDet2_45_03;
-  const Scalar mDet3_245_035 = rhs[SA20]*mDet2_45_35 - rhs[SA23]*mDet2_45_05 + rhs[SA25]*mDet2_45_03;
-  const Scalar mDet3_245_045 = rhs[SA20]*mDet2_45_45 - rhs[SA24]*mDet2_45_05 + rhs[SA25]*mDet2_45_04;
-  const Scalar mDet3_245_123 = rhs[SA21]*mDet2_45_23 - rhs[SA22]*mDet2_45_13 + rhs[SA23]*mDet2_45_12;
-  const Scalar mDet3_245_124 = rhs[SA21]*mDet2_45_24 - rhs[SA22]*mDet2_45_14 + rhs[SA24]*mDet2_45_12;
-  const Scalar mDet3_245_125 = rhs[SA21]*mDet2_45_25 - rhs[SA22]*mDet2_45_15 + rhs[SA25]*mDet2_45_12;
-  const Scalar mDet3_245_134 = rhs[SA21]*mDet2_45_34 - rhs[SA23]*mDet2_45_14 + rhs[SA24]*mDet2_45_13;
-  const Scalar mDet3_245_135 = rhs[SA21]*mDet2_45_35 - rhs[SA23]*mDet2_45_15 + rhs[SA25]*mDet2_45_13;
-  const Scalar mDet3_245_145 = rhs[SA21]*mDet2_45_45 - rhs[SA24]*mDet2_45_15 + rhs[SA25]*mDet2_45_14;
-  const Scalar mDet3_245_234 = rhs[SA22]*mDet2_45_34 - rhs[SA23]*mDet2_45_24 + rhs[SA24]*mDet2_45_23;
-  const Scalar mDet3_245_235 = rhs[SA22]*mDet2_45_35 - rhs[SA23]*mDet2_45_25 + rhs[SA25]*mDet2_45_23;
-  const Scalar mDet3_245_245 = rhs[SA22]*mDet2_45_45 - rhs[SA24]*mDet2_45_25 + rhs[SA25]*mDet2_45_24;
-  const Scalar mDet3_345_012 = rhs[SA30]*mDet2_45_12 - rhs[SA31]*mDet2_45_02 + rhs[SA32]*mDet2_45_01;
-  const Scalar mDet3_345_013 = rhs[SA30]*mDet2_45_13 - rhs[SA31]*mDet2_45_03 + rhs[SA33]*mDet2_45_01;
-  const Scalar mDet3_345_014 = rhs[SA30]*mDet2_45_14 - rhs[SA31]*mDet2_45_04 + rhs[SA34]*mDet2_45_01;
-  const Scalar mDet3_345_015 = rhs[SA30]*mDet2_45_15 - rhs[SA31]*mDet2_45_05 + rhs[SA35]*mDet2_45_01;
-  const Scalar mDet3_345_023 = rhs[SA30]*mDet2_45_23 - rhs[SA32]*mDet2_45_03 + rhs[SA33]*mDet2_45_02;
-  const Scalar mDet3_345_024 = rhs[SA30]*mDet2_45_24 - rhs[SA32]*mDet2_45_04 + rhs[SA34]*mDet2_45_02;
-  const Scalar mDet3_345_025 = rhs[SA30]*mDet2_45_25 - rhs[SA32]*mDet2_45_05 + rhs[SA35]*mDet2_45_02;
-  const Scalar mDet3_345_034 = rhs[SA30]*mDet2_45_34 - rhs[SA33]*mDet2_45_04 + rhs[SA34]*mDet2_45_03;
-  const Scalar mDet3_345_035 = rhs[SA30]*mDet2_45_35 - rhs[SA33]*mDet2_45_05 + rhs[SA35]*mDet2_45_03;
-  const Scalar mDet3_345_045 = rhs[SA30]*mDet2_45_45 - rhs[SA34]*mDet2_45_05 + rhs[SA35]*mDet2_45_04;
-  const Scalar mDet3_345_123 = rhs[SA31]*mDet2_45_23 - rhs[SA32]*mDet2_45_13 + rhs[SA33]*mDet2_45_12;
-  const Scalar mDet3_345_124 = rhs[SA31]*mDet2_45_24 - rhs[SA32]*mDet2_45_14 + rhs[SA34]*mDet2_45_12;
-  const Scalar mDet3_345_125 = rhs[SA31]*mDet2_45_25 - rhs[SA32]*mDet2_45_15 + rhs[SA35]*mDet2_45_12;
-  const Scalar mDet3_345_134 = rhs[SA31]*mDet2_45_34 - rhs[SA33]*mDet2_45_14 + rhs[SA34]*mDet2_45_13;
-  const Scalar mDet3_345_135 = rhs[SA31]*mDet2_45_35 - rhs[SA33]*mDet2_45_15 + rhs[SA35]*mDet2_45_13;
-  const Scalar mDet3_345_145 = rhs[SA31]*mDet2_45_45 - rhs[SA34]*mDet2_45_15 + rhs[SA35]*mDet2_45_14;
-  const Scalar mDet3_345_234 = rhs[SA32]*mDet2_45_34 - rhs[SA33]*mDet2_45_24 + rhs[SA34]*mDet2_45_23;
-  const Scalar mDet3_345_235 = rhs[SA32]*mDet2_45_35 - rhs[SA33]*mDet2_45_25 + rhs[SA35]*mDet2_45_23;
-  const Scalar mDet3_345_245 = rhs[SA32]*mDet2_45_45 - rhs[SA34]*mDet2_45_25 + rhs[SA35]*mDet2_45_24;
-  const Scalar mDet3_345_345 = rhs[SA33]*mDet2_45_45 - rhs[SA34]*mDet2_45_35 + rhs[SA35]*mDet2_45_34;
-
-  // Find all NECESSSARY 4x4 dets:  (55 of them)
-
-  const Scalar mDet4_1234_0123 = rhs[SA10]*mDet3_234_123 - rhs[SA11]*mDet3_234_023
-                                 + rhs[SA12]*mDet3_234_013 - rhs[SA13]*mDet3_234_012;
-  const Scalar mDet4_1234_0124 = rhs[SA10]*mDet3_234_124 - rhs[SA11]*mDet3_234_024
-                                 + rhs[SA12]*mDet3_234_014 - rhs[SA14]*mDet3_234_012;
-  const Scalar mDet4_1234_0134 = rhs[SA10]*mDet3_234_134 - rhs[SA11]*mDet3_234_034
-                                 + rhs[SA13]*mDet3_234_014 - rhs[SA14]*mDet3_234_013;
-  const Scalar mDet4_1234_0234 = rhs[SA10]*mDet3_234_234 - rhs[SA12]*mDet3_234_034
-                                 + rhs[SA13]*mDet3_234_024 - rhs[SA14]*mDet3_234_023;
-  const Scalar mDet4_1234_1234 = rhs[SA11]*mDet3_234_234 - rhs[SA12]*mDet3_234_134
-                                 + rhs[SA13]*mDet3_234_124 - rhs[SA14]*mDet3_234_123;
-  const Scalar mDet4_1235_0123 = rhs[SA10]*mDet3_235_123 - rhs[SA11]*mDet3_235_023
-                                 + rhs[SA12]*mDet3_235_013 - rhs[SA13]*mDet3_235_012;
-  const Scalar mDet4_1235_0124 = rhs[SA10]*mDet3_235_124 - rhs[SA11]*mDet3_235_024
-                                 + rhs[SA12]*mDet3_235_014 - rhs[SA14]*mDet3_235_012;
-  const Scalar mDet4_1235_0125 = rhs[SA10]*mDet3_235_125 - rhs[SA11]*mDet3_235_025
-                                 + rhs[SA12]*mDet3_235_015 - rhs[SA15]*mDet3_235_012;
-  const Scalar mDet4_1235_0134 = rhs[SA10]*mDet3_235_134 - rhs[SA11]*mDet3_235_034
-                                 + rhs[SA13]*mDet3_235_014 - rhs[SA14]*mDet3_235_013;
-  const Scalar mDet4_1235_0135 = rhs[SA10]*mDet3_235_135 - rhs[SA11]*mDet3_235_035
-                                 + rhs[SA13]*mDet3_235_015 - rhs[SA15]*mDet3_235_013;
-  const Scalar mDet4_1235_0234 = rhs[SA10]*mDet3_235_234 - rhs[SA12]*mDet3_235_034
-                                 + rhs[SA13]*mDet3_235_024 - rhs[SA14]*mDet3_235_023;
-  const Scalar mDet4_1235_0235 = rhs[SA10]*mDet3_235_235 - rhs[SA12]*mDet3_235_035
-                                 + rhs[SA13]*mDet3_235_025 - rhs[SA15]*mDet3_235_023;
-  const Scalar mDet4_1235_1234 = rhs[SA11]*mDet3_235_234 - rhs[SA12]*mDet3_235_134
-                                 + rhs[SA13]*mDet3_235_124 - rhs[SA14]*mDet3_235_123;
-  const Scalar mDet4_1235_1235 = rhs[SA11]*mDet3_235_235 - rhs[SA12]*mDet3_235_135
-                                 + rhs[SA13]*mDet3_235_125 - rhs[SA15]*mDet3_235_123;
-  const Scalar mDet4_1245_0123 = rhs[SA10]*mDet3_245_123 - rhs[SA11]*mDet3_245_023
-                                 + rhs[SA12]*mDet3_245_013 - rhs[SA13]*mDet3_245_012;
-  const Scalar mDet4_1245_0124 = rhs[SA10]*mDet3_245_124 - rhs[SA11]*mDet3_245_024
-                                 + rhs[SA12]*mDet3_245_014 - rhs[SA14]*mDet3_245_012;
-  const Scalar mDet4_1245_0125 = rhs[SA10]*mDet3_245_125 - rhs[SA11]*mDet3_245_025
-                                 + rhs[SA12]*mDet3_245_015 - rhs[SA15]*mDet3_245_012;
-  const Scalar mDet4_1245_0134 = rhs[SA10]*mDet3_245_134 - rhs[SA11]*mDet3_245_034
-                                 + rhs[SA13]*mDet3_245_014 - rhs[SA14]*mDet3_245_013;
-  const Scalar mDet4_1245_0135 = rhs[SA10]*mDet3_245_135 - rhs[SA11]*mDet3_245_035
-                                 + rhs[SA13]*mDet3_245_015 - rhs[SA15]*mDet3_245_013;
-  const Scalar mDet4_1245_0145 = rhs[SA10]*mDet3_245_145 - rhs[SA11]*mDet3_245_045
-                                 + rhs[SA14]*mDet3_245_015 - rhs[SA15]*mDet3_245_014;
-  const Scalar mDet4_1245_0234 = rhs[SA10]*mDet3_245_234 - rhs[SA12]*mDet3_245_034
-                                 + rhs[SA13]*mDet3_245_024 - rhs[SA14]*mDet3_245_023;
-  const Scalar mDet4_1245_0235 = rhs[SA10]*mDet3_245_235 - rhs[SA12]*mDet3_245_035
-                                 + rhs[SA13]*mDet3_245_025 - rhs[SA15]*mDet3_245_023;
-  const Scalar mDet4_1245_0245 = rhs[SA10]*mDet3_245_245 - rhs[SA12]*mDet3_245_045
-                                 + rhs[SA14]*mDet3_245_025 - rhs[SA15]*mDet3_245_024;
-  const Scalar mDet4_1245_1234 = rhs[SA11]*mDet3_245_234 - rhs[SA12]*mDet3_245_134
-                                 + rhs[SA13]*mDet3_245_124 - rhs[SA14]*mDet3_245_123;
-  const Scalar mDet4_1245_1235 = rhs[SA11]*mDet3_245_235 - rhs[SA12]*mDet3_245_135
-                                 + rhs[SA13]*mDet3_245_125 - rhs[SA15]*mDet3_245_123;
-  const Scalar mDet4_1245_1245 = rhs[SA11]*mDet3_245_245 - rhs[SA12]*mDet3_245_145
-                                 + rhs[SA14]*mDet3_245_125 - rhs[SA15]*mDet3_245_124;
-  const Scalar mDet4_1345_0123 = rhs[SA10]*mDet3_345_123 - rhs[SA11]*mDet3_345_023
-                                 + rhs[SA12]*mDet3_345_013 - rhs[SA13]*mDet3_345_012;
-  const Scalar mDet4_1345_0124 = rhs[SA10]*mDet3_345_124 - rhs[SA11]*mDet3_345_024
-                                 + rhs[SA12]*mDet3_345_014 - rhs[SA14]*mDet3_345_012;
-  const Scalar mDet4_1345_0125 = rhs[SA10]*mDet3_345_125 - rhs[SA11]*mDet3_345_025
-                                 + rhs[SA12]*mDet3_345_015 - rhs[SA15]*mDet3_345_012;
-  const Scalar mDet4_1345_0134 = rhs[SA10]*mDet3_345_134 - rhs[SA11]*mDet3_345_034
-                                 + rhs[SA13]*mDet3_345_014 - rhs[SA14]*mDet3_345_013;
-  const Scalar mDet4_1345_0135 = rhs[SA10]*mDet3_345_135 - rhs[SA11]*mDet3_345_035
-                                 + rhs[SA13]*mDet3_345_015 - rhs[SA15]*mDet3_345_013;
-  const Scalar mDet4_1345_0145 = rhs[SA10]*mDet3_345_145 - rhs[SA11]*mDet3_345_045
-                                 + rhs[SA14]*mDet3_345_015 - rhs[SA15]*mDet3_345_014;
-  const Scalar mDet4_1345_0234 = rhs[SA10]*mDet3_345_234 - rhs[SA12]*mDet3_345_034
-                                 + rhs[SA13]*mDet3_345_024 - rhs[SA14]*mDet3_345_023;
-  const Scalar mDet4_1345_0235 = rhs[SA10]*mDet3_345_235 - rhs[SA12]*mDet3_345_035
-                                 + rhs[SA13]*mDet3_345_025 - rhs[SA15]*mDet3_345_023;
-  const Scalar mDet4_1345_0245 = rhs[SA10]*mDet3_345_245 - rhs[SA12]*mDet3_345_045
-                                 + rhs[SA14]*mDet3_345_025 - rhs[SA15]*mDet3_345_024;
-  const Scalar mDet4_1345_0345 = rhs[SA10]*mDet3_345_345 - rhs[SA13]*mDet3_345_045
-                                 + rhs[SA14]*mDet3_345_035 - rhs[SA15]*mDet3_345_034;
-  const Scalar mDet4_1345_1234 = rhs[SA11]*mDet3_345_234 - rhs[SA12]*mDet3_345_134
-                                 + rhs[SA13]*mDet3_345_124 - rhs[SA14]*mDet3_345_123;
-  const Scalar mDet4_1345_1235 = rhs[SA11]*mDet3_345_235 - rhs[SA12]*mDet3_345_135
-                                 + rhs[SA13]*mDet3_345_125 - rhs[SA15]*mDet3_345_123;
-  const Scalar mDet4_1345_1245 = rhs[SA11]*mDet3_345_245 - rhs[SA12]*mDet3_345_145
-                                 + rhs[SA14]*mDet3_345_125 - rhs[SA15]*mDet3_345_124;
-  const Scalar mDet4_1345_1345 = rhs[SA11]*mDet3_345_345 - rhs[SA13]*mDet3_345_145
-                                 + rhs[SA14]*mDet3_345_135 - rhs[SA15]*mDet3_345_134;
-  const Scalar mDet4_2345_0123 = rhs[SA20]*mDet3_345_123 - rhs[SA21]*mDet3_345_023
-                                 + rhs[SA22]*mDet3_345_013 - rhs[SA23]*mDet3_345_012;
-  const Scalar mDet4_2345_0124 = rhs[SA20]*mDet3_345_124 - rhs[SA21]*mDet3_345_024
-                                 + rhs[SA22]*mDet3_345_014 - rhs[SA24]*mDet3_345_012;
-  const Scalar mDet4_2345_0125 = rhs[SA20]*mDet3_345_125 - rhs[SA21]*mDet3_345_025
-                                 + rhs[SA22]*mDet3_345_015 - rhs[SA25]*mDet3_345_012;
-  const Scalar mDet4_2345_0134 = rhs[SA20]*mDet3_345_134 - rhs[SA21]*mDet3_345_034
-                                 + rhs[SA23]*mDet3_345_014 - rhs[SA24]*mDet3_345_013;
-  const Scalar mDet4_2345_0135 = rhs[SA20]*mDet3_345_135 - rhs[SA21]*mDet3_345_035
-                                 + rhs[SA23]*mDet3_345_015 - rhs[SA25]*mDet3_345_013;
-  const Scalar mDet4_2345_0145 = rhs[SA20]*mDet3_345_145 - rhs[SA21]*mDet3_345_045
-                                 + rhs[SA24]*mDet3_345_015 - rhs[SA25]*mDet3_345_014;
-  const Scalar mDet4_2345_0234 = rhs[SA20]*mDet3_345_234 - rhs[SA22]*mDet3_345_034
-                                 + rhs[SA23]*mDet3_345_024 - rhs[SA24]*mDet3_345_023;
-  const Scalar mDet4_2345_0235 = rhs[SA20]*mDet3_345_235 - rhs[SA22]*mDet3_345_035
-                                 + rhs[SA23]*mDet3_345_025 - rhs[SA25]*mDet3_345_023;
-  const Scalar mDet4_2345_0245 = rhs[SA20]*mDet3_345_245 - rhs[SA22]*mDet3_345_045
-                                 + rhs[SA24]*mDet3_345_025 - rhs[SA25]*mDet3_345_024;
-  const Scalar mDet4_2345_0345 = rhs[SA20]*mDet3_345_345 - rhs[SA23]*mDet3_345_045
-                                 + rhs[SA24]*mDet3_345_035 - rhs[SA25]*mDet3_345_034;
-  const Scalar mDet4_2345_1234 = rhs[SA21]*mDet3_345_234 - rhs[SA22]*mDet3_345_134
-                                 + rhs[SA23]*mDet3_345_124 - rhs[SA24]*mDet3_345_123;
-  const Scalar mDet4_2345_1235 = rhs[SA21]*mDet3_345_235 - rhs[SA22]*mDet3_345_135
-                                 + rhs[SA23]*mDet3_345_125 - rhs[SA25]*mDet3_345_123;
-  const Scalar mDet4_2345_1245 = rhs[SA21]*mDet3_345_245 - rhs[SA22]*mDet3_345_145
-                                 + rhs[SA24]*mDet3_345_125 - rhs[SA25]*mDet3_345_124;
-  const Scalar mDet4_2345_1345 = rhs[SA21]*mDet3_345_345 - rhs[SA23]*mDet3_345_145
-                                 + rhs[SA24]*mDet3_345_135 - rhs[SA25]*mDet3_345_134;
-  const Scalar mDet4_2345_2345 = rhs[SA22]*mDet3_345_345 - rhs[SA23]*mDet3_345_245
-                                 + rhs[SA24]*mDet3_345_235 - rhs[SA25]*mDet3_345_234;
-
-  // Find all NECESSSARY 5x5 dets:  (19 of them)
-
-  const Scalar mDet5_01234_01234 = rhs[SA00]*mDet4_1234_1234 - rhs[SA01]*mDet4_1234_0234
-                                   + rhs[SA02]*mDet4_1234_0134 - rhs[SA03]*mDet4_1234_0124 + rhs[SA04]*mDet4_1234_0123;
-  const Scalar mDet5_01235_01234 = rhs[SA00]*mDet4_1235_1234 - rhs[SA01]*mDet4_1235_0234
-                                   + rhs[SA02]*mDet4_1235_0134 - rhs[SA03]*mDet4_1235_0124 + rhs[SA04]*mDet4_1235_0123;
-  const Scalar mDet5_01235_01235 = rhs[SA00]*mDet4_1235_1235 - rhs[SA01]*mDet4_1235_0235
-                                   + rhs[SA02]*mDet4_1235_0135 - rhs[SA03]*mDet4_1235_0125 + rhs[SA05]*mDet4_1235_0123;
-  const Scalar mDet5_01245_01234 = rhs[SA00]*mDet4_1245_1234 - rhs[SA01]*mDet4_1245_0234
-                                   + rhs[SA02]*mDet4_1245_0134 - rhs[SA03]*mDet4_1245_0124 + rhs[SA04]*mDet4_1245_0123;
-  const Scalar mDet5_01245_01235 = rhs[SA00]*mDet4_1245_1235 - rhs[SA01]*mDet4_1245_0235
-                                   + rhs[SA02]*mDet4_1245_0135 - rhs[SA03]*mDet4_1245_0125 + rhs[SA05]*mDet4_1245_0123;
-  const Scalar mDet5_01245_01245 = rhs[SA00]*mDet4_1245_1245 - rhs[SA01]*mDet4_1245_0245
-                                   + rhs[SA02]*mDet4_1245_0145 - rhs[SA04]*mDet4_1245_0125 + rhs[SA05]*mDet4_1245_0124;
-  const Scalar mDet5_01345_01234 = rhs[SA00]*mDet4_1345_1234 - rhs[SA01]*mDet4_1345_0234
-                                   + rhs[SA02]*mDet4_1345_0134 - rhs[SA03]*mDet4_1345_0124 + rhs[SA04]*mDet4_1345_0123;
-  const Scalar mDet5_01345_01235 = rhs[SA00]*mDet4_1345_1235 - rhs[SA01]*mDet4_1345_0235
-                                   + rhs[SA02]*mDet4_1345_0135 - rhs[SA03]*mDet4_1345_0125 + rhs[SA05]*mDet4_1345_0123;
-  const Scalar mDet5_01345_01245 = rhs[SA00]*mDet4_1345_1245 - rhs[SA01]*mDet4_1345_0245
-                                   + rhs[SA02]*mDet4_1345_0145 - rhs[SA04]*mDet4_1345_0125 + rhs[SA05]*mDet4_1345_0124;
-  const Scalar mDet5_01345_01345 = rhs[SA00]*mDet4_1345_1345 - rhs[SA01]*mDet4_1345_0345
-                                   + rhs[SA03]*mDet4_1345_0145 - rhs[SA04]*mDet4_1345_0135 + rhs[SA05]*mDet4_1345_0134;
-  const Scalar mDet5_02345_01234 = rhs[SA00]*mDet4_2345_1234 - rhs[SA01]*mDet4_2345_0234
-                                   + rhs[SA02]*mDet4_2345_0134 - rhs[SA03]*mDet4_2345_0124 + rhs[SA04]*mDet4_2345_0123;
-  const Scalar mDet5_02345_01235 = rhs[SA00]*mDet4_2345_1235 - rhs[SA01]*mDet4_2345_0235
-                                   + rhs[SA02]*mDet4_2345_0135 - rhs[SA03]*mDet4_2345_0125 + rhs[SA05]*mDet4_2345_0123;
-  const Scalar mDet5_02345_01245 = rhs[SA00]*mDet4_2345_1245 - rhs[SA01]*mDet4_2345_0245
-                                   + rhs[SA02]*mDet4_2345_0145 - rhs[SA04]*mDet4_2345_0125 + rhs[SA05]*mDet4_2345_0124;
-  const Scalar mDet5_02345_01345 = rhs[SA00]*mDet4_2345_1345 - rhs[SA01]*mDet4_2345_0345
-                                   + rhs[SA03]*mDet4_2345_0145 - rhs[SA04]*mDet4_2345_0135 + rhs[SA05]*mDet4_2345_0134;
-  const Scalar mDet5_02345_02345 = rhs[SA00]*mDet4_2345_2345 - rhs[SA02]*mDet4_2345_0345
-                                   + rhs[SA03]*mDet4_2345_0245 - rhs[SA04]*mDet4_2345_0235 + rhs[SA05]*mDet4_2345_0234;
-  const Scalar mDet5_12345_01234 = rhs[SA10]*mDet4_2345_1234 - rhs[SA11]*mDet4_2345_0234
-                                   + rhs[SA12]*mDet4_2345_0134 - rhs[SA13]*mDet4_2345_0124 + rhs[SA14]*mDet4_2345_0123;
-  const Scalar mDet5_12345_01235 = rhs[SA10]*mDet4_2345_1235 - rhs[SA11]*mDet4_2345_0235
-                                   + rhs[SA12]*mDet4_2345_0135 - rhs[SA13]*mDet4_2345_0125 + rhs[SA15]*mDet4_2345_0123;
-  const Scalar mDet5_12345_01245 = rhs[SA10]*mDet4_2345_1245 - rhs[SA11]*mDet4_2345_0245
-                                   + rhs[SA12]*mDet4_2345_0145 - rhs[SA14]*mDet4_2345_0125 + rhs[SA15]*mDet4_2345_0124;
-  const Scalar mDet5_12345_01345 = rhs[SA10]*mDet4_2345_1345 - rhs[SA11]*mDet4_2345_0345
-                                   + rhs[SA13]*mDet4_2345_0145 - rhs[SA14]*mDet4_2345_0135 + rhs[SA15]*mDet4_2345_0134;
-  const Scalar mDet5_12345_02345 = rhs[SA10]*mDet4_2345_2345 - rhs[SA12]*mDet4_2345_0345
-                                   + rhs[SA13]*mDet4_2345_0245 - rhs[SA14]*mDet4_2345_0235 + rhs[SA15]*mDet4_2345_0234;
-  const Scalar mDet5_12345_12345 = rhs[SA11]*mDet4_2345_2345 - rhs[SA12]*mDet4_2345_1345
-                                   + rhs[SA13]*mDet4_2345_1245 - rhs[SA14]*mDet4_2345_1235 + rhs[SA15]*mDet4_2345_1234;
-
-  // Find the determinant 
-
-  const Scalar det = rhs[SA00]*mDet5_12345_12345 - rhs[SA01]*mDet5_12345_02345 + rhs[SA02]*mDet5_12345_01345
-                     - rhs[SA03]*mDet5_12345_01245 + rhs[SA04]*mDet5_12345_01235 - rhs[SA05]*mDet5_12345_01234;
-
-//   if (determ)
-//     *determ = det;
-
-  if ( det == 0 )
-    return false;
-    //m.Invalidate()
-
-  const Scalar oneOverDet = 1.0/det;
-  const Scalar mn1OverDet = - oneOverDet;
-
-  rhs[SA00] =  mDet5_12345_12345*oneOverDet;
-  rhs[SA01] =  mDet5_12345_02345*mn1OverDet;
-  rhs[SA02] =  mDet5_12345_01345*oneOverDet;
-  rhs[SA03] =  mDet5_12345_01245*mn1OverDet;
-  rhs[SA04] =  mDet5_12345_01235*oneOverDet;
-  rhs[SA05] =  mDet5_12345_01234*mn1OverDet;
-
-  rhs[SA11] =  mDet5_02345_02345*oneOverDet;
-  rhs[SA12] =  mDet5_02345_01345*mn1OverDet;
-  rhs[SA13] =  mDet5_02345_01245*oneOverDet;
-  rhs[SA14] =  mDet5_02345_01235*mn1OverDet;
-  rhs[SA15] =  mDet5_02345_01234*oneOverDet;
-
-  rhs[SA22] =  mDet5_01345_01345*oneOverDet;
-  rhs[SA23] =  mDet5_01345_01245*mn1OverDet;
-  rhs[SA24] =  mDet5_01345_01235*oneOverDet;
-  rhs[SA25] =  mDet5_01345_01234*mn1OverDet;
-
-  rhs[SA33] =  mDet5_01245_01245*oneOverDet;
-  rhs[SA34] =  mDet5_01245_01235*mn1OverDet;
-  rhs[SA35] =  mDet5_01245_01234*oneOverDet;
-
-  rhs[SA44] =  mDet5_01235_01235*oneOverDet;
-  rhs[SA45] =  mDet5_01235_01234*mn1OverDet;
-
-  rhs[SA55] =  mDet5_01234_01234*oneOverDet;
-
-
-  return true;
-}
-
-
 
   }  // namespace Math
 
@@ -748,6 +381,8 @@ bool Inverter<6>::Dinv(MatRepSym<T,6> & rhs) {
           
 
 // undef Smacros to avoid conflicts
+
+// undef SF 4x4
 #undef SF00 
 #undef SF01 
 #undef SF02
@@ -768,7 +403,7 @@ bool Inverter<6>::Dinv(MatRepSym<T,6> & rhs) {
 #undef SF32
 #undef SF33
 
-// undef S
+// undef SM 5x5
 #undef SM00
 #undef SM01
 #undef SM02
@@ -799,47 +434,6 @@ bool Inverter<6>::Dinv(MatRepSym<T,6> & rhs) {
 #undef SM43
 #undef SM44
 
-#undef SA00
-#undef SA01
-#undef SA02
-#undef SA03
-#undef SA04
-#undef SA05
-
-#undef SA10
-#undef SA11
-#undef SA12
-#undef SA13
-#undef SA14
-#undef SA15
-
-#undef SA20
-#undef SA21
-#undef SA22
-#undef SA23
-#undef SA24
-#undef SA25
-
-#undef SA30
-#undef SA31
-#undef SA32
-#undef SA33
-#undef SA34
-#undef SA35
-
-#undef SA40
-#undef SA41
-#undef SA42
-#undef SA43
-#undef SA44
-#undef SA45
-
-#undef SA50
-#undef SA51
-#undef SA52
-#undef SA53
-#undef SA54
-#undef SA55
 
 
 
