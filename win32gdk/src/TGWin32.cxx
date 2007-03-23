@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.121 2007/03/05 14:26:12 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.122 2007/03/20 09:54:26 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Valeri Onuchin, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -1082,7 +1082,8 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
       fCursors[kHand] = gdk_cursor_new(GDK_HAND2);
       fCursors[kPointer] = gdk_cursor_new( GDK_LEFT_PTR);
       fCursors[kCaret] =  gdk_cursor_new(GDK_XTERM);
-      fCursors[kWatch] = gdk_cursor_new(GDK_WATCH);
+      //fCursors[kWatch] = gdk_cursor_new(GDK_WATCH);
+      fCursors[kWatch] = gdk_cursor_new(GDK_BUSY);
    }
    fCursors[kRotate] = gdk_cursor_new(GDK_EXCHANGE);
    fCursors[kArrowRight] = gdk_cursor_new(GDK_ARROW);

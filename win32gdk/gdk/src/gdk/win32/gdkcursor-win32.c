@@ -32,6 +32,7 @@ static const struct {
    "bottom_left_corner", 12}, {
    "bottom_right_corner", 14}, {
    "bottom_side", 16}, {
+   "busy", 21}, {
    "center_ptr", 22}, {
    "circle", 24}, {
    "kr", 34}, {
