@@ -52,15 +52,15 @@ NETXINCEXTRA := $(XROOTDDIRI:%=-I%)
 ifeq ($(PLATFORM),win32)
 NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
 else
-NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
-		$(XROOTDDIRL)/libXrdNet.a $(XROOTDDIRL)/libXrdSys.a
+NETXLIBEXTRA += -L$(LPATH) -lXrdPosix
 endif
 
 ##### local rules #####
 include/%.h:    $(NETXDIRI)/%.h $(XROOTDETAG)
 		cp $< $@
 
-$(NETXLIB):     $(NETXO) $(NETXDO) $(XRDPLUGINS) $(ORDER_) $(MAINLIBS) $(NETXLIBDEP)
+$(NETXLIB):     $(NETXO) $(NETXDO) $(ORDER_) $(MAINLIBS) $(NETXLIBDEP) \
+                $(XRDPLUGINS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libNetx.$(SOEXT) $@ "$(NETXO) $(NETXDO)" \
 		   "$(NETXLIBEXTRA)"

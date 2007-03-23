@@ -63,15 +63,14 @@ PROOFXINCEXTRA += $(PROOFDDIRI:%=-I%)
 ifeq ($(PLATFORM),win32)
 PROOFXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
 else
-PROOFXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.a $(XROOTDDIRL)/libXrdOuc.a \
-		  $(XROOTDDIRL)/libXrdNet.a
+PROOFXLIBEXTRA += -L$(LPATH) -lXrdPosix
 endif
 
 ##### local rules #####
 include/%.h:    $(PROOFXDIRI)/%.h $(XROOTDETAG)
 		cp $< $@
 
-$(PROOFXLIB):   $(PROOFXO) $(XPCONNO) $(PROOFXDO) $(ORDER_) $(MAINLIBS) \
+$(PROOFXLIB):   $(PROOFXO) $(PROOFXDO) $(XPCONNO) $(ORDER_) $(MAINLIBS) \
                 $(PROOFXLIBDEP) $(XRDPLUGINS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libProofx.$(SOEXT) $@ \
