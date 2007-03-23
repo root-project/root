@@ -52,7 +52,7 @@ NETXINCEXTRA := $(XROOTDDIRI:%=-I%)
 ifeq ($(PLATFORM),win32)
 NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
 else
-NETXLIBEXTRA += -L$(LPATH) -lXrdPosix
+NETXLIBEXTRA += -L$(XROOTDDIRL) -lXrdPosix
 endif
 
 ##### local rules #####
