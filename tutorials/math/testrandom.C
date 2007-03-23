@@ -41,11 +41,6 @@
 #include <TUnuranContDist.h>
 #include <TFile.h>
 
-void testrandom()
-{
-  testRandom3();
-  testAll();
-}
 
 void testAll() {
   int i, N = 10000000;
@@ -637,3 +632,8 @@ int testRandom3() {
    }
 
 
+void testrandom()
+{
+  testRandom3();
+  testAll();
+}
