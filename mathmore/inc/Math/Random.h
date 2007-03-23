@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: Random.h,v 1.4 2006/06/08 16:36:17 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: Random.h,v 1.5 2006/12/04 17:34:55 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -145,10 +145,24 @@ namespace Math {
      **/
 
     /**
-       Gaussian distribution
+       Gaussian distribution. Default method (use Ziggurat)
      */
     double Gaus(double mean = 0, double sigma = 1) { 
+      return mean + fEngine.GaussianZig(sigma);
+    }  
+
+    /**
+       Gaussian distribution (Box-Muller method)
+     */
+    double GausBM(double mean = 0, double sigma = 1) { 
       return mean + fEngine.Gaussian(sigma);
+    }  
+
+    /**
+       Gaussian distribution (Ratio Method)
+     */
+    double GausR(double mean = 0, double sigma = 1) { 
+      return mean + fEngine.GaussianRatio(sigma);
     }  
 
     /**

@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRndmEngines.h,v 1.2 2006/05/30 16:03:46 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRndmEngines.h,v 1.3 2006/06/19 08:44:08 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -80,7 +80,6 @@ namespace Math {
      */
     template<class Iterator> 
     void RandomArray(Iterator begin, Iterator end) { 
-      assert(fRng);
       for ( Iterator itr = begin; itr != end; ++itr ) { 
 	*itr = this->operator()(); 
       }
@@ -114,9 +113,19 @@ namespace Math {
      **/
 
     /**
-       Gaussian distribution
+       Gaussian distribution - default method is Box-Muller
      */
     double Gaussian(double sigma); 
+
+    /**
+       Gaussian distribution - Ziggurat method
+     */
+    double GaussianZig(double sigma);  
+
+    /**
+       Gaussian distribution - Ratio method
+     */
+    double GaussianRatio(double sigma); 
     /**
        Gaussian Tail distribution
      */

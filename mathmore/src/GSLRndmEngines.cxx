@@ -1,4 +1,4 @@
-// @(#)root/mathmore:$Name:  $:$Id: GSLRndmEngines.cxx,v 1.7 2006/07/06 11:01:51 moneta Exp $
+// @(#)root/mathmore:$Name:  $:$Id: GSLRndmEngines.cxx,v 1.8 2006/12/11 15:06:37 moneta Exp $
 // Authors: L. Moneta, A. Zsenei   08/2005 
 
  /**********************************************************************
@@ -40,6 +40,8 @@
 
 
 #include "Math/GSLRndmEngines.h"
+
+extern double gsl_ran_gaussian_acr(  const gsl_rng * r, const double sigma);
 
 //#include <iostream>
 
@@ -118,13 +120,13 @@ namespace Math {
 
   void GSLRandomEngine::Initialize() { 
   //----------------------------------------------------
-    assert(fRng);
+    assert(fRng != 0);
     fRng->Allocate(); 
   }
 
   void GSLRandomEngine::Terminate() { 
   //----------------------------------------------------
-    assert(fRng);
+    assert(fRng != 0);
     fRng->Free();
     delete fRng; 
     fRng = 0; 
@@ -134,14 +136,12 @@ namespace Math {
   double GSLRandomEngine::operator() () { 
     // generate random between 0 and 1. 
     // 0 is excluded 
-    assert(fRng);
     return gsl_rng_uniform_pos(fRng->Rng() ); 
   }
 
   void GSLRandomEngine::RandomArray(double * begin, double * end )  { 
     // generate array of randoms betweeen 0 and 1. 0 is excluded 
     // specialization for double * (to be faster) 
-      assert(fRng);
       for ( double * itr = begin; itr != end; ++itr ) { 
 	*itr = gsl_rng_uniform_pos(fRng->Rng() ); 
       }
@@ -177,16 +177,29 @@ namespace Math {
 
   unsigned int GSLRandomEngine::Size() const { 
   //----------------------------------------------------
-    return gsl_rng_size( fRng->Rng() ); 
+     assert (fRng != 0);
+     return gsl_rng_size( fRng->Rng() ); 
   }
 
 
   // Random distributions
   
-  double GSLRandomEngine::Gaussian(double sigma)  
+  double GSLRandomEngine::GaussianZig(double sigma)  
   {
     // Gaussian distribution. Use fast ziggurat algorithm implemented since GSL 1.8 
      return gsl_ran_gaussian_ziggurat(  fRng->Rng(), sigma);
+  }
+
+  double GSLRandomEngine::Gaussian(double sigma)  
+  {
+    // Gaussian distribution. Use default Box-Muller method
+     return gsl_ran_gaussian(  fRng->Rng(), sigma);
+  }
+
+  double GSLRandomEngine::GaussianRatio(double sigma)  
+  {
+    // Gaussian distribution. Use ratio method
+     return gsl_ran_gaussian_ratio_method(  fRng->Rng(), sigma);
   }
 
 
