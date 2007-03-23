@@ -15,7 +15,7 @@
 #include "TFoam.h"
 #include "TFoamIntegrand.h"
 #include "TStopwatch.h"
-#include "TRoot.h"
+#include "TROOT.h"
 
 
 #include "TUnuran.h"
