@@ -42,6 +42,7 @@ ifeq ($(wildcard $(XROOTDDIRI)/*.hh),)
 XROOTDDIRI   := $(XROOTDDIR)/src
 endif
 XROOTDDIRL   := $(XROOTDDIR)/lib
+XROOTDDIRP   := $(XROOTDDIRL)
 endif
 endif
 
@@ -52,7 +53,7 @@ NETXINCEXTRA := $(XROOTDDIRI:%=-I%)
 ifeq ($(PLATFORM),win32)
 NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
 else
-NETXLIBEXTRA += -L$(XROOTDDIRL) -lXrdPosix
+NETXLIBEXTRA += -L$(XROOTDDIRP) -lXrdPosix
 endif
 
 ##### local rules #####

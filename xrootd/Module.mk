@@ -56,6 +56,7 @@ XRDPLUGINS := $(XRDPLUGINSA)
 else
 XRDPLUGINSA:= $(XROOTDDIRL)/libXrdSec.$(XRDSOEXT)
 XRDPLUGINS := $(LPATH)/libXrdSec.$(XRDSOEXT)
+XROOTDDIRP := $(LPATH)
 ifeq ($(ARCH),win32gcc)
 XRDPLUGINS := $(patsubst $(LPATH)/%.$(XRDSOEXT),bin/%.$(XRDSOEXT),$(XRDPLUGINS))
 endif
@@ -88,7 +89,8 @@ endif
 ifneq ($(PLATFORM),win32)
 $(XRDPLUGINS): $(XRDPLUGINSA)
 		@(if [ -d $(XROOTDDIRL) ]; then \
-		    lsplug=`find $(XROOTDDIRL) -name "libXrd*.$(XRDSOEXT)"` ; \
+		    lsplug=`find $(XROOTDDIRL) -name "libXrd*.$(XRDSOEXT)"` ;\
+		    lsplug="$$lsplug `find $(XROOTDDIRL) -name "libXrd*.dylib"`" ;\
 		    for i in $$lsplug ; do \
 		       echo "Copying $$i ..." ; \
 		       if [ "x$(ARCH)" = "xwin32gcc" ] ; then \
@@ -98,7 +100,7 @@ $(XRDPLUGINS): $(XRDPLUGINSA)
 		          ln -sf bin/$$lname "$(LPATH)/$$lname.a" ; \
 		       else \
 		          cp $$i $(LPATH)/ ; \
-		       fi; \
+		       fi ; \
 		    done ; \
 		  fi)
 endif

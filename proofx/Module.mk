@@ -51,6 +51,7 @@ ifeq ($(wildcard $(XROOTDDIRI)/*.hh),)
 XROOTDDIRI   := $(XROOTDDIR)/src
 endif
 XROOTDDIRL   := $(XROOTDDIR)/lib
+XROOTDDIRP   := $(XROOTDDIRL)
 endif
 endif
 
@@ -63,7 +64,7 @@ PROOFXINCEXTRA += $(PROOFDDIRI:%=-I%)
 ifeq ($(PLATFORM),win32)
 PROOFXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
 else
-PROOFXLIBEXTRA += -L$(XROOTDDIRL) -lXrdPosix
+PROOFXLIBEXTRA += -L$(XROOTDDIRP) -lXrdPosix
 endif
 
 ##### local rules #####
