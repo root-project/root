@@ -4444,6 +4444,7 @@ if test "$prefix2" = "\$(ROOTSYS)" ; then
     libdir2=\$ROOTSYS/lib
     incdir2=\$ROOTSYS/include
 fi
+
 features=""
 for f in $options ; do
     bar="$`echo $f`"
@@ -4452,6 +4453,9 @@ for f in $options ; do
        features="$features $feat"
     fi
 done
+# threads are now always enabled
+features="$features thread"
+
 sed -e "s|@architecture@|$arch|"           \
     -e "s|@platform@|$platform|"           \
     -e "s|@prefix@|$prefix2|"              \
