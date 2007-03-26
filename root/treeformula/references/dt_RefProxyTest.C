@@ -1,11 +1,13 @@
 bool dt_RefProxyTest() {
-  gSystem->Load("libEvent.dll");
+  gSystem->Load("libTreePlayer");
+  gSystem->Load("libEvent");
 
   const char* fname;
 
   fname = "Event.new.split0.root";
   printf("\n\n\n=====================  %s  =================================\n\n\n",fname);
   TFile::Open(fname);
+  T->SetScanField(0);
   T->Scan("fLastTrack.fUniqueID:fLastTrack.fUniqueID&0xFFFF:fLastTrack@.fUniqueID:fLastTrack.fPx:fLastTrack.GetPx():fTracks[fTracks@.size()-1].fPx:fTracks[fTracks@.size()-1].GetPx():fTracks[0].fPx");
   T->Scan("fLastTrack.fUniqueID:fLastTrack@.fUniqueID:fLastTrack.fUniqueID&0xFFFF:fTracks[fTracks@.size()-1].fUniqueID&0xFFFF:fTracks[0].fUniqueID&0xFFFF");
   T->Scan("fLastTrack.GetUniqueID():fLastTrack@.GetUniqueID():fLastTrack.GetUniqueID()&0xFFFF:fTracks[fTracks@.size()-1].fUniqueID&0xFFFF:fTracks[0].GetUniqueID()&0xFFFF");
@@ -14,6 +16,7 @@ bool dt_RefProxyTest() {
   fname = "Event.new.split1.root";
   printf("\n\n\n=====================  %s  =================================\n\n\n",fname);
   TFile::Open(fname);
+  T->SetScanField(0);
   T->Scan("fLastTrack.fUniqueID:fLastTrack.fUniqueID&0xFFFF:fLastTrack@.fUniqueID:fLastTrack.fPx:fLastTrack.GetPx():fTracks[fTracks@.size()-1].fPx:fTracks[fTracks@.size()-1].GetPx():fTracks[0].fPx");
   T->Scan("fLastTrack.fUniqueID:fLastTrack@.fUniqueID:fLastTrack.fUniqueID&0xFFFF:fTracks[fTracks@.size()-1].fUniqueID&0xFFFF:fTracks[0].fUniqueID&0xFFFF");
   T->Scan("fLastTrack.GetUniqueID():fLastTrack@.GetUniqueID():fLastTrack.GetUniqueID()&0xFFFF:fTracks[fTracks@.size()-1].fUniqueID&0xFFFF:fTracks[0].GetUniqueID()&0xFFFF");
@@ -22,6 +25,7 @@ bool dt_RefProxyTest() {
   fname = "Event.new.split2.root";
   printf("\n\n\n=====================  %s  =================================\n\n\n",fname);
   TFile::Open(fname);
+  T->SetScanField(0);
   T->Scan("fLastTrack.fUniqueID:fLastTrack.fUniqueID&0xFFFF:fLastTrack@.fUniqueID:fLastTrack.fPx:fLastTrack.GetPx():fTracks[fTracks@.size()-1].fPx:fTracks[fTracks@.size()-1].GetPx():fTracks[0].fPx");
   T->Scan("fLastTrack.fUniqueID:fLastTrack@.fUniqueID:fLastTrack.fUniqueID&0xFFFF:fTracks[fTracks@.size()-1].fUniqueID&0xFFFF:fTracks[0].fUniqueID&0xFFFF");
   T->Scan("fLastTrack.GetUniqueID():fLastTrack@.GetUniqueID():fLastTrack.GetUniqueID()&0xFFFF:fTracks[fTracks@.size()-1].GetUniqueID()&0xFFFF:fTracks[0].GetUniqueID()&0xFFFF");
@@ -30,6 +34,7 @@ bool dt_RefProxyTest() {
   fname = "Event.new.split9.root";
   printf("\n\n\n=====================  %s  =================================\n\n\n",fname);
   TFile::Open(fname);
+  T->SetScanField(0);
   T->Scan("fLastTrack.fUniqueID:fLastTrack.fUniqueID&0xFFFF:fLastTrack@.fUniqueID:fLastTrack.fPx:fLastTrack.GetPx():fTracks[fTracks@.size()-1].fPx:fTracks[fTracks@.size()-1].GetPx():fTracks[0].fPx");
   T->Scan("fLastTrack.fUniqueID:fLastTrack@.fUniqueID:fLastTrack.fUniqueID&0xFFFF:fLastTrack.GetUniqueID()&0xFFFF:fTracks[fTracks@.size()-1].fUniqueID&0xFFFF:fTracks[0].fUniqueID&0xFFFF");
   T->Scan("fLastTrack.GetUniqueID():fLastTrack@.GetUniqueID():fLastTrack.GetUniqueID()&0xFFFF:fTracks[fTracks@.size()-1].GetUniqueID()&0xFFFF:fTracks[0].GetUniqueID()&0xFFFF");
