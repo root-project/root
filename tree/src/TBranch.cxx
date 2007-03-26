@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.122 2007/02/05 18:11:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.123 2007/02/06 15:30:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -92,6 +92,8 @@ TBranch::TBranch()
 , fBasketEntry(0)
 , fBasketSeek(0)
 , fTree(0)
+, fMother(0)
+, fParent(0)
 , fAddress(0)
 , fDirectory(0)
 , fFileName("")
@@ -108,7 +110,7 @@ TBranch::TBranch()
 }
 
 //______________________________________________________________________________
-TBranch::TBranch(const char* name, void* address, const char* leaflist, Int_t basketsize, Int_t compress)
+TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leaflist, Int_t basketsize, Int_t compress)
 : TNamed(name, leaflist)
 , TAttFill(0, 1001)
 , fCompress(compress)
@@ -133,7 +135,9 @@ TBranch::TBranch(const char* name, void* address, const char* leaflist, Int_t ba
 , fBasketBytes(0)
 , fBasketEntry(0)
 , fBasketSeek(0)
-, fTree(gTree)
+, fTree(tree)
+, fMother(0)
+, fParent(0)
 , fAddress((char*) address)
 , fDirectory(fTree->GetDirectory())
 , fFileName("")
@@ -182,6 +186,94 @@ TBranch::TBranch(const char* name, void* address, const char* leaflist, Int_t ba
    //    Note that this function is invoked by TTree::Branch
    //
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+   Init(name,address,leaflist,basketsize,compress);
+}
+
+//______________________________________________________________________________
+TBranch::TBranch(TBranch *parent, const char* name, void* address, const char* leaflist, Int_t basketsize, Int_t compress)
+: TNamed(name, leaflist)
+, TAttFill(0, 1001)
+, fCompress(compress)
+, fBasketSize((basketsize < 100) ? 100 : basketsize)
+, fEntryOffsetLen(0)
+, fWriteBasket(0)
+, fEntryNumber(0)
+, fOffset(0)
+, fMaxBaskets(10)
+, fSplitLevel(0)
+, fNleaves(0)
+, fReadBasket(0)
+, fReadEntry(-1)
+, fEntries(0)
+, fTotBytes(0)
+, fZipBytes(0)
+, fBranches()
+, fLeaves()
+, fBaskets()
+, fNBasketRAM(kMaxRAM+1)
+, fBasketRAM(0)
+, fBasketBytes(0)
+, fBasketEntry(0)
+, fBasketSeek(0)
+, fTree(parent ? parent->GetTree() : 0)
+, fMother(parent ? parent->GetMother() : 0)
+, fParent(parent)
+, fAddress((char*) address)
+, fDirectory(fTree->GetDirectory())
+, fFileName("")
+, fEntryBuffer(0)
+, fBrowsables(0)
+, fSkipZip(kFALSE)
+{
+   //*-*-*-*-*-*-*-*-*-*-*-*-*Create a Branch*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //*-*                =====================
+   //
+   //       * address is the address of the first item of a structure
+   //         or the address of a pointer to an object (see example).
+   //       * leaflist is the concatenation of all the variable names and types
+   //         separated by a colon character :
+   //         The variable name and the variable type are separated by a slash (/).
+   //         The variable type may be 0,1 or 2 characters. If no type is given,
+   //         the type of the variable is assumed to be the same as the previous
+   //         variable. If the first variable does not have a type, it is assumed
+   //         of type F by default. The list of currently supported types is given below:
+   //            - C : a character string terminated by the 0 character
+   //            - B : an 8 bit signed integer (Char_t)
+   //            - b : an 8 bit unsigned integer (UChar_t)
+   //            - S : a 16 bit signed integer (Short_t)
+   //            - s : a 16 bit unsigned integer (UShort_t)
+   //            - I : a 32 bit signed integer (Int_t)
+   //            - i : a 32 bit unsigned integer (UInt_t)
+   //            - F : a 32 bit floating point (Float_t)
+   //            - D : a 64 bit floating point (Double_t)
+   //            - L : a 64 bit signed integer (Long64_t)
+   //            - l : a 64 bit unsigned integer (ULong64_t)
+   //
+   //         By default, a variable will be copied to the buffer with the number of
+   //         bytes specified in the type descriptor character. However, if the type
+   //         consists of 2 characters, the second character is an integer that
+   //         specifies the number of bytes to be used when copying the variable
+   //         to the output buffer. Example:
+   //             X         ; variable X, type Float_t
+   //             Y/I       : variable Y, type Int_t
+   //             Y/I2      ; variable Y, type Int_t converted to a 16 bits integer
+   //
+   //   See an example of a Branch definition in the TTree constructor.
+   //
+   //   Note that in case the data type is an object, this branch can contain
+   //   only this object.
+   //
+   //    Note that this function is invoked by TTree::Branch
+   //
+   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+   Init(name,address,leaflist,basketsize,compress);
+}
+
+void TBranch::Init(const char* name, void* address, const char* leaflist, Int_t basketsize, Int_t compress)
+{
+   // Initialization routine called from the constructor.  This should NOT be made virtual.
 
    gBranch = this;
 
@@ -1131,12 +1223,15 @@ TBranch* TBranch::GetMother() const
 {
    // Get our top-level parent branch in the tree.
 
+   if (fMother) return fMother;
+
    const TObjArray* array = fTree->GetListOfBranches();
    Int_t n = array->GetEntriesFast();
    for (Int_t i = 0; i < n; ++i) {
       TBranch* branch = (TBranch*) array->UncheckedAt(i);
       TBranch* parent = branch->GetSubBranch(this);
       if (parent) {
+         const_cast<TBranch*>(this)->fMother = branch; // We can not yet use the 'mutable' keyword
          return branch;
       }
    }
@@ -1153,6 +1248,10 @@ TBranch* TBranch::GetSubBranch(const TBranch* child) const
    if (this == child) {
       // Note: We cast away any const-ness of "this".
       return (TBranch*) this;
+   }
+
+   if (child->fParent) {
+      return child->fParent;
    }
 
    Int_t len = fBranches.GetEntriesFast();

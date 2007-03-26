@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.55 2006/12/12 21:28:26 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.56 2007/03/08 23:29:01 pcanal Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -91,12 +91,19 @@ protected:
    Int_t                    Unroll(const char* name, TClass* cltop, TClass* cl, char* ptr, Int_t basketsize, Int_t splitlevel, Int_t btype);
    void                     ValidateAddress() const;
 
+   void Init(TTree *tree, TBranch *parent, const char* name, TStreamerInfo* sinfo, Int_t id, char* pointer, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t btype = 0);
+   void Init(TTree *tree, TBranch *parent, const char* name, TClonesArray* clones, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
+   void Init(TTree *tree, TBranch *parent, const char* name, TVirtualCollectionProxy* cont, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
+
 // Public Interface.
 public:
    TBranchElement();
-   TBranchElement(const char* name, TStreamerInfo* sinfo, Int_t id, char* pointer, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t btype = 0);
-   TBranchElement(const char* name, TClonesArray* clones, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
-   TBranchElement(const char* name, TVirtualCollectionProxy* cont, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
+   TBranchElement(TTree *tree, const char* name, TStreamerInfo* sinfo, Int_t id, char* pointer, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t btype = 0);
+   TBranchElement(TTree *tree, const char* name, TClonesArray* clones, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
+   TBranchElement(TTree *tree, const char* name, TVirtualCollectionProxy* cont, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
+   TBranchElement(TBranch *parent, const char* name, TStreamerInfo* sinfo, Int_t id, char* pointer, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t btype = 0);
+   TBranchElement(TBranch *parent, const char* name, TClonesArray* clones, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
+   TBranchElement(TBranch *parent, const char* name, TVirtualCollectionProxy* cont, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = -1);
 
    virtual                  ~TBranchElement();
 

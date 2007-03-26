@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchRef.cxx,v 1.9 2006/03/22 06:36:20 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchRef.cxx,v 1.10 2007/03/08 23:29:01 pcanal Exp $
 // Author: Rene Brun   19/08/2004
 
 /*************************************************************************
@@ -74,6 +74,7 @@ TBranchRef::TBranchRef(TTree *tree)
    }
 
    fTree       = tree;
+   fMother     = this;
    fDirectory  = fTree->GetDirectory();
    fFileName   = "";
 

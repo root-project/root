@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.23 2007/01/30 11:24:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.24 2007/02/03 18:33:15 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -45,10 +45,11 @@ TBranchClones::TBranchClones()
 , fBranchCount(0)
 {
    // -- Default and i/o constructor.
+
 }
 
 //______________________________________________________________________________
-TBranchClones::TBranchClones(const char* name, void* pointer, Int_t basketsize, Int_t compress, Int_t splitlevel)
+TBranchClones::TBranchClones(TTree *tree, const char* name, void* pointer, Int_t basketsize, Int_t compress, Int_t splitlevel)
 : TBranch()
 , fList(0)
 , fRead(0)
@@ -58,14 +59,41 @@ TBranchClones::TBranchClones(const char* name, void* pointer, Int_t basketsize, 
 {
    // -- Constructor.
 
+   Init(tree,0,name,pointer,basketsize,compress,splitlevel);
+}
+
+//______________________________________________________________________________
+TBranchClones::TBranchClones(TBranch *parent, const char* name, void* pointer, Int_t basketsize, Int_t compress, Int_t splitlevel)
+: TBranch()
+, fList(0)
+, fRead(0)
+, fN(0)
+, fNdataMax(0)
+, fBranchCount(0)
+{
+   // -- Constructor.
+
+   Init(0,parent,name,pointer,basketsize,compress,splitlevel);
+}
+
+//______________________________________________________________________________
+void TBranchClones::Init(TTree *tree, TBranch *parent, const char* name, void* pointer, Int_t basketsize, Int_t compress, Int_t splitlevel)
+{
+   // Initialization (non-virtual, to be called from constructor).
+
+   if (tree==0 && parent!=0) tree = parent->GetTree();
+   fTree   = tree;
+   fMother = parent ? parent->GetMother() : this;
+   fParent = parent;
+
    TString leaflist;
    TString branchname;
    TString branchcount;
    SetName(name);
-   if ((compress == -1) && gTree->GetDirectory()) {
+   if ((compress == -1) && tree->GetDirectory()) {
       TFile* bfile = 0;
-      if (gTree->GetDirectory()) {
-         bfile = gTree->GetDirectory()->GetFile();
+      if (tree->GetDirectory()) {
+         bfile = tree->GetDirectory()->GetFile();
       }
       if (bfile) {
          compress = bfile->GetCompressionLevel();
@@ -79,7 +107,7 @@ TBranchClones::TBranchClones(const char* name, void* pointer, Int_t basketsize, 
    if (!cl) {
       return;
    }
-   gTree->BuildStreamerInfo(cl);
+   tree->BuildStreamerInfo(cl);
    fClassName = cl->GetName();
    fSplitLevel = splitlevel;
 
@@ -89,10 +117,9 @@ TBranchClones::TBranchClones(const char* name, void* pointer, Int_t basketsize, 
    }
    leaflist.Form("%s_/I", name);
    branchcount.Form("%s_", name);
-   fBranchCount = new TBranch(branchcount, &fN, leaflist, basketsize);
+   fBranchCount = new TBranch(this, branchcount, &fN, leaflist, basketsize);
    fBranchCount->SetBit(kIsClone);
    TLeaf* leafcount = (TLeaf*) fBranchCount->GetListOfLeaves()->UncheckedAt(0);
-   fTree = gTree;
    fDirectory = fTree->GetDirectory();
    fFileName = "";
 
@@ -125,7 +152,7 @@ TBranchClones::TBranchClones(const char* name, void* pointer, Int_t basketsize, 
             continue;
          }
       }
-      gTree->BuildStreamerInfo(TClass::GetClass(member->GetFullTypeName()));
+      tree->BuildStreamerInfo(TClass::GetClass(member->GetFullTypeName()));
       TDataType* membertype = member->GetDataType();
       Int_t type = membertype->GetType();
       if (!type) {
@@ -159,7 +186,7 @@ TBranchClones::TBranchClones(const char* name, void* pointer, Int_t basketsize, 
          comp--;
       }
       branchname.Form("%s.%s", name, rd->GetName());
-      TBranch* branch  = new TBranch(branchname, this, leaflist, basketsize, comp);
+      TBranch* branch  = new TBranch(this, branchname, this, leaflist, basketsize, comp);
       branch->SetBit(kIsClone);
       TObjArray* leaves = branch->GetListOfLeaves();
       TLeaf* leaf = (TLeaf*) leaves->UncheckedAt(0);

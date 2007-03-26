@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.40 2007/02/03 18:33:15 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.41 2007/02/06 15:30:25 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -33,8 +33,6 @@
 #include "TTree.h"
 #include "TVirtualPad.h"
 
-R__EXTERN TTree* gTree;
-
 ClassImp(TBranchObject)
 
 //______________________________________________________________________________
@@ -48,10 +46,32 @@ TBranchObject::TBranchObject()
 }
 
 //______________________________________________________________________________
-TBranchObject::TBranchObject(const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t splitlevel, Int_t compress)
+TBranchObject::TBranchObject(TTree *tree, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t splitlevel, Int_t compress)
 : TBranch()
 {
    // Create a BranchObject.
+
+   Init(tree,0,name,classname,addobj,basketsize,splitlevel,compress);
+}
+
+//______________________________________________________________________________
+TBranchObject::TBranchObject(TBranch *parent, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t splitlevel, Int_t compress)
+: TBranch()
+{
+   // Create a BranchObject.
+
+   Init(0,parent,name,classname,addobj,basketsize,splitlevel,compress);
+}
+
+//______________________________________________________________________________
+void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t splitlevel, Int_t compress)
+{
+   // Initialization routine (run from the constructor so do not make this function virtual)
+
+   if (tree==0 && parent!=0) tree = parent->GetTree();
+   fTree   = tree;
+   fMother = parent ? parent->GetMother() : this;
+   fParent = parent;
 
    TClass* cl = TClass::GetClass(classname);
 
@@ -69,7 +89,7 @@ TBranchObject::TBranchObject(const char* name, const char* classname, void* addo
       delobj = kTRUE;
    }
 
-   gTree->BuildStreamerInfo(cl, obj);
+   tree->BuildStreamerInfo(cl, obj);
 
    if (delobj) {
       cl->Destructor(obj);
@@ -79,8 +99,8 @@ TBranchObject::TBranchObject(const char* name, const char* classname, void* addo
    SetTitle(name);
 
    fCompress = compress;
-   if ((compress == -1) && gTree->GetDirectory()) {
-      TFile* bfile = gTree->GetDirectory()->GetFile();
+   if ((compress == -1) && tree->GetDirectory()) {
+      TFile* bfile = tree->GetDirectory()->GetFile();
       if (bfile) {
          fCompress = bfile->GetCompressionLevel();
       }
@@ -107,7 +127,7 @@ TBranchObject::TBranchObject(const char* name, const char* classname, void* addo
    leaf->SetAddress(addobj);
    fNleaves = 1;
    fLeaves.Add(leaf);
-   gTree->GetListOfLeaves()->Add(leaf);
+   tree->GetListOfLeaves()->Add(leaf);
 
    // Set the bit kAutoDelete to specify that when reading
    // in TLeafObject::ReadBasket, the object should be deleted
@@ -115,7 +135,6 @@ TBranchObject::TBranchObject(const char* name, const char* classname, void* addo
    // It is foreseen to not set this bit in a future version.
    SetAutoDelete(kTRUE);
 
-   fTree = gTree;
    fDirectory = fTree->GetDirectory();
    fFileName = "";
 

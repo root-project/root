@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.h,v 1.6 2004/07/29 10:54:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.h,v 1.7 2005/11/11 22:16:04 pcanal Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -32,10 +32,13 @@ protected:
    
    TString     fClassName;        //Class name of referenced object
    TObject     *fOldObject;       //!Pointer to old object
-   
+
+   void Init(TTree *tree, TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1);   
+
 public:
    TBranchObject();
-   TBranchObject(const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1);
+   TBranchObject(TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1);
+   TBranchObject(TTree *tree, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1);
    virtual ~TBranchObject();
    
    virtual void        Browse(TBrowser *b);

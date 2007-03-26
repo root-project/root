@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.325 2007/03/16 10:54:07 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.326 2007/03/19 22:02:21 pcanal Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1188,7 +1188,7 @@ TBranch* TTree::Branch(const char* name, void* address, const char* leaflist, In
    //         the entries in the Tree randomly and your Tree is in split mode.
 
    gTree = this;
-   TBranch* branch = new TBranch(name, address, leaflist, bufsize);
+   TBranch* branch = new TBranch(this, name, address, leaflist, bufsize);
    if (branch->IsZombie()) {
       delete branch;
       branch = 0;
@@ -1274,7 +1274,7 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
       Error("BranchOld", "Cannot find class: '%s'", classname);
       return 0;
    }
-   TBranch* branch = new TBranchObject(name, classname, addobj, bufsize, splitlevel);
+   TBranch* branch = new TBranchObject(this, name, classname, addobj, bufsize, splitlevel);
    fBranches.Add(branch);
    if (!splitlevel) {
       return branch;
@@ -1372,18 +1372,18 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
             TClonesArray* li = (TClonesArray*) *ppointer;
             if (splitlevel != 2) {
                if (isDot) {
-                  branch1 = new TBranchClones(branchname, pointer, bufsize);
+                  branch1 = new TBranchClones(branch,branchname, pointer, bufsize);
                } else {
                   // FIXME: This is wrong!  The asterisk is not usually in the front!
-                  branch1 = new TBranchClones(&branchname.Data()[1], pointer, bufsize);
+                  branch1 = new TBranchClones(branch,&branchname.Data()[1], pointer, bufsize);
                }
                blist->Add(branch1);
             } else {
                if (isDot) {
-                  branch1 = new TBranchObject(branchname, li->ClassName(), pointer, bufsize);
+                  branch1 = new TBranchObject(branch, branchname, li->ClassName(), pointer, bufsize);
                } else {
                   // FIXME: This is wrong!  The asterisk is not usually in the front!
-                  branch1 = new TBranchObject(&branchname.Data()[1], li->ClassName(), pointer, bufsize);
+                  branch1 = new TBranchObject(branch, &branchname.Data()[1], li->ClassName(), pointer, bufsize);
                }
                blist->Add(branch1);
             }
@@ -1394,7 +1394,7 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
             if (!clobj->InheritsFrom(TObject::Class())) {
                continue;
             }
-            branch1 = new TBranchObject(dname, clobj->GetName(), pointer, bufsize, 0);
+            branch1 = new TBranchObject(branch, dname, clobj->GetName(), pointer, bufsize, 0);
             if (isDot) {
                branch1->SetName(branchname);
             } else {
@@ -1471,7 +1471,7 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
             leaflist.ReplaceAll("*","");
             // Add the branch to the tree and indicate that the address
             // is that of a pointer to be dereferenced before using.
-            branch1 = new TBranch(bname, *((void**) pointer), leaflist, bufsize);
+            branch1 = new TBranch(branch, bname, *((void**) pointer), leaflist, bufsize);
             TLeaf* leaf = (TLeaf*) branch1->GetListOfLeaves()->At(0);
             leaf->SetBit(TLeaf::kIndirectAddress);
             leaf->SetAddress((void**) pointer);
@@ -1503,7 +1503,7 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
             Error("BranchOld", "Cannot create branch for rdname: %s code: %d", branchname.Data(), code);
             leaflist = "";
          }
-         branch1 = new TBranch(branchname, pointer, leaflist, bufsize);
+         branch1 = new TBranch(branch, branchname, pointer, leaflist, bufsize);
          branch1->SetTitle(rdname);
          blist->Add(branch1);
       } else {
@@ -1635,7 +1635,7 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* add, Int_t
             Warning("Bronch", "Using split mode on a class: %s with a custom Streamer", clones->GetClass()->GetName());
       } else {
          if (classinfo->RootFlag() & 1) clones->BypassStreamer(kFALSE);
-         TBranchObject *branch = new TBranchObject(name,classname,add,bufsize,0);
+         TBranchObject *branch = new TBranchObject(this,name,classname,add,bufsize,0);
          fBranches.Add(branch);
          return branch;
       }
@@ -1664,7 +1664,7 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* add, Int_t
             }
          }
       }
-      TBranchElement* branch = new TBranchElement(name, collProxy, bufsize, splitlevel);
+      TBranchElement* branch = new TBranchElement(this, name, collProxy, bufsize, splitlevel);
       fBranches.Add(branch);
       branch->SetAddress(add);
       return branch;
@@ -1682,7 +1682,7 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* add, Int_t
    }
 
    if (splitlevel < 0 || ((splitlevel == 0) && hasCustomStreamer && cl->InheritsFrom(TObject::Class()))) {
-      TBranchObject* branch = new TBranchObject(name, classname, add, bufsize, 0);
+      TBranchObject* branch = new TBranchObject(this, name, classname, add, bufsize, 0);
       fBranches.Add(branch);
       return branch;
    }
@@ -1693,7 +1693,7 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* add, Int_t
       // The streamer info is not rebuilt unoptimized.
       // No dummy top-level branch is created.
       // No splitting is attempted.
-      TBranchElement* branch = new TBranchElement(name, (TClonesArray*) *ppointer, bufsize, splitlevel);
+      TBranchElement* branch = new TBranchElement(this, name, (TClonesArray*) *ppointer, bufsize, splitlevel);
       fBranches.Add(branch);
       branch->SetAddress(add);
       return branch;
@@ -1759,7 +1759,7 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* add, Int_t
    if (splitlevel > 0) {
       id = -2;
    }
-   TBranchElement* branch = new TBranchElement(name, sinfo, id, *ppointer, bufsize, splitlevel);
+   TBranchElement* branch = new TBranchElement(this, name, sinfo, id, *ppointer, bufsize, splitlevel);
    fBranches.Add(branch);
 
    //
@@ -1823,7 +1823,7 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* add, Int_t
             //       being the name of the base class.
             bname.Form("%s", element->GetFullName());
          }
-         TBranchElement* bre = new TBranchElement(bname, sinfo, id, pointer, bufsize, splitlevel - 1);
+         TBranchElement* bre = new TBranchElement(branch, bname, sinfo, id, pointer, bufsize, splitlevel - 1);
          bre->SetParentClass(cl);
          blist->Add(bre);
       }
@@ -4978,7 +4978,7 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor)
       } else {
          desc = Form("%s/%s",bdname,olddesc.Data());
       }
-      branch = new TBranch(bdname,address,desc.Data(),32000);
+      branch = new TBranch(this,bdname,address,desc.Data(),32000);
       if (branch->IsZombie()) {
          delete branch;
          Warning("ReadFile","Illegal branch definition: %s",bdcur);
@@ -5616,7 +5616,7 @@ Long64_t TTree::SetEntries(Long64_t n)
 }
 
 //_______________________________________________________________________
-void TTree::SetEntryList(TEntryList *enlist, Option_t */*opt*/)
+void TTree::SetEntryList(TEntryList *enlist, Option_t * /*opt*/)
 {
    //Set an EntryList
    
@@ -5879,6 +5879,7 @@ void TTree::Streamer(TBuffer& b)
       if (R__v > 4) {
          fDirectory = gDirectory;
          b.ReadClassBuffer(TTree::Class(), this, R__v, R__s, R__c);
+
          if (fTreeIndex) {
             fTreeIndex->SetTree(this);
          }

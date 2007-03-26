@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.33 2006/07/26 13:36:43 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.34 2007/02/04 17:39:44 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -78,6 +78,8 @@ protected:
    Long64_t   *fBasketEntry;     //[fMaxBaskets] Table of first entry in eack basket
    Long64_t   *fBasketSeek;      //[fMaxBaskets] Addresses of baskets on file
    TTree      *fTree;            //! Pointer to Tree header
+   TBranch    *fMother;          //! Pointer to top-level parent branch in the tree.
+   TBranch    *fParent;          //! Pointer to parent branch.
    char       *fAddress;         //! Address of 1st leaf (variable or object)
    TDirectory *fDirectory;       //! Pointer to directory where this branch buffers are stored
    TString     fFileName;        //  Name of file where buffers are stored ("" if in same file as Tree header)
@@ -87,6 +89,7 @@ protected:
    Bool_t      fSkipZip;         //!After being read, the buffer will not be unziped.
 
    void     SetSkipZip(Bool_t skip = kTRUE) { fSkipZip = skip; }
+   void     Init(const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress=-1);
 
 private:
    TBranch(const TBranch&);             // not implemented
@@ -94,7 +97,8 @@ private:
 
 public:
    TBranch();
-   TBranch(const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress=-1);
+   TBranch(TTree *tree, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress=-1);
+   TBranch(TBranch *parent, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress=-1);
    virtual ~TBranch();
 
    virtual void      AddBasket(TBasket &b, Bool_t ondisk, Long64_t startEntry);

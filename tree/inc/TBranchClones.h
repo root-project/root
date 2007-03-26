@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.h,v 1.8 2006/01/09 18:28:22 pcanal Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.h,v 1.9 2007/02/03 17:23:23 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -39,10 +39,13 @@ protected:
    TBranch          *fBranchCount;    //Branch with clones count
 
    friend class TTreeCloner;
-   
+
+   void Init(TTree *tree, TBranch *parent, const char *name, void *clonesaddress, Int_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
+
 public:
    TBranchClones();
-   TBranchClones(const char *name, void *clonesaddress, Int_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
+   TBranchClones(TTree *tree, const char *name, void *clonesaddress, Int_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
+   TBranchClones(TBranch *parent, const char *name, void *clonesaddress, Int_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
    virtual ~TBranchClones();
    
    virtual void    Browse(TBrowser *b);
