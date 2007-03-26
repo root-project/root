@@ -1,6 +1,7 @@
 #include "TTree.h"
 #include "TFile.h"
 #include "TList.h"
+#include "TROOT.h"
 #include <TBenchmark.h>
 
 int gHasLibrary = kFALSE;
