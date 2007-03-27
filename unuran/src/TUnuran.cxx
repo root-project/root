@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: TUnuran.cxx,v 1.2 2007/03/08 09:31:54 moneta Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuran.cxx,v 1.3 2007/03/14 14:55:02 moneta Exp $
 // Authors: L. Moneta, J. Leydold Tue Sep 26 16:25:09 2006
 
 /**********************************************************************
@@ -47,7 +47,7 @@ TUnuran::TUnuran(TRandom * r, unsigned int debugLevel) :
    if ( debugLevel > 2) 
       unur_set_default_debug(UNUR_DEBUG_ALL);
    else if (debugLevel > 1) 
-      unur_set_default_debug(UNUR_DEBUG_ALL);
+      unur_set_default_debug(UNUR_DEBUG_INIT);
    else
       unur_set_default_debug(UNUR_DEBUG_OFF);
       
@@ -336,7 +336,7 @@ bool  TUnuran::SetDiscreteDistribution(const TUnuranDiscrDist & dist)
          return false; 
       }
    }
-   if (dist.HasProbSum() ) { 
+   if (dist.HasProbSum() ) {
       ret = unur_distr_discr_set_pmfsum(fUdistr, dist.ProbSum());  
       if (ret != 0)  { 
          Error("SetContDistribution","invalid sum given,  mode = %g ",dist.ProbSum());

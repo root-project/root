@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: TUnuranDiscrDist.h,v 1.1 2007/03/08 09:31:54 moneta Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuranDiscrDist.h,v 1.2 2007/03/12 08:49:24 moneta Exp $
 // Authors: L. Moneta, J. Leydold Wed Feb 28 2007
 
 /**********************************************************************
@@ -103,7 +103,7 @@ public:
    /**
       set the value of the sum of the probabilities in the given domain
     */ 
-   void SetProbSum(int sum) { fSum = sum; fHasSum=true; }
+   void SetProbSum(double sum) { fSum = sum; fHasSum=true; }
 
    /**
       check if distribution has domain and return in case its domain
