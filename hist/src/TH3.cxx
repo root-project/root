@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.90 2007/02/01 14:58:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.91 2007/02/06 15:00:56 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -2582,7 +2582,7 @@ void TH3C::Streamer(TBuffer &R__b)
 
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
-      if (R__b.GetVersionOwner() < 22300) return;
+      if (R__b.GetParent() && R__b.GetVersionOwner() < 22300) return;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
          R__b.ReadClassBuffer(TH3C::Class(), this, R__v, R__s, R__c);
@@ -2826,7 +2826,7 @@ void TH3S::Streamer(TBuffer &R__b)
 
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
-      if (R__b.GetVersionOwner() < 22300) return;
+      if (R__b.GetParent() && R__b.GetVersionOwner() < 22300) return;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
          R__b.ReadClassBuffer(TH3S::Class(), this, R__v, R__s, R__c);
@@ -3261,7 +3261,7 @@ void TH3F::Streamer(TBuffer &R__b)
 
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
-      if (R__b.GetVersionOwner() < 22300) return;
+      if (R__b.GetParent() && R__b.GetVersionOwner() < 22300) return;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
          R__b.ReadClassBuffer(TH3F::Class(), this, R__v, R__s, R__c);
@@ -3485,7 +3485,7 @@ void TH3D::Streamer(TBuffer &R__b)
 
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
-      if (R__b.GetVersionOwner() < 22300) return;
+      if (R__b.GetParent() && R__b.GetVersionOwner() < 22300) return;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
          R__b.ReadClassBuffer(TH3D::Class(), this, R__v, R__s, R__c);

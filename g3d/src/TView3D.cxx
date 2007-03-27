@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TView3D.cxx,v 1.1 2007/02/07 21:16:09 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TView3D.cxx,v 1.1 2007/02/18 14:58:16 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -1873,7 +1873,7 @@ void TView3D::Streamer(TBuffer &R__b)
       //unfortunately we forgot to increment the TView3D version number
       //when the class was upgraded to double precision in version 2.25.
       //we are forced to use the file version number to recognize old files.
-      if (R__b.GetVersionOwner() < 22500) { //old version in single precision
+      if (R__b.GetParent() && R__b.GetVersionOwner() < 22500) { //old version in single precision
          TObject::Streamer(R__b);
          TAttLine::Streamer(R__b);
          Float_t single, sa[12];
