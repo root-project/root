@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookBranch.cxx,v 1.7 2004/07/29 10:54:54 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookBranch.cxx,v 1.8 2006/05/13 17:28:15 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -16,11 +16,16 @@ ClassImp(THbookBranch)
 
 
 //______________________________________________________________________________
-THbookBranch::THbookBranch(const char *name, void *address, const char *leaflist, Int_t basketsize, Int_t compress)
-            :TBranch(name,address,leaflist,basketsize,compress)
+THbookBranch::THbookBranch(TTree *tree, const char *name, void *address, const char *leaflist, Int_t basketsize, Int_t compress)
+            :TBranch(tree, name,address,leaflist,basketsize,compress)
 {
 }
 
+//______________________________________________________________________________
+THbookBranch::THbookBranch(TBranch *branch, const char *name, void *address, const char *leaflist, Int_t basketsize, Int_t compress)
+            :TBranch(branch,name,address,leaflist,basketsize,compress)
+{
+}
 
 //______________________________________________________________________________
 THbookBranch::~THbookBranch()

@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.25 2006/05/31 07:48:56 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.26 2007/01/15 16:10:10 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -740,7 +740,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
       }
 
       Int_t bufsize = 8000;
-      THbookBranch *branch = new THbookBranch(name,(void*)&bigbuf[bufpos],fullname,bufsize);
+      THbookBranch *branch = new THbookBranch(tree,name,(void*)&bigbuf[bufpos],fullname,bufsize);
       tree->GetListOfBranches()->Add(branch);
       branch->SetBlockName(block);
       branch->SetUniqueID(varNumber);
@@ -833,7 +833,7 @@ TObject *THbookFile::ConvertRWN(Int_t id)
       }
       Int_t bufsize = 8000;
       //tree->Branch(&name[first],&x[i],&name[first],bufsize);
-      THbookBranch *branch = new THbookBranch(&name[first],&x[4*i],&name[first],bufsize);
+      THbookBranch *branch = new THbookBranch(tree,&name[first],&x[4*i],&name[first],bufsize);
       branch->SetAddress(&x[i]);
       branch->SetBlockName(hbookName.Data());
       tree->GetListOfBranches()->Add(branch);

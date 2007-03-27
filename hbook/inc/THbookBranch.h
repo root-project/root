@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookBranch.h,v 1.5 2004/07/29 10:54:54 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookBranch.h,v 1.6 2006/05/13 17:28:15 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -32,7 +32,8 @@ protected:
 
 public:
    THbookBranch() {;}
-   THbookBranch(const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress=-1);
+   THbookBranch(TTree *tree, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress=-1);
+   THbookBranch(TBranch *branch, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress=-1);
    virtual ~THbookBranch();
    virtual void     Browse(TBrowser *b);
    virtual Int_t    GetEntry(Long64_t entry=0, Int_t getall=0);
