@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.53 2007/02/15 15:04:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.54 2007/02/22 15:40:02 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 
 #include "TROOT.h"
-#include "TClass.h"
+#include "TClassRef.h"
 #include "THStack.h"
 #include "TVirtualPad.h"
 #include "TVirtualHistPainter.h"
@@ -734,8 +734,10 @@ void THStack::Paint(Option_t *option)
             h1->SetFillColor(1000);
             h1->SetFillStyle(1001);
             h1->Paint(loption);
-            h1->SetFillColor(((TAttFill*)gPad->GetFrame())->GetFillColor());
-            h1->SetFillStyle(((TAttFill*)gPad->GetFrame())->GetFillStyle());
+            static TClassRef clTFrame = TClass::GetClass("TFrame",kFALSE);
+            TAttFill *frameFill = (TAttFill*)clTFrame->DynamicCast(TAttFill::Class(),gPad->GetFrame());
+            h1->SetFillColor(frameFill->GetFillColor());
+            h1->SetFillStyle(frameFill->GetFillStyle());
             h1->Paint(loption);
             h1->SetFillColor(h1col);
             h1->SetFillStyle(h1fill);
