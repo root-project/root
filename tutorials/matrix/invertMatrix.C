@@ -1,9 +1,11 @@
+#ifndef __CINT__
 #include "Riostream.h"
 #include "TMatrixD.h"
 #include "TMatrixDLazy.h"
 #include "TVectorD.h"
 #include "TDecompLU.h"
 #include "TDecompSVD.h"
+#endif
 
 // This macro shows several ways to invert a matrix . Each  method
 // is a trade-off between accuracy of the inversion and speed.
@@ -57,7 +59,7 @@ void invertMatrix(Int_t msize=6)
   // Get the maximum off-diagonal matrix value . One way to do this is to set the
   // diagonal to zero .
 
-  TMatrixD U1(H1,TMatrixT::kMult,H_square);
+  TMatrixD U1(H1,TMatrixD::kMult,H_square);
   TMatrixDDiag diag1(U1); diag1 = 0.0;
   const Double_t U1_max_offdiag = (U1.Abs()).Max();
   cout << "  Maximum off-diagonal = " << U1_max_offdiag << endl;
