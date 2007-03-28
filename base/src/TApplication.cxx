@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.87 2007/03/02 14:05:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.88 2007/03/28 14:29:12 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -597,6 +597,8 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
       }
 
       delete [] mac;
+
+      InitializeGraphics();
 
       return retval;
    }
