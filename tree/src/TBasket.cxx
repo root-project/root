@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.45 2007/01/20 19:29:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.46 2007/01/31 07:33:31 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -621,6 +621,7 @@ Int_t TBasket::WriteBuffer()
          // buffer is larger than the input. In this case, we write the original uncompressed buffer
          if (nout == 0 || nout >= fObjlen) {
             nout = fObjlen;
+            delete [] fBuffer;
             fBuffer = fBufferRef->Buffer();
             Create(fObjlen);
             fBufferRef->SetBufferOffset(0);
