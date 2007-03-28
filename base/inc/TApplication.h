@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.25 2007/03/02 10:24:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.26 2007/03/02 14:05:46 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -59,6 +59,7 @@ private:
    TTimer            *fIdleTimer;      //Idle timer
    TSignalHandler    *fSigHandler;     //Interrupt handler
 
+   static Bool_t      fgGraphNeeded;   // True if graphics libs need to be initialized
    static Bool_t      fgGraphInit;     // True if graphics libs initialized
 
    TApplication(const TApplication&);             // not implemented
@@ -118,6 +119,7 @@ public:
    void            SetReturnFromRun(Bool_t ret) { fReturnFromRun = ret; }
 
    static void     CreateApplication();
+   static void     NeedGraphicsLibs();
 
    virtual void    Terminate(Int_t status = 0);   //*SIGNAL*
    virtual void    KeyPressed(Int_t key);         //*SIGNAL*

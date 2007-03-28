@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.86 2007/03/02 13:34:50 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.87 2007/03/02 14:05:46 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -51,6 +51,7 @@
 #endif
 
 TApplication *gApplication = 0;
+Bool_t TApplication::fgGraphNeeded = kFALSE;
 Bool_t TApplication::fgGraphInit = kFALSE;
 
 //______________________________________________________________________________
@@ -161,8 +162,10 @@ TApplication::TApplication(const char *appClassName,
    gInterpreter->EnableAutoLoading();
 
    // Initialize the graphics environment
-   if (gClassTable->GetDict("TPad"))
+   if (gClassTable->GetDict("TPad")) {
+      fgGraphNeeded = kTRUE;
       InitializeGraphics();
+   }
 
    // Make sure all registered dictionaries have been initialized
    // and that all types have been loaded
@@ -189,12 +192,22 @@ TApplication::~TApplication()
 }
 
 //______________________________________________________________________________
+void TApplication::NeedGraphicsLibs()
+{
+   // Static method. This method should be called from static library
+   // initializers if the library needs the low level graphics system.
+
+   fgGraphNeeded = kTRUE;
+}
+
+//______________________________________________________________________________
 void TApplication::InitializeGraphics()
 {
    // Initialize the graphics environment.
 
-   if (fgGraphInit)
+   if (fgGraphInit || !fgGraphNeeded)
       return;
+
    fgGraphInit = kTRUE;
 
    // Load the graphics related libraries
@@ -203,30 +216,33 @@ void TApplication::InitializeGraphics()
    // Try to load TrueType font renderer. Only try to load if not in batch
    // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
    // if libttf or libGX11TTF are not found in $ROOTSYS/lib or $ROOTSYS/ttf/lib.
-   if (strcmp(gROOT->GetName(), "proofserv")) {
-      const char *ttpath = gEnv->GetValue("Root.TTFontPath",
+   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
 #ifdef TTFFONTDIR
-                                          TTFFONTDIR);
+                                       TTFFONTDIR);
 #else
-                                          "$(ROOTSYS)/fonts");
+                                       "$(ROOTSYS)/fonts");
 #endif
-      char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
-      // Check for use of DFSG - fonts
-      if (!ttfont)
-         ttfont = gSystem->Which(ttpath, "FreeSansBold.ttf", kReadPermission);
+   char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
+   // Check for use of DFSG - fonts
+   if (!ttfont)
+      ttfont = gSystem->Which(ttpath, "FreeSansBold.ttf", kReadPermission);
 
 #if !defined(R__WIN32)
-      if (!gROOT->IsBatch() && !strcmp(gVirtualX->GetName(), "X11") &&
-          ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
-         TString plugin = "x11ttf";
-
+   if (!gROOT->IsBatch() && !strcmp(gVirtualX->GetName(), "X11") &&
+       ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
+      if (gClassTable->GetDict("TGX11TTF")) {
+         // in principle we should not have linked anything against libGX11TTF
+         // but with ACLiC this can happen, initialize TGX11TTF by hand
+         // (normally this is done by the static library initializer)
+         ProcessLine("TGX11TTF::Activate();");
+      } else {
          TPluginHandler *h;
-         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", plugin)))
+         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", "x11ttf")))
             h->LoadPlugin();
       }
-#endif
-      delete [] ttfont;
    }
+#endif
+   delete [] ttfont;
 
    // Create WM dependent application environment
    if (fAppImp)
