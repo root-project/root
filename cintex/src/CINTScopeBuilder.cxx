@@ -1,4 +1,4 @@
-// @(#)root/cintex:$Name: v5-14-00-patches $:$Id: CINTScopeBuilder.cxx,v 1.8 2006/07/03 09:22:46 roiser Exp $
+// @(#)root/cintex:$Name: v5-14-00-patches $:$Id: CINTScopeBuilder.cxx,v 1.8.6.1 2007/03/07 09:33:35 rdm Exp $
 // Author: Pere Mato 2005
 
 // Copyright CERN, CH-1211 Geneva 23, 2004-2005, All rights reserved.
@@ -56,7 +56,7 @@ namespace ROOT { namespace Cintex {
          if ( scope.IsClass() )  {                  //--Setup the class scope
             CINTClassBuilder::Get(Type::ByName(sname));
          }
-         else {
+         else if (taginfo.tagtype == 'n' ) {
             G__tagtable_setup( taginfo.tagnum,       // tag number
                                0,                    // size
                                G__CPPLINK,           // cpplink
@@ -67,6 +67,9 @@ namespace ROOT { namespace Cintex {
             //-- Create a TClass Instance to please PyROOT adnd ROOT that also wats to have
             //   TClass for namespaces
             if (scope) ROOTClassEnhancer::CreateClassForNamespace(sname);
+         }
+         else {
+            //--Tag_table not possible to be setup at this moment....
          }
       }
       return;
