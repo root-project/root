@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: TClassDocOutput.cxx,v 1.3 2007/02/15 17:32:32 axel Exp $
+// @(#)root/html:$Name:  $:$Id: TClassDocOutput.cxx,v 1.4 2007/03/16 15:25:55 axel Exp $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -1466,6 +1466,14 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
          classFile << "<a class=\"descrheadentry\" href=\"" << link << "\">viewCVS source</a> ";
       }
    }
+
+   TString wikiLink = GetHtml()->GetWikiURL();
+   if (wikiLink.Length()) {
+      if (wikiLink.Contains("%c")) wikiLink.ReplaceAll("%c", currClassNameMangled);
+      else wikiLink += currClassNameMangled;
+      classFile << "<a class=\"descrheadentry\" href=\"" << wikiLink << "\">wiki</a> ";
+   }
+
    classFile << "</div>" << endl;
 
    classFile << "<div class=\"descrhead\">" << endl

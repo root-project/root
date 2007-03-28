@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.33 2007/02/15 17:32:32 axel Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.34 2007/03/19 10:59:41 axel Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -60,8 +60,9 @@ protected:
    TString        fFooter;          // footerer file name
    TString        fHomepage;        // URL of homepage
    TString        fSearchStemURL;   // URL stem used to build search URL
-   TString        fSearchEngine;    // Link to search engine
-   TString        fViewCVS;         // Link to ViewCVS
+   TString        fSearchEngine;    // link to search engine
+   TString        fViewCVS;         // link to ViewCVS; %f is replaced by the filename (no %f: it's appended)
+   TString        fWikiURL;         // URL stem of class's wiki page, %c replaced by mangled class name (no %c: appended)
    TString        fCharset;         // Charset for doc pages
    TString        fDocStyle;        // doc style (only "Doc++" has special treatment)
    
@@ -128,6 +129,7 @@ public:
    void          SetSearchStemURL(const char* url) { fSearchStemURL = url; }
    void          SetSearchEngine(const char* url) { fSearchEngine = url; }
    void          SetViewCVS(const char* url) { fViewCVS = url; }
+   void          SetWikiURL(const char* url) { fWikiURL = url; }
    void          SetCharset(const char* charset) { fCharset = charset; }
    void          SetDocStyle(const char* style) { fDocStyle = style; }
 
@@ -154,6 +156,7 @@ public:
    const TString&      GetSearchStemURL() const { return fSearchStemURL; }
    const TString&      GetSearchEngine() const { return fSearchEngine; }
    const TString&      GetViewCVS() const { return fViewCVS; }
+   const TString&      GetWikiURL() const { return fWikiURL; }
    const TString&      GetCharset() const { return fCharset; }
    const TString&      GetDocStyle() const { return fDocStyle; }
 
