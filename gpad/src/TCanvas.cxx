@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.123 2007/02/15 15:04:20 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.124 2007/03/18 18:35:21 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -34,16 +34,13 @@
 #include "TVirtualGL.h"
 #include "TObjectSpy.h"
 
-// This small class and the static object gMakedefcanvas_init make sure that
-// the TCanvas::MakeDefCanvas method is registered with TROOT as soon as
-// the shared library containing TCanvas is loaded.
 
-//class TInitMakeDefCanvas {
-//public:
-//   TInitMakeDefCanvas() { TROOT::SetMakeDefCanvas(&TCanvas::MakeDefCanvas(int)); }
-//};
+class TCanvasInit {
+public:
+   TCanvasInit() { TApplication::NeedGraphicsLibs(); }
+};
+static TCanvasInit gCanvasInit;
 
-//static TInitMakeDefCanvas gMakedefcanvas_init;
 
 //*-*x16 macros/layout_canvas
 

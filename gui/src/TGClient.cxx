@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.55 2007/03/01 01:09:02 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.56 2007/03/07 17:15:01 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 
 #include "TGClient.h"
 #include "TROOT.h"
+#include "TApplication.h"
 #include "TSystem.h"
 #include "TEnv.h"
 #include "THashList.h"
@@ -55,7 +56,7 @@ TGClient *gClient = 0;
 // Initialize gClient in case libGui is loaded in batch mode
 class TGClientInit {
 public:
-   TGClientInit() { if (gROOT && gROOT->IsBatch()) new TGClient(); }
+   TGClientInit() { if (gROOT && gROOT->IsBatch()) new TGClient(); TApplication::NeedGraphicsLibs(); }
 };
 static TGClientInit gClientInit;
 
