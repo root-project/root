@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.17 2007/03/02 13:34:30 rdm Exp $
+// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.18 2007/03/28 14:33:06 rdm Exp $
 // Author: Valeriy Onuchin (Xft support)  02/10/07
 // Author: Olivier Couet     01/10/02
 // Author: Fons Rademakers   21/11/98
@@ -26,6 +26,7 @@
 #include <stdlib.h>
 
 #include "TGX11TTF.h"
+#include "TClass.h"
 #include "TEnv.h"
 
 #ifdef R__HAS_XFT
@@ -151,7 +152,7 @@ void TGX11TTF::Activate()
 {
    // Static method setting TGX11TTF as the acting gVirtualX.
 
-   if (gVirtualX && gVirtualX->IsA() == TGX11::Class()) {
+   if (gVirtualX && !strcmp(gVirtualX->IsA()->GetName(), "TGX11")) {
       TGX11 *oldg = (TGX11 *) gVirtualX;
       gVirtualX = new TGX11TTF(*oldg);
       delete oldg;
