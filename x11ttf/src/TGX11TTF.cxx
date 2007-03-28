@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.16 2007/03/01 01:09:34 rdm Exp $
+// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.17 2007/03/02 13:34:30 rdm Exp $
 // Author: Valeriy Onuchin (Xft support)  02/10/07
 // Author: Olivier Couet     01/10/02
 // Author: Fons Rademakers   21/11/98
@@ -109,7 +109,7 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TTFInit                                                              //
+// TTFX11Init                                                           //
 //                                                                      //
 // Small utility class that takes care of switching the current         //
 // gVirtualX to the new TGX11TTF class as soon as the shared library    //
@@ -119,19 +119,10 @@ public:
 
 class TTFX11Init {
 public:
-   TTFX11Init();
+   TTFX11Init() { TGX11TTF::Activate(); }
 };
-
-TTFX11Init::TTFX11Init()
-{
-   if (gVirtualX && gVirtualX->IsA() == TGX11::Class()) {
-      TGX11 *oldg = (TGX11 *) gVirtualX;
-      gVirtualX = new TGX11TTF(*oldg);
-      delete oldg;
-   }
-}
-
 static TTFX11Init gTTFX11Init;
+
 
 ClassImp(TGX11TTF)
 
@@ -156,8 +147,15 @@ TGX11TTF::TGX11TTF(const TGX11 &org) : TGX11(org)
 }
 
 //______________________________________________________________________________
-TGX11TTF::~TGX11TTF()
+void TGX11TTF::Activate()
 {
+   // Static method setting TGX11TTF as the acting gVirtualX.
+
+   if (gVirtualX && gVirtualX->IsA() == TGX11::Class()) {
+      TGX11 *oldg = (TGX11 *) gVirtualX;
+      gVirtualX = new TGX11TTF(*oldg);
+      delete oldg;
+   }
 }
 
 //______________________________________________________________________________

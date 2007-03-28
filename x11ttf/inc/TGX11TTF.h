@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.h,v 1.5 2007/02/20 09:44:44 rdm Exp $
+// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.h,v 1.6 2007/03/02 13:34:30 rdm Exp $
 // Author: Olivier Couet     01/10/02
 // Author: Fons Rademakers   21/11/98
 
@@ -63,7 +63,7 @@ private:
 
 public:
    TGX11TTF(const TGX11 &org);
-   virtual ~TGX11TTF();
+   virtual ~TGX11TTF() { }
 
    Bool_t Init(void *display);
    void   DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
@@ -81,6 +81,8 @@ public:
    Int_t        TextWidth(FontStruct_t font, const char *s, Int_t len);
    void         GetFontProperties(FontStruct_t font, Int_t &max_ascent, Int_t &max_descent);
 #endif
+
+   static void  Activate();
 
    ClassDef(TGX11TTF,0)  //Interface to X11 + TTF font handling
 };
