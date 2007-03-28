@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.141 2007/03/12 10:24:57 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.142 2007/03/13 15:02:48 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -284,7 +284,10 @@ Long_t TCint::ProcessLine(const char *line, EErrorCode *error)
          } else {
             int local_error = 0;
 
+            int prerun = G__getPrerun();
+            G__setPrerun(0);
             ret = G__process_cmd((char *)line, fPrompt, &fMore, &local_error, &local_res);
+            G__setPrerun(prerun);
             if (local_error == 0 && G__get_return(&fExitCode) == G__RETURN_EXIT2) {
                ResetGlobals();
                gApplication->Terminate(fExitCode);
