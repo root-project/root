@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.164 2007/03/14 18:28:17 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.165 2007/03/20 10:59:33 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1518,8 +1518,10 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       delete [] path;
    }
 
-   if ((strstr(module, "libGui")) || (strstr(module, "libGpad")))
-      if (gApplication) gApplication->InitializeGraphics();
+   // will load and initialize graphics libraries if
+   // TApplication::NeedGraphicsLibs() has been called by a
+   // library static initializer
+   if (gApplication) gApplication->InitializeGraphics();
 
    if (!entry || !entry[0]) return i;
 
