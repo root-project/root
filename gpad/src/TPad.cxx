@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.263 2007/03/13 16:06:11 couet Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.264 2007/03/13 16:46:05 couet Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2732,27 +2732,11 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
    Color_t oldcolor = GetFillColor();
    SetFillColor(color);
    TAttFill::Modify();
-   Color_t light = TColor::GetColorBright(color);
-   Color_t dark  = TColor::GetColorDark(color);
-/*
-   if (color == 0) {
-      light = 0;
-      dark  = 0;
-   } else if (color <= 50 && color != 0) {
-      light = color + 150;
-      dark  = color + 100;
-   } else {
-      Float_t r, g, b, h, l, s;
-      TColor *c = gROOT->GetColor(color);
-      if (c) c->GetRGB(r, g, b);
-      else {r = 0.5; g=0.5; b=0.5;}
-      TColor::RGBtoHLS(r, g, b, h, l, s);
-      TColor::HLStoRGB(h, 0.7*l, s, r, g, b);
-      dark = TColor::GetColor(r, g, b);
-      TColor::HLStoRGB(h, 1.2*l, s, r, g, b);
-      light = TColor::GetColor(r, g, b);
+   Color_t light = 0, dark = 0;
+   if (color != 0) {
+      light = TColor::GetColorBright(color);
+      dark  = TColor::GetColorDark(color);
    }
-*/
 
    // Compute real left bottom & top right of the box in pixels
    px1 = XtoPixel(fX1);   py1 = YtoPixel(fY1);
