@@ -50,11 +50,6 @@ HADDS        := $(MODDIRS)/hadd.cxx
 HADDO        := $(HADDS:.cxx=.o)
 HADDDEP      := $(HADDO:.o=.d)
 HADD         := bin/hadd$(EXEEXT)
-ifeq ($(PLATFORM),win32)
-HADDLIBEXTRA := $(LPATH)/libTreePlayer.lib 
-else
-HADDLIBEXTRA := -lTreePlayer
-endif
 
 ##### h2root #####
 H2ROOTS1     := $(MODDIRS)/h2root.cxx
@@ -130,9 +125,9 @@ $(PROOFSERVSH): main/src/proofserv.sh
 		@cp $< $@
 		@chmod 0755 $@
 
-$(HADD):        $(HADDO) $(ROOTLIBSDEP) $(HADDLIBDEP)
-		$(LD) $(LDFLAGS) -o $@ $(HADDO) $(ROOTULIBS) $(HADDULIBEXTRA) \
-		   $(RPATH) $(ROOTLIBS) $(HADDLIBEXTRA) $(SYSLIBS)
+$(HADD):        $(HADDO) $(ROOTLIBSDEP)
+		$(LD) $(LDFLAGS) -o $@ $(HADDO) $(ROOTULIBS) \
+		   $(RPATH) $(ROOTLIBS) $(SYSLIBS)
 
 $(SSH2RPD):     $(SSH2RPDO) $(SNPRINTFO)
 		$(LD) $(LDFLAGS) -o $@ $(SSH2RPDO) $(SNPRINTFO) $(SYSLIBS)
