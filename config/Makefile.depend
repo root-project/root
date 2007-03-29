@@ -131,6 +131,9 @@ QTGSILIBEXTRA       = lib/libGui.lib lib/libGpad.lib
 FITPANELLIBDEP      = $(GUILIB) $(GPADLIB) $(HISTLIB) $(GRAFLIB) $(TREELIB)
 FITPANELLIBEXTRA    = lib/libGui.lib lib/libGpad.lib lib/libHist.lib \
                       lib/libGraf.lib lib/libTree.lib 
+HADDLIBDEP          = $(TREEPLAYERLIB)
+HADDLIBEXTRA        = lib/libTreePlayer.lib 
+HADDULIBEXTRA       = -include:_G__cpp_setupG__TreePlayer
 
 else
 
@@ -249,5 +252,12 @@ QTGSILIBDEP         = $(GUILIB) $(GPADLIB)
 QTGSILIBEXTRA       = -Llib -lGui -lGpad
 FITPANELLIBDEP      = $(GUILIB) $(GPADLIB) $(HISTLIB) $(GRAFLIB) $(TREELIB)
 FITPANELLIBEXTRA    = -Llib -lGui -lGpad -lHist -lGraf -lTree 
+HADDLIBDEP          = $(TREEPLAYERLIB)
+HADDLIBEXTRA        = -lTreePlayer
+ifeq ($(PLATFORM),aix5)
+HADDULIBEXTRA       = -Wl,-u,.G__cpp_setupG__TreePlayer
+else
+HADDULIBEXTRA       = -Wl,-u,_G__cpp_setupG__TreePlayer 
+endif
 
 endif
