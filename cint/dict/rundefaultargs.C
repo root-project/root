@@ -1,4 +1,7 @@
 #include <iostream>
+#include "TROOT.h"
+#include "TClass.h"
+#include "TMethod.h"
 
 using namespace std;
 
@@ -7,17 +10,17 @@ class TDefaultArgs
 public:
    TDefaultArgs() 
    { 
-      Dint();
-      Dfloat();
-      Dchar();
-      Dstring();
-      Dstdstring();
-      Denum();
-      DcharFancy();
-      DcharFancy2();
-      DcharFancy3();
-      DFunc();
-      DFunc2();
+      Xint();
+      Xfloat();
+      Xchar();
+      Xstring();
+      Xstdstring();
+      Xenum();
+      XcharFancy();
+      XcharFancy2();
+      XcharFancy3();
+      XFunc();
+      XFunc2();
       cout << endl;
    }
    enum Eenum {
@@ -32,57 +35,64 @@ public:
    
 private:
 
-   void Dint(int i=
+   void Xint(int i=
              -1) 
    {
       cout << i << endl;
    }
-   void Dfloat(float f
+   void Xfloat(float f
                =0.0001) 
    {
       cout << f << endl;
    }
-   void Dchar(char c='a') 
+   void Xchar(char c='a') 
    {
       cout << c << endl;
    }
-   void Dstring(const char* s="abc:,def)ghi'jkl\"mno'pqr<stu") 
+   void Xstring(const char* s="abc:,def)ghi'jkl\"mno'pqr<stu") 
    {
       cout << s << endl;
    }
-   void Dstdstring(const std::string s = "a std string arg's conversion")
+   void Xstdstring(const std::string s = "a std string arg's conversion")
    {
       cout << s.c_str() << endl;
    }
-   void Denum(const Eenum e 
+   void Xenum(const Eenum e 
               =  TDefaultArgs::kEnumConst) 
    {
       cout << e << endl;
    }
-   void DcharFancy(const char c = '\'') 
+   void XcharFancy(const char c = '\'') 
    {
       cout << c << endl;
    }
-   void DcharFancy2(const char c = '"') 
+   void XcharFancy2(const char c = '"') 
    {
       cout << c << endl;
    }
-   void DcharFancy3(const char c = /* */' ') 
+   void XcharFancy3(const char c = /* */' ') 
    {
       cout << c << endl;
    }
-   void DFunc(const char* s = GetDefArg("an arg's complexity")) 
+   void XFunc(const char* s = GetDefArg("an arg's complexity")) 
    {
       cout << s << endl;
    }
-   void DFunc2(const char* s = GetDefArg("'nested \"\"' quotes")) 
+   void XFunc2(const char* s = GetDefArg("'nested \"\"' quotes")) 
    {
       cout << s << endl;
    }
+
+   ClassDef(TDefaultArgs,0);
 };
 
 void rundefaultargs() 
 {
    TDefaultArgs da;
+   TIter iFunc(TDefaultArgs::Class()->GetListOfMethods());
+   TMethod* func = 0;
+   while ((func = (TMethod*)iFunc()))
+      if (func->GetName()[0] == 'X')
+         cout << func->GetPrototype() << endl;
 }
 
