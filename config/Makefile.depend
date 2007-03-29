@@ -174,9 +174,7 @@ GDMLLIBEXTRA        = lib/libGeom.lib lib/libXMLIO.lib lib/libHist.lib \
                       lib/libRIO.lib
 UNURANLIBDEP        = $(HISTLIB)
 UNURANLIBEXTRA      = lib/libHist.lib
-HADDLIBDEP          = $(TREEPLAYERLIB)
-HADDLIBEXTRA        = lib/libTreePlayer.lib 
-HADDULIBEXTRA       = -include:_G__cpp_setupG__TreePlayer
+
 
 else
 
@@ -332,12 +330,5 @@ GDMLLIBDEP          = $(GEOMLIB) $(XMLLIB) $(HISTLIB) $(IOLIB)
 GDMLLIBEXTRA        = -Llib -lGeom -lXMLIO -lHist -lRIO
 UNURANLIBDEP        = $(HISTLIB)
 UNURANLIBEXTRA      = -Llib -lHist
-HADDLIBDEP          = $(TREEPLAYERLIB)
-HADDLIBEXTRA        = -lTreePlayer
-ifeq ($(PLATFORM),aix5)
-HADDULIBEXTRA       = -Wl,-u,.G__cpp_setupG__TreePlayer
-else
-HADDULIBEXTRA       = -Wl,-u,_G__cpp_setupG__TreePlayer 
-endif
 
 endif

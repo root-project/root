@@ -64,6 +64,7 @@
 #include "TObjString.h"
 #include "Riostream.h"
 #include "TClass.h"
+#include "TSystem.h"
 
 TList *FileList;
 TFile *Target, *Source;
@@ -106,7 +107,9 @@ int main( int argc, char **argv )
          break;
       }
    }
-  
+ 
+   gSystem->Load("libTreePlayer");
+ 
    int ffirst = 2;
    if (force) ffirst++;
    if (noTrees) ffirst++;
