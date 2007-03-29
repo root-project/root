@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.h,v 1.10 2006/04/25 15:56:06 rdm Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.h,v 1.11 2006/05/23 04:47:40 brun Exp $
 // Author: Rene Brun   19/10/99
 
 /*************************************************************************
@@ -265,7 +265,7 @@ public:
    // ****** /PYINT6/
 
    Pyint6_t*   GetPyint6   () { return fPyint6; }
-   char*       GetPROC(int i) { return fPyint6->PROC[i]; }
+   char*       GetPROC(int i) { fPyint6->PROC[i][27]=0; return fPyint6->PROC[i]; }
 
    Pyint7_t*   GetPyint7() { return fPyint7; }
    Pyint8_t*   GetPyint8() { return fPyint8; }
