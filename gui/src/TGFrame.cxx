@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.146 2007/02/26 14:39:47 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.147 2007/03/02 10:24:14 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -2613,8 +2613,6 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    out <<"// By ROOT version "<< gROOT->GetVersion() <<" on "<<t.AsSQLString()<< endl;
    out << endl;
 
-   out << "#if !defined( __CINT__) || defined (__MAKECINT__)" << endl << endl;
-
    TIter nexti(ilist);
    while((inc = (TObjString *)nexti())) {
          out << "#ifndef ROOT_" << inc->GetString() << endl;
@@ -2627,7 +2625,6 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
          }
    }
    out << endl << "#include " << quote << "Riostream.h" << quote << endl;
-   out << endl << "#endif" << endl;
    // deletes created ListOfIncludes
    gROOT->GetListOfSpecials()->Remove(ilist);
    ilist->Delete();
