@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: TUnuranMultiContDist.h,v 1.1 2007/03/08 09:31:54 moneta Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuranMultiContDist.h,v 1.2 2007/03/12 08:49:24 moneta Exp $
 // Authors: L. Moneta, J. Leydold Wed Feb 28 2007
 
 /**********************************************************************
@@ -38,9 +38,11 @@ public:
    /** 
       Constructor from a TF1 object representing the Probability density funciton. 
       The derivatives of the Pdf are estimated, when required by the UNURAN algorithm, 
-      using numerical derivation
+      using numerical derivation. 
+      If a value of dim 0 is passed , the dimension of the function is taken from TF1::GetNdim(). 
+      This works only for 2D and 3D (for TF2 and TF3 objects). 
    */ 
-   TUnuranMultiContDist (TF1 * func = 0, bool isLogPdf = false);  
+   TUnuranMultiContDist (TF1 * func = 0, unsigned int dim = 0, bool isLogPdf = false);  
 
 
    /** 

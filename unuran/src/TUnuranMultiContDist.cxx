@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: TUnuranMultiContDist.cxx,v 1.2 2007/02/05 10:24:44 moneta Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuranMultiContDist.cxx,v 1.1 2007/03/08 09:31:54 moneta Exp $
 // Authors: L. Moneta, J. Leydold Wed Feb 28 2007
 
 /**********************************************************************
@@ -16,12 +16,13 @@
 #include <cassert>
 
 
-TUnuranMultiContDist::TUnuranMultiContDist (TF1 * func, bool isLogPdf) : 
+TUnuranMultiContDist::TUnuranMultiContDist (TF1 * func, unsigned int dim, bool isLogPdf) : 
    fPdf(func), 
-   fDim(func->GetNdim() ),
+   fDim( dim ),
    fIsLogPdf(isLogPdf)
 {
    //Constructor from a TF1 objects
+   if (fDim == 0) fDim = func->GetNdim(); 
 } 
 
 
