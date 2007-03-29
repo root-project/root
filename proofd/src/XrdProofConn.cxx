@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.17 2007/03/19 15:14:10 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofConn.cxx,v 1.18 2007/03/20 16:16:04 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -389,7 +389,7 @@ XrdClientMessage *XrdProofConn::SendRecv(XPClientRequest *req, const void *reqDa
    SetSID(req->header.streamid);
 
    // Notify what we are going to send
-   if (TRACING(ALL))
+   if (TRACING(HDBG))
       XPD::smartPrintClientHeader(req);
 
    // We need the right order
@@ -420,7 +420,7 @@ XrdClientMessage *XrdProofConn::SendRecv(XPClientRequest *req, const void *reqDa
          TRACE(REQ, "XrdProofConn::SendRecv: reading msg from connmgr (server "<<URLTAG<<")");
       } else {
          // Dump header, if required
-         if (TRACING(ALL))
+         if (TRACING(HDBG))
             XPD::smartPrintServerHeader(&(xmsg->fHdr));
          // Get the status
          xst = xmsg->HeaderStatus();
@@ -447,7 +447,7 @@ XrdClientMessage *XrdProofConn::SendRecv(XPClientRequest *req, const void *reqDa
                    xmsg->GetData(), xmsg->DataLen());
             //
             // Dump the buffer *answData, if requested
-            if (TRACING(ALL)) {
+            if (TRACING(HDBG)) {
                TRACE(REQ, "XrdProofConn::SendRecv: dumping read data ...");
                for (int jj = 0; jj < xmsg->DataLen(); jj++) {
                   printf("0x%.2x ", *(((kXR_char *)xmsg->GetData())+jj));
