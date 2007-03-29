@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.29 2007/01/19 16:48:00 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.30 2007/02/06 14:35:45 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -56,6 +56,13 @@ TPaveText::TPaveText(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Option_
    //
    // a PaveText is a Pave with several lines of text
    // The Pave is by default defined bith bordersize=5 and option ="br".
+   //  option = "T" Top frame
+   //  option = "B" Bottom frame
+   //  option = "R" Right frame
+   //  option = "L" Left frame
+   //  option = "NDC" x1,y1,x2,y2 are given in NDC
+   //  option = "ARC" corners are rounded
+   //
    // The individual text items are entered via AddText
    // By default, text items inherits from the default pavetext AttText.
    // A title can be added later to this pavetext via TPaveText::SetLabel.

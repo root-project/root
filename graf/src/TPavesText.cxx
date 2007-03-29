@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPavesText.cxx,v 1.9 2006/07/03 16:10:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPavesText.cxx,v 1.10 2007/01/19 16:48:00 brun Exp $
 // Author: Rene Brun   19/11/95
 
 /*************************************************************************
@@ -45,6 +45,18 @@ TPavesText::TPavesText(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Int_t
    // Pavestext normal constructor.
    //
    // The PavesText is by default defined bith bordersize=1 and option ="br".
+   //  option = "T" Top frame
+   //  option = "B" Bottom frame
+   //  option = "R" Right frame
+   //  option = "L" Left frame
+   //  option = "NDC" x1,y1,x2,y2 are given in NDC
+   //  option = "ARC" corners are rounded
+   //
+   //  IMPORTANT NOTE:
+   //  Because TPave objects (and objects deriving from TPave) have their
+   //  master coordinate system in NDC, one cannot use the TBox functions
+   //  SetX1,SetY1,SetX2,SetY2 to change the corner coordinates. One should use
+   //  instead SetX1NDC, SetY1NDC, SetX2NDC, SetY2NDC.
 
    fNpaves = npaves;
    SetBorderSize(1);
