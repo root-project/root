@@ -6932,35 +6932,57 @@ int G__memfunc_setup(const char *funcname,int hash,G__InterfaceMethod funcp
 int G__separate_parameter(char *original,int *pos,char *param)
 {
 #ifndef G__SMALLOBJECT
-  int i;
-  int single_quote=0;
-  int double_quote=0;
-  int c;
+   int single_quote=0;
+   int double_quote=0;
+   int single_arg_quote=0;
+   bool argStartsWithSingleQuote = false;
 
-  i = (*pos);
+   int startPos = (*pos);
+   if (original[startPos] == '\'') {
+      // don't put beginning ' into param
+      ++startPos;
+      argStartsWithSingleQuote = true;
+      single_arg_quote = 1;
+   }
 
-  while(1) {
-    c = (*(original+(i++)));
-    switch(c) {
-    case '\'':
-      if(double_quote==0) single_quote ^= 1;
-      break;
-    case '"':
-      if(single_quote==0) double_quote ^= 1;
-      break;
-    case ' ':
-    case '\0':
-      if(0==single_quote && 0==double_quote) {
-        *param = '\0';
-        *pos = i;
-        return(c);
+   int i = startPos;
+   bool done = false;
+   for(; !done; ++i) {
+      int c = original[i];
+      switch(c) {
+       case '\'':
+          if (!double_quote) 
+             if (single_quote) single_quote = 0;
+             // only turn on single_quote if at the beginning!
+             else if (i == startPos)  single_quote = 0;
+             else if (single_arg_quote) single_arg_quote = 0;
+          break;
+       case '"':
+          if (!single_quote) double_quote ^= 1;
+          break;
+       case ' ':
+          if(!single_quote && !double_quote && !single_arg_quote) {
+             c = 0;
+             done = true;
+          }
+          break;
+       case 0:
+          done = true;
+          break;
       }
-    default:
-      *(param++) = c;
-    }
-  }
 
-  /* return(c); */
+      *(param++) = c;
+   }
+
+   if (argStartsWithSingleQuote && ! *(param - 1) && *(param - 2) == '\'' )
+      *(param - 2) = 0; // skip trailing '
+   *pos = i;
+
+   if (i > startPos) --i;
+   else i = startPos;
+
+   return original[i];
+
 #endif
 }
 
@@ -6992,9 +7014,9 @@ int G__parse_parameter_link(char* paras)
 
   char ch = paras[0];
   for (int ifn = 0; ch != '\0'; ++ifn) {
-    ch = G__separate_parameter(paras, &os, c_type);
+    G__separate_parameter(paras, &os, c_type);
     type = c_type[0];
-    ch = G__separate_parameter(paras, &os, tagname);
+    G__separate_parameter(paras, &os, tagname);
     if (tagname[0] == '-') {
       tagnum = -1;
     }
@@ -7008,7 +7030,7 @@ int G__parse_parameter_link(char* paras)
       tagnum = G__search_tagname(tagname, isupper(type) ? 0xff : 0);
       G__p_ifunc = current_G__p_ifunc;
     }
-    ch = G__separate_parameter(paras, &os, type_name);
+    G__separate_parameter(paras, &os, type_name);
     if (type_name[0] == '-') {
       typenum = -1;
     }
@@ -7021,14 +7043,14 @@ int G__parse_parameter_link(char* paras)
         typenum = G__defined_typename(type_name);
       }
     }
-    ch = G__separate_parameter(paras, &os, c_reftype_const);
+    G__separate_parameter(paras, &os, c_reftype_const);
     reftype_const = std::atoi(c_reftype_const);
 #ifndef G__OLDIMPLEMENTATION1861
     if (typenum != -1) {
       reftype_const += G__newtype.isconst[typenum] * 10;
     }
 #endif
-    ch = G__separate_parameter(paras, &os, c_default);
+    G__separate_parameter(paras, &os, c_default);
     if ((c_default[0] == '-') && (c_default[1] == '\0')) {
       para_default = 0;
       c_default[0] = '\0';
