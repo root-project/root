@@ -7,7 +7,7 @@
 
 printUSAGE() { 
 		echo "" ;
-		echo "Usage: addtest test_path test name"  ;
+		echo "Usage: addtest test_path test_name"  ;
 	       	echo "  where test name is the name of the test to be added"
 		echo "  where test path is the directory path for the test to be added"; 
 	        echo "";
