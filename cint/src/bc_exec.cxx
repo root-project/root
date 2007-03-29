@@ -451,13 +451,16 @@ extern "C" int G__exec_bytecode(G__value *result7,G__CONST char *funcname,struct
   }
 
   /* copy arguments to stack in reverse order */
-  for(i=0;i<libp->paran;i++) {
-    int j=libp->paran-i-1;
+  int idx = 0;
+  for (i = 0; i < libp->paran; ++i) {
+    int j = libp->paran - i - 1;
     G__asm_stack[j] = libp->para[i];
-    if(0==G__asm_stack[j].ref || 
-       (G__PARAREFERENCE==var->reftype[i]&&var->type[i]!=libp->para[i].type)){
-      if(var) {
-	switch(var->type[i]) {
+    if (
+      !G__asm_stack[j].ref ||
+      ((var->reftype[idx] == G__PARAREFERENCE) && (var->type[idx] != libp->para[i].type))
+    ) {
+      if (var) {
+	switch (var->type[idx]) {
 	case 'f':
 	  G__asm_stack[j].ref=(long)G__Floatref(&libp->para[i]);
 	  break;
@@ -507,7 +510,11 @@ extern "C" int G__exec_bytecode(G__value *result7,G__CONST char *funcname,struct
 	  G__asm_stack[j].ref=(long)(&libp->para[i].obj.i);
 	  break;
 	}
-	if(i>=var->allvar) var=var->next;
+        ++idx;
+	if (idx >= var->allvar) {
+          var = var->next;
+          idx = 0;
+        }
       }
     }
   }

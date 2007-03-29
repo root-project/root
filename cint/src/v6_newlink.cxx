@@ -5384,97 +5384,90 @@ void G__cpplink_memvar(FILE *fp)
                         ,var->varnamebuf[j]);
               }
             }
-            else if(G__PROTECTED==var->access[j] &&
-                    G__struct.protectedaccess[i]) {
-              fprintf(fp,"(void*)((%s_PR*)p)->G__OS_%s(),"
-                      ,G__get_link_tagname(i)
-                      ,var->varnamebuf[j]);
+            else if ((var->access[j] == G__PROTECTED) && G__struct.protectedaccess[i]) {
+              fprintf(fp, "(void*)((%s_PR*)p)->G__OS_%s(),", G__get_link_tagname(i), var->varnamebuf[j]);
             }
-            else { /* Private or protected member */
+            else {
+              // Private or protected member
               fprintf(fp,"(void*)NULL,");
             }
-            fprintf(fp,"%d,",var->type[j]);
-            fprintf(fp,"%d,",var->reftype[j]);
-            fprintf(fp,"%d,",var->constvar[j]);
-
-            if(-1!=var->p_tagtable[j])
-              fprintf(fp,"G__get_linked_tagnum(&%s),"
-                      ,G__mark_linked_tagnum(var->p_tagtable[j]));
-            else
-              fprintf(fp,"-1,");
-
-            if(-1!=var->p_typetable[j])
-              fprintf(fp,"G__defined_typename(\"%s\"),"
-                      ,G__newtype.name[var->p_typetable[j]]);
-            else
-              fprintf(fp,"-1,");
-
-            fprintf(fp,"%d,",var->statictype[j]);
-            fprintf(fp,"%d,",var->access[j]);
-            fprintf(fp,"\"%s"
-                    ,var->varnamebuf[j]);
-            if(INT_MAX==var->varlabel[j][1] /* && 1== var->varlabel[j][0] */){
-              fprintf(fp,"[]");
-            } else
-            if(var->varlabel[j][1])
-              fprintf(fp,"[%d]",
-                      (var->varlabel[j][1]+1)/var->varlabel[j][0]);
-            for(k=1;k<var->paran[j];k++) {
-              fprintf(fp,"[%d]",var->varlabel[j][k+1]);
+            fprintf(fp, "%d,", var->type[j]);
+            fprintf(fp, "%d,", var->reftype[j]);
+            fprintf(fp, "%d,", var->constvar[j]);
+            if (var->p_tagtable[j] != -1) {
+              fprintf(fp, "G__get_linked_tagnum(&%s),", G__mark_linked_tagnum(var->p_tagtable[j]));
             }
-            if(pvoidflag
-               && G__LOCALSTATIC==var->statictype[j]
+            else {
+              fprintf(fp, "-1,");
+            }
+            if (var->p_typetable[j] != -1) {
+              fprintf(fp, "G__defined_typename(\"%s\"),", G__newtype.name[var->p_typetable[j]]);
+            }
+            else {
+              fprintf(fp, "-1,");
+            }
+            fprintf(fp, "%d,", var->statictype[j]);
+            fprintf(fp, "%d,", var->access[j]);
+            fprintf(fp, "\"%s", var->varnamebuf[j]);
+            if (var->varlabel[j][1] /* num of elements */ == INT_MAX /* unspecified length array */) {
+              fprintf(fp, "[]");
+            } else if (var->varlabel[j][1] /* num of elements */) {
+              fprintf(fp, "[%d]", var->varlabel[j][1] /* num of elements */ / var->varlabel[j][0] /* stride */);
+            }
+            for (k = 1; k< var->paran[j]; ++k) {
+              fprintf(fp, "[%d]", var->varlabel[j][k+1]);
+            }
+            if (
+              pvoidflag &&
+              (var->statictype[j] == G__LOCALSTATIC)
 #ifdef G__UNADDRESSABLEBOOL
-               && 'g'!=var->type[j]
+              && (var->type[j] != 'g')
 #endif
-               ) {
-              /* local enum member as static member.
-               * CAUTION: This implementation cause error on enum in
-               * nested class. */
-              sprintf(ttt,"%s::%s",G__fulltagname(i,1),var->varnamebuf[j]);
-              store_var_type=G__var_type; /* questionable */
-              G__var_type='p';
+            ) {
+              // local enum member as static member.
+              // CAUTION: This implementation cause error on enum in
+              // nested class.
+              sprintf(ttt, "%s::%s", G__fulltagname(i, 1), var->varnamebuf[j]);
+              store_var_type = G__var_type; /* questionable */
+              G__var_type = 'p';
               buf = G__getitem(ttt);
-              G__var_type=store_var_type; /* questionable */
-              G__string(buf,value);
-              G__quotedstring(value,ttt);
-              fprintf(fp,"=%s\",0",ttt);
+              G__var_type = store_var_type; /* questionable */
+              G__string(buf, value);
+              G__quotedstring(value, ttt);
+              fprintf(fp, "=%s\",0", ttt);
             }
-            else fprintf(fp,"=\",0");
-            G__getcommentstring(commentbuf,i,&var->comment[j]);
-            fprintf(fp,",%s);\n",commentbuf);
+            else {
+              fprintf(fp, "=\",0");
+            }
+            G__getcommentstring(commentbuf, i, &var->comment[j]);
+            fprintf(fp, ",%s);\n", commentbuf);
           } /* end if(G__PUBLIC) */
-          G__var_type='p';
+          G__var_type = 'p';
         } /* end for(j) */
-        var=var->next;
+        var = var->next;
       }  /* end while(var) */
-      fprintf(fp,"   }\n");
-
-      fprintf(fp,"   G__tag_memvar_reset();\n");
-      fprintf(fp,"}\n\n");
-
-
+      fprintf(fp, "   }\n");
+      fprintf(fp, "   G__tag_memvar_reset();\n");
+      fprintf(fp, "}\n\n");
     } /* end if(globalcomp) */
   } /* end for(i) */
-
-  if(G__CPPLINK == G__globalcomp) {
-    fprintf(fp,"extern \"C\" void G__cpp_setup_memvar%s() {\n",G__DLLID);
+  if (G__globalcomp == G__CPPLINK) {
+    fprintf(fp, "extern \"C\" void G__cpp_setup_memvar%s() {\n", G__DLLID);
   }
   else {
-    fprintf(fp,"void G__c_setup_memvar%s() {\n",G__DLLID);
+    fprintf(fp, "void G__c_setup_memvar%s() {\n", G__DLLID);
   }
-  fprintf(fp,"}\n");
-
-  /* Following dummy comment string is needed to clear rewinded part of the
-   * interface method source file. */
-  fprintf(fp,"/***********************************************************\n");
-  fprintf(fp,"************************************************************\n");
-  fprintf(fp,"************************************************************\n");
-  fprintf(fp,"************************************************************\n");
-  fprintf(fp,"************************************************************\n");
-  fprintf(fp,"************************************************************\n");
-  fprintf(fp,"************************************************************\n");
-  fprintf(fp,"***********************************************************/\n");
+  fprintf(fp, "}\n");
+  // Following dummy comment string is needed to clear rewinded part of the
+  // interface method source file.
+  fprintf(fp, "/***********************************************************\n");
+  fprintf(fp, "************************************************************\n");
+  fprintf(fp, "************************************************************\n");
+  fprintf(fp, "************************************************************\n");
+  fprintf(fp, "************************************************************\n");
+  fprintf(fp, "************************************************************\n");
+  fprintf(fp, "************************************************************\n");
+  fprintf(fp, "***********************************************************/\n");
 }
 
 /**************************************************************************
@@ -5994,17 +5987,23 @@ void G__cpplink_global(FILE *fp)
         fprintf(fp,"static void G__cpp_setup_global%d() {\n",divn++);
 #endif
       }
-      if((G__AUTO==var->statictype[j] /* not static */ ||
-          (0==var->p[j] && G__COMPILEDGLOBAL==var->statictype[j] &&
-           INT_MAX == var->varlabel[j][1])) && /* extern type v[]; */
-         G__NOLINK>var->globalcomp[j] &&   /* with -c-1 or -c-2 option */
+      if (
+        (
+          (var->statictype[j] == G__AUTO) /* not static */ ||
+          (
+            !var->p[j] &&
+            (var->statictype[j] == G__COMPILEDGLOBAL) &&
+            (var->varlabel[j][1] /* num of elements */ == INT_MAX /* unspecified length array flag */)
+          )
+        ) && /* extern type v[]; */
+        (G__NOLINK > var->globalcomp[j]) && /* with -c-1 or -c-2 option */
 #ifndef G__OLDIMPLEMENTATION2191
-         'j'!=tolower(var->type[j]) /* questionable */
+        ('j' != tolower(var->type[j])) && /* questionable */
 #else
-         'm'!=tolower(var->type[j])
+        ('m' != tolower(var->type[j])) &&
 #endif
-         && var->varnamebuf[j][0]
-         ) {
+        var->varnamebuf[j][0]
+      ) {
 
         if((-1!=var->p_tagtable[j]&&
             islower(var->type[j])&&var->constvar[j]&&
@@ -6044,30 +6043,32 @@ void G__cpplink_global(FILE *fp)
         else
           fprintf(fp,"-1,");
 
-        fprintf(fp,"%d,",var->statictype[j]);
-        fprintf(fp,"%d,",var->access[j]);
-        fprintf(fp,"\"%s"
-                ,var->varnamebuf[j]);
-        if(INT_MAX==var->varlabel[j][1] /* && 1== var->varlabel[j][0] */ )
-          fprintf(fp,"[]");
-        else if(var->varlabel[j][1])
-          fprintf(fp,"[%d]",
-                  (var->varlabel[j][1]+1)/var->varlabel[j][0]);
-        for(k=1;k<var->paran[j];k++) {
-          fprintf(fp,"[%d]",var->varlabel[j][k+1]);
+        fprintf(fp, "%d,", var->statictype[j]);
+        fprintf(fp, "%d,", var->access[j]);
+        fprintf(fp, "\"%s", var->varnamebuf[j]);
+        if (var->varlabel[j][1] /* num of elements */ == INT_MAX /* unspecified length flag */) {
+          fprintf(fp, "[]");
         }
-        if(pvoidflag) {
+        else if (var->varlabel[j][1] /* num of elements */) {
+          fprintf(fp, "[%d]", var->varlabel[j][1] /* num of elements */ / var->varlabel[j][0] /* stride */);
+        }
+        for (k = 1; k < var->paran[j]; ++k) {
+          fprintf(fp, "[%d]", var->varlabel[j][k+1]);
+        }
+        if (pvoidflag) {
           buf = G__getitem(var->varnamebuf[j]);
-          G__string(buf,value);
-          G__quotedstring(value,ttt);
-          if('p'==tolower(var->type[j])
-             || 'T'==var->type[j]
-             )
-            fprintf(fp,"=%s\",1,(char*)NULL);\n",ttt);
-          else
-            fprintf(fp,"=%s\",0,(char*)NULL);\n",ttt);
+          G__string(buf, value);
+          G__quotedstring(value, ttt);
+          if ((tolower(var->type[j]) == 'p') || (var->type[j] == 'T')) {
+            fprintf(fp, "=%s\",1,(char*)NULL);\n", ttt);
+          }
+          else {
+            fprintf(fp, "=%s\",0,(char*)NULL);\n", ttt);
+          }
         }
-        else fprintf(fp,"=\",0,(char*)NULL);\n");
+        else {
+          fprintf(fp, "=\",0,(char*)NULL);\n");
+        }
       } /* end if(G__PUBLIC) */
       G__var_type='p';
     } /* end for(j) */

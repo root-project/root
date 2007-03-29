@@ -193,24 +193,21 @@ int Cint::G__DataMemberInfo::ArrayDim()
 ///////////////////////////////////////////////////////////////////////////
 int Cint::G__DataMemberInfo::MaxIndex(int dim)
 {
-  if(IsValid()) {
-    struct G__var_array *var;
-    var = (struct G__var_array*)handle;
-    if(0<=dim&&dim<var->paran[index]) {
-      if(dim) {
-	return(var->varlabel[index][dim+1]);
+  if (IsValid()) {
+    struct G__var_array* var = (struct G__var_array*) handle;
+    if ((dim > -1) && (dim < var->paran[index])) {
+      if (dim) {
+        // -- Stored directly for second and greater dimensions.
+	return var->varlabel[index][dim+1];
       }
       else {
-	return((var->varlabel[index][1]+1)/var->varlabel[index][0]);
+        // -- For first dimension divide number of elements by stride.
+        // Note: This may be zero, if this is not an array!
+	return var->varlabel[index][1] /* num of elements*/ / var->varlabel[index][0] /* stride */;
       }
     }
-    else {
-      return(-1);
-    }
   }
-  else {
-    return(-1);
-  }
+  return -1;
 }
 ///////////////////////////////////////////////////////////////////////////
 void Cint::G__DataMemberInfo::SetGlobalcomp(int globalcomp)

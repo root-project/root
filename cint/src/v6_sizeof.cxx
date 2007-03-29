@@ -141,7 +141,6 @@ int G__Lsizeof(char *type_name)
   char namebody[G__MAXNAME+20];
   char *p;
   int i;
-  int pinc;
 
 
   /* return size of pointer if xxx* */
@@ -278,85 +277,106 @@ int G__Lsizeof(char *type_name)
 #else
   if(strcmp(type_name,"bool")==0) return(sizeof(unsigned char));
 #endif
-
-  while('*'==type_name[pointlevel]) ++pointlevel;
-  strcpy(namebody,type_name+pointlevel);
-  while((char*)NULL!=(p=strrchr(namebody,'['))) {
-    *p='\0';
+  while (type_name[pointlevel] == '*') {
+    ++pointlevel;
+  }
+  strcpy(namebody, type_name + pointlevel);
+  while ((p = strrchr(namebody, '['))) {
+    *p = '\0';
     ++pointlevel;
   }
   G__hash(namebody,hash,ig15)
   var = G__getvarentry(namebody,hash,&ig15,&G__global,G__p_local);
-  if(!var) {
+  if (!var) {
     char temp[G__ONELINE];
-    if(-1!=G__memberfunc_tagnum) /* questionable */
-      sprintf(temp,"%s\\%x\\%x\\%x",namebody,G__func_page,G__func_now
-              ,G__memberfunc_tagnum);
-    else
-      sprintf(temp,"%s\\%x\\%x" ,namebody,G__func_page,G__func_now);
-    
-    G__hash(temp,hash,i)
-    var = G__getvarentry(temp,hash,&ig15,&G__global,G__p_local);
-  }
-  if(var) {
-    if(INT_MAX==var->varlabel[ig15][1]) {
-      if('c'==var->type[ig15]) return(strlen((char*)var->p[ig15]));
-      else return(sizeof(void *));
-    }
-    buf.type=var->type[ig15];
-    buf.tagnum = var->p_tagtable[ig15];
-    buf.typenum = var->p_typetable[ig15];
-    if(isupper(buf.type)) buf.obj.reftype.reftype=var->reftype[ig15];
-    if(pointlevel<=var->paran[ig15]) {
-      switch(pointlevel) {
-      case 0: 
-        pinc=var->varlabel[ig15][1]+1; 
-        break;
-      case 1:
-        pinc=var->varlabel[ig15][0]; 
-        break;
-      default:
-        pinc=var->varlabel[ig15][0]; 
-        for(i=1;i<pointlevel;i++) pinc/=var->varlabel[ig15][i+1];
-        break;
-      }
+    if (G__memberfunc_tagnum != -1) { // questionable
+      sprintf(temp, "%s\\%x\\%x\\%x", namebody, G__func_page, G__func_now, G__memberfunc_tagnum);
     }
     else {
-      switch(pointlevel) {
-      case 0: break;
+      sprintf(temp, "%s\\%x\\%x", namebody, G__func_page, G__func_now);
+    }
+    G__hash(temp, hash, i)
+    var = G__getvarentry(temp, hash, &ig15, &G__global, G__p_local);
+  }
+  if (var) {
+    if (var->varlabel[ig15][1] == INT_MAX /* unspecified size array flag */) {
+      if (var->type[ig15] == 'c') {
+        return strlen((char*) var->p[ig15]);
+      }
+      else {
+        return sizeof(void *);
+      }
+    }
+    buf.type = var->type[ig15];
+    buf.tagnum = var->p_tagtable[ig15];
+    buf.typenum = var->p_typetable[ig15];
+    if (isupper(buf.type)) {
+      buf.obj.reftype.reftype = var->reftype[ig15];
+    }
+    int num_of_elements = 0;
+    if (pointlevel > var->paran[ig15] /* array dimensionality */) {
+      switch (pointlevel) {
+      case 0:
+        break;
       case 1:
-        if(G__PARANORMAL==buf.obj.reftype.reftype) buf.type=tolower(buf.type);
-        else if(G__PARAP2P==buf.obj.reftype.reftype) {
-          buf.obj.reftype.reftype=G__PARANORMAL;
+        if (G__PARANORMAL == buf.obj.reftype.reftype) {
+          buf.type = tolower(buf.type);
         }
-        else --buf.obj.reftype.reftype;
+        else if (G__PARAP2P == buf.obj.reftype.reftype) {
+          buf.obj.reftype.reftype = G__PARANORMAL;
+        }
+        else {
+          --buf.obj.reftype.reftype;
+        }
         break;
       case 2:
-        if(G__PARANORMAL==buf.obj.reftype.reftype) buf.type=tolower(buf.type);
-        else if(G__PARAP2P==buf.obj.reftype.reftype) {
-          buf.type=tolower(buf.type);
-          buf.obj.reftype.reftype=G__PARANORMAL;
+        if (G__PARANORMAL == buf.obj.reftype.reftype) {
+          buf.type = tolower(buf.type);
         }
-        else if(G__PARAP2P2P==buf.obj.reftype.reftype) {
-          buf.obj.reftype.reftype=G__PARANORMAL;
+        else if (G__PARAP2P == buf.obj.reftype.reftype) {
+          buf.type = tolower(buf.type);
+          buf.obj.reftype.reftype = G__PARANORMAL;
         }
-        else buf.obj.reftype.reftype-=2;
+        else if (G__PARAP2P2P == buf.obj.reftype.reftype) {
+          buf.obj.reftype.reftype = G__PARANORMAL;
+        }
+        else {
+          buf.obj.reftype.reftype -= 2;
+        }
         break;
       }
-      return(G__sizeof(&buf));
+      return G__sizeof(&buf);
     }
-    if(isupper(var->type[ig15])) return(pinc*sizeof(void *));
-    return(pinc*G__sizeof(&buf));
+    switch (pointlevel) {
+    case 0: 
+      num_of_elements = var->varlabel[ig15][1] /* num of elements */; 
+      if (!num_of_elements) {
+        num_of_elements = 1;
+      }
+      break;
+    case 1:
+      num_of_elements = var->varlabel[ig15][0] /* stride */; 
+      break;
+    default:
+      num_of_elements = var->varlabel[ig15][0] /* stride */; 
+      for (i = 1; i < pointlevel; ++i) {
+        num_of_elements /= var->varlabel[ig15][i+1];
+      }
+      break;
+    }
+    if (isupper(var->type[ig15])) {
+      return num_of_elements * sizeof(void *);
+    }
+    return num_of_elements * G__sizeof(&buf);
   }
-
   buf = G__getexpr(type_name);
-  if(buf.type) {
-    if('C'==buf.type && '"'==type_name[0]) return(strlen((char*)buf.obj.i)+1);
-    return(G__sizeof(&buf));
+  if (buf.type) {
+    if ((buf.type == 'C') && (type_name[0] == '"')) {
+      return strlen((char*) buf.obj.i) + 1;
+    }
+    return G__sizeof(&buf);
   }
-
-  return(-1);
-
+  return -1;
 }
 
 #ifdef G__TYPEINFO

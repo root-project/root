@@ -7,7 +7,7 @@
  * Description:
  *  Loop compilation related source code
  ************************************************************************
- * Copyright(c) 1995~2004  Masaharu Goto 
+ * Copyright(c) 1995~2004  Masaharu Goto
  *
  * For the licensing terms see the file COPYING
  *
@@ -74,10 +74,10 @@ double G__doubleM(G__value *buf)
      case 'n': return (double)(buf->obj.ll);
      case 'i': return (double)(buf->obj.i);
    }
-   return (double)(buf->obj.i); 
+   return (double)(buf->obj.i);
 #else
   // Because of branch prediction optimization in x86,
-  // the following is actually faster than a switch. 
+  // the following is actually faster than a switch.
   return (('f'==buf->type||'d'==buf->type) ? buf->obj.d :
           ('k'==buf->type||'h'==buf->type) ? (double)(buf->obj.ulo) :
           ('m'==buf->type) ? (double)(G__int64)(buf->obj.ull) :
@@ -359,10 +359,10 @@ void G__asm_tovalue_U(G__value *result)
 void G__LD_p0_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];
-  buf->tagnum = -1;              
-  buf->type = 'n';             
+  buf->tagnum = -1;
+  buf->type = 'n';
   buf->typenum = var->p_typetable[ig15];
-  buf->ref = var->p[ig15]+offset;       
+  buf->ref = var->p[ig15]+offset;
   buf->obj.ll = *(G__int64*)buf->ref;
 }
 /****************************************************************
@@ -371,10 +371,10 @@ void G__LD_p0_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *
 void G__LD_p0_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];
-  buf->tagnum = -1;              
-  buf->type = 'm';             
+  buf->tagnum = -1;
+  buf->type = 'm';
   buf->typenum = var->p_typetable[ig15];
-  buf->ref = var->p[ig15]+offset;       
+  buf->ref = var->p[ig15]+offset;
   buf->obj.ull = *(G__uint64*)buf->ref;
 }
 /****************************************************************
@@ -383,10 +383,10 @@ void G__LD_p0_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array 
 void G__LD_p0_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp)++];
-  buf->tagnum = -1;              
-  buf->type = 'q';             
+  buf->tagnum = -1;
+  buf->type = 'q';
   buf->typenum = var->p_typetable[ig15];
-  buf->ref = var->p[ig15]+offset;       
+  buf->ref = var->p[ig15]+offset;
   buf->obj.ld = *(long double*)buf->ref;
 }
 
@@ -528,25 +528,30 @@ void G__nonintarrayindex(struct G__var_array *var,int ig15)
 * G__ASM_GET_INT_P1
 ****************************************************************/
 #ifdef G__TUNEUP_W_SECURITY
-#define G__ASM_GET_INT_P1(casttype,ctype)              \
-  G__value *buf= &pbuf[*psp-1];                        \
-  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); /*1969*/ \
-  buf->tagnum = -1;                                    \
-  buf->type = ctype;                                   \
-  buf->typenum = var->p_typetable[ig15];               \
-  buf->ref = var->p[ig15]+offset+buf->obj.i*sizeof(casttype); \
-  if(buf->obj.i-1>var->varlabel[ig15][1])              \
-    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],buf->obj.i);  \
-  else                                                 \
-    buf->obj.i = *(casttype*)buf->ref
+#define G__ASM_GET_INT_P1(casttype, ctype) \
+  G__value* buf = &pbuf[*psp-1]; \
+  if ((buf->type == 'd') || (buf->type == 'f')) { \
+    G__nonintarrayindex(var, ig15); \
+  } \
+  buf->tagnum = -1; \
+  buf->type = ctype; \
+  buf->typenum = var->p_typetable[ig15]; \
+  buf->ref = var->p[ig15] + offset + (buf->obj.i * sizeof(casttype)); \
+  /* We intentionally allow going one beyond the end. */ \
+  if (buf->obj.i > var->varlabel[ig15][1] /* num of elements */) { \
+    G__arrayindexerror(ig15, var, var->varnamebuf[ig15], buf->obj.i); \
+  } \
+  else { \
+    buf->obj.i = *((casttype*) buf->ref); \
+  }
 #else
-#define G__ASM_GET_INT_P1(casttype,ctype)              \
-  G__value *buf= &pbuf[*psp-1];                        \
-  buf->tagnum = -1;                                    \
-  buf->type = ctype;                                   \
-  buf->typenum = var->p_typetable[ig15];               \
-  buf->ref = var->p[ig15]+offset+buf->obj.i*sizeof(casttype); \
-  buf->obj.i = *(casttype*)buf->ref
+#define G__ASM_GET_INT_P1(casttype, ctype) \
+  G__value* buf = &pbuf[*psp-1]; \
+  buf->tagnum = -1; \
+  buf->type = ctype; \
+  buf->typenum = var->p_typetable[ig15]; \
+  buf->ref = var->p[ig15] + offset + (buf->obj.i * sizeof(casttype)); \
+  buf->obj.i = *((casttype*) buf->ref)
 #endif
 
 /****************************************************************
@@ -555,15 +560,18 @@ void G__nonintarrayindex(struct G__var_array *var,int ig15)
 void G__LD_p1_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];
-  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); /*1969*/ 
-  buf->tagnum = -1;                                    
-  buf->type = 'n';                                   
-  buf->typenum = var->p_typetable[ig15];               
-  buf->ref = var->p[ig15]+offset+buf->obj.i*sizeof(G__int64); 
-  if(buf->obj.i-1>var->varlabel[ig15][1])              
-    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],buf->obj.i);  
-  else                                                 
+  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); /*1969*/
+  buf->tagnum = -1;
+  buf->type = 'n';
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = var->p[ig15]+offset+buf->obj.i*sizeof(G__int64);
+  // We intentionally allow going one beyond the end.
+  if (buf->obj.i > var->varlabel[ig15][1] /* num of elements */) {
+    G__arrayindexerror(ig15, var, var->varnamebuf[ig15], buf->obj.i);
+  }
+  else {
     buf->obj.ll = *(G__int64*)buf->ref;
+  }
 }
 /****************************************************************
 * G__LD_p1_ulonglong()
@@ -571,14 +579,15 @@ void G__LD_p1_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *
 void G__LD_p1_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];
-  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); /*1969*/ 
-  buf->tagnum = -1;                                    
-  buf->type = 'm';                                   
-  buf->typenum = var->p_typetable[ig15];               
-  buf->ref = var->p[ig15]+offset+buf->obj.i*sizeof(G__uint64); 
-  if(buf->obj.i-1>var->varlabel[ig15][1])              
-    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],buf->obj.i);  
-  else                                                 
+  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); /*1969*/
+  buf->tagnum = -1;
+  buf->type = 'm';
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = var->p[ig15]+offset+buf->obj.i*sizeof(G__uint64);
+  // We intentionally allow going one beyond the end.
+  if (buf->obj.i > var->varlabel[ig15][1] /* num of elements */)
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],buf->obj.i);
+  else
     buf->obj.ull = *(G__uint64*)buf->ref;
 }
 /****************************************************************
@@ -587,14 +596,15 @@ void G__LD_p1_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array 
 void G__LD_p1_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];
-  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); /*1969*/ 
-  buf->tagnum = -1;                                    
-  buf->type = 'q';                                   
-  buf->typenum = var->p_typetable[ig15];               
-  buf->ref = var->p[ig15]+offset+buf->obj.i*sizeof(long double); 
-  if(buf->obj.i-1>var->varlabel[ig15][1])              
-    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],buf->obj.i);  
-  else                                                 
+  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); /*1969*/
+  buf->tagnum = -1;
+  buf->type = 'q';
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = var->p[ig15]+offset+buf->obj.i*sizeof(long double);
+  // We intentionally allow going one beyond the end.
+  if (buf->obj.i > var->varlabel[ig15][1] /* num of elements */)
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],buf->obj.i);
+  else
     buf->obj.ld = *(long double*)buf->ref;
 }
 
@@ -674,13 +684,14 @@ void G__LD_p1_ulong(G__value *pbuf,int *psp,long offset,struct G__var_array *var
 void G__LD_p1_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];
-  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); 
+  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15);
   buf->tagnum = var->p_tagtable[ig15];
   buf->type = var->type[ig15];
   buf->typenum = var->p_typetable[ig15];
   buf->ref = var->p[ig15]+offset+buf->obj.i*sizeof(long);
 #ifdef G__TUNEUP_W_SECURITY
-  if(buf->obj.i-1>var->varlabel[ig15][1])
+  // We intentionally allow going one beyond the end.
+  if (buf->obj.i > var->varlabel[ig15][1] /* num of elements */)
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],buf->obj.i);
   else
 #endif
@@ -693,13 +704,14 @@ void G__LD_p1_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *v
 void G__LD_p1_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];
-  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); 
+  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15);
   buf->tagnum = var->p_tagtable[ig15];
   buf->type = 'u';
   buf->typenum = var->p_typetable[ig15];
   buf->ref = var->p[ig15]+offset+buf->obj.i*G__struct.size[buf->tagnum];
 #ifdef G__TUNEUP_W_SECURITY
-  if(buf->obj.i-1>var->varlabel[ig15][1])
+  // We intentionally allow going one beyond the end.
+  if (buf->obj.i > var->varlabel[ig15][1] /* num of elements */)
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],buf->obj.i);
   else
 #endif
@@ -711,13 +723,14 @@ void G__LD_p1_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *va
 void G__LD_p1_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];
-  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); 
+  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15);
   buf->tagnum = -1;
   buf->type = 'f';
   buf->typenum = var->p_typetable[ig15];
   buf->ref = var->p[ig15]+offset+buf->obj.i*sizeof(float);
 #ifdef G__TUNEUP_W_SECURITY
-  if(buf->obj.i-1>var->varlabel[ig15][1])
+  // We intentionally allow going one beyond the end.
+  if (buf->obj.i > var->varlabel[ig15][1] /* num of elements */)
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],buf->obj.i);
   else
 #endif
@@ -729,13 +742,14 @@ void G__LD_p1_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var
 void G__LD_p1_double(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[*psp-1];
-  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); 
+  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15);
   buf->tagnum = -1;
   buf->type = 'd';
   buf->typenum = var->p_typetable[ig15];
   buf->ref = var->p[ig15]+offset+buf->obj.i*sizeof(double);
 #ifdef G__TUNEUP_W_SECURITY
-  if(buf->obj.i-1>var->varlabel[ig15][1])
+  // We intentionally allow going one beyond the end.
+  if (buf->obj.i > var->varlabel[ig15][1] /* num of elements */)
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],buf->obj.i);
   else
 #endif
@@ -750,42 +764,45 @@ void G__LD_p1_double(G__value *pbuf,int *psp,long offset,struct G__var_array *va
 * G__ASM_GET_INT_PN
 ****************************************************************/
 #ifdef G__TUNEUP_W_SECURITY
-#define G__ASM_GET_INT_PN(casttype,ctype)              \
-  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];\
-  int ary = var->varlabel[ig15][0];                    \
-  int paran = var->paran[ig15];                        \
-  int p_inc=0;                                         \
-  int ig25;                                            \
-  ++(*psp);                                            \
-  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {\
-    p_inc += ary*G__int(buf[ig25]);                    \
-    ary /= var->varlabel[ig15][ig25+2];                \
-  }                                                    \
-  buf->tagnum = -1;                                    \
-  buf->type = ctype;                                   \
-  buf->typenum = var->p_typetable[ig15];               \
-  buf->ref = var->p[ig15]+offset+p_inc*sizeof(casttype); \
-  if(p_inc-1>var->varlabel[ig15][1])                   \
-    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);  \
-  else                                                 \
-    buf->obj.i = *(casttype*)buf->ref
+#define G__ASM_GET_INT_PN(CASTTYPE, CTYPE) \
+  *psp = *psp - var->paran[ig15]; \
+  G__value* buf = &pbuf[*psp]; \
+  int ary = var->varlabel[ig15][0] /* stride */; \
+  int paran = var->paran[ig15]; \
+  int p_inc = 0; \
+  ++(*psp); \
+  for (int ig25 = 0; (ig25 < paran) && (ig25 < var->paran[ig15]); ++ig25) { \
+    p_inc += ary * G__int(buf[ig25]); \
+    ary /= var->varlabel[ig15][ig25+2]; \
+  } \
+  buf->tagnum = -1; \
+  buf->type = CTYPE; \
+  buf->typenum = var->p_typetable[ig15]; \
+  buf->ref = var->p[ig15] + offset + (p_inc * sizeof(CASTTYPE)); \
+  /* We intentionally allow going one beyond the end. */ \
+  if (p_inc > var->varlabel[ig15][1] /* num of elements */) { \
+    G__arrayindexerror(ig15, var, var->varnamebuf[ig15], p_inc); \
+  } \
+  else { \
+    buf->obj.i = *((CASTTYPE*) buf->ref); \
+  }
 #else
-#define G__ASM_GET_INT_PN(casttype,ctype)              \
-  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];\
-  int ary = var->varlabel[ig15][0];                    \
-  int paran = var->paran[ig15];                        \
-  int p_inc=0;                                         \
-  int ig25;                                            \
-  ++(*psp);                                            \
-  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {\
-    p_inc += ary*G__int(buf[ig25]);                    \
-    ary /= var->varlabel[ig15][ig25+2];                \
-  }                                                    \
-  buf->tagnum = -1;                                    \
-  buf->type = ctype;                                   \
-  buf->typenum = var->p_typetable[ig15];               \
-  buf->ref = var->p[ig15]+offset+p_inc*sizeof(casttype); \
-  buf->obj.i = *(casttype*)buf->ref
+#define G__ASM_GET_INT_PN(CASTTYPE, CTYPE) \
+  *psp = *psp-var->paran[ig15]; \
+  G__value* buf = &pbuf[*psp]; \
+  int ary = var->varlabel[ig15][0] /* stride */; \
+  int paran = var->paran[ig15]; \
+  int p_inc = 0; \
+  ++(*psp); \
+  for (int ig25 = 0; ig25 < paran && ig25 < var->paran[ig15]; ++ig25) { \
+    p_inc += ary * G__int(buf[ig25]); \
+    ary /= var->varlabel[ig15][ig25+2]; \
+  } \
+  buf->tagnum = -1; \
+  buf->type = CTYPE; \
+  buf->typenum = var->p_typetable[ig15]; \
+  buf->ref = var->p[ig15] + offset + (p_inc * sizeof(CASTTYPE)); \
+  buf->obj.i = *((CASTTYPE*) buf->ref)
 #endif
 
 /****************************************************************
@@ -794,22 +811,23 @@ void G__LD_p1_double(G__value *pbuf,int *psp,long offset,struct G__var_array *va
 void G__LD_pn_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
-  int ary = var->varlabel[ig15][0];                    
-  int paran = var->paran[ig15];                        
-  int p_inc=0;                                         
-  int ig25;                                            
-  ++(*psp);                                            
+  int ary = var->varlabel[ig15][0] /* stride */;
+  int paran = var->paran[ig15];
+  int p_inc=0;
+  int ig25;
+  ++(*psp);
   for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {
-    p_inc += ary*G__int(buf[ig25]);                    
-    ary /= var->varlabel[ig15][ig25+2];                
-  }                                                    
-  buf->tagnum = -1;                                    
-  buf->type = 'n';                                   
-  buf->typenum = var->p_typetable[ig15];               
-  buf->ref = var->p[ig15]+offset+p_inc*sizeof(G__int64); 
-  if(p_inc-1>var->varlabel[ig15][1])                   
-    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);  
-  else                                                 
+    p_inc += ary*G__int(buf[ig25]);
+    ary /= var->varlabel[ig15][ig25+2];
+  }
+  buf->tagnum = -1;
+  buf->type = 'n';
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = var->p[ig15]+offset+p_inc*sizeof(G__int64);
+  // We intentionally allow going one beyond the end.
+  if (p_inc > var->varlabel[ig15][1] /* num of elements */)
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
+  else
     buf->obj.ll = *(G__int64*)buf->ref;
 }
 
@@ -819,22 +837,23 @@ void G__LD_pn_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *
 void G__LD_pn_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
-  int ary = var->varlabel[ig15][0];                    
-  int paran = var->paran[ig15];                        
-  int p_inc=0;                                         
-  int ig25;                                            
-  ++(*psp);                                            
+  int ary = var->varlabel[ig15][0] /* stride */;
+  int paran = var->paran[ig15];
+  int p_inc=0;
+  int ig25;
+  ++(*psp);
   for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {
-    p_inc += ary*G__int(buf[ig25]);                    
-    ary /= var->varlabel[ig15][ig25+2];                
-  }                                                    
-  buf->tagnum = -1;                                    
-  buf->type = 'm';                                   
-  buf->typenum = var->p_typetable[ig15];               
-  buf->ref = var->p[ig15]+offset+p_inc*sizeof(G__uint64); 
-  if(p_inc-1>var->varlabel[ig15][1])                   
-    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);  
-  else                                                 
+    p_inc += ary*G__int(buf[ig25]);
+    ary /= var->varlabel[ig15][ig25+2];
+  }
+  buf->tagnum = -1;
+  buf->type = 'm';
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = var->p[ig15]+offset+p_inc*sizeof(G__uint64);
+  // We intentionally allow going one beyond the end.
+  if (p_inc > var->varlabel[ig15][1] /* num of elements */)
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
+  else
     buf->obj.ull = *(G__uint64*)buf->ref;
 }
 /****************************************************************
@@ -843,22 +862,23 @@ void G__LD_pn_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array 
 void G__LD_pn_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
-  int ary = var->varlabel[ig15][0];                    
-  int paran = var->paran[ig15];                        
-  int p_inc=0;                                         
-  int ig25;                                            
-  ++(*psp);                                            
+  int ary = var->varlabel[ig15][0] /* stride */;
+  int paran = var->paran[ig15];
+  int p_inc=0;
+  int ig25;
+  ++(*psp);
   for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {
-    p_inc += ary*G__int(buf[ig25]);                    
-    ary /= var->varlabel[ig15][ig25+2];                
-  }                                                    
-  buf->tagnum = -1;                                    
-  buf->type = 'q';                                   
-  buf->typenum = var->p_typetable[ig15];               
-  buf->ref = var->p[ig15]+offset+p_inc*sizeof(long double); 
-  if(p_inc-1>var->varlabel[ig15][1])                   
-    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);  
-  else                                                 
+    p_inc += ary*G__int(buf[ig25]);
+    ary /= var->varlabel[ig15][ig25+2];
+  }
+  buf->tagnum = -1;
+  buf->type = 'q';
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = var->p[ig15]+offset+p_inc*sizeof(long double);
+  // We intentionally allow going one beyond the end.
+  if (p_inc > var->varlabel[ig15][1] /* num of elements */)
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
+  else
     buf->obj.ld = *(long double*)buf->ref;
 }
 
@@ -938,7 +958,7 @@ void G__LD_pn_ulong(G__value *pbuf,int *psp,long offset,struct G__var_array *var
 void G__LD_pn_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
-  int ary = var->varlabel[ig15][0];
+  int ary = var->varlabel[ig15][0] /* stride */;
   int paran = var->paran[ig15];
   int p_inc=0;
   int ig25;
@@ -952,7 +972,8 @@ void G__LD_pn_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *v
   buf->typenum = var->p_typetable[ig15];
   buf->ref = var->p[ig15]+offset+p_inc*sizeof(long);
 #ifdef G__TUNEUP_W_SECURITY
-  if(p_inc-1>var->varlabel[ig15][1])
+  // We intentionally allow going one beyond the end.
+  if (p_inc > var->varlabel[ig15][1] /* num of elements */)
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
   else
 #endif
@@ -965,7 +986,7 @@ void G__LD_pn_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *v
 void G__LD_pn_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
-  int ary = var->varlabel[ig15][0];
+  int ary = var->varlabel[ig15][0] /* stride */;
   int paran = var->paran[ig15];
   int p_inc=0;
   int ig25;
@@ -979,7 +1000,8 @@ void G__LD_pn_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *va
   buf->typenum = var->p_typetable[ig15];
   buf->ref = var->p[ig15]+offset+p_inc*G__struct.size[buf->tagnum];
 #ifdef G__TUNEUP_W_SECURITY
-  if(p_inc-1>var->varlabel[ig15][1])
+  // We intentionally allow going one beyond the end.
+  if (p_inc > var->varlabel[ig15][1] /* num of elements */)
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
   else
 #endif
@@ -991,7 +1013,7 @@ void G__LD_pn_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *va
 void G__LD_pn_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
-  int ary = var->varlabel[ig15][0];
+  int ary = var->varlabel[ig15][0] /* stride */;
   int paran = var->paran[ig15];
   int p_inc=0;
   int ig25;
@@ -1005,7 +1027,8 @@ void G__LD_pn_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var
   buf->typenum = var->p_typetable[ig15];
   buf->ref = var->p[ig15]+offset+p_inc*sizeof(float);
 #ifdef G__TUNEUP_W_SECURITY
-  if(p_inc-1>var->varlabel[ig15][1])
+  // We intentionally allow going one beyond the end.
+  if (p_inc > var->varlabel[ig15][1] /* num of elements */)
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
   else
 #endif
@@ -1017,7 +1040,7 @@ void G__LD_pn_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var
 void G__LD_pn_double(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
-  int ary = var->varlabel[ig15][0];
+  int ary = var->varlabel[ig15][0] /* stride */;
   int paran = var->paran[ig15];
   int p_inc=0;
   int ig25;
@@ -1031,7 +1054,8 @@ void G__LD_pn_double(G__value *pbuf,int *psp,long offset,struct G__var_array *va
   buf->typenum = var->p_typetable[ig15];
   buf->ref = var->p[ig15]+offset+p_inc*sizeof(double);
 #ifdef G__TUNEUP_W_SECURITY
-  if(p_inc-1>var->varlabel[ig15][1])
+  // We intentionally allow going one beyond the end.
+  if (p_inc > var->varlabel[ig15][1] /* num of elements */)
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
   else
 #endif
@@ -1059,11 +1083,11 @@ void G__LD_pn_double(G__value *pbuf,int *psp,long offset,struct G__var_array *va
 ****************************************************************/
 void G__LD_P10_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *buf= &pbuf[*psp-1];  
-  buf->tagnum = -1;              
-  buf->type = 'n';               
-  buf->typenum = var->p_typetable[ig15];  
-  buf->ref = *(long*)(var->p[ig15]+offset)+buf->obj.i*sizeof(G__int64); 
+  G__value *buf= &pbuf[*psp-1];
+  buf->tagnum = -1;
+  buf->type = 'n';
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = *(long*)(var->p[ig15]+offset)+buf->obj.i*sizeof(G__int64);
   buf->obj.ll = *(G__int64*)buf->ref;
 }
 /****************************************************************
@@ -1071,10 +1095,10 @@ void G__LD_P10_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array 
 ****************************************************************/
 void G__LD_P10_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *buf= &pbuf[*psp-1];  
-  buf->tagnum = -1;              
-  buf->type = 'm';               
-  buf->typenum = var->p_typetable[ig15];  
+  G__value *buf= &pbuf[*psp-1];
+  buf->tagnum = -1;
+  buf->type = 'm';
+  buf->typenum = var->p_typetable[ig15];
   buf->ref=*(long*)(var->p[ig15]+offset)+buf->obj.i*sizeof(G__uint64);
   buf->obj.ull = *(G__uint64*)buf->ref;
 }
@@ -1083,11 +1107,11 @@ void G__LD_P10_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array
 ****************************************************************/
 void G__LD_P10_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *buf= &pbuf[*psp-1];  
-  buf->tagnum = -1;              
-  buf->type = 'q';               
-  buf->typenum = var->p_typetable[ig15];  
-  buf->ref = *(long*)(var->p[ig15]+offset)+buf->obj.i*sizeof(long double); 
+  G__value *buf= &pbuf[*psp-1];
+  buf->tagnum = -1;
+  buf->type = 'q';
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = *(long*)(var->p[ig15]+offset)+buf->obj.i*sizeof(long double);
   buf->obj.ld = *(long double*)buf->ref;
 }
 
@@ -1137,11 +1161,11 @@ void G__LD_P10_ushort(G__value *pbuf,int *psp,long offset,struct G__var_array *v
 void G__LD_P10_int(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   /* G__ASM_GET_INT_P10(int,'i'); */
-  G__value *buf= &pbuf[*psp-1];   
-  buf->tagnum = -1;               
-  buf->type = 'i';              
-  buf->typenum = var->p_typetable[ig15];   
-  buf->ref = *(long*)(var->p[ig15]+offset)+buf->obj.i*sizeof(int); 
+  G__value *buf= &pbuf[*psp-1];
+  buf->tagnum = -1;
+  buf->type = 'i';
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = *(long*)(var->p[ig15]+offset)+buf->obj.i*sizeof(int);
   buf->obj.i = *(int*)buf->ref;
 }
 
@@ -1254,7 +1278,7 @@ void G__ST_p0_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *
   default:
     llval = (G__int64)val->obj.i;
     break;
-  }  
+  }
   *(G__int64*)(var->p[ig15]+offset)=llval;
 }
 
@@ -1282,7 +1306,7 @@ void G__ST_p0_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array 
   default:
     ullval = (G__uint64)val->obj.i;
     break;
-  }  
+  }
   *(G__uint64*)(var->p[ig15]+offset)=ullval;
 }
 /****************************************************************
@@ -1313,7 +1337,7 @@ void G__ST_p0_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array
   default:
     ldval = (long double)val->obj.i;
     break;
-  }  
+  }
   *(long double*)(var->p[ig15]+offset)=ldval;
 }
 
@@ -1436,20 +1460,23 @@ void G__ST_p0_double(G__value *pbuf,int *psp,long offset,struct G__var_array *va
 * G__ASM_ASSIGN_INT_P1
 ****************************************************************/
 #ifdef G__TUNEUP_W_SECURITY
-#define G__ASM_ASSIGN_INT_P1(casttype)                           \
-  G__value *val = &pbuf[*psp-1];                                 \
-  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); /*1969*/ \
-  if(val->obj.i>var->varlabel[ig15][1])                          \
-    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);  \
-  else                                                           \
-    *(casttype*)(var->p[ig15]+offset+val->obj.i*sizeof(casttype)) \
-            = (casttype)G__int(pbuf[*psp-2]);                    \
+#define G__ASM_ASSIGN_INT_P1(CASTTYPE) \
+  G__value* val = &pbuf[*psp-1]; \
+  if ((val->type == 'd') || (val->type == 'f')) { \
+    G__nonintarrayindex(var, ig15); \
+  } \
+  /* We intentionally allow going one beyond the end. */ \
+  if (val->obj.i > var->varlabel[ig15][1] /* num of elements */) { \
+    G__arrayindexerror(ig15, var, var->varnamebuf[ig15], val->obj.i); \
+  } \
+  else { \
+    *((CASTTYPE*) (var->p[ig15] + offset + (val->obj.i * sizeof(CASTTYPE)))) = (CASTTYPE) G__int(pbuf[*psp-2]); \
+  } \
   --(*psp)
 #else
-#define G__ASM_ASSIGN_INT_P1(casttype)                           \
-  G__value *val = &pbuf[*psp-1];                                 \
-  *(casttype*)(var->p[ig15]+offset+val->obj.i*sizeof(casttype))  \
-            = (casttype)G__int(pbuf[*psp-2]);                    \
+#define G__ASM_ASSIGN_INT_P1(CASTTYPE) \
+  G__value* val = &pbuf[*psp-1]; \
+  *((CASTTYPE*) (var->p[ig15] + offset + (val->obj.i * sizeof(CASTTYPE)))) = (CASTTYPE) G__int(pbuf[*psp-2]); \
   --(*psp)
 #endif
 
@@ -1458,13 +1485,14 @@ void G__ST_p0_double(G__value *pbuf,int *psp,long offset,struct G__var_array *va
 ****************************************************************/
 void G__ST_p1_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *val = &pbuf[*psp-1];                                 
-  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); /*1969*/ 
-  if(val->obj.i>var->varlabel[ig15][1])                          
-    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);  
-  else                                                           
-    *(G__int64*)(var->p[ig15]+offset+val->obj.i*sizeof(G__int64)) 
-            = (G__int64)G__Longlong(pbuf[*psp-2]);                    
+  G__value *val = &pbuf[*psp-1];
+  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); /*1969*/
+  // We intentionally allow going one beyond the end.
+  if (val->obj.i > var->varlabel[ig15][1] /* num of elements */)
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);
+  else
+    *(G__int64*)(var->p[ig15]+offset+val->obj.i*sizeof(G__int64))
+            = (G__int64)G__Longlong(pbuf[*psp-2]);
   --(*psp);
 }
 /****************************************************************
@@ -1472,13 +1500,14 @@ void G__ST_p1_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *
 ****************************************************************/
 void G__ST_p1_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *val = &pbuf[*psp-1];                                 
-  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); /*1969*/ 
-  if(val->obj.i>var->varlabel[ig15][1])                          
-    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);  
-  else                                                           
-    *(G__uint64*)(var->p[ig15]+offset+val->obj.i*sizeof(G__uint64)) 
-            = (G__uint64)G__ULonglong(pbuf[*psp-2]); 
+  G__value *val = &pbuf[*psp-1];
+  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); /*1969*/
+  // We intentionally allow going one beyond the end.
+  if (val->obj.i > var->varlabel[ig15][1] /* num of elements */)
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);
+  else
+    *(G__uint64*)(var->p[ig15]+offset+val->obj.i*sizeof(G__uint64))
+            = (G__uint64)G__ULonglong(pbuf[*psp-2]);
   --(*psp);
 }
 /****************************************************************
@@ -1486,13 +1515,14 @@ void G__ST_p1_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array 
 ****************************************************************/
 void G__ST_p1_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *val = &pbuf[*psp-1];                                 
-  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); /*1969*/ 
-  if(val->obj.i>var->varlabel[ig15][1])                          
-    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);  
-  else                                                           
-    *(long double*)(var->p[ig15]+offset+val->obj.i*sizeof(long double)) 
-            = (long double)G__Longdouble(pbuf[*psp-2]); 
+  G__value *val = &pbuf[*psp-1];
+  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); /*1969*/
+  // We intentionally allow going one beyond the end.
+  if (val->obj.i > var->varlabel[ig15][1] /* num of elements */)
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);
+  else
+    *(long double*)(var->p[ig15]+offset+val->obj.i*sizeof(long double))
+            = (long double)G__Longdouble(pbuf[*psp-2]);
   --(*psp);
 }
 
@@ -1571,8 +1601,9 @@ void G__ST_p1_ulong(G__value *pbuf,int *psp,long offset,struct G__var_array *var
 void G__ST_p1_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];
-  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); 
-  if(val->obj.i>var->varlabel[ig15][1]) {
+  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15);
+  // We intentionally allow going one beyond the end.
+  if (val->obj.i > var->varlabel[ig15][1] /* num of elements */) {
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);
   }
   else {
@@ -1596,9 +1627,10 @@ void G__ST_p1_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *v
 void G__ST_p1_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];
-  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); 
+  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15);
 #ifdef G__TUNEUP_W_SECURITY
-  if(val->obj.i>var->varlabel[ig15][1])
+  // We intentionally allow going one beyond the end.
+  if (val->obj.i > var->varlabel[ig15][1] /* num of elements */)
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);
   else
 #endif
@@ -1613,9 +1645,10 @@ void G__ST_p1_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *va
 void G__ST_p1_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];
-  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); 
+  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15);
 #ifdef G__TUNEUP_W_SECURITY
-  if(val->obj.i>var->varlabel[ig15][1])
+  // We intentionally allow going one beyond the end.
+  if (val->obj.i > var->varlabel[ig15][1] /* num of elements */)
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);
   else
 #endif
@@ -1629,9 +1662,10 @@ void G__ST_p1_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var
 void G__ST_p1_double(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *val = &pbuf[*psp-1];
-  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); 
+  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15);
 #ifdef G__TUNEUP_W_SECURITY
-  if(val->obj.i>var->varlabel[ig15][1])
+  // We intentionally allow going one beyond the end.
+  if (val->obj.i > var->varlabel[ig15][1] /* num of elements */)
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);
   else
 #endif
@@ -1648,34 +1682,35 @@ void G__ST_p1_double(G__value *pbuf,int *psp,long offset,struct G__var_array *va
 * G__ASM_ASSIGN_INT_PN
 ****************************************************************/
 #ifdef G__TUNEUP_W_SECURITY
-#define G__ASM_ASSIGN_INT_PN(casttype)                           \
-  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];          \
-  int ary = var->varlabel[ig15][0];                              \
-  int paran = var->paran[ig15];                                  \
-  int p_inc=0;                                                   \
-  int ig25;                                                      \
-  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {         \
-    p_inc += ary*G__int(buf[ig25]);                              \
-    ary /= var->varlabel[ig15][ig25+2];                          \
-  }                                                              \
-  if(p_inc>var->varlabel[ig15][1])                               \
-    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);    \
-  else                                                           \
-    *(casttype*)(var->p[ig15]+offset+p_inc*sizeof(casttype))     \
-            = (casttype)G__int(pbuf[*psp-1])
+#define G__ASM_ASSIGN_INT_PN(CASTTYPE) \
+  *psp = *psp-var->paran[ig15]; \
+  G__value* buf= &pbuf[*psp]; \
+  int ary = var->varlabel[ig15][0] /* stride */; \
+  int paran = var->paran[ig15]; \
+  int p_inc = 0; \
+  int ig25; \
+  for(ig25 = 0; ig25 < paran && ig25 < var->paran[ig15]; ++ig25) { \
+    p_inc += ary * G__int(buf[ig25]); \
+    ary /= var->varlabel[ig15][ig25+2]; \
+  } \
+  /* We intentionally allow going one beyond the end. */ \
+  if (p_inc > var->varlabel[ig15][1] /* num of elements */) \
+    G__arrayindexerror(ig15, var, var->varnamebuf[ig15], p_inc); \
+  else \
+    *((CASTTYPE*) (var->p[ig15] + offset + (p_inc * sizeof(CASTTYPE)))) = (CASTTYPE) G__int(pbuf[*psp-1])
 #else
-#define G__ASM_ASSIGN_INT_PN(casttype)                           \
-  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];          \
-  int ary = var->varlabel[ig15][0];                              \
-  int paran = var->paran[ig15];                                  \
-  int p_inc=0;                                                   \
-  int ig25;                                                      \
-  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {         \
-    p_inc += ary*G__int(buf[ig25]);                              \
-    ary /= var->varlabel[ig15][ig25+2];                          \
-  }                                                              \
-  *(casttype*)(var->p[ig15]+offset+p_inc*sizeof(casttype))       \
-            = (casttype)G__int(pbuf[*psp-1])
+#define G__ASM_ASSIGN_INT_PN(CASTTYPE) \
+  *psp = *psp-var->paran[ig15]; \
+  G__value* buf = &pbuf[*psp]; \
+  int ary = var->varlabel[ig15][0]; \
+  int paran = var->paran[ig15]; \
+  int p_inc = 0; \
+  int ig25; \
+  for (ig25 = 0; ig25 < paran && ig25 < var->paran[ig15]; ++ig25) { \
+    p_inc += ary * G__int(buf[ig25]); \
+    ary /= var->varlabel[ig15][ig25+2]; \
+  } \
+  *((CASTTYPE*) (var->p[ig15] + offset + (p_inc * sizeof(CASTTYPE)))) = (CASTTYPE) G__int(pbuf[*psp-1])
 #endif
 
 /****************************************************************
@@ -1683,19 +1718,20 @@ void G__ST_p1_double(G__value *pbuf,int *psp,long offset,struct G__var_array *va
 ****************************************************************/
 void G__ST_pn_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];          
-  int ary = var->varlabel[ig15][0];                              
-  int paran = var->paran[ig15];                                  
-  int p_inc=0;                                                   
-  int ig25;                                                      
-  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {         
-    p_inc += ary*G__int(buf[ig25]);                              
-    ary /= var->varlabel[ig15][ig25+2];                          
-  }                                                              
-  if(p_inc>var->varlabel[ig15][1])                               
-    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);    
-  else                                                           
-    *(G__int64*)(var->p[ig15]+offset+p_inc*sizeof(G__int64))   
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
+  int ary = var->varlabel[ig15][0] /* stride */;
+  int paran = var->paran[ig15];
+  int p_inc=0;
+  int ig25;
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {
+    p_inc += ary*G__int(buf[ig25]);
+    ary /= var->varlabel[ig15][ig25+2];
+  }
+  // We intentionally allow going one beyond the end.
+  if (p_inc > var->varlabel[ig15][1] /* num of elements */)
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
+  else
+    *(G__int64*)(var->p[ig15]+offset+p_inc*sizeof(G__int64))
       = (G__int64)G__Longlong(pbuf[*psp-1]);
 }
 
@@ -1704,19 +1740,20 @@ void G__ST_pn_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *
 ****************************************************************/
 void G__ST_pn_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];          
-  int ary = var->varlabel[ig15][0];                              
-  int paran = var->paran[ig15];                                  
-  int p_inc=0;                                                   
-  int ig25;                                                      
-  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {         
-    p_inc += ary*G__int(buf[ig25]);                              
-    ary /= var->varlabel[ig15][ig25+2];                          
-  }                                                              
-  if(p_inc>var->varlabel[ig15][1])                               
-    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);    
-  else                                                           
-    *(G__uint64*)(var->p[ig15]+offset+p_inc*sizeof(G__uint64))   
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
+  int ary = var->varlabel[ig15][0] /* stride */;
+  int paran = var->paran[ig15];
+  int p_inc=0;
+  int ig25;
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {
+    p_inc += ary*G__int(buf[ig25]);
+    ary /= var->varlabel[ig15][ig25+2];
+  }
+  // We intentionally allow going one beyond the end.
+  if (p_inc > var->varlabel[ig15][1] /* num of elements */)
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
+  else
+    *(G__uint64*)(var->p[ig15]+offset+p_inc*sizeof(G__uint64))
       = (G__uint64)G__ULonglong(pbuf[*psp-1]);
 }
 
@@ -1725,19 +1762,20 @@ void G__ST_pn_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array 
 ****************************************************************/
 void G__ST_pn_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];          
-  int ary = var->varlabel[ig15][0];                              
-  int paran = var->paran[ig15];                                  
-  int p_inc=0;                                                   
-  int ig25;                                                      
-  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {         
-    p_inc += ary*G__int(buf[ig25]);                              
-    ary /= var->varlabel[ig15][ig25+2];                          
-  }                                                              
-  if(p_inc>var->varlabel[ig15][1])                               
-    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);    
-  else                                                           
-    *(long double*)(var->p[ig15]+offset+p_inc*sizeof(long double))   
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
+  int ary = var->varlabel[ig15][0] /* stride */;
+  int paran = var->paran[ig15];
+  int p_inc=0;
+  int ig25;
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {
+    p_inc += ary*G__int(buf[ig25]);
+    ary /= var->varlabel[ig15][ig25+2];
+  }
+  // We intentionally allow going one beyond the end.
+  if (p_inc > var->varlabel[ig15][1] /* num of elements */)
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
+  else
+    *(long double*)(var->p[ig15]+offset+p_inc*sizeof(long double))
       = (long double)G__Longdouble(pbuf[*psp-1]);
 }
 
@@ -1817,7 +1855,7 @@ void G__ST_pn_ulong(G__value *pbuf,int *psp,long offset,struct G__var_array *var
 void G__ST_pn_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
-  int ary = var->varlabel[ig15][0];
+  int ary = var->varlabel[ig15][0] /* stride */;
   int paran = var->paran[ig15];
   int p_inc=0;
   int ig25;
@@ -1825,7 +1863,8 @@ void G__ST_pn_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *v
     p_inc += ary*G__int(buf[ig25]);
     ary /= var->varlabel[ig15][ig25+2];
   }
-  if(p_inc>var->varlabel[ig15][1]) {
+  // We intentionally allow going one beyond the end.
+  if (p_inc > var->varlabel[ig15][1] /* num of elements */) {
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
   }
   else {
@@ -1848,7 +1887,7 @@ void G__ST_pn_pointer(G__value *pbuf,int *psp,long offset,struct G__var_array *v
 void G__ST_pn_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
-  int ary = var->varlabel[ig15][0];
+  int ary = var->varlabel[ig15][0] /* stride */;
   int paran = var->paran[ig15];
   int p_inc=0;
   int ig25;
@@ -1857,7 +1896,8 @@ void G__ST_pn_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *va
     ary /= var->varlabel[ig15][ig25+2];
   }
 #ifdef G__TUNEUP_W_SECURITY
-  if(p_inc>var->varlabel[ig15][1])
+  // We intentionally allow going one beyond the end.
+  if (p_inc > var->varlabel[ig15][1] /* num of elements */)
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
   else
 #endif
@@ -1871,7 +1911,7 @@ void G__ST_pn_struct(G__value *pbuf,int *psp,long offset,struct G__var_array *va
 void G__ST_pn_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
-  int ary = var->varlabel[ig15][0];
+  int ary = var->varlabel[ig15][0] /* stride */;
   int paran = var->paran[ig15];
   int p_inc=0;
   int ig25;
@@ -1880,7 +1920,8 @@ void G__ST_pn_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var
     ary /= var->varlabel[ig15][ig25+2];
   }
 #ifdef G__TUNEUP_W_SECURITY
-  if(p_inc>var->varlabel[ig15][1])
+  // We intentionally allow going one beyond the end.
+  if (p_inc > var->varlabel[ig15][1] /* num of elements */)
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
   else
 #endif
@@ -1893,7 +1934,7 @@ void G__ST_pn_float(G__value *pbuf,int *psp,long offset,struct G__var_array *var
 void G__ST_pn_double(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
   G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
-  int ary = var->varlabel[ig15][0];
+  int ary = var->varlabel[ig15][0] /* stride */;
   int paran = var->paran[ig15];
   int p_inc=0;
   int ig25;
@@ -1902,7 +1943,8 @@ void G__ST_pn_double(G__value *pbuf,int *psp,long offset,struct G__var_array *va
     ary /= var->varlabel[ig15][ig25+2];
   }
 #ifdef G__TUNEUP_W_SECURITY
-  if(p_inc>var->varlabel[ig15][1])
+  // We intentionally allow going one beyond the end.
+  if (p_inc > var->varlabel[ig15][1] /* num of elements */)
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
   else
 #endif
@@ -1928,8 +1970,8 @@ void G__ST_pn_double(G__value *pbuf,int *psp,long offset,struct G__var_array *va
 ****************************************************************/
 void G__ST_P10_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *val = &pbuf[*psp-1];                                          
-  *(G__int64*)(*(long*)(var->p[ig15]+offset)+val->obj.i*sizeof(G__int64)) 
+  G__value *val = &pbuf[*psp-1];
+  *(G__int64*)(*(long*)(var->p[ig15]+offset)+val->obj.i*sizeof(G__int64))
             = (G__int64)G__Longlong(pbuf[*psp-2]);
   --(*psp);
 }
@@ -1938,8 +1980,8 @@ void G__ST_P10_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array 
 ****************************************************************/
 void G__ST_P10_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *val = &pbuf[*psp-1];                                          
-  *(G__uint64*)(*(long*)(var->p[ig15]+offset)+val->obj.i*sizeof(G__uint64)) 
+  G__value *val = &pbuf[*psp-1];
+  *(G__uint64*)(*(long*)(var->p[ig15]+offset)+val->obj.i*sizeof(G__uint64))
             = (G__uint64)G__ULonglong(pbuf[*psp-2]);
   --(*psp);
 }
@@ -1948,8 +1990,8 @@ void G__ST_P10_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array
 ****************************************************************/
 void G__ST_P10_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *val = &pbuf[*psp-1];                                          
-  *(long double*)(*(long*)(var->p[ig15]+offset)+val->obj.i*sizeof(long double)) 
+  G__value *val = &pbuf[*psp-1];
+  *(long double*)(*(long*)(var->p[ig15]+offset)+val->obj.i*sizeof(long double))
             = (long double)G__Longdouble(pbuf[*psp-2]);
   --(*psp);
 }
@@ -2086,11 +2128,11 @@ void G__ST_P10_double(G__value *pbuf,int *psp,long offset,struct G__var_array *v
 ****************************************************************/
 void G__LD_Rp0_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *buf= &pbuf[(*psp)++];         
-  buf->tagnum = -1;                       
-  buf->type = 'n';                      
-  buf->typenum = var->p_typetable[ig15];  
-  buf->ref = *(long*)(var->p[ig15]+offset);  
+  G__value *buf= &pbuf[(*psp)++];
+  buf->tagnum = -1;
+  buf->type = 'n';
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = *(long*)(var->p[ig15]+offset);
   buf->obj.ll = *(G__int64*)buf->ref;
 }
 /****************************************************************
@@ -2098,11 +2140,11 @@ void G__LD_Rp0_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array 
 ****************************************************************/
 void G__LD_Rp0_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *buf= &pbuf[(*psp)++];         
-  buf->tagnum = -1;                       
-  buf->type = 'm';                      
-  buf->typenum = var->p_typetable[ig15];  
-  buf->ref = *(long*)(var->p[ig15]+offset);  
+  G__value *buf= &pbuf[(*psp)++];
+  buf->tagnum = -1;
+  buf->type = 'm';
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = *(long*)(var->p[ig15]+offset);
   buf->obj.ull = *(G__uint64*)buf->ref;
 }
 /****************************************************************
@@ -2110,11 +2152,11 @@ void G__LD_Rp0_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array
 ****************************************************************/
 void G__LD_Rp0_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *buf= &pbuf[(*psp)++];         
-  buf->tagnum = -1;                       
-  buf->type = 'q';                      
-  buf->typenum = var->p_typetable[ig15];  
-  buf->ref = *(long*)(var->p[ig15]+offset);  
+  G__value *buf= &pbuf[(*psp)++];
+  buf->tagnum = -1;
+  buf->type = 'q';
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = *(long*)(var->p[ig15]+offset);
   buf->obj.ld = *(long double*)buf->ref;
 }
 
@@ -2259,8 +2301,8 @@ void G__LD_Rp0_double(G__value *pbuf,int *psp,long offset,struct G__var_array *v
 ****************************************************************/
 void G__ST_Rp0_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *val = &pbuf[*psp-1];                    
-  long adr = *(long*)(var->p[ig15]+offset);         
+  G__value *val = &pbuf[*psp-1];
+  long adr = *(long*)(var->p[ig15]+offset);
   G__int64 llval;
   switch(val->type) {
   case 'd':
@@ -2279,7 +2321,7 @@ void G__ST_Rp0_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array 
   default:
     llval = (G__int64)val->obj.i;
     break;
-  }  
+  }
   *(G__int64*)adr=llval;
 }
 
@@ -2288,8 +2330,8 @@ void G__ST_Rp0_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array 
 ****************************************************************/
 void G__ST_Rp0_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *val = &pbuf[*psp-1];                    
-  long adr = *(long*)(var->p[ig15]+offset);         
+  G__value *val = &pbuf[*psp-1];
+  long adr = *(long*)(var->p[ig15]+offset);
   G__uint64 ullval;
   switch(val->type) {
   case 'd':
@@ -2308,7 +2350,7 @@ void G__ST_Rp0_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array
   default:
     ullval = (G__uint64)val->obj.i;
     break;
-  }  
+  }
   *(G__uint64*)adr=ullval;
 }
 /****************************************************************
@@ -2316,8 +2358,8 @@ void G__ST_Rp0_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array
 ****************************************************************/
 void G__ST_Rp0_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *val = &pbuf[*psp-1];                    
-  long adr = *(long*)(var->p[ig15]+offset);         
+  G__value *val = &pbuf[*psp-1];
+  long adr = *(long*)(var->p[ig15]+offset);
   long double ldval;
   switch(val->type) {
   case 'd':
@@ -2340,7 +2382,7 @@ void G__ST_Rp0_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_arra
   default:
     ldval = (long double)val->obj.i;
     break;
-  }  
+  }
   *(long double*)adr=ldval;
 }
 
@@ -2469,11 +2511,11 @@ void G__ST_Rp0_double(G__value *pbuf,int *psp,long offset,struct G__var_array *v
 ****************************************************************/
 void G__LD_RP0_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *buf= &pbuf[(*psp)++];         
-  buf->tagnum = -1;                       
-  buf->type = 'n';                      
-  buf->typenum = var->p_typetable[ig15];  
-  buf->ref = var->p[ig15]+offset;         
+  G__value *buf= &pbuf[(*psp)++];
+  buf->tagnum = -1;
+  buf->type = 'n';
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = var->p[ig15]+offset;
   buf->obj.ll = *(long*)buf->ref;
 }
 /****************************************************************
@@ -2481,11 +2523,11 @@ void G__LD_RP0_longlong(G__value *pbuf,int *psp,long offset,struct G__var_array 
 ****************************************************************/
 void G__LD_RP0_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *buf= &pbuf[(*psp)++];         
-  buf->tagnum = -1;                       
-  buf->type = 'm';                      
-  buf->typenum = var->p_typetable[ig15];  
-  buf->ref = var->p[ig15]+offset;         
+  G__value *buf= &pbuf[(*psp)++];
+  buf->tagnum = -1;
+  buf->type = 'm';
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = var->p[ig15]+offset;
   buf->obj.ull = *(long*)buf->ref;
 }
 /****************************************************************
@@ -2493,11 +2535,11 @@ void G__LD_RP0_ulonglong(G__value *pbuf,int *psp,long offset,struct G__var_array
 ****************************************************************/
 void G__LD_RP0_longdouble(G__value *pbuf,int *psp,long offset,struct G__var_array *var,long ig15)
 {
-  G__value *buf= &pbuf[(*psp)++];         
-  buf->tagnum = -1;                       
-  buf->type = 'q';                      
-  buf->typenum = var->p_typetable[ig15];  
-  buf->ref = var->p[ig15]+offset;         
+  G__value *buf= &pbuf[(*psp)++];
+  buf->tagnum = -1;
+  buf->type = 'q';
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = var->p[ig15]+offset;
   buf->obj.ld = *(long*)buf->ref;
 }
 
@@ -2948,7 +2990,7 @@ void G__OP2_plus(G__value *bufm1,G__value *bufm2)
     bufm2->obj.ull=G__ULonglong(*bufm2)+G__ULonglong(*bufm1);
     bufm2->type='m';
   }
-  else 
+  else
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d = bufm2->obj.d + bufm1->obj.d;
@@ -2963,7 +3005,7 @@ void G__OP2_plus(G__value *bufm1,G__value *bufm2)
     bufm2->tagnum = bufm2->typenum = -1;
   }
   else if(G__isdoubleM(bufm1)) {
-    if(G__isunsignedM(bufm2)) 
+    if(G__isunsignedM(bufm2))
       bufm2->obj.d = (double)bufm2->obj.ulo + bufm1->obj.d;
     else
       bufm2->obj.d = (double)bufm2->obj.i + bufm1->obj.d;
@@ -2982,7 +3024,7 @@ void G__OP2_plus(G__value *bufm1,G__value *bufm2)
     bufm2->typenum = bufm1->typenum;
   }
   else if(G__isunsignedM(bufm1)) {
-    if(G__isunsignedM(bufm2)) 
+    if(G__isunsignedM(bufm2))
       bufm2->obj.ulo = bufm2->obj.ulo + bufm1->obj.ulo;
     else
       bufm2->obj.ulo = bufm2->obj.i + bufm1->obj.ulo;
@@ -3014,7 +3056,7 @@ void G__OP2_minus(G__value *bufm1,G__value *bufm2)
     bufm2->obj.ull=G__ULonglong(*bufm2)-G__ULonglong(*bufm1);
     bufm2->type='m';
   }
-  else 
+  else
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d = bufm2->obj.d - bufm1->obj.d;
@@ -3029,7 +3071,7 @@ void G__OP2_minus(G__value *bufm1,G__value *bufm2)
     bufm2->tagnum = bufm2->typenum = -1;
   }
   else if(G__isdoubleM(bufm1)) {
-    if(G__isunsignedM(bufm2)) 
+    if(G__isunsignedM(bufm2))
       bufm2->obj.d = (double)bufm2->obj.ulo - bufm1->obj.d;
     else
       bufm2->obj.d = (double)bufm2->obj.i - bufm1->obj.d;
@@ -3054,7 +3096,7 @@ void G__OP2_minus(G__value *bufm1,G__value *bufm2)
     bufm2->typenum = bufm1->typenum;
   }
   else if(G__isunsignedM(bufm1)) {
-    if(G__isunsignedM(bufm2)) 
+    if(G__isunsignedM(bufm2))
       bufm2->obj.ulo = bufm2->obj.ulo - bufm1->obj.ulo;
     else
       bufm2->obj.ulo = bufm2->obj.i - bufm1->obj.ulo;
@@ -3086,7 +3128,7 @@ void G__OP2_multiply(G__value *bufm1,G__value *bufm2)
     bufm2->obj.ull=G__ULonglong(*bufm2)*G__ULonglong(*bufm1);
     bufm2->type='m';
   }
-  else 
+  else
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d = bufm2->obj.d * bufm1->obj.d;
@@ -3100,14 +3142,14 @@ void G__OP2_multiply(G__value *bufm1,G__value *bufm2)
     bufm2->type = 'd';
   }
   else if(G__isdoubleM(bufm1)) {
-    if(G__isunsignedM(bufm2)) 
+    if(G__isunsignedM(bufm2))
       bufm2->obj.d = (double)bufm2->obj.ulo * bufm1->obj.d;
     else
       bufm2->obj.d = (double)bufm2->obj.i * bufm1->obj.d;
     bufm2->type = 'd';
   }
   else if(G__isunsignedM(bufm1)) {
-    if(G__isunsignedM(bufm2)) 
+    if(G__isunsignedM(bufm2))
       bufm2->obj.ulo = bufm2->obj.ulo * bufm1->obj.ulo;
     else
       bufm2->obj.ulo = bufm2->obj.i * bufm1->obj.ulo;
@@ -3135,7 +3177,7 @@ void G__OP2_modulus(G__value *bufm1,G__value *bufm2)
     bufm2->obj.ull=G__ULonglong(*bufm2)%G__ULonglong(*bufm1);
     bufm2->type='m';
   }
-  else 
+  else
 #ifdef G__TUNEUP_W_SECURITY
   if(0==bufm1->obj.i) {
     G__genericerror("Error: operator '%%' divided by zero");
@@ -3143,7 +3185,7 @@ void G__OP2_modulus(G__value *bufm1,G__value *bufm2)
   }
 #endif
   if(G__isunsignedM(bufm1)) {
-    if(G__isunsignedM(bufm2)) 
+    if(G__isunsignedM(bufm2))
       bufm2->obj.ulo = bufm2->obj.ulo % bufm1->obj.ulo;
     else
       bufm2->obj.ulo = bufm2->obj.i % bufm1->obj.ulo;
@@ -3180,7 +3222,7 @@ void G__OP2_divide(G__value *bufm1,G__value *bufm2)
     bufm2->obj.ull=G__ULonglong(*bufm2)/G__ULonglong(*bufm1);
     bufm2->type='m';
   }
-  else 
+  else
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
 #ifdef G__TUNEUP_W_SECURITY
@@ -3198,7 +3240,7 @@ void G__OP2_divide(G__value *bufm1,G__value *bufm2)
         return;
       }
 #endif
-      if(G__isunsignedM(bufm1)) 
+      if(G__isunsignedM(bufm1))
         bufm2->obj.d = bufm2->obj.d / (double)bufm1->obj.ulo;
       else
         bufm2->obj.d = bufm2->obj.d / (double)bufm1->obj.i;
@@ -3212,7 +3254,7 @@ void G__OP2_divide(G__value *bufm1,G__value *bufm2)
       return;
     }
 #endif
-    if(G__isunsignedM(bufm2)) 
+    if(G__isunsignedM(bufm2))
       bufm2->obj.d = (double)bufm2->obj.ulo / bufm1->obj.d;
     else
       bufm2->obj.d = (double)bufm2->obj.i / bufm1->obj.d;
@@ -3225,7 +3267,7 @@ void G__OP2_divide(G__value *bufm1,G__value *bufm2)
       return;
     }
 #endif
-    if(G__isunsignedM(bufm2)) 
+    if(G__isunsignedM(bufm2))
       bufm2->obj.ulo = bufm2->obj.ulo / bufm1->obj.ulo;
     else
       bufm2->obj.ulo = bufm2->obj.i / bufm1->obj.ulo;
@@ -3436,7 +3478,7 @@ void G__OP2_addassign(G__value *bufm1,G__value *bufm2)
     bufm2->type='m';
     *(G__uint64*)bufm2->ref = bufm2->obj.ull;
   }
-  else 
+  else
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d += bufm1->obj.d;
@@ -3484,7 +3526,7 @@ void G__OP2_subassign(G__value *bufm1,G__value *bufm2)
     bufm2->type='m';
     *(G__uint64*)bufm2->ref = bufm2->obj.ull;
   }
-  else 
+  else
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d -= bufm1->obj.d;
@@ -3537,7 +3579,7 @@ void G__OP2_mulassign(G__value *bufm1,G__value *bufm2)
     bufm2->type='m';
     *(G__uint64*)bufm2->ref = bufm2->obj.ull;
   }
-  else 
+  else
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d *= bufm1->obj.d;
@@ -3573,7 +3615,7 @@ void G__OP2_modassign(G__value *bufm1,G__value *bufm2)
     bufm2->type='m';
     *(G__uint64*)bufm2->ref = bufm2->obj.ull;
   }
-  else 
+  else
 #ifdef G__TUNEUP_W_SECURITY
   if(0==bufm1->obj.i) {
     G__genericerror("Error: operator '%%' divided by zero");
@@ -3619,7 +3661,7 @@ void G__OP2_divassign(G__value *bufm1,G__value *bufm2)
     bufm2->type='m';
     *(G__uint64*)bufm2->ref = bufm2->obj.ull;
   }
-  else 
+  else
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
 #ifdef G__TUNEUP_W_SECURITY
@@ -4072,7 +4114,7 @@ void G__OP1_minus(G__value *pbuf)
 /******************************************************************
 * G__suspendbytecode()
 ******************************************************************/
-void G__suspendbytecode() 
+void G__suspendbytecode()
 {
   if(G__asm_dbg && G__asm_noverflow) {
     if(G__dispmsg>=G__DISPNOTE) {
@@ -4085,7 +4127,7 @@ void G__suspendbytecode()
 /******************************************************************
 * G__resetbytecode()
 ******************************************************************/
-void G__resetbytecode() 
+void G__resetbytecode()
 {
   if(G__asm_dbg && G__asm_noverflow) {
     if(G__dispmsg>=G__DISPNOTE) {
@@ -4099,11 +4141,11 @@ void G__resetbytecode()
 /******************************************************************
 * G__abortbytecode()
 ******************************************************************/
-void G__abortbytecode() 
+void G__abortbytecode()
 {
   if(G__asm_dbg && G__asm_noverflow) {
     if(G__dispmsg>=G__DISPNOTE) {
-      if(0==G__xrefflag) 
+      if(0==G__xrefflag)
         G__fprinterr(G__serr,"Note: Bytecode compiler stops at this line. Enclosing loop or function may be slow %d"
                      ,G__asm_noverflow);
       else
@@ -4196,10 +4238,10 @@ int G__asm_clear()
   /* Issue, value of G__CL must be unique. Otherwise, following optimization
    * causes problem. There is similar issue, but the biggest risk is here. */
   if(G__asm_cp>=2 && G__CL==G__asm_inst[G__asm_cp-2]
-     && (G__asm_inst[G__asm_cp-1]&0xffff0000)==0x7fff0000) 
+     && (G__asm_inst[G__asm_cp-1]&0xffff0000)==0x7fff0000)
     G__inc_cp_asm(-2,0);
   G__asm_inst[G__asm_cp]=G__CL;
-  G__asm_inst[G__asm_cp+1]= (G__ifile.line_number&G__CL_LINEMASK) 
+  G__asm_inst[G__asm_cp+1]= (G__ifile.line_number&G__CL_LINEMASK)
                     + (G__ifile.filenum&G__CL_FILEMASK)*G__CL_FILESHIFT;
   G__inc_cp_asm(2,0);
   return(0);
@@ -4304,7 +4346,7 @@ void G__get__tm__(char *buf)
 /**************************************************************************
 * G__get__date__()
 **************************************************************************/
-char* G__get__date__() 
+char* G__get__date__()
 {
   int i=0,j=0;
   char buf[80];
@@ -4325,7 +4367,7 @@ char* G__get__date__()
 /**************************************************************************
 * G__get__time__()
 **************************************************************************/
-char* G__get__time__() 
+char* G__get__time__()
 {
   int i=0,j=0;
   char buf[80];
@@ -4480,7 +4522,7 @@ int G__asm_optimize(int *start)
   if((G__asm_inst[*start]==G__LD_VAR
       || (G__asm_inst[*start]==G__LD_MSTR
           && !G__asm_wholefunction
-      )) 
+      ))
      &&  /* 1 */
      G__asm_inst[*start+5]==G__LD      &&
      G__asm_inst[*start+7]==G__CMP2    &&
@@ -4835,7 +4877,7 @@ int G__get_LD_p0_p2f(int type,long *pinst)
   if(isupper(type)) {
     if('Z'==type) done=0;
 #ifndef G__OLDIMMPLEMENTATION1341
-    else if('P'==type || 'O'==type) *pinst = (long)G__LD_p0_double; 
+    else if('P'==type || 'O'==type) *pinst = (long)G__LD_p0_double;
 #endif
     else *pinst = (long)G__LD_p0_pointer;
   }
@@ -5876,7 +5918,7 @@ int G__LD_int_optimize(int *ppc,int *pi)
    * 5 point_level == p                  local_global
    * 6 var_array pointer                 var_array pointer
    ********************************************************************/
-  if((G__LD_VAR==G__asm_inst[pc+2] || G__LD_LVAR==G__asm_inst[pc+2]) && 
+  if((G__LD_VAR==G__asm_inst[pc+2] || G__LD_LVAR==G__asm_inst[pc+2]) &&
      1==G__asm_inst[pc+4] &&
      'p' == G__asm_inst[pc+5] &&
      (var = (struct G__var_array*)G__asm_inst[pc+6]) &&
@@ -6786,7 +6828,7 @@ int G__asm_optimize3(int *start)
       * 1 type
       * 2 typenum
       * 3 tagnum
-      * 4 reftype 
+      * 4 reftype
       * stack
       * sp-1    <- cast on this
       * sp
@@ -7176,8 +7218,8 @@ int G__asm_optimize3(int *start)
         case 'v':
           break;
         }
-      } 
-      else 
+      }
+      else
       if('p'==var_type &&
          (islower(var->type[ig15])||G__PARANORMAL==var->reftype[ig15])) {
         long inst;
@@ -7242,8 +7284,8 @@ int G__asm_optimize3(int *start)
         case 'v':
           break;
         }
-      } 
-      else 
+      }
+      else
       if(('p'==var_type || var_type == var->type[ig15]) &&
          (islower(var->type[ig15])||G__PARANORMAL==var->reftype[ig15])) {
         long inst;
@@ -7456,7 +7498,7 @@ int G__asm_optimize3(int *start)
         if(-1!=G__asm_inst[pc+1])
           G__fprinterr(G__serr,"%3lx: POPTEMP %s\n" ,pc
                        ,G__struct.name[G__asm_inst[pc+1]]);
-        else 
+        else
           G__fprinterr(G__serr,"%3lx: POPTEMP -1\n" ,pc);
       }
 #endif
@@ -7685,7 +7727,7 @@ int G__asm_optimize3(int *start)
       /***************************************
       * inst
       * 0 TRY
-      * 1 first_catchblock 
+      * 1 first_catchblock
       * 2 endof_catchblock
       ***************************************/
 #ifdef G__ASM_DBG
@@ -7722,7 +7764,7 @@ int G__asm_optimize3(int *start)
       * sp+1             <-
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) 
+      if(G__asm_dbg)
         G__fprinterr(G__serr,"%3lx: ALLOCEXCEPTION %d\n",pc,G__asm_inst[pc+1]);
 #endif
       /* no optimization */
@@ -7854,7 +7896,7 @@ int G__asm_optimize3(int *start)
       * 0 CASE
       * 1 *casetable
       * stack
-      * sp-1         <- 
+      * sp-1         <-
       * sp
       ***************************************/
 #ifdef G__ASM_DBG
@@ -8471,7 +8513,7 @@ int G__dasm(FILE *fout,int isthrow)
       * 1 type
       * 2 typenum
       * 3 tagnum
-      * 4 reftype 
+      * 4 reftype
       * stack
       * sp-1    <- cast on this
       * sp
@@ -8863,7 +8905,7 @@ int G__dasm(FILE *fout,int isthrow)
       ***************************************/
       if(0==isthrow) {
         if(-1!=G__asm_inst[pc+1])
-          fprintf(fout,"%3x: POPTEMP %s\n" 
+          fprintf(fout,"%3x: POPTEMP %s\n"
                   ,pc,G__struct.name[G__asm_inst[pc+1]]);
         else
           fprintf(fout,"%3x: POPTEMP -1\n",pc);
@@ -9075,7 +9117,7 @@ int G__dasm(FILE *fout,int isthrow)
       /***************************************
       * inst
       * 0 TRY
-      * 1 first_catchblock 
+      * 1 first_catchblock
       * 2 endof_catchblock
       ***************************************/
       if(0==isthrow) {
@@ -9261,7 +9303,7 @@ int G__dasm(FILE *fout,int isthrow)
       * 0 CASE
       * 1 *casetable
       * stack
-      * sp-1         <- 
+      * sp-1         <-
       * sp
       ***************************************/
 #ifdef G__ASM_DBG

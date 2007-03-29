@@ -1521,7 +1521,7 @@ long localmem;
 #if  defined(G__ROOT)
 	G__delete_interpreted_object((void*)G__store_struct_offset);
 #else
-	free((void*)G__store_struct_offset);
+	delete[] ((char*) G__store_struct_offset);
 #endif
       }
       pc+=2;
@@ -2323,7 +2323,7 @@ long localmem;
       var=(struct G__var_array*)G__asm_inst[pc+1];
       i=(int)G__asm_inst[pc+2];
       G__push_autoobjectstack((void*)(localmem+var->p[i])
-			      ,var->p_tagtable[i],var->varlabel[i][1]+1
+			      ,var->p_tagtable[i],var->varlabel[i][1]
                               ,G__scopelevel,0);
       pc+=3;
 #ifdef G__ASM_DBG

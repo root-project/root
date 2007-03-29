@@ -283,7 +283,7 @@ int G__baseconstructor(int n, G__baseparam *pbaseparamin)
   char *tagname,*memname;
   int flag;
   char construct[G__ONELINE];
-  int p_inc,size;
+  int size;
   long store_globalvarpointer;
   int donen=0;
   long addr,lval;
@@ -473,35 +473,37 @@ int G__baseconstructor(int n, G__baseparam *pbaseparamin)
         if(G__dispsource) {
           G__fprinterr(G__serr,"\n!!!Calling class member constructor %s",construct);
         }
-        p_inc = mem->varlabel[i][1];
+        int linear_index = mem->varlabel[i][1] /* number of elements */;
+        if (linear_index) {
+          --linear_index;
+        }
         size = G__struct.size[G__tagnum];
-        do {
-          if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) { /* C++ compiled */
-            G__globalvarpointer=G__store_struct_offset;
+        for (; linear_index >= 0; --linear_index) {
+          if (G__struct.iscpplink[G__tagnum] == G__CPPLINK) {
+            // C++ compiled
+            G__globalvarpointer = G__store_struct_offset;
           }
-          else G__globalvarpointer = G__PVOID;
-          {
-            int tmp=0;
-            G__getfunction(construct,&tmp ,G__TRYCONSTRUCTOR);
+          else {
+            G__globalvarpointer = G__PVOID;
           }
+          int known = 0;
+          G__getfunction(construct, &known, G__TRYCONSTRUCTOR);
           G__store_struct_offset += size;
-          --p_inc;
-        } while(p_inc>=0) ;
-      } /* if('u') */
-
-      else if(donen<n && G__LOCALSTATIC!=mem->statictype[i]) {
-        flag=0;
-        memname=mem->varnamebuf[i];
-        pbaseparam=pbaseparamin;
-        while(pbaseparam) {
-          if(strcmp(pbaseparam->name ,memname)==0) {
-            flag=1;
+        }
+      }
+      else if ((donen < n) && (mem->statictype[i] != G__LOCALSTATIC)) {
+        flag = 0;
+        memname = mem->varnamebuf[i];
+        pbaseparam = pbaseparamin;
+        while (pbaseparam) {
+          if (!strcmp(pbaseparam->name, memname)) {
+            flag = 1;
             ++donen;
             break;
           }
-          pbaseparam=pbaseparam->next;
+          pbaseparam = pbaseparam->next;
         }
-        if(flag) {
+        if (flag) {
           if(G__PARAREFERENCE==mem->reftype[i]) {
 #ifndef G__OLDIMPLEMENTATION945
             if(G__NOLINK!=G__globalcomp) 
@@ -593,32 +595,22 @@ int G__baseconstructor(int n, G__baseparam *pbaseparamin)
             } /* if(isupper) else */
             G__globalvarpointer = local_store_globalvarpointer;
           } /* if(reftype) else */
-        } /* if(flag) */
-      } /* else if(!LOCALSTATIC) */
-
-    } /* for(i) */
-    mem=mem->next;
-  } /* while(mem) */
-
+        }
+      }
+    }
+    mem = mem->next;
+  }
   G__globalvarpointer = store_globalvarpointer;
 #ifdef G__VIRTUALBASE
-  G__toplevelinstantiation=store_toplevelinstantiation;
+  G__toplevelinstantiation = store_toplevelinstantiation;
 #endif
-  
-  /* restore derived tagnum */
   G__tagnum = store_tagnum;
   G__store_struct_offset = store_struct_offset;
-  
-  /* assign virtual_identity if contains virtual
-   * function.  */
-  if(-1 != G__struct.virtual_offset[G__tagnum]
-     /* && 0==G__no_exec_compile  << this one is correct */
-     && 0==G__xrefflag
-     ) {
-    *(long*)(G__store_struct_offset+G__struct.virtual_offset[G__tagnum])
-      = G__tagnum;
+  // assign virtual_identity if contains virtual function.
+  if ((G__struct.virtual_offset[G__tagnum] != -1) && !G__xrefflag) {
+    *((long*) (G__store_struct_offset + G__struct.virtual_offset[G__tagnum])) = G__tagnum;
   }
-  return(0);
+  return 0;
 }
 
 /**************************************************************************
@@ -718,82 +710,83 @@ int G__basedestructor()
 **************************************************************************/
 int G__basedestructrc(G__var_array *mem)
 {
-  /* int store_tagnum; */
-  long store_struct_offset;
-  int i,j;
   char destruct[G__ONELINE];
-  int p_inc,size;
-  long store_globalvarpointer;
-  long address;
-
-  if(!mem) return(1);
-
-  store_globalvarpointer = G__globalvarpointer;
-  
-  if(mem->next) {
+  if (!mem) {
+    return 1;
+  }
+  long store_globalvarpointer = G__globalvarpointer;
+  if (mem->next) {
     G__basedestructrc(mem->next);
   }
-
-  /* store current tag information */
-  /* store_tagnum=G__tagnum; */
-  store_struct_offset = G__store_struct_offset;
-  
-  for(i=mem->allvar-1;i>=0;i--) {
-    if('u'==mem->type[i] && 
+  // store current tag information
+  long store_struct_offset = G__store_struct_offset;
+  for (int i = mem->allvar - 1; i >= 0; --i) {
+    if (
+      (mem->type[i] == 'u') && 
 #ifndef G__NEWINHERIT
-       0==mem->isinherit[i] &&
+      !mem->isinherit[i] &&
 #endif
-       'e'!=G__struct.type[mem->p_tagtable[i]] &&
-       G__LOCALSTATIC!=mem->statictype[i]) {
-      
-      G__tagnum=mem->p_tagtable[i];
-      G__store_struct_offset=store_struct_offset+mem->p[i];
-      sprintf(destruct,"~%s()",G__struct.name[G__tagnum]);
-      p_inc = mem->varlabel[i][1];
-      size = G__struct.size[G__tagnum];
-      if(G__asm_noverflow) {
-        if(0==p_inc) G__gen_addstros(mem->p[i]);
-        else         G__gen_addstros(mem->p[i]+size*p_inc);
+      (G__struct.type[mem->p_tagtable[i]] != 'e') &&
+      (mem->statictype[i] != G__LOCALSTATIC)
+    ) {
+      G__tagnum = mem->p_tagtable[i];
+      G__store_struct_offset = store_struct_offset + mem->p[i];
+      sprintf(destruct, "~%s()", G__struct.name[G__tagnum]);
+      int linear_index = mem->varlabel[i][1] /* number of elements */;
+      if (linear_index) {
+        --linear_index;
       }
-
-      j=0;
-      G__store_struct_offset += size*p_inc;
-      do {
-        if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) { /* C++ compiled */
-          G__globalvarpointer=G__store_struct_offset;
+      int size = G__struct.size[G__tagnum];
+      if (G__asm_noverflow) {
+        G__gen_addstros(mem->p[i] + (linear_index * size));
+      }
+      G__store_struct_offset += linear_index * size;
+      for (int known = 1; known && (linear_index >= 0); --linear_index) {
+        if (G__struct.iscpplink[G__tagnum] == G__CPPLINK) {
+          // C++ compiled
+          G__globalvarpointer = G__store_struct_offset;
         }
-        else G__globalvarpointer = G__PVOID;
-        /* avoid recursive and infinite virtual destructor call */
-        if(-1!=G__struct.virtual_offset[G__tagnum]) 
-          *(long*)(G__store_struct_offset+G__struct.virtual_offset[G__tagnum])
-            = G__tagnum;
-        if(G__dispsource) {
-          G__fprinterr(G__serr,"\n!!!Calling class member destructor %s" ,destruct);
+        else {
+          G__globalvarpointer = G__PVOID;
         }
-        G__getfunction(destruct,&j,G__TRYDESTRUCTOR);
+        // avoid recursive and infinite virtual destructor call
+        if (G__struct.virtual_offset[G__tagnum] != -1) 
+          *((long*) (G__store_struct_offset + G__struct.virtual_offset[G__tagnum])) = G__tagnum;
+        if (G__dispsource) {
+          G__fprinterr(G__serr, "\n!!!Calling class member destructor %s", destruct);
+        }
+        G__getfunction(destruct, &known, G__TRYDESTRUCTOR);
         G__store_struct_offset -= size;
-        if(p_inc && G__asm_noverflow) G__gen_addstros(-size);
-        --p_inc;
-      } while(p_inc>=0 && j) ;
-      G__globalvarpointer = G__PVOID;
-      if(G__asm_noverflow) G__gen_addstros(-mem->p[i]);
-    }
-    else if(G__security&G__SECURE_GARBAGECOLLECTION && 
-            (!G__no_exec_compile) &&
-            isupper(mem->type[i])) {
-      j=mem->varlabel[i][1]+1;
-      do {
-        --j;
-        address = G__store_struct_offset+mem->p[i]+G__LONGALLOC*j;
-        if(*(long*)address) {
-          G__del_refcount((void*)(*((long*)address)) ,(void**)address);
+        if (linear_index && G__asm_noverflow) {
+          G__gen_addstros(-size);
         }
-      } while(j);
+      }
+      G__globalvarpointer = G__PVOID;
+      if (G__asm_noverflow) {
+        G__gen_addstros(-mem->p[i]);
+      }
+    }
+    else if (
+      (G__security & G__SECURE_GARBAGECOLLECTION) && 
+      !G__no_exec_compile &&
+      isupper(mem->type[i])
+    ) {
+      int linear_index = mem->varlabel[i][1] /* number of elements */;
+      if (linear_index) {
+        --linear_index;
+      }
+      long address = 0;
+      for (; linear_index >= 0; --linear_index) {
+        address = G__store_struct_offset + mem->p[i] + (linear_index * G__LONGALLOC);
+        if (*((long*) address)) {
+          G__del_refcount((void*) (*((long*) address)), (void**) address);
+        }
+      }
     }
   }
   G__globalvarpointer = store_globalvarpointer;
   G__store_struct_offset = store_struct_offset;
-  return(0);
+  return 0;
 }
 
 

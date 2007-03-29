@@ -975,12 +975,17 @@ int G__display_class(FILE *fout,char *name,int base,int start)
             ,G__struct.line_number[tagnum]);
   }
   if(G__more(fout,msg)) return(1);
-  sprintf(msg
-          ," (tagnum=%d,voffset=%d,isabstract=%d,parent=%d,gcomp=%d:%d,d21=~cd=%x)" 
-          ,tagnum ,G__struct.virtual_offset[tagnum]
-          ,G__struct.isabstract[tagnum] ,G__struct.parent_tagnum[tagnum]
-          ,G__struct.globalcomp[tagnum],G__struct.iscpplink[tagnum]
-          ,G__struct.funcs[tagnum]);
+  sprintf(
+    msg,
+    " (tagnum=%d,voffset=%d,isabstract=%d,parent=%d,gcomp=%d:%d,funcs(dn21=~xcpd)=%x)",
+    tagnum,
+    G__struct.virtual_offset[tagnum],
+    G__struct.isabstract[tagnum],
+    G__struct.parent_tagnum[tagnum],
+    G__struct.globalcomp[tagnum],
+    G__struct.iscpplink[tagnum],
+    G__struct.funcs[tagnum]
+  );
   if(G__more(fout,msg)) return(1);
   if('$'==G__struct.name[tagnum][0]) {
     sprintf(msg," (typedef %s)",G__struct.name[tagnum]+1);
@@ -1835,38 +1840,42 @@ int G__varmonitor(FILE *fout,G__var_array *var,char *index,char *addspace,long o
     if(G__more(fout,msg)) return(1);
     sprintf(msg,"%s",var->varnamebuf[imon1]);
     if(G__more(fout,msg)) return(1);
-    if(var->varlabel[imon1][1] 
-       || var->paran[imon1]
-       ) {
-      int ixxx;
-      for(ixxx=0;ixxx<var->paran[imon1];ixxx++) {
-        if(ixxx) {
-          sprintf(msg,"[%d]",var->varlabel[imon1][ixxx+1]);
-          if(G__more(fout,msg)) return(1);
+    if (var->varlabel[imon1][1] /* num of elements */ || var->paran[imon1]) {
+      for (int ixxx = 0; ixxx < var->paran[imon1]; ++ixxx) {
+        if (ixxx) {
+          // -- Not a special case dimension, just print it.
+          sprintf(msg, "[%d]", var->varlabel[imon1][ixxx+1]);
+          if (G__more(fout, msg)) {
+            return 1;
+          }
         }
-        else if(var->varlabel[imon1][1]==INT_MAX) {
-          strcpy(msg,"[]");
-          if(G__more(fout,msg)) return(1);
+        else if (var->varlabel[imon1][1] /* num of elements */ == INT_MAX /* unspecified length flag */) {
+          // -- Special case dimension, unspecified length.
+          strcpy(msg, "[]");
+          if (G__more(fout, msg)) {
+            return 1;
+          }
         }
         else {
-          sprintf(msg,"[%d]"
-                  ,(var->varlabel[imon1][1]+1)/var->varlabel[imon1][0]);
-          if(G__more(fout,msg)) return(1);
+          // -- Special case dimension, first dimension must be calculated.
+          sprintf(msg, "[%d]", var->varlabel[imon1][1] /* num of elements */ / var->varlabel[imon1][0] /* stride */);
+          if (G__more(fout, msg)) {
+            return 1;
+          }
         }
       }
     }
 
-    if(var->bitfield[imon1]) {
-      sprintf(msg," : %d (%d)",var->bitfield[imon1]
-              ,var->varlabel[imon1][G__MAXVARDIM-1]);
-      if(G__more(fout,msg)) return(1);
+    if (var->bitfield[imon1]) {
+      sprintf(msg, " : %d (%d)", var->bitfield[imon1], var->varlabel[imon1][G__MAXVARDIM-1]);
+      if (G__more(fout, msg)) {
+        return 1;
+      }
     }
 
-    if(-1!=offset && 0==precompiled_private && addr) {
-      if(0==var->varlabel[imon1][1]
-         && 0==var->paran[imon1]
-         ) {
-        switch(var->type[imon1]) {
+    if ((offset != -1) && !precompiled_private && addr) {
+      if (!var->varlabel[imon1][1] && !var->paran[imon1]) {
+        switch (var->type[imon1]) {
         case 'T': 
           sprintf(msg,"=\"%s\"",*(char**)addr); 
           if(G__more(fout,msg)) return(1);

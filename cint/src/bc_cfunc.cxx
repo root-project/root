@@ -441,7 +441,7 @@ void G__functionscope::Baseclassctor_member(G__ClassInfo& cls
         m_bc_inst.PUSHSTROS();
         m_bc_inst.SETSTROS();
 	if(dat.ArrayDim()) {
-	  m_bc_inst.LD(var->varlabel[ig15][1]+1);
+	  m_bc_inst.LD(var->varlabel[ig15][1]);
 	  m_bc_inst.SETARYINDEX(1); // this is illegular, but (1) does --sp
 	  ctorfound
 	    =call_func(*dat.Type(),dat.Type()->TrueName(),&para,G__TRYMEMFUNC,1);
@@ -616,7 +616,7 @@ void G__functionscope::Baseclasscopyctor_member(G__ClassInfo& cls
       m_bc_inst.SETSTROS();
       libp->para[0].tagnum=var->p_tagtable[ig15]; // TODO, dirty workaround
       if(dat.ArrayDim()) {
-	m_bc_inst.LD(var->varlabel[ig15][1]+1);
+	m_bc_inst.LD(var->varlabel[ig15][1]);
 	m_bc_inst.SETARYINDEX(1); // this is illegular, but (1) does --sp
 	found=call_func(*dat.Type(),dat.Type()->TrueName(),libp,G__TRYMEMFUNC,1
 			);
@@ -641,7 +641,7 @@ void G__functionscope::Baseclasscopyctor_member(G__ClassInfo& cls
       if(dat.ArrayDim()) {
 	// (LD SRC), LD DEST, LD SIZE, MEMCPY
 	m_bc_inst.LD_MSTR(var,ig15,0,'p');
-	m_bc_inst.LD((var->varlabel[ig15][1]+1)*dat.Type()->Size());
+	m_bc_inst.LD((var->varlabel[ig15][1])*dat.Type()->Size());
 	m_bc_inst.MEMCPY();
       }
       else {
@@ -745,7 +745,7 @@ void G__functionscope::Baseclassassign_member(G__ClassInfo& cls
       m_bc_inst.SETSTROS();
       libp->para[0].tagnum=var->p_tagtable[ig15]; // TODO, dirty workaround
       if(dat.ArrayDim()) {
-	m_bc_inst.LD(var->varlabel[ig15][1]+1);
+	m_bc_inst.LD(var->varlabel[ig15][1]);
 	m_bc_inst.SETARYINDEX(1); // this is illegular, but (1) does --sp
 	found=call_func(*dat.Type(),"operator=",libp,G__TRYMEMFUNC,1);
 	m_bc_inst.RESETARYINDEX(0);
@@ -767,7 +767,7 @@ void G__functionscope::Baseclassassign_member(G__ClassInfo& cls
       if(dat.ArrayDim()) {
 	// (LD SRC), LD DEST, LD SIZE, MEMCPY
 	m_bc_inst.LD_MSTR(var,ig15,0,'p');
-	m_bc_inst.LD((var->varlabel[ig15][1]+1)*dat.Type()->Size());
+	m_bc_inst.LD((var->varlabel[ig15][1])*dat.Type()->Size());
 	m_bc_inst.MEMCPY();
       }
       else {
@@ -841,7 +841,7 @@ void G__functionscope::Baseclassdtor_member(G__ClassInfo& cls) {
       if(dat.ArrayDim()) {
 	struct G__var_array *var=(struct G__var_array*)dat.Handle();
 	int ig15 = dat.Index();
-	m_bc_inst.LD(var->varlabel[ig15][1]+1);
+	m_bc_inst.LD(var->varlabel[ig15][1]);
 	m_bc_inst.SETARYINDEX(1); // this is illegular, but (1) does --sp
 	dtorfound=call_func(*dat.Type(),fname,&para,G__TRYMEMFUNC,1);
 	m_bc_inst.RESETARYINDEX(0);
