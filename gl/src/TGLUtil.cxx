@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.37 2007/01/29 10:06:50 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.cxx,v 1.38 2007/01/29 15:10:48 brun Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -2151,16 +2151,16 @@ TGLLevelPalette::TGLLevelPalette()
 }
 
 //______________________________________________________________________________
-Bool_t TGLLevelPalette::GeneratePalette(UInt_t paletteSize, const Rgl::Range_t &zRange)
+Bool_t TGLLevelPalette::GeneratePalette(UInt_t paletteSize, const Rgl::Range_t &zRange, Bool_t check)
 {
    //Try to find colors for palette.
-   if (!fMaxPaletteSize)
+   if (!fMaxPaletteSize && check)
       glGetIntegerv(GL_MAX_TEXTURE_SIZE, &fMaxPaletteSize);
    
    if (!(zRange.second - zRange.first))
       return kFALSE;
 
-   if (paletteSize > UInt_t(fMaxPaletteSize)) {
+   if (check && paletteSize > UInt_t(fMaxPaletteSize)) {
       Error("TGLLevelPalette::GeneratePalette", 
             "Number of contours %d is too big for GL 1D texture, try to reduce it to %d",
             paletteSize, fMaxPaletteSize);
@@ -2260,5 +2260,12 @@ const UChar_t *TGLLevelPalette::GetColour(Double_t z)const
 {
    //Get color.
    const Int_t ind = Int_t((z - fZRange.first) / (fZRange.second - fZRange.first) * fPaletteSize);
+   return &fTexels[ind * 4];
+}
+
+//______________________________________________________________________________
+const UChar_t *TGLLevelPalette::GetColour(Int_t ind)const
+{
+   //Get color.
    return &fTexels[ind * 4];
 }

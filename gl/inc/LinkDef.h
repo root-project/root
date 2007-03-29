@@ -75,6 +75,7 @@
 #pragma link C++ class TGLPlotPainter;
 #pragma link C++ class TGLBoxPainter;
 #pragma link C++ class TGLTF3Painter;
+#pragma link C++ class TGLIsoPainter;
 #pragma link C++ class TGLPlotBox;
 #pragma link C++ class TGLTH3Slice;
 #pragma link C++ class TGLBoxCut;

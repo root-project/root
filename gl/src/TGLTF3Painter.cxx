@@ -3,6 +3,7 @@
 #include "Buttons.h"
 #include "TROOT.h"
 #include "TColor.h"
+#include "TMath.h"
 #include "TH1.h"
 #include "TF3.h"
 
@@ -340,6 +341,614 @@ void TGLTF3Painter::DrawSectionXOY()const
    //XOY parallel section
 }
 
+ClassImp(TGLIsoPainter)
+
+//______________________________________________________________________________
+TGLIsoPainter::TGLIsoPainter(TH1 *hist, TGLOrthoCamera *camera, TGLPlotCoordinates *coord, Int_t ctx)
+                  : TGLPlotPainter(hist, camera, coord, ctx, kTRUE, kTRUE, kTRUE),
+                    fXOZSlice("XOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOZ),
+                    fYOZSlice("YOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kYOZ),
+                    fXOYSlice("XOY", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOY),
+                    fInit(kFALSE)
+{
+   //Constructor.
+   if (hist->GetDimension() < 3)
+      Error("TGLIsoPainter::TGLIsoPainter", "Wrong type of histogramm, must have 3 dimensions");
+}
+
+//______________________________________________________________________________
+char *TGLIsoPainter::GetPlotInfo(Int_t /*px*/, Int_t /*py*/)
+{
+   //Return info for plot part under cursor.
+   return "iso";
+}
+
+namespace {
+
+   void MarchingCube(Double_t x, Double_t y, Double_t z, Double_t stepX, Double_t stepY, 
+                     Double_t stepZ, Double_t scaleX, Double_t scaleY, Double_t scaleZ,
+                     const Double_t *funValues, std::vector<TGLIsoPainter::TriFace_t> &mesh, 
+                     Double_t isoValue);
+                     
+   inline Double_t Abs(Double_t val)
+   {
+      if(val < 0.) val *= -1.;
+      return val;
+   }
+   
+   inline Bool_t Eq(const TGLVertex3 &v1, const TGLVertex3 &v2)
+   {
+      return Abs(v1.X() - v2.X()) < 0.0000001 && 
+             Abs(v1.Y() - v2.Y()) < 0.0000001 && 
+             Abs(v1.Z() - v2.Z()) < 0.0000001;
+   }
+   
+}
+
+//______________________________________________________________________________
+Bool_t TGLIsoPainter::InitGeometry()
+{
+   //Initializes meshes for 3d iso contours.
+   if (fHist->GetDimension() < 3) {
+      Error("TGLIsoPainter::TGLIsoPainter", "Wrong type of histogramm, must have 3 dimensions");
+      return kFALSE;  
+   }
+
+   //Create mesh.
+   //Now, I check this to avoid 
+   //expensive recalculations.
+   if (fInit)
+      return kTRUE;
+      
+   //Only in cartesian.
+   fCoord->SetCoordType(kGLCartesian);
+   if (!fCoord->SetRanges(fHist, kFALSE, kTRUE))
+      return kFALSE;
+
+   fBackBox.SetPlotBox(fCoord->GetXRangeScaled(), fCoord->GetYRangeScaled(), fCoord->GetZRangeScaled());
+   fCamera->SetViewVolume(fBackBox.Get3DBox());
+
+   //Move old meshed into the cache.
+   if (!fIsos.empty())
+      fCache.splice(fCache.begin(), fIsos);
+   //Number of contours == number of iso surfaces.
+   UInt_t nContours = fHist->GetContour();
+
+   if (nContours > 1) {
+      fColorLevels.resize(nContours);
+      FindMinMax();
+
+      if (fHist->TestBit(TH1::kUserContour)) {
+         //There are user defined contours (iso-levels).
+         for (UInt_t i = 0; i < nContours; ++i)
+            fColorLevels[i] = fHist->GetContourLevelPad(i);
+      } else {
+         //Equidistant iso-surfaces.
+         const Double_t isoStep = (fMinMax.second - fMinMax.first) / nContours;
+         for (UInt_t i = 0; i < nContours; ++i)
+            fColorLevels[i] = fMinMax.first + i * isoStep;
+      }
+      
+      fPalette.GeneratePalette(nContours, fMinMax, kFALSE);
+   } else {
+      //Only one iso (ROOT's standard).
+      fColorLevels.resize(nContours = 1);
+      fColorLevels[0] = fHist->GetSumOfWeights() / (fHist->GetNbinsX() * fHist->GetNbinsY() * fHist->GetNbinsZ());
+   }
+   
+   MeshIter_t firstMesh = fCache.begin();
+   //Initialize meshes, trying to reuse mesh from
+   //mesh cache.
+   for (UInt_t i = 0; i < nContours; ++i) {
+      if (firstMesh != fCache.end()) {
+         //There is a mesh in a chache.
+         SetMesh(*firstMesh, fColorLevels[i]);
+         MeshIter_t next = firstMesh;
+         ++next;
+         fIsos.splice(fIsos.begin(), fCache, firstMesh);
+         firstMesh = next;
+      } else {
+         //No meshes in a cache. 
+         //Create new one and _swap_ data (look at Mesh_t::Swap in a header)
+         //between empty mesh in a list and this mesh
+         //to avoid real copying.
+         Mesh_t newMesh;
+         SetMesh(newMesh, fColorLevels[i]);
+         fIsos.push_back(fDummyMesh);
+         fIsos.back().Swap(newMesh);
+      }
+   }
+
+
+   if (fCoord->Modified()) {
+      fUpdateSelection = kTRUE;
+      fXOZSectionPos = fBackBox.Get3DBox()[0].Y();
+      fYOZSectionPos = fBackBox.Get3DBox()[0].X();
+      fXOYSectionPos = fBackBox.Get3DBox()[0].Z();
+      fCoord->ResetModified();
+   }
+   
+   //Avoid rebuilding the mesh.
+   fInit = kTRUE;
+   
+   return kTRUE;
+
+}
+
+//______________________________________________________________________________
+void TGLIsoPainter::StartPan(Int_t px, Int_t py)
+{
+   //User clicks right mouse button (in a pad).
+   fMousePosition.fX = px;
+   fMousePosition.fY = fCamera->GetHeight() - py;
+   fCamera->StartPan(px, py);
+   fBoxCut.StartMovement(px, fCamera->GetHeight() - py);
+}
+
+//______________________________________________________________________________
+void TGLIsoPainter::Pan(Int_t px, Int_t py)
+{
+   //User's moving mouse cursor, with middle mouse button pressed (for pad).
+   //Calculate 3d shift related to 2d mouse movement.
+   // User's moving mouse cursor, with middle mouse button pressed (for pad).
+   // Calculate 3d shift related to 2d mouse movement.
+
+   if (!MakeGLContextCurrent())
+      return;
+
+   if (fSelectedPart >= fSelectionBase)//Pan camera.
+      fCamera->Pan(px, py);
+   else if (fSelectedPart > 0) {
+      //Convert py into bottom-top orientation.
+      //Possibly, move box here
+      py = fCamera->GetHeight() - py;
+      if (!fHighColor) {
+         if (fBoxCut.IsActive() && (fSelectedPart >= kXAxis && fSelectedPart <= kZAxis))
+            fBoxCut.MoveBox(px, py, fSelectedPart);
+         else
+            MoveSection(px, py);
+      } else {
+         MoveSection(px, py);
+      }
+   }
+
+   fMousePosition.fX = px, fMousePosition.fY = py;
+   fUpdateSelection = kTRUE;
+}
+
+//______________________________________________________________________________
+void TGLIsoPainter::AddOption(const TString &/*option*/)
+{
+   //No additional options for TGLIsoPainter.
+}
+
+//______________________________________________________________________________
+void TGLIsoPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
+{
+   //Change color sheme.
+   if (event == kKeyPress) {
+      if (py == kKey_c || py == kKey_C) {
+         if (fHighColor)
+            Info("ProcessEvent", "Cut box does not work in high color, please, switch to true color");
+         else {
+            fBoxCut.TurnOnOff();
+            fUpdateSelection = kTRUE;
+         }
+      }
+   } else if (event == kButton1Double && (fBoxCut.IsActive() || HasSections())) {
+      if (fBoxCut.IsActive())
+         fBoxCut.TurnOnOff();
+      const TGLVertex3 *frame = fBackBox.Get3DBox();
+      fXOZSectionPos = frame[0].Y();
+      fYOZSectionPos = frame[0].X();
+      fXOYSectionPos = frame[0].Z();
+
+      gGLManager->PaintSingleObject(this);
+   }
+}
+
+//______________________________________________________________________________
+void TGLIsoPainter::InitGL()const
+{
+   //Initialize OpenGL state variables.
+   glEnable(GL_LIGHTING);
+   glEnable(GL_LIGHT0);
+   glEnable(GL_DEPTH_TEST);
+   glDisable(GL_CULL_FACE);
+   glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+}
+
+//______________________________________________________________________________
+void TGLIsoPainter::DrawPlot()const
+{
+   //Draw mesh.
+   fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
+   DrawSections();
+
+   if (fIsos.size() != fColorLevels.size()) {
+      Error("TGLIsoPainter::DrawPlot", "Non-equal number of levels and isos");
+      return;
+   }
+   
+   if (!fSelectionPass && HasSections()) {
+      //Surface is semi-transparent during dynamic profiling.
+      //Having several complex nested surfaces, it's not easy
+      //(possible?) to implement correct and _efficient_ transparency
+      //drawing. So, artefacts are possbile.
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      glDepthMask(GL_FALSE);
+   }
+   
+   UInt_t colorInd = 0;
+   ConstMeshIter_t iso = fIsos.begin();
+   
+   for (; iso != fIsos.end(); ++iso, ++colorInd)
+      DrawMesh(*iso, colorInd);
+
+   if (!fSelectionPass && HasSections()) {
+      glDisable(GL_BLEND);
+      glDepthMask(GL_TRUE);   
+   }
+
+   if (fBoxCut.IsActive())
+      fBoxCut.DrawBox(fSelectionPass, fSelectedPart);
+}
+
+//______________________________________________________________________________
+void TGLIsoPainter::DrawSectionXOZ()const
+{
+   // Draw XOZ parallel section.
+   if (fSelectionPass)
+      return;
+   fXOZSlice.DrawSlice(fXOZSectionPos / fCoord->GetYScale());
+}
+
+//______________________________________________________________________________
+void TGLIsoPainter::DrawSectionYOZ()const
+{
+   // Draw YOZ parallel section.
+   if (fSelectionPass)
+      return;
+   fYOZSlice.DrawSlice(fYOZSectionPos / fCoord->GetXScale());
+}
+
+//______________________________________________________________________________
+void TGLIsoPainter::DrawSectionXOY()const
+{
+   // Draw XOY parallel section.
+   if (fSelectionPass)
+      return;
+   fXOYSlice.DrawSlice(fXOYSectionPos / fCoord->GetZScale());
+}
+
+//______________________________________________________________________________
+Bool_t TGLIsoPainter::HasSections()const
+{
+   //Any section exists.
+   return fXOZSectionPos > fBackBox.Get3DBox()[0].Y() || fYOZSectionPos > fBackBox.Get3DBox()[0].X() ||
+          fXOYSectionPos > fBackBox.Get3DBox()[0].Z();
+}
+
+//______________________________________________________________________________
+void TGLIsoPainter::SetSurfaceColor(Int_t ind)const
+{
+   //Set color for surface.
+   Float_t diffColor[] = {0.8f, 0.8f, 0.8f, 0.25f};
+
+   if (fColorLevels.size() == 1) {
+      if (fHist->GetFillColor() != kWhite)
+         if (const TColor *c = gROOT->GetColor(fHist->GetFillColor()))
+            c->GetRGB(diffColor[0], diffColor[1], diffColor[2]);
+   } else {
+      const UChar_t *color = fPalette.GetColour(ind);
+      diffColor[0] = color[0] / 255.;
+      diffColor[1] = color[1] / 255.;
+      diffColor[2] = color[2] / 255.;
+   }
+   
+   glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffColor);
+   const Float_t specColor[] = {1.f, 1.f, 1.f, 1.f};
+   glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specColor);
+   diffColor[0] /= 3.5, diffColor[1] /= 3.5, diffColor[2] /= 3.5;
+   glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, diffColor);
+   glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 30.f);
+}
+
+//______________________________________________________________________________
+void TGLIsoPainter::SetMesh(Mesh_t &m, Double_t isoValue)
+{
+   //Set mesh for iso surface at level isoValue.
+   //Large and nightmarish "unrolled" code - I'm doing simple optimisation:
+   //marching cubes calculates a set of triangles (possible empty)
+   //for each of cubes in a lattice. After that, I need to calculate
+   //per-vertex smoothed normals - calculating the summ of neighbouring
+   //per-triangle normals and normalizing 
+   //(so, I need to find common vertices for triangles), 
+   //this can be done only after 
+   //each of 26 neighbouring cubes was processed. I remember
+   //"mesh range" for each cube, not to check _EVERY_ triangles.
+   const Int_t nX = fHist->GetNbinsX();
+   const Int_t nY = fHist->GetNbinsY();
+   const Int_t nZ = fHist->GetNbinsZ();
+
+   const Double_t xMin      = fXAxis->GetBinCenter(fXAxis->GetFirst());
+   const Double_t xStep     = (fXAxis->GetBinCenter(fXAxis->GetLast()) - xMin) / (nX - 1);
+   const Double_t yMin      = fYAxis->GetBinCenter(fYAxis->GetFirst());
+   const Double_t yStep     = (fYAxis->GetBinCenter(fYAxis->GetLast()) - yMin) / (nY - 1);
+   const Double_t zMin      = fZAxis->GetBinCenter(fZAxis->GetFirst());
+   const Double_t zStep     = (fZAxis->GetBinCenter(fZAxis->GetLast()) - zMin) / (nZ - 1);
+   const Int_t    sliceSize = (nY + 2) * (nZ + 2);
+   std::vector<Range_t> &boxRanges = m.fBoxRanges;
+   std::vector<TriFace_t> &mesh = m.fMesh;
+   
+   boxRanges.assign((nX + 2) * (nY + 2) * (nZ + 2), Range_t());
+
+   //First, calculate full mesh and define "box ranges" - which
+   //part of the full mesh is in current box.
+   //Find flat normals.
+   for (Int_t i = 0, ir = fXAxis->GetFirst(), ei = fXAxis->GetLast(); ir < ei; ++i, ++ir) {
+      for (Int_t j = 0, jr = fYAxis->GetFirst(), ej = fYAxis->GetLast(); jr < ej; ++j, ++jr) {
+         for (Int_t k = 0, kr = fZAxis->GetFirst(), ek = fZAxis->GetLast(); kr < ek; ++k, ++kr) {
+            const Double_t cube[] = {fHist->GetBinContent(ir, jr, kr),             fHist->GetBinContent(ir + 1, jr, kr),
+                                     fHist->GetBinContent(ir + 1, jr + 1, kr),     fHist->GetBinContent(ir, jr + 1, kr),
+                                     fHist->GetBinContent(ir, jr, kr + 1),         fHist->GetBinContent(ir + 1, jr, kr + 1),
+                                     fHist->GetBinContent(ir + 1, jr + 1, kr + 1), fHist->GetBinContent(ir, jr + 1, kr + 1)};
+            Int_t start  = Int_t(mesh.size());
+            MarchingCube(xMin + i * xStep, yMin + j * yStep, zMin + k * zStep, xStep, yStep, zStep,
+                         fCoord->GetXScale(), fCoord->GetXScale(), fCoord->GetZScale(), cube, mesh,
+                         isoValue);
+            Int_t finish = Int_t(mesh.size());
+            if (start != finish)
+               boxRanges[(ir + 1) * sliceSize + (jr + 1) * (nZ + 2) + kr + 1] = Range_t(start, finish);
+         }
+      }
+   }
+   
+   for (Int_t i = 1; i <= nX; ++i) {
+      for (Int_t j = 1; j <= nY; ++j) {
+         for (Int_t k = 1; k <= nZ; ++k) {
+            Range_t &box = boxRanges[i * sliceSize + j * (nZ + 2) + k];
+            if (box.fFirst != -1) {
+               for (Int_t tri = box.fFirst; tri < box.fLast; ++tri) {
+                  TriFace_t &face = mesh[tri];
+                  //First, check triangles from the same box.
+                  for (Int_t k1 = 0; k1 < 3; ++k1) face.fPerVertexNormals[k1] = face.fNormal;
+                  const TGLVertex3 &v0 = face.fXYZ[0];
+                  const TGLVertex3 &v1 = face.fXYZ[1];
+                  const TGLVertex3 &v2 = face.fXYZ[2];
+                  
+                  for (Int_t tri1 = box.fFirst; tri1 < box.fLast; ++tri1) {
+                     if (tri != tri1) {
+                        const TriFace_t &testFace = mesh[tri1];
+                        if (Eq(v0, testFace.fXYZ[0]))
+                           face.fPerVertexNormals[0] += testFace.fNormal;
+                        if (Eq(v0, testFace.fXYZ[1]))
+                           face.fPerVertexNormals[0] += testFace.fNormal;
+                        if (Eq(v0, testFace.fXYZ[2]))
+                           face.fPerVertexNormals[0] += testFace.fNormal;
+                        if (Eq(v1, testFace.fXYZ[0]))
+                           face.fPerVertexNormals[1] += testFace.fNormal;
+                        if (Eq(v1, testFace.fXYZ[1]))
+                           face.fPerVertexNormals[1] += testFace.fNormal;
+                        if (Eq(v1, testFace.fXYZ[2]))
+                           face.fPerVertexNormals[1] += testFace.fNormal;
+                        if (Eq(v2, testFace.fXYZ[0]))
+                           face.fPerVertexNormals[2] += testFace.fNormal;
+                        if (Eq(v2, testFace.fXYZ[1]))
+                           face.fPerVertexNormals[2] += testFace.fNormal;
+                        if (Eq(v2, testFace.fXYZ[2]))
+                           face.fPerVertexNormals[2] += testFace.fNormal;
+                     }
+                  }
+                  
+                  const Int_t nZ2 = nZ + 2;
+
+                  Range_t &box1  = boxRanges[(i - 1) * sliceSize + (j - 1) * nZ2 + k - 1];
+                  CheckBox(mesh, face, box1);
+                  Range_t &box2  = boxRanges[(i) * sliceSize + (j - 1) * nZ2 + k - 1];
+                  CheckBox(mesh, face, box2);
+                  Range_t &box3  = boxRanges[(i + 1) * sliceSize + (j - 1) * nZ2 + k - 1];
+                  CheckBox(mesh, face, box3);
+                  Range_t &box4  = boxRanges[(i + 1) * sliceSize + (j) * nZ2 + k - 1];
+                  CheckBox(mesh, face, box4);
+                  Range_t &box5  = boxRanges[(i + 1) * sliceSize + (j + 1) * nZ2 + k - 1];
+                  CheckBox(mesh, face, box5);
+                  Range_t &box6  = boxRanges[(i) * sliceSize + (j + 1) * nZ2 + k - 1];
+                  CheckBox(mesh, face, box6);
+                  Range_t &box7  = boxRanges[(i - 1) * sliceSize + (j + 1) * nZ2 + k - 1];
+                  CheckBox(mesh, face, box7);
+                  Range_t &box8  = boxRanges[(i - 1) * sliceSize + (j) * nZ2 + k - 1];
+                  CheckBox(mesh, face, box8);
+                  Range_t &box9  = boxRanges[(i) * sliceSize + (j) * nZ2 + k - 1];
+                  CheckBox(mesh, face, box9);
+
+                  Range_t &box10  = boxRanges[(i - 1) * sliceSize + (j - 1) * nZ2 + k];
+                  CheckBox(mesh, face, box10);
+                  Range_t &box11  = boxRanges[(i) * sliceSize + (j - 1) * nZ2 + k];
+                  CheckBox(mesh, face, box11);
+                  Range_t &box12  = boxRanges[(i + 1) * sliceSize + (j - 1) * nZ2 + k];
+                  CheckBox(mesh, face, box12);
+                  Range_t &box13  = boxRanges[(i + 1) * sliceSize + (j) * nZ2 + k];
+                  CheckBox(mesh, face, box13);
+                  Range_t &box14  = boxRanges[(i + 1) * sliceSize + (j + 1) * nZ2 + k];
+                  CheckBox(mesh, face, box14);
+                  Range_t &box15  = boxRanges[(i) * sliceSize + (j + 1) * nZ2 + k];
+                  CheckBox(mesh, face, box15);
+                  Range_t &box16  = boxRanges[(i - 1) * sliceSize + (j + 1) * nZ2 + k];
+                  CheckBox(mesh, face, box16);
+                  Range_t &box17  = boxRanges[(i - 1) * sliceSize + (j) * nZ2 + k];
+                  CheckBox(mesh, face, box17);
+
+                  Range_t &box18  = boxRanges[(i - 1) * sliceSize + (j - 1) * nZ2 + k + 1];
+                  CheckBox(mesh, face, box18);
+                  Range_t &box19  = boxRanges[(i) * sliceSize + (j - 1) * nZ2 + k + 1];
+                  CheckBox(mesh, face, box19);
+                  Range_t &box20  = boxRanges[(i + 1) * sliceSize + (j - 1) * nZ2 + k + 1];
+                  CheckBox(mesh, face, box20);
+                  Range_t &box21  = boxRanges[(i + 1) * sliceSize + (j) * nZ2 + k + 1];
+                  CheckBox(mesh, face, box21);
+                  Range_t &box22  = boxRanges[(i + 1) * sliceSize + (j + 1) * nZ2 + k + 1];
+                  CheckBox(mesh, face, box22);
+                  Range_t &box23  = boxRanges[(i) * sliceSize + (j + 1) * nZ2 + k + 1];
+                  CheckBox(mesh, face, box23);
+                  Range_t &box24  = boxRanges[(i - 1) * sliceSize + (j + 1) * nZ2 + k + 1];
+                  CheckBox(mesh, face, box24);
+                  Range_t &box25  = boxRanges[(i - 1) * sliceSize + (j) * nZ2 + k + 1];
+                  CheckBox(mesh, face, box25);
+                  Range_t &box26  = boxRanges[(i) * sliceSize + (j) * nZ2 + k + 1];
+                  CheckBox(mesh, face, box26);
+               }
+            }
+         }
+      }
+   }
+   
+   for (UInt_t i = 0, ei = mesh.size(); i < ei; ++i) {
+      TriFace_t &face = mesh[i];
+      if(face.fPerVertexNormals[0].X() || face.fPerVertexNormals[0].Y() || face.fPerVertexNormals[0].Z())
+         face.fPerVertexNormals[0].Normalise();
+      if(face.fPerVertexNormals[1].X() || face.fPerVertexNormals[1].Y() || face.fPerVertexNormals[1].Z())         
+         face.fPerVertexNormals[1].Normalise();
+      if(face.fPerVertexNormals[2].X() || face.fPerVertexNormals[2].Y() || face.fPerVertexNormals[2].Z())
+         face.fPerVertexNormals[2].Normalise();
+   }
+
+}
+
+//______________________________________________________________________________
+void TGLIsoPainter::DrawMesh(const Mesh_t &mesh, Int_t level)const
+{
+   //Draw TF3 surface
+   if (!fSelectionPass)
+      SetSurfaceColor(level);
+
+   if (!fBoxCut.IsActive()) {
+      glBegin(GL_TRIANGLES);
+
+
+      if (!fSelectionPass) {
+         for (UInt_t i = 0, e = mesh.fMesh.size(); i < e; ++i) {
+            glNormal3dv(mesh.fMesh[i].fPerVertexNormals[0].CArr());
+            glVertex3dv(mesh.fMesh[i].fXYZ[0].CArr());
+            glNormal3dv(mesh.fMesh[i].fPerVertexNormals[1].CArr());
+            glVertex3dv(mesh.fMesh[i].fXYZ[1].CArr());
+            glNormal3dv(mesh.fMesh[i].fPerVertexNormals[2].CArr());
+            glVertex3dv(mesh.fMesh[i].fXYZ[2].CArr());
+         }
+         
+      } else {
+         Rgl::ObjectIDToColor(fSelectionBase, fHighColor);
+         for (UInt_t i = 0, e = mesh.fMesh.size(); i < e; ++i) {
+            glVertex3dv(mesh.fMesh[i].fXYZ[0].CArr());
+            glVertex3dv(mesh.fMesh[i].fXYZ[1].CArr());
+            glVertex3dv(mesh.fMesh[i].fXYZ[2].CArr());
+         }
+      }
+
+      glEnd();
+      
+   } else {
+      glBegin(GL_TRIANGLES);
+
+      if (!fSelectionPass) {
+         for (UInt_t i = 0, e = mesh.fMesh.size(); i < e; ++i) {
+            const TriFace_t &tri = mesh.fMesh[i];
+            const Double_t xMin = TMath::Min(TMath::Min(tri.fXYZ[0].X(), tri.fXYZ[1].X()), tri.fXYZ[2].X());
+            const Double_t xMax = TMath::Max(TMath::Max(tri.fXYZ[0].X(), tri.fXYZ[1].X()), tri.fXYZ[2].X());
+            const Double_t yMin = TMath::Min(TMath::Min(tri.fXYZ[0].Y(), tri.fXYZ[1].Y()), tri.fXYZ[2].Y());
+            const Double_t yMax = TMath::Max(TMath::Max(tri.fXYZ[0].Y(), tri.fXYZ[1].Y()), tri.fXYZ[2].Y());
+            const Double_t zMin = TMath::Min(TMath::Min(tri.fXYZ[0].Z(), tri.fXYZ[1].Z()), tri.fXYZ[2].Z());
+            const Double_t zMax = TMath::Max(TMath::Max(tri.fXYZ[0].Z(), tri.fXYZ[1].Z()), tri.fXYZ[2].Z());
+            
+            if (fBoxCut.IsInCut(xMin, xMax, yMin, yMax, zMin, zMax))
+               continue;
+
+            glNormal3dv(tri.fPerVertexNormals[0].CArr());
+            glVertex3dv(tri.fXYZ[0].CArr());
+            glNormal3dv(tri.fPerVertexNormals[1].CArr());            
+            glVertex3dv(tri.fXYZ[1].CArr());
+            glNormal3dv(tri.fPerVertexNormals[2].CArr());
+            glVertex3dv(tri.fXYZ[2].CArr());
+         }
+
+      } else {
+         Rgl::ObjectIDToColor(fSelectionBase, fHighColor);
+         for (UInt_t i = 0, e = mesh.fMesh.size(); i < e; ++i) {
+            const TriFace_t &tri = mesh.fMesh[i];
+            const Double_t xMin = TMath::Min(TMath::Min(tri.fXYZ[0].X(), tri.fXYZ[1].X()), tri.fXYZ[2].X());
+            const Double_t xMax = TMath::Max(TMath::Max(tri.fXYZ[0].X(), tri.fXYZ[1].X()), tri.fXYZ[2].X());
+            const Double_t yMin = TMath::Min(TMath::Min(tri.fXYZ[0].Y(), tri.fXYZ[1].Y()), tri.fXYZ[2].Y());
+            const Double_t yMax = TMath::Max(TMath::Max(tri.fXYZ[0].Y(), tri.fXYZ[1].Y()), tri.fXYZ[2].Y());
+            const Double_t zMin = TMath::Min(TMath::Min(tri.fXYZ[0].Z(), tri.fXYZ[1].Z()), tri.fXYZ[2].Z());
+            const Double_t zMax = TMath::Max(TMath::Max(tri.fXYZ[0].Z(), tri.fXYZ[1].Z()), tri.fXYZ[2].Z());
+            
+            if (fBoxCut.IsInCut(xMin, xMax, yMin, yMax, zMin, zMax))
+               continue;
+               
+            glVertex3dv(tri.fXYZ[0].CArr());
+            glVertex3dv(tri.fXYZ[1].CArr());
+            glVertex3dv(tri.fXYZ[2].CArr());
+         }
+      }
+
+      glEnd();
+   }
+}
+
+//______________________________________________________________________________
+void TGLIsoPainter::CheckBox(const std::vector<TriFace_t> &mesh, TriFace_t &face, const Range_t &box)
+{
+   //For given box and given fase, check if any of box faces has
+   //common vertex with face, if yes - att its flat normal.
+   if (box.fFirst == -1)
+      return;
+      
+   const TGLVertex3 &v0 = face.fXYZ[0];
+   const TGLVertex3 &v1 = face.fXYZ[1];
+   const TGLVertex3 &v2 = face.fXYZ[2];
+                  
+   for (Int_t tri1 = box.fFirst; tri1 < box.fLast; ++tri1) {
+      const TriFace_t &testFace = mesh[tri1];
+      if (Eq(v0, testFace.fXYZ[0]))
+         face.fPerVertexNormals[0] += testFace.fNormal;
+      if (Eq(v0, testFace.fXYZ[1]))
+         face.fPerVertexNormals[0] += testFace.fNormal;
+      if (Eq(v0, testFace.fXYZ[2]))
+         face.fPerVertexNormals[0] += testFace.fNormal;
+      if (Eq(v1, testFace.fXYZ[0]))
+         face.fPerVertexNormals[1] += testFace.fNormal;
+      if (Eq(v1, testFace.fXYZ[1]))
+         face.fPerVertexNormals[1] += testFace.fNormal;
+      if (Eq(v1, testFace.fXYZ[2]))
+         face.fPerVertexNormals[1] += testFace.fNormal;
+      if (Eq(v2, testFace.fXYZ[0]))
+         face.fPerVertexNormals[2] += testFace.fNormal;
+      if (Eq(v2, testFace.fXYZ[1]))
+         face.fPerVertexNormals[2] += testFace.fNormal;
+      if (Eq(v2, testFace.fXYZ[2]))
+         face.fPerVertexNormals[2] += testFace.fNormal;
+   }
+}
+
+//______________________________________________________________________________
+void TGLIsoPainter::FindMinMax()
+{
+   //Find max/min bin contents for TH3.
+   fMinMax.first  = fHist->GetBinContent(fXAxis->GetFirst(), fYAxis->GetFirst(), fZAxis->GetFirst());
+   fMinMax.second = fMinMax.first;
+   
+   for (Int_t i = fXAxis->GetFirst(), ei = fXAxis->GetLast(); i <= ei; ++i) {
+      for (Int_t j = fYAxis->GetFirst(), ej = fYAxis->GetLast(); j <= ej; ++j) {
+         for (Int_t k = fZAxis->GetFirst(), ek = fZAxis->GetLast(); k <= ek; ++k) {
+            const Double_t binContent = fHist->GetBinContent(i, j, k);
+            fMinMax.first  = TMath::Min(binContent, fMinMax.first);
+            fMinMax.second = TMath::Max(binContent, fMinMax.second);
+         }
+      }
+   }
+}
+
 /*
 TF3's based on a small, nice and neat implementation of marching cubes by Cory Bloyd (corysama at yahoo.com)
 (many thanks!!!). All possible errors in code are mine - I've modified original code. (tpochep)
@@ -402,6 +1011,11 @@ namespace {
       normal.Y() = fun->Eval(x, y - 0.01, z) - fun->Eval(x, y + 0.01, z);
       normal.Z() = fun->Eval(x, y, z - 0.01) - fun->Eval(x, y, z + 0.01);
       normal.Normalise();
+   }
+
+   void GetNormal(TGLIsoPainter::TriFace_t &face)
+   {
+      TMath::Normal2Plane(face.fXYZ[0].CArr(), face.fXYZ[1].CArr(), face.fXYZ[2].CArr(), face.fNormal.Arr());
    }
 
    extern Int_t gCubeEdgeFlags[256];
@@ -468,6 +1082,61 @@ namespace {
 
             newTri.fNormals[iCorner] = asEdgeNorm[iVertex];
          }
+
+         mesh.push_back(newTri);
+      }
+   }
+
+   //MarchingCube performs the Marching Cubes algorithm on a single cube
+   void MarchingCube(Double_t x, Double_t y, Double_t z, Double_t stepX, Double_t stepY, 
+                     Double_t stepZ, Double_t scaleX, Double_t scaleY, Double_t scaleZ,
+                     const Double_t *cube, std::vector<TGLIsoPainter::TriFace_t> &mesh, Double_t isoValue)
+   {
+      TGLVector3 asEdgeVertex[12];
+
+      //Find which vertices are inside of the surface and which are outside
+      Int_t iFlagIndex = 0;
+
+      for (Int_t iVertexTest = 0; iVertexTest < 8; ++iVertexTest) {
+         if(cube[iVertexTest] <= isoValue) 
+            iFlagIndex |= 1 << iVertexTest;
+      }
+
+      //Find which edges are intersected by the surface
+      Int_t iEdgeFlags = gCubeEdgeFlags[iFlagIndex];
+      //If the cube is entirely inside or outside of the surface, then there will be no intersections
+      if (!iEdgeFlags) 
+         return;
+
+      //Find the point of intersection of the surface with each edge
+      //Then find the normal to the surface at those points
+      for (Int_t iEdge = 0; iEdge < 12; ++iEdge) {
+         //if there is an intersection on this edge
+         if (iEdgeFlags & (1<<iEdge)) {
+            Double_t offset = GetOffset(cube[gA2EdgeConnection[iEdge][0]], cube[gA2EdgeConnection[iEdge][1]], isoValue);
+
+            asEdgeVertex[iEdge].X() = x + (gA2VertexOffset[gA2EdgeConnection[iEdge][0]][0] + offset * gA2EdgeDirection[iEdge][0]) * stepX;
+            asEdgeVertex[iEdge].Y() = y + (gA2VertexOffset[gA2EdgeConnection[iEdge][0]][1] + offset * gA2EdgeDirection[iEdge][1]) * stepY;
+            asEdgeVertex[iEdge].Z() = z + (gA2VertexOffset[gA2EdgeConnection[iEdge][0]][2] + offset * gA2EdgeDirection[iEdge][2]) * stepZ;
+         }
+      }
+
+      //Draw the triangles that were found.  There can be up to five per cube
+      for (Int_t iTriangle = 0; iTriangle < 5; iTriangle++) {
+         if(gTriangleConnectionTable[iFlagIndex][3 * iTriangle] < 0)
+            break;
+
+         TGLIsoPainter::TriFace_t newTri;
+         
+         for (Int_t iCorner = 2; iCorner >= 0; --iCorner) {
+            Int_t iVertex = gTriangleConnectionTable[iFlagIndex][3 * iTriangle + iCorner];
+
+            newTri.fXYZ[iCorner].X() = asEdgeVertex[iVertex].X() * scaleX;
+            newTri.fXYZ[iCorner].Y() = asEdgeVertex[iVertex].Y() * scaleY;
+            newTri.fXYZ[iCorner].Z() = asEdgeVertex[iVertex].Z() * scaleZ;
+         }
+         
+         GetNormal(newTri);
 
          mesh.push_back(newTri);
       }

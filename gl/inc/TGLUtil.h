@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.36 2007/01/15 11:30:47 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLUtil.h,v 1.37 2007/01/26 14:06:54 couet Exp $
 // Author:  Richard Maunder  25/05/2005
 
 /*************************************************************************
@@ -67,6 +67,7 @@ enum EGLPlotType {
    kGLTF3Plot,
    kGLStackPlot,
    kGLParametricPlot,
+   kGLIsoPlot,
    kGLDefaultPlot
 };
 
@@ -987,7 +988,7 @@ private:
 public:
    TGLLevelPalette();
 
-   Bool_t GeneratePalette(UInt_t paletteSize, const Rgl::Range_t &zRange);
+   Bool_t GeneratePalette(UInt_t paletteSize, const Rgl::Range_t &zRange, Bool_t checkSize = kTRUE);
 
    void   SetContours(const std::vector<Double_t> *contours);
 
@@ -997,6 +998,7 @@ public:
    Double_t       GetTexCoord(Double_t z)const;
 
    const UChar_t *GetColour(Double_t z)const;
+   const UChar_t *GetColour(Int_t ind)const;
 };
 
 #endif // ROOT_TGLUtil

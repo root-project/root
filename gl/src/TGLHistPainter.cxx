@@ -397,6 +397,9 @@ TGLHistPainter::ParsePaintOption(const TString &option)const
       parsedOption.fPlotType = kGLTF3Plot;
    if (option.Index("box") != kNPOS)
       parsedOption.fPlotType = kGLBoxPlot;
+   if (option.Index("iso") != kNPOS)
+      parsedOption.fPlotType = kGLIsoPlot;
+
 
    return parsedOption;
 }
@@ -420,6 +423,9 @@ void TGLHistPainter::CreatePainter(const PlotOption_t &option, const TString &ad
    } else if (option.fPlotType == kGLTF3Plot) {
       if (!fGLPainter.get())
          fGLPainter.reset(new TGLTF3Painter(fF3, fHist, &fCamera, &fCoord));
+   } else if (option.fPlotType == kGLIsoPlot) {
+      if (!fGLPainter.get())
+         fGLPainter.reset(new TGLIsoPainter(fHist, &fCamera, &fCoord));
    }
 
    if (fGLPainter.get()) {
