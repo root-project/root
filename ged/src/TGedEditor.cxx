@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.40 2007/02/06 15:39:54 antcheva Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.41 2007/03/22 14:58:45 antcheva Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -293,7 +293,8 @@ void TGedEditor::GlobalSetModel(TVirtualPad *pad, TObject * obj, Int_t ev)
 {
    // Set canvas to global editor.
 
-   if ((ev != kButton1Down) || !IsMapped() || obj->InheritsFrom("TColorWheel"))
+   if ((ev != kButton1Down) || !IsMapped() || 
+       (obj && obj->InheritsFrom("TColorWheel")))
       return;
 
    TCanvas* can = pad->GetCanvas();
@@ -344,7 +345,8 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
 {
    // Activate object editors according to the selected object.
 
-   if ((event != kButton1Down) || obj->InheritsFrom("TColorWheel")) return;
+   if ((event != kButton1Down) || (obj && obj->InheritsFrom("TColorWheel")))
+      return;
 
    if (gPad) gPad->GetVirtCanvas()->SetCursor(kWatch);
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kWatch));
