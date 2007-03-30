@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.10 2007/03/16 10:37:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEntryList.cxx,v 1.11 2007/03/17 08:45:36 brun Exp $
 // Author: Anna Kreshuk 27/10/2006
 
 /*************************************************************************
@@ -702,7 +702,9 @@ TEntryList *TEntryList::GetEntryList(const char *treename, const char *filename)
    TEntryList *templist;
    while ((templist = (TEntryList*)next())){
       if (newhash == templist->fStringHash){
-         return templist;
+         if (!strcmp(templist->GetTreeName(), treename) && !strcmp(templist->GetFileName(), filename)){
+            return templist;
+         }
       }
    }
 
@@ -718,7 +720,9 @@ TEntryList *TEntryList::GetEntryList(const char *treename, const char *filename)
    next.Reset();
    while ((templist = (TEntryList*)next())){
       if (newhash == templist->fStringHash){
-         return templist;
+         if (!strcmp(templist->GetTreeName(), treename) && !strcmp(templist->GetFileName(), longname)){
+            return templist;
+         }
       }
    }
    return 0;
@@ -927,6 +931,7 @@ void TEntryList::SetTree(const char *treename, const char *filename)
 
    TString stotal = treename;
    stotal.Append(filename);
+   //printf("setting tree %s\n", stotal.Data());
    ULong_t newhash = stotal.Hash();
    if (fLists) {
       //find the corresponding entry list and make it current
@@ -935,16 +940,21 @@ void TEntryList::SetTree(const char *treename, const char *filename)
          stotal = fCurrent->fTreeName + fCurrent->fFileName;
          fCurrent->fStringHash = stotal.Hash();
       }
-      if (newhash == fCurrent->fStringHash)
-         return; 
+      if (newhash == fCurrent->fStringHash){
+         if (!strcmp(fCurrent->fTreeName, treename) && !strcmp(fCurrent->fFileName, filename)){
+            return;
+         }
+      } 
       TIter next(fLists);
       while ((elist = (TEntryList*)next())){
          if (newhash == elist->fStringHash){
-            fCurrent = elist;
-            //the current entry list was changed. reset the fLastIndexQueried,
-            //so that Next() doesn't start with the wrong current list
-            fLastIndexQueried = -3;
-            return;
+            if (!strcmp(elist->GetTreeName(), treename) && !strcmp(elist->GetFileName(), filename)){
+               fCurrent = elist;
+               //the current entry list was changed. reset the fLastIndexQueried,
+               //so that Next() doesn't start with the wrong current list
+               fLastIndexQueried = -3;
+               return;
+            }
          }
       }
       //didn't find an entry list for this tree, create a new one
