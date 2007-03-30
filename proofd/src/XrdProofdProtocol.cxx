@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.42 2007/02/05 10:44:33 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.cxx,v 1.43 2007/03/19 15:14:10 rdm Exp $
 // Author: Gerardo Ganis  12/12/2005
 
 /*************************************************************************
@@ -3033,45 +3033,16 @@ int XrdProofdProtocol::Login()
       uname.erase(uname.find("|"));
    }
 
-   // No 'root' logins
-   if (uname.length() == 4 && uname == "root") {
-      TRACEP(XERR,"Login: 'root' logins not accepted ");
-      fResponse.Send(kXR_InvalidRequest,"Login: 'root' logins not accepted");
-      return rc;
-   }
-
-   // Here we check if the user is known locally.
-   // If not, we fail for now.
-   // In the future we may try to get a temporary account
-   if (GetUserInfo(uname.c_str(), fUI) != 0) {
-      XrdOucString emsg("Login: unknown ClientID: ");
-      emsg += uname;
+   // Here we check if the user is allowed to use th system
+   // If not, we fail.
+   XrdOucString emsg;
+   if (CheckUser(uname.c_str(), fUI, emsg) != 0) {
+      emsg.insert(": ", 0);
+      emsg.insert(uname, 0);
+      emsg.insert("Login: ClientID not allowed: ", 0);
       TRACEP(XERR, emsg.c_str());
       fResponse.Send(kXR_InvalidRequest, emsg.c_str());
       return rc;
-   }
-
-   // If we are in controlled mode we have to check if the user in the
-   // authorized list; otherwise we fail. Privileged users are always
-   // allowed to connect.
-   if (fgOperationMode == kXPD_OpModeControlled) {
-      bool notok = 1;
-      XrdOucString us;
-      int from = 0;
-      while ((from = fgAllowedUsers.tokenize(us, from, ',')) != -1) {
-         if (us == uname) {
-            notok = 0;
-            break;
-         }
-      }
-      if (notok) {
-         XrdOucString emsg("Login: controlled operations:"
-                           " user not currently authorized to log in: ");
-         emsg += uname;
-         TRACEP(XERR, emsg.c_str());
-         fResponse.Send(kXR_InvalidRequest, emsg.c_str());
-         return rc;
-      }
    }
 
    // Establish the ID for this link
@@ -3268,7 +3239,7 @@ int XrdProofdProtocol::MapClient(bool all)
    }
 
    // Map the existing session, if found
-   if (pmgr) {
+   if (pmgr && pmgr->IsValid()) {
       // Save as reference proof mgr
       fPClient = pmgr;
       TRACEP(DBG,"MapClient: matching client: "<<pmgr);
@@ -3343,9 +3314,19 @@ int XrdProofdProtocol::MapClient(bool all)
 
          // Make sure that no zombie proofserv is around
          CleanupProofServ(0, fClientID);
-         // No existing session: create a new one
-         pmgr = new XrdProofClient(this, clientvers, fUI.fWorkDir.c_str());
-         pmgr->SetROOT(fgROOT.front());
+         if (!pmgr) {
+            // No existing session: create a new one
+            pmgr = new XrdProofClient(fClientID, clientvers, fUI.fWorkDir.c_str());
+            pmgr->SetROOT(fgROOT.front());
+            // Add to the list
+            fgProofClients.push_back(pmgr);
+         } else {
+            // An instance not yet valid exists already: fill it
+            pmgr->SetClientVers(clientvers);
+            pmgr->SetWorkdir(fUI.fWorkDir.c_str());
+            if (!(pmgr->ROOT()))
+               pmgr->SetROOT(fgROOT.front());
+         }
       }
 
       // No existing session: create a new one
@@ -3355,9 +3336,6 @@ int XrdProofdProtocol::MapClient(bool all)
 
          // The index of the next free slot will be the unique ID
          fCID = pmgr->GetClientID(this);
-
-         // Add to the list
-         fgProofClients.push_back(pmgr);
 
          // Save as reference proof mgr
          fPClient = pmgr;
@@ -3410,6 +3388,9 @@ int XrdProofdProtocol::MapClient(bool all)
             fclose(f);
          }
 
+         // Instance can be considered valid by now 
+         pmgr->SetValid();
+
          TRACEP(DBG,"MapClient: client "<<pmgr<<" added to the list (ref sid: "<< sid<<")");
 
          XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
@@ -3437,6 +3418,8 @@ int XrdProofdProtocol::MapClient(bool all)
          }
 
       } else {
+         // Remove from the list
+         fgProofClients.remove(pmgr);
          SafeDelete(pmgr);
          TRACEP(DBG,"MapClient: cannot instantiate XrdProofClient");
          fResponse.Send(kXP_ServerError,
@@ -3456,6 +3439,60 @@ int XrdProofdProtocol::MapClient(bool all)
 
    return rc;
 }
+
+//_____________________________________________________________________________
+int XrdProofdProtocol::CheckUser(const char *usr,
+                                 XrdProofUI &ui, XrdOucString &e)
+{
+   // Check if the user is allowed to use the system
+   // Return 0 if OK, -1 if not.
+
+   // No 'root' logins
+   if (!usr || strlen(usr) <= 0) {
+      e = "Login: 'usr' string is undefined ";
+      return -1;
+   }
+
+   // No 'root' logins
+   if (strlen(usr) == 4 && !strcmp(usr, "root")) {
+      e = "Login: 'root' logins not accepted ";
+      return -1;
+   }
+
+   // Here we check if the user is known locally.
+   // If not, we fail for now.
+   // In the future we may try to get a temporary account
+   if (GetUserInfo(usr, ui) != 0) {
+      e = "Login: unknown ClientID: ";
+      e += usr;
+      return -1;
+   }
+
+   // If we are in controlled mode we have to check if the user in the
+   // authorized list; otherwise we fail. Privileged users are always
+   // allowed to connect.
+   if (fgOperationMode == kXPD_OpModeControlled) {
+      bool notok = 1;
+      XrdOucString us;
+      int from = 0;
+      while ((from = fgAllowedUsers.tokenize(us, from, ',')) != -1) {
+         if (us == usr) {
+            notok = 0;
+            break;
+         }
+      }
+      if (notok) {
+         e = "Login: controlled operations:"
+             " user not currently authorized to log in: ";
+         e += usr;
+         return -1;
+      }
+   }
+
+   // OK
+   return 0;
+}
+
 
 
 //_____________________________________________________________________________
@@ -3579,10 +3616,12 @@ int XrdProofdProtocol::GetData(const char *dtype, char *buff, int blen)
 
    if (rlen  < 0)
       if (rlen != -ENOMSG) {
-         TRACEP(XERR, "GetData: link read error");
-         return fLink->setEtext("link read error");
+         XrdOucString emsg = "GetData: link read error: errno: ";
+         emsg += -rlen;
+         TRACEP(XERR, emsg.c_str());
+         return fLink->setEtext(emsg.c_str());
       } else {
-         TRACEP(DBG, "GetData: connection closed by peer");
+         TRACEP(DBG, "GetData: connection closed by peer (errno: "<<-rlen<<")");
          return -1;
       }
    if (rlen < blen) {
@@ -4279,26 +4318,9 @@ int XrdProofdProtocol::Create()
    uenvs.erase(uenvs.find("|"));
    xps->SetUserEnvs(uenvs.c_str());
 
-   // Extract ROOT tag, if any
-   XrdOucString rtag;
-   bool usedefrtag = 1;
-   rtag.assign(buf,0,len-1);
-   int irtg = rtag.find("|rtag:");
-   rtag.erase(0,irtg+6);
-   rtag.erase(rtag.find("|"));
-   if (rtag != "") {
-      // Search in the list
-      std::list<XrdROOT *>::iterator ip;
-      for (ip = fgROOT.begin(); ip != fgROOT.end(); ++ip) {
-         if ((*ip)->MatchTag(rtag.c_str())) {
-            xps->SetROOT(*ip);
-            usedefrtag = 0;
-            break;
-         }
-      }
-   }
-   if (usedefrtag)
-      xps->SetROOT(fPClient->ROOT());
+   // The ROOT version to be used
+   xps->SetROOT(fPClient->ROOT());
+   XPDPRT("Create: using ROOT version: "<<xps->ROOT()->Export());
 
    // Notify
    TRACEP(DBG, "Create: {ord,cfg,psid,cid,log}: {"<<ord<<","<<cffile<<","<<psid
@@ -5411,19 +5433,82 @@ int XrdProofdProtocol::Admin()
       int len = fRequest.header.dlen;
       XrdOucString tag(t,len);
 
+      // If a user name is given separate it out and check if
+      // we can do the operation
+      XrdOucString usr;
+      if (tag.beginswith("u:")) {
+         usr = tag;
+         usr.erase(usr.rfind(' '));
+         usr.replace("u:","");
+         TRACEP(DBG, "Admin: ROOTVersion: request is for user: "<< usr);
+         // Isolate the tag
+         tag.erase(0,tag.find(' ') + 1);
+      }
+      TRACEP(DBG, "Admin: ROOTVersion: version tag: "<< tag);
+
+      // If the action is requested for a user different from us we
+      // must be 'superuser'
+      XrdProofClient *c = fPClient;
+      if (usr.length() > 0) {
+         if (usr != fPClient->ID()) {
+            if (!fSuperUser) {
+               usr.insert("Admin: not allowed to change settings for usr '", 0);
+               usr += "'";
+               TRACEP(XERR, usr.c_str());
+               fResponse.Send(kXR_InvalidRequest, usr.c_str());
+               return rc;
+            }
+            // Lookup the list
+            c = 0;
+            std::list<XrdProofClient *>::iterator i;
+            for (i = fgProofClients.begin(); i != fgProofClients.end(); ++i) {
+               if ((*i)->Match(usr.c_str())) {
+                  c = (*i);
+                  break;
+               }
+            }
+            if (!c) {
+               // Is this a potential user?
+               XrdOucString emsg;
+               XrdProofUI ui;
+               if (CheckUser(usr.c_str(), ui, emsg) != 0) {
+                  // No: fail
+                  emsg.insert(": ", 0);
+                  emsg.insert(usr, 0);
+                  emsg.insert("Admin: user not found: ", 0);
+                  TRACEP(XERR, emsg.c_str());
+                  fResponse.Send(kXR_InvalidRequest, emsg.c_str());
+                  return rc;
+               } else {
+                  // Yes: create an (invalid) instance of XrdProofClient:
+                  // It would be validated on the first valid login
+                  c = new XrdProofClient(usr.c_str());
+                  // Add to the list
+                  fgProofClients.push_back(c);
+               }
+            }
+         }
+      }
+
       // Search in the list
       bool ok = 0;
       std::list<XrdROOT *>::iterator ip;
       for (ip = fgROOT.begin(); ip != fgROOT.end(); ++ip) {
          if ((*ip)->MatchTag(tag.c_str())) {
-            fPClient->SetROOT(*ip);
+            c->SetROOT(*ip);
             ok = 1;
             break;
          }
       }
 
       // forward down the tree, if not leaf
-      Broadcast(type, tag.c_str());
+      if (fSrvType != kXPD_WorkerServer) {
+         XrdOucString buf("u:");
+         buf += c->ID();
+         buf += " ";
+         buf += tag;
+         Broadcast(type, buf.c_str());
+      }
 
       if (ok) {
          // Acknowledge user
@@ -7056,12 +7141,12 @@ int XrdProofdProtocol::GetNumCPUs()
 //--------------------------------------------------------------------------
 
 //__________________________________________________________________________
-XrdProofClient::XrdProofClient(XrdProofdProtocol *p,
+XrdProofClient::XrdProofClient(const char *cid,
                                short int clientvers, const char *wrkdir)
 {
    // Constructor
 
-   fClientID = (p && p->GetID()) ? strdup(p->GetID()) : 0;
+   fClientID = (cid) ? strdup(cid) : 0;
    fClientVers = clientvers;
    fProofServs.reserve(10);
    fClients.reserve(10);
@@ -7072,6 +7157,7 @@ XrdProofClient::XrdProofClient(XrdProofdProtocol *p,
    fROOT = 0;
    fWorkerProofServ = 0;
    fMasterProofServ = 0;
+   fIsValid = 0;
 }
 
 //__________________________________________________________________________

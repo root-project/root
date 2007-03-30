@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.20 2007/01/22 11:36:41 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: XrdProofdProtocol.h,v 1.21 2007/03/19 15:14:10 rdm Exp $
 // Author: G. Ganis  June 2005
 
 /*************************************************************************
@@ -278,6 +278,7 @@ public:
    static int    ChangeProcessPriority(int pid, int deltap);
    static int    CheckIf(XrdOucStream *s);
    static bool   CheckMaster(const char *m);
+   static int    CheckUser(const char *usr, XrdProofUI &ui, XrdOucString &e);
    static int    Config(const char *fn);
    static int    CreateDefaultPROOFcfg();
    static char  *Expand(char *p);
@@ -317,7 +318,7 @@ public:
 class XrdProofClient {
 
  public:
-   XrdProofClient(XrdProofdProtocol *p,
+   XrdProofClient(const char *cid,
                   short int clientvers = -1, const char *wrk = 0);
 
    virtual ~XrdProofClient();
@@ -328,6 +329,7 @@ class XrdProofClient {
    void                    CountMaster(int n = 1) { fMasterProofServ += n; }
    inline const char      *ID() const
                               { return (const char *)fClientID; }
+   inline bool             IsValid() const { return fIsValid; }
    bool                    Match(const char *id)
                               { return (id ? !strcmp(id, fClientID) : 0); }
    inline XrdOucRecMutex  *Mutex() const { return (XrdOucRecMutex *)&fMutex; }
@@ -346,9 +348,12 @@ class XrdProofClient {
    int                     GetClientID(XrdProofdProtocol *p);
    int                     GetFreeServID();
 
+   void                    SetClientVers(short int cv) { fClientVers = cv; }
+
    void                    SetROOT(XrdROOT *r) { fROOT = r; }
 
    void                    SetRefSid(unsigned short sid) { fRefSid = sid; }
+   void                    SetValid(bool valid = 1) { fIsValid = valid; }
    void                    SetWorkdir(const char *wrk)
                               { if (fWorkdir) free(fWorkdir);
                                 fWorkdir = (wrk) ? strdup(wrk) : 0; }
@@ -363,8 +368,11 @@ class XrdProofClient {
 
    XrdOucRecMutex          fMutex; // Local mutex
 
+   bool                    fIsValid; // TRUE if the instance is complete
+
    char                   *fClientID;   // String identifying this client
    short int               fClientVers; // PROOF version run by client
+
    unsigned short          fRefSid;     // Reference stream ID for this client
    char                   *fWorkdir;    // Client working area (sandbox) 
 
