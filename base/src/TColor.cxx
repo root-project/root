@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.31 2007/03/08 17:10:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.32 2007/03/12 07:48:10 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -503,8 +503,10 @@ ULong_t TColor::GetPixel() const
    // it needs to communicate with the graphics system.
 
    if (gVirtualX && !gROOT->IsBatch()) {
-      if (gApplication)
+      if (gApplication) {
+         TApplication::NeedGraphicsLibs();
          gApplication->InitializeGraphics();
+      }
       return gVirtualX->GetPixel(fNumber);
    }
 
