@@ -300,9 +300,9 @@ Bool_t Test3()
    chain->Add("stressEntryListTrees*.root/tree2");
 
    TCut cut = "x<0 && y>0";
+   
    chain->Draw(">>evlist", cut, "");
    TEventList *evlist = (TEventList*)gDirectory->Get("evlist");
-
    chain->Draw("x>>h1", cut, "goff");
    TH1F *h1 = (TH1F*)gDirectory->Get("h1");
    chain->SetEventList(evlist);
@@ -402,7 +402,7 @@ void MakeTrees(Int_t nentries, Int_t nfiles)
    TTree *tree1, *tree2;
 
    Double_t x, y, z;
-   Int_t range = nentries/100;
+   Double_t range = nentries/100.;
 
    char buffer[50];
    for (Int_t ifile=0; ifile<nfiles; ifile++){
