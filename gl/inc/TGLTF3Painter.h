@@ -74,12 +74,6 @@ public:
       TGLVector3 fNormal;//Flat normal.
       TGLVector3 fPerVertexNormals[3];//Smoothed normals for each vertex.
    };
-
-private:
-   TGLTH3Slice fXOZSlice;
-   TGLTH3Slice fYOZSlice;
-   TGLTH3Slice fXOYSlice;
-
    //Each of cubes (marching-cubes) has a
    //corresponding set of triangles in a mesh, possibly empty.
    //fFirst is the number of the first triangle,
@@ -94,7 +88,6 @@ private:
       Int_t fFirst;
       Int_t fLast;
    };
-
    struct Mesh_t {
       std::vector<Range_t>   fBoxRanges;
       std::vector<TriFace_t> fMesh;
@@ -104,6 +97,11 @@ private:
          std::swap(fMesh,      rhs.fMesh);
       }
    };
+
+private:
+   TGLTH3Slice fXOZSlice;
+   TGLTH3Slice fYOZSlice;
+   TGLTH3Slice fXOYSlice;
 
    Mesh_t                                    fDummyMesh;
    
