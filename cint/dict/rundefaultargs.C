@@ -41,7 +41,7 @@ private:
       cout << i << endl;
    }
    void Xfloat(float f
-               =0.0001) 
+               =1.01) 
    {
       cout << f << endl;
    }
@@ -89,7 +89,7 @@ private:
 void rundefaultargs() 
 {
    TDefaultArgs da;
-   TIter iFunc(TDefaultArgs::Class()->GetListOfMethods());
+   TIter iFunc(TClass::GetClass("TDefaultArgs")->GetListOfMethods());
    TMethod* func = 0;
    while ((func = (TMethod*)iFunc()))
       if (func->GetName()[0] == 'X')

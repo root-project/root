@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += defaultargs mytest
+TEST_TARGETS += defaultargs
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -32,13 +32,6 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
-# The name of this target should be changed according to the test being run.  Any name changes
-#  should also be reflected in the TEST_TARGETS variable above.
-
-mytest:
-	$(CMDECHO) echo mytest > /dev/null
-
-
 # Outputs a message if the FAIL variable is null
 
 testWithFailure:
@@ -61,5 +54,11 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 
 
 
-defaultargs: defaultargs.clog
+.PHONY: defaultargs_interpreted defaultargs_compiled
+defaultargs: defaultargs_interpreted defaultargs_compiled
+
+defaultargs_compiled: defaultargs.clog
+	$(TestDiff)
+
+defaultargs_interpreted: defaultargs.log
 	$(TestDiff)
