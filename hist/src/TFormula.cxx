@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.133 2007/03/08 21:21:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.134 2007/03/09 08:19:39 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -3023,7 +3023,7 @@ void TFormula::ProcessLinear(TString &formula)
    TString formula2(formula);
    char repl[20];
    char *pch;
-   Int_t nf;
+   Int_t nf, offset, replsize;
    //replace "++" with "+[i]*"
    pch= (char*)strstr(formula.Data(), "++");
    if (pch)
@@ -3034,8 +3034,11 @@ void TFormula::ProcessLinear(TString &formula)
       nf = 1;
       while (pch){
          sprintf(repl, ")+[%d]*(", nf);
-         Int_t offset = pch-formula.Data();
-         formula.Replace(pch-formula.Data(), 2, repl, (nf)/10+7);
+         offset = pch-formula.Data();
+         if (nf<10) replsize = 7;
+         else if (nf<100) replsize = 8;
+         else replsize = 9;
+         formula.Replace(pch-formula.Data(), 2, repl, replsize);
          pch = (char*)strstr(formula.Data()+offset, "++");
          nf++;
       }
@@ -3044,18 +3047,19 @@ void TFormula::ProcessLinear(TString &formula)
       //if there are no ++, create a new string with ++ instead of +[i]*
       formula2=formula2(4, formula2.Length()-4);
       pch= (char*)strchr(formula2.Data(), '[');
-      char repl[]="++";
+      sprintf(repl, "++");
       nf = 1;
       while (pch){
-         Int_t offset = pch-formula2.Data()-1;
-         formula2.Replace(pch-formula2.Data()-1, (nf)/10+5, repl, 2);
+         offset = pch-formula2.Data()-1;
+         if (nf<10) replsize = 5;
+         else replsize = 6;
+         formula2.Replace(pch-formula2.Data()-1, replsize, repl, 2);
          pch = (char*)strchr(formula2.Data()+offset, '[');
          nf++;
       }
    }
 
    fLinearParts.Expand(nf);
-
    //break up the formula and fill the array of linear parts
    TString replaceformula;
    formula2 = formula2.ReplaceAll("++", 2, "|", 1);
