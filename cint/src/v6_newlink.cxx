@@ -6954,7 +6954,7 @@ int G__separate_parameter(char *original,int *pos,char *param)
           if (!double_quote) 
              if (single_quote) single_quote = 0;
              // only turn on single_quote if at the beginning!
-             else if (i == startPos)  single_quote = 0;
+             else if (i == startPos)  single_quote = 1;
              else if (single_arg_quote) single_arg_quote = 0;
           break;
        case '"':
@@ -6964,6 +6964,13 @@ int G__separate_parameter(char *original,int *pos,char *param)
           if(!single_quote && !double_quote && !single_arg_quote) {
              c = 0;
              done = true;
+          }
+          break;
+       case '\\':
+          if (single_quote || double_quote) {
+             // prevent special treatment of next char
+             *(param++) = c;
+             c = original[++i];
           }
           break;
        case 0:
@@ -7057,17 +7064,6 @@ int G__parse_parameter_link(char* paras)
     }
     else {
       para_default = (G__value*) -1;
-      // The parameter default text will be quoted if it
-      // contains spaces, we must remove the quotes.
-      int len = std::strlen(c_default);
-      //assert(len > 2);
-      if (len > 1 && (c_default[0] == '\'' || c_default[0] == '\"')) {
-        c_default[len-1] = '\0';
-        // The source and destination overlap, do it carefully.
-        char buf[G__MAXNAME*2];
-        std::strcpy(buf, ((char*) c_default) + 1);
-        std::strcpy(c_default, buf);
-      }
     }
     ch = G__separate_parameter(paras, &os, c_paraname);
     if (c_paraname[0] == '-') {
