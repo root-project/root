@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: TUnuranEmpDist.cxx,v 1.1 2007/03/08 09:31:54 moneta Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuranEmpDist.cxx,v 1.2 2007/03/12 09:46:23 moneta Exp $
 // Authors: L. Moneta, J. Leydold Wed Feb 28 2007 
 
 /**********************************************************************
@@ -54,6 +54,43 @@ TUnuranEmpDist::TUnuranEmpDist (const TH1 * h1, bool useBuffer) :
       }
    }
 } 
+
+TUnuranEmpDist::TUnuranEmpDist (unsigned int n, double * x) : 
+   fData(std::vector<double>(x,x+n) ),
+   fDim(2),
+   fMin(0), fMax(0),
+   fBinned(0)  
+{
+   // constructor for 1D unbinned data
+}
+
+TUnuranEmpDist::TUnuranEmpDist (unsigned int n, double * x, double * y) : 
+   fData(std::vector<double>(2*n) ),
+   fDim(2),
+   fMin(0), fMax(0),
+   fBinned(0)  
+{
+   // constructor for 2D unbinned data
+   for (unsigned int i = 0; i < n; ++i) { 
+      fData[i*2]   = x[i];
+      fData[i*2+1] = y[i];
+   }
+}
+
+TUnuranEmpDist::TUnuranEmpDist (unsigned int n, double * x, double * y, double *z) : 
+   fData(std::vector<double>(3*n) ),
+   fDim(3),
+   fMin(0), fMax(0),
+   fBinned(0)  
+{
+   // constructor for 3D unbinned data
+   for (unsigned int i = 0; i < n; ++i) { 
+      fData[i*3]   = x[i];
+      fData[i*3+1] = y[i];
+      fData[i*3+2] = z[i];
+   }
+}
+
 
 
 TUnuranEmpDist::TUnuranEmpDist(const TUnuranEmpDist & rhs) :

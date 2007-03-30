@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: TUnuranEmpDist.h,v 1.3 2007/03/08 16:05:52 moneta Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuranEmpDist.h,v 1.4 2007/03/12 08:49:24 moneta Exp $
 // Authors: L. Moneta, J. Leydold Wed Feb 28 2007
 
 /**********************************************************************
@@ -59,6 +59,22 @@ public:
       fDim(dim), 
       fMin(0), fMax(0),
       fBinned(0)  {}
+
+   /** 
+      Constructor from a set of 1D data
+   */ 
+   TUnuranEmpDist (unsigned int n, double * x); 
+
+   /** 
+      Constructor from a set of 2D data
+   */ 
+   TUnuranEmpDist (unsigned int n, double * x, double * y); 
+
+   /** 
+      Constructor from a set of 3D data
+   */ 
+   TUnuranEmpDist (unsigned int n, double * x, double * y, double * z); 
+
 
    /** 
       Destructor (no operations)

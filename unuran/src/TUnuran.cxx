@@ -1,4 +1,4 @@
-// @(#)root/unuran:$Name:  $:$Id: TUnuran.cxx,v 1.3 2007/03/14 14:55:02 moneta Exp $
+// @(#)root/unuran:$Name:  $:$Id: TUnuran.cxx,v 1.4 2007/03/27 15:04:52 moneta Exp $
 // Authors: L. Moneta, J. Leydold Tue Sep 26 16:25:09 2006
 
 /**********************************************************************
@@ -288,7 +288,8 @@ bool TUnuran::SetEmpiricalDistribution(const TUnuranEmpDist & dist) {
    } 
    else { 
       const double * pv = &dist.Data().front();
-      int n = dist.Data().size();
+      // n is number of points (size/ndim)
+      int n = dist.Data().size()/dist.NDim();
       if (dist.NDim() == 1)   
          ret |= unur_distr_cemp_set_data(fUdistr, pv, n); 
       else  
