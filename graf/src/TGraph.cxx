@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.208 2007/02/26 17:27:22 couet Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.209 2007/03/01 07:55:18 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2018,12 +2018,14 @@ void TGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t
    // Least square linear fit without weights.
    //
    //  Fit a straight line (a0 + a1*x) to the data in this graph.
-   //  ndata:  number of points to fit
-   //  first:  first point number to fit
-   //  last:   last point to fit O(ndata should be last-first
+   //  ndata:  if ndata<0, fits the logarithm of the graph (used in InitExpo() to set
+   //          the initial parameter values for a fit with exponential function.
+   //  a0:     constant
+   //  a1:     slope
    //  ifail:  return parameter indicating the status of the fit (ifail=0, fit is OK)
+   //  xmin, xmax: fitting range
    //
-   //   extracted from CERNLIB LLSQ: Translated to C++ by Rene Brun
+   //  extracted from CERNLIB LLSQ: Translated to C++ by Rene Brun
 
    Double_t xbar, ybar, x2bar;
    Int_t i;
